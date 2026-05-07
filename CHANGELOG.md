@@ -1,5 +1,15 @@
 # Changelog
 
+## [2.5.0] - 2026-05-07
+
+### Performance
+
+- speed up markdown render benchmark (#55)
+
+### Documentation
+
+- publish md4x benchmark results (#54)
+
 ## [2.4.0] - 2026-04-23
 
 ### Features
