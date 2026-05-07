@@ -1,0 +1,71 @@
+name: Benchmark
+
+on:
+  pull_request:
+    branches: [main]
+
+permissions:
+  contents: read
+  issues: write
+  pull-requests: write
+
+env:
+  CARGO_TERM_COLOR: always
+
+jobs:
+  benchmark:
+    name: Benchmark
+    runs-on: ubuntu-latest
+    env:
+      CARGO_TARGET_DIR: /tmp/ox-content-cargo-target
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Checkout base
+        uses: actions/checkout@v4
+        with:
+          repository: ${{ github.repository }}
+          ref: ${{ github.event.pull_request.base.sha }}
+          path: .benchmark/base
+
+      - name: Checkout head
+        uses: actions/checkout@v4
+        with:
+          repository: ${{ github.event.pull_request.head.repo.full_name }}
+          ref: ${{ github.event.pull_request.head.sha }}
+          path: .benchmark/head
+
+      - name: Setup Vite+
+        uses: voidzero-dev/setup-vp@v1
+        with:
+          node-version-file: ".node-version"
+          cache: true
+          run-install: false
+
+      - name: Setup Rust
+        uses: dtolnay/rust-toolchain@stable
+
+      - name: Cache cargo
+        uses: Swatinem/rust-cache@v2
+
+      - name: Benchmark base
+        working-directory: .benchmark/base
+        run: node "$GITHUB_WORKSPACE/.github/scripts/run-pr-benchmark.mjs" --source "$GITHUB_WORKSPACE" --runtime-json "$RUNNER_TEMP/benchmark-base.json" --bundle-json "$RUNNER_TEMP/bundle-base.json"
+
+      - name: Benchmark head
+        working-directory: .benchmark/head
+        run: node "$GITHUB_WORKSPACE/.github/scripts/run-pr-benchmark.mjs" --source "$GITHUB_WORKSPACE" --runtime-json "$RUNNER_TEMP/benchmark-head.json" --bundle-json "$RUNNER_TEMP/bundle-head.json"
+
+      - name: Compare benchmarks
+        env:
+          BASE_SHA: ${{ github.event.pull_request.base.sha }}
+          HEAD_SHA: ${{ github.event.pull_request.head.sha }}
+        working-directory: .benchmark/head
+        run: node "$GITHUB_WORKSPACE/.github/scripts/compare-pr-benchmark.mjs"
+
+      - name: Comment on pull request
+        if: ${{ github.event.pull_request.head.repo.full_name == github.repository }}
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
+          COMMENT_PATH: ${{ runner.temp }}/benchmark-comment.md
+        run: node "$GITHUB_WORKSPACE/.github/scripts/comment-pr-benchmark.mjs"
