@@ -7,7 +7,7 @@
  *
  * ## Features
  *
- * - **Automatic Extraction**: Parses JSDoc comments from functions, classes, interfaces, and types
+ * - **Automatic Extraction**: Parses declarations and structured JSDoc metadata in Rust
  * - **Flexible Filtering**: Include/exclude patterns for selective documentation
  * - **Markdown Generation**: Converts extracted docs to organized Markdown files
  * - **Navigation Generation**: Auto-generates sidebar navigation metadata
@@ -349,6 +349,8 @@ interface NapiDocItem {
   signature?: string;
   params: NapiDocParam[];
   returnType?: string;
+  returnDescription?: string;
+  examples: string[];
   tags: NapiDocTag[];
 }
 
@@ -363,7 +365,7 @@ interface NapiDocItem {
  *
  * 1. **File Discovery**: Recursively walks directories, applying filters
  * 2. **File Reading**: Loads each matching file's content
- * 3. **JSDoc Extraction**: Parses JSDoc comments using regex patterns
+ * 3. **JSDoc Extraction**: Uses Rust-side JSDoc metadata from @ox-content/napi
  * 4. **Declaration Matching**: Pairs JSDoc comments with source declarations
  * 5. **Result Collection**: Aggregates extracted documentation by file
  *
@@ -512,128 +514,21 @@ function parseNapiDocItem(item: NapiDocItem): DocEntry | null {
     return null;
   }
 
-  const params: ParamDoc[] = [];
-  const examples: string[] = [];
+  const params = item.params.map((param) => ({
+    name: param.name,
+    type: param.typeAnnotation ?? "unknown",
+    description: param.description ?? "",
+    optional: param.optional || undefined,
+    default: param.defaultValue,
+  }));
+  const returns = item.returnType
+    ? {
+        type: item.returnType,
+        description: item.returnDescription ?? "",
+      }
+    : undefined;
   const tags: Record<string, string> = {};
-  let description = "";
-  let returns: { type: string; description: string } | undefined;
   let isPrivate = false;
-
-  const rawLines = (item.jsdoc ?? "").split("\n").map((line) => {
-    const trimmedStart = line.trimStart();
-    const withoutStar = trimmedStart.startsWith("*") ? trimmedStart.slice(1) : trimmedStart;
-    return withoutStar.startsWith(" ") ? withoutStar.slice(1) : withoutStar;
-  });
-  const cleanedLines = rawLines.map((line) => line.trim()).filter(Boolean);
-
-  let currentExample = "";
-  let inExample = false;
-  let rawLineIndex = 0;
-
-  for (const lineText of cleanedLines) {
-    // Find the corresponding raw line to get original indentation for examples
-    while (rawLineIndex < rawLines.length && rawLines[rawLineIndex].trim() !== lineText) {
-      rawLineIndex++;
-    }
-    const rawLine = rawLineIndex < rawLines.length ? rawLines[rawLineIndex] : lineText;
-    rawLineIndex++;
-
-    if (lineText.startsWith("@")) {
-      if (inExample) {
-        examples.push(currentExample.trim());
-        currentExample = "";
-        inExample = false;
-      }
-
-      const tagMatch = /@(\w+)\s*(?:\{([^}]*)\})?(.*)/.exec(lineText);
-      if (tagMatch) {
-        const [, tagName, tagType, tagRest] = tagMatch;
-
-        switch (tagName) {
-          case "param":
-            const paramMatch = /(\w+)\s*-?\s*(.*)/.exec(tagRest.trim());
-            if (paramMatch) {
-              params.push({
-                name: paramMatch[1],
-                type: tagType || "unknown",
-                description: paramMatch[2],
-              });
-            }
-            break;
-          case "returns":
-          case "return":
-            returns = {
-              type: tagType || "unknown",
-              description: tagRest.trim(),
-            };
-            break;
-          case "example":
-            inExample = true;
-            break;
-          case "private":
-            isPrivate = true;
-            break;
-          default:
-            tags[tagName] = tagRest.trim();
-        }
-      }
-    } else if (inExample) {
-      currentExample += rawLine + "\n";
-    } else if (!description) {
-      description = lineText;
-    } else {
-      description += "\n" + lineText;
-    }
-  }
-
-  if (inExample && currentExample) {
-    examples.push(currentExample.trim());
-  }
-
-  if (params.length === 0 && item.params.length > 0) {
-    params.push(
-      ...item.params.map((param) => ({
-        name: param.name,
-        type: param.typeAnnotation ?? "unknown",
-        description: param.description ?? "",
-        optional: param.optional || undefined,
-        default: param.defaultValue,
-      })),
-    );
-  } else if (item.params.length > 0) {
-    const paramMap = new Map(item.params.map((param) => [param.name, param]));
-    for (const param of params) {
-      const rustParam = paramMap.get(param.name);
-      if (!rustParam) {
-        continue;
-      }
-      if (param.type === "unknown" && rustParam.typeAnnotation) {
-        param.type = rustParam.typeAnnotation;
-      }
-      if (!param.description && rustParam.description) {
-        param.description = rustParam.description;
-      }
-      if (param.optional === undefined && rustParam.optional) {
-        param.optional = true;
-      }
-      if (!param.default && rustParam.defaultValue) {
-        param.default = rustParam.defaultValue;
-      }
-    }
-  }
-
-  if (!returns && item.returnType) {
-    returns = {
-      type: item.returnType,
-      description: "",
-    };
-  } else if (returns && returns.type === "unknown" && item.returnType) {
-    returns.type = item.returnType;
-  }
-
-  if (!description) {
-    description = item.doc ?? "";
-  }
 
   for (const tag of item.tags) {
     if (
@@ -656,10 +551,10 @@ function parseNapiDocItem(item: NapiDocItem): DocEntry | null {
   return {
     name: item.name,
     kind,
-    description,
+    description: item.doc ?? "",
     params: params.length > 0 ? params : undefined,
     returns,
-    examples: examples.length > 0 ? examples : undefined,
+    examples: item.examples.length > 0 ? item.examples : undefined,
     tags: Object.keys(tags).length > 0 ? tags : undefined,
     private: isPrivate,
     file: item.sourcePath,
@@ -1235,6 +1130,11 @@ function generateSourceLink(
   return `**[Source](${generateSourceHref(filePath, githubUrl, lineNumber, endLineNumber)})**`;
 }
 
+export function resolveDocsOptions(options: false): false;
+export function resolveDocsOptions(options?: import("./types").DocsOptions): ResolvedDocsOptions;
+export function resolveDocsOptions(
+  options: import("./types").DocsOptions | false | undefined,
+): ResolvedDocsOptions | false;
 export function resolveDocsOptions(
   options: import("./types").DocsOptions | false | undefined,
 ): ResolvedDocsOptions | false {

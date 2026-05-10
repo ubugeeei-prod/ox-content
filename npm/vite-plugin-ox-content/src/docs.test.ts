@@ -187,4 +187,57 @@ export interface RenderContext<TValue extends Record<string, unknown> = Record<s
     expect(markdown["interface.md"]).toContain("ox-api-entry__signature--highlighted");
     expect(markdown["index.md"]).toContain("ox-api-module__signature--highlighted");
   });
+
+  it("uses Rust-side JSDoc metadata for optional params and fenced examples", async () => {
+    const srcDir = await fs.mkdtemp(path.join(os.tmpdir(), "ox-content-docs-src-"));
+    tempDirs.push(srcDir);
+
+    const filePath = path.join(srcDir, "format.ts");
+    await fs.writeFile(
+      filePath,
+      `/**
+ * Formats a value.
+ *
+ * @param {number} value - Input value.
+ * @param {"short" | "long"} [mode="short"] - Format mode.
+ * @returns {string} Rendered label.
+ * @example
+ * \`\`\`ts
+ * const snippet = "@param not-a-real-tag";
+ * formatValue(1, "short");
+ * \`\`\`
+ * @since 2.4.0
+ */
+export function formatValue(value: number, mode: "short" | "long" = "short"): string {
+  return mode === "short" ? String(value) : \`value: \${value}\`;
+}
+`,
+      "utf-8",
+    );
+
+    const docs = await extractDocs([srcDir], resolveDocsOptions({ include: ["**/*.ts"] })!);
+    const entry = docs[0]?.entries[0];
+
+    expect(entry?.description).toBe("Formats a value.");
+    expect(entry?.params).toEqual([
+      {
+        name: "value",
+        type: "number",
+        description: "Input value.",
+      },
+      {
+        name: "mode",
+        type: '"short" | "long"',
+        description: "Format mode.",
+        optional: true,
+        default: '"short"',
+      },
+    ]);
+    expect(entry?.returns).toEqual({
+      type: "string",
+      description: "Rendered label.",
+    });
+    expect(entry?.examples?.[0]).toContain("@param not-a-real-tag");
+    expect(entry?.tags).toEqual({ since: "2.4.0" });
+  });
 });

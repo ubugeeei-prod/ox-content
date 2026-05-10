@@ -329,6 +329,8 @@ export interface JsSourceDocItem {
   signature?: string
   params: Array<JsSourceDocParam>
   returnType?: string
+  returnDescription?: string
+  examples: Array<string>
   tags: Array<JsSourceDocTag>
 }
 

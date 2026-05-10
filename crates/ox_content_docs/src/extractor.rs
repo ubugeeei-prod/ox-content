@@ -59,6 +59,10 @@ pub struct DocItem {
     pub params: Vec<ParamDoc>,
     /// Return type (for functions/methods).
     pub return_type: Option<String>,
+    /// Return description from JSDoc @returns tag.
+    pub return_description: Option<String>,
+    /// Code examples from JSDoc @example tags.
+    pub examples: Vec<String>,
     /// Child items (for classes, modules, etc.).
     pub children: Vec<DocItem>,
     /// JSDoc tags.
@@ -87,6 +91,21 @@ pub struct DocTag {
     pub tag: String,
     /// Tag value.
     pub value: String,
+}
+
+#[derive(Debug, Clone)]
+struct ParsedParamTag {
+    name: String,
+    type_annotation: Option<String>,
+    optional: bool,
+    default_value: Option<String>,
+    description: Option<String>,
+}
+
+#[derive(Debug, Clone)]
+struct ParsedReturnTag {
+    type_annotation: Option<String>,
+    description: Option<String>,
 }
 
 /// Kind of documentation item.
@@ -276,6 +295,7 @@ impl<'a> DocVisitor<'a> {
         let mut description_lines = Vec::new();
         let mut tags = Vec::new();
         let mut current_tag: Option<(String, Vec<String>)> = None;
+        let mut in_fence = false;
 
         let lines: Vec<String> = comment
             .lines()
@@ -288,12 +308,16 @@ impl<'a> DocVisitor<'a> {
 
         for line in lines {
             let trimmed = line.trim_start();
-            if let Some(without_at) = trimmed.strip_prefix('@') {
+            let starts_tag = !in_fence && trimmed.starts_with('@');
+            let toggles_fence = trimmed.starts_with("```") || trimmed.starts_with("~~~");
+
+            if starts_tag {
                 // Save previous tag if any
                 if let Some((tag, value_lines)) = current_tag.take() {
                     tags.push(DocTag { tag, value: value_lines.join("\n").trim().to_string() });
                 }
 
+                let without_at = trimmed.trim_start_matches('@');
                 let split_at = without_at
                     .char_indices()
                     .find_map(|(index, ch)| ch.is_whitespace().then_some(index))
@@ -306,6 +330,10 @@ impl<'a> DocVisitor<'a> {
             } else {
                 description_lines.push(line);
             }
+
+            if toggles_fence {
+                in_fence = !in_fence;
+            }
         }
 
         // Save last tag if any
@@ -314,6 +342,102 @@ impl<'a> DocVisitor<'a> {
         }
 
         (description_lines.join("\n").trim().to_string(), tags)
+    }
+
+    fn split_tag_type(value: &str) -> (Option<String>, &str) {
+        let value = value.trim_start();
+        let Some(rest) = value.strip_prefix('{') else {
+            return (None, value);
+        };
+        let Some(end) = rest.find('}') else {
+            return (None, value);
+        };
+
+        let type_annotation = rest[..end].trim();
+        let rest = rest[end + 1..].trim_start();
+
+        if type_annotation.is_empty() {
+            (None, rest)
+        } else {
+            (Some(type_annotation.to_string()), rest)
+        }
+    }
+
+    fn split_tag_value(value: &str) -> (Option<String>, &str) {
+        let value = value.trim_start();
+        if value.is_empty() {
+            return (None, "");
+        }
+
+        let split_at = value
+            .char_indices()
+            .find_map(|(index, ch)| ch.is_whitespace().then_some(index))
+            .unwrap_or(value.len());
+
+        (Some(value[..split_at].to_string()), value[split_at..].trim_start())
+    }
+
+    fn clean_tag_description(value: &str) -> Option<String> {
+        let description = value.trim_start().trim_start_matches('-').trim();
+        (!description.is_empty()).then(|| description.to_string())
+    }
+
+    fn parse_param_name(raw_name: &str) -> (String, bool, Option<String>) {
+        let raw_name = raw_name.trim();
+        let Some(inner) = raw_name.strip_prefix('[').and_then(|value| value.strip_suffix(']'))
+        else {
+            return (raw_name.trim_start_matches("...").to_string(), false, None);
+        };
+
+        let (name, default_value) =
+            inner.split_once('=').map_or((inner, None), |(name, default_value)| {
+                (name.trim(), Some(default_value.trim().to_string()))
+            });
+
+        (name.trim_start_matches("...").to_string(), true, default_value)
+    }
+
+    fn parse_param_tag(tag: &DocTag) -> Option<ParsedParamTag> {
+        if tag.tag != "param" {
+            return None;
+        }
+
+        let (type_annotation, rest) = Self::split_tag_type(&tag.value);
+        let (raw_name, rest) = Self::split_tag_value(rest);
+        let raw_name = raw_name?;
+        let (name, optional, default_value) = Self::parse_param_name(&raw_name);
+
+        Some(ParsedParamTag {
+            name,
+            type_annotation,
+            optional,
+            default_value,
+            description: Self::clean_tag_description(rest),
+        })
+    }
+
+    fn parse_return_tag(tag: &DocTag) -> Option<ParsedReturnTag> {
+        if tag.tag != "returns" && tag.tag != "return" {
+            return None;
+        }
+
+        let (type_annotation, rest) = Self::split_tag_type(&tag.value);
+
+        Some(ParsedReturnTag { type_annotation, description: Self::clean_tag_description(rest) })
+    }
+
+    fn extract_examples(tags: &[DocTag]) -> Vec<String> {
+        tags.iter()
+            .filter(|tag| tag.tag == "example")
+            .filter_map(|tag| {
+                let value = tag.value.trim();
+                (!value.is_empty()).then(|| value.to_string())
+            })
+            .collect()
+    }
+
+    fn extract_return_description(tags: &[DocTag]) -> Option<String> {
+        tags.iter().find_map(Self::parse_return_tag).and_then(|tag| tag.description)
     }
 
     fn format_type_parameter_declaration<T>(
@@ -618,39 +742,83 @@ impl<'a> DocVisitor<'a> {
         params: &oxc_ast::ast::FormalParameters<'a>,
         tags: &[DocTag],
     ) -> Vec<ParamDoc> {
+        let parsed_tags = tags.iter().filter_map(Self::parse_param_tag).collect::<Vec<_>>();
+
         params
             .items
             .iter()
             .map(|param| {
-                let name = match &param.pattern.kind {
-                    BindingPatternKind::BindingIdentifier(id) => id.name.to_string(),
-                    _ => "param".to_string(),
-                };
+                let name = Self::binding_pattern_name(&param.pattern).unwrap_or_else(|| {
+                    parsed_tags
+                        .iter()
+                        .find(|tag| {
+                            !params.items.iter().any(|item| {
+                                Self::binding_pattern_name(&item.pattern).as_deref()
+                                    == Some(tag.name.as_str())
+                            })
+                        })
+                        .map_or_else(|| "param".to_string(), |tag| tag.name.clone())
+                });
 
                 let type_annotation = param
                     .pattern
                     .type_annotation
                     .as_ref()
-                    .map(|t| self.format_ts_type(&t.type_annotation));
+                    .map(|t| self.format_ts_type(&t.type_annotation))
+                    .or_else(|| self.assignment_pattern_type_annotation(&param.pattern));
 
-                let description =
-                    tags.iter().find(|t| t.tag == "param" && t.value.starts_with(&name)).map(|t| {
-                        t.value
-                            .trim_start_matches(&name)
-                            .trim_start_matches(" - ")
-                            .trim()
-                            .to_string()
-                    });
+                let default_value = self.assignment_pattern_default_value(&param.pattern);
+                let tag = parsed_tags.iter().find(|tag| tag.name == name);
 
                 ParamDoc {
                     name,
-                    type_annotation,
-                    optional: param.pattern.optional,
-                    default_value: None,
-                    description,
+                    type_annotation: tag
+                        .and_then(|tag| tag.type_annotation.clone())
+                        .or(type_annotation),
+                    optional: param.pattern.optional
+                        || default_value.is_some()
+                        || tag.is_some_and(|tag| tag.optional),
+                    default_value: tag.and_then(|tag| tag.default_value.clone()).or(default_value),
+                    description: tag.and_then(|tag| tag.description.clone()),
                 }
             })
             .collect()
+    }
+
+    fn binding_pattern_name(pattern: &oxc_ast::ast::BindingPattern<'a>) -> Option<String> {
+        match &pattern.kind {
+            BindingPatternKind::BindingIdentifier(id) => Some(id.name.to_string()),
+            BindingPatternKind::AssignmentPattern(assign) => {
+                Self::binding_pattern_name(&assign.left)
+            }
+            _ => None,
+        }
+    }
+
+    fn assignment_pattern_default_value(
+        &self,
+        pattern: &oxc_ast::ast::BindingPattern<'a>,
+    ) -> Option<String> {
+        match &pattern.kind {
+            BindingPatternKind::AssignmentPattern(assign) => {
+                Some(self.slice(assign.right.span().start, assign.right.span().end))
+            }
+            _ => None,
+        }
+    }
+
+    fn assignment_pattern_type_annotation(
+        &self,
+        pattern: &oxc_ast::ast::BindingPattern<'a>,
+    ) -> Option<String> {
+        match &pattern.kind {
+            BindingPatternKind::AssignmentPattern(assign) => assign
+                .left
+                .type_annotation
+                .as_ref()
+                .map(|t| self.format_ts_type(&t.type_annotation)),
+            _ => None,
+        }
     }
 
     /// Extract parameters from a function.
@@ -664,7 +832,7 @@ impl<'a> DocVisitor<'a> {
         tags: &[DocTag],
     ) -> Option<String> {
         return_type.map(|r| self.format_ts_type(&r.type_annotation)).or_else(|| {
-            tags.iter().find(|t| t.tag == "returns" || t.tag == "return").map(|t| t.value.clone())
+            tags.iter().find_map(Self::parse_return_tag).and_then(|tag| tag.type_annotation)
         })
     }
 
@@ -704,6 +872,8 @@ impl<'a> DocVisitor<'a> {
             )),
             params: self.extract_params(func, &tags),
             return_type: self.extract_return_type(func, &tags),
+            return_description: Self::extract_return_description(&tags),
+            examples: Self::extract_examples(&tags),
             children: Vec::new(),
             tags,
         })
@@ -771,6 +941,8 @@ impl<'a> DocVisitor<'a> {
                         )),
                         params: self.extract_params(&method.value, &method_tags),
                         return_type: self.extract_return_type(&method.value, &method_tags),
+                        return_description: Self::extract_return_description(&method_tags),
+                        examples: Self::extract_examples(&method_tags),
                         children: Vec::new(),
                         tags: method_tags,
                     });
@@ -810,6 +982,8 @@ impl<'a> DocVisitor<'a> {
                         signature: type_annotation,
                         params: Vec::new(),
                         return_type: None,
+                        return_description: None,
+                        examples: Self::extract_examples(&prop_tags),
                         children: Vec::new(),
                         tags: prop_tags,
                     });
@@ -831,6 +1005,8 @@ impl<'a> DocVisitor<'a> {
             signature: Some(self.format_class_signature(class, name, exported)),
             params: Vec::new(),
             return_type: None,
+            return_description: None,
+            examples: Self::extract_examples(&tags),
             children,
             tags,
         })
@@ -947,6 +1123,8 @@ impl<'a> DocVisitor<'a> {
                                         arrow.return_type.as_ref(),
                                         &tags,
                                     ),
+                                    return_description: Self::extract_return_description(&tags),
+                                    examples: Self::extract_examples(&tags),
                                     children: Vec::new(),
                                     tags: tags.clone(),
                                 });
@@ -971,6 +1149,8 @@ impl<'a> DocVisitor<'a> {
                                     )),
                                     params: self.extract_params(func_expr, &tags),
                                     return_type: self.extract_return_type(func_expr, &tags),
+                                    return_description: Self::extract_return_description(&tags),
+                                    examples: Self::extract_examples(&tags),
                                     children: Vec::new(),
                                     tags: tags.clone(),
                                 });
@@ -1002,6 +1182,8 @@ impl<'a> DocVisitor<'a> {
                     signature: Some(self.format_type_alias_signature(type_alias, exported)),
                     params: Vec::new(),
                     return_type: None,
+                    return_description: None,
+                    examples: Self::extract_examples(&tags),
                     children: Vec::new(),
                     tags,
                 });
@@ -1057,6 +1239,8 @@ impl<'a> DocVisitor<'a> {
                                 signature: type_annotation,
                                 params: Vec::new(),
                                 return_type: None,
+                                return_description: None,
+                                examples: Self::extract_examples(&prop_tags),
                                 children: Vec::new(),
                                 tags: prop_tags,
                             });
@@ -1103,6 +1287,8 @@ impl<'a> DocVisitor<'a> {
                                     method.return_type.as_ref(),
                                     &method_tags,
                                 ),
+                                return_description: Self::extract_return_description(&method_tags),
+                                examples: Self::extract_examples(&method_tags),
                                 children: Vec::new(),
                                 tags: method_tags,
                             });
@@ -1124,6 +1310,8 @@ impl<'a> DocVisitor<'a> {
                     signature: Some(self.format_interface_signature(interface, exported)),
                     params: Vec::new(),
                     return_type: None,
+                    return_description: None,
+                    examples: Self::extract_examples(&tags),
                     children,
                     tags,
                 });
@@ -1160,6 +1348,8 @@ impl<'a> DocVisitor<'a> {
                             signature: None,
                             params: Vec::new(),
                             return_type: None,
+                            return_description: None,
+                            examples: Vec::new(),
                             children: Vec::new(),
                             tags: Vec::new(),
                         }
@@ -1179,6 +1369,8 @@ impl<'a> DocVisitor<'a> {
                     signature: None,
                     params: Vec::new(),
                     return_type: None,
+                    return_description: None,
+                    examples: Self::extract_examples(&tags),
                     children,
                     tags,
                 });
@@ -1238,5 +1430,48 @@ export interface User {
         assert_eq!(items[0].name, "User");
         assert_eq!(items[0].kind, DocItemKind::Interface);
         assert_eq!(items[0].children.len(), 2);
+    }
+
+    #[test]
+    fn test_extract_structured_jsdoc_metadata() {
+        let source = r#"
+/**
+ * Formats a value.
+ *
+ * @param {number} value - Input value.
+ * @param {"short" | "long"} [mode="short"] - Format mode.
+ * @returns {string} Rendered label.
+ * @example
+ * ```ts
+ * const snippet = "@param not-a-real-tag";
+ * formatValue(1, "short");
+ * ```
+ * @since 2.4.0
+ */
+export function formatValue(value: number, mode: "short" | "long" = "short"): string {
+    return mode === "short" ? String(value) : `value: ${value}`;
+}
+"#;
+
+        let extractor = DocExtractor::new();
+        let items = extractor.extract_source(source, "test.ts", SourceType::ts()).unwrap();
+        let item = &items[0];
+
+        assert_eq!(item.doc.as_deref(), Some("Formats a value."));
+        assert_eq!(item.return_type.as_deref(), Some("string"));
+        assert_eq!(item.return_description.as_deref(), Some("Rendered label."));
+        assert_eq!(item.examples.len(), 1);
+        assert!(item.examples[0].contains("@param not-a-real-tag"));
+        assert!(item.tags.iter().any(|tag| tag.tag == "since" && tag.value == "2.4.0"));
+
+        assert_eq!(item.params.len(), 2);
+        assert_eq!(item.params[0].name, "value");
+        assert_eq!(item.params[0].type_annotation.as_deref(), Some("number"));
+        assert_eq!(item.params[0].description.as_deref(), Some("Input value."));
+        assert_eq!(item.params[1].name, "mode");
+        assert_eq!(item.params[1].type_annotation.as_deref(), Some(r#""short" | "long""#));
+        assert_eq!(item.params[1].default_value.as_deref(), Some(r#""short""#));
+        assert_eq!(item.params[1].description.as_deref(), Some("Format mode."));
+        assert!(item.params[1].optional);
     }
 }
