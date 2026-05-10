@@ -4,12 +4,20 @@
  */
 
 import { spawnSync } from "node:child_process";
+import { writeFileSync } from "node:fs";
 import { performance } from "node:perf_hooks";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const BUN_BENCHMARK_SCRIPT = join(__dirname, "parse-benchmark-bun.mjs");
+const options = parseOptions(process.argv.slice(2));
+
+/**
+ * @typedef {Object} BenchmarkOptions
+ * @property {string | null} jsonPath
+ * @property {number} runs
+ */
 
 // Sample markdown content for benchmarking
 const sampleMarkdown = `
@@ -57,7 +65,61 @@ const sizes = {
 /**
  * Benchmark a sync function
  */
-function benchmark(name, fn, input, iterations = 100) {
+function benchmark(name, fn, input, iterations = 100, runs = 1) {
+  const samples = [];
+
+  for (let run = 0; run < runs; run++) {
+    samples.push(benchmarkOnce(fn, input, iterations));
+  }
+
+  return {
+    name,
+    ...medianSample(samples),
+    samples,
+  };
+}
+
+/**
+ * @param {string[]} args
+ * @returns {BenchmarkOptions}
+ */
+function parseOptions(args) {
+  /** @type {BenchmarkOptions} */
+  const parsed = {
+    jsonPath: null,
+    runs: 1,
+  };
+
+  for (let index = 0; index < args.length; index++) {
+    const arg = args[index];
+    if (arg === "--json") {
+      parsed.jsonPath = readOptionValue(args, ++index, "--json");
+      continue;
+    }
+    if (arg.startsWith("--json=")) {
+      parsed.jsonPath = readInlineOptionValue(arg, "--json");
+      continue;
+    }
+    if (arg === "--runs") {
+      parsed.runs = readPositiveIntegerOption(args, ++index, "--runs");
+      continue;
+    }
+    if (arg.startsWith("--runs=")) {
+      parsed.runs = readPositiveIntegerInlineOption(arg, "--runs");
+      continue;
+    }
+    if (arg === "--help" || arg === "-h") {
+      printUsage();
+      process.exit(0);
+    }
+
+    throw new Error(`Unknown argument: ${arg}`);
+  }
+
+  return parsed;
+}
+
+function benchmarkOnce(fn, input, iterations) {
   // Warmup
   for (let i = 0; i < 5; i++) {
     fn(input);
@@ -73,7 +135,6 @@ function benchmark(name, fn, input, iterations = 100) {
   const opsPerSec = 1000 / avgMs;
 
   return {
-    name,
     opsPerSec,
     avgMs,
     throughputMBs: (input.length / 1024 / 1024) * opsPerSec,
@@ -81,9 +142,94 @@ function benchmark(name, fn, input, iterations = 100) {
 }
 
 /**
+ * @param {string[]} args
+ * @param {number} index
+ * @param {string} optionName
+ * @returns {string}
+ */
+function readOptionValue(args, index, optionName) {
+  const value = args[index];
+  if (!value || value.startsWith("--")) {
+    throw new Error(`${optionName} requires a file path`);
+  }
+
+  return value;
+}
+
+/**
+ * @param {string[]} args
+ * @param {number} index
+ * @param {string} optionName
+ * @returns {number}
+ */
+function readPositiveIntegerOption(args, index, optionName) {
+  return parsePositiveInteger(readOptionValue(args, index, optionName), optionName);
+}
+
+/**
+ * @param {string} arg
+ * @param {string} optionName
+ * @returns {string}
+ */
+function readInlineOptionValue(arg, optionName) {
+  const value = arg.slice(`${optionName}=`.length);
+  if (!value) {
+    throw new Error(`${optionName} requires a file path`);
+  }
+
+  return value;
+}
+
+/**
+ * @param {string} arg
+ * @param {string} optionName
+ * @returns {number}
+ */
+function readPositiveIntegerInlineOption(arg, optionName) {
+  return parsePositiveInteger(readInlineOptionValue(arg, optionName), optionName);
+}
+
+function parsePositiveInteger(value, optionName) {
+  const parsed = Number.parseInt(value, 10);
+  if (!Number.isSafeInteger(parsed) || parsed < 1 || String(parsed) !== value) {
+    throw new Error(`${optionName} requires a positive integer`);
+  }
+
+  return parsed;
+}
+
+function medianSample(samples) {
+  const sorted = [...samples].sort((a, b) => a.opsPerSec - b.opsPerSec);
+  return sorted[Math.floor(sorted.length / 2)];
+}
+
+function printUsage() {
+  console.log(`Usage: node parse-benchmark.mjs [--json <path>] [--runs <count>]
+
+Options:
+  --json <path>  Write benchmark results as JSON
+  --runs <count> Use the median result from repeated runs
+  -h, --help     Show this help message`);
+}
+
+/**
  * Benchmark an async function
  */
 async function benchmarkAsync(name, fn, input, iterations = 100) {
+  const samples = [];
+
+  for (let run = 0; run < options.runs; run++) {
+    samples.push(await benchmarkAsyncOnce(fn, input, iterations));
+  }
+
+  return {
+    name,
+    ...medianSample(samples),
+    samples,
+  };
+}
+
+async function benchmarkAsyncOnce(fn, input, iterations) {
   // Warmup
   for (let i = 0; i < 5; i++) {
     await fn(input);
@@ -99,7 +245,6 @@ async function benchmarkAsync(name, fn, input, iterations = 100) {
   const opsPerSec = 1000 / avgMs;
 
   return {
-    name,
     opsPerSec,
     avgMs,
     throughputMBs: (input.length / 1024 / 1024) * opsPerSec,
@@ -182,6 +327,16 @@ function loadBunMarkdownBenchmarks() {
 async function runBenchmarks() {
   console.log("Parse/Render Speed Benchmark");
   console.log("============================\n");
+  if (options.runs > 1) {
+    console.log(`Using median of ${options.runs} runs\n`);
+  }
+
+  const report = {
+    name: "Parse/Render Speed Benchmark",
+    generatedAt: new Date().toISOString(),
+    runs: options.runs,
+    sizes: {},
+  };
 
   // Import libraries
   const { marked } = await import("marked");
@@ -270,25 +425,27 @@ async function runBenchmarks() {
     console.log(`\n## ${sizeName.toUpperCase()} (${sizeKB} KB)`);
 
     const iterations = sizeName === "large" ? 20 : sizeName === "medium" ? 50 : 100;
+    const suites = {};
 
     // Parse only benchmark
     const parseResults = [];
     for (const parser of parsers) {
       try {
-        const result = benchmark(parser.name, parser.fn, content, iterations);
+        const result = benchmark(parser.name, parser.fn, content, iterations, options.runs);
         parseResults.push(result);
       } catch {
         parseResults.push({ name: parser.name, error: true });
       }
     }
     parseResults.sort((a, b) => (b.opsPerSec || 0) - (a.opsPerSec || 0));
+    suites.parseOnly = parseResults;
     printTable("Parse Only", parseResults);
 
     // Parse + Render benchmark
     const renderResults = [];
     for (const renderer of renderers) {
       try {
-        const result = benchmark(renderer.name, renderer.fn, content, iterations);
+        const result = benchmark(renderer.name, renderer.fn, content, iterations, options.runs);
         renderResults.push(result);
       } catch {
         renderResults.push({ name: renderer.name, error: true });
@@ -298,6 +455,7 @@ async function runBenchmarks() {
       renderResults.push(bunMarkdown.render[sizeName]);
     }
     renderResults.sort((a, b) => (b.opsPerSec || 0) - (a.opsPerSec || 0));
+    suites.parseAndRender = renderResults;
     printTable("Parse + Render", renderResults);
 
     // Async benchmark (only for large)
@@ -312,11 +470,32 @@ async function runBenchmarks() {
         }
       }
       asyncResults.sort((a, b) => (b.opsPerSec || 0) - (a.opsPerSec || 0));
+      suites.parseAndRenderAsync = asyncResults;
       printTable("Parse + Render (Async/Worker Thread)", asyncResults);
     }
+
+    report.sizes[sizeName] = {
+      bytes: content.length,
+      sizeKB: Number(sizeKB),
+      iterations,
+      runs: options.runs,
+      suites,
+    };
   }
 
   console.log("\n\n*Higher ops/sec and throughput = better.*");
+
+  return report;
 }
 
-runBenchmarks().catch(console.error);
+runBenchmarks()
+  .then((report) => {
+    if (options.jsonPath) {
+      writeFileSync(options.jsonPath, `${JSON.stringify(report, null, 2)}\n`);
+      console.log(`\nWrote benchmark JSON to ${options.jsonPath}`);
+    }
+  })
+  .catch((error) => {
+    console.error(error);
+    process.exitCode = 1;
+  });
