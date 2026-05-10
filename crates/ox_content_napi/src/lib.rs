@@ -106,6 +106,8 @@ pub struct JsSourceDocItem {
     pub signature: Option<String>,
     pub params: Vec<JsSourceDocParam>,
     pub return_type: Option<String>,
+    pub return_description: Option<String>,
+    pub examples: Vec<String>,
     pub tags: Vec<JsSourceDocTag>,
 }
 
@@ -289,6 +291,8 @@ fn map_doc_item(item: DocItem) -> JsSourceDocItem {
         signature: item.signature,
         params: item.params.into_iter().map(map_param_doc).collect(),
         return_type: item.return_type,
+        return_description: item.return_description,
+        examples: item.examples,
         tags: item.tags.into_iter().map(map_doc_tag).collect(),
     }
 }

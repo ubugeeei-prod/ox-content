@@ -113,6 +113,9 @@ oxc_parser = "0.44"
 oxc_ast = "0.44"
 oxc_span = "0.44"
 
+# JSDoc parser
+ox_jsdoc_binary = { path = "crates/ox_jsdoc_binary" }
+
 # Testing
 criterion = "0.5"
 insta = "1"

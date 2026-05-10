@@ -1,0 +1,15 @@
+[package]
+name = "ox_jsdoc_binary"
+version = "0.0.0"
+edition = "2024"
+rust-version = "1.92.0"
+license = "MIT"
+publish = false
+description = "Binary AST format and lazy decoder for ox_jsdoc (parser-integrated, approach c-1)"
+
+[dependencies]
+memchr = "2"
+oxc_allocator = "=0.123.0"
+oxc_span = "=0.123.0"
+rustc-hash = "2"
+smallvec = { version = "1.15.1", features = ["union"] }

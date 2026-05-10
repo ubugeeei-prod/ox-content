@@ -1,5 +1,8 @@
 //! Documentation extraction from source code using OXC parser.
 
+use ox_jsdoc_binary::decoder::nodes::comment_ast::LazyJsdocTag;
+use ox_jsdoc_binary::decoder::LazySourceFile;
+use ox_jsdoc_binary::parser::{parse_to_bytes, ParseOptions};
 use oxc_allocator::Allocator;
 use oxc_ast::ast::{
     BindingPatternKind, Class, Comment, Declaration, ExportDefaultDeclarationKind, Expression,
@@ -59,6 +62,10 @@ pub struct DocItem {
     pub params: Vec<ParamDoc>,
     /// Return type (for functions/methods).
     pub return_type: Option<String>,
+    /// Return description from JSDoc @returns tag.
+    pub return_description: Option<String>,
+    /// Code examples from JSDoc @example tags.
+    pub examples: Vec<String>,
     /// Child items (for classes, modules, etc.).
     pub children: Vec<DocItem>,
     /// JSDoc tags.
@@ -87,6 +94,50 @@ pub struct DocTag {
     pub tag: String,
     /// Tag value.
     pub value: String,
+}
+
+#[derive(Debug, Clone)]
+struct ParsedParamTag {
+    name: String,
+    type_annotation: Option<String>,
+    optional: bool,
+    default_value: Option<String>,
+    description: Option<String>,
+}
+
+#[derive(Debug, Clone)]
+struct ParsedReturnTag {
+    type_annotation: Option<String>,
+    description: Option<String>,
+}
+
+#[derive(Debug, Clone)]
+struct ParsedJsdoc {
+    raw: String,
+    doc: String,
+    tags: Vec<DocTag>,
+    param_tags: Vec<ParsedParamTag>,
+    return_tag: Option<ParsedReturnTag>,
+    examples: Vec<String>,
+}
+
+#[derive(Debug, Clone)]
+struct ParsedJsdocBody {
+    doc: String,
+    tags: Vec<DocTag>,
+    param_tags: Vec<ParsedParamTag>,
+    return_tag: Option<ParsedReturnTag>,
+    examples: Vec<String>,
+}
+
+impl ParsedJsdoc {
+    fn doc_option(&self) -> Option<String> {
+        (!self.doc.is_empty()).then(|| self.doc.clone())
+    }
+
+    fn return_description(&self) -> Option<String> {
+        self.return_tag.as_ref().and_then(|tag| tag.description.clone())
+    }
 }
 
 /// Kind of documentation item.
@@ -256,64 +307,97 @@ impl<'a> DocVisitor<'a> {
         (start_line, end_line)
     }
 
-    fn extract_jsdoc(&self, attached_to: u32) -> Option<(String, String, Vec<DocTag>)> {
+    fn extract_jsdoc(&self, attached_to: u32) -> Option<ParsedJsdoc> {
         let comment =
             self.comments.iter().rev().find(|comment| {
                 comment.attached_to == attached_to && comment.is_jsdoc(self.source)
             })?;
 
+        let full_raw = comment.span.source_text(self.source);
         let mut raw = comment.content_span().source_text(self.source).to_string();
         if raw.starts_with('*') {
             raw.remove(0);
         }
         let raw = raw.trim_matches('\n').to_string();
-        let (doc, tags) = Self::parse_jsdoc(&raw);
-        Some((raw, doc, tags))
+
+        let body = Self::parse_jsdoc(full_raw)?;
+
+        Some(ParsedJsdoc {
+            raw,
+            doc: body.doc,
+            tags: body.tags,
+            param_tags: body.param_tags,
+            return_tag: body.return_tag,
+            examples: body.examples,
+        })
     }
 
-    /// Parse JSDoc comment into description and tags.
-    fn parse_jsdoc(comment: &str) -> (String, Vec<DocTag>) {
-        let mut description_lines = Vec::new();
+    /// Parse JSDoc comment into description and tags with ox_jsdoc_binary.
+    fn parse_jsdoc(comment: &str) -> Option<ParsedJsdocBody> {
+        let result = parse_to_bytes(
+            comment,
+            ParseOptions { compat_mode: true, fence_aware: true, ..ParseOptions::default() },
+        );
+        let source_file = LazySourceFile::new(&result.binary_bytes).ok()?;
+        let root = source_file.asts().next().flatten()?;
+
+        let doc = root.description().unwrap_or_default().trim().to_string();
         let mut tags = Vec::new();
-        let mut current_tag: Option<(String, Vec<String>)> = None;
+        let mut param_tags = Vec::new();
+        let mut return_tag = None;
+        let mut examples = Vec::new();
 
-        let lines: Vec<String> = comment
-            .lines()
-            .map(|line| {
-                let trimmed = line.trim_start();
-                let trimmed = trimmed.strip_prefix('*').unwrap_or(trimmed);
-                trimmed.strip_prefix(' ').unwrap_or(trimmed).trim_end().to_string()
-            })
-            .collect();
+        for tag in root.tags() {
+            let tag_name = tag.tag().value().to_string();
+            let value = tag.raw_body().unwrap_or_default().trim().to_string();
 
-        for line in lines {
-            let trimmed = line.trim_start();
-            if let Some(without_at) = trimmed.strip_prefix('@') {
-                // Save previous tag if any
-                if let Some((tag, value_lines)) = current_tag.take() {
-                    tags.push(DocTag { tag, value: value_lines.join("\n").trim().to_string() });
-                }
-
-                let split_at = without_at
-                    .char_indices()
-                    .find_map(|(index, ch)| ch.is_whitespace().then_some(index))
-                    .unwrap_or(without_at.len());
-                let tag_name = without_at[..split_at].to_string();
-                let tag_value = without_at[split_at..].trim_start().to_string();
-                current_tag = Some((tag_name, vec![tag_value]));
-            } else if let Some((_, ref mut value_lines)) = current_tag {
-                value_lines.push(line);
-            } else {
-                description_lines.push(line);
+            if let Some(param_tag) = Self::parse_param_tag(tag) {
+                param_tags.push(param_tag);
             }
+            if return_tag.is_none() {
+                return_tag = Self::parse_return_tag(tag);
+            }
+            if tag_name == "example" {
+                let example = tag
+                    .description()
+                    .or_else(|| tag.raw_body())
+                    .map(str::trim)
+                    .filter(|value| !value.is_empty())
+                    .map(str::to_string);
+                if let Some(example) = example {
+                    examples.push(example);
+                }
+            }
+
+            tags.push(DocTag { tag: tag_name, value });
         }
 
-        // Save last tag if any
-        if let Some((tag, value_lines)) = current_tag {
-            tags.push(DocTag { tag, value: value_lines.join("\n").trim().to_string() });
+        Some(ParsedJsdocBody { doc, tags, param_tags, return_tag, examples })
+    }
+
+    fn parse_param_tag(tag: LazyJsdocTag<'_>) -> Option<ParsedParamTag> {
+        if tag.tag().value() != "param" {
+            return None;
         }
 
-        (description_lines.join("\n").trim().to_string(), tags)
+        Some(ParsedParamTag {
+            name: tag.name()?.raw().trim_start_matches("...").to_string(),
+            type_annotation: tag.raw_type().map(|raw_type| raw_type.raw().to_string()),
+            optional: tag.optional(),
+            default_value: tag.default_value().map(str::to_string),
+            description: tag.description().map(str::to_string),
+        })
+    }
+
+    fn parse_return_tag(tag: LazyJsdocTag<'_>) -> Option<ParsedReturnTag> {
+        if tag.tag().value() != "returns" && tag.tag().value() != "return" {
+            return None;
+        }
+
+        Some(ParsedReturnTag {
+            type_annotation: tag.raw_type().map(|raw_type| raw_type.raw().to_string()),
+            description: tag.description().map(str::to_string),
+        })
     }
 
     fn format_type_parameter_declaration<T>(
@@ -616,61 +700,107 @@ impl<'a> DocVisitor<'a> {
     fn extract_params_from_formals(
         &self,
         params: &oxc_ast::ast::FormalParameters<'a>,
-        tags: &[DocTag],
+        parsed_tags: &[ParsedParamTag],
     ) -> Vec<ParamDoc> {
         params
             .items
             .iter()
             .map(|param| {
-                let name = match &param.pattern.kind {
-                    BindingPatternKind::BindingIdentifier(id) => id.name.to_string(),
-                    _ => "param".to_string(),
-                };
+                let name = Self::binding_pattern_name(&param.pattern).unwrap_or_else(|| {
+                    parsed_tags
+                        .iter()
+                        .find(|tag| {
+                            !params.items.iter().any(|item| {
+                                Self::binding_pattern_name(&item.pattern).as_deref()
+                                    == Some(tag.name.as_str())
+                            })
+                        })
+                        .map_or_else(|| "param".to_string(), |tag| tag.name.clone())
+                });
 
                 let type_annotation = param
                     .pattern
                     .type_annotation
                     .as_ref()
-                    .map(|t| self.format_ts_type(&t.type_annotation));
+                    .map(|t| self.format_ts_type(&t.type_annotation))
+                    .or_else(|| self.assignment_pattern_type_annotation(&param.pattern));
 
-                let description =
-                    tags.iter().find(|t| t.tag == "param" && t.value.starts_with(&name)).map(|t| {
-                        t.value
-                            .trim_start_matches(&name)
-                            .trim_start_matches(" - ")
-                            .trim()
-                            .to_string()
-                    });
+                let default_value = self.assignment_pattern_default_value(&param.pattern);
+                let tag = parsed_tags.iter().find(|tag| tag.name == name);
 
                 ParamDoc {
                     name,
-                    type_annotation,
-                    optional: param.pattern.optional,
-                    default_value: None,
-                    description,
+                    type_annotation: tag
+                        .and_then(|tag| tag.type_annotation.clone())
+                        .or(type_annotation),
+                    optional: param.pattern.optional
+                        || default_value.is_some()
+                        || tag.is_some_and(|tag| tag.optional),
+                    default_value: tag.and_then(|tag| tag.default_value.clone()).or(default_value),
+                    description: tag.and_then(|tag| tag.description.clone()),
                 }
             })
             .collect()
     }
 
+    fn binding_pattern_name(pattern: &oxc_ast::ast::BindingPattern<'a>) -> Option<String> {
+        match &pattern.kind {
+            BindingPatternKind::BindingIdentifier(id) => Some(id.name.to_string()),
+            BindingPatternKind::AssignmentPattern(assign) => {
+                Self::binding_pattern_name(&assign.left)
+            }
+            _ => None,
+        }
+    }
+
+    fn assignment_pattern_default_value(
+        &self,
+        pattern: &oxc_ast::ast::BindingPattern<'a>,
+    ) -> Option<String> {
+        match &pattern.kind {
+            BindingPatternKind::AssignmentPattern(assign) => {
+                Some(self.slice(assign.right.span().start, assign.right.span().end))
+            }
+            _ => None,
+        }
+    }
+
+    fn assignment_pattern_type_annotation(
+        &self,
+        pattern: &oxc_ast::ast::BindingPattern<'a>,
+    ) -> Option<String> {
+        match &pattern.kind {
+            BindingPatternKind::AssignmentPattern(assign) => assign
+                .left
+                .type_annotation
+                .as_ref()
+                .map(|t| self.format_ts_type(&t.type_annotation)),
+            _ => None,
+        }
+    }
+
     /// Extract parameters from a function.
-    fn extract_params(&self, func: &Function, tags: &[DocTag]) -> Vec<ParamDoc> {
-        self.extract_params_from_formals(&func.params, tags)
+    fn extract_params(&self, func: &Function, param_tags: &[ParsedParamTag]) -> Vec<ParamDoc> {
+        self.extract_params_from_formals(&func.params, param_tags)
     }
 
     fn extract_return_type_from_annotation(
         &self,
         return_type: Option<&oxc_allocator::Box<'a, oxc_ast::ast::TSTypeAnnotation<'a>>>,
-        tags: &[DocTag],
+        return_tag: Option<&ParsedReturnTag>,
     ) -> Option<String> {
-        return_type.map(|r| self.format_ts_type(&r.type_annotation)).or_else(|| {
-            tags.iter().find(|t| t.tag == "returns" || t.tag == "return").map(|t| t.value.clone())
-        })
+        return_type
+            .map(|r| self.format_ts_type(&r.type_annotation))
+            .or_else(|| return_tag.and_then(|tag| tag.type_annotation.clone()))
     }
 
     /// Extract return type from tags.
-    fn extract_return_type(&self, func: &Function, tags: &[DocTag]) -> Option<String> {
-        self.extract_return_type_from_annotation(func.return_type.as_ref(), tags)
+    fn extract_return_type(
+        &self,
+        func: &Function,
+        return_tag: Option<&ParsedReturnTag>,
+    ) -> Option<String> {
+        self.extract_return_type_from_annotation(func.return_type.as_ref(), return_tag)
     }
 
     /// Create a DocItem from a function.
@@ -681,31 +811,36 @@ impl<'a> DocVisitor<'a> {
         attached_to: u32,
     ) -> Option<DocItem> {
         let name = func.id.as_ref()?.name.to_string();
-        let (jsdoc, doc, tags) = self.extract_jsdoc(attached_to)?;
-        if !self.include_private && Self::has_private_tag(&tags) {
+        let jsdoc = self.extract_jsdoc(attached_to)?;
+        if !self.include_private && Self::has_private_tag(&jsdoc.tags) {
             return None;
         }
         let (line, end_line) = self.span_lines(attached_to, func.span.end);
+        let params = self.extract_params(func, &jsdoc.param_tags);
+        let return_type = self.extract_return_type(func, jsdoc.return_tag.as_ref());
+        let return_description = jsdoc.return_description();
 
         Some(DocItem {
             name,
             kind: DocItemKind::Function,
-            doc: if doc.is_empty() { None } else { Some(doc) },
+            doc: jsdoc.doc_option(),
             source_path: self.file_path.to_string(),
             line,
             end_line,
             column: self.column_number(attached_to),
-            jsdoc: Some(jsdoc),
+            jsdoc: Some(jsdoc.raw),
             exported,
             signature: Some(self.format_function_signature(
                 func,
                 func.id.as_ref()?.name.as_str(),
                 exported,
             )),
-            params: self.extract_params(func, &tags),
-            return_type: self.extract_return_type(func, &tags),
+            params,
+            return_type,
+            return_description,
+            examples: jsdoc.examples,
             children: Vec::new(),
-            tags,
+            tags: jsdoc.tags,
         })
     }
 
@@ -717,8 +852,8 @@ impl<'a> DocVisitor<'a> {
         exported: bool,
         attached_to: u32,
     ) -> Option<DocItem> {
-        let (jsdoc, doc, tags) = self.extract_jsdoc(attached_to)?;
-        if !self.include_private && Self::has_private_tag(&tags) {
+        let jsdoc = self.extract_jsdoc(attached_to)?;
+        if !self.include_private && Self::has_private_tag(&jsdoc.tags) {
             return None;
         }
         let (line, end_line) = self.span_lines(attached_to, class.span.end);
@@ -741,26 +876,28 @@ impl<'a> DocVisitor<'a> {
                         oxc_ast::ast::MethodDefinitionKind::Method => DocItemKind::Method,
                     };
 
-                    let Some((method_jsdoc, method_doc, method_tags)) =
-                        self.extract_jsdoc(method.span.start)
-                    else {
+                    let Some(method_jsdoc) = self.extract_jsdoc(method.span.start) else {
                         continue;
                     };
-                    if !self.include_private && Self::has_private_tag(&method_tags) {
+                    if !self.include_private && Self::has_private_tag(&method_jsdoc.tags) {
                         continue;
                     }
                     let (method_line, method_end_line) =
                         self.span_lines(method.span.start, method.span.end);
+                    let params = self.extract_params(&method.value, &method_jsdoc.param_tags);
+                    let return_type =
+                        self.extract_return_type(&method.value, method_jsdoc.return_tag.as_ref());
+                    let return_description = method_jsdoc.return_description();
 
                     children.push(DocItem {
                         name: method_name,
                         kind,
-                        doc: if method_doc.is_empty() { None } else { Some(method_doc) },
+                        doc: method_jsdoc.doc_option(),
                         source_path: self.file_path.to_string(),
                         line: method_line,
                         end_line: method_end_line,
                         column: self.column_number(method.span.start),
-                        jsdoc: Some(method_jsdoc),
+                        jsdoc: Some(method_jsdoc.raw),
                         exported: false,
                         signature: Some(self.format_assigned_function_signature(
                             "",
@@ -769,10 +906,12 @@ impl<'a> DocVisitor<'a> {
                             &method.value.params,
                             method.value.return_type.as_ref(),
                         )),
-                        params: self.extract_params(&method.value, &method_tags),
-                        return_type: self.extract_return_type(&method.value, &method_tags),
+                        params,
+                        return_type,
+                        return_description,
+                        examples: method_jsdoc.examples,
                         children: Vec::new(),
-                        tags: method_tags,
+                        tags: method_jsdoc.tags,
                     });
                 }
                 oxc_ast::ast::ClassElement::PropertyDefinition(prop) => {
@@ -781,12 +920,10 @@ impl<'a> DocVisitor<'a> {
                         _ => continue,
                     };
 
-                    let Some((prop_jsdoc, prop_doc, prop_tags)) =
-                        self.extract_jsdoc(prop.span.start)
-                    else {
+                    let Some(prop_jsdoc) = self.extract_jsdoc(prop.span.start) else {
                         continue;
                     };
-                    if !self.include_private && Self::has_private_tag(&prop_tags) {
+                    if !self.include_private && Self::has_private_tag(&prop_jsdoc.tags) {
                         continue;
                     }
                     let (prop_line, prop_end_line) =
@@ -800,18 +937,20 @@ impl<'a> DocVisitor<'a> {
                     children.push(DocItem {
                         name: prop_name,
                         kind: DocItemKind::Property,
-                        doc: if prop_doc.is_empty() { None } else { Some(prop_doc) },
+                        doc: prop_jsdoc.doc_option(),
                         source_path: self.file_path.to_string(),
                         line: prop_line,
                         end_line: prop_end_line,
                         column: self.column_number(prop.span.start),
-                        jsdoc: Some(prop_jsdoc),
+                        jsdoc: Some(prop_jsdoc.raw),
                         exported: false,
                         signature: type_annotation,
                         params: Vec::new(),
                         return_type: None,
+                        return_description: None,
+                        examples: prop_jsdoc.examples,
                         children: Vec::new(),
-                        tags: prop_tags,
+                        tags: prop_jsdoc.tags,
                     });
                 }
                 _ => {}
@@ -821,18 +960,20 @@ impl<'a> DocVisitor<'a> {
         Some(DocItem {
             name: name.to_string(),
             kind: DocItemKind::Class,
-            doc: if doc.is_empty() { None } else { Some(doc) },
+            doc: jsdoc.doc_option(),
             source_path: self.file_path.to_string(),
             line,
             end_line,
             column: self.column_number(attached_to),
-            jsdoc: Some(jsdoc),
+            jsdoc: Some(jsdoc.raw),
             exported,
             signature: Some(self.format_class_signature(class, name, exported)),
             params: Vec::new(),
             return_type: None,
+            return_description: None,
+            examples: jsdoc.examples,
             children,
-            tags,
+            tags: jsdoc.tags,
         })
     }
 }
@@ -907,10 +1048,10 @@ impl<'a> DocVisitor<'a> {
                 }
             }
             Declaration::VariableDeclaration(var_decl) => {
-                let Some((jsdoc, doc, tags)) = self.extract_jsdoc(attached_to) else {
+                let Some(jsdoc) = self.extract_jsdoc(attached_to) else {
                     return;
                 };
-                if !self.include_private && Self::has_private_tag(&tags) {
+                if !self.include_private && Self::has_private_tag(&jsdoc.tags) {
                     return;
                 }
                 let (line, end_line) = self.span_lines(attached_to, var_decl.span.end);
@@ -925,15 +1066,21 @@ impl<'a> DocVisitor<'a> {
 
                         match initializer {
                             Expression::ArrowFunctionExpression(arrow) => {
+                                let params = self
+                                    .extract_params_from_formals(&arrow.params, &jsdoc.param_tags);
+                                let return_type = self.extract_return_type_from_annotation(
+                                    arrow.return_type.as_ref(),
+                                    jsdoc.return_tag.as_ref(),
+                                );
                                 self.items.push(DocItem {
                                     name: name.clone(),
                                     kind: DocItemKind::Function,
-                                    doc: if doc.is_empty() { None } else { Some(doc.clone()) },
+                                    doc: jsdoc.doc_option(),
                                     source_path: self.file_path.to_string(),
                                     line,
                                     end_line,
                                     column: self.column_number(attached_to),
-                                    jsdoc: Some(jsdoc.clone()),
+                                    jsdoc: Some(jsdoc.raw.clone()),
                                     exported,
                                     signature: Some(self.format_assigned_function_signature(
                                         &name,
@@ -942,25 +1089,27 @@ impl<'a> DocVisitor<'a> {
                                         &arrow.params,
                                         arrow.return_type.as_ref(),
                                     )),
-                                    params: self.extract_params_from_formals(&arrow.params, &tags),
-                                    return_type: self.extract_return_type_from_annotation(
-                                        arrow.return_type.as_ref(),
-                                        &tags,
-                                    ),
+                                    params,
+                                    return_type,
+                                    return_description: jsdoc.return_description(),
+                                    examples: jsdoc.examples.clone(),
                                     children: Vec::new(),
-                                    tags: tags.clone(),
+                                    tags: jsdoc.tags.clone(),
                                 });
                             }
                             Expression::FunctionExpression(func_expr) => {
+                                let params = self.extract_params(func_expr, &jsdoc.param_tags);
+                                let return_type =
+                                    self.extract_return_type(func_expr, jsdoc.return_tag.as_ref());
                                 self.items.push(DocItem {
                                     name: name.clone(),
                                     kind: DocItemKind::Function,
-                                    doc: if doc.is_empty() { None } else { Some(doc.clone()) },
+                                    doc: jsdoc.doc_option(),
                                     source_path: self.file_path.to_string(),
                                     line,
                                     end_line,
                                     column: self.column_number(attached_to),
-                                    jsdoc: Some(jsdoc.clone()),
+                                    jsdoc: Some(jsdoc.raw.clone()),
                                     exported,
                                     signature: Some(self.format_assigned_function_signature(
                                         &name,
@@ -969,10 +1118,12 @@ impl<'a> DocVisitor<'a> {
                                         &func_expr.params,
                                         func_expr.return_type.as_ref(),
                                     )),
-                                    params: self.extract_params(func_expr, &tags),
-                                    return_type: self.extract_return_type(func_expr, &tags),
+                                    params,
+                                    return_type,
+                                    return_description: jsdoc.return_description(),
+                                    examples: jsdoc.examples.clone(),
                                     children: Vec::new(),
-                                    tags: tags.clone(),
+                                    tags: jsdoc.tags.clone(),
                                 });
                             }
                             _ => {}
@@ -981,10 +1132,10 @@ impl<'a> DocVisitor<'a> {
                 }
             }
             Declaration::TSTypeAliasDeclaration(type_alias) => {
-                let Some((jsdoc, doc, tags)) = self.extract_jsdoc(attached_to) else {
+                let Some(jsdoc) = self.extract_jsdoc(attached_to) else {
                     return;
                 };
-                if !self.include_private && Self::has_private_tag(&tags) {
+                if !self.include_private && Self::has_private_tag(&jsdoc.tags) {
                     return;
                 }
                 let (line, end_line) = self.span_lines(attached_to, type_alias.span.end);
@@ -992,25 +1143,27 @@ impl<'a> DocVisitor<'a> {
                 self.items.push(DocItem {
                     name: type_alias.id.name.to_string(),
                     kind: DocItemKind::Type,
-                    doc: if doc.is_empty() { None } else { Some(doc) },
+                    doc: jsdoc.doc_option(),
                     source_path: self.file_path.to_string(),
                     line,
                     end_line,
                     column: self.column_number(attached_to),
-                    jsdoc: Some(jsdoc),
+                    jsdoc: Some(jsdoc.raw),
                     exported,
                     signature: Some(self.format_type_alias_signature(type_alias, exported)),
                     params: Vec::new(),
                     return_type: None,
+                    return_description: None,
+                    examples: jsdoc.examples,
                     children: Vec::new(),
-                    tags,
+                    tags: jsdoc.tags,
                 });
             }
             Declaration::TSInterfaceDeclaration(interface) => {
-                let Some((jsdoc, doc, tags)) = self.extract_jsdoc(attached_to) else {
+                let Some(jsdoc) = self.extract_jsdoc(attached_to) else {
                     return;
                 };
-                if !self.include_private && Self::has_private_tag(&tags) {
+                if !self.include_private && Self::has_private_tag(&jsdoc.tags) {
                     return;
                 }
                 let (line, end_line) = self.span_lines(attached_to, interface.span.end);
@@ -1028,12 +1181,10 @@ impl<'a> DocVisitor<'a> {
                                 _ => continue,
                             };
 
-                            let Some((prop_jsdoc, prop_doc, prop_tags)) =
-                                self.extract_jsdoc(prop.span.start)
-                            else {
+                            let Some(prop_jsdoc) = self.extract_jsdoc(prop.span.start) else {
                                 continue;
                             };
-                            if !self.include_private && Self::has_private_tag(&prop_tags) {
+                            if !self.include_private && Self::has_private_tag(&prop_jsdoc.tags) {
                                 continue;
                             }
                             let (prop_line, prop_end_line) =
@@ -1047,18 +1198,20 @@ impl<'a> DocVisitor<'a> {
                             children.push(DocItem {
                                 name: prop_name,
                                 kind: DocItemKind::Property,
-                                doc: if prop_doc.is_empty() { None } else { Some(prop_doc) },
+                                doc: prop_jsdoc.doc_option(),
                                 source_path: self.file_path.to_string(),
                                 line: prop_line,
                                 end_line: prop_end_line,
                                 column: self.column_number(prop.span.start),
-                                jsdoc: Some(prop_jsdoc),
+                                jsdoc: Some(prop_jsdoc.raw),
                                 exported: false,
                                 signature: type_annotation,
                                 params: Vec::new(),
                                 return_type: None,
+                                return_description: None,
+                                examples: prop_jsdoc.examples,
                                 children: Vec::new(),
-                                tags: prop_tags,
+                                tags: prop_jsdoc.tags,
                             });
                         }
                         TSSignature::TSMethodSignature(method) => {
@@ -1069,26 +1222,33 @@ impl<'a> DocVisitor<'a> {
                                 _ => continue,
                             };
 
-                            let Some((method_jsdoc, method_doc, method_tags)) =
-                                self.extract_jsdoc(method.span.start)
-                            else {
+                            let Some(method_jsdoc) = self.extract_jsdoc(method.span.start) else {
                                 continue;
                             };
-                            if !self.include_private && Self::has_private_tag(&method_tags) {
+                            if !self.include_private && Self::has_private_tag(&method_jsdoc.tags) {
                                 continue;
                             }
                             let (method_line, method_end_line) =
                                 self.span_lines(method.span.start, method.span.end);
+                            let params = self.extract_params_from_formals(
+                                &method.params,
+                                &method_jsdoc.param_tags,
+                            );
+                            let return_type = self.extract_return_type_from_annotation(
+                                method.return_type.as_ref(),
+                                method_jsdoc.return_tag.as_ref(),
+                            );
+                            let return_description = method_jsdoc.return_description();
 
                             children.push(DocItem {
                                 name: method_name.clone(),
                                 kind: DocItemKind::Method,
-                                doc: if method_doc.is_empty() { None } else { Some(method_doc) },
+                                doc: method_jsdoc.doc_option(),
                                 source_path: self.file_path.to_string(),
                                 line: method_line,
                                 end_line: method_end_line,
                                 column: self.column_number(method.span.start),
-                                jsdoc: Some(method_jsdoc),
+                                jsdoc: Some(method_jsdoc.raw),
                                 exported: false,
                                 signature: Some(self.format_assigned_function_signature(
                                     &method_name,
@@ -1097,14 +1257,12 @@ impl<'a> DocVisitor<'a> {
                                     &method.params,
                                     method.return_type.as_ref(),
                                 )),
-                                params: self
-                                    .extract_params_from_formals(&method.params, &method_tags),
-                                return_type: self.extract_return_type_from_annotation(
-                                    method.return_type.as_ref(),
-                                    &method_tags,
-                                ),
+                                params,
+                                return_type,
+                                return_description,
+                                examples: method_jsdoc.examples,
                                 children: Vec::new(),
-                                tags: method_tags,
+                                tags: method_jsdoc.tags,
                             });
                         }
                         _ => {}
@@ -1114,25 +1272,27 @@ impl<'a> DocVisitor<'a> {
                 self.items.push(DocItem {
                     name: interface.id.name.to_string(),
                     kind: DocItemKind::Interface,
-                    doc: if doc.is_empty() { None } else { Some(doc) },
+                    doc: jsdoc.doc_option(),
                     source_path: self.file_path.to_string(),
                     line,
                     end_line,
                     column: self.column_number(attached_to),
-                    jsdoc: Some(jsdoc),
+                    jsdoc: Some(jsdoc.raw),
                     exported,
                     signature: Some(self.format_interface_signature(interface, exported)),
                     params: Vec::new(),
                     return_type: None,
+                    return_description: None,
+                    examples: jsdoc.examples,
                     children,
-                    tags,
+                    tags: jsdoc.tags,
                 });
             }
             Declaration::TSEnumDeclaration(enum_decl) => {
-                let Some((jsdoc, doc, tags)) = self.extract_jsdoc(attached_to) else {
+                let Some(jsdoc) = self.extract_jsdoc(attached_to) else {
                     return;
                 };
-                if !self.include_private && Self::has_private_tag(&tags) {
+                if !self.include_private && Self::has_private_tag(&jsdoc.tags) {
                     return;
                 }
                 let (line, end_line) = self.span_lines(attached_to, enum_decl.span.end);
@@ -1160,6 +1320,8 @@ impl<'a> DocVisitor<'a> {
                             signature: None,
                             params: Vec::new(),
                             return_type: None,
+                            return_description: None,
+                            examples: Vec::new(),
                             children: Vec::new(),
                             tags: Vec::new(),
                         }
@@ -1169,18 +1331,20 @@ impl<'a> DocVisitor<'a> {
                 self.items.push(DocItem {
                     name: enum_decl.id.name.to_string(),
                     kind: DocItemKind::Enum,
-                    doc: if doc.is_empty() { None } else { Some(doc) },
+                    doc: jsdoc.doc_option(),
                     source_path: self.file_path.to_string(),
                     line,
                     end_line,
                     column: self.column_number(attached_to),
-                    jsdoc: Some(jsdoc),
+                    jsdoc: Some(jsdoc.raw),
                     exported,
                     signature: None,
                     params: Vec::new(),
                     return_type: None,
+                    return_description: None,
+                    examples: jsdoc.examples,
                     children,
-                    tags,
+                    tags: jsdoc.tags,
                 });
             }
             _ => {}
@@ -1238,5 +1402,48 @@ export interface User {
         assert_eq!(items[0].name, "User");
         assert_eq!(items[0].kind, DocItemKind::Interface);
         assert_eq!(items[0].children.len(), 2);
+    }
+
+    #[test]
+    fn test_extract_structured_jsdoc_metadata() {
+        let source = r#"
+/**
+ * Formats a value.
+ *
+ * @param {number} value - Input value.
+ * @param {"short" | "long"} [mode="short"] - Format mode.
+ * @returns {string} Rendered label.
+ * @example
+ * ```ts
+ * const snippet = "@param not-a-real-tag";
+ * formatValue(1, "short");
+ * ```
+ * @since 2.4.0
+ */
+export function formatValue(value: number, mode: "short" | "long" = "short"): string {
+    return mode === "short" ? String(value) : `value: ${value}`;
+}
+"#;
+
+        let extractor = DocExtractor::new();
+        let items = extractor.extract_source(source, "test.ts", SourceType::ts()).unwrap();
+        let item = &items[0];
+
+        assert_eq!(item.doc.as_deref(), Some("Formats a value."));
+        assert_eq!(item.return_type.as_deref(), Some("string"));
+        assert_eq!(item.return_description.as_deref(), Some("Rendered label."));
+        assert_eq!(item.examples.len(), 1);
+        assert!(item.examples[0].contains("@param not-a-real-tag"));
+        assert!(item.tags.iter().any(|tag| tag.tag == "since" && tag.value == "2.4.0"));
+
+        assert_eq!(item.params.len(), 2);
+        assert_eq!(item.params[0].name, "value");
+        assert_eq!(item.params[0].type_annotation.as_deref(), Some("number"));
+        assert_eq!(item.params[0].description.as_deref(), Some("Input value."));
+        assert_eq!(item.params[1].name, "mode");
+        assert_eq!(item.params[1].type_annotation.as_deref(), Some(r#""short" | "long""#));
+        assert_eq!(item.params[1].default_value.as_deref(), Some(r#""short""#));
+        assert_eq!(item.params[1].description.as_deref(), Some("Format mode."));
+        assert!(item.params[1].optional);
     }
 }
