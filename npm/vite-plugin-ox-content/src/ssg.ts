@@ -561,6 +561,40 @@ export const DEFAULT_HTML_TEMPLATE = `<!DOCTYPE html>
       border-color: color-mix(in srgb, var(--color-primary) 38%, var(--color-border));
       background: color-mix(in srgb, var(--color-bg-alt) 68%, var(--color-primary) 6%);
     }
+    .content .ox-api-stats {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(7rem, 1fr));
+      gap: 0.55rem;
+      margin: 1rem 0 1.35rem;
+    }
+    .content .ox-api-stat {
+      min-width: 0;
+      padding: 0.7rem 0.75rem;
+      border: 1px solid color-mix(in srgb, var(--color-border) 76%, transparent);
+      border-radius: 4px;
+      background: color-mix(in srgb, var(--color-bg-alt) 72%, transparent);
+    }
+    .content .ox-api-stat strong {
+      display: block;
+      font-family: var(--font-mono);
+      font-size: 1rem;
+      line-height: 1.2;
+      color: var(--color-text);
+    }
+    .content .ox-api-stat span {
+      display: block;
+      margin-top: 0.25rem;
+      font-family: var(--font-mono);
+      font-size: 0.7rem;
+      font-weight: 600;
+      letter-spacing: 0.04em;
+      text-transform: uppercase;
+      color: var(--color-text-muted);
+    }
+    .content .ox-api-stat--warning {
+      border-color: color-mix(in srgb, #f59e0b 42%, var(--color-border));
+      background: color-mix(in srgb, var(--color-bg-alt) 78%, #f59e0b 8%);
+    }
     .content .ox-api-entry,
     .content .ox-api-module {
       margin: 0;
@@ -669,6 +703,31 @@ export const DEFAULT_HTML_TEMPLATE = `<!DOCTYPE html>
       display: flex;
       flex-direction: column;
       gap: 0.55rem;
+    }
+    .content .ox-api-entry__meta,
+    .content .ox-api-module__meta {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.35rem;
+    }
+    .content .ox-api-badge {
+      display: inline-flex;
+      align-items: center;
+      max-width: 100%;
+      padding: 0.18rem 0.42rem;
+      border: 1px solid color-mix(in srgb, var(--color-border) 78%, transparent);
+      border-radius: 4px;
+      background: color-mix(in srgb, var(--color-bg-alt) 78%, var(--color-primary) 6%);
+      color: color-mix(in srgb, var(--color-text) 74%, var(--color-text-muted));
+      font-family: var(--font-mono);
+      font-size: 0.68rem;
+      font-weight: 600;
+      line-height: 1.35;
+    }
+    .content .ox-api-badge--warning {
+      border-color: color-mix(in srgb, #f59e0b 46%, var(--color-border));
+      background: color-mix(in srgb, var(--color-bg-alt) 78%, #f59e0b 9%);
+      color: color-mix(in srgb, var(--color-text) 86%, #f59e0b);
     }
     .content .ox-api-entry__name,
     .content .ox-api-entry__signature,
@@ -817,6 +876,23 @@ export const DEFAULT_HTML_TEMPLATE = `<!DOCTYPE html>
       color: color-mix(in srgb, var(--color-text) 76%, var(--color-text-muted));
       font-size: 0.88rem;
       line-height: 1.55;
+    }
+    .content .ox-api-entry__section--signature pre {
+      margin: 0;
+      border: 1px solid var(--color-code-frame-border);
+      border-radius: 4px;
+    }
+    .content .ox-api-entry__example + .ox-api-entry__example {
+      margin-top: 0.85rem;
+    }
+    .content .ox-api-entry__example-heading {
+      margin-bottom: 0.45rem;
+      font-family: var(--font-mono);
+      font-size: 0.72rem;
+      font-weight: 700;
+      letter-spacing: 0.04em;
+      text-transform: uppercase;
+      color: var(--color-text-muted);
     }
     .content .ox-api-entry__section--examples pre {
       margin: 0;

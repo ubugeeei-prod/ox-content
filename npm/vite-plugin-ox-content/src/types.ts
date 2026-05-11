@@ -605,7 +605,7 @@ export interface DocsOptions {
 
   /**
    * Glob patterns for files to include.
-   * @default ['**\/*.ts', '**\/*.tsx']
+   * @default ['**\/*.ts', '**\/*.tsx', '**\/*.js', '**\/*.jsx', '**\/*.mts', '**\/*.mjs', '**\/*.cts', '**\/*.cjs']
    */
   include?: string[];
 
@@ -716,11 +716,25 @@ export interface ExtractedDocs {
 }
 
 /**
+ * Summary counts emitted with generated documentation data.
+ */
+export interface DocsSummary {
+  modules: number;
+  entries: number;
+  byKind: Record<string, number>;
+  params: number;
+  returns: number;
+  examples: number;
+  deprecated: number;
+}
+
+/**
  * Machine-readable payload emitted alongside generated docs.
  */
 export interface GeneratedDocsData {
   version: 1;
   generatedAt: string;
+  summary: DocsSummary;
   modules: ExtractedDocs[];
 }
 

@@ -75,6 +75,7 @@ ox_content_search = { version = "2.5.0", path = "crates/ox_content_search" }
 ox_content_ssg = { version = "2.5.0", path = "crates/ox_content_ssg" }
 ox_content_i18n = { version = "2.5.0", path = "crates/ox_content_i18n" }
 ox_content_i18n_checker = { version = "2.5.0", path = "crates/ox_content_i18n_checker" }
+ox_jsdoc = "0.0.15"
 
 # Memory allocation
 bumpalo = "3.16"

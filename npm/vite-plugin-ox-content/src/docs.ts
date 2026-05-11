@@ -56,13 +56,41 @@ import type {
   ExtractedDocs,
   DocEntry,
   ParamDoc,
+  ReturnDoc,
   GeneratedDocsData,
+  DocsSummary,
 } from "./types";
 import { generateNavMetadata, generateNavCode } from "./nav-generator";
 import { importNapiModule } from "./napi";
 
 const DOCS_MANIFEST_FILE = ".ox-content-docs-manifest.json";
 const DOCS_DATA_FILE = "docs.json";
+const DOC_KIND_ORDER: DocEntry["kind"][] = [
+  "function",
+  "class",
+  "interface",
+  "type",
+  "variable",
+  "module",
+];
+const DOC_KIND_PLURAL: Record<DocEntry["kind"], string> = {
+  function: "functions",
+  class: "classes",
+  interface: "interfaces",
+  type: "types",
+  variable: "variables",
+  module: "modules",
+};
+const DEFAULT_DOCS_INCLUDE = [
+  "**/*.ts",
+  "**/*.tsx",
+  "**/*.js",
+  "**/*.jsx",
+  "**/*.mts",
+  "**/*.mjs",
+  "**/*.cts",
+  "**/*.cjs",
+];
 
 function escapeHtml(str: string): string {
   return str
@@ -82,7 +110,11 @@ function cleanSummaryText(text: string | undefined, maxLength: number = 120): st
     return "";
   }
 
-  const collapsed = text.replace(/\s+/g, " ").trim();
+  const collapsed = text
+    .replace(/\[([^\]]+)\]\([^)]+\)/g, "$1")
+    .replace(/\[([^\]]+)\]/g, "$1")
+    .replace(/\s+/g, " ")
+    .trim();
   if (collapsed.length <= maxLength) {
     return collapsed;
   }
@@ -304,6 +336,106 @@ function renderDetailsControlsHtml(targetSelector: ".ox-api-entry" | ".ox-api-mo
 </div>`;
 }
 
+interface EntryStats {
+  entries: number;
+  byKind: Partial<Record<DocEntry["kind"], number>>;
+  params: number;
+  returns: number;
+  examples: number;
+  deprecated: number;
+}
+
+function createEmptyEntryStats(): EntryStats {
+  return {
+    entries: 0,
+    byKind: {},
+    params: 0,
+    returns: 0,
+    examples: 0,
+    deprecated: 0,
+  };
+}
+
+function summarizeEntries(entries: DocEntry[]): EntryStats {
+  const stats = createEmptyEntryStats();
+
+  for (const entry of entries) {
+    stats.entries++;
+    stats.byKind[entry.kind] = (stats.byKind[entry.kind] ?? 0) + 1;
+    stats.params += entry.params?.length ?? 0;
+    stats.returns += entry.returns ? 1 : 0;
+    stats.examples += entry.examples?.length ?? 0;
+    stats.deprecated += entry.tags?.deprecated !== undefined ? 1 : 0;
+  }
+
+  return stats;
+}
+
+function buildDocsSummary(docs: ExtractedDocs[]): DocsSummary {
+  const stats = summarizeEntries(docs.flatMap((doc) => doc.entries));
+  const byKind: Record<string, number> = {};
+
+  for (const kind of DOC_KIND_ORDER) {
+    const count = stats.byKind[kind];
+    if (count) {
+      byKind[kind] = count;
+    }
+  }
+
+  return {
+    modules: docs.length,
+    entries: stats.entries,
+    byKind,
+    params: stats.params,
+    returns: stats.returns,
+    examples: stats.examples,
+    deprecated: stats.deprecated,
+  };
+}
+
+function renderStatsHtml(stats: EntryStats, moduleCount?: number): string {
+  const items: { label: string; value: number; tone?: "warning" }[] = [];
+
+  if (moduleCount !== undefined) {
+    items.push({ label: "modules", value: moduleCount });
+  }
+
+  items.push({ label: "symbols", value: stats.entries });
+
+  for (const kind of DOC_KIND_ORDER) {
+    const count = stats.byKind[kind];
+    if (count) {
+      items.push({ label: DOC_KIND_PLURAL[kind], value: count });
+    }
+  }
+
+  if (stats.params) {
+    items.push({ label: "parameters", value: stats.params });
+  }
+  if (stats.returns) {
+    items.push({ label: "returns", value: stats.returns });
+  }
+  if (stats.examples) {
+    items.push({ label: "examples", value: stats.examples });
+  }
+  if (stats.deprecated) {
+    items.push({ label: "deprecated", value: stats.deprecated, tone: "warning" });
+  }
+
+  const renderedItems = items
+    .map(
+      (item) => `<span class="ox-api-stat${item.tone ? ` ox-api-stat--${item.tone}` : ""}">
+  <strong>${item.value}</strong>
+  <span>${escapeHtml(item.label)}</span>
+</span>`,
+    )
+    .join("\n");
+
+  return `<div class="ox-api-stats" aria-label="API reference summary">
+${renderedItems}
+</div>`;
+}
+
 function normalizeDocFilePath(filePath: string): string {
   const normalized = filePath.replace(/\\/g, "/");
   const match = normalized.match(/(?:^|\/)((?:npm|packages|crates|src)\/.+)$/);
@@ -314,6 +446,7 @@ function buildDocsData(docs: ExtractedDocs[]): GeneratedDocsData {
   return {
     version: 1,
     generatedAt: new Date().toISOString(),
+    summary: buildDocsSummary(docs),
     modules: docs.map((doc) => ({
       ...doc,
       file: normalizeDocFilePath(doc.file),
@@ -352,6 +485,120 @@ interface NapiDocItem {
   tags: NapiDocTag[];
 }
 
+function consumeJSDocType(value: string): { type?: string; rest: string } {
+  const trimmed = value.trimStart();
+  if (!trimmed.startsWith("{")) {
+    return { rest: trimmed };
+  }
+
+  let depth = 0;
+  for (let index = 0; index < trimmed.length; index++) {
+    const char = trimmed[index];
+    if (char === "{") {
+      depth++;
+    } else if (char === "}") {
+      depth--;
+      if (depth === 0) {
+        const type = trimmed.slice(1, index).trim();
+        return {
+          type: type || undefined,
+          rest: trimmed.slice(index + 1).trimStart(),
+        };
+      }
+    }
+  }
+
+  return { rest: trimmed };
+}
+
+function cleanTagDescription(value: string): string {
+  return value.trim().replace(/^-\s*/, "").trim();
+}
+
+function splitTagNameAndDescription(value: string): { name: string; description: string } {
+  const trimmed = value.trimStart();
+  if (trimmed.startsWith("[")) {
+    const closeIndex = trimmed.indexOf("]");
+    if (closeIndex >= 0) {
+      return {
+        name: trimmed.slice(0, closeIndex + 1),
+        description: trimmed.slice(closeIndex + 1).trimStart(),
+      };
+    }
+  }
+
+  const match = /^(\S+)(?:\s+([\s\S]*))?$/u.exec(trimmed);
+  return {
+    name: match?.[1] ?? "",
+    description: match?.[2] ?? "",
+  };
+}
+
+function parseParamTagValue(value: string): ParamDoc | null {
+  const { type, rest } = consumeJSDocType(value);
+  const { name: rawName, description } = splitTagNameAndDescription(rest);
+  let name = rawName.trim();
+  if (!name) {
+    return null;
+  }
+
+  let optional = false;
+  let defaultValue: string | undefined;
+  const optionalMatch = /^\[(.*)\]$/u.exec(name);
+  if (optionalMatch) {
+    optional = true;
+    const [innerName, innerDefault] = optionalMatch[1].split(/=(.*)/su);
+    name = innerName.trim();
+    defaultValue = innerDefault?.trim() || undefined;
+  }
+
+  if (!name) {
+    return null;
+  }
+
+  return {
+    name,
+    type: type || "unknown",
+    description: cleanTagDescription(description),
+    optional: optional || undefined,
+    default: defaultValue,
+  };
+}
+
+function parseReturnsTagValue(value: string): ReturnDoc {
+  const { type, rest } = consumeJSDocType(value);
+  return {
+    type: type || "unknown",
+    description: cleanTagDescription(rest),
+  };
+}
+
+function normalizeReturnType(value: string): string {
+  const parsed = parseReturnsTagValue(value);
+  return parsed.type === "unknown" ? value : parsed.type;
+}
+
+function mergeParam(params: ParamDoc[], next: ParamDoc): void {
+  const existing = params.find((param) => param.name === next.name);
+  if (!existing) {
+    params.push(next);
+    return;
+  }
+
+  if (next.type && (existing.type === "unknown" || next.type !== "unknown")) {
+    existing.type = next.type;
+  }
+  if (next.description) {
+    existing.description = next.description;
+  }
+  if (next.optional) {
+    existing.optional = true;
+  }
+  if (next.default) {
+    existing.default = next.default;
+  }
+}
+
 /**
  * Extracts JSDoc documentation from source files in specified directories.
  *
@@ -363,7 +610,7 @@ interface NapiDocItem {
  *
  * 1. **File Discovery**: Recursively walks directories, applying filters
  * 2. **File Reading**: Loads each matching file's content
- * 3. **JSDoc Extraction**: Parses JSDoc comments using regex patterns
+ * 3. **JSDoc Extraction**: Parses JSDoc comments using the native parser
  * 4. **Declaration Matching**: Pairs JSDoc comments with source declarations
  * 5. **Result Collection**: Aggregates extracted documentation by file
  *
@@ -545,36 +792,33 @@ function parseNapiDocItem(item: NapiDocItem): DocEntry | null {
         inExample = false;
       }
 
-      const tagMatch = /@(\w+)\s*(?:\{([^}]*)\})?(.*)/.exec(lineText);
+      const tagMatch = /^@(\S+)\s*([\s\S]*)$/u.exec(lineText);
       if (tagMatch) {
-        const [, tagName, tagType, tagRest] = tagMatch;
+        const [, tagName, tagValue = ""] = tagMatch;
 
         switch (tagName) {
           case "param":
-            const paramMatch = /(\w+)\s*-?\s*(.*)/.exec(tagRest.trim());
-            if (paramMatch) {
-              params.push({
-                name: paramMatch[1],
-                type: tagType || "unknown",
-                description: paramMatch[2],
-              });
+          case "arg":
+          case "argument": {
+            const param = parseParamTagValue(tagValue);
+            if (param) {
+              mergeParam(params, param);
             }
             break;
+          }
           case "returns":
           case "return":
-            returns = {
-              type: tagType || "unknown",
-              description: tagRest.trim(),
-            };
+            returns = parseReturnsTagValue(tagValue);
             break;
           case "example":
             inExample = true;
+            currentExample = tagValue.trim() ? `${tagValue.trim()}\n` : "";
             break;
           case "private":
             isPrivate = true;
             break;
           default:
-            tags[tagName] = tagRest.trim();
+            tags[tagName] = tagValue.trim();
         }
       }
     } else if (inExample) {
@@ -590,45 +834,33 @@ function parseNapiDocItem(item: NapiDocItem): DocEntry | null {
     examples.push(currentExample.trim());
   }
 
-  if (params.length === 0 && item.params.length > 0) {
-    params.push(
-      ...item.params.map((param) => ({
-        name: param.name,
-        type: param.typeAnnotation ?? "unknown",
-        description: param.description ?? "",
-        optional: param.optional || undefined,
-        default: param.defaultValue,
-      })),
-    );
-  } else if (item.params.length > 0) {
-    const paramMap = new Map(item.params.map((param) => [param.name, param]));
-    for (const param of params) {
-      const rustParam = paramMap.get(param.name);
-      if (!rustParam) {
-        continue;
-      }
-      if (param.type === "unknown" && rustParam.typeAnnotation) {
-        param.type = rustParam.typeAnnotation;
-      }
-      if (!param.description && rustParam.description) {
-        param.description = rustParam.description;
-      }
-      if (param.optional === undefined && rustParam.optional) {
-        param.optional = true;
-      }
-      if (!param.default && rustParam.defaultValue) {
-        param.default = rustParam.defaultValue;
-      }
+  for (const param of item.params) {
+    if (
+      params.length > 0 &&
+      param.name === "param" &&
+      !param.typeAnnotation &&
+      !param.description &&
+      !param.defaultValue
+    ) {
+      continue;
     }
+
+    mergeParam(params, {
+      name: param.name,
+      type: param.typeAnnotation ?? "unknown",
+      description: param.description ?? "",
+      optional: param.optional || undefined,
+      default: param.defaultValue,
+    });
   }
 
   if (!returns && item.returnType) {
     returns = {
-      type: item.returnType,
+      type: normalizeReturnType(item.returnType),
       description: "",
     };
-  } else if (returns && returns.type === "unknown" && item.returnType) {
-    returns.type = item.returnType;
+  } else if (returns && item.returnType) {
+    returns.type = normalizeReturnType(item.returnType);
   }
 
   if (!description) {
@@ -638,10 +870,31 @@ function parseNapiDocItem(item: NapiDocItem): DocEntry | null {
   for (const tag of item.tags) {
     if (
       tag.tag === "param" ||
+      tag.tag === "arg" ||
+      tag.tag === "argument" ||
       tag.tag === "returns" ||
-      tag.tag === "return" ||
-      tag.tag === "example"
+      tag.tag === "return"
     ) {
+      if (tag.tag === "param" || tag.tag === "arg" || tag.tag === "argument") {
+        const param = parseParamTagValue(tag.value);
+        if (param) {
+          mergeParam(params, param);
+        }
+      } else {
+        const parsedReturns = parseReturnsTagValue(tag.value);
+        if (!returns) {
+          returns = parsedReturns;
+        } else {
+          returns.type = returns.type === "unknown" ? parsedReturns.type : returns.type;
+          returns.description ||= parsedReturns.description;
+        }
+      }
+      continue;
+    }
+    if (tag.tag === "example") {
+      if (tag.value && !examples.includes(tag.value)) {
+        examples.push(tag.value);
+      }
       continue;
     }
     if (tag.tag === "private") {
@@ -778,6 +1031,8 @@ function generateFileMarkdown(
   md +=
     "Read the signatures first, then expand each item for parameters, return types, and examples.\n\n";
 
+  md += renderStatsHtml(summarizeEntries(doc.entries)) + "\n\n";
+
   md += "## Reference\n\n";
   if (doc.entries.length > 1) {
     md += renderDetailsControlsHtml(".ox-api-entry") + "\n\n";
@@ -825,6 +1080,72 @@ function formatKindLabel(kind: string): string {
   }
 }
 
+function formatCountLabel(
+  count: number,
+  singular: string,
+  plural: string = `${singular}s`,
+): string {
+  return `${count} ${count === 1 ? singular : plural}`;
+}
+
+interface EntryBadge {
+  label: string;
+  tone?: "warning";
+}
+
+function getEntryBadges(entry: DocEntry): EntryBadge[] {
+  const badges: EntryBadge[] = [];
+
+  if (entry.tags?.deprecated !== undefined) {
+    badges.push({ label: "deprecated", tone: "warning" });
+  }
+  if (entry.params?.length) {
+    badges.push({ label: formatCountLabel(entry.params.length, "param") });
+  }
+  if (entry.returns) {
+    badges.push({ label: `returns ${entry.returns.type}` });
+  }
+  if (entry.examples?.length) {
+    badges.push({ label: formatCountLabel(entry.examples.length, "example") });
+  }
+  if (entry.tags?.since) {
+    badges.push({ label: `since ${entry.tags.since}` });
+  }
+  if (entry.private) {
+    badges.push({ label: "private", tone: "warning" });
+  }
+
+  return badges;
+}
+
+function renderEntryBadgesHtml(entry: DocEntry, className: string): string {
+  const badges = getEntryBadges(entry);
+  if (badges.length === 0) {
+    return "";
+  }
+
+  return `<span class="${className}">${badges
+    .map(
+      (badge) =>
+        `<span class="ox-api-badge${badge.tone ? ` ox-api-badge--${badge.tone}` : ""}">${escapeHtml(badge.label)}</span>`,
+    )
+    .join("")}</span>`;
+}
+
+function parseExampleBlock(example: string): { code: string; language: string } {
+  const trimmed = example.trim();
+  const fenceMatch = /^```([\w-]+)?[^\n]*\n([\s\S]*?)\n?```$/u.exec(trimmed);
+
+  if (!fenceMatch) {
+    return { code: trimmed, language: "ts" };
+  }
+
+  return {
+    code: fenceMatch[2],
+    language: fenceMatch[1] || "ts",
+  };
+}
+
 function renderOverviewLine(entry: DocEntry, href: string): string {
   const signature = normalizeSignature(entry.signature);
   const summary = cleanSummaryText(entry.description, 88);
@@ -844,11 +1165,12 @@ function renderOverviewLine(entry: DocEntry, href: string): string {
 function renderOverviewHtmlItem(entry: DocEntry, href: string): string {
   const signature = normalizeSignature(entry.signature);
   const summary = cleanSummaryText(entry.description, 88);
+  const meta = renderEntryBadgesHtml(entry, "ox-api-module__meta");
   const heading = signature
     ? `<a href="${escapeHtml(href)}" class="ox-api-module__link">${renderHighlightedInlineCodeHtml(signature, "ox-api-module__signature ox-api-module__signature--highlighted")}</a>`
     : `<a href="${escapeHtml(href)}" class="ox-api-module__link"><code class="ox-api-module__name">${escapeHtml(entry.name)}</code></a>`;
 
-  return `<li><span class="ox-api-module__kind">${escapeHtml(formatKindLabel(entry.kind))}</span><div class="ox-api-module__item">${heading}${summary ? `<span class="ox-api-module__summary">${renderInlineHtml(summary)}</span>` : ""}</div></li>`;
+  return `<li><span class="ox-api-module__kind">${escapeHtml(formatKindLabel(entry.kind))}</span><div class="ox-api-module__item">${heading}${summary ? `<span class="ox-api-module__summary">${renderInlineHtml(summary)}</span>` : ""}${meta}</div></li>`;
 }
 
 function renderParamsListHtml(params: ParamDoc[]): string {
@@ -913,6 +1235,13 @@ function generateEntryMarkdown(
     body += renderMarkdownBlocksHtml(processedDescription) + "\n";
   }
 
+  if (entry.signature) {
+    body += `<div class="ox-api-entry__section ox-api-entry__section--signature">
+<h4>Signature</h4>
+${renderCodeBlockHtml(entry.signature, "typescript")}
+</div>\n`;
+  }
+
   if (sourceHref) {
     body += `<p class="ox-api-entry__source"><a href="${escapeHtml(sourceHref)}">View source</a></p>\n`;
   }
@@ -933,8 +1262,13 @@ function generateEntryMarkdown(
 
   if (entry.examples && entry.examples.length > 0) {
     const examplesHtml = entry.examples
-      .map((example) => example.replace(/^```\w*\n?/, "").replace(/\n?```$/, ""))
-      .map((example) => renderCodeBlockHtml(example, "ts"))
+      .map((example, index) => {
+        const parsed = parseExampleBlock(example);
+        return `<div class="ox-api-entry__example">
+<div class="ox-api-entry__example-heading">Example ${index + 1}</div>
+${renderCodeBlockHtml(parsed.code, parsed.language)}
+</div>`;
+      })
       .join("\n");
 
     body += `<div class="ox-api-entry__section ox-api-entry__section--examples">\n<h4>Examples</h4>\n${examplesHtml}\n</div>\n`;
@@ -953,7 +1287,7 @@ function generateEntryMarkdown(
     : `<code class="ox-api-entry__name">${escapeHtml(entry.name)}</code>`;
   const summaryParts = [
     `<span class="ox-api-entry__kind">${escapeHtml(formatKindLabel(entry.kind))}</span>`,
-    `<span class="ox-api-entry__summary-main">${summaryHeading}${summaryDescription ? `<span class="ox-api-entry__description">${renderInlineHtml(summaryDescription)}</span>` : ""}</span>`,
+    `<span class="ox-api-entry__summary-main">${summaryHeading}${summaryDescription ? `<span class="ox-api-entry__description">${renderInlineHtml(summaryDescription)}</span>` : ""}${renderEntryBadgesHtml(entry, "ox-api-entry__meta")}</span>`,
   ];
 
   return `<details id="${entryAnchor(entry.name)}" class="ox-api-entry">
@@ -971,6 +1305,7 @@ function generateIndex(docs: ExtractedDocs[], docToFile?: Map<ExtractedDocs, str
   md += "Generated by [Ox Content](https://github.com/ubugeeei/ox-content)\n\n";
   md +=
     "> Use search scopes like `@api transform` to limit results to the generated API reference.\n\n";
+  md += renderStatsHtml(summarizeEntries(docs.flatMap((doc) => doc.entries)), docs.length) + "\n\n";
 
   md += "## Modules\n\n";
   if (docs.length > 1) {
@@ -1020,6 +1355,7 @@ function generateCategoryMarkdown(
   const categoryFileName = `${kind}s`;
   let md = `# ${kind.charAt(0).toUpperCase() + kind.slice(1)}s\n\n`;
   md += `> ${entries.length} documented ${kind}${entries.length === 1 ? "" : "s"} collected across modules.\n\n`;
+  md += renderStatsHtml(summarizeEntries(entries)) + "\n\n";
 
   md += "## Overview\n\n";
   for (const entry of entries) {
@@ -1040,6 +1376,8 @@ function generateCategoryMarkdown(
 function generateCategoryIndex(byKind: Map<string, DocEntry[]>): string {
   let md = "# API Documentation\n\n";
   md += "Generated by [Ox Content](https://github.com/ubugeeei/ox-content)\n\n";
+  md +=
+    renderStatsHtml(summarizeEntries([...byKind.values()].flatMap((entries) => entries))) + "\n\n";
 
   for (const [kind, entries] of [...byKind.entries()].sort(([a], [b]) => compareStrings(a, b))) {
     const kindTitle = kind.charAt(0).toUpperCase() + kind.slice(1) + "s";
@@ -1248,7 +1586,7 @@ export function resolveDocsOptions(
     enabled: opts.enabled ?? true,
     src: opts.src ?? ["./src"],
     out: opts.out ?? "docs/api",
-    include: opts.include ?? ["**/*.ts", "**/*.tsx"],
+    include: opts.include ?? DEFAULT_DOCS_INCLUDE,
     exclude: opts.exclude ?? ["**/*.test.*", "**/*.spec.*", "node_modules"],
     format: opts.format ?? "markdown",
     private: opts.private ?? false,
