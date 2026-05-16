@@ -62,6 +62,6 @@ mod tests {
     fn test_transform() {
         let ctx = TransformContext::new();
         let html = ctx.transform("# Hello World").unwrap();
-        assert!(html.contains("<h1>"));
+        assert!(html.contains("<h1 id=\"hello-world\">"));
     }
 }
