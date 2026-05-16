@@ -40,6 +40,8 @@ export interface BasePageProps {
   html: string;
   /** Table of contents entries */
   toc: TocEntry[];
+  /** Last git commit timestamp in milliseconds */
+  lastUpdated?: number;
   /** Source file path (relative to docs root) */
   path: string;
   /** Output URL path */

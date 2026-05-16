@@ -582,6 +582,14 @@ a:hover {
   word-wrap: break-word;
   word-break: break-word;
 }
+.last-updated {
+  max-width: var(--octc-max-content-width);
+  margin: 2rem auto 0;
+  padding-top: 1rem;
+  border-top: 1px solid color-mix(in srgb, var(--octc-color-border) 78%, transparent);
+  color: var(--octc-color-text-muted);
+  font-size: 0.875rem;
+}
 .content h1 {
   font-size: clamp(2.4rem, 5vw, 3.1rem);
   margin-bottom: 1rem;

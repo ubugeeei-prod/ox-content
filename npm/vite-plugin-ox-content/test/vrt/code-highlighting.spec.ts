@@ -16,6 +16,7 @@ function createResolvedOptions(): ResolvedOptions {
       bare: false,
       siteName: "Ox Content",
       generateOgImage: false,
+      lastUpdated: false,
     },
     gfm: true,
     footnotes: true,

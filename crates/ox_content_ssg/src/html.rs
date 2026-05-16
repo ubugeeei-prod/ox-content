@@ -278,6 +278,8 @@ pub struct PageData {
     pub content: String,
     /// Table of contents entries.
     pub toc: Vec<TocEntry>,
+    /// Last updated timestamp in milliseconds since the Unix epoch.
+    pub last_updated: Option<i64>,
     /// URL path.
     pub path: String,
     /// Entry page configuration (if layout: entry).
@@ -387,6 +389,11 @@ struct EntryTemplate<'a> {
     features: Option<&'a [FeatureView]>,
 }
 
+struct LastUpdatedView {
+    text: String,
+    datetime: String,
+}
+
 /// Main page template.
 #[derive(Template)]
 #[template(path = "page.html")]
@@ -416,6 +423,7 @@ struct PageTemplate<'a> {
     main_content: &'a str,
     has_toc: bool,
     toc_html: &'a str,
+    last_updated: Option<&'a LastUpdatedView>,
     embed_content_after: &'a str,
     embed_footer_before: &'a str,
     footer_html: &'a str,
@@ -778,6 +786,31 @@ fn generate_toc_html(toc: &[TocEntry]) -> String {
     html
 }
 
+fn civil_from_days(days: i64) -> (i64, i64, i64) {
+    let z = days + 719_468;
+    let era = if z >= 0 { z } else { z - 146_096 } / 146_097;
+    let doe = z - era * 146_097;
+    let yoe = (doe - doe / 1_460 + doe / 36_524 - doe / 146_096) / 365;
+    let year = yoe + era * 400;
+    let doy = doe - (365 * yoe + yoe / 4 - yoe / 100);
+    let mp = (5 * doy + 2) / 153;
+    let day = doy - (153 * mp + 2) / 5 + 1;
+    let month = mp + if mp < 10 { 3 } else { -9 };
+    let year = year + i64::from(month <= 2);
+    (year, month, day)
+}
+
+fn format_last_updated(timestamp_ms: i64) -> Option<LastUpdatedView> {
+    if timestamp_ms < 0 {
+        return None;
+    }
+
+    let days = (timestamp_ms / 1_000).div_euclid(86_400);
+    let (year, month, day) = civil_from_days(days);
+    let date = format!("{year:04}-{month:02}-{day:02}");
+    Some(LastUpdatedView { text: date.clone(), datetime: date })
+}
+
 /// Generates a complete HTML page for SSG.
 ///
 /// This function creates a full HTML document with navigation sidebar,
@@ -833,6 +866,7 @@ pub fn generate_html(page_data: &PageData, nav_groups: &[NavGroup], config: &Ssg
     let all_css = css_sections.join("");
     let toc_html = generate_toc_html(&page_data.toc);
     let has_toc = !toc_html.is_empty();
+    let last_updated = page_data.last_updated.and_then(format_last_updated);
 
     // Embedded HTML for specific positions
     let embed_head = embed.and_then(|e| e.head.as_deref()).unwrap_or("");
@@ -951,6 +985,7 @@ pub fn generate_html(page_data: &PageData, nav_groups: &[NavGroup], config: &Ssg
         main_content: &main_content,
         has_toc,
         toc_html: &toc_html,
+        last_updated: last_updated.as_ref(),
         embed_content_after,
         embed_footer_before,
         footer_html: &footer_html,
@@ -1034,6 +1069,7 @@ mod tests {
             description: Some("Test description".to_string()),
             content: "<h1>Hello</h1>".to_string(),
             toc: vec![TocEntry { depth: 1, text: "Hello".to_string(), slug: "hello".to_string() }],
+            last_updated: Some(0),
             path: "test".to_string(),
             entry_page: None,
         };
@@ -1063,6 +1099,8 @@ mod tests {
         assert!(html.contains("Guide"));
         assert!(html.contains("class=\"toc\""));
         assert!(html.contains("href=\"#hello\""));
+        assert!(html.contains("Last updated:"));
+        assert!(html.contains("<time datetime=\"1970-01-01\">1970-01-01</time>"));
     }
 
     #[test]
@@ -1072,6 +1110,7 @@ mod tests {
             description: None,
             content: "<p>Content</p>".to_string(),
             toc: vec![],
+            last_updated: None,
             path: "themed".to_string(),
             entry_page: None,
         };
@@ -1113,6 +1152,7 @@ mod tests {
             description: None,
             content: "<p>Content</p>".to_string(),
             toc: vec![],
+            last_updated: None,
             path: "no-toc".to_string(),
             entry_page: None,
         };
@@ -1129,6 +1169,12 @@ mod tests {
 
         assert!(!html.contains("class=\"toc\""));
         assert!(!html.contains("<main class=\"main main--with-toc\">"));
+        assert!(!html.contains("Last updated:"));
+    }
+
+    #[test]
+    fn test_format_last_updated_rejects_invalid_timestamps() {
+        assert!(format_last_updated(-1).is_none());
     }
 
     #[test]

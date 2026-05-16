@@ -96,6 +96,9 @@
     <main class="main{% if has_toc %} main--with-toc{% endif %}">
 {{ embed_content_before|safe }}
 {{ main_content|safe }}
+{% if let Some(updated) = last_updated %}
+      <p class="last-updated">Last updated: <time datetime="{{ updated.datetime }}">{{ updated.text }}</time></p>
+{% endif %}
 {{ embed_content_after|safe }}
 {{ embed_footer_before|safe }}
 {{ footer_html|safe }}
