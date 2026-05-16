@@ -317,6 +317,20 @@ export interface JsSocialLinks {
   twitter?: string
   /** Discord URL. */
   discord?: string
+  /** Custom social links. */
+  links?: Array<JsSocialLink>
+}
+
+/** Custom social link for JavaScript. */
+export interface JsSocialLink {
+  /** Icon label. */
+  icon?: string
+  /** Inline SVG icon. */
+  iconSvg?: string
+  /** Link URL. */
+  link: string
+  /** Accessible label. */
+  ariaLabel?: string
 }
 
 /** Source documentation item extracted from a JS/TS file. */

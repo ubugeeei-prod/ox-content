@@ -1058,6 +1058,22 @@ pub struct JsSocialLinks {
     pub twitter: Option<String>,
     /// Discord URL.
     pub discord: Option<String>,
+    /// Custom social links.
+    pub links: Option<Vec<JsSocialLink>>,
+}
+
+/// Custom social link for JavaScript.
+#[napi(object)]
+#[derive(Clone)]
+pub struct JsSocialLink {
+    /// Icon label.
+    pub icon: Option<String>,
+    /// Inline SVG icon.
+    pub icon_svg: Option<String>,
+    /// Link URL.
+    pub link: String,
+    /// Accessible label.
+    pub aria_label: Option<String>,
 }
 
 /// Embedded HTML content for specific positions.
@@ -1184,6 +1200,17 @@ fn convert_theme_config(theme: Option<JsThemeConfig>) -> Option<ox_content_ssg::
             github: s.github,
             twitter: s.twitter,
             discord: s.discord,
+            links: s.links.map(|links| {
+                links
+                    .into_iter()
+                    .map(|l| ox_content_ssg::SocialLink {
+                        icon: l.icon,
+                        icon_svg: l.icon_svg,
+                        link: l.link,
+                        aria_label: l.aria_label,
+                    })
+                    .collect()
+            }),
         }),
         embed: t.embed.map(|e| ox_content_ssg::ThemeEmbed {
             head: e.head,

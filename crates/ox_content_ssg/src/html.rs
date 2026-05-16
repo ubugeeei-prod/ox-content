@@ -95,6 +95,21 @@ pub struct SocialLinks {
     pub twitter: Option<String>,
     /// Discord URL.
     pub discord: Option<String>,
+    /// Custom social links.
+    pub links: Option<Vec<SocialLink>>,
+}
+
+/// Custom social link.
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct SocialLink {
+    /// Icon label or built HTML icon source.
+    pub icon: Option<String>,
+    /// Trusted inline SVG icon.
+    pub icon_svg: Option<String>,
+    /// Link URL.
+    pub link: String,
+    /// Accessible label.
+    pub aria_label: Option<String>,
 }
 
 /// Embedded HTML content for specific positions in the page layout.
@@ -1041,7 +1056,13 @@ fn generate_social_links_html(links: &SocialLinks) -> String {
         twitter: links.twitter.as_deref(),
         discord: links.discord.as_deref(),
     };
-    template.render().unwrap_or_default()
+    let mut html = template.render().unwrap_or_default();
+    if let Some(custom_links) = &links.links {
+        for link in custom_links {
+            html.push_str(&render_custom_social_link(link, false));
+        }
+    }
+    html
 }
 
 fn generate_mobile_social_links_html(links: &SocialLinks) -> String {
@@ -1050,7 +1071,51 @@ fn generate_mobile_social_links_html(links: &SocialLinks) -> String {
         twitter: links.twitter.as_deref(),
         discord: links.discord.as_deref(),
     };
-    template.render().unwrap_or_default()
+    let mut html = template.render().unwrap_or_default();
+    if let Some(custom_links) = &links.links {
+        for link in custom_links {
+            html.push_str(&render_custom_social_link(link, true));
+        }
+    }
+    html
+}
+
+fn render_custom_social_link(link: &SocialLink, mobile: bool) -> String {
+    let label = link.aria_label.as_deref().or(link.icon.as_deref()).unwrap_or("Social link");
+    let href = escape_html(&link.link);
+    let label = escape_html(label);
+    let icon_html = render_social_icon(link);
+
+    if mobile {
+        format!(
+            "<a href=\"{href}\" class=\"mobile-footer-btn\" aria-label=\"{label}\" target=\"_blank\" rel=\"noopener\">{icon_html}<span class=\"mobile-footer-label\">{label}</span></a>\n"
+        )
+    } else {
+        format!(
+            "<a href=\"{href}\" class=\"social-link\" aria-label=\"{label}\" target=\"_blank\" rel=\"noopener\">{icon_html}</a>\n"
+        )
+    }
+}
+
+fn render_social_icon(link: &SocialLink) -> String {
+    if let Some(svg) = link.icon_svg.as_deref().and_then(validate_social_svg) {
+        return svg.to_string();
+    }
+
+    link.icon
+        .as_deref()
+        .map(|icon| format!("<span class=\"social-link-icon\">{}</span>", escape_html(icon)))
+        .unwrap_or_default()
+}
+
+fn validate_social_svg(svg: &str) -> Option<&str> {
+    let trimmed = svg.trim();
+    let lower = trimmed.to_ascii_lowercase();
+    if trimmed.starts_with("<svg") && !lower.contains("<script") {
+        Some(trimmed)
+    } else {
+        None
+    }
 }
 
 fn generate_nav_html(nav_groups: &[NavGroup], current_path: &str) -> String {
@@ -1143,6 +1208,44 @@ mod tests {
         // Check footer is present
         assert!(html.contains("Built with ox-content"));
         assert!(html.contains("2025 Test"));
+    }
+
+    #[test]
+    fn test_generate_html_with_custom_social_link() {
+        let page_data = PageData {
+            title: "Social Page".to_string(),
+            description: None,
+            content: "<p>Content</p>".to_string(),
+            toc: vec![],
+            path: "social".to_string(),
+            entry_page: None,
+        };
+        let config = SsgConfig {
+            site_name: "Social Site".to_string(),
+            base: "/".to_string(),
+            og_image: None,
+            locale: None,
+            available_locales: None,
+            theme: Some(ThemeConfig {
+                social_links: Some(SocialLinks {
+                    links: Some(vec![SocialLink {
+                        icon: None,
+                        icon_svg: Some("<svg viewBox=\"0 0 24 24\"></svg>".to_string()),
+                        link: "https://example.com".to_string(),
+                        aria_label: Some("Example".to_string()),
+                    }]),
+                    ..Default::default()
+                }),
+                ..Default::default()
+            }),
+        };
+
+        let html = generate_html(&page_data, &[], &config);
+
+        assert!(html.contains("aria-label=\"Example\""));
+        assert!(html.contains("href=\"https://example.com\""));
+        assert!(html.contains("<svg viewBox=\"0 0 24 24\"></svg>"));
+        assert!(html.contains("<span class=\"mobile-footer-label\">Example</span>"));
     }
 
     #[test]
