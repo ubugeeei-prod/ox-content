@@ -173,7 +173,7 @@ Generate table of contents.
 
 Source documentation generation options. Set to `false` to disable.
 
-Generated API pages now include a one-line overview for each symbol and expandable detail sections. A machine-readable `docs.json` payload is also emitted next to the Markdown files so custom viewers can build richer experiences without re-parsing source.
+Generated API pages now include summary stats, signature badges, one-line symbol overviews, expandable detail sections, and labeled examples. A machine-readable `docs.json` payload with aggregate counts is also emitted next to the Markdown files so custom viewers can build richer experiences without re-parsing source.
 
 ```ts
 oxContent({
@@ -197,7 +197,7 @@ oxContent({
 | `enabled` | `boolean`                        | `true`                           | Enable/disable docs generation |
 | `src`     | `string[]`                       | `['./src']`                      | Source directories to scan     |
 | `out`     | `string`                         | `'docs/api'`                     | Output directory               |
-| `include` | `string[]`                       | `['**/*.ts', '**/*.tsx']`        | Files to include               |
+| `include` | `string[]`                       | JS/TS source globs               | Files to include               |
 | `exclude` | `string[]`                       | `['**/*.test.*', '**/*.spec.*']` | Files to exclude               |
 | `format`  | `'markdown' \| 'json' \| 'html'` | `'markdown'`                     | Output format                  |
 | `private` | `boolean`                        | `false`                          | Include @private members       |

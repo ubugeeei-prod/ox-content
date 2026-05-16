@@ -88,10 +88,22 @@ describe("writeDocs", () => {
 
     const docsJson = JSON.parse(await fs.readFile(path.join(outDir, "docs.json"), "utf-8")) as {
       version: number;
+      summary: {
+        modules: number;
+        entries: number;
+        byKind: Record<string, number>;
+      };
       modules: ExtractedDocs[];
     };
 
     expect(docsJson.version).toBe(1);
+    expect(docsJson.summary).toMatchObject({
+      modules: 1,
+      entries: 1,
+      byKind: {
+        function: 1,
+      },
+    });
     expect(docsJson.modules[0]?.file).toBe("src/math.ts");
     expect(docsJson.modules[0]?.entries[0]?.file).toBe("src/math.ts");
     expect(docsJson.modules[0]?.entries[0]?.name).toBe("clamp");
@@ -151,6 +163,54 @@ export function addOne(value: number): number {
     expect(docs[0]?.entries[0]).toMatchObject({
       line: 4,
       endLine: 7,
+    });
+  });
+
+  it("extracts JSDoc types from JavaScript files by default", async () => {
+    const srcDir = await fs.mkdtemp(path.join(os.tmpdir(), "ox-content-docs-src-"));
+    tempDirs.push(srcDir);
+
+    await fs.writeFile(
+      path.join(srcDir, "labels.js"),
+      `/**
+ * Creates a user-facing label.
+ *
+ * @param {string} value - The label source
+ * @param {number} [maxLength=20] - Maximum length before truncation
+ * @returns {string} Formatted label
+ */
+export function label(value, maxLength = 20) {
+  return value.slice(0, maxLength);
+}
+`,
+      "utf-8",
+    );
+
+    const docs = await extractDocs([srcDir], resolveDocsOptions({})!);
+    const entry = docs[0]?.entries[0];
+
+    expect(entry).toMatchObject({
+      name: "label",
+      kind: "function",
+      description: "Creates a user-facing label.",
+      params: [
+        {
+          name: "value",
+          type: "string",
+          description: "The label source",
+        },
+        {
+          name: "maxLength",
+          type: "number",
+          description: "Maximum length before truncation",
+          optional: true,
+          default: "20",
+        },
+      ],
+      returns: {
+        type: "string",
+        description: "Formatted label",
+      },
     });
   });
 

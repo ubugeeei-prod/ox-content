@@ -1,5 +1,7 @@
 //! Documentation extraction from source code using OXC parser.
 
+use ox_jsdoc::decoder::nodes::comment_ast::{LazyJsdocTag, LazyJsdocTagBody};
+use ox_jsdoc::parser::{parse_to_bytes as parse_jsdoc_to_bytes, ParseOptions as JsdocParseOptions};
 use oxc_allocator::Allocator;
 use oxc_ast::ast::{
     BindingPatternKind, Class, Comment, Declaration, ExportDefaultDeclarationKind, Expression,
@@ -87,6 +89,15 @@ pub struct DocTag {
     pub tag: String,
     /// Tag value.
     pub value: String,
+}
+
+#[derive(Debug, Clone)]
+struct ParsedParamTag {
+    name: String,
+    type_annotation: Option<String>,
+    optional: bool,
+    default_value: Option<String>,
+    description: Option<String>,
 }
 
 /// Kind of documentation item.
@@ -262,17 +273,95 @@ impl<'a> DocVisitor<'a> {
                 comment.attached_to == attached_to && comment.is_jsdoc(self.source)
             })?;
 
+        let comment_source = comment.span.source_text(self.source);
         let mut raw = comment.content_span().source_text(self.source).to_string();
         if raw.starts_with('*') {
             raw.remove(0);
         }
         let raw = raw.trim_matches('\n').to_string();
-        let (doc, tags) = Self::parse_jsdoc(&raw);
+        let (doc, tags) = Self::parse_jsdoc(comment_source, &raw);
         Some((raw, doc, tags))
     }
 
     /// Parse JSDoc comment into description and tags.
-    fn parse_jsdoc(comment: &str) -> (String, Vec<DocTag>) {
+    fn parse_jsdoc(comment_source: &str, fallback_raw: &str) -> (String, Vec<DocTag>) {
+        let options =
+            JsdocParseOptions { preserve_whitespace: true, ..JsdocParseOptions::default() };
+        let result = parse_jsdoc_to_bytes(comment_source, options);
+
+        if result.diagnostics.is_empty() {
+            if let Ok(source_file) =
+                ox_jsdoc::decoder::source_file::LazySourceFile::new(&result.binary_bytes)
+            {
+                if let Some(root) = source_file.asts().next().flatten() {
+                    let doc = root
+                        .description_text(false)
+                        .map_or_else(String::new, |description| description.trim().to_string());
+                    let tags = root.tags().map(Self::convert_jsdoc_tag).collect();
+                    return (doc, tags);
+                }
+            }
+        }
+
+        Self::parse_jsdoc_fallback(fallback_raw)
+    }
+
+    fn convert_jsdoc_tag(tag: LazyJsdocTag<'_>) -> DocTag {
+        DocTag { tag: tag.tag().value().to_string(), value: Self::format_jsdoc_tag_value(tag) }
+    }
+
+    fn format_jsdoc_tag_value(tag: LazyJsdocTag<'_>) -> String {
+        let mut parts = Vec::new();
+
+        if let Some(raw_type) = tag.raw_type() {
+            let raw_type = raw_type.raw().trim();
+            if !raw_type.is_empty() {
+                parts.push(format!("{{{raw_type}}}"));
+            }
+        }
+
+        if let Some(name) = tag.name() {
+            let name = name.raw().trim();
+            if !name.is_empty() {
+                let name = if tag.optional() {
+                    tag.default_value().map_or_else(
+                        || format!("[{name}]"),
+                        |default_value| format!("[{name}={default_value}]"),
+                    )
+                } else {
+                    name.to_string()
+                };
+                parts.push(name);
+            }
+        }
+
+        if let Some(description) =
+            tag.description().map(str::trim).filter(|value| !value.is_empty())
+        {
+            if parts.is_empty() {
+                parts.push(description.to_string());
+            } else {
+                parts.push(format!("- {description}"));
+            }
+        }
+
+        if !parts.is_empty() {
+            return parts.join(" ");
+        }
+
+        if let Some(raw_body) = tag.raw_body().map(str::trim).filter(|value| !value.is_empty()) {
+            return raw_body.to_string();
+        }
+
+        tag.body().map_or_else(String::new, |body| match body {
+            LazyJsdocTagBody::Generic(body) => body.description().unwrap_or_default().to_string(),
+            LazyJsdocTagBody::Raw(body) => body.raw().to_string(),
+            LazyJsdocTagBody::Borrows(_) => String::new(),
+        })
+    }
+
+    /// Fallback parser used when the external JSDoc parser cannot produce a root.
+    fn parse_jsdoc_fallback(comment: &str) -> (String, Vec<DocTag>) {
         let mut description_lines = Vec::new();
         let mut tags = Vec::new();
         let mut current_tag: Option<(String, Vec<String>)> = None;
@@ -523,6 +612,129 @@ impl<'a> DocVisitor<'a> {
         tags.iter().any(|tag| tag.tag == "private")
     }
 
+    fn split_leading_jsdoc_type(value: &str) -> (Option<String>, &str) {
+        let value = value.trim_start();
+        let Some(rest) = value.strip_prefix('{') else {
+            return (None, value);
+        };
+
+        let mut depth = 1_u32;
+        for (index, ch) in rest.char_indices() {
+            match ch {
+                '{' => depth += 1,
+                '}' => {
+                    depth = depth.saturating_sub(1);
+                    if depth == 0 {
+                        let type_annotation = rest[..index].trim();
+                        let remaining = rest[index + ch.len_utf8()..].trim_start();
+                        return (
+                            (!type_annotation.is_empty()).then(|| type_annotation.to_string()),
+                            remaining,
+                        );
+                    }
+                }
+                _ => {}
+            }
+        }
+
+        (None, value)
+    }
+
+    fn clean_tag_description(value: &str) -> Option<String> {
+        let value = value.trim();
+        let value = value.strip_prefix('-').map_or(value, str::trim_start).trim();
+        (!value.is_empty()).then(|| value.to_string())
+    }
+
+    fn split_name_and_description(value: &str) -> (&str, &str) {
+        let value = value.trim_start();
+        if let Some(rest) = value.strip_prefix('[') {
+            if let Some(close_index) = rest.find(']') {
+                let close_index = close_index + 2;
+                return (&value[..close_index], value[close_index..].trim_start());
+            }
+        }
+
+        value
+            .char_indices()
+            .find_map(|(index, ch)| {
+                ch.is_whitespace()
+                    .then_some((&value[..index], value[index + ch.len_utf8()..].trim_start()))
+            })
+            .unwrap_or((value, ""))
+    }
+
+    fn parse_param_tag_value(value: &str) -> Option<ParsedParamTag> {
+        let (type_annotation, rest) = Self::split_leading_jsdoc_type(value);
+        let (name, description) = Self::split_name_and_description(rest);
+        let mut name = name.trim().to_string();
+        if name.is_empty() {
+            return None;
+        }
+
+        let mut optional = false;
+        let mut default_value = None;
+        if name.starts_with('[') && name.ends_with(']') {
+            optional = true;
+            let inner = name[1..name.len() - 1].to_string();
+            if let Some((inner_name, inner_default)) = inner.split_once('=') {
+                name = inner_name.trim().to_string();
+                let inner_default = inner_default.trim();
+                if !inner_default.is_empty() {
+                    default_value = Some(inner_default.to_string());
+                }
+            } else {
+                name = inner.trim().to_string();
+            }
+        }
+
+        (!name.is_empty()).then(|| ParsedParamTag {
+            name,
+            type_annotation,
+            optional,
+            default_value,
+            description: Self::clean_tag_description(description),
+        })
+    }
+
+    fn find_param_tag(tags: &[DocTag], name: &str) -> Option<ParsedParamTag> {
+        tags.iter()
+            .filter(|tag| matches!(tag.tag.as_str(), "param" | "arg" | "argument"))
+            .filter_map(|tag| Self::parse_param_tag_value(&tag.value))
+            .find(|tag| {
+                let tag_name = tag.name.trim_start_matches("...");
+                tag_name == name || tag_name.split('.').next() == Some(name)
+            })
+    }
+
+    fn parse_return_tag_value(value: &str) -> (Option<String>, Option<String>) {
+        let (type_annotation, rest) = Self::split_leading_jsdoc_type(value);
+        (type_annotation, Self::clean_tag_description(rest))
+    }
+
+    fn binding_pattern_name(pattern: &oxc_ast::ast::BindingPattern) -> String {
+        match &pattern.kind {
+            BindingPatternKind::BindingIdentifier(id) => id.name.to_string(),
+            BindingPatternKind::AssignmentPattern(assign) => {
+                Self::binding_pattern_name(&assign.left)
+            }
+            BindingPatternKind::ObjectPattern(_) => "param".to_string(),
+            BindingPatternKind::ArrayPattern(_) => "param".to_string(),
+        }
+    }
+
+    fn binding_pattern_default_value(
+        &self,
+        pattern: &oxc_ast::ast::BindingPattern,
+    ) -> Option<String> {
+        match &pattern.kind {
+            BindingPatternKind::AssignmentPattern(assign) => {
+                Some(self.slice(assign.right.span().start, assign.right.span().end))
+            }
+            _ => None,
+        }
+    }
+
     /// Format a binding pattern.
     fn format_binding_pattern(&self, pattern: &oxc_ast::ast::BindingPattern) -> String {
         match &pattern.kind {
@@ -618,39 +830,52 @@ impl<'a> DocVisitor<'a> {
         params: &oxc_ast::ast::FormalParameters<'a>,
         tags: &[DocTag],
     ) -> Vec<ParamDoc> {
-        params
+        let mut docs = params
             .items
             .iter()
             .map(|param| {
-                let name = match &param.pattern.kind {
-                    BindingPatternKind::BindingIdentifier(id) => id.name.to_string(),
-                    _ => "param".to_string(),
-                };
+                let name = Self::binding_pattern_name(&param.pattern);
+                let tag = Self::find_param_tag(tags, &name);
+                let default_value = self
+                    .binding_pattern_default_value(&param.pattern)
+                    .or_else(|| tag.as_ref().and_then(|tag| tag.default_value.clone()));
 
                 let type_annotation = param
                     .pattern
                     .type_annotation
                     .as_ref()
-                    .map(|t| self.format_ts_type(&t.type_annotation));
+                    .map(|t| self.format_ts_type(&t.type_annotation))
+                    .or_else(|| tag.as_ref().and_then(|tag| tag.type_annotation.clone()));
 
-                let description =
-                    tags.iter().find(|t| t.tag == "param" && t.value.starts_with(&name)).map(|t| {
-                        t.value
-                            .trim_start_matches(&name)
-                            .trim_start_matches(" - ")
-                            .trim()
-                            .to_string()
-                    });
+                let optional = param.pattern.optional
+                    || default_value.is_some()
+                    || tag.as_ref().is_some_and(|tag| tag.optional);
+                let description = tag.and_then(|tag| tag.description);
 
-                ParamDoc {
-                    name,
-                    type_annotation,
-                    optional: param.pattern.optional,
-                    default_value: None,
-                    description,
-                }
+                ParamDoc { name, type_annotation, optional, default_value, description }
             })
-            .collect()
+            .collect::<Vec<_>>();
+
+        if let Some(rest) = params.rest.as_ref() {
+            let name = Self::binding_pattern_name(&rest.argument);
+            let tag = Self::find_param_tag(tags, &name);
+            let type_annotation = rest
+                .argument
+                .type_annotation
+                .as_ref()
+                .map(|t| self.format_ts_type(&t.type_annotation))
+                .or_else(|| tag.as_ref().and_then(|tag| tag.type_annotation.clone()));
+
+            docs.push(ParamDoc {
+                name,
+                type_annotation,
+                optional: tag.as_ref().is_some_and(|tag| tag.optional),
+                default_value: tag.as_ref().and_then(|tag| tag.default_value.clone()),
+                description: tag.and_then(|tag| tag.description),
+            });
+        }
+
+        docs
     }
 
     /// Extract parameters from a function.
@@ -664,7 +889,10 @@ impl<'a> DocVisitor<'a> {
         tags: &[DocTag],
     ) -> Option<String> {
         return_type.map(|r| self.format_ts_type(&r.type_annotation)).or_else(|| {
-            tags.iter().find(|t| t.tag == "returns" || t.tag == "return").map(|t| t.value.clone())
+            tags.iter().find(|tag| tag.tag == "returns" || tag.tag == "return").and_then(|tag| {
+                let (type_annotation, description) = Self::parse_return_tag_value(&tag.value);
+                type_annotation.or(description)
+            })
         })
     }
 
@@ -1238,5 +1466,39 @@ export interface User {
         assert_eq!(items[0].name, "User");
         assert_eq!(items[0].kind, DocItemKind::Interface);
         assert_eq!(items[0].children.len(), 2);
+    }
+
+    #[test]
+    fn test_extract_jsdoc_types_from_javascript() {
+        let source = r"
+/**
+ * Creates a user-facing label.
+ *
+ * @param {string} value - The label source
+ * @param {number} [maxLength=20] - Maximum length before truncation
+ * @returns {string} Formatted label
+ */
+export function label(value, maxLength = 20) {
+    return value.slice(0, maxLength);
+}
+";
+
+        let extractor = DocExtractor::new();
+        let items = extractor.extract_source(source, "test.js", SourceType::mjs()).unwrap();
+
+        assert_eq!(items.len(), 1);
+        assert_eq!(items[0].name, "label");
+        assert_eq!(items[0].doc.as_deref(), Some("Creates a user-facing label."));
+        assert_eq!(items[0].return_type.as_deref(), Some("string"));
+        assert_eq!(items[0].params.len(), 2);
+        assert_eq!(items[0].params[0].type_annotation.as_deref(), Some("string"));
+        assert_eq!(items[0].params[0].description.as_deref(), Some("The label source"));
+        assert_eq!(items[0].params[1].type_annotation.as_deref(), Some("number"));
+        assert!(items[0].params[1].optional);
+        assert_eq!(items[0].params[1].default_value.as_deref(), Some("20"));
+        assert_eq!(
+            items[0].params[1].description.as_deref(),
+            Some("Maximum length before truncation")
+        );
     }
 }
