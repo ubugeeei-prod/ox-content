@@ -820,6 +820,15 @@ pub struct JsSearchResult {
     pub snippet: String,
 }
 
+/// Search query split into free text and scope prefixes.
+#[napi(object)]
+pub struct JsScopedSearchQuery {
+    /// Free-text terms after removing scope prefixes.
+    pub text: String,
+    /// Deduplicated lowercase scopes.
+    pub scopes: Vec<String>,
+}
+
 /// Search options for JavaScript.
 #[napi(object)]
 #[derive(Default, Clone)]
@@ -895,6 +904,31 @@ pub fn search_index(
             snippet: r.snippet,
         })
         .collect()
+}
+
+/// Splits a search query into free-text terms and `@scope` prefixes.
+#[napi(js_name = "parseScopedSearchQuery")]
+pub fn parse_scoped_search_query(query: String) -> JsScopedSearchQuery {
+    let parsed = ox_content_search::parse_scoped_search_query(&query);
+    JsScopedSearchQuery { text: parsed.text, scopes: parsed.scopes }
+}
+
+/// Derives hierarchical search scopes from a document id or URL.
+#[napi(js_name = "getSearchDocumentScopes")]
+pub fn get_search_document_scopes(id: String, url: String) -> Vec<String> {
+    ox_content_search::get_search_document_scopes(&id, &url)
+}
+
+/// Returns true when a document belongs to at least one requested search scope.
+#[napi(js_name = "matchesSearchScopes")]
+pub fn matches_search_scopes(id: String, url: String, scopes: Vec<String>) -> bool {
+    ox_content_search::matches_search_scopes(&id, &url, &scopes)
+}
+
+/// Generates the client-side search runtime module.
+#[napi(js_name = "generateSearchModule")]
+pub fn generate_search_module(options_json: String, index_path: String) -> String {
+    ox_content_search::generate_search_module(&options_json, &index_path)
 }
 
 // =============================================================================
