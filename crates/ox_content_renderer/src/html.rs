@@ -38,6 +38,8 @@ pub struct HtmlRendererOptions {
     pub code_annotation_syntax: CodeAnnotationSyntax,
     /// Enable line numbers for all code blocks by default.
     pub code_annotation_default_line_numbers: bool,
+    /// Maximum heading depth included in inline TOCs.
+    pub toc_max_depth: u8,
 }
 
 impl HtmlRendererOptions {
@@ -57,6 +59,7 @@ impl HtmlRendererOptions {
             code_annotation_meta_key: "annotate".to_string(),
             code_annotation_syntax: CodeAnnotationSyntax::Attribute,
             code_annotation_default_line_numbers: false,
+            toc_max_depth: 3,
         }
     }
 }
@@ -756,6 +759,17 @@ fn collect_heading_text(nodes: &[Node<'_>]) -> String {
     text
 }
 
+fn collect_text_nodes_only(nodes: &[Node<'_>]) -> Option<String> {
+    let mut text = String::new();
+    for node in nodes {
+        match node {
+            Node::Text(value) => text.push_str(value.value),
+            _ => return None,
+        }
+    }
+    Some(text)
+}
+
 fn collect_node_text(node: &Node<'_>, text: &mut String) {
     match node {
         Node::Text(value) => text.push_str(value.value),
@@ -801,11 +815,74 @@ fn slugify_heading(text: &str) -> String {
     }
 }
 
+#[derive(Debug, Clone)]
+struct InlineTocEntry {
+    depth: u8,
+    text: String,
+    id: String,
+}
+
+fn collect_inline_toc_entries(document: &Document<'_>, max_depth: u8) -> Vec<InlineTocEntry> {
+    let mut entries = Vec::new();
+    let mut counts = BTreeMap::new();
+
+    for node in &document.children {
+        collect_inline_toc_node(node, max_depth, &mut counts, &mut entries);
+    }
+
+    entries
+}
+
+fn collect_inline_toc_node(
+    node: &Node<'_>,
+    max_depth: u8,
+    counts: &mut BTreeMap<String, usize>,
+    entries: &mut Vec<InlineTocEntry>,
+) {
+    match node {
+        Node::Heading(heading) => {
+            let text = collect_heading_text(&heading.children);
+            let slug = slugify_heading(&text);
+            let count = counts.entry(slug.clone()).or_insert(0);
+            let id = if *count == 0 { slug } else { format!("{slug}-{count}") };
+            *count += 1;
+
+            if heading.depth <= max_depth {
+                entries.push(InlineTocEntry { depth: heading.depth, text, id });
+            }
+        }
+        Node::BlockQuote(block_quote) => {
+            for child in &block_quote.children {
+                collect_inline_toc_node(child, max_depth, counts, entries);
+            }
+        }
+        Node::List(list) => {
+            for item in &list.children {
+                for child in &item.children {
+                    collect_inline_toc_node(child, max_depth, counts, entries);
+                }
+            }
+        }
+        Node::ListItem(item) => {
+            for child in &item.children {
+                collect_inline_toc_node(child, max_depth, counts, entries);
+            }
+        }
+        Node::FootnoteDefinition(definition) => {
+            for child in &definition.children {
+                collect_inline_toc_node(child, max_depth, counts, entries);
+            }
+        }
+        _ => {}
+    }
+}
+
 /// HTML renderer.
 pub struct HtmlRenderer {
     options: HtmlRendererOptions,
     output: String,
     heading_id_counts: BTreeMap<String, usize>,
+    toc_entries: Vec<InlineTocEntry>,
 }
 
 impl HtmlRenderer {
@@ -816,19 +893,26 @@ impl HtmlRenderer {
             options: HtmlRendererOptions::new(),
             output: String::new(),
             heading_id_counts: BTreeMap::new(),
+            toc_entries: Vec::new(),
         }
     }
 
     /// Creates a new HTML renderer with the specified options.
     #[must_use]
     pub fn with_options(options: HtmlRendererOptions) -> Self {
-        Self { options, output: String::new(), heading_id_counts: BTreeMap::new() }
+        Self {
+            options,
+            output: String::new(),
+            heading_id_counts: BTreeMap::new(),
+            toc_entries: Vec::new(),
+        }
     }
 
     /// Renders a document to HTML string.
     #[must_use]
     pub fn render(&mut self, document: &Document<'_>) -> String {
         self.output.clear();
+        self.toc_entries = collect_inline_toc_entries(document, self.options.toc_max_depth);
         self.heading_id_counts.clear();
         let estimated_len = (document.span.len() as usize).saturating_mul(3) / 2;
         if self.output.capacity() < estimated_len {
@@ -836,6 +920,25 @@ impl HtmlRenderer {
         }
         self.visit_document(document);
         std::mem::take(&mut self.output)
+    }
+
+    fn render_inline_toc(&mut self) {
+        if self.toc_entries.is_empty() {
+            return;
+        }
+
+        self.write("<nav class=\"ox-toc\" aria-label=\"Table of contents\">\n<ul>\n");
+        for idx in 0..self.toc_entries.len() {
+            let entry = self.toc_entries[idx].clone();
+            self.write("<li class=\"ox-toc__item ox-toc__item--depth-");
+            self.write(&entry.depth.to_string());
+            self.write("\"><a href=\"#");
+            self.write_url_escaped(&entry.id);
+            self.write("\">");
+            self.write_escaped(&entry.text);
+            self.write("</a></li>\n");
+        }
+        self.write("</ul>\n</nav>\n");
     }
 
     fn write(&mut self, s: &str) {
@@ -1375,6 +1478,12 @@ impl Renderer for HtmlRenderer {
 
 impl<'a> Visit<'a> for HtmlRenderer {
     fn visit_paragraph(&mut self, paragraph: &Paragraph<'a>) {
+        if collect_text_nodes_only(&paragraph.children).is_some_and(|text| text.trim() == "[[toc]]")
+        {
+            self.render_inline_toc();
+            return;
+        }
+
         self.write("<p>");
         for child in &paragraph.children {
             self.visit_inline_node(child);
@@ -1737,6 +1846,62 @@ mod tests {
         let mut renderer = HtmlRenderer::new();
         let html = renderer.render(&doc);
         assert!(html.starts_with("<h2 id=\"api-index-guide\">"));
+    }
+
+    #[test]
+    fn test_render_inline_toc_directive() {
+        let allocator = Allocator::new();
+        let doc =
+            Parser::new(&allocator, "# Title\n\n[[toc]]\n\n## Intro\n### API").parse().unwrap();
+        let mut renderer = HtmlRenderer::new();
+        let html = renderer.render(&doc);
+
+        assert!(html.contains("<nav class=\"ox-toc\" aria-label=\"Table of contents\">"));
+        assert!(html.contains("<a href=\"#title\">Title</a>"));
+        assert!(html.contains("<a href=\"#intro\">Intro</a>"));
+        assert!(html.contains("<a href=\"#api\">API</a>"));
+        assert!(!html.contains("<p>[[toc]]</p>"));
+    }
+
+    #[test]
+    fn test_render_inline_toc_uses_unique_and_unicode_ids() {
+        let allocator = Allocator::new();
+        let doc =
+            Parser::new(&allocator, "[[toc]]\n\n## Setup\n## Setup\n## はじめに").parse().unwrap();
+        let mut renderer = HtmlRenderer::new();
+        let html = renderer.render(&doc);
+
+        assert!(html.contains("href=\"#setup\""));
+        assert!(html.contains("href=\"#setup-1\""));
+        assert!(html.contains("href=\"#はじめに\""));
+    }
+
+    #[test]
+    fn test_render_inline_toc_requires_standalone_text() {
+        let allocator = Allocator::new();
+        let doc =
+            Parser::new(&allocator, "See [[toc]] here\n\n`[[toc]]`\n\n## Intro").parse().unwrap();
+        let mut renderer = HtmlRenderer::new();
+        let html = renderer.render(&doc);
+
+        assert!(html.contains("<p>See [[toc]] here</p>"));
+        assert!(html.contains("<p><code>[[toc]]</code></p>"));
+        assert!(!html.contains("ox-toc"));
+    }
+
+    #[test]
+    fn test_render_inline_toc_honors_max_depth() {
+        let allocator = Allocator::new();
+        let doc = Parser::new(&allocator, "[[toc]]\n\n# Title\n## Intro\n### API").parse().unwrap();
+        let mut renderer = HtmlRenderer::with_options(HtmlRendererOptions {
+            toc_max_depth: 2,
+            ..Default::default()
+        });
+        let html = renderer.render(&doc);
+
+        assert!(html.contains("href=\"#title\""));
+        assert!(html.contains("href=\"#intro\""));
+        assert!(!html.contains("href=\"#api\""));
     }
 
     #[test]
