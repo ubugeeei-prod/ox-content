@@ -411,6 +411,8 @@ struct LastUpdatedView {
 #[derive(Template)]
 #[template(path = "page.html")]
 struct PageTemplate<'a> {
+    html_lang: &'a str,
+    html_dir: &'a str,
     site_name: &'a str,
     document_title: &'a str,
     description: Option<&'a str>,
@@ -824,6 +826,33 @@ fn format_last_updated(timestamp_ms: i64) -> Option<LastUpdatedView> {
     Some(LastUpdatedView { text: date.clone(), datetime: date })
 }
 
+fn infer_locale_dir(locale: &str) -> &'static str {
+    match locale.split('-').next().unwrap_or_default().to_ascii_lowercase().as_str() {
+        "ar" | "fa" | "he" | "iw" | "ps" | "sd" | "ug" | "ur" | "yi" => "rtl",
+        _ => "ltr",
+    }
+}
+
+fn html_locale_attrs(config: &SsgConfig) -> (&str, &str) {
+    let lang = config
+        .locale
+        .as_deref()
+        .filter(|locale| !locale.trim().is_empty())
+        .or_else(|| config.available_locales.as_ref()?.first().map(|locale| locale.code.as_str()))
+        .unwrap_or("en");
+    let configured_dir = config.available_locales.as_ref().and_then(|locales| {
+        locales.iter().find(|locale| locale.code == lang).and_then(|locale| {
+            match locale.dir.as_str() {
+                "ltr" => Some("ltr"),
+                "rtl" => Some("rtl"),
+                _ => None,
+            }
+        })
+    });
+
+    (lang, configured_dir.unwrap_or_else(|| infer_locale_dir(lang)))
+}
+
 /// Generates a complete HTML page for SSG.
 ///
 /// This function creates a full HTML document with navigation sidebar,
@@ -971,8 +1000,11 @@ pub fn generate_html(page_data: &PageData, nav_groups: &[NavGroup], config: &Ssg
     } else {
         format!("{} - {}", page_data.title, config.site_name)
     };
+    let (html_lang, html_dir) = html_locale_attrs(config);
 
     let template = PageTemplate {
+        html_lang,
+        html_dir,
         site_name: &config.site_name,
         document_title: &document_title,
         description: page_data.description.as_deref(),
@@ -1368,6 +1400,32 @@ mod tests {
     #[test]
     fn test_format_last_updated_rejects_invalid_timestamps() {
         assert!(format_last_updated(-1).is_none());
+    }
+
+    #[test]
+    fn test_html_locale_attrs_use_current_locale_and_direction() {
+        let config = SsgConfig {
+            site_name: "Localized".to_string(),
+            base: "/".to_string(),
+            og_image: None,
+            theme: None,
+            locale: Some("ar".to_string()),
+            available_locales: None,
+        };
+
+        assert_eq!(html_locale_attrs(&config), ("ar", "rtl"));
+
+        let page_data = PageData {
+            title: "مرحبا".to_string(),
+            description: None,
+            content: "<p>Content</p>".to_string(),
+            toc: vec![],
+            last_updated: None,
+            path: "ar".to_string(),
+            entry_page: None,
+        };
+        let html = generate_html(&page_data, &[], &config);
+        assert!(html.contains("<html lang=\"ar\" dir=\"rtl\">"));
     }
 
     #[test]

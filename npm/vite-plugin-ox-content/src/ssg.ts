@@ -21,6 +21,7 @@ import type {
   TocEntry,
   HeroConfig,
   FeatureConfig,
+  LocaleConfig,
 } from "./types";
 import { resolveTheme, themeToNapi } from "./theme";
 import type { ResolvedThemeConfig, SidebarItem } from "./theme";
@@ -1554,6 +1555,8 @@ export async function generateHtmlPage(
   base: string,
   ogImage?: string,
   theme?: ResolvedThemeConfig,
+  locale?: string,
+  availableLocales?: LocaleConfig[],
 ): Promise<string> {
   const mod = await importNapiModule();
 
@@ -1639,6 +1642,12 @@ export async function generateHtmlPage(
       base,
       ogImage,
       theme: themeForRust,
+      locale,
+      availableLocales: availableLocales?.map((l) => ({
+        code: l.code,
+        name: l.name,
+        dir: l.dir ?? "ltr",
+      })),
     },
   );
 }
@@ -1992,6 +2001,12 @@ export function getHref(
     return `${base}index${extension}`;
   }
   return `${base}${urlPath}/index${extension}`;
+}
+
+export function getPageLocale(urlPath: string, i18n: ResolvedOptions["i18n"]): string | undefined {
+  if (!i18n) return undefined;
+  const firstSegment = urlPath.split("/").filter(Boolean)[0];
+  return i18n.locales.some((l) => l.code === firstSegment) ? firstSegment : i18n.defaultLocale;
 }
 
 /**
@@ -2480,6 +2495,8 @@ export async function buildSsg(
           base,
           pageOgImage,
           ssgOptions.theme,
+          getPageLocale(pageData.path, options.i18n),
+          options.i18n ? options.i18n.locales : undefined,
         );
       }
 
