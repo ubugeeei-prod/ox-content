@@ -798,6 +798,44 @@ impl HtmlRenderer {
         }
     }
 
+    fn sanitized_url<'a>(&self, url: &'a str, fallback: &'static str) -> &'a str {
+        if !self.options.sanitize {
+            return url;
+        }
+
+        let trimmed =
+            url.trim_matches(|ch: char| ch.is_ascii_control() || ch.is_ascii_whitespace());
+
+        if Self::is_safe_url(trimmed) {
+            trimmed
+        } else {
+            fallback
+        }
+    }
+
+    fn is_safe_url(url: &str) -> bool {
+        if url.bytes().any(|byte| byte.is_ascii_control()) {
+            return false;
+        }
+
+        let Some(colon_index) = url.find(':') else {
+            return true;
+        };
+
+        let first_path_marker = url.find(&['/', '?', '#'][..]).unwrap_or(usize::MAX);
+        if first_path_marker < colon_index {
+            return true;
+        }
+
+        let scheme = url[..colon_index]
+            .chars()
+            .filter(|ch| !ch.is_ascii_whitespace())
+            .map(|ch| ch.to_ascii_lowercase())
+            .collect::<String>();
+
+        matches!(scheme.as_str(), "http" | "https" | "mailto" | "tel")
+    }
+
     fn render_paragraph_with_skipped_text_prefix<'a>(
         &self,
         paragraph: &Paragraph<'a>,
@@ -1327,15 +1365,17 @@ impl<'a> Visit<'a> for HtmlRenderer {
 
     fn visit_link(&mut self, link: &Link<'a>) {
         self.write("<a href=\"");
-        if self.options.convert_md_links {
-            let url = self.convert_md_url(link.url);
-            self.write_url_escaped(&url);
+        let converted_url;
+        let href = if self.options.convert_md_links {
+            converted_url = self.convert_md_url(link.url);
+            self.sanitized_url(&converted_url, "#")
         } else {
-            self.write_url_escaped(link.url);
-        }
+            self.sanitized_url(link.url, "#")
+        };
+        self.write_url_escaped(href);
         self.write("\"");
         // Add target="_blank" for external links (http:// or https://)
-        if link.url.starts_with("http://") || link.url.starts_with("https://") {
+        if href.starts_with("http://") || href.starts_with("https://") {
             self.write(" target=\"_blank\" rel=\"noopener noreferrer\"");
         }
         if let Some(title) = link.title {
@@ -1352,7 +1392,7 @@ impl<'a> Visit<'a> for HtmlRenderer {
 
     fn visit_image(&mut self, image: &Image<'a>) {
         self.write("<img src=\"");
-        self.write_url_escaped(image.url);
+        self.write_url_escaped(self.sanitized_url(image.url, ""));
         self.write("\" alt=\"");
         self.write_escaped(image.alt);
         self.write("\"");
