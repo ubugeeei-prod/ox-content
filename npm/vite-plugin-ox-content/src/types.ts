@@ -96,6 +96,34 @@ export interface EntryPageConfig {
 }
 
 /**
+ * Navigation item for SSG sidebar rendering.
+ */
+export interface SsgNavigationItem {
+  /** Display title */
+  title: string;
+  /**
+   * Route path used for active-state matching.
+   * Internal links should use site-relative paths such as `/getting-started`.
+   */
+  path?: string;
+  /**
+   * Final href used in the rendered HTML.
+   * When omitted for internal links, ox-content derives it from `path`.
+   */
+  href?: string;
+}
+
+/**
+ * Navigation group for SSG sidebar rendering.
+ */
+export interface SsgNavigationGroup {
+  /** Group heading */
+  title: string;
+  /** Navigation items within this group */
+  items: SsgNavigationItem[];
+}
+
+/**
  * SSG (Static Site Generation) options.
  */
 export interface SsgOptions {
@@ -160,6 +188,12 @@ export interface SsgOptions {
    * Use defineTheme() to create a theme configuration.
    */
   theme?: ThemeConfig;
+
+  /**
+   * Override the auto-generated sidebar navigation.
+   * Useful when migrating from tools with explicit navigation config such as VitePress.
+   */
+  navigation?: SsgNavigationGroup[];
 }
 
 /**
@@ -176,6 +210,7 @@ export interface ResolvedSsgOptions {
   lastUpdated: boolean;
   siteUrl?: string;
   theme?: ResolvedThemeConfig;
+  navigation?: SsgNavigationGroup[];
 }
 
 /**

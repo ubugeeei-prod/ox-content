@@ -16,14 +16,17 @@ import { transformIslands, hasIslands, resetIslandCounter } from "./island";
 import {
   collectMarkdownFiles,
   buildNavItems,
+  buildThemeNavItems,
   extractTitle,
   getUrlPath,
   generateHtmlPage,
   formatTitle,
+  resolveNavigationGroups,
 } from "./ssg";
 import type { NavGroup, SsgPageData, SsgEntryPageConfig } from "./ssg";
 import type { ResolvedOptions } from "./types";
 import type { HeroConfig, FeatureConfig } from "./types";
+import { normalizeVitePressFrontmatter } from "./vitepress";
 
 /** File extensions to skip in the middleware. */
 const SKIP_EXTENSIONS = new Set([
@@ -278,6 +281,7 @@ async function renderPage(
     baseUrl: base,
     sourcePath: filePath,
   });
+  const frontmatter = normalizeVitePressFrontmatter(result.frontmatter);
 
   let transformedHtml = result.html;
 
@@ -305,15 +309,15 @@ async function renderPage(
   transformedHtml = restoreMermaidSvgs(transformedHtml, mermaidSvgs);
 
   // Extract title
-  const title = extractTitle(transformedHtml, result.frontmatter);
-  const description = result.frontmatter.description as string | undefined;
+  const title = extractTitle(transformedHtml, frontmatter);
+  const description = frontmatter.description as string | undefined;
 
   // Check if this is an entry page
   let entryPage: SsgEntryPageConfig | undefined;
-  if (result.frontmatter.layout === "entry") {
+  if (frontmatter.layout === "entry") {
     entryPage = {
-      hero: result.frontmatter.hero as HeroConfig | undefined,
-      features: result.frontmatter.features as FeatureConfig[] | undefined,
+      hero: frontmatter.hero as HeroConfig | undefined,
+      features: frontmatter.features as FeatureConfig[] | undefined,
     };
   }
 
@@ -323,7 +327,7 @@ async function renderPage(
     description,
     content: transformedHtml,
     toc: result.toc,
-    frontmatter: result.frontmatter,
+    frontmatter,
     path: getUrlPath(filePath, srcDir),
     href: getUrlPath(filePath, srcDir) || "/",
     entryPage,
@@ -391,7 +395,11 @@ export function createDevServerMiddleware(
       // Build navigation if not cached
       if (!cache.navGroups) {
         const markdownFiles = await collectMarkdownFiles(srcDir);
-        cache.navGroups = buildNavItems(markdownFiles, srcDir, base, ".html");
+        cache.navGroups =
+          resolveNavigationGroups(options.ssg.navigation, base, options.ssg.extension) ??
+          (options.ssg.theme?.sidebar.length
+            ? buildThemeNavItems(options.ssg.theme.sidebar, base, options.ssg.extension)
+            : buildNavItems(markdownFiles, srcDir, base, options.ssg.extension));
       }
 
       // Render the page

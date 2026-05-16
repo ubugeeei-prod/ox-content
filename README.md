@@ -77,6 +77,34 @@ export default defineConfig({
 });
 ```
 
+### Migrate from VitePress
+
+```bash
+ox-content-migrate-vitepress .vitepress/config.ts \
+  --src-dir docs \
+  --out-dir dist \
+  --out ox-content.config.ts
+```
+
+The same migration runner is available across JavaScript runtimes:
+
+```bash
+# Node.js, after installing @ox-content/vite-plugin
+ox-content-migrate-vitepress .vitepress/config.ts --out ox-content.config.ts
+
+# Deno
+deno run -A npm:@ox-content/vite-plugin/vitepress-migrate .vitepress/config.ts \
+  --out ox-content.config.ts
+
+# Bun
+bunx --bun @ox-content/vite-plugin .vitepress/config.ts --out ox-content.config.ts
+```
+
+The generated `ox-content.config.ts` contains an editable `OxContentOptions` object built from
+VitePress settings such as `title`, `base`, `themeConfig.sidebar`, `themeConfig.socialLinks`,
+`themeConfig.footer`, and search placeholder.
+`layout: home` frontmatter is also accepted for landing pages during SSG/dev rendering.
+
 ### Browser Usage (WebAssembly)
 
 ```bash

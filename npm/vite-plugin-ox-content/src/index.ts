@@ -52,6 +52,8 @@ export type {
   HeroConfig,
   FeatureConfig,
   EntryPageConfig,
+  SsgNavigationItem,
+  SsgNavigationGroup,
   // i18n types
   I18nOptions,
   ResolvedI18nOptions,
@@ -534,6 +536,24 @@ export type {
 export { buildSsg, resolveSsgOptions, DEFAULT_HTML_TEMPLATE } from "./ssg";
 export { resolveSearchOptions, buildSearchIndex, writeSearchIndex } from "./search";
 export { defineTheme, defaultTheme, mergeThemes, resolveTheme } from "./theme";
+export {
+  fromVitePressConfig,
+  generateVitePressMigrationConfig,
+  convertVitePressSidebar,
+  convertVitePressNav,
+  normalizeVitePressFrontmatter,
+} from "./vitepress";
+export type {
+  GenerateVitePressMigrationConfigOptions,
+  VitePressConfig,
+  VitePressThemeConfig,
+  VitePressSidebar,
+  VitePressSidebarItem,
+  VitePressNavItem,
+  VitePressSocialLink,
+  VitePressFooter,
+  VitePressLogo,
+} from "./vitepress";
 export type {
   ThemeConfig,
   ThemeColors,

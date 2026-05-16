@@ -17,6 +17,7 @@ import type {
   ResolvedOptions,
   ResolvedSsgOptions,
   SsgOptions,
+  SsgNavigationGroup,
   TocEntry,
   HeroConfig,
   FeatureConfig,
@@ -24,6 +25,7 @@ import type {
 } from "./types";
 import { resolveTheme, themeToNapi } from "./theme";
 import type { ResolvedThemeConfig, SidebarItem } from "./theme";
+import { normalizeVitePressFrontmatter } from "./vitepress";
 
 /**
  * Navigation item for SSG.
@@ -1449,6 +1451,7 @@ export function resolveSsgOptions(ssg: SsgOptions | boolean | undefined): Resolv
     lastUpdated: ssg.lastUpdated ?? false,
     siteUrl: ssg.siteUrl,
     theme: resolveTheme(ssg.theme),
+    navigation: ssg.navigation,
   };
 }
 
@@ -1676,6 +1679,98 @@ export function getHref(
   return importNapiModuleSync().getSsgHref(inputPath, srcDir, base, extension);
 }
 
+function isExternalHref(value: string): boolean {
+  return /^[a-z][a-z0-9+.-]*:/i.test(value) || value.startsWith("//");
+}
+
+function splitHrefSuffix(value: string): { pathname: string; suffix: string } {
+  const match = /^([^?#]*)([?#].*)?$/.exec(value);
+  return {
+    pathname: match?.[1] ?? value,
+    suffix: match?.[2] ?? "",
+  };
+}
+
+function normalizeNavigationPath(value: string): { path: string; suffix: string } {
+  const { pathname, suffix } = splitHrefSuffix(value.trim());
+  let normalized = pathname || "/";
+
+  if (!normalized.startsWith("/")) {
+    normalized = `/${normalized}`;
+  }
+
+  normalized = normalized
+    .replace(/\/index(?:\.(?:html?|md|markdown))?$/i, "/")
+    .replace(/\.(?:html?|md|markdown)$/i, "");
+
+  if (normalized !== "/") {
+    normalized = normalized.replace(/\/+$/, "");
+  }
+
+  return {
+    path: normalized || "/",
+    suffix,
+  };
+}
+
+function buildHrefFromNavigationPath(pathname: string, base: string, extension: string): string {
+  if (pathname === "/" || pathname === "") {
+    return `${base}index${extension}`;
+  }
+
+  return `${base}${pathname.replace(/^\/+/, "")}/index${extension}`;
+}
+
+/**
+ * Resolves manual navigation config to the format used by the built-in SSG renderer.
+ */
+export function resolveNavigationGroups(
+  navigation: SsgNavigationGroup[] | undefined,
+  base: string,
+  extension: string,
+): NavGroup[] | undefined {
+  if (!navigation) {
+    return undefined;
+  }
+
+  return navigation.map((group) => ({
+    title: group.title,
+    items: group.items.flatMap((item) => {
+      const rawHref = item.href ?? item.path;
+      if (!rawHref) {
+        return [];
+      }
+
+      if (isExternalHref(rawHref) || rawHref.startsWith("#")) {
+        return [
+          {
+            title: item.title,
+            path: item.path ?? rawHref,
+            href: rawHref,
+          },
+        ];
+      }
+
+      const pathSource = item.path ?? rawHref;
+      const { path } = normalizeNavigationPath(pathSource);
+      const href = item.href
+        ? (() => {
+            const normalized = normalizeNavigationPath(item.href);
+            return `${buildHrefFromNavigationPath(normalized.path, base, extension)}${normalized.suffix}`;
+          })()
+        : buildHrefFromNavigationPath(path, base, extension);
+
+      return [
+        {
+          title: item.title,
+          path,
+          href,
+        },
+      ];
+    }),
+  }));
+}
+
 export function getPageLocale(urlPath: string, i18n: ResolvedOptions["i18n"]): string | undefined {
   if (!i18n) return undefined;
   return (
@@ -1788,9 +1883,11 @@ export async function buildSsg(
   const markdownFiles = await collectMarkdownFiles(srcDir);
 
   // Build navigation
-  const navItems = ssgOptions.theme?.sidebar.length
-    ? buildThemeNavItems(ssgOptions.theme.sidebar, base, ssgOptions.extension)
-    : buildNavItems(markdownFiles, srcDir, base, ssgOptions.extension);
+  const navItems =
+    resolveNavigationGroups(ssgOptions.navigation, base, ssgOptions.extension) ??
+    (ssgOptions.theme?.sidebar.length
+      ? buildThemeNavItems(ssgOptions.theme.sidebar, base, ssgOptions.extension)
+      : buildNavItems(markdownFiles, srcDir, base, ssgOptions.extension));
 
   // Get site name from options or package.json
   let siteName = ssgOptions.siteName ?? "Documentation";
@@ -1842,6 +1939,7 @@ export async function buildSsg(
         baseUrl: base,
         sourcePath: inputPath,
       });
+      const frontmatter = normalizeVitePressFrontmatter(result.frontmatter);
 
       // Apply built-in plugin transformations (No-JS First)
       let transformedHtml = result.html;
@@ -1870,8 +1968,8 @@ export async function buildSsg(
       // Restore protected mermaid SVGs
       transformedHtml = restoreMermaidSvgs(transformedHtml, mermaidSvgs);
 
-      const title = extractTitle(transformedHtml, result.frontmatter);
-      const description = result.frontmatter.description as string | undefined;
+      const title = extractTitle(transformedHtml, frontmatter);
+      const description = frontmatter.description as string | undefined;
       const routePaths = getRoutePaths(
         inputPath,
         srcDir,
@@ -1888,13 +1986,13 @@ export async function buildSsg(
         title,
         description,
         lastUpdated: napi?.getGitLastUpdated(inputPath, root) ?? undefined,
-        frontmatter: result.frontmatter,
+        frontmatter,
         toc: result.toc,
       });
 
       // Collect OG image entry if generation is enabled
       if (shouldGenerateOgImages) {
-        const { layout: _layout, ...frontmatterRest } = result.frontmatter;
+        const { layout: _layout, ...frontmatterRest } = frontmatter;
         ogImageEntries.push({
           props: {
             ...frontmatterRest,

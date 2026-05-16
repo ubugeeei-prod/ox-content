@@ -11,6 +11,7 @@ import * as path from "path";
 import { glob } from "glob";
 import type { Plugin } from "vite";
 import type { ResolvedOptions } from "./types";
+import { normalizeVitePressFrontmatter } from "./vitepress";
 
 // =============================================================================
 // Types
@@ -145,7 +146,7 @@ async function collectPages(options: ResolvedOptions, root: string): Promise<Pag
 
   for (const file of files.sort()) {
     const content = fs.readFileSync(file, "utf-8");
-    const frontmatter = parseFrontmatter(content);
+    const frontmatter = normalizeVitePressFrontmatter(parseFrontmatter(content));
 
     // Skip entry layout pages (they are landing pages, not content pages)
     if (frontmatter.layout === "entry") continue;

@@ -26,6 +26,42 @@ export default defineConfig({
 });
 ```
 
+## VitePress Migration
+
+If you already have a VitePress site, generate an editable ox-content options object:
+
+```bash
+ox-content-migrate-vitepress .vitepress/config.ts \
+  --src-dir docs \
+  --out-dir dist \
+  --out ox-content.config.ts
+```
+
+The CLI can run on Node.js, Deno, or Bun:
+
+```bash
+# Node.js, after installing @ox-content/vite-plugin
+ox-content-migrate-vitepress .vitepress/config.ts --out ox-content.config.ts
+
+# Deno
+deno run -A npm:@ox-content/vite-plugin/vitepress-migrate .vitepress/config.ts \
+  --out ox-content.config.ts
+
+# Bun
+bunx --bun @ox-content/vite-plugin .vitepress/config.ts --out ox-content.config.ts
+```
+
+The generated `ox-content.config.ts` maps these settings into ox-content:
+
+- `title` / `themeConfig.siteTitle` -> `ssg.siteName`
+- `base` -> `base`
+- `themeConfig.sidebar` -> `ssg.navigation`
+- `themeConfig.socialLinks` / `themeConfig.footer` / `themeConfig.logo` -> `ssg.theme`
+- `themeConfig.search.placeholder` -> `search.placeholder`
+
+For landing pages, VitePress-style `layout: home` frontmatter is treated the same as
+ox-content's `layout: entry`.
+
 ## Options
 
 ### srcDir
