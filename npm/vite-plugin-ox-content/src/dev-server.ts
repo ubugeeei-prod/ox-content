@@ -304,7 +304,7 @@ async function renderPage(
     tabs: true,
     youtube: true,
     github: options.embeds.github,
-    ogp: true,
+    openGraph: options.embeds.openGraph,
     mermaid: true,
     githubToken: process.env.GITHUB_TOKEN,
   });

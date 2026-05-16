@@ -212,7 +212,7 @@ Generate table of contents.
 ### embeds
 
 - Type: `BuiltinEmbedOptions | false`
-- Default: `{ github: true }`
+- Default: `{ github: true, openGraph: true }`
 
 Built-in static embeds are rendered at transform time, with no client-side JavaScript.
 
@@ -222,6 +222,8 @@ Built-in static embeds are rendered at transform time, with no client-side JavaS
 <GitHub permalink="https://github.com/ubugeeei/ox-content/blob/278098b/README.md#L1-L12" />
 
 <GitHub repo="ubugeeei/ox-content" path="README.md" ref="main" loc="1-12" />
+
+<OgCard url="https://github.com/ubugeeei/ox-content" />
 ```
 
 `permalink`, `url`, and `href` accept GitHub `blob` URLs. The `#L1-L12` fragment is used as the source line range. You can also use `repo`, `path`, `ref`, and `loc` when you do not want to paste the full permalink. Source embeds fetch the GitHub contents API and render code directly instead of using an Open Graph preview.
@@ -235,6 +237,9 @@ oxContent({
       token: process.env.GITHUB_TOKEN,
       maxSourceBytes: 200000,
       maxSourceLines: 120,
+    },
+    openGraph: {
+      timeout: 5000,
     },
   },
 });
@@ -272,13 +277,27 @@ Source code card classes:
 - `.ox-github-code-line-number`
 - `.ox-github-code-line-content`
 
+Open Graph card classes:
+
+- `.ox-ogp-card`
+- `.ox-ogp-simple`
+- `.ox-ogp-content`
+- `.ox-ogp-title`
+- `.ox-ogp-description`
+- `.ox-ogp-image`
+- `.ox-ogp-meta`
+- `.ox-ogp-domain`
+- `.ox-ogp-favicon`
+
 ```css
 .ox-github-card,
-.ox-github-code {
+.ox-github-code,
+.ox-ogp-card {
   border-color: var(--my-border-color);
 }
 
-.ox-github-code-line-number {
+.ox-github-code-line-number,
+.ox-ogp-domain {
   color: var(--my-muted-color);
 }
 ```

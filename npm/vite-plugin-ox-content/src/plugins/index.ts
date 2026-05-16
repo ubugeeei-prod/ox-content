@@ -6,6 +6,7 @@
  */
 
 import type { GitHubOptions } from "./github";
+import type { OgpOptions } from "./ogp";
 
 export { transformTabs, generateTabsCSS, resetTabGroupCounter } from "./tabs";
 
@@ -47,7 +48,8 @@ export interface TransformAllOptions {
   tabs?: boolean;
   youtube?: boolean;
   github?: boolean | GitHubOptions;
-  ogp?: boolean;
+  ogp?: boolean | OgpOptions;
+  openGraph?: boolean | OgpOptions;
   mermaid?: boolean;
   githubToken?: string;
 }
@@ -63,12 +65,14 @@ export async function transformAllPlugins(
     tabs = true,
     youtube = true,
     github = true,
-    ogp = true,
+    ogp,
+    openGraph,
     mermaid = true,
     githubToken,
   } = options;
 
   let result = html;
+  const ogpOptions = openGraph ?? ogp ?? true;
 
   // Order matters: process in dependency order
 
@@ -92,9 +96,13 @@ export async function transformAllPlugins(
   }
 
   // 4. OGP (requires fetch calls)
-  if (ogp) {
+  if (ogpOptions !== false) {
     const { transformOgp } = await import("./ogp");
-    result = await transformOgp(result);
+    result = await transformOgp(
+      result,
+      undefined,
+      typeof ogpOptions === "object" ? ogpOptions : {},
+    );
   }
 
   // 5. Mermaid (requires mermaid library)
@@ -113,6 +121,7 @@ export async function transformBuiltinEmbeds(
   html: string,
   options: {
     github: GitHubOptions | false;
+    openGraph: OgpOptions | false;
   },
 ): Promise<string> {
   let result = html;
@@ -123,6 +132,11 @@ export async function transformBuiltinEmbeds(
       token: process.env.GITHUB_TOKEN,
       ...options.github,
     });
+  }
+
+  if (options.openGraph) {
+    const { transformOgp } = await import("./ogp");
+    result = await transformOgp(result, undefined, options.openGraph);
   }
 
   return result;
