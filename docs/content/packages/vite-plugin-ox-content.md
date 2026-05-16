@@ -277,13 +277,27 @@ Source code card classes:
 - `.ox-github-code-line-number`
 - `.ox-github-code-line-content`
 
+Open Graph card classes:
+
+- `.ox-ogp-card`
+- `.ox-ogp-simple`
+- `.ox-ogp-content`
+- `.ox-ogp-title`
+- `.ox-ogp-description`
+- `.ox-ogp-image`
+- `.ox-ogp-meta`
+- `.ox-ogp-domain`
+- `.ox-ogp-favicon`
+
 ```css
 .ox-github-card,
-.ox-github-code {
+.ox-github-code,
+.ox-ogp-card {
   border-color: var(--my-border-color);
 }
 
-.ox-github-code-line-number {
+.ox-github-code-line-number,
+.ox-ogp-domain {
   color: var(--my-muted-color);
 }
 ```
