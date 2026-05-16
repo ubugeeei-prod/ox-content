@@ -138,7 +138,7 @@ function buildComment({ basePath, headPath, baseBundlePath, headBundlePath, base
     "",
     "### Runtime",
     "",
-    "| Suite | Size | Target | Base ops/sec | Head ops/sec | Delta |",
+    "| Suite | Size | Target | Base time | Head time | Head speed (base=100%) |",
     "| --- | --- | --- | ---: | ---: | ---: |",
   ];
 
@@ -147,14 +147,14 @@ function buildComment({ basePath, headPath, baseBundlePath, headBundlePath, base
   } else {
     for (const row of runtimeRows) {
       lines.push(
-        `| ${row.suiteLabel} | ${row.sizeName} | ${row.targetName} | ${formatOps(row.baseOps)} | ${formatOps(row.headOps)} | ${formatDelta(row.deltaPercent)} |`,
+        `| ${row.suiteLabel} | ${row.sizeName} | ${row.targetName} | ${formatTimeMs(row.baseOps)} | ${formatTimeMs(row.headOps)} | ${formatSpeedPercent(row.speedPercent)} |`,
       );
     }
   }
 
   lines.push(
     "",
-    `Values are from the large parse/render benchmark. Higher ops/sec is better; changes within +/-${NOISE_THRESHOLD_PERCENT}% are treated as noise.`,
+    `Values are from the large runtime benchmarks. Time is shown in milliseconds to microsecond precision. Head speed is normalized with base = 1.00 (100%); changes within +/-${NOISE_THRESHOLD_PERCENT}% are treated as noise.`,
     "",
   );
 
@@ -209,6 +209,7 @@ function compareRuntimeReports(base, head) {
       baseOps,
       headOps,
       deltaPercent: percentChange(baseOps, headOps),
+      speedPercent: speedPercent(baseOps, headOps),
     };
   });
 }
@@ -313,6 +314,14 @@ function percentChange(baseValue, headValue) {
   return ((headValue - baseValue) / baseValue) * 100;
 }
 
+function speedPercent(baseValue, headValue) {
+  if (!Number.isFinite(baseValue) || !Number.isFinite(headValue) || baseValue <= 0) {
+    return null;
+  }
+
+  return (headValue / baseValue) * 100;
+}
+
 function summarizeRows(runtimeRows, bundleRows) {
   const runtimeCount = runtimeRows.filter((row) => row.deltaPercent !== null).length;
   const bundleCount = bundleRows.filter((row) => row.deltaPercent !== null).length;
@@ -332,16 +341,28 @@ function summarizeRows(runtimeRows, bundleRows) {
   return `${parts.join(" and ")} compared.`;
 }
 
-function formatOps(value) {
-  return formatNumber(value);
-}
-
 function formatNumber(value) {
   if (!Number.isFinite(value)) {
     return "n/a";
   }
 
   return Math.round(value).toLocaleString("en-US");
+}
+
+function formatTimeMs(opsPerSec) {
+  if (!Number.isFinite(opsPerSec) || opsPerSec <= 0) {
+    return "n/a";
+  }
+
+  return `${(1000 / opsPerSec).toFixed(3)} ms`;
+}
+
+function formatSpeedPercent(value) {
+  if (!Number.isFinite(value)) {
+    return "n/a";
+  }
+
+  return `${value.toFixed(2)}%`;
 }
 
 function formatBytes(value) {
