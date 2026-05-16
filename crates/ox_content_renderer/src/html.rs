@@ -707,6 +707,47 @@ fn parse_vitepress_inline_annotations(value: &str) -> Vec<CodeLineRenderState> {
     lines
 }
 
+fn is_html_attr_start(byte: u8) -> bool {
+    byte.is_ascii_alphabetic()
+}
+
+fn is_html_attr_char(byte: u8) -> bool {
+    byte.is_ascii_alphanumeric() || matches!(byte, b'-' | b'_' | b':')
+}
+
+fn html_attr_value_range(html: &str, bytes: &[u8], name_end: usize) -> Option<(usize, usize)> {
+    let mut cursor = name_end;
+    while cursor < bytes.len() && bytes[cursor].is_ascii_whitespace() {
+        cursor += 1;
+    }
+    if bytes.get(cursor) != Some(&b'=') {
+        return None;
+    }
+    cursor += 1;
+    while cursor < bytes.len() && bytes[cursor].is_ascii_whitespace() {
+        cursor += 1;
+    }
+
+    if let quote @ (b'"' | b'\'') = bytes.get(cursor).copied()? {
+        let value_start = cursor + 1;
+        let value_end = html[value_start..]
+            .bytes()
+            .position(|byte| byte == quote)
+            .map(|offset| value_start + offset)?;
+        Some((value_start, value_end))
+    } else {
+        let value_start = cursor;
+        let mut value_end = value_start;
+        while value_end < bytes.len()
+            && !bytes[value_end].is_ascii_whitespace()
+            && bytes[value_end] != b'>'
+        {
+            value_end += 1;
+        }
+        Some((value_start, value_end))
+    }
+}
+
 /// HTML renderer.
 pub struct HtmlRenderer {
     options: HtmlRendererOptions,
@@ -1030,6 +1071,90 @@ impl HtmlRenderer {
         }
     }
 
+    fn convert_markdown_url(&self, url: &str) -> String {
+        let converted = self.convert_md_url(url);
+        if converted != url {
+            return converted;
+        }
+
+        self.apply_base_to_root_absolute_url(url).unwrap_or(converted)
+    }
+
+    fn apply_base_to_root_absolute_url(&self, url: &str) -> Option<String> {
+        if !self.options.convert_md_links || !url.starts_with('/') || url.starts_with("//") {
+            return None;
+        }
+
+        let suffix_start = url.find(&['?', '#'][..]).unwrap_or(url.len());
+        let (path, suffix) = url.split_at(suffix_start);
+        let base = self.options.base_url.trim_end_matches('/');
+
+        if base.is_empty() {
+            Some(url.to_string())
+        } else if path == "/" {
+            Some(format!("{base}/{suffix}"))
+        } else {
+            Some(format!("{base}{path}{suffix}"))
+        }
+    }
+
+    fn rewrite_html_root_urls(&self, html: &str) -> String {
+        let mut output = String::with_capacity(html.len());
+        let bytes = html.as_bytes();
+        let mut i = 0;
+        let mut in_tag = false;
+
+        while i < bytes.len() {
+            match bytes[i] {
+                b'<' => {
+                    in_tag = true;
+                    output.push('<');
+                    i += 1;
+                }
+                b'>' => {
+                    in_tag = false;
+                    output.push('>');
+                    i += 1;
+                }
+                byte if in_tag && is_html_attr_start(byte) => {
+                    let name_start = i;
+                    let mut name_end = i + 1;
+                    while name_end < bytes.len() && is_html_attr_char(bytes[name_end]) {
+                        name_end += 1;
+                    }
+
+                    let name = &html[name_start..name_end];
+                    if name.eq_ignore_ascii_case("href") || name.eq_ignore_ascii_case("src") {
+                        let Some((value_start, value_end)) =
+                            html_attr_value_range(html, bytes, name_end)
+                        else {
+                            output.push_str(name);
+                            i = name_end;
+                            continue;
+                        };
+                        let value = &html[value_start..value_end];
+                        if let Some(rewritten) = self.apply_base_to_root_absolute_url(value) {
+                            output.push_str(&html[i..value_start]);
+                            output.push_str(&rewritten);
+                            i = value_end;
+                            continue;
+                        }
+                    }
+
+                    output.push_str(name);
+                    i = name_end;
+                }
+                _ => {
+                    let ch = html[i..].chars().next().expect("valid UTF-8");
+                    output.push(ch);
+                    i += ch.len_utf8();
+                }
+            }
+        }
+
+        output
+    }
+
     /// Converts a `.md` URL to `.html` URL for SSG output.
     fn convert_md_url(&self, url: &str) -> String {
         // Split URL into path and fragment
@@ -1308,6 +1433,9 @@ impl<'a> Visit<'a> for HtmlRenderer {
     fn visit_html(&mut self, html: &Html<'a>) {
         if self.options.sanitize {
             self.write_escaped(html.value);
+        } else if self.options.convert_md_links {
+            let rewritten = self.rewrite_html_root_urls(html.value);
+            self.write(&rewritten);
         } else {
             self.write(html.value);
         }
@@ -1367,7 +1495,7 @@ impl<'a> Visit<'a> for HtmlRenderer {
         self.write("<a href=\"");
         let converted_url;
         let href = if self.options.convert_md_links {
-            converted_url = self.convert_md_url(link.url);
+            converted_url = self.convert_markdown_url(link.url);
             self.sanitized_url(&converted_url, "#")
         } else {
             self.sanitized_url(link.url, "#")
@@ -1392,7 +1520,14 @@ impl<'a> Visit<'a> for HtmlRenderer {
 
     fn visit_image(&mut self, image: &Image<'a>) {
         self.write("<img src=\"");
-        self.write_url_escaped(self.sanitized_url(image.url, ""));
+        let converted_url;
+        let src = if self.options.convert_md_links {
+            converted_url = self.convert_markdown_url(image.url);
+            self.sanitized_url(&converted_url, "")
+        } else {
+            self.sanitized_url(image.url, "")
+        };
+        self.write_url_escaped(src);
         self.write("\" alt=\"");
         self.write_escaped(image.alt);
         self.write("\"");
