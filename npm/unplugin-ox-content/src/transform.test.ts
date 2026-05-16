@@ -11,6 +11,7 @@ import remarkDirective from "remark-directive";
 import remarkFrontmatter from "remark-frontmatter";
 import remarkGfm from "remark-gfm";
 import remarkMath from "remark-math";
+import remarkParse from "remark-parse";
 import remarkRehype from "remark-rehype";
 import remarkSmartypants from "remark-smartypants";
 import remarkToc from "remark-toc";
@@ -356,6 +357,48 @@ function createResolvedOptions(overrides?: Partial<ResolvedOptions>): ResolvedOp
     },
     ...overrides,
   };
+}
+
+interface UpstreamUnifiedFixture {
+  source: string;
+  remark?: unknown[];
+  rehype?: unknown[];
+}
+
+function applyUpstreamUnifiedPlugins(processor: ReturnType<typeof unified>, plugins: unknown[]) {
+  for (const plugin of plugins) {
+    if (Array.isArray(plugin)) {
+      const [attacher, ...pluginOptions] = plugin;
+      if (pluginOptions.length === 0) {
+        processor.use(attacher as never);
+      } else if (pluginOptions.length === 1) {
+        processor.use(attacher as never, pluginOptions[0] as never);
+      } else {
+        processor.use(attacher as never, pluginOptions as never);
+      }
+      continue;
+    }
+
+    processor.use(plugin as never);
+  }
+}
+
+async function renderWithUpstreamUnified(
+  fixture: UpstreamUnifiedFixture,
+  filePath: string,
+): Promise<string> {
+  const processor = unified().use(remarkParse);
+  applyUpstreamUnifiedPlugins(processor, fixture.remark ?? []);
+  processor.use(remarkRehype, { allowDangerousHtml: true } as never);
+  applyUpstreamUnifiedPlugins(processor, fixture.rehype ?? []);
+  processor.use(rehypeStringify, { allowDangerousHtml: true } as never);
+
+  return String(
+    await processor.process({
+      path: filePath,
+      value: fixture.source,
+    } as never),
+  );
 }
 
 describe("mdast js plugin", () => {
@@ -1177,6 +1220,131 @@ describe("mdast js plugin", () => {
     expect(result.html).toContain("<b>bold</b>");
     expect(result.html).not.toContain("<script>");
     expect(result.html).not.toContain("alert(1)");
+  });
+
+  it("matches upstream unified output snapshots for real-world plugin pipelines", async () => {
+    const fixtures: Record<string, UpstreamUnifiedFixture> = {
+      "remark-gfm-smartypants-toc": {
+        source: [
+          "# Guide",
+          "",
+          "## Contents",
+          "",
+          "## Install",
+          "",
+          'Run "vp install" -- then enjoy.',
+          "",
+          "- [x] shipped",
+          "",
+          "| Package | Runtime |",
+          "| - | - |",
+          "| ox-content | Node |",
+          "",
+          "~~old~~",
+        ].join("\n"),
+        remark: [remarkGfm, remarkSmartypants, [remarkToc, { heading: "contents" }]],
+      },
+      "remark-frontmatter": {
+        source: "---\ntitle: Plugin Frontmatter\n---\n# Body",
+        remark: [[remarkFrontmatter, ["yaml"]]],
+      },
+      "remark-directive": {
+        source: ":::note{#plugin-note}\nDirective **body**.\n:::",
+        remark: [
+          remarkDirective,
+          function remarkDirectiveToAside() {
+            return (tree: {
+              type?: string;
+              name?: string;
+              attributes?: Record<string, string>;
+              data?: Record<string, unknown>;
+              children?: unknown[];
+            }) => {
+              const visit = (node: typeof tree) => {
+                if (node.type === "containerDirective" && node.name === "note") {
+                  node.data = {
+                    ...node.data,
+                    hName: "aside",
+                    hProperties: {
+                      id: node.attributes?.id,
+                      className: ["note"],
+                    },
+                  };
+                }
+
+                for (const child of node.children ?? []) {
+                  visit(child as typeof tree);
+                }
+              };
+
+              visit(tree);
+            };
+          },
+        ],
+      },
+      "remark-math-rehype-katex": {
+        source: "Inline $a + b$.\n\n$$\nx^2\n$$",
+        remark: [remarkMath],
+        rehype: [rehypeKatex],
+      },
+      "rehype-slug-autolink-native-mdast": {
+        source: "# Hello\n\nWorld",
+        rehype: [
+          rehypeSlug,
+          [
+            rehypeAutolinkHeadings,
+            {
+              behavior: "append",
+              content: {
+                type: "text",
+                value: "#",
+              },
+            },
+          ],
+        ],
+      },
+      "rehype-external-links": {
+        source: "[External](https://example.com) and [Local](/docs)",
+        remark: [remarkGfm],
+        rehype: [
+          [
+            rehypeExternalLinks,
+            {
+              target: "_blank",
+              rel: ["nofollow", "noopener"],
+            },
+          ],
+        ],
+      },
+      "rehype-raw-sanitize": {
+        source: "Safe <b>bold</b>.\n\n<script>alert(1)</script>",
+        remark: [remarkGfm],
+        rehype: [rehypeRaw, rehypeSanitize],
+      },
+    };
+    const upstreamSnapshots: Record<string, string> = {};
+
+    for (const [name, fixture] of Object.entries(fixtures)) {
+      const upstreamHtml = await renderWithUpstreamUnified(fixture, `docs/upstream-${name}.md`);
+      const result = await transformMarkdown(
+        fixture.source,
+        `docs/ox-content-${name}.md`,
+        createResolvedOptions({
+          plugin: {
+            oxContent: [],
+            markdownIt: [],
+            mdast: [],
+            remark: fixture.remark ?? [],
+            rehype: fixture.rehype ?? [],
+          },
+        }),
+      );
+
+      upstreamSnapshots[name] = upstreamHtml;
+      expect(result.html).toBe(upstreamHtml);
+    }
+
+    expect(upstreamSnapshots).toMatchSnapshot();
   });
 
   it("runs markdown-it plugins and builds the TOC from markdown-it tokens", async () => {

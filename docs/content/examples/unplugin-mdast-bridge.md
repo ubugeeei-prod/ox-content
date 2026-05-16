@@ -46,7 +46,9 @@ There are two important compatibility boundaries:
 ## Real-world Plugin Matrix
 
 The bridge test suite includes end-to-end coverage for representative packages from the unified ecosystem,
-not only local mock plugins:
+not only local mock plugins. For the matrix below, the test first renders each fixture with the upstream
+`unified` pipeline and stores that HTML as a Vitest snapshot, then asserts that `@ox-content/unplugin`
+produces the same HTML:
 
 - `remark-gfm` for tables, task lists, strikethrough, and syntax-extension fallback.
 - `remark-smartypants` and `remark-toc` for mdast transforms after fallback parsing.
