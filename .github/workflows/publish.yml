@@ -57,9 +57,6 @@ jobs:
         if: matrix.target == 'aarch64-unknown-linux-gnu'
         run: cargo install cargo-zigbuild
 
-      - name: Cache cargo
-        uses: Swatinem/rust-cache@v2
-
       - name: Build NAPI
         working-directory: crates/ox_content_napi
         run: vp exec -- napi build --release --target ${{ matrix.target }} ${{ matrix.target == 'aarch64-unknown-linux-gnu' && '--cross-compile' || '' }}
@@ -91,10 +88,8 @@ jobs:
           cache: true
           run-install: true
 
-      - name: Setup npm publishing auth
-        uses: actions/setup-node@v4
-        with:
-          registry-url: https://registry.npmjs.org
+      - name: Setup npm registry
+        run: npm config set registry https://registry.npmjs.org
 
       - name: Install npm 11+ (required for OIDC trusted publishing)
         run: npm install -g npm@11
@@ -102,6 +97,7 @@ jobs:
       - name: Download all artifacts
         uses: actions/download-artifact@v4
         with:
+          pattern: napi-*
           path: crates/ox_content_napi/artifacts
 
       - name: Create npm sub-package directories
@@ -135,13 +131,21 @@ jobs:
       - name: Determine npm tag
         id: npm-tag
         run: |
-          VERSION="${GITHUB_REF#refs/tags/v}"
+          VERSION="${GITHUB_REF_NAME#v}"
           if [[ "$VERSION" == *"-"* ]]; then
-            PRE_ID=$(echo "$VERSION" | sed 's/.*-\([a-zA-Z]*\).*/\1/')
-            echo "tag=--tag $PRE_ID" >> "$GITHUB_OUTPUT"
+            PRE_ID="${VERSION#*-}"
+            TAG="${PRE_ID%%.*}"
           else
-            echo "tag=" >> "$GITHUB_OUTPUT"
+            TAG="latest"
           fi
+
+          if [[ ! "$TAG" =~ ^[A-Za-z0-9][A-Za-z0-9._-]*$ ]]; then
+            echo "::error::Invalid npm dist-tag: $TAG"
+            exit 1
+          fi
+
+          echo "tag=$TAG" >> "$GITHUB_OUTPUT"
+          echo "NPM_TAG=$TAG" >> "$GITHUB_ENV"
 
       - name: Update optionalDependencies
         working-directory: crates/ox_content_napi
@@ -159,7 +163,7 @@ jobs:
               return 0
             fi
 
-            npm publish --provenance --access public ${{ steps.npm-tag.outputs.tag }}
+            npm publish --provenance --access public --tag "$NPM_TAG"
           }
 
           for pkg in binding-packages/*/; do
@@ -178,7 +182,7 @@ jobs:
             echo "Skipping ${PKG_NAME}@${PKG_VERSION} (already published)"
             exit 0
           fi
-          npm publish --provenance --access public ${{ steps.npm-tag.outputs.tag }}
+          npm publish --provenance --access public --tag "$NPM_TAG"
 
   publish-packages:
     name: Publish npm packages
@@ -200,10 +204,8 @@ jobs:
           cache: true
           run-install: true
 
-      - name: Setup npm publishing auth
-        uses: actions/setup-node@v4
-        with:
-          registry-url: https://registry.npmjs.org
+      - name: Setup npm registry
+        run: npm config set registry https://registry.npmjs.org
 
       - name: Install npm 11+ (required for OIDC trusted publishing)
         run: npm install -g npm@11
@@ -212,9 +214,6 @@ jobs:
         uses: dtolnay/rust-toolchain@stable
         with:
           targets: wasm32-unknown-unknown
-
-      - name: Cache cargo
-        uses: Swatinem/rust-cache@v2
 
       - name: Build NAPI (for local use)
         run: vp run build:napi
@@ -231,13 +230,21 @@ jobs:
       - name: Determine npm tag
         id: npm-tag
         run: |
-          VERSION="${GITHUB_REF#refs/tags/v}"
+          VERSION="${GITHUB_REF_NAME#v}"
           if [[ "$VERSION" == *"-"* ]]; then
-            PRE_ID=$(echo "$VERSION" | sed 's/.*-\([a-zA-Z]*\).*/\1/')
-            echo "tag=--tag $PRE_ID" >> "$GITHUB_OUTPUT"
+            PRE_ID="${VERSION#*-}"
+            TAG="${PRE_ID%%.*}"
           else
-            echo "tag=" >> "$GITHUB_OUTPUT"
+            TAG="latest"
           fi
+
+          if [[ ! "$TAG" =~ ^[A-Za-z0-9][A-Za-z0-9._-]*$ ]]; then
+            echo "::error::Invalid npm dist-tag: $TAG"
+            exit 1
+          fi
+
+          echo "tag=$TAG" >> "$GITHUB_OUTPUT"
+          echo "NPM_TAG=$TAG" >> "$GITHUB_ENV"
 
       - name: Publish @ox-content/islands
         working-directory: npm/ox-content-islands
@@ -249,7 +256,7 @@ jobs:
             exit 0
           fi
           TARBALL=$(vp exec -- pnpm pack --pack-destination /tmp | tail -1)
-          npm publish "$TARBALL" --provenance --access public ${{ steps.npm-tag.outputs.tag }}
+          npm publish "$TARBALL" --provenance --access public --tag "$NPM_TAG"
 
       - name: Publish @ox-content/vite-plugin
         working-directory: npm/vite-plugin-ox-content
@@ -261,7 +268,7 @@ jobs:
             exit 0
           fi
           TARBALL=$(vp exec -- pnpm pack --pack-destination /tmp | tail -1)
-          npm publish "$TARBALL" --provenance --access public ${{ steps.npm-tag.outputs.tag }}
+          npm publish "$TARBALL" --provenance --access public --tag "$NPM_TAG"
 
       - name: Publish @ox-content/unplugin
         working-directory: npm/unplugin-ox-content
@@ -273,7 +280,7 @@ jobs:
             exit 0
           fi
           TARBALL=$(vp exec -- pnpm pack --pack-destination /tmp | tail -1)
-          npm publish "$TARBALL" --provenance --access public ${{ steps.npm-tag.outputs.tag }}
+          npm publish "$TARBALL" --provenance --access public --tag "$NPM_TAG"
 
       - name: Publish @ox-content/vite-plugin-vue
         working-directory: npm/vite-plugin-ox-content-vue
@@ -285,7 +292,7 @@ jobs:
             exit 0
           fi
           TARBALL=$(vp exec -- pnpm pack --pack-destination /tmp | tail -1)
-          npm publish "$TARBALL" --provenance --access public ${{ steps.npm-tag.outputs.tag }}
+          npm publish "$TARBALL" --provenance --access public --tag "$NPM_TAG"
 
       - name: Publish @ox-content/vite-plugin-react
         working-directory: npm/vite-plugin-ox-content-react
@@ -297,7 +304,7 @@ jobs:
             exit 0
           fi
           TARBALL=$(vp exec -- pnpm pack --pack-destination /tmp | tail -1)
-          npm publish "$TARBALL" --provenance --access public ${{ steps.npm-tag.outputs.tag }}
+          npm publish "$TARBALL" --provenance --access public --tag "$NPM_TAG"
 
       - name: Publish @ox-content/vite-plugin-svelte
         working-directory: npm/vite-plugin-ox-content-svelte
@@ -309,7 +316,7 @@ jobs:
             exit 0
           fi
           TARBALL=$(vp exec -- pnpm pack --pack-destination /tmp | tail -1)
-          npm publish "$TARBALL" --provenance --access public ${{ steps.npm-tag.outputs.tag }}
+          npm publish "$TARBALL" --provenance --access public --tag "$NPM_TAG"
 
       - name: Publish @ox-content/wasm
         working-directory: crates/ox_content_wasm/pkg
@@ -320,7 +327,7 @@ jobs:
             echo "Skipping ${PKG_NAME}@${PKG_VERSION} (already published)"
             exit 0
           fi
-          npm publish --provenance --access public ${{ steps.npm-tag.outputs.tag }}
+          npm publish --provenance --access public --tag "$NPM_TAG"
 
   publish-crates:
     name: Publish to crates.io
@@ -335,9 +342,6 @@ jobs:
 
       - name: Setup Rust
         uses: dtolnay/rust-toolchain@stable
-
-      - name: Cache cargo
-        uses: Swatinem/rust-cache@v2
 
       - name: Authenticate with crates.io
         id: crates-io-auth
