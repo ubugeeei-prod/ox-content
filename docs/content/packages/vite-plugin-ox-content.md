@@ -312,8 +312,11 @@ The plugin provides virtual modules:
 
 ```ts
 import config from "virtual:ox-content/config";
-import { useMarkdown } from "virtual:ox-content/runtime";
+import { useMarkdown, withBase, withoutBase } from "virtual:ox-content/runtime";
 import { search, searchOptions } from "virtual:ox-content/search";
+
+const assetUrl = withBase("/og.png");
+const routePath = withoutBase("/docs/guide");
 
 // Use the search function
 const results = await search("query", { limit: 10 });
