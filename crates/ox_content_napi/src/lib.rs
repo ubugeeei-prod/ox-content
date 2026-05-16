@@ -1579,6 +1579,29 @@ pub struct I18nLoadResult {
     pub errors: Vec<String>,
 }
 
+/// Locale metadata for generated i18n runtime modules.
+#[napi(object)]
+#[derive(Clone)]
+pub struct JsI18nRuntimeLocale {
+    /// BCP 47 locale tag.
+    pub code: String,
+    /// Display name for this locale.
+    pub name: String,
+    /// Text direction.
+    pub dir: Option<String>,
+}
+
+/// Configuration for generated i18n runtime modules.
+#[napi(object)]
+pub struct JsI18nRuntimeConfig {
+    /// Default locale tag.
+    pub default_locale: String,
+    /// Available locales.
+    pub locales: Vec<JsI18nRuntimeLocale>,
+    /// Whether URLs should omit the default locale prefix.
+    pub hide_default_locale: bool,
+}
+
 /// Result of MF2 validation.
 #[napi(object)]
 pub struct Mf2ValidateResult {
@@ -1637,19 +1660,30 @@ pub fn load_dictionaries(dir: String) -> I18nLoadResult {
 #[napi]
 pub fn load_dictionaries_flat(dir: String) -> HashMap<String, HashMap<String, String>> {
     let path = std::path::Path::new(&dir);
-    let Ok(set) = ox_content_i18n::dictionary::load_from_dir(path) else {
-        return HashMap::new();
-    };
+    ox_content_i18n::runtime::load_flat_dictionaries(path).unwrap_or_default()
+}
 
-    let mut result = HashMap::new();
-    for locale in set.locales() {
-        if let Some(dict) = set.get(locale) {
-            let flat: HashMap<String, String> =
-                dict.iter().map(|(k, v)| (k.to_string(), v.to_string())).collect();
-            result.insert(locale.to_string(), flat);
-        }
-    }
-    result
+/// Generates the `virtual:ox-content/i18n` runtime module.
+#[napi(js_name = "generateI18nModule")]
+pub fn generate_i18n_module(dict_dir: String, config: JsI18nRuntimeConfig) -> String {
+    let config = ox_content_i18n::runtime::I18nRuntimeConfig {
+        default_locale: config.default_locale,
+        locales: config
+            .locales
+            .into_iter()
+            .map(|locale| ox_content_i18n::runtime::I18nRuntimeLocale {
+                code: locale.code,
+                name: locale.name,
+                dir: locale.dir,
+            })
+            .collect(),
+        hide_default_locale: config.hide_default_locale,
+    };
+    let dictionaries =
+        ox_content_i18n::runtime::load_flat_dictionaries(std::path::Path::new(&dict_dir))
+            .unwrap_or_default();
+
+    ox_content_i18n::runtime::generate_runtime_module(&config, &dictionaries)
 }
 
 /// Validates an MF2 message string.
