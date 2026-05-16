@@ -317,6 +317,62 @@ fn inline_link_handles_nested_parentheses() {
 }
 
 #[test]
+fn inline_raw_html_is_preserved_as_html_node() {
+    let allocator = Allocator::new();
+    let doc = parse_with_options(
+        &allocator,
+        "before <input type=\"checkbox\"> after",
+        ParserOptions::default(),
+    );
+
+    match &doc.children[0] {
+        Node::Paragraph(paragraph) => {
+            assert!(
+                matches!(&paragraph.children[1], Node::Html(html) if html.value == "<input type=\"checkbox\">")
+            );
+        }
+        other => panic!("expected paragraph, got {other:?}"),
+    }
+}
+
+#[test]
+fn list_item_allows_inline_raw_html() {
+    let allocator = Allocator::new();
+    let doc = parse_with_options(
+        &allocator,
+        "- <input type=\"checkbox\"> task",
+        ParserOptions::default(),
+    );
+
+    match &doc.children[0] {
+        Node::List(list) => match &list.children[0].children[0] {
+            Node::Paragraph(paragraph) => {
+                assert!(
+                    matches!(&paragraph.children[0], Node::Html(html) if html.value == "<input type=\"checkbox\">")
+                );
+            }
+            other => panic!("expected paragraph, got {other:?}"),
+        },
+        other => panic!("expected list, got {other:?}"),
+    }
+}
+
+#[test]
+fn inline_code_keeps_raw_html_literal() {
+    let allocator = Allocator::new();
+    let doc = parse_with_options(&allocator, "`<input>`", ParserOptions::default());
+
+    match &doc.children[0] {
+        Node::Paragraph(paragraph) => {
+            assert!(
+                matches!(&paragraph.children[0], Node::InlineCode(code) if code.value == "<input>")
+            );
+        }
+        other => panic!("expected paragraph, got {other:?}"),
+    }
+}
+
+#[test]
 fn image_url_handles_nested_parentheses() {
     let allocator = Allocator::new();
     let doc =

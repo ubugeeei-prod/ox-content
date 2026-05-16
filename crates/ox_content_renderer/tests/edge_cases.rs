@@ -216,6 +216,28 @@ fn hard_breaks_render_inside_paragraphs() {
 }
 
 #[test]
+fn inline_raw_html_renders_without_extra_newline() {
+    let html = render(
+        "- <input type=\"checkbox\"> task",
+        ParserOptions::default(),
+        HtmlRendererOptions::default(),
+    );
+
+    assert_eq!(html, "<ul>\n<li><p><input type=\"checkbox\"> task</p>\n</li>\n</ul>\n");
+}
+
+#[test]
+fn inline_raw_html_is_escaped_when_sanitize_is_enabled() {
+    let html = render(
+        "<span>ok</span>",
+        ParserOptions::default(),
+        HtmlRendererOptions { sanitize: true, ..Default::default() },
+    );
+
+    assert_eq!(html, "<p>&lt;span&gt;ok&lt;/span&gt;</p>\n");
+}
+
+#[test]
 fn html_type6_details_allows_markdown_after_blank_line() {
     let html = render(
         "<details>\n\n<summary>Click to expand</summary>\n\n**bold should be markdown**\n\n- list\n\n```js\nconsole.log(\"code\");\n```\n\n</details>",

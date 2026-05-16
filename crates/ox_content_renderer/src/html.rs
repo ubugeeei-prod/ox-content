@@ -1071,6 +1071,24 @@ impl HtmlRenderer {
         }
     }
 
+    fn write_html_value(&mut self, value: &str) {
+        if self.options.sanitize {
+            self.write_escaped(value);
+        } else if self.options.convert_md_links {
+            let rewritten = self.rewrite_html_root_urls(value);
+            self.write(&rewritten);
+        } else {
+            self.write(value);
+        }
+    }
+
+    fn visit_inline_node(&mut self, node: &Node<'_>) {
+        match node {
+            Node::Html(html) => self.write_html_value(html.value),
+            _ => self.visit_node(node),
+        }
+    }
+
     fn convert_markdown_url(&self, url: &str) -> String {
         let converted = self.convert_md_url(url);
         if converted != url {
@@ -1291,7 +1309,7 @@ impl<'a> Visit<'a> for HtmlRenderer {
     fn visit_paragraph(&mut self, paragraph: &Paragraph<'a>) {
         self.write("<p>");
         for child in &paragraph.children {
-            self.visit_node(child);
+            self.visit_inline_node(child);
         }
         self.write("</p>\n");
     }
@@ -1309,7 +1327,7 @@ impl<'a> Visit<'a> for HtmlRenderer {
         self.write(tag);
         self.write(">");
         for child in &heading.children {
-            self.visit_node(child);
+            self.visit_inline_node(child);
         }
         self.write("</");
         self.write(tag);
@@ -1431,14 +1449,7 @@ impl<'a> Visit<'a> for HtmlRenderer {
     }
 
     fn visit_html(&mut self, html: &Html<'a>) {
-        if self.options.sanitize {
-            self.write_escaped(html.value);
-        } else if self.options.convert_md_links {
-            let rewritten = self.rewrite_html_root_urls(html.value);
-            self.write(&rewritten);
-        } else {
-            self.write(html.value);
-        }
+        self.write_html_value(html.value);
         self.write("\n");
     }
 
@@ -1468,7 +1479,7 @@ impl<'a> Visit<'a> for HtmlRenderer {
     fn visit_emphasis(&mut self, emphasis: &Emphasis<'a>) {
         self.write("<em>");
         for child in &emphasis.children {
-            self.visit_node(child);
+            self.visit_inline_node(child);
         }
         self.write("</em>");
     }
@@ -1476,7 +1487,7 @@ impl<'a> Visit<'a> for HtmlRenderer {
     fn visit_strong(&mut self, strong: &Strong<'a>) {
         self.write("<strong>");
         for child in &strong.children {
-            self.visit_node(child);
+            self.visit_inline_node(child);
         }
         self.write("</strong>");
     }
@@ -1513,7 +1524,7 @@ impl<'a> Visit<'a> for HtmlRenderer {
         }
         self.write(">");
         for child in &link.children {
-            self.visit_node(child);
+            self.visit_inline_node(child);
         }
         self.write("</a>");
     }
@@ -1546,7 +1557,7 @@ impl<'a> Visit<'a> for HtmlRenderer {
     fn visit_delete(&mut self, delete: &Delete<'a>) {
         self.write("<del>");
         for child in &delete.children {
-            self.visit_node(child);
+            self.visit_inline_node(child);
         }
         self.write("</del>");
     }
@@ -1607,7 +1618,7 @@ impl HtmlRenderer {
 
     fn visit_table_cell(&mut self, cell: &TableCell<'_>) {
         for child in &cell.children {
-            self.visit_node(child);
+            self.visit_inline_node(child);
         }
     }
 }
