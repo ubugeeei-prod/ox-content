@@ -4,6 +4,7 @@
 
 import type { LanguageRegistration, ThemeRegistration } from "shiki";
 import type { ThemeConfig, ResolvedThemeConfig } from "./theme";
+import type { GitHubOptions } from "./plugins";
 
 // =============================================================================
 // Entry Page Types (VitePress-like)
@@ -372,6 +373,13 @@ export interface OxContentOptions {
   ogViewer?: boolean;
 
   /**
+   * Built-in static embeds rendered during Markdown transformation.
+   * Set to `false` to disable all built-in embeds.
+   * @default { github: true }
+   */
+  embeds?: BuiltinEmbedOptions | false;
+
+  /**
    * i18n (internationalization) options.
    * Set to false to disable i18n.
    * @default false
@@ -407,7 +415,27 @@ export interface ResolvedOptions {
   docs: ResolvedDocsOptions | false;
   search: ResolvedSearchOptions;
   ogViewer: boolean;
+  embeds: ResolvedBuiltinEmbedOptions;
   i18n: ResolvedI18nOptions | false;
+}
+
+/**
+ * Built-in embed configuration.
+ */
+export interface BuiltinEmbedOptions {
+  /**
+   * Render `<GitHub repo="owner/name" />` repository cards.
+   * Pass an options object to configure fetching.
+   * @default true
+   */
+  github?: boolean | GitHubOptions;
+}
+
+/**
+ * Resolved built-in embed configuration.
+ */
+export interface ResolvedBuiltinEmbedOptions {
+  github: GitHubOptions | false;
 }
 
 /**

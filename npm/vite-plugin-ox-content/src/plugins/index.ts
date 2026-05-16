@@ -5,6 +5,8 @@
  * They generate static HTML at build time and require no client-side JS.
  */
 
+import type { GitHubOptions } from "./github";
+
 export { transformTabs, generateTabsCSS, resetTabGroupCounter } from "./tabs";
 
 export { transformYouTube, extractVideoId, type YouTubeOptions } from "./youtube";
@@ -36,7 +38,7 @@ export { transformMermaidStatic, mermaidClientScript, type MermaidOptions } from
 export interface TransformAllOptions {
   tabs?: boolean;
   youtube?: boolean;
-  github?: boolean;
+  github?: boolean | GitHubOptions;
   ogp?: boolean;
   mermaid?: boolean;
   githubToken?: string;
@@ -75,9 +77,10 @@ export async function transformAllPlugins(
   }
 
   // 3. GitHub (requires API calls)
-  if (github) {
+  if (github !== false) {
     const { transformGitHub } = await import("./github");
-    result = await transformGitHub(result, undefined, { token: githubToken });
+    const options = typeof github === "object" ? github : {};
+    result = await transformGitHub(result, undefined, { token: githubToken, ...options });
   }
 
   // 4. OGP (requires fetch calls)
@@ -90,6 +93,28 @@ export async function transformAllPlugins(
   if (mermaid) {
     const { transformMermaidStatic } = await import("./mermaid");
     result = await transformMermaidStatic(result);
+  }
+
+  return result;
+}
+
+/**
+ * Transform built-in embed components in HTML content.
+ */
+export async function transformBuiltinEmbeds(
+  html: string,
+  options: {
+    github: GitHubOptions | false;
+  },
+): Promise<string> {
+  let result = html;
+
+  if (options.github) {
+    const { transformGitHub } = await import("./github");
+    result = await transformGitHub(result, undefined, {
+      token: process.env.GITHUB_TOKEN,
+      ...options.github,
+    });
   }
 
   return result;
