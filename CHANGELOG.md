@@ -1,5 +1,16 @@
 # Changelog
 
+## [2.8.0] - 2026-05-16
+
+### Features
+
+- add Intl localization helpers (#87)
+- add runtime path helpers (#88)
+
+### Bug Fixes
+
+- harden embed inputs (#89)
+
 ## [2.7.0] - 2026-05-16
 
 ### Features
