@@ -12,7 +12,7 @@ import { transformAllPlugins } from "./plugins";
 import type { TransformAllOptions } from "./plugins";
 import { protectMermaidSvgs, restoreMermaidSvgs } from "./plugins/mermaid-protect";
 import { transformIslands, hasIslands } from "./island";
-import { importNapiModule } from "./napi";
+import { importNapiModule, importNapiModuleSync } from "./napi";
 import type {
   ResolvedOptions,
   ResolvedSsgOptions,
@@ -58,6 +58,14 @@ export interface SsgPageData {
   href: string;
   /** Entry page configuration (if layout: entry) */
   entryPage?: SsgEntryPageConfig;
+}
+
+interface SsgRoutePaths {
+  outputPath: string;
+  urlPath: string;
+  href: string;
+  ogImagePath: string;
+  ogImageUrl: string;
 }
 
 /**
@@ -1479,59 +1487,10 @@ function renderTemplate(template: string, data: Record<string, unknown>): string
  * Extracts title from content or frontmatter.
  */
 export function extractTitle(content: string, frontmatter: Record<string, unknown>): string {
-  if (frontmatter.title && typeof frontmatter.title === "string") {
-    return frontmatter.title;
-  }
-
-  const h1Match = content.match(/<h1[^>]*>([^<]+)<\/h1>/i);
-  if (h1Match) {
-    return h1Match[1].trim();
-  }
-
-  return "Untitled";
-}
-
-/**
- * Generates navigation HTML from nav groups.
- */
-function _generateNavHtml(navGroups: NavGroup[], currentPath: string): string {
-  return navGroups
-    .map((group) => {
-      const items = group.items
-        .map((item) => {
-          const isActive = item.path === currentPath;
-          const activeClass = isActive ? " active" : "";
-          return `              <li class="nav-item"><a href="${item.href}" class="nav-link${activeClass}">${item.title}</a></li>`;
-        })
-        .join("\n");
-
-      return `          <div class="nav-section">
-            <div class="nav-title">${group.title}</div>
-            <ul class="nav-list">
-${items}
-            </ul>
-          </div>`;
-    })
-    .join("\n");
-}
-
-/**
- * Generates TOC HTML from toc entries.
- */
-function _generateTocHtml(toc: TocEntry[]): string {
-  const flattenToc = (entries: TocEntry[], depth = 1): string[] => {
-    const items: string[] = [];
-    for (const entry of entries) {
-      items.push(
-        `        <li class="toc-item"><a href="#${entry.slug}" class="toc-link" style="--depth: ${depth}">${entry.text}</a></li>`,
-      );
-      if (entry.children && entry.children.length > 0) {
-        items.push(...flattenToc(entry.children, depth + 1));
-      }
-    }
-    return items;
-  };
-  return flattenToc(toc).join("\n");
+  return importNapiModuleSync().extractSsgTitle(
+    content,
+    typeof frontmatter.title === "string" ? frontmatter.title : undefined,
+  );
 }
 
 /**
@@ -1695,29 +1654,14 @@ export function getOutputPath(
   outDir: string,
   extension: string,
 ): string {
-  const relativePath = path.relative(srcDir, inputPath);
-  const baseName = relativePath.replace(/\.(?:md|markdown)$/i, extension);
-
-  if (baseName.endsWith(`index${extension}`)) {
-    return path.join(outDir, baseName);
-  }
-
-  const dirName = baseName.replace(new RegExp(`\\${extension}$`), "");
-  return path.join(outDir, dirName, `index${extension}`);
+  return importNapiModuleSync().getSsgOutputPath(inputPath, srcDir, outDir, extension);
 }
 
 /**
  * Converts a markdown file path to a relative URL path.
  */
 export function getUrlPath(inputPath: string, srcDir: string): string {
-  const relativePath = path.relative(srcDir, inputPath);
-  const baseName = relativePath.replace(/\.(?:md|markdown)$/i, "");
-
-  if (baseName === "index" || baseName.endsWith("/index")) {
-    return baseName.replace(/\/?index$/, "") || "/";
-  }
-
-  return baseName;
+  return importNapiModuleSync().getSsgUrlPath(inputPath, srcDir);
 }
 
 /**
@@ -1729,80 +1673,43 @@ export function getHref(
   base: string,
   extension: string,
 ): string {
-  const urlPath = getUrlPath(inputPath, srcDir);
-  if (urlPath === "/" || urlPath === "") {
-    return `${base}index${extension}`;
-  }
-  return `${base}${urlPath}/index${extension}`;
+  return importNapiModuleSync().getSsgHref(inputPath, srcDir, base, extension);
 }
 
 export function getPageLocale(urlPath: string, i18n: ResolvedOptions["i18n"]): string | undefined {
   if (!i18n) return undefined;
-  const firstSegment = urlPath.split("/").filter(Boolean)[0];
-  return i18n.locales.some((l) => l.code === firstSegment) ? firstSegment : i18n.defaultLocale;
+  return (
+    importNapiModuleSync().getSsgPageLocale(
+      urlPath,
+      i18n.defaultLocale,
+      i18n.locales.map((locale) => locale.code),
+    ) ?? undefined
+  );
 }
 
-/**
- * Gets the OG image output path for a given markdown file.
- */
-function getOgImagePath(inputPath: string, srcDir: string, outDir: string): string {
-  const relativePath = path.relative(srcDir, inputPath);
-  const baseName = relativePath.replace(/\.(?:md|markdown)$/i, "");
-
-  if (baseName === "index" || baseName.endsWith("/index")) {
-    const dirPath = baseName.replace(/\/?index$/, "") || "";
-    return path.join(outDir, dirPath, "og-image.png");
-  }
-
-  return path.join(outDir, baseName, "og-image.png");
-}
-
-/**
- * Gets the OG image URL for use in meta tags.
- * If siteUrl is provided, returns an absolute URL (required for SNS sharing).
- */
-function getOgImageUrl(inputPath: string, srcDir: string, base: string, siteUrl?: string): string {
-  const urlPath = getUrlPath(inputPath, srcDir);
-  let relativePath: string;
-  if (urlPath === "/" || urlPath === "") {
-    relativePath = `${base}og-image.png`;
-  } else {
-    relativePath = `${base}${urlPath}/og-image.png`;
-  }
-
-  // Return absolute URL if siteUrl is provided
-  if (siteUrl) {
-    const cleanSiteUrl = siteUrl.replace(/\/$/, "");
-    return `${cleanSiteUrl}${relativePath}`;
-  }
-
-  return relativePath;
-}
-
-/**
- * Gets display title from file path.
- */
-function getDisplayTitle(filePath: string): string {
-  const fileName = path.basename(filePath, path.extname(filePath));
-
-  if (fileName === "index") {
-    const dirName = path.basename(path.dirname(filePath));
-    if (dirName && dirName !== ".") {
-      return formatTitle(dirName);
-    }
-    return "Home";
-  }
-
-  return formatTitle(fileName);
+function getRoutePaths(
+  inputPath: string,
+  srcDir: string,
+  outDir: string,
+  base: string,
+  extension: string,
+  siteUrl?: string,
+): SsgRoutePaths {
+  return importNapiModuleSync().resolveSsgRoutePaths(
+    inputPath,
+    srcDir,
+    outDir,
+    base,
+    extension,
+    siteUrl,
+  );
 }
 
 /**
  * Formats a file/dir name as a title.
  */
 export function formatTitle(name: string): string {
-  return name
-    .replace(/[-_]([a-z])/g, (_, char) => " " + char.toUpperCase())
-    .replace(/^[a-z]/, (char) => char.toUpperCase());
+  return importNapiModuleSync().formatSsgTitle(name);
 }
 
 /**
@@ -1835,125 +1742,7 @@ export function buildNavItems(
   base: string,
   extension: string,
 ): NavGroup[] {
-  const groups = new Map<string, SsgNavItem[]>();
-
-  // Define the order of groups (api at the bottom)
-  const groupOrder = ["", "examples", "packages", "api"];
-
-  for (const file of markdownFiles) {
-    const relativePath = path.relative(srcDir, file);
-    const parts = relativePath.split(path.sep);
-
-    // Determine group: first directory or '' for root files
-    let groupKey = "";
-    if (parts.length > 1) {
-      groupKey = parts[0];
-    }
-
-    if (!groups.has(groupKey)) {
-      groups.set(groupKey, []);
-    }
-
-    const urlPath = getUrlPath(file, srcDir);
-
-    // Use "Overview" for root index.md, otherwise use getDisplayTitle
-    let title: string;
-    if (urlPath === "/" || urlPath === "") {
-      title = "Overview";
-    } else {
-      title = getDisplayTitle(file);
-    }
-
-    groups.get(groupKey)!.push({
-      title,
-      path: urlPath,
-      href: getHref(file, srcDir, base, extension),
-    });
-  }
-
-  // Sort items within each group: index files first, then alphabetically
-  const sortItems = (items: SsgNavItem[]) => {
-    return items.sort((a, b) => {
-      // Root index (Overview) comes first
-      const aIsRoot = a.path === "/" || a.path === "";
-      const bIsRoot = b.path === "/" || b.path === "";
-      if (aIsRoot && !bIsRoot) return -1;
-      if (!aIsRoot && bIsRoot) return 1;
-      // Otherwise, maintain alphabetical order by title
-      return a.title.localeCompare(b.title);
-    });
-  };
-
-  // Convert to array and sort by group order
-  const result: NavGroup[] = [];
-
-  for (const key of groupOrder) {
-    const items = groups.get(key);
-    if (items && items.length > 0) {
-      result.push({
-        title: key === "" ? "Guide" : formatTitle(key),
-        items: sortItems(items),
-      });
-      groups.delete(key);
-    }
-  }
-
-  // Add any remaining groups
-  for (const [key, items] of groups) {
-    if (items.length > 0) {
-      result.push({
-        title: formatTitle(key),
-        items: sortItems(items),
-      });
-    }
-  }
-
-  return result;
-}
-
-function isSafeSidebarLink(link: string): boolean {
-  const trimmed = link.trim();
-  if (trimmed.startsWith("//")) {
-    return false;
-  }
-  return !/^[a-z][a-z0-9+.-]*:/i.test(trimmed) || /^(https?:|mailto:)/i.test(trimmed);
-}
-
-function sidebarPath(link?: string): string {
-  if (!link || !isSafeSidebarLink(link)) {
-    return "";
-  }
-  if (/^(https?:|mailto:|#)/i.test(link.trim())) {
-    return "";
-  }
-  const withoutHash = link.trim().split("#", 1)[0].split("?", 1)[0];
-  const bare = withoutHash
-    .replace(/^\/+/, "")
-    .replace(/\/$/, "")
-    .replace(/\.(md|markdown)$/i, "");
-  if (!bare || bare === "index") {
-    return "/";
-  }
-  return bare.replace(/\/index$/, "");
-}
-
-function sidebarHref(link: string | undefined, base: string, extension: string): string {
-  if (!link) {
-    return "#";
-  }
-  const trimmed = link.trim();
-  if (!isSafeSidebarLink(trimmed)) {
-    return "#";
-  }
-  if (/^(https?:|mailto:|#)/i.test(trimmed)) {
-    return trimmed;
-  }
-  const hash = trimmed.includes("#") ? `#${trimmed.split("#").slice(1).join("#")}` : "";
-  const withoutHash = trimmed.split("#", 1)[0].replace(/^\/+/, "").replace(/\/$/, "");
-  const withoutExt = withoutHash.replace(/\.(md|markdown)$/i, "");
-  const route =
-    !withoutExt || withoutExt === "index" ? "index" : `${withoutExt.replace(/\/index$/, "")}/index`;
-  return `${base}${route}${extension}${hash}`;
+  return importNapiModuleSync().buildSsgNavItems(markdownFiles, srcDir, base, extension);
 }
 
 /**
@@ -1964,43 +1753,7 @@ export function buildThemeNavItems(
   base: string,
   extension: string,
 ): NavGroup[] {
-  const toNavItem = (item: SidebarItem): SsgNavItem => {
-    const navItem: SsgNavItem = {
-      title: item.text ?? item.link ?? "Untitled",
-      path: sidebarPath(item.link),
-      href: sidebarHref(item.link, base, extension),
-    };
-    if (item.items?.length) {
-      navItem.children = item.items.map(toNavItem);
-    }
-    if (item.collapsed !== undefined) {
-      navItem.collapsed = item.collapsed;
-    }
-    return navItem;
-  };
-  const groups: NavGroup[] = [];
-  let looseItems: SsgNavItem[] = [];
-  const flushLooseItems = () => {
-    if (looseItems.length > 0) {
-      groups.push({ title: "Guide", items: looseItems });
-      looseItems = [];
-    }
-  };
-
-  for (const item of sidebar) {
-    if (item.items?.length && !item.link) {
-      flushLooseItems();
-      groups.push({
-        title: item.text ?? "Guide",
-        items: item.items.map(toNavItem),
-        collapsed: item.collapsed,
-      });
-    } else {
-      looseItems.push(toNavItem(item));
-    }
-  }
-  flushLooseItems();
-  return groups;
+  return importNapiModuleSync().buildSsgThemeNavItems(sidebar, base, extension);
 }
 
 /**
@@ -2067,6 +1820,7 @@ export async function buildSsg(
   // Collect page metadata for OG image generation
   interface PageProcessResult {
     inputPath: string;
+    routePaths: SsgRoutePaths;
     transformedHtml: string;
     title: string;
     description?: string;
@@ -2118,9 +1872,18 @@ export async function buildSsg(
 
       const title = extractTitle(transformedHtml, result.frontmatter);
       const description = result.frontmatter.description as string | undefined;
+      const routePaths = getRoutePaths(
+        inputPath,
+        srcDir,
+        outDir,
+        base,
+        ssgOptions.extension,
+        ssgOptions.siteUrl,
+      );
 
       pageResults.push({
         inputPath,
+        routePaths,
         transformedHtml,
         title,
         description,
@@ -2131,7 +1894,6 @@ export async function buildSsg(
 
       // Collect OG image entry if generation is enabled
       if (shouldGenerateOgImages) {
-        const ogImageOutputPath = getOgImagePath(inputPath, srcDir, outDir);
         const { layout: _layout, ...frontmatterRest } = result.frontmatter;
         ogImageEntries.push({
           props: {
@@ -2140,11 +1902,11 @@ export async function buildSsg(
             description,
             siteName,
           },
-          outputPath: ogImageOutputPath,
+          outputPath: routePaths.ogImagePath,
         });
         ogImageInputPaths.push(inputPath);
         // Pre-compute URL so HTML can reference it
-        ogImageUrlMap.set(inputPath, getOgImageUrl(inputPath, srcDir, base, ssgOptions.siteUrl));
+        ogImageUrlMap.set(inputPath, routePaths.ogImageUrl);
       }
     } catch (err) {
       const errorMessage = err instanceof Error ? err.message : String(err);
@@ -2187,8 +1949,16 @@ export async function buildSsg(
   // Generate HTML pages
   for (const pageResult of pageResults) {
     try {
-      const { inputPath, transformedHtml, title, description, lastUpdated, frontmatter, toc } =
-        pageResult;
+      const {
+        inputPath,
+        routePaths,
+        transformedHtml,
+        title,
+        description,
+        lastUpdated,
+        frontmatter,
+        toc,
+      } = pageResult;
 
       // Determine OG image URL for this page
       let pageOgImage = ssgOptions.ogImage; // fallback to static URL
@@ -2217,8 +1987,8 @@ export async function buildSsg(
           toc,
           lastUpdated,
           frontmatter,
-          path: getUrlPath(inputPath, srcDir),
-          href: getHref(inputPath, srcDir, base, ssgOptions.extension),
+          path: routePaths.urlPath,
+          href: routePaths.href,
           entryPage,
         };
         html = await generateHtmlPage(
@@ -2233,10 +2003,9 @@ export async function buildSsg(
         );
       }
 
-      const outputPath = getOutputPath(inputPath, srcDir, outDir, ssgOptions.extension);
       generatedPages.push({
         inputPath,
-        outputPath,
+        outputPath: routePaths.outputPath,
         html,
       });
     } catch (err) {

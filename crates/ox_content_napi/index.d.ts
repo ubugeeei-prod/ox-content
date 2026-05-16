@@ -7,6 +7,12 @@
  */
 export declare function buildSearchIndex(documents: Array<JsSearchDocument>): string
 
+/** Builds SSG navigation groups from markdown files. */
+export declare function buildSsgNavItems(markdownFiles: Array<string>, srcDir: string, base: string, extension: string): Array<JsSsgNavGroup>
+
+/** Builds SSG navigation groups from an explicit theme sidebar tree. */
+export declare function buildSsgThemeNavItems(sidebar: Array<JsSsgSidebarItem>, base: string, extension: string): Array<JsSsgNavGroup>
+
 /**
  * Runs i18n checks on dictionaries against used translation keys.
  *
@@ -31,12 +37,18 @@ export declare function extractFileDocs(filePath: string, includePrivate?: boole
  */
 export declare function extractSearchContent(source: string, id: string, url: string, options?: JsParserOptions | undefined | null): JsSearchDocument
 
+/** Extracts a page title from frontmatter title or rendered HTML. */
+export declare function extractSsgTitle(content: string, frontmatterTitle?: string | undefined | null): string
+
 /**
  * Extracts translation keys from a TypeScript/JavaScript source string.
  *
  * Finds calls like `t('key')` and `$t('key')`.
  */
 export declare function extractTranslationKeys(source: string, filePath: string, functionNames?: Array<string> | undefined | null): Array<I18NKeyUsage>
+
+/** Formats a file or directory segment as an SSG title. */
+export declare function formatSsgTitle(name: string): string
 
 /** Generates the `virtual:ox-content/i18n` runtime module. */
 export declare function generateI18nModule(dictDir: string, config: JsI18NRuntimeConfig): string
@@ -54,6 +66,18 @@ export declare function generateSsgHtml(pageData: JsSsgPageData, navGroups: Arra
 
 /** Returns the last git commit timestamp for a file in milliseconds. */
 export declare function getGitLastUpdated(filePath: string, root?: string | undefined | null): number | null
+
+/** Converts a markdown file path to an SSG href. */
+export declare function getSsgHref(inputPath: string, srcDir: string, base: string, extension: string): string
+
+/** Converts a markdown file path to its corresponding SSG HTML output path. */
+export declare function getSsgOutputPath(inputPath: string, srcDir: string, outDir: string, extension: string): string
+
+/** Resolves a page locale from an SSG URL path and configured locale codes. */
+export declare function getSsgPageLocale(urlPath: string, defaultLocale: string, localeCodes: Array<string>): string | null
+
+/** Converts a markdown file path to a relative SSG URL path. */
+export declare function getSsgUrlPath(inputPath: string, srcDir: string): string
 
 /** Result of i18n checking. */
 export interface I18NCheckResult {
@@ -497,6 +521,20 @@ export interface JsSsgPageData {
   entryPage?: JsEntryPageConfig
 }
 
+/** Resolved SSG output and public route paths. */
+export interface JsSsgRoutePaths {
+  /** HTML output file path. */
+  outputPath: string
+  /** Route path without extension. */
+  urlPath: string
+  /** Public HTML href. */
+  href: string
+  /** OG image output file path. */
+  ogImagePath: string
+  /** OG image public URL. */
+  ogImageUrl: string
+}
+
 /** Shared SSG asset extracted from generated pages. */
 export interface JsSsgSharedAsset {
   /** Output file path. */
@@ -505,6 +543,18 @@ export interface JsSsgSharedAsset {
   publicPath: string
   /** Asset content. */
   content: string
+}
+
+/** Theme sidebar item for SSG navigation generation. */
+export interface JsSsgSidebarItem {
+  /** Display text. */
+  text?: string
+  /** Link URL or route path. */
+  link?: string
+  /** Child sidebar items. */
+  items?: Array<JsSsgSidebarItem>
+  /** Whether this group is collapsed by default. */
+  collapsed?: boolean
 }
 
 /** Theme colors for JavaScript. */
@@ -729,6 +779,9 @@ export interface RenderResult {
   /** Render errors, if any. */
   errors: Array<string>
 }
+
+/** Resolves all output and public route paths for an SSG page. */
+export declare function resolveSsgRoutePaths(inputPath: string, srcDir: string, outDir: string, base: string, extension: string, siteUrl?: string | undefined | null): JsSsgRoutePaths
 
 /**
  * Searches a serialized index.

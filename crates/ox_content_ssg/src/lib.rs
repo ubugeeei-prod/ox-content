@@ -53,6 +53,7 @@
 
 mod assets;
 mod html;
+mod routes;
 
 pub use assets::{
     externalize_shared_page_assets, ExternalizedAssets, GeneratedHtmlPage, SharedAsset,
@@ -62,4 +63,9 @@ pub use html::{
     HeroNoticeConfig, LocaleInfo, NavGroup, NavItem, PageData, SocialLink, SocialLinks, SsgConfig,
     ThemeColors, ThemeConfig, ThemeEmbed, ThemeEntryPage, ThemeFonts, ThemeFooter, ThemeHeader,
     ThemeLayout, TocEntry,
+};
+pub use routes::{
+    build_nav_items, build_theme_nav_items, extract_title, format_title, get_href,
+    get_og_image_path, get_og_image_url, get_output_path, get_page_locale, get_url_path,
+    resolve_route_paths, RoutePaths, SidebarItem,
 };
