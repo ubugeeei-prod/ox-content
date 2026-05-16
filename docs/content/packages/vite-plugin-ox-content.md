@@ -37,6 +37,20 @@ ox-content-migrate-vitepress .vitepress/config.ts \
   --out ox-content.config.ts
 ```
 
+The CLI can run on Node.js, Deno, or Bun:
+
+```bash
+# Node.js, after installing @ox-content/vite-plugin
+ox-content-migrate-vitepress .vitepress/config.ts --out ox-content.config.ts
+
+# Deno
+deno run -A npm:@ox-content/vite-plugin/vitepress-migrate .vitepress/config.ts \
+  --out ox-content.config.ts
+
+# Bun
+bunx --bun @ox-content/vite-plugin .vitepress/config.ts --out ox-content.config.ts
+```
+
 The generated `ox-content.config.ts` maps these settings into ox-content:
 
 - `title` / `themeConfig.siteTitle` -> `ssg.siteName`

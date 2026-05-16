@@ -1,5 +1,13 @@
+import { mkdtemp, rm, writeFile } from "node:fs/promises";
+import { tmpdir } from "node:os";
+import path from "node:path";
 import { describe, expect, it } from "vite-plus/test";
 import { resolveNavigationGroups } from "./ssg";
+import {
+  parseVitePressMigrationCliArgs,
+  runVitePressMigrationCli,
+  type VitePressMigrationCliRuntime,
+} from "./vitepress-cli-runtime";
 import {
   convertVitePressNav,
   convertVitePressSidebar,
@@ -119,6 +127,66 @@ describe("vitepress migration helpers", () => {
     expect(source).toContain('base: "/docs/"');
     expect(source).toContain('srcDir: "docs"');
     expect(source).toContain('outDir: "dist"');
+    expect(source).toContain('path: "/intro"');
+  });
+
+  it("parses migration CLI options without depending on a Node process", () => {
+    expect(
+      parseVitePressMigrationCliArgs([
+        ".vitepress/config.ts",
+        "--src-dir",
+        "docs",
+        "--out-dir",
+        "dist",
+        "--out",
+        "ox-content.config.ts",
+        "--force",
+      ]),
+    ).toEqual({
+      configPath: ".vitepress/config.ts",
+      srcDir: "docs",
+      outDir: "dist",
+      out: "ox-content.config.ts",
+      force: true,
+      help: false,
+    });
+  });
+
+  it("runs the migration CLI through a runtime adapter", async () => {
+    const directory = await mkdtemp(path.join(tmpdir(), "ox-content-vitepress-cli-"));
+    const configPath = path.join(directory, "config.mjs");
+    const stdout: string[] = [];
+    const runtime: VitePressMigrationCliRuntime = {
+      name: "bun",
+      argv: [configPath, "--src-dir", "docs"],
+      cwd: () => directory,
+      writeStdout: (value) => {
+        stdout.push(value);
+      },
+      writeStderr: () => {},
+      setExitCode: () => {},
+    };
+
+    try {
+      await writeFile(
+        configPath,
+        `export default {
+  title: "Docs",
+  base: "/docs/",
+  themeConfig: {
+    sidebar: [{ text: "Intro", link: "/intro.md" }]
+  }
+};`,
+      );
+
+      await runVitePressMigrationCli(runtime);
+    } finally {
+      await rm(directory, { recursive: true, force: true });
+    }
+
+    const source = stdout.join("");
+    expect(source).toContain('base: "/docs/"');
+    expect(source).toContain('srcDir: "docs"');
     expect(source).toContain('path: "/intro"');
   });
 
