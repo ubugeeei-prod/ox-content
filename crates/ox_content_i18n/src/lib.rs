@@ -18,6 +18,7 @@ pub mod error;
 pub mod key;
 pub mod locale;
 pub mod mf2;
+pub mod runtime;
 
 pub use dictionary::{Dictionary, DictionarySet};
 pub use error::{I18nError, I18nResult};

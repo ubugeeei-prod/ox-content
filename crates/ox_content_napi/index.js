@@ -87,6 +87,7 @@ module.exports.generateSsgHtml = binding.generateSsgHtml;
 module.exports.transformMermaid = binding.transformMermaid;
 module.exports.loadDictionaries = binding.loadDictionaries;
 module.exports.loadDictionariesFlat = binding.loadDictionariesFlat;
+module.exports.generateI18nModule = binding.generateI18nModule;
 module.exports.validateMf2 = binding.validateMf2;
 module.exports.checkI18n = binding.checkI18n;
 module.exports.extractTranslationKeys = binding.extractTranslationKeys;

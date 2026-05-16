@@ -32,6 +32,9 @@ export declare function extractSearchContent(source: string, id: string, url: st
  */
 export declare function extractTranslationKeys(source: string, filePath: string, functionNames?: Array<string> | undefined | null): Array<I18NKeyUsage>
 
+/** Generates the `virtual:ox-content/i18n` runtime module. */
+export declare function generateI18nModule(dictDir: string, config: JsI18NRuntimeConfig): string
+
 /**
  * Generates an OG image as SVG.
  *
@@ -162,6 +165,26 @@ export interface JsHeroNotice {
   title?: string
   /** Notice paragraphs. */
   body?: Array<string>
+}
+
+/** Configuration for generated i18n runtime modules. */
+export interface JsI18NRuntimeConfig {
+  /** Default locale tag. */
+  defaultLocale: string
+  /** Available locales. */
+  locales: Array<JsI18NRuntimeLocale>
+  /** Whether URLs should omit the default locale prefix. */
+  hideDefaultLocale: boolean
+}
+
+/** Locale metadata for generated i18n runtime modules. */
+export interface JsI18NRuntimeLocale {
+  /** BCP 47 locale tag. */
+  code: string
+  /** Display name for this locale. */
+  name: string
+  /** Text direction. */
+  dir?: string
 }
 
 /** Locale information for the locale switcher. */
@@ -309,18 +332,6 @@ export interface JsSearchResult {
   snippet: string
 }
 
-/** Social links for JavaScript. */
-export interface JsSocialLinks {
-  /** GitHub URL. */
-  github?: string
-  /** Twitter/X URL. */
-  twitter?: string
-  /** Discord URL. */
-  discord?: string
-  /** Custom social links. */
-  links?: Array<JsSocialLink>
-}
-
 /** Custom social link for JavaScript. */
 export interface JsSocialLink {
   /** Icon label. */
@@ -331,6 +342,18 @@ export interface JsSocialLink {
   link: string
   /** Accessible label. */
   ariaLabel?: string
+}
+
+/** Social links for JavaScript. */
+export interface JsSocialLinks {
+  /** GitHub URL. */
+  github?: string
+  /** Twitter/X URL. */
+  twitter?: string
+  /** Discord URL. */
+  discord?: string
+  /** Custom social links. */
+  links?: Array<JsSocialLink>
 }
 
 /** Source documentation item extracted from a JS/TS file. */
