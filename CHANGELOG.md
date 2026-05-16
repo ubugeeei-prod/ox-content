@@ -1,5 +1,12 @@
 # Changelog
 
+## [2.10.0] - 2026-05-16
+
+### Features
+
+- migration path (#39)
+- mdast js plugin (#40)
+
 ## [2.9.0] - 2026-05-16
 
 ### Performance
