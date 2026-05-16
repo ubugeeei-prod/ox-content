@@ -27,7 +27,7 @@
 ## Features
 
 - **Blazing Fast** - Arena-allocated parser with zero-copy parsing
-- **mdast Compatible** - Full compatibility with the unified ecosystem
+- **mdast Compatible** - Run custom mdast plugins and existing remark/unified transforms
 - **GFM Support** - Tables, task lists, strikethrough, autolinks, footnotes
 - **Multi-Runtime** - Node.js (NAPI), WebAssembly, Native Rust
 - **Framework Agnostic** - Works with Vue, React, Svelte, and more

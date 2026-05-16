@@ -11,6 +11,12 @@ import { transformMarkdown } from "./transform";
 import type { OxContentOptions, ResolvedOptions, ResolvedDocsConfig, DocsConfig } from "./types";
 
 export type {
+  MdastNode,
+  MdastRoot,
+  MdastPlugin,
+  MdastPluginContext,
+  MdastTransformer,
+  OxContentMdastPlugin,
   OxContentOptions,
   ResolvedOptions,
   ResolvedDocsConfig,
@@ -20,10 +26,20 @@ export type {
   PluginConfig,
   OxContentPlugin,
   MarkdownItPlugin,
+  UnifiedPreset,
   RemarkPlugin,
   RehypePlugin,
 } from "./types";
 export { transformMarkdown } from "./transform";
+export {
+  createMdastPluginContext,
+  defineMdastPlugin,
+  extractTocFromMdast,
+  oxContentMdast,
+  parseMarkdownToMdast,
+  toUnifiedMdastPlugin,
+  type OxContentMdastOptions,
+} from "./mdast";
 
 /**
  * Resolves docs configuration.
@@ -100,6 +116,7 @@ function resolveOptions(options: OxContentOptions): ResolvedOptions {
     plugin: {
       oxContent: options.plugin?.oxContent ?? [],
       markdownIt: options.plugin?.markdownIt ?? [],
+      mdast: options.plugin?.mdast ?? [],
       remark: options.plugin?.remark ?? [],
       rehype: options.plugin?.rehype ?? [],
     },

@@ -1,11 +1,14 @@
 //! Node.js bindings for Ox Content.
 //!
 //! This crate provides NAPI bindings for using Ox Content from Node.js,
-//! enabling zero-copy AST transfer and JavaScript interoperability.
+//! including raw-buffer AST transfer for JavaScript interoperability.
 
 mod highlight;
 mod lint;
 mod mdast;
+mod mdast_raw;
+mod transfer;
+mod transformer;
 
 use napi::bindgen_prelude::*;
 use napi::Task;
@@ -15,15 +18,16 @@ use std::path::{Path, PathBuf};
 use std::process::Command;
 
 use ox_content_allocator::Allocator;
-use ox_content_ast::{Document, Heading, Node};
 use ox_content_docs::{
     generate_nav_code, generate_nav_metadata, normalize_doc_items, DocExtractor, DocItem,
     DocItemKind, DocTag, DocsNavItem, NormalizedDocEntry, NormalizedParamDoc, NormalizedReturnDoc,
     ParamDoc,
 };
 use ox_content_parser::{Parser, ParserOptions};
-use ox_content_renderer::{HtmlRenderer, HtmlRendererOptions};
+use ox_content_renderer::HtmlRenderer;
 use ox_content_search::{DocumentIndexer, SearchIndex, SearchIndexBuilder, SearchOptions};
+use transfer::TransferPayloadKind;
+use transformer::{parse_frontmatter, MarkdownTransformer};
 
 const ALLOCATOR_BYTES_PER_INPUT_BYTE: usize = 8;
 const MIN_ALLOCATOR_CAPACITY: usize = 4 * 1024;
@@ -176,6 +180,8 @@ pub struct JsTransformOptions {
     pub strikethrough: Option<bool>,
     /// Enable autolinks.
     pub autolinks: Option<bool>,
+    /// Parse YAML frontmatter before transforming.
+    pub frontmatter: Option<bool>,
     /// Maximum TOC depth (1-6).
     pub toc_max_depth: Option<u8>,
     /// Convert `.md` links to `.html` links for SSG output.
@@ -194,9 +200,17 @@ pub struct JsTransformOptions {
     pub code_annotation_default_line_numbers: Option<bool>,
 }
 
+/// Source preparation options for JavaScript.
+#[napi(object)]
+#[derive(Default, Clone)]
+pub struct JsSourceOptions {
+    /// Parse YAML frontmatter before returning the content payload.
+    pub frontmatter: Option<bool>,
+}
+
 /// Parser options for JavaScript.
 #[napi(object)]
-#[derive(Default)]
+#[derive(Default, Clone)]
 pub struct JsParserOptions {
     /// Enable GFM extensions.
     pub gfm: Option<bool>,
@@ -239,7 +253,7 @@ impl From<JsParserOptions> for ParserOptions {
 
 /// Parses Markdown source into an AST.
 ///
-/// Returns the AST as a JSON string for zero-copy transfer to JavaScript.
+/// Returns the AST as a JSON string for compatibility-oriented JavaScript consumers.
 #[napi]
 pub fn parse(source: String, options: Option<JsParserOptions>) -> ParseResult {
     let allocator = create_allocator_for_source(&source);
@@ -253,6 +267,44 @@ pub fn parse(source: String, options: Option<JsParserOptions>) -> ParseResult {
             ParseResult { ast, errors: vec![] }
         }
         Err(e) => ParseResult { ast: String::new(), errors: vec![e.to_string()] },
+    }
+}
+
+/// Parses Markdown source into a raw mdast memory block for JavaScript-side deserialization.
+#[napi]
+pub fn parse_mdast_raw(source: String, options: Option<JsParserOptions>) -> Result<Uint8Array> {
+    parse_transfer_raw(source, "mdast".to_string(), options)
+}
+
+/// Parses Markdown source into a transfer buffer identified by payload kind.
+///
+/// Today `mdast` is the primary supported payload. Future payload kinds such as
+/// markdown-it token streams will share the same transfer envelope.
+#[napi]
+pub fn parse_transfer_raw(
+    source: String,
+    kind: String,
+    options: Option<JsParserOptions>,
+) -> Result<Uint8Array> {
+    let payload_kind = TransferPayloadKind::from_str(&kind).ok_or_else(|| {
+        napi::Error::from_reason(format!("Unsupported transfer payload kind: {kind}"))
+    })?;
+
+    match payload_kind {
+        TransferPayloadKind::Mdast => {
+            let allocator = Allocator::new();
+            let parser_options = options.map(ParserOptions::from).unwrap_or_default();
+            let parser = Parser::with_options(&allocator, &source, parser_options);
+            let document =
+                parser.parse().map_err(|error| napi::Error::from_reason(error.to_string()))?;
+            mdast_raw::to_mdast_raw(&document)
+        }
+        TransferPayloadKind::MarkdownItTokens => Err(napi::Error::from_reason(
+            "markdown-it token transfer is not implemented yet; mdast is the current baseline",
+        )),
+        TransferPayloadKind::PreparedSource => Err(napi::Error::from_reason(
+            "prepared-source transfer is exposed through prepareSourceRaw, not parseTransferRaw",
+        )),
     }
 }
 
@@ -455,196 +507,30 @@ pub fn merge_highlighted_code_blocks(original_html: String, highlighted_html: St
 #[napi]
 pub fn transform(source: String, options: Option<JsTransformOptions>) -> TransformResult {
     let opts = options.unwrap_or_default();
-    let toc_max_depth = opts.toc_max_depth.unwrap_or(3);
-
-    // Parse frontmatter
-    let (content, frontmatter) = parse_frontmatter(&source);
-
-    // Parse markdown
-    let allocator = create_allocator_for_source(&content);
-    let parser_options = transform_options_to_parser_options(&opts);
-    let parser = Parser::with_options(&allocator, &content, parser_options);
-
-    let result = parser.parse();
-    match result {
-        Ok(doc) => {
-            // Extract TOC from headings
-            let toc = extract_toc(&doc, toc_max_depth);
-
-            // Render to HTML
-            let renderer_options = transform_options_to_renderer_options(&opts);
-            let mut renderer = HtmlRenderer::with_options(renderer_options);
-            let html = renderer.render(&doc);
-
-            TransformResult {
-                html,
-                frontmatter: serde_json::to_string(&frontmatter)
-                    .unwrap_or_else(|_| "{}".to_string()),
-                toc,
-                errors: vec![],
-            }
-        }
-        Err(e) => TransformResult {
-            html: String::new(),
-            frontmatter: "{}".to_string(),
-            toc: vec![],
-            errors: vec![e.to_string()],
-        },
-    }
+    MarkdownTransformer::from_options(&opts).transform(&source)
 }
 
-/// Parses YAML frontmatter from Markdown content.
-fn parse_frontmatter(source: &str) -> (String, HashMap<String, serde_json::Value>) {
-    // Check for frontmatter delimiter
-    if !source.starts_with("---") {
-        return (source.to_string(), HashMap::new());
-    }
-
-    // Find the closing delimiter
-    let rest = &source[3..];
-    let Some(end_pos) = rest.find("\n---") else {
-        return (source.to_string(), HashMap::new());
-    };
-
-    let frontmatter_str = rest[..end_pos].trim_start_matches('\n');
-    let content = rest[end_pos + 4..].trim_start_matches('\n');
-    let frontmatter = serde_yaml::from_str(frontmatter_str).unwrap_or_default();
-
-    (content.to_string(), frontmatter)
+/// Transforms Markdown into a raw mdast transfer buffer.
+///
+/// This keeps frontmatter parsing and mdast generation on the Rust side and
+/// transfers a single external memory block to JavaScript for deserialization.
+#[napi]
+pub fn transform_mdast_raw(
+    source: String,
+    options: Option<JsTransformOptions>,
+) -> Result<Uint8Array> {
+    let opts = options.unwrap_or_default();
+    MarkdownTransformer::from_options(&opts).transform_mdast_raw(&source)
 }
 
-/// Extracts table of contents from document headings.
-fn extract_toc(doc: &Document, max_depth: u8) -> Vec<TocEntry> {
-    let mut entries = Vec::new();
-    let mut slug_counts = HashMap::new();
-
-    for node in &doc.children {
-        if let Node::Heading(heading) = node {
-            if heading.depth <= max_depth {
-                let text = extract_heading_text(heading);
-                let slug = unique_slug(slugify(&text), &mut slug_counts);
-                entries.push(TocEntry { depth: heading.depth, text, slug });
-            }
-        }
-    }
-
-    entries
-}
-
-/// Extracts plain text from a heading node.
-fn extract_heading_text(heading: &Heading) -> String {
-    let mut text = String::new();
-    for child in &heading.children {
-        collect_text(child, &mut text);
-    }
-    text
-}
-
-/// Recursively collects text from nodes.
-fn collect_text(node: &Node, text: &mut String) {
-    match node {
-        Node::Text(t) => text.push_str(t.value),
-        Node::Emphasis(e) => {
-            for child in &e.children {
-                collect_text(child, text);
-            }
-        }
-        Node::Strong(s) => {
-            for child in &s.children {
-                collect_text(child, text);
-            }
-        }
-        Node::InlineCode(c) => text.push_str(c.value),
-        Node::Delete(d) => {
-            for child in &d.children {
-                collect_text(child, text);
-            }
-        }
-        Node::Link(l) => {
-            for child in &l.children {
-                collect_text(child, text);
-            }
-        }
-        _ => {}
-    }
-}
-
-/// Converts text to URL-friendly slug.
-fn slugify(text: &str) -> String {
-    text.to_lowercase()
-        .chars()
-        .map(|c| if c.is_alphanumeric() || c == ' ' || c == '-' { c } else { ' ' })
-        .collect::<String>()
-        .split_whitespace()
-        .collect::<Vec<_>>()
-        .join("-")
-}
-
-fn unique_slug(slug: String, counts: &mut HashMap<String, usize>) -> String {
-    let slug = if slug.is_empty() { "section".to_string() } else { slug };
-    let count = counts.entry(slug.clone()).or_insert(0);
-    let unique = if *count == 0 { slug } else { format!("{slug}-{count}") };
-    *count += 1;
-    unique
-}
-
-/// Converts transform options to parser options.
-fn transform_options_to_parser_options(opts: &JsTransformOptions) -> ParserOptions {
-    let mut options =
-        if opts.gfm.unwrap_or(false) { ParserOptions::gfm() } else { ParserOptions::default() };
-
-    if let Some(v) = opts.footnotes {
-        options.footnotes = v;
-    }
-    if let Some(v) = opts.task_lists {
-        options.task_lists = v;
-    }
-    if let Some(v) = opts.tables {
-        options.tables = v;
-    }
-    if let Some(v) = opts.strikethrough {
-        options.strikethrough = v;
-    }
-    if let Some(v) = opts.autolinks {
-        options.autolinks = v;
-    }
-
-    options
-}
-
-/// Converts transform options to renderer options.
-fn transform_options_to_renderer_options(opts: &JsTransformOptions) -> HtmlRendererOptions {
-    let mut options = HtmlRendererOptions::new();
-
-    options.toc_max_depth = opts.toc_max_depth.unwrap_or(options.toc_max_depth);
-
-    if let Some(v) = opts.convert_md_links {
-        options.convert_md_links = v;
-    }
-    if let Some(ref v) = opts.base_url {
-        options.base_url.clone_from(v);
-    }
-    if let Some(ref v) = opts.source_path {
-        options.source_path.clone_from(v);
-    }
-    if let Some(v) = opts.code_annotations {
-        options.code_annotations = v;
-    }
-    if let Some(ref v) = opts.code_annotation_meta_key {
-        options.code_annotation_meta_key.clone_from(v);
-    }
-    if let Some(ref v) = opts.code_annotation_syntax {
-        options.code_annotation_syntax = match v.as_str() {
-            "vitepress" => ox_content_renderer::CodeAnnotationSyntax::VitePress,
-            "both" => ox_content_renderer::CodeAnnotationSyntax::Both,
-            _ => ox_content_renderer::CodeAnnotationSyntax::Attribute,
-        };
-    }
-    if let Some(v) = opts.code_annotation_default_line_numbers {
-        options.code_annotation_default_line_numbers = v;
-    }
-
-    options
+/// Splits Markdown source into content and frontmatter in a raw transfer buffer.
+///
+/// This is used by JavaScript-side markdown-it and custom unified parser paths so
+/// frontmatter stripping can stay on the Rust side even when parsing continues in JS.
+#[napi]
+pub fn prepare_source_raw(source: String, options: Option<JsSourceOptions>) -> Result<Uint8Array> {
+    let frontmatter = options.unwrap_or_default().frontmatter.unwrap_or(true);
+    MarkdownTransformer::with_frontmatter(frontmatter).prepare_source_raw(&source)
 }
 
 // =============================================================================
@@ -702,39 +588,7 @@ impl Task for TransformTask {
     type JsValue = TransformResult;
 
     fn compute(&mut self) -> Result<Self::Output> {
-        let toc_max_depth = self.options.toc_max_depth.unwrap_or(3);
-
-        // Parse frontmatter
-        let (content, frontmatter) = parse_frontmatter(&self.source);
-
-        // Parse markdown
-        let allocator = create_allocator_for_source(&content);
-        let parser_options = transform_options_to_parser_options(&self.options);
-        let parser = Parser::with_options(&allocator, &content, parser_options);
-
-        let result = match parser.parse() {
-            Ok(doc) => {
-                let toc = extract_toc(&doc, toc_max_depth);
-                let renderer_options = transform_options_to_renderer_options(&self.options);
-                let mut renderer = HtmlRenderer::with_options(renderer_options);
-                let html = renderer.render(&doc);
-
-                TransformResult {
-                    html,
-                    frontmatter: serde_json::to_string(&frontmatter)
-                        .unwrap_or_else(|_| "{}".to_string()),
-                    toc,
-                    errors: vec![],
-                }
-            }
-            Err(e) => TransformResult {
-                html: String::new(),
-                frontmatter: "{}".to_string(),
-                toc: vec![],
-                errors: vec![e.to_string()],
-            },
-        };
-        Ok(result)
+        Ok(MarkdownTransformer::from_options(&self.options).transform(&self.source))
     }
 
     fn resolve(&mut self, _env: Env, output: Self::Output) -> Result<Self::JsValue> {
@@ -2223,10 +2077,8 @@ mod tests {
     use std::fs;
     use std::process::Command;
 
-    use ox_content_allocator::Allocator;
-    use ox_content_parser::Parser;
-
-    use super::{extract_toc, get_git_last_updated, parse_frontmatter};
+    use super::get_git_last_updated;
+    use super::transformer::parse_frontmatter;
 
     #[test]
     fn parses_nested_yaml_frontmatter() {
@@ -2259,18 +2111,6 @@ mod tests {
 
         assert_eq!(content, "Body");
         assert!(frontmatter.is_empty());
-    }
-
-    #[test]
-    fn toc_slugs_are_unique_and_match_heading_ids() {
-        let allocator = Allocator::new();
-        let doc = Parser::new(&allocator, "## Setup!\n## Setup?\n##").parse().unwrap();
-
-        let toc = extract_toc(&doc, 3);
-
-        assert_eq!(toc[0].slug, "setup");
-        assert_eq!(toc[1].slug, "setup-1");
-        assert_eq!(toc[2].slug, "section");
     }
 
     #[test]

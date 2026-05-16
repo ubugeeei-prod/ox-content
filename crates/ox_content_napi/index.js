@@ -70,6 +70,8 @@ const binding = loadBinding();
 // Export individual functions for ESM compatibility
 module.exports = binding;
 module.exports.parse = binding.parse;
+module.exports.parseTransferRaw = binding.parseTransferRaw;
+module.exports.parseMdastRaw = binding.parseMdastRaw;
 module.exports.parseAndRender = binding.parseAndRender;
 module.exports.parseAndRenderAsync = binding.parseAndRenderAsync;
 module.exports.lintMarkdown = binding.lintMarkdown;

@@ -82,6 +82,8 @@ Under the hood, Ox Content is not only a docs theme. It also exposes the Markdow
 - [Getting Started](./getting-started.md) - Installation and first steps
 - [Development Setup](./development-setup.md) - Build ox-content itself and work on the repo
 - [Architecture](./architecture.md) - Deep dive into the design
+- [unplugin mdast Bridge Example](./examples/unplugin-mdast-bridge.md) - Native parser plus unified-compatible mdast plugins
+- [unplugin markdown-it Token Bridge](./examples/unplugin-markdown-it-token-bridge.md) - `markdown-it` plugins plus downstream unified token access
 - [Theming](./theming.md) - Customize your documentation site
 - [API Reference](./api/index.md) - Generated API docs for the public surface
 - [GitHub](https://github.com/ubugeeei/ox-content) - Source code and issues

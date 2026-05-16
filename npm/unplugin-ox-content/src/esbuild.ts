@@ -3,8 +3,7 @@
  */
 
 import oxContentUnplugin from "./index";
-import type { OxContentOptions, ResolvedOptions, TocEntry, TransformResult } from "./types";
 
 export default oxContentUnplugin.esbuild;
 export { oxContentUnplugin as unplugin };
-export type { OxContentOptions, ResolvedOptions, TocEntry, TransformResult };
+export * from "./index";

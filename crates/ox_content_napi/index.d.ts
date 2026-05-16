@@ -475,6 +475,12 @@ export interface JsSourceDocTag {
   value: string
 }
 
+/** Source preparation options for JavaScript. */
+export interface JsSourceOptions {
+  /** Parse YAML frontmatter before returning the content payload. */
+  frontmatter?: boolean
+}
+
 /** SSG configuration. */
 export interface JsSsgConfig {
   /** Site name. */
@@ -716,6 +722,8 @@ export interface JsTransformOptions {
   strikethrough?: boolean
   /** Enable autolinks. */
   autolinks?: boolean
+  /** Parse YAML frontmatter before transforming. */
+  frontmatter?: boolean
   /** Maximum TOC depth (1-6). */
   tocMaxDepth?: number
   /** Convert `.md` links to `.html` links for SSG output. */
@@ -781,7 +789,7 @@ export interface Mf2ValidateResult {
 /**
  * Parses Markdown source into an AST.
  *
- * Returns the AST as a JSON string for zero-copy transfer to JavaScript.
+ * Returns the AST as a JSON string for compatibility-oriented JavaScript consumers.
  */
 export declare function parse(source: string, options?: JsParserOptions | undefined | null): ParseResult
 
@@ -790,6 +798,9 @@ export declare function parseAndRender(source: string, options?: JsParserOptions
 
 /** Parses Markdown and renders to HTML asynchronously (runs on worker thread). */
 export declare function parseAndRenderAsync(source: string, options?: JsParserOptions | undefined | null): Promise<unknown>
+
+/** Parses Markdown source into a raw mdast memory block for JavaScript-side deserialization. */
+export declare function parseMdastRaw(source: string, options?: JsParserOptions | undefined | null): Uint8Array
 
 /** Parse result containing the AST as JSON. */
 export interface ParseResult {
@@ -801,6 +812,22 @@ export interface ParseResult {
 
 /** Splits a search query into free-text terms and `@scope` prefixes. */
 export declare function parseScopedSearchQuery(query: string): JsScopedSearchQuery
+
+/**
+ * Parses Markdown source into a transfer buffer identified by payload kind.
+ *
+ * Today `mdast` is the primary supported payload. Future payload kinds such as
+ * markdown-it token streams will share the same transfer envelope.
+ */
+export declare function parseTransferRaw(source: string, kind: string, options?: JsParserOptions | undefined | null): Uint8Array
+
+/**
+ * Splits Markdown source into content and frontmatter in a raw transfer buffer.
+ *
+ * This is used by JavaScript-side markdown-it and custom unified parser paths so
+ * frontmatter stripping can stay on the Rust side even when parsing continues in JS.
+ */
+export declare function prepareSourceRaw(source: string, options?: JsSourceOptions | undefined | null): Uint8Array
 
 /** Renders an AST (provided as JSON) to HTML. */
 export declare function render(astJson: string): RenderResult
@@ -843,6 +870,14 @@ export declare function transform(source: string, options?: JsTransformOptions |
 
 /** Transforms Markdown source asynchronously (runs on worker thread). */
 export declare function transformAsync(source: string, options?: JsTransformOptions | undefined | null): Promise<unknown>
+
+/**
+ * Transforms Markdown into a raw mdast transfer buffer.
+ *
+ * This keeps frontmatter parsing and mdast generation on the Rust side and
+ * transfers a single external memory block to JavaScript for deserialization.
+ */
+export declare function transformMdastRaw(source: string, options?: JsTransformOptions | undefined | null): Uint8Array
 
 /**
  * Transforms mermaid code blocks in HTML to rendered SVG diagrams.
