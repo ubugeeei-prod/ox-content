@@ -38,6 +38,11 @@ remark syntax extensions and custom parsers intentionally fall back to `remark-p
 parser cannot execute micromark extensions. markdown-it plugins can still run first, and their token stream
 is exposed at `file.data.oxContent.markdownIt.tokens` for downstream unified plugins.
 
+The compatibility test matrix uses real unified packages, including `remark-gfm`,
+`remark-frontmatter`, `remark-directive`, `remark-math`, `remark-toc`, `remark-smartypants`,
+`rehype-slug`, `rehype-autolink-headings`, `rehype-external-links`, `rehype-katex`, `rehype-raw`,
+and `rehype-sanitize`.
+
 ## Core configuration
 
 ```ts

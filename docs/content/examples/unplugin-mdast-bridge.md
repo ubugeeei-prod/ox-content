@@ -43,6 +43,20 @@ There are two important compatibility boundaries:
   remark plugins can inspect those tokens, but that path is a token/HTML bridge rather than a perfect
   source-mdast representation of markdown-it internals.
 
+## Real-world Plugin Matrix
+
+The bridge test suite includes end-to-end coverage for representative packages from the unified ecosystem,
+not only local mock plugins:
+
+- `remark-gfm` for tables, task lists, strikethrough, and syntax-extension fallback.
+- `remark-smartypants` and `remark-toc` for mdast transforms after fallback parsing.
+- `remark-frontmatter` while preserving Rust-prepared `vfile.data.matter`.
+- `remark-directive` with downstream `data.hName` / `data.hProperties` handoff to `remark-rehype`.
+- `remark-math` plus `rehype-katex` for syntax extension plus rehype rendering.
+- `rehype-slug` and `rehype-autolink-headings` on the native mdast bridge.
+- `rehype-external-links` after fallback parsing.
+- `rehype-raw` plus `rehype-sanitize` for raw HTML compatibility.
+
 ## Performance Expectations
 
 The native fast path remains the performance target. The mdast bridge is a compatibility path, so it adds

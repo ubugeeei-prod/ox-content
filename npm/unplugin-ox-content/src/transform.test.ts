@@ -1,7 +1,19 @@
 import { createRequire } from "node:module";
 import type MarkdownIt from "markdown-it";
+import rehypeAutolinkHeadings from "rehype-autolink-headings";
+import rehypeExternalLinks from "rehype-external-links";
+import rehypeKatex from "rehype-katex";
 import rehypeStringify from "rehype-stringify";
+import rehypeRaw from "rehype-raw";
+import rehypeSanitize from "rehype-sanitize";
+import rehypeSlug from "rehype-slug";
+import remarkDirective from "remark-directive";
+import remarkFrontmatter from "remark-frontmatter";
+import remarkGfm from "remark-gfm";
+import remarkMath from "remark-math";
 import remarkRehype from "remark-rehype";
+import remarkSmartypants from "remark-smartypants";
+import remarkToc from "remark-toc";
 import { unified } from "unified";
 import { describe, expect, it } from "vite-plus/test";
 import type { ResolvedOptions } from "./types";
@@ -930,6 +942,241 @@ describe("mdast js plugin", () => {
     );
 
     expect(result.html).toBe('<aside data-compiler="rehype">custom-output</aside>');
+  });
+
+  it("runs a real-world remark syntax and transform matrix end-to-end", async () => {
+    const result = await transformMarkdown(
+      [
+        "# Guide",
+        "",
+        "## Contents",
+        "",
+        "## Install",
+        "",
+        'Run "vp install" -- then enjoy.',
+        "",
+        "- [x] shipped",
+        "",
+        "| Package | Runtime |",
+        "| - | - |",
+        "| ox-content | Node |",
+        "",
+        "~~old~~",
+      ].join("\n"),
+      "docs/real-remark-matrix.md",
+      createResolvedOptions({
+        plugin: {
+          oxContent: [],
+          markdownIt: [],
+          mdast: [],
+          remark: [remarkGfm, remarkSmartypants, [remarkToc, { heading: "contents" }]],
+          rehype: [],
+        },
+      }),
+    );
+
+    expect(result.html).toContain("<table>");
+    expect(result.html).toMatch(/<input(?=[^>]*type="checkbox")(?=[^>]*checked)[^>]*>/);
+    expect(result.html).toContain("<del>old</del>");
+    expect(result.html).toContain('href="#install"');
+    expect(result.html).toMatch(/“vp install”|&#x201C;vp install&#x201D;/);
+  });
+
+  it("runs remark-frontmatter while preserving Rust-prepared vfile matter", async () => {
+    function remarkReportFrontmatterNodes() {
+      return (
+        tree: {
+          children?: Array<{
+            type?: string;
+            value?: string;
+          }>;
+        },
+        file: { data?: { matter?: { title?: string } } },
+      ) => {
+        const yaml = tree.children?.find((node) => node.type === "yaml");
+        tree.children = (tree.children ?? []).filter((node) => node.type !== "yaml");
+        tree.children.push({
+          type: "paragraph",
+          children: [
+            {
+              type: "text",
+              value:
+                `frontmatter-node:${yaml?.value?.trim() ?? "missing"}; ` +
+                `matter:${file.data?.matter?.title ?? "missing"}`,
+            },
+          ],
+        } as never);
+      };
+    }
+
+    const result = await transformMarkdown(
+      "---\ntitle: Plugin Frontmatter\n---\n# Body",
+      "docs/real-frontmatter.md",
+      createResolvedOptions({
+        plugin: {
+          oxContent: [],
+          markdownIt: [],
+          mdast: [],
+          remark: [[remarkFrontmatter, ["yaml"]], remarkReportFrontmatterNodes],
+          rehype: [],
+        },
+      }),
+    );
+
+    expect(result.html).toContain(
+      "<p>frontmatter-node:title: Plugin Frontmatter; matter:frontmatter-from-rust</p>",
+    );
+  });
+
+  it("runs remark-directive syntax with downstream mdast-to-hast data", async () => {
+    type DirectiveNode = {
+      type?: string;
+      name?: string;
+      attributes?: Record<string, string>;
+      data?: Record<string, unknown>;
+      children?: DirectiveNode[];
+    };
+
+    function remarkDirectiveToAside() {
+      return (tree: DirectiveNode) => {
+        const visit = (node: DirectiveNode) => {
+          if (node.type === "containerDirective" && node.name === "note") {
+            node.data = {
+              ...node.data,
+              hName: "aside",
+              hProperties: {
+                id: node.attributes?.id,
+                className: ["note"],
+              },
+            };
+          }
+
+          for (const child of node.children ?? []) {
+            visit(child);
+          }
+        };
+
+        visit(tree);
+      };
+    }
+
+    const result = await transformMarkdown(
+      ":::note{#plugin-note}\nDirective **body**.\n:::",
+      "docs/real-directive.md",
+      createResolvedOptions({
+        plugin: {
+          oxContent: [],
+          markdownIt: [],
+          mdast: [],
+          remark: [remarkDirective, remarkDirectiveToAside],
+          rehype: [],
+        },
+      }),
+    );
+
+    expect(result.html).toMatch(/<aside(?=[^>]*id="plugin-note")(?=[^>]*class="note")[^>]*>/);
+    expect(result.html).toContain("Directive <strong>body</strong>.");
+  });
+
+  it("runs remark-math with rehype-katex end-to-end", async () => {
+    const result = await transformMarkdown(
+      "Inline $a + b$.\n\n$$\nx^2\n$$",
+      "docs/real-math.md",
+      createResolvedOptions({
+        plugin: {
+          oxContent: [],
+          markdownIt: [],
+          mdast: [],
+          remark: [remarkMath],
+          rehype: [rehypeKatex],
+        },
+      }),
+    );
+
+    expect(result.html).toContain('class="katex"');
+    expect(result.html).toContain("a");
+    expect(result.html).toContain("x");
+  });
+
+  it("runs rehype-slug and rehype-autolink-headings on the native mdast bridge", async () => {
+    const result = await transformMarkdown(
+      "# Ignored by native mock",
+      "docs/real-rehype-headings.md",
+      createResolvedOptions({
+        plugin: {
+          oxContent: [],
+          markdownIt: [],
+          mdast: [],
+          remark: [],
+          rehype: [
+            rehypeSlug,
+            [
+              rehypeAutolinkHeadings,
+              {
+                behavior: "append",
+                content: {
+                  type: "text",
+                  value: "#",
+                },
+              },
+            ],
+          ],
+        },
+      }),
+    );
+
+    expect(result.html).toContain('<h1 id="hello">Hello');
+    expect(result.html).toContain('href="#hello"');
+    expect(result.html).toContain(">#</a>");
+  });
+
+  it("runs rehype-external-links after remark fallback parsing", async () => {
+    const result = await transformMarkdown(
+      "[External](https://example.com) and [Local](/docs)",
+      "docs/real-external-links.md",
+      createResolvedOptions({
+        plugin: {
+          oxContent: [],
+          markdownIt: [],
+          mdast: [],
+          remark: [remarkGfm],
+          rehype: [
+            [
+              rehypeExternalLinks,
+              {
+                target: "_blank",
+                rel: ["nofollow", "noopener"],
+              },
+            ],
+          ],
+        },
+      }),
+    );
+
+    expect(result.html).toMatch(
+      /<a(?=[^>]*href="https:\/\/example\.com")(?=[^>]*target="_blank")(?=[^>]*rel="nofollow noopener")[^>]*>External<\/a>/,
+    );
+    expect(result.html).toContain('<a href="/docs">Local</a>');
+  });
+
+  it("runs rehype-raw and rehype-sanitize for raw HTML compatibility", async () => {
+    const result = await transformMarkdown(
+      "Safe <b>bold</b>.\n\n<script>alert(1)</script>",
+      "docs/real-raw-sanitize.md",
+      createResolvedOptions({
+        plugin: {
+          oxContent: [],
+          markdownIt: [],
+          mdast: [],
+          remark: [remarkGfm],
+          rehype: [rehypeRaw, rehypeSanitize],
+        },
+      }),
+    );
+
+    expect(result.html).toContain("<b>bold</b>");
+    expect(result.html).not.toContain("<script>");
+    expect(result.html).not.toContain("alert(1)");
   });
 
   it("runs markdown-it plugins and builds the TOC from markdown-it tokens", async () => {
