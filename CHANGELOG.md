@@ -1,5 +1,29 @@
 # Changelog
 
+## [2.7.0] - 2026-05-16
+
+### Features
+
+- support sidebar config (#86)
+- support custom social links (#85)
+- support git last updated (#84)
+- render inline toc directive (#83)
+- render toc outline in ssg theme (#82)
+- add heading anchor ids (#80)
+
+### Bug Fixes
+
+- render inline raw html (#79)
+- terminate html blocks on blank lines (#78)
+- apply base to markdown paths (#77)
+- pin deploy workflow actions (#76)
+- pin benchmark workflow actions (#75)
+- pin ci workflow actions (#74)
+- harden publish workflow (#73)
+- parse napi frontmatter with yaml (#72)
+- report benchmark time and base speed (#71)
+- harden renderer urls and workflows (#70)
+
 ## [2.6.0] - 2026-05-16
 
 ### Features
