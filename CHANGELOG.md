@@ -1,5 +1,12 @@
 # Changelog
 
+## [2.6.0] - 2026-05-16
+
+### Features
+
+- use ox_jsdoc for docs generation (#69)
+- add pull request benchmark comments (#64)
+
 ## [2.5.0] - 2026-05-07
 
 ### Performance
