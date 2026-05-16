@@ -1,5 +1,58 @@
 // Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
 
+exports[`mdast js plugin > accepts unified preset objects in the remark stage 1`] = `
+"<h1>Hello</h1>
+<p>World</p>
+<p>From remark preset</p>"
+`;
+
+exports[`mdast js plugin > bridges markdown-it output into mdast and remark plugins when both are configured 1`] = `
+"<h1>Hello from markdown-it + mdast</h1>
+<p>From remark bridge</p>"
+`;
+
+exports[`mdast js plugin > can be used directly as a unified parser plugin 1`] = `
+"<h1>Hello</h1>
+<p>World</p>"
+`;
+
+exports[`mdast js plugin > exposes Rust-parsed frontmatter on vfile data for native unified plugins 1`] = `"<h1>frontmatter-from-rust</h1>"`;
+
+exports[`mdast js plugin > exposes Rust-prepared frontmatter to markdown-it plugins 1`] = `
+"<h1>frontmatter-from-rust</h1>
+"
+`;
+
+exports[`mdast js plugin > exposes markdown-it tokens on vfile data for downstream unified plugins 1`] = `
+"<h1>Hello from markdown-it tokens</h1>
+<p>From token stream: Hello from markdown-it tokens</p>"
+`;
+
+exports[`mdast js plugin > exposes source offsets from Rust-prepared source to markdown-it plugins 1`] = `
+"<h1>4:1:23</h1>
+"
+`;
+
+exports[`mdast js plugin > exposes source offsets on the mdast plugin context 1`] = `
+"<h1>4:1:23</h1>
+<p>World</p>"
+`;
+
+exports[`mdast js plugin > exposes source offsets on top-level file.data for unified plugins 1`] = `
+"<h1>4:1:23</h1>
+<p>World</p>"
+`;
+
+exports[`mdast js plugin > falls back to remark-parse when remark syntax extensions are registered 1`] = `"<h1>Parsed by fallback via remark-parse</h1>"`;
+
+exports[`mdast js plugin > honors custom unified parsers without overriding them 1`] = `"<h1>frontmatter-visible</h1>"`;
+
+exports[`mdast js plugin > keeps the native fast path when no unified plugins are configured 1`] = `
+"<h1>Hello</h1>
+<p>World</p>
+"
+`;
+
 exports[`mdast js plugin > matches upstream unified output snapshots for real-world plugin pipelines 1`] = `
 {
   "rehype-external-links": "<p><a href="https://example.com" rel="nofollow noopener" target="_blank">External</a> and <a href="/docs">Local</a></p>",
@@ -37,4 +90,92 @@ exports[`mdast js plugin > matches upstream unified output snapshots for real-wo
   "remark-math-rehype-katex": "<p>Inline <span class="katex"><span class="katex-mathml"><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>a</mi><mo>+</mo><mi>b</mi></mrow><annotation encoding="application/x-tex">a + b</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:0.6667em;vertical-align:-0.0833em;"></span><span class="mord mathnormal">a</span><span class="mspace" style="margin-right:0.2222em;"></span><span class="mbin">+</span><span class="mspace" style="margin-right:0.2222em;"></span></span><span class="base"><span class="strut" style="height:0.6944em;"></span><span class="mord mathnormal">b</span></span></span></span>.</p>
 <span class="katex-display"><span class="katex"><span class="katex-mathml"><math xmlns="http://www.w3.org/1998/Math/MathML" display="block"><semantics><mrow><msup><mi>x</mi><mn>2</mn></msup></mrow><annotation encoding="application/x-tex">x^2</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:0.8641em;"></span><span class="mord"><span class="mord mathnormal">x</span><span class="msupsub"><span class="vlist-t"><span class="vlist-r"><span class="vlist" style="height:0.8641em;"><span style="top:-3.113em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mtight">2</span></span></span></span></span></span></span></span></span></span></span></span>",
 }
+`;
+
+exports[`mdast js plugin > pipes markdown-it output through rehype plugins when configured 1`] = `
+"<h1 data-pipeline="rehype">Hello from markdown-it</h1>
+"
+`;
+
+exports[`mdast js plugin > rebases native mdast positions to the original source after frontmatter 1`] = `
+"<h1>4:1:23</h1>
+<p>World</p>"
+`;
+
+exports[`mdast js plugin > reuses explicit bridge plugins nested inside unified presets 1`] = `
+"<h1 data-preset="bridge">Hello</h1>
+<p>World</p>"
+`;
+
+exports[`mdast js plugin > reuses explicit remark-rehype and rehype-stringify plugins without double-applying them 1`] = `
+"<h1>Hello</h1>
+<p>World</p>"
+`;
+
+exports[`mdast js plugin > runs Ox Content-native mdast plugins and updates the TOC from the transformed tree 1`] = `
+"<h1>Hello!!!</h1>
+<p>World</p>"
+`;
+
+exports[`mdast js plugin > runs a real-world remark syntax and transform matrix end-to-end 1`] = `
+"<h1>Guide</h1>
+<h2>Contents</h2>
+<ul>
+<li><a href="#install">Install</a></li>
+</ul>
+<h2>Install</h2>
+<p>Run “vp install” — then enjoy.</p>
+<ul class="contains-task-list">
+<li class="task-list-item"><input type="checkbox" checked disabled> shipped</li>
+</ul>
+<table>
+<thead>
+<tr>
+<th>Package</th>
+<th>Runtime</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>ox-content</td>
+<td>Node</td>
+</tr>
+</tbody>
+</table>
+<p><del>old</del></p>"
+`;
+
+exports[`mdast js plugin > runs existing unified remark plugins in the mdast stage 1`] = `
+"<h1>Hello</h1>
+<p>World</p>
+<p>From remark plugin</p>"
+`;
+
+exports[`mdast js plugin > runs markdown-it plugins and builds the TOC from markdown-it tokens 1`] = `
+"<h1 id="markdown-it-heading">Hello from markdown-it</h1>
+"
+`;
+
+exports[`mdast js plugin > runs rehype-external-links after remark fallback parsing 1`] = `"<p><a href="https://example.com" rel="nofollow noopener" target="_blank">External</a> and <a href="/docs">Local</a></p>"`;
+
+exports[`mdast js plugin > runs rehype-raw and rehype-sanitize for raw HTML compatibility 1`] = `
+"<p>Safe <b>bold</b>.</p>
+"
+`;
+
+exports[`mdast js plugin > runs rehype-slug and rehype-autolink-headings on the native mdast bridge 1`] = `
+"<h1 id="hello">Hello<a aria-hidden="true" tabindex="-1" href="#hello">#</a></h1>
+<p>World</p>"
+`;
+
+exports[`mdast js plugin > runs remark-directive syntax with downstream mdast-to-hast data 1`] = `"<aside id="plugin-note" class="note"><p>Directive <strong>body</strong>.</p></aside>"`;
+
+exports[`mdast js plugin > runs remark-frontmatter while preserving Rust-prepared vfile matter 1`] = `
+"<h1>Body</h1>
+<p>frontmatter-node:title: Plugin Frontmatter; matter:frontmatter-from-rust</p>"
+`;
+
+exports[`mdast js plugin > runs remark-math with rehype-katex end-to-end 1`] = `
+"<p>Inline <span class="katex"><span class="katex-mathml"><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>a</mi><mo>+</mo><mi>b</mi></mrow><annotation encoding="application/x-tex">a + b</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:0.6667em;vertical-align:-0.0833em;"></span><span class="mord mathnormal">a</span><span class="mspace" style="margin-right:0.2222em;"></span><span class="mbin">+</span><span class="mspace" style="margin-right:0.2222em;"></span></span><span class="base"><span class="strut" style="height:0.6944em;"></span><span class="mord mathnormal">b</span></span></span></span>.</p>
+<span class="katex-display"><span class="katex"><span class="katex-mathml"><math xmlns="http://www.w3.org/1998/Math/MathML" display="block"><semantics><mrow><msup><mi>x</mi><mn>2</mn></msup></mrow><annotation encoding="application/x-tex">x^2</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:0.8641em;"></span><span class="mord"><span class="mord mathnormal">x</span><span class="msupsub"><span class="vlist-t"><span class="vlist-r"><span class="vlist" style="height:0.8641em;"><span style="top:-3.113em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mtight">2</span></span></span></span></span></span></span></span></span></span></span></span>"
 `;

@@ -405,7 +405,7 @@ describe("mdast js plugin", () => {
   it("keeps the native fast path when no unified plugins are configured", async () => {
     const result = await transformMarkdown("# Hello", "docs/fast-path.md", createResolvedOptions());
 
-    expect(result.html).toContain("<h1>Hello</h1>");
+    expect(result.html).toMatchSnapshot();
     expect(result.toc).toEqual([
       {
         depth: 1,
@@ -452,7 +452,7 @@ describe("mdast js plugin", () => {
       }),
     );
 
-    expect(result.html).toContain("<h1>4:1:23</h1>");
+    expect(result.html).toMatchSnapshot();
   });
 
   it("exposes source offsets on the mdast plugin context", async () => {
@@ -479,7 +479,7 @@ describe("mdast js plugin", () => {
       }),
     );
 
-    expect(result.html).toContain("<h1>4:1:23</h1>");
+    expect(result.html).toMatchSnapshot();
   });
 
   it("exposes source offsets from Rust-prepared source to markdown-it plugins", async () => {
@@ -507,7 +507,7 @@ describe("mdast js plugin", () => {
       }),
     );
 
-    expect(result.html).toContain("<h1>4:1:23</h1>");
+    expect(result.html).toMatchSnapshot();
   });
 
   it("exposes source offsets on top-level file.data for unified plugins", async () => {
@@ -548,7 +548,7 @@ describe("mdast js plugin", () => {
       }),
     );
 
-    expect(result.html).toContain("<h1>4:1:23</h1>");
+    expect(result.html).toMatchSnapshot();
   });
 
   it("runs Ox Content-native mdast plugins and updates the TOC from the transformed tree", async () => {
@@ -574,7 +574,7 @@ describe("mdast js plugin", () => {
       }),
     );
 
-    expect(result.html).toContain("<h1>Hello!!!</h1>");
+    expect(result.html).toMatchSnapshot();
     expect(result.toc).toEqual([
       {
         depth: 1,
@@ -609,7 +609,7 @@ describe("mdast js plugin", () => {
       }),
     );
 
-    expect(result.html).toContain("<p>From remark plugin</p>");
+    expect(result.html).toMatchSnapshot();
   });
 
   it("accepts unified preset objects in the remark stage", async () => {
@@ -640,7 +640,7 @@ describe("mdast js plugin", () => {
       }),
     );
 
-    expect(result.html).toContain("<p>From remark preset</p>");
+    expect(result.html).toMatchSnapshot();
   });
 
   it("exposes Rust-parsed frontmatter on vfile data for native unified plugins", async () => {
@@ -675,7 +675,7 @@ describe("mdast js plugin", () => {
       }),
     );
 
-    expect(result.html).toContain("<h1>frontmatter-from-rust</h1>");
+    expect(result.html).toMatchSnapshot();
   });
 
   it("fails fast when modern Rust transfer bindings are unavailable", async () => {
@@ -796,7 +796,7 @@ describe("mdast js plugin", () => {
       }),
     );
 
-    expect(result.html).toContain("<h1>frontmatter-from-rust</h1>");
+    expect(result.html).toMatchSnapshot();
     expect(result.frontmatter).toEqual({ title: "frontmatter-from-rust" });
   });
 
@@ -830,8 +830,7 @@ describe("mdast js plugin", () => {
       }),
     );
 
-    expect(result.html).toContain("<h1>Parsed by fallback via remark-parse</h1>");
-    expect(result.html).not.toContain("<h1>Hello</h1>");
+    expect(result.html).toMatchSnapshot();
   });
 
   it("honors custom unified parsers without overriding them", async () => {
@@ -867,8 +866,7 @@ describe("mdast js plugin", () => {
       }),
     );
 
-    expect(result.html).toContain("<h1>frontmatter-visible</h1>");
-    expect(result.html).not.toContain("<h1>Hello</h1>");
+    expect(result.html).toMatchSnapshot();
   });
 
   it("reuses explicit remark-rehype and rehype-stringify plugins without double-applying them", async () => {
@@ -886,8 +884,7 @@ describe("mdast js plugin", () => {
       }),
     );
 
-    expect(result.html).toContain("<h1>Hello</h1>");
-    expect(result.html).toContain("<p>World</p>");
+    expect(result.html).toMatchSnapshot();
   });
 
   it("reuses explicit bridge plugins nested inside unified presets", async () => {
@@ -935,8 +932,7 @@ describe("mdast js plugin", () => {
       }),
     );
 
-    expect(result.html).toContain('<h1 data-preset="bridge">Hello</h1>');
-    expect(result.html).toContain("<p>World</p>");
+    expect(result.html).toMatchSnapshot();
   });
 
   it("honors custom unified compilers without overriding them", async () => {
@@ -1018,11 +1014,7 @@ describe("mdast js plugin", () => {
       }),
     );
 
-    expect(result.html).toContain("<table>");
-    expect(result.html).toMatch(/<input(?=[^>]*type="checkbox")(?=[^>]*checked)[^>]*>/);
-    expect(result.html).toContain("<del>old</del>");
-    expect(result.html).toContain('href="#install"');
-    expect(result.html).toMatch(/“vp install”|&#x201C;vp install&#x201D;/);
+    expect(result.html).toMatchSnapshot();
   });
 
   it("runs remark-frontmatter while preserving Rust-prepared vfile matter", async () => {
@@ -1066,9 +1058,7 @@ describe("mdast js plugin", () => {
       }),
     );
 
-    expect(result.html).toContain(
-      "<p>frontmatter-node:title: Plugin Frontmatter; matter:frontmatter-from-rust</p>",
-    );
+    expect(result.html).toMatchSnapshot();
   });
 
   it("runs remark-directive syntax with downstream mdast-to-hast data", async () => {
@@ -1117,8 +1107,7 @@ describe("mdast js plugin", () => {
       }),
     );
 
-    expect(result.html).toMatch(/<aside(?=[^>]*id="plugin-note")(?=[^>]*class="note")[^>]*>/);
-    expect(result.html).toContain("Directive <strong>body</strong>.");
+    expect(result.html).toMatchSnapshot();
   });
 
   it("runs remark-math with rehype-katex end-to-end", async () => {
@@ -1136,9 +1125,7 @@ describe("mdast js plugin", () => {
       }),
     );
 
-    expect(result.html).toContain('class="katex"');
-    expect(result.html).toContain("a");
-    expect(result.html).toContain("x");
+    expect(result.html).toMatchSnapshot();
   });
 
   it("runs rehype-slug and rehype-autolink-headings on the native mdast bridge", async () => {
@@ -1168,9 +1155,7 @@ describe("mdast js plugin", () => {
       }),
     );
 
-    expect(result.html).toContain('<h1 id="hello">Hello');
-    expect(result.html).toContain('href="#hello"');
-    expect(result.html).toContain(">#</a>");
+    expect(result.html).toMatchSnapshot();
   });
 
   it("runs rehype-external-links after remark fallback parsing", async () => {
@@ -1196,10 +1181,7 @@ describe("mdast js plugin", () => {
       }),
     );
 
-    expect(result.html).toMatch(
-      /<a(?=[^>]*href="https:\/\/example\.com")(?=[^>]*target="_blank")(?=[^>]*rel="nofollow noopener")[^>]*>External<\/a>/,
-    );
-    expect(result.html).toContain('<a href="/docs">Local</a>');
+    expect(result.html).toMatchSnapshot();
   });
 
   it("runs rehype-raw and rehype-sanitize for raw HTML compatibility", async () => {
@@ -1217,9 +1199,7 @@ describe("mdast js plugin", () => {
       }),
     );
 
-    expect(result.html).toContain("<b>bold</b>");
-    expect(result.html).not.toContain("<script>");
-    expect(result.html).not.toContain("alert(1)");
+    expect(result.html).toMatchSnapshot();
   });
 
   it("matches upstream unified output snapshots for real-world plugin pipelines", async () => {
@@ -1385,7 +1365,7 @@ describe("mdast js plugin", () => {
       }),
     );
 
-    expect(result.html).toContain('<h1 id="markdown-it-heading">Hello from markdown-it</h1>');
+    expect(result.html).toMatchSnapshot();
     expect(result.toc).toEqual([
       {
         depth: 1,
@@ -1448,8 +1428,7 @@ describe("mdast js plugin", () => {
       }),
     );
 
-    expect(result.html).toContain('data-pipeline="rehype"');
-    expect(result.html).toContain("Hello from markdown-it");
+    expect(result.html).toMatchSnapshot();
   });
 
   it("bridges markdown-it output into mdast and remark plugins when both are configured", async () => {
@@ -1499,8 +1478,7 @@ describe("mdast js plugin", () => {
       }),
     );
 
-    expect(result.html).toContain("<h1>Hello from markdown-it + mdast</h1>");
-    expect(result.html).toContain("<p>From remark bridge</p>");
+    expect(result.html).toMatchSnapshot();
     expect(result.toc).toEqual([
       {
         depth: 1,
@@ -1572,7 +1550,7 @@ describe("mdast js plugin", () => {
       }),
     );
 
-    expect(result.html).toContain("<p>From token stream: Hello from markdown-it tokens</p>");
+    expect(result.html).toMatchSnapshot();
   });
 
   it("can be used directly as a unified parser plugin", async () => {
@@ -1582,7 +1560,6 @@ describe("mdast js plugin", () => {
       .use(rehypeStringify, { allowDangerousHtml: true })
       .process("# Ignored by mock parser");
 
-    expect(String(file)).toContain("<h1>Hello</h1>");
-    expect(String(file)).toContain("<p>World</p>");
+    expect(String(file)).toMatchSnapshot();
   });
 });
