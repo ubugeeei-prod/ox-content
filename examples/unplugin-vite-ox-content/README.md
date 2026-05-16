@@ -22,6 +22,22 @@ npm run dev
 - The final paragraph is appended by the remark plugin using frontmatter data.
 - The imported module exposes `frontmatter`, `toc`, and transformed `html`.
 
+## Compatibility and performance
+
+`plugin.mdast` accepts `defineMdastPlugin()` transforms, while `plugin.remark` accepts existing
+remark/unified plugins in the same mdast stage. Unified plugin tuples and presets are supported, and
+`vfile.data.matter`, `vfile.data.frontmatter`, `file.data.oxContent`, source offsets, and transformed TOC
+entries are available to downstream plugins.
+
+The native Rust path is still used when no markdown-it, mdast, remark, or rehype plugins are configured.
+Once the bridge is enabled, Ox Content pays for JS mdast materialization and unified plugin execution.
+A local Node `v24.15.0` smoke benchmark over a 45 KB fixture measured 1.215 ms/document for the native
+fast path, 10.154 ms/document for an mdast no-op plugin, and 10.597 ms/document for a remark no-op plugin.
+
+remark syntax extensions and custom parsers intentionally fall back to `remark-parse`, because the Rust
+parser cannot execute micromark extensions. markdown-it plugins can still run first, and their token stream
+is exposed at `file.data.oxContent.markdownIt.tokens` for downstream unified plugins.
+
 ## Core configuration
 
 ```ts

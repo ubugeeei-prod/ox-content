@@ -264,6 +264,30 @@ for each fixture so you can distinguish parser cost from transfer-format cost.
 This benchmark measures the Rust-side pipeline only. For end-to-end unified bridge evaluation, pair it
 with a JavaScript benchmark that includes the N-API boundary and JS-side mdast materialization.
 
+A local transfer-focused run on 2026-05-17 with Node `v24.15.0` on Apple M5 Pro used `--sample-size 10`,
+`--warm-up-time 1`, and `--measurement-time 1`. The large fixture was 45,298 bytes of GFM-heavy Markdown.
+
+| Path                  | Large fixture median |   Throughput |
+| --------------------- | -------------------: | -----------: |
+| `parse_native`        |            314.07 us | 137.55 MiB/s |
+| `parse_json`          |            373.60 us | 115.63 MiB/s |
+| `parse_raw`           |            560.24 us | 77.109 MiB/s |
+| `transform_mdast_raw` |            594.15 us | 72.708 MiB/s |
+| `transform_html`      |            686.09 us | 62.965 MiB/s |
+
+Payload sizes from the same run:
+
+| Fixture | JSON bytes | Raw bytes | Transform raw bytes |
+| ------- | ---------: | --------: | ------------------: |
+| small   |      2,292 |     4,177 |               4,682 |
+| medium  |     22,668 |    40,582 |              45,164 |
+| large   |    226,428 |   404,632 |             449,984 |
+
+The raw transfer path is still useful because it keeps Rust in charge of parsing, frontmatter stripping,
+and source-origin metadata, but this run shows that the first raw encoding is not yet smaller or faster
+than JSON by itself. End-to-end mdast bridge performance should therefore be read as a compatibility
+feature today, with raw format and JS deserializer tuning as the next performance target.
+
 ### Transfer Envelope
 
 Raw transfers now use a payload-kind-aware envelope via `parseTransferRaw(source, kind, options)`.

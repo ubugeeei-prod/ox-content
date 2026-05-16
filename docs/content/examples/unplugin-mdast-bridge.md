@@ -19,6 +19,49 @@ npm run dev
 - A final `oxContent` HTML plugin that prepends reading time and wraps the rendered output.
 - A browser view that shows the resulting `html`, `frontmatter`, and `toc` exports from the imported Markdown module.
 
+## Compatibility Model
+
+The bridge is designed for practical mdast and remark plugin reuse without making the no-plugin path pay
+for unified. When `plugin.mdast`, `plugin.remark`, `plugin.rehype`, or `plugin.markdownIt` is configured,
+Ox Content enters the unified bridge. Without those plugins, Markdown still uses the native Rust parse and
+render path.
+
+The supported path covers:
+
+- `defineMdastPlugin()` functions that mutate the Rust-produced mdast tree.
+- Existing remark/unified transformer functions, plugin tuples, and preset objects.
+- `plugin.remark` and `plugin.mdast` in the same mdast stage, with TOC extraction after those transforms.
+- `vfile.data.matter`, `vfile.data.frontmatter`, `file.data.oxContent`, and original-source offsets for diagnostics.
+- Explicit `remark-rehype` and `rehype-stringify` bridge plugins when a project wants to own those stages.
+- Custom unified parsers and compilers, when they are registered by the user.
+
+There are two important compatibility boundaries:
+
+- remark syntax extensions and custom parsers force a fallback to `remark-parse`, because the Rust parser
+  cannot execute micromark extensions.
+- `plugin.markdownIt` runs first and exposes tokens at `file.data.oxContent.markdownIt.tokens`; downstream
+  remark plugins can inspect those tokens, but that path is a token/HTML bridge rather than a perfect
+  source-mdast representation of markdown-it internals.
+
+## Performance Expectations
+
+The native fast path remains the performance target. The mdast bridge is a compatibility path, so it adds
+JS mdast materialization plus unified plugin execution.
+
+A local Node `v24.15.0` smoke benchmark over a 45 KB Markdown fixture measured:
+
+| Path               | Time per document | Throughput |
+| ------------------ | ----------------: | ---------: |
+| native fast path   |          1.215 ms | 34.6 MiB/s |
+| mdast no-op plugin |         10.154 ms |  4.1 MiB/s |
+| remark no-op       |         10.597 ms |  4.0 MiB/s |
+
+The Rust-side transfer work is much smaller than the end-to-end bridge cost. On the same large fixture,
+`transformMdastRaw` measured about 0.594 ms and `transform_html` measured about 0.686 ms in Criterion.
+That means the current bottleneck is mostly JS object materialization and unified processing, not the Rust
+parser itself. The raw transfer format is intentionally explicit, but its current payload is larger than
+the JSON export, so raw format and deserializer tuning remain good follow-up optimization targets.
+
 ## Configuration
 
 ```ts
