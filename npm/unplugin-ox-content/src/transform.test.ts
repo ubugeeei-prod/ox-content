@@ -335,7 +335,7 @@ function createResolvedOptions(overrides?: Partial<ResolvedOptions>): ResolvedOp
     frontmatter: true,
     toc: true,
     tocMaxDepth: 3,
-    extensions: [".md"],
+    extensions: [".md", ".markdown", ".mdx"],
     include: [],
     exclude: [],
     plugin: {

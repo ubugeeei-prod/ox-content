@@ -236,6 +236,12 @@ export interface OxContentOptions {
   base?: string;
 
   /**
+   * Markdown-like file extensions to process.
+   * @default ['.md', '.markdown', '.mdx']
+   */
+  extensions?: string[];
+
+  /**
    * SSG (Static Site Generation) options.
    * Set to false to disable SSG completely.
    * @default { enabled: true }
@@ -380,6 +386,7 @@ export interface ResolvedOptions {
   srcDir: string;
   outDir: string;
   base: string;
+  extensions: string[];
   ssg: ResolvedSsgOptions;
   gfm: boolean;
   footnotes: boolean;

@@ -75,6 +75,7 @@ export async function transformMarkdownWithReact(
     srcDir: options.srcDir,
     outDir: options.outDir,
     base: options.base,
+    extensions: options.extensions,
     ssg: {
       enabled: false,
       extension: ".html",

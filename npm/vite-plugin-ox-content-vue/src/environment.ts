@@ -54,7 +54,7 @@ export function createVueMarkdownEnvironment(
     // Development server options (client only)
     ...(!isSSR && {
       dev: {
-        warmup: ["./src/**/*.vue", "./docs/**/*.md"],
+        warmup: ["./src/**/*.vue", "./docs/**/*.{md,markdown,mdx}"],
       },
     }),
   };

@@ -115,6 +115,7 @@ function createResolvedOptions(overrides: Partial<ResolvedOptions> = {}): Resolv
     srcDir: "content",
     outDir: "dist",
     base: "/",
+    extensions: [".md", ".markdown", ".mdx"],
     ssg: {
       enabled: true,
       extension: ".html",

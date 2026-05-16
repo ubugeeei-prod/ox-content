@@ -94,6 +94,7 @@ export async function transformMarkdownWithVue(
     srcDir: options.srcDir,
     outDir: options.outDir,
     base: options.base,
+    extensions: options.extensions,
     ssg: {
       enabled: false,
       extension: ".html",
@@ -134,7 +135,7 @@ export async function transformMarkdownWithVue(
       hotkey: "k",
     },
     i18n: false,
-  } as Parameters<typeof baseTransformMarkdown>[2] & {
+  } as unknown as Parameters<typeof baseTransformMarkdown>[2] & {
     codeAnnotations?: TransformOptions["codeAnnotations"];
   };
 

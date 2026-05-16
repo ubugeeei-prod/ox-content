@@ -12,6 +12,7 @@ import { glob } from "glob";
 import type { Plugin } from "vite";
 import type { ResolvedOptions } from "./types";
 import { normalizeVitePressFrontmatter } from "./vitepress";
+import { markdownGlobPattern, stripMarkdownExtension } from "./markdown";
 
 // =============================================================================
 // Types
@@ -76,9 +77,9 @@ function extractTitle(content: string, frontmatter: Record<string, unknown>): st
   return match ? match[1].trim() : "";
 }
 
-function getUrlPath(filePath: string, srcDir: string): string {
+function getUrlPath(filePath: string, srcDir: string, extensions: readonly string[]): string {
   let rel = path.relative(srcDir, filePath).replace(/\\/g, "/");
-  rel = rel.replace(/\.md$/, "");
+  rel = stripMarkdownExtension(rel, extensions);
   if (rel === "index") return "/";
   if (rel.endsWith("/index")) rel = rel.slice(0, -"/index".length);
   return "/" + rel;
@@ -139,7 +140,7 @@ function validatePage(
 
 async function collectPages(options: ResolvedOptions, root: string): Promise<PageOgData[]> {
   const srcDir = path.resolve(root, options.srcDir);
-  const files = await glob("**/*.md", { cwd: srcDir, absolute: true });
+  const files = await glob(markdownGlobPattern(srcDir, options.extensions), { absolute: true });
 
   const pages: PageOgData[] = [];
   const generateOgImage = options.ogImage || options.ssg.generateOgImage;
@@ -160,7 +161,7 @@ async function collectPages(options: ResolvedOptions, root: string): Promise<Pag
         ? [frontmatter.tags]
         : [];
 
-    const urlPath = getUrlPath(file, srcDir);
+    const urlPath = getUrlPath(file, srcDir, options.extensions);
     const ogImageUrl = computeOgImageUrl(
       urlPath,
       options.base,

@@ -7,6 +7,11 @@
 import * as fs from "fs/promises";
 import * as path from "path";
 import { importNapiModule, importNapiModuleSync } from "./napi";
+import {
+  DEFAULT_MARKDOWN_EXTENSIONS,
+  isMarkdownFilePath,
+  stripMarkdownExtension,
+} from "./markdown";
 import type {
   SearchOptions,
   ResolvedSearchOptions,
@@ -85,7 +90,10 @@ export function resolveSearchOptions(
 /**
  * Collects all Markdown files from a directory.
  */
-async function collectMarkdownFiles(dir: string): Promise<string[]> {
+async function collectMarkdownFiles(
+  dir: string,
+  extensions: readonly string[] = DEFAULT_MARKDOWN_EXTENSIONS,
+): Promise<string[]> {
   const files: string[] = [];
 
   async function walk(currentDir: string) {
@@ -97,7 +105,7 @@ async function collectMarkdownFiles(dir: string): Promise<string[]> {
 
         if (entry.isDirectory() && !entry.name.startsWith(".") && entry.name !== "node_modules") {
           await walk(fullPath);
-        } else if (entry.isFile() && entry.name.endsWith(".md")) {
+        } else if (entry.isFile() && isMarkdownFilePath(entry.name, extensions)) {
           files.push(fullPath);
         }
       }
@@ -113,7 +121,11 @@ async function collectMarkdownFiles(dir: string): Promise<string[]> {
 /**
  * Builds the search index from Markdown files.
  */
-export async function buildSearchIndex(srcDir: string, base: string): Promise<string> {
+export async function buildSearchIndex(
+  srcDir: string,
+  base: string,
+  extensions: readonly string[] = DEFAULT_MARKDOWN_EXTENSIONS,
+): Promise<string> {
   const napi = await getOxContent();
 
   if (!napi) {
@@ -126,15 +138,15 @@ export async function buildSearchIndex(srcDir: string, base: string): Promise<st
     });
   }
 
-  const files = await collectMarkdownFiles(srcDir);
+  const files = await collectMarkdownFiles(srcDir, extensions);
   const documents: SearchDocument[] = [];
 
   for (const file of files) {
     try {
       const content = await fs.readFile(file, "utf-8");
       const relativePath = path.relative(srcDir, file);
-      const url = base + relativePath.replace(/\.md$/, "").replace(/\\/g, "/");
-      const id = relativePath.replace(/\.md$/, "").replace(/\\/g, "/");
+      const id = stripMarkdownExtension(relativePath, extensions).replace(/\\/g, "/");
+      const url = base + id;
 
       // Use Rust bindings to extract search content (if available)
       const extractSearchContent = (napi as any).extractSearchContent;

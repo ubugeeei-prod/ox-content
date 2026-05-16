@@ -26,6 +26,7 @@ import {
 } from "./dev-server";
 import { createOgViewerPlugin } from "./og-viewer";
 import { resolveI18nOptions, createI18nPlugin } from "./i18n";
+import { isMarkdownFilePath, normalizeMarkdownExtensions } from "./markdown";
 import type { OxContentOptions, ResolvedOptions } from "./types";
 
 export type { OxContentOptions } from "./types";
@@ -113,7 +114,7 @@ export function oxContent(options: OxContentOptions = {}): Plugin[] {
       // Add middleware for serving Markdown files
       devServer.middlewares.use(async (req, res, next) => {
         const url = req.url;
-        if (!url || !url.endsWith(".md")) {
+        if (!url || !isMarkdownFilePath(url, resolvedOptions.extensions)) {
           return next();
         }
 
@@ -128,8 +129,8 @@ export function oxContent(options: OxContentOptions = {}): Plugin[] {
         return "\0" + id;
       }
 
-      // Resolve .md files
-      if (id.endsWith(".md")) {
+      // Resolve Markdown files
+      if (isMarkdownFilePath(id, resolvedOptions.extensions)) {
         return id;
       }
 
@@ -147,7 +148,7 @@ export function oxContent(options: OxContentOptions = {}): Plugin[] {
     },
 
     async transform(code, id) {
-      if (!id.endsWith(".md")) {
+      if (!isMarkdownFilePath(id, resolvedOptions.extensions)) {
         return null;
       }
 
@@ -162,7 +163,7 @@ export function oxContent(options: OxContentOptions = {}): Plugin[] {
 
     // Hot Module Replacement support
     async handleHotUpdate({ file, server }) {
-      if (file.endsWith(".md")) {
+      if (isMarkdownFilePath(file, resolvedOptions.extensions)) {
         // Notify client about the update
         server.ws.send({
           type: "custom",
@@ -264,7 +265,7 @@ export function oxContent(options: OxContentOptions = {}): Plugin[] {
 
       // Watch for .md file add/unlink to invalidate nav cache
       devServer.watcher.on("add", (file: string) => {
-        if (file.startsWith(srcDir) && file.endsWith(".md")) {
+        if (file.startsWith(srcDir) && isMarkdownFilePath(file, resolvedOptions.extensions)) {
           invalidateNavCache(ssgDevCache);
           devServer.ws.send({
             type: "custom",
@@ -274,7 +275,7 @@ export function oxContent(options: OxContentOptions = {}): Plugin[] {
         }
       });
       devServer.watcher.on("unlink", (file: string) => {
-        if (file.startsWith(srcDir) && file.endsWith(".md")) {
+        if (file.startsWith(srcDir) && isMarkdownFilePath(file, resolvedOptions.extensions)) {
           invalidateNavCache(ssgDevCache);
           devServer.ws.send({
             type: "custom",
@@ -286,7 +287,7 @@ export function oxContent(options: OxContentOptions = {}): Plugin[] {
 
       // Watch for .md file changes to invalidate page cache
       devServer.watcher.on("change", (file: string) => {
-        if (file.startsWith(srcDir) && file.endsWith(".md")) {
+        if (file.startsWith(srcDir) && isMarkdownFilePath(file, resolvedOptions.extensions)) {
           invalidatePageCache(ssgDevCache, file);
         }
       });
@@ -353,7 +354,11 @@ export function oxContent(options: OxContentOptions = {}): Plugin[] {
       const srcDir = path.resolve(root, resolvedOptions.srcDir);
 
       try {
-        searchIndexJson = await buildSearchIndex(srcDir, resolvedOptions.base);
+        searchIndexJson = await buildSearchIndex(
+          srcDir,
+          resolvedOptions.base,
+          resolvedOptions.extensions,
+        );
         console.log("[ox-content] Search index built");
       } catch (err) {
         console.warn("[ox-content] Failed to build search index:", err);
@@ -399,6 +404,7 @@ function resolveOptions(options: OxContentOptions): ResolvedOptions {
     srcDir: options.srcDir ?? "content",
     outDir: options.outDir ?? "dist",
     base: options.base ?? "/",
+    extensions: normalizeMarkdownExtensions(options.extensions),
     ssg: resolveSsgOptions(options.ssg),
     gfm: options.gfm ?? true,
     footnotes: options.footnotes ?? true,
@@ -535,6 +541,12 @@ export type {
 } from "./lint-files";
 export { buildSsg, resolveSsgOptions, DEFAULT_HTML_TEMPLATE } from "./ssg";
 export { resolveSearchOptions, buildSearchIndex, writeSearchIndex } from "./search";
+export {
+  DEFAULT_MARKDOWN_EXTENSIONS,
+  normalizeMarkdownExtensions,
+  isMarkdownFilePath,
+  stripMarkdownExtension,
+} from "./markdown";
 export { defineTheme, defaultTheme, mergeThemes, resolveTheme } from "./theme";
 export {
   fromVitePressConfig,
