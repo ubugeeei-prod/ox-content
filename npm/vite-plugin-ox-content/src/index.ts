@@ -453,17 +453,43 @@ function resolveCodeAnnotationsOptions(
 /**
  * Generates virtual module content.
  */
-function generateVirtualModule(path: string, options: ResolvedOptions): string {
+export function generateVirtualModule(path: string, options: ResolvedOptions): string {
   if (path === "config") {
     return `export default ${JSON.stringify(options)};`;
   }
 
   if (path === "runtime") {
+    const base = normalizeRuntimeBase(options.base);
     return `
+      export const base = ${JSON.stringify(base)};
+      export const runtimeConfig = { base };
+
+      export function isExternalUrl(value) {
+        return /^(?:https?:)?\\/\\//i.test(value) || /^(?:mailto|tel):/i.test(value);
+      }
+
+      export function withBase(pathname = "") {
+        const value = String(pathname);
+        if (!value || value === "/") return base;
+        if (value.startsWith("#") || isExternalUrl(value)) return value;
+        return base + (value.startsWith("/") ? value.slice(1) : value);
+      }
+
+      export function withoutBase(pathname = "") {
+        const value = String(pathname);
+        if (base === "/" || value.startsWith("#") || isExternalUrl(value)) return value;
+        const bareBase = base.slice(0, -1);
+        if (value === bareBase) return "/";
+        if (value.startsWith(base)) return "/" + value.slice(base.length);
+        return value;
+      }
+
       export function useMarkdown() {
         return {
+          base,
+          withBase,
+          withoutBase,
           render: (content) => {
-            // Client-side rendering if needed
             return content;
           },
         };
@@ -472,6 +498,13 @@ function generateVirtualModule(path: string, options: ResolvedOptions): string {
   }
 
   return "export default {};";
+}
+
+function normalizeRuntimeBase(base: string): string {
+  const trimmed = base.trim();
+  if (!trimmed || trimmed === "/") return "/";
+  const withLeading = trimmed.startsWith("/") ? trimmed : `/${trimmed}`;
+  return withLeading.endsWith("/") ? withLeading : `${withLeading}/`;
 }
 
 // Re-export types and utilities
