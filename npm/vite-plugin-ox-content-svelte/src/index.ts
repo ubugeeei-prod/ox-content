@@ -179,7 +179,31 @@ function resolveSvelteOptions(
     frontmatter: options.frontmatter ?? true,
     toc: options.toc ?? true,
     tocMaxDepth: options.tocMaxDepth ?? 3,
+    codeAnnotations: resolveCodeAnnotationsOptions(options.codeAnnotations),
     runes: options.runes ?? true,
+  };
+}
+
+function resolveCodeAnnotationsOptions(
+  options: SvelteIntegrationOptions["codeAnnotations"],
+): ResolvedSvelteOptions["codeAnnotations"] {
+  if (!options) {
+    return {
+      enabled: false,
+      metaKey: "annotate",
+    };
+  }
+
+  if (options === true) {
+    return {
+      enabled: true,
+      metaKey: "annotate",
+    };
+  }
+
+  return {
+    enabled: true,
+    metaKey: options.metaKey ?? "annotate",
   };
 }
 

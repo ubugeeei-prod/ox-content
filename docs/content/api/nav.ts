@@ -48,10 +48,6 @@ export const apiNav: NavItem[] = [
     path: "/api/jsx-runtime",
   },
   {
-    title: "Jsx.d",
-    path: "/api/jsx.d",
-  },
-  {
     title: "Mermaid",
     path: "/api/mermaid",
   },

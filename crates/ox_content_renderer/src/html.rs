@@ -1,9 +1,11 @@
 //! HTML renderer implementation.
 
+use std::collections::BTreeMap;
+
 use ox_content_ast::{
     BlockQuote, Break, CodeBlock, Definition, Delete, Document, Emphasis, FootnoteDefinition,
-    FootnoteReference, Heading, Html, Image, InlineCode, Link, List, ListItem, Paragraph, Strong,
-    Table, TableCell, TableRow, Text, ThematicBreak, Visit,
+    FootnoteReference, Heading, Html, Image, InlineCode, Link, List, ListItem, Node, Paragraph,
+    Strong, Table, TableCell, TableRow, Text, ThematicBreak, Visit,
 };
 
 use crate::render::{RenderResult, Renderer};
@@ -28,6 +30,16 @@ pub struct HtmlRendererOptions {
     /// Source file path for relative link resolution.
     /// Used to determine if the current file is an index file.
     pub source_path: String,
+    /// Enable line annotations for code blocks using fence meta.
+    pub code_annotations: bool,
+    /// Fence meta key used to read code annotations.
+    pub code_annotation_meta_key: String,
+    /// Code annotation syntax mode.
+    pub code_annotation_syntax: CodeAnnotationSyntax,
+    /// Enable line numbers for all code blocks by default.
+    pub code_annotation_default_line_numbers: bool,
+    /// Maximum heading depth included in inline TOCs.
+    pub toc_max_depth: u8,
 }
 
 impl HtmlRendererOptions {
@@ -43,6 +55,11 @@ impl HtmlRendererOptions {
             convert_md_links: false,
             base_url: "/".to_string(),
             source_path: String::new(),
+            code_annotations: false,
+            code_annotation_meta_key: "annotate".to_string(),
+            code_annotation_syntax: CodeAnnotationSyntax::Attribute,
+            code_annotation_default_line_numbers: false,
+            toc_max_depth: 3,
         }
     }
 }
@@ -53,35 +70,875 @@ impl Default for HtmlRendererOptions {
     }
 }
 
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum CodeAnnotationSyntax {
+    Attribute,
+    VitePress,
+    Both,
+}
+
+impl CodeAnnotationSyntax {
+    fn includes_attribute(self) -> bool {
+        matches!(self, Self::Attribute | Self::Both)
+    }
+
+    fn includes_vitepress(self) -> bool {
+        matches!(self, Self::VitePress | Self::Both)
+    }
+}
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+enum CodeAnnotationKind {
+    Highlight,
+    Warning,
+    Error,
+    Add,
+    Remove,
+    Focus,
+}
+
+impl CodeAnnotationKind {
+    fn from_str(value: &str) -> Option<Self> {
+        match value {
+            "highlight" => Some(Self::Highlight),
+            "warning" => Some(Self::Warning),
+            "error" => Some(Self::Error),
+            "add" => Some(Self::Add),
+            "remove" => Some(Self::Remove),
+            "focus" => Some(Self::Focus),
+            _ => None,
+        }
+    }
+
+    fn class_name(self) -> &'static str {
+        match self {
+            Self::Highlight => "ox-code-line--highlight",
+            Self::Warning => "ox-code-line--warning",
+            Self::Error => "ox-code-line--error",
+            Self::Add => "ox-code-line--add",
+            Self::Remove => "ox-code-line--remove",
+            Self::Focus => "ox-code-line--focus",
+        }
+    }
+
+    fn extra_class_names(self) -> &'static [&'static str] {
+        match self {
+            Self::Highlight => &["highlighted"],
+            Self::Warning => &["highlighted", "warning"],
+            Self::Error => &["highlighted", "error"],
+            Self::Add => &["diff", "add"],
+            Self::Remove => &["diff", "remove"],
+            Self::Focus => &["focused"],
+        }
+    }
+
+    fn block_class_name(self) -> Option<&'static str> {
+        match self {
+            Self::Highlight | Self::Warning | Self::Error => Some("has-highlighted"),
+            Self::Add | Self::Remove => Some("has-diff"),
+            Self::Focus => Some("has-focused"),
+        }
+    }
+}
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+enum CalloutKind {
+    Note,
+    Tip,
+    Important,
+    Warning,
+    Caution,
+}
+
+impl CalloutKind {
+    fn parse_marker(value: &str) -> Option<(Self, &str)> {
+        let marker = value.strip_prefix("[!")?;
+        let end = marker.find(']')?;
+        let kind = match marker[..end].trim().to_ascii_uppercase().as_str() {
+            "NOTE" => Self::Note,
+            "TIP" => Self::Tip,
+            "IMPORTANT" => Self::Important,
+            "WARNING" => Self::Warning,
+            "CAUTION" => Self::Caution,
+            _ => return None,
+        };
+
+        Some((kind, marker[end + 1..].trim_start_matches(char::is_whitespace)))
+    }
+
+    fn class_name(self) -> &'static str {
+        match self {
+            Self::Note => "note",
+            Self::Tip => "tip",
+            Self::Important => "important",
+            Self::Warning => "warning",
+            Self::Caution => "caution",
+        }
+    }
+
+    fn label(self) -> &'static str {
+        match self {
+            Self::Note => "Note",
+            Self::Tip => "Tip",
+            Self::Important => "Important",
+            Self::Warning => "Warning",
+            Self::Caution => "Caution",
+        }
+    }
+}
+
+#[derive(Debug, Clone)]
+struct CodeLineRenderState {
+    value: String,
+    annotations: Vec<CodeAnnotationKind>,
+}
+
+#[derive(Debug, Clone)]
+struct CodeBlockRenderState {
+    language: Option<String>,
+    title: Option<String>,
+    line_numbers_start: Option<usize>,
+    lines: Vec<CodeLineRenderState>,
+}
+
+impl CodeBlockRenderState {
+    fn has_annotations(&self) -> bool {
+        self.lines.iter().any(|line| !line.annotations.is_empty())
+    }
+
+    fn has_focus(&self) -> bool {
+        self.lines.iter().any(|line| line.annotations.contains(&CodeAnnotationKind::Focus))
+    }
+
+    fn block_classes(&self) -> Vec<&'static str> {
+        let mut classes = Vec::new();
+        if self.has_annotations() || self.line_numbers_start.is_some() || self.title.is_some() {
+            classes.push("ox-code-block");
+        }
+        if self.has_annotations() {
+            classes.push("ox-code-block--annotated");
+        }
+        if self.line_numbers_start.is_some() {
+            classes.push("ox-code-block--line-numbers");
+            classes.push("line-numbers-mode");
+        }
+        if self.title.is_some() {
+            classes.push("ox-code-block--with-title");
+        }
+
+        for line in &self.lines {
+            for annotation in &line.annotations {
+                if let Some(class_name) = annotation.block_class_name() {
+                    if !classes.contains(&class_name) {
+                        classes.push(class_name);
+                    }
+                }
+            }
+        }
+
+        classes
+    }
+
+    fn needs_line_wrappers(&self) -> bool {
+        self.has_annotations() || self.line_numbers_start.is_some()
+    }
+}
+
+#[derive(Debug, Clone)]
+struct NormalizedCodeBlockInfo {
+    language: Option<String>,
+    meta: String,
+}
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+enum MetaTokenKind {
+    Raw,
+    Braces,
+    Brackets,
+}
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+struct MetaToken<'a> {
+    kind: MetaTokenKind,
+    value: &'a str,
+}
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+struct PendingCodeAnnotation {
+    kind: CodeAnnotationKind,
+    remaining: usize,
+}
+
+#[derive(Debug, Clone)]
+struct ParsedInlineDirective {
+    kind: CodeAnnotationKind,
+    count: usize,
+    stripped_line: String,
+    standalone: bool,
+}
+
+fn parse_code_annotations(meta: &str, key: &str) -> BTreeMap<usize, Vec<CodeAnnotationKind>> {
+    let Some(value) = extract_meta_attribute(meta, key) else {
+        return BTreeMap::new();
+    };
+
+    let mut annotations = BTreeMap::new();
+
+    for entry in value.split(';') {
+        let Some((raw_kind, raw_lines)) = entry.split_once(':') else {
+            continue;
+        };
+
+        let Some(kind) = CodeAnnotationKind::from_str(raw_kind.trim()) else {
+            continue;
+        };
+
+        for line_number in parse_line_numbers(raw_lines.trim()) {
+            push_code_annotation(&mut annotations, line_number, kind);
+        }
+    }
+
+    annotations
+}
+
+fn extract_meta_attribute<'a>(meta: &'a str, target: &str) -> Option<&'a str> {
+    let bytes = meta.as_bytes();
+    let mut index = 0;
+
+    while index < bytes.len() {
+        while index < bytes.len() && bytes[index].is_ascii_whitespace() {
+            index += 1;
+        }
+
+        if index >= bytes.len() {
+            break;
+        }
+
+        let key_start = index;
+        while index < bytes.len() && !bytes[index].is_ascii_whitespace() && bytes[index] != b'=' {
+            index += 1;
+        }
+
+        if key_start == index {
+            index += 1;
+            continue;
+        }
+
+        let key = &meta[key_start..index];
+
+        while index < bytes.len() && bytes[index].is_ascii_whitespace() {
+            index += 1;
+        }
+
+        if index >= bytes.len() || bytes[index] != b'=' {
+            continue;
+        }
+
+        index += 1;
+        while index < bytes.len() && bytes[index].is_ascii_whitespace() {
+            index += 1;
+        }
+
+        if index >= bytes.len() {
+            break;
+        }
+
+        let value = if bytes[index] == b'"' || bytes[index] == b'\'' {
+            let quote = bytes[index];
+            index += 1;
+            let value_start = index;
+
+            while index < bytes.len() && bytes[index] != quote {
+                index += 1;
+            }
+
+            let value_end = index;
+            if index < bytes.len() {
+                index += 1;
+            }
+            &meta[value_start..value_end]
+        } else {
+            let value_start = index;
+            while index < bytes.len() && !bytes[index].is_ascii_whitespace() {
+                index += 1;
+            }
+            &meta[value_start..index]
+        };
+
+        if key == target {
+            return Some(value);
+        }
+    }
+
+    None
+}
+
+fn parse_line_numbers(value: &str) -> Vec<usize> {
+    let mut line_numbers = Vec::new();
+
+    for part in value.split(',').map(str::trim).filter(|part| !part.is_empty()) {
+        if let Some((raw_start, raw_end)) = part.split_once('-') {
+            let Ok(start) = raw_start.trim().parse::<usize>() else {
+                continue;
+            };
+            let Ok(end) = raw_end.trim().parse::<usize>() else {
+                continue;
+            };
+
+            if start == 0 || end < start {
+                continue;
+            }
+
+            for line_number in start..=end {
+                if !line_numbers.contains(&line_number) {
+                    line_numbers.push(line_number);
+                }
+            }
+            continue;
+        }
+
+        let Ok(line_number) = part.parse::<usize>() else {
+            continue;
+        };
+
+        if line_number > 0 && !line_numbers.contains(&line_number) {
+            line_numbers.push(line_number);
+        }
+    }
+
+    line_numbers.sort_unstable();
+    line_numbers
+}
+
+fn push_code_annotation(
+    annotations: &mut BTreeMap<usize, Vec<CodeAnnotationKind>>,
+    line_number: usize,
+    kind: CodeAnnotationKind,
+) {
+    let kinds = annotations.entry(line_number).or_default();
+    if !kinds.contains(&kind) {
+        kinds.push(kind);
+    }
+}
+
+fn split_code_block_meta(meta: &str) -> Vec<MetaToken<'_>> {
+    let bytes = meta.as_bytes();
+    let mut index = 0;
+    let mut tokens = Vec::new();
+
+    while index < bytes.len() {
+        while index < bytes.len() && bytes[index].is_ascii_whitespace() {
+            index += 1;
+        }
+
+        if index >= bytes.len() {
+            break;
+        }
+
+        match bytes[index] {
+            b'{' => {
+                let start = index + 1;
+                index += 1;
+                while index < bytes.len() && bytes[index] != b'}' {
+                    index += 1;
+                }
+                tokens.push(MetaToken {
+                    kind: MetaTokenKind::Braces,
+                    value: &meta[start..index.min(bytes.len())],
+                });
+                if index < bytes.len() {
+                    index += 1;
+                }
+            }
+            b'[' => {
+                let start = index + 1;
+                index += 1;
+                while index < bytes.len() && bytes[index] != b']' {
+                    index += 1;
+                }
+                tokens.push(MetaToken {
+                    kind: MetaTokenKind::Brackets,
+                    value: &meta[start..index.min(bytes.len())],
+                });
+                if index < bytes.len() {
+                    index += 1;
+                }
+            }
+            _ => {
+                let start = index;
+                let mut quote: Option<u8> = None;
+
+                while index < bytes.len() {
+                    let byte = bytes[index];
+                    if let Some(current_quote) = quote {
+                        if byte == current_quote {
+                            quote = None;
+                        }
+                        index += 1;
+                        continue;
+                    }
+
+                    if byte == b'"' || byte == b'\'' {
+                        quote = Some(byte);
+                        index += 1;
+                        continue;
+                    }
+
+                    if byte.is_ascii_whitespace() || byte == b'{' || byte == b'[' {
+                        break;
+                    }
+
+                    index += 1;
+                }
+
+                tokens.push(MetaToken { kind: MetaTokenKind::Raw, value: &meta[start..index] });
+            }
+        }
+    }
+
+    tokens
+}
+
+fn split_code_block_language_token(raw: &str) -> (&str, &str) {
+    for (index, ch) in raw.char_indices() {
+        match ch {
+            '{' | '[' => return (&raw[..index], &raw[index..]),
+            ':' if raw[index..].starts_with(":line-numbers")
+                || raw[index..].starts_with(":no-line-numbers") =>
+            {
+                return (&raw[..index], &raw[index..]);
+            }
+            _ => {}
+        }
+    }
+
+    (raw, "")
+}
+
+fn normalize_code_block_info(lang: Option<&str>, meta: Option<&str>) -> NormalizedCodeBlockInfo {
+    let mut meta_parts: Vec<&str> = Vec::new();
+    let mut language = None;
+
+    if let Some(raw_lang) = lang.map(str::trim).filter(|value| !value.is_empty()) {
+        let (normalized_lang, inline_meta) = split_code_block_language_token(raw_lang);
+        if !normalized_lang.is_empty() {
+            language = Some(normalized_lang.to_string());
+        }
+        if !inline_meta.trim().is_empty() {
+            meta_parts.push(inline_meta.trim());
+        }
+    }
+
+    if let Some(raw_meta) = meta.map(str::trim).filter(|value| !value.is_empty()) {
+        meta_parts.push(raw_meta);
+    }
+
+    NormalizedCodeBlockInfo { language, meta: meta_parts.join(" ") }
+}
+
+fn normalize_code_block_language(lang: Option<&str>) -> Option<&str> {
+    let raw_lang = lang.map(str::trim).filter(|value| !value.is_empty())?;
+    let (language, _) = split_code_block_language_token(raw_lang);
+    let language = language.trim();
+
+    if language.is_empty() {
+        None
+    } else {
+        Some(language)
+    }
+}
+
+fn apply_annotation_numbers(
+    lines: &mut [CodeLineRenderState],
+    line_numbers: &[usize],
+    kind: CodeAnnotationKind,
+) {
+    for line_number in line_numbers {
+        let Some(line) = lines.get_mut(line_number.saturating_sub(1)) else {
+            continue;
+        };
+
+        if !line.annotations.contains(&kind) {
+            line.annotations.push(kind);
+        }
+    }
+}
+
+fn apply_btree_annotations(
+    lines: &mut [CodeLineRenderState],
+    annotations: &BTreeMap<usize, Vec<CodeAnnotationKind>>,
+) {
+    for (line_number, kinds) in annotations {
+        let Some(line) = lines.get_mut(line_number.saturating_sub(1)) else {
+            continue;
+        };
+        for kind in kinds {
+            if !line.annotations.contains(kind) {
+                line.annotations.push(*kind);
+            }
+        }
+    }
+}
+
+fn apply_pending_annotations(
+    line: &mut CodeLineRenderState,
+    pending_annotations: &mut Vec<PendingCodeAnnotation>,
+) {
+    let mut remaining = Vec::new();
+
+    for mut pending in pending_annotations.drain(..) {
+        if !line.annotations.contains(&pending.kind) {
+            line.annotations.push(pending.kind);
+        }
+
+        if pending.remaining > 1 {
+            pending.remaining -= 1;
+            remaining.push(pending);
+        }
+    }
+
+    *pending_annotations = remaining;
+}
+
+fn parse_annotation_count(value: &str) -> usize {
+    value.trim().parse::<usize>().ok().filter(|count| *count > 0).unwrap_or(1)
+}
+
+fn parse_vitepress_directive_kind(value: &str) -> Option<(CodeAnnotationKind, usize)> {
+    let trimmed = value.trim();
+
+    if trimmed == "++" {
+        return Some((CodeAnnotationKind::Add, 1));
+    }
+
+    if trimmed == "--" {
+        return Some((CodeAnnotationKind::Remove, 1));
+    }
+
+    if let Some((kind, count)) = trimmed.split_once(':') {
+        let parsed_kind = match kind.trim() {
+            "highlight" => CodeAnnotationKind::Highlight,
+            "focus" => CodeAnnotationKind::Focus,
+            "warning" => CodeAnnotationKind::Warning,
+            "error" => CodeAnnotationKind::Error,
+            _ => return None,
+        };
+        return Some((parsed_kind, parse_annotation_count(count)));
+    }
+
+    match trimmed {
+        "highlight" => Some((CodeAnnotationKind::Highlight, 1)),
+        "warning" => Some((CodeAnnotationKind::Warning, 1)),
+        "error" => Some((CodeAnnotationKind::Error, 1)),
+        "focus" => Some((CodeAnnotationKind::Focus, 1)),
+        _ => None,
+    }
+}
+
+fn parse_vitepress_inline_directive(line: &str) -> Option<ParsedInlineDirective> {
+    let marker_start = line.find("[!code ")?;
+    let directive_start = marker_start + "[!code ".len();
+    let marker_end = line[directive_start..].find(']')? + directive_start;
+    let directive = &line[directive_start..marker_end];
+
+    let before_marker = &line[..marker_start];
+    let after_marker = &line[marker_end + 1..];
+    let trimmed_before = before_marker.trim_end();
+
+    let (comment_start, requires_closer) = if trimmed_before.ends_with("//") {
+        (trimmed_before.len() - 2, false)
+    } else if trimmed_before.ends_with('#') {
+        (trimmed_before.len() - 1, false)
+    } else if trimmed_before.ends_with("<!--") {
+        (trimmed_before.len() - 4, true)
+    } else if trimmed_before.ends_with("/*") {
+        (trimmed_before.len() - 2, true)
+    } else {
+        return None;
+    };
+
+    let trailing = after_marker.trim();
+    if requires_closer && trailing != "-->" && trailing != "*/" {
+        return None;
+    }
+    if !requires_closer && !trailing.is_empty() {
+        return None;
+    }
+
+    let stripped_line = before_marker[..comment_start].trim_end().to_string();
+    let standalone = stripped_line.trim().is_empty();
+    let (kind, count) = parse_vitepress_directive_kind(directive)?;
+
+    Some(ParsedInlineDirective { kind, count, stripped_line, standalone })
+}
+
+fn parse_vitepress_inline_annotations(value: &str) -> Vec<CodeLineRenderState> {
+    let mut lines = Vec::new();
+    let mut pending_annotations: Vec<PendingCodeAnnotation> = Vec::new();
+
+    for raw_line in value.split('\n') {
+        if let Some(directive) = parse_vitepress_inline_directive(raw_line) {
+            if directive.standalone {
+                pending_annotations.push(PendingCodeAnnotation {
+                    kind: directive.kind,
+                    remaining: directive.count,
+                });
+                continue;
+            }
+
+            let mut line =
+                CodeLineRenderState { value: directive.stripped_line, annotations: Vec::new() };
+            apply_pending_annotations(&mut line, &mut pending_annotations);
+            if !line.annotations.contains(&directive.kind) {
+                line.annotations.push(directive.kind);
+            }
+            if directive.count > 1 {
+                pending_annotations.push(PendingCodeAnnotation {
+                    kind: directive.kind,
+                    remaining: directive.count - 1,
+                });
+            }
+            lines.push(line);
+            continue;
+        }
+
+        let mut line = CodeLineRenderState { value: raw_line.to_string(), annotations: Vec::new() };
+        apply_pending_annotations(&mut line, &mut pending_annotations);
+        lines.push(line);
+    }
+
+    lines
+}
+
+fn is_html_attr_start(byte: u8) -> bool {
+    byte.is_ascii_alphabetic()
+}
+
+fn is_html_attr_char(byte: u8) -> bool {
+    byte.is_ascii_alphanumeric() || matches!(byte, b'-' | b'_' | b':')
+}
+
+fn html_attr_value_range(html: &str, bytes: &[u8], name_end: usize) -> Option<(usize, usize)> {
+    let mut cursor = name_end;
+    while cursor < bytes.len() && bytes[cursor].is_ascii_whitespace() {
+        cursor += 1;
+    }
+    if bytes.get(cursor) != Some(&b'=') {
+        return None;
+    }
+    cursor += 1;
+    while cursor < bytes.len() && bytes[cursor].is_ascii_whitespace() {
+        cursor += 1;
+    }
+
+    if let quote @ (b'"' | b'\'') = bytes.get(cursor).copied()? {
+        let value_start = cursor + 1;
+        let value_end = html[value_start..]
+            .bytes()
+            .position(|byte| byte == quote)
+            .map(|offset| value_start + offset)?;
+        Some((value_start, value_end))
+    } else {
+        let value_start = cursor;
+        let mut value_end = value_start;
+        while value_end < bytes.len()
+            && !bytes[value_end].is_ascii_whitespace()
+            && bytes[value_end] != b'>'
+        {
+            value_end += 1;
+        }
+        Some((value_start, value_end))
+    }
+}
+
+fn collect_heading_text(nodes: &[Node<'_>]) -> String {
+    let mut text = String::new();
+    for node in nodes {
+        collect_node_text(node, &mut text);
+    }
+    text
+}
+
+fn collect_text_nodes_only(nodes: &[Node<'_>]) -> Option<String> {
+    let mut text = String::new();
+    for node in nodes {
+        match node {
+            Node::Text(value) => text.push_str(value.value),
+            _ => return None,
+        }
+    }
+    Some(text)
+}
+
+fn collect_node_text(node: &Node<'_>, text: &mut String) {
+    match node {
+        Node::Text(value) => text.push_str(value.value),
+        Node::InlineCode(value) => text.push_str(value.value),
+        Node::Emphasis(value) => {
+            for child in &value.children {
+                collect_node_text(child, text);
+            }
+        }
+        Node::Strong(value) => {
+            for child in &value.children {
+                collect_node_text(child, text);
+            }
+        }
+        Node::Delete(value) => {
+            for child in &value.children {
+                collect_node_text(child, text);
+            }
+        }
+        Node::Link(value) => {
+            for child in &value.children {
+                collect_node_text(child, text);
+            }
+        }
+        _ => {}
+    }
+}
+
+fn slugify_heading(text: &str) -> String {
+    let slug = text
+        .to_lowercase()
+        .chars()
+        .map(|ch| if ch.is_alphanumeric() || ch == ' ' || ch == '-' { ch } else { ' ' })
+        .collect::<String>()
+        .split_whitespace()
+        .collect::<Vec<_>>()
+        .join("-");
+
+    if slug.is_empty() {
+        "section".to_string()
+    } else {
+        slug
+    }
+}
+
+#[derive(Debug, Clone)]
+struct InlineTocEntry {
+    depth: u8,
+    text: String,
+    id: String,
+}
+
+fn collect_inline_toc_entries(document: &Document<'_>, max_depth: u8) -> Vec<InlineTocEntry> {
+    let mut entries = Vec::new();
+    let mut counts = BTreeMap::new();
+
+    for node in &document.children {
+        collect_inline_toc_node(node, max_depth, &mut counts, &mut entries);
+    }
+
+    entries
+}
+
+fn collect_inline_toc_node(
+    node: &Node<'_>,
+    max_depth: u8,
+    counts: &mut BTreeMap<String, usize>,
+    entries: &mut Vec<InlineTocEntry>,
+) {
+    match node {
+        Node::Heading(heading) => {
+            let text = collect_heading_text(&heading.children);
+            let slug = slugify_heading(&text);
+            let count = counts.entry(slug.clone()).or_insert(0);
+            let id = if *count == 0 { slug } else { format!("{slug}-{count}") };
+            *count += 1;
+
+            if heading.depth <= max_depth {
+                entries.push(InlineTocEntry { depth: heading.depth, text, id });
+            }
+        }
+        Node::BlockQuote(block_quote) => {
+            for child in &block_quote.children {
+                collect_inline_toc_node(child, max_depth, counts, entries);
+            }
+        }
+        Node::List(list) => {
+            for item in &list.children {
+                for child in &item.children {
+                    collect_inline_toc_node(child, max_depth, counts, entries);
+                }
+            }
+        }
+        Node::ListItem(item) => {
+            for child in &item.children {
+                collect_inline_toc_node(child, max_depth, counts, entries);
+            }
+        }
+        Node::FootnoteDefinition(definition) => {
+            for child in &definition.children {
+                collect_inline_toc_node(child, max_depth, counts, entries);
+            }
+        }
+        _ => {}
+    }
+}
+
 /// HTML renderer.
 pub struct HtmlRenderer {
     options: HtmlRendererOptions,
     output: String,
+    heading_id_counts: BTreeMap<String, usize>,
+    toc_entries: Vec<InlineTocEntry>,
 }
 
 impl HtmlRenderer {
     /// Creates a new HTML renderer with default options.
     #[must_use]
     pub fn new() -> Self {
-        Self { options: HtmlRendererOptions::new(), output: String::new() }
+        Self {
+            options: HtmlRendererOptions::new(),
+            output: String::new(),
+            heading_id_counts: BTreeMap::new(),
+            toc_entries: Vec::new(),
+        }
     }
 
     /// Creates a new HTML renderer with the specified options.
     #[must_use]
     pub fn with_options(options: HtmlRendererOptions) -> Self {
-        Self { options, output: String::new() }
+        Self {
+            options,
+            output: String::new(),
+            heading_id_counts: BTreeMap::new(),
+            toc_entries: Vec::new(),
+        }
     }
 
     /// Renders a document to HTML string.
     #[must_use]
     pub fn render(&mut self, document: &Document<'_>) -> String {
         self.output.clear();
+        self.toc_entries = collect_inline_toc_entries(document, self.options.toc_max_depth);
+        self.heading_id_counts.clear();
         let estimated_len = (document.span.len() as usize).saturating_mul(3) / 2;
         if self.output.capacity() < estimated_len {
             self.output.reserve(estimated_len - self.output.capacity());
         }
         self.visit_document(document);
         std::mem::take(&mut self.output)
+    }
+
+    fn render_inline_toc(&mut self) {
+        if self.toc_entries.is_empty() {
+            return;
+        }
+
+        self.write("<nav class=\"ox-toc\" aria-label=\"Table of contents\">\n<ul>\n");
+        for idx in 0..self.toc_entries.len() {
+            let entry = self.toc_entries[idx].clone();
+            self.write("<li class=\"ox-toc__item ox-toc__item--depth-");
+            self.write(&entry.depth.to_string());
+            self.write("\"><a href=\"#");
+            self.write_url_escaped(&entry.id);
+            self.write("\">");
+            self.write_escaped(&entry.text);
+            self.write("</a></li>\n");
+        }
+        self.write("</ul>\n</nav>\n");
     }
 
     fn write(&mut self, s: &str) {
@@ -142,6 +999,349 @@ impl HtmlRenderer {
         if start < s.len() {
             self.output.push_str(&s[start..]);
         }
+    }
+
+    fn sanitized_url<'a>(&self, url: &'a str, fallback: &'static str) -> &'a str {
+        if !self.options.sanitize {
+            return url;
+        }
+
+        let trimmed =
+            url.trim_matches(|ch: char| ch.is_ascii_control() || ch.is_ascii_whitespace());
+
+        if Self::is_safe_url(trimmed) {
+            trimmed
+        } else {
+            fallback
+        }
+    }
+
+    fn is_safe_url(url: &str) -> bool {
+        if url.bytes().any(|byte| byte.is_ascii_control()) {
+            return false;
+        }
+
+        let Some(colon_index) = url.find(':') else {
+            return true;
+        };
+
+        let first_path_marker = url.find(&['/', '?', '#'][..]).unwrap_or(usize::MAX);
+        if first_path_marker < colon_index {
+            return true;
+        }
+
+        let scheme = url[..colon_index]
+            .chars()
+            .filter(|ch| !ch.is_ascii_whitespace())
+            .map(|ch| ch.to_ascii_lowercase())
+            .collect::<String>();
+
+        matches!(scheme.as_str(), "http" | "https" | "mailto" | "tel")
+    }
+
+    fn render_paragraph_with_skipped_text_prefix<'a>(
+        &self,
+        paragraph: &Paragraph<'a>,
+        mut skip_chars: usize,
+    ) -> String {
+        let mut renderer = HtmlRenderer::with_options(self.options.clone());
+
+        for child in &paragraph.children {
+            match child {
+                Node::Text(text) if skip_chars > 0 => {
+                    if skip_chars >= text.value.len() {
+                        skip_chars -= text.value.len();
+                        continue;
+                    }
+
+                    renderer.write_escaped(&text.value[skip_chars..]);
+                    skip_chars = 0;
+                }
+                _ => renderer.visit_node(child),
+            }
+        }
+
+        renderer.output
+    }
+
+    fn detect_callout<'a>(paragraph: &Paragraph<'a>) -> Option<(CalloutKind, usize)> {
+        let mut prefix = String::new();
+
+        for child in &paragraph.children {
+            let Node::Text(text) = child else {
+                break;
+            };
+
+            prefix.push_str(text.value);
+
+            if let Some((kind, remainder)) = CalloutKind::parse_marker(&prefix) {
+                let consumed = prefix.len().saturating_sub(remainder.len());
+                return Some((kind, consumed));
+            }
+        }
+
+        None
+    }
+
+    fn render_callout_block_quote<'a>(&mut self, block_quote: &BlockQuote<'a>) -> bool {
+        let Some(Node::Paragraph(first_paragraph)) = block_quote.children.first() else {
+            return false;
+        };
+        let Some((kind, consumed_chars)) = Self::detect_callout(first_paragraph) else {
+            return false;
+        };
+
+        self.write("<blockquote class=\"ox-callout ox-callout--");
+        self.write(kind.class_name());
+        self.write("\">\n");
+        self.write("<p class=\"ox-callout-title\">");
+        self.write(kind.label());
+        self.write("</p>\n");
+
+        let paragraph_body =
+            self.render_paragraph_with_skipped_text_prefix(first_paragraph, consumed_chars);
+        if !paragraph_body.trim().is_empty() {
+            self.write("<p>");
+            self.write(&paragraph_body);
+            self.write("</p>\n");
+        }
+
+        for child in block_quote.children.iter().skip(1) {
+            self.visit_node(child);
+        }
+
+        self.write("</blockquote>\n");
+        true
+    }
+
+    fn build_code_block_state(&self, code_block: &CodeBlock<'_>) -> CodeBlockRenderState {
+        let info = normalize_code_block_info(code_block.lang, code_block.meta);
+        let syntax = self.options.code_annotation_syntax;
+        let mut lines = if self.options.code_annotations && syntax.includes_vitepress() {
+            parse_vitepress_inline_annotations(code_block.value)
+        } else {
+            code_block
+                .value
+                .split('\n')
+                .map(|line| CodeLineRenderState {
+                    value: line.to_string(),
+                    annotations: Vec::new(),
+                })
+                .collect()
+        };
+
+        let mut title = None;
+        let mut line_numbers_start = if self.options.code_annotations
+            && syntax.includes_vitepress()
+            && self.options.code_annotation_default_line_numbers
+        {
+            Some(1)
+        } else {
+            None
+        };
+
+        if self.options.code_annotations && !info.meta.is_empty() {
+            if syntax.includes_attribute() {
+                let annotations =
+                    parse_code_annotations(&info.meta, &self.options.code_annotation_meta_key);
+                apply_btree_annotations(&mut lines, &annotations);
+            }
+
+            if syntax.includes_vitepress() {
+                for token in split_code_block_meta(&info.meta) {
+                    match token.kind {
+                        MetaTokenKind::Braces => {
+                            let line_numbers = parse_line_numbers(token.value);
+                            apply_annotation_numbers(
+                                &mut lines,
+                                &line_numbers,
+                                CodeAnnotationKind::Highlight,
+                            );
+                        }
+                        MetaTokenKind::Brackets => {
+                            if title.is_none() && !token.value.trim().is_empty() {
+                                title = Some(token.value.trim().to_string());
+                            }
+                        }
+                        MetaTokenKind::Raw => {
+                            if token.value == ":line-numbers" {
+                                line_numbers_start = Some(1);
+                            } else if let Some(start) =
+                                token.value.strip_prefix(":line-numbers=").and_then(|value| {
+                                    value
+                                        .trim()
+                                        .parse::<usize>()
+                                        .ok()
+                                        .filter(|line_number| *line_number > 0)
+                                })
+                            {
+                                line_numbers_start = Some(start);
+                            } else if token.value == ":no-line-numbers" {
+                                line_numbers_start = None;
+                            }
+                        }
+                    }
+                }
+            }
+        }
+
+        CodeBlockRenderState { language: info.language, title, line_numbers_start, lines }
+    }
+
+    fn write_code_lines(&mut self, state: &CodeBlockRenderState) {
+        let has_focus = state.has_focus();
+
+        for (index, line) in state.lines.iter().enumerate() {
+            let line_number = index + 1;
+            let mut class_names: Vec<&str> = vec!["line", "ox-code-line"];
+
+            for annotation in &line.annotations {
+                let class_name = annotation.class_name();
+                if !class_names.contains(&class_name) {
+                    class_names.push(class_name);
+                }
+                for extra_class_name in annotation.extra_class_names() {
+                    if !class_names.contains(extra_class_name) {
+                        class_names.push(extra_class_name);
+                    }
+                }
+            }
+
+            if has_focus && !line.annotations.contains(&CodeAnnotationKind::Focus) {
+                class_names.push("ox-code-line--dimmed");
+            }
+
+            self.write("<span class=\"");
+            self.write(&class_names.join(" "));
+            self.write("\" data-line=\"");
+            self.write(&line_number.to_string());
+            self.write("\"");
+
+            if let Some(start) = state.line_numbers_start {
+                self.write(" data-line-number=\"");
+                self.write(&(start + index).to_string());
+                self.write("\"");
+            }
+
+            self.write(">");
+            self.write_escaped(&line.value);
+            self.write("</span>");
+
+            if index + 1 < state.lines.len() {
+                self.write("\n");
+            }
+        }
+    }
+
+    fn write_html_value(&mut self, value: &str) {
+        if self.options.sanitize {
+            self.write_escaped(value);
+        } else if self.options.convert_md_links {
+            let rewritten = self.rewrite_html_root_urls(value);
+            self.write(&rewritten);
+        } else {
+            self.write(value);
+        }
+    }
+
+    fn visit_inline_node(&mut self, node: &Node<'_>) {
+        match node {
+            Node::Html(html) => self.write_html_value(html.value),
+            _ => self.visit_node(node),
+        }
+    }
+
+    fn heading_id(&mut self, heading: &Heading<'_>) -> String {
+        let text = collect_heading_text(&heading.children);
+        let slug = slugify_heading(&text);
+        let count = self.heading_id_counts.entry(slug.clone()).or_insert(0);
+        let id = if *count == 0 { slug } else { format!("{slug}-{count}") };
+        *count += 1;
+        id
+    }
+
+    fn convert_markdown_url(&self, url: &str) -> String {
+        let converted = self.convert_md_url(url);
+        if converted != url {
+            return converted;
+        }
+
+        self.apply_base_to_root_absolute_url(url).unwrap_or(converted)
+    }
+
+    fn apply_base_to_root_absolute_url(&self, url: &str) -> Option<String> {
+        if !self.options.convert_md_links || !url.starts_with('/') || url.starts_with("//") {
+            return None;
+        }
+
+        let suffix_start = url.find(&['?', '#'][..]).unwrap_or(url.len());
+        let (path, suffix) = url.split_at(suffix_start);
+        let base = self.options.base_url.trim_end_matches('/');
+
+        if base.is_empty() {
+            Some(url.to_string())
+        } else if path == "/" {
+            Some(format!("{base}/{suffix}"))
+        } else {
+            Some(format!("{base}{path}{suffix}"))
+        }
+    }
+
+    fn rewrite_html_root_urls(&self, html: &str) -> String {
+        let mut output = String::with_capacity(html.len());
+        let bytes = html.as_bytes();
+        let mut i = 0;
+        let mut in_tag = false;
+
+        while i < bytes.len() {
+            match bytes[i] {
+                b'<' => {
+                    in_tag = true;
+                    output.push('<');
+                    i += 1;
+                }
+                b'>' => {
+                    in_tag = false;
+                    output.push('>');
+                    i += 1;
+                }
+                byte if in_tag && is_html_attr_start(byte) => {
+                    let name_start = i;
+                    let mut name_end = i + 1;
+                    while name_end < bytes.len() && is_html_attr_char(bytes[name_end]) {
+                        name_end += 1;
+                    }
+
+                    let name = &html[name_start..name_end];
+                    if name.eq_ignore_ascii_case("href") || name.eq_ignore_ascii_case("src") {
+                        let Some((value_start, value_end)) =
+                            html_attr_value_range(html, bytes, name_end)
+                        else {
+                            output.push_str(name);
+                            i = name_end;
+                            continue;
+                        };
+                        let value = &html[value_start..value_end];
+                        if let Some(rewritten) = self.apply_base_to_root_absolute_url(value) {
+                            output.push_str(&html[i..value_start]);
+                            output.push_str(&rewritten);
+                            i = value_end;
+                            continue;
+                        }
+                    }
+
+                    output.push_str(name);
+                    i = name_end;
+                }
+                _ => {
+                    let ch = html[i..].chars().next().expect("valid UTF-8");
+                    output.push(ch);
+                    i += ch.len_utf8();
+                }
+            }
+        }
+
+        output
     }
 
     /// Converts a `.md` URL to `.html` URL for SSG output.
@@ -278,9 +1478,15 @@ impl Renderer for HtmlRenderer {
 
 impl<'a> Visit<'a> for HtmlRenderer {
     fn visit_paragraph(&mut self, paragraph: &Paragraph<'a>) {
+        if collect_text_nodes_only(&paragraph.children).is_some_and(|text| text.trim() == "[[toc]]")
+        {
+            self.render_inline_toc();
+            return;
+        }
+
         self.write("<p>");
         for child in &paragraph.children {
-            self.visit_node(child);
+            self.visit_inline_node(child);
         }
         self.write("</p>\n");
     }
@@ -294,11 +1500,15 @@ impl<'a> Visit<'a> for HtmlRenderer {
             5 => "h5",
             _ => "h6",
         };
+        let id = self.heading_id(heading);
         self.write("<");
         self.write(tag);
+        self.write(" id=\"");
+        self.write_escaped(&id);
+        self.write("\"");
         self.write(">");
         for child in &heading.children {
-            self.visit_node(child);
+            self.visit_inline_node(child);
         }
         self.write("</");
         self.write(tag);
@@ -314,6 +1524,10 @@ impl<'a> Visit<'a> for HtmlRenderer {
     }
 
     fn visit_block_quote(&mut self, block_quote: &BlockQuote<'a>) {
+        if self.render_callout_block_quote(block_quote) {
+            return;
+        }
+
         self.write("<blockquote>\n");
         for child in &block_quote.children {
             self.visit_node(child);
@@ -368,23 +1582,55 @@ impl<'a> Visit<'a> for HtmlRenderer {
     }
 
     fn visit_code_block(&mut self, code_block: &CodeBlock<'a>) {
-        self.write("<pre><code");
-        if let Some(lang) = code_block.lang {
+        if !self.options.code_annotations {
+            self.write("<pre><code");
+            if let Some(lang) = normalize_code_block_language(code_block.lang) {
+                self.write(" class=\"language-");
+                self.write_escaped(lang);
+                self.write("\"");
+            }
+            self.write(">");
+            self.write_escaped(code_block.value);
+            self.write("</code></pre>\n");
+            return;
+        }
+
+        let state = self.build_code_block_state(code_block);
+        let block_classes = state.block_classes();
+
+        self.write("<pre");
+        if !block_classes.is_empty() {
+            self.write(" class=\"");
+            self.write(&block_classes.join(" "));
+            self.write("\"");
+        }
+        if let Some(title) = state.title.as_deref() {
+            self.write(" data-code-title=\"");
+            self.write_escaped(title);
+            self.write("\"");
+        }
+        if let Some(start) = state.line_numbers_start {
+            self.write(" data-line-numbers=\"true\" data-line-number-start=\"");
+            self.write(&start.to_string());
+            self.write("\"");
+        }
+        self.write("><code");
+        if let Some(lang) = state.language.as_deref() {
             self.write(" class=\"language-");
             self.write_escaped(lang);
             self.write("\"");
         }
         self.write(">");
-        self.write_escaped(code_block.value);
+        if state.needs_line_wrappers() {
+            self.write_code_lines(&state);
+        } else {
+            self.write_escaped(code_block.value);
+        }
         self.write("</code></pre>\n");
     }
 
     fn visit_html(&mut self, html: &Html<'a>) {
-        if self.options.sanitize {
-            self.write_escaped(html.value);
-        } else {
-            self.write(html.value);
-        }
+        self.write_html_value(html.value);
         self.write("\n");
     }
 
@@ -414,7 +1660,7 @@ impl<'a> Visit<'a> for HtmlRenderer {
     fn visit_emphasis(&mut self, emphasis: &Emphasis<'a>) {
         self.write("<em>");
         for child in &emphasis.children {
-            self.visit_node(child);
+            self.visit_inline_node(child);
         }
         self.write("</em>");
     }
@@ -422,7 +1668,7 @@ impl<'a> Visit<'a> for HtmlRenderer {
     fn visit_strong(&mut self, strong: &Strong<'a>) {
         self.write("<strong>");
         for child in &strong.children {
-            self.visit_node(child);
+            self.visit_inline_node(child);
         }
         self.write("</strong>");
     }
@@ -439,11 +1685,17 @@ impl<'a> Visit<'a> for HtmlRenderer {
 
     fn visit_link(&mut self, link: &Link<'a>) {
         self.write("<a href=\"");
-        let url = self.convert_md_url(link.url);
-        self.write_url_escaped(&url);
+        let converted_url;
+        let href = if self.options.convert_md_links {
+            converted_url = self.convert_markdown_url(link.url);
+            self.sanitized_url(&converted_url, "#")
+        } else {
+            self.sanitized_url(link.url, "#")
+        };
+        self.write_url_escaped(href);
         self.write("\"");
         // Add target="_blank" for external links (http:// or https://)
-        if link.url.starts_with("http://") || link.url.starts_with("https://") {
+        if href.starts_with("http://") || href.starts_with("https://") {
             self.write(" target=\"_blank\" rel=\"noopener noreferrer\"");
         }
         if let Some(title) = link.title {
@@ -453,14 +1705,21 @@ impl<'a> Visit<'a> for HtmlRenderer {
         }
         self.write(">");
         for child in &link.children {
-            self.visit_node(child);
+            self.visit_inline_node(child);
         }
         self.write("</a>");
     }
 
     fn visit_image(&mut self, image: &Image<'a>) {
         self.write("<img src=\"");
-        self.write_url_escaped(image.url);
+        let converted_url;
+        let src = if self.options.convert_md_links {
+            converted_url = self.convert_markdown_url(image.url);
+            self.sanitized_url(&converted_url, "")
+        } else {
+            self.sanitized_url(image.url, "")
+        };
+        self.write_url_escaped(src);
         self.write("\" alt=\"");
         self.write_escaped(image.alt);
         self.write("\"");
@@ -479,7 +1738,7 @@ impl<'a> Visit<'a> for HtmlRenderer {
     fn visit_delete(&mut self, delete: &Delete<'a>) {
         self.write("<del>");
         for child in &delete.children {
-            self.visit_node(child);
+            self.visit_inline_node(child);
         }
         self.write("</del>");
     }
@@ -540,7 +1799,7 @@ impl HtmlRenderer {
 
     fn visit_table_cell(&mut self, cell: &TableCell<'_>) {
         for child in &cell.children {
-            self.visit_node(child);
+            self.visit_inline_node(child);
         }
     }
 }
@@ -566,7 +1825,83 @@ mod tests {
         let doc = Parser::new(&allocator, "# Hello").parse().unwrap();
         let mut renderer = HtmlRenderer::new();
         let html = renderer.render(&doc);
-        assert_eq!(html, "<h1>Hello</h1>\n");
+        assert_eq!(html, "<h1 id=\"hello\">Hello</h1>\n");
+    }
+
+    #[test]
+    fn test_render_heading_ids_are_unique_and_unicode() {
+        let allocator = Allocator::new();
+        let doc = Parser::new(&allocator, "## はじめに\n## はじめに").parse().unwrap();
+        let mut renderer = HtmlRenderer::new();
+        let html = renderer.render(&doc);
+        assert!(html.contains("<h2 id=\"はじめに\">はじめに</h2>"));
+        assert!(html.contains("<h2 id=\"はじめに-1\">はじめに</h2>"));
+    }
+
+    #[test]
+    fn test_render_heading_id_uses_inline_text() {
+        let allocator = Allocator::new();
+        let doc =
+            Parser::new(&allocator, "## **API** `Index` [Guide](./guide.md)").parse().unwrap();
+        let mut renderer = HtmlRenderer::new();
+        let html = renderer.render(&doc);
+        assert!(html.starts_with("<h2 id=\"api-index-guide\">"));
+    }
+
+    #[test]
+    fn test_render_inline_toc_directive() {
+        let allocator = Allocator::new();
+        let doc =
+            Parser::new(&allocator, "# Title\n\n[[toc]]\n\n## Intro\n### API").parse().unwrap();
+        let mut renderer = HtmlRenderer::new();
+        let html = renderer.render(&doc);
+
+        assert!(html.contains("<nav class=\"ox-toc\" aria-label=\"Table of contents\">"));
+        assert!(html.contains("<a href=\"#title\">Title</a>"));
+        assert!(html.contains("<a href=\"#intro\">Intro</a>"));
+        assert!(html.contains("<a href=\"#api\">API</a>"));
+        assert!(!html.contains("<p>[[toc]]</p>"));
+    }
+
+    #[test]
+    fn test_render_inline_toc_uses_unique_and_unicode_ids() {
+        let allocator = Allocator::new();
+        let doc =
+            Parser::new(&allocator, "[[toc]]\n\n## Setup\n## Setup\n## はじめに").parse().unwrap();
+        let mut renderer = HtmlRenderer::new();
+        let html = renderer.render(&doc);
+
+        assert!(html.contains("href=\"#setup\""));
+        assert!(html.contains("href=\"#setup-1\""));
+        assert!(html.contains("href=\"#はじめに\""));
+    }
+
+    #[test]
+    fn test_render_inline_toc_requires_standalone_text() {
+        let allocator = Allocator::new();
+        let doc =
+            Parser::new(&allocator, "See [[toc]] here\n\n`[[toc]]`\n\n## Intro").parse().unwrap();
+        let mut renderer = HtmlRenderer::new();
+        let html = renderer.render(&doc);
+
+        assert!(html.contains("<p>See [[toc]] here</p>"));
+        assert!(html.contains("<p><code>[[toc]]</code></p>"));
+        assert!(!html.contains("ox-toc"));
+    }
+
+    #[test]
+    fn test_render_inline_toc_honors_max_depth() {
+        let allocator = Allocator::new();
+        let doc = Parser::new(&allocator, "[[toc]]\n\n# Title\n## Intro\n### API").parse().unwrap();
+        let mut renderer = HtmlRenderer::with_options(HtmlRendererOptions {
+            toc_max_depth: 2,
+            ..Default::default()
+        });
+        let html = renderer.render(&doc);
+
+        assert!(html.contains("href=\"#title\""));
+        assert!(html.contains("href=\"#intro\""));
+        assert!(!html.contains("href=\"#api\""));
     }
 
     #[test]
@@ -590,12 +1925,144 @@ mod tests {
     }
 
     #[test]
+    fn test_render_github_style_important_callout() {
+        let allocator = Allocator::new();
+        let doc = Parser::new(&allocator, "> [!IMPORTANT]\n> This is important.").parse().unwrap();
+        let mut renderer = HtmlRenderer::new();
+        let html = renderer.render(&doc);
+
+        assert!(html.contains("<blockquote class=\"ox-callout ox-callout--important\">"));
+        assert!(html.contains("<p class=\"ox-callout-title\">Important</p>"));
+        assert!(html.contains("<p>This is important.</p>"));
+        assert!(!html.contains("[!IMPORTANT]"));
+    }
+
+    #[test]
+    fn test_render_github_style_callout_with_inline_content_after_marker() {
+        let allocator = Allocator::new();
+        let doc = Parser::new(&allocator, "> [!NOTE] Supports **inline** content").parse().unwrap();
+        let mut renderer = HtmlRenderer::new();
+        let html = renderer.render(&doc);
+
+        assert!(html.contains("<blockquote class=\"ox-callout ox-callout--note\">"));
+        assert!(html.contains("<p class=\"ox-callout-title\">Note</p>"));
+        assert!(html.contains("<p>Supports <strong>inline</strong> content</p>"));
+        assert!(!html.contains("[!NOTE]"));
+    }
+
+    #[test]
     fn test_render_code_block() {
         let allocator = Allocator::new();
         let doc = Parser::new(&allocator, "```rust\nfn main() {}\n```").parse().unwrap();
         let mut renderer = HtmlRenderer::new();
         let html = renderer.render(&doc);
         assert!(html.contains("<pre><code class=\"language-rust\">"));
+    }
+
+    #[test]
+    fn test_render_code_block_with_annotations() {
+        let allocator = Allocator::new();
+        let doc = Parser::new(
+            &allocator,
+            "```ts file=main.ts annotate=\"highlight:1;warning:2;error:3\"\nconst ok = true;\nconst maybe = false;\nthrow new Error('boom');\n```",
+        )
+        .parse()
+        .unwrap();
+        let mut renderer = HtmlRenderer::with_options(HtmlRendererOptions {
+            code_annotations: true,
+            ..Default::default()
+        });
+        let html = renderer.render(&doc);
+
+        assert!(html.contains("class=\"ox-code-block ox-code-block--annotated has-highlighted\""));
+        assert!(html.contains(
+            "class=\"line ox-code-line ox-code-line--highlight highlighted\" data-line=\"1\""
+        ));
+        assert!(html.contains(
+            "class=\"line ox-code-line ox-code-line--warning highlighted warning\" data-line=\"2\""
+        ));
+        assert!(html.contains(
+            "class=\"line ox-code-line ox-code-line--error highlighted error\" data-line=\"3\""
+        ));
+        assert!(!html.contains("file=main.ts"));
+    }
+
+    #[test]
+    fn test_render_code_block_with_custom_annotation_meta_key() {
+        let allocator = Allocator::new();
+        let doc = Parser::new(
+            &allocator,
+            "```ts markers=\"warning:2\"\nconst ok = true;\nconst maybe = false;\n```",
+        )
+        .parse()
+        .unwrap();
+        let mut renderer = HtmlRenderer::with_options(HtmlRendererOptions {
+            code_annotations: true,
+            code_annotation_meta_key: "markers".to_string(),
+            ..Default::default()
+        });
+        let html = renderer.render(&doc);
+
+        assert!(html.contains("ox-code-block--annotated"));
+        assert!(html.contains("ox-code-line--warning"));
+    }
+
+    #[test]
+    fn test_render_code_block_with_vitepress_meta() {
+        let allocator = Allocator::new();
+        let doc = Parser::new(
+            &allocator,
+            "```ts:line-numbers=2 {1,3} [config.ts]\nconst first = true;\nconst second = false;\nconst third = true;\n```",
+        )
+        .parse()
+        .unwrap();
+        let mut renderer = HtmlRenderer::with_options(HtmlRendererOptions {
+            code_annotations: true,
+            code_annotation_syntax: CodeAnnotationSyntax::VitePress,
+            ..Default::default()
+        });
+        let html = renderer.render(&doc);
+
+        assert!(html.contains("ox-code-block--annotated"));
+        assert!(html.contains("ox-code-block--line-numbers"));
+        assert!(html.contains("ox-code-block--with-title"));
+        assert!(html.contains("line-numbers-mode"));
+        assert!(html.contains("has-highlighted"));
+        assert!(html.contains("data-code-title=\"config.ts\""));
+        assert!(html.contains("data-line-number-start=\"2\""));
+        assert!(html.contains("class=\"language-ts\""));
+        assert!(html.contains("data-line-number=\"2\""));
+        assert!(html.contains("data-line-number=\"4\""));
+        assert!(html.contains("ox-code-line--highlight"));
+    }
+
+    #[test]
+    fn test_render_code_block_with_vitepress_inline_directives() {
+        let allocator = Allocator::new();
+        let doc = Parser::new(
+            &allocator,
+            "```ts\n// [!code focus:2]\nconst first = true;\nconst second = false;\nconsole.log('old value') // [!code --]\nconsole.log('new value') // [!code ++]\nconsole.warn('careful') // [!code warning]\nthrow new Error('boom') // [!code error]\n```",
+        )
+        .parse()
+        .unwrap();
+        let mut renderer = HtmlRenderer::with_options(HtmlRendererOptions {
+            code_annotations: true,
+            code_annotation_syntax: CodeAnnotationSyntax::VitePress,
+            ..Default::default()
+        });
+        let html = renderer.render(&doc);
+
+        assert!(!html.contains("[!code"));
+        assert!(html.contains("has-focused"));
+        assert!(html.contains("has-diff"));
+        assert!(html.contains("ox-code-line--focus"));
+        assert!(html.contains("ox-code-line--dimmed"));
+        assert!(html.contains("ox-code-line--remove"));
+        assert!(html.contains("ox-code-line--add"));
+        assert!(html.contains("ox-code-line--warning"));
+        assert!(html.contains("ox-code-line--error"));
+        assert!(html.contains("console.log(&#39;old value&#39;)"));
+        assert!(html.contains("console.log(&#39;new value&#39;)"));
     }
 
     #[test]
@@ -660,7 +2127,7 @@ mod tests {
         let doc = Parser::new(&allocator, "### [index](./index-module.md)").parse().unwrap();
         let mut renderer = HtmlRenderer::new();
         let html = renderer.render(&doc);
-        assert_eq!(html, "<h3><a href=\"./index-module.md\">index</a></h3>\n");
+        assert_eq!(html, "<h3 id=\"index\"><a href=\"./index-module.md\">index</a></h3>\n");
     }
 
     #[test]

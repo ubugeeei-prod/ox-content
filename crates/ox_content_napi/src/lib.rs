@@ -3,18 +3,36 @@
 //! This crate provides NAPI bindings for using Ox Content from Node.js,
 //! enabling zero-copy AST transfer and JavaScript interoperability.
 
+mod highlight;
+mod lint;
 mod mdast;
 
 use napi::bindgen_prelude::*;
 use napi::Task;
 use napi_derive::napi;
 use std::collections::HashMap;
+use std::path::{Path, PathBuf};
+use std::process::Command;
 
 use ox_content_allocator::Allocator;
 use ox_content_ast::{Document, Heading, Node};
+use ox_content_docs::{
+    generate_nav_code, generate_nav_metadata, normalize_doc_items, DocExtractor, DocItem,
+    DocItemKind, DocTag, DocsNavItem, NormalizedDocEntry, NormalizedParamDoc, NormalizedReturnDoc,
+    ParamDoc,
+};
 use ox_content_parser::{Parser, ParserOptions};
 use ox_content_renderer::{HtmlRenderer, HtmlRendererOptions};
 use ox_content_search::{DocumentIndexer, SearchIndex, SearchIndexBuilder, SearchOptions};
+
+const ALLOCATOR_BYTES_PER_INPUT_BYTE: usize = 8;
+const MIN_ALLOCATOR_CAPACITY: usize = 4 * 1024;
+
+fn create_allocator_for_source(source: &str) -> Allocator {
+    let capacity =
+        source.len().saturating_mul(ALLOCATOR_BYTES_PER_INPUT_BYTE).max(MIN_ALLOCATOR_CAPACITY);
+    Allocator::with_capacity(capacity)
+}
 
 /// Parse result containing the AST as JSON.
 #[napi(object)]
@@ -59,6 +77,89 @@ pub struct TransformResult {
     pub errors: Vec<String>,
 }
 
+/// Raw JSDoc tag extracted from source code.
+#[napi(object)]
+#[derive(Clone)]
+pub struct JsSourceDocTag {
+    pub tag: String,
+    pub value: String,
+}
+
+/// Parameter documentation extracted from source code.
+#[napi(object)]
+#[derive(Clone)]
+pub struct JsSourceDocParam {
+    pub name: String,
+    pub type_annotation: Option<String>,
+    pub optional: bool,
+    pub default_value: Option<String>,
+    pub description: Option<String>,
+}
+
+/// Source documentation item extracted from a JS/TS file.
+#[napi(object)]
+#[derive(Clone)]
+pub struct JsSourceDocItem {
+    pub name: String,
+    pub kind: String,
+    pub doc: Option<String>,
+    pub jsdoc: Option<String>,
+    pub source_path: String,
+    pub line: u32,
+    pub end_line: u32,
+    pub exported: bool,
+    pub signature: Option<String>,
+    pub params: Vec<JsSourceDocParam>,
+    pub return_type: Option<String>,
+    pub tags: Vec<JsSourceDocTag>,
+}
+
+/// Normalized parameter documentation used by generated API docs.
+#[napi(object)]
+#[derive(Clone)]
+pub struct JsDocParam {
+    pub name: String,
+    pub r#type: String,
+    pub description: String,
+    pub optional: Option<bool>,
+    pub r#default: Option<String>,
+}
+
+/// Normalized return documentation used by generated API docs.
+#[napi(object)]
+#[derive(Clone)]
+pub struct JsDocReturn {
+    pub r#type: String,
+    pub description: String,
+}
+
+/// Normalized documentation entry used by generated API docs.
+#[napi(object)]
+#[derive(Clone)]
+pub struct JsDocEntry {
+    pub name: String,
+    pub kind: String,
+    pub description: String,
+    pub params: Option<Vec<JsDocParam>>,
+    pub returns: Option<JsDocReturn>,
+    pub examples: Option<Vec<String>>,
+    pub tags: Option<HashMap<String, String>>,
+    pub private: bool,
+    pub file: String,
+    pub line: u32,
+    pub end_line: u32,
+    pub signature: Option<String>,
+}
+
+/// Navigation item emitted for generated documentation.
+#[napi(object)]
+#[derive(Clone)]
+pub struct JsDocsNavItem {
+    pub title: String,
+    pub path: String,
+    pub children: Option<Vec<JsDocsNavItem>>,
+}
+
 /// Transform options for JavaScript.
 #[napi(object)]
 #[derive(Default, Clone)]
@@ -83,6 +184,14 @@ pub struct JsTransformOptions {
     pub base_url: Option<String>,
     /// Source file path for relative link resolution.
     pub source_path: Option<String>,
+    /// Enable line annotations for code blocks using fence meta.
+    pub code_annotations: Option<bool>,
+    /// Fence meta key used to read code annotations.
+    pub code_annotation_meta_key: Option<String>,
+    /// Code annotation syntax mode.
+    pub code_annotation_syntax: Option<String>,
+    /// Enable line numbers for all code blocks by default.
+    pub code_annotation_default_line_numbers: Option<bool>,
 }
 
 /// Parser options for JavaScript.
@@ -133,7 +242,7 @@ impl From<JsParserOptions> for ParserOptions {
 /// Returns the AST as a JSON string for zero-copy transfer to JavaScript.
 #[napi]
 pub fn parse(source: String, options: Option<JsParserOptions>) -> ParseResult {
-    let allocator = Allocator::new();
+    let allocator = create_allocator_for_source(&source);
     let parser_options = options.map(ParserOptions::from).unwrap_or_default();
     let parser = Parser::with_options(&allocator, &source, parser_options);
 
@@ -150,7 +259,7 @@ pub fn parse(source: String, options: Option<JsParserOptions>) -> ParseResult {
 /// Parses Markdown and renders to HTML.
 #[napi]
 pub fn parse_and_render(source: String, options: Option<JsParserOptions>) -> RenderResult {
-    let allocator = Allocator::new();
+    let allocator = create_allocator_for_source(&source);
     let parser_options = options.map(ParserOptions::from).unwrap_or_default();
     let parser = Parser::with_options(&allocator, &source, parser_options);
 
@@ -186,6 +295,160 @@ pub fn version() -> String {
     env!("CARGO_PKG_VERSION").to_string()
 }
 
+fn doc_item_kind_to_string(kind: DocItemKind) -> String {
+    match kind {
+        DocItemKind::Module => "module",
+        DocItemKind::Function => "function",
+        DocItemKind::Class => "class",
+        DocItemKind::Interface => "interface",
+        DocItemKind::Type => "type",
+        DocItemKind::Enum => "enum",
+        DocItemKind::Variable => "variable",
+        DocItemKind::Method => "method",
+        DocItemKind::Property => "property",
+        DocItemKind::Constructor => "constructor",
+        DocItemKind::Getter => "getter",
+        DocItemKind::Setter => "setter",
+    }
+    .to_string()
+}
+
+fn map_doc_tag(tag: DocTag) -> JsSourceDocTag {
+    JsSourceDocTag { tag: tag.tag, value: tag.value }
+}
+
+fn map_param_doc(param: ParamDoc) -> JsSourceDocParam {
+    JsSourceDocParam {
+        name: param.name,
+        type_annotation: param.type_annotation,
+        optional: param.optional,
+        default_value: param.default_value,
+        description: param.description,
+    }
+}
+
+fn map_doc_item(item: DocItem) -> JsSourceDocItem {
+    JsSourceDocItem {
+        name: item.name,
+        kind: doc_item_kind_to_string(item.kind),
+        doc: item.doc,
+        jsdoc: item.jsdoc,
+        source_path: item.source_path,
+        line: item.line,
+        end_line: item.end_line,
+        exported: item.exported,
+        signature: item.signature,
+        params: item.params.into_iter().map(map_param_doc).collect(),
+        return_type: item.return_type,
+        tags: item.tags.into_iter().map(map_doc_tag).collect(),
+    }
+}
+
+fn map_normalized_param_doc(param: NormalizedParamDoc) -> JsDocParam {
+    JsDocParam {
+        name: param.name,
+        r#type: param.type_annotation,
+        description: param.description,
+        optional: param.optional.then_some(true),
+        r#default: param.default_value,
+    }
+}
+
+fn map_normalized_return_doc(return_doc: NormalizedReturnDoc) -> JsDocReturn {
+    JsDocReturn { r#type: return_doc.type_annotation, description: return_doc.description }
+}
+
+fn map_normalized_doc_entry(entry: NormalizedDocEntry) -> JsDocEntry {
+    JsDocEntry {
+        name: entry.name,
+        kind: entry.kind.as_str().to_string(),
+        description: entry.description,
+        params: (!entry.params.is_empty())
+            .then(|| entry.params.into_iter().map(map_normalized_param_doc).collect()),
+        returns: entry.returns.map(map_normalized_return_doc),
+        examples: (!entry.examples.is_empty()).then_some(entry.examples),
+        tags: (!entry.tags.is_empty()).then(|| entry.tags.into_iter().collect()),
+        private: entry.private,
+        file: entry.file,
+        line: entry.line,
+        end_line: entry.end_line,
+        signature: entry.signature,
+    }
+}
+
+fn map_docs_nav_item(item: DocsNavItem) -> JsDocsNavItem {
+    JsDocsNavItem {
+        title: item.title,
+        path: item.path,
+        children: item.children.map(|children| {
+            children.into_iter().map(map_docs_nav_item).collect::<Vec<JsDocsNavItem>>()
+        }),
+    }
+}
+
+fn convert_docs_nav_item(item: JsDocsNavItem) -> DocsNavItem {
+    DocsNavItem {
+        title: item.title,
+        path: item.path,
+        children: item.children.map(|children| {
+            children.into_iter().map(convert_docs_nav_item).collect::<Vec<DocsNavItem>>()
+        }),
+    }
+}
+
+/// Extracts documented declarations from a JavaScript/TypeScript file using Oxc.
+#[napi]
+pub fn extract_file_docs(
+    file_path: String,
+    include_private: Option<bool>,
+) -> Result<Vec<JsSourceDocItem>> {
+    let extractor = DocExtractor::with_private(include_private.unwrap_or(false));
+    let items = extractor
+        .extract_file(Path::new(&file_path))
+        .map_err(|err| Error::from_reason(err.to_string()))?;
+
+    Ok(items.into_iter().map(map_doc_item).collect())
+}
+
+/// Extracts normalized documentation entries from a JavaScript/TypeScript file using Oxc.
+#[napi(js_name = "extractFileDocEntries")]
+pub fn extract_file_doc_entries(
+    file_path: String,
+    include_private: Option<bool>,
+) -> Result<Vec<JsDocEntry>> {
+    let extractor = DocExtractor::with_private(include_private.unwrap_or(false));
+    let items = extractor
+        .extract_file(Path::new(&file_path))
+        .map_err(|err| Error::from_reason(err.to_string()))?;
+
+    Ok(normalize_doc_items(items).into_iter().map(map_normalized_doc_entry).collect())
+}
+
+/// Generates sidebar navigation metadata from documentation file paths.
+#[napi(js_name = "generateDocsNavMetadata")]
+pub fn generate_docs_nav_metadata(
+    files: Vec<String>,
+    base_path: Option<String>,
+) -> Vec<JsDocsNavItem> {
+    generate_nav_metadata(&files, base_path.as_deref()).into_iter().map(map_docs_nav_item).collect()
+}
+
+/// Generates TypeScript source code for documentation navigation metadata.
+#[napi(js_name = "generateDocsNavCode")]
+pub fn generate_docs_nav_code(
+    nav_items: Vec<JsDocsNavItem>,
+    export_name: Option<String>,
+) -> String {
+    let nav_items = nav_items.into_iter().map(convert_docs_nav_item).collect::<Vec<_>>();
+    generate_nav_code(&nav_items, export_name.as_deref())
+}
+
+/// Restores code block metadata after JavaScript-side syntax highlighting.
+#[napi]
+pub fn merge_highlighted_code_blocks(original_html: String, highlighted_html: String) -> String {
+    highlight::merge_highlighted_code_blocks(&original_html, &highlighted_html)
+}
+
 /// Transforms Markdown source into HTML, frontmatter, and TOC.
 ///
 /// This is the main entry point for @ox-content/unplugin.
@@ -198,7 +461,7 @@ pub fn transform(source: String, options: Option<JsTransformOptions>) -> Transfo
     let (content, frontmatter) = parse_frontmatter(&source);
 
     // Parse markdown
-    let allocator = Allocator::new();
+    let allocator = create_allocator_for_source(&content);
     let parser_options = transform_options_to_parser_options(&opts);
     let parser = Parser::with_options(&allocator, &content, parser_options);
 
@@ -232,53 +495,20 @@ pub fn transform(source: String, options: Option<JsTransformOptions>) -> Transfo
 
 /// Parses YAML frontmatter from Markdown content.
 fn parse_frontmatter(source: &str) -> (String, HashMap<String, serde_json::Value>) {
-    let mut frontmatter = HashMap::new();
-
     // Check for frontmatter delimiter
     if !source.starts_with("---") {
-        return (source.to_string(), frontmatter);
+        return (source.to_string(), HashMap::new());
     }
 
     // Find the closing delimiter
     let rest = &source[3..];
     let Some(end_pos) = rest.find("\n---") else {
-        return (source.to_string(), frontmatter);
+        return (source.to_string(), HashMap::new());
     };
 
-    let frontmatter_str = &rest[..end_pos].trim_start_matches('\n');
-    let content = &rest[end_pos + 4..].trim_start_matches('\n');
-
-    // Parse simple YAML key-value pairs
-    for line in frontmatter_str.lines() {
-        let line = line.trim();
-        if line.is_empty() || line.starts_with('#') {
-            continue;
-        }
-
-        if let Some(colon_pos) = line.find(':') {
-            let key = line[..colon_pos].trim().to_string();
-            let value_str = line[colon_pos + 1..].trim();
-
-            let value = if value_str == "true" {
-                serde_json::Value::Bool(true)
-            } else if value_str == "false" {
-                serde_json::Value::Bool(false)
-            } else if let Ok(n) = value_str.parse::<i64>() {
-                serde_json::Value::Number(n.into())
-            } else if let Ok(n) = value_str.parse::<f64>() {
-                serde_json::Number::from_f64(n).map_or_else(
-                    || serde_json::Value::String(value_str.to_string()),
-                    serde_json::Value::Number,
-                )
-            } else {
-                // Remove surrounding quotes if present
-                let s = value_str.trim_matches('"').trim_matches('\'');
-                serde_json::Value::String(s.to_string())
-            };
-
-            frontmatter.insert(key, value);
-        }
-    }
+    let frontmatter_str = rest[..end_pos].trim_start_matches('\n');
+    let content = rest[end_pos + 4..].trim_start_matches('\n');
+    let frontmatter = serde_yaml::from_str(frontmatter_str).unwrap_or_default();
 
     (content.to_string(), frontmatter)
 }
@@ -286,12 +516,13 @@ fn parse_frontmatter(source: &str) -> (String, HashMap<String, serde_json::Value
 /// Extracts table of contents from document headings.
 fn extract_toc(doc: &Document, max_depth: u8) -> Vec<TocEntry> {
     let mut entries = Vec::new();
+    let mut slug_counts = HashMap::new();
 
     for node in &doc.children {
         if let Node::Heading(heading) = node {
             if heading.depth <= max_depth {
                 let text = extract_heading_text(heading);
-                let slug = slugify(&text);
+                let slug = unique_slug(slugify(&text), &mut slug_counts);
                 entries.push(TocEntry { depth: heading.depth, text, slug });
             }
         }
@@ -349,6 +580,14 @@ fn slugify(text: &str) -> String {
         .join("-")
 }
 
+fn unique_slug(slug: String, counts: &mut HashMap<String, usize>) -> String {
+    let slug = if slug.is_empty() { "section".to_string() } else { slug };
+    let count = counts.entry(slug.clone()).or_insert(0);
+    let unique = if *count == 0 { slug } else { format!("{slug}-{count}") };
+    *count += 1;
+    unique
+}
+
 /// Converts transform options to parser options.
 fn transform_options_to_parser_options(opts: &JsTransformOptions) -> ParserOptions {
     let mut options =
@@ -377,6 +616,8 @@ fn transform_options_to_parser_options(opts: &JsTransformOptions) -> ParserOptio
 fn transform_options_to_renderer_options(opts: &JsTransformOptions) -> HtmlRendererOptions {
     let mut options = HtmlRendererOptions::new();
 
+    options.toc_max_depth = opts.toc_max_depth.unwrap_or(options.toc_max_depth);
+
     if let Some(v) = opts.convert_md_links {
         options.convert_md_links = v;
     }
@@ -385,6 +626,22 @@ fn transform_options_to_renderer_options(opts: &JsTransformOptions) -> HtmlRende
     }
     if let Some(ref v) = opts.source_path {
         options.source_path.clone_from(v);
+    }
+    if let Some(v) = opts.code_annotations {
+        options.code_annotations = v;
+    }
+    if let Some(ref v) = opts.code_annotation_meta_key {
+        options.code_annotation_meta_key.clone_from(v);
+    }
+    if let Some(ref v) = opts.code_annotation_syntax {
+        options.code_annotation_syntax = match v.as_str() {
+            "vitepress" => ox_content_renderer::CodeAnnotationSyntax::VitePress,
+            "both" => ox_content_renderer::CodeAnnotationSyntax::Both,
+            _ => ox_content_renderer::CodeAnnotationSyntax::Attribute,
+        };
+    }
+    if let Some(v) = opts.code_annotation_default_line_numbers {
+        options.code_annotation_default_line_numbers = v;
     }
 
     options
@@ -405,7 +662,7 @@ impl Task for ParseAndRenderTask {
     type JsValue = RenderResult;
 
     fn compute(&mut self) -> Result<Self::Output> {
-        let allocator = Allocator::new();
+        let allocator = create_allocator_for_source(&self.source);
         let parser = Parser::with_options(&allocator, &self.source, self.options.clone());
 
         let result = match parser.parse() {
@@ -451,7 +708,7 @@ impl Task for TransformTask {
         let (content, frontmatter) = parse_frontmatter(&self.source);
 
         // Parse markdown
-        let allocator = Allocator::new();
+        let allocator = create_allocator_for_source(&content);
         let parser_options = transform_options_to_parser_options(&self.options);
         let parser = Parser::with_options(&allocator, &content, parser_options);
 
@@ -612,6 +869,15 @@ pub struct JsSearchResult {
     pub snippet: String,
 }
 
+/// Search query split into free text and scope prefixes.
+#[napi(object)]
+pub struct JsScopedSearchQuery {
+    /// Free-text terms after removing scope prefixes.
+    pub text: String,
+    /// Deduplicated lowercase scopes.
+    pub scopes: Vec<String>,
+}
+
 /// Search options for JavaScript.
 #[napi(object)]
 #[derive(Default, Clone)]
@@ -689,6 +955,31 @@ pub fn search_index(
         .collect()
 }
 
+/// Splits a search query into free-text terms and `@scope` prefixes.
+#[napi(js_name = "parseScopedSearchQuery")]
+pub fn parse_scoped_search_query(query: String) -> JsScopedSearchQuery {
+    let parsed = ox_content_search::parse_scoped_search_query(&query);
+    JsScopedSearchQuery { text: parsed.text, scopes: parsed.scopes }
+}
+
+/// Derives hierarchical search scopes from a document id or URL.
+#[napi(js_name = "getSearchDocumentScopes")]
+pub fn get_search_document_scopes(id: String, url: String) -> Vec<String> {
+    ox_content_search::get_search_document_scopes(&id, &url)
+}
+
+/// Returns true when a document belongs to at least one requested search scope.
+#[napi(js_name = "matchesSearchScopes")]
+pub fn matches_search_scopes(id: String, url: String, scopes: Vec<String>) -> bool {
+    ox_content_search::matches_search_scopes(&id, &url, &scopes)
+}
+
+/// Generates the client-side search runtime module.
+#[napi(js_name = "generateSearchModule")]
+pub fn generate_search_module(options_json: String, index_path: String) -> String {
+    ox_content_search::generate_search_module(&options_json, &index_path)
+}
+
 // =============================================================================
 // SSG HTML Generation API
 // =============================================================================
@@ -703,6 +994,8 @@ pub struct JsSsgNavItem {
     pub path: String,
     /// Full href.
     pub href: String,
+    pub children: Option<Vec<JsSsgNavItem>>,
+    pub collapsed: Option<bool>,
 }
 
 /// Navigation group for SSG.
@@ -713,6 +1006,69 @@ pub struct JsSsgNavGroup {
     pub title: String,
     /// Navigation items.
     pub items: Vec<JsSsgNavItem>,
+    pub collapsed: Option<bool>,
+}
+
+/// Resolved SSG output and public route paths.
+#[napi(object)]
+pub struct JsSsgRoutePaths {
+    /// HTML output file path.
+    pub output_path: String,
+    /// Route path without extension.
+    pub url_path: String,
+    /// Public HTML href.
+    pub href: String,
+    /// OG image output file path.
+    pub og_image_path: String,
+    /// OG image public URL.
+    pub og_image_url: String,
+}
+
+/// Theme sidebar item for SSG navigation generation.
+#[napi(object)]
+#[derive(Clone, Default)]
+pub struct JsSsgSidebarItem {
+    /// Display text.
+    pub text: Option<String>,
+    /// Link URL or route path.
+    pub link: Option<String>,
+    /// Child sidebar items.
+    pub items: Option<Vec<JsSsgSidebarItem>>,
+    /// Whether this group is collapsed by default.
+    pub collapsed: Option<bool>,
+}
+
+/// Generated SSG HTML page for shared asset extraction.
+#[napi(object)]
+#[derive(Clone)]
+pub struct JsSsgGeneratedHtmlPage {
+    /// Source Markdown path.
+    pub input_path: String,
+    /// Output HTML path.
+    pub output_path: String,
+    /// HTML content.
+    pub html: String,
+}
+
+/// Shared SSG asset extracted from generated pages.
+#[napi(object)]
+#[derive(Clone)]
+pub struct JsSsgSharedAsset {
+    /// Output file path.
+    pub output_path: String,
+    /// Public URL path used from HTML.
+    pub public_path: String,
+    /// Asset content.
+    pub content: String,
+}
+
+/// Result of SSG shared asset extraction.
+#[napi(object)]
+pub struct JsSsgExternalizedAssets {
+    /// HTML pages with inline assets replaced.
+    pub pages: Vec<JsSsgGeneratedHtmlPage>,
+    /// Extracted shared assets.
+    pub assets: Vec<JsSsgSharedAsset>,
 }
 
 /// Hero action for entry page.
@@ -733,12 +1089,26 @@ pub struct JsHeroAction {
 pub struct JsHeroImage {
     /// Image source URL.
     pub src: String,
+    /// Light mode image source URL.
+    pub light_src: Option<String>,
+    /// Dark mode image source URL.
+    pub dark_src: Option<String>,
     /// Alt text.
     pub alt: Option<String>,
     /// Image width.
     pub width: Option<u32>,
     /// Image height.
     pub height: Option<u32>,
+}
+
+/// Hero notice for entry page.
+#[napi(object)]
+#[derive(Clone, Default)]
+pub struct JsHeroNotice {
+    /// Notice title.
+    pub title: Option<String>,
+    /// Notice paragraphs.
+    pub body: Option<Vec<String>>,
 }
 
 /// Hero section configuration for entry page.
@@ -751,6 +1121,8 @@ pub struct JsHeroConfig {
     pub text: Option<String>,
     /// Tagline.
     pub tagline: Option<String>,
+    /// Optional notice shown in the hero.
+    pub notice: Option<JsHeroNotice>,
     /// Hero image.
     pub image: Option<JsHeroImage>,
     /// Action buttons.
@@ -794,10 +1166,34 @@ pub struct JsSsgPageData {
     pub content: String,
     /// Table of contents entries.
     pub toc: Vec<TocEntry>,
+    /// Last updated timestamp in milliseconds since the Unix epoch.
+    pub last_updated: Option<f64>,
     /// URL path.
     pub path: String,
     /// Entry page configuration (if layout: entry).
     pub entry_page: Option<JsEntryPageConfig>,
+}
+
+/// Returns the last git commit timestamp for a file in milliseconds.
+#[napi]
+pub fn get_git_last_updated(file_path: String, root: Option<String>) -> Option<f64> {
+    let root = root.map(PathBuf::from)?;
+    let file = PathBuf::from(&file_path);
+    let pathspec = file.strip_prefix(&root).ok().and_then(|p| p.to_str()).unwrap_or(&file_path);
+    let output = Command::new("git")
+        .arg("-C")
+        .arg(root)
+        .args(["log", "-1", "--format=%ct", "--"])
+        .arg(pathspec)
+        .output()
+        .ok()?;
+
+    if !output.status.success() {
+        return None;
+    }
+
+    let seconds = String::from_utf8(output.stdout).ok()?.trim().parse::<f64>().ok()?;
+    Some(seconds * 1_000.0)
 }
 
 // =============================================================================
@@ -838,6 +1234,14 @@ pub struct JsThemeFonts {
     pub mono: Option<String>,
 }
 
+/// Entry page theme configuration for JavaScript.
+#[napi(object)]
+#[derive(Clone, Default)]
+pub struct JsThemeEntryPage {
+    /// Landing page presentation mode.
+    pub mode: Option<String>,
+}
+
 /// Theme layout for JavaScript.
 #[napi(object)]
 #[derive(Clone, Default)]
@@ -856,6 +1260,12 @@ pub struct JsThemeLayout {
 pub struct JsThemeHeader {
     /// Logo image URL.
     pub logo: Option<String>,
+    /// Light mode logo image URL.
+    pub logo_light: Option<String>,
+    /// Dark mode logo image URL.
+    pub logo_dark: Option<String>,
+    /// Whether to render the site name text next to the logo.
+    pub show_site_name_text: Option<bool>,
     /// Logo width in pixels.
     pub logo_width: Option<u32>,
     /// Logo height in pixels.
@@ -882,6 +1292,22 @@ pub struct JsSocialLinks {
     pub twitter: Option<String>,
     /// Discord URL.
     pub discord: Option<String>,
+    /// Custom social links.
+    pub links: Option<Vec<JsSocialLink>>,
+}
+
+/// Custom social link for JavaScript.
+#[napi(object)]
+#[derive(Clone)]
+pub struct JsSocialLink {
+    /// Icon label.
+    pub icon: Option<String>,
+    /// Inline SVG icon.
+    pub icon_svg: Option<String>,
+    /// Link URL.
+    pub link: String,
+    /// Accessible label.
+    pub aria_label: Option<String>,
 }
 
 /// Embedded HTML content for specific positions.
@@ -918,6 +1344,8 @@ pub struct JsThemeConfig {
     pub dark_colors: Option<JsThemeColors>,
     /// Font configuration.
     pub fonts: Option<JsThemeFonts>,
+    /// Entry page configuration.
+    pub entry_page: Option<JsThemeEntryPage>,
     /// Layout configuration.
     pub layout: Option<JsThemeLayout>,
     /// Header configuration.
@@ -985,6 +1413,7 @@ fn convert_theme_config(theme: Option<JsThemeConfig>) -> Option<ox_content_ssg::
         colors: convert_theme_colors(t.colors),
         dark_colors: convert_theme_colors(t.dark_colors),
         fonts: t.fonts.map(|f| ox_content_ssg::ThemeFonts { sans: f.sans, mono: f.mono }),
+        entry_page: t.entry_page.map(|entry| ox_content_ssg::ThemeEntryPage { mode: entry.mode }),
         layout: t.layout.map(|l| ox_content_ssg::ThemeLayout {
             sidebar_width: l.sidebar_width,
             header_height: l.header_height,
@@ -992,6 +1421,9 @@ fn convert_theme_config(theme: Option<JsThemeConfig>) -> Option<ox_content_ssg::
         }),
         header: t.header.map(|h| ox_content_ssg::ThemeHeader {
             logo: h.logo,
+            logo_light: h.logo_light,
+            logo_dark: h.logo_dark,
+            show_site_name_text: h.show_site_name_text,
             logo_width: h.logo_width,
             logo_height: h.logo_height,
         }),
@@ -1002,6 +1434,17 @@ fn convert_theme_config(theme: Option<JsThemeConfig>) -> Option<ox_content_ssg::
             github: s.github,
             twitter: s.twitter,
             discord: s.discord,
+            links: s.links.map(|links| {
+                links
+                    .into_iter()
+                    .map(|l| ox_content_ssg::SocialLink {
+                        icon: l.icon,
+                        icon_svg: l.icon_svg,
+                        link: l.link,
+                        aria_label: l.aria_label,
+                    })
+                    .collect()
+            }),
         }),
         embed: t.embed.map(|e| ox_content_ssg::ThemeEmbed {
             head: e.head,
@@ -1028,8 +1471,13 @@ fn convert_entry_page_config(
             name: h.name,
             text: h.text,
             tagline: h.tagline,
+            notice: h
+                .notice
+                .map(|n| ox_content_ssg::HeroNoticeConfig { title: n.title, body: n.body }),
             image: h.image.map(|i| ox_content_ssg::HeroImage {
                 src: i.src,
+                light_src: i.light_src,
+                dark_src: i.dark_src,
                 alt: i.alt,
                 width: i.width,
                 height: i.height,
@@ -1060,6 +1508,180 @@ fn convert_entry_page_config(
     })
 }
 
+fn convert_nav_item(item: JsSsgNavItem) -> ox_content_ssg::NavItem {
+    ox_content_ssg::NavItem {
+        title: item.title,
+        path: item.path,
+        href: item.href,
+        children: item.children.unwrap_or_default().into_iter().map(convert_nav_item).collect(),
+        collapsed: item.collapsed,
+    }
+}
+
+fn map_nav_item(item: ox_content_ssg::NavItem) -> JsSsgNavItem {
+    JsSsgNavItem {
+        title: item.title,
+        path: item.path,
+        href: item.href,
+        children: if item.children.is_empty() {
+            None
+        } else {
+            Some(item.children.into_iter().map(map_nav_item).collect())
+        },
+        collapsed: item.collapsed,
+    }
+}
+
+fn map_nav_group(group: ox_content_ssg::NavGroup) -> JsSsgNavGroup {
+    JsSsgNavGroup {
+        title: group.title,
+        items: group.items.into_iter().map(map_nav_item).collect(),
+        collapsed: group.collapsed,
+    }
+}
+
+fn convert_sidebar_item(item: JsSsgSidebarItem) -> ox_content_ssg::SidebarItem {
+    ox_content_ssg::SidebarItem {
+        text: item.text,
+        link: item.link,
+        items: item.items.unwrap_or_default().into_iter().map(convert_sidebar_item).collect(),
+        collapsed: item.collapsed,
+    }
+}
+
+fn map_route_paths(paths: ox_content_ssg::RoutePaths) -> JsSsgRoutePaths {
+    JsSsgRoutePaths {
+        output_path: paths.output_path,
+        url_path: paths.url_path,
+        href: paths.href,
+        og_image_path: paths.og_image_path,
+        og_image_url: paths.og_image_url,
+    }
+}
+
+fn convert_generated_html_page(page: JsSsgGeneratedHtmlPage) -> ox_content_ssg::GeneratedHtmlPage {
+    ox_content_ssg::GeneratedHtmlPage {
+        input_path: page.input_path,
+        output_path: page.output_path,
+        html: page.html,
+    }
+}
+
+fn map_generated_html_page(page: ox_content_ssg::GeneratedHtmlPage) -> JsSsgGeneratedHtmlPage {
+    JsSsgGeneratedHtmlPage {
+        input_path: page.input_path,
+        output_path: page.output_path,
+        html: page.html,
+    }
+}
+
+fn map_shared_asset(asset: ox_content_ssg::SharedAsset) -> JsSsgSharedAsset {
+    JsSsgSharedAsset {
+        output_path: asset.output_path,
+        public_path: asset.public_path,
+        content: asset.content,
+    }
+}
+
+/// Resolves all output and public route paths for an SSG page.
+#[napi(js_name = "resolveSsgRoutePaths")]
+pub fn resolve_ssg_route_paths(
+    input_path: String,
+    src_dir: String,
+    out_dir: String,
+    base: String,
+    extension: String,
+    site_url: Option<String>,
+) -> JsSsgRoutePaths {
+    map_route_paths(ox_content_ssg::resolve_route_paths(
+        &input_path,
+        &src_dir,
+        &out_dir,
+        &base,
+        &extension,
+        site_url.as_deref(),
+    ))
+}
+
+/// Converts a markdown file path to its corresponding SSG HTML output path.
+#[napi(js_name = "getSsgOutputPath")]
+pub fn get_ssg_output_path(
+    input_path: String,
+    src_dir: String,
+    out_dir: String,
+    extension: String,
+) -> String {
+    ox_content_ssg::get_output_path(&input_path, &src_dir, &out_dir, &extension)
+}
+
+/// Converts a markdown file path to a relative SSG URL path.
+#[napi(js_name = "getSsgUrlPath")]
+pub fn get_ssg_url_path(input_path: String, src_dir: String) -> String {
+    ox_content_ssg::get_url_path(&input_path, &src_dir)
+}
+
+/// Converts a markdown file path to an SSG href.
+#[napi(js_name = "getSsgHref")]
+pub fn get_ssg_href(
+    input_path: String,
+    src_dir: String,
+    base: String,
+    extension: String,
+) -> String {
+    ox_content_ssg::get_href(&input_path, &src_dir, &base, &extension)
+}
+
+/// Resolves a page locale from an SSG URL path and configured locale codes.
+#[napi(js_name = "getSsgPageLocale")]
+pub fn get_ssg_page_locale(
+    url_path: String,
+    default_locale: String,
+    locale_codes: Vec<String>,
+) -> Option<String> {
+    ox_content_ssg::get_page_locale(&url_path, &default_locale, &locale_codes)
+}
+
+/// Extracts a page title from frontmatter title or rendered HTML.
+#[napi(js_name = "extractSsgTitle")]
+pub fn extract_ssg_title(content: String, frontmatter_title: Option<String>) -> String {
+    ox_content_ssg::extract_title(&content, frontmatter_title.as_deref())
+}
+
+/// Formats a file or directory segment as an SSG title.
+#[napi(js_name = "formatSsgTitle")]
+pub fn format_ssg_title(name: String) -> String {
+    ox_content_ssg::format_title(&name)
+}
+
+/// Builds SSG navigation groups from markdown files.
+#[napi(js_name = "buildSsgNavItems")]
+pub fn build_ssg_nav_items(
+    markdown_files: Vec<String>,
+    src_dir: String,
+    base: String,
+    extension: String,
+) -> Vec<JsSsgNavGroup> {
+    ox_content_ssg::build_nav_items(&markdown_files, &src_dir, &base, &extension)
+        .into_iter()
+        .map(map_nav_group)
+        .collect()
+}
+
+/// Builds SSG navigation groups from an explicit theme sidebar tree.
+#[napi(js_name = "buildSsgThemeNavItems")]
+pub fn build_ssg_theme_nav_items(
+    sidebar: Vec<JsSsgSidebarItem>,
+    base: String,
+    extension: String,
+) -> Vec<JsSsgNavGroup> {
+    let sidebar: Vec<ox_content_ssg::SidebarItem> =
+        sidebar.into_iter().map(convert_sidebar_item).collect();
+    ox_content_ssg::build_theme_nav_items(&sidebar, &base, &extension)
+        .into_iter()
+        .map(map_nav_group)
+        .collect()
+}
+
 /// Generates SSG HTML page with navigation and search.
 #[napi]
 pub fn generate_ssg_html(
@@ -1077,6 +1699,10 @@ pub fn generate_ssg_html(
             .into_iter()
             .map(|t| ox_content_ssg::TocEntry { depth: t.depth, text: t.text, slug: t.slug })
             .collect(),
+        last_updated: page_data
+            .last_updated
+            .filter(|timestamp| timestamp.is_finite() && *timestamp >= 0.0)
+            .map(|timestamp| timestamp as i64),
         path: page_data.path,
         entry_page: convert_entry_page_config(page_data.entry_page),
     };
@@ -1085,11 +1711,8 @@ pub fn generate_ssg_html(
         .into_iter()
         .map(|g| ox_content_ssg::NavGroup {
             title: g.title,
-            items: g
-                .items
-                .into_iter()
-                .map(|i| ox_content_ssg::NavItem { title: i.title, path: i.path, href: i.href })
-                .collect(),
+            items: g.items.into_iter().map(convert_nav_item).collect(),
+            collapsed: g.collapsed,
         })
         .collect();
 
@@ -1110,6 +1733,25 @@ pub fn generate_ssg_html(
     ox_content_ssg::generate_html(&ssg_page_data, &ssg_nav_groups, &ssg_config)
 }
 
+/// Extracts shared CSS and JavaScript assets from generated SSG pages.
+#[napi(js_name = "externalizeSsgAssets")]
+pub fn externalize_ssg_assets(
+    pages: Vec<JsSsgGeneratedHtmlPage>,
+    out_dir: String,
+    base: String,
+) -> JsSsgExternalizedAssets {
+    let result = ox_content_ssg::externalize_shared_page_assets(
+        pages.into_iter().map(convert_generated_html_page).collect(),
+        &out_dir,
+        &base,
+    );
+
+    JsSsgExternalizedAssets {
+        pages: result.pages.into_iter().map(map_generated_html_page).collect(),
+        assets: result.assets.into_iter().map(map_shared_asset).collect(),
+    }
+}
+
 /// Extracts searchable content from Markdown source.
 ///
 /// Parses the Markdown and extracts title, body text, headings, and code.
@@ -1120,11 +1762,10 @@ pub fn extract_search_content(
     url: String,
     options: Option<JsParserOptions>,
 ) -> JsSearchDocument {
-    let allocator = Allocator::new();
-    let parser_options = options.map(ParserOptions::from).unwrap_or_default();
-
     // Parse frontmatter first
     let (content, frontmatter) = parse_frontmatter(&source);
+    let allocator = create_allocator_for_source(&content);
+    let parser_options = options.map(ParserOptions::from).unwrap_or_default();
 
     // Try to get title from frontmatter
     let frontmatter_title = frontmatter.get("title").and_then(|v| v.as_str()).map(String::from);
@@ -1352,6 +1993,29 @@ pub struct I18nLoadResult {
     pub errors: Vec<String>,
 }
 
+/// Locale metadata for generated i18n runtime modules.
+#[napi(object)]
+#[derive(Clone)]
+pub struct JsI18nRuntimeLocale {
+    /// BCP 47 locale tag.
+    pub code: String,
+    /// Display name for this locale.
+    pub name: String,
+    /// Text direction.
+    pub dir: Option<String>,
+}
+
+/// Configuration for generated i18n runtime modules.
+#[napi(object)]
+pub struct JsI18nRuntimeConfig {
+    /// Default locale tag.
+    pub default_locale: String,
+    /// Available locales.
+    pub locales: Vec<JsI18nRuntimeLocale>,
+    /// Whether URLs should omit the default locale prefix.
+    pub hide_default_locale: bool,
+}
+
 /// Result of MF2 validation.
 #[napi(object)]
 pub struct Mf2ValidateResult {
@@ -1410,19 +2074,30 @@ pub fn load_dictionaries(dir: String) -> I18nLoadResult {
 #[napi]
 pub fn load_dictionaries_flat(dir: String) -> HashMap<String, HashMap<String, String>> {
     let path = std::path::Path::new(&dir);
-    let Ok(set) = ox_content_i18n::dictionary::load_from_dir(path) else {
-        return HashMap::new();
-    };
+    ox_content_i18n::runtime::load_flat_dictionaries(path).unwrap_or_default()
+}
 
-    let mut result = HashMap::new();
-    for locale in set.locales() {
-        if let Some(dict) = set.get(locale) {
-            let flat: HashMap<String, String> =
-                dict.iter().map(|(k, v)| (k.to_string(), v.to_string())).collect();
-            result.insert(locale.to_string(), flat);
-        }
-    }
-    result
+/// Generates the `virtual:ox-content/i18n` runtime module.
+#[napi(js_name = "generateI18nModule")]
+pub fn generate_i18n_module(dict_dir: String, config: JsI18nRuntimeConfig) -> String {
+    let config = ox_content_i18n::runtime::I18nRuntimeConfig {
+        default_locale: config.default_locale,
+        locales: config
+            .locales
+            .into_iter()
+            .map(|locale| ox_content_i18n::runtime::I18nRuntimeLocale {
+                code: locale.code,
+                name: locale.name,
+                dir: locale.dir,
+            })
+            .collect(),
+        hide_default_locale: config.hide_default_locale,
+    };
+    let dictionaries =
+        ox_content_i18n::runtime::load_flat_dictionaries(std::path::Path::new(&dict_dir))
+            .unwrap_or_default();
+
+    ox_content_i18n::runtime::generate_runtime_module(&config, &dictionaries)
 }
 
 /// Validates an MF2 message string.
@@ -1539,5 +2214,108 @@ pub fn extract_translation_keys(
             })
             .collect(),
         Err(_) => vec![],
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use serde_json::json;
+    use std::fs;
+    use std::process::Command;
+
+    use ox_content_allocator::Allocator;
+    use ox_content_parser::Parser;
+
+    use super::{extract_toc, get_git_last_updated, parse_frontmatter};
+
+    #[test]
+    fn parses_nested_yaml_frontmatter() {
+        let (content, frontmatter) = parse_frontmatter(
+            "---\ntitle: Guide\nmeta:\n  tags:\n    - rust\n    - napi\n  draft: false\n---\n# Body",
+        );
+
+        assert_eq!(content, "# Body");
+        assert_eq!(frontmatter.get("title"), Some(&json!("Guide")));
+        assert_eq!(
+            frontmatter.get("meta"),
+            Some(&json!({"tags": ["rust", "napi"], "draft": false}))
+        );
+    }
+
+    #[test]
+    fn frontmatter_preserves_yaml_scalars_and_quoted_colons() {
+        let (_, frontmatter) = parse_frontmatter(
+            "---\ncount: 3\nratio: 1.5\ncanonical: \"https://example.com/a:b\"\n---\n",
+        );
+
+        assert_eq!(frontmatter.get("count"), Some(&json!(3)));
+        assert_eq!(frontmatter.get("ratio"), Some(&json!(1.5)));
+        assert_eq!(frontmatter.get("canonical"), Some(&json!("https://example.com/a:b")));
+    }
+
+    #[test]
+    fn malformed_yaml_strips_block_and_returns_empty_frontmatter() {
+        let (content, frontmatter) = parse_frontmatter("---\ntitle: [broken\n---\nBody");
+
+        assert_eq!(content, "Body");
+        assert!(frontmatter.is_empty());
+    }
+
+    #[test]
+    fn toc_slugs_are_unique_and_match_heading_ids() {
+        let allocator = Allocator::new();
+        let doc = Parser::new(&allocator, "## Setup!\n## Setup?\n##").parse().unwrap();
+
+        let toc = extract_toc(&doc, 3);
+
+        assert_eq!(toc[0].slug, "setup");
+        assert_eq!(toc[1].slug, "setup-1");
+        assert_eq!(toc[2].slug, "section");
+    }
+
+    #[test]
+    fn transform_passes_toc_depth_to_inline_toc() {
+        let result = super::transform(
+            "[[toc]]\n\n## Intro\n### API".to_string(),
+            Some(super::JsTransformOptions { toc_max_depth: Some(2), ..Default::default() }),
+        );
+
+        assert!(result.html.contains("href=\"#intro\""));
+        assert!(!result.html.contains("href=\"#api\""));
+    }
+
+    #[test]
+    fn git_last_updated_uses_root_relative_path() {
+        let root = std::env::temp_dir().join(format!("ox-content-git-{}", std::process::id()));
+        let _ = fs::remove_dir_all(&root);
+        fs::create_dir_all(root.join("docs")).unwrap();
+        fs::write(root.join("docs/page.md"), "# Page").unwrap();
+
+        for args in [
+            vec!["init"],
+            vec!["add", "docs/page.md"],
+            vec![
+                "-c",
+                "user.name=Test",
+                "-c",
+                "user.email=test@example.com",
+                "commit",
+                "-m",
+                "init",
+            ],
+        ] {
+            let mut cmd = Command::new("git");
+            cmd.arg("-C").arg(&root).args(args);
+            cmd.env("GIT_AUTHOR_DATE", "@1234567890");
+            cmd.env("GIT_COMMITTER_DATE", "@1234567890");
+            assert!(cmd.status().unwrap().success());
+        }
+
+        let updated = get_git_last_updated(
+            root.join("docs/page.md").to_string_lossy().into_owned(),
+            Some(root.to_string_lossy().into_owned()),
+        );
+        assert_eq!(updated, Some(1_234_567_890_000.0));
+        let _ = fs::remove_dir_all(root);
     }
 }

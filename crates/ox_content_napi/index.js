@@ -61,7 +61,7 @@ function loadBinding() {
 
   throw new Error(
     `@ox-content/napi: No compatible binary found for ${platform}-${arch}. ` +
-      `Please run 'mise run build:napi' from the repository root.`,
+      `If you're working from the repository, run 'nix develop -c vp run build:napi' from the repository root.`,
   );
 }
 
@@ -72,18 +72,39 @@ module.exports = binding;
 module.exports.parse = binding.parse;
 module.exports.parseAndRender = binding.parseAndRender;
 module.exports.parseAndRenderAsync = binding.parseAndRenderAsync;
+module.exports.lintMarkdown = binding.lintMarkdown;
+module.exports.lintMarkdownDocuments = binding.lintMarkdownDocuments;
 module.exports.render = binding.render;
 module.exports.transform = binding.transform;
 module.exports.transformAsync = binding.transformAsync;
 module.exports.version = binding.version;
+module.exports.extractFileDocs = binding.extractFileDocs;
+module.exports.extractFileDocEntries = binding.extractFileDocEntries;
+module.exports.generateDocsNavMetadata = binding.generateDocsNavMetadata;
+module.exports.generateDocsNavCode = binding.generateDocsNavCode;
 module.exports.generateOgImageSvg = binding.generateOgImageSvg;
 module.exports.buildSearchIndex = binding.buildSearchIndex;
 module.exports.searchIndex = binding.searchIndex;
 module.exports.extractSearchContent = binding.extractSearchContent;
+module.exports.parseScopedSearchQuery = binding.parseScopedSearchQuery;
+module.exports.getSearchDocumentScopes = binding.getSearchDocumentScopes;
+module.exports.matchesSearchScopes = binding.matchesSearchScopes;
+module.exports.generateSearchModule = binding.generateSearchModule;
 module.exports.generateSsgHtml = binding.generateSsgHtml;
+module.exports.resolveSsgRoutePaths = binding.resolveSsgRoutePaths;
+module.exports.getSsgOutputPath = binding.getSsgOutputPath;
+module.exports.getSsgUrlPath = binding.getSsgUrlPath;
+module.exports.getSsgHref = binding.getSsgHref;
+module.exports.getSsgPageLocale = binding.getSsgPageLocale;
+module.exports.extractSsgTitle = binding.extractSsgTitle;
+module.exports.formatSsgTitle = binding.formatSsgTitle;
+module.exports.buildSsgNavItems = binding.buildSsgNavItems;
+module.exports.buildSsgThemeNavItems = binding.buildSsgThemeNavItems;
+module.exports.externalizeSsgAssets = binding.externalizeSsgAssets;
 module.exports.transformMermaid = binding.transformMermaid;
 module.exports.loadDictionaries = binding.loadDictionaries;
 module.exports.loadDictionariesFlat = binding.loadDictionariesFlat;
+module.exports.generateI18nModule = binding.generateI18nModule;
 module.exports.validateMf2 = binding.validateMf2;
 module.exports.checkI18n = binding.checkI18n;
 module.exports.extractTranslationKeys = binding.extractTranslationKeys;

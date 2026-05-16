@@ -52,6 +52,101 @@ fn html_blocks_are_escaped_when_sanitize_is_enabled() {
 }
 
 #[test]
+fn unsafe_link_urls_are_neutralized_when_sanitize_is_enabled() {
+    let html = render(
+        "[run](javascript:alert(1))",
+        ParserOptions::default(),
+        HtmlRendererOptions { sanitize: true, ..Default::default() },
+    );
+
+    assert_eq!(html, "<p><a href=\"#\">run</a></p>\n");
+}
+
+#[test]
+fn obfuscated_unsafe_link_schemes_are_neutralized() {
+    let html = render(
+        "[run](  JaVa ScRiPt:alert(1))",
+        ParserOptions::default(),
+        HtmlRendererOptions { sanitize: true, ..Default::default() },
+    );
+
+    assert_eq!(html, "<p><a href=\"#\">run</a></p>\n");
+}
+
+#[test]
+fn unsafe_image_urls_are_cleared_when_sanitize_is_enabled() {
+    let html = render(
+        "![x](data:text/html,<script>alert(1)</script>)",
+        ParserOptions::default(),
+        HtmlRendererOptions { sanitize: true, ..Default::default() },
+    );
+
+    assert_eq!(html, "<p><img src=\"\" alt=\"x\"></p>\n");
+}
+
+#[test]
+fn sanitize_keeps_relative_and_allowed_url_schemes() {
+    let html = render(
+        "[guide](./guide.md) [mail](mailto:hi@example.com) [phone](tel:+123)",
+        ParserOptions::default(),
+        HtmlRendererOptions { sanitize: true, ..Default::default() },
+    );
+
+    assert!(html.contains("href=\"./guide.md\""));
+    assert!(html.contains("href=\"mailto:hi@example.com\""));
+    assert!(html.contains("href=\"tel:+123\""));
+}
+
+#[test]
+fn base_prefixes_root_absolute_markdown_links() {
+    let html = render(
+        "[Guide](/guide) [Dir](/guide/) [Markdown](/api.md#types)",
+        ParserOptions::default(),
+        HtmlRendererOptions {
+            convert_md_links: true,
+            base_url: "/docs/".to_string(),
+            ..Default::default()
+        },
+    );
+
+    assert!(html.contains("href=\"/docs/guide\""));
+    assert!(html.contains("href=\"/docs/guide/\""));
+    assert!(html.contains("href=\"/docs/api/index.html#types\""));
+}
+
+#[test]
+fn base_prefixes_root_absolute_markdown_images() {
+    let html = render(
+        "![logo](/img/logo.png)",
+        ParserOptions::default(),
+        HtmlRendererOptions {
+            convert_md_links: true,
+            base_url: "/docs/".to_string(),
+            ..Default::default()
+        },
+    );
+
+    assert_eq!(html, "<p><img src=\"/docs/img/logo.png\" alt=\"logo\"></p>\n");
+}
+
+#[test]
+fn base_prefixes_root_absolute_raw_html_attrs() {
+    let html = render(
+        "<div>\n<a href=\"/guide\">Guide</a>\n<img src='/img/logo.png'>\n<script src=\"//cdn.example/app.js\"></script>\n</div>",
+        ParserOptions::default(),
+        HtmlRendererOptions {
+            convert_md_links: true,
+            base_url: "/docs/".to_string(),
+            ..Default::default()
+        },
+    );
+
+    assert!(html.contains("href=\"/docs/guide\""), "{html}");
+    assert!(html.contains("src='/docs/img/logo.png'"), "{html}");
+    assert!(html.contains("src=\"//cdn.example/app.js\""), "{html}");
+}
+
+#[test]
 fn ordered_lists_preserve_start_attribute() {
     let html =
         render("3. third\n4. fourth", ParserOptions::default(), HtmlRendererOptions::default());
@@ -118,4 +213,41 @@ fn xhtml_images_self_close() {
 fn hard_breaks_render_inside_paragraphs() {
     let html = render("line 1\\\nline 2", ParserOptions::default(), HtmlRendererOptions::default());
     assert_eq!(html, "<p>line 1<br>\nline 2</p>\n");
+}
+
+#[test]
+fn inline_raw_html_renders_without_extra_newline() {
+    let html = render(
+        "- <input type=\"checkbox\"> task",
+        ParserOptions::default(),
+        HtmlRendererOptions::default(),
+    );
+
+    assert_eq!(html, "<ul>\n<li><p><input type=\"checkbox\"> task</p>\n</li>\n</ul>\n");
+}
+
+#[test]
+fn inline_raw_html_is_escaped_when_sanitize_is_enabled() {
+    let html = render(
+        "<span>ok</span>",
+        ParserOptions::default(),
+        HtmlRendererOptions { sanitize: true, ..Default::default() },
+    );
+
+    assert_eq!(html, "<p>&lt;span&gt;ok&lt;/span&gt;</p>\n");
+}
+
+#[test]
+fn html_type6_details_allows_markdown_after_blank_line() {
+    let html = render(
+        "<details>\n\n<summary>Click to expand</summary>\n\n**bold should be markdown**\n\n- list\n\n```js\nconsole.log(\"code\");\n```\n\n</details>",
+        ParserOptions::default(),
+        HtmlRendererOptions::default(),
+    );
+
+    assert!(html.contains("<details>"));
+    assert!(html.contains("<summary>Click to expand</summary>"));
+    assert!(html.contains("<strong>bold should be markdown</strong>"));
+    assert!(html.contains("<ul>"));
+    assert!(html.contains("<pre><code class=\"language-js\">"));
 }

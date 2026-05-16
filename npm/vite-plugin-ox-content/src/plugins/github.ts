@@ -41,6 +41,13 @@ const defaultOptions: Required<GitHubOptions> = {
 
 // Simple in-memory cache
 const repoCache = new Map<string, { data: GitHubRepoData; timestamp: number }>();
+const GITHUB_REPO_RE = /^[A-Za-z0-9_.-]+\/[A-Za-z0-9_.-]+$/;
+
+export function isSafeGitHubRepo(repo: string): boolean {
+  return (
+    GITHUB_REPO_RE.test(repo) && !repo.split("/").some((part) => part === "." || part === "..")
+  );
+}
 
 /**
  * Get element attribute value.
@@ -72,6 +79,10 @@ export async function fetchRepoData(
   repo: string,
   options: Required<GitHubOptions>,
 ): Promise<GitHubRepoData | null> {
+  if (!isSafeGitHubRepo(repo)) {
+    return null;
+  }
+
   // Check cache
   if (options.cache) {
     const cached = repoCache.get(repo);
@@ -263,12 +274,13 @@ function createGitHubCard(repoData: GitHubRepoData): Element {
  * Create fallback element when repo data is unavailable.
  */
 function createFallbackCard(repo: string): Element {
+  const href = isSafeGitHubRepo(repo) ? `https://github.com/${repo}` : "#";
   return {
     type: "element",
     tagName: "a",
     properties: {
       className: ["ox-github-card", "error"],
-      href: `https://github.com/${repo}`,
+      href,
       target: "_blank",
       rel: "noopener noreferrer",
     },
@@ -318,7 +330,9 @@ export async function collectGitHubRepos(html: string): Promise<string[]> {
 
   let match;
   while ((match = repoPattern.exec(html)) !== null) {
-    repos.push(match[1]);
+    if (isSafeGitHubRepo(match[1])) {
+      repos.push(match[1]);
+    }
   }
 
   return repos;

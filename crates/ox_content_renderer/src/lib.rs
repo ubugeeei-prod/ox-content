@@ -22,5 +22,5 @@
 mod html;
 mod render;
 
-pub use html::{HtmlRenderer, HtmlRendererOptions};
+pub use html::{CodeAnnotationSyntax, HtmlRenderer, HtmlRendererOptions};
 pub use render::{RenderError, RenderResult, Renderer};

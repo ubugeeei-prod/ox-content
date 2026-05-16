@@ -4,27 +4,28 @@ This directory contains logo assets for Ox Content.
 
 ## Files
 
-| File            | Description                    | Use Case                 |
-| --------------- | ------------------------------ | ------------------------ |
-| `logo.svg`      | Full logo with background      | Marketing, documentation |
-| `logo-dark.svg` | Logo on transparent background | Dark theme websites      |
-| `logo-icon.svg` | Small icon version             | Favicons, small displays |
+| File                  | Description                  | Use Case                     |
+| --------------------- | ---------------------------- | ---------------------------- |
+| `logo.svg`            | Primary markdown mark        | Docs, README, marketing      |
+| `logo-dark.svg`       | Markdown mark on dark plaque | Dark surfaces, social        |
+| `logo-icon.svg`       | Compact icon export          | Favicons, small displays     |
+| `oxcontent-light.svg` | Light wordmark lockup        | Dark-mode README and badges  |
+| `oxcontent-dark.svg`  | Dark wordmark lockup         | Light-mode README and badges |
 
 ## Design Concept
 
 The Ox Content logo combines two key concepts:
 
-1. **Ox Horns** - Representing the Oxc family heritage, styled as code brackets (`< >`) to symbolize parsing and processing
-2. **Markdown Document** - A document with the Markdown "M" symbol, representing content and documentation
+1. **Single document surface** - One gently rounded page keeps the mark simple and light.
+2. **Bracketed lockup** - The wordmark can present the symbol inside parentheses, similar to the Oxc-style brand lockup.
 
 ## Color Palette
 
-| Color             | Hex       | Usage                 |
-| ----------------- | --------- | --------------------- |
-| Primary           | `#e94560` | Accent, highlights    |
-| Background Dark   | `#1a1a2e` | Dark backgrounds      |
-| Background Medium | `#16213e` | Secondary backgrounds |
-| Accent Dark       | `#0f3460` | Borders, outlines     |
+| Color     | Hex       | Usage                        |
+| --------- | --------- | ---------------------------- |
+| Blue      | `#355cff` | Gradient start and main tone |
+| Sky Blue  | `#74c7ff` | Gradient end and lift        |
+| Deep Navy | `#0b1220` | Dark plaque and OG surfaces  |
 
 ## Usage Guidelines
 

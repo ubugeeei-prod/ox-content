@@ -1,101 +1,229 @@
 # Getting Started
 
-This guide will help you set up Ox Content and start using it in your projects.
+Ox Content can be adopted at four different layers.
 
-## Prerequisites
+If you are building a documentation site, start with the Vite plugin.
+If you want the Rust core from Node.js, use the N-API package next.
+If you need browser-side or sandboxed execution, use the WebAssembly package next.
+If you want the parser and renderer directly in Rust, use the Rust crates last.
 
-Before you begin, ensure you have the following installed:
+Contributor setup and source builds live on a separate page: [Development Setup](./development-setup.md).
 
-| Requirement | Version | Installation                                                            |
-| ----------- | ------- | ----------------------------------------------------------------------- |
-| **Rust**    | 1.83+   | [rustup.rs](https://rustup.rs/)                                         |
-| **Node.js** | 24+     | Managed via `.node-version` / `vp` or [nodejs.org](https://nodejs.org/) |
-| **Vite+**   | Latest  | [vite.plus](https://vite.plus/)                                         |
+## Choose Your Entry Point
 
-## Installation
+| You want to...                                            | Start here                                  |
+| --------------------------------------------------------- | ------------------------------------------- |
+| Build a docs site or content pipeline                     | [Vite Plugin](#1-vite-plugin-first)         |
+| Call the parser and renderer from Node.js                 | [N-API](#2-nodejs-api-via-n-api)            |
+| Run Ox Content in the browser or another WebAssembly host | [WebAssembly Package](./packages/wasm.md)   |
+| Embed Ox Content directly in a Rust project               | [Rust Crates](#4-rust-crates)               |
+| Work on Ox Content itself                                 | [Development Setup](./development-setup.md) |
 
-### For Development (Building from Source)
+## Requirements
+
+| Path                | Requirement                                                            |
+| ------------------- | ---------------------------------------------------------------------- |
+| Vite Plugin         | Node.js `24+` and a Vite or Vite+ project                              |
+| N-API               | Node.js `24+`                                                          |
+| WebAssembly Package | A JS toolchain that can install npm packages and load `.wasm` from ESM |
+| Rust Crates         | Rust `1.83+`                                                           |
+
+## 1. Vite Plugin First
+
+This is the default entry point for most users.
+
+The Vite plugin gives you the full Ox Content pipeline: Markdown transforms, static site generation, theming, search, OG images, and generated API docs.
+It already brings in the native runtime it needs, so you do not need to install `@ox-content/napi` separately for the Vite-based path.
+
+### Install
 
 ```bash
-# Clone the repository
-git clone https://github.com/ubugeeei/ox-content.git
-cd ox-content
-
-# Optional: install Rust via mise
-mise trust
-mise install
-
-# Install JS dependencies
-vp install
-
-# Build all crates
-vp run build
-
-# Run tests to verify installation
-vp run test
+vp install @ox-content/vite-plugin
 ```
 
-### As a Rust Dependency
+### Minimal Setup
 
-Add to your `Cargo.toml`:
+```ts
+// vite.config.ts
+import { defineConfig } from "vite-plus";
+import { oxContent } from "@ox-content/vite-plugin";
+
+export default defineConfig({
+  plugins: [
+    oxContent({
+      srcDir: "content",
+      outDir: "dist/docs",
+      highlight: true,
+      ogImage: true,
+      docs: {
+        enabled: true,
+        src: ["./src"],
+        out: "content/api",
+      },
+    }),
+  ],
+});
+```
+
+Create a Markdown entry page:
+
+```md
+<!-- content/index.md -->
+
+# Hello Ox Content
+
+This site is generated from Markdown.
+```
+
+Then run the docs app:
+
+```bash
+vp dev
+```
+
+### Framework Integrations
+
+If you want component islands inside Markdown, add one of the first-party integrations:
+
+```bash
+# Vue
+vp install @ox-content/vite-plugin-vue vue @vitejs/plugin-vue
+
+# React
+vp install @ox-content/vite-plugin-react react react-dom @vitejs/plugin-react
+
+# Svelte
+vp install @ox-content/vite-plugin-svelte svelte @sveltejs/vite-plugin-svelte
+```
+
+Read more:
+
+- [@ox-content/vite-plugin](./packages/vite-plugin-ox-content.md)
+- [Vue integration](./packages/vite-plugin-ox-content-vue.md)
+- [React integration](./packages/vite-plugin-ox-content-react.md)
+- [Svelte integration](./packages/vite-plugin-ox-content-svelte.md)
+- [Theming](./theming.md)
+- [Source docs example](./examples/gen-source-docs.md)
+
+## 2. Node.js API via N-API
+
+If you want Ox Content as a fast Markdown engine inside a Node.js tool, script, or custom docs workflow, use `@ox-content/napi`.
+
+### Install
+
+```bash
+vp install @ox-content/napi
+```
+
+### Parse and Render
+
+```ts
+import { parseAndRender } from "@ox-content/napi";
+
+const markdown = `
+# Welcome
+
+- Fast parser
+- Rust core
+- HTML output
+`;
+
+const result = parseAndRender(markdown, {
+  gfm: true,
+  tables: true,
+  taskLists: true,
+});
+
+console.log(result.html);
+```
+
+### Parse to AST
+
+```ts
+import { parseMarkdown } from "@ox-content/napi";
+
+const ast = parseMarkdown("# Hello\n\nThis is **bold**.", {
+  gfm: true,
+});
+
+console.log(JSON.stringify(ast, null, 2));
+```
+
+Read more:
+
+- [@ox-content/napi](./packages/napi.md)
+- [@ox-content/wasm](./packages/wasm.md)
+- [API Reference](./api/index.md)
+
+## 3. WebAssembly via @ox-content/wasm
+
+If you need Ox Content in the browser, in a Web Worker, or in another WebAssembly host, use `@ox-content/wasm`.
+
+### Install
+
+```bash
+vp install @ox-content/wasm
+```
+
+### Use from JavaScript
+
+```ts
+import init, { parseAndRender, WasmParserOptions } from "@ox-content/wasm";
+
+await init();
+
+const options = new WasmParserOptions();
+options.gfm = true;
+options.tables = true;
+options.taskLists = true;
+
+const result = parseAndRender("# Hello from WASM", options);
+console.log(result.html);
+```
+
+The default `init()` call loads `ox_content_wasm_bg.wasm` relative to the package entry, so this path works well in bundlers and environments that support `.wasm` assets from ESM.
+
+### Build and Publish Locally from This Repo
+
+If you are maintaining Ox Content itself, the repository can generate a publish-ready npm package for you:
+
+```bash
+vp run build:wasm
+cd crates/ox_content_wasm/pkg
+vp exec -- npm pack --dry-run
+```
+
+For the first local publish of this scoped package, authenticate with the registry if needed and publish it as public:
+
+```bash
+cd crates/ox_content_wasm/pkg
+vp exec -- npm whoami || vp exec -- npm login
+vp exec -- npm publish --access public
+```
+
+Publishing from `crates/ox_content_wasm/pkg` is safer than publishing from the workspace root, because it only targets the generated package.
+
+Avoid publishing from the workspace root here unless you intentionally want a broader workspace release flow.
+
+If your npm account enforces 2FA for publishing, npm will prompt for the one-time code during `npm publish`.
+
+The current WASM surface exposes `parseAndRender`, `transform`, `version`, and `WasmParserOptions` from [`crates/ox_content_wasm/src/lib.rs`](https://github.com/ubugeeei/ox-content/blob/main/crates/ox_content_wasm/src/lib.rs).
+
+## 4. Rust Crates
+
+If you want the lowest-level building blocks directly, use the Rust crates.
+
+### Add Dependencies
 
 ```toml
 [dependencies]
-ox_content_allocator = "0.1"
-ox_content_ast = "0.1"
-ox_content_parser = "0.1"
-ox_content_renderer = "0.1"
+ox_content_allocator = "2.9.0"
+ox_content_ast = "2.9.0"
+ox_content_parser = "2.9.0"
+ox_content_renderer = "2.9.0"
 ```
 
-### As an npm Package
-
-```bash
-npm install @ox-content/napi
-# or
-pnpm add @ox-content/napi
-# or
-yarn add @ox-content/napi
-```
-
-## Quick Start Examples
-
-### Basic Parsing and Rendering (Rust)
-
-```rust
-use ox_content_allocator::Allocator;
-use ox_content_parser::Parser;
-use ox_content_renderer::HtmlRenderer;
-
-fn main() {
-    // Step 1: Create an arena allocator
-    let allocator = Allocator::new();
-
-    // Step 2: Define your Markdown content
-    let markdown = r#"
-# Welcome to Ox Content
-
-This is a **fast** Markdown parser written in Rust.
-
-## Features
-
-- Zero-copy parsing
-- Arena allocation
-- GFM support
-"#;
-
-    // Step 3: Parse the Markdown
-    let parser = Parser::new(&allocator, markdown);
-    let document = parser.parse().expect("Failed to parse");
-
-    // Step 4: Render to HTML
-    let mut renderer = HtmlRenderer::new();
-    let html = renderer.render(&document);
-
-    println!("{}", html);
-}
-```
-
-### With GFM Extensions (Rust)
+### Parse and Render in Rust
 
 ```rust
 use ox_content_allocator::Allocator;
@@ -104,30 +232,10 @@ use ox_content_renderer::HtmlRenderer;
 
 fn main() {
     let allocator = Allocator::new();
+    let markdown = "# Hello from Rust\n\n- Fast\n- Reusable\n- Markdown";
 
-    let markdown = r#"
-# Task List
-
-- [x] Learn Rust
-- [x] Build a parser
-- [ ] Conquer the world
-
-## Data Table
-
-| Name | Age | City |
-|------|-----|------|
-| Alice | 30 | NYC |
-| Bob | 25 | LA |
-
-## Formatting
-
-~~deleted~~ text and www.example.com autolink
-"#;
-
-    // Enable GFM extensions
-    let options = ParserOptions::gfm();
-    let parser = Parser::with_options(&allocator, markdown, options);
-    let document = parser.parse().unwrap();
+    let parser = Parser::with_options(&allocator, markdown, ParserOptions::gfm());
+    let document = parser.parse().expect("failed to parse markdown");
 
     let mut renderer = HtmlRenderer::new();
     let html = renderer.render(&document);
@@ -136,420 +244,8 @@ fn main() {
 }
 ```
 
-### Node.js Usage
+If you need deeper internals, the crate-level APIs are documented in the Rust workspace and explained further in [Architecture](./architecture.md).
 
-```javascript
-import { parseMarkdown, parseAndRender } from "@ox-content/napi";
+## Need to Build Ox Content Itself?
 
-// Option 1: Get AST only
-const markdown = "# Hello World\n\nThis is **bold** text.";
-const ast = parseMarkdown(markdown, { gfm: true });
-console.log(JSON.stringify(ast, null, 2));
-
-// Option 2: Parse and render in one call
-const result = parseAndRender(markdown, {
-  gfm: true,
-});
-console.log(result.html);
-// Output: <h1>Hello World</h1>\n<p>This is <strong>bold</strong> text.</p>\n
-```
-
-### TypeScript with Types
-
-```typescript
-import {
-  parseMarkdown,
-  parseAndRender,
-  type ParseOptions,
-  type RenderResult,
-} from "@ox-content/napi";
-
-const options: ParseOptions = {
-  gfm: true,
-  footnotes: true,
-  tables: true,
-};
-
-const markdown = `
-# API Documentation
-
-## Endpoints
-
-| Method | Path | Description |
-|--------|------|-------------|
-| GET | /users | List users |
-| POST | /users | Create user |
-`;
-
-const result: RenderResult = parseAndRender(markdown, options);
-console.log(result.html);
-```
-
-### With Vite
-
-```bash
-npm install @ox-content/vite-plugin @ox-content/napi
-```
-
-```typescript
-// vite.config.ts
-import { defineConfig } from "vite";
-import { oxContent, defineTheme, defaultTheme } from "@ox-content/vite-plugin";
-
-export default defineConfig({
-  plugins: [
-    oxContent({
-      // Source directory (default: 'content')
-      srcDir: "content",
-      outDir: "dist",
-      // Enable syntax highlighting
-      highlight: true,
-      // SSG with themes and OG images
-      ssg: {
-        siteName: "My Docs",
-        ogImage: "https://example.com/og-image.png",
-        theme: defineTheme({
-          extends: defaultTheme,
-          socialLinks: {
-            github: "https://github.com/your/repo",
-          },
-        }),
-      },
-      // Built-in full-text search (enabled by default)
-      search: {
-        enabled: true,
-        placeholder: "Search docs...",
-      },
-    }),
-  ],
-});
-```
-
-### With Framework Integration
-
-```bash
-# Vue
-npm install @ox-content/vite-plugin-vue @ox-content/napi
-
-# React
-npm install @ox-content/vite-plugin-react @ox-content/napi
-
-# Svelte
-npm install @ox-content/vite-plugin-svelte @ox-content/napi
-```
-
-```typescript
-// vite.config.ts (Vue example)
-import { defineConfig } from "vite";
-import vue from "@vitejs/plugin-vue";
-import { oxContentVue } from "@ox-content/vite-plugin-vue";
-
-export default defineConfig({
-  plugins: [vue(), oxContentVue()],
-});
-```
-
-## Development Workflow
-
-### Available Workspace Tasks
-
-The canonical workspace tasks are defined in `vite.config.ts` and are invoked with `vp run <task>`.
-For JS/TS quality checks, `check:ts`, `lint:ts`, and `fmt:ts-check` all delegate to `vp check`.
-
-```bash
-# Setup
-vp install              # Install JS dependencies with Vite+
-
-# Building
-vp run build            # Build everything (Rust + NAPI + npm packages)
-vp run build:rust       # Build Rust crates
-vp run build:rust-release
-vp run build:napi
-vp run build:npm
-
-# Testing
-vp run test             # Run all tests
-vp run test:rust
-vp run test:rust-verbose
-vp run test:ts
-vp run watch            # Watch for changes and run tests
-
-# Code Quality
-vp run fmt              # Format Rust + JavaScript/TypeScript
-vp run fmt:check        # Check formatting (CI mode)
-vp run clippy           # Run clippy lints
-vp run lint             # Run all lints
-
-# Pre-commit Check
-vp run ready            # Run format, lint, and tests
-
-# Documentation
-vp run doc:cargo        # Generate Rust documentation
-vp run doc:cargo-open   # Generate and open in browser
-
-# Docs and examples
-vp run dev              # Start docs + playground
-vp run dev:docs
-vp run dev:playground
-vp run playground
-vp run integ-vue
-vp run integ-react
-vp run integ-svelte
-vp run ssg-vite
-
-# Benchmarks
-vp run bench                # Run all benchmarks (Rust + JS)
-vp run bench:rust           # Run Rust benchmarks only
-vp run bench:parse          # Run parse/render speed benchmarks
-vp run bench:bundle         # Run bundle size benchmarks
-```
-
-### Project Structure
-
-```
-ox-content/
-├── Cargo.toml              # Workspace configuration
-├── vite.config.ts          # Vite+ workspace task graph
-├── mise.toml               # Optional Rust toolchain config for mise
-├── crates/                 # Rust crates
-│   ├── ox_content_allocator/   # Arena allocator
-│   ├── ox_content_ast/         # AST node definitions
-│   ├── ox_content_parser/      # Markdown parser
-│   ├── ox_content_renderer/    # HTML renderer
-│   ├── ox_content_search/      # Full-text search engine
-│   ├── ox_content_napi/        # Node.js NAPI bindings
-│   ├── ox_content_wasm/        # WebAssembly bindings
-│   └── ox_content_og_image/    # OG image generation
-├── npm/                    # npm packages
-│   ├── vite-plugin-ox-content/       # @ox-content/vite-plugin
-│   ├── vite-plugin-ox-content-vue/   # @ox-content/vite-plugin-vue
-│   ├── vite-plugin-ox-content-react/ # @ox-content/vite-plugin-react
-│   ├── vite-plugin-ox-content-svelte/# @ox-content/vite-plugin-svelte
-│   └── unplugin-ox-content/          # @ox-content/unplugin
-├── examples/               # Usage examples
-├── content/                # Markdown content (default srcDir)
-└── .github/workflows/      # CI/CD
-    ├── ci.yml              # Continuous integration
-    └── publish.yml         # npm release automation
-```
-
-## Running Tests
-
-### All Tests
-
-```bash
-# With Vite+
-vp run test
-
-# With cargo directly
-cargo test --workspace
-```
-
-### Specific Crate
-
-```bash
-cargo test -p ox_content_parser
-cargo test -p ox_content_renderer
-```
-
-### With Output
-
-```bash
-cargo test --workspace -- --nocapture
-```
-
-### Watch Mode
-
-```bash
-vp run watch
-# or
-cargo watch -x "test --workspace"
-```
-
-## Running Benchmarks
-
-Ox Content includes comprehensive benchmarks to measure performance:
-
-```bash
-# Run all benchmarks
-vp run bench
-
-# Run only Rust benchmarks (cargo bench)
-vp run bench:rust
-
-# Run parse/render speed benchmarks (compares with marked, markdown-it, md4w/md4c, and Bun when available)
-vp run bench:parse
-
-# Run bundle size benchmarks (compares with VitePress, Astro, etc.)
-vp run bench:bundle
-```
-
-### Benchmark Results
-
-See the [Benchmarks section](./index.md#benchmarks) for the latest results and the current comparison set.
-
-## Using the Playground
-
-The playground provides an interactive environment to test the parser:
-
-```bash
-# Start docs and playground together
-vp run dev
-
-# Or run only the playground
-vp run playground
-
-# Or manually
-cd examples/playground
-vp dev
-```
-
-Then open [http://127.0.0.1:5173](http://127.0.0.1:5173) for the playground and
-[http://127.0.0.1:4173](http://127.0.0.1:4173) for the docs site.
-
-**Features:**
-
-- Live Markdown preview
-- HTML output inspection
-- Pseudo AST visualization
-- Simple split-pane editor
-- Copy actions for source and output
-
-## Troubleshooting
-
-### Common Issues
-
-#### "cargo: command not found"
-
-Ensure Rust is installed and in your PATH:
-
-```bash
-curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh
-source ~/.cargo/env
-```
-
-#### mise Not Recognized
-
-Install mise:
-
-```bash
-curl https://mise.run | sh
-
-# Add to your shell config
-echo 'eval "$(mise activate bash)"' >> ~/.bashrc
-# or for zsh
-echo 'eval "$(mise activate zsh)"' >> ~/.zshrc
-```
-
-#### Build Fails with Linking Errors
-
-On Linux, you may need to install build essentials:
-
-```bash
-# Ubuntu/Debian
-sudo apt-get install build-essential
-
-# Fedora
-sudo dnf groupinstall "Development Tools"
-```
-
-On macOS, install Xcode Command Line Tools:
-
-```bash
-xcode-select --install
-```
-
-#### NAPI Build Fails
-
-Ensure you have the correct Node.js version:
-
-```bash
-mise use node@24
-# or
-nvm use 24
-```
-
-### Getting Help
-
-- [GitHub Issues](https://github.com/ubugeeei/ox-content/issues) - Bug reports and feature requests
-- [Discussions](https://github.com/ubugeeei/ox-content/discussions) - Questions and ideas
-
-## API Documentation Generation
-
-Ox Content can generate API documentation from your TypeScript/JavaScript source code, similar to `cargo doc` for Rust.
-
-### Configuration
-
-```typescript
-// vite.config.ts
-import oxContent from "@ox-content/unplugin/vite";
-
-export default defineConfig({
-  plugins: [
-    oxContent({
-      docs: {
-        enabled: true,
-        src: ["./src"],
-        out: "docs/api",
-      },
-    }),
-  ],
-});
-```
-
-### Options
-
-| Option           | Type               | Default                | Description                          |
-| ---------------- | ------------------ | ---------------------- | ------------------------------------ |
-| `enabled`        | `boolean`          | `false`                | Enable API docs generation           |
-| `src`            | `string[]`         | `['./src']`            | Source directories to scan           |
-| `out`            | `string`           | `'docs/api'`           | Output directory                     |
-| `include`        | `string[]`         | `['**/*.ts', ...]`     | File patterns to include             |
-| `exclude`        | `string[]`         | `['**/*.test.*', ...]` | File patterns to exclude             |
-| `includePrivate` | `boolean`          | `false`                | Include private items (`_` prefixed) |
-| `toc`            | `boolean`          | `true`                 | Generate table of contents           |
-| `groupBy`        | `'file' \| 'kind'` | `'file'`               | How to group documentation           |
-
-### Writing Documentation
-
-Use JSDoc comments to document your code:
-
-```typescript
-/**
- * A user in the system.
- */
-export interface User {
-  /** The user's unique identifier */
-  id: string;
-  /** The user's display name */
-  name: string;
-  /** The user's email address */
-  email: string;
-}
-
-/**
- * Creates a new user.
- * @param name - The user's name
- * @param email - The user's email
- * @returns The created user object
- * @example
- * const user = createUser('Alice', 'alice@example.com');
- */
-export function createUser(name: string, email: string): User {
-  return { id: crypto.randomUUID(), name, email };
-}
-```
-
-Supported JSDoc tags:
-
-- `@param` - Parameter description
-- `@returns` / `@return` - Return value description
-- `@example` - Usage examples
-- `@deprecated` - Mark as deprecated
-- `@see` - Reference to related items
-
-## Next Steps
-
-- [Architecture Overview](./architecture.md) - Learn about the design
-- [API Reference](./api/) - Explore the Rust API
-- [Playground](/playground/) - Try it interactively
+If you are cloning the repository, working on the docs theme, building the N-API bindings locally, or running the full test suite, use [Development Setup](./development-setup.md) instead of this page.

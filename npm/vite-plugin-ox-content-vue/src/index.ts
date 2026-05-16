@@ -211,10 +211,34 @@ function resolveVueOptions(options: VueIntegrationOptions): ResolvedVueOptions {
     frontmatter: options.frontmatter ?? true,
     toc: options.toc ?? true,
     tocMaxDepth: options.tocMaxDepth ?? 3,
+    codeAnnotations: resolveCodeAnnotationsOptions(options.codeAnnotations),
     components: options.components ?? {},
     // Vue-specific options
     reactivityTransform: options.reactivityTransform ?? false,
     customBlocks: options.customBlocks ?? true,
+  };
+}
+
+function resolveCodeAnnotationsOptions(
+  options: VueIntegrationOptions["codeAnnotations"],
+): ResolvedVueOptions["codeAnnotations"] {
+  if (!options) {
+    return {
+      enabled: false,
+      metaKey: "annotate",
+    };
+  }
+
+  if (options === true) {
+    return {
+      enabled: true,
+      metaKey: "annotate",
+    };
+  }
+
+  return {
+    enabled: true,
+    metaKey: options.metaKey ?? "annotate",
   };
 }
 

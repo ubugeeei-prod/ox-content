@@ -1,5 +1,14 @@
 import type { OxContentOptions } from "@ox-content/vite-plugin";
 
+export interface CodeAnnotationsOptions {
+  metaKey?: string;
+}
+
+export interface ResolvedCodeAnnotationsOptions {
+  enabled: boolean;
+  metaKey: string;
+}
+
 export type ComponentsMap = Record<string, string>;
 
 /**
@@ -24,6 +33,7 @@ export interface ReactIntegrationOptions extends OxContentOptions {
    * ```
    */
   components?: ComponentsOption;
+  codeAnnotations?: boolean | CodeAnnotationsOptions;
   jsxRuntime?: "automatic" | "classic";
 }
 
@@ -35,6 +45,7 @@ export interface ResolvedReactOptions {
   frontmatter: boolean;
   toc: boolean;
   tocMaxDepth: number;
+  codeAnnotations: ResolvedCodeAnnotationsOptions;
   components: ComponentsMap;
   jsxRuntime: "automatic" | "classic";
   root?: string;

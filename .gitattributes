@@ -1,0 +1,13 @@
+# Keep GitHub language statistics focused on maintained source code.
+/docs/** linguist-documentation=true
+/examples/** linguist-documentation=true
+/benchmarks/** linguist-documentation=true
+
+# Generated API/reference artifacts.
+/docs/content/api/** linguist-generated=true
+/**/docs/api/** linguist-generated=true
+/crates/ox_content_napi/index.d.ts linguist-generated=true
+
+# Test snapshots and rendered VRT baselines.
+/npm/vite-plugin-ox-content/src/__snapshots__/** linguist-generated=true
+/npm/vite-plugin-ox-content/test/vrt/**/*-snapshots/** linguist-generated=true

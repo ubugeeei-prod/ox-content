@@ -1,0 +1,185 @@
+{
+  "version": 1,
+  "generatedAt": "2026-04-21T09:21:28.261Z",
+  "modules": [
+    {
+      "file": "/Users/nishimura/Code/github.com/ubugeeei/ox-content--2/examples/gen-source-docs/src/math.ts",
+      "entries": [
+        {
+          "name": "clamp",
+          "kind": "function",
+          "description": "Clamps a number between a minimum and maximum value.",
+          "params": [
+            {
+              "name": "value",
+              "type": "number",
+              "description": "The value to clamp"
+            },
+            {
+              "name": "min",
+              "type": "number",
+              "description": "The minimum allowed value"
+            },
+            {
+              "name": "max",
+              "type": "number",
+              "description": "The maximum allowed value"
+            }
+          ],
+          "returns": {
+            "type": "number",
+            "description": "The clamped value"
+          },
+          "examples": [
+            "```ts\nclamp(5, 0, 10) // => 5\nclamp(-5, 0, 10) // => 0\nclamp(15, 0, 10) // => 10\n```"
+          ],
+          "private": false,
+          "file": "/Users/nishimura/Code/github.com/ubugeeei/ox-content--2/examples/gen-source-docs/src/math.ts",
+          "line": 6,
+          "signature": "export function clamp(value: number, min: number, max: number): number"
+        },
+        {
+          "name": "lerp",
+          "kind": "function",
+          "description": "Linearly interpolates between two values.",
+          "params": [
+            {
+              "name": "start",
+              "type": "number",
+              "description": "The start value"
+            },
+            {
+              "name": "end",
+              "type": "number",
+              "description": "The end value"
+            },
+            {
+              "name": "t",
+              "type": "number",
+              "description": "The interpolation factor (0 to 1)"
+            }
+          ],
+          "returns": {
+            "type": "number",
+            "description": "The interpolated value"
+          },
+          "examples": ["```ts\nlerp(0, 100, 0.5) // => 50\nlerp(0, 100, 0.25) // => 25\n```"],
+          "private": false,
+          "file": "/Users/nishimura/Code/github.com/ubugeeei/ox-content--2/examples/gen-source-docs/src/math.ts",
+          "line": 25,
+          "signature": "export function lerp(start: number, end: number, t: number): number"
+        },
+        {
+          "name": "round",
+          "kind": "function",
+          "description": "Rounds a number to a specified number of decimal places.",
+          "params": [
+            {
+              "name": "value",
+              "type": "number",
+              "description": "The value to round"
+            },
+            {
+              "name": "decimals",
+              "type": "number",
+              "description": "The number of decimal places"
+            }
+          ],
+          "returns": {
+            "type": "number",
+            "description": "The rounded value"
+          },
+          "examples": ["```ts\nround(3.14159, 2) // => 3.14\nround(3.14159, 4) // => 3.1416\n```"],
+          "private": false,
+          "file": "/Users/nishimura/Code/github.com/ubugeeei/ox-content--2/examples/gen-source-docs/src/math.ts",
+          "line": 43,
+          "signature": "export function round(value: number, decimals: number): number"
+        }
+      ]
+    },
+    {
+      "file": "/Users/nishimura/Code/github.com/ubugeeei/ox-content--2/examples/gen-source-docs/src/utils.ts",
+      "entries": [
+        {
+          "name": "capitalize",
+          "kind": "function",
+          "description": "Capitalizes the first letter of a string.",
+          "params": [
+            {
+              "name": "str",
+              "type": "string",
+              "description": "The input string to capitalize"
+            }
+          ],
+          "returns": {
+            "type": "string",
+            "description": "The string with the first letter capitalized"
+          },
+          "examples": [
+            "```ts\ncapitalize('hello') // => 'Hello'\ncapitalize('WORLD') // => 'WORLD'\n```"
+          ],
+          "private": false,
+          "file": "/Users/nishimura/Code/github.com/ubugeeei/ox-content--2/examples/gen-source-docs/src/utils.ts",
+          "line": 6,
+          "signature": "export function capitalize(str: string): string"
+        },
+        {
+          "name": "truncate",
+          "kind": "function",
+          "description": "Truncates a string to a specified length.",
+          "params": [
+            {
+              "name": "str",
+              "type": "string",
+              "description": "The input string to truncate"
+            },
+            {
+              "name": "maxLength",
+              "type": "number",
+              "description": "Maximum length of the output string"
+            },
+            {
+              "name": "suffix",
+              "type": "string",
+              "description": "Suffix to append when truncated (default: '...')"
+            }
+          ],
+          "returns": {
+            "type": "string",
+            "description": "The truncated string"
+          },
+          "examples": [
+            "```ts\ntruncate('Hello World', 5) // => 'Hello...'\ntruncate('Hi', 10) // => 'Hi'\n```"
+          ],
+          "private": false,
+          "file": "/Users/nishimura/Code/github.com/ubugeeei/ox-content--2/examples/gen-source-docs/src/utils.ts",
+          "line": 23,
+          "signature": "export function truncate(str: string, maxLength: number, suffix: string = \"...\"): string"
+        },
+        {
+          "name": "toKebabCase",
+          "kind": "function",
+          "description": "Converts a string to kebab-case.",
+          "params": [
+            {
+              "name": "str",
+              "type": "string",
+              "description": "The input string to convert"
+            }
+          ],
+          "returns": {
+            "type": "string",
+            "description": "The kebab-cased string"
+          },
+          "examples": [
+            "```ts\ntoKebabCase('helloWorld') // => 'hello-world'\ntoKebabCase('HelloWorld') // => 'hello-world'\n```"
+          ],
+          "private": false,
+          "file": "/Users/nishimura/Code/github.com/ubugeeei/ox-content--2/examples/gen-source-docs/src/utils.ts",
+          "line": 42,
+          "signature": "export function toKebabCase(str: string): string"
+        }
+      ]
+    }
+  ]
+}

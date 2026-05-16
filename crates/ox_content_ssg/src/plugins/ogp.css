@@ -3,31 +3,19 @@
 .ox-ogp-card {
   display: flex;
   margin: 1.5rem 0;
-  border: 1px solid var(--octc-color-border);
-  border-radius: 8px;
-  overflow: hidden;
-  background: var(--octc-color-bg);
+  border: 0;
+  border-top: 1px solid color-mix(in srgb, var(--octc-color-border) 74%, transparent);
+  border-bottom: 1px solid color-mix(in srgb, var(--octc-color-border) 74%, transparent);
+  border-radius: 0;
+  overflow: visible;
+  background: transparent;
   text-decoration: none;
   color: var(--octc-color-text);
-  transition:
-    border-color 0.2s ease,
-    box-shadow 0.2s ease;
+  transition: color 0.2s ease;
 }
 
 .ox-ogp-card:hover {
-  border-color: var(--octc-color-primary);
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
   text-decoration: none;
-}
-
-[data-theme="dark"] .ox-ogp-card:hover {
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
-}
-
-@media (prefers-color-scheme: dark) {
-  :root:not([data-theme="light"]) .ox-ogp-card:hover {
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
-  }
 }
 
 .ox-ogp-content {
@@ -170,17 +158,17 @@
   display: inline-flex;
   align-items: center;
   gap: 0.5rem;
-  padding: 0.5rem 0.75rem;
-  border: 1px solid var(--octc-color-border);
-  border-radius: 6px;
+  padding: 0.35rem 0;
+  border: 0;
+  border-bottom: 1px solid color-mix(in srgb, var(--octc-color-border) 74%, transparent);
+  border-radius: 0;
   font-size: 0.875rem;
   color: var(--octc-color-primary);
   text-decoration: none;
-  transition: border-color 0.2s ease;
+  transition: color 0.2s ease;
 }
 
 .ox-ogp-simple:hover {
-  border-color: var(--octc-color-primary);
   text-decoration: underline;
 }
 

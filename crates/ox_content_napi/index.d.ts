@@ -5,7 +5,13 @@
  *
  * Takes an array of documents and returns a serialized search index as JSON.
  */
-export declare function buildSearchIndex(documents: Array<JsSearchDocument>): string;
+export declare function buildSearchIndex(documents: Array<JsSearchDocument>): string
+
+/** Builds SSG navigation groups from markdown files. */
+export declare function buildSsgNavItems(markdownFiles: Array<string>, srcDir: string, base: string, extension: string): Array<JsSsgNavGroup>
+
+/** Builds SSG navigation groups from an explicit theme sidebar tree. */
+export declare function buildSsgThemeNavItems(sidebar: Array<JsSsgSidebarItem>, base: string, extension: string): Array<JsSsgNavGroup>
 
 /**
  * Runs i18n checks on dictionaries against used translation keys.
@@ -13,30 +19,45 @@ export declare function buildSearchIndex(documents: Array<JsSearchDocument>): st
  * `dict_dir` is the path to the i18n directory with locale subdirectories.
  * `used_keys` is a list of translation keys found in source code.
  */
-export declare function checkI18n(dictDir: string, usedKeys: Array<string>): I18NCheckResult;
+export declare function checkI18n(dictDir: string, usedKeys: Array<string>): I18NCheckResult
+
+/** Extracts shared CSS and JavaScript assets from generated SSG pages. */
+export declare function externalizeSsgAssets(pages: Array<JsSsgGeneratedHtmlPage>, outDir: string, base: string): JsSsgExternalizedAssets
+
+/** Extracts normalized documentation entries from a JavaScript/TypeScript file using Oxc. */
+export declare function extractFileDocEntries(filePath: string, includePrivate?: boolean | undefined | null): Array<JsDocEntry>
+
+/** Extracts documented declarations from a JavaScript/TypeScript file using Oxc. */
+export declare function extractFileDocs(filePath: string, includePrivate?: boolean | undefined | null): Array<JsSourceDocItem>
 
 /**
  * Extracts searchable content from Markdown source.
  *
  * Parses the Markdown and extracts title, body text, headings, and code.
  */
-export declare function extractSearchContent(
-  source: string,
-  id: string,
-  url: string,
-  options?: JsParserOptions | undefined | null,
-): JsSearchDocument;
+export declare function extractSearchContent(source: string, id: string, url: string, options?: JsParserOptions | undefined | null): JsSearchDocument
+
+/** Extracts a page title from frontmatter title or rendered HTML. */
+export declare function extractSsgTitle(content: string, frontmatterTitle?: string | undefined | null): string
 
 /**
  * Extracts translation keys from a TypeScript/JavaScript source string.
  *
  * Finds calls like `t('key')` and `$t('key')`.
  */
-export declare function extractTranslationKeys(
-  source: string,
-  filePath: string,
-  functionNames?: Array<string> | undefined | null,
-): Array<I18NKeyUsage>;
+export declare function extractTranslationKeys(source: string, filePath: string, functionNames?: Array<string> | undefined | null): Array<I18NKeyUsage>
+
+/** Formats a file or directory segment as an SSG title. */
+export declare function formatSsgTitle(name: string): string
+
+/** Generates TypeScript source code for documentation navigation metadata. */
+export declare function generateDocsNavCode(navItems: Array<JsDocsNavItem>, exportName?: string | undefined | null): string
+
+/** Generates sidebar navigation metadata from documentation file paths. */
+export declare function generateDocsNavMetadata(files: Array<string>, basePath?: string | undefined | null): Array<JsDocsNavItem>
+
+/** Generates the `virtual:ox-content/i18n` runtime module. */
+export declare function generateI18nModule(dictDir: string, config: JsI18NRuntimeConfig): string
 
 /**
  * Generates an OG image as SVG.
@@ -44,407 +65,678 @@ export declare function extractTranslationKeys(
  * This function generates an SVG representation of an OG image
  * that can be used for social media previews.
  */
-export declare function generateOgImageSvg(
-  data: JsOgImageData,
-  config?: JsOgImageConfig | undefined | null,
-): string;
+export declare function generateOgImageSvg(data: JsOgImageData, config?: JsOgImageConfig | undefined | null): string
+
+/** Generates the client-side search runtime module. */
+export declare function generateSearchModule(optionsJson: string, indexPath: string): string
 
 /** Generates SSG HTML page with navigation and search. */
-export declare function generateSsgHtml(
-  pageData: JsSsgPageData,
-  navGroups: Array<JsSsgNavGroup>,
-  config: JsSsgConfig,
-): string;
+export declare function generateSsgHtml(pageData: JsSsgPageData, navGroups: Array<JsSsgNavGroup>, config: JsSsgConfig): string
+
+/** Returns the last git commit timestamp for a file in milliseconds. */
+export declare function getGitLastUpdated(filePath: string, root?: string | undefined | null): number | null
+
+/** Derives hierarchical search scopes from a document id or URL. */
+export declare function getSearchDocumentScopes(id: string, url: string): Array<string>
+
+/** Converts a markdown file path to an SSG href. */
+export declare function getSsgHref(inputPath: string, srcDir: string, base: string, extension: string): string
+
+/** Converts a markdown file path to its corresponding SSG HTML output path. */
+export declare function getSsgOutputPath(inputPath: string, srcDir: string, outDir: string, extension: string): string
+
+/** Resolves a page locale from an SSG URL path and configured locale codes. */
+export declare function getSsgPageLocale(urlPath: string, defaultLocale: string, localeCodes: Array<string>): string | null
+
+/** Converts a markdown file path to a relative SSG URL path. */
+export declare function getSsgUrlPath(inputPath: string, srcDir: string): string
 
 /** Result of i18n checking. */
 export interface I18NCheckResult {
   /** All diagnostics. */
-  diagnostics: Array<I18NDiagnostic>;
+  diagnostics: Array<I18NDiagnostic>
   /** Number of errors. */
-  errorCount: number;
+  errorCount: number
   /** Number of warnings. */
-  warningCount: number;
+  warningCount: number
 }
 
 /** A single i18n diagnostic. */
 export interface I18NDiagnostic {
   /** Severity: "error", "warning", or "info". */
-  severity: string;
+  severity: string
   /** Diagnostic message. */
-  message: string;
+  message: string
   /** Related translation key, if any. */
-  key?: string;
+  key?: string
   /** Related locale, if any. */
-  locale?: string;
+  locale?: string
 }
 
 /** A translation key usage found in source code. */
 export interface I18NKeyUsage {
   /** The translation key. */
-  key: string;
+  key: string
   /** Source file path. */
-  filePath: string;
+  filePath: string
   /** Line number. */
-  line: number;
+  line: number
   /** Column number. */
-  column: number;
+  column: number
   /** End column number. */
-  endColumn: number;
+  endColumn: number
 }
 
 /** Result of loading dictionaries. */
 export interface I18NLoadResult {
   /** Number of locales loaded. */
-  localeCount: number;
+  localeCount: number
   /** All locale tags. */
-  locales: Array<string>;
+  locales: Array<string>
   /** Errors encountered during loading. */
-  errors: Array<string>;
+  errors: Array<string>
+}
+
+/** Normalized documentation entry used by generated API docs. */
+export interface JsDocEntry {
+  name: string
+  kind: string
+  description: string
+  params?: Array<JsDocParam>
+  returns?: JsDocReturn
+  examples?: Array<string>
+  tags?: Record<string, string>
+  private: boolean
+  file: string
+  line: number
+  endLine: number
+  signature?: string
+}
+
+/** Normalized parameter documentation used by generated API docs. */
+export interface JsDocParam {
+  name: string
+  type: string
+  description: string
+  optional?: boolean
+  default?: string
+}
+
+/** Normalized return documentation used by generated API docs. */
+export interface JsDocReturn {
+  type: string
+  description: string
+}
+
+/** Navigation item emitted for generated documentation. */
+export interface JsDocsNavItem {
+  title: string
+  path: string
+  children?: Array<JsDocsNavItem>
 }
 
 /** Entry page configuration. */
 export interface JsEntryPageConfig {
   /** Hero section. */
-  hero?: JsHeroConfig;
+  hero?: JsHeroConfig
   /** Feature cards. */
-  features?: Array<JsFeatureConfig>;
+  features?: Array<JsFeatureConfig>
 }
 
 /** Feature card for entry page. */
 export interface JsFeatureConfig {
   /** Icon - supports: "mdi:icon-name" (Iconify), image URL, or emoji. */
-  icon?: string;
+  icon?: string
   /** Feature title. */
-  title: string;
+  title: string
   /** Feature description. */
-  details?: string;
+  details?: string
   /** Optional link. */
-  link?: string;
+  link?: string
   /** Link text. */
-  linkText?: string;
+  linkText?: string
 }
 
 /** Hero action for entry page. */
 export interface JsHeroAction {
   /** Button theme: "brand" or "alt". */
-  theme?: string;
+  theme?: string
   /** Button text. */
-  text: string;
+  text: string
   /** Link URL. */
-  link: string;
+  link: string
 }
 
 /** Hero section configuration for entry page. */
 export interface JsHeroConfig {
   /** Main title (large, gradient text). */
-  name?: string;
+  name?: string
   /** Secondary text. */
-  text?: string;
+  text?: string
   /** Tagline. */
-  tagline?: string;
+  tagline?: string
+  /** Optional notice shown in the hero. */
+  notice?: JsHeroNotice
   /** Hero image. */
-  image?: JsHeroImage;
+  image?: JsHeroImage
   /** Action buttons. */
-  actions?: Array<JsHeroAction>;
+  actions?: Array<JsHeroAction>
 }
 
 /** Hero image for entry page. */
 export interface JsHeroImage {
   /** Image source URL. */
-  src: string;
+  src: string
+  /** Light mode image source URL. */
+  lightSrc?: string
+  /** Dark mode image source URL. */
+  darkSrc?: string
   /** Alt text. */
-  alt?: string;
+  alt?: string
   /** Image width. */
-  width?: number;
+  width?: number
   /** Image height. */
-  height?: number;
+  height?: number
+}
+
+/** Hero notice for entry page. */
+export interface JsHeroNotice {
+  /** Notice title. */
+  title?: string
+  /** Notice paragraphs. */
+  body?: Array<string>
+}
+
+/** Configuration for generated i18n runtime modules. */
+export interface JsI18NRuntimeConfig {
+  /** Default locale tag. */
+  defaultLocale: string
+  /** Available locales. */
+  locales: Array<JsI18NRuntimeLocale>
+  /** Whether URLs should omit the default locale prefix. */
+  hideDefaultLocale: boolean
+}
+
+/** Locale metadata for generated i18n runtime modules. */
+export interface JsI18NRuntimeLocale {
+  /** BCP 47 locale tag. */
+  code: string
+  /** Display name for this locale. */
+  name: string
+  /** Text direction. */
+  dir?: string
 }
 
 /** Locale information for the locale switcher. */
 export interface JsLocaleInfo {
   /** BCP 47 locale tag. */
-  code: string;
+  code: string
   /** Display name. */
-  name: string;
+  name: string
   /** Text direction. */
-  dir: string;
+  dir: string
+}
+
+export interface JsMarkdownLintDiagnostic {
+  ruleId: string
+  severity: string
+  message: string
+  line: number
+  column: number
+  endLine: number
+  endColumn: number
+  language?: string
+  suggestions?: Array<string>
+}
+
+export interface JsMarkdownLintDictionaryOptions {
+  words?: Array<string>
+  byLanguage?: Array<JsMarkdownLintLanguageWords>
+  ignoredWords?: Array<string>
+}
+
+export interface JsMarkdownLintLanguageWords {
+  language: string
+  words: Array<string>
+}
+
+export interface JsMarkdownLintOptions {
+  languages?: Array<string>
+  rules?: JsMarkdownLintRuleOptions
+  dictionary?: JsMarkdownLintDictionaryOptions
+}
+
+export interface JsMarkdownLintResult {
+  diagnostics: Array<JsMarkdownLintDiagnostic>
+  errorCount: number
+  warningCount: number
+  infoCount: number
+  maskedDocument: string
+}
+
+export interface JsMarkdownLintRuleOptions {
+  duplicateHeadings?: boolean
+  headingIncrement?: boolean
+  maxConsecutiveBlankLines?: number
+  repeatedPunctuation?: boolean
+  repeatedWords?: boolean
+  spellcheck?: boolean
+  trailingSpaces?: boolean
 }
 
 /** OG image configuration for JavaScript. */
 export interface JsOgImageConfig {
   /** Image width in pixels. */
-  width?: number;
+  width?: number
   /** Image height in pixels. */
-  height?: number;
+  height?: number
   /** Background color (hex). */
-  backgroundColor?: string;
+  backgroundColor?: string
   /** Text color (hex). */
-  textColor?: string;
+  textColor?: string
   /** Title font size. */
-  titleFontSize?: number;
+  titleFontSize?: number
   /** Description font size. */
-  descriptionFontSize?: number;
+  descriptionFontSize?: number
 }
 
 /** OG image data for JavaScript. */
 export interface JsOgImageData {
   /** Page title. */
-  title: string;
+  title: string
   /** Page description. */
-  description?: string;
+  description?: string
   /** Site name. */
-  siteName?: string;
+  siteName?: string
   /** Author name. */
-  author?: string;
+  author?: string
 }
 
 /** Parser options for JavaScript. */
 export interface JsParserOptions {
   /** Enable GFM extensions. */
-  gfm?: boolean;
+  gfm?: boolean
   /** Enable footnotes. */
-  footnotes?: boolean;
+  footnotes?: boolean
   /** Enable task lists. */
-  taskLists?: boolean;
+  taskLists?: boolean
   /** Enable tables. */
-  tables?: boolean;
+  tables?: boolean
   /** Enable strikethrough. */
-  strikethrough?: boolean;
+  strikethrough?: boolean
   /** Enable autolinks. */
-  autolinks?: boolean;
+  autolinks?: boolean
+}
+
+/** Search query split into free text and scope prefixes. */
+export interface JsScopedSearchQuery {
+  /** Free-text terms after removing scope prefixes. */
+  text: string
+  /** Deduplicated lowercase scopes. */
+  scopes: Array<string>
 }
 
 /** Search document for JavaScript. */
 export interface JsSearchDocument {
   /** Unique document identifier. */
-  id: string;
+  id: string
   /** Document title. */
-  title: string;
+  title: string
   /** Document URL. */
-  url: string;
+  url: string
   /** Document body text. */
-  body: string;
+  body: string
   /** Document headings. */
-  headings: Array<string>;
+  headings: Array<string>
   /** Code snippets. */
-  code: Array<string>;
+  code: Array<string>
 }
 
 /** Search options for JavaScript. */
 export interface JsSearchOptions {
   /** Maximum number of results. */
-  limit?: number;
+  limit?: number
   /** Enable prefix matching. */
-  prefix?: boolean;
+  prefix?: boolean
   /** Enable fuzzy matching. */
-  fuzzy?: boolean;
+  fuzzy?: boolean
   /** Minimum score threshold. */
-  threshold?: number;
+  threshold?: number
 }
 
 /** Search result for JavaScript. */
 export interface JsSearchResult {
   /** Document ID. */
-  id: string;
+  id: string
   /** Document title. */
-  title: string;
+  title: string
   /** Document URL. */
-  url: string;
+  url: string
   /** Relevance score. */
-  score: number;
+  score: number
   /** Matched terms. */
-  matches: Array<string>;
+  matches: Array<string>
   /** Content snippet. */
-  snippet: string;
+  snippet: string
+}
+
+/** Custom social link for JavaScript. */
+export interface JsSocialLink {
+  /** Icon label. */
+  icon?: string
+  /** Inline SVG icon. */
+  iconSvg?: string
+  /** Link URL. */
+  link: string
+  /** Accessible label. */
+  ariaLabel?: string
 }
 
 /** Social links for JavaScript. */
 export interface JsSocialLinks {
   /** GitHub URL. */
-  github?: string;
+  github?: string
   /** Twitter/X URL. */
-  twitter?: string;
+  twitter?: string
   /** Discord URL. */
-  discord?: string;
+  discord?: string
+  /** Custom social links. */
+  links?: Array<JsSocialLink>
+}
+
+/** Source documentation item extracted from a JS/TS file. */
+export interface JsSourceDocItem {
+  name: string
+  kind: string
+  doc?: string
+  jsdoc?: string
+  sourcePath: string
+  line: number
+  endLine: number
+  exported: boolean
+  signature?: string
+  params: Array<JsSourceDocParam>
+  returnType?: string
+  tags: Array<JsSourceDocTag>
+}
+
+/** Parameter documentation extracted from source code. */
+export interface JsSourceDocParam {
+  name: string
+  typeAnnotation?: string
+  optional: boolean
+  defaultValue?: string
+  description?: string
+}
+
+/** Raw JSDoc tag extracted from source code. */
+export interface JsSourceDocTag {
+  tag: string
+  value: string
 }
 
 /** SSG configuration. */
 export interface JsSsgConfig {
   /** Site name. */
-  siteName: string;
+  siteName: string
   /** Base URL path. */
-  base: string;
+  base: string
   /** OG image URL. */
-  ogImage?: string;
+  ogImage?: string
   /** Theme configuration. */
-  theme?: JsThemeConfig;
+  theme?: JsThemeConfig
   /** Current locale for this page. */
-  locale?: string;
+  locale?: string
   /** Available locales for locale switcher. */
-  availableLocales?: Array<JsLocaleInfo>;
+  availableLocales?: Array<JsLocaleInfo>
+}
+
+/** Result of SSG shared asset extraction. */
+export interface JsSsgExternalizedAssets {
+  /** HTML pages with inline assets replaced. */
+  pages: Array<JsSsgGeneratedHtmlPage>
+  /** Extracted shared assets. */
+  assets: Array<JsSsgSharedAsset>
+}
+
+/** Generated SSG HTML page for shared asset extraction. */
+export interface JsSsgGeneratedHtmlPage {
+  /** Source Markdown path. */
+  inputPath: string
+  /** Output HTML path. */
+  outputPath: string
+  /** HTML content. */
+  html: string
 }
 
 /** Navigation group for SSG. */
 export interface JsSsgNavGroup {
   /** Group title. */
-  title: string;
+  title: string
   /** Navigation items. */
-  items: Array<JsSsgNavItem>;
+  items: Array<JsSsgNavItem>
+  collapsed?: boolean
 }
 
 /** Navigation item for SSG. */
 export interface JsSsgNavItem {
   /** Display title. */
-  title: string;
+  title: string
   /** URL path. */
-  path: string;
+  path: string
   /** Full href. */
-  href: string;
+  href: string
+  children?: Array<JsSsgNavItem>
+  collapsed?: boolean
 }
 
 /** Page data for SSG. */
 export interface JsSsgPageData {
   /** Page title. */
-  title: string;
+  title: string
   /** Page description. */
-  description?: string;
+  description?: string
   /** Page content HTML. */
-  content: string;
+  content: string
   /** Table of contents entries. */
-  toc: Array<TocEntry>;
+  toc: Array<TocEntry>
+  /** Last updated timestamp in milliseconds since the Unix epoch. */
+  lastUpdated?: number
   /** URL path. */
-  path: string;
+  path: string
   /** Entry page configuration (if layout: entry). */
-  entryPage?: JsEntryPageConfig;
+  entryPage?: JsEntryPageConfig
+}
+
+/** Resolved SSG output and public route paths. */
+export interface JsSsgRoutePaths {
+  /** HTML output file path. */
+  outputPath: string
+  /** Route path without extension. */
+  urlPath: string
+  /** Public HTML href. */
+  href: string
+  /** OG image output file path. */
+  ogImagePath: string
+  /** OG image public URL. */
+  ogImageUrl: string
+}
+
+/** Shared SSG asset extracted from generated pages. */
+export interface JsSsgSharedAsset {
+  /** Output file path. */
+  outputPath: string
+  /** Public URL path used from HTML. */
+  publicPath: string
+  /** Asset content. */
+  content: string
+}
+
+/** Theme sidebar item for SSG navigation generation. */
+export interface JsSsgSidebarItem {
+  /** Display text. */
+  text?: string
+  /** Link URL or route path. */
+  link?: string
+  /** Child sidebar items. */
+  items?: Array<JsSsgSidebarItem>
+  /** Whether this group is collapsed by default. */
+  collapsed?: boolean
 }
 
 /** Theme colors for JavaScript. */
 export interface JsThemeColors {
   /** Primary accent color. */
-  primary?: string;
+  primary?: string
   /** Primary color on hover. */
-  primaryHover?: string;
+  primaryHover?: string
   /** Background color. */
-  background?: string;
+  background?: string
   /** Alternative background color. */
-  backgroundAlt?: string;
+  backgroundAlt?: string
   /** Main text color. */
-  text?: string;
+  text?: string
   /** Muted text color. */
-  textMuted?: string;
+  textMuted?: string
   /** Border color. */
-  border?: string;
+  border?: string
   /** Code block background color. */
-  codeBackground?: string;
+  codeBackground?: string
   /** Code block text color. */
-  codeText?: string;
+  codeText?: string
 }
 
 /** Theme configuration for JavaScript. */
 export interface JsThemeConfig {
   /** Light mode colors. */
-  colors?: JsThemeColors;
+  colors?: JsThemeColors
   /** Dark mode colors. */
-  darkColors?: JsThemeColors;
+  darkColors?: JsThemeColors
   /** Font configuration. */
-  fonts?: JsThemeFonts;
+  fonts?: JsThemeFonts
+  /** Entry page configuration. */
+  entryPage?: JsThemeEntryPage
   /** Layout configuration. */
-  layout?: JsThemeLayout;
+  layout?: JsThemeLayout
   /** Header configuration. */
-  header?: JsThemeHeader;
+  header?: JsThemeHeader
   /** Footer configuration. */
-  footer?: JsThemeFooter;
+  footer?: JsThemeFooter
   /** Social links configuration. */
-  socialLinks?: JsSocialLinks;
+  socialLinks?: JsSocialLinks
   /** Embedded HTML content at specific positions. */
-  embed?: JsThemeEmbed;
+  embed?: JsThemeEmbed
   /** Additional custom CSS. */
-  css?: string;
+  css?: string
   /** Additional custom JavaScript. */
-  js?: string;
+  js?: string
 }
 
 /** Embedded HTML content for specific positions. */
 export interface JsThemeEmbed {
   /** Content to embed into `<head>`. */
-  head?: string;
+  head?: string
   /** Content before header. */
-  headerBefore?: string;
+  headerBefore?: string
   /** Content after header. */
-  headerAfter?: string;
+  headerAfter?: string
   /** Content before sidebar navigation. */
-  sidebarBefore?: string;
+  sidebarBefore?: string
   /** Content after sidebar navigation. */
-  sidebarAfter?: string;
+  sidebarAfter?: string
   /** Content before main content. */
-  contentBefore?: string;
+  contentBefore?: string
   /** Content after main content. */
-  contentAfter?: string;
+  contentAfter?: string
   /** Content before footer. */
-  footerBefore?: string;
+  footerBefore?: string
   /** Custom footer content. */
-  footer?: string;
+  footer?: string
+}
+
+/** Entry page theme configuration for JavaScript. */
+export interface JsThemeEntryPage {
+  /** Landing page presentation mode. */
+  mode?: string
 }
 
 /** Theme fonts for JavaScript. */
 export interface JsThemeFonts {
   /** Sans-serif font stack. */
-  sans?: string;
+  sans?: string
   /** Monospace font stack. */
-  mono?: string;
+  mono?: string
 }
 
 /** Theme footer for JavaScript. */
 export interface JsThemeFooter {
   /** Footer message (supports HTML). */
-  message?: string;
+  message?: string
   /** Copyright text (supports HTML). */
-  copyright?: string;
+  copyright?: string
 }
 
 /** Theme header for JavaScript. */
 export interface JsThemeHeader {
   /** Logo image URL. */
-  logo?: string;
+  logo?: string
+  /** Light mode logo image URL. */
+  logoLight?: string
+  /** Dark mode logo image URL. */
+  logoDark?: string
+  /** Whether to render the site name text next to the logo. */
+  showSiteNameText?: boolean
   /** Logo width in pixels. */
-  logoWidth?: number;
+  logoWidth?: number
   /** Logo height in pixels. */
-  logoHeight?: number;
+  logoHeight?: number
 }
 
 /** Theme layout for JavaScript. */
 export interface JsThemeLayout {
   /** Sidebar width (CSS value). */
-  sidebarWidth?: string;
+  sidebarWidth?: string
   /** Header height (CSS value). */
-  headerHeight?: string;
+  headerHeight?: string
   /** Maximum content width (CSS value). */
-  maxContentWidth?: string;
+  maxContentWidth?: string
 }
 
 /** Transform options for JavaScript. */
 export interface JsTransformOptions {
   /** Enable GFM extensions. */
-  gfm?: boolean;
+  gfm?: boolean
   /** Enable footnotes. */
-  footnotes?: boolean;
+  footnotes?: boolean
   /** Enable task lists. */
-  taskLists?: boolean;
+  taskLists?: boolean
   /** Enable tables. */
-  tables?: boolean;
+  tables?: boolean
   /** Enable strikethrough. */
-  strikethrough?: boolean;
+  strikethrough?: boolean
   /** Enable autolinks. */
-  autolinks?: boolean;
+  autolinks?: boolean
   /** Maximum TOC depth (1-6). */
-  tocMaxDepth?: number;
+  tocMaxDepth?: number
   /** Convert `.md` links to `.html` links for SSG output. */
-  convertMdLinks?: boolean;
+  convertMdLinks?: boolean
   /** Base URL for absolute link conversion (e.g., "/" or "/docs/"). */
-  baseUrl?: string;
+  baseUrl?: string
   /** Source file path for relative link resolution. */
-  sourcePath?: string;
+  sourcePath?: string
+  /** Enable line annotations for code blocks using fence meta. */
+  codeAnnotations?: boolean
+  /** Fence meta key used to read code annotations. */
+  codeAnnotationMetaKey?: string
+  /** Code annotation syntax mode. */
+  codeAnnotationSyntax?: string
+  /** Enable line numbers for all code blocks by default. */
+  codeAnnotationDefaultLineNumbers?: boolean
 }
+
+export declare function lintMarkdown(source: string, options?: JsMarkdownLintOptions | undefined | null): JsMarkdownLintResult
+
+export declare function lintMarkdownDocuments(sources: Array<string>, options?: JsMarkdownLintOptions | undefined | null): Array<JsMarkdownLintResult>
 
 /**
  * Loads dictionaries from the given directory.
@@ -452,7 +744,7 @@ export interface JsTransformOptions {
  * The directory should contain locale subdirectories (e.g., `en/`, `ja/`)
  * with JSON or YAML translation files.
  */
-export declare function loadDictionaries(dir: string): I18NLoadResult;
+export declare function loadDictionaries(dir: string): I18NLoadResult
 
 /**
  * Loads dictionaries from the given directory and returns a flat key-value map per locale.
@@ -460,24 +752,30 @@ export declare function loadDictionaries(dir: string): I18NLoadResult;
  * Each locale maps to a flat `{ "namespace.key": "value" }` structure.
  * Supports both JSON and YAML dictionary files.
  */
-export declare function loadDictionariesFlat(dir: string): Record<string, Record<string, string>>;
+export declare function loadDictionariesFlat(dir: string): Record<string, Record<string, string>>
+
+/** Returns true when a document belongs to at least one requested search scope. */
+export declare function matchesSearchScopes(id: string, url: string, scopes: Array<string>): boolean
+
+/** Restores code block metadata after JavaScript-side syntax highlighting. */
+export declare function mergeHighlightedCodeBlocks(originalHtml: string, highlightedHtml: string): string
 
 /** Mermaid transform result. */
 export interface MermaidTransformResult {
   /** The transformed HTML with mermaid code blocks replaced by rendered SVGs. */
-  html: string;
+  html: string
   /** Non-fatal errors encountered during rendering (per-diagram). */
-  errors: Array<string>;
+  errors: Array<string>
 }
 
 /** Result of MF2 validation. */
 export interface Mf2ValidateResult {
   /** Whether the message is valid. */
-  valid: boolean;
+  valid: boolean
   /** Validation errors. */
-  errors: Array<string>;
+  errors: Array<string>
   /** AST as JSON (if parsing succeeded). */
-  astJson?: string;
+  astJson?: string
 }
 
 /**
@@ -485,41 +783,38 @@ export interface Mf2ValidateResult {
  *
  * Returns the AST as a JSON string for zero-copy transfer to JavaScript.
  */
-export declare function parse(
-  source: string,
-  options?: JsParserOptions | undefined | null,
-): ParseResult;
+export declare function parse(source: string, options?: JsParserOptions | undefined | null): ParseResult
 
 /** Parses Markdown and renders to HTML. */
-export declare function parseAndRender(
-  source: string,
-  options?: JsParserOptions | undefined | null,
-): RenderResult;
+export declare function parseAndRender(source: string, options?: JsParserOptions | undefined | null): RenderResult
 
 /** Parses Markdown and renders to HTML asynchronously (runs on worker thread). */
-export declare function parseAndRenderAsync(
-  source: string,
-  options?: JsParserOptions | undefined | null,
-): Promise<unknown>;
+export declare function parseAndRenderAsync(source: string, options?: JsParserOptions | undefined | null): Promise<unknown>
 
 /** Parse result containing the AST as JSON. */
 export interface ParseResult {
   /** The AST as a JSON string. */
-  ast: string;
+  ast: string
   /** Parse errors, if any. */
-  errors: Array<string>;
+  errors: Array<string>
 }
 
+/** Splits a search query into free-text terms and `@scope` prefixes. */
+export declare function parseScopedSearchQuery(query: string): JsScopedSearchQuery
+
 /** Renders an AST (provided as JSON) to HTML. */
-export declare function render(astJson: string): RenderResult;
+export declare function render(astJson: string): RenderResult
 
 /** Render result containing the HTML output. */
 export interface RenderResult {
   /** The rendered HTML. */
-  html: string;
+  html: string
   /** Render errors, if any. */
-  errors: Array<string>;
+  errors: Array<string>
 }
+
+/** Resolves all output and public route paths for an SSG page. */
+export declare function resolveSsgRoutePaths(inputPath: string, srcDir: string, outDir: string, base: string, extension: string, siteUrl?: string | undefined | null): JsSsgRoutePaths
 
 /**
  * Searches a serialized index.
@@ -527,20 +822,16 @@ export interface RenderResult {
  * Takes a JSON-serialized index, query string, and options.
  * Returns an array of search results.
  */
-export declare function searchIndex(
-  indexJson: string,
-  query: string,
-  options?: JsSearchOptions | undefined | null,
-): Array<JsSearchResult>;
+export declare function searchIndex(indexJson: string, query: string, options?: JsSearchOptions | undefined | null): Array<JsSearchResult>
 
 /** Table of contents entry. */
 export interface TocEntry {
   /** Heading depth (1-6). */
-  depth: number;
+  depth: number
   /** Heading text. */
-  text: string;
+  text: string
   /** URL-friendly slug. */
-  slug: string;
+  slug: string
 }
 
 /**
@@ -548,16 +839,10 @@ export interface TocEntry {
  *
  * This is the main entry point for @ox-content/unplugin.
  */
-export declare function transform(
-  source: string,
-  options?: JsTransformOptions | undefined | null,
-): TransformResult;
+export declare function transform(source: string, options?: JsTransformOptions | undefined | null): TransformResult
 
 /** Transforms Markdown source asynchronously (runs on worker thread). */
-export declare function transformAsync(
-  source: string,
-  options?: JsTransformOptions | undefined | null,
-): Promise<unknown>;
+export declare function transformAsync(source: string, options?: JsTransformOptions | undefined | null): Promise<unknown>
 
 /**
  * Transforms mermaid code blocks in HTML to rendered SVG diagrams.
@@ -566,18 +851,18 @@ export declare function transformAsync(
  * renders each in parallel using the mmdc CLI, and replaces them with
  * `<div class="ox-mermaid">...</div>`.
  */
-export declare function transformMermaid(html: string, mmdcPath: string): MermaidTransformResult;
+export declare function transformMermaid(html: string, mmdcPath: string): MermaidTransformResult
 
 /** Transform result containing HTML, frontmatter, and TOC. */
 export interface TransformResult {
   /** The rendered HTML. */
-  html: string;
+  html: string
   /** Parsed frontmatter as JSON string. */
-  frontmatter: string;
+  frontmatter: string
   /** Table of contents entries. */
-  toc: Array<TocEntry>;
+  toc: Array<TocEntry>
   /** Parse/render errors, if any. */
-  errors: Array<string>;
+  errors: Array<string>
 }
 
 /**
@@ -585,7 +870,7 @@ export interface TransformResult {
  *
  * Returns parsing and semantic validation results.
  */
-export declare function validateMf2(message: string): Mf2ValidateResult;
+export declare function validateMf2(message: string): Mf2ValidateResult
 
 /** Returns the version of ox_content_napi. */
-export declare function version(): string;
+export declare function version(): string

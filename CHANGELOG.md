@@ -1,5 +1,115 @@
 # Changelog
 
+## [2.9.0] - 2026-05-16
+
+### Performance
+
+- reduce search query allocations (#97)
+
+### Refactoring
+
+- move docs nav generation to Rust (#96)
+- move search runtime generation to Rust (#95)
+- move SSG routing helpers to Rust (#94)
+- move SSG asset externalization to Rust (#93)
+- move docs normalization to Rust (#92)
+- move i18n runtime generation to Rust (#90)
+
+## [2.8.0] - 2026-05-16
+
+### Features
+
+- add Intl localization helpers (#87)
+- add runtime path helpers (#88)
+
+### Bug Fixes
+
+- harden embed inputs (#89)
+
+## [2.7.0] - 2026-05-16
+
+### Features
+
+- support sidebar config (#86)
+- support custom social links (#85)
+- support git last updated (#84)
+- render inline toc directive (#83)
+- render toc outline in ssg theme (#82)
+- add heading anchor ids (#80)
+
+### Bug Fixes
+
+- render inline raw html (#79)
+- terminate html blocks on blank lines (#78)
+- apply base to markdown paths (#77)
+- pin deploy workflow actions (#76)
+- pin benchmark workflow actions (#75)
+- pin ci workflow actions (#74)
+- harden publish workflow (#73)
+- parse napi frontmatter with yaml (#72)
+- report benchmark time and base speed (#71)
+- harden renderer urls and workflows (#70)
+
+## [2.6.0] - 2026-05-16
+
+### Features
+
+- use ox_jsdoc for docs generation (#69)
+- add pull request benchmark comments (#64)
+
+## [2.5.0] - 2026-05-07
+
+### Performance
+
+- speed up markdown render benchmark (#55)
+
+### Documentation
+
+- publish md4x benchmark results (#54)
+
+## [2.4.0] - 2026-04-23
+
+### Features
+
+- unify ox content lsp and i18n tooling (#51)
+- configurable markdown linting (#49)
+- wasm (#46)
+
+### Bug Fixes
+
+- publish wasm package via npm (#48)
+- publish wasm package via npm (#47)
+
+## [2.3.0] - 2026-04-22
+
+### Features
+
+- wasm (#46)
+- generated docs UX and scoped search (#44)
+- code highlighting (#42)
+
+### Bug Fixes
+
+- text autosizing
+- ci
+
+## [2.2.0] - 2026-04-22
+
+### Bug Fixes
+
+- text autosizing
+
+## [2.1.0] - 2026-04-22
+
+## [2.0.0] - 2026-04-22
+
+## [1.1.0] - 2026-04-21
+
+### Features
+
+- generated docs UX and scoped search (#44)
+- code highlighting (#42)
+
 ## [1.0.0-alpha.0] - 2026-03-12
 
 ### Performance

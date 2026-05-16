@@ -81,6 +81,7 @@ function resolveOptions(options: OxContentOptions): ResolvedOptions {
     strikethrough: options.strikethrough ?? true,
     highlight: options.highlight ?? false,
     highlightTheme: options.highlightTheme ?? "github-dark",
+    codeAnnotations: resolveCodeAnnotationsOptions(options.codeAnnotations),
     mermaid: options.mermaid ?? false,
     frontmatter: options.frontmatter ?? true,
     toc: options.toc ?? true,
@@ -103,6 +104,29 @@ function resolveOptions(options: OxContentOptions): ResolvedOptions {
       rehype: options.plugin?.rehype ?? [],
     },
     docs: resolveDocsConfig(options.docs),
+  };
+}
+
+function resolveCodeAnnotationsOptions(
+  options: OxContentOptions["codeAnnotations"],
+): ResolvedOptions["codeAnnotations"] {
+  if (!options) {
+    return {
+      enabled: false,
+      metaKey: "annotate",
+    };
+  }
+
+  if (options === true) {
+    return {
+      enabled: true,
+      metaKey: "annotate",
+    };
+  }
+
+  return {
+    enabled: true,
+    metaKey: options.metaKey ?? "annotate",
   };
 }
 

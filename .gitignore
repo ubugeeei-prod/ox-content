@@ -1,5 +1,6 @@
 # Rust
 /target
+**/target/
 **/*.rs.bk
 Cargo.lock
 
@@ -16,6 +17,7 @@ Thumbs.db
 
 # Node.js
 node_modules/
+.pnpm-store/
 npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
@@ -43,7 +45,7 @@ crates/ox_content_wasm/pkg/
 
 # Documentation
 /docs/api
-/docs/content/api/.ox-content-docs-manifest.json
+**/.ox-content-docs-manifest.json
 
 # Environment
 .env

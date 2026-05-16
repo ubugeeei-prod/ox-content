@@ -51,56 +51,411 @@
 
 import * as fs from "fs";
 import * as path from "path";
-import type { ResolvedDocsOptions, ExtractedDocs, DocEntry, ParamDoc } from "./types";
+import type {
+  ResolvedDocsOptions,
+  ExtractedDocs,
+  DocEntry,
+  ParamDoc,
+  GeneratedDocsData,
+  DocsSummary,
+} from "./types";
 import { generateNavMetadata, generateNavCode } from "./nav-generator";
+import { importNapiModule } from "./napi";
 
 const DOCS_MANIFEST_FILE = ".ox-content-docs-manifest.json";
-/**
- * Regex pattern for matching JSDoc comment blocks.
- *
- * Matches block comments that start at the beginning of a line
- * (with optional leading whitespace). This pattern avoids false matches
- * with block comments inside strings like glob patterns.
- *
- * @internal
- */
-const JSDOC_BLOCK = /^[ \t]*\/\*\*\s*([\s\S]*?)\s*\*\//gm;
+const DOCS_DATA_FILE = "docs.json";
+const DOC_KIND_ORDER: DocEntry["kind"][] = [
+  "function",
+  "class",
+  "interface",
+  "type",
+  "variable",
+  "module",
+];
+const DOC_KIND_PLURAL: Record<DocEntry["kind"], string> = {
+  function: "functions",
+  class: "classes",
+  interface: "interfaces",
+  type: "types",
+  variable: "variables",
+  module: "modules",
+};
+const DEFAULT_DOCS_INCLUDE = [
+  "**/*.ts",
+  "**/*.tsx",
+  "**/*.js",
+  "**/*.jsx",
+  "**/*.mts",
+  "**/*.mjs",
+  "**/*.cts",
+  "**/*.cjs",
+];
 
-/**
- * Regex pattern for matching function declarations.
- * Matches: `function name`, `export function name`, `async function name`
- * @internal
- */
-const _FUNCTION_DECL = /(?:export\s+)?(?:async\s+)?function\s+(\w+)/;
+function escapeHtml(str: string): string {
+  return str
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;")
+    .replace(/'/g, "&#39;");
+}
 
-/**
- * Regex pattern for matching const arrow/async functions.
- * Matches: `const name = () => {}`, `const name = async () => {}`
- * @internal
- */
-const _CONST_FUNC = /(?:export\s+)?const\s+(\w+)\s*=\s*(?:async\s*)?\(/;
+function entryAnchor(name: string): string {
+  return name.toLowerCase();
+}
 
-/**
- * Regex pattern for matching class declarations.
- * Matches: `class Name`, `export class Name`
- * @internal
- */
-const _CLASS_DECL = /(?:export\s+)?class\s+(\w+)/;
+function cleanSummaryText(text: string | undefined, maxLength: number = 120): string {
+  if (!text) {
+    return "";
+  }
 
-/**
- * Regex pattern for matching interface declarations.
- * Matches: `interface Name`, `export interface Name`
- * @internal
- */
-const _INTERFACE_DECL = /(?:export\s+)?interface\s+(\w+)/;
+  const collapsed = text
+    .replace(/\[([^\]]+)\]\([^)]+\)/g, "$1")
+    .replace(/\[([^\]]+)\]/g, "$1")
+    .replace(/\s+/g, " ")
+    .trim();
+  if (collapsed.length <= maxLength) {
+    return collapsed;
+  }
 
-/**
- * Regex pattern for matching type alias declarations.
- * Matches: `type Name = ...`, `export type Name = ...`
- * @internal
- */
-const _TYPE_DECL = /(?:export\s+)?type\s+(\w+)/;
+  return `${collapsed.slice(0, maxLength - 1).trimEnd()}…`;
+}
 
+function renderInlineHtml(text: string): string {
+  let html = "";
+  let lastIndex = 0;
+  const tokenPattern =
+    /`([^`]+)`|\[([^\]]+)\]\(([^)]+)\)|\*\*([^*]+)\*\*|__([^_]+)__|\*([^*]+)\*|_([^_]+)_/g;
+  let match: RegExpExecArray | null;
+
+  while ((match = tokenPattern.exec(text)) !== null) {
+    html += escapeHtml(text.slice(lastIndex, match.index));
+
+    if (match[1]) {
+      html += `<code>${escapeHtml(match[1])}</code>`;
+    } else if (match[2] && match[3]) {
+      html += `<a href="${escapeHtml(match[3])}">${renderInlineHtml(match[2])}</a>`;
+    } else if (match[4] || match[5]) {
+      const strongText = match[4] ?? match[5] ?? "";
+      html += `<strong>${renderInlineHtml(strongText)}</strong>`;
+    } else if (match[6] || match[7]) {
+      const emphasisText = match[6] ?? match[7] ?? "";
+      html += `<em>${renderInlineHtml(emphasisText)}</em>`;
+    }
+
+    lastIndex = match.index + match[0].length;
+  }
+
+  html += escapeHtml(text.slice(lastIndex));
+  return html.replace(/\n/g, "<br>");
+}
+
+function isFenceStart(line: string): RegExpExecArray | null {
+  return /^```([\w-]+)?\s*$/.exec(line.trim());
+}
+
+function isHeading(line: string): RegExpExecArray | null {
+  return /^(#{1,6})\s+(.*)$/.exec(line.trim());
+}
+
+function isOrderedListItem(line: string): RegExpExecArray | null {
+  return /^\d+\.\s+(.*)$/.exec(line.trim());
+}
+
+function isUnorderedListItem(line: string): RegExpExecArray | null {
+  return /^[-*+]\s+(.*)$/.exec(line.trim());
+}
+
+function isMarkdownBlockStart(line: string): boolean {
+  return Boolean(
+    isFenceStart(line) || isHeading(line) || isOrderedListItem(line) || isUnorderedListItem(line),
+  );
+}
+
+function renderMarkdownBlocksHtml(text: string): string {
+  const lines = text.split(/\r?\n/);
+  const blocks: string[] = [];
+  let index = 0;
+
+  while (index < lines.length) {
+    const line = lines[index];
+    const trimmed = line.trim();
+
+    if (!trimmed) {
+      index++;
+      continue;
+    }
+
+    const fenceMatch = isFenceStart(line);
+    if (fenceMatch) {
+      const language = fenceMatch[1] || "text";
+      const codeLines: string[] = [];
+      index++;
+
+      while (index < lines.length && !lines[index].trim().startsWith("```")) {
+        codeLines.push(lines[index]);
+        index++;
+      }
+
+      if (index < lines.length) {
+        index++;
+      }
+
+      blocks.push(renderCodeBlockHtml(codeLines.join("\n"), language));
+      continue;
+    }
+
+    const headingMatch = isHeading(line);
+    if (headingMatch) {
+      const level = Math.min(headingMatch[1].length, 6);
+      blocks.push(`<h${level}>${renderInlineHtml(headingMatch[2].trim())}</h${level}>`);
+      index++;
+      continue;
+    }
+
+    const orderedMatch = isOrderedListItem(line);
+    if (orderedMatch) {
+      const items: string[] = [];
+
+      while (index < lines.length) {
+        const currentLine = lines[index];
+        const currentMatch = isOrderedListItem(currentLine);
+        if (!currentMatch) {
+          break;
+        }
+
+        const itemLines = [currentMatch[1].trim()];
+        index++;
+
+        while (index < lines.length) {
+          const continuation = lines[index];
+          const continuationTrimmed = continuation.trim();
+
+          if (
+            !continuationTrimmed ||
+            isMarkdownBlockStart(continuation) ||
+            /^ {0,1}\d+\.\s+/.test(continuationTrimmed)
+          ) {
+            break;
+          }
+
+          itemLines.push(continuationTrimmed);
+          index++;
+        }
+
+        items.push(`<li>${renderInlineHtml(itemLines.join(" "))}</li>`);
+
+        if (index < lines.length && !lines[index].trim()) {
+          break;
+        }
+      }
+
+      blocks.push(`<ol>\n${items.join("\n")}\n</ol>`);
+      continue;
+    }
+
+    const unorderedMatch = isUnorderedListItem(line);
+    if (unorderedMatch) {
+      const items: string[] = [];
+
+      while (index < lines.length) {
+        const currentLine = lines[index];
+        const currentMatch = isUnorderedListItem(currentLine);
+        if (!currentMatch) {
+          break;
+        }
+
+        const itemLines = [currentMatch[1].trim()];
+        index++;
+
+        while (index < lines.length) {
+          const continuation = lines[index];
+          const continuationTrimmed = continuation.trim();
+
+          if (
+            !continuationTrimmed ||
+            isMarkdownBlockStart(continuation) ||
+            /^[-*+]\s+/.test(continuationTrimmed)
+          ) {
+            break;
+          }
+
+          itemLines.push(continuationTrimmed);
+          index++;
+        }
+
+        items.push(`<li>${renderInlineHtml(itemLines.join(" "))}</li>`);
+
+        if (index < lines.length && !lines[index].trim()) {
+          break;
+        }
+      }
+
+      blocks.push(`<ul>\n${items.join("\n")}\n</ul>`);
+      continue;
+    }
+
+    const paragraphLines = [trimmed];
+    index++;
+
+    while (index < lines.length) {
+      const nextLine = lines[index];
+      const nextTrimmed = nextLine.trim();
+
+      if (!nextTrimmed || isMarkdownBlockStart(nextLine)) {
+        break;
+      }
+
+      paragraphLines.push(nextTrimmed);
+      index++;
+    }
+
+    blocks.push(`<p>${renderInlineHtml(paragraphLines.join(" "))}</p>`);
+  }
+
+  return `<div class="ox-api-entry__prose">\n${blocks.join("\n")}\n</div>`;
+}
+
+function renderCodeBlockHtml(code: string, language: string = "typescript"): string {
+  return `<pre><code class="language-${language}">${escapeHtml(code)}</code></pre>`;
+}
+
+function renderHighlightedInlineCodeHtml(
+  code: string,
+  className: string,
+  language: string = "typescript",
+): string {
+  return `<code class="${escapeHtml(className)} language-${language}">${escapeHtml(code)}</code>`;
+}
+
+function renderDetailsControlsHtml(targetSelector: ".ox-api-entry" | ".ox-api-module"): string {
+  return `<div class="ox-api-controls" data-ox-api-target="${targetSelector}" role="toolbar" aria-label="Reference display controls">
+<button type="button" class="ox-api-controls__button" data-ox-api-toggle="expand">Open all</button>
+<button type="button" class="ox-api-controls__button" data-ox-api-toggle="collapse">Close all</button>
+</div>`;
+}
+
+interface EntryStats {
+  entries: number;
+  byKind: Partial<Record<DocEntry["kind"], number>>;
+  params: number;
+  returns: number;
+  examples: number;
+  deprecated: number;
+}
+
+function createEmptyEntryStats(): EntryStats {
+  return {
+    entries: 0,
+    byKind: {},
+    params: 0,
+    returns: 0,
+    examples: 0,
+    deprecated: 0,
+  };
+}
+
+function summarizeEntries(entries: DocEntry[]): EntryStats {
+  const stats = createEmptyEntryStats();
+
+  for (const entry of entries) {
+    stats.entries++;
+    stats.byKind[entry.kind] = (stats.byKind[entry.kind] ?? 0) + 1;
+    stats.params += entry.params?.length ?? 0;
+    stats.returns += entry.returns ? 1 : 0;
+    stats.examples += entry.examples?.length ?? 0;
+    stats.deprecated += entry.tags?.deprecated !== undefined ? 1 : 0;
+  }
+
+  return stats;
+}
+
+function buildDocsSummary(docs: ExtractedDocs[]): DocsSummary {
+  const stats = summarizeEntries(docs.flatMap((doc) => doc.entries));
+  const byKind: Record<string, number> = {};
+
+  for (const kind of DOC_KIND_ORDER) {
+    const count = stats.byKind[kind];
+    if (count) {
+      byKind[kind] = count;
+    }
+  }
+
+  return {
+    modules: docs.length,
+    entries: stats.entries,
+    byKind,
+    params: stats.params,
+    returns: stats.returns,
+    examples: stats.examples,
+    deprecated: stats.deprecated,
+  };
+}
+
+function renderStatsHtml(stats: EntryStats, moduleCount?: number): string {
+  const items: { label: string; value: number; tone?: "warning" }[] = [];
+
+  if (moduleCount !== undefined) {
+    items.push({ label: "modules", value: moduleCount });
+  }
+
+  items.push({ label: "symbols", value: stats.entries });
+
+  for (const kind of DOC_KIND_ORDER) {
+    const count = stats.byKind[kind];
+    if (count) {
+      items.push({ label: DOC_KIND_PLURAL[kind], value: count });
+    }
+  }
+
+  if (stats.params) {
+    items.push({ label: "parameters", value: stats.params });
+  }
+  if (stats.returns) {
+    items.push({ label: "returns", value: stats.returns });
+  }
+  if (stats.examples) {
+    items.push({ label: "examples", value: stats.examples });
+  }
+  if (stats.deprecated) {
+    items.push({ label: "deprecated", value: stats.deprecated, tone: "warning" });
+  }
+
+  const renderedItems = items
+    .map(
+      (item) => `<span class="ox-api-stat${item.tone ? ` ox-api-stat--${item.tone}` : ""}">
+  <strong>${item.value}</strong>
+  <span>${escapeHtml(item.label)}</span>
+</span>`,
+    )
+    .join("\n");
+
+  return `<div class="ox-api-stats" aria-label="API reference summary">
+${renderedItems}
+</div>`;
+}
+
+function normalizeDocFilePath(filePath: string): string {
+  const normalized = filePath.replace(/\\/g, "/");
+  const match = normalized.match(/(?:^|\/)((?:npm|packages|crates|src)\/.+)$/);
+  return match?.[1] ?? normalized.replace(/^\/+/, "");
+}
+
+function buildDocsData(docs: ExtractedDocs[]): GeneratedDocsData {
+  return {
+    version: 1,
+    generatedAt: new Date().toISOString(),
+    summary: buildDocsSummary(docs),
+    modules: docs.map((doc) => ({
+      ...doc,
+      file: normalizeDocFilePath(doc.file),
+      entries: doc.entries.map((entry) => ({
+        ...entry,
+        file: normalizeDocFilePath(entry.file),
+      })),
+    })),
+  };
+}
 /**
  * Extracts JSDoc documentation from source files in specified directories.
  *
@@ -112,7 +467,7 @@ const _TYPE_DECL = /(?:export\s+)?type\s+(\w+)/;
  *
  * 1. **File Discovery**: Recursively walks directories, applying filters
  * 2. **File Reading**: Loads each matching file's content
- * 3. **JSDoc Extraction**: Parses JSDoc comments using regex patterns
+ * 3. **JSDoc Extraction**: Parses JSDoc comments using the native parser
  * 4. **Declaration Matching**: Pairs JSDoc comments with source declarations
  * 5. **Result Collection**: Aggregates extracted documentation by file
  *
@@ -170,14 +525,22 @@ export async function extractDocs(
   srcDirs: string[],
   options: ResolvedDocsOptions,
 ): Promise<ExtractedDocs[]> {
+  const napi = await importNapiModule();
+  const extractFileDocEntries = (
+    napi as { extractFileDocEntries?: (filePath: string, includePrivate?: boolean) => DocEntry[] }
+  ).extractFileDocEntries;
+
+  if (!extractFileDocEntries) {
+    throw new Error("[ox-content] extractFileDocEntries is not available from @ox-content/napi.");
+  }
+
   const results: ExtractedDocs[] = [];
 
   for (const srcDir of srcDirs) {
     const files = await findFiles(srcDir, options);
 
     for (const file of files) {
-      const content = await fs.promises.readFile(file, "utf-8");
-      const entries = extractFromContent(content, file, options);
+      const entries = extractFileDocEntries(file, options.private);
 
       if (entries.length > 0) {
         results.push({ file, entries });
@@ -246,343 +609,6 @@ function isExcluded(file: string, patterns: string[]): boolean {
 }
 
 /**
- * Extracts documentation entries from file content.
- */
-function extractFromContent(
-  content: string,
-  file: string,
-  options: ResolvedDocsOptions,
-): DocEntry[] {
-  const entries: DocEntry[] = [];
-
-  let match: RegExpExecArray | null;
-  JSDOC_BLOCK.lastIndex = 0;
-
-  while ((match = JSDOC_BLOCK.exec(content)) !== null) {
-    const jsdocContent = match[1];
-    const jsdocEnd = match.index + match[0].length;
-
-    const afterJsdoc = content.slice(jsdocEnd).trim();
-    const lineNumber = content.slice(0, match.index).split("\n").length;
-
-    const entry = parseJsdocBlock(jsdocContent, afterJsdoc, file, lineNumber);
-
-    if (entry && (options.private || !entry.private)) {
-      entries.push(entry);
-    }
-  }
-
-  return entries;
-}
-
-/**
- * Extracts the complete function signature for display.
- *
- * Captures the full function declaration from `export/async/function name(...): ReturnType`
- * or `export const name = (...): ReturnType => {}`, handling multi-line signatures.
- *
- * @param signature - Multi-line function declaration text
- * @returns Cleaned function signature or undefined if not found
- *
- * @internal
- */
-function extractFunctionSignature(signature: string): string | undefined {
-  // Match function declarations: export/async function, export const, etc.
-  // Capture everything from the start until the opening brace or arrow
-  const match = signature.match(
-    /(?:export\s+)?(?:async\s+)?(?:function\s+\w+|\w+\s*=\s*(?:async\s*)?\()\([^{]*?\)(?:\s*:\s*[^{;]+)?/s,
-  );
-
-  if (match) {
-    let sig = match[0].trim();
-    // Clean up excessive whitespace while preserving structure
-    // Replace multiple spaces with single space, but keep newlines in readable format
-    sig = sig
-      .split("\n")
-      .map((line) => line.trim())
-      .filter((line) => line)
-      .join("\n  ");
-    return sig;
-  }
-
-  return undefined;
-}
-
-/**
- * Extracts parameter and return types from a TypeScript function signature.
- *
- * Parses function signatures to extract:
- * - Parameter names and their type annotations
- * - Return type annotation
- *
- * Handles various function declaration styles:
- * - `function name(param: type): ReturnType`
- * - `const name = (param: type): ReturnType => {}`
- * - `export async function name(param: type): Promise<ReturnType>`
- *
- * @param signature - Multi-line function signature text
- * @param params - Array of parameter docs with names already extracted
- * @returns Object with extracted parameter types and return type
- *
- * @internal
- */
-function extractTypesFromSignature(
-  signature: string,
-  _params: ParamDoc[],
-): { paramTypes: string[]; returnType?: string } {
-  const paramTypes: string[] = [];
-
-  // Extract the parameter list from the signature
-  // Match everything between the first `(` and the closing `)` before `=>` or `{`
-  const paramListMatch = signature.match(/\(([^)]*)\)(?:\s*:\s*([^{=>]+))?/s);
-
-  if (paramListMatch && paramListMatch[1]) {
-    const paramListStr = paramListMatch[1];
-
-    // Split by comma, but be careful about nested generics
-    const paramParts = splitParameters(paramListStr);
-
-    for (const part of paramParts) {
-      const trimmed = part.trim();
-      if (!trimmed) continue;
-
-      // Extract type from "name: type" or "name: type = default"
-      // Handle nested generics properly
-      const typeMatch = /:\s*(.+?)(?:\s*=|$)/.exec(trimmed);
-      if (typeMatch) {
-        let typeStr = typeMatch[1].trim();
-        // Remove trailing equals and everything after it (default value)
-        if (typeStr.includes("=")) {
-          typeStr = typeStr.split("=")[0].trim();
-        }
-        paramTypes.push(typeStr);
-      }
-    }
-  }
-
-  // Extract return type
-  let returnType: string | undefined;
-
-  // Look for return type annotation `: Type` or `: Promise<Type>`
-  // This comes after the closing parenthesis
-  // Need to handle nested angle brackets in generics
-  const returnTypeMatch = signature.match(/\)\s*:\s*(.+?)(?={|$)/);
-  if (returnTypeMatch) {
-    returnType = returnTypeMatch[1].trim();
-  }
-
-  return {
-    paramTypes,
-    returnType,
-  };
-}
-
-/**
- * Splits function parameters while respecting nested angle brackets (generics).
- *
- * Handles cases like:
- * - `a: string, b: number` → `["a: string", "b: number"]`
- * - `a: Promise<string>, b: Record<string, any>` → `["a: Promise<string>", "b: Record<string, any>"]`
- *
- * @param paramListStr - String containing all parameters
- * @returns Array of individual parameter strings
- *
- * @internal
- */
-function splitParameters(paramListStr: string): string[] {
-  const parts: string[] = [];
-  let current = "";
-  let depth = 0; // Track nested angle brackets
-
-  for (const char of paramListStr) {
-    if (char === "<") {
-      depth++;
-      current += char;
-    } else if (char === ">") {
-      depth--;
-      current += char;
-    } else if (char === "," && depth === 0) {
-      parts.push(current);
-      current = "";
-    } else {
-      current += char;
-    }
-  }
-
-  if (current) {
-    parts.push(current);
-  }
-
-  return parts;
-}
-
-/**
- * Parses a JSDoc block and the following declaration.
- * Only matches if the declaration is immediately after the JSDoc (with only whitespace/keywords between).
- */
-function parseJsdocBlock(
-  jsdoc: string,
-  declaration: string,
-  file: string,
-  line: number,
-): DocEntry | null {
-  const params: ParamDoc[] = [];
-  const examples: string[] = [];
-  const tags: Record<string, string> = {};
-  let description = "";
-  let returns: { type: string; description: string } | undefined;
-  let isPrivate = false;
-
-  // Split lines and remove JSDoc markers but preserve indentation for code examples
-  const rawLines = jsdoc.split("\n").map((l) => l.replace(/^\s*\*\s?/, ""));
-  const cleanedLines = rawLines.map((l) => l.trim()).filter((l) => l);
-
-  let currentExample = "";
-  let inExample = false;
-  let rawLineIndex = 0;
-
-  for (const lineText of cleanedLines) {
-    // Find the corresponding raw line to get original indentation for examples
-    while (rawLineIndex < rawLines.length && rawLines[rawLineIndex].trim() !== lineText) {
-      rawLineIndex++;
-    }
-    const rawLine = rawLineIndex < rawLines.length ? rawLines[rawLineIndex] : lineText;
-    rawLineIndex++;
-
-    if (lineText.startsWith("@")) {
-      if (inExample) {
-        examples.push(currentExample.trim());
-        currentExample = "";
-        inExample = false;
-      }
-
-      const tagMatch = /@(\w+)\s*(?:\{([^}]*)\})?(.*)/.exec(lineText);
-      if (tagMatch) {
-        const [, tagName, tagType, tagRest] = tagMatch;
-
-        switch (tagName) {
-          case "param":
-            const paramMatch = /(\w+)\s*-?\s*(.*)/.exec(tagRest.trim());
-            if (paramMatch) {
-              params.push({
-                name: paramMatch[1],
-                type: tagType || "unknown",
-                description: paramMatch[2],
-              });
-            }
-            break;
-          case "returns":
-          case "return":
-            returns = {
-              type: tagType || "unknown",
-              description: tagRest.trim(),
-            };
-            break;
-          case "example":
-            inExample = true;
-            break;
-          case "private":
-            isPrivate = true;
-            break;
-          default:
-            tags[tagName] = tagRest.trim();
-        }
-      }
-    } else if (inExample) {
-      // Use raw line to preserve indentation in code examples
-      currentExample += rawLine + "\n";
-    } else if (!description) {
-      description = lineText;
-    } else {
-      description += "\n" + lineText;
-    }
-  }
-
-  if (inExample && currentExample) {
-    examples.push(currentExample.trim());
-  }
-
-  // Only look at the first few lines after the JSDoc to find the declaration
-  // This prevents module-level JSDoc from matching distant declarations
-  const firstFewLines = declaration.split("\n").slice(0, 5).join("\n");
-
-  let name = "";
-  let kind: DocEntry["kind"] = "function";
-
-  // Use anchored patterns to match at the start (after optional whitespace/keywords)
-  const ANCHORED_FUNCTION = /^(?:export\s+)?(?:async\s+)?function\s+(\w+)/;
-  const ANCHORED_CONST_FUNC = /^(?:export\s+)?const\s+(\w+)\s*=\s*(?:async\s*)?\(/;
-  const ANCHORED_CLASS = /^(?:export\s+)?class\s+(\w+)/;
-  const ANCHORED_INTERFACE = /^(?:export\s+)?interface\s+(\w+)/;
-  const ANCHORED_TYPE = /^(?:export\s+)?type\s+(\w+)/;
-
-  let declMatch: RegExpExecArray | null;
-
-  if ((declMatch = ANCHORED_FUNCTION.exec(firstFewLines))) {
-    name = declMatch[1];
-    kind = "function";
-  } else if ((declMatch = ANCHORED_CONST_FUNC.exec(firstFewLines))) {
-    name = declMatch[1];
-    kind = "function";
-  } else if ((declMatch = ANCHORED_CLASS.exec(firstFewLines))) {
-    name = declMatch[1];
-    kind = "class";
-  } else if ((declMatch = ANCHORED_INTERFACE.exec(firstFewLines))) {
-    name = declMatch[1];
-    kind = "interface";
-  } else if ((declMatch = ANCHORED_TYPE.exec(firstFewLines))) {
-    name = declMatch[1];
-    kind = "type";
-  }
-
-  if (!name) return null;
-
-  // Extract full signature and types from function signature if needed
-  let signature: string | undefined;
-  if (kind === "function") {
-    const signatureTypes = extractTypesFromSignature(firstFewLines, params);
-
-    // Update params with extracted types if JSDoc types were missing
-    if (signatureTypes.paramTypes.length > 0) {
-      for (let i = 0; i < params.length && i < signatureTypes.paramTypes.length; i++) {
-        if (params[i].type === "unknown") {
-          params[i].type = signatureTypes.paramTypes[i];
-        }
-      }
-    }
-
-    // Update return type if JSDoc return type was missing
-    if (signatureTypes.returnType && (!returns || returns.type === "unknown")) {
-      if (returns) {
-        returns.type = signatureTypes.returnType;
-      } else {
-        returns = {
-          type: signatureTypes.returnType,
-          description: "",
-        };
-      }
-    }
-
-    // Extract the complete function signature
-    signature = extractFunctionSignature(firstFewLines);
-  }
-
-  return {
-    name,
-    kind,
-    description,
-    params: params.length > 0 ? params : undefined,
-    returns,
-    examples: examples.length > 0 ? examples : undefined,
-    tags: Object.keys(tags).length > 0 ? tags : undefined,
-    private: isPrivate,
-    file,
-    line,
-    signature,
-  };
-}
-
-/**
  * Generates Markdown documentation from extracted docs.
  */
 export function generateMarkdown(
@@ -590,12 +616,13 @@ export function generateMarkdown(
   options: ResolvedDocsOptions,
 ): Record<string, string> {
   const result: Record<string, string> = {};
-  const symbolMap = buildSymbolMap(docs);
+  const sortedDocs = sortExtractedDocs(docs);
+  const symbolMap = buildSymbolMap(sortedDocs);
 
   if (options.groupBy === "file") {
     const docToFile = new Map<ExtractedDocs, string>();
 
-    for (const doc of docs) {
+    for (const doc of sortedDocs) {
       let fileName = path.basename(doc.file, path.extname(doc.file));
       // Avoid conflict with the main index.md
       if (fileName === "index") {
@@ -607,11 +634,11 @@ export function generateMarkdown(
       result[`${fileName}.md`] = markdown;
     }
 
-    result["index.md"] = generateIndex(docs, docToFile);
+    result["index.md"] = generateIndex(sortedDocs, docToFile);
   } else {
     const byKind = new Map<string, DocEntry[]>();
 
-    for (const doc of docs) {
+    for (const doc of sortedDocs) {
       for (const entry of doc.entries) {
         const existing = byKind.get(entry.kind) || [];
         existing.push(entry);
@@ -619,7 +646,11 @@ export function generateMarkdown(
       }
     }
 
-    for (const [kind, entries] of byKind) {
+    for (const entries of byKind.values()) {
+      entries.sort(compareEntriesByName);
+    }
+
+    for (const [kind, entries] of [...byKind.entries()].sort(([a], [b]) => compareStrings(a, b))) {
       result[`${kind}s.md`] = generateCategoryMarkdown(kind, entries, options, symbolMap);
     }
 
@@ -627,6 +658,26 @@ export function generateMarkdown(
   }
 
   return result;
+}
+
+function compareStrings(a: string, b: string): number {
+  return a.localeCompare(b, "en", {
+    numeric: true,
+    sensitivity: "base",
+  });
+}
+
+function compareEntriesByName(a: DocEntry, b: DocEntry): number {
+  return compareStrings(a.name, b.name);
+}
+
+function sortExtractedDocs(docs: ExtractedDocs[]): ExtractedDocs[] {
+  return [...docs]
+    .map((doc) => ({
+      ...doc,
+      entries: [...doc.entries].sort(compareEntriesByName),
+    }))
+    .sort((a, b) => compareStrings(path.basename(a.file), path.basename(b.file)));
 }
 
 function generateFileMarkdown(
@@ -646,12 +697,191 @@ function generateFileMarkdown(
     }
   }
 
-  // Pass symbol map for cross-file link resolution
+  md += `> ${doc.entries.length} documented symbol${doc.entries.length === 1 ? "" : "s"}. `;
+  md +=
+    "Read the signatures first, then expand each item for parameters, return types, and examples.\n\n";
+
+  md += renderStatsHtml(summarizeEntries(doc.entries)) + "\n\n";
+
+  md += "## Reference\n\n";
+  if (doc.entries.length > 1) {
+    md += renderDetailsControlsHtml(".ox-api-entry") + "\n\n";
+  }
+
   for (const entry of doc.entries) {
     md += generateEntryMarkdown(entry, options, currentFileName, symbolMap);
   }
 
   return md;
+}
+
+function normalizeSignature(signature: string | undefined): string | undefined {
+  if (!signature) {
+    return undefined;
+  }
+
+  return signature
+    .replace(/\s+/g, " ")
+    .replace(/^export\s+/, "")
+    .replace(/^declare\s+/, "")
+    .replace(/^abstract\s+/, "")
+    .replace(/^async\s+function\s+/, "")
+    .replace(/^function\s+/, "")
+    .replace(/^class\s+/, "")
+    .replace(/^interface\s+/, "")
+    .replace(/^type\s+/, "")
+    .trim();
+}
+
+function formatKindLabel(kind: string): string {
+  switch (kind) {
+    case "function":
+      return "fn";
+    case "interface":
+      return "interface";
+    case "class":
+      return "class";
+    case "type":
+      return "type";
+    case "const":
+      return "const";
+    default:
+      return kind;
+  }
+}
+
+function formatCountLabel(
+  count: number,
+  singular: string,
+  plural: string = `${singular}s`,
+): string {
+  return `${count} ${count === 1 ? singular : plural}`;
+}
+
+interface EntryBadge {
+  label: string;
+  tone?: "warning";
+}
+
+function getEntryBadges(entry: DocEntry): EntryBadge[] {
+  const badges: EntryBadge[] = [];
+
+  if (entry.tags?.deprecated !== undefined) {
+    badges.push({ label: "deprecated", tone: "warning" });
+  }
+  if (entry.params?.length) {
+    badges.push({ label: formatCountLabel(entry.params.length, "param") });
+  }
+  if (entry.returns) {
+    badges.push({ label: `returns ${entry.returns.type}` });
+  }
+  if (entry.examples?.length) {
+    badges.push({ label: formatCountLabel(entry.examples.length, "example") });
+  }
+  if (entry.tags?.since) {
+    badges.push({ label: `since ${entry.tags.since}` });
+  }
+  if (entry.private) {
+    badges.push({ label: "private", tone: "warning" });
+  }
+
+  return badges;
+}
+
+function renderEntryBadgesHtml(entry: DocEntry, className: string): string {
+  const badges = getEntryBadges(entry);
+  if (badges.length === 0) {
+    return "";
+  }
+
+  return `<span class="${className}">${badges
+    .map(
+      (badge) =>
+        `<span class="ox-api-badge${badge.tone ? ` ox-api-badge--${badge.tone}` : ""}">${escapeHtml(badge.label)}</span>`,
+    )
+    .join("")}</span>`;
+}
+
+function parseExampleBlock(example: string): { code: string; language: string } {
+  const trimmed = example.trim();
+  const fenceMatch = /^```([\w-]+)?[^\n]*\n([\s\S]*?)\n?```$/u.exec(trimmed);
+
+  if (!fenceMatch) {
+    return { code: trimmed, language: "ts" };
+  }
+
+  return {
+    code: fenceMatch[2],
+    language: fenceMatch[1] || "ts",
+  };
+}
+
+function renderOverviewLine(entry: DocEntry, href: string): string {
+  const signature = normalizeSignature(entry.signature);
+  const summary = cleanSummaryText(entry.description, 88);
+  const parts = [`- [\`${entry.name}\`](${href})`, `\`${entry.kind}\``];
+
+  if (signature) {
+    parts.push(`\`${signature}\``);
+  }
+
+  if (summary) {
+    parts.push(`- ${summary}`);
+  }
+
+  return `${parts.join(" ")}\n`;
+}
+
+function renderOverviewHtmlItem(entry: DocEntry, href: string): string {
+  const signature = normalizeSignature(entry.signature);
+  const summary = cleanSummaryText(entry.description, 88);
+  const meta = renderEntryBadgesHtml(entry, "ox-api-module__meta");
+  const heading = signature
+    ? `<a href="${escapeHtml(href)}" class="ox-api-module__link">${renderHighlightedInlineCodeHtml(signature, "ox-api-module__signature ox-api-module__signature--highlighted")}</a>`
+    : `<a href="${escapeHtml(href)}" class="ox-api-module__link"><code class="ox-api-module__name">${escapeHtml(entry.name)}</code></a>`;
+
+  return `<li><span class="ox-api-module__kind">${escapeHtml(formatKindLabel(entry.kind))}</span><div class="ox-api-module__item">${heading}${summary ? `<span class="ox-api-module__summary">${renderInlineHtml(summary)}</span>` : ""}${meta}</div></li>`;
+}
+
+function renderParamsListHtml(params: ParamDoc[]): string {
+  const rows = params
+    .map((param) => {
+      const flags = [
+        param.optional ? "optional" : "",
+        param.default ? `default: ${param.default}` : "",
+      ].filter(Boolean);
+      const description = [param.description, flags.join(" · ")].filter(Boolean).join(" — ");
+
+      return `<li class="ox-api-entry__param">
+  <div class="ox-api-entry__param-heading">
+    <code class="ox-api-entry__param-name">${escapeHtml(param.name)}</code>
+    <code class="ox-api-entry__param-type">${escapeHtml(param.type)}</code>
+  </div>
+  ${description ? `<p class="ox-api-entry__param-description">${renderInlineHtml(description)}</p>` : ""}
+</li>`;
+    })
+    .join("\n");
+
+  return `<div class="ox-api-entry__section ox-api-entry__section--params">
+<h4>Parameters</h4>
+<ul class="ox-api-entry__params">
+${rows}
+</ul>
+</div>`;
+}
+
+function renderTagListHtml(tags: Record<string, string>): string {
+  const items = Object.entries(tags)
+    .map(
+      ([tag, value]) =>
+        `<li><span class="ox-api-entry__tag-name">@${escapeHtml(tag)}</span><span class="ox-api-entry__tag-value">${renderInlineHtml(value)}</span></li>`,
+    )
+    .join("");
+
+  return `<div class="ox-api-entry__section ox-api-entry__section--tags">
+<h4>Tags</h4>
+<ul class="ox-api-entry__tags">${items}</ul>
+</div>`;
 }
 
 function generateEntryMarkdown(
@@ -660,68 +890,97 @@ function generateEntryMarkdown(
   currentFileName?: string,
   symbolMap?: Map<string, SymbolLocation>,
 ): string {
-  let md = `## ${entry.name}\n\n`;
+  const processedDescription =
+    entry.description && currentFileName && symbolMap
+      ? convertSymbolLinks(entry.description, currentFileName, symbolMap)
+      : entry.description;
+  const summarySignature = normalizeSignature(entry.signature);
+  const sourceHref = options?.githubUrl
+    ? generateSourceHref(entry.file, options.githubUrl, entry.line, entry.endLine)
+    : undefined;
 
-  md += `\`${entry.kind}\`\n\n`;
+  let body = "";
 
-  if (entry.description) {
-    // Convert symbol links [SymbolName] to markdown links
-    const processedDescription =
-      currentFileName && symbolMap
-        ? convertSymbolLinks(entry.description, currentFileName, symbolMap)
-        : entry.description;
-    md += `${processedDescription}\n\n`;
+  if (processedDescription) {
+    body += renderMarkdownBlocksHtml(processedDescription) + "\n";
   }
 
-  // Add source link if githubUrl is provided
-  if (options?.githubUrl) {
-    const sourceLink = generateSourceLink(entry.file, options.githubUrl, entry.line);
-    if (sourceLink) {
-      md += sourceLink + "\n\n";
-    }
+  if (entry.signature) {
+    body += `<div class="ox-api-entry__section ox-api-entry__section--signature">
+<h4>Signature</h4>
+${renderCodeBlockHtml(entry.signature, "typescript")}
+</div>\n`;
   }
 
-  // Add function signature if available
-  if (entry.signature && entry.kind === "function") {
-    md += "```typescript\n";
-    md += entry.signature + "\n";
-    md += "```\n\n";
+  if (sourceHref) {
+    body += `<p class="ox-api-entry__source"><a href="${escapeHtml(sourceHref)}">View source</a></p>\n`;
   }
 
   if (entry.params && entry.params.length > 0) {
-    md += "### Parameters\n\n";
-    md += "| Name | Type | Description |\n";
-    md += "|------|------|-------------|\n";
-    for (const param of entry.params) {
-      md += `| \`${param.name}\` | \`${param.type}\` | ${param.description} |\n`;
-    }
-    md += "\n";
+    body += renderParamsListHtml(entry.params) + "\n";
   }
 
   if (entry.returns) {
-    md += "### Returns\n\n";
-    md += `\`${entry.returns.type}\` - ${entry.returns.description}\n\n`;
+    body += `<div class="ox-api-entry__section ox-api-entry__section--returns">
+<h4>Returns</h4>
+<div class="ox-api-entry__return">
+  <code class="ox-api-entry__return-type">${escapeHtml(entry.returns.type)}</code>
+  ${entry.returns.description ? `<p class="ox-api-entry__return-description">${renderInlineHtml(entry.returns.description)}</p>` : ""}
+</div>
+</div>\n`;
   }
 
   if (entry.examples && entry.examples.length > 0) {
-    md += "### Examples\n\n";
-    for (const example of entry.examples) {
-      md += "```ts\n";
-      md += example.replace(/^```\w*\n?/, "").replace(/\n?```$/, "");
-      md += "\n```\n\n";
-    }
+    const examplesHtml = entry.examples
+      .map((example, index) => {
+        const parsed = parseExampleBlock(example);
+        return `<div class="ox-api-entry__example">
+<div class="ox-api-entry__example-heading">Example ${index + 1}</div>
+${renderCodeBlockHtml(parsed.code, parsed.language)}
+</div>`;
+      })
+      .join("\n");
+
+    body += `<div class="ox-api-entry__section ox-api-entry__section--examples">\n<h4>Examples</h4>\n${examplesHtml}\n</div>\n`;
   }
 
-  md += "---\n\n";
+  if (entry.tags && Object.keys(entry.tags).length > 0) {
+    body += renderTagListHtml(entry.tags) + "\n";
+  }
 
-  return md;
+  const summaryDescription = cleanSummaryText(processedDescription, summarySignature ? 80 : 120);
+  const summaryHeading = summarySignature
+    ? renderHighlightedInlineCodeHtml(
+        summarySignature,
+        "ox-api-entry__signature ox-api-entry__signature--highlighted",
+      )
+    : `<code class="ox-api-entry__name">${escapeHtml(entry.name)}</code>`;
+  const summaryParts = [
+    `<span class="ox-api-entry__kind">${escapeHtml(formatKindLabel(entry.kind))}</span>`,
+    `<span class="ox-api-entry__summary-main">${summaryHeading}${summaryDescription ? `<span class="ox-api-entry__description">${renderInlineHtml(summaryDescription)}</span>` : ""}${renderEntryBadgesHtml(entry, "ox-api-entry__meta")}</span>`,
+  ];
+
+  return `<details id="${entryAnchor(entry.name)}" class="ox-api-entry">
+  <summary>${summaryParts.join("")}</summary>
+  <div class="ox-api-entry__body">
+${body.trim()}
+  </div>
+</details>
+
+`;
 }
 
 function generateIndex(docs: ExtractedDocs[], docToFile?: Map<ExtractedDocs, string>): string {
   let md = "# API Documentation\n\n";
   md += "Generated by [Ox Content](https://github.com/ubugeeei/ox-content)\n\n";
+  md +=
+    "> Use search scopes like `@api transform` to limit results to the generated API reference.\n\n";
+  md += renderStatsHtml(summarizeEntries(docs.flatMap((doc) => doc.entries)), docs.length) + "\n\n";
 
   md += "## Modules\n\n";
+  if (docs.length > 1) {
+    md += renderDetailsControlsHtml(".ox-api-module") + "\n\n";
+  }
 
   for (const doc of docs) {
     const displayName = path.basename(doc.file, path.extname(doc.file));
@@ -733,14 +992,25 @@ function generateIndex(docs: ExtractedDocs[], docToFile?: Map<ExtractedDocs, str
       fileName = "index-module";
     }
 
-    md += `### [${displayName}](./${fileName}.md)\n\n`;
+    const countLabel = `${doc.entries.length} symbol${doc.entries.length === 1 ? "" : "s"}`;
+    md += `<details class="ox-api-module">
+  <summary>
+    <span class="ox-api-module__title"><a href="./${fileName}.md">${escapeHtml(displayName)}</a></span>
+    <span class="ox-api-module__count">${countLabel}</span>
+  </summary>
+  <div class="ox-api-module__body">
+    <ul class="ox-api-module__list">
+`;
 
     for (const entry of doc.entries) {
-      const desc = entry.description?.slice(0, 80) || "";
-      const ellipsis = entry.description && entry.description.length > 80 ? "..." : "";
-      md += `- \`${entry.kind}\` **${entry.name}** - ${desc}${ellipsis}\n`;
+      md += `      ${renderOverviewHtmlItem(entry, `./${fileName}.md#${entryAnchor(entry.name)}`)}\n`;
     }
-    md += "\n";
+
+    md += `    </ul>
+  </div>
+</details>
+
+`;
   }
 
   return md;
@@ -754,6 +1024,17 @@ function generateCategoryMarkdown(
 ): string {
   const categoryFileName = `${kind}s`;
   let md = `# ${kind.charAt(0).toUpperCase() + kind.slice(1)}s\n\n`;
+  md += `> ${entries.length} documented ${kind}${entries.length === 1 ? "" : "s"} collected across modules.\n\n`;
+  md += renderStatsHtml(summarizeEntries(entries)) + "\n\n";
+
+  md += "## Overview\n\n";
+  for (const entry of entries) {
+    md += renderOverviewLine(entry, `#${entryAnchor(entry.name)}`);
+  }
+  md += "\n## Reference\n\n";
+  if (entries.length > 1) {
+    md += renderDetailsControlsHtml(".ox-api-entry") + "\n\n";
+  }
 
   for (const entry of entries) {
     md += generateEntryMarkdown(entry, options, categoryFileName, symbolMap);
@@ -765,14 +1046,16 @@ function generateCategoryMarkdown(
 function generateCategoryIndex(byKind: Map<string, DocEntry[]>): string {
   let md = "# API Documentation\n\n";
   md += "Generated by [Ox Content](https://github.com/ubugeeei/ox-content)\n\n";
+  md +=
+    renderStatsHtml(summarizeEntries([...byKind.values()].flatMap((entries) => entries))) + "\n\n";
 
-  for (const [kind, entries] of byKind) {
+  for (const [kind, entries] of [...byKind.entries()].sort(([a], [b]) => compareStrings(a, b))) {
     const kindTitle = kind.charAt(0).toUpperCase() + kind.slice(1) + "s";
     md += `## [${kindTitle}](./${kind}s.md)\n\n`;
+    md += `> ${entries.length} item${entries.length === 1 ? "" : "s"}.\n\n`;
 
     for (const entry of entries) {
-      const desc = entry.description?.slice(0, 60) || "";
-      md += `- **${entry.name}** - ${desc}...\n`;
+      md += renderOverviewLine(entry, `./${kind}s.md#${entryAnchor(entry.name)}`);
     }
     md += "\n";
   }
@@ -874,6 +1157,9 @@ export async function writeDocs(
   if (extractedDocs && options?.generateNav && options.groupBy === "file") {
     generatedFiles.add("nav.ts");
   }
+  if (extractedDocs) {
+    generatedFiles.add(DOCS_DATA_FILE);
+  }
 
   const manifestPath = path.join(outDir, DOCS_MANIFEST_FILE);
   let previousFiles: string[] = [];
@@ -905,6 +1191,14 @@ export async function writeDocs(
     await fs.promises.writeFile(navFilePath, navCode, "utf-8");
   }
 
+  if (extractedDocs) {
+    await fs.promises.writeFile(
+      path.join(outDir, DOCS_DATA_FILE),
+      JSON.stringify(buildDocsData(extractedDocs), null, 2),
+      "utf-8",
+    );
+  }
+
   await fs.promises.writeFile(
     manifestPath,
     JSON.stringify([...generatedFiles].sort(), null, 2),
@@ -916,22 +1210,37 @@ export async function writeDocs(
  * Resolves docs options with defaults.
  */
 /**
- * Generates a GitHub source link for a file and optional line number.
+ * Generates a GitHub source link for a file and optional line range.
  *
  * @param filePath - Full path to the source file
  * @param githubUrl - Base GitHub repository URL
- * @param lineNumber - Optional line number to link to
- * @returns Markdown link to source code
+ * @param lineNumber - Optional start line number to link to
+ * @param endLineNumber - Optional end line number to link to
+ * @returns Absolute GitHub URL to source code
  */
-function generateSourceLink(filePath: string, githubUrl: string, lineNumber?: number): string {
-  // Convert absolute path to relative path from repository root
-  // Match common project directory patterns: npm/, packages/, crates/, src/
-  const relativePath = filePath.replace(/^.*?\/(npm|packages|crates|src)\//, "$1/");
+function generateSourceHref(
+  filePath: string,
+  githubUrl: string,
+  lineNumber?: number,
+  endLineNumber?: number,
+): string {
+  const relativePath = normalizeDocFilePath(filePath);
 
-  const fragment = lineNumber ? `#L${lineNumber}` : "";
-  const link = `${githubUrl}/blob/main/${relativePath}${fragment}`;
+  const fragment = lineNumber
+    ? endLineNumber && endLineNumber > lineNumber
+      ? `#L${lineNumber}-L${endLineNumber}`
+      : `#L${lineNumber}`
+    : "";
+  return `${githubUrl}/blob/main/${relativePath}${fragment}`;
+}
 
-  return `**[Source](${link})**`;
+function generateSourceLink(
+  filePath: string,
+  githubUrl: string,
+  lineNumber?: number,
+  endLineNumber?: number,
+): string {
+  return `**[Source](${generateSourceHref(filePath, githubUrl, lineNumber, endLineNumber)})**`;
 }
 
 export function resolveDocsOptions(
@@ -947,7 +1256,7 @@ export function resolveDocsOptions(
     enabled: opts.enabled ?? true,
     src: opts.src ?? ["./src"],
     out: opts.out ?? "docs/api",
-    include: opts.include ?? ["**/*.ts", "**/*.tsx"],
+    include: opts.include ?? DEFAULT_DOCS_INCLUDE,
     exclude: opts.exclude ?? ["**/*.test.*", "**/*.spec.*", "node_modules"],
     format: opts.format ?? "markdown",
     private: opts.private ?? false,

@@ -1,0 +1,5259 @@
+{
+  "version": 1,
+  "generatedAt": "2026-04-22T15:40:02.878Z",
+  "modules": [
+    {
+      "file": "npm/vite-plugin-ox-content/src/dev-server.ts",
+      "entries": [
+        {
+          "name": "shouldSkip",
+          "kind": "function",
+          "description": "Check if a request URL should be skipped by the dev server middleware.",
+          "params": [
+            {
+              "name": "url",
+              "type": "string",
+              "description": ""
+            }
+          ],
+          "returns": {
+            "type": "boolean",
+            "description": ""
+          },
+          "private": false,
+          "file": "npm/vite-plugin-ox-content/src/dev-server.ts",
+          "line": 60,
+          "endLine": 77,
+          "signature": "function shouldSkip(url: string): boolean"
+        },
+        {
+          "name": "resolveMarkdownFile",
+          "kind": "function",
+          "description": "Resolve a request URL to a markdown file path.\nReturns null if no matching file exists.",
+          "params": [
+            {
+              "name": "url",
+              "type": "string",
+              "description": ""
+            },
+            {
+              "name": "srcDir",
+              "type": "string",
+              "description": ""
+            }
+          ],
+          "returns": {
+            "type": "Promise",
+            "description": ""
+          },
+          "private": false,
+          "file": "npm/vite-plugin-ox-content/src/dev-server.ts",
+          "line": 83,
+          "endLine": 121,
+          "signature": "async function resolveMarkdownFile(url: string, srcDir: string): Promise<string | null>"
+        },
+        {
+          "name": "injectViteHmrClient",
+          "kind": "function",
+          "description": "Inject Vite HMR client script into the HTML.",
+          "params": [
+            {
+              "name": "html",
+              "type": "string",
+              "description": ""
+            }
+          ],
+          "returns": {
+            "type": "string",
+            "description": ""
+          },
+          "private": false,
+          "file": "npm/vite-plugin-ox-content/src/dev-server.ts",
+          "line": 126,
+          "endLine": 193,
+          "signature": "function injectViteHmrClient(html: string): string"
+        },
+        {
+          "name": "DevServerCache",
+          "kind": "interface",
+          "description": "Dev server state for caching.",
+          "private": false,
+          "file": "npm/vite-plugin-ox-content/src/dev-server.ts",
+          "line": 198,
+          "endLine": 205,
+          "signature": "interface DevServerCache"
+        },
+        {
+          "name": "createDevServerCache",
+          "kind": "function",
+          "description": "Create a dev server cache instance.",
+          "returns": {
+            "type": "DevServerCache",
+            "description": ""
+          },
+          "private": false,
+          "file": "npm/vite-plugin-ox-content/src/dev-server.ts",
+          "line": 210,
+          "endLine": 216,
+          "signature": "export function createDevServerCache(): DevServerCache"
+        },
+        {
+          "name": "invalidateNavCache",
+          "kind": "function",
+          "description": "Invalidate navigation cache (called on file add/unlink).",
+          "params": [
+            {
+              "name": "cache",
+              "type": "DevServerCache",
+              "description": ""
+            }
+          ],
+          "returns": {
+            "type": "void",
+            "description": ""
+          },
+          "private": false,
+          "file": "npm/vite-plugin-ox-content/src/dev-server.ts",
+          "line": 221,
+          "endLine": 225,
+          "signature": "export function invalidateNavCache(cache: DevServerCache): void"
+        },
+        {
+          "name": "invalidatePageCache",
+          "kind": "function",
+          "description": "Invalidate page cache for a specific file (called on file change).",
+          "params": [
+            {
+              "name": "cache",
+              "type": "DevServerCache",
+              "description": ""
+            },
+            {
+              "name": "filePath",
+              "type": "string",
+              "description": ""
+            }
+          ],
+          "returns": {
+            "type": "void",
+            "description": ""
+          },
+          "private": false,
+          "file": "npm/vite-plugin-ox-content/src/dev-server.ts",
+          "line": 230,
+          "endLine": 232,
+          "signature": "export function invalidatePageCache(cache: DevServerCache, filePath: string): void"
+        },
+        {
+          "name": "resolveSiteName",
+          "kind": "function",
+          "description": "Resolve site name from options or package.json.",
+          "params": [
+            {
+              "name": "options",
+              "type": "ResolvedOptions",
+              "description": ""
+            },
+            {
+              "name": "root",
+              "type": "string",
+              "description": ""
+            }
+          ],
+          "returns": {
+            "type": "Promise",
+            "description": ""
+          },
+          "private": false,
+          "file": "npm/vite-plugin-ox-content/src/dev-server.ts",
+          "line": 237,
+          "endLine": 253,
+          "signature": "async function resolveSiteName(options: ResolvedOptions, root: string): Promise<string>"
+        },
+        {
+          "name": "renderPage",
+          "kind": "function",
+          "description": "Render a single markdown page to full HTML.",
+          "params": [
+            {
+              "name": "filePath",
+              "type": "string",
+              "description": ""
+            },
+            {
+              "name": "options",
+              "type": "ResolvedOptions",
+              "description": ""
+            },
+            {
+              "name": "navGroups",
+              "type": "NavGroup[]",
+              "description": ""
+            },
+            {
+              "name": "siteName",
+              "type": "string",
+              "description": ""
+            },
+            {
+              "name": "base",
+              "type": "string",
+              "description": ""
+            },
+            {
+              "name": "root",
+              "type": "string",
+              "description": ""
+            }
+          ],
+          "returns": {
+            "type": "Promise",
+            "description": ""
+          },
+          "private": false,
+          "file": "npm/vite-plugin-ox-content/src/dev-server.ts",
+          "line": 258,
+          "endLine": 346,
+          "signature": "async function renderPage(filePath: string, options: ResolvedOptions, navGroups: NavGroup[], siteName: string, base: string, root: string): Promise<string>"
+        },
+        {
+          "name": "createDevServerMiddleware",
+          "kind": "function",
+          "description": "Create the dev server middleware for SSG page serving.",
+          "params": [
+            {
+              "name": "options",
+              "type": "ResolvedOptions",
+              "description": ""
+            },
+            {
+              "name": "root",
+              "type": "string",
+              "description": ""
+            },
+            {
+              "name": "cache",
+              "type": "DevServerCache",
+              "description": ""
+            }
+          ],
+          "returns": {
+            "type": "Connect.NextHandleFunction",
+            "description": ""
+          },
+          "private": false,
+          "file": "npm/vite-plugin-ox-content/src/dev-server.ts",
+          "line": 351,
+          "endLine": 412,
+          "signature": "export function createDevServerMiddleware(options: ResolvedOptions, root: string, cache: DevServerCache): Connect.NextHandleFunction"
+        }
+      ]
+    },
+    {
+      "file": "npm/vite-plugin-ox-content/src/docs.ts",
+      "entries": [
+        {
+          "name": "extractDocs",
+          "kind": "function",
+          "description": "Extracts JSDoc documentation from source files in specified directories.\nThis function recursively searches directories for source files matching\nthe include/exclude patterns, then extracts all documented items (functions,\nclasses, interfaces, types) from those files.\n## Process\n1. **File Discovery**: Recursively walks directories, applying filters\n2. **File Reading**: Loads each matching file's content\n3. **JSDoc Extraction**: Parses JSDoc comments using regex patterns\n4. **Declaration Matching**: Pairs JSDoc comments with source declarations\n5. **Result Collection**: Aggregates extracted documentation by file\n## Include/Exclude Patterns\nPatterns support:\n- `**` - Match any directory structure\n- `*` - Match any filename\n- Standard glob patterns (e.g., `**\\/*.test.ts`)\n## Performance Considerations\n- Uses filesystem I/O which can be slow for large codebases\n- Consider using more specific include patterns to reduce file scanning\n- Results are not cached; call once per build/dev session\nEach ExtractedDocs object contains file path and array of DocEntry items.",
+          "params": [
+            {
+              "name": "srcDirs",
+              "type": "string[]",
+              "description": "Array of source directory paths to scan"
+            },
+            {
+              "name": "options",
+              "type": "ResolvedDocsOptions",
+              "description": "Documentation extraction options (filters, grouping, etc.)"
+            }
+          ],
+          "returns": {
+            "type": "Promise",
+            "description": "Promise resolving to array of extracted documentation by file."
+          },
+          "examples": [
+            "```typescript\nconst docs = await extractDocs(\n  ['./packages/vite-plugin/src'],\n  {\n    enabled: true,\n    src: [],\n    out: 'docs',\n    include: ['**\\/*.ts'],\n    exclude: ['**\\/*.test.ts', '**\\/*.spec.ts'],\n    format: 'markdown',\n    private: false,\n    toc: true,\n    groupBy: 'file',\n    generateNav: true,\n  }\n);\n// Returns:\n// [\n//   {\n//     file: '/path/to/transform.ts',\n//     entries: [\n//       { name: 'transformMarkdown', kind: 'function', ... },\n//       { name: 'loadNapiBindings', kind: 'function', ... },\n//     ]\n//   },\n//   ...\n// ]\n```"
+          ],
+          "private": false,
+          "file": "npm/vite-plugin-ox-content/src/docs.ts",
+          "line": 420,
+          "endLine": 450,
+          "signature": "export async function extractDocs(srcDirs: string[], options: ResolvedDocsOptions): Promise<ExtractedDocs[]>"
+        },
+        {
+          "name": "findFiles",
+          "kind": "function",
+          "description": "Recursively finds all source files matching include/exclude patterns.",
+          "params": [
+            {
+              "name": "dir",
+              "type": "string",
+              "description": ""
+            },
+            {
+              "name": "options",
+              "type": "ResolvedDocsOptions",
+              "description": ""
+            }
+          ],
+          "returns": {
+            "type": "Promise",
+            "description": ""
+          },
+          "tags": {
+            "internal": ""
+          },
+          "private": false,
+          "file": "npm/vite-plugin-ox-content/src/docs.ts",
+          "line": 457,
+          "endLine": 485,
+          "signature": "async function findFiles(dir: string, options: ResolvedDocsOptions): Promise<string[]>"
+        },
+        {
+          "name": "generateMarkdown",
+          "kind": "function",
+          "description": "Generates Markdown documentation from extracted docs.",
+          "params": [
+            {
+              "name": "docs",
+              "type": "ExtractedDocs[]",
+              "description": ""
+            },
+            {
+              "name": "options",
+              "type": "ResolvedDocsOptions",
+              "description": ""
+            }
+          ],
+          "returns": {
+            "type": "Record",
+            "description": ""
+          },
+          "private": false,
+          "file": "npm/vite-plugin-ox-content/src/docs.ts",
+          "line": 691,
+          "endLine": 738,
+          "signature": "export function generateMarkdown(docs: ExtractedDocs[], options: ResolvedDocsOptions): Record<string, string>"
+        },
+        {
+          "name": "SymbolLocation",
+          "kind": "interface",
+          "description": "Symbol location info for cross-file linking.",
+          "private": false,
+          "file": "npm/vite-plugin-ox-content/src/docs.ts",
+          "line": 1061,
+          "endLine": 1065,
+          "signature": "interface SymbolLocation"
+        },
+        {
+          "name": "convertSymbolLinks",
+          "kind": "function",
+          "description": "Converts symbol links [SymbolName] to markdown links.\nProcesses description text to convert cargo-docs-style symbol references\n`[SymbolName]` into clickable markdown links pointing to the appropriate\ndocumentation page.\n## Examples\nInput: \"See [transformMarkdown] for usage\" (same file)\nOutput: \"See [transformMarkdown](#transformmarkdown) for usage\"\nInput: \"Uses [NavItem] interface\" (different file: types.ts)\nOutput: \"Uses [NavItem](./types.md#navitem) interface\"",
+          "params": [
+            {
+              "name": "text",
+              "type": "string",
+              "description": "Description text containing symbol references"
+            },
+            {
+              "name": "currentFileName",
+              "type": "string",
+              "description": "Current file name (without extension) for same-file detection"
+            },
+            {
+              "name": "symbolMap",
+              "type": "Map",
+              "description": "Map of symbol names to their file locations"
+            }
+          ],
+          "returns": {
+            "type": "string",
+            "description": "Text with symbol references converted to markdown links"
+          },
+          "tags": {
+            "internal": ""
+          },
+          "private": false,
+          "file": "npm/vite-plugin-ox-content/src/docs.ts",
+          "line": 1089,
+          "endLine": 1111,
+          "signature": "function convertSymbolLinks(text: string, currentFileName: string, symbolMap: Map<string, SymbolLocation>): string"
+        },
+        {
+          "name": "buildSymbolMap",
+          "kind": "function",
+          "description": "Builds a map of all symbols to their file locations.",
+          "params": [
+            {
+              "name": "docs",
+              "type": "ExtractedDocs[]",
+              "description": ""
+            }
+          ],
+          "returns": {
+            "type": "Map",
+            "description": ""
+          },
+          "private": false,
+          "file": "npm/vite-plugin-ox-content/src/docs.ts",
+          "line": 1116,
+          "endLine": 1135,
+          "signature": "function buildSymbolMap(docs: ExtractedDocs[]): Map<string, SymbolLocation>"
+        },
+        {
+          "name": "writeDocs",
+          "kind": "function",
+          "description": "Writes generated documentation to the output directory.",
+          "params": [
+            {
+              "name": "docs",
+              "type": "Record",
+              "description": ""
+            },
+            {
+              "name": "outDir",
+              "type": "string",
+              "description": ""
+            },
+            {
+              "name": "extractedDocs",
+              "type": "ExtractedDocs[]",
+              "description": "",
+              "optional": true
+            },
+            {
+              "name": "options",
+              "type": "ResolvedDocsOptions",
+              "description": "",
+              "optional": true
+            }
+          ],
+          "returns": {
+            "type": "Promise",
+            "description": ""
+          },
+          "private": false,
+          "file": "npm/vite-plugin-ox-content/src/docs.ts",
+          "line": 1140,
+          "endLine": 1199,
+          "signature": "export async function writeDocs(docs: Record<string, string>, outDir: string, extractedDocs?: ExtractedDocs[], options?: ResolvedDocsOptions): Promise<void>"
+        },
+        {
+          "name": "generateSourceHref",
+          "kind": "function",
+          "description": "Generates a GitHub source link for a file and optional line range.",
+          "params": [
+            {
+              "name": "filePath",
+              "type": "string",
+              "description": "Full path to the source file"
+            },
+            {
+              "name": "githubUrl",
+              "type": "string",
+              "description": "Base GitHub repository URL"
+            },
+            {
+              "name": "lineNumber",
+              "type": "number",
+              "description": "Optional start line number to link to",
+              "optional": true
+            },
+            {
+              "name": "endLineNumber",
+              "type": "number",
+              "description": "Optional end line number to link to",
+              "optional": true
+            }
+          ],
+          "returns": {
+            "type": "string",
+            "description": "Absolute GitHub URL to source code"
+          },
+          "private": false,
+          "file": "npm/vite-plugin-ox-content/src/docs.ts",
+          "line": 1213,
+          "endLine": 1227,
+          "signature": "function generateSourceHref(filePath: string, githubUrl: string, lineNumber?: number, endLineNumber?: number): string"
+        }
+      ]
+    },
+    {
+      "file": "npm/vite-plugin-ox-content/src/environment.ts",
+      "entries": [
+        {
+          "name": "createMarkdownEnvironment",
+          "kind": "function",
+          "description": "Creates the Markdown processing environment configuration.\nThis environment is used for:\n- Server-side rendering of Markdown files\n- Static site generation\n- Pre-rendering at build time",
+          "params": [
+            {
+              "name": "options",
+              "type": "ResolvedOptions",
+              "description": ""
+            }
+          ],
+          "returns": {
+            "type": "EnvironmentOptions",
+            "description": ""
+          },
+          "examples": [
+            "```ts\n// In your vite.config.ts\nexport default defineConfig({\n  environments: {\n    markdown: createMarkdownEnvironment({\n      srcDir: 'content',\n      gfm: true,\n    }),\n  },\n});\n```"
+          ],
+          "private": false,
+          "file": "npm/vite-plugin-ox-content/src/environment.ts",
+          "line": 32,
+          "endLine": 79,
+          "signature": "export function createMarkdownEnvironment(options: ResolvedOptions): EnvironmentOptions"
+        },
+        {
+          "name": "EnvironmentTransformContext",
+          "kind": "interface",
+          "description": "Environment-specific module transformer.\nThis is called during the transform phase to process\nMarkdown files within the environment context.",
+          "private": false,
+          "file": "npm/vite-plugin-ox-content/src/environment.ts",
+          "line": 87,
+          "endLine": 107,
+          "signature": "export interface EnvironmentTransformContext"
+        },
+        {
+          "name": "createTransformOptions",
+          "kind": "function",
+          "description": "Creates environment-aware transform options.",
+          "params": [
+            {
+              "name": "ctx",
+              "type": "EnvironmentTransformContext",
+              "description": ""
+            },
+            {
+              "name": "options",
+              "type": "ResolvedOptions",
+              "description": ""
+            }
+          ],
+          "returns": {
+            "type": "ResolvedOptions",
+            "description": ""
+          },
+          "private": false,
+          "file": "npm/vite-plugin-ox-content/src/environment.ts",
+          "line": 112,
+          "endLine": 122,
+          "signature": "export function createTransformOptions(ctx: EnvironmentTransformContext, options: ResolvedOptions): ResolvedOptions"
+        },
+        {
+          "name": "prerender",
+          "kind": "function",
+          "description": "Runs pre-render for SSG.\nThis function is called during build to pre-render all Markdown files.",
+          "params": [
+            {
+              "name": "files",
+              "type": "string[]",
+              "description": ""
+            },
+            {
+              "name": "_options",
+              "type": "ResolvedOptions",
+              "description": ""
+            }
+          ],
+          "returns": {
+            "type": "Promise",
+            "description": ""
+          },
+          "private": false,
+          "file": "npm/vite-plugin-ox-content/src/environment.ts",
+          "line": 129,
+          "endLine": 142,
+          "signature": "export async function prerender(files: string[], _options: ResolvedOptions): Promise<Map<string, string>>"
+        },
+        {
+          "name": "createEnvironmentPlugins",
+          "kind": "function",
+          "description": "Environment plugin factory.\nCreates plugins specific to the Markdown environment.",
+          "params": [
+            {
+              "name": "_options",
+              "type": "ResolvedOptions",
+              "description": ""
+            }
+          ],
+          "private": false,
+          "file": "npm/vite-plugin-ox-content/src/environment.ts",
+          "line": 149,
+          "endLine": 175,
+          "signature": "export function createEnvironmentPlugins(_options: ResolvedOptions)"
+        }
+      ]
+    },
+    {
+      "file": "npm/vite-plugin-ox-content/src/highlight.ts",
+      "entries": [
+        {
+          "name": "getHighlighter",
+          "kind": "function",
+          "description": "Get or create the Shiki highlighter.",
+          "params": [
+            {
+              "name": "theme",
+              "type": "string | ThemeRegistration",
+              "description": ""
+            },
+            {
+              "name": "param",
+              "type": "unknown",
+              "description": ""
+            }
+          ],
+          "returns": {
+            "type": "Promise",
+            "description": ""
+          },
+          "private": false,
+          "file": "npm/vite-plugin-ox-content/src/highlight.ts",
+          "line": 50,
+          "endLine": 69,
+          "signature": "async function getHighlighter(theme: string | ThemeRegistration, customLangs: LanguageRegistration[] = []): Promise<Highlighter>"
+        },
+        {
+          "name": "rehypeShikiHighlight",
+          "kind": "function",
+          "description": "Rehype plugin for syntax highlighting with Shiki.",
+          "params": [
+            {
+              "name": "options",
+              "type": "{ ... }",
+              "description": ""
+            }
+          ],
+          "private": false,
+          "file": "npm/vite-plugin-ox-content/src/highlight.ts",
+          "line": 92,
+          "endLine": 208,
+          "signature": "function rehypeShikiHighlight(options: {\n  theme: string | ThemeRegistration;\n  langs?: LanguageRegistration[];\n})"
+        },
+        {
+          "name": "getTextContent",
+          "kind": "function",
+          "description": "Extract text content from a hast node.",
+          "params": [
+            {
+              "name": "node",
+              "type": "Element | Root",
+              "description": ""
+            }
+          ],
+          "returns": {
+            "type": "string",
+            "description": ""
+          },
+          "private": false,
+          "file": "npm/vite-plugin-ox-content/src/highlight.ts",
+          "line": 213,
+          "endLine": 227,
+          "signature": "function getTextContent(node: Element | Root): string"
+        },
+        {
+          "name": "highlightCode",
+          "kind": "function",
+          "description": "Apply syntax highlighting to HTML using Shiki.",
+          "params": [
+            {
+              "name": "html",
+              "type": "string",
+              "description": ""
+            },
+            {
+              "name": "param",
+              "type": "unknown",
+              "description": ""
+            },
+            {
+              "name": "param",
+              "type": "unknown",
+              "description": ""
+            }
+          ],
+          "returns": {
+            "type": "Promise",
+            "description": ""
+          },
+          "private": false,
+          "file": "npm/vite-plugin-ox-content/src/highlight.ts",
+          "line": 244,
+          "endLine": 256,
+          "signature": "export async function highlightCode(html: string, theme: string | ThemeRegistration = \"github-dark\", langs: LanguageRegistration[] = []): Promise<string>"
+        }
+      ]
+    },
+    {
+      "file": "npm/vite-plugin-ox-content/src/i18n.ts",
+      "entries": [
+        {
+          "name": "resolveI18nOptions",
+          "kind": "function",
+          "description": "Resolves i18n options with defaults.",
+          "params": [
+            {
+              "name": "options",
+              "type": "I18nOptions | false | undefined",
+              "description": ""
+            }
+          ],
+          "returns": {
+            "type": "ResolvedI18nOptions | false",
+            "description": ""
+          },
+          "private": false,
+          "file": "npm/vite-plugin-ox-content/src/i18n.ts",
+          "line": 20,
+          "endLine": 45,
+          "signature": "export function resolveI18nOptions(options: I18nOptions | false | undefined): ResolvedI18nOptions | false"
+        },
+        {
+          "name": "createI18nPlugin",
+          "kind": "function",
+          "description": "Creates the i18n sub-plugin for the Vite plugin array.",
+          "params": [
+            {
+              "name": "resolvedOptions",
+              "type": "ResolvedOptions",
+              "description": ""
+            }
+          ],
+          "returns": {
+            "type": "Plugin",
+            "description": ""
+          },
+          "private": false,
+          "file": "npm/vite-plugin-ox-content/src/i18n.ts",
+          "line": 50,
+          "endLine": 169,
+          "signature": "export function createI18nPlugin(resolvedOptions: ResolvedOptions): Plugin"
+        },
+        {
+          "name": "generateI18nModule",
+          "kind": "function",
+          "description": "Generates the virtual module for i18n configuration.",
+          "params": [
+            {
+              "name": "options",
+              "type": "ResolvedI18nOptions",
+              "description": ""
+            },
+            {
+              "name": "root",
+              "type": "string",
+              "description": ""
+            }
+          ],
+          "returns": {
+            "type": "string",
+            "description": ""
+          },
+          "private": false,
+          "file": "npm/vite-plugin-ox-content/src/i18n.ts",
+          "line": 174,
+          "endLine": 251,
+          "signature": "function generateI18nModule(options: ResolvedI18nOptions, root: string): string"
+        },
+        {
+          "name": "flattenObject",
+          "kind": "function",
+          "description": "Flattens a nested object into dot-separated keys.",
+          "params": [
+            {
+              "name": "obj",
+              "type": "Record",
+              "description": ""
+            },
+            {
+              "name": "prefix",
+              "type": "string",
+              "description": ""
+            },
+            {
+              "name": "result",
+              "type": "Record",
+              "description": ""
+            }
+          ],
+          "returns": {
+            "type": "void",
+            "description": ""
+          },
+          "private": false,
+          "file": "npm/vite-plugin-ox-content/src/i18n.ts",
+          "line": 256,
+          "endLine": 271,
+          "signature": "function flattenObject(obj: Record<string, unknown>, prefix: string, result: Record<string, string>): void"
+        },
+        {
+          "name": "loadDictionariesFallback",
+          "kind": "function",
+          "description": "Fallback dictionary loading using TS-based JSON file reading.",
+          "params": [
+            {
+              "name": "options",
+              "type": "ResolvedI18nOptions",
+              "description": ""
+            },
+            {
+              "name": "dictDir",
+              "type": "string",
+              "description": ""
+            }
+          ],
+          "returns": {
+            "type": "Record",
+            "description": ""
+          },
+          "private": false,
+          "file": "npm/vite-plugin-ox-content/src/i18n.ts",
+          "line": 276,
+          "endLine": 307,
+          "signature": "function loadDictionariesFallback(options: ResolvedI18nOptions, dictDir: string): Record<string, Record<string, string>>"
+        },
+        {
+          "name": "collectKeysFromSource",
+          "kind": "function",
+          "description": "Collects translation keys from source files using NAPI extractTranslationKeys.",
+          "params": [
+            {
+              "name": "root",
+              "type": "string",
+              "description": ""
+            },
+            {
+              "name": "extractTranslationKeys",
+              "type": "(source: string, filePath: string, functionNames?: string[]) => Array",
+              "description": ""
+            },
+            {
+              "name": "options",
+              "type": "ResolvedI18nOptions",
+              "description": ""
+            }
+          ],
+          "returns": {
+            "type": "string[]",
+            "description": ""
+          },
+          "private": false,
+          "file": "npm/vite-plugin-ox-content/src/i18n.ts",
+          "line": 312,
+          "endLine": 350,
+          "signature": "function collectKeysFromSource(root: string, extractTranslationKeys: (\n    source: string,\n    filePath: string,\n    functionNames?: string[],\n  ) => Array<{ key: string }>, options: ResolvedI18nOptions): string[]"
+        },
+        {
+          "name": "walkDir",
+          "kind": "function",
+          "description": "Recursively walks a directory, calling the callback for files matching the pattern.",
+          "params": [
+            {
+              "name": "dir",
+              "type": "string",
+              "description": ""
+            },
+            {
+              "name": "pattern",
+              "type": "RegExp",
+              "description": ""
+            },
+            {
+              "name": "callback",
+              "type": "(filePath: string) => void",
+              "description": ""
+            }
+          ],
+          "returns": {
+            "type": "void",
+            "description": ""
+          },
+          "private": false,
+          "file": "npm/vite-plugin-ox-content/src/i18n.ts",
+          "line": 355,
+          "endLine": 366,
+          "signature": "function walkDir(dir: string, pattern: RegExp, callback: (filePath: string) => void): void"
+        }
+      ]
+    },
+    {
+      "file": "npm/vite-plugin-ox-content/src/index.ts",
+      "entries": [
+        {
+          "name": "oxContent",
+          "kind": "function",
+          "description": "Creates the Ox Content Vite plugin.",
+          "params": [
+            {
+              "name": "param",
+              "type": "unknown",
+              "description": ""
+            }
+          ],
+          "returns": {
+            "type": "Plugin[]",
+            "description": ""
+          },
+          "examples": [
+            "```ts\n// vite.config.ts\nimport { defineConfig } from 'vite';\nimport { oxContent } from '@ox-content/vite-plugin';\nexport default defineConfig({\n  plugins: [\n    oxContent({\n      srcDir: 'content',\n      gfm: true,\n    }),\n  ],\n});\n```"
+          ],
+          "private": false,
+          "file": "npm/vite-plugin-ox-content/src/index.ts",
+          "line": 80,
+          "endLine": 390,
+          "signature": "export function oxContent(options: OxContentOptions = {}): Plugin[]"
+        },
+        {
+          "name": "resolveOptions",
+          "kind": "function",
+          "description": "Resolves plugin options with defaults.",
+          "params": [
+            {
+              "name": "options",
+              "type": "OxContentOptions",
+              "description": ""
+            }
+          ],
+          "returns": {
+            "type": "ResolvedOptions",
+            "description": ""
+          },
+          "private": false,
+          "file": "npm/vite-plugin-ox-content/src/index.ts",
+          "line": 395,
+          "endLine": 422,
+          "signature": "function resolveOptions(options: OxContentOptions): ResolvedOptions"
+        },
+        {
+          "name": "generateVirtualModule",
+          "kind": "function",
+          "description": "Generates virtual module content.",
+          "params": [
+            {
+              "name": "path",
+              "type": "string",
+              "description": ""
+            },
+            {
+              "name": "options",
+              "type": "ResolvedOptions",
+              "description": ""
+            }
+          ],
+          "returns": {
+            "type": "string",
+            "description": ""
+          },
+          "private": false,
+          "file": "npm/vite-plugin-ox-content/src/index.ts",
+          "line": 456,
+          "endLine": 475,
+          "signature": "function generateVirtualModule(path: string, options: ResolvedOptions): string"
+        }
+      ]
+    },
+    {
+      "file": "npm/vite-plugin-ox-content/src/island/parse.ts",
+      "entries": [
+        {
+          "name": "getAttribute",
+          "kind": "function",
+          "description": "Get element attribute value.",
+          "params": [
+            {
+              "name": "el",
+              "type": "Element",
+              "description": ""
+            },
+            {
+              "name": "name",
+              "type": "string",
+              "description": ""
+            }
+          ],
+          "returns": {
+            "type": "string | undefined",
+            "description": ""
+          },
+          "private": false,
+          "file": "npm/vite-plugin-ox-content/src/island/parse.ts",
+          "line": 30,
+          "endLine": 35,
+          "signature": "function getAttribute(el: Element, name: string): string | undefined"
+        },
+        {
+          "name": "parseProps",
+          "kind": "function",
+          "description": "Parse JSX-style props from attributes.",
+          "params": [
+            {
+              "name": "el",
+              "type": "Element",
+              "description": ""
+            }
+          ],
+          "returns": {
+            "type": "Record",
+            "description": ""
+          },
+          "private": false,
+          "file": "npm/vite-plugin-ox-content/src/island/parse.ts",
+          "line": 40,
+          "endLine": 77,
+          "signature": "function parseProps(el: Element): Record<string, unknown>"
+        },
+        {
+          "name": "findComponentElement",
+          "kind": "function",
+          "description": "Find the component element inside <Island>.",
+          "params": [
+            {
+              "name": "children",
+              "type": "unknown",
+              "description": ""
+            }
+          ],
+          "returns": {
+            "type": "Element | literal",
+            "description": ""
+          },
+          "private": false,
+          "file": "npm/vite-plugin-ox-content/src/island/parse.ts",
+          "line": 82,
+          "endLine": 92,
+          "signature": "function findComponentElement(children: Element[\"children\"]): Element | null"
+        },
+        {
+          "name": "getComponentName",
+          "kind": "function",
+          "description": "Get component name from child element.",
+          "params": [
+            {
+              "name": "el",
+              "type": "Element",
+              "description": ""
+            }
+          ],
+          "returns": {
+            "type": "string",
+            "description": ""
+          },
+          "private": false,
+          "file": "npm/vite-plugin-ox-content/src/island/parse.ts",
+          "line": 97,
+          "endLine": 105,
+          "signature": "function getComponentName(el: Element): string"
+        },
+        {
+          "name": "resetIslandCounter",
+          "kind": "function",
+          "description": "Reset island counter (for testing).",
+          "returns": {
+            "type": "void",
+            "description": ""
+          },
+          "private": false,
+          "file": "npm/vite-plugin-ox-content/src/island/parse.ts",
+          "line": 112,
+          "endLine": 114,
+          "signature": "export function resetIslandCounter(): void"
+        },
+        {
+          "name": "rehypeIslands",
+          "kind": "function",
+          "description": "Rehype plugin to transform Island components.",
+          "params": [
+            {
+              "name": "collectedIslands",
+              "type": "IslandInfo[]",
+              "description": ""
+            }
+          ],
+          "private": false,
+          "file": "npm/vite-plugin-ox-content/src/island/parse.ts",
+          "line": 119,
+          "endLine": 180,
+          "signature": "function rehypeIslands(collectedIslands: IslandInfo[])"
+        },
+        {
+          "name": "transformIslands",
+          "kind": "function",
+          "description": "Transform Island components in HTML.\nConverts:\n```html\n<Island load=\"visible\">\n<Counter initial={0} />\n</Island>\n```\nTo:\n```html\n<div id=\"ox-island-0\"\ndata-ox-island=\"Counter\"\ndata-ox-load=\"visible\"\ndata-ox-props='{\"initial\":0}'\nclass=\"ox-island\">\n<!-- fallback content -->\n</div>\n```",
+          "params": [
+            {
+              "name": "html",
+              "type": "string",
+              "description": ""
+            }
+          ],
+          "returns": {
+            "type": "Promise",
+            "description": ""
+          },
+          "private": false,
+          "file": "npm/vite-plugin-ox-content/src/island/parse.ts",
+          "line": 203,
+          "endLine": 216,
+          "signature": "export async function transformIslands(html: string): Promise<ParseIslandsResult>"
+        },
+        {
+          "name": "hasIslands",
+          "kind": "function",
+          "description": "Check if HTML contains any Island components.",
+          "params": [
+            {
+              "name": "html",
+              "type": "string",
+              "description": ""
+            }
+          ],
+          "returns": {
+            "type": "boolean",
+            "description": ""
+          },
+          "private": false,
+          "file": "npm/vite-plugin-ox-content/src/island/parse.ts",
+          "line": 221,
+          "endLine": 223,
+          "signature": "export function hasIslands(html: string): boolean"
+        },
+        {
+          "name": "extractIslandInfo",
+          "kind": "function",
+          "description": "Extract island info without transforming HTML.\nUseful for analysis/bundling purposes.",
+          "params": [
+            {
+              "name": "html",
+              "type": "string",
+              "description": ""
+            }
+          ],
+          "returns": {
+            "type": "Promise",
+            "description": ""
+          },
+          "private": false,
+          "file": "npm/vite-plugin-ox-content/src/island/parse.ts",
+          "line": 229,
+          "endLine": 232,
+          "signature": "export async function extractIslandInfo(html: string): Promise<IslandInfo[]>"
+        },
+        {
+          "name": "generateHydrationScript",
+          "kind": "function",
+          "description": "Generate client-side hydration script.\nThis is a minimal script that imports and initializes islands.",
+          "params": [
+            {
+              "name": "components",
+              "type": "string[]",
+              "description": ""
+            }
+          ],
+          "returns": {
+            "type": "string",
+            "description": ""
+          },
+          "private": false,
+          "file": "npm/vite-plugin-ox-content/src/island/parse.ts",
+          "line": 238,
+          "endLine": 269,
+          "signature": "export function generateHydrationScript(components: string[]): string"
+        }
+      ]
+    },
+    {
+      "file": "npm/vite-plugin-ox-content/src/jsx-runtime.ts",
+      "entries": [
+        {
+          "name": "escapeHtml",
+          "kind": "function",
+          "description": "Escapes HTML special characters to prevent XSS.",
+          "params": [
+            {
+              "name": "str",
+              "type": "string",
+              "description": ""
+            }
+          ],
+          "returns": {
+            "type": "string",
+            "description": ""
+          },
+          "private": false,
+          "file": "npm/vite-plugin-ox-content/src/jsx-runtime.ts",
+          "line": 78,
+          "endLine": 85,
+          "signature": "function escapeHtml(str: string): string"
+        },
+        {
+          "name": "toHtmlAttr",
+          "kind": "function",
+          "description": "Converts a camelCase attribute name to kebab-case for HTML.\nSpecial handling for data-* and aria-* attributes.",
+          "params": [
+            {
+              "name": "name",
+              "type": "string",
+              "description": ""
+            }
+          ],
+          "returns": {
+            "type": "string",
+            "description": ""
+          },
+          "private": false,
+          "file": "npm/vite-plugin-ox-content/src/jsx-runtime.ts",
+          "line": 91,
+          "endLine": 101,
+          "signature": "function toHtmlAttr(name: string): string"
+        },
+        {
+          "name": "renderAttr",
+          "kind": "function",
+          "description": "Renders an attribute value to a string.",
+          "params": [
+            {
+              "name": "name",
+              "type": "string",
+              "description": ""
+            },
+            {
+              "name": "value",
+              "type": "unknown",
+              "description": ""
+            }
+          ],
+          "returns": {
+            "type": "string",
+            "description": ""
+          },
+          "private": false,
+          "file": "npm/vite-plugin-ox-content/src/jsx-runtime.ts",
+          "line": 106,
+          "endLine": 132,
+          "signature": "function renderAttr(name: string, value: unknown): string"
+        },
+        {
+          "name": "JSXElementType",
+          "kind": "type",
+          "description": "JSX element type - either a string (intrinsic) or a function component.",
+          "private": false,
+          "file": "npm/vite-plugin-ox-content/src/jsx-runtime.ts",
+          "line": 137,
+          "endLine": 137,
+          "signature": "export type JSXElementType = string | ((props: Record<string, unknown>) => JSXNode)"
+        },
+        {
+          "name": "JSXChild",
+          "kind": "type",
+          "description": "Valid JSX child types.",
+          "private": false,
+          "file": "npm/vite-plugin-ox-content/src/jsx-runtime.ts",
+          "line": 142,
+          "endLine": 142,
+          "signature": "export type JSXChild = string | number | boolean | null | undefined | JSXNode | JSXChild[]"
+        },
+        {
+          "name": "JSXNode",
+          "kind": "interface",
+          "description": "JSX node - the result of JSX expressions.",
+          "private": false,
+          "file": "npm/vite-plugin-ox-content/src/jsx-runtime.ts",
+          "line": 147,
+          "endLine": 149,
+          "signature": "export interface JSXNode"
+        },
+        {
+          "name": "JSXProps",
+          "kind": "interface",
+          "description": "Props with children.",
+          "private": false,
+          "file": "npm/vite-plugin-ox-content/src/jsx-runtime.ts",
+          "line": 154,
+          "endLine": 157,
+          "signature": "export interface JSXProps"
+        },
+        {
+          "name": "renderChildren",
+          "kind": "function",
+          "description": "Renders children to HTML string.",
+          "params": [
+            {
+              "name": "children",
+              "type": "JSXChild",
+              "description": ""
+            }
+          ],
+          "returns": {
+            "type": "string",
+            "description": ""
+          },
+          "private": false,
+          "file": "npm/vite-plugin-ox-content/src/jsx-runtime.ts",
+          "line": 162,
+          "endLine": 188,
+          "signature": "function renderChildren(children: JSXChild): string"
+        },
+        {
+          "name": "jsx",
+          "kind": "function",
+          "description": "Creates a JSX element.\nThis is the core function called by the JSX transform.",
+          "params": [
+            {
+              "name": "type",
+              "type": "JSXElementType",
+              "description": ""
+            },
+            {
+              "name": "props",
+              "type": "JSXProps",
+              "description": ""
+            },
+            {
+              "name": "_key",
+              "type": "string",
+              "description": "",
+              "optional": true
+            }
+          ],
+          "returns": {
+            "type": "JSXNode",
+            "description": ""
+          },
+          "private": false,
+          "file": "npm/vite-plugin-ox-content/src/jsx-runtime.ts",
+          "line": 194,
+          "endLine": 229,
+          "signature": "export function jsx(type: JSXElementType, props: JSXProps, _key?: string): JSXNode"
+        },
+        {
+          "name": "jsxs",
+          "kind": "function",
+          "description": "Creates a JSX element with static children.\nCalled by the JSX transform for elements with multiple children.",
+          "params": [
+            {
+              "name": "type",
+              "type": "JSXElementType",
+              "description": ""
+            },
+            {
+              "name": "props",
+              "type": "JSXProps",
+              "description": ""
+            },
+            {
+              "name": "key",
+              "type": "string",
+              "description": "",
+              "optional": true
+            }
+          ],
+          "returns": {
+            "type": "JSXNode",
+            "description": ""
+          },
+          "private": false,
+          "file": "npm/vite-plugin-ox-content/src/jsx-runtime.ts",
+          "line": 235,
+          "endLine": 237,
+          "signature": "export function jsxs(type: JSXElementType, props: JSXProps, key?: string): JSXNode"
+        },
+        {
+          "name": "Fragment",
+          "kind": "function",
+          "description": "Fragment component - renders children without a wrapper element.",
+          "params": [
+            {
+              "name": "param",
+              "type": "{ ... }",
+              "description": ""
+            }
+          ],
+          "returns": {
+            "type": "JSXNode",
+            "description": ""
+          },
+          "private": false,
+          "file": "npm/vite-plugin-ox-content/src/jsx-runtime.ts",
+          "line": 242,
+          "endLine": 244,
+          "signature": "export function Fragment({ children }: { children?: JSXChild }): JSXNode"
+        },
+        {
+          "name": "renderToString",
+          "kind": "function",
+          "description": "Renders a JSX node to an HTML string.",
+          "params": [
+            {
+              "name": "node",
+              "type": "JSXNode",
+              "description": ""
+            }
+          ],
+          "returns": {
+            "type": "string",
+            "description": ""
+          },
+          "private": false,
+          "file": "npm/vite-plugin-ox-content/src/jsx-runtime.ts",
+          "line": 249,
+          "endLine": 251,
+          "signature": "export function renderToString(node: JSXNode): string"
+        },
+        {
+          "name": "raw",
+          "kind": "function",
+          "description": "Creates raw HTML without escaping.\nUse with caution - only for trusted content.",
+          "params": [
+            {
+              "name": "html",
+              "type": "string",
+              "description": ""
+            }
+          ],
+          "returns": {
+            "type": "JSXNode",
+            "description": ""
+          },
+          "examples": ["```tsx\n<div>{raw('<strong>Bold</strong>')}</div>\n```"],
+          "private": false,
+          "file": "npm/vite-plugin-ox-content/src/jsx-runtime.ts",
+          "line": 262,
+          "endLine": 264,
+          "signature": "export function raw(html: string): JSXNode"
+        },
+        {
+          "name": "when",
+          "kind": "function",
+          "description": "Conditionally renders content.",
+          "params": [
+            {
+              "name": "condition",
+              "type": "boolean",
+              "description": ""
+            },
+            {
+              "name": "content",
+              "type": "JSXNode",
+              "description": ""
+            }
+          ],
+          "returns": {
+            "type": "JSXNode",
+            "description": ""
+          },
+          "examples": ["```tsx\n{when(isLoggedIn, <UserMenu />)}\n```"],
+          "private": false,
+          "file": "npm/vite-plugin-ox-content/src/jsx-runtime.ts",
+          "line": 274,
+          "endLine": 276,
+          "signature": "export function when(condition: boolean, content: JSXNode): JSXNode"
+        },
+        {
+          "name": "each",
+          "kind": "function",
+          "description": "Maps over an array and renders each item.",
+          "params": [
+            {
+              "name": "items",
+              "type": "T[]",
+              "description": ""
+            },
+            {
+              "name": "render",
+              "type": "(item: T, index: number) => JSXNode",
+              "description": ""
+            }
+          ],
+          "returns": {
+            "type": "JSXNode",
+            "description": ""
+          },
+          "examples": ["```tsx\n{each(items, (item) => <li>{item.name}</li>)}\n```"],
+          "private": false,
+          "file": "npm/vite-plugin-ox-content/src/jsx-runtime.ts",
+          "line": 286,
+          "endLine": 289,
+          "signature": "export function each<T>(items: T[], render: (item: T, index: number) => JSXNode): JSXNode"
+        }
+      ]
+    },
+    {
+      "file": "npm/vite-plugin-ox-content/src/nav-generator.ts",
+      "entries": [
+        {
+          "name": "generateNavMetadata",
+          "kind": "function",
+          "description": "Generates sidebar navigation metadata from extracted documentation.\nTakes an array of extracted documentation and produces a flat navigation\nstructure suitable for sidebar menus. Items are:\n- Sorted alphabetically by display name\n- Formatted with readable titles\n- Prefixed with the specified base path\n## Naming Conventions\n- `transform.ts` → `{ title: 'Transform', path: '/api/transform' }`\n- `nav-generator.ts` → `{ title: 'Nav Generator', path: '/api/nav-generator' }`\n- `index.ts` or `index-module.ts` → `{ title: 'Overview', path: '/api/index' }`\n- `types.ts` → `{ title: 'Types', path: '/api/types' }`\n## Sorting\nItems are sorted alphabetically by display title for consistent ordering.\nSpecial item 'Overview' sorts naturally with others (O comes after most letters).\n## Path Generation\nThe generated paths are used to import corresponding Markdown files:\n- Path `/api/transform` → Import from `../api/transform.md`\n- Path `/api/index` → Import from `../api/index.md`\nUse '/api' for main API docs, '/helpers' for utilities, etc.",
+          "params": [
+            {
+              "name": "docs",
+              "type": "ExtractedDocs[]",
+              "description": "Array of extracted documentation (file + entries)"
+            },
+            {
+              "name": "basePath",
+              "type": "unknown",
+              "description": "Base path prefix for navigation URLs (default: '/api')"
+            }
+          ],
+          "returns": {
+            "type": "NavItem[]",
+            "description": "Array of navigation items ready to use or export to TypeScript"
+          },
+          "examples": [
+            "```typescript\nconst navItems = generateNavMetadata(\n  [\n    { file: 'transform.ts', entries: [...] },\n    { file: 'docs.ts', entries: [...] },\n    { file: 'types.ts', entries: [...] },\n  ],\n  '/api'\n);\n// Returns:\n// [\n//   { title: 'Docs', path: '/api/docs' },\n//   { title: 'Transform', path: '/api/transform' },\n//   { title: 'Types', path: '/api/types' },\n// ]\n```"
+          ],
+          "tags": {
+            "see": "generateNavCode For converting these items to TypeScript code"
+          },
+          "private": false,
+          "file": "npm/vite-plugin-ox-content/src/nav-generator.ts",
+          "line": 116,
+          "endLine": 128,
+          "signature": "export function generateNavMetadata(docs: ExtractedDocs[], basePath: string = \"/api\"): NavItem[]"
+        },
+        {
+          "name": "getDocDisplayName",
+          "kind": "function",
+          "description": "Gets the human-readable display name for a documentation file.\nTransforms file paths and names into proper title case:\n- Extracts base name (e.g., 'transform.ts' → 'transform')\n- Converts kebab-case to Title Case (e.g., 'nav-generator' → 'Nav Generator')\n- Converts camelCase to Title Case (e.g., 'transformMarkdown' → 'Transform Markdown')\n- Handles special cases (index → 'Overview')\n## Examples\n- `'/path/to/transform.ts'` → `'Transform'`\n- `'nav-generator.ts'` → `'Nav Generator'`\n- `'index.ts'` → `'Overview'`\n- `'index-module.ts'` → `'Overview'`\n- `'myFunction.ts'` → `'My Function'` (with camelCase handling)",
+          "params": [
+            {
+              "name": "filePath",
+              "type": "string",
+              "description": "Full or relative file path"
+            }
+          ],
+          "returns": {
+            "type": "string",
+            "description": "Formatted display name suitable for UI labels"
+          },
+          "tags": {
+            "internal": ""
+          },
+          "private": false,
+          "file": "npm/vite-plugin-ox-content/src/nav-generator.ts",
+          "line": 152,
+          "endLine": 165,
+          "signature": "function getDocDisplayName(filePath: string): string"
+        },
+        {
+          "name": "getDocFileName",
+          "kind": "function",
+          "description": "Gets the file name (without extension) for use in navigation paths.\nThis handles filename conflicts that may occur during generation:\n- Preserves most names as-is\n- Special handling for index files to maintain consistency",
+          "params": [
+            {
+              "name": "filePath",
+              "type": "string",
+              "description": "Source file path"
+            }
+          ],
+          "returns": {
+            "type": "string",
+            "description": "File name without extension, ready for URL paths"
+          },
+          "tags": {
+            "internal": ""
+          },
+          "private": false,
+          "file": "npm/vite-plugin-ox-content/src/nav-generator.ts",
+          "line": 179,
+          "endLine": 189,
+          "signature": "function getDocFileName(filePath: string): string"
+        },
+        {
+          "name": "generateNavCode",
+          "kind": "function",
+          "description": "Generates TypeScript code for navigation metadata export.\nCreates a complete, self-contained TypeScript file that:\n- Defines the NavItem interface\n- Exports navigation items as a const\n- Uses `as const` for type-safe literal types\n- Includes auto-generation notice\nThe generated code is production-ready and suitable for direct import\nin Vue, React, or vanilla TypeScript applications.\n## Generated Code Example\n```typescript\nexport interface NavItem {\ntitle: string;\npath: string;\nchildren?: NavItem[];\n}\nexport const apiNav: NavItem[] = [\n{ \"title\": \"Docs\", \"path\": \"/api/docs\" },\n{ \"title\": \"Transform\", \"path\": \"/api/transform\" },\n// ...\n] as const;\n```\n## Features\n- **Type Safety**: Includes NavItem interface definition\n- **Readonly**: Uses `as const` to ensure immutability\n- **IDE Support**: Full IntelliSense and autocomplete\n- **Self-Documenting**: Includes notice that file is auto-generated\nUse custom names for different navigation sections\nready to write to a .ts file",
+          "params": [
+            {
+              "name": "navItems",
+              "type": "NavItem[]",
+              "description": "Array of navigation items to export"
+            },
+            {
+              "name": "exportName",
+              "type": "unknown",
+              "description": "Name of the exported const (default: 'apiNav')"
+            }
+          ],
+          "returns": {
+            "type": "string",
+            "description": "Complete TypeScript source code as string,"
+          },
+          "examples": [
+            "```typescript\nconst navItems = [\n  { title: 'Home', path: '/api/index' },\n  { title: 'Transform', path: '/api/transform' },\n];\nconst code = generateNavCode(navItems, 'apiNav');\nawait fs.promises.writeFile('docs/api/nav.ts', code, 'utf-8');\n```"
+          ],
+          "tags": {
+            "see": "generateNavMetadata For generating NavItem arrays from extracted docs"
+          },
+          "private": false,
+          "file": "npm/vite-plugin-ox-content/src/nav-generator.ts",
+          "line": 246,
+          "endLine": 262,
+          "signature": "export function generateNavCode(navItems: NavItem[], exportName: string = \"apiNav\"): string"
+        }
+      ]
+    },
+    {
+      "file": "npm/vite-plugin-ox-content/src/og-image/browser.ts",
+      "entries": [
+        {
+          "name": "OgBrowserSession",
+          "kind": "interface",
+          "description": "A browser session that can render HTML pages to PNG.\nImplements AsyncDisposable for automatic cleanup via `await using`.",
+          "private": false,
+          "file": "npm/vite-plugin-ox-content/src/og-image/browser.ts",
+          "line": 17,
+          "endLine": 19,
+          "signature": "export interface OgBrowserSession extends AsyncDisposable"
+        },
+        {
+          "name": "openBrowser",
+          "kind": "function",
+          "description": "Opens a Chromium browser and returns a session for rendering OG images.\nReturns null if Playwright/Chromium is not available.\nThe session implements AsyncDisposable — use `await using` for automatic cleanup:\n```ts\nawait using session = await openBrowser();\nif (!session) return;\nconst png = await session.renderPage(html, 1200, 630);\n```",
+          "returns": {
+            "type": "Promise",
+            "description": ""
+          },
+          "private": false,
+          "file": "npm/vite-plugin-ox-content/src/og-image/browser.ts",
+          "line": 32,
+          "endLine": 75,
+          "signature": "export async function openBrowser(): Promise<OgBrowserSession | null>"
+        }
+      ]
+    },
+    {
+      "file": "npm/vite-plugin-ox-content/src/og-image/cache.ts",
+      "entries": [
+        {
+          "name": "computeCacheKey",
+          "kind": "function",
+          "description": "Computes a cache key from template + props + options.",
+          "params": [
+            {
+              "name": "templateSource",
+              "type": "string",
+              "description": ""
+            },
+            {
+              "name": "props",
+              "type": "Record",
+              "description": ""
+            },
+            {
+              "name": "width",
+              "type": "number",
+              "description": ""
+            },
+            {
+              "name": "height",
+              "type": "number",
+              "description": ""
+            }
+          ],
+          "returns": {
+            "type": "string",
+            "description": ""
+          },
+          "private": false,
+          "file": "npm/vite-plugin-ox-content/src/og-image/cache.ts",
+          "line": 15,
+          "endLine": 23,
+          "signature": "export function computeCacheKey(templateSource: string, props: Record<string, unknown>, width: number, height: number): string"
+        },
+        {
+          "name": "getCached",
+          "kind": "function",
+          "description": "Checks if a cached PNG exists for the given key.\nReturns the cached file path if found, null otherwise.",
+          "params": [
+            {
+              "name": "cacheDir",
+              "type": "string",
+              "description": ""
+            },
+            {
+              "name": "key",
+              "type": "string",
+              "description": ""
+            }
+          ],
+          "returns": {
+            "type": "Promise",
+            "description": ""
+          },
+          "private": false,
+          "file": "npm/vite-plugin-ox-content/src/og-image/cache.ts",
+          "line": 29,
+          "endLine": 36,
+          "signature": "export async function getCached(cacheDir: string, key: string): Promise<Buffer | null>"
+        },
+        {
+          "name": "writeCache",
+          "kind": "function",
+          "description": "Writes a PNG buffer to the cache.",
+          "params": [
+            {
+              "name": "cacheDir",
+              "type": "string",
+              "description": ""
+            },
+            {
+              "name": "key",
+              "type": "string",
+              "description": ""
+            },
+            {
+              "name": "png",
+              "type": "Buffer",
+              "description": ""
+            }
+          ],
+          "returns": {
+            "type": "Promise",
+            "description": ""
+          },
+          "private": false,
+          "file": "npm/vite-plugin-ox-content/src/og-image/cache.ts",
+          "line": 41,
+          "endLine": 45,
+          "signature": "export async function writeCache(cacheDir: string, key: string, png: Buffer): Promise<void>"
+        }
+      ]
+    },
+    {
+      "file": "npm/vite-plugin-ox-content/src/og-image/index.ts",
+      "entries": [
+        {
+          "name": "resolveOgImageOptions",
+          "kind": "function",
+          "description": "Resolves user-provided OG image options with defaults.",
+          "params": [
+            {
+              "name": "options",
+              "type": "OgImageOptions | undefined",
+              "description": ""
+            }
+          ],
+          "returns": {
+            "type": "ResolvedOgImageOptions",
+            "description": ""
+          },
+          "private": false,
+          "file": "npm/vite-plugin-ox-content/src/og-image/index.ts",
+          "line": 34,
+          "endLine": 43,
+          "signature": "export function resolveOgImageOptions(options: OgImageOptions | undefined): ResolvedOgImageOptions"
+        },
+        {
+          "name": "OgImagePageEntry",
+          "kind": "interface",
+          "description": "A single page entry for batch OG image generation.",
+          "private": false,
+          "file": "npm/vite-plugin-ox-content/src/og-image/index.ts",
+          "line": 48,
+          "endLine": 53,
+          "signature": "export interface OgImagePageEntry"
+        },
+        {
+          "name": "OgImageResult",
+          "kind": "interface",
+          "description": "Result of OG image generation for a single page.",
+          "private": false,
+          "file": "npm/vite-plugin-ox-content/src/og-image/index.ts",
+          "line": 58,
+          "endLine": 62,
+          "signature": "export interface OgImageResult"
+        },
+        {
+          "name": "resolveTemplate",
+          "kind": "function",
+          "description": "Resolves the template function from options.\nDispatches by file extension:\n- `.vue`  → Vue SFC (SSR via vue/server-renderer)\n- `.svelte` → Svelte SFC (SSR via svelte/server)\n- `.tsx`/`.jsx` → React Server Component (SSR via react-dom/server)\n- others → TypeScript template (direct function export)",
+          "params": [
+            {
+              "name": "options",
+              "type": "ResolvedOgImageOptions",
+              "description": ""
+            },
+            {
+              "name": "root",
+              "type": "string",
+              "description": ""
+            }
+          ],
+          "returns": {
+            "type": "Promise",
+            "description": ""
+          },
+          "private": false,
+          "file": "npm/vite-plugin-ox-content/src/og-image/index.ts",
+          "line": 73,
+          "endLine": 104,
+          "signature": "async function resolveTemplate(options: ResolvedOgImageOptions, root: string): Promise<OgImageTemplateFn>"
+        },
+        {
+          "name": "resolveTsTemplate",
+          "kind": "function",
+          "description": "Resolves a plain TypeScript template (existing behavior).",
+          "params": [
+            {
+              "name": "templatePath",
+              "type": "string",
+              "description": ""
+            },
+            {
+              "name": "options",
+              "type": "ResolvedOgImageOptions",
+              "description": ""
+            },
+            {
+              "name": "root",
+              "type": "string",
+              "description": ""
+            }
+          ],
+          "returns": {
+            "type": "Promise",
+            "description": ""
+          },
+          "private": false,
+          "file": "npm/vite-plugin-ox-content/src/og-image/index.ts",
+          "line": 109,
+          "endLine": 141,
+          "signature": "async function resolveTsTemplate(templatePath: string, options: ResolvedOgImageOptions, root: string): Promise<OgImageTemplateFn>"
+        },
+        {
+          "name": "resolveVueTemplate",
+          "kind": "function",
+          "description": "Resolves a Vue SFC template via SSR.\nCompiles the SFC with @vue/compiler-sfc (or @vizejs/vite-plugin),\nbundles with rolldown, then wraps with createSSRApp + renderToString.",
+          "params": [
+            {
+              "name": "templatePath",
+              "type": "string",
+              "description": ""
+            },
+            {
+              "name": "options",
+              "type": "ResolvedOgImageOptions",
+              "description": ""
+            },
+            {
+              "name": "root",
+              "type": "string",
+              "description": ""
+            }
+          ],
+          "returns": {
+            "type": "Promise",
+            "description": ""
+          },
+          "private": false,
+          "file": "npm/vite-plugin-ox-content/src/og-image/index.ts",
+          "line": 149,
+          "endLine": 222,
+          "signature": "async function resolveVueTemplate(templatePath: string, options: ResolvedOgImageOptions, root: string): Promise<OgImageTemplateFn>"
+        },
+        {
+          "name": "createVueCompilerPlugin",
+          "kind": "function",
+          "description": "Creates a rolldown plugin that compiles Vue SFCs using @vue/compiler-sfc.",
+          "returns": {
+            "type": "unknown",
+            "description": ""
+          },
+          "private": false,
+          "file": "npm/vite-plugin-ox-content/src/og-image/index.ts",
+          "line": 227,
+          "endLine": 279,
+          "signature": "function createVueCompilerPlugin(): import(\"rolldown\").Plugin"
+        },
+        {
+          "name": "getVizejsPlugin",
+          "kind": "function",
+          "description": "Loads @vizejs/vite-plugin as a rolldown plugin for Vue SFC compilation.",
+          "returns": {
+            "type": "Promise",
+            "description": ""
+          },
+          "private": false,
+          "file": "npm/vite-plugin-ox-content/src/og-image/index.ts",
+          "line": 284,
+          "endLine": 295,
+          "signature": "async function getVizejsPlugin(): Promise<import(\"rolldown\").Plugin[]>"
+        },
+        {
+          "name": "resolveSvelteTemplate",
+          "kind": "function",
+          "description": "Resolves a Svelte SFC template via SSR.\nCompiles the SFC with svelte/compiler (server mode + runes),\nbundles with rolldown, then wraps with svelte/server render().",
+          "params": [
+            {
+              "name": "templatePath",
+              "type": "string",
+              "description": ""
+            },
+            {
+              "name": "root",
+              "type": "string",
+              "description": ""
+            }
+          ],
+          "returns": {
+            "type": "Promise",
+            "description": ""
+          },
+          "private": false,
+          "file": "npm/vite-plugin-ox-content/src/og-image/index.ts",
+          "line": 303,
+          "endLine": 344,
+          "signature": "async function resolveSvelteTemplate(templatePath: string, root: string): Promise<OgImageTemplateFn>"
+        },
+        {
+          "name": "createSvelteCompilerPlugin",
+          "kind": "function",
+          "description": "Creates a rolldown plugin that compiles Svelte SFCs using svelte/compiler.",
+          "returns": {
+            "type": "unknown",
+            "description": ""
+          },
+          "private": false,
+          "file": "npm/vite-plugin-ox-content/src/og-image/index.ts",
+          "line": 349,
+          "endLine": 374,
+          "signature": "function createSvelteCompilerPlugin(): import(\"rolldown\").Plugin"
+        },
+        {
+          "name": "resolveReactTemplate",
+          "kind": "function",
+          "description": "Resolves a React (.tsx/.jsx) template via SSR.\nBundles with rolldown (JSX transform), then wraps with\nreact-dom/server renderToReadableStream for async Server Component support.",
+          "params": [
+            {
+              "name": "templatePath",
+              "type": "string",
+              "description": ""
+            },
+            {
+              "name": "root",
+              "type": "string",
+              "description": ""
+            }
+          ],
+          "returns": {
+            "type": "Promise",
+            "description": ""
+          },
+          "private": false,
+          "file": "npm/vite-plugin-ox-content/src/og-image/index.ts",
+          "line": 382,
+          "endLine": 451,
+          "signature": "async function resolveReactTemplate(templatePath: string, root: string): Promise<OgImageTemplateFn>"
+        },
+        {
+          "name": "computeTemplateSource",
+          "kind": "function",
+          "description": "Computes a stable template source identifier for cache keys.\nFor custom templates, hashes the file content so cache invalidates\nwhen the template changes. For the default template, returns a fixed string.",
+          "params": [
+            {
+              "name": "options",
+              "type": "ResolvedOgImageOptions",
+              "description": ""
+            },
+            {
+              "name": "root",
+              "type": "string",
+              "description": ""
+            }
+          ],
+          "returns": {
+            "type": "Promise",
+            "description": ""
+          },
+          "private": false,
+          "file": "npm/vite-plugin-ox-content/src/og-image/index.ts",
+          "line": 459,
+          "endLine": 471,
+          "signature": "async function computeTemplateSource(options: ResolvedOgImageOptions, root: string): Promise<string>"
+        },
+        {
+          "name": "generateOgImages",
+          "kind": "function",
+          "description": "Generates OG images for a batch of pages.\nManages the full lifecycle: resolve template → launch browser (with `using`) →\nrender each page (with caching and concurrency).\nAll errors are non-fatal: failures are reported in results but never throw.",
+          "params": [
+            {
+              "name": "pages",
+              "type": "OgImagePageEntry[]",
+              "description": ""
+            },
+            {
+              "name": "options",
+              "type": "ResolvedOgImageOptions",
+              "description": ""
+            },
+            {
+              "name": "root",
+              "type": "string",
+              "description": ""
+            }
+          ],
+          "returns": {
+            "type": "Promise",
+            "description": ""
+          },
+          "private": false,
+          "file": "npm/vite-plugin-ox-content/src/og-image/index.ts",
+          "line": 481,
+          "endLine": 532,
+          "signature": "export async function generateOgImages(pages: OgImagePageEntry[], options: ResolvedOgImageOptions, root: string): Promise<OgImageResult[]>"
+        },
+        {
+          "name": "tryServeAllFromCache",
+          "kind": "function",
+          "description": "Tries to serve all pages from cache.\nReturns results if ALL pages are cached, null otherwise.",
+          "params": [
+            {
+              "name": "pages",
+              "type": "OgImagePageEntry[]",
+              "description": ""
+            },
+            {
+              "name": "templateSource",
+              "type": "string",
+              "description": ""
+            },
+            {
+              "name": "options",
+              "type": "ResolvedOgImageOptions",
+              "description": ""
+            },
+            {
+              "name": "cacheDir",
+              "type": "string",
+              "description": ""
+            }
+          ],
+          "returns": {
+            "type": "Promise",
+            "description": ""
+          },
+          "private": false,
+          "file": "npm/vite-plugin-ox-content/src/og-image/index.ts",
+          "line": 538,
+          "endLine": 564,
+          "signature": "async function tryServeAllFromCache(pages: OgImagePageEntry[], templateSource: string, options: ResolvedOgImageOptions, cacheDir: string): Promise<OgImageResult[] | null>"
+        },
+        {
+          "name": "renderSinglePage",
+          "kind": "function",
+          "description": "Renders a single page to PNG, with cache support.",
+          "params": [
+            {
+              "name": "entry",
+              "type": "OgImagePageEntry",
+              "description": ""
+            },
+            {
+              "name": "templateFn",
+              "type": "OgImageTemplateFn",
+              "description": ""
+            },
+            {
+              "name": "templateSource",
+              "type": "string",
+              "description": ""
+            },
+            {
+              "name": "options",
+              "type": "ResolvedOgImageOptions",
+              "description": ""
+            },
+            {
+              "name": "cacheDir",
+              "type": "string",
+              "description": ""
+            },
+            {
+              "name": "session",
+              "type": "OgBrowserSession",
+              "description": ""
+            },
+            {
+              "name": "publicDir",
+              "type": "string",
+              "description": "",
+              "optional": true
+            }
+          ],
+          "returns": {
+            "type": "Promise",
+            "description": ""
+          },
+          "private": false,
+          "file": "npm/vite-plugin-ox-content/src/og-image/index.ts",
+          "line": 569,
+          "endLine": 626,
+          "signature": "async function renderSinglePage(entry: OgImagePageEntry, templateFn: OgImageTemplateFn, templateSource: string, options: ResolvedOgImageOptions, cacheDir: string, session: OgBrowserSession, publicDir?: string): Promise<OgImageResult>"
+        }
+      ]
+    },
+    {
+      "file": "npm/vite-plugin-ox-content/src/og-image/renderer.ts",
+      "entries": [
+        {
+          "name": "wrapHtml",
+          "kind": "function",
+          "description": "Wraps template HTML in a minimal document with viewport locked to given dimensions.",
+          "params": [
+            {
+              "name": "bodyHtml",
+              "type": "string",
+              "description": ""
+            },
+            {
+              "name": "width",
+              "type": "number",
+              "description": ""
+            },
+            {
+              "name": "height",
+              "type": "number",
+              "description": ""
+            },
+            {
+              "name": "useBaseUrl",
+              "type": "boolean",
+              "description": ""
+            }
+          ],
+          "returns": {
+            "type": "string",
+            "description": ""
+          },
+          "private": false,
+          "file": "npm/vite-plugin-ox-content/src/og-image/renderer.ts",
+          "line": 11,
+          "endLine": 24,
+          "signature": "function wrapHtml(bodyHtml: string, width: number, height: number, useBaseUrl: boolean): string"
+        },
+        {
+          "name": "renderHtmlToPng",
+          "kind": "function",
+          "description": "Renders an HTML string to a PNG buffer using Chromium.",
+          "params": [
+            {
+              "name": "page",
+              "type": "Page",
+              "description": "Playwright page instance"
+            },
+            {
+              "name": "html",
+              "type": "string",
+              "description": "HTML string from template function"
+            },
+            {
+              "name": "width",
+              "type": "number",
+              "description": "Image width"
+            },
+            {
+              "name": "height",
+              "type": "number",
+              "description": "Image height"
+            },
+            {
+              "name": "publicDir",
+              "type": "string",
+              "description": "Optional public directory for serving local assets (images, fonts, etc.)",
+              "optional": true
+            }
+          ],
+          "returns": {
+            "type": "Promise",
+            "description": "PNG buffer"
+          },
+          "private": false,
+          "file": "npm/vite-plugin-ox-content/src/og-image/renderer.ts",
+          "line": 36,
+          "endLine": 91,
+          "signature": "export async function renderHtmlToPng(page: Page, html: string, width: number, height: number, publicDir?: string): Promise<Buffer>"
+        }
+      ]
+    },
+    {
+      "file": "npm/vite-plugin-ox-content/src/og-image/template.ts",
+      "entries": [
+        {
+          "name": "escapeHtml",
+          "kind": "function",
+          "description": "Escapes HTML special characters.",
+          "params": [
+            {
+              "name": "str",
+              "type": "string",
+              "description": ""
+            }
+          ],
+          "returns": {
+            "type": "string",
+            "description": ""
+          },
+          "private": false,
+          "file": "npm/vite-plugin-ox-content/src/og-image/template.ts",
+          "line": 13,
+          "endLine": 19,
+          "signature": "function escapeHtml(str: string): string"
+        },
+        {
+          "name": "getDefaultTemplate",
+          "kind": "function",
+          "description": "Returns the built-in default template function.",
+          "returns": {
+            "type": "OgImageTemplateFn",
+            "description": ""
+          },
+          "private": false,
+          "file": "npm/vite-plugin-ox-content/src/og-image/template.ts",
+          "line": 76,
+          "endLine": 103,
+          "signature": "export function getDefaultTemplate(): OgImageTemplateFn"
+        }
+      ]
+    },
+    {
+      "file": "npm/vite-plugin-ox-content/src/og-image/types.ts",
+      "entries": [
+        {
+          "name": "OgImageTemplateProps",
+          "kind": "interface",
+          "description": "Props passed to OG image template functions.",
+          "private": false,
+          "file": "npm/vite-plugin-ox-content/src/og-image/types.ts",
+          "line": 8,
+          "endLine": 21,
+          "signature": "export interface OgImageTemplateProps"
+        },
+        {
+          "name": "OgImageTemplateFn",
+          "kind": "type",
+          "description": "Template function that receives page metadata and returns an HTML string.",
+          "private": false,
+          "file": "npm/vite-plugin-ox-content/src/og-image/types.ts",
+          "line": 26,
+          "endLine": 26,
+          "signature": "export type OgImageTemplateFn = (props: OgImageTemplateProps) => string | Promise<string>"
+        },
+        {
+          "name": "OgImageOptions",
+          "kind": "interface",
+          "description": "OG image generation options (user-facing).",
+          "private": false,
+          "file": "npm/vite-plugin-ox-content/src/og-image/types.ts",
+          "line": 31,
+          "endLine": 74,
+          "signature": "export interface OgImageOptions"
+        },
+        {
+          "name": "ResolvedOgImageOptions",
+          "kind": "interface",
+          "description": "Resolved OG image options with all defaults applied.",
+          "private": false,
+          "file": "npm/vite-plugin-ox-content/src/og-image/types.ts",
+          "line": 79,
+          "endLine": 86,
+          "signature": "export interface ResolvedOgImageOptions"
+        }
+      ]
+    },
+    {
+      "file": "npm/vite-plugin-ox-content/src/page-context.ts",
+      "entries": [
+        {
+          "name": "BasePageProps",
+          "kind": "interface",
+          "description": "Base page props available for all pages.",
+          "private": false,
+          "file": "npm/vite-plugin-ox-content/src/page-context.ts",
+          "line": 34,
+          "endLine": 51,
+          "signature": "export interface BasePageProps"
+        },
+        {
+          "name": "PageProps",
+          "kind": "type",
+          "description": "Extended page props with custom frontmatter.",
+          "private": false,
+          "file": "npm/vite-plugin-ox-content/src/page-context.ts",
+          "line": 56,
+          "endLine": 60,
+          "signature": "export type PageProps<T extends Record<string, unknown> = Record<string, unknown>> = BasePageProps & {\n    /** Custom frontmatter fields */\n    frontmatter: T & Record<string, unknown>;\n  }"
+        },
+        {
+          "name": "SiteConfig",
+          "kind": "interface",
+          "description": "Site-wide configuration available in context.",
+          "private": false,
+          "file": "npm/vite-plugin-ox-content/src/page-context.ts",
+          "line": 65,
+          "endLine": 74,
+          "signature": "export interface SiteConfig"
+        },
+        {
+          "name": "NavGroup",
+          "kind": "interface",
+          "description": "Navigation group.",
+          "private": false,
+          "file": "npm/vite-plugin-ox-content/src/page-context.ts",
+          "line": 79,
+          "endLine": 82,
+          "signature": "export interface NavGroup"
+        },
+        {
+          "name": "NavItem",
+          "kind": "interface",
+          "description": "Navigation item.",
+          "private": false,
+          "file": "npm/vite-plugin-ox-content/src/page-context.ts",
+          "line": 87,
+          "endLine": 91,
+          "signature": "export interface NavItem"
+        },
+        {
+          "name": "RenderContext",
+          "kind": "interface",
+          "description": "Complete render context.",
+          "private": false,
+          "file": "npm/vite-plugin-ox-content/src/page-context.ts",
+          "line": 96,
+          "endLine": 101,
+          "signature": "export interface RenderContext<T extends Record<string, unknown> = Record<string, unknown>>"
+        },
+        {
+          "name": "setRenderContext",
+          "kind": "function",
+          "description": "Sets the current render context.\nCalled internally during page rendering.",
+          "params": [
+            {
+              "name": "ctx",
+              "type": "RenderContext",
+              "description": ""
+            }
+          ],
+          "returns": {
+            "type": "void",
+            "description": ""
+          },
+          "tags": {
+            "internal": ""
+          },
+          "private": false,
+          "file": "npm/vite-plugin-ox-content/src/page-context.ts",
+          "line": 111,
+          "endLine": 113,
+          "signature": "export function setRenderContext(ctx: RenderContext): void"
+        },
+        {
+          "name": "clearRenderContext",
+          "kind": "function",
+          "description": "Clears the current render context.\nCalled internally after page rendering.",
+          "returns": {
+            "type": "void",
+            "description": ""
+          },
+          "tags": {
+            "internal": ""
+          },
+          "private": false,
+          "file": "npm/vite-plugin-ox-content/src/page-context.ts",
+          "line": 120,
+          "endLine": 122,
+          "signature": "export function clearRenderContext(): void"
+        },
+        {
+          "name": "usePageProps",
+          "kind": "function",
+          "description": "Gets the current page props.",
+          "returns": {
+            "type": "PageProps",
+            "description": "The current page props"
+          },
+          "examples": [
+            "```tsx\nfunction PageTitle() {\n  const page = usePageProps();\n  return <h1>{page.title}</h1>;\n}\n```"
+          ],
+          "tags": {
+            "throws": "Error if called outside of a render context"
+          },
+          "private": false,
+          "file": "npm/vite-plugin-ox-content/src/page-context.ts",
+          "line": 138,
+          "endLine": 148,
+          "signature": "export function usePageProps<\n  T extends Record<string, unknown> = Record<string, unknown>,\n>(): PageProps<T>"
+        },
+        {
+          "name": "useSiteConfig",
+          "kind": "function",
+          "description": "Gets the site configuration.",
+          "returns": {
+            "type": "SiteConfig",
+            "description": "The site configuration"
+          },
+          "examples": [
+            "```tsx\nfunction SiteHeader() {\n  const site = useSiteConfig();\n  return <header>{site.name}</header>;\n}\n```"
+          ],
+          "tags": {
+            "throws": "Error if called outside of a render context"
+          },
+          "private": false,
+          "file": "npm/vite-plugin-ox-content/src/page-context.ts",
+          "line": 164,
+          "endLine": 172,
+          "signature": "export function useSiteConfig(): SiteConfig"
+        },
+        {
+          "name": "useRenderContext",
+          "kind": "function",
+          "description": "Gets the full render context.",
+          "returns": {
+            "type": "RenderContext",
+            "description": "The complete render context"
+          },
+          "examples": [
+            "```tsx\nfunction Layout({ children }) {\n  const ctx = useRenderContext();\n  return (\n    <html>\n      <head><title>{ctx.page.title} - {ctx.site.name}</title></head>\n      <body>{children}</body>\n    </html>\n  );\n}\n```"
+          ],
+          "tags": {
+            "throws": "Error if called outside of a render context"
+          },
+          "private": false,
+          "file": "npm/vite-plugin-ox-content/src/page-context.ts",
+          "line": 193,
+          "endLine": 203,
+          "signature": "export function useRenderContext<\n  T extends Record<string, unknown> = Record<string, unknown>,\n>(): RenderContext<T>"
+        },
+        {
+          "name": "useNav",
+          "kind": "function",
+          "description": "Gets the navigation groups.",
+          "returns": {
+            "type": "NavGroup[]",
+            "description": ""
+          },
+          "examples": [
+            "```tsx\nfunction Sidebar() {\n  const nav = useNav();\n  return (\n    <nav>\n      {each(nav, (group) => (\n        <div>\n          <h3>{group.title}</h3>\n          <ul>\n            {each(group.items, (item) => (\n              <li><a href={item.href}>{item.title}</a></li>\n            ))}\n          </ul>\n        </div>\n      ))}\n    </nav>\n  );\n}\n```"
+          ],
+          "private": false,
+          "file": "npm/vite-plugin-ox-content/src/page-context.ts",
+          "line": 229,
+          "endLine": 231,
+          "signature": "export function useNav(): NavGroup[]"
+        },
+        {
+          "name": "useIsActive",
+          "kind": "function",
+          "description": "Checks if the given path is the current page.",
+          "params": [
+            {
+              "name": "path",
+              "type": "string",
+              "description": ""
+            }
+          ],
+          "returns": {
+            "type": "boolean",
+            "description": ""
+          },
+          "examples": [
+            "```tsx\nfunction NavLink({ href, children }) {\n  const isActive = useIsActive(href);\n  return <a href={href} class={isActive ? 'active' : ''}>{children}</a>;\n}\n```"
+          ],
+          "private": false,
+          "file": "npm/vite-plugin-ox-content/src/page-context.ts",
+          "line": 244,
+          "endLine": 247,
+          "signature": "export function useIsActive(path: string): boolean"
+        },
+        {
+          "name": "FrontmatterSchema",
+          "kind": "interface",
+          "description": "Schema for frontmatter type generation.",
+          "private": false,
+          "file": "npm/vite-plugin-ox-content/src/page-context.ts",
+          "line": 254,
+          "endLine": 263,
+          "signature": "export interface FrontmatterSchema"
+        },
+        {
+          "name": "inferType",
+          "kind": "function",
+          "description": "Infers TypeScript types from frontmatter values.",
+          "params": [
+            {
+              "name": "value",
+              "type": "unknown",
+              "description": ""
+            }
+          ],
+          "returns": {
+            "type": "string",
+            "description": ""
+          },
+          "private": false,
+          "file": "npm/vite-plugin-ox-content/src/page-context.ts",
+          "line": 268,
+          "endLine": 287,
+          "signature": "export function inferType(value: unknown): string"
+        },
+        {
+          "name": "generateFrontmatterTypes",
+          "kind": "function",
+          "description": "Generates TypeScript interface from frontmatter samples.",
+          "params": [
+            {
+              "name": "samples",
+              "type": "Record[]",
+              "description": ""
+            },
+            {
+              "name": "param",
+              "type": "unknown",
+              "description": ""
+            }
+          ],
+          "returns": {
+            "type": "string",
+            "description": ""
+          },
+          "private": false,
+          "file": "npm/vite-plugin-ox-content/src/page-context.ts",
+          "line": 292,
+          "endLine": 333,
+          "signature": "export function generateFrontmatterTypes(samples: Record<string, unknown>[], interfaceName = \"PageFrontmatter\"): string"
+        }
+      ]
+    },
+    {
+      "file": "npm/vite-plugin-ox-content/src/plugins/github.ts",
+      "entries": [
+        {
+          "name": "getAttribute",
+          "kind": "function",
+          "description": "Get element attribute value.",
+          "params": [
+            {
+              "name": "el",
+              "type": "Element",
+              "description": ""
+            },
+            {
+              "name": "name",
+              "type": "string",
+              "description": ""
+            }
+          ],
+          "returns": {
+            "type": "string | undefined",
+            "description": ""
+          },
+          "private": false,
+          "file": "npm/vite-plugin-ox-content/src/plugins/github.ts",
+          "line": 48,
+          "endLine": 53,
+          "signature": "function getAttribute(el: Element, name: string): string | undefined"
+        },
+        {
+          "name": "formatNumber",
+          "kind": "function",
+          "description": "Format number with K/M suffix.",
+          "params": [
+            {
+              "name": "num",
+              "type": "number",
+              "description": ""
+            }
+          ],
+          "returns": {
+            "type": "string",
+            "description": ""
+          },
+          "private": false,
+          "file": "npm/vite-plugin-ox-content/src/plugins/github.ts",
+          "line": 58,
+          "endLine": 66,
+          "signature": "function formatNumber(num: number): string"
+        },
+        {
+          "name": "fetchRepoData",
+          "kind": "function",
+          "description": "Fetch repository data from GitHub API.",
+          "params": [
+            {
+              "name": "repo",
+              "type": "string",
+              "description": ""
+            },
+            {
+              "name": "options",
+              "type": "Required",
+              "description": ""
+            }
+          ],
+          "returns": {
+            "type": "Promise",
+            "description": ""
+          },
+          "private": false,
+          "file": "npm/vite-plugin-ox-content/src/plugins/github.ts",
+          "line": 71,
+          "endLine": 112,
+          "signature": "export async function fetchRepoData(repo: string, options: Required<GitHubOptions>): Promise<GitHubRepoData | null>"
+        },
+        {
+          "name": "createGitHubCard",
+          "kind": "function",
+          "description": "Create GitHub card element from repo data.",
+          "params": [
+            {
+              "name": "repoData",
+              "type": "GitHubRepoData",
+              "description": ""
+            }
+          ],
+          "returns": {
+            "type": "Element",
+            "description": ""
+          },
+          "private": false,
+          "file": "npm/vite-plugin-ox-content/src/plugins/github.ts",
+          "line": 117,
+          "endLine": 260,
+          "signature": "function createGitHubCard(repoData: GitHubRepoData): Element"
+        },
+        {
+          "name": "createFallbackCard",
+          "kind": "function",
+          "description": "Create fallback element when repo data is unavailable.",
+          "params": [
+            {
+              "name": "repo",
+              "type": "string",
+              "description": ""
+            }
+          ],
+          "returns": {
+            "type": "Element",
+            "description": ""
+          },
+          "private": false,
+          "file": "npm/vite-plugin-ox-content/src/plugins/github.ts",
+          "line": 265,
+          "endLine": 310,
+          "signature": "function createFallbackCard(repo: string): Element"
+        },
+        {
+          "name": "collectGitHubRepos",
+          "kind": "function",
+          "description": "Collect all GitHub repos from HTML for pre-fetching.",
+          "params": [
+            {
+              "name": "html",
+              "type": "string",
+              "description": ""
+            }
+          ],
+          "returns": {
+            "type": "Promise",
+            "description": ""
+          },
+          "private": false,
+          "file": "npm/vite-plugin-ox-content/src/plugins/github.ts",
+          "line": 315,
+          "endLine": 325,
+          "signature": "export async function collectGitHubRepos(html: string): Promise<string[]>"
+        },
+        {
+          "name": "prefetchGitHubRepos",
+          "kind": "function",
+          "description": "Pre-fetch all GitHub repos data.",
+          "params": [
+            {
+              "name": "repos",
+              "type": "string[]",
+              "description": ""
+            },
+            {
+              "name": "options",
+              "type": "GitHubOptions",
+              "description": "",
+              "optional": true
+            }
+          ],
+          "returns": {
+            "type": "Promise",
+            "description": ""
+          },
+          "private": false,
+          "file": "npm/vite-plugin-ox-content/src/plugins/github.ts",
+          "line": 330,
+          "endLine": 345,
+          "signature": "export async function prefetchGitHubRepos(repos: string[], options?: GitHubOptions): Promise<Map<string, GitHubRepoData | null>>"
+        },
+        {
+          "name": "rehypeGitHub",
+          "kind": "function",
+          "description": "Rehype plugin to transform GitHub components.",
+          "params": [
+            {
+              "name": "repoDataMap",
+              "type": "Map",
+              "description": ""
+            }
+          ],
+          "private": false,
+          "file": "npm/vite-plugin-ox-content/src/plugins/github.ts",
+          "line": 350,
+          "endLine": 379,
+          "signature": "function rehypeGitHub(repoDataMap: Map<string, GitHubRepoData | null>)"
+        },
+        {
+          "name": "transformGitHub",
+          "kind": "function",
+          "description": "Transform GitHub components in HTML.",
+          "params": [
+            {
+              "name": "html",
+              "type": "string",
+              "description": ""
+            },
+            {
+              "name": "repoDataMap",
+              "type": "Map",
+              "description": "",
+              "optional": true
+            },
+            {
+              "name": "options",
+              "type": "GitHubOptions",
+              "description": "",
+              "optional": true
+            }
+          ],
+          "returns": {
+            "type": "Promise",
+            "description": ""
+          },
+          "private": false,
+          "file": "npm/vite-plugin-ox-content/src/plugins/github.ts",
+          "line": 384,
+          "endLine": 403,
+          "signature": "export async function transformGitHub(html: string, repoDataMap?: Map<string, GitHubRepoData | null>, options?: GitHubOptions): Promise<string>"
+        }
+      ]
+    },
+    {
+      "file": "npm/vite-plugin-ox-content/src/plugins/index.ts",
+      "entries": [
+        {
+          "name": "TransformAllOptions",
+          "kind": "interface",
+          "description": "Transform all plugin components in HTML.\nCall this during SSG build to process all plugins at once.",
+          "private": false,
+          "file": "npm/vite-plugin-ox-content/src/plugins/index.ts",
+          "line": 36,
+          "endLine": 43,
+          "signature": "export interface TransformAllOptions"
+        },
+        {
+          "name": "transformAllPlugins",
+          "kind": "function",
+          "description": "Transform all enabled plugins in HTML content.",
+          "params": [
+            {
+              "name": "html",
+              "type": "string",
+              "description": ""
+            },
+            {
+              "name": "param",
+              "type": "unknown",
+              "description": ""
+            }
+          ],
+          "returns": {
+            "type": "Promise",
+            "description": ""
+          },
+          "private": false,
+          "file": "npm/vite-plugin-ox-content/src/plugins/index.ts",
+          "line": 48,
+          "endLine": 96,
+          "signature": "export async function transformAllPlugins(html: string, options: TransformAllOptions = {}): Promise<string>"
+        }
+      ]
+    },
+    {
+      "file": "npm/vite-plugin-ox-content/src/plugins/mermaid-protect.ts",
+      "entries": [
+        {
+          "name": "MermaidSvgProtection",
+          "kind": "interface",
+          "description": "Protects mermaid SVG content from rehype HTML5 parser corruption.\nrehypeParse + rehypeStringify converts `<br />` in SVG foreignObject\nto `<br></br>`, which HTML5 interprets as 2 <br> elements.\nEach rehype pass doubles them: 1 → 2 → 4 → 8 → 16.\nThis module extracts ox-mermaid SVG blocks into placeholders before\nrehype processing and restores them after.",
+          "private": false,
+          "file": "npm/vite-plugin-ox-content/src/plugins/mermaid-protect.ts",
+          "line": 12,
+          "endLine": 15,
+          "signature": "export interface MermaidSvgProtection"
+        },
+        {
+          "name": "protectMermaidSvgs",
+          "kind": "function",
+          "description": "Extract `<div class=\"ox-mermaid\">...</div>` blocks and replace\nwith HTML comment placeholders that rehype will preserve.",
+          "params": [
+            {
+              "name": "html",
+              "type": "string",
+              "description": ""
+            }
+          ],
+          "returns": {
+            "type": "MermaidSvgProtection",
+            "description": ""
+          },
+          "private": false,
+          "file": "npm/vite-plugin-ox-content/src/plugins/mermaid-protect.ts",
+          "line": 21,
+          "endLine": 64,
+          "signature": "export function protectMermaidSvgs(html: string): MermaidSvgProtection"
+        },
+        {
+          "name": "restoreMermaidSvgs",
+          "kind": "function",
+          "description": "Restore protected mermaid SVG blocks from placeholders.",
+          "params": [
+            {
+              "name": "html",
+              "type": "string",
+              "description": ""
+            },
+            {
+              "name": "svgs",
+              "type": "Map",
+              "description": ""
+            }
+          ],
+          "returns": {
+            "type": "string",
+            "description": ""
+          },
+          "private": false,
+          "file": "npm/vite-plugin-ox-content/src/plugins/mermaid-protect.ts",
+          "line": 69,
+          "endLine": 75,
+          "signature": "export function restoreMermaidSvgs(html: string, svgs: Map<string, string>): string"
+        }
+      ]
+    },
+    {
+      "file": "npm/vite-plugin-ox-content/src/plugins/mermaid.ts",
+      "entries": [
+        {
+          "name": "transformMermaidStatic",
+          "kind": "function",
+          "description": "Transforms mermaid code blocks in HTML to rendered SVG diagrams.\nUses the native Rust NAPI transformMermaid function.",
+          "params": [
+            {
+              "name": "html",
+              "type": "string",
+              "description": ""
+            },
+            {
+              "name": "_options",
+              "type": "MermaidOptions",
+              "description": "",
+              "optional": true
+            }
+          ],
+          "returns": {
+            "type": "Promise",
+            "description": ""
+          },
+          "private": false,
+          "file": "npm/vite-plugin-ox-content/src/plugins/mermaid.ts",
+          "line": 76,
+          "endLine": 101,
+          "signature": "export async function transformMermaidStatic(html: string, _options?: MermaidOptions): Promise<string>"
+        }
+      ]
+    },
+    {
+      "file": "npm/vite-plugin-ox-content/src/plugins/ogp.ts",
+      "entries": [
+        {
+          "name": "getAttribute",
+          "kind": "function",
+          "description": "Get element attribute value.",
+          "params": [
+            {
+              "name": "el",
+              "type": "Element",
+              "description": ""
+            },
+            {
+              "name": "name",
+              "type": "string",
+              "description": ""
+            }
+          ],
+          "returns": {
+            "type": "string | undefined",
+            "description": ""
+          },
+          "private": false,
+          "file": "npm/vite-plugin-ox-content/src/plugins/ogp.ts",
+          "line": 46,
+          "endLine": 51,
+          "signature": "function getAttribute(el: Element, name: string): string | undefined"
+        },
+        {
+          "name": "extractDomain",
+          "kind": "function",
+          "description": "Extract domain from URL.",
+          "params": [
+            {
+              "name": "url",
+              "type": "string",
+              "description": ""
+            }
+          ],
+          "returns": {
+            "type": "string",
+            "description": ""
+          },
+          "private": false,
+          "file": "npm/vite-plugin-ox-content/src/plugins/ogp.ts",
+          "line": 56,
+          "endLine": 63,
+          "signature": "function extractDomain(url: string): string"
+        },
+        {
+          "name": "getFaviconUrl",
+          "kind": "function",
+          "description": "Get favicon URL for a domain.",
+          "params": [
+            {
+              "name": "url",
+              "type": "string",
+              "description": ""
+            }
+          ],
+          "returns": {
+            "type": "string",
+            "description": ""
+          },
+          "private": false,
+          "file": "npm/vite-plugin-ox-content/src/plugins/ogp.ts",
+          "line": 68,
+          "endLine": 76,
+          "signature": "function getFaviconUrl(url: string): string"
+        },
+        {
+          "name": "parseOgpFromHtml",
+          "kind": "function",
+          "description": "Parse OGP metadata from HTML.",
+          "params": [
+            {
+              "name": "html",
+              "type": "string",
+              "description": ""
+            },
+            {
+              "name": "url",
+              "type": "string",
+              "description": ""
+            }
+          ],
+          "returns": {
+            "type": "OgpData",
+            "description": ""
+          },
+          "private": false,
+          "file": "npm/vite-plugin-ox-content/src/plugins/ogp.ts",
+          "line": 81,
+          "endLine": 138,
+          "signature": "function parseOgpFromHtml(html: string, url: string): OgpData"
+        },
+        {
+          "name": "fetchOgpData",
+          "kind": "function",
+          "description": "Fetch OGP data for a URL.",
+          "params": [
+            {
+              "name": "url",
+              "type": "string",
+              "description": ""
+            },
+            {
+              "name": "options",
+              "type": "Required",
+              "description": ""
+            }
+          ],
+          "returns": {
+            "type": "Promise",
+            "description": ""
+          },
+          "private": false,
+          "file": "npm/vite-plugin-ox-content/src/plugins/ogp.ts",
+          "line": 143,
+          "endLine": 191,
+          "signature": "export async function fetchOgpData(url: string, options: Required<OgpOptions>): Promise<OgpData | null>"
+        },
+        {
+          "name": "createOgpCard",
+          "kind": "function",
+          "description": "Create OGP card element.",
+          "params": [
+            {
+              "name": "data",
+              "type": "OgpData",
+              "description": ""
+            }
+          ],
+          "returns": {
+            "type": "Element",
+            "description": ""
+          },
+          "private": false,
+          "file": "npm/vite-plugin-ox-content/src/plugins/ogp.ts",
+          "line": 196,
+          "endLine": 284,
+          "signature": "function createOgpCard(data: OgpData): Element"
+        },
+        {
+          "name": "createFallbackCard",
+          "kind": "function",
+          "description": "Create fallback element when OGP data is unavailable.",
+          "params": [
+            {
+              "name": "url",
+              "type": "string",
+              "description": ""
+            }
+          ],
+          "returns": {
+            "type": "Element",
+            "description": ""
+          },
+          "private": false,
+          "file": "npm/vite-plugin-ox-content/src/plugins/ogp.ts",
+          "line": 289,
+          "endLine": 323,
+          "signature": "function createFallbackCard(url: string): Element"
+        },
+        {
+          "name": "collectOgpUrls",
+          "kind": "function",
+          "description": "Collect all OGP URLs from HTML for pre-fetching.",
+          "params": [
+            {
+              "name": "html",
+              "type": "string",
+              "description": ""
+            }
+          ],
+          "returns": {
+            "type": "Promise",
+            "description": ""
+          },
+          "private": false,
+          "file": "npm/vite-plugin-ox-content/src/plugins/ogp.ts",
+          "line": 328,
+          "endLine": 338,
+          "signature": "export async function collectOgpUrls(html: string): Promise<string[]>"
+        },
+        {
+          "name": "prefetchOgpData",
+          "kind": "function",
+          "description": "Pre-fetch all OGP data.",
+          "params": [
+            {
+              "name": "urls",
+              "type": "string[]",
+              "description": ""
+            },
+            {
+              "name": "options",
+              "type": "OgpOptions",
+              "description": "",
+              "optional": true
+            }
+          ],
+          "returns": {
+            "type": "Promise",
+            "description": ""
+          },
+          "private": false,
+          "file": "npm/vite-plugin-ox-content/src/plugins/ogp.ts",
+          "line": 343,
+          "endLine": 358,
+          "signature": "export async function prefetchOgpData(urls: string[], options?: OgpOptions): Promise<Map<string, OgpData | null>>"
+        },
+        {
+          "name": "rehypeOgp",
+          "kind": "function",
+          "description": "Rehype plugin to transform OgCard components.",
+          "params": [
+            {
+              "name": "ogpDataMap",
+              "type": "Map",
+              "description": ""
+            }
+          ],
+          "private": false,
+          "file": "npm/vite-plugin-ox-content/src/plugins/ogp.ts",
+          "line": 363,
+          "endLine": 390,
+          "signature": "function rehypeOgp(ogpDataMap: Map<string, OgpData | null>)"
+        },
+        {
+          "name": "transformOgp",
+          "kind": "function",
+          "description": "Transform OgCard components in HTML.",
+          "params": [
+            {
+              "name": "html",
+              "type": "string",
+              "description": ""
+            },
+            {
+              "name": "ogpDataMap",
+              "type": "Map",
+              "description": "",
+              "optional": true
+            },
+            {
+              "name": "options",
+              "type": "OgpOptions",
+              "description": "",
+              "optional": true
+            }
+          ],
+          "returns": {
+            "type": "Promise",
+            "description": ""
+          },
+          "private": false,
+          "file": "npm/vite-plugin-ox-content/src/plugins/ogp.ts",
+          "line": 395,
+          "endLine": 414,
+          "signature": "export async function transformOgp(html: string, ogpDataMap?: Map<string, OgpData | null>, options?: OgpOptions): Promise<string>"
+        }
+      ]
+    },
+    {
+      "file": "npm/vite-plugin-ox-content/src/plugins/tabs.ts",
+      "entries": [
+        {
+          "name": "resetTabGroupCounter",
+          "kind": "function",
+          "description": "Reset tab group counter (for testing).",
+          "returns": {
+            "type": "void",
+            "description": ""
+          },
+          "private": false,
+          "file": "npm/vite-plugin-ox-content/src/plugins/tabs.ts",
+          "line": 18,
+          "endLine": 20,
+          "signature": "export function resetTabGroupCounter(): void"
+        },
+        {
+          "name": "getAttribute",
+          "kind": "function",
+          "description": "Get element attribute value.",
+          "params": [
+            {
+              "name": "el",
+              "type": "Element",
+              "description": ""
+            },
+            {
+              "name": "name",
+              "type": "string",
+              "description": ""
+            }
+          ],
+          "returns": {
+            "type": "string | undefined",
+            "description": ""
+          },
+          "private": false,
+          "file": "npm/vite-plugin-ox-content/src/plugins/tabs.ts",
+          "line": 25,
+          "endLine": 30,
+          "signature": "function getAttribute(el: Element, name: string): string | undefined"
+        },
+        {
+          "name": "parseTabChildren",
+          "kind": "function",
+          "description": "Parse Tab elements from Tabs children.",
+          "params": [
+            {
+              "name": "children",
+              "type": "unknown",
+              "description": ""
+            }
+          ],
+          "returns": {
+            "type": "TabData[]",
+            "description": ""
+          },
+          "private": false,
+          "file": "npm/vite-plugin-ox-content/src/plugins/tabs.ts",
+          "line": 40,
+          "endLine": 59,
+          "signature": "function parseTabChildren(children: Element[\"children\"]): TabData[]"
+        },
+        {
+          "name": "createTabsElement",
+          "kind": "function",
+          "description": "Create the HTML structure for tabs.",
+          "params": [
+            {
+              "name": "tabs",
+              "type": "TabData[]",
+              "description": ""
+            },
+            {
+              "name": "groupId",
+              "type": "string",
+              "description": ""
+            }
+          ],
+          "returns": {
+            "type": "Element",
+            "description": ""
+          },
+          "private": false,
+          "file": "npm/vite-plugin-ox-content/src/plugins/tabs.ts",
+          "line": 64,
+          "endLine": 127,
+          "signature": "function createTabsElement(tabs: TabData[], groupId: string): Element"
+        },
+        {
+          "name": "createFallbackElement",
+          "kind": "function",
+          "description": "Create fallback HTML using <details> elements.",
+          "params": [
+            {
+              "name": "tabs",
+              "type": "TabData[]",
+              "description": ""
+            }
+          ],
+          "returns": {
+            "type": "Element",
+            "description": ""
+          },
+          "private": false,
+          "file": "npm/vite-plugin-ox-content/src/plugins/tabs.ts",
+          "line": 132,
+          "endLine": 172,
+          "signature": "function createFallbackElement(tabs: TabData[]): Element"
+        },
+        {
+          "name": "rehypeTabs",
+          "kind": "function",
+          "description": "Rehype plugin to transform Tabs components.",
+          "private": false,
+          "file": "npm/vite-plugin-ox-content/src/plugins/tabs.ts",
+          "line": 177,
+          "endLine": 215,
+          "signature": "function rehypeTabs()"
+        },
+        {
+          "name": "transformTabs",
+          "kind": "function",
+          "description": "Transform Tabs components in HTML.",
+          "params": [
+            {
+              "name": "html",
+              "type": "string",
+              "description": ""
+            }
+          ],
+          "returns": {
+            "type": "Promise",
+            "description": ""
+          },
+          "private": false,
+          "file": "npm/vite-plugin-ox-content/src/plugins/tabs.ts",
+          "line": 220,
+          "endLine": 228,
+          "signature": "export async function transformTabs(html: string): Promise<string>"
+        },
+        {
+          "name": "generateTabsCSS",
+          "kind": "function",
+          "description": "Generate dynamic CSS for :has() based tab switching.\nThis is needed because :has() selectors need unique IDs.",
+          "params": [
+            {
+              "name": "groupCount",
+              "type": "number",
+              "description": ""
+            }
+          ],
+          "returns": {
+            "type": "string",
+            "description": ""
+          },
+          "private": false,
+          "file": "npm/vite-plugin-ox-content/src/plugins/tabs.ts",
+          "line": 234,
+          "endLine": 246,
+          "signature": "export function generateTabsCSS(groupCount: number): string"
+        }
+      ]
+    },
+    {
+      "file": "npm/vite-plugin-ox-content/src/plugins/youtube.ts",
+      "entries": [
+        {
+          "name": "getAttribute",
+          "kind": "function",
+          "description": "Get element attribute value.",
+          "params": [
+            {
+              "name": "el",
+              "type": "Element",
+              "description": ""
+            },
+            {
+              "name": "name",
+              "type": "string",
+              "description": ""
+            }
+          ],
+          "returns": {
+            "type": "string | undefined",
+            "description": ""
+          },
+          "private": false,
+          "file": "npm/vite-plugin-ox-content/src/plugins/youtube.ts",
+          "line": 34,
+          "endLine": 39,
+          "signature": "function getAttribute(el: Element, name: string): string | undefined"
+        },
+        {
+          "name": "extractVideoId",
+          "kind": "function",
+          "description": "Extract YouTube video ID from various URL formats.",
+          "params": [
+            {
+              "name": "input",
+              "type": "string",
+              "description": ""
+            }
+          ],
+          "returns": {
+            "type": "string | literal",
+            "description": ""
+          },
+          "private": false,
+          "file": "npm/vite-plugin-ox-content/src/plugins/youtube.ts",
+          "line": 44,
+          "endLine": 62,
+          "signature": "export function extractVideoId(input: string): string | null"
+        },
+        {
+          "name": "buildEmbedUrl",
+          "kind": "function",
+          "description": "Build YouTube embed URL with parameters.",
+          "params": [
+            {
+              "name": "videoId",
+              "type": "string",
+              "description": ""
+            },
+            {
+              "name": "options",
+              "type": "Required",
+              "description": ""
+            },
+            {
+              "name": "params",
+              "type": "Record",
+              "description": "",
+              "optional": true
+            }
+          ],
+          "returns": {
+            "type": "string",
+            "description": ""
+          },
+          "private": false,
+          "file": "npm/vite-plugin-ox-content/src/plugins/youtube.ts",
+          "line": 67,
+          "endLine": 83,
+          "signature": "function buildEmbedUrl(videoId: string, options: Required<YouTubeOptions>, params?: Record<string, string>): string"
+        },
+        {
+          "name": "createYouTubeElement",
+          "kind": "function",
+          "description": "Create YouTube embed element.",
+          "params": [
+            {
+              "name": "videoId",
+              "type": "string",
+              "description": ""
+            },
+            {
+              "name": "options",
+              "type": "Required",
+              "description": ""
+            },
+            {
+              "name": "title",
+              "type": "string",
+              "description": "",
+              "optional": true
+            },
+            {
+              "name": "start",
+              "type": "string",
+              "description": "",
+              "optional": true
+            }
+          ],
+          "returns": {
+            "type": "Element",
+            "description": ""
+          },
+          "private": false,
+          "file": "npm/vite-plugin-ox-content/src/plugins/youtube.ts",
+          "line": 88,
+          "endLine": 127,
+          "signature": "function createYouTubeElement(videoId: string, options: Required<YouTubeOptions>, title?: string, start?: string): Element"
+        },
+        {
+          "name": "rehypeYouTube",
+          "kind": "function",
+          "description": "Rehype plugin to transform YouTube components.",
+          "params": [
+            {
+              "name": "options",
+              "type": "Required",
+              "description": ""
+            }
+          ],
+          "private": false,
+          "file": "npm/vite-plugin-ox-content/src/plugins/youtube.ts",
+          "line": 132,
+          "endLine": 164,
+          "signature": "function rehypeYouTube(options: Required<YouTubeOptions>)"
+        },
+        {
+          "name": "transformYouTube",
+          "kind": "function",
+          "description": "Transform YouTube components in HTML.",
+          "params": [
+            {
+              "name": "html",
+              "type": "string",
+              "description": ""
+            },
+            {
+              "name": "options",
+              "type": "YouTubeOptions",
+              "description": "",
+              "optional": true
+            }
+          ],
+          "returns": {
+            "type": "Promise",
+            "description": ""
+          },
+          "private": false,
+          "file": "npm/vite-plugin-ox-content/src/plugins/youtube.ts",
+          "line": 169,
+          "endLine": 179,
+          "signature": "export async function transformYouTube(html: string, options?: YouTubeOptions): Promise<string>"
+        }
+      ]
+    },
+    {
+      "file": "npm/vite-plugin-ox-content/src/search.ts",
+      "entries": [
+        {
+          "name": "parseScopedSearchQuery",
+          "kind": "function",
+          "description": "Splits a raw query into free-text terms and `@scope` prefixes.",
+          "params": [
+            {
+              "name": "query",
+              "type": "string",
+              "description": ""
+            }
+          ],
+          "returns": {
+            "type": "ScopedSearchQuery",
+            "description": ""
+          },
+          "private": false,
+          "file": "npm/vite-plugin-ox-content/src/search.ts",
+          "line": 35,
+          "endLine": 51,
+          "signature": "export function parseScopedSearchQuery(query: string): ScopedSearchQuery"
+        },
+        {
+          "name": "getSearchDocumentScopes",
+          "kind": "function",
+          "description": "Derives hierarchical search scopes from a document id or URL.\nFor example, `api/math/index` yields `[\"api\", \"api/math\"]`.",
+          "params": [
+            {
+              "name": "doc",
+              "type": "Pick",
+              "description": ""
+            }
+          ],
+          "returns": {
+            "type": "string[]",
+            "description": ""
+          },
+          "private": false,
+          "file": "npm/vite-plugin-ox-content/src/search.ts",
+          "line": 58,
+          "endLine": 75,
+          "signature": "export function getSearchDocumentScopes(doc: Pick<SearchDocument, \"id\" | \"url\">): string[]"
+        },
+        {
+          "name": "matchesSearchScopes",
+          "kind": "function",
+          "description": "Returns true when a search document belongs to at least one requested scope.",
+          "params": [
+            {
+              "name": "doc",
+              "type": "Pick",
+              "description": ""
+            },
+            {
+              "name": "scopes",
+              "type": "string[]",
+              "description": ""
+            }
+          ],
+          "returns": {
+            "type": "boolean",
+            "description": ""
+          },
+          "private": false,
+          "file": "npm/vite-plugin-ox-content/src/search.ts",
+          "line": 80,
+          "endLine": 90,
+          "signature": "export function matchesSearchScopes(doc: Pick<SearchDocument, \"id\" | \"url\">, scopes: string[]): boolean"
+        },
+        {
+          "name": "resolveSearchOptions",
+          "kind": "function",
+          "description": "Resolves search options with defaults.",
+          "params": [
+            {
+              "name": "options",
+              "type": "SearchOptions | boolean | undefined",
+              "description": ""
+            }
+          ],
+          "returns": {
+            "type": "ResolvedSearchOptions",
+            "description": ""
+          },
+          "private": false,
+          "file": "npm/vite-plugin-ox-content/src/search.ts",
+          "line": 95,
+          "endLine": 117,
+          "signature": "export function resolveSearchOptions(options: SearchOptions | boolean | undefined): ResolvedSearchOptions"
+        },
+        {
+          "name": "collectMarkdownFiles",
+          "kind": "function",
+          "description": "Collects all Markdown files from a directory.",
+          "params": [
+            {
+              "name": "dir",
+              "type": "string",
+              "description": ""
+            }
+          ],
+          "returns": {
+            "type": "Promise",
+            "description": ""
+          },
+          "private": false,
+          "file": "npm/vite-plugin-ox-content/src/search.ts",
+          "line": 122,
+          "endLine": 145,
+          "signature": "async function collectMarkdownFiles(dir: string): Promise<string[]>"
+        },
+        {
+          "name": "buildSearchIndex",
+          "kind": "function",
+          "description": "Builds the search index from Markdown files.",
+          "params": [
+            {
+              "name": "srcDir",
+              "type": "string",
+              "description": ""
+            },
+            {
+              "name": "base",
+              "type": "string",
+              "description": ""
+            }
+          ],
+          "returns": {
+            "type": "Promise",
+            "description": ""
+          },
+          "private": false,
+          "file": "npm/vite-plugin-ox-content/src/search.ts",
+          "line": 150,
+          "endLine": 201,
+          "signature": "export async function buildSearchIndex(srcDir: string, base: string): Promise<string>"
+        },
+        {
+          "name": "writeSearchIndex",
+          "kind": "function",
+          "description": "Writes the search index to a file.",
+          "params": [
+            {
+              "name": "indexJson",
+              "type": "string",
+              "description": ""
+            },
+            {
+              "name": "outDir",
+              "type": "string",
+              "description": ""
+            }
+          ],
+          "returns": {
+            "type": "Promise",
+            "description": ""
+          },
+          "private": false,
+          "file": "npm/vite-plugin-ox-content/src/search.ts",
+          "line": 206,
+          "endLine": 214,
+          "signature": "export async function writeSearchIndex(indexJson: string, outDir: string): Promise<void>"
+        },
+        {
+          "name": "generateSearchModule",
+          "kind": "function",
+          "description": "Client-side search module code.\nThis is injected into the bundle as a virtual module.",
+          "params": [
+            {
+              "name": "options",
+              "type": "ResolvedSearchOptions",
+              "description": ""
+            },
+            {
+              "name": "indexPath",
+              "type": "string",
+              "description": ""
+            }
+          ],
+          "returns": {
+            "type": "string",
+            "description": ""
+          },
+          "private": false,
+          "file": "npm/vite-plugin-ox-content/src/search.ts",
+          "line": 220,
+          "endLine": 449,
+          "signature": "export function generateSearchModule(options: ResolvedSearchOptions, indexPath: string): string"
+        }
+      ]
+    },
+    {
+      "file": "npm/vite-plugin-ox-content/src/ssg.ts",
+      "entries": [
+        {
+          "name": "SsgNavItem",
+          "kind": "interface",
+          "description": "Navigation item for SSG.",
+          "private": false,
+          "file": "npm/vite-plugin-ox-content/src/ssg.ts",
+          "line": 31,
+          "endLine": 36,
+          "signature": "export interface SsgNavItem"
+        },
+        {
+          "name": "SsgEntryPageConfig",
+          "kind": "interface",
+          "description": "Entry page configuration for SSG (passed to Rust).",
+          "private": false,
+          "file": "npm/vite-plugin-ox-content/src/ssg.ts",
+          "line": 41,
+          "endLine": 44,
+          "signature": "export interface SsgEntryPageConfig"
+        },
+        {
+          "name": "SsgPageData",
+          "kind": "interface",
+          "description": "Page data for SSG.",
+          "private": false,
+          "file": "npm/vite-plugin-ox-content/src/ssg.ts",
+          "line": 49,
+          "endLine": 59,
+          "signature": "export interface SsgPageData"
+        },
+        {
+          "name": "resolveSsgOptions",
+          "kind": "function",
+          "description": "Resolves SSG options with defaults.",
+          "params": [
+            {
+              "name": "ssg",
+              "type": "SsgOptions | boolean | undefined",
+              "description": ""
+            }
+          ],
+          "returns": {
+            "type": "ResolvedSsgOptions",
+            "description": ""
+          },
+          "private": false,
+          "file": "npm/vite-plugin-ox-content/src/ssg.ts",
+          "line": 1331,
+          "endLine": 1364,
+          "signature": "export function resolveSsgOptions(ssg: SsgOptions | boolean | undefined): ResolvedSsgOptions"
+        },
+        {
+          "name": "renderTemplate",
+          "kind": "function",
+          "description": "Simple mustache-like template rendering.",
+          "params": [
+            {
+              "name": "template",
+              "type": "string",
+              "description": ""
+            },
+            {
+              "name": "data",
+              "type": "Record",
+              "description": ""
+            }
+          ],
+          "returns": {
+            "type": "string",
+            "description": ""
+          },
+          "private": false,
+          "file": "npm/vite-plugin-ox-content/src/ssg.ts",
+          "line": 1369,
+          "endLine": 1395,
+          "signature": "function renderTemplate(template: string, data: Record<string, unknown>): string"
+        },
+        {
+          "name": "extractTitle",
+          "kind": "function",
+          "description": "Extracts title from content or frontmatter.",
+          "params": [
+            {
+              "name": "content",
+              "type": "string",
+              "description": ""
+            },
+            {
+              "name": "frontmatter",
+              "type": "Record",
+              "description": ""
+            }
+          ],
+          "returns": {
+            "type": "string",
+            "description": ""
+          },
+          "private": false,
+          "file": "npm/vite-plugin-ox-content/src/ssg.ts",
+          "line": 1400,
+          "endLine": 1411,
+          "signature": "export function extractTitle(content: string, frontmatter: Record<string, unknown>): string"
+        },
+        {
+          "name": "_generateNavHtml",
+          "kind": "function",
+          "description": "Generates navigation HTML from nav groups.",
+          "params": [
+            {
+              "name": "navGroups",
+              "type": "NavGroup[]",
+              "description": ""
+            },
+            {
+              "name": "currentPath",
+              "type": "string",
+              "description": ""
+            }
+          ],
+          "returns": {
+            "type": "string",
+            "description": ""
+          },
+          "private": false,
+          "file": "npm/vite-plugin-ox-content/src/ssg.ts",
+          "line": 1416,
+          "endLine": 1435,
+          "signature": "function _generateNavHtml(navGroups: NavGroup[], currentPath: string): string"
+        },
+        {
+          "name": "_generateTocHtml",
+          "kind": "function",
+          "description": "Generates TOC HTML from toc entries.",
+          "params": [
+            {
+              "name": "toc",
+              "type": "TocEntry[]",
+              "description": ""
+            }
+          ],
+          "returns": {
+            "type": "string",
+            "description": ""
+          },
+          "private": false,
+          "file": "npm/vite-plugin-ox-content/src/ssg.ts",
+          "line": 1440,
+          "endLine": 1454,
+          "signature": "function _generateTocHtml(toc: TocEntry[]): string"
+        },
+        {
+          "name": "generateBareHtmlPage",
+          "kind": "function",
+          "description": "Generates bare HTML page (no navigation, no styles).",
+          "params": [
+            {
+              "name": "content",
+              "type": "string",
+              "description": ""
+            },
+            {
+              "name": "title",
+              "type": "string",
+              "description": ""
+            }
+          ],
+          "returns": {
+            "type": "string",
+            "description": ""
+          },
+          "private": false,
+          "file": "npm/vite-plugin-ox-content/src/ssg.ts",
+          "line": 1459,
+          "endLine": 1464,
+          "signature": "export function generateBareHtmlPage(content: string, title: string): string"
+        },
+        {
+          "name": "generateHtmlPage",
+          "kind": "function",
+          "description": "Generates HTML page with navigation using Rust NAPI bindings.",
+          "params": [
+            {
+              "name": "pageData",
+              "type": "SsgPageData",
+              "description": ""
+            },
+            {
+              "name": "navGroups",
+              "type": "NavGroup[]",
+              "description": ""
+            },
+            {
+              "name": "siteName",
+              "type": "string",
+              "description": ""
+            },
+            {
+              "name": "base",
+              "type": "string",
+              "description": ""
+            },
+            {
+              "name": "ogImage",
+              "type": "string",
+              "description": "",
+              "optional": true
+            },
+            {
+              "name": "theme",
+              "type": "ResolvedThemeConfig",
+              "description": "",
+              "optional": true
+            }
+          ],
+          "returns": {
+            "type": "Promise",
+            "description": ""
+          },
+          "private": false,
+          "file": "npm/vite-plugin-ox-content/src/ssg.ts",
+          "line": 1469,
+          "endLine": 1557,
+          "signature": "export async function generateHtmlPage(pageData: SsgPageData, navGroups: NavGroup[], siteName: string, base: string, ogImage?: string, theme?: ResolvedThemeConfig): Promise<string>"
+        },
+        {
+          "name": "getOutputPath",
+          "kind": "function",
+          "description": "Converts a markdown file path to its corresponding HTML output path.",
+          "params": [
+            {
+              "name": "inputPath",
+              "type": "string",
+              "description": ""
+            },
+            {
+              "name": "srcDir",
+              "type": "string",
+              "description": ""
+            },
+            {
+              "name": "outDir",
+              "type": "string",
+              "description": ""
+            },
+            {
+              "name": "extension",
+              "type": "string",
+              "description": ""
+            }
+          ],
+          "returns": {
+            "type": "string",
+            "description": ""
+          },
+          "private": false,
+          "file": "npm/vite-plugin-ox-content/src/ssg.ts",
+          "line": 1863,
+          "endLine": 1878,
+          "signature": "export function getOutputPath(inputPath: string, srcDir: string, outDir: string, extension: string): string"
+        },
+        {
+          "name": "getUrlPath",
+          "kind": "function",
+          "description": "Converts a markdown file path to a relative URL path.",
+          "params": [
+            {
+              "name": "inputPath",
+              "type": "string",
+              "description": ""
+            },
+            {
+              "name": "srcDir",
+              "type": "string",
+              "description": ""
+            }
+          ],
+          "returns": {
+            "type": "string",
+            "description": ""
+          },
+          "private": false,
+          "file": "npm/vite-plugin-ox-content/src/ssg.ts",
+          "line": 1883,
+          "endLine": 1892,
+          "signature": "export function getUrlPath(inputPath: string, srcDir: string): string"
+        },
+        {
+          "name": "getHref",
+          "kind": "function",
+          "description": "Converts a markdown file path to an href.",
+          "params": [
+            {
+              "name": "inputPath",
+              "type": "string",
+              "description": ""
+            },
+            {
+              "name": "srcDir",
+              "type": "string",
+              "description": ""
+            },
+            {
+              "name": "base",
+              "type": "string",
+              "description": ""
+            },
+            {
+              "name": "extension",
+              "type": "string",
+              "description": ""
+            }
+          ],
+          "returns": {
+            "type": "string",
+            "description": ""
+          },
+          "private": false,
+          "file": "npm/vite-plugin-ox-content/src/ssg.ts",
+          "line": 1897,
+          "endLine": 1908,
+          "signature": "export function getHref(inputPath: string, srcDir: string, base: string, extension: string): string"
+        },
+        {
+          "name": "getOgImagePath",
+          "kind": "function",
+          "description": "Gets the OG image output path for a given markdown file.",
+          "params": [
+            {
+              "name": "inputPath",
+              "type": "string",
+              "description": ""
+            },
+            {
+              "name": "srcDir",
+              "type": "string",
+              "description": ""
+            },
+            {
+              "name": "outDir",
+              "type": "string",
+              "description": ""
+            }
+          ],
+          "returns": {
+            "type": "string",
+            "description": ""
+          },
+          "private": false,
+          "file": "npm/vite-plugin-ox-content/src/ssg.ts",
+          "line": 1913,
+          "endLine": 1923,
+          "signature": "function getOgImagePath(inputPath: string, srcDir: string, outDir: string): string"
+        },
+        {
+          "name": "getOgImageUrl",
+          "kind": "function",
+          "description": "Gets the OG image URL for use in meta tags.\nIf siteUrl is provided, returns an absolute URL (required for SNS sharing).",
+          "params": [
+            {
+              "name": "inputPath",
+              "type": "string",
+              "description": ""
+            },
+            {
+              "name": "srcDir",
+              "type": "string",
+              "description": ""
+            },
+            {
+              "name": "base",
+              "type": "string",
+              "description": ""
+            },
+            {
+              "name": "siteUrl",
+              "type": "string",
+              "description": "",
+              "optional": true
+            }
+          ],
+          "returns": {
+            "type": "string",
+            "description": ""
+          },
+          "private": false,
+          "file": "npm/vite-plugin-ox-content/src/ssg.ts",
+          "line": 1929,
+          "endLine": 1945,
+          "signature": "function getOgImageUrl(inputPath: string, srcDir: string, base: string, siteUrl?: string): string"
+        },
+        {
+          "name": "getDisplayTitle",
+          "kind": "function",
+          "description": "Gets display title from file path.",
+          "params": [
+            {
+              "name": "filePath",
+              "type": "string",
+              "description": ""
+            }
+          ],
+          "returns": {
+            "type": "string",
+            "description": ""
+          },
+          "private": false,
+          "file": "npm/vite-plugin-ox-content/src/ssg.ts",
+          "line": 1950,
+          "endLine": 1962,
+          "signature": "function getDisplayTitle(filePath: string): string"
+        },
+        {
+          "name": "formatTitle",
+          "kind": "function",
+          "description": "Formats a file/dir name as a title.",
+          "params": [
+            {
+              "name": "name",
+              "type": "string",
+              "description": ""
+            }
+          ],
+          "returns": {
+            "type": "string",
+            "description": ""
+          },
+          "private": false,
+          "file": "npm/vite-plugin-ox-content/src/ssg.ts",
+          "line": 1967,
+          "endLine": 1971,
+          "signature": "export function formatTitle(name: string): string"
+        },
+        {
+          "name": "collectMarkdownFiles",
+          "kind": "function",
+          "description": "Collects all markdown files from the source directory.",
+          "params": [
+            {
+              "name": "srcDir",
+              "type": "string",
+              "description": ""
+            }
+          ],
+          "returns": {
+            "type": "Promise",
+            "description": ""
+          },
+          "private": false,
+          "file": "npm/vite-plugin-ox-content/src/ssg.ts",
+          "line": 1976,
+          "endLine": 1983,
+          "signature": "export async function collectMarkdownFiles(srcDir: string): Promise<string[]>"
+        },
+        {
+          "name": "NavGroup",
+          "kind": "interface",
+          "description": "Navigation group for hierarchical navigation.",
+          "private": false,
+          "file": "npm/vite-plugin-ox-content/src/ssg.ts",
+          "line": 1988,
+          "endLine": 1991,
+          "signature": "export interface NavGroup"
+        },
+        {
+          "name": "buildNavItems",
+          "kind": "function",
+          "description": "Builds navigation items from markdown files, grouped by directory.",
+          "params": [
+            {
+              "name": "markdownFiles",
+              "type": "string[]",
+              "description": ""
+            },
+            {
+              "name": "srcDir",
+              "type": "string",
+              "description": ""
+            },
+            {
+              "name": "base",
+              "type": "string",
+              "description": ""
+            },
+            {
+              "name": "extension",
+              "type": "string",
+              "description": ""
+            }
+          ],
+          "returns": {
+            "type": "NavGroup[]",
+            "description": ""
+          },
+          "private": false,
+          "file": "npm/vite-plugin-ox-content/src/ssg.ts",
+          "line": 1996,
+          "endLine": 2076,
+          "signature": "export function buildNavItems(markdownFiles: string[], srcDir: string, base: string, extension: string): NavGroup[]"
+        },
+        {
+          "name": "buildSsg",
+          "kind": "function",
+          "description": "Builds all markdown files to static HTML.",
+          "params": [
+            {
+              "name": "options",
+              "type": "ResolvedOptions",
+              "description": ""
+            },
+            {
+              "name": "root",
+              "type": "string",
+              "description": ""
+            }
+          ],
+          "returns": {
+            "type": "Promise",
+            "description": ""
+          },
+          "private": false,
+          "file": "npm/vite-plugin-ox-content/src/ssg.ts",
+          "line": 2081,
+          "endLine": 2321,
+          "signature": "export async function buildSsg(options: ResolvedOptions, root: string): Promise<{ files: string[]; errors: string[] }>"
+        }
+      ]
+    },
+    {
+      "file": "npm/vite-plugin-ox-content/src/theme-renderer.ts",
+      "entries": [
+        {
+          "name": "ThemeComponent",
+          "kind": "type",
+          "description": "Theme component type.",
+          "private": false,
+          "file": "npm/vite-plugin-ox-content/src/theme-renderer.ts",
+          "line": 25,
+          "endLine": 25,
+          "signature": "export type ThemeComponent = (props: ThemeProps) => JSXNode"
+        },
+        {
+          "name": "ThemeProps",
+          "kind": "interface",
+          "description": "Props passed to the theme component.",
+          "private": false,
+          "file": "npm/vite-plugin-ox-content/src/theme-renderer.ts",
+          "line": 30,
+          "endLine": 33,
+          "signature": "export interface ThemeProps"
+        },
+        {
+          "name": "PageData",
+          "kind": "interface",
+          "description": "Page data for rendering.",
+          "private": false,
+          "file": "npm/vite-plugin-ox-content/src/theme-renderer.ts",
+          "line": 38,
+          "endLine": 55,
+          "signature": "export interface PageData"
+        },
+        {
+          "name": "ThemeRenderOptions",
+          "kind": "interface",
+          "description": "Theme render options.",
+          "private": false,
+          "file": "npm/vite-plugin-ox-content/src/theme-renderer.ts",
+          "line": 60,
+          "endLine": 73,
+          "signature": "export interface ThemeRenderOptions"
+        },
+        {
+          "name": "renderPage",
+          "kind": "function",
+          "description": "Renders a page using the theme component.",
+          "params": [
+            {
+              "name": "page",
+              "type": "PageData",
+              "description": "Page data to render"
+            },
+            {
+              "name": "options",
+              "type": "ThemeRenderOptions",
+              "description": "Theme render options"
+            }
+          ],
+          "returns": {
+            "type": "string",
+            "description": "Rendered HTML string"
+          },
+          "private": false,
+          "file": "npm/vite-plugin-ox-content/src/theme-renderer.ts",
+          "line": 82,
+          "endLine": 139,
+          "signature": "export function renderPage(page: PageData, options: ThemeRenderOptions): string"
+        },
+        {
+          "name": "renderAllPages",
+          "kind": "function",
+          "description": "Renders all pages and generates type definitions.",
+          "params": [
+            {
+              "name": "pages",
+              "type": "PageData[]",
+              "description": "All pages to render"
+            },
+            {
+              "name": "options",
+              "type": "ThemeRenderOptions",
+              "description": "Theme render options"
+            }
+          ],
+          "returns": {
+            "type": "Promise",
+            "description": "Map of output paths to rendered HTML"
+          },
+          "private": false,
+          "file": "npm/vite-plugin-ox-content/src/theme-renderer.ts",
+          "line": 148,
+          "endLine": 166,
+          "signature": "export async function renderAllPages(pages: PageData[], options: ThemeRenderOptions): Promise<Map<string, string>>"
+        },
+        {
+          "name": "generateTypes",
+          "kind": "function",
+          "description": "Generates TypeScript type definitions from page frontmatter.",
+          "params": [
+            {
+              "name": "pages",
+              "type": "PageData[]",
+              "description": "All pages"
+            },
+            {
+              "name": "outDir",
+              "type": "string",
+              "description": "Output directory for types"
+            }
+          ],
+          "returns": {
+            "type": "Promise",
+            "description": ""
+          },
+          "private": false,
+          "file": "npm/vite-plugin-ox-content/src/theme-renderer.ts",
+          "line": 174,
+          "endLine": 185,
+          "signature": "export async function generateTypes(pages: PageData[], outDir: string): Promise<void>"
+        },
+        {
+          "name": "DefaultTheme",
+          "kind": "function",
+          "description": "Default theme component.\nA minimal theme that renders page content with basic styling.",
+          "params": [
+            {
+              "name": "param",
+              "type": "ThemeProps",
+              "description": ""
+            }
+          ],
+          "returns": {
+            "type": "JSXNode",
+            "description": ""
+          },
+          "private": false,
+          "file": "npm/vite-plugin-ox-content/src/theme-renderer.ts",
+          "line": 191,
+          "endLine": 236,
+          "signature": "export function DefaultTheme({ children }: ThemeProps): JSXNode"
+        },
+        {
+          "name": "createTheme",
+          "kind": "function",
+          "description": "Creates a theme with layout switching support.",
+          "params": [
+            {
+              "name": "config",
+              "type": "{ ... }",
+              "description": ""
+            }
+          ],
+          "returns": {
+            "type": "ThemeComponent",
+            "description": ""
+          },
+          "examples": [
+            "```tsx\nimport { createTheme } from '@ox-content/vite-plugin';\nimport { DefaultLayout } from './layouts/Default';\nimport { EntryLayout } from './layouts/Entry';\nexport default createTheme({\n  layouts: {\n    default: DefaultLayout,\n    entry: EntryLayout,\n  },\n});\n```"
+          ],
+          "private": false,
+          "file": "npm/vite-plugin-ox-content/src/theme-renderer.ts",
+          "line": 263,
+          "endLine": 287,
+          "signature": "export function createTheme(config: {\n  layouts: Record<string, ThemeComponent>;\n  defaultLayout?: string;\n}): ThemeComponent"
+        }
+      ]
+    },
+    {
+      "file": "npm/vite-plugin-ox-content/src/theme.ts",
+      "entries": [
+        {
+          "name": "ThemeColors",
+          "kind": "interface",
+          "description": "Theme color configuration.",
+          "private": false,
+          "file": "npm/vite-plugin-ox-content/src/theme.ts",
+          "line": 10,
+          "endLine": 29,
+          "signature": "export interface ThemeColors"
+        },
+        {
+          "name": "ThemeLayout",
+          "kind": "interface",
+          "description": "Theme layout configuration.",
+          "private": false,
+          "file": "npm/vite-plugin-ox-content/src/theme.ts",
+          "line": 34,
+          "endLine": 41,
+          "signature": "export interface ThemeLayout"
+        },
+        {
+          "name": "ThemeFonts",
+          "kind": "interface",
+          "description": "Theme font configuration.",
+          "private": false,
+          "file": "npm/vite-plugin-ox-content/src/theme.ts",
+          "line": 46,
+          "endLine": 51,
+          "signature": "export interface ThemeFonts"
+        },
+        {
+          "name": "ThemeEntryPage",
+          "kind": "interface",
+          "description": "Entry page theme configuration.",
+          "private": false,
+          "file": "npm/vite-plugin-ox-content/src/theme.ts",
+          "line": 56,
+          "endLine": 59,
+          "signature": "export interface ThemeEntryPage"
+        },
+        {
+          "name": "ThemeHeader",
+          "kind": "interface",
+          "description": "Theme header configuration.",
+          "private": false,
+          "file": "npm/vite-plugin-ox-content/src/theme.ts",
+          "line": 64,
+          "endLine": 77,
+          "signature": "export interface ThemeHeader"
+        },
+        {
+          "name": "ThemeFooter",
+          "kind": "interface",
+          "description": "Theme footer configuration.",
+          "private": false,
+          "file": "npm/vite-plugin-ox-content/src/theme.ts",
+          "line": 82,
+          "endLine": 87,
+          "signature": "export interface ThemeFooter"
+        },
+        {
+          "name": "SocialLinks",
+          "kind": "interface",
+          "description": "Social links configuration.",
+          "private": false,
+          "file": "npm/vite-plugin-ox-content/src/theme.ts",
+          "line": 92,
+          "endLine": 99,
+          "signature": "export interface SocialLinks"
+        },
+        {
+          "name": "ThemeEmbed",
+          "kind": "interface",
+          "description": "Embedded HTML content for specific positions in the page layout.",
+          "private": false,
+          "file": "npm/vite-plugin-ox-content/src/theme.ts",
+          "line": 104,
+          "endLine": 123,
+          "signature": "export interface ThemeEmbed"
+        },
+        {
+          "name": "ThemeConfig",
+          "kind": "interface",
+          "description": "Complete theme configuration.",
+          "private": false,
+          "file": "npm/vite-plugin-ox-content/src/theme.ts",
+          "line": 128,
+          "endLine": 155,
+          "signature": "export interface ThemeConfig"
+        },
+        {
+          "name": "ResolvedThemeConfig",
+          "kind": "interface",
+          "description": "Resolved theme configuration (after merging with defaults).",
+          "private": false,
+          "file": "npm/vite-plugin-ox-content/src/theme.ts",
+          "line": 160,
+          "endLine": 173,
+          "signature": "export interface ResolvedThemeConfig"
+        },
+        {
+          "name": "deepMerge",
+          "kind": "function",
+          "description": "Deep merge two objects.",
+          "params": [
+            {
+              "name": "target",
+              "type": "T",
+              "description": ""
+            },
+            {
+              "name": "source",
+              "type": "Partial",
+              "description": ""
+            }
+          ],
+          "returns": {
+            "type": "T",
+            "description": ""
+          },
+          "private": false,
+          "file": "npm/vite-plugin-ox-content/src/theme.ts",
+          "line": 236,
+          "endLine": 262,
+          "signature": "function deepMerge<T extends Record<string, unknown>>(target: T, source: Partial<T>): T"
+        },
+        {
+          "name": "defineTheme",
+          "kind": "function",
+          "description": "Defines a theme configuration with type checking.",
+          "params": [
+            {
+              "name": "config",
+              "type": "ThemeConfig",
+              "description": ""
+            }
+          ],
+          "returns": {
+            "type": "ThemeConfig",
+            "description": ""
+          },
+          "examples": [
+            "```ts\nconst myTheme = defineTheme({\n  extends: defaultTheme,\n  colors: {\n    primary: '#3498db',\n  },\n  footer: {\n    copyright: '2025 My Company',\n  },\n});\n```"
+          ],
+          "private": false,
+          "file": "npm/vite-plugin-ox-content/src/theme.ts",
+          "line": 280,
+          "endLine": 282,
+          "signature": "export function defineTheme(config: ThemeConfig): ThemeConfig"
+        },
+        {
+          "name": "mergeThemes",
+          "kind": "function",
+          "description": "Merges multiple theme configurations.\nLater themes override earlier ones.",
+          "returns": {
+            "type": "ThemeConfig",
+            "description": ""
+          },
+          "examples": [
+            "```ts\nconst merged = mergeThemes(defaultTheme, customTheme, overrides);\n```"
+          ],
+          "private": false,
+          "file": "npm/vite-plugin-ox-content/src/theme.ts",
+          "line": 293,
+          "endLine": 308,
+          "signature": "export function mergeThemes(...themes): ThemeConfig"
+        },
+        {
+          "name": "resolveTheme",
+          "kind": "function",
+          "description": "Resolves a theme configuration by merging with its extends chain and defaults.",
+          "params": [
+            {
+              "name": "config",
+              "type": "ThemeConfig",
+              "description": "",
+              "optional": true
+            }
+          ],
+          "returns": {
+            "type": "ResolvedThemeConfig",
+            "description": ""
+          },
+          "private": false,
+          "file": "npm/vite-plugin-ox-content/src/theme.ts",
+          "line": 313,
+          "endLine": 350,
+          "signature": "export function resolveTheme(config?: ThemeConfig): ResolvedThemeConfig"
+        },
+        {
+          "name": "themeToNapi",
+          "kind": "function",
+          "description": "Converts resolved theme to the format expected by Rust NAPI.",
+          "params": [
+            {
+              "name": "theme",
+              "type": "ResolvedThemeConfig",
+              "description": ""
+            }
+          ],
+          "returns": {
+            "type": "NapiThemeConfig",
+            "description": ""
+          },
+          "private": false,
+          "file": "npm/vite-plugin-ox-content/src/theme.ts",
+          "line": 355,
+          "endLine": 431,
+          "signature": "export function themeToNapi(theme: ResolvedThemeConfig): NapiThemeConfig"
+        },
+        {
+          "name": "NapiThemeColors",
+          "kind": "interface",
+          "description": "NAPI-compatible theme colors type.",
+          "private": false,
+          "file": "npm/vite-plugin-ox-content/src/theme.ts",
+          "line": 436,
+          "endLine": 446,
+          "signature": "export interface NapiThemeColors"
+        },
+        {
+          "name": "NapiThemeFonts",
+          "kind": "interface",
+          "description": "NAPI-compatible theme fonts type.",
+          "private": false,
+          "file": "npm/vite-plugin-ox-content/src/theme.ts",
+          "line": 451,
+          "endLine": 454,
+          "signature": "export interface NapiThemeFonts"
+        },
+        {
+          "name": "NapiThemeEntryPage",
+          "kind": "interface",
+          "description": "NAPI-compatible entry page theme type.",
+          "private": false,
+          "file": "npm/vite-plugin-ox-content/src/theme.ts",
+          "line": 459,
+          "endLine": 461,
+          "signature": "export interface NapiThemeEntryPage"
+        },
+        {
+          "name": "NapiThemeLayout",
+          "kind": "interface",
+          "description": "NAPI-compatible theme layout type.",
+          "private": false,
+          "file": "npm/vite-plugin-ox-content/src/theme.ts",
+          "line": 466,
+          "endLine": 470,
+          "signature": "export interface NapiThemeLayout"
+        },
+        {
+          "name": "NapiThemeHeader",
+          "kind": "interface",
+          "description": "NAPI-compatible theme header type.",
+          "private": false,
+          "file": "npm/vite-plugin-ox-content/src/theme.ts",
+          "line": 475,
+          "endLine": 482,
+          "signature": "export interface NapiThemeHeader"
+        },
+        {
+          "name": "NapiThemeFooter",
+          "kind": "interface",
+          "description": "NAPI-compatible theme footer type.",
+          "private": false,
+          "file": "npm/vite-plugin-ox-content/src/theme.ts",
+          "line": 487,
+          "endLine": 490,
+          "signature": "export interface NapiThemeFooter"
+        },
+        {
+          "name": "NapiSocialLinks",
+          "kind": "interface",
+          "description": "NAPI-compatible social links type.",
+          "private": false,
+          "file": "npm/vite-plugin-ox-content/src/theme.ts",
+          "line": 495,
+          "endLine": 499,
+          "signature": "export interface NapiSocialLinks"
+        },
+        {
+          "name": "NapiThemeEmbed",
+          "kind": "interface",
+          "description": "NAPI-compatible theme embed type.",
+          "private": false,
+          "file": "npm/vite-plugin-ox-content/src/theme.ts",
+          "line": 504,
+          "endLine": 514,
+          "signature": "export interface NapiThemeEmbed"
+        },
+        {
+          "name": "NapiThemeConfig",
+          "kind": "interface",
+          "description": "NAPI-compatible theme configuration type.",
+          "private": false,
+          "file": "npm/vite-plugin-ox-content/src/theme.ts",
+          "line": 519,
+          "endLine": 531,
+          "signature": "export interface NapiThemeConfig"
+        }
+      ]
+    },
+    {
+      "file": "npm/vite-plugin-ox-content/src/transform.ts",
+      "entries": [
+        {
+          "name": "NapiBindings",
+          "kind": "interface",
+          "description": "NAPI bindings for Rust-based Markdown processing.\nProvides access to compiled Rust functions for high-performance\nMarkdown parsing and rendering operations.",
+          "private": false,
+          "file": "npm/vite-plugin-ox-content/src/transform.ts",
+          "line": 47,
+          "endLine": 96,
+          "signature": "interface NapiBindings"
+        },
+        {
+          "name": "OgImageData",
+          "kind": "interface",
+          "description": "OG image data for generating social media preview images.",
+          "private": false,
+          "file": "npm/vite-plugin-ox-content/src/transform.ts",
+          "line": 101,
+          "endLine": 110,
+          "signature": "export interface OgImageData"
+        },
+        {
+          "name": "OgImageConfig",
+          "kind": "interface",
+          "description": "OG image configuration.",
+          "private": false,
+          "file": "npm/vite-plugin-ox-content/src/transform.ts",
+          "line": 115,
+          "endLine": 128,
+          "signature": "export interface OgImageConfig"
+        },
+        {
+          "name": "JsTransformOptions",
+          "kind": "interface",
+          "description": "Options for Rust-based Markdown transformation.\nControls which Markdown extensions and features are enabled\nduring parsing and rendering.",
+          "private": false,
+          "file": "npm/vite-plugin-ox-content/src/transform.ts",
+          "line": 136,
+          "endLine": 226,
+          "signature": "interface JsTransformOptions"
+        },
+        {
+          "name": "loadNapiBindings",
+          "kind": "function",
+          "description": "Lazily loads and caches NAPI bindings.\nThis function uses lazy loading to defer the import of NAPI bindings\nuntil they're actually needed. The bindings are loaded only once and\ncached for subsequent uses. If loading fails (e.g., bindings not built),\nthe failure is cached to avoid repeated load attempts.\n## Performance Considerations\nThe first call to this function may have a slight performance penalty\ndue to module loading. Subsequent calls use the cached result and are\nessentially zero-cost.\n## Error Handling\nIf NAPI bindings are not available (not built, wrong architecture, etc.),\nthis function returns `null`. The caller should handle this gracefully\nor provide fallback behavior.",
+          "returns": {
+            "type": "Promise",
+            "description": "Promise resolving to NAPI bindings or null if unavailable"
+          },
+          "examples": [
+            "```typescript\n// Simple check with fallback\nconst napi = await loadNapiBindings();\nif (!napi) {\n  console.warn('NAPI bindings not available, using fallback');\n  return fallbackRender(content);\n}\n// Use Rust implementation\nconst result = napi.transform(content, { gfm: true });\n```"
+          ],
+          "tags": {
+            "internal": ""
+          },
+          "private": false,
+          "file": "npm/vite-plugin-ox-content/src/transform.ts",
+          "line": 279,
+          "endLine": 302,
+          "signature": "async function loadNapiBindings(): Promise<NapiBindings | null>"
+        },
+        {
+          "name": "SsgTransformOptions",
+          "kind": "interface",
+          "description": "SSG-specific transform options.",
+          "private": false,
+          "file": "npm/vite-plugin-ox-content/src/transform.ts",
+          "line": 388,
+          "endLine": 395,
+          "signature": "export interface SsgTransformOptions"
+        },
+        {
+          "name": "parseFrontmatter",
+          "kind": "function",
+          "description": "Parses YAML frontmatter from Markdown content.\nUses proper YAML parser for full nested object support.",
+          "params": [
+            {
+              "name": "source",
+              "type": "string",
+              "description": ""
+            }
+          ],
+          "returns": {
+            "type": "{ ... }",
+            "description": ""
+          },
+          "private": false,
+          "file": "npm/vite-plugin-ox-content/src/transform.ts",
+          "line": 482,
+          "endLine": 509,
+          "signature": "function parseFrontmatter(source: string): {\n  content: string;\n  frontmatter: Record<string, unknown>;\n}"
+        },
+        {
+          "name": "buildTocTree",
+          "kind": "function",
+          "description": "Builds nested TOC tree from flat list.",
+          "params": [
+            {
+              "name": "entries",
+              "type": "TocEntry[]",
+              "description": ""
+            }
+          ],
+          "returns": {
+            "type": "TocEntry[]",
+            "description": ""
+          },
+          "private": false,
+          "file": "npm/vite-plugin-ox-content/src/transform.ts",
+          "line": 514,
+          "endLine": 534,
+          "signature": "function buildTocTree(entries: TocEntry[]): TocEntry[]"
+        },
+        {
+          "name": "generateModuleCode",
+          "kind": "function",
+          "description": "Generates the JavaScript module code.",
+          "params": [
+            {
+              "name": "html",
+              "type": "string",
+              "description": ""
+            },
+            {
+              "name": "frontmatter",
+              "type": "Record",
+              "description": ""
+            },
+            {
+              "name": "toc",
+              "type": "TocEntry[]",
+              "description": ""
+            },
+            {
+              "name": "filePath",
+              "type": "string",
+              "description": ""
+            },
+            {
+              "name": "_options",
+              "type": "ResolvedOptions",
+              "description": ""
+            }
+          ],
+          "returns": {
+            "type": "string",
+            "description": ""
+          },
+          "private": false,
+          "file": "npm/vite-plugin-ox-content/src/transform.ts",
+          "line": 539,
+          "endLine": 588,
+          "signature": "function generateModuleCode(html: string, frontmatter: Record<string, unknown>, toc: TocEntry[], filePath: string, _options: ResolvedOptions): string"
+        },
+        {
+          "name": "extractImports",
+          "kind": "function",
+          "description": "Extracts imports from Markdown content.\nSupports importing components for interactive islands.",
+          "params": [
+            {
+              "name": "content",
+              "type": "string",
+              "description": ""
+            }
+          ],
+          "returns": {
+            "type": "string[]",
+            "description": ""
+          },
+          "private": false,
+          "file": "npm/vite-plugin-ox-content/src/transform.ts",
+          "line": 595,
+          "endLine": 605,
+          "signature": "export function extractImports(content: string): string[]"
+        },
+        {
+          "name": "generateOgImageSvg",
+          "kind": "function",
+          "description": "Generates an OG image SVG using the Rust-based generator.\nThis function uses the Rust NAPI bindings to generate SVG-based\nOG images for social media previews. The SVG can be served directly\nor converted to PNG/JPEG for broader compatibility.\nIn the future, custom JS templates can be provided to override\nthe default Rust-based template.",
+          "params": [
+            {
+              "name": "data",
+              "type": "OgImageData",
+              "description": "OG image data (title, description, etc.)"
+            },
+            {
+              "name": "config",
+              "type": "OgImageConfig",
+              "description": "Optional OG image configuration",
+              "optional": true
+            }
+          ],
+          "returns": {
+            "type": "Promise",
+            "description": "SVG string or null if NAPI bindings are unavailable"
+          },
+          "private": false,
+          "file": "npm/vite-plugin-ox-content/src/transform.ts",
+          "line": 621,
+          "endLine": 643,
+          "signature": "export async function generateOgImageSvg(data: OgImageData, config?: OgImageConfig): Promise<string | null>"
+        }
+      ]
+    },
+    {
+      "file": "npm/vite-plugin-ox-content/src/types.ts",
+      "entries": [
+        {
+          "name": "HeroAction",
+          "kind": "interface",
+          "description": "Hero section action button.",
+          "private": false,
+          "file": "npm/vite-plugin-ox-content/src/types.ts",
+          "line": 15,
+          "endLine": 22,
+          "signature": "export interface HeroAction"
+        },
+        {
+          "name": "HeroImage",
+          "kind": "interface",
+          "description": "Hero section image configuration.",
+          "private": false,
+          "file": "npm/vite-plugin-ox-content/src/types.ts",
+          "line": 27,
+          "endLine": 40,
+          "signature": "export interface HeroImage"
+        },
+        {
+          "name": "HeroNotice",
+          "kind": "interface",
+          "description": "Hero notice configuration.",
+          "private": false,
+          "file": "npm/vite-plugin-ox-content/src/types.ts",
+          "line": 45,
+          "endLine": 50,
+          "signature": "export interface HeroNotice"
+        },
+        {
+          "name": "HeroConfig",
+          "kind": "interface",
+          "description": "Hero section configuration for entry page.",
+          "private": false,
+          "file": "npm/vite-plugin-ox-content/src/types.ts",
+          "line": 55,
+          "endLine": 68,
+          "signature": "export interface HeroConfig"
+        },
+        {
+          "name": "FeatureConfig",
+          "kind": "interface",
+          "description": "Feature card for entry page.",
+          "private": false,
+          "file": "npm/vite-plugin-ox-content/src/types.ts",
+          "line": 73,
+          "endLine": 84,
+          "signature": "export interface FeatureConfig"
+        },
+        {
+          "name": "EntryPageConfig",
+          "kind": "interface",
+          "description": "Entry page frontmatter configuration.",
+          "private": false,
+          "file": "npm/vite-plugin-ox-content/src/types.ts",
+          "line": 89,
+          "endLine": 96,
+          "signature": "export interface EntryPageConfig"
+        },
+        {
+          "name": "SsgOptions",
+          "kind": "interface",
+          "description": "SSG (Static Site Generation) options.",
+          "private": false,
+          "file": "npm/vite-plugin-ox-content/src/types.ts",
+          "line": 101,
+          "endLine": 157,
+          "signature": "export interface SsgOptions"
+        },
+        {
+          "name": "ResolvedSsgOptions",
+          "kind": "interface",
+          "description": "Resolved SSG options.",
+          "private": false,
+          "file": "npm/vite-plugin-ox-content/src/types.ts",
+          "line": 162,
+          "endLine": 172,
+          "signature": "export interface ResolvedSsgOptions"
+        },
+        {
+          "name": "OxContentOptions",
+          "kind": "interface",
+          "description": "Plugin options.",
+          "private": false,
+          "file": "npm/vite-plugin-ox-content/src/types.ts",
+          "line": 177,
+          "endLine": 332,
+          "signature": "export interface OxContentOptions"
+        },
+        {
+          "name": "ResolvedOptions",
+          "kind": "interface",
+          "description": "Resolved options with all defaults applied.",
+          "private": false,
+          "file": "npm/vite-plugin-ox-content/src/types.ts",
+          "line": 337,
+          "endLine": 362,
+          "signature": "export interface ResolvedOptions"
+        },
+        {
+          "name": "CodeAnnotationKind",
+          "kind": "type",
+          "description": "Supported line annotation kinds for code blocks.",
+          "private": false,
+          "file": "npm/vite-plugin-ox-content/src/types.ts",
+          "line": 367,
+          "endLine": 367,
+          "signature": "export type CodeAnnotationKind = \"highlight\" | \"warning\" | \"error\""
+        },
+        {
+          "name": "CodeAnnotationSyntax",
+          "kind": "type",
+          "description": "Supported code annotation syntaxes.",
+          "private": false,
+          "file": "npm/vite-plugin-ox-content/src/types.ts",
+          "line": 372,
+          "endLine": 372,
+          "signature": "export type CodeAnnotationSyntax = \"attribute\" | \"vitepress\" | \"both\""
+        },
+        {
+          "name": "CodeAnnotationsOptions",
+          "kind": "interface",
+          "description": "Opt-in code annotation configuration.",
+          "private": false,
+          "file": "npm/vite-plugin-ox-content/src/types.ts",
+          "line": 377,
+          "endLine": 407,
+          "signature": "export interface CodeAnnotationsOptions"
+        },
+        {
+          "name": "ResolvedCodeAnnotationsOptions",
+          "kind": "interface",
+          "description": "Resolved code annotation configuration.",
+          "private": false,
+          "file": "npm/vite-plugin-ox-content/src/types.ts",
+          "line": 412,
+          "endLine": 417,
+          "signature": "export interface ResolvedCodeAnnotationsOptions"
+        },
+        {
+          "name": "OgImageOptions",
+          "kind": "interface",
+          "description": "OG image generation options.\nUses Chromium-based rendering with customizable templates.",
+          "private": false,
+          "file": "npm/vite-plugin-ox-content/src/types.ts",
+          "line": 423,
+          "endLine": 466,
+          "signature": "export interface OgImageOptions"
+        },
+        {
+          "name": "ResolvedOgImageOptions",
+          "kind": "interface",
+          "description": "Resolved OG image options with all defaults applied.",
+          "private": false,
+          "file": "npm/vite-plugin-ox-content/src/types.ts",
+          "line": 471,
+          "endLine": 478,
+          "signature": "export interface ResolvedOgImageOptions"
+        },
+        {
+          "name": "MarkdownTransformer",
+          "kind": "interface",
+          "description": "Custom AST transformer.",
+          "private": false,
+          "file": "npm/vite-plugin-ox-content/src/types.ts",
+          "line": 483,
+          "endLine": 493,
+          "signature": "export interface MarkdownTransformer"
+        },
+        {
+          "name": "TransformContext",
+          "kind": "interface",
+          "description": "Transform context passed to transformers.",
+          "private": false,
+          "file": "npm/vite-plugin-ox-content/src/types.ts",
+          "line": 498,
+          "endLine": 513,
+          "signature": "export interface TransformContext"
+        },
+        {
+          "name": "MarkdownNode",
+          "kind": "interface",
+          "description": "Markdown AST node (simplified for TypeScript).",
+          "private": false,
+          "file": "npm/vite-plugin-ox-content/src/types.ts",
+          "line": 518,
+          "endLine": 523,
+          "signature": "export interface MarkdownNode"
+        },
+        {
+          "name": "TransformResult",
+          "kind": "interface",
+          "description": "Transform result.",
+          "private": false,
+          "file": "npm/vite-plugin-ox-content/src/types.ts",
+          "line": 528,
+          "endLine": 553,
+          "signature": "export interface TransformResult"
+        },
+        {
+          "name": "TocEntry",
+          "kind": "interface",
+          "description": "Table of contents entry.",
+          "private": false,
+          "file": "npm/vite-plugin-ox-content/src/types.ts",
+          "line": 558,
+          "endLine": 578,
+          "signature": "export interface TocEntry"
+        },
+        {
+          "name": "DocsOptions",
+          "kind": "interface",
+          "description": "Options for source documentation generation.",
+          "private": false,
+          "file": "npm/vite-plugin-ox-content/src/types.ts",
+          "line": 587,
+          "endLine": 654,
+          "signature": "export interface DocsOptions"
+        },
+        {
+          "name": "ResolvedDocsOptions",
+          "kind": "interface",
+          "description": "Resolved docs options with all defaults applied.",
+          "private": false,
+          "file": "npm/vite-plugin-ox-content/src/types.ts",
+          "line": 659,
+          "endLine": 671,
+          "signature": "export interface ResolvedDocsOptions"
+        },
+        {
+          "name": "DocEntry",
+          "kind": "interface",
+          "description": "A single documentation entry extracted from source.",
+          "private": false,
+          "file": "npm/vite-plugin-ox-content/src/types.ts",
+          "line": 676,
+          "endLine": 689,
+          "signature": "export interface DocEntry"
+        },
+        {
+          "name": "ParamDoc",
+          "kind": "interface",
+          "description": "Parameter documentation.",
+          "private": false,
+          "file": "npm/vite-plugin-ox-content/src/types.ts",
+          "line": 694,
+          "endLine": 700,
+          "signature": "export interface ParamDoc"
+        },
+        {
+          "name": "ReturnDoc",
+          "kind": "interface",
+          "description": "Return type documentation.",
+          "private": false,
+          "file": "npm/vite-plugin-ox-content/src/types.ts",
+          "line": 705,
+          "endLine": 708,
+          "signature": "export interface ReturnDoc"
+        },
+        {
+          "name": "ExtractedDocs",
+          "kind": "interface",
+          "description": "Extracted documentation for a single file.",
+          "private": false,
+          "file": "npm/vite-plugin-ox-content/src/types.ts",
+          "line": 713,
+          "endLine": 716,
+          "signature": "export interface ExtractedDocs"
+        },
+        {
+          "name": "GeneratedDocsData",
+          "kind": "interface",
+          "description": "Machine-readable payload emitted alongside generated docs.",
+          "private": false,
+          "file": "npm/vite-plugin-ox-content/src/types.ts",
+          "line": 721,
+          "endLine": 725,
+          "signature": "export interface GeneratedDocsData"
+        },
+        {
+          "name": "NavItem",
+          "kind": "interface",
+          "description": "Navigation item for sidebar navigation.",
+          "private": false,
+          "file": "npm/vite-plugin-ox-content/src/types.ts",
+          "line": 730,
+          "endLine": 745,
+          "signature": "export interface NavItem"
+        },
+        {
+          "name": "SearchOptions",
+          "kind": "interface",
+          "description": "Options for full-text search.",
+          "private": false,
+          "file": "npm/vite-plugin-ox-content/src/types.ts",
+          "line": 754,
+          "endLine": 784,
+          "signature": "export interface SearchOptions"
+        },
+        {
+          "name": "ResolvedSearchOptions",
+          "kind": "interface",
+          "description": "Resolved search options.",
+          "private": false,
+          "file": "npm/vite-plugin-ox-content/src/types.ts",
+          "line": 789,
+          "endLine": 795,
+          "signature": "export interface ResolvedSearchOptions"
+        },
+        {
+          "name": "SearchDocument",
+          "kind": "interface",
+          "description": "Search document structure.",
+          "private": false,
+          "file": "npm/vite-plugin-ox-content/src/types.ts",
+          "line": 800,
+          "endLine": 807,
+          "signature": "export interface SearchDocument"
+        },
+        {
+          "name": "SearchResult",
+          "kind": "interface",
+          "description": "Search result structure.",
+          "private": false,
+          "file": "npm/vite-plugin-ox-content/src/types.ts",
+          "line": 812,
+          "endLine": 820,
+          "signature": "export interface SearchResult"
+        },
+        {
+          "name": "ScopedSearchQuery",
+          "kind": "interface",
+          "description": "Parsed search query with optional scope prefixes.",
+          "private": false,
+          "file": "npm/vite-plugin-ox-content/src/types.ts",
+          "line": 825,
+          "endLine": 828,
+          "signature": "export interface ScopedSearchQuery"
+        },
+        {
+          "name": "LocaleConfig",
+          "kind": "interface",
+          "description": "Locale configuration.",
+          "private": false,
+          "file": "npm/vite-plugin-ox-content/src/types.ts",
+          "line": 837,
+          "endLine": 844,
+          "signature": "export interface LocaleConfig"
+        },
+        {
+          "name": "I18nOptions",
+          "kind": "interface",
+          "description": "i18n (internationalization) options.",
+          "private": false,
+          "file": "npm/vite-plugin-ox-content/src/types.ts",
+          "line": 849,
+          "endLine": 892,
+          "signature": "export interface I18nOptions"
+        },
+        {
+          "name": "ResolvedI18nOptions",
+          "kind": "interface",
+          "description": "Resolved i18n options with all defaults applied.",
+          "private": false,
+          "file": "npm/vite-plugin-ox-content/src/types.ts",
+          "line": 897,
+          "endLine": 905,
+          "signature": "export interface ResolvedI18nOptions"
+        }
+      ]
+    }
+  ]
+}

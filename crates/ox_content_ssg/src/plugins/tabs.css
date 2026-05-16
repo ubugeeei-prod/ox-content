@@ -3,7 +3,7 @@
 .ox-tabs {
   margin: 1.5rem 0;
   border: 1px solid var(--octc-color-border);
-  border-radius: 8px;
+  border-radius: 4px;
   overflow: hidden;
 }
 
@@ -132,7 +132,7 @@
 
 .ox-tabs-fallback details {
   border: 1px solid var(--octc-color-border);
-  border-radius: 8px;
+  border-radius: 4px;
   margin-bottom: 0.5rem;
 }
 
@@ -145,7 +145,7 @@
   cursor: pointer;
   font-weight: 500;
   background: var(--octc-color-bg-alt);
-  border-radius: 8px;
+  border-radius: 4px;
   list-style: none;
 }
 
@@ -165,7 +165,7 @@
 }
 
 .ox-tabs-fallback details[open] summary {
-  border-radius: 8px 8px 0 0;
+  border-radius: 4px 4px 0 0;
   border-bottom: 1px solid var(--octc-color-border);
 }
 

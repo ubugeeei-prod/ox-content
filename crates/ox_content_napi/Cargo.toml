@@ -34,6 +34,9 @@ napi = { workspace = true }
 napi-derive = { workspace = true }
 serde = { workspace = true }
 serde_json = { workspace = true }
+serde_yaml = { workspace = true }
+regex = { workspace = true }
+unicode-normalization = { workspace = true }
 
 [build-dependencies]
 napi-build = { workspace = true }

@@ -35,6 +35,15 @@ export type RehypePlugin = [unknown, unknown] | unknown;
  */
 export type OxContentPlugin = (html: string) => string | Promise<string>;
 
+export interface CodeAnnotationsOptions {
+  metaKey?: string;
+}
+
+export interface ResolvedCodeAnnotationsOptions {
+  enabled: boolean;
+  metaKey: string;
+}
+
 /**
  * API documentation generation configuration.
  * Similar to cargo docs for Rust.
@@ -171,6 +180,13 @@ export interface OxContentOptions {
   highlightTheme?: string;
 
   /**
+   * Opt-in line annotations for fenced code blocks.
+   * Example: `annotate="highlight:1,3-4;warning:6"`
+   * @default false
+   */
+  codeAnnotations?: boolean | CodeAnnotationsOptions;
+
+  /**
    * Enable mermaid diagram rendering.
    * @default false
    */
@@ -250,6 +266,7 @@ export interface ResolvedOptions {
   strikethrough: boolean;
   highlight: boolean;
   highlightTheme: string;
+  codeAnnotations: ResolvedCodeAnnotationsOptions;
   mermaid: boolean;
   frontmatter: boolean;
   toc: boolean;

@@ -16,6 +16,7 @@ import { transformIslands, hasIslands, resetIslandCounter } from "./island";
 import {
   collectMarkdownFiles,
   buildNavItems,
+  buildThemeNavItems,
   extractTitle,
   getUrlPath,
   generateHtmlPage,
@@ -396,7 +397,9 @@ export function createDevServerMiddleware(
         const markdownFiles = await collectMarkdownFiles(srcDir);
         cache.navGroups =
           resolveNavigationGroups(options.ssg.navigation, base, options.ssg.extension) ??
-          buildNavItems(markdownFiles, srcDir, base, options.ssg.extension);
+          (options.ssg.theme?.sidebar.length
+            ? buildThemeNavItems(options.ssg.theme.sidebar, base, options.ssg.extension)
+            : buildNavItems(markdownFiles, srcDir, base, options.ssg.extension));
       }
 
       // Render the page

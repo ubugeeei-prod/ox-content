@@ -1,6 +1,6 @@
 {
   "name": "@ox-content/vite-plugin",
-  "version": "1.0.0-alpha.0",
+  "version": "2.9.0",
   "description": "Vite plugin for Ox Content - High-performance Markdown processing with Environment API",
   "keywords": [
     "environment-api",
@@ -37,27 +37,35 @@
   "scripts": {
     "build": "vp pack",
     "dev": "vp pack --watch",
-    "typecheck": "tsgo --noEmit"
+    "typecheck": "tsgo --noEmit",
+    "test:vrt": "playwright test",
+    "test:vrt:update": "playwright test --update-snapshots"
   },
   "dependencies": {
+    "@cspell/dict-de-de": "^4.1.2",
+    "@cspell/dict-en_us": "^4.4.33",
+    "@cspell/dict-fr-fr": "^2.3.2",
+    "@cspell/dict-pl_pl": "^3.0.6",
     "@mermaid-js/mermaid-cli": "^11.12.0",
     "@ox-content/napi": "workspace:*",
+    "cspell-lib": "^10.0.0",
     "glob": "^11.0.0",
-    "playwright": "^1.50.0",
+    "playwright": "^1.59.1",
     "puppeteer": "^23.11.1",
     "rehype-parse": "^9.0.1",
     "rehype-stringify": "^10.0.1",
     "rolldown": "^1.0.0-rc.1",
     "shiki": "^1.24.0",
+    "typescript": "catalog:",
     "unified": "^11.0.5"
   },
   "devDependencies": {
+    "@playwright/test": "^1.59.1",
     "@types/hast": "^3.0.4",
     "@types/node": "catalog:",
     "@types/react": "catalog:",
     "@types/react-dom": "catalog:",
     "@typescript/native-preview": "catalog:",
-    "typescript": "catalog:",
     "vite": "catalog:",
     "vite-plus": "catalog:",
     "yaml": "^2.8.2"

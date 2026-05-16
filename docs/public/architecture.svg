@@ -1,22 +1,22 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 700 200">
   <defs>
     <linearGradient id="rustGrad" x1="0%" y1="0%" x2="100%" y2="0%">
-      <stop offset="0%" style="stop-color:#b7410e"/>
-      <stop offset="100%" style="stop-color:#ce5937"/>
+      <stop offset="0%" style="stop-color:#7a5cff"/>
+      <stop offset="100%" style="stop-color:#4acdff"/>
     </linearGradient>
     <linearGradient id="napiGrad" x1="0%" y1="0%" x2="100%" y2="0%">
-      <stop offset="0%" style="stop-color:#68a063"/>
-      <stop offset="100%" style="stop-color:#8bc34a"/>
+      <stop offset="0%" style="stop-color:#91ede9"/>
+      <stop offset="100%" style="stop-color:#b9ff66"/>
     </linearGradient>
     <linearGradient id="viteGrad" x1="0%" y1="0%" x2="100%" y2="0%">
-      <stop offset="0%" style="stop-color:#646cff"/>
-      <stop offset="100%" style="stop-color:#9f7aea"/>
+      <stop offset="0%" style="stop-color:#4acdff"/>
+      <stop offset="100%" style="stop-color:#ff915c"/>
     </linearGradient>
   </defs>
 
   <style>
-    .title { font: bold 12px system-ui, sans-serif; fill: #fff; }
-    .subtitle { font: 10px system-ui, sans-serif; fill: rgba(255,255,255,0.8); }
+    .title { font: bold 12px IBM Plex Sans, system-ui, sans-serif; fill: #fff; }
+    .subtitle { font: 10px IBM Plex Sans, system-ui, sans-serif; fill: rgba(255,255,255,0.8); }
     .arrow { fill: none; stroke: #666; stroke-width: 2; marker-end: url(#arrowhead); }
   </style>
 

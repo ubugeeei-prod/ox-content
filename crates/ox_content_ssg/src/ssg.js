@@ -131,6 +131,22 @@ mobileSearchBtn?.addEventListener("click", () => {
 
 mobileThemeBtn?.addEventListener("click", () => setTheme(getTheme() === "dark" ? "light" : "dark"));
 
+document.querySelectorAll(".ox-api-controls").forEach((controls) => {
+  const targetSelector = controls.getAttribute("data-ox-api-target");
+  if (!targetSelector) return;
+
+  controls.querySelectorAll("[data-ox-api-toggle]").forEach((button) => {
+    button.addEventListener("click", () => {
+      const shouldOpen = button.getAttribute("data-ox-api-toggle") === "expand";
+      document.querySelectorAll(targetSelector).forEach((entry) => {
+        if (entry instanceof HTMLDetailsElement) {
+          entry.open = shouldOpen;
+        }
+      });
+    });
+  });
+});
+
 // ox-content:search:start
 window.__oxContentInitSearch = (() => {
   let api = null;
@@ -176,6 +192,39 @@ window.__oxContentInitSearch = (() => {
       }
     };
 
+    const parseScopedQuery = (query) => {
+      const scopes = [];
+      const terms = [];
+      for (const part of query.trim().split(/\s+/).filter(Boolean)) {
+        if (part.startsWith("@") && part.length > 1) {
+          scopes.push(part.slice(1).toLowerCase());
+        } else {
+          terms.push(part);
+        }
+      }
+      return { text: terms.join(" ").trim(), scopes: [...new Set(scopes)] };
+    };
+
+    const getScopesForDoc = (doc) => {
+      const source = (doc.id || doc.url || "").replace(/^\/+/, "").toLowerCase();
+      const segments = source.split("/").filter(Boolean);
+      if (segments.length <= 1) return [];
+
+      const scopes = [];
+      let current = "";
+      for (const segment of segments.slice(0, -1)) {
+        current = current ? current + "/" + segment : segment;
+        scopes.push(current);
+      }
+      return scopes;
+    };
+
+    const matchesScopes = (doc, scopes) => {
+      if (!scopes.length) return true;
+      const docScopes = new Set(getScopesForDoc(doc));
+      return scopes.some((scope) => docScopes.has(scope));
+    };
+
     const tokenize = (text) => {
       const tokens = [];
       let current = "";
@@ -214,6 +263,9 @@ window.__oxContentInitSearch = (() => {
             (index === selectedIdx ? " selected" : "") +
             '"><div class="search-result-title">' +
             result.title +
+            (result.scopes?.length
+              ? '<span class="search-result-scope">@' + result.scopes[0] + "</span>"
+              : "") +
             "</div>" +
             (result.snippet
               ? '<div class="search-result-snippet">' + result.snippet + "</div>"
@@ -224,28 +276,31 @@ window.__oxContentInitSearch = (() => {
     };
 
     const search = async (query) => {
-      if (!query.trim()) {
-        searchResults.innerHTML = "";
-        results = [];
-        return;
-      }
-
       await loadIndex();
       if (!searchIndex) {
         searchResults.innerHTML = '<div class="search-empty">Index unavailable</div>';
         return;
       }
 
-      const tokens = tokenize(query);
-      if (!tokens.length) {
+      const parsedQuery = parseScopedQuery(query);
+      if (!parsedQuery.text && parsedQuery.scopes.length === 0) {
         searchResults.innerHTML = "";
         results = [];
         return;
       }
 
+      const tokens = tokenize(parsedQuery.text);
       const k1 = 1.2,
         b = 0.75,
         scores = new Map();
+
+      if (!tokens.length) {
+        searchIndex.documents.forEach((doc, idx) => {
+          if (matchesScopes(doc, parsedQuery.scopes)) {
+            scores.set(idx, { score: 0, matches: new Set() });
+          }
+        });
+      }
 
       for (let i = 0; i < tokens.length; i++) {
         const token = tokens[i],
@@ -265,6 +320,7 @@ window.__oxContentInitSearch = (() => {
           for (const posting of postings) {
             const doc = searchIndex.documents[posting.doc_idx];
             if (!doc) continue;
+            if (!matchesScopes(doc, parsedQuery.scopes)) continue;
 
             const boost = posting.field === "Title" ? 10 : posting.field === "Heading" ? 5 : 1,
               score =
@@ -287,6 +343,7 @@ window.__oxContentInitSearch = (() => {
       results = Array.from(scores.entries())
         .map(([idx, data]) => {
           const doc = searchIndex.documents[idx];
+          const scopes = getScopesForDoc(doc);
           let snippet = "";
 
           if (doc.body) {
@@ -298,16 +355,16 @@ window.__oxContentInitSearch = (() => {
                 firstPos = pos;
               }
             }
-            const start = Math.max(0, firstPos - 50),
+            const start = firstPos === -1 ? 0 : Math.max(0, firstPos - 50),
               end = Math.min(doc.body.length, start + 150);
             snippet = doc.body.slice(start, end);
             if (start > 0) snippet = "..." + snippet;
             if (end < doc.body.length) snippet += "...";
           }
 
-          return { ...doc, score: data.score, snippet };
+          return { ...doc, score: data.score, scopes, snippet };
         })
-        .sort((a, b) => b.score - a.score)
+        .sort((a, b) => b.score - a.score || a.title.localeCompare(b.title))
         .slice(0, 10);
 
       selectedIdx = 0;

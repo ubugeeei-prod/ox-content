@@ -1,0 +1,33 @@
+[package]
+name = "ox_content_lsp"
+version.workspace = true
+authors.workspace = true
+categories.workspace = true
+edition.workspace = true
+homepage.workspace = true
+keywords.workspace = true
+license.workspace = true
+repository.workspace = true
+rust-version.workspace = true
+description = "Unified LSP server for Ox Content authoring"
+
+[lints]
+workspace = true
+
+[[bin]]
+name = "ox-content-lsp"
+path = "src/main.rs"
+
+[dependencies]
+ox_content_allocator = { workspace = true }
+ox_content_ast = { workspace = true }
+ox_content_i18n = { workspace = true }
+ox_content_i18n_checker = { workspace = true }
+ox_content_parser = { workspace = true }
+ox_content_renderer = { workspace = true }
+oxc_span = { workspace = true }
+tower-lsp = { workspace = true }
+tokio = { workspace = true }
+serde = { workspace = true }
+serde_json = { workspace = true }
+serde_yaml = { workspace = true }

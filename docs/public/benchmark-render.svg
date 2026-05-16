@@ -1,25 +1,25 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 650 220">
   <defs>
     <linearGradient id="oxGrad" x1="0%" y1="0%" x2="100%" y2="0%">
-      <stop offset="0%" style="stop-color:#ff6b35"/>
-      <stop offset="100%" style="stop-color:#f7931a"/>
+      <stop offset="0%" style="stop-color:#7a5cff"/>
+      <stop offset="100%" style="stop-color:#4acdff"/>
     </linearGradient>
     <linearGradient id="grayGrad" x1="0%" y1="0%" x2="100%" y2="0%">
-      <stop offset="0%" style="stop-color:#4a5568"/>
-      <stop offset="100%" style="stop-color:#718096"/>
+      <stop offset="0%" style="stop-color:#4f607b"/>
+      <stop offset="100%" style="stop-color:#8190b0"/>
     </linearGradient>
   </defs>
 
   <style>
-    .title { font: bold 14px system-ui, sans-serif; fill: #1a202c; }
-    .label { font: 12px system-ui, sans-serif; fill: #4a5568; }
-    .value { font: bold 11px system-ui, sans-serif; fill: #1a202c; }
-    .unit { font: 10px system-ui, sans-serif; fill: #718096; }
-    .ratio { font: bold 10px system-ui, sans-serif; fill: #2d3748; }
+    .title { font: bold 14px IBM Plex Sans, system-ui, sans-serif; fill: #131a30; }
+    .label { font: 12px IBM Plex Sans, system-ui, sans-serif; fill: #4f607b; }
+    .value { font: bold 11px IBM Plex Sans, system-ui, sans-serif; fill: #131a30; }
+    .unit { font: 10px IBM Plex Sans, system-ui, sans-serif; fill: #8190b0; }
+    .ratio { font: bold 10px IBM Plex Sans, system-ui, sans-serif; fill: #364462; }
   </style>
 
   <!-- Background -->
-  <rect width="650" height="220" fill="#f8f9fa" rx="8"/>
+  <rect width="650" height="220" fill="#f5f7fb" rx="8"/>
 
   <!-- Title -->
   <text x="325" y="24" text-anchor="middle" class="title">Parse + Render Speed (Large 48.7KB)</text>

@@ -9,7 +9,7 @@ use wasm_bindgen::prelude::*;
 use ox_content_allocator::Allocator;
 use ox_content_ast::{Document, Heading, Node};
 use ox_content_parser::{Parser, ParserOptions};
-use ox_content_renderer::HtmlRenderer;
+use ox_content_renderer::{HtmlRenderer, HtmlRendererOptions};
 
 /// Table of contents entry.
 #[derive(serde::Serialize)]
@@ -117,7 +117,10 @@ pub fn parse_and_render(source: &str, options: Option<WasmParserOptions>) -> JsV
     let result = parser.parse();
     match result {
         Ok(doc) => {
-            let mut renderer = HtmlRenderer::new();
+            let mut renderer = HtmlRenderer::with_options(HtmlRendererOptions {
+                toc_max_depth: opts.toc_max_depth,
+                ..Default::default()
+            });
             let html = renderer.render(&doc);
             serde_wasm_bindgen::to_value(&serde_json::json!({
                 "html": html,
@@ -154,7 +157,10 @@ pub fn transform(source: &str, options: Option<WasmParserOptions>) -> JsValue {
             let toc = extract_toc(&doc, toc_max_depth);
 
             // Render to HTML
-            let mut renderer = HtmlRenderer::new();
+            let mut renderer = HtmlRenderer::with_options(HtmlRendererOptions {
+                toc_max_depth,
+                ..Default::default()
+            });
             let html = renderer.render(&doc);
 
             let transform_result = TransformResult { html, frontmatter, toc, errors: vec![] };
@@ -232,12 +238,13 @@ fn parse_frontmatter(source: &str) -> (String, HashMap<String, serde_json::Value
 /// Extracts table of contents from document headings.
 fn extract_toc(doc: &Document, max_depth: u8) -> Vec<TocEntry> {
     let mut entries = Vec::new();
+    let mut slug_counts = HashMap::new();
 
     for node in &doc.children {
         if let Node::Heading(heading) = node {
             if heading.depth <= max_depth {
                 let text = extract_heading_text(heading);
-                let slug = slugify(&text);
+                let slug = unique_slug(slugify(&text), &mut slug_counts);
                 entries.push(TocEntry { depth: heading.depth, text, slug });
             }
         }
@@ -293,4 +300,32 @@ fn slugify(text: &str) -> String {
         .split_whitespace()
         .collect::<Vec<_>>()
         .join("-")
+}
+
+fn unique_slug(slug: String, counts: &mut HashMap<String, usize>) -> String {
+    let slug = if slug.is_empty() { "section".to_string() } else { slug };
+    let count = counts.entry(slug.clone()).or_insert(0);
+    let unique = if *count == 0 { slug } else { format!("{slug}-{count}") };
+    *count += 1;
+    unique
+}
+
+#[cfg(test)]
+mod tests {
+    use ox_content_allocator::Allocator;
+    use ox_content_parser::Parser;
+
+    use super::extract_toc;
+
+    #[test]
+    fn toc_slugs_are_unique_and_match_heading_ids() {
+        let allocator = Allocator::new();
+        let doc = Parser::new(&allocator, "## Setup!\n## Setup?\n##").parse().unwrap();
+
+        let toc = extract_toc(&doc, 3);
+
+        assert_eq!(toc[0].slug, "setup");
+        assert_eq!(toc[1].slug, "setup-1");
+        assert_eq!(toc[2].slug, "section");
+    }
 }

@@ -5,7 +5,7 @@
   position: relative;
   width: 100%;
   aspect-ratio: 16 / 9;
-  border-radius: 8px;
+  border-radius: 4px;
   overflow: hidden;
   background: var(--octc-color-bg-alt);
 }

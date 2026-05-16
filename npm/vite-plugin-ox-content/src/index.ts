@@ -29,8 +29,11 @@ import { resolveI18nOptions, createI18nPlugin } from "./i18n";
 import type { OxContentOptions, ResolvedOptions } from "./types";
 
 export type { OxContentOptions } from "./types";
-export type { LanguageRegistration } from "shiki";
+export type { LanguageRegistration, ThemeRegistration } from "shiki";
 export type {
+  CodeAnnotationSyntax,
+  CodeAnnotationsOptions,
+  ResolvedCodeAnnotationsOptions,
   DocsOptions,
   ResolvedDocsOptions,
   DocEntry,
@@ -405,6 +408,7 @@ function resolveOptions(options: OxContentOptions): ResolvedOptions {
     highlight: options.highlight ?? false,
     highlightTheme: options.highlightTheme ?? "github-dark",
     highlightLangs: options.highlightLangs ?? [],
+    codeAnnotations: resolveCodeAnnotationsOptions(options.codeAnnotations),
     mermaid: options.mermaid ?? false,
     frontmatter: options.frontmatter ?? true,
     toc: options.toc ?? true,
@@ -419,20 +423,75 @@ function resolveOptions(options: OxContentOptions): ResolvedOptions {
   };
 }
 
+function resolveCodeAnnotationsOptions(
+  options: OxContentOptions["codeAnnotations"],
+): ResolvedOptions["codeAnnotations"] {
+  if (!options) {
+    return {
+      enabled: false,
+      notation: "attribute",
+      metaKey: "annotate",
+      defaultLineNumbers: false,
+    };
+  }
+
+  if (options === true) {
+    return {
+      enabled: true,
+      notation: "attribute",
+      metaKey: "annotate",
+      defaultLineNumbers: false,
+    };
+  }
+
+  return {
+    enabled: true,
+    notation: options.notation ?? "attribute",
+    metaKey: options.metaKey ?? "annotate",
+    defaultLineNumbers: options.defaultLineNumbers ?? false,
+  };
+}
+
 /**
  * Generates virtual module content.
  */
-function generateVirtualModule(path: string, options: ResolvedOptions): string {
+export function generateVirtualModule(path: string, options: ResolvedOptions): string {
   if (path === "config") {
     return `export default ${JSON.stringify(options)};`;
   }
 
   if (path === "runtime") {
+    const base = normalizeRuntimeBase(options.base);
     return `
+      export const base = ${JSON.stringify(base)};
+      export const runtimeConfig = { base };
+
+      export function isExternalUrl(value) {
+        return /^(?:https?:)?\\/\\//i.test(value) || /^(?:mailto|tel):/i.test(value);
+      }
+
+      export function withBase(pathname = "") {
+        const value = String(pathname);
+        if (!value || value === "/") return base;
+        if (value.startsWith("#") || isExternalUrl(value)) return value;
+        return base + (value.startsWith("/") ? value.slice(1) : value);
+      }
+
+      export function withoutBase(pathname = "") {
+        const value = String(pathname);
+        if (base === "/" || value.startsWith("#") || isExternalUrl(value)) return value;
+        const bareBase = base.slice(0, -1);
+        if (value === bareBase) return "/";
+        if (value.startsWith(base)) return "/" + value.slice(base.length);
+        return value;
+      }
+
       export function useMarkdown() {
         return {
+          base,
+          withBase,
+          withoutBase,
           render: (content) => {
-            // Client-side rendering if needed
             return content;
           },
         };
@@ -443,10 +502,37 @@ function generateVirtualModule(path: string, options: ResolvedOptions): string {
   return "export default {};";
 }
 
+function normalizeRuntimeBase(base: string): string {
+  const trimmed = base.trim();
+  if (!trimmed || trimmed === "/") return "/";
+  const withLeading = trimmed.startsWith("/") ? trimmed : `/${trimmed}`;
+  return withLeading.endsWith("/") ? withLeading : `${withLeading}/`;
+}
+
 // Re-export types and utilities
 export { createMarkdownEnvironment } from "./environment";
 export { transformMarkdown } from "./transform";
 export { extractDocs, generateMarkdown, writeDocs, resolveDocsOptions } from "./docs";
+export { lintMarkdown, lintMarkdownAsync } from "./lint";
+export { lintMarkdownFile, lintMarkdownFiles, shouldLintMarkdownFile } from "./lint-files";
+export type {
+  MarkdownLintDiagnostic,
+  MarkdownLintDictionaryOptions,
+  MarkdownLintLanguage,
+  MarkdownLintOptions,
+  MarkdownLintResult,
+  MarkdownLintRuleOptions,
+  MarkdownLintSeverity,
+  MarkdownLintStandardDictionaryOptions,
+} from "./lint";
+export type {
+  MarkdownLintFileDiagnostic as MarkdownLintBatchDiagnostic,
+  MarkdownLintFileDiagnostic,
+  MarkdownLintFileOptions,
+  MarkdownLintFileResult,
+  MarkdownLintFilesResult,
+  MarkdownLintFileOptions as MarkdownLintProjectOptions,
+} from "./lint-files";
 export { buildSsg, resolveSsgOptions, DEFAULT_HTML_TEMPLATE } from "./ssg";
 export { resolveSearchOptions, buildSearchIndex, writeSearchIndex } from "./search";
 export { defineTheme, defaultTheme, mergeThemes, resolveTheme } from "./theme";
@@ -471,6 +557,7 @@ export type {
   ThemeColors,
   ThemeLayout,
   ThemeFonts,
+  ThemeEntryPage,
   ThemeHeader,
   ThemeFooter,
   SocialLinks,

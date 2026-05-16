@@ -1,69 +1,14 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="512" height="512">
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="512" height="512" fill="none">
   <defs>
-    <linearGradient id="grad1" x1="0%" y1="0%" x2="100%" y2="100%">
-      <stop offset="0%" style="stop-color:#ff6b35"/>
-      <stop offset="50%" style="stop-color:#f7931a"/>
-      <stop offset="100%" style="stop-color:#e85d04"/>
-    </linearGradient>
-    <linearGradient id="grad2" x1="100%" y1="0%" x2="0%" y2="100%">
-      <stop offset="0%" style="stop-color:#ffb347"/>
-      <stop offset="100%" style="stop-color:#ff6b35"/>
+    <linearGradient id="logoGradientDocs" x1="138" y1="118" x2="360" y2="392" gradientUnits="userSpaceOnUse">
+      <stop offset="0%" stop-color="#355cff" />
+      <stop offset="100%" stop-color="#74c7ff" />
     </linearGradient>
   </defs>
-
-  <!-- Top block - tilted left -->
-  <rect x="80" y="48" width="280" height="72" rx="14"
-        fill="url(#grad1)"
-        transform="rotate(-8 220 84)"/>
-
-  <!-- Connector particles -->
-  <circle cx="400" cy="100" r="12" fill="url(#grad2)"/>
-  <circle cx="420" cy="140" r="8" fill="url(#grad2)" opacity="0.7"/>
-
-  <!-- Second block - slight tilt -->
-  <rect x="100" y="148" width="320" height="88" rx="16"
-        fill="url(#grad1)"
-        transform="rotate(-3 260 192)"/>
-
-  <!-- Middle main block - largest, straight -->
-  <rect x="56" y="260" width="400" height="100" rx="18"
-        fill="url(#grad1)"/>
-
-  <!-- Fourth block - slight opposite tilt -->
-  <rect x="100" y="384" width="320" height="88" rx="16"
-        fill="url(#grad1)"
-        transform="rotate(3 260 428)"/>
-
-  <!-- Connector particles bottom -->
-  <circle cx="112" cy="488" r="12" fill="url(#grad2)"/>
-  <circle cx="88" cy="460" r="8" fill="url(#grad2)" opacity="0.7"/>
-
-  <!-- Content lines with varying styles -->
-  <g fill="#fff">
-    <!-- Top block -->
-    <rect x="110" y="68" width="140" height="8" rx="4" transform="rotate(-8 180 72)" opacity="0.9"/>
-    <rect x="110" y="88" width="90" height="8" rx="4" transform="rotate(-8 155 92)" opacity="0.7"/>
-
-    <!-- Second block -->
-    <rect x="136" y="172" width="180" height="10" rx="5" transform="rotate(-3 226 177)" opacity="0.9"/>
-    <rect x="136" y="196" width="120" height="10" rx="5" transform="rotate(-3 196 201)" opacity="0.7"/>
-
-    <!-- Middle block - more prominent -->
-    <rect x="96" y="288" width="240" height="14" rx="7" opacity="0.95"/>
-    <rect x="96" y="316" width="300" height="14" rx="7" opacity="0.85"/>
-    <rect x="96" y="344" width="180" height="14" rx="7" opacity="0.75"/>
-
-    <!-- Fourth block -->
-    <rect x="136" y="408" width="160" height="10" rx="5" transform="rotate(3 216 413)" opacity="0.9"/>
-    <rect x="136" y="432" width="100" height="10" rx="5" transform="rotate(3 186 437)" opacity="0.7"/>
-  </g>
-
-  <!-- Accent dots scattered -->
-  <g fill="url(#grad2)">
-    <circle cx="440" cy="280" r="6" opacity="0.5"/>
-    <circle cx="460" cy="320" r="4" opacity="0.4"/>
-    <circle cx="448" cy="360" r="5" opacity="0.3"/>
-    <circle cx="72" cy="180" r="5" opacity="0.4"/>
-    <circle cx="52" cy="220" r="4" opacity="0.3"/>
+  <g transform="rotate(-7 256 256)">
+    <path
+      d="M161 96H286C298 96 309 101 318 110L352 144C361 153 366 164 366 176V386C366 399 355 410 342 410H161C148 410 138 399 138 386V120C138 107 148 96 161 96Z"
+      fill="url(#logoGradientDocs)"
+    />
   </g>
 </svg>
