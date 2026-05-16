@@ -926,6 +926,35 @@ pub struct JsSsgNavGroup {
     pub collapsed: Option<bool>,
 }
 
+/// Resolved SSG output and public route paths.
+#[napi(object)]
+pub struct JsSsgRoutePaths {
+    /// HTML output file path.
+    pub output_path: String,
+    /// Route path without extension.
+    pub url_path: String,
+    /// Public HTML href.
+    pub href: String,
+    /// OG image output file path.
+    pub og_image_path: String,
+    /// OG image public URL.
+    pub og_image_url: String,
+}
+
+/// Theme sidebar item for SSG navigation generation.
+#[napi(object)]
+#[derive(Clone, Default)]
+pub struct JsSsgSidebarItem {
+    /// Display text.
+    pub text: Option<String>,
+    /// Link URL or route path.
+    pub link: Option<String>,
+    /// Child sidebar items.
+    pub items: Option<Vec<JsSsgSidebarItem>>,
+    /// Whether this group is collapsed by default.
+    pub collapsed: Option<bool>,
+}
+
 /// Generated SSG HTML page for shared asset extraction.
 #[napi(object)]
 #[derive(Clone)]
@@ -1406,6 +1435,47 @@ fn convert_nav_item(item: JsSsgNavItem) -> ox_content_ssg::NavItem {
     }
 }
 
+fn map_nav_item(item: ox_content_ssg::NavItem) -> JsSsgNavItem {
+    JsSsgNavItem {
+        title: item.title,
+        path: item.path,
+        href: item.href,
+        children: if item.children.is_empty() {
+            None
+        } else {
+            Some(item.children.into_iter().map(map_nav_item).collect())
+        },
+        collapsed: item.collapsed,
+    }
+}
+
+fn map_nav_group(group: ox_content_ssg::NavGroup) -> JsSsgNavGroup {
+    JsSsgNavGroup {
+        title: group.title,
+        items: group.items.into_iter().map(map_nav_item).collect(),
+        collapsed: group.collapsed,
+    }
+}
+
+fn convert_sidebar_item(item: JsSsgSidebarItem) -> ox_content_ssg::SidebarItem {
+    ox_content_ssg::SidebarItem {
+        text: item.text,
+        link: item.link,
+        items: item.items.unwrap_or_default().into_iter().map(convert_sidebar_item).collect(),
+        collapsed: item.collapsed,
+    }
+}
+
+fn map_route_paths(paths: ox_content_ssg::RoutePaths) -> JsSsgRoutePaths {
+    JsSsgRoutePaths {
+        output_path: paths.output_path,
+        url_path: paths.url_path,
+        href: paths.href,
+        og_image_path: paths.og_image_path,
+        og_image_url: paths.og_image_url,
+    }
+}
+
 fn convert_generated_html_page(page: JsSsgGeneratedHtmlPage) -> ox_content_ssg::GeneratedHtmlPage {
     ox_content_ssg::GeneratedHtmlPage {
         input_path: page.input_path,
@@ -1428,6 +1498,105 @@ fn map_shared_asset(asset: ox_content_ssg::SharedAsset) -> JsSsgSharedAsset {
         public_path: asset.public_path,
         content: asset.content,
     }
+}
+
+/// Resolves all output and public route paths for an SSG page.
+#[napi(js_name = "resolveSsgRoutePaths")]
+pub fn resolve_ssg_route_paths(
+    input_path: String,
+    src_dir: String,
+    out_dir: String,
+    base: String,
+    extension: String,
+    site_url: Option<String>,
+) -> JsSsgRoutePaths {
+    map_route_paths(ox_content_ssg::resolve_route_paths(
+        &input_path,
+        &src_dir,
+        &out_dir,
+        &base,
+        &extension,
+        site_url.as_deref(),
+    ))
+}
+
+/// Converts a markdown file path to its corresponding SSG HTML output path.
+#[napi(js_name = "getSsgOutputPath")]
+pub fn get_ssg_output_path(
+    input_path: String,
+    src_dir: String,
+    out_dir: String,
+    extension: String,
+) -> String {
+    ox_content_ssg::get_output_path(&input_path, &src_dir, &out_dir, &extension)
+}
+
+/// Converts a markdown file path to a relative SSG URL path.
+#[napi(js_name = "getSsgUrlPath")]
+pub fn get_ssg_url_path(input_path: String, src_dir: String) -> String {
+    ox_content_ssg::get_url_path(&input_path, &src_dir)
+}
+
+/// Converts a markdown file path to an SSG href.
+#[napi(js_name = "getSsgHref")]
+pub fn get_ssg_href(
+    input_path: String,
+    src_dir: String,
+    base: String,
+    extension: String,
+) -> String {
+    ox_content_ssg::get_href(&input_path, &src_dir, &base, &extension)
+}
+
+/// Resolves a page locale from an SSG URL path and configured locale codes.
+#[napi(js_name = "getSsgPageLocale")]
+pub fn get_ssg_page_locale(
+    url_path: String,
+    default_locale: String,
+    locale_codes: Vec<String>,
+) -> Option<String> {
+    ox_content_ssg::get_page_locale(&url_path, &default_locale, &locale_codes)
+}
+
+/// Extracts a page title from frontmatter title or rendered HTML.
+#[napi(js_name = "extractSsgTitle")]
+pub fn extract_ssg_title(content: String, frontmatter_title: Option<String>) -> String {
+    ox_content_ssg::extract_title(&content, frontmatter_title.as_deref())
+}
+
+/// Formats a file or directory segment as an SSG title.
+#[napi(js_name = "formatSsgTitle")]
+pub fn format_ssg_title(name: String) -> String {
+    ox_content_ssg::format_title(&name)
+}
+
+/// Builds SSG navigation groups from markdown files.
+#[napi(js_name = "buildSsgNavItems")]
+pub fn build_ssg_nav_items(
+    markdown_files: Vec<String>,
+    src_dir: String,
+    base: String,
+    extension: String,
+) -> Vec<JsSsgNavGroup> {
+    ox_content_ssg::build_nav_items(&markdown_files, &src_dir, &base, &extension)
+        .into_iter()
+        .map(map_nav_group)
+        .collect()
+}
+
+/// Builds SSG navigation groups from an explicit theme sidebar tree.
+#[napi(js_name = "buildSsgThemeNavItems")]
+pub fn build_ssg_theme_nav_items(
+    sidebar: Vec<JsSsgSidebarItem>,
+    base: String,
+    extension: String,
+) -> Vec<JsSsgNavGroup> {
+    let sidebar: Vec<ox_content_ssg::SidebarItem> =
+        sidebar.into_iter().map(convert_sidebar_item).collect();
+    ox_content_ssg::build_theme_nav_items(&sidebar, &base, &extension)
+        .into_iter()
+        .map(map_nav_group)
+        .collect()
 }
 
 /// Generates SSG HTML page with navigation and search.
