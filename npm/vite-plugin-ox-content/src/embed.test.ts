@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vite-plus/test";
 import { collectGitHubRepos, isSafeGitHubRepo, transformGitHub } from "./plugins/github";
+import { transformBuiltinEmbeds } from "./plugins";
 import { collectOgpUrls, isSafeOgpUrl, transformOgp } from "./plugins/ogp";
 
 describe("builtin embed input hardening", () => {
@@ -39,5 +40,23 @@ describe("builtin embed input hardening", () => {
       new Map([["javascript:alert(1)", null]]),
     );
     expect(html).toContain('href="#"');
+  });
+
+  it("runs GitHub embeds through the shared builtin transform", async () => {
+    const html = await transformBuiltinEmbeds('<GitHub repo="../secret"></GitHub>', {
+      github: {},
+    });
+
+    expect(html).toContain("ox-github-card");
+    expect(html).toContain('href="#"');
+  });
+
+  it("can disable builtin embeds", async () => {
+    const input = '<GitHub repo="../secret"></GitHub>';
+    await expect(
+      transformBuiltinEmbeds(input, {
+        github: false,
+      }),
+    ).resolves.toBe(input);
   });
 });

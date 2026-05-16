@@ -209,6 +209,35 @@ See the [Code Annotations example](../examples/code-annotations.md) for a render
 
 Generate table of contents.
 
+### embeds
+
+- Type: `BuiltinEmbedOptions | false`
+- Default: `{ github: true }`
+
+Built-in static embeds are rendered at transform time, with no client-side JavaScript.
+
+```md
+<GitHub repo="ubugeeei/ox-content" />
+```
+
+Disable all embeds or configure each fetcher:
+
+```ts
+oxContent({
+  embeds: {
+    github: {
+      token: process.env.GITHUB_TOKEN,
+    },
+  },
+});
+```
+
+```ts
+oxContent({
+  embeds: false,
+});
+```
+
 ### docs
 
 - Type: `DocsOptions | false`
