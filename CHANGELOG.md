@@ -1,5 +1,20 @@
 # Changelog
 
+## [2.9.0] - 2026-05-16
+
+### Performance
+
+- reduce search query allocations (#97)
+
+### Refactoring
+
+- move docs nav generation to Rust (#96)
+- move search runtime generation to Rust (#95)
+- move SSG routing helpers to Rust (#94)
+- move SSG asset externalization to Rust (#93)
+- move docs normalization to Rust (#92)
+- move i18n runtime generation to Rust (#90)
+
 ## [2.8.0] - 2026-05-16
 
 ### Features
