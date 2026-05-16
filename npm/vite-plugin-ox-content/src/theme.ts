@@ -86,10 +86,18 @@ export interface ThemeFooter {
   copyright?: string;
 }
 
-/**
- * Social links configuration.
- */
-export interface SocialLinks {
+/** Custom social link icon. */
+export type SocialLinkIcon = string | { svg: string };
+
+/** Custom social link. */
+export interface SocialLink {
+  icon: SocialLinkIcon;
+  link: string;
+  ariaLabel?: string;
+}
+
+/** Legacy social links configuration. */
+export interface LegacySocialLinks {
   /** GitHub URL */
   github?: string;
   /** Twitter/X URL */
@@ -97,6 +105,9 @@ export interface SocialLinks {
   /** Discord URL */
   discord?: string;
 }
+
+/** Social links configuration. */
+export type SocialLinks = LegacySocialLinks | SocialLink[];
 
 /**
  * Embedded HTML content for specific positions in the page layout.
@@ -353,6 +364,8 @@ export function resolveTheme(config?: ThemeConfig): ResolvedThemeConfig {
  * Converts resolved theme to the format expected by Rust NAPI.
  */
 export function themeToNapi(theme: ResolvedThemeConfig): NapiThemeConfig {
+  const socialLinks = socialLinksToNapi(theme.socialLinks);
+
   return {
     colors: theme.colors.primary
       ? {
@@ -416,18 +429,26 @@ export function themeToNapi(theme: ResolvedThemeConfig): NapiThemeConfig {
             copyright: theme.footer.copyright,
           }
         : undefined,
-    socialLinks:
-      theme.socialLinks.github || theme.socialLinks.twitter || theme.socialLinks.discord
-        ? {
-            github: theme.socialLinks.github,
-            twitter: theme.socialLinks.twitter,
-            discord: theme.socialLinks.discord,
-          }
-        : undefined,
+    socialLinks,
     embed: Object.keys(theme.embed).length > 0 ? theme.embed : undefined,
     css: theme.css || undefined,
     js: theme.js || undefined,
   };
+}
+
+function socialLinksToNapi(links: SocialLinks): NapiSocialLinks | undefined {
+  if (Array.isArray(links)) {
+    const items = links.map((item) => {
+      const icon = typeof item.icon === "string" ? item.icon : undefined;
+      const iconSvg = typeof item.icon === "object" ? item.icon.svg : undefined;
+      return { icon, iconSvg, link: item.link, ariaLabel: item.ariaLabel };
+    });
+    return items.length > 0 ? { links: items } : undefined;
+  }
+
+  return links.github || links.twitter || links.discord
+    ? { github: links.github, twitter: links.twitter, discord: links.discord }
+    : undefined;
 }
 
 /**
@@ -496,6 +517,14 @@ export interface NapiSocialLinks {
   github?: string;
   twitter?: string;
   discord?: string;
+  links?: NapiSocialLink[];
+}
+
+export interface NapiSocialLink {
+  icon?: string;
+  iconSvg?: string;
+  link: string;
+  ariaLabel?: string;
 }
 
 /**
