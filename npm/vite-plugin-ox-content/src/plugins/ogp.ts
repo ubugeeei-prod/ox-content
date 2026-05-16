@@ -40,6 +40,43 @@ const defaultOptions: Required<OgpOptions> = {
 // Simple in-memory cache
 const ogpCache = new Map<string, { data: OgpData; timestamp: number }>();
 
+function isPrivateIPv4(hostname: string): boolean {
+  const parts = hostname.split(".").map(Number);
+  if (
+    parts.length !== 4 ||
+    parts.some((part) => !Number.isInteger(part) || part < 0 || part > 255)
+  ) {
+    return false;
+  }
+  const [a, b] = parts;
+  return (
+    a === 10 ||
+    a === 127 ||
+    a === 0 ||
+    (a === 172 && b >= 16 && b <= 31) ||
+    (a === 192 && b === 168) ||
+    (a === 169 && b === 254)
+  );
+}
+
+export function isSafeOgpUrl(value: string): boolean {
+  try {
+    const url = new URL(value);
+    const host = url.hostname.toLowerCase();
+    const ipv6 = host.replace(/^\[|\]$/g, "");
+    if (url.protocol !== "http:" && url.protocol !== "https:") return false;
+    if (host === "localhost" || host.endsWith(".localhost")) return false;
+    if (
+      ipv6.includes(":") &&
+      (ipv6 === "::1" || ipv6.startsWith("fc") || ipv6.startsWith("fd") || ipv6.startsWith("fe80"))
+    )
+      return false;
+    return !isPrivateIPv4(host);
+  } catch {
+    return false;
+  }
+}
+
 /**
  * Get element attribute value.
  */
@@ -144,6 +181,10 @@ export async function fetchOgpData(
   url: string,
   options: Required<OgpOptions>,
 ): Promise<OgpData | null> {
+  if (!isSafeOgpUrl(url)) {
+    return null;
+  }
+
   // Check cache
   if (options.cache) {
     const cached = ogpCache.get(url);
@@ -275,7 +316,7 @@ function createOgpCard(data: OgpData): Element {
     tagName: "a",
     properties: {
       className: ["ox-ogp-card"],
-      href: data.url,
+      href: isSafeOgpUrl(data.url) ? data.url : "#",
       target: "_blank",
       rel: "noopener noreferrer",
     },
@@ -292,7 +333,7 @@ function createFallbackCard(url: string): Element {
     tagName: "a",
     properties: {
       className: ["ox-ogp-simple"],
-      href: url,
+      href: isSafeOgpUrl(url) ? url : "#",
       target: "_blank",
       rel: "noopener noreferrer",
     },
@@ -331,7 +372,9 @@ export async function collectOgpUrls(html: string): Promise<string[]> {
 
   let match;
   while ((match = urlPattern.exec(html)) !== null) {
-    urls.push(match[1]);
+    if (isSafeOgpUrl(match[1])) {
+      urls.push(match[1]);
+    }
   }
 
   return urls;
