@@ -15,6 +15,9 @@ export declare function buildSearchIndex(documents: Array<JsSearchDocument>): st
  */
 export declare function checkI18n(dictDir: string, usedKeys: Array<string>): I18NCheckResult
 
+/** Extracts normalized documentation entries from a JavaScript/TypeScript file using Oxc. */
+export declare function extractFileDocEntries(filePath: string, includePrivate?: boolean | undefined | null): Array<JsDocEntry>
+
 /** Extracts documented declarations from a JavaScript/TypeScript file using Oxc. */
 export declare function extractFileDocs(filePath: string, includePrivate?: boolean | undefined | null): Array<JsSourceDocItem>
 
@@ -93,6 +96,37 @@ export interface I18NLoadResult {
   locales: Array<string>
   /** Errors encountered during loading. */
   errors: Array<string>
+}
+
+/** Normalized documentation entry used by generated API docs. */
+export interface JsDocEntry {
+  name: string
+  kind: string
+  description: string
+  params?: Array<JsDocParam>
+  returns?: JsDocReturn
+  examples?: Array<string>
+  tags?: Record<string, string>
+  private: boolean
+  file: string
+  line: number
+  endLine: number
+  signature?: string
+}
+
+/** Normalized parameter documentation used by generated API docs. */
+export interface JsDocParam {
+  name: string
+  type: string
+  description: string
+  optional?: boolean
+  default?: string
+}
+
+/** Normalized return documentation used by generated API docs. */
+export interface JsDocReturn {
+  type: string
+  description: string
 }
 
 /** Entry page configuration. */

@@ -16,7 +16,10 @@ use std::process::Command;
 
 use ox_content_allocator::Allocator;
 use ox_content_ast::{Document, Heading, Node};
-use ox_content_docs::{DocExtractor, DocItem, DocItemKind, DocTag, ParamDoc};
+use ox_content_docs::{
+    normalize_doc_items, DocExtractor, DocItem, DocItemKind, DocTag, NormalizedDocEntry,
+    NormalizedParamDoc, NormalizedReturnDoc, ParamDoc,
+};
 use ox_content_parser::{Parser, ParserOptions};
 use ox_content_renderer::{HtmlRenderer, HtmlRendererOptions};
 use ox_content_search::{DocumentIndexer, SearchIndex, SearchIndexBuilder, SearchOptions};
@@ -108,6 +111,43 @@ pub struct JsSourceDocItem {
     pub params: Vec<JsSourceDocParam>,
     pub return_type: Option<String>,
     pub tags: Vec<JsSourceDocTag>,
+}
+
+/// Normalized parameter documentation used by generated API docs.
+#[napi(object)]
+#[derive(Clone)]
+pub struct JsDocParam {
+    pub name: String,
+    pub r#type: String,
+    pub description: String,
+    pub optional: Option<bool>,
+    pub r#default: Option<String>,
+}
+
+/// Normalized return documentation used by generated API docs.
+#[napi(object)]
+#[derive(Clone)]
+pub struct JsDocReturn {
+    pub r#type: String,
+    pub description: String,
+}
+
+/// Normalized documentation entry used by generated API docs.
+#[napi(object)]
+#[derive(Clone)]
+pub struct JsDocEntry {
+    pub name: String,
+    pub kind: String,
+    pub description: String,
+    pub params: Option<Vec<JsDocParam>>,
+    pub returns: Option<JsDocReturn>,
+    pub examples: Option<Vec<String>>,
+    pub tags: Option<HashMap<String, String>>,
+    pub private: bool,
+    pub file: String,
+    pub line: u32,
+    pub end_line: u32,
+    pub signature: Option<String>,
 }
 
 /// Transform options for JavaScript.
@@ -294,6 +334,38 @@ fn map_doc_item(item: DocItem) -> JsSourceDocItem {
     }
 }
 
+fn map_normalized_param_doc(param: NormalizedParamDoc) -> JsDocParam {
+    JsDocParam {
+        name: param.name,
+        r#type: param.type_annotation,
+        description: param.description,
+        optional: param.optional.then_some(true),
+        r#default: param.default_value,
+    }
+}
+
+fn map_normalized_return_doc(return_doc: NormalizedReturnDoc) -> JsDocReturn {
+    JsDocReturn { r#type: return_doc.type_annotation, description: return_doc.description }
+}
+
+fn map_normalized_doc_entry(entry: NormalizedDocEntry) -> JsDocEntry {
+    JsDocEntry {
+        name: entry.name,
+        kind: entry.kind.as_str().to_string(),
+        description: entry.description,
+        params: (!entry.params.is_empty())
+            .then(|| entry.params.into_iter().map(map_normalized_param_doc).collect()),
+        returns: entry.returns.map(map_normalized_return_doc),
+        examples: (!entry.examples.is_empty()).then_some(entry.examples),
+        tags: (!entry.tags.is_empty()).then(|| entry.tags.into_iter().collect()),
+        private: entry.private,
+        file: entry.file,
+        line: entry.line,
+        end_line: entry.end_line,
+        signature: entry.signature,
+    }
+}
+
 /// Extracts documented declarations from a JavaScript/TypeScript file using Oxc.
 #[napi]
 pub fn extract_file_docs(
@@ -306,6 +378,20 @@ pub fn extract_file_docs(
         .map_err(|err| Error::from_reason(err.to_string()))?;
 
     Ok(items.into_iter().map(map_doc_item).collect())
+}
+
+/// Extracts normalized documentation entries from a JavaScript/TypeScript file using Oxc.
+#[napi(js_name = "extractFileDocEntries")]
+pub fn extract_file_doc_entries(
+    file_path: String,
+    include_private: Option<bool>,
+) -> Result<Vec<JsDocEntry>> {
+    let extractor = DocExtractor::with_private(include_private.unwrap_or(false));
+    let items = extractor
+        .extract_file(Path::new(&file_path))
+        .map_err(|err| Error::from_reason(err.to_string()))?;
+
+    Ok(normalize_doc_items(items).into_iter().map(map_normalized_doc_entry).collect())
 }
 
 /// Restores code block metadata after JavaScript-side syntax highlighting.
