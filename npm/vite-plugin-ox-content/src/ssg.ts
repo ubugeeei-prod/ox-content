@@ -51,6 +51,7 @@ export interface SsgPageData {
   description?: string;
   content: string;
   toc: TocEntry[];
+  lastUpdated?: number;
   frontmatter: Record<string, unknown>;
   path: string;
   href: string;
@@ -1412,6 +1413,7 @@ export function resolveSsgOptions(ssg: SsgOptions | boolean | undefined): Resolv
       clean: false,
       bare: false,
       generateOgImage: false,
+      lastUpdated: false,
     };
   }
 
@@ -1422,6 +1424,7 @@ export function resolveSsgOptions(ssg: SsgOptions | boolean | undefined): Resolv
       clean: false,
       bare: false,
       generateOgImage: false,
+      lastUpdated: false,
       theme: resolveTheme(undefined),
     };
   }
@@ -1434,6 +1437,7 @@ export function resolveSsgOptions(ssg: SsgOptions | boolean | undefined): Resolv
     siteName: ssg.siteName,
     ogImage: ssg.ogImage,
     generateOgImage: ssg.generateOgImage ?? false,
+    lastUpdated: ssg.lastUpdated ?? false,
     siteUrl: ssg.siteUrl,
     theme: resolveTheme(ssg.theme),
   };
@@ -1619,6 +1623,7 @@ export async function generateHtmlPage(
       description: pageData.description,
       content: pageData.content,
       toc: tocForRust,
+      lastUpdated: pageData.lastUpdated,
       path: pageData.path,
       entryPage: entryPageForRust,
     },
@@ -2216,10 +2221,12 @@ export async function buildSsg(
     transformedHtml: string;
     title: string;
     description?: string;
+    lastUpdated?: number;
     frontmatter: Record<string, unknown>;
     toc: TocEntry[];
   }
   const pageResults: PageProcessResult[] = [];
+  const napi = ssgOptions.lastUpdated ? await importNapiModule() : undefined;
 
   // Process each file: transform markdown and collect metadata
   for (const inputPath of markdownFiles) {
@@ -2268,6 +2275,7 @@ export async function buildSsg(
         transformedHtml,
         title,
         description,
+        lastUpdated: napi?.getGitLastUpdated(inputPath, root) ?? undefined,
         frontmatter: result.frontmatter,
         toc: result.toc,
       });
@@ -2330,7 +2338,8 @@ export async function buildSsg(
   // Generate HTML pages
   for (const pageResult of pageResults) {
     try {
-      const { inputPath, transformedHtml, title, description, frontmatter, toc } = pageResult;
+      const { inputPath, transformedHtml, title, description, lastUpdated, frontmatter, toc } =
+        pageResult;
 
       // Determine OG image URL for this page
       let pageOgImage = ssgOptions.ogImage; // fallback to static URL
@@ -2357,6 +2366,7 @@ export async function buildSsg(
           description,
           content: transformedHtml,
           toc,
+          lastUpdated,
           frontmatter,
           path: getUrlPath(inputPath, srcDir),
           href: getHref(inputPath, srcDir, base, ssgOptions.extension),

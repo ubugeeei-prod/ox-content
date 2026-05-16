@@ -143,6 +143,12 @@ export interface SsgOptions {
   generateOgImage?: boolean;
 
   /**
+   * Add each page's last git commit timestamp to the default theme.
+   * @default false
+   */
+  lastUpdated?: boolean;
+
+  /**
    * Site URL for generating absolute OG image URLs.
    * Required for proper SNS sharing.
    * Example: 'https://example.com'
@@ -167,6 +173,7 @@ export interface ResolvedSsgOptions {
   siteName?: string;
   ogImage?: string;
   generateOgImage: boolean;
+  lastUpdated: boolean;
   siteUrl?: string;
   theme?: ResolvedThemeConfig;
 }

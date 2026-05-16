@@ -43,6 +43,9 @@ export declare function generateOgImageSvg(data: JsOgImageData, config?: JsOgIma
 /** Generates SSG HTML page with navigation and search. */
 export declare function generateSsgHtml(pageData: JsSsgPageData, navGroups: Array<JsSsgNavGroup>, config: JsSsgConfig): string
 
+/** Returns the last git commit timestamp for a file in milliseconds. */
+export declare function getGitLastUpdated(filePath: string, root?: string | undefined | null): number | null
+
 /** Result of i18n checking. */
 export interface I18NCheckResult {
   /** All diagnostics. */
@@ -391,6 +394,8 @@ export interface JsSsgPageData {
   content: string
   /** Table of contents entries. */
   toc: Array<TocEntry>
+  /** Last updated timestamp in milliseconds since the Unix epoch. */
+  lastUpdated?: number
   /** URL path. */
   path: string
   /** Entry page configuration (if layout: entry). */

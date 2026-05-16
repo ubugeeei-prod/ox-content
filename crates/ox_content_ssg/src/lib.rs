@@ -24,6 +24,7 @@
 //!     description: Some("Learn how to use ox-content".to_string()),
 //!     content: "<h1>Getting Started</h1><p>Welcome!</p>".to_string(),
 //!     toc: vec![TocEntry { depth: 1, text: "Getting Started".to_string(), slug: "getting-started".to_string() }],
+//!     last_updated: None,
 //!     path: "getting-started".to_string(),
 //!     entry_page: None,
 //! };

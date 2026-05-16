@@ -11,7 +11,8 @@ use napi::bindgen_prelude::*;
 use napi::Task;
 use napi_derive::napi;
 use std::collections::HashMap;
-use std::path::Path;
+use std::path::{Path, PathBuf};
+use std::process::Command;
 
 use ox_content_allocator::Allocator;
 use ox_content_ast::{Document, Heading, Node};
@@ -931,10 +932,34 @@ pub struct JsSsgPageData {
     pub content: String,
     /// Table of contents entries.
     pub toc: Vec<TocEntry>,
+    /// Last updated timestamp in milliseconds since the Unix epoch.
+    pub last_updated: Option<f64>,
     /// URL path.
     pub path: String,
     /// Entry page configuration (if layout: entry).
     pub entry_page: Option<JsEntryPageConfig>,
+}
+
+/// Returns the last git commit timestamp for a file in milliseconds.
+#[napi]
+pub fn get_git_last_updated(file_path: String, root: Option<String>) -> Option<f64> {
+    let root = root.map(PathBuf::from)?;
+    let file = PathBuf::from(&file_path);
+    let pathspec = file.strip_prefix(&root).ok().and_then(|p| p.to_str()).unwrap_or(&file_path);
+    let output = Command::new("git")
+        .arg("-C")
+        .arg(root)
+        .args(["log", "-1", "--format=%ct", "--"])
+        .arg(pathspec)
+        .output()
+        .ok()?;
+
+    if !output.status.success() {
+        return None;
+    }
+
+    let seconds = String::from_utf8(output.stdout).ok()?.trim().parse::<f64>().ok()?;
+    Some(seconds * 1_000.0)
 }
 
 // =============================================================================
@@ -1239,6 +1264,10 @@ pub fn generate_ssg_html(
             .into_iter()
             .map(|t| ox_content_ssg::TocEntry { depth: t.depth, text: t.text, slug: t.slug })
             .collect(),
+        last_updated: page_data
+            .last_updated
+            .filter(|timestamp| timestamp.is_finite() && *timestamp >= 0.0)
+            .map(|timestamp| timestamp as i64),
         path: page_data.path,
         entry_page: convert_entry_page_config(page_data.entry_page),
     };
@@ -1706,11 +1735,13 @@ pub fn extract_translation_keys(
 #[cfg(test)]
 mod tests {
     use serde_json::json;
+    use std::fs;
+    use std::process::Command;
 
     use ox_content_allocator::Allocator;
     use ox_content_parser::Parser;
 
-    use super::{extract_toc, parse_frontmatter};
+    use super::{extract_toc, get_git_last_updated, parse_frontmatter};
 
     #[test]
     fn parses_nested_yaml_frontmatter() {
@@ -1766,5 +1797,40 @@ mod tests {
 
         assert!(result.html.contains("href=\"#intro\""));
         assert!(!result.html.contains("href=\"#api\""));
+    }
+
+    #[test]
+    fn git_last_updated_uses_root_relative_path() {
+        let root = std::env::temp_dir().join(format!("ox-content-git-{}", std::process::id()));
+        let _ = fs::remove_dir_all(&root);
+        fs::create_dir_all(root.join("docs")).unwrap();
+        fs::write(root.join("docs/page.md"), "# Page").unwrap();
+
+        for args in [
+            vec!["init"],
+            vec!["add", "docs/page.md"],
+            vec![
+                "-c",
+                "user.name=Test",
+                "-c",
+                "user.email=test@example.com",
+                "commit",
+                "-m",
+                "init",
+            ],
+        ] {
+            let mut cmd = Command::new("git");
+            cmd.arg("-C").arg(&root).args(args);
+            cmd.env("GIT_AUTHOR_DATE", "@1234567890");
+            cmd.env("GIT_COMMITTER_DATE", "@1234567890");
+            assert!(cmd.status().unwrap().success());
+        }
+
+        let updated = get_git_last_updated(
+            root.join("docs/page.md").to_string_lossy().into_owned(),
+            Some(root.to_string_lossy().into_owned()),
+        );
+        assert_eq!(updated, Some(1_234_567_890_000.0));
+        let _ = fs::remove_dir_all(root);
     }
 }

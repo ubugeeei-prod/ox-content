@@ -103,6 +103,7 @@ export function createDocsResolvedOptions(
       bare: false,
       siteName: "Ox Content",
       generateOgImage: false,
+      lastUpdated: false,
     },
     gfm: true,
     footnotes: true,
