@@ -85,6 +85,7 @@ module.exports.buildSearchIndex = binding.buildSearchIndex;
 module.exports.searchIndex = binding.searchIndex;
 module.exports.extractSearchContent = binding.extractSearchContent;
 module.exports.generateSsgHtml = binding.generateSsgHtml;
+module.exports.externalizeSsgAssets = binding.externalizeSsgAssets;
 module.exports.transformMermaid = binding.transformMermaid;
 module.exports.loadDictionaries = binding.loadDictionaries;
 module.exports.loadDictionariesFlat = binding.loadDictionariesFlat;

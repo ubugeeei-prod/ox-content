@@ -926,6 +926,39 @@ pub struct JsSsgNavGroup {
     pub collapsed: Option<bool>,
 }
 
+/// Generated SSG HTML page for shared asset extraction.
+#[napi(object)]
+#[derive(Clone)]
+pub struct JsSsgGeneratedHtmlPage {
+    /// Source Markdown path.
+    pub input_path: String,
+    /// Output HTML path.
+    pub output_path: String,
+    /// HTML content.
+    pub html: String,
+}
+
+/// Shared SSG asset extracted from generated pages.
+#[napi(object)]
+#[derive(Clone)]
+pub struct JsSsgSharedAsset {
+    /// Output file path.
+    pub output_path: String,
+    /// Public URL path used from HTML.
+    pub public_path: String,
+    /// Asset content.
+    pub content: String,
+}
+
+/// Result of SSG shared asset extraction.
+#[napi(object)]
+pub struct JsSsgExternalizedAssets {
+    /// HTML pages with inline assets replaced.
+    pub pages: Vec<JsSsgGeneratedHtmlPage>,
+    /// Extracted shared assets.
+    pub assets: Vec<JsSsgSharedAsset>,
+}
+
 /// Hero action for entry page.
 #[napi(object)]
 #[derive(Clone, Default)]
@@ -1373,6 +1406,30 @@ fn convert_nav_item(item: JsSsgNavItem) -> ox_content_ssg::NavItem {
     }
 }
 
+fn convert_generated_html_page(page: JsSsgGeneratedHtmlPage) -> ox_content_ssg::GeneratedHtmlPage {
+    ox_content_ssg::GeneratedHtmlPage {
+        input_path: page.input_path,
+        output_path: page.output_path,
+        html: page.html,
+    }
+}
+
+fn map_generated_html_page(page: ox_content_ssg::GeneratedHtmlPage) -> JsSsgGeneratedHtmlPage {
+    JsSsgGeneratedHtmlPage {
+        input_path: page.input_path,
+        output_path: page.output_path,
+        html: page.html,
+    }
+}
+
+fn map_shared_asset(asset: ox_content_ssg::SharedAsset) -> JsSsgSharedAsset {
+    JsSsgSharedAsset {
+        output_path: asset.output_path,
+        public_path: asset.public_path,
+        content: asset.content,
+    }
+}
+
 /// Generates SSG HTML page with navigation and search.
 #[napi]
 pub fn generate_ssg_html(
@@ -1422,6 +1479,25 @@ pub fn generate_ssg_html(
     };
 
     ox_content_ssg::generate_html(&ssg_page_data, &ssg_nav_groups, &ssg_config)
+}
+
+/// Extracts shared CSS and JavaScript assets from generated SSG pages.
+#[napi(js_name = "externalizeSsgAssets")]
+pub fn externalize_ssg_assets(
+    pages: Vec<JsSsgGeneratedHtmlPage>,
+    out_dir: String,
+    base: String,
+) -> JsSsgExternalizedAssets {
+    let result = ox_content_ssg::externalize_shared_page_assets(
+        pages.into_iter().map(convert_generated_html_page).collect(),
+        &out_dir,
+        &base,
+    );
+
+    JsSsgExternalizedAssets {
+        pages: result.pages.into_iter().map(map_generated_html_page).collect(),
+        assets: result.assets.into_iter().map(map_shared_asset).collect(),
+    }
 }
 
 /// Extracts searchable content from Markdown source.

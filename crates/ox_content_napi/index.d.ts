@@ -15,6 +15,9 @@ export declare function buildSearchIndex(documents: Array<JsSearchDocument>): st
  */
 export declare function checkI18n(dictDir: string, usedKeys: Array<string>): I18NCheckResult
 
+/** Extracts shared CSS and JavaScript assets from generated SSG pages. */
+export declare function externalizeSsgAssets(pages: Array<JsSsgGeneratedHtmlPage>, outDir: string, base: string): JsSsgExternalizedAssets
+
 /** Extracts normalized documentation entries from a JavaScript/TypeScript file using Oxc. */
 export declare function extractFileDocEntries(filePath: string, includePrivate?: boolean | undefined | null): Array<JsDocEntry>
 
@@ -437,6 +440,24 @@ export interface JsSsgConfig {
   availableLocales?: Array<JsLocaleInfo>
 }
 
+/** Result of SSG shared asset extraction. */
+export interface JsSsgExternalizedAssets {
+  /** HTML pages with inline assets replaced. */
+  pages: Array<JsSsgGeneratedHtmlPage>
+  /** Extracted shared assets. */
+  assets: Array<JsSsgSharedAsset>
+}
+
+/** Generated SSG HTML page for shared asset extraction. */
+export interface JsSsgGeneratedHtmlPage {
+  /** Source Markdown path. */
+  inputPath: string
+  /** Output HTML path. */
+  outputPath: string
+  /** HTML content. */
+  html: string
+}
+
 /** Navigation group for SSG. */
 export interface JsSsgNavGroup {
   /** Group title. */
@@ -474,6 +495,16 @@ export interface JsSsgPageData {
   path: string
   /** Entry page configuration (if layout: entry). */
   entryPage?: JsEntryPageConfig
+}
+
+/** Shared SSG asset extracted from generated pages. */
+export interface JsSsgSharedAsset {
+  /** Output file path. */
+  outputPath: string
+  /** Public URL path used from HTML. */
+  publicPath: string
+  /** Asset content. */
+  content: string
 }
 
 /** Theme colors for JavaScript. */

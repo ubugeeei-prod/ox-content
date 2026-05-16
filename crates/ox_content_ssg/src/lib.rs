@@ -51,8 +51,12 @@
 //! let html = generate_html(&page_data, &nav_groups, &config);
 //! ```
 
+mod assets;
 mod html;
 
+pub use assets::{
+    externalize_shared_page_assets, ExternalizedAssets, GeneratedHtmlPage, SharedAsset,
+};
 pub use html::{
     generate_html, EntryPageConfig, FeatureConfig, HeroAction, HeroConfig, HeroImage,
     HeroNoticeConfig, LocaleInfo, NavGroup, NavItem, PageData, SocialLink, SocialLinks, SsgConfig,
