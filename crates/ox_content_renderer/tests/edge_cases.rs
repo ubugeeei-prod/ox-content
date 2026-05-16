@@ -98,6 +98,55 @@ fn sanitize_keeps_relative_and_allowed_url_schemes() {
 }
 
 #[test]
+fn base_prefixes_root_absolute_markdown_links() {
+    let html = render(
+        "[Guide](/guide) [Dir](/guide/) [Markdown](/api.md#types)",
+        ParserOptions::default(),
+        HtmlRendererOptions {
+            convert_md_links: true,
+            base_url: "/docs/".to_string(),
+            ..Default::default()
+        },
+    );
+
+    assert!(html.contains("href=\"/docs/guide\""));
+    assert!(html.contains("href=\"/docs/guide/\""));
+    assert!(html.contains("href=\"/docs/api/index.html#types\""));
+}
+
+#[test]
+fn base_prefixes_root_absolute_markdown_images() {
+    let html = render(
+        "![logo](/img/logo.png)",
+        ParserOptions::default(),
+        HtmlRendererOptions {
+            convert_md_links: true,
+            base_url: "/docs/".to_string(),
+            ..Default::default()
+        },
+    );
+
+    assert_eq!(html, "<p><img src=\"/docs/img/logo.png\" alt=\"logo\"></p>\n");
+}
+
+#[test]
+fn base_prefixes_root_absolute_raw_html_attrs() {
+    let html = render(
+        "<div>\n<a href=\"/guide\">Guide</a>\n<img src='/img/logo.png'>\n<script src=\"//cdn.example/app.js\"></script>\n</div>",
+        ParserOptions::default(),
+        HtmlRendererOptions {
+            convert_md_links: true,
+            base_url: "/docs/".to_string(),
+            ..Default::default()
+        },
+    );
+
+    assert!(html.contains("href=\"/docs/guide\""), "{html}");
+    assert!(html.contains("src='/docs/img/logo.png'"), "{html}");
+    assert!(html.contains("src=\"//cdn.example/app.js\""), "{html}");
+}
+
+#[test]
 fn ordered_lists_preserve_start_attribute() {
     let html =
         render("3. third\n4. fourth", ParserOptions::default(), HtmlRendererOptions::default());
