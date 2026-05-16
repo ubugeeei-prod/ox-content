@@ -224,6 +224,8 @@ Built-in static embeds are rendered at transform time, with no client-side JavaS
 <GitHub repo="ubugeeei/ox-content" path="README.md" ref="main" loc="1-12" />
 ```
 
+`permalink`, `url`, and `href` accept GitHub `blob` URLs. The `#L1-L12` fragment is used as the source line range. You can also use `repo`, `path`, `ref`, and `loc` when you do not want to paste the full permalink. Source embeds fetch the GitHub contents API and render code directly instead of using an Open Graph preview.
+
 Disable all embeds or configure each fetcher:
 
 ```ts
@@ -242,6 +244,43 @@ oxContent({
 oxContent({
   embeds: false,
 });
+```
+
+#### Styling built-in embeds
+
+Built-in embed markup uses stable CSS classes so the generated HTML can be themed without client-side JavaScript.
+
+Repository card classes:
+
+- `.ox-github-card`
+- `.ox-github-header`
+- `.ox-github-icon`
+- `.ox-github-repo`
+- `.ox-github-description`
+- `.ox-github-stats`
+- `.ox-github-stat`
+- `.ox-github-language`
+
+Source code card classes:
+
+- `.ox-github-code`
+- `.ox-github-code-header`
+- `.ox-github-code-title`
+- `.ox-github-code-loc`
+- `.ox-github-code-block`
+- `.ox-github-code-line`
+- `.ox-github-code-line-number`
+- `.ox-github-code-line-content`
+
+```css
+.ox-github-card,
+.ox-github-code {
+  border-color: var(--my-border-color);
+}
+
+.ox-github-code-line-number {
+  color: var(--my-muted-color);
+}
 ```
 
 ### docs
