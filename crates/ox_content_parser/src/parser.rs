@@ -993,7 +993,7 @@ impl<'a> Parser<'a> {
             // Look for special characters
             while pos < content.len() {
                 let ch = bytes[pos];
-                if matches!(ch, b'*' | b'_' | b'`' | b'[' | b'!' | b'~' | b'\\') {
+                if matches!(ch, b'*' | b'_' | b'`' | b'[' | b'!' | b'~' | b'\\' | b'<') {
                     break;
                 }
                 pos += 1;
@@ -1022,6 +1022,19 @@ impl<'a> Parser<'a> {
                     };
                     children.push(Node::Break(break_node));
                     pos += 2;
+                }
+                b'<' => {
+                    if let Some((html, end)) = Self::parse_inline_html(content, pos, offset) {
+                        children.push(Node::Html(html));
+                        pos = end;
+                    } else {
+                        let text = Text {
+                            value: "<",
+                            span: Span::new((offset + pos) as u32, (offset + pos + 1) as u32),
+                        };
+                        children.push(Node::Text(text));
+                        pos += 1;
+                    }
                 }
                 b'\\' if pos + 1 < content.len() => {
                     // Escape sequence
@@ -1346,6 +1359,82 @@ impl<'a> Parser<'a> {
         }
 
         Ok(children)
+    }
+
+    fn parse_inline_html(content: &'a str, pos: usize, offset: usize) -> Option<(Html<'a>, usize)> {
+        let bytes = content.as_bytes();
+
+        if content[pos..].starts_with("<!--") {
+            let end = content[pos + 4..].find("-->").map(|found| pos + 4 + found + 3)?;
+            return Some((
+                Html {
+                    value: &content[pos..end],
+                    span: Span::new((offset + pos) as u32, (offset + end) as u32),
+                },
+                end,
+            ));
+        }
+
+        let closing = bytes.get(pos + 1) == Some(&b'/');
+        let tag_start = if closing { pos + 2 } else { pos + 1 };
+        if !bytes.get(tag_start).is_some_and(u8::is_ascii_alphabetic) {
+            return None;
+        }
+
+        let mut tag_end = tag_start + 1;
+        while tag_end < bytes.len()
+            && (bytes[tag_end].is_ascii_alphanumeric() || bytes[tag_end] == b'-')
+        {
+            tag_end += 1;
+        }
+
+        let mut cursor = tag_end;
+        if closing {
+            while cursor < bytes.len() && matches!(bytes[cursor], b' ' | b'\t') {
+                cursor += 1;
+            }
+            if bytes.get(cursor) != Some(&b'>') {
+                return None;
+            }
+            let end = cursor + 1;
+            return Some((
+                Html {
+                    value: &content[pos..end],
+                    span: Span::new((offset + pos) as u32, (offset + end) as u32),
+                },
+                end,
+            ));
+        }
+
+        if !matches!(bytes.get(cursor), Some(b' ' | b'\t' | b'/' | b'>')) {
+            return None;
+        }
+
+        let mut quote = None;
+        while cursor < bytes.len() {
+            let byte = bytes[cursor];
+            if let Some(quote_byte) = quote {
+                if byte == quote_byte {
+                    quote = None;
+                }
+            } else if matches!(byte, b'"' | b'\'') {
+                quote = Some(byte);
+            } else if byte == b'>' {
+                let end = cursor + 1;
+                return Some((
+                    Html {
+                        value: &content[pos..end],
+                        span: Span::new((offset + pos) as u32, (offset + end) as u32),
+                    },
+                    end,
+                ));
+            } else if byte == b'\n' {
+                return None;
+            }
+            cursor += 1;
+        }
+
+        None
     }
 }
 
