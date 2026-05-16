@@ -4,7 +4,7 @@
 
 import type { LanguageRegistration, ThemeRegistration } from "shiki";
 import type { ThemeConfig, ResolvedThemeConfig } from "./theme";
-import type { GitHubOptions } from "./plugins";
+import type { GitHubOptions, OgpOptions } from "./plugins";
 
 // =============================================================================
 // Entry Page Types (VitePress-like)
@@ -375,7 +375,7 @@ export interface OxContentOptions {
   /**
    * Built-in static embeds rendered during Markdown transformation.
    * Set to `false` to disable all built-in embeds.
-   * @default { github: true }
+   * @default { github: true, openGraph: true }
    */
   embeds?: BuiltinEmbedOptions | false;
 
@@ -429,6 +429,13 @@ export interface BuiltinEmbedOptions {
    * @default true
    */
   github?: boolean | GitHubOptions;
+
+  /**
+   * Render `<OgCard url="https://example.com" />` Open Graph link cards.
+   * Pass an options object to configure fetching.
+   * @default true
+   */
+  openGraph?: boolean | OgpOptions;
 }
 
 /**
@@ -436,6 +443,7 @@ export interface BuiltinEmbedOptions {
  */
 export interface ResolvedBuiltinEmbedOptions {
   github: GitHubOptions | false;
+  openGraph: OgpOptions | false;
 }
 
 /**

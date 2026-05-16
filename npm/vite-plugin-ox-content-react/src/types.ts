@@ -52,12 +52,21 @@ export interface GitHubEmbedOptions {
   maxSourceLines?: number;
 }
 
+export interface OpenGraphEmbedOptions {
+  timeout?: number;
+  cache?: boolean;
+  cacheTTL?: number;
+  userAgent?: string;
+}
+
 export interface BuiltinEmbedOptions {
   github?: boolean | GitHubEmbedOptions;
+  openGraph?: boolean | OpenGraphEmbedOptions;
 }
 
 export interface ResolvedBuiltinEmbedOptions {
   github: GitHubEmbedOptions | false;
+  openGraph: OpenGraphEmbedOptions | false;
 }
 
 export interface ResolvedReactOptions {

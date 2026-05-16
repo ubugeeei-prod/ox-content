@@ -144,6 +144,7 @@ export function createDocsResolvedOptions(
     ogViewer: false,
     embeds: {
       github: {},
+      openGraph: {},
     },
     i18n: false,
     ...overrides,

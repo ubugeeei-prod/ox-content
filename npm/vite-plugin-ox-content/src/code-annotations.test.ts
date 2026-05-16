@@ -162,6 +162,7 @@ function createResolvedOptions(overrides: Partial<ResolvedOptions> = {}): Resolv
     ogViewer: false,
     embeds: {
       github: {},
+      openGraph: {},
     },
     i18n: false,
     ...overrides,
