@@ -23,7 +23,7 @@ import type {
   FeatureConfig,
 } from "./types";
 import { resolveTheme, themeToNapi } from "./theme";
-import type { ResolvedThemeConfig } from "./theme";
+import type { ResolvedThemeConfig, SidebarItem } from "./theme";
 
 /**
  * Navigation item for SSG.
@@ -33,6 +33,7 @@ export interface SsgNavItem {
   path: string;
   href: string;
   children?: SsgNavItem[];
+  collapsed?: boolean;
 }
 
 /**
@@ -1564,13 +1565,18 @@ export async function generateHtmlPage(
   }));
 
   // Convert NavGroup to the format expected by Rust
+  const toRustNavItem = (item: SsgNavItem): SsgNavItem => ({
+    title: item.title,
+    path: item.path,
+    href: item.href,
+    children: item.children?.map(toRustNavItem),
+    collapsed: item.collapsed,
+  });
+
   const navGroupsForRust = navGroups.map((group) => ({
     title: group.title,
-    items: group.items.map((item) => ({
-      title: item.title,
-      path: item.path,
-      href: item.href,
-    })),
+    collapsed: group.collapsed,
+    items: group.items.map(toRustNavItem),
   }));
 
   // Convert theme to NAPI format if provided
@@ -2069,6 +2075,7 @@ export async function collectMarkdownFiles(srcDir: string): Promise<string[]> {
 export interface NavGroup {
   title: string;
   items: SsgNavItem[];
+  collapsed?: boolean;
 }
 
 /**
@@ -2156,6 +2163,98 @@ export function buildNavItems(
   return result;
 }
 
+function isSafeSidebarLink(link: string): boolean {
+  const trimmed = link.trim();
+  if (trimmed.startsWith("//")) {
+    return false;
+  }
+  return !/^[a-z][a-z0-9+.-]*:/i.test(trimmed) || /^(https?:|mailto:)/i.test(trimmed);
+}
+
+function sidebarPath(link?: string): string {
+  if (!link || !isSafeSidebarLink(link)) {
+    return "";
+  }
+  if (/^(https?:|mailto:|#)/i.test(link.trim())) {
+    return "";
+  }
+  const withoutHash = link.trim().split("#", 1)[0].split("?", 1)[0];
+  const bare = withoutHash
+    .replace(/^\/+/, "")
+    .replace(/\/$/, "")
+    .replace(/\.(md|markdown)$/i, "");
+  if (!bare || bare === "index") {
+    return "/";
+  }
+  return bare.replace(/\/index$/, "");
+}
+
+function sidebarHref(link: string | undefined, base: string, extension: string): string {
+  if (!link) {
+    return "#";
+  }
+  const trimmed = link.trim();
+  if (!isSafeSidebarLink(trimmed)) {
+    return "#";
+  }
+  if (/^(https?:|mailto:|#)/i.test(trimmed)) {
+    return trimmed;
+  }
+  const hash = trimmed.includes("#") ? `#${trimmed.split("#").slice(1).join("#")}` : "";
+  const withoutHash = trimmed.split("#", 1)[0].replace(/^\/+/, "").replace(/\/$/, "");
+  const withoutExt = withoutHash.replace(/\.(md|markdown)$/i, "");
+  const route =
+    !withoutExt || withoutExt === "index" ? "index" : `${withoutExt.replace(/\/index$/, "")}/index`;
+  return `${base}${route}${extension}${hash}`;
+}
+
+/**
+ * Builds navigation items from an explicit theme sidebar tree.
+ */
+export function buildThemeNavItems(
+  sidebar: SidebarItem[],
+  base: string,
+  extension: string,
+): NavGroup[] {
+  const toNavItem = (item: SidebarItem): SsgNavItem => {
+    const navItem: SsgNavItem = {
+      title: item.text ?? item.link ?? "Untitled",
+      path: sidebarPath(item.link),
+      href: sidebarHref(item.link, base, extension),
+    };
+    if (item.items?.length) {
+      navItem.children = item.items.map(toNavItem);
+    }
+    if (item.collapsed !== undefined) {
+      navItem.collapsed = item.collapsed;
+    }
+    return navItem;
+  };
+  const groups: NavGroup[] = [];
+  let looseItems: SsgNavItem[] = [];
+  const flushLooseItems = () => {
+    if (looseItems.length > 0) {
+      groups.push({ title: "Guide", items: looseItems });
+      looseItems = [];
+    }
+  };
+
+  for (const item of sidebar) {
+    if (item.items?.length && !item.link) {
+      flushLooseItems();
+      groups.push({
+        title: item.text ?? "Guide",
+        items: item.items.map(toNavItem),
+        collapsed: item.collapsed,
+      });
+    } else {
+      looseItems.push(toNavItem(item));
+    }
+  }
+  flushLooseItems();
+  return groups;
+}
+
 /**
  * Builds all markdown files to static HTML.
  */
@@ -2188,7 +2287,9 @@ export async function buildSsg(
   const markdownFiles = await collectMarkdownFiles(srcDir);
 
   // Build navigation
-  const navItems = buildNavItems(markdownFiles, srcDir, base, ssgOptions.extension);
+  const navItems = ssgOptions.theme?.sidebar.length
+    ? buildThemeNavItems(ssgOptions.theme.sidebar, base, ssgOptions.extension)
+    : buildNavItems(markdownFiles, srcDir, base, ssgOptions.extension);
 
   // Get site name from options or package.json
   let siteName = ssgOptions.siteName ?? "Documentation";

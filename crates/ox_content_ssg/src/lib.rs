@@ -35,7 +35,10 @@
 //!         title: "Getting Started".to_string(),
 //!         path: "getting-started".to_string(),
 //!         href: "/docs/getting-started/index.html".to_string(),
+//!         children: vec![],
+//!         collapsed: None,
 //!     }],
+//!     collapsed: None,
 //! }];
 //!
 //! let config = SsgConfig {

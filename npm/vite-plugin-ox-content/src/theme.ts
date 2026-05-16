@@ -133,6 +133,13 @@ export interface ThemeEmbed {
   footer?: string;
 }
 
+export interface SidebarItem {
+  text?: string;
+  link?: string;
+  items?: SidebarItem[];
+  collapsed?: boolean;
+}
+
 /**
  * Complete theme configuration.
  */
@@ -157,6 +164,7 @@ export interface ThemeConfig {
   footer?: ThemeFooter;
   /** Social links configuration */
   socialLinks?: SocialLinks;
+  sidebar?: SidebarItem[];
   /** Embedded HTML content at specific positions */
   embed?: ThemeEmbed;
   /** Additional custom CSS */
@@ -178,6 +186,7 @@ export interface ResolvedThemeConfig {
   header: ThemeHeader;
   footer: ThemeFooter;
   socialLinks: SocialLinks;
+  sidebar: SidebarItem[];
   embed: ThemeEmbed;
   css: string;
   js: string;
@@ -354,6 +363,7 @@ export function resolveTheme(config?: ThemeConfig): ResolvedThemeConfig {
     header: merged.header ?? defaultTheme.header!,
     footer: merged.footer ?? defaultTheme.footer!,
     socialLinks: merged.socialLinks ?? defaultTheme.socialLinks!,
+    sidebar: merged.sidebar ?? [],
     embed: merged.embed ?? {},
     css: merged.css ?? "",
     js: merged.js ?? "",
