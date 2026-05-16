@@ -1,5 +1,13 @@
 # Changelog
 
+## [2.11.0] - 2026-05-16
+
+### Features
+
+- add builtin open graph embeds (#101)
+- add builtin github embeds (#99)
+- support mdx content files (#98)
+
 ## [2.10.0] - 2026-05-16
 
 ### Features
