@@ -359,55 +359,62 @@ pub fn transform(source: String, options: Option<JsTransformOptions>) -> Transfo
 
 /// Parses YAML frontmatter from Markdown content.
 fn parse_frontmatter(source: &str) -> (String, HashMap<String, serde_json::Value>) {
-    let mut frontmatter = HashMap::new();
-
     // Check for frontmatter delimiter
     if !source.starts_with("---") {
-        return (source.to_string(), frontmatter);
+        return (source.to_string(), HashMap::new());
     }
 
     // Find the closing delimiter
     let rest = &source[3..];
     let Some(end_pos) = rest.find("\n---") else {
-        return (source.to_string(), frontmatter);
+        return (source.to_string(), HashMap::new());
     };
 
-    let frontmatter_str = &rest[..end_pos].trim_start_matches('\n');
-    let content = &rest[end_pos + 4..].trim_start_matches('\n');
-
-    // Parse simple YAML key-value pairs
-    for line in frontmatter_str.lines() {
-        let line = line.trim();
-        if line.is_empty() || line.starts_with('#') {
-            continue;
-        }
-
-        if let Some(colon_pos) = line.find(':') {
-            let key = line[..colon_pos].trim().to_string();
-            let value_str = line[colon_pos + 1..].trim();
-
-            let value = if value_str == "true" {
-                serde_json::Value::Bool(true)
-            } else if value_str == "false" {
-                serde_json::Value::Bool(false)
-            } else if let Ok(n) = value_str.parse::<i64>() {
-                serde_json::Value::Number(n.into())
-            } else if let Ok(n) = value_str.parse::<f64>() {
-                serde_json::Number::from_f64(n).map_or_else(
-                    || serde_json::Value::String(value_str.to_string()),
-                    serde_json::Value::Number,
-                )
-            } else {
-                // Remove surrounding quotes if present
-                let s = value_str.trim_matches('"').trim_matches('\'');
-                serde_json::Value::String(s.to_string())
-            };
-
-            frontmatter.insert(key, value);
-        }
-    }
+    let frontmatter_str = rest[..end_pos].trim_start_matches('\n');
+    let content = rest[end_pos + 4..].trim_start_matches('\n');
+    let frontmatter = serde_yaml::from_str(frontmatter_str).unwrap_or_default();
 
     (content.to_string(), frontmatter)
+}
+
+#[cfg(test)]
+mod tests {
+    use serde_json::json;
+
+    use super::parse_frontmatter;
+
+    #[test]
+    fn parses_nested_yaml_frontmatter() {
+        let (content, frontmatter) = parse_frontmatter(
+            "---\ntitle: Guide\nmeta:\n  tags:\n    - rust\n    - napi\n  draft: false\n---\n# Body",
+        );
+
+        assert_eq!(content, "# Body");
+        assert_eq!(frontmatter.get("title"), Some(&json!("Guide")));
+        assert_eq!(
+            frontmatter.get("meta"),
+            Some(&json!({"tags": ["rust", "napi"], "draft": false}))
+        );
+    }
+
+    #[test]
+    fn frontmatter_preserves_yaml_scalars_and_quoted_colons() {
+        let (_, frontmatter) = parse_frontmatter(
+            "---\ncount: 3\nratio: 1.5\ncanonical: \"https://example.com/a:b\"\n---\n",
+        );
+
+        assert_eq!(frontmatter.get("count"), Some(&json!(3)));
+        assert_eq!(frontmatter.get("ratio"), Some(&json!(1.5)));
+        assert_eq!(frontmatter.get("canonical"), Some(&json!("https://example.com/a:b")));
+    }
+
+    #[test]
+    fn malformed_yaml_strips_block_and_returns_empty_frontmatter() {
+        let (content, frontmatter) = parse_frontmatter("---\ntitle: [broken\n---\nBody");
+
+        assert_eq!(content, "Body");
+        assert!(frontmatter.is_empty());
+    }
 }
 
 /// Extracts table of contents from document headings.
