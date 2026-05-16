@@ -214,3 +214,18 @@ fn hard_breaks_render_inside_paragraphs() {
     let html = render("line 1\\\nline 2", ParserOptions::default(), HtmlRendererOptions::default());
     assert_eq!(html, "<p>line 1<br>\nline 2</p>\n");
 }
+
+#[test]
+fn html_type6_details_allows_markdown_after_blank_line() {
+    let html = render(
+        "<details>\n\n<summary>Click to expand</summary>\n\n**bold should be markdown**\n\n- list\n\n```js\nconsole.log(\"code\");\n```\n\n</details>",
+        ParserOptions::default(),
+        HtmlRendererOptions::default(),
+    );
+
+    assert!(html.contains("<details>"));
+    assert!(html.contains("<summary>Click to expand</summary>"));
+    assert!(html.contains("<strong>bold should be markdown</strong>"));
+    assert!(html.contains("<ul>"));
+    assert!(html.contains("<pre><code class=\"language-js\">"));
+}

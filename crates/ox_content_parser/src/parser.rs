@@ -237,12 +237,22 @@ impl<'a> Parser<'a> {
             return Ok(None);
         };
 
-        let closing_tag = format!("</{tag_name}");
-
-        loop {
-            let consumed = self.consume_line();
-            if consumed.to_ascii_lowercase().contains(&closing_tag) || self.is_at_end() {
-                break;
+        if Self::is_type1_html_block_tag(&tag_name) {
+            let closing_tag = format!("</{tag_name}");
+            loop {
+                let consumed = self.consume_line();
+                if consumed.to_ascii_lowercase().contains(&closing_tag) || self.is_at_end() {
+                    break;
+                }
+            }
+        } else {
+            self.consume_line();
+            while !self.is_at_end() {
+                let next = self.remaining().lines().next().unwrap_or("");
+                if next.trim().is_empty() {
+                    break;
+                }
+                self.consume_line();
             }
         }
 
@@ -302,7 +312,9 @@ impl<'a> Parser<'a> {
             "ol",
             "p",
             "pre",
+            "script",
             "section",
+            "style",
             "summary",
             "table",
             "tbody",
@@ -310,11 +322,18 @@ impl<'a> Parser<'a> {
             "tfoot",
             "th",
             "thead",
+            "textarea",
             "tr",
             "ul",
         ]
         .iter()
         .any(|candidate| tag_name.eq_ignore_ascii_case(candidate))
+    }
+
+    fn is_type1_html_block_tag(tag_name: &str) -> bool {
+        ["pre", "script", "style", "textarea"]
+            .iter()
+            .any(|candidate| tag_name.eq_ignore_ascii_case(candidate))
     }
 
     /// Checks if the current position starts a block quote.
