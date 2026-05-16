@@ -52,6 +52,52 @@ fn html_blocks_are_escaped_when_sanitize_is_enabled() {
 }
 
 #[test]
+fn unsafe_link_urls_are_neutralized_when_sanitize_is_enabled() {
+    let html = render(
+        "[run](javascript:alert(1))",
+        ParserOptions::default(),
+        HtmlRendererOptions { sanitize: true, ..Default::default() },
+    );
+
+    assert_eq!(html, "<p><a href=\"#\">run</a></p>\n");
+}
+
+#[test]
+fn obfuscated_unsafe_link_schemes_are_neutralized() {
+    let html = render(
+        "[run](  JaVa ScRiPt:alert(1))",
+        ParserOptions::default(),
+        HtmlRendererOptions { sanitize: true, ..Default::default() },
+    );
+
+    assert_eq!(html, "<p><a href=\"#\">run</a></p>\n");
+}
+
+#[test]
+fn unsafe_image_urls_are_cleared_when_sanitize_is_enabled() {
+    let html = render(
+        "![x](data:text/html,<script>alert(1)</script>)",
+        ParserOptions::default(),
+        HtmlRendererOptions { sanitize: true, ..Default::default() },
+    );
+
+    assert_eq!(html, "<p><img src=\"\" alt=\"x\"></p>\n");
+}
+
+#[test]
+fn sanitize_keeps_relative_and_allowed_url_schemes() {
+    let html = render(
+        "[guide](./guide.md) [mail](mailto:hi@example.com) [phone](tel:+123)",
+        ParserOptions::default(),
+        HtmlRendererOptions { sanitize: true, ..Default::default() },
+    );
+
+    assert!(html.contains("href=\"./guide.md\""));
+    assert!(html.contains("href=\"mailto:hi@example.com\""));
+    assert!(html.contains("href=\"tel:+123\""));
+}
+
+#[test]
 fn ordered_lists_preserve_start_attribute() {
     let html =
         render("3. third\n4. fourth", ParserOptions::default(), HtmlRendererOptions::default());
