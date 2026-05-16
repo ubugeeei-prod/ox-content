@@ -56,7 +56,6 @@ import type {
   ExtractedDocs,
   DocEntry,
   ParamDoc,
-  ReturnDoc,
   GeneratedDocsData,
   DocsSummary,
 } from "./types";
@@ -457,148 +456,6 @@ function buildDocsData(docs: ExtractedDocs[]): GeneratedDocsData {
     })),
   };
 }
-interface NapiDocTag {
-  tag: string;
-  value: string;
-}
-
-interface NapiDocParam {
-  name: string;
-  typeAnnotation?: string;
-  optional: boolean;
-  defaultValue?: string;
-  description?: string;
-}
-
-interface NapiDocItem {
-  name: string;
-  kind: string;
-  doc?: string;
-  jsdoc?: string;
-  sourcePath: string;
-  line: number;
-  endLine: number;
-  exported: boolean;
-  signature?: string;
-  params: NapiDocParam[];
-  returnType?: string;
-  tags: NapiDocTag[];
-}
-
-function consumeJSDocType(value: string): { type?: string; rest: string } {
-  const trimmed = value.trimStart();
-  if (!trimmed.startsWith("{")) {
-    return { rest: trimmed };
-  }
-
-  let depth = 0;
-  for (let index = 0; index < trimmed.length; index++) {
-    const char = trimmed[index];
-    if (char === "{") {
-      depth++;
-    } else if (char === "}") {
-      depth--;
-      if (depth === 0) {
-        const type = trimmed.slice(1, index).trim();
-        return {
-          type: type || undefined,
-          rest: trimmed.slice(index + 1).trimStart(),
-        };
-      }
-    }
-  }
-
-  return { rest: trimmed };
-}
-
-function cleanTagDescription(value: string): string {
-  return value.trim().replace(/^-\s*/, "").trim();
-}
-
-function splitTagNameAndDescription(value: string): { name: string; description: string } {
-  const trimmed = value.trimStart();
-  if (trimmed.startsWith("[")) {
-    const closeIndex = trimmed.indexOf("]");
-    if (closeIndex >= 0) {
-      return {
-        name: trimmed.slice(0, closeIndex + 1),
-        description: trimmed.slice(closeIndex + 1).trimStart(),
-      };
-    }
-  }
-
-  const match = /^(\S+)(?:\s+([\s\S]*))?$/u.exec(trimmed);
-  return {
-    name: match?.[1] ?? "",
-    description: match?.[2] ?? "",
-  };
-}
-
-function parseParamTagValue(value: string): ParamDoc | null {
-  const { type, rest } = consumeJSDocType(value);
-  const { name: rawName, description } = splitTagNameAndDescription(rest);
-  let name = rawName.trim();
-  if (!name) {
-    return null;
-  }
-
-  let optional = false;
-  let defaultValue: string | undefined;
-  const optionalMatch = /^\[(.*)\]$/u.exec(name);
-  if (optionalMatch) {
-    optional = true;
-    const [innerName, innerDefault] = optionalMatch[1].split(/=(.*)/su);
-    name = innerName.trim();
-    defaultValue = innerDefault?.trim() || undefined;
-  }
-
-  if (!name) {
-    return null;
-  }
-
-  return {
-    name,
-    type: type || "unknown",
-    description: cleanTagDescription(description),
-    optional: optional || undefined,
-    default: defaultValue,
-  };
-}
-
-function parseReturnsTagValue(value: string): ReturnDoc {
-  const { type, rest } = consumeJSDocType(value);
-  return {
-    type: type || "unknown",
-    description: cleanTagDescription(rest),
-  };
-}
-
-function normalizeReturnType(value: string): string {
-  const parsed = parseReturnsTagValue(value);
-  return parsed.type === "unknown" ? value : parsed.type;
-}
-
-function mergeParam(params: ParamDoc[], next: ParamDoc): void {
-  const existing = params.find((param) => param.name === next.name);
-  if (!existing) {
-    params.push(next);
-    return;
-  }
-
-  if (next.type && (existing.type === "unknown" || next.type !== "unknown")) {
-    existing.type = next.type;
-  }
-  if (next.description) {
-    existing.description = next.description;
-  }
-  if (next.optional) {
-    existing.optional = true;
-  }
-  if (next.default) {
-    existing.default = next.default;
-  }
-}
-
 /**
  * Extracts JSDoc documentation from source files in specified directories.
  *
@@ -669,12 +526,12 @@ export async function extractDocs(
   options: ResolvedDocsOptions,
 ): Promise<ExtractedDocs[]> {
   const napi = await importNapiModule();
-  const extractFileDocs = (
-    napi as { extractFileDocs?: (filePath: string, includePrivate?: boolean) => NapiDocItem[] }
-  ).extractFileDocs;
+  const extractFileDocEntries = (
+    napi as { extractFileDocEntries?: (filePath: string, includePrivate?: boolean) => DocEntry[] }
+  ).extractFileDocEntries;
 
-  if (!extractFileDocs) {
-    throw new Error("[ox-content] extractFileDocs is not available from @ox-content/napi.");
+  if (!extractFileDocEntries) {
+    throw new Error("[ox-content] extractFileDocEntries is not available from @ox-content/napi.");
   }
 
   const results: ExtractedDocs[] = [];
@@ -683,9 +540,7 @@ export async function extractDocs(
     const files = await findFiles(srcDir, options);
 
     for (const file of files) {
-      const entries = extractFileDocs(file, options.private)
-        .map(parseNapiDocItem)
-        .filter((entry): entry is DocEntry => Boolean(entry));
+      const entries = extractFileDocEntries(file, options.private);
 
       if (entries.length > 0) {
         results.push({ file, entries });
@@ -751,191 +606,6 @@ function isExcluded(file: string, patterns: string[]): boolean {
     }
     return false;
   });
-}
-
-function parseNapiDocItem(item: NapiDocItem): DocEntry | null {
-  const kind = normalizeNapiKind(item.kind);
-  if (!kind) {
-    return null;
-  }
-
-  const params: ParamDoc[] = [];
-  const examples: string[] = [];
-  const tags: Record<string, string> = {};
-  let description = "";
-  let returns: { type: string; description: string } | undefined;
-  let isPrivate = false;
-
-  const rawLines = (item.jsdoc ?? "").split("\n").map((line) => {
-    const trimmedStart = line.trimStart();
-    const withoutStar = trimmedStart.startsWith("*") ? trimmedStart.slice(1) : trimmedStart;
-    return withoutStar.startsWith(" ") ? withoutStar.slice(1) : withoutStar;
-  });
-  const cleanedLines = rawLines.map((line) => line.trim()).filter(Boolean);
-
-  let currentExample = "";
-  let inExample = false;
-  let rawLineIndex = 0;
-
-  for (const lineText of cleanedLines) {
-    // Find the corresponding raw line to get original indentation for examples
-    while (rawLineIndex < rawLines.length && rawLines[rawLineIndex].trim() !== lineText) {
-      rawLineIndex++;
-    }
-    const rawLine = rawLineIndex < rawLines.length ? rawLines[rawLineIndex] : lineText;
-    rawLineIndex++;
-
-    if (lineText.startsWith("@")) {
-      if (inExample) {
-        examples.push(currentExample.trim());
-        currentExample = "";
-        inExample = false;
-      }
-
-      const tagMatch = /^@(\S+)\s*([\s\S]*)$/u.exec(lineText);
-      if (tagMatch) {
-        const [, tagName, tagValue = ""] = tagMatch;
-
-        switch (tagName) {
-          case "param":
-          case "arg":
-          case "argument": {
-            const param = parseParamTagValue(tagValue);
-            if (param) {
-              mergeParam(params, param);
-            }
-            break;
-          }
-          case "returns":
-          case "return":
-            returns = parseReturnsTagValue(tagValue);
-            break;
-          case "example":
-            inExample = true;
-            currentExample = tagValue.trim() ? `${tagValue.trim()}\n` : "";
-            break;
-          case "private":
-            isPrivate = true;
-            break;
-          default:
-            tags[tagName] = tagValue.trim();
-        }
-      }
-    } else if (inExample) {
-      currentExample += rawLine + "\n";
-    } else if (!description) {
-      description = lineText;
-    } else {
-      description += "\n" + lineText;
-    }
-  }
-
-  if (inExample && currentExample) {
-    examples.push(currentExample.trim());
-  }
-
-  for (const param of item.params) {
-    if (
-      params.length > 0 &&
-      param.name === "param" &&
-      !param.typeAnnotation &&
-      !param.description &&
-      !param.defaultValue
-    ) {
-      continue;
-    }
-
-    mergeParam(params, {
-      name: param.name,
-      type: param.typeAnnotation ?? "unknown",
-      description: param.description ?? "",
-      optional: param.optional || undefined,
-      default: param.defaultValue,
-    });
-  }
-
-  if (!returns && item.returnType) {
-    returns = {
-      type: normalizeReturnType(item.returnType),
-      description: "",
-    };
-  } else if (returns && item.returnType) {
-    returns.type = normalizeReturnType(item.returnType);
-  }
-
-  if (!description) {
-    description = item.doc ?? "";
-  }
-
-  for (const tag of item.tags) {
-    if (
-      tag.tag === "param" ||
-      tag.tag === "arg" ||
-      tag.tag === "argument" ||
-      tag.tag === "returns" ||
-      tag.tag === "return"
-    ) {
-      if (tag.tag === "param" || tag.tag === "arg" || tag.tag === "argument") {
-        const param = parseParamTagValue(tag.value);
-        if (param) {
-          mergeParam(params, param);
-        }
-      } else {
-        const parsedReturns = parseReturnsTagValue(tag.value);
-        if (!returns) {
-          returns = parsedReturns;
-        } else {
-          returns.type = returns.type === "unknown" ? parsedReturns.type : returns.type;
-          returns.description ||= parsedReturns.description;
-        }
-      }
-      continue;
-    }
-    if (tag.tag === "example") {
-      if (tag.value && !examples.includes(tag.value)) {
-        examples.push(tag.value);
-      }
-      continue;
-    }
-    if (tag.tag === "private") {
-      isPrivate = true;
-      continue;
-    }
-    if (!tags[tag.tag]) {
-      tags[tag.tag] = tag.value;
-    }
-  }
-
-  return {
-    name: item.name,
-    kind,
-    description,
-    params: params.length > 0 ? params : undefined,
-    returns,
-    examples: examples.length > 0 ? examples : undefined,
-    tags: Object.keys(tags).length > 0 ? tags : undefined,
-    private: isPrivate,
-    file: item.sourcePath,
-    line: item.line,
-    endLine: item.endLine,
-    signature: item.signature,
-  };
-}
-
-function normalizeNapiKind(kind: string): DocEntry["kind"] | null {
-  switch (kind) {
-    case "function":
-    case "class":
-    case "interface":
-    case "type":
-    case "variable":
-    case "module":
-      return kind;
-    case "enum":
-      return "type";
-    default:
-      return null;
-  }
 }
 
 /**

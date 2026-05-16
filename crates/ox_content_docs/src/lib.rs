@@ -7,9 +7,14 @@
 mod config;
 mod extractor;
 mod generator;
+mod normalize;
 
 pub use config::DocsConfig;
 pub use extractor::{
     DocExtractor, DocItem, DocItemKind, DocTag, ExtractError, ExtractResult, ParamDoc,
 };
 pub use generator::{DocsGenerator, GenerateError, GenerateResult};
+pub use normalize::{
+    normalize_doc_item, normalize_doc_items, NormalizedDocEntry, NormalizedDocKind,
+    NormalizedParamDoc, NormalizedReturnDoc,
+};
