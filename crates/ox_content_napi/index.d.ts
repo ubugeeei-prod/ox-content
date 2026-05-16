@@ -386,6 +386,7 @@ export interface JsSsgNavGroup {
   title: string
   /** Navigation items. */
   items: Array<JsSsgNavItem>
+  collapsed?: boolean
 }
 
 /** Navigation item for SSG. */
@@ -396,6 +397,8 @@ export interface JsSsgNavItem {
   path: string
   /** Full href. */
   href: string
+  children?: Array<JsSsgNavItem>
+  collapsed?: boolean
 }
 
 /** Page data for SSG. */

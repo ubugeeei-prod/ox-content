@@ -825,6 +825,8 @@ pub struct JsSsgNavItem {
     pub path: String,
     /// Full href.
     pub href: String,
+    pub children: Option<Vec<JsSsgNavItem>>,
+    pub collapsed: Option<bool>,
 }
 
 /// Navigation group for SSG.
@@ -835,6 +837,7 @@ pub struct JsSsgNavGroup {
     pub title: String,
     /// Navigation items.
     pub items: Vec<JsSsgNavItem>,
+    pub collapsed: Option<bool>,
 }
 
 /// Hero action for entry page.
@@ -1274,6 +1277,16 @@ fn convert_entry_page_config(
     })
 }
 
+fn convert_nav_item(item: JsSsgNavItem) -> ox_content_ssg::NavItem {
+    ox_content_ssg::NavItem {
+        title: item.title,
+        path: item.path,
+        href: item.href,
+        children: item.children.unwrap_or_default().into_iter().map(convert_nav_item).collect(),
+        collapsed: item.collapsed,
+    }
+}
+
 /// Generates SSG HTML page with navigation and search.
 #[napi]
 pub fn generate_ssg_html(
@@ -1303,11 +1316,8 @@ pub fn generate_ssg_html(
         .into_iter()
         .map(|g| ox_content_ssg::NavGroup {
             title: g.title,
-            items: g
-                .items
-                .into_iter()
-                .map(|i| ox_content_ssg::NavItem { title: i.title, path: i.path, href: i.href })
-                .collect(),
+            items: g.items.into_iter().map(convert_nav_item).collect(),
+            collapsed: g.collapsed,
         })
         .collect();
 

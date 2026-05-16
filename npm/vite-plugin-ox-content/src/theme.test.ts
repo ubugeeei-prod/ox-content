@@ -107,6 +107,15 @@ describe("theme", () => {
       expect(resolved.colors.background).toBe("#ffffff");
       expect(resolved.footer.message).toBe("Hello");
     });
+
+    it("should preserve explicit sidebar config", () => {
+      const resolved = resolveTheme({
+        sidebar: [{ text: "Guide", items: [{ text: "Intro", link: "/intro" }], collapsed: true }],
+      });
+      expect(resolved.sidebar).toEqual([
+        { text: "Guide", items: [{ text: "Intro", link: "/intro" }], collapsed: true },
+      ]);
+    });
   });
 
   describe("themeToNapi", () => {

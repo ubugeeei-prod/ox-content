@@ -260,6 +260,10 @@ pub struct NavItem {
     pub path: String,
     /// Full href.
     pub href: String,
+    #[serde(default)]
+    pub children: Vec<NavItem>,
+    #[serde(default)]
+    pub collapsed: Option<bool>,
 }
 
 /// Navigation group for SSG.
@@ -269,6 +273,8 @@ pub struct NavGroup {
     pub title: String,
     /// Navigation items.
     pub items: Vec<NavItem>,
+    #[serde(default)]
+    pub collapsed: Option<bool>,
 }
 
 /// Table of contents entry.
@@ -334,14 +340,6 @@ pub struct LocaleInfo {
 // =============================================================================
 // Askama Template Structures
 // =============================================================================
-
-/// Navigation template.
-#[derive(Template)]
-#[template(path = "nav.html")]
-struct NavTemplate<'a> {
-    nav_groups: &'a [NavGroup],
-    current_path: &'a str,
-}
 
 /// Social links template (desktop header).
 #[derive(Template)]
@@ -1119,8 +1117,66 @@ fn validate_social_svg(svg: &str) -> Option<&str> {
 }
 
 fn generate_nav_html(nav_groups: &[NavGroup], current_path: &str) -> String {
-    let template = NavTemplate { nav_groups, current_path };
-    template.render().unwrap_or_default()
+    let mut html = String::new();
+    for group in nav_groups {
+        if group.collapsed.is_some() {
+            let open = if group.collapsed == Some(true) { "" } else { " open" };
+            html.push_str(&format!(
+                "<details class=\"nav-section nav-section--collapsible\"{open}>\n  <summary class=\"nav-title nav-title--summary\">{}</summary>\n",
+                escape_html(&group.title)
+            ));
+            render_nav_list(&mut html, &group.items, current_path, false);
+            html.push_str("</details>\n");
+        } else {
+            html.push_str(&format!(
+                "<div class=\"nav-section\">\n  <div class=\"nav-title\">{}</div>\n",
+                escape_html(&group.title)
+            ));
+            render_nav_list(&mut html, &group.items, current_path, false);
+            html.push_str("</div>\n");
+        }
+    }
+    html
+}
+
+fn render_nav_list(html: &mut String, items: &[NavItem], current_path: &str, nested: bool) {
+    let class_name = if nested { "nav-list nav-list--nested" } else { "nav-list" };
+    html.push_str(&format!("  <ul class=\"{class_name}\">\n"));
+    for item in items {
+        render_nav_item(html, item, current_path);
+    }
+    html.push_str("  </ul>\n");
+}
+
+fn render_nav_item(html: &mut String, item: &NavItem, current_path: &str) {
+    let href = safe_nav_href(&item.href);
+    let title = escape_html(&item.title);
+    let active_class = if item.path == current_path { " active" } else { "" };
+    if item.children.is_empty() {
+        html.push_str(&format!(
+            "    <li class=\"nav-item\"><a href=\"{href}\" class=\"nav-link{active_class}\">{title}</a></li>\n"
+        ));
+        return;
+    }
+
+    let open = if item.collapsed == Some(true) { "" } else { " open" };
+    html.push_str(&format!(
+        "    <li class=\"nav-item nav-item--group\"><details class=\"nav-details\"{open}><summary class=\"nav-summary\"><a href=\"{href}\" class=\"nav-link nav-link--summary{active_class}\">{title}</a></summary>\n"
+    ));
+    render_nav_list(html, &item.children, current_path, true);
+    html.push_str("    </details></li>\n");
+}
+
+fn safe_nav_href(href: &str) -> String {
+    let trimmed = href.trim();
+    let lower = trimmed.to_ascii_lowercase();
+    let safe_scheme = lower.starts_with("http://")
+        || lower.starts_with("https://")
+        || lower.starts_with("mailto:");
+    if trimmed.starts_with("//") || (trimmed.contains(':') && !safe_scheme) {
+        return "#".to_string();
+    }
+    escape_html(trimmed)
 }
 
 #[cfg(test)]
@@ -1145,7 +1201,10 @@ mod tests {
                 title: "Test Page".to_string(),
                 path: "test".to_string(),
                 href: "/docs/test/index.html".to_string(),
+                children: vec![],
+                collapsed: None,
             }],
+            collapsed: None,
         }];
 
         let config = SsgConfig {
@@ -1166,6 +1225,36 @@ mod tests {
         assert!(html.contains("href=\"#hello\""));
         assert!(html.contains("Last updated:"));
         assert!(html.contains("<time datetime=\"1970-01-01\">1970-01-01</time>"));
+    }
+
+    #[test]
+    fn test_generate_nav_html_with_nested_collapsed_items() {
+        let nav_groups = vec![NavGroup {
+            title: "Guide & API".to_string(),
+            collapsed: Some(true),
+            items: vec![NavItem {
+                title: "Runtime <Core>".to_string(),
+                path: "runtime".to_string(),
+                href: "javascript:alert(1)".to_string(),
+                collapsed: Some(false),
+                children: vec![NavItem {
+                    title: "Setup".to_string(),
+                    path: "runtime/setup".to_string(),
+                    href: "/docs/runtime/setup/index.html".to_string(),
+                    children: vec![],
+                    collapsed: None,
+                }],
+            }],
+        }];
+
+        let html = generate_nav_html(&nav_groups, "runtime/setup");
+        assert!(html.contains("<details class=\"nav-section nav-section--collapsible\">"));
+        assert!(html.contains("Guide &amp; API"));
+        assert!(html.contains("Runtime &lt;Core&gt;"));
+        assert!(html.contains("href=\"#\""));
+        assert!(html.contains("nav-list nav-list--nested"));
+        assert!(html.contains("class=\"nav-link active\""));
+        assert!(!html.contains("javascript:"));
     }
 
     #[test]
@@ -1217,6 +1306,7 @@ mod tests {
             description: None,
             content: "<p>Content</p>".to_string(),
             toc: vec![],
+            last_updated: None,
             path: "social".to_string(),
             entry_page: None,
         };
