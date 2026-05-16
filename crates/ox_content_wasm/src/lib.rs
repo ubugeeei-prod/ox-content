@@ -232,12 +232,13 @@ fn parse_frontmatter(source: &str) -> (String, HashMap<String, serde_json::Value
 /// Extracts table of contents from document headings.
 fn extract_toc(doc: &Document, max_depth: u8) -> Vec<TocEntry> {
     let mut entries = Vec::new();
+    let mut slug_counts = HashMap::new();
 
     for node in &doc.children {
         if let Node::Heading(heading) = node {
             if heading.depth <= max_depth {
                 let text = extract_heading_text(heading);
-                let slug = slugify(&text);
+                let slug = unique_slug(slugify(&text), &mut slug_counts);
                 entries.push(TocEntry { depth: heading.depth, text, slug });
             }
         }
@@ -293,4 +294,32 @@ fn slugify(text: &str) -> String {
         .split_whitespace()
         .collect::<Vec<_>>()
         .join("-")
+}
+
+fn unique_slug(slug: String, counts: &mut HashMap<String, usize>) -> String {
+    let slug = if slug.is_empty() { "section".to_string() } else { slug };
+    let count = counts.entry(slug.clone()).or_insert(0);
+    let unique = if *count == 0 { slug } else { format!("{slug}-{count}") };
+    *count += 1;
+    unique
+}
+
+#[cfg(test)]
+mod tests {
+    use ox_content_allocator::Allocator;
+    use ox_content_parser::Parser;
+
+    use super::extract_toc;
+
+    #[test]
+    fn toc_slugs_are_unique_and_match_heading_ids() {
+        let allocator = Allocator::new();
+        let doc = Parser::new(&allocator, "## Setup!\n## Setup?\n##").parse().unwrap();
+
+        let toc = extract_toc(&doc, 3);
+
+        assert_eq!(toc[0].slug, "setup");
+        assert_eq!(toc[1].slug, "setup-1");
+        assert_eq!(toc[2].slug, "section");
+    }
 }

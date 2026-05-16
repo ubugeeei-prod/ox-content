@@ -377,55 +377,16 @@ fn parse_frontmatter(source: &str) -> (String, HashMap<String, serde_json::Value
     (content.to_string(), frontmatter)
 }
 
-#[cfg(test)]
-mod tests {
-    use serde_json::json;
-
-    use super::parse_frontmatter;
-
-    #[test]
-    fn parses_nested_yaml_frontmatter() {
-        let (content, frontmatter) = parse_frontmatter(
-            "---\ntitle: Guide\nmeta:\n  tags:\n    - rust\n    - napi\n  draft: false\n---\n# Body",
-        );
-
-        assert_eq!(content, "# Body");
-        assert_eq!(frontmatter.get("title"), Some(&json!("Guide")));
-        assert_eq!(
-            frontmatter.get("meta"),
-            Some(&json!({"tags": ["rust", "napi"], "draft": false}))
-        );
-    }
-
-    #[test]
-    fn frontmatter_preserves_yaml_scalars_and_quoted_colons() {
-        let (_, frontmatter) = parse_frontmatter(
-            "---\ncount: 3\nratio: 1.5\ncanonical: \"https://example.com/a:b\"\n---\n",
-        );
-
-        assert_eq!(frontmatter.get("count"), Some(&json!(3)));
-        assert_eq!(frontmatter.get("ratio"), Some(&json!(1.5)));
-        assert_eq!(frontmatter.get("canonical"), Some(&json!("https://example.com/a:b")));
-    }
-
-    #[test]
-    fn malformed_yaml_strips_block_and_returns_empty_frontmatter() {
-        let (content, frontmatter) = parse_frontmatter("---\ntitle: [broken\n---\nBody");
-
-        assert_eq!(content, "Body");
-        assert!(frontmatter.is_empty());
-    }
-}
-
 /// Extracts table of contents from document headings.
 fn extract_toc(doc: &Document, max_depth: u8) -> Vec<TocEntry> {
     let mut entries = Vec::new();
+    let mut slug_counts = HashMap::new();
 
     for node in &doc.children {
         if let Node::Heading(heading) = node {
             if heading.depth <= max_depth {
                 let text = extract_heading_text(heading);
-                let slug = slugify(&text);
+                let slug = unique_slug(slugify(&text), &mut slug_counts);
                 entries.push(TocEntry { depth: heading.depth, text, slug });
             }
         }
@@ -481,6 +442,14 @@ fn slugify(text: &str) -> String {
         .split_whitespace()
         .collect::<Vec<_>>()
         .join("-")
+}
+
+fn unique_slug(slug: String, counts: &mut HashMap<String, usize>) -> String {
+    let slug = if slug.is_empty() { "section".to_string() } else { slug };
+    let count = counts.entry(slug.clone()).or_insert(0);
+    let unique = if *count == 0 { slug } else { format!("{slug}-{count}") };
+    *count += 1;
+    unique
 }
 
 /// Converts transform options to parser options.
@@ -1729,5 +1698,60 @@ pub fn extract_translation_keys(
             })
             .collect(),
         Err(_) => vec![],
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use serde_json::json;
+
+    use ox_content_allocator::Allocator;
+    use ox_content_parser::Parser;
+
+    use super::{extract_toc, parse_frontmatter};
+
+    #[test]
+    fn parses_nested_yaml_frontmatter() {
+        let (content, frontmatter) = parse_frontmatter(
+            "---\ntitle: Guide\nmeta:\n  tags:\n    - rust\n    - napi\n  draft: false\n---\n# Body",
+        );
+
+        assert_eq!(content, "# Body");
+        assert_eq!(frontmatter.get("title"), Some(&json!("Guide")));
+        assert_eq!(
+            frontmatter.get("meta"),
+            Some(&json!({"tags": ["rust", "napi"], "draft": false}))
+        );
+    }
+
+    #[test]
+    fn frontmatter_preserves_yaml_scalars_and_quoted_colons() {
+        let (_, frontmatter) = parse_frontmatter(
+            "---\ncount: 3\nratio: 1.5\ncanonical: \"https://example.com/a:b\"\n---\n",
+        );
+
+        assert_eq!(frontmatter.get("count"), Some(&json!(3)));
+        assert_eq!(frontmatter.get("ratio"), Some(&json!(1.5)));
+        assert_eq!(frontmatter.get("canonical"), Some(&json!("https://example.com/a:b")));
+    }
+
+    #[test]
+    fn malformed_yaml_strips_block_and_returns_empty_frontmatter() {
+        let (content, frontmatter) = parse_frontmatter("---\ntitle: [broken\n---\nBody");
+
+        assert_eq!(content, "Body");
+        assert!(frontmatter.is_empty());
+    }
+
+    #[test]
+    fn toc_slugs_are_unique_and_match_heading_ids() {
+        let allocator = Allocator::new();
+        let doc = Parser::new(&allocator, "## Setup!\n## Setup?\n##").parse().unwrap();
+
+        let toc = extract_toc(&doc, 3);
+
+        assert_eq!(toc[0].slug, "setup");
+        assert_eq!(toc[1].slug, "setup-1");
+        assert_eq!(toc[2].slug, "section");
     }
 }
