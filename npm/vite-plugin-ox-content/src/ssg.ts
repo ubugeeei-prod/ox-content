@@ -2,7 +2,6 @@
  * SSG (Static Site Generation) module for ox-content
  */
 
-import { createHash } from "node:crypto";
 import * as fs from "fs/promises";
 import * as path from "path";
 import { glob } from "glob";
@@ -1658,241 +1657,9 @@ interface GeneratedHtmlPage {
   html: string;
 }
 
-interface SharedAssetChunk {
+interface ExternalizedSharedAsset {
   outputPath: string;
-  publicPath: string;
   content: string;
-}
-
-interface CssSection {
-  name: string;
-  content: string;
-}
-
-const SSG_STYLE_BLOCK_RE =
-  /[ \t]*<!-- ox-content:styles:start -->\s*<style>([\s\S]*?)<\/style>\s*<!-- ox-content:styles:end -->/;
-const SSG_SCRIPT_BLOCK_RE =
-  /[ \t]*<!-- ox-content:scripts:start -->\s*<script>([\s\S]*?)<\/script>\s*<!-- ox-content:scripts:end -->/;
-const FIRST_INLINE_STYLE_RE = /[ \t]*<style>([\s\S]*?)<\/style>/;
-const LAST_INLINE_BODY_SCRIPT_RE = /[ \t]*<script>([\s\S]*?)<\/script>\s*<\/body>/;
-const CSS_SECTION_RE =
-  /\/\* ox-content:css:([a-z0-9-]+):start \*\/\s*([\s\S]*?)\s*\/\* ox-content:css:\1:end \*\//g;
-const SEARCH_CHUNK_RE = /\/\/ ox-content:search:start\s*([\s\S]*?)\s*\/\/ ox-content:search:end/;
-const SEARCH_CHUNK_PLACEHOLDER = "__OX_CONTENT_SEARCH_CHUNK__";
-const CORE_CSS_SECTION_NAMES = new Set(["base", "footer"]);
-const THEME_INLINE_CSS_MAX_BYTES = 2048;
-
-function createContentHash(content: string): string {
-  return createHash("sha256").update(content).digest("hex").slice(0, 10);
-}
-
-function sanitizeChunkLabel(label: string): string {
-  return (
-    label
-      .toLowerCase()
-      .replace(/[^a-z0-9]+/g, "-")
-      .replace(/^-+|-+$/g, "") || "asset"
-  );
-}
-
-function toPublicAssetPath(base: string, fileName: string): string {
-  const normalizedBase = base.endsWith("/") ? base : `${base}/`;
-  return `${normalizedBase}assets/${fileName}`;
-}
-
-function hasRelativeCssUrls(css: string): boolean {
-  let cursor = 0;
-
-  while (cursor < css.length) {
-    const urlIndex = css.indexOf("url(", cursor);
-    if (urlIndex === -1) {
-      return false;
-    }
-
-    let valueStart = urlIndex + 4;
-    while (valueStart < css.length && /\s/.test(css[valueStart])) {
-      valueStart++;
-    }
-
-    const quote = css[valueStart] === '"' || css[valueStart] === "'" ? css[valueStart] : "";
-    if (quote) {
-      valueStart++;
-    }
-
-    let valueEnd = valueStart;
-    while (valueEnd < css.length) {
-      const char = css[valueEnd];
-      if (quote) {
-        if (char === "\\") {
-          valueEnd += 2;
-          continue;
-        }
-        if (char === quote) {
-          break;
-        }
-      } else if (char === ")") {
-        break;
-      }
-      valueEnd++;
-    }
-
-    const value = css.slice(valueStart, valueEnd).trim();
-    if (
-      value &&
-      !value.startsWith("data:") &&
-      !value.startsWith("http:") &&
-      !value.startsWith("https:") &&
-      !value.startsWith("//") &&
-      !value.startsWith("/") &&
-      !value.startsWith("#") &&
-      !value.startsWith("blob:") &&
-      !value.startsWith("var(")
-    ) {
-      return true;
-    }
-
-    cursor = valueEnd + 1;
-  }
-
-  return false;
-}
-
-function createSharedAssetChunk(
-  type: "css" | "js",
-  label: string,
-  content: string,
-  outDir: string,
-  base: string,
-): SharedAssetChunk {
-  const hash = createContentHash(content);
-  const fileName = `ox-content-${sanitizeChunkLabel(label)}-${hash}.${type}`;
-
-  return {
-    outputPath: path.join(outDir, "assets", fileName),
-    publicPath: toPublicAssetPath(base, fileName),
-    content,
-  };
-}
-
-function extractCssSections(cssContent: string): CssSection[] {
-  return Array.from(cssContent.matchAll(CSS_SECTION_RE))
-    .map(([, name, content]) => ({
-      name,
-      content: content.trim(),
-    }))
-    .filter((section) => section.content.length > 0);
-}
-
-function getOrCreateSharedChunk(
-  chunks: Map<string, SharedAssetChunk>,
-  type: "css" | "js",
-  label: string,
-  content: string,
-  outDir: string,
-  base: string,
-): SharedAssetChunk {
-  let chunk = chunks.get(content);
-  if (!chunk) {
-    chunk = createSharedAssetChunk(type, label, content, outDir, base);
-    chunks.set(content, chunk);
-  }
-  return chunk;
-}
-
-function buildStyleReplacement(
-  cssContent: string,
-  cssChunks: Map<string, SharedAssetChunk>,
-  outDir: string,
-  base: string,
-): string {
-  const sections = extractCssSections(cssContent);
-  const effectiveSections =
-    sections.length > 0
-      ? sections
-      : [
-          {
-            name: "css",
-            content: cssContent.trim(),
-          },
-        ];
-
-  const coreContent = effectiveSections
-    .filter((section) => CORE_CSS_SECTION_NAMES.has(section.name))
-    .map((section) => section.content)
-    .join("\n")
-    .trim();
-  const fragments: string[] = [];
-
-  if (coreContent) {
-    const coreChunk = getOrCreateSharedChunk(cssChunks, "css", "core", coreContent, outDir, base);
-    fragments.push(`  <link rel="stylesheet" href="${coreChunk.publicPath}">`);
-  }
-
-  for (const section of effectiveSections) {
-    if (CORE_CSS_SECTION_NAMES.has(section.name)) {
-      continue;
-    }
-
-    const shouldInlineTheme =
-      section.name === "theme" &&
-      (hasRelativeCssUrls(section.content) || section.content.length <= THEME_INLINE_CSS_MAX_BYTES);
-    if (shouldInlineTheme || hasRelativeCssUrls(section.content)) {
-      fragments.push(`  <style>${section.content}</style>`);
-      continue;
-    }
-
-    const chunk = getOrCreateSharedChunk(
-      cssChunks,
-      "css",
-      section.name,
-      section.content,
-      outDir,
-      base,
-    );
-    fragments.push(`  <link rel="stylesheet" href="${chunk.publicPath}">`);
-  }
-
-  return fragments.join("\n");
-}
-
-function buildScriptReplacement(
-  jsContent: string,
-  jsChunks: Map<string, SharedAssetChunk>,
-  outDir: string,
-  base: string,
-): string {
-  const searchMatch = jsContent.match(SEARCH_CHUNK_RE);
-
-  if (searchMatch && jsContent.includes(SEARCH_CHUNK_PLACEHOLDER)) {
-    const searchContent = searchMatch[1].trim();
-    if (searchContent) {
-      const searchChunk = getOrCreateSharedChunk(
-        jsChunks,
-        "js",
-        "search",
-        searchContent,
-        outDir,
-        base,
-      );
-      const coreContent = jsContent
-        .replace(SEARCH_CHUNK_RE, "")
-        .replaceAll(SEARCH_CHUNK_PLACEHOLDER, searchChunk.publicPath)
-        .trim();
-
-      if (coreContent) {
-        const coreChunk = getOrCreateSharedChunk(jsChunks, "js", "core", coreContent, outDir, base);
-        return `  <script defer src="${coreChunk.publicPath}"></script>`;
-      }
-    }
-  }
-
-  const fallbackContent = jsContent.trim();
-  if (!fallbackContent) {
-    return "";
-  }
-
-  const chunk = getOrCreateSharedChunk(jsChunks, "js", "js", fallbackContent, outDir, base);
-  return `  <script defer src="${chunk.publicPath}"></script>`;
 }
 
 async function externalizeSharedPageAssets(
@@ -1900,56 +1667,22 @@ async function externalizeSharedPageAssets(
   outDir: string,
   base: string,
 ): Promise<{ pages: GeneratedHtmlPage[]; assets: string[] }> {
-  const cssChunks = new Map<string, SharedAssetChunk>();
-  const jsChunks = new Map<string, SharedAssetChunk>();
+  const mod = await importNapiModule();
+  const optimized = mod.externalizeSsgAssets(pages, outDir, base) as {
+    pages: GeneratedHtmlPage[];
+    assets: ExternalizedSharedAsset[];
+  };
 
-  const optimizedPages = pages.map((page) => {
-    let html = page.html;
-
-    const styleMatch = html.match(SSG_STYLE_BLOCK_RE);
-    if (styleMatch) {
-      const replacement = buildStyleReplacement(styleMatch[1], cssChunks, outDir, base);
-      html = html.replace(SSG_STYLE_BLOCK_RE, replacement);
-    } else {
-      const inlineStyleMatch = html.match(FIRST_INLINE_STYLE_RE);
-      if (inlineStyleMatch) {
-        const replacement = buildStyleReplacement(inlineStyleMatch[1], cssChunks, outDir, base);
-        html = html.replace(FIRST_INLINE_STYLE_RE, replacement);
-      }
-    }
-
-    const scriptMatch = html.match(SSG_SCRIPT_BLOCK_RE);
-    if (scriptMatch) {
-      const replacement = buildScriptReplacement(scriptMatch[1], jsChunks, outDir, base);
-      html = html.replace(SSG_SCRIPT_BLOCK_RE, replacement);
-    } else {
-      const inlineScriptMatch = html.match(LAST_INLINE_BODY_SCRIPT_RE);
-      if (inlineScriptMatch) {
-        const replacement = buildScriptReplacement(inlineScriptMatch[1], jsChunks, outDir, base);
-        html = html.replace(
-          LAST_INLINE_BODY_SCRIPT_RE,
-          replacement ? `${replacement}\n</body>` : "</body>",
-        );
-      }
-    }
-
-    return {
-      ...page,
-      html,
-    };
-  });
-
-  const chunks = [...cssChunks.values(), ...jsChunks.values()];
   await Promise.all(
-    chunks.map(async (chunk) => {
-      await fs.mkdir(path.dirname(chunk.outputPath), { recursive: true });
-      await fs.writeFile(chunk.outputPath, chunk.content, "utf-8");
+    optimized.assets.map(async (asset) => {
+      await fs.mkdir(path.dirname(asset.outputPath), { recursive: true });
+      await fs.writeFile(asset.outputPath, asset.content, "utf-8");
     }),
   );
 
   return {
-    pages: optimizedPages,
-    assets: chunks.map((chunk) => chunk.outputPath),
+    pages: optimized.pages,
+    assets: optimized.assets.map((asset) => asset.outputPath),
   };
 }
 
