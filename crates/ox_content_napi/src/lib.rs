@@ -17,8 +17,9 @@ use std::process::Command;
 use ox_content_allocator::Allocator;
 use ox_content_ast::{Document, Heading, Node};
 use ox_content_docs::{
-    normalize_doc_items, DocExtractor, DocItem, DocItemKind, DocTag, NormalizedDocEntry,
-    NormalizedParamDoc, NormalizedReturnDoc, ParamDoc,
+    generate_nav_code, generate_nav_metadata, normalize_doc_items, DocExtractor, DocItem,
+    DocItemKind, DocTag, DocsNavItem, NormalizedDocEntry, NormalizedParamDoc, NormalizedReturnDoc,
+    ParamDoc,
 };
 use ox_content_parser::{Parser, ParserOptions};
 use ox_content_renderer::{HtmlRenderer, HtmlRendererOptions};
@@ -148,6 +149,15 @@ pub struct JsDocEntry {
     pub line: u32,
     pub end_line: u32,
     pub signature: Option<String>,
+}
+
+/// Navigation item emitted for generated documentation.
+#[napi(object)]
+#[derive(Clone)]
+pub struct JsDocsNavItem {
+    pub title: String,
+    pub path: String,
+    pub children: Option<Vec<JsDocsNavItem>>,
 }
 
 /// Transform options for JavaScript.
@@ -366,6 +376,26 @@ fn map_normalized_doc_entry(entry: NormalizedDocEntry) -> JsDocEntry {
     }
 }
 
+fn map_docs_nav_item(item: DocsNavItem) -> JsDocsNavItem {
+    JsDocsNavItem {
+        title: item.title,
+        path: item.path,
+        children: item.children.map(|children| {
+            children.into_iter().map(map_docs_nav_item).collect::<Vec<JsDocsNavItem>>()
+        }),
+    }
+}
+
+fn convert_docs_nav_item(item: JsDocsNavItem) -> DocsNavItem {
+    DocsNavItem {
+        title: item.title,
+        path: item.path,
+        children: item.children.map(|children| {
+            children.into_iter().map(convert_docs_nav_item).collect::<Vec<DocsNavItem>>()
+        }),
+    }
+}
+
 /// Extracts documented declarations from a JavaScript/TypeScript file using Oxc.
 #[napi]
 pub fn extract_file_docs(
@@ -392,6 +422,25 @@ pub fn extract_file_doc_entries(
         .map_err(|err| Error::from_reason(err.to_string()))?;
 
     Ok(normalize_doc_items(items).into_iter().map(map_normalized_doc_entry).collect())
+}
+
+/// Generates sidebar navigation metadata from documentation file paths.
+#[napi(js_name = "generateDocsNavMetadata")]
+pub fn generate_docs_nav_metadata(
+    files: Vec<String>,
+    base_path: Option<String>,
+) -> Vec<JsDocsNavItem> {
+    generate_nav_metadata(&files, base_path.as_deref()).into_iter().map(map_docs_nav_item).collect()
+}
+
+/// Generates TypeScript source code for documentation navigation metadata.
+#[napi(js_name = "generateDocsNavCode")]
+pub fn generate_docs_nav_code(
+    nav_items: Vec<JsDocsNavItem>,
+    export_name: Option<String>,
+) -> String {
+    let nav_items = nav_items.into_iter().map(convert_docs_nav_item).collect::<Vec<_>>();
+    generate_nav_code(&nav_items, export_name.as_deref())
 }
 
 /// Restores code block metadata after JavaScript-side syntax highlighting.

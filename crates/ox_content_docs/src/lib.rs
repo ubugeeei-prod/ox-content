@@ -7,6 +7,7 @@
 mod config;
 mod extractor;
 mod generator;
+mod nav;
 mod normalize;
 
 pub use config::DocsConfig;
@@ -14,6 +15,7 @@ pub use extractor::{
     DocExtractor, DocItem, DocItemKind, DocTag, ExtractError, ExtractResult, ParamDoc,
 };
 pub use generator::{DocsGenerator, GenerateError, GenerateResult};
+pub use nav::{generate_nav_code, generate_nav_metadata, DocsNavItem};
 pub use normalize::{
     normalize_doc_item, normalize_doc_items, NormalizedDocEntry, NormalizedDocKind,
     NormalizedParamDoc, NormalizedReturnDoc,
