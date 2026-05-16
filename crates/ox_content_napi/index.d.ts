@@ -61,11 +61,17 @@ export declare function generateI18nModule(dictDir: string, config: JsI18NRuntim
  */
 export declare function generateOgImageSvg(data: JsOgImageData, config?: JsOgImageConfig | undefined | null): string
 
+/** Generates the client-side search runtime module. */
+export declare function generateSearchModule(optionsJson: string, indexPath: string): string
+
 /** Generates SSG HTML page with navigation and search. */
 export declare function generateSsgHtml(pageData: JsSsgPageData, navGroups: Array<JsSsgNavGroup>, config: JsSsgConfig): string
 
 /** Returns the last git commit timestamp for a file in milliseconds. */
 export declare function getGitLastUpdated(filePath: string, root?: string | undefined | null): number | null
+
+/** Derives hierarchical search scopes from a document id or URL. */
+export declare function getSearchDocumentScopes(id: string, url: string): Array<string>
 
 /** Converts a markdown file path to an SSG href. */
 export declare function getSsgHref(inputPath: string, srcDir: string, base: string, extension: string): string
@@ -347,6 +353,14 @@ export interface JsParserOptions {
   strikethrough?: boolean
   /** Enable autolinks. */
   autolinks?: boolean
+}
+
+/** Search query split into free text and scope prefixes. */
+export interface JsScopedSearchQuery {
+  /** Free-text terms after removing scope prefixes. */
+  text: string
+  /** Deduplicated lowercase scopes. */
+  scopes: Array<string>
 }
 
 /** Search document for JavaScript. */
@@ -727,6 +741,9 @@ export declare function loadDictionaries(dir: string): I18NLoadResult
  */
 export declare function loadDictionariesFlat(dir: string): Record<string, Record<string, string>>
 
+/** Returns true when a document belongs to at least one requested search scope. */
+export declare function matchesSearchScopes(id: string, url: string, scopes: Array<string>): boolean
+
 /** Restores code block metadata after JavaScript-side syntax highlighting. */
 export declare function mergeHighlightedCodeBlocks(originalHtml: string, highlightedHtml: string): string
 
@@ -768,6 +785,9 @@ export interface ParseResult {
   /** Parse errors, if any. */
   errors: Array<string>
 }
+
+/** Splits a search query into free-text terms and `@scope` prefixes. */
+export declare function parseScopedSearchQuery(query: string): JsScopedSearchQuery
 
 /** Renders an AST (provided as JSON) to HTML. */
 export declare function render(astJson: string): RenderResult

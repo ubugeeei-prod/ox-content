@@ -30,8 +30,14 @@
 mod index;
 mod indexer;
 mod query;
+mod runtime;
+mod scope;
 mod tokenizer;
 
 pub use index::{Field, Posting, SearchDocument, SearchIndex, SearchIndexBuilder};
 pub use indexer::DocumentIndexer;
 pub use query::{SearchOptions, SearchResult};
+pub use runtime::generate_search_module;
+pub use scope::{
+    get_search_document_scopes, matches_search_scopes, parse_scoped_search_query, ScopedSearchQuery,
+};
