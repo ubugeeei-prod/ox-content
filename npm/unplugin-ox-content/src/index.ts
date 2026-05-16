@@ -87,7 +87,7 @@ function resolveDocsConfig(docs: boolean | DocsConfig | undefined): ResolvedDocs
  * Resolves plugin options with defaults.
  */
 function resolveOptions(options: OxContentOptions): ResolvedOptions {
-  const extensions = options.extensions ?? [".md", ".markdown"];
+  const extensions = options.extensions ?? [".md", ".markdown", ".mdx"];
   return {
     srcDir: options.srcDir ?? "docs",
     gfm: options.gfm ?? true,

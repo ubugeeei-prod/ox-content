@@ -13,6 +13,7 @@ import type { TransformAllOptions } from "./plugins";
 import { protectMermaidSvgs, restoreMermaidSvgs } from "./plugins/mermaid-protect";
 import { transformIslands, hasIslands } from "./island";
 import { importNapiModule, importNapiModuleSync } from "./napi";
+import { DEFAULT_MARKDOWN_EXTENSIONS, markdownGlobPattern } from "./markdown";
 import type {
   ResolvedOptions,
   ResolvedSsgOptions,
@@ -1810,8 +1811,11 @@ export function formatTitle(name: string): string {
 /**
  * Collects all markdown files from the source directory.
  */
-export async function collectMarkdownFiles(srcDir: string): Promise<string[]> {
-  const pattern = path.join(srcDir, "**/*.{md,markdown}");
+export async function collectMarkdownFiles(
+  srcDir: string,
+  extensions: readonly string[] = DEFAULT_MARKDOWN_EXTENSIONS,
+): Promise<string[]> {
+  const pattern = markdownGlobPattern(srcDir, extensions);
   const files = await glob(pattern, {
     nodir: true,
     ignore: ["**/node_modules/**", "**/dist/**", "**/.git/**"],
@@ -1880,7 +1884,7 @@ export async function buildSsg(
   }
 
   // Collect markdown files
-  const markdownFiles = await collectMarkdownFiles(srcDir);
+  const markdownFiles = await collectMarkdownFiles(srcDir, options.extensions);
 
   // Build navigation
   const navItems =

@@ -28,6 +28,7 @@
 
 - **Blazing Fast** - Arena-allocated parser with zero-copy parsing
 - **mdast Compatible** - Run custom mdast plugins and existing remark/unified transforms
+- **MDX-ready Files** - Process `.mdx` alongside Markdown in Vite, SSG, and framework integrations
 - **GFM Support** - Tables, task lists, strikethrough, autolinks, footnotes
 - **Multi-Runtime** - Node.js (NAPI), WebAssembly, Native Rust
 - **Framework Agnostic** - Works with Vue, React, Svelte, and more

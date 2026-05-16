@@ -353,7 +353,7 @@ export interface OxContentOptions {
 
   /**
    * File extensions to process.
-   * @default ['.md', '.markdown']
+   * @default ['.md', '.markdown', '.mdx']
    */
   extensions?: string[];
 

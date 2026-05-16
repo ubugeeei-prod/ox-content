@@ -1344,7 +1344,7 @@ impl HtmlRenderer {
         output
     }
 
-    /// Converts a `.md` URL to `.html` URL for SSG output.
+    /// Converts a Markdown URL to an `.html` URL for SSG output.
     fn convert_md_url(&self, url: &str) -> String {
         // Split URL into path and fragment
         let (path, fragment) = match url.split_once('#') {
@@ -1352,16 +1352,23 @@ impl HtmlRenderer {
             None => (url, None),
         };
 
-        let is_md = std::path::Path::new(path)
-            .extension()
-            .is_some_and(|ext| ext.eq_ignore_ascii_case("md"));
+        let markdown_extension =
+            std::path::Path::new(path).extension().and_then(|ext| ext.to_str()).filter(|ext| {
+                ext.eq_ignore_ascii_case("md")
+                    || ext.eq_ignore_ascii_case("mdx")
+                    || ext.eq_ignore_ascii_case("markdown")
+            });
 
-        if !self.options.convert_md_links || !is_md {
+        let Some(markdown_extension) = markdown_extension else {
+            return url.to_string();
+        };
+
+        if !self.options.convert_md_links {
             return url.to_string();
         }
 
-        // Remove the .md extension
-        let path_without_ext = &path[..path.len() - 3];
+        // Remove the Markdown extension, including the leading dot.
+        let path_without_ext = &path[..path.len() - markdown_extension.len() - 1];
 
         // Check if the source file is an index file
         // index.md stays at the directory level, so relative paths work differently
@@ -2246,6 +2253,23 @@ mod tests {
             html.contains("href=\"./types/index.html\""),
             "Expected ./types/index.html but got: {html}"
         );
+    }
+
+    #[test]
+    fn test_convert_mdx_and_markdown_links() {
+        let allocator = Allocator::new();
+        let doc = Parser::new(&allocator, "[Component](./component.mdx) [Guide](guide.markdown)")
+            .parse()
+            .unwrap();
+        let mut renderer = HtmlRenderer::with_options(HtmlRendererOptions {
+            convert_md_links: true,
+            base_url: "/".to_string(),
+            source_path: "api/index.mdx".to_string(),
+            ..Default::default()
+        });
+        let html = renderer.render(&doc);
+        assert!(html.contains("href=\"./component/index.html\""), "Got: {html}");
+        assert!(html.contains("href=\"./guide/index.html\""), "Got: {html}");
     }
 
     #[test]

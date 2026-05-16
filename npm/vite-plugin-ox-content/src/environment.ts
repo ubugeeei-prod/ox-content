@@ -7,6 +7,7 @@
 
 import type { EnvironmentOptions } from "vite";
 import type { ResolvedOptions } from "./types";
+import { isMarkdownFilePath } from "./markdown";
 
 /**
  * Creates the Markdown processing environment configuration.
@@ -58,8 +59,8 @@ export function createMarkdownEnvironment(options: ResolvedOptions): Environment
 
     // Resolve configuration
     resolve: {
-      // Handle .md files
-      extensions: [".md", ".markdown"],
+      // Handle Markdown-like files
+      extensions: options.extensions,
 
       // Conditions for module resolution
       conditions: ["markdown", "node", "import"],
@@ -146,7 +147,7 @@ export async function prerender(
  *
  * Creates plugins specific to the Markdown environment.
  */
-export function createEnvironmentPlugins(_options: ResolvedOptions) {
+export function createEnvironmentPlugins(options: ResolvedOptions) {
   return [
     {
       name: "ox-content:markdown-env",
@@ -158,7 +159,7 @@ export function createEnvironmentPlugins(_options: ResolvedOptions) {
 
       // Transform within the environment
       transform(code: string, id: string) {
-        if (!id.endsWith(".md")) {
+        if (!isMarkdownFilePath(id, options.extensions)) {
           return null;
         }
 

@@ -53,6 +53,12 @@ describe("SSG route helpers", () => {
     );
     expect(getUrlPath(inputPath, srcDir)).toBe("guide/intro");
     expect(getHref(inputPath, srcDir, "/docs/", ".html")).toBe("/docs/guide/intro/index.html");
+
+    const mdxPath = path.join(srcDir, "components", "button.mdx");
+    expect(getOutputPath(mdxPath, srcDir, outDir, ".html")).toBe(
+      path.join(outDir, "components", "button", "index.html"),
+    );
+    expect(getUrlPath(mdxPath, srcDir)).toBe("components/button");
   });
 
   it("builds nav groups in the default SSG order", () => {

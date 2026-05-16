@@ -325,6 +325,9 @@ fn strip_markdown_extension(path: &str) -> String {
     if path.len() >= 3 && path[path.len() - 3..].eq_ignore_ascii_case(".md") {
         return path[..path.len() - 3].to_string();
     }
+    if path.len() >= 4 && path[path.len() - 4..].eq_ignore_ascii_case(".mdx") {
+        return path[..path.len() - 4].to_string();
+    }
     if path.len() >= 9 && path[path.len() - 9..].eq_ignore_ascii_case(".markdown") {
         return path[..path.len() - 9].to_string();
     }
@@ -489,6 +492,7 @@ mod tests {
             get_output_path("/repo/docs/guide/intro.md", root, "/repo/dist", ".html"),
             join_path("/repo/dist", "guide/intro/index.html")
         );
+        assert_eq!(get_url_path("/repo/docs/reference.mdx", root), "reference");
         assert_eq!(
             get_og_image_url(
                 "/repo/docs/guide/index.markdown",

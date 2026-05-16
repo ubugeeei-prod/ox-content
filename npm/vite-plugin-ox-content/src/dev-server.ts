@@ -27,6 +27,7 @@ import type { NavGroup, SsgPageData, SsgEntryPageConfig } from "./ssg";
 import type { ResolvedOptions } from "./types";
 import type { HeroConfig, FeatureConfig } from "./types";
 import { normalizeVitePressFrontmatter } from "./vitepress";
+import { isMarkdownFilePath } from "./markdown";
 
 /** File extensions to skip in the middleware. */
 const SKIP_EXTENSIONS = new Set([
@@ -83,7 +84,11 @@ function shouldSkip(url: string): boolean {
  * Resolve a request URL to a markdown file path.
  * Returns null if no matching file exists.
  */
-async function resolveMarkdownFile(url: string, srcDir: string): Promise<string | null> {
+async function resolveMarkdownFile(
+  url: string,
+  srcDir: string,
+  extensions: readonly string[],
+): Promise<string | null> {
   // Remove query string and hash
   let pathname = url.split("?")[0].split("#")[0];
 
@@ -97,30 +102,35 @@ async function resolveMarkdownFile(url: string, srcDir: string): Promise<string 
     pathname = pathname.slice(0, -1);
   }
 
-  // Map URL to potential markdown file path
-  let relativePath: string;
-  if (pathname === "/") {
-    relativePath = "index.md";
-  } else {
-    // Remove leading slash
-    relativePath = pathname.slice(1) + ".md";
+  const routePath = pathname === "/" ? "" : pathname.slice(1);
+  const directCandidates =
+    pathname === "/"
+      ? extensions.map((extension) => `index${extension}`)
+      : isMarkdownFilePath(routePath, extensions)
+        ? [routePath]
+        : extensions.map((extension) => `${routePath}${extension}`);
+
+  for (const relativePath of directCandidates) {
+    const filePath = path.join(srcDir, relativePath);
+    try {
+      await fs.access(filePath);
+      return filePath;
+    } catch {
+      // Try the next extension.
+    }
   }
 
-  const filePath = path.join(srcDir, relativePath);
-
-  try {
-    await fs.access(filePath);
-    return filePath;
-  } catch {
-    // Try as directory index
-    const indexPath = path.join(srcDir, pathname === "/" ? "" : pathname.slice(1), "index.md");
+  for (const extension of extensions) {
+    const indexPath = path.join(srcDir, routePath, `index${extension}`);
     try {
       await fs.access(indexPath);
       return indexPath;
     } catch {
-      return null;
+      // Try the next extension.
     }
   }
+
+  return null;
 }
 
 /**
@@ -374,7 +384,7 @@ export function createDevServerMiddleware(
     if (shouldSkip(routeUrl)) return next();
 
     // Resolve markdown file
-    const filePath = await resolveMarkdownFile(routeUrl, srcDir);
+    const filePath = await resolveMarkdownFile(routeUrl, srcDir, options.extensions);
     if (!filePath) return next();
 
     try {
@@ -394,7 +404,7 @@ export function createDevServerMiddleware(
 
       // Build navigation if not cached
       if (!cache.navGroups) {
-        const markdownFiles = await collectMarkdownFiles(srcDir);
+        const markdownFiles = await collectMarkdownFiles(srcDir, options.extensions);
         cache.navGroups =
           resolveNavigationGroups(options.ssg.navigation, base, options.ssg.extension) ??
           (options.ssg.theme?.sidebar.length

@@ -71,6 +71,13 @@ ox-content's `layout: entry`.
 
 Source directory for Markdown files.
 
+### extensions
+
+- Type: `string[]`
+- Default: `['.md', '.markdown', '.mdx']`
+
+Markdown-like file extensions processed by the Vite plugin, SSG, dev server, search index, and OG viewer.
+
 ### outDir
 
 - Type: `string`
