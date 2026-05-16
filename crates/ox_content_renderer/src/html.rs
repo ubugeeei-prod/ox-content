@@ -748,29 +748,88 @@ fn html_attr_value_range(html: &str, bytes: &[u8], name_end: usize) -> Option<(u
     }
 }
 
+fn collect_heading_text(nodes: &[Node<'_>]) -> String {
+    let mut text = String::new();
+    for node in nodes {
+        collect_node_text(node, &mut text);
+    }
+    text
+}
+
+fn collect_node_text(node: &Node<'_>, text: &mut String) {
+    match node {
+        Node::Text(value) => text.push_str(value.value),
+        Node::InlineCode(value) => text.push_str(value.value),
+        Node::Emphasis(value) => {
+            for child in &value.children {
+                collect_node_text(child, text);
+            }
+        }
+        Node::Strong(value) => {
+            for child in &value.children {
+                collect_node_text(child, text);
+            }
+        }
+        Node::Delete(value) => {
+            for child in &value.children {
+                collect_node_text(child, text);
+            }
+        }
+        Node::Link(value) => {
+            for child in &value.children {
+                collect_node_text(child, text);
+            }
+        }
+        _ => {}
+    }
+}
+
+fn slugify_heading(text: &str) -> String {
+    let slug = text
+        .to_lowercase()
+        .chars()
+        .map(|ch| if ch.is_alphanumeric() || ch == ' ' || ch == '-' { ch } else { ' ' })
+        .collect::<String>()
+        .split_whitespace()
+        .collect::<Vec<_>>()
+        .join("-");
+
+    if slug.is_empty() {
+        "section".to_string()
+    } else {
+        slug
+    }
+}
+
 /// HTML renderer.
 pub struct HtmlRenderer {
     options: HtmlRendererOptions,
     output: String,
+    heading_id_counts: BTreeMap<String, usize>,
 }
 
 impl HtmlRenderer {
     /// Creates a new HTML renderer with default options.
     #[must_use]
     pub fn new() -> Self {
-        Self { options: HtmlRendererOptions::new(), output: String::new() }
+        Self {
+            options: HtmlRendererOptions::new(),
+            output: String::new(),
+            heading_id_counts: BTreeMap::new(),
+        }
     }
 
     /// Creates a new HTML renderer with the specified options.
     #[must_use]
     pub fn with_options(options: HtmlRendererOptions) -> Self {
-        Self { options, output: String::new() }
+        Self { options, output: String::new(), heading_id_counts: BTreeMap::new() }
     }
 
     /// Renders a document to HTML string.
     #[must_use]
     pub fn render(&mut self, document: &Document<'_>) -> String {
         self.output.clear();
+        self.heading_id_counts.clear();
         let estimated_len = (document.span.len() as usize).saturating_mul(3) / 2;
         if self.output.capacity() < estimated_len {
             self.output.reserve(estimated_len - self.output.capacity());
@@ -1089,6 +1148,15 @@ impl HtmlRenderer {
         }
     }
 
+    fn heading_id(&mut self, heading: &Heading<'_>) -> String {
+        let text = collect_heading_text(&heading.children);
+        let slug = slugify_heading(&text);
+        let count = self.heading_id_counts.entry(slug.clone()).or_insert(0);
+        let id = if *count == 0 { slug } else { format!("{slug}-{count}") };
+        *count += 1;
+        id
+    }
+
     fn convert_markdown_url(&self, url: &str) -> String {
         let converted = self.convert_md_url(url);
         if converted != url {
@@ -1323,8 +1391,12 @@ impl<'a> Visit<'a> for HtmlRenderer {
             5 => "h5",
             _ => "h6",
         };
+        let id = self.heading_id(heading);
         self.write("<");
         self.write(tag);
+        self.write(" id=\"");
+        self.write_escaped(&id);
+        self.write("\"");
         self.write(">");
         for child in &heading.children {
             self.visit_inline_node(child);
@@ -1644,7 +1716,27 @@ mod tests {
         let doc = Parser::new(&allocator, "# Hello").parse().unwrap();
         let mut renderer = HtmlRenderer::new();
         let html = renderer.render(&doc);
-        assert_eq!(html, "<h1>Hello</h1>\n");
+        assert_eq!(html, "<h1 id=\"hello\">Hello</h1>\n");
+    }
+
+    #[test]
+    fn test_render_heading_ids_are_unique_and_unicode() {
+        let allocator = Allocator::new();
+        let doc = Parser::new(&allocator, "## はじめに\n## はじめに").parse().unwrap();
+        let mut renderer = HtmlRenderer::new();
+        let html = renderer.render(&doc);
+        assert!(html.contains("<h2 id=\"はじめに\">はじめに</h2>"));
+        assert!(html.contains("<h2 id=\"はじめに-1\">はじめに</h2>"));
+    }
+
+    #[test]
+    fn test_render_heading_id_uses_inline_text() {
+        let allocator = Allocator::new();
+        let doc =
+            Parser::new(&allocator, "## **API** `Index` [Guide](./guide.md)").parse().unwrap();
+        let mut renderer = HtmlRenderer::new();
+        let html = renderer.render(&doc);
+        assert!(html.starts_with("<h2 id=\"api-index-guide\">"));
     }
 
     #[test]
@@ -1870,7 +1962,7 @@ mod tests {
         let doc = Parser::new(&allocator, "### [index](./index-module.md)").parse().unwrap();
         let mut renderer = HtmlRenderer::new();
         let html = renderer.render(&doc);
-        assert_eq!(html, "<h3><a href=\"./index-module.md\">index</a></h3>\n");
+        assert_eq!(html, "<h3 id=\"index\"><a href=\"./index-module.md\">index</a></h3>\n");
     }
 
     #[test]
