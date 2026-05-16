@@ -17,6 +17,9 @@
     "url": "https://github.com/ubugeeei/ox-content.git",
     "directory": "npm/vite-plugin-ox-content"
   },
+  "bin": {
+    "ox-content-migrate-vitepress": "./dist/vitepress-cli.mjs"
+  },
   "files": [
     "dist"
   ],

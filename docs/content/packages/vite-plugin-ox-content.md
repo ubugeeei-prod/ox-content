@@ -28,26 +28,16 @@ export default defineConfig({
 
 ## VitePress Migration
 
-If you already have a VitePress site, you can reuse the common config directly:
+If you already have a VitePress site, generate an editable ox-content options object:
 
-```ts
-import { defineConfig } from "vite";
-import vitepressConfig from "./.vitepress/config";
-import { oxContent, fromVitePressConfig } from "@ox-content/vite-plugin";
-
-export default defineConfig({
-  plugins: [
-    oxContent(
-      fromVitePressConfig(vitepressConfig, {
-        srcDir: "docs",
-        outDir: "dist",
-      }),
-    ),
-  ],
-});
+```bash
+ox-content-migrate-vitepress .vitepress/config.ts \
+  --src-dir docs \
+  --out-dir dist \
+  --out ox-content.config.ts
 ```
 
-`fromVitePressConfig()` maps these settings into ox-content:
+The generated `ox-content.config.ts` maps these settings into ox-content:
 
 - `title` / `themeConfig.siteTitle` -> `ssg.siteName`
 - `base` -> `base`

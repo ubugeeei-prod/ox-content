@@ -1,4 +1,4 @@
-import { defaultTheme, defineTheme, mergeThemes, type ThemeConfig } from "./theme";
+import { defineTheme, mergeThemes, type ThemeConfig } from "./theme";
 import type { OxContentOptions, SsgNavigationGroup, SsgNavigationItem } from "./types";
 
 export interface VitePressLogo {
@@ -52,6 +52,10 @@ export interface VitePressConfig {
   description?: string;
   base?: string;
   themeConfig?: VitePressThemeConfig;
+}
+
+export interface GenerateVitePressMigrationConfigOptions {
+  importSource?: string;
 }
 
 function isRecord(value: unknown): value is Record<string, unknown> {
@@ -271,7 +275,6 @@ function toThemeConfig(themeConfig: VitePressThemeConfig | undefined): ThemeConf
   );
 
   const theme: ThemeConfig = {
-    extends: defaultTheme,
     ...(logo
       ? {
           header: {
@@ -430,6 +433,74 @@ export function fromVitePressConfig(
   };
 
   return mergeOxContentOptions(migrated, overrides);
+}
+
+/**
+ * Generates a TypeScript module exporting migrated ox-content options.
+ *
+ * This is used by the migration CLI so users can inspect and edit the resulting
+ * object instead of keeping a runtime dependency on their VitePress config.
+ */
+export function generateVitePressMigrationConfig(
+  config: VitePressConfig,
+  overrides: OxContentOptions = {},
+  options: GenerateVitePressMigrationConfigOptions = {},
+): string {
+  const importSource = options.importSource ?? "@ox-content/vite-plugin";
+  const migrated = fromVitePressConfig(config, overrides);
+
+  return `import type { OxContentOptions } from ${JSON.stringify(importSource)};
+
+const config = ${formatTsValue(migrated)} satisfies OxContentOptions;
+
+export default config;
+`;
+}
+
+function formatTsValue(value: unknown, depth = 0): string {
+  if (value === undefined) {
+    return "undefined";
+  }
+
+  if (value === null || typeof value === "boolean" || typeof value === "number") {
+    return JSON.stringify(value);
+  }
+
+  if (typeof value === "string") {
+    return JSON.stringify(value);
+  }
+
+  if (Array.isArray(value)) {
+    if (value.length === 0) {
+      return "[]";
+    }
+
+    const indent = "  ".repeat(depth + 1);
+    const closingIndent = "  ".repeat(depth);
+    return `[\n${value.map((item) => `${indent}${formatTsValue(item, depth + 1)},`).join("\n")}\n${closingIndent}]`;
+  }
+
+  if (isRecord(value)) {
+    const entries = Object.entries(value).filter(([, entryValue]) => entryValue !== undefined);
+    if (entries.length === 0) {
+      return "{}";
+    }
+
+    const indent = "  ".repeat(depth + 1);
+    const closingIndent = "  ".repeat(depth);
+    return `{\n${entries
+      .map(
+        ([key, entryValue]) =>
+          `${indent}${formatObjectKey(key)}: ${formatTsValue(entryValue, depth + 1)},`,
+      )
+      .join("\n")}\n${closingIndent}}`;
+  }
+
+  return "undefined";
+}
+
+function formatObjectKey(key: string): string {
+  return /^[A-Za-z_$][\w$]*$/.test(key) ? key : JSON.stringify(key);
 }
 
 function toNumber(value: unknown): number | undefined {

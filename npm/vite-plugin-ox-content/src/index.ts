@@ -538,11 +538,13 @@ export { resolveSearchOptions, buildSearchIndex, writeSearchIndex } from "./sear
 export { defineTheme, defaultTheme, mergeThemes, resolveTheme } from "./theme";
 export {
   fromVitePressConfig,
+  generateVitePressMigrationConfig,
   convertVitePressSidebar,
   convertVitePressNav,
   normalizeVitePressFrontmatter,
 } from "./vitepress";
 export type {
+  GenerateVitePressMigrationConfigOptions,
   VitePressConfig,
   VitePressThemeConfig,
   VitePressSidebar,

@@ -4,6 +4,7 @@ import {
   convertVitePressNav,
   convertVitePressSidebar,
   fromVitePressConfig,
+  generateVitePressMigrationConfig,
   normalizeVitePressFrontmatter,
 } from "./vitepress";
 
@@ -95,6 +96,30 @@ describe("vitepress migration helpers", () => {
     expect(options.ssg.theme?.socialLinks?.github).toBe("https://github.com/ubugeeei/ox-content");
     expect(options.ssg.theme?.footer?.copyright).toBe("2026");
     expect(options.ssg.theme?.footer?.message).toBe("Migrated from VitePress");
+  });
+
+  it("generates an editable ox-content options module", () => {
+    const source = generateVitePressMigrationConfig(
+      {
+        title: "Docs",
+        base: "/docs/",
+        themeConfig: {
+          sidebar: [{ text: "Intro", link: "/intro.md" }],
+          search: { placeholder: "Search docs" },
+        },
+      },
+      {
+        srcDir: "docs",
+        outDir: "dist",
+      },
+    );
+
+    expect(source).toContain('import type { OxContentOptions } from "@ox-content/vite-plugin";');
+    expect(source).toContain("satisfies OxContentOptions");
+    expect(source).toContain('base: "/docs/"');
+    expect(source).toContain('srcDir: "docs"');
+    expect(source).toContain('outDir: "dist"');
+    expect(source).toContain('path: "/intro"');
   });
 
   it("normalizes VitePress home frontmatter into ox-content entry frontmatter", () => {

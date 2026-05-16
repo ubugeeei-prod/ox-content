@@ -79,26 +79,16 @@ export default defineConfig({
 
 ### Migrate from VitePress
 
-```ts
-// vite.config.ts
-import { defineConfig } from "vite";
-import vitepressConfig from "./.vitepress/config";
-import { oxContent, fromVitePressConfig } from "@ox-content/vite-plugin";
-
-export default defineConfig({
-  plugins: [
-    oxContent(
-      fromVitePressConfig(vitepressConfig, {
-        srcDir: "docs",
-        outDir: "dist",
-      }),
-    ),
-  ],
-});
+```bash
+ox-content-migrate-vitepress .vitepress/config.ts \
+  --src-dir docs \
+  --out-dir dist \
+  --out ox-content.config.ts
 ```
 
-`fromVitePressConfig()` reuses common VitePress settings such as `title`, `base`,
-`themeConfig.sidebar`, `themeConfig.socialLinks`, `themeConfig.footer`, and search placeholder.
+The generated `ox-content.config.ts` contains an editable `OxContentOptions` object built from
+VitePress settings such as `title`, `base`, `themeConfig.sidebar`, `themeConfig.socialLinks`,
+`themeConfig.footer`, and search placeholder.
 `layout: home` frontmatter is also accepted for landing pages during SSG/dev rendering.
 
 ### Browser Usage (WebAssembly)
