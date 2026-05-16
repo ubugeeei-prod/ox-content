@@ -5,7 +5,7 @@ Svelte integration for Ox Content - embed Svelte 5 components in Markdown.
 ## Installation
 
 ```bash
-pnpm add @ox-content/vite-plugin-svelte svelte @sveltejs/vite-plugin-svelte
+vp install @ox-content/vite-plugin-svelte svelte @sveltejs/vite-plugin-svelte
 ```
 
 ## Usage

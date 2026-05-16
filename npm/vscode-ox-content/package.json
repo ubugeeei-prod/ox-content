@@ -1,0 +1,99 @@
+{
+  "name": "vscode-ox-content",
+  "version": "0.1.0",
+  "private": true,
+  "description": "VS Code extension for Ox Content authoring and i18n workflows",
+  "categories": [
+    "Formatters",
+    "Programming Languages",
+    "Snippets"
+  ],
+  "license": "MIT",
+  "files": [
+    "dist",
+    "snippets",
+    "README.md"
+  ],
+  "main": "./dist/extension.js",
+  "scripts": {
+    "build": "tsc -p tsconfig.json",
+    "clean": "rm -rf dist"
+  },
+  "devDependencies": {
+    "@types/node": "catalog:",
+    "@types/vscode": "^1.90.0",
+    "typescript": "catalog:",
+    "vscode-languageclient": "^9.0.1"
+  },
+  "contributes": {
+    "commands": [
+      {
+        "command": "oxContent.insertTable",
+        "title": "Ox Content: Insert Table",
+        "category": "Ox Content"
+      },
+      {
+        "command": "oxContent.insertCodeFence",
+        "title": "Ox Content: Insert Code Fence",
+        "category": "Ox Content"
+      },
+      {
+        "command": "oxContent.insertCallout",
+        "title": "Ox Content: Insert Callout",
+        "category": "Ox Content"
+      },
+      {
+        "command": "oxContent.openPreview",
+        "title": "Ox Content: Open Preview",
+        "category": "Ox Content"
+      }
+    ],
+    "configuration": {
+      "title": "Ox Content",
+      "properties": {
+        "oxContent.server.path": {
+          "type": "string",
+          "default": "",
+          "markdownDescription": "Absolute or workspace-relative path to `ox-content-lsp`. When empty, the extension looks in `target/debug`, `target/release`, then falls back to `cargo run`."
+        },
+        "oxContent.frontmatter.schema": {
+          "type": "string",
+          "default": "",
+          "markdownDescription": "Optional absolute or workspace-relative path to the frontmatter schema file used for Markdown and `.mdc` frontmatter completion and diagnostics."
+        },
+        "oxContent.preview.autoRefresh": {
+          "type": "boolean",
+          "default": true,
+          "description": "Automatically refresh the Ox Content preview when the document changes."
+        }
+      }
+    },
+    "configurationDefaults": {
+      "files.associations": {
+        "*.mdc": "markdown"
+      }
+    },
+    "snippets": [
+      {
+        "language": "markdown",
+        "path": "./snippets/markdown.json"
+      }
+    ]
+  },
+  "activationEvents": [
+    "onCommand:oxContent.insertCallout",
+    "onCommand:oxContent.insertCodeFence",
+    "onCommand:oxContent.insertTable",
+    "onCommand:oxContent.openPreview",
+    "onLanguage:javascript",
+    "onLanguage:javascriptreact",
+    "onLanguage:json",
+    "onLanguage:markdown",
+    "onLanguage:typescript",
+    "onLanguage:typescriptreact",
+    "onLanguage:yaml"
+  ],
+  "engines": {
+    "vscode": "^1.90.0"
+  }
+}

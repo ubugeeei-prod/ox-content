@@ -98,6 +98,22 @@ Configure your `tsconfig.json` for JSX:
 
 All CSS variables use the `--octc-` prefix for namespacing.
 
+## Entry Page Modes
+
+The default theme supports two landing page modes:
+
+- `default` - the more branded, marketing-style entry page
+- `subtle` - a quieter docs.rs-like presentation with tighter spacing and a more restrained hero
+
+```ts
+defineTheme({
+  extends: defaultTheme,
+  entryPage: {
+    mode: "subtle",
+  },
+});
+```
+
 ### Colors
 
 | Option                  | CSS Variable                 | Description                                   |
@@ -341,9 +357,8 @@ defineTheme({
   extends: defaultTheme,
   css: `
     .content h1 {
-      background: linear-gradient(135deg, #667eea, #764ba2);
-      -webkit-background-clip: text;
-      -webkit-text-fill-color: transparent;
+      color: #3b82f6;
+      letter-spacing: -0.04em;
     }
   `,
   js: `
@@ -358,30 +373,30 @@ defineTheme({
 const defaultTheme = {
   name: "default",
   colors: {
-    primary: "#e04d0a",
-    primaryHover: "#f5602a",
+    primary: "#3b82f6",
+    primaryHover: "#2563eb",
     background: "#ffffff",
-    backgroundAlt: "#f8f9fa",
-    text: "#1a1a1a",
-    textMuted: "#666666",
-    border: "#e5e7eb",
-    codeBackground: "#1e293b",
-    codeText: "#e2e8f0",
+    backgroundAlt: "#f5f7fb",
+    text: "#131a30",
+    textMuted: "#4f607b",
+    border: "#d2dbea",
+    codeBackground: "#0b1328",
+    codeText: "#eaf2ff",
   },
   darkColors: {
-    primary: "#f5714a",
-    primaryHover: "#ff8a66",
-    background: "#141414",
-    backgroundAlt: "#141414",
-    text: "#e5e5e5",
-    textMuted: "#a3a3a3",
-    border: "#2a2a2a",
-    codeBackground: "#1a1a1a",
-    codeText: "#e5e5e5",
+    primary: "#60a5fa",
+    primaryHover: "#93c5fd",
+    background: "#060816",
+    backgroundAlt: "#0d1528",
+    text: "#ebf2ff",
+    textMuted: "#8ea0bf",
+    border: "#223252",
+    codeBackground: "#0a1020",
+    codeText: "#e7f0ff",
   },
   fonts: {
-    sans: 'system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif',
-    mono: 'ui-monospace, SFMono-Regular, "SF Mono", Menlo, Consolas, monospace',
+    sans: '"IBM Plex Sans", "Avenir Next", "Segoe UI Variable", "Segoe UI", sans-serif',
+    mono: '"IBM Plex Mono", "SFMono-Regular", Consolas, monospace',
   },
   layout: {
     sidebarWidth: "260px",

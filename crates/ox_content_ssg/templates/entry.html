@@ -1,5 +1,19 @@
 {% if let Some(hero) = hero %}
 <section class="hero">
+{% if let Some(image) = hero.image %}
+  <div class="hero-image">
+{% if let Some(light_src) = image.light_src %}
+{% if let Some(dark_src) = image.dark_src %}
+    <img src="{{ light_src }}" alt="{{ image.alt.as_deref().unwrap_or("") }}"{% if let Some(w) = image.width %} width="{{ w }}"{% endif %}{% if let Some(h) = image.height %} height="{{ h }}"{% endif %} class="theme-asset theme-asset--light" />
+    <img src="{{ dark_src }}" alt="{{ image.alt.as_deref().unwrap_or("") }}"{% if let Some(w) = image.width %} width="{{ w }}"{% endif %}{% if let Some(h) = image.height %} height="{{ h }}"{% endif %} class="theme-asset theme-asset--dark" />
+{% else %}
+    <img src="{{ light_src }}" alt="{{ image.alt.as_deref().unwrap_or("") }}"{% if let Some(w) = image.width %} width="{{ w }}"{% endif %}{% if let Some(h) = image.height %} height="{{ h }}"{% endif %} />
+{% endif %}
+{% else %}
+    <img src="{{ image.src }}" alt="{{ image.alt.as_deref().unwrap_or("") }}"{% if let Some(w) = image.width %} width="{{ w }}"{% endif %}{% if let Some(h) = image.height %} height="{{ h }}"{% endif %} />
+{% endif %}
+  </div>
+{% endif %}
   <div class="hero-content">
 {% if let Some(name) = hero.name %}
     <h1 class="hero-name">{{ name }}</h1>
@@ -9,11 +23,6 @@
 {% endif %}
 {% if let Some(tagline) = hero.tagline %}
     <p class="hero-tagline">{{ tagline }}</p>
-{% endif %}
-{% if let Some(image) = hero.image %}
-    <div class="hero-image">
-      <img src="{{ image.src }}" alt="{{ image.alt.as_deref().unwrap_or("") }}"{% if let Some(w) = image.width %} width="{{ w }}"{% endif %}{% if let Some(h) = image.height %} height="{{ h }}"{% endif %} />
-    </div>
 {% endif %}
 {% if let Some(actions) = hero.actions %}
 {% if !actions.is_empty() %}
@@ -25,6 +34,18 @@
 {% endif %}
 {% endif %}
   </div>
+{% if let Some(notice) = hero.notice %}
+  <div class="hero-notice">
+{% if let Some(title) = notice.title %}
+    <p class="hero-notice-title">{{ title }}</p>
+{% endif %}
+{% if let Some(body) = notice.body %}
+{% for paragraph in body %}
+    <p class="hero-notice-body">{{ paragraph }}</p>
+{% endfor %}
+{% endif %}
+  </div>
+{% endif %}
 </section>
 {% endif %}
 {% if let Some(features) = features %}

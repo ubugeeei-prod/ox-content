@@ -7,9 +7,10 @@
  *
  * This script:
  *   1. Updates all package.json versions
- *   2. Generates CHANGELOG.md
- *   3. Creates a git commit and tag
- *   4. Pushes to remote
+ *   2. Updates Rust dependency versions in docs
+ *   3. Generates CHANGELOG.md
+ *   4. Creates a git commit and tag
+ *   5. Pushes to remote
  */
 
 import { execSync } from "child_process";
@@ -32,6 +33,7 @@ const NPM_PACKAGES = [
 ];
 
 const CARGO_TOML = "Cargo.toml";
+const RUST_DOC_FILES = ["docs/content/getting-started.md"];
 
 function exec(cmd: string, options: { cwd?: string; stdio?: "inherit" | "pipe" } = {}): string {
   console.log(`$ ${cmd}`);
@@ -77,6 +79,22 @@ function setCargoVersion(version: string): void {
   content = content.replace(/(ox_content_\w+\s*=\s*\{\s*version\s*=\s*)"[^"]+"/g, `$1"${version}"`);
   fs.writeFileSync(fullPath, content, "utf-8");
   console.log(`  Updated Cargo.toml workspace version to ${version}`);
+}
+
+function updateRustDocsVersion(version: string): void {
+  for (const relativePath of RUST_DOC_FILES) {
+    const fullPath = path.join(ROOT, relativePath);
+    let content = fs.readFileSync(fullPath, "utf-8");
+
+    const updated = content.replace(/(ox_content_[a-z_]+\s*=\s*)"[^"]+"/g, `$1"${version}"`);
+
+    if (updated !== content) {
+      fs.writeFileSync(fullPath, updated, "utf-8");
+      console.log(`  Updated Rust crate versions in ${relativePath}`);
+    } else {
+      console.log(`  No Rust crate versions to update in ${relativePath}`);
+    }
+  }
 }
 
 function bumpVersion(
@@ -242,6 +260,10 @@ async function main(): Promise<void> {
   for (const pkg of NPM_PACKAGES) {
     setPackageVersion(pkg, newVersion);
   }
+
+  // Update Rust dependency versions in docs
+  console.log("Updating Rust docs versions...");
+  updateRustDocsVersion(newVersion);
 
   // Generate changelog
   console.log("\nGenerating changelog...");

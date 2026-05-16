@@ -34,6 +34,7 @@
 import YAML from "yaml";
 import type { ResolvedOptions, TransformResult, TocEntry } from "./types";
 import { highlightCode } from "./highlight";
+import { importNapiModule } from "./napi";
 import { transformMermaidStatic } from "./plugins/mermaid";
 import { protectMermaidSvgs, restoreMermaidSvgs } from "./plugins/mermaid-protect";
 
@@ -83,6 +84,15 @@ interface NapiBindings {
    * @returns SVG string
    */
   generateOgImageSvg: (data: OgImageData, config?: OgImageConfig) => string;
+
+  /**
+   * Restores code block metadata after JavaScript-side syntax highlighting.
+   *
+   * @param originalHtml - HTML before syntax highlighting
+   * @param highlightedHtml - HTML after Shiki highlighting
+   * @returns Highlighted HTML with original code block metadata reapplied
+   */
+  mergeHighlightedCodeBlocks: (originalHtml: string, highlightedHtml: string) => string;
 }
 
 /**
@@ -189,6 +199,30 @@ interface JsTransformOptions {
    * Used to determine if the current file is an index file.
    */
   sourcePath?: string;
+
+  /**
+   * Enable line annotations for code blocks using fence meta.
+   * @default false
+   */
+  codeAnnotations?: boolean;
+
+  /**
+   * Fence meta key used to read code annotations.
+   * @default "annotate"
+   */
+  codeAnnotationMetaKey?: string;
+
+  /**
+   * Code annotation syntax mode.
+   * @default "attribute"
+   */
+  codeAnnotationSyntax?: "attribute" | "vitepress" | "both";
+
+  /**
+   * Enable line numbers for all code blocks by default.
+   * @default false
+   */
+  codeAnnotationDefaultLineNumbers?: boolean;
 }
 
 /**
@@ -253,7 +287,7 @@ async function loadNapiBindings(): Promise<NapiBindings | null> {
 
   try {
     // Dynamic import to handle cases where NAPI isn't built
-    const mod = await import("@ox-content/napi");
+    const mod = await importNapiModule();
     napiBindings = mod;
     return mod;
   } catch (error) {
@@ -388,6 +422,10 @@ export async function transformMarkdown(
     convertMdLinks: ssgOptions?.convertMdLinks,
     baseUrl: ssgOptions?.baseUrl,
     sourcePath: ssgOptions?.sourcePath ?? filePath,
+    codeAnnotations: options.codeAnnotations.enabled,
+    codeAnnotationMetaKey: options.codeAnnotations.metaKey,
+    codeAnnotationSyntax: options.codeAnnotations.notation,
+    codeAnnotationDefaultLineNumbers: options.codeAnnotations.defaultLineNumbers,
   });
 
   if (result.errors.length > 0) {
@@ -414,7 +452,13 @@ export async function transformMarkdown(
 
   // Apply syntax highlighting if enabled
   if (options.highlight) {
-    html = await highlightCode(html, options.highlightTheme, options.highlightLangs);
+    const originalHtml = html;
+    const highlightedHtml = await highlightCode(
+      html,
+      options.highlightTheme,
+      options.highlightLangs,
+    );
+    html = napi.mergeHighlightedCodeBlocks(originalHtml, highlightedHtml);
   }
 
   // Restore protected SVGs

@@ -57,6 +57,19 @@ export default defineConfig({
 
 ## Plugin Examples
 
+### [Code Annotations](./code-annotations.md)
+
+Opt-in code block annotations with both custom attributes and VitePress-compatible notation.
+
+```ts
+oxContent({
+  highlight: true,
+  codeAnnotations: {
+    notation: "both",
+  },
+});
+```
+
 ### [markdown-it Plugin](./plugin-markdown-it.md)
 
 Use Ox Content as a markdown-it plugin for existing markdown-it projects.

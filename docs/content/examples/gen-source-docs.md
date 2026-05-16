@@ -1,6 +1,6 @@
 # Source Documentation Generator Example
 
-Demonstrates auto-generating API documentation from JSDoc/TSDoc comments.
+Demonstrates auto-generating API documentation from JSDoc/TSDoc comments, then layering a richer viewer on top of the generated `docs.json` payload.
 
 ## Setup
 
@@ -86,14 +86,21 @@ export function add(a: number, b: number): number {
 
 ## Generated Output
 
-The plugin generates Markdown files in `docs/api/`:
+The plugin generates Markdown files plus a machine-readable JSON manifest in `docs/api/`:
 
 ```
 docs/api/
+├── docs.json      # Structured data for custom viewers
 ├── index.md       # API index
 ├── utils.md       # utils.ts documentation
 └── math.md        # math.ts documentation
 ```
+
+The example viewer uses that JSON to provide:
+
+- one-line symbol overviews
+- expandable accordion details
+- scoped search such as `@api clamp`
 
 ## Dogfooding
 

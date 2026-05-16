@@ -72,7 +72,7 @@ noscript .ox-island-fallback {
 [data-ox-island].ox-island-error {
   border: 1px solid #f87171;
   padding: 1rem;
-  border-radius: 8px;
+  border-radius: 4px;
   background: rgba(248, 113, 113, 0.1);
 }
 

@@ -1,0 +1,19 @@
+id = "ox-content"
+name = "Ox Content"
+version = "0.1.0"
+schema_version = 1
+authors = ["ubugeeei"]
+description = "Ox Content authoring support for Zed"
+repository = "https://github.com/ubugeeei/ox-content"
+
+[language_servers.ox-content-lsp]
+name = "ox-content-lsp"
+languages = ["Markdown", "JavaScript", "TypeScript", "TSX", "JSON", "YAML"]
+
+[language_servers.ox-content-lsp.language_ids]
+Markdown = "markdown"
+JavaScript = "javascript"
+TypeScript = "typescript"
+TSX = "typescriptreact"
+JSON = "json"
+YAML = "yaml"

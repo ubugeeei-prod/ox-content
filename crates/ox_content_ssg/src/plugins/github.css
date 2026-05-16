@@ -3,31 +3,19 @@
 .ox-github-card {
   display: block;
   margin: 1.5rem 0;
-  padding: 1rem 1.25rem;
-  border: 1px solid var(--octc-color-border);
-  border-radius: 8px;
-  background: var(--octc-color-bg);
+  padding: 1rem 0;
+  border: 0;
+  border-top: 1px solid color-mix(in srgb, var(--octc-color-border) 74%, transparent);
+  border-bottom: 1px solid color-mix(in srgb, var(--octc-color-border) 74%, transparent);
+  border-radius: 0;
+  background: transparent;
   text-decoration: none;
   color: var(--octc-color-text);
-  transition:
-    border-color 0.2s ease,
-    box-shadow 0.2s ease;
+  transition: color 0.2s ease;
 }
 
 .ox-github-card:hover {
-  border-color: var(--octc-color-primary);
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
   text-decoration: none;
-}
-
-[data-theme="dark"] .ox-github-card:hover {
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
-}
-
-@media (prefers-color-scheme: dark) {
-  :root:not([data-theme="light"]) .ox-github-card:hover {
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
-  }
 }
 
 .ox-github-header {
@@ -171,7 +159,7 @@
 /* Error state */
 .ox-github-card.error {
   border-color: #f87171;
-  background: rgba(248, 113, 113, 0.1);
+  background: transparent;
 }
 
 .ox-github-error {

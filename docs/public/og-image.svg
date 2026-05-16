@@ -1,91 +1,73 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 630" width="1200" height="630">
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 630" width="1200" height="630" fill="none">
   <defs>
-    <linearGradient id="bgGrad" x1="0%" y1="0%" x2="100%" y2="100%">
-      <stop offset="0%" style="stop-color:#141414"/>
-      <stop offset="100%" style="stop-color:#1a1a1a"/>
-    </linearGradient>
-    <linearGradient id="oxGrad" x1="0%" y1="0%" x2="100%" y2="100%">
-      <stop offset="0%" style="stop-color:#ff6b35"/>
-      <stop offset="50%" style="stop-color:#f7931a"/>
-      <stop offset="100%" style="stop-color:#e85d04"/>
-    </linearGradient>
-    <linearGradient id="oxGrad2" x1="100%" y1="0%" x2="0%" y2="100%">
-      <stop offset="0%" style="stop-color:#ffb347"/>
-      <stop offset="100%" style="stop-color:#ff6b35"/>
+    <linearGradient id="ogWordmarkGradient" x1="286" y1="10" x2="320" y2="54" gradientUnits="userSpaceOnUse">
+      <stop offset="0%" stop-color="#355cff" />
+      <stop offset="100%" stop-color="#74c7ff" />
     </linearGradient>
   </defs>
 
-  <!-- Background -->
-  <rect width="1200" height="630" fill="url(#bgGrad)"/>
+  <rect width="1200" height="630" fill="#0b1220" />
+  <rect x="0.5" y="0.5" width="1199" height="629" stroke="#223252" />
+  <rect width="1200" height="4" fill="#4f6fae" />
 
-  <!-- Decorative dots -->
-  <g fill="url(#oxGrad2)" opacity="0.3">
-    <circle cx="100" cy="100" r="40"/>
-    <circle cx="1100" cy="530" r="50"/>
-    <circle cx="1050" cy="80" r="25"/>
-    <circle cx="150" cy="550" r="30"/>
-  </g>
-
-  <!-- Logo blocks (scaled version of main logo) -->
-  <g transform="translate(100, 165)">
-    <!-- Top block -->
-    <rect x="40" y="24" width="140" height="36" rx="7"
-          fill="url(#oxGrad)"
-          transform="rotate(-8 110 42)"/>
-
-    <!-- Connector particles -->
-    <circle cx="200" cy="50" r="6" fill="url(#oxGrad2)"/>
-    <circle cx="210" cy="70" r="4" fill="url(#oxGrad2)" opacity="0.7"/>
-
-    <!-- Second block -->
-    <rect x="50" y="74" width="160" height="44" rx="8"
-          fill="url(#oxGrad)"
-          transform="rotate(-3 130 96)"/>
-
-    <!-- Middle main block -->
-    <rect x="28" y="130" width="200" height="50" rx="9"
-          fill="url(#oxGrad)"/>
-
-    <!-- Fourth block -->
-    <rect x="50" y="192" width="160" height="44" rx="8"
-          fill="url(#oxGrad)"
-          transform="rotate(3 130 214)"/>
-
-    <!-- Connector particles bottom -->
-    <circle cx="56" cy="244" r="6" fill="url(#oxGrad2)"/>
-    <circle cx="44" cy="230" r="4" fill="url(#oxGrad2)" opacity="0.7"/>
-
-    <!-- Content lines -->
-    <g fill="#fff">
-      <rect x="55" y="34" width="70" height="4" rx="2" transform="rotate(-8 90 36)" opacity="0.9"/>
-      <rect x="55" y="44" width="45" height="4" rx="2" transform="rotate(-8 77 46)" opacity="0.7"/>
-      <rect x="68" y="86" width="90" height="5" rx="2.5" transform="rotate(-3 113 88)" opacity="0.9"/>
-      <rect x="68" y="98" width="60" height="5" rx="2.5" transform="rotate(-3 98 100)" opacity="0.7"/>
-      <rect x="48" y="144" width="120" height="7" rx="3.5" opacity="0.95"/>
-      <rect x="48" y="158" width="150" height="7" rx="3.5" opacity="0.85"/>
-      <rect x="48" y="172" width="90" height="7" rx="3.5" opacity="0.75"/>
-      <rect x="68" y="204" width="80" height="5" rx="2.5" transform="rotate(3 108 206)" opacity="0.9"/>
-      <rect x="68" y="216" width="50" height="5" rx="2.5" transform="rotate(3 93 218)" opacity="0.7"/>
+  <g transform="translate(64 56) scale(1.5926)">
+    <text
+      x="2"
+      y="43"
+      fill="#eff6ff"
+      font-family="IBM Plex Sans, IBM Plex Mono, Avenir Next, Segoe UI, sans-serif"
+      font-size="34"
+      font-weight="700"
+      letter-spacing="-1.4"
+    >
+      OXCONTENT
+    </text>
+    <text
+      x="213"
+      y="43.5"
+      fill="#eff6ff"
+      font-family="IBM Plex Sans, IBM Plex Mono, Avenir Next, Segoe UI, sans-serif"
+      font-size="40"
+      font-weight="400"
+    >
+      (
+    </text>
+    <g transform="translate(216 9) scale(0.089) rotate(-7 256 256)">
+      <path
+        d="M161 96H286C298 96 309 101 318 110L352 144C361 153 366 164 366 176V386C366 399 355 410 342 410H161C148 410 138 399 138 386V120C138 107 148 96 161 96Z"
+        fill="url(#ogWordmarkGradient)"
+      />
     </g>
+    <text
+      x="252"
+      y="43.5"
+      fill="#eff6ff"
+      font-family="IBM Plex Sans, IBM Plex Mono, Avenir Next, Segoe UI, sans-serif"
+      font-size="40"
+      font-weight="400"
+    >
+      )
+    </text>
   </g>
 
-  <!-- Title -->
-  <text x="420" y="290" font-family="system-ui, -apple-system, sans-serif" font-size="72" font-weight="700" fill="#ffffff">
-    Ox Content
+  <text
+    x="64"
+    y="300"
+    fill="#eff6ff"
+    font-family="IBM Plex Sans, Avenir Next, Segoe UI, sans-serif"
+    font-size="76"
+    font-weight="700"
+    letter-spacing="-4"
+  >
+    cargo doc for JavaScript
   </text>
-
-  <!-- Tagline -->
-  <text x="420" y="360" font-family="system-ui, -apple-system, sans-serif" font-size="28" fill="#a3a3a3">
-    High-performance documentation toolkit
+  <text
+    x="64"
+    y="382"
+    fill="#93a4c3"
+    font-family="IBM Plex Sans, Avenir Next, Segoe UI, sans-serif"
+    font-size="30"
+  >
+    Rust-powered docs and high-performance Markdown tooling.
   </text>
-
-  <!-- Features -->
-  <g font-family="system-ui, -apple-system, sans-serif" font-size="20" fill="#737373">
-    <text x="420" y="430">Rust-powered Markdown parser</text>
-    <text x="420" y="465">Framework-agnostic Vite plugins</text>
-    <text x="420" y="500">Zero-copy AST with NAPI bindings</text>
-  </g>
-
-  <!-- Accent bar -->
-  <rect x="420" y="390" width="60" height="4" rx="2" fill="url(#oxGrad)"/>
 </svg>

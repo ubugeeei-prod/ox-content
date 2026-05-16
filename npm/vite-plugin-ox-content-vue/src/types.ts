@@ -4,6 +4,15 @@
 
 import type { OxContentOptions } from "@ox-content/vite-plugin";
 
+export interface CodeAnnotationsOptions {
+  metaKey?: string;
+}
+
+export interface ResolvedCodeAnnotationsOptions {
+  enabled: boolean;
+  metaKey: string;
+}
+
 /**
  * Component registration map.
  * Key is the component name to use in Markdown, value is the import path.
@@ -61,6 +70,7 @@ export interface VueIntegrationOptions extends OxContentOptions {
    * @default true
    */
   components?: ComponentsOption;
+  codeAnnotations?: boolean | CodeAnnotationsOptions;
   reactivityTransform?: boolean;
   customBlocks?: boolean;
 }
@@ -76,6 +86,7 @@ export interface ResolvedVueOptions {
   frontmatter: boolean;
   toc: boolean;
   tocMaxDepth: number;
+  codeAnnotations: ResolvedCodeAnnotationsOptions;
   components: ComponentsOption;
   reactivityTransform: boolean;
   customBlocks: boolean;

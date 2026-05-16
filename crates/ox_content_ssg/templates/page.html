@@ -1,22 +1,22 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="{{ html_lang }}" dir="{{ html_dir }}">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>{{ title }} - {{ site_name }}</title>
+  <title>{{ document_title }}</title>
   {% if let Some(desc) = description %}
   <meta name="description" content="{{ desc }}">
   <meta property="og:description" content="{{ desc }}">
   <meta name="twitter:description" content="{{ desc }}">
   {% endif %}
   <meta property="og:type" content="website">
-  <meta property="og:title" content="{{ title }} - {{ site_name }}">
+  <meta property="og:title" content="{{ document_title }}">
   {% if let Some(img) = og_image %}
   <meta property="og:image" content="{{ img }}">
   <meta name="twitter:image" content="{{ img }}">
   {% endif %}
   <meta name="twitter:card" content="summary_large_image">
-  <meta name="twitter:title" content="{{ title }} - {{ site_name }}">
+  <meta name="twitter:title" content="{{ document_title }}">
   <!-- ox-content:styles:start -->
   <style>{{ css|safe }}</style>
   <!-- ox-content:styles:end -->
@@ -31,9 +31,20 @@
         <path d="M3 12h18M3 6h18M3 18h18"/>
       </svg>
     </button>
-    <a href="{{ base }}index.html" class="header-title">
-      <img src="{{ logo_src }}" alt="" width="{{ logo_width }}" height="{{ logo_height }}" style="margin-right: 8px; vertical-align: middle;" />
+    <a href="{{ base }}index.html" class="header-title{% if !show_site_name_text %} header-title--logo-only{% endif %}" aria-label="{{ site_name }}">
+{% if let Some(light_logo_src) = logo_light_src %}
+{% if let Some(dark_logo_src) = logo_dark_src %}
+      <img src="{{ light_logo_src }}" alt="" width="{{ logo_width }}" height="{{ logo_height }}" class="theme-asset theme-asset--light header-logo" />
+      <img src="{{ dark_logo_src }}" alt="" width="{{ logo_width }}" height="{{ logo_height }}" class="theme-asset theme-asset--dark header-logo" />
+{% else %}
+      <img src="{{ light_logo_src }}" alt="" width="{{ logo_width }}" height="{{ logo_height }}" class="header-logo" />
+{% endif %}
+{% else %}
+      <img src="{{ logo_src }}" alt="" width="{{ logo_width }}" height="{{ logo_height }}" class="header-logo" />
+{% endif %}
+{% if show_site_name_text %}
       {{ site_name }}
+{% endif %}
     </a>
     <div class="header-actions">
 {{ social_links|safe }}      <button class="search-button" aria-label="Search">
@@ -73,8 +84,8 @@
   </div>
   <div class="overlay"></div>
   <div class="layout">
-{% if !is_entry_page %}
-    <aside class="sidebar">
+{% if !navigation.is_empty() %}
+    <aside class="sidebar{% if is_entry_page %} sidebar--entry{% endif %}">
 {{ embed_sidebar_before|safe }}
       <nav>
 {{ navigation|safe }}
@@ -82,13 +93,24 @@
 {{ embed_sidebar_after|safe }}
     </aside>
 {% endif %}
-    <main class="main">
+    <main class="main{% if has_toc %} main--with-toc{% endif %}">
 {{ embed_content_before|safe }}
 {{ main_content|safe }}
+{% if let Some(updated) = last_updated %}
+      <p class="last-updated">Last updated: <time datetime="{{ updated.datetime }}">{{ updated.text }}</time></p>
+{% endif %}
 {{ embed_content_after|safe }}
 {{ embed_footer_before|safe }}
 {{ footer_html|safe }}
     </main>
+{% if has_toc %}
+    <aside class="toc" aria-label="On this page">
+      <div class="toc-title">On this page</div>
+      <ul class="toc-list">
+{{ toc_html|safe }}
+      </ul>
+    </aside>
+{% endif %}
   </div>
   <footer class="mobile-footer">
     <button class="mobile-footer-btn" aria-label="Menu" data-mobile-menu>

@@ -18,6 +18,7 @@ This example showcases:
 - **Table of Contents** - Auto-generated navigation
 - **Hot Module Replacement** - Live updates during development
 - **GFM Support** - GitHub Flavored Markdown features
+- **Code Annotations** - Opt-in line markers with custom attributes and VitePress-compatible notation
 
 ## Code Example
 
@@ -37,6 +38,10 @@ content.toc.forEach((entry) => {
   console.log(entry.text, entry.slug);
 });
 ```
+
+## More Pages
+
+- [Code Annotations](./code-annotations.md)
 
 ## Task Lists
 

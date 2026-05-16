@@ -9,6 +9,7 @@
 import { existsSync } from "node:fs";
 import { join } from "node:path";
 import { fileURLToPath } from "node:url";
+import { importNapiModule } from "../napi";
 
 export interface MermaidOptions {
   /** Mermaid theme. Default: "neutral" */
@@ -26,9 +27,7 @@ async function loadNapi() {
   if (napiLoadAttempted) return napiBindings;
   napiLoadAttempted = true;
   try {
-    const mod = await import("@ox-content/napi");
-    // CJS-to-ESM interop: native functions are on mod.default
-    const binding = (mod.default ?? mod) as unknown as NonNullable<typeof napiBindings>;
+    const binding = (await importNapiModule()) as unknown as NonNullable<typeof napiBindings>;
     if (typeof binding.transformMermaid !== "function") {
       napiBindings = null;
       return null;

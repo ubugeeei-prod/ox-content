@@ -1,6 +1,10 @@
 <script>
   let { start = 0 } = $props();
-  let count = $state(start);
+  let count = $state(0);
+
+  $effect(() => {
+    count = start;
+  });
 </script>
 
 <div class="counter">

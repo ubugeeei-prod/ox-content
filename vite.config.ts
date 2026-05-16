@@ -1,4 +1,41 @@
+import { spawnSync } from "node:child_process";
 import { defineConfig } from "vite-plus";
+
+const lifecycleEnvName = "OX_CONTENT_VP_LIFECYCLE";
+
+const lifecycleTasks: Record<string, string> = {
+  build: "build",
+  check: "check",
+  dev: "dev",
+  fmt: "fmt",
+};
+
+// Vite+ direct commands bypass run.tasks, so root lifecycle commands delegate into the task graph.
+const delegateLifecycleCommand = () => {
+  if (process.env[lifecycleEnvName]) {
+    return;
+  }
+
+  const [, , command, ...args] = process.argv;
+  const taskName = command ? lifecycleTasks[command] : undefined;
+
+  if (!taskName || args.length > 0) {
+    return;
+  }
+
+  const result = spawnSync("vp", ["run", taskName], {
+    env: { ...process.env, [lifecycleEnvName]: "1" },
+    stdio: "inherit",
+  });
+
+  if (result.error) {
+    throw result.error;
+  }
+
+  process.exit(result.status ?? 1);
+};
+
+delegateLifecycleCommand();
 
 const task = (
   command: string,
@@ -27,9 +64,11 @@ const uncachedTask = (
   } = {},
 ) => task(command, { ...options, cache: false });
 
+const vpBuiltin = (command: string) => `${lifecycleEnvName}=1 ${command}`;
+
 export default defineConfig({
   fmt: {
-    ignorePatterns: ["crates/ox_content_ssg/templates/*.html"],
+    ignorePatterns: ["crates/ox_content_napi/index.d.ts", "crates/ox_content_ssg/templates/*.html"],
   },
   lint: {
     options: {
@@ -38,6 +77,7 @@ export default defineConfig({
   },
   test: {
     passWithNoTests: true,
+    exclude: ["**/test/vrt/**"],
   },
   run: {
     cache: {
@@ -45,47 +85,69 @@ export default defineConfig({
       tasks: true,
     },
     tasks: {
-      build: noopTask(["build:rust", "build:npm"]),
+      build: noopTask(["build:docs", "build:playground", "doc:cargo"]),
       "build:rust": task("cargo build --workspace"),
       "build:rust-release": task("cargo build --workspace --release"),
-      "build:napi": task("vp run --filter ./crates/ox_content_napi build"),
+      "build:napi": task("vp run --filter ./crates/ox_content_napi build", {
+        dependsOn: ["build:rust"],
+      }),
       "build:npm": task("vp run --filter './npm/*' build", {
         dependsOn: ["build:napi"],
       }),
-      "build:wasm": task("wasm-pack build --target web --out-dir pkg", {
-        cwd: "crates/ox_content_wasm",
+      "build:docs": task("vp run --filter ./docs build", {
+        dependsOn: ["build:npm"],
       }),
+      "build:playground": task("vp run --filter ./examples/playground build", {
+        dependsOn: ["build:npm"],
+      }),
+      "build:wasm": task("node --experimental-strip-types scripts/build-wasm-package.ts"),
 
       test: noopTask(["test:rust", "test:ts"]),
       "test:rust": task("cargo test --workspace"),
       "test:rust-verbose": uncachedTask("cargo test --workspace -- --nocapture"),
-      "test:ts": task("vp test"),
+      "test:ts": noopTask(["test:ts-unit", "test:vrt"]),
+      "test:ts-unit": task("vp exec --filter @ox-content/vite-plugin -- vp test src", {
+        dependsOn: ["build:napi"],
+      }),
+      "test:vrt": uncachedTask("vp exec --filter @ox-content/vite-plugin -- playwright test", {
+        dependsOn: ["build:napi"],
+      }),
+      "test:vrt:update": uncachedTask(
+        "vp exec --filter @ox-content/vite-plugin -- playwright test --update-snapshots",
+        {
+          dependsOn: ["build:napi"],
+        },
+      ),
 
-      check: noopTask(["check:rust", "check:ts"]),
-      "check:rust": task("cargo check --workspace"),
+      check: noopTask(["fmt:rust-check", "lint:rust", "check:ts"]),
+      "check:rust": task("cargo check --workspace --all-targets"),
 
-      clippy: task("cargo clippy --workspace --all-targets -- -D warnings"),
+      clippy: task("cargo clippy --workspace --all-targets -- -D warnings", {
+        dependsOn: ["check:rust"],
+      }),
 
       fmt: noopTask(["fmt:rust", "fmt:ts"]),
       "fmt:rust": task("cargo fmt --all"),
-      "fmt:check": noopTask(["fmt:rust-check", "check:ts"]),
+      "fmt:check": noopTask(["fmt:rust-check", "fmt:ts-check"]),
       "fmt:rust-check": task("cargo fmt --all -- --check"),
-      "fmt:ts": task('vp fmt "npm/*/src" scripts'),
-      "fmt:ts-check": noopTask(["check:ts"]),
+      "fmt:ts": task(vpBuiltin("vp fmt")),
+      "fmt:ts-check": task(vpBuiltin("vp fmt --check")),
 
       lint: noopTask(["lint:rust", "check:ts"]),
-      "lint:rust": task("cargo clippy --workspace --all-targets -- -D warnings"),
+      "lint:rust": task("cargo clippy --workspace --all-targets -- -D warnings", {
+        dependsOn: ["check:rust"],
+      }),
       "lint:ts": noopTask(["check:ts"]),
-      "check:ts": task(
-        'vp check vite.config.ts scripts && vp exec --filter "./npm/*" -- vp check src vite.config.ts',
-      ),
+      "check:ts": task(vpBuiltin("vp check")),
 
       bench: noopTask(["bench:rust", "bench:parse", "bench:bundle"], { cache: false }),
       "bench:rust": uncachedTask("cargo bench --workspace"),
       "bench:parse": uncachedTask("vp run --filter ./benchmarks/bundle-size benchmark:parse"),
       "bench:bundle": uncachedTask("vp run --filter ./benchmarks/bundle-size benchmark"),
 
-      "doc:cargo": task("cargo doc --workspace --no-deps"),
+      "doc:cargo": task("cargo doc --workspace --no-deps", {
+        dependsOn: ["build:napi"],
+      }),
       "doc:cargo-open": uncachedTask("cargo doc --workspace --no-deps --open"),
       clean: uncachedTask("cargo clean"),
       "napi-prepublish": uncachedTask("napi prepublish", {
@@ -125,9 +187,7 @@ export default defineConfig({
           dependsOn: ["build:npm"],
         },
       ),
-      "dev-build": task("vp run --filter ./docs build", {
-        dependsOn: ["build:npm"],
-      }),
+      "dev-build": noopTask(["build:docs"]),
       "dev-preview": uncachedTask("vp run --filter ./docs preview"),
 
       install: uncachedTask("vp install"),

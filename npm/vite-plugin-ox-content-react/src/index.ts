@@ -183,7 +183,31 @@ function resolveReactOptions(
     frontmatter: options.frontmatter ?? true,
     toc: options.toc ?? true,
     tocMaxDepth: options.tocMaxDepth ?? 3,
+    codeAnnotations: resolveCodeAnnotationsOptions(options.codeAnnotations),
     jsxRuntime: options.jsxRuntime ?? "automatic",
+  };
+}
+
+function resolveCodeAnnotationsOptions(
+  options: ReactIntegrationOptions["codeAnnotations"],
+): ResolvedReactOptions["codeAnnotations"] {
+  if (!options) {
+    return {
+      enabled: false,
+      metaKey: "annotate",
+    };
+  }
+
+  if (options === true) {
+    return {
+      enabled: true,
+      metaKey: "annotate",
+    };
+  }
+
+  return {
+    enabled: true,
+    metaKey: options.metaKey ?? "annotate",
   };
 }
 

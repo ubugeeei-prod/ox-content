@@ -209,43 +209,41 @@ function renderViewerHtml(pages: PageOgData[], options: ResolvedOptions): string
   <style>
     :root {
       --bg: #ffffff;
-      --bg-card: #f8f9fa;
+      --bg-card: #f5f7fb;
       --bg-preview: #ffffff;
-      --text: #1a1a2e;
-      --text-muted: #6b7280;
-      --border: #e5e7eb;
-      --accent: #e8590c;
-      --accent-light: #fff4e6;
+      --text: #131a30;
+      --text-muted: #4f607b;
+      --border: #d2dbea;
+      --accent: #4f6fae;
+      --accent-light: #eef2fa;
       --error: #dc2626;
       --error-bg: #fef2f2;
       --warning: #d97706;
       --warning-bg: #fffbeb;
       --success: #16a34a;
-      --tag-bg: #f0f0f0;
-      --shadow: 0 1px 3px rgba(0,0,0,0.08);
-      --radius: 8px;
+      --tag-bg: #ecf3ff;
+      --radius: 16px;
     }
     @media (prefers-color-scheme: dark) {
       :root {
-        --bg: #0f172a;
-        --bg-card: #1e293b;
-        --bg-preview: #334155;
-        --text: #e2e8f0;
-        --text-muted: #94a3b8;
-        --border: #334155;
-        --accent: #fb923c;
-        --accent-light: #431407;
+        --bg: #060816;
+        --bg-card: #0d1528;
+        --bg-preview: #10172d;
+        --text: #ebf2ff;
+        --text-muted: #8ea0bf;
+        --border: #223252;
+        --accent: #86a4da;
+        --accent-light: #151730;
         --error: #f87171;
         --error-bg: #450a0a;
         --warning: #fbbf24;
         --warning-bg: #451a03;
         --success: #4ade80;
-        --tag-bg: #334155;
-        --shadow: 0 1px 3px rgba(0,0,0,0.3);
+        --tag-bg: #131b33;
       }
     }
     * { margin: 0; padding: 0; box-sizing: border-box; }
-    body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif; background: var(--bg); color: var(--text); }
+    body { font-family: 'IBM Plex Sans', 'Avenir Next', 'Segoe UI', system-ui, sans-serif; background: radial-gradient(circle at top left, rgba(79,111,174,0.10), transparent 24%), radial-gradient(circle at 85% 14%, rgba(145,237,233,0.08), transparent 22%), var(--bg); color: var(--text); }
     .header { padding: 16px 24px; border-bottom: 1px solid var(--border); display: flex; align-items: center; gap: 12px; }
     .header svg { width: 28px; height: 28px; color: var(--accent); }
     .header h1 { font-size: 18px; font-weight: 600; }
@@ -266,7 +264,7 @@ function renderViewerHtml(pages: PageOgData[], options: ResolvedOptions): string
     .search-input { padding: 6px 12px; border: 1px solid var(--border); border-radius: 6px; background: var(--bg); color: var(--text); font-size: 13px; flex: 1; min-width: 200px; }
     .search-input::placeholder { color: var(--text-muted); }
     .container { padding: 24px; display: flex; flex-direction: column; gap: 20px; max-width: 1200px; margin: 0 auto; }
-    .card { border: 1px solid var(--border); border-radius: var(--radius); background: var(--bg-card); box-shadow: var(--shadow); overflow: hidden; }
+    .card { border: 1px solid var(--border); border-radius: var(--radius); background: var(--bg-card); overflow: hidden; }
     .card-header { padding: 16px; border-bottom: 1px solid var(--border); }
     .card-path { font-size: 12px; color: var(--text-muted); font-family: monospace; margin-bottom: 4px; }
     .card-title { font-size: 16px; font-weight: 600; }

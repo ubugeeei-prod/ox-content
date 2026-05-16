@@ -2,8 +2,8 @@
 
 use ox_content_allocator::{Allocator, Vec};
 use ox_content_ast::{
-    AlignKind, BlockQuote, Document, Image, Link, List, ListItem, Node, Paragraph, Span, Table,
-    TableCell, TableRow, Text,
+    AlignKind, BlockQuote, Document, Html, Image, Link, List, ListItem, Node, Paragraph, Span,
+    Table, TableCell, TableRow, Text,
 };
 
 use crate::error::{ParseError, ParseResult};
@@ -156,34 +156,184 @@ impl<'a> Parser<'a> {
         }
 
         let start = self.position;
+        let line = self.remaining().lines().next().unwrap_or("");
+        let trimmed = line.trim_start();
+        let first = trimmed.as_bytes().first().copied();
 
         // Try to parse different block types
-        if self.try_parse_heading() {
-            return self.parse_heading(start);
+        match first {
+            Some(b'#') if self.try_parse_heading() => return self.parse_heading(start),
+            Some(b'-' | b'*') => {
+                if self.try_parse_thematic_break() {
+                    return self.parse_thematic_break(start);
+                }
+                if self.try_parse_list() {
+                    return self.parse_list(start);
+                }
+            }
+            Some(b'_') if self.try_parse_thematic_break() => {
+                return self.parse_thematic_break(start);
+            }
+            Some(b'>') => return self.parse_block_quote(start),
+            Some(b'`' | b'~') if self.try_parse_fenced_code() => {
+                return self.parse_fenced_code(start);
+            }
+            Some(b'<') if self.try_parse_html_block() => return self.parse_html_block(start),
+            Some(b'+' | b'0'..=b'9') if self.try_parse_list() => {
+                return self.parse_list(start);
+            }
+            _ => {}
         }
 
-        if self.try_parse_thematic_break() {
-            return self.parse_thematic_break(start);
-        }
-
-        if self.try_parse_block_quote() {
-            return self.parse_block_quote(start);
-        }
-
-        if self.try_parse_fenced_code() {
-            return self.parse_fenced_code(start);
-        }
-
-        if self.options.tables && self.try_parse_table() {
+        if self.options.tables && line.contains('|') && self.try_parse_table() {
             return self.parse_table(start);
-        }
-
-        if self.try_parse_list() {
-            return self.parse_list(start);
         }
 
         // Default: parse as paragraph
         self.parse_paragraph(start)
+    }
+
+    fn line_starts_block(&self) -> bool {
+        let line = self.remaining().lines().next().unwrap_or("");
+        let trimmed = line.trim_start();
+        let first = trimmed.as_bytes().first().copied();
+
+        let starts_block = match first {
+            Some(b'#') => self.try_parse_heading(),
+            Some(b'-' | b'*') => self.try_parse_thematic_break() || self.try_parse_list(),
+            Some(b'_') => self.try_parse_thematic_break(),
+            Some(b'>') => self.try_parse_block_quote(),
+            Some(b'`' | b'~') => self.try_parse_fenced_code(),
+            Some(b'<') => self.try_parse_html_block(),
+            Some(b'+' | b'0'..=b'9') => self.try_parse_list(),
+            _ => false,
+        };
+
+        starts_block || (self.options.tables && line.contains('|') && self.try_parse_table())
+    }
+
+    fn try_parse_html_block(&self) -> bool {
+        let line = self.remaining().lines().next().unwrap_or("");
+        Self::parse_html_block_tag_name(line).is_some() || line.trim_start().starts_with("<!--")
+    }
+
+    fn parse_html_block(&mut self, start: usize) -> ParseResult<Option<Node<'a>>> {
+        let line = self.remaining().lines().next().unwrap_or("");
+
+        if line.trim_start().starts_with("<!--") {
+            loop {
+                let consumed = self.consume_line();
+                if consumed.contains("-->") || self.is_at_end() {
+                    break;
+                }
+            }
+
+            let span = Span::new(start as u32, self.position as u32);
+            let value = &self.source[start..self.position];
+            return Ok(Some(Node::Html(Html { value, span })));
+        }
+
+        let Some(tag_name) = Self::parse_html_block_tag_name(line) else {
+            return Ok(None);
+        };
+
+        if Self::is_type1_html_block_tag(&tag_name) {
+            let closing_tag = format!("</{tag_name}");
+            loop {
+                let consumed = self.consume_line();
+                if consumed.to_ascii_lowercase().contains(&closing_tag) || self.is_at_end() {
+                    break;
+                }
+            }
+        } else {
+            self.consume_line();
+            while !self.is_at_end() {
+                let next = self.remaining().lines().next().unwrap_or("");
+                if next.trim().is_empty() {
+                    break;
+                }
+                self.consume_line();
+            }
+        }
+
+        let span = Span::new(start as u32, self.position as u32);
+        let value = &self.source[start..self.position];
+        Ok(Some(Node::Html(Html { value, span })))
+    }
+
+    fn parse_html_block_tag_name(line: &str) -> Option<String> {
+        let trimmed = line.trim_start();
+        let after_open = trimmed.strip_prefix('<')?;
+        let after_slash = after_open.strip_prefix('/').unwrap_or(after_open);
+        let mut tag_len = 0;
+
+        for byte in after_slash.as_bytes() {
+            if byte.is_ascii_alphanumeric() || *byte == b'-' {
+                tag_len += 1;
+            } else {
+                break;
+            }
+        }
+
+        if tag_len == 0 {
+            return None;
+        }
+
+        let tag_name = &after_slash[..tag_len];
+        let next = after_slash.as_bytes().get(tag_len).copied();
+
+        if let Some(byte) = next {
+            if !matches!(byte, b' ' | b'\t' | b'>' | b'/') {
+                return None;
+            }
+        }
+
+        if !Self::is_supported_html_block_tag(tag_name) {
+            return None;
+        }
+
+        Some(tag_name.to_ascii_lowercase())
+    }
+
+    fn is_supported_html_block_tag(tag_name: &str) -> bool {
+        [
+            "article",
+            "aside",
+            "blockquote",
+            "details",
+            "dialog",
+            "div",
+            "figcaption",
+            "figure",
+            "footer",
+            "header",
+            "main",
+            "nav",
+            "ol",
+            "p",
+            "pre",
+            "script",
+            "section",
+            "style",
+            "summary",
+            "table",
+            "tbody",
+            "td",
+            "tfoot",
+            "th",
+            "thead",
+            "textarea",
+            "tr",
+            "ul",
+        ]
+        .iter()
+        .any(|candidate| tag_name.eq_ignore_ascii_case(candidate))
+    }
+
+    fn is_type1_html_block_tag(tag_name: &str) -> bool {
+        ["pre", "script", "style", "textarea"]
+            .iter()
+            .any(|candidate| tag_name.eq_ignore_ascii_case(candidate))
     }
 
     /// Checks if the current position starts a block quote.
@@ -804,13 +954,7 @@ impl<'a> Parser<'a> {
             self.position = line_start;
 
             // Check for block-level element that would end paragraph
-            if self.try_parse_heading()
-                || self.try_parse_thematic_break()
-                || self.try_parse_block_quote()
-                || self.try_parse_fenced_code()
-                || (self.options.tables && self.try_parse_table())
-                || self.try_parse_list()
-            {
+            if self.line_starts_block() {
                 break;
             }
 
@@ -849,7 +993,7 @@ impl<'a> Parser<'a> {
             // Look for special characters
             while pos < content.len() {
                 let ch = bytes[pos];
-                if matches!(ch, b'*' | b'_' | b'`' | b'[' | b'!' | b'~' | b'\\') {
+                if matches!(ch, b'*' | b'_' | b'`' | b'[' | b'!' | b'~' | b'\\' | b'<') {
                     break;
                 }
                 pos += 1;
@@ -878,6 +1022,19 @@ impl<'a> Parser<'a> {
                     };
                     children.push(Node::Break(break_node));
                     pos += 2;
+                }
+                b'<' => {
+                    if let Some((html, end)) = Self::parse_inline_html(content, pos, offset) {
+                        children.push(Node::Html(html));
+                        pos = end;
+                    } else {
+                        let text = Text {
+                            value: "<",
+                            span: Span::new((offset + pos) as u32, (offset + pos + 1) as u32),
+                        };
+                        children.push(Node::Text(text));
+                        pos += 1;
+                    }
                 }
                 b'\\' if pos + 1 < content.len() => {
                     // Escape sequence
@@ -1202,6 +1359,82 @@ impl<'a> Parser<'a> {
         }
 
         Ok(children)
+    }
+
+    fn parse_inline_html(content: &'a str, pos: usize, offset: usize) -> Option<(Html<'a>, usize)> {
+        let bytes = content.as_bytes();
+
+        if content[pos..].starts_with("<!--") {
+            let end = content[pos + 4..].find("-->").map(|found| pos + 4 + found + 3)?;
+            return Some((
+                Html {
+                    value: &content[pos..end],
+                    span: Span::new((offset + pos) as u32, (offset + end) as u32),
+                },
+                end,
+            ));
+        }
+
+        let closing = bytes.get(pos + 1) == Some(&b'/');
+        let tag_start = if closing { pos + 2 } else { pos + 1 };
+        if !bytes.get(tag_start).is_some_and(u8::is_ascii_alphabetic) {
+            return None;
+        }
+
+        let mut tag_end = tag_start + 1;
+        while tag_end < bytes.len()
+            && (bytes[tag_end].is_ascii_alphanumeric() || bytes[tag_end] == b'-')
+        {
+            tag_end += 1;
+        }
+
+        let mut cursor = tag_end;
+        if closing {
+            while cursor < bytes.len() && matches!(bytes[cursor], b' ' | b'\t') {
+                cursor += 1;
+            }
+            if bytes.get(cursor) != Some(&b'>') {
+                return None;
+            }
+            let end = cursor + 1;
+            return Some((
+                Html {
+                    value: &content[pos..end],
+                    span: Span::new((offset + pos) as u32, (offset + end) as u32),
+                },
+                end,
+            ));
+        }
+
+        if !matches!(bytes.get(cursor), Some(b' ' | b'\t' | b'/' | b'>')) {
+            return None;
+        }
+
+        let mut quote = None;
+        while cursor < bytes.len() {
+            let byte = bytes[cursor];
+            if let Some(quote_byte) = quote {
+                if byte == quote_byte {
+                    quote = None;
+                }
+            } else if matches!(byte, b'"' | b'\'') {
+                quote = Some(byte);
+            } else if byte == b'>' {
+                let end = cursor + 1;
+                return Some((
+                    Html {
+                        value: &content[pos..end],
+                        span: Span::new((offset + pos) as u32, (offset + end) as u32),
+                    },
+                    end,
+                ));
+            } else if byte == b'\n' {
+                return None;
+            }
+            cursor += 1;
+        }
+
+        None
     }
 }
 

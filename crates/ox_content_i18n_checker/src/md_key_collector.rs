@@ -76,13 +76,7 @@ fn extract_key_from_expression(expr: &str) -> Option<String> {
     let expr = expr.trim();
 
     // Match t('...') or $t('...')
-    let rest = if let Some(rest) = expr.strip_prefix("$t(") {
-        rest
-    } else if let Some(rest) = expr.strip_prefix("t(") {
-        rest
-    } else {
-        return None;
-    };
+    let rest = expr.strip_prefix("$t(").or_else(|| expr.strip_prefix("t("))?;
 
     let rest = rest.strip_suffix(')')?;
     let rest = rest.trim();

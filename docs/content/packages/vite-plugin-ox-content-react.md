@@ -5,7 +5,7 @@ React integration for Ox Content - embed React components in Markdown.
 ## Installation
 
 ```bash
-pnpm add @ox-content/vite-plugin-react react react-dom @vitejs/plugin-react
+vp install @ox-content/vite-plugin-react react react-dom @vitejs/plugin-react
 ```
 
 ## Usage

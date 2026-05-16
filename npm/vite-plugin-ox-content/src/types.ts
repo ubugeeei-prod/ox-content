@@ -2,7 +2,7 @@
  * Type definitions for @ox-content/vite-plugin
  */
 
-import type { LanguageRegistration } from "shiki";
+import type { LanguageRegistration, ThemeRegistration } from "shiki";
 import type { ThemeConfig, ResolvedThemeConfig } from "./theme";
 
 // =============================================================================
@@ -27,12 +27,26 @@ export interface HeroAction {
 export interface HeroImage {
   /** Image source URL */
   src: string;
+  /** Light mode image source URL */
+  lightSrc?: string;
+  /** Dark mode image source URL */
+  darkSrc?: string;
   /** Alt text */
   alt?: string;
   /** Image width */
   width?: number;
   /** Image height */
   height?: number;
+}
+
+/**
+ * Hero notice configuration.
+ */
+export interface HeroNotice {
+  /** Notice title */
+  title?: string;
+  /** Notice paragraphs */
+  body?: string[];
 }
 
 /**
@@ -45,6 +59,8 @@ export interface HeroConfig {
   text?: string;
   /** Tagline (smaller, muted) */
   tagline?: string;
+  /** Notice shown near the top of the hero */
+  notice?: HeroNotice;
   /** Hero image */
   image?: HeroImage;
   /** Action buttons */
@@ -127,6 +143,12 @@ export interface SsgOptions {
   generateOgImage?: boolean;
 
   /**
+   * Add each page's last git commit timestamp to the default theme.
+   * @default false
+   */
+  lastUpdated?: boolean;
+
+  /**
    * Site URL for generating absolute OG image URLs.
    * Required for proper SNS sharing.
    * Example: 'https://example.com'
@@ -151,6 +173,7 @@ export interface ResolvedSsgOptions {
   siteName?: string;
   ogImage?: string;
   generateOgImage: boolean;
+  lastUpdated: boolean;
   siteUrl?: string;
   theme?: ResolvedThemeConfig;
 }
@@ -224,7 +247,7 @@ export interface OxContentOptions {
    * Syntax highlighting theme.
    * @default 'github-dark'
    */
-  highlightTheme?: string;
+  highlightTheme?: string | ThemeRegistration;
 
   /**
    * Additional languages for syntax highlighting.
@@ -232,6 +255,19 @@ export interface OxContentOptions {
    * These are loaded alongside the built-in languages.
    */
   highlightLangs?: LanguageRegistration[];
+
+  /**
+   * Opt-in code block annotations for fenced code blocks.
+   *
+   * Supports the configurable attribute syntax by default, and can also opt
+   * into VitePress-compatible fence metadata and inline notation.
+   *
+   * Example:
+   * ` ```ts annotate="highlight:1,3-4;warning:6;error:7" `
+   *
+   * @default false
+   */
+  codeAnnotations?: boolean | CodeAnnotationsOptions;
 
   /**
    * Enable mermaid diagram rendering.
@@ -316,8 +352,9 @@ export interface ResolvedOptions {
   taskLists: boolean;
   strikethrough: boolean;
   highlight: boolean;
-  highlightTheme: string;
+  highlightTheme: string | ThemeRegistration;
   highlightLangs: LanguageRegistration[];
+  codeAnnotations: ResolvedCodeAnnotationsOptions;
   mermaid: boolean;
   frontmatter: boolean;
   toc: boolean;
@@ -329,6 +366,61 @@ export interface ResolvedOptions {
   search: ResolvedSearchOptions;
   ogViewer: boolean;
   i18n: ResolvedI18nOptions | false;
+}
+
+/**
+ * Supported line annotation kinds for code blocks.
+ */
+export type CodeAnnotationKind = "highlight" | "warning" | "error";
+
+/**
+ * Supported code annotation syntaxes.
+ */
+export type CodeAnnotationSyntax = "attribute" | "vitepress" | "both";
+
+/**
+ * Opt-in code annotation configuration.
+ */
+export interface CodeAnnotationsOptions {
+  /**
+   * Annotation syntax to enable.
+   *
+   * - `attribute`: custom attribute syntax like `annotate="highlight:1,3-4"`
+   * - `vitepress`: VitePress-compatible syntax like `{1,3-4}` and `[!code warning]`
+   * - `both`: enables both syntaxes
+   *
+   * @default "attribute"
+   */
+  notation?: CodeAnnotationSyntax;
+
+  /**
+   * Attribute name read from the code fence meta string.
+   *
+   * Example: `annotate="highlight:1,3-4;warning:6"`
+   *
+   * @default "annotate"
+   */
+  metaKey?: string;
+
+  /**
+   * Enable line numbers for all code blocks by default.
+   *
+   * In `vitepress` or `both` mode, fenced code blocks can override this with
+   * `:line-numbers`, `:line-numbers=<start>`, or `:no-line-numbers`.
+   *
+   * @default false
+   */
+  defaultLineNumbers?: boolean;
+}
+
+/**
+ * Resolved code annotation configuration.
+ */
+export interface ResolvedCodeAnnotationsOptions {
+  enabled: boolean;
+  notation: CodeAnnotationSyntax;
+  metaKey: string;
+  defaultLineNumbers: boolean;
 }
 
 /**
@@ -520,7 +612,7 @@ export interface DocsOptions {
 
   /**
    * Glob patterns for files to include.
-   * @default ['**\/*.ts', '**\/*.tsx']
+   * @default ['**\/*.ts', '**\/*.tsx', '**\/*.js', '**\/*.jsx', '**\/*.mts', '**\/*.mjs', '**\/*.cts', '**\/*.cjs']
    */
   include?: string[];
 
@@ -599,6 +691,7 @@ export interface DocEntry {
   private?: boolean;
   file: string;
   line: number;
+  endLine: number;
   signature?: string; // Full function/type signature (for functions and type aliases)
 }
 
@@ -627,6 +720,29 @@ export interface ReturnDoc {
 export interface ExtractedDocs {
   file: string;
   entries: DocEntry[];
+}
+
+/**
+ * Summary counts emitted with generated documentation data.
+ */
+export interface DocsSummary {
+  modules: number;
+  entries: number;
+  byKind: Record<string, number>;
+  params: number;
+  returns: number;
+  examples: number;
+  deprecated: number;
+}
+
+/**
+ * Machine-readable payload emitted alongside generated docs.
+ */
+export interface GeneratedDocsData {
+  version: 1;
+  generatedAt: string;
+  summary: DocsSummary;
+  modules: ExtractedDocs[];
 }
 
 /**
@@ -721,6 +837,15 @@ export interface SearchResult {
   score: number;
   matches: string[];
   snippet: string;
+  scopes?: string[];
+}
+
+/**
+ * Parsed search query with optional scope prefixes.
+ */
+export interface ScopedSearchQuery {
+  text: string;
+  scopes: string[];
 }
 
 // ============================================

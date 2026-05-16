@@ -88,79 +88,103 @@ impl OgImageGenerator {
         let height = self.config.height;
         let bg = &self.config.background_color;
         let text_color = &self.config.text_color;
+        let font_family =
+            self.config.font_family.as_deref().unwrap_or("IBM Plex Sans, system-ui, sans-serif");
+        let brand = data
+            .site_name
+            .as_deref()
+            .filter(|name| !name.trim().is_empty())
+            .unwrap_or("Ox Content");
+        let is_brand_card = normalize_for_compare(&data.title) == normalize_for_compare(brand);
+        let hero_title =
+            if is_brand_card { "cargo doc for JavaScript".to_string() } else { data.title.clone() };
+        let hero_description = if is_brand_card {
+            "Rust-powered docs and high-performance Markdown tooling.".to_string()
+        } else {
+            data.description
+                .as_deref()
+                .filter(|description| !description.trim().is_empty())
+                .unwrap_or("Rust-powered docs and Markdown tooling.")
+                .to_string()
+        };
 
-        // Truncate and escape text
-        let title = truncate_text(&data.title, 50);
-        let title = escape_xml(&title);
-        let description = data
-            .description
-            .as_ref()
-            .map(|d| truncate_text(d, 120))
-            .map(|d| escape_xml(&d))
-            .unwrap_or_default();
-        let site_name =
-            data.site_name.as_ref().map_or_else(|| "Ox Content".to_string(), |s| escape_xml(s));
-
-        // Generate description lines (wrap at ~60 chars)
-        let desc_lines = wrap_text(&description, 60);
-        let desc_svg = desc_lines.iter().enumerate().fold(String::new(), |mut acc, (i, line)| {
+        let title_lines = wrap_text_limited(&hero_title, 28, 2);
+        let title_line_height = u64::from(self.config.title_font_size) + 10;
+        let title_svg = title_lines.iter().enumerate().fold(String::new(), |mut acc, (i, line)| {
             use std::fmt::Write;
-            let dy = if i == 0 { "0" } else { "1.4em" };
-            let _ = write!(acc, r#"<tspan x="80" dy="{dy}">{line}</tspan>"#);
+            let line_index = u64::try_from(i).unwrap_or(u64::MAX);
+            let y = 300_u64.saturating_add(line_index.saturating_mul(title_line_height));
+            let _ = write!(
+                acc,
+                r#"<text x="64" y="{y}" fill="{text_color}" font-size="{}" font-weight="700" letter-spacing="-3.8px" font-family="{font_family}">{}</text>"#,
+                self.config.title_font_size,
+                escape_xml(line)
+            );
             acc
         });
 
+        let description_lines = wrap_text_limited(&hero_description, 56, 2);
+        let title_line_offset =
+            u64::try_from(title_lines.len().saturating_sub(1)).unwrap_or(u64::MAX);
+        let description_start_y = 300_u64
+            .saturating_add(title_line_offset.saturating_mul(title_line_height))
+            .saturating_add(58);
+        let description_line_height = u64::from(self.config.description_font_size) + 14;
+        let description_svg =
+            description_lines
+                .iter()
+                .enumerate()
+                .fold(String::new(), |mut acc, (i, line)| {
+                    use std::fmt::Write;
+                    let line_index = u64::try_from(i).unwrap_or(u64::MAX);
+                    let y = description_start_y
+                        .saturating_add(line_index.saturating_mul(description_line_height));
+                    let _ = write!(
+                        acc,
+                        r##"<text x="64" y="{y}" fill="#93a4c3" font-size="{}" font-family="{font_family}">{}</text>"##,
+                        self.config.description_font_size,
+                        escape_xml(line)
+                    );
+                    acc
+                });
+
         format!(
-            r#"<svg xmlns="http://www.w3.org/2000/svg" width="{width}" height="{height}" viewBox="0 0 {width} {height}">
+            r##"<svg xmlns="http://www.w3.org/2000/svg" width="{width}" height="{height}" viewBox="0 0 {width} {height}">
+  <rect width="100%" height="100%" fill="{bg}"/>
+  <rect x="0.5" y="0.5" width="{border_width}" height="{border_height}" fill="none" stroke="#223252"/>
+  <rect width="100%" height="4" fill="#4f6fae"/>
+
   <defs>
-    <linearGradient id="bgGrad" x1="0%" y1="0%" x2="100%" y2="100%">
-      <stop offset="0%" style="stop-color:{bg}"/>
-      <stop offset="100%" style="stop-color:#2d2d4a"/>
-    </linearGradient>
-    <linearGradient id="accentGrad" x1="0%" y1="0%" x2="100%" y2="0%">
-      <stop offset="0%" style="stop-color:#b7410e"/>
-      <stop offset="100%" style="stop-color:#e67e4d"/>
+    <linearGradient id="brand_mark_gradient" x1="138" y1="118" x2="360" y2="392" gradientUnits="userSpaceOnUse">
+      <stop offset="0%" stop-color="#355cff"/>
+      <stop offset="100%" stop-color="#74c7ff"/>
     </linearGradient>
   </defs>
 
-  <!-- Background -->
-  <rect width="100%" height="100%" fill="url(#bgGrad)"/>
+  <g transform="translate(64 56) scale(1.5926)">
+    <text x="2" y="43" fill="#eff6ff" font-family="IBM Plex Sans, IBM Plex Mono, Avenir Next, Segoe UI, sans-serif" font-size="34" font-weight="700" letter-spacing="-1.4px">OXCONTENT</text>
+    <text x="213" y="43.5" fill="#eff6ff" font-family="IBM Plex Sans, IBM Plex Mono, Avenir Next, Segoe UI, sans-serif" font-size="40" font-weight="400">(</text>
+    <g transform="translate(216 9) scale(0.089) rotate(-7 256 256)">
+      <path d="M161 96H286C298 96 309 101 318 110L352 144C361 153 366 164 366 176V386C366 399 355 410 342 410H161C148 410 138 399 138 386V120C138 107 148 96 161 96Z" fill="url(#brand_mark_gradient)"/>
+    </g>
+    <text x="252" y="43.5" fill="#eff6ff" font-family="IBM Plex Sans, IBM Plex Mono, Avenir Next, Segoe UI, sans-serif" font-size="40" font-weight="400">)</text>
+  </g>
 
-  <!-- Accent bar -->
-  <rect x="0" y="0" width="8" height="100%" fill="url(#accentGrad)"/>
-
-  <!-- Logo circle -->
-  <circle cx="120" cy="120" r="50" fill="url(#accentGrad)" opacity="0.9"/>
-  <text x="120" y="135" text-anchor="middle" fill="{text_color}" font-size="40" font-weight="bold" font-family="system-ui, sans-serif">Ox</text>
-
-  <!-- Site name -->
-  <text x="190" y="125" fill="{text_color}" font-size="24" font-family="system-ui, sans-serif" opacity="0.7">{site_name}</text>
-
-  <!-- Title -->
-  <text x="80" y="280" fill="{text_color}" font-size="56" font-weight="bold" font-family="system-ui, sans-serif">{title}</text>
-
-  <!-- Description -->
-  <text x="80" y="380" fill="{text_color}" font-size="28" font-family="system-ui, sans-serif" opacity="0.8">{desc_svg}</text>
-
-  <!-- Bottom decoration -->
-  <rect x="80" y="540" width="200" height="4" rx="2" fill="url(#accentGrad)" opacity="0.6"/>
-</svg>"#
+  {title_svg}
+  {description_svg}
+</svg>"##,
+            border_width = width.saturating_sub(1),
+            border_height = height.saturating_sub(1)
         )
     }
 }
 
-/// Truncates text to a maximum length, adding ellipsis if needed.
-fn truncate_text(text: &str, max_len: usize) -> String {
-    if text.chars().count() <= max_len {
-        text.to_string()
-    } else {
-        let truncated: String = text.chars().take(max_len - 3).collect();
-        format!("{truncated}...")
-    }
+fn normalize_for_compare(value: &str) -> String {
+    value.chars().filter(|ch| !ch.is_whitespace()).flat_map(char::to_lowercase).collect()
 }
 
 /// Wraps text into lines of approximately max_chars length.
-fn wrap_text(text: &str, max_chars: usize) -> Vec<String> {
+fn wrap_text_limited(text: &str, max_chars: usize, max_lines: usize) -> Vec<String> {
     let mut lines = Vec::new();
     let mut current_line = String::new();
 
@@ -180,9 +204,8 @@ fn wrap_text(text: &str, max_chars: usize) -> Vec<String> {
         lines.push(current_line);
     }
 
-    // Limit to 2 lines
-    if lines.len() > 2 {
-        lines.truncate(2);
+    if lines.len() > max_lines {
+        lines.truncate(max_lines);
         if let Some(last) = lines.last_mut() {
             if last.len() > 3 {
                 last.truncate(last.len() - 3);

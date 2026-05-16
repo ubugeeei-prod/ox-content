@@ -41,10 +41,7 @@ const annotateHeadings = defineMdastPlugin("annotate-headings", (tree, context) 
 });
 
 function remarkExposeFrontmatter() {
-  return (
-    tree: MdastRoot,
-    file: { data?: { matter?: { title?: string; stage?: string } } },
-  ) => {
+  return (tree: MdastRoot, file: { data?: { matter?: { title?: string; stage?: string } } }) => {
     tree.children.push({
       type: "paragraph",
       children: [
@@ -134,8 +131,14 @@ document.getElementById("app")!.innerHTML = `
   <h2>What the bridge changes</h2>
   <ul>
     <li>The custom mdast plugin appends a badge to the first heading.</li>
-    <li>An existing remark plugin reads <code>vfile.data.matter</code> and appends a summary paragraph.</li>
-    <li>A final ox-content HTML plugin wraps the output in an <code>&lt;article&gt;</code> and prepends reading time.</li>
+    <li>
+      An existing remark plugin reads <code>vfile.data.matter</code> and appends a summary
+      paragraph.
+    </li>
+    <li>
+      A final ox-content HTML plugin wraps the output in an <code>&lt;article&gt;</code> and
+      prepends reading time.
+    </li>
   </ul>
   <p>remark saw frontmatter title: Unified Bridge Demo and stage: mdast -&gt; remark -&gt; html.</p>
 </article>

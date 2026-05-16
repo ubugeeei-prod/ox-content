@@ -1,10 +1,12 @@
 # Source Documentation Generator Example
 
-This example demonstrates **dogfooding** - using Ox Content's own tools to generate documentation for source files, with Vue components embedded for interactive documentation.
+This example demonstrates **dogfooding** - using Ox Content's own tools to generate documentation for source files, then rendering the generated `docs.json` with a richer Vue-based viewer.
 
 ## Features
 
 - **Auto-generated API docs**: Extracts JSDoc/TSDoc comments from source files
+- **Accordion viewer**: Skim one-line summaries, then expand details on demand
+- **Scoped search**: Try queries like `@api clamp`
 - **Vue components**: Embed interactive components in the generated documentation
 - **Glob pattern support**: Auto-discover components without listing each one
 
@@ -56,7 +58,7 @@ npm run build
 
 ## How It Works
 
-1. **Docs Generation**: The base `oxContent` plugin scans source files for JSDoc comments and generates Markdown documentation automatically.
+1. **Docs Generation**: The base `oxContent` plugin scans source files for JSDoc comments and generates Markdown documentation plus a machine-readable `docs.json` payload.
 
 2. **Vue Components**: The `oxContentVue` plugin enables embedding Vue components in Markdown using glob patterns for easy component discovery.
 

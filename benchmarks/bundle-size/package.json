@@ -14,6 +14,7 @@
     "markdown-it": "^14.1.0",
     "marked": "^15.0.0",
     "md4w": "^0.2.7",
+    "md4x": "^0.0.25",
     "micromark": "^4.0.1",
     "remark-html": "^16.0.1",
     "remark-parse": "^11.0.0",

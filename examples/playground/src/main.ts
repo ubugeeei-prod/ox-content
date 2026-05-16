@@ -281,7 +281,7 @@ const SHELL_RULES: HighlightRule[] = [
   },
   {
     type: "function",
-    pattern: /\b(?:pnpm|npm|node|npx|git|cargo|mise|vite|cd|ls|cat|echo|cp|mv|rm|mkdir|touch)\b/,
+    pattern: /\b(?:pnpm|npm|node|npx|git|cargo|nix|vp|vite|cd|ls|cat|echo|cp|mv|rm|mkdir|touch)\b/,
   },
   {
     type: "variable",

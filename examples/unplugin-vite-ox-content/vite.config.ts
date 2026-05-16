@@ -6,7 +6,13 @@ import oxContent, {
 } from "@ox-content/unplugin/vite";
 
 const annotateHeadings = defineMdastPlugin("annotate-headings", (tree, context) => {
-  const badge = String(context.frontmatter.badge ?? "mdast bridge");
+  const rawBadge = context.frontmatter.badge;
+  const badge =
+    rawBadge === undefined || rawBadge === null
+      ? "mdast bridge"
+      : typeof rawBadge === "string"
+        ? rawBadge
+        : JSON.stringify(rawBadge);
 
   for (const node of tree.children) {
     if (node.type !== "heading" || node.depth !== 1 || !Array.isArray(node.children)) {
@@ -22,10 +28,7 @@ const annotateHeadings = defineMdastPlugin("annotate-headings", (tree, context) 
 });
 
 function remarkExposeFrontmatter() {
-  return (
-    tree: MdastRoot,
-    file: { data?: { matter?: { title?: string; stage?: string } } },
-  ) => {
+  return (tree: MdastRoot, file: { data?: { matter?: { title?: string; stage?: string } } }) => {
     tree.children.push({
       type: "paragraph",
       children: [

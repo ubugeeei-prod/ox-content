@@ -13,11 +13,11 @@ This directory contains example integrations and use cases for Ox Content.
 
 ## Plugin Integrations
 
-| Example                                    | Description                | Use Case                                       |
-| ------------------------------------------ | -------------------------- | ---------------------------------------------- |
-| [markdown-it-plugin](./markdown-it-plugin) | markdown-it integration    | Use Ox Content parser with markdown-it plugins |
-| [rehype-plugin](./rehype-plugin)           | unified/rehype integration | Post-process HTML with rehype plugins          |
-| [unplugin-vite-ox-content](./unplugin-vite-ox-content) | mdast/unified bridge | Run custom mdast and existing remark plugins on Ox Content |
+| Example                                                | Description                | Use Case                                                   |
+| ------------------------------------------------------ | -------------------------- | ---------------------------------------------------------- |
+| [markdown-it-plugin](./markdown-it-plugin)             | markdown-it integration    | Use Ox Content parser with markdown-it plugins             |
+| [rehype-plugin](./rehype-plugin)                       | unified/rehype integration | Post-process HTML with rehype plugins                      |
+| [unplugin-vite-ox-content](./unplugin-vite-ox-content) | mdast/unified bridge       | Run custom mdast and existing remark plugins on Ox Content |
 
 ## Tooling Examples
 

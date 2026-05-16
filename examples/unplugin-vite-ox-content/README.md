@@ -44,10 +44,7 @@ const annotateHeadings = defineMdastPlugin("annotate-headings", (tree, context) 
 });
 
 function remarkExposeFrontmatter() {
-  return (
-    tree: MdastRoot,
-    file: { data?: { matter?: { title?: string; stage?: string } } },
-  ) => {
+  return (tree: MdastRoot, file: { data?: { matter?: { title?: string; stage?: string } } }) => {
     tree.children.push({
       type: "paragraph",
       children: [
@@ -131,8 +128,24 @@ function markdownItHeadingPlugin(md: MarkdownIt) {
 }
 
 function remarkReadMarkdownItTokens() {
-  return (tree: MdastRoot, file: { data?: { oxContent?: { markdownIt?: { tokens?: Array<{ type?: string; children?: Array<{ type?: string; content?: string }> }> } } } }) => {
-    const inline = file.data?.oxContent?.markdownIt?.tokens?.find((token) => token.type === "inline");
+  return (
+    tree: MdastRoot,
+    file: {
+      data?: {
+        oxContent?: {
+          markdownIt?: {
+            tokens?: Array<{
+              type?: string;
+              children?: Array<{ type?: string; content?: string }>;
+            }>;
+          };
+        };
+      };
+    },
+  ) => {
+    const inline = file.data?.oxContent?.markdownIt?.tokens?.find(
+      (token) => token.type === "inline",
+    );
     const text = inline?.children?.find((token) => token.type === "text")?.content;
     if (!text) {
       return;

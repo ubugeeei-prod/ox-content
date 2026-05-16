@@ -5,8 +5,10 @@ Base Vite plugin for Ox Content with Environment API support.
 ## Installation
 
 ```bash
-pnpm add @ox-content/vite-plugin
+vp install @ox-content/vite-plugin
 ```
+
+`@ox-content/vite-plugin` already depends on `@ox-content/napi`, so a separate `vp install @ox-content/napi` is not required when you are using the Vite plugin.
 
 ## Basic Usage
 
@@ -91,6 +93,72 @@ oxContent({
 
 Enable GitHub Flavored Markdown extensions.
 
+### codeAnnotations
+
+- Type: `boolean | CodeAnnotationsOptions`
+- Default: `false`
+
+Enables opt-in code block annotations for fenced code blocks.
+
+By default, Ox Content uses the configurable attribute syntax. You can also opt into VitePress-compatible fence metadata and inline notation, or enable both at the same time.
+
+```ts
+oxContent({
+  highlight: true,
+  codeAnnotations: {
+    notation: "both",
+  },
+});
+```
+
+Attribute syntax with the default `metaKey`:
+
+````md
+```ts annotate="highlight:1,6;warning:2;error:3"
+export function loadUser(input: string) {
+  if (!input) console.warn("missing payload");
+  throw new Error("missing id");
+}
+
+const user = loadUser(payload);
+console.log(user);
+```
+````
+
+VitePress-compatible syntax:
+
+````md
+```ts:line-numbers=10 {1,4} [config.ts]
+const user = loadUser(payload);
+console.warn("Deprecated") // [!code warning]
+throw new Error("boom") // [!code error]
+```
+````
+
+Rendered example:
+
+```ts annotate="highlight:1,6;warning:2;error:3"
+export function loadUser(input: string) {
+  if (!input) console.warn("missing payload");
+  throw new Error("missing id");
+}
+
+const user = loadUser(payload);
+console.log(user);
+```
+
+You can also customize the attribute name:
+
+```ts
+oxContent({
+  codeAnnotations: {
+    metaKey: "markers",
+  },
+});
+```
+
+See the [Code Annotations example](../examples/code-annotations.md) for a rendered example.
+
 ### toc
 
 - Type: `boolean`
@@ -104,6 +172,8 @@ Generate table of contents.
 - Default: `{ enabled: true }`
 
 Source documentation generation options. Set to `false` to disable.
+
+Generated API pages now include summary stats, signature badges, one-line symbol overviews, expandable detail sections, and labeled examples. A machine-readable `docs.json` payload with aggregate counts is also emitted next to the Markdown files so custom viewers can build richer experiences without re-parsing source.
 
 ```ts
 oxContent({
@@ -127,7 +197,7 @@ oxContent({
 | `enabled` | `boolean`                        | `true`                           | Enable/disable docs generation |
 | `src`     | `string[]`                       | `['./src']`                      | Source directories to scan     |
 | `out`     | `string`                         | `'docs/api'`                     | Output directory               |
-| `include` | `string[]`                       | `['**/*.ts', '**/*.tsx']`        | Files to include               |
+| `include` | `string[]`                       | JS/TS source globs               | Files to include               |
 | `exclude` | `string[]`                       | `['**/*.test.*', '**/*.spec.*']` | Files to exclude               |
 | `format`  | `'markdown' \| 'json' \| 'html'` | `'markdown'`                     | Output format                  |
 | `private` | `boolean`                        | `false`                          | Include @private members       |
@@ -183,6 +253,7 @@ oxContent({
 - **Multi-field Search**: Title, headings, body, and code are indexed with different weights
 - **Japanese/CJK Support**: Proper tokenization for CJK characters
 - **Prefix Matching**: Type-ahead suggestions for autocomplete
+- **Scoped Queries**: Prefix queries like `@api transform` to limit results by section
 - **Zero Dependencies**: No external search service required
 
 ### Disabling Search
@@ -202,6 +273,9 @@ import { search, searchOptions } from "virtual:ox-content/search";
 
 // Search the index
 const results = await search("query text", { limit: 5 });
+
+// Scope search to the API reference
+const apiResults = await search("@api transform", { limit: 5 });
 
 // Results include:
 // - id: document ID
@@ -238,8 +312,11 @@ The plugin provides virtual modules:
 
 ```ts
 import config from "virtual:ox-content/config";
-import { useMarkdown } from "virtual:ox-content/runtime";
+import { useMarkdown, withBase, withoutBase } from "virtual:ox-content/runtime";
 import { search, searchOptions } from "virtual:ox-content/search";
+
+const assetUrl = withBase("/og.png");
+const routePath = withoutBase("/docs/guide");
 
 // Use the search function
 const results = await search("query", { limit: 10 });

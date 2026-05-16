@@ -134,8 +134,7 @@ fn gfm_transform_options() -> JsTransformOptions {
         frontmatter: Some(true),
         toc_max_depth: Some(3),
         convert_md_links: Some(false),
-        base_url: None,
-        source_path: None,
+        ..Default::default()
     }
 }
 

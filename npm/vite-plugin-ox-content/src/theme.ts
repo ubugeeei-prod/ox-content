@@ -51,11 +51,25 @@ export interface ThemeFonts {
 }
 
 /**
+ * Entry page theme configuration.
+ */
+export interface ThemeEntryPage {
+  /** Landing page presentation mode */
+  mode?: "default" | "subtle";
+}
+
+/**
  * Theme header configuration.
  */
 export interface ThemeHeader {
   /** Logo image URL */
   logo?: string;
+  /** Light mode logo image URL */
+  logoLight?: string;
+  /** Dark mode logo image URL */
+  logoDark?: string;
+  /** Whether to render the site name text next to the logo */
+  showSiteNameText?: boolean;
   /** Logo width in pixels */
   logoWidth?: number;
   /** Logo height in pixels */
@@ -72,10 +86,18 @@ export interface ThemeFooter {
   copyright?: string;
 }
 
-/**
- * Social links configuration.
- */
-export interface SocialLinks {
+/** Custom social link icon. */
+export type SocialLinkIcon = string | { svg: string };
+
+/** Custom social link. */
+export interface SocialLink {
+  icon: SocialLinkIcon;
+  link: string;
+  ariaLabel?: string;
+}
+
+/** Legacy social links configuration. */
+export interface LegacySocialLinks {
   /** GitHub URL */
   github?: string;
   /** Twitter/X URL */
@@ -83,6 +105,9 @@ export interface SocialLinks {
   /** Discord URL */
   discord?: string;
 }
+
+/** Social links configuration. */
+export type SocialLinks = LegacySocialLinks | SocialLink[];
 
 /**
  * Embedded HTML content for specific positions in the page layout.
@@ -108,6 +133,13 @@ export interface ThemeEmbed {
   footer?: string;
 }
 
+export interface SidebarItem {
+  text?: string;
+  link?: string;
+  items?: SidebarItem[];
+  collapsed?: boolean;
+}
+
 /**
  * Complete theme configuration.
  */
@@ -122,6 +154,8 @@ export interface ThemeConfig {
   darkColors?: ThemeColors;
   /** Font configuration (maps to CSS variables) */
   fonts?: ThemeFonts;
+  /** Entry page configuration */
+  entryPage?: ThemeEntryPage;
   /** Layout configuration (maps to CSS variables) */
   layout?: ThemeLayout;
   /** Header configuration */
@@ -130,6 +164,7 @@ export interface ThemeConfig {
   footer?: ThemeFooter;
   /** Social links configuration */
   socialLinks?: SocialLinks;
+  sidebar?: SidebarItem[];
   /** Embedded HTML content at specific positions */
   embed?: ThemeEmbed;
   /** Additional custom CSS */
@@ -146,10 +181,12 @@ export interface ResolvedThemeConfig {
   colors: ThemeColors;
   darkColors: ThemeColors;
   fonts: ThemeFonts;
+  entryPage: ThemeEntryPage;
   layout: ThemeLayout;
   header: ThemeHeader;
   footer: ThemeFooter;
   socialLinks: SocialLinks;
+  sidebar: SidebarItem[];
   embed: ThemeEmbed;
   css: string;
   js: string;
@@ -162,30 +199,33 @@ export interface ResolvedThemeConfig {
 export const defaultTheme: ThemeConfig = {
   name: "default",
   colors: {
-    primary: "#e04d0a",
-    primaryHover: "#f5602a",
+    primary: "#4f6fae",
+    primaryHover: "#425f96",
     background: "#ffffff",
-    backgroundAlt: "#f8f9fa",
-    text: "#1a1a1a",
-    textMuted: "#666666",
-    border: "#e5e7eb",
-    codeBackground: "#1e293b",
-    codeText: "#e2e8f0",
+    backgroundAlt: "#f5f7fb",
+    text: "#131a30",
+    textMuted: "#4f607b",
+    border: "#d2dbea",
+    codeBackground: "#101a31",
+    codeText: "#edf3ff",
   },
   darkColors: {
-    primary: "#f5714a",
-    primaryHover: "#ff8a66",
-    background: "#141414",
-    backgroundAlt: "#141414",
-    text: "#e5e5e5",
-    textMuted: "#a3a3a3",
-    border: "#2a2a2a",
-    codeBackground: "#1a1a1a",
-    codeText: "#e5e5e5",
+    primary: "#86a4da",
+    primaryHover: "#a3bbe8",
+    background: "#060816",
+    backgroundAlt: "#0d1528",
+    text: "#ebf2ff",
+    textMuted: "#8ea0bf",
+    border: "#223252",
+    codeBackground: "#0a1020",
+    codeText: "#e7f0ff",
   },
   fonts: {
-    sans: 'system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif',
-    mono: 'ui-monospace, SFMono-Regular, "SF Mono", Menlo, Consolas, monospace',
+    sans: '"IBM Plex Sans", "Avenir Next", "Segoe UI Variable", "Segoe UI", sans-serif',
+    mono: '"IBM Plex Mono", "SFMono-Regular", Consolas, monospace',
+  },
+  entryPage: {
+    mode: "default",
   },
   layout: {
     sidebarWidth: "260px",
@@ -194,6 +234,9 @@ export const defaultTheme: ThemeConfig = {
   },
   header: {
     logo: undefined,
+    logoLight: undefined,
+    logoDark: undefined,
+    showSiteNameText: true,
     logoWidth: 28,
     logoHeight: 28,
   },
@@ -315,10 +358,12 @@ export function resolveTheme(config?: ThemeConfig): ResolvedThemeConfig {
     colors: merged.colors ?? defaultTheme.colors!,
     darkColors: merged.darkColors ?? defaultTheme.darkColors!,
     fonts: merged.fonts ?? defaultTheme.fonts!,
+    entryPage: merged.entryPage ?? defaultTheme.entryPage!,
     layout: merged.layout ?? defaultTheme.layout!,
     header: merged.header ?? defaultTheme.header!,
     footer: merged.footer ?? defaultTheme.footer!,
     socialLinks: merged.socialLinks ?? defaultTheme.socialLinks!,
+    sidebar: merged.sidebar ?? [],
     embed: merged.embed ?? {},
     css: merged.css ?? "",
     js: merged.js ?? "",
@@ -329,6 +374,8 @@ export function resolveTheme(config?: ThemeConfig): ResolvedThemeConfig {
  * Converts resolved theme to the format expected by Rust NAPI.
  */
 export function themeToNapi(theme: ResolvedThemeConfig): NapiThemeConfig {
+  const socialLinks = socialLinksToNapi(theme.socialLinks);
+
   return {
     colors: theme.colors.primary
       ? {
@@ -362,6 +409,11 @@ export function themeToNapi(theme: ResolvedThemeConfig): NapiThemeConfig {
           mono: theme.fonts.mono,
         }
       : undefined,
+    entryPage: theme.entryPage.mode
+      ? {
+          mode: theme.entryPage.mode,
+        }
+      : undefined,
     layout: theme.layout.sidebarWidth
       ? {
           sidebarWidth: theme.layout.sidebarWidth,
@@ -369,13 +421,17 @@ export function themeToNapi(theme: ResolvedThemeConfig): NapiThemeConfig {
           maxContentWidth: theme.layout.maxContentWidth,
         }
       : undefined,
-    header: theme.header.logo
-      ? {
-          logo: theme.header.logo,
-          logoWidth: theme.header.logoWidth,
-          logoHeight: theme.header.logoHeight,
-        }
-      : undefined,
+    header:
+      theme.header.logo || theme.header.logoLight || theme.header.logoDark
+        ? {
+            logo: theme.header.logo,
+            logoLight: theme.header.logoLight,
+            logoDark: theme.header.logoDark,
+            showSiteNameText: theme.header.showSiteNameText,
+            logoWidth: theme.header.logoWidth,
+            logoHeight: theme.header.logoHeight,
+          }
+        : undefined,
     footer:
       theme.footer.message || theme.footer.copyright
         ? {
@@ -383,18 +439,26 @@ export function themeToNapi(theme: ResolvedThemeConfig): NapiThemeConfig {
             copyright: theme.footer.copyright,
           }
         : undefined,
-    socialLinks:
-      theme.socialLinks.github || theme.socialLinks.twitter || theme.socialLinks.discord
-        ? {
-            github: theme.socialLinks.github,
-            twitter: theme.socialLinks.twitter,
-            discord: theme.socialLinks.discord,
-          }
-        : undefined,
+    socialLinks,
     embed: Object.keys(theme.embed).length > 0 ? theme.embed : undefined,
     css: theme.css || undefined,
     js: theme.js || undefined,
   };
+}
+
+function socialLinksToNapi(links: SocialLinks): NapiSocialLinks | undefined {
+  if (Array.isArray(links)) {
+    const items = links.map((item) => {
+      const icon = typeof item.icon === "string" ? item.icon : undefined;
+      const iconSvg = typeof item.icon === "object" ? item.icon.svg : undefined;
+      return { icon, iconSvg, link: item.link, ariaLabel: item.ariaLabel };
+    });
+    return items.length > 0 ? { links: items } : undefined;
+  }
+
+  return links.github || links.twitter || links.discord
+    ? { github: links.github, twitter: links.twitter, discord: links.discord }
+    : undefined;
 }
 
 /**
@@ -421,6 +485,13 @@ export interface NapiThemeFonts {
 }
 
 /**
+ * NAPI-compatible entry page theme type.
+ */
+export interface NapiThemeEntryPage {
+  mode?: "default" | "subtle";
+}
+
+/**
  * NAPI-compatible theme layout type.
  */
 export interface NapiThemeLayout {
@@ -434,6 +505,9 @@ export interface NapiThemeLayout {
  */
 export interface NapiThemeHeader {
   logo?: string;
+  logoLight?: string;
+  logoDark?: string;
+  showSiteNameText?: boolean;
   logoWidth?: number;
   logoHeight?: number;
 }
@@ -453,6 +527,14 @@ export interface NapiSocialLinks {
   github?: string;
   twitter?: string;
   discord?: string;
+  links?: NapiSocialLink[];
+}
+
+export interface NapiSocialLink {
+  icon?: string;
+  iconSvg?: string;
+  link: string;
+  ariaLabel?: string;
 }
 
 /**
@@ -477,6 +559,7 @@ export interface NapiThemeConfig {
   colors?: NapiThemeColors;
   darkColors?: NapiThemeColors;
   fonts?: NapiThemeFonts;
+  entryPage?: NapiThemeEntryPage;
   layout?: NapiThemeLayout;
   header?: NapiThemeHeader;
   footer?: NapiThemeFooter;

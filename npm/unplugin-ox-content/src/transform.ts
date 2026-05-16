@@ -65,6 +65,10 @@ interface NapiBindings {
       autolinks?: boolean;
       frontmatter?: boolean;
       tocMaxDepth?: number;
+      codeAnnotations?: boolean;
+      codeAnnotationMetaKey?: string;
+      codeAnnotationSyntax?: string;
+      codeAnnotationDefaultLineNumbers?: boolean;
     },
   ) => Uint8Array;
   transform: (
@@ -78,6 +82,10 @@ interface NapiBindings {
       autolinks?: boolean;
       frontmatter?: boolean;
       tocMaxDepth?: number;
+      codeAnnotations?: boolean;
+      codeAnnotationMetaKey?: string;
+      codeAnnotationSyntax?: string;
+      codeAnnotationDefaultLineNumbers?: boolean;
     },
   ) => {
     html: string;
@@ -202,7 +210,7 @@ function loadNapiBindings(): NapiBindings {
   if (cachedNapiBindings === null) {
     throw new Error(
       "[ox-content] Failed to load @ox-content/napi. Please ensure the NAPI module is built. " +
-        "Run: mise run build:napi",
+        "Run: nix develop -c vp run build:napi",
     );
   }
 
@@ -227,7 +235,14 @@ function createNapiTransformOptions(options: ResolvedOptions): {
   autolinks: boolean;
   frontmatter: boolean;
   tocMaxDepth: number;
+  codeAnnotations: boolean;
+  codeAnnotationMetaKey: string;
 } {
+  const codeAnnotations = options.codeAnnotations ?? {
+    enabled: false,
+    metaKey: "annotate",
+  };
+
   return {
     gfm: options.gfm,
     footnotes: options.footnotes,
@@ -237,6 +252,8 @@ function createNapiTransformOptions(options: ResolvedOptions): {
     autolinks: options.gfm,
     frontmatter: options.frontmatter,
     tocMaxDepth: options.tocMaxDepth,
+    codeAnnotations: codeAnnotations.enabled,
+    codeAnnotationMetaKey: codeAnnotations.metaKey,
   };
 }
 
