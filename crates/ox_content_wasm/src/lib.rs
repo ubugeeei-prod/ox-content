@@ -9,7 +9,7 @@ use wasm_bindgen::prelude::*;
 use ox_content_allocator::Allocator;
 use ox_content_ast::{Document, Heading, Node};
 use ox_content_parser::{Parser, ParserOptions};
-use ox_content_renderer::HtmlRenderer;
+use ox_content_renderer::{HtmlRenderer, HtmlRendererOptions};
 
 /// Table of contents entry.
 #[derive(serde::Serialize)]
@@ -117,7 +117,10 @@ pub fn parse_and_render(source: &str, options: Option<WasmParserOptions>) -> JsV
     let result = parser.parse();
     match result {
         Ok(doc) => {
-            let mut renderer = HtmlRenderer::new();
+            let mut renderer = HtmlRenderer::with_options(HtmlRendererOptions {
+                toc_max_depth: opts.toc_max_depth,
+                ..Default::default()
+            });
             let html = renderer.render(&doc);
             serde_wasm_bindgen::to_value(&serde_json::json!({
                 "html": html,
@@ -154,7 +157,10 @@ pub fn transform(source: &str, options: Option<WasmParserOptions>) -> JsValue {
             let toc = extract_toc(&doc, toc_max_depth);
 
             // Render to HTML
-            let mut renderer = HtmlRenderer::new();
+            let mut renderer = HtmlRenderer::with_options(HtmlRendererOptions {
+                toc_max_depth,
+                ..Default::default()
+            });
             let html = renderer.render(&doc);
 
             let transform_result = TransformResult { html, frontmatter, toc, errors: vec![] };

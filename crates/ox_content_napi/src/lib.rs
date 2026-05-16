@@ -480,6 +480,8 @@ fn transform_options_to_parser_options(opts: &JsTransformOptions) -> ParserOptio
 fn transform_options_to_renderer_options(opts: &JsTransformOptions) -> HtmlRendererOptions {
     let mut options = HtmlRendererOptions::new();
 
+    options.toc_max_depth = opts.toc_max_depth.unwrap_or(options.toc_max_depth);
+
     if let Some(v) = opts.convert_md_links {
         options.convert_md_links = v;
     }
@@ -1753,5 +1755,16 @@ mod tests {
         assert_eq!(toc[0].slug, "setup");
         assert_eq!(toc[1].slug, "setup-1");
         assert_eq!(toc[2].slug, "section");
+    }
+
+    #[test]
+    fn transform_passes_toc_depth_to_inline_toc() {
+        let result = super::transform(
+            "[[toc]]\n\n## Intro\n### API".to_string(),
+            Some(super::JsTransformOptions { toc_max_depth: Some(2), ..Default::default() }),
+        );
+
+        assert!(result.html.contains("href=\"#intro\""));
+        assert!(!result.html.contains("href=\"#api\""));
     }
 }
