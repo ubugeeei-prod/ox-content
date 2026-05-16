@@ -14,9 +14,17 @@ export { transformYouTube, extractVideoId, type YouTubeOptions } from "./youtube
 export {
   transformGitHub,
   fetchRepoData,
+  fetchGitHubSource,
   collectGitHubRepos,
+  collectGitHubSources,
   prefetchGitHubRepos,
+  prefetchGitHubSources,
+  parseGitHubPermalink,
+  parseGitHubLineRange,
   type GitHubRepoData,
+  type GitHubSourceData,
+  type GitHubSourceRef,
+  type GitHubLineRange,
   type GitHubOptions,
 } from "./github";
 

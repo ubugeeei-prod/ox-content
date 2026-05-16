@@ -48,6 +48,8 @@ export interface GitHubEmbedOptions {
   token?: string;
   cache?: boolean;
   cacheTTL?: number;
+  maxSourceBytes?: number;
+  maxSourceLines?: number;
 }
 
 export interface BuiltinEmbedOptions {

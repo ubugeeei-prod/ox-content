@@ -1,10 +1,11 @@
 /**
- * GitHub Plugin - Repository card embedding
+ * GitHub Plugin - Repository and source code embedding
  *
- * Transforms <GitHub> components into static repository cards
+ * Transforms <GitHub> components into static repository and source code cards
  * by fetching data from GitHub API at build time.
  */
 
+import { Buffer } from "node:buffer";
 import { unified } from "unified";
 import rehypeParse from "rehype-parse";
 import rehypeStringify from "rehype-stringify";
@@ -24,6 +25,30 @@ export interface GitHubRepoData {
   };
 }
 
+export interface GitHubLineRange {
+  start: number;
+  end: number;
+}
+
+export interface GitHubSourceRef {
+  repo: string;
+  ref: string;
+  path: string;
+  permalink: string;
+  lines?: GitHubLineRange;
+}
+
+export interface GitHubSourceData {
+  repo: string;
+  ref: string;
+  path: string;
+  permalink: string;
+  content: string;
+  size: number;
+  html_url: string;
+  language: string | null;
+}
+
 export interface GitHubOptions {
   /** GitHub API token for higher rate limits. */
   token?: string;
@@ -31,22 +56,143 @@ export interface GitHubOptions {
   cache?: boolean;
   /** Cache TTL in milliseconds. Default: 3600000 (1 hour) */
   cacheTTL?: number;
+  /** Maximum source file size to inline in bytes. Default: 200000 */
+  maxSourceBytes?: number;
+  /** Maximum source lines to inline when no line range is specified. Default: 120 */
+  maxSourceLines?: number;
 }
 
 const defaultOptions: Required<GitHubOptions> = {
   token: "",
   cache: true,
   cacheTTL: 3600000,
+  maxSourceBytes: 200000,
+  maxSourceLines: 120,
 };
 
 // Simple in-memory cache
 const repoCache = new Map<string, { data: GitHubRepoData; timestamp: number }>();
+const sourceCache = new Map<string, { data: GitHubSourceData; timestamp: number }>();
 const GITHUB_REPO_RE = /^[A-Za-z0-9_.-]+\/[A-Za-z0-9_.-]+$/;
+const GITHUB_COMPONENT_RE = /<github\b([^>]*)>/gi;
+const ATTRIBUTE_RE = /([:\w-]+)(?:\s*=\s*(?:"([^"]*)"|'([^']*)'|([^\s"'>/]+)))?/g;
+const CONTROL_CHAR_RE = /[\u0000-\u001f\u007f]/;
+const EXTENSION_LANGUAGE_MAP = new Map<string, string>([
+  ["cjs", "javascript"],
+  ["css", "css"],
+  ["go", "go"],
+  ["html", "html"],
+  ["js", "javascript"],
+  ["json", "json"],
+  ["jsx", "jsx"],
+  ["md", "markdown"],
+  ["mdx", "mdx"],
+  ["mjs", "javascript"],
+  ["py", "python"],
+  ["rb", "ruby"],
+  ["rs", "rust"],
+  ["sh", "shell"],
+  ["svelte", "svelte"],
+  ["toml", "toml"],
+  ["ts", "typescript"],
+  ["tsx", "tsx"],
+  ["vue", "vue"],
+  ["yaml", "yaml"],
+  ["yml", "yaml"],
+]);
 
 export function isSafeGitHubRepo(repo: string): boolean {
   return (
     GITHUB_REPO_RE.test(repo) && !repo.split("/").some((part) => part === "." || part === "..")
   );
+}
+
+function isSafeGitHubRef(ref: string): boolean {
+  return Boolean(ref) && !CONTROL_CHAR_RE.test(ref) && !hasUnsafePathSegment(ref);
+}
+
+function isSafeGitHubPath(path: string): boolean {
+  return Boolean(path) && !CONTROL_CHAR_RE.test(path) && !hasUnsafePathSegment(path);
+}
+
+function hasUnsafePathSegment(value: string): boolean {
+  return value
+    .split("/")
+    .some((part) => !part || part === "." || part === ".." || part.includes("\\"));
+}
+
+function encodePath(path: string): string {
+  return path.split("/").map(encodeURIComponent).join("/");
+}
+
+function sourceKey(source: GitHubSourceRef): string {
+  return `${source.repo}@${source.ref}:${source.path}`;
+}
+
+function formatLineRange(lines: GitHubLineRange): string {
+  return lines.start === lines.end ? `L${lines.start}` : `L${lines.start}-L${lines.end}`;
+}
+
+export function parseGitHubLineRange(value: string | undefined): GitHubLineRange | undefined {
+  if (!value) return undefined;
+  const match = value.trim().match(/^#?L?(\d+)(?:-L?(\d+))?$/i);
+  if (!match) return undefined;
+
+  const start = Number.parseInt(match[1], 10);
+  const end = match[2] ? Number.parseInt(match[2], 10) : start;
+  if (!Number.isSafeInteger(start) || !Number.isSafeInteger(end) || start < 1 || end < start) {
+    return undefined;
+  }
+
+  return { start, end };
+}
+
+export function createGitHubPermalink(source: Omit<GitHubSourceRef, "permalink">): string {
+  const fragment = source.lines ? `#${formatLineRange(source.lines)}` : "";
+  return `https://github.com/${source.repo}/blob/${encodeURIComponent(source.ref)}/${encodePath(
+    source.path,
+  )}${fragment}`;
+}
+
+export function parseGitHubPermalink(value: string): GitHubSourceRef | null {
+  let url: URL;
+  try {
+    url = new URL(value);
+  } catch {
+    return null;
+  }
+
+  if (url.protocol !== "https:" || url.hostname !== "github.com") {
+    return null;
+  }
+
+  let parts: string[];
+  try {
+    parts = url.pathname
+      .split("/")
+      .filter(Boolean)
+      .map((part) => decodeURIComponent(part));
+  } catch {
+    return null;
+  }
+
+  if (parts.length < 5 || parts[2] !== "blob") {
+    return null;
+  }
+
+  const repo = `${parts[0]}/${parts[1]}`;
+  const ref = parts[3];
+  const path = parts.slice(4).join("/");
+  if (!isSafeGitHubRepo(repo) || !isSafeGitHubRef(ref) || !isSafeGitHubPath(path)) {
+    return null;
+  }
+
+  const lines = parseGitHubLineRange(url.hash);
+  const source = { repo, ref, path, lines };
+  return {
+    ...source,
+    permalink: createGitHubPermalink(source),
+  };
 }
 
 /**
@@ -118,6 +264,94 @@ export async function fetchRepoData(
     return data;
   } catch (error) {
     console.warn(`Error fetching GitHub repo ${repo}:`, error);
+    return null;
+  }
+}
+
+interface GitHubContentApiFile {
+  type: string;
+  encoding?: string;
+  content?: string;
+  size?: number;
+  html_url?: string;
+}
+
+/**
+ * Fetch source file data from GitHub API.
+ */
+export async function fetchGitHubSource(
+  source: GitHubSourceRef,
+  options: Required<GitHubOptions>,
+): Promise<GitHubSourceData | null> {
+  if (
+    !isSafeGitHubRepo(source.repo) ||
+    !isSafeGitHubRef(source.ref) ||
+    !isSafeGitHubPath(source.path)
+  ) {
+    return null;
+  }
+
+  const key = sourceKey(source);
+  if (options.cache) {
+    const cached = sourceCache.get(key);
+    if (cached && Date.now() - cached.timestamp < options.cacheTTL) {
+      return cached.data;
+    }
+  }
+
+  try {
+    const headers: Record<string, string> = {
+      Accept: "application/vnd.github.v3+json",
+      "User-Agent": "ox-content-github-plugin",
+    };
+
+    if (options.token) {
+      headers.Authorization = `Bearer ${options.token}`;
+    }
+
+    const apiUrl = `https://api.github.com/repos/${source.repo}/contents/${encodePath(
+      source.path,
+    )}?ref=${encodeURIComponent(source.ref)}`;
+    const response = await fetch(apiUrl, { headers });
+
+    if (!response.ok) {
+      console.warn(`Failed to fetch GitHub source ${source.permalink}: ${response.status}`);
+      return null;
+    }
+
+    const data = (await response.json()) as GitHubContentApiFile;
+    if (
+      data.type !== "file" ||
+      data.encoding !== "base64" ||
+      !data.content ||
+      (data.size ?? 0) > options.maxSourceBytes
+    ) {
+      return null;
+    }
+
+    const content = Buffer.from(data.content.replace(/\s/g, ""), "base64").toString("utf8");
+    if (Buffer.byteLength(content) > options.maxSourceBytes) {
+      return null;
+    }
+
+    const sourceData: GitHubSourceData = {
+      repo: source.repo,
+      ref: source.ref,
+      path: source.path,
+      permalink: source.permalink,
+      content,
+      size: data.size ?? Buffer.byteLength(content),
+      html_url: data.html_url ?? source.permalink,
+      language: inferLanguage(source.path),
+    };
+
+    if (options.cache) {
+      sourceCache.set(key, { data: sourceData, timestamp: Date.now() });
+    }
+
+    return sourceData;
+  } catch (error) {
+    console.warn(`Error fetching GitHub source ${source.permalink}:`, error);
     return null;
   }
 }
@@ -321,21 +555,222 @@ function createFallbackCard(repo: string): Element {
   };
 }
 
+function inferLanguage(path: string): string | null {
+  const fileName = path.split("/").at(-1)?.toLowerCase() ?? "";
+  if (fileName === "dockerfile") return "dockerfile";
+  if (fileName === "makefile") return "makefile";
+
+  const extension = fileName.includes(".") ? fileName.split(".").at(-1) : undefined;
+  return extension ? (EXTENSION_LANGUAGE_MAP.get(extension) ?? extension) : null;
+}
+
+function normalizeSourceLines(content: string): string[] {
+  const lines = content.replace(/\r\n?/g, "\n").split("\n");
+  if (lines.length > 1 && lines.at(-1) === "") {
+    lines.pop();
+  }
+  return lines.length > 0 ? lines : [""];
+}
+
+function createGitHubSourceCard(
+  source: GitHubSourceData,
+  lines: GitHubLineRange | undefined,
+  options: Required<GitHubOptions>,
+): Element {
+  const allLines = normalizeSourceLines(source.content);
+  const start = Math.min(lines?.start ?? 1, allLines.length);
+  const end = lines
+    ? Math.min(lines.end, allLines.length)
+    : Math.min(allLines.length, options.maxSourceLines);
+  const selectedLines = allLines.slice(start - 1, end);
+  const lineRange = { start, end };
+  const loc = selectedLines.length;
+  const rangeLabel = formatLineRange(lineRange);
+  const locLabel =
+    !lines && end < allLines.length
+      ? `${rangeLabel} of ${allLines.length} LOC`
+      : `${rangeLabel} - ${loc} LOC`;
+  const languageClass = source.language ? [`language-${source.language}`] : [];
+
+  return {
+    type: "element",
+    tagName: "figure",
+    properties: {
+      className: ["ox-github-code"],
+      "data-loc": String(loc),
+      "data-source": source.permalink,
+    },
+    children: [
+      {
+        type: "element",
+        tagName: "figcaption",
+        properties: { className: ["ox-github-code-header"] },
+        children: [
+          {
+            type: "element",
+            tagName: "a",
+            properties: {
+              className: ["ox-github-code-title"],
+              href: source.permalink,
+              target: "_blank",
+              rel: "noopener noreferrer",
+            },
+            children: [{ type: "text", value: `${source.repo}/${source.path}` }],
+          },
+          {
+            type: "element",
+            tagName: "span",
+            properties: { className: ["ox-github-code-loc"] },
+            children: [{ type: "text", value: locLabel }],
+          },
+        ],
+      },
+      {
+        type: "element",
+        tagName: "pre",
+        properties: {
+          className: ["ox-github-code-block", ...languageClass],
+          ...(source.language ? { "data-language": source.language } : {}),
+        },
+        children: [
+          {
+            type: "element",
+            tagName: "code",
+            properties: {
+              className: languageClass,
+            },
+            children: selectedLines.map((line, index) => {
+              const lineNumber = start + index;
+              return {
+                type: "element" as const,
+                tagName: "span",
+                properties: {
+                  className: ["line", "ox-github-code-line"],
+                  "data-line": String(lineNumber),
+                },
+                children: [
+                  {
+                    type: "element" as const,
+                    tagName: "span",
+                    properties: { className: ["ox-github-code-line-number"] },
+                    children: [{ type: "text" as const, value: String(lineNumber) }],
+                  },
+                  {
+                    type: "element" as const,
+                    tagName: "span",
+                    properties: { className: ["ox-github-code-line-content"] },
+                    children: [{ type: "text" as const, value: line || " " }],
+                  },
+                ],
+              };
+            }),
+          },
+        ],
+      },
+    ],
+  };
+}
+
 /**
  * Collect all GitHub repos from HTML for pre-fetching.
  */
 export async function collectGitHubRepos(html: string): Promise<string[]> {
   const repos: string[] = [];
-  const repoPattern = /<github[^>]*\s+repo=["']([^"']+)["']/gi;
 
+  GITHUB_COMPONENT_RE.lastIndex = 0;
   let match;
-  while ((match = repoPattern.exec(html)) !== null) {
-    if (isSafeGitHubRepo(match[1])) {
-      repos.push(match[1]);
+  while ((match = GITHUB_COMPONENT_RE.exec(html)) !== null) {
+    const attrs = parseAttributes(match[1]);
+    if (attrs.path || attrs.file || attrs.permalink || attrs.url || attrs.href) {
+      continue;
+    }
+
+    const repo = attrs.repo;
+    if (repo && isSafeGitHubRepo(repo)) {
+      repos.push(repo);
     }
   }
 
   return repos;
+}
+
+/**
+ * Collect all GitHub source references from HTML for pre-fetching.
+ */
+export async function collectGitHubSources(html: string): Promise<GitHubSourceRef[]> {
+  const sources: GitHubSourceRef[] = [];
+
+  GITHUB_COMPONENT_RE.lastIndex = 0;
+  let match;
+  while ((match = GITHUB_COMPONENT_RE.exec(html)) !== null) {
+    const source = sourceRefFromAttributes(parseAttributes(match[1]));
+    if (source) {
+      sources.push(source);
+    }
+  }
+
+  return sources;
+}
+
+function parseAttributes(raw: string): Record<string, string> {
+  const attrs: Record<string, string> = {};
+  ATTRIBUTE_RE.lastIndex = 0;
+  let match;
+
+  while ((match = ATTRIBUTE_RE.exec(raw)) !== null) {
+    attrs[match[1].toLowerCase()] = match[2] ?? match[3] ?? match[4] ?? "";
+  }
+
+  return attrs;
+}
+
+function attributesFromElement(el: Element): Record<string, string> {
+  const attrs: Record<string, string> = {};
+  for (const name of [
+    "permalink",
+    "url",
+    "href",
+    "repo",
+    "path",
+    "file",
+    "ref",
+    "sha",
+    "branch",
+    "loc",
+    "lines",
+    "line",
+  ]) {
+    const value = getAttribute(el, name);
+    if (value !== undefined) {
+      attrs[name] = value;
+    }
+  }
+  return attrs;
+}
+
+function sourceRefFromAttributes(attrs: Record<string, string>): GitHubSourceRef | null {
+  const permalink = attrs.permalink ?? attrs.url ?? attrs.href;
+  if (permalink) {
+    return parseGitHubPermalink(permalink);
+  }
+
+  const repo = attrs.repo;
+  const path = attrs.path ?? attrs.file;
+  if (!repo || !path || !isSafeGitHubRepo(repo) || !isSafeGitHubPath(path)) {
+    return null;
+  }
+
+  const ref = attrs.ref ?? attrs.sha ?? attrs.branch ?? "main";
+  if (!isSafeGitHubRef(ref)) {
+    return null;
+  }
+
+  const lines = parseGitHubLineRange(attrs.loc ?? attrs.lines ?? attrs.line);
+  const source = { repo, ref, path, lines };
+  return {
+    ...source,
+    permalink: createGitHubPermalink(source),
+  };
 }
 
 /**
@@ -349,7 +784,7 @@ export async function prefetchGitHubRepos(
   const results = new Map<string, GitHubRepoData | null>();
 
   await Promise.all(
-    repos.map(async (repo) => {
+    Array.from(new Set(repos)).map(async (repo) => {
       const data = await fetchRepoData(repo, mergedOptions);
       results.set(repo, data);
     }),
@@ -359,9 +794,36 @@ export async function prefetchGitHubRepos(
 }
 
 /**
+ * Pre-fetch all GitHub source files.
+ */
+export async function prefetchGitHubSources(
+  sources: GitHubSourceRef[],
+  options?: GitHubOptions,
+): Promise<Map<string, GitHubSourceData | null>> {
+  const mergedOptions = { ...defaultOptions, ...options };
+  const results = new Map<string, GitHubSourceData | null>();
+  const uniqueSources = Array.from(
+    new Map(sources.map((source) => [sourceKey(source), source])).values(),
+  );
+
+  await Promise.all(
+    uniqueSources.map(async (source) => {
+      const data = await fetchGitHubSource(source, mergedOptions);
+      results.set(sourceKey(source), data);
+    }),
+  );
+
+  return results;
+}
+
+/**
  * Rehype plugin to transform GitHub components.
  */
-function rehypeGitHub(repoDataMap: Map<string, GitHubRepoData | null>) {
+function rehypeGitHub(
+  repoDataMap: Map<string, GitHubRepoData | null>,
+  sourceDataMap: Map<string, GitHubSourceData | null>,
+  options: Required<GitHubOptions>,
+) {
   return (tree: Root) => {
     const visit = (node: Root | Element) => {
       if ("children" in node) {
@@ -371,8 +833,18 @@ function rehypeGitHub(repoDataMap: Map<string, GitHubRepoData | null>) {
           if (child.type === "element") {
             // Check for <GitHub> component
             if (child.tagName.toLowerCase() === "github") {
-              const repo = getAttribute(child, "repo");
+              const attrs = attributesFromElement(child);
+              const source = sourceRefFromAttributes(attrs);
 
+              if (source) {
+                const sourceData = sourceDataMap.get(sourceKey(source));
+                node.children[i] = sourceData
+                  ? createGitHubSourceCard(sourceData, source.lines, options)
+                  : createFallbackCard(source.permalink);
+                continue;
+              }
+
+              const repo = attrs.repo;
               if (repo) {
                 const repoData = repoDataMap.get(repo);
                 const cardElement = repoData
@@ -400,16 +872,19 @@ export async function transformGitHub(
   repoDataMap?: Map<string, GitHubRepoData | null>,
   options?: GitHubOptions,
 ): Promise<string> {
+  const mergedOptions = { ...defaultOptions, ...options };
   // If no pre-fetched data, collect and fetch
   let dataMap = repoDataMap;
   if (!dataMap) {
     const repos = await collectGitHubRepos(html);
-    dataMap = await prefetchGitHubRepos(repos, options);
+    dataMap = await prefetchGitHubRepos(repos, mergedOptions);
   }
+  const sources = await collectGitHubSources(html);
+  const sourceDataMap = await prefetchGitHubSources(sources, mergedOptions);
 
   const result = await unified()
     .use(rehypeParse, { fragment: true })
-    .use(rehypeGitHub, dataMap)
+    .use(rehypeGitHub, dataMap, sourceDataMap, mergedOptions)
     .use(rehypeStringify)
     .process(html);
 

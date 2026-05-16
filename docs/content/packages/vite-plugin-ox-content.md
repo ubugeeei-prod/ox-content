@@ -218,6 +218,10 @@ Built-in static embeds are rendered at transform time, with no client-side JavaS
 
 ```md
 <GitHub repo="ubugeeei/ox-content" />
+
+<GitHub permalink="https://github.com/ubugeeei/ox-content/blob/278098b/README.md#L1-L12" />
+
+<GitHub repo="ubugeeei/ox-content" path="README.md" ref="main" loc="1-12" />
 ```
 
 Disable all embeds or configure each fetcher:
@@ -227,6 +231,8 @@ oxContent({
   embeds: {
     github: {
       token: process.env.GITHUB_TOKEN,
+      maxSourceBytes: 200000,
+      maxSourceLines: 120,
     },
   },
 });
