@@ -36,6 +36,7 @@ import type { ResolvedOptions, TransformResult, TocEntry } from "./types";
 import { highlightCode } from "./highlight";
 import { importNapiModule } from "./napi";
 import { transformMermaidStatic } from "./plugins/mermaid";
+import { transformBuiltinEmbeds } from "./plugins";
 import { protectMermaidSvgs, restoreMermaidSvgs } from "./plugins/mermaid-protect";
 
 /**
@@ -460,6 +461,14 @@ export async function transformMarkdown(
     );
     html = napi.mergeHighlightedCodeBlocks(originalHtml, highlightedHtml);
   }
+
+  // Render static built-in embeds while Mermaid SVG placeholders are protected.
+  html = await transformBuiltinEmbeds(
+    html,
+    options.embeds ?? {
+      github: {},
+    },
+  );
 
   // Restore protected SVGs
   html = restoreMermaidSvgs(html, svgs);

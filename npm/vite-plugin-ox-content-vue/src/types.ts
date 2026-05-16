@@ -79,6 +79,23 @@ export interface VueIntegrationOptions extends OxContentOptions {
   codeAnnotations?: boolean | CodeAnnotationsOptions;
   reactivityTransform?: boolean;
   customBlocks?: boolean;
+  embeds?: BuiltinEmbedOptions | false;
+}
+
+export interface GitHubEmbedOptions {
+  token?: string;
+  cache?: boolean;
+  cacheTTL?: number;
+  maxSourceBytes?: number;
+  maxSourceLines?: number;
+}
+
+export interface BuiltinEmbedOptions {
+  github?: boolean | GitHubEmbedOptions;
+}
+
+export interface ResolvedBuiltinEmbedOptions {
+  github: GitHubEmbedOptions | false;
 }
 
 /**
@@ -97,6 +114,7 @@ export interface ResolvedVueOptions {
   components: ComponentsOption;
   reactivityTransform: boolean;
   customBlocks: boolean;
+  embeds: ResolvedBuiltinEmbedOptions;
 }
 
 /**

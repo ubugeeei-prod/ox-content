@@ -160,6 +160,9 @@ function createResolvedOptions(overrides: Partial<ResolvedOptions> = {}): Resolv
       hotkey: "/",
     },
     ogViewer: false,
+    embeds: {
+      github: {},
+    },
     i18n: false,
     ...overrides,
   };

@@ -16,6 +16,7 @@ import type {
   ResolvedVueOptions,
   ComponentsMap,
   ComponentsOption,
+  BuiltinEmbedOptions,
 } from "./types";
 
 const DEFAULT_MARKDOWN_EXTENSIONS = [".md", ".markdown", ".mdx"] as const;
@@ -37,11 +38,29 @@ function isMarkdownFilePath(filePath: string, extensions: readonly string[]): bo
   return extensions.some((extension) => pathname.endsWith(extension.toLowerCase()));
 }
 
+function resolveBuiltinEmbedOptions(
+  options: BuiltinEmbedOptions | false | undefined,
+): ResolvedVueOptions["embeds"] {
+  if (options === false) return { github: false };
+  return {
+    github: resolveSingleEmbedOptions(options?.github),
+  };
+}
+
+function resolveSingleEmbedOptions<T extends object>(options: boolean | T | undefined): T | false {
+  if (options === false) return false;
+  if (options === true || options === undefined) return {} as T;
+  return options;
+}
+
 export type {
   VueIntegrationOptions,
   ResolvedVueOptions,
   ComponentsOption,
   ComponentsMap,
+  BuiltinEmbedOptions,
+  GitHubEmbedOptions,
+  ResolvedBuiltinEmbedOptions,
   VueTransformResult,
   ComponentIsland,
   ParsedMarkdownContent,
@@ -233,6 +252,7 @@ function resolveVueOptions(options: VueIntegrationOptions): ResolvedVueOptions {
     tocMaxDepth: options.tocMaxDepth ?? 3,
     codeAnnotations: resolveCodeAnnotationsOptions(options.codeAnnotations),
     components: options.components ?? {},
+    embeds: resolveBuiltinEmbedOptions(options.embeds),
     // Vue-specific options
     reactivityTransform: options.reactivityTransform ?? false,
     customBlocks: options.customBlocks ?? true,

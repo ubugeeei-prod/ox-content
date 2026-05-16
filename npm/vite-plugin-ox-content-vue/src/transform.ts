@@ -134,6 +134,7 @@ export async function transformMarkdownWithVue(
       placeholder: "Search...",
       hotkey: "k",
     },
+    embeds: options.embeds,
     i18n: false,
   } as unknown as Parameters<typeof baseTransformMarkdown>[2] & {
     codeAnnotations?: TransformOptions["codeAnnotations"];

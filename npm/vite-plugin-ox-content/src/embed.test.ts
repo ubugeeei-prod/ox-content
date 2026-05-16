@@ -1,5 +1,13 @@
+import { Buffer } from "node:buffer";
 import { describe, expect, it } from "vite-plus/test";
-import { collectGitHubRepos, isSafeGitHubRepo, transformGitHub } from "./plugins/github";
+import {
+  collectGitHubRepos,
+  collectGitHubSources,
+  isSafeGitHubRepo,
+  parseGitHubPermalink,
+  transformGitHub,
+} from "./plugins/github";
+import { transformBuiltinEmbeds } from "./plugins";
 import { collectOgpUrls, isSafeOgpUrl, transformOgp } from "./plugins/ogp";
 
 describe("builtin embed input hardening", () => {
@@ -21,6 +29,64 @@ describe("builtin embed input hardening", () => {
     expect(html).toContain('href="#"');
   });
 
+  it("accepts GitHub source permalinks and loc ranges", async () => {
+    const permalink =
+      "https://github.com/ubugeeei/ox-content/blob/278098b/npm/vite-plugin-ox-content/src/plugins/github.ts#L10-L12";
+    expect(parseGitHubPermalink(permalink)).toMatchObject({
+      repo: "ubugeeei/ox-content",
+      ref: "278098b",
+      path: "npm/vite-plugin-ox-content/src/plugins/github.ts",
+      lines: { start: 10, end: 12 },
+    });
+    expect(parseGitHubPermalink("https://example.com/ubugeeei/ox-content/blob/main/a.ts")).toBe(
+      null,
+    );
+
+    await expect(
+      collectGitHubSources(
+        `<GitHub permalink="${permalink}"></GitHub><GitHub repo="ubugeeei/ox-content" path="README.md" ref="main" loc="1-2"></GitHub>`,
+      ),
+    ).resolves.toMatchObject([
+      { repo: "ubugeeei/ox-content", lines: { start: 10, end: 12 } },
+      { repo: "ubugeeei/ox-content", path: "README.md", lines: { start: 1, end: 2 } },
+    ]);
+  });
+
+  it("expands GitHub source permalinks into code cards", async () => {
+    const originalFetch = globalThis.fetch;
+    globalThis.fetch = async () =>
+      ({
+        ok: true,
+        status: 200,
+        json: async () => ({
+          type: "file",
+          encoding: "base64",
+          content: Buffer.from("const first = 1;\nconst second = 2;\nconst third = 3;\n").toString(
+            "base64",
+          ),
+          size: 48,
+          html_url: "https://github.com/acme/project/blob/abc123/src/index.ts#L2-L3",
+        }),
+      }) as Response;
+
+    try {
+      const html = await transformGitHub(
+        '<GitHub permalink="https://github.com/acme/project/blob/abc123/src/index.ts#L2-L3"></GitHub>',
+        undefined,
+        { cache: false },
+      );
+
+      expect(html).toContain("ox-github-code");
+      expect(html).toContain("src/index.ts");
+      expect(html).toContain("L2-L3 - 2 LOC");
+      expect(html).toContain('data-line="2"');
+      expect(html).toContain("const second = 2;");
+      expect(html).not.toContain("const first = 1;");
+    } finally {
+      globalThis.fetch = originalFetch;
+    }
+  });
+
   it("accepts only public http OGP URLs", async () => {
     expect(isSafeOgpUrl("https://example.com/post")).toBe(true);
     expect(isSafeOgpUrl("http://127.0.0.1/admin")).toBe(false);
@@ -39,5 +105,23 @@ describe("builtin embed input hardening", () => {
       new Map([["javascript:alert(1)", null]]),
     );
     expect(html).toContain('href="#"');
+  });
+
+  it("runs GitHub embeds through the shared builtin transform", async () => {
+    const html = await transformBuiltinEmbeds('<GitHub repo="../secret"></GitHub>', {
+      github: {},
+    });
+
+    expect(html).toContain("ox-github-card");
+    expect(html).toContain('href="#"');
+  });
+
+  it("can disable builtin embeds", async () => {
+    const input = '<GitHub repo="../secret"></GitHub>';
+    await expect(
+      transformBuiltinEmbeds(input, {
+        github: false,
+      }),
+    ).resolves.toBe(input);
   });
 });

@@ -1956,7 +1956,7 @@ export async function buildSsg(
       const pluginOptions: TransformAllOptions = {
         tabs: true,
         youtube: true,
-        github: true,
+        github: options.embeds.github,
         ogp: true,
         mermaid: true,
         githubToken: process.env.GITHUB_TOKEN,

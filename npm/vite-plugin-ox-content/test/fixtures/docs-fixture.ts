@@ -142,6 +142,9 @@ export function createDocsResolvedOptions(
       hotkey: "/",
     },
     ogViewer: false,
+    embeds: {
+      github: {},
+    },
     i18n: false,
     ...overrides,
   };

@@ -59,6 +59,8 @@ export type {
   I18nOptions,
   ResolvedI18nOptions,
   LocaleConfig,
+  BuiltinEmbedOptions,
+  ResolvedBuiltinEmbedOptions,
 } from "./types";
 
 /**
@@ -425,8 +427,29 @@ function resolveOptions(options: OxContentOptions): ResolvedOptions {
     docs: resolveDocsOptions(options.docs),
     search: resolveSearchOptions(options.search),
     ogViewer: options.ogViewer ?? true,
+    embeds: resolveBuiltinEmbedOptions(options.embeds),
     i18n: resolveI18nOptions(options.i18n),
   };
+}
+
+export function resolveBuiltinEmbedOptions(
+  options: OxContentOptions["embeds"],
+): ResolvedOptions["embeds"] {
+  if (options === false) {
+    return {
+      github: false,
+    };
+  }
+
+  return {
+    github: resolveSingleEmbedOptions(options?.github),
+  };
+}
+
+function resolveSingleEmbedOptions<T extends object>(options: boolean | T | undefined): T | false {
+  if (options === false) return false;
+  if (options === true || options === undefined) return {} as T;
+  return options;
 }
 
 function resolveCodeAnnotationsOptions(
@@ -624,8 +647,13 @@ export {
   extractVideoId,
   transformGitHub,
   fetchRepoData,
+  fetchGitHubSource,
   collectGitHubRepos,
+  collectGitHubSources,
   prefetchGitHubRepos,
+  prefetchGitHubSources,
+  parseGitHubPermalink,
+  parseGitHubLineRange,
   transformOgp,
   fetchOgpData,
   collectOgpUrls,
@@ -637,6 +665,9 @@ export {
 export type {
   YouTubeOptions,
   GitHubRepoData,
+  GitHubSourceData,
+  GitHubSourceRef,
+  GitHubLineRange,
   GitHubOptions,
   OgpData,
   OgpOptions,

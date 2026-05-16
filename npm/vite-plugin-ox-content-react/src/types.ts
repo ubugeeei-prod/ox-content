@@ -41,6 +41,23 @@ export interface ReactIntegrationOptions extends OxContentOptions {
   components?: ComponentsOption;
   codeAnnotations?: boolean | CodeAnnotationsOptions;
   jsxRuntime?: "automatic" | "classic";
+  embeds?: BuiltinEmbedOptions | false;
+}
+
+export interface GitHubEmbedOptions {
+  token?: string;
+  cache?: boolean;
+  cacheTTL?: number;
+  maxSourceBytes?: number;
+  maxSourceLines?: number;
+}
+
+export interface BuiltinEmbedOptions {
+  github?: boolean | GitHubEmbedOptions;
+}
+
+export interface ResolvedBuiltinEmbedOptions {
+  github: GitHubEmbedOptions | false;
 }
 
 export interface ResolvedReactOptions {
@@ -55,6 +72,7 @@ export interface ResolvedReactOptions {
   codeAnnotations: ResolvedCodeAnnotationsOptions;
   components: ComponentsMap;
   jsxRuntime: "automatic" | "classic";
+  embeds: ResolvedBuiltinEmbedOptions;
   root?: string;
 }
 

@@ -303,7 +303,7 @@ async function renderPage(
   transformedHtml = await transformAllPlugins(transformedHtml, {
     tabs: true,
     youtube: true,
-    github: true,
+    github: options.embeds.github,
     ogp: true,
     mermaid: true,
     githubToken: process.env.GITHUB_TOKEN,

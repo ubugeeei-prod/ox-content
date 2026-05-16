@@ -41,6 +41,23 @@ export interface SvelteIntegrationOptions extends OxContentOptions {
   components?: ComponentsOption;
   codeAnnotations?: boolean | CodeAnnotationsOptions;
   runes?: boolean;
+  embeds?: BuiltinEmbedOptions | false;
+}
+
+export interface GitHubEmbedOptions {
+  token?: string;
+  cache?: boolean;
+  cacheTTL?: number;
+  maxSourceBytes?: number;
+  maxSourceLines?: number;
+}
+
+export interface BuiltinEmbedOptions {
+  github?: boolean | GitHubEmbedOptions;
+}
+
+export interface ResolvedBuiltinEmbedOptions {
+  github: GitHubEmbedOptions | false;
 }
 
 export interface ResolvedSvelteOptions {
@@ -55,6 +72,7 @@ export interface ResolvedSvelteOptions {
   codeAnnotations: ResolvedCodeAnnotationsOptions;
   components: ComponentsMap;
   runes: boolean;
+  embeds: ResolvedBuiltinEmbedOptions;
   root?: string;
 }
 

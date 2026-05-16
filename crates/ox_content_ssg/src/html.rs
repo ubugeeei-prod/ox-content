@@ -886,7 +886,10 @@ pub fn generate_html(page_data: &PageData, nav_groups: &[NavGroup], config: &Ssg
     if page_content_contains_any(&page_data.content, &["ox-youtube"]) {
         css_sections.push(wrap_css_section("plugin-youtube", YOUTUBE_CSS));
     }
-    if page_content_contains_any(&page_data.content, &["ox-github-card", "ox-github-error"]) {
+    if page_content_contains_any(
+        &page_data.content,
+        &["ox-github-card", "ox-github-code", "ox-github-error"],
+    ) {
         css_sections.push(wrap_css_section("plugin-github", GITHUB_CSS));
     }
     if page_content_contains_any(&page_data.content, &["ox-ogp-card", "ox-ogp-simple"]) {
