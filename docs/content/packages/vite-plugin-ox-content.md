@@ -212,12 +212,14 @@ Generate table of contents.
 ### embeds
 
 - Type: `BuiltinEmbedOptions | false`
-- Default: `{ github: true }`
+- Default: `{ github: true, openGraph: true }`
 
 Built-in static embeds are rendered at transform time, with no client-side JavaScript.
 
 ```md
 <GitHub repo="ubugeeei/ox-content" />
+
+<OgCard url="https://github.com/ubugeeei/ox-content" />
 ```
 
 Disable all embeds or configure each fetcher:
@@ -227,6 +229,9 @@ oxContent({
   embeds: {
     github: {
       token: process.env.GITHUB_TOKEN,
+    },
+    openGraph: {
+      timeout: 5000,
     },
   },
 });

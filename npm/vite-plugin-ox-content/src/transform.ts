@@ -467,6 +467,7 @@ export async function transformMarkdown(
     html,
     options.embeds ?? {
       github: {},
+      openGraph: {},
     },
   );
 

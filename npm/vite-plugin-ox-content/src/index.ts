@@ -438,11 +438,13 @@ export function resolveBuiltinEmbedOptions(
   if (options === false) {
     return {
       github: false,
+      openGraph: false,
     };
   }
 
   return {
     github: resolveSingleEmbedOptions(options?.github),
+    openGraph: resolveSingleEmbedOptions(options?.openGraph),
   };
 }
 

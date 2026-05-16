@@ -42,20 +42,26 @@ describe("builtin embed input hardening", () => {
     expect(html).toContain('href="#"');
   });
 
-  it("runs GitHub embeds through the shared builtin transform", async () => {
-    const html = await transformBuiltinEmbeds('<GitHub repo="../secret"></GitHub>', {
-      github: {},
-    });
+  it("runs GitHub and Open Graph embeds through the shared builtin transform", async () => {
+    const html = await transformBuiltinEmbeds(
+      '<GitHub repo="../secret"></GitHub><OgCard url="javascript:alert(1)"></OgCard>',
+      {
+        github: {},
+        openGraph: {},
+      },
+    );
 
     expect(html).toContain("ox-github-card");
+    expect(html).toContain("ox-ogp-simple");
     expect(html).toContain('href="#"');
   });
 
   it("can disable builtin embeds", async () => {
-    const input = '<GitHub repo="../secret"></GitHub>';
+    const input = '<GitHub repo="../secret"></GitHub><OgCard url="javascript:alert(1)"></OgCard>';
     await expect(
       transformBuiltinEmbeds(input, {
         github: false,
+        openGraph: false,
       }),
     ).resolves.toBe(input);
   });

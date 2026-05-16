@@ -40,9 +40,10 @@ function isMarkdownFilePath(filePath: string, extensions: readonly string[]): bo
 function resolveBuiltinEmbedOptions(
   options: BuiltinEmbedOptions | false | undefined,
 ): ResolvedReactOptions["embeds"] {
-  if (options === false) return { github: false };
+  if (options === false) return { github: false, openGraph: false };
   return {
     github: resolveSingleEmbedOptions(options?.github),
+    openGraph: resolveSingleEmbedOptions(options?.openGraph),
   };
 }
 
@@ -59,6 +60,7 @@ export type {
   ComponentsMap,
   BuiltinEmbedOptions,
   GitHubEmbedOptions,
+  OpenGraphEmbedOptions,
   ResolvedBuiltinEmbedOptions,
   ReactTransformResult,
   ComponentIsland,

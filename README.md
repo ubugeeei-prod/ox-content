@@ -33,7 +33,7 @@
 - **Multi-Runtime** - Node.js (NAPI), WebAssembly, Native Rust
 - **Framework Agnostic** - Works with Vue, React, Svelte, and more
 - **Built-in SSG** - Static site generation with theming, search, and OG images
-- **Built-in Embeds** - Static GitHub repository cards
+- **Built-in Embeds** - Static GitHub repository and Open Graph link cards
 - **API Docs Generation** - Generate docs from JSDoc/TypeScript (like `cargo doc`)
 - **i18n** - ICU MessageFormat 2 parser, dictionary management, static checker, and LSP
 - **Editor Tooling** - Markdown/MDC LSP plus VS Code, Zed, and Neovim integrations
