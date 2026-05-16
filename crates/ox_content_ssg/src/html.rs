@@ -414,6 +414,8 @@ struct PageTemplate<'a> {
     embed_sidebar_after: &'a str,
     embed_content_before: &'a str,
     main_content: &'a str,
+    has_toc: bool,
+    toc_html: &'a str,
     embed_content_after: &'a str,
     embed_footer_before: &'a str,
     footer_html: &'a str,
@@ -744,6 +746,38 @@ fn page_content_contains_any(content: &str, needles: &[&str]) -> bool {
     needles.iter().any(|needle| content.contains(needle))
 }
 
+fn escape_html(value: &str) -> String {
+    let mut output = String::with_capacity(value.len());
+    for ch in value.chars() {
+        match ch {
+            '&' => output.push_str("&amp;"),
+            '<' => output.push_str("&lt;"),
+            '>' => output.push_str("&gt;"),
+            '"' => output.push_str("&quot;"),
+            '\'' => output.push_str("&#39;"),
+            _ => output.push(ch),
+        }
+    }
+    output
+}
+
+fn generate_toc_html(toc: &[TocEntry]) -> String {
+    let mut html = String::new();
+
+    for entry in toc {
+        let depth = entry.depth.clamp(1, 6);
+        html.push_str("        <li class=\"toc-item\"><a href=\"#");
+        html.push_str(&escape_html(&entry.slug));
+        html.push_str("\" class=\"toc-link toc-link--depth-");
+        html.push_str(&depth.to_string());
+        html.push_str("\">");
+        html.push_str(&escape_html(&entry.text));
+        html.push_str("</a></li>\n");
+    }
+
+    html
+}
+
 /// Generates a complete HTML page for SSG.
 ///
 /// This function creates a full HTML document with navigation sidebar,
@@ -797,6 +831,8 @@ pub fn generate_html(page_data: &PageData, nav_groups: &[NavGroup], config: &Ssg
     }
 
     let all_css = css_sections.join("");
+    let toc_html = generate_toc_html(&page_data.toc);
+    let has_toc = !toc_html.is_empty();
 
     // Embedded HTML for specific positions
     let embed_head = embed.and_then(|e| e.head.as_deref()).unwrap_or("");
@@ -913,6 +949,8 @@ pub fn generate_html(page_data: &PageData, nav_groups: &[NavGroup], config: &Ssg
         embed_sidebar_after,
         embed_content_before,
         main_content: &main_content,
+        has_toc,
+        toc_html: &toc_html,
         embed_content_after,
         embed_footer_before,
         footer_html: &footer_html,
@@ -1023,6 +1061,8 @@ mod tests {
         assert!(html.contains("Test Page - Test Site"));
         assert!(html.contains("<h1>Hello</h1>"));
         assert!(html.contains("Guide"));
+        assert!(html.contains("class=\"toc\""));
+        assert!(html.contains("href=\"#hello\""));
     }
 
     #[test]
@@ -1064,6 +1104,44 @@ mod tests {
         // Check footer is present
         assert!(html.contains("Built with ox-content"));
         assert!(html.contains("2025 Test"));
+    }
+
+    #[test]
+    fn test_generate_html_without_toc_omits_outline() {
+        let page_data = PageData {
+            title: "No TOC".to_string(),
+            description: None,
+            content: "<p>Content</p>".to_string(),
+            toc: vec![],
+            path: "no-toc".to_string(),
+            entry_page: None,
+        };
+        let config = SsgConfig {
+            site_name: "Test Site".to_string(),
+            base: "/".to_string(),
+            og_image: None,
+            theme: None,
+            locale: None,
+            available_locales: None,
+        };
+
+        let html = generate_html(&page_data, &[], &config);
+
+        assert!(!html.contains("class=\"toc\""));
+        assert!(!html.contains("<main class=\"main main--with-toc\">"));
+    }
+
+    #[test]
+    fn test_generate_toc_html_escapes_entries() {
+        let html = generate_toc_html(&[TocEntry {
+            depth: 2,
+            text: "A <script>".to_string(),
+            slug: "a\" onclick=\"alert(1)".to_string(),
+        }]);
+
+        assert!(html.contains("A &lt;script&gt;"));
+        assert!(html.contains("href=\"#a&quot; onclick=&quot;alert(1)\""));
+        assert!(!html.contains("A <script>"));
     }
 
     #[test]

@@ -93,13 +93,21 @@
 {{ embed_sidebar_after|safe }}
     </aside>
 {% endif %}
-    <main class="main">
+    <main class="main{% if has_toc %} main--with-toc{% endif %}">
 {{ embed_content_before|safe }}
 {{ main_content|safe }}
 {{ embed_content_after|safe }}
 {{ embed_footer_before|safe }}
 {{ footer_html|safe }}
     </main>
+{% if has_toc %}
+    <aside class="toc" aria-label="On this page">
+      <div class="toc-title">On this page</div>
+      <ul class="toc-list">
+{{ toc_html|safe }}
+      </ul>
+    </aside>
+{% endif %}
   </div>
   <footer class="mobile-footer">
     <button class="mobile-footer-btn" aria-label="Menu" data-mobile-menu>
