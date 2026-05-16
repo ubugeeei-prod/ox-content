@@ -50,6 +50,12 @@ export declare function extractTranslationKeys(source: string, filePath: string,
 /** Formats a file or directory segment as an SSG title. */
 export declare function formatSsgTitle(name: string): string
 
+/** Generates TypeScript source code for documentation navigation metadata. */
+export declare function generateDocsNavCode(navItems: Array<JsDocsNavItem>, exportName?: string | undefined | null): string
+
+/** Generates sidebar navigation metadata from documentation file paths. */
+export declare function generateDocsNavMetadata(files: Array<string>, basePath?: string | undefined | null): Array<JsDocsNavItem>
+
 /** Generates the `virtual:ox-content/i18n` runtime module. */
 export declare function generateI18nModule(dictDir: string, config: JsI18NRuntimeConfig): string
 
@@ -160,6 +166,13 @@ export interface JsDocParam {
 export interface JsDocReturn {
   type: string
   description: string
+}
+
+/** Navigation item emitted for generated documentation. */
+export interface JsDocsNavItem {
+  title: string
+  path: string
+  children?: Array<JsDocsNavItem>
 }
 
 /** Entry page configuration. */
