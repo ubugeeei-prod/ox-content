@@ -14,6 +14,7 @@ use napi::bindgen_prelude::*;
 use napi::Task;
 use napi_derive::napi;
 use std::collections::HashMap;
+use std::fs;
 use std::path::{Path, PathBuf};
 use std::process::Command;
 
@@ -26,7 +27,9 @@ use ox_content_docs::{
 };
 use ox_content_parser::{Parser, ParserOptions};
 use ox_content_renderer::HtmlRenderer;
-use ox_content_search::{DocumentIndexer, SearchIndex, SearchIndexBuilder, SearchOptions};
+use ox_content_search::{
+    DocumentIndexer, SearchDocument, SearchIndex, SearchIndexBuilder, SearchOptions,
+};
 use transfer::TransferPayloadKind;
 use transformer::{parse_frontmatter, MarkdownTransformer};
 
@@ -817,6 +820,76 @@ pub struct JsSearchDocument {
     pub code: Vec<String>,
 }
 
+fn map_search_document(doc: SearchDocument) -> JsSearchDocument {
+    JsSearchDocument {
+        id: doc.id,
+        title: doc.title,
+        url: doc.url,
+        body: doc.body,
+        headings: doc.headings,
+        code: doc.code,
+    }
+}
+
+fn extract_search_document_from_source(
+    source: &str,
+    id: String,
+    url: String,
+    parser_options: ParserOptions,
+) -> SearchDocument {
+    let (content, frontmatter) = parse_frontmatter(source);
+    let frontmatter_title = frontmatter.get("title").and_then(|v| v.as_str()).map(String::from);
+    let allocator = create_allocator_for_source(&content);
+    let parser = Parser::with_options(&allocator, &content, parser_options);
+
+    let result = parser.parse();
+    let document = match &result {
+        Ok(doc) => {
+            let mut indexer = DocumentIndexer::new();
+            indexer.extract(doc);
+
+            SearchDocument {
+                id,
+                title: frontmatter_title
+                    .unwrap_or_else(|| indexer.title().map(String::from).unwrap_or_default()),
+                url,
+                body: indexer.body().to_string(),
+                headings: indexer.headings().to_vec(),
+                code: indexer.code().to_vec(),
+            }
+        }
+        Err(_) => SearchDocument {
+            id,
+            title: frontmatter_title.unwrap_or_default(),
+            url,
+            body: String::new(),
+            headings: Vec::new(),
+            code: Vec::new(),
+        },
+    };
+    drop(result);
+
+    document
+}
+
+fn build_search_index_json(documents: impl IntoIterator<Item = SearchDocument>) -> String {
+    let mut builder = SearchIndexBuilder::new();
+
+    for doc in documents {
+        builder.add_document(doc);
+    }
+
+    builder.build().to_json()
+}
+
+fn search_document_id(src_dir: &Path, file: &str, extensions: &[String]) -> String {
+    let file_path = Path::new(file);
+    let relative_path = file_path.strip_prefix(src_dir).unwrap_or(file_path);
+    let relative_path = relative_path.to_string_lossy().replace('\\', "/");
+
+    ox_content_search::strip_markdown_extension(&relative_path, extensions)
+}
+
 /// Search result for JavaScript.
 #[napi(object)]
 pub struct JsSearchResult {
@@ -873,21 +946,39 @@ impl From<JsSearchOptions> for SearchOptions {
 /// Takes an array of documents and returns a serialized search index as JSON.
 #[napi]
 pub fn build_search_index(documents: Vec<JsSearchDocument>) -> String {
-    let mut builder = SearchIndexBuilder::new();
+    build_search_index_json(documents.into_iter().map(|doc| SearchDocument {
+        id: doc.id,
+        title: doc.title,
+        url: doc.url,
+        body: doc.body,
+        headings: doc.headings,
+        code: doc.code,
+    }))
+}
 
-    for doc in documents {
-        builder.add_document(ox_content_search::SearchDocument {
-            id: doc.id,
-            title: doc.title,
-            url: doc.url,
-            body: doc.body,
-            headings: doc.headings,
-            code: doc.code,
+/// Builds a search index directly from Markdown files under a source directory.
+///
+/// File discovery, Markdown parsing, search document extraction, and index
+/// construction all run on the Rust side.
+#[napi(js_name = "buildSearchIndexFromDirectory")]
+pub fn build_search_index_from_directory(
+    src_dir: String,
+    base: String,
+    extensions: Vec<String>,
+) -> String {
+    let src_path = Path::new(&src_dir);
+    let parser_options = ParserOptions::gfm();
+    let documents = ox_content_search::collect_markdown_files(&src_dir, &extensions)
+        .into_iter()
+        .filter_map(|file| {
+            let source = fs::read_to_string(&file).ok()?;
+            let id = search_document_id(src_path, &file, &extensions);
+            let url = format!("{base}{id}");
+
+            Some(extract_search_document_from_source(&source, id, url, parser_options.clone()))
         });
-    }
 
-    let index = builder.build();
-    index.to_json()
+    build_search_index_json(documents)
 }
 
 /// Searches a serialized index.
@@ -1782,32 +1873,8 @@ pub fn extract_search_content(
     url: String,
     options: Option<JsParserOptions>,
 ) -> JsSearchDocument {
-    // Parse frontmatter first
-    let (content, frontmatter) = parse_frontmatter(&source);
-    let allocator = create_allocator_for_source(&content);
     let parser_options = options.map(ParserOptions::from).unwrap_or_default();
-
-    // Try to get title from frontmatter
-    let frontmatter_title = frontmatter.get("title").and_then(|v| v.as_str()).map(String::from);
-
-    let parser = Parser::with_options(&allocator, &content, parser_options);
-
-    let result = parser.parse();
-    let (title, body, headings, code) = if let Ok(ref doc) = result {
-        let mut indexer = DocumentIndexer::new();
-        indexer.extract(doc);
-
-        let title = frontmatter_title
-            .unwrap_or_else(|| indexer.title().map(String::from).unwrap_or_default());
-
-        (title, indexer.body().to_string(), indexer.headings().to_vec(), indexer.code().to_vec())
-    } else {
-        (frontmatter_title.unwrap_or_default(), String::new(), Vec::new(), Vec::new())
-    };
-    // Explicitly drop the result to release the borrow
-    drop(result);
-
-    JsSearchDocument { id, title, url, body, headings, code }
+    map_search_document(extract_search_document_from_source(&source, id, url, parser_options))
 }
 
 // =============================================================================
@@ -2288,6 +2355,35 @@ mod tests {
 
         assert!(result.html.contains("href=\"#intro\""));
         assert!(!result.html.contains("href=\"#api\""));
+    }
+
+    #[test]
+    fn builds_search_index_from_directory() {
+        let root =
+            std::env::temp_dir().join(format!("ox-content-napi-search-{}", std::process::id()));
+        let docs_dir = root.join("docs");
+        let _ = fs::remove_dir_all(&root);
+        fs::create_dir_all(docs_dir.join("guide")).unwrap();
+        fs::write(
+            docs_dir.join("guide/intro.markdown"),
+            "---\ntitle: Native Search\n---\n# Intro\n\nSearch body text.",
+        )
+        .unwrap();
+
+        let index_json = super::build_search_index_from_directory(
+            docs_dir.to_string_lossy().into_owned(),
+            "/docs/".to_string(),
+            vec![".md".to_string(), ".markdown".to_string()],
+        );
+        let index = ox_content_search::SearchIndex::from_json(&index_json).unwrap();
+
+        assert_eq!(index.doc_count, 1);
+        assert_eq!(index.documents[0].id, "guide/intro");
+        assert_eq!(index.documents[0].title, "Native Search");
+        assert_eq!(index.documents[0].url, "/docs/guide/intro");
+        assert!(index.documents[0].body.contains("Search body text"));
+
+        let _ = fs::remove_dir_all(root);
     }
 
     #[test]

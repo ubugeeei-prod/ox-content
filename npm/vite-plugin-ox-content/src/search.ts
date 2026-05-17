@@ -7,7 +7,7 @@
 import * as fs from "fs/promises";
 import * as path from "path";
 import { importNapiModule, importNapiModuleSync } from "./napi";
-import { DEFAULT_MARKDOWN_EXTENSIONS, stripMarkdownExtension } from "./markdown";
+import { DEFAULT_MARKDOWN_EXTENSIONS } from "./markdown";
 import type {
   SearchOptions,
   ResolvedSearchOptions,
@@ -103,44 +103,7 @@ export async function buildSearchIndex(
     });
   }
 
-  const files = napi.collectSearchMarkdownFiles(srcDir, [...extensions]);
-  const documents: SearchDocument[] = [];
-
-  for (const file of files) {
-    try {
-      const content = await fs.readFile(file, "utf-8");
-      const relativePath = path.relative(srcDir, file);
-      const id = stripMarkdownExtension(relativePath, extensions).replace(/\\/g, "/");
-      const url = base + id;
-
-      // Use Rust bindings to extract search content (if available)
-      const extractSearchContent = (napi as any).extractSearchContent;
-      if (!extractSearchContent) {
-        console.warn("[ox-content] Search not available: extractSearchContent not implemented");
-        return "[]";
-      }
-      const doc = extractSearchContent(content, id, url, { gfm: true });
-
-      documents.push({
-        id: doc.id,
-        title: doc.title,
-        url: doc.url,
-        body: doc.body,
-        headings: doc.headings,
-        code: doc.code,
-      });
-    } catch {
-      // Skip files that can't be processed
-    }
-  }
-
-  // Build the index using Rust bindings (if available)
-  const buildSearchIndex = (napi as any).buildSearchIndex;
-  if (!buildSearchIndex) {
-    console.warn("[ox-content] Search not available: buildSearchIndex not implemented");
-    return JSON.stringify(documents);
-  }
-  return buildSearchIndex(documents);
+  return napi.buildSearchIndexFromDirectory(srcDir, base, [...extensions]);
 }
 
 /**
