@@ -24,9 +24,17 @@ thiserror = { workspace = true }
 serde = { workspace = true }
 serde_json = { workspace = true }
 regex = { workspace = true }
+rustc-hash = { workspace = true }
 
 # OXC for JS/TS parsing
 oxc_allocator = { workspace = true }
 oxc_parser = { workspace = true }
 oxc_ast = { workspace = true }
 oxc_span = { workspace = true }
+
+[dev-dependencies]
+criterion = { workspace = true }
+
+[[bench]]
+name = "extractor"
+harness = false

@@ -1,7 +1,10 @@
 //! Documentation extraction from source code using OXC parser.
 
 use ox_jsdoc::decoder::nodes::comment_ast::{LazyJsdocTag, LazyJsdocTagBody};
-use ox_jsdoc::parser::{parse_to_bytes as parse_jsdoc_to_bytes, ParseOptions as JsdocParseOptions};
+use ox_jsdoc::parser::{
+    parse_batch_to_bytes as parse_jsdoc_batch_to_bytes, BatchItem as JsdocBatchItem,
+    ParseOptions as JsdocParseOptions,
+};
 use oxc_allocator::Allocator;
 use oxc_ast::ast::{
     BindingPatternKind, Class, Comment, Declaration, ExportDefaultDeclarationKind, Expression,
@@ -11,6 +14,7 @@ use oxc_ast::visit::walk;
 use oxc_ast::Visit;
 use oxc_parser::Parser;
 use oxc_span::{GetSpan, SourceType};
+use rustc_hash::{FxBuildHasher, FxHashMap, FxHashSet};
 use serde::{Deserialize, Serialize};
 use std::path::Path;
 use thiserror::Error;
@@ -208,12 +212,10 @@ impl DocExtractor {
             return Err(ExtractError::Parse(error_msg));
         }
 
-        let mut visitor = DocVisitor::new(
-            source,
-            file_path,
-            self.include_private,
-            ret.program.comments.iter().copied().collect(),
-        );
+        let comments: Vec<Comment> = ret.program.comments.iter().copied().collect();
+        let jsdoc_cache = build_jsdoc_cache(source, &comments);
+
+        let mut visitor = DocVisitor::new(source, file_path, self.include_private, jsdoc_cache);
         visitor.visit_program(&ret.program);
 
         Ok(visitor.items)
@@ -235,12 +237,76 @@ impl Default for DocExtractor {
     }
 }
 
+/// Pre-parsed JSDoc data for one comment: `(raw, description, tags)`.
+type ParsedJsdoc = (String, String, Vec<DocTag>);
+
+/// Extract the JSDoc content body from a comment with a single allocation.
+fn extract_raw_jsdoc(comment: &Comment, source: &str) -> String {
+    let content = comment.content_span().source_text(source);
+    let trimmed = content.strip_prefix('*').unwrap_or(content);
+    trimmed.trim_matches('\n').to_string()
+}
+
+/// Pre-parse every JSDoc comment in the program with a single batch call so the
+/// AST visitor can resolve documentation by `attached_to` via a cheap lookup.
+fn build_jsdoc_cache(source: &str, comments: &[Comment]) -> FxHashMap<u32, ParsedJsdoc> {
+    let jsdoc_comments: Vec<&Comment> =
+        comments.iter().filter(|comment| comment.is_jsdoc(source)).collect();
+    if jsdoc_comments.is_empty() {
+        return FxHashMap::default();
+    }
+
+    let items: Vec<JsdocBatchItem<'_>> = jsdoc_comments
+        .iter()
+        .map(|comment| JsdocBatchItem {
+            source_text: comment.span.source_text(source),
+            base_offset: comment.span.start,
+        })
+        .collect();
+
+    let options = JsdocParseOptions { preserve_whitespace: true, ..JsdocParseOptions::default() };
+    let result = parse_jsdoc_batch_to_bytes(&items, options);
+
+    let failed: FxHashSet<u32> =
+        result.diagnostics.iter().map(|diagnostic| diagnostic.root_index).collect();
+
+    let mut cache: FxHashMap<u32, ParsedJsdoc> =
+        FxHashMap::with_capacity_and_hasher(jsdoc_comments.len(), FxBuildHasher);
+
+    if let Ok(source_file) =
+        ox_jsdoc::decoder::source_file::LazySourceFile::new(&result.binary_bytes)
+    {
+        for (index, (comment, root)) in jsdoc_comments.iter().zip(source_file.asts()).enumerate() {
+            let raw = extract_raw_jsdoc(comment, source);
+            let (doc, tags) = match root {
+                Some(root) if !failed.contains(&(index as u32)) => {
+                    let doc = root
+                        .description_text(false)
+                        .map_or_else(String::new, |description| description.trim().to_string());
+                    let tags = root.tags().map(DocVisitor::convert_jsdoc_tag).collect();
+                    (doc, tags)
+                }
+                _ => DocVisitor::parse_jsdoc_fallback(&raw),
+            };
+            cache.insert(comment.attached_to, (raw, doc, tags));
+        }
+    } else {
+        for comment in &jsdoc_comments {
+            let raw = extract_raw_jsdoc(comment, source);
+            let (doc, tags) = DocVisitor::parse_jsdoc_fallback(&raw);
+            cache.insert(comment.attached_to, (raw, doc, tags));
+        }
+    }
+
+    cache
+}
+
 /// AST visitor for extracting documentation.
 struct DocVisitor<'a> {
     source: &'a str,
     file_path: &'a str,
     include_private: bool,
-    comments: Vec<Comment>,
+    jsdoc_cache: FxHashMap<u32, ParsedJsdoc>,
     line_starts: Vec<usize>,
     items: Vec<DocItem>,
     /// Track default export
@@ -252,7 +318,7 @@ impl<'a> DocVisitor<'a> {
         source: &'a str,
         file_path: &'a str,
         include_private: bool,
-        comments: Vec<Comment>,
+        jsdoc_cache: FxHashMap<u32, ParsedJsdoc>,
     ) -> Self {
         let mut line_starts = vec![0];
         line_starts.extend(
@@ -266,7 +332,7 @@ impl<'a> DocVisitor<'a> {
             source,
             file_path,
             include_private,
-            comments,
+            jsdoc_cache,
             line_starts,
             items: Vec::new(),
             has_default_export: false,
@@ -297,42 +363,7 @@ impl<'a> DocVisitor<'a> {
     }
 
     fn extract_jsdoc(&self, attached_to: u32) -> Option<(String, String, Vec<DocTag>)> {
-        let comment =
-            self.comments.iter().rev().find(|comment| {
-                comment.attached_to == attached_to && comment.is_jsdoc(self.source)
-            })?;
-
-        let comment_source = comment.span.source_text(self.source);
-        let mut raw = comment.content_span().source_text(self.source).to_string();
-        if raw.starts_with('*') {
-            raw.remove(0);
-        }
-        let raw = raw.trim_matches('\n').to_string();
-        let (doc, tags) = Self::parse_jsdoc(comment_source, &raw);
-        Some((raw, doc, tags))
-    }
-
-    /// Parse JSDoc comment into description and tags.
-    fn parse_jsdoc(comment_source: &str, fallback_raw: &str) -> (String, Vec<DocTag>) {
-        let options =
-            JsdocParseOptions { preserve_whitespace: true, ..JsdocParseOptions::default() };
-        let result = parse_jsdoc_to_bytes(comment_source, options);
-
-        if result.diagnostics.is_empty() {
-            if let Ok(source_file) =
-                ox_jsdoc::decoder::source_file::LazySourceFile::new(&result.binary_bytes)
-            {
-                if let Some(root) = source_file.asts().next().flatten() {
-                    let doc = root
-                        .description_text(false)
-                        .map_or_else(String::new, |description| description.trim().to_string());
-                    let tags = root.tags().map(Self::convert_jsdoc_tag).collect();
-                    return (doc, tags);
-                }
-            }
-        }
-
-        Self::parse_jsdoc_fallback(fallback_raw)
+        self.jsdoc_cache.get(&attached_to).cloned()
     }
 
     fn convert_jsdoc_tag(tag: LazyJsdocTag<'_>) -> DocTag {
