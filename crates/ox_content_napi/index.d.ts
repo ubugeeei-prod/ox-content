@@ -7,6 +7,14 @@
  */
 export declare function buildSearchIndex(documents: Array<JsSearchDocument>): string
 
+/**
+ * Builds a search index directly from Markdown files under a source directory.
+ *
+ * File discovery, Markdown parsing, search document extraction, and index
+ * construction all run on the Rust side.
+ */
+export declare function buildSearchIndexFromDirectory(srcDir: string, base: string, extensions: Array<string>): string
+
 /** Builds SSG navigation groups from markdown files. */
 export declare function buildSsgNavItems(markdownFiles: Array<string>, srcDir: string, base: string, extension: string): Array<JsSsgNavGroup>
 
