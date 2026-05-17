@@ -8,6 +8,7 @@ import {
   getOutputPath,
   getPageLocale,
   getUrlPath,
+  resolveNavigationGroups,
   resolveSsgOptions,
 } from "./ssg";
 
@@ -100,6 +101,34 @@ describe("SSG route helpers", () => {
       ],
     });
     expect(groups[2]?.items[0]?.href).toBe("#");
+  });
+
+  it("resolves manual navigation groups through the native binding", () => {
+    const groups = resolveNavigationGroups(
+      [
+        {
+          title: "Guide",
+          items: [
+            { title: "Home", path: "/index.md" },
+            { title: "Install", path: "/guide/install", href: "/guide/install.md#cli" },
+            { title: "External", href: "https://example.com/docs" },
+          ],
+        },
+      ],
+      "/docs/",
+      ".html",
+    );
+
+    expect(groups).toEqual([
+      {
+        title: "Guide",
+        items: [
+          { title: "Home", path: "/", href: "/docs/index.html" },
+          { title: "Install", path: "/guide/install", href: "/docs/guide/install/index.html#cli" },
+          { title: "External", path: "https://example.com/docs", href: "https://example.com/docs" },
+        ],
+      },
+    ]);
   });
 
   it("formats file names as titles through the Rust helper", () => {

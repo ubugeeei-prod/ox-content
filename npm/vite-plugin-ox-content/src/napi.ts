@@ -1,21 +1,34 @@
-export async function importNapiModule(): Promise<typeof import("@ox-content/napi")> {
-  const mod = (await import("@ox-content/napi")) as typeof import("@ox-content/napi") & {
-    default?: Partial<typeof import("@ox-content/napi")>;
-  };
+import { createRequire } from "node:module";
 
-  if (mod.default && typeof mod.default === "object") {
-    return {
-      ...mod.default,
-      ...mod,
-    };
+type NapiModule = typeof import("@ox-content/napi");
+const requireNapi = createRequire(import.meta.url);
+
+function getDefaultExport(value: unknown): object | undefined {
+  if (!value || typeof value !== "object" || !("default" in value)) {
+    return undefined;
   }
 
-  return mod;
+  const defaultExport = value.default;
+  return defaultExport && typeof defaultExport === "object" ? defaultExport : undefined;
 }
 
-let syncNapiModule: typeof import("@ox-content/napi") | null | undefined;
+function normalizeNapiModule(mod: NapiModule): NapiModule {
+  const defaultExport = getDefaultExport(mod);
+  return defaultExport
+    ? ({
+        ...defaultExport,
+        ...mod,
+      } as NapiModule)
+    : mod;
+}
 
-export function importNapiModuleSync(): typeof import("@ox-content/napi") {
+export async function importNapiModule(): Promise<NapiModule> {
+  return normalizeNapiModule((await import("@ox-content/napi")) as NapiModule);
+}
+
+let syncNapiModule: NapiModule | null | undefined;
+
+export function importNapiModuleSync(): NapiModule {
   if (syncNapiModule) {
     return syncNapiModule;
   }
@@ -27,17 +40,8 @@ export function importNapiModuleSync(): typeof import("@ox-content/napi") {
   }
 
   try {
-    // eslint-disable-next-line @typescript-eslint/no-require-imports
-    const mod = require("@ox-content/napi") as typeof import("@ox-content/napi") & {
-      default?: Partial<typeof import("@ox-content/napi")>;
-    };
-    syncNapiModule =
-      mod.default && typeof mod.default === "object"
-        ? ({
-            ...mod.default,
-            ...mod,
-          } as typeof import("@ox-content/napi"))
-        : mod;
+    const mod = requireNapi("@ox-content/napi") as NapiModule;
+    syncNapiModule = normalizeNapiModule(mod);
     return syncNapiModule;
   } catch {
     syncNapiModule = null;

@@ -76,7 +76,6 @@ const sourceCache = new Map<string, { data: GitHubSourceData; timestamp: number 
 const GITHUB_REPO_RE = /^[A-Za-z0-9_.-]+\/[A-Za-z0-9_.-]+$/;
 const GITHUB_COMPONENT_RE = /<github\b([^>]*)>/gi;
 const ATTRIBUTE_RE = /([:\w-]+)(?:\s*=\s*(?:"([^"]*)"|'([^']*)'|([^\s"'>/]+)))?/g;
-const CONTROL_CHAR_RE = /[\u0000-\u001f\u007f]/;
 const EXTENSION_LANGUAGE_MAP = new Map<string, string>([
   ["cjs", "javascript"],
   ["css", "css"],
@@ -101,6 +100,16 @@ const EXTENSION_LANGUAGE_MAP = new Map<string, string>([
   ["yml", "yaml"],
 ]);
 
+function hasControlChar(value: string): boolean {
+  for (let index = 0; index < value.length; index++) {
+    const code = value.charCodeAt(index);
+    if (code <= 0x1f || code === 0x7f) {
+      return true;
+    }
+  }
+  return false;
+}
+
 export function isSafeGitHubRepo(repo: string): boolean {
   return (
     GITHUB_REPO_RE.test(repo) && !repo.split("/").some((part) => part === "." || part === "..")
@@ -108,11 +117,11 @@ export function isSafeGitHubRepo(repo: string): boolean {
 }
 
 function isSafeGitHubRef(ref: string): boolean {
-  return Boolean(ref) && !CONTROL_CHAR_RE.test(ref) && !hasUnsafePathSegment(ref);
+  return Boolean(ref) && !hasControlChar(ref) && !hasUnsafePathSegment(ref);
 }
 
 function isSafeGitHubPath(path: string): boolean {
-  return Boolean(path) && !CONTROL_CHAR_RE.test(path) && !hasUnsafePathSegment(path);
+  return Boolean(path) && !hasControlChar(path) && !hasUnsafePathSegment(path);
 }
 
 function hasUnsafePathSegment(value: string): boolean {

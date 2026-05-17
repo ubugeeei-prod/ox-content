@@ -21,6 +21,15 @@ export declare function buildSsgThemeNavItems(sidebar: Array<JsSsgSidebarItem>, 
  */
 export declare function checkI18n(dictDir: string, usedKeys: Array<string>): I18NCheckResult
 
+/** Collects source files for generated API documentation. */
+export declare function collectDocsSourceFiles(srcDir: string, include: Array<string>, exclude: Array<string>): Array<string>
+
+/** Collects Markdown files for search indexing from a source directory. */
+export declare function collectSearchMarkdownFiles(srcDir: string, extensions: Array<string>): Array<string>
+
+/** Collects Markdown files for SSG from a source directory. */
+export declare function collectSsgMarkdownFiles(srcDir: string, extensions: Array<string>): Array<string>
+
 /** Extracts shared CSS and JavaScript assets from generated SSG pages. */
 export declare function externalizeSsgAssets(pages: Array<JsSsgGeneratedHtmlPage>, outDir: string, base: string): JsSsgExternalizedAssets
 
@@ -49,6 +58,9 @@ export declare function extractTranslationKeys(source: string, filePath: string,
 
 /** Formats a file or directory segment as an SSG title. */
 export declare function formatSsgTitle(name: string): string
+
+/** Generates Markdown API reference pages from extracted documentation entries. */
+export declare function generateDocsMarkdown(docs: Array<JsDocsMarkdownModule>, options?: JsDocsMarkdownOptions | undefined | null): Record<string, string>
 
 /** Generates TypeScript source code for documentation navigation metadata. */
 export declare function generateDocsNavCode(navItems: Array<JsDocsNavItem>, exportName?: string | undefined | null): string
@@ -166,6 +178,40 @@ export interface JsDocParam {
 export interface JsDocReturn {
   type: string
   description: string
+}
+
+/** Documentation entry used by generated API Markdown. */
+export interface JsDocsMarkdownEntry {
+  name: string
+  kind: string
+  description: string
+  params?: Array<JsDocParam>
+  returns?: JsDocReturn
+  examples?: Array<string>
+  tags?: Array<JsDocsMarkdownTag>
+  private: boolean
+  file: string
+  line: number
+  endLine: number
+  signature?: string
+}
+
+/** Extracted docs for one source file used by generated API Markdown. */
+export interface JsDocsMarkdownModule {
+  file: string
+  entries: Array<JsDocsMarkdownEntry>
+}
+
+/** Options for generated API Markdown. */
+export interface JsDocsMarkdownOptions {
+  groupBy?: string
+  githubUrl?: string
+}
+
+/** Ordered JSDoc tag used by generated API Markdown. */
+export interface JsDocsMarkdownTag {
+  tag: string
+  value: string
 }
 
 /** Navigation item emitted for generated documentation. */
@@ -524,6 +570,19 @@ export interface JsSsgNavGroup {
   collapsed?: boolean
 }
 
+/** Manual SSG navigation group supplied by user configuration. */
+export interface JsSsgNavigationGroup {
+  title: string
+  items: Array<JsSsgNavigationItem>
+}
+
+/** Manual SSG navigation item supplied by user configuration. */
+export interface JsSsgNavigationItem {
+  title: string
+  path?: string
+  href?: string
+}
+
 /** Navigation item for SSG. */
 export interface JsSsgNavItem {
   /** Display title. */
@@ -839,6 +898,9 @@ export interface RenderResult {
   /** Render errors, if any. */
   errors: Array<string>
 }
+
+/** Resolves manual SSG navigation groups. */
+export declare function resolveSsgNavigationGroups(navigation: Array<JsSsgNavigationGroup>, base: string, extension: string): Array<JsSsgNavGroup>
 
 /** Resolves all output and public route paths for an SSG page. */
 export declare function resolveSsgRoutePaths(inputPath: string, srcDir: string, outDir: string, base: string, extension: string, siteUrl?: string | undefined | null): JsSsgRoutePaths
