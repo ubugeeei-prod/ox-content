@@ -96,6 +96,7 @@ module.exports.parseScopedSearchQuery = binding.parseScopedSearchQuery;
 module.exports.getSearchDocumentScopes = binding.getSearchDocumentScopes;
 module.exports.matchesSearchScopes = binding.matchesSearchScopes;
 module.exports.generateSearchModule = binding.generateSearchModule;
+module.exports.generateSearchModuleFromOptions = binding.generateSearchModuleFromOptions;
 module.exports.collectSearchMarkdownFiles = binding.collectSearchMarkdownFiles;
 module.exports.generateSsgHtml = binding.generateSsgHtml;
 module.exports.resolveSsgRoutePaths = binding.resolveSsgRoutePaths;
