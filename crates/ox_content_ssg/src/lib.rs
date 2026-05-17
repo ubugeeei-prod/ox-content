@@ -65,7 +65,8 @@ pub use html::{
     ThemeLayout, TocEntry,
 };
 pub use routes::{
-    build_nav_items, build_theme_nav_items, extract_title, format_title, get_href,
-    get_og_image_path, get_og_image_url, get_output_path, get_page_locale, get_url_path,
-    resolve_route_paths, RoutePaths, SidebarItem,
+    build_nav_items, build_theme_nav_items, collect_markdown_files, extract_title, format_title,
+    get_href, get_og_image_path, get_og_image_url, get_output_path, get_page_locale, get_url_path,
+    resolve_navigation_groups, resolve_route_paths, ManualNavigationGroup, ManualNavigationItem,
+    RoutePaths, SidebarItem,
 };

@@ -4,7 +4,6 @@
 
 import * as fs from "fs/promises";
 import * as path from "path";
-import { glob } from "glob";
 import { transformMarkdown } from "./transform";
 import { generateOgImages } from "./og-image";
 import type { OgImagePageEntry } from "./og-image";
@@ -13,7 +12,7 @@ import type { TransformAllOptions } from "./plugins";
 import { protectMermaidSvgs, restoreMermaidSvgs } from "./plugins/mermaid-protect";
 import { transformIslands, hasIslands } from "./island";
 import { importNapiModule, importNapiModuleSync } from "./napi";
-import { DEFAULT_MARKDOWN_EXTENSIONS, markdownGlobPattern } from "./markdown";
+import { DEFAULT_MARKDOWN_EXTENSIONS } from "./markdown";
 import type {
   ResolvedOptions,
   ResolvedSsgOptions,
@@ -1680,48 +1679,6 @@ export function getHref(
   return importNapiModuleSync().getSsgHref(inputPath, srcDir, base, extension);
 }
 
-function isExternalHref(value: string): boolean {
-  return /^[a-z][a-z0-9+.-]*:/i.test(value) || value.startsWith("//");
-}
-
-function splitHrefSuffix(value: string): { pathname: string; suffix: string } {
-  const match = /^([^?#]*)([?#].*)?$/.exec(value);
-  return {
-    pathname: match?.[1] ?? value,
-    suffix: match?.[2] ?? "",
-  };
-}
-
-function normalizeNavigationPath(value: string): { path: string; suffix: string } {
-  const { pathname, suffix } = splitHrefSuffix(value.trim());
-  let normalized = pathname || "/";
-
-  if (!normalized.startsWith("/")) {
-    normalized = `/${normalized}`;
-  }
-
-  normalized = normalized
-    .replace(/\/index(?:\.(?:html?|md|markdown))?$/i, "/")
-    .replace(/\.(?:html?|md|markdown)$/i, "");
-
-  if (normalized !== "/") {
-    normalized = normalized.replace(/\/+$/, "");
-  }
-
-  return {
-    path: normalized || "/",
-    suffix,
-  };
-}
-
-function buildHrefFromNavigationPath(pathname: string, base: string, extension: string): string {
-  if (pathname === "/" || pathname === "") {
-    return `${base}index${extension}`;
-  }
-
-  return `${base}${pathname.replace(/^\/+/, "")}/index${extension}`;
-}
-
 /**
  * Resolves manual navigation config to the format used by the built-in SSG renderer.
  */
@@ -1734,42 +1691,7 @@ export function resolveNavigationGroups(
     return undefined;
   }
 
-  return navigation.map((group) => ({
-    title: group.title,
-    items: group.items.flatMap((item) => {
-      const rawHref = item.href ?? item.path;
-      if (!rawHref) {
-        return [];
-      }
-
-      if (isExternalHref(rawHref) || rawHref.startsWith("#")) {
-        return [
-          {
-            title: item.title,
-            path: item.path ?? rawHref,
-            href: rawHref,
-          },
-        ];
-      }
-
-      const pathSource = item.path ?? rawHref;
-      const { path } = normalizeNavigationPath(pathSource);
-      const href = item.href
-        ? (() => {
-            const normalized = normalizeNavigationPath(item.href);
-            return `${buildHrefFromNavigationPath(normalized.path, base, extension)}${normalized.suffix}`;
-          })()
-        : buildHrefFromNavigationPath(path, base, extension);
-
-      return [
-        {
-          title: item.title,
-          path,
-          href,
-        },
-      ];
-    }),
-  }));
+  return importNapiModuleSync().resolveSsgNavigationGroups(navigation, base, extension);
 }
 
 export function getPageLocale(urlPath: string, i18n: ResolvedOptions["i18n"]): string | undefined {
@@ -1815,12 +1737,7 @@ export async function collectMarkdownFiles(
   srcDir: string,
   extensions: readonly string[] = DEFAULT_MARKDOWN_EXTENSIONS,
 ): Promise<string[]> {
-  const pattern = markdownGlobPattern(srcDir, extensions);
-  const files = await glob(pattern, {
-    nodir: true,
-    ignore: ["**/node_modules/**", "**/dist/**", "**/.git/**"],
-  });
-  return files.sort();
+  return importNapiModuleSync().collectSsgMarkdownFiles(srcDir, [...extensions]);
 }
 
 /**

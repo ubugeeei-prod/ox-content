@@ -7,6 +7,7 @@
 mod config;
 mod extractor;
 mod generator;
+mod markdown;
 mod nav;
 mod normalize;
 
@@ -15,6 +16,10 @@ pub use extractor::{
     DocExtractor, DocItem, DocItemKind, DocTag, ExtractError, ExtractResult, ParamDoc,
 };
 pub use generator::{DocsGenerator, GenerateError, GenerateResult};
+pub use markdown::{
+    generate_markdown, ApiDocEntry, ApiDocModule, ApiDocTag, ApiParamDoc, ApiReturnDoc,
+    MarkdownDocsOptions,
+};
 pub use nav::{generate_nav_code, generate_nav_metadata, DocsNavItem};
 pub use normalize::{
     normalize_doc_item, normalize_doc_items, NormalizedDocEntry, NormalizedDocKind,

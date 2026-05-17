@@ -19,8 +19,9 @@ use std::process::Command;
 
 use ox_content_allocator::Allocator;
 use ox_content_docs::{
-    generate_nav_code, generate_nav_metadata, normalize_doc_items, DocExtractor, DocItem,
-    DocItemKind, DocTag, DocsNavItem, NormalizedDocEntry, NormalizedParamDoc, NormalizedReturnDoc,
+    generate_markdown, generate_nav_code, generate_nav_metadata, normalize_doc_items, ApiDocEntry,
+    ApiDocModule, ApiDocTag, ApiParamDoc, ApiReturnDoc, DocExtractor, DocItem, DocItemKind, DocTag,
+    DocsNavItem, MarkdownDocsOptions, NormalizedDocEntry, NormalizedParamDoc, NormalizedReturnDoc,
     ParamDoc,
 };
 use ox_content_parser::{Parser, ParserOptions};
@@ -162,6 +163,48 @@ pub struct JsDocsNavItem {
     pub title: String,
     pub path: String,
     pub children: Option<Vec<JsDocsNavItem>>,
+}
+
+/// Ordered JSDoc tag used by generated API Markdown.
+#[napi(object)]
+#[derive(Clone)]
+pub struct JsDocsMarkdownTag {
+    pub tag: String,
+    pub value: String,
+}
+
+/// Documentation entry used by generated API Markdown.
+#[napi(object)]
+#[derive(Clone)]
+pub struct JsDocsMarkdownEntry {
+    pub name: String,
+    pub kind: String,
+    pub description: String,
+    pub params: Option<Vec<JsDocParam>>,
+    pub returns: Option<JsDocReturn>,
+    pub examples: Option<Vec<String>>,
+    pub tags: Option<Vec<JsDocsMarkdownTag>>,
+    pub private: bool,
+    pub file: String,
+    pub line: u32,
+    pub end_line: u32,
+    pub signature: Option<String>,
+}
+
+/// Extracted docs for one source file used by generated API Markdown.
+#[napi(object)]
+#[derive(Clone)]
+pub struct JsDocsMarkdownModule {
+    pub file: String,
+    pub entries: Vec<JsDocsMarkdownEntry>,
+}
+
+/// Options for generated API Markdown.
+#[napi(object)]
+#[derive(Clone)]
+pub struct JsDocsMarkdownOptions {
+    pub group_by: Option<String>,
+    pub github_url: Option<String>,
 }
 
 /// Transform options for JavaScript.
@@ -448,6 +491,48 @@ fn convert_docs_nav_item(item: JsDocsNavItem) -> DocsNavItem {
     }
 }
 
+fn convert_markdown_param(param: JsDocParam) -> ApiParamDoc {
+    ApiParamDoc {
+        name: param.name,
+        type_annotation: param.r#type,
+        description: param.description,
+        optional: param.optional.unwrap_or(false),
+        default_value: param.r#default,
+    }
+}
+
+fn convert_markdown_return(return_doc: JsDocReturn) -> ApiReturnDoc {
+    ApiReturnDoc { type_annotation: return_doc.r#type, description: return_doc.description }
+}
+
+fn convert_markdown_tag(tag: JsDocsMarkdownTag) -> ApiDocTag {
+    ApiDocTag { tag: tag.tag, value: tag.value }
+}
+
+fn convert_markdown_entry(entry: JsDocsMarkdownEntry) -> ApiDocEntry {
+    ApiDocEntry {
+        name: entry.name,
+        kind: entry.kind,
+        description: entry.description,
+        params: entry.params.unwrap_or_default().into_iter().map(convert_markdown_param).collect(),
+        returns: entry.returns.map(convert_markdown_return),
+        examples: entry.examples.unwrap_or_default(),
+        tags: entry.tags.unwrap_or_default().into_iter().map(convert_markdown_tag).collect(),
+        private: entry.private,
+        file: entry.file,
+        line: entry.line,
+        end_line: entry.end_line,
+        signature: entry.signature,
+    }
+}
+
+fn convert_markdown_module(module: JsDocsMarkdownModule) -> ApiDocModule {
+    ApiDocModule {
+        file: module.file,
+        entries: module.entries.into_iter().map(convert_markdown_entry).collect(),
+    }
+}
+
 /// Extracts documented declarations from a JavaScript/TypeScript file using Oxc.
 #[napi]
 pub fn extract_file_docs(
@@ -493,6 +578,22 @@ pub fn generate_docs_nav_code(
 ) -> String {
     let nav_items = nav_items.into_iter().map(convert_docs_nav_item).collect::<Vec<_>>();
     generate_nav_code(&nav_items, export_name.as_deref())
+}
+
+/// Generates Markdown API reference pages from extracted documentation entries.
+#[napi(js_name = "generateDocsMarkdown")]
+pub fn generate_docs_markdown(
+    docs: Vec<JsDocsMarkdownModule>,
+    options: Option<JsDocsMarkdownOptions>,
+) -> HashMap<String, String> {
+    let options =
+        options.map_or_else(MarkdownDocsOptions::default, |options| MarkdownDocsOptions {
+            group_by: options.group_by.unwrap_or_else(|| "file".to_string()),
+            github_url: options.github_url,
+        });
+    generate_markdown(&docs.into_iter().map(convert_markdown_module).collect::<Vec<_>>(), &options)
+        .into_iter()
+        .collect()
 }
 
 /// Restores code block metadata after JavaScript-side syntax highlighting.
@@ -890,6 +991,23 @@ pub struct JsSsgSidebarItem {
     pub items: Option<Vec<JsSsgSidebarItem>>,
     /// Whether this group is collapsed by default.
     pub collapsed: Option<bool>,
+}
+
+/// Manual SSG navigation item supplied by user configuration.
+#[napi(object)]
+#[derive(Clone)]
+pub struct JsSsgNavigationItem {
+    pub title: String,
+    pub path: Option<String>,
+    pub href: Option<String>,
+}
+
+/// Manual SSG navigation group supplied by user configuration.
+#[napi(object)]
+#[derive(Clone)]
+pub struct JsSsgNavigationGroup {
+    pub title: String,
+    pub items: Vec<JsSsgNavigationItem>,
 }
 
 /// Generated SSG HTML page for shared asset extraction.
@@ -1403,6 +1521,17 @@ fn convert_sidebar_item(item: JsSsgSidebarItem) -> ox_content_ssg::SidebarItem {
     }
 }
 
+fn convert_navigation_item(item: JsSsgNavigationItem) -> ox_content_ssg::ManualNavigationItem {
+    ox_content_ssg::ManualNavigationItem { title: item.title, path: item.path, href: item.href }
+}
+
+fn convert_navigation_group(group: JsSsgNavigationGroup) -> ox_content_ssg::ManualNavigationGroup {
+    ox_content_ssg::ManualNavigationGroup {
+        title: group.title,
+        items: group.items.into_iter().map(convert_navigation_item).collect(),
+    }
+}
+
 fn map_route_paths(paths: ox_content_ssg::RoutePaths) -> JsSsgRoutePaths {
     JsSsgRoutePaths {
         output_path: paths.output_path,
@@ -1534,6 +1663,27 @@ pub fn build_ssg_theme_nav_items(
         .into_iter()
         .map(map_nav_group)
         .collect()
+}
+
+/// Resolves manual SSG navigation groups.
+#[napi(js_name = "resolveSsgNavigationGroups")]
+pub fn resolve_ssg_navigation_groups(
+    navigation: Vec<JsSsgNavigationGroup>,
+    base: String,
+    extension: String,
+) -> Vec<JsSsgNavGroup> {
+    let navigation: Vec<ox_content_ssg::ManualNavigationGroup> =
+        navigation.into_iter().map(convert_navigation_group).collect();
+    ox_content_ssg::resolve_navigation_groups(&navigation, &base, &extension)
+        .into_iter()
+        .map(map_nav_group)
+        .collect()
+}
+
+/// Collects Markdown files for SSG from a source directory.
+#[napi(js_name = "collectSsgMarkdownFiles")]
+pub fn collect_ssg_markdown_files(src_dir: String, extensions: Vec<String>) -> Vec<String> {
+    ox_content_ssg::collect_markdown_files(&src_dir, &extensions)
 }
 
 /// Generates SSG HTML page with navigation and search.
