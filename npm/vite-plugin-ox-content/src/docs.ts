@@ -319,28 +319,7 @@ export function generateMarkdown(
   docs: ExtractedDocs[],
   options: ResolvedDocsOptions,
 ): Record<string, string> {
-  const napi = importNapiModuleSync() as typeof import("@ox-content/napi") & {
-    generateDocsMarkdown?: (
-      docs: Array<{
-        file: string;
-        entries: Array<{
-          name: string;
-          kind: DocEntry["kind"];
-          description: string;
-          params?: DocEntry["params"];
-          returns?: DocEntry["returns"];
-          examples?: string[];
-          tags?: Array<{ tag: string; value: string }>;
-          private: boolean;
-          file: string;
-          line: number;
-          endLine: number;
-          signature?: string;
-        }>;
-      }>,
-      options?: { groupBy?: ResolvedDocsOptions["groupBy"]; githubUrl?: string },
-    ) => Record<string, string>;
-  };
+  const napi = importNapiModuleSync();
 
   if (typeof napi.generateDocsMarkdown !== "function") {
     throw new Error(
