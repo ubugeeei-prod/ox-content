@@ -2189,6 +2189,50 @@ pub struct I18nCheckResult {
     pub warning_count: u32,
 }
 
+fn i18n_check_result_from_diagnostics(
+    diagnostics: Vec<ox_content_i18n::checker::Diagnostic>,
+) -> I18nCheckResult {
+    let mut error_count = 0u32;
+    let mut warning_count = 0u32;
+    let js_diagnostics: Vec<I18nDiagnostic> = diagnostics
+        .into_iter()
+        .map(|d| {
+            let severity = match d.severity {
+                ox_content_i18n::checker::Severity::Error => {
+                    error_count += 1;
+                    "error"
+                }
+                ox_content_i18n::checker::Severity::Warning => {
+                    warning_count += 1;
+                    "warning"
+                }
+                ox_content_i18n::checker::Severity::Info => "info",
+            };
+            I18nDiagnostic {
+                severity: severity.to_string(),
+                message: d.message,
+                key: d.key,
+                locale: d.locale,
+            }
+        })
+        .collect();
+
+    I18nCheckResult { diagnostics: js_diagnostics, error_count, warning_count }
+}
+
+fn i18n_check_error(message: String) -> I18nCheckResult {
+    I18nCheckResult {
+        diagnostics: vec![I18nDiagnostic {
+            severity: "error".to_string(),
+            message,
+            key: None,
+            locale: None,
+        }],
+        error_count: 1,
+        warning_count: 0,
+    }
+}
+
 /// Loads dictionaries from the given directory.
 ///
 /// The directory should contain locale subdirectories (e.g., `en/`, `ja/`)
@@ -2262,49 +2306,40 @@ pub fn check_i18n(dict_dir: String, used_keys: Vec<String>) -> I18nCheckResult {
     let path = std::path::Path::new(&dict_dir);
     let dict_set = match ox_content_i18n::dictionary::load_from_dir(path) {
         Ok(set) => set,
-        Err(e) => {
-            return I18nCheckResult {
-                diagnostics: vec![I18nDiagnostic {
-                    severity: "error".to_string(),
-                    message: e.to_string(),
-                    key: None,
-                    locale: None,
-                }],
-                error_count: 1,
-                warning_count: 0,
-            };
-        }
+        Err(e) => return i18n_check_error(e.to_string()),
     };
 
     let keys_set: std::collections::HashSet<String> = used_keys.into_iter().collect();
     let diagnostics = ox_content_i18n::checker::check_all(&keys_set, &dict_set);
 
-    let mut error_count = 0u32;
-    let mut warning_count = 0u32;
-    let js_diagnostics: Vec<I18nDiagnostic> = diagnostics
-        .into_iter()
-        .map(|d| {
-            let severity = match d.severity {
-                ox_content_i18n::checker::Severity::Error => {
-                    error_count += 1;
-                    "error"
-                }
-                ox_content_i18n::checker::Severity::Warning => {
-                    warning_count += 1;
-                    "warning"
-                }
-                ox_content_i18n::checker::Severity::Info => "info",
-            };
-            I18nDiagnostic {
-                severity: severity.to_string(),
-                message: d.message,
-                key: d.key,
-                locale: d.locale,
-            }
-        })
-        .collect();
+    i18n_check_result_from_diagnostics(diagnostics)
+}
 
-    I18nCheckResult { diagnostics: js_diagnostics, error_count, warning_count }
+/// Runs project-level i18n checks by collecting source keys and validating dictionaries.
+///
+/// `dict_dir` is the path to the i18n directory with locale subdirectories.
+/// `src_dirs` are source/content directories to scan recursively.
+/// `function_names` are translation call names to collect from JS/TS source.
+/// `default_locale` is used for dictionary fallback rules.
+#[napi(js_name = "checkI18nProject")]
+pub fn check_i18n_project(
+    dict_dir: String,
+    src_dirs: Vec<String>,
+    function_names: Vec<String>,
+    default_locale: String,
+) -> I18nCheckResult {
+    let config = ox_content_i18n_checker::CheckConfig {
+        dict_dir,
+        src_dirs,
+        function_names,
+        default_locale: Some(default_locale),
+        ..Default::default()
+    };
+
+    match ox_content_i18n_checker::check(&config) {
+        Ok(result) => i18n_check_result_from_diagnostics(result.diagnostics),
+        Err(error) => i18n_check_error(error),
+    }
 }
 
 /// A translation key usage found in source code.
@@ -2450,6 +2485,45 @@ mod tests {
             fs::read_to_string(root.join("search-index.json")).unwrap(),
             r#"{"doc_count":0}"#
         );
+
+        let _ = fs::remove_dir_all(root);
+    }
+
+    #[test]
+    fn check_i18n_project_collects_source_and_markdown_keys() {
+        let unique =
+            std::time::SystemTime::now().duration_since(std::time::UNIX_EPOCH).unwrap().as_nanos();
+        let root = std::env::temp_dir()
+            .join(format!("ox-content-napi-i18n-{}-{unique}", std::process::id()));
+        let dict_root = root.join("content/i18n");
+        let src_dir = root.join("src");
+        let content_dir = root.join("content");
+        let _ = fs::remove_dir_all(&root);
+        fs::create_dir_all(dict_root.join("en")).unwrap();
+        fs::create_dir_all(&src_dir).unwrap();
+
+        fs::write(
+            dict_root.join("en/common.json"),
+            r#"{"fromSrc":"From source","fromMd":"From markdown"}"#,
+        )
+        .unwrap();
+        fs::write(src_dir.join("app.ts"), "const label = t('common.fromSrc');").unwrap();
+        fs::write(content_dir.join("guide.md"), "{{t('common.fromMd')}}").unwrap();
+
+        let result = super::check_i18n_project(
+            dict_root.to_string_lossy().into_owned(),
+            vec![
+                src_dir.to_string_lossy().into_owned(),
+                content_dir.to_string_lossy().into_owned(),
+            ],
+            vec!["t".to_string(), "$t".to_string()],
+            "en".to_string(),
+        );
+        let messages: Vec<&str> = result.diagnostics.iter().map(|d| d.message.as_str()).collect();
+
+        assert_eq!(result.error_count, 0, "diagnostics: {messages:?}");
+        assert_eq!(result.warning_count, 0, "diagnostics: {messages:?}");
+        assert!(result.diagnostics.is_empty());
 
         let _ = fs::remove_dir_all(root);
     }

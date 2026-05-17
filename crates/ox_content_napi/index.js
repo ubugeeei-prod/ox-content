@@ -118,4 +118,5 @@ module.exports.loadDictionariesFlat = binding.loadDictionariesFlat;
 module.exports.generateI18nModule = binding.generateI18nModule;
 module.exports.validateMf2 = binding.validateMf2;
 module.exports.checkI18n = binding.checkI18n;
+module.exports.checkI18nProject = binding.checkI18nProject;
 module.exports.extractTranslationKeys = binding.extractTranslationKeys;

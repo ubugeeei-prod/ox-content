@@ -32,6 +32,16 @@ export declare function buildSsgThemeNavItems(sidebar: Array<JsSsgSidebarItem>, 
  */
 export declare function checkI18n(dictDir: string, usedKeys: Array<string>): I18NCheckResult
 
+/**
+ * Runs project-level i18n checks by collecting source keys and validating dictionaries.
+ *
+ * `dict_dir` is the path to the i18n directory with locale subdirectories.
+ * `src_dirs` are source/content directories to scan recursively.
+ * `function_names` are translation call names to collect from JS/TS source.
+ * `default_locale` is used for dictionary fallback rules.
+ */
+export declare function checkI18nProject(dictDir: string, srcDirs: Array<string>, functionNames: Array<string>, defaultLocale: string): I18NCheckResult
+
 /** Collects source files for generated API documentation. */
 export declare function collectDocsSourceFiles(srcDir: string, include: Array<string>, exclude: Array<string>): Array<string>
 

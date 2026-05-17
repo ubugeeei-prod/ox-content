@@ -86,25 +86,13 @@ export function createI18nPlugin(resolvedOptions: ResolvedOptions): Plugin {
       }
 
       try {
-        const { loadDictionaries, checkI18n, extractTranslationKeys } = await importNapiModule();
-
-        // Load and validate dictionaries
-        const loadResult = loadDictionaries(dictDir);
-        if (loadResult.errors.length > 0) {
-          for (const error of loadResult.errors) {
-            console.warn(`[ox-content:i18n] ${error}`);
-          }
-          return;
-        }
-
-        console.log(
-          `[ox-content:i18n] Loaded ${loadResult.localeCount} locales: ${loadResult.locales.join(", ")}`,
+        const { checkI18nProject } = await importNapiModule();
+        const checkResult = checkI18nProject(
+          dictDir,
+          [path.resolve(root, "src"), path.resolve(root, "content")],
+          i18nOptions.functionNames,
+          i18nOptions.defaultLocale,
         );
-
-        // Collect translation keys from source files
-        const collectedKeys = collectKeysFromSource(root, extractTranslationKeys, i18nOptions);
-
-        const checkResult = checkI18n(dictDir, collectedKeys);
         if (checkResult.errorCount > 0 || checkResult.warningCount > 0) {
           for (const diag of checkResult.diagnostics) {
             if (diag.severity === "error") {
@@ -197,63 +185,4 @@ export function generateI18nModule(options: ResolvedI18nOptions, root: string): 
   throw new Error(
     "[ox-content:i18n] @ox-content/napi does not expose generateI18nModule. Please rebuild the NAPI package.",
   );
-}
-
-/**
- * Collects translation keys from source files using NAPI extractTranslationKeys.
- */
-function collectKeysFromSource(
-  root: string,
-  extractTranslationKeys: (
-    source: string,
-    filePath: string,
-    functionNames?: string[],
-  ) => Array<{ key: string }>,
-  options: ResolvedI18nOptions,
-): string[] {
-  const srcDir = path.resolve(root, "src");
-  const keys = new Set<string>();
-
-  // Scan TS/JS/TSX/JSX files in src/
-  if (fs.existsSync(srcDir)) {
-    walkDir(srcDir, /\.(ts|tsx|js|jsx)$/, (filePath) => {
-      const source = fs.readFileSync(filePath, "utf-8");
-      const usages = extractTranslationKeys(source, filePath, options.functionNames);
-      for (const usage of usages) {
-        keys.add(usage.key);
-      }
-    });
-  }
-
-  // Scan Markdown files for {{t('key')}} patterns
-  const contentDir = path.resolve(root, "content");
-  if (fs.existsSync(contentDir)) {
-    const tPattern = /\{\{t\(['"]([^'"]+)['"]\)\}\}/g;
-    walkDir(contentDir, /\.(md|mdx)$/, (filePath) => {
-      const content = fs.readFileSync(filePath, "utf-8");
-      let match;
-      while ((match = tPattern.exec(content)) !== null) {
-        keys.add(match[1]);
-      }
-      tPattern.lastIndex = 0;
-    });
-  }
-
-  return Array.from(keys);
-}
-
-/**
- * Recursively walks a directory, calling the callback for files matching the pattern.
- */
-function walkDir(dir: string, pattern: RegExp, callback: (filePath: string) => void): void {
-  const entries = fs.readdirSync(dir, { withFileTypes: true });
-  for (const entry of entries) {
-    const fullPath = path.join(dir, entry.name);
-    if (entry.isDirectory()) {
-      if (entry.name === "node_modules" || entry.name === ".git") continue;
-      walkDir(fullPath, pattern, callback);
-    } else if (pattern.test(entry.name)) {
-      callback(fullPath);
-    }
-  }
 }
