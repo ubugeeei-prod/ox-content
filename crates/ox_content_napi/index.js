@@ -88,6 +88,7 @@ module.exports.collectDocsSourceFiles = binding.collectDocsSourceFiles;
 module.exports.generateDocsMarkdown = binding.generateDocsMarkdown;
 module.exports.generateOgImageSvg = binding.generateOgImageSvg;
 module.exports.buildSearchIndex = binding.buildSearchIndex;
+module.exports.buildSearchIndexFromDirectory = binding.buildSearchIndexFromDirectory;
 module.exports.searchIndex = binding.searchIndex;
 module.exports.extractSearchContent = binding.extractSearchContent;
 module.exports.parseScopedSearchQuery = binding.parseScopedSearchQuery;

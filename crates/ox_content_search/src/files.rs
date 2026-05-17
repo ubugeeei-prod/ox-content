@@ -13,6 +13,19 @@ pub fn collect_markdown_files(src_dir: &str, extensions: &[String]) -> Vec<Strin
     files
 }
 
+/// Removes the matching Markdown extension from a file path.
+#[must_use]
+pub fn strip_markdown_extension(file_path: &str, extensions: &[String]) -> String {
+    let mut extensions = normalize_markdown_extensions(extensions);
+    extensions.sort_by_key(|extension| std::cmp::Reverse(extension.len()));
+
+    let lower_path = file_path.to_ascii_lowercase();
+    extensions.iter().find(|extension| lower_path.ends_with(extension.as_str())).map_or_else(
+        || file_path.to_string(),
+        |extension| file_path[..file_path.len() - extension.len()].to_string(),
+    )
+}
+
 fn collect_markdown_files_inner(dir: &Path, extensions: &[String], files: &mut Vec<String>) {
     let Ok(entries) = fs::read_dir(dir) else {
         return;
@@ -86,5 +99,24 @@ mod tests {
         assert!(files.iter().any(|file| file.ends_with("docs/guide/intro.mdx")));
 
         let _ = std::fs::remove_dir_all(&root);
+    }
+
+    #[test]
+    fn strips_longest_matching_markdown_extension() {
+        assert_eq!(
+            strip_markdown_extension(
+                "guide/reference.markdown",
+                &[".md".to_string(), ".markdown".to_string()]
+            ),
+            "guide/reference"
+        );
+        assert_eq!(
+            strip_markdown_extension("guide/reference.MDX", &["mdx".to_string()]),
+            "guide/reference"
+        );
+        assert_eq!(
+            strip_markdown_extension("guide/reference.txt", &["md".to_string()]),
+            "guide/reference.txt"
+        );
     }
 }
