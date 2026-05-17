@@ -1,7 +1,7 @@
 //! File discovery helpers for search indexing.
 
 use std::fs;
-use std::path::Path;
+use std::path::{Path, PathBuf};
 
 /// Collects Markdown files under `src_dir` for search indexing.
 #[must_use]
@@ -24,6 +24,17 @@ pub fn strip_markdown_extension(file_path: &str, extensions: &[String]) -> Strin
         || file_path.to_string(),
         |extension| file_path[..file_path.len() - extension.len()].to_string(),
     )
+}
+
+/// Writes a serialized search index to `search-index.json` under `out_dir`.
+pub fn write_search_index(index_json: &str, out_dir: &str) -> std::io::Result<PathBuf> {
+    let out_dir = Path::new(out_dir);
+    fs::create_dir_all(out_dir)?;
+
+    let index_path = out_dir.join("search-index.json");
+    fs::write(&index_path, index_json)?;
+
+    Ok(index_path)
 }
 
 fn collect_markdown_files_inner(dir: &Path, extensions: &[String], files: &mut Vec<String>) {
@@ -118,5 +129,20 @@ mod tests {
             strip_markdown_extension("guide/reference.txt", &["md".to_string()]),
             "guide/reference.txt"
         );
+    }
+
+    #[test]
+    fn writes_search_index_file() {
+        let root =
+            std::env::temp_dir().join(format!("ox-content-search-index-{}", std::process::id()));
+        let _ = std::fs::remove_dir_all(&root);
+
+        let index_path =
+            write_search_index(r#"{"doc_count":0}"#, root.to_string_lossy().as_ref()).unwrap();
+
+        assert_eq!(index_path.file_name().unwrap(), "search-index.json");
+        assert_eq!(std::fs::read_to_string(&index_path).unwrap(), r#"{"doc_count":0}"#);
+
+        let _ = std::fs::remove_dir_all(&root);
     }
 }

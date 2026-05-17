@@ -15,6 +15,9 @@ export declare function buildSearchIndex(documents: Array<JsSearchDocument>): st
  */
 export declare function buildSearchIndexFromDirectory(srcDir: string, base: string, extensions: Array<string>): string
 
+/** Writes a serialized search index to `search-index.json` under an output directory. */
+export declare function writeSearchIndex(indexJson: string, outDir: string): void
+
 /** Builds SSG navigation groups from markdown files. */
 export declare function buildSsgNavItems(markdownFiles: Array<string>, srcDir: string, base: string, extension: string): Array<JsSsgNavGroup>
 
