@@ -99,6 +99,9 @@ export declare function generateSearchModuleFromOptions(options: JsSearchRuntime
 /** Generates SSG HTML page with navigation and search. */
 export declare function generateSsgHtml(pageData: JsSsgPageData, navGroups: Array<JsSsgNavGroup>, config: JsSsgConfig): string
 
+/** Generates a bare SSG HTML page without navigation or styles. */
+export declare function generateSsgBareHtml(content: string, title: string): string
+
 /** Returns the last git commit timestamp for a file in milliseconds. */
 export declare function getGitLastUpdated(filePath: string, root?: string | undefined | null): number | null
 

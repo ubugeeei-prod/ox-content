@@ -1889,6 +1889,12 @@ pub fn generate_ssg_html(
     ox_content_ssg::generate_html(&ssg_page_data, &ssg_nav_groups, &ssg_config)
 }
 
+/// Generates a bare SSG HTML page without navigation or styles.
+#[napi(js_name = "generateSsgBareHtml")]
+pub fn generate_ssg_bare_html(content: String, title: String) -> String {
+    ox_content_ssg::generate_bare_html(&content, &title)
+}
+
 /// Extracts shared CSS and JavaScript assets from generated SSG pages.
 #[napi(js_name = "externalizeSsgAssets")]
 pub fn externalize_ssg_assets(
