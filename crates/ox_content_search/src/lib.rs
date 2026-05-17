@@ -27,6 +27,7 @@
 //! let results = index.search("getting started", &SearchOptions::default());
 //! ```
 
+mod files;
 mod index;
 mod indexer;
 mod query;
@@ -34,6 +35,7 @@ mod runtime;
 mod scope;
 mod tokenizer;
 
+pub use files::collect_markdown_files;
 pub use index::{Field, Posting, SearchDocument, SearchIndex, SearchIndexBuilder};
 pub use indexer::DocumentIndexer;
 pub use query::{SearchOptions, SearchResult};

@@ -128,6 +128,61 @@ impl DocsGenerator {
     }
 }
 
+/// Collects documentation source files under `src_dir`.
+#[must_use]
+pub fn collect_source_files(src_dir: &str, include: &[String], exclude: &[String]) -> Vec<String> {
+    let mut files = Vec::new();
+    collect_source_files_inner(Path::new(src_dir), include, exclude, &mut files);
+    files.sort();
+    files
+}
+
+fn collect_source_files_inner(
+    dir: &Path,
+    include: &[String],
+    exclude: &[String],
+    files: &mut Vec<String>,
+) {
+    let Ok(entries) = std::fs::read_dir(dir) else {
+        return;
+    };
+
+    for entry in entries.flatten() {
+        let path = entry.path();
+        let path_str = path.to_string_lossy();
+        let Ok(file_type) = entry.file_type() else {
+            continue;
+        };
+
+        if file_type.is_dir() {
+            if !is_excluded_source_path(&path_str, exclude) {
+                collect_source_files_inner(&path, include, exclude, files);
+            }
+        } else if file_type.is_file()
+            && is_included_source_path(&path_str, include)
+            && !is_excluded_source_path(&path_str, exclude)
+        {
+            files.push(path_str.into_owned());
+        }
+    }
+}
+
+fn is_included_source_path(path: &str, patterns: &[String]) -> bool {
+    patterns.iter().any(|pattern| glob_match(pattern, path))
+}
+
+fn is_excluded_source_path(path: &str, patterns: &[String]) -> bool {
+    patterns.iter().any(|pattern| {
+        if pattern.contains("node_modules") {
+            return path.contains("node_modules");
+        }
+        if pattern.contains(".test.") || pattern.contains(".spec.") {
+            return path.contains(".test.") || path.contains(".spec.");
+        }
+        glob_match(pattern, path)
+    })
+}
+
 /// Simple glob matching (** and * patterns).
 fn glob_match(pattern: &str, path: &str) -> bool {
     // Very simplified glob matching
@@ -181,5 +236,29 @@ mod tests {
         // Exact match
         assert!(glob_match("foo.ts", "foo.ts"));
         assert!(!glob_match("foo.ts", "bar.ts"));
+    }
+
+    #[test]
+    fn collects_source_files_with_doc_filters() {
+        let root =
+            std::env::temp_dir().join(format!("ox-content-docs-files-{}", std::process::id()));
+        let _ = std::fs::remove_dir_all(&root);
+        std::fs::create_dir_all(root.join("src/nested")).unwrap();
+        std::fs::create_dir_all(root.join("src/node_modules/pkg")).unwrap();
+        std::fs::write(root.join("src/index.ts"), "").unwrap();
+        std::fs::write(root.join("src/nested/view.tsx"), "").unwrap();
+        std::fs::write(root.join("src/nested/view.test.ts"), "").unwrap();
+        std::fs::write(root.join("src/node_modules/pkg/index.ts"), "").unwrap();
+
+        let include = vec!["**/*.ts".to_string(), "**/*.tsx".to_string()];
+        let exclude = vec!["**/*.test.*".to_string(), "node_modules".to_string()];
+        let files =
+            collect_source_files(root.join("src").to_string_lossy().as_ref(), &include, &exclude);
+
+        assert_eq!(files.len(), 2);
+        assert!(files.iter().any(|file| file.ends_with("src/index.ts")));
+        assert!(files.iter().any(|file| file.ends_with("src/nested/view.tsx")));
+
+        let _ = std::fs::remove_dir_all(&root);
     }
 }

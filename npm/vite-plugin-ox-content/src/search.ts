@@ -7,11 +7,7 @@
 import * as fs from "fs/promises";
 import * as path from "path";
 import { importNapiModule, importNapiModuleSync } from "./napi";
-import {
-  DEFAULT_MARKDOWN_EXTENSIONS,
-  isMarkdownFilePath,
-  stripMarkdownExtension,
-} from "./markdown";
+import { DEFAULT_MARKDOWN_EXTENSIONS, stripMarkdownExtension } from "./markdown";
 import type {
   SearchOptions,
   ResolvedSearchOptions,
@@ -88,37 +84,6 @@ export function resolveSearchOptions(
 }
 
 /**
- * Collects all Markdown files from a directory.
- */
-async function collectMarkdownFiles(
-  dir: string,
-  extensions: readonly string[] = DEFAULT_MARKDOWN_EXTENSIONS,
-): Promise<string[]> {
-  const files: string[] = [];
-
-  async function walk(currentDir: string) {
-    try {
-      const entries = await fs.readdir(currentDir, { withFileTypes: true });
-
-      for (const entry of entries) {
-        const fullPath = path.join(currentDir, entry.name);
-
-        if (entry.isDirectory() && !entry.name.startsWith(".") && entry.name !== "node_modules") {
-          await walk(fullPath);
-        } else if (entry.isFile() && isMarkdownFilePath(entry.name, extensions)) {
-          files.push(fullPath);
-        }
-      }
-    } catch {
-      // Ignore errors
-    }
-  }
-
-  await walk(dir);
-  return files;
-}
-
-/**
  * Builds the search index from Markdown files.
  */
 export async function buildSearchIndex(
@@ -138,7 +103,7 @@ export async function buildSearchIndex(
     });
   }
 
-  const files = await collectMarkdownFiles(srcDir, extensions);
+  const files = napi.collectSearchMarkdownFiles(srcDir, [...extensions]);
   const documents: SearchDocument[] = [];
 
   for (const file of files) {

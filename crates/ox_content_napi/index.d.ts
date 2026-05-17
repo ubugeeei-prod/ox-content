@@ -21,6 +21,12 @@ export declare function buildSsgThemeNavItems(sidebar: Array<JsSsgSidebarItem>, 
  */
 export declare function checkI18n(dictDir: string, usedKeys: Array<string>): I18NCheckResult
 
+/** Collects source files for generated API documentation. */
+export declare function collectDocsSourceFiles(srcDir: string, include: Array<string>, exclude: Array<string>): Array<string>
+
+/** Collects Markdown files for search indexing from a source directory. */
+export declare function collectSearchMarkdownFiles(srcDir: string, extensions: Array<string>): Array<string>
+
 /** Collects Markdown files for SSG from a source directory. */
 export declare function collectSsgMarkdownFiles(srcDir: string, extensions: Array<string>): Array<string>
 

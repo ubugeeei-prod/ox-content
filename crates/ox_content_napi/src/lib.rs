@@ -580,6 +580,16 @@ pub fn generate_docs_nav_code(
     generate_nav_code(&nav_items, export_name.as_deref())
 }
 
+/// Collects source files for generated API documentation.
+#[napi(js_name = "collectDocsSourceFiles")]
+pub fn collect_docs_source_files(
+    src_dir: String,
+    include: Vec<String>,
+    exclude: Vec<String>,
+) -> Vec<String> {
+    ox_content_docs::collect_source_files(&src_dir, &include, &exclude)
+}
+
 /// Generates Markdown API reference pages from extracted documentation entries.
 #[napi(js_name = "generateDocsMarkdown")]
 pub fn generate_docs_markdown(
@@ -933,6 +943,12 @@ pub fn matches_search_scopes(id: String, url: String, scopes: Vec<String>) -> bo
 #[napi(js_name = "generateSearchModule")]
 pub fn generate_search_module(options_json: String, index_path: String) -> String {
     ox_content_search::generate_search_module(&options_json, &index_path)
+}
+
+/// Collects Markdown files for search indexing from a source directory.
+#[napi(js_name = "collectSearchMarkdownFiles")]
+pub fn collect_search_markdown_files(src_dir: String, extensions: Vec<String>) -> Vec<String> {
+    ox_content_search::collect_markdown_files(&src_dir, &extensions)
 }
 
 // =============================================================================

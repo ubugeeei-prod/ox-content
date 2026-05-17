@@ -15,7 +15,7 @@ pub use config::DocsConfig;
 pub use extractor::{
     DocExtractor, DocItem, DocItemKind, DocTag, ExtractError, ExtractResult, ParamDoc,
 };
-pub use generator::{DocsGenerator, GenerateError, GenerateResult};
+pub use generator::{collect_source_files, DocsGenerator, GenerateError, GenerateResult};
 pub use markdown::{
     generate_markdown, ApiDocEntry, ApiDocModule, ApiDocTag, ApiParamDoc, ApiReturnDoc,
     MarkdownDocsOptions,

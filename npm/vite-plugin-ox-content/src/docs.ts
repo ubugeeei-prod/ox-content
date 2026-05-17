@@ -241,7 +241,7 @@ export async function extractDocs(
   const results: ExtractedDocs[] = [];
 
   for (const srcDir of srcDirs) {
-    const files = await findFiles(srcDir, options);
+    const files = napi.collectDocsSourceFiles(srcDir, options.include, options.exclude);
 
     for (const file of files) {
       const entries = extractFileDocEntries(file, options.private);
@@ -253,63 +253,6 @@ export async function extractDocs(
   }
 
   return results;
-}
-
-/**
- * Recursively finds all source files matching include/exclude patterns.
- *
- * @internal
- */
-async function findFiles(dir: string, options: ResolvedDocsOptions): Promise<string[]> {
-  const files: string[] = [];
-
-  async function walk(currentDir: string) {
-    let entries;
-    try {
-      entries = await fs.promises.readdir(currentDir, { withFileTypes: true });
-    } catch {
-      return;
-    }
-
-    for (const entry of entries) {
-      const fullPath = path.join(currentDir, entry.name);
-
-      if (entry.isDirectory()) {
-        if (!isExcluded(fullPath, options.exclude)) {
-          await walk(fullPath);
-        }
-      } else if (entry.isFile()) {
-        if (isIncluded(fullPath, options.include) && !isExcluded(fullPath, options.exclude)) {
-          files.push(fullPath);
-        }
-      }
-    }
-  }
-
-  await walk(dir);
-  return files;
-}
-
-function isIncluded(file: string, patterns: string[]): boolean {
-  return patterns.some((pattern) => {
-    if (pattern.includes("**")) {
-      const ext = pattern.split(".").pop();
-      return file.endsWith(`.${ext}`);
-    }
-    return file.endsWith(pattern.replace("*", ""));
-  });
-}
-
-function isExcluded(file: string, patterns: string[]): boolean {
-  return patterns.some((pattern) => {
-    if (pattern.includes("node_modules")) {
-      return file.includes("node_modules");
-    }
-    if (pattern.includes(".test.") || pattern.includes(".spec.")) {
-      return file.includes(".test.") || file.includes(".spec.");
-    }
-    return false;
-  });
 }
 
 /**
