@@ -99,6 +99,7 @@ module.exports.generateSearchModule = binding.generateSearchModule;
 module.exports.generateSearchModuleFromOptions = binding.generateSearchModuleFromOptions;
 module.exports.collectSearchMarkdownFiles = binding.collectSearchMarkdownFiles;
 module.exports.generateSsgHtml = binding.generateSsgHtml;
+module.exports.generateSsgBareHtml = binding.generateSsgBareHtml;
 module.exports.resolveSsgRoutePaths = binding.resolveSsgRoutePaths;
 module.exports.getSsgOutputPath = binding.getSsgOutputPath;
 module.exports.getSsgUrlPath = binding.getSsgUrlPath;

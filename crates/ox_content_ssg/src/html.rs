@@ -446,6 +446,14 @@ struct PageTemplate<'a> {
     js: &'a str,
 }
 
+/// Bare page template (no navigation, no styles).
+#[derive(Template)]
+#[template(path = "bare_page.html")]
+struct BarePageTemplate<'a> {
+    title: &'a str,
+    content: &'a str,
+}
+
 /// CSS styles for SSG pages.
 const SSG_CSS: &str = include_str!("ssg.css");
 
@@ -1044,6 +1052,13 @@ pub fn generate_html(page_data: &PageData, nav_groups: &[NavGroup], config: &Ssg
     template.render().unwrap_or_default()
 }
 
+/// Generates a bare HTML page for SSG.
+///
+/// This page intentionally omits navigation, styles, and scripts.
+pub fn generate_bare_html(content: &str, title: &str) -> String {
+    BarePageTemplate { title, content }.render().unwrap_or_default()
+}
+
 /// Renders an icon based on its format.
 ///
 /// Supported formats:
@@ -1260,6 +1275,16 @@ mod tests {
         assert!(html.contains("href=\"#hello\""));
         assert!(html.contains("Last updated:"));
         assert!(html.contains("<time datetime=\"1970-01-01\">1970-01-01</time>"));
+    }
+
+    #[test]
+    fn test_generate_bare_html() {
+        let html = generate_bare_html("<h1>Hello</h1>", "Test Page");
+
+        assert_eq!(
+            html,
+            "<!DOCTYPE html>\n<html lang=\"en\">\n<head>\n  <meta charset=\"UTF-8\">\n  <meta name=\"viewport\" content=\"width=device-width, initial-scale=1.0\">\n  <title>Test Page</title>\n</head>\n<body>\n<h1>Hello</h1>\n</body>\n</html>"
+        );
     }
 
     #[test]
