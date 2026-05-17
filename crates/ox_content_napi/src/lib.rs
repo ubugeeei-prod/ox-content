@@ -29,6 +29,7 @@ use ox_content_parser::{Parser, ParserOptions};
 use ox_content_renderer::HtmlRenderer;
 use ox_content_search::{
     DocumentIndexer, SearchDocument, SearchIndex, SearchIndexBuilder, SearchOptions,
+    SearchRuntimeOptions,
 };
 use transfer::TransferPayloadKind;
 use transformer::{parse_frontmatter, MarkdownTransformer};
@@ -941,6 +942,33 @@ impl From<JsSearchOptions> for SearchOptions {
     }
 }
 
+/// Resolved search runtime options for JavaScript.
+#[napi(object)]
+pub struct JsSearchRuntimeOptions {
+    /// Whether search is enabled.
+    pub enabled: bool,
+    /// Maximum number of results.
+    pub limit: u32,
+    /// Enable prefix matching.
+    pub prefix: bool,
+    /// Search input placeholder.
+    pub placeholder: String,
+    /// Keyboard shortcut to focus search.
+    pub hotkey: String,
+}
+
+impl From<JsSearchRuntimeOptions> for SearchRuntimeOptions {
+    fn from(options: JsSearchRuntimeOptions) -> Self {
+        Self {
+            enabled: options.enabled,
+            limit: options.limit,
+            prefix: options.prefix,
+            placeholder: options.placeholder,
+            hotkey: options.hotkey,
+        }
+    }
+}
+
 /// Builds a search index from documents.
 ///
 /// Takes an array of documents and returns a serialized search index as JSON.
@@ -1034,6 +1062,15 @@ pub fn matches_search_scopes(id: String, url: String, scopes: Vec<String>) -> bo
 #[napi(js_name = "generateSearchModule")]
 pub fn generate_search_module(options_json: String, index_path: String) -> String {
     ox_content_search::generate_search_module(&options_json, &index_path)
+}
+
+/// Generates the client-side search runtime module from typed options.
+#[napi(js_name = "generateSearchModuleFromOptions")]
+pub fn generate_search_module_from_options(
+    options: JsSearchRuntimeOptions,
+    index_path: String,
+) -> String {
+    ox_content_search::generate_search_module_with_options(&options.into(), &index_path)
 }
 
 /// Collects Markdown files for search indexing from a source directory.
@@ -2409,6 +2446,24 @@ mod tests {
         );
 
         let _ = fs::remove_dir_all(root);
+    }
+
+    #[test]
+    fn generates_search_module_from_typed_options() {
+        let module = super::generate_search_module_from_options(
+            super::JsSearchRuntimeOptions {
+                enabled: true,
+                limit: 7,
+                prefix: false,
+                placeholder: "Find".to_string(),
+                hotkey: "k".to_string(),
+            },
+            "/docs/search-index.json".to_string(),
+        );
+
+        assert!(module.contains(
+            r#"const searchOptions = {"enabled":true,"limit":7,"prefix":false,"placeholder":"Find","hotkey":"k"};"#
+        ));
     }
 
     #[test]

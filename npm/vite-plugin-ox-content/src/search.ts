@@ -122,5 +122,5 @@ export async function writeSearchIndex(indexJson: string, outDir: string): Promi
  * This is injected into the bundle as a virtual module.
  */
 export function generateSearchModule(options: ResolvedSearchOptions, indexPath: string): string {
-  return importNapiModuleSync().generateSearchModule(JSON.stringify(options), indexPath);
+  return importNapiModuleSync().generateSearchModuleFromOptions(options, indexPath);
 }

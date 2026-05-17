@@ -93,6 +93,9 @@ export declare function generateOgImageSvg(data: JsOgImageData, config?: JsOgIma
 /** Generates the client-side search runtime module. */
 export declare function generateSearchModule(optionsJson: string, indexPath: string): string
 
+/** Generates the client-side search runtime module from typed options. */
+export declare function generateSearchModuleFromOptions(options: JsSearchRuntimeOptions, indexPath: string): string
+
 /** Generates SSG HTML page with navigation and search. */
 export declare function generateSsgHtml(pageData: JsSsgPageData, navGroups: Array<JsSsgNavGroup>, config: JsSsgConfig): string
 
@@ -459,6 +462,20 @@ export interface JsSearchOptions {
   fuzzy?: boolean
   /** Minimum score threshold. */
   threshold?: number
+}
+
+/** Resolved search runtime options for JavaScript. */
+export interface JsSearchRuntimeOptions {
+  /** Whether search is enabled. */
+  enabled: boolean
+  /** Maximum number of results. */
+  limit: number
+  /** Enable prefix matching. */
+  prefix: boolean
+  /** Search input placeholder. */
+  placeholder: string
+  /** Keyboard shortcut to focus search. */
+  hotkey: string
 }
 
 /** Search result for JavaScript. */
