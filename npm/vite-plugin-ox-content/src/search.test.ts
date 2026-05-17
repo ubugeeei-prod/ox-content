@@ -9,6 +9,7 @@ import {
   matchesSearchScopes,
   parseScopedSearchQuery,
   resolveSearchOptions,
+  writeSearchIndex,
 } from "./search";
 
 const tempDirs: string[] = [];
@@ -89,5 +90,18 @@ Body text with a searchable phrase.
       url: "/docs/guide/intro",
     });
     expect(index.documents[0]?.body).toContain("searchable phrase");
+  });
+});
+
+describe("writeSearchIndex", () => {
+  it("writes the index through the native binding", async () => {
+    const outDir = await fs.mkdtemp(path.join(os.tmpdir(), "ox-content-search-out-"));
+    tempDirs.push(outDir);
+
+    await writeSearchIndex('{"doc_count":0}', outDir);
+
+    expect(await fs.readFile(path.join(outDir, "search-index.json"), "utf-8")).toBe(
+      '{"doc_count":0}',
+    );
   });
 });

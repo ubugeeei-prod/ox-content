@@ -35,7 +35,7 @@ mod runtime;
 mod scope;
 mod tokenizer;
 
-pub use files::{collect_markdown_files, strip_markdown_extension};
+pub use files::{collect_markdown_files, strip_markdown_extension, write_search_index};
 pub use index::{Field, Posting, SearchDocument, SearchIndex, SearchIndexBuilder};
 pub use indexer::DocumentIndexer;
 pub use query::{SearchOptions, SearchResult};

@@ -4,8 +4,6 @@
  * Generates search index at build time and provides client-side search.
  */
 
-import * as fs from "fs/promises";
-import * as path from "path";
 import { importNapiModule, importNapiModuleSync } from "./napi";
 import { DEFAULT_MARKDOWN_EXTENSIONS } from "./markdown";
 import type {
@@ -110,13 +108,13 @@ export async function buildSearchIndex(
  * Writes the search index to a file.
  */
 export async function writeSearchIndex(indexJson: string, outDir: string): Promise<void> {
-  const indexPath = path.join(outDir, "search-index.json");
+  const napi = await getOxContent();
 
-  // Ensure output directory exists
-  await fs.mkdir(outDir, { recursive: true });
+  if (!napi) {
+    return;
+  }
 
-  // Write the index
-  await fs.writeFile(indexPath, indexJson, "utf-8");
+  napi.writeSearchIndex(indexJson, outDir);
 }
 
 /**

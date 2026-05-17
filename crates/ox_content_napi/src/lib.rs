@@ -1042,6 +1042,14 @@ pub fn collect_search_markdown_files(src_dir: String, extensions: Vec<String>) -
     ox_content_search::collect_markdown_files(&src_dir, &extensions)
 }
 
+/// Writes a serialized search index to `search-index.json` under an output directory.
+#[napi(js_name = "writeSearchIndex")]
+pub fn write_search_index(index_json: String, out_dir: String) -> Result<()> {
+    ox_content_search::write_search_index(&index_json, &out_dir)
+        .map_err(|err| Error::from_reason(format!("failed to write search index: {err}")))?;
+    Ok(())
+}
+
 // =============================================================================
 // SSG HTML Generation API
 // =============================================================================
@@ -2382,6 +2390,23 @@ mod tests {
         assert_eq!(index.documents[0].title, "Native Search");
         assert_eq!(index.documents[0].url, "/docs/guide/intro");
         assert!(index.documents[0].body.contains("Search body text"));
+
+        let _ = fs::remove_dir_all(root);
+    }
+
+    #[test]
+    fn writes_search_index_through_napi() {
+        let root =
+            std::env::temp_dir().join(format!("ox-content-napi-search-out-{}", std::process::id()));
+        let _ = fs::remove_dir_all(&root);
+
+        super::write_search_index(r#"{"doc_count":0}"#.to_string(), root.to_string_lossy().into())
+            .unwrap();
+
+        assert_eq!(
+            fs::read_to_string(root.join("search-index.json")).unwrap(),
+            r#"{"doc_count":0}"#
+        );
 
         let _ = fs::remove_dir_all(root);
     }
