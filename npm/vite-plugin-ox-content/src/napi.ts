@@ -1,4 +1,7 @@
+import { createRequire } from "node:module";
+
 type NapiModule = typeof import("@ox-content/napi");
+const requireNapi = createRequire(import.meta.url);
 
 function getDefaultExport(value: unknown): object | undefined {
   if (!value || typeof value !== "object" || !("default" in value)) {
@@ -37,8 +40,7 @@ export function importNapiModuleSync(): NapiModule {
   }
 
   try {
-    // eslint-disable-next-line @typescript-eslint/no-require-imports
-    const mod = require("@ox-content/napi") as NapiModule;
+    const mod = requireNapi("@ox-content/napi") as NapiModule;
     syncNapiModule = normalizeNapiModule(mod);
     return syncNapiModule;
   } catch {
