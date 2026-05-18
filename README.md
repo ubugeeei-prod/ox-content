@@ -228,6 +228,8 @@ vp build               # Build Rust, npm packages, docs, and playground
 
 The dev shell is pinned in `flake.nix`, the workspace task graph lives in `vite.config.ts`, and `.node-version` is kept for CI / non-Nix Node setup.
 
+See [CONTRIBUTING.md](./CONTRIBUTING.md) for branch, commit, PR, testing, and release-note guidance.
+
 See the [documentation](https://ubugeeei.github.io/ox-content/) for more details.
 
 ## Sponsor
