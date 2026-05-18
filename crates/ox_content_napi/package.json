@@ -31,7 +31,7 @@
     "build:debug": "napi build"
   },
   "devDependencies": {
-    "@napi-rs/cli": "^3.5.1"
+    "@napi-rs/cli": "^3.6.2"
   },
   "napi": {
     "binaryName": "ox-content",
