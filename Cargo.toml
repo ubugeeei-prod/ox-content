@@ -76,7 +76,7 @@ ox_content_ssg = { version = "2.11.0", path = "crates/ox_content_ssg" }
 ox_content_i18n = { version = "2.11.0", path = "crates/ox_content_i18n" }
 ox_content_i18n_checker = { version = "2.11.0", path = "crates/ox_content_i18n_checker" }
 ox_content_mdc_checker = { version = "2.11.0", path = "crates/ox_content_mdc_checker" }
-ox_jsdoc = "0.0.15"
+ox_jsdoc = "0.0.16"
 
 # Memory allocation
 bumpalo = "3.16"
@@ -87,7 +87,7 @@ napi-derive = "3"
 napi-build = "2.3.1"
 
 # Parsing utilities
-logos = "0.14"
+logos = "0.16"
 regex = "1.11"
 unicode-normalization = "0.1"
 
@@ -98,7 +98,7 @@ rustc-hash = "2"
 serde = { version = "1.0", features = ["derive"] }
 serde_json = "1.0"
 serde_yaml = "0.9"
-sha2 = "0.10"
+sha2 = "0.11"
 
 # LSP
 tower-lsp = "0.20"
@@ -114,13 +114,13 @@ thiserror = "2"
 miette = { version = "7", features = ["fancy"] }
 
 # OXC parser
-oxc_allocator = "0.44"
-oxc_parser = "0.44"
-oxc_ast = "0.44"
-oxc_span = "0.44"
+oxc_allocator = "0.131"
+oxc_parser = "0.131"
+oxc_ast = "0.131"
+oxc_span = "0.131"
 
 # Testing
-criterion = "0.5"
+criterion = "0.8"
 insta = "1"
 
 [profile.dev]
