@@ -14,7 +14,8 @@
 <p align="center">
   <a href="https://ubugeeei.github.io/ox-content/">Documentation</a> •
   <a href="https://ubugeeei.github.io/ox-content/getting-started">Getting Started</a> •
-  <a href="https://ubugeeei.github.io/ox-content/playground/">Playground</a>
+  <a href="https://ubugeeei.github.io/ox-content/playground/">Playground</a> •
+  <a href="./SECURITY.md">Security</a>
 </p>
 
 > [!NOTE]
