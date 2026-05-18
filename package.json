@@ -3,6 +3,18 @@
   "version": "0.0.0",
   "private": true,
   "type": "module",
+  "scripts": {
+    "fmt": "vp fmt",
+    "fmt:check": "vp run fmt:check",
+    "check": "vp check",
+    "lint": "vp run lint",
+    "test": "vp run test",
+    "build": "vp build",
+    "dev": "vp dev",
+    "ci": "vp run ci",
+    "ready": "vp run ready",
+    "release": "vp run release"
+  },
   "devDependencies": {
     "typescript": "catalog:",
     "vite-plus": "catalog:"
