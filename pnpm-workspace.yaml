@@ -29,6 +29,10 @@ onlyBuiltDependencies:
   - esbuild
   - sharp
   - puppeteer
+packageExtensions:
+  "@voidzero-dev/vite-plus-core@0.1.21":
+    dependencies:
+      picomatch: ^4.0.4
 overrides:
   vite: "catalog:"
   vitest: "catalog:"
