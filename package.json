@@ -4,16 +4,16 @@
   "private": true,
   "type": "module",
   "scripts": {
-    "fmt": "vp fmt",
-    "fmt:check": "vp run fmt:check",
-    "check": "vp check",
-    "lint": "vp run lint",
-    "test": "vp run test",
-    "build": "vp build",
-    "dev": "vp dev",
-    "ci": "vp run ci",
-    "ready": "vp run ready",
-    "release": "vp run release"
+    "fmt": "vp run workspace:fmt",
+    "fmt:check": "vp run workspace:fmt:check",
+    "check": "vp run workspace:check",
+    "lint": "vp run workspace:lint",
+    "test": "vp run workspace:test",
+    "build": "vp run workspace:build",
+    "dev": "vp run workspace:dev",
+    "ci": "vp run workspace:ci",
+    "ready": "vp run workspace:ready",
+    "release": "vp run workspace:release"
   },
   "devDependencies": {
     "typescript": "catalog:",
