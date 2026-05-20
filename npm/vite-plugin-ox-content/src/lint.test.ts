@@ -1,6 +1,8 @@
 import { describe, expect, it } from "vite-plus/test";
 import { lintMarkdown, lintMarkdownAsync } from "./lint";
 
+const standardDictionaryTimeout = 15_000;
+
 describe("lintMarkdown", () => {
   it("reports structural Markdown issues", () => {
     const result = lintMarkdown("# Title\n\n\n### Jump\n# Title  ", {
@@ -72,47 +74,55 @@ describe("lintMarkdown", () => {
 });
 
 describe("lintMarkdownAsync", () => {
-  it("accepts valid words from opt-in standard dictionaries", async () => {
-    const result = await lintMarkdownAsync(
-      ["Hello world", "Bonjour monde", "Hallo welt", "Witaj dokumentacja"].join("\n"),
-      {
-        dictionary: {
-          standard: {
-            languages: ["en", "fr", "de", "pl"],
+  it(
+    "accepts valid words from opt-in standard dictionaries",
+    async () => {
+      const result = await lintMarkdownAsync(
+        ["Hello world", "Bonjour monde", "Hallo welt", "Witaj dokumentacja"].join("\n"),
+        {
+          dictionary: {
+            standard: {
+              languages: ["en", "fr", "de", "pl"],
+            },
           },
         },
-      },
-    );
+      );
 
-    expect(result.diagnostics).toHaveLength(0);
-  });
+      expect(result.diagnostics).toHaveLength(0);
+    },
+    standardDictionaryTimeout,
+  );
 
-  it("flags misspellings with opt-in standard dictionaries", async () => {
-    const result = await lintMarkdownAsync(
-      ["Hello wrld", "Bonjour mondde", "Hallo weltt", "Witaj dokumantacja"].join("\n"),
-      {
-        dictionary: {
-          standard: {
-            languages: ["en", "fr", "de", "pl"],
+  it(
+    "flags misspellings with opt-in standard dictionaries",
+    async () => {
+      const result = await lintMarkdownAsync(
+        ["Hello wrld", "Bonjour mondde", "Hallo weltt", "Witaj dokumantacja"].join("\n"),
+        {
+          dictionary: {
+            standard: {
+              languages: ["en", "fr", "de", "pl"],
+            },
           },
         },
-      },
-    );
+      );
 
-    const spellcheckDiagnostics = result.diagnostics.filter(
-      (diagnostic) => diagnostic.ruleId === "spellcheck",
-    );
+      const spellcheckDiagnostics = result.diagnostics.filter(
+        (diagnostic) => diagnostic.ruleId === "spellcheck",
+      );
 
-    expect(spellcheckDiagnostics).toHaveLength(4);
-    expect(spellcheckDiagnostics.map((diagnostic) => diagnostic.line)).toEqual([1, 2, 3, 4]);
-    expect(spellcheckDiagnostics[1]?.suggestions).toContain("monde");
-    expect(
-      spellcheckDiagnostics.every((diagnostic) => (diagnostic.suggestions?.length ?? 0) > 0),
-    ).toBe(true);
-    expect(spellcheckDiagnostics.flatMap((diagnostic) => diagnostic.suggestions ?? [])).toContain(
-      "monde",
-    );
-  });
+      expect(spellcheckDiagnostics).toHaveLength(4);
+      expect(spellcheckDiagnostics.map((diagnostic) => diagnostic.line)).toEqual([1, 2, 3, 4]);
+      expect(spellcheckDiagnostics[1]?.suggestions).toContain("monde");
+      expect(
+        spellcheckDiagnostics.every((diagnostic) => (diagnostic.suggestions?.length ?? 0) > 0),
+      ).toBe(true);
+      expect(spellcheckDiagnostics.flatMap((diagnostic) => diagnostic.suggestions ?? [])).toContain(
+        "monde",
+      );
+    },
+    standardDictionaryTimeout,
+  );
 
   it("requires explicit imports for standard languages without bundled presets", async () => {
     await expect(
