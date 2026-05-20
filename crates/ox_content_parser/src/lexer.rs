@@ -34,7 +34,7 @@ pub enum Token {
     OrderedListMarker(Option<u32>),
 
     /// Fenced code block delimiter.
-    #[regex(r"```[^\n]*|~~~[^\n]*")]
+    #[regex(r"```[^\n]*|~~~[^\n]*", allow_greedy = true)]
     FencedCodeDelimiter,
 
     /// Emphasis marker (*).
