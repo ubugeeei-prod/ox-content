@@ -7,11 +7,10 @@ use ox_jsdoc::parser::{
 };
 use oxc_allocator::Allocator;
 use oxc_ast::ast::{
-    BindingPatternKind, Class, Comment, Declaration, ExportDefaultDeclarationKind, Expression,
-    Function, Statement, TSSignature, TSType, TSTypeName,
+    BindingPattern, Class, Comment, Declaration, ExportDefaultDeclarationKind, Expression,
+    Function, Statement, TSSignature, TSType, TSTypeAnnotation, TSTypeName,
 };
-use oxc_ast::visit::walk;
-use oxc_ast::Visit;
+use oxc_ast_visit::{walk, Visit};
 use oxc_parser::Parser;
 use oxc_span::{GetSpan, SourceType};
 use rustc_hash::{FxBuildHasher, FxHashMap, FxHashSet};
@@ -251,7 +250,7 @@ fn extract_raw_jsdoc(comment: &Comment, source: &str) -> String {
 /// AST visitor can resolve documentation by `attached_to` via a cheap lookup.
 fn build_jsdoc_cache(source: &str, comments: &[Comment]) -> FxHashMap<u32, ParsedJsdoc> {
     let jsdoc_comments: Vec<&Comment> =
-        comments.iter().filter(|comment| comment.is_jsdoc(source)).collect();
+        comments.iter().filter(|comment| comment.is_jsdoc()).collect();
     if jsdoc_comments.is_empty() {
         return FxHashMap::default();
     }
@@ -531,10 +530,7 @@ impl<'a> DocVisitor<'a> {
             .collect::<Vec<_>>();
 
         if let Some(rest) = &params.rest {
-            items.push(format!(
-                "...{}",
-                self.slice(rest.argument.span().start, rest.argument.span().end)
-            ));
+            items.push(self.slice(rest.span.start, rest.span.end));
         }
 
         items.join(", ")
@@ -622,29 +618,27 @@ impl<'a> DocVisitor<'a> {
         if let Some(super_class) = &class.super_class {
             sig.push_str(" extends ");
             sig.push_str(&self.slice(super_class.span().start, super_class.span().end));
-            if let Some(type_params) = &class.super_type_parameters {
+            if let Some(type_params) = &class.super_type_arguments {
                 sig.push_str(&self.format_type_parameter_declaration(Some(type_params)));
             }
         }
 
-        if let Some(implements) = &class.implements {
-            let implements = implements
-                .iter()
-                .map(|item| {
-                    let mut value =
-                        self.slice(item.expression.span().start, item.expression.span().end);
-                    if let Some(type_params) = &item.type_parameters {
-                        value.push_str(&self.format_type_parameter_declaration(Some(type_params)));
-                    }
-                    value
-                })
-                .collect::<Vec<_>>()
-                .join(", ");
+        let implements = class
+            .implements
+            .iter()
+            .map(|item| {
+                let mut value = Self::format_ts_type_name(&item.expression);
+                if let Some(type_params) = &item.type_arguments {
+                    value.push_str(&self.format_type_parameter_declaration(Some(type_params)));
+                }
+                value
+            })
+            .collect::<Vec<_>>()
+            .join(", ");
 
-            if !implements.is_empty() {
-                sig.push_str(" implements ");
-                sig.push_str(&implements);
-            }
+        if !implements.is_empty() {
+            sig.push_str(" implements ");
+            sig.push_str(&implements);
         }
 
         sig
@@ -666,24 +660,23 @@ impl<'a> DocVisitor<'a> {
         sig.push_str(interface.id.name.as_str());
         sig.push_str(&self.format_type_parameter_declaration(interface.type_parameters.as_ref()));
 
-        if let Some(extends) = &interface.extends {
-            let extends = extends
-                .iter()
-                .map(|item| {
-                    let mut value =
-                        self.slice(item.expression.span().start, item.expression.span().end);
-                    if let Some(type_params) = &item.type_parameters {
-                        value.push_str(&self.format_type_parameter_declaration(Some(type_params)));
-                    }
-                    value
-                })
-                .collect::<Vec<_>>()
-                .join(", ");
+        let extends = interface
+            .extends
+            .iter()
+            .map(|item| {
+                let mut value =
+                    self.slice(item.expression.span().start, item.expression.span().end);
+                if let Some(type_params) = &item.type_arguments {
+                    value.push_str(&self.format_type_parameter_declaration(Some(type_params)));
+                }
+                value
+            })
+            .collect::<Vec<_>>()
+            .join(", ");
 
-            if !extends.is_empty() {
-                sig.push_str(" extends ");
-                sig.push_str(&extends);
-            }
+        if !extends.is_empty() {
+            sig.push_str(" extends ");
+            sig.push_str(&extends);
         }
 
         sig
@@ -841,23 +834,18 @@ impl<'a> DocVisitor<'a> {
         (type_annotation, Self::clean_tag_description(rest))
     }
 
-    fn binding_pattern_name(pattern: &oxc_ast::ast::BindingPattern) -> String {
-        match &pattern.kind {
-            BindingPatternKind::BindingIdentifier(id) => id.name.to_string(),
-            BindingPatternKind::AssignmentPattern(assign) => {
-                Self::binding_pattern_name(&assign.left)
-            }
-            BindingPatternKind::ObjectPattern(_) => "param".to_string(),
-            BindingPatternKind::ArrayPattern(_) => "param".to_string(),
+    fn binding_pattern_name(pattern: &BindingPattern<'a>) -> String {
+        match pattern {
+            BindingPattern::BindingIdentifier(id) => id.name.to_string(),
+            BindingPattern::AssignmentPattern(assign) => Self::binding_pattern_name(&assign.left),
+            BindingPattern::ObjectPattern(_) => "param".to_string(),
+            BindingPattern::ArrayPattern(_) => "param".to_string(),
         }
     }
 
-    fn binding_pattern_default_value(
-        &self,
-        pattern: &oxc_ast::ast::BindingPattern,
-    ) -> Option<String> {
-        match &pattern.kind {
-            BindingPatternKind::AssignmentPattern(assign) => {
+    fn binding_pattern_default_value(&self, pattern: &BindingPattern<'a>) -> Option<String> {
+        match pattern {
+            BindingPattern::AssignmentPattern(assign) => {
                 Some(self.slice(assign.right.span().start, assign.right.span().end))
             }
             _ => None,
@@ -865,23 +853,28 @@ impl<'a> DocVisitor<'a> {
     }
 
     /// Format a binding pattern.
-    fn format_binding_pattern(&self, pattern: &oxc_ast::ast::BindingPattern) -> String {
-        match &pattern.kind {
-            BindingPatternKind::BindingIdentifier(id) => {
+    fn format_binding_pattern(
+        &self,
+        pattern: &BindingPattern<'a>,
+        optional: bool,
+        type_annotation: Option<&TSTypeAnnotation<'a>>,
+    ) -> String {
+        match pattern {
+            BindingPattern::BindingIdentifier(id) => {
                 let mut s = id.name.to_string();
-                if pattern.optional {
+                if optional {
                     s.push('?');
                 }
-                if let Some(type_ann) = &pattern.type_annotation {
+                if let Some(type_ann) = type_annotation {
                     s.push_str(": ");
                     s.push_str(&self.format_ts_type(&type_ann.type_annotation));
                 }
                 s
             }
-            BindingPatternKind::ObjectPattern(_) => "{...}".to_string(),
-            BindingPatternKind::ArrayPattern(_) => "[...]".to_string(),
-            BindingPatternKind::AssignmentPattern(assign) => {
-                self.format_binding_pattern(&assign.left)
+            BindingPattern::ObjectPattern(_) => "{...}".to_string(),
+            BindingPattern::ArrayPattern(_) => "[...]".to_string(),
+            BindingPattern::AssignmentPattern(assign) => {
+                self.format_binding_pattern(&assign.left, optional, type_annotation)
             }
         }
     }
@@ -917,7 +910,13 @@ impl<'a> DocVisitor<'a> {
                     .params
                     .items
                     .iter()
-                    .map(|p| self.format_binding_pattern(&p.pattern))
+                    .map(|p| {
+                        self.format_binding_pattern(
+                            &p.pattern,
+                            p.optional,
+                            p.type_annotation.as_deref(),
+                        )
+                    })
                     .collect();
                 let ret = self.format_ts_type(&func.return_type.type_annotation);
                 format!("({}) => {}", params.join(", "), ret)
@@ -951,6 +950,7 @@ impl<'a> DocVisitor<'a> {
             TSTypeName::QualifiedName(qn) => {
                 format!("{}.{}", Self::format_ts_type_name(&qn.left), qn.right.name)
             }
+            TSTypeName::ThisExpression(_) => "this".to_string(),
         }
     }
 
@@ -967,16 +967,21 @@ impl<'a> DocVisitor<'a> {
                 let tag = Self::find_param_tag(tags, &name);
                 let default_value = self
                     .binding_pattern_default_value(&param.pattern)
+                    .or_else(|| {
+                        param
+                            .initializer
+                            .as_ref()
+                            .map(|init| self.slice(init.span().start, init.span().end))
+                    })
                     .or_else(|| tag.as_ref().and_then(|tag| tag.default_value.clone()));
 
                 let type_annotation = param
-                    .pattern
                     .type_annotation
                     .as_ref()
                     .map(|t| self.format_ts_type(&t.type_annotation))
                     .or_else(|| tag.as_ref().and_then(|tag| tag.type_annotation.clone()));
 
-                let optional = param.pattern.optional
+                let optional = param.optional
                     || default_value.is_some()
                     || tag.as_ref().is_some_and(|tag| tag.optional);
                 let description = tag.and_then(|tag| tag.description);
@@ -986,10 +991,9 @@ impl<'a> DocVisitor<'a> {
             .collect::<Vec<_>>();
 
         if let Some(rest) = params.rest.as_ref() {
-            let name = Self::binding_pattern_name(&rest.argument);
+            let name = Self::binding_pattern_name(&rest.rest.argument);
             let tag = Self::find_param_tag(tags, &name);
             let type_annotation = rest
-                .argument
                 .type_annotation
                 .as_ref()
                 .map(|t| self.format_ts_type(&t.type_annotation))
@@ -1273,7 +1277,7 @@ impl<'a> DocVisitor<'a> {
                 let (line, end_line) = self.span_lines(attached_to, var_decl.span.end);
 
                 for declarator in &var_decl.declarations {
-                    if let BindingPatternKind::BindingIdentifier(id) = &declarator.id.kind {
+                    if let BindingPattern::BindingIdentifier(id) = &declarator.id {
                         let name = id.name.to_string();
 
                         let Some(initializer) = &declarator.init else {
@@ -1495,12 +1499,19 @@ impl<'a> DocVisitor<'a> {
                 let (line, end_line) = self.span_lines(attached_to, enum_decl.span.end);
 
                 let children: Vec<DocItem> = enum_decl
+                    .body
                     .members
                     .iter()
                     .map(|member| {
                         let member_name = match &member.id {
                             oxc_ast::ast::TSEnumMemberName::Identifier(id) => id.name.to_string(),
                             oxc_ast::ast::TSEnumMemberName::String(s) => s.value.to_string(),
+                            oxc_ast::ast::TSEnumMemberName::ComputedString(s) => {
+                                s.value.to_string()
+                            }
+                            oxc_ast::ast::TSEnumMemberName::ComputedTemplateString(template) => {
+                                self.slice(template.span.start, template.span.end)
+                            }
                         };
                         let (member_line, member_end_line) =
                             self.span_lines(member.span.start, member.span.end);

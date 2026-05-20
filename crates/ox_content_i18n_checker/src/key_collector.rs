@@ -1,7 +1,6 @@
 use oxc_allocator::Allocator;
 use oxc_ast::ast::{Argument, CallExpression, Expression};
-use oxc_ast::visit::walk;
-use oxc_ast::Visit;
+use oxc_ast_visit::{walk, Visit};
 use oxc_parser::Parser;
 use oxc_span::SourceType;
 use std::path::Path;

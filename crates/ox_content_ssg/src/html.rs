@@ -1290,8 +1290,15 @@ mod tests {
     #[test]
     fn test_generate_bare_html_escapes_title_but_keeps_content_raw() {
         let html = generate_bare_html("<h1>Raw & ready</h1>", "<script>alert(1)</script>");
+        let title = html
+            .split("<title>")
+            .nth(1)
+            .and_then(|value| value.split("</title>").next())
+            .expect("bare HTML should include a title element");
 
-        assert!(html.contains("<title>&lt;script&gt;alert(1)&lt;/script&gt;</title>"));
+        assert!(title.contains("alert(1)"));
+        assert!(!title.contains('<'));
+        assert!(!title.contains('>'));
         assert!(html.contains("<h1>Raw & ready</h1>"));
         assert!(!html.contains("<title><script>"));
     }

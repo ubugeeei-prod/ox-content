@@ -3,9 +3,10 @@
 //! The benchmark focuses on the JSDoc parsing path, which dominates extraction
 //! cost for files dense with documentation comments.
 
-use criterion::{black_box, criterion_group, criterion_main, Criterion, Throughput};
+use criterion::{criterion_group, criterion_main, Criterion, Throughput};
 use ox_content_docs::DocExtractor;
 use oxc_span::SourceType;
+use std::hint::black_box;
 
 const SMALL_TS: &str = r"
 /**

@@ -1,8 +1,9 @@
 //! Benchmarks for the Markdown parser.
 
-use criterion::{black_box, criterion_group, criterion_main, Criterion, Throughput};
+use criterion::{criterion_group, criterion_main, Criterion, Throughput};
 use ox_content_allocator::Allocator;
 use ox_content_parser::Parser;
+use std::hint::black_box;
 
 const SIMPLE_MD: &str = r#"# Hello World
 

@@ -1,9 +1,10 @@
-use criterion::{black_box, criterion_group, criterion_main, BenchmarkId, Criterion, Throughput};
+use criterion::{criterion_group, criterion_main, BenchmarkId, Criterion, Throughput};
 use ox_content_allocator::Allocator;
 use ox_content_napi::{
     parse, parse_mdast_raw, transform, transform_mdast_raw, JsParserOptions, JsTransformOptions,
 };
 use ox_content_parser::{Parser, ParserOptions};
+use std::hint::black_box;
 
 const SAMPLE_BLOCK: &str = r"# Heading
 
