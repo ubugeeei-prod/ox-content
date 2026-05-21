@@ -974,6 +974,7 @@ a:hover {
 .content .ox-api-entry__body {
   margin-left: calc(var(--octc-api-kind-width, 6.5rem) + 0.95rem);
   margin-top: 0.7rem;
+  margin-bottom: 1rem;
   padding: 1.45rem 1rem 2.1rem 1.1rem;
   border: 1px solid color-mix(in srgb, var(--octc-color-border) 72%, transparent);
   border-radius: 4px;
