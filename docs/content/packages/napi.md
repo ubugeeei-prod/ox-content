@@ -8,6 +8,12 @@ Node.js bindings for Ox Content's Rust core.
 vp install @ox-content/napi
 ```
 
+## Platform Support
+
+Release packages ship native bindings for macOS arm64/x64, Linux arm64/x64 GNU, and Windows x64 MSVC. CI runs a lightweight load and parse/render smoke test on macOS, Linux, and Windows for every PR.
+
+Other Node.js platforms may build from source if the Rust toolchain and NAPI build tooling are available, but they are not published as prebuilt npm binding packages.
+
 ## Usage
 
 ### Parse Markdown to AST

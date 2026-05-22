@@ -127,6 +127,50 @@ jobs:
       - name: Pack and inspect publishable packages
         run: node scripts/package-dry-run.mjs
 
+  napi-smoke:
+    name: NAPI smoke - ${{ matrix.os }}
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, macos-latest, windows-latest]
+    steps:
+      - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4
+        with:
+          persist-credentials: false
+
+      - name: Setup Vite+
+        uses: voidzero-dev/setup-vp@ca1c46663915d6c1042ae23bd39ab85718bfb0fa # v1
+        with:
+          node-version-file: ".node-version"
+          cache: true
+          run-install: true
+
+      - name: Setup Rust
+        uses: dtolnay/rust-toolchain@29eef336d9b2848a0b548edc03f92a220660cdb8 # stable
+
+      - name: Cache cargo
+        uses: Swatinem/rust-cache@e18b497796c12c097a38f9edb9d0641fb99eee32 # v2
+
+      - name: Build local NAPI binding
+        working-directory: crates/ox_content_napi
+        run: vp exec -- napi build --release
+
+      - name: Load and parse smoke test
+        shell: bash
+        run: |
+          node - <<'NODE'
+          const napi = require("./crates/ox_content_napi");
+          const result = napi.parseAndRender("# Hello\n\nSmoke test", { gfm: true });
+          if (result.errors.length > 0) {
+            throw new Error(result.errors.join("\n"));
+          }
+          if (!result.html.includes("Hello</h1>")) {
+            throw new Error(`Unexpected render output: ${result.html}`);
+          }
+          console.log(`@ox-content/napi ${napi.version()} loaded on ${process.platform}-${process.arch}`);
+          NODE
+
   build:
     name: Build
     runs-on: ubuntu-latest
