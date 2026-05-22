@@ -92,7 +92,7 @@ jobs:
         uses: Swatinem/rust-cache@e18b497796c12c097a38f9edb9d0641fb99eee32 # v2
 
       - name: Install Playwright browsers
-        run: vp exec --filter @ox-content/vite-plugin -- playwright install --with-deps chromium
+        run: vp exec --filter @ox-content/vite-plugin -- playwright install chromium
 
       - name: Run tests
         run: vp run test
