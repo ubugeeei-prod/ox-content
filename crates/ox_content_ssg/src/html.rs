@@ -1288,6 +1288,15 @@ mod tests {
     }
 
     #[test]
+    fn test_generate_bare_html_escapes_title_but_keeps_content_raw() {
+        let html = generate_bare_html("<h1>Raw & ready</h1>", "<script>alert(1)</script>");
+
+        assert!(html.contains("<title>&lt;script&gt;alert(1)&lt;/script&gt;</title>"));
+        assert!(html.contains("<h1>Raw & ready</h1>"));
+        assert!(!html.contains("<title><script>"));
+    }
+
+    #[test]
     fn test_generate_nav_html_with_nested_collapsed_items() {
         let nav_groups = vec![NavGroup {
             title: "Guide & API".to_string(),
