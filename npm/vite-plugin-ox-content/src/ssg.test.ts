@@ -4,6 +4,7 @@ import {
   buildNavItems,
   buildThemeNavItems,
   formatTitle,
+  generateBareHtmlPage,
   getHref,
   getOutputPath,
   getPageLocale,
@@ -44,6 +45,13 @@ describe("getPageLocale", () => {
 });
 
 describe("SSG route helpers", () => {
+  it("generates bare HTML through the NAPI-backed wrapper", () => {
+    const html = generateBareHtmlPage("<main>Body</main>", "Bare <Page>");
+
+    expect(html).toContain("<title>Bare &lt;Page&gt;</title>");
+    expect(html).toContain("<main>Body</main>");
+  });
+
   it("resolves output paths, URL paths, and hrefs through NAPI", () => {
     const srcDir = path.join(process.cwd(), "docs");
     const outDir = path.join(process.cwd(), "dist");
