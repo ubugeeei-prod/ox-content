@@ -295,7 +295,12 @@ fn create_shared_asset_chunk(
 
 fn create_content_hash(content: &str) -> String {
     let hash = Sha256::digest(content.as_bytes());
-    format!("{hash:x}").chars().take(10).collect()
+    let mut output = String::with_capacity(10);
+    for byte in hash.iter().take(5) {
+        use std::fmt::Write as _;
+        let _ = write!(&mut output, "{byte:02x}");
+    }
+    output
 }
 
 fn sanitize_chunk_label(label: &str) -> String {

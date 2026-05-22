@@ -192,6 +192,8 @@ importers:
 
   crates/ox_content_wasm/pkg: {}
 
+  crates/ox_content_wasm/pkg: {}
+
   docs:
     devDependencies:
       '@ox-content/vite-plugin':

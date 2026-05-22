@@ -15,7 +15,7 @@ description = "Static Site Generation for Ox Content documentation"
 workspace = true
 
 [dependencies]
-askama = "0.12"
+askama = "0.16"
 serde = { workspace = true }
 serde_json = { workspace = true }
 sha2 = { workspace = true }
