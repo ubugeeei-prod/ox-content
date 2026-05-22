@@ -4,10 +4,10 @@ import { defineConfig } from "vite-plus";
 const lifecycleEnvName = "OX_CONTENT_VP_LIFECYCLE";
 
 const lifecycleTasks: Record<string, string> = {
-  build: "build",
-  check: "check",
-  dev: "dev",
-  fmt: "fmt",
+  build: "workspace:build",
+  check: "workspace:check",
+  dev: "workspace:dev",
+  fmt: "workspace:fmt",
 };
 
 // Vite+ direct commands bypass run.tasks, so root lifecycle commands delegate into the task graph.
@@ -85,7 +85,7 @@ export default defineConfig({
       tasks: true,
     },
     tasks: {
-      build: noopTask(["build:docs", "build:playground", "doc:cargo"]),
+      "workspace:build": noopTask(["build:docs", "build:playground", "doc:cargo"]),
       "build:rust": task("cargo build --workspace"),
       "build:rust-release": task("cargo build --workspace --release"),
       "build:napi": task("vp run --filter ./crates/ox_content_napi build", {
@@ -102,7 +102,7 @@ export default defineConfig({
       }),
       "build:wasm": task("node --experimental-strip-types scripts/build-wasm-package.ts"),
 
-      test: noopTask(["test:rust", "test:ts"]),
+      "workspace:test": noopTask(["test:rust", "test:ts"]),
       "test:rust": task("cargo test --workspace"),
       "test:rust-verbose": uncachedTask("cargo test --workspace -- --nocapture"),
       "test:ts": noopTask(["test:ts-unit", "test:vrt"]),
@@ -119,21 +119,21 @@ export default defineConfig({
         },
       ),
 
-      check: noopTask(["fmt:rust-check", "lint:rust", "check:ts"]),
+      "workspace:check": noopTask(["fmt:rust-check", "lint:rust", "check:ts"]),
       "check:rust": task("cargo check --workspace --all-targets"),
 
       clippy: task("cargo clippy --workspace --all-targets -- -D warnings", {
         dependsOn: ["check:rust"],
       }),
 
-      fmt: noopTask(["fmt:rust", "fmt:ts"]),
+      "workspace:fmt": noopTask(["fmt:rust", "fmt:ts"]),
       "fmt:rust": task("cargo fmt --all"),
-      "fmt:check": noopTask(["fmt:rust-check", "fmt:ts-check"]),
+      "workspace:fmt:check": noopTask(["fmt:rust-check", "fmt:ts-check"]),
       "fmt:rust-check": task("cargo fmt --all -- --check"),
       "fmt:ts": task(vpBuiltin("vp fmt")),
       "fmt:ts-check": task(vpBuiltin("vp fmt --check")),
 
-      lint: noopTask(["lint:rust", "check:ts"]),
+      "workspace:lint": noopTask(["lint:rust", "check:ts"]),
       "lint:rust": task("cargo clippy --workspace --all-targets -- -D warnings", {
         dependsOn: ["check:rust"],
       }),
@@ -154,8 +154,8 @@ export default defineConfig({
         cwd: "crates/ox_content_napi",
       }),
 
-      ci: noopTask(["fmt:rust-check", "lint:rust", "check:ts", "test"]),
-      ready: noopTask(["fmt", "lint", "test"]),
+      "workspace:ci": noopTask(["fmt:rust-check", "lint:rust", "check:ts", "workspace:test"]),
+      "workspace:ready": noopTask(["workspace:fmt", "workspace:lint", "workspace:test"]),
       coverage: uncachedTask("cargo llvm-cov --workspace --html"),
       setup: uncachedTask(
         "rustup component add clippy rustfmt && cargo install cargo-watch cargo-llvm-cov",
@@ -176,7 +176,7 @@ export default defineConfig({
         dependsOn: ["build:npm"],
       }),
       "dev:playground": uncachedTask("vp run --filter ./examples/playground dev"),
-      dev: uncachedTask(
+      "workspace:dev": uncachedTask(
         [
           "trap 'kill 0' EXIT INT TERM",
           "vp run --filter ./docs dev &",
@@ -191,7 +191,7 @@ export default defineConfig({
       "dev-preview": uncachedTask("vp run --filter ./docs preview"),
 
       install: uncachedTask("vp install"),
-      release: uncachedTask("node --experimental-strip-types scripts/release.ts"),
+      "workspace:release": uncachedTask("node --experimental-strip-types scripts/release.ts"),
       "examples-install": noopTask(["install"], { cache: false }),
     },
   },
