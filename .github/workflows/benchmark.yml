@@ -66,6 +66,7 @@ jobs:
         env:
           BASE_SHA: ${{ github.event.pull_request.base.sha }}
           HEAD_SHA: ${{ github.event.pull_request.head.sha }}
+          OX_CONTENT_BENCHMARK_ALLOW_REGRESSION: ${{ contains(github.event.pull_request.labels.*.name, 'benchmark-regression-accepted') && '1' || '0' }}
         working-directory: .benchmark/head
         run: node "$GITHUB_WORKSPACE/.github/scripts/compare-pr-benchmark.mjs"
 
