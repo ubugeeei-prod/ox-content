@@ -6,6 +6,9 @@ const COMMENT_MARKER = "<!-- ox-content-benchmark-report -->";
 const TARGET_NAMES = new Set(["@ox-content/napi", "@ox-content/napi (async)"]);
 const COMMENT_SIZE_NAMES = new Set(["large"]);
 const NOISE_THRESHOLD_PERCENT = 5;
+const RUNTIME_REGRESSION_THRESHOLD_PERCENT = -10;
+const BUNDLE_REGRESSION_THRESHOLD_PERCENT = 5;
+const BENCHMARK_OVERRIDE_ENV = "OX_CONTENT_BENCHMARK_ALLOW_REGRESSION";
 const BUNDLE_APP_ORDER = [
   "ox-content (bare)",
   "ox-content (default)",
@@ -33,6 +36,10 @@ if (options.outputPath) {
 }
 
 console.log(body);
+
+if (body.includes("<!-- ox-content-benchmark-regression -->")) {
+  process.exitCode = 1;
+}
 
 function parseOptions(args) {
   const parsed = {
@@ -125,6 +132,8 @@ function buildComment({ basePath, headPath, baseBundlePath, headBundlePath, base
       ? compareBundleReports(readJson(baseBundlePath), readJson(headBundlePath))
       : [];
   const summary = summarizeRows(runtimeRows, bundleRows);
+  const regressions = collectRegressions(runtimeRows, bundleRows);
+  const overrideEnabled = process.env[BENCHMARK_OVERRIDE_ENV] === "1";
   const compareText =
     baseSha && headSha
       ? `Comparing base \`${shortSha(baseSha)}\` to head \`${shortSha(headSha)}\`.`
@@ -181,6 +190,35 @@ function buildComment({ basePath, headPath, baseBundlePath, headBundlePath, base
       "Bundle size uses gzipped JS/CSS/HTML/JSON assets. Requests estimate index.html plus referenced local initial assets. Lower is better.",
       "",
     );
+  }
+
+  lines.push(
+    "### Regression Gate",
+    "",
+    `Runtime regressions fail when head throughput is more than ${Math.abs(RUNTIME_REGRESSION_THRESHOLD_PERCENT)}% slower than base. Bundle regressions fail when gzipped size grows by more than ${BUNDLE_REGRESSION_THRESHOLD_PERCENT}%. Maintainers can intentionally override by applying the \`benchmark-regression-accepted\` PR label, which sets \`${BENCHMARK_OVERRIDE_ENV}=1\`.`,
+    "",
+  );
+
+  if (regressions.length === 0) {
+    lines.push("No threshold regressions found.", "");
+  } else {
+    if (!overrideEnabled) {
+      lines.push("<!-- ox-content-benchmark-regression -->");
+    }
+    lines.push(
+      overrideEnabled
+        ? "Threshold regressions were found, but the maintainer override is active."
+        : "Threshold regressions were found and this check should fail.",
+      "",
+      "| Metric | Target | Delta | Threshold |",
+      "| --- | --- | ---: | ---: |",
+    );
+    for (const regression of regressions) {
+      lines.push(
+        `| ${regression.metric} | ${regression.target} | ${formatDelta(regression.deltaPercent)} | ${formatDelta(regression.thresholdPercent)} |`,
+      );
+    }
+    lines.push("");
   }
 
   return lines.join("\n");
@@ -339,6 +377,40 @@ function summarizeRows(runtimeRows, bundleRows) {
   }
 
   return `${parts.join(" and ")} compared.`;
+}
+
+function collectRegressions(runtimeRows, bundleRows) {
+  const regressions = [];
+
+  for (const row of runtimeRows) {
+    if (
+      Number.isFinite(row.deltaPercent) &&
+      row.deltaPercent < RUNTIME_REGRESSION_THRESHOLD_PERCENT
+    ) {
+      regressions.push({
+        metric: `${row.suiteLabel} runtime`,
+        target: `${row.sizeName} / ${row.targetName}`,
+        deltaPercent: row.deltaPercent,
+        thresholdPercent: RUNTIME_REGRESSION_THRESHOLD_PERCENT,
+      });
+    }
+  }
+
+  for (const row of bundleRows) {
+    if (
+      Number.isFinite(row.deltaPercent) &&
+      row.deltaPercent > BUNDLE_REGRESSION_THRESHOLD_PERCENT
+    ) {
+      regressions.push({
+        metric: "Bundle gzip",
+        target: row.name,
+        deltaPercent: row.deltaPercent,
+        thresholdPercent: BUNDLE_REGRESSION_THRESHOLD_PERCENT,
+      });
+    }
+  }
+
+  return regressions;
 }
 
 function formatNumber(value) {

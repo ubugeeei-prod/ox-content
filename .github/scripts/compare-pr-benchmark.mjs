@@ -7,7 +7,7 @@ import { join } from "node:path";
 const runnerTemp = requiredEnv("RUNNER_TEMP");
 const commentPath = join(runnerTemp, "benchmark-comment.md");
 
-run("node", [
+const status = run("node", [
   "benchmarks/bundle-size/compare-pr-benchmark.mjs",
   "--base",
   join(runnerTemp, "benchmark-base.json"),
@@ -27,6 +27,10 @@ run("node", [
 
 if (process.env.GITHUB_STEP_SUMMARY) {
   appendFileSync(process.env.GITHUB_STEP_SUMMARY, `${readFileSync(commentPath, "utf8")}\n`);
+}
+
+if (status !== 0) {
+  process.exit(status);
 }
 
 /**
@@ -52,7 +56,5 @@ function run(command, args) {
   if (result.error) {
     throw result.error;
   }
-  if (result.status !== 0) {
-    process.exit(result.status ?? 1);
-  }
+  return result.status ?? 1;
 }
