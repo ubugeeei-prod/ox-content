@@ -153,11 +153,13 @@ export async function generateHtmlPage(
   const mod = await importNapiModule();
 
   // Convert TocEntry to the format expected by Rust
-  const tocForRust = pageData.toc.map((entry) => ({
+  const toRustTocEntry = (entry: TocEntry): TocEntry => ({
     depth: entry.depth,
     text: entry.text,
     slug: entry.slug,
-  }));
+    children: entry.children?.map(toRustTocEntry) ?? [],
+  });
+  const tocForRust = pageData.toc.map(toRustTocEntry);
 
   // Convert NavGroup to the format expected by Rust
   const toRustNavItem = (item: SsgNavItem): SsgNavItem => ({

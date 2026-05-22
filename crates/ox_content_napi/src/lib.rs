@@ -20,10 +20,10 @@ use std::process::Command;
 
 use ox_content_allocator::Allocator;
 use ox_content_docs::{
-    generate_markdown, generate_nav_code, generate_nav_metadata, normalize_doc_items, ApiDocEntry,
-    ApiDocModule, ApiDocTag, ApiParamDoc, ApiReturnDoc, DocExtractor, DocItem, DocItemKind, DocTag,
-    DocsNavItem, MarkdownDocsOptions, NormalizedDocEntry, NormalizedParamDoc, NormalizedReturnDoc,
-    ParamDoc,
+    generate_docs_data_json, generate_markdown, generate_nav_code, generate_nav_metadata,
+    normalize_doc_items, ApiDocEntry, ApiDocModule, ApiDocTag, ApiParamDoc, ApiReturnDoc,
+    DocExtractor, DocItem, DocItemKind, DocTag, DocsNavItem, MarkdownDocsOptions,
+    NormalizedDocEntry, NormalizedParamDoc, NormalizedReturnDoc, ParamDoc,
 };
 use ox_content_parser::{Parser, ParserOptions};
 use ox_content_renderer::HtmlRenderer;
@@ -71,6 +71,8 @@ pub struct TocEntry {
     pub text: String,
     /// URL-friendly slug.
     pub slug: String,
+    /// Child entries.
+    pub children: Vec<TocEntry>,
 }
 
 /// Transform result containing HTML, frontmatter, and TOC.
@@ -84,6 +86,30 @@ pub struct TransformResult {
     pub toc: Vec<TocEntry>,
     /// Parse/render errors, if any.
     pub errors: Vec<String>,
+}
+
+/// Source offset where prepared Markdown content begins in the original source.
+#[napi(object)]
+pub struct JsSourceOrigin {
+    /// UTF-8 byte offset.
+    pub byte_offset: u32,
+    /// UTF-16 code-unit offset.
+    pub offset: u32,
+    /// 1-based line number.
+    pub line: u32,
+    /// 1-based column number.
+    pub column: u32,
+}
+
+/// Prepared Markdown source with parsed frontmatter.
+#[napi(object)]
+pub struct PreparedSourceResult {
+    /// Markdown content after optional frontmatter removal.
+    pub content: String,
+    /// Parsed frontmatter object.
+    pub frontmatter: HashMap<String, serde_json::Value>,
+    /// Source position where `content` starts in the original source.
+    pub source_offset: JsSourceOrigin,
 }
 
 /// Raw JSDoc tag extracted from source code.
@@ -610,6 +636,19 @@ pub fn generate_docs_markdown(
         .collect()
 }
 
+/// Generates the machine-readable docs data JSON payload.
+#[napi(js_name = "generateDocsDataJson")]
+pub fn generate_docs_data_json_napi(
+    docs: Vec<JsDocsMarkdownModule>,
+    generated_at: String,
+) -> Result<String> {
+    generate_docs_data_json(
+        &docs.into_iter().map(convert_markdown_module).collect::<Vec<_>>(),
+        &generated_at,
+    )
+    .map_err(|error| Error::from_reason(error.to_string()))
+}
+
 /// Restores code block metadata after JavaScript-side syntax highlighting.
 #[napi]
 pub fn merge_highlighted_code_blocks(original_html: String, highlighted_html: String) -> String {
@@ -646,6 +685,24 @@ pub fn transform_mdast_raw(
 pub fn prepare_source_raw(source: String, options: Option<JsSourceOptions>) -> Result<Uint8Array> {
     let frontmatter = options.unwrap_or_default().frontmatter.unwrap_or(true);
     MarkdownTransformer::with_frontmatter(frontmatter).prepare_source_raw(&source)
+}
+
+/// Splits Markdown source into content and parsed frontmatter.
+#[napi(js_name = "prepareSource")]
+pub fn prepare_source(source: String, options: Option<JsSourceOptions>) -> PreparedSourceResult {
+    let frontmatter = options.unwrap_or_default().frontmatter.unwrap_or(true);
+    let prepared = MarkdownTransformer::with_frontmatter(frontmatter).prepare_source(&source);
+
+    PreparedSourceResult {
+        content: prepared.content,
+        frontmatter: prepared.frontmatter,
+        source_offset: JsSourceOrigin {
+            byte_offset: prepared.source_origin.byte_offset,
+            offset: prepared.source_origin.offset,
+            line: prepared.source_origin.line,
+            column: prepared.source_origin.column,
+        },
+    }
 }
 
 // =============================================================================
@@ -1850,11 +1907,7 @@ pub fn generate_ssg_html(
         title: page_data.title,
         description: page_data.description,
         content: page_data.content,
-        toc: page_data
-            .toc
-            .into_iter()
-            .map(|t| ox_content_ssg::TocEntry { depth: t.depth, text: t.text, slug: t.slug })
-            .collect(),
+        toc: flatten_toc_entries(page_data.toc),
         last_updated: page_data
             .last_updated
             .filter(|timestamp| timestamp.is_finite() && *timestamp >= 0.0)
@@ -1887,6 +1940,19 @@ pub fn generate_ssg_html(
     };
 
     ox_content_ssg::generate_html(&ssg_page_data, &ssg_nav_groups, &ssg_config)
+}
+
+fn flatten_toc_entries(entries: Vec<TocEntry>) -> Vec<ox_content_ssg::TocEntry> {
+    let mut flat = Vec::new();
+    for entry in entries {
+        flat.push(ox_content_ssg::TocEntry {
+            depth: entry.depth,
+            text: entry.text,
+            slug: entry.slug,
+        });
+        flat.extend(flatten_toc_entries(entry.children));
+    }
+    flat
 }
 
 /// Generates a bare SSG HTML page without navigation or styles.
@@ -2430,6 +2496,98 @@ mod tests {
 
         assert_eq!(content, "Body");
         assert!(frontmatter.is_empty());
+    }
+
+    #[test]
+    fn prepare_source_returns_object_shaped_frontmatter_and_origin() {
+        let result = super::prepare_source(
+            "---\ntitle: Guide\nmeta:\n  draft: false\n---\n# Body".to_string(),
+            None,
+        );
+
+        assert_eq!(result.content, "# Body");
+        assert_eq!(result.frontmatter.get("title"), Some(&json!("Guide")));
+        assert_eq!(result.frontmatter.get("meta"), Some(&json!({"draft": false})));
+        assert_eq!(result.source_offset.line, 6);
+        assert_eq!(result.source_offset.column, 1);
+    }
+
+    #[test]
+    fn javascript_wrapper_and_declarations_cover_expected_exports() {
+        let manifest_dir = std::path::Path::new(env!("CARGO_MANIFEST_DIR"));
+        let index_js = fs::read_to_string(manifest_dir.join("index.js")).unwrap();
+        let declarations = fs::read_to_string(manifest_dir.join("index.d.ts")).unwrap();
+        let expected_exports = [
+            "buildSearchIndex",
+            "buildSearchIndexFromDirectory",
+            "buildSsgNavItems",
+            "buildSsgThemeNavItems",
+            "checkI18n",
+            "checkI18nProject",
+            "collectDocsSourceFiles",
+            "collectSearchMarkdownFiles",
+            "collectSsgMarkdownFiles",
+            "externalizeSsgAssets",
+            "extractFileDocEntries",
+            "extractFileDocs",
+            "extractSearchContent",
+            "extractSsgTitle",
+            "extractTranslationKeys",
+            "formatSsgTitle",
+            "generateDocsDataJson",
+            "generateDocsMarkdown",
+            "generateDocsNavCode",
+            "generateDocsNavMetadata",
+            "generateI18nModule",
+            "generateOgImageSvg",
+            "generateSearchModule",
+            "generateSearchModuleFromOptions",
+            "generateSsgBareHtml",
+            "generateSsgHtml",
+            "getGitLastUpdated",
+            "getSearchDocumentScopes",
+            "getSsgHref",
+            "getSsgOutputPath",
+            "getSsgPageLocale",
+            "getSsgUrlPath",
+            "lintMarkdown",
+            "lintMarkdownDocuments",
+            "loadDictionaries",
+            "loadDictionariesFlat",
+            "matchesSearchScopes",
+            "mergeHighlightedCodeBlocks",
+            "parse",
+            "parseAndRender",
+            "parseAndRenderAsync",
+            "parseMdastRaw",
+            "parseScopedSearchQuery",
+            "parseTransferRaw",
+            "prepareSource",
+            "prepareSourceRaw",
+            "render",
+            "resolveSsgNavigationGroups",
+            "resolveSsgRoutePaths",
+            "searchIndex",
+            "transform",
+            "transformAsync",
+            "transformMdastRaw",
+            "transformMermaid",
+            "validateMf2",
+            "version",
+            "writeSearchIndex",
+        ];
+
+        for export_name in expected_exports {
+            assert!(
+                index_js
+                    .contains(&format!("module.exports.{export_name} = binding.{export_name};")),
+                "index.js is missing {export_name}"
+            );
+            assert!(
+                declarations.contains(&format!("export declare function {export_name}(")),
+                "index.d.ts is missing {export_name}"
+            );
+        }
     }
 
     #[test]
