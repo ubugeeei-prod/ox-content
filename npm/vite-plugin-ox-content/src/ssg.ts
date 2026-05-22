@@ -71,6 +71,14 @@ interface SsgRoutePaths {
 }
 
 /**
+ * Deprecated compatibility export for consumers that imported the former
+ * TypeScript SSG template. HTML generation is Rust-backed now.
+ *
+ * @deprecated Use `generateHtmlPage`/`buildSsg` instead.
+ */
+export const DEFAULT_HTML_TEMPLATE = "<!-- ox-content default HTML template is Rust-backed -->";
+
+/**
  * Resolves SSG options with defaults.
  */
 export function resolveSsgOptions(ssg: SsgOptions | boolean | undefined): ResolvedSsgOptions {

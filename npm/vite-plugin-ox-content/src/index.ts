@@ -564,7 +564,7 @@ export type {
   MarkdownLintFilesResult,
   MarkdownLintFileOptions as MarkdownLintProjectOptions,
 } from "./lint-files";
-export { buildSsg, resolveSsgOptions } from "./ssg";
+export { buildSsg, resolveSsgOptions, DEFAULT_HTML_TEMPLATE } from "./ssg";
 export { resolveSearchOptions, buildSearchIndex, writeSearchIndex } from "./search";
 export {
   DEFAULT_MARKDOWN_EXTENSIONS,
