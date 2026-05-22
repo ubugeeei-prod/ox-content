@@ -13,7 +13,7 @@
     "@ox-content/vite-plugin": "workspace:*",
     "@types/react": "catalog:",
     "@types/react-dom": "catalog:",
-    "@vue/compiler-sfc": "^3.5.0",
+    "@vue/compiler-sfc": "^3.5.34",
     "react": "catalog:",
     "react-dom": "catalog:",
     "svelte": "catalog:",
