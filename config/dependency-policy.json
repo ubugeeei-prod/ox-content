@@ -183,6 +183,16 @@
         "reason": "Transitive CLI parsing utility used by tooling."
       },
       {
+        "name": "@fortawesome/fontawesome-free",
+        "license": "(CC-BY-4.0 AND OFL-1.1 AND MIT)",
+        "reason": "Transitive icon and font assets used by Mermaid diagram rendering tooling."
+      },
+      {
+        "name": "elkjs",
+        "license": "EPL-2.0",
+        "reason": "Transitive diagram layout engine used by Mermaid rendering tooling."
+      },
+      {
         "name": "khroma",
         "license": "Unknown",
         "reason": "Transitive color utility; review upstream metadata during dependency refresh."
