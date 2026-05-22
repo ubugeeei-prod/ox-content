@@ -1,0 +1,36 @@
+name: Documentation improvement
+description: Request a correction, clarification, or missing documentation.
+title: "docs: "
+labels: ["documentation", "needs-triage"]
+body:
+  - type: textarea
+    id: location
+    attributes:
+      label: Location
+      description: Link or path to the affected documentation, if known.
+      placeholder: docs/... or README section...
+    validations:
+      required: true
+  - type: textarea
+    id: problem
+    attributes:
+      label: Problem
+      description: What is inaccurate, missing, confusing, or stale?
+    validations:
+      required: true
+  - type: textarea
+    id: proposed
+    attributes:
+      label: Proposed improvement
+      description: What should the documentation say or explain?
+    validations:
+      required: true
+  - type: checkboxes
+    id: readiness
+    attributes:
+      label: Readiness checks
+      options:
+        - label: I checked for an existing issue or pull request.
+          required: true
+        - label: I included enough context for a reviewer to validate the change.
+          required: true
