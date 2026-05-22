@@ -31,7 +31,6 @@
  * ```
  */
 
-import YAML from "yaml";
 import type { ResolvedOptions, TransformResult, TocEntry } from "./types";
 import { highlightCode } from "./highlight";
 import { importNapiModule } from "./napi";
@@ -73,7 +72,7 @@ interface NapiBindings {
   ) => {
     html: string;
     frontmatter: string;
-    toc: { depth: number; text: string; slug: string }[];
+    toc: Array<{ depth: number; text: string; slug: string; children?: TocEntry[] }>;
     errors: string[];
   };
 
@@ -173,6 +172,12 @@ interface JsTransformOptions {
    * @default false
    */
   autolinks?: boolean;
+
+  /**
+   * Parse YAML frontmatter before transforming.
+   * @default true
+   */
+  frontmatter?: boolean;
 
   /**
    * Maximum heading depth for table of contents.
@@ -409,16 +414,14 @@ export async function transformMarkdown(
     );
   }
 
-  // Parse frontmatter using YAML on TypeScript side for proper nested object support
-  const { content: markdownContent, frontmatter } = parseFrontmatter(source);
-
-  // Use Rust-based transformation (pass content without frontmatter)
-  const result = napi.transform(markdownContent, {
+  // Use Rust-based transformation, including frontmatter preparation.
+  const result = napi.transform(source, {
     gfm: options.gfm,
     footnotes: options.footnotes,
     taskLists: options.taskLists,
     tables: options.tables,
     strikethrough: options.strikethrough,
+    frontmatter: options.frontmatter,
     tocMaxDepth: options.tocMaxDepth,
     convertMdLinks: ssgOptions?.convertMdLinks,
     baseUrl: ssgOptions?.baseUrl,
@@ -434,13 +437,9 @@ export async function transformMarkdown(
   }
 
   let html = result.html;
+  const frontmatter = parseFrontmatterJson(result.frontmatter);
 
-  // Convert flat TOC from Rust to nested TOC
-  const flatToc: TocEntry[] = result.toc.map((item) => ({
-    ...item,
-    children: [],
-  }));
-  const toc = options.toc ? buildTocTree(flatToc) : [];
+  const toc = options.toc ? result.toc.map(normalizeTocEntry) : [];
 
   // Transform mermaid diagrams before highlighting to avoid entity re-encoding
   if (options.mermaid) {
@@ -485,62 +484,33 @@ export async function transformMarkdown(
   };
 }
 
-/**
- * Parses YAML frontmatter from Markdown content.
- * Uses proper YAML parser for full nested object support.
- */
-function parseFrontmatter(source: string): {
-  content: string;
-  frontmatter: Record<string, unknown>;
-} {
-  // Check for frontmatter delimiter
-  if (!source.startsWith("---")) {
-    return { content: source, frontmatter: {} };
+function parseFrontmatterJson(json: string): Record<string, unknown> {
+  if (!json) {
+    return {};
   }
-
-  // Find the closing delimiter
-  const rest = source.slice(3);
-  const endIndex = rest.indexOf("\n---");
-
-  if (endIndex === -1) {
-    return { content: source, frontmatter: {} };
-  }
-
-  const frontmatterStr = rest.slice(0, endIndex).trim();
-  const content = rest.slice(endIndex + 4).trimStart();
 
   try {
-    const frontmatter = YAML.parse(frontmatterStr) as Record<string, unknown>;
-    return { content, frontmatter: frontmatter || {} };
-  } catch (error) {
-    console.warn("[ox-content] Failed to parse frontmatter:", error);
-    return { content, frontmatter: {} };
+    const value = JSON.parse(json);
+    return value && typeof value === "object" && !Array.isArray(value)
+      ? (value as Record<string, unknown>)
+      : {};
+  } catch {
+    return {};
   }
 }
 
-/**
- * Builds nested TOC tree from flat list.
- */
-function buildTocTree(entries: TocEntry[]): TocEntry[] {
-  const root: TocEntry[] = [];
-  const stack: TocEntry[] = [];
-
-  for (const entry of entries) {
-    // Pop stack until we find a parent with smaller depth
-    while (stack.length > 0 && stack[stack.length - 1].depth >= entry.depth) {
-      stack.pop();
-    }
-
-    if (stack.length === 0) {
-      root.push(entry);
-    } else {
-      stack[stack.length - 1].children.push(entry);
-    }
-
-    stack.push(entry);
-  }
-
-  return root;
+function normalizeTocEntry(entry: {
+  depth: number;
+  text: string;
+  slug: string;
+  children?: TocEntry[];
+}): TocEntry {
+  return {
+    depth: entry.depth,
+    text: entry.text,
+    slug: entry.slug,
+    children: (entry.children ?? []).map(normalizeTocEntry),
+  };
 }
 
 /**

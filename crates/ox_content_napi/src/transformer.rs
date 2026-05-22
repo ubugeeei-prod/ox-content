@@ -26,18 +26,18 @@ pub struct MarkdownTransformer {
     renderer_options: HtmlRendererOptions,
 }
 
-struct PreparedMarkdownSource {
-    content: String,
-    frontmatter: HashMap<String, serde_json::Value>,
-    source_origin: SourceOrigin,
+pub struct PreparedMarkdownSource {
+    pub content: String,
+    pub frontmatter: HashMap<String, serde_json::Value>,
+    pub source_origin: SourceOrigin,
 }
 
 #[derive(Clone, Copy, Debug, Default, Eq, PartialEq)]
-struct SourceOrigin {
-    byte_offset: u32,
-    offset: u32,
-    line: u32,
-    column: u32,
+pub struct SourceOrigin {
+    pub byte_offset: u32,
+    pub offset: u32,
+    pub line: u32,
+    pub column: u32,
 }
 
 impl SourceOrigin {
@@ -141,7 +141,7 @@ impl MarkdownTransformer {
         renderer.render(document)
     }
 
-    fn prepare_source(&self, source: &str) -> PreparedMarkdownSource {
+    pub(super) fn prepare_source(&self, source: &str) -> PreparedMarkdownSource {
         if self.frontmatter {
             parse_frontmatter_with_origin(source)
         } else {
@@ -217,12 +217,26 @@ fn extract_toc(doc: &Document, max_depth: u8) -> Vec<TocEntry> {
             if heading.depth <= max_depth {
                 let text = extract_heading_text(heading);
                 let slug = unique_slug(slugify(&text), &mut slug_counts);
-                entries.push(TocEntry { depth: heading.depth, text, slug });
+                push_nested_toc_entry(
+                    &mut entries,
+                    TocEntry { depth: heading.depth, text, slug, children: Vec::new() },
+                );
             }
         }
     }
 
     entries
+}
+
+fn push_nested_toc_entry(entries: &mut Vec<TocEntry>, entry: TocEntry) {
+    if let Some(last) = entries.last_mut() {
+        if last.depth < entry.depth {
+            push_nested_toc_entry(&mut last.children, entry);
+            return;
+        }
+    }
+
+    entries.push(entry);
 }
 
 fn extract_heading_text(heading: &Heading) -> String {
@@ -402,5 +416,20 @@ mod tests {
         assert_eq!(toc[0].slug, "setup");
         assert_eq!(toc[1].slug, "setup-1");
         assert_eq!(toc[2].slug, "section");
+    }
+
+    #[test]
+    fn toc_entries_are_nested_in_rust() {
+        let allocator = Allocator::new();
+        let doc =
+            Parser::new(&allocator, "## Guide\n### Install\n#### CLI\n## API").parse().unwrap();
+
+        let toc = extract_toc(&doc, 4);
+
+        assert_eq!(toc.len(), 2);
+        assert_eq!(toc[0].slug, "guide");
+        assert_eq!(toc[0].children[0].slug, "install");
+        assert_eq!(toc[0].children[0].children[0].slug, "cli");
+        assert_eq!(toc[1].slug, "api");
     }
 }

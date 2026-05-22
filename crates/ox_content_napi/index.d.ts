@@ -15,9 +15,6 @@ export declare function buildSearchIndex(documents: Array<JsSearchDocument>): st
  */
 export declare function buildSearchIndexFromDirectory(srcDir: string, base: string, extensions: Array<string>): string
 
-/** Writes a serialized search index to `search-index.json` under an output directory. */
-export declare function writeSearchIndex(indexJson: string, outDir: string): void
-
 /** Builds SSG navigation groups from markdown files. */
 export declare function buildSsgNavItems(markdownFiles: Array<string>, srcDir: string, base: string, extension: string): Array<JsSsgNavGroup>
 
@@ -80,6 +77,9 @@ export declare function extractTranslationKeys(source: string, filePath: string,
 /** Formats a file or directory segment as an SSG title. */
 export declare function formatSsgTitle(name: string): string
 
+/** Generates the machine-readable docs data JSON payload. */
+export declare function generateDocsDataJson(docs: Array<JsDocsMarkdownModule>, generatedAt: string): string
+
 /** Generates Markdown API reference pages from extracted documentation entries. */
 export declare function generateDocsMarkdown(docs: Array<JsDocsMarkdownModule>, options?: JsDocsMarkdownOptions | undefined | null): Record<string, string>
 
@@ -106,11 +106,11 @@ export declare function generateSearchModule(optionsJson: string, indexPath: str
 /** Generates the client-side search runtime module from typed options. */
 export declare function generateSearchModuleFromOptions(options: JsSearchRuntimeOptions, indexPath: string): string
 
-/** Generates SSG HTML page with navigation and search. */
-export declare function generateSsgHtml(pageData: JsSsgPageData, navGroups: Array<JsSsgNavGroup>, config: JsSsgConfig): string
-
 /** Generates a bare SSG HTML page without navigation or styles. */
 export declare function generateSsgBareHtml(content: string, title: string): string
+
+/** Generates SSG HTML page with navigation and search. */
+export declare function generateSsgHtml(pageData: JsSsgPageData, navGroups: Array<JsSsgNavGroup>, config: JsSsgConfig): string
 
 /** Returns the last git commit timestamp for a file in milliseconds. */
 export declare function getGitLastUpdated(filePath: string, root?: string | undefined | null): number | null
@@ -477,20 +477,6 @@ export interface JsSearchOptions {
   threshold?: number
 }
 
-/** Resolved search runtime options for JavaScript. */
-export interface JsSearchRuntimeOptions {
-  /** Whether search is enabled. */
-  enabled: boolean
-  /** Maximum number of results. */
-  limit: number
-  /** Enable prefix matching. */
-  prefix: boolean
-  /** Search input placeholder. */
-  placeholder: string
-  /** Keyboard shortcut to focus search. */
-  hotkey: string
-}
-
 /** Search result for JavaScript. */
 export interface JsSearchResult {
   /** Document ID. */
@@ -505,6 +491,20 @@ export interface JsSearchResult {
   matches: Array<string>
   /** Content snippet. */
   snippet: string
+}
+
+/** Resolved search runtime options for JavaScript. */
+export interface JsSearchRuntimeOptions {
+  /** Whether search is enabled. */
+  enabled: boolean
+  /** Maximum number of results. */
+  limit: number
+  /** Enable prefix matching. */
+  prefix: boolean
+  /** Search input placeholder. */
+  placeholder: string
+  /** Keyboard shortcut to focus search. */
+  hotkey: string
 }
 
 /** Custom social link for JavaScript. */
@@ -566,6 +566,18 @@ export interface JsSourceDocTag {
 export interface JsSourceOptions {
   /** Parse YAML frontmatter before returning the content payload. */
   frontmatter?: boolean
+}
+
+/** Source offset where prepared Markdown content begins in the original source. */
+export interface JsSourceOrigin {
+  /** UTF-8 byte offset. */
+  byteOffset: number
+  /** UTF-16 code-unit offset. */
+  offset: number
+  /** 1-based line number. */
+  line: number
+  /** 1-based column number. */
+  column: number
 }
 
 /** SSG configuration. */
@@ -921,6 +933,19 @@ export declare function parseScopedSearchQuery(query: string): JsScopedSearchQue
  */
 export declare function parseTransferRaw(source: string, kind: string, options?: JsParserOptions | undefined | null): Uint8Array
 
+/** Prepared Markdown source with parsed frontmatter. */
+export interface PreparedSourceResult {
+  /** Markdown content after optional frontmatter removal. */
+  content: string
+  /** Parsed frontmatter object. */
+  frontmatter: Record<string, any>
+  /** Source position where `content` starts in the original source. */
+  sourceOffset: JsSourceOrigin
+}
+
+/** Splits Markdown source into content and parsed frontmatter. */
+export declare function prepareSource(source: string, options?: JsSourceOptions | undefined | null): PreparedSourceResult
+
 /**
  * Splits Markdown source into content and frontmatter in a raw transfer buffer.
  *
@@ -962,6 +987,8 @@ export interface TocEntry {
   text: string
   /** URL-friendly slug. */
   slug: string
+  /** Child entries. */
+  children: Array<TocEntry>
 }
 
 /**
@@ -1012,3 +1039,6 @@ export declare function validateMf2(message: string): Mf2ValidateResult
 
 /** Returns the version of ox_content_napi. */
 export declare function version(): string
+
+/** Writes a serialized search index to `search-index.json` under an output directory. */
+export declare function writeSearchIndex(indexJson: string, outDir: string): void

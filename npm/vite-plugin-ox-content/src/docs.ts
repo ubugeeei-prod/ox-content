@@ -51,26 +51,12 @@
 
 import * as fs from "fs";
 import * as path from "path";
-import type {
-  ResolvedDocsOptions,
-  ExtractedDocs,
-  DocEntry,
-  GeneratedDocsData,
-  DocsSummary,
-} from "./types";
+import type { ResolvedDocsOptions, ExtractedDocs, DocEntry } from "./types";
 import { generateNavMetadata, generateNavCode } from "./nav-generator";
 import { importNapiModule, importNapiModuleSync } from "./napi";
 
 const DOCS_MANIFEST_FILE = ".ox-content-docs-manifest.json";
 const DOCS_DATA_FILE = "docs.json";
-const DOC_KIND_ORDER: DocEntry["kind"][] = [
-  "function",
-  "class",
-  "interface",
-  "type",
-  "variable",
-  "module",
-];
 const DEFAULT_DOCS_INCLUDE = [
   "**/*.ts",
   "**/*.tsx",
@@ -82,84 +68,6 @@ const DEFAULT_DOCS_INCLUDE = [
   "**/*.cjs",
 ];
 
-interface EntryStats {
-  entries: number;
-  byKind: Partial<Record<DocEntry["kind"], number>>;
-  params: number;
-  returns: number;
-  examples: number;
-  deprecated: number;
-}
-
-function createEmptyEntryStats(): EntryStats {
-  return {
-    entries: 0,
-    byKind: {},
-    params: 0,
-    returns: 0,
-    examples: 0,
-    deprecated: 0,
-  };
-}
-
-function summarizeEntries(entries: DocEntry[]): EntryStats {
-  const stats = createEmptyEntryStats();
-
-  for (const entry of entries) {
-    stats.entries++;
-    stats.byKind[entry.kind] = (stats.byKind[entry.kind] ?? 0) + 1;
-    stats.params += entry.params?.length ?? 0;
-    stats.returns += entry.returns ? 1 : 0;
-    stats.examples += entry.examples?.length ?? 0;
-    stats.deprecated += entry.tags?.deprecated !== undefined ? 1 : 0;
-  }
-
-  return stats;
-}
-
-function buildDocsSummary(docs: ExtractedDocs[]): DocsSummary {
-  const stats = summarizeEntries(docs.flatMap((doc) => doc.entries));
-  const byKind: Record<string, number> = {};
-
-  for (const kind of DOC_KIND_ORDER) {
-    const count = stats.byKind[kind];
-    if (count) {
-      byKind[kind] = count;
-    }
-  }
-
-  return {
-    modules: docs.length,
-    entries: stats.entries,
-    byKind,
-    params: stats.params,
-    returns: stats.returns,
-    examples: stats.examples,
-    deprecated: stats.deprecated,
-  };
-}
-
-function normalizeDocFilePath(filePath: string): string {
-  const normalized = filePath.replace(/\\/g, "/");
-  const match = normalized.match(/(?:^|\/)((?:npm|packages|crates|src)\/.+)$/);
-  return match?.[1] ?? normalized.replace(/^\/+/, "");
-}
-
-function buildDocsData(docs: ExtractedDocs[]): GeneratedDocsData {
-  return {
-    version: 1,
-    generatedAt: new Date().toISOString(),
-    summary: buildDocsSummary(docs),
-    modules: docs.map((doc) => ({
-      ...doc,
-      file: normalizeDocFilePath(doc.file),
-      entries: doc.entries.map((entry) => ({
-        ...entry,
-        file: normalizeDocFilePath(entry.file),
-      })),
-    })),
-  };
-}
 /**
  * Extracts JSDoc documentation from source files in specified directories.
  *
@@ -270,31 +178,10 @@ export function generateMarkdown(
     );
   }
 
-  return napi.generateDocsMarkdown(
-    docs.map((doc) => ({
-      file: doc.file,
-      entries: doc.entries.map((entry) => ({
-        name: entry.name,
-        kind: entry.kind,
-        description: entry.description,
-        params: entry.params,
-        returns: entry.returns,
-        examples: entry.examples,
-        tags: entry.tags
-          ? Object.entries(entry.tags).map(([tag, value]) => ({ tag, value }))
-          : undefined,
-        private: entry.private ?? false,
-        file: entry.file,
-        line: entry.line,
-        endLine: entry.endLine,
-        signature: entry.signature,
-      })),
-    })),
-    {
-      groupBy: options.groupBy,
-      githubUrl: options.githubUrl,
-    },
-  );
+  return napi.generateDocsMarkdown(toRustDocsModules(docs), {
+    groupBy: options.groupBy,
+    githubUrl: options.githubUrl,
+  });
 }
 
 /**
@@ -347,9 +234,10 @@ export async function writeDocs(
   }
 
   if (extractedDocs) {
+    const napi = importNapiModuleSync();
     await fs.promises.writeFile(
       path.join(outDir, DOCS_DATA_FILE),
-      JSON.stringify(buildDocsData(extractedDocs), null, 2),
+      napi.generateDocsDataJson(toRustDocsModules(extractedDocs), new Date().toISOString()),
       "utf-8",
     );
   }
@@ -359,6 +247,28 @@ export async function writeDocs(
     JSON.stringify([...generatedFiles].sort(), null, 2),
     "utf-8",
   );
+}
+
+function toRustDocsModules(docs: ExtractedDocs[]) {
+  return docs.map((doc) => ({
+    file: doc.file,
+    entries: doc.entries.map((entry) => ({
+      name: entry.name,
+      kind: entry.kind,
+      description: entry.description,
+      params: entry.params,
+      returns: entry.returns,
+      examples: entry.examples,
+      tags: entry.tags
+        ? Object.entries(entry.tags).map(([tag, value]) => ({ tag, value }))
+        : undefined,
+      private: entry.private ?? false,
+      file: entry.file,
+      line: entry.line,
+      endLine: entry.endLine,
+      signature: entry.signature,
+    })),
+  }));
 }
 
 /**

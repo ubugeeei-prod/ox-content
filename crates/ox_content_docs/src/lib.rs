@@ -5,6 +5,7 @@
 //! for JavaScript/TypeScript files.
 
 mod config;
+mod data;
 mod extractor;
 mod generator;
 mod markdown;
@@ -12,6 +13,7 @@ mod nav;
 mod normalize;
 
 pub use config::DocsConfig;
+pub use data::generate_docs_data_json;
 pub use extractor::{
     DocExtractor, DocItem, DocItemKind, DocTag, ExtractError, ExtractResult, ParamDoc,
 };
