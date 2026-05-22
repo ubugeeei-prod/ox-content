@@ -126,6 +126,28 @@ fn unclosed_fence_consumes_until_eof() {
 }
 
 #[test]
+fn indented_fence_inside_list_item_stays_nested_block() {
+    let allocator = Allocator::new();
+    let doc = parse_with_options(
+        &allocator,
+        "1. text\n\n   ```ts\n   const a = 1;\n   ```",
+        ParserOptions::default(),
+    );
+
+    match &doc.children[0] {
+        Node::List(list) => {
+            assert_eq!(list.children.len(), 1);
+            assert_eq!(list.children[0].children.len(), 2);
+            assert!(matches!(&list.children[0].children[0], Node::Paragraph(_)));
+            assert!(
+                matches!(&list.children[0].children[1], Node::CodeBlock(block) if block.lang == Some("ts") && block.value == "const a = 1;\n")
+            );
+        }
+        other => panic!("expected list, got {other:?}"),
+    }
+}
+
+#[test]
 fn ordered_list_start_and_parenthesis_marker_are_preserved() {
     let allocator = Allocator::new();
     let doc = parse_with_options(&allocator, "3) third\n4) fourth", ParserOptions::default());
