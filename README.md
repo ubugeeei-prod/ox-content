@@ -171,7 +171,13 @@ Supported features include:
 - i18n key completion, hover, go-to-definition, diagnostics, and inlay hints for JS/TS
 - table / code fence / callout insertion commands
 - preview HTML generation for editor UIs
-- `.mdc` authoring support
+- `.mdc` authoring support with component tag diagnostics
+
+For CI or editor-independent checks, run:
+
+```bash
+cargo run -p ox_content_mdc_checker --bin ox-content-mdc-check -- docs/page.mdc
+```
 
 **[Read the full documentation →](https://ubugeeei.github.io/ox-content/)**
 

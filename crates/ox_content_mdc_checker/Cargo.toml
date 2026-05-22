@@ -1,0 +1,24 @@
+[package]
+name = "ox_content_mdc_checker"
+version.workspace = true
+authors.workspace = true
+categories.workspace = true
+edition.workspace = true
+homepage.workspace = true
+keywords.workspace = true
+license.workspace = true
+repository.workspace = true
+rust-version.workspace = true
+description = "Static checker for Ox Content MDC component syntax"
+
+[lints]
+workspace = true
+
+[[bin]]
+name = "ox-content-mdc-check"
+path = "src/main.rs"
+
+[dependencies]
+clap = { workspace = true }
+serde = { workspace = true }
+serde_json = { workspace = true }
