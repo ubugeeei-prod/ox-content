@@ -97,6 +97,42 @@ jobs:
       - name: Run tests
         run: vp run test
 
+  dependency-policy:
+    name: Dependency policy
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4
+        with:
+          persist-credentials: false
+
+      - name: Setup Vite+
+        uses: voidzero-dev/setup-vp@ca1c46663915d6c1042ae23bd39ab85718bfb0fa # v1
+        with:
+          node-version-file: ".node-version"
+          cache: true
+          run-install: true
+
+      - name: Setup Rust
+        uses: dtolnay/rust-toolchain@29eef336d9b2848a0b548edc03f92a220660cdb8 # stable
+
+      - name: Cache cargo
+        uses: Swatinem/rust-cache@e18b497796c12c097a38f9edb9d0641fb99eee32 # v2
+
+      - name: Install Cargo audit tools
+        run: cargo install cargo-audit cargo-deny --locked
+
+      - name: Check Cargo advisories
+        run: cargo audit --deny warnings
+
+      - name: Check Cargo licenses
+        run: cargo deny check licenses
+
+      - name: Check npm advisories
+        run: node scripts/check-npm-advisories.mjs
+
+      - name: Check npm licenses
+        run: node scripts/check-npm-licenses.mjs
+
   package-dry-run:
     name: Package dry-run
     runs-on: ubuntu-latest
