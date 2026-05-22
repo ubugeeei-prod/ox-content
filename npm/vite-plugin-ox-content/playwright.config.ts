@@ -12,6 +12,7 @@ export default defineConfig({
     },
   },
   use: {
+    channel: process.env.CI ? "chrome" : undefined,
     headless: true,
     viewport: { width: 1280, height: 1600 },
     deviceScaleFactor: 1,

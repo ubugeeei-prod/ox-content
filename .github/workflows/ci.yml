@@ -91,8 +91,8 @@ jobs:
       - name: Cache cargo
         uses: Swatinem/rust-cache@e18b497796c12c097a38f9edb9d0641fb99eee32 # v2
 
-      - name: Install Playwright browsers
-        run: vp exec --filter @ox-content/vite-plugin -- playwright install --only-shell chromium
+      - name: Check browser availability
+        run: google-chrome --version
 
       - name: Run tests
         run: vp run test
