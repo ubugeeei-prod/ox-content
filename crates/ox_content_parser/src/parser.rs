@@ -514,6 +514,44 @@ impl<'a> Parser<'a> {
         })
     }
 
+    fn line_at(&self, line_start: usize) -> &'a str {
+        self.source[line_start..].lines().next().unwrap_or("")
+    }
+
+    fn next_line_start(&self, line_start: usize) -> usize {
+        let line = self.line_at(line_start);
+        let next = line_start + line.len();
+        if self.source.as_bytes().get(next) == Some(&b'\n') {
+            next + 1
+        } else {
+            next
+        }
+    }
+
+    fn strip_indent_columns(line: &str, columns: usize) -> &str {
+        let mut consumed = 0;
+        let mut byte_index = 0;
+
+        for ch in line.chars() {
+            let width = if ch == ' ' {
+                1
+            } else if ch == '\t' {
+                4
+            } else {
+                break;
+            };
+
+            if consumed + width > columns {
+                break;
+            }
+
+            consumed += width;
+            byte_index += ch.len_utf8();
+        }
+
+        &line[byte_index..]
+    }
+
     /// Parses a list (ordered or unordered).
     fn parse_list(&mut self, start: usize) -> ParseResult<Option<Node<'a>>> {
         let baseline_indent = self.calc_indentation(start);
@@ -527,6 +565,7 @@ impl<'a> Parser<'a> {
         let list_start = first_item.start;
 
         let mut children: Vec<'a, ListItem<'a>> = self.allocator.new_vec();
+        let mut list_spread = false;
 
         loop {
             if self.is_at_end() {
@@ -592,40 +631,212 @@ impl<'a> Parser<'a> {
 
             // Consume line
             self.position += line.len();
-            if self.peek() == Some('\n') {
+            let consumed_newline = self.peek() == Some('\n');
+            if consumed_newline {
                 self.advance();
             }
 
-            // Create list item
-            let item_children_inline = self.parse_inline(item.content, item.content_offset)?;
-
-            // Wrap in Paragraph
-            let mut para_children = self.allocator.new_vec();
-            for child in item_children_inline {
-                para_children.push(child);
+            let content_indent = item.content_offset.saturating_sub(line_start);
+            let mut item_source = String::new();
+            item_source.push_str(item.content);
+            if consumed_newline {
+                item_source.push('\n');
             }
-            let para = Paragraph {
-                children: para_children,
-                span: Span::new(
-                    item.content_offset as u32,
-                    (item.content_offset + item.content.len()) as u32,
-                ),
-            };
+            let mut item_end = self.position;
+            let mut item_spread = false;
 
-            let mut list_item_children = self.allocator.new_vec();
-            list_item_children.push(Node::Paragraph(para));
+            loop {
+                if self.is_at_end() {
+                    break;
+                }
+
+                let continuation_start = self.position;
+                let continuation_line = self.line_at(continuation_start);
+                let continuation_next = self.next_line_start(continuation_start);
+
+                if continuation_line.trim().is_empty() {
+                    let mut lookahead = continuation_next;
+                    let mut blank_count = 1;
+                    while lookahead < self.source.len() {
+                        let line = self.line_at(lookahead);
+                        if !line.trim().is_empty() {
+                            break;
+                        }
+                        blank_count += 1;
+                        lookahead = self.next_line_start(lookahead);
+                    }
+
+                    if lookahead >= self.source.len() {
+                        break;
+                    }
+
+                    let next_indent = self.calc_indentation(lookahead);
+                    let next_item = self.parse_list_item_line(lookahead);
+                    if next_indent == baseline_indent
+                        && next_item.as_ref().is_some_and(|next| next.ordered == ordered)
+                    {
+                        self.position = lookahead;
+                        item_spread = true;
+                        list_spread = true;
+                        break;
+                    }
+
+                    if next_indent >= content_indent {
+                        for _ in 0..blank_count {
+                            item_source.push('\n');
+                        }
+                        self.position = lookahead;
+                        item_spread = true;
+                        list_spread = true;
+                        item_end = self.position;
+                        continue;
+                    }
+
+                    break;
+                }
+
+                let current_indent = self.calc_indentation(continuation_start);
+                if current_indent < baseline_indent {
+                    break;
+                }
+
+                if current_indent == baseline_indent {
+                    if self
+                        .parse_list_item_line(continuation_start)
+                        .is_some_and(|next| next.ordered == ordered)
+                    {
+                        break;
+                    }
+
+                    break;
+                }
+
+                let stripped = Self::strip_indent_columns(continuation_line, content_indent);
+                item_source.push_str(stripped);
+                item_source.push('\n');
+                self.position = continuation_next;
+                item_end = self.position;
+            }
+
+            let item_source = self.allocator.alloc_str(&item_source);
+            let sub_parser =
+                Parser::with_options(self.allocator, item_source, self.options.clone());
+            let sub_doc = sub_parser.parse()?;
+            let mut item_children = sub_doc.children;
+            for child in &mut item_children {
+                Self::offset_node_spans(child, item.content_offset as u32);
+            }
 
             let list_item = ListItem {
                 checked: item.checked,
-                spread: false,
-                children: list_item_children,
-                span: Span::new(line_start as u32, self.position as u32),
+                spread: item_spread,
+                children: item_children,
+                span: Span::new(line_start as u32, item_end as u32),
             };
             children.push(list_item);
         }
 
         let span = Span::new(start as u32, self.position as u32);
-        Ok(Some(Node::List(List { ordered, start: list_start, spread: false, children, span })))
+        Ok(Some(Node::List(List {
+            ordered,
+            start: list_start,
+            spread: list_spread,
+            children,
+            span,
+        })))
+    }
+
+    fn offset_span(span: &mut Span, offset: u32) {
+        span.start += offset;
+        span.end += offset;
+    }
+
+    fn offset_node_spans(node: &mut Node<'a>, offset: u32) {
+        match node {
+            Node::Paragraph(node) => {
+                Self::offset_span(&mut node.span, offset);
+                for child in &mut node.children {
+                    Self::offset_node_spans(child, offset);
+                }
+            }
+            Node::Heading(node) => {
+                Self::offset_span(&mut node.span, offset);
+                for child in &mut node.children {
+                    Self::offset_node_spans(child, offset);
+                }
+            }
+            Node::ThematicBreak(node) => Self::offset_span(&mut node.span, offset),
+            Node::BlockQuote(node) => {
+                Self::offset_span(&mut node.span, offset);
+                for child in &mut node.children {
+                    Self::offset_node_spans(child, offset);
+                }
+            }
+            Node::List(node) => {
+                Self::offset_span(&mut node.span, offset);
+                for child in &mut node.children {
+                    Self::offset_list_item_spans(child, offset);
+                }
+            }
+            Node::ListItem(node) => Self::offset_list_item_spans(node, offset),
+            Node::CodeBlock(node) => Self::offset_span(&mut node.span, offset),
+            Node::Html(node) => Self::offset_span(&mut node.span, offset),
+            Node::Table(node) => {
+                Self::offset_span(&mut node.span, offset);
+                for row in &mut node.children {
+                    Self::offset_span(&mut row.span, offset);
+                    for cell in &mut row.children {
+                        Self::offset_span(&mut cell.span, offset);
+                        for child in &mut cell.children {
+                            Self::offset_node_spans(child, offset);
+                        }
+                    }
+                }
+            }
+            Node::Text(node) => Self::offset_span(&mut node.span, offset),
+            Node::Emphasis(node) => {
+                Self::offset_span(&mut node.span, offset);
+                for child in &mut node.children {
+                    Self::offset_node_spans(child, offset);
+                }
+            }
+            Node::Strong(node) => {
+                Self::offset_span(&mut node.span, offset);
+                for child in &mut node.children {
+                    Self::offset_node_spans(child, offset);
+                }
+            }
+            Node::InlineCode(node) => Self::offset_span(&mut node.span, offset),
+            Node::Break(node) => Self::offset_span(&mut node.span, offset),
+            Node::Link(node) => {
+                Self::offset_span(&mut node.span, offset);
+                for child in &mut node.children {
+                    Self::offset_node_spans(child, offset);
+                }
+            }
+            Node::Image(node) => Self::offset_span(&mut node.span, offset),
+            Node::Delete(node) => {
+                Self::offset_span(&mut node.span, offset);
+                for child in &mut node.children {
+                    Self::offset_node_spans(child, offset);
+                }
+            }
+            Node::FootnoteReference(node) => Self::offset_span(&mut node.span, offset),
+            Node::Definition(node) => Self::offset_span(&mut node.span, offset),
+            Node::FootnoteDefinition(node) => {
+                Self::offset_span(&mut node.span, offset);
+                for child in &mut node.children {
+                    Self::offset_node_spans(child, offset);
+                }
+            }
+        }
+    }
+
+    fn offset_list_item_spans(list_item: &mut ListItem<'a>, offset: u32) {
+        Self::offset_span(&mut list_item.span, offset);
+        for child in &mut list_item.children {
+            Self::offset_node_spans(child, offset);
+        }
     }
 
     /// Checks if the current position starts a heading.
@@ -666,8 +877,25 @@ impl<'a> Parser<'a> {
 
     /// Checks if the current position starts a fenced code block.
     fn try_parse_fenced_code(&self) -> bool {
-        let remaining = self.remaining();
-        remaining.starts_with("```") || remaining.starts_with("~~~")
+        let line = self.remaining().lines().next().unwrap_or("");
+        if Self::indentation_columns(line) > 3 {
+            return false;
+        }
+
+        let trimmed = line.trim_start();
+        trimmed.starts_with("```") || trimmed.starts_with("~~~")
+    }
+
+    fn indentation_columns(line: &str) -> usize {
+        let mut indent = 0;
+        for ch in line.chars() {
+            match ch {
+                ' ' => indent += 1,
+                '\t' => indent += 4,
+                _ => break,
+            }
+        }
+        indent
     }
 
     /// Checks if the current position starts a table.
@@ -763,6 +991,13 @@ impl<'a> Parser<'a> {
 
     /// Parses a fenced code block.
     fn parse_fenced_code(&mut self, start: usize) -> ParseResult<Option<Node<'a>>> {
+        let opening_indent = self.calc_indentation(start).min(3);
+        for _ in 0..opening_indent {
+            if self.peek() == Some(' ') {
+                self.advance();
+            }
+        }
+
         let fence_char = self.peek().unwrap();
         let mut fence_len = 0;
 
@@ -794,9 +1029,7 @@ impl<'a> Parser<'a> {
             self.advance();
         }
 
-        // Parse code content
-        let content_start = self.position;
-        let mut content_end = content_start;
+        let mut value = String::new();
 
         loop {
             if self.is_at_end() {
@@ -804,39 +1037,50 @@ impl<'a> Parser<'a> {
             }
 
             let line_start = self.position;
+            let line = self.line_at(line_start);
+            let line_indent = Self::indentation_columns(line);
 
-            // Check for closing fence
-            let mut closing_fence_len = 0;
-            while self.peek() == Some(fence_char) {
-                closing_fence_len += 1;
-                self.advance();
-            }
-
-            if closing_fence_len >= fence_len {
-                // Skip rest of line
-                while let Some(ch) = self.peek() {
-                    if ch == '\n' {
+            if line_indent <= 3 {
+                self.position = line_start;
+                let indent_to_skip = self.calc_indentation(line_start).min(3);
+                for _ in 0..indent_to_skip {
+                    if self.peek() == Some(' ') {
                         self.advance();
-                        break;
                     }
+                }
+
+                // Check for closing fence
+                let mut closing_fence_len = 0;
+                while self.peek() == Some(fence_char) {
+                    closing_fence_len += 1;
                     self.advance();
                 }
-                content_end = line_start;
-                break;
+
+                if closing_fence_len >= fence_len {
+                    // Skip rest of line
+                    while let Some(ch) = self.peek() {
+                        if ch == '\n' {
+                            self.advance();
+                            break;
+                        }
+                        self.advance();
+                    }
+                    break;
+                }
             }
 
             // Not a closing fence, reset and consume line
             self.position = line_start;
-            while let Some(ch) = self.peek() {
-                self.advance();
-                if ch == '\n' {
-                    break;
-                }
+            let next_line = self.next_line_start(line_start);
+            let stripped = Self::strip_indent_columns(line, opening_indent);
+            value.push_str(stripped);
+            if self.source.as_bytes().get(line_start + line.len()) == Some(&b'\n') {
+                value.push('\n');
             }
-            content_end = self.position;
+            self.position = next_line;
         }
 
-        let value = &self.source[content_start..content_end];
+        let value = self.allocator.alloc_str(&value);
         let span = Span::new(start as u32, self.position as u32);
 
         Ok(Some(Node::CodeBlock(ox_content_ast::CodeBlock { lang, meta, value, span })))

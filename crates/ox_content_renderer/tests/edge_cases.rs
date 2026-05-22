@@ -189,6 +189,20 @@ fn code_block_meta_does_not_leak_into_class_name() {
 }
 
 #[test]
+fn fenced_code_inside_list_item_renders_as_block_code() {
+    let html = render(
+        "1. text\n\n   ```ts\n   const a = 1;\n   ```",
+        ParserOptions::default(),
+        HtmlRendererOptions::default(),
+    );
+
+    assert!(html.contains("<ol>"));
+    assert!(html.contains("<li><p>text</p>"));
+    assert!(html.contains("<pre><code class=\"language-ts\">const a = 1;\n</code></pre>"));
+    assert!(!html.contains("<p><code></code><code>ts"));
+}
+
+#[test]
 fn nested_parentheses_in_links_are_preserved_in_output() {
     let html = render(
         "[docs](https://example.com/a(b)c)",
