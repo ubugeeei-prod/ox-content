@@ -1,5 +1,11 @@
 # Changelog
 
+## [2.13.0] - 2026-05-24
+
+### Bug Fixes
+
+- align vite-plus-core catalog with vite-plus (#146)
+
 ## [2.12.0] - 2026-05-24
 
 ### Features
