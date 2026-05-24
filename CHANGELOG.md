@@ -1,5 +1,38 @@
 # Changelog
 
+## [2.12.0] - 2026-05-24
+
+### Features
+
+- add component checker diagnostics
+
+### Bug Fixes
+
+- protect public export surface
+- escape bare page titles
+- render list item fenced code as blocks
+- add spacing below expanded docs entries (#134)
+
+### Performance
+
+- batch-parse JSDoc comments in extractor (#111)
+
+### Refactoring
+
+- centralize metadata in Rust
+- move i18n project checks into napi (#109)
+- move bare ssg html into rust (#110)
+- type search module options (#108)
+- write search index in rust (#107)
+- build search index in rust (#106)
+- move docs and ssg helpers to rust (#105)
+- remove mod.rs module roots (#104)
+
+### Documentation
+
+- add security policy (#126)
+- add contributing guide (#127)
+
 ## [2.11.0] - 2026-05-16
 
 ### Features
