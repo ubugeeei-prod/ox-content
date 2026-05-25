@@ -353,7 +353,7 @@ fn aggregate_spans(iters: &[&IterationRecord]) -> Vec<SpanAggregate> {
             s.share_of_total = s.total_self.as_nanos() as f64 / total_ns;
         }
     }
-    agg.sort_by(|a, b| b.total_inclusive.cmp(&a.total_inclusive));
+    agg.sort_by_key(|s| std::cmp::Reverse(s.total_inclusive));
     agg
 }
 

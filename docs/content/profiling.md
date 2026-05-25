@@ -19,7 +19,7 @@ There are three independent layers, all exposed through one CLI:
    wraps `std::alloc::System` and atomically records every allocation,
    deallocation, byte counter, peak live bytes, and a power-of-two
    size-class histogram. Installed as `#[global_allocator]` in the
-   `ox-content-profile` binary, so the counts include *everything* the
+   `ox-content-profile` binary, so the counts include _everything_ the
    process does during a measurement window.
 
 2. **Hierarchical timing spans** (`ox_content_profiler::scope`) maintain a
@@ -137,7 +137,7 @@ fn main() {
 
 ## Suggested workflow for performance work
 
-1. Run the profiler against a representative corpus *before* changing
+1. Run the profiler against a representative corpus _before_ changing
    anything. Save the table or JSON.
 2. Find the highest-`share` span that is not obviously memory-bandwidth
    bound. Look at its `allocs` and `bytes` columns — span-level
