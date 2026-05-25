@@ -77,16 +77,26 @@ Under the hood, Ox Content is not only a docs theme. It also exposes the Markdow
 - [React Integration Example](./examples/integ-react.md) - Use React islands inside Markdown pages
 - [Svelte Integration Example](./examples/integ-svelte.md) - Bring Svelte components into the same pipeline
 
-## Quick Links
+## User Guide
 
 - [Getting Started](./getting-started.md) - Installation and first steps
-- [Development Setup](./development-setup.md) - Build ox-content itself and work on the repo
+- [Theming](./theming.md) - Customize your documentation site
+- [Examples](./examples/index.md) - Integration, source docs, OG image, and SSG examples
+
+## Advanced Docs
+
 - [Architecture](./architecture.md) - Deep dive into the design
 - [Performance](./performance.md) - Benchmark results and reproduction commands
+- [Profiling Mode](./profiling.md) - Allocation and span-level investigation
 - [unplugin mdast Bridge Example](./examples/unplugin-mdast-bridge.md) - Native parser plus unified-compatible mdast plugins
 - [unplugin markdown-it Token Bridge](./examples/unplugin-markdown-it-token-bridge.md) - `markdown-it` plugins plus downstream unified token access
-- [Theming](./theming.md) - Customize your documentation site
+- [Development Setup](./development-setup.md) - Build ox-content itself and work on the repo
+
+## Reference
+
 - [API Reference](./api/index.md) - Generated API docs for the public surface
+- [Vite Plugin](./packages/vite-plugin-ox-content.md) - Main docs pipeline package
+- [Packages](./packages/napi.md) - Node.js, WebAssembly, framework, and i18n package docs
 - [GitHub](https://github.com/ubugeeei/ox-content) - Source code and issues
 
 ## Community Credits

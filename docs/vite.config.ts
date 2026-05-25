@@ -58,6 +58,47 @@ export default defineConfig(({ mode }) => {
                 'Released under the <a href="https://opensource.org/licenses/MIT">MIT License</a>.',
               copyright: `Copyright © 2024-${new Date().getFullYear()} ubugeeei`,
             },
+            sidebar: [
+              {
+                text: "Guide",
+                items: [
+                  { text: "Getting Started", link: "/getting-started.md" },
+                  { text: "Theming", link: "/theming.md" },
+                  { text: "Examples", link: "/examples/index.md" },
+                ],
+              },
+              {
+                text: "Advanced",
+                items: [
+                  { text: "Architecture", link: "/architecture.md" },
+                  { text: "Performance", link: "/performance.md" },
+                  { text: "Profiling Mode", link: "/profiling.md" },
+                  { text: "mdast Bridge Example", link: "/examples/unplugin-mdast-bridge.md" },
+                  {
+                    text: "markdown-it Token Bridge",
+                    link: "/examples/unplugin-markdown-it-token-bridge.md",
+                  },
+                  { text: "Development Setup", link: "/development-setup.md" },
+                ],
+              },
+              {
+                text: "Reference",
+                collapsed: true,
+                items: [
+                  { text: "API Reference", link: "/api/index.md" },
+                  { text: "Vite Plugin", link: "/packages/vite-plugin-ox-content.md" },
+                  { text: "N-API", link: "/packages/napi.md" },
+                  { text: "WebAssembly", link: "/packages/wasm.md" },
+                  { text: "Vue Integration", link: "/packages/vite-plugin-ox-content-vue.md" },
+                  { text: "React Integration", link: "/packages/vite-plugin-ox-content-react.md" },
+                  {
+                    text: "Svelte Integration",
+                    link: "/packages/vite-plugin-ox-content-svelte.md",
+                  },
+                  { text: "i18n Package", link: "/packages/i18n.md" },
+                ],
+              },
+            ],
             css: `
               .content h1,
               .hero-name {
