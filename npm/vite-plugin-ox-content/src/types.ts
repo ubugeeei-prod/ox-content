@@ -736,6 +736,12 @@ export interface DocsOptions {
   private?: boolean;
 
   /**
+   * Include internal members in documentation.
+   * @default false
+   */
+  internal?: boolean;
+
+  /**
    * Generate table of contents for each file.
    * @default true
    */
@@ -773,6 +779,7 @@ export interface ResolvedDocsOptions {
   entryPoints?: ResolvedDocsEntryPoint[];
   format: "markdown" | "json" | "html";
   private: boolean;
+  internal: boolean;
   toc: boolean;
   groupBy: "file" | "category";
   githubUrl?: string;

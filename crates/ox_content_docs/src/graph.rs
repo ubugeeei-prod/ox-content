@@ -41,6 +41,8 @@ pub struct EntryPointDocsOptions {
     pub graph: GraphOptions,
     /// Include `@private` docs.
     pub include_private: bool,
+    /// Include `@internal` docs.
+    pub include_internal: bool,
 }
 
 /// Resolved export graph.
@@ -211,7 +213,8 @@ pub fn extract_docs_from_entry_points(
     options: &EntryPointDocsOptions,
 ) -> Result<Vec<EntrypointDocsModule>, GraphError> {
     let graph = build_export_graph(entrypoints, &options.graph)?;
-    let extractor = DocExtractor::with_private(options.include_private);
+    let extractor =
+        DocExtractor::with_visibility(options.include_private, options.include_internal);
     let mut docs_cache: FxHashMap<PathBuf, Vec<NormalizedDocEntry>> =
         FxHashMap::with_hasher(FxBuildHasher);
     let mut modules = Vec::with_capacity(graph.entrypoints.len());
@@ -739,7 +742,11 @@ export function label(value: string): string {
 
         let docs = extract_docs_from_entry_points(
             &entrypoints,
-            &EntryPointDocsOptions { graph: graph_options, include_private: false },
+            &EntryPointDocsOptions {
+                graph: graph_options,
+                include_private: false,
+                include_internal: false,
+            },
         )
         .unwrap();
         let names = docs[0].entries.iter().map(|entry| entry.name.as_str()).collect::<Vec<_>>();

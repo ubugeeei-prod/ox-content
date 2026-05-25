@@ -256,6 +256,82 @@ export interface Options {
     expect(docs[0]?.entries.map((entry) => entry.name)).toEqual(["sum", "Options"]);
   });
 
+  it("excludes internal docs unless explicitly included", async () => {
+    const srcDir = await fs.mkdtemp(path.join(os.tmpdir(), "ox-content-docs-src-"));
+    tempDirs.push(srcDir);
+
+    await fs.writeFile(
+      path.join(srcDir, "visibility.ts"),
+      `/** Public command. */
+export function publicCommand(): void {}
+
+/**
+ * Internal helper.
+ * @internal
+ */
+export function internalHelper(): void {}
+`,
+      "utf-8",
+    );
+
+    const publicOnly = await extractDocs([srcDir], resolveDocsOptions({ include: ["**/*.ts"] })!);
+    expect(publicOnly[0]?.entries.map((entry) => entry.name)).toEqual(["publicCommand"]);
+
+    const withInternal = await extractDocs(
+      [srcDir],
+      resolveDocsOptions({ include: ["**/*.ts"], internal: true })!,
+    );
+    expect(withInternal[0]?.entries.map((entry) => entry.name)).toEqual([
+      "publicCommand",
+      "internalHelper",
+    ]);
+  });
+
+  it("applies internal filtering to public API entry points", async () => {
+    const srcDir = await fs.mkdtemp(path.join(os.tmpdir(), "ox-content-docs-src-"));
+    tempDirs.push(srcDir);
+
+    await fs.writeFile(
+      path.join(srcDir, "index.ts"),
+      `export { publicCommand, internalHelper } from "./commands";
+`,
+      "utf-8",
+    );
+    await fs.writeFile(
+      path.join(srcDir, "commands.ts"),
+      `/** Public command. */
+export function publicCommand(): void {}
+
+/**
+ * Internal helper.
+ * @internal
+ */
+export function internalHelper(): void {}
+`,
+      "utf-8",
+    );
+
+    const publicOnly = await extractDocs(
+      [],
+      resolveDocsOptions({
+        entryPoints: [{ path: path.join(srcDir, "index.ts"), name: "default" }],
+      })!,
+    );
+    expect(publicOnly[0]?.entries.map((entry) => entry.name)).toEqual(["publicCommand"]);
+
+    const withInternal = await extractDocs(
+      [],
+      resolveDocsOptions({
+        entryPoints: [{ path: path.join(srcDir, "index.ts"), name: "default" }],
+        internal: true,
+      })!,
+    );
+    expect(withInternal[0]?.entries.map((entry) => entry.name)).toEqual([
+      "publicCommand",
+      "internalHelper",
+    ]);
+  });
+
   it("extracts and renders highlighted interface signatures with generics", async () => {
     const srcDir = await fs.mkdtemp(path.join(os.tmpdir(), "ox-content-docs-src-"));
     tempDirs.push(srcDir);
