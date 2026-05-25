@@ -2,6 +2,7 @@
   "name": "vscode-ox-content",
   "version": "0.1.0",
   "private": true,
+  "publisher": "ubugeeei",
   "description": "VS Code extension for Ox Content authoring and i18n workflows",
   "categories": [
     "Formatters",
@@ -17,11 +18,17 @@
   "main": "./dist/extension.js",
   "scripts": {
     "build": "tsc -p tsconfig.json",
-    "clean": "rm -rf dist"
+    "clean": "rm -rf dist",
+    "pretest": "tsc -p tsconfig.json",
+    "test": "vscode-test"
   },
   "devDependencies": {
+    "@types/mocha": "^10.0.10",
     "@types/node": "catalog:",
     "@types/vscode": "^1.120.0",
+    "@vscode/test-cli": "^0.0.10",
+    "@vscode/test-electron": "^2.4.1",
+    "mocha": "^10.7.3",
     "typescript": "catalog:",
     "vscode-languageclient": "^9.0.1"
   },

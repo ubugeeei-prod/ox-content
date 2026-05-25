@@ -11,7 +11,7 @@
     "strict": true,
     "resolveJsonModule": true,
     "esModuleInterop": true,
-    "types": ["node", "vscode"]
+    "types": ["node", "vscode", "mocha"]
   },
   "include": ["src/**/*.ts"],
   "exclude": ["dist", "node_modules"]
