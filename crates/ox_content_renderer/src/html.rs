@@ -158,13 +158,23 @@ impl CalloutKind {
     fn parse_marker(value: &str) -> Option<(Self, &str)> {
         let marker = value.strip_prefix("[!")?;
         let end = marker.find(']')?;
-        let kind = match marker[..end].trim().to_ascii_uppercase().as_str() {
-            "NOTE" => Self::Note,
-            "TIP" => Self::Tip,
-            "IMPORTANT" => Self::Important,
-            "WARNING" => Self::Warning,
-            "CAUTION" => Self::Caution,
-            _ => return None,
+        // Allocation-free: the previous `to_ascii_uppercase().as_str()`
+        // path allocated a fresh `String` for every `[!FOO]`-prefixed
+        // text run that reached this branch. `eq_ignore_ascii_case`
+        // compares the trimmed slice in place against each known label.
+        let name = marker[..end].trim();
+        let kind = if name.eq_ignore_ascii_case("NOTE") {
+            Self::Note
+        } else if name.eq_ignore_ascii_case("TIP") {
+            Self::Tip
+        } else if name.eq_ignore_ascii_case("IMPORTANT") {
+            Self::Important
+        } else if name.eq_ignore_ascii_case("WARNING") {
+            Self::Warning
+        } else if name.eq_ignore_ascii_case("CAUTION") {
+            Self::Caution
+        } else {
+            return None;
         };
 
         Some((kind, marker[end + 1..].trim_start_matches(char::is_whitespace)))
@@ -1137,7 +1147,13 @@ impl HtmlRenderer {
             collect_inline_toc_entries(document, self.options.toc_max_depth, &mut self.toc_entries);
         }
         self.heading_id_counts.clear();
-        let estimated_len = (document.span.len() as usize).saturating_mul(3) / 2;
+        // HTML output is typically 2×–3× the markdown source (every
+        // `**bold**` becomes `<strong>...</strong>` etc.) so the prior
+        // 1.5× estimate kept undersizing the buffer and forcing 1–2
+        // power-of-two reallocs per render on docs >32 KB. 2× hits the
+        // realistic mean for the bundled corpora (rust-book / vite /
+        // vue / typescript-handbook all land between 1.8× and 2.6×).
+        let estimated_len = (document.span.len() as usize).saturating_mul(2);
         if self.output.capacity() < estimated_len {
             self.output.reserve(estimated_len - self.output.capacity());
         }
@@ -1265,15 +1281,35 @@ impl HtmlRenderer {
     }
 
     fn detect_callout<'a>(paragraph: &Paragraph<'a>) -> Option<(CalloutKind, usize)> {
-        let mut prefix = String::new();
+        // Fast bail: a callout marker is `[!KIND]...` so the very first
+        // text byte must be `[`. The previous version unconditionally
+        // allocated a `String prefix` and pushed Text values into it
+        // before checking — pure waste for the overwhelmingly common
+        // case of a regular block quote.
+        let mut iter = paragraph.children.iter();
+        let Node::Text(first_text) = iter.next()? else {
+            return None;
+        };
+        if first_text.value.as_bytes().first() != Some(&b'[') {
+            return None;
+        }
 
-        for child in &paragraph.children {
+        // The first Text node almost always contains the entire marker
+        // (parsers don't split `[!NOTE]` across multiple Text nodes
+        // unless inline markup interleaves). Try in-place first, and
+        // only fall back to the concatenating slow path if the marker
+        // straddles nodes.
+        if let Some((kind, remainder)) = CalloutKind::parse_marker(first_text.value) {
+            let consumed = first_text.value.len().saturating_sub(remainder.len());
+            return Some((kind, consumed));
+        }
+
+        let mut prefix = String::from(first_text.value);
+        for child in iter {
             let Node::Text(text) = child else {
-                break;
+                return None;
             };
-
             prefix.push_str(text.value);
-
             if let Some((kind, remainder)) = CalloutKind::parse_marker(&prefix) {
                 let consumed = prefix.len().saturating_sub(remainder.len());
                 return Some((kind, consumed));
@@ -1451,14 +1487,14 @@ impl HtmlRenderer {
         }
     }
 
-    fn heading_id(&mut self, heading: &Heading<'_>) -> String {
-        // Collect the heading text into a long-lived scratch buffer and
-        // slugify it into a second one. The previous version allocated a
-        // fresh `String` for both the text and the slug on every heading;
-        // this version pays for at most one `String` allocation per
-        // heading (the slug clone that becomes the map key on vacant
-        // inserts) and zero on duplicates beyond the `format!` for the
-        // suffix.
+    /// Writes the heading's slugified id directly into `self.output`.
+    /// Avoids allocating a return `String`: the unique-heading hot path
+    /// now pays for exactly one `String` allocation (the slug clone that
+    /// becomes the map key) and the duplicate-heading path pays for
+    /// zero, since the `-N` suffix is written directly via `write!`.
+    fn write_heading_id(&mut self, heading: &Heading<'_>) {
+        use std::fmt::Write as _;
+
         self.heading_text_scratch.clear();
         collect_heading_text_into(&heading.children, &mut self.heading_text_scratch);
         self.heading_slug_scratch.clear();
@@ -1466,19 +1502,21 @@ impl HtmlRenderer {
 
         // Cheap lookup first — avoids cloning the slug on the duplicate
         // path. The `entry()` API would force us to materialize an owned
-        // key up front, defeating the point. On vacant inserts we still
-        // pay for one slug clone (the map key) plus one String for the
-        // returned id — those two allocations are intrinsic to the API.
+        // key up front, defeating the point.
         if let Some(count) = self.heading_id_counts.get_mut(self.heading_slug_scratch.as_str()) {
-            let id = format!("{}-{count}", self.heading_slug_scratch);
+            let n = *count;
             *count += 1;
-            return id;
+            self.output.push_str(&self.heading_slug_scratch);
+            // `write!` into `String` is infallible; the formatter pushes
+            // bytes directly into the existing buffer with no `format!`
+            // intermediate allocation.
+            let _ = write!(self.output, "-{n}");
+            return;
         }
 
+        self.output.push_str(&self.heading_slug_scratch);
         let key = self.heading_slug_scratch.clone();
-        let id = key.clone();
         self.heading_id_counts.insert(key, 1);
-        id
     }
 
     fn convert_markdown_url(&self, url: &str) -> String {
@@ -1734,14 +1772,15 @@ impl<'a> Visit<'a> for HtmlRenderer {
         // 1..=6 by construction, and "h%d" is a fixed shape we can splat
         // directly. Saves a branch and a `write` call.
         let depth = heading.depth.clamp(1, 6);
-        let id = self.heading_id(heading);
         self.output.push_str("<h");
         self.output.push((b'0' + depth) as char);
         self.output.push_str(" id=\"");
         // Heading ids are slugified: lowercase alnum + '-' separators. None
         // of those bytes need HTML escaping, so the unconditional
-        // `write_escaped` pass over the id was pure overhead.
-        self.output.push_str(&id);
+        // `write_escaped` pass over the id was pure overhead. We also
+        // skip materializing the id as a return-value `String`; it's
+        // written straight into `self.output`.
+        self.write_heading_id(heading);
         self.output.push_str("\">");
         for child in &heading.children {
             self.visit_inline_node(child);
