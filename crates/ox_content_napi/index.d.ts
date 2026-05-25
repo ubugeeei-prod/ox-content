@@ -259,6 +259,8 @@ export interface JsDocsMarkdownModule {
 export interface JsDocsMarkdownOptions {
   groupBy?: string
   githubUrl?: string
+  linkStyle?: 'markdown' | 'clean'
+  basePath?: string
 }
 
 /** Ordered JSDoc tag used by generated API Markdown. */

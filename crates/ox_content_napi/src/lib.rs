@@ -24,8 +24,8 @@ use ox_content_docs::{
     generate_nav_code, generate_nav_metadata, normalize_doc_items, ApiDocEntry, ApiDocMember,
     ApiDocModule, ApiDocTag, ApiParamDoc, ApiReturnDoc, DocExtractor, DocItem, DocItemKind, DocTag,
     DocsNavItem, EntryPointDocsOptions, EntryPointSpec, ExportGraph, ExportKind, ExportSource,
-    GraphOptions, MarkdownDocsOptions, NormalizedDocEntry, NormalizedMember, NormalizedParamDoc,
-    NormalizedReturnDoc, ParamDoc, PublicExport,
+    GraphOptions, MarkdownDocsOptions, MarkdownLinkStyle, NormalizedDocEntry, NormalizedMember,
+    NormalizedParamDoc, NormalizedReturnDoc, ParamDoc, PublicExport,
 };
 use ox_content_parser::{Parser, ParserOptions};
 use ox_content_renderer::HtmlRenderer;
@@ -260,6 +260,9 @@ pub struct JsDocsMarkdownModule {
 pub struct JsDocsMarkdownOptions {
     pub group_by: Option<String>,
     pub github_url: Option<String>,
+    #[napi(ts_type = "'markdown' | 'clean'")]
+    pub link_style: Option<String>,
+    pub base_path: Option<String>,
 }
 
 /// Entry point used to group generated API docs.
@@ -927,10 +930,19 @@ pub fn generate_docs_markdown(
         options.map_or_else(MarkdownDocsOptions::default, |options| MarkdownDocsOptions {
             group_by: options.group_by.unwrap_or_else(|| "file".to_string()),
             github_url: options.github_url,
+            link_style: parse_markdown_link_style(options.link_style.as_deref()),
+            base_path: options.base_path,
         });
     generate_markdown(&docs.into_iter().map(convert_markdown_module).collect::<Vec<_>>(), &options)
         .into_iter()
         .collect()
+}
+
+fn parse_markdown_link_style(link_style: Option<&str>) -> MarkdownLinkStyle {
+    match link_style {
+        Some("clean") => MarkdownLinkStyle::Clean,
+        _ => MarkdownLinkStyle::Markdown,
+    }
 }
 
 /// Generates the machine-readable docs data JSON payload.
@@ -2764,7 +2776,10 @@ mod tests {
     use std::process::Command;
 
     use super::transformer::parse_frontmatter;
-    use super::{get_git_last_updated, map_normalized_doc_entry};
+    use super::{
+        generate_docs_markdown, get_git_last_updated, map_normalized_doc_entry,
+        JsDocsMarkdownEntry, JsDocsMarkdownModule, JsDocsMarkdownOptions,
+    };
 
     #[test]
     fn parses_nested_yaml_frontmatter() {
@@ -2840,6 +2855,41 @@ mod tests {
         assert_eq!(member.r#type.as_deref(), Some("string"));
         assert_eq!(member.optional, Some(true));
         assert_eq!(member.readonly, Some(true));
+    }
+
+    #[test]
+    fn generate_docs_markdown_accepts_clean_link_options() {
+        let docs = vec![JsDocsMarkdownModule {
+            file: "/repo/src/context.ts".to_string(),
+            entries: vec![JsDocsMarkdownEntry {
+                name: "CommandContext".to_string(),
+                kind: "interface".to_string(),
+                description: "Runtime context.".to_string(),
+                params: None,
+                returns: None,
+                examples: None,
+                tags: None,
+                private: false,
+                file: "/repo/src/context.ts".to_string(),
+                line: 1,
+                end_line: 1,
+                signature: Some("export interface CommandContext".to_string()),
+                members: None,
+            }],
+        }];
+        let markdown = generate_docs_markdown(
+            docs,
+            Some(JsDocsMarkdownOptions {
+                group_by: Some("file".to_string()),
+                github_url: None,
+                link_style: Some("clean".to_string()),
+                base_path: Some("/api-ox".to_string()),
+            }),
+        );
+        let index = markdown.get("index.md").unwrap();
+
+        assert!(index.contains("href=\"/api-ox/context\""));
+        assert!(index.contains("href=\"/api-ox/context#commandcontext\""));
     }
 
     #[test]

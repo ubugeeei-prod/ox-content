@@ -4,6 +4,25 @@
 
 > 10 documented symbols. Read the signatures first, then expand each item for parameters, return types, and examples.
 
+<div class="ox-api-stats" aria-label="API reference summary">
+<span class="ox-api-stat">
+  <strong>10</strong>
+  <span>symbols</span>
+</span>
+<span class="ox-api-stat">
+  <strong>10</strong>
+  <span>functions</span>
+</span>
+<span class="ox-api-stat">
+  <strong>10</strong>
+  <span>parameters</span>
+</span>
+<span class="ox-api-stat">
+  <strong>9</strong>
+  <span>returns</span>
+</span>
+</div>
+
 ## Reference
 
 <div class="ox-api-controls" data-ox-api-target=".ox-api-entry" role="toolbar" aria-label="Reference display controls">
@@ -12,10 +31,14 @@
 </div>
 
 <details id="extractislandinfo" class="ox-api-entry">
-  <summary><span class="ox-api-entry__kind">fn</span><span class="ox-api-entry__summary-main"><code class="ox-api-entry__signature ox-api-entry__signature--highlighted language-typescript">extractIslandInfo(html: string): Promise&lt;IslandInfo[]&gt;</code><span class="ox-api-entry__description">Extract island info without transforming HTML. Useful for analysis/bundling pur…</span></span></summary>
+  <summary><span class="ox-api-entry__kind">fn</span><span class="ox-api-entry__summary-main"><code class="ox-api-entry__signature ox-api-entry__signature--highlighted language-typescript">extractIslandInfo(html: string): Promise&lt;IslandInfo[]&gt;</code><span class="ox-api-entry__description">Extract island info without transforming HTML. Useful for analysis/bundling pur…</span><span class="ox-api-entry__meta"><span class="ox-api-badge">1 param</span><span class="ox-api-badge">returns Promise</span></span></span></summary>
   <div class="ox-api-entry__body">
 <div class="ox-api-entry__prose">
 <p>Extract island info without transforming HTML. Useful for analysis/bundling purposes.</p>
+</div>
+<div class="ox-api-entry__section ox-api-entry__section--signature">
+<h4>Signature</h4>
+<pre><code class="language-typescript">export async function extractIslandInfo(html: string): Promise&lt;IslandInfo[]&gt;</code></pre>
 </div>
 <p class="ox-api-entry__source"><a href="https://github.com/ubugeeei/ox-content/blob/main/npm/vite-plugin-ox-content/src/island/parse.ts#L229-L232">View source</a></p>
 <div class="ox-api-entry__section ox-api-entry__section--params">
@@ -41,10 +64,14 @@
 </details>
 
 <details id="findcomponentelement" class="ox-api-entry">
-  <summary><span class="ox-api-entry__kind">fn</span><span class="ox-api-entry__summary-main"><code class="ox-api-entry__signature ox-api-entry__signature--highlighted language-typescript">findComponentElement(children: Element[&quot;children&quot;]): Element | null</code><span class="ox-api-entry__description">Find the component element inside &lt;Island&gt;.</span></span></summary>
+  <summary><span class="ox-api-entry__kind">fn</span><span class="ox-api-entry__summary-main"><code class="ox-api-entry__signature ox-api-entry__signature--highlighted language-typescript">findComponentElement(children: Element[&quot;children&quot;]): Element | null</code><span class="ox-api-entry__description">Find the component element inside &lt;Island&gt;.</span><span class="ox-api-entry__meta"><span class="ox-api-badge">1 param</span><span class="ox-api-badge">returns Element | null</span></span></span></summary>
   <div class="ox-api-entry__body">
 <div class="ox-api-entry__prose">
 <p>Find the component element inside &lt;Island&gt;.</p>
+</div>
+<div class="ox-api-entry__section ox-api-entry__section--signature">
+<h4>Signature</h4>
+<pre><code class="language-typescript">function findComponentElement(children: Element[&quot;children&quot;]): Element | null</code></pre>
 </div>
 <p class="ox-api-entry__source"><a href="https://github.com/ubugeeei/ox-content/blob/main/npm/vite-plugin-ox-content/src/island/parse.ts#L82-L92">View source</a></p>
 <div class="ox-api-entry__section ox-api-entry__section--params">
@@ -62,7 +89,7 @@
 <div class="ox-api-entry__section ox-api-entry__section--returns">
 <h4>Returns</h4>
 <div class="ox-api-entry__return">
-  <code class="ox-api-entry__return-type">Element | literal</code>
+  <code class="ox-api-entry__return-type">Element | null</code>
   
 </div>
 </div>
@@ -70,10 +97,14 @@
 </details>
 
 <details id="generatehydrationscript" class="ox-api-entry">
-  <summary><span class="ox-api-entry__kind">fn</span><span class="ox-api-entry__summary-main"><code class="ox-api-entry__signature ox-api-entry__signature--highlighted language-typescript">generateHydrationScript(components: string[]): string</code><span class="ox-api-entry__description">Generate client-side hydration script. This is a minimal script that imports an…</span></span></summary>
+  <summary><span class="ox-api-entry__kind">fn</span><span class="ox-api-entry__summary-main"><code class="ox-api-entry__signature ox-api-entry__signature--highlighted language-typescript">generateHydrationScript(components: string[]): string</code><span class="ox-api-entry__description">Generate client-side hydration script. This is a minimal script that imports an…</span><span class="ox-api-entry__meta"><span class="ox-api-badge">1 param</span><span class="ox-api-badge">returns string</span></span></span></summary>
   <div class="ox-api-entry__body">
 <div class="ox-api-entry__prose">
 <p>Generate client-side hydration script. This is a minimal script that imports and initializes islands.</p>
+</div>
+<div class="ox-api-entry__section ox-api-entry__section--signature">
+<h4>Signature</h4>
+<pre><code class="language-typescript">export function generateHydrationScript(components: string[]): string</code></pre>
 </div>
 <p class="ox-api-entry__source"><a href="https://github.com/ubugeeei/ox-content/blob/main/npm/vite-plugin-ox-content/src/island/parse.ts#L238-L269">View source</a></p>
 <div class="ox-api-entry__section ox-api-entry__section--params">
@@ -99,10 +130,14 @@
 </details>
 
 <details id="getattribute" class="ox-api-entry">
-  <summary><span class="ox-api-entry__kind">fn</span><span class="ox-api-entry__summary-main"><code class="ox-api-entry__signature ox-api-entry__signature--highlighted language-typescript">getAttribute(el: Element, name: string): string | undefined</code><span class="ox-api-entry__description">Get element attribute value.</span></span></summary>
+  <summary><span class="ox-api-entry__kind">fn</span><span class="ox-api-entry__summary-main"><code class="ox-api-entry__signature ox-api-entry__signature--highlighted language-typescript">getAttribute(el: Element, name: string): string | undefined</code><span class="ox-api-entry__description">Get element attribute value.</span><span class="ox-api-entry__meta"><span class="ox-api-badge">2 params</span><span class="ox-api-badge">returns string | undefined</span></span></span></summary>
   <div class="ox-api-entry__body">
 <div class="ox-api-entry__prose">
 <p>Get element attribute value.</p>
+</div>
+<div class="ox-api-entry__section ox-api-entry__section--signature">
+<h4>Signature</h4>
+<pre><code class="language-typescript">function getAttribute(el: Element, name: string): string | undefined</code></pre>
 </div>
 <p class="ox-api-entry__source"><a href="https://github.com/ubugeeei/ox-content/blob/main/npm/vite-plugin-ox-content/src/island/parse.ts#L30-L35">View source</a></p>
 <div class="ox-api-entry__section ox-api-entry__section--params">
@@ -135,10 +170,14 @@
 </details>
 
 <details id="getcomponentname" class="ox-api-entry">
-  <summary><span class="ox-api-entry__kind">fn</span><span class="ox-api-entry__summary-main"><code class="ox-api-entry__signature ox-api-entry__signature--highlighted language-typescript">getComponentName(el: Element): string</code><span class="ox-api-entry__description">Get component name from child element.</span></span></summary>
+  <summary><span class="ox-api-entry__kind">fn</span><span class="ox-api-entry__summary-main"><code class="ox-api-entry__signature ox-api-entry__signature--highlighted language-typescript">getComponentName(el: Element): string</code><span class="ox-api-entry__description">Get component name from child element.</span><span class="ox-api-entry__meta"><span class="ox-api-badge">1 param</span><span class="ox-api-badge">returns string</span></span></span></summary>
   <div class="ox-api-entry__body">
 <div class="ox-api-entry__prose">
 <p>Get component name from child element.</p>
+</div>
+<div class="ox-api-entry__section ox-api-entry__section--signature">
+<h4>Signature</h4>
+<pre><code class="language-typescript">function getComponentName(el: Element): string</code></pre>
 </div>
 <p class="ox-api-entry__source"><a href="https://github.com/ubugeeei/ox-content/blob/main/npm/vite-plugin-ox-content/src/island/parse.ts#L97-L105">View source</a></p>
 <div class="ox-api-entry__section ox-api-entry__section--params">
@@ -164,10 +203,14 @@
 </details>
 
 <details id="hasislands" class="ox-api-entry">
-  <summary><span class="ox-api-entry__kind">fn</span><span class="ox-api-entry__summary-main"><code class="ox-api-entry__signature ox-api-entry__signature--highlighted language-typescript">hasIslands(html: string): boolean</code><span class="ox-api-entry__description">Check if HTML contains any Island components.</span></span></summary>
+  <summary><span class="ox-api-entry__kind">fn</span><span class="ox-api-entry__summary-main"><code class="ox-api-entry__signature ox-api-entry__signature--highlighted language-typescript">hasIslands(html: string): boolean</code><span class="ox-api-entry__description">Check if HTML contains any Island components.</span><span class="ox-api-entry__meta"><span class="ox-api-badge">1 param</span><span class="ox-api-badge">returns boolean</span></span></span></summary>
   <div class="ox-api-entry__body">
 <div class="ox-api-entry__prose">
 <p>Check if HTML contains any Island components.</p>
+</div>
+<div class="ox-api-entry__section ox-api-entry__section--signature">
+<h4>Signature</h4>
+<pre><code class="language-typescript">export function hasIslands(html: string): boolean</code></pre>
 </div>
 <p class="ox-api-entry__source"><a href="https://github.com/ubugeeei/ox-content/blob/main/npm/vite-plugin-ox-content/src/island/parse.ts#L221-L223">View source</a></p>
 <div class="ox-api-entry__section ox-api-entry__section--params">
@@ -193,10 +236,14 @@
 </details>
 
 <details id="parseprops" class="ox-api-entry">
-  <summary><span class="ox-api-entry__kind">fn</span><span class="ox-api-entry__summary-main"><code class="ox-api-entry__signature ox-api-entry__signature--highlighted language-typescript">parseProps(el: Element): Record&lt;string, unknown&gt;</code><span class="ox-api-entry__description">Parse JSX-style props from attributes.</span></span></summary>
+  <summary><span class="ox-api-entry__kind">fn</span><span class="ox-api-entry__summary-main"><code class="ox-api-entry__signature ox-api-entry__signature--highlighted language-typescript">parseProps(el: Element): Record&lt;string, unknown&gt;</code><span class="ox-api-entry__description">Parse JSX-style props from attributes.</span><span class="ox-api-entry__meta"><span class="ox-api-badge">1 param</span><span class="ox-api-badge">returns Record</span></span></span></summary>
   <div class="ox-api-entry__body">
 <div class="ox-api-entry__prose">
 <p>Parse JSX-style props from attributes.</p>
+</div>
+<div class="ox-api-entry__section ox-api-entry__section--signature">
+<h4>Signature</h4>
+<pre><code class="language-typescript">function parseProps(el: Element): Record&lt;string, unknown&gt;</code></pre>
 </div>
 <p class="ox-api-entry__source"><a href="https://github.com/ubugeeei/ox-content/blob/main/npm/vite-plugin-ox-content/src/island/parse.ts#L40-L77">View source</a></p>
 <div class="ox-api-entry__section ox-api-entry__section--params">
@@ -222,10 +269,14 @@
 </details>
 
 <details id="rehypeislands" class="ox-api-entry">
-  <summary><span class="ox-api-entry__kind">fn</span><span class="ox-api-entry__summary-main"><code class="ox-api-entry__signature ox-api-entry__signature--highlighted language-typescript">rehypeIslands(collectedIslands: IslandInfo[])</code><span class="ox-api-entry__description">Rehype plugin to transform Island components.</span></span></summary>
+  <summary><span class="ox-api-entry__kind">fn</span><span class="ox-api-entry__summary-main"><code class="ox-api-entry__signature ox-api-entry__signature--highlighted language-typescript">rehypeIslands(collectedIslands: IslandInfo[])</code><span class="ox-api-entry__description">Rehype plugin to transform Island components.</span><span class="ox-api-entry__meta"><span class="ox-api-badge">1 param</span></span></span></summary>
   <div class="ox-api-entry__body">
 <div class="ox-api-entry__prose">
 <p>Rehype plugin to transform Island components.</p>
+</div>
+<div class="ox-api-entry__section ox-api-entry__section--signature">
+<h4>Signature</h4>
+<pre><code class="language-typescript">function rehypeIslands(collectedIslands: IslandInfo[])</code></pre>
 </div>
 <p class="ox-api-entry__source"><a href="https://github.com/ubugeeei/ox-content/blob/main/npm/vite-plugin-ox-content/src/island/parse.ts#L119-L180">View source</a></p>
 <div class="ox-api-entry__section ox-api-entry__section--params">
@@ -244,10 +295,14 @@
 </details>
 
 <details id="resetislandcounter" class="ox-api-entry">
-  <summary><span class="ox-api-entry__kind">fn</span><span class="ox-api-entry__summary-main"><code class="ox-api-entry__signature ox-api-entry__signature--highlighted language-typescript">resetIslandCounter(): void</code><span class="ox-api-entry__description">Reset island counter (for testing).</span></span></summary>
+  <summary><span class="ox-api-entry__kind">fn</span><span class="ox-api-entry__summary-main"><code class="ox-api-entry__signature ox-api-entry__signature--highlighted language-typescript">resetIslandCounter(): void</code><span class="ox-api-entry__description">Reset island counter (for testing).</span><span class="ox-api-entry__meta"><span class="ox-api-badge">returns void</span></span></span></summary>
   <div class="ox-api-entry__body">
 <div class="ox-api-entry__prose">
 <p>Reset island counter (for testing).</p>
+</div>
+<div class="ox-api-entry__section ox-api-entry__section--signature">
+<h4>Signature</h4>
+<pre><code class="language-typescript">export function resetIslandCounter(): void</code></pre>
 </div>
 <p class="ox-api-entry__source"><a href="https://github.com/ubugeeei/ox-content/blob/main/npm/vite-plugin-ox-content/src/island/parse.ts#L112-L114">View source</a></p>
 <div class="ox-api-entry__section ox-api-entry__section--returns">
@@ -261,21 +316,26 @@
 </details>
 
 <details id="transformislands" class="ox-api-entry">
-  <summary><span class="ox-api-entry__kind">fn</span><span class="ox-api-entry__summary-main"><code class="ox-api-entry__signature ox-api-entry__signature--highlighted language-typescript">transformIslands(html: string): Promise&lt;ParseIslandsResult&gt;</code><span class="ox-api-entry__description">Transform Island components in HTML. Converts: ```html &lt;Island load=&quot;visible&quot;&gt;…</span></span></summary>
+  <summary><span class="ox-api-entry__kind">fn</span><span class="ox-api-entry__summary-main"><code class="ox-api-entry__signature ox-api-entry__signature--highlighted language-typescript">transformIslands(html: string): Promise&lt;ParseIslandsResult&gt;</code><span class="ox-api-entry__description">Transform Island components in HTML. Converts: ```html &lt;Island load=&quot;visible&quot;&gt;…</span><span class="ox-api-entry__meta"><span class="ox-api-badge">1 param</span><span class="ox-api-badge">returns Promise</span></span></span></summary>
   <div class="ox-api-entry__body">
 <div class="ox-api-entry__prose">
-<p>Transform Island components in HTML. Converts:</p>
+<p>Transform Island components in HTML.</p>
+<p>Converts:</p>
 <pre><code class="language-html">&lt;Island load=&quot;visible&quot;&gt;
-&lt;Counter initial={0} /&gt;
+  &lt;Counter initial={0} /&gt;
 &lt;/Island&gt;</code></pre>
 <p>To:</p>
 <pre><code class="language-html">&lt;div id=&quot;ox-island-0&quot;
-data-ox-island=&quot;Counter&quot;
-data-ox-load=&quot;visible&quot;
-data-ox-props=&#39;{&quot;initial&quot;:0}&#39;
-class=&quot;ox-island&quot;&gt;
-&lt;!-- fallback content --&gt;
+     data-ox-island=&quot;Counter&quot;
+     data-ox-load=&quot;visible&quot;
+     data-ox-props=&#39;{&quot;initial&quot;:0}&#39;
+     class=&quot;ox-island&quot;&gt;
+  &lt;!-- fallback content --&gt;
 &lt;/div&gt;</code></pre>
+</div>
+<div class="ox-api-entry__section ox-api-entry__section--signature">
+<h4>Signature</h4>
+<pre><code class="language-typescript">export async function transformIslands(html: string): Promise&lt;ParseIslandsResult&gt;</code></pre>
 </div>
 <p class="ox-api-entry__source"><a href="https://github.com/ubugeeei/ox-content/blob/main/npm/vite-plugin-ox-content/src/island/parse.ts#L203-L216">View source</a></p>
 <div class="ox-api-entry__section ox-api-entry__section--params">

@@ -761,6 +761,18 @@ export interface DocsOptions {
   githubUrl?: string;
 
   /**
+   * Internal documentation link style.
+   * @default 'markdown'
+   */
+  linkStyle?: "markdown" | "clean";
+
+  /**
+   * Route prefix used by generated documentation links and nav metadata.
+   * Nav metadata falls back to '/api' when this is not set.
+   */
+  basePath?: string;
+
+  /**
    * Generate navigation metadata file.
    * @default true
    */
@@ -783,6 +795,8 @@ export interface ResolvedDocsOptions {
   toc: boolean;
   groupBy: "file" | "category";
   githubUrl?: string;
+  linkStyle: "markdown" | "clean";
+  basePath?: string;
   generateNav: boolean;
 }
 

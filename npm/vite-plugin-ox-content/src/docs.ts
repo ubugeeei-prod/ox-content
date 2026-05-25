@@ -211,6 +211,8 @@ export function generateMarkdown(
   return napi.generateDocsMarkdown(toRustDocsModules(docs), {
     groupBy: options.groupBy,
     githubUrl: options.githubUrl,
+    linkStyle: options.linkStyle,
+    basePath: options.basePath,
   });
 }
 
@@ -257,7 +259,7 @@ export async function writeDocs(
 
   // Generate and write navigation metadata if enabled
   if (extractedDocs && options?.generateNav && options.groupBy === "file") {
-    const navItems = generateNavMetadata(extractedDocs, "/api");
+    const navItems = generateNavMetadata(extractedDocs, options.basePath ?? "/api");
     const navCode = generateNavCode(navItems, "apiNav");
     const navFilePath = path.join(outDir, "nav.ts");
     await fs.promises.writeFile(navFilePath, navCode, "utf-8");
@@ -329,6 +331,8 @@ export function resolveDocsOptions(
     toc: false,
     groupBy: opts.groupBy ?? "file",
     githubUrl: opts.githubUrl,
+    linkStyle: opts.linkStyle ?? "markdown",
+    basePath: opts.basePath,
     generateNav: opts.generateNav ?? true,
   };
 }
