@@ -1,0 +1,23 @@
+---
+source: crates/ox_content_renderer/tests/snapshot_render.rs
+assertion_line: 29
+description: "| name | status |\n| ---- | ------ |\n| **bold** | *it* |\n| `code` | ~~old~~ |\n"
+---
+<table>
+<thead>
+<tr>
+<th>name</th>
+<th>status</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>bold</strong></td>
+<td><em>it</em></td>
+</tr>
+<tr>
+<td><code>code</code></td>
+<td><del>old</del></td>
+</tr>
+</tbody>
+</table>

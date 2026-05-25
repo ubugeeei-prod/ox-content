@@ -1,0 +1,25 @@
+---
+source: crates/ox_content_parser/tests/snapshot_parse.rs
+assertion_line: 32
+description: "| name | status |\n| ---- | ------ |\n| **bold** | *italic* |\n| `code` | ~~old~~ |\n"
+---
+Document [0..81]
+  Table align=[none,none] [0..81]
+    TableRow [0..0]
+      TableCell [0..0]
+        Text "name" [0..4]
+      TableCell [0..0]
+        Text "status" [0..6]
+    TableRow [0..0]
+      TableCell [0..0]
+        Strong [0..8]
+          Text "bold" [2..6]
+      TableCell [0..0]
+        Emphasis [0..8]
+          Text "italic" [1..7]
+    TableRow [0..0]
+      TableCell [0..0]
+        InlineCode "code" [0..6]
+      TableCell [0..0]
+        Delete [0..7]
+          Text "old" [2..5]

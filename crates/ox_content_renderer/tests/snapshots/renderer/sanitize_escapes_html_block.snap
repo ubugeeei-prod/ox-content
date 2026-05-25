@@ -1,0 +1,6 @@
+---
+source: crates/ox_content_renderer/tests/snapshot_render.rs
+assertion_line: 29
+description: "<div><script>alert(1)</script></div>\n"
+---
+&lt;div&gt;&lt;script&gt;alert(1)&lt;/script&gt;&lt;/div&gt;

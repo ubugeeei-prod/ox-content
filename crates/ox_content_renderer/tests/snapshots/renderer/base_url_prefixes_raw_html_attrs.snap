@@ -1,0 +1,9 @@
+---
+source: crates/ox_content_renderer/tests/snapshot_render.rs
+assertion_line: 29
+description: "<div>\n<a href=\"/guide\">Guide</a>\n<img src='/img/logo.png'>\n</div>\n"
+---
+<div>
+<a href="/docs/guide">Guide</a>
+<img src='/docs/img/logo.png'>
+</div>

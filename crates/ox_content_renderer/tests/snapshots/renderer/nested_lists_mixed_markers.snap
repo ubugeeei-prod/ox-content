@@ -1,0 +1,21 @@
+---
+source: crates/ox_content_renderer/tests/snapshot_render.rs
+assertion_line: 29
+description: "- parent\n  - child a\n  - child b\n    1. deep one\n- sibling\n"
+---
+<ul>
+<li><p>parent</p>
+<ul>
+<li><p>child a</p>
+</li>
+<li><p>child b</p>
+<ol>
+<li><p>deep one</p>
+</li>
+</ol>
+</li>
+</ul>
+</li>
+<li><p>sibling</p>
+</li>
+</ul>

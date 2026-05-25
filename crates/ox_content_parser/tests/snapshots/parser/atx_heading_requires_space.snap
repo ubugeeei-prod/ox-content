@@ -1,0 +1,10 @@
+---
+source: crates/ox_content_parser/tests/snapshot_parse.rs
+assertion_line: 32
+description: "#NoSpace\n## With space\n"
+---
+Document [0..23]
+  Paragraph [0..9]
+    Text "#NoSpace" [0..8]
+  Heading depth=2 [9..23]
+    Text "With space" [12..22]

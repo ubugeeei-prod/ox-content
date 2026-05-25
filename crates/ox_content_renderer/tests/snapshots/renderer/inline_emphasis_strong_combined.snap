@@ -1,0 +1,6 @@
+---
+source: crates/ox_content_renderer/tests/snapshot_render.rs
+assertion_line: 29
+description: "*it* **bold** ***both*** `code`\n"
+---
+<p><em>it</em> <strong>bold</strong> <strong>both</strong> <code>code</code></p>

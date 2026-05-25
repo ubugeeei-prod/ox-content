@@ -1,0 +1,7 @@
+---
+source: crates/ox_content_parser/tests/snapshot_parse.rs
+assertion_line: 32
+description: "```rs\nfn main() {}\n"
+---
+Document [0..19]
+  CodeBlock lang=Some("rs") meta=None value="fn main() {}\n" [0..19]

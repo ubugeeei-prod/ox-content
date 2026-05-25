@@ -1,0 +1,10 @@
+---
+source: crates/ox_content_parser/tests/snapshot_parse.rs
+assertion_line: 32
+description: "Show `<input type=\"checkbox\">` literally.\n"
+---
+Document [0..42]
+  Paragraph [0..42]
+    Text "Show " [0..5]
+    InlineCode "<input type=\"checkbox\">" [5..30]
+    Text " literally." [30..41]
