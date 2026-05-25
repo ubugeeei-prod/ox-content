@@ -54,6 +54,9 @@ export declare function collectSsgMarkdownFiles(srcDir: string, extensions: Arra
 /** Extracts shared CSS and JavaScript assets from generated SSG pages. */
 export declare function externalizeSsgAssets(pages: Array<JsSsgGeneratedHtmlPage>, outDir: string, base: string): JsSsgExternalizedAssets
 
+/** Extracts normalized documentation entries from source directories using Oxc. */
+export declare function extractDocsFromDirectories(srcDirs: Array<string>, include: Array<string>, exclude: Array<string>, includePrivate?: boolean | undefined | null, includeInternal?: boolean | undefined | null): Array<JsExtractedDocsModule>
+
 /** Extracts generated API docs grouped by public entry points. */
 export declare function extractDocsFromEntryPoints(entryPoints: Array<JsEntryPointSpec>, options?: JsEntryPointDocsOptions | undefined | null): Array<JsEntrypointDocsModule>
 
@@ -276,6 +279,13 @@ export interface JsDocsNavItem {
   children?: Array<JsDocsNavItem>
 }
 
+/** Options for writing generated API documentation files. */
+export interface JsDocsOutputOptions {
+  generateNav?: boolean
+  groupBy?: string
+  generatedAt?: string
+}
+
 /** Entry page configuration. */
 export interface JsEntryPageConfig {
   /** Hero section. */
@@ -327,6 +337,12 @@ export interface JsExportSource {
   package?: string
   originalName: string
   typeOnly: boolean
+}
+
+/** Extracted docs for one source file returned to JavaScript callers. */
+export interface JsExtractedDocsModule {
+  file: string
+  entries: Array<JsDocEntry>
 }
 
 /** Feature card for entry page. */
@@ -1132,6 +1148,9 @@ export declare function validateMf2(message: string): Mf2ValidateResult
 
 /** Returns the version of ox_content_napi. */
 export declare function version(): string
+
+/** Writes generated API documentation files and native sidecars. */
+export declare function writeGeneratedDocs(docs: Record<string, string>, outDir: string, extractedDocs?: Array<JsDocsMarkdownModule> | undefined | null, options?: JsDocsOutputOptions | undefined | null): void
 
 /** Writes a serialized search index to `search-index.json` under an output directory. */
 export declare function writeSearchIndex(indexJson: string, outDir: string): void
