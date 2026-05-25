@@ -132,7 +132,6 @@ impl<'a> Parser<'a> {
         Some(ch)
     }
 
-
     /// Skips whitespace characters.
     fn skip_whitespace(&mut self) {
         let bytes = self.source.as_bytes();
@@ -209,9 +208,7 @@ impl<'a> Parser<'a> {
             _ => {}
         }
 
-        if self.options.tables
-            && memchr(b'|', line.as_bytes()).is_some()
-            && self.try_parse_table()
+        if self.options.tables && memchr(b'|', line.as_bytes()).is_some() && self.try_parse_table()
         {
             return self.parse_table(start);
         }
@@ -462,10 +459,7 @@ impl<'a> Parser<'a> {
         let trimmed = line.trim_start().as_bytes();
 
         // Unordered list: starts with -, *, or + followed by space.
-        if trimmed.len() >= 2
-            && matches!(trimmed[0], b'-' | b'*' | b'+')
-            && trimmed[1] == b' '
-        {
+        if trimmed.len() >= 2 && matches!(trimmed[0], b'-' | b'*' | b'+') && trimmed[1] == b' ' {
             return true;
         }
 
@@ -568,8 +562,8 @@ impl<'a> Parser<'a> {
     /// than walking UTF-8 code points one character at a time.
     fn line_at(&self, line_start: usize) -> &'a str {
         let bytes = self.source.as_bytes();
-        let end = memchr(b'\n', &bytes[line_start..])
-            .map_or(self.source.len(), |off| line_start + off);
+        let end =
+            memchr(b'\n', &bytes[line_start..]).map_or(self.source.len(), |off| line_start + off);
         &self.source[line_start..end]
     }
 
@@ -965,7 +959,7 @@ impl<'a> Parser<'a> {
         let nl1 = memchr(b'\n', &bytes[p1..]).map_or(bytes.len(), |off| p1 + off);
 
         let first_line = self.source[p0..nl0].trim();
-        if !memchr(b'|', first_line.as_bytes()).is_some() {
+        if memchr(b'|', first_line.as_bytes()).is_none() {
             return false;
         }
 
@@ -1305,16 +1299,13 @@ impl<'a> Parser<'a> {
     fn consume_line(&mut self) -> &'a str {
         let start = self.position;
         let bytes = self.source.as_bytes();
-        match memchr(b'\n', &bytes[start..]) {
-            Some(off) => {
-                let line_end = start + off;
-                self.position = line_end + 1;
-                &self.source[start..line_end]
-            }
-            None => {
-                self.position = self.source.len();
-                &self.source[start..]
-            }
+        if let Some(off) = memchr(b'\n', &bytes[start..]) {
+            let line_end = start + off;
+            self.position = line_end + 1;
+            &self.source[start..line_end]
+        } else {
+            self.position = self.source.len();
+            &self.source[start..]
         }
     }
 
@@ -1355,16 +1346,12 @@ impl<'a> Parser<'a> {
             }
 
             // Consume one line via memchr.
-            content_end = match memchr(b'\n', &bytes[line_start..]) {
-                Some(off) => {
-                    self.position = line_start + off + 1;
-                    line_start + off + 1
-                }
-                None => {
-                    self.position = self.source.len();
-                    self.source.len()
-                }
+            content_end = if let Some(off) = memchr(b'\n', &bytes[line_start..]) {
+                line_start + off + 1
+            } else {
+                self.source.len()
             };
+            self.position = content_end;
         }
 
         let content = self.source[start..content_end].trim();

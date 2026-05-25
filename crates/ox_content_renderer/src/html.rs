@@ -1,5 +1,6 @@
 //! HTML renderer implementation.
 
+use std::collections::hash_map::Entry;
 use std::collections::BTreeMap;
 
 use ox_content_ast::{
@@ -1097,11 +1098,7 @@ impl HtmlRenderer {
         // this is the common case for normal docs.
         self.toc_entries.clear();
         if document_has_toc_marker(document) {
-            collect_inline_toc_entries(
-                document,
-                self.options.toc_max_depth,
-                &mut self.toc_entries,
-            );
+            collect_inline_toc_entries(document, self.options.toc_max_depth, &mut self.toc_entries);
         }
         self.heading_id_counts.clear();
         let estimated_len = (document.span.len() as usize).saturating_mul(3) / 2;
@@ -1426,7 +1423,6 @@ impl HtmlRenderer {
         // did a `get_mut` + `insert` (two hashes) and cloned the slug on
         // every unique heading. Now the unique path is one hash + one
         // insert with no clone.
-        use std::collections::hash_map::Entry;
         match self.heading_id_counts.entry(slug) {
             Entry::Occupied(mut entry) => {
                 let count = *entry.get();
