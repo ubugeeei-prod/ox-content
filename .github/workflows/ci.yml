@@ -228,8 +228,10 @@ jobs:
       - name: Cache cargo
         uses: Swatinem/rust-cache@e18b497796c12c097a38f9edb9d0641fb99eee32 # v2
 
-      - name: Install Chromium for mermaid-cli
-        run: vp exec --filter @ox-content/vite-plugin -- puppeteer browsers install chrome-headless-shell
+      - name: Install browsers for docs rendering
+        run: |
+          vp exec --filter @ox-content/vite-plugin -- playwright install --with-deps chromium
+          vp exec --filter @ox-content/vite-plugin -- puppeteer browsers install chrome-headless-shell
 
       - name: Build
         run: vp build
