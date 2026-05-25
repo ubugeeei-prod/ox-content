@@ -1264,13 +1264,10 @@ impl<'a> Parser<'a> {
     /// Parses a table.
     fn parse_table(&mut self, start: usize) -> ParseResult<Option<Node<'a>>> {
         profile_span!("parser::parse_table");
-        let mut rows: std::vec::Vec<std::vec::Vec<&str>> = std::vec::Vec::new();
         let mut align: Vec<'a, AlignKind> = self.allocator.new_vec();
 
         // Parse header row
         let header_line = self.consume_line();
-        let header_cells = Self::parse_table_row_cells(header_line);
-        rows.push(header_cells);
 
         // Parse delimiter row to get alignment
         let delimiter_line = self.consume_line();
@@ -1286,6 +1283,11 @@ impl<'a> Parser<'a> {
             };
             align.push(alignment);
         }
+
+        // Build the table AST directly instead of first collecting row
+        // slices into short-lived heap Vecs.
+        let mut children: Vec<'a, TableRow<'a>> = self.allocator.new_vec();
+        children.push(self.parse_table_row(header_line)?);
 
         // Parse body rows
         loop {
@@ -1312,22 +1314,7 @@ impl<'a> Parser<'a> {
 
             self.position = line_start;
             let row_line = self.consume_line();
-            let row_cells = Self::parse_table_row_cells(row_line);
-            rows.push(row_cells);
-        }
-
-        // Build the table AST
-        let mut children: Vec<'a, TableRow<'a>> = self.allocator.new_vec();
-
-        for row_cells in rows {
-            let mut cells: Vec<'a, TableCell<'a>> = self.allocator.new_vec();
-            for cell_content in row_cells {
-                let cell_children = self.parse_inline(cell_content, 0)?;
-                let cell = TableCell { children: cell_children, span: Span::new(0, 0) };
-                cells.push(cell);
-            }
-            let row = TableRow { children: cells, span: Span::new(0, 0) };
-            children.push(row);
+            children.push(self.parse_table_row(row_line)?);
         }
 
         let span = Span::new(start as u32, self.position as u32);
@@ -1352,12 +1339,23 @@ impl<'a> Parser<'a> {
         }
     }
 
-    /// Parses table row cells from a line.
-    fn parse_table_row_cells(line: &'a str) -> std::vec::Vec<&'a str> {
+    /// Parses a table row into arena-backed AST cells without temporary heap
+    /// collection.
+    fn parse_table_row(&self, line: &'a str) -> ParseResult<TableRow<'a>> {
+        let mut cells: Vec<'a, TableCell<'a>> = self.allocator.new_vec();
+        for cell_content in Self::table_row_cells(line) {
+            let cell_children = self.parse_inline(cell_content, 0)?;
+            cells.push(TableCell { children: cell_children, span: Span::new(0, 0) });
+        }
+        Ok(TableRow { children: cells, span: Span::new(0, 0) })
+    }
+
+    /// Iterates table row cells from a line.
+    fn table_row_cells(line: &'a str) -> impl Iterator<Item = &'a str> {
         let trimmed = line.trim();
         let trimmed = trimmed.strip_prefix('|').unwrap_or(trimmed);
         let trimmed = trimmed.strip_suffix('|').unwrap_or(trimmed);
-        trimmed.split('|').map(str::trim).collect()
+        trimmed.split('|').map(str::trim)
     }
 
     /// Parses a paragraph.
