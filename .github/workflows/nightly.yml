@@ -144,11 +144,11 @@ jobs:
         run: vp exec -- napi pre-publish -t npm --npm-dir ../../binding-packages --no-gh-release --skip-optional-publish
 
       - name: Build TS packages
-        run: pnpm --filter "@ox-content/*" build
+        run: vp exec -- pnpm --filter "@ox-content/*" build
 
       - name: Publish to pkg-pr-new
         run: |
-          pnpx pkg-pr-new publish --compact --pnpm \
+          vp exec -- pnpx pkg-pr-new publish --compact --pnpm \
             ./crates/ox_content_napi \
             ./binding-packages/darwin-x64 \
             ./binding-packages/darwin-arm64 \
