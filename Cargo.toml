@@ -76,6 +76,7 @@ ox_content_ssg = { version = "2.14.0", path = "crates/ox_content_ssg" }
 ox_content_i18n = { version = "2.14.0", path = "crates/ox_content_i18n" }
 ox_content_i18n_checker = { version = "2.14.0", path = "crates/ox_content_i18n_checker" }
 ox_content_mdc_checker = { version = "2.14.0", path = "crates/ox_content_mdc_checker" }
+ox_content_profiler = { version = "2.14.0", path = "crates/ox_content_profiler" }
 ox_jsdoc = "0.0.16"
 
 # Memory allocation

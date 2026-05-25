@@ -18,6 +18,13 @@ workspace = true
 ox_content_allocator = { workspace = true }
 ox_content_ast = { workspace = true }
 thiserror = { workspace = true }
+ox_content_profiler = { workspace = true, optional = true }
+
+[features]
+default = []
+# See `ox_content_parser`'s `profile` feature — same trade-off, but
+# instruments the HTML renderer's visitor entry points instead.
+profile = ["dep:ox_content_profiler"]
 
 [dev-dependencies]
 ox_content_parser = { workspace = true }

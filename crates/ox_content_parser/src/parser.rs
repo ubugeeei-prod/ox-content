@@ -7,6 +7,9 @@ use ox_content_ast::{
 };
 
 use crate::error::{ParseError, ParseResult};
+#[allow(unused_imports)]
+// The macro is no-op without the `profile` feature, which suppresses the use.
+use crate::profile_span;
 
 /// Parser options.
 #[derive(Debug, Clone, Default)]
@@ -80,6 +83,7 @@ impl<'a> Parser<'a> {
 
     /// Parses the source into a document AST.
     pub fn parse(mut self) -> ParseResult<Document<'a>> {
+        profile_span!("parser::parse");
         let mut children = self.allocator.new_vec();
 
         while !self.is_at_end() {
@@ -141,6 +145,7 @@ impl<'a> Parser<'a> {
 
     /// Parses a block element.
     fn parse_block(&mut self) -> ParseResult<Option<Node<'a>>> {
+        profile_span!("parser::parse_block");
         self.skip_blank_lines();
 
         if self.is_at_end() {
@@ -218,6 +223,7 @@ impl<'a> Parser<'a> {
     }
 
     fn parse_html_block(&mut self, start: usize) -> ParseResult<Option<Node<'a>>> {
+        profile_span!("parser::parse_html_block");
         let line = self.remaining().lines().next().unwrap_or("");
 
         if line.trim_start().starts_with("<!--") {
@@ -233,26 +239,42 @@ impl<'a> Parser<'a> {
             return Ok(Some(Node::Html(Html { value, span })));
         }
 
+        // `parse_html_block_tag_name` returns a borrowed slice — no allocation.
         let Some(tag_name) = Self::parse_html_block_tag_name(line) else {
             return Ok(None);
         };
 
-        if Self::is_type1_html_block_tag(&tag_name) {
-            let closing_tag = format!("</{tag_name}");
+        if Self::is_type1_html_block_tag(tag_name) {
+            // Type 1 blocks (`<pre>`, `<script>`, `<style>`, `<textarea>`)
+            // close on the first line containing `</tag`. The previous
+            // implementation built a `String` per parse + lowercased every
+            // line; instead we scan bytes directly with case-insensitive
+            // compare. For a single 25KB document with ~38 blocks this
+            // turns ~hundreds of allocations into zero.
+            let tag_bytes = tag_name.as_bytes();
             loop {
                 let consumed = self.consume_line();
-                if consumed.to_ascii_lowercase().contains(&closing_tag) || self.is_at_end() {
+                if ascii_contains_closing_tag(consumed, tag_bytes) || self.is_at_end() {
                     break;
                 }
             }
         } else {
             self.consume_line();
+            // Walk forward line-by-line until a blank line. Previously we
+            // peeked with `remaining().lines().next()` THEN consumed the
+            // line, which walked each line twice. Consume first and inspect
+            // the returned slice so we only scan once.
             while !self.is_at_end() {
-                let next = self.remaining().lines().next().unwrap_or("");
-                if next.trim().is_empty() {
+                let line_start = self.position;
+                let consumed = self.consume_line();
+                if consumed.is_empty()
+                    || consumed.bytes().all(|b| b == b' ' || b == b'\t' || b == b'\r')
+                {
+                    // Roll back so the outer `parse_block` loop sees the
+                    // blank line and skips it via `skip_blank_lines`.
+                    self.position = line_start;
                     break;
                 }
-                self.consume_line();
             }
         }
 
@@ -261,7 +283,12 @@ impl<'a> Parser<'a> {
         Ok(Some(Node::Html(Html { value, span })))
     }
 
-    fn parse_html_block_tag_name(line: &str) -> Option<String> {
+    /// Returns the borrowed tag-name slice when `line` begins with one of
+    /// the recognized HTML block tags. The slice points back into `line`'s
+    /// underlying storage, so there's no allocation. Callers that need
+    /// case-insensitive comparison should use `eq_ignore_ascii_case` directly
+    /// — the source casing is preserved.
+    fn parse_html_block_tag_name(line: &str) -> Option<&str> {
         let trimmed = line.trim_start();
         let after_open = trimmed.strip_prefix('<')?;
         let after_slash = after_open.strip_prefix('/').unwrap_or(after_open);
@@ -292,7 +319,7 @@ impl<'a> Parser<'a> {
             return None;
         }
 
-        Some(tag_name.to_ascii_lowercase())
+        Some(tag_name)
     }
 
     fn is_supported_html_block_tag(tag_name: &str) -> bool {
@@ -346,6 +373,7 @@ impl<'a> Parser<'a> {
 
     /// Parses a block quote.
     fn parse_block_quote(&mut self, start: usize) -> ParseResult<Option<Node<'a>>> {
+        profile_span!("parser::parse_block_quote");
         self.nesting_depth += 1;
 
         // Collect lines belonging to this block quote and strip the `>` prefix.
@@ -554,6 +582,7 @@ impl<'a> Parser<'a> {
 
     /// Parses a list (ordered or unordered).
     fn parse_list(&mut self, start: usize) -> ParseResult<Option<Node<'a>>> {
+        profile_span!("parser::parse_list");
         let baseline_indent = self.calc_indentation(start);
 
         // Determine list type from the first line (already verified by try_parse_list)
@@ -934,6 +963,7 @@ impl<'a> Parser<'a> {
 
     /// Parses a heading.
     fn parse_heading(&mut self, start: usize) -> ParseResult<Option<Node<'a>>> {
+        profile_span!("parser::parse_heading");
         let mut depth = 0u8;
         while self.peek() == Some('#') {
             depth += 1;
@@ -991,6 +1021,7 @@ impl<'a> Parser<'a> {
 
     /// Parses a fenced code block.
     fn parse_fenced_code(&mut self, start: usize) -> ParseResult<Option<Node<'a>>> {
+        profile_span!("parser::parse_fenced_code");
         let opening_indent = self.calc_indentation(start).min(3);
         for _ in 0..opening_indent {
             if self.peek() == Some(' ') {
@@ -1029,7 +1060,14 @@ impl<'a> Parser<'a> {
             self.advance();
         }
 
-        let mut value = String::new();
+        // Pre-size to avoid the growing `String`'s reallocation chain
+        // (1024 → 2048 → 4096 → ...) which previously produced ~3-7 system
+        // allocations per code block. The upper bound `remaining` is loose
+        // — code blocks are bounded by the closing fence, not EOF — but it
+        // overshoots only when the rest of the document is mostly code,
+        // and avoids ever growing during the read loop.
+        let remaining_estimate = self.source.len().saturating_sub(self.position);
+        let mut value = String::with_capacity(remaining_estimate.min(8 * 1024));
 
         loop {
             if self.is_at_end() {
@@ -1088,6 +1126,7 @@ impl<'a> Parser<'a> {
 
     /// Parses a table.
     fn parse_table(&mut self, start: usize) -> ParseResult<Option<Node<'a>>> {
+        profile_span!("parser::parse_table");
         let mut rows: std::vec::Vec<std::vec::Vec<&str>> = std::vec::Vec::new();
         let mut align: Vec<'a, AlignKind> = self.allocator.new_vec();
 
@@ -1159,14 +1198,25 @@ impl<'a> Parser<'a> {
     }
 
     /// Consumes a line and returns it.
+    ///
+    /// Newlines are always single ASCII `\n` bytes, so we can scan for the
+    /// terminator at byte-level without UTF-8 decoding every character.
+    /// On a document like `docs/content/api/types.md` (~25 KB, 38 HTML
+    /// blocks) this is on the parser's hottest path — replacing the prior
+    /// `peek()` + `advance()` loop with a direct byte search measurably
+    /// reduces `parse_html_block` cost.
     fn consume_line(&mut self) -> &'a str {
         let start = self.position;
-        while let Some(ch) = self.peek() {
-            self.advance();
-            if ch == '\n' {
+        let bytes = self.source.as_bytes();
+        let mut i = start;
+        while i < bytes.len() {
+            if bytes[i] == b'\n' {
+                i += 1;
                 break;
             }
+            i += 1;
         }
+        self.position = i;
         self.source[start..self.position].trim_end_matches('\n')
     }
 
@@ -1180,6 +1230,7 @@ impl<'a> Parser<'a> {
 
     /// Parses a paragraph.
     fn parse_paragraph(&mut self, start: usize) -> ParseResult<Option<Node<'a>>> {
+        profile_span!("parser::parse_paragraph");
         let mut content_end = start;
 
         loop {
@@ -1227,6 +1278,7 @@ impl<'a> Parser<'a> {
 
     /// Parses inline content.
     fn parse_inline(&self, content: &'a str, offset: usize) -> ParseResult<Vec<'a, Node<'a>>> {
+        profile_span!("parser::parse_inline");
         let mut children = self.allocator.new_vec();
         let mut pos = 0;
         let bytes = content.as_bytes();
@@ -1682,9 +1734,43 @@ impl<'a> Parser<'a> {
     }
 }
 
+/// Case-insensitive search for `</tag` in `haystack`. Equivalent to
+/// `haystack.to_ascii_lowercase().contains(&format!("</{tag}"))` but
+/// allocates nothing. Used in the HTML block hot loop (type 1 closing
+/// detection) which iterates once per line inside `<pre>` / `<script>` /
+/// `<style>` / `<textarea>` blocks — historically the dominant allocator
+/// in this parser on documents with many such blocks.
+fn ascii_contains_closing_tag(haystack: &str, tag: &[u8]) -> bool {
+    let bytes = haystack.as_bytes();
+    if bytes.len() < tag.len() + 2 {
+        return false;
+    }
+    let limit = bytes.len() - (tag.len() + 1);
+    let mut i = 0;
+    while i <= limit {
+        if bytes[i] == b'<' && bytes[i + 1] == b'/' {
+            let candidate = &bytes[i + 2..i + 2 + tag.len()];
+            if candidate.eq_ignore_ascii_case(tag) {
+                return true;
+            }
+        }
+        i += 1;
+    }
+    false
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[test]
+    fn ascii_contains_closing_tag_matches_case_insensitively() {
+        assert!(ascii_contains_closing_tag("end </SCRIPT> tail", b"script"));
+        assert!(ascii_contains_closing_tag("</style ", b"style"));
+        assert!(!ascii_contains_closing_tag("<scriptsource>", b"script"));
+        assert!(!ascii_contains_closing_tag("", b"pre"));
+        assert!(!ascii_contains_closing_tag("</pr", b"pre"));
+    }
 
     #[test]
     fn test_parse_image() {

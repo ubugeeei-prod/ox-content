@@ -21,6 +21,26 @@
 //! let document = parser.parse();
 //! ```
 
+/// Lightweight RAII span guard used internally by the parser modules.
+///
+/// Compiles to `let _ = ();` when the `profile` feature is disabled (the
+/// default) so call sites pay nothing. Under `--features profile`, expands
+/// to `ox_content_profiler::ScopeGuard::enter(name)` which records the
+/// scope timing + allocation delta into the thread-local span tree.
+#[cfg(feature = "profile")]
+macro_rules! profile_span {
+    ($name:literal) => {
+        let __ox_profile_guard = ::ox_content_profiler::ScopeGuard::enter($name);
+    };
+}
+
+#[cfg(not(feature = "profile"))]
+macro_rules! profile_span {
+    ($name:literal) => {};
+}
+
+pub(crate) use profile_span;
+
 mod error;
 mod lexer;
 mod parser;

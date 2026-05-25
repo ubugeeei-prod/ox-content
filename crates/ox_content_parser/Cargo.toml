@@ -19,6 +19,16 @@ ox_content_allocator = { workspace = true }
 ox_content_ast = { workspace = true }
 thiserror = { workspace = true }
 logos = { workspace = true }
+ox_content_profiler = { workspace = true, optional = true }
+
+[features]
+default = []
+# Compiles in lightweight RAII span guards at the parser's hot block-level
+# entry points. Off by default: when disabled, `profile_span!` expands to
+# a zero-sized binding the optimizer drops. Enable via
+# `cargo check -p ox_content_parser --features profile` or the
+# `ox_content_profile_cli` binary.
+profile = ["dep:ox_content_profiler"]
 
 [dev-dependencies]
 criterion = { workspace = true }
