@@ -1,5 +1,15 @@
 # Changelog
 
+## [2.16.0] - 2026-05-25
+
+### Performance
+
+- byte-level fast paths and zero-copy hot spots (#164)
+
+### Documentation
+
+- add community credits (@kazupon)
+
 ## [2.15.0] - 2026-05-25
 
 ### Features
