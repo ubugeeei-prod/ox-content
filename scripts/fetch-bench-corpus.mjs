@@ -117,7 +117,8 @@ for (const source of SOURCES) {
       markdownBytes: Number(bytes.trim()) || 0,
     });
   } catch (err) {
-    console.error(`[corpus] FAILED ${source.name}: ${err instanceof Error ? err.message : err}`);
+    const message = err instanceof Error ? err.message : String(err);
+    console.error(`[corpus] FAILED ${source.name}: ${message}`);
     rmSync(dest, { recursive: true, force: true });
   }
 }

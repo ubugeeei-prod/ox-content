@@ -196,6 +196,11 @@
         "name": "khroma",
         "license": "Unknown",
         "reason": "Transitive color utility; review upstream metadata during dependency refresh."
+      },
+      {
+        "name": "jszip",
+        "license": "(MIT OR GPL-3.0-or-later)",
+        "reason": "Dev-only transitive dependency of @vscode/test-electron (extension test harness); MIT branch of the dual license is selected."
       }
     ]
   }

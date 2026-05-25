@@ -13,12 +13,12 @@ rustup toolchain install nightly  # libfuzzer needs nightly
 
 ## Targets
 
-| target            | what it checks                                                                |
-| ----------------- | ----------------------------------------------------------------------------- |
-| `parse`           | parser with default options never panics on any UTF-8 input                   |
-| `parse_gfm`       | parser with GFM extensions enabled never panics                               |
-| `parse_render`    | parser + renderer pipeline never panics; options derived from input prefix    |
-| `render_sanitize` | sanitize=true output never emits `href="javascript:` / `src="javascript:`     |
+| target            | what it checks                                                             |
+| ----------------- | -------------------------------------------------------------------------- |
+| `parse`           | parser with default options never panics on any UTF-8 input                |
+| `parse_gfm`       | parser with GFM extensions enabled never panics                            |
+| `parse_render`    | parser + renderer pipeline never panics; options derived from input prefix |
+| `render_sanitize` | sanitize=true output never emits `href="javascript:` / `src="javascript:`  |
 
 ## Running
 

@@ -98,7 +98,7 @@ mod tests {
         let document = TextDocumentState::new(source.to_string());
         let frontmatter = parse_frontmatter(&document);
         let diagnostics = markdown_parse_diagnostics(&document, frontmatter.block.as_ref());
-        assert!(diagnostics.is_empty(), "expected clean parse for valid body, got {diagnostics:?}",);
+        assert!(diagnostics.is_empty(), "expected clean parse for valid body, got {diagnostics:?}");
     }
 
     #[test]
@@ -110,6 +110,6 @@ mod tests {
         let document = TextDocumentState::new(source.to_string());
         let frontmatter = parse_frontmatter(&document);
         let diagnostics = markdown_parse_diagnostics(&document, frontmatter.block.as_ref());
-        assert!(diagnostics.is_empty(), "yaml leaked into markdown diagnostics: {diagnostics:?}",);
+        assert!(diagnostics.is_empty(), "yaml leaked into markdown diagnostics: {diagnostics:?}");
     }
 }

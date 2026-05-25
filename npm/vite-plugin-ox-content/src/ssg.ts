@@ -576,8 +576,8 @@ export async function buildSsg(
       // error per page — `openBrowser()` already warned once. Just clear the
       // og:image meta tags and move on.
       const allMissingBrowser =
-        ogResults.length > 0
-          && ogResults.every((result) => result.error === "Chromium not available");
+        ogResults.length > 0 &&
+        ogResults.every((result) => result.error === "Chromium not available");
       if (allMissingBrowser) {
         for (const inputPath of ogImageInputPaths) {
           ogImageUrlMap.delete(inputPath);

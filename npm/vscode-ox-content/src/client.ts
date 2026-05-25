@@ -51,9 +51,7 @@ export async function startClient(context: vscode.ExtensionContext): Promise<Lan
         if (EDITOR_GUARDED_COMMANDS.has(command)) {
           const editor = vscode.window.activeTextEditor;
           if (!editor || editor.document.languageId !== "markdown") {
-            void vscode.window.showInformationMessage(
-              "Open a Markdown or .mdc document first.",
-            );
+            void vscode.window.showInformationMessage("Open a Markdown or .mdc document first.");
             return undefined;
           }
           return next(command, [

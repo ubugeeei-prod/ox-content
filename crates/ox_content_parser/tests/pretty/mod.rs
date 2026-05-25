@@ -112,7 +112,7 @@ fn format_node(node: &Node<'_>, source: &str, depth: usize, out: &mut String) {
             line(
                 out,
                 depth,
-                format_args!("Link url={:?} title={:?} {}", l.url, l.title, span(l.span, source),),
+                format_args!("Link url={:?} title={:?} {}", l.url, l.title, span(l.span, source)),
             );
             for child in &l.children {
                 format_node(child, source, depth + 1, out);

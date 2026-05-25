@@ -72,7 +72,7 @@ function pack(packageDir) {
 }
 
 function parsePackOutput(output) {
-  const jsonStart = output.search(/[\[{]/);
+  const jsonStart = output.search(/[[{]/);
   if (jsonStart === -1) {
     throw new Error(`pnpm pack did not emit JSON output:\n${output}`);
   }

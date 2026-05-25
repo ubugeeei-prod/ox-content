@@ -25,12 +25,12 @@ node scripts/fetch-bench-corpus.mjs
 This sparse-checkouts the docs subtree of each upstream repo into
 `benchmarks/corpus/<project>/`. Today the script tracks:
 
-| project              | source                                                                        | license            |
-| -------------------- | ----------------------------------------------------------------------------- | ------------------ |
-| `vue-docs`           | [vuejs/docs](https://github.com/vuejs/docs)                                   | MIT                |
-| `vite-docs`          | [vitejs/vite](https://github.com/vitejs/vite) (`docs/`)                       | MIT                |
-| `rust-book`          | [rust-lang/book](https://github.com/rust-lang/book)                           | MIT OR Apache-2.0  |
-| `typescript-handbook`| [microsoft/TypeScript-Website](https://github.com/microsoft/TypeScript-Website) (`packages/documentation/copy/en`) | MIT |
+| project               | source                                                                                                             | license           |
+| --------------------- | ------------------------------------------------------------------------------------------------------------------ | ----------------- |
+| `vue-docs`            | [vuejs/docs](https://github.com/vuejs/docs)                                                                        | MIT               |
+| `vite-docs`           | [vitejs/vite](https://github.com/vitejs/vite) (`docs/`)                                                            | MIT               |
+| `rust-book`           | [rust-lang/book](https://github.com/rust-lang/book)                                                                | MIT OR Apache-2.0 |
+| `typescript-handbook` | [microsoft/TypeScript-Website](https://github.com/microsoft/TypeScript-Website) (`packages/documentation/copy/en`) | MIT               |
 
 After fetching, run:
 

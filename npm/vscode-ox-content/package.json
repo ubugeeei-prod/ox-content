@@ -2,7 +2,6 @@
   "name": "vscode-ox-content",
   "version": "0.1.0",
   "private": true,
-  "publisher": "ubugeeei",
   "description": "VS Code extension for Ox Content authoring and i18n workflows",
   "categories": [
     "Formatters",
@@ -10,6 +9,7 @@
     "Snippets"
   ],
   "license": "MIT",
+  "publisher": "ubugeeei",
   "files": [
     "dist",
     "snippets",
