@@ -10,6 +10,24 @@ use serde::{Deserialize, Serialize};
 
 const DOC_KIND_ORDER: [&str; 6] = ["function", "class", "interface", "type", "variable", "module"];
 
+type RegexCache = OnceLock<Option<Regex>>;
+
+fn cached_regex(cache: &'static RegexCache, pattern: &'static str) -> Option<&'static Regex> {
+    cache.get_or_init(|| Regex::new(pattern).ok()).as_ref()
+}
+
+fn push_fmt(output: &mut String, args: std::fmt::Arguments<'_>) {
+    if output.write_fmt(args).is_err() {
+        output.push_str("[formatting failed]");
+    }
+}
+
+fn fmt_args(args: std::fmt::Arguments<'_>) -> String {
+    let mut output = String::new();
+    push_fmt(&mut output, args);
+    output
+}
+
 /// Extracted docs for one source module.
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
 pub struct ApiDocModule {
@@ -225,59 +243,81 @@ fn entry_anchor(name: &str) -> String {
 }
 
 fn clean_summary_text(text: &str, max_length: usize) -> String {
-    static MARKDOWN_LINK_RE: OnceLock<Regex> = OnceLock::new();
-    static BRACKET_LINK_RE: OnceLock<Regex> = OnceLock::new();
-    static WHITESPACE_RE: OnceLock<Regex> = OnceLock::new();
+    static MARKDOWN_LINK_RE: RegexCache = OnceLock::new();
+    static BRACKET_LINK_RE: RegexCache = OnceLock::new();
+    static WHITESPACE_RE: RegexCache = OnceLock::new();
 
     if text.is_empty() {
         return String::new();
     }
 
-    let markdown_link_re =
-        MARKDOWN_LINK_RE.get_or_init(|| Regex::new(r"\[([^\]]+)\]\([^)]+\)").unwrap());
-    let bracket_link_re = BRACKET_LINK_RE.get_or_init(|| Regex::new(r"\[([^\]]+)\]").unwrap());
-    let whitespace_re = WHITESPACE_RE.get_or_init(|| Regex::new(r"\s+").unwrap());
+    let fallback = || text.split_whitespace().collect::<Vec<_>>().join(" ");
+    let Some(markdown_link_re) = cached_regex(&MARKDOWN_LINK_RE, r"\[([^\]]+)\]\([^)]+\)") else {
+        return truncate_summary_text(&fallback(), max_length);
+    };
+    let Some(bracket_link_re) = cached_regex(&BRACKET_LINK_RE, r"\[([^\]]+)\]") else {
+        return truncate_summary_text(&fallback(), max_length);
+    };
+    let Some(whitespace_re) = cached_regex(&WHITESPACE_RE, r"\s+") else {
+        return truncate_summary_text(&fallback(), max_length);
+    };
 
     let collapsed = markdown_link_re.replace_all(text, "$1").to_string();
     let collapsed = bracket_link_re.replace_all(&collapsed, "$1").to_string();
     let collapsed = whitespace_re.replace_all(&collapsed, " ").trim().to_string();
 
-    if collapsed.chars().count() <= max_length {
-        return collapsed;
+    truncate_summary_text(&collapsed, max_length)
+}
+
+fn truncate_summary_text(text: &str, max_length: usize) -> String {
+    if text.chars().count() <= max_length {
+        return text.to_string();
     }
 
-    let truncated: String = collapsed.chars().take(max_length.saturating_sub(1)).collect();
-    format!("{}…", truncated.trim_end())
+    let truncated: String = text.chars().take(max_length.saturating_sub(1)).collect();
+    let trimmed = truncated.trim_end();
+    let mut value = String::with_capacity(trimmed.len() + "…".len());
+    value.push_str(trimmed);
+    value.push('…');
+    value
 }
 
 fn render_inline_html(text: &str) -> String {
-    static TOKEN_RE: OnceLock<Regex> = OnceLock::new();
+    static TOKEN_RE: RegexCache = OnceLock::new();
 
-    let token_re = TOKEN_RE.get_or_init(|| {
-        Regex::new(
-            r"`([^`]+)`|\[([^\]]+)\]\(([^)]+)\)|\*\*([^*]+)\*\*|__([^_]+)__|\*([^*]+)\*|_([^_]+)_",
-        )
-        .unwrap()
-    });
+    let Some(token_re) = cached_regex(
+        &TOKEN_RE,
+        r"`([^`]+)`|\[([^\]]+)\]\(([^)]+)\)|\*\*([^*]+)\*\*|__([^_]+)__|\*([^*]+)\*|_([^_]+)_",
+    ) else {
+        return escape_html(text).replace('\n', "<br>");
+    };
     let mut html = String::new();
     let mut last_index = 0;
 
     for captures in token_re.captures_iter(text) {
-        let mat = captures.get(0).expect("token match");
+        let Some(mat) = captures.get(0) else {
+            continue;
+        };
         html.push_str(&escape_html(&text[last_index..mat.start()]));
 
         if let Some(code) = captures.get(1) {
-            html.push_str(&format!("<code>{}</code>", escape_html(code.as_str())));
+            push_fmt(&mut html, format_args!("<code>{}</code>", escape_html(code.as_str())));
         } else if let (Some(label), Some(href)) = (captures.get(2), captures.get(3)) {
-            html.push_str(&format!(
-                "<a href=\"{}\">{}</a>",
-                escape_html(href.as_str()),
-                render_inline_html(label.as_str())
-            ));
+            push_fmt(
+                &mut html,
+                format_args!(
+                    "<a href=\"{}\">{}</a>",
+                    escape_html(href.as_str()),
+                    render_inline_html(label.as_str())
+                ),
+            );
         } else if let Some(strong) = captures.get(4).or_else(|| captures.get(5)) {
-            html.push_str(&format!("<strong>{}</strong>", render_inline_html(strong.as_str())));
+            push_fmt(
+                &mut html,
+                format_args!("<strong>{}</strong>", render_inline_html(strong.as_str())),
+            );
         } else if let Some(emphasis) = captures.get(6).or_else(|| captures.get(7)) {
-            html.push_str(&format!("<em>{}</em>", render_inline_html(emphasis.as_str())));
+            push_fmt(&mut html, format_args!("<em>{}</em>", render_inline_html(emphasis.as_str())));
         }
 
         last_index = mat.end();
@@ -288,18 +328,18 @@ fn render_inline_html(text: &str) -> String {
 }
 
 fn is_fence_start(line: &str) -> Option<String> {
-    static FENCE_RE: OnceLock<Regex> = OnceLock::new();
+    static FENCE_RE: RegexCache = OnceLock::new();
 
-    let fence_re = FENCE_RE.get_or_init(|| Regex::new(r"^```([\w-]+)?\s*$").unwrap());
+    let fence_re = cached_regex(&FENCE_RE, r"^```([\w-]+)?\s*$")?;
     fence_re
         .captures(line.trim())
         .map(|captures| captures.get(1).map_or("text", |value| value.as_str()).to_string())
 }
 
 fn heading_match(line: &str) -> Option<(usize, String)> {
-    static HEADING_RE: OnceLock<Regex> = OnceLock::new();
+    static HEADING_RE: RegexCache = OnceLock::new();
 
-    let heading_re = HEADING_RE.get_or_init(|| Regex::new(r"^(#{1,6})\s+(.*)$").unwrap());
+    let heading_re = cached_regex(&HEADING_RE, r"^(#{1,6})\s+(.*)$")?;
     heading_re.captures(line.trim()).map(|captures| {
         (
             captures.get(1).map_or(1, |value| value.as_str().len()).min(6),
@@ -309,18 +349,18 @@ fn heading_match(line: &str) -> Option<(usize, String)> {
 }
 
 fn ordered_list_item(line: &str) -> Option<String> {
-    static ORDERED_RE: OnceLock<Regex> = OnceLock::new();
+    static ORDERED_RE: RegexCache = OnceLock::new();
 
-    let ordered_re = ORDERED_RE.get_or_init(|| Regex::new(r"^\d+\.\s+(.*)$").unwrap());
+    let ordered_re = cached_regex(&ORDERED_RE, r"^\d+\.\s+(.*)$")?;
     ordered_re
         .captures(line.trim())
         .and_then(|captures| captures.get(1).map(|value| value.as_str().to_string()))
 }
 
 fn unordered_list_item(line: &str) -> Option<String> {
-    static UNORDERED_RE: OnceLock<Regex> = OnceLock::new();
+    static UNORDERED_RE: RegexCache = OnceLock::new();
 
-    let unordered_re = UNORDERED_RE.get_or_init(|| Regex::new(r"^[-*+]\s+(.*)$").unwrap());
+    let unordered_re = cached_regex(&UNORDERED_RE, r"^[-*+]\s+(.*)$")?;
     unordered_re
         .captures(line.trim())
         .and_then(|captures| captures.get(1).map(|value| value.as_str().to_string()))
@@ -334,17 +374,15 @@ fn is_markdown_block_start(line: &str) -> bool {
 }
 
 fn render_markdown_blocks_html(text: &str) -> String {
-    static ORDERED_CONTINUATION_RE: OnceLock<Regex> = OnceLock::new();
-    static UNORDERED_CONTINUATION_RE: OnceLock<Regex> = OnceLock::new();
+    static ORDERED_CONTINUATION_RE: RegexCache = OnceLock::new();
+    static UNORDERED_CONTINUATION_RE: RegexCache = OnceLock::new();
 
     let lines: Vec<&str> =
         text.split('\n').map(|line| line.strip_suffix('\r').unwrap_or(line)).collect();
     let mut blocks = Vec::new();
     let mut index = 0;
-    let ordered_continuation_re =
-        ORDERED_CONTINUATION_RE.get_or_init(|| Regex::new(r"^ {0,1}\d+\.\s+").unwrap());
-    let unordered_continuation_re =
-        UNORDERED_CONTINUATION_RE.get_or_init(|| Regex::new(r"^[-*+]\s+").unwrap());
+    let ordered_continuation_re = cached_regex(&ORDERED_CONTINUATION_RE, r"^ {0,1}\d+\.\s+");
+    let unordered_continuation_re = cached_regex(&UNORDERED_CONTINUATION_RE, r"^[-*+]\s+");
 
     while index < lines.len() {
         let line = lines[index];
@@ -397,7 +435,8 @@ fn render_markdown_blocks_html(text: &str) -> String {
 
                     if continuation_trimmed.is_empty()
                         || is_markdown_block_start(continuation)
-                        || ordered_continuation_re.is_match(continuation_trimmed)
+                        || ordered_continuation_re
+                            .is_some_and(|re| re.is_match(continuation_trimmed))
                     {
                         break;
                     }
@@ -436,7 +475,8 @@ fn render_markdown_blocks_html(text: &str) -> String {
 
                     if continuation_trimmed.is_empty()
                         || is_markdown_block_start(continuation)
-                        || unordered_continuation_re.is_match(continuation_trimmed)
+                        || unordered_continuation_re
+                            .is_some_and(|re| re.is_match(continuation_trimmed))
                     {
                         break;
                     }
@@ -611,18 +651,22 @@ fn generate_file_markdown(
     symbol_map: &HashMap<String, SymbolLocation>,
 ) -> String {
     let display_name = file_name(&doc.file);
-    let mut markdown = format!("# {display_name}\n\n");
+    let mut markdown = String::new();
+    push_fmt(&mut markdown, format_args!("# {display_name}\n\n"));
 
     if let Some(github_url) = &options.github_url {
         markdown.push_str(&generate_source_link(&doc.file, github_url, None, None));
         markdown.push_str("\n\n");
     }
 
-    markdown.push_str(&format!(
-        "> {} documented symbol{}. ",
-        doc.entries.len(),
-        if doc.entries.len() == 1 { "" } else { "s" }
-    ));
+    push_fmt(
+        &mut markdown,
+        format_args!(
+            "> {} documented symbol{}. ",
+            doc.entries.len(),
+            if doc.entries.len() == 1 { "" } else { "s" }
+        ),
+    );
     markdown.push_str(
         "Read the signatures first, then expand each item for parameters, return types, and examples.\n\n",
     );
@@ -684,7 +728,7 @@ fn format_kind_label(kind: &str) -> &str {
 
 fn format_count_label(count: usize, singular: &str, plural: Option<&str>) -> String {
     let label = if count == 1 { singular } else { plural.unwrap_or(singular) };
-    format!("{count} {label}")
+    fmt_args(format_args!("{count} {label}"))
 }
 
 fn entry_tag_value<'a>(entry: &'a ApiDocEntry, tag_name: &str) -> Option<&'a str> {
@@ -710,8 +754,10 @@ fn get_entry_badges(entry: &ApiDocEntry) -> Vec<EntryBadge> {
         });
     }
     if let Some(returns) = &entry.returns {
-        badges
-            .push(EntryBadge { label: format!("returns {}", returns.type_annotation), tone: None });
+        badges.push(EntryBadge {
+            label: fmt_args(format_args!("returns {}", returns.type_annotation)),
+            tone: None,
+        });
     }
     if !entry.examples.is_empty() {
         badges.push(EntryBadge {
@@ -720,7 +766,7 @@ fn get_entry_badges(entry: &ApiDocEntry) -> Vec<EntryBadge> {
         });
     }
     if let Some(since) = entry_tag_value(entry, "since") {
-        badges.push(EntryBadge { label: format!("since {since}"), tone: None });
+        badges.push(EntryBadge { label: fmt_args(format_args!("since {since}")), tone: None });
     }
     if entry.private {
         badges.push(EntryBadge { label: "private".to_string(), tone: Some("warning") });
@@ -737,25 +783,29 @@ fn render_entry_badges_html(entry: &ApiDocEntry, class_name: &str) -> String {
 
     let mut rendered = String::new();
     for badge in badges {
-        let tone_class = badge.tone.map_or(String::new(), |tone| format!(" ox-api-badge--{tone}"));
-        write!(
-            rendered,
-            "<span class=\"ox-api-badge{}\">{}</span>",
-            tone_class,
-            escape_html(&badge.label)
-        )
-        .unwrap();
+        let tone_class = badge
+            .tone
+            .map_or(String::new(), |tone| fmt_args(format_args!(" ox-api-badge--{tone}")));
+        push_fmt(
+            &mut rendered,
+            format_args!(
+                "<span class=\"ox-api-badge{}\">{}</span>",
+                tone_class,
+                escape_html(&badge.label)
+            ),
+        );
     }
 
-    format!("<span class=\"{class_name}\">{rendered}</span>")
+    fmt_args(format_args!("<span class=\"{class_name}\">{rendered}</span>"))
 }
 
 fn parse_example_block(example: &str) -> (String, String) {
-    static FENCE_RE: OnceLock<Regex> = OnceLock::new();
+    static FENCE_RE: RegexCache = OnceLock::new();
 
     let trimmed = example.trim();
-    let fence_re =
-        FENCE_RE.get_or_init(|| Regex::new(r"(?s)^```([\w-]+)?[^\n]*\n(.*?)\n?```$").unwrap());
+    let Some(fence_re) = cached_regex(&FENCE_RE, r"(?s)^```([\w-]+)?[^\n]*\n(.*?)\n?```$") else {
+        return (trimmed.to_string(), "ts".to_string());
+    };
 
     if let Some(captures) = fence_re.captures(trimmed) {
         let language = captures.get(1).map_or("ts", |value| value.as_str()).to_string();
@@ -870,13 +920,11 @@ fn render_params_list_html(params: &[ApiParamDoc]) -> String {
 fn render_tag_list_html(tags: &[ApiDocTag]) -> String {
     let mut items = String::new();
     for tag in tags {
-        write!(
-            items,
+        push_fmt(&mut items, format_args!(
             "<li><span class=\"ox-api-entry__tag-name\">@{}</span><span class=\"ox-api-entry__tag-value\">{}</span></li>",
             escape_html(&tag.tag),
             render_inline_html(&tag.value)
-        )
-        .unwrap();
+        ));
     }
 
     format!(
@@ -904,7 +952,7 @@ fn render_member_flags(member: &ApiDocMember) -> String {
 
     let mut html = String::new();
     for flag in flags {
-        write!(html, "<span class=\"ox-api-badge\">{flag}</span>").unwrap();
+        push_fmt(&mut html, format_args!("<span class=\"ox-api-badge\">{flag}</span>"));
     }
     html
 }
@@ -942,17 +990,18 @@ fn render_member_description_html(member: &ApiDocMember) -> String {
                     description.push_str(" - optional");
                 }
             }
-            write!(
-                params,
-                "<li><code>{}</code>{}</li>",
-                escape_html(&param.name),
-                if description.is_empty() {
-                    String::new()
-                } else {
-                    format!(" {}", render_inline_html(&description))
-                }
-            )
-            .unwrap();
+            push_fmt(
+                &mut params,
+                format_args!(
+                    "<li><code>{}</code>{}</li>",
+                    escape_html(&param.name),
+                    if description.is_empty() {
+                        String::new()
+                    } else {
+                        format!(" {}", render_inline_html(&description))
+                    }
+                ),
+            );
         }
         blocks.push(format!("<ul class=\"ox-api-entry__member-params\">{params}</ul>"));
     }
@@ -1097,17 +1146,20 @@ fn generate_entry_markdown(
     }
 
     if let Some(signature) = &entry.signature {
-        body.push_str(&format!(
-            "<div class=\"ox-api-entry__section ox-api-entry__section--signature\">
+        push_fmt(
+            &mut body,
+            format_args!(
+                "<div class=\"ox-api-entry__section ox-api-entry__section--signature\">
 <h4>Signature</h4>
 {}
 </div>\n",
-            render_code_block_html(signature, "typescript")
-        ));
+                render_code_block_html(signature, "typescript")
+            ),
+        );
     }
 
     if let Some(source_href) = source_href {
-        body.push_str(&format!(
+        push_fmt(&mut body, format_args!(
             "<p class=\"ox-api-entry__source\"><a class=\"ox-api-entry__source-link\" href=\"{}\" target=\"_blank\" rel=\"noopener noreferrer\">View source<span class=\"ox-api-entry__source-icon\" aria-hidden=\"true\"></span></a></p>\n",
             escape_html(&source_href)
         ));
@@ -1124,24 +1176,27 @@ fn generate_entry_markdown(
     }
 
     if let Some(returns) = &entry.returns {
-        body.push_str(&format!(
-            "<div class=\"ox-api-entry__section ox-api-entry__section--returns\">
+        push_fmt(
+            &mut body,
+            format_args!(
+                "<div class=\"ox-api-entry__section ox-api-entry__section--returns\">
 <h4>Returns</h4>
 <div class=\"ox-api-entry__return\">
   <code class=\"ox-api-entry__return-type\">{}</code>
   {}
 </div>
 </div>\n",
-            escape_html(&returns.type_annotation),
-            if returns.description.is_empty() {
-                String::new()
-            } else {
-                format!(
-                    "<p class=\"ox-api-entry__return-description\">{}</p>",
-                    render_inline_html(&returns.description)
-                )
-            }
-        ));
+                escape_html(&returns.type_annotation),
+                if returns.description.is_empty() {
+                    String::new()
+                } else {
+                    format!(
+                        "<p class=\"ox-api-entry__return-description\">{}</p>",
+                        render_inline_html(&returns.description)
+                    )
+                }
+            ),
+        );
     }
 
     if !entry.examples.is_empty() {
@@ -1163,12 +1218,15 @@ fn generate_entry_markdown(
             .collect::<Vec<_>>()
             .join("\n");
 
-        body.push_str(&format!(
-            "<div class=\"ox-api-entry__section ox-api-entry__section--examples\">
+        push_fmt(
+            &mut body,
+            format_args!(
+                "<div class=\"ox-api-entry__section ox-api-entry__section--examples\">
 <h4>Examples</h4>
 {examples_html}
 </div>\n"
-        ));
+            ),
+        );
     }
 
     if !entry.tags.is_empty() {
@@ -1254,13 +1312,15 @@ fn generate_index(docs: &[ApiDocModule], doc_to_file: Option<&HashMap<String, St
             file_name = "index-module".to_string();
         }
 
-        let count_label = format!(
+        let count_label = fmt_args(format_args!(
             "{} symbol{}",
             doc.entries.len(),
             if doc.entries.len() == 1 { "" } else { "s" }
-        );
-        markdown.push_str(&format!(
-            "<details class=\"ox-api-module\">
+        ));
+        push_fmt(
+            &mut markdown,
+            format_args!(
+                "<details class=\"ox-api-module\">
   <summary>
     <span class=\"ox-api-module__title\"><a href=\"./{file_name}.md\">{}</a></span>
     <span class=\"ox-api-module__count\">{count_label}</span>
@@ -1268,17 +1328,21 @@ fn generate_index(docs: &[ApiDocModule], doc_to_file: Option<&HashMap<String, St
   <div class=\"ox-api-module__body\">
     <ul class=\"ox-api-module__list\">
 ",
-            escape_html(&display_name)
-        ));
+                escape_html(&display_name)
+            ),
+        );
 
         for entry in &doc.entries {
-            markdown.push_str(&format!(
-                "      {}\n",
-                render_overview_html_item(
-                    entry,
-                    &format!("./{file_name}.md#{}", entry_anchor(&entry.name))
-                )
-            ));
+            push_fmt(
+                &mut markdown,
+                format_args!(
+                    "      {}\n",
+                    render_overview_html_item(
+                        entry,
+                        &fmt_args(format_args!("./{file_name}.md#{}", entry_anchor(&entry.name)))
+                    )
+                ),
+            );
         }
 
         markdown.push_str(
@@ -1299,19 +1363,25 @@ fn generate_category_markdown(
     options: &MarkdownDocsOptions,
     symbol_map: &HashMap<String, SymbolLocation>,
 ) -> String {
-    let category_file_name = format!("{kind}s");
-    let mut markdown = format!("# {}s\n\n", capitalize_ascii(kind));
-    markdown.push_str(&format!(
-        "> {} documented {kind}{} collected across modules.\n\n",
-        entries.len(),
-        if entries.len() == 1 { "" } else { "s" }
-    ));
+    let category_file_name = fmt_args(format_args!("{kind}s"));
+    let mut markdown = fmt_args(format_args!("# {}s\n\n", capitalize_ascii(kind)));
+    push_fmt(
+        &mut markdown,
+        format_args!(
+            "> {} documented {kind}{} collected across modules.\n\n",
+            entries.len(),
+            if entries.len() == 1 { "" } else { "s" }
+        ),
+    );
     markdown.push_str(&render_stats_html(&summarize_entries(entries), None));
     markdown.push_str("\n\n");
 
     markdown.push_str("## Overview\n\n");
     for entry in entries {
-        markdown.push_str(&render_overview_line(entry, &format!("#{}", entry_anchor(&entry.name))));
+        markdown.push_str(&render_overview_line(
+            entry,
+            &fmt_args(format_args!("#{}", entry_anchor(&entry.name))),
+        ));
     }
     markdown.push_str("\n## Reference\n\n");
     if entries.len() > 1 {
@@ -1341,18 +1411,21 @@ fn generate_category_index(by_kind: &BTreeMap<String, Vec<ApiDocEntry>>) -> Stri
     markdown.push_str("\n\n");
 
     for (kind, entries) in by_kind {
-        let kind_title = format!("{}s", capitalize_ascii(kind));
-        markdown.push_str(&format!("## [{kind_title}](./{kind}s.md)\n\n"));
-        markdown.push_str(&format!(
-            "> {} item{}.\n\n",
-            entries.len(),
-            if entries.len() == 1 { "" } else { "s" }
-        ));
+        let kind_title = fmt_args(format_args!("{}s", capitalize_ascii(kind)));
+        push_fmt(&mut markdown, format_args!("## [{kind_title}](./{kind}s.md)\n\n"));
+        push_fmt(
+            &mut markdown,
+            format_args!(
+                "> {} item{}.\n\n",
+                entries.len(),
+                if entries.len() == 1 { "" } else { "s" }
+            ),
+        );
 
         for entry in entries {
             markdown.push_str(&render_overview_line(
                 entry,
-                &format!("./{kind}s.md#{}", entry_anchor(&entry.name)),
+                &fmt_args(format_args!("./{kind}s.md#{}", entry_anchor(&entry.name))),
             ));
         }
         markdown.push('\n');
@@ -1366,9 +1439,11 @@ fn convert_symbol_links(
     current_file_name: &str,
     symbol_map: &HashMap<String, SymbolLocation>,
 ) -> String {
-    static SYMBOL_RE: OnceLock<Regex> = OnceLock::new();
+    static SYMBOL_RE: RegexCache = OnceLock::new();
 
-    let symbol_re = SYMBOL_RE.get_or_init(|| Regex::new(r"\[([A-Z_]\w*)\]").unwrap());
+    let Some(symbol_re) = cached_regex(&SYMBOL_RE, r"\[([A-Z_]\w*)\]") else {
+        return text.to_string();
+    };
     let mut result = String::new();
     let mut last_index = 0;
 
@@ -1388,13 +1463,16 @@ fn convert_symbol_links(
 
         result.push_str(&text[last_index..mat.start()]);
         if location.file_name == current_file_name {
-            result.push_str(&format!("[{symbol_name}](#{})", symbol_name.to_lowercase()));
+            push_fmt(&mut result, format_args!("[{symbol_name}](#{})", symbol_name.to_lowercase()));
         } else {
-            result.push_str(&format!(
-                "[{symbol_name}](./{}.md#{})",
-                location.file_name,
-                symbol_name.to_lowercase()
-            ));
+            push_fmt(
+                &mut result,
+                format_args!(
+                    "[{symbol_name}](./{}.md#{})",
+                    location.file_name,
+                    symbol_name.to_lowercase()
+                ),
+            );
         }
         last_index = mat.end();
     }

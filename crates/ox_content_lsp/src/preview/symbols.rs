@@ -65,7 +65,11 @@ fn symbol_for_heading(
     #[allow(deprecated)]
     DocumentSymbol {
         name: heading_text(heading),
-        detail: Some(format!("h{}", heading.depth)),
+        detail: Some({
+            let mut detail = String::from("h");
+            detail.push_str(&heading.depth.to_string());
+            detail
+        }),
         kind: SymbolKind::STRING,
         range,
         selection_range: range,
@@ -78,21 +82,27 @@ fn symbol_for_heading(
 #[cfg(test)]
 mod tests {
     use super::*;
+    use std::fmt::Write as _;
 
     fn outline(symbols: &[DocumentSymbol]) -> String {
         let mut out = String::new();
         for symbol in symbols {
             let detail = symbol.detail.as_deref().unwrap_or("?");
             let range = symbol.range;
-            out.push_str(&format!(
-                "{} [{}:{}..{}:{}] {}\n",
+            if writeln!(
+                &mut out,
+                "{} [{}:{}..{}:{}] {}",
                 detail,
                 range.start.line,
                 range.start.character,
                 range.end.line,
                 range.end.character,
                 symbol.name,
-            ));
+            )
+            .is_err()
+            {
+                out.push_str("[formatting failed]\n");
+            }
         }
         out
     }

@@ -1,3 +1,5 @@
+use std::fmt::Write as _;
+
 use tower_lsp::jsonrpc::Result;
 use tower_lsp::lsp_types::*;
 use tower_lsp::{Client, LanguageServer};
@@ -177,9 +179,13 @@ impl LanguageServer for Backend {
             return Ok(None);
         }
 
-        let mut md = format!("**`{key}`**\n\n| Locale | Translation |\n|--------|-------------|\n");
+        let mut md = String::new();
+        push_fmt(
+            &mut md,
+            format_args!("**`{key}`**\n\n| Locale | Translation |\n|--------|-------------|\n"),
+        );
         for (locale, value) in &translations {
-            md.push_str(&format!("| `{locale}` | {value} |\n"));
+            push_fmt(&mut md, format_args!("| `{locale}` | {value} |\n"));
         }
 
         Ok(Some(Hover {
@@ -265,5 +271,11 @@ impl LanguageServer for Backend {
         }
 
         Ok(Some(hints))
+    }
+}
+
+fn push_fmt(output: &mut String, args: std::fmt::Arguments<'_>) {
+    if output.write_fmt(args).is_err() {
+        output.push_str("[formatting failed]");
     }
 }

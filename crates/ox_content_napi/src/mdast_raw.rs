@@ -111,7 +111,7 @@ pub fn to_mdast_raw_with_sections(
     extra_sections: Vec<(u32, Vec<u8>)>,
 ) -> napi::Result<Uint8Array> {
     let mut serializer = MdastRawSerializer::default();
-    let root_index = serializer.write_document(document);
+    let root_index = serializer.write_document(document)?;
     serializer.finish(root_index, extra_sections)
 }
 
@@ -157,13 +157,13 @@ impl MdastRawSerializer {
         builder.finish()
     }
 
-    fn write_document(&mut self, document: &Document<'_>) -> u32 {
+    fn write_document(&mut self, document: &Document<'_>) -> napi::Result<u32> {
         let mut record = RawNodeRecord::new(KIND_ROOT, document.span);
-        self.write_child_nodes(&mut record, &document.children);
+        self.write_child_nodes(&mut record, &document.children)?;
         self.push_record(record)
     }
 
-    fn write_node(&mut self, node: &Node<'_>) -> u32 {
+    fn write_node(&mut self, node: &Node<'_>) -> napi::Result<u32> {
         match node {
             Node::Paragraph(node) => self.write_paragraph(node),
             Node::Heading(node) => self.write_heading(node),
@@ -188,32 +188,32 @@ impl MdastRawSerializer {
         }
     }
 
-    fn write_paragraph(&mut self, node: &Paragraph<'_>) -> u32 {
+    fn write_paragraph(&mut self, node: &Paragraph<'_>) -> napi::Result<u32> {
         let mut record = RawNodeRecord::new(KIND_PARAGRAPH, node.span);
-        self.write_child_nodes(&mut record, &node.children);
+        self.write_child_nodes(&mut record, &node.children)?;
         self.push_record(record)
     }
 
-    fn write_heading(&mut self, node: &Heading<'_>) -> u32 {
+    fn write_heading(&mut self, node: &Heading<'_>) -> napi::Result<u32> {
         let mut record = RawNodeRecord::new(KIND_HEADING, node.span);
-        self.write_child_nodes(&mut record, &node.children);
+        self.write_child_nodes(&mut record, &node.children)?;
         record.num0 = u32::from(node.depth);
         self.push_record(record)
     }
 
-    fn write_thematic_break(&mut self, node: &ThematicBreak) -> u32 {
+    fn write_thematic_break(&mut self, node: &ThematicBreak) -> napi::Result<u32> {
         self.push_record(RawNodeRecord::new(KIND_THEMATIC_BREAK, node.span))
     }
 
-    fn write_block_quote(&mut self, node: &BlockQuote<'_>) -> u32 {
+    fn write_block_quote(&mut self, node: &BlockQuote<'_>) -> napi::Result<u32> {
         let mut record = RawNodeRecord::new(KIND_BLOCKQUOTE, node.span);
-        self.write_child_nodes(&mut record, &node.children);
+        self.write_child_nodes(&mut record, &node.children)?;
         self.push_record(record)
     }
 
-    fn write_list(&mut self, node: &List<'_>) -> u32 {
+    fn write_list(&mut self, node: &List<'_>) -> napi::Result<u32> {
         let mut record = RawNodeRecord::new(KIND_LIST, node.span);
-        self.write_child_list_items(&mut record, &node.children);
+        self.write_child_list_items(&mut record, &node.children)?;
         if node.ordered {
             record.flags |= FLAG_ORDERED;
         }
@@ -224,9 +224,9 @@ impl MdastRawSerializer {
         self.push_record(record)
     }
 
-    fn write_list_item(&mut self, node: &ListItem<'_>) -> u32 {
+    fn write_list_item(&mut self, node: &ListItem<'_>) -> napi::Result<u32> {
         let mut record = RawNodeRecord::new(KIND_LIST_ITEM, node.span);
-        self.write_child_nodes(&mut record, &node.children);
+        self.write_child_nodes(&mut record, &node.children)?;
         if node.spread {
             record.flags |= FLAG_SPREAD;
         }
@@ -239,23 +239,23 @@ impl MdastRawSerializer {
         self.push_record(record)
     }
 
-    fn write_code_block(&mut self, node: &CodeBlock<'_>) -> u32 {
+    fn write_code_block(&mut self, node: &CodeBlock<'_>) -> napi::Result<u32> {
         let mut record = RawNodeRecord::new(KIND_CODE, node.span);
-        self.write_string_into_slot(&mut record, 0, node.lang);
-        self.write_string_into_slot(&mut record, 1, node.meta);
-        self.write_string_into_slot(&mut record, 2, Some(node.value));
+        self.write_string_into_slot(&mut record, 0, node.lang)?;
+        self.write_string_into_slot(&mut record, 1, node.meta)?;
+        self.write_string_into_slot(&mut record, 2, Some(node.value))?;
         self.push_record(record)
     }
 
-    fn write_html(&mut self, node: &Html<'_>) -> u32 {
+    fn write_html(&mut self, node: &Html<'_>) -> napi::Result<u32> {
         let mut record = RawNodeRecord::new(KIND_HTML, node.span);
-        self.write_string_into_slot(&mut record, 0, Some(node.value));
+        self.write_string_into_slot(&mut record, 0, Some(node.value))?;
         self.push_record(record)
     }
 
-    fn write_table(&mut self, node: &Table<'_>) -> u32 {
+    fn write_table(&mut self, node: &Table<'_>) -> napi::Result<u32> {
         let mut record = RawNodeRecord::new(KIND_TABLE, node.span);
-        self.write_child_table_rows(&mut record, &node.children);
+        self.write_child_table_rows(&mut record, &node.children)?;
         let align_start = self.aligns.len();
         for align in &node.align {
             self.aligns.push(match align {
@@ -265,155 +265,163 @@ impl MdastRawSerializer {
                 AlignKind::Right => ALIGN_RIGHT,
             });
         }
-        record.num0 = as_u32(align_start).expect("align overflow");
-        record.num1 = as_u32(node.align.len()).expect("align overflow");
+        record.num0 = as_u32(align_start)?;
+        record.num1 = as_u32(node.align.len())?;
         self.push_record(record)
     }
 
-    fn write_table_row(&mut self, node: &TableRow<'_>) -> u32 {
+    fn write_table_row(&mut self, node: &TableRow<'_>) -> napi::Result<u32> {
         let mut record = RawNodeRecord::new(KIND_TABLE_ROW, node.span);
-        self.write_child_table_cells(&mut record, &node.children);
+        self.write_child_table_cells(&mut record, &node.children)?;
         self.push_record(record)
     }
 
-    fn write_table_cell(&mut self, node: &TableCell<'_>) -> u32 {
+    fn write_table_cell(&mut self, node: &TableCell<'_>) -> napi::Result<u32> {
         let mut record = RawNodeRecord::new(KIND_TABLE_CELL, node.span);
-        self.write_child_nodes(&mut record, &node.children);
+        self.write_child_nodes(&mut record, &node.children)?;
         self.push_record(record)
     }
 
-    fn write_text(&mut self, node: &Text<'_>) -> u32 {
+    fn write_text(&mut self, node: &Text<'_>) -> napi::Result<u32> {
         let mut record = RawNodeRecord::new(KIND_TEXT, node.span);
-        self.write_string_into_slot(&mut record, 0, Some(node.value));
+        self.write_string_into_slot(&mut record, 0, Some(node.value))?;
         self.push_record(record)
     }
 
-    fn write_emphasis(&mut self, node: &Emphasis<'_>) -> u32 {
+    fn write_emphasis(&mut self, node: &Emphasis<'_>) -> napi::Result<u32> {
         let mut record = RawNodeRecord::new(KIND_EMPHASIS, node.span);
-        self.write_child_nodes(&mut record, &node.children);
+        self.write_child_nodes(&mut record, &node.children)?;
         self.push_record(record)
     }
 
-    fn write_strong(&mut self, node: &Strong<'_>) -> u32 {
+    fn write_strong(&mut self, node: &Strong<'_>) -> napi::Result<u32> {
         let mut record = RawNodeRecord::new(KIND_STRONG, node.span);
-        self.write_child_nodes(&mut record, &node.children);
+        self.write_child_nodes(&mut record, &node.children)?;
         self.push_record(record)
     }
 
-    fn write_inline_code(&mut self, node: &InlineCode<'_>) -> u32 {
+    fn write_inline_code(&mut self, node: &InlineCode<'_>) -> napi::Result<u32> {
         let mut record = RawNodeRecord::new(KIND_INLINE_CODE, node.span);
-        self.write_string_into_slot(&mut record, 0, Some(node.value));
+        self.write_string_into_slot(&mut record, 0, Some(node.value))?;
         self.push_record(record)
     }
 
-    fn write_break(&mut self, node: &Break) -> u32 {
+    fn write_break(&mut self, node: &Break) -> napi::Result<u32> {
         self.push_record(RawNodeRecord::new(KIND_BREAK, node.span))
     }
 
-    fn write_link(&mut self, node: &Link<'_>) -> u32 {
+    fn write_link(&mut self, node: &Link<'_>) -> napi::Result<u32> {
         let mut record = RawNodeRecord::new(KIND_LINK, node.span);
-        self.write_child_nodes(&mut record, &node.children);
-        self.write_string_into_slot(&mut record, 0, Some(node.url));
-        self.write_string_into_slot(&mut record, 1, node.title);
+        self.write_child_nodes(&mut record, &node.children)?;
+        self.write_string_into_slot(&mut record, 0, Some(node.url))?;
+        self.write_string_into_slot(&mut record, 1, node.title)?;
         self.push_record(record)
     }
 
-    fn write_image(&mut self, node: &Image<'_>) -> u32 {
+    fn write_image(&mut self, node: &Image<'_>) -> napi::Result<u32> {
         let mut record = RawNodeRecord::new(KIND_IMAGE, node.span);
-        self.write_string_into_slot(&mut record, 0, Some(node.url));
-        self.write_string_into_slot(&mut record, 1, Some(node.alt));
-        self.write_string_into_slot(&mut record, 2, node.title);
+        self.write_string_into_slot(&mut record, 0, Some(node.url))?;
+        self.write_string_into_slot(&mut record, 1, Some(node.alt))?;
+        self.write_string_into_slot(&mut record, 2, node.title)?;
         self.push_record(record)
     }
 
-    fn write_delete(&mut self, node: &Delete<'_>) -> u32 {
+    fn write_delete(&mut self, node: &Delete<'_>) -> napi::Result<u32> {
         let mut record = RawNodeRecord::new(KIND_DELETE, node.span);
-        self.write_child_nodes(&mut record, &node.children);
+        self.write_child_nodes(&mut record, &node.children)?;
         self.push_record(record)
     }
 
-    fn write_footnote_reference(&mut self, node: &FootnoteReference<'_>) -> u32 {
+    fn write_footnote_reference(&mut self, node: &FootnoteReference<'_>) -> napi::Result<u32> {
         let mut record = RawNodeRecord::new(KIND_FOOTNOTE_REFERENCE, node.span);
-        self.write_string_into_slot(&mut record, 0, Some(node.identifier));
-        self.write_string_into_slot(&mut record, 1, node.label);
+        self.write_string_into_slot(&mut record, 0, Some(node.identifier))?;
+        self.write_string_into_slot(&mut record, 1, node.label)?;
         self.push_record(record)
     }
 
-    fn write_definition(&mut self, node: &Definition<'_>) -> u32 {
+    fn write_definition(&mut self, node: &Definition<'_>) -> napi::Result<u32> {
         let mut record = RawNodeRecord::new(KIND_DEFINITION, node.span);
-        self.write_string_into_slot(&mut record, 0, Some(node.identifier));
-        self.write_string_into_slot(&mut record, 1, node.label);
-        self.write_string_into_slot(&mut record, 2, Some(node.url));
-        self.write_string_into_slot(&mut record, 3, node.title);
+        self.write_string_into_slot(&mut record, 0, Some(node.identifier))?;
+        self.write_string_into_slot(&mut record, 1, node.label)?;
+        self.write_string_into_slot(&mut record, 2, Some(node.url))?;
+        self.write_string_into_slot(&mut record, 3, node.title)?;
         self.push_record(record)
     }
 
-    fn write_footnote_definition(&mut self, node: &FootnoteDefinition<'_>) -> u32 {
+    fn write_footnote_definition(&mut self, node: &FootnoteDefinition<'_>) -> napi::Result<u32> {
         let mut record = RawNodeRecord::new(KIND_FOOTNOTE_DEFINITION, node.span);
-        self.write_child_nodes(&mut record, &node.children);
-        self.write_string_into_slot(&mut record, 0, Some(node.identifier));
-        self.write_string_into_slot(&mut record, 1, node.label);
+        self.write_child_nodes(&mut record, &node.children)?;
+        self.write_string_into_slot(&mut record, 0, Some(node.identifier))?;
+        self.write_string_into_slot(&mut record, 1, node.label)?;
         self.push_record(record)
     }
 
-    fn write_child_nodes(&mut self, record: &mut RawNodeRecord, children: &ArenaVec<'_, Node<'_>>) {
+    fn write_child_nodes(
+        &mut self,
+        record: &mut RawNodeRecord,
+        children: &ArenaVec<'_, Node<'_>>,
+    ) -> napi::Result<()> {
         let mut direct_children = Vec::with_capacity(children.len());
         for child in children {
-            let index = self.write_node(child);
+            let index = self.write_node(child)?;
             direct_children.push(index);
         }
         let child_start = self.child_indices.len();
         self.child_indices.extend(direct_children);
-        record.child_start = as_u32(child_start).expect("child overflow");
-        record.child_len = as_u32(self.child_indices.len() - child_start).expect("child overflow");
+        record.child_start = as_u32(child_start)?;
+        record.child_len = as_u32(self.child_indices.len() - child_start)?;
+        Ok(())
     }
 
     fn write_child_list_items(
         &mut self,
         record: &mut RawNodeRecord,
         children: &ArenaVec<'_, ListItem<'_>>,
-    ) {
+    ) -> napi::Result<()> {
         let mut direct_children = Vec::with_capacity(children.len());
         for child in children {
-            let index = self.write_list_item(child);
+            let index = self.write_list_item(child)?;
             direct_children.push(index);
         }
         let child_start = self.child_indices.len();
         self.child_indices.extend(direct_children);
-        record.child_start = as_u32(child_start).expect("child overflow");
-        record.child_len = as_u32(self.child_indices.len() - child_start).expect("child overflow");
+        record.child_start = as_u32(child_start)?;
+        record.child_len = as_u32(self.child_indices.len() - child_start)?;
+        Ok(())
     }
 
     fn write_child_table_rows(
         &mut self,
         record: &mut RawNodeRecord,
         children: &ArenaVec<'_, TableRow<'_>>,
-    ) {
+    ) -> napi::Result<()> {
         let mut direct_children = Vec::with_capacity(children.len());
         for child in children {
-            let index = self.write_table_row(child);
+            let index = self.write_table_row(child)?;
             direct_children.push(index);
         }
         let child_start = self.child_indices.len();
         self.child_indices.extend(direct_children);
-        record.child_start = as_u32(child_start).expect("child overflow");
-        record.child_len = as_u32(self.child_indices.len() - child_start).expect("child overflow");
+        record.child_start = as_u32(child_start)?;
+        record.child_len = as_u32(self.child_indices.len() - child_start)?;
+        Ok(())
     }
 
     fn write_child_table_cells(
         &mut self,
         record: &mut RawNodeRecord,
         children: &ArenaVec<'_, TableCell<'_>>,
-    ) {
+    ) -> napi::Result<()> {
         let mut direct_children = Vec::with_capacity(children.len());
         for child in children {
-            let index = self.write_table_cell(child);
+            let index = self.write_table_cell(child)?;
             direct_children.push(index);
         }
         let child_start = self.child_indices.len();
         self.child_indices.extend(direct_children);
-        record.child_start = as_u32(child_start).expect("child overflow");
-        record.child_len = as_u32(self.child_indices.len() - child_start).expect("child overflow");
+        record.child_start = as_u32(child_start)?;
+        record.child_len = as_u32(self.child_indices.len() - child_start)?;
+        Ok(())
     }
 
     fn write_string_into_slot(
@@ -421,15 +429,15 @@ impl MdastRawSerializer {
         record: &mut RawNodeRecord,
         slot: usize,
         value: Option<&str>,
-    ) {
+    ) -> napi::Result<()> {
         let Some(value) = value else {
-            return;
+            return Ok(());
         };
 
         let offset = self.strings.len();
         self.strings.extend_from_slice(value.as_bytes());
-        let offset = as_u32(offset).expect("string overflow");
-        let len = as_u32(value.len()).expect("string overflow");
+        let offset = as_u32(offset)?;
+        let len = as_u32(value.len())?;
 
         match slot {
             0 => {
@@ -448,14 +456,20 @@ impl MdastRawSerializer {
                 record.str3_offset = offset;
                 record.str3_len = len;
             }
-            _ => unreachable!(),
+            _ => {
+                let mut message = String::from("invalid raw mdast string slot: ");
+                message.push_str(&slot.to_string());
+                return Err(napi::Error::from_reason(message));
+            }
         }
+        Ok(())
     }
 
-    fn push_record(&mut self, record: RawNodeRecord) -> u32 {
+    fn push_record(&mut self, record: RawNodeRecord) -> napi::Result<u32> {
         let index = self.nodes.len();
+        let index = as_u32(index)?;
         self.nodes.push(record);
-        as_u32(index).expect("node overflow")
+        Ok(index)
     }
 }
 

@@ -11,6 +11,7 @@
 //! Rendering is intentionally string-based and lock-free so that printing
 //! the report does not itself perturb the global allocator counters by much.
 
+use std::fmt::Write as _;
 use std::time::Duration;
 
 use crate::alloc::AllocDelta;
@@ -107,30 +108,36 @@ impl Report {
         let mut out = String::with_capacity(4096);
         let ruler = "─".repeat(78);
 
-        out.push_str(&format!("\n{ruler}\n"));
-        out.push_str(&format!(" Profile: {}\n", self.label));
-        out.push_str(&format!(
-            " Iterations measured: {} (warmup: {})\n",
-            self.timing.samples, self.config.warmup
-        ));
-        out.push_str(&format!("{ruler}\n"));
+        push_fmt(&mut out, format_args!("\n{ruler}\n"));
+        push_fmt(&mut out, format_args!(" Profile: {}\n", self.label));
+        push_fmt(
+            &mut out,
+            format_args!(
+                " Iterations measured: {} (warmup: {})\n",
+                self.timing.samples, self.config.warmup
+            ),
+        );
+        push_fmt(&mut out, format_args!("{ruler}\n"));
 
         out.push_str("\n Timing\n");
-        out.push_str(&format!(
-            "   min   {}\n   p50   {}\n   p95   {}\n   p99   {}\n   max   {}\n   mean  {}\n",
-            fmt_duration(self.timing.min),
-            fmt_duration(self.timing.p50),
-            fmt_duration(self.timing.p95),
-            fmt_duration(self.timing.p99),
-            fmt_duration(self.timing.max),
-            fmt_duration(self.timing.mean),
-        ));
+        push_fmt(
+            &mut out,
+            format_args!(
+                "   min   {}\n   p50   {}\n   p95   {}\n   p99   {}\n   max   {}\n   mean  {}\n",
+                fmt_duration(self.timing.min),
+                fmt_duration(self.timing.p50),
+                fmt_duration(self.timing.p95),
+                fmt_duration(self.timing.p99),
+                fmt_duration(self.timing.max),
+                fmt_duration(self.timing.mean),
+            ),
+        );
         if let Some(throughput) = self.timing.throughput_mb_s {
-            out.push_str(&format!("   throughput   {throughput:>8.2} MB/s\n"));
+            push_fmt(&mut out, format_args!("   throughput   {throughput:>8.2} MB/s\n"));
         }
 
         out.push_str("\n Allocations (per iteration)\n");
-        out.push_str(&format!(
+        push_fmt(&mut out, format_args!(
             "   count       {:>12.1}\n   bytes       {:>12}\n   peak (max)  {:>12}\n   largest     {:>12}\n",
             self.allocs.mean_allocations,
             fmt_bytes_f(self.allocs.mean_bytes),
@@ -140,28 +147,37 @@ impl Report {
 
         if !self.spans.is_empty() {
             out.push_str("\n Spans (sorted by total inclusive time)\n");
-            out.push_str(&format!(
-                "   {:<32} {:>8} {:>12} {:>12} {:>6}   {:>10} {:>10}\n",
-                "name", "hits", "self", "inclusive", "share", "allocs", "bytes",
-            ));
-            out.push_str(&format!("   {}\n", "·".repeat(74)));
+            push_fmt(
+                &mut out,
+                format_args!(
+                    "   {:<32} {:>8} {:>12} {:>12} {:>6}   {:>10} {:>10}\n",
+                    "name", "hits", "self", "inclusive", "share", "allocs", "bytes",
+                ),
+            );
+            push_fmt(&mut out, format_args!("   {}\n", "·".repeat(74)));
             for span in self.spans.iter().take(self.config.max_span_rows) {
-                out.push_str(&format!(
-                    "   {:<32} {:>8} {:>12} {:>12} {:>5.1}%   {:>10} {:>10}\n",
-                    truncate(span.name, 32),
-                    span.hits,
-                    fmt_duration(span.total_self),
-                    fmt_duration(span.total_inclusive),
-                    span.share_of_total * 100.0,
-                    span.total_allocs,
-                    fmt_bytes(span.total_bytes),
-                ));
+                push_fmt(
+                    &mut out,
+                    format_args!(
+                        "   {:<32} {:>8} {:>12} {:>12} {:>5.1}%   {:>10} {:>10}\n",
+                        truncate(span.name, 32),
+                        span.hits,
+                        fmt_duration(span.total_self),
+                        fmt_duration(span.total_inclusive),
+                        span.share_of_total * 100.0,
+                        span.total_allocs,
+                        fmt_bytes(span.total_bytes),
+                    ),
+                );
             }
             if self.spans.len() > self.config.max_span_rows {
-                out.push_str(&format!(
-                    "   …and {} more spans\n",
-                    self.spans.len() - self.config.max_span_rows
-                ));
+                push_fmt(
+                    &mut out,
+                    format_args!(
+                        "   …and {} more spans\n",
+                        self.spans.len() - self.config.max_span_rows
+                    ),
+                );
             }
         }
 
@@ -176,12 +192,12 @@ impl Report {
                 for (label, count) in last.allocs.size_class_buckets.iter_nonempty() {
                     let bar_len = ((count as f64).log2().max(0.0) * 2.0) as usize;
                     let bar = "▏".repeat(bar_len.min(40));
-                    out.push_str(&format!("   {label:>10}  {count:>8}  {bar}\n"));
+                    push_fmt(&mut out, format_args!("   {label:>10}  {count:>8}  {bar}\n"));
                 }
             }
         }
 
-        out.push_str(&format!("\n{ruler}\n"));
+        push_fmt(&mut out, format_args!("\n{ruler}\n"));
         out
     }
 
@@ -210,18 +226,21 @@ impl Report {
         write_kv_dur(&mut s, "mean_ns", self.timing.mean);
         if let Some(t) = self.timing.throughput_mb_s {
             s.push(',');
-            s.push_str(&format!("\"throughput_mb_s\":{t}"));
+            push_fmt(&mut s, format_args!("\"throughput_mb_s\":{t}"));
         }
         s.push('}');
         s.push(',');
         s.push_str("\"allocs\":{");
-        s.push_str(&format!(
-            "\"mean_count\":{:.3},\"mean_bytes\":{:.3},\"max_peak\":{},\"largest\":{}",
-            self.allocs.mean_allocations,
-            self.allocs.mean_bytes,
-            self.allocs.max_peak_above_baseline,
-            self.allocs.largest_single_alloc
-        ));
+        push_fmt(
+            &mut s,
+            format_args!(
+                "\"mean_count\":{:.3},\"mean_bytes\":{:.3},\"max_peak\":{},\"largest\":{}",
+                self.allocs.mean_allocations,
+                self.allocs.mean_bytes,
+                self.allocs.max_peak_above_baseline,
+                self.allocs.largest_single_alloc
+            ),
+        );
         s.push('}');
         s.push(',');
         s.push_str("\"spans\":[");
@@ -362,13 +381,13 @@ fn aggregate_spans(iters: &[&IterationRecord]) -> Vec<SpanAggregate> {
 fn fmt_duration(d: Duration) -> String {
     let ns = d.as_nanos();
     if ns < 1_000 {
-        format!("{ns} ns")
+        fmt_args(format_args!("{ns} ns"))
     } else if ns < 1_000_000 {
-        format!("{:.2} µs", ns as f64 / 1_000.0)
+        fmt_args(format_args!("{:.2} µs", ns as f64 / 1_000.0))
     } else if ns < 1_000_000_000 {
-        format!("{:.2} ms", ns as f64 / 1_000_000.0)
+        fmt_args(format_args!("{:.2} ms", ns as f64 / 1_000_000.0))
     } else {
-        format!("{:.3} s", d.as_secs_f64())
+        fmt_args(format_args!("{:.3} s", d.as_secs_f64()))
     }
 }
 
@@ -385,9 +404,9 @@ fn fmt_bytes_f(b: f64) -> String {
         unit += 1;
     }
     if unit == 0 {
-        format!("{value:.0} {}", UNITS[unit])
+        fmt_args(format_args!("{value:.0} {}", UNITS[unit]))
     } else {
-        format!("{value:.2} {}", UNITS[unit])
+        fmt_args(format_args!("{value:.2} {}", UNITS[unit]))
     }
 }
 
@@ -410,7 +429,7 @@ fn write_kv_str(s: &mut String, k: &str, v: &str) {
         match ch {
             '"' => s.push_str("\\\""),
             '\\' => s.push_str("\\\\"),
-            c if (c as u32) < 0x20 => s.push_str(&format!("\\u{:04x}", c as u32)),
+            c if (c as u32) < 0x20 => push_json_control_escape(s, c as u32),
             c => s.push(c),
         }
     }
@@ -426,6 +445,26 @@ fn write_kv_u64(s: &mut String, k: &str, v: u64) {
 
 fn write_kv_dur(s: &mut String, k: &str, v: Duration) {
     write_kv_u64(s, k, v.as_nanos() as u64);
+}
+
+fn push_fmt(output: &mut String, args: std::fmt::Arguments<'_>) {
+    if output.write_fmt(args).is_err() {
+        output.push_str("[formatting failed]");
+    }
+}
+
+fn fmt_args(args: std::fmt::Arguments<'_>) -> String {
+    let mut output = String::new();
+    push_fmt(&mut output, args);
+    output
+}
+
+fn push_json_control_escape(output: &mut String, value: u32) {
+    const HEX: &[u8; 16] = b"0123456789abcdef";
+    output.push_str("\\u00");
+    let low = (value & 0xff) as usize;
+    output.push(char::from(HEX[(low >> 4) & 0xf]));
+    output.push(char::from(HEX[low & 0xf]));
 }
 
 #[cfg(test)]
