@@ -1,0 +1,8 @@
+---
+source: crates/ox_content_parser/tests/snapshot_parse.rs
+assertion_line: 32
+description: "![alt](./logo.png)\n"
+---
+Document [0..19]
+  Paragraph [0..19]
+    Image url="./logo.png" alt="alt" title=None [0..18]

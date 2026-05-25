@@ -7,8 +7,8 @@
  */
 
 import { existsSync } from "node:fs";
-import { join } from "node:path";
-import { fileURLToPath } from "node:url";
+import { createRequire } from "node:module";
+import { dirname, join } from "node:path";
 import { importNapiModule } from "../napi";
 
 export interface MermaidOptions {
@@ -45,11 +45,15 @@ let cachedMmdcPath: string | null | undefined;
 function resolveMmdcPath(): string | null {
   if (cachedMmdcPath !== undefined) return cachedMmdcPath;
 
-  // 1. Resolve via import.meta.resolve (works in pnpm strict mode)
-  //    @mermaid-js/mermaid-cli exports ./src/index.js; cli.js is in the same dir
+  // 1. Resolve via Node's CJS resolver. createRequire(process.cwd()) gives
+  //    us a resolver anchored at the consumer project, which is what we want
+  //    in pnpm strict mode. Using `require.resolve` instead of
+  //    `import.meta.resolve` keeps this code working in the CJS bundle —
+  //    rolldown would otherwise warn that `import.meta` is replaced with `{}`.
   try {
-    const entry = import.meta.resolve("@mermaid-js/mermaid-cli");
-    const cliPath = fileURLToPath(new URL("./cli.js", entry));
+    const require = createRequire(join(process.cwd(), "noop.js"));
+    const entry = require.resolve("@mermaid-js/mermaid-cli");
+    const cliPath = join(dirname(entry), "cli.js");
     if (existsSync(cliPath)) {
       cachedMmdcPath = cliPath;
       return cachedMmdcPath;

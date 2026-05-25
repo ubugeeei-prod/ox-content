@@ -1,0 +1,13 @@
+---
+source: crates/ox_content_parser/tests/snapshot_parse.rs
+assertion_line: 32
+description: "3. third\n4. fourth\n"
+---
+Document [0..19]
+  List ordered=true start=3 spread=false [0..19]
+    ListItem spread=false checked=- [0..9]
+      Paragraph [3..9]
+        Text "third" [3..8]
+    ListItem spread=false checked=- [9..19]
+      Paragraph [12..19]
+        Text "fourth" [12..18]

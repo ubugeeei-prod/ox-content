@@ -1,0 +1,9 @@
+---
+source: crates/ox_content_renderer/tests/snapshot_render.rs
+assertion_line: 29
+description: "> first\n>\n> second\n"
+---
+<blockquote>
+<p>first</p>
+<p>second</p>
+</blockquote>

@@ -34,7 +34,12 @@ profile = ["dep:ox_content_profiler"]
 [dev-dependencies]
 criterion = { workspace = true }
 insta = { workspace = true }
+ox_content_renderer = { workspace = true }
 
 [[bench]]
 name = "parser"
+harness = false
+
+[[bench]]
+name = "corpus"
 harness = false

@@ -1,0 +1,14 @@
+---
+source: crates/ox_content_parser/tests/snapshot_parse.rs
+assertion_line: 32
+description: "\\*not italic\\* and \\_not underscore\\_\n"
+---
+Document [0..38]
+  Paragraph [0..38]
+    Text "*" [0..2]
+    Text "not italic" [2..12]
+    Text "*" [12..14]
+    Text " and " [14..19]
+    Text "_" [19..21]
+    Text "not underscore" [21..35]
+    Text "_" [35..37]

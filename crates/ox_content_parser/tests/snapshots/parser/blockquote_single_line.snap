@@ -1,0 +1,9 @@
+---
+source: crates/ox_content_parser/tests/snapshot_parse.rs
+assertion_line: 32
+description: "> hello\n"
+---
+Document [0..8]
+  BlockQuote [0..8]
+    Paragraph [0..6]
+      Text "hello" [0..5]

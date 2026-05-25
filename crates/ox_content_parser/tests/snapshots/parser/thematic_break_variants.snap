@@ -1,0 +1,12 @@
+---
+source: crates/ox_content_parser/tests/snapshot_parse.rs
+assertion_line: 32
+description: "---\n\n___\n\n***\n\n  ---  \n\n - - -\n\n* * *\n"
+---
+Document [0..38]
+  ThematicBreak [0..4]
+  ThematicBreak [5..9]
+  ThematicBreak [10..14]
+  ThematicBreak [15..23]
+  ThematicBreak [24..31]
+  ThematicBreak [32..38]

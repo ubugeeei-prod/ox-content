@@ -1,0 +1,6 @@
+---
+source: crates/ox_content_renderer/tests/snapshot_render.rs
+assertion_line: 29
+description: "[guide](./guide.md) [mail](mailto:hi@example.com) [phone](tel:+123)\n"
+---
+<p><a href="./guide.md">guide</a> <a href="mailto:hi@example.com">mail</a> <a href="tel:+123">phone</a></p>

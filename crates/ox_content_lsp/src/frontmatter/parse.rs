@@ -15,16 +15,18 @@ pub fn parse_frontmatter(document: &TextDocumentState) -> FrontmatterDocument {
 
     let content_start_offset = document.line_end_offset(0).min(document.text().len());
     let content_end_offset = document.line_start_offset(closing_line);
+    let block_end_offset = document.line_end_offset(closing_line);
     let raw = document.text()[content_start_offset..content_end_offset].to_string();
     let top_level_keys = collect_top_level_keys(document, content_start_offset, &raw);
     let (value, diagnostics) = parse_yaml(document, content_start_offset, &raw);
 
     FrontmatterDocument {
         block: Some(FrontmatterBlock {
-            block_range: document.range_from_offsets(0, document.line_end_offset(closing_line)),
+            block_range: document.range_from_offsets(0, block_end_offset),
             content_range: document.range_from_offsets(content_start_offset, content_end_offset),
             content_start_offset,
             content_end_offset,
+            block_end_offset,
             value,
             diagnostics,
             top_level_keys,
@@ -54,6 +56,7 @@ fn unterminated_block(document: &TextDocumentState) -> FrontmatterBlock {
         },
         content_start_offset: document.line_start_offset(1.min(document.line_count())),
         content_end_offset: document.text().len(),
+        block_end_offset: document.text().len(),
         value: None,
         diagnostics: vec![Diagnostic {
             range,

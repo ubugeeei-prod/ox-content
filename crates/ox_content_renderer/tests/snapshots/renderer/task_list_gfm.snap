@@ -1,0 +1,11 @@
+---
+source: crates/ox_content_renderer/tests/snapshot_render.rs
+assertion_line: 29
+description: "- [x] done\n- [ ] todo\n"
+---
+<ul>
+<li><input type="checkbox" checked disabled> <p>done</p>
+</li>
+<li><input type="checkbox" disabled> <p>todo</p>
+</li>
+</ul>

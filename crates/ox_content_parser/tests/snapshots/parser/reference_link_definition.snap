@@ -1,0 +1,14 @@
+---
+source: crates/ox_content_parser/tests/snapshot_parse.rs
+assertion_line: 32
+description: "[link][ref]\n\n[ref]: https://example.com \"Title\"\n"
+---
+Document [0..48]
+  Paragraph [0..12]
+    Text "[" [0..1]
+    Text "link]" [1..6]
+    Text "[" [6..7]
+    Text "ref]" [7..11]
+  Paragraph [13..48]
+    Text "[" [13..14]
+    Text "ref]: https://example.com \"Title\"" [14..47]

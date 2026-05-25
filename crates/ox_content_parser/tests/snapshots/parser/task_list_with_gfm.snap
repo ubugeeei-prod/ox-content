@@ -1,0 +1,13 @@
+---
+source: crates/ox_content_parser/tests/snapshot_parse.rs
+assertion_line: 32
+description: "- [ ] todo\n- [x] done\n"
+---
+Document [0..22]
+  List ordered=false start=- spread=false [0..22]
+    ListItem spread=false checked=false [0..11]
+      Paragraph [6..11]
+        Text "todo" [6..10]
+    ListItem spread=false checked=true [11..22]
+      Paragraph [17..22]
+        Text "done" [17..21]

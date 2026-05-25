@@ -1,0 +1,14 @@
+---
+source: crates/ox_content_parser/tests/snapshot_parse.rs
+assertion_line: 32
+description: "> outer\n>\n> > inner\n>\n> outer again\n"
+---
+Document [0..36]
+  BlockQuote [0..36]
+    Paragraph [0..6]
+      Text "outer" [0..5]
+    BlockQuote [7..15]
+      Paragraph [0..6]
+        Text "inner" [0..5]
+    Paragraph [16..28]
+      Text "outer again" [16..27]

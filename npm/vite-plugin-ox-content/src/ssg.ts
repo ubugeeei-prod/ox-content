@@ -570,24 +570,38 @@ export async function buildSsg(
   if (shouldGenerateOgImages && ogImageEntries.length > 0) {
     try {
       const ogResults = await generateOgImages(ogImageEntries, options.ogImageOptions, root);
-      let ogSuccessCount = 0;
-      for (let i = 0; i < ogResults.length; i++) {
-        const result = ogResults[i];
-        if (result.error) {
-          errors.push(`OG image failed for ${result.outputPath}: ${result.error}`);
-          // Remove failed entries so og:image / twitter:image meta tags are not emitted
-          ogImageUrlMap.delete(ogImageInputPaths[i]);
-        } else {
-          generatedFiles.push(result.outputPath);
-          ogSuccessCount++;
+
+      // When the whole batch failed because Chromium wasn't available
+      // (common in CI without browser deps), avoid spamming the log with one
+      // error per page — `openBrowser()` already warned once. Just clear the
+      // og:image meta tags and move on.
+      const allMissingBrowser =
+        ogResults.length > 0 &&
+        ogResults.every((result) => result.error === "Chromium not available");
+      if (allMissingBrowser) {
+        for (const inputPath of ogImageInputPaths) {
+          ogImageUrlMap.delete(inputPath);
         }
-      }
-      if (ogSuccessCount > 0) {
-        const cachedCount = ogResults.filter((r) => r.cached && !r.error).length;
-        console.log(
-          `[ox-content:og-image] Generated ${ogSuccessCount} OG images` +
-            (cachedCount > 0 ? ` (${cachedCount} from cache)` : ""),
-        );
+      } else {
+        let ogSuccessCount = 0;
+        for (let i = 0; i < ogResults.length; i++) {
+          const result = ogResults[i];
+          if (result.error) {
+            errors.push(`OG image failed for ${result.outputPath}: ${result.error}`);
+            // Remove failed entries so og:image / twitter:image meta tags are not emitted
+            ogImageUrlMap.delete(ogImageInputPaths[i]);
+          } else {
+            generatedFiles.push(result.outputPath);
+            ogSuccessCount++;
+          }
+        }
+        if (ogSuccessCount > 0) {
+          const cachedCount = ogResults.filter((r) => r.cached && !r.error).length;
+          console.log(
+            `[ox-content:og-image] Generated ${ogSuccessCount} OG images` +
+              (cachedCount > 0 ? ` (${cachedCount} from cache)` : ""),
+          );
+        }
       }
     } catch (err) {
       // Non-fatal: OG image failures never block the SSG build

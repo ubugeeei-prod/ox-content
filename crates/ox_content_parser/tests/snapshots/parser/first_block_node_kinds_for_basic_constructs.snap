@@ -1,0 +1,11 @@
+---
+source: crates/ox_content_parser/tests/snapshot_parse.rs
+assertion_line: 477
+---
+para_kind: Paragraph
+heading_kind: Heading
+list_kind: List
+blockquote_kind: BlockQuote
+code_kind: CodeBlock
+hr_kind: ThematicBreak
+table_kind: Table

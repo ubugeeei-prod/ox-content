@@ -1,0 +1,12 @@
+---
+source: crates/ox_content_parser/tests/snapshot_parse.rs
+assertion_line: 32
+description: "before <span class=\"x\">middle</span> after\n"
+---
+Document [0..43]
+  Paragraph [0..43]
+    Text "before " [0..7]
+    Html value="<span class=\"x\">" [7..23]
+    Text "middle" [23..29]
+    Html value="</span>" [29..36]
+    Text " after" [36..42]

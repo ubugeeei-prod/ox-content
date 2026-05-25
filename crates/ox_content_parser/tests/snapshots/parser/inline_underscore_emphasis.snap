@@ -1,0 +1,16 @@
+---
+source: crates/ox_content_parser/tests/snapshot_parse.rs
+assertion_line: 32
+description: "_italic_ and __bold__ and ___both___.\n"
+---
+Document [0..38]
+  Paragraph [0..38]
+    Emphasis [0..8]
+      Text "italic" [1..7]
+    Text " and " [8..13]
+    Strong [13..21]
+      Text "bold" [15..19]
+    Text " and " [21..26]
+    Strong [26..36]
+      Text "both" [29..33]
+    Text "." [36..37]

@@ -1,0 +1,10 @@
+---
+source: crates/ox_content_parser/tests/snapshot_parse.rs
+assertion_line: 32
+description: "## Title ###\n## Edge  ####  \n"
+---
+Document [0..29]
+  Heading depth=2 [0..13]
+    Text "Title" [3..8]
+  Heading depth=2 [13..29]
+    Text "Edge" [16..20]

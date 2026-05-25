@@ -1,0 +1,7 @@
+---
+source: crates/ox_content_lsp/src/preview/symbols.rs
+assertion_line: 114
+---
+h1 [0:0..1:0] h1
+h2 [1:0..2:0] h2 deeper
+h3 [2:0..3:0] h3 deepest
