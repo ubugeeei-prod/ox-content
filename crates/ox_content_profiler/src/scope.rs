@@ -214,10 +214,22 @@ pub struct SpanRegistry {
 
 #[cfg(test)]
 mod tests {
+    use std::sync::Mutex;
+
     use super::*;
+
+    /// `enable()` / `disable()` write to a process-wide `AtomicBool`, but
+    /// `cargo test` runs unit tests in parallel by default. Without this
+    /// lock the three tests below would race: e.g. `disabled_spans_are_noops`
+    /// could flip the gate off while `span_records_self_and_inclusive_time`
+    /// was mid-`span("outer", ...)`, producing an empty records list and
+    /// a flaky "outer recorded" panic. Serialize them through one mutex so
+    /// they observe the gate state they set themselves.
+    static GATE: Mutex<()> = Mutex::new(());
 
     #[test]
     fn span_records_self_and_inclusive_time() {
+        let _guard = GATE.lock().unwrap_or_else(|poisoned| poisoned.into_inner());
         enable();
         reset_thread_spans();
 
@@ -245,6 +257,7 @@ mod tests {
 
     #[test]
     fn disabled_spans_are_noops() {
+        let _guard = GATE.lock().unwrap_or_else(|poisoned| poisoned.into_inner());
         disable();
         reset_thread_spans();
 
@@ -257,6 +270,7 @@ mod tests {
 
     #[test]
     fn repeated_hits_accumulate() {
+        let _guard = GATE.lock().unwrap_or_else(|poisoned| poisoned.into_inner());
         enable();
         reset_thread_spans();
 
