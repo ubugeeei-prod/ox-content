@@ -1,5 +1,7 @@
 //! HTML page generation for SSG.
 
+use std::fmt::Write as _;
+
 use askama::Template;
 use serde::{Deserialize, Serialize};
 
@@ -1171,17 +1173,20 @@ fn generate_nav_html(nav_groups: &[NavGroup], current_path: &str) -> String {
     for group in nav_groups {
         if group.collapsed.is_some() {
             let open = if group.collapsed == Some(true) { "" } else { " open" };
-            html.push_str(&format!(
+            push_fmt(&mut html, format_args!(
                 "<details class=\"nav-section nav-section--collapsible\"{open}>\n  <summary class=\"nav-title nav-title--summary\">{}</summary>\n",
                 escape_html(&group.title)
             ));
             render_nav_list(&mut html, &group.items, current_path, false);
             html.push_str("</details>\n");
         } else {
-            html.push_str(&format!(
-                "<div class=\"nav-section\">\n  <div class=\"nav-title\">{}</div>\n",
-                escape_html(&group.title)
-            ));
+            push_fmt(
+                &mut html,
+                format_args!(
+                    "<div class=\"nav-section\">\n  <div class=\"nav-title\">{}</div>\n",
+                    escape_html(&group.title)
+                ),
+            );
             render_nav_list(&mut html, &group.items, current_path, false);
             html.push_str("</div>\n");
         }
@@ -1191,7 +1196,7 @@ fn generate_nav_html(nav_groups: &[NavGroup], current_path: &str) -> String {
 
 fn render_nav_list(html: &mut String, items: &[NavItem], current_path: &str, nested: bool) {
     let class_name = if nested { "nav-list nav-list--nested" } else { "nav-list" };
-    html.push_str(&format!("  <ul class=\"{class_name}\">\n"));
+    push_fmt(html, format_args!("  <ul class=\"{class_name}\">\n"));
     for item in items {
         render_nav_item(html, item, current_path);
     }
@@ -1203,14 +1208,14 @@ fn render_nav_item(html: &mut String, item: &NavItem, current_path: &str) {
     let title = escape_html(&item.title);
     let active_class = if item.path == current_path { " active" } else { "" };
     if item.children.is_empty() {
-        html.push_str(&format!(
+        push_fmt(html, format_args!(
             "    <li class=\"nav-item\"><a href=\"{href}\" class=\"nav-link{active_class}\">{title}</a></li>\n"
         ));
         return;
     }
 
     let open = if item.collapsed == Some(true) { "" } else { " open" };
-    html.push_str(&format!(
+    push_fmt(html, format_args!(
         "    <li class=\"nav-item nav-item--group\"><details class=\"nav-details\"{open}><summary class=\"nav-summary\"><a href=\"{href}\" class=\"nav-link nav-link--summary{active_class}\">{title}</a></summary>\n"
     ));
     render_nav_list(html, &item.children, current_path, true);
@@ -1227,6 +1232,12 @@ fn safe_nav_href(href: &str) -> String {
         return "#".to_string();
     }
     escape_html(trimmed)
+}
+
+fn push_fmt(output: &mut String, args: std::fmt::Arguments<'_>) {
+    if output.write_fmt(args).is_err() {
+        output.push_str("[formatting failed]");
+    }
 }
 
 #[cfg(test)]

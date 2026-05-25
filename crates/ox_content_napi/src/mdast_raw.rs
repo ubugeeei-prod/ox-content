@@ -457,9 +457,9 @@ impl MdastRawSerializer {
                 record.str3_len = len;
             }
             _ => {
-                return Err(napi::Error::from_reason(format!(
-                    "invalid raw mdast string slot: {slot}"
-                )));
+                let mut message = String::from("invalid raw mdast string slot: ");
+                message.push_str(&slot.to_string());
+                return Err(napi::Error::from_reason(message));
             }
         }
         Ok(())

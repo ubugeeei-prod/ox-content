@@ -22,6 +22,7 @@
 //! Without a `<FILE>` the embedded corpus is used so the binary stays
 //! useful in CI / first-time setup.
 
+use std::fmt::Write as _;
 use std::path::PathBuf;
 use std::process::ExitCode;
 
@@ -94,10 +95,9 @@ fn parser_options(cli: &Cli) -> ParserOptions {
 }
 
 fn parse_error(err: impl std::fmt::Display) -> std::io::Error {
-    std::io::Error::new(
-        std::io::ErrorKind::InvalidData,
-        format!("failed to parse Markdown input for profiling: {err}"),
-    )
+    let mut message = String::from("failed to parse Markdown input for profiling: ");
+    push_fmt(&mut message, format_args!("{err}"));
+    std::io::Error::new(std::io::ErrorKind::InvalidData, message)
 }
 
 fn run(cli: &Cli) -> std::io::Result<()> {
@@ -114,11 +114,13 @@ fn run(cli: &Cli) -> std::io::Result<()> {
     let total_iters = cli.warmup + cli.iters;
     let config = ReportConfig { input_bytes: Some(bytes), warmup: cli.warmup, max_span_rows: 24 };
 
-    let label = match &cli.cmd {
-        Cmd::Parse { .. } => format!("parse ({label_input}, {bytes} bytes)"),
-        Cmd::Render { .. } => format!("render ({label_input}, {bytes} bytes)"),
-        Cmd::Pipeline { .. } => format!("pipeline ({label_input}, {bytes} bytes)"),
+    let label_prefix = match &cli.cmd {
+        Cmd::Parse { .. } => "parse",
+        Cmd::Render { .. } => "render",
+        Cmd::Pipeline { .. } => "pipeline",
     };
+    let mut label = String::new();
+    push_fmt(&mut label, format_args!("{label_prefix} ({label_input}, {bytes} bytes)"));
 
     let mut recorder = Recorder::new(label).with_config(config);
 
@@ -175,6 +177,12 @@ fn run(cli: &Cli) -> std::io::Result<()> {
         println!("{}", report.render_table());
     }
     Ok(())
+}
+
+fn push_fmt(output: &mut String, args: std::fmt::Arguments<'_>) {
+    if output.write_fmt(args).is_err() {
+        output.push_str("[formatting failed]");
+    }
 }
 
 fn main() -> ExitCode {

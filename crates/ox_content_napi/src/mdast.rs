@@ -316,7 +316,7 @@ impl MdastJsonSerializer {
             if let Some(escaped) = escaped {
                 self.output.push_str(escaped);
             } else {
-                self.output.push_str(&format!("\\u{byte:04x}"));
+                push_json_byte_escape(&mut self.output, byte);
             }
             start = idx + 1;
         }
@@ -326,6 +326,13 @@ impl MdastJsonSerializer {
         }
         self.output.push('"');
     }
+}
+
+fn push_json_byte_escape(output: &mut String, byte: u8) {
+    const HEX: &[u8; 16] = b"0123456789abcdef";
+    output.push_str("\\u00");
+    output.push(char::from(HEX[usize::from((byte >> 4) & 0x0f)]));
+    output.push(char::from(HEX[usize::from(byte & 0x0f)]));
 }
 
 #[cfg(test)]

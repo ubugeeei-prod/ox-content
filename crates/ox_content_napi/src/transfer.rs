@@ -100,7 +100,9 @@ fn checked_mul(left: usize, right: usize, context: &str) -> napi::Result<usize> 
 }
 
 fn transfer_size_error(context: &str) -> napi::Error {
-    napi::Error::from_reason(format!("transfer buffer is too large while calculating {context}"))
+    let mut message = String::from("transfer buffer is too large while calculating ");
+    message.push_str(context);
+    napi::Error::from_reason(message)
 }
 
 fn push_u16(buffer: &mut Vec<u8>, value: u16) {
