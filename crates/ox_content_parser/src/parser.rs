@@ -233,9 +233,19 @@ impl<'a> Parser<'a> {
         let trimmed = line.trim_start();
         let first = trimmed.as_bytes().first().copied();
 
+        // NB: dispatch arms must use the same `try_parse_*` helpers as
+        // `parse_block`, which test at `self.position` (the un-trimmed
+        // offset). Using `is_atx_heading_prefix(trimmed.as_bytes())` here
+        // would diverge from `parse_block`'s `Some(b'#') if
+        // self.try_parse_heading()` check on indented inputs like
+        // `" # heading"`: `line_starts_block` would say "yes, a heading",
+        // `parse_block` would say "no" (since the byte at position 0 is
+        // a space) and fall through to `parse_paragraph`, which would
+        // immediately break with no content — `parse_block` then returns
+        // `Ok(None)` without advancing position, and the outer
+        // `parse()` loop spins forever on the same offset.
         let starts_block = match first {
-            // Cheap heading test inline: ATX heading needs `#{1..6}` + ws/EOL.
-            Some(b'#') => is_atx_heading_prefix(trimmed.as_bytes()),
+            Some(b'#') => self.try_parse_heading(),
             Some(b'-' | b'*') => self.try_parse_thematic_break() || self.try_parse_list(),
             Some(b'_') => self.try_parse_thematic_break(),
             Some(b'>') => true,
@@ -1954,6 +1964,25 @@ mod tests {
             }
             _ => panic!("expected heading"),
         }
+    }
+
+    #[test]
+    fn indented_heading_like_text_does_not_loop() {
+        // Regression: `line_starts_block` once tested ATX headings against
+        // the trimmed bytes while `parse_block` tested at the un-trimmed
+        // position, so " # heading" caused `parse_paragraph` to break
+        // immediately ("looks like a heading") and `parse_block` to return
+        // `Ok(None)` without advancing — spinning the outer loop forever.
+        // The fix is for `line_starts_block` to defer to
+        // `self.try_parse_heading()` so both checks see the same offset.
+        let allocator = Allocator::new();
+        let doc = Parser::new(&allocator, " # heading\n").parse().unwrap();
+        assert_eq!(doc.children.len(), 1);
+        assert!(
+            matches!(&doc.children[0], Node::Paragraph(_)),
+            "expected leading-indented `#` to parse as paragraph text, got {:?}",
+            &doc.children[0]
+        );
     }
 
     #[test]

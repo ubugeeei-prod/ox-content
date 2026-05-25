@@ -1061,6 +1061,15 @@ pub struct HtmlRenderer {
     output: String,
     heading_id_counts: FxHashMap<String, usize>,
     toc_entries: Vec<InlineTocEntry>,
+    /// Whether the document being rendered contains at least one
+    /// `[[toc]]` directive paragraph. Cached at `render()` entry so each
+    /// `visit_paragraph` can skip the marker check entirely when no
+    /// directive exists (the common case). Kept separate from
+    /// `toc_entries.is_empty()` because a document may have a marker
+    /// AND zero entries (no headings, or all filtered by `toc_max_depth`)
+    /// — in that case we still need to suppress the literal `[[toc]]`
+    /// text from the output.
+    document_has_toc_marker: bool,
 }
 
 impl HtmlRenderer {
@@ -1072,6 +1081,7 @@ impl HtmlRenderer {
             output: String::new(),
             heading_id_counts: FxHashMap::default(),
             toc_entries: Vec::new(),
+            document_has_toc_marker: false,
         }
     }
 
@@ -1083,6 +1093,7 @@ impl HtmlRenderer {
             output: String::new(),
             heading_id_counts: FxHashMap::default(),
             toc_entries: Vec::new(),
+            document_has_toc_marker: false,
         }
     }
 
@@ -1097,7 +1108,8 @@ impl HtmlRenderer {
         // cheaply (no allocations) and skip the work when no marker exists —
         // this is the common case for normal docs.
         self.toc_entries.clear();
-        if document_has_toc_marker(document) {
+        self.document_has_toc_marker = document_has_toc_marker(document);
+        if self.document_has_toc_marker {
             collect_inline_toc_entries(document, self.options.toc_max_depth, &mut self.toc_entries);
         }
         self.heading_id_counts.clear();
@@ -1664,11 +1676,13 @@ impl Renderer for HtmlRenderer {
 impl<'a> Visit<'a> for HtmlRenderer {
     fn visit_paragraph(&mut self, paragraph: &Paragraph<'a>) {
         profile_span!("renderer::visit_paragraph");
-        // Skip the `[[toc]]` detection entirely when no TOC entries were
-        // collected — `render_inline_toc()` would emit nothing anyway, so
-        // the check is pure overhead. This matters because it runs on
-        // every paragraph in the document.
-        if !self.toc_entries.is_empty() && is_toc_marker_paragraph(paragraph) {
+        // Skip the `[[toc]]` byte scan entirely when the document has no
+        // marker — pure overhead in the common case. When a marker IS
+        // present we must run the check on every paragraph and suppress
+        // the matching one, even if `toc_entries` is empty (e.g. document
+        // has no headings or all are filtered by `toc_max_depth`).
+        // Otherwise the literal `[[toc]]` would leak into the output.
+        if self.document_has_toc_marker && is_toc_marker_paragraph(paragraph) {
             self.render_inline_toc();
             return;
         }
@@ -2080,6 +2094,39 @@ mod tests {
         assert!(html.contains("<p>See [[toc]] here</p>"));
         assert!(html.contains("<p><code>[[toc]]</code></p>"));
         assert!(!html.contains("ox-toc"));
+    }
+
+    #[test]
+    fn test_render_inline_toc_marker_is_suppressed_when_no_headings() {
+        // When the document contains `[[toc]]` but no headings (so
+        // `toc_entries` is empty), the marker paragraph must still be
+        // suppressed from output — otherwise the literal `[[toc]]`
+        // leaks through as `<p>[[toc]]</p>`. Regression coverage for
+        // the lazy-TOC optimization.
+        let allocator = Allocator::new();
+        let doc = Parser::new(&allocator, "[[toc]]").parse().unwrap();
+        let mut renderer = HtmlRenderer::new();
+        let html = renderer.render(&doc);
+
+        assert!(!html.contains("[[toc]]"), "marker leaked into output: {html}");
+        assert!(!html.contains("<p>"), "expected no paragraph wrapper: {html}");
+    }
+
+    #[test]
+    fn test_render_inline_toc_marker_is_suppressed_when_filtered_by_depth() {
+        // `toc_max_depth: 0` filters every heading out, but the marker
+        // paragraph should still be consumed so it doesn't leak.
+        let allocator = Allocator::new();
+        let doc = Parser::new(&allocator, "[[toc]]\n\n## Intro").parse().unwrap();
+        let mut renderer = HtmlRenderer::with_options(HtmlRendererOptions {
+            toc_max_depth: 0,
+            ..Default::default()
+        });
+        let html = renderer.render(&doc);
+
+        assert!(!html.contains("[[toc]]"), "marker leaked: {html}");
+        // The heading should still render as a heading (not as a TOC entry).
+        assert!(html.contains("<h2"), "heading missing: {html}");
     }
 
     #[test]

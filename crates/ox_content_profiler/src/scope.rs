@@ -229,7 +229,7 @@ mod tests {
 
     #[test]
     fn span_records_self_and_inclusive_time() {
-        let _guard = GATE.lock().unwrap_or_else(|poisoned| poisoned.into_inner());
+        let _guard = GATE.lock().unwrap_or_else(std::sync::PoisonError::into_inner);
         enable();
         reset_thread_spans();
 
@@ -257,7 +257,7 @@ mod tests {
 
     #[test]
     fn disabled_spans_are_noops() {
-        let _guard = GATE.lock().unwrap_or_else(|poisoned| poisoned.into_inner());
+        let _guard = GATE.lock().unwrap_or_else(std::sync::PoisonError::into_inner);
         disable();
         reset_thread_spans();
 
@@ -270,7 +270,7 @@ mod tests {
 
     #[test]
     fn repeated_hits_accumulate() {
-        let _guard = GATE.lock().unwrap_or_else(|poisoned| poisoned.into_inner());
+        let _guard = GATE.lock().unwrap_or_else(std::sync::PoisonError::into_inner);
         enable();
         reset_thread_spans();
 
