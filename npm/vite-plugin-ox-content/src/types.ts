@@ -802,6 +802,27 @@ export interface DocEntry {
   line: number;
   endLine: number;
   signature?: string; // Full function/type signature (for functions and type aliases)
+  members?: DocMember[];
+}
+
+/**
+ * A member belonging to a class, interface, type alias, or enum entry.
+ */
+export interface DocMember {
+  name: string;
+  kind: "property" | "method" | "constructor" | "getter" | "setter" | "enumMember";
+  description: string;
+  signature?: string;
+  type?: string;
+  params?: ParamDoc[];
+  returns?: ReturnDoc;
+  optional?: boolean;
+  readonly?: boolean;
+  static?: boolean;
+  private?: boolean;
+  tags?: Record<string, string>;
+  line: number;
+  endLine: number;
 }
 
 /**
