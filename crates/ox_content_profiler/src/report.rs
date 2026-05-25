@@ -1,6 +1,6 @@
 //! Report formatting.
 //!
-//! [`Report::from_iterations`] takes the per-iteration records captured by
+//! `Report::from_iterations` takes the per-iteration records captured by
 //! [`crate::Recorder`] and folds them into aggregate statistics:
 //!
 //! - Timing percentiles (min / p50 / p95 / p99 / max / mean) per workload.

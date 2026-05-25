@@ -11,6 +11,8 @@ export default defineConfig({
     dts: true,
     clean: true,
     hash: false,
-    external: ["vite", "vue", "@ox-content/vite-plugin"],
+    deps: {
+      neverBundle: ["vite", "vue", "@ox-content/vite-plugin"],
+    },
   }),
 });

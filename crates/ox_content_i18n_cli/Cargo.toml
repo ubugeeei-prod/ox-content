@@ -17,6 +17,12 @@ workspace = true
 [[bin]]
 name = "ox-content-i18n"
 path = "src/main.rs"
+# The lib target `ox_content_i18n` writes its rustdoc to
+# `target/doc/ox_content_i18n/index.html`. This bin would land at the same
+# path (cargo derives the doc dir from the snake_case of the bin name) and
+# trigger a "output filename collision" warning. Skip rustdoc for the CLI —
+# its surface is `--help`, not generated API docs.
+doc = false
 
 [dependencies]
 ox_content_i18n = { workspace = true }
