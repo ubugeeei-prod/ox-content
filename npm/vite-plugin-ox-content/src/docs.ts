@@ -297,6 +297,7 @@ function toRustDocsModules(docs: ExtractedDocs[]) {
       line: entry.line,
       endLine: entry.endLine,
       signature: entry.signature,
+      members: entry.members,
     })),
   }));
 }

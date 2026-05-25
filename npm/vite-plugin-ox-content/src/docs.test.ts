@@ -214,6 +214,79 @@ export function label(value, maxLength = 20) {
     });
   });
 
+  it("extracts and renders members from documented TypeScript entries", async () => {
+    const srcDir = await fs.mkdtemp(path.join(os.tmpdir(), "ox-content-docs-src-"));
+    tempDirs.push(srcDir);
+
+    await fs.writeFile(
+      path.join(srcDir, "command.ts"),
+      `type Context = { cwd: string };
+
+/**
+ * Runtime command.
+ */
+export interface Command {
+  readonly name: string;
+  args?: string[];
+  run(ctx: Context): Promise<void>;
+}
+
+/**
+ * Command options.
+ */
+export type CommandOptions = {
+  name: string;
+  run(ctx: Context): void;
+};
+`,
+      "utf-8",
+    );
+
+    const docs = await extractDocs([srcDir], resolveDocsOptions({ include: ["**/*.ts"] })!);
+    const command = docs[0]?.entries.find((entry) => entry.name === "Command");
+    const options = docs[0]?.entries.find((entry) => entry.name === "CommandOptions");
+
+    expect(command?.members).toMatchObject([
+      {
+        name: "name",
+        kind: "property",
+        type: "string",
+        readonly: true,
+      },
+      {
+        name: "args",
+        kind: "property",
+        type: "string[]",
+        optional: true,
+      },
+      {
+        name: "run",
+        kind: "method",
+        signature: "run(ctx: Context): Promise<void>",
+      },
+    ]);
+    expect(options?.members).toMatchObject([
+      {
+        name: "name",
+        kind: "property",
+        type: "string",
+      },
+      {
+        name: "run",
+        kind: "method",
+        signature: "run(ctx: Context): void",
+      },
+    ]);
+
+    const markdown = generateMarkdown(docs, resolveDocsOptions({})!);
+
+    expect(markdown["command.md"]).toContain("<h4>Members</h4>");
+    expect(markdown["command.md"]).toContain("<h5>Properties</h5>");
+    expect(markdown["command.md"]).toContain("<code>name</code>");
+    expect(markdown["command.md"]).toContain("readonly");
+    expect(markdown["command.md"]).toContain("run(ctx: Context): Promise&lt;void&gt;");
+  });
+
   it("groups docs by public API entry points", async () => {
     const srcDir = await fs.mkdtemp(path.join(os.tmpdir(), "ox-content-docs-src-"));
     tempDirs.push(srcDir);

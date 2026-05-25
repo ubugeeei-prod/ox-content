@@ -196,6 +196,25 @@ export interface JsDocEntry {
   line: number
   endLine: number
   signature?: string
+  members?: Array<JsDocMember>
+}
+
+/** Normalized member documentation used by generated API docs. */
+export interface JsDocMember {
+  name: string
+  kind: string
+  description: string
+  signature?: string
+  type?: string
+  params?: Array<JsDocParam>
+  returns?: JsDocReturn
+  optional?: boolean
+  readonly?: boolean
+  static?: boolean
+  private?: boolean
+  tags?: Record<string, string>
+  line: number
+  endLine: number
 }
 
 /** Normalized parameter documentation used by generated API docs. */
@@ -227,6 +246,7 @@ export interface JsDocsMarkdownEntry {
   line: number
   endLine: number
   signature?: string
+  members?: Array<JsDocMember>
 }
 
 /** Extracted docs for one source file used by generated API Markdown. */
@@ -614,6 +634,7 @@ export interface JsSourceDocItem {
   signature?: string
   params: Array<JsSourceDocParam>
   returnType?: string
+  members?: Array<JsSourceDocItem>
   tags: Array<JsSourceDocTag>
 }
 
