@@ -533,8 +533,17 @@ function normalizeHeroImage(value: unknown): Record<string, unknown> | undefined
     return undefined;
   }
 
+  const lightSrc =
+    (typeof value.lightSrc === "string" && value.lightSrc) ||
+    (typeof value.light === "string" && value.light);
+  const darkSrc =
+    (typeof value.darkSrc === "string" && value.darkSrc) ||
+    (typeof value.dark === "string" && value.dark);
+
   return {
     src,
+    ...(lightSrc ? { lightSrc } : {}),
+    ...(darkSrc ? { darkSrc } : {}),
     ...(typeof value.alt === "string" ? { alt: value.alt } : {}),
     ...(toNumber(value.width) !== undefined ? { width: toNumber(value.width) } : {}),
     ...(toNumber(value.height) !== undefined ? { height: toNumber(value.height) } : {}),
