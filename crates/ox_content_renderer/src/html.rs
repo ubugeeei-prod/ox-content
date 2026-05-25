@@ -1533,13 +1533,12 @@ impl HtmlRenderer {
         self.heading_id_counts.insert(key, 1);
     }
 
-    fn convert_markdown_url(&self, url: &str) -> String {
-        let converted = self.convert_md_url(url);
-        if converted != url {
-            return converted;
+    fn convert_markdown_url(&self, url: &str) -> Option<String> {
+        if let Some(converted) = self.convert_md_url(url) {
+            return Some(converted);
         }
 
-        self.apply_base_to_root_absolute_url(url).unwrap_or(converted)
+        self.apply_base_to_root_absolute_url(url)
     }
 
     fn apply_base_to_root_absolute_url(&self, url: &str) -> Option<String> {
@@ -1552,7 +1551,7 @@ impl HtmlRenderer {
         let base = self.options.base_url.trim_end_matches('/');
 
         if base.is_empty() {
-            Some(url.to_string())
+            None
         } else if path == "/" {
             Some(format!("{base}/{suffix}"))
         } else {
@@ -1621,7 +1620,7 @@ impl HtmlRenderer {
     }
 
     /// Converts a Markdown URL to an `.html` URL for SSG output.
-    fn convert_md_url(&self, url: &str) -> String {
+    fn convert_md_url(&self, url: &str) -> Option<String> {
         // Split URL into path and fragment
         let (path, fragment) = match url.split_once('#') {
             Some((p, f)) => (p, Some(f)),
@@ -1635,12 +1634,10 @@ impl HtmlRenderer {
                     || ext.eq_ignore_ascii_case("markdown")
             });
 
-        let Some(markdown_extension) = markdown_extension else {
-            return url.to_string();
-        };
+        let markdown_extension = markdown_extension?;
 
         if !self.options.convert_md_links {
-            return url.to_string();
+            return None;
         }
 
         // Remove the Markdown extension, including the leading dot.
@@ -1729,10 +1726,10 @@ impl HtmlRenderer {
         };
 
         // Reattach fragment if present
-        match fragment {
+        Some(match fragment {
             Some(f) => format!("{converted}#{f}"),
             None => converted,
-        }
+        })
     }
 
     /// Checks if the source file is an index file (index.md).
@@ -1979,13 +1976,9 @@ impl<'a> Visit<'a> for HtmlRenderer {
 
     fn visit_link(&mut self, link: &Link<'a>) {
         self.write("<a href=\"");
-        let converted_url;
-        let href = if self.options.convert_md_links {
-            converted_url = self.convert_markdown_url(link.url);
-            self.sanitized_url(&converted_url, "#")
-        } else {
-            self.sanitized_url(link.url, "#")
-        };
+        let converted_url =
+            if self.options.convert_md_links { self.convert_markdown_url(link.url) } else { None };
+        let href = self.sanitized_url(converted_url.as_deref().unwrap_or(link.url), "#");
         self.write_url_escaped(href);
         self.write("\"");
         // Add target="_blank" for external links (http:// or https://)
@@ -2006,13 +1999,9 @@ impl<'a> Visit<'a> for HtmlRenderer {
 
     fn visit_image(&mut self, image: &Image<'a>) {
         self.write("<img src=\"");
-        let converted_url;
-        let src = if self.options.convert_md_links {
-            converted_url = self.convert_markdown_url(image.url);
-            self.sanitized_url(&converted_url, "")
-        } else {
-            self.sanitized_url(image.url, "")
-        };
+        let converted_url =
+            if self.options.convert_md_links { self.convert_markdown_url(image.url) } else { None };
+        let src = self.sanitized_url(converted_url.as_deref().unwrap_or(image.url), "");
         self.write_url_escaped(src);
         self.write("\" alt=\"");
         self.write_escaped(image.alt);
