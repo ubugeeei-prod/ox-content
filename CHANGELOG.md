@@ -1,5 +1,23 @@
 # Changelog
 
+## [2.18.0] - 2026-05-25
+
+### Bug Fixes
+
+- remove panic-prone runtime paths (#171)
+- improve docs hero, search, and source links (#169)
+- render docs assets in CI
+
+### Performance
+
+- arena strings, dispatch cache, fewer heading allocs (#172)
+
+### Documentation
+
+- separate user guide and advanced docs
+- expand performance documentation (#167)
+- update architecture overview (#166)
+
 ## [2.17.0] - 2026-05-25
 
 ## [2.16.0] - 2026-05-25
