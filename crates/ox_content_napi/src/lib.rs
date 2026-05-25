@@ -262,6 +262,7 @@ pub struct JsEntryPointDocsOptions {
     pub root: Option<String>,
     pub tsconfig: Option<String>,
     pub private: Option<bool>,
+    pub internal: Option<bool>,
 }
 
 /// Export source metadata.
@@ -610,6 +611,7 @@ fn convert_entrypoint_docs_options(
             tsconfig: options.tsconfig.map(PathBuf::from),
         },
         include_private: options.private.unwrap_or(false),
+        include_internal: options.internal.unwrap_or(false),
     }
 }
 
@@ -740,8 +742,12 @@ fn convert_markdown_module(module: JsDocsMarkdownModule) -> ApiDocModule {
 pub fn extract_file_docs(
     file_path: String,
     include_private: Option<bool>,
+    include_internal: Option<bool>,
 ) -> Result<Vec<JsSourceDocItem>> {
-    let extractor = DocExtractor::with_private(include_private.unwrap_or(false));
+    let extractor = DocExtractor::with_visibility(
+        include_private.unwrap_or(false),
+        include_internal.unwrap_or(false),
+    );
     let items = extractor
         .extract_file(Path::new(&file_path))
         .map_err(|err| Error::from_reason(err.to_string()))?;
@@ -754,8 +760,12 @@ pub fn extract_file_docs(
 pub fn extract_file_doc_entries(
     file_path: String,
     include_private: Option<bool>,
+    include_internal: Option<bool>,
 ) -> Result<Vec<JsDocEntry>> {
-    let extractor = DocExtractor::with_private(include_private.unwrap_or(false));
+    let extractor = DocExtractor::with_visibility(
+        include_private.unwrap_or(false),
+        include_internal.unwrap_or(false),
+    );
     let items = extractor
         .extract_file(Path::new(&file_path))
         .map_err(|err| Error::from_reason(err.to_string()))?;

@@ -144,7 +144,7 @@ export async function extractDocs(
       napi as {
         extractDocsFromEntryPoints?: (
           entryPoints: ResolvedDocsEntryPoint[],
-          options?: { root?: string; private?: boolean },
+          options?: { root?: string; private?: boolean; internal?: boolean },
         ) => Array<{ file: string; entries: DocEntry[] }>;
       }
     ).extractDocsFromEntryPoints;
@@ -158,11 +158,18 @@ export async function extractDocs(
     return extractDocsFromEntryPoints(options.entryPoints, {
       root: process.cwd(),
       private: options.private,
+      internal: options.internal,
     }).map((doc) => ({ file: doc.file, entries: doc.entries }));
   }
 
   const extractFileDocEntries = (
-    napi as { extractFileDocEntries?: (filePath: string, includePrivate?: boolean) => DocEntry[] }
+    napi as {
+      extractFileDocEntries?: (
+        filePath: string,
+        includePrivate?: boolean,
+        includeInternal?: boolean,
+      ) => DocEntry[];
+    }
   ).extractFileDocEntries;
 
   if (!extractFileDocEntries) {
@@ -175,7 +182,7 @@ export async function extractDocs(
     const files = napi.collectDocsSourceFiles(srcDir, options.include, options.exclude);
 
     for (const file of files) {
-      const entries = extractFileDocEntries(file, options.private);
+      const entries = extractFileDocEntries(file, options.private, options.internal);
 
       if (entries.length > 0) {
         results.push({ file, entries });
@@ -317,6 +324,7 @@ export function resolveDocsOptions(
     ),
     format: opts.format ?? "markdown",
     private: opts.private ?? false,
+    internal: opts.internal ?? false,
     toc: false,
     groupBy: opts.groupBy ?? "file",
     githubUrl: opts.githubUrl,

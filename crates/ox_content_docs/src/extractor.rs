@@ -166,19 +166,27 @@ pub enum DocItemKind {
 pub struct DocExtractor {
     /// Include private items.
     include_private: bool,
+    /// Include internal items.
+    include_internal: bool,
 }
 
 impl DocExtractor {
     /// Creates a new documentation extractor.
     #[must_use]
     pub fn new() -> Self {
-        Self { include_private: false }
+        Self { include_private: false, include_internal: false }
     }
 
     /// Creates a new extractor that includes private items.
     #[must_use]
     pub fn with_private(include_private: bool) -> Self {
-        Self { include_private }
+        Self { include_private, include_internal: false }
+    }
+
+    /// Creates a new extractor with explicit visibility options.
+    #[must_use]
+    pub fn with_visibility(include_private: bool, include_internal: bool) -> Self {
+        Self { include_private, include_internal }
     }
 
     /// Extracts documentation from a source file.
@@ -214,7 +222,13 @@ impl DocExtractor {
         let comments: Vec<Comment> = ret.program.comments.iter().copied().collect();
         let jsdoc_cache = build_jsdoc_cache(source, &comments);
 
-        let mut visitor = DocVisitor::new(source, file_path, self.include_private, jsdoc_cache);
+        let mut visitor = DocVisitor::new(
+            source,
+            file_path,
+            self.include_private,
+            self.include_internal,
+            jsdoc_cache,
+        );
         if let Some(module_item) = visitor.extract_module_entry(&comments) {
             visitor.items.push(module_item);
         }
@@ -308,6 +322,7 @@ struct DocVisitor<'a> {
     source: &'a str,
     file_path: &'a str,
     include_private: bool,
+    include_internal: bool,
     jsdoc_cache: FxHashMap<u32, ParsedJsdoc>,
     line_starts: Vec<usize>,
     items: Vec<DocItem>,
@@ -320,6 +335,7 @@ impl<'a> DocVisitor<'a> {
         source: &'a str,
         file_path: &'a str,
         include_private: bool,
+        include_internal: bool,
         jsdoc_cache: FxHashMap<u32, ParsedJsdoc>,
     ) -> Self {
         let mut line_starts = vec![0];
@@ -334,6 +350,7 @@ impl<'a> DocVisitor<'a> {
             source,
             file_path,
             include_private,
+            include_internal,
             jsdoc_cache,
             line_starts,
             items: Vec::new(),
@@ -792,6 +809,15 @@ impl<'a> DocVisitor<'a> {
         tags.iter().any(|tag| tag.tag == "private")
     }
 
+    fn has_internal_tag(tags: &[DocTag]) -> bool {
+        tags.iter().any(|tag| tag.tag == "internal")
+    }
+
+    fn should_skip_by_visibility(&self, tags: &[DocTag]) -> bool {
+        (!self.include_private && Self::has_private_tag(tags))
+            || (!self.include_internal && Self::has_internal_tag(tags))
+    }
+
     fn split_leading_jsdoc_type(value: &str) -> (Option<String>, &str) {
         let value = value.trim_start();
         let Some(rest) = value.strip_prefix('{') else {
@@ -1124,7 +1150,7 @@ impl<'a> DocVisitor<'a> {
     ) -> Option<DocItem> {
         let name = func.id.as_ref()?.name.to_string();
         let (jsdoc, doc, tags) = self.extract_jsdoc(attached_to)?;
-        if !self.include_private && Self::has_private_tag(&tags) {
+        if self.should_skip_by_visibility(&tags) {
             return None;
         }
         let (line, end_line) = self.span_lines(attached_to, func.span.end);
@@ -1160,7 +1186,7 @@ impl<'a> DocVisitor<'a> {
         attached_to: u32,
     ) -> Option<DocItem> {
         let (jsdoc, doc, tags) = self.extract_jsdoc(attached_to)?;
-        if !self.include_private && Self::has_private_tag(&tags) {
+        if self.should_skip_by_visibility(&tags) {
             return None;
         }
         let (line, end_line) = self.span_lines(attached_to, class.span.end);
@@ -1188,7 +1214,7 @@ impl<'a> DocVisitor<'a> {
                     else {
                         continue;
                     };
-                    if !self.include_private && Self::has_private_tag(&method_tags) {
+                    if self.should_skip_by_visibility(&method_tags) {
                         continue;
                     }
                     let (method_line, method_end_line) =
@@ -1228,7 +1254,7 @@ impl<'a> DocVisitor<'a> {
                     else {
                         continue;
                     };
-                    if !self.include_private && Self::has_private_tag(&prop_tags) {
+                    if self.should_skip_by_visibility(&prop_tags) {
                         continue;
                     }
                     let (prop_line, prop_end_line) =
@@ -1352,7 +1378,7 @@ impl<'a> DocVisitor<'a> {
                 let Some((jsdoc, doc, tags)) = self.extract_jsdoc(attached_to) else {
                     return;
                 };
-                if !self.include_private && Self::has_private_tag(&tags) {
+                if self.should_skip_by_visibility(&tags) {
                     return;
                 }
                 let (line, end_line) = self.span_lines(attached_to, var_decl.span.end);
@@ -1449,7 +1475,7 @@ impl<'a> DocVisitor<'a> {
                 let Some((jsdoc, doc, tags)) = self.extract_jsdoc(attached_to) else {
                     return;
                 };
-                if !self.include_private && Self::has_private_tag(&tags) {
+                if self.should_skip_by_visibility(&tags) {
                     return;
                 }
                 let (line, end_line) = self.span_lines(attached_to, type_alias.span.end);
@@ -1475,7 +1501,7 @@ impl<'a> DocVisitor<'a> {
                 let Some((jsdoc, doc, tags)) = self.extract_jsdoc(attached_to) else {
                     return;
                 };
-                if !self.include_private && Self::has_private_tag(&tags) {
+                if self.should_skip_by_visibility(&tags) {
                     return;
                 }
                 let (line, end_line) = self.span_lines(attached_to, interface.span.end);
@@ -1498,7 +1524,7 @@ impl<'a> DocVisitor<'a> {
                             else {
                                 continue;
                             };
-                            if !self.include_private && Self::has_private_tag(&prop_tags) {
+                            if self.should_skip_by_visibility(&prop_tags) {
                                 continue;
                             }
                             let (prop_line, prop_end_line) =
@@ -1539,7 +1565,7 @@ impl<'a> DocVisitor<'a> {
                             else {
                                 continue;
                             };
-                            if !self.include_private && Self::has_private_tag(&method_tags) {
+                            if self.should_skip_by_visibility(&method_tags) {
                                 continue;
                             }
                             let (method_line, method_end_line) =
@@ -1597,7 +1623,7 @@ impl<'a> DocVisitor<'a> {
                 let Some((jsdoc, doc, tags)) = self.extract_jsdoc(attached_to) else {
                     return;
                 };
-                if !self.include_private && Self::has_private_tag(&tags) {
+                if self.should_skip_by_visibility(&tags) {
                     return;
                 }
                 let (line, end_line) = self.span_lines(attached_to, enum_decl.span.end);
@@ -1837,5 +1863,30 @@ export { value } from './value';
         assert_eq!(items.len(), 1);
         assert_eq!(items[0].name, "runtime");
         assert_eq!(items[0].kind, DocItemKind::Module);
+    }
+
+    #[test]
+    fn test_internal_items_are_excluded_by_default() {
+        let source = r"
+/** Public command. */
+export function publicCommand(): void {}
+
+/**
+ * Internal helper.
+ * @internal
+ */
+export function internalHelper(): void {}
+";
+
+        let public_only =
+            DocExtractor::new().extract_source(source, "visibility.ts", SourceType::ts()).unwrap();
+        assert_eq!(public_only.len(), 1);
+        assert_eq!(public_only[0].name, "publicCommand");
+
+        let with_internal = DocExtractor::with_visibility(false, true)
+            .extract_source(source, "visibility.ts", SourceType::ts())
+            .unwrap();
+        assert_eq!(with_internal.len(), 2);
+        assert_eq!(with_internal[1].name, "internalHelper");
     }
 }

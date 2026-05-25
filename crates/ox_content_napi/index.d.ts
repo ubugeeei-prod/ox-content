@@ -58,10 +58,10 @@ export declare function externalizeSsgAssets(pages: Array<JsSsgGeneratedHtmlPage
 export declare function extractDocsFromEntryPoints(entryPoints: Array<JsEntryPointSpec>, options?: JsEntryPointDocsOptions | undefined | null): Array<JsEntrypointDocsModule>
 
 /** Extracts normalized documentation entries from a JavaScript/TypeScript file using Oxc. */
-export declare function extractFileDocEntries(filePath: string, includePrivate?: boolean | undefined | null): Array<JsDocEntry>
+export declare function extractFileDocEntries(filePath: string, includePrivate?: boolean | undefined | null, includeInternal?: boolean | undefined | null): Array<JsDocEntry>
 
 /** Extracts documented declarations from a JavaScript/TypeScript file using Oxc. */
-export declare function extractFileDocs(filePath: string, includePrivate?: boolean | undefined | null): Array<JsSourceDocItem>
+export declare function extractFileDocs(filePath: string, includePrivate?: boolean | undefined | null, includeInternal?: boolean | undefined | null): Array<JsSourceDocItem>
 
 /**
  * Extracts searchable content from Markdown source.
@@ -276,6 +276,7 @@ export interface JsEntryPointDocsOptions {
   root?: string
   tsconfig?: string
   private?: boolean
+  internal?: boolean
 }
 
 /** Public entry point module. */
