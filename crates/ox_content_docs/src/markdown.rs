@@ -1108,7 +1108,7 @@ fn generate_entry_markdown(
 
     if let Some(source_href) = source_href {
         body.push_str(&format!(
-            "<p class=\"ox-api-entry__source\"><a href=\"{}\">View source</a></p>\n",
+            "<p class=\"ox-api-entry__source\"><a class=\"ox-api-entry__source-link\" href=\"{}\" target=\"_blank\" rel=\"noopener noreferrer\">View source<span class=\"ox-api-entry__source-icon\" aria-hidden=\"true\"></span></a></p>\n",
             escape_html(&source_href)
         ));
     }
