@@ -1,6 +1,5 @@
 //! HTML renderer implementation.
 
-use std::collections::hash_map::Entry;
 use std::collections::BTreeMap;
 
 use ox_content_ast::{
@@ -844,10 +843,14 @@ fn html_attr_value_range(html: &str, bytes: &[u8], name_end: usize) -> Option<(u
 
 fn collect_heading_text(nodes: &[Node<'_>]) -> String {
     let mut text = String::new();
-    for node in nodes {
-        collect_node_text(node, &mut text);
-    }
+    collect_heading_text_into(nodes, &mut text);
     text
+}
+
+fn collect_heading_text_into(nodes: &[Node<'_>], text: &mut String) {
+    for node in nodes {
+        collect_node_text(node, text);
+    }
 }
 
 fn collect_node_text(node: &Node<'_>, text: &mut String) {
@@ -879,12 +882,22 @@ fn collect_node_text(node: &Node<'_>, text: &mut String) {
 }
 
 fn slugify_heading(text: &str) -> String {
+    let mut out = String::with_capacity(text.len());
+    slugify_heading_into(text, &mut out);
+    out
+}
+
+/// Slugify `text` into `out`. `out` is **not** cleared by this function —
+/// callers should clear it themselves so they can reuse a long-lived
+/// scratch buffer across many headings without giving up the allocation.
+fn slugify_heading_into(text: &str, out: &mut String) {
     // Single-pass slugify. Hot path is the all-ASCII byte loop (no
     // UTF-8 decode, no `char::to_lowercase` iterator allocation per
     // character); we fall back to the char iterator only when a
     // non-ASCII byte appears.
     let bytes = text.as_bytes();
-    let mut out = String::with_capacity(text.len());
+    out.reserve(text.len());
+    let start_len = out.len();
     let mut last_was_separator = true;
     let mut i = 0;
 
@@ -924,14 +937,12 @@ fn slugify_heading(text: &str) -> String {
         }
     }
 
-    while out.ends_with('-') {
+    while out.len() > start_len && out.ends_with('-') {
         out.pop();
     }
 
-    if out.is_empty() {
-        "section".to_string()
-    } else {
-        out
+    if out.len() == start_len {
+        out.push_str("section");
     }
 }
 
@@ -1070,6 +1081,15 @@ pub struct HtmlRenderer {
     /// — in that case we still need to suppress the literal `[[toc]]`
     /// text from the output.
     document_has_toc_marker: bool,
+    /// Reusable scratch buffer for the raw concatenated heading text in
+    /// `heading_id`. A long-lived buffer avoids paying for a fresh
+    /// `String` allocation per heading — `slugify_heading` previously
+    /// allocated one `text` String per call.
+    heading_text_scratch: String,
+    /// Reusable scratch buffer for the slugified id. The final id String
+    /// that ends up in `heading_id_counts` is cloned out of here on
+    /// vacant inserts; the buffer itself stays around across renders.
+    heading_slug_scratch: String,
 }
 
 impl HtmlRenderer {
@@ -1082,6 +1102,8 @@ impl HtmlRenderer {
             heading_id_counts: FxHashMap::default(),
             toc_entries: Vec::new(),
             document_has_toc_marker: false,
+            heading_text_scratch: String::new(),
+            heading_slug_scratch: String::new(),
         }
     }
 
@@ -1094,6 +1116,8 @@ impl HtmlRenderer {
             heading_id_counts: FxHashMap::default(),
             toc_entries: Vec::new(),
             document_has_toc_marker: false,
+            heading_text_scratch: String::new(),
+            heading_slug_scratch: String::new(),
         }
     }
 
@@ -1428,26 +1452,33 @@ impl HtmlRenderer {
     }
 
     fn heading_id(&mut self, heading: &Heading<'_>) -> String {
-        let text = collect_heading_text(&heading.children);
-        let slug = slugify_heading(&text);
-        // Common case: the slug is unique. We take ownership of `slug` for
-        // the returned id and only hash-lookup once — the previous version
-        // did a `get_mut` + `insert` (two hashes) and cloned the slug on
-        // every unique heading. Now the unique path is one hash + one
-        // insert with no clone.
-        match self.heading_id_counts.entry(slug) {
-            Entry::Occupied(mut entry) => {
-                let count = *entry.get();
-                let id = format!("{}-{count}", entry.key());
-                *entry.get_mut() = count + 1;
-                id
-            }
-            Entry::Vacant(entry) => {
-                let id = entry.key().clone();
-                entry.insert(1);
-                id
-            }
+        // Collect the heading text into a long-lived scratch buffer and
+        // slugify it into a second one. The previous version allocated a
+        // fresh `String` for both the text and the slug on every heading;
+        // this version pays for at most one `String` allocation per
+        // heading (the slug clone that becomes the map key on vacant
+        // inserts) and zero on duplicates beyond the `format!` for the
+        // suffix.
+        self.heading_text_scratch.clear();
+        collect_heading_text_into(&heading.children, &mut self.heading_text_scratch);
+        self.heading_slug_scratch.clear();
+        slugify_heading_into(&self.heading_text_scratch, &mut self.heading_slug_scratch);
+
+        // Cheap lookup first — avoids cloning the slug on the duplicate
+        // path. The `entry()` API would force us to materialize an owned
+        // key up front, defeating the point. On vacant inserts we still
+        // pay for one slug clone (the map key) plus one String for the
+        // returned id — those two allocations are intrinsic to the API.
+        if let Some(count) = self.heading_id_counts.get_mut(self.heading_slug_scratch.as_str()) {
+            let id = format!("{}-{count}", self.heading_slug_scratch);
+            *count += 1;
+            return id;
         }
+
+        let key = self.heading_slug_scratch.clone();
+        let id = key.clone();
+        self.heading_id_counts.insert(key, 1);
+        id
     }
 
     fn convert_markdown_url(&self, url: &str) -> String {

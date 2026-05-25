@@ -183,26 +183,29 @@ impl<'a> Parser<'a> {
         let trimmed = line.trim_start();
         let first = trimmed.as_bytes().first().copied();
 
-        // Try to parse different block types
+        // Try to parse different block types. Each dispatch arm hands the
+        // already-scanned `line` / `trimmed` slices to the matching
+        // `*_at` helper so the inner check doesn't re-run `memchr` +
+        // `trim_start` on the same line.
         match first {
-            Some(b'#') if self.try_parse_heading() => return self.parse_heading(start),
+            Some(b'#') if self.try_parse_heading_at(trimmed) => return self.parse_heading(start),
             Some(b'-' | b'*') => {
-                if self.try_parse_thematic_break() {
+                if Self::try_parse_thematic_break_line(line) {
                     return self.parse_thematic_break(start);
                 }
-                if self.try_parse_list() {
+                if Self::try_parse_list_line(trimmed) {
                     return self.parse_list(start);
                 }
             }
-            Some(b'_') if self.try_parse_thematic_break() => {
+            Some(b'_') if Self::try_parse_thematic_break_line(line) => {
                 return self.parse_thematic_break(start);
             }
             Some(b'>') => return self.parse_block_quote(start),
-            Some(b'`' | b'~') if self.try_parse_fenced_code() => {
+            Some(b'`' | b'~') if Self::try_parse_fenced_code_at(line, trimmed) => {
                 return self.parse_fenced_code(start);
             }
             Some(b'<') if self.try_parse_html_block() => return self.parse_html_block(start),
-            Some(b'+' | b'0'..=b'9') if self.try_parse_list() => {
+            Some(b'+' | b'0'..=b'9') if Self::try_parse_list_line(trimmed) => {
                 return self.parse_list(start);
             }
             _ => {}
@@ -233,25 +236,30 @@ impl<'a> Parser<'a> {
         let trimmed = line.trim_start();
         let first = trimmed.as_bytes().first().copied();
 
-        // NB: dispatch arms must use the same `try_parse_*` helpers as
-        // `parse_block`, which test at `self.position` (the un-trimmed
-        // offset). Using `is_atx_heading_prefix(trimmed.as_bytes())` here
-        // would diverge from `parse_block`'s `Some(b'#') if
-        // self.try_parse_heading()` check on indented inputs like
-        // `" # heading"`: `line_starts_block` would say "yes, a heading",
-        // `parse_block` would say "no" (since the byte at position 0 is
-        // a space) and fall through to `parse_paragraph`, which would
-        // immediately break with no content — `parse_block` then returns
-        // `Ok(None)` without advancing position, and the outer
-        // `parse()` loop spins forever on the same offset.
+        // NB: dispatch arms must use the same checks as `parse_block`,
+        // which test at `self.position` (the un-trimmed offset). Using
+        // `is_atx_heading_prefix(trimmed.as_bytes())` here would diverge
+        // from `parse_block`'s `Some(b'#') if self.try_parse_heading_at()`
+        // check on indented inputs like `" # heading"`:
+        // `line_starts_block` would say "yes, a heading", `parse_block`
+        // would say "no" (since the byte at position 0 is a space) and
+        // fall through to `parse_paragraph`, which would immediately break
+        // with no content — `parse_block` then returns `Ok(None)` without
+        // advancing position, and the outer `parse()` loop spins forever
+        // on the same offset. We route every arm through the same
+        // line-cached helpers as `parse_block` so the two dispatchers stay
+        // in lock-step and we only `memchr` + `trim_start` the current
+        // line once per call.
         let starts_block = match first {
-            Some(b'#') => self.try_parse_heading(),
-            Some(b'-' | b'*') => self.try_parse_thematic_break() || self.try_parse_list(),
-            Some(b'_') => self.try_parse_thematic_break(),
+            Some(b'#') => self.try_parse_heading_at(trimmed),
+            Some(b'-' | b'*') => {
+                Self::try_parse_thematic_break_line(line) || Self::try_parse_list_line(trimmed)
+            }
+            Some(b'_') => Self::try_parse_thematic_break_line(line),
             Some(b'>') => true,
-            Some(b'`' | b'~') => self.try_parse_fenced_code(),
+            Some(b'`' | b'~') => Self::try_parse_fenced_code_at(line, trimmed),
             Some(b'<') => self.try_parse_html_block(),
-            Some(b'+' | b'0'..=b'9') => self.try_parse_list(),
+            Some(b'+' | b'0'..=b'9') => Self::try_parse_list_line(trimmed),
             _ => false,
         };
 
@@ -413,27 +421,36 @@ impl<'a> Parser<'a> {
         self.nesting_depth += 1;
 
         // Collect lines belonging to this block quote and strip the `>` prefix.
-        let mut inner = String::new();
+        // Write straight into a bump-allocated `String` so we don't pay for
+        // `String::new` (system allocator) followed by `alloc_str` (copy to
+        // arena) on every block quote. Capacity is intentionally small —
+        // bumpalo will grow it if needed, and oversizing wastes arena
+        // bytes that can't be reclaimed until reset.
+        let bytes = self.source.as_bytes();
+        let mut inner =
+            ox_content_allocator::String::with_capacity_in(128, self.allocator.bump());
 
         loop {
-            if self.is_at_end() {
+            if self.position >= bytes.len() {
                 break;
             }
 
             let line_start = self.position;
-            self.skip_whitespace();
+            let mut ws_cursor = line_start;
+            while ws_cursor < bytes.len() && matches!(bytes[ws_cursor], b' ' | b'\t') {
+                ws_cursor += 1;
+            }
 
             // Blank line ends the block quote
-            if self.peek() == Some('\n') || self.is_at_end() {
-                self.position = line_start;
+            if ws_cursor >= bytes.len() || bytes[ws_cursor] == b'\n' {
                 break;
             }
 
-            self.position = line_start;
-
-            let remaining = self.remaining();
-            let line = remaining.lines().next().unwrap_or("");
-            let trimmed = line.trim_start();
+            let line_end =
+                memchr(b'\n', &bytes[line_start..]).map_or(bytes.len(), |off| line_start + off);
+            let line = &self.source[line_start..line_end];
+            let trimmed_offset = ws_cursor - line_start;
+            let trimmed = &line[trimmed_offset..];
 
             if let Some(after_gt) = trimmed.strip_prefix('>') {
                 // Strip the optional single space after `>`
@@ -441,19 +458,16 @@ impl<'a> Parser<'a> {
                 inner.push_str(stripped);
                 inner.push('\n');
 
-                // Advance past this line
-                self.position += line.len();
-                if self.peek() == Some('\n') {
-                    self.advance();
-                }
+                // Advance past this line (and the trailing newline if any).
+                self.position = if line_end < bytes.len() { line_end + 1 } else { line_end };
             } else {
                 // Line doesn't start with `>`, block quote ends
                 break;
             }
         }
 
-        // Recursively parse the inner content
-        let inner_str = self.allocator.alloc_str(&inner);
+        // Recursively parse the inner content from the same arena — no copy.
+        let inner_str = inner.into_bump_str();
         let sub_parser = Parser::with_options(self.allocator, inner_str, self.options.clone());
         let sub_doc = sub_parser.parse()?;
 
@@ -465,8 +479,15 @@ impl<'a> Parser<'a> {
 
     /// Checks if the current position starts a list.
     fn try_parse_list(&self) -> bool {
-        let line = self.current_line();
-        let trimmed = line.trim_start().as_bytes();
+        Self::try_parse_list_line(self.current_line().trim_start())
+    }
+
+    /// Line-cached variant of [`Self::try_parse_list`]. Callers that
+    /// already produced the trimmed line via `parse_block` /
+    /// `line_starts_block` reuse that slice instead of re-scanning the
+    /// source for a newline and re-running `trim_start`.
+    fn try_parse_list_line(trimmed: &str) -> bool {
+        let trimmed = trimmed.as_bytes();
 
         // Unordered list: starts with -, *, or + followed by space.
         if trimmed.len() >= 2 && matches!(trimmed[0], b'-' | b'*' | b'+') && trimmed[1] == b' ' {
@@ -695,7 +716,16 @@ impl<'a> Parser<'a> {
             }
 
             let content_indent = item.content_offset.saturating_sub(line_start);
-            let mut item_source = String::new();
+            // Bump-allocate the per-item buffer so we don't go System →
+            // arena for every list item. Most items are a single short
+            // line — over-sizing the capacity wastes arena bytes that
+            // bumpalo can't reclaim until reset. Use the item header
+            // length as the floor and let push_str grow only when the
+            // item actually spans continuation lines.
+            let mut item_source = ox_content_allocator::String::with_capacity_in(
+                item.content.len() + 1,
+                self.allocator.bump(),
+            );
             item_source.push_str(item.content);
             if consumed_newline {
                 item_source.push('\n');
@@ -776,7 +806,7 @@ impl<'a> Parser<'a> {
                 item_end = self.position;
             }
 
-            let item_source = self.allocator.alloc_str(&item_source);
+            let item_source = item_source.into_bump_str();
             let sub_parser =
                 Parser::with_options(self.allocator, item_source, self.options.clone());
             let sub_doc = sub_parser.parse()?;
@@ -897,18 +927,22 @@ impl<'a> Parser<'a> {
         }
     }
 
-    /// Checks if the current position starts a heading.
-    fn try_parse_heading(&self) -> bool {
-        // Byte-level test: avoids the `chars().peekable()` allocation
-        // chain — we're scanning ASCII `#` and whitespace, no Unicode
-        // involved.
-        let bytes = &self.source.as_bytes()[self.position..];
-        is_atx_heading_prefix(bytes)
+    /// Cheap line-cached ATX heading check. Both `parse_block` and
+    /// `line_starts_block` already produce the trimmed line, so we reuse
+    /// that slice instead of re-scanning the source. ATX rejects any
+    /// leading indentation, so the heading test only fires when the line
+    /// at `self.position` does NOT start with a space or tab.
+    fn try_parse_heading_at(&self, trimmed: &str) -> bool {
+        let bytes = self.source.as_bytes();
+        let pos = self.position;
+        if pos < bytes.len() && matches!(bytes[pos], b' ' | b'\t') {
+            return false;
+        }
+        is_atx_heading_prefix(trimmed.as_bytes())
     }
 
-    /// Checks if the current position starts a thematic break.
-    fn try_parse_thematic_break(&self) -> bool {
-        let bytes = self.current_line().trim().as_bytes();
+    fn try_parse_thematic_break_line(line: &str) -> bool {
+        let bytes = line.trim().as_bytes();
         if bytes.len() < 3 {
             return false;
         }
@@ -927,14 +961,12 @@ impl<'a> Parser<'a> {
         count >= 3
     }
 
-    /// Checks if the current position starts a fenced code block.
-    fn try_parse_fenced_code(&self) -> bool {
-        let line = self.current_line();
+    fn try_parse_fenced_code_at(line: &str, trimmed: &str) -> bool {
         if Self::indentation_columns(line) > 3 {
             return false;
         }
 
-        let trimmed = line.trim_start().as_bytes();
+        let trimmed = trimmed.as_bytes();
         trimmed.len() >= 3
             && ((trimmed[0] == b'`' && trimmed[1] == b'`' && trimmed[2] == b'`')
                 || (trimmed[0] == b'~' && trimmed[1] == b'~' && trimmed[2] == b'~'))
@@ -1879,7 +1911,7 @@ fn next_inline_special(bytes: &[u8], from: usize) -> usize {
     i
 }
 
-/// Cheap byte-level test mirroring `try_parse_heading` without bouncing
+/// Cheap byte-level test mirroring `try_parse_heading_at` without bouncing
 /// through `chars()`/`peekable`. ATX heading prefix: `#{1..=6}` followed
 /// by space/tab/newline or end-of-input.
 fn is_atx_heading_prefix(bytes: &[u8]) -> bool {
@@ -1976,7 +2008,7 @@ mod tests {
         // immediately ("looks like a heading") and `parse_block` to return
         // `Ok(None)` without advancing — spinning the outer loop forever.
         // The fix is for `line_starts_block` to defer to
-        // `self.try_parse_heading()` so both checks see the same offset.
+        // `self.try_parse_heading_at()` so both checks see the same offset.
         let allocator = Allocator::new();
         let doc = Parser::new(&allocator, " # heading\n").parse().unwrap();
         assert_eq!(doc.children.len(), 1);
