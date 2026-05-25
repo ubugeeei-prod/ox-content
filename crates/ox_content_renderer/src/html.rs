@@ -750,6 +750,26 @@ static ESCAPE_FLAG: [u8; 256] = {
     t
 };
 
+static URL_ESCAPE_TABLE: [&str; 256] = {
+    let mut table: [&str; 256] = [""; 256];
+    table[b'&' as usize] = "&amp;";
+    table[b'<' as usize] = "%3C";
+    table[b'>' as usize] = "%3E";
+    table[b'"' as usize] = "%22";
+    table[b' ' as usize] = "%20";
+    table
+};
+
+static URL_ESCAPE_FLAG: [u8; 256] = {
+    let mut t = [0u8; 256];
+    t[b'&' as usize] = 1;
+    t[b'<' as usize] = 1;
+    t[b'>' as usize] = 1;
+    t[b'"' as usize] = 1;
+    t[b' ' as usize] = 1;
+    t
+};
+
 #[inline]
 fn write_escaped_into(out: &mut String, s: &str) {
     let bytes = s.as_bytes();
@@ -813,28 +833,57 @@ fn write_escaped_into(out: &mut String, s: &str) {
 
 fn write_url_escaped_into(out: &mut String, s: &str) {
     let bytes = s.as_bytes();
-    let mut start = 0;
+    let mut start = 0usize;
+    let mut i = 0usize;
 
-    for (idx, byte) in bytes.iter().copied().enumerate() {
-        let escaped = match byte {
-            b'&' => Some("&amp;"),
-            b'<' => Some("%3C"),
-            b'>' => Some("%3E"),
-            b'"' => Some("%22"),
-            b' ' => Some("%20"),
-            _ => None,
-        };
-
-        if let Some(escaped) = escaped {
-            if start < idx {
-                out.push_str(&s[start..idx]);
-            }
-            out.push_str(escaped);
-            start = idx + 1;
+    while i + 8 <= bytes.len() {
+        let chunk = &bytes[i..i + 8];
+        let mask = URL_ESCAPE_FLAG[chunk[0] as usize]
+            | URL_ESCAPE_FLAG[chunk[1] as usize]
+            | URL_ESCAPE_FLAG[chunk[2] as usize]
+            | URL_ESCAPE_FLAG[chunk[3] as usize]
+            | URL_ESCAPE_FLAG[chunk[4] as usize]
+            | URL_ESCAPE_FLAG[chunk[5] as usize]
+            | URL_ESCAPE_FLAG[chunk[6] as usize]
+            | URL_ESCAPE_FLAG[chunk[7] as usize];
+        if mask == 0 {
+            i += 8;
+            continue;
         }
+        break;
     }
 
-    if start < s.len() {
+    while i < bytes.len() {
+        let b = bytes[i];
+        if URL_ESCAPE_FLAG[b as usize] != 0 {
+            if start < i {
+                out.push_str(&s[start..i]);
+            }
+            out.push_str(URL_ESCAPE_TABLE[b as usize]);
+            i += 1;
+            start = i;
+            while i + 8 <= bytes.len() {
+                let chunk = &bytes[i..i + 8];
+                let mask = URL_ESCAPE_FLAG[chunk[0] as usize]
+                    | URL_ESCAPE_FLAG[chunk[1] as usize]
+                    | URL_ESCAPE_FLAG[chunk[2] as usize]
+                    | URL_ESCAPE_FLAG[chunk[3] as usize]
+                    | URL_ESCAPE_FLAG[chunk[4] as usize]
+                    | URL_ESCAPE_FLAG[chunk[5] as usize]
+                    | URL_ESCAPE_FLAG[chunk[6] as usize]
+                    | URL_ESCAPE_FLAG[chunk[7] as usize];
+                if mask == 0 {
+                    i += 8;
+                    continue;
+                }
+                break;
+            }
+            continue;
+        }
+        i += 1;
+    }
+
+    if start < bytes.len() {
         out.push_str(&s[start..]);
     }
 }
