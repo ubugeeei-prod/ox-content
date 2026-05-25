@@ -11,7 +11,7 @@
   },
   "dependencies": {
     "@ox-content/napi": "workspace:*",
-    "markdown-it": "^14.1.1",
+    "markdown-it": "^14.2.0",
     "marked": "^18.0.3",
     "md4w": "^0.2.7",
     "md4x": "^0.0.25",
