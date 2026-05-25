@@ -707,6 +707,33 @@ impl<'a> DocVisitor<'a> {
         sig
     }
 
+    fn format_variable_signature(
+        &self,
+        name: &str,
+        exported: bool,
+        decl_kind: &str,
+        type_annotation: Option<&TSTypeAnnotation<'a>>,
+        initializer: Option<&Expression<'a>>,
+    ) -> String {
+        let mut sig = String::new();
+        if exported {
+            sig.push_str("export ");
+        }
+        sig.push_str(decl_kind);
+        sig.push(' ');
+        sig.push_str(name);
+
+        if let Some(type_annotation) = type_annotation {
+            sig.push_str(": ");
+            sig.push_str(&self.format_ts_type(&type_annotation.type_annotation));
+        } else if let Some(initializer) = initializer {
+            sig.push_str(" = ");
+            sig.push_str(&self.slice(initializer.span().start, initializer.span().end));
+        }
+
+        sig
+    }
+
     fn has_private_tag(tags: &[DocTag]) -> bool {
         tags.iter().any(|tag| tag.tag == "private")
     }
@@ -1336,7 +1363,30 @@ impl<'a> DocVisitor<'a> {
                                     tags: tags.clone(),
                                 });
                             }
-                            _ => {}
+                            other => {
+                                self.items.push(DocItem {
+                                    name: name.clone(),
+                                    kind: DocItemKind::Variable,
+                                    doc: if doc.is_empty() { None } else { Some(doc.clone()) },
+                                    source_path: self.file_path.to_string(),
+                                    line,
+                                    end_line,
+                                    column: self.column_number(attached_to),
+                                    jsdoc: Some(jsdoc.clone()),
+                                    exported,
+                                    signature: Some(self.format_variable_signature(
+                                        &name,
+                                        exported,
+                                        var_decl.kind.as_str(),
+                                        declarator.type_annotation.as_deref(),
+                                        Some(other),
+                                    )),
+                                    params: Vec::new(),
+                                    return_type: None,
+                                    children: Vec::new(),
+                                    tags: tags.clone(),
+                                });
+                            }
                         }
                     }
                 }
@@ -1661,5 +1711,35 @@ export function label(value, maxLength = 20) {
         let returns_tag = items[0].tags.iter().find(|tag| tag.tag == "returns").unwrap();
         assert_eq!(returns_tag.type_annotation.as_deref(), Some("string"));
         assert_eq!(returns_tag.description.as_deref(), Some("Formatted label"));
+    }
+
+    #[test]
+    fn test_extract_plain_top_level_variable() {
+        let source = r"
+/** Default placeholder when a command has no explicit name. */
+export const ANONYMOUS_COMMAND_NAME = '__anonymous__';
+
+/** Default retry count. */
+export let retries: number = 3;
+
+/** Creates labels. */
+export const label = (value: string): string => value;
+";
+
+        let extractor = DocExtractor::new();
+        let items = extractor.extract_source(source, "constants.ts", SourceType::ts()).unwrap();
+
+        assert_eq!(items.len(), 3);
+        assert_eq!(items[0].name, "ANONYMOUS_COMMAND_NAME");
+        assert_eq!(items[0].kind, DocItemKind::Variable);
+        assert_eq!(
+            items[0].signature.as_deref(),
+            Some("export const ANONYMOUS_COMMAND_NAME = '__anonymous__'")
+        );
+        assert_eq!(items[1].name, "retries");
+        assert_eq!(items[1].kind, DocItemKind::Variable);
+        assert_eq!(items[1].signature.as_deref(), Some("export let retries: number"));
+        assert_eq!(items[2].name, "label");
+        assert_eq!(items[2].kind, DocItemKind::Function);
     }
 }
