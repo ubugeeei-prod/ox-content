@@ -155,6 +155,7 @@ export default defineConfig({
       }),
 
       "workspace:ci": noopTask(["fmt:rust-check", "lint:rust", "check:ts", "workspace:test"]),
+      actrun: uncachedTask("actrun workflow run .github/workflows/ci.yml --trust"),
       "workspace:ready": noopTask(["workspace:fmt", "workspace:lint", "workspace:test"]),
       coverage: uncachedTask("cargo llvm-cov --workspace --html"),
       setup: uncachedTask(
