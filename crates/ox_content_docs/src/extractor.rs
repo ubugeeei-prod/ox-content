@@ -215,6 +215,9 @@ impl DocExtractor {
         let jsdoc_cache = build_jsdoc_cache(source, &comments);
 
         let mut visitor = DocVisitor::new(source, file_path, self.include_private, jsdoc_cache);
+        if let Some(module_item) = visitor.extract_module_entry(&comments) {
+            visitor.items.push(module_item);
+        }
         visitor.visit_program(&ret.program);
 
         Ok(visitor.items)
@@ -363,6 +366,57 @@ impl<'a> DocVisitor<'a> {
 
     fn extract_jsdoc(&self, attached_to: u32) -> Option<(String, String, Vec<DocTag>)> {
         self.jsdoc_cache.get(&attached_to).cloned()
+    }
+
+    fn extract_module_entry(&self, comments: &[Comment]) -> Option<DocItem> {
+        let comment = comments.iter().find(|comment| comment.is_jsdoc())?;
+        let (raw, doc, tags) = self.extract_jsdoc(comment.attached_to)?;
+        let (module_name, module_description) = Self::parse_module_tag(&tags)?;
+        let name = module_name.unwrap_or_else(|| self.file_stem_module_name());
+        let (line, end_line) = self.span_lines(comment.span.start, comment.span.end);
+
+        Some(DocItem {
+            name,
+            kind: DocItemKind::Module,
+            doc: if doc.is_empty() { module_description } else { Some(doc) },
+            source_path: self.file_path.to_string(),
+            line,
+            end_line,
+            column: self.column_number(comment.span.start),
+            jsdoc: Some(raw),
+            exported: true,
+            signature: None,
+            params: Vec::new(),
+            return_type: None,
+            children: Vec::new(),
+            tags,
+        })
+    }
+
+    fn parse_module_tag(tags: &[DocTag]) -> Option<(Option<String>, Option<String>)> {
+        let tag = tags.iter().find(|tag| tag.tag == "module")?;
+        let value = tag.value.trim();
+        if value.is_empty() {
+            return Some((None, tag.description.clone()));
+        }
+
+        let split_at = value
+            .char_indices()
+            .find_map(|(index, ch)| ch.is_whitespace().then_some(index))
+            .unwrap_or(value.len());
+        let name = value[..split_at].trim();
+        let rest = value[split_at..].trim();
+        let description = Self::clean_tag_description(rest).or_else(|| tag.description.clone());
+
+        Some(((!name.is_empty()).then(|| name.to_string()), description))
+    }
+
+    fn file_stem_module_name(&self) -> String {
+        Path::new(self.file_path)
+            .file_stem()
+            .and_then(|stem| stem.to_str())
+            .unwrap_or("module")
+            .to_string()
     }
 
     fn convert_jsdoc_tag(tag: LazyJsdocTag<'_>) -> DocTag {
@@ -1741,5 +1795,47 @@ export const label = (value: string): string => value;
         assert_eq!(items[1].signature.as_deref(), Some("export let retries: number"));
         assert_eq!(items[2].name, "label");
         assert_eq!(items[2].kind, DocItemKind::Function);
+    }
+
+    #[test]
+    fn test_extract_file_level_module_jsdoc() {
+        let source = r"
+/**
+ * @module default
+ *
+ * Main entry point for the framework.
+ */
+export { cli } from './core';
+
+/** Runs the CLI. */
+export function cli(): void {}
+";
+
+        let extractor = DocExtractor::new();
+        let items = extractor.extract_source(source, "src/index.ts", SourceType::ts()).unwrap();
+
+        assert_eq!(items.len(), 2);
+        assert_eq!(items[0].name, "default");
+        assert_eq!(items[0].kind, DocItemKind::Module);
+        assert_eq!(items[0].doc.as_deref(), Some("Main entry point for the framework."));
+        assert!(items[0].tags.iter().any(|tag| tag.tag == "module"));
+        assert_eq!(items[1].name, "cli");
+    }
+
+    #[test]
+    fn test_module_jsdoc_name_falls_back_to_file_stem() {
+        let source = r"
+/**
+ * @module
+ */
+export { value } from './value';
+";
+
+        let extractor = DocExtractor::new();
+        let items = extractor.extract_source(source, "src/runtime.ts", SourceType::ts()).unwrap();
+
+        assert_eq!(items.len(), 1);
+        assert_eq!(items[0].name, "runtime");
+        assert_eq!(items[0].kind, DocItemKind::Module);
     }
 }
