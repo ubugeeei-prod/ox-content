@@ -507,20 +507,20 @@ The Vite plugin supports HMR for Markdown files:
 
 ### Parse and Render Speed
 
-Latest local benchmark sweep on 2026-04-24 with Node `v24.15.0` on Apple M5 Pro. The tables below show median results from 7 local runs of the benchmark harness for the large 48.7 KB case.
+Latest local benchmark sweep on 2026-05-25 with Node `v24.15.0` on Apple M5 Pro. The tables below show median results from 7 local runs of the benchmark harness for the large 48.7 KB case.
 
 | Library             | Parse Only (48.7 KB) | Parse + Render (48.7 KB) |
 | ------------------- | -------------------: | -----------------------: |
-| `Bun.markdown.html` |                    - |             3376 ops/sec |
-| `md4x (napi)`       |          958 ops/sec |             3167 ops/sec |
-| `@ox-content/napi`  |         2337 ops/sec |             2599 ops/sec |
-| `md4w (md4c)`       |          884 ops/sec |             2253 ops/sec |
-| `markdown-it`       |          631 ops/sec |              628 ops/sec |
-| `marked`            |          385 ops/sec |              381 ops/sec |
-| `micromark`         |                    - |               36 ops/sec |
-| `remark`            |           33 ops/sec |               29 ops/sec |
+| `@ox-content/napi`  |         4207 ops/sec |             4503 ops/sec |
+| `Bun.markdown.html` |                    - |             4225 ops/sec |
+| `md4x (napi)`       |         1231 ops/sec |             4014 ops/sec |
+| `md4w (md4c)`       |         1143 ops/sec |             2653 ops/sec |
+| `markdown-it`       |         1035 ops/sec |              840 ops/sec |
+| `marked`            |          530 ops/sec |              470 ops/sec |
+| `micromark`         |                    - |               45 ops/sec |
+| `remark`            |           44 ops/sec |               36 ops/sec |
 
-This benchmark uses `node benchmarks/bundle-size/parse-benchmark.mjs`. The comparison set now includes `md4w (md4c)` and `md4x (napi)` by default, and `Bun.markdown.html` is measured automatically when `bun` is available on the host.
+`@ox-content/napi` now leads both the parse-only and parse+render columns. This benchmark uses `node benchmarks/bundle-size/parse-benchmark.mjs`. The comparison set includes `md4w (md4c)` and `md4x (napi)` by default, and `Bun.markdown.html` is measured automatically when `bun` is available on the host.
 
 ## Security Considerations
 

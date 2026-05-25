@@ -91,6 +91,7 @@ napi-build = "2.3.1"
 logos = "0.16"
 regex = "1.11"
 unicode-normalization = "0.1"
+memchr = "2.7"
 
 # Hashing
 rustc-hash = "2"
