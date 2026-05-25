@@ -239,6 +239,10 @@ See [CONTRIBUTING.md](./CONTRIBUTING.md) for branch, commit, PR, testing, and re
 
 See the [documentation](https://ubugeeei.github.io/ox-content/) for more details.
 
+## Community Credits
+
+Special thanks to [kazupon](https://github.com/kazupon) for substantial community contributions around JSDoc support, including the API docs generation pipeline and documentation quality.
+
 ## Sponsor
 
 If you find Ox Content useful, please consider [sponsoring](https://github.com/sponsors/ubugeeei) the project.

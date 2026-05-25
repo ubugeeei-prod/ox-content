@@ -88,6 +88,10 @@ Under the hood, Ox Content is not only a docs theme. It also exposes the Markdow
 - [API Reference](./api/index.md) - Generated API docs for the public surface
 - [GitHub](https://github.com/ubugeeei/ox-content) - Source code and issues
 
+## Community Credits
+
+Special thanks to [kazupon](https://github.com/kazupon) for substantial community contributions around JSDoc support, including the API docs generation pipeline and documentation quality.
+
 ## Benchmarks
 
 Ox Content is positioned both as a document generator and as a high-performance Markdown toolkit. The numbers below focus on the Markdown engine side.
