@@ -1,7 +1,6 @@
 //! Markdown rendering for generated API reference documentation.
 
 use std::collections::{BTreeMap, HashMap};
-use std::fmt::Write as _;
 use std::path::Path;
 use std::sync::OnceLock;
 
@@ -9,6 +8,12 @@ use regex::Regex;
 use serde::{Deserialize, Serialize};
 
 const DOC_KIND_ORDER: [&str; 6] = ["function", "class", "interface", "type", "variable", "module"];
+
+type RegexCache = OnceLock<Option<Regex>>;
+
+fn cached_regex(cache: &'static RegexCache, pattern: &'static str) -> Option<&'static Regex> {
+    cache.get_or_init(|| Regex::new(pattern).ok()).as_ref()
+}
 
 /// Extracted docs for one source module.
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
@@ -225,45 +230,57 @@ fn entry_anchor(name: &str) -> String {
 }
 
 fn clean_summary_text(text: &str, max_length: usize) -> String {
-    static MARKDOWN_LINK_RE: OnceLock<Regex> = OnceLock::new();
-    static BRACKET_LINK_RE: OnceLock<Regex> = OnceLock::new();
-    static WHITESPACE_RE: OnceLock<Regex> = OnceLock::new();
+    static MARKDOWN_LINK_RE: RegexCache = OnceLock::new();
+    static BRACKET_LINK_RE: RegexCache = OnceLock::new();
+    static WHITESPACE_RE: RegexCache = OnceLock::new();
 
     if text.is_empty() {
         return String::new();
     }
 
-    let markdown_link_re =
-        MARKDOWN_LINK_RE.get_or_init(|| Regex::new(r"\[([^\]]+)\]\([^)]+\)").unwrap());
-    let bracket_link_re = BRACKET_LINK_RE.get_or_init(|| Regex::new(r"\[([^\]]+)\]").unwrap());
-    let whitespace_re = WHITESPACE_RE.get_or_init(|| Regex::new(r"\s+").unwrap());
+    let fallback = || text.split_whitespace().collect::<Vec<_>>().join(" ");
+    let Some(markdown_link_re) = cached_regex(&MARKDOWN_LINK_RE, r"\[([^\]]+)\]\([^)]+\)") else {
+        return truncate_summary_text(&fallback(), max_length);
+    };
+    let Some(bracket_link_re) = cached_regex(&BRACKET_LINK_RE, r"\[([^\]]+)\]") else {
+        return truncate_summary_text(&fallback(), max_length);
+    };
+    let Some(whitespace_re) = cached_regex(&WHITESPACE_RE, r"\s+") else {
+        return truncate_summary_text(&fallback(), max_length);
+    };
 
     let collapsed = markdown_link_re.replace_all(text, "$1").to_string();
     let collapsed = bracket_link_re.replace_all(&collapsed, "$1").to_string();
     let collapsed = whitespace_re.replace_all(&collapsed, " ").trim().to_string();
 
-    if collapsed.chars().count() <= max_length {
-        return collapsed;
+    truncate_summary_text(&collapsed, max_length)
+}
+
+fn truncate_summary_text(text: &str, max_length: usize) -> String {
+    if text.chars().count() <= max_length {
+        return text.to_string();
     }
 
-    let truncated: String = collapsed.chars().take(max_length.saturating_sub(1)).collect();
+    let truncated: String = text.chars().take(max_length.saturating_sub(1)).collect();
     format!("{}…", truncated.trim_end())
 }
 
 fn render_inline_html(text: &str) -> String {
-    static TOKEN_RE: OnceLock<Regex> = OnceLock::new();
+    static TOKEN_RE: RegexCache = OnceLock::new();
 
-    let token_re = TOKEN_RE.get_or_init(|| {
-        Regex::new(
-            r"`([^`]+)`|\[([^\]]+)\]\(([^)]+)\)|\*\*([^*]+)\*\*|__([^_]+)__|\*([^*]+)\*|_([^_]+)_",
-        )
-        .unwrap()
-    });
+    let Some(token_re) = cached_regex(
+        &TOKEN_RE,
+        r"`([^`]+)`|\[([^\]]+)\]\(([^)]+)\)|\*\*([^*]+)\*\*|__([^_]+)__|\*([^*]+)\*|_([^_]+)_",
+    ) else {
+        return escape_html(text).replace('\n', "<br>");
+    };
     let mut html = String::new();
     let mut last_index = 0;
 
     for captures in token_re.captures_iter(text) {
-        let mat = captures.get(0).expect("token match");
+        let Some(mat) = captures.get(0) else {
+            continue;
+        };
         html.push_str(&escape_html(&text[last_index..mat.start()]));
 
         if let Some(code) = captures.get(1) {
@@ -288,18 +305,18 @@ fn render_inline_html(text: &str) -> String {
 }
 
 fn is_fence_start(line: &str) -> Option<String> {
-    static FENCE_RE: OnceLock<Regex> = OnceLock::new();
+    static FENCE_RE: RegexCache = OnceLock::new();
 
-    let fence_re = FENCE_RE.get_or_init(|| Regex::new(r"^```([\w-]+)?\s*$").unwrap());
+    let fence_re = cached_regex(&FENCE_RE, r"^```([\w-]+)?\s*$")?;
     fence_re
         .captures(line.trim())
         .map(|captures| captures.get(1).map_or("text", |value| value.as_str()).to_string())
 }
 
 fn heading_match(line: &str) -> Option<(usize, String)> {
-    static HEADING_RE: OnceLock<Regex> = OnceLock::new();
+    static HEADING_RE: RegexCache = OnceLock::new();
 
-    let heading_re = HEADING_RE.get_or_init(|| Regex::new(r"^(#{1,6})\s+(.*)$").unwrap());
+    let heading_re = cached_regex(&HEADING_RE, r"^(#{1,6})\s+(.*)$")?;
     heading_re.captures(line.trim()).map(|captures| {
         (
             captures.get(1).map_or(1, |value| value.as_str().len()).min(6),
@@ -309,18 +326,18 @@ fn heading_match(line: &str) -> Option<(usize, String)> {
 }
 
 fn ordered_list_item(line: &str) -> Option<String> {
-    static ORDERED_RE: OnceLock<Regex> = OnceLock::new();
+    static ORDERED_RE: RegexCache = OnceLock::new();
 
-    let ordered_re = ORDERED_RE.get_or_init(|| Regex::new(r"^\d+\.\s+(.*)$").unwrap());
+    let ordered_re = cached_regex(&ORDERED_RE, r"^\d+\.\s+(.*)$")?;
     ordered_re
         .captures(line.trim())
         .and_then(|captures| captures.get(1).map(|value| value.as_str().to_string()))
 }
 
 fn unordered_list_item(line: &str) -> Option<String> {
-    static UNORDERED_RE: OnceLock<Regex> = OnceLock::new();
+    static UNORDERED_RE: RegexCache = OnceLock::new();
 
-    let unordered_re = UNORDERED_RE.get_or_init(|| Regex::new(r"^[-*+]\s+(.*)$").unwrap());
+    let unordered_re = cached_regex(&UNORDERED_RE, r"^[-*+]\s+(.*)$")?;
     unordered_re
         .captures(line.trim())
         .and_then(|captures| captures.get(1).map(|value| value.as_str().to_string()))
@@ -334,17 +351,15 @@ fn is_markdown_block_start(line: &str) -> bool {
 }
 
 fn render_markdown_blocks_html(text: &str) -> String {
-    static ORDERED_CONTINUATION_RE: OnceLock<Regex> = OnceLock::new();
-    static UNORDERED_CONTINUATION_RE: OnceLock<Regex> = OnceLock::new();
+    static ORDERED_CONTINUATION_RE: RegexCache = OnceLock::new();
+    static UNORDERED_CONTINUATION_RE: RegexCache = OnceLock::new();
 
     let lines: Vec<&str> =
         text.split('\n').map(|line| line.strip_suffix('\r').unwrap_or(line)).collect();
     let mut blocks = Vec::new();
     let mut index = 0;
-    let ordered_continuation_re =
-        ORDERED_CONTINUATION_RE.get_or_init(|| Regex::new(r"^ {0,1}\d+\.\s+").unwrap());
-    let unordered_continuation_re =
-        UNORDERED_CONTINUATION_RE.get_or_init(|| Regex::new(r"^[-*+]\s+").unwrap());
+    let ordered_continuation_re = cached_regex(&ORDERED_CONTINUATION_RE, r"^ {0,1}\d+\.\s+");
+    let unordered_continuation_re = cached_regex(&UNORDERED_CONTINUATION_RE, r"^[-*+]\s+");
 
     while index < lines.len() {
         let line = lines[index];
@@ -397,7 +412,8 @@ fn render_markdown_blocks_html(text: &str) -> String {
 
                     if continuation_trimmed.is_empty()
                         || is_markdown_block_start(continuation)
-                        || ordered_continuation_re.is_match(continuation_trimmed)
+                        || ordered_continuation_re
+                            .is_some_and(|re| re.is_match(continuation_trimmed))
                     {
                         break;
                     }
@@ -436,7 +452,8 @@ fn render_markdown_blocks_html(text: &str) -> String {
 
                     if continuation_trimmed.is_empty()
                         || is_markdown_block_start(continuation)
-                        || unordered_continuation_re.is_match(continuation_trimmed)
+                        || unordered_continuation_re
+                            .is_some_and(|re| re.is_match(continuation_trimmed))
                     {
                         break;
                     }
@@ -738,24 +755,23 @@ fn render_entry_badges_html(entry: &ApiDocEntry, class_name: &str) -> String {
     let mut rendered = String::new();
     for badge in badges {
         let tone_class = badge.tone.map_or(String::new(), |tone| format!(" ox-api-badge--{tone}"));
-        write!(
-            rendered,
+        rendered.push_str(&format!(
             "<span class=\"ox-api-badge{}\">{}</span>",
             tone_class,
             escape_html(&badge.label)
-        )
-        .unwrap();
+        ));
     }
 
     format!("<span class=\"{class_name}\">{rendered}</span>")
 }
 
 fn parse_example_block(example: &str) -> (String, String) {
-    static FENCE_RE: OnceLock<Regex> = OnceLock::new();
+    static FENCE_RE: RegexCache = OnceLock::new();
 
     let trimmed = example.trim();
-    let fence_re =
-        FENCE_RE.get_or_init(|| Regex::new(r"(?s)^```([\w-]+)?[^\n]*\n(.*?)\n?```$").unwrap());
+    let Some(fence_re) = cached_regex(&FENCE_RE, r"(?s)^```([\w-]+)?[^\n]*\n(.*?)\n?```$") else {
+        return (trimmed.to_string(), "ts".to_string());
+    };
 
     if let Some(captures) = fence_re.captures(trimmed) {
         let language = captures.get(1).map_or("ts", |value| value.as_str()).to_string();
@@ -870,13 +886,11 @@ fn render_params_list_html(params: &[ApiParamDoc]) -> String {
 fn render_tag_list_html(tags: &[ApiDocTag]) -> String {
     let mut items = String::new();
     for tag in tags {
-        write!(
-            items,
+        items.push_str(&format!(
             "<li><span class=\"ox-api-entry__tag-name\">@{}</span><span class=\"ox-api-entry__tag-value\">{}</span></li>",
             escape_html(&tag.tag),
             render_inline_html(&tag.value)
-        )
-        .unwrap();
+        ));
     }
 
     format!(
@@ -904,7 +918,7 @@ fn render_member_flags(member: &ApiDocMember) -> String {
 
     let mut html = String::new();
     for flag in flags {
-        write!(html, "<span class=\"ox-api-badge\">{flag}</span>").unwrap();
+        html.push_str(&format!("<span class=\"ox-api-badge\">{flag}</span>"));
     }
     html
 }
@@ -942,8 +956,7 @@ fn render_member_description_html(member: &ApiDocMember) -> String {
                     description.push_str(" - optional");
                 }
             }
-            write!(
-                params,
+            params.push_str(&format!(
                 "<li><code>{}</code>{}</li>",
                 escape_html(&param.name),
                 if description.is_empty() {
@@ -951,8 +964,7 @@ fn render_member_description_html(member: &ApiDocMember) -> String {
                 } else {
                     format!(" {}", render_inline_html(&description))
                 }
-            )
-            .unwrap();
+            ));
         }
         blocks.push(format!("<ul class=\"ox-api-entry__member-params\">{params}</ul>"));
     }
@@ -1366,9 +1378,11 @@ fn convert_symbol_links(
     current_file_name: &str,
     symbol_map: &HashMap<String, SymbolLocation>,
 ) -> String {
-    static SYMBOL_RE: OnceLock<Regex> = OnceLock::new();
+    static SYMBOL_RE: RegexCache = OnceLock::new();
 
-    let symbol_re = SYMBOL_RE.get_or_init(|| Regex::new(r"\[([A-Z_]\w*)\]").unwrap());
+    let Some(symbol_re) = cached_regex(&SYMBOL_RE, r"\[([A-Z_]\w*)\]") else {
+        return text.to_string();
+    };
     let mut result = String::new();
     let mut last_index = 0;
 

@@ -93,6 +93,13 @@ fn parser_options(cli: &Cli) -> ParserOptions {
     }
 }
 
+fn parse_error(err: impl std::fmt::Display) -> std::io::Error {
+    std::io::Error::new(
+        std::io::ErrorKind::InvalidData,
+        format!("failed to parse Markdown input for profiling: {err}"),
+    )
+}
+
 fn run(cli: &Cli) -> std::io::Result<()> {
     CountingAllocator::enable();
     scope::enable();
@@ -118,11 +125,12 @@ fn run(cli: &Cli) -> std::io::Result<()> {
     match &cli.cmd {
         Cmd::Parse { .. } => {
             for _ in 0..total_iters {
-                recorder.record(|| {
+                recorder.record(|| -> std::io::Result<()> {
                     let alloc = Allocator::new();
                     let parser = Parser::with_options(&alloc, &source, parser_options(cli));
-                    let _ = parser.parse();
-                });
+                    let _ = parser.parse().map_err(parse_error)?;
+                    Ok(())
+                })?;
             }
         }
         Cmd::Render { .. } => {
@@ -132,7 +140,7 @@ fn run(cli: &Cli) -> std::io::Result<()> {
             for _ in 0..total_iters {
                 let alloc = Allocator::new();
                 let parser = Parser::with_options(&alloc, &source, parser_options(cli));
-                let doc = parser.parse().expect("parser failure during profile");
+                let doc = parser.parse().map_err(parse_error)?;
                 recorder.record(|| {
                     let mut renderer = HtmlRenderer::with_options(HtmlRendererOptions::new());
                     let _ = renderer.render(&doc);
@@ -141,13 +149,14 @@ fn run(cli: &Cli) -> std::io::Result<()> {
         }
         Cmd::Pipeline { .. } => {
             for _ in 0..total_iters {
-                recorder.record(|| {
+                recorder.record(|| -> std::io::Result<()> {
                     let alloc = Allocator::new();
                     let parser = Parser::with_options(&alloc, &source, parser_options(cli));
-                    let doc = parser.parse().expect("parser failure during profile");
+                    let doc = parser.parse().map_err(parse_error)?;
                     let mut renderer = HtmlRenderer::with_options(HtmlRendererOptions::new());
                     let _ = renderer.render(&doc);
-                });
+                    Ok(())
+                })?;
             }
         }
     }

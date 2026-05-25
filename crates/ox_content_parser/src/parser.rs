@@ -1115,7 +1115,9 @@ impl<'a> Parser<'a> {
             }
         }
 
-        let fence_char = self.peek().unwrap();
+        let Some(fence_char) = self.peek() else {
+            return Err(ParseError::UnexpectedEof { span: Span::new(start as u32, start as u32) });
+        };
         let mut fence_len = 0;
 
         while self.peek() == Some(fence_char) {

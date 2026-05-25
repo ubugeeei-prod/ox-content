@@ -1,5 +1,3 @@
-use std::ptr;
-
 use napi::bindgen_prelude::Uint8Array;
 
 pub const TRANSFER_MAGIC: u32 = u32::from_le_bytes(*b"OXTR");
@@ -53,10 +51,13 @@ impl TransferBufferBuilder {
     }
 
     pub fn finish(self) -> napi::Result<Uint8Array> {
-        let section_table_len = self.sections.len() * TRANSFER_SECTION_RECORD_LEN;
-        let body_offset = TRANSFER_HEADER_LEN + section_table_len;
-        let body_len = self.sections.iter().map(|section| section.bytes.len()).sum::<usize>();
-        let total_len = body_offset + body_len;
+        let section_table_len =
+            checked_mul(self.sections.len(), TRANSFER_SECTION_RECORD_LEN, "section table length")?;
+        let body_offset = checked_add(TRANSFER_HEADER_LEN, section_table_len, "body offset")?;
+        let body_len = self.sections.iter().try_fold(0usize, |total, section| {
+            checked_add(total, section.bytes.len(), "body length")
+        })?;
+        let total_len = checked_add(body_offset, body_len, "total length")?;
         let mut buffer = Vec::with_capacity(total_len);
 
         push_u32(&mut buffer, TRANSFER_MAGIC);
@@ -72,7 +73,8 @@ impl TransferBufferBuilder {
             push_u32(&mut buffer, section.id);
             push_u32(&mut buffer, as_u32(next_section_offset)?);
             push_u32(&mut buffer, as_u32(section.bytes.len())?);
-            next_section_offset += section.bytes.len();
+            next_section_offset =
+                checked_add(next_section_offset, section.bytes.len(), "section offset")?;
         }
 
         for section in self.sections {
@@ -81,12 +83,24 @@ impl TransferBufferBuilder {
 
         debug_assert_eq!(buffer.len(), total_len);
 
-        into_external_uint8_array(buffer)
+        Ok(Uint8Array::new(buffer))
     }
 }
 
 pub fn as_u32(value: usize) -> napi::Result<u32> {
     u32::try_from(value).map_err(|_| napi::Error::from_reason("transfer buffer overflow"))
+}
+
+fn checked_add(left: usize, right: usize, context: &str) -> napi::Result<usize> {
+    left.checked_add(right).ok_or_else(|| transfer_size_error(context))
+}
+
+fn checked_mul(left: usize, right: usize, context: &str) -> napi::Result<usize> {
+    left.checked_mul(right).ok_or_else(|| transfer_size_error(context))
+}
+
+fn transfer_size_error(context: &str) -> napi::Error {
+    napi::Error::from_reason(format!("transfer buffer is too large while calculating {context}"))
 }
 
 fn push_u16(buffer: &mut Vec<u8>, value: u16) {
@@ -95,19 +109,6 @@ fn push_u16(buffer: &mut Vec<u8>, value: u16) {
 
 fn push_u32(buffer: &mut Vec<u8>, value: u32) {
     buffer.extend_from_slice(&value.to_le_bytes());
-}
-
-#[allow(unsafe_code)]
-fn into_external_uint8_array(buffer: Vec<u8>) -> napi::Result<Uint8Array> {
-    let len = buffer.len();
-    let ptr = Box::into_raw(buffer.into_boxed_slice()).cast::<u8>();
-    let array = unsafe {
-        Uint8Array::with_external_data(ptr, len, move |ptr, len| {
-            let slice = ptr::slice_from_raw_parts_mut(ptr, len);
-            drop(Box::from_raw(slice));
-        })
-    };
-    Ok(array)
 }
 
 #[cfg(test)]

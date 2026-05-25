@@ -11,30 +11,30 @@ use unicode_normalization::UnicodeNormalization;
 const SUPPORTED_MARKDOWN_LINT_LANGUAGES: [&str; 6] = ["en", "ja", "zh", "fr", "de", "pl"];
 const DEFAULT_LANGUAGES: [&str; 1] = ["en"];
 
-static HEADING_PATTERN: LazyLock<Regex> =
-    LazyLock::new(|| Regex::new(r"^\s{0,3}(#{1,6})[ \t]+(.+?)\s*#*\s*$").unwrap());
-static FENCE_PATTERN: LazyLock<Regex> =
-    LazyLock::new(|| Regex::new(r"^\s{0,3}(`{3,}|~{3,})").unwrap());
-static LIST_PREFIX_PATTERN: LazyLock<Regex> = LazyLock::new(|| {
-    Regex::new(r"^\s{0,3}(?:#{1,6}[ \t]+|>\s?|(?:[-*+]|(?:\d+[.)]))[ \t]+)").unwrap()
-});
-static REFERENCE_DEFINITION_PATTERN: LazyLock<Regex> =
-    LazyLock::new(|| Regex::new(r"^\s{0,3}\[[^\]]+\]:").unwrap());
-static URL_PATTERN: LazyLock<Regex> =
-    LazyLock::new(|| Regex::new(r"(?iu)\b(?:https?://|mailto:|www\.)\S+").unwrap());
-static HTML_TAG_PATTERN: LazyLock<Regex> =
-    LazyLock::new(|| Regex::new(r"(?u)</?[\p{L}!][^>]*>").unwrap());
-static FOOTNOTE_PATTERN: LazyLock<Regex> = LazyLock::new(|| Regex::new(r"\[\^[^\]]+\]").unwrap());
-static LATIN_WORD_PATTERN: LazyLock<Regex> =
-    LazyLock::new(|| Regex::new(r"(?u)\p{Latin}+(?:['’-]\p{Latin}+)*").unwrap());
-static CJK_RUN_PATTERN: LazyLock<Regex> =
-    LazyLock::new(|| Regex::new(r"(?u)[\p{Han}\p{Hiragana}\p{Katakana}ー]+").unwrap());
+static HEADING_PATTERN: LazyLock<Option<Regex>> =
+    LazyLock::new(|| Regex::new(r"^\s{0,3}(#{1,6})[ \t]+(.+?)\s*#*\s*$").ok());
+static FENCE_PATTERN: LazyLock<Option<Regex>> =
+    LazyLock::new(|| Regex::new(r"^\s{0,3}(`{3,}|~{3,})").ok());
+static LIST_PREFIX_PATTERN: LazyLock<Option<Regex>> =
+    LazyLock::new(|| Regex::new(r"^\s{0,3}(?:#{1,6}[ \t]+|>\s?|(?:[-*+]|(?:\d+[.)]))[ \t]+)").ok());
+static REFERENCE_DEFINITION_PATTERN: LazyLock<Option<Regex>> =
+    LazyLock::new(|| Regex::new(r"^\s{0,3}\[[^\]]+\]:").ok());
+static URL_PATTERN: LazyLock<Option<Regex>> =
+    LazyLock::new(|| Regex::new(r"(?iu)\b(?:https?://|mailto:|www\.)\S+").ok());
+static HTML_TAG_PATTERN: LazyLock<Option<Regex>> =
+    LazyLock::new(|| Regex::new(r"(?u)</?[\p{L}!][^>]*>").ok());
+static FOOTNOTE_PATTERN: LazyLock<Option<Regex>> =
+    LazyLock::new(|| Regex::new(r"\[\^[^\]]+\]").ok());
+static LATIN_WORD_PATTERN: LazyLock<Option<Regex>> =
+    LazyLock::new(|| Regex::new(r"(?u)\p{Latin}+(?:['’-]\p{Latin}+)*").ok());
+static CJK_RUN_PATTERN: LazyLock<Option<Regex>> =
+    LazyLock::new(|| Regex::new(r"(?u)[\p{Han}\p{Hiragana}\p{Katakana}ー]+").ok());
 
-static LINT_DICTIONARY_DATA: LazyLock<LintDictionaryData> = LazyLock::new(|| {
+static LINT_DICTIONARY_DATA: LazyLock<Option<LintDictionaryData>> = LazyLock::new(|| {
     serde_json::from_str(include_str!(
         "../../../npm/vite-plugin-ox-content/src/lint-dictionaries.json"
     ))
-    .expect("lint dictionaries JSON should be valid")
+    .ok()
 });
 
 #[derive(Deserialize)]
@@ -44,6 +44,7 @@ struct LintDictionaryData {
     by_language: HashMap<String, Vec<String>>,
 }
 
+#[derive(Default)]
 struct PreparedLintDictionaryData {
     global_words: HashSet<String>,
     by_language: HashMap<String, PreparedLanguageDictionary>,
@@ -62,7 +63,11 @@ struct SegmentWord {
 }
 
 static PREPARED_LINT_DICTIONARY_DATA: LazyLock<PreparedLintDictionaryData> = LazyLock::new(|| {
-    let global_words = LINT_DICTIONARY_DATA
+    let Some(dictionary_data) = LINT_DICTIONARY_DATA.as_ref() else {
+        return PreparedLintDictionaryData::default();
+    };
+
+    let global_words = dictionary_data
         .global
         .iter()
         .map(|word| normalize_word_for_set(word))
@@ -72,7 +77,7 @@ static PREPARED_LINT_DICTIONARY_DATA: LazyLock<PreparedLintDictionaryData> = Laz
     let by_language = SUPPORTED_MARKDOWN_LINT_LANGUAGES
         .iter()
         .map(|language| {
-            let words = LINT_DICTIONARY_DATA
+            let words = dictionary_data
                 .by_language
                 .get(*language)
                 .into_iter()
@@ -349,13 +354,15 @@ fn collect_markdown_lint_state(
             continue;
         }
 
-        if let Some(fence_match) = FENCE_PATTERN.find(line) {
-            let fence = &line[fence_match.start()..fence_match.end()];
-            in_fence = true;
-            fence_char = fence.chars().next().unwrap_or('\0');
-            fence_length = fence.chars().count();
-            masked_lines.push(create_skipped_line_mask(line));
-            continue;
+        if let Some(fence_pattern) = FENCE_PATTERN.as_ref() {
+            if let Some(fence_match) = fence_pattern.find(line) {
+                let fence = &line[fence_match.start()..fence_match.end()];
+                in_fence = true;
+                fence_char = fence.chars().next().unwrap_or('\0');
+                fence_length = fence.chars().count();
+                masked_lines.push(create_skipped_line_mask(line));
+                continue;
+            }
         }
 
         if normalized_options.rules.trailing_spaces {
@@ -398,7 +405,8 @@ fn collect_markdown_lint_state(
 
         blank_line_streak = 0;
 
-        if let Some(captures) = HEADING_PATTERN.captures(line) {
+        if let Some(captures) = HEADING_PATTERN.as_ref().and_then(|pattern| pattern.captures(line))
+        {
             let depth = captures.get(1).map_or(0, |value| value.as_str().chars().count());
             let heading_text = captures
                 .get(2)
@@ -440,7 +448,9 @@ fn collect_markdown_lint_state(
             }
         }
 
-        if REFERENCE_DEFINITION_PATTERN.is_match(line) || is_indented_code_block_line(line) {
+        if REFERENCE_DEFINITION_PATTERN.as_ref().is_some_and(|pattern| pattern.is_match(line))
+            || is_indented_code_block_line(line)
+        {
             masked_lines.push(create_skipped_line_mask(line));
             continue;
         }
@@ -648,9 +658,11 @@ fn collect_tokens(
     let latin_tokens = collect_latin_tokens(masked_line, languages, dictionary);
     let mut cjk_tokens = Vec::new();
 
-    for value in CJK_RUN_PATTERN.find_iter(masked_line) {
-        let start = byte_to_char_index(masked_line, value.start());
-        cjk_tokens.extend(collect_cjk_tokens(value.as_str(), start, languages, dictionary));
+    if let Some(cjk_run_pattern) = CJK_RUN_PATTERN.as_ref() {
+        for value in cjk_run_pattern.find_iter(masked_line) {
+            let start = byte_to_char_index(masked_line, value.start());
+            cjk_tokens.extend(collect_cjk_tokens(value.as_str(), start, languages, dictionary));
+        }
     }
 
     merge_tokens(latin_tokens, cjk_tokens)
@@ -698,11 +710,13 @@ fn collect_latin_tokens(
     let fallback_language = latin_languages[0].clone();
     let mut tokens = Vec::new();
 
-    for value in LATIN_WORD_PATTERN.find_iter(masked_line) {
-        let text = value.as_str().to_string();
-        let start = byte_to_char_index(masked_line, value.start());
-        let end = start + count_code_points(value.as_str());
-        tokens.push(Token { end, language: fallback_language.clone(), start, text });
+    if let Some(latin_word_pattern) = LATIN_WORD_PATTERN.as_ref() {
+        for value in latin_word_pattern.find_iter(masked_line) {
+            let text = value.as_str().to_string();
+            let start = byte_to_char_index(masked_line, value.start());
+            let end = start + count_code_points(value.as_str());
+            tokens.push(Token { end, language: fallback_language.clone(), start, text });
+        }
     }
 
     assign_latin_languages(tokens, &latin_languages, dictionary, &fallback_language)
@@ -1171,24 +1185,33 @@ fn mask_markdown_line(line: &str) -> String {
     let line_chars = line.chars().collect::<Vec<_>>();
     let mut chars = line_chars.clone();
 
-    if let Some(prefix_match) = LIST_PREFIX_PATTERN.find(line) {
-        let (start, end) = byte_range_to_char_range(line, prefix_match.start(), prefix_match.end());
-        blank_range(&mut chars, start, end);
+    if let Some(list_prefix_pattern) = LIST_PREFIX_PATTERN.as_ref() {
+        if let Some(prefix_match) = list_prefix_pattern.find(line) {
+            let (start, end) =
+                byte_range_to_char_range(line, prefix_match.start(), prefix_match.end());
+            blank_range(&mut chars, start, end);
+        }
     }
 
-    for value in FOOTNOTE_PATTERN.find_iter(line) {
-        let (start, end) = byte_range_to_char_range(line, value.start(), value.end());
-        blank_range(&mut chars, start, end);
+    if let Some(footnote_pattern) = FOOTNOTE_PATTERN.as_ref() {
+        for value in footnote_pattern.find_iter(line) {
+            let (start, end) = byte_range_to_char_range(line, value.start(), value.end());
+            blank_range(&mut chars, start, end);
+        }
     }
 
-    for value in URL_PATTERN.find_iter(line) {
-        let (start, end) = byte_range_to_char_range(line, value.start(), value.end());
-        blank_range(&mut chars, start, end);
+    if let Some(url_pattern) = URL_PATTERN.as_ref() {
+        for value in url_pattern.find_iter(line) {
+            let (start, end) = byte_range_to_char_range(line, value.start(), value.end());
+            blank_range(&mut chars, start, end);
+        }
     }
 
-    for value in HTML_TAG_PATTERN.find_iter(line) {
-        let (start, end) = byte_range_to_char_range(line, value.start(), value.end());
-        blank_range(&mut chars, start, end);
+    if let Some(html_tag_pattern) = HTML_TAG_PATTERN.as_ref() {
+        for value in html_tag_pattern.find_iter(line) {
+            let (start, end) = byte_range_to_char_range(line, value.start(), value.end());
+            blank_range(&mut chars, start, end);
+        }
     }
 
     mask_inline_code(&line_chars, &mut chars);
@@ -1410,14 +1433,10 @@ fn levenshtein(left: &str, right: &str) -> usize {
 
         for (right_index, right_value) in right_chars.iter().enumerate() {
             let substitution_cost = usize::from(left_value != right_value);
-            current_row[right_index + 1] = *[
-                current_row[right_index] + 1,
-                previous_row[right_index + 1] + 1,
-                previous_row[right_index] + substitution_cost,
-            ]
-            .iter()
-            .min()
-            .unwrap();
+            let insertion = current_row[right_index] + 1;
+            let deletion = previous_row[right_index + 1] + 1;
+            let substitution = previous_row[right_index] + substitution_cost;
+            current_row[right_index + 1] = insertion.min(deletion).min(substitution);
         }
 
         previous_row.clone_from(&current_row);

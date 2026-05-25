@@ -1524,9 +1524,12 @@ impl HtmlRenderer {
                     i = name_end;
                 }
                 _ => {
-                    let ch = html[i..].chars().next().expect("valid UTF-8");
-                    output.push(ch);
-                    i += ch.len_utf8();
+                    if let Some(ch) = html[i..].chars().next() {
+                        output.push(ch);
+                        i += ch.len_utf8();
+                    } else {
+                        break;
+                    }
                 }
             }
         }
