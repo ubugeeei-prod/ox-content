@@ -1003,6 +1003,7 @@ pub fn generate_docs_data_json_napi(
 
 /// Writes generated API documentation files and native sidecars.
 #[napi(js_name = "writeGeneratedDocs")]
+#[allow(clippy::implicit_hasher)]
 pub fn write_generated_docs(
     docs: HashMap<String, String>,
     out_dir: String,
