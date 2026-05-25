@@ -284,6 +284,7 @@ export interface JsDocsOutputOptions {
   generateNav?: boolean
   groupBy?: string
   generatedAt?: string
+  basePath?: string
 }
 
 /** Entry page configuration. */
