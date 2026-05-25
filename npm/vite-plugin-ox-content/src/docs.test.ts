@@ -214,6 +214,48 @@ export function label(value, maxLength = 20) {
     });
   });
 
+  it("groups docs by public API entry points", async () => {
+    const srcDir = await fs.mkdtemp(path.join(os.tmpdir(), "ox-content-docs-src-"));
+    tempDirs.push(srcDir);
+
+    await fs.writeFile(
+      path.join(srcDir, "index.ts"),
+      `export { add as sum } from "./math";
+export type { Options } from "./types";
+`,
+      "utf-8",
+    );
+    await fs.writeFile(
+      path.join(srcDir, "math.ts"),
+      `/** Adds two numbers. */
+export function add(a: number, b: number): number {
+  return a + b;
+}
+`,
+      "utf-8",
+    );
+    await fs.writeFile(
+      path.join(srcDir, "types.ts"),
+      `/** Runtime options. */
+export interface Options {
+  value: string;
+}
+`,
+      "utf-8",
+    );
+
+    const docs = await extractDocs(
+      [],
+      resolveDocsOptions({
+        entryPoints: [{ path: path.join(srcDir, "index.ts"), name: "default" }],
+      })!,
+    );
+
+    expect(docs).toHaveLength(1);
+    expect(docs[0]?.file).toBe("default");
+    expect(docs[0]?.entries.map((entry) => entry.name)).toEqual(["sum", "Options"]);
+  });
+
   it("extracts and renders highlighted interface signatures with generics", async () => {
     const srcDir = await fs.mkdtemp(path.join(os.tmpdir(), "ox-content-docs-src-"));
     tempDirs.push(srcDir);

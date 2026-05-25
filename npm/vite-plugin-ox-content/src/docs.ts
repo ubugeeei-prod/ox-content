@@ -51,7 +51,7 @@
 
 import * as fs from "fs";
 import * as path from "path";
-import type { ResolvedDocsOptions, ExtractedDocs, DocEntry } from "./types";
+import type { ResolvedDocsOptions, ExtractedDocs, DocEntry, ResolvedDocsEntryPoint } from "./types";
 import { generateNavMetadata, generateNavCode } from "./nav-generator";
 import { importNapiModule, importNapiModuleSync } from "./napi";
 
@@ -138,6 +138,29 @@ export async function extractDocs(
   options: ResolvedDocsOptions,
 ): Promise<ExtractedDocs[]> {
   const napi = await importNapiModule();
+
+  if (options.entryPoints?.length) {
+    const extractDocsFromEntryPoints = (
+      napi as {
+        extractDocsFromEntryPoints?: (
+          entryPoints: ResolvedDocsEntryPoint[],
+          options?: { root?: string; private?: boolean },
+        ) => Array<{ file: string; entries: DocEntry[] }>;
+      }
+    ).extractDocsFromEntryPoints;
+
+    if (!extractDocsFromEntryPoints) {
+      throw new Error(
+        "[ox-content] extractDocsFromEntryPoints is not available from @ox-content/napi.",
+      );
+    }
+
+    return extractDocsFromEntryPoints(options.entryPoints, {
+      root: process.cwd(),
+      private: options.private,
+    }).map((doc) => ({ file: doc.file, entries: doc.entries }));
+  }
+
   const extractFileDocEntries = (
     napi as { extractFileDocEntries?: (filePath: string, includePrivate?: boolean) => DocEntry[] }
   ).extractFileDocEntries;
@@ -289,6 +312,9 @@ export function resolveDocsOptions(
     out: opts.out ?? "docs/api",
     include: opts.include ?? DEFAULT_DOCS_INCLUDE,
     exclude: opts.exclude ?? ["**/*.test.*", "**/*.spec.*", "node_modules"],
+    entryPoints: opts.entryPoints?.map((entryPoint) =>
+      typeof entryPoint === "string" ? { path: entryPoint } : entryPoint,
+    ),
     format: opts.format ?? "markdown",
     private: opts.private ?? false,
     toc: false,
