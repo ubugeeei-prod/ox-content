@@ -1,6 +1,7 @@
 //! HTML renderer implementation.
 
 use std::collections::BTreeMap;
+use std::fmt::{Display, Write as _};
 
 use ox_content_ast::{
     BlockQuote, Break, CodeBlock, Definition, Delete, Document, Emphasis, FootnoteDefinition,
@@ -1229,6 +1230,10 @@ impl HtmlRenderer {
         self.output.push_str(s);
     }
 
+    fn write_display(&mut self, value: impl Display) {
+        write!(self.output, "{value}").expect("writing to String should not fail");
+    }
+
     fn write_escaped(&mut self, s: &str) {
         profile_span!("renderer::write_escaped");
         write_escaped_into(&mut self.output, s);
@@ -1471,12 +1476,12 @@ impl HtmlRenderer {
             self.write("<span class=\"");
             self.write(&class_names.join(" "));
             self.write("\" data-line=\"");
-            self.write(&line_number.to_string());
+            self.write_display(line_number);
             self.write("\"");
 
             if let Some(start) = state.line_numbers_start {
                 self.write(" data-line-number=\"");
-                self.write(&(start + index).to_string());
+                self.write_display(start + index);
                 self.write("\"");
             }
 
@@ -1835,7 +1840,7 @@ impl<'a> Visit<'a> for HtmlRenderer {
             if let Some(start) = list.start {
                 if start != 1 {
                     self.write("<ol start=\"");
-                    self.write(&start.to_string());
+                    self.write_display(start);
                     self.write("\">\n");
                 } else {
                     self.write("<ol>\n");
@@ -1907,7 +1912,7 @@ impl<'a> Visit<'a> for HtmlRenderer {
         }
         if let Some(start) = state.line_numbers_start {
             self.write(" data-line-numbers=\"true\" data-line-number-start=\"");
-            self.write(&start.to_string());
+            self.write_display(start);
             self.write("\"");
         }
         self.write("><code");
