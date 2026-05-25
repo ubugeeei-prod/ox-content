@@ -49,14 +49,9 @@
  * ```
  */
 
-import * as fs from "fs";
-import * as path from "path";
 import type { ResolvedDocsOptions, ExtractedDocs, DocEntry, ResolvedDocsEntryPoint } from "./types";
-import { generateNavMetadata, generateNavCode } from "./nav-generator";
 import { importNapiModule, importNapiModuleSync } from "./napi";
 
-const DOCS_MANIFEST_FILE = ".ox-content-docs-manifest.json";
-const DOCS_DATA_FILE = "docs.json";
 const DEFAULT_DOCS_INCLUDE = [
   "**/*.ts",
   "**/*.tsx",
@@ -162,35 +157,31 @@ export async function extractDocs(
     }).map((doc) => ({ file: doc.file, entries: doc.entries }));
   }
 
-  const extractFileDocEntries = (
+  const extractDocsFromDirectories = (
     napi as {
-      extractFileDocEntries?: (
-        filePath: string,
+      extractDocsFromDirectories?: (
+        srcDirs: string[],
+        include: string[],
+        exclude: string[],
         includePrivate?: boolean,
         includeInternal?: boolean,
-      ) => DocEntry[];
+      ) => Array<{ file: string; entries: DocEntry[] }>;
     }
-  ).extractFileDocEntries;
+  ).extractDocsFromDirectories;
 
-  if (!extractFileDocEntries) {
-    throw new Error("[ox-content] extractFileDocEntries is not available from @ox-content/napi.");
+  if (!extractDocsFromDirectories) {
+    throw new Error(
+      "[ox-content] extractDocsFromDirectories is not available from @ox-content/napi.",
+    );
   }
 
-  const results: ExtractedDocs[] = [];
-
-  for (const srcDir of srcDirs) {
-    const files = napi.collectDocsSourceFiles(srcDir, options.include, options.exclude);
-
-    for (const file of files) {
-      const entries = extractFileDocEntries(file, options.private, options.internal);
-
-      if (entries.length > 0) {
-        results.push({ file, entries });
-      }
-    }
-  }
-
-  return results;
+  return extractDocsFromDirectories(
+    srcDirs,
+    options.include,
+    options.exclude,
+    options.private,
+    options.internal,
+  ).map((doc) => ({ file: doc.file, entries: doc.entries }));
 }
 
 /**
@@ -223,59 +214,23 @@ export async function writeDocs(
   extractedDocs?: ExtractedDocs[],
   options?: ResolvedDocsOptions,
 ): Promise<void> {
-  await fs.promises.mkdir(outDir, { recursive: true });
+  const napi = importNapiModuleSync();
 
-  const generatedFiles = new Set(Object.keys(docs));
-  if (extractedDocs && options?.generateNav && options.groupBy === "file") {
-    generatedFiles.add("nav.ts");
-  }
-  if (extractedDocs) {
-    generatedFiles.add(DOCS_DATA_FILE);
-  }
-
-  const manifestPath = path.join(outDir, DOCS_MANIFEST_FILE);
-  let previousFiles: string[] = [];
-
-  try {
-    previousFiles = JSON.parse(await fs.promises.readFile(manifestPath, "utf-8")) as string[];
-  } catch {
-    previousFiles = [];
-  }
-
-  for (const staleFile of previousFiles) {
-    if (generatedFiles.has(staleFile)) {
-      continue;
-    }
-
-    await fs.promises.rm(path.join(outDir, staleFile), { force: true });
-  }
-
-  for (const [fileName, content] of Object.entries(docs)) {
-    const filePath = path.join(outDir, fileName);
-    await fs.promises.writeFile(filePath, content, "utf-8");
-  }
-
-  // Generate and write navigation metadata if enabled
-  if (extractedDocs && options?.generateNav && options.groupBy === "file") {
-    const navItems = generateNavMetadata(extractedDocs, "/api");
-    const navCode = generateNavCode(navItems, "apiNav");
-    const navFilePath = path.join(outDir, "nav.ts");
-    await fs.promises.writeFile(navFilePath, navCode, "utf-8");
-  }
-
-  if (extractedDocs) {
-    const napi = importNapiModuleSync();
-    await fs.promises.writeFile(
-      path.join(outDir, DOCS_DATA_FILE),
-      napi.generateDocsDataJson(toRustDocsModules(extractedDocs), new Date().toISOString()),
-      "utf-8",
+  if (typeof napi.writeGeneratedDocs !== "function") {
+    throw new Error(
+      "[ox-content] writeGeneratedDocs is not available from @ox-content/napi. Please rebuild the NAPI package.",
     );
   }
 
-  await fs.promises.writeFile(
-    manifestPath,
-    JSON.stringify([...generatedFiles].sort(), null, 2),
-    "utf-8",
+  napi.writeGeneratedDocs(
+    docs,
+    outDir,
+    extractedDocs ? toRustDocsModules(extractedDocs) : undefined,
+    {
+      generateNav: options?.generateNav ?? false,
+      groupBy: options?.groupBy ?? "file",
+      generatedAt: new Date().toISOString(),
+    },
   );
 }
 

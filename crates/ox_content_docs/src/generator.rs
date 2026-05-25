@@ -4,6 +4,7 @@ use std::path::Path;
 
 use crate::config::DocsConfig;
 use crate::extractor::{DocExtractor, DocItem, ExtractResult};
+use crate::normalize::{normalize_doc_items, NormalizedDocEntry};
 
 use thiserror::Error;
 
@@ -30,6 +31,15 @@ pub enum GenerateError {
 pub struct DocsGenerator {
     config: DocsConfig,
     extractor: DocExtractor,
+}
+
+/// Extracted documentation for one source module.
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct ExtractedDocModule {
+    /// Source file path.
+    pub file: String,
+    /// Normalized documentation entries for the source file.
+    pub entries: Vec<NormalizedDocEntry>,
 }
 
 impl DocsGenerator {
@@ -135,6 +145,29 @@ pub fn collect_source_files(src_dir: &str, include: &[String], exclude: &[String
     collect_source_files_inner(Path::new(src_dir), include, exclude, &mut files);
     files.sort();
     files
+}
+
+/// Extracts normalized documentation from source directories.
+pub fn extract_docs_from_directories(
+    src_dirs: &[String],
+    include: &[String],
+    exclude: &[String],
+    include_private: bool,
+    include_internal: bool,
+) -> ExtractResult<Vec<ExtractedDocModule>> {
+    let extractor = DocExtractor::with_visibility(include_private, include_internal);
+    let mut modules = Vec::new();
+
+    for src_dir in src_dirs {
+        for file in collect_source_files(src_dir, include, exclude) {
+            let entries = normalize_doc_items(extractor.extract_file(Path::new(&file))?);
+            if !entries.is_empty() {
+                modules.push(ExtractedDocModule { file, entries });
+            }
+        }
+    }
+
+    Ok(modules)
 }
 
 fn collect_source_files_inner(

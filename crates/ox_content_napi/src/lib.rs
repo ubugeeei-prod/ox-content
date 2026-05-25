@@ -13,19 +13,20 @@ mod transformer;
 use napi::bindgen_prelude::*;
 use napi::Task;
 use napi_derive::napi;
-use std::collections::HashMap;
+use std::collections::{BTreeMap, HashMap};
 use std::fs;
 use std::path::{Path, PathBuf};
 use std::process::Command;
 
 use ox_content_allocator::Allocator;
 use ox_content_docs::{
-    build_export_graph, extract_docs_from_entry_points, generate_docs_data_json, generate_markdown,
-    generate_nav_code, generate_nav_metadata, normalize_doc_items, ApiDocEntry, ApiDocMember,
-    ApiDocModule, ApiDocTag, ApiParamDoc, ApiReturnDoc, DocExtractor, DocItem, DocItemKind, DocTag,
-    DocsNavItem, EntryPointDocsOptions, EntryPointSpec, ExportGraph, ExportKind, ExportSource,
-    GraphOptions, MarkdownDocsOptions, NormalizedDocEntry, NormalizedMember, NormalizedParamDoc,
-    NormalizedReturnDoc, ParamDoc, PublicExport,
+    build_export_graph, extract_docs_from_directories, extract_docs_from_entry_points,
+    generate_docs_data_json, generate_markdown, generate_nav_code, generate_nav_metadata,
+    normalize_doc_items, write_docs_output, ApiDocEntry, ApiDocMember, ApiDocModule, ApiDocTag,
+    ApiParamDoc, ApiReturnDoc, DocExtractor, DocItem, DocItemKind, DocTag, DocsNavItem,
+    DocsOutputOptions, EntryPointDocsOptions, EntryPointSpec, ExportGraph, ExportKind,
+    ExportSource, ExtractedDocModule, GraphOptions, MarkdownDocsOptions, NormalizedDocEntry,
+    NormalizedMember, NormalizedParamDoc, NormalizedReturnDoc, ParamDoc, PublicExport,
 };
 use ox_content_parser::{Parser, ParserOptions};
 use ox_content_renderer::HtmlRenderer;
@@ -254,12 +255,29 @@ pub struct JsDocsMarkdownModule {
     pub entries: Vec<JsDocsMarkdownEntry>,
 }
 
+/// Extracted docs for one source file returned to JavaScript callers.
+#[napi(object)]
+#[derive(Clone)]
+pub struct JsExtractedDocsModule {
+    pub file: String,
+    pub entries: Vec<JsDocEntry>,
+}
+
 /// Options for generated API Markdown.
 #[napi(object)]
 #[derive(Clone)]
 pub struct JsDocsMarkdownOptions {
     pub group_by: Option<String>,
     pub github_url: Option<String>,
+}
+
+/// Options for writing generated API documentation files.
+#[napi(object)]
+#[derive(Clone, Default)]
+pub struct JsDocsOutputOptions {
+    pub generate_nav: Option<bool>,
+    pub group_by: Option<String>,
+    pub generated_at: Option<String>,
 }
 
 /// Entry point used to group generated API docs.
@@ -817,6 +835,22 @@ fn convert_markdown_module(module: JsDocsMarkdownModule) -> ApiDocModule {
     }
 }
 
+fn map_extracted_doc_module(module: ExtractedDocModule) -> JsExtractedDocsModule {
+    JsExtractedDocsModule {
+        file: module.file,
+        entries: module.entries.into_iter().map(map_normalized_doc_entry).collect(),
+    }
+}
+
+fn convert_docs_output_options(options: Option<JsDocsOutputOptions>) -> DocsOutputOptions {
+    let options = options.unwrap_or_default();
+    DocsOutputOptions {
+        generate_nav: options.generate_nav.unwrap_or(false),
+        group_by: options.group_by.unwrap_or_else(|| "file".to_string()),
+        generated_at: options.generated_at.unwrap_or_default(),
+    }
+}
+
 /// Extracts documented declarations from a JavaScript/TypeScript file using Oxc.
 #[napi]
 pub fn extract_file_docs(
@@ -882,6 +916,27 @@ pub fn collect_docs_source_files(
     ox_content_docs::collect_source_files(&src_dir, &include, &exclude)
 }
 
+/// Extracts normalized documentation entries from source directories using Oxc.
+#[napi(js_name = "extractDocsFromDirectories")]
+pub fn extract_docs_from_directories_napi(
+    src_dirs: Vec<String>,
+    include: Vec<String>,
+    exclude: Vec<String>,
+    include_private: Option<bool>,
+    include_internal: Option<bool>,
+) -> Result<Vec<JsExtractedDocsModule>> {
+    let modules = extract_docs_from_directories(
+        &src_dirs,
+        &include,
+        &exclude,
+        include_private.unwrap_or(false),
+        include_internal.unwrap_or(false),
+    )
+    .map_err(|err| Error::from_reason(err.to_string()))?;
+
+    Ok(modules.into_iter().map(map_extracted_doc_module).collect())
+}
+
 /// Builds the public API export graph from entry points.
 #[napi(js_name = "buildExportGraph")]
 pub fn build_export_graph_napi(
@@ -944,6 +999,23 @@ pub fn generate_docs_data_json_napi(
         &generated_at,
     )
     .map_err(|error| Error::from_reason(error.to_string()))
+}
+
+/// Writes generated API documentation files and native sidecars.
+#[napi(js_name = "writeGeneratedDocs")]
+pub fn write_generated_docs(
+    docs: HashMap<String, String>,
+    out_dir: String,
+    extracted_docs: Option<Vec<JsDocsMarkdownModule>>,
+    options: Option<JsDocsOutputOptions>,
+) -> Result<()> {
+    let docs = docs.into_iter().collect::<BTreeMap<_, _>>();
+    let extracted_docs = extracted_docs
+        .map(|docs| docs.into_iter().map(convert_markdown_module).collect::<Vec<_>>());
+    let options = convert_docs_output_options(options);
+
+    write_docs_output(&docs, Path::new(&out_dir), extracted_docs.as_deref(), &options)
+        .map_err(|error| Error::from_reason(error.to_string()))
 }
 
 /// Restores code block metadata after JavaScript-side syntax highlighting.
@@ -2873,6 +2945,7 @@ mod tests {
             "collectSearchMarkdownFiles",
             "collectSsgMarkdownFiles",
             "externalizeSsgAssets",
+            "extractDocsFromDirectories",
             "extractDocsFromEntryPoints",
             "extractFileDocEntries",
             "extractFileDocs",
@@ -2920,6 +2993,7 @@ mod tests {
             "transformMermaid",
             "validateMf2",
             "version",
+            "writeGeneratedDocs",
             "writeSearchIndex",
         ];
 
