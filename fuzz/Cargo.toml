@@ -1,0 +1,52 @@
+[package]
+name = "ox_content_fuzz"
+version = "0.0.0"
+publish = false
+edition = "2021"
+rust-version = "1.83.0"
+
+# Detached from the workspace so libfuzzer-sys (and its nightly/sanitizer
+# requirements) never leak into normal `cargo check`/`cargo test`. Run with
+# `cargo +nightly fuzz run <target>` from `fuzz/`.
+[workspace]
+
+[package.metadata]
+cargo-fuzz = true
+
+[dependencies]
+libfuzzer-sys = "0.4"
+ox_content_allocator = { path = "../crates/ox_content_allocator" }
+ox_content_ast = { path = "../crates/ox_content_ast" }
+ox_content_parser = { path = "../crates/ox_content_parser" }
+ox_content_renderer = { path = "../crates/ox_content_renderer" }
+
+[[bin]]
+name = "parse"
+path = "fuzz_targets/parse.rs"
+test = false
+doc = false
+bench = false
+
+[[bin]]
+name = "parse_gfm"
+path = "fuzz_targets/parse_gfm.rs"
+test = false
+doc = false
+bench = false
+
+[[bin]]
+name = "parse_render"
+path = "fuzz_targets/parse_render.rs"
+test = false
+doc = false
+bench = false
+
+[[bin]]
+name = "render_sanitize"
+path = "fuzz_targets/render_sanitize.rs"
+test = false
+doc = false
+bench = false
+
+[profile.release]
+debug = 1
