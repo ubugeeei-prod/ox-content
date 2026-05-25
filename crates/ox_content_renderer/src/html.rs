@@ -1066,15 +1066,22 @@ fn collect_inline_toc_node(
     counts: &mut FxHashMap<String, usize>,
     entries: &mut Vec<InlineTocEntry>,
 ) {
+    use std::fmt::Write as _;
+
     match node {
         Node::Heading(heading) => {
             let include_heading = heading.depth <= max_depth;
             let text = collect_heading_text(&heading.children);
-            let slug = slugify_heading(&text);
+            let mut slug = slugify_heading(&text);
             let id = if let Some(count) = counts.get_mut(slug.as_str()) {
                 let suffix = *count;
                 *count += 1;
-                include_heading.then(|| format!("{slug}-{suffix}"))
+                if include_heading {
+                    let _ = write!(slug, "-{suffix}");
+                    Some(slug)
+                } else {
+                    None
+                }
             } else if include_heading {
                 counts.insert(slug.clone(), 1);
                 Some(slug)
