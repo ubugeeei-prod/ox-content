@@ -41,8 +41,10 @@ jobs:
           restore-keys: |
             ${{ runner.os }}-cargo-
 
-      - name: Install Chromium for mermaid-cli
-        run: vp exec --filter @ox-content/vite-plugin -- puppeteer browsers install chrome-headless-shell
+      - name: Install browsers for docs rendering
+        run: |
+          vp exec --filter @ox-content/vite-plugin -- playwright install --with-deps chromium
+          vp exec --filter @ox-content/vite-plugin -- puppeteer browsers install chrome-headless-shell
 
       - name: Build
         run: vp build
