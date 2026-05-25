@@ -427,8 +427,7 @@ impl<'a> Parser<'a> {
         // bumpalo will grow it if needed, and oversizing wastes arena
         // bytes that can't be reclaimed until reset.
         let bytes = self.source.as_bytes();
-        let mut inner =
-            ox_content_allocator::String::with_capacity_in(128, self.allocator.bump());
+        let mut inner = ox_content_allocator::String::with_capacity_in(128, self.allocator.bump());
 
         loop {
             if self.position >= bytes.len() {
