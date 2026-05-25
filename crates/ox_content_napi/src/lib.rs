@@ -20,10 +20,12 @@ use std::process::Command;
 
 use ox_content_allocator::Allocator;
 use ox_content_docs::{
-    generate_docs_data_json, generate_markdown, generate_nav_code, generate_nav_metadata,
-    normalize_doc_items, ApiDocEntry, ApiDocModule, ApiDocTag, ApiParamDoc, ApiReturnDoc,
-    DocExtractor, DocItem, DocItemKind, DocTag, DocsNavItem, MarkdownDocsOptions,
-    NormalizedDocEntry, NormalizedParamDoc, NormalizedReturnDoc, ParamDoc,
+    build_export_graph, extract_docs_from_entry_points, generate_docs_data_json, generate_markdown,
+    generate_nav_code, generate_nav_metadata, normalize_doc_items, ApiDocEntry, ApiDocModule,
+    ApiDocTag, ApiParamDoc, ApiReturnDoc, DocExtractor, DocItem, DocItemKind, DocTag, DocsNavItem,
+    EntryPointDocsOptions, EntryPointSpec, ExportGraph, ExportKind, ExportSource, GraphOptions,
+    MarkdownDocsOptions, NormalizedDocEntry, NormalizedParamDoc, NormalizedReturnDoc, ParamDoc,
+    PublicExport,
 };
 use ox_content_parser::{Parser, ParserOptions};
 use ox_content_renderer::HtmlRenderer;
@@ -235,6 +237,87 @@ pub struct JsDocsMarkdownModule {
 pub struct JsDocsMarkdownOptions {
     pub group_by: Option<String>,
     pub github_url: Option<String>,
+}
+
+/// Entry point used to group generated API docs.
+#[napi(object)]
+#[derive(Clone)]
+pub struct JsEntryPointSpec {
+    pub path: String,
+    pub name: Option<String>,
+}
+
+/// Export graph resolution options.
+#[napi(object)]
+#[derive(Clone, Default)]
+pub struct JsGraphOptions {
+    pub root: Option<String>,
+    pub tsconfig: Option<String>,
+}
+
+/// Options for extracting docs grouped by entry point.
+#[napi(object)]
+#[derive(Clone, Default)]
+pub struct JsEntryPointDocsOptions {
+    pub root: Option<String>,
+    pub tsconfig: Option<String>,
+    pub private: Option<bool>,
+}
+
+/// Export source metadata.
+#[napi(object)]
+#[derive(Clone)]
+pub struct JsExportSource {
+    pub kind: String,
+    pub module: Option<String>,
+    pub package: Option<String>,
+    pub original_name: String,
+    pub type_only: bool,
+}
+
+/// Public export metadata.
+#[napi(object)]
+#[derive(Clone)]
+pub struct JsPublicExport {
+    pub name: String,
+    pub kind: String,
+    pub source: JsExportSource,
+}
+
+/// Public entry point module.
+#[napi(object)]
+#[derive(Clone)]
+pub struct JsEntrypointModule {
+    pub name: String,
+    pub source_path: String,
+    pub exports: Vec<JsPublicExport>,
+}
+
+/// Resolved source module.
+#[napi(object)]
+#[derive(Clone)]
+pub struct JsResolvedModule {
+    pub path: String,
+    pub exports: Vec<JsPublicExport>,
+}
+
+/// Resolved export graph.
+#[napi(object)]
+#[derive(Clone)]
+pub struct JsExportGraph {
+    pub entrypoints: Vec<JsEntrypointModule>,
+    pub modules: Vec<JsResolvedModule>,
+}
+
+/// Docs grouped by a public entry point.
+#[napi(object)]
+#[derive(Clone)]
+pub struct JsEntrypointDocsModule {
+    pub name: String,
+    pub file: String,
+    pub source_path: String,
+    pub entries: Vec<JsDocEntry>,
+    pub exports: Vec<JsPublicExport>,
 }
 
 /// Transform options for JavaScript.
@@ -501,6 +584,95 @@ fn map_normalized_doc_entry(entry: NormalizedDocEntry) -> JsDocEntry {
     }
 }
 
+fn path_to_string(path: &Path) -> String {
+    path.to_string_lossy().to_string()
+}
+
+fn convert_entrypoint_spec(spec: JsEntryPointSpec) -> EntryPointSpec {
+    EntryPointSpec { path: PathBuf::from(spec.path), name: spec.name }
+}
+
+fn convert_graph_options(options: Option<JsGraphOptions>) -> GraphOptions {
+    let options = options.unwrap_or_default();
+    GraphOptions {
+        root: options.root.map(PathBuf::from),
+        tsconfig: options.tsconfig.map(PathBuf::from),
+    }
+}
+
+fn convert_entrypoint_docs_options(
+    options: Option<JsEntryPointDocsOptions>,
+) -> EntryPointDocsOptions {
+    let options = options.unwrap_or_default();
+    EntryPointDocsOptions {
+        graph: GraphOptions {
+            root: options.root.map(PathBuf::from),
+            tsconfig: options.tsconfig.map(PathBuf::from),
+        },
+        include_private: options.private.unwrap_or(false),
+    }
+}
+
+fn map_export_kind(kind: ExportKind) -> String {
+    match kind {
+        ExportKind::Value => "value",
+        ExportKind::Type => "type",
+        ExportKind::ValueAndType => "valueAndType",
+        ExportKind::Namespace => "namespace",
+        ExportKind::Default => "default",
+    }
+    .to_string()
+}
+
+fn map_export_source(source: ExportSource) -> JsExportSource {
+    match source {
+        ExportSource::Local { module, original_name } => JsExportSource {
+            kind: "local".to_string(),
+            module: Some(path_to_string(&module)),
+            package: None,
+            original_name,
+            type_only: false,
+        },
+        ExportSource::External { package, original_name, type_only } => JsExportSource {
+            kind: "external".to_string(),
+            module: None,
+            package: Some(package),
+            original_name,
+            type_only,
+        },
+    }
+}
+
+fn map_public_export(export: PublicExport) -> JsPublicExport {
+    JsPublicExport {
+        name: export.name,
+        kind: map_export_kind(export.kind),
+        source: map_export_source(export.source),
+    }
+}
+
+fn map_export_graph(graph: ExportGraph) -> JsExportGraph {
+    JsExportGraph {
+        entrypoints: graph
+            .entrypoints
+            .into_iter()
+            .map(|entrypoint| JsEntrypointModule {
+                name: entrypoint.name,
+                source_path: path_to_string(&entrypoint.source_path),
+                exports: entrypoint.exports.into_iter().map(map_public_export).collect(),
+            })
+            .collect(),
+        modules: graph
+            .modules
+            .into_values()
+            .map(|module| JsResolvedModule {
+                path: path_to_string(&module.path),
+                exports: module.exports.into_iter().map(map_public_export).collect(),
+            })
+            .collect(),
+    }
+}
+
 fn map_docs_nav_item(item: DocsNavItem) -> JsDocsNavItem {
     JsDocsNavItem {
         title: item.title,
@@ -618,6 +790,41 @@ pub fn collect_docs_source_files(
     exclude: Vec<String>,
 ) -> Vec<String> {
     ox_content_docs::collect_source_files(&src_dir, &include, &exclude)
+}
+
+/// Builds the public API export graph from entry points.
+#[napi(js_name = "buildExportGraph")]
+pub fn build_export_graph_napi(
+    entry_points: Vec<JsEntryPointSpec>,
+    options: Option<JsGraphOptions>,
+) -> Result<JsExportGraph> {
+    let entry_points = entry_points.into_iter().map(convert_entrypoint_spec).collect::<Vec<_>>();
+    let graph = build_export_graph(&entry_points, &convert_graph_options(options))
+        .map_err(|error| Error::from_reason(error.to_string()))?;
+    Ok(map_export_graph(graph))
+}
+
+/// Extracts generated API docs grouped by public entry points.
+#[napi(js_name = "extractDocsFromEntryPoints")]
+pub fn extract_docs_from_entry_points_napi(
+    entry_points: Vec<JsEntryPointSpec>,
+    options: Option<JsEntryPointDocsOptions>,
+) -> Result<Vec<JsEntrypointDocsModule>> {
+    let entry_points = entry_points.into_iter().map(convert_entrypoint_spec).collect::<Vec<_>>();
+    let modules =
+        extract_docs_from_entry_points(&entry_points, &convert_entrypoint_docs_options(options))
+            .map_err(|error| Error::from_reason(error.to_string()))?;
+
+    Ok(modules
+        .into_iter()
+        .map(|module| JsEntrypointDocsModule {
+            name: module.name,
+            file: module.file,
+            source_path: path_to_string(&module.source_path),
+            entries: module.entries.into_iter().map(map_normalized_doc_entry).collect(),
+            exports: module.exports.into_iter().map(map_public_export).collect(),
+        })
+        .collect())
 }
 
 /// Generates Markdown API reference pages from extracted documentation entries.
@@ -2522,12 +2729,14 @@ mod tests {
             "buildSearchIndexFromDirectory",
             "buildSsgNavItems",
             "buildSsgThemeNavItems",
+            "buildExportGraph",
             "checkI18n",
             "checkI18nProject",
             "collectDocsSourceFiles",
             "collectSearchMarkdownFiles",
             "collectSsgMarkdownFiles",
             "externalizeSsgAssets",
+            "extractDocsFromEntryPoints",
             "extractFileDocEntries",
             "extractFileDocs",
             "extractSearchContent",

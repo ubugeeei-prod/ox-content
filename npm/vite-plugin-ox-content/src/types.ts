@@ -667,6 +667,24 @@ export interface TocEntry {
 // ============================================
 
 /**
+ * Public API entry point for grouped documentation.
+ */
+export type DocsEntryPoint =
+  | string
+  | {
+      path: string;
+      name?: string;
+    };
+
+/**
+ * Resolved public API entry point.
+ */
+export interface ResolvedDocsEntryPoint {
+  path: string;
+  name?: string;
+}
+
+/**
  * Options for source documentation generation.
  */
 export interface DocsOptions {
@@ -699,6 +717,11 @@ export interface DocsOptions {
    * @default ['**\/*.test.*', '**\/*.spec.*', 'node_modules']
    */
   exclude?: string[];
+
+  /**
+   * Public API entry points used to group re-exported docs.
+   */
+  entryPoints?: DocsEntryPoint[];
 
   /**
    * Output format.
@@ -747,6 +770,7 @@ export interface ResolvedDocsOptions {
   out: string;
   include: string[];
   exclude: string[];
+  entryPoints?: ResolvedDocsEntryPoint[];
   format: "markdown" | "json" | "html";
   private: boolean;
   toc: boolean;

@@ -8,6 +8,7 @@ mod config;
 mod data;
 mod extractor;
 mod generator;
+mod graph;
 mod markdown;
 mod nav;
 mod normalize;
@@ -18,6 +19,11 @@ pub use extractor::{
     DocExtractor, DocItem, DocItemKind, DocTag, ExtractError, ExtractResult, ParamDoc,
 };
 pub use generator::{collect_source_files, DocsGenerator, GenerateError, GenerateResult};
+pub use graph::{
+    build_export_graph, extract_docs_from_entry_points, EntryPointDocsOptions, EntryPointSpec,
+    EntrypointDocsModule, EntrypointModule, ExportGraph, ExportKind, ExportSource, GraphError,
+    GraphOptions, PublicExport, ResolvedModule,
+};
 pub use markdown::{
     generate_markdown, ApiDocEntry, ApiDocModule, ApiDocTag, ApiParamDoc, ApiReturnDoc,
     MarkdownDocsOptions,
