@@ -810,6 +810,34 @@ fn write_escaped_into(out: &mut String, s: &str) {
     }
 }
 
+fn write_url_escaped_into(out: &mut String, s: &str) {
+    let bytes = s.as_bytes();
+    let mut start = 0;
+
+    for (idx, byte) in bytes.iter().copied().enumerate() {
+        let escaped = match byte {
+            b'&' => Some("&amp;"),
+            b'<' => Some("%3C"),
+            b'>' => Some("%3E"),
+            b'"' => Some("%22"),
+            b' ' => Some("%20"),
+            _ => None,
+        };
+
+        if let Some(escaped) = escaped {
+            if start < idx {
+                out.push_str(&s[start..idx]);
+            }
+            out.push_str(escaped);
+            start = idx + 1;
+        }
+    }
+
+    if start < s.len() {
+        out.push_str(&s[start..]);
+    }
+}
+
 fn is_html_attr_start(byte: u8) -> bool {
     byte.is_ascii_alphabetic()
 }
@@ -1162,20 +1190,21 @@ impl HtmlRenderer {
     }
 
     fn render_inline_toc(&mut self) {
+        use std::fmt::Write as _;
+
         if self.toc_entries.is_empty() {
             return;
         }
 
         self.write("<nav class=\"ox-toc\" aria-label=\"Table of contents\">\n<ul>\n");
-        for idx in 0..self.toc_entries.len() {
-            let entry = self.toc_entries[idx].clone();
-            self.write("<li class=\"ox-toc__item ox-toc__item--depth-");
-            self.write(&entry.depth.to_string());
-            self.write("\"><a href=\"#");
-            self.write_url_escaped(&entry.id);
-            self.write("\">");
-            self.write_escaped(&entry.text);
-            self.write("</a></li>\n");
+        for entry in &self.toc_entries {
+            self.output.push_str("<li class=\"ox-toc__item ox-toc__item--depth-");
+            let _ = write!(self.output, "{}", entry.depth);
+            self.output.push_str("\"><a href=\"#");
+            write_url_escaped_into(&mut self.output, &entry.id);
+            self.output.push_str("\">");
+            write_escaped_into(&mut self.output, &entry.text);
+            self.output.push_str("</a></li>\n");
         }
         self.write("</ul>\n</nav>\n");
     }
@@ -1190,31 +1219,7 @@ impl HtmlRenderer {
     }
 
     fn write_url_escaped(&mut self, s: &str) {
-        let bytes = s.as_bytes();
-        let mut start = 0;
-
-        for (idx, byte) in bytes.iter().copied().enumerate() {
-            let escaped = match byte {
-                b'&' => Some("&amp;"),
-                b'<' => Some("%3C"),
-                b'>' => Some("%3E"),
-                b'"' => Some("%22"),
-                b' ' => Some("%20"),
-                _ => None,
-            };
-
-            if let Some(escaped) = escaped {
-                if start < idx {
-                    self.output.push_str(&s[start..idx]);
-                }
-                self.output.push_str(escaped);
-                start = idx + 1;
-            }
-        }
-
-        if start < s.len() {
-            self.output.push_str(&s[start..]);
-        }
+        write_url_escaped_into(&mut self.output, s);
     }
 
     fn sanitized_url<'a>(&self, url: &'a str, fallback: &'static str) -> &'a str {
