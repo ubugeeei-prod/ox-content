@@ -1,5 +1,12 @@
 # Changelog
 
+## [2.15.0] - 2026-05-25
+
+### Features
+
+- add allocation and timing profiling mode (#163)
+- expose and render API members (#160)
+
 ## [2.14.0] - 2026-05-25
 
 ### Features

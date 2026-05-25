@@ -1,6 +1,6 @@
 {
   "name": "@ox-content/napi",
-  "version": "2.14.0",
+  "version": "2.15.0",
   "description": "Node.js bindings for Ox Content - High-performance Markdown parser",
   "keywords": [
     "markdown",
