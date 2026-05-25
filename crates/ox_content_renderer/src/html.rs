@@ -7,6 +7,7 @@ use ox_content_ast::{
     FootnoteReference, Heading, Html, Image, InlineCode, Link, List, ListItem, Node, Paragraph,
     Strong, Table, TableCell, TableRow, Text, ThematicBreak, Visit,
 };
+use rustc_hash::FxHashMap;
 
 #[allow(unused_imports)]
 // The macro is no-op without the `profile` feature, which suppresses the use.
@@ -713,6 +714,92 @@ fn parse_vitepress_inline_annotations(value: &str) -> Vec<CodeLineRenderState> {
     lines
 }
 
+// Per-byte HTML-escape mapping. `ESCAPE_FLAG[b] == 1` and
+// `ESCAPE_TABLE[b]` is the replacement string when `b` must be escaped;
+// otherwise the flag is 0 and the entry is `""`. Splitting flag/string
+// lets the inner scan use a plain integer OR over 8-byte chunks (which
+// LLVM vectorizes) instead of branching on a string comparison.
+static ESCAPE_TABLE: [&str; 256] = {
+    let mut table: [&str; 256] = [""; 256];
+    table[b'&' as usize] = "&amp;";
+    table[b'<' as usize] = "&lt;";
+    table[b'>' as usize] = "&gt;";
+    table[b'"' as usize] = "&quot;";
+    table[b'\'' as usize] = "&#39;";
+    table
+};
+
+static ESCAPE_FLAG: [u8; 256] = {
+    let mut t = [0u8; 256];
+    t[b'&' as usize] = 1;
+    t[b'<' as usize] = 1;
+    t[b'>' as usize] = 1;
+    t[b'"' as usize] = 1;
+    t[b'\'' as usize] = 1;
+    t
+};
+
+#[inline]
+fn write_escaped_into(out: &mut String, s: &str) {
+    let bytes = s.as_bytes();
+    let mut start = 0usize;
+    let mut i = 0usize;
+    out.reserve(s.len());
+
+    // 8-byte chunk fast-skip — the OR over 8 lookups vectorizes well and
+    // dominates the inner loop on long no-escape runs (most plain text).
+    while i + 8 <= bytes.len() {
+        let chunk = &bytes[i..i + 8];
+        let mask = ESCAPE_FLAG[chunk[0] as usize]
+            | ESCAPE_FLAG[chunk[1] as usize]
+            | ESCAPE_FLAG[chunk[2] as usize]
+            | ESCAPE_FLAG[chunk[3] as usize]
+            | ESCAPE_FLAG[chunk[4] as usize]
+            | ESCAPE_FLAG[chunk[5] as usize]
+            | ESCAPE_FLAG[chunk[6] as usize]
+            | ESCAPE_FLAG[chunk[7] as usize];
+        if mask == 0 {
+            i += 8;
+            continue;
+        }
+        break;
+    }
+
+    while i < bytes.len() {
+        let b = bytes[i];
+        if ESCAPE_FLAG[b as usize] != 0 {
+            if start < i {
+                out.push_str(&s[start..i]);
+            }
+            out.push_str(ESCAPE_TABLE[b as usize]);
+            i += 1;
+            start = i;
+            while i + 8 <= bytes.len() {
+                let chunk = &bytes[i..i + 8];
+                let mask = ESCAPE_FLAG[chunk[0] as usize]
+                    | ESCAPE_FLAG[chunk[1] as usize]
+                    | ESCAPE_FLAG[chunk[2] as usize]
+                    | ESCAPE_FLAG[chunk[3] as usize]
+                    | ESCAPE_FLAG[chunk[4] as usize]
+                    | ESCAPE_FLAG[chunk[5] as usize]
+                    | ESCAPE_FLAG[chunk[6] as usize]
+                    | ESCAPE_FLAG[chunk[7] as usize];
+                if mask == 0 {
+                    i += 8;
+                    continue;
+                }
+                break;
+            }
+            continue;
+        }
+        i += 1;
+    }
+
+    if start < bytes.len() {
+        out.push_str(&s[start..]);
+    }
+}
+
 fn is_html_attr_start(byte: u8) -> bool {
     byte.is_ascii_alphabetic()
 }
@@ -762,17 +849,6 @@ fn collect_heading_text(nodes: &[Node<'_>]) -> String {
     text
 }
 
-fn collect_text_nodes_only(nodes: &[Node<'_>]) -> Option<String> {
-    let mut text = String::new();
-    for node in nodes {
-        match node {
-            Node::Text(value) => text.push_str(value.value),
-            _ => return None,
-        }
-    }
-    Some(text)
-}
-
 fn collect_node_text(node: &Node<'_>, text: &mut String) {
     match node {
         Node::Text(value) => text.push_str(value.value),
@@ -802,27 +878,48 @@ fn collect_node_text(node: &Node<'_>, text: &mut String) {
 }
 
 fn slugify_heading(text: &str) -> String {
-    // Previously this function chained `to_lowercase` → `chars.map.collect` →
-    // `split_whitespace.collect::<Vec>` → `join`, each step a fresh heap
-    // allocation (4 per heading, plus `text` and the `id` clone). For docs
-    // with many headings that dominated the renderer's allocation count.
-    // The single-pass version below produces the same output with one
-    // allocation: the result String itself.
+    // Single-pass slugify. Hot path is the all-ASCII byte loop (no
+    // UTF-8 decode, no `char::to_lowercase` iterator allocation per
+    // character); we fall back to the char iterator only when a
+    // non-ASCII byte appears.
+    let bytes = text.as_bytes();
     let mut out = String::with_capacity(text.len());
     let mut last_was_separator = true;
+    let mut i = 0;
 
-    for ch in text.chars() {
-        for lower in ch.to_lowercase() {
-            if lower.is_alphanumeric() {
-                out.push(lower);
+    while i < bytes.len() {
+        let b = bytes[i];
+        if b < 0x80 {
+            if b.is_ascii_alphanumeric() {
+                // Lowercase ASCII letters with a branchless add.
+                let lower = if b.is_ascii_uppercase() { b + 32 } else { b };
+                out.push(lower as char);
                 last_was_separator = false;
             } else if !last_was_separator {
-                // Collapse runs of whitespace / punctuation / '-' into one
-                // dash. Mirrors the prior behavior (which mapped non-alnum
-                // to space, split on whitespace, joined with '-').
                 out.push('-');
                 last_was_separator = true;
             }
+            i += 1;
+        } else {
+            // Find the next ASCII boundary and process the multi-byte run
+            // through the char iterator (handles Unicode case folding /
+            // alphanumeric classification correctly).
+            let mut j = i + 1;
+            while j < bytes.len() && bytes[j] >= 0x80 {
+                j += 1;
+            }
+            for ch in text[i..j].chars() {
+                for lower in ch.to_lowercase() {
+                    if lower.is_alphanumeric() {
+                        out.push(lower);
+                        last_was_separator = false;
+                    } else if !last_was_separator {
+                        out.push('-');
+                        last_was_separator = true;
+                    }
+                }
+            }
+            i = j;
         }
     }
 
@@ -844,21 +941,79 @@ struct InlineTocEntry {
     id: String,
 }
 
-fn collect_inline_toc_entries(document: &Document<'_>, max_depth: u8) -> Vec<InlineTocEntry> {
-    let mut entries = Vec::new();
-    let mut counts = BTreeMap::new();
+fn collect_inline_toc_entries(
+    document: &Document<'_>,
+    max_depth: u8,
+    entries: &mut Vec<InlineTocEntry>,
+) {
+    let mut counts = FxHashMap::default();
 
     for node in &document.children {
-        collect_inline_toc_node(node, max_depth, &mut counts, &mut entries);
+        collect_inline_toc_node(node, max_depth, &mut counts, entries);
+    }
+}
+
+/// Cheap, allocation-free scan for a standalone `[[toc]]` paragraph. The
+/// directive is recognized only when the paragraph contains a single text
+/// node whose trimmed value is exactly `[[toc]]` — which is also the only
+/// form `visit_paragraph` will render as a TOC.
+fn document_has_toc_marker(document: &Document<'_>) -> bool {
+    document.children.iter().any(node_has_toc_marker)
+}
+
+fn node_has_toc_marker(node: &Node<'_>) -> bool {
+    match node {
+        Node::Paragraph(p) => is_toc_marker_paragraph(p),
+        Node::BlockQuote(bq) => bq.children.iter().any(node_has_toc_marker),
+        Node::List(list) => list.children.iter().any(list_item_has_toc_marker),
+        Node::ListItem(item) => list_item_has_toc_marker(item),
+        Node::FootnoteDefinition(def) => def.children.iter().any(node_has_toc_marker),
+        _ => false,
+    }
+}
+
+fn list_item_has_toc_marker(item: &ListItem<'_>) -> bool {
+    item.children.iter().any(node_has_toc_marker)
+}
+
+fn is_toc_marker_paragraph(paragraph: &Paragraph<'_>) -> bool {
+    // Equivalent to the prior
+    // `collect_text_nodes_only(...).is_some_and(|t| t.trim() == "[[toc]]")`
+    // check, but allocation-free: bails on the first non-Text child and
+    // matches the marker byte-by-byte against the concatenated text. Note
+    // that the inline parser emits the literal "[[toc]]" as three Text
+    // nodes (`[`, `[`, `toc]]`) because the bracket-as-link path fails
+    // open — so a "single Text child only" shortcut would miss it.
+    const MARKER: &[u8] = b"[[toc]]";
+    let mut matched = 0usize;
+    let mut after_marker_ws = false;
+
+    for child in &paragraph.children {
+        let Node::Text(text) = child else {
+            return false;
+        };
+        for &byte in text.value.as_bytes() {
+            let is_ws = matches!(byte, b' ' | b'\t' | b'\n' | b'\r');
+            if is_ws {
+                if matched > 0 {
+                    after_marker_ws = true;
+                }
+                continue;
+            }
+            if after_marker_ws || matched == MARKER.len() || byte != MARKER[matched] {
+                return false;
+            }
+            matched += 1;
+        }
     }
 
-    entries
+    matched == MARKER.len()
 }
 
 fn collect_inline_toc_node(
     node: &Node<'_>,
     max_depth: u8,
-    counts: &mut BTreeMap<String, usize>,
+    counts: &mut FxHashMap<String, usize>,
     entries: &mut Vec<InlineTocEntry>,
 ) {
     match node {
@@ -903,7 +1058,7 @@ fn collect_inline_toc_node(
 pub struct HtmlRenderer {
     options: HtmlRendererOptions,
     output: String,
-    heading_id_counts: BTreeMap<String, usize>,
+    heading_id_counts: FxHashMap<String, usize>,
     toc_entries: Vec<InlineTocEntry>,
 }
 
@@ -914,7 +1069,7 @@ impl HtmlRenderer {
         Self {
             options: HtmlRendererOptions::new(),
             output: String::new(),
-            heading_id_counts: BTreeMap::new(),
+            heading_id_counts: FxHashMap::default(),
             toc_entries: Vec::new(),
         }
     }
@@ -925,7 +1080,7 @@ impl HtmlRenderer {
         Self {
             options,
             output: String::new(),
-            heading_id_counts: BTreeMap::new(),
+            heading_id_counts: FxHashMap::default(),
             toc_entries: Vec::new(),
         }
     }
@@ -935,7 +1090,19 @@ impl HtmlRenderer {
     pub fn render(&mut self, document: &Document<'_>) -> String {
         profile_span!("renderer::render");
         self.output.clear();
-        self.toc_entries = collect_inline_toc_entries(document, self.options.toc_max_depth);
+        // TOC collection walks every heading and allocates a slug per entry,
+        // which used to fire on every render regardless of whether a
+        // `[[toc]]` directive was actually present. Pre-scan the document
+        // cheaply (no allocations) and skip the work when no marker exists —
+        // this is the common case for normal docs.
+        self.toc_entries.clear();
+        if document_has_toc_marker(document) {
+            collect_inline_toc_entries(
+                document,
+                self.options.toc_max_depth,
+                &mut self.toc_entries,
+            );
+        }
         self.heading_id_counts.clear();
         let estimated_len = (document.span.len() as usize).saturating_mul(3) / 2;
         if self.output.capacity() < estimated_len {
@@ -970,31 +1137,7 @@ impl HtmlRenderer {
 
     fn write_escaped(&mut self, s: &str) {
         profile_span!("renderer::write_escaped");
-        let bytes = s.as_bytes();
-        let mut start = 0;
-
-        for (idx, byte) in bytes.iter().copied().enumerate() {
-            let escaped = match byte {
-                b'&' => Some("&amp;"),
-                b'<' => Some("&lt;"),
-                b'>' => Some("&gt;"),
-                b'"' => Some("&quot;"),
-                b'\'' => Some("&#39;"),
-                _ => None,
-            };
-
-            if let Some(escaped) = escaped {
-                if start < idx {
-                    self.output.push_str(&s[start..idx]);
-                }
-                self.output.push_str(escaped);
-                start = idx + 1;
-            }
-        }
-
-        if start < s.len() {
-            self.output.push_str(&s[start..]);
-        }
+        write_escaped_into(&mut self.output, s);
     }
 
     fn write_url_escaped(&mut self, s: &str) {
@@ -1278,18 +1421,24 @@ impl HtmlRenderer {
     fn heading_id(&mut self, heading: &Heading<'_>) -> String {
         let text = collect_heading_text(&heading.children);
         let slug = slugify_heading(&text);
-        // The common case (every heading id is unique) used to clone the
-        // slug into the map *and* call `format!`. Now we only allocate for
-        // the map entry, and only build the disambiguated id when we
-        // actually see a duplicate.
-        if let Some(count) = self.heading_id_counts.get_mut(&slug) {
-            let id = format!("{slug}-{count}");
-            *count += 1;
-            id
-        } else {
-            let id = slug.clone();
-            self.heading_id_counts.insert(slug, 1);
-            id
+        // Common case: the slug is unique. We take ownership of `slug` for
+        // the returned id and only hash-lookup once — the previous version
+        // did a `get_mut` + `insert` (two hashes) and cloned the slug on
+        // every unique heading. Now the unique path is one hash + one
+        // insert with no clone.
+        use std::collections::hash_map::Entry;
+        match self.heading_id_counts.entry(slug) {
+            Entry::Occupied(mut entry) => {
+                let count = *entry.get();
+                let id = format!("{}-{count}", entry.key());
+                *entry.get_mut() = count + 1;
+                id
+            }
+            Entry::Vacant(entry) => {
+                let id = entry.key().clone();
+                entry.insert(1);
+                id
+            }
         }
     }
 
@@ -1519,42 +1668,43 @@ impl Renderer for HtmlRenderer {
 impl<'a> Visit<'a> for HtmlRenderer {
     fn visit_paragraph(&mut self, paragraph: &Paragraph<'a>) {
         profile_span!("renderer::visit_paragraph");
-        if collect_text_nodes_only(&paragraph.children).is_some_and(|text| text.trim() == "[[toc]]")
-        {
+        // Skip the `[[toc]]` detection entirely when no TOC entries were
+        // collected — `render_inline_toc()` would emit nothing anyway, so
+        // the check is pure overhead. This matters because it runs on
+        // every paragraph in the document.
+        if !self.toc_entries.is_empty() && is_toc_marker_paragraph(paragraph) {
             self.render_inline_toc();
             return;
         }
 
-        self.write("<p>");
+        self.output.push_str("<p>");
         for child in &paragraph.children {
             self.visit_inline_node(child);
         }
-        self.write("</p>\n");
+        self.output.push_str("</p>\n");
     }
 
     fn visit_heading(&mut self, heading: &Heading<'a>) {
         profile_span!("renderer::visit_heading");
-        let tag = match heading.depth {
-            1 => "h1",
-            2 => "h2",
-            3 => "h3",
-            4 => "h4",
-            5 => "h5",
-            _ => "h6",
-        };
+        // Avoid the heading.depth -> &str match per call: heading depth is
+        // 1..=6 by construction, and "h%d" is a fixed shape we can splat
+        // directly. Saves a branch and a `write` call.
+        let depth = heading.depth.clamp(1, 6);
         let id = self.heading_id(heading);
-        self.write("<");
-        self.write(tag);
-        self.write(" id=\"");
-        self.write_escaped(&id);
-        self.write("\"");
-        self.write(">");
+        self.output.push_str("<h");
+        self.output.push((b'0' + depth) as char);
+        self.output.push_str(" id=\"");
+        // Heading ids are slugified: lowercase alnum + '-' separators. None
+        // of those bytes need HTML escaping, so the unconditional
+        // `write_escaped` pass over the id was pure overhead.
+        self.output.push_str(&id);
+        self.output.push_str("\">");
         for child in &heading.children {
             self.visit_inline_node(child);
         }
-        self.write("</");
-        self.write(tag);
-        self.write(">\n");
+        self.output.push_str("</h");
+        self.output.push((b'0' + depth) as char);
+        self.output.push_str(">\n");
     }
 
     fn visit_thematic_break(&mut self, _thematic_break: &ThematicBreak) {

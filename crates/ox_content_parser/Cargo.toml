@@ -19,6 +19,7 @@ ox_content_allocator = { workspace = true }
 ox_content_ast = { workspace = true }
 thiserror = { workspace = true }
 logos = { workspace = true }
+memchr = { workspace = true }
 ox_content_profiler = { workspace = true, optional = true }
 
 [features]
