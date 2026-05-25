@@ -1,12 +1,13 @@
 use serde_json::{json, Map, Value};
 
-use crate::markdown::{ApiDocEntry, ApiDocModule, ApiParamDoc, ApiReturnDoc};
+use crate::markdown::{ApiDocEntry, ApiDocMember, ApiDocModule, ApiParamDoc, ApiReturnDoc};
 
 const DOC_KIND_ORDER: [&str; 6] = ["function", "class", "interface", "type", "variable", "module"];
 
 #[derive(Default)]
 struct EntryStats {
     entries: u32,
+    members: u32,
     params: u32,
     returns: u32,
     examples: u32,
@@ -38,6 +39,7 @@ fn build_docs_summary(docs: &[ApiDocModule]) -> Value {
             stats.entries += 1;
             let count = stats.by_kind.get(&entry.kind).and_then(Value::as_u64).unwrap_or(0) + 1;
             stats.by_kind.insert(entry.kind.clone(), json!(count));
+            stats.members += entry.members.len() as u32;
             stats.params += entry.params.len() as u32;
             stats.returns += u32::from(entry.returns.is_some());
             stats.examples += entry.examples.len() as u32;
@@ -56,6 +58,7 @@ fn build_docs_summary(docs: &[ApiDocModule]) -> Value {
         "modules": docs.len(),
         "entries": stats.entries,
         "byKind": by_kind,
+        "members": stats.members,
         "params": stats.params,
         "returns": stats.returns,
         "examples": stats.examples,
@@ -96,6 +99,12 @@ fn entry_to_json(entry: &ApiDocEntry) -> Value {
             ),
         );
     }
+    if !entry.members.is_empty() {
+        value.insert(
+            "members".to_string(),
+            Value::Array(entry.members.iter().map(member_to_json).collect()),
+        );
+    }
     if entry.private {
         value.insert("private".to_string(), json!(true));
     }
@@ -106,6 +115,52 @@ fn entry_to_json(entry: &ApiDocEntry) -> Value {
     if let Some(signature) = &entry.signature {
         value.insert("signature".to_string(), json!(signature));
     }
+
+    Value::Object(value)
+}
+
+fn member_to_json(member: &ApiDocMember) -> Value {
+    let mut value = Map::new();
+    value.insert("name".to_string(), json!(member.name));
+    value.insert("kind".to_string(), json!(member.kind));
+    value.insert("description".to_string(), json!(member.description));
+    if let Some(signature) = &member.signature {
+        value.insert("signature".to_string(), json!(signature));
+    }
+    if let Some(type_annotation) = &member.type_annotation {
+        value.insert("type".to_string(), json!(type_annotation));
+    }
+    if !member.params.is_empty() {
+        value.insert(
+            "params".to_string(),
+            Value::Array(member.params.iter().map(param_to_json).collect()),
+        );
+    }
+    if let Some(returns) = &member.returns {
+        value.insert("returns".to_string(), return_to_json(returns));
+    }
+    if member.optional {
+        value.insert("optional".to_string(), json!(true));
+    }
+    if member.readonly {
+        value.insert("readonly".to_string(), json!(true));
+    }
+    if member.r#static {
+        value.insert("static".to_string(), json!(true));
+    }
+    if member.private {
+        value.insert("private".to_string(), json!(true));
+    }
+    if !member.tags.is_empty() {
+        value.insert(
+            "tags".to_string(),
+            Value::Object(
+                member.tags.iter().map(|tag| (tag.tag.clone(), json!(tag.value))).collect(),
+            ),
+        );
+    }
+    value.insert("line".to_string(), json!(member.line));
+    value.insert("endLine".to_string(), json!(member.end_line));
 
     Value::Object(value)
 }
@@ -172,6 +227,7 @@ mod tests {
                 line: 10,
                 end_line: 10,
                 signature: Some("export function clamp(value: number): number".to_string()),
+                members: vec![],
             }],
         }];
 
@@ -180,6 +236,7 @@ mod tests {
 
         assert_eq!(value["summary"]["modules"], 1);
         assert_eq!(value["summary"]["byKind"]["function"], 1);
+        assert_eq!(value["summary"]["members"], 0);
         assert_eq!(value["summary"]["params"], 1);
         assert_eq!(value["summary"]["deprecated"], 1);
         assert_eq!(value["modules"][0]["file"], "src/math.ts");

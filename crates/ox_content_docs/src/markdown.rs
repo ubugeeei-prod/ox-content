@@ -46,6 +46,48 @@ pub struct ApiDocEntry {
     pub end_line: u32,
     /// Full source signature.
     pub signature: Option<String>,
+    /// Members belonging to class/interface/type/enum entries.
+    #[serde(default)]
+    pub members: Vec<ApiDocMember>,
+}
+
+/// Documentation for a member of a class/interface/type/enum entry.
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
+pub struct ApiDocMember {
+    /// Member name.
+    pub name: String,
+    /// Member kind.
+    pub kind: String,
+    /// Human-readable description.
+    pub description: String,
+    /// Full member signature.
+    pub signature: Option<String>,
+    /// Property or enum member type/value annotation.
+    pub type_annotation: Option<String>,
+    /// Parameters.
+    #[serde(default)]
+    pub params: Vec<ApiParamDoc>,
+    /// Return documentation.
+    pub returns: Option<ApiReturnDoc>,
+    /// Whether the member is optional.
+    #[serde(default)]
+    pub optional: bool,
+    /// Whether the member is readonly.
+    #[serde(default)]
+    pub readonly: bool,
+    /// Whether the member is static.
+    #[serde(default)]
+    pub r#static: bool,
+    /// Whether the member is private.
+    #[serde(default)]
+    pub private: bool,
+    /// Custom JSDoc tags, kept in source insertion order.
+    #[serde(default)]
+    pub tags: Vec<ApiDocTag>,
+    /// Declaration start line.
+    pub line: u32,
+    /// Declaration end line.
+    pub end_line: u32,
 }
 
 /// Parameter documentation.
@@ -100,6 +142,7 @@ impl Default for MarkdownDocsOptions {
 struct EntryStats {
     entries: usize,
     by_kind: BTreeMap<String, usize>,
+    members: usize,
     params: usize,
     returns: usize,
     examples: usize,
@@ -461,6 +504,7 @@ fn summarize_entries<'a>(entries: impl IntoIterator<Item = &'a ApiDocEntry>) -> 
     for entry in entries {
         stats.entries += 1;
         *stats.by_kind.entry(entry.kind.clone()).or_default() += 1;
+        stats.members += entry.members.len();
         stats.params += entry.params.len();
         stats.returns += usize::from(entry.returns.is_some());
         stats.examples += entry.examples.len();
@@ -487,6 +531,9 @@ fn render_stats_html(stats: &EntryStats, module_count: Option<usize>) -> String 
 
     if stats.params > 0 {
         items.push(("parameters".to_string(), stats.params, None));
+    }
+    if stats.members > 0 {
+        items.push(("members".to_string(), stats.members, None));
     }
     if stats.returns > 0 {
         items.push(("returns".to_string(), stats.returns, None));
@@ -653,6 +700,12 @@ fn get_entry_badges(entry: &ApiDocEntry) -> Vec<EntryBadge> {
     if !entry.params.is_empty() {
         badges.push(EntryBadge {
             label: format_count_label(entry.params.len(), "param", Some("params")),
+            tone: None,
+        });
+    }
+    if !entry.members.is_empty() {
+        badges.push(EntryBadge {
+            label: format_count_label(entry.members.len(), "member", Some("members")),
             tone: None,
         });
     }
@@ -834,6 +887,192 @@ fn render_tag_list_html(tags: &[ApiDocTag]) -> String {
     )
 }
 
+fn render_member_flags(member: &ApiDocMember) -> String {
+    let mut flags = Vec::new();
+    if member.optional {
+        flags.push("optional");
+    }
+    if member.readonly {
+        flags.push("readonly");
+    }
+    if member.r#static {
+        flags.push("static");
+    }
+    if member.private {
+        flags.push("private");
+    }
+
+    let mut html = String::new();
+    for flag in flags {
+        write!(html, "<span class=\"ox-api-badge\">{flag}</span>").unwrap();
+    }
+    html
+}
+
+fn render_member_type_html(member: &ApiDocMember) -> String {
+    let value = member
+        .signature
+        .as_deref()
+        .or(member.type_annotation.as_deref())
+        .or_else(|| member.returns.as_ref().map(|returns| returns.type_annotation.as_str()));
+
+    value.map_or_else(String::new, |value| {
+        render_highlighted_inline_code_html(value, "ox-api-entry__member-type", "typescript")
+    })
+}
+
+fn render_member_description_html(member: &ApiDocMember) -> String {
+    let mut blocks = Vec::new();
+
+    if !member.description.is_empty() {
+        blocks.push(format!(
+            "<div class=\"ox-api-entry__member-description\">{}</div>",
+            render_inline_html(&member.description)
+        ));
+    }
+
+    if !member.params.is_empty() {
+        let mut params = String::new();
+        for param in &member.params {
+            let mut description = param.description.clone();
+            if param.optional {
+                if description.is_empty() {
+                    description.push_str("optional");
+                } else {
+                    description.push_str(" - optional");
+                }
+            }
+            write!(
+                params,
+                "<li><code>{}</code>{}</li>",
+                escape_html(&param.name),
+                if description.is_empty() {
+                    String::new()
+                } else {
+                    format!(" {}", render_inline_html(&description))
+                }
+            )
+            .unwrap();
+        }
+        blocks.push(format!("<ul class=\"ox-api-entry__member-params\">{params}</ul>"));
+    }
+
+    if let Some(returns) = &member.returns {
+        if !returns.description.is_empty() {
+            blocks.push(format!(
+                "<div class=\"ox-api-entry__member-return\"><span>Returns</span> {}</div>",
+                render_inline_html(&returns.description)
+            ));
+        }
+    }
+
+    blocks.join("")
+}
+
+fn render_member_table_html(title: &str, members: &[&ApiDocMember]) -> String {
+    if members.is_empty() {
+        return String::new();
+    }
+
+    let rows = members
+        .iter()
+        .map(|member| {
+            format!(
+                "<tr>
+  <td><code>{}</code>{}</td>
+  <td><span class=\"ox-api-entry__member-kind\">{}</span></td>
+  <td>{}</td>
+  <td>{}</td>
+</tr>",
+                escape_html(&member.name),
+                render_member_flags(member),
+                escape_html(&member.kind),
+                render_member_type_html(member),
+                render_member_description_html(member)
+            )
+        })
+        .collect::<Vec<_>>()
+        .join("\n");
+
+    format!(
+        "<div class=\"ox-api-entry__member-group\">
+<h5>{}</h5>
+<table class=\"ox-api-entry__members-table\">
+<thead><tr><th>Name</th><th>Kind</th><th>Type</th><th>Description</th></tr></thead>
+<tbody>
+{rows}
+</tbody>
+</table>
+</div>",
+        escape_html(title)
+    )
+}
+
+fn render_members_table_html(members: &[ApiDocMember], entry_kind: &str) -> String {
+    if members.is_empty() {
+        return String::new();
+    }
+
+    let constructors =
+        members.iter().filter(|member| member.kind == "constructor").collect::<Vec<_>>();
+    let static_methods = members
+        .iter()
+        .filter(|member| {
+            member.r#static && matches!(member.kind.as_str(), "method" | "getter" | "setter")
+        })
+        .collect::<Vec<_>>();
+    let methods = members
+        .iter()
+        .filter(|member| {
+            !member.r#static && matches!(member.kind.as_str(), "method" | "getter" | "setter")
+        })
+        .collect::<Vec<_>>();
+    let static_properties = members
+        .iter()
+        .filter(|member| member.r#static && member.kind == "property")
+        .collect::<Vec<_>>();
+    let properties = members
+        .iter()
+        .filter(|member| !member.r#static && member.kind == "property")
+        .collect::<Vec<_>>();
+    let enum_members =
+        members.iter().filter(|member| member.kind == "enumMember").collect::<Vec<_>>();
+
+    let mut groups = Vec::new();
+    match entry_kind {
+        "class" => {
+            groups.push(render_member_table_html("Constructors", &constructors));
+            groups.push(render_member_table_html("Static Methods", &static_methods));
+            groups.push(render_member_table_html("Methods", &methods));
+            groups.push(render_member_table_html("Static Properties", &static_properties));
+            groups.push(render_member_table_html("Properties", &properties));
+        }
+        "interface" => {
+            groups.push(render_member_table_html("Properties", &properties));
+            groups.push(render_member_table_html("Methods", &methods));
+        }
+        "type" => {
+            groups.push(render_member_table_html("Properties", &properties));
+            groups.push(render_member_table_html("Methods", &methods));
+            groups.push(render_member_table_html("Enum Members", &enum_members));
+        }
+        _ => groups.push(render_member_table_html("Members", &members.iter().collect::<Vec<_>>())),
+    }
+
+    let groups = groups.into_iter().filter(|group| !group.is_empty()).collect::<Vec<_>>();
+    if groups.is_empty() {
+        return String::new();
+    }
+
+    format!(
+        "<div class=\"ox-api-entry__section ox-api-entry__section--members\">
+<h4>Members</h4>
+{}
+</div>",
+        groups.join("\n")
+    )
+}
+
 fn generate_entry_markdown(
     entry: &ApiDocEntry,
     options: &MarkdownDocsOptions,
@@ -872,6 +1111,11 @@ fn generate_entry_markdown(
             "<p class=\"ox-api-entry__source\"><a href=\"{}\">View source</a></p>\n",
             escape_html(&source_href)
         ));
+    }
+
+    if !entry.members.is_empty() {
+        body.push_str(&render_members_table_html(&entry.members, &entry.kind));
+        body.push('\n');
     }
 
     if !entry.params.is_empty() {
@@ -1230,5 +1474,86 @@ fn capitalize_ascii(value: &str) -> String {
     match chars.next() {
         Some(first) => format!("{}{}", first.to_ascii_uppercase(), chars.as_str()),
         None => String::new(),
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn renders_interface_members_table() {
+        let docs = vec![ApiDocModule {
+            file: "/repo/src/command.ts".to_string(),
+            entries: vec![ApiDocEntry {
+                name: "Command".to_string(),
+                kind: "interface".to_string(),
+                description: "Runtime command.".to_string(),
+                params: vec![],
+                returns: None,
+                examples: vec![],
+                tags: vec![],
+                private: false,
+                file: "/repo/src/command.ts".to_string(),
+                line: 1,
+                end_line: 10,
+                signature: Some("export interface Command".to_string()),
+                members: vec![
+                    ApiDocMember {
+                        name: "name".to_string(),
+                        kind: "property".to_string(),
+                        description: "Command name.".to_string(),
+                        signature: None,
+                        type_annotation: Some("string".to_string()),
+                        params: vec![],
+                        returns: None,
+                        optional: false,
+                        readonly: true,
+                        r#static: false,
+                        private: false,
+                        tags: vec![],
+                        line: 5,
+                        end_line: 5,
+                    },
+                    ApiDocMember {
+                        name: "run".to_string(),
+                        kind: "method".to_string(),
+                        description: "Runs the command.".to_string(),
+                        signature: Some("run(ctx: Context): Promise<void>".to_string()),
+                        type_annotation: None,
+                        params: vec![ApiParamDoc {
+                            name: "ctx".to_string(),
+                            type_annotation: "Context".to_string(),
+                            description: "Runtime context.".to_string(),
+                            optional: false,
+                            default_value: None,
+                        }],
+                        returns: Some(ApiReturnDoc {
+                            type_annotation: "Promise".to_string(),
+                            description: "Run result.".to_string(),
+                        }),
+                        optional: false,
+                        readonly: false,
+                        r#static: false,
+                        private: false,
+                        tags: vec![],
+                        line: 7,
+                        end_line: 7,
+                    },
+                ],
+            }],
+        }];
+
+        let markdown = generate_markdown(&docs, &MarkdownDocsOptions::default());
+        let page = markdown.get("command.md").unwrap();
+
+        assert!(page.contains("<h4>Members</h4>"));
+        assert!(page.contains("<h5>Properties</h5>"));
+        assert!(page.contains("<code>name</code>"));
+        assert!(page.contains("readonly"));
+        assert!(page.contains("Command name."));
+        assert!(page.contains("<h5>Methods</h5>"));
+        assert!(page.contains("run(ctx: Context): Promise&lt;void&gt;"));
+        assert!(page.contains("Runtime context."));
     }
 }

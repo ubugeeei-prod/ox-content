@@ -45,7 +45,8 @@ impl NormalizedDocKind {
             | DocItemKind::Property
             | DocItemKind::Constructor
             | DocItemKind::Getter
-            | DocItemKind::Setter => None,
+            | DocItemKind::Setter
+            | DocItemKind::EnumMember => None,
         }
     }
 
@@ -59,6 +60,60 @@ impl NormalizedDocKind {
             Self::Type => "type",
             Self::Variable => "variable",
             Self::Module => "module",
+        }
+    }
+}
+
+/// Documentation item kind supported for class/interface/type/enum members.
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(rename_all = "lowercase")]
+pub enum NormalizedMemberKind {
+    /// Object or class property.
+    Property,
+    /// Method signature.
+    Method,
+    /// Class constructor.
+    Constructor,
+    /// Getter accessor.
+    Getter,
+    /// Setter accessor.
+    Setter,
+    /// Enum member.
+    #[serde(rename = "enumMember")]
+    EnumMember,
+}
+
+impl NormalizedMemberKind {
+    /// Converts extractor-level member kinds into public member kinds.
+    #[must_use]
+    pub fn from_doc_item_kind(kind: DocItemKind) -> Option<Self> {
+        match kind {
+            DocItemKind::Property => Some(Self::Property),
+            DocItemKind::Method => Some(Self::Method),
+            DocItemKind::Constructor => Some(Self::Constructor),
+            DocItemKind::Getter => Some(Self::Getter),
+            DocItemKind::Setter => Some(Self::Setter),
+            DocItemKind::EnumMember => Some(Self::EnumMember),
+            DocItemKind::Module
+            | DocItemKind::Function
+            | DocItemKind::Class
+            | DocItemKind::Interface
+            | DocItemKind::Type
+            | DocItemKind::Enum
+            | DocItemKind::Variable => None,
+        }
+    }
+
+    /// Returns the JavaScript-facing string for this kind.
+    #[must_use]
+    pub fn as_str(self) -> &'static str {
+        match self {
+            Self::Property => "property",
+            Self::Method => "method",
+            Self::Constructor => "constructor",
+            Self::Getter => "getter",
+            Self::Setter => "setter",
+            Self::EnumMember => "enumMember",
         }
     }
 }
@@ -85,6 +140,45 @@ pub struct NormalizedReturnDoc {
     pub type_annotation: String,
     /// Return value description.
     pub description: String,
+}
+
+/// Normalized documentation for a member of a class/interface/type/enum entry.
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+pub struct NormalizedMember {
+    /// Member name.
+    pub name: String,
+    /// Member kind.
+    pub kind: NormalizedMemberKind,
+    /// Human-readable description.
+    pub description: String,
+    /// Full member signature, for callable members.
+    pub signature: Option<String>,
+    /// Property or enum member type/value annotation.
+    pub type_annotation: Option<String>,
+    /// Parameters, if any.
+    #[serde(default)]
+    pub params: Vec<NormalizedParamDoc>,
+    /// Return documentation, if any.
+    pub returns: Option<NormalizedReturnDoc>,
+    /// Whether the member is optional.
+    #[serde(default)]
+    pub optional: bool,
+    /// Whether the member is readonly.
+    #[serde(default)]
+    pub readonly: bool,
+    /// Whether the member is static.
+    #[serde(default)]
+    pub r#static: bool,
+    /// Whether the member is marked private.
+    #[serde(default)]
+    pub private: bool,
+    /// Custom JSDoc tags.
+    #[serde(default)]
+    pub tags: BTreeMap<String, String>,
+    /// Declaration start line.
+    pub line: u32,
+    /// Declaration end line.
+    pub end_line: u32,
 }
 
 /// Normalized documentation entry consumed by generated API docs.
@@ -114,6 +208,9 @@ pub struct NormalizedDocEntry {
     pub end_line: u32,
     /// Signature text.
     pub signature: Option<String>,
+    /// Members belonging to class/interface/type/enum entries.
+    #[serde(default)]
+    pub members: Vec<NormalizedMember>,
 }
 
 /// Normalizes extracted documentation items into API reference entries.
@@ -127,13 +224,76 @@ pub fn normalize_doc_items(items: Vec<DocItem>) -> Vec<NormalizedDocEntry> {
 pub fn normalize_doc_item(item: DocItem) -> Option<NormalizedDocEntry> {
     let kind = NormalizedDocKind::from_doc_item_kind(item.kind)?;
 
+    let mut metadata = normalize_doc_metadata(&item.tags);
+    merge_extracted_params(&mut metadata.params, item.params);
+    merge_extracted_return(&mut metadata.returns, item.return_type);
+    let members = item.children.into_iter().filter_map(normalize_member).collect();
+
+    Some(NormalizedDocEntry {
+        name: item.name,
+        kind,
+        description: item.doc.unwrap_or_default(),
+        params: metadata.params,
+        returns: metadata.returns,
+        examples: metadata.examples,
+        tags: metadata.tags,
+        private: metadata.private,
+        file: item.source_path,
+        line: item.line,
+        end_line: item.end_line,
+        signature: item.signature,
+        members,
+    })
+}
+
+fn normalize_member(item: DocItem) -> Option<NormalizedMember> {
+    let kind = NormalizedMemberKind::from_doc_item_kind(item.kind)?;
+    let mut metadata = normalize_doc_metadata(&item.tags);
+    merge_extracted_params(&mut metadata.params, item.params);
+    merge_extracted_return(&mut metadata.returns, item.return_type);
+
+    let (signature, type_annotation) = match kind {
+        NormalizedMemberKind::Property | NormalizedMemberKind::EnumMember => (None, item.signature),
+        NormalizedMemberKind::Method
+        | NormalizedMemberKind::Constructor
+        | NormalizedMemberKind::Getter
+        | NormalizedMemberKind::Setter => (item.signature, None),
+    };
+
+    Some(NormalizedMember {
+        name: item.name,
+        kind,
+        description: item.doc.unwrap_or_default(),
+        signature,
+        type_annotation,
+        params: metadata.params,
+        returns: metadata.returns,
+        optional: item.optional,
+        readonly: item.readonly,
+        r#static: item.r#static,
+        private: metadata.private,
+        tags: metadata.tags,
+        line: item.line,
+        end_line: item.end_line,
+    })
+}
+
+struct NormalizedDocMetadata {
+    params: Vec<NormalizedParamDoc>,
+    returns: Option<NormalizedReturnDoc>,
+    examples: Vec<String>,
+    tags: BTreeMap<String, String>,
+    private: bool,
+}
+
+fn normalize_doc_metadata(tags: &[DocTag]) -> NormalizedDocMetadata {
     let mut params = Vec::new();
     let mut returns = None;
     let mut examples = Vec::new();
-    let mut tags = BTreeMap::new();
-    let mut is_private = false;
+    let mut normalized_tags = BTreeMap::new();
+    let mut private = false;
 
-    for tag in &item.tags {
+    for tag in tags {
         match tag.tag.as_str() {
             tag_name if PARAM_TAG_NAMES.contains(&tag_name) => {
                 if let Some(param) = normalized_param_from_tag(tag) {
@@ -151,21 +311,25 @@ pub fn normalize_doc_item(item: DocItem) -> Option<NormalizedDocEntry> {
                 }
             }
             PRIVATE_TAG_NAME => {
-                is_private = true;
+                private = true;
             }
             tag_name => {
-                tags.entry(tag_name.to_string()).or_insert_with(|| tag.value.clone());
+                normalized_tags.entry(tag_name.to_string()).or_insert_with(|| tag.value.clone());
             }
         }
     }
 
-    for param in item.params {
-        if is_placeholder_param(&params, &param) {
+    NormalizedDocMetadata { params, returns, examples, tags: normalized_tags, private }
+}
+
+fn merge_extracted_params(params: &mut Vec<NormalizedParamDoc>, extracted_params: Vec<ParamDoc>) {
+    for param in extracted_params {
+        if is_placeholder_param(params, &param) {
             continue;
         }
 
         merge_param(
-            &mut params,
+            params,
             NormalizedParamDoc {
                 name: param.name,
                 type_annotation: param.type_annotation.unwrap_or_else(|| UNKNOWN_TYPE.to_string()),
@@ -175,33 +339,20 @@ pub fn normalize_doc_item(item: DocItem) -> Option<NormalizedDocEntry> {
             },
         );
     }
+}
 
-    if let Some(return_type) = item.return_type {
-        match &mut returns {
+fn merge_extracted_return(returns: &mut Option<NormalizedReturnDoc>, return_type: Option<String>) {
+    if let Some(return_type) = return_type {
+        match returns {
             Some(current) => current.type_annotation = return_type,
             None => {
-                returns = Some(NormalizedReturnDoc {
+                *returns = Some(NormalizedReturnDoc {
                     type_annotation: return_type,
                     description: String::new(),
                 });
             }
         }
     }
-
-    Some(NormalizedDocEntry {
-        name: item.name,
-        kind,
-        description: item.doc.unwrap_or_default(),
-        params,
-        returns,
-        examples,
-        tags,
-        private: is_private,
-        file: item.source_path,
-        line: item.line,
-        end_line: item.end_line,
-        signature: item.signature,
-    })
 }
 
 fn is_placeholder_param(existing_params: &[NormalizedParamDoc], param: &ParamDoc) -> bool {
@@ -353,5 +504,172 @@ export enum Mode {
 
         assert_eq!(entries.len(), 1);
         assert_eq!(entries[0].kind, NormalizedDocKind::Type);
+    }
+
+    #[test]
+    fn interface_with_properties_emits_members() {
+        let source = r"
+/**
+ * Runtime command.
+ */
+export interface Command {
+    /** Command name. */
+    readonly name: string;
+    /** Positional arguments. */
+    args?: string[];
+}
+";
+
+        let extractor = DocExtractor::new();
+        let items = extractor.extract_source(source, "command.ts", SourceType::ts()).unwrap();
+        let entries = normalize_doc_items(items);
+        let members = &entries[0].members;
+
+        assert_eq!(members.len(), 2);
+        assert_eq!(members[0].name, "name");
+        assert_eq!(members[0].kind, NormalizedMemberKind::Property);
+        assert_eq!(members[0].type_annotation.as_deref(), Some("string"));
+        assert_eq!(members[0].description, "Command name.");
+        assert!(members[0].readonly);
+        assert!(!members[0].optional);
+        assert_eq!(members[1].name, "args");
+        assert_eq!(members[1].type_annotation.as_deref(), Some("string[]"));
+        assert!(members[1].optional);
+    }
+
+    #[test]
+    fn interface_with_method_signatures_emits_method_members() {
+        let source = r"
+/**
+ * Runtime command.
+ */
+export interface Command {
+    /**
+     * Runs the command.
+     * @param ctx - Runtime context
+     * @returns Run result
+     */
+    run(ctx: Context): Promise<void>;
+}
+";
+
+        let extractor = DocExtractor::new();
+        let items = extractor.extract_source(source, "command.ts", SourceType::ts()).unwrap();
+        let entries = normalize_doc_items(items);
+        let member = &entries[0].members[0];
+
+        assert_eq!(member.name, "run");
+        assert_eq!(member.kind, NormalizedMemberKind::Method);
+        assert_eq!(member.signature.as_deref(), Some("run(ctx: Context): Promise<void>"));
+        assert_eq!(member.params.len(), 1);
+        assert_eq!(member.params[0].name, "ctx");
+        assert_eq!(member.params[0].type_annotation, "Context");
+        assert_eq!(member.params[0].description, "Runtime context");
+        assert_eq!(
+            member.returns,
+            Some(NormalizedReturnDoc {
+                type_annotation: "Promise".to_string(),
+                description: "Run result".to_string()
+            })
+        );
+    }
+
+    #[test]
+    fn class_emits_constructor_static_method_and_property_members() {
+        let source = r"
+/**
+ * Registry.
+ */
+export class Registry {
+    /** Creates a registry. */
+    constructor(name: string) {}
+    /** Default registry. */
+    static defaultName: string;
+    /** Registers a value. */
+    register(value: string): void {}
+}
+";
+
+        let extractor = DocExtractor::new();
+        let items = extractor.extract_source(source, "registry.ts", SourceType::ts()).unwrap();
+        let entries = normalize_doc_items(items);
+        let members = &entries[0].members;
+
+        assert_eq!(
+            members.iter().map(|member| member.name.as_str()).collect::<Vec<_>>(),
+            ["constructor", "defaultName", "register"]
+        );
+        assert_eq!(members[0].kind, NormalizedMemberKind::Constructor);
+        assert_eq!(members[0].params[0].type_annotation, "string");
+        assert_eq!(members[1].kind, NormalizedMemberKind::Property);
+        assert!(members[1].r#static);
+        assert_eq!(members[1].type_annotation.as_deref(), Some("string"));
+        assert_eq!(members[2].kind, NormalizedMemberKind::Method);
+    }
+
+    #[test]
+    fn enum_emits_enum_members_in_declaration_order() {
+        let source = r"
+/**
+ * Available modes.
+ */
+export enum Mode {
+    Fast = 'fast',
+    Slow = 'slow',
+}
+";
+
+        let extractor = DocExtractor::new();
+        let items = extractor.extract_source(source, "mode.ts", SourceType::ts()).unwrap();
+        let entries = normalize_doc_items(items);
+        let members = &entries[0].members;
+
+        assert_eq!(
+            members.iter().map(|member| member.name.as_str()).collect::<Vec<_>>(),
+            ["Fast", "Slow"]
+        );
+        assert!(members.iter().all(|member| member.kind == NormalizedMemberKind::EnumMember));
+        assert_eq!(members[0].type_annotation.as_deref(), Some("'fast'"));
+    }
+
+    #[test]
+    fn member_visibility_tags_are_filtered_by_extractor_options() {
+        let source = r"
+/**
+ * Runtime command.
+ */
+export interface Command {
+    /** Command name. */
+    name: string;
+    /**
+     * Internal token.
+     * @internal
+     */
+    token: string;
+    /**
+     * Private secret.
+     * @private
+     */
+    secret: string;
+}
+";
+
+        let public_items =
+            DocExtractor::new().extract_source(source, "command.ts", SourceType::ts()).unwrap();
+        let public_entries = normalize_doc_items(public_items);
+        assert_eq!(
+            public_entries[0].members.iter().map(|member| member.name.as_str()).collect::<Vec<_>>(),
+            ["name"]
+        );
+
+        let all_items = DocExtractor::with_visibility(true, true)
+            .extract_source(source, "command.ts", SourceType::ts())
+            .unwrap();
+        let all_entries = normalize_doc_items(all_items);
+        assert_eq!(
+            all_entries[0].members.iter().map(|member| member.name.as_str()).collect::<Vec<_>>(),
+            ["name", "token", "secret"]
+        );
+        assert!(all_entries[0].members[2].private);
     }
 }

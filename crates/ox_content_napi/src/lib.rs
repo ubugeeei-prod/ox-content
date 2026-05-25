@@ -21,11 +21,11 @@ use std::process::Command;
 use ox_content_allocator::Allocator;
 use ox_content_docs::{
     build_export_graph, extract_docs_from_entry_points, generate_docs_data_json, generate_markdown,
-    generate_nav_code, generate_nav_metadata, normalize_doc_items, ApiDocEntry, ApiDocModule,
-    ApiDocTag, ApiParamDoc, ApiReturnDoc, DocExtractor, DocItem, DocItemKind, DocTag, DocsNavItem,
-    EntryPointDocsOptions, EntryPointSpec, ExportGraph, ExportKind, ExportSource, GraphOptions,
-    MarkdownDocsOptions, NormalizedDocEntry, NormalizedParamDoc, NormalizedReturnDoc, ParamDoc,
-    PublicExport,
+    generate_nav_code, generate_nav_metadata, normalize_doc_items, ApiDocEntry, ApiDocMember,
+    ApiDocModule, ApiDocTag, ApiParamDoc, ApiReturnDoc, DocExtractor, DocItem, DocItemKind, DocTag,
+    DocsNavItem, EntryPointDocsOptions, EntryPointSpec, ExportGraph, ExportKind, ExportSource,
+    GraphOptions, MarkdownDocsOptions, NormalizedDocEntry, NormalizedMember, NormalizedParamDoc,
+    NormalizedReturnDoc, ParamDoc, PublicExport,
 };
 use ox_content_parser::{Parser, ParserOptions};
 use ox_content_renderer::HtmlRenderer;
@@ -148,6 +148,7 @@ pub struct JsSourceDocItem {
     pub signature: Option<String>,
     pub params: Vec<JsSourceDocParam>,
     pub return_type: Option<String>,
+    pub members: Option<Vec<JsSourceDocItem>>,
     pub tags: Vec<JsSourceDocTag>,
 }
 
@@ -170,6 +171,26 @@ pub struct JsDocReturn {
     pub description: String,
 }
 
+/// Normalized member documentation used by generated API docs.
+#[napi(object)]
+#[derive(Clone)]
+pub struct JsDocMember {
+    pub name: String,
+    pub kind: String,
+    pub description: String,
+    pub signature: Option<String>,
+    pub r#type: Option<String>,
+    pub params: Option<Vec<JsDocParam>>,
+    pub returns: Option<JsDocReturn>,
+    pub optional: Option<bool>,
+    pub readonly: Option<bool>,
+    pub r#static: Option<bool>,
+    pub private: Option<bool>,
+    pub tags: Option<HashMap<String, String>>,
+    pub line: u32,
+    pub end_line: u32,
+}
+
 /// Normalized documentation entry used by generated API docs.
 #[napi(object)]
 #[derive(Clone)]
@@ -186,6 +207,7 @@ pub struct JsDocEntry {
     pub line: u32,
     pub end_line: u32,
     pub signature: Option<String>,
+    pub members: Option<Vec<JsDocMember>>,
 }
 
 /// Navigation item emitted for generated documentation.
@@ -221,6 +243,7 @@ pub struct JsDocsMarkdownEntry {
     pub line: u32,
     pub end_line: u32,
     pub signature: Option<String>,
+    pub members: Option<Vec<JsDocMember>>,
 }
 
 /// Extracted docs for one source file used by generated API Markdown.
@@ -518,6 +541,7 @@ fn doc_item_kind_to_string(kind: DocItemKind) -> String {
         DocItemKind::Constructor => "constructor",
         DocItemKind::Getter => "getter",
         DocItemKind::Setter => "setter",
+        DocItemKind::EnumMember => "enumMember",
     }
     .to_string()
 }
@@ -537,6 +561,9 @@ fn map_param_doc(param: ParamDoc) -> JsSourceDocParam {
 }
 
 fn map_doc_item(item: DocItem) -> JsSourceDocItem {
+    let members =
+        (!item.children.is_empty()).then(|| item.children.into_iter().map(map_doc_item).collect());
+
     JsSourceDocItem {
         name: item.name,
         kind: doc_item_kind_to_string(item.kind),
@@ -549,6 +576,7 @@ fn map_doc_item(item: DocItem) -> JsSourceDocItem {
         signature: item.signature,
         params: item.params.into_iter().map(map_param_doc).collect(),
         return_type: item.return_type,
+        members,
         tags: item.tags.into_iter().map(map_doc_tag).collect(),
     }
 }
@@ -567,6 +595,26 @@ fn map_normalized_return_doc(return_doc: NormalizedReturnDoc) -> JsDocReturn {
     JsDocReturn { r#type: return_doc.type_annotation, description: return_doc.description }
 }
 
+fn map_normalized_member(member: NormalizedMember) -> JsDocMember {
+    JsDocMember {
+        name: member.name,
+        kind: member.kind.as_str().to_string(),
+        description: member.description,
+        signature: member.signature,
+        r#type: member.type_annotation,
+        params: (!member.params.is_empty())
+            .then(|| member.params.into_iter().map(map_normalized_param_doc).collect()),
+        returns: member.returns.map(map_normalized_return_doc),
+        optional: member.optional.then_some(true),
+        readonly: member.readonly.then_some(true),
+        r#static: member.r#static.then_some(true),
+        private: member.private.then_some(true),
+        tags: (!member.tags.is_empty()).then(|| member.tags.into_iter().collect()),
+        line: member.line,
+        end_line: member.end_line,
+    }
+}
+
 fn map_normalized_doc_entry(entry: NormalizedDocEntry) -> JsDocEntry {
     JsDocEntry {
         name: entry.name,
@@ -582,6 +630,8 @@ fn map_normalized_doc_entry(entry: NormalizedDocEntry) -> JsDocEntry {
         line: entry.line,
         end_line: entry.end_line,
         signature: entry.signature,
+        members: (!entry.members.is_empty())
+            .then(|| entry.members.into_iter().map(map_normalized_member).collect()),
     }
 }
 
@@ -713,6 +763,30 @@ fn convert_markdown_tag(tag: JsDocsMarkdownTag) -> ApiDocTag {
     ApiDocTag { tag: tag.tag, value: tag.value }
 }
 
+fn convert_markdown_member(member: JsDocMember) -> ApiDocMember {
+    ApiDocMember {
+        name: member.name,
+        kind: member.kind,
+        description: member.description,
+        signature: member.signature,
+        type_annotation: member.r#type,
+        params: member.params.unwrap_or_default().into_iter().map(convert_markdown_param).collect(),
+        returns: member.returns.map(convert_markdown_return),
+        optional: member.optional.unwrap_or(false),
+        readonly: member.readonly.unwrap_or(false),
+        r#static: member.r#static.unwrap_or(false),
+        private: member.private.unwrap_or(false),
+        tags: member
+            .tags
+            .unwrap_or_default()
+            .into_iter()
+            .map(|(tag, value)| ApiDocTag { tag, value })
+            .collect(),
+        line: member.line,
+        end_line: member.end_line,
+    }
+}
+
 fn convert_markdown_entry(entry: JsDocsMarkdownEntry) -> ApiDocEntry {
     ApiDocEntry {
         name: entry.name,
@@ -727,6 +801,12 @@ fn convert_markdown_entry(entry: JsDocsMarkdownEntry) -> ApiDocEntry {
         line: entry.line,
         end_line: entry.end_line,
         signature: entry.signature,
+        members: entry
+            .members
+            .unwrap_or_default()
+            .into_iter()
+            .map(convert_markdown_member)
+            .collect(),
     }
 }
 
@@ -2675,12 +2755,16 @@ pub fn extract_translation_keys(
 
 #[cfg(test)]
 mod tests {
+    use ox_content_docs::{
+        NormalizedDocEntry, NormalizedDocKind, NormalizedMember, NormalizedMemberKind,
+    };
     use serde_json::json;
+    use std::collections::BTreeMap;
     use std::fs;
     use std::process::Command;
 
-    use super::get_git_last_updated;
     use super::transformer::parse_frontmatter;
+    use super::{get_git_last_updated, map_normalized_doc_entry};
 
     #[test]
     fn parses_nested_yaml_frontmatter() {
@@ -2713,6 +2797,49 @@ mod tests {
 
         assert_eq!(content, "Body");
         assert!(frontmatter.is_empty());
+    }
+
+    #[test]
+    fn normalized_doc_entry_maps_members_to_js_shape() {
+        let entry = NormalizedDocEntry {
+            name: "Command".to_string(),
+            kind: NormalizedDocKind::Interface,
+            description: "Runtime command.".to_string(),
+            params: vec![],
+            returns: None,
+            examples: vec![],
+            tags: BTreeMap::new(),
+            private: false,
+            file: "command.ts".to_string(),
+            line: 1,
+            end_line: 8,
+            signature: Some("export interface Command".to_string()),
+            members: vec![NormalizedMember {
+                name: "name".to_string(),
+                kind: NormalizedMemberKind::Property,
+                description: "Command name.".to_string(),
+                signature: None,
+                type_annotation: Some("string".to_string()),
+                params: vec![],
+                returns: None,
+                optional: true,
+                readonly: true,
+                r#static: false,
+                private: false,
+                tags: BTreeMap::new(),
+                line: 4,
+                end_line: 4,
+            }],
+        };
+
+        let js_entry = map_normalized_doc_entry(entry);
+        let member = &js_entry.members.as_ref().unwrap()[0];
+
+        assert_eq!(member.name, "name");
+        assert_eq!(member.kind, "property");
+        assert_eq!(member.r#type.as_deref(), Some("string"));
+        assert_eq!(member.optional, Some(true));
+        assert_eq!(member.readonly, Some(true));
     }
 
     #[test]
