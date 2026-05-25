@@ -96,33 +96,33 @@ Special thanks to [kazupon](https://github.com/kazupon) for substantial communit
 
 Ox Content is positioned both as a document generator and as a high-performance Markdown toolkit. The numbers below focus on the Markdown engine side.
 
-Latest local benchmark sweep on 2026-04-24 with Node `v24.15.0` on Apple M5 Pro. The tables below show median results from 7 local runs of the benchmark harness for the large 48.7 KB case.
+Latest local benchmark sweep on 2026-05-25 with Node `v24.15.0` on Apple M5 Pro. The tables below show median results from 7 local runs of the benchmark harness for the large 48.7 KB case.
 
 ### Parse Only (48.7 KB)
 
 | Library            | ops/sec | avg time |  throughput |
 | ------------------ | ------: | -------: | ----------: |
-| `@ox-content/napi` |    2337 |  0.43 ms | 111.20 MB/s |
-| `md4x (napi)`      |     958 |  1.04 ms |  45.56 MB/s |
-| `md4w (md4c)`      |     884 |  1.13 ms |  42.06 MB/s |
-| `markdown-it`      |     631 |  1.58 ms |  30.04 MB/s |
-| `marked`           |     385 |  2.60 ms |  18.33 MB/s |
-| `remark`           |      33 | 29.97 ms |   1.59 MB/s |
+| `@ox-content/napi` |    4207 |  0.24 ms | 200.20 MB/s |
+| `md4x (napi)`      |    1231 |  0.81 ms |  58.56 MB/s |
+| `md4w (md4c)`      |    1143 |  0.87 ms |  54.41 MB/s |
+| `markdown-it`      |    1035 |  0.97 ms |  49.24 MB/s |
+| `marked`           |     530 |  1.89 ms |  25.23 MB/s |
+| `remark`           |      44 | 22.74 ms |   2.09 MB/s |
 
 ### Parse + Render (48.7 KB)
 
 | Library             | ops/sec | avg time |  throughput |
 | ------------------- | ------: | -------: | ----------: |
-| `Bun.markdown.html` |    3376 |  0.30 ms | 160.67 MB/s |
-| `md4x (napi)`       |    3167 |  0.32 ms | 150.73 MB/s |
-| `@ox-content/napi`  |    2599 |  0.38 ms | 123.66 MB/s |
-| `md4w (md4c)`       |    2253 |  0.44 ms | 107.21 MB/s |
-| `markdown-it`       |     628 |  1.59 ms |  29.91 MB/s |
-| `marked`            |     381 |  2.62 ms |  18.15 MB/s |
-| `micromark`         |      36 | 28.16 ms |   1.69 MB/s |
-| `remark`            |      29 | 34.97 ms |   1.36 MB/s |
+| `@ox-content/napi`  |    4503 |  0.22 ms | 214.26 MB/s |
+| `Bun.markdown.html` |    4225 |  0.24 ms | 201.06 MB/s |
+| `md4x (napi)`       |    4014 |  0.25 ms | 191.02 MB/s |
+| `md4w (md4c)`       |    2653 |  0.38 ms | 126.23 MB/s |
+| `markdown-it`       |     840 |  1.19 ms |  39.96 MB/s |
+| `marked`            |     470 |  2.13 ms |  22.36 MB/s |
+| `micromark`         |      45 | 22.35 ms |   2.13 MB/s |
+| `remark`            |      36 | 28.16 ms |   1.69 MB/s |
 
-In this latest local release-build sweep, Ox Content stays ahead for parse-only throughput. The parse+render comparison now includes `md4x (napi)`, where Bun and md4x lead the table and Ox Content remains close behind while still serving as the native core for the full documentation pipeline.
+In this latest local release-build sweep, Ox Content leads every comparison: 3.4× ahead of the next-fastest native parser (`md4x (napi)`) on parse-only and 1.07× ahead of `Bun.markdown.html` on parse+render, while remaining the native core that drives the full documentation pipeline. Margins widen further on small documents — see `node benchmarks/bundle-size/parse-benchmark.mjs` for the full sweep across small, medium, and large inputs.
 
 Reproduce with:
 
