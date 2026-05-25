@@ -539,6 +539,14 @@ impl<'a> Parser<'a> {
     fn parse_list_item_line(&self, line_start: usize) -> Option<ParsedListItem<'a>> {
         let remaining = &self.source[line_start..];
         let line = remaining.lines().next().unwrap_or("");
+        self.parse_list_item_line_from_line(line_start, line)
+    }
+
+    fn parse_list_item_line_from_line(
+        &self,
+        line_start: usize,
+        line: &'a str,
+    ) -> Option<ParsedListItem<'a>> {
         let trimmed = line.trim_start();
         let trimmed_offset = line_start + (line.len() - trimmed.len());
 
@@ -699,7 +707,7 @@ impl<'a> Parser<'a> {
             // Check if it's a list item
             let remaining = self.remaining();
             let line = remaining.lines().next().unwrap_or("");
-            let Some(item) = self.parse_list_item_line(line_start) else {
+            let Some(item) = self.parse_list_item_line_from_line(line_start, line) else {
                 break;
             };
             if item.ordered != ordered {
