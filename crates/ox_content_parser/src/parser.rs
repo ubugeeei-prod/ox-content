@@ -447,9 +447,15 @@ impl<'a> Parser<'a> {
 
             let line_end =
                 memchr(b'\n', &bytes[line_start..]).map_or(bytes.len(), |off| line_start + off);
-            let line = &self.source[line_start..line_end];
+            // Strip a trailing `\r` so CRLF line endings produce the same
+            // inner slice as the prior `lines().next()` path. Without
+            // this, `\r` leaks into the bump-allocated `inner` buffer
+            // and re-enters the sub-parser as text — visible in the
+            // rendered HTML for Windows-style Markdown.
+            let raw_line = &self.source[line_start..line_end];
+            let line = raw_line.strip_suffix('\r').unwrap_or(raw_line);
             let trimmed_offset = ws_cursor - line_start;
-            let trimmed = &line[trimmed_offset..];
+            let trimmed = &line[trimmed_offset.min(line.len())..];
 
             if let Some(after_gt) = trimmed.strip_prefix('>') {
                 // Strip the optional single space after `>`
@@ -2178,6 +2184,34 @@ mod tests {
                 assert!(matches!(&bq.children[0], Node::BlockQuote(_)));
             }
             _ => panic!("expected block quote, got {:?}", &doc.children[0]),
+        }
+    }
+
+    #[test]
+    fn block_quote_strips_crlf_carriage_return() {
+        // Regression: when `parse_block_quote` switched from `lines().next()`
+        // to a `memchr(b'\n')` byte-slice, the trailing `\r` of `\r\n` line
+        // endings was no longer stripped and leaked into the bump-allocated
+        // inner buffer, surfacing as a literal `\r` in the rendered text
+        // for Windows-style Markdown.
+        let allocator = Allocator::new();
+        let doc = Parser::new(&allocator, "> hello\r\n> world\r\n").parse().unwrap();
+        assert_eq!(doc.children.len(), 1);
+        let Node::BlockQuote(bq) = &doc.children[0] else {
+            panic!("expected block quote, got {:?}", &doc.children[0]);
+        };
+        assert_eq!(bq.children.len(), 1, "both quoted lines should fold into one paragraph");
+        let Node::Paragraph(p) = &bq.children[0] else {
+            panic!("expected paragraph, got {:?}", &bq.children[0]);
+        };
+        for child in &p.children {
+            if let Node::Text(text) = child {
+                assert!(
+                    !text.value.contains('\r'),
+                    "carriage return leaked into block-quote text: {:?}",
+                    text.value
+                );
+            }
         }
     }
 }
