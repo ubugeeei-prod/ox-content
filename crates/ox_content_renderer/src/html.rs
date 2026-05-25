@@ -1068,13 +1068,22 @@ fn collect_inline_toc_node(
 ) {
     match node {
         Node::Heading(heading) => {
+            let include_heading = heading.depth <= max_depth;
             let text = collect_heading_text(&heading.children);
             let slug = slugify_heading(&text);
-            let count = counts.entry(slug.clone()).or_insert(0);
-            let id = if *count == 0 { slug } else { format!("{slug}-{count}") };
-            *count += 1;
+            let id = if let Some(count) = counts.get_mut(slug.as_str()) {
+                let suffix = *count;
+                *count += 1;
+                include_heading.then(|| format!("{slug}-{suffix}"))
+            } else if include_heading {
+                counts.insert(slug.clone(), 1);
+                Some(slug)
+            } else {
+                counts.insert(slug, 1);
+                None
+            };
 
-            if heading.depth <= max_depth {
+            if let Some(id) = id {
                 entries.push(InlineTocEntry { depth: heading.depth, text, id });
             }
         }
