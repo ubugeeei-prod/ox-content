@@ -989,6 +989,9 @@ export interface Mf2ValidateResult {
   astJson?: string
 }
 
+/** Normalizes VitePress-specific frontmatter into ox-content's entry-page shape. */
+export declare function normalizeVitePressFrontmatter(frontmatter: any): any
+
 /**
  * Parses Markdown source into an AST.
  *

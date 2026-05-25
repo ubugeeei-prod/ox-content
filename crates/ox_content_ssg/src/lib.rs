@@ -54,6 +54,7 @@
 mod assets;
 mod html;
 mod routes;
+mod vitepress;
 
 pub use assets::{
     externalize_shared_page_assets, ExternalizedAssets, GeneratedHtmlPage, SharedAsset,
@@ -70,3 +71,4 @@ pub use routes::{
     resolve_navigation_groups, resolve_route_paths, ManualNavigationGroup, ManualNavigationItem,
     RoutePaths, SidebarItem,
 };
+pub use vitepress::normalize_vitepress_frontmatter;
