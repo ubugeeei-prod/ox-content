@@ -1,0 +1,23 @@
+[package]
+name = "ox_content_profiler"
+version.workspace = true
+authors.workspace = true
+categories.workspace = true
+edition.workspace = true
+homepage.workspace = true
+keywords.workspace = true
+license.workspace = true
+repository.workspace = true
+rust-version.workspace = true
+description = "Profiling primitives for Ox Content: counting global allocator, hierarchical timing spans, and report formatting"
+
+[lints]
+workspace = true
+
+[dependencies]
+serde = { workspace = true, optional = true }
+serde_json = { workspace = true, optional = true }
+
+[features]
+default = []
+serde = ["dep:serde", "dep:serde_json"]

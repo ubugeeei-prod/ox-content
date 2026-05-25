@@ -39,6 +39,18 @@ vp run dev:playground
 vp run bench:parse
 ```
 
+For allocation-aware performance work, use the in-tree profiler. It installs
+a counting global allocator and turns on per-span timing for the parser and
+renderer crates:
+
+```bash
+cargo run --release -p ox_content_profile_cli -- pipeline --gfm \
+    --iters 200 --warmup 20 docs/content/api/types.md
+```
+
+See [docs/content/profiling.md](./docs/content/profiling.md) for the full
+workflow and how to read the report.
+
 For narrower Rust work, the underlying commands are also available:
 
 ```bash

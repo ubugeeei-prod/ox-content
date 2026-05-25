@@ -1,0 +1,28 @@
+[package]
+name = "ox_content_profile_cli"
+version.workspace = true
+authors.workspace = true
+categories.workspace = true
+edition.workspace = true
+homepage.workspace = true
+keywords.workspace = true
+license.workspace = true
+repository.workspace = true
+rust-version.workspace = true
+description = "Profile-mode CLI driver for the Ox Content Markdown engine"
+publish = false
+
+[lints]
+workspace = true
+
+[[bin]]
+name = "ox-content-profile"
+path = "src/main.rs"
+
+[dependencies]
+ox_content_allocator = { workspace = true }
+ox_content_ast = { workspace = true }
+ox_content_parser = { workspace = true, features = ["profile"] }
+ox_content_renderer = { workspace = true, features = ["profile"] }
+ox_content_profiler = { workspace = true }
+clap = { workspace = true }

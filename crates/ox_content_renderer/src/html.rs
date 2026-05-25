@@ -8,6 +8,9 @@ use ox_content_ast::{
     Strong, Table, TableCell, TableRow, Text, ThematicBreak, Visit,
 };
 
+#[allow(unused_imports)]
+// The macro is no-op without the `profile` feature, which suppresses the use.
+use crate::profile_span;
 use crate::render::{RenderResult, Renderer};
 
 /// HTML renderer options.
@@ -799,19 +802,38 @@ fn collect_node_text(node: &Node<'_>, text: &mut String) {
 }
 
 fn slugify_heading(text: &str) -> String {
-    let slug = text
-        .to_lowercase()
-        .chars()
-        .map(|ch| if ch.is_alphanumeric() || ch == ' ' || ch == '-' { ch } else { ' ' })
-        .collect::<String>()
-        .split_whitespace()
-        .collect::<Vec<_>>()
-        .join("-");
+    // Previously this function chained `to_lowercase` → `chars.map.collect` →
+    // `split_whitespace.collect::<Vec>` → `join`, each step a fresh heap
+    // allocation (4 per heading, plus `text` and the `id` clone). For docs
+    // with many headings that dominated the renderer's allocation count.
+    // The single-pass version below produces the same output with one
+    // allocation: the result String itself.
+    let mut out = String::with_capacity(text.len());
+    let mut last_was_separator = true;
 
-    if slug.is_empty() {
+    for ch in text.chars() {
+        for lower in ch.to_lowercase() {
+            if lower.is_alphanumeric() {
+                out.push(lower);
+                last_was_separator = false;
+            } else if !last_was_separator {
+                // Collapse runs of whitespace / punctuation / '-' into one
+                // dash. Mirrors the prior behavior (which mapped non-alnum
+                // to space, split on whitespace, joined with '-').
+                out.push('-');
+                last_was_separator = true;
+            }
+        }
+    }
+
+    while out.ends_with('-') {
+        out.pop();
+    }
+
+    if out.is_empty() {
         "section".to_string()
     } else {
-        slug
+        out
     }
 }
 
@@ -911,6 +933,7 @@ impl HtmlRenderer {
     /// Renders a document to HTML string.
     #[must_use]
     pub fn render(&mut self, document: &Document<'_>) -> String {
+        profile_span!("renderer::render");
         self.output.clear();
         self.toc_entries = collect_inline_toc_entries(document, self.options.toc_max_depth);
         self.heading_id_counts.clear();
@@ -946,6 +969,7 @@ impl HtmlRenderer {
     }
 
     fn write_escaped(&mut self, s: &str) {
+        profile_span!("renderer::write_escaped");
         let bytes = s.as_bytes();
         let mut start = 0;
 
@@ -1254,10 +1278,19 @@ impl HtmlRenderer {
     fn heading_id(&mut self, heading: &Heading<'_>) -> String {
         let text = collect_heading_text(&heading.children);
         let slug = slugify_heading(&text);
-        let count = self.heading_id_counts.entry(slug.clone()).or_insert(0);
-        let id = if *count == 0 { slug } else { format!("{slug}-{count}") };
-        *count += 1;
-        id
+        // The common case (every heading id is unique) used to clone the
+        // slug into the map *and* call `format!`. Now we only allocate for
+        // the map entry, and only build the disambiguated id when we
+        // actually see a duplicate.
+        if let Some(count) = self.heading_id_counts.get_mut(&slug) {
+            let id = format!("{slug}-{count}");
+            *count += 1;
+            id
+        } else {
+            let id = slug.clone();
+            self.heading_id_counts.insert(slug, 1);
+            id
+        }
     }
 
     fn convert_markdown_url(&self, url: &str) -> String {
@@ -1485,6 +1518,7 @@ impl Renderer for HtmlRenderer {
 
 impl<'a> Visit<'a> for HtmlRenderer {
     fn visit_paragraph(&mut self, paragraph: &Paragraph<'a>) {
+        profile_span!("renderer::visit_paragraph");
         if collect_text_nodes_only(&paragraph.children).is_some_and(|text| text.trim() == "[[toc]]")
         {
             self.render_inline_toc();
@@ -1499,6 +1533,7 @@ impl<'a> Visit<'a> for HtmlRenderer {
     }
 
     fn visit_heading(&mut self, heading: &Heading<'a>) {
+        profile_span!("renderer::visit_heading");
         let tag = match heading.depth {
             1 => "h1",
             2 => "h2",
@@ -1531,6 +1566,7 @@ impl<'a> Visit<'a> for HtmlRenderer {
     }
 
     fn visit_block_quote(&mut self, block_quote: &BlockQuote<'a>) {
+        profile_span!("renderer::visit_block_quote");
         if self.render_callout_block_quote(block_quote) {
             return;
         }
@@ -1543,6 +1579,7 @@ impl<'a> Visit<'a> for HtmlRenderer {
     }
 
     fn visit_list(&mut self, list: &List<'a>) {
+        profile_span!("renderer::visit_list");
         if list.ordered {
             if let Some(start) = list.start {
                 if start != 1 {
@@ -1589,6 +1626,7 @@ impl<'a> Visit<'a> for HtmlRenderer {
     }
 
     fn visit_code_block(&mut self, code_block: &CodeBlock<'a>) {
+        profile_span!("renderer::visit_code_block");
         if !self.options.code_annotations {
             self.write("<pre><code");
             if let Some(lang) = normalize_code_block_language(code_block.lang) {
@@ -1642,6 +1680,7 @@ impl<'a> Visit<'a> for HtmlRenderer {
     }
 
     fn visit_table(&mut self, table: &Table<'a>) {
+        profile_span!("renderer::visit_table");
         self.write("<table>\n");
         for (i, row) in table.children.iter().enumerate() {
             if i == 0 {
@@ -1661,6 +1700,7 @@ impl<'a> Visit<'a> for HtmlRenderer {
     }
 
     fn visit_text(&mut self, text: &Text<'a>) {
+        profile_span!("renderer::visit_text");
         self.write_escaped(text.value);
     }
 
