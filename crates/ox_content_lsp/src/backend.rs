@@ -34,6 +34,11 @@ impl Backend {
         if is_markdown_path(&path) {
             self.state.upsert_document(uri.clone(), text.clone()).await;
             self.publish_diagnostics_for(uri).await;
+            // HMR: any subscribed preview panel needs the rendered HTML
+            // pushed to it; this replaces the polling
+            // `onDidChangeTextDocument` refresh editors used to do. The
+            // helper short-circuits silently when no client is listening.
+            self.push_preview_update(uri).await;
         }
 
         let path_str = path.to_string_lossy().to_string();
