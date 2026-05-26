@@ -34,7 +34,11 @@ const env = { ...process.env, OX_CONTENT_LSP_PATH: lspBinary };
 
 const passthrough = process.argv.slice(2);
 
-const result = spawnSync("pnpm", ["exec", "vscode-test", ...passthrough], {
+// Invoke vscode-test through `vp exec` rather than `pnpm exec` so we
+// pick up the workspace-installed binary via the same toolchain CI
+// already uses. CI images set up by `voidzero-dev/setup-vp` expose
+// `vp` on PATH but not `pnpm` directly.
+const result = spawnSync("vp", ["exec", "--", "vscode-test", ...passthrough], {
   cwd: extensionDir,
   env,
   stdio: "inherit",
