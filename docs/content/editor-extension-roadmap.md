@@ -37,7 +37,7 @@ must not depend on a later one in the list.
 | 2   | i18n preview / completion                       | present                   | `ox-content-i18n`            | present                   | present                     | shipped            |
 | 3   | MDC completion + type check                     | diagnostics only          | `ox-content-mdc-check`       | diagnostics               | diagnostics                 | needs completion   |
 | 4   | Vue / React props completion + jump + typecheck | none                      | none                         | none                      | none                        | new (corsa_client) |
-| 5   | Asset path completion + diagnostics             | none                      | none                         | none                      | none                        | new                |
+| 5   | Asset path completion + diagnostics             | completion provider       | via link checker             | completion + diagnostics  | completion + diagnostics    | shipped            |
 | 6   | Dead link checker                               | none                      | none                         | none                      | none                        | new                |
 | 7   | textlint integration                            | none                      | none                         | none                      | none                        | new                |
 | 8   | Frontmatter schema completion + diagnostics     | present                   | none (validated through LSP) | present                   | present                     | needs CLI          |
@@ -96,11 +96,19 @@ Replace the polling refresh path with an explicit push channel.
 
 ### 4. `feat(lsp): asset path completion and diagnostics`
 
-- LSP completion provider triggered on image and link openers
-  (`![…](`, `<img src="`, raw HTML attribute parsers).
-- Diagnostics for missing assets resolved relative to a configurable
-  `oxContent.asset.srcDir` (defaults to the workspace root).
-- CLI surface piggybacks on `ox-content-link-check --assets`.
+- ✅ LSP completion provider triggered on image and link openers
+  (`![…](`, `[…](`, `<img src="`, `<a href="`, also `<video|audio|source|iframe|picture src="`).
+  Image-context triggers narrow the file list to known media
+  extensions; link-context triggers list every file plus directories.
+- ✅ Hidden-file filtering, prefix matching, directory entries
+  rendered as `name/`. UTF-16 cursor handling for international
+  characters (covered by `line_prefix` tests).
+- ✅ Diagnostics for missing assets are already produced by the
+  link checker (see PR #3 above) since image targets flow through
+  the same resolver. No new CLI surface needed.
+- Pending follow-up: per-feature `oxContent.asset.srcDir` setting
+  separate from the workspace root, for repos that keep static
+  assets under a `public/` subdirectory.
 
 ### 5. `feat(mdc): component name and attribute completion`
 

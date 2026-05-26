@@ -7,6 +7,7 @@ use crate::frontmatter;
 use crate::i18n;
 use crate::preview;
 
+use super::assets::{completion_items as asset_completion_items, detect_context, line_prefix};
 use super::snippets::markdown_snippet_items;
 use super::Backend;
 
@@ -41,6 +42,22 @@ impl Backend {
         }
 
         let document = self.state.document(uri).await?;
+
+        // Asset / link path completion short-circuits everything else
+        // when the cursor sits inside a Markdown `()` or an HTML
+        // `src=`/`href=`. Mixing it with snippets / frontmatter would
+        // pollute the list — a user typing `![alt](./` does not want
+        // a `## Section` snippet suggestion.
+        let line_text = document.line_text(position.line);
+        let prefix = line_prefix(line_text, position.character);
+        if let Some((context, partial)) = detect_context(prefix) {
+            let doc_dir = path.parent().map(std::path::Path::to_path_buf);
+            let src_dir = self.state.root().await;
+            let items =
+                asset_completion_items(context, partial, doc_dir.as_deref(), src_dir.as_deref());
+            return (!items.is_empty()).then_some(CompletionResponse::Array(items));
+        }
+
         let config = self.resolved_config().await;
         let frontmatter = frontmatter::parse_frontmatter(&document);
         let mut items = frontmatter
