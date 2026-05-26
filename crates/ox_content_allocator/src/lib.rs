@@ -29,6 +29,29 @@ impl Allocator {
         Self { bump: Bump::with_capacity(capacity) }
     }
 
+    /// Creates a new allocator pre-sized for parsing a Markdown source of
+    /// the given length. The capacity is a heuristic (`source_len * 8`
+    /// bytes, with a 4 KB floor) that covers the typical AST footprint
+    /// for real-world Markdown without growing through bumpalo's
+    /// chunk-doubling path — on a fresh [`Self::new`], that path accounts
+    /// for ~10 global allocations on a 64 KB document.
+    ///
+    /// Callers that already know the input length should prefer this over
+    /// [`Self::new`]: same fallible-only allocator API, but typically one
+    /// arena chunk for the whole parse + render pipeline.
+    #[must_use]
+    pub fn for_source_len(source_len: usize) -> Self {
+        // The 8× factor is empirical: across the bundled corpora
+        // (rust-book / vite / vue / typescript-handbook) the AST + render
+        // output combined comes in between 5× and 7× of the source
+        // length. 8× errs slightly on the over-allocation side so the
+        // first chunk almost always suffices.
+        const BYTES_PER_INPUT_BYTE: usize = 8;
+        const MIN_CAPACITY: usize = 4 * 1024;
+        let capacity = source_len.saturating_mul(BYTES_PER_INPUT_BYTE).max(MIN_CAPACITY);
+        Self::with_capacity(capacity)
+    }
+
     /// Returns the underlying bump allocator.
     #[must_use]
     pub fn bump(&self) -> &Bump {

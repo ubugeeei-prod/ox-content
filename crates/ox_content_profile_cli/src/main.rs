@@ -128,7 +128,7 @@ fn run(cli: &Cli) -> std::io::Result<()> {
         Cmd::Parse { .. } => {
             for _ in 0..total_iters {
                 recorder.record(|| -> std::io::Result<()> {
-                    let alloc = Allocator::new();
+                    let alloc = Allocator::for_source_len(source.len());
                     let parser = Parser::with_options(&alloc, &source, parser_options(cli));
                     let _ = parser.parse().map_err(parse_error)?;
                     Ok(())
@@ -140,7 +140,7 @@ fn run(cli: &Cli) -> std::io::Result<()> {
             // iteration to keep the AST distinct (rendering itself mutates
             // shared HtmlRenderer state across iterations otherwise).
             for _ in 0..total_iters {
-                let alloc = Allocator::new();
+                let alloc = Allocator::for_source_len(source.len());
                 let parser = Parser::with_options(&alloc, &source, parser_options(cli));
                 let doc = parser.parse().map_err(parse_error)?;
                 recorder.record(|| {
@@ -152,7 +152,7 @@ fn run(cli: &Cli) -> std::io::Result<()> {
         Cmd::Pipeline { .. } => {
             for _ in 0..total_iters {
                 recorder.record(|| -> std::io::Result<()> {
-                    let alloc = Allocator::new();
+                    let alloc = Allocator::for_source_len(source.len());
                     let parser = Parser::with_options(&alloc, &source, parser_options(cli));
                     let doc = parser.parse().map_err(parse_error)?;
                     let mut renderer = HtmlRenderer::with_options(HtmlRendererOptions::new());

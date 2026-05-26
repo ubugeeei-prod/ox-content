@@ -16,7 +16,7 @@ pub(super) fn markdown_parse_diagnostics(
         |block| (&document.text()[block.block_end_offset..], block.block_end_offset),
     );
 
-    let allocator = Allocator::new();
+    let allocator = Allocator::for_source_len(source.len());
     let parser = Parser::with_options(&allocator, source, ParserOptions::gfm());
     let diagnostics = match parser.parse() {
         Ok(_) => Vec::new(),
