@@ -40,7 +40,7 @@
 <h4>Signature</h4>
 <pre><code class="language-typescript">async function getHighlighter(theme: string | ThemeRegistration, customLangs: LanguageRegistration[] = []): Promise&lt;Highlighter&gt;</code></pre>
 </div>
-<p class="ox-api-entry__source"><a href="https://github.com/ubugeeei/ox-content/blob/main/npm/vite-plugin-ox-content/src/highlight.ts#L50-L69">View source</a></p>
+<p class="ox-api-entry__source"><a class="ox-api-entry__source-link" href="https://github.com/ubugeeei/ox-content/blob/main/npm/vite-plugin-ox-content/src/highlight.ts#L50-L69" target="_blank" rel="noopener noreferrer">View source<span class="ox-api-entry__source-icon" aria-hidden="true"></span></a></p>
 <div class="ox-api-entry__section ox-api-entry__section--params">
 <h4>Parameters</h4>
 <ul class="ox-api-entry__params">
@@ -80,7 +80,7 @@
 <h4>Signature</h4>
 <pre><code class="language-typescript">function getTextContent(node: Element | Root): string</code></pre>
 </div>
-<p class="ox-api-entry__source"><a href="https://github.com/ubugeeei/ox-content/blob/main/npm/vite-plugin-ox-content/src/highlight.ts#L213-L227">View source</a></p>
+<p class="ox-api-entry__source"><a class="ox-api-entry__source-link" href="https://github.com/ubugeeei/ox-content/blob/main/npm/vite-plugin-ox-content/src/highlight.ts#L213-L227" target="_blank" rel="noopener noreferrer">View source<span class="ox-api-entry__source-icon" aria-hidden="true"></span></a></p>
 <div class="ox-api-entry__section ox-api-entry__section--params">
 <h4>Parameters</h4>
 <ul class="ox-api-entry__params">
@@ -113,7 +113,7 @@
 <h4>Signature</h4>
 <pre><code class="language-typescript">export async function highlightCode(html: string, theme: string | ThemeRegistration = &quot;github-dark&quot;, langs: LanguageRegistration[] = []): Promise&lt;string&gt;</code></pre>
 </div>
-<p class="ox-api-entry__source"><a href="https://github.com/ubugeeei/ox-content/blob/main/npm/vite-plugin-ox-content/src/highlight.ts#L244-L256">View source</a></p>
+<p class="ox-api-entry__source"><a class="ox-api-entry__source-link" href="https://github.com/ubugeeei/ox-content/blob/main/npm/vite-plugin-ox-content/src/highlight.ts#L244-L256" target="_blank" rel="noopener noreferrer">View source<span class="ox-api-entry__source-icon" aria-hidden="true"></span></a></p>
 <div class="ox-api-entry__section ox-api-entry__section--params">
 <h4>Parameters</h4>
 <ul class="ox-api-entry__params">
@@ -163,7 +163,7 @@
   langs?: LanguageRegistration[];
 })</code></pre>
 </div>
-<p class="ox-api-entry__source"><a href="https://github.com/ubugeeei/ox-content/blob/main/npm/vite-plugin-ox-content/src/highlight.ts#L92-L208">View source</a></p>
+<p class="ox-api-entry__source"><a class="ox-api-entry__source-link" href="https://github.com/ubugeeei/ox-content/blob/main/npm/vite-plugin-ox-content/src/highlight.ts#L92-L208" target="_blank" rel="noopener noreferrer">View source<span class="ox-api-entry__source-icon" aria-hidden="true"></span></a></p>
 <div class="ox-api-entry__section ox-api-entry__section--params">
 <h4>Parameters</h4>
 <ul class="ox-api-entry__params">

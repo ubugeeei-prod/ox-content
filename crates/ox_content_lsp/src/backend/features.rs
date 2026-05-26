@@ -7,7 +7,10 @@ use crate::frontmatter;
 use crate::i18n;
 use crate::preview;
 
+use ox_content_mdc_checker::Registry;
+
 use super::assets::{completion_items as asset_completion_items, detect_context, line_prefix};
+use super::mdc::{completion_items as mdc_completion_items, detect_site as detect_mdc_site};
 use super::snippets::markdown_snippet_items;
 use super::Backend;
 
@@ -59,6 +62,22 @@ impl Backend {
         }
 
         let config = self.resolved_config().await;
+
+        // MDC component / attribute completion. Short-circuit out
+        // before snippets and frontmatter so the popup is focused on
+        // the construct the user is mid-typing — a `## Section`
+        // snippet polluting `<Alert |` is just noise.
+        let line_text = document.line_text(position.line);
+        let prefix = line_prefix(line_text, position.character);
+        if let Some(site) = detect_mdc_site(prefix) {
+            if let Some(registry) = load_mdc_registry(&config) {
+                let items = mdc_completion_items(&site, &registry);
+                if !items.is_empty() {
+                    return Some(CompletionResponse::Array(items));
+                }
+            }
+        }
+
         let frontmatter = frontmatter::parse_frontmatter(&document);
         let mut items = frontmatter
             .block
@@ -206,4 +225,13 @@ fn push_fmt(output: &mut String, args: std::fmt::Arguments<'_>) {
     if output.write_fmt(args).is_err() {
         output.push_str("[formatting failed]");
     }
+}
+
+fn load_mdc_registry(config: &crate::config::ResolvedConfig) -> Option<Registry> {
+    let path = config.mdc_components.as_deref()?;
+    // Treat a missing or unreadable registry file the same as "no
+    // registry configured" — completion silently falls through. The
+    // alternative (publishing a diagnostic on every keystroke) would
+    // be noisy and we'd rather not double the failure modes here.
+    Registry::from_path(path).ok().flatten()
 }

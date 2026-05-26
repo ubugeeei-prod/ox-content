@@ -3,6 +3,7 @@ mod commands;
 mod diagnostics;
 mod features;
 mod handlers;
+mod mdc;
 mod snippets;
 
 use tower_lsp::lsp_types::{Diagnostic, Url};

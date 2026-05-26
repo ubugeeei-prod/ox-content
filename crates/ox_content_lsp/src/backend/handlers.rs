@@ -43,6 +43,11 @@ impl LanguageServer for Backend {
                         // descends into a subdirectory.
                         "(".into(),
                         "/".into(),
+                        // MDC component / attribute completion: `<`
+                        // opens it for `<Foo`, space reopens it after
+                        // the component name for `<Foo |`.
+                        "<".into(),
+                        " ".into(),
                     ]),
                     ..Default::default()
                 }),

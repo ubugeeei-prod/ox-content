@@ -21,6 +21,10 @@ pub struct InitializationOptions {
     /// falls back to `npx textlint`.
     #[serde(rename = "textlintCommand")]
     pub textlint_command: Option<String>,
+    /// Path to a JSON file declaring known MDC components and their
+    /// attributes. See `ox_content_mdc_checker::Registry`.
+    #[serde(rename = "mdcComponents")]
+    pub mdc_components: Option<String>,
 }
 
 #[derive(Clone, Debug, Default, Deserialize)]
@@ -28,6 +32,7 @@ pub struct InitializationOptions {
 struct WorkspaceConfigFile {
     frontmatter: FrontmatterConfigFile,
     textlint: TextlintConfigFile,
+    mdc: MdcConfigFile,
 }
 
 #[derive(Clone, Debug, Default, Deserialize)]
@@ -43,10 +48,17 @@ struct TextlintConfigFile {
     command: Option<String>,
 }
 
+#[derive(Clone, Debug, Default, Deserialize)]
+#[serde(default)]
+struct MdcConfigFile {
+    components: Option<String>,
+}
+
 #[derive(Clone, Debug, Default)]
 pub struct ResolvedConfig {
     pub frontmatter_schema: Option<PathBuf>,
     pub textlint: crate::textlint::TextlintConfig,
+    pub mdc_components: Option<PathBuf>,
 }
 
 impl ResolvedConfig {
@@ -74,7 +86,7 @@ impl ResolvedConfig {
                     .map(|value| resolve_path(root.as_deref(), &value))
             });
 
-        // textlint flows through the same init → workspace file →
+        // textlint flows through the same init -> workspace file ->
         // env var pipeline so users have one consistent override
         // model. The init option wins so editors can flip it
         // dynamically without rewriting the workspace config.
@@ -95,12 +107,28 @@ impl ResolvedConfig {
             })
             .or_else(|| env::var("OX_CONTENT_TEXTLINT_COMMAND").ok());
 
+        let mdc_components = init
+            .mdc_components
+            .as_ref()
+            .map(|value| resolve_path(root.as_deref(), value))
+            .or_else(|| {
+                workspace_file.as_ref().and_then(|(path, config)| {
+                    config.mdc.components.as_ref().map(|value| resolve_path(path.parent(), value))
+                })
+            })
+            .or_else(|| {
+                env::var("OX_CONTENT_MDC_COMPONENTS")
+                    .ok()
+                    .map(|value| resolve_path(root.as_deref(), &value))
+            });
+
         Self {
             frontmatter_schema,
             textlint: crate::textlint::TextlintConfig {
                 enabled: textlint_enabled,
                 command: textlint_command,
             },
+            mdc_components,
         }
     }
 }

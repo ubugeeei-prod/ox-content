@@ -4,6 +4,7 @@ import * as vscode from "vscode";
 import { getConfig } from "./config";
 import { SERVER_COMMAND_PREVIEW_HTML } from "./constants";
 import { sendServerCommand } from "./client";
+import { errorHtml } from "./internal/preview-html";
 import type { PreviewEntry, PreviewPayload } from "./types";
 
 const previewEntries = new Map<string, PreviewEntry>();
@@ -104,29 +105,4 @@ function clearTimer(key: string): void {
     clearTimeout(timer);
   }
   refreshTimers.delete(key);
-}
-
-function errorHtml(message: string): string {
-  const escaped = message.replaceAll("&", "&amp;").replaceAll("<", "&lt;").replaceAll(">", "&gt;");
-
-  return `<!doctype html>
-<html lang="en">
-  <head>
-    <meta charset="utf-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <style>
-      body { margin: 0; padding: 24px; font: 14px/1.6 ui-sans-serif, system-ui, sans-serif; background: #0f172a; color: #e2e8f0; }
-      .card { max-width: 720px; margin: 0 auto; padding: 20px 22px; border-radius: 16px; border: 1px solid #334155; background: #111827; }
-      h1 { margin-top: 0; font-size: 1rem; }
-      code { color: #fda4af; }
-    </style>
-  </head>
-  <body>
-    <div class="card">
-      <h1>Ox Content Preview</h1>
-      <p>${escaped}</p>
-      <p>Make sure <code>ox-content-lsp</code> is available or set <code>oxContent.server.path</code>.</p>
-    </div>
-  </body>
-</html>`;
 }

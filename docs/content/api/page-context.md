@@ -26,6 +26,10 @@
   <span>parameters</span>
 </span>
 <span class="ox-api-stat">
+  <strong>24</strong>
+  <span>members</span>
+</span>
+<span class="ox-api-stat">
   <strong>7</strong>
   <span>returns</span>
 </span>
@@ -43,7 +47,7 @@
 </div>
 
 <details id="basepageprops" class="ox-api-entry">
-  <summary><span class="ox-api-entry__kind">interface</span><span class="ox-api-entry__summary-main"><code class="ox-api-entry__signature ox-api-entry__signature--highlighted language-typescript">BasePageProps</code><span class="ox-api-entry__description">Base page props available for all pages.</span></span></summary>
+  <summary><span class="ox-api-entry__kind">interface</span><span class="ox-api-entry__summary-main"><code class="ox-api-entry__signature ox-api-entry__signature--highlighted language-typescript">BasePageProps</code><span class="ox-api-entry__description">Base page props available for all pages.</span><span class="ox-api-entry__meta"><span class="ox-api-badge">9 members</span></span></span></summary>
   <div class="ox-api-entry__body">
 <div class="ox-api-entry__prose">
 <p>Base page props available for all pages.</p>
@@ -52,12 +56,77 @@
 <h4>Signature</h4>
 <pre><code class="language-typescript">export interface BasePageProps</code></pre>
 </div>
-<p class="ox-api-entry__source"><a href="https://github.com/ubugeeei/ox-content/blob/main/npm/vite-plugin-ox-content/src/page-context.ts#L34-L53">View source</a></p>
+<p class="ox-api-entry__source"><a class="ox-api-entry__source-link" href="https://github.com/ubugeeei/ox-content/blob/main/npm/vite-plugin-ox-content/src/page-context.ts#L34-L53" target="_blank" rel="noopener noreferrer">View source<span class="ox-api-entry__source-icon" aria-hidden="true"></span></a></p>
+<div class="ox-api-entry__section ox-api-entry__section--members">
+<h4>Members</h4>
+<div class="ox-api-entry__member-group">
+<h5>Properties</h5>
+<table class="ox-api-entry__members-table">
+<thead><tr><th>Name</th><th>Kind</th><th>Type</th><th>Description</th></tr></thead>
+<tbody>
+<tr>
+  <td><code>title</code></td>
+  <td><span class="ox-api-entry__member-kind">property</span></td>
+  <td><code class="ox-api-entry__member-type language-typescript">string</code></td>
+  <td><div class="ox-api-entry__member-description">Page title from frontmatter or first heading</div></td>
+</tr>
+<tr>
+  <td><code>description</code><span class="ox-api-badge">optional</span></td>
+  <td><span class="ox-api-entry__member-kind">property</span></td>
+  <td><code class="ox-api-entry__member-type language-typescript">string</code></td>
+  <td><div class="ox-api-entry__member-description">Page description from frontmatter</div></td>
+</tr>
+<tr>
+  <td><code>html</code></td>
+  <td><span class="ox-api-entry__member-kind">property</span></td>
+  <td><code class="ox-api-entry__member-type language-typescript">string</code></td>
+  <td><div class="ox-api-entry__member-description">Rendered HTML content</div></td>
+</tr>
+<tr>
+  <td><code>toc</code></td>
+  <td><span class="ox-api-entry__member-kind">property</span></td>
+  <td><code class="ox-api-entry__member-type language-typescript">TocEntry[]</code></td>
+  <td><div class="ox-api-entry__member-description">Table of contents entries</div></td>
+</tr>
+<tr>
+  <td><code>lastUpdated</code><span class="ox-api-badge">optional</span></td>
+  <td><span class="ox-api-entry__member-kind">property</span></td>
+  <td><code class="ox-api-entry__member-type language-typescript">number</code></td>
+  <td><div class="ox-api-entry__member-description">Last git commit timestamp in milliseconds</div></td>
+</tr>
+<tr>
+  <td><code>path</code></td>
+  <td><span class="ox-api-entry__member-kind">property</span></td>
+  <td><code class="ox-api-entry__member-type language-typescript">string</code></td>
+  <td><div class="ox-api-entry__member-description">Source file path (relative to docs root)</div></td>
+</tr>
+<tr>
+  <td><code>url</code></td>
+  <td><span class="ox-api-entry__member-kind">property</span></td>
+  <td><code class="ox-api-entry__member-type language-typescript">string</code></td>
+  <td><div class="ox-api-entry__member-description">Output URL path</div></td>
+</tr>
+<tr>
+  <td><code>frontmatter</code></td>
+  <td><span class="ox-api-entry__member-kind">property</span></td>
+  <td><code class="ox-api-entry__member-type language-typescript">Record</code></td>
+  <td><div class="ox-api-entry__member-description">Raw frontmatter object</div></td>
+</tr>
+<tr>
+  <td><code>layout</code><span class="ox-api-badge">optional</span></td>
+  <td><span class="ox-api-entry__member-kind">property</span></td>
+  <td><code class="ox-api-entry__member-type language-typescript">string</code></td>
+  <td><div class="ox-api-entry__member-description">Layout name from frontmatter</div></td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
   </div>
 </details>
 
 <details id="frontmatterschema" class="ox-api-entry">
-  <summary><span class="ox-api-entry__kind">interface</span><span class="ox-api-entry__summary-main"><code class="ox-api-entry__signature ox-api-entry__signature--highlighted language-typescript">FrontmatterSchema</code><span class="ox-api-entry__description">Schema for frontmatter type generation.</span></span></summary>
+  <summary><span class="ox-api-entry__kind">interface</span><span class="ox-api-entry__summary-main"><code class="ox-api-entry__signature ox-api-entry__signature--highlighted language-typescript">FrontmatterSchema</code><span class="ox-api-entry__description">Schema for frontmatter type generation.</span><span class="ox-api-entry__meta"><span class="ox-api-badge">4 members</span></span></span></summary>
   <div class="ox-api-entry__body">
 <div class="ox-api-entry__prose">
 <p>Schema for frontmatter type generation.</p>
@@ -66,7 +135,42 @@
 <h4>Signature</h4>
 <pre><code class="language-typescript">export interface FrontmatterSchema</code></pre>
 </div>
-<p class="ox-api-entry__source"><a href="https://github.com/ubugeeei/ox-content/blob/main/npm/vite-plugin-ox-content/src/page-context.ts#L256-L265">View source</a></p>
+<p class="ox-api-entry__source"><a class="ox-api-entry__source-link" href="https://github.com/ubugeeei/ox-content/blob/main/npm/vite-plugin-ox-content/src/page-context.ts#L256-L265" target="_blank" rel="noopener noreferrer">View source<span class="ox-api-entry__source-icon" aria-hidden="true"></span></a></p>
+<div class="ox-api-entry__section ox-api-entry__section--members">
+<h4>Members</h4>
+<div class="ox-api-entry__member-group">
+<h5>Properties</h5>
+<table class="ox-api-entry__members-table">
+<thead><tr><th>Name</th><th>Kind</th><th>Type</th><th>Description</th></tr></thead>
+<tbody>
+<tr>
+  <td><code>name</code></td>
+  <td><span class="ox-api-entry__member-kind">property</span></td>
+  <td><code class="ox-api-entry__member-type language-typescript">string</code></td>
+  <td><div class="ox-api-entry__member-description">Field name</div></td>
+</tr>
+<tr>
+  <td><code>type</code></td>
+  <td><span class="ox-api-entry__member-kind">property</span></td>
+  <td><code class="ox-api-entry__member-type language-typescript">string</code></td>
+  <td><div class="ox-api-entry__member-description">TypeScript type</div></td>
+</tr>
+<tr>
+  <td><code>optional</code></td>
+  <td><span class="ox-api-entry__member-kind">property</span></td>
+  <td><code class="ox-api-entry__member-type language-typescript">boolean</code></td>
+  <td><div class="ox-api-entry__member-description">Whether the field is optional</div></td>
+</tr>
+<tr>
+  <td><code>description</code><span class="ox-api-badge">optional</span></td>
+  <td><span class="ox-api-entry__member-kind">property</span></td>
+  <td><code class="ox-api-entry__member-type language-typescript">string</code></td>
+  <td><div class="ox-api-entry__member-description">JSDoc description</div></td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
   </div>
 </details>
 
@@ -80,7 +184,7 @@
 <h4>Signature</h4>
 <pre><code class="language-typescript">export function generateFrontmatterTypes(samples: Record&lt;string, unknown&gt;[], interfaceName = &quot;PageFrontmatter&quot;): string</code></pre>
 </div>
-<p class="ox-api-entry__source"><a href="https://github.com/ubugeeei/ox-content/blob/main/npm/vite-plugin-ox-content/src/page-context.ts#L294-L335">View source</a></p>
+<p class="ox-api-entry__source"><a class="ox-api-entry__source-link" href="https://github.com/ubugeeei/ox-content/blob/main/npm/vite-plugin-ox-content/src/page-context.ts#L294-L335" target="_blank" rel="noopener noreferrer">View source<span class="ox-api-entry__source-icon" aria-hidden="true"></span></a></p>
 <div class="ox-api-entry__section ox-api-entry__section--params">
 <h4>Parameters</h4>
 <ul class="ox-api-entry__params">
@@ -120,7 +224,7 @@
 <h4>Signature</h4>
 <pre><code class="language-typescript">export function inferType(value: unknown): string</code></pre>
 </div>
-<p class="ox-api-entry__source"><a href="https://github.com/ubugeeei/ox-content/blob/main/npm/vite-plugin-ox-content/src/page-context.ts#L270-L289">View source</a></p>
+<p class="ox-api-entry__source"><a class="ox-api-entry__source-link" href="https://github.com/ubugeeei/ox-content/blob/main/npm/vite-plugin-ox-content/src/page-context.ts#L270-L289" target="_blank" rel="noopener noreferrer">View source<span class="ox-api-entry__source-icon" aria-hidden="true"></span></a></p>
 <div class="ox-api-entry__section ox-api-entry__section--params">
 <h4>Parameters</h4>
 <ul class="ox-api-entry__params">
@@ -144,7 +248,7 @@
 </details>
 
 <details id="navgroup" class="ox-api-entry">
-  <summary><span class="ox-api-entry__kind">interface</span><span class="ox-api-entry__summary-main"><code class="ox-api-entry__signature ox-api-entry__signature--highlighted language-typescript">NavGroup</code><span class="ox-api-entry__description">Navigation group.</span></span></summary>
+  <summary><span class="ox-api-entry__kind">interface</span><span class="ox-api-entry__summary-main"><code class="ox-api-entry__signature ox-api-entry__signature--highlighted language-typescript">NavGroup</code><span class="ox-api-entry__description">Navigation group.</span><span class="ox-api-entry__meta"><span class="ox-api-badge">2 members</span></span></span></summary>
   <div class="ox-api-entry__body">
 <div class="ox-api-entry__prose">
 <p>Navigation group.</p>
@@ -153,12 +257,35 @@
 <h4>Signature</h4>
 <pre><code class="language-typescript">export interface NavGroup</code></pre>
 </div>
-<p class="ox-api-entry__source"><a href="https://github.com/ubugeeei/ox-content/blob/main/npm/vite-plugin-ox-content/src/page-context.ts#L81-L84">View source</a></p>
+<p class="ox-api-entry__source"><a class="ox-api-entry__source-link" href="https://github.com/ubugeeei/ox-content/blob/main/npm/vite-plugin-ox-content/src/page-context.ts#L81-L84" target="_blank" rel="noopener noreferrer">View source<span class="ox-api-entry__source-icon" aria-hidden="true"></span></a></p>
+<div class="ox-api-entry__section ox-api-entry__section--members">
+<h4>Members</h4>
+<div class="ox-api-entry__member-group">
+<h5>Properties</h5>
+<table class="ox-api-entry__members-table">
+<thead><tr><th>Name</th><th>Kind</th><th>Type</th><th>Description</th></tr></thead>
+<tbody>
+<tr>
+  <td><code>title</code></td>
+  <td><span class="ox-api-entry__member-kind">property</span></td>
+  <td><code class="ox-api-entry__member-type language-typescript">string</code></td>
+  <td></td>
+</tr>
+<tr>
+  <td><code>items</code></td>
+  <td><span class="ox-api-entry__member-kind">property</span></td>
+  <td><code class="ox-api-entry__member-type language-typescript">NavItem[]</code></td>
+  <td></td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
   </div>
 </details>
 
 <details id="navitem" class="ox-api-entry">
-  <summary><span class="ox-api-entry__kind">interface</span><span class="ox-api-entry__summary-main"><code class="ox-api-entry__signature ox-api-entry__signature--highlighted language-typescript">NavItem</code><span class="ox-api-entry__description">Navigation item.</span></span></summary>
+  <summary><span class="ox-api-entry__kind">interface</span><span class="ox-api-entry__summary-main"><code class="ox-api-entry__signature ox-api-entry__signature--highlighted language-typescript">NavItem</code><span class="ox-api-entry__description">Navigation item.</span><span class="ox-api-entry__meta"><span class="ox-api-badge">3 members</span></span></span></summary>
   <div class="ox-api-entry__body">
 <div class="ox-api-entry__prose">
 <p>Navigation item.</p>
@@ -167,7 +294,36 @@
 <h4>Signature</h4>
 <pre><code class="language-typescript">export interface NavItem</code></pre>
 </div>
-<p class="ox-api-entry__source"><a href="https://github.com/ubugeeei/ox-content/blob/main/npm/vite-plugin-ox-content/src/page-context.ts#L89-L93">View source</a></p>
+<p class="ox-api-entry__source"><a class="ox-api-entry__source-link" href="https://github.com/ubugeeei/ox-content/blob/main/npm/vite-plugin-ox-content/src/page-context.ts#L89-L93" target="_blank" rel="noopener noreferrer">View source<span class="ox-api-entry__source-icon" aria-hidden="true"></span></a></p>
+<div class="ox-api-entry__section ox-api-entry__section--members">
+<h4>Members</h4>
+<div class="ox-api-entry__member-group">
+<h5>Properties</h5>
+<table class="ox-api-entry__members-table">
+<thead><tr><th>Name</th><th>Kind</th><th>Type</th><th>Description</th></tr></thead>
+<tbody>
+<tr>
+  <td><code>title</code></td>
+  <td><span class="ox-api-entry__member-kind">property</span></td>
+  <td><code class="ox-api-entry__member-type language-typescript">string</code></td>
+  <td></td>
+</tr>
+<tr>
+  <td><code>path</code></td>
+  <td><span class="ox-api-entry__member-kind">property</span></td>
+  <td><code class="ox-api-entry__member-type language-typescript">string</code></td>
+  <td></td>
+</tr>
+<tr>
+  <td><code>href</code></td>
+  <td><span class="ox-api-entry__member-kind">property</span></td>
+  <td><code class="ox-api-entry__member-type language-typescript">string</code></td>
+  <td></td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
   </div>
 </details>
 
@@ -184,12 +340,12 @@
     frontmatter: T &amp; Record&lt;string, unknown&gt;;
   }</code></pre>
 </div>
-<p class="ox-api-entry__source"><a href="https://github.com/ubugeeei/ox-content/blob/main/npm/vite-plugin-ox-content/src/page-context.ts#L58-L62">View source</a></p>
+<p class="ox-api-entry__source"><a class="ox-api-entry__source-link" href="https://github.com/ubugeeei/ox-content/blob/main/npm/vite-plugin-ox-content/src/page-context.ts#L58-L62" target="_blank" rel="noopener noreferrer">View source<span class="ox-api-entry__source-icon" aria-hidden="true"></span></a></p>
   </div>
 </details>
 
 <details id="rendercontext" class="ox-api-entry">
-  <summary><span class="ox-api-entry__kind">interface</span><span class="ox-api-entry__summary-main"><code class="ox-api-entry__signature ox-api-entry__signature--highlighted language-typescript">RenderContext&lt;T extends Record&lt;string, unknown&gt; = Record&lt;string, unknown&gt;&gt;</code><span class="ox-api-entry__description">Complete render context.</span></span></summary>
+  <summary><span class="ox-api-entry__kind">interface</span><span class="ox-api-entry__summary-main"><code class="ox-api-entry__signature ox-api-entry__signature--highlighted language-typescript">RenderContext&lt;T extends Record&lt;string, unknown&gt; = Record&lt;string, unknown&gt;&gt;</code><span class="ox-api-entry__description">Complete render context.</span><span class="ox-api-entry__meta"><span class="ox-api-badge">2 members</span></span></span></summary>
   <div class="ox-api-entry__body">
 <div class="ox-api-entry__prose">
 <p>Complete render context.</p>
@@ -198,12 +354,35 @@
 <h4>Signature</h4>
 <pre><code class="language-typescript">export interface RenderContext&lt;T extends Record&lt;string, unknown&gt; = Record&lt;string, unknown&gt;&gt;</code></pre>
 </div>
-<p class="ox-api-entry__source"><a href="https://github.com/ubugeeei/ox-content/blob/main/npm/vite-plugin-ox-content/src/page-context.ts#L98-L103">View source</a></p>
+<p class="ox-api-entry__source"><a class="ox-api-entry__source-link" href="https://github.com/ubugeeei/ox-content/blob/main/npm/vite-plugin-ox-content/src/page-context.ts#L98-L103" target="_blank" rel="noopener noreferrer">View source<span class="ox-api-entry__source-icon" aria-hidden="true"></span></a></p>
+<div class="ox-api-entry__section ox-api-entry__section--members">
+<h4>Members</h4>
+<div class="ox-api-entry__member-group">
+<h5>Properties</h5>
+<table class="ox-api-entry__members-table">
+<thead><tr><th>Name</th><th>Kind</th><th>Type</th><th>Description</th></tr></thead>
+<tbody>
+<tr>
+  <td><code>page</code></td>
+  <td><span class="ox-api-entry__member-kind">property</span></td>
+  <td><code class="ox-api-entry__member-type language-typescript">PageProps</code></td>
+  <td><div class="ox-api-entry__member-description">Current page props</div></td>
+</tr>
+<tr>
+  <td><code>site</code></td>
+  <td><span class="ox-api-entry__member-kind">property</span></td>
+  <td><code class="ox-api-entry__member-type language-typescript">SiteConfig</code></td>
+  <td><div class="ox-api-entry__member-description">Site configuration</div></td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
   </div>
 </details>
 
 <details id="siteconfig" class="ox-api-entry">
-  <summary><span class="ox-api-entry__kind">interface</span><span class="ox-api-entry__summary-main"><code class="ox-api-entry__signature ox-api-entry__signature--highlighted language-typescript">SiteConfig</code><span class="ox-api-entry__description">Site-wide configuration available in context.</span></span></summary>
+  <summary><span class="ox-api-entry__kind">interface</span><span class="ox-api-entry__summary-main"><code class="ox-api-entry__signature ox-api-entry__signature--highlighted language-typescript">SiteConfig</code><span class="ox-api-entry__description">Site-wide configuration available in context.</span><span class="ox-api-entry__meta"><span class="ox-api-badge">4 members</span></span></span></summary>
   <div class="ox-api-entry__body">
 <div class="ox-api-entry__prose">
 <p>Site-wide configuration available in context.</p>
@@ -212,7 +391,42 @@
 <h4>Signature</h4>
 <pre><code class="language-typescript">export interface SiteConfig</code></pre>
 </div>
-<p class="ox-api-entry__source"><a href="https://github.com/ubugeeei/ox-content/blob/main/npm/vite-plugin-ox-content/src/page-context.ts#L67-L76">View source</a></p>
+<p class="ox-api-entry__source"><a class="ox-api-entry__source-link" href="https://github.com/ubugeeei/ox-content/blob/main/npm/vite-plugin-ox-content/src/page-context.ts#L67-L76" target="_blank" rel="noopener noreferrer">View source<span class="ox-api-entry__source-icon" aria-hidden="true"></span></a></p>
+<div class="ox-api-entry__section ox-api-entry__section--members">
+<h4>Members</h4>
+<div class="ox-api-entry__member-group">
+<h5>Properties</h5>
+<table class="ox-api-entry__members-table">
+<thead><tr><th>Name</th><th>Kind</th><th>Type</th><th>Description</th></tr></thead>
+<tbody>
+<tr>
+  <td><code>name</code></td>
+  <td><span class="ox-api-entry__member-kind">property</span></td>
+  <td><code class="ox-api-entry__member-type language-typescript">string</code></td>
+  <td><div class="ox-api-entry__member-description">Site name</div></td>
+</tr>
+<tr>
+  <td><code>base</code></td>
+  <td><span class="ox-api-entry__member-kind">property</span></td>
+  <td><code class="ox-api-entry__member-type language-typescript">string</code></td>
+  <td><div class="ox-api-entry__member-description">Base URL path</div></td>
+</tr>
+<tr>
+  <td><code>pages</code></td>
+  <td><span class="ox-api-entry__member-kind">property</span></td>
+  <td><code class="ox-api-entry__member-type language-typescript">BasePageProps[]</code></td>
+  <td><div class="ox-api-entry__member-description">All pages in the site</div></td>
+</tr>
+<tr>
+  <td><code>nav</code></td>
+  <td><span class="ox-api-entry__member-kind">property</span></td>
+  <td><code class="ox-api-entry__member-type language-typescript">NavGroup[]</code></td>
+  <td><div class="ox-api-entry__member-description">Navigation groups</div></td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
   </div>
 </details>
 
@@ -226,7 +440,7 @@
 <h4>Signature</h4>
 <pre><code class="language-typescript">export function useIsActive(path: string): boolean</code></pre>
 </div>
-<p class="ox-api-entry__source"><a href="https://github.com/ubugeeei/ox-content/blob/main/npm/vite-plugin-ox-content/src/page-context.ts#L246-L249">View source</a></p>
+<p class="ox-api-entry__source"><a class="ox-api-entry__source-link" href="https://github.com/ubugeeei/ox-content/blob/main/npm/vite-plugin-ox-content/src/page-context.ts#L246-L249" target="_blank" rel="noopener noreferrer">View source<span class="ox-api-entry__source-icon" aria-hidden="true"></span></a></p>
 <div class="ox-api-entry__section ox-api-entry__section--params">
 <h4>Parameters</h4>
 <ul class="ox-api-entry__params">
@@ -269,7 +483,7 @@
 <h4>Signature</h4>
 <pre><code class="language-typescript">export function useNav(): NavGroup[]</code></pre>
 </div>
-<p class="ox-api-entry__source"><a href="https://github.com/ubugeeei/ox-content/blob/main/npm/vite-plugin-ox-content/src/page-context.ts#L231-L233">View source</a></p>
+<p class="ox-api-entry__source"><a class="ox-api-entry__source-link" href="https://github.com/ubugeeei/ox-content/blob/main/npm/vite-plugin-ox-content/src/page-context.ts#L231-L233" target="_blank" rel="noopener noreferrer">View source<span class="ox-api-entry__source-icon" aria-hidden="true"></span></a></p>
 <div class="ox-api-entry__section ox-api-entry__section--returns">
 <h4>Returns</h4>
 <div class="ox-api-entry__return">
@@ -315,7 +529,7 @@
   T extends Record&lt;string, unknown&gt; = Record&lt;string, unknown&gt;,
 &gt;(): PageProps&lt;T&gt;</code></pre>
 </div>
-<p class="ox-api-entry__source"><a href="https://github.com/ubugeeei/ox-content/blob/main/npm/vite-plugin-ox-content/src/page-context.ts#L140-L150">View source</a></p>
+<p class="ox-api-entry__source"><a class="ox-api-entry__source-link" href="https://github.com/ubugeeei/ox-content/blob/main/npm/vite-plugin-ox-content/src/page-context.ts#L140-L150" target="_blank" rel="noopener noreferrer">View source<span class="ox-api-entry__source-icon" aria-hidden="true"></span></a></p>
 <div class="ox-api-entry__section ox-api-entry__section--returns">
 <h4>Returns</h4>
 <div class="ox-api-entry__return">
@@ -352,7 +566,7 @@
   T extends Record&lt;string, unknown&gt; = Record&lt;string, unknown&gt;,
 &gt;(): RenderContext&lt;T&gt;</code></pre>
 </div>
-<p class="ox-api-entry__source"><a href="https://github.com/ubugeeei/ox-content/blob/main/npm/vite-plugin-ox-content/src/page-context.ts#L195-L205">View source</a></p>
+<p class="ox-api-entry__source"><a class="ox-api-entry__source-link" href="https://github.com/ubugeeei/ox-content/blob/main/npm/vite-plugin-ox-content/src/page-context.ts#L195-L205" target="_blank" rel="noopener noreferrer">View source<span class="ox-api-entry__source-icon" aria-hidden="true"></span></a></p>
 <div class="ox-api-entry__section ox-api-entry__section--returns">
 <h4>Returns</h4>
 <div class="ox-api-entry__return">
@@ -392,7 +606,7 @@
 <h4>Signature</h4>
 <pre><code class="language-typescript">export function useSiteConfig(): SiteConfig</code></pre>
 </div>
-<p class="ox-api-entry__source"><a href="https://github.com/ubugeeei/ox-content/blob/main/npm/vite-plugin-ox-content/src/page-context.ts#L166-L174">View source</a></p>
+<p class="ox-api-entry__source"><a class="ox-api-entry__source-link" href="https://github.com/ubugeeei/ox-content/blob/main/npm/vite-plugin-ox-content/src/page-context.ts#L166-L174" target="_blank" rel="noopener noreferrer">View source<span class="ox-api-entry__source-icon" aria-hidden="true"></span></a></p>
 <div class="ox-api-entry__section ox-api-entry__section--returns">
 <h4>Returns</h4>
 <div class="ox-api-entry__return">
