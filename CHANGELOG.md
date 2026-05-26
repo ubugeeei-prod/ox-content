@@ -1,5 +1,110 @@
 # Changelog
 
+## [2.19.0] - 2026-05-26
+
+### Features
+
+- support clean URLs in generated Markdown links (#187)
+- add allocation and timing profiling mode (#163)
+- expose and render API members (#160)
+- filter internal declarations (#156)
+- resolve entrypoint export graph (#158)
+- extract file-level module jsdoc (#157)
+- extract plain variable declarations (#155)
+- add component checker diagnostics
+- add builtin open graph embeds (#101)
+- add builtin github embeds (#99)
+- support mdx content files (#98)
+- migration path (#39)
+- mdast js plugin (#40)
+- add Intl localization helpers (#87)
+- add runtime path helpers (#88)
+- support sidebar config (#86)
+- support custom social links (#85)
+- support git last updated (#84)
+- render inline toc directive (#83)
+- render toc outline in ssg theme (#82)
+- add heading anchor ids (#80)
+- use ox_jsdoc for docs generation (#69)
+- add pull request benchmark comments (#64)
+- unify ox content lsp and i18n tooling (#51)
+- configurable markdown linting (#49)
+- wasm (#46)
+- generated docs UX and scoped search (#44)
+- code highlighting (#42)
+
+### Bug Fixes
+
+- remove panic-prone runtime paths (#171)
+- improve docs hero, search, and source links (#169)
+- render docs assets in CI
+- align vite-plus-core catalog with vite-plus (#146)
+- protect public export surface
+- escape bare page titles
+- render list item fenced code as blocks
+- add spacing below expanded docs entries (#134)
+- harden embed inputs (#89)
+- render inline raw html (#79)
+- terminate html blocks on blank lines (#78)
+- apply base to markdown paths (#77)
+- pin deploy workflow actions (#76)
+- pin benchmark workflow actions (#75)
+- pin ci workflow actions (#74)
+- harden publish workflow (#73)
+- parse napi frontmatter with yaml (#72)
+- report benchmark time and base speed (#71)
+- harden renderer urls and workflows (#70)
+- publish wasm package via npm (#48)
+- publish wasm package via npm (#47)
+- text autosizing
+- ci
+
+### Performance
+
+- reuse parsed list lines (#184)
+- scan safe urls in chunks (#183)
+- write numeric attrs without strings (#182)
+- avoid unused link url allocations (#181)
+- write duplicate toc id suffixes in place (#180)
+- avoid duplicate toc slug clones (#179)
+- avoid inline toc entry clones (#178)
+- avoid temporary table row allocations (#177)
+- write heading id directly to output, skip callout alloc (#173) (#174)
+- arena strings, dispatch cache, fewer heading allocs (#172)
+- byte-level fast paths and zero-copy hot spots (#164)
+- batch-parse JSDoc comments in extractor (#111)
+- reduce search query allocations (#97)
+- speed up markdown render benchmark (#55)
+
+### Refactoring
+
+- move VitePress frontmatter normalization to Rust (#186)
+- move docs generation output into rust (#185)
+- centralize metadata in Rust
+- move i18n project checks into napi (#109)
+- move bare ssg html into rust (#110)
+- type search module options (#108)
+- write search index in rust (#107)
+- build search index in rust (#106)
+- move docs and ssg helpers to rust (#105)
+- remove mod.rs module roots (#104)
+- move docs nav generation to Rust (#96)
+- move search runtime generation to Rust (#95)
+- move SSG routing helpers to Rust (#94)
+- move SSG asset externalization to Rust (#93)
+- move docs normalization to Rust (#92)
+- move i18n runtime generation to Rust (#90)
+
+### Documentation
+
+- separate user guide and advanced docs
+- expand performance documentation (#167)
+- update architecture overview (#166)
+- add community credits (@kazupon)
+- add security policy (#126)
+- add contributing guide (#127)
+- publish md4x benchmark results (#54)
+
 ## [2.18.0] - 2026-05-25
 
 ### Bug Fixes
