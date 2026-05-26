@@ -4,6 +4,25 @@
 
 > 6 documented symbols. Read the signatures first, then expand each item for parameters, return types, and examples.
 
+<div class="ox-api-stats" aria-label="API reference summary">
+<span class="ox-api-stat">
+  <strong>6</strong>
+  <span>symbols</span>
+</span>
+<span class="ox-api-stat">
+  <strong>6</strong>
+  <span>functions</span>
+</span>
+<span class="ox-api-stat">
+  <strong>13</strong>
+  <span>parameters</span>
+</span>
+<span class="ox-api-stat">
+  <strong>5</strong>
+  <span>returns</span>
+</span>
+</div>
+
 ## Reference
 
 <div class="ox-api-controls" data-ox-api-target=".ox-api-entry" role="toolbar" aria-label="Reference display controls">
@@ -12,10 +31,14 @@
 </div>
 
 <details id="buildembedurl" class="ox-api-entry">
-  <summary><span class="ox-api-entry__kind">fn</span><span class="ox-api-entry__summary-main"><code class="ox-api-entry__signature ox-api-entry__signature--highlighted language-typescript">buildEmbedUrl(videoId: string, options: Required&lt;YouTubeOptions&gt;, params?: Record&lt;string, string&gt;): string</code><span class="ox-api-entry__description">Build YouTube embed URL with parameters.</span></span></summary>
+  <summary><span class="ox-api-entry__kind">fn</span><span class="ox-api-entry__summary-main"><code class="ox-api-entry__signature ox-api-entry__signature--highlighted language-typescript">buildEmbedUrl(videoId: string, options: Required&lt;YouTubeOptions&gt;, params?: Record&lt;string, string&gt;): string</code><span class="ox-api-entry__description">Build YouTube embed URL with parameters.</span><span class="ox-api-entry__meta"><span class="ox-api-badge">3 params</span><span class="ox-api-badge">returns string</span></span></span></summary>
   <div class="ox-api-entry__body">
 <div class="ox-api-entry__prose">
 <p>Build YouTube embed URL with parameters.</p>
+</div>
+<div class="ox-api-entry__section ox-api-entry__section--signature">
+<h4>Signature</h4>
+<pre><code class="language-typescript">function buildEmbedUrl(videoId: string, options: Required&lt;YouTubeOptions&gt;, params?: Record&lt;string, string&gt;): string</code></pre>
 </div>
 <p class="ox-api-entry__source"><a href="https://github.com/ubugeeei/ox-content/blob/main/npm/vite-plugin-ox-content/src/plugins/youtube.ts#L67-L83">View source</a></p>
 <div class="ox-api-entry__section ox-api-entry__section--params">
@@ -55,10 +78,14 @@
 </details>
 
 <details id="createyoutubeelement" class="ox-api-entry">
-  <summary><span class="ox-api-entry__kind">fn</span><span class="ox-api-entry__summary-main"><code class="ox-api-entry__signature ox-api-entry__signature--highlighted language-typescript">createYouTubeElement(videoId: string, options: Required&lt;YouTubeOptions&gt;, title?: string, start?: string): Element</code><span class="ox-api-entry__description">Create YouTube embed element.</span></span></summary>
+  <summary><span class="ox-api-entry__kind">fn</span><span class="ox-api-entry__summary-main"><code class="ox-api-entry__signature ox-api-entry__signature--highlighted language-typescript">createYouTubeElement(videoId: string, options: Required&lt;YouTubeOptions&gt;, title?: string, start?: string): Element</code><span class="ox-api-entry__description">Create YouTube embed element.</span><span class="ox-api-entry__meta"><span class="ox-api-badge">4 params</span><span class="ox-api-badge">returns Element</span></span></span></summary>
   <div class="ox-api-entry__body">
 <div class="ox-api-entry__prose">
 <p>Create YouTube embed element.</p>
+</div>
+<div class="ox-api-entry__section ox-api-entry__section--signature">
+<h4>Signature</h4>
+<pre><code class="language-typescript">function createYouTubeElement(videoId: string, options: Required&lt;YouTubeOptions&gt;, title?: string, start?: string): Element</code></pre>
 </div>
 <p class="ox-api-entry__source"><a href="https://github.com/ubugeeei/ox-content/blob/main/npm/vite-plugin-ox-content/src/plugins/youtube.ts#L88-L127">View source</a></p>
 <div class="ox-api-entry__section ox-api-entry__section--params">
@@ -105,10 +132,14 @@
 </details>
 
 <details id="extractvideoid" class="ox-api-entry">
-  <summary><span class="ox-api-entry__kind">fn</span><span class="ox-api-entry__summary-main"><code class="ox-api-entry__signature ox-api-entry__signature--highlighted language-typescript">extractVideoId(input: string): string | null</code><span class="ox-api-entry__description">Extract YouTube video ID from various URL formats.</span></span></summary>
+  <summary><span class="ox-api-entry__kind">fn</span><span class="ox-api-entry__summary-main"><code class="ox-api-entry__signature ox-api-entry__signature--highlighted language-typescript">extractVideoId(input: string): string | null</code><span class="ox-api-entry__description">Extract YouTube video ID from various URL formats.</span><span class="ox-api-entry__meta"><span class="ox-api-badge">1 param</span><span class="ox-api-badge">returns string | null</span></span></span></summary>
   <div class="ox-api-entry__body">
 <div class="ox-api-entry__prose">
 <p>Extract YouTube video ID from various URL formats.</p>
+</div>
+<div class="ox-api-entry__section ox-api-entry__section--signature">
+<h4>Signature</h4>
+<pre><code class="language-typescript">export function extractVideoId(input: string): string | null</code></pre>
 </div>
 <p class="ox-api-entry__source"><a href="https://github.com/ubugeeei/ox-content/blob/main/npm/vite-plugin-ox-content/src/plugins/youtube.ts#L44-L62">View source</a></p>
 <div class="ox-api-entry__section ox-api-entry__section--params">
@@ -126,7 +157,7 @@
 <div class="ox-api-entry__section ox-api-entry__section--returns">
 <h4>Returns</h4>
 <div class="ox-api-entry__return">
-  <code class="ox-api-entry__return-type">string | literal</code>
+  <code class="ox-api-entry__return-type">string | null</code>
   
 </div>
 </div>
@@ -134,10 +165,14 @@
 </details>
 
 <details id="getattribute" class="ox-api-entry">
-  <summary><span class="ox-api-entry__kind">fn</span><span class="ox-api-entry__summary-main"><code class="ox-api-entry__signature ox-api-entry__signature--highlighted language-typescript">getAttribute(el: Element, name: string): string | undefined</code><span class="ox-api-entry__description">Get element attribute value.</span></span></summary>
+  <summary><span class="ox-api-entry__kind">fn</span><span class="ox-api-entry__summary-main"><code class="ox-api-entry__signature ox-api-entry__signature--highlighted language-typescript">getAttribute(el: Element, name: string): string | undefined</code><span class="ox-api-entry__description">Get element attribute value.</span><span class="ox-api-entry__meta"><span class="ox-api-badge">2 params</span><span class="ox-api-badge">returns string | undefined</span></span></span></summary>
   <div class="ox-api-entry__body">
 <div class="ox-api-entry__prose">
 <p>Get element attribute value.</p>
+</div>
+<div class="ox-api-entry__section ox-api-entry__section--signature">
+<h4>Signature</h4>
+<pre><code class="language-typescript">function getAttribute(el: Element, name: string): string | undefined</code></pre>
 </div>
 <p class="ox-api-entry__source"><a href="https://github.com/ubugeeei/ox-content/blob/main/npm/vite-plugin-ox-content/src/plugins/youtube.ts#L34-L39">View source</a></p>
 <div class="ox-api-entry__section ox-api-entry__section--params">
@@ -170,10 +205,14 @@
 </details>
 
 <details id="rehypeyoutube" class="ox-api-entry">
-  <summary><span class="ox-api-entry__kind">fn</span><span class="ox-api-entry__summary-main"><code class="ox-api-entry__signature ox-api-entry__signature--highlighted language-typescript">rehypeYouTube(options: Required&lt;YouTubeOptions&gt;)</code><span class="ox-api-entry__description">Rehype plugin to transform YouTube components.</span></span></summary>
+  <summary><span class="ox-api-entry__kind">fn</span><span class="ox-api-entry__summary-main"><code class="ox-api-entry__signature ox-api-entry__signature--highlighted language-typescript">rehypeYouTube(options: Required&lt;YouTubeOptions&gt;)</code><span class="ox-api-entry__description">Rehype plugin to transform YouTube components.</span><span class="ox-api-entry__meta"><span class="ox-api-badge">1 param</span></span></span></summary>
   <div class="ox-api-entry__body">
 <div class="ox-api-entry__prose">
 <p>Rehype plugin to transform YouTube components.</p>
+</div>
+<div class="ox-api-entry__section ox-api-entry__section--signature">
+<h4>Signature</h4>
+<pre><code class="language-typescript">function rehypeYouTube(options: Required&lt;YouTubeOptions&gt;)</code></pre>
 </div>
 <p class="ox-api-entry__source"><a href="https://github.com/ubugeeei/ox-content/blob/main/npm/vite-plugin-ox-content/src/plugins/youtube.ts#L132-L164">View source</a></p>
 <div class="ox-api-entry__section ox-api-entry__section--params">
@@ -192,10 +231,14 @@
 </details>
 
 <details id="transformyoutube" class="ox-api-entry">
-  <summary><span class="ox-api-entry__kind">fn</span><span class="ox-api-entry__summary-main"><code class="ox-api-entry__signature ox-api-entry__signature--highlighted language-typescript">transformYouTube(html: string, options?: YouTubeOptions): Promise&lt;string&gt;</code><span class="ox-api-entry__description">Transform YouTube components in HTML.</span></span></summary>
+  <summary><span class="ox-api-entry__kind">fn</span><span class="ox-api-entry__summary-main"><code class="ox-api-entry__signature ox-api-entry__signature--highlighted language-typescript">transformYouTube(html: string, options?: YouTubeOptions): Promise&lt;string&gt;</code><span class="ox-api-entry__description">Transform YouTube components in HTML.</span><span class="ox-api-entry__meta"><span class="ox-api-badge">2 params</span><span class="ox-api-badge">returns Promise</span></span></span></summary>
   <div class="ox-api-entry__body">
 <div class="ox-api-entry__prose">
 <p>Transform YouTube components in HTML.</p>
+</div>
+<div class="ox-api-entry__section ox-api-entry__section--signature">
+<h4>Signature</h4>
+<pre><code class="language-typescript">export async function transformYouTube(html: string, options?: YouTubeOptions): Promise&lt;string&gt;</code></pre>
 </div>
 <p class="ox-api-entry__source"><a href="https://github.com/ubugeeei/ox-content/blob/main/npm/vite-plugin-ox-content/src/plugins/youtube.ts#L169-L179">View source</a></p>
 <div class="ox-api-entry__section ox-api-entry__section--params">

@@ -48,16 +48,20 @@ export const apiNav: NavItem[] = [
     path: "/api/jsx-runtime",
   },
   {
+    title: "Lint",
+    path: "/api/lint",
+  },
+  {
+    title: "Lint Files",
+    path: "/api/lint-files",
+  },
+  {
     title: "Mermaid",
     path: "/api/mermaid",
   },
   {
     title: "Mermaid Protect",
     path: "/api/mermaid-protect",
-  },
-  {
-    title: "Nav Generator",
-    path: "/api/nav-generator",
   },
   {
     title: "Ogp",
@@ -122,6 +126,10 @@ export const apiNav: NavItem[] = [
   {
     title: "Types",
     path: "/api/types",
+  },
+  {
+    title: "Vitepress",
+    path: "/api/vitepress",
   },
   {
     title: "Youtube",

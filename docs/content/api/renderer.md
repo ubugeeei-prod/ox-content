@@ -4,6 +4,25 @@
 
 > 2 documented symbols. Read the signatures first, then expand each item for parameters, return types, and examples.
 
+<div class="ox-api-stats" aria-label="API reference summary">
+<span class="ox-api-stat">
+  <strong>2</strong>
+  <span>symbols</span>
+</span>
+<span class="ox-api-stat">
+  <strong>2</strong>
+  <span>functions</span>
+</span>
+<span class="ox-api-stat">
+  <strong>9</strong>
+  <span>parameters</span>
+</span>
+<span class="ox-api-stat">
+  <strong>2</strong>
+  <span>returns</span>
+</span>
+</div>
+
 ## Reference
 
 <div class="ox-api-controls" data-ox-api-target=".ox-api-entry" role="toolbar" aria-label="Reference display controls">
@@ -12,10 +31,14 @@
 </div>
 
 <details id="renderhtmltopng" class="ox-api-entry">
-  <summary><span class="ox-api-entry__kind">fn</span><span class="ox-api-entry__summary-main"><code class="ox-api-entry__signature ox-api-entry__signature--highlighted language-typescript">renderHtmlToPng(page: Page, html: string, width: number, height: number, publicDir?: string): Promise&lt;Buffer&gt;</code><span class="ox-api-entry__description">Renders an HTML string to a PNG buffer using Chromium.</span></span></summary>
+  <summary><span class="ox-api-entry__kind">fn</span><span class="ox-api-entry__summary-main"><code class="ox-api-entry__signature ox-api-entry__signature--highlighted language-typescript">renderHtmlToPng(page: Page, html: string, width: number, height: number, publicDir?: string): Promise&lt;Buffer&gt;</code><span class="ox-api-entry__description">Renders an HTML string to a PNG buffer using Chromium.</span><span class="ox-api-entry__meta"><span class="ox-api-badge">5 params</span><span class="ox-api-badge">returns Promise</span></span></span></summary>
   <div class="ox-api-entry__body">
 <div class="ox-api-entry__prose">
 <p>Renders an HTML string to a PNG buffer using Chromium.</p>
+</div>
+<div class="ox-api-entry__section ox-api-entry__section--signature">
+<h4>Signature</h4>
+<pre><code class="language-typescript">export async function renderHtmlToPng(page: Page, html: string, width: number, height: number, publicDir?: string): Promise&lt;Buffer&gt;</code></pre>
 </div>
 <p class="ox-api-entry__source"><a href="https://github.com/ubugeeei/ox-content/blob/main/npm/vite-plugin-ox-content/src/og-image/renderer.ts#L36-L91">View source</a></p>
 <div class="ox-api-entry__section ox-api-entry__section--params">
@@ -69,10 +92,14 @@
 </details>
 
 <details id="wraphtml" class="ox-api-entry">
-  <summary><span class="ox-api-entry__kind">fn</span><span class="ox-api-entry__summary-main"><code class="ox-api-entry__signature ox-api-entry__signature--highlighted language-typescript">wrapHtml(bodyHtml: string, width: number, height: number, useBaseUrl: boolean): string</code><span class="ox-api-entry__description">Wraps template HTML in a minimal document with viewport locked to given dimensi…</span></span></summary>
+  <summary><span class="ox-api-entry__kind">fn</span><span class="ox-api-entry__summary-main"><code class="ox-api-entry__signature ox-api-entry__signature--highlighted language-typescript">wrapHtml(bodyHtml: string, width: number, height: number, useBaseUrl: boolean): string</code><span class="ox-api-entry__description">Wraps template HTML in a minimal document with viewport locked to given dimensi…</span><span class="ox-api-entry__meta"><span class="ox-api-badge">4 params</span><span class="ox-api-badge">returns string</span></span></span></summary>
   <div class="ox-api-entry__body">
 <div class="ox-api-entry__prose">
 <p>Wraps template HTML in a minimal document with viewport locked to given dimensions.</p>
+</div>
+<div class="ox-api-entry__section ox-api-entry__section--signature">
+<h4>Signature</h4>
+<pre><code class="language-typescript">function wrapHtml(bodyHtml: string, width: number, height: number, useBaseUrl: boolean): string</code></pre>
 </div>
 <p class="ox-api-entry__source"><a href="https://github.com/ubugeeei/ox-content/blob/main/npm/vite-plugin-ox-content/src/og-image/renderer.ts#L11-L24">View source</a></p>
 <div class="ox-api-entry__section ox-api-entry__section--params">

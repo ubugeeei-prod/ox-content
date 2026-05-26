@@ -202,6 +202,8 @@ export function generateMarkdown(
   return napi.generateDocsMarkdown(toRustDocsModules(docs), {
     groupBy: options.groupBy,
     githubUrl: options.githubUrl,
+    linkStyle: options.linkStyle,
+    basePath: options.basePath,
   });
 }
 
@@ -230,6 +232,7 @@ export async function writeDocs(
       generateNav: options?.generateNav ?? false,
       groupBy: options?.groupBy ?? "file",
       generatedAt: new Date().toISOString(),
+      basePath: options?.basePath,
     },
   );
 }
@@ -284,6 +287,8 @@ export function resolveDocsOptions(
     toc: false,
     groupBy: opts.groupBy ?? "file",
     githubUrl: opts.githubUrl,
+    linkStyle: opts.linkStyle ?? "markdown",
+    basePath: opts.basePath,
     generateNav: opts.generateNav ?? true,
   };
 }

@@ -108,6 +108,39 @@ describe("writeDocs", () => {
     expect(docsJson.modules[0]?.entries[0]?.file).toBe("src/math.ts");
     expect(docsJson.modules[0]?.entries[0]?.name).toBe("clamp");
   });
+
+  it("uses the configured base path for generated nav metadata", async () => {
+    const outDir = await fs.mkdtemp(path.join(os.tmpdir(), "ox-content-docs-"));
+    tempDirs.push(outDir);
+
+    const extractedDocs: ExtractedDocs[] = [
+      {
+        file: "/repo/src/context.ts",
+        entries: [
+          {
+            name: "CommandContext",
+            kind: "interface",
+            description: "Runtime context.",
+            file: "/repo/src/context.ts",
+            line: 1,
+            endLine: 1,
+            signature: "export interface CommandContext",
+          },
+        ],
+      },
+    ];
+
+    await writeDocs(
+      { "context.md": "# context", "index.md": "# API" },
+      outDir,
+      extractedDocs,
+      resolveDocsOptions({ generateNav: true, basePath: "/api-ox" }),
+    );
+
+    await expect(fs.readFile(path.join(outDir, "nav.ts"), "utf-8")).resolves.toContain(
+      '"path": "/api-ox/context"',
+    );
+  });
 });
 
 describe("generateMarkdown", () => {
@@ -138,6 +171,34 @@ describe("generateMarkdown", () => {
     expect(markdown["utils.md"]).toContain('<details id="capitalize" class="ox-api-entry">');
     expect(markdown["utils.md"]).toContain("Read the signatures first");
     expect(markdown["index.md"]).toContain("`@api transform`");
+  });
+
+  it("passes clean link options to generated Markdown", () => {
+    const docs: ExtractedDocs[] = [
+      {
+        file: "/repo/src/context.ts",
+        entries: [
+          {
+            name: "CommandContext",
+            kind: "interface",
+            description: "Runtime context.",
+            file: "/repo/src/context.ts",
+            line: 1,
+            endLine: 1,
+            signature: "export interface CommandContext",
+          },
+        ],
+      },
+    ];
+
+    const markdown = generateMarkdown(
+      docs,
+      resolveDocsOptions({ linkStyle: "clean", basePath: "/api-ox" })!,
+    );
+
+    expect(markdown["index.md"]).toContain('href="/api-ox/context"');
+    expect(markdown["index.md"]).toContain('href="/api-ox/context#commandcontext"');
+    expect(markdown["index.md"]).not.toContain(".md#commandcontext");
   });
 
   it("extracts declaration line ranges for source links", async () => {
