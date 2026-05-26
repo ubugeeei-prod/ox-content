@@ -105,10 +105,20 @@ export default defineConfig({
       "workspace:test": noopTask(["test:rust", "test:ts"]),
       "test:rust": task("cargo test --workspace"),
       "test:rust-verbose": uncachedTask("cargo test --workspace -- --nocapture"),
-      "test:ts": noopTask(["test:ts-unit", "test:vrt"]),
+      // `test:vscode` is intentionally NOT part of `test:ts`: it spins up a
+      // real VS Code Electron host and needs xvfb on Linux runners. CI
+      // exposes it via its own job; here we only chain the pure-node
+      // unit suite so `vp run test` stays headless.
+      "test:ts": noopTask(["test:ts-unit", "test:vscode-unit", "test:vrt"]),
       "test:ts-unit": task("vp exec --filter @ox-content/vite-plugin -- vp test src", {
         dependsOn: ["build:napi"],
       }),
+      "test:vscode-unit": task("vp exec --filter vscode-ox-content -- vp test src/test/unit"),
+      "test:vscode": uncachedTask("node scripts/run-vscode-tests.mjs", {
+        dependsOn: ["build:lsp", "vscode:build"],
+      }),
+      "build:lsp": task("cargo build --release -p ox_content_lsp --bin ox-content-lsp"),
+      "vscode:build": task("vp exec --filter vscode-ox-content -- tsc -p tsconfig.json"),
       "test:vrt": uncachedTask("vp exec --filter @ox-content/vite-plugin -- playwright test", {
         dependsOn: ["build:napi"],
       }),

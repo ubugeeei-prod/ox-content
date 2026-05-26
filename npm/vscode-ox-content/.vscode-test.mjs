@@ -7,8 +7,11 @@ import { defineConfig } from "@vscode/test-cli";
 // LSP-dependent assertions skip themselves when `ox-content-lsp` is not on
 // the runner — the test workspace is configured with an absolute path that
 // resolves to `target/debug/ox-content-lsp` when present.
+//
+// Unit tests (pure node, no VS Code host) live under `src/test/unit/` and
+// run separately via `vp test` / `pnpm test:unit`.
 export default defineConfig({
-  files: "dist/test/**/*.test.js",
+  files: "dist/test/integration/**/*.test.js",
   // Use the source-tree fixtures directly so `tsc` doesn't have to copy
   // `.md` / `.json` files into `dist`. The workspace just needs to exist;
   // the tests open files via vscode.workspace.openTextDocument(...).
