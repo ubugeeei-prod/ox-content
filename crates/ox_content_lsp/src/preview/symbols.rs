@@ -21,7 +21,7 @@ pub fn document_symbols(
         (source, 0)
     };
 
-    let allocator = Allocator::new();
+    let allocator = Allocator::for_source_len(content.len());
     let parser = Parser::with_options(&allocator, content, ParserOptions::gfm());
     let ast = parser.parse()?;
     let mut symbols = Vec::new();

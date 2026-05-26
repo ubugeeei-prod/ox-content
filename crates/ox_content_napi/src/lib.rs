@@ -38,13 +38,8 @@ use ox_content_search::{
 use transfer::TransferPayloadKind;
 use transformer::{parse_frontmatter, MarkdownTransformer};
 
-const ALLOCATOR_BYTES_PER_INPUT_BYTE: usize = 8;
-const MIN_ALLOCATOR_CAPACITY: usize = 4 * 1024;
-
 fn create_allocator_for_source(source: &str) -> Allocator {
-    let capacity =
-        source.len().saturating_mul(ALLOCATOR_BYTES_PER_INPUT_BYTE).max(MIN_ALLOCATOR_CAPACITY);
-    Allocator::with_capacity(capacity)
+    Allocator::for_source_len(source.len())
 }
 
 /// Parse result containing the AST as JSON.
