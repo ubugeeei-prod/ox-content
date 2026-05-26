@@ -72,6 +72,11 @@
           "type": "boolean",
           "default": true,
           "description": "Automatically refresh the Ox Content preview when the document changes."
+        },
+        "oxContent.mdc.components": {
+          "type": "string",
+          "default": "",
+          "markdownDescription": "Optional absolute or workspace-relative path to the MDC component registry JSON file. The registry powers component name and attribute completion inside `.md` / `.mdc` files."
         }
       }
     },

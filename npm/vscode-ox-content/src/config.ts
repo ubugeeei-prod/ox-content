@@ -32,8 +32,19 @@ export function resolveServerOptions(
 }
 
 export function resolveInitializationOptions(workspaceRoot?: string): Record<string, string> {
+  const options: Record<string, string> = {};
+
   const schemaSetting = getConfig().get<string>("frontmatter.schema", "").trim();
-  return schemaSetting ? { frontmatterSchema: resolveFilePath(schemaSetting, workspaceRoot) } : {};
+  if (schemaSetting) {
+    options.frontmatterSchema = resolveFilePath(schemaSetting, workspaceRoot);
+  }
+
+  const mdcComponents = getConfig().get<string>("mdc.components", "").trim();
+  if (mdcComponents) {
+    options.mdcComponents = resolveFilePath(mdcComponents, workspaceRoot);
+  }
+
+  return options;
 }
 
 function findLocalServerBinary(
