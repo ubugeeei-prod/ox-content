@@ -8,7 +8,9 @@ Features:
 - frontmatter schema completion and diagnostics
 - i18n key completion, hover, definition, diagnostics, and inlay hints for JS/TS
 - command palette actions for table/code fence/callout insertion
-- Ox Content HTML preview
+- Ox Content HTML preview with **HMR**: opening the preview subscribes
+  the document with the LSP, and the panel reloads on every
+  `oxContent/previewDidChange` notification (no client-side polling)
 - `.mdc` files associated with Markdown and component tag diagnostics
 
 ## Configuration
@@ -23,6 +25,22 @@ The environment variable `OX_CONTENT_LSP_PATH` is honored as an override
 between `oxContent.server.path` and the local-binary probe. CI and the
 integration test runner use it so they can point at a freshly built
 `target/release/ox-content-lsp` without writing per-workspace settings.
+
+## Preview HMR
+
+`oxContent.openPreview` opens a webview that subscribes to LSP push
+updates instead of debouncing on `onDidChangeTextDocument`. The flow is:
+
+1. The extension calls `oxContent.previewSubscribe` with the document
+   URI; the LSP returns the initial rendered HTML.
+2. Every text change to that document triggers
+   `oxContent/previewDidChange` from the LSP, which the panel applies
+   directly.
+3. Disposing the webview (or closing the document) sends
+   `oxContent.previewUnsubscribe`.
+
+Set `oxContent.preview.autoRefresh: false` to opt out — the panel
+still opens but stops at the initial render.
 
 ## Testing
 

@@ -6,7 +6,7 @@ use crate::document::is_markdown_path;
 
 use super::commands::{
     insert_actions, COMMAND_INSERT_CALLOUT, COMMAND_INSERT_CODE_FENCE, COMMAND_INSERT_TABLE,
-    COMMAND_PREVIEW_HTML,
+    COMMAND_PREVIEW_HTML, COMMAND_PREVIEW_SUBSCRIBE, COMMAND_PREVIEW_UNSUBSCRIBE,
 };
 use super::Backend;
 
@@ -62,6 +62,8 @@ impl LanguageServer for Backend {
                         COMMAND_INSERT_CODE_FENCE.into(),
                         COMMAND_INSERT_CALLOUT.into(),
                         COMMAND_PREVIEW_HTML.into(),
+                        COMMAND_PREVIEW_SUBSCRIBE.into(),
+                        COMMAND_PREVIEW_UNSUBSCRIBE.into(),
                     ],
                     ..Default::default()
                 }),
@@ -162,6 +164,8 @@ impl LanguageServer for Backend {
                 self.insert_template(&params.command, params.arguments).await
             }
             COMMAND_PREVIEW_HTML => self.preview_html(params.arguments).await,
+            COMMAND_PREVIEW_SUBSCRIBE => self.preview_subscribe(params.arguments).await,
+            COMMAND_PREVIEW_UNSUBSCRIBE => self.preview_unsubscribe(params.arguments).await,
             _ => Ok(None),
         }
     }

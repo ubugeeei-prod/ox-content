@@ -91,3 +91,19 @@ export async function sendServerCommand<T = unknown>(
     arguments: args,
   });
 }
+
+/**
+ * Subscribe to an LSP notification routed through the active client.
+ * Returns a Disposable so the caller can detach on panel teardown.
+ * Throws when no client is running — callers should only invoke this
+ * after `startClient` resolves.
+ */
+export function onServerNotification<T>(
+  method: string,
+  handler: (params: T) => void,
+): vscode.Disposable {
+  if (!client) {
+    throw new Error("Ox Content language client is not running.");
+  }
+  return client.onNotification(method, handler);
+}

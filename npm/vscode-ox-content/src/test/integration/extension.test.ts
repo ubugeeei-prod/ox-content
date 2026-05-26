@@ -27,6 +27,14 @@ const EXPECTED_COMMANDS = [
   "oxContent.openPreview",
 ];
 
+// HMR-flow commands. The LSP advertises them in its
+// `execute_command_provider` capability, so vscode-languageclient
+// registers them as VS Code commands once the server starts — but
+// they have no `onCommand:` activation event because they are only
+// dispatched by the extension itself (preview subscribe / unsubscribe
+// on panel lifecycle).
+const EXPECTED_LSP_COMMANDS = ["oxContent.previewSubscribe", "oxContent.previewUnsubscribe"];
+
 const EDITOR_GUARDED_COMMANDS = [
   "oxContent.insertTable",
   "oxContent.insertCodeFence",
@@ -142,7 +150,7 @@ suite("vscode-ox-content extension surface", () => {
     }
     const registered = await vscode.commands.getCommands(true);
     const oxCommands = registered.filter((id) => id.startsWith("oxContent."));
-    for (const id of EXPECTED_COMMANDS) {
+    for (const id of [...EXPECTED_COMMANDS, ...EXPECTED_LSP_COMMANDS]) {
       assert.ok(
         registered.includes(id),
         `command ${id} not registered. registered oxContent.* commands: ${oxCommands.join(", ")}`,

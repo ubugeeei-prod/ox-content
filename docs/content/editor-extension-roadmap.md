@@ -31,16 +31,16 @@ must not depend on a later one in the list.
 
 ## Feature Matrix
 
-| #   | Feature                                         | LSP                       | CLI                          | VS Code                   | Neovim                      | Status             |
-| --- | ----------------------------------------------- | ------------------------- | ---------------------------- | ------------------------- | --------------------------- | ------------------ |
-| 1   | Markdown preview (HMR)                          | partial — polling refresh | none                         | webview, debounced reload | external browser, on-demand | needs HMR + CLI    |
-| 2   | i18n preview / completion                       | present                   | `ox-content-i18n`            | present                   | present                     | shipped            |
-| 3   | MDC completion + type check                     | completion + diagnostics  | `ox-content-mdc-check`       | completion + diagnostics  | completion + diagnostics    | shipped            |
-| 4   | Vue / React props completion + jump + typecheck | none                      | none                         | none                      | none                        | new (corsa_client) |
-| 5   | Asset path completion + diagnostics             | completion provider       | via link checker             | completion + diagnostics  | completion + diagnostics    | shipped            |
-| 6   | Dead link checker                               | diagnostics               | `ox-content-link-check`      | diagnostics               | diagnostics                 | local: shipped     |
-| 7   | textlint integration                            | on-save diagnostics       | via configured command       | enabled per setting       | enabled per setting         | shipped (opt-in)   |
-| 8   | Frontmatter schema completion + diagnostics     | present                   | none (validated through LSP) | present                   | present                     | needs CLI          |
+| #   | Feature                                         | LSP                      | CLI                          | VS Code                  | Neovim                      | Status             |
+| --- | ----------------------------------------------- | ------------------------ | ---------------------------- | ------------------------ | --------------------------- | ------------------ |
+| 1   | Markdown preview (HMR)                          | push channel             | none                         | subscribed webview       | external browser, on-demand | needs CLI + nvim   |
+| 2   | i18n preview / completion                       | present                  | `ox-content-i18n`            | present                  | present                     | shipped            |
+| 3   | MDC completion + type check                     | completion + diagnostics | `ox-content-mdc-check`       | completion + diagnostics | completion + diagnostics    | shipped            |
+| 4   | Vue / React props completion + jump + typecheck | none                     | none                         | none                     | none                        | new (corsa_client) |
+| 5   | Asset path completion + diagnostics             | completion provider      | via link checker             | completion + diagnostics | completion + diagnostics    | shipped            |
+| 6   | Dead link checker                               | diagnostics              | `ox-content-link-check`      | diagnostics              | diagnostics                 | local: shipped     |
+| 7   | textlint integration                            | on-save diagnostics      | via configured command       | enabled per setting      | enabled per setting         | shipped (opt-in)   |
+| 8   | Frontmatter schema completion + diagnostics     | present                  | none (validated through LSP) | present                  | present                     | needs CLI          |
 
 ## PR Sequence
 
@@ -74,14 +74,19 @@ Foundation PR. Tightens the existing extension before adding features.
 
 Replace the polling refresh path with an explicit push channel.
 
-- New LSP notification `oxContent/previewDidChange` payload `{ uri, html, title }`.
-- VS Code webview subscribes to the notification instead of debouncing on
+- ✅ LSP notification `oxContent/previewDidChange` with `{ uri, html, title }` payload
+  (shipped, see `crates/ox_content_lsp/src/backend/commands.rs`).
+- ✅ `oxContent.previewSubscribe` / `oxContent.previewUnsubscribe`
+  execute-command handlers.
+- ✅ VS Code webview subscribes on open, unsubscribes on dispose, and
+  listens for `oxContent/previewDidChange` instead of debouncing on
   `onDidChangeTextDocument`.
-- New CLI `ox-content-preview` that hosts an SSE endpoint backed by the same
-  renderer; useful for `--watch` workflows and for the Neovim browser
-  preview.
-- Neovim preview opens the SSE URL instead of writing a temp file when
-  `auto_refresh = true`.
+- Pending follow-up: CLI `ox-content-preview` that hosts an SSE endpoint
+  backed by the same renderer (useful for `--watch` workflows and for the
+  Neovim browser preview). Tracked as a separate PR so this one stays
+  focused on the LSP push channel.
+- Pending follow-up: Neovim preview opens the SSE URL instead of writing
+  a temp file when `auto_refresh = true`.
 
 ### 3. `feat(link-checker): new crate, LSP integration, CLI`
 
