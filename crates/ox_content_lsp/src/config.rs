@@ -13,12 +13,21 @@ pub struct InitializationOptions {
     pub config_path: Option<String>,
     #[serde(rename = "frontmatterSchema")]
     pub frontmatter_schema: Option<String>,
+    /// Opt-in for the textlint sidecar (off by default — textlint
+    /// is heavy and noisy for projects that don't use it).
+    #[serde(rename = "textlintEnabled", default)]
+    pub textlint_enabled: bool,
+    /// Optional override command for the textlint binary. Empty
+    /// falls back to `npx textlint`.
+    #[serde(rename = "textlintCommand")]
+    pub textlint_command: Option<String>,
 }
 
 #[derive(Clone, Debug, Default, Deserialize)]
 #[serde(default)]
 struct WorkspaceConfigFile {
     frontmatter: FrontmatterConfigFile,
+    textlint: TextlintConfigFile,
 }
 
 #[derive(Clone, Debug, Default, Deserialize)]
@@ -27,25 +36,37 @@ struct FrontmatterConfigFile {
     schema: Option<String>,
 }
 
+#[derive(Clone, Debug, Default, Deserialize)]
+#[serde(default)]
+struct TextlintConfigFile {
+    enabled: Option<bool>,
+    command: Option<String>,
+}
+
 #[derive(Clone, Debug, Default)]
 pub struct ResolvedConfig {
     pub frontmatter_schema: Option<PathBuf>,
+    pub textlint: crate::textlint::TextlintConfig,
 }
 
 impl ResolvedConfig {
     #[must_use]
     pub fn load(root: Option<&Path>, init: &InitializationOptions) -> Self {
         let root = root.map(Path::to_path_buf);
+        let workspace_file = load_workspace_file(root.as_deref(), init.config_path.as_deref());
+
         let frontmatter_schema = init
             .frontmatter_schema
             .as_ref()
             .map(|value| resolve_path(root.as_deref(), value))
             .or_else(|| {
-                load_workspace_file(root.as_deref(), init.config_path.as_deref()).and_then(
-                    |(path, config)| {
-                        config.frontmatter.schema.map(|value| resolve_path(path.parent(), &value))
-                    },
-                )
+                workspace_file.as_ref().and_then(|(path, config)| {
+                    config
+                        .frontmatter
+                        .schema
+                        .as_ref()
+                        .map(|value| resolve_path(path.parent(), value))
+                })
             })
             .or_else(|| {
                 env::var("OX_CONTENT_FRONTMATTER_SCHEMA")
@@ -53,7 +74,34 @@ impl ResolvedConfig {
                     .map(|value| resolve_path(root.as_deref(), &value))
             });
 
-        Self { frontmatter_schema }
+        // textlint flows through the same init → workspace file →
+        // env var pipeline so users have one consistent override
+        // model. The init option wins so editors can flip it
+        // dynamically without rewriting the workspace config.
+        let textlint_enabled = if init.textlint_enabled {
+            true
+        } else if let Some((_, config)) = workspace_file.as_ref() {
+            config.textlint.enabled.unwrap_or(false)
+        } else {
+            env::var("OX_CONTENT_TEXTLINT_ENABLED")
+                .ok()
+                .is_some_and(|value| matches!(value.as_str(), "1" | "true" | "yes"))
+        };
+        let textlint_command = init
+            .textlint_command
+            .clone()
+            .or_else(|| {
+                workspace_file.as_ref().and_then(|(_, config)| config.textlint.command.clone())
+            })
+            .or_else(|| env::var("OX_CONTENT_TEXTLINT_COMMAND").ok());
+
+        Self {
+            frontmatter_schema,
+            textlint: crate::textlint::TextlintConfig {
+                enabled: textlint_enabled,
+                command: textlint_command,
+            },
+        }
     }
 }
 

@@ -39,7 +39,7 @@ must not depend on a later one in the list.
 | 4   | Vue / React props completion + jump + typecheck | none                      | none                         | none                      | none                        | new (corsa_client) |
 | 5   | Asset path completion + diagnostics             | completion provider       | via link checker             | completion + diagnostics  | completion + diagnostics    | shipped            |
 | 6   | Dead link checker                               | diagnostics               | `ox-content-link-check`      | diagnostics               | diagnostics                 | local: shipped     |
-| 7   | textlint integration                            | none                      | none                         | none                      | none                        | new                |
+| 7   | textlint integration                            | on-save diagnostics       | via configured command       | enabled per setting       | enabled per setting         | shipped (opt-in)   |
 | 8   | Frontmatter schema completion + diagnostics     | present                   | none (validated through LSP) | present                   | present                     | needs CLI          |
 
 ## PR Sequence
@@ -144,12 +144,28 @@ so users without `typescript-go` available are not affected.
 
 ### 7. `feat(textlint): sidecar integration`
 
-- Spawn `textlint` (node) as a long-lived sidecar from the LSP when a
-  `.textlintrc` is discovered.
-- Surface findings as LSP diagnostics; expose code actions for `--fix`
-  suggestions when textlint reports them.
-- CLI `ox-content-textlint` shells the same flow for CI.
-- Document required textlint version and rule discovery.
+- ✅ New `ox_content_lsp::textlint` module spawns
+  `<command> --format json --stdin --stdin-filename <path>` and
+  parses the per-file message array into LSP diagnostics under
+  `source: "textlint"`. Runs **on save only** so the typing path
+  stays fast (textlint can take a few hundred ms per file).
+- ✅ Opt-in via `oxContent.textlintEnabled` initialization option,
+  `textlint.enabled` in the workspace config, or
+  `OX_CONTENT_TEXTLINT_ENABLED=1`. Off by default — textlint is
+  heavy and noisy for projects that don't use it.
+- ✅ Custom command override via `oxContent.textlintCommand` /
+  `textlint.command` / `OX_CONTENT_TEXTLINT_COMMAND`. Empty falls
+  back to `npx textlint`. Shell-style quoting supported.
+- ✅ VS Code: `oxContent.textlint.enabled` /
+  `oxContent.textlint.command` settings forward into the
+  initialization options.
+- ✅ 11 unit tests cover JSON parsing, severity mapping,
+  zero-indexed coordinates, the missing-rule-id and unknown-severity
+  cases, shlex-style command splitting, and the disabled /
+  missing-binary subprocess paths.
+- Pending follow-ups: code actions for textlint `--fix` suggestions,
+  dedicated `ox-content-textlint` CLI (currently the user runs
+  textlint directly), debounce / cancellation between rapid saves.
 
 ### 8. `feat(nvim): polish, parity, and busted suite`
 

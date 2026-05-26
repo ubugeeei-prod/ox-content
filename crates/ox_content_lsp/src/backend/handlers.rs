@@ -16,8 +16,15 @@ impl LanguageServer for Backend {
         self.init_from_params(&params).await;
         Ok(InitializeResult {
             capabilities: ServerCapabilities {
-                text_document_sync: Some(TextDocumentSyncCapability::Kind(
-                    TextDocumentSyncKind::FULL,
+                // Advertise full-document sync plus save events so
+                // textlint (which runs on save) gets notified.
+                text_document_sync: Some(TextDocumentSyncCapability::Options(
+                    TextDocumentSyncOptions {
+                        open_close: Some(true),
+                        change: Some(TextDocumentSyncKind::FULL),
+                        save: Some(TextDocumentSyncSaveOptions::Supported(true)),
+                        ..Default::default()
+                    },
                 )),
                 completion_provider: Some(CompletionOptions {
                     trigger_characters: Some(vec![
@@ -82,6 +89,14 @@ impl LanguageServer for Backend {
 
     async fn did_close(&self, params: DidCloseTextDocumentParams) {
         self.close_document(&params.text_document.uri).await;
+    }
+
+    async fn did_save(&self, params: DidSaveTextDocumentParams) {
+        // textlint is too heavy to run on every keystroke (a few
+        // hundred ms per file), so it lives on the save path. The
+        // helper inside `Backend` short-circuits when the user has
+        // not opted in via `oxContent.textlintEnabled`.
+        self.run_textlint_for(&params.text_document.uri).await;
     }
 
     async fn completion(&self, params: CompletionParams) -> Result<Option<CompletionResponse>> {

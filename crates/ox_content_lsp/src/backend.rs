@@ -66,6 +66,34 @@ impl Backend {
         self.client.publish_diagnostics(uri.clone(), Vec::new(), None).await;
     }
 
+    pub(super) async fn run_textlint_for(&self, uri: &Url) {
+        let config = self.resolved_config().await;
+        if !config.textlint.enabled {
+            return;
+        }
+        let Some(document) = self.state.document(uri).await else {
+            return;
+        };
+        let Ok(path) = uri.to_file_path() else {
+            return;
+        };
+        if !is_markdown_path(&path) {
+            return;
+        }
+        let textlint_diagnostics =
+            crate::textlint::run(document.text(), &path, &config.textlint).await;
+        // textlint diagnostics live alongside the other Markdown
+        // checks; we publish them through the same channel so the
+        // editor sees a single combined gutter. Re-run the
+        // non-textlint diagnostics here so we don't accidentally
+        // drop the squiggles the on_change path published moments
+        // ago when we replace the diagnostic list.
+        let is_mdc = path.extension().and_then(|ext| ext.to_str()) == Some("mdc");
+        let mut current = self.diagnostics(uri, &document, is_mdc).await;
+        current.extend(textlint_diagnostics);
+        self.client.publish_diagnostics(uri.clone(), current, None).await;
+    }
+
     pub(super) async fn publish_diagnostics_for(&self, uri: &Url) {
         let Some(document) = self.state.document(uri).await else {
             return;
