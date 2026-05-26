@@ -1,0 +1,27 @@
+[package]
+name = "ox_content_link_checker"
+version.workspace = true
+authors.workspace = true
+categories.workspace = true
+edition.workspace = true
+homepage.workspace = true
+keywords.workspace = true
+license.workspace = true
+repository.workspace = true
+rust-version.workspace = true
+description = "Static dead-link checker for Ox Content Markdown (local, deterministic)"
+
+[lints]
+workspace = true
+
+[[bin]]
+name = "ox-content-link-check"
+path = "src/main.rs"
+
+[dependencies]
+ox_content_allocator = { workspace = true }
+ox_content_ast = { workspace = true }
+ox_content_parser = { workspace = true }
+clap = { workspace = true }
+serde = { workspace = true }
+serde_json = { workspace = true }

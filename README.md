@@ -151,6 +151,23 @@ ox-content-i18n check --dict-dir content/i18n --src src
 ox-content-i18n validate "Hello {$name}"
 ```
 
+### Dead Link Checker (CLI)
+
+```bash
+# Check every link in a tree, exit non-zero on broken targets
+ox-content-link-check docs/**/*.md
+
+# Treat `/foo.md` as workspace-rooted under docs/
+ox-content-link-check --src-dir docs docs/**/*.md
+
+# Suppress known intentionally-broken targets
+ox-content-link-check --ignore "intentionally-broken" docs/**/*.md
+```
+
+Offline-only by design — `http://` and `https://` links pass through
+without a network request, so the same binary is safe to run in CI
+without timeouts, retries, or rate limits.
+
 ### Editor Tooling
 
 Ox Content now ships a unified authoring and i18n language server:
@@ -171,9 +188,10 @@ Supported features include:
 - frontmatter schema completion and diagnostics
 - i18n key completion, hover, go-to-definition, diagnostics, and inlay hints for JS/TS
 - table / code fence / callout insertion commands
-- preview HTML generation for editor UIs
+- preview HTML generation for editor UIs (with LSP-pushed HMR)
 - `.mdc` authoring support with component tag diagnostics
 - asset path completion inside `[…](`, `![…](`, and HTML `src=`/`href=` attributes
+- dead link diagnostics powered by `ox_content_link_checker`
 
 For CI or editor-independent checks, run:
 

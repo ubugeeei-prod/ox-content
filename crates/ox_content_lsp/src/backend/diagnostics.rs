@@ -1,6 +1,9 @@
+use std::path::PathBuf;
+
 use ox_content_allocator::Allocator;
+use ox_content_link_checker::{check_source as link_check_source, CheckOptions, Severity};
 use ox_content_parser::{ParseError, Parser, ParserOptions};
-use tower_lsp::lsp_types::{Diagnostic, DiagnosticSeverity};
+use tower_lsp::lsp_types::{Diagnostic, DiagnosticSeverity, Url};
 
 use crate::document::TextDocumentState;
 use crate::frontmatter::FrontmatterBlock;
@@ -65,6 +68,40 @@ pub(super) fn mdc_diagnostics(
                 message: diagnostic.message,
                 ..Default::default()
             }
+        })
+        .collect()
+}
+
+pub(super) fn link_check_diagnostics(
+    document: &TextDocumentState,
+    uri: &Url,
+    src_dir: Option<PathBuf>,
+) -> Vec<Diagnostic> {
+    let Some(file_path) = uri.to_file_path().ok() else {
+        return Vec::new();
+    };
+
+    let options = CheckOptions { file_path, src_dir, ignore_patterns: Vec::new() };
+    link_check_source(document.text(), &options)
+        .into_iter()
+        .map(|diagnostic| Diagnostic {
+            range: tower_lsp::lsp_types::Range {
+                start: tower_lsp::lsp_types::Position {
+                    line: diagnostic.line.saturating_sub(1),
+                    character: diagnostic.column.saturating_sub(1),
+                },
+                end: tower_lsp::lsp_types::Position {
+                    line: diagnostic.end_line.saturating_sub(1),
+                    character: diagnostic.end_column.saturating_sub(1),
+                },
+            },
+            severity: Some(match diagnostic.severity {
+                Severity::Error => DiagnosticSeverity::ERROR,
+                Severity::Warning => DiagnosticSeverity::WARNING,
+            }),
+            source: Some("ox-content-link".to_string()),
+            message: diagnostic.message,
+            ..Default::default()
         })
         .collect()
 }

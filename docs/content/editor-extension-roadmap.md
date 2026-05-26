@@ -38,7 +38,7 @@ must not depend on a later one in the list.
 | 3   | MDC completion + type check                     | diagnostics only          | `ox-content-mdc-check`       | diagnostics               | diagnostics                 | needs completion   |
 | 4   | Vue / React props completion + jump + typecheck | none                      | none                         | none                      | none                        | new (corsa_client) |
 | 5   | Asset path completion + diagnostics             | completion provider       | via link checker             | completion + diagnostics  | completion + diagnostics    | shipped            |
-| 6   | Dead link checker                               | none                      | none                         | none                      | none                        | new                |
+| 6   | Dead link checker                               | diagnostics               | `ox-content-link-check`      | diagnostics               | diagnostics                 | local: shipped     |
 | 7   | textlint integration                            | none                      | none                         | none                      | none                        | new                |
 | 8   | Frontmatter schema completion + diagnostics     | present                   | none (validated through LSP) | present                   | present                     | needs CLI          |
 
@@ -85,14 +85,20 @@ Replace the polling refresh path with an explicit push channel.
 
 ### 3. `feat(link-checker): new crate, LSP integration, CLI`
 
-- New crate `ox_content_link_checker` with deterministic local link
-  resolution (relative paths, anchors, link reference definitions) and an
-  optional async HTTP head-check pool guarded behind a feature flag
-  (`http-check`) so the default build is offline-only.
-- LSP diagnostics namespaced under `oxContent.linkCheck`. Configuration:
-  `oxContent.linkCheck.followHttp`, `oxContent.linkCheck.ignorePatterns`.
-- CLI `ox-content-link-check [paths…] [--http] [--format text|json]`.
-- A GitHub Actions snippet pasted into the docs site.
+- ✅ New crate `ox_content_link_checker` with deterministic local link
+  resolution (relative paths, self-anchors, image targets). Offline-only
+  by design; ships with 11 unit tests covering every link form documented
+  in the crate README.
+- ✅ CLI `ox-content-link-check [paths…] [--src-dir DIR] [--ignore PATTERN]
+[--format text|json]` with exit-code-1-on-error semantics for CI.
+- ✅ LSP diagnostics under `source: "ox-content-link"`, wired into the
+  per-document diagnostic publish path so they appear alongside parse,
+  frontmatter, and MDC errors without an extra round trip.
+- Pending follow-ups:
+  - HTTP head-check pool behind a `http-check` feature flag.
+  - Reference-link expansion (currently blocked on the parser).
+  - Cross-file anchor resolution (currently emits a warning).
+  - GitHub Actions snippet on the docs site.
 
 ### 4. `feat(lsp): asset path completion and diagnostics`
 
