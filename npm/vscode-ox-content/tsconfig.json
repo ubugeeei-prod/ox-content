@@ -14,5 +14,8 @@
     "types": ["node", "vscode", "mocha"]
   },
   "include": ["src/**/*.ts"],
-  "exclude": ["dist", "node_modules"]
+  // Unit tests run under vitest with its own TS pipeline (esbuild). They
+  // can use import-attributes and other syntax not enabled here, and they
+  // import vitest globals that the mocha+vscode test config does not load.
+  "exclude": ["dist", "node_modules", "src/test/unit"]
 }

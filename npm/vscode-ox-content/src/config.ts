@@ -1,7 +1,8 @@
 import * as fs from "node:fs";
-import * as path from "node:path";
 import * as vscode from "vscode";
 import type { ServerOptions } from "vscode-languageclient/node";
+
+import { localServerBinaryCandidates, resolveFilePath } from "./internal/paths";
 
 export function getConfig(): vscode.WorkspaceConfiguration {
   return vscode.workspace.getConfiguration("oxContent");
@@ -18,6 +19,15 @@ export function resolveServerOptions(
 
   if (resolvedConfiguredPath && fs.existsSync(resolvedConfiguredPath)) {
     return { command: resolvedConfiguredPath, args: [] };
+  }
+
+  // Escape hatch for CI and the integration test runner: an absolute path
+  // in `OX_CONTENT_LSP_PATH` wins over the local-binary probe so the test
+  // host can use a freshly built `target/release/ox-content-lsp` without
+  // synthesizing a workspace `.vscode/settings.json`.
+  const envBinary = process.env.OX_CONTENT_LSP_PATH?.trim();
+  if (envBinary && fs.existsSync(envBinary)) {
+    return { command: envBinary, args: [] };
   }
 
   const localBinary = findLocalServerBinary(context, workspaceRoot);
@@ -51,20 +61,11 @@ function findLocalServerBinary(
   context: vscode.ExtensionContext,
   workspaceRoot?: string,
 ): string | undefined {
-  const binaryName = process.platform === "win32" ? "ox-content-lsp.exe" : "ox-content-lsp";
-  const candidates = [
-    workspaceRoot ? path.join(workspaceRoot, "target", "debug", binaryName) : undefined,
-    workspaceRoot ? path.join(workspaceRoot, "target", "release", binaryName) : undefined,
-    path.join(context.extensionPath, "bin", binaryName),
-  ].filter((value): value is string => Boolean(value));
+  const candidates = localServerBinaryCandidates({
+    workspaceRoot,
+    extensionPath: context.extensionPath,
+    platform: process.platform,
+  });
 
   return candidates.find((candidate) => fs.existsSync(candidate));
-}
-
-function resolveFilePath(value: string, workspaceRoot?: string): string {
-  if (path.isAbsolute(value)) {
-    return value;
-  }
-
-  return workspaceRoot ? path.join(workspaceRoot, value) : value;
 }
