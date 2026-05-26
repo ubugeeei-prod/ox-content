@@ -1,3 +1,4 @@
+import { importNapiModuleSync } from "./napi";
 import { defineTheme, mergeThemes, type ThemeConfig } from "./theme";
 import type { OxContentOptions, SsgNavigationGroup, SsgNavigationItem } from "./types";
 
@@ -503,74 +504,11 @@ function formatObjectKey(key: string): string {
   return /^[A-Za-z_$][\w$]*$/.test(key) ? key : JSON.stringify(key);
 }
 
-function toNumber(value: unknown): number | undefined {
-  if (typeof value === "number" && Number.isFinite(value)) {
-    return value;
-  }
-
-  if (typeof value === "string" && /^\d+$/.test(value)) {
-    return Number(value);
-  }
-
-  return undefined;
-}
-
-function normalizeHeroImage(value: unknown): Record<string, unknown> | undefined {
-  if (typeof value === "string") {
-    return { src: value };
-  }
-
-  if (!isRecord(value)) {
-    return undefined;
-  }
-
-  const src =
-    (typeof value.src === "string" && value.src) ||
-    (typeof value.light === "string" && value.light) ||
-    (typeof value.dark === "string" && value.dark);
-
-  if (!src) {
-    return undefined;
-  }
-
-  const lightSrc =
-    (typeof value.lightSrc === "string" && value.lightSrc) ||
-    (typeof value.light === "string" && value.light);
-  const darkSrc =
-    (typeof value.darkSrc === "string" && value.darkSrc) ||
-    (typeof value.dark === "string" && value.dark);
-
-  return {
-    src,
-    ...(lightSrc ? { lightSrc } : {}),
-    ...(darkSrc ? { darkSrc } : {}),
-    ...(typeof value.alt === "string" ? { alt: value.alt } : {}),
-    ...(toNumber(value.width) !== undefined ? { width: toNumber(value.width) } : {}),
-    ...(toNumber(value.height) !== undefined ? { height: toNumber(value.height) } : {}),
-  };
-}
-
 /**
  * Normalizes VitePress-specific frontmatter into ox-content's entry-page shape.
  */
 export function normalizeVitePressFrontmatter(
   frontmatter: Record<string, unknown>,
 ): Record<string, unknown> {
-  const next = { ...frontmatter };
-
-  if (frontmatter.layout === "home") {
-    next.layout = "entry";
-  }
-
-  if (isRecord(frontmatter.hero)) {
-    const image = normalizeHeroImage(frontmatter.hero.image);
-    if (image) {
-      next.hero = {
-        ...frontmatter.hero,
-        image,
-      };
-    }
-  }
-
-  return next;
+  return importNapiModuleSync().normalizeVitePressFrontmatter(frontmatter);
 }

@@ -2230,6 +2230,12 @@ pub fn format_ssg_title(name: String) -> String {
     ox_content_ssg::format_title(&name)
 }
 
+/// Normalizes VitePress-specific frontmatter into ox-content's entry-page shape.
+#[napi(js_name = "normalizeVitePressFrontmatter")]
+pub fn normalize_vitepress_frontmatter(frontmatter: serde_json::Value) -> serde_json::Value {
+    ox_content_ssg::normalize_vitepress_frontmatter(frontmatter)
+}
+
 /// Builds SSG navigation groups from markdown files.
 #[napi(js_name = "buildSsgNavItems")]
 pub fn build_ssg_nav_items(
@@ -3029,6 +3035,7 @@ mod tests {
             "loadDictionariesFlat",
             "matchesSearchScopes",
             "mergeHighlightedCodeBlocks",
+            "normalizeVitePressFrontmatter",
             "parse",
             "parseAndRender",
             "parseAndRenderAsync",
