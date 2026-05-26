@@ -1,0 +1,11 @@
+---
+source: crates/ox_content_parser/tests/snapshot_parse.rs
+assertion_line: 32
+description: "1. text\n\n   ```ts\n   const a = 1;\n   ```\n"
+---
+Document [0..41]
+  List ordered=true start=1 spread=true [0..41]
+    ListItem spread=true checked=- [0..41]
+      Paragraph [3..8]
+        Text "text" [3..7]
+      CodeBlock lang=Some("ts") meta=None value="const a = 1;\n" [9..32]

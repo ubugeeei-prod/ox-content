@@ -168,7 +168,7 @@ vp run bench:parse
 vp run bench:bundle
 ```
 
-The latest published benchmark snapshot lives on the home page under [Benchmarks](./index.md#benchmarks).
+The latest published benchmark snapshot lives on [Performance](./performance.md).
 
 ## Troubleshooting
 

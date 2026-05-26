@@ -1,0 +1,15 @@
+---
+source: crates/ox_content_parser/tests/snapshot_parse.rs
+assertion_line: 32
+description: "> - item one\n> - item two\n>\n> ```rs\n> fn f() {}\n> ```\n"
+---
+Document [0..54]
+  BlockQuote [0..54]
+    List ordered=false start=- spread=false [0..22]
+      ListItem spread=false checked=- [0..11]
+        Paragraph [2..11]
+          Text "item one" [2..10]
+      ListItem spread=false checked=- [11..22]
+        Paragraph [13..22]
+          Text "item two" [13..21]
+    CodeBlock lang=Some("rs") meta=None value="fn f() {}\n" [23..43]

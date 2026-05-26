@@ -47,7 +47,7 @@ features:
   - icon: "mdi:puzzle-outline"
     title: High-Performance Markdown Engine
     details: The parser, renderer, and plugin system are reusable as a Markdown library, not just internals behind the default docs theme.
-    link: architecture.md
+    link: performance.md
   - icon: "mdi:connection"
     title: Vue, Svelte, React Integrations
     details: First-party integrations let you embed framework components into Markdown without giving up the core pipeline.
@@ -77,49 +77,28 @@ Under the hood, Ox Content is not only a docs theme. It also exposes the Markdow
 - [React Integration Example](./examples/integ-react.md) - Use React islands inside Markdown pages
 - [Svelte Integration Example](./examples/integ-svelte.md) - Bring Svelte components into the same pipeline
 
-## Quick Links
+## User Guide
 
 - [Getting Started](./getting-started.md) - Installation and first steps
-- [Development Setup](./development-setup.md) - Build ox-content itself and work on the repo
-- [Architecture](./architecture.md) - Deep dive into the design
 - [Theming](./theming.md) - Customize your documentation site
+- [Examples](./examples/index.md) - Integration, source docs, OG image, and SSG examples
+
+## Advanced Docs
+
+- [Architecture](./architecture.md) - Deep dive into the design
+- [Performance](./performance.md) - Benchmark results and reproduction commands
+- [Profiling Mode](./profiling.md) - Allocation and span-level investigation
+- [unplugin mdast Bridge Example](./examples/unplugin-mdast-bridge.md) - Native parser plus unified-compatible mdast plugins
+- [unplugin markdown-it Token Bridge](./examples/unplugin-markdown-it-token-bridge.md) - `markdown-it` plugins plus downstream unified token access
+- [Development Setup](./development-setup.md) - Build ox-content itself and work on the repo
+
+## Reference
+
 - [API Reference](./api/index.md) - Generated API docs for the public surface
+- [Vite Plugin](./packages/vite-plugin-ox-content.md) - Main docs pipeline package
+- [Packages](./packages/napi.md) - Node.js, WebAssembly, framework, and i18n package docs
 - [GitHub](https://github.com/ubugeeei/ox-content) - Source code and issues
 
-## Benchmarks
+## Community Credits
 
-Ox Content is positioned both as a document generator and as a high-performance Markdown toolkit. The numbers below focus on the Markdown engine side.
-
-Latest local benchmark sweep on 2026-04-22 with Node `v24.15.0` on Apple M5 Pro. The tables below show median results from 7 local runs of the benchmark harness for the large 48.7 KB case.
-
-### Parse Only (48.7 KB)
-
-| Library            | ops/sec | avg time |  throughput |
-| ------------------ | ------: | -------: | ----------: |
-| `@ox-content/napi` |    2933 |  0.34 ms | 139.55 MB/s |
-| `md4w (md4c)`      |    1054 |  0.95 ms |  50.16 MB/s |
-| `markdown-it`      |     807 |  1.24 ms |  38.42 MB/s |
-| `marked`           |     512 |  1.95 ms |  24.36 MB/s |
-| `remark`           |      42 | 23.89 ms |   1.99 MB/s |
-
-### Parse + Render (48.7 KB)
-
-| Library             | ops/sec | avg time |  throughput |
-| ------------------- | ------: | -------: | ----------: |
-| `@ox-content/napi`  |    3273 |  0.31 ms | 155.73 MB/s |
-| `Bun.markdown.html` |    2848 |  0.35 ms | 135.52 MB/s |
-| `md4w (md4c)`       |    2608 |  0.38 ms | 124.13 MB/s |
-| `markdown-it`       |     787 |  1.27 ms |  37.44 MB/s |
-| `marked`            |     489 |  2.04 ms |  23.28 MB/s |
-| `micromark`         |      44 | 22.62 ms |   2.10 MB/s |
-| `remark`            |      36 | 28.16 ms |   1.69 MB/s |
-
-In this latest local release-build sweep, Ox Content came out on top for both parse-only and parse+render in the large 48.7 KB case while still serving as the native core for the full documentation pipeline.
-
-Reproduce with:
-
-```bash
-node benchmarks/bundle-size/parse-benchmark.mjs
-```
-
-The benchmark includes `md4w (md4c)` by default and adds `Bun.markdown.html` automatically when `bun` is available.
+Special thanks to [kazupon](https://github.com/kazupon) for substantial community contributions around JSDoc support, including the API docs generation pipeline and documentation quality.

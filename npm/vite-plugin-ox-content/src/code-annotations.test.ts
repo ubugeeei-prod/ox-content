@@ -115,12 +115,14 @@ function createResolvedOptions(overrides: Partial<ResolvedOptions> = {}): Resolv
     srcDir: "content",
     outDir: "dist",
     base: "/",
+    extensions: [".md", ".markdown", ".mdx"],
     ssg: {
       enabled: true,
       extension: ".html",
       clean: false,
       bare: false,
       generateOgImage: false,
+      lastUpdated: false,
     },
     gfm: true,
     footnotes: true,
@@ -158,6 +160,10 @@ function createResolvedOptions(overrides: Partial<ResolvedOptions> = {}): Resolv
       hotkey: "/",
     },
     ogViewer: false,
+    embeds: {
+      github: {},
+      openGraph: {},
+    },
     i18n: false,
     ...overrides,
   };

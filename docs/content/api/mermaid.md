@@ -2,17 +2,82 @@
 
 **[Source](https://github.com/ubugeeei/ox-content/blob/main/npm/vite-plugin-ox-content/src/plugins/mermaid.ts)**
 
-> 1 documented symbol. Read the signatures first, then expand each item for parameters, return types, and examples.
+> 3 documented symbols. Read the signatures first, then expand each item for parameters, return types, and examples.
+
+<div class="ox-api-stats" aria-label="API reference summary">
+<span class="ox-api-stat">
+  <strong>3</strong>
+  <span>symbols</span>
+</span>
+<span class="ox-api-stat">
+  <strong>1</strong>
+  <span>functions</span>
+</span>
+<span class="ox-api-stat">
+  <strong>2</strong>
+  <span>variables</span>
+</span>
+<span class="ox-api-stat">
+  <strong>2</strong>
+  <span>parameters</span>
+</span>
+<span class="ox-api-stat">
+  <strong>1</strong>
+  <span>returns</span>
+</span>
+<span class="ox-api-stat ox-api-stat--warning">
+  <strong>1</strong>
+  <span>deprecated</span>
+</span>
+</div>
 
 ## Reference
 
+<div class="ox-api-controls" data-ox-api-target=".ox-api-entry" role="toolbar" aria-label="Reference display controls">
+<button type="button" class="ox-api-controls__button" data-ox-api-toggle="expand">Open all</button>
+<button type="button" class="ox-api-controls__button" data-ox-api-toggle="collapse">Close all</button>
+</div>
+
+<details id="mermaidclientscript" class="ox-api-entry">
+  <summary><span class="ox-api-entry__kind">variable</span><span class="ox-api-entry__summary-main"><code class="ox-api-entry__signature ox-api-entry__signature--highlighted language-typescript">const mermaidClientScript = &quot;&quot;</code><span class="ox-api-entry__meta"><span class="ox-api-badge ox-api-badge--warning">deprecated</span></span></span></summary>
+  <div class="ox-api-entry__body">
+<div class="ox-api-entry__section ox-api-entry__section--signature">
+<h4>Signature</h4>
+<pre><code class="language-typescript">export const mermaidClientScript = &quot;&quot;</code></pre>
+</div>
+<p class="ox-api-entry__source"><a class="ox-api-entry__source-link" href="https://github.com/ubugeeei/ox-content/blob/main/npm/vite-plugin-ox-content/src/plugins/mermaid.ts#L133" target="_blank" rel="noopener noreferrer">View source<span class="ox-api-entry__source-icon" aria-hidden="true"></span></a></p>
+<div class="ox-api-entry__section ox-api-entry__section--tags">
+<h4>Tags</h4>
+<ul class="ox-api-entry__tags"><li><span class="ox-api-entry__tag-name">@deprecated</span><span class="ox-api-entry__tag-value">No longer used. Mermaid rendering is now done at build time via NAPI.</span></li></ul>
+</div>
+  </div>
+</details>
+
+<details id="napibindings" class="ox-api-entry">
+  <summary><span class="ox-api-entry__kind">variable</span><span class="ox-api-entry__summary-main"><code class="ox-api-entry__signature ox-api-entry__signature--highlighted language-typescript">let napiBindings: { ... } | null</code><span class="ox-api-entry__description">Cached NAPI bindings</span></span></summary>
+  <div class="ox-api-entry__body">
+<div class="ox-api-entry__prose">
+<p>Cached NAPI bindings</p>
+</div>
+<div class="ox-api-entry__section ox-api-entry__section--signature">
+<h4>Signature</h4>
+<pre><code class="language-typescript">let napiBindings: { ... } | null</code></pre>
+</div>
+<p class="ox-api-entry__source"><a class="ox-api-entry__source-link" href="https://github.com/ubugeeei/ox-content/blob/main/npm/vite-plugin-ox-content/src/plugins/mermaid.ts#L20-L22" target="_blank" rel="noopener noreferrer">View source<span class="ox-api-entry__source-icon" aria-hidden="true"></span></a></p>
+  </div>
+</details>
+
 <details id="transformmermaidstatic" class="ox-api-entry">
-  <summary><span class="ox-api-entry__kind">fn</span><span class="ox-api-entry__summary-main"><code class="ox-api-entry__signature ox-api-entry__signature--highlighted language-typescript">transformMermaidStatic(html: string, _options?: MermaidOptions): Promise&lt;string&gt;</code><span class="ox-api-entry__description">Transforms mermaid code blocks in HTML to rendered SVG diagrams. Uses the nativ…</span></span></summary>
+  <summary><span class="ox-api-entry__kind">fn</span><span class="ox-api-entry__summary-main"><code class="ox-api-entry__signature ox-api-entry__signature--highlighted language-typescript">transformMermaidStatic(html: string, _options?: MermaidOptions): Promise&lt;string&gt;</code><span class="ox-api-entry__description">Transforms mermaid code blocks in HTML to rendered SVG diagrams. Uses the nativ…</span><span class="ox-api-entry__meta"><span class="ox-api-badge">2 params</span><span class="ox-api-badge">returns Promise</span></span></span></summary>
   <div class="ox-api-entry__body">
 <div class="ox-api-entry__prose">
 <p>Transforms mermaid code blocks in HTML to rendered SVG diagrams. Uses the native Rust NAPI transformMermaid function.</p>
 </div>
-<p class="ox-api-entry__source"><a href="https://github.com/ubugeeei/ox-content/blob/main/npm/vite-plugin-ox-content/src/plugins/mermaid.ts#L76-L101">View source</a></p>
+<div class="ox-api-entry__section ox-api-entry__section--signature">
+<h4>Signature</h4>
+<pre><code class="language-typescript">export async function transformMermaidStatic(html: string, _options?: MermaidOptions): Promise&lt;string&gt;</code></pre>
+</div>
+<p class="ox-api-entry__source"><a class="ox-api-entry__source-link" href="https://github.com/ubugeeei/ox-content/blob/main/npm/vite-plugin-ox-content/src/plugins/mermaid.ts#L94-L119" target="_blank" rel="noopener noreferrer">View source<span class="ox-api-entry__source-icon" aria-hidden="true"></span></a></p>
 <div class="ox-api-entry__section ox-api-entry__section--params">
 <h4>Parameters</h4>
 <ul class="ox-api-entry__params">
@@ -41,4 +106,3 @@
 </div>
   </div>
 </details>
-

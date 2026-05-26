@@ -1,0 +1,46 @@
+---
+source: crates/ox_content_renderer/tests/snapshot_render.rs
+assertion_line: 29
+description: "# Project\n\nAn intro with **bold**, *it*, `code`, ~~old~~, [link](https://example.com), and a hard\\\nbreak.\n\n## Install\n\n```bash\nnpm install ox-content\n```\n\n## Steps\n\n1. one\n2. two\n   - nested\n3. three\n\n> Quoted tip.\n\n| col | val |\n| :-- | --: |\n| a   | 1   |\n| b   | 2   |\n\n![diagram](./img.png \"Title\")\n"
+---
+<h1 id="project">Project</h1>
+<p>An intro with <strong>bold</strong>, <em>it</em>, <code>code</code>, <del>old</del>, <a href="https://example.com" target="_blank" rel="noopener noreferrer">link</a>, and a hard<br>
+break.</p>
+<h2 id="install">Install</h2>
+<pre><code class="language-bash">npm install ox-content
+</code></pre>
+<h2 id="steps">Steps</h2>
+<ol>
+<li><p>one</p>
+</li>
+<li><p>two</p>
+<ul>
+<li><p>nested</p>
+</li>
+</ul>
+</li>
+<li><p>three</p>
+</li>
+</ol>
+<blockquote>
+<p>Quoted tip.</p>
+</blockquote>
+<table>
+<thead>
+<tr>
+<th align="left">col</th>
+<th align="right">val</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td align="left">a</td>
+<td align="right">1</td>
+</tr>
+<tr>
+<td align="left">b</td>
+<td align="right">2</td>
+</tr>
+</tbody>
+</table>
+<p><img src="./img.png%20%22Title%22" alt="diagram"></p>

@@ -1,0 +1,9 @@
+---
+source: crates/ox_content_parser/tests/snapshot_parse.rs
+assertion_line: 32
+description: "<div>\nraw html line\n</div>\n\nAfter\n"
+---
+Document [0..34]
+  Html value="<div>\nraw html line\n</div>\n" [0..27]
+  Paragraph [28..34]
+    Text "After" [28..33]

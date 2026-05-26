@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="{{ html_lang }}" dir="{{ html_dir }}">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -65,14 +65,14 @@
     </div>
   </header>
 {{ embed_header_after|safe }}
-  <div class="search-modal-overlay">
+  <div class="search-modal-overlay" role="dialog" aria-modal="true" aria-label="Search documentation">
     <div class="search-modal">
       <div class="search-header">
         <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
           <circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/>
         </svg>
         <input type="text" class="search-input" placeholder="Search documentation..." />
-        <button class="search-close">Esc</button>
+        <button type="button" class="search-close">Esc</button>
       </div>
       <div class="search-results"></div>
       <div class="search-footer">
@@ -93,13 +93,24 @@
 {{ embed_sidebar_after|safe }}
     </aside>
 {% endif %}
-    <main class="main">
+    <main class="main{% if has_toc %} main--with-toc{% endif %}">
 {{ embed_content_before|safe }}
 {{ main_content|safe }}
+{% if let Some(updated) = last_updated %}
+      <p class="last-updated">Last updated: <time datetime="{{ updated.datetime }}">{{ updated.text }}</time></p>
+{% endif %}
 {{ embed_content_after|safe }}
 {{ embed_footer_before|safe }}
 {{ footer_html|safe }}
     </main>
+{% if has_toc %}
+    <aside class="toc" aria-label="On this page">
+      <div class="toc-title">On this page</div>
+      <ul class="toc-list">
+{{ toc_html|safe }}
+      </ul>
+    </aside>
+{% endif %}
   </div>
   <footer class="mobile-footer">
     <button class="mobile-footer-btn" aria-label="Menu" data-mobile-menu>

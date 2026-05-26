@@ -166,3 +166,74 @@
   color: #f87171;
   font-size: 0.875rem;
 }
+
+.ox-github-code {
+  margin: 1.5rem 0;
+  border: 1px solid color-mix(in srgb, var(--octc-color-border) 74%, transparent);
+  border-radius: 8px;
+  overflow: hidden;
+  background: color-mix(in srgb, var(--octc-color-bg) 96%, var(--octc-color-border));
+}
+
+.ox-github-code-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 1rem;
+  padding: 0.625rem 0.875rem;
+  border-bottom: 1px solid color-mix(in srgb, var(--octc-color-border) 74%, transparent);
+  font-size: 0.8125rem;
+}
+
+.ox-github-code-title {
+  min-width: 0;
+  color: var(--octc-color-primary);
+  font-weight: 600;
+  text-decoration: none;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.ox-github-code-title:hover {
+  text-decoration: underline;
+}
+
+.ox-github-code-loc {
+  flex-shrink: 0;
+  color: var(--octc-color-text-muted);
+  font-variant-numeric: tabular-nums;
+}
+
+.ox-github-code-block {
+  margin: 0;
+  padding: 0.75rem 0;
+  overflow-x: auto;
+  background: transparent;
+  color: var(--octc-color-text);
+  font-size: 0.875rem;
+  line-height: 1.6;
+}
+
+.ox-github-code-block code {
+  display: block;
+  min-width: max-content;
+}
+
+.ox-github-code-line {
+  display: grid;
+  grid-template-columns: 4rem 1fr;
+  gap: 0.875rem;
+  padding-right: 1rem;
+}
+
+.ox-github-code-line-number {
+  color: var(--octc-color-text-muted);
+  text-align: right;
+  user-select: none;
+  font-variant-numeric: tabular-nums;
+}
+
+.ox-github-code-line-content {
+  white-space: pre;
+}

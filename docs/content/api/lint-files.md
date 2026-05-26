@@ -4,6 +4,33 @@
 
 > 7 documented symbols. Read the signatures first, then expand each item for parameters, return types, and examples.
 
+<div class="ox-api-stats" aria-label="API reference summary">
+<span class="ox-api-stat">
+  <strong>7</strong>
+  <span>symbols</span>
+</span>
+<span class="ox-api-stat">
+  <strong>3</strong>
+  <span>functions</span>
+</span>
+<span class="ox-api-stat">
+  <strong>4</strong>
+  <span>interfaces</span>
+</span>
+<span class="ox-api-stat">
+  <strong>5</strong>
+  <span>parameters</span>
+</span>
+<span class="ox-api-stat">
+  <strong>15</strong>
+  <span>members</span>
+</span>
+<span class="ox-api-stat">
+  <strong>3</strong>
+  <span>returns</span>
+</span>
+</div>
+
 ## Reference
 
 <div class="ox-api-controls" data-ox-api-target=".ox-api-entry" role="toolbar" aria-label="Reference display controls">
@@ -12,12 +39,17 @@
 </div>
 
 <details id="lintmarkdownfile" class="ox-api-entry">
-  <summary><span class="ox-api-entry__kind">fn</span><span class="ox-api-entry__summary-main"><code class="ox-api-entry__signature ox-api-entry__signature--highlighted language-typescript">lintMarkdownFile(filePath: string, options: MarkdownLintFileOptions = {}): Promise&lt;MarkdownLintFileResult&gt;</code><span class="ox-api-entry__description">Lints a single Markdown file using project-style include/exclude settings. If t…</span></span></summary>
+  <summary><span class="ox-api-entry__kind">fn</span><span class="ox-api-entry__summary-main"><code class="ox-api-entry__signature ox-api-entry__signature--highlighted language-typescript">lintMarkdownFile(filePath: string, options: MarkdownLintFileOptions = {}): Promise&lt;MarkdownLintFileResult&gt;</code><span class="ox-api-entry__description">Lints a single Markdown file using project-style include/exclude settings. If t…</span><span class="ox-api-entry__meta"><span class="ox-api-badge">2 params</span><span class="ox-api-badge">returns Promise</span></span></span></summary>
   <div class="ox-api-entry__body">
 <div class="ox-api-entry__prose">
-<p>Lints a single Markdown file using project-style include/exclude settings. If the file is filtered out by <code>include</code> / <code>exclude</code>, the returned result is marked as <code>skipped</code> and contains no diagnostics.</p>
+<p>Lints a single Markdown file using project-style include/exclude settings.</p>
+<p>If the file is filtered out by <code>include</code> / <code>exclude</code>, the returned result is marked as <code>skipped</code> and contains no diagnostics.</p>
 </div>
-<p class="ox-api-entry__source"><a href="https://github.com/ubugeeei/ox-content/blob/main/npm/vite-plugin-ox-content/src/lint-files.ts#L105-L114">View source</a></p>
+<div class="ox-api-entry__section ox-api-entry__section--signature">
+<h4>Signature</h4>
+<pre><code class="language-typescript">export async function lintMarkdownFile(filePath: string, options: MarkdownLintFileOptions = {}): Promise&lt;MarkdownLintFileResult&gt;</code></pre>
+</div>
+<p class="ox-api-entry__source"><a class="ox-api-entry__source-link" href="https://github.com/ubugeeei/ox-content/blob/main/npm/vite-plugin-ox-content/src/lint-files.ts#L105-L114" target="_blank" rel="noopener noreferrer">View source<span class="ox-api-entry__source-icon" aria-hidden="true"></span></a></p>
 <div class="ox-api-entry__section ox-api-entry__section--params">
 <h4>Parameters</h4>
 <ul class="ox-api-entry__params">
@@ -30,10 +62,10 @@
 </li>
 <li class="ox-api-entry__param">
   <div class="ox-api-entry__param-heading">
-    <code class="ox-api-entry__param-name">param</code>
-    <code class="ox-api-entry__param-type">unknown</code>
+    <code class="ox-api-entry__param-name">options</code>
+    <code class="ox-api-entry__param-type">MarkdownLintFileOptions</code>
   </div>
-  
+  <p class="ox-api-entry__param-description">optional · default: {}</p>
 </li>
 </ul>
 </div>
@@ -48,21 +80,25 @@
 </details>
 
 <details id="lintmarkdownfiles" class="ox-api-entry">
-  <summary><span class="ox-api-entry__kind">fn</span><span class="ox-api-entry__summary-main"><code class="ox-api-entry__signature ox-api-entry__signature--highlighted language-typescript">lintMarkdownFiles(options: MarkdownLintFileOptions = {}): Promise&lt;MarkdownLintFilesResult&gt;</code><span class="ox-api-entry__description">Lints all Markdown files matched by the configured include/exclude patterns.</span></span></summary>
+  <summary><span class="ox-api-entry__kind">fn</span><span class="ox-api-entry__summary-main"><code class="ox-api-entry__signature ox-api-entry__signature--highlighted language-typescript">lintMarkdownFiles(options: MarkdownLintFileOptions = {}): Promise&lt;MarkdownLintFilesResult&gt;</code><span class="ox-api-entry__description">Lints all Markdown files matched by the configured include/exclude patterns.</span><span class="ox-api-entry__meta"><span class="ox-api-badge">1 param</span><span class="ox-api-badge">returns Promise</span></span></span></summary>
   <div class="ox-api-entry__body">
 <div class="ox-api-entry__prose">
 <p>Lints all Markdown files matched by the configured include/exclude patterns.</p>
 </div>
-<p class="ox-api-entry__source"><a href="https://github.com/ubugeeei/ox-content/blob/main/npm/vite-plugin-ox-content/src/lint-files.ts#L119-L156">View source</a></p>
+<div class="ox-api-entry__section ox-api-entry__section--signature">
+<h4>Signature</h4>
+<pre><code class="language-typescript">export async function lintMarkdownFiles(options: MarkdownLintFileOptions = {}): Promise&lt;MarkdownLintFilesResult&gt;</code></pre>
+</div>
+<p class="ox-api-entry__source"><a class="ox-api-entry__source-link" href="https://github.com/ubugeeei/ox-content/blob/main/npm/vite-plugin-ox-content/src/lint-files.ts#L119-L156" target="_blank" rel="noopener noreferrer">View source<span class="ox-api-entry__source-icon" aria-hidden="true"></span></a></p>
 <div class="ox-api-entry__section ox-api-entry__section--params">
 <h4>Parameters</h4>
 <ul class="ox-api-entry__params">
 <li class="ox-api-entry__param">
   <div class="ox-api-entry__param-heading">
-    <code class="ox-api-entry__param-name">param</code>
-    <code class="ox-api-entry__param-type">unknown</code>
+    <code class="ox-api-entry__param-name">options</code>
+    <code class="ox-api-entry__param-type">MarkdownLintFileOptions</code>
   </div>
-  
+  <p class="ox-api-entry__param-description">optional · default: {}</p>
 </li>
 </ul>
 </div>
@@ -77,52 +113,207 @@
 </details>
 
 <details id="markdownlintfilediagnostic" class="ox-api-entry">
-  <summary><span class="ox-api-entry__kind">interface</span><span class="ox-api-entry__summary-main"><code class="ox-api-entry__signature ox-api-entry__signature--highlighted language-typescript">MarkdownLintFileDiagnostic extends MarkdownLintDiagnostic</code><span class="ox-api-entry__description">A lint diagnostic annotated with file metadata.</span></span></summary>
+  <summary><span class="ox-api-entry__kind">interface</span><span class="ox-api-entry__summary-main"><code class="ox-api-entry__signature ox-api-entry__signature--highlighted language-typescript">MarkdownLintFileDiagnostic extends MarkdownLintDiagnostic</code><span class="ox-api-entry__description">A lint diagnostic annotated with file metadata.</span><span class="ox-api-entry__meta"><span class="ox-api-badge">2 members</span></span></span></summary>
   <div class="ox-api-entry__body">
 <div class="ox-api-entry__prose">
 <p>A lint diagnostic annotated with file metadata.</p>
 </div>
-<p class="ox-api-entry__source"><a href="https://github.com/ubugeeei/ox-content/blob/main/npm/vite-plugin-ox-content/src/lint-files.ts#L50-L53">View source</a></p>
+<div class="ox-api-entry__section ox-api-entry__section--signature">
+<h4>Signature</h4>
+<pre><code class="language-typescript">export interface MarkdownLintFileDiagnostic extends MarkdownLintDiagnostic</code></pre>
+</div>
+<p class="ox-api-entry__source"><a class="ox-api-entry__source-link" href="https://github.com/ubugeeei/ox-content/blob/main/npm/vite-plugin-ox-content/src/lint-files.ts#L50-L53" target="_blank" rel="noopener noreferrer">View source<span class="ox-api-entry__source-icon" aria-hidden="true"></span></a></p>
+<div class="ox-api-entry__section ox-api-entry__section--members">
+<h4>Members</h4>
+<div class="ox-api-entry__member-group">
+<h5>Properties</h5>
+<table class="ox-api-entry__members-table">
+<thead><tr><th>Name</th><th>Kind</th><th>Type</th><th>Description</th></tr></thead>
+<tbody>
+<tr>
+  <td><code>filePath</code></td>
+  <td><span class="ox-api-entry__member-kind">property</span></td>
+  <td><code class="ox-api-entry__member-type language-typescript">string</code></td>
+  <td></td>
+</tr>
+<tr>
+  <td><code>relativePath</code></td>
+  <td><span class="ox-api-entry__member-kind">property</span></td>
+  <td><code class="ox-api-entry__member-type language-typescript">string</code></td>
+  <td></td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
   </div>
 </details>
 
 <details id="markdownlintfileoptions" class="ox-api-entry">
-  <summary><span class="ox-api-entry__kind">interface</span><span class="ox-api-entry__summary-main"><code class="ox-api-entry__signature ox-api-entry__signature--highlighted language-typescript">MarkdownLintFileOptions extends MarkdownLintOptions</code><span class="ox-api-entry__description">File-oriented Markdown lint options for end-user configuration. This extends th…</span></span></summary>
+  <summary><span class="ox-api-entry__kind">interface</span><span class="ox-api-entry__summary-main"><code class="ox-api-entry__signature ox-api-entry__signature--highlighted language-typescript">MarkdownLintFileOptions extends MarkdownLintOptions</code><span class="ox-api-entry__description">File-oriented Markdown lint options for end-user configuration. This extends th…</span><span class="ox-api-entry__meta"><span class="ox-api-badge">4 members</span></span></span></summary>
   <div class="ox-api-entry__body">
 <div class="ox-api-entry__prose">
-<p>File-oriented Markdown lint options for end-user configuration. This extends the content-level lint options with project-level targeting, so consumers can decide which files should be checked and which paths should be ignored.</p>
+<p>File-oriented Markdown lint options for end-user configuration.</p>
+<p>This extends the content-level lint options with project-level targeting, so consumers can decide which files should be checked and which paths should be ignored.</p>
 </div>
-<p class="ox-api-entry__source"><a href="https://github.com/ubugeeei/ox-content/blob/main/npm/vite-plugin-ox-content/src/lint-files.ts#L22-L45">View source</a></p>
+<div class="ox-api-entry__section ox-api-entry__section--signature">
+<h4>Signature</h4>
+<pre><code class="language-typescript">export interface MarkdownLintFileOptions extends MarkdownLintOptions</code></pre>
+</div>
+<p class="ox-api-entry__source"><a class="ox-api-entry__source-link" href="https://github.com/ubugeeei/ox-content/blob/main/npm/vite-plugin-ox-content/src/lint-files.ts#L22-L45" target="_blank" rel="noopener noreferrer">View source<span class="ox-api-entry__source-icon" aria-hidden="true"></span></a></p>
+<div class="ox-api-entry__section ox-api-entry__section--members">
+<h4>Members</h4>
+<div class="ox-api-entry__member-group">
+<h5>Properties</h5>
+<table class="ox-api-entry__members-table">
+<thead><tr><th>Name</th><th>Kind</th><th>Type</th><th>Description</th></tr></thead>
+<tbody>
+<tr>
+  <td><code>cwd</code><span class="ox-api-badge">optional</span></td>
+  <td><span class="ox-api-entry__member-kind">property</span></td>
+  <td><code class="ox-api-entry__member-type language-typescript">string</code></td>
+  <td><div class="ox-api-entry__member-description">Base directory used to resolve <code>include</code> and <code>exclude</code> patterns.</div></td>
+</tr>
+<tr>
+  <td><code>include</code><span class="ox-api-badge">optional</span></td>
+  <td><span class="ox-api-entry__member-kind">property</span></td>
+  <td><code class="ox-api-entry__member-type language-typescript">string[]</code></td>
+  <td><div class="ox-api-entry__member-description">Glob patterns for files to lint.</div></td>
+</tr>
+<tr>
+  <td><code>exclude</code><span class="ox-api-badge">optional</span></td>
+  <td><span class="ox-api-entry__member-kind">property</span></td>
+  <td><code class="ox-api-entry__member-type language-typescript">string[]</code></td>
+  <td><div class="ox-api-entry__member-description">Glob patterns for files to exclude from linting.</div></td>
+</tr>
+<tr>
+  <td><code>ignore</code><span class="ox-api-badge">optional</span></td>
+  <td><span class="ox-api-entry__member-kind">property</span></td>
+  <td><code class="ox-api-entry__member-type language-typescript">string[]</code></td>
+  <td><div class="ox-api-entry__member-description">Alias of <code>exclude</code>.</div></td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
   </div>
 </details>
 
 <details id="markdownlintfileresult" class="ox-api-entry">
-  <summary><span class="ox-api-entry__kind">interface</span><span class="ox-api-entry__summary-main"><code class="ox-api-entry__signature ox-api-entry__signature--highlighted language-typescript">MarkdownLintFileResult extends MarkdownLintResult</code><span class="ox-api-entry__description">Lint result for a single file.</span></span></summary>
+  <summary><span class="ox-api-entry__kind">interface</span><span class="ox-api-entry__summary-main"><code class="ox-api-entry__signature ox-api-entry__signature--highlighted language-typescript">MarkdownLintFileResult extends MarkdownLintResult</code><span class="ox-api-entry__description">Lint result for a single file.</span><span class="ox-api-entry__meta"><span class="ox-api-badge">3 members</span></span></span></summary>
   <div class="ox-api-entry__body">
 <div class="ox-api-entry__prose">
 <p>Lint result for a single file.</p>
 </div>
-<p class="ox-api-entry__source"><a href="https://github.com/ubugeeei/ox-content/blob/main/npm/vite-plugin-ox-content/src/lint-files.ts#L58-L62">View source</a></p>
+<div class="ox-api-entry__section ox-api-entry__section--signature">
+<h4>Signature</h4>
+<pre><code class="language-typescript">export interface MarkdownLintFileResult extends MarkdownLintResult</code></pre>
+</div>
+<p class="ox-api-entry__source"><a class="ox-api-entry__source-link" href="https://github.com/ubugeeei/ox-content/blob/main/npm/vite-plugin-ox-content/src/lint-files.ts#L58-L62" target="_blank" rel="noopener noreferrer">View source<span class="ox-api-entry__source-icon" aria-hidden="true"></span></a></p>
+<div class="ox-api-entry__section ox-api-entry__section--members">
+<h4>Members</h4>
+<div class="ox-api-entry__member-group">
+<h5>Properties</h5>
+<table class="ox-api-entry__members-table">
+<thead><tr><th>Name</th><th>Kind</th><th>Type</th><th>Description</th></tr></thead>
+<tbody>
+<tr>
+  <td><code>filePath</code></td>
+  <td><span class="ox-api-entry__member-kind">property</span></td>
+  <td><code class="ox-api-entry__member-type language-typescript">string</code></td>
+  <td></td>
+</tr>
+<tr>
+  <td><code>relativePath</code></td>
+  <td><span class="ox-api-entry__member-kind">property</span></td>
+  <td><code class="ox-api-entry__member-type language-typescript">string</code></td>
+  <td></td>
+</tr>
+<tr>
+  <td><code>skipped</code></td>
+  <td><span class="ox-api-entry__member-kind">property</span></td>
+  <td><code class="ox-api-entry__member-type language-typescript">boolean</code></td>
+  <td></td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
   </div>
 </details>
 
 <details id="markdownlintfilesresult" class="ox-api-entry">
-  <summary><span class="ox-api-entry__kind">interface</span><span class="ox-api-entry__summary-main"><code class="ox-api-entry__signature ox-api-entry__signature--highlighted language-typescript">MarkdownLintFilesResult</code><span class="ox-api-entry__description">Aggregated lint result for multiple files.</span></span></summary>
+  <summary><span class="ox-api-entry__kind">interface</span><span class="ox-api-entry__summary-main"><code class="ox-api-entry__signature ox-api-entry__signature--highlighted language-typescript">MarkdownLintFilesResult</code><span class="ox-api-entry__description">Aggregated lint result for multiple files.</span><span class="ox-api-entry__meta"><span class="ox-api-badge">6 members</span></span></span></summary>
   <div class="ox-api-entry__body">
 <div class="ox-api-entry__prose">
 <p>Aggregated lint result for multiple files.</p>
 </div>
-<p class="ox-api-entry__source"><a href="https://github.com/ubugeeei/ox-content/blob/main/npm/vite-plugin-ox-content/src/lint-files.ts#L67-L74">View source</a></p>
+<div class="ox-api-entry__section ox-api-entry__section--signature">
+<h4>Signature</h4>
+<pre><code class="language-typescript">export interface MarkdownLintFilesResult</code></pre>
+</div>
+<p class="ox-api-entry__source"><a class="ox-api-entry__source-link" href="https://github.com/ubugeeei/ox-content/blob/main/npm/vite-plugin-ox-content/src/lint-files.ts#L67-L74" target="_blank" rel="noopener noreferrer">View source<span class="ox-api-entry__source-icon" aria-hidden="true"></span></a></p>
+<div class="ox-api-entry__section ox-api-entry__section--members">
+<h4>Members</h4>
+<div class="ox-api-entry__member-group">
+<h5>Properties</h5>
+<table class="ox-api-entry__members-table">
+<thead><tr><th>Name</th><th>Kind</th><th>Type</th><th>Description</th></tr></thead>
+<tbody>
+<tr>
+  <td><code>checkedFileCount</code></td>
+  <td><span class="ox-api-entry__member-kind">property</span></td>
+  <td><code class="ox-api-entry__member-type language-typescript">number</code></td>
+  <td></td>
+</tr>
+<tr>
+  <td><code>diagnostics</code></td>
+  <td><span class="ox-api-entry__member-kind">property</span></td>
+  <td><code class="ox-api-entry__member-type language-typescript">MarkdownLintFileDiagnostic[]</code></td>
+  <td></td>
+</tr>
+<tr>
+  <td><code>errorCount</code></td>
+  <td><span class="ox-api-entry__member-kind">property</span></td>
+  <td><code class="ox-api-entry__member-type language-typescript">number</code></td>
+  <td></td>
+</tr>
+<tr>
+  <td><code>files</code></td>
+  <td><span class="ox-api-entry__member-kind">property</span></td>
+  <td><code class="ox-api-entry__member-type language-typescript">MarkdownLintFileResult[]</code></td>
+  <td></td>
+</tr>
+<tr>
+  <td><code>infoCount</code></td>
+  <td><span class="ox-api-entry__member-kind">property</span></td>
+  <td><code class="ox-api-entry__member-type language-typescript">number</code></td>
+  <td></td>
+</tr>
+<tr>
+  <td><code>warningCount</code></td>
+  <td><span class="ox-api-entry__member-kind">property</span></td>
+  <td><code class="ox-api-entry__member-type language-typescript">number</code></td>
+  <td></td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
   </div>
 </details>
 
 <details id="shouldlintmarkdownfile" class="ox-api-entry">
-  <summary><span class="ox-api-entry__kind">fn</span><span class="ox-api-entry__summary-main"><code class="ox-api-entry__signature ox-api-entry__signature--highlighted language-typescript">shouldLintMarkdownFile(filePath: string, options: MarkdownLintFileOptions = {}): boolean</code><span class="ox-api-entry__description">Returns true if the file path is included by the configured glob filters.</span></span></summary>
+  <summary><span class="ox-api-entry__kind">fn</span><span class="ox-api-entry__summary-main"><code class="ox-api-entry__signature ox-api-entry__signature--highlighted language-typescript">shouldLintMarkdownFile(filePath: string, options: MarkdownLintFileOptions = {}): boolean</code><span class="ox-api-entry__description">Returns true if the file path is included by the configured glob filters.</span><span class="ox-api-entry__meta"><span class="ox-api-badge">2 params</span><span class="ox-api-badge">returns boolean</span></span></span></summary>
   <div class="ox-api-entry__body">
 <div class="ox-api-entry__prose">
 <p>Returns true if the file path is included by the configured glob filters.</p>
 </div>
-<p class="ox-api-entry__source"><a href="https://github.com/ubugeeei/ox-content/blob/main/npm/vite-plugin-ox-content/src/lint-files.ts#L91-L97">View source</a></p>
+<div class="ox-api-entry__section ox-api-entry__section--signature">
+<h4>Signature</h4>
+<pre><code class="language-typescript">export function shouldLintMarkdownFile(filePath: string, options: MarkdownLintFileOptions = {}): boolean</code></pre>
+</div>
+<p class="ox-api-entry__source"><a class="ox-api-entry__source-link" href="https://github.com/ubugeeei/ox-content/blob/main/npm/vite-plugin-ox-content/src/lint-files.ts#L91-L97" target="_blank" rel="noopener noreferrer">View source<span class="ox-api-entry__source-icon" aria-hidden="true"></span></a></p>
 <div class="ox-api-entry__section ox-api-entry__section--params">
 <h4>Parameters</h4>
 <ul class="ox-api-entry__params">
@@ -135,10 +326,10 @@
 </li>
 <li class="ox-api-entry__param">
   <div class="ox-api-entry__param-heading">
-    <code class="ox-api-entry__param-name">param</code>
-    <code class="ox-api-entry__param-type">unknown</code>
+    <code class="ox-api-entry__param-name">options</code>
+    <code class="ox-api-entry__param-type">MarkdownLintFileOptions</code>
   </div>
-  
+  <p class="ox-api-entry__param-description">optional · default: {}</p>
 </li>
 </ul>
 </div>
@@ -151,4 +342,3 @@
 </div>
   </div>
 </details>
-

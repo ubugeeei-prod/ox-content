@@ -1,5 +1,7 @@
 //! HTML page generation for SSG.
 
+use std::fmt::Write as _;
+
 use askama::Template;
 use serde::{Deserialize, Serialize};
 
@@ -95,6 +97,21 @@ pub struct SocialLinks {
     pub twitter: Option<String>,
     /// Discord URL.
     pub discord: Option<String>,
+    /// Custom social links.
+    pub links: Option<Vec<SocialLink>>,
+}
+
+/// Custom social link.
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct SocialLink {
+    /// Icon label or built HTML icon source.
+    pub icon: Option<String>,
+    /// Trusted inline SVG icon.
+    pub icon_svg: Option<String>,
+    /// Link URL.
+    pub link: String,
+    /// Accessible label.
+    pub aria_label: Option<String>,
 }
 
 /// Embedded HTML content for specific positions in the page layout.
@@ -245,6 +262,10 @@ pub struct NavItem {
     pub path: String,
     /// Full href.
     pub href: String,
+    #[serde(default)]
+    pub children: Vec<NavItem>,
+    #[serde(default)]
+    pub collapsed: Option<bool>,
 }
 
 /// Navigation group for SSG.
@@ -254,6 +275,8 @@ pub struct NavGroup {
     pub title: String,
     /// Navigation items.
     pub items: Vec<NavItem>,
+    #[serde(default)]
+    pub collapsed: Option<bool>,
 }
 
 /// Table of contents entry.
@@ -278,6 +301,8 @@ pub struct PageData {
     pub content: String,
     /// Table of contents entries.
     pub toc: Vec<TocEntry>,
+    /// Last updated timestamp in milliseconds since the Unix epoch.
+    pub last_updated: Option<i64>,
     /// URL path.
     pub path: String,
     /// Entry page configuration (if layout: entry).
@@ -317,14 +342,6 @@ pub struct LocaleInfo {
 // =============================================================================
 // Askama Template Structures
 // =============================================================================
-
-/// Navigation template.
-#[derive(Template)]
-#[template(path = "nav.html")]
-struct NavTemplate<'a> {
-    nav_groups: &'a [NavGroup],
-    current_path: &'a str,
-}
 
 /// Social links template (desktop header).
 #[derive(Template)]
@@ -387,10 +404,17 @@ struct EntryTemplate<'a> {
     features: Option<&'a [FeatureView]>,
 }
 
+struct LastUpdatedView {
+    text: String,
+    datetime: String,
+}
+
 /// Main page template.
 #[derive(Template)]
 #[template(path = "page.html")]
 struct PageTemplate<'a> {
+    html_lang: &'a str,
+    html_dir: &'a str,
     site_name: &'a str,
     document_title: &'a str,
     description: Option<&'a str>,
@@ -414,11 +438,22 @@ struct PageTemplate<'a> {
     embed_sidebar_after: &'a str,
     embed_content_before: &'a str,
     main_content: &'a str,
+    has_toc: bool,
+    toc_html: &'a str,
+    last_updated: Option<&'a LastUpdatedView>,
     embed_content_after: &'a str,
     embed_footer_before: &'a str,
     footer_html: &'a str,
     mobile_social_links: &'a str,
     js: &'a str,
+}
+
+/// Bare page template (no navigation, no styles).
+#[derive(Template)]
+#[template(path = "bare_page.html")]
+struct BarePageTemplate<'a> {
+    title: &'a str,
+    content: &'a str,
 }
 
 /// CSS styles for SSG pages.
@@ -744,6 +779,90 @@ fn page_content_contains_any(content: &str, needles: &[&str]) -> bool {
     needles.iter().any(|needle| content.contains(needle))
 }
 
+fn escape_html(value: &str) -> String {
+    let mut output = String::with_capacity(value.len());
+    for ch in value.chars() {
+        match ch {
+            '&' => output.push_str("&amp;"),
+            '<' => output.push_str("&lt;"),
+            '>' => output.push_str("&gt;"),
+            '"' => output.push_str("&quot;"),
+            '\'' => output.push_str("&#39;"),
+            _ => output.push(ch),
+        }
+    }
+    output
+}
+
+fn generate_toc_html(toc: &[TocEntry]) -> String {
+    let mut html = String::new();
+
+    for entry in toc {
+        let depth = entry.depth.clamp(1, 6);
+        html.push_str("        <li class=\"toc-item\"><a href=\"#");
+        html.push_str(&escape_html(&entry.slug));
+        html.push_str("\" class=\"toc-link toc-link--depth-");
+        html.push_str(&depth.to_string());
+        html.push_str("\">");
+        html.push_str(&escape_html(&entry.text));
+        html.push_str("</a></li>\n");
+    }
+
+    html
+}
+
+fn civil_from_days(days: i64) -> (i64, i64, i64) {
+    let z = days + 719_468;
+    let era = if z >= 0 { z } else { z - 146_096 } / 146_097;
+    let doe = z - era * 146_097;
+    let yoe = (doe - doe / 1_460 + doe / 36_524 - doe / 146_096) / 365;
+    let year = yoe + era * 400;
+    let doy = doe - (365 * yoe + yoe / 4 - yoe / 100);
+    let mp = (5 * doy + 2) / 153;
+    let day = doy - (153 * mp + 2) / 5 + 1;
+    let month = mp + if mp < 10 { 3 } else { -9 };
+    let year = year + i64::from(month <= 2);
+    (year, month, day)
+}
+
+fn format_last_updated(timestamp_ms: i64) -> Option<LastUpdatedView> {
+    if timestamp_ms < 0 {
+        return None;
+    }
+
+    let days = (timestamp_ms / 1_000).div_euclid(86_400);
+    let (year, month, day) = civil_from_days(days);
+    let date = format!("{year:04}-{month:02}-{day:02}");
+    Some(LastUpdatedView { text: date.clone(), datetime: date })
+}
+
+fn infer_locale_dir(locale: &str) -> &'static str {
+    match locale.split('-').next().unwrap_or_default().to_ascii_lowercase().as_str() {
+        "ar" | "fa" | "he" | "iw" | "ps" | "sd" | "ug" | "ur" | "yi" => "rtl",
+        _ => "ltr",
+    }
+}
+
+fn html_locale_attrs(config: &SsgConfig) -> (&str, &str) {
+    let lang = config
+        .locale
+        .as_deref()
+        .filter(|locale| !locale.trim().is_empty())
+        .or_else(|| config.available_locales.as_ref()?.first().map(|locale| locale.code.as_str()))
+        .unwrap_or("en");
+    let configured_dir = config.available_locales.as_ref().and_then(|locales| {
+        locales.iter().find(|locale| locale.code == lang).and_then(|locale| {
+            match locale.dir.as_str() {
+                "ltr" => Some("ltr"),
+                "rtl" => Some("rtl"),
+                _ => None,
+            }
+        })
+    });
+
+    (lang, configured_dir.unwrap_or_else(|| infer_locale_dir(lang)))
+}
+
 /// Generates a complete HTML page for SSG.
 ///
 /// This function creates a full HTML document with navigation sidebar,
@@ -777,7 +896,10 @@ pub fn generate_html(page_data: &PageData, nav_groups: &[NavGroup], config: &Ssg
     if page_content_contains_any(&page_data.content, &["ox-youtube"]) {
         css_sections.push(wrap_css_section("plugin-youtube", YOUTUBE_CSS));
     }
-    if page_content_contains_any(&page_data.content, &["ox-github-card", "ox-github-error"]) {
+    if page_content_contains_any(
+        &page_data.content,
+        &["ox-github-card", "ox-github-code", "ox-github-error"],
+    ) {
         css_sections.push(wrap_css_section("plugin-github", GITHUB_CSS));
     }
     if page_content_contains_any(&page_data.content, &["ox-ogp-card", "ox-ogp-simple"]) {
@@ -797,6 +919,9 @@ pub fn generate_html(page_data: &PageData, nav_groups: &[NavGroup], config: &Ssg
     }
 
     let all_css = css_sections.join("");
+    let toc_html = generate_toc_html(&page_data.toc);
+    let has_toc = !toc_html.is_empty();
+    let last_updated = page_data.last_updated.and_then(format_last_updated);
 
     // Embedded HTML for specific positions
     let embed_head = embed.and_then(|e| e.head.as_deref()).unwrap_or("");
@@ -888,8 +1013,11 @@ pub fn generate_html(page_data: &PageData, nav_groups: &[NavGroup], config: &Ssg
     } else {
         format!("{} - {}", page_data.title, config.site_name)
     };
+    let (html_lang, html_dir) = html_locale_attrs(config);
 
     let template = PageTemplate {
+        html_lang,
+        html_dir,
         site_name: &config.site_name,
         document_title: &document_title,
         description: page_data.description.as_deref(),
@@ -913,6 +1041,9 @@ pub fn generate_html(page_data: &PageData, nav_groups: &[NavGroup], config: &Ssg
         embed_sidebar_after,
         embed_content_before,
         main_content: &main_content,
+        has_toc,
+        toc_html: &toc_html,
+        last_updated: last_updated.as_ref(),
         embed_content_after,
         embed_footer_before,
         footer_html: &footer_html,
@@ -921,6 +1052,13 @@ pub fn generate_html(page_data: &PageData, nav_groups: &[NavGroup], config: &Ssg
     };
 
     template.render().unwrap_or_default()
+}
+
+/// Generates a bare HTML page for SSG.
+///
+/// This page intentionally omits navigation, styles, and scripts.
+pub fn generate_bare_html(content: &str, title: &str) -> String {
+    BarePageTemplate { title, content }.render().unwrap_or_default()
 }
 
 /// Renders an icon based on its format.
@@ -968,7 +1106,13 @@ fn generate_social_links_html(links: &SocialLinks) -> String {
         twitter: links.twitter.as_deref(),
         discord: links.discord.as_deref(),
     };
-    template.render().unwrap_or_default()
+    let mut html = template.render().unwrap_or_default();
+    if let Some(custom_links) = &links.links {
+        for link in custom_links {
+            html.push_str(&render_custom_social_link(link, false));
+        }
+    }
+    html
 }
 
 fn generate_mobile_social_links_html(links: &SocialLinks) -> String {
@@ -977,12 +1121,123 @@ fn generate_mobile_social_links_html(links: &SocialLinks) -> String {
         twitter: links.twitter.as_deref(),
         discord: links.discord.as_deref(),
     };
-    template.render().unwrap_or_default()
+    let mut html = template.render().unwrap_or_default();
+    if let Some(custom_links) = &links.links {
+        for link in custom_links {
+            html.push_str(&render_custom_social_link(link, true));
+        }
+    }
+    html
+}
+
+fn render_custom_social_link(link: &SocialLink, mobile: bool) -> String {
+    let label = link.aria_label.as_deref().or(link.icon.as_deref()).unwrap_or("Social link");
+    let href = escape_html(&link.link);
+    let label = escape_html(label);
+    let icon_html = render_social_icon(link);
+
+    if mobile {
+        format!(
+            "<a href=\"{href}\" class=\"mobile-footer-btn\" aria-label=\"{label}\" target=\"_blank\" rel=\"noopener\">{icon_html}<span class=\"mobile-footer-label\">{label}</span></a>\n"
+        )
+    } else {
+        format!(
+            "<a href=\"{href}\" class=\"social-link\" aria-label=\"{label}\" target=\"_blank\" rel=\"noopener\">{icon_html}</a>\n"
+        )
+    }
+}
+
+fn render_social_icon(link: &SocialLink) -> String {
+    if let Some(svg) = link.icon_svg.as_deref().and_then(validate_social_svg) {
+        return svg.to_string();
+    }
+
+    link.icon
+        .as_deref()
+        .map(|icon| format!("<span class=\"social-link-icon\">{}</span>", escape_html(icon)))
+        .unwrap_or_default()
+}
+
+fn validate_social_svg(svg: &str) -> Option<&str> {
+    let trimmed = svg.trim();
+    let lower = trimmed.to_ascii_lowercase();
+    if trimmed.starts_with("<svg") && !lower.contains("<script") {
+        Some(trimmed)
+    } else {
+        None
+    }
 }
 
 fn generate_nav_html(nav_groups: &[NavGroup], current_path: &str) -> String {
-    let template = NavTemplate { nav_groups, current_path };
-    template.render().unwrap_or_default()
+    let mut html = String::new();
+    for group in nav_groups {
+        if group.collapsed.is_some() {
+            let open = if group.collapsed == Some(true) { "" } else { " open" };
+            push_fmt(&mut html, format_args!(
+                "<details class=\"nav-section nav-section--collapsible\"{open}>\n  <summary class=\"nav-title nav-title--summary\">{}</summary>\n",
+                escape_html(&group.title)
+            ));
+            render_nav_list(&mut html, &group.items, current_path, false);
+            html.push_str("</details>\n");
+        } else {
+            push_fmt(
+                &mut html,
+                format_args!(
+                    "<div class=\"nav-section\">\n  <div class=\"nav-title\">{}</div>\n",
+                    escape_html(&group.title)
+                ),
+            );
+            render_nav_list(&mut html, &group.items, current_path, false);
+            html.push_str("</div>\n");
+        }
+    }
+    html
+}
+
+fn render_nav_list(html: &mut String, items: &[NavItem], current_path: &str, nested: bool) {
+    let class_name = if nested { "nav-list nav-list--nested" } else { "nav-list" };
+    push_fmt(html, format_args!("  <ul class=\"{class_name}\">\n"));
+    for item in items {
+        render_nav_item(html, item, current_path);
+    }
+    html.push_str("  </ul>\n");
+}
+
+fn render_nav_item(html: &mut String, item: &NavItem, current_path: &str) {
+    let href = safe_nav_href(&item.href);
+    let title = escape_html(&item.title);
+    let active_class = if item.path == current_path { " active" } else { "" };
+    if item.children.is_empty() {
+        push_fmt(html, format_args!(
+            "    <li class=\"nav-item\"><a href=\"{href}\" class=\"nav-link{active_class}\">{title}</a></li>\n"
+        ));
+        return;
+    }
+
+    let open = if item.collapsed == Some(true) { "" } else { " open" };
+    push_fmt(html, format_args!(
+        "    <li class=\"nav-item nav-item--group\"><details class=\"nav-details\"{open}><summary class=\"nav-summary\"><a href=\"{href}\" class=\"nav-link nav-link--summary{active_class}\">{title}</a></summary>\n"
+    ));
+    render_nav_list(html, &item.children, current_path, true);
+    html.push_str("    </details></li>\n");
+}
+
+fn safe_nav_href(href: &str) -> String {
+    let trimmed = href.trim();
+    let lower = trimmed.to_ascii_lowercase();
+    let safe_scheme = lower.starts_with("http://")
+        || lower.starts_with("https://")
+        || lower.starts_with("mailto:");
+    if trimmed.starts_with("//") || (trimmed.contains(':') && !safe_scheme) {
+        return "#".to_string();
+    }
+    escape_html(trimmed)
+}
+
+fn push_fmt(output: &mut String, args: std::fmt::Arguments<'_>) {
+    if output.write_fmt(args).is_err() {
+        output.push_str("[formatting failed]");
+    }
 }
 
 #[cfg(test)]
@@ -996,6 +1251,7 @@ mod tests {
             description: Some("Test description".to_string()),
             content: "<h1>Hello</h1>".to_string(),
             toc: vec![TocEntry { depth: 1, text: "Hello".to_string(), slug: "hello".to_string() }],
+            last_updated: Some(0),
             path: "test".to_string(),
             entry_page: None,
         };
@@ -1006,7 +1262,10 @@ mod tests {
                 title: "Test Page".to_string(),
                 path: "test".to_string(),
                 href: "/docs/test/index.html".to_string(),
+                children: vec![],
+                collapsed: None,
             }],
+            collapsed: None,
         }];
 
         let config = SsgConfig {
@@ -1023,6 +1282,66 @@ mod tests {
         assert!(html.contains("Test Page - Test Site"));
         assert!(html.contains("<h1>Hello</h1>"));
         assert!(html.contains("Guide"));
+        assert!(html.contains("class=\"toc\""));
+        assert!(html.contains("href=\"#hello\""));
+        assert!(html.contains("Last updated:"));
+        assert!(html.contains("<time datetime=\"1970-01-01\">1970-01-01</time>"));
+    }
+
+    #[test]
+    fn test_generate_bare_html() {
+        let html = generate_bare_html("<h1>Hello</h1>", "Test Page");
+
+        assert_eq!(
+            html,
+            "<!DOCTYPE html>\n<html lang=\"en\">\n<head>\n  <meta charset=\"UTF-8\">\n  <meta name=\"viewport\" content=\"width=device-width, initial-scale=1.0\">\n  <title>Test Page</title>\n</head>\n<body>\n<h1>Hello</h1>\n</body>\n</html>"
+        );
+    }
+
+    #[test]
+    fn test_generate_bare_html_escapes_title_but_keeps_content_raw() {
+        let html = generate_bare_html("<h1>Raw & ready</h1>", "<script>alert(1)</script>");
+        let title = html
+            .split("<title>")
+            .nth(1)
+            .and_then(|value| value.split("</title>").next())
+            .expect("bare HTML should include a title element");
+
+        assert!(title.contains("alert(1)"));
+        assert!(!title.contains('<'));
+        assert!(!title.contains('>'));
+        assert!(html.contains("<h1>Raw & ready</h1>"));
+        assert!(!html.contains("<title><script>"));
+    }
+
+    #[test]
+    fn test_generate_nav_html_with_nested_collapsed_items() {
+        let nav_groups = vec![NavGroup {
+            title: "Guide & API".to_string(),
+            collapsed: Some(true),
+            items: vec![NavItem {
+                title: "Runtime <Core>".to_string(),
+                path: "runtime".to_string(),
+                href: "javascript:alert(1)".to_string(),
+                collapsed: Some(false),
+                children: vec![NavItem {
+                    title: "Setup".to_string(),
+                    path: "runtime/setup".to_string(),
+                    href: "/docs/runtime/setup/index.html".to_string(),
+                    children: vec![],
+                    collapsed: None,
+                }],
+            }],
+        }];
+
+        let html = generate_nav_html(&nav_groups, "runtime/setup");
+        assert!(html.contains("<details class=\"nav-section nav-section--collapsible\">"));
+        assert!(html.contains("Guide &amp; API"));
+        assert!(html.contains("Runtime &lt;Core&gt;"));
+        assert!(html.contains("href=\"#\""));
+        assert!(html.contains("nav-list nav-list--nested"));
+        assert!(html.contains("class=\"nav-link active\""));
+        assert!(!html.contains("javascript:"));
     }
 
     #[test]
@@ -1032,6 +1351,7 @@ mod tests {
             description: None,
             content: "<p>Content</p>".to_string(),
             toc: vec![],
+            last_updated: None,
             path: "themed".to_string(),
             entry_page: None,
         };
@@ -1064,6 +1384,116 @@ mod tests {
         // Check footer is present
         assert!(html.contains("Built with ox-content"));
         assert!(html.contains("2025 Test"));
+    }
+
+    #[test]
+    fn test_generate_html_with_custom_social_link() {
+        let page_data = PageData {
+            title: "Social Page".to_string(),
+            description: None,
+            content: "<p>Content</p>".to_string(),
+            toc: vec![],
+            last_updated: None,
+            path: "social".to_string(),
+            entry_page: None,
+        };
+        let config = SsgConfig {
+            site_name: "Social Site".to_string(),
+            base: "/".to_string(),
+            og_image: None,
+            locale: None,
+            available_locales: None,
+            theme: Some(ThemeConfig {
+                social_links: Some(SocialLinks {
+                    links: Some(vec![SocialLink {
+                        icon: None,
+                        icon_svg: Some("<svg viewBox=\"0 0 24 24\"></svg>".to_string()),
+                        link: "https://example.com".to_string(),
+                        aria_label: Some("Example".to_string()),
+                    }]),
+                    ..Default::default()
+                }),
+                ..Default::default()
+            }),
+        };
+
+        let html = generate_html(&page_data, &[], &config);
+
+        assert!(html.contains("aria-label=\"Example\""));
+        assert!(html.contains("href=\"https://example.com\""));
+        assert!(html.contains("<svg viewBox=\"0 0 24 24\"></svg>"));
+        assert!(html.contains("<span class=\"mobile-footer-label\">Example</span>"));
+    }
+
+    #[test]
+    fn test_generate_html_without_toc_omits_outline() {
+        let page_data = PageData {
+            title: "No TOC".to_string(),
+            description: None,
+            content: "<p>Content</p>".to_string(),
+            toc: vec![],
+            last_updated: None,
+            path: "no-toc".to_string(),
+            entry_page: None,
+        };
+        let config = SsgConfig {
+            site_name: "Test Site".to_string(),
+            base: "/".to_string(),
+            og_image: None,
+            theme: None,
+            locale: None,
+            available_locales: None,
+        };
+
+        let html = generate_html(&page_data, &[], &config);
+
+        assert!(!html.contains("class=\"toc\""));
+        assert!(!html.contains("<main class=\"main main--with-toc\">"));
+        assert!(!html.contains("Last updated:"));
+    }
+
+    #[test]
+    fn test_format_last_updated_rejects_invalid_timestamps() {
+        assert!(format_last_updated(-1).is_none());
+    }
+
+    #[test]
+    fn test_html_locale_attrs_use_current_locale_and_direction() {
+        let config = SsgConfig {
+            site_name: "Localized".to_string(),
+            base: "/".to_string(),
+            og_image: None,
+            theme: None,
+            locale: Some("ar".to_string()),
+            available_locales: None,
+        };
+
+        assert_eq!(html_locale_attrs(&config), ("ar", "rtl"));
+
+        let page_data = PageData {
+            title: "مرحبا".to_string(),
+            description: None,
+            content: "<p>Content</p>".to_string(),
+            toc: vec![],
+            last_updated: None,
+            path: "ar".to_string(),
+            entry_page: None,
+        };
+        let html = generate_html(&page_data, &[], &config);
+        assert!(html.contains("<html lang=\"ar\" dir=\"rtl\">"));
+    }
+
+    #[test]
+    fn test_generate_toc_html_escapes_entries() {
+        let html = generate_toc_html(&[TocEntry {
+            depth: 2,
+            text: "A <script>".to_string(),
+            slug: "a\" onclick=\"alert(1)".to_string(),
+        }]);
+
+        assert!(html.contains("A &lt;script&gt;"));
+        assert!(html.contains("href=\"#a&quot; onclick=&quot;alert(1)\""));
+        assert!(!html.contains("A <script>"));
     }
 
     #[test]

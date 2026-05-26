@@ -16,14 +16,18 @@ import { transformIslands, hasIslands, resetIslandCounter } from "./island";
 import {
   collectMarkdownFiles,
   buildNavItems,
+  buildThemeNavItems,
   extractTitle,
   getUrlPath,
   generateHtmlPage,
   formatTitle,
+  resolveNavigationGroups,
 } from "./ssg";
 import type { NavGroup, SsgPageData, SsgEntryPageConfig } from "./ssg";
 import type { ResolvedOptions } from "./types";
 import type { HeroConfig, FeatureConfig } from "./types";
+import { normalizeVitePressFrontmatter } from "./vitepress";
+import { isMarkdownFilePath } from "./markdown";
 
 /** File extensions to skip in the middleware. */
 const SKIP_EXTENSIONS = new Set([
@@ -80,7 +84,11 @@ function shouldSkip(url: string): boolean {
  * Resolve a request URL to a markdown file path.
  * Returns null if no matching file exists.
  */
-async function resolveMarkdownFile(url: string, srcDir: string): Promise<string | null> {
+async function resolveMarkdownFile(
+  url: string,
+  srcDir: string,
+  extensions: readonly string[],
+): Promise<string | null> {
   // Remove query string and hash
   let pathname = url.split("?")[0].split("#")[0];
 
@@ -94,30 +102,35 @@ async function resolveMarkdownFile(url: string, srcDir: string): Promise<string 
     pathname = pathname.slice(0, -1);
   }
 
-  // Map URL to potential markdown file path
-  let relativePath: string;
-  if (pathname === "/") {
-    relativePath = "index.md";
-  } else {
-    // Remove leading slash
-    relativePath = pathname.slice(1) + ".md";
+  const routePath = pathname === "/" ? "" : pathname.slice(1);
+  const directCandidates =
+    pathname === "/"
+      ? extensions.map((extension) => `index${extension}`)
+      : isMarkdownFilePath(routePath, extensions)
+        ? [routePath]
+        : extensions.map((extension) => `${routePath}${extension}`);
+
+  for (const relativePath of directCandidates) {
+    const filePath = path.join(srcDir, relativePath);
+    try {
+      await fs.access(filePath);
+      return filePath;
+    } catch {
+      // Try the next extension.
+    }
   }
 
-  const filePath = path.join(srcDir, relativePath);
-
-  try {
-    await fs.access(filePath);
-    return filePath;
-  } catch {
-    // Try as directory index
-    const indexPath = path.join(srcDir, pathname === "/" ? "" : pathname.slice(1), "index.md");
+  for (const extension of extensions) {
+    const indexPath = path.join(srcDir, routePath, `index${extension}`);
     try {
       await fs.access(indexPath);
       return indexPath;
     } catch {
-      return null;
+      // Try the next extension.
     }
   }
+
+  return null;
 }
 
 /**
@@ -278,6 +291,7 @@ async function renderPage(
     baseUrl: base,
     sourcePath: filePath,
   });
+  const frontmatter = normalizeVitePressFrontmatter(result.frontmatter);
 
   let transformedHtml = result.html;
 
@@ -289,8 +303,8 @@ async function renderPage(
   transformedHtml = await transformAllPlugins(transformedHtml, {
     tabs: true,
     youtube: true,
-    github: true,
-    ogp: true,
+    github: options.embeds.github,
+    openGraph: options.embeds.openGraph,
     mermaid: true,
     githubToken: process.env.GITHUB_TOKEN,
   });
@@ -305,15 +319,15 @@ async function renderPage(
   transformedHtml = restoreMermaidSvgs(transformedHtml, mermaidSvgs);
 
   // Extract title
-  const title = extractTitle(transformedHtml, result.frontmatter);
-  const description = result.frontmatter.description as string | undefined;
+  const title = extractTitle(transformedHtml, frontmatter);
+  const description = frontmatter.description as string | undefined;
 
   // Check if this is an entry page
   let entryPage: SsgEntryPageConfig | undefined;
-  if (result.frontmatter.layout === "entry") {
+  if (frontmatter.layout === "entry") {
     entryPage = {
-      hero: result.frontmatter.hero as HeroConfig | undefined,
-      features: result.frontmatter.features as FeatureConfig[] | undefined,
+      hero: frontmatter.hero as HeroConfig | undefined,
+      features: frontmatter.features as FeatureConfig[] | undefined,
     };
   }
 
@@ -323,7 +337,7 @@ async function renderPage(
     description,
     content: transformedHtml,
     toc: result.toc,
-    frontmatter: result.frontmatter,
+    frontmatter,
     path: getUrlPath(filePath, srcDir),
     href: getUrlPath(filePath, srcDir) || "/",
     entryPage,
@@ -370,7 +384,7 @@ export function createDevServerMiddleware(
     if (shouldSkip(routeUrl)) return next();
 
     // Resolve markdown file
-    const filePath = await resolveMarkdownFile(routeUrl, srcDir);
+    const filePath = await resolveMarkdownFile(routeUrl, srcDir, options.extensions);
     if (!filePath) return next();
 
     try {
@@ -390,8 +404,12 @@ export function createDevServerMiddleware(
 
       // Build navigation if not cached
       if (!cache.navGroups) {
-        const markdownFiles = await collectMarkdownFiles(srcDir);
-        cache.navGroups = buildNavItems(markdownFiles, srcDir, base, ".html");
+        const markdownFiles = await collectMarkdownFiles(srcDir, options.extensions);
+        cache.navGroups =
+          resolveNavigationGroups(options.ssg.navigation, base, options.ssg.extension) ??
+          (options.ssg.theme?.sidebar.length
+            ? buildThemeNavItems(options.ssg.theme.sidebar, base, options.ssg.extension)
+            : buildNavItems(markdownFiles, srcDir, base, options.ssg.extension));
       }
 
       // Render the page

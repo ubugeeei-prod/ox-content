@@ -1,0 +1,17 @@
+[licenses]
+version = 2
+confidence-threshold = 0.8
+allow = [
+  "MIT",
+  "Apache-2.0",
+  "Unicode-3.0",
+  "0BSD",
+  "BSD-2-Clause",
+  "ISC",
+  "BSL-1.0",
+  "Zlib",
+  "Unlicense",
+]
+
+[licenses.private]
+ignore = true

@@ -11,6 +11,8 @@ export default defineConfig({
     dts: true,
     clean: true,
     hash: false,
-    external: ["vite", "react", "react-dom", "@ox-content/vite-plugin"],
+    deps: {
+      neverBundle: ["vite", "react", "react-dom", "@ox-content/vite-plugin"],
+    },
   }),
 });

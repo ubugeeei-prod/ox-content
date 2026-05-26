@@ -1,0 +1,46 @@
+name: Feature request
+description: Propose a production-ready enhancement.
+title: "feat: "
+labels: ["enhancement", "needs-triage"]
+body:
+  - type: textarea
+    id: problem
+    attributes:
+      label: Problem or opportunity
+      description: What user or maintainer need does this address?
+    validations:
+      required: true
+  - type: textarea
+    id: proposal
+    attributes:
+      label: Proposed solution
+      description: Describe the expected behavior and scope.
+    validations:
+      required: true
+  - type: textarea
+    id: alternatives
+    attributes:
+      label: Alternatives considered
+      description: Note simpler options, prior art, or why this belongs here.
+    validations:
+      required: true
+  - type: dropdown
+    id: impact
+    attributes:
+      label: Production impact
+      options:
+        - User-facing behavior change
+        - Maintainer or workflow change
+        - Internal implementation only
+        - Unsure
+    validations:
+      required: true
+  - type: checkboxes
+    id: readiness
+    attributes:
+      label: Readiness checks
+      options:
+        - label: I checked for an existing issue or pull request.
+          required: true
+        - label: I described validation or rollout considerations.
+          required: true

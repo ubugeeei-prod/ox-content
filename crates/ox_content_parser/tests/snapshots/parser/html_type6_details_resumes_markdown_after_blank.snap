@@ -1,0 +1,16 @@
+---
+source: crates/ox_content_parser/tests/snapshot_parse.rs
+assertion_line: 32
+description: "<details>\n\n<summary>Click</summary>\n\n**bold**\n\n- list\n\n</details>\n"
+---
+Document [0..66]
+  Html value="<details>\n" [0..10]
+  Html value="<summary>Click</summary>\n" [11..36]
+  Paragraph [37..46]
+    Strong [37..45]
+      Text "bold" [39..43]
+  List ordered=false start=- spread=false [47..54]
+    ListItem spread=false checked=- [47..54]
+      Paragraph [49..54]
+        Text "list" [49..53]
+  Html value="</details>\n" [55..66]

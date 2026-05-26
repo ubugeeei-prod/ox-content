@@ -1,0 +1,6 @@
+---
+source: crates/ox_content_renderer/tests/snapshot_render.rs
+assertion_line: 29
+description: "<span>ok</span>\n"
+---
+<p>&lt;span&gt;ok&lt;/span&gt;</p>

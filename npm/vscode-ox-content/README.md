@@ -9,4 +9,4 @@ Features:
 - i18n key completion, hover, definition, diagnostics, and inlay hints for JS/TS
 - command palette actions for table/code fence/callout insertion
 - Ox Content HTML preview
-- `.mdc` files associated with Markdown
+- `.mdc` files associated with Markdown and component tag diagnostics

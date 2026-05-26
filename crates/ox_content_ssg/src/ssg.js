@@ -172,11 +172,13 @@ window.__oxContentInitSearch = (() => {
 
     const openSearch = () => {
       searchOverlay.classList.add("open");
+      document.body.classList.add("search-open");
       searchInput.focus();
     };
 
     const closeSearch = () => {
       searchOverlay.classList.remove("open");
+      document.body.classList.remove("search-open");
       searchInput.value = "";
       searchResults.innerHTML = "";
       selectedIdx = 0;
@@ -374,6 +376,9 @@ window.__oxContentInitSearch = (() => {
     searchClose?.addEventListener("click", closeSearch);
     searchOverlay.addEventListener("click", (e) => {
       if (e.target === searchOverlay) closeSearch();
+    });
+    searchResults.addEventListener("click", (e) => {
+      if (e.target instanceof Element && e.target.closest("a.search-result")) closeSearch();
     });
     searchInput.addEventListener("input", () => {
       if (searchTimeout) clearTimeout(searchTimeout);

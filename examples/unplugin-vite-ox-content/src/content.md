@@ -1,24 +1,25 @@
 ---
-title: ox-content native plugin example
+title: Unified Bridge Demo
+badge: mdast bridge
+stage: mdast -> remark -> html
 ---
 
-# Native Plugins
+# Existing unified plugins still run
 
-This example demonstrates **ox-content native plugins**.
+This page starts as plain Markdown and is then processed by the Ox Content unified bridge.
 
-## How It Works
+## What the bridge changes
 
-Native plugins are simple functions that transform HTML after rendering.
+- The custom mdast plugin appends a badge to the first heading.
+- An existing remark plugin reads `vfile.data.matter` and appends a summary paragraph.
+- A final ox-content HTML plugin wraps the output in an `<article>` and prepends reading time.
 
-```typescript
-const myPlugin: OxContentPlugin = (html) => {
-  return `<div class="wrapper">${html}</div>`;
-};
-```
+## Why this matters
 
-## Benefits
+You can keep the native Ox Content parser, but still run the existing unified ecosystem at the mdast stage.
 
-- Simple API
-- Full control over HTML output
-- No external dependencies
-- Can be async
+### Signals to look for in the rendered result
+
+- The top heading should include `[mdast bridge]`.
+- The final paragraph should mention the frontmatter title and stage.
+- The table of contents should stay aligned with the transformed heading text.

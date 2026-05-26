@@ -1,0 +1,11 @@
+---
+source: crates/ox_content_parser/tests/snapshot_parse.rs
+assertion_line: 32
+description: "See [the site](https://example.com).\n"
+---
+Document [0..37]
+  Paragraph [0..37]
+    Text "See " [0..4]
+    Link url="https://example.com" title=None [4..35]
+      Text "the site" [5..13]
+    Text "." [35..36]

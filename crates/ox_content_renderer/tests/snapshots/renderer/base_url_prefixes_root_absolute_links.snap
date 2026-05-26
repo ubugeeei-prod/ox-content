@@ -1,0 +1,6 @@
+---
+source: crates/ox_content_renderer/tests/snapshot_render.rs
+assertion_line: 29
+description: "[guide](/guide) [dir](/guide/) [md](/api.md#types)\n"
+---
+<p><a href="/docs/guide">guide</a> <a href="/docs/guide/">dir</a> <a href="/docs/api/index.html#types">md</a></p>

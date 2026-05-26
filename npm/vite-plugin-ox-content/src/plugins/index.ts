@@ -5,6 +5,9 @@
  * They generate static HTML at build time and require no client-side JS.
  */
 
+import type { GitHubOptions } from "./github";
+import type { OgpOptions } from "./ogp";
+
 export { transformTabs, generateTabsCSS, resetTabGroupCounter } from "./tabs";
 
 export { transformYouTube, extractVideoId, type YouTubeOptions } from "./youtube";
@@ -12,9 +15,17 @@ export { transformYouTube, extractVideoId, type YouTubeOptions } from "./youtube
 export {
   transformGitHub,
   fetchRepoData,
+  fetchGitHubSource,
   collectGitHubRepos,
+  collectGitHubSources,
   prefetchGitHubRepos,
+  prefetchGitHubSources,
+  parseGitHubPermalink,
+  parseGitHubLineRange,
   type GitHubRepoData,
+  type GitHubSourceData,
+  type GitHubSourceRef,
+  type GitHubLineRange,
   type GitHubOptions,
 } from "./github";
 
@@ -36,8 +47,9 @@ export { transformMermaidStatic, mermaidClientScript, type MermaidOptions } from
 export interface TransformAllOptions {
   tabs?: boolean;
   youtube?: boolean;
-  github?: boolean;
-  ogp?: boolean;
+  github?: boolean | GitHubOptions;
+  ogp?: boolean | OgpOptions;
+  openGraph?: boolean | OgpOptions;
   mermaid?: boolean;
   githubToken?: string;
 }
@@ -53,12 +65,14 @@ export async function transformAllPlugins(
     tabs = true,
     youtube = true,
     github = true,
-    ogp = true,
+    ogp,
+    openGraph,
     mermaid = true,
     githubToken,
   } = options;
 
   let result = html;
+  const ogpOptions = openGraph ?? ogp ?? true;
 
   // Order matters: process in dependency order
 
@@ -75,21 +89,54 @@ export async function transformAllPlugins(
   }
 
   // 3. GitHub (requires API calls)
-  if (github) {
+  if (github !== false) {
     const { transformGitHub } = await import("./github");
-    result = await transformGitHub(result, undefined, { token: githubToken });
+    const options = typeof github === "object" ? github : {};
+    result = await transformGitHub(result, undefined, { token: githubToken, ...options });
   }
 
   // 4. OGP (requires fetch calls)
-  if (ogp) {
+  if (ogpOptions !== false) {
     const { transformOgp } = await import("./ogp");
-    result = await transformOgp(result);
+    result = await transformOgp(
+      result,
+      undefined,
+      typeof ogpOptions === "object" ? ogpOptions : {},
+    );
   }
 
   // 5. Mermaid (requires mermaid library)
   if (mermaid) {
     const { transformMermaidStatic } = await import("./mermaid");
     result = await transformMermaidStatic(result);
+  }
+
+  return result;
+}
+
+/**
+ * Transform built-in embed components in HTML content.
+ */
+export async function transformBuiltinEmbeds(
+  html: string,
+  options: {
+    github: GitHubOptions | false;
+    openGraph: OgpOptions | false;
+  },
+): Promise<string> {
+  let result = html;
+
+  if (options.github) {
+    const { transformGitHub } = await import("./github");
+    result = await transformGitHub(result, undefined, {
+      token: process.env.GITHUB_TOKEN,
+      ...options.github,
+    });
+  }
+
+  if (options.openGraph) {
+    const { transformOgp } = await import("./ogp");
+    result = await transformOgp(result, undefined, options.openGraph);
   }
 
   return result;

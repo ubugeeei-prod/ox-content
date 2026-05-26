@@ -1,0 +1,7 @@
+---
+source: crates/ox_content_parser/tests/snapshot_parse.rs
+assertion_line: 32
+description: "```ts filename=main.ts\nconst answer = 42;\n```\n"
+---
+Document [0..46]
+  CodeBlock lang=Some("ts") meta=Some("filename=main.ts") value="const answer = 42;\n" [0..46]

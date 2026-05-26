@@ -1,0 +1,18 @@
+---
+source: crates/ox_content_parser/tests/snapshot_parse.rs
+assertion_line: 32
+description: "# h1\n## h2\n### h3\n#### h4\n##### h5\n###### h6\n"
+---
+Document [0..45]
+  Heading depth=1 [0..5]
+    Text "h1" [2..4]
+  Heading depth=2 [5..11]
+    Text "h2" [8..10]
+  Heading depth=3 [11..18]
+    Text "h3" [15..17]
+  Heading depth=4 [18..26]
+    Text "h4" [23..25]
+  Heading depth=5 [26..35]
+    Text "h5" [32..34]
+  Heading depth=6 [35..45]
+    Text "h6" [42..44]

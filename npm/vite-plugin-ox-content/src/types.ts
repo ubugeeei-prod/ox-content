@@ -4,6 +4,7 @@
 
 import type { LanguageRegistration, ThemeRegistration } from "shiki";
 import type { ThemeConfig, ResolvedThemeConfig } from "./theme";
+import type { GitHubOptions, OgpOptions } from "./plugins";
 
 // =============================================================================
 // Entry Page Types (VitePress-like)
@@ -96,6 +97,34 @@ export interface EntryPageConfig {
 }
 
 /**
+ * Navigation item for SSG sidebar rendering.
+ */
+export interface SsgNavigationItem {
+  /** Display title */
+  title: string;
+  /**
+   * Route path used for active-state matching.
+   * Internal links should use site-relative paths such as `/getting-started`.
+   */
+  path?: string;
+  /**
+   * Final href used in the rendered HTML.
+   * When omitted for internal links, ox-content derives it from `path`.
+   */
+  href?: string;
+}
+
+/**
+ * Navigation group for SSG sidebar rendering.
+ */
+export interface SsgNavigationGroup {
+  /** Group heading */
+  title: string;
+  /** Navigation items within this group */
+  items: SsgNavigationItem[];
+}
+
+/**
  * SSG (Static Site Generation) options.
  */
 export interface SsgOptions {
@@ -143,6 +172,12 @@ export interface SsgOptions {
   generateOgImage?: boolean;
 
   /**
+   * Add each page's last git commit timestamp to the default theme.
+   * @default false
+   */
+  lastUpdated?: boolean;
+
+  /**
    * Site URL for generating absolute OG image URLs.
    * Required for proper SNS sharing.
    * Example: 'https://example.com'
@@ -154,6 +189,12 @@ export interface SsgOptions {
    * Use defineTheme() to create a theme configuration.
    */
   theme?: ThemeConfig;
+
+  /**
+   * Override the auto-generated sidebar navigation.
+   * Useful when migrating from tools with explicit navigation config such as VitePress.
+   */
+  navigation?: SsgNavigationGroup[];
 }
 
 /**
@@ -167,8 +208,10 @@ export interface ResolvedSsgOptions {
   siteName?: string;
   ogImage?: string;
   generateOgImage: boolean;
+  lastUpdated: boolean;
   siteUrl?: string;
   theme?: ResolvedThemeConfig;
+  navigation?: SsgNavigationGroup[];
 }
 
 /**
@@ -192,6 +235,12 @@ export interface OxContentOptions {
    * @default '/'
    */
   base?: string;
+
+  /**
+   * Markdown-like file extensions to process.
+   * @default ['.md', '.markdown', '.mdx']
+   */
+  extensions?: string[];
 
   /**
    * SSG (Static Site Generation) options.
@@ -324,6 +373,13 @@ export interface OxContentOptions {
   ogViewer?: boolean;
 
   /**
+   * Built-in static embeds rendered during Markdown transformation.
+   * Set to `false` to disable all built-in embeds.
+   * @default { github: true, openGraph: true }
+   */
+  embeds?: BuiltinEmbedOptions | false;
+
+  /**
    * i18n (internationalization) options.
    * Set to false to disable i18n.
    * @default false
@@ -338,6 +394,7 @@ export interface ResolvedOptions {
   srcDir: string;
   outDir: string;
   base: string;
+  extensions: string[];
   ssg: ResolvedSsgOptions;
   gfm: boolean;
   footnotes: boolean;
@@ -358,7 +415,35 @@ export interface ResolvedOptions {
   docs: ResolvedDocsOptions | false;
   search: ResolvedSearchOptions;
   ogViewer: boolean;
+  embeds: ResolvedBuiltinEmbedOptions;
   i18n: ResolvedI18nOptions | false;
+}
+
+/**
+ * Built-in embed configuration.
+ */
+export interface BuiltinEmbedOptions {
+  /**
+   * Render `<GitHub repo="owner/name" />` repository cards.
+   * Pass an options object to configure fetching.
+   * @default true
+   */
+  github?: boolean | GitHubOptions;
+
+  /**
+   * Render `<OgCard url="https://example.com" />` Open Graph link cards.
+   * Pass an options object to configure fetching.
+   * @default true
+   */
+  openGraph?: boolean | OgpOptions;
+}
+
+/**
+ * Resolved built-in embed configuration.
+ */
+export interface ResolvedBuiltinEmbedOptions {
+  github: GitHubOptions | false;
+  openGraph: OgpOptions | false;
 }
 
 /**
@@ -582,6 +667,24 @@ export interface TocEntry {
 // ============================================
 
 /**
+ * Public API entry point for grouped documentation.
+ */
+export type DocsEntryPoint =
+  | string
+  | {
+      path: string;
+      name?: string;
+    };
+
+/**
+ * Resolved public API entry point.
+ */
+export interface ResolvedDocsEntryPoint {
+  path: string;
+  name?: string;
+}
+
+/**
  * Options for source documentation generation.
  */
 export interface DocsOptions {
@@ -605,7 +708,7 @@ export interface DocsOptions {
 
   /**
    * Glob patterns for files to include.
-   * @default ['**\/*.ts', '**\/*.tsx']
+   * @default ['**\/*.ts', '**\/*.tsx', '**\/*.js', '**\/*.jsx', '**\/*.mts', '**\/*.mjs', '**\/*.cts', '**\/*.cjs']
    */
   include?: string[];
 
@@ -614,6 +717,11 @@ export interface DocsOptions {
    * @default ['**\/*.test.*', '**\/*.spec.*', 'node_modules']
    */
   exclude?: string[];
+
+  /**
+   * Public API entry points used to group re-exported docs.
+   */
+  entryPoints?: DocsEntryPoint[];
 
   /**
    * Output format.
@@ -626,6 +734,12 @@ export interface DocsOptions {
    * @default false
    */
   private?: boolean;
+
+  /**
+   * Include internal members in documentation.
+   * @default false
+   */
+  internal?: boolean;
 
   /**
    * Generate table of contents for each file.
@@ -662,8 +776,10 @@ export interface ResolvedDocsOptions {
   out: string;
   include: string[];
   exclude: string[];
+  entryPoints?: ResolvedDocsEntryPoint[];
   format: "markdown" | "json" | "html";
   private: boolean;
+  internal: boolean;
   toc: boolean;
   groupBy: "file" | "category";
   githubUrl?: string;
@@ -686,6 +802,27 @@ export interface DocEntry {
   line: number;
   endLine: number;
   signature?: string; // Full function/type signature (for functions and type aliases)
+  members?: DocMember[];
+}
+
+/**
+ * A member belonging to a class, interface, type alias, or enum entry.
+ */
+export interface DocMember {
+  name: string;
+  kind: "property" | "method" | "constructor" | "getter" | "setter" | "enumMember";
+  description: string;
+  signature?: string;
+  type?: string;
+  params?: ParamDoc[];
+  returns?: ReturnDoc;
+  optional?: boolean;
+  readonly?: boolean;
+  static?: boolean;
+  private?: boolean;
+  tags?: Record<string, string>;
+  line: number;
+  endLine: number;
 }
 
 /**
@@ -716,11 +853,25 @@ export interface ExtractedDocs {
 }
 
 /**
+ * Summary counts emitted with generated documentation data.
+ */
+export interface DocsSummary {
+  modules: number;
+  entries: number;
+  byKind: Record<string, number>;
+  params: number;
+  returns: number;
+  examples: number;
+  deprecated: number;
+}
+
+/**
  * Machine-readable payload emitted alongside generated docs.
  */
 export interface GeneratedDocsData {
   version: 1;
   generatedAt: string;
+  summary: DocsSummary;
   modules: ExtractedDocs[];
 }
 

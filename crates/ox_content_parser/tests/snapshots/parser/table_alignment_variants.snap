@@ -1,0 +1,21 @@
+---
+source: crates/ox_content_parser/tests/snapshot_parse.rs
+assertion_line: 32
+description: "| a | b | c |\n| :-- | :-: | --: |\n| 1 | 2 | 3 |\n"
+---
+Document [0..48]
+  Table align=[left,center,right] [0..48]
+    TableRow [0..0]
+      TableCell [0..0]
+        Text "a" [0..1]
+      TableCell [0..0]
+        Text "b" [0..1]
+      TableCell [0..0]
+        Text "c" [0..1]
+    TableRow [0..0]
+      TableCell [0..0]
+        Text "1" [0..1]
+      TableCell [0..0]
+        Text "2" [0..1]
+      TableCell [0..0]
+        Text "3" [0..1]

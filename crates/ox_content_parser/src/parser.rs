@@ -1,5 +1,6 @@
 //! Markdown parser implementation.
 
+use memchr::memchr;
 use ox_content_allocator::{Allocator, Vec};
 use ox_content_ast::{
     AlignKind, BlockQuote, Document, Html, Image, Link, List, ListItem, Node, Paragraph, Span,
@@ -7,6 +8,9 @@ use ox_content_ast::{
 };
 
 use crate::error::{ParseError, ParseResult};
+#[allow(unused_imports)]
+// The macro is no-op without the `profile` feature, which suppresses the use.
+use crate::profile_span;
 
 /// Parser options.
 #[derive(Debug, Clone, Default)]
@@ -80,6 +84,7 @@ impl<'a> Parser<'a> {
 
     /// Parses the source into a document AST.
     pub fn parse(mut self) -> ParseResult<Document<'a>> {
+        profile_span!("parser::parse");
         let mut children = self.allocator.new_vec();
 
         while !self.is_at_end() {
@@ -103,11 +108,24 @@ impl<'a> Parser<'a> {
     }
 
     /// Peeks at the current character.
+    #[inline]
     fn peek(&self) -> Option<char> {
-        self.remaining().chars().next()
+        // ASCII fast path: most parser hot loops only inspect ASCII bytes
+        // (`#`, `\``, `~`, `>`, digits, whitespace), so avoid the cost of
+        // constructing a `Chars` iterator and decoding UTF-8 when the
+        // current byte is plain ASCII.
+        let bytes = self.source.as_bytes();
+        let pos = self.position;
+        let &b = bytes.get(pos)?;
+        if b < 0x80 {
+            Some(b as char)
+        } else {
+            self.source[pos..].chars().next()
+        }
     }
 
     /// Advances by one character.
+    #[inline]
     fn advance(&mut self) -> Option<char> {
         let ch = self.peek()?;
         self.position += ch.len_utf8();
@@ -116,31 +134,36 @@ impl<'a> Parser<'a> {
 
     /// Skips whitespace characters.
     fn skip_whitespace(&mut self) {
-        while let Some(ch) = self.peek() {
-            if ch == ' ' || ch == '\t' {
-                self.advance();
-            } else {
-                break;
-            }
+        let bytes = self.source.as_bytes();
+        let mut pos = self.position;
+        while pos < bytes.len() && matches!(bytes[pos], b' ' | b'\t') {
+            pos += 1;
         }
+        self.position = pos;
     }
 
     /// Skips blank lines.
     fn skip_blank_lines(&mut self) {
-        while !self.is_at_end() {
-            let start = self.position;
-            self.skip_whitespace();
-            if self.peek() == Some('\n') {
-                self.advance();
+        let bytes = self.source.as_bytes();
+        let mut pos = self.position;
+        loop {
+            let line_start = pos;
+            // Skip spaces/tabs.
+            while pos < bytes.len() && matches!(bytes[pos], b' ' | b'\t') {
+                pos += 1;
+            }
+            if pos < bytes.len() && bytes[pos] == b'\n' {
+                pos += 1;
             } else {
-                self.position = start;
-                break;
+                self.position = line_start;
+                return;
             }
         }
     }
 
     /// Parses a block element.
     fn parse_block(&mut self) -> ParseResult<Option<Node<'a>>> {
+        profile_span!("parser::parse_block");
         self.skip_blank_lines();
 
         if self.is_at_end() {
@@ -156,38 +179,94 @@ impl<'a> Parser<'a> {
         }
 
         let start = self.position;
+        let line = self.current_line();
+        let trimmed = line.trim_start();
+        let first = trimmed.as_bytes().first().copied();
 
-        // Try to parse different block types
-        if self.try_parse_heading() {
-            return self.parse_heading(start);
+        // Try to parse different block types. Each dispatch arm hands the
+        // already-scanned `line` / `trimmed` slices to the matching
+        // `*_at` helper so the inner check doesn't re-run `memchr` +
+        // `trim_start` on the same line.
+        match first {
+            Some(b'#') if self.try_parse_heading_at(trimmed) => return self.parse_heading(start),
+            Some(b'-' | b'*') => {
+                if Self::try_parse_thematic_break_line(line) {
+                    return self.parse_thematic_break(start);
+                }
+                if Self::try_parse_list_line(trimmed) {
+                    return self.parse_list(start);
+                }
+            }
+            Some(b'_') if Self::try_parse_thematic_break_line(line) => {
+                return self.parse_thematic_break(start);
+            }
+            Some(b'>') => return self.parse_block_quote(start),
+            Some(b'`' | b'~') if Self::try_parse_fenced_code_at(line, trimmed) => {
+                return self.parse_fenced_code(start);
+            }
+            Some(b'<') if self.try_parse_html_block() => return self.parse_html_block(start),
+            Some(b'+' | b'0'..=b'9') if Self::try_parse_list_line(trimmed) => {
+                return self.parse_list(start);
+            }
+            _ => {}
         }
 
-        if self.try_parse_thematic_break() {
-            return self.parse_thematic_break(start);
-        }
-
-        if self.try_parse_block_quote() {
-            return self.parse_block_quote(start);
-        }
-
-        if self.try_parse_fenced_code() {
-            return self.parse_fenced_code(start);
-        }
-
-        if self.try_parse_html_block() {
-            return self.parse_html_block(start);
-        }
-
-        if self.options.tables && self.try_parse_table() {
+        if self.options.tables && memchr(b'|', line.as_bytes()).is_some() && self.try_parse_table()
+        {
             return self.parse_table(start);
-        }
-
-        if self.try_parse_list() {
-            return self.parse_list(start);
         }
 
         // Default: parse as paragraph
         self.parse_paragraph(start)
+    }
+
+    /// Returns the current line (from `self.position` up to the next `\n`,
+    /// exclusive). Uses `memchr` for the newline scan — faster than
+    /// `remaining().lines().next()` because it operates on bytes instead
+    /// of UTF-8 code points.
+    fn current_line(&self) -> &'a str {
+        let bytes = self.source.as_bytes();
+        let end = memchr(b'\n', &bytes[self.position..])
+            .map_or(self.source.len(), |off| self.position + off);
+        &self.source[self.position..end]
+    }
+
+    fn line_starts_block(&self) -> bool {
+        let line = self.current_line();
+        let trimmed = line.trim_start();
+        let first = trimmed.as_bytes().first().copied();
+
+        // NB: dispatch arms must use the same checks as `parse_block`,
+        // which test at `self.position` (the un-trimmed offset). Using
+        // `is_atx_heading_prefix(trimmed.as_bytes())` here would diverge
+        // from `parse_block`'s `Some(b'#') if self.try_parse_heading_at()`
+        // check on indented inputs like `" # heading"`:
+        // `line_starts_block` would say "yes, a heading", `parse_block`
+        // would say "no" (since the byte at position 0 is a space) and
+        // fall through to `parse_paragraph`, which would immediately break
+        // with no content — `parse_block` then returns `Ok(None)` without
+        // advancing position, and the outer `parse()` loop spins forever
+        // on the same offset. We route every arm through the same
+        // line-cached helpers as `parse_block` so the two dispatchers stay
+        // in lock-step and we only `memchr` + `trim_start` the current
+        // line once per call.
+        let starts_block = match first {
+            Some(b'#') => self.try_parse_heading_at(trimmed),
+            Some(b'-' | b'*') => {
+                Self::try_parse_thematic_break_line(line) || Self::try_parse_list_line(trimmed)
+            }
+            Some(b'_') => Self::try_parse_thematic_break_line(line),
+            Some(b'>') => true,
+            Some(b'`' | b'~') => Self::try_parse_fenced_code_at(line, trimmed),
+            Some(b'<') => self.try_parse_html_block(),
+            Some(b'+' | b'0'..=b'9') => Self::try_parse_list_line(trimmed),
+            _ => false,
+        };
+
+        starts_block
+            || (self.options.tables
+                && memchr(b'|', line.as_bytes()).is_some()
+                && self.try_parse_table())
     }
 
     fn try_parse_html_block(&self) -> bool {
@@ -196,6 +275,7 @@ impl<'a> Parser<'a> {
     }
 
     fn parse_html_block(&mut self, start: usize) -> ParseResult<Option<Node<'a>>> {
+        profile_span!("parser::parse_html_block");
         let line = self.remaining().lines().next().unwrap_or("");
 
         if line.trim_start().starts_with("<!--") {
@@ -211,16 +291,42 @@ impl<'a> Parser<'a> {
             return Ok(Some(Node::Html(Html { value, span })));
         }
 
+        // `parse_html_block_tag_name` returns a borrowed slice — no allocation.
         let Some(tag_name) = Self::parse_html_block_tag_name(line) else {
             return Ok(None);
         };
 
-        let closing_tag = format!("</{tag_name}");
-
-        loop {
-            let consumed = self.consume_line();
-            if consumed.to_ascii_lowercase().contains(&closing_tag) || self.is_at_end() {
-                break;
+        if Self::is_type1_html_block_tag(tag_name) {
+            // Type 1 blocks (`<pre>`, `<script>`, `<style>`, `<textarea>`)
+            // close on the first line containing `</tag`. The previous
+            // implementation built a `String` per parse + lowercased every
+            // line; instead we scan bytes directly with case-insensitive
+            // compare. For a single 25KB document with ~38 blocks this
+            // turns ~hundreds of allocations into zero.
+            let tag_bytes = tag_name.as_bytes();
+            loop {
+                let consumed = self.consume_line();
+                if ascii_contains_closing_tag(consumed, tag_bytes) || self.is_at_end() {
+                    break;
+                }
+            }
+        } else {
+            self.consume_line();
+            // Walk forward line-by-line until a blank line. Previously we
+            // peeked with `remaining().lines().next()` THEN consumed the
+            // line, which walked each line twice. Consume first and inspect
+            // the returned slice so we only scan once.
+            while !self.is_at_end() {
+                let line_start = self.position;
+                let consumed = self.consume_line();
+                if consumed.is_empty()
+                    || consumed.bytes().all(|b| b == b' ' || b == b'\t' || b == b'\r')
+                {
+                    // Roll back so the outer `parse_block` loop sees the
+                    // blank line and skips it via `skip_blank_lines`.
+                    self.position = line_start;
+                    break;
+                }
             }
         }
 
@@ -229,7 +335,12 @@ impl<'a> Parser<'a> {
         Ok(Some(Node::Html(Html { value, span })))
     }
 
-    fn parse_html_block_tag_name(line: &str) -> Option<String> {
+    /// Returns the borrowed tag-name slice when `line` begins with one of
+    /// the recognized HTML block tags. The slice points back into `line`'s
+    /// underlying storage, so there's no allocation. Callers that need
+    /// case-insensitive comparison should use `eq_ignore_ascii_case` directly
+    /// — the source casing is preserved.
+    fn parse_html_block_tag_name(line: &str) -> Option<&str> {
         let trimmed = line.trim_start();
         let after_open = trimmed.strip_prefix('<')?;
         let after_slash = after_open.strip_prefix('/').unwrap_or(after_open);
@@ -260,7 +371,7 @@ impl<'a> Parser<'a> {
             return None;
         }
 
-        Some(tag_name.to_ascii_lowercase())
+        Some(tag_name)
     }
 
     fn is_supported_html_block_tag(tag_name: &str) -> bool {
@@ -280,7 +391,9 @@ impl<'a> Parser<'a> {
             "ol",
             "p",
             "pre",
+            "script",
             "section",
+            "style",
             "summary",
             "table",
             "tbody",
@@ -288,6 +401,7 @@ impl<'a> Parser<'a> {
             "tfoot",
             "th",
             "thead",
+            "textarea",
             "tr",
             "ul",
         ]
@@ -295,40 +409,47 @@ impl<'a> Parser<'a> {
         .any(|candidate| tag_name.eq_ignore_ascii_case(candidate))
     }
 
-    /// Checks if the current position starts a block quote.
-    fn try_parse_block_quote(&self) -> bool {
-        let remaining = self.remaining();
-        let line = remaining.lines().next().unwrap_or("");
-        let trimmed = line.trim_start();
-        trimmed.starts_with('>')
+    fn is_type1_html_block_tag(tag_name: &str) -> bool {
+        ["pre", "script", "style", "textarea"]
+            .iter()
+            .any(|candidate| tag_name.eq_ignore_ascii_case(candidate))
     }
 
     /// Parses a block quote.
     fn parse_block_quote(&mut self, start: usize) -> ParseResult<Option<Node<'a>>> {
+        profile_span!("parser::parse_block_quote");
         self.nesting_depth += 1;
 
         // Collect lines belonging to this block quote and strip the `>` prefix.
-        let mut inner = String::new();
+        // Write straight into a bump-allocated `String` so we don't pay for
+        // `String::new` (system allocator) followed by `alloc_str` (copy to
+        // arena) on every block quote. Capacity is intentionally small —
+        // bumpalo will grow it if needed, and oversizing wastes arena
+        // bytes that can't be reclaimed until reset.
+        let bytes = self.source.as_bytes();
+        let mut inner = ox_content_allocator::String::with_capacity_in(128, self.allocator.bump());
 
         loop {
-            if self.is_at_end() {
+            if self.position >= bytes.len() {
                 break;
             }
 
             let line_start = self.position;
-            self.skip_whitespace();
+            let mut ws_cursor = line_start;
+            while ws_cursor < bytes.len() && matches!(bytes[ws_cursor], b' ' | b'\t') {
+                ws_cursor += 1;
+            }
 
             // Blank line ends the block quote
-            if self.peek() == Some('\n') || self.is_at_end() {
-                self.position = line_start;
+            if ws_cursor >= bytes.len() || bytes[ws_cursor] == b'\n' {
                 break;
             }
 
-            self.position = line_start;
-
-            let remaining = self.remaining();
-            let line = remaining.lines().next().unwrap_or("");
-            let trimmed = line.trim_start();
+            let line_end =
+                memchr(b'\n', &bytes[line_start..]).map_or(bytes.len(), |off| line_start + off);
+            let line = &self.source[line_start..line_end];
+            let trimmed_offset = ws_cursor - line_start;
+            let trimmed = &line[trimmed_offset..];
 
             if let Some(after_gt) = trimmed.strip_prefix('>') {
                 // Strip the optional single space after `>`
@@ -336,19 +457,16 @@ impl<'a> Parser<'a> {
                 inner.push_str(stripped);
                 inner.push('\n');
 
-                // Advance past this line
-                self.position += line.len();
-                if self.peek() == Some('\n') {
-                    self.advance();
-                }
+                // Advance past this line (and the trailing newline if any).
+                self.position = if line_end < bytes.len() { line_end + 1 } else { line_end };
             } else {
                 // Line doesn't start with `>`, block quote ends
                 break;
             }
         }
 
-        // Recursively parse the inner content
-        let inner_str = self.allocator.alloc_str(&inner);
+        // Recursively parse the inner content from the same arena — no copy.
+        let inner_str = inner.into_bump_str();
         let sub_parser = Parser::with_options(self.allocator, inner_str, self.options.clone());
         let sub_doc = sub_parser.parse()?;
 
@@ -360,35 +478,30 @@ impl<'a> Parser<'a> {
 
     /// Checks if the current position starts a list.
     fn try_parse_list(&self) -> bool {
-        let remaining = self.remaining();
-        let line = remaining.lines().next().unwrap_or("");
-        let trimmed = line.trim_start();
+        Self::try_parse_list_line(self.current_line().trim_start())
+    }
 
-        // Unordered list: starts with -, *, or + followed by space
-        if trimmed.starts_with("- ") || trimmed.starts_with("* ") || trimmed.starts_with("+ ") {
+    /// Line-cached variant of [`Self::try_parse_list`]. Callers that
+    /// already produced the trimmed line via `parse_block` /
+    /// `line_starts_block` reuse that slice instead of re-scanning the
+    /// source for a newline and re-running `trim_start`.
+    fn try_parse_list_line(trimmed: &str) -> bool {
+        let trimmed = trimmed.as_bytes();
+
+        // Unordered list: starts with -, *, or + followed by space.
+        if trimmed.len() >= 2 && matches!(trimmed[0], b'-' | b'*' | b'+') && trimmed[1] == b' ' {
             return true;
         }
 
-        // Ordered list: starts with digit(s) followed by . or ) and space
-        let mut chars = trimmed.chars().peekable();
-        let mut has_digit = false;
-        while let Some(ch) = chars.peek() {
-            if ch.is_ascii_digit() {
-                has_digit = true;
-                chars.next();
-            } else {
-                break;
-            }
+        // Ordered list: digit(s) followed by `.` or `)` and a space.
+        let mut i = 0;
+        while i < trimmed.len() && trimmed[i].is_ascii_digit() {
+            i += 1;
         }
-        if has_digit {
-            if let Some(ch) = chars.next() {
-                if (ch == '.' || ch == ')') && chars.peek() == Some(&' ') {
-                    return true;
-                }
-            }
-        }
-
-        false
+        i > 0
+            && i + 1 < trimmed.len()
+            && matches!(trimmed[i], b'.' | b')')
+            && trimmed[i + 1] == b' '
     }
 
     /// Calculates the indentation level (number of spaces) of the current line.
@@ -426,6 +539,14 @@ impl<'a> Parser<'a> {
     fn parse_list_item_line(&self, line_start: usize) -> Option<ParsedListItem<'a>> {
         let remaining = &self.source[line_start..];
         let line = remaining.lines().next().unwrap_or("");
+        self.parse_list_item_line_from_line(line_start, line)
+    }
+
+    fn parse_list_item_line_from_line(
+        &self,
+        line_start: usize,
+        line: &'a str,
+    ) -> Option<ParsedListItem<'a>> {
         let trimmed = line.trim_start();
         let trimmed_offset = line_start + (line.len() - trimmed.len());
 
@@ -473,8 +594,52 @@ impl<'a> Parser<'a> {
         })
     }
 
+    /// Returns the substring covering the line at `line_start`, excluding
+    /// the trailing `\n`. Equivalent to `self.source[line_start..].lines().next()`
+    /// but faster: `memchr` finds the newline in vectorized bytes rather
+    /// than walking UTF-8 code points one character at a time.
+    fn line_at(&self, line_start: usize) -> &'a str {
+        let bytes = self.source.as_bytes();
+        let end =
+            memchr(b'\n', &bytes[line_start..]).map_or(self.source.len(), |off| line_start + off);
+        &self.source[line_start..end]
+    }
+
+    fn next_line_start(&self, line_start: usize) -> usize {
+        let bytes = self.source.as_bytes();
+        match memchr(b'\n', &bytes[line_start..]) {
+            Some(off) => line_start + off + 1,
+            None => self.source.len(),
+        }
+    }
+
+    fn strip_indent_columns(line: &str, columns: usize) -> &str {
+        let mut consumed = 0;
+        let mut byte_index = 0;
+
+        for ch in line.chars() {
+            let width = if ch == ' ' {
+                1
+            } else if ch == '\t' {
+                4
+            } else {
+                break;
+            };
+
+            if consumed + width > columns {
+                break;
+            }
+
+            consumed += width;
+            byte_index += ch.len_utf8();
+        }
+
+        &line[byte_index..]
+    }
+
     /// Parses a list (ordered or unordered).
     fn parse_list(&mut self, start: usize) -> ParseResult<Option<Node<'a>>> {
+        profile_span!("parser::parse_list");
         let baseline_indent = self.calc_indentation(start);
 
         // Determine list type from the first line (already verified by try_parse_list)
@@ -486,6 +651,7 @@ impl<'a> Parser<'a> {
         let list_start = first_item.start;
 
         let mut children: Vec<'a, ListItem<'a>> = self.allocator.new_vec();
+        let mut list_spread = false;
 
         loop {
             if self.is_at_end() {
@@ -541,7 +707,7 @@ impl<'a> Parser<'a> {
             // Check if it's a list item
             let remaining = self.remaining();
             let line = remaining.lines().next().unwrap_or("");
-            let Some(item) = self.parse_list_item_line(line_start) else {
+            let Some(item) = self.parse_list_item_line_from_line(line_start, line) else {
                 break;
             };
             if item.ordered != ordered {
@@ -551,102 +717,306 @@ impl<'a> Parser<'a> {
 
             // Consume line
             self.position += line.len();
-            if self.peek() == Some('\n') {
+            let consumed_newline = self.peek() == Some('\n');
+            if consumed_newline {
                 self.advance();
             }
 
-            // Create list item
-            let item_children_inline = self.parse_inline(item.content, item.content_offset)?;
-
-            // Wrap in Paragraph
-            let mut para_children = self.allocator.new_vec();
-            for child in item_children_inline {
-                para_children.push(child);
+            let content_indent = item.content_offset.saturating_sub(line_start);
+            // Bump-allocate the per-item buffer so we don't go System →
+            // arena for every list item. Most items are a single short
+            // line — over-sizing the capacity wastes arena bytes that
+            // bumpalo can't reclaim until reset. Use the item header
+            // length as the floor and let push_str grow only when the
+            // item actually spans continuation lines.
+            let mut item_source = ox_content_allocator::String::with_capacity_in(
+                item.content.len() + 1,
+                self.allocator.bump(),
+            );
+            item_source.push_str(item.content);
+            if consumed_newline {
+                item_source.push('\n');
             }
-            let para = Paragraph {
-                children: para_children,
-                span: Span::new(
-                    item.content_offset as u32,
-                    (item.content_offset + item.content.len()) as u32,
-                ),
-            };
+            let mut item_end = self.position;
+            let mut item_spread = false;
 
-            let mut list_item_children = self.allocator.new_vec();
-            list_item_children.push(Node::Paragraph(para));
+            loop {
+                if self.is_at_end() {
+                    break;
+                }
+
+                let continuation_start = self.position;
+                let continuation_line = self.line_at(continuation_start);
+                let continuation_next = self.next_line_start(continuation_start);
+
+                if continuation_line.trim().is_empty() {
+                    let mut lookahead = continuation_next;
+                    let mut blank_count = 1;
+                    while lookahead < self.source.len() {
+                        let line = self.line_at(lookahead);
+                        if !line.trim().is_empty() {
+                            break;
+                        }
+                        blank_count += 1;
+                        lookahead = self.next_line_start(lookahead);
+                    }
+
+                    if lookahead >= self.source.len() {
+                        break;
+                    }
+
+                    let next_indent = self.calc_indentation(lookahead);
+                    let next_item = self.parse_list_item_line(lookahead);
+                    if next_indent == baseline_indent
+                        && next_item.as_ref().is_some_and(|next| next.ordered == ordered)
+                    {
+                        self.position = lookahead;
+                        item_spread = true;
+                        list_spread = true;
+                        break;
+                    }
+
+                    if next_indent >= content_indent {
+                        for _ in 0..blank_count {
+                            item_source.push('\n');
+                        }
+                        self.position = lookahead;
+                        item_spread = true;
+                        list_spread = true;
+                        item_end = self.position;
+                        continue;
+                    }
+
+                    break;
+                }
+
+                let current_indent = self.calc_indentation(continuation_start);
+                if current_indent < baseline_indent {
+                    break;
+                }
+
+                if current_indent == baseline_indent {
+                    if self
+                        .parse_list_item_line(continuation_start)
+                        .is_some_and(|next| next.ordered == ordered)
+                    {
+                        break;
+                    }
+
+                    break;
+                }
+
+                let stripped = Self::strip_indent_columns(continuation_line, content_indent);
+                item_source.push_str(stripped);
+                item_source.push('\n');
+                self.position = continuation_next;
+                item_end = self.position;
+            }
+
+            let item_source = item_source.into_bump_str();
+            let sub_parser =
+                Parser::with_options(self.allocator, item_source, self.options.clone());
+            let sub_doc = sub_parser.parse()?;
+            let mut item_children = sub_doc.children;
+            for child in &mut item_children {
+                Self::offset_node_spans(child, item.content_offset as u32);
+            }
 
             let list_item = ListItem {
                 checked: item.checked,
-                spread: false,
-                children: list_item_children,
-                span: Span::new(line_start as u32, self.position as u32),
+                spread: item_spread,
+                children: item_children,
+                span: Span::new(line_start as u32, item_end as u32),
             };
             children.push(list_item);
         }
 
         let span = Span::new(start as u32, self.position as u32);
-        Ok(Some(Node::List(List { ordered, start: list_start, spread: false, children, span })))
+        Ok(Some(Node::List(List {
+            ordered,
+            start: list_start,
+            spread: list_spread,
+            children,
+            span,
+        })))
     }
 
-    /// Checks if the current position starts a heading.
-    fn try_parse_heading(&self) -> bool {
-        let remaining = self.remaining();
-        let mut chars = remaining.chars().peekable();
-        let mut hash_count = 0;
+    fn offset_span(span: &mut Span, offset: u32) {
+        span.start += offset;
+        span.end += offset;
+    }
 
-        while chars.peek() == Some(&'#') {
-            chars.next();
-            hash_count += 1;
-            if hash_count > 6 {
+    fn offset_node_spans(node: &mut Node<'a>, offset: u32) {
+        match node {
+            Node::Paragraph(node) => {
+                Self::offset_span(&mut node.span, offset);
+                for child in &mut node.children {
+                    Self::offset_node_spans(child, offset);
+                }
+            }
+            Node::Heading(node) => {
+                Self::offset_span(&mut node.span, offset);
+                for child in &mut node.children {
+                    Self::offset_node_spans(child, offset);
+                }
+            }
+            Node::ThematicBreak(node) => Self::offset_span(&mut node.span, offset),
+            Node::BlockQuote(node) => {
+                Self::offset_span(&mut node.span, offset);
+                for child in &mut node.children {
+                    Self::offset_node_spans(child, offset);
+                }
+            }
+            Node::List(node) => {
+                Self::offset_span(&mut node.span, offset);
+                for child in &mut node.children {
+                    Self::offset_list_item_spans(child, offset);
+                }
+            }
+            Node::ListItem(node) => Self::offset_list_item_spans(node, offset),
+            Node::CodeBlock(node) => Self::offset_span(&mut node.span, offset),
+            Node::Html(node) => Self::offset_span(&mut node.span, offset),
+            Node::Table(node) => {
+                Self::offset_span(&mut node.span, offset);
+                for row in &mut node.children {
+                    Self::offset_span(&mut row.span, offset);
+                    for cell in &mut row.children {
+                        Self::offset_span(&mut cell.span, offset);
+                        for child in &mut cell.children {
+                            Self::offset_node_spans(child, offset);
+                        }
+                    }
+                }
+            }
+            Node::Text(node) => Self::offset_span(&mut node.span, offset),
+            Node::Emphasis(node) => {
+                Self::offset_span(&mut node.span, offset);
+                for child in &mut node.children {
+                    Self::offset_node_spans(child, offset);
+                }
+            }
+            Node::Strong(node) => {
+                Self::offset_span(&mut node.span, offset);
+                for child in &mut node.children {
+                    Self::offset_node_spans(child, offset);
+                }
+            }
+            Node::InlineCode(node) => Self::offset_span(&mut node.span, offset),
+            Node::Break(node) => Self::offset_span(&mut node.span, offset),
+            Node::Link(node) => {
+                Self::offset_span(&mut node.span, offset);
+                for child in &mut node.children {
+                    Self::offset_node_spans(child, offset);
+                }
+            }
+            Node::Image(node) => Self::offset_span(&mut node.span, offset),
+            Node::Delete(node) => {
+                Self::offset_span(&mut node.span, offset);
+                for child in &mut node.children {
+                    Self::offset_node_spans(child, offset);
+                }
+            }
+            Node::FootnoteReference(node) => Self::offset_span(&mut node.span, offset),
+            Node::Definition(node) => Self::offset_span(&mut node.span, offset),
+            Node::FootnoteDefinition(node) => {
+                Self::offset_span(&mut node.span, offset);
+                for child in &mut node.children {
+                    Self::offset_node_spans(child, offset);
+                }
+            }
+        }
+    }
+
+    fn offset_list_item_spans(list_item: &mut ListItem<'a>, offset: u32) {
+        Self::offset_span(&mut list_item.span, offset);
+        for child in &mut list_item.children {
+            Self::offset_node_spans(child, offset);
+        }
+    }
+
+    /// Cheap line-cached ATX heading check. Both `parse_block` and
+    /// `line_starts_block` already produce the trimmed line, so we reuse
+    /// that slice instead of re-scanning the source. ATX rejects any
+    /// leading indentation, so the heading test only fires when the line
+    /// at `self.position` does NOT start with a space or tab.
+    fn try_parse_heading_at(&self, trimmed: &str) -> bool {
+        let bytes = self.source.as_bytes();
+        let pos = self.position;
+        if pos < bytes.len() && matches!(bytes[pos], b' ' | b'\t') {
+            return false;
+        }
+        is_atx_heading_prefix(trimmed.as_bytes())
+    }
+
+    fn try_parse_thematic_break_line(line: &str) -> bool {
+        let bytes = line.trim().as_bytes();
+        if bytes.len() < 3 {
+            return false;
+        }
+        let first = bytes[0];
+        if !matches!(first, b'-' | b'*' | b'_') {
+            return false;
+        }
+        let mut count = 0u32;
+        for &b in bytes {
+            if b == first {
+                count += 1;
+            } else if b != b' ' && b != b'\t' {
                 return false;
             }
         }
-
-        hash_count > 0 && matches!(chars.peek(), Some(' ') | Some('\t') | Some('\n') | None)
+        count >= 3
     }
 
-    /// Checks if the current position starts a thematic break.
-    fn try_parse_thematic_break(&self) -> bool {
-        let remaining = self.remaining();
-        let line = remaining.lines().next().unwrap_or("");
-        let trimmed = line.trim();
-
-        if trimmed.len() < 3 {
+    fn try_parse_fenced_code_at(line: &str, trimmed: &str) -> bool {
+        if Self::indentation_columns(line) > 3 {
             return false;
         }
 
-        let first = trimmed.chars().next().unwrap();
-        if !matches!(first, '-' | '*' | '_') {
-            return false;
-        }
-
-        trimmed.chars().all(|c| c == first || c == ' ' || c == '\t')
-            && trimmed.chars().filter(|&c| c == first).count() >= 3
+        let trimmed = trimmed.as_bytes();
+        trimmed.len() >= 3
+            && ((trimmed[0] == b'`' && trimmed[1] == b'`' && trimmed[2] == b'`')
+                || (trimmed[0] == b'~' && trimmed[1] == b'~' && trimmed[2] == b'~'))
     }
 
-    /// Checks if the current position starts a fenced code block.
-    fn try_parse_fenced_code(&self) -> bool {
-        let remaining = self.remaining();
-        remaining.starts_with("```") || remaining.starts_with("~~~")
+    fn indentation_columns(line: &str) -> usize {
+        let mut indent = 0;
+        for &b in line.as_bytes() {
+            match b {
+                b' ' => indent += 1,
+                b'\t' => indent += 4,
+                _ => break,
+            }
+        }
+        indent
     }
 
     /// Checks if the current position starts a table.
     fn try_parse_table(&self) -> bool {
-        let remaining = self.remaining();
-        let lines: std::vec::Vec<&str> = remaining.lines().take(2).collect();
-
-        if lines.len() < 2 {
+        // Avoid the `Vec` allocation: peek the first two lines directly via
+        // `memchr` and inspect them in place.
+        let bytes = self.source.as_bytes();
+        let p0 = self.position;
+        let nl0 = match memchr(b'\n', &bytes[p0..]) {
+            Some(off) => p0 + off,
+            None => return false,
+        };
+        let p1 = nl0 + 1;
+        if p1 >= bytes.len() {
             return false;
         }
+        let nl1 = memchr(b'\n', &bytes[p1..]).map_or(bytes.len(), |off| p1 + off);
 
-        // First line must start with | or contain |
-        let first_line = lines[0].trim();
-        if !first_line.starts_with('|') && !first_line.contains('|') {
+        let first_line = self.source[p0..nl0].trim();
+        if memchr(b'|', first_line.as_bytes()).is_none() {
             return false;
         }
 
         // Second line must be the delimiter row (contains | and -)
-        let second_line = lines[1].trim();
-        if !second_line.contains('|') || !second_line.contains('-') {
+        let second_line = self.source[p1..nl1].trim();
+        if memchr(b'|', second_line.as_bytes()).is_none()
+            || memchr(b'-', second_line.as_bytes()).is_none()
+        {
             return false;
         }
 
@@ -665,6 +1035,7 @@ impl<'a> Parser<'a> {
 
     /// Parses a heading.
     fn parse_heading(&mut self, start: usize) -> ParseResult<Option<Node<'a>>> {
+        profile_span!("parser::parse_heading");
         let mut depth = 0u8;
         while self.peek() == Some('#') {
             depth += 1;
@@ -720,9 +1091,72 @@ impl<'a> Parser<'a> {
         Ok(Some(Node::ThematicBreak(ox_content_ast::ThematicBreak { span })))
     }
 
+    /// Scans for a closing fence with at least `fence_len` repetitions of
+    /// `fence_char`, allowing up to 3 columns of leading indent on the
+    /// candidate line. Returns `(body_end, fence_line_end)` where
+    /// `body_end` is the offset to slice the code body and
+    /// `fence_line_end` is the offset *after* the closing fence's newline
+    /// (or EOF). When no closing fence exists, returns `(eof, eof)` —
+    /// matching the legacy "consume to end of input" behavior.
+    fn find_fenced_close(
+        &self,
+        fence_char: char,
+        fence_len: usize,
+        body_start: usize,
+    ) -> (usize, usize) {
+        let bytes = self.source.as_bytes();
+        let fence_byte = fence_char as u8;
+        let mut line_start = body_start;
+
+        while line_start < bytes.len() {
+            // Skip up to 3 leading spaces.
+            let mut cursor = line_start;
+            let max_indent_end = (line_start + 3).min(bytes.len());
+            while cursor < max_indent_end && bytes[cursor] == b' ' {
+                cursor += 1;
+            }
+
+            // Count the run of `fence_char`.
+            let fence_start = cursor;
+            while cursor < bytes.len() && bytes[cursor] == fence_byte {
+                cursor += 1;
+            }
+            let count = cursor - fence_start;
+
+            if count >= fence_len {
+                // Found the closing fence. Body ends at `line_start`;
+                // fence line ends at the next `\n` (inclusive) or EOF.
+                let after_fence = match memchr(b'\n', &bytes[cursor..]) {
+                    Some(off) => cursor + off + 1,
+                    None => bytes.len(),
+                };
+                return (line_start, after_fence);
+            }
+
+            // Not a closing fence — move to the next line.
+            line_start = match memchr(b'\n', &bytes[line_start..]) {
+                Some(off) => line_start + off + 1,
+                None => bytes.len(),
+            };
+        }
+
+        // No closing fence; consume everything as body.
+        (bytes.len(), bytes.len())
+    }
+
     /// Parses a fenced code block.
     fn parse_fenced_code(&mut self, start: usize) -> ParseResult<Option<Node<'a>>> {
-        let fence_char = self.peek().unwrap();
+        profile_span!("parser::parse_fenced_code");
+        let opening_indent = self.calc_indentation(start).min(3);
+        for _ in 0..opening_indent {
+            if self.peek() == Some(' ') {
+                self.advance();
+            }
+        }
+
+        let Some(fence_char) = self.peek() else {
+            return Err(ParseError::UnexpectedEof { span: Span::new(start as u32, start as u32) });
+        };
         let mut fence_len = 0;
 
         while self.peek() == Some(fence_char) {
@@ -753,63 +1187,95 @@ impl<'a> Parser<'a> {
             self.advance();
         }
 
-        // Parse code content
-        let content_start = self.position;
-        let mut content_end = content_start;
+        // Fast path: when the opening fence has no indentation, the body
+        // lines need no indent stripping — we can find the closing fence
+        // by scanning the source and emit a zero-copy `&str` slice. This
+        // is the overwhelmingly common case (almost no code block in the
+        // wild is indented), and it removes both the per-line copy into a
+        // growing `String` *and* the trailing `alloc_str` (which used to
+        // double-allocate every code block's body).
+        let body_start = self.position;
+        let span;
+        let value: &'a str = if opening_indent == 0 {
+            let (body_end, fence_line_end) =
+                self.find_fenced_close(fence_char, fence_len, body_start);
+            self.position = fence_line_end;
+            span = Span::new(start as u32, self.position as u32);
+            &self.source[body_start..body_end]
+        } else {
+            // Indented opening fence: lines may need leading-space stripping,
+            // so we have to materialize a new string. Write directly into a
+            // bump-allocated string so we don't pay for `String` (system
+            // allocator) → `alloc_str` (arena copy).
+            let remaining_estimate = self.source.len().saturating_sub(self.position);
+            let mut value = ox_content_allocator::String::with_capacity_in(
+                remaining_estimate.min(8 * 1024),
+                self.allocator.bump(),
+            );
 
-        loop {
-            if self.is_at_end() {
-                break;
-            }
-
-            let line_start = self.position;
-
-            // Check for closing fence
-            let mut closing_fence_len = 0;
-            while self.peek() == Some(fence_char) {
-                closing_fence_len += 1;
-                self.advance();
-            }
-
-            if closing_fence_len >= fence_len {
-                // Skip rest of line
-                while let Some(ch) = self.peek() {
-                    if ch == '\n' {
-                        self.advance();
-                        break;
-                    }
-                    self.advance();
-                }
-                content_end = line_start;
-                break;
-            }
-
-            // Not a closing fence, reset and consume line
-            self.position = line_start;
-            while let Some(ch) = self.peek() {
-                self.advance();
-                if ch == '\n' {
+            loop {
+                if self.is_at_end() {
                     break;
                 }
-            }
-            content_end = self.position;
-        }
 
-        let value = &self.source[content_start..content_end];
-        let span = Span::new(start as u32, self.position as u32);
+                let line_start = self.position;
+                let line = self.line_at(line_start);
+                let line_indent = Self::indentation_columns(line);
+
+                if line_indent <= 3 {
+                    self.position = line_start;
+                    let indent_to_skip = self.calc_indentation(line_start).min(3);
+                    for _ in 0..indent_to_skip {
+                        if self.peek() == Some(' ') {
+                            self.advance();
+                        }
+                    }
+
+                    // Check for closing fence
+                    let mut closing_fence_len = 0;
+                    while self.peek() == Some(fence_char) {
+                        closing_fence_len += 1;
+                        self.advance();
+                    }
+
+                    if closing_fence_len >= fence_len {
+                        // Skip rest of line
+                        while let Some(ch) = self.peek() {
+                            if ch == '\n' {
+                                self.advance();
+                                break;
+                            }
+                            self.advance();
+                        }
+                        break;
+                    }
+                }
+
+                // Not a closing fence, reset and consume line
+                self.position = line_start;
+                let next_line = self.next_line_start(line_start);
+                let stripped = Self::strip_indent_columns(line, opening_indent);
+                value.push_str(stripped);
+                if self.source.as_bytes().get(line_start + line.len()) == Some(&b'\n') {
+                    value.push('\n');
+                }
+                self.position = next_line;
+            }
+
+            span = Span::new(start as u32, self.position as u32);
+            value.into_bump_str()
+        };
 
         Ok(Some(Node::CodeBlock(ox_content_ast::CodeBlock { lang, meta, value, span })))
     }
 
     /// Parses a table.
     fn parse_table(&mut self, start: usize) -> ParseResult<Option<Node<'a>>> {
-        let mut rows: std::vec::Vec<std::vec::Vec<&str>> = std::vec::Vec::new();
+        profile_span!("parser::parse_table");
         let mut align: Vec<'a, AlignKind> = self.allocator.new_vec();
 
         // Parse header row
         let header_line = self.consume_line();
-        let header_cells = Self::parse_table_row_cells(header_line);
-        rows.push(header_cells);
 
         // Parse delimiter row to get alignment
         let delimiter_line = self.consume_line();
@@ -825,6 +1291,11 @@ impl<'a> Parser<'a> {
             };
             align.push(alignment);
         }
+
+        // Build the table AST directly instead of first collecting row
+        // slices into short-lived heap Vecs.
+        let mut children: Vec<'a, TableRow<'a>> = self.allocator.new_vec();
+        children.push(self.parse_table_row(header_line)?);
 
         // Parse body rows
         loop {
@@ -851,22 +1322,7 @@ impl<'a> Parser<'a> {
 
             self.position = line_start;
             let row_line = self.consume_line();
-            let row_cells = Self::parse_table_row_cells(row_line);
-            rows.push(row_cells);
-        }
-
-        // Build the table AST
-        let mut children: Vec<'a, TableRow<'a>> = self.allocator.new_vec();
-
-        for row_cells in rows {
-            let mut cells: Vec<'a, TableCell<'a>> = self.allocator.new_vec();
-            for cell_content in row_cells {
-                let cell_children = self.parse_inline(cell_content, 0)?;
-                let cell = TableCell { children: cell_children, span: Span::new(0, 0) };
-                cells.push(cell);
-            }
-            let row = TableRow { children: cells, span: Span::new(0, 0) };
-            children.push(row);
+            children.push(self.parse_table_row(row_line)?);
         }
 
         let span = Span::new(start as u32, self.position as u32);
@@ -874,64 +1330,77 @@ impl<'a> Parser<'a> {
     }
 
     /// Consumes a line and returns it.
+    ///
+    /// Uses `memchr` to find the terminator in vectorized bytes instead
+    /// of scanning per-byte. On a document like `docs/content/api/types.md`
+    /// (~25 KB, 38 HTML blocks) this is on the parser's hottest path.
     fn consume_line(&mut self) -> &'a str {
         let start = self.position;
-        while let Some(ch) = self.peek() {
-            self.advance();
-            if ch == '\n' {
-                break;
-            }
+        let bytes = self.source.as_bytes();
+        if let Some(off) = memchr(b'\n', &bytes[start..]) {
+            let line_end = start + off;
+            self.position = line_end + 1;
+            &self.source[start..line_end]
+        } else {
+            self.position = self.source.len();
+            &self.source[start..]
         }
-        self.source[start..self.position].trim_end_matches('\n')
     }
 
-    /// Parses table row cells from a line.
-    fn parse_table_row_cells(line: &'a str) -> std::vec::Vec<&'a str> {
+    /// Parses a table row into arena-backed AST cells without temporary heap
+    /// collection.
+    fn parse_table_row(&self, line: &'a str) -> ParseResult<TableRow<'a>> {
+        let mut cells: Vec<'a, TableCell<'a>> = self.allocator.new_vec();
+        for cell_content in Self::table_row_cells(line) {
+            let cell_children = self.parse_inline(cell_content, 0)?;
+            cells.push(TableCell { children: cell_children, span: Span::new(0, 0) });
+        }
+        Ok(TableRow { children: cells, span: Span::new(0, 0) })
+    }
+
+    /// Iterates table row cells from a line.
+    fn table_row_cells(line: &'a str) -> impl Iterator<Item = &'a str> {
         let trimmed = line.trim();
         let trimmed = trimmed.strip_prefix('|').unwrap_or(trimmed);
         let trimmed = trimmed.strip_suffix('|').unwrap_or(trimmed);
-        trimmed.split('|').map(str::trim).collect()
+        trimmed.split('|').map(str::trim)
     }
 
     /// Parses a paragraph.
     fn parse_paragraph(&mut self, start: usize) -> ParseResult<Option<Node<'a>>> {
+        profile_span!("parser::parse_paragraph");
         let mut content_end = start;
+        let bytes = self.source.as_bytes();
 
         loop {
             if self.is_at_end() {
                 break;
             }
 
-            // Check for blank line (paragraph end)
+            // Check for blank line (paragraph end): scan whitespace and
+            // peek the next byte. Cheaper than the prior
+            // `skip_whitespace` + `peek` + reset dance.
             let line_start = self.position;
-            self.skip_whitespace();
-            if self.peek() == Some('\n') || self.is_at_end() {
-                self.position = line_start;
+            let mut cursor = line_start;
+            while cursor < bytes.len() && matches!(bytes[cursor], b' ' | b'\t') {
+                cursor += 1;
+            }
+            if cursor >= bytes.len() || bytes[cursor] == b'\n' {
                 break;
             }
 
-            self.position = line_start;
-
-            // Check for block-level element that would end paragraph
-            if self.try_parse_heading()
-                || self.try_parse_thematic_break()
-                || self.try_parse_block_quote()
-                || self.try_parse_fenced_code()
-                || self.try_parse_html_block()
-                || (self.options.tables && self.try_parse_table())
-                || self.try_parse_list()
-            {
+            // Check for block-level element that would end paragraph.
+            if self.line_starts_block() {
                 break;
             }
 
-            // Consume line
-            while let Some(ch) = self.peek() {
-                self.advance();
-                if ch == '\n' {
-                    break;
-                }
-            }
-            content_end = self.position;
+            // Consume one line via memchr.
+            content_end = if let Some(off) = memchr(b'\n', &bytes[line_start..]) {
+                line_start + off + 1
+            } else {
+                self.source.len()
+            };
+            self.position = content_end;
         }
 
         let content = self.source[start..content_end].trim();
@@ -949,6 +1418,7 @@ impl<'a> Parser<'a> {
 
     /// Parses inline content.
     fn parse_inline(&self, content: &'a str, offset: usize) -> ParseResult<Vec<'a, Node<'a>>> {
+        profile_span!("parser::parse_inline");
         let mut children = self.allocator.new_vec();
         let mut pos = 0;
         let bytes = content.as_bytes();
@@ -956,14 +1426,10 @@ impl<'a> Parser<'a> {
         while pos < content.len() {
             let start = pos;
 
-            // Look for special characters
-            while pos < content.len() {
-                let ch = bytes[pos];
-                if matches!(ch, b'*' | b'_' | b'`' | b'[' | b'!' | b'~' | b'\\') {
-                    break;
-                }
-                pos += 1;
-            }
+            // Fast-skip to the next special character using an unrolled
+            // byte test. The hot path in real-world Markdown is runs of
+            // plain text — this lets the optimizer vectorize the scan.
+            pos = next_inline_special(bytes, pos);
 
             // Emit text before special character
             if pos > start {
@@ -988,6 +1454,19 @@ impl<'a> Parser<'a> {
                     };
                     children.push(Node::Break(break_node));
                     pos += 2;
+                }
+                b'<' => {
+                    if let Some((html, end)) = Self::parse_inline_html(content, pos, offset) {
+                        children.push(Node::Html(html));
+                        pos = end;
+                    } else {
+                        let text = Text {
+                            value: "<",
+                            span: Span::new((offset + pos) as u32, (offset + pos + 1) as u32),
+                        };
+                        children.push(Node::Text(text));
+                        pos += 1;
+                    }
                 }
                 b'\\' if pos + 1 < content.len() => {
                     // Escape sequence
@@ -1313,11 +1792,184 @@ impl<'a> Parser<'a> {
 
         Ok(children)
     }
+
+    fn parse_inline_html(content: &'a str, pos: usize, offset: usize) -> Option<(Html<'a>, usize)> {
+        let bytes = content.as_bytes();
+
+        if content[pos..].starts_with("<!--") {
+            let end = content[pos + 4..].find("-->").map(|found| pos + 4 + found + 3)?;
+            return Some((
+                Html {
+                    value: &content[pos..end],
+                    span: Span::new((offset + pos) as u32, (offset + end) as u32),
+                },
+                end,
+            ));
+        }
+
+        let closing = bytes.get(pos + 1) == Some(&b'/');
+        let tag_start = if closing { pos + 2 } else { pos + 1 };
+        if !bytes.get(tag_start).is_some_and(u8::is_ascii_alphabetic) {
+            return None;
+        }
+
+        let mut tag_end = tag_start + 1;
+        while tag_end < bytes.len()
+            && (bytes[tag_end].is_ascii_alphanumeric() || bytes[tag_end] == b'-')
+        {
+            tag_end += 1;
+        }
+
+        let mut cursor = tag_end;
+        if closing {
+            while cursor < bytes.len() && matches!(bytes[cursor], b' ' | b'\t') {
+                cursor += 1;
+            }
+            if bytes.get(cursor) != Some(&b'>') {
+                return None;
+            }
+            let end = cursor + 1;
+            return Some((
+                Html {
+                    value: &content[pos..end],
+                    span: Span::new((offset + pos) as u32, (offset + end) as u32),
+                },
+                end,
+            ));
+        }
+
+        if !matches!(bytes.get(cursor), Some(b' ' | b'\t' | b'/' | b'>')) {
+            return None;
+        }
+
+        let mut quote = None;
+        while cursor < bytes.len() {
+            let byte = bytes[cursor];
+            if let Some(quote_byte) = quote {
+                if byte == quote_byte {
+                    quote = None;
+                }
+            } else if matches!(byte, b'"' | b'\'') {
+                quote = Some(byte);
+            } else if byte == b'>' {
+                let end = cursor + 1;
+                return Some((
+                    Html {
+                        value: &content[pos..end],
+                        span: Span::new((offset + pos) as u32, (offset + end) as u32),
+                    },
+                    end,
+                ));
+            } else if byte == b'\n' {
+                return None;
+            }
+            cursor += 1;
+        }
+
+        None
+    }
+}
+
+/// Lookup table: `INLINE_SPECIAL[b] == 1` iff the byte is one of the
+/// inline-special markers. Lookup tables vectorize and predict better
+/// than chained `matches!` checks.
+static INLINE_SPECIAL: [u8; 256] = {
+    let mut t = [0u8; 256];
+    t[b'*' as usize] = 1;
+    t[b'_' as usize] = 1;
+    t[b'`' as usize] = 1;
+    t[b'[' as usize] = 1;
+    t[b'!' as usize] = 1;
+    t[b'~' as usize] = 1;
+    t[b'\\' as usize] = 1;
+    t[b'<' as usize] = 1;
+    t
+};
+
+/// Returns the index of the next inline-special byte at or after `from`,
+/// or `bytes.len()` if none. Unrolled 8-byte chunks let LLVM vectorize the
+/// no-marker path — the common case in real-world Markdown is long runs
+/// of plain text between markers.
+#[inline]
+fn next_inline_special(bytes: &[u8], from: usize) -> usize {
+    let mut i = from;
+    let end = bytes.len();
+
+    while i + 8 <= end {
+        let chunk = &bytes[i..i + 8];
+        let mask = INLINE_SPECIAL[chunk[0] as usize]
+            | INLINE_SPECIAL[chunk[1] as usize]
+            | INLINE_SPECIAL[chunk[2] as usize]
+            | INLINE_SPECIAL[chunk[3] as usize]
+            | INLINE_SPECIAL[chunk[4] as usize]
+            | INLINE_SPECIAL[chunk[5] as usize]
+            | INLINE_SPECIAL[chunk[6] as usize]
+            | INLINE_SPECIAL[chunk[7] as usize];
+        if mask != 0 {
+            break;
+        }
+        i += 8;
+    }
+    while i < end && INLINE_SPECIAL[bytes[i] as usize] == 0 {
+        i += 1;
+    }
+    i
+}
+
+/// Cheap byte-level test mirroring `try_parse_heading_at` without bouncing
+/// through `chars()`/`peekable`. ATX heading prefix: `#{1..=6}` followed
+/// by space/tab/newline or end-of-input.
+fn is_atx_heading_prefix(bytes: &[u8]) -> bool {
+    let mut hashes = 0;
+    while hashes < bytes.len() && bytes[hashes] == b'#' {
+        hashes += 1;
+        if hashes > 6 {
+            return false;
+        }
+    }
+    if hashes == 0 {
+        return false;
+    }
+    matches!(bytes.get(hashes), None | Some(b' ' | b'\t' | b'\n'))
+}
+
+/// Case-insensitive search for `</tag` in `haystack`. Equivalent to
+/// `haystack.to_ascii_lowercase().contains(&format!("</{tag}"))` but
+/// allocates nothing. Used in the HTML block hot loop (type 1 closing
+/// detection) which iterates once per line inside `<pre>` / `<script>` /
+/// `<style>` / `<textarea>` blocks — historically the dominant allocator
+/// in this parser on documents with many such blocks.
+fn ascii_contains_closing_tag(haystack: &str, tag: &[u8]) -> bool {
+    let bytes = haystack.as_bytes();
+    if bytes.len() < tag.len() + 2 {
+        return false;
+    }
+    let limit = bytes.len() - (tag.len() + 1);
+    let mut i = 0;
+    while i <= limit {
+        if bytes[i] == b'<' && bytes[i + 1] == b'/' {
+            let candidate = &bytes[i + 2..i + 2 + tag.len()];
+            if candidate.eq_ignore_ascii_case(tag) {
+                return true;
+            }
+        }
+        i += 1;
+    }
+    false
 }
 
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[test]
+    fn ascii_contains_closing_tag_matches_case_insensitively() {
+        assert!(ascii_contains_closing_tag("end </SCRIPT> tail", b"script"));
+        assert!(ascii_contains_closing_tag("</style ", b"style"));
+        assert!(!ascii_contains_closing_tag("<scriptsource>", b"script"));
+        assert!(!ascii_contains_closing_tag("", b"pre"));
+        assert!(!ascii_contains_closing_tag("</pr", b"pre"));
+    }
 
     #[test]
     fn test_parse_image() {
@@ -1351,6 +2003,25 @@ mod tests {
             }
             _ => panic!("expected heading"),
         }
+    }
+
+    #[test]
+    fn indented_heading_like_text_does_not_loop() {
+        // Regression: `line_starts_block` once tested ATX headings against
+        // the trimmed bytes while `parse_block` tested at the un-trimmed
+        // position, so " # heading" caused `parse_paragraph` to break
+        // immediately ("looks like a heading") and `parse_block` to return
+        // `Ok(None)` without advancing — spinning the outer loop forever.
+        // The fix is for `line_starts_block` to defer to
+        // `self.try_parse_heading_at()` so both checks see the same offset.
+        let allocator = Allocator::new();
+        let doc = Parser::new(&allocator, " # heading\n").parse().unwrap();
+        assert_eq!(doc.children.len(), 1);
+        assert!(
+            matches!(&doc.children[0], Node::Paragraph(_)),
+            "expected leading-indented `#` to parse as paragraph text, got {:?}",
+            &doc.children[0]
+        );
     }
 
     #[test]

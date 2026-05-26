@@ -1,6 +1,6 @@
 {
   "name": "@ox-content/vite-plugin",
-  "version": "2.4.0",
+  "version": "2.18.0",
   "description": "Vite plugin for Ox Content - High-performance Markdown processing with Environment API",
   "keywords": [
     "environment-api",
@@ -17,7 +17,11 @@
     "url": "https://github.com/ubugeeei/ox-content.git",
     "directory": "npm/vite-plugin-ox-content"
   },
+  "bin": {
+    "ox-content-migrate-vitepress": "./bin/migrate-vitepress.mjs"
+  },
   "files": [
+    "bin",
     "dist"
   ],
   "type": "module",
@@ -28,6 +32,10 @@
       "import": "./dist/index.mjs",
       "require": "./dist/index.cjs",
       "types": "./dist/index.d.mts"
+    },
+    "./vitepress-migrate": {
+      "import": "./dist/vitepress-cli.mjs",
+      "types": "./dist/vitepress-cli.d.mts"
     }
   },
   "publishConfig": {
@@ -46,21 +54,21 @@
     "@cspell/dict-en_us": "^4.4.33",
     "@cspell/dict-fr-fr": "^2.3.2",
     "@cspell/dict-pl_pl": "^3.0.6",
-    "@mermaid-js/mermaid-cli": "^11.12.0",
+    "@mermaid-js/mermaid-cli": "^11.15.0",
     "@ox-content/napi": "workspace:*",
     "cspell-lib": "^10.0.0",
-    "glob": "^11.0.0",
-    "playwright": "^1.59.1",
-    "puppeteer": "^23.11.1",
+    "glob": "^13.0.6",
+    "playwright": "^1.60.0",
+    "puppeteer": "^25.0.3",
     "rehype-parse": "^9.0.1",
     "rehype-stringify": "^10.0.1",
-    "rolldown": "^1.0.0-rc.1",
-    "shiki": "^1.24.0",
+    "rolldown": "^1.0.1",
+    "shiki": "^4.0.2",
     "typescript": "catalog:",
     "unified": "^11.0.5"
   },
   "devDependencies": {
-    "@playwright/test": "^1.59.1",
+    "@playwright/test": "^1.60.0",
     "@types/hast": "^3.0.4",
     "@types/node": "catalog:",
     "@types/react": "catalog:",
@@ -68,7 +76,7 @@
     "@typescript/native-preview": "catalog:",
     "vite": "catalog:",
     "vite-plus": "catalog:",
-    "yaml": "^2.8.2"
+    "yaml": "^2.9.0"
   },
   "peerDependencies": {
     "@vue/compiler-sfc": "^3.4.0",

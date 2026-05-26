@@ -1,0 +1,7 @@
+---
+source: crates/ox_content_renderer/tests/snapshot_render.rs
+assertion_line: 29
+description: "```ts\nconst x = 1;\n```\n"
+---
+<pre><code class="language-ts">const x = 1;
+</code></pre>

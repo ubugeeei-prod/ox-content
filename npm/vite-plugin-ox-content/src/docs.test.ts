@@ -88,10 +88,22 @@ describe("writeDocs", () => {
 
     const docsJson = JSON.parse(await fs.readFile(path.join(outDir, "docs.json"), "utf-8")) as {
       version: number;
+      summary: {
+        modules: number;
+        entries: number;
+        byKind: Record<string, number>;
+      };
       modules: ExtractedDocs[];
     };
 
     expect(docsJson.version).toBe(1);
+    expect(docsJson.summary).toMatchObject({
+      modules: 1,
+      entries: 1,
+      byKind: {
+        function: 1,
+      },
+    });
     expect(docsJson.modules[0]?.file).toBe("src/math.ts");
     expect(docsJson.modules[0]?.entries[0]?.file).toBe("src/math.ts");
     expect(docsJson.modules[0]?.entries[0]?.name).toBe("clamp");
@@ -152,6 +164,245 @@ export function addOne(value: number): number {
       line: 4,
       endLine: 7,
     });
+  });
+
+  it("extracts JSDoc types from JavaScript files by default", async () => {
+    const srcDir = await fs.mkdtemp(path.join(os.tmpdir(), "ox-content-docs-src-"));
+    tempDirs.push(srcDir);
+
+    await fs.writeFile(
+      path.join(srcDir, "labels.js"),
+      `/**
+ * Creates a user-facing label.
+ *
+ * @param {string} value - The label source
+ * @param {number} [maxLength=20] - Maximum length before truncation
+ * @returns {string} Formatted label
+ */
+export function label(value, maxLength = 20) {
+  return value.slice(0, maxLength);
+}
+`,
+      "utf-8",
+    );
+
+    const docs = await extractDocs([srcDir], resolveDocsOptions({})!);
+    const entry = docs[0]?.entries[0];
+
+    expect(entry).toMatchObject({
+      name: "label",
+      kind: "function",
+      description: "Creates a user-facing label.",
+      params: [
+        {
+          name: "value",
+          type: "string",
+          description: "The label source",
+        },
+        {
+          name: "maxLength",
+          type: "number",
+          description: "Maximum length before truncation",
+          optional: true,
+          default: "20",
+        },
+      ],
+      returns: {
+        type: "string",
+        description: "Formatted label",
+      },
+    });
+  });
+
+  it("extracts and renders members from documented TypeScript entries", async () => {
+    const srcDir = await fs.mkdtemp(path.join(os.tmpdir(), "ox-content-docs-src-"));
+    tempDirs.push(srcDir);
+
+    await fs.writeFile(
+      path.join(srcDir, "command.ts"),
+      `type Context = { cwd: string };
+
+/**
+ * Runtime command.
+ */
+export interface Command {
+  readonly name: string;
+  args?: string[];
+  run(ctx: Context): Promise<void>;
+}
+
+/**
+ * Command options.
+ */
+export type CommandOptions = {
+  name: string;
+  run(ctx: Context): void;
+};
+`,
+      "utf-8",
+    );
+
+    const docs = await extractDocs([srcDir], resolveDocsOptions({ include: ["**/*.ts"] })!);
+    const command = docs[0]?.entries.find((entry) => entry.name === "Command");
+    const options = docs[0]?.entries.find((entry) => entry.name === "CommandOptions");
+
+    expect(command?.members).toMatchObject([
+      {
+        name: "name",
+        kind: "property",
+        type: "string",
+        readonly: true,
+      },
+      {
+        name: "args",
+        kind: "property",
+        type: "string[]",
+        optional: true,
+      },
+      {
+        name: "run",
+        kind: "method",
+        signature: "run(ctx: Context): Promise<void>",
+      },
+    ]);
+    expect(options?.members).toMatchObject([
+      {
+        name: "name",
+        kind: "property",
+        type: "string",
+      },
+      {
+        name: "run",
+        kind: "method",
+        signature: "run(ctx: Context): void",
+      },
+    ]);
+
+    const markdown = generateMarkdown(docs, resolveDocsOptions({})!);
+
+    expect(markdown["command.md"]).toContain("<h4>Members</h4>");
+    expect(markdown["command.md"]).toContain("<h5>Properties</h5>");
+    expect(markdown["command.md"]).toContain("<code>name</code>");
+    expect(markdown["command.md"]).toContain("readonly");
+    expect(markdown["command.md"]).toContain("run(ctx: Context): Promise&lt;void&gt;");
+  });
+
+  it("groups docs by public API entry points", async () => {
+    const srcDir = await fs.mkdtemp(path.join(os.tmpdir(), "ox-content-docs-src-"));
+    tempDirs.push(srcDir);
+
+    await fs.writeFile(
+      path.join(srcDir, "index.ts"),
+      `export { add as sum } from "./math";
+export type { Options } from "./types";
+`,
+      "utf-8",
+    );
+    await fs.writeFile(
+      path.join(srcDir, "math.ts"),
+      `/** Adds two numbers. */
+export function add(a: number, b: number): number {
+  return a + b;
+}
+`,
+      "utf-8",
+    );
+    await fs.writeFile(
+      path.join(srcDir, "types.ts"),
+      `/** Runtime options. */
+export interface Options {
+  value: string;
+}
+`,
+      "utf-8",
+    );
+
+    const docs = await extractDocs(
+      [],
+      resolveDocsOptions({
+        entryPoints: [{ path: path.join(srcDir, "index.ts"), name: "default" }],
+      })!,
+    );
+
+    expect(docs).toHaveLength(1);
+    expect(docs[0]?.file).toBe("default");
+    expect(docs[0]?.entries.map((entry) => entry.name)).toEqual(["sum", "Options"]);
+  });
+
+  it("excludes internal docs unless explicitly included", async () => {
+    const srcDir = await fs.mkdtemp(path.join(os.tmpdir(), "ox-content-docs-src-"));
+    tempDirs.push(srcDir);
+
+    await fs.writeFile(
+      path.join(srcDir, "visibility.ts"),
+      `/** Public command. */
+export function publicCommand(): void {}
+
+/**
+ * Internal helper.
+ * @internal
+ */
+export function internalHelper(): void {}
+`,
+      "utf-8",
+    );
+
+    const publicOnly = await extractDocs([srcDir], resolveDocsOptions({ include: ["**/*.ts"] })!);
+    expect(publicOnly[0]?.entries.map((entry) => entry.name)).toEqual(["publicCommand"]);
+
+    const withInternal = await extractDocs(
+      [srcDir],
+      resolveDocsOptions({ include: ["**/*.ts"], internal: true })!,
+    );
+    expect(withInternal[0]?.entries.map((entry) => entry.name)).toEqual([
+      "publicCommand",
+      "internalHelper",
+    ]);
+  });
+
+  it("applies internal filtering to public API entry points", async () => {
+    const srcDir = await fs.mkdtemp(path.join(os.tmpdir(), "ox-content-docs-src-"));
+    tempDirs.push(srcDir);
+
+    await fs.writeFile(
+      path.join(srcDir, "index.ts"),
+      `export { publicCommand, internalHelper } from "./commands";
+`,
+      "utf-8",
+    );
+    await fs.writeFile(
+      path.join(srcDir, "commands.ts"),
+      `/** Public command. */
+export function publicCommand(): void {}
+
+/**
+ * Internal helper.
+ * @internal
+ */
+export function internalHelper(): void {}
+`,
+      "utf-8",
+    );
+
+    const publicOnly = await extractDocs(
+      [],
+      resolveDocsOptions({
+        entryPoints: [{ path: path.join(srcDir, "index.ts"), name: "default" }],
+      })!,
+    );
+    expect(publicOnly[0]?.entries.map((entry) => entry.name)).toEqual(["publicCommand"]);
+
+    const withInternal = await extractDocs(
+      [],
+      resolveDocsOptions({
+        entryPoints: [{ path: path.join(srcDir, "index.ts"), name: "default" }],
+        internal: true,
+      })!,
+    );
+    expect(withInternal[0]?.entries.map((entry) => entry.name)).toEqual([
+      "publicCommand",
+      "internalHelper",
+    ]);
   });
 
   it("extracts and renders highlighted interface signatures with generics", async () => {

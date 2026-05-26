@@ -1,0 +1,27 @@
+---
+source: crates/ox_content_parser/tests/snapshot_parse.rs
+assertion_line: 32
+description: "- parent\n  - child\n  - second child\n    1. deep one\n    2. deep two\n- sibling\n"
+---
+Document [0..78]
+  List ordered=false start=- spread=false [0..78]
+    ListItem spread=false checked=- [0..68]
+      Paragraph [2..9]
+        Text "parent" [2..8]
+      List ordered=false start=- spread=false [9..60]
+        ListItem spread=false checked=- [9..17]
+          Paragraph [11..17]
+            Text "child" [11..16]
+        ListItem spread=false checked=- [17..60]
+          Paragraph [19..32]
+            Text "second child" [19..31]
+          List ordered=true start=1 spread=false [32..56]
+            ListItem spread=false checked=- [32..44]
+              Paragraph [35..44]
+                Text "deep one" [35..43]
+            ListItem spread=false checked=- [44..56]
+              Paragraph [47..56]
+                Text "deep two" [47..55]
+    ListItem spread=false checked=- [68..78]
+      Paragraph [70..78]
+        Text "sibling" [70..77]

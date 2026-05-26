@@ -1,0 +1,6 @@
+---
+source: crates/ox_content_renderer/tests/snapshot_render.rs
+assertion_line: 29
+description: "5 < 6 & 7 > 4, quote: \"hi\" 'bye'\n"
+---
+<p>5 &lt; 6 &amp; 7 &gt; 4, quote: &quot;hi&quot; &#39;bye&#39;</p>

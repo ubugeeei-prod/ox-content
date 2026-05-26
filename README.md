@@ -14,7 +14,8 @@
 <p align="center">
   <a href="https://ubugeeei.github.io/ox-content/">Documentation</a> •
   <a href="https://ubugeeei.github.io/ox-content/getting-started">Getting Started</a> •
-  <a href="https://ubugeeei.github.io/ox-content/playground/">Playground</a>
+  <a href="https://ubugeeei.github.io/ox-content/playground/">Playground</a> •
+  <a href="./SECURITY.md">Security</a>
 </p>
 
 > [!NOTE]
@@ -27,11 +28,13 @@
 ## Features
 
 - **Blazing Fast** - Arena-allocated parser with zero-copy parsing
-- **mdast Compatible** - Full compatibility with the unified ecosystem
+- **mdast Compatible** - Run custom mdast plugins and existing remark/unified transforms
+- **MDX-ready Files** - Process `.mdx` alongside Markdown in Vite, SSG, and framework integrations
 - **GFM Support** - Tables, task lists, strikethrough, autolinks, footnotes
 - **Multi-Runtime** - Node.js (NAPI), WebAssembly, Native Rust
 - **Framework Agnostic** - Works with Vue, React, Svelte, and more
 - **Built-in SSG** - Static site generation with theming, search, and OG images
+- **Built-in Embeds** - Static GitHub repository, source code, and Open Graph link cards
 - **API Docs Generation** - Generate docs from JSDoc/TypeScript (like `cargo doc`)
 - **i18n** - ICU MessageFormat 2 parser, dictionary management, static checker, and LSP
 - **Editor Tooling** - Markdown/MDC LSP plus VS Code, Zed, and Neovim integrations
@@ -76,6 +79,34 @@ export default defineConfig({
   ],
 });
 ```
+
+### Migrate from VitePress
+
+```bash
+ox-content-migrate-vitepress .vitepress/config.ts \
+  --src-dir docs \
+  --out-dir dist \
+  --out ox-content.config.ts
+```
+
+The same migration runner is available across JavaScript runtimes:
+
+```bash
+# Node.js, after installing @ox-content/vite-plugin
+ox-content-migrate-vitepress .vitepress/config.ts --out ox-content.config.ts
+
+# Deno
+deno run -A npm:@ox-content/vite-plugin/vitepress-migrate .vitepress/config.ts \
+  --out ox-content.config.ts
+
+# Bun
+bunx --bun @ox-content/vite-plugin .vitepress/config.ts --out ox-content.config.ts
+```
+
+The generated `ox-content.config.ts` contains an editable `OxContentOptions` object built from
+VitePress settings such as `title`, `base`, `themeConfig.sidebar`, `themeConfig.socialLinks`,
+`themeConfig.footer`, and search placeholder.
+`layout: home` frontmatter is also accepted for landing pages during SSG/dev rendering.
 
 ### Browser Usage (WebAssembly)
 
@@ -141,7 +172,13 @@ Supported features include:
 - i18n key completion, hover, go-to-definition, diagnostics, and inlay hints for JS/TS
 - table / code fence / callout insertion commands
 - preview HTML generation for editor UIs
-- `.mdc` authoring support
+- `.mdc` authoring support with component tag diagnostics
+
+For CI or editor-independent checks, run:
+
+```bash
+cargo run -p ox_content_mdc_checker --bin ox-content-mdc-check -- docs/page.mdc
+```
 
 **[Read the full documentation →](https://ubugeeei.github.io/ox-content/)**
 
@@ -149,31 +186,33 @@ Supported features include:
 
 Ox Content is positioned both as a document generator and as a high-performance Markdown toolkit. The numbers below focus on the Markdown engine side.
 
-Latest local benchmark sweep on 2026-04-22 with Node `v24.15.0` on Apple M5 Pro. The tables below show median results from 7 local runs of the benchmark harness for the large 48.7 KB case.
+Latest local benchmark sweep on 2026-05-25 with Node `v24.15.0` on Apple M5 Pro. The tables below show median results from 7 local runs of the benchmark harness for the large 48.7 KB case.
 
 ### Parse Only (48.7 KB)
 
 | Library            | ops/sec | avg time |  throughput |
 | ------------------ | ------: | -------: | ----------: |
-| `@ox-content/napi` |    2933 |  0.34 ms | 139.55 MB/s |
-| `md4w (md4c)`      |    1054 |  0.95 ms |  50.16 MB/s |
-| `markdown-it`      |     807 |  1.24 ms |  38.42 MB/s |
-| `marked`           |     512 |  1.95 ms |  24.36 MB/s |
-| `remark`           |      42 | 23.89 ms |   1.99 MB/s |
+| `@ox-content/napi` |    4207 |  0.24 ms | 200.20 MB/s |
+| `md4x (napi)`      |    1231 |  0.81 ms |  58.56 MB/s |
+| `md4w (md4c)`      |    1143 |  0.87 ms |  54.41 MB/s |
+| `markdown-it`      |    1035 |  0.97 ms |  49.24 MB/s |
+| `marked`           |     530 |  1.89 ms |  25.23 MB/s |
+| `remark`           |      44 | 22.74 ms |   2.09 MB/s |
 
 ### Parse + Render (48.7 KB)
 
 | Library             | ops/sec | avg time |  throughput |
 | ------------------- | ------: | -------: | ----------: |
-| `@ox-content/napi`  |    3273 |  0.31 ms | 155.73 MB/s |
-| `Bun.markdown.html` |    2848 |  0.35 ms | 135.52 MB/s |
-| `md4w (md4c)`       |    2608 |  0.38 ms | 124.13 MB/s |
-| `markdown-it`       |     787 |  1.27 ms |  37.44 MB/s |
-| `marked`            |     489 |  2.04 ms |  23.28 MB/s |
-| `micromark`         |      44 | 22.62 ms |   2.10 MB/s |
+| `@ox-content/napi`  |    4503 |  0.22 ms | 214.26 MB/s |
+| `Bun.markdown.html` |    4225 |  0.24 ms | 201.06 MB/s |
+| `md4x (napi)`       |    4014 |  0.25 ms | 191.02 MB/s |
+| `md4w (md4c)`       |    2653 |  0.38 ms | 126.23 MB/s |
+| `markdown-it`       |     840 |  1.19 ms |  39.96 MB/s |
+| `marked`            |     470 |  2.13 ms |  22.36 MB/s |
+| `micromark`         |      45 | 22.35 ms |   2.13 MB/s |
 | `remark`            |      36 | 28.16 ms |   1.69 MB/s |
 
-In this latest local release-build sweep, Ox Content came out on top for both parse-only and parse+render in the large 48.7 KB case while still serving as the native core for the full documentation pipeline.
+In this latest local release-build sweep, Ox Content leads every comparison: 3.4× ahead of the next-fastest native parser (`md4x (napi)`) on parse-only and 1.07× ahead of `Bun.markdown.html` on parse+render, while remaining the native core that drives the full documentation pipeline. Margins widen further on small documents — see `node benchmarks/bundle-size/parse-benchmark.mjs` for the full sweep across small, medium, and large inputs.
 
 Run the benchmark with:
 
@@ -181,23 +220,28 @@ Run the benchmark with:
 node benchmarks/bundle-size/parse-benchmark.mjs
 ```
 
-The script now compares against `md4w (md4c)` by default and will include `Bun.markdown.html` automatically when `bun` is installed.
+The script now compares against `md4w (md4c)` and `md4x (napi)` by default and will include `Bun.markdown.html` automatically when `bun` is installed.
 
 ## Development
 
 ```bash
 nix develop           # Enter the pinned dev shell
 vp install             # Install JS dependencies through Vite+
-vp run build:napi      # Build NAPI bindings
-vp run build:npm       # Build npm packages
-vp run build:wasm      # Build publish-ready @ox-content/wasm package
-cargo check -p ox_content_lsp
-vp run test            # Run tests
+vp fmt                 # Format Rust and JS/TS sources
+vp check               # Check Rust and JS/TS sources
+vp dev                 # Start the docs and playground dev servers
+vp build               # Build Rust, npm packages, docs, and playground
 ```
 
 The dev shell is pinned in `flake.nix`, the workspace task graph lives in `vite.config.ts`, and `.node-version` is kept for CI / non-Nix Node setup.
 
+See [CONTRIBUTING.md](./CONTRIBUTING.md) for branch, commit, PR, testing, and release-note guidance.
+
 See the [documentation](https://ubugeeei.github.io/ox-content/) for more details.
+
+## Community Credits
+
+Special thanks to [kazupon](https://github.com/kazupon) for substantial community contributions around JSDoc support, including the API docs generation pipeline and documentation quality.
 
 ## Sponsor
 

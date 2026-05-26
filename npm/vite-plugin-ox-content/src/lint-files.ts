@@ -9,7 +9,7 @@ import {
   type MarkdownLintResult,
 } from "./lint";
 
-const DEFAULT_LINT_FILE_INCLUDE = ["**/*.md", "**/*.markdown"] as const;
+const DEFAULT_LINT_FILE_INCLUDE = ["**/*.md", "**/*.markdown", "**/*.mdx"] as const;
 const DEFAULT_LINT_FILE_EXCLUDE = ["**/node_modules/**", "**/.git/**", "**/dist/**"] as const;
 
 /**
@@ -28,7 +28,7 @@ export interface MarkdownLintFileOptions extends MarkdownLintOptions {
 
   /**
    * Glob patterns for files to lint.
-   * @default ['**\/*.md', '**\/*.markdown']
+   * @default ['**\/*.md', '**\/*.markdown', '**\/*.mdx']
    */
   include?: string[];
 

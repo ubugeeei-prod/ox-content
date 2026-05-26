@@ -1,0 +1,6 @@
+---
+source: crates/ox_content_renderer/tests/snapshot_render.rs
+assertion_line: 29
+description: "[guide](./guide.md)\n"
+---
+<p><a href="./guide.md">guide</a></p>

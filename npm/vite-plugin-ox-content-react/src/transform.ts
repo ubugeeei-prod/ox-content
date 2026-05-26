@@ -75,12 +75,14 @@ export async function transformMarkdownWithReact(
     srcDir: options.srcDir,
     outDir: options.outDir,
     base: options.base,
+    extensions: options.extensions,
     ssg: {
       enabled: false,
       extension: ".html",
       clean: false,
       bare: false,
       generateOgImage: false,
+      lastUpdated: false,
     },
     gfm: options.gfm,
     frontmatter: false,
@@ -113,6 +115,7 @@ export async function transformMarkdownWithReact(
       placeholder: "Search...",
       hotkey: "k",
     },
+    embeds: options.embeds,
     i18n: false,
   } as unknown as Parameters<typeof baseTransformMarkdown>[2] & {
     codeAnnotations?: ResolvedReactOptions["codeAnnotations"];

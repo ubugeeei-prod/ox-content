@@ -8,27 +8,31 @@ packages:
   - benchmarks/bundle-size/apps/*
 
 catalog:
-  "@sveltejs/vite-plugin-svelte": ^7.0.0
-  "@types/node": ^22.0.0
-  "@types/react": ^19.0.0
+  "@sveltejs/vite-plugin-svelte": ^7.1.2
+  "@types/node": ^25.8.0
+  "@types/react": ^19.2.14
   "@types/react-dom": ^19.0.0
-  "@vitejs/plugin-react": ^6.0.0
+  "@vitejs/plugin-react": ^6.0.2
   "@vitejs/plugin-vue": ^6.0.0
-  "@typescript/native-preview": ^7.0.0-dev.20250601
+  "@typescript/native-preview": ^7.0.0-dev.20260518.1
   esbuild: ^0.27.4
   react: ^19.0.0
   react-dom: ^19.0.0
-  svelte: ^5.46.4
-  typescript: ^5.7.0
-  vite: npm:@voidzero-dev/vite-plus-core@0.1.11
-  vitest: npm:@voidzero-dev/vite-plus-test@0.1.11
-  vue: ^3.5.0
-  vite-plus: 0.1.11
+  svelte: ^5.55.7
+  typescript: ^6.0.3
+  vite: npm:@voidzero-dev/vite-plus-core@0.1.21
+  vitest: npm:@voidzero-dev/vite-plus-test@0.1.21
+  vue: ^3.5.34
+  vite-plus: 0.1.21
 
 onlyBuiltDependencies:
   - esbuild
   - sharp
   - puppeteer
+packageExtensions:
+  "@voidzero-dev/vite-plus-core@0.1.21":
+    dependencies:
+      picomatch: ^4.0.4
 overrides:
   vite: "catalog:"
   vitest: "catalog:"

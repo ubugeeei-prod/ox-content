@@ -1,0 +1,142 @@
+:root {
+  color: #1f1a16;
+  background:
+    radial-gradient(circle at top left, rgba(204, 138, 68, 0.22), transparent 28%),
+    linear-gradient(180deg, #f7f1e7 0%, #f0e7d8 100%);
+  font-family: "Iowan Old Style", "Palatino Linotype", "Book Antiqua", Georgia, serif;
+  line-height: 1.55;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+}
+
+a {
+  color: inherit;
+}
+
+code,
+pre {
+  font-family: "SFMono-Regular", "Menlo", "Monaco", "Courier New", monospace;
+}
+
+#app {
+  max-width: 1120px;
+  margin: 0 auto;
+  padding: 48px 20px 80px;
+}
+
+.page-header {
+  margin-bottom: 28px;
+}
+
+.page-header h1 {
+  margin: 0;
+  font-size: clamp(2.5rem, 4vw, 4rem);
+  line-height: 0.95;
+}
+
+.page-header p {
+  max-width: 68ch;
+  margin: 14px 0 0;
+  color: rgba(31, 26, 22, 0.78);
+}
+
+.example-grid {
+  display: grid;
+  gap: 20px;
+  grid-template-columns: minmax(0, 1.35fr) minmax(280px, 0.9fr);
+}
+
+.panel {
+  border: 1px solid rgba(72, 48, 30, 0.14);
+  border-radius: 24px;
+  background: rgba(255, 251, 245, 0.78);
+  box-shadow: 0 18px 40px rgba(97, 67, 42, 0.08);
+  overflow: hidden;
+}
+
+.panel-header {
+  padding: 18px 22px 0;
+}
+
+.panel-header h2,
+.panel-header h3 {
+  margin: 0;
+  font-size: 1.15rem;
+}
+
+.panel-header p {
+  margin: 8px 0 0;
+  color: rgba(31, 26, 22, 0.72);
+}
+
+.panel-body {
+  padding: 18px 22px 24px;
+}
+
+.metadata-list {
+  display: grid;
+  gap: 18px;
+}
+
+.metadata-list pre,
+.source-block pre {
+  margin: 0;
+  padding: 16px;
+  border-radius: 16px;
+  background: #1c1917;
+  color: #f7f1e7;
+  overflow-x: auto;
+}
+
+.source-block + .source-block {
+  margin-top: 18px;
+}
+
+.rendered-stage {
+  padding: 0 22px 24px;
+}
+
+.rendered-stage .ox-content-demo {
+  padding: 22px;
+  border-radius: 18px;
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.92), rgba(252, 246, 238, 0.95));
+  border: 1px solid rgba(72, 48, 30, 0.1);
+}
+
+.rendered-stage .reading-time {
+  margin-top: 0;
+  font-size: 0.92rem;
+  letter-spacing: 0.02em;
+  text-transform: uppercase;
+  color: #8e5f33;
+}
+
+.rendered-stage h1,
+.rendered-stage h2,
+.rendered-stage h3 {
+  line-height: 1.1;
+}
+
+.rendered-stage ul {
+  padding-left: 1.2rem;
+}
+
+.rendered-stage li + li {
+  margin-top: 0.35rem;
+}
+
+@media (max-width: 900px) {
+  #app {
+    padding: 28px 16px 56px;
+  }
+
+  .example-grid {
+    grid-template-columns: 1fr;
+  }
+}

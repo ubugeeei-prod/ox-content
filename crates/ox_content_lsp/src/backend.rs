@@ -70,11 +70,16 @@ impl Backend {
             return;
         };
 
-        let diagnostics = self.diagnostics(&document).await;
+        let is_mdc = uri
+            .to_file_path()
+            .ok()
+            .and_then(|path| path.extension().and_then(|ext| ext.to_str()).map(str::to_string))
+            .is_some_and(|ext| ext == "mdc");
+        let diagnostics = self.diagnostics(&document, is_mdc).await;
         self.client.publish_diagnostics(uri.clone(), diagnostics, None).await;
     }
 
-    async fn diagnostics(&self, document: &TextDocumentState) -> Vec<Diagnostic> {
+    async fn diagnostics(&self, document: &TextDocumentState, is_mdc: bool) -> Vec<Diagnostic> {
         let config = self.resolved_config().await;
         let frontmatter = frontmatter::parse_frontmatter(document);
         let mut diagnostics = frontmatter
@@ -83,6 +88,9 @@ impl Backend {
             .map_or_else(Vec::new, |block| Self::frontmatter_diagnostics(block, &config));
         diagnostics
             .extend(diagnostics::markdown_parse_diagnostics(document, frontmatter.block.as_ref()));
+        if is_mdc {
+            diagnostics.extend(diagnostics::mdc_diagnostics(document, frontmatter.block.as_ref()));
+        }
         diagnostics
     }
 

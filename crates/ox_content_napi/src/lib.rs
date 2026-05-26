@@ -1,25 +1,42 @@
 //! Node.js bindings for Ox Content.
 //!
 //! This crate provides NAPI bindings for using Ox Content from Node.js,
-//! enabling zero-copy AST transfer and JavaScript interoperability.
+//! including raw-buffer AST transfer for JavaScript interoperability.
 
 mod highlight;
 mod lint;
 mod mdast;
+mod mdast_raw;
 mod slides;
+mod transfer;
+mod transformer;
 
 use napi::bindgen_prelude::*;
 use napi::Task;
 use napi_derive::napi;
-use std::collections::HashMap;
-use std::path::Path;
+use std::collections::{BTreeMap, HashMap};
+use std::fs;
+use std::path::{Path, PathBuf};
+use std::process::Command;
 
 use ox_content_allocator::Allocator;
-use ox_content_ast::{Document, Heading, Node};
-use ox_content_docs::{DocExtractor, DocItem, DocItemKind, DocTag, ParamDoc};
+use ox_content_docs::{
+    build_export_graph, extract_docs_from_directories, extract_docs_from_entry_points,
+    generate_docs_data_json, generate_markdown, generate_nav_code, generate_nav_metadata,
+    normalize_doc_items, write_docs_output, ApiDocEntry, ApiDocMember, ApiDocModule, ApiDocTag,
+    ApiParamDoc, ApiReturnDoc, DocExtractor, DocItem, DocItemKind, DocTag, DocsNavItem,
+    DocsOutputOptions, EntryPointDocsOptions, EntryPointSpec, ExportGraph, ExportKind,
+    ExportSource, ExtractedDocModule, GraphOptions, MarkdownDocsOptions, NormalizedDocEntry,
+    NormalizedMember, NormalizedParamDoc, NormalizedReturnDoc, ParamDoc, PublicExport,
+};
 use ox_content_parser::{Parser, ParserOptions};
-use ox_content_renderer::{HtmlRenderer, HtmlRendererOptions};
-use ox_content_search::{DocumentIndexer, SearchIndex, SearchIndexBuilder, SearchOptions};
+use ox_content_renderer::HtmlRenderer;
+use ox_content_search::{
+    DocumentIndexer, SearchDocument, SearchIndex, SearchIndexBuilder, SearchOptions,
+    SearchRuntimeOptions,
+};
+use transfer::TransferPayloadKind;
+use transformer::{parse_frontmatter, MarkdownTransformer};
 
 const ALLOCATOR_BYTES_PER_INPUT_BYTE: usize = 8;
 const MIN_ALLOCATOR_CAPACITY: usize = 4 * 1024;
@@ -60,6 +77,8 @@ pub struct TocEntry {
     pub text: String,
     /// URL-friendly slug.
     pub slug: String,
+    /// Child entries.
+    pub children: Vec<TocEntry>,
 }
 
 /// Transform result containing HTML, frontmatter, and TOC.
@@ -73,6 +92,30 @@ pub struct TransformResult {
     pub toc: Vec<TocEntry>,
     /// Parse/render errors, if any.
     pub errors: Vec<String>,
+}
+
+/// Source offset where prepared Markdown content begins in the original source.
+#[napi(object)]
+pub struct JsSourceOrigin {
+    /// UTF-8 byte offset.
+    pub byte_offset: u32,
+    /// UTF-16 code-unit offset.
+    pub offset: u32,
+    /// 1-based line number.
+    pub line: u32,
+    /// 1-based column number.
+    pub column: u32,
+}
+
+/// Prepared Markdown source with parsed frontmatter.
+#[napi(object)]
+pub struct PreparedSourceResult {
+    /// Markdown content after optional frontmatter removal.
+    pub content: String,
+    /// Parsed frontmatter object.
+    pub frontmatter: HashMap<String, serde_json::Value>,
+    /// Source position where `content` starts in the original source.
+    pub source_offset: JsSourceOrigin,
 }
 
 /// Raw JSDoc tag extracted from source code.
@@ -109,7 +152,217 @@ pub struct JsSourceDocItem {
     pub signature: Option<String>,
     pub params: Vec<JsSourceDocParam>,
     pub return_type: Option<String>,
+    pub members: Option<Vec<JsSourceDocItem>>,
     pub tags: Vec<JsSourceDocTag>,
+}
+
+/// Normalized parameter documentation used by generated API docs.
+#[napi(object)]
+#[derive(Clone)]
+pub struct JsDocParam {
+    pub name: String,
+    pub r#type: String,
+    pub description: String,
+    pub optional: Option<bool>,
+    pub r#default: Option<String>,
+}
+
+/// Normalized return documentation used by generated API docs.
+#[napi(object)]
+#[derive(Clone)]
+pub struct JsDocReturn {
+    pub r#type: String,
+    pub description: String,
+}
+
+/// Normalized member documentation used by generated API docs.
+#[napi(object)]
+#[derive(Clone)]
+pub struct JsDocMember {
+    pub name: String,
+    pub kind: String,
+    pub description: String,
+    pub signature: Option<String>,
+    pub r#type: Option<String>,
+    pub params: Option<Vec<JsDocParam>>,
+    pub returns: Option<JsDocReturn>,
+    pub optional: Option<bool>,
+    pub readonly: Option<bool>,
+    pub r#static: Option<bool>,
+    pub private: Option<bool>,
+    pub tags: Option<HashMap<String, String>>,
+    pub line: u32,
+    pub end_line: u32,
+}
+
+/// Normalized documentation entry used by generated API docs.
+#[napi(object)]
+#[derive(Clone)]
+pub struct JsDocEntry {
+    pub name: String,
+    pub kind: String,
+    pub description: String,
+    pub params: Option<Vec<JsDocParam>>,
+    pub returns: Option<JsDocReturn>,
+    pub examples: Option<Vec<String>>,
+    pub tags: Option<HashMap<String, String>>,
+    pub private: bool,
+    pub file: String,
+    pub line: u32,
+    pub end_line: u32,
+    pub signature: Option<String>,
+    pub members: Option<Vec<JsDocMember>>,
+}
+
+/// Navigation item emitted for generated documentation.
+#[napi(object)]
+#[derive(Clone)]
+pub struct JsDocsNavItem {
+    pub title: String,
+    pub path: String,
+    pub children: Option<Vec<JsDocsNavItem>>,
+}
+
+/// Ordered JSDoc tag used by generated API Markdown.
+#[napi(object)]
+#[derive(Clone)]
+pub struct JsDocsMarkdownTag {
+    pub tag: String,
+    pub value: String,
+}
+
+/// Documentation entry used by generated API Markdown.
+#[napi(object)]
+#[derive(Clone)]
+pub struct JsDocsMarkdownEntry {
+    pub name: String,
+    pub kind: String,
+    pub description: String,
+    pub params: Option<Vec<JsDocParam>>,
+    pub returns: Option<JsDocReturn>,
+    pub examples: Option<Vec<String>>,
+    pub tags: Option<Vec<JsDocsMarkdownTag>>,
+    pub private: bool,
+    pub file: String,
+    pub line: u32,
+    pub end_line: u32,
+    pub signature: Option<String>,
+    pub members: Option<Vec<JsDocMember>>,
+}
+
+/// Extracted docs for one source file used by generated API Markdown.
+#[napi(object)]
+#[derive(Clone)]
+pub struct JsDocsMarkdownModule {
+    pub file: String,
+    pub entries: Vec<JsDocsMarkdownEntry>,
+}
+
+/// Extracted docs for one source file returned to JavaScript callers.
+#[napi(object)]
+#[derive(Clone)]
+pub struct JsExtractedDocsModule {
+    pub file: String,
+    pub entries: Vec<JsDocEntry>,
+}
+
+/// Options for generated API Markdown.
+#[napi(object)]
+#[derive(Clone)]
+pub struct JsDocsMarkdownOptions {
+    pub group_by: Option<String>,
+    pub github_url: Option<String>,
+}
+
+/// Options for writing generated API documentation files.
+#[napi(object)]
+#[derive(Clone, Default)]
+pub struct JsDocsOutputOptions {
+    pub generate_nav: Option<bool>,
+    pub group_by: Option<String>,
+    pub generated_at: Option<String>,
+}
+
+/// Entry point used to group generated API docs.
+#[napi(object)]
+#[derive(Clone)]
+pub struct JsEntryPointSpec {
+    pub path: String,
+    pub name: Option<String>,
+}
+
+/// Export graph resolution options.
+#[napi(object)]
+#[derive(Clone, Default)]
+pub struct JsGraphOptions {
+    pub root: Option<String>,
+    pub tsconfig: Option<String>,
+}
+
+/// Options for extracting docs grouped by entry point.
+#[napi(object)]
+#[derive(Clone, Default)]
+pub struct JsEntryPointDocsOptions {
+    pub root: Option<String>,
+    pub tsconfig: Option<String>,
+    pub private: Option<bool>,
+    pub internal: Option<bool>,
+}
+
+/// Export source metadata.
+#[napi(object)]
+#[derive(Clone)]
+pub struct JsExportSource {
+    pub kind: String,
+    pub module: Option<String>,
+    pub package: Option<String>,
+    pub original_name: String,
+    pub type_only: bool,
+}
+
+/// Public export metadata.
+#[napi(object)]
+#[derive(Clone)]
+pub struct JsPublicExport {
+    pub name: String,
+    pub kind: String,
+    pub source: JsExportSource,
+}
+
+/// Public entry point module.
+#[napi(object)]
+#[derive(Clone)]
+pub struct JsEntrypointModule {
+    pub name: String,
+    pub source_path: String,
+    pub exports: Vec<JsPublicExport>,
+}
+
+/// Resolved source module.
+#[napi(object)]
+#[derive(Clone)]
+pub struct JsResolvedModule {
+    pub path: String,
+    pub exports: Vec<JsPublicExport>,
+}
+
+/// Resolved export graph.
+#[napi(object)]
+#[derive(Clone)]
+pub struct JsExportGraph {
+    pub entrypoints: Vec<JsEntrypointModule>,
+    pub modules: Vec<JsResolvedModule>,
+}
+
+/// Docs grouped by a public entry point.
+#[napi(object)]
+#[derive(Clone)]
+pub struct JsEntrypointDocsModule {
+    pub name: String,
+    pub file: String,
+    pub source_path: String,
+    pub entries: Vec<JsDocEntry>,
+    pub exports: Vec<JsPublicExport>,
 }
 
 /// Transform options for JavaScript.
@@ -128,6 +381,8 @@ pub struct JsTransformOptions {
     pub strikethrough: Option<bool>,
     /// Enable autolinks.
     pub autolinks: Option<bool>,
+    /// Parse YAML frontmatter before transforming.
+    pub frontmatter: Option<bool>,
     /// Maximum TOC depth (1-6).
     pub toc_max_depth: Option<u8>,
     /// Convert `.md` links to `.html` links for SSG output.
@@ -146,9 +401,17 @@ pub struct JsTransformOptions {
     pub code_annotation_default_line_numbers: Option<bool>,
 }
 
+/// Source preparation options for JavaScript.
+#[napi(object)]
+#[derive(Default, Clone)]
+pub struct JsSourceOptions {
+    /// Parse YAML frontmatter before returning the content payload.
+    pub frontmatter: Option<bool>,
+}
+
 /// Parser options for JavaScript.
 #[napi(object)]
-#[derive(Default)]
+#[derive(Default, Clone)]
 pub struct JsParserOptions {
     /// Enable GFM extensions.
     pub gfm: Option<bool>,
@@ -191,7 +454,7 @@ impl From<JsParserOptions> for ParserOptions {
 
 /// Parses Markdown source into an AST.
 ///
-/// Returns the AST as a JSON string for zero-copy transfer to JavaScript.
+/// Returns the AST as a JSON string for compatibility-oriented JavaScript consumers.
 #[napi]
 pub fn parse(source: String, options: Option<JsParserOptions>) -> ParseResult {
     let allocator = create_allocator_for_source(&source);
@@ -205,6 +468,44 @@ pub fn parse(source: String, options: Option<JsParserOptions>) -> ParseResult {
             ParseResult { ast, errors: vec![] }
         }
         Err(e) => ParseResult { ast: String::new(), errors: vec![e.to_string()] },
+    }
+}
+
+/// Parses Markdown source into a raw mdast memory block for JavaScript-side deserialization.
+#[napi]
+pub fn parse_mdast_raw(source: String, options: Option<JsParserOptions>) -> Result<Uint8Array> {
+    parse_transfer_raw(source, "mdast".to_string(), options)
+}
+
+/// Parses Markdown source into a transfer buffer identified by payload kind.
+///
+/// Today `mdast` is the primary supported payload. Future payload kinds such as
+/// markdown-it token streams will share the same transfer envelope.
+#[napi]
+pub fn parse_transfer_raw(
+    source: String,
+    kind: String,
+    options: Option<JsParserOptions>,
+) -> Result<Uint8Array> {
+    let payload_kind = TransferPayloadKind::from_str(&kind).ok_or_else(|| {
+        napi::Error::from_reason(format!("Unsupported transfer payload kind: {kind}"))
+    })?;
+
+    match payload_kind {
+        TransferPayloadKind::Mdast => {
+            let allocator = Allocator::new();
+            let parser_options = options.map(ParserOptions::from).unwrap_or_default();
+            let parser = Parser::with_options(&allocator, &source, parser_options);
+            let document =
+                parser.parse().map_err(|error| napi::Error::from_reason(error.to_string()))?;
+            mdast_raw::to_mdast_raw(&document)
+        }
+        TransferPayloadKind::MarkdownItTokens => Err(napi::Error::from_reason(
+            "markdown-it token transfer is not implemented yet; mdast is the current baseline",
+        )),
+        TransferPayloadKind::PreparedSource => Err(napi::Error::from_reason(
+            "prepared-source transfer is exposed through prepareSourceRaw, not parseTransferRaw",
+        )),
     }
 }
 
@@ -261,6 +562,7 @@ fn doc_item_kind_to_string(kind: DocItemKind) -> String {
         DocItemKind::Constructor => "constructor",
         DocItemKind::Getter => "getter",
         DocItemKind::Setter => "setter",
+        DocItemKind::EnumMember => "enumMember",
     }
     .to_string()
 }
@@ -280,6 +582,9 @@ fn map_param_doc(param: ParamDoc) -> JsSourceDocParam {
 }
 
 fn map_doc_item(item: DocItem) -> JsSourceDocItem {
+    let members =
+        (!item.children.is_empty()).then(|| item.children.into_iter().map(map_doc_item).collect());
+
     JsSourceDocItem {
         name: item.name,
         kind: doc_item_kind_to_string(item.kind),
@@ -292,7 +597,260 @@ fn map_doc_item(item: DocItem) -> JsSourceDocItem {
         signature: item.signature,
         params: item.params.into_iter().map(map_param_doc).collect(),
         return_type: item.return_type,
+        members,
         tags: item.tags.into_iter().map(map_doc_tag).collect(),
+    }
+}
+
+fn map_normalized_param_doc(param: NormalizedParamDoc) -> JsDocParam {
+    JsDocParam {
+        name: param.name,
+        r#type: param.type_annotation,
+        description: param.description,
+        optional: param.optional.then_some(true),
+        r#default: param.default_value,
+    }
+}
+
+fn map_normalized_return_doc(return_doc: NormalizedReturnDoc) -> JsDocReturn {
+    JsDocReturn { r#type: return_doc.type_annotation, description: return_doc.description }
+}
+
+fn map_normalized_member(member: NormalizedMember) -> JsDocMember {
+    JsDocMember {
+        name: member.name,
+        kind: member.kind.as_str().to_string(),
+        description: member.description,
+        signature: member.signature,
+        r#type: member.type_annotation,
+        params: (!member.params.is_empty())
+            .then(|| member.params.into_iter().map(map_normalized_param_doc).collect()),
+        returns: member.returns.map(map_normalized_return_doc),
+        optional: member.optional.then_some(true),
+        readonly: member.readonly.then_some(true),
+        r#static: member.r#static.then_some(true),
+        private: member.private.then_some(true),
+        tags: (!member.tags.is_empty()).then(|| member.tags.into_iter().collect()),
+        line: member.line,
+        end_line: member.end_line,
+    }
+}
+
+fn map_normalized_doc_entry(entry: NormalizedDocEntry) -> JsDocEntry {
+    JsDocEntry {
+        name: entry.name,
+        kind: entry.kind.as_str().to_string(),
+        description: entry.description,
+        params: (!entry.params.is_empty())
+            .then(|| entry.params.into_iter().map(map_normalized_param_doc).collect()),
+        returns: entry.returns.map(map_normalized_return_doc),
+        examples: (!entry.examples.is_empty()).then_some(entry.examples),
+        tags: (!entry.tags.is_empty()).then(|| entry.tags.into_iter().collect()),
+        private: entry.private,
+        file: entry.file,
+        line: entry.line,
+        end_line: entry.end_line,
+        signature: entry.signature,
+        members: (!entry.members.is_empty())
+            .then(|| entry.members.into_iter().map(map_normalized_member).collect()),
+    }
+}
+
+fn path_to_string(path: &Path) -> String {
+    path.to_string_lossy().to_string()
+}
+
+fn convert_entrypoint_spec(spec: JsEntryPointSpec) -> EntryPointSpec {
+    EntryPointSpec { path: PathBuf::from(spec.path), name: spec.name }
+}
+
+fn convert_graph_options(options: Option<JsGraphOptions>) -> GraphOptions {
+    let options = options.unwrap_or_default();
+    GraphOptions {
+        root: options.root.map(PathBuf::from),
+        tsconfig: options.tsconfig.map(PathBuf::from),
+    }
+}
+
+fn convert_entrypoint_docs_options(
+    options: Option<JsEntryPointDocsOptions>,
+) -> EntryPointDocsOptions {
+    let options = options.unwrap_or_default();
+    EntryPointDocsOptions {
+        graph: GraphOptions {
+            root: options.root.map(PathBuf::from),
+            tsconfig: options.tsconfig.map(PathBuf::from),
+        },
+        include_private: options.private.unwrap_or(false),
+        include_internal: options.internal.unwrap_or(false),
+    }
+}
+
+fn map_export_kind(kind: ExportKind) -> String {
+    match kind {
+        ExportKind::Value => "value",
+        ExportKind::Type => "type",
+        ExportKind::ValueAndType => "valueAndType",
+        ExportKind::Namespace => "namespace",
+        ExportKind::Default => "default",
+    }
+    .to_string()
+}
+
+fn map_export_source(source: ExportSource) -> JsExportSource {
+    match source {
+        ExportSource::Local { module, original_name } => JsExportSource {
+            kind: "local".to_string(),
+            module: Some(path_to_string(&module)),
+            package: None,
+            original_name,
+            type_only: false,
+        },
+        ExportSource::External { package, original_name, type_only } => JsExportSource {
+            kind: "external".to_string(),
+            module: None,
+            package: Some(package),
+            original_name,
+            type_only,
+        },
+    }
+}
+
+fn map_public_export(export: PublicExport) -> JsPublicExport {
+    JsPublicExport {
+        name: export.name,
+        kind: map_export_kind(export.kind),
+        source: map_export_source(export.source),
+    }
+}
+
+fn map_export_graph(graph: ExportGraph) -> JsExportGraph {
+    JsExportGraph {
+        entrypoints: graph
+            .entrypoints
+            .into_iter()
+            .map(|entrypoint| JsEntrypointModule {
+                name: entrypoint.name,
+                source_path: path_to_string(&entrypoint.source_path),
+                exports: entrypoint.exports.into_iter().map(map_public_export).collect(),
+            })
+            .collect(),
+        modules: graph
+            .modules
+            .into_values()
+            .map(|module| JsResolvedModule {
+                path: path_to_string(&module.path),
+                exports: module.exports.into_iter().map(map_public_export).collect(),
+            })
+            .collect(),
+    }
+}
+
+fn map_docs_nav_item(item: DocsNavItem) -> JsDocsNavItem {
+    JsDocsNavItem {
+        title: item.title,
+        path: item.path,
+        children: item.children.map(|children| {
+            children.into_iter().map(map_docs_nav_item).collect::<Vec<JsDocsNavItem>>()
+        }),
+    }
+}
+
+fn convert_docs_nav_item(item: JsDocsNavItem) -> DocsNavItem {
+    DocsNavItem {
+        title: item.title,
+        path: item.path,
+        children: item.children.map(|children| {
+            children.into_iter().map(convert_docs_nav_item).collect::<Vec<DocsNavItem>>()
+        }),
+    }
+}
+
+fn convert_markdown_param(param: JsDocParam) -> ApiParamDoc {
+    ApiParamDoc {
+        name: param.name,
+        type_annotation: param.r#type,
+        description: param.description,
+        optional: param.optional.unwrap_or(false),
+        default_value: param.r#default,
+    }
+}
+
+fn convert_markdown_return(return_doc: JsDocReturn) -> ApiReturnDoc {
+    ApiReturnDoc { type_annotation: return_doc.r#type, description: return_doc.description }
+}
+
+fn convert_markdown_tag(tag: JsDocsMarkdownTag) -> ApiDocTag {
+    ApiDocTag { tag: tag.tag, value: tag.value }
+}
+
+fn convert_markdown_member(member: JsDocMember) -> ApiDocMember {
+    ApiDocMember {
+        name: member.name,
+        kind: member.kind,
+        description: member.description,
+        signature: member.signature,
+        type_annotation: member.r#type,
+        params: member.params.unwrap_or_default().into_iter().map(convert_markdown_param).collect(),
+        returns: member.returns.map(convert_markdown_return),
+        optional: member.optional.unwrap_or(false),
+        readonly: member.readonly.unwrap_or(false),
+        r#static: member.r#static.unwrap_or(false),
+        private: member.private.unwrap_or(false),
+        tags: member
+            .tags
+            .unwrap_or_default()
+            .into_iter()
+            .map(|(tag, value)| ApiDocTag { tag, value })
+            .collect(),
+        line: member.line,
+        end_line: member.end_line,
+    }
+}
+
+fn convert_markdown_entry(entry: JsDocsMarkdownEntry) -> ApiDocEntry {
+    ApiDocEntry {
+        name: entry.name,
+        kind: entry.kind,
+        description: entry.description,
+        params: entry.params.unwrap_or_default().into_iter().map(convert_markdown_param).collect(),
+        returns: entry.returns.map(convert_markdown_return),
+        examples: entry.examples.unwrap_or_default(),
+        tags: entry.tags.unwrap_or_default().into_iter().map(convert_markdown_tag).collect(),
+        private: entry.private,
+        file: entry.file,
+        line: entry.line,
+        end_line: entry.end_line,
+        signature: entry.signature,
+        members: entry
+            .members
+            .unwrap_or_default()
+            .into_iter()
+            .map(convert_markdown_member)
+            .collect(),
+    }
+}
+
+fn convert_markdown_module(module: JsDocsMarkdownModule) -> ApiDocModule {
+    ApiDocModule {
+        file: module.file,
+        entries: module.entries.into_iter().map(convert_markdown_entry).collect(),
+    }
+}
+
+fn map_extracted_doc_module(module: ExtractedDocModule) -> JsExtractedDocsModule {
+    JsExtractedDocsModule {
+        file: module.file,
+        entries: module.entries.into_iter().map(map_normalized_doc_entry).collect(),
+    }
+}
+
+fn convert_docs_output_options(options: Option<JsDocsOutputOptions>) -> DocsOutputOptions {
+    let options = options.unwrap_or_default();
+    DocsOutputOptions {
+        generate_nav: options.generate_nav.unwrap_or(false),
+        group_by: options.group_by.unwrap_or_else(|| "file".to_string()),
+        generated_at: options.generated_at.unwrap_or_default(),
     }
 }
 
@@ -301,13 +859,167 @@ fn map_doc_item(item: DocItem) -> JsSourceDocItem {
 pub fn extract_file_docs(
     file_path: String,
     include_private: Option<bool>,
+    include_internal: Option<bool>,
 ) -> Result<Vec<JsSourceDocItem>> {
-    let extractor = DocExtractor::with_private(include_private.unwrap_or(false));
+    let extractor = DocExtractor::with_visibility(
+        include_private.unwrap_or(false),
+        include_internal.unwrap_or(false),
+    );
     let items = extractor
         .extract_file(Path::new(&file_path))
         .map_err(|err| Error::from_reason(err.to_string()))?;
 
     Ok(items.into_iter().map(map_doc_item).collect())
+}
+
+/// Extracts normalized documentation entries from a JavaScript/TypeScript file using Oxc.
+#[napi(js_name = "extractFileDocEntries")]
+pub fn extract_file_doc_entries(
+    file_path: String,
+    include_private: Option<bool>,
+    include_internal: Option<bool>,
+) -> Result<Vec<JsDocEntry>> {
+    let extractor = DocExtractor::with_visibility(
+        include_private.unwrap_or(false),
+        include_internal.unwrap_or(false),
+    );
+    let items = extractor
+        .extract_file(Path::new(&file_path))
+        .map_err(|err| Error::from_reason(err.to_string()))?;
+
+    Ok(normalize_doc_items(items).into_iter().map(map_normalized_doc_entry).collect())
+}
+
+/// Generates sidebar navigation metadata from documentation file paths.
+#[napi(js_name = "generateDocsNavMetadata")]
+pub fn generate_docs_nav_metadata(
+    files: Vec<String>,
+    base_path: Option<String>,
+) -> Vec<JsDocsNavItem> {
+    generate_nav_metadata(&files, base_path.as_deref()).into_iter().map(map_docs_nav_item).collect()
+}
+
+/// Generates TypeScript source code for documentation navigation metadata.
+#[napi(js_name = "generateDocsNavCode")]
+pub fn generate_docs_nav_code(
+    nav_items: Vec<JsDocsNavItem>,
+    export_name: Option<String>,
+) -> String {
+    let nav_items = nav_items.into_iter().map(convert_docs_nav_item).collect::<Vec<_>>();
+    generate_nav_code(&nav_items, export_name.as_deref())
+}
+
+/// Collects source files for generated API documentation.
+#[napi(js_name = "collectDocsSourceFiles")]
+pub fn collect_docs_source_files(
+    src_dir: String,
+    include: Vec<String>,
+    exclude: Vec<String>,
+) -> Vec<String> {
+    ox_content_docs::collect_source_files(&src_dir, &include, &exclude)
+}
+
+/// Extracts normalized documentation entries from source directories using Oxc.
+#[napi(js_name = "extractDocsFromDirectories")]
+pub fn extract_docs_from_directories_napi(
+    src_dirs: Vec<String>,
+    include: Vec<String>,
+    exclude: Vec<String>,
+    include_private: Option<bool>,
+    include_internal: Option<bool>,
+) -> Result<Vec<JsExtractedDocsModule>> {
+    let modules = extract_docs_from_directories(
+        &src_dirs,
+        &include,
+        &exclude,
+        include_private.unwrap_or(false),
+        include_internal.unwrap_or(false),
+    )
+    .map_err(|err| Error::from_reason(err.to_string()))?;
+
+    Ok(modules.into_iter().map(map_extracted_doc_module).collect())
+}
+
+/// Builds the public API export graph from entry points.
+#[napi(js_name = "buildExportGraph")]
+pub fn build_export_graph_napi(
+    entry_points: Vec<JsEntryPointSpec>,
+    options: Option<JsGraphOptions>,
+) -> Result<JsExportGraph> {
+    let entry_points = entry_points.into_iter().map(convert_entrypoint_spec).collect::<Vec<_>>();
+    let graph = build_export_graph(&entry_points, &convert_graph_options(options))
+        .map_err(|error| Error::from_reason(error.to_string()))?;
+    Ok(map_export_graph(graph))
+}
+
+/// Extracts generated API docs grouped by public entry points.
+#[napi(js_name = "extractDocsFromEntryPoints")]
+pub fn extract_docs_from_entry_points_napi(
+    entry_points: Vec<JsEntryPointSpec>,
+    options: Option<JsEntryPointDocsOptions>,
+) -> Result<Vec<JsEntrypointDocsModule>> {
+    let entry_points = entry_points.into_iter().map(convert_entrypoint_spec).collect::<Vec<_>>();
+    let modules =
+        extract_docs_from_entry_points(&entry_points, &convert_entrypoint_docs_options(options))
+            .map_err(|error| Error::from_reason(error.to_string()))?;
+
+    Ok(modules
+        .into_iter()
+        .map(|module| JsEntrypointDocsModule {
+            name: module.name,
+            file: module.file,
+            source_path: path_to_string(&module.source_path),
+            entries: module.entries.into_iter().map(map_normalized_doc_entry).collect(),
+            exports: module.exports.into_iter().map(map_public_export).collect(),
+        })
+        .collect())
+}
+
+/// Generates Markdown API reference pages from extracted documentation entries.
+#[napi(js_name = "generateDocsMarkdown")]
+pub fn generate_docs_markdown(
+    docs: Vec<JsDocsMarkdownModule>,
+    options: Option<JsDocsMarkdownOptions>,
+) -> HashMap<String, String> {
+    let options =
+        options.map_or_else(MarkdownDocsOptions::default, |options| MarkdownDocsOptions {
+            group_by: options.group_by.unwrap_or_else(|| "file".to_string()),
+            github_url: options.github_url,
+        });
+    generate_markdown(&docs.into_iter().map(convert_markdown_module).collect::<Vec<_>>(), &options)
+        .into_iter()
+        .collect()
+}
+
+/// Generates the machine-readable docs data JSON payload.
+#[napi(js_name = "generateDocsDataJson")]
+pub fn generate_docs_data_json_napi(
+    docs: Vec<JsDocsMarkdownModule>,
+    generated_at: String,
+) -> Result<String> {
+    generate_docs_data_json(
+        &docs.into_iter().map(convert_markdown_module).collect::<Vec<_>>(),
+        &generated_at,
+    )
+    .map_err(|error| Error::from_reason(error.to_string()))
+}
+
+/// Writes generated API documentation files and native sidecars.
+#[napi(js_name = "writeGeneratedDocs")]
+#[allow(clippy::implicit_hasher)]
+pub fn write_generated_docs(
+    docs: HashMap<String, String>,
+    out_dir: String,
+    extracted_docs: Option<Vec<JsDocsMarkdownModule>>,
+    options: Option<JsDocsOutputOptions>,
+) -> Result<()> {
+    let docs = docs.into_iter().collect::<BTreeMap<_, _>>();
+    let extracted_docs = extracted_docs
+        .map(|docs| docs.into_iter().map(convert_markdown_module).collect::<Vec<_>>());
+    let options = convert_docs_output_options(options);
+
+    write_docs_output(&docs, Path::new(&out_dir), extracted_docs.as_deref(), &options)
+        .map_err(|error| Error::from_reason(error.to_string()))
 }
 
 /// Restores code block metadata after JavaScript-side syntax highlighting.
@@ -322,218 +1034,48 @@ pub fn merge_highlighted_code_blocks(original_html: String, highlighted_html: St
 #[napi]
 pub fn transform(source: String, options: Option<JsTransformOptions>) -> TransformResult {
     let opts = options.unwrap_or_default();
-    let toc_max_depth = opts.toc_max_depth.unwrap_or(3);
+    MarkdownTransformer::from_options(&opts).transform(&source)
+}
 
-    // Parse frontmatter
-    let (content, frontmatter) = parse_frontmatter(&source);
+/// Transforms Markdown into a raw mdast transfer buffer.
+///
+/// This keeps frontmatter parsing and mdast generation on the Rust side and
+/// transfers a single external memory block to JavaScript for deserialization.
+#[napi]
+pub fn transform_mdast_raw(
+    source: String,
+    options: Option<JsTransformOptions>,
+) -> Result<Uint8Array> {
+    let opts = options.unwrap_or_default();
+    MarkdownTransformer::from_options(&opts).transform_mdast_raw(&source)
+}
 
-    // Parse markdown
-    let allocator = create_allocator_for_source(&content);
-    let parser_options = transform_options_to_parser_options(&opts);
-    let parser = Parser::with_options(&allocator, &content, parser_options);
+/// Splits Markdown source into content and frontmatter in a raw transfer buffer.
+///
+/// This is used by JavaScript-side markdown-it and custom unified parser paths so
+/// frontmatter stripping can stay on the Rust side even when parsing continues in JS.
+#[napi]
+pub fn prepare_source_raw(source: String, options: Option<JsSourceOptions>) -> Result<Uint8Array> {
+    let frontmatter = options.unwrap_or_default().frontmatter.unwrap_or(true);
+    MarkdownTransformer::with_frontmatter(frontmatter).prepare_source_raw(&source)
+}
 
-    let result = parser.parse();
-    match result {
-        Ok(doc) => {
-            // Extract TOC from headings
-            let toc = extract_toc(&doc, toc_max_depth);
+/// Splits Markdown source into content and parsed frontmatter.
+#[napi(js_name = "prepareSource")]
+pub fn prepare_source(source: String, options: Option<JsSourceOptions>) -> PreparedSourceResult {
+    let frontmatter = options.unwrap_or_default().frontmatter.unwrap_or(true);
+    let prepared = MarkdownTransformer::with_frontmatter(frontmatter).prepare_source(&source);
 
-            // Render to HTML
-            let renderer_options = transform_options_to_renderer_options(&opts);
-            let mut renderer = HtmlRenderer::with_options(renderer_options);
-            let html = renderer.render(&doc);
-
-            TransformResult {
-                html,
-                frontmatter: serde_json::to_string(&frontmatter)
-                    .unwrap_or_else(|_| "{}".to_string()),
-                toc,
-                errors: vec![],
-            }
-        }
-        Err(e) => TransformResult {
-            html: String::new(),
-            frontmatter: "{}".to_string(),
-            toc: vec![],
-            errors: vec![e.to_string()],
+    PreparedSourceResult {
+        content: prepared.content,
+        frontmatter: prepared.frontmatter,
+        source_offset: JsSourceOrigin {
+            byte_offset: prepared.source_origin.byte_offset,
+            offset: prepared.source_origin.offset,
+            line: prepared.source_origin.line,
+            column: prepared.source_origin.column,
         },
     }
-}
-
-/// Parses YAML frontmatter from Markdown content.
-fn parse_frontmatter(source: &str) -> (String, HashMap<String, serde_json::Value>) {
-    let mut frontmatter = HashMap::new();
-
-    // Check for frontmatter delimiter
-    if !source.starts_with("---") {
-        return (source.to_string(), frontmatter);
-    }
-
-    // Find the closing delimiter
-    let rest = &source[3..];
-    let Some(end_pos) = rest.find("\n---") else {
-        return (source.to_string(), frontmatter);
-    };
-
-    let frontmatter_str = &rest[..end_pos].trim_start_matches('\n');
-    let content = &rest[end_pos + 4..].trim_start_matches('\n');
-
-    // Parse simple YAML key-value pairs
-    for line in frontmatter_str.lines() {
-        let line = line.trim();
-        if line.is_empty() || line.starts_with('#') {
-            continue;
-        }
-
-        if let Some(colon_pos) = line.find(':') {
-            let key = line[..colon_pos].trim().to_string();
-            let value_str = line[colon_pos + 1..].trim();
-
-            let value = if value_str == "true" {
-                serde_json::Value::Bool(true)
-            } else if value_str == "false" {
-                serde_json::Value::Bool(false)
-            } else if let Ok(n) = value_str.parse::<i64>() {
-                serde_json::Value::Number(n.into())
-            } else if let Ok(n) = value_str.parse::<f64>() {
-                serde_json::Number::from_f64(n).map_or_else(
-                    || serde_json::Value::String(value_str.to_string()),
-                    serde_json::Value::Number,
-                )
-            } else {
-                // Remove surrounding quotes if present
-                let s = value_str.trim_matches('"').trim_matches('\'');
-                serde_json::Value::String(s.to_string())
-            };
-
-            frontmatter.insert(key, value);
-        }
-    }
-
-    (content.to_string(), frontmatter)
-}
-
-/// Extracts table of contents from document headings.
-fn extract_toc(doc: &Document, max_depth: u8) -> Vec<TocEntry> {
-    let mut entries = Vec::new();
-
-    for node in &doc.children {
-        if let Node::Heading(heading) = node {
-            if heading.depth <= max_depth {
-                let text = extract_heading_text(heading);
-                let slug = slugify(&text);
-                entries.push(TocEntry { depth: heading.depth, text, slug });
-            }
-        }
-    }
-
-    entries
-}
-
-/// Extracts plain text from a heading node.
-fn extract_heading_text(heading: &Heading) -> String {
-    let mut text = String::new();
-    for child in &heading.children {
-        collect_text(child, &mut text);
-    }
-    text
-}
-
-/// Recursively collects text from nodes.
-fn collect_text(node: &Node, text: &mut String) {
-    match node {
-        Node::Text(t) => text.push_str(t.value),
-        Node::Emphasis(e) => {
-            for child in &e.children {
-                collect_text(child, text);
-            }
-        }
-        Node::Strong(s) => {
-            for child in &s.children {
-                collect_text(child, text);
-            }
-        }
-        Node::InlineCode(c) => text.push_str(c.value),
-        Node::Delete(d) => {
-            for child in &d.children {
-                collect_text(child, text);
-            }
-        }
-        Node::Link(l) => {
-            for child in &l.children {
-                collect_text(child, text);
-            }
-        }
-        _ => {}
-    }
-}
-
-/// Converts text to URL-friendly slug.
-fn slugify(text: &str) -> String {
-    text.to_lowercase()
-        .chars()
-        .map(|c| if c.is_alphanumeric() || c == ' ' || c == '-' { c } else { ' ' })
-        .collect::<String>()
-        .split_whitespace()
-        .collect::<Vec<_>>()
-        .join("-")
-}
-
-/// Converts transform options to parser options.
-fn transform_options_to_parser_options(opts: &JsTransformOptions) -> ParserOptions {
-    let mut options =
-        if opts.gfm.unwrap_or(false) { ParserOptions::gfm() } else { ParserOptions::default() };
-
-    if let Some(v) = opts.footnotes {
-        options.footnotes = v;
-    }
-    if let Some(v) = opts.task_lists {
-        options.task_lists = v;
-    }
-    if let Some(v) = opts.tables {
-        options.tables = v;
-    }
-    if let Some(v) = opts.strikethrough {
-        options.strikethrough = v;
-    }
-    if let Some(v) = opts.autolinks {
-        options.autolinks = v;
-    }
-
-    options
-}
-
-/// Converts transform options to renderer options.
-fn transform_options_to_renderer_options(opts: &JsTransformOptions) -> HtmlRendererOptions {
-    let mut options = HtmlRendererOptions::new();
-
-    if let Some(v) = opts.convert_md_links {
-        options.convert_md_links = v;
-    }
-    if let Some(ref v) = opts.base_url {
-        options.base_url.clone_from(v);
-    }
-    if let Some(ref v) = opts.source_path {
-        options.source_path.clone_from(v);
-    }
-    if let Some(v) = opts.code_annotations {
-        options.code_annotations = v;
-    }
-    if let Some(ref v) = opts.code_annotation_meta_key {
-        options.code_annotation_meta_key.clone_from(v);
-    }
-    if let Some(ref v) = opts.code_annotation_syntax {
-        options.code_annotation_syntax = match v.as_str() {
-            "vitepress" => ox_content_renderer::CodeAnnotationSyntax::VitePress,
-            "both" => ox_content_renderer::CodeAnnotationSyntax::Both,
-            _ => ox_content_renderer::CodeAnnotationSyntax::Attribute,
-        };
-    }
-    if let Some(v) = opts.code_annotation_default_line_numbers {
-        options.code_annotation_default_line_numbers = v;
-    }
-
-    options
 }
 
 // =============================================================================
@@ -591,39 +1133,7 @@ impl Task for TransformTask {
     type JsValue = TransformResult;
 
     fn compute(&mut self) -> Result<Self::Output> {
-        let toc_max_depth = self.options.toc_max_depth.unwrap_or(3);
-
-        // Parse frontmatter
-        let (content, frontmatter) = parse_frontmatter(&self.source);
-
-        // Parse markdown
-        let allocator = create_allocator_for_source(&content);
-        let parser_options = transform_options_to_parser_options(&self.options);
-        let parser = Parser::with_options(&allocator, &content, parser_options);
-
-        let result = match parser.parse() {
-            Ok(doc) => {
-                let toc = extract_toc(&doc, toc_max_depth);
-                let renderer_options = transform_options_to_renderer_options(&self.options);
-                let mut renderer = HtmlRenderer::with_options(renderer_options);
-                let html = renderer.render(&doc);
-
-                TransformResult {
-                    html,
-                    frontmatter: serde_json::to_string(&frontmatter)
-                        .unwrap_or_else(|_| "{}".to_string()),
-                    toc,
-                    errors: vec![],
-                }
-            }
-            Err(e) => TransformResult {
-                html: String::new(),
-                frontmatter: "{}".to_string(),
-                toc: vec![],
-                errors: vec![e.to_string()],
-            },
-        };
-        Ok(result)
+        Ok(MarkdownTransformer::from_options(&self.options).transform(&self.source))
     }
 
     fn resolve(&mut self, _env: Env, output: Self::Output) -> Result<Self::JsValue> {
@@ -741,6 +1251,76 @@ pub struct JsSearchDocument {
     pub code: Vec<String>,
 }
 
+fn map_search_document(doc: SearchDocument) -> JsSearchDocument {
+    JsSearchDocument {
+        id: doc.id,
+        title: doc.title,
+        url: doc.url,
+        body: doc.body,
+        headings: doc.headings,
+        code: doc.code,
+    }
+}
+
+fn extract_search_document_from_source(
+    source: &str,
+    id: String,
+    url: String,
+    parser_options: ParserOptions,
+) -> SearchDocument {
+    let (content, frontmatter) = parse_frontmatter(source);
+    let frontmatter_title = frontmatter.get("title").and_then(|v| v.as_str()).map(String::from);
+    let allocator = create_allocator_for_source(&content);
+    let parser = Parser::with_options(&allocator, &content, parser_options);
+
+    let result = parser.parse();
+    let document = match &result {
+        Ok(doc) => {
+            let mut indexer = DocumentIndexer::new();
+            indexer.extract(doc);
+
+            SearchDocument {
+                id,
+                title: frontmatter_title
+                    .unwrap_or_else(|| indexer.title().map(String::from).unwrap_or_default()),
+                url,
+                body: indexer.body().to_string(),
+                headings: indexer.headings().to_vec(),
+                code: indexer.code().to_vec(),
+            }
+        }
+        Err(_) => SearchDocument {
+            id,
+            title: frontmatter_title.unwrap_or_default(),
+            url,
+            body: String::new(),
+            headings: Vec::new(),
+            code: Vec::new(),
+        },
+    };
+    drop(result);
+
+    document
+}
+
+fn build_search_index_json(documents: impl IntoIterator<Item = SearchDocument>) -> String {
+    let mut builder = SearchIndexBuilder::new();
+
+    for doc in documents {
+        builder.add_document(doc);
+    }
+
+    builder.build().to_json()
+}
+
+fn search_document_id(src_dir: &Path, file: &str, extensions: &[String]) -> String {
+    let file_path = Path::new(file);
+    let relative_path = file_path.strip_prefix(src_dir).unwrap_or(file_path);
+    let relative_path = relative_path.to_string_lossy().replace('\\', "/");
+
+    ox_content_search::strip_markdown_extension(&relative_path, extensions)
+}
+
 /// Search result for JavaScript.
 #[napi(object)]
 pub struct JsSearchResult {
@@ -756,6 +1336,15 @@ pub struct JsSearchResult {
     pub matches: Vec<String>,
     /// Content snippet.
     pub snippet: String,
+}
+
+/// Search query split into free text and scope prefixes.
+#[napi(object)]
+pub struct JsScopedSearchQuery {
+    /// Free-text terms after removing scope prefixes.
+    pub text: String,
+    /// Deduplicated lowercase scopes.
+    pub scopes: Vec<String>,
 }
 
 /// Search options for JavaScript.
@@ -783,26 +1372,71 @@ impl From<JsSearchOptions> for SearchOptions {
     }
 }
 
+/// Resolved search runtime options for JavaScript.
+#[napi(object)]
+pub struct JsSearchRuntimeOptions {
+    /// Whether search is enabled.
+    pub enabled: bool,
+    /// Maximum number of results.
+    pub limit: u32,
+    /// Enable prefix matching.
+    pub prefix: bool,
+    /// Search input placeholder.
+    pub placeholder: String,
+    /// Keyboard shortcut to focus search.
+    pub hotkey: String,
+}
+
+impl From<JsSearchRuntimeOptions> for SearchRuntimeOptions {
+    fn from(options: JsSearchRuntimeOptions) -> Self {
+        Self {
+            enabled: options.enabled,
+            limit: options.limit,
+            prefix: options.prefix,
+            placeholder: options.placeholder,
+            hotkey: options.hotkey,
+        }
+    }
+}
+
 /// Builds a search index from documents.
 ///
 /// Takes an array of documents and returns a serialized search index as JSON.
 #[napi]
 pub fn build_search_index(documents: Vec<JsSearchDocument>) -> String {
-    let mut builder = SearchIndexBuilder::new();
+    build_search_index_json(documents.into_iter().map(|doc| SearchDocument {
+        id: doc.id,
+        title: doc.title,
+        url: doc.url,
+        body: doc.body,
+        headings: doc.headings,
+        code: doc.code,
+    }))
+}
 
-    for doc in documents {
-        builder.add_document(ox_content_search::SearchDocument {
-            id: doc.id,
-            title: doc.title,
-            url: doc.url,
-            body: doc.body,
-            headings: doc.headings,
-            code: doc.code,
+/// Builds a search index directly from Markdown files under a source directory.
+///
+/// File discovery, Markdown parsing, search document extraction, and index
+/// construction all run on the Rust side.
+#[napi(js_name = "buildSearchIndexFromDirectory")]
+pub fn build_search_index_from_directory(
+    src_dir: String,
+    base: String,
+    extensions: Vec<String>,
+) -> String {
+    let src_path = Path::new(&src_dir);
+    let parser_options = ParserOptions::gfm();
+    let documents = ox_content_search::collect_markdown_files(&src_dir, &extensions)
+        .into_iter()
+        .filter_map(|file| {
+            let source = fs::read_to_string(&file).ok()?;
+            let id = search_document_id(src_path, &file, &extensions);
+            let url = format!("{base}{id}");
+
+            Some(extract_search_document_from_source(&source, id, url, parser_options.clone()))
         });
-    }
 
-    let index = builder.build();
-    index.to_json()
+    build_search_index_json(documents)
 }
 
 /// Searches a serialized index.
@@ -835,6 +1469,54 @@ pub fn search_index(
         .collect()
 }
 
+/// Splits a search query into free-text terms and `@scope` prefixes.
+#[napi(js_name = "parseScopedSearchQuery")]
+pub fn parse_scoped_search_query(query: String) -> JsScopedSearchQuery {
+    let parsed = ox_content_search::parse_scoped_search_query(&query);
+    JsScopedSearchQuery { text: parsed.text, scopes: parsed.scopes }
+}
+
+/// Derives hierarchical search scopes from a document id or URL.
+#[napi(js_name = "getSearchDocumentScopes")]
+pub fn get_search_document_scopes(id: String, url: String) -> Vec<String> {
+    ox_content_search::get_search_document_scopes(&id, &url)
+}
+
+/// Returns true when a document belongs to at least one requested search scope.
+#[napi(js_name = "matchesSearchScopes")]
+pub fn matches_search_scopes(id: String, url: String, scopes: Vec<String>) -> bool {
+    ox_content_search::matches_search_scopes(&id, &url, &scopes)
+}
+
+/// Generates the client-side search runtime module.
+#[napi(js_name = "generateSearchModule")]
+pub fn generate_search_module(options_json: String, index_path: String) -> String {
+    ox_content_search::generate_search_module(&options_json, &index_path)
+}
+
+/// Generates the client-side search runtime module from typed options.
+#[napi(js_name = "generateSearchModuleFromOptions")]
+pub fn generate_search_module_from_options(
+    options: JsSearchRuntimeOptions,
+    index_path: String,
+) -> String {
+    ox_content_search::generate_search_module_with_options(&options.into(), &index_path)
+}
+
+/// Collects Markdown files for search indexing from a source directory.
+#[napi(js_name = "collectSearchMarkdownFiles")]
+pub fn collect_search_markdown_files(src_dir: String, extensions: Vec<String>) -> Vec<String> {
+    ox_content_search::collect_markdown_files(&src_dir, &extensions)
+}
+
+/// Writes a serialized search index to `search-index.json` under an output directory.
+#[napi(js_name = "writeSearchIndex")]
+pub fn write_search_index(index_json: String, out_dir: String) -> Result<()> {
+    ox_content_search::write_search_index(&index_json, &out_dir)
+        .map_err(|err| Error::from_reason(format!("failed to write search index: {err}")))?;
+    Ok(())
+}
+
 // =============================================================================
 // SSG HTML Generation API
 // =============================================================================
@@ -849,6 +1531,8 @@ pub struct JsSsgNavItem {
     pub path: String,
     /// Full href.
     pub href: String,
+    pub children: Option<Vec<JsSsgNavItem>>,
+    pub collapsed: Option<bool>,
 }
 
 /// Navigation group for SSG.
@@ -859,6 +1543,86 @@ pub struct JsSsgNavGroup {
     pub title: String,
     /// Navigation items.
     pub items: Vec<JsSsgNavItem>,
+    pub collapsed: Option<bool>,
+}
+
+/// Resolved SSG output and public route paths.
+#[napi(object)]
+pub struct JsSsgRoutePaths {
+    /// HTML output file path.
+    pub output_path: String,
+    /// Route path without extension.
+    pub url_path: String,
+    /// Public HTML href.
+    pub href: String,
+    /// OG image output file path.
+    pub og_image_path: String,
+    /// OG image public URL.
+    pub og_image_url: String,
+}
+
+/// Theme sidebar item for SSG navigation generation.
+#[napi(object)]
+#[derive(Clone, Default)]
+pub struct JsSsgSidebarItem {
+    /// Display text.
+    pub text: Option<String>,
+    /// Link URL or route path.
+    pub link: Option<String>,
+    /// Child sidebar items.
+    pub items: Option<Vec<JsSsgSidebarItem>>,
+    /// Whether this group is collapsed by default.
+    pub collapsed: Option<bool>,
+}
+
+/// Manual SSG navigation item supplied by user configuration.
+#[napi(object)]
+#[derive(Clone)]
+pub struct JsSsgNavigationItem {
+    pub title: String,
+    pub path: Option<String>,
+    pub href: Option<String>,
+}
+
+/// Manual SSG navigation group supplied by user configuration.
+#[napi(object)]
+#[derive(Clone)]
+pub struct JsSsgNavigationGroup {
+    pub title: String,
+    pub items: Vec<JsSsgNavigationItem>,
+}
+
+/// Generated SSG HTML page for shared asset extraction.
+#[napi(object)]
+#[derive(Clone)]
+pub struct JsSsgGeneratedHtmlPage {
+    /// Source Markdown path.
+    pub input_path: String,
+    /// Output HTML path.
+    pub output_path: String,
+    /// HTML content.
+    pub html: String,
+}
+
+/// Shared SSG asset extracted from generated pages.
+#[napi(object)]
+#[derive(Clone)]
+pub struct JsSsgSharedAsset {
+    /// Output file path.
+    pub output_path: String,
+    /// Public URL path used from HTML.
+    pub public_path: String,
+    /// Asset content.
+    pub content: String,
+}
+
+/// Result of SSG shared asset extraction.
+#[napi(object)]
+pub struct JsSsgExternalizedAssets {
+    /// HTML pages with inline assets replaced.
+    pub pages: Vec<JsSsgGeneratedHtmlPage>,
+    /// Extracted shared assets.
+    pub assets: Vec<JsSsgSharedAsset>,
 }
 
 /// Hero action for entry page.
@@ -956,10 +1720,34 @@ pub struct JsSsgPageData {
     pub content: String,
     /// Table of contents entries.
     pub toc: Vec<TocEntry>,
+    /// Last updated timestamp in milliseconds since the Unix epoch.
+    pub last_updated: Option<f64>,
     /// URL path.
     pub path: String,
     /// Entry page configuration (if layout: entry).
     pub entry_page: Option<JsEntryPageConfig>,
+}
+
+/// Returns the last git commit timestamp for a file in milliseconds.
+#[napi]
+pub fn get_git_last_updated(file_path: String, root: Option<String>) -> Option<f64> {
+    let root = root.map(PathBuf::from)?;
+    let file = PathBuf::from(&file_path);
+    let pathspec = file.strip_prefix(&root).ok().and_then(|p| p.to_str()).unwrap_or(&file_path);
+    let output = Command::new("git")
+        .arg("-C")
+        .arg(root)
+        .args(["log", "-1", "--format=%ct", "--"])
+        .arg(pathspec)
+        .output()
+        .ok()?;
+
+    if !output.status.success() {
+        return None;
+    }
+
+    let seconds = String::from_utf8(output.stdout).ok()?.trim().parse::<f64>().ok()?;
+    Some(seconds * 1_000.0)
 }
 
 // =============================================================================
@@ -1058,6 +1846,22 @@ pub struct JsSocialLinks {
     pub twitter: Option<String>,
     /// Discord URL.
     pub discord: Option<String>,
+    /// Custom social links.
+    pub links: Option<Vec<JsSocialLink>>,
+}
+
+/// Custom social link for JavaScript.
+#[napi(object)]
+#[derive(Clone)]
+pub struct JsSocialLink {
+    /// Icon label.
+    pub icon: Option<String>,
+    /// Inline SVG icon.
+    pub icon_svg: Option<String>,
+    /// Link URL.
+    pub link: String,
+    /// Accessible label.
+    pub aria_label: Option<String>,
 }
 
 /// Embedded HTML content for specific positions.
@@ -1184,6 +1988,17 @@ fn convert_theme_config(theme: Option<JsThemeConfig>) -> Option<ox_content_ssg::
             github: s.github,
             twitter: s.twitter,
             discord: s.discord,
+            links: s.links.map(|links| {
+                links
+                    .into_iter()
+                    .map(|l| ox_content_ssg::SocialLink {
+                        icon: l.icon,
+                        icon_svg: l.icon_svg,
+                        link: l.link,
+                        aria_label: l.aria_label,
+                    })
+                    .collect()
+            }),
         }),
         embed: t.embed.map(|e| ox_content_ssg::ThemeEmbed {
             head: e.head,
@@ -1247,6 +2062,212 @@ fn convert_entry_page_config(
     })
 }
 
+fn convert_nav_item(item: JsSsgNavItem) -> ox_content_ssg::NavItem {
+    ox_content_ssg::NavItem {
+        title: item.title,
+        path: item.path,
+        href: item.href,
+        children: item.children.unwrap_or_default().into_iter().map(convert_nav_item).collect(),
+        collapsed: item.collapsed,
+    }
+}
+
+fn map_nav_item(item: ox_content_ssg::NavItem) -> JsSsgNavItem {
+    JsSsgNavItem {
+        title: item.title,
+        path: item.path,
+        href: item.href,
+        children: if item.children.is_empty() {
+            None
+        } else {
+            Some(item.children.into_iter().map(map_nav_item).collect())
+        },
+        collapsed: item.collapsed,
+    }
+}
+
+fn map_nav_group(group: ox_content_ssg::NavGroup) -> JsSsgNavGroup {
+    JsSsgNavGroup {
+        title: group.title,
+        items: group.items.into_iter().map(map_nav_item).collect(),
+        collapsed: group.collapsed,
+    }
+}
+
+fn convert_sidebar_item(item: JsSsgSidebarItem) -> ox_content_ssg::SidebarItem {
+    ox_content_ssg::SidebarItem {
+        text: item.text,
+        link: item.link,
+        items: item.items.unwrap_or_default().into_iter().map(convert_sidebar_item).collect(),
+        collapsed: item.collapsed,
+    }
+}
+
+fn convert_navigation_item(item: JsSsgNavigationItem) -> ox_content_ssg::ManualNavigationItem {
+    ox_content_ssg::ManualNavigationItem { title: item.title, path: item.path, href: item.href }
+}
+
+fn convert_navigation_group(group: JsSsgNavigationGroup) -> ox_content_ssg::ManualNavigationGroup {
+    ox_content_ssg::ManualNavigationGroup {
+        title: group.title,
+        items: group.items.into_iter().map(convert_navigation_item).collect(),
+    }
+}
+
+fn map_route_paths(paths: ox_content_ssg::RoutePaths) -> JsSsgRoutePaths {
+    JsSsgRoutePaths {
+        output_path: paths.output_path,
+        url_path: paths.url_path,
+        href: paths.href,
+        og_image_path: paths.og_image_path,
+        og_image_url: paths.og_image_url,
+    }
+}
+
+fn convert_generated_html_page(page: JsSsgGeneratedHtmlPage) -> ox_content_ssg::GeneratedHtmlPage {
+    ox_content_ssg::GeneratedHtmlPage {
+        input_path: page.input_path,
+        output_path: page.output_path,
+        html: page.html,
+    }
+}
+
+fn map_generated_html_page(page: ox_content_ssg::GeneratedHtmlPage) -> JsSsgGeneratedHtmlPage {
+    JsSsgGeneratedHtmlPage {
+        input_path: page.input_path,
+        output_path: page.output_path,
+        html: page.html,
+    }
+}
+
+fn map_shared_asset(asset: ox_content_ssg::SharedAsset) -> JsSsgSharedAsset {
+    JsSsgSharedAsset {
+        output_path: asset.output_path,
+        public_path: asset.public_path,
+        content: asset.content,
+    }
+}
+
+/// Resolves all output and public route paths for an SSG page.
+#[napi(js_name = "resolveSsgRoutePaths")]
+pub fn resolve_ssg_route_paths(
+    input_path: String,
+    src_dir: String,
+    out_dir: String,
+    base: String,
+    extension: String,
+    site_url: Option<String>,
+) -> JsSsgRoutePaths {
+    map_route_paths(ox_content_ssg::resolve_route_paths(
+        &input_path,
+        &src_dir,
+        &out_dir,
+        &base,
+        &extension,
+        site_url.as_deref(),
+    ))
+}
+
+/// Converts a markdown file path to its corresponding SSG HTML output path.
+#[napi(js_name = "getSsgOutputPath")]
+pub fn get_ssg_output_path(
+    input_path: String,
+    src_dir: String,
+    out_dir: String,
+    extension: String,
+) -> String {
+    ox_content_ssg::get_output_path(&input_path, &src_dir, &out_dir, &extension)
+}
+
+/// Converts a markdown file path to a relative SSG URL path.
+#[napi(js_name = "getSsgUrlPath")]
+pub fn get_ssg_url_path(input_path: String, src_dir: String) -> String {
+    ox_content_ssg::get_url_path(&input_path, &src_dir)
+}
+
+/// Converts a markdown file path to an SSG href.
+#[napi(js_name = "getSsgHref")]
+pub fn get_ssg_href(
+    input_path: String,
+    src_dir: String,
+    base: String,
+    extension: String,
+) -> String {
+    ox_content_ssg::get_href(&input_path, &src_dir, &base, &extension)
+}
+
+/// Resolves a page locale from an SSG URL path and configured locale codes.
+#[napi(js_name = "getSsgPageLocale")]
+pub fn get_ssg_page_locale(
+    url_path: String,
+    default_locale: String,
+    locale_codes: Vec<String>,
+) -> Option<String> {
+    ox_content_ssg::get_page_locale(&url_path, &default_locale, &locale_codes)
+}
+
+/// Extracts a page title from frontmatter title or rendered HTML.
+#[napi(js_name = "extractSsgTitle")]
+pub fn extract_ssg_title(content: String, frontmatter_title: Option<String>) -> String {
+    ox_content_ssg::extract_title(&content, frontmatter_title.as_deref())
+}
+
+/// Formats a file or directory segment as an SSG title.
+#[napi(js_name = "formatSsgTitle")]
+pub fn format_ssg_title(name: String) -> String {
+    ox_content_ssg::format_title(&name)
+}
+
+/// Builds SSG navigation groups from markdown files.
+#[napi(js_name = "buildSsgNavItems")]
+pub fn build_ssg_nav_items(
+    markdown_files: Vec<String>,
+    src_dir: String,
+    base: String,
+    extension: String,
+) -> Vec<JsSsgNavGroup> {
+    ox_content_ssg::build_nav_items(&markdown_files, &src_dir, &base, &extension)
+        .into_iter()
+        .map(map_nav_group)
+        .collect()
+}
+
+/// Builds SSG navigation groups from an explicit theme sidebar tree.
+#[napi(js_name = "buildSsgThemeNavItems")]
+pub fn build_ssg_theme_nav_items(
+    sidebar: Vec<JsSsgSidebarItem>,
+    base: String,
+    extension: String,
+) -> Vec<JsSsgNavGroup> {
+    let sidebar: Vec<ox_content_ssg::SidebarItem> =
+        sidebar.into_iter().map(convert_sidebar_item).collect();
+    ox_content_ssg::build_theme_nav_items(&sidebar, &base, &extension)
+        .into_iter()
+        .map(map_nav_group)
+        .collect()
+}
+
+/// Resolves manual SSG navigation groups.
+#[napi(js_name = "resolveSsgNavigationGroups")]
+pub fn resolve_ssg_navigation_groups(
+    navigation: Vec<JsSsgNavigationGroup>,
+    base: String,
+    extension: String,
+) -> Vec<JsSsgNavGroup> {
+    let navigation: Vec<ox_content_ssg::ManualNavigationGroup> =
+        navigation.into_iter().map(convert_navigation_group).collect();
+    ox_content_ssg::resolve_navigation_groups(&navigation, &base, &extension)
+        .into_iter()
+        .map(map_nav_group)
+        .collect()
+}
+
+/// Collects Markdown files for SSG from a source directory.
+#[napi(js_name = "collectSsgMarkdownFiles")]
+pub fn collect_ssg_markdown_files(src_dir: String, extensions: Vec<String>) -> Vec<String> {
+    ox_content_ssg::collect_markdown_files(&src_dir, &extensions)
+}
+
 /// Generates SSG HTML page with navigation and search.
 #[napi]
 pub fn generate_ssg_html(
@@ -1259,11 +2280,11 @@ pub fn generate_ssg_html(
         title: page_data.title,
         description: page_data.description,
         content: page_data.content,
-        toc: page_data
-            .toc
-            .into_iter()
-            .map(|t| ox_content_ssg::TocEntry { depth: t.depth, text: t.text, slug: t.slug })
-            .collect(),
+        toc: flatten_toc_entries(page_data.toc),
+        last_updated: page_data
+            .last_updated
+            .filter(|timestamp| timestamp.is_finite() && *timestamp >= 0.0)
+            .map(|timestamp| timestamp as i64),
         path: page_data.path,
         entry_page: convert_entry_page_config(page_data.entry_page),
     };
@@ -1272,11 +2293,8 @@ pub fn generate_ssg_html(
         .into_iter()
         .map(|g| ox_content_ssg::NavGroup {
             title: g.title,
-            items: g
-                .items
-                .into_iter()
-                .map(|i| ox_content_ssg::NavItem { title: i.title, path: i.path, href: i.href })
-                .collect(),
+            items: g.items.into_iter().map(convert_nav_item).collect(),
+            collapsed: g.collapsed,
         })
         .collect();
 
@@ -1297,6 +2315,44 @@ pub fn generate_ssg_html(
     ox_content_ssg::generate_html(&ssg_page_data, &ssg_nav_groups, &ssg_config)
 }
 
+fn flatten_toc_entries(entries: Vec<TocEntry>) -> Vec<ox_content_ssg::TocEntry> {
+    let mut flat = Vec::new();
+    for entry in entries {
+        flat.push(ox_content_ssg::TocEntry {
+            depth: entry.depth,
+            text: entry.text,
+            slug: entry.slug,
+        });
+        flat.extend(flatten_toc_entries(entry.children));
+    }
+    flat
+}
+
+/// Generates a bare SSG HTML page without navigation or styles.
+#[napi(js_name = "generateSsgBareHtml")]
+pub fn generate_ssg_bare_html(content: String, title: String) -> String {
+    ox_content_ssg::generate_bare_html(&content, &title)
+}
+
+/// Extracts shared CSS and JavaScript assets from generated SSG pages.
+#[napi(js_name = "externalizeSsgAssets")]
+pub fn externalize_ssg_assets(
+    pages: Vec<JsSsgGeneratedHtmlPage>,
+    out_dir: String,
+    base: String,
+) -> JsSsgExternalizedAssets {
+    let result = ox_content_ssg::externalize_shared_page_assets(
+        pages.into_iter().map(convert_generated_html_page).collect(),
+        &out_dir,
+        &base,
+    );
+
+    JsSsgExternalizedAssets {
+        pages: result.pages.into_iter().map(map_generated_html_page).collect(),
+        assets: result.assets.into_iter().map(map_shared_asset).collect(),
+    }
+}
+
 /// Extracts searchable content from Markdown source.
 ///
 /// Parses the Markdown and extracts title, body text, headings, and code.
@@ -1307,32 +2363,8 @@ pub fn extract_search_content(
     url: String,
     options: Option<JsParserOptions>,
 ) -> JsSearchDocument {
-    // Parse frontmatter first
-    let (content, frontmatter) = parse_frontmatter(&source);
-    let allocator = create_allocator_for_source(&content);
     let parser_options = options.map(ParserOptions::from).unwrap_or_default();
-
-    // Try to get title from frontmatter
-    let frontmatter_title = frontmatter.get("title").and_then(|v| v.as_str()).map(String::from);
-
-    let parser = Parser::with_options(&allocator, &content, parser_options);
-
-    let result = parser.parse();
-    let (title, body, headings, code) = if let Ok(ref doc) = result {
-        let mut indexer = DocumentIndexer::new();
-        indexer.extract(doc);
-
-        let title = frontmatter_title
-            .unwrap_or_else(|| indexer.title().map(String::from).unwrap_or_default());
-
-        (title, indexer.body().to_string(), indexer.headings().to_vec(), indexer.code().to_vec())
-    } else {
-        (frontmatter_title.unwrap_or_default(), String::new(), Vec::new(), Vec::new())
-    };
-    // Explicitly drop the result to release the borrow
-    drop(result);
-
-    JsSearchDocument { id, title, url, body, headings, code }
+    map_search_document(extract_search_document_from_source(&source, id, url, parser_options))
 }
 
 // =============================================================================
@@ -1538,6 +2570,29 @@ pub struct I18nLoadResult {
     pub errors: Vec<String>,
 }
 
+/// Locale metadata for generated i18n runtime modules.
+#[napi(object)]
+#[derive(Clone)]
+pub struct JsI18nRuntimeLocale {
+    /// BCP 47 locale tag.
+    pub code: String,
+    /// Display name for this locale.
+    pub name: String,
+    /// Text direction.
+    pub dir: Option<String>,
+}
+
+/// Configuration for generated i18n runtime modules.
+#[napi(object)]
+pub struct JsI18nRuntimeConfig {
+    /// Default locale tag.
+    pub default_locale: String,
+    /// Available locales.
+    pub locales: Vec<JsI18nRuntimeLocale>,
+    /// Whether URLs should omit the default locale prefix.
+    pub hide_default_locale: bool,
+}
+
 /// Result of MF2 validation.
 #[napi(object)]
 pub struct Mf2ValidateResult {
@@ -1573,85 +2628,9 @@ pub struct I18nCheckResult {
     pub warning_count: u32,
 }
 
-/// Loads dictionaries from the given directory.
-///
-/// The directory should contain locale subdirectories (e.g., `en/`, `ja/`)
-/// with JSON or YAML translation files.
-#[napi]
-pub fn load_dictionaries(dir: String) -> I18nLoadResult {
-    let path = std::path::Path::new(&dir);
-    match ox_content_i18n::dictionary::load_from_dir(path) {
-        Ok(set) => {
-            let locales: Vec<String> = set.locales().map(String::from).collect();
-            I18nLoadResult { locale_count: locales.len() as u32, locales, errors: vec![] }
-        }
-        Err(e) => I18nLoadResult { locale_count: 0, locales: vec![], errors: vec![e.to_string()] },
-    }
-}
-
-/// Loads dictionaries from the given directory and returns a flat key-value map per locale.
-///
-/// Each locale maps to a flat `{ "namespace.key": "value" }` structure.
-/// Supports both JSON and YAML dictionary files.
-#[napi]
-pub fn load_dictionaries_flat(dir: String) -> HashMap<String, HashMap<String, String>> {
-    let path = std::path::Path::new(&dir);
-    let Ok(set) = ox_content_i18n::dictionary::load_from_dir(path) else {
-        return HashMap::new();
-    };
-
-    let mut result = HashMap::new();
-    for locale in set.locales() {
-        if let Some(dict) = set.get(locale) {
-            let flat: HashMap<String, String> =
-                dict.iter().map(|(k, v)| (k.to_string(), v.to_string())).collect();
-            result.insert(locale.to_string(), flat);
-        }
-    }
-    result
-}
-
-/// Validates an MF2 message string.
-///
-/// Returns parsing and semantic validation results.
-#[napi]
-pub fn validate_mf2(message: String) -> Mf2ValidateResult {
-    match ox_content_i18n::mf2::parse_and_validate(&message) {
-        Ok((ast, validation_errors)) => {
-            let ast_json = serde_json::to_string(&ast).ok();
-            let errors: Vec<String> = validation_errors.iter().map(ToString::to_string).collect();
-            Mf2ValidateResult { valid: errors.is_empty(), errors, ast_json }
-        }
-        Err(e) => Mf2ValidateResult { valid: false, errors: vec![e.to_string()], ast_json: None },
-    }
-}
-
-/// Runs i18n checks on dictionaries against used translation keys.
-///
-/// `dict_dir` is the path to the i18n directory with locale subdirectories.
-/// `used_keys` is a list of translation keys found in source code.
-#[napi(js_name = "checkI18n")]
-pub fn check_i18n(dict_dir: String, used_keys: Vec<String>) -> I18nCheckResult {
-    let path = std::path::Path::new(&dict_dir);
-    let dict_set = match ox_content_i18n::dictionary::load_from_dir(path) {
-        Ok(set) => set,
-        Err(e) => {
-            return I18nCheckResult {
-                diagnostics: vec![I18nDiagnostic {
-                    severity: "error".to_string(),
-                    message: e.to_string(),
-                    key: None,
-                    locale: None,
-                }],
-                error_count: 1,
-                warning_count: 0,
-            };
-        }
-    };
-
-    let keys_set: std::collections::HashSet<String> = used_keys.into_iter().collect();
-    let diagnostics = ox_content_i18n::checker::check_all(&keys_set, &dict_set);
-
+fn i18n_check_result_from_diagnostics(
+    diagnostics: Vec<ox_content_i18n::checker::Diagnostic>,
+) -> I18nCheckResult {
     let mut error_count = 0u32;
     let mut warning_count = 0u32;
     let js_diagnostics: Vec<I18nDiagnostic> = diagnostics
@@ -1678,6 +2657,128 @@ pub fn check_i18n(dict_dir: String, used_keys: Vec<String>) -> I18nCheckResult {
         .collect();
 
     I18nCheckResult { diagnostics: js_diagnostics, error_count, warning_count }
+}
+
+fn i18n_check_error(message: String) -> I18nCheckResult {
+    I18nCheckResult {
+        diagnostics: vec![I18nDiagnostic {
+            severity: "error".to_string(),
+            message,
+            key: None,
+            locale: None,
+        }],
+        error_count: 1,
+        warning_count: 0,
+    }
+}
+
+/// Loads dictionaries from the given directory.
+///
+/// The directory should contain locale subdirectories (e.g., `en/`, `ja/`)
+/// with JSON or YAML translation files.
+#[napi]
+pub fn load_dictionaries(dir: String) -> I18nLoadResult {
+    let path = std::path::Path::new(&dir);
+    match ox_content_i18n::dictionary::load_from_dir(path) {
+        Ok(set) => {
+            let locales: Vec<String> = set.locales().map(String::from).collect();
+            I18nLoadResult { locale_count: locales.len() as u32, locales, errors: vec![] }
+        }
+        Err(e) => I18nLoadResult { locale_count: 0, locales: vec![], errors: vec![e.to_string()] },
+    }
+}
+
+/// Loads dictionaries from the given directory and returns a flat key-value map per locale.
+///
+/// Each locale maps to a flat `{ "namespace.key": "value" }` structure.
+/// Supports both JSON and YAML dictionary files.
+#[napi]
+pub fn load_dictionaries_flat(dir: String) -> HashMap<String, HashMap<String, String>> {
+    let path = std::path::Path::new(&dir);
+    ox_content_i18n::runtime::load_flat_dictionaries(path).unwrap_or_default()
+}
+
+/// Generates the `virtual:ox-content/i18n` runtime module.
+#[napi(js_name = "generateI18nModule")]
+pub fn generate_i18n_module(dict_dir: String, config: JsI18nRuntimeConfig) -> String {
+    let config = ox_content_i18n::runtime::I18nRuntimeConfig {
+        default_locale: config.default_locale,
+        locales: config
+            .locales
+            .into_iter()
+            .map(|locale| ox_content_i18n::runtime::I18nRuntimeLocale {
+                code: locale.code,
+                name: locale.name,
+                dir: locale.dir,
+            })
+            .collect(),
+        hide_default_locale: config.hide_default_locale,
+    };
+    let dictionaries =
+        ox_content_i18n::runtime::load_flat_dictionaries(std::path::Path::new(&dict_dir))
+            .unwrap_or_default();
+
+    ox_content_i18n::runtime::generate_runtime_module(&config, &dictionaries)
+}
+
+/// Validates an MF2 message string.
+///
+/// Returns parsing and semantic validation results.
+#[napi]
+pub fn validate_mf2(message: String) -> Mf2ValidateResult {
+    match ox_content_i18n::mf2::parse_and_validate(&message) {
+        Ok((ast, validation_errors)) => {
+            let ast_json = serde_json::to_string(&ast).ok();
+            let errors: Vec<String> = validation_errors.iter().map(ToString::to_string).collect();
+            Mf2ValidateResult { valid: errors.is_empty(), errors, ast_json }
+        }
+        Err(e) => Mf2ValidateResult { valid: false, errors: vec![e.to_string()], ast_json: None },
+    }
+}
+
+/// Runs i18n checks on dictionaries against used translation keys.
+///
+/// `dict_dir` is the path to the i18n directory with locale subdirectories.
+/// `used_keys` is a list of translation keys found in source code.
+#[napi(js_name = "checkI18n")]
+pub fn check_i18n(dict_dir: String, used_keys: Vec<String>) -> I18nCheckResult {
+    let path = std::path::Path::new(&dict_dir);
+    let dict_set = match ox_content_i18n::dictionary::load_from_dir(path) {
+        Ok(set) => set,
+        Err(e) => return i18n_check_error(e.to_string()),
+    };
+
+    let keys_set: std::collections::HashSet<String> = used_keys.into_iter().collect();
+    let diagnostics = ox_content_i18n::checker::check_all(&keys_set, &dict_set);
+
+    i18n_check_result_from_diagnostics(diagnostics)
+}
+
+/// Runs project-level i18n checks by collecting source keys and validating dictionaries.
+///
+/// `dict_dir` is the path to the i18n directory with locale subdirectories.
+/// `src_dirs` are source/content directories to scan recursively.
+/// `function_names` are translation call names to collect from JS/TS source.
+/// `default_locale` is used for dictionary fallback rules.
+#[napi(js_name = "checkI18nProject")]
+pub fn check_i18n_project(
+    dict_dir: String,
+    src_dirs: Vec<String>,
+    function_names: Vec<String>,
+    default_locale: String,
+) -> I18nCheckResult {
+    let config = ox_content_i18n_checker::CheckConfig {
+        dict_dir,
+        src_dirs,
+        function_names,
+        default_locale: Some(default_locale),
+        ..Default::default()
+    };
+
+    match ox_content_i18n_checker::check(&config) {
+        Ok(result) => i18n_check_result_from_diagnostics(result.diagnostics),
+        Err(error) => i18n_check_error(error),
+    }
 }
 
 /// A translation key usage found in source code.
@@ -1725,5 +2826,340 @@ pub fn extract_translation_keys(
             })
             .collect(),
         Err(_) => vec![],
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use ox_content_docs::{
+        NormalizedDocEntry, NormalizedDocKind, NormalizedMember, NormalizedMemberKind,
+    };
+    use serde_json::json;
+    use std::collections::BTreeMap;
+    use std::fs;
+    use std::process::Command;
+
+    use super::transformer::parse_frontmatter;
+    use super::{get_git_last_updated, map_normalized_doc_entry};
+
+    #[test]
+    fn parses_nested_yaml_frontmatter() {
+        let (content, frontmatter) = parse_frontmatter(
+            "---\ntitle: Guide\nmeta:\n  tags:\n    - rust\n    - napi\n  draft: false\n---\n# Body",
+        );
+
+        assert_eq!(content, "# Body");
+        assert_eq!(frontmatter.get("title"), Some(&json!("Guide")));
+        assert_eq!(
+            frontmatter.get("meta"),
+            Some(&json!({"tags": ["rust", "napi"], "draft": false}))
+        );
+    }
+
+    #[test]
+    fn frontmatter_preserves_yaml_scalars_and_quoted_colons() {
+        let (_, frontmatter) = parse_frontmatter(
+            "---\ncount: 3\nratio: 1.5\ncanonical: \"https://example.com/a:b\"\n---\n",
+        );
+
+        assert_eq!(frontmatter.get("count"), Some(&json!(3)));
+        assert_eq!(frontmatter.get("ratio"), Some(&json!(1.5)));
+        assert_eq!(frontmatter.get("canonical"), Some(&json!("https://example.com/a:b")));
+    }
+
+    #[test]
+    fn malformed_yaml_strips_block_and_returns_empty_frontmatter() {
+        let (content, frontmatter) = parse_frontmatter("---\ntitle: [broken\n---\nBody");
+
+        assert_eq!(content, "Body");
+        assert!(frontmatter.is_empty());
+    }
+
+    #[test]
+    fn normalized_doc_entry_maps_members_to_js_shape() {
+        let entry = NormalizedDocEntry {
+            name: "Command".to_string(),
+            kind: NormalizedDocKind::Interface,
+            description: "Runtime command.".to_string(),
+            params: vec![],
+            returns: None,
+            examples: vec![],
+            tags: BTreeMap::new(),
+            private: false,
+            file: "command.ts".to_string(),
+            line: 1,
+            end_line: 8,
+            signature: Some("export interface Command".to_string()),
+            members: vec![NormalizedMember {
+                name: "name".to_string(),
+                kind: NormalizedMemberKind::Property,
+                description: "Command name.".to_string(),
+                signature: None,
+                type_annotation: Some("string".to_string()),
+                params: vec![],
+                returns: None,
+                optional: true,
+                readonly: true,
+                r#static: false,
+                private: false,
+                tags: BTreeMap::new(),
+                line: 4,
+                end_line: 4,
+            }],
+        };
+
+        let js_entry = map_normalized_doc_entry(entry);
+        let member = &js_entry.members.as_ref().unwrap()[0];
+
+        assert_eq!(member.name, "name");
+        assert_eq!(member.kind, "property");
+        assert_eq!(member.r#type.as_deref(), Some("string"));
+        assert_eq!(member.optional, Some(true));
+        assert_eq!(member.readonly, Some(true));
+    }
+
+    #[test]
+    fn prepare_source_returns_object_shaped_frontmatter_and_origin() {
+        let result = super::prepare_source(
+            "---\ntitle: Guide\nmeta:\n  draft: false\n---\n# Body".to_string(),
+            None,
+        );
+
+        assert_eq!(result.content, "# Body");
+        assert_eq!(result.frontmatter.get("title"), Some(&json!("Guide")));
+        assert_eq!(result.frontmatter.get("meta"), Some(&json!({"draft": false})));
+        assert_eq!(result.source_offset.line, 6);
+        assert_eq!(result.source_offset.column, 1);
+    }
+
+    #[test]
+    fn javascript_wrapper_and_declarations_cover_expected_exports() {
+        let manifest_dir = std::path::Path::new(env!("CARGO_MANIFEST_DIR"));
+        let index_js = fs::read_to_string(manifest_dir.join("index.js")).unwrap();
+        let declarations = fs::read_to_string(manifest_dir.join("index.d.ts")).unwrap();
+        let expected_exports = [
+            "buildSearchIndex",
+            "buildSearchIndexFromDirectory",
+            "buildSsgNavItems",
+            "buildSsgThemeNavItems",
+            "buildExportGraph",
+            "checkI18n",
+            "checkI18nProject",
+            "collectDocsSourceFiles",
+            "collectSearchMarkdownFiles",
+            "collectSsgMarkdownFiles",
+            "externalizeSsgAssets",
+            "extractDocsFromDirectories",
+            "extractDocsFromEntryPoints",
+            "extractFileDocEntries",
+            "extractFileDocs",
+            "extractSearchContent",
+            "extractSsgTitle",
+            "extractTranslationKeys",
+            "formatSsgTitle",
+            "generateDocsDataJson",
+            "generateDocsMarkdown",
+            "generateDocsNavCode",
+            "generateDocsNavMetadata",
+            "generateI18nModule",
+            "generateOgImageSvg",
+            "generateSearchModule",
+            "generateSearchModuleFromOptions",
+            "generateSsgBareHtml",
+            "generateSsgHtml",
+            "getGitLastUpdated",
+            "getSearchDocumentScopes",
+            "getSsgHref",
+            "getSsgOutputPath",
+            "getSsgPageLocale",
+            "getSsgUrlPath",
+            "lintMarkdown",
+            "lintMarkdownDocuments",
+            "loadDictionaries",
+            "loadDictionariesFlat",
+            "matchesSearchScopes",
+            "mergeHighlightedCodeBlocks",
+            "parse",
+            "parseAndRender",
+            "parseAndRenderAsync",
+            "parseMdastRaw",
+            "parseScopedSearchQuery",
+            "parseTransferRaw",
+            "prepareSource",
+            "prepareSourceRaw",
+            "render",
+            "resolveSsgNavigationGroups",
+            "resolveSsgRoutePaths",
+            "searchIndex",
+            "transform",
+            "transformAsync",
+            "transformMdastRaw",
+            "transformMermaid",
+            "validateMf2",
+            "version",
+            "writeGeneratedDocs",
+            "writeSearchIndex",
+        ];
+
+        for export_name in expected_exports {
+            assert!(
+                index_js
+                    .contains(&format!("module.exports.{export_name} = binding.{export_name};")),
+                "index.js is missing {export_name}"
+            );
+            assert!(
+                declarations.contains(&format!("export declare function {export_name}(")),
+                "index.d.ts is missing {export_name}"
+            );
+        }
+    }
+
+    #[test]
+    fn transform_passes_toc_depth_to_inline_toc() {
+        let result = super::transform(
+            "[[toc]]\n\n## Intro\n### API".to_string(),
+            Some(super::JsTransformOptions { toc_max_depth: Some(2), ..Default::default() }),
+        );
+
+        assert!(result.html.contains("href=\"#intro\""));
+        assert!(!result.html.contains("href=\"#api\""));
+    }
+
+    #[test]
+    fn builds_search_index_from_directory() {
+        let root =
+            std::env::temp_dir().join(format!("ox-content-napi-search-{}", std::process::id()));
+        let docs_dir = root.join("docs");
+        let _ = fs::remove_dir_all(&root);
+        fs::create_dir_all(docs_dir.join("guide")).unwrap();
+        fs::write(
+            docs_dir.join("guide/intro.markdown"),
+            "---\ntitle: Native Search\n---\n# Intro\n\nSearch body text.",
+        )
+        .unwrap();
+
+        let index_json = super::build_search_index_from_directory(
+            docs_dir.to_string_lossy().into_owned(),
+            "/docs/".to_string(),
+            vec![".md".to_string(), ".markdown".to_string()],
+        );
+        let index = ox_content_search::SearchIndex::from_json(&index_json).unwrap();
+
+        assert_eq!(index.doc_count, 1);
+        assert_eq!(index.documents[0].id, "guide/intro");
+        assert_eq!(index.documents[0].title, "Native Search");
+        assert_eq!(index.documents[0].url, "/docs/guide/intro");
+        assert!(index.documents[0].body.contains("Search body text"));
+
+        let _ = fs::remove_dir_all(root);
+    }
+
+    #[test]
+    fn writes_search_index_through_napi() {
+        let root =
+            std::env::temp_dir().join(format!("ox-content-napi-search-out-{}", std::process::id()));
+        let _ = fs::remove_dir_all(&root);
+
+        super::write_search_index(r#"{"doc_count":0}"#.to_string(), root.to_string_lossy().into())
+            .unwrap();
+
+        assert_eq!(
+            fs::read_to_string(root.join("search-index.json")).unwrap(),
+            r#"{"doc_count":0}"#
+        );
+
+        let _ = fs::remove_dir_all(root);
+    }
+
+    #[test]
+    fn check_i18n_project_collects_source_and_markdown_keys() {
+        let unique =
+            std::time::SystemTime::now().duration_since(std::time::UNIX_EPOCH).unwrap().as_nanos();
+        let root = std::env::temp_dir()
+            .join(format!("ox-content-napi-i18n-{}-{unique}", std::process::id()));
+        let dict_root = root.join("content/i18n");
+        let src_dir = root.join("src");
+        let content_dir = root.join("content");
+        let _ = fs::remove_dir_all(&root);
+        fs::create_dir_all(dict_root.join("en")).unwrap();
+        fs::create_dir_all(&src_dir).unwrap();
+
+        fs::write(
+            dict_root.join("en/common.json"),
+            r#"{"fromSrc":"From source","fromMd":"From markdown"}"#,
+        )
+        .unwrap();
+        fs::write(src_dir.join("app.ts"), "const label = t('common.fromSrc');").unwrap();
+        fs::write(content_dir.join("guide.md"), "{{t('common.fromMd')}}").unwrap();
+
+        let result = super::check_i18n_project(
+            dict_root.to_string_lossy().into_owned(),
+            vec![
+                src_dir.to_string_lossy().into_owned(),
+                content_dir.to_string_lossy().into_owned(),
+            ],
+            vec!["t".to_string(), "$t".to_string()],
+            "en".to_string(),
+        );
+        let messages: Vec<&str> = result.diagnostics.iter().map(|d| d.message.as_str()).collect();
+
+        assert_eq!(result.error_count, 0, "diagnostics: {messages:?}");
+        assert_eq!(result.warning_count, 0, "diagnostics: {messages:?}");
+        assert!(result.diagnostics.is_empty());
+
+        let _ = fs::remove_dir_all(root);
+    }
+
+    #[test]
+    fn generates_search_module_from_typed_options() {
+        let module = super::generate_search_module_from_options(
+            super::JsSearchRuntimeOptions {
+                enabled: true,
+                limit: 7,
+                prefix: false,
+                placeholder: "Find".to_string(),
+                hotkey: "k".to_string(),
+            },
+            "/docs/search-index.json".to_string(),
+        );
+
+        assert!(module.contains(
+            r#"const searchOptions = {"enabled":true,"limit":7,"prefix":false,"placeholder":"Find","hotkey":"k"};"#
+        ));
+    }
+
+    #[test]
+    fn git_last_updated_uses_root_relative_path() {
+        let root = std::env::temp_dir().join(format!("ox-content-git-{}", std::process::id()));
+        let _ = fs::remove_dir_all(&root);
+        fs::create_dir_all(root.join("docs")).unwrap();
+        fs::write(root.join("docs/page.md"), "# Page").unwrap();
+
+        for args in [
+            vec!["init"],
+            vec!["add", "docs/page.md"],
+            vec![
+                "-c",
+                "user.name=Test",
+                "-c",
+                "user.email=test@example.com",
+                "commit",
+                "-m",
+                "init",
+            ],
+        ] {
+            let mut cmd = Command::new("git");
+            cmd.arg("-C").arg(&root).args(args);
+            cmd.env("GIT_AUTHOR_DATE", "@1234567890");
+            cmd.env("GIT_COMMITTER_DATE", "@1234567890");
+            assert!(cmd.status().unwrap().success());
+        }
+
+        let updated = get_git_last_updated(
+            root.join("docs/page.md").to_string_lossy().into_owned(),
+            Some(root.to_string_lossy().into_owned()),
+        );
+        assert_eq!(updated, Some(1_234_567_890_000.0));
+        let _ = fs::remove_dir_all(root);
     }
 }

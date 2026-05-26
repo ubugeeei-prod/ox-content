@@ -16,7 +16,7 @@ description = "Node.js bindings for Ox Content"
 workspace = true
 
 [lib]
-crate-type = ["cdylib"]
+crate-type = ["cdylib", "rlib"]
 
 [dependencies]
 ox_content_allocator = { workspace = true }
@@ -35,8 +35,16 @@ napi = { workspace = true }
 napi-derive = { workspace = true }
 serde = { workspace = true }
 serde_json = { workspace = true }
+serde_yaml = { workspace = true }
 regex = { workspace = true }
 unicode-normalization = { workspace = true }
 
 [build-dependencies]
 napi-build = { workspace = true }
+
+[dev-dependencies]
+criterion = { workspace = true }
+
+[[bench]]
+name = "mdast_transfer"
+harness = false

@@ -1,0 +1,60 @@
+name: Bug report
+description: Report a reproducible defect or regression.
+title: "bug: "
+labels: ["bug", "needs-triage"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Use this for reproducible defects. Include enough detail for someone else to verify the issue.
+  - type: textarea
+    id: summary
+    attributes:
+      label: Summary
+      description: What is broken, and what impact does it have?
+      placeholder: The content build fails when...
+    validations:
+      required: true
+  - type: textarea
+    id: steps
+    attributes:
+      label: Reproduction steps
+      description: Provide the smallest reliable sequence of steps.
+      placeholder: |
+        1. Run ...
+        2. Open ...
+        3. Observe ...
+    validations:
+      required: true
+  - type: textarea
+    id: expected
+    attributes:
+      label: Expected behavior
+      description: What should happen instead?
+    validations:
+      required: true
+  - type: textarea
+    id: actual
+    attributes:
+      label: Actual behavior
+      description: What happened, including errors or logs if available?
+    validations:
+      required: true
+  - type: dropdown
+    id: severity
+    attributes:
+      label: Severity
+      options:
+        - Blocker - production or release is stopped
+        - High - core workflow is broken
+        - Medium - workaround exists
+        - Low - minor defect
+    validations:
+      required: true
+  - type: textarea
+    id: environment
+    attributes:
+      label: Environment
+      description: OS, browser, Node/package manager versions, branch, or deployment target.
+    validations:
+      required: true

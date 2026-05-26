@@ -18,6 +18,8 @@ export default defineConfig({
     dts: true,
     clean: true,
     hash: false,
-    external: ["vite", "webpack", "rollup", "esbuild", "@ox-content/napi", "unplugin"],
+    deps: {
+      neverBundle: ["vite", "webpack", "rollup", "esbuild", "@ox-content/napi", "unplugin"],
+    },
   }),
 });

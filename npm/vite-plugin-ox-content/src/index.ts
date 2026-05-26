@@ -26,6 +26,7 @@ import {
 } from "./dev-server";
 import { createOgViewerPlugin } from "./og-viewer";
 import { resolveI18nOptions, createI18nPlugin } from "./i18n";
+import { isMarkdownFilePath, normalizeMarkdownExtensions } from "./markdown";
 import type { OxContentOptions, ResolvedOptions } from "./types";
 
 export type { OxContentOptions } from "./types";
@@ -52,10 +53,14 @@ export type {
   HeroConfig,
   FeatureConfig,
   EntryPageConfig,
+  SsgNavigationItem,
+  SsgNavigationGroup,
   // i18n types
   I18nOptions,
   ResolvedI18nOptions,
   LocaleConfig,
+  BuiltinEmbedOptions,
+  ResolvedBuiltinEmbedOptions,
 } from "./types";
 
 /**
@@ -111,7 +116,7 @@ export function oxContent(options: OxContentOptions = {}): Plugin[] {
       // Add middleware for serving Markdown files
       devServer.middlewares.use(async (req, res, next) => {
         const url = req.url;
-        if (!url || !url.endsWith(".md")) {
+        if (!url || !isMarkdownFilePath(url, resolvedOptions.extensions)) {
           return next();
         }
 
@@ -126,8 +131,8 @@ export function oxContent(options: OxContentOptions = {}): Plugin[] {
         return "\0" + id;
       }
 
-      // Resolve .md files
-      if (id.endsWith(".md")) {
+      // Resolve Markdown files
+      if (isMarkdownFilePath(id, resolvedOptions.extensions)) {
         return id;
       }
 
@@ -145,7 +150,7 @@ export function oxContent(options: OxContentOptions = {}): Plugin[] {
     },
 
     async transform(code, id) {
-      if (!id.endsWith(".md")) {
+      if (!isMarkdownFilePath(id, resolvedOptions.extensions)) {
         return null;
       }
 
@@ -160,7 +165,7 @@ export function oxContent(options: OxContentOptions = {}): Plugin[] {
 
     // Hot Module Replacement support
     async handleHotUpdate({ file, server }) {
-      if (file.endsWith(".md")) {
+      if (isMarkdownFilePath(file, resolvedOptions.extensions)) {
         // Notify client about the update
         server.ws.send({
           type: "custom",
@@ -262,7 +267,7 @@ export function oxContent(options: OxContentOptions = {}): Plugin[] {
 
       // Watch for .md file add/unlink to invalidate nav cache
       devServer.watcher.on("add", (file: string) => {
-        if (file.startsWith(srcDir) && file.endsWith(".md")) {
+        if (file.startsWith(srcDir) && isMarkdownFilePath(file, resolvedOptions.extensions)) {
           invalidateNavCache(ssgDevCache);
           devServer.ws.send({
             type: "custom",
@@ -272,7 +277,7 @@ export function oxContent(options: OxContentOptions = {}): Plugin[] {
         }
       });
       devServer.watcher.on("unlink", (file: string) => {
-        if (file.startsWith(srcDir) && file.endsWith(".md")) {
+        if (file.startsWith(srcDir) && isMarkdownFilePath(file, resolvedOptions.extensions)) {
           invalidateNavCache(ssgDevCache);
           devServer.ws.send({
             type: "custom",
@@ -284,7 +289,7 @@ export function oxContent(options: OxContentOptions = {}): Plugin[] {
 
       // Watch for .md file changes to invalidate page cache
       devServer.watcher.on("change", (file: string) => {
-        if (file.startsWith(srcDir) && file.endsWith(".md")) {
+        if (file.startsWith(srcDir) && isMarkdownFilePath(file, resolvedOptions.extensions)) {
           invalidatePageCache(ssgDevCache, file);
         }
       });
@@ -351,7 +356,11 @@ export function oxContent(options: OxContentOptions = {}): Plugin[] {
       const srcDir = path.resolve(root, resolvedOptions.srcDir);
 
       try {
-        searchIndexJson = await buildSearchIndex(srcDir, resolvedOptions.base);
+        searchIndexJson = await buildSearchIndex(
+          srcDir,
+          resolvedOptions.base,
+          resolvedOptions.extensions,
+        );
         console.log("[ox-content] Search index built");
       } catch (err) {
         console.warn("[ox-content] Failed to build search index:", err);
@@ -397,6 +406,7 @@ function resolveOptions(options: OxContentOptions): ResolvedOptions {
     srcDir: options.srcDir ?? "content",
     outDir: options.outDir ?? "dist",
     base: options.base ?? "/",
+    extensions: normalizeMarkdownExtensions(options.extensions),
     ssg: resolveSsgOptions(options.ssg),
     gfm: options.gfm ?? true,
     footnotes: options.footnotes ?? true,
@@ -417,8 +427,31 @@ function resolveOptions(options: OxContentOptions): ResolvedOptions {
     docs: resolveDocsOptions(options.docs),
     search: resolveSearchOptions(options.search),
     ogViewer: options.ogViewer ?? true,
+    embeds: resolveBuiltinEmbedOptions(options.embeds),
     i18n: resolveI18nOptions(options.i18n),
   };
+}
+
+export function resolveBuiltinEmbedOptions(
+  options: OxContentOptions["embeds"],
+): ResolvedOptions["embeds"] {
+  if (options === false) {
+    return {
+      github: false,
+      openGraph: false,
+    };
+  }
+
+  return {
+    github: resolveSingleEmbedOptions(options?.github),
+    openGraph: resolveSingleEmbedOptions(options?.openGraph),
+  };
+}
+
+function resolveSingleEmbedOptions<T extends object>(options: boolean | T | undefined): T | false {
+  if (options === false) return false;
+  if (options === true || options === undefined) return {} as T;
+  return options;
 }
 
 function resolveCodeAnnotationsOptions(
@@ -453,17 +486,43 @@ function resolveCodeAnnotationsOptions(
 /**
  * Generates virtual module content.
  */
-function generateVirtualModule(path: string, options: ResolvedOptions): string {
+export function generateVirtualModule(path: string, options: ResolvedOptions): string {
   if (path === "config") {
     return `export default ${JSON.stringify(options)};`;
   }
 
   if (path === "runtime") {
+    const base = normalizeRuntimeBase(options.base);
     return `
+      export const base = ${JSON.stringify(base)};
+      export const runtimeConfig = { base };
+
+      export function isExternalUrl(value) {
+        return /^(?:https?:)?\\/\\//i.test(value) || /^(?:mailto|tel):/i.test(value);
+      }
+
+      export function withBase(pathname = "") {
+        const value = String(pathname);
+        if (!value || value === "/") return base;
+        if (value.startsWith("#") || isExternalUrl(value)) return value;
+        return base + (value.startsWith("/") ? value.slice(1) : value);
+      }
+
+      export function withoutBase(pathname = "") {
+        const value = String(pathname);
+        if (base === "/" || value.startsWith("#") || isExternalUrl(value)) return value;
+        const bareBase = base.slice(0, -1);
+        if (value === bareBase) return "/";
+        if (value.startsWith(base)) return "/" + value.slice(base.length);
+        return value;
+      }
+
       export function useMarkdown() {
         return {
+          base,
+          withBase,
+          withoutBase,
           render: (content) => {
-            // Client-side rendering if needed
             return content;
           },
         };
@@ -472,6 +531,13 @@ function generateVirtualModule(path: string, options: ResolvedOptions): string {
   }
 
   return "export default {};";
+}
+
+function normalizeRuntimeBase(base: string): string {
+  const trimmed = base.trim();
+  if (!trimmed || trimmed === "/") return "/";
+  const withLeading = trimmed.startsWith("/") ? trimmed : `/${trimmed}`;
+  return withLeading.endsWith("/") ? withLeading : `${withLeading}/`;
 }
 
 // Re-export types and utilities
@@ -500,7 +566,31 @@ export type {
 } from "./lint-files";
 export { buildSsg, resolveSsgOptions, DEFAULT_HTML_TEMPLATE } from "./ssg";
 export { resolveSearchOptions, buildSearchIndex, writeSearchIndex } from "./search";
+export {
+  DEFAULT_MARKDOWN_EXTENSIONS,
+  normalizeMarkdownExtensions,
+  isMarkdownFilePath,
+  stripMarkdownExtension,
+} from "./markdown";
 export { defineTheme, defaultTheme, mergeThemes, resolveTheme } from "./theme";
+export {
+  fromVitePressConfig,
+  generateVitePressMigrationConfig,
+  convertVitePressSidebar,
+  convertVitePressNav,
+  normalizeVitePressFrontmatter,
+} from "./vitepress";
+export type {
+  GenerateVitePressMigrationConfigOptions,
+  VitePressConfig,
+  VitePressThemeConfig,
+  VitePressSidebar,
+  VitePressSidebarItem,
+  VitePressNavItem,
+  VitePressSocialLink,
+  VitePressFooter,
+  VitePressLogo,
+} from "./vitepress";
 export type {
   ThemeConfig,
   ThemeColors,
@@ -559,8 +649,13 @@ export {
   extractVideoId,
   transformGitHub,
   fetchRepoData,
+  fetchGitHubSource,
   collectGitHubRepos,
+  collectGitHubSources,
   prefetchGitHubRepos,
+  prefetchGitHubSources,
+  parseGitHubPermalink,
+  parseGitHubLineRange,
   transformOgp,
   fetchOgpData,
   collectOgpUrls,
@@ -572,6 +667,9 @@ export {
 export type {
   YouTubeOptions,
   GitHubRepoData,
+  GitHubSourceData,
+  GitHubSourceRef,
+  GitHubLineRange,
   GitHubOptions,
   OgpData,
   OgpOptions,

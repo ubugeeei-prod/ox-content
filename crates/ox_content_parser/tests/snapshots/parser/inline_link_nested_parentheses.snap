@@ -1,0 +1,9 @@
+---
+source: crates/ox_content_parser/tests/snapshot_parse.rs
+assertion_line: 32
+description: "[docs](https://example.com/a(b)c)\n"
+---
+Document [0..34]
+  Paragraph [0..34]
+    Link url="https://example.com/a(b)c" title=None [0..33]
+      Text "docs" [1..5]

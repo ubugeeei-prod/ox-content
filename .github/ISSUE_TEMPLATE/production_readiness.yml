@@ -1,0 +1,52 @@
+name: Production-readiness task
+description: Track reliability, release, observability, security, or operational hardening work.
+title: "chore: "
+labels: ["production-readiness", "needs-triage"]
+body:
+  - type: textarea
+    id: objective
+    attributes:
+      label: Objective
+      description: What production risk or operational gap does this reduce?
+    validations:
+      required: true
+  - type: dropdown
+    id: category
+    attributes:
+      label: Category
+      options:
+        - Reliability
+        - Security
+        - Observability
+        - Release or rollback
+        - Performance
+        - Compliance or dependency hygiene
+        - Other
+    validations:
+      required: true
+  - type: textarea
+    id: acceptance
+    attributes:
+      label: Acceptance criteria
+      description: List concrete conditions that must be true before this is complete.
+      placeholder: |
+        - ...
+        - ...
+    validations:
+      required: true
+  - type: textarea
+    id: validation
+    attributes:
+      label: Validation plan
+      description: Commands, checks, dashboards, or manual steps that prove readiness.
+    validations:
+      required: true
+  - type: checkboxes
+    id: release
+    attributes:
+      label: Release considerations
+      options:
+        - label: Rollback or recovery path is known.
+          required: true
+        - label: Documentation or runbook impact has been considered.
+          required: true

@@ -96,6 +96,7 @@ export function createDocsResolvedOptions(
     srcDir: "content",
     outDir: "dist",
     base: "/",
+    extensions: [".md", ".markdown", ".mdx"],
     ssg: {
       enabled: true,
       extension: ".html",
@@ -103,6 +104,7 @@ export function createDocsResolvedOptions(
       bare: false,
       siteName: "Ox Content",
       generateOgImage: false,
+      lastUpdated: false,
     },
     gfm: true,
     footnotes: true,
@@ -140,6 +142,10 @@ export function createDocsResolvedOptions(
       hotkey: "/",
     },
     ogViewer: false,
+    embeds: {
+      github: {},
+      openGraph: {},
+    },
     i18n: false,
     ...overrides,
   };

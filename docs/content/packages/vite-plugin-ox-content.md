@@ -26,6 +26,42 @@ export default defineConfig({
 });
 ```
 
+## VitePress Migration
+
+If you already have a VitePress site, generate an editable ox-content options object:
+
+```bash
+ox-content-migrate-vitepress .vitepress/config.ts \
+  --src-dir docs \
+  --out-dir dist \
+  --out ox-content.config.ts
+```
+
+The CLI can run on Node.js, Deno, or Bun:
+
+```bash
+# Node.js, after installing @ox-content/vite-plugin
+ox-content-migrate-vitepress .vitepress/config.ts --out ox-content.config.ts
+
+# Deno
+deno run -A npm:@ox-content/vite-plugin/vitepress-migrate .vitepress/config.ts \
+  --out ox-content.config.ts
+
+# Bun
+bunx --bun @ox-content/vite-plugin .vitepress/config.ts --out ox-content.config.ts
+```
+
+The generated `ox-content.config.ts` maps these settings into ox-content:
+
+- `title` / `themeConfig.siteTitle` -> `ssg.siteName`
+- `base` -> `base`
+- `themeConfig.sidebar` -> `ssg.navigation`
+- `themeConfig.socialLinks` / `themeConfig.footer` / `themeConfig.logo` -> `ssg.theme`
+- `themeConfig.search.placeholder` -> `search.placeholder`
+
+For landing pages, VitePress-style `layout: home` frontmatter is treated the same as
+ox-content's `layout: entry`.
+
 ## Options
 
 ### srcDir
@@ -34,6 +70,13 @@ export default defineConfig({
 - Default: `'docs'`
 
 Source directory for Markdown files.
+
+### extensions
+
+- Type: `string[]`
+- Default: `['.md', '.markdown', '.mdx']`
+
+Markdown-like file extensions processed by the Vite plugin, SSG, dev server, search index, and OG viewer.
 
 ### outDir
 
@@ -166,6 +209,99 @@ See the [Code Annotations example](../examples/code-annotations.md) for a render
 
 Generate table of contents.
 
+### embeds
+
+- Type: `BuiltinEmbedOptions | false`
+- Default: `{ github: true, openGraph: true }`
+
+Built-in static embeds are rendered at transform time, with no client-side JavaScript.
+
+```md
+<GitHub repo="ubugeeei/ox-content" />
+
+<GitHub permalink="https://github.com/ubugeeei/ox-content/blob/278098b/README.md#L1-L12" />
+
+<GitHub repo="ubugeeei/ox-content" path="README.md" ref="main" loc="1-12" />
+
+<OgCard url="https://github.com/ubugeeei/ox-content" />
+```
+
+`permalink`, `url`, and `href` accept GitHub `blob` URLs. The `#L1-L12` fragment is used as the source line range. You can also use `repo`, `path`, `ref`, and `loc` when you do not want to paste the full permalink. Source embeds fetch the GitHub contents API and render code directly instead of using an Open Graph preview.
+
+Disable all embeds or configure each fetcher:
+
+```ts
+oxContent({
+  embeds: {
+    github: {
+      token: process.env.GITHUB_TOKEN,
+      maxSourceBytes: 200000,
+      maxSourceLines: 120,
+    },
+    openGraph: {
+      timeout: 5000,
+    },
+  },
+});
+```
+
+```ts
+oxContent({
+  embeds: false,
+});
+```
+
+#### Styling built-in embeds
+
+Built-in embed markup uses stable CSS classes so the generated HTML can be themed without client-side JavaScript.
+
+Repository card classes:
+
+- `.ox-github-card`
+- `.ox-github-header`
+- `.ox-github-icon`
+- `.ox-github-repo`
+- `.ox-github-description`
+- `.ox-github-stats`
+- `.ox-github-stat`
+- `.ox-github-language`
+
+Source code card classes:
+
+- `.ox-github-code`
+- `.ox-github-code-header`
+- `.ox-github-code-title`
+- `.ox-github-code-loc`
+- `.ox-github-code-block`
+- `.ox-github-code-line`
+- `.ox-github-code-line-number`
+- `.ox-github-code-line-content`
+
+Open Graph card classes:
+
+- `.ox-ogp-card`
+- `.ox-ogp-simple`
+- `.ox-ogp-content`
+- `.ox-ogp-title`
+- `.ox-ogp-description`
+- `.ox-ogp-image`
+- `.ox-ogp-meta`
+- `.ox-ogp-domain`
+- `.ox-ogp-favicon`
+
+```css
+.ox-github-card,
+.ox-github-code,
+.ox-ogp-card {
+  border-color: var(--my-border-color);
+}
+
+.ox-github-code-line-number,
+.ox-ogp-domain {
+  color: var(--my-muted-color);
+}
+```
+
 ### docs
 
 - Type: `DocsOptions | false`
@@ -173,7 +309,7 @@ Generate table of contents.
 
 Source documentation generation options. Set to `false` to disable.
 
-Generated API pages now include a one-line overview for each symbol and expandable detail sections. A machine-readable `docs.json` payload is also emitted next to the Markdown files so custom viewers can build richer experiences without re-parsing source.
+Generated API pages now include summary stats, signature badges, one-line symbol overviews, expandable detail sections, and labeled examples. A machine-readable `docs.json` payload with aggregate counts is also emitted next to the Markdown files so custom viewers can build richer experiences without re-parsing source.
 
 ```ts
 oxContent({
@@ -197,7 +333,7 @@ oxContent({
 | `enabled` | `boolean`                        | `true`                           | Enable/disable docs generation |
 | `src`     | `string[]`                       | `['./src']`                      | Source directories to scan     |
 | `out`     | `string`                         | `'docs/api'`                     | Output directory               |
-| `include` | `string[]`                       | `['**/*.ts', '**/*.tsx']`        | Files to include               |
+| `include` | `string[]`                       | JS/TS source globs               | Files to include               |
 | `exclude` | `string[]`                       | `['**/*.test.*', '**/*.spec.*']` | Files to exclude               |
 | `format`  | `'markdown' \| 'json' \| 'html'` | `'markdown'`                     | Output format                  |
 | `private` | `boolean`                        | `false`                          | Include @private members       |
@@ -312,8 +448,11 @@ The plugin provides virtual modules:
 
 ```ts
 import config from "virtual:ox-content/config";
-import { useMarkdown } from "virtual:ox-content/runtime";
+import { useMarkdown, withBase, withoutBase } from "virtual:ox-content/runtime";
 import { search, searchOptions } from "virtual:ox-content/search";
+
+const assetUrl = withBase("/og.png");
+const routePath = withoutBase("/docs/guide");
 
 // Use the search function
 const results = await search("query", { limit: 10 });

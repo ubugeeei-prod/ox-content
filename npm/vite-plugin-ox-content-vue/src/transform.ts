@@ -94,12 +94,14 @@ export async function transformMarkdownWithVue(
     srcDir: options.srcDir,
     outDir: options.outDir,
     base: options.base,
+    extensions: options.extensions,
     ssg: {
       enabled: false,
       extension: ".html",
       clean: false,
       bare: false,
       generateOgImage: false,
+      lastUpdated: false,
     },
     gfm: options.gfm,
     frontmatter: false, // Already extracted
@@ -132,8 +134,9 @@ export async function transformMarkdownWithVue(
       placeholder: "Search...",
       hotkey: "k",
     },
+    embeds: options.embeds,
     i18n: false,
-  } as Parameters<typeof baseTransformMarkdown>[2] & {
+  } as unknown as Parameters<typeof baseTransformMarkdown>[2] & {
     codeAnnotations?: TransformOptions["codeAnnotations"];
   };
 

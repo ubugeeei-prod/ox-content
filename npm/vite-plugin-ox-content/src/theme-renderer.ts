@@ -44,6 +44,8 @@ export interface PageData {
   html: string;
   /** Table of contents */
   toc: TocEntry[];
+  /** Last git commit timestamp in milliseconds */
+  lastUpdated?: number;
   /** Source file path */
   path: string;
   /** Output URL path */
@@ -88,6 +90,7 @@ export function renderPage(page: PageData, options: ThemeRenderOptions): string 
     description: page.description,
     html: page.html,
     toc: page.toc,
+    lastUpdated: page.lastUpdated,
     path: page.path,
     url: page.url,
     frontmatter: page.frontmatter,
@@ -104,6 +107,7 @@ export function renderPage(page: PageData, options: ThemeRenderOptions): string 
       description: p.description,
       html: p.html,
       toc: p.toc,
+      lastUpdated: p.lastUpdated,
       path: p.path,
       url: p.url,
       frontmatter: p.frontmatter,

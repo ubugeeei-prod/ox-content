@@ -26,12 +26,7 @@
   },
   "Ox Content Table": {
     "prefix": "table",
-    "body": [
-      "| ${1:Column} | ${2:Column} |",
-      "| --- | --- |",
-      "| ${3:Value} | ${4:Value} |",
-      "$0"
-    ],
+    "body": ["| ${1:Column} | ${2:Column} |", "| --- | --- |", "| ${3:Value} | ${4:Value} |", "$0"],
     "description": "Insert a Markdown table"
   }
 }

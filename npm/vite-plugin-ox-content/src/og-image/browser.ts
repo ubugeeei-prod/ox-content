@@ -10,6 +10,11 @@
 import type { Page } from "playwright";
 import { renderHtmlToPng } from "./renderer";
 
+const PLAYWRIGHT_BROWSER_INSTALL_HINT =
+  "Install Playwright browsers with `npx playwright install chromium` to enable OG image generation.";
+
+let chromiumUnavailableWarned = false;
+
 /**
  * A browser session that can render HTML pages to PNG.
  * Implements AsyncDisposable for automatic cleanup via `await using`.
@@ -66,10 +71,38 @@ export async function openBrowser(): Promise<OgBrowserSession | null> {
       },
     };
   } catch (err) {
-    console.warn(
-      "[ox-content:og-image] Chromium not available, skipping OG image generation.",
-      err instanceof Error ? err.message : err,
-    );
+    warnChromiumUnavailableOnce(err);
     return null;
   }
+}
+
+function warnChromiumUnavailableOnce(err: unknown): void {
+  if (chromiumUnavailableWarned) {
+    return;
+  }
+
+  chromiumUnavailableWarned = true;
+  console.warn(
+    `[ox-content:og-image] Chromium not available, skipping OG image generation. ${formatChromiumUnavailableDetail(
+      err,
+    )}`,
+  );
+}
+
+function formatChromiumUnavailableDetail(err: unknown): string {
+  const message = err instanceof Error ? err.message : String(err);
+
+  if (
+    message.includes("Executable doesn't exist") ||
+    message.includes("Please run the following command to download new browsers")
+  ) {
+    return PLAYWRIGHT_BROWSER_INSTALL_HINT;
+  }
+
+  return (
+    message
+      .split(/\r?\n/)
+      .find((line) => line.trim())
+      ?.trim() ?? "Unknown launch error."
+  );
 }

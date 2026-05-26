@@ -1,3 +1,5 @@
+use std::fmt::Write as _;
+
 use tower_lsp::lsp_types::*;
 
 use crate::document::is_markdown_path;
@@ -68,10 +70,13 @@ impl Backend {
                 return None;
             }
 
-            let mut value =
-                format!("**`{key}`**\n\n| Locale | Translation |\n|--------|-------------|\n");
+            let mut value = String::new();
+            push_fmt(
+                &mut value,
+                format_args!("**`{key}`**\n\n| Locale | Translation |\n|--------|-------------|\n"),
+            );
             for (locale, translation) in &translations {
-                value.push_str(&format!("| `{locale}` | {translation} |\n"));
+                push_fmt(&mut value, format_args!("| `{locale}` | {translation} |\n"));
             }
 
             return Some(Hover {
@@ -177,5 +182,11 @@ impl Backend {
             Ok(symbols) if !symbols.is_empty() => Some(DocumentSymbolResponse::Nested(symbols)),
             _ => None,
         }
+    }
+}
+
+fn push_fmt(output: &mut String, args: std::fmt::Arguments<'_>) {
+    if output.write_fmt(args).is_err() {
+        output.push_str("[formatting failed]");
     }
 }

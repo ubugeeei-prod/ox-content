@@ -7,8 +7,8 @@
     "build": "astro build"
   },
   "dependencies": {
-    "@astrojs/vue": "^5.0.0",
-    "astro": "^5.0.0",
+    "@astrojs/vue": "^6.0.1",
+    "astro": "^6.3.3",
     "vue": "catalog:"
   }
 }

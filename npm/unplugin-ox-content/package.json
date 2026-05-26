@@ -1,6 +1,6 @@
 {
   "name": "@ox-content/unplugin",
-  "version": "2.4.0",
+  "version": "2.18.0",
   "description": "Universal plugin for Ox Content - Markdown processing for webpack, rollup, esbuild, vite, and more",
   "keywords": [
     "esbuild",
@@ -62,24 +62,37 @@
   "dependencies": {
     "@ox-content/napi": "workspace:*",
     "@rollup/pluginutils": "^5.1.4",
-    "gray-matter": "^4.0.3",
-    "markdown-it": "^14.1.0",
+    "markdown-it": "^14.1.1",
     "markdown-it-anchor": "^9.2.0",
+    "rehype-parse": "^9.0.1",
+    "rehype-remark": "^10.0.1",
     "rehype-stringify": "^10.0.1",
     "remark-parse": "^11.0.0",
     "remark-rehype": "^11.1.1",
     "unified": "^11.0.5",
-    "unplugin": "^2.1.2"
+    "unplugin": "^3.0.0"
   },
   "devDependencies": {
     "@types/markdown-it": "^14.1.2",
     "@types/node": "catalog:",
     "@typescript/native-preview": "catalog:",
     "esbuild": "catalog:",
-    "rollup": "^4.29.1",
+    "rehype-autolink-headings": "^7.1.0",
+    "rehype-external-links": "^3.0.0",
+    "rehype-katex": "^7.0.1",
+    "rehype-raw": "^7.0.0",
+    "rehype-sanitize": "^6.0.0",
+    "rehype-slug": "^6.0.0",
+    "remark-directive": "^4.0.0",
+    "remark-frontmatter": "^5.0.0",
+    "remark-gfm": "^4.0.1",
+    "remark-math": "^6.0.0",
+    "remark-smartypants": "^3.0.2",
+    "remark-toc": "^9.0.0",
+    "rollup": "^4.60.4",
     "typescript": "catalog:",
     "vite": "catalog:",
     "vite-plus": "catalog:",
-    "webpack": "^5.97.1"
+    "webpack": "^5.106.2"
   }
 }

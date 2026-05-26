@@ -4,10 +4,9 @@
  * Orchestrates browser lifecycle, template resolution, caching,
  * and batch rendering with concurrency control.
  */
-/// <reference path="./optional-deps.d.ts" />
-
 import * as path from "path";
 import * as crypto from "crypto";
+import type {} from "./optional-deps";
 import { openBrowser } from "./browser";
 import type { OgBrowserSession } from "./browser";
 import { getDefaultTemplate } from "./template";

@@ -107,6 +107,15 @@ describe("theme", () => {
       expect(resolved.colors.background).toBe("#ffffff");
       expect(resolved.footer.message).toBe("Hello");
     });
+
+    it("should preserve explicit sidebar config", () => {
+      const resolved = resolveTheme({
+        sidebar: [{ text: "Guide", items: [{ text: "Intro", link: "/intro" }], collapsed: true }],
+      });
+      expect(resolved.sidebar).toEqual([
+        { text: "Guide", items: [{ text: "Intro", link: "/intro" }], collapsed: true },
+      ]);
+    });
   });
 
   describe("themeToNapi", () => {
@@ -116,6 +125,7 @@ describe("theme", () => {
         footer: { message: "Test", copyright: "2025" },
         entryPage: { mode: "subtle" },
         header: { logoLight: "wordmark.svg", showSiteNameText: false },
+        socialLinks: { github: "https://github.com/example" },
       });
 
       const napi = themeToNapi(resolved);
@@ -124,6 +134,23 @@ describe("theme", () => {
       expect(napi.header?.showSiteNameText).toBe(false);
       expect(napi.footer?.message).toBe("Test");
       expect(napi.footer?.copyright).toBe("2025");
+      expect(napi.socialLinks?.github).toBe("https://github.com/example");
+    });
+
+    it("should convert custom social links to NAPI format", () => {
+      const svg = '<svg viewBox="0 0 24 24"><path d="M1 1h22v22H1z"/></svg>';
+      const resolved = resolveTheme({
+        socialLinks: [{ icon: { svg }, link: "https://example.com", ariaLabel: "Example" }],
+      });
+
+      const napi = themeToNapi(resolved);
+
+      expect(napi.socialLinks?.links?.[0]).toEqual({
+        icon: undefined,
+        iconSvg: svg,
+        link: "https://example.com",
+        ariaLabel: "Example",
+      });
     });
 
     it("should omit empty sections", () => {
