@@ -1,3 +1,4 @@
+mod assets;
 mod commands;
 mod diagnostics;
 mod features;
