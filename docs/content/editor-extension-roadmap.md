@@ -1,0 +1,178 @@
+# Editor Extension Roadmap
+
+This document tracks the production-readiness plan for the Ox Content editor
+extensions. The primary targets are **VS Code** and **Neovim**; Zed is kept in
+lock-step where possible but is not a release gate. Every feature must be
+runnable from a CLI so it can be wired into CI without an editor.
+
+The roadmap is intentionally split into small, conventional pull requests so
+each one can land independently with its own tests and changelog entry. A PR
+must not depend on a later one in the list.
+
+## Architecture Principles
+
+1. **One server, many clients.** All language intelligence lives in
+   `ox_content_lsp` (Rust). Editor plugins are thin clients that only
+   translate LSP capabilities into editor-native UI.
+2. **Every feature ships a CLI counterpart.** If a check or generator only
+   exists inside the LSP, it cannot run in CI. The minimum bar is one binary
+   per feature (`ox-content-link-check`, `ox-content-textlint`, …) returning
+   non-zero on failure with a stable text/JSON output.
+3. **Native dependencies stay native.** Type-aware features that need
+   TypeScript talk to `typescript-go` via the `corsa_client` Rust crate, not
+   through Node. The LSP spawns a single `tsgo` subprocess per workspace and
+   reuses it.
+4. **Editor plugins stay testable headlessly.** VS Code uses
+   `@vscode/test-cli` + `@vscode/test-electron`. Neovim uses
+   `nvim --headless` + `busted`. Both run in CI on every PR.
+5. **No editor-specific feature.** A feature ships in the LSP first, with a
+   CLI, and only then surfaces in any editor. This keeps Neovim, Zed, and
+   future editors at parity.
+
+## Feature Matrix
+
+| #   | Feature                                         | LSP                       | CLI                          | VS Code                   | Neovim                      | Status             |
+| --- | ----------------------------------------------- | ------------------------- | ---------------------------- | ------------------------- | --------------------------- | ------------------ |
+| 1   | Markdown preview (HMR)                          | partial — polling refresh | none                         | webview, debounced reload | external browser, on-demand | needs HMR + CLI    |
+| 2   | i18n preview / completion                       | present                   | `ox-content-i18n`            | present                   | present                     | shipped            |
+| 3   | MDC completion + type check                     | diagnostics only          | `ox-content-mdc-check`       | diagnostics               | diagnostics                 | needs completion   |
+| 4   | Vue / React props completion + jump + typecheck | none                      | none                         | none                      | none                        | new (corsa_client) |
+| 5   | Asset path completion + diagnostics             | none                      | none                         | none                      | none                        | new                |
+| 6   | Dead link checker                               | none                      | none                         | none                      | none                        | new                |
+| 7   | textlint integration                            | none                      | none                         | none                      | none                        | new                |
+| 8   | Frontmatter schema completion + diagnostics     | present                   | none (validated through LSP) | present                   | present                     | needs CLI          |
+
+## PR Sequence
+
+Each item below is one PR. They are listed in execution order; later PRs may
+depend on earlier ones, but never the reverse. Every PR ships:
+
+- Rust unit tests for the new crate(s) and any new LSP request handlers.
+- TypeScript Mocha tests for any VS Code wiring.
+- Lua `busted` tests for any new Neovim surface.
+- A CI job entry in `.github/workflows/ci.yml`.
+- Documentation updates under `docs/content/` and the affected package README.
+
+### 1. `test(vscode-ox-content): integration suite and CI job`
+
+Foundation PR. Tightens the existing extension before adding features.
+
+- Expand `npm/vscode-ox-content/src/test/extension.test.ts` into a suite that
+  exercises: activation, command registration (LSP-advertised vs.
+  webview-only), middleware guards, configuration round-trip, preview panel
+  lifecycle, snippet contribution shape, and `oxContent.openPreview` happy and
+  error paths.
+- Add Node-only unit tests for `config.ts`, `client.ts` middleware predicates,
+  `preview.ts` debouncing, and `constants.ts` (pure data) using `vitest`.
+- New CI job `vscode-test` in `.github/workflows/ci.yml`, running on Linux
+  with `xvfb-run` and pulling the LSP binary out of `target/release` to avoid
+  `cargo run` at activation time.
+- Document the test workflow in
+  `npm/vscode-ox-content/README.md` and `CONTRIBUTING.md`.
+
+### 2. `feat(lsp): preview HMR channel`
+
+Replace the polling refresh path with an explicit push channel.
+
+- New LSP notification `oxContent/previewDidChange` payload `{ uri, html, title }`.
+- VS Code webview subscribes to the notification instead of debouncing on
+  `onDidChangeTextDocument`.
+- New CLI `ox-content-preview` that hosts an SSE endpoint backed by the same
+  renderer; useful for `--watch` workflows and for the Neovim browser
+  preview.
+- Neovim preview opens the SSE URL instead of writing a temp file when
+  `auto_refresh = true`.
+
+### 3. `feat(link-checker): new crate, LSP integration, CLI`
+
+- New crate `ox_content_link_checker` with deterministic local link
+  resolution (relative paths, anchors, link reference definitions) and an
+  optional async HTTP head-check pool guarded behind a feature flag
+  (`http-check`) so the default build is offline-only.
+- LSP diagnostics namespaced under `oxContent.linkCheck`. Configuration:
+  `oxContent.linkCheck.followHttp`, `oxContent.linkCheck.ignorePatterns`.
+- CLI `ox-content-link-check [paths…] [--http] [--format text|json]`.
+- A GitHub Actions snippet pasted into the docs site.
+
+### 4. `feat(lsp): asset path completion and diagnostics`
+
+- LSP completion provider triggered on image and link openers
+  (`![…](`, `<img src="`, raw HTML attribute parsers).
+- Diagnostics for missing assets resolved relative to a configurable
+  `oxContent.asset.srcDir` (defaults to the workspace root).
+- CLI surface piggybacks on `ox-content-link-check --assets`.
+
+### 5. `feat(mdc): component name and attribute completion`
+
+- Extend `ox_content_mdc_checker` with a component registry sourced from an
+  index file (`oxContent.mdc.components`) and from framework integrations
+  if discoverable. The registry is also consumable from the CLI.
+- LSP exposes component name completion at `::` and attribute completion
+  inside the opening tag.
+- Hover surface that documents the discovered component.
+
+### 6. `feat(component-resolver): Vue and React props via corsa_client`
+
+The single largest PR in the sequence. Lands behind a `tsgo` opt-in setting
+so users without `typescript-go` available are not affected.
+
+- New crate `ox_content_component_resolver` that wraps `corsa_client` and
+  resolves a component identifier to its props type, location, and JSDoc.
+- LSP wires completion, go-to-definition, and diagnostics on top of the
+  resolver for MDX/`.mdc` files. Document the resolution model in
+  `docs/content/component-resolution.md`.
+- CLI `ox-content-component-check` runs the resolver workspace-wide and
+  prints unresolved or mistyped references for CI.
+- Configuration: `oxContent.components.tsgoPath`,
+  `oxContent.components.tsconfig`, `oxContent.components.enabled`.
+- One `tsgo` process is shared across the workspace; lifecycle is owned by
+  the LSP backend so the editor never sees it.
+
+### 7. `feat(textlint): sidecar integration`
+
+- Spawn `textlint` (node) as a long-lived sidecar from the LSP when a
+  `.textlintrc` is discovered.
+- Surface findings as LSP diagnostics; expose code actions for `--fix`
+  suggestions when textlint reports them.
+- CLI `ox-content-textlint` shells the same flow for CI.
+- Document required textlint version and rule discovery.
+
+### 8. `feat(nvim): polish, parity, and busted suite`
+
+- Add user commands for every new feature shipped above
+  (`:OxContentLinkCheck`, `:OxContentAssetCheck`, `:OxContentTextlint`,
+  `:OxContentComponentCheck`).
+- Move client setup into a single composable surface so users can disable
+  individual features.
+- Add `busted` tests under `editors/neovim/tests/` and a CI job
+  `neovim-test` running `nvim --headless -c "PlenaryBustedDirectory ..."`.
+- Refresh the README with the new command surface.
+
+### 9. `chore(release): VS Code Marketplace and OpenVSX publish workflow`
+
+Final shipping PR. Does not change runtime behavior.
+
+- New workflow `.github/workflows/publish-vscode.yml` triggered by tags of
+  the form `vscode-v*`. Downloads pre-built `ox-content-lsp` artifacts from
+  the `publish.yml` job for `linux-x64`, `linux-arm64`, `darwin-x64`,
+  `darwin-arm64`, and `win32-x64`. Bundles each into a platform-specific
+  VSIX and publishes via `vsce publish --packagePath` and
+  `ovsx publish --packagePath` with provenance.
+- Document the operational setup in
+  `npm/vscode-ox-content/PUBLISHING.md`: publisher creation,
+  `VSCE_PAT` and `OVSX_PAT` secrets, icon and README requirements,
+  versioning policy, and how to issue a manual hotfix.
+
+## Out of Scope
+
+- IDEA / WebStorm plugin. Not on the roadmap; we expose only the LSP surface
+  and let third parties wrap it.
+- Bundled `tsgo` binary. The component resolver requires the user to provide
+  a `typescript-go` build; we will not vendor it.
+- Hosted preview service. Preview HMR runs locally only.
+
+## Tracking
+
+Progress is tracked through the conventional commit log: each PR above maps
+1:1 to a `feat:` / `test:` / `chore:` commit on `main`. This document is
+updated in the same PR when an item lands.

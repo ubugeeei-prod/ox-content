@@ -91,6 +91,7 @@ Under the hood, Ox Content is not only a docs theme. It also exposes the Markdow
 - [unplugin mdast Bridge Example](./examples/unplugin-mdast-bridge.md) - Native parser plus unified-compatible mdast plugins
 - [unplugin markdown-it Token Bridge](./examples/unplugin-markdown-it-token-bridge.md) - `markdown-it` plugins plus downstream unified token access
 - [Development Setup](./development-setup.md) - Build ox-content itself and work on the repo
+- [Editor Extension Roadmap](./editor-extension-roadmap.md) - VS Code and Neovim plan, PR-by-PR
 
 ## Reference
 
