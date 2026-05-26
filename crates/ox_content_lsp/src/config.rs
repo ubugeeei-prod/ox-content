@@ -13,12 +13,17 @@ pub struct InitializationOptions {
     pub config_path: Option<String>,
     #[serde(rename = "frontmatterSchema")]
     pub frontmatter_schema: Option<String>,
+    /// Path to a JSON file declaring known MDC components and their
+    /// attributes. See `ox_content_mdc_checker::Registry`.
+    #[serde(rename = "mdcComponents")]
+    pub mdc_components: Option<String>,
 }
 
 #[derive(Clone, Debug, Default, Deserialize)]
 #[serde(default)]
 struct WorkspaceConfigFile {
     frontmatter: FrontmatterConfigFile,
+    mdc: MdcConfigFile,
 }
 
 #[derive(Clone, Debug, Default, Deserialize)]
@@ -27,25 +32,36 @@ struct FrontmatterConfigFile {
     schema: Option<String>,
 }
 
+#[derive(Clone, Debug, Default, Deserialize)]
+#[serde(default)]
+struct MdcConfigFile {
+    components: Option<String>,
+}
+
 #[derive(Clone, Debug, Default)]
 pub struct ResolvedConfig {
     pub frontmatter_schema: Option<PathBuf>,
+    pub mdc_components: Option<PathBuf>,
 }
 
 impl ResolvedConfig {
     #[must_use]
     pub fn load(root: Option<&Path>, init: &InitializationOptions) -> Self {
         let root = root.map(Path::to_path_buf);
+        let workspace_file = load_workspace_file(root.as_deref(), init.config_path.as_deref());
+
         let frontmatter_schema = init
             .frontmatter_schema
             .as_ref()
             .map(|value| resolve_path(root.as_deref(), value))
             .or_else(|| {
-                load_workspace_file(root.as_deref(), init.config_path.as_deref()).and_then(
-                    |(path, config)| {
-                        config.frontmatter.schema.map(|value| resolve_path(path.parent(), &value))
-                    },
-                )
+                workspace_file.as_ref().and_then(|(path, config)| {
+                    config
+                        .frontmatter
+                        .schema
+                        .as_ref()
+                        .map(|value| resolve_path(path.parent(), value))
+                })
             })
             .or_else(|| {
                 env::var("OX_CONTENT_FRONTMATTER_SCHEMA")
@@ -53,7 +69,22 @@ impl ResolvedConfig {
                     .map(|value| resolve_path(root.as_deref(), &value))
             });
 
-        Self { frontmatter_schema }
+        let mdc_components = init
+            .mdc_components
+            .as_ref()
+            .map(|value| resolve_path(root.as_deref(), value))
+            .or_else(|| {
+                workspace_file.as_ref().and_then(|(path, config)| {
+                    config.mdc.components.as_ref().map(|value| resolve_path(path.parent(), value))
+                })
+            })
+            .or_else(|| {
+                env::var("OX_CONTENT_MDC_COMPONENTS")
+                    .ok()
+                    .map(|value| resolve_path(root.as_deref(), &value))
+            });
+
+        Self { frontmatter_schema, mdc_components }
     }
 }
 

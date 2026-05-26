@@ -35,7 +35,7 @@ must not depend on a later one in the list.
 | --- | ----------------------------------------------- | ------------------------- | ---------------------------- | ------------------------- | --------------------------- | ------------------ |
 | 1   | Markdown preview (HMR)                          | partial — polling refresh | none                         | webview, debounced reload | external browser, on-demand | needs HMR + CLI    |
 | 2   | i18n preview / completion                       | present                   | `ox-content-i18n`            | present                   | present                     | shipped            |
-| 3   | MDC completion + type check                     | diagnostics only          | `ox-content-mdc-check`       | diagnostics               | diagnostics                 | needs completion   |
+| 3   | MDC completion + type check                     | completion + diagnostics  | `ox-content-mdc-check`       | completion + diagnostics  | completion + diagnostics    | shipped            |
 | 4   | Vue / React props completion + jump + typecheck | none                      | none                         | none                      | none                        | new (corsa_client) |
 | 5   | Asset path completion + diagnostics             | completion provider       | via link checker             | completion + diagnostics  | completion + diagnostics    | shipped            |
 | 6   | Dead link checker                               | diagnostics               | `ox-content-link-check`      | diagnostics               | diagnostics                 | local: shipped     |
@@ -118,12 +118,23 @@ Replace the polling refresh path with an explicit push channel.
 
 ### 5. `feat(mdc): component name and attribute completion`
 
-- Extend `ox_content_mdc_checker` with a component registry sourced from an
-  index file (`oxContent.mdc.components`) and from framework integrations
-  if discoverable. The registry is also consumable from the CLI.
-- LSP exposes component name completion at `::` and attribute completion
-  inside the opening tag.
-- Hover surface that documents the discovered component.
+- ✅ New `ox_content_mdc_checker::Registry` (de)serializes a JSON
+  index of components and their attributes. Deterministic iteration
+  order via `BTreeMap`, lenient parsing (unknown fields tolerated).
+- ✅ LSP completion: component names after `<Foo|`, attribute names
+  inside `<Foo |…>`. Inside-quote and post-`=` positions are skipped
+  to avoid noise. Attribute insertion uses snippet syntax
+  (`name="$0"`) so the cursor lands inside the value.
+- ✅ Registry path is configurable via the `mdcComponents`
+  initialization option, `mdc.components` in the workspace config
+  file, or `OX_CONTENT_MDC_COMPONENTS` env var (in that order).
+- Pending follow-ups:
+  - Hover documentation for an MDC tag the cursor sits on
+    (registry already exposes the data).
+  - Diagnostic for using an unknown component (opt-in only — would
+    be noisy for projects with partial registries).
+  - Framework-specific auto-discovery (Nuxt content, Astro, etc.)
+    that builds the registry without a hand-written JSON file.
 
 ### 6. `feat(component-resolver): Vue and React props via corsa_client`
 
