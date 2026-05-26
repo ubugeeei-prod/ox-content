@@ -49,14 +49,14 @@
     <code class="ox-api-entry__param-name">videoId</code>
     <code class="ox-api-entry__param-type">string</code>
   </div>
-  
+
 </li>
 <li class="ox-api-entry__param">
   <div class="ox-api-entry__param-heading">
     <code class="ox-api-entry__param-name">options</code>
     <code class="ox-api-entry__param-type">Required</code>
   </div>
-  
+
 </li>
 <li class="ox-api-entry__param">
   <div class="ox-api-entry__param-heading">
@@ -71,7 +71,7 @@
 <h4>Returns</h4>
 <div class="ox-api-entry__return">
   <code class="ox-api-entry__return-type">string</code>
-  
+
 </div>
 </div>
   </div>
@@ -96,14 +96,14 @@
     <code class="ox-api-entry__param-name">videoId</code>
     <code class="ox-api-entry__param-type">string</code>
   </div>
-  
+
 </li>
 <li class="ox-api-entry__param">
   <div class="ox-api-entry__param-heading">
     <code class="ox-api-entry__param-name">options</code>
     <code class="ox-api-entry__param-type">Required</code>
   </div>
-  
+
 </li>
 <li class="ox-api-entry__param">
   <div class="ox-api-entry__param-heading">
@@ -125,7 +125,7 @@
 <h4>Returns</h4>
 <div class="ox-api-entry__return">
   <code class="ox-api-entry__return-type">Element</code>
-  
+
 </div>
 </div>
   </div>
@@ -150,7 +150,7 @@
     <code class="ox-api-entry__param-name">input</code>
     <code class="ox-api-entry__param-type">string</code>
   </div>
-  
+
 </li>
 </ul>
 </div>
@@ -158,7 +158,7 @@
 <h4>Returns</h4>
 <div class="ox-api-entry__return">
   <code class="ox-api-entry__return-type">string | null</code>
-  
+
 </div>
 </div>
   </div>
@@ -183,14 +183,14 @@
     <code class="ox-api-entry__param-name">el</code>
     <code class="ox-api-entry__param-type">Element</code>
   </div>
-  
+
 </li>
 <li class="ox-api-entry__param">
   <div class="ox-api-entry__param-heading">
     <code class="ox-api-entry__param-name">name</code>
     <code class="ox-api-entry__param-type">string</code>
   </div>
-  
+
 </li>
 </ul>
 </div>
@@ -198,7 +198,7 @@
 <h4>Returns</h4>
 <div class="ox-api-entry__return">
   <code class="ox-api-entry__return-type">string | undefined</code>
-  
+
 </div>
 </div>
   </div>
@@ -223,7 +223,7 @@
     <code class="ox-api-entry__param-name">options</code>
     <code class="ox-api-entry__param-type">Required</code>
   </div>
-  
+
 </li>
 </ul>
 </div>
@@ -249,7 +249,7 @@
     <code class="ox-api-entry__param-name">html</code>
     <code class="ox-api-entry__param-type">string</code>
   </div>
-  
+
 </li>
 <li class="ox-api-entry__param">
   <div class="ox-api-entry__param-heading">
@@ -264,7 +264,7 @@
 <h4>Returns</h4>
 <div class="ox-api-entry__return">
   <code class="ox-api-entry__return-type">Promise</code>
-  
+
 </div>
 </div>
   </div>

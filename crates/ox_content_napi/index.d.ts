@@ -283,6 +283,8 @@ export interface JsDocsMarkdownModule {
 export interface JsDocsMarkdownOptions {
   groupBy?: string
   githubUrl?: string
+  linkStyle?: 'markdown' | 'clean'
+  basePath?: string
 }
 
 /** Ordered JSDoc tag used by generated API Markdown. */
@@ -303,6 +305,7 @@ export interface JsDocsOutputOptions {
   generateNav?: boolean
   groupBy?: string
   generatedAt?: string
+  basePath?: string
 }
 
 /** Entry page configuration. */
@@ -1099,6 +1102,9 @@ export interface Mf2ValidateResult {
   /** AST as JSON (if parsing succeeded). */
   astJson?: string
 }
+
+/** Normalizes VitePress-specific frontmatter into ox-content's entry-page shape. */
+export declare function normalizeVitePressFrontmatter(frontmatter: any): any
 
 /**
  * Parses Markdown source into an AST.

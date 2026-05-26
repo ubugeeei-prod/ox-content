@@ -49,7 +49,7 @@
     <code class="ox-api-entry__param-name">str</code>
     <code class="ox-api-entry__param-type">string</code>
   </div>
-  
+
 </li>
 </ul>
 </div>
@@ -57,7 +57,7 @@
 <h4>Returns</h4>
 <div class="ox-api-entry__return">
   <code class="ox-api-entry__return-type">string</code>
-  
+
 </div>
 </div>
   </div>
@@ -78,7 +78,7 @@
 <h4>Returns</h4>
 <div class="ox-api-entry__return">
   <code class="ox-api-entry__return-type">OgImageTemplateFn</code>
-  
+
 </div>
 </div>
   </div>

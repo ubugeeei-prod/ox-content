@@ -18,6 +18,12 @@ describe("generateNavMetadata", () => {
       { title: "Types", path: "/api/types" },
     ]);
   });
+
+  it("normalizes the configured base path", () => {
+    const nav = generateNavMetadata([{ file: "/repo/src/context.ts", entries: [] }], "api-ox/");
+
+    expect(nav).toEqual([{ title: "Context", path: "/api-ox/context" }]);
+  });
 });
 
 describe("generateNavCode", () => {

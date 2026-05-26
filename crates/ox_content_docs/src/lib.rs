@@ -30,7 +30,7 @@ pub use graph::{
 };
 pub use markdown::{
     generate_markdown, ApiDocEntry, ApiDocMember, ApiDocModule, ApiDocTag, ApiParamDoc,
-    ApiReturnDoc, MarkdownDocsOptions,
+    ApiReturnDoc, MarkdownDocsOptions, MarkdownLinkStyle,
 };
 pub use nav::{generate_nav_code, generate_nav_metadata, DocsNavItem};
 pub use normalize::{

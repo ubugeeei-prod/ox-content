@@ -1200,15 +1200,7 @@ impl HtmlRenderer {
     /// Creates a new HTML renderer with default options.
     #[must_use]
     pub fn new() -> Self {
-        Self {
-            options: HtmlRendererOptions::new(),
-            output: String::new(),
-            heading_id_counts: FxHashMap::default(),
-            toc_entries: Vec::new(),
-            document_has_toc_marker: false,
-            heading_text_scratch: String::new(),
-            heading_slug_scratch: String::new(),
-        }
+        Self::with_options(HtmlRendererOptions::new())
     }
 
     /// Creates a new HTML renderer with the specified options.
@@ -1220,8 +1212,13 @@ impl HtmlRenderer {
             heading_id_counts: FxHashMap::default(),
             toc_entries: Vec::new(),
             document_has_toc_marker: false,
-            heading_text_scratch: String::new(),
-            heading_slug_scratch: String::new(),
+            // Pre-size the heading scratch buffers: a typical heading text
+            // is well under 64 chars. Pre-allocating spares the first
+            // heading from a `String::with_capacity(0)` → `reserve(N)`
+            // round-trip without meaningful memory cost (these buffers
+            // live for the renderer's lifetime regardless).
+            heading_text_scratch: String::with_capacity(64),
+            heading_slug_scratch: String::with_capacity(64),
         }
     }
 
@@ -1556,7 +1553,14 @@ impl HtmlRenderer {
     }
 
     fn visit_inline_node(&mut self, node: &Node<'_>) {
+        // Text is the overwhelmingly common child of paragraphs / headings
+        // / links / emphasis / strong, etc. — on the bundled corpora it
+        // accounts for roughly 60-70% of inline visits. Inlining the
+        // write here skips the trait's 20-arm `walk_node` match and the
+        // `visit_text` wrapper, both of which are the only thing
+        // `visit_text` would do anyway (escape into `self.output`).
         match node {
+            Node::Text(text) => write_escaped_into(&mut self.output, text.value),
             Node::Html(html) => self.write_html_value(html.value),
             _ => self.visit_node(node),
         }

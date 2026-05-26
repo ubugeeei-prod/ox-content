@@ -107,6 +107,7 @@ module.exports.matchesSearchScopes = binding.matchesSearchScopes;
 module.exports.generateSearchModule = binding.generateSearchModule;
 module.exports.generateSearchModuleFromOptions = binding.generateSearchModuleFromOptions;
 module.exports.collectSearchMarkdownFiles = binding.collectSearchMarkdownFiles;
+module.exports.normalizeVitePressFrontmatter = binding.normalizeVitePressFrontmatter;
 module.exports.generateSsgHtml = binding.generateSsgHtml;
 module.exports.generateSsgBareHtml = binding.generateSsgBareHtml;
 module.exports.getGitLastUpdated = binding.getGitLastUpdated;

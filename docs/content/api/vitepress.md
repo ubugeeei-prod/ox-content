@@ -40,7 +40,7 @@
 <h4>Signature</h4>
 <pre><code class="language-typescript">export function convertVitePressNav(nav: VitePressNavItem[]): SsgNavigationGroup[]</code></pre>
 </div>
-<p class="ox-api-entry__source"><a class="ox-api-entry__source-link" href="https://github.com/ubugeeei/ox-content/blob/main/npm/vite-plugin-ox-content/src/vitepress.ts#L375-L403" target="_blank" rel="noopener noreferrer">View source<span class="ox-api-entry__source-icon" aria-hidden="true"></span></a></p>
+<p class="ox-api-entry__source"><a class="ox-api-entry__source-link" href="https://github.com/ubugeeei/ox-content/blob/main/npm/vite-plugin-ox-content/src/vitepress.ts#L376-L404" target="_blank" rel="noopener noreferrer">View source<span class="ox-api-entry__source-icon" aria-hidden="true"></span></a></p>
 <div class="ox-api-entry__section ox-api-entry__section--params">
 <h4>Parameters</h4>
 <ul class="ox-api-entry__params">
@@ -49,7 +49,7 @@
     <code class="ox-api-entry__param-name">nav</code>
     <code class="ox-api-entry__param-type">VitePressNavItem[]</code>
   </div>
-  
+
 </li>
 </ul>
 </div>
@@ -57,7 +57,7 @@
 <h4>Returns</h4>
 <div class="ox-api-entry__return">
   <code class="ox-api-entry__return-type">SsgNavigationGroup[]</code>
-  
+
 </div>
 </div>
   </div>
@@ -73,7 +73,7 @@
 <h4>Signature</h4>
 <pre><code class="language-typescript">export function convertVitePressSidebar(sidebar: VitePressSidebar): SsgNavigationGroup[]</code></pre>
 </div>
-<p class="ox-api-entry__source"><a class="ox-api-entry__source-link" href="https://github.com/ubugeeei/ox-content/blob/main/npm/vite-plugin-ox-content/src/vitepress.ts#L359-L369" target="_blank" rel="noopener noreferrer">View source<span class="ox-api-entry__source-icon" aria-hidden="true"></span></a></p>
+<p class="ox-api-entry__source"><a class="ox-api-entry__source-link" href="https://github.com/ubugeeei/ox-content/blob/main/npm/vite-plugin-ox-content/src/vitepress.ts#L360-L370" target="_blank" rel="noopener noreferrer">View source<span class="ox-api-entry__source-icon" aria-hidden="true"></span></a></p>
 <div class="ox-api-entry__section ox-api-entry__section--params">
 <h4>Parameters</h4>
 <ul class="ox-api-entry__params">
@@ -82,7 +82,7 @@
     <code class="ox-api-entry__param-name">sidebar</code>
     <code class="ox-api-entry__param-type">VitePressSidebar</code>
   </div>
-  
+
 </li>
 </ul>
 </div>
@@ -90,7 +90,7 @@
 <h4>Returns</h4>
 <div class="ox-api-entry__return">
   <code class="ox-api-entry__return-type">SsgNavigationGroup[]</code>
-  
+
 </div>
 </div>
   </div>
@@ -106,7 +106,7 @@
 <h4>Signature</h4>
 <pre><code class="language-typescript">export function fromVitePressConfig(config: VitePressConfig, overrides: OxContentOptions = {}): OxContentOptions</code></pre>
 </div>
-<p class="ox-api-entry__source"><a class="ox-api-entry__source-link" href="https://github.com/ubugeeei/ox-content/blob/main/npm/vite-plugin-ox-content/src/vitepress.ts#L408-L436" target="_blank" rel="noopener noreferrer">View source<span class="ox-api-entry__source-icon" aria-hidden="true"></span></a></p>
+<p class="ox-api-entry__source"><a class="ox-api-entry__source-link" href="https://github.com/ubugeeei/ox-content/blob/main/npm/vite-plugin-ox-content/src/vitepress.ts#L409-L437" target="_blank" rel="noopener noreferrer">View source<span class="ox-api-entry__source-icon" aria-hidden="true"></span></a></p>
 <div class="ox-api-entry__section ox-api-entry__section--params">
 <h4>Parameters</h4>
 <ul class="ox-api-entry__params">
@@ -115,7 +115,7 @@
     <code class="ox-api-entry__param-name">config</code>
     <code class="ox-api-entry__param-type">VitePressConfig</code>
   </div>
-  
+
 </li>
 <li class="ox-api-entry__param">
   <div class="ox-api-entry__param-heading">
@@ -130,7 +130,7 @@
 <h4>Returns</h4>
 <div class="ox-api-entry__return">
   <code class="ox-api-entry__return-type">OxContentOptions</code>
-  
+
 </div>
 </div>
   </div>
@@ -147,7 +147,7 @@
 <h4>Signature</h4>
 <pre><code class="language-typescript">export function generateVitePressMigrationConfig(config: VitePressConfig, overrides: OxContentOptions = {}, options: GenerateVitePressMigrationConfigOptions = {}): string</code></pre>
 </div>
-<p class="ox-api-entry__source"><a class="ox-api-entry__source-link" href="https://github.com/ubugeeei/ox-content/blob/main/npm/vite-plugin-ox-content/src/vitepress.ts#L444-L458" target="_blank" rel="noopener noreferrer">View source<span class="ox-api-entry__source-icon" aria-hidden="true"></span></a></p>
+<p class="ox-api-entry__source"><a class="ox-api-entry__source-link" href="https://github.com/ubugeeei/ox-content/blob/main/npm/vite-plugin-ox-content/src/vitepress.ts#L445-L459" target="_blank" rel="noopener noreferrer">View source<span class="ox-api-entry__source-icon" aria-hidden="true"></span></a></p>
 <div class="ox-api-entry__section ox-api-entry__section--params">
 <h4>Parameters</h4>
 <ul class="ox-api-entry__params">
@@ -156,7 +156,7 @@
     <code class="ox-api-entry__param-name">config</code>
     <code class="ox-api-entry__param-type">VitePressConfig</code>
   </div>
-  
+
 </li>
 <li class="ox-api-entry__param">
   <div class="ox-api-entry__param-heading">
@@ -178,7 +178,7 @@
 <h4>Returns</h4>
 <div class="ox-api-entry__return">
   <code class="ox-api-entry__return-type">string</code>
-  
+
 </div>
 </div>
   </div>
@@ -194,7 +194,7 @@
 <h4>Signature</h4>
 <pre><code class="language-typescript">export function normalizeVitePressFrontmatter(frontmatter: Record&lt;string, unknown&gt;): Record&lt;string, unknown&gt;</code></pre>
 </div>
-<p class="ox-api-entry__source"><a class="ox-api-entry__source-link" href="https://github.com/ubugeeei/ox-content/blob/main/npm/vite-plugin-ox-content/src/vitepress.ts#L556-L576" target="_blank" rel="noopener noreferrer">View source<span class="ox-api-entry__source-icon" aria-hidden="true"></span></a></p>
+<p class="ox-api-entry__source"><a class="ox-api-entry__source-link" href="https://github.com/ubugeeei/ox-content/blob/main/npm/vite-plugin-ox-content/src/vitepress.ts#L510-L514" target="_blank" rel="noopener noreferrer">View source<span class="ox-api-entry__source-icon" aria-hidden="true"></span></a></p>
 <div class="ox-api-entry__section ox-api-entry__section--params">
 <h4>Parameters</h4>
 <ul class="ox-api-entry__params">
@@ -203,7 +203,7 @@
     <code class="ox-api-entry__param-name">frontmatter</code>
     <code class="ox-api-entry__param-type">Record</code>
   </div>
-  
+
 </li>
 </ul>
 </div>
@@ -211,7 +211,7 @@
 <h4>Returns</h4>
 <div class="ox-api-entry__return">
   <code class="ox-api-entry__return-type">Record</code>
-  
+
 </div>
 </div>
   </div>

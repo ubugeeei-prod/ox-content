@@ -25,6 +25,8 @@ pub struct DocsOutputOptions {
     pub group_by: String,
     /// ISO timestamp included in `docs.json`.
     pub generated_at: String,
+    /// Base path used for navigation links. Defaults to `/api` when `None`.
+    pub base_path: Option<String>,
 }
 
 /// Error returned while writing generated docs.
@@ -70,7 +72,8 @@ pub fn write_docs_output(
     if let Some(extracted_docs) = extracted_docs {
         if options.generate_nav && options.group_by == "file" {
             let files = extracted_docs.iter().map(|doc| doc.file.clone()).collect::<Vec<_>>();
-            let nav_items = generate_nav_metadata(&files, Some(DOCS_NAV_BASE_PATH));
+            let base_path = options.base_path.as_deref().unwrap_or(DOCS_NAV_BASE_PATH);
+            let nav_items = generate_nav_metadata(&files, Some(base_path));
             fs::write(
                 out_dir.join(DOCS_NAV_FILE),
                 generate_nav_code(&nav_items, Some(DOCS_NAV_EXPORT_NAME)),
@@ -130,6 +133,7 @@ mod tests {
             generate_nav: true,
             group_by: "file".to_string(),
             generated_at: "2026-01-01T00:00:00.000Z".to_string(),
+            base_path: None,
         }
     }
 

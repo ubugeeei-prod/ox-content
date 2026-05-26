@@ -58,7 +58,7 @@
     <code class="ox-api-entry__param-name">content</code>
     <code class="ox-api-entry__param-type">string</code>
   </div>
-  
+
 </li>
 </ul>
 </div>
@@ -66,7 +66,7 @@
 <h4>Returns</h4>
 <div class="ox-api-entry__return">
   <code class="ox-api-entry__return-type">string[]</code>
-  
+
 </div>
 </div>
   </div>
@@ -91,35 +91,35 @@
     <code class="ox-api-entry__param-name">html</code>
     <code class="ox-api-entry__param-type">string</code>
   </div>
-  
+
 </li>
 <li class="ox-api-entry__param">
   <div class="ox-api-entry__param-heading">
     <code class="ox-api-entry__param-name">frontmatter</code>
     <code class="ox-api-entry__param-type">Record</code>
   </div>
-  
+
 </li>
 <li class="ox-api-entry__param">
   <div class="ox-api-entry__param-heading">
     <code class="ox-api-entry__param-name">toc</code>
     <code class="ox-api-entry__param-type">TocEntry[]</code>
   </div>
-  
+
 </li>
 <li class="ox-api-entry__param">
   <div class="ox-api-entry__param-heading">
     <code class="ox-api-entry__param-name">filePath</code>
     <code class="ox-api-entry__param-type">string</code>
   </div>
-  
+
 </li>
 <li class="ox-api-entry__param">
   <div class="ox-api-entry__param-heading">
     <code class="ox-api-entry__param-name">_options</code>
     <code class="ox-api-entry__param-type">ResolvedOptions</code>
   </div>
-  
+
 </li>
 </ul>
 </div>
@@ -127,7 +127,7 @@
 <h4>Returns</h4>
 <div class="ox-api-entry__return">
   <code class="ox-api-entry__return-type">string</code>
-  
+
 </div>
 </div>
   </div>

@@ -31,6 +31,11 @@ impl LanguageServer for Backend {
                         ">".into(),
                         "|".into(),
                         ":".into(),
+                        // Asset path completion: `(` opens it after
+                        // `[…]`/`![…]`, `/` reopens it after the user
+                        // descends into a subdirectory.
+                        "(".into(),
+                        "/".into(),
                     ]),
                     ..Default::default()
                 }),

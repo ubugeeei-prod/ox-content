@@ -22,7 +22,7 @@ pub struct DocsNavItem {
 
 /// Generates sidebar navigation metadata from documentation file paths.
 pub fn generate_nav_metadata(files: &[String], base_path: Option<&str>) -> Vec<DocsNavItem> {
-    let base_path = base_path.unwrap_or(DEFAULT_BASE_PATH);
+    let base_path = normalize_base_path(base_path.unwrap_or(DEFAULT_BASE_PATH));
     let mut sorted_files = files.to_vec();
 
     sorted_files.sort_by_key(|file| get_doc_display_name(file));
@@ -35,6 +35,20 @@ pub fn generate_nav_metadata(files: &[String], base_path: Option<&str>) -> Vec<D
             children: None,
         })
         .collect()
+}
+
+fn normalize_base_path(base_path: &str) -> String {
+    let base_path = base_path.trim().trim_end_matches('/');
+
+    if base_path.is_empty() || base_path == "/" {
+        return String::new();
+    }
+
+    if base_path.starts_with('/') {
+        base_path.to_string()
+    } else {
+        format!("/{base_path}")
+    }
 }
 
 /// Generates TypeScript source code for navigation metadata exports.
@@ -140,6 +154,13 @@ mod tests {
                 },
             ]
         );
+    }
+
+    #[test]
+    fn normalizes_nav_base_path() {
+        let nav = generate_nav_metadata(&["/repo/src/context.ts".to_string()], Some("api-ox/"));
+
+        assert_eq!(nav[0].path, "/api-ox/context");
     }
 
     #[test]

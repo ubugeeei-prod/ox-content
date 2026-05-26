@@ -72,7 +72,7 @@ impl MarkdownTransformer {
 
     pub(crate) fn transform(&self, source: &str) -> TransformResult {
         let prepared = self.prepare_source(source);
-        let allocator = Allocator::new();
+        let allocator = Allocator::for_source_len(prepared.content.len());
         let parse_result = self.parse_document(&allocator, &prepared.content);
 
         match parse_result {
@@ -97,7 +97,7 @@ impl MarkdownTransformer {
         let content_bytes = prepared.content.as_bytes().to_vec();
         let frontmatter_bytes = serde_json::to_vec(&prepared.frontmatter)
             .map_err(|error| napi::Error::from_reason(error.to_string()))?;
-        let allocator = Allocator::new();
+        let allocator = Allocator::for_source_len(prepared.content.len());
         let document = self
             .parse_document(&allocator, &prepared.content)
             .map_err(|error| napi::Error::from_reason(error.to_string()))?;

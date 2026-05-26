@@ -26,8 +26,9 @@ use ox_content_docs::{
     normalize_doc_items, write_docs_output, ApiDocEntry, ApiDocMember, ApiDocModule, ApiDocTag,
     ApiParamDoc, ApiReturnDoc, DocExtractor, DocItem, DocItemKind, DocTag, DocsNavItem,
     DocsOutputOptions, EntryPointDocsOptions, EntryPointSpec, ExportGraph, ExportKind,
-    ExportSource, ExtractedDocModule, GraphOptions, MarkdownDocsOptions, NormalizedDocEntry,
-    NormalizedMember, NormalizedParamDoc, NormalizedReturnDoc, ParamDoc, PublicExport,
+    ExportSource, ExtractedDocModule, GraphOptions, MarkdownDocsOptions, MarkdownLinkStyle,
+    NormalizedDocEntry, NormalizedMember, NormalizedParamDoc, NormalizedReturnDoc, ParamDoc,
+    PublicExport,
 };
 use ox_content_parser::{Parser, ParserOptions};
 use ox_content_renderer::HtmlRenderer;
@@ -38,15 +39,10 @@ use ox_content_search::{
 use transfer::TransferPayloadKind;
 use transformer::{parse_frontmatter, MarkdownTransformer};
 
-const ALLOCATOR_BYTES_PER_INPUT_BYTE: usize = 8;
-const MIN_ALLOCATOR_CAPACITY: usize = 4 * 1024;
-
 pub use slides::*;
 
 fn create_allocator_for_source(source: &str) -> Allocator {
-    let capacity =
-        source.len().saturating_mul(ALLOCATOR_BYTES_PER_INPUT_BYTE).max(MIN_ALLOCATOR_CAPACITY);
-    Allocator::with_capacity(capacity)
+    Allocator::for_source_len(source.len())
 }
 
 /// Parse result containing the AST as JSON.
@@ -272,6 +268,9 @@ pub struct JsExtractedDocsModule {
 pub struct JsDocsMarkdownOptions {
     pub group_by: Option<String>,
     pub github_url: Option<String>,
+    #[napi(ts_type = "'markdown' | 'clean'")]
+    pub link_style: Option<String>,
+    pub base_path: Option<String>,
 }
 
 /// Options for writing generated API documentation files.
@@ -281,6 +280,7 @@ pub struct JsDocsOutputOptions {
     pub generate_nav: Option<bool>,
     pub group_by: Option<String>,
     pub generated_at: Option<String>,
+    pub base_path: Option<String>,
 }
 
 /// Entry point used to group generated API docs.
@@ -851,6 +851,7 @@ fn convert_docs_output_options(options: Option<JsDocsOutputOptions>) -> DocsOutp
         generate_nav: options.generate_nav.unwrap_or(false),
         group_by: options.group_by.unwrap_or_else(|| "file".to_string()),
         generated_at: options.generated_at.unwrap_or_default(),
+        base_path: options.base_path,
     }
 }
 
@@ -985,10 +986,19 @@ pub fn generate_docs_markdown(
         options.map_or_else(MarkdownDocsOptions::default, |options| MarkdownDocsOptions {
             group_by: options.group_by.unwrap_or_else(|| "file".to_string()),
             github_url: options.github_url,
+            link_style: parse_markdown_link_style(options.link_style.as_deref()),
+            base_path: options.base_path,
         });
     generate_markdown(&docs.into_iter().map(convert_markdown_module).collect::<Vec<_>>(), &options)
         .into_iter()
         .collect()
+}
+
+fn parse_markdown_link_style(link_style: Option<&str>) -> MarkdownLinkStyle {
+    match link_style {
+        Some("clean") => MarkdownLinkStyle::Clean,
+        _ => MarkdownLinkStyle::Markdown,
+    }
 }
 
 /// Generates the machine-readable docs data JSON payload.
@@ -2218,6 +2228,12 @@ pub fn format_ssg_title(name: String) -> String {
     ox_content_ssg::format_title(&name)
 }
 
+/// Normalizes VitePress-specific frontmatter into ox-content's entry-page shape.
+#[napi(js_name = "normalizeVitePressFrontmatter")]
+pub fn normalize_vitepress_frontmatter(frontmatter: serde_json::Value) -> serde_json::Value {
+    ox_content_ssg::normalize_vitepress_frontmatter(frontmatter)
+}
+
 /// Builds SSG navigation groups from markdown files.
 #[napi(js_name = "buildSsgNavItems")]
 pub fn build_ssg_nav_items(
@@ -2840,7 +2856,10 @@ mod tests {
     use std::process::Command;
 
     use super::transformer::parse_frontmatter;
-    use super::{get_git_last_updated, map_normalized_doc_entry};
+    use super::{
+        generate_docs_markdown, get_git_last_updated, map_normalized_doc_entry,
+        JsDocsMarkdownEntry, JsDocsMarkdownModule, JsDocsMarkdownOptions,
+    };
 
     #[test]
     fn parses_nested_yaml_frontmatter() {
@@ -2919,6 +2938,41 @@ mod tests {
     }
 
     #[test]
+    fn generate_docs_markdown_accepts_clean_link_options() {
+        let docs = vec![JsDocsMarkdownModule {
+            file: "/repo/src/context.ts".to_string(),
+            entries: vec![JsDocsMarkdownEntry {
+                name: "CommandContext".to_string(),
+                kind: "interface".to_string(),
+                description: "Runtime context.".to_string(),
+                params: None,
+                returns: None,
+                examples: None,
+                tags: None,
+                private: false,
+                file: "/repo/src/context.ts".to_string(),
+                line: 1,
+                end_line: 1,
+                signature: Some("export interface CommandContext".to_string()),
+                members: None,
+            }],
+        }];
+        let markdown = generate_docs_markdown(
+            docs,
+            Some(JsDocsMarkdownOptions {
+                group_by: Some("file".to_string()),
+                github_url: None,
+                link_style: Some("clean".to_string()),
+                base_path: Some("/api-ox".to_string()),
+            }),
+        );
+        let index = markdown.get("index.md").unwrap();
+
+        assert!(index.contains("href=\"/api-ox/context\""));
+        assert!(index.contains("href=\"/api-ox/context#commandcontext\""));
+    }
+
+    #[test]
     fn prepare_source_returns_object_shaped_frontmatter_and_origin() {
         let result = super::prepare_source(
             "---\ntitle: Guide\nmeta:\n  draft: false\n---\n# Body".to_string(),
@@ -2979,6 +3033,7 @@ mod tests {
             "loadDictionariesFlat",
             "matchesSearchScopes",
             "mergeHighlightedCodeBlocks",
+            "normalizeVitePressFrontmatter",
             "parse",
             "parseAndRender",
             "parseAndRenderAsync",

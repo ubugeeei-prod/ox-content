@@ -173,6 +173,7 @@ Supported features include:
 - table / code fence / callout insertion commands
 - preview HTML generation for editor UIs
 - `.mdc` authoring support with component tag diagnostics
+- asset path completion inside `[…](`, `![…](`, and HTML `src=`/`href=` attributes
 
 For CI or editor-independent checks, run:
 

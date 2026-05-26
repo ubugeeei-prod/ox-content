@@ -68,7 +68,7 @@
     <code class="ox-api-entry__param-name">config</code>
     <code class="ox-api-entry__param-type">{ ... }</code>
   </div>
-  
+
 </li>
 </ul>
 </div>
@@ -76,7 +76,7 @@
 <h4>Returns</h4>
 <div class="ox-api-entry__return">
   <code class="ox-api-entry__return-type">ThemeComponent</code>
-  
+
 </div>
 </div>
 <div class="ox-api-entry__section ox-api-entry__section--examples">
@@ -118,7 +118,7 @@ entry: EntryLayout,
     <code class="ox-api-entry__param-name">param</code>
     <code class="ox-api-entry__param-type">ThemeProps</code>
   </div>
-  
+
 </li>
 </ul>
 </div>
@@ -126,7 +126,7 @@ entry: EntryLayout,
 <h4>Returns</h4>
 <div class="ox-api-entry__return">
   <code class="ox-api-entry__return-type">JSXNode</code>
-  
+
 </div>
 </div>
   </div>
@@ -166,7 +166,7 @@ entry: EntryLayout,
 <h4>Returns</h4>
 <div class="ox-api-entry__return">
   <code class="ox-api-entry__return-type">Promise</code>
-  
+
 </div>
 </div>
   </div>
