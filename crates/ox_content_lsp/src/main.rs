@@ -16,6 +16,7 @@ mod frontmatter;
 mod i18n;
 mod preview;
 mod state;
+mod textlint;
 
 use tower_lsp::{LspService, Server};
 

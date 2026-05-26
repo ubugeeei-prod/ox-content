@@ -192,6 +192,7 @@ Supported features include:
 - `.mdc` authoring support with component tag diagnostics
 - asset path completion inside `[…](`, `![…](`, and HTML `src=`/`href=` attributes
 - dead link diagnostics powered by `ox_content_link_checker`
+- opt-in [textlint](https://textlint.github.io) integration: on-save diagnostics under `source: "textlint"`
 - MDC component name and attribute completion when a project provides a component registry
 
 For CI or editor-independent checks, run:

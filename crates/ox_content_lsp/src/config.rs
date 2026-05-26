@@ -13,6 +13,14 @@ pub struct InitializationOptions {
     pub config_path: Option<String>,
     #[serde(rename = "frontmatterSchema")]
     pub frontmatter_schema: Option<String>,
+    /// Opt-in for the textlint sidecar (off by default — textlint
+    /// is heavy and noisy for projects that don't use it).
+    #[serde(rename = "textlintEnabled", default)]
+    pub textlint_enabled: bool,
+    /// Optional override command for the textlint binary. Empty
+    /// falls back to `npx textlint`.
+    #[serde(rename = "textlintCommand")]
+    pub textlint_command: Option<String>,
     /// Path to a JSON file declaring known MDC components and their
     /// attributes. See `ox_content_mdc_checker::Registry`.
     #[serde(rename = "mdcComponents")]
@@ -23,6 +31,7 @@ pub struct InitializationOptions {
 #[serde(default)]
 struct WorkspaceConfigFile {
     frontmatter: FrontmatterConfigFile,
+    textlint: TextlintConfigFile,
     mdc: MdcConfigFile,
 }
 
@@ -34,6 +43,13 @@ struct FrontmatterConfigFile {
 
 #[derive(Clone, Debug, Default, Deserialize)]
 #[serde(default)]
+struct TextlintConfigFile {
+    enabled: Option<bool>,
+    command: Option<String>,
+}
+
+#[derive(Clone, Debug, Default, Deserialize)]
+#[serde(default)]
 struct MdcConfigFile {
     components: Option<String>,
 }
@@ -41,6 +57,7 @@ struct MdcConfigFile {
 #[derive(Clone, Debug, Default)]
 pub struct ResolvedConfig {
     pub frontmatter_schema: Option<PathBuf>,
+    pub textlint: crate::textlint::TextlintConfig,
     pub mdc_components: Option<PathBuf>,
 }
 
@@ -69,6 +86,27 @@ impl ResolvedConfig {
                     .map(|value| resolve_path(root.as_deref(), &value))
             });
 
+        // textlint flows through the same init -> workspace file ->
+        // env var pipeline so users have one consistent override
+        // model. The init option wins so editors can flip it
+        // dynamically without rewriting the workspace config.
+        let textlint_enabled = if init.textlint_enabled {
+            true
+        } else if let Some((_, config)) = workspace_file.as_ref() {
+            config.textlint.enabled.unwrap_or(false)
+        } else {
+            env::var("OX_CONTENT_TEXTLINT_ENABLED")
+                .ok()
+                .is_some_and(|value| matches!(value.as_str(), "1" | "true" | "yes"))
+        };
+        let textlint_command = init
+            .textlint_command
+            .clone()
+            .or_else(|| {
+                workspace_file.as_ref().and_then(|(_, config)| config.textlint.command.clone())
+            })
+            .or_else(|| env::var("OX_CONTENT_TEXTLINT_COMMAND").ok());
+
         let mdc_components = init
             .mdc_components
             .as_ref()
@@ -84,7 +122,14 @@ impl ResolvedConfig {
                     .map(|value| resolve_path(root.as_deref(), &value))
             });
 
-        Self { frontmatter_schema, mdc_components }
+        Self {
+            frontmatter_schema,
+            textlint: crate::textlint::TextlintConfig {
+                enabled: textlint_enabled,
+                command: textlint_command,
+            },
+            mdc_components,
+        }
     }
 }
 

@@ -41,12 +41,26 @@ export function resolveServerOptions(
   };
 }
 
-export function resolveInitializationOptions(workspaceRoot?: string): Record<string, string> {
-  const options: Record<string, string> = {};
+export function resolveInitializationOptions(
+  workspaceRoot?: string,
+): Record<string, string | boolean> {
+  const options: Record<string, string | boolean> = {};
 
   const schemaSetting = getConfig().get<string>("frontmatter.schema", "").trim();
   if (schemaSetting) {
     options.frontmatterSchema = resolveFilePath(schemaSetting, workspaceRoot);
+  }
+
+  // textlint defaults to off; only forward the flag when explicitly
+  // enabled to keep the init payload small for users who haven't
+  // opted in.
+  const textlintEnabled = getConfig().get<boolean>("textlint.enabled", false);
+  if (textlintEnabled) {
+    options.textlintEnabled = true;
+  }
+  const textlintCommand = getConfig().get<string>("textlint.command", "").trim();
+  if (textlintCommand) {
+    options.textlintCommand = textlintCommand;
   }
 
   const mdcComponents = getConfig().get<string>("mdc.components", "").trim();
