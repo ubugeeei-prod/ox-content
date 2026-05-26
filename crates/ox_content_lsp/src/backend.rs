@@ -76,11 +76,16 @@ impl Backend {
             .ok()
             .and_then(|path| path.extension().and_then(|ext| ext.to_str()).map(str::to_string))
             .is_some_and(|ext| ext == "mdc");
-        let diagnostics = self.diagnostics(&document, is_mdc).await;
+        let diagnostics = self.diagnostics(uri, &document, is_mdc).await;
         self.client.publish_diagnostics(uri.clone(), diagnostics, None).await;
     }
 
-    async fn diagnostics(&self, document: &TextDocumentState, is_mdc: bool) -> Vec<Diagnostic> {
+    async fn diagnostics(
+        &self,
+        uri: &Url,
+        document: &TextDocumentState,
+        is_mdc: bool,
+    ) -> Vec<Diagnostic> {
         let config = self.resolved_config().await;
         let frontmatter = frontmatter::parse_frontmatter(document);
         let mut diagnostics = frontmatter
@@ -92,6 +97,16 @@ impl Backend {
         if is_mdc {
             diagnostics.extend(diagnostics::mdc_diagnostics(document, frontmatter.block.as_ref()));
         }
+        // Link checker runs on every Markdown/MDC document. It only
+        // consults the local filesystem, so it stays cheap enough to
+        // run on every keystroke. The optional workspace root is used
+        // as the absolute-path resolution base; without it `/foo.md`
+        // links are anchored to the document's own directory.
+        diagnostics.extend(diagnostics::link_check_diagnostics(
+            document,
+            uri,
+            self.state.root().await,
+        ));
         diagnostics
     }
 
