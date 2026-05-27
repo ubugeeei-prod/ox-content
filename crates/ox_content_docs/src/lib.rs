@@ -25,8 +25,9 @@ pub use generator::{
 };
 pub use graph::{
     build_export_graph, extract_docs_from_entry_points, EntryPointDocsOptions, EntryPointSpec,
-    EntrypointDocsModule, EntrypointModule, ExportGraph, ExportKind, ExportSource, GraphError,
-    GraphOptions, PublicExport, ResolvedModule,
+    EntrypointDocsModule, EntrypointModule, ExportGraph, ExportKind, ExportSource,
+    ExternalDocsOptions, ExternalPackageSource, GraphError, GraphOptions, PublicExport,
+    ResolvedModule,
 };
 pub use markdown::{
     generate_markdown, ApiDocEntry, ApiDocMember, ApiDocModule, ApiDocTag, ApiParamDoc,

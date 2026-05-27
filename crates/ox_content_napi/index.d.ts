@@ -310,6 +310,8 @@ export interface JsEntryPointDocsOptions {
   tsconfig?: string
   private?: boolean
   internal?: boolean
+  externalDocs?: boolean
+  externalPackageSources?: Array<JsExternalPackageSource>
 }
 
 /** Public entry point module. */
@@ -336,8 +338,15 @@ export interface JsExportSource {
   kind: string
   module?: string
   package?: string
+  specifier?: string
   originalName: string
   typeOnly: boolean
+}
+
+/** Explicit source entry for an external package. */
+export interface JsExternalPackageSource {
+  package: string
+  entry: string
 }
 
 /** Extracted docs for one source file returned to JavaScript callers. */
@@ -364,6 +373,8 @@ export interface JsFeatureConfig {
 export interface JsGraphOptions {
   root?: string
   tsconfig?: string
+  externalDocs?: boolean
+  externalPackageSources?: Array<JsExternalPackageSource>
 }
 
 /** Hero action for entry page. */
