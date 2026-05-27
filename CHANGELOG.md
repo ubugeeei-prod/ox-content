@@ -1,5 +1,43 @@
 # Changelog
 
+## [2.20.0] - 2026-05-27
+
+### Features
+
+- preview HMR push channel (#192)
+- on-save LSP sidecar with opt-in command override (#197)
+- component name + attribute completion via registry (#195)
+- new crate, LSP diagnostics, CLI (#193)
+- asset path completion inside link/image openers (#194)
+- support clean URLs in generated Markdown links (#187)
+
+### Bug Fixes
+
+- extract external re-export docs (#198)
+
+### Performance
+
+- add Allocator::for_source_len, use it across LSP + NAPI (#190)
+- fast-path text in inline dispatch, pre-size heading scratch (#188)
+- reuse parsed list lines (#184)
+- scan safe urls in chunks (#183)
+- write numeric attrs without strings (#182)
+- avoid unused link url allocations (#181)
+- write duplicate toc id suffixes in place (#180)
+- avoid duplicate toc slug clones (#179)
+- avoid inline toc entry clones (#178)
+- avoid temporary table row allocations (#177)
+- write heading id directly to output, skip callout alloc (#173) (#174)
+
+### Refactoring
+
+- move VitePress frontmatter normalization to Rust (#186)
+- move docs generation output into rust (#185)
+
+### Documentation
+
+- add editor extension roadmap (#189)
+
 ## [2.19.0] - 2026-05-26
 
 ### Features
