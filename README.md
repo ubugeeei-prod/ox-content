@@ -266,6 +266,8 @@ Special thanks to [kazupon](https://github.com/kazupon) for substantial communit
 
 ## Sponsor
 
+CI/CD for this repository is sponsored by [Blacksmith](https://www.blacksmith.sh/), which provides the GitHub Actions runners used by this project.
+
 If you find Ox Content useful, please consider [sponsoring](https://github.com/sponsors/ubugeeei) the project.
 
 ## License

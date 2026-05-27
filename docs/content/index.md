@@ -103,3 +103,9 @@ Under the hood, Ox Content is not only a docs theme. It also exposes the Markdow
 ## Community Credits
 
 Special thanks to [kazupon](https://github.com/kazupon) for substantial community contributions around JSDoc support, including the API docs generation pipeline and documentation quality.
+
+## Sponsor
+
+CI/CD for this repository is sponsored by [Blacksmith](https://www.blacksmith.sh/), which provides the GitHub Actions runners used by this project.
+
+If you find Ox Content useful, please consider [sponsoring](https://github.com/sponsors/ubugeeei) the project.
