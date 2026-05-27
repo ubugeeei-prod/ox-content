@@ -302,6 +302,17 @@ export interface JsEntrypointDocsModule {
   sourcePath: string
   entries: Array<JsDocEntry>
   exports: Array<JsPublicExport>
+  diagnostics: Array<JsDocsDiagnostic>
+}
+
+/** Diagnostic for an entry point export during docs extraction. */
+export interface JsDocsDiagnostic {
+  code: string
+  entrypoint: string
+  exportName: string
+  exportKind: string
+  source: JsExportSource
+  message: string
 }
 
 /** Options for extracting docs grouped by entry point. */

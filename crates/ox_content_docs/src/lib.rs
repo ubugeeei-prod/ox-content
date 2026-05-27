@@ -24,10 +24,10 @@ pub use generator::{
     GenerateError, GenerateResult,
 };
 pub use graph::{
-    build_export_graph, extract_docs_from_entry_points, EntryPointDocsOptions, EntryPointSpec,
-    EntrypointDocsModule, EntrypointModule, ExportGraph, ExportKind, ExportSource,
-    ExternalDocsOptions, ExternalPackageSource, GraphError, GraphOptions, PublicExport,
-    ResolvedModule,
+    build_export_graph, extract_docs_from_entry_points, DocsDiagnostic, DocsDiagnosticCode,
+    EntryPointDocsOptions, EntryPointSpec, EntrypointDocsModule, EntrypointModule, ExportGraph,
+    ExportKind, ExportSource, ExternalDocsOptions, ExternalPackageSource, GraphError, GraphOptions,
+    PublicExport, ResolvedModule,
 };
 pub use markdown::{
     generate_markdown, ApiDocEntry, ApiDocMember, ApiDocModule, ApiDocTag, ApiParamDoc,

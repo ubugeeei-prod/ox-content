@@ -180,25 +180,37 @@ pub struct DocExtractor {
     include_private: bool,
     /// Include internal items.
     include_internal: bool,
+    /// Include declarations without JSDoc. Used for public entry point exports.
+    include_undocumented_declarations: bool,
 }
 
 impl DocExtractor {
     /// Creates a new documentation extractor.
     #[must_use]
     pub fn new() -> Self {
-        Self { include_private: false, include_internal: false }
+        Self {
+            include_private: false,
+            include_internal: false,
+            include_undocumented_declarations: false,
+        }
     }
 
     /// Creates a new extractor that includes private items.
     #[must_use]
     pub fn with_private(include_private: bool) -> Self {
-        Self { include_private, include_internal: false }
+        Self { include_private, include_internal: false, include_undocumented_declarations: false }
     }
 
     /// Creates a new extractor with explicit visibility options.
     #[must_use]
     pub fn with_visibility(include_private: bool, include_internal: bool) -> Self {
-        Self { include_private, include_internal }
+        Self { include_private, include_internal, include_undocumented_declarations: false }
+    }
+
+    /// Creates a new extractor for public entry point exports.
+    #[must_use]
+    pub(crate) fn for_entrypoint_exports(include_private: bool, include_internal: bool) -> Self {
+        Self { include_private, include_internal, include_undocumented_declarations: true }
     }
 
     /// Extracts documentation from a source file.
@@ -239,6 +251,7 @@ impl DocExtractor {
             file_path,
             self.include_private,
             self.include_internal,
+            self.include_undocumented_declarations,
             jsdoc_cache,
         );
         if let Some(module_item) = visitor.extract_module_entry(&comments) {
@@ -335,6 +348,7 @@ struct DocVisitor<'a> {
     file_path: &'a str,
     include_private: bool,
     include_internal: bool,
+    include_undocumented_declarations: bool,
     jsdoc_cache: FxHashMap<u32, ParsedJsdoc>,
     line_starts: Vec<usize>,
     items: Vec<DocItem>,
@@ -348,6 +362,7 @@ impl<'a> DocVisitor<'a> {
         file_path: &'a str,
         include_private: bool,
         include_internal: bool,
+        include_undocumented_declarations: bool,
         jsdoc_cache: FxHashMap<u32, ParsedJsdoc>,
     ) -> Self {
         let mut line_starts = vec![0];
@@ -363,6 +378,7 @@ impl<'a> DocVisitor<'a> {
             file_path,
             include_private,
             include_internal,
+            include_undocumented_declarations,
             jsdoc_cache,
             line_starts,
             items: Vec::new(),
@@ -395,6 +411,20 @@ impl<'a> DocVisitor<'a> {
 
     fn extract_jsdoc(&self, attached_to: u32) -> Option<(String, String, Vec<DocTag>)> {
         self.jsdoc_cache.get(&attached_to).cloned()
+    }
+
+    fn extract_declaration_docs(
+        &self,
+        attached_to: u32,
+    ) -> Option<(Option<String>, Option<String>, Vec<DocTag>)> {
+        if let Some((jsdoc, doc, tags)) = self.extract_jsdoc(attached_to) {
+            if self.should_skip_by_visibility(&tags) {
+                return None;
+            }
+            return Some((Some(jsdoc), (!doc.is_empty()).then_some(doc), tags));
+        }
+
+        self.include_undocumented_declarations.then(|| (None, None, Vec::new()))
     }
 
     fn extract_module_entry(&self, comments: &[Comment]) -> Option<DocItem> {
@@ -1015,7 +1045,9 @@ impl<'a> DocVisitor<'a> {
             TSType::TSBigIntKeyword(_) => "bigint".to_string(),
             TSType::TSSymbolKeyword(_) => "symbol".to_string(),
             TSType::TSObjectKeyword(_) => "object".to_string(),
-            TSType::TSTypeReference(ref_type) => Self::format_ts_type_name(&ref_type.type_name),
+            TSType::TSTypeReference(ref_type) => {
+                self.slice(ref_type.span().start, ref_type.span().end)
+            }
             TSType::TSArrayType(arr) => format!("{}[]", self.format_ts_type(&arr.element_type)),
             TSType::TSUnionType(union) => {
                 let types: Vec<String> =
@@ -1164,21 +1196,18 @@ impl<'a> DocVisitor<'a> {
         attached_to: u32,
     ) -> Option<DocItem> {
         let name = func.id.as_ref()?.name.to_string();
-        let (jsdoc, doc, tags) = self.extract_jsdoc(attached_to)?;
-        if self.should_skip_by_visibility(&tags) {
-            return None;
-        }
+        let (jsdoc, doc, tags) = self.extract_declaration_docs(attached_to)?;
         let (line, end_line) = self.span_lines(attached_to, func.span.end);
 
         Some(DocItem {
             name,
             kind: DocItemKind::Function,
-            doc: if doc.is_empty() { None } else { Some(doc) },
+            doc,
             source_path: self.file_path.to_string(),
             line,
             end_line,
             column: self.column_number(attached_to),
-            jsdoc: Some(jsdoc),
+            jsdoc,
             exported,
             signature: Some(self.format_function_signature(
                 func,
@@ -1203,10 +1232,7 @@ impl<'a> DocVisitor<'a> {
         exported: bool,
         attached_to: u32,
     ) -> Option<DocItem> {
-        let (jsdoc, doc, tags) = self.extract_jsdoc(attached_to)?;
-        if self.should_skip_by_visibility(&tags) {
-            return None;
-        }
+        let (jsdoc, doc, tags) = self.extract_declaration_docs(attached_to)?;
         let (line, end_line) = self.span_lines(attached_to, class.span.end);
 
         let mut children = Vec::new();
@@ -1317,12 +1343,12 @@ impl<'a> DocVisitor<'a> {
         Some(DocItem {
             name: name.to_string(),
             kind: DocItemKind::Class,
-            doc: if doc.is_empty() { None } else { Some(doc) },
+            doc,
             source_path: self.file_path.to_string(),
             line,
             end_line,
             column: self.column_number(attached_to),
-            jsdoc: Some(jsdoc),
+            jsdoc,
             exported,
             signature: Some(self.format_class_signature(class, name, exported)),
             optional: false,
@@ -1512,12 +1538,9 @@ impl<'a> DocVisitor<'a> {
                 }
             }
             Declaration::VariableDeclaration(var_decl) => {
-                let Some((jsdoc, doc, tags)) = self.extract_jsdoc(attached_to) else {
+                let Some((jsdoc, doc, tags)) = self.extract_declaration_docs(attached_to) else {
                     return;
                 };
-                if self.should_skip_by_visibility(&tags) {
-                    return;
-                }
                 let (line, end_line) = self.span_lines(attached_to, var_decl.span.end);
 
                 for declarator in &var_decl.declarations {
@@ -1533,12 +1556,12 @@ impl<'a> DocVisitor<'a> {
                                 self.items.push(DocItem {
                                     name: name.clone(),
                                     kind: DocItemKind::Function,
-                                    doc: if doc.is_empty() { None } else { Some(doc.clone()) },
+                                    doc: doc.clone(),
                                     source_path: self.file_path.to_string(),
                                     line,
                                     end_line,
                                     column: self.column_number(attached_to),
-                                    jsdoc: Some(jsdoc.clone()),
+                                    jsdoc: jsdoc.clone(),
                                     exported,
                                     signature: Some(self.format_assigned_function_signature(
                                         &name,
@@ -1563,12 +1586,12 @@ impl<'a> DocVisitor<'a> {
                                 self.items.push(DocItem {
                                     name: name.clone(),
                                     kind: DocItemKind::Function,
-                                    doc: if doc.is_empty() { None } else { Some(doc.clone()) },
+                                    doc: doc.clone(),
                                     source_path: self.file_path.to_string(),
                                     line,
                                     end_line,
                                     column: self.column_number(attached_to),
-                                    jsdoc: Some(jsdoc.clone()),
+                                    jsdoc: jsdoc.clone(),
                                     exported,
                                     signature: Some(self.format_assigned_function_signature(
                                         &name,
@@ -1590,12 +1613,12 @@ impl<'a> DocVisitor<'a> {
                                 self.items.push(DocItem {
                                     name: name.clone(),
                                     kind: DocItemKind::Variable,
-                                    doc: if doc.is_empty() { None } else { Some(doc.clone()) },
+                                    doc: doc.clone(),
                                     source_path: self.file_path.to_string(),
                                     line,
                                     end_line,
                                     column: self.column_number(attached_to),
-                                    jsdoc: Some(jsdoc.clone()),
+                                    jsdoc: jsdoc.clone(),
                                     exported,
                                     signature: Some(self.format_variable_signature(
                                         &name,
@@ -1618,12 +1641,9 @@ impl<'a> DocVisitor<'a> {
                 }
             }
             Declaration::TSTypeAliasDeclaration(type_alias) => {
-                let Some((jsdoc, doc, tags)) = self.extract_jsdoc(attached_to) else {
+                let Some((jsdoc, doc, tags)) = self.extract_declaration_docs(attached_to) else {
                     return;
                 };
-                if self.should_skip_by_visibility(&tags) {
-                    return;
-                }
                 let (line, end_line) = self.span_lines(attached_to, type_alias.span.end);
                 let children = match &type_alias.type_annotation {
                     TSType::TSTypeLiteral(type_literal) => {
@@ -1635,12 +1655,12 @@ impl<'a> DocVisitor<'a> {
                 self.items.push(DocItem {
                     name: type_alias.id.name.to_string(),
                     kind: DocItemKind::Type,
-                    doc: if doc.is_empty() { None } else { Some(doc) },
+                    doc,
                     source_path: self.file_path.to_string(),
                     line,
                     end_line,
                     column: self.column_number(attached_to),
-                    jsdoc: Some(jsdoc),
+                    jsdoc,
                     exported,
                     signature: Some(self.format_type_alias_signature(type_alias, exported)),
                     optional: false,
@@ -1653,12 +1673,9 @@ impl<'a> DocVisitor<'a> {
                 });
             }
             Declaration::TSInterfaceDeclaration(interface) => {
-                let Some((jsdoc, doc, tags)) = self.extract_jsdoc(attached_to) else {
+                let Some((jsdoc, doc, tags)) = self.extract_declaration_docs(attached_to) else {
                     return;
                 };
-                if self.should_skip_by_visibility(&tags) {
-                    return;
-                }
                 let (line, end_line) = self.span_lines(attached_to, interface.span.end);
 
                 let children = self.extract_ts_signature_members(&interface.body.body);
@@ -1666,12 +1683,12 @@ impl<'a> DocVisitor<'a> {
                 self.items.push(DocItem {
                     name: interface.id.name.to_string(),
                     kind: DocItemKind::Interface,
-                    doc: if doc.is_empty() { None } else { Some(doc) },
+                    doc,
                     source_path: self.file_path.to_string(),
                     line,
                     end_line,
                     column: self.column_number(attached_to),
-                    jsdoc: Some(jsdoc),
+                    jsdoc,
                     exported,
                     signature: Some(self.format_interface_signature(interface, exported)),
                     optional: false,
@@ -1684,12 +1701,9 @@ impl<'a> DocVisitor<'a> {
                 });
             }
             Declaration::TSEnumDeclaration(enum_decl) => {
-                let Some((jsdoc, doc, tags)) = self.extract_jsdoc(attached_to) else {
+                let Some((jsdoc, doc, tags)) = self.extract_declaration_docs(attached_to) else {
                     return;
                 };
-                if self.should_skip_by_visibility(&tags) {
-                    return;
-                }
                 let (line, end_line) = self.span_lines(attached_to, enum_decl.span.end);
 
                 let children: Vec<DocItem> = enum_decl
@@ -1744,12 +1758,12 @@ impl<'a> DocVisitor<'a> {
                 self.items.push(DocItem {
                     name: enum_decl.id.name.to_string(),
                     kind: DocItemKind::Enum,
-                    doc: if doc.is_empty() { None } else { Some(doc) },
+                    doc,
                     source_path: self.file_path.to_string(),
                     line,
                     end_line,
                     column: self.column_number(attached_to),
-                    jsdoc: Some(jsdoc),
+                    jsdoc,
                     exported,
                     signature: None,
                     optional: false,
@@ -1975,6 +1989,16 @@ export const label = (value: string): string => value;
         assert_eq!(items[1].signature.as_deref(), Some("export let retries: number"));
         assert_eq!(items[2].name, "label");
         assert_eq!(items[2].kind, DocItemKind::Function);
+    }
+
+    #[test]
+    fn test_undocumented_top_level_variable_is_skipped_by_default() {
+        let source = "export const ANONYMOUS_COMMAND_NAME = '(anonymous)';";
+
+        let items =
+            DocExtractor::new().extract_source(source, "constants.ts", SourceType::ts()).unwrap();
+
+        assert!(items.is_empty());
     }
 
     #[test]

@@ -23,11 +23,11 @@ use ox_content_docs::{
     build_export_graph, extract_docs_from_directories, extract_docs_from_entry_points,
     generate_docs_data_json, generate_markdown, generate_nav_code, generate_nav_metadata,
     normalize_doc_items, write_docs_output, ApiDocEntry, ApiDocMember, ApiDocModule, ApiDocTag,
-    ApiParamDoc, ApiReturnDoc, DocExtractor, DocItem, DocItemKind, DocTag, DocsNavItem,
-    DocsOutputOptions, EntryPointDocsOptions, EntryPointSpec, ExportGraph, ExportKind,
-    ExportSource, ExternalDocsOptions, ExternalPackageSource, ExtractedDocModule, GraphOptions,
-    MarkdownDocsOptions, MarkdownLinkStyle, NormalizedDocEntry, NormalizedMember,
-    NormalizedParamDoc, NormalizedReturnDoc, ParamDoc, PublicExport,
+    ApiParamDoc, ApiReturnDoc, DocExtractor, DocItem, DocItemKind, DocTag, DocsDiagnostic,
+    DocsDiagnosticCode, DocsNavItem, DocsOutputOptions, EntryPointDocsOptions, EntryPointSpec,
+    ExportGraph, ExportKind, ExportSource, ExternalDocsOptions, ExternalPackageSource,
+    ExtractedDocModule, GraphOptions, MarkdownDocsOptions, MarkdownLinkStyle, NormalizedDocEntry,
+    NormalizedMember, NormalizedParamDoc, NormalizedReturnDoc, ParamDoc, PublicExport,
 };
 use ox_content_parser::{Parser, ParserOptions};
 use ox_content_renderer::HtmlRenderer;
@@ -373,6 +373,19 @@ pub struct JsEntrypointDocsModule {
     pub source_path: String,
     pub entries: Vec<JsDocEntry>,
     pub exports: Vec<JsPublicExport>,
+    pub diagnostics: Vec<JsDocsDiagnostic>,
+}
+
+/// Diagnostic for an entry point export during docs extraction.
+#[napi(object)]
+#[derive(Clone)]
+pub struct JsDocsDiagnostic {
+    pub code: String,
+    pub entrypoint: String,
+    pub export_name: String,
+    pub export_kind: String,
+    pub source: JsExportSource,
+    pub message: String,
 }
 
 /// Transform options for JavaScript.
@@ -759,6 +772,27 @@ fn map_public_export(export: PublicExport) -> JsPublicExport {
     }
 }
 
+fn map_docs_diagnostic_code(code: DocsDiagnosticCode) -> String {
+    match code {
+        DocsDiagnosticCode::FilteredByVisibility => "filteredByVisibility",
+        DocsDiagnosticCode::MissingDeclaration => "missingDeclaration",
+        DocsDiagnosticCode::UnsupportedExport => "unsupportedExport",
+        DocsDiagnosticCode::UnresolvedExternal => "unresolvedExternal",
+    }
+    .to_string()
+}
+
+fn map_docs_diagnostic(diagnostic: DocsDiagnostic) -> JsDocsDiagnostic {
+    JsDocsDiagnostic {
+        code: map_docs_diagnostic_code(diagnostic.code),
+        entrypoint: diagnostic.entrypoint,
+        export_name: diagnostic.export_name,
+        export_kind: map_export_kind(diagnostic.export_kind),
+        source: map_export_source(diagnostic.source),
+        message: diagnostic.message,
+    }
+}
+
 fn map_export_graph(graph: ExportGraph) -> JsExportGraph {
     JsExportGraph {
         entrypoints: graph
@@ -1007,6 +1041,7 @@ pub fn extract_docs_from_entry_points_napi(
             source_path: path_to_string(&module.source_path),
             entries: module.entries.into_iter().map(map_normalized_doc_entry).collect(),
             exports: module.exports.into_iter().map(map_public_export).collect(),
+            diagnostics: module.diagnostics.into_iter().map(map_docs_diagnostic).collect(),
         })
         .collect())
 }
@@ -3066,6 +3101,66 @@ export interface ExternalThing {
             .module
             .as_deref()
             .is_some_and(|module| { module.ends_with("external-pkg/lib/index.d.ts") }));
+
+        let _ = fs::remove_dir_all(root);
+    }
+
+    #[test]
+    fn extract_docs_from_entry_points_emits_undocumented_public_const_and_diagnostics() {
+        let unique =
+            std::time::SystemTime::now().duration_since(std::time::UNIX_EPOCH).unwrap().as_nanos();
+        let root = std::env::temp_dir()
+            .join(format!("ox-content-napi-local-export-docs-{}-{unique}", std::process::id()));
+        let _ = fs::remove_dir_all(&root);
+        fs::create_dir_all(root.join("src")).unwrap();
+        fs::write(
+            root.join("src/index.ts"),
+            r"
+export { ANONYMOUS_COMMAND_NAME } from './constants';
+export type { ExtractArgs } from './types';
+",
+        )
+        .unwrap();
+        fs::write(
+            root.join("src/constants.ts"),
+            r#"
+export const ANONYMOUS_COMMAND_NAME = "(anonymous)";
+"#,
+        )
+        .unwrap();
+        fs::write(
+            root.join("src/types.ts"),
+            r"
+/**
+ * Type helper to extract args.
+ *
+ * @internal
+ */
+export type ExtractArgs<G> = G extends { args: infer A } ? A : never;
+",
+        )
+        .unwrap();
+
+        let modules = extract_docs_from_entry_points_napi(
+            vec![JsEntryPointSpec {
+                path: "src/index.ts".to_string(),
+                name: Some("default".to_string()),
+            }],
+            Some(JsEntryPointDocsOptions {
+                root: Some(root.to_string_lossy().into_owned()),
+                ..Default::default()
+            }),
+        )
+        .unwrap();
+
+        assert_eq!(modules[0].entries.len(), 1);
+        assert_eq!(modules[0].entries[0].name, "ANONYMOUS_COMMAND_NAME");
+        assert_eq!(modules[0].entries[0].kind, "variable");
+        assert!(modules[0].entries[0].description.is_empty());
+        assert_eq!(modules[0].diagnostics.len(), 1);
+        assert_eq!(modules[0].diagnostics[0].code, "filteredByVisibility");
+        assert_eq!(modules[0].diagnostics[0].export_name, "ExtractArgs");
+        assert_eq!(modules[0].diagnostics[0].source.original_name, "ExtractArgs");
 
         let _ = fs::remove_dir_all(root);
     }

@@ -568,7 +568,7 @@ export interface Command {
         assert_eq!(
             member.returns,
             Some(NormalizedReturnDoc {
-                type_annotation: "Promise".to_string(),
+                type_annotation: "Promise<void>".to_string(),
                 description: "Run result".to_string()
             })
         );
