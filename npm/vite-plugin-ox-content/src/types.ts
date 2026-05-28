@@ -773,6 +773,12 @@ export interface DocsOptions {
   basePath?: string;
 
   /**
+   * Generated Markdown output path strategy.
+   * @default 'flat'
+   */
+  pathStrategy?: "flat" | "typedoc";
+
+  /**
    * Generate navigation metadata file.
    * @default true
    */
@@ -797,6 +803,7 @@ export interface ResolvedDocsOptions {
   githubUrl?: string;
   linkStyle: "markdown" | "clean";
   basePath?: string;
+  pathStrategy: "flat" | "typedoc";
   generateNav: boolean;
 }
 

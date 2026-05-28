@@ -6,7 +6,6 @@
  */
 import * as path from "path";
 import * as crypto from "crypto";
-import type {} from "./optional-deps";
 import { openBrowser } from "./browser";
 import type { OgBrowserSession } from "./browser";
 import { getDefaultTemplate } from "./template";

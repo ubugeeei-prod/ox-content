@@ -200,6 +200,48 @@ describe("generateMarkdown", () => {
     expect(markdown["index.md"]).toContain('href="/api-ox/context#commandcontext"');
     expect(markdown["index.md"]).not.toContain(".md#commandcontext");
   });
+
+  it("emits TypeDoc-style paths when pathStrategy is typedoc", () => {
+    const docs: ExtractedDocs[] = [
+      {
+        file: "default",
+        entries: [
+          {
+            name: "Command",
+            kind: "interface",
+            description: "Runtime command.",
+            file: "/repo/src/types.ts",
+            line: 1,
+            endLine: 1,
+            signature: "export interface Command",
+          },
+          {
+            name: "cli",
+            kind: "function",
+            description: "Runs {@link Command}.",
+            file: "/repo/src/cli.ts",
+            line: 1,
+            endLine: 1,
+            signature: "export function cli(): void",
+          },
+        ],
+      },
+    ];
+
+    const markdown = generateMarkdown(
+      docs,
+      resolveDocsOptions({
+        linkStyle: "clean",
+        basePath: "/api",
+        pathStrategy: "typedoc",
+      })!,
+    );
+
+    expect(markdown["default/index.md"]).toContain("[`cli`](/api/default/functions/cli)");
+    expect(markdown["default/functions/cli.md"]).toContain(
+      'href="/api/default/interfaces/Command"',
+    );
+  });
 });
 
 describe("generateMarkdown extraction", () => {

@@ -31,9 +31,11 @@ pub use graph::{
 };
 pub use markdown::{
     generate_markdown, ApiDocEntry, ApiDocMember, ApiDocModule, ApiDocTag, ApiParamDoc,
-    ApiReturnDoc, MarkdownDocsOptions, MarkdownLinkStyle,
+    ApiReturnDoc, MarkdownDocsOptions, MarkdownLinkStyle, MarkdownPathStrategy,
 };
-pub use nav::{generate_nav_code, generate_nav_metadata, DocsNavItem};
+pub use nav::{
+    generate_nav_code, generate_nav_metadata, generate_nav_metadata_from_docs, DocsNavItem,
+};
 pub use normalize::{
     normalize_doc_item, normalize_doc_items, NormalizedDocEntry, NormalizedDocKind,
     NormalizedMember, NormalizedMemberKind, NormalizedParamDoc, NormalizedReturnDoc,

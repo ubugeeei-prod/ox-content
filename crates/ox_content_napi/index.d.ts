@@ -274,6 +274,7 @@ export interface JsDocsMarkdownOptions {
   githubUrl?: string
   linkStyle?: 'markdown' | 'clean'
   basePath?: string
+  pathStrategy?: 'flat' | 'typedoc'
 }
 
 /** Ordered JSDoc tag used by generated API Markdown. */
@@ -295,6 +296,7 @@ export interface JsDocsOutputOptions {
   groupBy?: string
   generatedAt?: string
   basePath?: string
+  pathStrategy?: 'flat' | 'typedoc'
 }
 
 /** Entry page configuration. */
