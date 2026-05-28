@@ -19,15 +19,15 @@ jobs:
       fail-fast: false
       matrix:
         include:
-          - os: blacksmith-6vcpu-macos-latest
+          - os: macos-latest
             target: x86_64-apple-darwin
-          - os: blacksmith-6vcpu-macos-latest
+          - os: macos-latest
             target: aarch64-apple-darwin
-          - os: blacksmith-2vcpu-ubuntu-2404
+          - os: ubuntu-24.04
             target: x86_64-unknown-linux-gnu
-          - os: blacksmith-2vcpu-ubuntu-2404
+          - os: ubuntu-24.04
             target: aarch64-unknown-linux-gnu
-          - os: blacksmith-2vcpu-windows-2025
+          - os: windows-2025
             target: x86_64-pc-windows-msvc
 
     steps:
@@ -70,7 +70,7 @@ jobs:
 
   publish-napi:
     name: Publish @ox-content/napi
-    runs-on: blacksmith-2vcpu-ubuntu-2404
+    runs-on: ubuntu-24.04
     needs: build-napi
     environment: npm
     permissions:
@@ -186,7 +186,7 @@ jobs:
 
   publish-packages:
     name: Publish npm packages
-    runs-on: blacksmith-2vcpu-ubuntu-2404
+    runs-on: ubuntu-24.04
     needs: publish-napi
     environment: npm
     permissions:
@@ -331,7 +331,7 @@ jobs:
 
   publish-crates:
     name: Publish to crates.io
-    runs-on: blacksmith-2vcpu-ubuntu-2404
+    runs-on: ubuntu-24.04
     permissions:
       contents: read
       id-token: write
@@ -372,7 +372,7 @@ jobs:
 
   create-release:
     name: Create GitHub Release
-    runs-on: blacksmith-2vcpu-ubuntu-2404
+    runs-on: ubuntu-24.04
     needs: [publish-packages, publish-crates]
     permissions:
       contents: write
