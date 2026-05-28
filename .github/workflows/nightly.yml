@@ -80,9 +80,10 @@ jobs:
 
       - name: Install zig (Linux ARM64)
         if: matrix.target == 'aarch64-unknown-linux-gnu'
-        uses: goto-bus-stop/setup-zig@v2
-        with:
-          version: 0.13.0
+        run: |
+          curl -fsSL https://ziglang.org/download/0.13.0/zig-linux-x86_64-0.13.0.tar.xz -o zig.tar.xz
+          tar -xf zig.tar.xz
+          echo "$PWD/zig-linux-x86_64-0.13.0" >> "$GITHUB_PATH"
 
       - name: Install cargo-zigbuild (Linux ARM64)
         if: matrix.target == 'aarch64-unknown-linux-gnu'
