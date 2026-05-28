@@ -151,7 +151,9 @@ describe("vitepress migration helpers", () => {
       help: false,
     });
   });
+});
 
+describe("vitepress migration CLI", () => {
   it("runs the migration CLI through a runtime adapter", async () => {
     const directory = await mkdtemp(path.join(tmpdir(), "ox-content-vitepress-cli-"));
     const configPath = path.join(directory, "config.mjs");

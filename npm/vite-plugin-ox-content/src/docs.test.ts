@@ -200,7 +200,9 @@ describe("generateMarkdown", () => {
     expect(markdown["index.md"]).toContain('href="/api-ox/context#commandcontext"');
     expect(markdown["index.md"]).not.toContain(".md#commandcontext");
   });
+});
 
+describe("generateMarkdown extraction", () => {
   it("extracts declaration line ranges for source links", async () => {
     const srcDir = await fs.mkdtemp(path.join(os.tmpdir(), "ox-content-docs-src-"));
     tempDirs.push(srcDir);
@@ -347,7 +349,9 @@ export type CommandOptions = {
     expect(markdown["command.md"]).toContain("readonly");
     expect(markdown["command.md"]).toContain("run(ctx: Context): Promise&lt;void&gt;");
   });
+});
 
+describe("generateMarkdown entry points", () => {
   it("groups docs by public API entry points", async () => {
     const srcDir = await fs.mkdtemp(path.join(os.tmpdir(), "ox-content-docs-src-"));
     tempDirs.push(srcDir);
