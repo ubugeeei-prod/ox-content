@@ -51,40 +51,41 @@ suite("vscode-ox-content extension surface", () => {
   let activationCompleted = false;
 
   suiteSetup(async function () {
-    // Activation can take a moment in CI on the first run.
-    this.timeout(30_000);
-
-    const extension = vscode.extensions.getExtension(EXTENSION_ID);
-    assert.ok(extension, `extension ${EXTENSION_ID} is not present in the host`);
-
-    // Trigger activation via an activationEvent rather than calling
-    // `extension.activate()` directly. The activate() function registers
-    // commands unconditionally, so a second invocation would error out
-    // with "command already exists" once auto-activation has already
-    // fired (e.g. because the workspace contains `sample.md`).
-    const doc = await vscode.workspace.openTextDocument({
-      language: "markdown",
-      content: "# activator\n",
-    });
-    await vscode.window.showTextDocument(doc);
-
-    // Wait up to 25s for full activation. activate() awaits startClient
-    // which talks to the ox-content-lsp binary over stdio; on runners
-    // without that binary, this may never complete and the LSP-dependent
-    // checks below skip themselves.
-    const start = Date.now();
-    while (!extension.isActive && Date.now() - start < 25_000) {
-      await new Promise((resolve) => setTimeout(resolve, 100));
-    }
-    activationCompleted = extension.isActive;
+    activationCompleted = await activateExtensionForTests(this);
   });
 
   setup(async () => {
-    // Each test starts from a clean editor stack so an inherited preview
-    // panel or open document does not leak into the next assertion.
     await vscode.commands.executeCommand("workbench.action.closeAllEditors");
   });
 
+  registerManifestTests();
+  registerActivationTests(() => activationCompleted);
+  registerPreviewTests(() => activationCompleted);
+  registerConfigurationTests();
+});
+
+async function activateExtensionForTests(context: {
+  timeout: (ms: number) => void;
+}): Promise<boolean> {
+  context.timeout(30_000);
+
+  const extension = vscode.extensions.getExtension(EXTENSION_ID);
+  assert.ok(extension, `extension ${EXTENSION_ID} is not present in the host`);
+
+  const doc = await vscode.workspace.openTextDocument({
+    language: "markdown",
+    content: "# activator\n",
+  });
+  await vscode.window.showTextDocument(doc);
+
+  const start = Date.now();
+  while (!extension.isActive && Date.now() - start < 25_000) {
+    await new Promise((resolve) => setTimeout(resolve, 100));
+  }
+  return extension.isActive;
+}
+
+function registerManifestTests(): void {
   test("extension is registered with the workbench", () => {
     const extension = vscode.extensions.getExtension(EXTENSION_ID);
     assert.ok(extension, `extension ${EXTENSION_ID} is not present`);
@@ -144,20 +145,6 @@ suite("vscode-ox-content extension surface", () => {
     }
   });
 
-  test("declared commands are registered after activation", async function () {
-    if (!activationCompleted) {
-      this.skip();
-    }
-    const registered = await vscode.commands.getCommands(true);
-    const oxCommands = registered.filter((id) => id.startsWith("oxContent."));
-    for (const id of [...EXPECTED_COMMANDS, ...EXPECTED_LSP_COMMANDS]) {
-      assert.ok(
-        registered.includes(id),
-        `command ${id} not registered. registered oxContent.* commands: ${oxCommands.join(", ")}`,
-      );
-    }
-  });
-
   test("contributes a snippet path for markdown that exists on disk", async () => {
     const extension = vscode.extensions.getExtension(EXTENSION_ID);
     assert.ok(extension, `extension ${EXTENSION_ID} not found`);
@@ -195,9 +182,25 @@ suite("vscode-ox-content extension surface", () => {
       assert.ok(prefixes.has(prefix), `snippet prefix ${prefix} missing from markdown.json`);
     }
   });
+}
+
+function registerActivationTests(isActivated: () => boolean): void {
+  test("declared commands are registered after activation", async function () {
+    if (!isActivated()) {
+      this.skip();
+    }
+    const registered = await vscode.commands.getCommands(true);
+    const oxCommands = registered.filter((id) => id.startsWith("oxContent."));
+    for (const id of [...EXPECTED_COMMANDS, ...EXPECTED_LSP_COMMANDS]) {
+      assert.ok(
+        registered.includes(id),
+        `command ${id} not registered. registered oxContent.* commands: ${oxCommands.join(", ")}`,
+      );
+    }
+  });
 
   test("insert commands without an active editor show a hint instead of throwing", async function () {
-    if (!activationCompleted) {
+    if (!isActivated()) {
       this.skip();
     }
     for (const id of EDITOR_GUARDED_COMMANDS) {
@@ -208,15 +211,17 @@ suite("vscode-ox-content extension surface", () => {
   });
 
   test("openPreview without an active markdown editor shows a hint", async function () {
-    if (!activationCompleted) {
+    if (!isActivated()) {
       this.skip();
     }
     // Should resolve cleanly even though there's no markdown buffer to preview.
     await vscode.commands.executeCommand("oxContent.openPreview");
   });
+}
 
+function registerPreviewTests(isActivated: () => boolean): void {
   test("openPreview without an active markdown editor does not open a webview", async function () {
-    if (!activationCompleted) {
+    if (!isActivated()) {
       this.skip();
     }
     // Open a non-markdown buffer so there *is* an active editor — just
@@ -231,13 +236,7 @@ suite("vscode-ox-content extension surface", () => {
 
     // The webview is opened via createWebviewPanel which surfaces as a
     // tab whose viewType begins with our id. Assert none of them appear.
-    const previewTabs = vscode.window.tabGroups.all
-      .flatMap((group) => group.tabs)
-      .filter(
-        (tab) =>
-          tab.input instanceof vscode.TabInputWebview &&
-          tab.input.viewType.endsWith("oxContentPreview"),
-      );
+    const previewTabs = getPreviewTabs();
     assert.equal(
       previewTabs.length,
       0,
@@ -246,7 +245,7 @@ suite("vscode-ox-content extension surface", () => {
   });
 
   test("openPreview from a markdown editor opens (and disposes) a webview tab", async function () {
-    if (!activationCompleted) {
+    if (!isActivated()) {
       this.skip();
     }
     const doc = await vscode.workspace.openTextDocument({
@@ -262,13 +261,7 @@ suite("vscode-ox-content extension surface", () => {
     const start = Date.now();
     let previewTabs: vscode.Tab[] = [];
     while (Date.now() - start < 5_000) {
-      previewTabs = vscode.window.tabGroups.all
-        .flatMap((group) => group.tabs)
-        .filter(
-          (tab) =>
-            tab.input instanceof vscode.TabInputWebview &&
-            tab.input.viewType.endsWith("oxContentPreview"),
-        );
+      previewTabs = getPreviewTabs();
       if (previewTabs.length > 0) {
         break;
       }
@@ -285,16 +278,12 @@ suite("vscode-ox-content extension surface", () => {
     for (const tab of previewTabs) {
       await vscode.window.tabGroups.close(tab);
     }
-    const stillThere = vscode.window.tabGroups.all
-      .flatMap((group) => group.tabs)
-      .filter(
-        (tab) =>
-          tab.input instanceof vscode.TabInputWebview &&
-          tab.input.viewType.endsWith("oxContentPreview"),
-      );
+    const stillThere = getPreviewTabs();
     assert.equal(stillThere.length, 0, "preview tab was not disposed after close");
   });
+}
 
+function registerConfigurationTests(): void {
   test("oxContent.preview.autoRefresh round-trips through the workbench config", async () => {
     const config = vscode.workspace.getConfiguration("oxContent");
     const original = config.get<boolean>("preview.autoRefresh");
@@ -310,4 +299,14 @@ suite("vscode-ox-content extension surface", () => {
         .update("preview.autoRefresh", original, vscode.ConfigurationTarget.Global);
     }
   });
-});
+}
+
+function getPreviewTabs(): vscode.Tab[] {
+  return vscode.window.tabGroups.all
+    .flatMap((group) => group.tabs)
+    .filter(
+      (tab) =>
+        tab.input instanceof vscode.TabInputWebview &&
+        tab.input.viewType.endsWith("oxContentPreview"),
+    );
+}
