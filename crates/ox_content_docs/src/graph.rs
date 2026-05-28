@@ -160,10 +160,44 @@ pub struct EntrypointDocsModule {
     pub file: String,
     /// Source file path.
     pub source_path: PathBuf,
-    /// Normalized docs entries for reachable local exports.
+    /// Normalized docs entries for reachable exports.
     pub entries: Vec<NormalizedDocEntry>,
     /// Public export metadata, including external re-exports.
     pub exports: Vec<PublicExport>,
+    /// Diagnostics for exports that could not be emitted as docs entries.
+    #[serde(default)]
+    pub diagnostics: Vec<DocsDiagnostic>,
+}
+
+/// Diagnostic for an entry point export during docs extraction.
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+pub struct DocsDiagnostic {
+    /// Machine-readable diagnostic code.
+    pub code: DocsDiagnosticCode,
+    /// Public entry point name.
+    pub entrypoint: String,
+    /// Public export name.
+    pub export_name: String,
+    /// Public export kind.
+    pub export_kind: ExportKind,
+    /// Export source metadata.
+    pub source: ExportSource,
+    /// Human-readable diagnostic message.
+    pub message: String,
+}
+
+/// Diagnostic code for entry point docs extraction.
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub enum DocsDiagnosticCode {
+    /// Export was intentionally filtered by visibility options.
+    FilteredByVisibility,
+    /// Graph export could not be matched to a declaration.
+    MissingDeclaration,
+    /// Export kind is not emitted as a docs entry.
+    UnsupportedExport,
+    /// External export could not be resolved to a source or declaration module.
+    UnresolvedExternal,
 }
 
 /// Export graph error.
@@ -242,13 +276,17 @@ pub fn extract_docs_from_entry_points(
 ) -> Result<Vec<EntrypointDocsModule>, GraphError> {
     let graph = build_export_graph(entrypoints, &options.graph)?;
     let extractor =
-        DocExtractor::with_visibility(options.include_private, options.include_internal);
+        DocExtractor::for_entrypoint_exports(options.include_private, options.include_internal);
+    let all_visibility_extractor = DocExtractor::for_entrypoint_exports(true, true);
     let mut docs_cache: FxHashMap<PathBuf, Vec<NormalizedDocEntry>> =
+        FxHashMap::with_hasher(FxBuildHasher);
+    let mut all_docs_cache: FxHashMap<PathBuf, Vec<NormalizedDocEntry>> =
         FxHashMap::with_hasher(FxBuildHasher);
     let mut modules = Vec::with_capacity(graph.entrypoints.len());
 
     for entrypoint in graph.entrypoints {
         let mut entries = Vec::new();
+        let mut diagnostics = Vec::new();
         let mut seen = FxHashSet::default();
 
         for export in &entrypoint.exports {
@@ -257,31 +295,88 @@ pub fn extract_docs_from_entry_points(
                 | ExportSource::External { module: Some(module), original_name, .. } => {
                     (module, original_name)
                 }
-                ExportSource::External { .. } => continue,
-            };
-            if original_name == "*" {
-                continue;
-            }
-
-            if !docs_cache.contains_key(module) {
-                let items = extractor
-                    .extract_file(module)
-                    .map_err(|source| GraphError::Extract { path: module.clone(), source })?;
-                docs_cache.insert(module.clone(), normalize_doc_items(items));
-            }
-
-            let Some(module_entries) = docs_cache.get(module) else {
-                continue;
-            };
-            for entry in module_entries.iter().filter(|entry| entry.name == *original_name) {
-                let key = format!("{}\0{}\0{}", export.name, entry.file, entry.line);
-                if !seen.insert(key) {
+                ExportSource::External { .. } => {
+                    diagnostics.push(docs_diagnostic(
+                        DocsDiagnosticCode::UnresolvedExternal,
+                        &entrypoint.name,
+                        export,
+                        format!(
+                            "export \"{}\" from entrypoint \"{}\" was not documented because its external source could not be resolved",
+                            export.name, entrypoint.name
+                        ),
+                    ));
                     continue;
                 }
-                let mut entry = entry.clone();
-                entry.name.clone_from(&export.name);
-                entries.push(entry);
+            };
+            if original_name == "*" {
+                diagnostics.push(docs_diagnostic(
+                    DocsDiagnosticCode::UnsupportedExport,
+                    &entrypoint.name,
+                    export,
+                    format!(
+                        "export \"{}\" from entrypoint \"{}\" was not documented because namespace exports are not emitted as docs entries",
+                        export.name, entrypoint.name
+                    ),
+                ));
+                continue;
             }
+
+            let matched = {
+                let module_entries =
+                    normalized_entries_for_module(&mut docs_cache, &extractor, module)?;
+                let mut matched = false;
+                for entry in module_entries.iter().filter(|entry| entry.name == *original_name) {
+                    matched = true;
+                    let key = format!("{}\0{}\0{}", export.name, entry.file, entry.line);
+                    if !seen.insert(key) {
+                        continue;
+                    }
+                    let mut entry = entry.clone();
+                    entry.name.clone_from(&export.name);
+                    entries.push(entry);
+                }
+                matched
+            };
+
+            if matched {
+                continue;
+            }
+
+            let all_module_entries = normalized_entries_for_module(
+                &mut all_docs_cache,
+                &all_visibility_extractor,
+                module,
+            )?;
+            if let Some(hidden_entry) =
+                all_module_entries.iter().find(|entry| entry.name == *original_name)
+            {
+                if let Some(reason) = filtered_visibility_reason(
+                    hidden_entry,
+                    options.include_private,
+                    options.include_internal,
+                ) {
+                    diagnostics.push(docs_diagnostic(
+                        DocsDiagnosticCode::FilteredByVisibility,
+                        &entrypoint.name,
+                        export,
+                        format!(
+                            "export \"{}\" from entrypoint \"{}\" was excluded from docs because it is marked {reason}",
+                            export.name, entrypoint.name
+                        ),
+                    ));
+                    continue;
+                }
+            }
+
+            diagnostics.push(docs_diagnostic(
+                DocsDiagnosticCode::MissingDeclaration,
+                &entrypoint.name,
+                export,
+                format!(
+                    "export \"{}\" from entrypoint \"{}\" was not documented because no matching declaration was extracted",
+                    export.name, entrypoint.name
+                ),
+            ));
         }
 
         modules.push(EntrypointDocsModule {
@@ -290,10 +385,56 @@ pub fn extract_docs_from_entry_points(
             source_path: entrypoint.source_path,
             entries,
             exports: entrypoint.exports,
+            diagnostics,
         });
     }
 
     Ok(modules)
+}
+
+fn normalized_entries_for_module<'a>(
+    docs_cache: &'a mut FxHashMap<PathBuf, Vec<NormalizedDocEntry>>,
+    extractor: &DocExtractor,
+    module: &PathBuf,
+) -> Result<&'a [NormalizedDocEntry], GraphError> {
+    if !docs_cache.contains_key(module) {
+        let items = extractor
+            .extract_file(module)
+            .map_err(|source| GraphError::Extract { path: module.clone(), source })?;
+        docs_cache.insert(module.clone(), normalize_doc_items(items));
+    }
+
+    Ok(docs_cache.get(module).expect("normalized docs cache entry").as_slice())
+}
+
+fn filtered_visibility_reason(
+    entry: &NormalizedDocEntry,
+    include_private: bool,
+    include_internal: bool,
+) -> Option<&'static str> {
+    if !include_private && entry.private {
+        return Some("@private");
+    }
+    if !include_internal && entry.tags.contains_key("internal") {
+        return Some("@internal");
+    }
+    None
+}
+
+fn docs_diagnostic(
+    code: DocsDiagnosticCode,
+    entrypoint: &str,
+    export: &PublicExport,
+    message: String,
+) -> DocsDiagnostic {
+    DocsDiagnostic {
+        code,
+        entrypoint: entrypoint.to_string(),
+        export_name: export.name.clone(),
+        export_kind: export.kind,
+        source: export.source.clone(),
+        message,
+    }
 }
 
 struct ModuleResolver {
@@ -1060,6 +1201,118 @@ export function label(value: string): string {
         .unwrap();
         let names = docs[0].entries.iter().map(|entry| entry.name.as_str()).collect::<Vec<_>>();
         assert_eq!(names, ["sum", "Options", "label"]);
+
+        fs::remove_dir_all(root).unwrap();
+    }
+
+    #[test]
+    fn entrypoint_docs_emit_public_consts_without_jsdoc() {
+        let root = temp_root();
+        fs::create_dir_all(root.join("src")).unwrap();
+        fs::write(
+            root.join("src/index.ts"),
+            r"
+export { ANONYMOUS_COMMAND_NAME, CLI_OPTIONS_DEFAULT } from './constants';
+",
+        )
+        .unwrap();
+        fs::write(
+            root.join("src/constants.ts"),
+            r#"
+export const ANONYMOUS_COMMAND_NAME = "(anonymous)";
+
+export const CLI_OPTIONS_DEFAULT: CliOptions<DefaultGunshiParams> = {
+  usageSilent: false,
+};
+"#,
+        )
+        .unwrap();
+
+        let entrypoints = [EntryPointSpec {
+            path: PathBuf::from("src/index.ts"),
+            name: Some("default".to_string()),
+        }];
+        let docs = extract_docs_from_entry_points(
+            &entrypoints,
+            &EntryPointDocsOptions {
+                graph: GraphOptions { root: Some(root.clone()), ..GraphOptions::default() },
+                include_private: false,
+                include_internal: false,
+            },
+        )
+        .unwrap();
+
+        assert!(docs[0].diagnostics.is_empty());
+        let anonymous =
+            docs[0].entries.iter().find(|entry| entry.name == "ANONYMOUS_COMMAND_NAME").unwrap();
+        assert_eq!(anonymous.kind.as_str(), "variable");
+        assert!(anonymous.description.is_empty());
+        assert_eq!(
+            anonymous.signature.as_deref(),
+            Some(r#"export const ANONYMOUS_COMMAND_NAME = "(anonymous)""#)
+        );
+
+        let cli_options =
+            docs[0].entries.iter().find(|entry| entry.name == "CLI_OPTIONS_DEFAULT").unwrap();
+        assert_eq!(cli_options.kind.as_str(), "variable");
+        assert_eq!(
+            cli_options.signature.as_deref(),
+            Some("export const CLI_OPTIONS_DEFAULT: CliOptions<DefaultGunshiParams>")
+        );
+
+        fs::remove_dir_all(root).unwrap();
+    }
+
+    #[test]
+    fn entrypoint_docs_diagnose_internal_type_filtered_by_visibility() {
+        let root = temp_root();
+        fs::create_dir_all(root.join("src")).unwrap();
+        fs::write(root.join("src/index.ts"), "export type { ExtractArgs } from './types';\n")
+            .unwrap();
+        fs::write(
+            root.join("src/types.ts"),
+            r"
+/**
+ * Type helper to extract args.
+ *
+ * @internal
+ */
+export type ExtractArgs<G> = G extends { args: infer A } ? A : never;
+",
+        )
+        .unwrap();
+
+        let entrypoints = [EntryPointSpec {
+            path: PathBuf::from("src/index.ts"),
+            name: Some("default".to_string()),
+        }];
+        let docs = extract_docs_from_entry_points(
+            &entrypoints,
+            &EntryPointDocsOptions {
+                graph: GraphOptions { root: Some(root.clone()), ..GraphOptions::default() },
+                include_private: false,
+                include_internal: false,
+            },
+        )
+        .unwrap();
+
+        assert!(docs[0].entries.is_empty());
+        assert_eq!(docs[0].diagnostics.len(), 1);
+        assert_eq!(docs[0].diagnostics[0].code, DocsDiagnosticCode::FilteredByVisibility);
+        assert_eq!(docs[0].diagnostics[0].export_name, "ExtractArgs");
+        assert!(docs[0].diagnostics[0].message.contains("@internal"));
+
+        let with_internal = extract_docs_from_entry_points(
+            &entrypoints,
+            &EntryPointDocsOptions {
+                graph: GraphOptions { root: Some(root.clone()), ..GraphOptions::default() },
+                include_private: false,
+                include_internal: true,
+            },
+        )
+        .unwrap();
+        assert_eq!(with_internal[0].entries[0].name, "ExtractArgs");
+        assert!(with_internal[0].diagnostics.is_empty());
 
         fs::remove_dir_all(root).unwrap();
     }

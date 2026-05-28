@@ -235,6 +235,16 @@ export interface JsDocReturn {
   description: string
 }
 
+/** Diagnostic for an entry point export during docs extraction. */
+export interface JsDocsDiagnostic {
+  code: string
+  entrypoint: string
+  exportName: string
+  exportKind: string
+  source: JsExportSource
+  message: string
+}
+
 /** Documentation entry used by generated API Markdown. */
 export interface JsDocsMarkdownEntry {
   name: string
@@ -302,6 +312,7 @@ export interface JsEntrypointDocsModule {
   sourcePath: string
   entries: Array<JsDocEntry>
   exports: Array<JsPublicExport>
+  diagnostics: Array<JsDocsDiagnostic>
 }
 
 /** Options for extracting docs grouped by entry point. */
