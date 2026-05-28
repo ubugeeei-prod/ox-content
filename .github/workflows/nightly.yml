@@ -189,7 +189,8 @@ jobs:
 
       - name: Publish to pkg-pr-new
         run: |
-          vp exec -- pnpx pkg-pr-new publish --compact --pnpm \
+          set +e
+          output=$(vp exec -- pnpx pkg-pr-new publish --compact --pnpm \
             ./crates/ox_content_napi \
             ./binding-packages/darwin-x64 \
             ./binding-packages/darwin-arm64 \
@@ -201,4 +202,17 @@ jobs:
             ./npm/vite-plugin-ox-content \
             ./npm/vite-plugin-ox-content-react \
             ./npm/vite-plugin-ox-content-svelte \
-            ./npm/vite-plugin-ox-content-vue
+            ./npm/vite-plugin-ox-content-vue 2>&1)
+          status=$?
+          printf '%s\n' "$output"
+
+          if [ "$status" -eq 0 ]; then
+            exit 0
+          fi
+
+          if [ "${{ github.event_name }}" = "pull_request" ] && grep -Fq "The app https://github.com/apps/pkg-pr-new is not installed" <<< "$output"; then
+            echo "::warning::pkg-pr-new GitHub App is not installed; skipping preview publish for this pull request."
+            exit 0
+          fi
+
+          exit "$status"
