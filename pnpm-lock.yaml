@@ -887,6 +887,9 @@ importers:
       typescript:
         specifier: 'catalog:'
         version: 6.0.3
+      vitest:
+        specifier: npm:@voidzero-dev/vite-plus-test@0.1.21
+        version: '@voidzero-dev/vite-plus-test@0.1.21(@types/node@25.9.1)(esbuild@0.27.7)(jiti@1.21.7)(terser@5.48.0)(typescript@6.0.3)(vite@8.0.14(@types/node@25.9.1)(esbuild@0.27.7)(jiti@1.21.7)(terser@5.48.0)(yaml@2.9.0))(yaml@2.9.0)'
       vscode-languageclient:
         specifier: ^9.0.1
         version: 9.0.1

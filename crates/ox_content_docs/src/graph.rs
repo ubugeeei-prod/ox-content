@@ -4,8 +4,8 @@ use std::path::{Path, PathBuf};
 
 use oxc_allocator::Allocator;
 use oxc_ast::ast::{
-    BindingPattern, Declaration, ExportDefaultDeclarationKind, ImportOrExportKind,
-    ModuleExportName, Statement,
+    BindingPattern, Declaration, ExportDefaultDeclarationKind, ImportDeclarationSpecifier,
+    ImportOrExportKind, ModuleExportName, Statement,
 };
 use oxc_parser::Parser;
 use oxc_resolver::{ResolveOptions, Resolver, TsconfigOptions, TsconfigReferences};
@@ -32,6 +32,28 @@ pub struct GraphOptions {
     pub root: Option<PathBuf>,
     /// Optional TypeScript config for path alias resolution.
     pub tsconfig: Option<PathBuf>,
+    /// External package documentation extraction options.
+    #[serde(default)]
+    pub external_docs: ExternalDocsOptions,
+}
+
+/// External package documentation extraction options.
+#[derive(Debug, Clone, Default, PartialEq, Eq, Serialize, Deserialize)]
+pub struct ExternalDocsOptions {
+    /// Resolve external package re-exports into documentation entries.
+    pub enabled: bool,
+    /// Explicit package source entries used before package exports/types resolution.
+    #[serde(default)]
+    pub package_sources: Vec<ExternalPackageSource>,
+}
+
+/// Explicit source entry for an external package.
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+pub struct ExternalPackageSource {
+    /// Package name or exact package subpath specifier.
+    pub package: String,
+    /// Source or declaration entry file.
+    pub entry: PathBuf,
 }
 
 /// Options for extracting docs grouped by entry point.
@@ -116,6 +138,12 @@ pub enum ExportSource {
     External {
         /// Package name.
         package: String,
+        /// Original module specifier.
+        #[serde(default, skip_serializing_if = "String::is_empty")]
+        specifier: String,
+        /// Resolved source or declaration module path, when available.
+        #[serde(default, skip_serializing_if = "Option::is_none")]
+        module: Option<PathBuf>,
         /// Original exported name.
         original_name: String,
         /// Whether the export is type-only.
@@ -132,10 +160,44 @@ pub struct EntrypointDocsModule {
     pub file: String,
     /// Source file path.
     pub source_path: PathBuf,
-    /// Normalized docs entries for reachable local exports.
+    /// Normalized docs entries for reachable exports.
     pub entries: Vec<NormalizedDocEntry>,
     /// Public export metadata, including external re-exports.
     pub exports: Vec<PublicExport>,
+    /// Diagnostics for exports that could not be emitted as docs entries.
+    #[serde(default)]
+    pub diagnostics: Vec<DocsDiagnostic>,
+}
+
+/// Diagnostic for an entry point export during docs extraction.
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+pub struct DocsDiagnostic {
+    /// Machine-readable diagnostic code.
+    pub code: DocsDiagnosticCode,
+    /// Public entry point name.
+    pub entrypoint: String,
+    /// Public export name.
+    pub export_name: String,
+    /// Public export kind.
+    pub export_kind: ExportKind,
+    /// Export source metadata.
+    pub source: ExportSource,
+    /// Human-readable diagnostic message.
+    pub message: String,
+}
+
+/// Diagnostic code for entry point docs extraction.
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub enum DocsDiagnosticCode {
+    /// Export was intentionally filtered by visibility options.
+    FilteredByVisibility,
+    /// Graph export could not be matched to a declaration.
+    MissingDeclaration,
+    /// Export kind is not emitted as a docs entry.
+    UnsupportedExport,
+    /// External export could not be resolved to a source or declaration module.
+    UnresolvedExternal,
 }
 
 /// Export graph error.
@@ -214,42 +276,107 @@ pub fn extract_docs_from_entry_points(
 ) -> Result<Vec<EntrypointDocsModule>, GraphError> {
     let graph = build_export_graph(entrypoints, &options.graph)?;
     let extractor =
-        DocExtractor::with_visibility(options.include_private, options.include_internal);
+        DocExtractor::for_entrypoint_exports(options.include_private, options.include_internal);
+    let all_visibility_extractor = DocExtractor::for_entrypoint_exports(true, true);
     let mut docs_cache: FxHashMap<PathBuf, Vec<NormalizedDocEntry>> =
+        FxHashMap::with_hasher(FxBuildHasher);
+    let mut all_docs_cache: FxHashMap<PathBuf, Vec<NormalizedDocEntry>> =
         FxHashMap::with_hasher(FxBuildHasher);
     let mut modules = Vec::with_capacity(graph.entrypoints.len());
 
     for entrypoint in graph.entrypoints {
         let mut entries = Vec::new();
+        let mut diagnostics = Vec::new();
         let mut seen = FxHashSet::default();
 
         for export in &entrypoint.exports {
-            let ExportSource::Local { module, original_name } = &export.source else {
-                continue;
-            };
-            if original_name == "*" {
-                continue;
-            }
-
-            if !docs_cache.contains_key(module) {
-                let items = extractor
-                    .extract_file(module)
-                    .map_err(|source| GraphError::Extract { path: module.clone(), source })?;
-                docs_cache.insert(module.clone(), normalize_doc_items(items));
-            }
-
-            let Some(module_entries) = docs_cache.get(module) else {
-                continue;
-            };
-            for entry in module_entries.iter().filter(|entry| entry.name == *original_name) {
-                let key = format!("{}\0{}\0{}", export.name, entry.file, entry.line);
-                if !seen.insert(key) {
+            let (module, original_name) = match &export.source {
+                ExportSource::Local { module, original_name }
+                | ExportSource::External { module: Some(module), original_name, .. } => {
+                    (module, original_name)
+                }
+                ExportSource::External { .. } => {
+                    diagnostics.push(docs_diagnostic(
+                        DocsDiagnosticCode::UnresolvedExternal,
+                        &entrypoint.name,
+                        export,
+                        format!(
+                            "export \"{}\" from entrypoint \"{}\" was not documented because its external source could not be resolved",
+                            export.name, entrypoint.name
+                        ),
+                    ));
                     continue;
                 }
-                let mut entry = entry.clone();
-                entry.name.clone_from(&export.name);
-                entries.push(entry);
+            };
+            if original_name == "*" {
+                diagnostics.push(docs_diagnostic(
+                    DocsDiagnosticCode::UnsupportedExport,
+                    &entrypoint.name,
+                    export,
+                    format!(
+                        "export \"{}\" from entrypoint \"{}\" was not documented because namespace exports are not emitted as docs entries",
+                        export.name, entrypoint.name
+                    ),
+                ));
+                continue;
             }
+
+            let matched = {
+                let module_entries =
+                    normalized_entries_for_module(&mut docs_cache, &extractor, module)?;
+                let mut matched = false;
+                for entry in module_entries.iter().filter(|entry| entry.name == *original_name) {
+                    matched = true;
+                    let key = format!("{}\0{}\0{}", export.name, entry.file, entry.line);
+                    if !seen.insert(key) {
+                        continue;
+                    }
+                    let mut entry = entry.clone();
+                    entry.name.clone_from(&export.name);
+                    entries.push(entry);
+                }
+                matched
+            };
+
+            if matched {
+                continue;
+            }
+
+            let all_module_entries = normalized_entries_for_module(
+                &mut all_docs_cache,
+                &all_visibility_extractor,
+                module,
+            )?;
+            if let Some(hidden_entry) =
+                all_module_entries.iter().find(|entry| entry.name == *original_name)
+            {
+                if let Some(reason) = filtered_visibility_reason(
+                    hidden_entry,
+                    options.include_private,
+                    options.include_internal,
+                ) {
+                    diagnostics.push(docs_diagnostic(
+                        DocsDiagnosticCode::FilteredByVisibility,
+                        &entrypoint.name,
+                        export,
+                        format!(
+                            "export \"{}\" from entrypoint \"{}\" was excluded from docs because it is marked {reason}",
+                            export.name, entrypoint.name
+                        ),
+                    ));
+                    continue;
+                }
+            }
+
+            diagnostics.push(docs_diagnostic(
+                DocsDiagnosticCode::MissingDeclaration,
+                &entrypoint.name,
+                export,
+                format!(
+                    "export \"{}\" from entrypoint \"{}\" was not documented because no matching declaration was extracted",
+                    export.name, entrypoint.name
+                ),
+            ));
         }
 
         modules.push(EntrypointDocsModule {
@@ -258,20 +385,91 @@ pub fn extract_docs_from_entry_points(
             source_path: entrypoint.source_path,
             entries,
             exports: entrypoint.exports,
+            diagnostics,
         });
     }
 
     Ok(modules)
 }
 
+fn normalized_entries_for_module<'a>(
+    docs_cache: &'a mut FxHashMap<PathBuf, Vec<NormalizedDocEntry>>,
+    extractor: &DocExtractor,
+    module: &PathBuf,
+) -> Result<&'a [NormalizedDocEntry], GraphError> {
+    if !docs_cache.contains_key(module) {
+        let items = extractor
+            .extract_file(module)
+            .map_err(|source| GraphError::Extract { path: module.clone(), source })?;
+        docs_cache.insert(module.clone(), normalize_doc_items(items));
+    }
+
+    Ok(docs_cache.get(module).expect("normalized docs cache entry").as_slice())
+}
+
+fn filtered_visibility_reason(
+    entry: &NormalizedDocEntry,
+    include_private: bool,
+    include_internal: bool,
+) -> Option<&'static str> {
+    if !include_private && entry.private {
+        return Some("@private");
+    }
+    if !include_internal && entry.tags.contains_key("internal") {
+        return Some("@internal");
+    }
+    None
+}
+
+fn docs_diagnostic(
+    code: DocsDiagnosticCode,
+    entrypoint: &str,
+    export: &PublicExport,
+    message: String,
+) -> DocsDiagnostic {
+    DocsDiagnostic {
+        code,
+        entrypoint: entrypoint.to_string(),
+        export_name: export.name.clone(),
+        export_kind: export.kind,
+        source: export.source.clone(),
+        message,
+    }
+}
+
 struct ModuleResolver {
+    root: PathBuf,
     resolver: Resolver,
+    external_docs_enabled: bool,
+    external_sources: FxHashMap<String, PathBuf>,
+}
+
+#[derive(Debug, Clone)]
+struct ResolvedModuleRef {
+    path: PathBuf,
+    external: Option<ExternalModuleRef>,
+}
+
+#[derive(Debug, Clone)]
+struct ExternalModuleRef {
+    package: String,
+    specifier: String,
+}
+
+#[derive(Debug, Clone)]
+struct ImportBinding {
+    specifier: String,
+    imported_name: String,
+    type_only: bool,
 }
 
 impl ModuleResolver {
     fn new(root: &Path, options: &GraphOptions) -> Self {
         let mut resolve_options = ResolveOptions {
             extensions: vec![
+                ".d.ts".to_string(),
+                ".d.mts".to_string(),
+                ".d.cts".to_string(),
                 ".ts".to_string(),
                 ".tsx".to_string(),
                 ".mts".to_string(),
@@ -284,9 +482,23 @@ impl ModuleResolver {
                 ".node".to_string(),
             ],
             extension_alias: vec![
-                (".js".to_string(), vec![".ts".to_string(), ".tsx".to_string(), ".js".to_string()]),
-                (".mjs".to_string(), vec![".mts".to_string(), ".mjs".to_string()]),
-                (".cjs".to_string(), vec![".cts".to_string(), ".cjs".to_string()]),
+                (
+                    ".js".to_string(),
+                    vec![
+                        ".ts".to_string(),
+                        ".tsx".to_string(),
+                        ".d.ts".to_string(),
+                        ".js".to_string(),
+                    ],
+                ),
+                (
+                    ".mjs".to_string(),
+                    vec![".mts".to_string(), ".d.mts".to_string(), ".mjs".to_string()],
+                ),
+                (
+                    ".cjs".to_string(),
+                    vec![".cts".to_string(), ".d.cts".to_string(), ".cjs".to_string()],
+                ),
             ],
             condition_names: vec![
                 "types".to_string(),
@@ -305,27 +517,73 @@ impl ModuleResolver {
             });
         }
 
-        Self { resolver: Resolver::new(resolve_options) }
+        let external_sources = options
+            .external_docs
+            .package_sources
+            .iter()
+            .map(|source| {
+                (source.package.clone(), normalize_existing_path(&absolutize(root, &source.entry)))
+            })
+            .collect();
+
+        Self {
+            root: root.to_path_buf(),
+            resolver: Resolver::new(resolve_options),
+            external_docs_enabled: options.external_docs.enabled,
+            external_sources,
+        }
     }
 
-    fn resolve_local(
+    fn resolve_specifier(
         &self,
         importer: &Path,
         specifier: &str,
-    ) -> Result<Option<PathBuf>, GraphError> {
-        if !is_local_specifier(specifier) {
+    ) -> Result<Option<ResolvedModuleRef>, GraphError> {
+        if !is_local_specifier(specifier) && !self.external_docs_enabled {
             return Ok(None);
         }
 
+        if let Some(path) = self.resolve_external_source_override(specifier) {
+            return Ok(Some(ResolvedModuleRef {
+                path,
+                external: Some(ExternalModuleRef {
+                    package: external_package_name(specifier),
+                    specifier: specifier.to_string(),
+                }),
+            }));
+        }
+
         let directory = importer.parent().unwrap_or_else(|| Path::new("."));
-        self.resolver
-            .resolve(directory, specifier)
-            .map(|resolution| Some(normalize_existing_path(resolution.path())))
-            .map_err(|error| GraphError::Resolve {
+        match self.resolver.resolve(directory, specifier) {
+            Ok(resolution) => {
+                let path = normalize_existing_path(resolution.path());
+                let external = (!is_local_specifier(specifier)).then(|| ExternalModuleRef {
+                    package: external_package_name(specifier),
+                    specifier: specifier.to_string(),
+                });
+                Ok(Some(ResolvedModuleRef { path, external }))
+            }
+            Err(error) if is_local_specifier(specifier) => Err(GraphError::Resolve {
                 importer: importer.to_path_buf(),
                 specifier: specifier.to_string(),
                 message: error.to_string(),
+            }),
+            Err(_) => Ok(None),
+        }
+    }
+
+    fn resolve_external_source_override(&self, specifier: &str) -> Option<PathBuf> {
+        if !self.external_docs_enabled || is_local_specifier(specifier) {
+            return None;
+        }
+
+        let package = external_package_name(specifier);
+        self.external_sources
+            .get(specifier)
+            .or_else(|| {
+                (specifier == package).then(|| self.external_sources.get(&package)).flatten()
             })
+            .map(|path| normalize_existing_path(&absolutize(&self.root, path)))
     }
 }
 
@@ -380,6 +638,7 @@ impl GraphBuilder {
         }
 
         let mut exports = Vec::new();
+        let imports = collect_import_bindings(&ret.program.body);
         for statement in &ret.program.body {
             match statement {
                 Statement::ExportNamedDeclaration(export) => {
@@ -390,48 +649,53 @@ impl GraphBuilder {
                     if let Some(source) = &export.source {
                         let specifier = source.value.to_string();
                         let kind = export_kind(export.export_kind);
-                        if let Some(module) = self.resolver.resolve_local(path, &specifier)? {
-                            append_reexports_from_specifiers(
+                        if let Some(resolved) = self.resolver.resolve_specifier(path, &specifier)? {
+                            self.append_reexports_from_resolved_module(
                                 &mut exports,
-                                &module,
+                                &resolved,
                                 &export.specifiers,
                                 kind,
-                            );
+                            )?;
                         } else {
                             append_external_reexports(
                                 &mut exports,
                                 &specifier,
+                                None,
                                 &export.specifiers,
                                 kind,
                             );
                         }
                     } else {
-                        append_local_specifier_exports(
+                        self.append_local_specifier_exports(
                             &mut exports,
                             path,
+                            &imports,
                             &export.specifiers,
                             export_kind(export.export_kind),
-                        );
+                        )?;
                     }
                 }
                 Statement::ExportAllDeclaration(export) => {
                     let specifier = export.source.value.to_string();
                     let kind = export_kind(export.export_kind);
-                    if let Some(module) = self.resolver.resolve_local(path, &specifier)? {
+                    if let Some(resolved) = self.resolver.resolve_specifier(path, &specifier)? {
                         if let Some(exported) = &export.exported {
                             exports.push(PublicExport {
                                 name: module_export_name(exported),
                                 kind: ExportKind::Namespace,
-                                source: ExportSource::Local {
-                                    module,
-                                    original_name: "*".to_string(),
-                                },
+                                source: export_source_from_resolved(
+                                    &resolved,
+                                    "*".to_string(),
+                                    kind == ExportKind::Type,
+                                ),
                             });
                         } else {
+                            let module_exports = self.collect_module_exports(&resolved.path)?;
                             exports.extend(
-                                self.collect_module_exports(&module)?
+                                module_exports
                                     .into_iter()
-                                    .filter(|export| export.name != "default"),
+                                    .filter(|export| export.name != "default")
+                                    .map(|export| reexport_module_export(export, &resolved, kind)),
                             );
                         }
                     } else {
@@ -443,6 +707,8 @@ impl GraphBuilder {
                             kind,
                             source: ExportSource::External {
                                 package: external_package_name(&specifier),
+                                specifier,
+                                module: None,
                                 original_name: "*".to_string(),
                                 type_only: kind == ExportKind::Type,
                             },
@@ -475,6 +741,103 @@ impl GraphBuilder {
         }
 
         dedupe_exports(exports)
+    }
+
+    fn append_reexports_from_resolved_module(
+        &mut self,
+        exports: &mut Vec<PublicExport>,
+        resolved: &ResolvedModuleRef,
+        specifiers: &[oxc_ast::ast::ExportSpecifier<'_>],
+        statement_kind: ExportKind,
+    ) -> Result<(), GraphError> {
+        for specifier in specifiers {
+            let kind = specifier_kind(statement_kind, specifier.export_kind);
+            exports.push(self.public_export_from_resolved_module(
+                resolved,
+                module_export_name(&specifier.exported),
+                module_export_name(&specifier.local),
+                kind,
+            )?);
+        }
+
+        Ok(())
+    }
+
+    fn append_local_specifier_exports(
+        &mut self,
+        exports: &mut Vec<PublicExport>,
+        path: &Path,
+        imports: &FxHashMap<String, ImportBinding>,
+        specifiers: &[oxc_ast::ast::ExportSpecifier<'_>],
+        statement_kind: ExportKind,
+    ) -> Result<(), GraphError> {
+        for specifier in specifiers {
+            let local_name = module_export_name(&specifier.local);
+            let public_name = module_export_name(&specifier.exported);
+            let kind = specifier_kind(statement_kind, specifier.export_kind);
+
+            if let Some(binding) = imports.get(&local_name) {
+                let kind = if binding.type_only { ExportKind::Type } else { kind };
+                if let Some(resolved) = self.resolver.resolve_specifier(path, &binding.specifier)? {
+                    exports.push(self.public_export_from_resolved_module(
+                        &resolved,
+                        public_name,
+                        binding.imported_name.clone(),
+                        kind,
+                    )?);
+                } else if !is_local_specifier(&binding.specifier) {
+                    exports.push(PublicExport {
+                        name: public_name,
+                        kind,
+                        source: ExportSource::External {
+                            package: external_package_name(&binding.specifier),
+                            specifier: binding.specifier.clone(),
+                            module: None,
+                            original_name: binding.imported_name.clone(),
+                            type_only: kind == ExportKind::Type,
+                        },
+                    });
+                }
+                continue;
+            }
+
+            exports.push(PublicExport {
+                name: public_name,
+                kind,
+                source: ExportSource::Local {
+                    module: path.to_path_buf(),
+                    original_name: local_name,
+                },
+            });
+        }
+
+        Ok(())
+    }
+
+    fn public_export_from_resolved_module(
+        &mut self,
+        resolved: &ResolvedModuleRef,
+        public_name: String,
+        original_name: String,
+        kind: ExportKind,
+    ) -> Result<PublicExport, GraphError> {
+        let module_exports = self.collect_module_exports(&resolved.path)?;
+        if let Some(export) = module_exports.iter().find(|export| export.name == original_name) {
+            let mut export = export.clone();
+            export.name = public_name;
+            export.kind = kind;
+            if let Some(external) = &resolved.external {
+                export.source =
+                    externalize_source(export.source, external, kind == ExportKind::Type);
+            }
+            return Ok(export);
+        }
+
+        Ok(PublicExport {
+            name: public_name,
+            kind,
+            source: export_source_from_resolved(resolved, original_name, kind == ExportKind::Type),
+        })
     }
 }
 
@@ -527,47 +890,10 @@ fn append_local_export(exports: &mut Vec<PublicExport>, path: &Path, name: &str,
     });
 }
 
-fn append_reexports_from_specifiers(
-    exports: &mut Vec<PublicExport>,
-    module: &Path,
-    specifiers: &[oxc_ast::ast::ExportSpecifier<'_>],
-    statement_kind: ExportKind,
-) {
-    for specifier in specifiers {
-        let kind = specifier_kind(statement_kind, specifier.export_kind);
-        exports.push(PublicExport {
-            name: module_export_name(&specifier.exported),
-            kind,
-            source: ExportSource::Local {
-                module: module.to_path_buf(),
-                original_name: module_export_name(&specifier.local),
-            },
-        });
-    }
-}
-
-fn append_local_specifier_exports(
-    exports: &mut Vec<PublicExport>,
-    path: &Path,
-    specifiers: &[oxc_ast::ast::ExportSpecifier<'_>],
-    statement_kind: ExportKind,
-) {
-    for specifier in specifiers {
-        let kind = specifier_kind(statement_kind, specifier.export_kind);
-        exports.push(PublicExport {
-            name: module_export_name(&specifier.exported),
-            kind,
-            source: ExportSource::Local {
-                module: path.to_path_buf(),
-                original_name: module_export_name(&specifier.local),
-            },
-        });
-    }
-}
-
 fn append_external_reexports(
     exports: &mut Vec<PublicExport>,
     specifier: &str,
+    module: Option<PathBuf>,
     specifiers: &[oxc_ast::ast::ExportSpecifier<'_>],
     statement_kind: ExportKind,
 ) {
@@ -579,10 +905,131 @@ fn append_external_reexports(
             kind,
             source: ExportSource::External {
                 package: package.clone(),
+                specifier: specifier.to_string(),
+                module: module.clone(),
                 original_name: module_export_name(&export_specifier.local),
                 type_only: kind == ExportKind::Type,
             },
         });
+    }
+}
+
+fn collect_import_bindings(statements: &[Statement<'_>]) -> FxHashMap<String, ImportBinding> {
+    let mut imports = FxHashMap::default();
+
+    for statement in statements {
+        let Statement::ImportDeclaration(import) = statement else {
+            continue;
+        };
+        let Some(specifiers) = &import.specifiers else {
+            continue;
+        };
+
+        let statement_type_only = import.import_kind == ImportOrExportKind::Type;
+        for specifier in specifiers {
+            let specifier =
+                import_binding(import.source.value.as_str(), statement_type_only, specifier);
+            imports.insert(specifier.0, specifier.1);
+        }
+    }
+
+    imports
+}
+
+fn import_binding(
+    specifier: &str,
+    statement_type_only: bool,
+    import_specifier: &ImportDeclarationSpecifier<'_>,
+) -> (String, ImportBinding) {
+    match import_specifier {
+        ImportDeclarationSpecifier::ImportSpecifier(import) => (
+            import.local.name.to_string(),
+            ImportBinding {
+                specifier: specifier.to_string(),
+                imported_name: module_export_name(&import.imported),
+                type_only: statement_type_only || import.import_kind == ImportOrExportKind::Type,
+            },
+        ),
+        ImportDeclarationSpecifier::ImportDefaultSpecifier(import) => (
+            import.local.name.to_string(),
+            ImportBinding {
+                specifier: specifier.to_string(),
+                imported_name: "default".to_string(),
+                type_only: statement_type_only,
+            },
+        ),
+        ImportDeclarationSpecifier::ImportNamespaceSpecifier(import) => (
+            import.local.name.to_string(),
+            ImportBinding {
+                specifier: specifier.to_string(),
+                imported_name: "*".to_string(),
+                type_only: statement_type_only,
+            },
+        ),
+    }
+}
+
+fn reexport_module_export(
+    mut export: PublicExport,
+    resolved: &ResolvedModuleRef,
+    statement_kind: ExportKind,
+) -> PublicExport {
+    if statement_kind == ExportKind::Type {
+        export.kind = ExportKind::Type;
+    }
+
+    if let Some(external) = &resolved.external {
+        export.source =
+            externalize_source(export.source, external, export.kind == ExportKind::Type);
+    }
+
+    export
+}
+
+fn export_source_from_resolved(
+    resolved: &ResolvedModuleRef,
+    original_name: String,
+    type_only: bool,
+) -> ExportSource {
+    if let Some(external) = &resolved.external {
+        ExportSource::External {
+            package: external.package.clone(),
+            specifier: external.specifier.clone(),
+            module: Some(resolved.path.clone()),
+            original_name,
+            type_only,
+        }
+    } else {
+        ExportSource::Local { module: resolved.path.clone(), original_name }
+    }
+}
+
+fn externalize_source(
+    source: ExportSource,
+    external: &ExternalModuleRef,
+    type_only: bool,
+) -> ExportSource {
+    match source {
+        ExportSource::Local { module, original_name } => ExportSource::External {
+            package: external.package.clone(),
+            specifier: external.specifier.clone(),
+            module: Some(module),
+            original_name,
+            type_only,
+        },
+        ExportSource::External {
+            package,
+            specifier,
+            module,
+            original_name,
+            type_only: source_type_only,
+        } => ExportSource::External {
+            package,
+            specifier,
+            module,
+            original_name,
+            type_only: type_only || source_type_only,
+        },
     }
 }
 
@@ -618,8 +1065,11 @@ fn dedupe_exports(exports: Vec<PublicExport>) -> Result<Vec<PublicExport>, Graph
             ExportSource::Local { module, original_name } => {
                 format!("local:{}:{original_name}", module.display())
             }
-            ExportSource::External { package, original_name, type_only } => {
-                format!("external:{package}:{original_name}:{type_only}")
+            ExportSource::External { package, specifier, module, original_name, type_only } => {
+                format!(
+                    "external:{package}:{specifier}:{}:{original_name}:{type_only}",
+                    module.as_ref().map_or(String::new(), |module| module.display().to_string())
+                )
             }
         };
         let key = format!("{}:{:?}:{source_key}", export.name, export.kind);
@@ -727,7 +1177,7 @@ export function label(value: string): string {
             path: PathBuf::from("src/index.ts"),
             name: Some("default".to_string()),
         }];
-        let graph_options = GraphOptions { root: Some(root.clone()), tsconfig: None };
+        let graph_options = GraphOptions { root: Some(root.clone()), ..GraphOptions::default() };
 
         let graph = build_export_graph(&entrypoints, &graph_options).unwrap();
         assert_eq!(graph.entrypoints[0].name, "default");
@@ -755,8 +1205,308 @@ export function label(value: string): string {
         fs::remove_dir_all(root).unwrap();
     }
 
+    #[test]
+    fn entrypoint_docs_emit_public_consts_without_jsdoc() {
+        let root = temp_root();
+        fs::create_dir_all(root.join("src")).unwrap();
+        fs::write(
+            root.join("src/index.ts"),
+            r"
+export { ANONYMOUS_COMMAND_NAME, CLI_OPTIONS_DEFAULT } from './constants';
+",
+        )
+        .unwrap();
+        fs::write(
+            root.join("src/constants.ts"),
+            r#"
+export const ANONYMOUS_COMMAND_NAME = "(anonymous)";
+
+export const CLI_OPTIONS_DEFAULT: CliOptions<DefaultGunshiParams> = {
+  usageSilent: false,
+};
+"#,
+        )
+        .unwrap();
+
+        let entrypoints = [EntryPointSpec {
+            path: PathBuf::from("src/index.ts"),
+            name: Some("default".to_string()),
+        }];
+        let docs = extract_docs_from_entry_points(
+            &entrypoints,
+            &EntryPointDocsOptions {
+                graph: GraphOptions { root: Some(root.clone()), ..GraphOptions::default() },
+                include_private: false,
+                include_internal: false,
+            },
+        )
+        .unwrap();
+
+        assert!(docs[0].diagnostics.is_empty());
+        let anonymous =
+            docs[0].entries.iter().find(|entry| entry.name == "ANONYMOUS_COMMAND_NAME").unwrap();
+        assert_eq!(anonymous.kind.as_str(), "variable");
+        assert!(anonymous.description.is_empty());
+        assert_eq!(
+            anonymous.signature.as_deref(),
+            Some(r#"export const ANONYMOUS_COMMAND_NAME = "(anonymous)""#)
+        );
+
+        let cli_options =
+            docs[0].entries.iter().find(|entry| entry.name == "CLI_OPTIONS_DEFAULT").unwrap();
+        assert_eq!(cli_options.kind.as_str(), "variable");
+        assert_eq!(
+            cli_options.signature.as_deref(),
+            Some("export const CLI_OPTIONS_DEFAULT: CliOptions<DefaultGunshiParams>")
+        );
+
+        fs::remove_dir_all(root).unwrap();
+    }
+
+    #[test]
+    fn entrypoint_docs_diagnose_internal_type_filtered_by_visibility() {
+        let root = temp_root();
+        fs::create_dir_all(root.join("src")).unwrap();
+        fs::write(root.join("src/index.ts"), "export type { ExtractArgs } from './types';\n")
+            .unwrap();
+        fs::write(
+            root.join("src/types.ts"),
+            r"
+/**
+ * Type helper to extract args.
+ *
+ * @internal
+ */
+export type ExtractArgs<G> = G extends { args: infer A } ? A : never;
+",
+        )
+        .unwrap();
+
+        let entrypoints = [EntryPointSpec {
+            path: PathBuf::from("src/index.ts"),
+            name: Some("default".to_string()),
+        }];
+        let docs = extract_docs_from_entry_points(
+            &entrypoints,
+            &EntryPointDocsOptions {
+                graph: GraphOptions { root: Some(root.clone()), ..GraphOptions::default() },
+                include_private: false,
+                include_internal: false,
+            },
+        )
+        .unwrap();
+
+        assert!(docs[0].entries.is_empty());
+        assert_eq!(docs[0].diagnostics.len(), 1);
+        assert_eq!(docs[0].diagnostics[0].code, DocsDiagnosticCode::FilteredByVisibility);
+        assert_eq!(docs[0].diagnostics[0].export_name, "ExtractArgs");
+        assert!(docs[0].diagnostics[0].message.contains("@internal"));
+
+        let with_internal = extract_docs_from_entry_points(
+            &entrypoints,
+            &EntryPointDocsOptions {
+                graph: GraphOptions { root: Some(root.clone()), ..GraphOptions::default() },
+                include_private: false,
+                include_internal: true,
+            },
+        )
+        .unwrap();
+        assert_eq!(with_internal[0].entries[0].name, "ExtractArgs");
+        assert!(with_internal[0].diagnostics.is_empty());
+
+        fs::remove_dir_all(root).unwrap();
+    }
+
+    #[test]
+    fn extracts_docs_from_resolved_external_package_types() {
+        let root = temp_root();
+        fs::create_dir_all(root.join("src")).unwrap();
+        fs::write(root.join("src/index.ts"), "export { ExternalThing } from 'external-pkg';\n")
+            .unwrap();
+        write_external_package(
+            &root,
+            "external-pkg",
+            r"
+/** External thing. */
+export interface ExternalThing {
+  value: string;
+}
+",
+        );
+
+        let entrypoints = [EntryPointSpec {
+            path: PathBuf::from("src/index.ts"),
+            name: Some("default".to_string()),
+        }];
+        let graph_options = GraphOptions {
+            root: Some(root.clone()),
+            external_docs: ExternalDocsOptions { enabled: true, package_sources: vec![] },
+            ..GraphOptions::default()
+        };
+
+        let graph = build_export_graph(&entrypoints, &graph_options).unwrap();
+        assert!(graph.entrypoints[0].exports.iter().any(|export| matches!(
+            &export.source,
+            ExportSource::External { package, module: Some(module), original_name, .. }
+                if package == "external-pkg"
+                    && original_name == "ExternalThing"
+                    && module.ends_with("index.d.ts")
+        )));
+
+        let docs = extract_docs_from_entry_points(
+            &entrypoints,
+            &EntryPointDocsOptions {
+                graph: graph_options,
+                include_private: false,
+                include_internal: false,
+            },
+        )
+        .unwrap();
+
+        assert_eq!(docs[0].entries[0].name, "ExternalThing");
+        assert_eq!(docs[0].entries[0].description, "External thing.");
+
+        fs::remove_dir_all(root).unwrap();
+    }
+
+    #[test]
+    fn follows_import_aliases_in_declaration_barrels() {
+        let root = temp_root();
+        fs::create_dir_all(root.join("src")).unwrap();
+        fs::write(root.join("src/index.ts"), "export { parseArgs } from 'external-pkg';\n")
+            .unwrap();
+        let package_root = root.join("node_modules/external-pkg");
+        fs::create_dir_all(package_root.join("lib")).unwrap();
+        fs::write(
+            package_root.join("package.json"),
+            r#"{
+  "name": "external-pkg",
+  "type": "module",
+  "exports": {
+    ".": {
+      "types": "./lib/index.d.ts",
+      "default": "./lib/index.js"
+    }
+  }
+}"#,
+        )
+        .unwrap();
+        fs::write(
+            package_root.join("lib/index.d.ts"),
+            r#"
+import { a as parseArgs } from "./parser-hash.js";
+export { parseArgs };
+"#,
+        )
+        .unwrap();
+        fs::write(
+            package_root.join("lib/parser-hash.d.ts"),
+            r"
+/** Parse args. */
+declare function a(): void;
+export { a };
+",
+        )
+        .unwrap();
+
+        let entrypoints = [EntryPointSpec {
+            path: PathBuf::from("src/index.ts"),
+            name: Some("default".to_string()),
+        }];
+        let graph_options = GraphOptions {
+            root: Some(root.clone()),
+            external_docs: ExternalDocsOptions { enabled: true, package_sources: vec![] },
+            ..GraphOptions::default()
+        };
+        let docs = extract_docs_from_entry_points(
+            &entrypoints,
+            &EntryPointDocsOptions {
+                graph: graph_options,
+                include_private: false,
+                include_internal: false,
+            },
+        )
+        .unwrap();
+
+        assert_eq!(docs[0].entries[0].name, "parseArgs");
+        assert_eq!(docs[0].entries[0].description, "Parse args.");
+        assert!(docs[0].entries[0].file.ends_with("parser-hash.d.ts"));
+
+        fs::remove_dir_all(root).unwrap();
+    }
+
+    #[test]
+    fn external_package_source_mapping_prefers_workspace_source() {
+        let root = temp_root();
+        fs::create_dir_all(root.join("src")).unwrap();
+        fs::create_dir_all(root.join("packages/plugin/src")).unwrap();
+        fs::write(root.join("src/index.ts"), "export { helper } from '@scope/plugin';\n").unwrap();
+        fs::write(
+            root.join("packages/plugin/src/index.ts"),
+            r"
+/** Workspace helper. */
+export function helper(): void {}
+",
+        )
+        .unwrap();
+
+        let entrypoints = [EntryPointSpec {
+            path: PathBuf::from("src/index.ts"),
+            name: Some("default".to_string()),
+        }];
+        let graph_options = GraphOptions {
+            root: Some(root.clone()),
+            external_docs: ExternalDocsOptions {
+                enabled: true,
+                package_sources: vec![ExternalPackageSource {
+                    package: "@scope/plugin".to_string(),
+                    entry: PathBuf::from("packages/plugin/src/index.ts"),
+                }],
+            },
+            ..GraphOptions::default()
+        };
+
+        let docs = extract_docs_from_entry_points(
+            &entrypoints,
+            &EntryPointDocsOptions {
+                graph: graph_options,
+                include_private: false,
+                include_internal: false,
+            },
+        )
+        .unwrap();
+
+        assert_eq!(docs[0].entries[0].name, "helper");
+        assert_eq!(docs[0].entries[0].description, "Workspace helper.");
+        assert!(docs[0].entries[0].file.ends_with("packages/plugin/src/index.ts"));
+
+        fs::remove_dir_all(root).unwrap();
+    }
+
     fn temp_root() -> PathBuf {
         let nanos = SystemTime::now().duration_since(UNIX_EPOCH).unwrap().as_nanos();
         std::env::temp_dir().join(format!("ox-content-docs-graph-{nanos}"))
+    }
+
+    fn write_external_package(root: &Path, name: &str, declaration: &str) {
+        let package_root = root.join("node_modules").join(name);
+        fs::create_dir_all(package_root.join("lib")).unwrap();
+        fs::write(
+            package_root.join("package.json"),
+            format!(
+                r#"{{
+  "name": "{name}",
+  "type": "module",
+  "exports": {{
+    ".": {{
+      "types": "./lib/index.d.ts",
+      "default": "./lib/index.js"
+    }}
+  }}
+}}"#
+            ),
+        )
+        .unwrap();
+        fs::write(package_root.join("lib/index.d.ts"), declaration).unwrap();
     }
 }

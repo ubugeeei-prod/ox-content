@@ -58,6 +58,7 @@ export function createMarkdownOptions(options: ResolvedSlidesPluginOptions): Res
     srcDir: options.srcDir,
     outDir: options.outDir,
     base: options.base,
+    extensions: options.extensions,
     ssg: options.ssg,
     gfm: options.gfm,
     footnotes: options.footnotes,
@@ -89,6 +90,7 @@ export function createMarkdownOptions(options: ResolvedSlidesPluginOptions): Res
       hotkey: "k",
     },
     ogViewer: false,
+    embeds: { github: false, openGraph: false },
     i18n: false,
   };
 }

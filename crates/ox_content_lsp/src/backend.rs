@@ -3,6 +3,7 @@ mod commands;
 mod diagnostics;
 mod features;
 mod handlers;
+mod mdc;
 mod snippets;
 
 use tower_lsp::lsp_types::{Diagnostic, Url};
@@ -33,6 +34,11 @@ impl Backend {
         if is_markdown_path(&path) {
             self.state.upsert_document(uri.clone(), text.clone()).await;
             self.publish_diagnostics_for(uri).await;
+            // HMR: any subscribed preview panel needs the rendered HTML
+            // pushed to it; this replaces the polling
+            // `onDidChangeTextDocument` refresh editors used to do. The
+            // helper short-circuits silently when no client is listening.
+            self.push_preview_update(uri).await;
         }
 
         let path_str = path.to_string_lossy().to_string();
@@ -66,6 +72,34 @@ impl Backend {
         self.client.publish_diagnostics(uri.clone(), Vec::new(), None).await;
     }
 
+    pub(super) async fn run_textlint_for(&self, uri: &Url) {
+        let config = self.resolved_config().await;
+        if !config.textlint.enabled {
+            return;
+        }
+        let Some(document) = self.state.document(uri).await else {
+            return;
+        };
+        let Ok(path) = uri.to_file_path() else {
+            return;
+        };
+        if !is_markdown_path(&path) {
+            return;
+        }
+        let textlint_diagnostics =
+            crate::textlint::run(document.text(), &path, &config.textlint).await;
+        // textlint diagnostics live alongside the other Markdown
+        // checks; we publish them through the same channel so the
+        // editor sees a single combined gutter. Re-run the
+        // non-textlint diagnostics here so we don't accidentally
+        // drop the squiggles the on_change path published moments
+        // ago when we replace the diagnostic list.
+        let is_mdc = path.extension().and_then(|ext| ext.to_str()) == Some("mdc");
+        let mut current = self.diagnostics(uri, &document, is_mdc).await;
+        current.extend(textlint_diagnostics);
+        self.client.publish_diagnostics(uri.clone(), current, None).await;
+    }
+
     pub(super) async fn publish_diagnostics_for(&self, uri: &Url) {
         let Some(document) = self.state.document(uri).await else {
             return;
@@ -76,11 +110,16 @@ impl Backend {
             .ok()
             .and_then(|path| path.extension().and_then(|ext| ext.to_str()).map(str::to_string))
             .is_some_and(|ext| ext == "mdc");
-        let diagnostics = self.diagnostics(&document, is_mdc).await;
+        let diagnostics = self.diagnostics(uri, &document, is_mdc).await;
         self.client.publish_diagnostics(uri.clone(), diagnostics, None).await;
     }
 
-    async fn diagnostics(&self, document: &TextDocumentState, is_mdc: bool) -> Vec<Diagnostic> {
+    async fn diagnostics(
+        &self,
+        uri: &Url,
+        document: &TextDocumentState,
+        is_mdc: bool,
+    ) -> Vec<Diagnostic> {
         let config = self.resolved_config().await;
         let frontmatter = frontmatter::parse_frontmatter(document);
         let mut diagnostics = frontmatter
@@ -92,6 +131,16 @@ impl Backend {
         if is_mdc {
             diagnostics.extend(diagnostics::mdc_diagnostics(document, frontmatter.block.as_ref()));
         }
+        // Link checker runs on every Markdown/MDC document. It only
+        // consults the local filesystem, so it stays cheap enough to
+        // run on every keystroke. The optional workspace root is used
+        // as the absolute-path resolution base; without it `/foo.md`
+        // links are anchored to the document's own directory.
+        diagnostics.extend(diagnostics::link_check_diagnostics(
+            document,
+            uri,
+            self.state.root().await,
+        ));
         diagnostics
     }
 

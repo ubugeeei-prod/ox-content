@@ -31,16 +31,16 @@ must not depend on a later one in the list.
 
 ## Feature Matrix
 
-| #   | Feature                                         | LSP                       | CLI                          | VS Code                   | Neovim                      | Status             |
-| --- | ----------------------------------------------- | ------------------------- | ---------------------------- | ------------------------- | --------------------------- | ------------------ |
-| 1   | Markdown preview (HMR)                          | partial — polling refresh | none                         | webview, debounced reload | external browser, on-demand | needs HMR + CLI    |
-| 2   | i18n preview / completion                       | present                   | `ox-content-i18n`            | present                   | present                     | shipped            |
-| 3   | MDC completion + type check                     | diagnostics only          | `ox-content-mdc-check`       | diagnostics               | diagnostics                 | needs completion   |
-| 4   | Vue / React props completion + jump + typecheck | none                      | none                         | none                      | none                        | new (corsa_client) |
-| 5   | Asset path completion + diagnostics             | completion provider       | via link checker             | completion + diagnostics  | completion + diagnostics    | shipped            |
-| 6   | Dead link checker                               | none                      | none                         | none                      | none                        | new                |
-| 7   | textlint integration                            | none                      | none                         | none                      | none                        | new                |
-| 8   | Frontmatter schema completion + diagnostics     | present                   | none (validated through LSP) | present                   | present                     | needs CLI          |
+| #   | Feature                                         | LSP                      | CLI                          | VS Code                  | Neovim                      | Status           |
+| --- | ----------------------------------------------- | ------------------------ | ---------------------------- | ------------------------ | --------------------------- | ---------------- |
+| 1   | Markdown preview (HMR)                          | push channel             | none                         | subscribed webview       | external browser, on-demand | needs CLI + nvim |
+| 2   | i18n preview / completion                       | present                  | `ox-content-i18n`            | present                  | present                     | shipped          |
+| 3   | MDC completion + type check                     | completion + diagnostics | `ox-content-mdc-check`       | completion + diagnostics | completion + diagnostics    | shipped          |
+| 4   | Vue / React props completion + jump + typecheck | crate scaffold           | planned                      | planned                  | planned                     | scaffold landed  |
+| 5   | Asset path completion + diagnostics             | completion provider      | via link checker             | completion + diagnostics | completion + diagnostics    | shipped          |
+| 6   | Dead link checker                               | diagnostics              | `ox-content-link-check`      | diagnostics              | diagnostics                 | local: shipped   |
+| 7   | textlint integration                            | on-save diagnostics      | via configured command       | enabled per setting      | enabled per setting         | shipped (opt-in) |
+| 8   | Frontmatter schema completion + diagnostics     | present                  | none (validated through LSP) | present                  | present                     | needs CLI        |
 
 ## PR Sequence
 
@@ -74,25 +74,36 @@ Foundation PR. Tightens the existing extension before adding features.
 
 Replace the polling refresh path with an explicit push channel.
 
-- New LSP notification `oxContent/previewDidChange` payload `{ uri, html, title }`.
-- VS Code webview subscribes to the notification instead of debouncing on
+- ✅ LSP notification `oxContent/previewDidChange` with `{ uri, html, title }` payload
+  (shipped, see `crates/ox_content_lsp/src/backend/commands.rs`).
+- ✅ `oxContent.previewSubscribe` / `oxContent.previewUnsubscribe`
+  execute-command handlers.
+- ✅ VS Code webview subscribes on open, unsubscribes on dispose, and
+  listens for `oxContent/previewDidChange` instead of debouncing on
   `onDidChangeTextDocument`.
-- New CLI `ox-content-preview` that hosts an SSE endpoint backed by the same
-  renderer; useful for `--watch` workflows and for the Neovim browser
-  preview.
-- Neovim preview opens the SSE URL instead of writing a temp file when
-  `auto_refresh = true`.
+- Pending follow-up: CLI `ox-content-preview` that hosts an SSE endpoint
+  backed by the same renderer (useful for `--watch` workflows and for the
+  Neovim browser preview). Tracked as a separate PR so this one stays
+  focused on the LSP push channel.
+- Pending follow-up: Neovim preview opens the SSE URL instead of writing
+  a temp file when `auto_refresh = true`.
 
 ### 3. `feat(link-checker): new crate, LSP integration, CLI`
 
-- New crate `ox_content_link_checker` with deterministic local link
-  resolution (relative paths, anchors, link reference definitions) and an
-  optional async HTTP head-check pool guarded behind a feature flag
-  (`http-check`) so the default build is offline-only.
-- LSP diagnostics namespaced under `oxContent.linkCheck`. Configuration:
-  `oxContent.linkCheck.followHttp`, `oxContent.linkCheck.ignorePatterns`.
-- CLI `ox-content-link-check [paths…] [--http] [--format text|json]`.
-- A GitHub Actions snippet pasted into the docs site.
+- ✅ New crate `ox_content_link_checker` with deterministic local link
+  resolution (relative paths, self-anchors, image targets). Offline-only
+  by design; ships with 11 unit tests covering every link form documented
+  in the crate README.
+- ✅ CLI `ox-content-link-check [paths…] [--src-dir DIR] [--ignore PATTERN]
+[--format text|json]` with exit-code-1-on-error semantics for CI.
+- ✅ LSP diagnostics under `source: "ox-content-link"`, wired into the
+  per-document diagnostic publish path so they appear alongside parse,
+  frontmatter, and MDC errors without an extra round trip.
+- Pending follow-ups:
+  - HTTP head-check pool behind a `http-check` feature flag.
+  - Reference-link expansion (currently blocked on the parser).
+  - Cross-file anchor resolution (currently emits a warning).
+  - GitHub Actions snippet on the docs site.
 
 ### 4. `feat(lsp): asset path completion and diagnostics`
 
@@ -112,38 +123,88 @@ Replace the polling refresh path with an explicit push channel.
 
 ### 5. `feat(mdc): component name and attribute completion`
 
-- Extend `ox_content_mdc_checker` with a component registry sourced from an
-  index file (`oxContent.mdc.components`) and from framework integrations
-  if discoverable. The registry is also consumable from the CLI.
-- LSP exposes component name completion at `::` and attribute completion
-  inside the opening tag.
-- Hover surface that documents the discovered component.
+- ✅ New `ox_content_mdc_checker::Registry` (de)serializes a JSON
+  index of components and their attributes. Deterministic iteration
+  order via `BTreeMap`, lenient parsing (unknown fields tolerated).
+- ✅ LSP completion: component names after `<Foo|`, attribute names
+  inside `<Foo |…>`. Inside-quote and post-`=` positions are skipped
+  to avoid noise. Attribute insertion uses snippet syntax
+  (`name="$0"`) so the cursor lands inside the value.
+- ✅ Registry path is configurable via the `mdcComponents`
+  initialization option, `mdc.components` in the workspace config
+  file, or `OX_CONTENT_MDC_COMPONENTS` env var (in that order).
+- Pending follow-ups:
+  - Hover documentation for an MDC tag the cursor sits on
+    (registry already exposes the data).
+  - Diagnostic for using an unknown component (opt-in only — would
+    be noisy for projects with partial registries).
+  - Framework-specific auto-discovery (Nuxt content, Astro, etc.)
+    that builds the registry without a hand-written JSON file.
 
 ### 6. `feat(component-resolver): Vue and React props via corsa_client`
 
-The single largest PR in the sequence. Lands behind a `tsgo` opt-in setting
-so users without `typescript-go` available are not affected.
+The single largest item on the roadmap. Lands behind a `tsgo` opt-in
+setting so users without `typescript-go` available are not affected.
+Split into three sequential PRs:
 
-- New crate `ox_content_component_resolver` that wraps `corsa_client` and
-  resolves a component identifier to its props type, location, and JSDoc.
-- LSP wires completion, go-to-definition, and diagnostics on top of the
-  resolver for MDX/`.mdc` files. Document the resolution model in
-  `docs/content/component-resolution.md`.
-- CLI `ox-content-component-check` runs the resolver workspace-wide and
-  prints unresolved or mistyped references for CI.
-- Configuration: `oxContent.components.tsgoPath`,
+#### 6a. Scaffold (`feat(component-resolver): scaffold crate`)
+
+- ✅ New crate `ox_content_component_resolver` registered in the
+  workspace.
+- ✅ Public types: `Resolver`, `ResolverConfig`, `ResolvedComponent`,
+  `ResolvedProp`, `Location`, `Error`.
+- ✅ `corsa_client = "0.10"` wired through and proven to build
+  against the workspace.
+- ✅ Scaffold returns `Error::NotImplemented` so editor integrations
+  can develop against the public types before the implementation
+  lands.
+- ✅ 5 unit tests pin the scaffold contract (missing-tsgo,
+  relative-path, NotImplemented, serde round-trip, config builder).
+
+#### 6b. Resolver implementation (planned follow-up)
+
+- Open `component_file` as a tsgo virtual document.
+- Locate the default export and extract the props type (TS `Props`,
+  `defineProps<…>()`, React.FC `<Props>`).
+- Enumerate prop members → name, type string, optionality, JSDoc,
+  declaration location.
+- One `tsgo` process shared per workspace; lifecycle owned by the
+  resolver, not the editor.
+- Integration test gated on `OX_CONTENT_TSGO_PATH` env var.
+
+#### 6c. LSP + CLI integration (planned follow-up)
+
+- LSP wires completion, hover, go-to-definition, and diagnostics on
+  top of the resolver for MDC/MDX files.
+- New CLI `ox-content-component-check` for CI.
+- VS Code: `oxContent.components.tsgoPath`,
   `oxContent.components.tsconfig`, `oxContent.components.enabled`.
-- One `tsgo` process is shared across the workspace; lifecycle is owned by
-  the LSP backend so the editor never sees it.
+- Document the resolution model in `docs/content/component-resolution.md`.
 
 ### 7. `feat(textlint): sidecar integration`
 
-- Spawn `textlint` (node) as a long-lived sidecar from the LSP when a
-  `.textlintrc` is discovered.
-- Surface findings as LSP diagnostics; expose code actions for `--fix`
-  suggestions when textlint reports them.
-- CLI `ox-content-textlint` shells the same flow for CI.
-- Document required textlint version and rule discovery.
+- ✅ New `ox_content_lsp::textlint` module spawns
+  `<command> --format json --stdin --stdin-filename <path>` and
+  parses the per-file message array into LSP diagnostics under
+  `source: "textlint"`. Runs **on save only** so the typing path
+  stays fast (textlint can take a few hundred ms per file).
+- ✅ Opt-in via `oxContent.textlintEnabled` initialization option,
+  `textlint.enabled` in the workspace config, or
+  `OX_CONTENT_TEXTLINT_ENABLED=1`. Off by default — textlint is
+  heavy and noisy for projects that don't use it.
+- ✅ Custom command override via `oxContent.textlintCommand` /
+  `textlint.command` / `OX_CONTENT_TEXTLINT_COMMAND`. Empty falls
+  back to `npx textlint`. Shell-style quoting supported.
+- ✅ VS Code: `oxContent.textlint.enabled` /
+  `oxContent.textlint.command` settings forward into the
+  initialization options.
+- ✅ 11 unit tests cover JSON parsing, severity mapping,
+  zero-indexed coordinates, the missing-rule-id and unknown-severity
+  cases, shlex-style command splitting, and the disabled /
+  missing-binary subprocess paths.
+- Pending follow-ups: code actions for textlint `--fix` suggestions,
+  dedicated `ox-content-textlint` CLI (currently the user runs
+  textlint directly), debounce / cancellation between rapid saves.
 
 ### 8. `feat(nvim): polish, parity, and busted suite`
 

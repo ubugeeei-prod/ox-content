@@ -22,10 +22,6 @@
   <span>parameters</span>
 </span>
 <span class="ox-api-stat">
-  <strong>4</strong>
-  <span>members</span>
-</span>
-<span class="ox-api-stat">
   <strong>3</strong>
   <span>returns</span>
 </span>
@@ -62,7 +58,7 @@
     <code class="ox-api-entry__param-name">options</code>
     <code class="ox-api-entry__param-type">ResolvedOptions</code>
   </div>
-
+  
 </li>
 </ul>
 </div>
@@ -94,7 +90,7 @@
     <code class="ox-api-entry__param-name">options</code>
     <code class="ox-api-entry__param-type">ResolvedOptions</code>
   </div>
-
+  
 </li>
 </ul>
 </div>
@@ -102,7 +98,7 @@
 <h4>Returns</h4>
 <div class="ox-api-entry__return">
   <code class="ox-api-entry__return-type">EnvironmentOptions</code>
-
+  
 </div>
 </div>
 <div class="ox-api-entry__section ox-api-entry__section--examples">
@@ -142,14 +138,14 @@ export default defineConfig({
     <code class="ox-api-entry__param-name">ctx</code>
     <code class="ox-api-entry__param-type">EnvironmentTransformContext</code>
   </div>
-
+  
 </li>
 <li class="ox-api-entry__param">
   <div class="ox-api-entry__param-heading">
     <code class="ox-api-entry__param-name">options</code>
     <code class="ox-api-entry__param-type">ResolvedOptions</code>
   </div>
-
+  
 </li>
 </ul>
 </div>
@@ -157,14 +153,14 @@ export default defineConfig({
 <h4>Returns</h4>
 <div class="ox-api-entry__return">
   <code class="ox-api-entry__return-type">ResolvedOptions</code>
-
+  
 </div>
 </div>
   </div>
 </details>
 
 <details id="environmenttransformcontext" class="ox-api-entry">
-  <summary><span class="ox-api-entry__kind">interface</span><span class="ox-api-entry__summary-main"><code class="ox-api-entry__signature ox-api-entry__signature--highlighted language-typescript">EnvironmentTransformContext</code><span class="ox-api-entry__description">Environment-specific module transformer. This is called during the transform ph…</span><span class="ox-api-entry__meta"><span class="ox-api-badge">4 members</span></span></span></summary>
+  <summary><span class="ox-api-entry__kind">interface</span><span class="ox-api-entry__summary-main"><code class="ox-api-entry__signature ox-api-entry__signature--highlighted language-typescript">EnvironmentTransformContext</code><span class="ox-api-entry__description">Environment-specific module transformer. This is called during the transform ph…</span></span></summary>
   <div class="ox-api-entry__body">
 <div class="ox-api-entry__prose">
 <p>Environment-specific module transformer.</p>
@@ -175,41 +171,6 @@ export default defineConfig({
 <pre><code class="language-typescript">export interface EnvironmentTransformContext</code></pre>
 </div>
 <p class="ox-api-entry__source"><a class="ox-api-entry__source-link" href="https://github.com/ubugeeei/ox-content/blob/main/npm/vite-plugin-ox-content/src/environment.ts#L88-L108" target="_blank" rel="noopener noreferrer">View source<span class="ox-api-entry__source-icon" aria-hidden="true"></span></a></p>
-<div class="ox-api-entry__section ox-api-entry__section--members">
-<h4>Members</h4>
-<div class="ox-api-entry__member-group">
-<h5>Properties</h5>
-<table class="ox-api-entry__members-table">
-<thead><tr><th>Name</th><th>Kind</th><th>Type</th><th>Description</th></tr></thead>
-<tbody>
-<tr>
-  <td><code>environment</code></td>
-  <td><span class="ox-api-entry__member-kind">property</span></td>
-  <td><code class="ox-api-entry__member-type language-typescript">string</code></td>
-  <td><div class="ox-api-entry__member-description">Current environment name.</div></td>
-</tr>
-<tr>
-  <td><code>isDev</code></td>
-  <td><span class="ox-api-entry__member-kind">property</span></td>
-  <td><code class="ox-api-entry__member-type language-typescript">boolean</code></td>
-  <td><div class="ox-api-entry__member-description">Whether we&#39;re in development mode.</div></td>
-</tr>
-<tr>
-  <td><code>isSSR</code></td>
-  <td><span class="ox-api-entry__member-kind">property</span></td>
-  <td><code class="ox-api-entry__member-type language-typescript">boolean</code></td>
-  <td><div class="ox-api-entry__member-description">Whether this is a server-side render.</div></td>
-</tr>
-<tr>
-  <td><code>config</code></td>
-  <td><span class="ox-api-entry__member-kind">property</span></td>
-  <td><code class="ox-api-entry__member-type language-typescript">unknown</code></td>
-  <td><div class="ox-api-entry__member-description">The resolved Vite config.</div></td>
-</tr>
-</tbody>
-</table>
-</div>
-</div>
   </div>
 </details>
 
@@ -233,14 +194,14 @@ export default defineConfig({
     <code class="ox-api-entry__param-name">files</code>
     <code class="ox-api-entry__param-type">string[]</code>
   </div>
-
+  
 </li>
 <li class="ox-api-entry__param">
   <div class="ox-api-entry__param-heading">
     <code class="ox-api-entry__param-name">_options</code>
     <code class="ox-api-entry__param-type">ResolvedOptions</code>
   </div>
-
+  
 </li>
 </ul>
 </div>
@@ -248,7 +209,7 @@ export default defineConfig({
 <h4>Returns</h4>
 <div class="ox-api-entry__return">
   <code class="ox-api-entry__return-type">Promise</code>
-
+  
 </div>
 </div>
   </div>

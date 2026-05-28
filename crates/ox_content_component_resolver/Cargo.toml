@@ -1,0 +1,22 @@
+[package]
+name = "ox_content_component_resolver"
+version.workspace = true
+authors.workspace = true
+categories.workspace = true
+edition.workspace = true
+homepage.workspace = true
+keywords.workspace = true
+license.workspace = true
+repository.workspace = true
+rust-version.workspace = true
+description = "Resolves component props for Markdown/MDC docs via typescript-go (corsa_client)"
+
+[lints]
+workspace = true
+
+[dependencies]
+corsa_client = "0.10"
+serde = { workspace = true }
+serde_json = { workspace = true }
+thiserror = { workspace = true }
+tokio = { workspace = true }

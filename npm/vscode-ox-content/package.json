@@ -20,7 +20,8 @@
     "build": "tsc -p tsconfig.json",
     "clean": "rm -rf dist",
     "pretest": "tsc -p tsconfig.json",
-    "test": "vscode-test"
+    "test": "vscode-test",
+    "test:unit": "vp test src/test/unit"
   },
   "devDependencies": {
     "@types/mocha": "^10.0.10",
@@ -30,6 +31,7 @@
     "@vscode/test-electron": "^2.4.1",
     "mocha": "^10.7.3",
     "typescript": "catalog:",
+    "vitest": "catalog:",
     "vscode-languageclient": "^9.0.1"
   },
   "contributes": {
@@ -72,6 +74,21 @@
           "type": "boolean",
           "default": true,
           "description": "Automatically refresh the Ox Content preview when the document changes."
+        },
+        "oxContent.textlint.enabled": {
+          "type": "boolean",
+          "default": false,
+          "markdownDescription": "Run [textlint](https://textlint.github.io) on Markdown / `.mdc` files on save and surface its findings as diagnostics. Off by default because textlint is heavy and noisy for projects that don't use it."
+        },
+        "oxContent.textlint.command": {
+          "type": "string",
+          "default": "",
+          "markdownDescription": "Optional shell command used to invoke textlint. Empty falls back to `npx textlint`. Example: `pnpm exec textlint` or `/usr/local/bin/textlint`."
+        },
+        "oxContent.mdc.components": {
+          "type": "string",
+          "default": "",
+          "markdownDescription": "Optional absolute or workspace-relative path to the MDC component registry JSON file. The registry powers component name and attribute completion inside `.md` / `.mdc` files."
         }
       }
     },

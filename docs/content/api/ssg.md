@@ -26,10 +26,6 @@
   <span>parameters</span>
 </span>
 <span class="ox-api-stat">
-  <strong>19</strong>
-  <span>members</span>
-</span>
-<span class="ox-api-stat">
   <strong>13</strong>
   <span>returns</span>
 </span>
@@ -65,28 +61,28 @@
     <code class="ox-api-entry__param-name">markdownFiles</code>
     <code class="ox-api-entry__param-type">string[]</code>
   </div>
-
+  
 </li>
 <li class="ox-api-entry__param">
   <div class="ox-api-entry__param-heading">
     <code class="ox-api-entry__param-name">srcDir</code>
     <code class="ox-api-entry__param-type">string</code>
   </div>
-
+  
 </li>
 <li class="ox-api-entry__param">
   <div class="ox-api-entry__param-heading">
     <code class="ox-api-entry__param-name">base</code>
     <code class="ox-api-entry__param-type">string</code>
   </div>
-
+  
 </li>
 <li class="ox-api-entry__param">
   <div class="ox-api-entry__param-heading">
     <code class="ox-api-entry__param-name">extension</code>
     <code class="ox-api-entry__param-type">string</code>
   </div>
-
+  
 </li>
 </ul>
 </div>
@@ -94,7 +90,7 @@
 <h4>Returns</h4>
 <div class="ox-api-entry__return">
   <code class="ox-api-entry__return-type">NavGroup[]</code>
-
+  
 </div>
 </div>
   </div>
@@ -119,14 +115,14 @@
     <code class="ox-api-entry__param-name">options</code>
     <code class="ox-api-entry__param-type">ResolvedOptions</code>
   </div>
-
+  
 </li>
 <li class="ox-api-entry__param">
   <div class="ox-api-entry__param-heading">
     <code class="ox-api-entry__param-name">root</code>
     <code class="ox-api-entry__param-type">string</code>
   </div>
-
+  
 </li>
 </ul>
 </div>
@@ -134,7 +130,7 @@
 <h4>Returns</h4>
 <div class="ox-api-entry__return">
   <code class="ox-api-entry__return-type">Promise</code>
-
+  
 </div>
 </div>
   </div>
@@ -159,21 +155,21 @@
     <code class="ox-api-entry__param-name">sidebar</code>
     <code class="ox-api-entry__param-type">SidebarItem[]</code>
   </div>
-
+  
 </li>
 <li class="ox-api-entry__param">
   <div class="ox-api-entry__param-heading">
     <code class="ox-api-entry__param-name">base</code>
     <code class="ox-api-entry__param-type">string</code>
   </div>
-
+  
 </li>
 <li class="ox-api-entry__param">
   <div class="ox-api-entry__param-heading">
     <code class="ox-api-entry__param-name">extension</code>
     <code class="ox-api-entry__param-type">string</code>
   </div>
-
+  
 </li>
 </ul>
 </div>
@@ -181,7 +177,7 @@
 <h4>Returns</h4>
 <div class="ox-api-entry__return">
   <code class="ox-api-entry__return-type">NavGroup[]</code>
-
+  
 </div>
 </div>
   </div>
@@ -206,7 +202,7 @@
     <code class="ox-api-entry__param-name">srcDir</code>
     <code class="ox-api-entry__param-type">string</code>
   </div>
-
+  
 </li>
 <li class="ox-api-entry__param">
   <div class="ox-api-entry__param-heading">
@@ -221,7 +217,7 @@
 <h4>Returns</h4>
 <div class="ox-api-entry__return">
   <code class="ox-api-entry__return-type">Promise</code>
-
+  
 </div>
 </div>
   </div>
@@ -264,14 +260,14 @@
     <code class="ox-api-entry__param-name">content</code>
     <code class="ox-api-entry__param-type">string</code>
   </div>
-
+  
 </li>
 <li class="ox-api-entry__param">
   <div class="ox-api-entry__param-heading">
     <code class="ox-api-entry__param-name">frontmatter</code>
     <code class="ox-api-entry__param-type">Record</code>
   </div>
-
+  
 </li>
 </ul>
 </div>
@@ -279,7 +275,7 @@
 <h4>Returns</h4>
 <div class="ox-api-entry__return">
   <code class="ox-api-entry__return-type">string</code>
-
+  
 </div>
 </div>
   </div>
@@ -304,7 +300,7 @@
     <code class="ox-api-entry__param-name">name</code>
     <code class="ox-api-entry__param-type">string</code>
   </div>
-
+  
 </li>
 </ul>
 </div>
@@ -312,7 +308,7 @@
 <h4>Returns</h4>
 <div class="ox-api-entry__return">
   <code class="ox-api-entry__return-type">string</code>
-
+  
 </div>
 </div>
   </div>
@@ -337,14 +333,14 @@
     <code class="ox-api-entry__param-name">content</code>
     <code class="ox-api-entry__param-type">string</code>
   </div>
-
+  
 </li>
 <li class="ox-api-entry__param">
   <div class="ox-api-entry__param-heading">
     <code class="ox-api-entry__param-name">title</code>
     <code class="ox-api-entry__param-type">string</code>
   </div>
-
+  
 </li>
 </ul>
 </div>
@@ -352,7 +348,7 @@
 <h4>Returns</h4>
 <div class="ox-api-entry__return">
   <code class="ox-api-entry__return-type">string</code>
-
+  
 </div>
 </div>
   </div>
@@ -377,28 +373,28 @@
     <code class="ox-api-entry__param-name">pageData</code>
     <code class="ox-api-entry__param-type">SsgPageData</code>
   </div>
-
+  
 </li>
 <li class="ox-api-entry__param">
   <div class="ox-api-entry__param-heading">
     <code class="ox-api-entry__param-name">navGroups</code>
     <code class="ox-api-entry__param-type">NavGroup[]</code>
   </div>
-
+  
 </li>
 <li class="ox-api-entry__param">
   <div class="ox-api-entry__param-heading">
     <code class="ox-api-entry__param-name">siteName</code>
     <code class="ox-api-entry__param-type">string</code>
   </div>
-
+  
 </li>
 <li class="ox-api-entry__param">
   <div class="ox-api-entry__param-heading">
     <code class="ox-api-entry__param-name">base</code>
     <code class="ox-api-entry__param-type">string</code>
   </div>
-
+  
 </li>
 <li class="ox-api-entry__param">
   <div class="ox-api-entry__param-heading">
@@ -434,7 +430,7 @@
 <h4>Returns</h4>
 <div class="ox-api-entry__return">
   <code class="ox-api-entry__return-type">Promise</code>
-
+  
 </div>
 </div>
   </div>
@@ -459,28 +455,28 @@
     <code class="ox-api-entry__param-name">inputPath</code>
     <code class="ox-api-entry__param-type">string</code>
   </div>
-
+  
 </li>
 <li class="ox-api-entry__param">
   <div class="ox-api-entry__param-heading">
     <code class="ox-api-entry__param-name">srcDir</code>
     <code class="ox-api-entry__param-type">string</code>
   </div>
-
+  
 </li>
 <li class="ox-api-entry__param">
   <div class="ox-api-entry__param-heading">
     <code class="ox-api-entry__param-name">base</code>
     <code class="ox-api-entry__param-type">string</code>
   </div>
-
+  
 </li>
 <li class="ox-api-entry__param">
   <div class="ox-api-entry__param-heading">
     <code class="ox-api-entry__param-name">extension</code>
     <code class="ox-api-entry__param-type">string</code>
   </div>
-
+  
 </li>
 </ul>
 </div>
@@ -488,7 +484,7 @@
 <h4>Returns</h4>
 <div class="ox-api-entry__return">
   <code class="ox-api-entry__return-type">string</code>
-
+  
 </div>
 </div>
   </div>
@@ -513,28 +509,28 @@
     <code class="ox-api-entry__param-name">inputPath</code>
     <code class="ox-api-entry__param-type">string</code>
   </div>
-
+  
 </li>
 <li class="ox-api-entry__param">
   <div class="ox-api-entry__param-heading">
     <code class="ox-api-entry__param-name">srcDir</code>
     <code class="ox-api-entry__param-type">string</code>
   </div>
-
+  
 </li>
 <li class="ox-api-entry__param">
   <div class="ox-api-entry__param-heading">
     <code class="ox-api-entry__param-name">outDir</code>
     <code class="ox-api-entry__param-type">string</code>
   </div>
-
+  
 </li>
 <li class="ox-api-entry__param">
   <div class="ox-api-entry__param-heading">
     <code class="ox-api-entry__param-name">extension</code>
     <code class="ox-api-entry__param-type">string</code>
   </div>
-
+  
 </li>
 </ul>
 </div>
@@ -542,7 +538,7 @@
 <h4>Returns</h4>
 <div class="ox-api-entry__return">
   <code class="ox-api-entry__return-type">string</code>
-
+  
 </div>
 </div>
   </div>
@@ -567,14 +563,14 @@
     <code class="ox-api-entry__param-name">inputPath</code>
     <code class="ox-api-entry__param-type">string</code>
   </div>
-
+  
 </li>
 <li class="ox-api-entry__param">
   <div class="ox-api-entry__param-heading">
     <code class="ox-api-entry__param-name">srcDir</code>
     <code class="ox-api-entry__param-type">string</code>
   </div>
-
+  
 </li>
 </ul>
 </div>
@@ -582,14 +578,14 @@
 <h4>Returns</h4>
 <div class="ox-api-entry__return">
   <code class="ox-api-entry__return-type">string</code>
-
+  
 </div>
 </div>
   </div>
 </details>
 
 <details id="navgroup" class="ox-api-entry">
-  <summary><span class="ox-api-entry__kind">interface</span><span class="ox-api-entry__summary-main"><code class="ox-api-entry__signature ox-api-entry__signature--highlighted language-typescript">NavGroup</code><span class="ox-api-entry__description">Navigation group for hierarchical navigation.</span><span class="ox-api-entry__meta"><span class="ox-api-badge">3 members</span></span></span></summary>
+  <summary><span class="ox-api-entry__kind">interface</span><span class="ox-api-entry__summary-main"><code class="ox-api-entry__signature ox-api-entry__signature--highlighted language-typescript">NavGroup</code><span class="ox-api-entry__description">Navigation group for hierarchical navigation.</span></span></summary>
   <div class="ox-api-entry__body">
 <div class="ox-api-entry__prose">
 <p>Navigation group for hierarchical navigation.</p>
@@ -599,35 +595,6 @@
 <pre><code class="language-typescript">export interface NavGroup</code></pre>
 </div>
 <p class="ox-api-entry__source"><a class="ox-api-entry__source-link" href="https://github.com/ubugeeei/ox-content/blob/main/npm/vite-plugin-ox-content/src/ssg.ts#L379-L383" target="_blank" rel="noopener noreferrer">View source<span class="ox-api-entry__source-icon" aria-hidden="true"></span></a></p>
-<div class="ox-api-entry__section ox-api-entry__section--members">
-<h4>Members</h4>
-<div class="ox-api-entry__member-group">
-<h5>Properties</h5>
-<table class="ox-api-entry__members-table">
-<thead><tr><th>Name</th><th>Kind</th><th>Type</th><th>Description</th></tr></thead>
-<tbody>
-<tr>
-  <td><code>title</code></td>
-  <td><span class="ox-api-entry__member-kind">property</span></td>
-  <td><code class="ox-api-entry__member-type language-typescript">string</code></td>
-  <td></td>
-</tr>
-<tr>
-  <td><code>items</code></td>
-  <td><span class="ox-api-entry__member-kind">property</span></td>
-  <td><code class="ox-api-entry__member-type language-typescript">SsgNavItem[]</code></td>
-  <td></td>
-</tr>
-<tr>
-  <td><code>collapsed</code><span class="ox-api-badge">optional</span></td>
-  <td><span class="ox-api-entry__member-kind">property</span></td>
-  <td><code class="ox-api-entry__member-type language-typescript">boolean</code></td>
-  <td></td>
-</tr>
-</tbody>
-</table>
-</div>
-</div>
   </div>
 </details>
 
@@ -650,21 +617,21 @@
     <code class="ox-api-entry__param-name">navigation</code>
     <code class="ox-api-entry__param-type">SsgNavigationGroup[] | undefined</code>
   </div>
-
+  
 </li>
 <li class="ox-api-entry__param">
   <div class="ox-api-entry__param-heading">
     <code class="ox-api-entry__param-name">base</code>
     <code class="ox-api-entry__param-type">string</code>
   </div>
-
+  
 </li>
 <li class="ox-api-entry__param">
   <div class="ox-api-entry__param-heading">
     <code class="ox-api-entry__param-name">extension</code>
     <code class="ox-api-entry__param-type">string</code>
   </div>
-
+  
 </li>
 </ul>
 </div>
@@ -672,7 +639,7 @@
 <h4>Returns</h4>
 <div class="ox-api-entry__return">
   <code class="ox-api-entry__return-type">NavGroup[] | undefined</code>
-
+  
 </div>
 </div>
   </div>
@@ -697,7 +664,7 @@
     <code class="ox-api-entry__param-name">ssg</code>
     <code class="ox-api-entry__param-type">SsgOptions | boolean | undefined</code>
   </div>
-
+  
 </li>
 </ul>
 </div>
@@ -705,14 +672,14 @@
 <h4>Returns</h4>
 <div class="ox-api-entry__return">
   <code class="ox-api-entry__return-type">ResolvedSsgOptions</code>
-
+  
 </div>
 </div>
   </div>
 </details>
 
 <details id="ssgentrypageconfig" class="ox-api-entry">
-  <summary><span class="ox-api-entry__kind">interface</span><span class="ox-api-entry__summary-main"><code class="ox-api-entry__signature ox-api-entry__signature--highlighted language-typescript">SsgEntryPageConfig</code><span class="ox-api-entry__description">Entry page configuration for SSG (passed to Rust).</span><span class="ox-api-entry__meta"><span class="ox-api-badge">2 members</span></span></span></summary>
+  <summary><span class="ox-api-entry__kind">interface</span><span class="ox-api-entry__summary-main"><code class="ox-api-entry__signature ox-api-entry__signature--highlighted language-typescript">SsgEntryPageConfig</code><span class="ox-api-entry__description">Entry page configuration for SSG (passed to Rust).</span></span></summary>
   <div class="ox-api-entry__body">
 <div class="ox-api-entry__prose">
 <p>Entry page configuration for SSG (passed to Rust).</p>
@@ -722,34 +689,11 @@
 <pre><code class="language-typescript">export interface SsgEntryPageConfig</code></pre>
 </div>
 <p class="ox-api-entry__source"><a class="ox-api-entry__source-link" href="https://github.com/ubugeeei/ox-content/blob/main/npm/vite-plugin-ox-content/src/ssg.ts#L44-L47" target="_blank" rel="noopener noreferrer">View source<span class="ox-api-entry__source-icon" aria-hidden="true"></span></a></p>
-<div class="ox-api-entry__section ox-api-entry__section--members">
-<h4>Members</h4>
-<div class="ox-api-entry__member-group">
-<h5>Properties</h5>
-<table class="ox-api-entry__members-table">
-<thead><tr><th>Name</th><th>Kind</th><th>Type</th><th>Description</th></tr></thead>
-<tbody>
-<tr>
-  <td><code>hero</code><span class="ox-api-badge">optional</span></td>
-  <td><span class="ox-api-entry__member-kind">property</span></td>
-  <td><code class="ox-api-entry__member-type language-typescript">HeroConfig</code></td>
-  <td></td>
-</tr>
-<tr>
-  <td><code>features</code><span class="ox-api-badge">optional</span></td>
-  <td><span class="ox-api-entry__member-kind">property</span></td>
-  <td><code class="ox-api-entry__member-type language-typescript">FeatureConfig[]</code></td>
-  <td></td>
-</tr>
-</tbody>
-</table>
-</div>
-</div>
   </div>
 </details>
 
 <details id="ssgnavitem" class="ox-api-entry">
-  <summary><span class="ox-api-entry__kind">interface</span><span class="ox-api-entry__summary-main"><code class="ox-api-entry__signature ox-api-entry__signature--highlighted language-typescript">SsgNavItem</code><span class="ox-api-entry__description">Navigation item for SSG.</span><span class="ox-api-entry__meta"><span class="ox-api-badge">5 members</span></span></span></summary>
+  <summary><span class="ox-api-entry__kind">interface</span><span class="ox-api-entry__summary-main"><code class="ox-api-entry__signature ox-api-entry__signature--highlighted language-typescript">SsgNavItem</code><span class="ox-api-entry__description">Navigation item for SSG.</span></span></summary>
   <div class="ox-api-entry__body">
 <div class="ox-api-entry__prose">
 <p>Navigation item for SSG.</p>
@@ -759,52 +703,11 @@
 <pre><code class="language-typescript">export interface SsgNavItem</code></pre>
 </div>
 <p class="ox-api-entry__source"><a class="ox-api-entry__source-link" href="https://github.com/ubugeeei/ox-content/blob/main/npm/vite-plugin-ox-content/src/ssg.ts#L33-L39" target="_blank" rel="noopener noreferrer">View source<span class="ox-api-entry__source-icon" aria-hidden="true"></span></a></p>
-<div class="ox-api-entry__section ox-api-entry__section--members">
-<h4>Members</h4>
-<div class="ox-api-entry__member-group">
-<h5>Properties</h5>
-<table class="ox-api-entry__members-table">
-<thead><tr><th>Name</th><th>Kind</th><th>Type</th><th>Description</th></tr></thead>
-<tbody>
-<tr>
-  <td><code>title</code></td>
-  <td><span class="ox-api-entry__member-kind">property</span></td>
-  <td><code class="ox-api-entry__member-type language-typescript">string</code></td>
-  <td></td>
-</tr>
-<tr>
-  <td><code>path</code></td>
-  <td><span class="ox-api-entry__member-kind">property</span></td>
-  <td><code class="ox-api-entry__member-type language-typescript">string</code></td>
-  <td></td>
-</tr>
-<tr>
-  <td><code>href</code></td>
-  <td><span class="ox-api-entry__member-kind">property</span></td>
-  <td><code class="ox-api-entry__member-type language-typescript">string</code></td>
-  <td></td>
-</tr>
-<tr>
-  <td><code>children</code><span class="ox-api-badge">optional</span></td>
-  <td><span class="ox-api-entry__member-kind">property</span></td>
-  <td><code class="ox-api-entry__member-type language-typescript">SsgNavItem[]</code></td>
-  <td></td>
-</tr>
-<tr>
-  <td><code>collapsed</code><span class="ox-api-badge">optional</span></td>
-  <td><span class="ox-api-entry__member-kind">property</span></td>
-  <td><code class="ox-api-entry__member-type language-typescript">boolean</code></td>
-  <td></td>
-</tr>
-</tbody>
-</table>
-</div>
-</div>
   </div>
 </details>
 
 <details id="ssgpagedata" class="ox-api-entry">
-  <summary><span class="ox-api-entry__kind">interface</span><span class="ox-api-entry__summary-main"><code class="ox-api-entry__signature ox-api-entry__signature--highlighted language-typescript">SsgPageData</code><span class="ox-api-entry__description">Page data for SSG.</span><span class="ox-api-entry__meta"><span class="ox-api-badge">9 members</span></span></span></summary>
+  <summary><span class="ox-api-entry__kind">interface</span><span class="ox-api-entry__summary-main"><code class="ox-api-entry__signature ox-api-entry__signature--highlighted language-typescript">SsgPageData</code><span class="ox-api-entry__description">Page data for SSG.</span></span></summary>
   <div class="ox-api-entry__body">
 <div class="ox-api-entry__prose">
 <p>Page data for SSG.</p>
@@ -814,70 +717,5 @@
 <pre><code class="language-typescript">export interface SsgPageData</code></pre>
 </div>
 <p class="ox-api-entry__source"><a class="ox-api-entry__source-link" href="https://github.com/ubugeeei/ox-content/blob/main/npm/vite-plugin-ox-content/src/ssg.ts#L52-L63" target="_blank" rel="noopener noreferrer">View source<span class="ox-api-entry__source-icon" aria-hidden="true"></span></a></p>
-<div class="ox-api-entry__section ox-api-entry__section--members">
-<h4>Members</h4>
-<div class="ox-api-entry__member-group">
-<h5>Properties</h5>
-<table class="ox-api-entry__members-table">
-<thead><tr><th>Name</th><th>Kind</th><th>Type</th><th>Description</th></tr></thead>
-<tbody>
-<tr>
-  <td><code>title</code></td>
-  <td><span class="ox-api-entry__member-kind">property</span></td>
-  <td><code class="ox-api-entry__member-type language-typescript">string</code></td>
-  <td></td>
-</tr>
-<tr>
-  <td><code>description</code><span class="ox-api-badge">optional</span></td>
-  <td><span class="ox-api-entry__member-kind">property</span></td>
-  <td><code class="ox-api-entry__member-type language-typescript">string</code></td>
-  <td></td>
-</tr>
-<tr>
-  <td><code>content</code></td>
-  <td><span class="ox-api-entry__member-kind">property</span></td>
-  <td><code class="ox-api-entry__member-type language-typescript">string</code></td>
-  <td></td>
-</tr>
-<tr>
-  <td><code>toc</code></td>
-  <td><span class="ox-api-entry__member-kind">property</span></td>
-  <td><code class="ox-api-entry__member-type language-typescript">TocEntry[]</code></td>
-  <td></td>
-</tr>
-<tr>
-  <td><code>lastUpdated</code><span class="ox-api-badge">optional</span></td>
-  <td><span class="ox-api-entry__member-kind">property</span></td>
-  <td><code class="ox-api-entry__member-type language-typescript">number</code></td>
-  <td></td>
-</tr>
-<tr>
-  <td><code>frontmatter</code></td>
-  <td><span class="ox-api-entry__member-kind">property</span></td>
-  <td><code class="ox-api-entry__member-type language-typescript">Record</code></td>
-  <td></td>
-</tr>
-<tr>
-  <td><code>path</code></td>
-  <td><span class="ox-api-entry__member-kind">property</span></td>
-  <td><code class="ox-api-entry__member-type language-typescript">string</code></td>
-  <td></td>
-</tr>
-<tr>
-  <td><code>href</code></td>
-  <td><span class="ox-api-entry__member-kind">property</span></td>
-  <td><code class="ox-api-entry__member-type language-typescript">string</code></td>
-  <td></td>
-</tr>
-<tr>
-  <td><code>entryPage</code><span class="ox-api-badge">optional</span></td>
-  <td><span class="ox-api-entry__member-kind">property</span></td>
-  <td><code class="ox-api-entry__member-type language-typescript">SsgEntryPageConfig</code></td>
-  <td><div class="ox-api-entry__member-description">Entry page configuration (if layout: entry)</div></td>
-</tr>
-</tbody>
-</table>
-</div>
-</div>
   </div>
 </details>

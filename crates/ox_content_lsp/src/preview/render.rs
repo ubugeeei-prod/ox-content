@@ -1,14 +1,14 @@
 use ox_content_allocator::Allocator;
 use ox_content_parser::{ParseError, Parser, ParserOptions};
 use ox_content_renderer::HtmlRenderer;
-use serde::Serialize;
+use serde::{Deserialize, Serialize};
 
 use crate::document::TextDocumentState;
 use crate::frontmatter::parse_frontmatter;
 use crate::preview::html::wrap_preview_html;
 use crate::preview::text::preview_title;
 
-#[derive(Clone, Debug, Serialize)]
+#[derive(Clone, Debug, Serialize, Deserialize)]
 pub struct PreviewPayload {
     pub html: String,
     pub title: String,

@@ -26,10 +26,6 @@
   <span>parameters</span>
 </span>
 <span class="ox-api-stat">
-  <strong>3</strong>
-  <span>members</span>
-</span>
-<span class="ox-api-stat">
   <strong>9</strong>
   <span>returns</span>
 </span>
@@ -57,7 +53,7 @@
 <h4>Returns</h4>
 <div class="ox-api-entry__return">
   <code class="ox-api-entry__return-type">DevServerCache</code>
-
+  
 </div>
 </div>
   </div>
@@ -82,21 +78,21 @@
     <code class="ox-api-entry__param-name">options</code>
     <code class="ox-api-entry__param-type">ResolvedOptions</code>
   </div>
-
+  
 </li>
 <li class="ox-api-entry__param">
   <div class="ox-api-entry__param-heading">
     <code class="ox-api-entry__param-name">root</code>
     <code class="ox-api-entry__param-type">string</code>
   </div>
-
+  
 </li>
 <li class="ox-api-entry__param">
   <div class="ox-api-entry__param-heading">
     <code class="ox-api-entry__param-name">cache</code>
     <code class="ox-api-entry__param-type">DevServerCache</code>
   </div>
-
+  
 </li>
 </ul>
 </div>
@@ -104,14 +100,14 @@
 <h4>Returns</h4>
 <div class="ox-api-entry__return">
   <code class="ox-api-entry__return-type">Connect.NextHandleFunction</code>
-
+  
 </div>
 </div>
   </div>
 </details>
 
 <details id="devservercache" class="ox-api-entry">
-  <summary><span class="ox-api-entry__kind">interface</span><span class="ox-api-entry__summary-main"><code class="ox-api-entry__signature ox-api-entry__signature--highlighted language-typescript">DevServerCache</code><span class="ox-api-entry__description">Dev server state for caching.</span><span class="ox-api-entry__meta"><span class="ox-api-badge">3 members</span></span></span></summary>
+  <summary><span class="ox-api-entry__kind">interface</span><span class="ox-api-entry__summary-main"><code class="ox-api-entry__signature ox-api-entry__signature--highlighted language-typescript">DevServerCache</code><span class="ox-api-entry__description">Dev server state for caching.</span></span></summary>
   <div class="ox-api-entry__body">
 <div class="ox-api-entry__prose">
 <p>Dev server state for caching.</p>
@@ -121,35 +117,6 @@
 <pre><code class="language-typescript">interface DevServerCache</code></pre>
 </div>
 <p class="ox-api-entry__source"><a class="ox-api-entry__source-link" href="https://github.com/ubugeeei/ox-content/blob/main/npm/vite-plugin-ox-content/src/dev-server.ts#L211-L218" target="_blank" rel="noopener noreferrer">View source<span class="ox-api-entry__source-icon" aria-hidden="true"></span></a></p>
-<div class="ox-api-entry__section ox-api-entry__section--members">
-<h4>Members</h4>
-<div class="ox-api-entry__member-group">
-<h5>Properties</h5>
-<table class="ox-api-entry__members-table">
-<thead><tr><th>Name</th><th>Kind</th><th>Type</th><th>Description</th></tr></thead>
-<tbody>
-<tr>
-  <td><code>navGroups</code></td>
-  <td><span class="ox-api-entry__member-kind">property</span></td>
-  <td><code class="ox-api-entry__member-type language-typescript">NavGroup[] | null</code></td>
-  <td><div class="ox-api-entry__member-description">Cached navigation groups. Invalidated on file add/unlink.</div></td>
-</tr>
-<tr>
-  <td><code>pages</code></td>
-  <td><span class="ox-api-entry__member-kind">property</span></td>
-  <td><code class="ox-api-entry__member-type language-typescript">Map</code></td>
-  <td><div class="ox-api-entry__member-description">Cached rendered HTML keyed by absolute file path.</div></td>
-</tr>
-<tr>
-  <td><code>siteName</code></td>
-  <td><span class="ox-api-entry__member-kind">property</span></td>
-  <td><code class="ox-api-entry__member-type language-typescript">string | null</code></td>
-  <td><div class="ox-api-entry__member-description">Cached site name. Computed once.</div></td>
-</tr>
-</tbody>
-</table>
-</div>
-</div>
   </div>
 </details>
 
@@ -172,7 +139,7 @@
     <code class="ox-api-entry__param-name">html</code>
     <code class="ox-api-entry__param-type">string</code>
   </div>
-
+  
 </li>
 </ul>
 </div>
@@ -180,7 +147,7 @@
 <h4>Returns</h4>
 <div class="ox-api-entry__return">
   <code class="ox-api-entry__return-type">string</code>
-
+  
 </div>
 </div>
   </div>
@@ -205,7 +172,7 @@
     <code class="ox-api-entry__param-name">cache</code>
     <code class="ox-api-entry__param-type">DevServerCache</code>
   </div>
-
+  
 </li>
 </ul>
 </div>
@@ -213,7 +180,7 @@
 <h4>Returns</h4>
 <div class="ox-api-entry__return">
   <code class="ox-api-entry__return-type">void</code>
-
+  
 </div>
 </div>
   </div>
@@ -238,14 +205,14 @@
     <code class="ox-api-entry__param-name">cache</code>
     <code class="ox-api-entry__param-type">DevServerCache</code>
   </div>
-
+  
 </li>
 <li class="ox-api-entry__param">
   <div class="ox-api-entry__param-heading">
     <code class="ox-api-entry__param-name">filePath</code>
     <code class="ox-api-entry__param-type">string</code>
   </div>
-
+  
 </li>
 </ul>
 </div>
@@ -253,7 +220,7 @@
 <h4>Returns</h4>
 <div class="ox-api-entry__return">
   <code class="ox-api-entry__return-type">void</code>
-
+  
 </div>
 </div>
   </div>
@@ -278,42 +245,42 @@
     <code class="ox-api-entry__param-name">filePath</code>
     <code class="ox-api-entry__param-type">string</code>
   </div>
-
+  
 </li>
 <li class="ox-api-entry__param">
   <div class="ox-api-entry__param-heading">
     <code class="ox-api-entry__param-name">options</code>
     <code class="ox-api-entry__param-type">ResolvedOptions</code>
   </div>
-
+  
 </li>
 <li class="ox-api-entry__param">
   <div class="ox-api-entry__param-heading">
     <code class="ox-api-entry__param-name">navGroups</code>
     <code class="ox-api-entry__param-type">NavGroup[]</code>
   </div>
-
+  
 </li>
 <li class="ox-api-entry__param">
   <div class="ox-api-entry__param-heading">
     <code class="ox-api-entry__param-name">siteName</code>
     <code class="ox-api-entry__param-type">string</code>
   </div>
-
+  
 </li>
 <li class="ox-api-entry__param">
   <div class="ox-api-entry__param-heading">
     <code class="ox-api-entry__param-name">base</code>
     <code class="ox-api-entry__param-type">string</code>
   </div>
-
+  
 </li>
 <li class="ox-api-entry__param">
   <div class="ox-api-entry__param-heading">
     <code class="ox-api-entry__param-name">root</code>
     <code class="ox-api-entry__param-type">string</code>
   </div>
-
+  
 </li>
 </ul>
 </div>
@@ -321,7 +288,7 @@
 <h4>Returns</h4>
 <div class="ox-api-entry__return">
   <code class="ox-api-entry__return-type">Promise</code>
-
+  
 </div>
 </div>
   </div>
@@ -346,21 +313,21 @@
     <code class="ox-api-entry__param-name">url</code>
     <code class="ox-api-entry__param-type">string</code>
   </div>
-
+  
 </li>
 <li class="ox-api-entry__param">
   <div class="ox-api-entry__param-heading">
     <code class="ox-api-entry__param-name">srcDir</code>
     <code class="ox-api-entry__param-type">string</code>
   </div>
-
+  
 </li>
 <li class="ox-api-entry__param">
   <div class="ox-api-entry__param-heading">
     <code class="ox-api-entry__param-name">extensions</code>
     <code class="ox-api-entry__param-type">unknown</code>
   </div>
-
+  
 </li>
 </ul>
 </div>
@@ -368,7 +335,7 @@
 <h4>Returns</h4>
 <div class="ox-api-entry__return">
   <code class="ox-api-entry__return-type">Promise</code>
-
+  
 </div>
 </div>
   </div>
@@ -393,14 +360,14 @@
     <code class="ox-api-entry__param-name">options</code>
     <code class="ox-api-entry__param-type">ResolvedOptions</code>
   </div>
-
+  
 </li>
 <li class="ox-api-entry__param">
   <div class="ox-api-entry__param-heading">
     <code class="ox-api-entry__param-name">root</code>
     <code class="ox-api-entry__param-type">string</code>
   </div>
-
+  
 </li>
 </ul>
 </div>
@@ -408,7 +375,7 @@
 <h4>Returns</h4>
 <div class="ox-api-entry__return">
   <code class="ox-api-entry__return-type">Promise</code>
-
+  
 </div>
 </div>
   </div>
@@ -433,7 +400,7 @@
     <code class="ox-api-entry__param-name">url</code>
     <code class="ox-api-entry__param-type">string</code>
   </div>
-
+  
 </li>
 </ul>
 </div>
@@ -441,7 +408,7 @@
 <h4>Returns</h4>
 <div class="ox-api-entry__return">
   <code class="ox-api-entry__return-type">boolean</code>
-
+  
 </div>
 </div>
   </div>

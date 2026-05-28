@@ -30,10 +30,6 @@
   <span>parameters</span>
 </span>
 <span class="ox-api-stat">
-  <strong>2</strong>
-  <span>members</span>
-</span>
-<span class="ox-api-stat">
   <strong>11</strong>
   <span>returns</span>
 </span>
@@ -69,14 +65,14 @@
     <code class="ox-api-entry__param-name">items</code>
     <code class="ox-api-entry__param-type">T[]</code>
   </div>
-
+  
 </li>
 <li class="ox-api-entry__param">
   <div class="ox-api-entry__param-heading">
     <code class="ox-api-entry__param-name">render</code>
     <code class="ox-api-entry__param-type">(item: T, index: number) =&gt; JSXNode</code>
   </div>
-
+  
 </li>
 </ul>
 </div>
@@ -84,7 +80,7 @@
 <h4>Returns</h4>
 <div class="ox-api-entry__return">
   <code class="ox-api-entry__return-type">JSXNode</code>
-
+  
 </div>
 </div>
 <div class="ox-api-entry__section ox-api-entry__section--examples">
@@ -116,7 +112,7 @@
     <code class="ox-api-entry__param-name">str</code>
     <code class="ox-api-entry__param-type">string</code>
   </div>
-
+  
 </li>
 </ul>
 </div>
@@ -124,7 +120,7 @@
 <h4>Returns</h4>
 <div class="ox-api-entry__return">
   <code class="ox-api-entry__return-type">string</code>
-
+  
 </div>
 </div>
   </div>
@@ -149,7 +145,7 @@
     <code class="ox-api-entry__param-name">param</code>
     <code class="ox-api-entry__param-type">{ ... }</code>
   </div>
-
+  
 </li>
 </ul>
 </div>
@@ -157,7 +153,7 @@
 <h4>Returns</h4>
 <div class="ox-api-entry__return">
   <code class="ox-api-entry__return-type">JSXNode</code>
-
+  
 </div>
 </div>
   </div>
@@ -182,14 +178,14 @@
     <code class="ox-api-entry__param-name">type</code>
     <code class="ox-api-entry__param-type">JSXElementType</code>
   </div>
-
+  
 </li>
 <li class="ox-api-entry__param">
   <div class="ox-api-entry__param-heading">
     <code class="ox-api-entry__param-name">props</code>
     <code class="ox-api-entry__param-type">JSXProps</code>
   </div>
-
+  
 </li>
 <li class="ox-api-entry__param">
   <div class="ox-api-entry__param-heading">
@@ -204,7 +200,7 @@
 <h4>Returns</h4>
 <div class="ox-api-entry__return">
   <code class="ox-api-entry__return-type">JSXNode</code>
-
+  
 </div>
 </div>
   </div>
@@ -239,7 +235,7 @@
 </details>
 
 <details id="jsxnode" class="ox-api-entry">
-  <summary><span class="ox-api-entry__kind">interface</span><span class="ox-api-entry__summary-main"><code class="ox-api-entry__signature ox-api-entry__signature--highlighted language-typescript">JSXNode</code><span class="ox-api-entry__description">JSX node - the result of JSX expressions.</span><span class="ox-api-entry__meta"><span class="ox-api-badge">1 member</span></span></span></summary>
+  <summary><span class="ox-api-entry__kind">interface</span><span class="ox-api-entry__summary-main"><code class="ox-api-entry__signature ox-api-entry__signature--highlighted language-typescript">JSXNode</code><span class="ox-api-entry__description">JSX node - the result of JSX expressions.</span></span></summary>
   <div class="ox-api-entry__body">
 <div class="ox-api-entry__prose">
 <p>JSX node - the result of JSX expressions.</p>
@@ -249,28 +245,11 @@
 <pre><code class="language-typescript">export interface JSXNode</code></pre>
 </div>
 <p class="ox-api-entry__source"><a class="ox-api-entry__source-link" href="https://github.com/ubugeeei/ox-content/blob/main/npm/vite-plugin-ox-content/src/jsx-runtime.ts#L147-L149" target="_blank" rel="noopener noreferrer">View source<span class="ox-api-entry__source-icon" aria-hidden="true"></span></a></p>
-<div class="ox-api-entry__section ox-api-entry__section--members">
-<h4>Members</h4>
-<div class="ox-api-entry__member-group">
-<h5>Properties</h5>
-<table class="ox-api-entry__members-table">
-<thead><tr><th>Name</th><th>Kind</th><th>Type</th><th>Description</th></tr></thead>
-<tbody>
-<tr>
-  <td><code>__html</code></td>
-  <td><span class="ox-api-entry__member-kind">property</span></td>
-  <td><code class="ox-api-entry__member-type language-typescript">string</code></td>
-  <td></td>
-</tr>
-</tbody>
-</table>
-</div>
-</div>
   </div>
 </details>
 
 <details id="jsxprops" class="ox-api-entry">
-  <summary><span class="ox-api-entry__kind">interface</span><span class="ox-api-entry__summary-main"><code class="ox-api-entry__signature ox-api-entry__signature--highlighted language-typescript">JSXProps</code><span class="ox-api-entry__description">Props with children.</span><span class="ox-api-entry__meta"><span class="ox-api-badge">1 member</span></span></span></summary>
+  <summary><span class="ox-api-entry__kind">interface</span><span class="ox-api-entry__summary-main"><code class="ox-api-entry__signature ox-api-entry__signature--highlighted language-typescript">JSXProps</code><span class="ox-api-entry__description">Props with children.</span></span></summary>
   <div class="ox-api-entry__body">
 <div class="ox-api-entry__prose">
 <p>Props with children.</p>
@@ -280,23 +259,6 @@
 <pre><code class="language-typescript">export interface JSXProps</code></pre>
 </div>
 <p class="ox-api-entry__source"><a class="ox-api-entry__source-link" href="https://github.com/ubugeeei/ox-content/blob/main/npm/vite-plugin-ox-content/src/jsx-runtime.ts#L154-L157" target="_blank" rel="noopener noreferrer">View source<span class="ox-api-entry__source-icon" aria-hidden="true"></span></a></p>
-<div class="ox-api-entry__section ox-api-entry__section--members">
-<h4>Members</h4>
-<div class="ox-api-entry__member-group">
-<h5>Properties</h5>
-<table class="ox-api-entry__members-table">
-<thead><tr><th>Name</th><th>Kind</th><th>Type</th><th>Description</th></tr></thead>
-<tbody>
-<tr>
-  <td><code>children</code><span class="ox-api-badge">optional</span></td>
-  <td><span class="ox-api-entry__member-kind">property</span></td>
-  <td><code class="ox-api-entry__member-type language-typescript">JSXChild</code></td>
-  <td></td>
-</tr>
-</tbody>
-</table>
-</div>
-</div>
   </div>
 </details>
 
@@ -319,14 +281,14 @@
     <code class="ox-api-entry__param-name">type</code>
     <code class="ox-api-entry__param-type">JSXElementType</code>
   </div>
-
+  
 </li>
 <li class="ox-api-entry__param">
   <div class="ox-api-entry__param-heading">
     <code class="ox-api-entry__param-name">props</code>
     <code class="ox-api-entry__param-type">JSXProps</code>
   </div>
-
+  
 </li>
 <li class="ox-api-entry__param">
   <div class="ox-api-entry__param-heading">
@@ -341,7 +303,7 @@
 <h4>Returns</h4>
 <div class="ox-api-entry__return">
   <code class="ox-api-entry__return-type">JSXNode</code>
-
+  
 </div>
 </div>
   </div>
@@ -366,7 +328,7 @@
     <code class="ox-api-entry__param-name">html</code>
     <code class="ox-api-entry__param-type">string</code>
   </div>
-
+  
 </li>
 </ul>
 </div>
@@ -374,7 +336,7 @@
 <h4>Returns</h4>
 <div class="ox-api-entry__return">
   <code class="ox-api-entry__return-type">JSXNode</code>
-
+  
 </div>
 </div>
 <div class="ox-api-entry__section ox-api-entry__section--examples">
@@ -406,14 +368,14 @@
     <code class="ox-api-entry__param-name">name</code>
     <code class="ox-api-entry__param-type">string</code>
   </div>
-
+  
 </li>
 <li class="ox-api-entry__param">
   <div class="ox-api-entry__param-heading">
     <code class="ox-api-entry__param-name">value</code>
     <code class="ox-api-entry__param-type">unknown</code>
   </div>
-
+  
 </li>
 </ul>
 </div>
@@ -421,7 +383,7 @@
 <h4>Returns</h4>
 <div class="ox-api-entry__return">
   <code class="ox-api-entry__return-type">string</code>
-
+  
 </div>
 </div>
   </div>
@@ -446,7 +408,7 @@
     <code class="ox-api-entry__param-name">children</code>
     <code class="ox-api-entry__param-type">JSXChild</code>
   </div>
-
+  
 </li>
 </ul>
 </div>
@@ -454,7 +416,7 @@
 <h4>Returns</h4>
 <div class="ox-api-entry__return">
   <code class="ox-api-entry__return-type">string</code>
-
+  
 </div>
 </div>
   </div>
@@ -479,7 +441,7 @@
     <code class="ox-api-entry__param-name">node</code>
     <code class="ox-api-entry__param-type">JSXNode</code>
   </div>
-
+  
 </li>
 </ul>
 </div>
@@ -487,7 +449,7 @@
 <h4>Returns</h4>
 <div class="ox-api-entry__return">
   <code class="ox-api-entry__return-type">string</code>
-
+  
 </div>
 </div>
   </div>
@@ -512,7 +474,7 @@
     <code class="ox-api-entry__param-name">name</code>
     <code class="ox-api-entry__param-type">string</code>
   </div>
-
+  
 </li>
 </ul>
 </div>
@@ -520,7 +482,7 @@
 <h4>Returns</h4>
 <div class="ox-api-entry__return">
   <code class="ox-api-entry__return-type">string</code>
-
+  
 </div>
 </div>
   </div>
@@ -598,14 +560,14 @@ return (
     <code class="ox-api-entry__param-name">condition</code>
     <code class="ox-api-entry__param-type">boolean</code>
   </div>
-
+  
 </li>
 <li class="ox-api-entry__param">
   <div class="ox-api-entry__param-heading">
     <code class="ox-api-entry__param-name">content</code>
     <code class="ox-api-entry__param-type">JSXNode</code>
   </div>
-
+  
 </li>
 </ul>
 </div>
@@ -613,7 +575,7 @@ return (
 <h4>Returns</h4>
 <div class="ox-api-entry__return">
   <code class="ox-api-entry__return-type">JSXNode</code>
-
+  
 </div>
 </div>
 <div class="ox-api-entry__section ox-api-entry__section--examples">

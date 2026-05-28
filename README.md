@@ -151,6 +151,23 @@ ox-content-i18n check --dict-dir content/i18n --src src
 ox-content-i18n validate "Hello {$name}"
 ```
 
+### Dead Link Checker (CLI)
+
+```bash
+# Check every link in a tree, exit non-zero on broken targets
+ox-content-link-check docs/**/*.md
+
+# Treat `/foo.md` as workspace-rooted under docs/
+ox-content-link-check --src-dir docs docs/**/*.md
+
+# Suppress known intentionally-broken targets
+ox-content-link-check --ignore "intentionally-broken" docs/**/*.md
+```
+
+Offline-only by design — `http://` and `https://` links pass through
+without a network request, so the same binary is safe to run in CI
+without timeouts, retries, or rate limits.
+
 ### Editor Tooling
 
 Ox Content now ships a unified authoring and i18n language server:
@@ -171,9 +188,12 @@ Supported features include:
 - frontmatter schema completion and diagnostics
 - i18n key completion, hover, go-to-definition, diagnostics, and inlay hints for JS/TS
 - table / code fence / callout insertion commands
-- preview HTML generation for editor UIs
+- preview HTML generation for editor UIs (with LSP-pushed HMR)
 - `.mdc` authoring support with component tag diagnostics
 - asset path completion inside `[…](`, `![…](`, and HTML `src=`/`href=` attributes
+- dead link diagnostics powered by `ox_content_link_checker`
+- opt-in [textlint](https://textlint.github.io) integration: on-save diagnostics under `source: "textlint"`
+- MDC component name and attribute completion when a project provides a component registry
 
 For CI or editor-independent checks, run:
 
@@ -187,33 +207,33 @@ cargo run -p ox_content_mdc_checker --bin ox-content-mdc-check -- docs/page.mdc
 
 Ox Content is positioned both as a document generator and as a high-performance Markdown toolkit. The numbers below focus on the Markdown engine side.
 
-Latest local benchmark sweep on 2026-05-25 with Node `v24.15.0` on Apple M5 Pro. The tables below show median results from 7 local runs of the benchmark harness for the large 48.7 KB case.
+Latest local benchmark sweep on 2026-05-28 with Node `v24.16.0` on Apple M5 Pro. The tables below show median results from 7 local runs of the benchmark harness for the large 48.7 KB case.
 
 ### Parse Only (48.7 KB)
 
 | Library            | ops/sec | avg time |  throughput |
 | ------------------ | ------: | -------: | ----------: |
-| `@ox-content/napi` |    4207 |  0.24 ms | 200.20 MB/s |
-| `md4x (napi)`      |    1231 |  0.81 ms |  58.56 MB/s |
-| `md4w (md4c)`      |    1143 |  0.87 ms |  54.41 MB/s |
-| `markdown-it`      |    1035 |  0.97 ms |  49.24 MB/s |
-| `marked`           |     530 |  1.89 ms |  25.23 MB/s |
-| `remark`           |      44 | 22.74 ms |   2.09 MB/s |
+| `@ox-content/napi` |    4572 |  0.22 ms | 217.56 MB/s |
+| `md4x (napi)`      |    1155 |  0.87 ms |  54.98 MB/s |
+| `md4w (md4c)`      |     990 |  1.01 ms |  47.12 MB/s |
+| `markdown-it`      |     925 |  1.08 ms |  44.02 MB/s |
+| `marked`           |     488 |  2.05 ms |  23.23 MB/s |
+| `remark`           |      37 | 27.01 ms |   1.76 MB/s |
 
 ### Parse + Render (48.7 KB)
 
 | Library             | ops/sec | avg time |  throughput |
 | ------------------- | ------: | -------: | ----------: |
-| `@ox-content/napi`  |    4503 |  0.22 ms | 214.26 MB/s |
-| `Bun.markdown.html` |    4225 |  0.24 ms | 201.06 MB/s |
-| `md4x (napi)`       |    4014 |  0.25 ms | 191.02 MB/s |
-| `md4w (md4c)`       |    2653 |  0.38 ms | 126.23 MB/s |
-| `markdown-it`       |     840 |  1.19 ms |  39.96 MB/s |
-| `marked`            |     470 |  2.13 ms |  22.36 MB/s |
-| `micromark`         |      45 | 22.35 ms |   2.13 MB/s |
-| `remark`            |      36 | 28.16 ms |   1.69 MB/s |
+| `@ox-content/napi`  |    6001 |  0.17 ms | 285.56 MB/s |
+| `Bun.markdown.html` |    3482 |  0.29 ms | 165.71 MB/s |
+| `md4x (napi)`       |    3474 |  0.29 ms | 165.32 MB/s |
+| `md4w (md4c)`       |    2392 |  0.42 ms | 113.85 MB/s |
+| `markdown-it`       |     694 |  1.44 ms |  33.04 MB/s |
+| `marked`            |     454 |  2.20 ms |  21.59 MB/s |
+| `micromark`         |      39 | 25.87 ms |   1.84 MB/s |
+| `remark`            |      32 | 31.45 ms |   1.51 MB/s |
 
-In this latest local release-build sweep, Ox Content leads every comparison: 3.4× ahead of the next-fastest native parser (`md4x (napi)`) on parse-only and 1.07× ahead of `Bun.markdown.html` on parse+render, while remaining the native core that drives the full documentation pipeline. Margins widen further on small documents — see `node benchmarks/bundle-size/parse-benchmark.mjs` for the full sweep across small, medium, and large inputs.
+In this latest local release-build sweep, Ox Content leads every comparison: 3.96× ahead of the next-fastest native parser (`md4x (napi)`) on parse-only and 1.72× ahead of `Bun.markdown.html` on parse+render, while remaining the native core that drives the full documentation pipeline. Margins widen further on small documents — see `node benchmarks/bundle-size/parse-benchmark.mjs` for the full sweep across small, medium, and large inputs.
 
 Run the benchmark with:
 
