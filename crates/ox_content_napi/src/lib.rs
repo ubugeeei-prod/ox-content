@@ -26,8 +26,9 @@ use ox_content_docs::{
     ApiParamDoc, ApiReturnDoc, DocExtractor, DocItem, DocItemKind, DocTag, DocsDiagnostic,
     DocsDiagnosticCode, DocsNavItem, DocsOutputOptions, EntryPointDocsOptions, EntryPointSpec,
     ExportGraph, ExportKind, ExportSource, ExternalDocsOptions, ExternalPackageSource,
-    ExtractedDocModule, GraphOptions, MarkdownDocsOptions, MarkdownLinkStyle, NormalizedDocEntry,
-    NormalizedMember, NormalizedParamDoc, NormalizedReturnDoc, ParamDoc, PublicExport,
+    ExtractedDocModule, GraphOptions, MarkdownDocsOptions, MarkdownLinkStyle, MarkdownPathStrategy,
+    NormalizedDocEntry, NormalizedMember, NormalizedParamDoc, NormalizedReturnDoc, ParamDoc,
+    PublicExport,
 };
 use ox_content_parser::{Parser, ParserOptions};
 use ox_content_renderer::HtmlRenderer;
@@ -268,6 +269,8 @@ pub struct JsDocsMarkdownOptions {
     #[napi(ts_type = "'markdown' | 'clean'")]
     pub link_style: Option<String>,
     pub base_path: Option<String>,
+    #[napi(ts_type = "'flat' | 'typedoc'")]
+    pub path_strategy: Option<String>,
 }
 
 /// Options for writing generated API documentation files.
@@ -278,6 +281,8 @@ pub struct JsDocsOutputOptions {
     pub group_by: Option<String>,
     pub generated_at: Option<String>,
     pub base_path: Option<String>,
+    #[napi(ts_type = "'flat' | 'typedoc'")]
+    pub path_strategy: Option<String>,
 }
 
 /// Entry point used to group generated API docs.
@@ -931,6 +936,7 @@ fn convert_docs_output_options(options: Option<JsDocsOutputOptions>) -> DocsOutp
         group_by: options.group_by.unwrap_or_else(|| "file".to_string()),
         generated_at: options.generated_at.unwrap_or_default(),
         base_path: options.base_path,
+        path_strategy: parse_markdown_path_strategy(options.path_strategy.as_deref()),
     }
 }
 
@@ -1068,6 +1074,7 @@ pub fn generate_docs_markdown(
             github_url: options.github_url,
             link_style: parse_markdown_link_style(options.link_style.as_deref()),
             base_path: options.base_path,
+            path_strategy: parse_markdown_path_strategy(options.path_strategy.as_deref()),
         });
     generate_markdown(&docs.into_iter().map(convert_markdown_module).collect::<Vec<_>>(), &options)
         .into_iter()
@@ -1078,6 +1085,13 @@ fn parse_markdown_link_style(link_style: Option<&str>) -> MarkdownLinkStyle {
     match link_style {
         Some("clean") => MarkdownLinkStyle::Clean,
         _ => MarkdownLinkStyle::Markdown,
+    }
+}
+
+fn parse_markdown_path_strategy(path_strategy: Option<&str>) -> MarkdownPathStrategy {
+    match path_strategy {
+        Some("typedoc") => MarkdownPathStrategy::TypeDoc,
+        _ => MarkdownPathStrategy::Flat,
     }
 }
 
@@ -3046,6 +3060,7 @@ mod tests {
                 github_url: None,
                 link_style: Some("clean".to_string()),
                 base_path: Some("/api-ox".to_string()),
+                path_strategy: None,
             }),
         );
         let index = markdown.get("index.md").unwrap();
@@ -3137,6 +3152,61 @@ mod tests {
         assert!(build_page.contains("<a href=\"https://github.com/unjs/std-env\">std-env</a>"));
         assert!(command_page.contains("<tr id=\"command-args\">"));
         assert!(command_page.contains("<a href=\"#command-args\"><code>Command.args</code></a>"));
+    }
+
+    #[test]
+    fn generate_docs_markdown_accepts_typedoc_path_strategy() {
+        let docs = vec![JsDocsMarkdownModule {
+            file: "default".to_string(),
+            entries: vec![
+                JsDocsMarkdownEntry {
+                    name: "Command".to_string(),
+                    kind: "interface".to_string(),
+                    description: "Runtime command.".to_string(),
+                    params: None,
+                    returns: None,
+                    examples: None,
+                    tags: None,
+                    private: false,
+                    file: "/repo/src/types.ts".to_string(),
+                    line: 1,
+                    end_line: 10,
+                    signature: Some("export interface Command".to_string()),
+                    members: None,
+                },
+                JsDocsMarkdownEntry {
+                    name: "cli".to_string(),
+                    kind: "function".to_string(),
+                    description: "Runs {@link Command}.".to_string(),
+                    params: None,
+                    returns: None,
+                    examples: None,
+                    tags: None,
+                    private: false,
+                    file: "/repo/src/cli.ts".to_string(),
+                    line: 1,
+                    end_line: 10,
+                    signature: Some("export function cli(): void".to_string()),
+                    members: None,
+                },
+            ],
+        }];
+
+        let markdown = generate_docs_markdown(
+            docs,
+            Some(JsDocsMarkdownOptions {
+                group_by: Some("file".to_string()),
+                github_url: None,
+                link_style: Some("clean".to_string()),
+                base_path: Some("/api".to_string()),
+                path_strategy: Some("typedoc".to_string()),
+            }),
+        );
+        let cli_page = markdown.get("default/functions/cli.md").unwrap();
+
+        assert!(markdown.contains_key("default/index.md"));
+        assert!(markdown.contains_key("default/interfaces/Command.md"));
+        assert!(cli_page.contains("<a href=\"/api/default/interfaces/Command\">Command</a>"));
     }
 
     #[test]
