@@ -188,9 +188,10 @@ jobs:
         run: vp exec -- pnpm --filter "@ox-content/*" build
 
       - name: Publish to pkg-pr-new
+        id: publish-pkg-pr-new
+        continue-on-error: ${{ github.event_name == 'pull_request' }}
         run: |
-          set +e
-          output=$(vp exec -- pnpx pkg-pr-new publish --compact --pnpm \
+          vp exec -- pnpx pkg-pr-new publish --compact --pnpm \
             ./crates/ox_content_napi \
             ./binding-packages/darwin-x64 \
             ./binding-packages/darwin-arm64 \
@@ -202,17 +203,8 @@ jobs:
             ./npm/vite-plugin-ox-content \
             ./npm/vite-plugin-ox-content-react \
             ./npm/vite-plugin-ox-content-svelte \
-            ./npm/vite-plugin-ox-content-vue 2>&1)
-          status=$?
-          printf '%s\n' "$output"
+            ./npm/vite-plugin-ox-content-vue
 
-          if [ "$status" -eq 0 ]; then
-            exit 0
-          fi
-
-          if [ "${{ github.event_name }}" = "pull_request" ] && grep -Fq "The app https://github.com/apps/pkg-pr-new is not installed" <<< "$output"; then
-            echo "::warning::pkg-pr-new GitHub App is not installed; skipping preview publish for this pull request."
-            exit 0
-          fi
-
-          exit "$status"
+      - name: Warn when preview publish is unavailable
+        if: github.event_name == 'pull_request' && steps.publish-pkg-pr-new.outcome == 'failure'
+        run: echo "::warning::pkg-pr-new preview publish failed; keeping pull request CI non-blocking for the external preview service."
