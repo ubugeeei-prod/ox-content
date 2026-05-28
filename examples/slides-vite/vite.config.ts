@@ -12,10 +12,6 @@ export default defineConfig({
         generateOgImage: true,
         siteUrl: "https://example.com",
       },
-      theme: {
-        surfaceBorder: "rgba(41, 60, 107, 0.14)",
-        colorPrimary: "#314b88",
-      },
     }),
   ],
 });

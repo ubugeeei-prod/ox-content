@@ -7,28 +7,33 @@ pub const DEFAULT_MAX_WIDTH: &str = "min(1740px, calc(100vw - 8px))";
 pub const DEFAULT_MAX_HEIGHT: &str = "calc(100vh - 56px)";
 pub const DEFAULT_PADDING: &str = "clamp(24px, 2.2vw, 38px)";
 pub const DEFAULT_SURFACE_RADIUS: &str = "4px";
-pub const DEFAULT_CODE_BACKGROUND: &str = "#f5f7fa";
+pub const DEFAULT_CODE_BACKGROUND: &str = "#f3efe6";
 pub const DEFAULT_BUILTIN_ANIMATIONS: bool = true;
-pub const DEFAULT_CANVAS_BACKGROUND: &str = "#edf0f4";
+// Warm paper canvas + clean white slide surface, with near-invisible hairlines.
+// Avoids the cold "admin dashboard" gray that the previous defaults gave off.
+pub const DEFAULT_CANVAS_BACKGROUND: &str = "#f3eee3";
 pub const DEFAULT_SURFACE_BACKGROUND: &str = "#ffffff";
-pub const DEFAULT_SURFACE_BORDER: &str = "#cfd6df";
-pub const DEFAULT_PRESENTER_SIDEBAR_BACKGROUND: &str = "#f7f8fa";
+pub const DEFAULT_SURFACE_BORDER: &str = "rgba(15, 23, 42, 0.07)";
+pub const DEFAULT_PRESENTER_SIDEBAR_BACKGROUND: &str = "#ede6d6";
 pub const DEFAULT_FONT_SANS: &str =
     "\"IBM Plex Sans\", \"Avenir Next\", \"Segoe UI Variable\", \"Segoe UI\", sans-serif";
 pub const DEFAULT_FONT_MONO: &str = "\"IBM Plex Mono\", \"SFMono-Regular\", Consolas, monospace";
-pub const DEFAULT_COLOR_TEXT: &str = "#111827";
-pub const DEFAULT_COLOR_TEXT_MUTED: &str = "#667085";
-pub const DEFAULT_COLOR_PRIMARY: &str = "#1f4b99";
-pub const DEFAULT_COLOR_BORDER: &str = "#d4d9e1";
-pub const DEFAULT_DARK_CANVAS_BACKGROUND: &str = "#0e1318";
-pub const DEFAULT_DARK_SURFACE_BACKGROUND: &str = "#161d24";
-pub const DEFAULT_DARK_SURFACE_BORDER: &str = "#2a3440";
-pub const DEFAULT_DARK_PRESENTER_SIDEBAR_BACKGROUND: &str = "#121920";
-pub const DEFAULT_DARK_CODE_BACKGROUND: &str = "#0f141a";
-pub const DEFAULT_DARK_COLOR_TEXT: &str = "#eef2f6";
-pub const DEFAULT_DARK_COLOR_TEXT_MUTED: &str = "#9ba8b6";
-pub const DEFAULT_DARK_COLOR_PRIMARY: &str = "#9bbcff";
-pub const DEFAULT_DARK_COLOR_BORDER: &str = "#313d4a";
+pub const DEFAULT_COLOR_TEXT: &str = "#0a0e1a";
+pub const DEFAULT_COLOR_TEXT_MUTED: &str = "#6b6457";
+// Default primary tracks the ink color so the chrome stays quiet; users can
+// override `colorPrimary` to brand their deck.
+pub const DEFAULT_COLOR_PRIMARY: &str = "#0a0e1a";
+pub const DEFAULT_COLOR_BORDER: &str = "rgba(15, 23, 42, 0.09)";
+// Dark mode: near-black canvas with a subtly lifted surface and warm-off-white ink.
+pub const DEFAULT_DARK_CANVAS_BACKGROUND: &str = "#0a0a0d";
+pub const DEFAULT_DARK_SURFACE_BACKGROUND: &str = "#141419";
+pub const DEFAULT_DARK_SURFACE_BORDER: &str = "rgba(255, 255, 255, 0.08)";
+pub const DEFAULT_DARK_PRESENTER_SIDEBAR_BACKGROUND: &str = "#0d0d11";
+pub const DEFAULT_DARK_CODE_BACKGROUND: &str = "#1a1a20";
+pub const DEFAULT_DARK_COLOR_TEXT: &str = "#f3ede0";
+pub const DEFAULT_DARK_COLOR_TEXT_MUTED: &str = "#9a9285";
+pub const DEFAULT_DARK_COLOR_PRIMARY: &str = "#f3ede0";
+pub const DEFAULT_DARK_COLOR_BORDER: &str = "rgba(255, 255, 255, 0.10)";
 
 #[derive(Debug, Clone)]
 pub struct ResolvedSlideTheme<'a> {

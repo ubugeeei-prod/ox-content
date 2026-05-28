@@ -255,6 +255,6 @@ mod tests {
         );
 
         assert!(html.contains("@media (prefers-color-scheme: dark)"));
-        assert!(html.contains("--ox-slide-dark-code-surface: #0f141a;"));
+        assert!(html.contains("--ox-slide-dark-code-surface: #1a1a20;"));
     }
 }
