@@ -1,4 +1,4 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 680 250">
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 680 230">
   <defs>
     <linearGradient id="oxGrad" x1="0%" y1="0%" x2="100%" y2="0%">
       <stop offset="0%" style="stop-color:#7a5cff"/>
@@ -12,10 +12,6 @@
       <stop offset="0%" style="stop-color:#4f607b"/>
       <stop offset="100%" style="stop-color:#8190b0"/>
     </linearGradient>
-    <linearGradient id="greenGrad" x1="0%" y1="0%" x2="100%" y2="0%">
-      <stop offset="0%" style="stop-color:#38a169"/>
-      <stop offset="100%" style="stop-color:#48bb78"/>
-    </linearGradient>
   </defs>
 
   <style>
@@ -26,50 +22,34 @@
     .ratio { font: bold 10px IBM Plex Sans, system-ui, sans-serif; fill: #364462; }
   </style>
 
-  <!-- Background -->
-  <rect width="680" height="250" fill="#f5f7fb" rx="8"/>
+  <rect width="680" height="230" fill="#f5f7fb" rx="8"/>
 
-  <!-- Title -->
-  <text x="300" y="24" text-anchor="middle" class="title">Production Build Time</text>
+  <text x="340" y="24" text-anchor="middle" class="title">Production Build Time</text>
 
-  <!-- Scale: 2154ms (Astro+Vue) = 400px max -->
+  <text x="145" y="58" text-anchor="end" class="label">ox-content (default)</text>
+  <rect x="155" y="45" width="145" height="20" rx="4" fill="url(#oxGrad2)"/>
+  <text x="308" y="58" class="value">299ms</text>
+  <text x="354" y="58" class="ratio">0.90x</text>
 
-  <!-- ox-content (bare): 556ms = 103px -->
-  <text x="140" y="58" text-anchor="end" class="label">ox-content (bare)</text>
-  <rect x="150" y="45" width="103" height="20" rx="4" fill="url(#oxGrad)"/>
-  <text x="260" y="58" class="value">556ms</text>
-  <text x="306" y="58" class="ratio">1.00x</text>
+  <text x="145" y="88" text-anchor="end" class="label">ox-content (bare)</text>
+  <rect x="155" y="75" width="161" height="20" rx="4" fill="url(#oxGrad)"/>
+  <text x="324" y="88" class="value">332ms</text>
+  <text x="370" y="88" class="ratio">1.00x</text>
 
-  <!-- ox-content (default): 588ms = 109px -->
-  <text x="140" y="88" text-anchor="end" class="label">ox-content (default)</text>
-  <rect x="150" y="75" width="109" height="20" rx="4" fill="url(#oxGrad2)"/>
-  <text x="266" y="88" class="value">588ms</text>
-  <text x="312" y="88" class="ratio">1.06x</text>
+  <text x="145" y="118" text-anchor="end" class="label">ox-content + Vue</text>
+  <rect x="155" y="105" width="181" height="20" rx="4" fill="url(#oxGrad2)"/>
+  <text x="344" y="118" class="value">372ms</text>
+  <text x="390" y="118" class="ratio">1.12x</text>
 
-  <!-- ox-content + Vue: 905ms = 168px -->
-  <text x="140" y="118" text-anchor="end" class="label">ox-content + Vue</text>
-  <rect x="150" y="105" width="168" height="20" rx="4" fill="url(#oxGrad2)"/>
-  <text x="325" y="118" class="value">905ms</text>
-  <text x="371" y="118" class="ratio">1.63x</text>
+  <text x="145" y="148" text-anchor="end" class="label">VitePress (bare)</text>
+  <rect x="155" y="135" width="283" height="20" rx="4" fill="url(#grayGrad)"/>
+  <text x="446" y="148" class="value">582ms</text>
+  <text x="492" y="148" class="ratio">1.76x</text>
 
-  <!-- VitePress: 1447ms = 269px (bare, no theme) -->
-  <text x="140" y="148" text-anchor="end" class="label">VitePress</text>
-  <rect x="150" y="135" width="269" height="20" rx="4" fill="url(#grayGrad)"/>
-  <text x="426" y="148" class="value">1447ms</text>
-  <text x="481" y="148" class="ratio">2.60x</text>
+  <text x="145" y="178" text-anchor="end" class="label">VitePress (default)</text>
+  <rect x="155" y="165" width="400" height="20" rx="4" fill="url(#grayGrad)"/>
+  <text x="420" y="178" class="ratio" style="fill:#fff">2.48x</text>
+  <text x="562" y="178" class="value">823ms</text>
 
-  <!-- Astro: 1741ms = 323px -->
-  <text x="140" y="178" text-anchor="end" class="label">Astro</text>
-  <rect x="150" y="165" width="323" height="20" rx="4" fill="url(#greenGrad)"/>
-  <text x="480" y="178" class="value">1741ms</text>
-  <text x="535" y="178" class="ratio">3.13x</text>
-
-  <!-- Astro + Vue: 2154ms = 400px -->
-  <text x="140" y="208" text-anchor="end" class="label">Astro + Vue</text>
-  <rect x="150" y="195" width="400" height="20" rx="4" fill="url(#greenGrad)"/>
-  <text x="557" y="208" class="value">2154ms</text>
-  <text x="612" y="208" class="ratio">3.87x</text>
-
-  <!-- Footer -->
-  <text x="300" y="238" text-anchor="middle" class="unit">Lower is better. Average of 3 builds per framework.</text>
+  <text x="340" y="210" text-anchor="middle" class="unit">Lower is better. Average of 3 successful production builds.</text>
 </svg>
