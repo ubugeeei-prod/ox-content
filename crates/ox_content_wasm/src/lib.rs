@@ -39,6 +39,9 @@ pub struct WasmParserOptions {
     strikethrough: bool,
     autolinks: bool,
     toc_max_depth: u8,
+    autolink_urls: bool,
+    autolink_patterns: Vec<String>,
+    autolink_target_blank: bool,
 }
 
 #[wasm_bindgen]
@@ -53,6 +56,9 @@ impl WasmParserOptions {
             strikethrough: false,
             autolinks: false,
             toc_max_depth: 3,
+            autolink_urls: false,
+            autolink_patterns: vec!["http://".to_string(), "https://".to_string()],
+            autolink_target_blank: true,
         }
     }
 
@@ -90,6 +96,27 @@ impl WasmParserOptions {
     pub fn set_toc_max_depth(&mut self, value: u8) {
         self.toc_max_depth = value;
     }
+
+    /// Enables the renderer's URL auto-linking builtin. Bare URLs matching
+    /// any registered pattern are wrapped in an `<a>` tag.
+    #[wasm_bindgen(setter = autolinkUrls)]
+    pub fn set_autolink_urls(&mut self, value: bool) {
+        self.autolink_urls = value;
+    }
+
+    /// Replaces the URL prefix patterns used by auto-linking. Pass a JS
+    /// array of strings such as `["http://", "https://", "ftp://"]`.
+    #[wasm_bindgen(setter = autolinkPatterns)]
+    pub fn set_autolink_patterns(&mut self, value: Vec<String>) {
+        self.autolink_patterns = value;
+    }
+
+    /// Toggles `target="_blank" rel="noopener noreferrer"` on auto-linked
+    /// URLs. Has no effect when `autolinkUrls` is off.
+    #[wasm_bindgen(setter = autolinkTargetBlank)]
+    pub fn set_autolink_target_blank(&mut self, value: bool) {
+        self.autolink_target_blank = value;
+    }
 }
 
 impl From<&WasmParserOptions> for ParserOptions {
@@ -119,6 +146,9 @@ pub fn parse_and_render(source: &str, options: Option<WasmParserOptions>) -> JsV
         Ok(doc) => {
             let mut renderer = HtmlRenderer::with_options(HtmlRendererOptions {
                 toc_max_depth: opts.toc_max_depth,
+                autolink_urls: opts.autolink_urls,
+                autolink_patterns: opts.autolink_patterns.clone(),
+                autolink_target_blank: opts.autolink_target_blank,
                 ..Default::default()
             });
             let html = renderer.render(&doc);
@@ -159,6 +189,9 @@ pub fn transform(source: &str, options: Option<WasmParserOptions>) -> JsValue {
             // Render to HTML
             let mut renderer = HtmlRenderer::with_options(HtmlRendererOptions {
                 toc_max_depth,
+                autolink_urls: opts.autolink_urls,
+                autolink_patterns: opts.autolink_patterns.clone(),
+                autolink_target_blank: opts.autolink_target_blank,
                 ..Default::default()
             });
             let html = renderer.render(&doc);
