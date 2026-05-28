@@ -348,6 +348,15 @@ fn transform_options_to_renderer_options(opts: &JsTransformOptions) -> HtmlRende
     if let Some(v) = opts.code_annotation_default_line_numbers {
         options.code_annotation_default_line_numbers = v;
     }
+    if let Some(v) = opts.autolink_urls {
+        options.autolink_urls = v;
+    }
+    if let Some(v) = &opts.autolink_patterns {
+        options.autolink_patterns.clone_from(v);
+    }
+    if let Some(v) = opts.autolink_target_blank {
+        options.autolink_target_blank = v;
+    }
 
     options
 }

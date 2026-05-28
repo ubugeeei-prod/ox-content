@@ -425,6 +425,16 @@ pub struct JsTransformOptions {
     pub code_annotation_syntax: Option<String>,
     /// Enable line numbers for all code blocks by default.
     pub code_annotation_default_line_numbers: Option<bool>,
+    /// Auto-link bare URLs in text. When enabled, the renderer wraps any
+    /// text occurrence starting with a registered pattern (default `http://`
+    /// and `https://`) in an `<a>` tag.
+    pub autolink_urls: Option<bool>,
+    /// URL prefix patterns for [`Self::autolink_urls`]. Overrides the
+    /// default `["http://", "https://"]` when set.
+    pub autolink_patterns: Option<Vec<String>>,
+    /// Add `target="_blank" rel="noopener noreferrer"` to auto-linked URLs.
+    /// Defaults to true; ignored when [`Self::autolink_urls`] is off.
+    pub autolink_target_blank: Option<bool>,
 }
 
 /// Source preparation options for JavaScript.
@@ -2931,8 +2941,9 @@ mod tests {
     use super::transformer::parse_frontmatter;
     use super::{
         extract_docs_from_entry_points_napi, generate_docs_markdown, get_git_last_updated,
-        map_normalized_doc_entry, JsDocsMarkdownEntry, JsDocsMarkdownModule, JsDocsMarkdownOptions,
-        JsEntryPointDocsOptions, JsEntryPointSpec,
+        map_normalized_doc_entry, JsDocMember, JsDocParam, JsDocReturn, JsDocsMarkdownEntry,
+        JsDocsMarkdownModule, JsDocsMarkdownOptions, JsDocsMarkdownTag, JsEntryPointDocsOptions,
+        JsEntryPointSpec,
     };
 
     #[test]
@@ -3044,6 +3055,91 @@ mod tests {
 
         assert!(index.contains("href=\"/api-ox/context\""));
         assert!(index.contains("href=\"/api-ox/context#commandcontext\""));
+    }
+
+    #[test]
+    fn generate_docs_markdown_resolves_jsdoc_inline_links() {
+        let docs = vec![
+            JsDocsMarkdownModule {
+                file: "/repo/src/command.ts".to_string(),
+                entries: vec![JsDocsMarkdownEntry {
+                    name: "Command".to_string(),
+                    kind: "interface".to_string(),
+                    description: "Runtime command.".to_string(),
+                    params: None,
+                    returns: None,
+                    examples: None,
+                    tags: None,
+                    private: false,
+                    file: "/repo/src/command.ts".to_string(),
+                    line: 1,
+                    end_line: 10,
+                    signature: Some("export interface Command".to_string()),
+                    members: Some(vec![JsDocMember {
+                        name: "args".to_string(),
+                        kind: "property".to_string(),
+                        description: "All {@linkcode Command.args} names.".to_string(),
+                        signature: None,
+                        r#type: Some("Record<string, unknown>".to_string()),
+                        params: None,
+                        returns: None,
+                        optional: Some(false),
+                        readonly: Some(false),
+                        r#static: Some(false),
+                        private: Some(false),
+                        tags: None,
+                        line: 5,
+                        end_line: 5,
+                    }]),
+                }],
+            },
+            JsDocsMarkdownModule {
+                file: "/repo/src/build.ts".to_string(),
+                entries: vec![JsDocsMarkdownEntry {
+                    name: "buildCommand".to_string(),
+                    kind: "function".to_string(),
+                    description: "Builds {@linkcode Command | command} metadata.".to_string(),
+                    params: Some(vec![JsDocParam {
+                        name: "entry".to_string(),
+                        r#type: "Command".to_string(),
+                        description: "A {@linkcode Command | entry command}".to_string(),
+                        optional: Some(false),
+                        r#default: None,
+                    }]),
+                    returns: Some(JsDocReturn {
+                        r#type: "Command".to_string(),
+                        description: "A {@link Command} result.".to_string(),
+                    }),
+                    examples: None,
+                    tags: Some(vec![JsDocsMarkdownTag {
+                        tag: "see".to_string(),
+                        value: "{@link https://github.com/unjs/std-env | std-env}".to_string(),
+                    }]),
+                    private: false,
+                    file: "/repo/src/build.ts".to_string(),
+                    line: 1,
+                    end_line: 20,
+                    signature: Some(
+                        "export function buildCommand(entry: Command): Command".to_string(),
+                    ),
+                    members: None,
+                }],
+            },
+        ];
+
+        let markdown = generate_docs_markdown(docs, None);
+        let build_page = markdown.get("build.md").unwrap();
+        let command_page = markdown.get("command.md").unwrap();
+
+        assert!(!build_page.contains("{@link"));
+        assert!(!command_page.contains("{@link"));
+        assert!(
+            build_page.contains("<a href=\"./command.md#command\"><code>entry command</code></a>")
+        );
+        assert!(build_page.contains("<a href=\"./command.md#command\">Command</a>"));
+        assert!(build_page.contains("<a href=\"https://github.com/unjs/std-env\">std-env</a>"));
+        assert!(command_page.contains("<tr id=\"command-args\">"));
+        assert!(command_page.contains("<a href=\"#command-args\"><code>Command.args</code></a>"));
     }
 
     #[test]

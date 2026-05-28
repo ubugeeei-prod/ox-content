@@ -45,6 +45,18 @@ pub struct HtmlRendererOptions {
     pub code_annotation_default_line_numbers: bool,
     /// Maximum heading depth included in inline TOCs.
     pub toc_max_depth: u8,
+    /// Auto-link bare URLs in text. When enabled, any occurrence in a text
+    /// node that starts with one of [`Self::autolink_patterns`] is wrapped
+    /// in an `<a>` tag. Auto-linking is suppressed inside an existing link.
+    pub autolink_urls: bool,
+    /// URL prefix patterns recognised by [`Self::autolink_urls`]. Defaults
+    /// to `["http://", "https://"]`. Register additional schemes (e.g.
+    /// `"ftp://"`, `"mailto:"`) by pushing onto this vec.
+    pub autolink_patterns: Vec<String>,
+    /// When auto-linking, emit `target="_blank" rel="noopener noreferrer"`.
+    /// Independent from the existing markdown-link behaviour, which always
+    /// adds the attributes for http/https hrefs.
+    pub autolink_target_blank: bool,
 }
 
 impl HtmlRendererOptions {
@@ -65,6 +77,9 @@ impl HtmlRendererOptions {
             code_annotation_syntax: CodeAnnotationSyntax::Attribute,
             code_annotation_default_line_numbers: false,
             toc_max_depth: 3,
+            autolink_urls: false,
+            autolink_patterns: vec!["http://".to_string(), "https://".to_string()],
+            autolink_target_blank: true,
         }
     }
 }
@@ -888,6 +903,91 @@ fn write_url_escaped_into(out: &mut String, s: &str) {
     }
 }
 
+/// Scans `s` from `from` for the next position that begins one of the
+/// registered URL prefixes at a word boundary, and returns the
+/// `(match_start, url_end)` byte range with trailing punctuation trimmed.
+///
+/// The boundary rule mirrors common autolinkers: a match is only accepted
+/// when the preceding byte (if any) is not an ASCII alphanumeric — so
+/// `"see http://x"` matches but `"shttp://x"` doesn't. The URL extends to
+/// the next whitespace, `<`, `>`, `"`, `'`, or backtick, and we then strip
+/// trailing `.,;:!?` plus an unbalanced `)`, `]`, or `}`.
+fn find_autolink_match(s: &str, from: usize, patterns: &[String]) -> Option<(usize, usize)> {
+    let bytes = s.as_bytes();
+    let mut i = from;
+    while i < bytes.len() {
+        // Word boundary: the previous byte must not be ASCII alphanumeric.
+        let is_boundary = i == 0 || !bytes[i - 1].is_ascii_alphanumeric();
+        if is_boundary {
+            for pat in patterns {
+                let pat_bytes = pat.as_bytes();
+                if pat_bytes.is_empty() {
+                    continue;
+                }
+                if i + pat_bytes.len() <= bytes.len()
+                    && bytes[i..i + pat_bytes.len()].eq_ignore_ascii_case(pat_bytes)
+                {
+                    let url_start = i;
+                    let mut url_end = i + pat_bytes.len();
+                    while url_end < bytes.len() && is_url_byte(bytes[url_end]) {
+                        url_end += 1;
+                    }
+                    // Require at least one byte beyond the scheme/prefix
+                    // so `"http://"` on its own isn't auto-linked.
+                    if url_end == i + pat_bytes.len() {
+                        continue;
+                    }
+                    url_end = trim_trailing_punct(bytes, url_start, url_end);
+                    return Some((url_start, url_end));
+                }
+            }
+        }
+        i += 1;
+    }
+    None
+}
+
+#[inline]
+fn is_url_byte(byte: u8) -> bool {
+    !matches!(byte, b' ' | b'\t' | b'\n' | b'\r' | b'<' | b'>' | b'"' | b'\'' | b'`')
+}
+
+fn trim_trailing_punct(bytes: &[u8], start: usize, mut end: usize) -> usize {
+    while end > start {
+        let b = bytes[end - 1];
+        match b {
+            b'.' | b',' | b';' | b':' | b'!' | b'?' => end -= 1,
+            b')' | b']' | b'}' => {
+                let (open, close) = match b {
+                    b')' => (b'(', b')'),
+                    b']' => (b'[', b']'),
+                    _ => (b'{', b'}'),
+                };
+                // Strip the closing bracket only when it has no unmatched
+                // partner inside the URL — a single pass over the slice is
+                // simpler than two `filter().count()` walks and avoids the
+                // `naive_bytecount` clippy lint.
+                let mut opens = 0usize;
+                let mut closes = 0usize;
+                for &x in &bytes[start..end - 1] {
+                    if x == open {
+                        opens += 1;
+                    } else if x == close {
+                        closes += 1;
+                    }
+                }
+                if closes >= opens {
+                    end -= 1;
+                } else {
+                    break;
+                }
+            }
+            _ => break,
+        }
+    }
+    end
+}
+
 fn is_html_attr_start(byte: u8) -> bool {
     byte.is_ascii_alphabetic()
 }
@@ -1194,6 +1294,12 @@ pub struct HtmlRenderer {
     /// that ends up in `heading_id_counts` is cloned out of here on
     /// vacant inserts; the buffer itself stays around across renders.
     heading_slug_scratch: String,
+    /// Suppresses URL auto-linking while we're already inside an `<a>` so
+    /// the builtin can't nest anchors. Tracked manually rather than via
+    /// the AST because `visit_text` can be reached through many parents
+    /// (paragraphs, headings, emphasis, …) and only the link case needs
+    /// to mask it out.
+    in_link: bool,
 }
 
 impl HtmlRenderer {
@@ -1219,6 +1325,7 @@ impl HtmlRenderer {
             // live for the renderer's lifetime regardless).
             heading_text_scratch: String::with_capacity(64),
             heading_slug_scratch: String::with_capacity(64),
+            in_link: false,
         }
     }
 
@@ -1283,6 +1390,42 @@ impl HtmlRenderer {
     fn write_escaped(&mut self, s: &str) {
         profile_span!("renderer::write_escaped");
         write_escaped_into(&mut self.output, s);
+    }
+
+    /// Walks `s` and emits an `<a>` tag for each registered URL pattern
+    /// match, escaping the non-URL spans the normal way. Caller is expected
+    /// to have already gated this on the autolink flag — the function does
+    /// no flag checks of its own.
+    fn write_text_with_autolinks(&mut self, s: &str) {
+        profile_span!("renderer::write_text_with_autolinks");
+        let bytes = s.as_bytes();
+        let mut cursor = 0usize;
+        while cursor < bytes.len() {
+            let Some((match_start, url_end)) =
+                find_autolink_match(s, cursor, &self.options.autolink_patterns)
+            else {
+                break;
+            };
+            // Emit the literal text preceding the URL.
+            if match_start > cursor {
+                write_escaped_into(&mut self.output, &s[cursor..match_start]);
+            }
+            let url = &s[match_start..url_end];
+            self.output.push_str("<a href=\"");
+            write_url_escaped_into(&mut self.output, url);
+            self.output.push('"');
+            if self.options.autolink_target_blank {
+                self.output.push_str(" target=\"_blank\" rel=\"noopener noreferrer\"");
+            }
+            self.output.push('>');
+            // The visible text is the URL itself; escape it like any text.
+            write_escaped_into(&mut self.output, url);
+            self.output.push_str("</a>");
+            cursor = url_end;
+        }
+        if cursor < bytes.len() {
+            write_escaped_into(&mut self.output, &s[cursor..]);
+        }
     }
 
     fn write_url_escaped(&mut self, s: &str) {
@@ -1560,7 +1703,22 @@ impl HtmlRenderer {
         // `visit_text` wrapper, both of which are the only thing
         // `visit_text` would do anyway (escape into `self.output`).
         match node {
-            Node::Text(text) => write_escaped_into(&mut self.output, text.value),
+            Node::Text(text) => {
+                // The autolink builtin lives on this hot path too: when
+                // the flag is on (and we're not already inside an `<a>`)
+                // we have to scan the text for URLs before escaping. The
+                // common case — flag off — collapses back to the original
+                // single `write_escaped_into` call thanks to the early
+                // boolean check.
+                if self.options.autolink_urls
+                    && !self.in_link
+                    && !self.options.autolink_patterns.is_empty()
+                {
+                    self.write_text_with_autolinks(text.value);
+                } else {
+                    write_escaped_into(&mut self.output, text.value);
+                }
+            }
             Node::Html(html) => self.write_html_value(html.value),
             _ => self.visit_node(node),
         }
@@ -2010,7 +2168,12 @@ impl<'a> Visit<'a> for HtmlRenderer {
 
     fn visit_text(&mut self, text: &Text<'a>) {
         profile_span!("renderer::visit_text");
-        self.write_escaped(text.value);
+        if self.options.autolink_urls && !self.in_link && !self.options.autolink_patterns.is_empty()
+        {
+            self.write_text_with_autolinks(text.value);
+        } else {
+            self.write_escaped(text.value);
+        }
     }
 
     fn visit_emphasis(&mut self, emphasis: &Emphasis<'a>) {
@@ -2056,9 +2219,14 @@ impl<'a> Visit<'a> for HtmlRenderer {
             self.write("\"");
         }
         self.write(">");
+        // Suppress URL auto-linking inside the anchor — children text nodes
+        // may contain literal URLs that we must not wrap in a nested <a>.
+        let prev_in_link = self.in_link;
+        self.in_link = true;
         for child in &link.children {
             self.visit_inline_node(child);
         }
+        self.in_link = prev_in_link;
         self.write("</a>");
     }
 
@@ -2679,6 +2847,146 @@ mod tests {
         assert!(
             html.contains("href=\"../../guide/index.html\""),
             "Expected ../../guide/index.html but got: {html}"
+        );
+    }
+
+    #[test]
+    fn test_autolink_disabled_by_default() {
+        let allocator = Allocator::new();
+        let doc = Parser::new(&allocator, "see http://example.com here").parse().unwrap();
+        let mut renderer = HtmlRenderer::new();
+        let html = renderer.render(&doc);
+        // No <a> tag is emitted unless the flag is on.
+        assert!(!html.contains("<a "), "unexpected autolink in: {html}");
+        assert!(html.contains("http://example.com"));
+    }
+
+    #[test]
+    fn test_autolink_basic_http_and_https() {
+        let allocator = Allocator::new();
+        let doc = Parser::new(&allocator, "see http://example.com and https://example.org")
+            .parse()
+            .unwrap();
+        let mut renderer = HtmlRenderer::with_options(HtmlRendererOptions {
+            autolink_urls: true,
+            ..Default::default()
+        });
+        let html = renderer.render(&doc);
+        assert!(
+            html.contains(
+                "<a href=\"http://example.com\" target=\"_blank\" rel=\"noopener noreferrer\">http://example.com</a>"
+            ),
+            "missing http autolink in: {html}"
+        );
+        assert!(
+            html.contains(
+                "<a href=\"https://example.org\" target=\"_blank\" rel=\"noopener noreferrer\">https://example.org</a>"
+            ),
+            "missing https autolink in: {html}"
+        );
+    }
+
+    #[test]
+    fn test_autolink_target_blank_can_be_disabled() {
+        let allocator = Allocator::new();
+        let doc = Parser::new(&allocator, "go to https://example.com now").parse().unwrap();
+        let mut renderer = HtmlRenderer::with_options(HtmlRendererOptions {
+            autolink_urls: true,
+            autolink_target_blank: false,
+            ..Default::default()
+        });
+        let html = renderer.render(&doc);
+        assert!(
+            html.contains("<a href=\"https://example.com\">https://example.com</a>"),
+            "expected bare anchor in: {html}"
+        );
+        assert!(!html.contains("target=\"_blank\""), "blank attr leaked: {html}");
+    }
+
+    #[test]
+    fn test_autolink_strips_trailing_punctuation() {
+        let allocator = Allocator::new();
+        let doc = Parser::new(
+            &allocator,
+            "find it at https://example.com. or (https://example.org) maybe",
+        )
+        .parse()
+        .unwrap();
+        let mut renderer = HtmlRenderer::with_options(HtmlRendererOptions {
+            autolink_urls: true,
+            ..Default::default()
+        });
+        let html = renderer.render(&doc);
+        assert!(html.contains(">https://example.com</a>."), "period leaked: {html}");
+        assert!(html.contains("(<a href=\"https://example.org\""), "open paren lost: {html}");
+        assert!(html.contains(">https://example.org</a>)"), "close paren lost: {html}");
+    }
+
+    #[test]
+    fn test_autolink_word_boundary_required() {
+        let allocator = Allocator::new();
+        // "shttp://x" must not match — the prefix is glued to a word char.
+        let doc = Parser::new(&allocator, "shttp://x and http://y").parse().unwrap();
+        let mut renderer = HtmlRenderer::with_options(HtmlRendererOptions {
+            autolink_urls: true,
+            ..Default::default()
+        });
+        let html = renderer.render(&doc);
+        assert!(!html.contains("href=\"http://x\""), "unexpected glued autolink: {html}");
+        assert!(html.contains("href=\"http://y\""), "missing real autolink: {html}");
+    }
+
+    #[test]
+    fn test_autolink_custom_pattern_registration() {
+        let allocator = Allocator::new();
+        let doc = Parser::new(&allocator, "email mailto:foo@example.com please").parse().unwrap();
+        let mut renderer = HtmlRenderer::with_options(HtmlRendererOptions {
+            autolink_urls: true,
+            autolink_patterns: vec!["mailto:".to_string()],
+            ..Default::default()
+        });
+        let html = renderer.render(&doc);
+        assert!(
+            html.contains("<a href=\"mailto:foo@example.com\""),
+            "missing custom-pattern autolink: {html}"
+        );
+    }
+
+    #[test]
+    fn test_autolink_does_not_nest_inside_existing_link() {
+        let allocator = Allocator::new();
+        // The text inside the explicit markdown link contains a URL — the
+        // builtin must not wrap that URL in a second <a>.
+        let doc =
+            Parser::new(&allocator, "[visit https://example.com here](/page)").parse().unwrap();
+        let mut renderer = HtmlRenderer::with_options(HtmlRendererOptions {
+            autolink_urls: true,
+            ..Default::default()
+        });
+        let html = renderer.render(&doc);
+        assert_eq!(html.matches("<a ").count(), 1, "nested anchor in: {html}");
+        assert!(html.contains("href=\"/page\""), "outer link lost: {html}");
+        assert!(html.contains("visit https://example.com here"), "inner text lost: {html}");
+    }
+
+    #[test]
+    fn test_autolink_escapes_query_string_safely() {
+        let allocator = Allocator::new();
+        // `&` inside the URL must be escaped both as href and as visible
+        // text — otherwise the output would be parser-ambiguous HTML.
+        let doc = Parser::new(&allocator, "see http://a.test/?q=foo&r=bar now").parse().unwrap();
+        let mut renderer = HtmlRenderer::with_options(HtmlRendererOptions {
+            autolink_urls: true,
+            ..Default::default()
+        });
+        let html = renderer.render(&doc);
+        assert!(
+            html.contains("href=\"http://a.test/?q=foo&amp;r=bar\""),
+            "href not escaped: {html}"
+        );
+        assert!(
+            html.contains(">http://a.test/?q=foo&amp;r=bar</a>"),
+            "visible text not escaped: {html}"
         );
     }
 }
