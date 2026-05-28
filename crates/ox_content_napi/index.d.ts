@@ -984,6 +984,22 @@ export interface JsTransformOptions {
   codeAnnotationSyntax?: string
   /** Enable line numbers for all code blocks by default. */
   codeAnnotationDefaultLineNumbers?: boolean
+  /**
+   * Auto-link bare URLs in text. When enabled, the renderer wraps any
+   * text occurrence starting with a registered pattern (default `http://`
+   * and `https://`) in an `<a>` tag.
+   */
+  autolinkUrls?: boolean
+  /**
+   * URL prefix patterns for [`Self::autolink_urls`]. Overrides the
+   * default `["http://", "https://"]` when set.
+   */
+  autolinkPatterns?: Array<string>
+  /**
+   * Add `target="_blank" rel="noopener noreferrer"` to auto-linked URLs.
+   * Defaults to true; ignored when [`Self::autolink_urls`] is off.
+   */
+  autolinkTargetBlank?: boolean
 }
 
 export declare function lintMarkdown(source: string, options?: JsMarkdownLintOptions | undefined | null): JsMarkdownLintResult
