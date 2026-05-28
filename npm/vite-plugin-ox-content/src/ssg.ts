@@ -405,6 +405,38 @@ export function buildThemeNavItems(
   return importNapiModuleSync().buildSsgThemeNavItems(sidebar, base, extension);
 }
 
+interface BuildSsgContext {
+  options: ResolvedOptions;
+  ssgOptions: ResolvedSsgOptions;
+  root: string;
+  srcDir: string;
+  outDir: string;
+  base: string;
+  siteName: string;
+  navItems: NavGroup[];
+  shouldGenerateOgImages: boolean;
+  napi?: Awaited<ReturnType<typeof importNapiModule>>;
+}
+
+interface PageProcessResult {
+  inputPath: string;
+  routePaths: SsgRoutePaths;
+  transformedHtml: string;
+  title: string;
+  description?: string;
+  lastUpdated?: number;
+  frontmatter: Record<string, unknown>;
+  toc: TocEntry[];
+}
+
+interface CollectedPageResults {
+  pageResults: PageProcessResult[];
+  ogImageEntries: OgImagePageEntry[];
+  ogImageInputPaths: string[];
+  ogImageUrlMap: Map<string, string>;
+  errors: string[];
+}
+
 /**
  * Builds all markdown files to static HTML.
  */
@@ -419,260 +451,267 @@ export async function buildSsg(
 
   const srcDir = path.resolve(root, options.srcDir);
   const outDir = path.resolve(root, options.outDir);
-  const base = options.base.endsWith("/") ? options.base : options.base + "/";
   const generatedFiles: string[] = [];
-  const generatedPages: GeneratedHtmlPage[] = [];
   const errors: string[] = [];
 
-  // Clean output directory if requested
-  if (ssgOptions.clean) {
-    try {
-      await fs.rm(outDir, { recursive: true, force: true });
-    } catch {
-      // Ignore if directory doesn't exist
-    }
+  await cleanOutputDirectory(ssgOptions, outDir);
+
+  const markdownFiles = await collectMarkdownFiles(srcDir, options.extensions);
+  const context = await createBuildSsgContext(options, root, srcDir, outDir, markdownFiles);
+  const collected = await collectPageResults(context, markdownFiles);
+  errors.push(...collected.errors);
+
+  await generateOgImageAssets(context, collected, generatedFiles, errors);
+
+  const generatedPages = await generateHtmlPages(context, collected.pageResults, collected, errors);
+  await writeGeneratedPages(generatedPages, context, generatedFiles);
+
+  return { files: generatedFiles, errors };
+}
+
+async function cleanOutputDirectory(ssgOptions: ResolvedSsgOptions, outDir: string): Promise<void> {
+  if (!ssgOptions.clean) {
+    return;
   }
 
-  // Collect markdown files
-  const markdownFiles = await collectMarkdownFiles(srcDir, options.extensions);
+  try {
+    await fs.rm(outDir, { recursive: true, force: true });
+  } catch {
+    // Ignore if directory doesn't exist.
+  }
+}
 
-  // Build navigation
+async function createBuildSsgContext(
+  options: ResolvedOptions,
+  root: string,
+  srcDir: string,
+  outDir: string,
+  markdownFiles: string[],
+): Promise<BuildSsgContext> {
+  const ssgOptions = options.ssg;
+  const base = options.base.endsWith("/") ? options.base : options.base + "/";
   const navItems =
     resolveNavigationGroups(ssgOptions.navigation, base, ssgOptions.extension) ??
     (ssgOptions.theme?.sidebar.length
       ? buildThemeNavItems(ssgOptions.theme.sidebar, base, ssgOptions.extension)
       : buildNavItems(markdownFiles, srcDir, base, ssgOptions.extension));
 
-  // Get site name from options or package.json
-  let siteName = ssgOptions.siteName ?? "Documentation";
-  if (!ssgOptions.siteName) {
-    try {
-      const pkgPath = path.join(root, "package.json");
-      const pkg = JSON.parse(await fs.readFile(pkgPath, "utf-8"));
-      if (pkg.name) {
-        siteName = formatTitle(pkg.name);
-      }
-    } catch {
-      // Use default
-    }
+  return {
+    options,
+    ssgOptions,
+    root,
+    srcDir,
+    outDir,
+    base,
+    navItems,
+    siteName: await resolveSiteName(root, ssgOptions),
+    shouldGenerateOgImages: (options.ogImage || ssgOptions.generateOgImage) && !ssgOptions.bare,
+    napi: ssgOptions.lastUpdated ? await importNapiModule() : undefined,
+  };
+}
+
+async function resolveSiteName(root: string, ssgOptions: ResolvedSsgOptions): Promise<string> {
+  if (ssgOptions.siteName) {
+    return ssgOptions.siteName;
   }
 
-  // Collect OG image entries for batch rendering
-  const ogImageEntries: OgImagePageEntry[] = [];
-  // Parallel array tracking the inputPath for each ogImageEntry (same index)
-  const ogImageInputPaths: string[] = [];
-  // Map from inputPath to OG image URL (filled after batch render)
-  const ogImageUrlMap = new Map<string, string>();
-
-  // Determine if OG images should be generated
-  const shouldGenerateOgImages =
-    (options.ogImage || ssgOptions.generateOgImage) && !ssgOptions.bare;
-
-  // Collect page metadata for OG image generation
-  interface PageProcessResult {
-    inputPath: string;
-    routePaths: SsgRoutePaths;
-    transformedHtml: string;
-    title: string;
-    description?: string;
-    lastUpdated?: number;
-    frontmatter: Record<string, unknown>;
-    toc: TocEntry[];
+  try {
+    const pkgPath = path.join(root, "package.json");
+    const pkg = JSON.parse(await fs.readFile(pkgPath, "utf-8"));
+    return pkg.name ? formatTitle(pkg.name) : "Documentation";
+  } catch {
+    return "Documentation";
   }
-  const pageResults: PageProcessResult[] = [];
-  const napi = ssgOptions.lastUpdated ? await importNapiModule() : undefined;
+}
 
-  // Process each file: transform markdown and collect metadata
+async function collectPageResults(
+  context: BuildSsgContext,
+  markdownFiles: string[],
+): Promise<CollectedPageResults> {
+  const collected: CollectedPageResults = {
+    pageResults: [],
+    ogImageEntries: [],
+    ogImageInputPaths: [],
+    ogImageUrlMap: new Map(),
+    errors: [],
+  };
+
   for (const inputPath of markdownFiles) {
     try {
-      const content = await fs.readFile(inputPath, "utf-8");
-      // Pass SSG options to transform for .md -> .html link conversion in Rust
-      // The sourcePath is used to determine if the file is an index file for correct relative link resolution
-      const result = await transformMarkdown(content, inputPath, options, {
-        convertMdLinks: true,
-        baseUrl: base,
-        sourcePath: inputPath,
-      });
-      const frontmatter = normalizeVitePressFrontmatter(result.frontmatter);
-
-      // Apply built-in plugin transformations (No-JS First)
-      let transformedHtml = result.html;
-
-      // Protect mermaid SVGs from rehype processing in plugins
-      const { html: protectedHtml, svgs: mermaidSvgs } = protectMermaidSvgs(transformedHtml);
-      transformedHtml = protectedHtml;
-
-      // Transform Tabs, YouTube, GitHub, OGP, Mermaid plugins
-      const pluginOptions: TransformAllOptions = {
-        tabs: true,
-        youtube: true,
-        github: options.embeds.github,
-        openGraph: options.embeds.openGraph,
-        mermaid: true,
-        githubToken: process.env.GITHUB_TOKEN,
-      };
-      transformedHtml = await transformAllPlugins(transformedHtml, pluginOptions);
-
-      // Transform Island components
-      if (hasIslands(transformedHtml)) {
-        const islandResult = await transformIslands(transformedHtml);
-        transformedHtml = islandResult.html;
-      }
-
-      // Restore protected mermaid SVGs
-      transformedHtml = restoreMermaidSvgs(transformedHtml, mermaidSvgs);
-
-      const title = extractTitle(transformedHtml, frontmatter);
-      const description = frontmatter.description as string | undefined;
-      const routePaths = getRoutePaths(
-        inputPath,
-        srcDir,
-        outDir,
-        base,
-        ssgOptions.extension,
-        ssgOptions.siteUrl,
-      );
-
-      pageResults.push({
-        inputPath,
-        routePaths,
-        transformedHtml,
-        title,
-        description,
-        lastUpdated: napi?.getGitLastUpdated(inputPath, root) ?? undefined,
-        frontmatter,
-        toc: result.toc,
-      });
-
-      // Collect OG image entry if generation is enabled
-      if (shouldGenerateOgImages) {
-        const { layout: _layout, ...frontmatterRest } = frontmatter;
-        ogImageEntries.push({
-          props: {
-            ...frontmatterRest,
-            title,
-            description,
-            siteName,
-          },
-          outputPath: routePaths.ogImagePath,
-        });
-        ogImageInputPaths.push(inputPath);
-        // Pre-compute URL so HTML can reference it
-        ogImageUrlMap.set(inputPath, routePaths.ogImageUrl);
-      }
+      const pageResult = await transformSsgPage(context, inputPath);
+      collected.pageResults.push(pageResult);
+      collectOgImageEntry(context, pageResult, collected);
     } catch (err) {
       const errorMessage = err instanceof Error ? err.message : String(err);
-      errors.push(`Failed to process ${inputPath}: ${errorMessage}`);
+      collected.errors.push(`Failed to process ${inputPath}: ${errorMessage}`);
     }
   }
 
-  // Batch generate OG images (Chromium-based)
-  if (shouldGenerateOgImages && ogImageEntries.length > 0) {
-    try {
-      const ogResults = await generateOgImages(ogImageEntries, options.ogImageOptions, root);
+  return collected;
+}
 
-      // When the whole batch failed because Chromium wasn't available
-      // (common in CI without browser deps), avoid spamming the log with one
-      // error per page — `openBrowser()` already warned once. Just clear the
-      // og:image meta tags and move on.
-      const allMissingBrowser =
-        ogResults.length > 0 &&
-        ogResults.every((result) => result.error === "Chromium not available");
-      if (allMissingBrowser) {
-        for (const inputPath of ogImageInputPaths) {
-          ogImageUrlMap.delete(inputPath);
-        }
-      } else {
-        let ogSuccessCount = 0;
-        for (let i = 0; i < ogResults.length; i++) {
-          const result = ogResults[i];
-          if (result.error) {
-            errors.push(`OG image failed for ${result.outputPath}: ${result.error}`);
-            // Remove failed entries so og:image / twitter:image meta tags are not emitted
-            ogImageUrlMap.delete(ogImageInputPaths[i]);
-          } else {
-            generatedFiles.push(result.outputPath);
-            ogSuccessCount++;
-          }
-        }
-        if (ogSuccessCount > 0) {
-          const cachedCount = ogResults.filter((r) => r.cached && !r.error).length;
-          console.log(
-            `[ox-content:og-image] Generated ${ogSuccessCount} OG images` +
-              (cachedCount > 0 ? ` (${cachedCount} from cache)` : ""),
-          );
-        }
-      }
-    } catch (err) {
-      // Non-fatal: OG image failures never block the SSG build
-      const errorMessage = err instanceof Error ? err.message : String(err);
-      console.warn(`[ox-content:og-image] Batch generation failed: ${errorMessage}`);
-      // Clear all entries so og:image / twitter:image meta tags are not emitted
-      ogImageUrlMap.clear();
+async function transformSsgPage(
+  context: BuildSsgContext,
+  inputPath: string,
+): Promise<PageProcessResult> {
+  const content = await fs.readFile(inputPath, "utf-8");
+  const result = await transformMarkdown(content, inputPath, context.options, {
+    convertMdLinks: true,
+    baseUrl: context.base,
+    sourcePath: inputPath,
+  });
+  const frontmatter = normalizeVitePressFrontmatter(result.frontmatter);
+  const transformedHtml = await transformSsgHtml(result.html, context.options);
+  const title = extractTitle(transformedHtml, frontmatter);
+
+  return {
+    inputPath,
+    routePaths: getRoutePaths(
+      inputPath,
+      context.srcDir,
+      context.outDir,
+      context.base,
+      context.ssgOptions.extension,
+      context.ssgOptions.siteUrl,
+    ),
+    transformedHtml,
+    title,
+    description: frontmatter.description as string | undefined,
+    lastUpdated: context.napi?.getGitLastUpdated(inputPath, context.root) ?? undefined,
+    frontmatter,
+    toc: result.toc,
+  };
+}
+
+async function transformSsgHtml(html: string, options: ResolvedOptions): Promise<string> {
+  const { html: protectedHtml, svgs: mermaidSvgs } = protectMermaidSvgs(html);
+  const pluginOptions: TransformAllOptions = {
+    tabs: true,
+    youtube: true,
+    github: options.embeds.github,
+    openGraph: options.embeds.openGraph,
+    mermaid: true,
+    githubToken: process.env.GITHUB_TOKEN,
+  };
+
+  let transformedHtml = await transformAllPlugins(protectedHtml, pluginOptions);
+  if (hasIslands(transformedHtml)) {
+    const islandResult = await transformIslands(transformedHtml);
+    transformedHtml = islandResult.html;
+  }
+
+  return restoreMermaidSvgs(transformedHtml, mermaidSvgs);
+}
+
+function collectOgImageEntry(
+  context: BuildSsgContext,
+  pageResult: PageProcessResult,
+  collected: CollectedPageResults,
+): void {
+  if (!context.shouldGenerateOgImages) {
+    return;
+  }
+
+  const { layout: _layout, ...frontmatterRest } = pageResult.frontmatter;
+  collected.ogImageEntries.push({
+    props: {
+      ...frontmatterRest,
+      title: pageResult.title,
+      description: pageResult.description,
+      siteName: context.siteName,
+    },
+    outputPath: pageResult.routePaths.ogImagePath,
+  });
+  collected.ogImageInputPaths.push(pageResult.inputPath);
+  collected.ogImageUrlMap.set(pageResult.inputPath, pageResult.routePaths.ogImageUrl);
+}
+
+async function generateOgImageAssets(
+  context: BuildSsgContext,
+  collected: CollectedPageResults,
+  generatedFiles: string[],
+  errors: string[],
+): Promise<void> {
+  if (!context.shouldGenerateOgImages || collected.ogImageEntries.length === 0) {
+    return;
+  }
+
+  try {
+    const ogResults = await generateOgImages(
+      collected.ogImageEntries,
+      context.options.ogImageOptions,
+      context.root,
+    );
+    if (clearMissingBrowserOgImages(ogResults, collected)) {
+      return;
+    }
+
+    reportOgImageResults(ogResults, collected, generatedFiles, errors);
+  } catch (err) {
+    const errorMessage = err instanceof Error ? err.message : String(err);
+    console.warn(`[ox-content:og-image] Batch generation failed: ${errorMessage}`);
+    collected.ogImageUrlMap.clear();
+  }
+}
+
+function clearMissingBrowserOgImages(
+  ogResults: Awaited<ReturnType<typeof generateOgImages>>,
+  collected: CollectedPageResults,
+): boolean {
+  const allMissingBrowser =
+    ogResults.length > 0 && ogResults.every((result) => result.error === "Chromium not available");
+  if (!allMissingBrowser) {
+    return false;
+  }
+
+  for (const inputPath of collected.ogImageInputPaths) {
+    collected.ogImageUrlMap.delete(inputPath);
+  }
+  return true;
+}
+
+function reportOgImageResults(
+  ogResults: Awaited<ReturnType<typeof generateOgImages>>,
+  collected: CollectedPageResults,
+  generatedFiles: string[],
+  errors: string[],
+): void {
+  let ogSuccessCount = 0;
+
+  for (let i = 0; i < ogResults.length; i++) {
+    const result = ogResults[i];
+    if (result.error) {
+      errors.push(`OG image failed for ${result.outputPath}: ${result.error}`);
+      collected.ogImageUrlMap.delete(collected.ogImageInputPaths[i]);
+    } else {
+      generatedFiles.push(result.outputPath);
+      ogSuccessCount++;
     }
   }
 
-  // Generate HTML pages
+  if (ogSuccessCount > 0) {
+    const cachedCount = ogResults.filter((result) => result.cached && !result.error).length;
+    console.log(
+      `[ox-content:og-image] Generated ${ogSuccessCount} OG images` +
+        (cachedCount > 0 ? ` (${cachedCount} from cache)` : ""),
+    );
+  }
+}
+
+async function generateHtmlPages(
+  context: BuildSsgContext,
+  pageResults: PageProcessResult[],
+  collected: CollectedPageResults,
+  errors: string[],
+): Promise<GeneratedHtmlPage[]> {
+  const generatedPages: GeneratedHtmlPage[] = [];
+
   for (const pageResult of pageResults) {
     try {
-      const {
-        inputPath,
-        routePaths,
-        transformedHtml,
-        title,
-        description,
-        lastUpdated,
-        frontmatter,
-        toc,
-      } = pageResult;
-
-      // Determine OG image URL for this page
-      let pageOgImage = ssgOptions.ogImage; // fallback to static URL
-      if (shouldGenerateOgImages && ogImageUrlMap.has(inputPath)) {
-        pageOgImage = ogImageUrlMap.get(inputPath);
-      }
-
-      // Check if this is an entry page (layout: entry)
-      let entryPage: SsgEntryPageConfig | undefined;
-      if (frontmatter.layout === "entry") {
-        entryPage = {
-          hero: frontmatter.hero as HeroConfig | undefined,
-          features: frontmatter.features as FeatureConfig[] | undefined,
-        };
-      }
-
-      // Generate HTML based on bare option
-      let html: string;
-      if (ssgOptions.bare) {
-        html = generateBareHtmlPage(transformedHtml, title);
-      } else {
-        const pageData: SsgPageData = {
-          title,
-          description,
-          content: transformedHtml,
-          toc,
-          lastUpdated,
-          frontmatter,
-          path: routePaths.urlPath,
-          href: routePaths.href,
-          entryPage,
-        };
-        html = await generateHtmlPage(
-          pageData,
-          navItems,
-          siteName,
-          base,
-          pageOgImage,
-          ssgOptions.theme,
-          getPageLocale(pageData.path, options.i18n),
-          options.i18n ? options.i18n.locales : undefined,
-        );
-      }
-
       generatedPages.push({
-        inputPath,
-        outputPath: routePaths.outputPath,
-        html,
+        inputPath: pageResult.inputPath,
+        outputPath: pageResult.routePaths.outputPath,
+        html: await renderSsgPage(context, pageResult, collected.ogImageUrlMap),
       });
     } catch (err) {
       const errorMessage = err instanceof Error ? err.message : String(err);
@@ -680,7 +719,69 @@ export async function buildSsg(
     }
   }
 
-  const optimizedOutput = await externalizeSharedPageAssets(generatedPages, outDir, base);
+  return generatedPages;
+}
+
+async function renderSsgPage(
+  context: BuildSsgContext,
+  pageResult: PageProcessResult,
+  ogImageUrlMap: Map<string, string>,
+): Promise<string> {
+  if (context.ssgOptions.bare) {
+    return generateBareHtmlPage(pageResult.transformedHtml, pageResult.title);
+  }
+
+  const pageData = createSsgPageData(pageResult);
+  const pageOgImage =
+    context.shouldGenerateOgImages && ogImageUrlMap.has(pageResult.inputPath)
+      ? ogImageUrlMap.get(pageResult.inputPath)
+      : context.ssgOptions.ogImage;
+
+  return generateHtmlPage(
+    pageData,
+    context.navItems,
+    context.siteName,
+    context.base,
+    pageOgImage,
+    context.ssgOptions.theme,
+    getPageLocale(pageData.path, context.options.i18n),
+    context.options.i18n ? context.options.i18n.locales : undefined,
+  );
+}
+
+function createSsgPageData(pageResult: PageProcessResult): SsgPageData {
+  const { frontmatter } = pageResult;
+  const entryPage =
+    frontmatter.layout === "entry"
+      ? {
+          hero: frontmatter.hero as HeroConfig | undefined,
+          features: frontmatter.features as FeatureConfig[] | undefined,
+        }
+      : undefined;
+
+  return {
+    title: pageResult.title,
+    description: pageResult.description,
+    content: pageResult.transformedHtml,
+    toc: pageResult.toc,
+    lastUpdated: pageResult.lastUpdated,
+    frontmatter,
+    path: pageResult.routePaths.urlPath,
+    href: pageResult.routePaths.href,
+    entryPage,
+  };
+}
+
+async function writeGeneratedPages(
+  generatedPages: GeneratedHtmlPage[],
+  context: BuildSsgContext,
+  generatedFiles: string[],
+): Promise<void> {
+  const optimizedOutput = await externalizeSharedPageAssets(
+    generatedPages,
+    context.outDir,
+    context.base,
+  );
   generatedFiles.push(...optimizedOutput.assets);
 
   for (const page of optimizedOutput.pages) {
@@ -688,6 +789,4 @@ export async function buildSsg(
     await fs.writeFile(page.outputPath, page.html, "utf-8");
     generatedFiles.push(page.outputPath);
   }
-
-  return { files: generatedFiles, errors };
 }
