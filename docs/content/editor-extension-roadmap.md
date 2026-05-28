@@ -31,16 +31,16 @@ must not depend on a later one in the list.
 
 ## Feature Matrix
 
-| #   | Feature                                         | LSP                      | CLI                          | VS Code                  | Neovim                      | Status             |
-| --- | ----------------------------------------------- | ------------------------ | ---------------------------- | ------------------------ | --------------------------- | ------------------ |
-| 1   | Markdown preview (HMR)                          | push channel             | none                         | subscribed webview       | external browser, on-demand | needs CLI + nvim   |
-| 2   | i18n preview / completion                       | present                  | `ox-content-i18n`            | present                  | present                     | shipped            |
-| 3   | MDC completion + type check                     | completion + diagnostics | `ox-content-mdc-check`       | completion + diagnostics | completion + diagnostics    | shipped            |
-| 4   | Vue / React props completion + jump + typecheck | none                     | none                         | none                     | none                        | new (corsa_client) |
-| 5   | Asset path completion + diagnostics             | completion provider      | via link checker             | completion + diagnostics | completion + diagnostics    | shipped            |
-| 6   | Dead link checker                               | diagnostics              | `ox-content-link-check`      | diagnostics              | diagnostics                 | local: shipped     |
-| 7   | textlint integration                            | on-save diagnostics      | via configured command       | enabled per setting      | enabled per setting         | shipped (opt-in)   |
-| 8   | Frontmatter schema completion + diagnostics     | present                  | none (validated through LSP) | present                  | present                     | needs CLI          |
+| #   | Feature                                         | LSP                      | CLI                          | VS Code                  | Neovim                      | Status           |
+| --- | ----------------------------------------------- | ------------------------ | ---------------------------- | ------------------------ | --------------------------- | ---------------- |
+| 1   | Markdown preview (HMR)                          | push channel             | none                         | subscribed webview       | external browser, on-demand | needs CLI + nvim |
+| 2   | i18n preview / completion                       | present                  | `ox-content-i18n`            | present                  | present                     | shipped          |
+| 3   | MDC completion + type check                     | completion + diagnostics | `ox-content-mdc-check`       | completion + diagnostics | completion + diagnostics    | shipped          |
+| 4   | Vue / React props completion + jump + typecheck | crate scaffold           | planned                      | planned                  | planned                     | scaffold landed  |
+| 5   | Asset path completion + diagnostics             | completion provider      | via link checker             | completion + diagnostics | completion + diagnostics    | shipped          |
+| 6   | Dead link checker                               | diagnostics              | `ox-content-link-check`      | diagnostics              | diagnostics                 | local: shipped   |
+| 7   | textlint integration                            | on-save diagnostics      | via configured command       | enabled per setting      | enabled per setting         | shipped (opt-in) |
+| 8   | Frontmatter schema completion + diagnostics     | present                  | none (validated through LSP) | present                  | present                     | needs CLI        |
 
 ## PR Sequence
 
@@ -143,20 +143,43 @@ Replace the polling refresh path with an explicit push channel.
 
 ### 6. `feat(component-resolver): Vue and React props via corsa_client`
 
-The single largest PR in the sequence. Lands behind a `tsgo` opt-in setting
-so users without `typescript-go` available are not affected.
+The single largest item on the roadmap. Lands behind a `tsgo` opt-in
+setting so users without `typescript-go` available are not affected.
+Split into three sequential PRs:
 
-- New crate `ox_content_component_resolver` that wraps `corsa_client` and
-  resolves a component identifier to its props type, location, and JSDoc.
-- LSP wires completion, go-to-definition, and diagnostics on top of the
-  resolver for MDX/`.mdc` files. Document the resolution model in
-  `docs/content/component-resolution.md`.
-- CLI `ox-content-component-check` runs the resolver workspace-wide and
-  prints unresolved or mistyped references for CI.
-- Configuration: `oxContent.components.tsgoPath`,
+#### 6a. Scaffold (`feat(component-resolver): scaffold crate`)
+
+- ✅ New crate `ox_content_component_resolver` registered in the
+  workspace.
+- ✅ Public types: `Resolver`, `ResolverConfig`, `ResolvedComponent`,
+  `ResolvedProp`, `Location`, `Error`.
+- ✅ `corsa_client = "0.10"` wired through and proven to build
+  against the workspace.
+- ✅ Scaffold returns `Error::NotImplemented` so editor integrations
+  can develop against the public types before the implementation
+  lands.
+- ✅ 5 unit tests pin the scaffold contract (missing-tsgo,
+  relative-path, NotImplemented, serde round-trip, config builder).
+
+#### 6b. Resolver implementation (planned follow-up)
+
+- Open `component_file` as a tsgo virtual document.
+- Locate the default export and extract the props type (TS `Props`,
+  `defineProps<…>()`, React.FC `<Props>`).
+- Enumerate prop members → name, type string, optionality, JSDoc,
+  declaration location.
+- One `tsgo` process shared per workspace; lifecycle owned by the
+  resolver, not the editor.
+- Integration test gated on `OX_CONTENT_TSGO_PATH` env var.
+
+#### 6c. LSP + CLI integration (planned follow-up)
+
+- LSP wires completion, hover, go-to-definition, and diagnostics on
+  top of the resolver for MDC/MDX files.
+- New CLI `ox-content-component-check` for CI.
+- VS Code: `oxContent.components.tsgoPath`,
   `oxContent.components.tsconfig`, `oxContent.components.enabled`.
-- One `tsgo` process is shared across the workspace; lifecycle is owned by
-  the LSP backend so the editor never sees it.
+- Document the resolution model in `docs/content/component-resolution.md`.
 
 ### 7. `feat(textlint): sidecar integration`
 

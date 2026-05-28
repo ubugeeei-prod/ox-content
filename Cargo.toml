@@ -77,6 +77,7 @@ ox_content_i18n = { version = "2.21.0", path = "crates/ox_content_i18n" }
 ox_content_i18n_checker = { version = "2.21.0", path = "crates/ox_content_i18n_checker" }
 ox_content_mdc_checker = { version = "2.21.0", path = "crates/ox_content_mdc_checker" }
 ox_content_link_checker = { version = "2.21.0", path = "crates/ox_content_link_checker" }
+ox_content_component_resolver = { version = "2.21.0", path = "crates/ox_content_component_resolver" }
 ox_content_profiler = { version = "2.21.0", path = "crates/ox_content_profiler" }
 ox_jsdoc = "0.0.16"
 
