@@ -14,7 +14,7 @@ concurrency:
 
 jobs:
   build:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     steps:
       - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
         with:
@@ -41,8 +41,10 @@ jobs:
           restore-keys: |
             ${{ runner.os }}-cargo-
 
-      - name: Install Chromium for mermaid-cli
-        run: vp exec --filter @ox-content/vite-plugin -- puppeteer browsers install chrome-headless-shell
+      - name: Install browsers for docs rendering
+        run: |
+          vp exec --filter @ox-content/vite-plugin -- playwright install --with-deps chromium
+          vp exec --filter @ox-content/vite-plugin -- puppeteer browsers install chrome-headless-shell
 
       - name: Build
         run: vp build
@@ -71,7 +73,7 @@ jobs:
     environment:
       name: github-pages
       url: ${{ steps.deployment.outputs.page_url }}
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     needs: build
     permissions:
       pages: write

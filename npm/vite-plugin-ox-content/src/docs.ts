@@ -49,14 +49,9 @@
  * ```
  */
 
-import * as fs from "fs";
-import * as path from "path";
-import type { ResolvedDocsOptions, ExtractedDocs, DocEntry } from "./types";
-import { generateNavMetadata, generateNavCode } from "./nav-generator";
+import type { ResolvedDocsOptions, ExtractedDocs, DocEntry, ResolvedDocsEntryPoint } from "./types";
 import { importNapiModule, importNapiModuleSync } from "./napi";
 
-const DOCS_MANIFEST_FILE = ".ox-content-docs-manifest.json";
-const DOCS_DATA_FILE = "docs.json";
 const DEFAULT_DOCS_INCLUDE = [
   "**/*.ts",
   "**/*.tsx",
@@ -138,29 +133,55 @@ export async function extractDocs(
   options: ResolvedDocsOptions,
 ): Promise<ExtractedDocs[]> {
   const napi = await importNapiModule();
-  const extractFileDocEntries = (
-    napi as { extractFileDocEntries?: (filePath: string, includePrivate?: boolean) => DocEntry[] }
-  ).extractFileDocEntries;
 
-  if (!extractFileDocEntries) {
-    throw new Error("[ox-content] extractFileDocEntries is not available from @ox-content/napi.");
-  }
-
-  const results: ExtractedDocs[] = [];
-
-  for (const srcDir of srcDirs) {
-    const files = napi.collectDocsSourceFiles(srcDir, options.include, options.exclude);
-
-    for (const file of files) {
-      const entries = extractFileDocEntries(file, options.private);
-
-      if (entries.length > 0) {
-        results.push({ file, entries });
+  if (options.entryPoints?.length) {
+    const extractDocsFromEntryPoints = (
+      napi as {
+        extractDocsFromEntryPoints?: (
+          entryPoints: ResolvedDocsEntryPoint[],
+          options?: { root?: string; private?: boolean; internal?: boolean },
+        ) => Array<{ file: string; entries: DocEntry[] }>;
       }
+    ).extractDocsFromEntryPoints;
+
+    if (!extractDocsFromEntryPoints) {
+      throw new Error(
+        "[ox-content] extractDocsFromEntryPoints is not available from @ox-content/napi.",
+      );
     }
+
+    return extractDocsFromEntryPoints(options.entryPoints, {
+      root: process.cwd(),
+      private: options.private,
+      internal: options.internal,
+    }).map((doc) => ({ file: doc.file, entries: doc.entries }));
   }
 
-  return results;
+  const extractDocsFromDirectories = (
+    napi as {
+      extractDocsFromDirectories?: (
+        srcDirs: string[],
+        include: string[],
+        exclude: string[],
+        includePrivate?: boolean,
+        includeInternal?: boolean,
+      ) => Array<{ file: string; entries: DocEntry[] }>;
+    }
+  ).extractDocsFromDirectories;
+
+  if (!extractDocsFromDirectories) {
+    throw new Error(
+      "[ox-content] extractDocsFromDirectories is not available from @ox-content/napi.",
+    );
+  }
+
+  return extractDocsFromDirectories(
+    srcDirs,
+    options.include,
+    options.exclude,
+    options.private,
+    options.internal,
+  ).map((doc) => ({ file: doc.file, entries: doc.entries }));
 }
 
 /**
@@ -181,6 +202,8 @@ export function generateMarkdown(
   return napi.generateDocsMarkdown(toRustDocsModules(docs), {
     groupBy: options.groupBy,
     githubUrl: options.githubUrl,
+    linkStyle: options.linkStyle,
+    basePath: options.basePath,
   });
 }
 
@@ -193,59 +216,24 @@ export async function writeDocs(
   extractedDocs?: ExtractedDocs[],
   options?: ResolvedDocsOptions,
 ): Promise<void> {
-  await fs.promises.mkdir(outDir, { recursive: true });
+  const napi = importNapiModuleSync();
 
-  const generatedFiles = new Set(Object.keys(docs));
-  if (extractedDocs && options?.generateNav && options.groupBy === "file") {
-    generatedFiles.add("nav.ts");
-  }
-  if (extractedDocs) {
-    generatedFiles.add(DOCS_DATA_FILE);
-  }
-
-  const manifestPath = path.join(outDir, DOCS_MANIFEST_FILE);
-  let previousFiles: string[] = [];
-
-  try {
-    previousFiles = JSON.parse(await fs.promises.readFile(manifestPath, "utf-8")) as string[];
-  } catch {
-    previousFiles = [];
-  }
-
-  for (const staleFile of previousFiles) {
-    if (generatedFiles.has(staleFile)) {
-      continue;
-    }
-
-    await fs.promises.rm(path.join(outDir, staleFile), { force: true });
-  }
-
-  for (const [fileName, content] of Object.entries(docs)) {
-    const filePath = path.join(outDir, fileName);
-    await fs.promises.writeFile(filePath, content, "utf-8");
-  }
-
-  // Generate and write navigation metadata if enabled
-  if (extractedDocs && options?.generateNav && options.groupBy === "file") {
-    const navItems = generateNavMetadata(extractedDocs, "/api");
-    const navCode = generateNavCode(navItems, "apiNav");
-    const navFilePath = path.join(outDir, "nav.ts");
-    await fs.promises.writeFile(navFilePath, navCode, "utf-8");
-  }
-
-  if (extractedDocs) {
-    const napi = importNapiModuleSync();
-    await fs.promises.writeFile(
-      path.join(outDir, DOCS_DATA_FILE),
-      napi.generateDocsDataJson(toRustDocsModules(extractedDocs), new Date().toISOString()),
-      "utf-8",
+  if (typeof napi.writeGeneratedDocs !== "function") {
+    throw new Error(
+      "[ox-content] writeGeneratedDocs is not available from @ox-content/napi. Please rebuild the NAPI package.",
     );
   }
 
-  await fs.promises.writeFile(
-    manifestPath,
-    JSON.stringify([...generatedFiles].sort(), null, 2),
-    "utf-8",
+  napi.writeGeneratedDocs(
+    docs,
+    outDir,
+    extractedDocs ? toRustDocsModules(extractedDocs) : undefined,
+    {
+      generateNav: options?.generateNav ?? false,
+      groupBy: options?.groupBy ?? "file",
+      generatedAt: new Date().toISOString(),
+      basePath: options?.basePath,
+    },
   );
 }
 
@@ -267,6 +255,7 @@ function toRustDocsModules(docs: ExtractedDocs[]) {
       line: entry.line,
       endLine: entry.endLine,
       signature: entry.signature,
+      members: entry.members,
     })),
   }));
 }
@@ -289,11 +278,17 @@ export function resolveDocsOptions(
     out: opts.out ?? "docs/api",
     include: opts.include ?? DEFAULT_DOCS_INCLUDE,
     exclude: opts.exclude ?? ["**/*.test.*", "**/*.spec.*", "node_modules"],
+    entryPoints: opts.entryPoints?.map((entryPoint) =>
+      typeof entryPoint === "string" ? { path: entryPoint } : entryPoint,
+    ),
     format: opts.format ?? "markdown",
     private: opts.private ?? false,
+    internal: opts.internal ?? false,
     toc: false,
     groupBy: opts.groupBy ?? "file",
     githubUrl: opts.githubUrl,
+    linkStyle: opts.linkStyle ?? "markdown",
+    basePath: opts.basePath,
     generateNav: opts.generateNav ?? true,
   };
 }

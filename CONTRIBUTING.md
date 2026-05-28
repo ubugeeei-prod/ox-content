@@ -39,6 +39,18 @@ vp run dev:playground
 vp run bench:parse
 ```
 
+For allocation-aware performance work, use the in-tree profiler. It installs
+a counting global allocator and turns on per-span timing for the parser and
+renderer crates:
+
+```bash
+cargo run --release -p ox_content_profile_cli -- pipeline --gfm \
+    --iters 200 --warmup 20 docs/content/api/types.md
+```
+
+See [docs/content/profiling.md](./docs/content/profiling.md) for the full
+workflow and how to read the report.
+
 For narrower Rust work, the underlying commands are also available:
 
 ```bash
@@ -65,6 +77,7 @@ Choose the smallest verification that covers the change, then broaden it when th
 - TypeScript packages and Vite plugins: run `vp run test:ts`, `vp run check:ts`, or the relevant package command.
 - Cross-package changes: run `vp run ready` before opening a PR.
 - Visual regression changes: run `vp run test:vrt`; use `vp run test:vrt:update` only when snapshot updates are intentional.
+- VS Code extension changes: run `vp run test:vscode-unit` for the pure-node helpers, and `vp run test:vscode` for the integration suite (the latter needs an X server — `xvfb-run` in CI, a real display locally). See [npm/vscode-ox-content/README.md](./npm/vscode-ox-content/README.md#testing) for the details.
 - Docs-only changes: run the relevant docs build or dev task when the change affects rendering, navigation, examples, or code snippets.
 
 ## Documentation and Examples

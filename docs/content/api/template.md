@@ -4,6 +4,25 @@
 
 > 2 documented symbols. Read the signatures first, then expand each item for parameters, return types, and examples.
 
+<div class="ox-api-stats" aria-label="API reference summary">
+<span class="ox-api-stat">
+  <strong>2</strong>
+  <span>symbols</span>
+</span>
+<span class="ox-api-stat">
+  <strong>2</strong>
+  <span>functions</span>
+</span>
+<span class="ox-api-stat">
+  <strong>1</strong>
+  <span>parameters</span>
+</span>
+<span class="ox-api-stat">
+  <strong>2</strong>
+  <span>returns</span>
+</span>
+</div>
+
 ## Reference
 
 <div class="ox-api-controls" data-ox-api-target=".ox-api-entry" role="toolbar" aria-label="Reference display controls">
@@ -12,12 +31,16 @@
 </div>
 
 <details id="escapehtml" class="ox-api-entry">
-  <summary><span class="ox-api-entry__kind">fn</span><span class="ox-api-entry__summary-main"><code class="ox-api-entry__signature ox-api-entry__signature--highlighted language-typescript">escapeHtml(str: string): string</code><span class="ox-api-entry__description">Escapes HTML special characters.</span></span></summary>
+  <summary><span class="ox-api-entry__kind">fn</span><span class="ox-api-entry__summary-main"><code class="ox-api-entry__signature ox-api-entry__signature--highlighted language-typescript">escapeHtml(str: string): string</code><span class="ox-api-entry__description">Escapes HTML special characters.</span><span class="ox-api-entry__meta"><span class="ox-api-badge">1 param</span><span class="ox-api-badge">returns string</span></span></span></summary>
   <div class="ox-api-entry__body">
 <div class="ox-api-entry__prose">
 <p>Escapes HTML special characters.</p>
 </div>
-<p class="ox-api-entry__source"><a href="https://github.com/ubugeeei/ox-content/blob/main/npm/vite-plugin-ox-content/src/og-image/template.ts#L13-L19">View source</a></p>
+<div class="ox-api-entry__section ox-api-entry__section--signature">
+<h4>Signature</h4>
+<pre><code class="language-typescript">function escapeHtml(str: string): string</code></pre>
+</div>
+<p class="ox-api-entry__source"><a class="ox-api-entry__source-link" href="https://github.com/ubugeeei/ox-content/blob/main/npm/vite-plugin-ox-content/src/og-image/template.ts#L13-L19" target="_blank" rel="noopener noreferrer">View source<span class="ox-api-entry__source-icon" aria-hidden="true"></span></a></p>
 <div class="ox-api-entry__section ox-api-entry__section--params">
 <h4>Parameters</h4>
 <ul class="ox-api-entry__params">
@@ -41,12 +64,16 @@
 </details>
 
 <details id="getdefaulttemplate" class="ox-api-entry">
-  <summary><span class="ox-api-entry__kind">fn</span><span class="ox-api-entry__summary-main"><code class="ox-api-entry__signature ox-api-entry__signature--highlighted language-typescript">getDefaultTemplate(): OgImageTemplateFn</code><span class="ox-api-entry__description">Returns the built-in default template function.</span></span></summary>
+  <summary><span class="ox-api-entry__kind">fn</span><span class="ox-api-entry__summary-main"><code class="ox-api-entry__signature ox-api-entry__signature--highlighted language-typescript">getDefaultTemplate(): OgImageTemplateFn</code><span class="ox-api-entry__description">Returns the built-in default template function.</span><span class="ox-api-entry__meta"><span class="ox-api-badge">returns OgImageTemplateFn</span></span></span></summary>
   <div class="ox-api-entry__body">
 <div class="ox-api-entry__prose">
 <p>Returns the built-in default template function.</p>
 </div>
-<p class="ox-api-entry__source"><a href="https://github.com/ubugeeei/ox-content/blob/main/npm/vite-plugin-ox-content/src/og-image/template.ts#L76-L103">View source</a></p>
+<div class="ox-api-entry__section ox-api-entry__section--signature">
+<h4>Signature</h4>
+<pre><code class="language-typescript">export function getDefaultTemplate(): OgImageTemplateFn</code></pre>
+</div>
+<p class="ox-api-entry__source"><a class="ox-api-entry__source-link" href="https://github.com/ubugeeei/ox-content/blob/main/npm/vite-plugin-ox-content/src/og-image/template.ts#L76-L103" target="_blank" rel="noopener noreferrer">View source<span class="ox-api-entry__source-icon" aria-hidden="true"></span></a></p>
 <div class="ox-api-entry__section ox-api-entry__section--returns">
 <h4>Returns</h4>
 <div class="ox-api-entry__return">

@@ -31,6 +31,7 @@ binding-packages/
 crates/ox_content_wasm/pkg/
 
 # Build artifacts
+/_build/
 /dist
 **/dist/
 **/.astro/
@@ -59,3 +60,10 @@ crates/ox_content_wasm/pkg/
 
 # Benchmark results
 /criterion
+
+# Fetched OSS markdown corpus for benchmarking
+# (see scripts/fetch-bench-corpus.mjs)
+benchmarks/corpus/
+
+# Local VS Code extension test harness downloads
+.vscode-test/

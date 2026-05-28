@@ -151,7 +151,9 @@ describe("vitepress migration helpers", () => {
       help: false,
     });
   });
+});
 
+describe("vitepress migration CLI", () => {
   it("runs the migration CLI through a runtime adapter", async () => {
     const directory = await mkdtemp(path.join(tmpdir(), "ox-content-vitepress-cli-"));
     const configPath = path.join(directory, "config.mjs");
@@ -210,8 +212,38 @@ describe("vitepress migration helpers", () => {
         name: "Docs",
         image: {
           src: "/logo-light.svg",
+          lightSrc: "/logo-light.svg",
+          darkSrc: "/logo-dark.svg",
           width: 120,
           height: 80,
+        },
+      },
+    });
+  });
+
+  it("preserves ox-content hero image theme sources", () => {
+    const frontmatter = normalizeVitePressFrontmatter({
+      layout: "entry",
+      hero: {
+        name: "Ox Content",
+        image: {
+          src: "oxcontent-dark.svg",
+          lightSrc: "oxcontent-dark.svg",
+          darkSrc: "oxcontent-light.svg",
+          alt: "Ox Content wordmark",
+        },
+      },
+    });
+
+    expect(frontmatter).toEqual({
+      layout: "entry",
+      hero: {
+        name: "Ox Content",
+        image: {
+          src: "oxcontent-dark.svg",
+          lightSrc: "oxcontent-dark.svg",
+          darkSrc: "oxcontent-light.svg",
+          alt: "Ox Content wordmark",
         },
       },
     });

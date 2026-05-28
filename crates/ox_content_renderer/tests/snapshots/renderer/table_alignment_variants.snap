@@ -1,0 +1,21 @@
+---
+source: crates/ox_content_renderer/tests/snapshot_render.rs
+assertion_line: 29
+description: "| a | b | c |\n| :-- | :-: | --: |\n| 1 | 2 | 3 |\n"
+---
+<table>
+<thead>
+<tr>
+<th align="left">a</th>
+<th align="center">b</th>
+<th align="right">c</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td align="left">1</td>
+<td align="center">2</td>
+<td align="right">3</td>
+</tr>
+</tbody>
+</table>

@@ -1,0 +1,10 @@
+---
+source: crates/ox_content_parser/tests/snapshot_parse.rs
+assertion_line: 32
+description: "Use `let x = 1;` to declare a value.\n"
+---
+Document [0..37]
+  Paragraph [0..37]
+    Text "Use " [0..4]
+    InlineCode "let x = 1;" [4..16]
+    Text " to declare a value." [16..36]

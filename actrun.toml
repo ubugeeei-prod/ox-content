@@ -1,0 +1,17 @@
+# Run GitHub Actions locally against the current workspace.
+workspace_mode = "local"
+
+# Use the toolchain and dependencies already installed on the machine.
+local_skip_actions = [
+  "actions/checkout",
+  "actions/setup-node",
+  "actions/setup-python",
+  "actions/setup-go",
+  "actions-rust-lang/setup-rust-toolchain",
+  "dtolnay/rust-toolchain",
+  "Swatinem/rust-cache",
+  "voidzero-dev/setup-vp",
+]
+
+# Avoid slow nix develop wrapping for fast local CI feedback.
+nix_mode = "off"

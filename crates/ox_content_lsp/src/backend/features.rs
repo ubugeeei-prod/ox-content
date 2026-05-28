@@ -1,3 +1,5 @@
+use std::fmt::Write as _;
+
 use tower_lsp::lsp_types::*;
 
 use crate::document::is_markdown_path;
@@ -5,6 +7,10 @@ use crate::frontmatter;
 use crate::i18n;
 use crate::preview;
 
+use ox_content_mdc_checker::Registry;
+
+use super::assets::{completion_items as asset_completion_items, detect_context, line_prefix};
+use super::mdc::{completion_items as mdc_completion_items, detect_site as detect_mdc_site};
 use super::snippets::markdown_snippet_items;
 use super::Backend;
 
@@ -39,7 +45,39 @@ impl Backend {
         }
 
         let document = self.state.document(uri).await?;
+
+        // Asset / link path completion short-circuits everything else
+        // when the cursor sits inside a Markdown `()` or an HTML
+        // `src=`/`href=`. Mixing it with snippets / frontmatter would
+        // pollute the list — a user typing `![alt](./` does not want
+        // a `## Section` snippet suggestion.
+        let line_text = document.line_text(position.line);
+        let prefix = line_prefix(line_text, position.character);
+        if let Some((context, partial)) = detect_context(prefix) {
+            let doc_dir = path.parent().map(std::path::Path::to_path_buf);
+            let src_dir = self.state.root().await;
+            let items =
+                asset_completion_items(context, partial, doc_dir.as_deref(), src_dir.as_deref());
+            return (!items.is_empty()).then_some(CompletionResponse::Array(items));
+        }
+
         let config = self.resolved_config().await;
+
+        // MDC component / attribute completion. Short-circuit out
+        // before snippets and frontmatter so the popup is focused on
+        // the construct the user is mid-typing — a `## Section`
+        // snippet polluting `<Alert |` is just noise.
+        let line_text = document.line_text(position.line);
+        let prefix = line_prefix(line_text, position.character);
+        if let Some(site) = detect_mdc_site(prefix) {
+            if let Some(registry) = load_mdc_registry(&config) {
+                let items = mdc_completion_items(&site, &registry);
+                if !items.is_empty() {
+                    return Some(CompletionResponse::Array(items));
+                }
+            }
+        }
+
         let frontmatter = frontmatter::parse_frontmatter(&document);
         let mut items = frontmatter
             .block
@@ -68,10 +106,13 @@ impl Backend {
                 return None;
             }
 
-            let mut value =
-                format!("**`{key}`**\n\n| Locale | Translation |\n|--------|-------------|\n");
+            let mut value = String::new();
+            push_fmt(
+                &mut value,
+                format_args!("**`{key}`**\n\n| Locale | Translation |\n|--------|-------------|\n"),
+            );
             for (locale, translation) in &translations {
-                value.push_str(&format!("| `{locale}` | {translation} |\n"));
+                push_fmt(&mut value, format_args!("| `{locale}` | {translation} |\n"));
             }
 
             return Some(Hover {
@@ -178,4 +219,19 @@ impl Backend {
             _ => None,
         }
     }
+}
+
+fn push_fmt(output: &mut String, args: std::fmt::Arguments<'_>) {
+    if output.write_fmt(args).is_err() {
+        output.push_str("[formatting failed]");
+    }
+}
+
+fn load_mdc_registry(config: &crate::config::ResolvedConfig) -> Option<Registry> {
+    let path = config.mdc_components.as_deref()?;
+    // Treat a missing or unreadable registry file the same as "no
+    // registry configured" — completion silently falls through. The
+    // alternative (publishing a diagnostic on every keystroke) would
+    // be noisy and we'd rather not double the failure modes here.
+    Registry::from_path(path).ok().flatten()
 }

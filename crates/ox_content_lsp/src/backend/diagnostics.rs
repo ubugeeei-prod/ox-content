@@ -1,6 +1,9 @@
+use std::path::PathBuf;
+
 use ox_content_allocator::Allocator;
+use ox_content_link_checker::{check_source as link_check_source, CheckOptions, Severity};
 use ox_content_parser::{ParseError, Parser, ParserOptions};
-use tower_lsp::lsp_types::{Diagnostic, DiagnosticSeverity};
+use tower_lsp::lsp_types::{Diagnostic, DiagnosticSeverity, Url};
 
 use crate::document::TextDocumentState;
 use crate::frontmatter::FrontmatterBlock;
@@ -9,17 +12,14 @@ pub(super) fn markdown_parse_diagnostics(
     document: &TextDocumentState,
     block: Option<&FrontmatterBlock>,
 ) -> Vec<Diagnostic> {
+    // Diagnostics apply to the markdown body, not the YAML frontmatter.
+    // `block_end_offset` is the byte just past the closing `---` line.
     let (source, offset) = block.map_or_else(
         || (document.text(), 0),
-        |block| {
-            (
-                &document.text()[block.content_start_offset..block.content_end_offset],
-                block.content_start_offset,
-            )
-        },
+        |block| (&document.text()[block.block_end_offset..], block.block_end_offset),
     );
 
-    let allocator = Allocator::new();
+    let allocator = Allocator::for_source_len(source.len());
     let parser = Parser::with_options(&allocator, source, ParserOptions::gfm());
     let diagnostics = match parser.parse() {
         Ok(_) => Vec::new(),
@@ -33,12 +33,15 @@ pub(super) fn mdc_diagnostics(
     document: &TextDocumentState,
     block: Option<&FrontmatterBlock>,
 ) -> Vec<Diagnostic> {
+    // MDC diagnostics apply to the markdown body. Use the post-frontmatter
+    // slice so column/line numbers from the checker line up with the source
+    // the editor opened.
     let (source, line_offset) = block.map_or_else(
         || (document.text(), 0),
         |block| {
-            let before = &document.text()[..block.content_start_offset];
+            let before = &document.text()[..block.block_end_offset];
             (
-                &document.text()[block.content_start_offset..block.content_end_offset],
+                &document.text()[block.block_end_offset..],
                 before.chars().filter(|ch| *ch == '\n').count() as u32,
             )
         },
@@ -69,6 +72,40 @@ pub(super) fn mdc_diagnostics(
         .collect()
 }
 
+pub(super) fn link_check_diagnostics(
+    document: &TextDocumentState,
+    uri: &Url,
+    src_dir: Option<PathBuf>,
+) -> Vec<Diagnostic> {
+    let Some(file_path) = uri.to_file_path().ok() else {
+        return Vec::new();
+    };
+
+    let options = CheckOptions { file_path, src_dir, ignore_patterns: Vec::new() };
+    link_check_source(document.text(), &options)
+        .into_iter()
+        .map(|diagnostic| Diagnostic {
+            range: tower_lsp::lsp_types::Range {
+                start: tower_lsp::lsp_types::Position {
+                    line: diagnostic.line.saturating_sub(1),
+                    character: diagnostic.column.saturating_sub(1),
+                },
+                end: tower_lsp::lsp_types::Position {
+                    line: diagnostic.end_line.saturating_sub(1),
+                    character: diagnostic.end_column.saturating_sub(1),
+                },
+            },
+            severity: Some(match diagnostic.severity {
+                Severity::Error => DiagnosticSeverity::ERROR,
+                Severity::Warning => DiagnosticSeverity::WARNING,
+            }),
+            source: Some("ox-content-link".to_string()),
+            message: diagnostic.message,
+            ..Default::default()
+        })
+        .collect()
+}
+
 fn parse_error_to_diagnostic(
     document: &TextDocumentState,
     base_offset: usize,
@@ -84,5 +121,32 @@ fn parse_error_to_diagnostic(
         source: Some("ox-content".to_string()),
         message: error.to_string(),
         ..Default::default()
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use crate::frontmatter::parse_frontmatter;
+
+    #[test]
+    fn markdown_parse_diagnostics_skip_valid_body_after_frontmatter() {
+        let source = "---\ntitle: Doc\n---\n\n# Valid heading\n\nA paragraph.\n";
+        let document = TextDocumentState::new(source.to_string());
+        let frontmatter = parse_frontmatter(&document);
+        let diagnostics = markdown_parse_diagnostics(&document, frontmatter.block.as_ref());
+        assert!(diagnostics.is_empty(), "expected clean parse for valid body, got {diagnostics:?}");
+    }
+
+    #[test]
+    fn markdown_parse_diagnostics_skip_yaml_inside_frontmatter() {
+        // The YAML body would look like a paragraph to the markdown parser
+        // and could produce spurious diagnostics. This regression test pins
+        // the contract that the YAML is fed to the YAML parser only.
+        let source = "---\ntitle: A title with : colon\n---\n\nbody\n";
+        let document = TextDocumentState::new(source.to_string());
+        let frontmatter = parse_frontmatter(&document);
+        let diagnostics = markdown_parse_diagnostics(&document, frontmatter.block.as_ref());
+        assert!(diagnostics.is_empty(), "yaml leaked into markdown diagnostics: {diagnostics:?}");
     }
 }

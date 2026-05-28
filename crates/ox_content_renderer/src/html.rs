@@ -1,13 +1,18 @@
 //! HTML renderer implementation.
 
 use std::collections::BTreeMap;
+use std::fmt::{Display, Write as _};
 
 use ox_content_ast::{
     BlockQuote, Break, CodeBlock, Definition, Delete, Document, Emphasis, FootnoteDefinition,
     FootnoteReference, Heading, Html, Image, InlineCode, Link, List, ListItem, Node, Paragraph,
     Strong, Table, TableCell, TableRow, Text, ThematicBreak, Visit,
 };
+use rustc_hash::FxHashMap;
 
+#[allow(unused_imports)]
+// The macro is no-op without the `profile` feature, which suppresses the use.
+use crate::profile_span;
 use crate::render::{RenderResult, Renderer};
 
 /// HTML renderer options.
@@ -154,13 +159,23 @@ impl CalloutKind {
     fn parse_marker(value: &str) -> Option<(Self, &str)> {
         let marker = value.strip_prefix("[!")?;
         let end = marker.find(']')?;
-        let kind = match marker[..end].trim().to_ascii_uppercase().as_str() {
-            "NOTE" => Self::Note,
-            "TIP" => Self::Tip,
-            "IMPORTANT" => Self::Important,
-            "WARNING" => Self::Warning,
-            "CAUTION" => Self::Caution,
-            _ => return None,
+        // Allocation-free: the previous `to_ascii_uppercase().as_str()`
+        // path allocated a fresh `String` for every `[!FOO]`-prefixed
+        // text run that reached this branch. `eq_ignore_ascii_case`
+        // compares the trimmed slice in place against each known label.
+        let name = marker[..end].trim();
+        let kind = if name.eq_ignore_ascii_case("NOTE") {
+            Self::Note
+        } else if name.eq_ignore_ascii_case("TIP") {
+            Self::Tip
+        } else if name.eq_ignore_ascii_case("IMPORTANT") {
+            Self::Important
+        } else if name.eq_ignore_ascii_case("WARNING") {
+            Self::Warning
+        } else if name.eq_ignore_ascii_case("CAUTION") {
+            Self::Caution
+        } else {
+            return None;
         };
 
         Some((kind, marker[end + 1..].trim_start_matches(char::is_whitespace)))
@@ -710,6 +725,169 @@ fn parse_vitepress_inline_annotations(value: &str) -> Vec<CodeLineRenderState> {
     lines
 }
 
+// Per-byte HTML-escape mapping. `ESCAPE_FLAG[b] == 1` and
+// `ESCAPE_TABLE[b]` is the replacement string when `b` must be escaped;
+// otherwise the flag is 0 and the entry is `""`. Splitting flag/string
+// lets the inner scan use a plain integer OR over 8-byte chunks (which
+// LLVM vectorizes) instead of branching on a string comparison.
+static ESCAPE_TABLE: [&str; 256] = {
+    let mut table: [&str; 256] = [""; 256];
+    table[b'&' as usize] = "&amp;";
+    table[b'<' as usize] = "&lt;";
+    table[b'>' as usize] = "&gt;";
+    table[b'"' as usize] = "&quot;";
+    table[b'\'' as usize] = "&#39;";
+    table
+};
+
+static ESCAPE_FLAG: [u8; 256] = {
+    let mut t = [0u8; 256];
+    t[b'&' as usize] = 1;
+    t[b'<' as usize] = 1;
+    t[b'>' as usize] = 1;
+    t[b'"' as usize] = 1;
+    t[b'\'' as usize] = 1;
+    t
+};
+
+static URL_ESCAPE_TABLE: [&str; 256] = {
+    let mut table: [&str; 256] = [""; 256];
+    table[b'&' as usize] = "&amp;";
+    table[b'<' as usize] = "%3C";
+    table[b'>' as usize] = "%3E";
+    table[b'"' as usize] = "%22";
+    table[b' ' as usize] = "%20";
+    table
+};
+
+static URL_ESCAPE_FLAG: [u8; 256] = {
+    let mut t = [0u8; 256];
+    t[b'&' as usize] = 1;
+    t[b'<' as usize] = 1;
+    t[b'>' as usize] = 1;
+    t[b'"' as usize] = 1;
+    t[b' ' as usize] = 1;
+    t
+};
+
+#[inline]
+fn write_escaped_into(out: &mut String, s: &str) {
+    let bytes = s.as_bytes();
+    let mut start = 0usize;
+    let mut i = 0usize;
+    out.reserve(s.len());
+
+    // 8-byte chunk fast-skip — the OR over 8 lookups vectorizes well and
+    // dominates the inner loop on long no-escape runs (most plain text).
+    while i + 8 <= bytes.len() {
+        let chunk = &bytes[i..i + 8];
+        let mask = ESCAPE_FLAG[chunk[0] as usize]
+            | ESCAPE_FLAG[chunk[1] as usize]
+            | ESCAPE_FLAG[chunk[2] as usize]
+            | ESCAPE_FLAG[chunk[3] as usize]
+            | ESCAPE_FLAG[chunk[4] as usize]
+            | ESCAPE_FLAG[chunk[5] as usize]
+            | ESCAPE_FLAG[chunk[6] as usize]
+            | ESCAPE_FLAG[chunk[7] as usize];
+        if mask == 0 {
+            i += 8;
+            continue;
+        }
+        break;
+    }
+
+    while i < bytes.len() {
+        let b = bytes[i];
+        if ESCAPE_FLAG[b as usize] != 0 {
+            if start < i {
+                out.push_str(&s[start..i]);
+            }
+            out.push_str(ESCAPE_TABLE[b as usize]);
+            i += 1;
+            start = i;
+            while i + 8 <= bytes.len() {
+                let chunk = &bytes[i..i + 8];
+                let mask = ESCAPE_FLAG[chunk[0] as usize]
+                    | ESCAPE_FLAG[chunk[1] as usize]
+                    | ESCAPE_FLAG[chunk[2] as usize]
+                    | ESCAPE_FLAG[chunk[3] as usize]
+                    | ESCAPE_FLAG[chunk[4] as usize]
+                    | ESCAPE_FLAG[chunk[5] as usize]
+                    | ESCAPE_FLAG[chunk[6] as usize]
+                    | ESCAPE_FLAG[chunk[7] as usize];
+                if mask == 0 {
+                    i += 8;
+                    continue;
+                }
+                break;
+            }
+            continue;
+        }
+        i += 1;
+    }
+
+    if start < bytes.len() {
+        out.push_str(&s[start..]);
+    }
+}
+
+fn write_url_escaped_into(out: &mut String, s: &str) {
+    let bytes = s.as_bytes();
+    let mut start = 0usize;
+    let mut i = 0usize;
+
+    while i + 8 <= bytes.len() {
+        let chunk = &bytes[i..i + 8];
+        let mask = URL_ESCAPE_FLAG[chunk[0] as usize]
+            | URL_ESCAPE_FLAG[chunk[1] as usize]
+            | URL_ESCAPE_FLAG[chunk[2] as usize]
+            | URL_ESCAPE_FLAG[chunk[3] as usize]
+            | URL_ESCAPE_FLAG[chunk[4] as usize]
+            | URL_ESCAPE_FLAG[chunk[5] as usize]
+            | URL_ESCAPE_FLAG[chunk[6] as usize]
+            | URL_ESCAPE_FLAG[chunk[7] as usize];
+        if mask == 0 {
+            i += 8;
+            continue;
+        }
+        break;
+    }
+
+    while i < bytes.len() {
+        let b = bytes[i];
+        if URL_ESCAPE_FLAG[b as usize] != 0 {
+            if start < i {
+                out.push_str(&s[start..i]);
+            }
+            out.push_str(URL_ESCAPE_TABLE[b as usize]);
+            i += 1;
+            start = i;
+            while i + 8 <= bytes.len() {
+                let chunk = &bytes[i..i + 8];
+                let mask = URL_ESCAPE_FLAG[chunk[0] as usize]
+                    | URL_ESCAPE_FLAG[chunk[1] as usize]
+                    | URL_ESCAPE_FLAG[chunk[2] as usize]
+                    | URL_ESCAPE_FLAG[chunk[3] as usize]
+                    | URL_ESCAPE_FLAG[chunk[4] as usize]
+                    | URL_ESCAPE_FLAG[chunk[5] as usize]
+                    | URL_ESCAPE_FLAG[chunk[6] as usize]
+                    | URL_ESCAPE_FLAG[chunk[7] as usize];
+                if mask == 0 {
+                    i += 8;
+                    continue;
+                }
+                break;
+            }
+            continue;
+        }
+        i += 1;
+    }
+
+    if start < bytes.len() {
+        out.push_str(&s[start..]);
+    }
+}
+
 fn is_html_attr_start(byte: u8) -> bool {
     byte.is_ascii_alphabetic()
 }
@@ -753,21 +931,14 @@ fn html_attr_value_range(html: &str, bytes: &[u8], name_end: usize) -> Option<(u
 
 fn collect_heading_text(nodes: &[Node<'_>]) -> String {
     let mut text = String::new();
-    for node in nodes {
-        collect_node_text(node, &mut text);
-    }
+    collect_heading_text_into(nodes, &mut text);
     text
 }
 
-fn collect_text_nodes_only(nodes: &[Node<'_>]) -> Option<String> {
-    let mut text = String::new();
+fn collect_heading_text_into(nodes: &[Node<'_>], text: &mut String) {
     for node in nodes {
-        match node {
-            Node::Text(value) => text.push_str(value.value),
-            _ => return None,
-        }
+        collect_node_text(node, text);
     }
-    Some(text)
 }
 
 fn collect_node_text(node: &Node<'_>, text: &mut String) {
@@ -799,19 +970,67 @@ fn collect_node_text(node: &Node<'_>, text: &mut String) {
 }
 
 fn slugify_heading(text: &str) -> String {
-    let slug = text
-        .to_lowercase()
-        .chars()
-        .map(|ch| if ch.is_alphanumeric() || ch == ' ' || ch == '-' { ch } else { ' ' })
-        .collect::<String>()
-        .split_whitespace()
-        .collect::<Vec<_>>()
-        .join("-");
+    let mut out = String::with_capacity(text.len());
+    slugify_heading_into(text, &mut out);
+    out
+}
 
-    if slug.is_empty() {
-        "section".to_string()
-    } else {
-        slug
+/// Slugify `text` into `out`. `out` is **not** cleared by this function —
+/// callers should clear it themselves so they can reuse a long-lived
+/// scratch buffer across many headings without giving up the allocation.
+fn slugify_heading_into(text: &str, out: &mut String) {
+    // Single-pass slugify. Hot path is the all-ASCII byte loop (no
+    // UTF-8 decode, no `char::to_lowercase` iterator allocation per
+    // character); we fall back to the char iterator only when a
+    // non-ASCII byte appears.
+    let bytes = text.as_bytes();
+    out.reserve(text.len());
+    let start_len = out.len();
+    let mut last_was_separator = true;
+    let mut i = 0;
+
+    while i < bytes.len() {
+        let b = bytes[i];
+        if b < 0x80 {
+            if b.is_ascii_alphanumeric() {
+                // Lowercase ASCII letters with a branchless add.
+                let lower = if b.is_ascii_uppercase() { b + 32 } else { b };
+                out.push(lower as char);
+                last_was_separator = false;
+            } else if !last_was_separator {
+                out.push('-');
+                last_was_separator = true;
+            }
+            i += 1;
+        } else {
+            // Find the next ASCII boundary and process the multi-byte run
+            // through the char iterator (handles Unicode case folding /
+            // alphanumeric classification correctly).
+            let mut j = i + 1;
+            while j < bytes.len() && bytes[j] >= 0x80 {
+                j += 1;
+            }
+            for ch in text[i..j].chars() {
+                for lower in ch.to_lowercase() {
+                    if lower.is_alphanumeric() {
+                        out.push(lower);
+                        last_was_separator = false;
+                    } else if !last_was_separator {
+                        out.push('-');
+                        last_was_separator = true;
+                    }
+                }
+            }
+            i = j;
+        }
+    }
+
+    while out.len() > start_len && out.ends_with('-') {
+        out.pop();
+    }
+
+    if out.len() == start_len {
+        out.push_str("section");
     }
 }
 
@@ -822,32 +1041,106 @@ struct InlineTocEntry {
     id: String,
 }
 
-fn collect_inline_toc_entries(document: &Document<'_>, max_depth: u8) -> Vec<InlineTocEntry> {
-    let mut entries = Vec::new();
-    let mut counts = BTreeMap::new();
+fn collect_inline_toc_entries(
+    document: &Document<'_>,
+    max_depth: u8,
+    entries: &mut Vec<InlineTocEntry>,
+) {
+    let mut counts = FxHashMap::default();
 
     for node in &document.children {
-        collect_inline_toc_node(node, max_depth, &mut counts, &mut entries);
+        collect_inline_toc_node(node, max_depth, &mut counts, entries);
+    }
+}
+
+/// Cheap, allocation-free scan for a standalone `[[toc]]` paragraph. The
+/// directive is recognized only when the paragraph contains a single text
+/// node whose trimmed value is exactly `[[toc]]` — which is also the only
+/// form `visit_paragraph` will render as a TOC.
+fn document_has_toc_marker(document: &Document<'_>) -> bool {
+    document.children.iter().any(node_has_toc_marker)
+}
+
+fn node_has_toc_marker(node: &Node<'_>) -> bool {
+    match node {
+        Node::Paragraph(p) => is_toc_marker_paragraph(p),
+        Node::BlockQuote(bq) => bq.children.iter().any(node_has_toc_marker),
+        Node::List(list) => list.children.iter().any(list_item_has_toc_marker),
+        Node::ListItem(item) => list_item_has_toc_marker(item),
+        Node::FootnoteDefinition(def) => def.children.iter().any(node_has_toc_marker),
+        _ => false,
+    }
+}
+
+fn list_item_has_toc_marker(item: &ListItem<'_>) -> bool {
+    item.children.iter().any(node_has_toc_marker)
+}
+
+fn is_toc_marker_paragraph(paragraph: &Paragraph<'_>) -> bool {
+    // Equivalent to the prior
+    // `collect_text_nodes_only(...).is_some_and(|t| t.trim() == "[[toc]]")`
+    // check, but allocation-free: bails on the first non-Text child and
+    // matches the marker byte-by-byte against the concatenated text. Note
+    // that the inline parser emits the literal "[[toc]]" as three Text
+    // nodes (`[`, `[`, `toc]]`) because the bracket-as-link path fails
+    // open — so a "single Text child only" shortcut would miss it.
+    const MARKER: &[u8] = b"[[toc]]";
+    let mut matched = 0usize;
+    let mut after_marker_ws = false;
+
+    for child in &paragraph.children {
+        let Node::Text(text) = child else {
+            return false;
+        };
+        for &byte in text.value.as_bytes() {
+            let is_ws = matches!(byte, b' ' | b'\t' | b'\n' | b'\r');
+            if is_ws {
+                if matched > 0 {
+                    after_marker_ws = true;
+                }
+                continue;
+            }
+            if after_marker_ws || matched == MARKER.len() || byte != MARKER[matched] {
+                return false;
+            }
+            matched += 1;
+        }
     }
 
-    entries
+    matched == MARKER.len()
 }
 
 fn collect_inline_toc_node(
     node: &Node<'_>,
     max_depth: u8,
-    counts: &mut BTreeMap<String, usize>,
+    counts: &mut FxHashMap<String, usize>,
     entries: &mut Vec<InlineTocEntry>,
 ) {
+    use std::fmt::Write as _;
+
     match node {
         Node::Heading(heading) => {
+            let include_heading = heading.depth <= max_depth;
             let text = collect_heading_text(&heading.children);
-            let slug = slugify_heading(&text);
-            let count = counts.entry(slug.clone()).or_insert(0);
-            let id = if *count == 0 { slug } else { format!("{slug}-{count}") };
-            *count += 1;
+            let mut slug = slugify_heading(&text);
+            let id = if let Some(count) = counts.get_mut(slug.as_str()) {
+                let suffix = *count;
+                *count += 1;
+                if include_heading {
+                    let _ = write!(slug, "-{suffix}");
+                    Some(slug)
+                } else {
+                    None
+                }
+            } else if include_heading {
+                counts.insert(slug.clone(), 1);
+                Some(slug)
+            } else {
+                counts.insert(slug, 1);
+                None
+            };
 
-            if heading.depth <= max_depth {
+            if let Some(id) = id {
                 entries.push(InlineTocEntry { depth: heading.depth, text, id });
             }
         }
@@ -881,20 +1174,33 @@ fn collect_inline_toc_node(
 pub struct HtmlRenderer {
     options: HtmlRendererOptions,
     output: String,
-    heading_id_counts: BTreeMap<String, usize>,
+    heading_id_counts: FxHashMap<String, usize>,
     toc_entries: Vec<InlineTocEntry>,
+    /// Whether the document being rendered contains at least one
+    /// `[[toc]]` directive paragraph. Cached at `render()` entry so each
+    /// `visit_paragraph` can skip the marker check entirely when no
+    /// directive exists (the common case). Kept separate from
+    /// `toc_entries.is_empty()` because a document may have a marker
+    /// AND zero entries (no headings, or all filtered by `toc_max_depth`)
+    /// — in that case we still need to suppress the literal `[[toc]]`
+    /// text from the output.
+    document_has_toc_marker: bool,
+    /// Reusable scratch buffer for the raw concatenated heading text in
+    /// `heading_id`. A long-lived buffer avoids paying for a fresh
+    /// `String` allocation per heading — `slugify_heading` previously
+    /// allocated one `text` String per call.
+    heading_text_scratch: String,
+    /// Reusable scratch buffer for the slugified id. The final id String
+    /// that ends up in `heading_id_counts` is cloned out of here on
+    /// vacant inserts; the buffer itself stays around across renders.
+    heading_slug_scratch: String,
 }
 
 impl HtmlRenderer {
     /// Creates a new HTML renderer with default options.
     #[must_use]
     pub fn new() -> Self {
-        Self {
-            options: HtmlRendererOptions::new(),
-            output: String::new(),
-            heading_id_counts: BTreeMap::new(),
-            toc_entries: Vec::new(),
-        }
+        Self::with_options(HtmlRendererOptions::new())
     }
 
     /// Creates a new HTML renderer with the specified options.
@@ -903,18 +1209,42 @@ impl HtmlRenderer {
         Self {
             options,
             output: String::new(),
-            heading_id_counts: BTreeMap::new(),
+            heading_id_counts: FxHashMap::default(),
             toc_entries: Vec::new(),
+            document_has_toc_marker: false,
+            // Pre-size the heading scratch buffers: a typical heading text
+            // is well under 64 chars. Pre-allocating spares the first
+            // heading from a `String::with_capacity(0)` → `reserve(N)`
+            // round-trip without meaningful memory cost (these buffers
+            // live for the renderer's lifetime regardless).
+            heading_text_scratch: String::with_capacity(64),
+            heading_slug_scratch: String::with_capacity(64),
         }
     }
 
     /// Renders a document to HTML string.
     #[must_use]
     pub fn render(&mut self, document: &Document<'_>) -> String {
+        profile_span!("renderer::render");
         self.output.clear();
-        self.toc_entries = collect_inline_toc_entries(document, self.options.toc_max_depth);
+        // TOC collection walks every heading and allocates a slug per entry,
+        // which used to fire on every render regardless of whether a
+        // `[[toc]]` directive was actually present. Pre-scan the document
+        // cheaply (no allocations) and skip the work when no marker exists —
+        // this is the common case for normal docs.
+        self.toc_entries.clear();
+        self.document_has_toc_marker = document_has_toc_marker(document);
+        if self.document_has_toc_marker {
+            collect_inline_toc_entries(document, self.options.toc_max_depth, &mut self.toc_entries);
+        }
         self.heading_id_counts.clear();
-        let estimated_len = (document.span.len() as usize).saturating_mul(3) / 2;
+        // HTML output is typically 2×–3× the markdown source (every
+        // `**bold**` becomes `<strong>...</strong>` etc.) so the prior
+        // 1.5× estimate kept undersizing the buffer and forcing 1–2
+        // power-of-two reallocs per render on docs >32 KB. 2× hits the
+        // realistic mean for the bundled corpora (rust-book / vite /
+        // vue / typescript-handbook all land between 1.8× and 2.6×).
+        let estimated_len = (document.span.len() as usize).saturating_mul(2);
         if self.output.capacity() < estimated_len {
             self.output.reserve(estimated_len - self.output.capacity());
         }
@@ -923,20 +1253,21 @@ impl HtmlRenderer {
     }
 
     fn render_inline_toc(&mut self) {
+        use std::fmt::Write as _;
+
         if self.toc_entries.is_empty() {
             return;
         }
 
         self.write("<nav class=\"ox-toc\" aria-label=\"Table of contents\">\n<ul>\n");
-        for idx in 0..self.toc_entries.len() {
-            let entry = self.toc_entries[idx].clone();
-            self.write("<li class=\"ox-toc__item ox-toc__item--depth-");
-            self.write(&entry.depth.to_string());
-            self.write("\"><a href=\"#");
-            self.write_url_escaped(&entry.id);
-            self.write("\">");
-            self.write_escaped(&entry.text);
-            self.write("</a></li>\n");
+        for entry in &self.toc_entries {
+            self.output.push_str("<li class=\"ox-toc__item ox-toc__item--depth-");
+            let _ = write!(self.output, "{}", entry.depth);
+            self.output.push_str("\"><a href=\"#");
+            write_url_escaped_into(&mut self.output, &entry.id);
+            self.output.push_str("\">");
+            write_escaped_into(&mut self.output, &entry.text);
+            self.output.push_str("</a></li>\n");
         }
         self.write("</ul>\n</nav>\n");
     }
@@ -945,60 +1276,17 @@ impl HtmlRenderer {
         self.output.push_str(s);
     }
 
+    fn write_display(&mut self, value: impl Display) {
+        write!(self.output, "{value}").expect("writing to String should not fail");
+    }
+
     fn write_escaped(&mut self, s: &str) {
-        let bytes = s.as_bytes();
-        let mut start = 0;
-
-        for (idx, byte) in bytes.iter().copied().enumerate() {
-            let escaped = match byte {
-                b'&' => Some("&amp;"),
-                b'<' => Some("&lt;"),
-                b'>' => Some("&gt;"),
-                b'"' => Some("&quot;"),
-                b'\'' => Some("&#39;"),
-                _ => None,
-            };
-
-            if let Some(escaped) = escaped {
-                if start < idx {
-                    self.output.push_str(&s[start..idx]);
-                }
-                self.output.push_str(escaped);
-                start = idx + 1;
-            }
-        }
-
-        if start < s.len() {
-            self.output.push_str(&s[start..]);
-        }
+        profile_span!("renderer::write_escaped");
+        write_escaped_into(&mut self.output, s);
     }
 
     fn write_url_escaped(&mut self, s: &str) {
-        let bytes = s.as_bytes();
-        let mut start = 0;
-
-        for (idx, byte) in bytes.iter().copied().enumerate() {
-            let escaped = match byte {
-                b'&' => Some("&amp;"),
-                b'<' => Some("%3C"),
-                b'>' => Some("%3E"),
-                b'"' => Some("%22"),
-                b' ' => Some("%20"),
-                _ => None,
-            };
-
-            if let Some(escaped) = escaped {
-                if start < idx {
-                    self.output.push_str(&s[start..idx]);
-                }
-                self.output.push_str(escaped);
-                start = idx + 1;
-            }
-        }
-
-        if start < s.len() {
-            self.output.push_str(&s[start..]);
-        }
+        write_url_escaped_into(&mut self.output, s);
     }
 
     fn sanitized_url<'a>(&self, url: &'a str, fallback: &'static str) -> &'a str {
@@ -1065,15 +1353,35 @@ impl HtmlRenderer {
     }
 
     fn detect_callout<'a>(paragraph: &Paragraph<'a>) -> Option<(CalloutKind, usize)> {
-        let mut prefix = String::new();
+        // Fast bail: a callout marker is `[!KIND]...` so the very first
+        // text byte must be `[`. The previous version unconditionally
+        // allocated a `String prefix` and pushed Text values into it
+        // before checking — pure waste for the overwhelmingly common
+        // case of a regular block quote.
+        let mut iter = paragraph.children.iter();
+        let Node::Text(first_text) = iter.next()? else {
+            return None;
+        };
+        if first_text.value.as_bytes().first() != Some(&b'[') {
+            return None;
+        }
 
-        for child in &paragraph.children {
+        // The first Text node almost always contains the entire marker
+        // (parsers don't split `[!NOTE]` across multiple Text nodes
+        // unless inline markup interleaves). Try in-place first, and
+        // only fall back to the concatenating slow path if the marker
+        // straddles nodes.
+        if let Some((kind, remainder)) = CalloutKind::parse_marker(first_text.value) {
+            let consumed = first_text.value.len().saturating_sub(remainder.len());
+            return Some((kind, consumed));
+        }
+
+        let mut prefix = String::from(first_text.value);
+        for child in iter {
             let Node::Text(text) = child else {
-                break;
+                return None;
             };
-
             prefix.push_str(text.value);
-
             if let Some((kind, remainder)) = CalloutKind::parse_marker(&prefix) {
                 let consumed = prefix.len().saturating_sub(remainder.len());
                 return Some((kind, consumed));
@@ -1214,12 +1522,12 @@ impl HtmlRenderer {
             self.write("<span class=\"");
             self.write(&class_names.join(" "));
             self.write("\" data-line=\"");
-            self.write(&line_number.to_string());
+            self.write_display(line_number);
             self.write("\"");
 
             if let Some(start) = state.line_numbers_start {
                 self.write(" data-line-number=\"");
-                self.write(&(start + index).to_string());
+                self.write_display(start + index);
                 self.write("\"");
             }
 
@@ -1245,28 +1553,57 @@ impl HtmlRenderer {
     }
 
     fn visit_inline_node(&mut self, node: &Node<'_>) {
+        // Text is the overwhelmingly common child of paragraphs / headings
+        // / links / emphasis / strong, etc. — on the bundled corpora it
+        // accounts for roughly 60-70% of inline visits. Inlining the
+        // write here skips the trait's 20-arm `walk_node` match and the
+        // `visit_text` wrapper, both of which are the only thing
+        // `visit_text` would do anyway (escape into `self.output`).
         match node {
+            Node::Text(text) => write_escaped_into(&mut self.output, text.value),
             Node::Html(html) => self.write_html_value(html.value),
             _ => self.visit_node(node),
         }
     }
 
-    fn heading_id(&mut self, heading: &Heading<'_>) -> String {
-        let text = collect_heading_text(&heading.children);
-        let slug = slugify_heading(&text);
-        let count = self.heading_id_counts.entry(slug.clone()).or_insert(0);
-        let id = if *count == 0 { slug } else { format!("{slug}-{count}") };
-        *count += 1;
-        id
-    }
+    /// Writes the heading's slugified id directly into `self.output`.
+    /// Avoids allocating a return `String`: the unique-heading hot path
+    /// now pays for exactly one `String` allocation (the slug clone that
+    /// becomes the map key) and the duplicate-heading path pays for
+    /// zero, since the `-N` suffix is written directly via `write!`.
+    fn write_heading_id(&mut self, heading: &Heading<'_>) {
+        use std::fmt::Write as _;
 
-    fn convert_markdown_url(&self, url: &str) -> String {
-        let converted = self.convert_md_url(url);
-        if converted != url {
-            return converted;
+        self.heading_text_scratch.clear();
+        collect_heading_text_into(&heading.children, &mut self.heading_text_scratch);
+        self.heading_slug_scratch.clear();
+        slugify_heading_into(&self.heading_text_scratch, &mut self.heading_slug_scratch);
+
+        // Cheap lookup first — avoids cloning the slug on the duplicate
+        // path. The `entry()` API would force us to materialize an owned
+        // key up front, defeating the point.
+        if let Some(count) = self.heading_id_counts.get_mut(self.heading_slug_scratch.as_str()) {
+            let n = *count;
+            *count += 1;
+            self.output.push_str(&self.heading_slug_scratch);
+            // `write!` into `String` is infallible; the formatter pushes
+            // bytes directly into the existing buffer with no `format!`
+            // intermediate allocation.
+            let _ = write!(self.output, "-{n}");
+            return;
         }
 
-        self.apply_base_to_root_absolute_url(url).unwrap_or(converted)
+        self.output.push_str(&self.heading_slug_scratch);
+        let key = self.heading_slug_scratch.clone();
+        self.heading_id_counts.insert(key, 1);
+    }
+
+    fn convert_markdown_url(&self, url: &str) -> Option<String> {
+        if let Some(converted) = self.convert_md_url(url) {
+            return Some(converted);
+        }
+
+        self.apply_base_to_root_absolute_url(url)
     }
 
     fn apply_base_to_root_absolute_url(&self, url: &str) -> Option<String> {
@@ -1279,7 +1616,7 @@ impl HtmlRenderer {
         let base = self.options.base_url.trim_end_matches('/');
 
         if base.is_empty() {
-            Some(url.to_string())
+            None
         } else if path == "/" {
             Some(format!("{base}/{suffix}"))
         } else {
@@ -1334,9 +1671,12 @@ impl HtmlRenderer {
                     i = name_end;
                 }
                 _ => {
-                    let ch = html[i..].chars().next().expect("valid UTF-8");
-                    output.push(ch);
-                    i += ch.len_utf8();
+                    if let Some(ch) = html[i..].chars().next() {
+                        output.push(ch);
+                        i += ch.len_utf8();
+                    } else {
+                        break;
+                    }
                 }
             }
         }
@@ -1345,7 +1685,7 @@ impl HtmlRenderer {
     }
 
     /// Converts a Markdown URL to an `.html` URL for SSG output.
-    fn convert_md_url(&self, url: &str) -> String {
+    fn convert_md_url(&self, url: &str) -> Option<String> {
         // Split URL into path and fragment
         let (path, fragment) = match url.split_once('#') {
             Some((p, f)) => (p, Some(f)),
@@ -1359,12 +1699,10 @@ impl HtmlRenderer {
                     || ext.eq_ignore_ascii_case("markdown")
             });
 
-        let Some(markdown_extension) = markdown_extension else {
-            return url.to_string();
-        };
+        let markdown_extension = markdown_extension?;
 
         if !self.options.convert_md_links {
-            return url.to_string();
+            return None;
         }
 
         // Remove the Markdown extension, including the leading dot.
@@ -1453,10 +1791,10 @@ impl HtmlRenderer {
         };
 
         // Reattach fragment if present
-        match fragment {
+        Some(match fragment {
             Some(f) => format!("{converted}#{f}"),
             None => converted,
-        }
+        })
     }
 
     /// Checks if the source file is an index file (index.md).
@@ -1485,41 +1823,47 @@ impl Renderer for HtmlRenderer {
 
 impl<'a> Visit<'a> for HtmlRenderer {
     fn visit_paragraph(&mut self, paragraph: &Paragraph<'a>) {
-        if collect_text_nodes_only(&paragraph.children).is_some_and(|text| text.trim() == "[[toc]]")
-        {
+        profile_span!("renderer::visit_paragraph");
+        // Skip the `[[toc]]` byte scan entirely when the document has no
+        // marker — pure overhead in the common case. When a marker IS
+        // present we must run the check on every paragraph and suppress
+        // the matching one, even if `toc_entries` is empty (e.g. document
+        // has no headings or all are filtered by `toc_max_depth`).
+        // Otherwise the literal `[[toc]]` would leak into the output.
+        if self.document_has_toc_marker && is_toc_marker_paragraph(paragraph) {
             self.render_inline_toc();
             return;
         }
 
-        self.write("<p>");
+        self.output.push_str("<p>");
         for child in &paragraph.children {
             self.visit_inline_node(child);
         }
-        self.write("</p>\n");
+        self.output.push_str("</p>\n");
     }
 
     fn visit_heading(&mut self, heading: &Heading<'a>) {
-        let tag = match heading.depth {
-            1 => "h1",
-            2 => "h2",
-            3 => "h3",
-            4 => "h4",
-            5 => "h5",
-            _ => "h6",
-        };
-        let id = self.heading_id(heading);
-        self.write("<");
-        self.write(tag);
-        self.write(" id=\"");
-        self.write_escaped(&id);
-        self.write("\"");
-        self.write(">");
+        profile_span!("renderer::visit_heading");
+        // Avoid the heading.depth -> &str match per call: heading depth is
+        // 1..=6 by construction, and "h%d" is a fixed shape we can splat
+        // directly. Saves a branch and a `write` call.
+        let depth = heading.depth.clamp(1, 6);
+        self.output.push_str("<h");
+        self.output.push((b'0' + depth) as char);
+        self.output.push_str(" id=\"");
+        // Heading ids are slugified: lowercase alnum + '-' separators. None
+        // of those bytes need HTML escaping, so the unconditional
+        // `write_escaped` pass over the id was pure overhead. We also
+        // skip materializing the id as a return-value `String`; it's
+        // written straight into `self.output`.
+        self.write_heading_id(heading);
+        self.output.push_str("\">");
         for child in &heading.children {
             self.visit_inline_node(child);
         }
-        self.write("</");
-        self.write(tag);
-        self.write(">\n");
+        self.output.push_str("</h");
+        self.output.push((b'0' + depth) as char);
+        self.output.push_str(">\n");
     }
 
     fn visit_thematic_break(&mut self, _thematic_break: &ThematicBreak) {
@@ -1531,6 +1875,7 @@ impl<'a> Visit<'a> for HtmlRenderer {
     }
 
     fn visit_block_quote(&mut self, block_quote: &BlockQuote<'a>) {
+        profile_span!("renderer::visit_block_quote");
         if self.render_callout_block_quote(block_quote) {
             return;
         }
@@ -1543,11 +1888,12 @@ impl<'a> Visit<'a> for HtmlRenderer {
     }
 
     fn visit_list(&mut self, list: &List<'a>) {
+        profile_span!("renderer::visit_list");
         if list.ordered {
             if let Some(start) = list.start {
                 if start != 1 {
                     self.write("<ol start=\"");
-                    self.write(&start.to_string());
+                    self.write_display(start);
                     self.write("\">\n");
                 } else {
                     self.write("<ol>\n");
@@ -1589,6 +1935,7 @@ impl<'a> Visit<'a> for HtmlRenderer {
     }
 
     fn visit_code_block(&mut self, code_block: &CodeBlock<'a>) {
+        profile_span!("renderer::visit_code_block");
         if !self.options.code_annotations {
             self.write("<pre><code");
             if let Some(lang) = normalize_code_block_language(code_block.lang) {
@@ -1618,7 +1965,7 @@ impl<'a> Visit<'a> for HtmlRenderer {
         }
         if let Some(start) = state.line_numbers_start {
             self.write(" data-line-numbers=\"true\" data-line-number-start=\"");
-            self.write(&start.to_string());
+            self.write_display(start);
             self.write("\"");
         }
         self.write("><code");
@@ -1642,6 +1989,7 @@ impl<'a> Visit<'a> for HtmlRenderer {
     }
 
     fn visit_table(&mut self, table: &Table<'a>) {
+        profile_span!("renderer::visit_table");
         self.write("<table>\n");
         for (i, row) in table.children.iter().enumerate() {
             if i == 0 {
@@ -1661,6 +2009,7 @@ impl<'a> Visit<'a> for HtmlRenderer {
     }
 
     fn visit_text(&mut self, text: &Text<'a>) {
+        profile_span!("renderer::visit_text");
         self.write_escaped(text.value);
     }
 
@@ -1692,13 +2041,9 @@ impl<'a> Visit<'a> for HtmlRenderer {
 
     fn visit_link(&mut self, link: &Link<'a>) {
         self.write("<a href=\"");
-        let converted_url;
-        let href = if self.options.convert_md_links {
-            converted_url = self.convert_markdown_url(link.url);
-            self.sanitized_url(&converted_url, "#")
-        } else {
-            self.sanitized_url(link.url, "#")
-        };
+        let converted_url =
+            if self.options.convert_md_links { self.convert_markdown_url(link.url) } else { None };
+        let href = self.sanitized_url(converted_url.as_deref().unwrap_or(link.url), "#");
         self.write_url_escaped(href);
         self.write("\"");
         // Add target="_blank" for external links (http:// or https://)
@@ -1719,13 +2064,9 @@ impl<'a> Visit<'a> for HtmlRenderer {
 
     fn visit_image(&mut self, image: &Image<'a>) {
         self.write("<img src=\"");
-        let converted_url;
-        let src = if self.options.convert_md_links {
-            converted_url = self.convert_markdown_url(image.url);
-            self.sanitized_url(&converted_url, "")
-        } else {
-            self.sanitized_url(image.url, "")
-        };
+        let converted_url =
+            if self.options.convert_md_links { self.convert_markdown_url(image.url) } else { None };
+        let src = self.sanitized_url(converted_url.as_deref().unwrap_or(image.url), "");
         self.write_url_escaped(src);
         self.write("\" alt=\"");
         self.write_escaped(image.alt);
@@ -1894,6 +2235,39 @@ mod tests {
         assert!(html.contains("<p>See [[toc]] here</p>"));
         assert!(html.contains("<p><code>[[toc]]</code></p>"));
         assert!(!html.contains("ox-toc"));
+    }
+
+    #[test]
+    fn test_render_inline_toc_marker_is_suppressed_when_no_headings() {
+        // When the document contains `[[toc]]` but no headings (so
+        // `toc_entries` is empty), the marker paragraph must still be
+        // suppressed from output — otherwise the literal `[[toc]]`
+        // leaks through as `<p>[[toc]]</p>`. Regression coverage for
+        // the lazy-TOC optimization.
+        let allocator = Allocator::new();
+        let doc = Parser::new(&allocator, "[[toc]]").parse().unwrap();
+        let mut renderer = HtmlRenderer::new();
+        let html = renderer.render(&doc);
+
+        assert!(!html.contains("[[toc]]"), "marker leaked into output: {html}");
+        assert!(!html.contains("<p>"), "expected no paragraph wrapper: {html}");
+    }
+
+    #[test]
+    fn test_render_inline_toc_marker_is_suppressed_when_filtered_by_depth() {
+        // `toc_max_depth: 0` filters every heading out, but the marker
+        // paragraph should still be consumed so it doesn't leak.
+        let allocator = Allocator::new();
+        let doc = Parser::new(&allocator, "[[toc]]\n\n## Intro").parse().unwrap();
+        let mut renderer = HtmlRenderer::with_options(HtmlRendererOptions {
+            toc_max_depth: 0,
+            ..Default::default()
+        });
+        let html = renderer.render(&doc);
+
+        assert!(!html.contains("[[toc]]"), "marker leaked: {html}");
+        // The heading should still render as a heading (not as a TOC entry).
+        assert!(html.contains("<h2"), "heading missing: {html}");
     }
 
     #[test]

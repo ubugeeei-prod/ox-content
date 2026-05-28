@@ -169,12 +169,10 @@ impl SearchIndex {
         let body_lower = body.to_lowercase();
 
         // Find the first match position
-        let mut first_match_pos = None;
+        let mut first_match_pos: Option<usize> = None;
         for term in matches {
             if let Some(pos) = body_lower.find(term) {
-                if first_match_pos.is_none() || pos < first_match_pos.unwrap() {
-                    first_match_pos = Some(pos);
-                }
+                first_match_pos = Some(first_match_pos.map_or(pos, |current| current.min(pos)));
             }
         }
 

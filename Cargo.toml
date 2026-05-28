@@ -3,7 +3,7 @@ resolver = "2"
 members = ["crates/*"]
 
 [workspace.package]
-version = "2.13.0"
+version = "2.21.0"
 authors = ["ubugeeei"]
 categories = ["development-tools"]
 edition = "2021"
@@ -32,9 +32,9 @@ cargo = { level = "warn", priority = -1 }
 dbg_macro = "warn"
 print_stdout = "warn"
 print_stderr = "warn"
+format_push_string = "deny"
 
 # Allow
-format_push_string = "allow"
 match_same_arms = "allow"
 option_if_let_else = "allow"
 case_sensitive_file_extension_comparisons = "allow"
@@ -63,19 +63,21 @@ use_self = "allow"
 
 [workspace.dependencies]
 # Internal crates (version is used for crates.io publish, path for local dev)
-ox_content_allocator = { version = "2.13.0", path = "crates/ox_content_allocator" }
-ox_content_ast = { version = "2.13.0", path = "crates/ox_content_ast" }
-ox_content_parser = { version = "2.13.0", path = "crates/ox_content_parser" }
-ox_content_renderer = { version = "2.13.0", path = "crates/ox_content_renderer" }
-ox_content_napi = { version = "2.13.0", path = "crates/ox_content_napi" }
-ox_content_vite = { version = "2.13.0", path = "crates/ox_content_vite" }
-ox_content_og_image = { version = "2.13.0", path = "crates/ox_content_og_image" }
-ox_content_docs = { version = "2.13.0", path = "crates/ox_content_docs" }
-ox_content_search = { version = "2.13.0", path = "crates/ox_content_search" }
-ox_content_ssg = { version = "2.13.0", path = "crates/ox_content_ssg" }
-ox_content_i18n = { version = "2.13.0", path = "crates/ox_content_i18n" }
-ox_content_i18n_checker = { version = "2.13.0", path = "crates/ox_content_i18n_checker" }
-ox_content_mdc_checker = { version = "2.13.0", path = "crates/ox_content_mdc_checker" }
+ox_content_allocator = { version = "2.21.0", path = "crates/ox_content_allocator" }
+ox_content_ast = { version = "2.21.0", path = "crates/ox_content_ast" }
+ox_content_parser = { version = "2.21.0", path = "crates/ox_content_parser" }
+ox_content_renderer = { version = "2.21.0", path = "crates/ox_content_renderer" }
+ox_content_napi = { version = "2.21.0", path = "crates/ox_content_napi" }
+ox_content_vite = { version = "2.21.0", path = "crates/ox_content_vite" }
+ox_content_og_image = { version = "2.21.0", path = "crates/ox_content_og_image" }
+ox_content_docs = { version = "2.21.0", path = "crates/ox_content_docs" }
+ox_content_search = { version = "2.21.0", path = "crates/ox_content_search" }
+ox_content_ssg = { version = "2.21.0", path = "crates/ox_content_ssg" }
+ox_content_i18n = { version = "2.21.0", path = "crates/ox_content_i18n" }
+ox_content_i18n_checker = { version = "2.21.0", path = "crates/ox_content_i18n_checker" }
+ox_content_mdc_checker = { version = "2.21.0", path = "crates/ox_content_mdc_checker" }
+ox_content_link_checker = { version = "2.21.0", path = "crates/ox_content_link_checker" }
+ox_content_profiler = { version = "2.21.0", path = "crates/ox_content_profiler" }
 ox_jsdoc = "0.0.16"
 
 # Memory allocation
@@ -90,6 +92,7 @@ napi-build = "2.3.1"
 logos = "0.16"
 regex = "1.11"
 unicode-normalization = "0.1"
+memchr = "2.7"
 
 # Hashing
 rustc-hash = "2"
@@ -114,11 +117,12 @@ thiserror = "2"
 miette = { version = "7", features = ["fancy"] }
 
 # OXC parser
-oxc_allocator = "0.131"
-oxc_parser = "0.131"
-oxc_ast = "0.131"
-oxc_ast_visit = "0.131"
-oxc_span = "0.131"
+oxc_allocator = "0.132"
+oxc_parser = "0.132"
+oxc_ast = "0.132"
+oxc_ast_visit = "0.132"
+oxc_span = "0.132"
+oxc_resolver = "4.2.0"
 
 # Testing
 criterion = "0.8"
@@ -132,8 +136,12 @@ insta.opt-level = 3
 similar.opt-level = 3
 
 [profile.release]
+opt-level = 3
 lto = "fat"
 codegen-units = 1
 strip = "symbols"
 debug = false
+debug-assertions = false
+overflow-checks = false
+incremental = false
 panic = "abort"

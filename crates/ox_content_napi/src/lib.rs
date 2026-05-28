@@ -13,17 +13,21 @@ mod transformer;
 use napi::bindgen_prelude::*;
 use napi::Task;
 use napi_derive::napi;
-use std::collections::HashMap;
+use std::collections::{BTreeMap, HashMap};
 use std::fs;
 use std::path::{Path, PathBuf};
 use std::process::Command;
 
 use ox_content_allocator::Allocator;
 use ox_content_docs::{
+    build_export_graph, extract_docs_from_directories, extract_docs_from_entry_points,
     generate_docs_data_json, generate_markdown, generate_nav_code, generate_nav_metadata,
-    normalize_doc_items, ApiDocEntry, ApiDocModule, ApiDocTag, ApiParamDoc, ApiReturnDoc,
-    DocExtractor, DocItem, DocItemKind, DocTag, DocsNavItem, MarkdownDocsOptions,
-    NormalizedDocEntry, NormalizedParamDoc, NormalizedReturnDoc, ParamDoc,
+    normalize_doc_items, write_docs_output, ApiDocEntry, ApiDocMember, ApiDocModule, ApiDocTag,
+    ApiParamDoc, ApiReturnDoc, DocExtractor, DocItem, DocItemKind, DocTag, DocsNavItem,
+    DocsOutputOptions, EntryPointDocsOptions, EntryPointSpec, ExportGraph, ExportKind,
+    ExportSource, ExternalDocsOptions, ExternalPackageSource, ExtractedDocModule, GraphOptions,
+    MarkdownDocsOptions, MarkdownLinkStyle, NormalizedDocEntry, NormalizedMember,
+    NormalizedParamDoc, NormalizedReturnDoc, ParamDoc, PublicExport,
 };
 use ox_content_parser::{Parser, ParserOptions};
 use ox_content_renderer::HtmlRenderer;
@@ -34,13 +38,8 @@ use ox_content_search::{
 use transfer::TransferPayloadKind;
 use transformer::{parse_frontmatter, MarkdownTransformer};
 
-const ALLOCATOR_BYTES_PER_INPUT_BYTE: usize = 8;
-const MIN_ALLOCATOR_CAPACITY: usize = 4 * 1024;
-
 fn create_allocator_for_source(source: &str) -> Allocator {
-    let capacity =
-        source.len().saturating_mul(ALLOCATOR_BYTES_PER_INPUT_BYTE).max(MIN_ALLOCATOR_CAPACITY);
-    Allocator::with_capacity(capacity)
+    Allocator::for_source_len(source.len())
 }
 
 /// Parse result containing the AST as JSON.
@@ -146,6 +145,7 @@ pub struct JsSourceDocItem {
     pub signature: Option<String>,
     pub params: Vec<JsSourceDocParam>,
     pub return_type: Option<String>,
+    pub members: Option<Vec<JsSourceDocItem>>,
     pub tags: Vec<JsSourceDocTag>,
 }
 
@@ -168,6 +168,26 @@ pub struct JsDocReturn {
     pub description: String,
 }
 
+/// Normalized member documentation used by generated API docs.
+#[napi(object)]
+#[derive(Clone)]
+pub struct JsDocMember {
+    pub name: String,
+    pub kind: String,
+    pub description: String,
+    pub signature: Option<String>,
+    pub r#type: Option<String>,
+    pub params: Option<Vec<JsDocParam>>,
+    pub returns: Option<JsDocReturn>,
+    pub optional: Option<bool>,
+    pub readonly: Option<bool>,
+    pub r#static: Option<bool>,
+    pub private: Option<bool>,
+    pub tags: Option<HashMap<String, String>>,
+    pub line: u32,
+    pub end_line: u32,
+}
+
 /// Normalized documentation entry used by generated API docs.
 #[napi(object)]
 #[derive(Clone)]
@@ -184,6 +204,7 @@ pub struct JsDocEntry {
     pub line: u32,
     pub end_line: u32,
     pub signature: Option<String>,
+    pub members: Option<Vec<JsDocMember>>,
 }
 
 /// Navigation item emitted for generated documentation.
@@ -219,6 +240,7 @@ pub struct JsDocsMarkdownEntry {
     pub line: u32,
     pub end_line: u32,
     pub signature: Option<String>,
+    pub members: Option<Vec<JsDocMember>>,
 }
 
 /// Extracted docs for one source file used by generated API Markdown.
@@ -229,12 +251,128 @@ pub struct JsDocsMarkdownModule {
     pub entries: Vec<JsDocsMarkdownEntry>,
 }
 
+/// Extracted docs for one source file returned to JavaScript callers.
+#[napi(object)]
+#[derive(Clone)]
+pub struct JsExtractedDocsModule {
+    pub file: String,
+    pub entries: Vec<JsDocEntry>,
+}
+
 /// Options for generated API Markdown.
 #[napi(object)]
 #[derive(Clone)]
 pub struct JsDocsMarkdownOptions {
     pub group_by: Option<String>,
     pub github_url: Option<String>,
+    #[napi(ts_type = "'markdown' | 'clean'")]
+    pub link_style: Option<String>,
+    pub base_path: Option<String>,
+}
+
+/// Options for writing generated API documentation files.
+#[napi(object)]
+#[derive(Clone, Default)]
+pub struct JsDocsOutputOptions {
+    pub generate_nav: Option<bool>,
+    pub group_by: Option<String>,
+    pub generated_at: Option<String>,
+    pub base_path: Option<String>,
+}
+
+/// Entry point used to group generated API docs.
+#[napi(object)]
+#[derive(Clone)]
+pub struct JsEntryPointSpec {
+    pub path: String,
+    pub name: Option<String>,
+}
+
+/// Export graph resolution options.
+#[napi(object)]
+#[derive(Clone, Default)]
+pub struct JsGraphOptions {
+    pub root: Option<String>,
+    pub tsconfig: Option<String>,
+    pub external_docs: Option<bool>,
+    pub external_package_sources: Option<Vec<JsExternalPackageSource>>,
+}
+
+/// Options for extracting docs grouped by entry point.
+#[napi(object)]
+#[derive(Clone, Default)]
+pub struct JsEntryPointDocsOptions {
+    pub root: Option<String>,
+    pub tsconfig: Option<String>,
+    pub private: Option<bool>,
+    pub internal: Option<bool>,
+    pub external_docs: Option<bool>,
+    pub external_package_sources: Option<Vec<JsExternalPackageSource>>,
+}
+
+/// Explicit source entry for an external package.
+#[napi(object)]
+#[derive(Clone)]
+pub struct JsExternalPackageSource {
+    pub package: String,
+    pub entry: String,
+}
+
+/// Export source metadata.
+#[napi(object)]
+#[derive(Clone)]
+pub struct JsExportSource {
+    pub kind: String,
+    pub module: Option<String>,
+    pub package: Option<String>,
+    pub specifier: Option<String>,
+    pub original_name: String,
+    pub type_only: bool,
+}
+
+/// Public export metadata.
+#[napi(object)]
+#[derive(Clone)]
+pub struct JsPublicExport {
+    pub name: String,
+    pub kind: String,
+    pub source: JsExportSource,
+}
+
+/// Public entry point module.
+#[napi(object)]
+#[derive(Clone)]
+pub struct JsEntrypointModule {
+    pub name: String,
+    pub source_path: String,
+    pub exports: Vec<JsPublicExport>,
+}
+
+/// Resolved source module.
+#[napi(object)]
+#[derive(Clone)]
+pub struct JsResolvedModule {
+    pub path: String,
+    pub exports: Vec<JsPublicExport>,
+}
+
+/// Resolved export graph.
+#[napi(object)]
+#[derive(Clone)]
+pub struct JsExportGraph {
+    pub entrypoints: Vec<JsEntrypointModule>,
+    pub modules: Vec<JsResolvedModule>,
+}
+
+/// Docs grouped by a public entry point.
+#[napi(object)]
+#[derive(Clone)]
+pub struct JsEntrypointDocsModule {
+    pub name: String,
+    pub file: String,
+    pub source_path: String,
+    pub entries: Vec<JsDocEntry>,
+    pub exports: Vec<JsPublicExport>,
 }
 
 /// Transform options for JavaScript.
@@ -434,6 +572,7 @@ fn doc_item_kind_to_string(kind: DocItemKind) -> String {
         DocItemKind::Constructor => "constructor",
         DocItemKind::Getter => "getter",
         DocItemKind::Setter => "setter",
+        DocItemKind::EnumMember => "enumMember",
     }
     .to_string()
 }
@@ -453,6 +592,9 @@ fn map_param_doc(param: ParamDoc) -> JsSourceDocParam {
 }
 
 fn map_doc_item(item: DocItem) -> JsSourceDocItem {
+    let members =
+        (!item.children.is_empty()).then(|| item.children.into_iter().map(map_doc_item).collect());
+
     JsSourceDocItem {
         name: item.name,
         kind: doc_item_kind_to_string(item.kind),
@@ -465,6 +607,7 @@ fn map_doc_item(item: DocItem) -> JsSourceDocItem {
         signature: item.signature,
         params: item.params.into_iter().map(map_param_doc).collect(),
         return_type: item.return_type,
+        members,
         tags: item.tags.into_iter().map(map_doc_tag).collect(),
     }
 }
@@ -483,6 +626,26 @@ fn map_normalized_return_doc(return_doc: NormalizedReturnDoc) -> JsDocReturn {
     JsDocReturn { r#type: return_doc.type_annotation, description: return_doc.description }
 }
 
+fn map_normalized_member(member: NormalizedMember) -> JsDocMember {
+    JsDocMember {
+        name: member.name,
+        kind: member.kind.as_str().to_string(),
+        description: member.description,
+        signature: member.signature,
+        r#type: member.type_annotation,
+        params: (!member.params.is_empty())
+            .then(|| member.params.into_iter().map(map_normalized_param_doc).collect()),
+        returns: member.returns.map(map_normalized_return_doc),
+        optional: member.optional.then_some(true),
+        readonly: member.readonly.then_some(true),
+        r#static: member.r#static.then_some(true),
+        private: member.private.then_some(true),
+        tags: (!member.tags.is_empty()).then(|| member.tags.into_iter().collect()),
+        line: member.line,
+        end_line: member.end_line,
+    }
+}
+
 fn map_normalized_doc_entry(entry: NormalizedDocEntry) -> JsDocEntry {
     JsDocEntry {
         name: entry.name,
@@ -498,6 +661,123 @@ fn map_normalized_doc_entry(entry: NormalizedDocEntry) -> JsDocEntry {
         line: entry.line,
         end_line: entry.end_line,
         signature: entry.signature,
+        members: (!entry.members.is_empty())
+            .then(|| entry.members.into_iter().map(map_normalized_member).collect()),
+    }
+}
+
+fn path_to_string(path: &Path) -> String {
+    path.to_string_lossy().to_string()
+}
+
+fn convert_entrypoint_spec(spec: JsEntryPointSpec) -> EntryPointSpec {
+    EntryPointSpec { path: PathBuf::from(spec.path), name: spec.name }
+}
+
+fn convert_graph_options(options: Option<JsGraphOptions>) -> GraphOptions {
+    let options = options.unwrap_or_default();
+    GraphOptions {
+        root: options.root.map(PathBuf::from),
+        tsconfig: options.tsconfig.map(PathBuf::from),
+        external_docs: ExternalDocsOptions {
+            enabled: options.external_docs.unwrap_or(false),
+            package_sources: convert_external_package_sources(options.external_package_sources),
+        },
+    }
+}
+
+fn convert_entrypoint_docs_options(
+    options: Option<JsEntryPointDocsOptions>,
+) -> EntryPointDocsOptions {
+    let options = options.unwrap_or_default();
+    EntryPointDocsOptions {
+        graph: GraphOptions {
+            root: options.root.map(PathBuf::from),
+            tsconfig: options.tsconfig.map(PathBuf::from),
+            external_docs: ExternalDocsOptions {
+                enabled: options.external_docs.unwrap_or(false),
+                package_sources: convert_external_package_sources(options.external_package_sources),
+            },
+        },
+        include_private: options.private.unwrap_or(false),
+        include_internal: options.internal.unwrap_or(false),
+    }
+}
+
+fn convert_external_package_sources(
+    sources: Option<Vec<JsExternalPackageSource>>,
+) -> Vec<ExternalPackageSource> {
+    sources
+        .unwrap_or_default()
+        .into_iter()
+        .map(|source| ExternalPackageSource {
+            package: source.package,
+            entry: PathBuf::from(source.entry),
+        })
+        .collect()
+}
+
+fn map_export_kind(kind: ExportKind) -> String {
+    match kind {
+        ExportKind::Value => "value",
+        ExportKind::Type => "type",
+        ExportKind::ValueAndType => "valueAndType",
+        ExportKind::Namespace => "namespace",
+        ExportKind::Default => "default",
+    }
+    .to_string()
+}
+
+fn map_export_source(source: ExportSource) -> JsExportSource {
+    match source {
+        ExportSource::Local { module, original_name } => JsExportSource {
+            kind: "local".to_string(),
+            module: Some(path_to_string(&module)),
+            package: None,
+            specifier: None,
+            original_name,
+            type_only: false,
+        },
+        ExportSource::External { package, specifier, module, original_name, type_only } => {
+            JsExportSource {
+                kind: "external".to_string(),
+                module: module.as_ref().map(|module| path_to_string(module)),
+                package: Some(package),
+                specifier: (!specifier.is_empty()).then_some(specifier),
+                original_name,
+                type_only,
+            }
+        }
+    }
+}
+
+fn map_public_export(export: PublicExport) -> JsPublicExport {
+    JsPublicExport {
+        name: export.name,
+        kind: map_export_kind(export.kind),
+        source: map_export_source(export.source),
+    }
+}
+
+fn map_export_graph(graph: ExportGraph) -> JsExportGraph {
+    JsExportGraph {
+        entrypoints: graph
+            .entrypoints
+            .into_iter()
+            .map(|entrypoint| JsEntrypointModule {
+                name: entrypoint.name,
+                source_path: path_to_string(&entrypoint.source_path),
+                exports: entrypoint.exports.into_iter().map(map_public_export).collect(),
+            })
+            .collect(),
+        modules: graph
+            .modules
+            .into_values()
+            .map(|module| JsResolvedModule {
+                path: path_to_string(&module.path),
+                exports: module.exports.into_iter().map(map_public_export).collect(),
+            })
+            .collect(),
     }
 }
 
@@ -539,6 +819,30 @@ fn convert_markdown_tag(tag: JsDocsMarkdownTag) -> ApiDocTag {
     ApiDocTag { tag: tag.tag, value: tag.value }
 }
 
+fn convert_markdown_member(member: JsDocMember) -> ApiDocMember {
+    ApiDocMember {
+        name: member.name,
+        kind: member.kind,
+        description: member.description,
+        signature: member.signature,
+        type_annotation: member.r#type,
+        params: member.params.unwrap_or_default().into_iter().map(convert_markdown_param).collect(),
+        returns: member.returns.map(convert_markdown_return),
+        optional: member.optional.unwrap_or(false),
+        readonly: member.readonly.unwrap_or(false),
+        r#static: member.r#static.unwrap_or(false),
+        private: member.private.unwrap_or(false),
+        tags: member
+            .tags
+            .unwrap_or_default()
+            .into_iter()
+            .map(|(tag, value)| ApiDocTag { tag, value })
+            .collect(),
+        line: member.line,
+        end_line: member.end_line,
+    }
+}
+
 fn convert_markdown_entry(entry: JsDocsMarkdownEntry) -> ApiDocEntry {
     ApiDocEntry {
         name: entry.name,
@@ -553,6 +857,12 @@ fn convert_markdown_entry(entry: JsDocsMarkdownEntry) -> ApiDocEntry {
         line: entry.line,
         end_line: entry.end_line,
         signature: entry.signature,
+        members: entry
+            .members
+            .unwrap_or_default()
+            .into_iter()
+            .map(convert_markdown_member)
+            .collect(),
     }
 }
 
@@ -563,13 +873,34 @@ fn convert_markdown_module(module: JsDocsMarkdownModule) -> ApiDocModule {
     }
 }
 
+fn map_extracted_doc_module(module: ExtractedDocModule) -> JsExtractedDocsModule {
+    JsExtractedDocsModule {
+        file: module.file,
+        entries: module.entries.into_iter().map(map_normalized_doc_entry).collect(),
+    }
+}
+
+fn convert_docs_output_options(options: Option<JsDocsOutputOptions>) -> DocsOutputOptions {
+    let options = options.unwrap_or_default();
+    DocsOutputOptions {
+        generate_nav: options.generate_nav.unwrap_or(false),
+        group_by: options.group_by.unwrap_or_else(|| "file".to_string()),
+        generated_at: options.generated_at.unwrap_or_default(),
+        base_path: options.base_path,
+    }
+}
+
 /// Extracts documented declarations from a JavaScript/TypeScript file using Oxc.
 #[napi]
 pub fn extract_file_docs(
     file_path: String,
     include_private: Option<bool>,
+    include_internal: Option<bool>,
 ) -> Result<Vec<JsSourceDocItem>> {
-    let extractor = DocExtractor::with_private(include_private.unwrap_or(false));
+    let extractor = DocExtractor::with_visibility(
+        include_private.unwrap_or(false),
+        include_internal.unwrap_or(false),
+    );
     let items = extractor
         .extract_file(Path::new(&file_path))
         .map_err(|err| Error::from_reason(err.to_string()))?;
@@ -582,8 +913,12 @@ pub fn extract_file_docs(
 pub fn extract_file_doc_entries(
     file_path: String,
     include_private: Option<bool>,
+    include_internal: Option<bool>,
 ) -> Result<Vec<JsDocEntry>> {
-    let extractor = DocExtractor::with_private(include_private.unwrap_or(false));
+    let extractor = DocExtractor::with_visibility(
+        include_private.unwrap_or(false),
+        include_internal.unwrap_or(false),
+    );
     let items = extractor
         .extract_file(Path::new(&file_path))
         .map_err(|err| Error::from_reason(err.to_string()))?;
@@ -620,6 +955,62 @@ pub fn collect_docs_source_files(
     ox_content_docs::collect_source_files(&src_dir, &include, &exclude)
 }
 
+/// Extracts normalized documentation entries from source directories using Oxc.
+#[napi(js_name = "extractDocsFromDirectories")]
+pub fn extract_docs_from_directories_napi(
+    src_dirs: Vec<String>,
+    include: Vec<String>,
+    exclude: Vec<String>,
+    include_private: Option<bool>,
+    include_internal: Option<bool>,
+) -> Result<Vec<JsExtractedDocsModule>> {
+    let modules = extract_docs_from_directories(
+        &src_dirs,
+        &include,
+        &exclude,
+        include_private.unwrap_or(false),
+        include_internal.unwrap_or(false),
+    )
+    .map_err(|err| Error::from_reason(err.to_string()))?;
+
+    Ok(modules.into_iter().map(map_extracted_doc_module).collect())
+}
+
+/// Builds the public API export graph from entry points.
+#[napi(js_name = "buildExportGraph")]
+pub fn build_export_graph_napi(
+    entry_points: Vec<JsEntryPointSpec>,
+    options: Option<JsGraphOptions>,
+) -> Result<JsExportGraph> {
+    let entry_points = entry_points.into_iter().map(convert_entrypoint_spec).collect::<Vec<_>>();
+    let graph = build_export_graph(&entry_points, &convert_graph_options(options))
+        .map_err(|error| Error::from_reason(error.to_string()))?;
+    Ok(map_export_graph(graph))
+}
+
+/// Extracts generated API docs grouped by public entry points.
+#[napi(js_name = "extractDocsFromEntryPoints")]
+pub fn extract_docs_from_entry_points_napi(
+    entry_points: Vec<JsEntryPointSpec>,
+    options: Option<JsEntryPointDocsOptions>,
+) -> Result<Vec<JsEntrypointDocsModule>> {
+    let entry_points = entry_points.into_iter().map(convert_entrypoint_spec).collect::<Vec<_>>();
+    let modules =
+        extract_docs_from_entry_points(&entry_points, &convert_entrypoint_docs_options(options))
+            .map_err(|error| Error::from_reason(error.to_string()))?;
+
+    Ok(modules
+        .into_iter()
+        .map(|module| JsEntrypointDocsModule {
+            name: module.name,
+            file: module.file,
+            source_path: path_to_string(&module.source_path),
+            entries: module.entries.into_iter().map(map_normalized_doc_entry).collect(),
+            exports: module.exports.into_iter().map(map_public_export).collect(),
+        })
+        .collect())
+}
+
 /// Generates Markdown API reference pages from extracted documentation entries.
 #[napi(js_name = "generateDocsMarkdown")]
 pub fn generate_docs_markdown(
@@ -630,10 +1021,19 @@ pub fn generate_docs_markdown(
         options.map_or_else(MarkdownDocsOptions::default, |options| MarkdownDocsOptions {
             group_by: options.group_by.unwrap_or_else(|| "file".to_string()),
             github_url: options.github_url,
+            link_style: parse_markdown_link_style(options.link_style.as_deref()),
+            base_path: options.base_path,
         });
     generate_markdown(&docs.into_iter().map(convert_markdown_module).collect::<Vec<_>>(), &options)
         .into_iter()
         .collect()
+}
+
+fn parse_markdown_link_style(link_style: Option<&str>) -> MarkdownLinkStyle {
+    match link_style {
+        Some("clean") => MarkdownLinkStyle::Clean,
+        _ => MarkdownLinkStyle::Markdown,
+    }
 }
 
 /// Generates the machine-readable docs data JSON payload.
@@ -647,6 +1047,24 @@ pub fn generate_docs_data_json_napi(
         &generated_at,
     )
     .map_err(|error| Error::from_reason(error.to_string()))
+}
+
+/// Writes generated API documentation files and native sidecars.
+#[napi(js_name = "writeGeneratedDocs")]
+#[allow(clippy::implicit_hasher)]
+pub fn write_generated_docs(
+    docs: HashMap<String, String>,
+    out_dir: String,
+    extracted_docs: Option<Vec<JsDocsMarkdownModule>>,
+    options: Option<JsDocsOutputOptions>,
+) -> Result<()> {
+    let docs = docs.into_iter().collect::<BTreeMap<_, _>>();
+    let extracted_docs = extracted_docs
+        .map(|docs| docs.into_iter().map(convert_markdown_module).collect::<Vec<_>>());
+    let options = convert_docs_output_options(options);
+
+    write_docs_output(&docs, Path::new(&out_dir), extracted_docs.as_deref(), &options)
+        .map_err(|error| Error::from_reason(error.to_string()))
 }
 
 /// Restores code block metadata after JavaScript-side syntax highlighting.
@@ -1845,6 +2263,12 @@ pub fn format_ssg_title(name: String) -> String {
     ox_content_ssg::format_title(&name)
 }
 
+/// Normalizes VitePress-specific frontmatter into ox-content's entry-page shape.
+#[napi(js_name = "normalizeVitePressFrontmatter")]
+pub fn normalize_vitepress_frontmatter(frontmatter: serde_json::Value) -> serde_json::Value {
+    ox_content_ssg::normalize_vitepress_frontmatter(frontmatter)
+}
+
 /// Builds SSG navigation groups from markdown files.
 #[napi(js_name = "buildSsgNavItems")]
 pub fn build_ssg_nav_items(
@@ -2458,12 +2882,20 @@ pub fn extract_translation_keys(
 
 #[cfg(test)]
 mod tests {
+    use ox_content_docs::{
+        NormalizedDocEntry, NormalizedDocKind, NormalizedMember, NormalizedMemberKind,
+    };
     use serde_json::json;
+    use std::collections::BTreeMap;
     use std::fs;
     use std::process::Command;
 
-    use super::get_git_last_updated;
     use super::transformer::parse_frontmatter;
+    use super::{
+        extract_docs_from_entry_points_napi, generate_docs_markdown, get_git_last_updated,
+        map_normalized_doc_entry, JsDocsMarkdownEntry, JsDocsMarkdownModule, JsDocsMarkdownOptions,
+        JsEntryPointDocsOptions, JsEntryPointSpec,
+    };
 
     #[test]
     fn parses_nested_yaml_frontmatter() {
@@ -2499,6 +2931,146 @@ mod tests {
     }
 
     #[test]
+    fn normalized_doc_entry_maps_members_to_js_shape() {
+        let entry = NormalizedDocEntry {
+            name: "Command".to_string(),
+            kind: NormalizedDocKind::Interface,
+            description: "Runtime command.".to_string(),
+            params: vec![],
+            returns: None,
+            examples: vec![],
+            tags: BTreeMap::new(),
+            private: false,
+            file: "command.ts".to_string(),
+            line: 1,
+            end_line: 8,
+            signature: Some("export interface Command".to_string()),
+            members: vec![NormalizedMember {
+                name: "name".to_string(),
+                kind: NormalizedMemberKind::Property,
+                description: "Command name.".to_string(),
+                signature: None,
+                type_annotation: Some("string".to_string()),
+                params: vec![],
+                returns: None,
+                optional: true,
+                readonly: true,
+                r#static: false,
+                private: false,
+                tags: BTreeMap::new(),
+                line: 4,
+                end_line: 4,
+            }],
+        };
+
+        let js_entry = map_normalized_doc_entry(entry);
+        let member = &js_entry.members.as_ref().unwrap()[0];
+
+        assert_eq!(member.name, "name");
+        assert_eq!(member.kind, "property");
+        assert_eq!(member.r#type.as_deref(), Some("string"));
+        assert_eq!(member.optional, Some(true));
+        assert_eq!(member.readonly, Some(true));
+    }
+
+    #[test]
+    fn generate_docs_markdown_accepts_clean_link_options() {
+        let docs = vec![JsDocsMarkdownModule {
+            file: "/repo/src/context.ts".to_string(),
+            entries: vec![JsDocsMarkdownEntry {
+                name: "CommandContext".to_string(),
+                kind: "interface".to_string(),
+                description: "Runtime context.".to_string(),
+                params: None,
+                returns: None,
+                examples: None,
+                tags: None,
+                private: false,
+                file: "/repo/src/context.ts".to_string(),
+                line: 1,
+                end_line: 1,
+                signature: Some("export interface CommandContext".to_string()),
+                members: None,
+            }],
+        }];
+        let markdown = generate_docs_markdown(
+            docs,
+            Some(JsDocsMarkdownOptions {
+                group_by: Some("file".to_string()),
+                github_url: None,
+                link_style: Some("clean".to_string()),
+                base_path: Some("/api-ox".to_string()),
+            }),
+        );
+        let index = markdown.get("index.md").unwrap();
+
+        assert!(index.contains("href=\"/api-ox/context\""));
+        assert!(index.contains("href=\"/api-ox/context#commandcontext\""));
+    }
+
+    #[test]
+    fn extract_docs_from_entry_points_accepts_external_docs_options() {
+        let unique =
+            std::time::SystemTime::now().duration_since(std::time::UNIX_EPOCH).unwrap().as_nanos();
+        let root = std::env::temp_dir()
+            .join(format!("ox-content-napi-external-docs-{}-{unique}", std::process::id()));
+        let package_root = root.join("node_modules/external-pkg");
+        let _ = fs::remove_dir_all(&root);
+        fs::create_dir_all(root.join("src")).unwrap();
+        fs::create_dir_all(package_root.join("lib")).unwrap();
+        fs::write(root.join("src/index.ts"), "export { ExternalThing } from 'external-pkg';\n")
+            .unwrap();
+        fs::write(
+            package_root.join("package.json"),
+            r#"{
+  "name": "external-pkg",
+  "type": "module",
+  "exports": {
+    ".": {
+      "types": "./lib/index.d.ts",
+      "default": "./lib/index.js"
+    }
+  }
+}"#,
+        )
+        .unwrap();
+        fs::write(
+            package_root.join("lib/index.d.ts"),
+            r"
+/** External thing. */
+export interface ExternalThing {
+  value: string;
+}
+",
+        )
+        .unwrap();
+
+        let modules = extract_docs_from_entry_points_napi(
+            vec![JsEntryPointSpec {
+                path: "src/index.ts".to_string(),
+                name: Some("default".to_string()),
+            }],
+            Some(JsEntryPointDocsOptions {
+                root: Some(root.to_string_lossy().into_owned()),
+                external_docs: Some(true),
+                ..Default::default()
+            }),
+        )
+        .unwrap();
+
+        assert_eq!(modules[0].entries[0].name, "ExternalThing");
+        assert_eq!(modules[0].entries[0].description, "External thing.");
+        assert_eq!(modules[0].exports[0].source.kind, "external");
+        assert!(modules[0].exports[0]
+            .source
+            .module
+            .as_deref()
+            .is_some_and(|module| { module.ends_with("external-pkg/lib/index.d.ts") }));
+
+        let _ = fs::remove_dir_all(root);
+    }
+
+    #[test]
     fn prepare_source_returns_object_shaped_frontmatter_and_origin() {
         let result = super::prepare_source(
             "---\ntitle: Guide\nmeta:\n  draft: false\n---\n# Body".to_string(),
@@ -2522,12 +3094,15 @@ mod tests {
             "buildSearchIndexFromDirectory",
             "buildSsgNavItems",
             "buildSsgThemeNavItems",
+            "buildExportGraph",
             "checkI18n",
             "checkI18nProject",
             "collectDocsSourceFiles",
             "collectSearchMarkdownFiles",
             "collectSsgMarkdownFiles",
             "externalizeSsgAssets",
+            "extractDocsFromDirectories",
+            "extractDocsFromEntryPoints",
             "extractFileDocEntries",
             "extractFileDocs",
             "extractSearchContent",
@@ -2556,6 +3131,7 @@ mod tests {
             "loadDictionariesFlat",
             "matchesSearchScopes",
             "mergeHighlightedCodeBlocks",
+            "normalizeVitePressFrontmatter",
             "parse",
             "parseAndRender",
             "parseAndRenderAsync",
@@ -2574,6 +3150,7 @@ mod tests {
             "transformMermaid",
             "validateMf2",
             "version",
+            "writeGeneratedDocs",
             "writeSearchIndex",
         ];
 

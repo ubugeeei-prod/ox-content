@@ -1,0 +1,10 @@
+---
+source: crates/ox_content_parser/tests/snapshot_parse.rs
+assertion_line: 32
+description: "line 1\\\nline 2\n"
+---
+Document [0..15]
+  Paragraph [0..15]
+    Text "line 1" [0..6]
+    Break [6..8]
+    Text "line 2" [8..14]

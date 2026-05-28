@@ -1,0 +1,7 @@
+---
+source: crates/ox_content_parser/tests/snapshot_parse.rs
+assertion_line: 32
+description: "~~~rust title=lib.rs\nfn main() {}\n~~~\n"
+---
+Document [0..38]
+  CodeBlock lang=Some("rust") meta=Some("title=lib.rs") value="fn main() {}\n" [0..38]

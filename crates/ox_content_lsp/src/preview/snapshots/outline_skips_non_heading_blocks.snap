@@ -1,0 +1,6 @@
+---
+source: crates/ox_content_lsp/src/preview/symbols.rs
+assertion_line: 155
+---
+h1 [0:0..1:0] Top
+h2 [10:0..11:0] Below

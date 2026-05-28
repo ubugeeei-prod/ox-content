@@ -1,0 +1,17 @@
+---
+source: crates/ox_content_parser/tests/snapshot_parse.rs
+assertion_line: 32
+description: "An *italic* word and a **bold** one and a ***both*** one.\n"
+---
+Document [0..58]
+  Paragraph [0..58]
+    Text "An " [0..3]
+    Emphasis [3..11]
+      Text "italic" [4..10]
+    Text " word and a " [11..23]
+    Strong [23..31]
+      Text "bold" [25..29]
+    Text " one and a " [31..42]
+    Strong [42..52]
+      Text "both" [45..49]
+    Text " one." [52..57]

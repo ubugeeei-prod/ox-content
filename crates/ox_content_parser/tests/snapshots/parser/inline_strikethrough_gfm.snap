@@ -1,0 +1,10 @@
+---
+source: crates/ox_content_parser/tests/snapshot_parse.rs
+assertion_line: 32
+description: "~~gone~~ but kept.\n"
+---
+Document [0..19]
+  Paragraph [0..19]
+    Delete [0..8]
+      Text "gone" [2..6]
+    Text " but kept." [8..18]

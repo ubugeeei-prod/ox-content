@@ -1,0 +1,6 @@
+---
+source: crates/ox_content_renderer/tests/snapshot_render.rs
+assertion_line: 29
+description: "![x](data:text/html,<script>alert(1)</script>)\n"
+---
+<p><img src="" alt="x"></p>

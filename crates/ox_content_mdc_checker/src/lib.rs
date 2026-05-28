@@ -1,5 +1,9 @@
 use serde::Serialize;
 
+pub mod registry;
+
+pub use registry::{Attribute, Component, Registry, RegistryError};
+
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize)]
 #[serde(rename_all = "lowercase")]
 pub enum Severity {

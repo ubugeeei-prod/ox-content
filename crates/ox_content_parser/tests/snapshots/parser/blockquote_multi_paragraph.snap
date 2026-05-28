@@ -1,0 +1,11 @@
+---
+source: crates/ox_content_parser/tests/snapshot_parse.rs
+assertion_line: 32
+description: "> first\n>\n> second\n"
+---
+Document [0..19]
+  BlockQuote [0..19]
+    Paragraph [0..6]
+      Text "first" [0..5]
+    Paragraph [7..14]
+      Text "second" [7..13]

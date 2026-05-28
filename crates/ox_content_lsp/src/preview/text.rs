@@ -53,3 +53,66 @@ fn collect_text(node: &Node<'_>, text: &mut String) {
         _ => {}
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use ox_content_allocator::Allocator;
+    use ox_content_parser::{Parser, ParserOptions};
+
+    use super::*;
+
+    fn first_heading<'a>(allocator: &'a Allocator, source: &'a str) -> Heading<'a> {
+        let parser = Parser::with_options(allocator, source, ParserOptions::default());
+        let mut doc = parser.parse().unwrap();
+        let node = doc.children.pop().expect("at least one node");
+        match node {
+            Node::Heading(heading) => heading,
+            other => panic!("expected heading, got {other:?}"),
+        }
+    }
+
+    #[test]
+    fn heading_text_flattens_inline_styling() {
+        let allocator = Allocator::new();
+        let heading = first_heading(
+            &allocator,
+            "# Plain *italic* and **bold** and `code` and [link](https://x)\n",
+        );
+        assert_eq!(heading_text(&heading), "Plain italic and bold and code and link");
+    }
+
+    #[test]
+    fn preview_title_prefers_frontmatter_over_heading() {
+        // When frontmatter has `title`, it wins over the first H1. This is
+        // the contract the VS Code preview panel relies on.
+        let zero_range = tower_lsp::lsp_types::Range::default();
+        let fm = crate::frontmatter::FrontmatterBlock {
+            block_range: zero_range,
+            content_range: zero_range,
+            content_start_offset: 0,
+            content_end_offset: 0,
+            block_end_offset: 0,
+            value: Some(serde_json::json!({ "title": "From FM" })),
+            diagnostics: Vec::new(),
+            top_level_keys: Vec::new(),
+        };
+        let allocator = Allocator::new();
+        let heading_node = Node::Heading(first_heading(&allocator, "# Heading Wins When Empty\n"));
+        let nodes = [heading_node];
+        assert_eq!(preview_title(Some(&fm), &nodes).as_deref(), Some("From FM"));
+    }
+
+    #[test]
+    fn preview_title_falls_back_to_first_h1() {
+        let allocator = Allocator::new();
+        let heading_node = Node::Heading(first_heading(&allocator, "# Heading Wins\n"));
+        let nodes = [heading_node];
+        assert_eq!(preview_title(None, &nodes).as_deref(), Some("Heading Wins"));
+    }
+
+    #[test]
+    fn preview_title_returns_none_when_no_signal() {
+        let nodes: [Node<'_>; 0] = [];
+        assert_eq!(preview_title(None, &nodes), None);
+    }
+}

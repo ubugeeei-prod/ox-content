@@ -217,43 +217,9 @@ const doc = extractSearchContent(markdown, "hello", "/hello", { gfm: true });
 
 ## Performance
 
-Ox Content is positioned both as a document generator and as a high-performance Markdown toolkit. The numbers below focus on the Markdown engine side.
-
-Latest local benchmark sweep on 2026-04-24 with Node `v24.15.0` on Apple M5 Pro. The tables below show median results from 7 local runs of the benchmark harness for the large 48.7 KB case.
-
-### Parse Only (48.7 KB)
-
-| Library            | ops/sec | avg time |  throughput |
-| ------------------ | ------: | -------: | ----------: |
-| `@ox-content/napi` |    2337 |  0.43 ms | 111.20 MB/s |
-| `md4x (napi)`      |     958 |  1.04 ms |  45.56 MB/s |
-| `md4w (md4c)`      |     884 |  1.13 ms |  42.06 MB/s |
-| `markdown-it`      |     631 |  1.58 ms |  30.04 MB/s |
-| `marked`           |     385 |  2.60 ms |  18.33 MB/s |
-| `remark`           |      33 | 29.97 ms |   1.59 MB/s |
-
-### Parse + Render (48.7 KB)
-
-| Library             | ops/sec | avg time |  throughput |
-| ------------------- | ------: | -------: | ----------: |
-| `Bun.markdown.html` |    3376 |  0.30 ms | 160.67 MB/s |
-| `md4x (napi)`       |    3167 |  0.32 ms | 150.73 MB/s |
-| `@ox-content/napi`  |    2599 |  0.38 ms | 123.66 MB/s |
-| `md4w (md4c)`       |    2253 |  0.44 ms | 107.21 MB/s |
-| `markdown-it`       |     628 |  1.59 ms |  29.91 MB/s |
-| `marked`            |     381 |  2.62 ms |  18.15 MB/s |
-| `micromark`         |      36 | 28.16 ms |   1.69 MB/s |
-| `remark`            |      29 | 34.97 ms |   1.36 MB/s |
-
-Reproduce with:
-
-```bash
-node benchmarks/bundle-size/parse-benchmark.mjs
-```
-
-In this latest local release-build sweep, Ox Content stays ahead for parse-only throughput. The parse+render comparison now includes `md4x (napi)`, where Bun and md4x lead the table and Ox Content remains close behind while still serving as the native core for the full documentation pipeline.
-
-The benchmark includes `md4w (md4c)` and `md4x (napi)` by default and adds `Bun.markdown.html` automatically when `bun` is available.
+The current parser and renderer benchmark snapshot lives on
+[Performance](../performance.md). This package page keeps only N-API-specific
+micro-benchmarking notes.
 
 ### mdast Transfer Micro-benchmark
 

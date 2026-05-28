@@ -1,0 +1,9 @@
+---
+source: crates/ox_content_renderer/tests/snapshot_render.rs
+assertion_line: 29
+description: "<details id=\"a\">\n<summary>S</summary>\n<p>Body</p>\n</details>\n"
+---
+<details id="a">
+<summary>S</summary>
+<p>Body</p>
+</details>

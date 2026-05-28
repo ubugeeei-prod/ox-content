@@ -1,0 +1,17 @@
+# Default ownership.
+* @ubugeeei
+
+# i18n implementation and integration.
+/crates/ox_content_i18n*/ @ubugeeei @kazupon
+/crates/ox_content_lsp/src/i18n.rs @ubugeeei @kazupon
+/crates/ox_content_lsp/src/i18n/ @ubugeeei @kazupon
+/docs/content/api/i18n.md @ubugeeei @kazupon
+/docs/content/packages/i18n.md @ubugeeei @kazupon
+/npm/vite-plugin-ox-content/src/i18n.ts @ubugeeei @kazupon
+/npm/vite-plugin-ox-content/src/i18n.test.ts @ubugeeei @kazupon
+
+# JSDoc and generated API documentation support.
+/crates/ox_content_docs/ @ubugeeei @kazupon
+/npm/vite-plugin-ox-content/src/docs* @ubugeeei @kazupon
+/npm/vite-plugin-ox-content/src/nav-generator* @ubugeeei @kazupon
+/docs/content/examples/gen-source-docs.md @ubugeeei @kazupon

@@ -1,6 +1,6 @@
 {
   "name": "@ox-content/vite-plugin",
-  "version": "2.13.0",
+  "version": "2.21.0",
   "description": "Vite plugin for Ox Content - High-performance Markdown processing with Environment API",
   "keywords": [
     "environment-api",
@@ -18,9 +18,10 @@
     "directory": "npm/vite-plugin-ox-content"
   },
   "bin": {
-    "ox-content-migrate-vitepress": "./dist/vitepress-cli.mjs"
+    "ox-content-migrate-vitepress": "./bin/migrate-vitepress.mjs"
   },
   "files": [
+    "bin",
     "dist"
   ],
   "type": "module",

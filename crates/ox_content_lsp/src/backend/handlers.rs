@@ -6,7 +6,7 @@ use crate::document::is_markdown_path;
 
 use super::commands::{
     insert_actions, COMMAND_INSERT_CALLOUT, COMMAND_INSERT_CODE_FENCE, COMMAND_INSERT_TABLE,
-    COMMAND_PREVIEW_HTML,
+    COMMAND_PREVIEW_HTML, COMMAND_PREVIEW_SUBSCRIBE, COMMAND_PREVIEW_UNSUBSCRIBE,
 };
 use super::Backend;
 
@@ -16,8 +16,15 @@ impl LanguageServer for Backend {
         self.init_from_params(&params).await;
         Ok(InitializeResult {
             capabilities: ServerCapabilities {
-                text_document_sync: Some(TextDocumentSyncCapability::Kind(
-                    TextDocumentSyncKind::FULL,
+                // Advertise full-document sync plus save events so
+                // textlint (which runs on save) gets notified.
+                text_document_sync: Some(TextDocumentSyncCapability::Options(
+                    TextDocumentSyncOptions {
+                        open_close: Some(true),
+                        change: Some(TextDocumentSyncKind::FULL),
+                        save: Some(TextDocumentSyncSaveOptions::Supported(true)),
+                        ..Default::default()
+                    },
                 )),
                 completion_provider: Some(CompletionOptions {
                     trigger_characters: Some(vec![
@@ -31,6 +38,16 @@ impl LanguageServer for Backend {
                         ">".into(),
                         "|".into(),
                         ":".into(),
+                        // Asset path completion: `(` opens it after
+                        // `[…]`/`![…]`, `/` reopens it after the user
+                        // descends into a subdirectory.
+                        "(".into(),
+                        "/".into(),
+                        // MDC component / attribute completion: `<`
+                        // opens it for `<Foo`, space reopens it after
+                        // the component name for `<Foo |`.
+                        "<".into(),
+                        " ".into(),
                     ]),
                     ..Default::default()
                 }),
@@ -45,6 +62,8 @@ impl LanguageServer for Backend {
                         COMMAND_INSERT_CODE_FENCE.into(),
                         COMMAND_INSERT_CALLOUT.into(),
                         COMMAND_PREVIEW_HTML.into(),
+                        COMMAND_PREVIEW_SUBSCRIBE.into(),
+                        COMMAND_PREVIEW_UNSUBSCRIBE.into(),
                     ],
                     ..Default::default()
                 }),
@@ -77,6 +96,14 @@ impl LanguageServer for Backend {
 
     async fn did_close(&self, params: DidCloseTextDocumentParams) {
         self.close_document(&params.text_document.uri).await;
+    }
+
+    async fn did_save(&self, params: DidSaveTextDocumentParams) {
+        // textlint is too heavy to run on every keystroke (a few
+        // hundred ms per file), so it lives on the save path. The
+        // helper inside `Backend` short-circuits when the user has
+        // not opted in via `oxContent.textlintEnabled`.
+        self.run_textlint_for(&params.text_document.uri).await;
     }
 
     async fn completion(&self, params: CompletionParams) -> Result<Option<CompletionResponse>> {
@@ -137,6 +164,8 @@ impl LanguageServer for Backend {
                 self.insert_template(&params.command, params.arguments).await
             }
             COMMAND_PREVIEW_HTML => self.preview_html(params.arguments).await,
+            COMMAND_PREVIEW_SUBSCRIBE => self.preview_subscribe(params.arguments).await,
+            COMMAND_PREVIEW_UNSUBSCRIBE => self.preview_unsubscribe(params.arguments).await,
             _ => Ok(None),
         }
     }

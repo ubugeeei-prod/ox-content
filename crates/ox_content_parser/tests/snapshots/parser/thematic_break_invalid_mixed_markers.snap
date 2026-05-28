@@ -1,0 +1,12 @@
+---
+source: crates/ox_content_parser/tests/snapshot_parse.rs
+assertion_line: 32
+description: "- * -\n"
+---
+Document [0..6]
+  List ordered=false start=- spread=false [0..6]
+    ListItem spread=false checked=- [0..6]
+      List ordered=false start=- spread=false [2..6]
+        ListItem spread=false checked=- [2..6]
+          Paragraph [4..6]
+            Text "-" [4..5]

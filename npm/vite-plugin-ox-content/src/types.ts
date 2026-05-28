@@ -667,6 +667,24 @@ export interface TocEntry {
 // ============================================
 
 /**
+ * Public API entry point for grouped documentation.
+ */
+export type DocsEntryPoint =
+  | string
+  | {
+      path: string;
+      name?: string;
+    };
+
+/**
+ * Resolved public API entry point.
+ */
+export interface ResolvedDocsEntryPoint {
+  path: string;
+  name?: string;
+}
+
+/**
  * Options for source documentation generation.
  */
 export interface DocsOptions {
@@ -701,6 +719,11 @@ export interface DocsOptions {
   exclude?: string[];
 
   /**
+   * Public API entry points used to group re-exported docs.
+   */
+  entryPoints?: DocsEntryPoint[];
+
+  /**
    * Output format.
    * @default 'markdown'
    */
@@ -711,6 +734,12 @@ export interface DocsOptions {
    * @default false
    */
   private?: boolean;
+
+  /**
+   * Include internal members in documentation.
+   * @default false
+   */
+  internal?: boolean;
 
   /**
    * Generate table of contents for each file.
@@ -732,6 +761,18 @@ export interface DocsOptions {
   githubUrl?: string;
 
   /**
+   * Internal documentation link style.
+   * @default 'markdown'
+   */
+  linkStyle?: "markdown" | "clean";
+
+  /**
+   * Route prefix used by generated documentation links and nav metadata.
+   * Nav metadata falls back to '/api' when this is not set.
+   */
+  basePath?: string;
+
+  /**
    * Generate navigation metadata file.
    * @default true
    */
@@ -747,11 +788,15 @@ export interface ResolvedDocsOptions {
   out: string;
   include: string[];
   exclude: string[];
+  entryPoints?: ResolvedDocsEntryPoint[];
   format: "markdown" | "json" | "html";
   private: boolean;
+  internal: boolean;
   toc: boolean;
   groupBy: "file" | "category";
   githubUrl?: string;
+  linkStyle: "markdown" | "clean";
+  basePath?: string;
   generateNav: boolean;
 }
 
@@ -771,6 +816,27 @@ export interface DocEntry {
   line: number;
   endLine: number;
   signature?: string; // Full function/type signature (for functions and type aliases)
+  members?: DocMember[];
+}
+
+/**
+ * A member belonging to a class, interface, type alias, or enum entry.
+ */
+export interface DocMember {
+  name: string;
+  kind: "property" | "method" | "constructor" | "getter" | "setter" | "enumMember";
+  description: string;
+  signature?: string;
+  type?: string;
+  params?: ParamDoc[];
+  returns?: ReturnDoc;
+  optional?: boolean;
+  readonly?: boolean;
+  static?: boolean;
+  private?: boolean;
+  tags?: Record<string, string>;
+  line: number;
+  endLine: number;
 }
 
 /**

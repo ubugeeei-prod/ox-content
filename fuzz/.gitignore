@@ -1,0 +1,10 @@
+target
+artifacts
+coverage
+Cargo.lock
+
+# libFuzzer expands the corpus during runs. Only the curated `seed_*` files
+# below each corpus directory are intended to be tracked; everything else
+# (hash-named binary blobs) is regenerable and would only churn the repo.
+corpus/**/*
+!corpus/**/seed_*

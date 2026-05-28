@@ -148,6 +148,290 @@ document.querySelectorAll(".ox-api-controls").forEach((controls) => {
 });
 
 // ox-content:search:start
+const getOxContentSearchElements = () => {
+  const searchOverlay = document.querySelector(".search-modal-overlay"),
+    searchInput = document.querySelector(".search-input"),
+    searchResults = document.querySelector(".search-results"),
+    searchClose = document.querySelector(".search-close");
+
+  if (!searchOverlay || !searchInput || !searchResults) {
+    return null;
+  }
+
+  return { searchOverlay, searchInput, searchResults, searchClose };
+};
+
+const createOxContentSearchState = () => ({
+  searchIndex: null,
+  selectedIdx: 0,
+  results: [],
+  searchTimeout: null,
+});
+
+const loadOxContentSearchIndex = async (state) => {
+  if (state.searchIndex) return;
+  try {
+    state.searchIndex = await (await fetch("{{base}}search-index.json")).json();
+  } catch (e) {
+    console.warn("Search index load failed:", e);
+  }
+};
+
+const parseOxContentScopedQuery = (query) => {
+  const scopes = [];
+  const terms = [];
+  for (const part of query.trim().split(/\s+/).filter(Boolean)) {
+    if (part.startsWith("@") && part.length > 1) {
+      scopes.push(part.slice(1).toLowerCase());
+    } else {
+      terms.push(part);
+    }
+  }
+  return { text: terms.join(" ").trim(), scopes: [...new Set(scopes)] };
+};
+
+const getOxContentScopesForDoc = (doc) => {
+  const source = (doc.id || doc.url || "").replace(/^\/+/, "").toLowerCase();
+  const segments = source.split("/").filter(Boolean);
+  if (segments.length <= 1) return [];
+
+  const scopes = [];
+  let current = "";
+  for (const segment of segments.slice(0, -1)) {
+    current = current ? current + "/" + segment : segment;
+    scopes.push(current);
+  }
+  return scopes;
+};
+
+const matchesOxContentScopes = (doc, scopes) => {
+  if (!scopes.length) return true;
+  const docScopes = new Set(getOxContentScopesForDoc(doc));
+  return scopes.some((scope) => docScopes.has(scope));
+};
+
+const tokenizeOxContentSearchText = (text) => {
+  const tokens = [];
+  let current = "";
+
+  for (const ch of text) {
+    if (/[\u4E00-\u9FFF\u3400-\u4DBF\u3040-\u309F\u30A0-\u30FF\uAC00-\uD7AF]/.test(ch)) {
+      if (current) {
+        tokens.push(current.toLowerCase());
+        current = "";
+      }
+      tokens.push(ch);
+    } else if (/[a-zA-Z0-9_]/.test(ch)) {
+      current += ch;
+    } else if (current) {
+      tokens.push(current.toLowerCase());
+      current = "";
+    }
+  }
+
+  if (current) tokens.push(current.toLowerCase());
+  return tokens;
+};
+
+const renderOxContentSearchResults = (elements, state) => {
+  if (!state.results.length) {
+    elements.searchResults.innerHTML = '<div class="search-empty">No results</div>';
+    return;
+  }
+
+  elements.searchResults.innerHTML = state.results
+    .map(
+      (result, index) =>
+        '<a href="' +
+        result.url +
+        '" class="search-result' +
+        (index === state.selectedIdx ? " selected" : "") +
+        '"><div class="search-result-title">' +
+        result.title +
+        (result.scopes?.length
+          ? '<span class="search-result-scope">@' + result.scopes[0] + "</span>"
+          : "") +
+        "</div>" +
+        (result.snippet ? '<div class="search-result-snippet">' + result.snippet + "</div>" : "") +
+        "</a>",
+    )
+    .join("");
+};
+
+const scoreOxContentSearchTerms = (searchIndex, parsedQuery, tokens) => {
+  const k1 = 1.2,
+    b = 0.75,
+    scores = new Map();
+
+  if (!tokens.length) {
+    searchIndex.documents.forEach((doc, idx) => {
+      if (matchesOxContentScopes(doc, parsedQuery.scopes)) {
+        scores.set(idx, { score: 0, matches: new Set() });
+      }
+    });
+  }
+
+  for (let i = 0; i < tokens.length; i++) {
+    const token = tokens[i],
+      isLast = i === tokens.length - 1;
+    const terms =
+      isLast && token.length >= 2
+        ? Object.keys(searchIndex.index).filter((term) => term.startsWith(token))
+        : searchIndex.index[token]
+          ? [token]
+          : [];
+
+    addOxContentTermScores(searchIndex, scores, parsedQuery.scopes, terms, k1, b);
+  }
+
+  return scores;
+};
+
+const addOxContentTermScores = (searchIndex, scores, scopes, terms, k1, b) => {
+  for (const term of terms) {
+    const postings = searchIndex.index[term] || [],
+      df = searchIndex.df[term] || 1,
+      idf = Math.log((searchIndex.doc_count - df + 0.5) / (df + 0.5) + 1);
+
+    for (const posting of postings) {
+      const doc = searchIndex.documents[posting.doc_idx];
+      if (!doc || !matchesOxContentScopes(doc, scopes)) continue;
+
+      const boost = posting.field === "Title" ? 10 : posting.field === "Heading" ? 5 : 1,
+        score =
+          idf *
+          ((posting.tf * (k1 + 1)) /
+            (posting.tf + k1 * (1 - b + (b * doc.body.length) / searchIndex.avg_dl))) *
+          boost;
+
+      if (!scores.has(posting.doc_idx)) {
+        scores.set(posting.doc_idx, { score: 0, matches: new Set() });
+      }
+
+      const entry = scores.get(posting.doc_idx);
+      entry.score += score;
+      entry.matches.add(term);
+    }
+  }
+};
+
+const createOxContentSnippet = (doc, matches) => {
+  if (!doc.body) return "";
+
+  const bodyLower = doc.body.toLowerCase();
+  let firstPos = -1;
+  for (const match of matches) {
+    const pos = bodyLower.indexOf(match);
+    if (pos !== -1 && (firstPos === -1 || pos < firstPos)) {
+      firstPos = pos;
+    }
+  }
+
+  const start = firstPos === -1 ? 0 : Math.max(0, firstPos - 50),
+    end = Math.min(doc.body.length, start + 150);
+  let snippet = doc.body.slice(start, end);
+  if (start > 0) snippet = "..." + snippet;
+  if (end < doc.body.length) snippet += "...";
+  return snippet;
+};
+
+const buildOxContentSearchResults = (searchIndex, parsedQuery) => {
+  const tokens = tokenizeOxContentSearchText(parsedQuery.text);
+  const scores = scoreOxContentSearchTerms(searchIndex, parsedQuery, tokens);
+
+  return Array.from(scores.entries())
+    .map(([idx, data]) => {
+      const doc = searchIndex.documents[idx];
+      return {
+        ...doc,
+        score: data.score,
+        scopes: getOxContentScopesForDoc(doc),
+        snippet: createOxContentSnippet(doc, data.matches),
+      };
+    })
+    .sort((a, b) => b.score - a.score || a.title.localeCompare(b.title))
+    .slice(0, 10);
+};
+
+const runOxContentSearch = async (query, elements, state) => {
+  await loadOxContentSearchIndex(state);
+  if (!state.searchIndex) {
+    elements.searchResults.innerHTML = '<div class="search-empty">Index unavailable</div>';
+    return;
+  }
+
+  const parsedQuery = parseOxContentScopedQuery(query);
+  if (!parsedQuery.text && parsedQuery.scopes.length === 0) {
+    elements.searchResults.innerHTML = "";
+    state.results = [];
+    return;
+  }
+
+  state.results = buildOxContentSearchResults(state.searchIndex, parsedQuery);
+  state.selectedIdx = 0;
+  renderOxContentSearchResults(elements, state);
+};
+
+const registerOxContentSearchEvents = (elements, state, closeSearch) => {
+  elements.searchClose?.addEventListener("click", closeSearch);
+  elements.searchOverlay.addEventListener("click", (e) => {
+    if (e.target === elements.searchOverlay) closeSearch();
+  });
+  elements.searchResults.addEventListener("click", (e) => {
+    if (e.target instanceof Element && e.target.closest("a.search-result")) closeSearch();
+  });
+  elements.searchInput.addEventListener("input", () => {
+    if (state.searchTimeout) clearTimeout(state.searchTimeout);
+    state.searchTimeout = setTimeout(
+      () => runOxContentSearch(elements.searchInput.value, elements, state),
+      150,
+    );
+  });
+  elements.searchInput.addEventListener("keydown", (e) => {
+    handleOxContentSearchKeydown(e, elements, state, closeSearch);
+  });
+};
+
+const handleOxContentSearchKeydown = (e, elements, state, closeSearch) => {
+  if (e.key === "Escape") closeSearch();
+  else if (e.key === "ArrowDown") {
+    e.preventDefault();
+    if (state.selectedIdx < state.results.length - 1) {
+      state.selectedIdx++;
+      renderOxContentSearchResults(elements, state);
+    }
+  } else if (e.key === "ArrowUp") {
+    e.preventDefault();
+    if (state.selectedIdx > 0) {
+      state.selectedIdx--;
+      renderOxContentSearchResults(elements, state);
+    }
+  } else if (e.key === "Enter" && state.results[state.selectedIdx]) {
+    e.preventDefault();
+    location.href = state.results[state.selectedIdx].url;
+  }
+};
+
+const createOxContentSearchApi = (elements) => {
+  const state = createOxContentSearchState();
+  const openSearch = () => {
+    elements.searchOverlay.classList.add("open");
+    document.body.classList.add("search-open");
+    elements.searchInput.focus();
+  };
+  const closeSearch = () => {
+    elements.searchOverlay.classList.remove("open");
+    document.body.classList.remove("search-open");
+    elements.searchInput.value = "";
+    elements.searchResults.innerHTML = "";
+    state.selectedIdx = 0;
+    state.results = [];
+  };
+
+  registerOxContentSearchEvents(elements, state, closeSearch);
+  return { openSearch, closeSearch };
+};
+
 window.__oxContentInitSearch = (() => {
   let api = null;
 
@@ -156,254 +440,12 @@ window.__oxContentInitSearch = (() => {
       return api;
     }
 
-    const searchOverlay = document.querySelector(".search-modal-overlay"),
-      searchInput = document.querySelector(".search-input"),
-      searchResults = document.querySelector(".search-results"),
-      searchClose = document.querySelector(".search-close");
-
-    if (!searchOverlay || !searchInput || !searchResults) {
+    const elements = getOxContentSearchElements();
+    if (!elements) {
       return null;
     }
 
-    let searchIndex = null,
-      selectedIdx = 0,
-      results = [],
-      searchTimeout = null;
-
-    const openSearch = () => {
-      searchOverlay.classList.add("open");
-      searchInput.focus();
-    };
-
-    const closeSearch = () => {
-      searchOverlay.classList.remove("open");
-      searchInput.value = "";
-      searchResults.innerHTML = "";
-      selectedIdx = 0;
-      results = [];
-    };
-
-    const loadIndex = async () => {
-      if (searchIndex) return;
-      try {
-        searchIndex = await (await fetch("{{base}}search-index.json")).json();
-      } catch (e) {
-        console.warn("Search index load failed:", e);
-      }
-    };
-
-    const parseScopedQuery = (query) => {
-      const scopes = [];
-      const terms = [];
-      for (const part of query.trim().split(/\s+/).filter(Boolean)) {
-        if (part.startsWith("@") && part.length > 1) {
-          scopes.push(part.slice(1).toLowerCase());
-        } else {
-          terms.push(part);
-        }
-      }
-      return { text: terms.join(" ").trim(), scopes: [...new Set(scopes)] };
-    };
-
-    const getScopesForDoc = (doc) => {
-      const source = (doc.id || doc.url || "").replace(/^\/+/, "").toLowerCase();
-      const segments = source.split("/").filter(Boolean);
-      if (segments.length <= 1) return [];
-
-      const scopes = [];
-      let current = "";
-      for (const segment of segments.slice(0, -1)) {
-        current = current ? current + "/" + segment : segment;
-        scopes.push(current);
-      }
-      return scopes;
-    };
-
-    const matchesScopes = (doc, scopes) => {
-      if (!scopes.length) return true;
-      const docScopes = new Set(getScopesForDoc(doc));
-      return scopes.some((scope) => docScopes.has(scope));
-    };
-
-    const tokenize = (text) => {
-      const tokens = [];
-      let current = "";
-
-      for (const ch of text) {
-        if (/[\u4E00-\u9FFF\u3400-\u4DBF\u3040-\u309F\u30A0-\u30FF\uAC00-\uD7AF]/.test(ch)) {
-          if (current) {
-            tokens.push(current.toLowerCase());
-            current = "";
-          }
-          tokens.push(ch);
-        } else if (/[a-zA-Z0-9_]/.test(ch)) {
-          current += ch;
-        } else if (current) {
-          tokens.push(current.toLowerCase());
-          current = "";
-        }
-      }
-
-      if (current) tokens.push(current.toLowerCase());
-      return tokens;
-    };
-
-    const render = () => {
-      if (!results.length) {
-        searchResults.innerHTML = '<div class="search-empty">No results</div>';
-        return;
-      }
-
-      searchResults.innerHTML = results
-        .map(
-          (result, index) =>
-            '<a href="' +
-            result.url +
-            '" class="search-result' +
-            (index === selectedIdx ? " selected" : "") +
-            '"><div class="search-result-title">' +
-            result.title +
-            (result.scopes?.length
-              ? '<span class="search-result-scope">@' + result.scopes[0] + "</span>"
-              : "") +
-            "</div>" +
-            (result.snippet
-              ? '<div class="search-result-snippet">' + result.snippet + "</div>"
-              : "") +
-            "</a>",
-        )
-        .join("");
-    };
-
-    const search = async (query) => {
-      await loadIndex();
-      if (!searchIndex) {
-        searchResults.innerHTML = '<div class="search-empty">Index unavailable</div>';
-        return;
-      }
-
-      const parsedQuery = parseScopedQuery(query);
-      if (!parsedQuery.text && parsedQuery.scopes.length === 0) {
-        searchResults.innerHTML = "";
-        results = [];
-        return;
-      }
-
-      const tokens = tokenize(parsedQuery.text);
-      const k1 = 1.2,
-        b = 0.75,
-        scores = new Map();
-
-      if (!tokens.length) {
-        searchIndex.documents.forEach((doc, idx) => {
-          if (matchesScopes(doc, parsedQuery.scopes)) {
-            scores.set(idx, { score: 0, matches: new Set() });
-          }
-        });
-      }
-
-      for (let i = 0; i < tokens.length; i++) {
-        const token = tokens[i],
-          isLast = i === tokens.length - 1;
-        let terms =
-          isLast && token.length >= 2
-            ? Object.keys(searchIndex.index).filter((term) => term.startsWith(token))
-            : searchIndex.index[token]
-              ? [token]
-              : [];
-
-        for (const term of terms) {
-          const postings = searchIndex.index[term] || [],
-            df = searchIndex.df[term] || 1,
-            idf = Math.log((searchIndex.doc_count - df + 0.5) / (df + 0.5) + 1);
-
-          for (const posting of postings) {
-            const doc = searchIndex.documents[posting.doc_idx];
-            if (!doc) continue;
-            if (!matchesScopes(doc, parsedQuery.scopes)) continue;
-
-            const boost = posting.field === "Title" ? 10 : posting.field === "Heading" ? 5 : 1,
-              score =
-                idf *
-                ((posting.tf * (k1 + 1)) /
-                  (posting.tf + k1 * (1 - b + (b * doc.body.length) / searchIndex.avg_dl))) *
-                boost;
-
-            if (!scores.has(posting.doc_idx)) {
-              scores.set(posting.doc_idx, { score: 0, matches: new Set() });
-            }
-
-            const entry = scores.get(posting.doc_idx);
-            entry.score += score;
-            entry.matches.add(term);
-          }
-        }
-      }
-
-      results = Array.from(scores.entries())
-        .map(([idx, data]) => {
-          const doc = searchIndex.documents[idx];
-          const scopes = getScopesForDoc(doc);
-          let snippet = "";
-
-          if (doc.body) {
-            const bodyLower = doc.body.toLowerCase();
-            let firstPos = -1;
-            for (const match of data.matches) {
-              const pos = bodyLower.indexOf(match);
-              if (pos !== -1 && (firstPos === -1 || pos < firstPos)) {
-                firstPos = pos;
-              }
-            }
-            const start = firstPos === -1 ? 0 : Math.max(0, firstPos - 50),
-              end = Math.min(doc.body.length, start + 150);
-            snippet = doc.body.slice(start, end);
-            if (start > 0) snippet = "..." + snippet;
-            if (end < doc.body.length) snippet += "...";
-          }
-
-          return { ...doc, score: data.score, scopes, snippet };
-        })
-        .sort((a, b) => b.score - a.score || a.title.localeCompare(b.title))
-        .slice(0, 10);
-
-      selectedIdx = 0;
-      render();
-    };
-
-    searchClose?.addEventListener("click", closeSearch);
-    searchOverlay.addEventListener("click", (e) => {
-      if (e.target === searchOverlay) closeSearch();
-    });
-    searchInput.addEventListener("input", () => {
-      if (searchTimeout) clearTimeout(searchTimeout);
-      searchTimeout = setTimeout(() => search(searchInput.value), 150);
-    });
-    searchInput.addEventListener("keydown", (e) => {
-      if (e.key === "Escape") closeSearch();
-      else if (e.key === "ArrowDown") {
-        e.preventDefault();
-        if (selectedIdx < results.length - 1) {
-          selectedIdx++;
-          render();
-        }
-      } else if (e.key === "ArrowUp") {
-        e.preventDefault();
-        if (selectedIdx > 0) {
-          selectedIdx--;
-          render();
-        }
-      } else if (e.key === "Enter" && results[selectedIdx]) {
-        e.preventDefault();
-        location.href = results[selectedIdx].url;
-      }
-    });
-
-    api = {
-      openSearch,
-      closeSearch,
-    };
-
+    api = createOxContentSearchApi(elements);
     return api;
   };
 })();
