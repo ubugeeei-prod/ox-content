@@ -1,5 +1,23 @@
 # Changelog
 
+## [2.22.0] - 2026-05-28
+
+### Features
+
+- scaffold crate (#196)
+
+### Bug Fixes
+
+- document local entrypoint exports (#199)
+
+### Refactoring
+
+- split long implementations (#203)
+
+### Documentation
+
+- update benchmarks
+
 ## [2.21.0] - 2026-05-28
 
 ### Performance
