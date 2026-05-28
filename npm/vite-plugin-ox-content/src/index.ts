@@ -84,54 +84,72 @@ export type {
  */
 export function oxContent(options: OxContentOptions = {}): Plugin[] {
   const resolvedOptions = resolveOptions(options);
-  let config: ResolvedConfig;
-  let _server: ViteDevServer | undefined;
+  let config: ResolvedConfig | undefined;
+  const getRoot = () => config?.root || process.cwd();
 
-  async function regenerateDocs(root: string): Promise<number> {
-    const docsOptions = resolvedOptions.docs;
-    if (!docsOptions || !docsOptions.enabled) {
-      return 0;
-    }
+  const ssgDevCache = createDevServerCache();
+  const plugins: Plugin[] = [
+    createMainPlugin(resolvedOptions, (resolvedConfig) => {
+      config = resolvedConfig;
+    }),
+    createEnvironmentPlugin(resolvedOptions),
+    createDocsPlugin(resolvedOptions, getRoot),
+    createSsgPlugin(resolvedOptions, getRoot, ssgDevCache),
+    createSearchPlugin(resolvedOptions, getRoot),
+  ];
 
-    const srcDirs = docsOptions.src.map((src) => path.resolve(root, src));
-    const outDir = path.resolve(root, docsOptions.out);
-    const extracted = await extractDocs(srcDirs, docsOptions);
-    const generated = generateMarkdown(extracted, docsOptions);
-
-    await writeDocs(generated, outDir, extracted, docsOptions);
-
-    return Object.keys(generated).length;
+  if (resolvedOptions.i18n) {
+    plugins.push(createI18nPlugin(resolvedOptions));
   }
 
-  const mainPlugin: Plugin = {
+  if (resolvedOptions.ogViewer) {
+    plugins.push(createOgViewerPlugin(resolvedOptions));
+  }
+
+  return plugins;
+}
+
+async function regenerateDocs(resolvedOptions: ResolvedOptions, root: string): Promise<number> {
+  const docsOptions = resolvedOptions.docs;
+  if (!docsOptions || !docsOptions.enabled) {
+    return 0;
+  }
+
+  const srcDirs = docsOptions.src.map((src) => path.resolve(root, src));
+  const outDir = path.resolve(root, docsOptions.out);
+  const extracted = await extractDocs(srcDirs, docsOptions);
+  const generated = generateMarkdown(extracted, docsOptions);
+
+  await writeDocs(generated, outDir, extracted, docsOptions);
+
+  return Object.keys(generated).length;
+}
+
+function createMainPlugin(
+  resolvedOptions: ResolvedOptions,
+  setConfig: (config: ResolvedConfig) => void,
+): Plugin {
+  return {
     name: "ox-content",
 
-    configResolved(resolvedConfig) {
-      config = resolvedConfig;
-    },
+    configResolved: setConfig,
 
     configureServer(devServer) {
-      _server = devServer;
-
-      // Add middleware for serving Markdown files
       devServer.middlewares.use(async (req, res, next) => {
         const url = req.url;
         if (!url || !isMarkdownFilePath(url, resolvedOptions.extensions)) {
           return next();
         }
 
-        // Let Vite handle the transformation
         next();
       });
     },
 
     resolveId(id) {
-      // Handle virtual modules for Markdown imports
       if (id.startsWith("virtual:ox-content/")) {
         return "\0" + id;
       }
 
-      // Resolve Markdown files
       if (isMarkdownFilePath(id, resolvedOptions.extensions)) {
         return id;
       }
@@ -140,10 +158,9 @@ export function oxContent(options: OxContentOptions = {}): Plugin[] {
     },
 
     async load(id) {
-      // Handle virtual modules
       if (id.startsWith("\0virtual:ox-content/")) {
-        const path = id.slice("\0virtual:ox-content/".length);
-        return generateVirtualModule(path, resolvedOptions);
+        const virtualPath = id.slice("\0virtual:ox-content/".length);
+        return generateVirtualModule(virtualPath, resolvedOptions);
       }
 
       return null;
@@ -154,49 +171,46 @@ export function oxContent(options: OxContentOptions = {}): Plugin[] {
         return null;
       }
 
-      // Transform Markdown to JavaScript module
       const result = await transformMarkdown(code, id, resolvedOptions);
-
       return {
         code: result.code,
         map: null,
       };
     },
 
-    // Hot Module Replacement support
     async handleHotUpdate({ file, server }) {
-      if (isMarkdownFilePath(file, resolvedOptions.extensions)) {
-        // Notify client about the update
-        server.ws.send({
-          type: "custom",
-          event: "ox-content:update",
-          data: { file },
-        });
-
-        // Return empty array to prevent default HMR
-        // We handle it ourselves
-        const modules = server.moduleGraph.getModulesByFile(file);
-        return modules ? Array.from(modules) : [];
+      if (!isMarkdownFilePath(file, resolvedOptions.extensions)) {
+        return;
       }
+
+      server.ws.send({
+        type: "custom",
+        event: "ox-content:update",
+        data: { file },
+      });
+
+      const modules = server.moduleGraph.getModulesByFile(file);
+      return modules ? Array.from(modules) : [];
     },
   };
+}
 
-  // Environment API plugin for SSG
-  const environmentPlugin: Plugin = {
+function createEnvironmentPlugin(resolvedOptions: ResolvedOptions): Plugin {
+  return {
     name: "ox-content:environment",
 
     config() {
       return {
         environments: {
-          // Markdown processing environment
           markdown: createMarkdownEnvironment(resolvedOptions),
         },
       };
     },
   };
+}
 
-  // Docs generation plugin (builtin, opt-out)
-  const docsPlugin: Plugin = {
+function createDocsPlugin(resolvedOptions: ResolvedOptions, getRoot: () => string): Plugin {
+  return {
     name: "ox-content:docs",
 
     async buildStart() {
@@ -205,10 +219,8 @@ export function oxContent(options: OxContentOptions = {}): Plugin[] {
         return;
       }
 
-      const root = config?.root || process.cwd();
-
       try {
-        const count = await regenerateDocs(root);
+        const count = await regenerateDocs(resolvedOptions, getRoot());
         console.log(`[ox-content] Generated ${count} documentation files to ${docsOptions.out}`);
       } catch (err) {
         console.warn("[ox-content] Failed to generate documentation:", err);
@@ -221,15 +233,12 @@ export function oxContent(options: OxContentOptions = {}): Plugin[] {
         return;
       }
 
-      // Watch source directories for changes
-      const root = config?.root || process.cwd();
+      const root = getRoot();
       const srcDirs = docsOptions.src.map((src) => path.resolve(root, src));
-
       for (const srcDir of srcDirs) {
         devServer.watcher.add(srcDir);
       }
 
-      // Regenerate docs on file changes
       devServer.watcher.on("all", async (event, file) => {
         if (event !== "add" && event !== "change" && event !== "unlink") {
           return;
@@ -238,56 +247,49 @@ export function oxContent(options: OxContentOptions = {}): Plugin[] {
         const isSourceFile = srcDirs.some(
           (srcDir) => file.startsWith(srcDir) && (file.endsWith(".ts") || file.endsWith(".tsx")),
         );
+        if (!isSourceFile) {
+          return;
+        }
 
-        if (isSourceFile) {
-          try {
-            await regenerateDocs(root);
-          } catch {
-            // Ignore errors during dev
-          }
+        try {
+          await regenerateDocs(resolvedOptions, root);
+        } catch {
+          // Ignore errors during dev.
         }
       });
     },
   };
+}
 
-  // SSG plugin (builtin, opt-in by default)
-  const ssgDevCache = createDevServerCache();
-  const ssgPlugin: Plugin = {
+function createSsgPlugin(
+  resolvedOptions: ResolvedOptions,
+  getRoot: () => string,
+  ssgDevCache: ReturnType<typeof createDevServerCache>,
+): Plugin {
+  return {
     name: "ox-content:ssg",
 
     configureServer(devServer) {
       const ssgOptions = resolvedOptions.ssg;
       if (!ssgOptions.enabled) return;
 
-      const root = config?.root || process.cwd();
+      const root = getRoot();
       const srcDir = path.resolve(root, resolvedOptions.srcDir);
-
-      // Register dev server middleware
       devServer.middlewares.use(createDevServerMiddleware(resolvedOptions, root, ssgDevCache));
 
-      // Watch for .md file add/unlink to invalidate nav cache
       devServer.watcher.on("add", (file: string) => {
-        if (file.startsWith(srcDir) && isMarkdownFilePath(file, resolvedOptions.extensions)) {
-          invalidateNavCache(ssgDevCache);
-          devServer.ws.send({
-            type: "custom",
-            event: "ox-content:update",
-            data: { file, type: "add" },
-          });
-        }
+        notifySsgFileAddedOrRemoved(devServer, resolvedOptions, ssgDevCache, srcDir, file, "add");
       });
       devServer.watcher.on("unlink", (file: string) => {
-        if (file.startsWith(srcDir) && isMarkdownFilePath(file, resolvedOptions.extensions)) {
-          invalidateNavCache(ssgDevCache);
-          devServer.ws.send({
-            type: "custom",
-            event: "ox-content:update",
-            data: { file, type: "unlink" },
-          });
-        }
+        notifySsgFileAddedOrRemoved(
+          devServer,
+          resolvedOptions,
+          ssgDevCache,
+          srcDir,
+          file,
+          "unlink",
+        );
       });
-
-      // Watch for .md file changes to invalidate page cache
       devServer.watcher.on("change", (file: string) => {
         if (file.startsWith(srcDir) && isMarkdownFilePath(file, resolvedOptions.extensions)) {
           invalidatePageCache(ssgDevCache, file);
@@ -301,29 +303,46 @@ export function oxContent(options: OxContentOptions = {}): Plugin[] {
         return;
       }
 
-      const root = config?.root || process.cwd();
-
       try {
-        const result = await buildSsg(resolvedOptions, root);
-
+        const result = await buildSsg(resolvedOptions, getRoot());
         if (result.files.length > 0) {
           console.log(`[ox-content] Generated ${result.files.length} output files`);
         }
 
-        if (result.errors.length > 0) {
-          for (const error of result.errors) {
-            console.warn(`[ox-content] ${error}`);
-          }
+        for (const error of result.errors) {
+          console.warn(`[ox-content] ${error}`);
         }
       } catch (err) {
         console.error("[ox-content] SSG build failed:", err);
       }
     },
   };
+}
 
-  // Search plugin
+function notifySsgFileAddedOrRemoved(
+  devServer: ViteDevServer,
+  resolvedOptions: ResolvedOptions,
+  ssgDevCache: ReturnType<typeof createDevServerCache>,
+  srcDir: string,
+  file: string,
+  type: "add" | "unlink",
+): void {
+  if (!file.startsWith(srcDir) || !isMarkdownFilePath(file, resolvedOptions.extensions)) {
+    return;
+  }
+
+  invalidateNavCache(ssgDevCache);
+  devServer.ws.send({
+    type: "custom",
+    event: "ox-content:update",
+    data: { file, type },
+  });
+}
+
+function createSearchPlugin(resolvedOptions: ResolvedOptions, getRoot: () => string): Plugin {
   let searchIndexJson = "";
-  const searchPlugin: Plugin = {
+
+  return {
     name: "ox-content:search",
 
     resolveId(id) {
@@ -334,16 +353,17 @@ export function oxContent(options: OxContentOptions = {}): Plugin[] {
     },
 
     async load(id) {
-      if (id === "\0virtual:ox-content/search") {
-        const searchOptions = resolvedOptions.search;
-        if (!searchOptions.enabled) {
-          return "export const search = () => []; export const searchOptions = { enabled: false }; export default { search, searchOptions };";
-        }
-
-        const indexPath = resolvedOptions.base + "search-index.json";
-        return generateSearchModule(searchOptions, indexPath);
+      if (id !== "\0virtual:ox-content/search") {
+        return null;
       }
-      return null;
+
+      const searchOptions = resolvedOptions.search;
+      if (!searchOptions.enabled) {
+        return "export const search = () => []; export const searchOptions = { enabled: false }; export default { search, searchOptions };";
+      }
+
+      const indexPath = resolvedOptions.base + "search-index.json";
+      return generateSearchModule(searchOptions, indexPath);
     },
 
     async buildStart() {
@@ -352,9 +372,7 @@ export function oxContent(options: OxContentOptions = {}): Plugin[] {
         return;
       }
 
-      const root = config?.root || process.cwd();
-      const srcDir = path.resolve(root, resolvedOptions.srcDir);
-
+      const srcDir = path.resolve(getRoot(), resolvedOptions.srcDir);
       try {
         searchIndexJson = await buildSearchIndex(
           srcDir,
@@ -373,9 +391,7 @@ export function oxContent(options: OxContentOptions = {}): Plugin[] {
         return;
       }
 
-      const root = config?.root || process.cwd();
-      const outDir = path.resolve(root, resolvedOptions.outDir);
-
+      const outDir = path.resolve(getRoot(), resolvedOptions.outDir);
       try {
         await writeSearchIndex(searchIndexJson, outDir);
         console.log("[ox-content] Search index written to", path.join(outDir, "search-index.json"));
@@ -384,18 +400,6 @@ export function oxContent(options: OxContentOptions = {}): Plugin[] {
       }
     },
   };
-
-  const plugins: Plugin[] = [mainPlugin, environmentPlugin, docsPlugin, ssgPlugin, searchPlugin];
-
-  if (resolvedOptions.i18n) {
-    plugins.push(createI18nPlugin(resolvedOptions));
-  }
-
-  if (resolvedOptions.ogViewer) {
-    plugins.push(createOgViewerPlugin(resolvedOptions));
-  }
-
-  return plugins;
 }
 
 /**

@@ -611,7 +611,9 @@ describe("mdast js plugin", () => {
 
     expect(result.html).toMatchSnapshot();
   });
+});
 
+describe("mdast js plugin", () => {
   it("accepts unified preset objects in the remark stage", async () => {
     function remarkAppendParagraph() {
       return (tree: typeof baseMdast) => {
@@ -731,7 +733,9 @@ describe("mdast js plugin", () => {
       napiExports.transformMdastRaw = originalTransformMdastRaw;
     }
   });
+});
 
+describe("mdast js plugin", () => {
   it("fails fast when native mdast transfer bindings are unavailable", async () => {
     const napiExports = require.cache[napiId]?.exports as {
       transformMdastRaw?: unknown;
@@ -886,7 +890,9 @@ describe("mdast js plugin", () => {
 
     expect(result.html).toMatchSnapshot();
   });
+});
 
+describe("mdast js plugin", () => {
   it("reuses explicit bridge plugins nested inside unified presets", async () => {
     function rehypeAnnotateHeading() {
       return (tree: {
@@ -1109,7 +1115,9 @@ describe("mdast js plugin", () => {
 
     expect(result.html).toMatchSnapshot();
   });
+});
 
+describe("mdast js plugin", () => {
   it("runs remark-math with rehype-katex end-to-end", async () => {
     const result = await transformMarkdown(
       "Inline $a + b$.\n\n$$\nx^2\n$$",
@@ -1326,7 +1334,9 @@ describe("mdast js plugin", () => {
 
     expect(upstreamSnapshots).toMatchSnapshot();
   });
+});
 
+describe("mdast js plugin", () => {
   it("runs markdown-it plugins and builds the TOC from markdown-it tokens", async () => {
     function markdownItHeadingPlugin(md: MarkdownIt) {
       md.core.ruler.push("rewrite-heading", (state) => {

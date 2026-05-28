@@ -1,5 +1,11 @@
 # Changelog
 
+## [2.21.0] - 2026-05-28
+
+### Performance
+
+- optimize release profile (#202)
+
 ## [2.20.0] - 2026-05-27
 
 ### Features
