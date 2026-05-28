@@ -204,6 +204,28 @@ struct EntryBadge {
 #[derive(Debug, Clone)]
 struct SymbolLocation {
     file_name: String,
+    anchor: String,
+}
+
+#[derive(Debug, Clone)]
+struct MarkdownLinkContext<'a> {
+    options: &'a MarkdownDocsOptions,
+    current_file_name: &'a str,
+    symbol_map: &'a HashMap<String, SymbolLocation>,
+}
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+enum JsdocInlineLinkKind {
+    Link,
+    LinkCode,
+    LinkPlain,
+}
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+struct JsdocInlineLink<'a> {
+    kind: JsdocInlineLinkKind,
+    target: &'a str,
+    label: Option<&'a str>,
 }
 
 /// Generates Markdown documentation pages from extracted API docs.
@@ -214,7 +236,7 @@ pub fn generate_markdown(
 ) -> BTreeMap<String, String> {
     let mut result = BTreeMap::new();
     let sorted_docs = sort_extracted_docs(docs);
-    let symbol_map = build_symbol_map(&sorted_docs);
+    let symbol_map = build_symbol_map(&sorted_docs, options);
 
     if options.group_by == "file" {
         let mut doc_to_file = HashMap::new();
@@ -232,7 +254,7 @@ pub fn generate_markdown(
 
         result.insert(
             "index.md".to_string(),
-            generate_index(&sorted_docs, options, Some(&doc_to_file)),
+            generate_index(&sorted_docs, options, Some(&doc_to_file), Some(&symbol_map)),
         );
     } else {
         let mut by_kind: BTreeMap<String, Vec<ApiDocEntry>> = BTreeMap::new();
@@ -254,7 +276,10 @@ pub fn generate_markdown(
             );
         }
 
-        result.insert("index.md".to_string(), generate_category_index(&by_kind, options));
+        result.insert(
+            "index.md".to_string(),
+            generate_category_index(&by_kind, options, &symbol_map),
+        );
     }
 
     result
@@ -314,9 +339,133 @@ fn entry_anchor(name: &str) -> String {
     name.to_lowercase()
 }
 
+fn member_anchor(entry_name: &str, member_name: &str) -> String {
+    format!("{}-{}", entry_anchor(entry_name), entry_anchor(member_name))
+}
+
+fn format_symbol_href(context: &MarkdownLinkContext<'_>, location: &SymbolLocation) -> String {
+    if location.file_name == context.current_file_name {
+        format!("#{}", location.anchor)
+    } else {
+        doc_page_href(context.options, &location.file_name, Some(&location.anchor))
+    }
+}
+
+fn resolve_jsdoc_link_target(
+    target: &str,
+    context: Option<&MarkdownLinkContext<'_>>,
+) -> Option<String> {
+    let target = target.trim();
+    if target.starts_with("http://") || target.starts_with("https://") {
+        return Some(target.to_string());
+    }
+
+    let context = context?;
+    context.symbol_map.get(target).map(|location| format_symbol_href(context, location))
+}
+
+fn parse_jsdoc_inline_link_body(body: &str) -> Option<(&str, Option<&str>)> {
+    let body = body.trim();
+    if body.is_empty() {
+        return None;
+    }
+
+    let (target, label) =
+        body.split_once('|').map_or((body, None), |(target, label)| (target, Some(label)));
+    let target = target.trim();
+    if target.is_empty() {
+        return None;
+    }
+
+    Some((target, label.map(str::trim).filter(|label| !label.is_empty())))
+}
+
+fn parse_jsdoc_inline_link_at(text: &str, start: usize) -> Option<(JsdocInlineLink<'_>, usize)> {
+    let after_open = text.get(start + 2..)?;
+    let (kind, tag_len) = if after_open.starts_with("linkcode") {
+        (JsdocInlineLinkKind::LinkCode, "linkcode".len())
+    } else if after_open.starts_with("linkplain") {
+        (JsdocInlineLinkKind::LinkPlain, "linkplain".len())
+    } else if after_open.starts_with("link") {
+        (JsdocInlineLinkKind::Link, "link".len())
+    } else {
+        return None;
+    };
+
+    let body_start = start + 2 + tag_len;
+    if !text
+        .get(body_start..)
+        .and_then(|value| value.chars().next())
+        .is_some_and(|value| value.is_whitespace() || value == '}')
+    {
+        return None;
+    }
+
+    let body_end = body_start + text.get(body_start..)?.find('}')?;
+    let body = text.get(body_start..body_end)?;
+    let (target, label) = parse_jsdoc_inline_link_body(body)?;
+
+    Some((JsdocInlineLink { kind, target, label }, body_end + 1))
+}
+
+fn render_jsdoc_inline_link(
+    link: &JsdocInlineLink<'_>,
+    context: Option<&MarkdownLinkContext<'_>>,
+) -> String {
+    let label = link.label.unwrap_or(link.target).trim();
+    let label = if label.is_empty() { link.target.trim() } else { label };
+    let label = if link.kind == JsdocInlineLinkKind::LinkCode {
+        format!("`{}`", label.trim_matches('`'))
+    } else {
+        label.to_string()
+    };
+
+    if let Some(href) = resolve_jsdoc_link_target(link.target, context) {
+        format!("[{label}]({href})")
+    } else {
+        label
+    }
+}
+
+fn convert_jsdoc_inline_links(text: &str, context: Option<&MarkdownLinkContext<'_>>) -> String {
+    let mut result = String::new();
+    let mut cursor = 0;
+
+    while let Some(start_offset) = text[cursor..].find("{@") {
+        let start = cursor + start_offset;
+        let Some((link, end)) = parse_jsdoc_inline_link_at(text, start) else {
+            result.push_str(&text[cursor..start + 2]);
+            cursor = start + 2;
+            continue;
+        };
+
+        result.push_str(&text[cursor..start]);
+        result.push_str(&render_jsdoc_inline_link(&link, context));
+        cursor = end;
+    }
+
+    if cursor == 0 {
+        return text.to_string();
+    }
+
+    result.push_str(&text[cursor..]);
+    result
+}
+
+fn process_doc_text(text: &str, context: Option<&MarkdownLinkContext<'_>>) -> String {
+    let text =
+        context.map_or_else(|| text.to_string(), |context| convert_symbol_links(text, context));
+    convert_jsdoc_inline_links(&text, context)
+}
+
+fn render_doc_inline_html(text: &str, context: Option<&MarkdownLinkContext<'_>>) -> String {
+    render_inline_html(&process_doc_text(text, context))
+}
+
 fn clean_summary_text(text: &str, max_length: usize) -> String {
     static MARKDOWN_LINK_RE: RegexCache = OnceLock::new();
     static BRACKET_LINK_RE: RegexCache = OnceLock::new();
+    static INLINE_CODE_RE: RegexCache = OnceLock::new();
     static WHITESPACE_RE: RegexCache = OnceLock::new();
 
     if text.is_empty() {
@@ -330,12 +479,16 @@ fn clean_summary_text(text: &str, max_length: usize) -> String {
     let Some(bracket_link_re) = cached_regex(&BRACKET_LINK_RE, r"\[([^\]]+)\]") else {
         return truncate_summary_text(&fallback(), max_length);
     };
+    let Some(inline_code_re) = cached_regex(&INLINE_CODE_RE, r"`([^`]+)`") else {
+        return truncate_summary_text(&fallback(), max_length);
+    };
     let Some(whitespace_re) = cached_regex(&WHITESPACE_RE, r"\s+") else {
         return truncate_summary_text(&fallback(), max_length);
     };
 
     let collapsed = markdown_link_re.replace_all(text, "$1").to_string();
     let collapsed = bracket_link_re.replace_all(&collapsed, "$1").to_string();
+    let collapsed = inline_code_re.replace_all(&collapsed, "$1").to_string();
     let collapsed = whitespace_re.replace_all(&collapsed, " ").trim().to_string();
 
     truncate_summary_text(&collapsed, max_length)
@@ -888,9 +1041,13 @@ fn parse_example_block(example: &str) -> (String, String) {
     }
 }
 
-fn render_overview_line(entry: &ApiDocEntry, href: &str) -> String {
+fn render_overview_line(
+    entry: &ApiDocEntry,
+    href: &str,
+    context: Option<&MarkdownLinkContext<'_>>,
+) -> String {
     let signature = normalize_signature(entry.signature.as_deref());
-    let summary = clean_summary_text(&entry.description, 88);
+    let summary = clean_summary_text(&process_doc_text(&entry.description, context), 88);
     let mut parts = vec![format!("- [`{}`]({href})", entry.name), format!("`{}`", entry.kind)];
 
     if let Some(signature) = signature {
@@ -904,9 +1061,13 @@ fn render_overview_line(entry: &ApiDocEntry, href: &str) -> String {
     format!("{}\n", parts.join(" "))
 }
 
-fn render_overview_html_item(entry: &ApiDocEntry, href: &str) -> String {
+fn render_overview_html_item(
+    entry: &ApiDocEntry,
+    href: &str,
+    context: Option<&MarkdownLinkContext<'_>>,
+) -> String {
     let signature = normalize_signature(entry.signature.as_deref());
-    let summary = clean_summary_text(&entry.description, 88);
+    let summary = clean_summary_text(&process_doc_text(&entry.description, context), 88);
     let meta = render_entry_badges_html(entry, "ox-api-module__meta");
     let heading = if let Some(signature) = signature {
         format!(
@@ -938,7 +1099,10 @@ fn render_overview_html_item(entry: &ApiDocEntry, href: &str) -> String {
     )
 }
 
-fn render_params_list_html(params: &[ApiParamDoc]) -> String {
+fn render_params_list_html(
+    params: &[ApiParamDoc],
+    context: Option<&MarkdownLinkContext<'_>>,
+) -> String {
     let rows = params
         .iter()
         .map(|param| {
@@ -971,7 +1135,7 @@ fn render_params_list_html(params: &[ApiParamDoc]) -> String {
                 } else {
                     format!(
                         "<p class=\"ox-api-entry__param-description\">{}</p>",
-                        render_inline_html(&description)
+                        render_doc_inline_html(&description, context)
                     )
                 }
             )
@@ -989,13 +1153,13 @@ fn render_params_list_html(params: &[ApiParamDoc]) -> String {
     )
 }
 
-fn render_tag_list_html(tags: &[ApiDocTag]) -> String {
+fn render_tag_list_html(tags: &[ApiDocTag], context: Option<&MarkdownLinkContext<'_>>) -> String {
     let mut items = String::new();
     for tag in tags {
         push_fmt(&mut items, format_args!(
             "<li><span class=\"ox-api-entry__tag-name\">@{}</span><span class=\"ox-api-entry__tag-value\">{}</span></li>",
             escape_html(&tag.tag),
-            render_inline_html(&tag.value)
+            render_doc_inline_html(&tag.value, context)
         ));
     }
 
@@ -1041,13 +1205,16 @@ fn render_member_type_html(member: &ApiDocMember) -> String {
     })
 }
 
-fn render_member_description_html(member: &ApiDocMember) -> String {
+fn render_member_description_html(
+    member: &ApiDocMember,
+    context: Option<&MarkdownLinkContext<'_>>,
+) -> String {
     let mut blocks = Vec::new();
 
     if !member.description.is_empty() {
         blocks.push(format!(
             "<div class=\"ox-api-entry__member-description\">{}</div>",
-            render_inline_html(&member.description)
+            render_doc_inline_html(&member.description, context)
         ));
     }
 
@@ -1070,7 +1237,7 @@ fn render_member_description_html(member: &ApiDocMember) -> String {
                     if description.is_empty() {
                         String::new()
                     } else {
-                        format!(" {}", render_inline_html(&description))
+                        format!(" {}", render_doc_inline_html(&description, context))
                     }
                 ),
             );
@@ -1082,7 +1249,7 @@ fn render_member_description_html(member: &ApiDocMember) -> String {
         if !returns.description.is_empty() {
             blocks.push(format!(
                 "<div class=\"ox-api-entry__member-return\"><span>Returns</span> {}</div>",
-                render_inline_html(&returns.description)
+                render_doc_inline_html(&returns.description, context)
             ));
         }
     }
@@ -1090,7 +1257,12 @@ fn render_member_description_html(member: &ApiDocMember) -> String {
     blocks.join("")
 }
 
-fn render_member_table_html(title: &str, members: &[&ApiDocMember]) -> String {
+fn render_member_table_html(
+    entry_name: &str,
+    title: &str,
+    members: &[&ApiDocMember],
+    context: Option<&MarkdownLinkContext<'_>>,
+) -> String {
     if members.is_empty() {
         return String::new();
     }
@@ -1099,17 +1271,18 @@ fn render_member_table_html(title: &str, members: &[&ApiDocMember]) -> String {
         .iter()
         .map(|member| {
             format!(
-                "<tr>
+                "<tr id=\"{}\">
   <td><code>{}</code>{}</td>
   <td><span class=\"ox-api-entry__member-kind\">{}</span></td>
   <td>{}</td>
   <td>{}</td>
 </tr>",
+                escape_html(&member_anchor(entry_name, &member.name)),
                 escape_html(&member.name),
                 render_member_flags(member),
                 escape_html(&member.kind),
                 render_member_type_html(member),
-                render_member_description_html(member)
+                render_member_description_html(member, context)
             )
         })
         .collect::<Vec<_>>()
@@ -1129,55 +1302,87 @@ fn render_member_table_html(title: &str, members: &[&ApiDocMember]) -> String {
     )
 }
 
-fn render_members_table_html(members: &[ApiDocMember], entry_kind: &str) -> String {
-    if members.is_empty() {
+fn render_members_table_html(
+    entry: &ApiDocEntry,
+    context: Option<&MarkdownLinkContext<'_>>,
+) -> String {
+    if entry.members.is_empty() {
         return String::new();
     }
 
     let constructors =
-        members.iter().filter(|member| member.kind == "constructor").collect::<Vec<_>>();
-    let static_methods = members
+        entry.members.iter().filter(|member| member.kind == "constructor").collect::<Vec<_>>();
+    let static_methods = entry
+        .members
         .iter()
         .filter(|member| {
             member.r#static && matches!(member.kind.as_str(), "method" | "getter" | "setter")
         })
         .collect::<Vec<_>>();
-    let methods = members
+    let methods = entry
+        .members
         .iter()
         .filter(|member| {
             !member.r#static && matches!(member.kind.as_str(), "method" | "getter" | "setter")
         })
         .collect::<Vec<_>>();
-    let static_properties = members
+    let static_properties = entry
+        .members
         .iter()
         .filter(|member| member.r#static && member.kind == "property")
         .collect::<Vec<_>>();
-    let properties = members
+    let properties = entry
+        .members
         .iter()
         .filter(|member| !member.r#static && member.kind == "property")
         .collect::<Vec<_>>();
     let enum_members =
-        members.iter().filter(|member| member.kind == "enumMember").collect::<Vec<_>>();
+        entry.members.iter().filter(|member| member.kind == "enumMember").collect::<Vec<_>>();
 
     let mut groups = Vec::new();
-    match entry_kind {
+    match entry.kind.as_str() {
         "class" => {
-            groups.push(render_member_table_html("Constructors", &constructors));
-            groups.push(render_member_table_html("Static Methods", &static_methods));
-            groups.push(render_member_table_html("Methods", &methods));
-            groups.push(render_member_table_html("Static Properties", &static_properties));
-            groups.push(render_member_table_html("Properties", &properties));
+            groups.push(render_member_table_html(
+                &entry.name,
+                "Constructors",
+                &constructors,
+                context,
+            ));
+            groups.push(render_member_table_html(
+                &entry.name,
+                "Static Methods",
+                &static_methods,
+                context,
+            ));
+            groups.push(render_member_table_html(&entry.name, "Methods", &methods, context));
+            groups.push(render_member_table_html(
+                &entry.name,
+                "Static Properties",
+                &static_properties,
+                context,
+            ));
+            groups.push(render_member_table_html(&entry.name, "Properties", &properties, context));
         }
         "interface" => {
-            groups.push(render_member_table_html("Properties", &properties));
-            groups.push(render_member_table_html("Methods", &methods));
+            groups.push(render_member_table_html(&entry.name, "Properties", &properties, context));
+            groups.push(render_member_table_html(&entry.name, "Methods", &methods, context));
         }
         "type" => {
-            groups.push(render_member_table_html("Properties", &properties));
-            groups.push(render_member_table_html("Methods", &methods));
-            groups.push(render_member_table_html("Enum Members", &enum_members));
+            groups.push(render_member_table_html(&entry.name, "Properties", &properties, context));
+            groups.push(render_member_table_html(&entry.name, "Methods", &methods, context));
+            groups.push(render_member_table_html(
+                &entry.name,
+                "Enum Members",
+                &enum_members,
+                context,
+            ));
         }
-        _ => groups.push(render_member_table_html("Members", &members.iter().collect::<Vec<_>>())),
+        _ => groups.push(render_member_table_html(
+            &entry.name,
+            "Members",
+            &entry.members.iter().collect::<Vec<_>>(),
+            context,
+        )),
     }
 
     let groups = groups.into_iter().filter(|group| !group.is_empty()).collect::<Vec<_>>();
@@ -1200,12 +1405,11 @@ fn generate_entry_markdown(
     current_file_name: Option<&str>,
     symbol_map: Option<&HashMap<String, SymbolLocation>>,
 ) -> String {
-    let processed_description = match (current_file_name, symbol_map) {
-        (Some(current_file_name), Some(symbol_map)) if !entry.description.is_empty() => {
-            convert_symbol_links(&entry.description, options, current_file_name, symbol_map)
-        }
-        _ => entry.description.clone(),
-    };
+    let link_context = current_file_name.zip(symbol_map).map(|(current_file_name, symbol_map)| {
+        MarkdownLinkContext { options, current_file_name, symbol_map }
+    });
+    let link_context = link_context.as_ref();
+    let processed_description = process_doc_text(&entry.description, link_context);
     let summary_signature = normalize_signature(entry.signature.as_deref());
     let source_href = options.github_url.as_ref().map(|github_url| {
         generate_source_href(&entry.file, github_url, Some(entry.line), Some(entry.end_line))
@@ -1238,12 +1442,12 @@ fn generate_entry_markdown(
     }
 
     if !entry.members.is_empty() {
-        body.push_str(&render_members_table_html(&entry.members, &entry.kind));
+        body.push_str(&render_members_table_html(entry, link_context));
         body.push('\n');
     }
 
     if !entry.params.is_empty() {
-        body.push_str(&render_params_list_html(&entry.params));
+        body.push_str(&render_params_list_html(&entry.params, link_context));
         body.push('\n');
     }
 
@@ -1264,7 +1468,7 @@ fn generate_entry_markdown(
                 } else {
                     format!(
                         "<p class=\"ox-api-entry__return-description\">{}</p>",
-                        render_inline_html(&returns.description)
+                        render_doc_inline_html(&returns.description, link_context)
                     )
                 }
             ),
@@ -1302,7 +1506,7 @@ fn generate_entry_markdown(
     }
 
     if !entry.tags.is_empty() {
-        body.push_str(&render_tag_list_html(&entry.tags));
+        body.push_str(&render_tag_list_html(&entry.tags, link_context));
         body.push('\n');
     }
 
@@ -1358,7 +1562,13 @@ fn generate_index(
     docs: &[ApiDocModule],
     options: &MarkdownDocsOptions,
     doc_to_file: Option<&HashMap<String, String>>,
+    symbol_map: Option<&HashMap<String, SymbolLocation>>,
 ) -> String {
+    let link_context = symbol_map.map(|symbol_map| MarkdownLinkContext {
+        options,
+        current_file_name: "index",
+        symbol_map,
+    });
     let mut markdown = "# API Documentation\n\n".to_string();
     markdown.push_str("Generated by [Ox Content](https://github.com/ubugeeei/ox-content)\n\n");
     markdown.push_str(
@@ -1413,7 +1623,10 @@ fn generate_index(
             let href = doc_page_href(options, &file_name, Some(&entry_anchor(&entry.name)));
             push_fmt(
                 &mut markdown,
-                format_args!("      {}\n", render_overview_html_item(entry, &href)),
+                format_args!(
+                    "      {}\n",
+                    render_overview_html_item(entry, &href, link_context.as_ref())
+                ),
             );
         }
 
@@ -1436,6 +1649,8 @@ fn generate_category_markdown(
     symbol_map: &HashMap<String, SymbolLocation>,
 ) -> String {
     let category_file_name = fmt_args(format_args!("{kind}s"));
+    let link_context =
+        MarkdownLinkContext { options, current_file_name: &category_file_name, symbol_map };
     let mut markdown = fmt_args(format_args!("# {}s\n\n", capitalize_ascii(kind)));
     push_fmt(
         &mut markdown,
@@ -1453,6 +1668,7 @@ fn generate_category_markdown(
         markdown.push_str(&render_overview_line(
             entry,
             &fmt_args(format_args!("#{}", entry_anchor(&entry.name))),
+            Some(&link_context),
         ));
     }
     markdown.push_str("\n## Reference\n\n");
@@ -1476,7 +1692,9 @@ fn generate_category_markdown(
 fn generate_category_index(
     by_kind: &BTreeMap<String, Vec<ApiDocEntry>>,
     options: &MarkdownDocsOptions,
+    symbol_map: &HashMap<String, SymbolLocation>,
 ) -> String {
+    let link_context = MarkdownLinkContext { options, current_file_name: "index", symbol_map };
     let mut markdown = "# API Documentation\n\n".to_string();
     markdown.push_str("Generated by [Ox Content](https://github.com/ubugeeei/ox-content)\n\n");
     markdown.push_str(&render_stats_html(
@@ -1507,7 +1725,7 @@ fn generate_category_index(
         for entry in entries {
             let href =
                 doc_page_href(options, &category_file_name, Some(&entry_anchor(&entry.name)));
-            markdown.push_str(&render_overview_line(entry, &href));
+            markdown.push_str(&render_overview_line(entry, &href, Some(&link_context)));
         }
         markdown.push('\n');
     }
@@ -1515,12 +1733,7 @@ fn generate_category_index(
     markdown
 }
 
-fn convert_symbol_links(
-    text: &str,
-    options: &MarkdownDocsOptions,
-    current_file_name: &str,
-    symbol_map: &HashMap<String, SymbolLocation>,
-) -> String {
+fn convert_symbol_links(text: &str, context: &MarkdownLinkContext<'_>) -> String {
     static SYMBOL_RE: RegexCache = OnceLock::new();
 
     let Some(symbol_re) = cached_regex(&SYMBOL_RE, r"\[([A-Z_]\w*)\]") else {
@@ -1539,22 +1752,15 @@ fn convert_symbol_links(
         }
 
         let symbol_name = captures.get(1).map_or("", |value| value.as_str());
-        let Some(location) = symbol_map.get(symbol_name) else {
+        let Some(location) = context.symbol_map.get(symbol_name) else {
             continue;
         };
 
         result.push_str(&text[last_index..mat.start()]);
-        if location.file_name == current_file_name {
-            push_fmt(&mut result, format_args!("[{symbol_name}](#{})", symbol_name.to_lowercase()));
-        } else {
-            push_fmt(
-                &mut result,
-                format_args!(
-                    "[{symbol_name}]({})",
-                    doc_page_href(options, &location.file_name, Some(&symbol_name.to_lowercase()))
-                ),
-            );
-        }
+        push_fmt(
+            &mut result,
+            format_args!("[{symbol_name}]({})", format_symbol_href(context, location)),
+        );
         last_index = mat.end();
     }
 
@@ -1566,17 +1772,36 @@ fn convert_symbol_links(
     result
 }
 
-fn build_symbol_map(docs: &[ApiDocModule]) -> HashMap<String, SymbolLocation> {
+fn build_symbol_map(
+    docs: &[ApiDocModule],
+    options: &MarkdownDocsOptions,
+) -> HashMap<String, SymbolLocation> {
     let mut map = HashMap::new();
 
     for doc in docs {
-        let mut file_name = file_stem(&doc.file);
-        if file_name == "index" {
-            file_name = "index-module".to_string();
-        }
-
         for entry in &doc.entries {
-            map.insert(entry.name.clone(), SymbolLocation { file_name: file_name.clone() });
+            let mut file_name = if options.group_by == "category" {
+                fmt_args(format_args!("{}s", entry.kind))
+            } else {
+                file_stem(&doc.file)
+            };
+            if file_name == "index" {
+                file_name = "index-module".to_string();
+            }
+
+            map.insert(
+                entry.name.clone(),
+                SymbolLocation { file_name: file_name.clone(), anchor: entry_anchor(&entry.name) },
+            );
+            for member in &entry.members {
+                map.insert(
+                    fmt_args(format_args!("{}.{}", entry.name, member.name)),
+                    SymbolLocation {
+                        file_name: file_name.clone(),
+                        anchor: member_anchor(&entry.name, &member.name),
+                    },
+                );
+            }
         }
     }
 
@@ -1753,6 +1978,112 @@ mod tests {
         let page = markdown.get("command.md").unwrap();
 
         assert!(page.contains("<a href=\"/api-ox/context#commandcontext\">CommandContext</a>"));
+    }
+
+    #[test]
+    fn jsdoc_inline_links_render_across_doc_fields() {
+        let docs = vec![
+            ApiDocModule {
+                file: "/repo/src/agent.ts".to_string(),
+                entries: vec![test_entry(
+                    "AgentProfile",
+                    "interface",
+                    "/repo/src/agent.ts",
+                    "Agent profile.",
+                )],
+            },
+            ApiDocModule {
+                file: "/repo/src/command.ts".to_string(),
+                entries: vec![ApiDocEntry {
+                    name: "Command".to_string(),
+                    kind: "interface".to_string(),
+                    description: "Runtime command.".to_string(),
+                    params: vec![],
+                    returns: None,
+                    examples: vec![],
+                    tags: vec![],
+                    private: false,
+                    file: "/repo/src/command.ts".to_string(),
+                    line: 1,
+                    end_line: 10,
+                    signature: Some("export interface Command".to_string()),
+                    members: vec![ApiDocMember {
+                        name: "args".to_string(),
+                        kind: "property".to_string(),
+                        description: "All {@linkcode Command.args} names use kebab-case."
+                            .to_string(),
+                        signature: None,
+                        type_annotation: Some("Record<string, unknown>".to_string()),
+                        params: vec![],
+                        returns: None,
+                        optional: false,
+                        readonly: false,
+                        r#static: false,
+                        private: false,
+                        tags: vec![],
+                        line: 5,
+                        end_line: 5,
+                    }],
+                }],
+            },
+            ApiDocModule {
+                file: "/repo/src/build.ts".to_string(),
+                entries: vec![ApiDocEntry {
+                    name: "buildCommand".to_string(),
+                    kind: "function".to_string(),
+                    description: "Builds {@linkcode Command | command} metadata.".to_string(),
+                    params: vec![ApiParamDoc {
+                        name: "entry".to_string(),
+                        type_annotation: "Command".to_string(),
+                        description: "A {@linkcode Command | entry command}".to_string(),
+                        optional: false,
+                        default_value: None,
+                    }],
+                    returns: Some(ApiReturnDoc {
+                        type_annotation: "AgentProfile".to_string(),
+                        description: "An {@link AgentProfile} result.".to_string(),
+                    }),
+                    examples: vec![],
+                    tags: vec![
+                        ApiDocTag {
+                            tag: "see".to_string(),
+                            value: "delegated to {@link https://github.com/unjs/std-env | std-env}"
+                                .to_string(),
+                        },
+                        ApiDocTag {
+                            tag: "remarks".to_string(),
+                            value: "Falls back to {@link MissingSymbol | missing}.".to_string(),
+                        },
+                    ],
+                    private: false,
+                    file: "/repo/src/build.ts".to_string(),
+                    line: 1,
+                    end_line: 20,
+                    signature: Some(
+                        "export function buildCommand(entry: Command): AgentProfile".to_string(),
+                    ),
+                    members: vec![],
+                }],
+            },
+        ];
+
+        let markdown = generate_markdown(&docs, &MarkdownDocsOptions::default());
+        let build_page = markdown.get("build.md").unwrap();
+        let command_page = markdown.get("command.md").unwrap();
+        let index = markdown.get("index.md").unwrap();
+
+        assert!(!build_page.contains("{@link"));
+        assert!(!command_page.contains("{@link"));
+        assert!(!index.contains("{@link"));
+        assert!(
+            build_page.contains("<a href=\"./command.md#command\"><code>entry command</code></a>")
+        );
+        assert!(build_page.contains("<a href=\"./agent.md#agentprofile\">AgentProfile</a>"));
+        assert!(build_page.contains("<a href=\"https://github.com/unjs/std-env\">std-env</a>"));
+        assert!(build_page.contains("Falls back to missing."));
+        assert!(command_page.contains("<tr id=\"command-args\">"));
+        assert!(command_page.contains("<a href=\"#command-args\"><code>Command.args</code></a>"));
+        assert!(index.contains("Builds command metadata."));
     }
 
     #[test]
