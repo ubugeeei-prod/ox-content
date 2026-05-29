@@ -372,7 +372,7 @@ mod tests {
     #[test]
     fn numbers_groups_from_start_and_counts() {
         let result =
-            transform_tabs(r#"<tabs><tab>a</tab></tabs> middle <tabs><tab>b</tab></tabs>"#, 5);
+            transform_tabs(r"<tabs><tab>a</tab></tabs> middle <tabs><tab>b</tab></tabs>", 5);
         assert_eq!(result.group_count, 2);
         assert!(result.html.contains(r#"data-group="5""#));
         assert!(result.html.contains(r#"data-group="6""#));
@@ -381,7 +381,7 @@ mod tests {
 
     #[test]
     fn leaves_empty_tabs_untouched_and_uncounted() {
-        let html = r#"<tabs>   </tabs>"#;
+        let html = r"<tabs>   </tabs>";
         let result = transform_tabs(html, 0);
         assert_eq!(result.group_count, 0);
         assert_eq!(result.html, html);
@@ -389,7 +389,7 @@ mod tests {
 
     #[test]
     fn passes_through_without_tabs_marker() {
-        let html = r#"<p>No tabs here, just a <table><tr><td>cell</td></tr></table>.</p>"#;
+        let html = r"<p>No tabs here, just a <table><tr><td>cell</td></tr></table>.</p>";
         let result = transform_tabs(html, 0);
         assert_eq!(result.group_count, 0);
         assert_eq!(result.html, html);
