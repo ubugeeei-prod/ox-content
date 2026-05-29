@@ -38,9 +38,9 @@ describe("builtin embed input hardening", () => {
       path: "npm/vite-plugin-ox-content/src/plugins/github.ts",
       lines: { start: 10, end: 12 },
     });
-    expect(parseGitHubPermalink("https://example.com/ubugeeei-prod/ox-content/blob/main/a.ts")).toBe(
-      null,
-    );
+    expect(
+      parseGitHubPermalink("https://example.com/ubugeeei-prod/ox-content/blob/main/a.ts"),
+    ).toBe(null);
 
     await expect(
       collectGitHubSources(
