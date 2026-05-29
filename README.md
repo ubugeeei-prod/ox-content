@@ -12,9 +12,9 @@
 </p>
 
 <p align="center">
-  <a href="https://ubugeeei.github.io/ox-content/">Documentation</a> •
-  <a href="https://ubugeeei.github.io/ox-content/getting-started">Getting Started</a> •
-  <a href="https://ubugeeei.github.io/ox-content/playground/">Playground</a> •
+  <a href="https://ox-content.void.app/">Documentation</a> •
+  <a href="https://ox-content.void.app/getting-started">Getting Started</a> •
+  <a href="https://ox-content.void.app/playground/">Playground</a> •
   <a href="./SECURITY.md">Security</a>
 </p>
 
@@ -201,7 +201,7 @@ For CI or editor-independent checks, run:
 cargo run -p ox_content_mdc_checker --bin ox-content-mdc-check -- docs/page.mdc
 ```
 
-**[Read the full documentation →](https://ubugeeei.github.io/ox-content/)**
+**[Read the full documentation →](https://ox-content.void.app/)**
 
 ## Performance
 
@@ -258,7 +258,7 @@ The dev shell is pinned in `flake.nix`, the workspace task graph lives in `vite.
 
 See [CONTRIBUTING.md](./CONTRIBUTING.md) for branch, commit, PR, testing, and release-note guidance.
 
-See the [documentation](https://ubugeeei.github.io/ox-content/) for more details.
+See the [documentation](https://ox-content.void.app/) for more details.
 
 ## Community Credits
 

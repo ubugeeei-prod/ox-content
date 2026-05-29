@@ -68,7 +68,7 @@ function normalizePackageJson(): void {
   pkg.name = "@ox-content/wasm";
   pkg.author = "ubugeeei";
   delete pkg.collaborators;
-  pkg.homepage = "https://ubugeeei.github.io/ox-content/packages/wasm";
+  pkg.homepage = "https://ox-content.void.app/packages/wasm";
   pkg.repository = {
     type: "git",
     url: "https://github.com/ubugeeei/ox-content.git",

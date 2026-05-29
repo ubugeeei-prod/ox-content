@@ -102,6 +102,14 @@ export default defineConfig({
       }),
       "build:wasm": task("node --experimental-strip-types scripts/build-wasm-package.ts"),
 
+      // Assemble docs + Rust API docs + playground into a single `dist/` for deployment.
+      "build:site": uncachedTask("node --experimental-strip-types scripts/assemble-site.ts", {
+        dependsOn: ["build:docs", "doc:cargo", "build:playground"],
+      }),
+      deploy: uncachedTask("npx -y void deploy --dir dist", {
+        dependsOn: ["build:site"],
+      }),
+
       "workspace:test": noopTask(["test:rust", "test:ts"]),
       "test:rust": task("cargo test --workspace"),
       "test:rust-verbose": uncachedTask("cargo test --workspace -- --nocapture"),

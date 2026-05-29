@@ -8,12 +8,11 @@ import { oxContentHighlightTheme } from "./ox-content-highlight-theme";
  * Dogfooding: Using ox-content to build ox-content's own documentation.
  * Uses SSG to generate static HTML from Markdown files.
  */
-export default defineConfig(({ mode }) => {
-  const isProd = mode === "production";
-  const base = isProd ? "/ox-content/" : "/";
+export default defineConfig(() => {
+  // Void serves the site at the domain root (not a subpath like GitHub Pages did).
+  const base = "/";
 
   return {
-    // Site base path (for GitHub Pages in prod, root for dev)
     base,
 
     plugins: [
@@ -28,9 +27,9 @@ export default defineConfig(({ mode }) => {
         // SSG options with theme customization
         ssg: {
           siteName: "Ox Content",
-          siteUrl: "https://ubugeeei.github.io",
+          siteUrl: "https://ox-content.void.app",
           generateOgImage: true,
-          ogImage: "https://ubugeeei.github.io/ox-content/og-image.png",
+          ogImage: "https://ox-content.void.app/og-image.png",
           theme: defineTheme({
             extends: defaultTheme,
             header: {

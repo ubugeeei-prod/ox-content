@@ -39,6 +39,9 @@ crates/ox_content_wasm/pkg/
 *.dylib
 *.dll
 
+# Void deployment (local project linkage; CI uses VOID_PROJECT)
+.void/
+
 # Test and coverage
 /coverage
 *.lcov
