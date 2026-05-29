@@ -7,6 +7,7 @@ mod highlight;
 mod lint;
 mod mdast;
 mod mdast_raw;
+mod tabs;
 mod transfer;
 mod transformer;
 mod youtube;
@@ -1189,6 +1190,25 @@ pub fn transform_youtube_embeds(html: String, options: Option<JsYouTubeOptions>)
         None => defaults,
     };
     youtube::transform_youtube(&html, &resolved)
+}
+
+/// Result of [`transform_tabs_embeds`].
+#[napi(object)]
+pub struct JsTabsTransformResult {
+    /// HTML with every `<tabs>` block expanded.
+    pub html: String,
+    /// Number of tab groups expanded; the caller advances its group counter by
+    /// this amount so generated CSS covers exactly the emitted groups.
+    pub group_count: u32,
+}
+
+/// Rewrites `<tabs><tab>…</tab></tabs>` blocks in rendered HTML into the no-JS
+/// CSS tab widget plus a `<details>` fallback. Rust port of the TS
+/// `transformTabs`. Groups are numbered from `start_group`.
+#[napi]
+pub fn transform_tabs_embeds(html: String, start_group: u32) -> JsTabsTransformResult {
+    let result = tabs::transform_tabs(&html, start_group);
+    JsTabsTransformResult { html: result.html, group_count: result.group_count }
 }
 
 /// Transforms Markdown source into HTML, frontmatter, and TOC.

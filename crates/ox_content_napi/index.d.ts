@@ -850,6 +850,17 @@ export interface JsSsgSidebarItem {
   collapsed?: boolean
 }
 
+/** Result of [`transform_tabs_embeds`]. */
+export interface JsTabsTransformResult {
+  /** HTML with every `<tabs>` block expanded. */
+  html: string
+  /**
+   * Number of tab groups expanded; the caller advances its group counter by
+   * this amount so generated CSS covers exactly the emitted groups.
+   */
+  groupCount: number
+}
+
 /** Theme colors for JavaScript. */
 export interface JsThemeColors {
   /** Primary accent color. */
@@ -1211,6 +1222,13 @@ export interface TransformResult {
   /** Parse/render errors, if any. */
   errors: Array<string>
 }
+
+/**
+ * Rewrites `<tabs><tab>…</tab></tabs>` blocks in rendered HTML into the no-JS
+ * CSS tab widget plus a `<details>` fallback. Rust port of the TS
+ * `transformTabs`. Groups are numbered from `start_group`.
+ */
+export declare function transformTabsEmbeds(html: string, startGroup: number): JsTabsTransformResult
 
 /**
  * Rewrites `<youtube …>` elements in rendered HTML into responsive,
