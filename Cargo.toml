@@ -3,7 +3,7 @@ resolver = "2"
 members = ["crates/*"]
 
 [workspace.package]
-version = "2.23.0"
+version = "2.24.0"
 authors = ["ubugeeei"]
 categories = ["development-tools"]
 edition = "2021"
@@ -63,22 +63,22 @@ use_self = "allow"
 
 [workspace.dependencies]
 # Internal crates (version is used for crates.io publish, path for local dev)
-ox_content_allocator = { version = "2.23.0", path = "crates/ox_content_allocator" }
-ox_content_ast = { version = "2.23.0", path = "crates/ox_content_ast" }
-ox_content_parser = { version = "2.23.0", path = "crates/ox_content_parser" }
-ox_content_renderer = { version = "2.23.0", path = "crates/ox_content_renderer" }
-ox_content_napi = { version = "2.23.0", path = "crates/ox_content_napi" }
-ox_content_vite = { version = "2.23.0", path = "crates/ox_content_vite" }
-ox_content_og_image = { version = "2.23.0", path = "crates/ox_content_og_image" }
-ox_content_docs = { version = "2.23.0", path = "crates/ox_content_docs" }
-ox_content_search = { version = "2.23.0", path = "crates/ox_content_search" }
-ox_content_ssg = { version = "2.23.0", path = "crates/ox_content_ssg" }
-ox_content_i18n = { version = "2.23.0", path = "crates/ox_content_i18n" }
-ox_content_i18n_checker = { version = "2.23.0", path = "crates/ox_content_i18n_checker" }
-ox_content_mdc_checker = { version = "2.23.0", path = "crates/ox_content_mdc_checker" }
-ox_content_link_checker = { version = "2.23.0", path = "crates/ox_content_link_checker" }
-ox_content_component_resolver = { version = "2.23.0", path = "crates/ox_content_component_resolver" }
-ox_content_profiler = { version = "2.23.0", path = "crates/ox_content_profiler" }
+ox_content_allocator = { version = "2.24.0", path = "crates/ox_content_allocator" }
+ox_content_ast = { version = "2.24.0", path = "crates/ox_content_ast" }
+ox_content_parser = { version = "2.24.0", path = "crates/ox_content_parser" }
+ox_content_renderer = { version = "2.24.0", path = "crates/ox_content_renderer" }
+ox_content_napi = { version = "2.24.0", path = "crates/ox_content_napi" }
+ox_content_vite = { version = "2.24.0", path = "crates/ox_content_vite" }
+ox_content_og_image = { version = "2.24.0", path = "crates/ox_content_og_image" }
+ox_content_docs = { version = "2.24.0", path = "crates/ox_content_docs" }
+ox_content_search = { version = "2.24.0", path = "crates/ox_content_search" }
+ox_content_ssg = { version = "2.24.0", path = "crates/ox_content_ssg" }
+ox_content_i18n = { version = "2.24.0", path = "crates/ox_content_i18n" }
+ox_content_i18n_checker = { version = "2.24.0", path = "crates/ox_content_i18n_checker" }
+ox_content_mdc_checker = { version = "2.24.0", path = "crates/ox_content_mdc_checker" }
+ox_content_link_checker = { version = "2.24.0", path = "crates/ox_content_link_checker" }
+ox_content_component_resolver = { version = "2.24.0", path = "crates/ox_content_component_resolver" }
+ox_content_profiler = { version = "2.24.0", path = "crates/ox_content_profiler" }
 ox_jsdoc = "0.0.16"
 
 # Memory allocation
