@@ -1,5 +1,17 @@
 # Changelog
 
+## [2.23.0] - 2026-05-29
+
+### Features
+
+- complete typedoc path strategy support (#214)
+- autolink bare URLs in text (#205)
+
+### Bug Fixes
+
+- support typedoc markdown paths (#209)
+- render JSDoc inline links (#204)
+
 ## [2.22.0] - 2026-05-28
 
 ### Features
