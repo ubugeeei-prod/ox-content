@@ -201,6 +201,31 @@
         "name": "jszip",
         "license": "(MIT OR GPL-3.0-or-later)",
         "reason": "Dev-only transitive dependency of @vscode/test-electron (extension test harness); MIT branch of the dual license is selected."
+      },
+      {
+        "name": "@bruits/satteri-linux-x64-gnu",
+        "license": "Unknown",
+        "reason": "Optional native binary of satteri (MIT), a benchmark-only Markdown engine comparison target; platform package omits its own license field."
+      },
+      {
+        "name": "@bruits/satteri-darwin-x64",
+        "license": "Unknown",
+        "reason": "Optional native binary of satteri (MIT), a benchmark-only Markdown engine comparison target; platform package omits its own license field."
+      },
+      {
+        "name": "@bruits/satteri-darwin-arm64",
+        "license": "Unknown",
+        "reason": "Optional native binary of satteri (MIT), a benchmark-only Markdown engine comparison target; platform package omits its own license field."
+      },
+      {
+        "name": "@bruits/satteri-win32-x64-msvc",
+        "license": "Unknown",
+        "reason": "Optional native binary of satteri (MIT), a benchmark-only Markdown engine comparison target; platform package omits its own license field."
+      },
+      {
+        "name": "@bruits/satteri-wasm32-wasi",
+        "license": "Unknown",
+        "reason": "Optional native binary of satteri (MIT), a benchmark-only Markdown engine comparison target; platform package omits its own license field."
       }
     ]
   }
