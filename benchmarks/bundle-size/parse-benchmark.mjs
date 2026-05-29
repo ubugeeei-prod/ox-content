@@ -350,6 +350,17 @@ async function runBenchmarks() {
   const remarkHtml = (await import("remark-html")).default;
   await initMd4w();
 
+  // satteri is an optional comparison target. It may be missing when the
+  // benchmark runs against an older checkout (e.g. the CI base ref that
+  // predates this dependency), so load it defensively like @ox-content/napi.
+  let satteri = null;
+  try {
+    satteri = await import("satteri");
+    console.log("Using satteri\n");
+  } catch {
+    console.log("satteri not available, skipping satteri comparisons\n");
+  }
+
   // Try to import NAPI
   let napi = null;
   try {
@@ -388,6 +399,10 @@ async function runBenchmarks() {
     { name: "remark", fn: (input) => remarkParseProcessor.parse(input) },
   );
 
+  if (satteri) {
+    parsers.push({ name: "satteri", fn: (input) => satteri.markdownToMdast(input) });
+  }
+
   // Define renderers (parse + render)
   const renderers = [];
 
@@ -409,6 +424,10 @@ async function runBenchmarks() {
       fn: (input) => remarkFullProcessor.processSync(input).toString(),
     },
   );
+
+  if (satteri) {
+    renderers.push({ name: "satteri", fn: (input) => satteri.markdownToHtml(input) });
+  }
 
   // Define async renderers
   const asyncRenderers = [];
