@@ -1,5 +1,14 @@
 # Changelog
 
+## [2.26.0] - 2026-05-29
+
+### Performance
+
+- port the tabs embed transform to Rust (#221)
+- port the YouTube embed transform to Rust (#220)
+- skip no-op rehype round-trips and redundant per-page work (#218)
+- skip non-URL text in autolink scan via memchr (#217)
+
 ## [2.25.0] - 2026-05-29
 
 ## [2.24.0] - 2026-05-29
