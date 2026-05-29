@@ -19,7 +19,7 @@ Before you begin, ensure you have the following installed:
 
 ```bash
 # Clone the repository
-git clone https://github.com/ubugeeei/ox-content.git
+git clone https://github.com/ubugeeei-prod/ox-content.git
 cd ox-content
 
 # Enter the pinned development shell
@@ -232,5 +232,5 @@ If you are not using Nix, install `wasm-pack` manually and make sure `wasm32-unk
 
 ## Getting Help
 
-- [GitHub Issues](https://github.com/ubugeeei/ox-content/issues)
-- [Discussions](https://github.com/ubugeeei/ox-content/discussions)
+- [GitHub Issues](https://github.com/ubugeeei-prod/ox-content/issues)
+- [Discussions](https://github.com/ubugeeei-prod/ox-content/discussions)

@@ -7,10 +7,10 @@ version = "2.24.0"
 authors = ["ubugeeei"]
 categories = ["development-tools"]
 edition = "2021"
-homepage = "https://github.com/ubugeeei/ox-content"
+homepage = "https://github.com/ubugeeei-prod/ox-content"
 keywords = ["markdown", "documentation", "parser", "vite"]
 license = "MIT"
-repository = "https://github.com/ubugeeei/ox-content"
+repository = "https://github.com/ubugeeei-prod/ox-content"
 rust-version = "1.83.0"
 
 [workspace.lints.rust]

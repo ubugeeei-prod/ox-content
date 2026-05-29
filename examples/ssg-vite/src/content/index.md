@@ -52,7 +52,7 @@ content.toc.forEach((entry) => {
 
 ## Links and Resources
 
-- [Ox Content Documentation](https://github.com/ubugeeei/ox-content)
+- [Ox Content Documentation](https://github.com/ubugeeei-prod/ox-content)
 - [Vite Environment API](https://vitejs.dev/guide/api-environment.html)
 
 ## Conclusion

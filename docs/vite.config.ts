@@ -28,9 +28,9 @@ export default defineConfig(({ mode }) => {
         // SSG options with theme customization
         ssg: {
           siteName: "Ox Content",
-          siteUrl: "https://ubugeeei.github.io",
+          siteUrl: "https://ubugeeei-prod.github.io",
           generateOgImage: true,
-          ogImage: "https://ubugeeei.github.io/ox-content/og-image.png",
+          ogImage: "https://ubugeeei-prod.github.io/ox-content/og-image.png",
           theme: defineTheme({
             extends: defaultTheme,
             header: {
@@ -131,7 +131,7 @@ export default defineConfig(({ mode }) => {
           exclude: ["**/*.test.*"],
           toc: true,
           groupBy: "file",
-          githubUrl: "https://github.com/ubugeeei/ox-content",
+          githubUrl: "https://github.com/ubugeeei-prod/ox-content",
           generateNav: true,
         },
       }),

@@ -12,15 +12,15 @@ import { collectOgpUrls, isSafeOgpUrl, transformOgp } from "./plugins/ogp";
 
 describe("builtin embed input hardening", () => {
   it("accepts only safe GitHub repo references", async () => {
-    expect(isSafeGitHubRepo("ubugeeei/ox-content")).toBe(true);
+    expect(isSafeGitHubRepo("ubugeeei-prod/ox-content")).toBe(true);
     expect(isSafeGitHubRepo("../secret")).toBe(false);
     expect(isSafeGitHubRepo("owner/repo?tab=readme")).toBe(false);
 
     await expect(
       collectGitHubRepos(
-        '<GitHub repo="ubugeeei/ox-content"></GitHub><GitHub repo="../secret"></GitHub>',
+        '<GitHub repo="ubugeeei-prod/ox-content"></GitHub><GitHub repo="../secret"></GitHub>',
       ),
-    ).resolves.toEqual(["ubugeeei/ox-content"]);
+    ).resolves.toEqual(["ubugeeei-prod/ox-content"]);
 
     const html = await transformGitHub(
       '<GitHub repo="../secret"></GitHub>',
@@ -31,24 +31,24 @@ describe("builtin embed input hardening", () => {
 
   it("accepts GitHub source permalinks and loc ranges", async () => {
     const permalink =
-      "https://github.com/ubugeeei/ox-content/blob/278098b/npm/vite-plugin-ox-content/src/plugins/github.ts#L10-L12";
+      "https://github.com/ubugeeei-prod/ox-content/blob/278098b/npm/vite-plugin-ox-content/src/plugins/github.ts#L10-L12";
     expect(parseGitHubPermalink(permalink)).toMatchObject({
-      repo: "ubugeeei/ox-content",
+      repo: "ubugeeei-prod/ox-content",
       ref: "278098b",
       path: "npm/vite-plugin-ox-content/src/plugins/github.ts",
       lines: { start: 10, end: 12 },
     });
-    expect(parseGitHubPermalink("https://example.com/ubugeeei/ox-content/blob/main/a.ts")).toBe(
+    expect(parseGitHubPermalink("https://example.com/ubugeeei-prod/ox-content/blob/main/a.ts")).toBe(
       null,
     );
 
     await expect(
       collectGitHubSources(
-        `<GitHub permalink="${permalink}"></GitHub><GitHub repo="ubugeeei/ox-content" path="README.md" ref="main" loc="1-2"></GitHub>`,
+        `<GitHub permalink="${permalink}"></GitHub><GitHub repo="ubugeeei-prod/ox-content" path="README.md" ref="main" loc="1-2"></GitHub>`,
       ),
     ).resolves.toMatchObject([
-      { repo: "ubugeeei/ox-content", lines: { start: 10, end: 12 } },
-      { repo: "ubugeeei/ox-content", path: "README.md", lines: { start: 1, end: 2 } },
+      { repo: "ubugeeei-prod/ox-content", lines: { start: 10, end: 12 } },
+      { repo: "ubugeeei-prod/ox-content", path: "README.md", lines: { start: 1, end: 2 } },
     ]);
   });
 

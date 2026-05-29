@@ -207,7 +207,7 @@ Avoid publishing from the workspace root here unless you intentionally want a br
 
 If your npm account enforces 2FA for publishing, npm will prompt for the one-time code during `npm publish`.
 
-The current WASM surface exposes `parseAndRender`, `transform`, `version`, and `WasmParserOptions` from [`crates/ox_content_wasm/src/lib.rs`](https://github.com/ubugeeei/ox-content/blob/main/crates/ox_content_wasm/src/lib.rs).
+The current WASM surface exposes `parseAndRender`, `transform`, `version`, and `WasmParserOptions` from [`crates/ox_content_wasm/src/lib.rs`](https://github.com/ubugeeei-prod/ox-content/blob/main/crates/ox_content_wasm/src/lib.rs).
 
 ## 4. Rust Crates
 

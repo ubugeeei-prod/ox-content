@@ -756,7 +756,7 @@ export interface DocsOptions {
   /**
    * GitHub repository URL for source code links.
    * When provided, generated documentation will include links to source code.
-   * Example: 'https://github.com/ubugeeei/ox-content'
+   * Example: 'https://github.com/ubugeeei-prod/ox-content'
    */
   githubUrl?: string;
 
