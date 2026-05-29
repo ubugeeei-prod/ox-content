@@ -1018,6 +1018,21 @@ export interface JsTransformOptions {
   autolinkTargetBlank?: boolean
 }
 
+/**
+ * Options for [`transform_youtube_embeds`]; all optional, matching the TS
+ * `YouTubeOptions` defaults when omitted.
+ */
+export interface JsYouTubeOptions {
+  /** Use privacy-enhanced mode (youtube-nocookie.com). Default: true. */
+  privacyEnhanced?: boolean
+  /** Default aspect ratio. Default: "16/9". */
+  aspectRatio?: string
+  /** Allow fullscreen. Default: true. */
+  allowFullscreen?: boolean
+  /** Lazy-load the iframe. Default: true. */
+  lazyLoad?: boolean
+}
+
 export declare function lintMarkdown(source: string, options?: JsMarkdownLintOptions | undefined | null): JsMarkdownLintResult
 
 export declare function lintMarkdownDocuments(sources: Array<string>, options?: JsMarkdownLintOptions | undefined | null): Array<JsMarkdownLintResult>
@@ -1196,6 +1211,12 @@ export interface TransformResult {
   /** Parse/render errors, if any. */
   errors: Array<string>
 }
+
+/**
+ * Rewrites `<youtube …>` elements in rendered HTML into responsive,
+ * privacy-enhanced iframe embeds. Rust port of the TS `transformYouTube`.
+ */
+export declare function transformYoutubeEmbeds(html: string, options?: JsYouTubeOptions | undefined | null): string
 
 /**
  * Validates an MF2 message string.
