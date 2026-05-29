@@ -218,6 +218,14 @@ function rehypeTabs() {
  * Transform Tabs components in HTML.
  */
 export async function transformTabs(html: string): Promise<string> {
+  // `rehypeTabs` only acts on `<Tabs>` elements. When the document has none,
+  // the rehype parse/stringify round-trip is wasted work, so skip it. The
+  // marker is a deliberately loose superset of the element name to avoid ever
+  // skipping a page that actually contains a `<Tabs>`.
+  if (!/<tabs/i.test(html)) {
+    return html;
+  }
+
   const result = await unified()
     .use(rehypeParse, { fragment: true })
     .use(rehypeTabs)

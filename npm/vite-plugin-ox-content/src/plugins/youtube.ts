@@ -167,6 +167,13 @@ function rehypeYouTube(options: Required<YouTubeOptions>) {
  * Transform YouTube components in HTML.
  */
 export async function transformYouTube(html: string, options?: YouTubeOptions): Promise<string> {
+  // `rehypeYouTube` only acts on `<youtube>` elements. Skip the rehype
+  // round-trip entirely when the document has none. The marker is a loose
+  // superset of the element name so a real `<youtube>` is never skipped.
+  if (!/<youtube/i.test(html)) {
+    return html;
+  }
+
   const mergedOptions = { ...defaultOptions, ...options };
 
   const result = await unified()
