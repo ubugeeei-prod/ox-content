@@ -141,6 +141,44 @@ describe("writeDocs", () => {
       '"path": "/api-ox/context"',
     );
   });
+
+  it("writes typedoc nested files and nav tree when pathStrategy is typedoc", async () => {
+    const outDir = await fs.mkdtemp(path.join(os.tmpdir(), "ox-content-docs-"));
+    tempDirs.push(outDir);
+
+    const extractedDocs: ExtractedDocs[] = [
+      {
+        file: "default",
+        entries: [
+          {
+            name: "cli",
+            kind: "function",
+            description: "Runs the CLI.",
+            file: "/repo/src/cli.ts",
+            line: 1,
+            endLine: 1,
+            signature: "export function cli(): void",
+          },
+        ],
+      },
+    ];
+
+    const options = resolveDocsOptions({
+      generateNav: true,
+      basePath: "/api",
+      pathStrategy: "typedoc",
+      linkStyle: "clean",
+    });
+    const markdown = generateMarkdown(extractedDocs, options);
+
+    await writeDocs(markdown, outDir, extractedDocs, options);
+
+    await expect(fs.access(path.join(outDir, "default/index.md"))).resolves.not.toThrow();
+    await expect(fs.access(path.join(outDir, "default/functions/cli.md"))).resolves.not.toThrow();
+    await expect(fs.readFile(path.join(outDir, "nav.ts"), "utf-8")).resolves.toContain(
+      '"path": "/api/default/functions/cli"',
+    );
+  });
 });
 
 describe("generateMarkdown", () => {

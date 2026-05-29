@@ -2,7 +2,8 @@ use serde_json::{json, Map, Value};
 
 use crate::markdown::{ApiDocEntry, ApiDocMember, ApiDocModule, ApiParamDoc, ApiReturnDoc};
 
-const DOC_KIND_ORDER: [&str; 6] = ["function", "class", "interface", "type", "variable", "module"];
+const DOC_KIND_ORDER: [&str; 7] =
+    ["function", "class", "interface", "type", "enum", "variable", "module"];
 
 #[derive(Default)]
 struct EntryStats {

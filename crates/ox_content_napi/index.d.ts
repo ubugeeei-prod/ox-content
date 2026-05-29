@@ -98,6 +98,14 @@ export declare function generateDocsNavCode(navItems: Array<JsDocsNavItem>, expo
 /** Generates sidebar navigation metadata from documentation file paths. */
 export declare function generateDocsNavMetadata(files: Array<string>, basePath?: string | undefined | null): Array<JsDocsNavItem>
 
+/**
+ * Generates sidebar navigation metadata from extracted documentation modules.
+ *
+ * Use this when the output `pathStrategy` is `"typedoc"` so that the navigation
+ * tree mirrors the nested module/category/symbol pages.
+ */
+export declare function generateDocsNavMetadataFromDocs(docs: Array<JsDocsMarkdownModule>, options?: JsDocsNavOptions | undefined | null): Array<JsDocsNavItem>
+
 /** Generates the `virtual:ox-content/i18n` runtime module. */
 export declare function generateI18nModule(dictDir: string, config: JsI18NRuntimeConfig): string
 
@@ -288,6 +296,12 @@ export interface JsDocsNavItem {
   title: string
   path: string
   children?: Array<JsDocsNavItem>
+}
+
+/** Options for generating sidebar navigation metadata from extracted docs. */
+export interface JsDocsNavOptions {
+  basePath?: string
+  pathStrategy?: 'flat' | 'typedoc'
 }
 
 /** Options for writing generated API documentation files. */

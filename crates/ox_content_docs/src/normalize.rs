@@ -22,8 +22,10 @@ pub enum NormalizedDocKind {
     Class,
     /// TypeScript interface declaration.
     Interface,
-    /// Type alias or enum.
+    /// Type alias.
     Type,
+    /// Enum declaration.
+    Enum,
     /// Variable declaration.
     Variable,
     /// Module or namespace.
@@ -38,7 +40,8 @@ impl NormalizedDocKind {
             DocItemKind::Function => Some(Self::Function),
             DocItemKind::Class => Some(Self::Class),
             DocItemKind::Interface => Some(Self::Interface),
-            DocItemKind::Type | DocItemKind::Enum => Some(Self::Type),
+            DocItemKind::Type => Some(Self::Type),
+            DocItemKind::Enum => Some(Self::Enum),
             DocItemKind::Variable => Some(Self::Variable),
             DocItemKind::Module => Some(Self::Module),
             DocItemKind::Method
@@ -58,6 +61,7 @@ impl NormalizedDocKind {
             Self::Class => "class",
             Self::Interface => "interface",
             Self::Type => "type",
+            Self::Enum => "enum",
             Self::Variable => "variable",
             Self::Module => "module",
         }
@@ -487,7 +491,7 @@ export function internalHelper(): void {}
     }
 
     #[test]
-    fn maps_enums_to_type_entries() {
+    fn preserves_enum_kind_in_normalized_entries() {
         let source = r"
 /**
  * Available modes.
@@ -503,7 +507,7 @@ export enum Mode {
         let entries = normalize_doc_items(items);
 
         assert_eq!(entries.len(), 1);
-        assert_eq!(entries[0].kind, NormalizedDocKind::Type);
+        assert_eq!(entries[0].kind, NormalizedDocKind::Enum);
     }
 
     #[test]

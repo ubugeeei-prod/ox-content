@@ -22,13 +22,13 @@ use ox_content_allocator::Allocator;
 use ox_content_docs::{
     build_export_graph, extract_docs_from_directories, extract_docs_from_entry_points,
     generate_docs_data_json, generate_markdown, generate_nav_code, generate_nav_metadata,
-    normalize_doc_items, write_docs_output, ApiDocEntry, ApiDocMember, ApiDocModule, ApiDocTag,
-    ApiParamDoc, ApiReturnDoc, DocExtractor, DocItem, DocItemKind, DocTag, DocsDiagnostic,
-    DocsDiagnosticCode, DocsNavItem, DocsOutputOptions, EntryPointDocsOptions, EntryPointSpec,
-    ExportGraph, ExportKind, ExportSource, ExternalDocsOptions, ExternalPackageSource,
-    ExtractedDocModule, GraphOptions, MarkdownDocsOptions, MarkdownLinkStyle, MarkdownPathStrategy,
-    NormalizedDocEntry, NormalizedMember, NormalizedParamDoc, NormalizedReturnDoc, ParamDoc,
-    PublicExport,
+    generate_nav_metadata_from_docs, normalize_doc_items, write_docs_output, ApiDocEntry,
+    ApiDocMember, ApiDocModule, ApiDocTag, ApiParamDoc, ApiReturnDoc, DocExtractor, DocItem,
+    DocItemKind, DocTag, DocsDiagnostic, DocsDiagnosticCode, DocsNavItem, DocsOutputOptions,
+    EntryPointDocsOptions, EntryPointSpec, ExportGraph, ExportKind, ExportSource,
+    ExternalDocsOptions, ExternalPackageSource, ExtractedDocModule, GraphOptions,
+    MarkdownDocsOptions, MarkdownLinkStyle, MarkdownPathStrategy, NormalizedDocEntry,
+    NormalizedMember, NormalizedParamDoc, NormalizedReturnDoc, ParamDoc, PublicExport,
 };
 use ox_content_parser::{Parser, ParserOptions};
 use ox_content_renderer::HtmlRenderer;
@@ -215,6 +215,15 @@ pub struct JsDocsNavItem {
     pub title: String,
     pub path: String,
     pub children: Option<Vec<JsDocsNavItem>>,
+}
+
+/// Options for generating sidebar navigation metadata from extracted docs.
+#[napi(object)]
+#[derive(Default)]
+pub struct JsDocsNavOptions {
+    pub base_path: Option<String>,
+    #[napi(ts_type = "'flat' | 'typedoc'")]
+    pub path_strategy: Option<String>,
 }
 
 /// Ordered JSDoc tag used by generated API Markdown.
@@ -983,6 +992,24 @@ pub fn generate_docs_nav_metadata(
     base_path: Option<String>,
 ) -> Vec<JsDocsNavItem> {
     generate_nav_metadata(&files, base_path.as_deref()).into_iter().map(map_docs_nav_item).collect()
+}
+
+/// Generates sidebar navigation metadata from extracted documentation modules.
+///
+/// Use this when the output `pathStrategy` is `"typedoc"` so that the navigation
+/// tree mirrors the nested module/category/symbol pages.
+#[napi(js_name = "generateDocsNavMetadataFromDocs")]
+pub fn generate_docs_nav_metadata_from_docs_napi(
+    docs: Vec<JsDocsMarkdownModule>,
+    options: Option<JsDocsNavOptions>,
+) -> Vec<JsDocsNavItem> {
+    let options = options.unwrap_or_default();
+    let strategy = parse_markdown_path_strategy(options.path_strategy.as_deref());
+    let modules = docs.into_iter().map(convert_markdown_module).collect::<Vec<_>>();
+    generate_nav_metadata_from_docs(&modules, options.base_path.as_deref(), strategy)
+        .into_iter()
+        .map(map_docs_nav_item)
+        .collect()
 }
 
 /// Generates TypeScript source code for documentation navigation metadata.
@@ -2951,9 +2978,10 @@ mod tests {
 
     use super::transformer::parse_frontmatter;
     use super::{
-        extract_docs_from_entry_points_napi, generate_docs_markdown, get_git_last_updated,
-        map_normalized_doc_entry, JsDocMember, JsDocParam, JsDocReturn, JsDocsMarkdownEntry,
-        JsDocsMarkdownModule, JsDocsMarkdownOptions, JsDocsMarkdownTag, JsEntryPointDocsOptions,
+        extract_docs_from_entry_points_napi, generate_docs_markdown,
+        generate_docs_nav_metadata_from_docs_napi, get_git_last_updated, map_normalized_doc_entry,
+        JsDocMember, JsDocParam, JsDocReturn, JsDocsMarkdownEntry, JsDocsMarkdownModule,
+        JsDocsMarkdownOptions, JsDocsMarkdownTag, JsDocsNavOptions, JsEntryPointDocsOptions,
         JsEntryPointSpec,
     };
 
@@ -3210,6 +3238,140 @@ mod tests {
     }
 
     #[test]
+    fn generate_docs_nav_metadata_from_docs_returns_typedoc_tree() {
+        let docs = vec![JsDocsMarkdownModule {
+            file: "default".to_string(),
+            entries: vec![
+                JsDocsMarkdownEntry {
+                    name: "cli".to_string(),
+                    kind: "function".to_string(),
+                    description: String::new(),
+                    params: None,
+                    returns: None,
+                    examples: None,
+                    tags: None,
+                    private: false,
+                    file: "/repo/src/cli.ts".to_string(),
+                    line: 1,
+                    end_line: 1,
+                    signature: None,
+                    members: None,
+                },
+                JsDocsMarkdownEntry {
+                    name: "Mode".to_string(),
+                    kind: "enum".to_string(),
+                    description: String::new(),
+                    params: None,
+                    returns: None,
+                    examples: None,
+                    tags: None,
+                    private: false,
+                    file: "/repo/src/mode.ts".to_string(),
+                    line: 1,
+                    end_line: 1,
+                    signature: None,
+                    members: None,
+                },
+            ],
+        }];
+
+        let nav = generate_docs_nav_metadata_from_docs_napi(
+            docs,
+            Some(JsDocsNavOptions {
+                base_path: Some("/api".to_string()),
+                path_strategy: Some("typedoc".to_string()),
+            }),
+        );
+
+        assert_eq!(nav[0].title, "Default");
+        assert_eq!(nav[0].path, "/api/default");
+        let children = nav[0].children.as_ref().unwrap();
+        assert_eq!(children[0].title, "Functions");
+        assert_eq!(children[0].children.as_ref().unwrap()[0].path, "/api/default/functions/cli");
+        assert_eq!(children[1].title, "Enumerations");
+        assert_eq!(
+            children[1].children.as_ref().unwrap()[0].path,
+            "/api/default/enumerations/Mode"
+        );
+    }
+
+    #[test]
+    fn generate_docs_nav_metadata_from_docs_defaults_to_flat() {
+        let docs = vec![JsDocsMarkdownModule {
+            file: "/repo/src/context.ts".to_string(),
+            entries: vec![],
+        }];
+
+        let nav = generate_docs_nav_metadata_from_docs_napi(docs, None);
+
+        assert_eq!(nav.len(), 1);
+        assert_eq!(nav[0].path, "/api/context");
+        assert!(nav[0].children.is_none());
+    }
+
+    #[test]
+    fn write_generated_docs_writes_typedoc_nested_files() {
+        use super::{write_generated_docs, JsDocsOutputOptions};
+
+        let unique =
+            std::time::SystemTime::now().duration_since(std::time::UNIX_EPOCH).unwrap().as_nanos();
+        let out_dir = std::env::temp_dir()
+            .join(format!("ox-content-napi-typedoc-write-{}-{unique}", std::process::id()));
+
+        let extracted = vec![JsDocsMarkdownModule {
+            file: "default".to_string(),
+            entries: vec![JsDocsMarkdownEntry {
+                name: "cli".to_string(),
+                kind: "function".to_string(),
+                description: "Runs the CLI.".to_string(),
+                params: None,
+                returns: None,
+                examples: None,
+                tags: None,
+                private: false,
+                file: "/repo/src/cli.ts".to_string(),
+                line: 1,
+                end_line: 1,
+                signature: Some("export function cli(): void".to_string()),
+                members: None,
+            }],
+        }];
+
+        let markdown = generate_docs_markdown(
+            extracted.clone(),
+            Some(JsDocsMarkdownOptions {
+                group_by: Some("file".to_string()),
+                github_url: None,
+                link_style: Some("clean".to_string()),
+                base_path: Some("/api".to_string()),
+                path_strategy: Some("typedoc".to_string()),
+            }),
+        );
+
+        write_generated_docs(
+            markdown,
+            out_dir.to_string_lossy().to_string(),
+            Some(extracted),
+            Some(JsDocsOutputOptions {
+                generate_nav: Some(true),
+                group_by: Some("file".to_string()),
+                generated_at: Some("2026-01-01T00:00:00.000Z".to_string()),
+                base_path: Some("/api".to_string()),
+                path_strategy: Some("typedoc".to_string()),
+            }),
+        )
+        .unwrap();
+
+        assert!(out_dir.join("default/index.md").exists());
+        assert!(out_dir.join("default/functions/cli.md").exists());
+
+        let nav = fs::read_to_string(out_dir.join("nav.ts")).unwrap();
+        assert!(nav.contains("\"/api/default/functions/cli\""));
+
+        fs::remove_dir_all(&out_dir).unwrap();
+    }
+
+    #[test]
     fn extract_docs_from_entry_points_accepts_external_docs_options() {
         let unique =
             std::time::SystemTime::now().duration_since(std::time::UNIX_EPOCH).unwrap().as_nanos();
@@ -3374,6 +3536,7 @@ export type ExtractArgs<G> = G extends { args: infer A } ? A : never;
             "generateDocsMarkdown",
             "generateDocsNavCode",
             "generateDocsNavMetadata",
+            "generateDocsNavMetadataFromDocs",
             "generateI18nModule",
             "generateOgImageSvg",
             "generateSearchModule",
