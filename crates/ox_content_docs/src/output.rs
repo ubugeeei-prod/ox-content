@@ -217,9 +217,7 @@ mod tests {
 
     #[test]
     fn writes_typedoc_docs_with_consistent_nav_and_data() {
-        use crate::markdown::{
-            generate_markdown, ApiDocEntry, ApiDocMember, MarkdownDocsOptions,
-        };
+        use crate::markdown::{generate_markdown, ApiDocEntry, ApiDocMember, MarkdownDocsOptions};
 
         let out_dir = temp_dir();
         let extracted = vec![ApiDocModule {

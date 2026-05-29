@@ -12,9 +12,7 @@ export function generateNavMetadata(
   basePathOrOptions: string | GenerateNavMetadataOptions = "/api",
 ): NavItem[] {
   const options: GenerateNavMetadataOptions =
-    typeof basePathOrOptions === "string"
-      ? { basePath: basePathOrOptions }
-      : basePathOrOptions;
+    typeof basePathOrOptions === "string" ? { basePath: basePathOrOptions } : basePathOrOptions;
   const basePath = options.basePath ?? "/api";
   const napi = importNapiModuleSync();
 
