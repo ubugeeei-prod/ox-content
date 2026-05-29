@@ -8,7 +8,7 @@
   },
   "dependencies": {
     "@astrojs/vue": "^6.0.1",
-    "astro": "^6.3.3",
+    "astro": "^6.4.2",
     "vue": "catalog:"
   }
 }
