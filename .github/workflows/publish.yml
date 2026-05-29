@@ -23,9 +23,9 @@ jobs:
             target: x86_64-apple-darwin
           - os: macos-latest
             target: aarch64-apple-darwin
-          - os: blacksmith-8vcpu-ubuntu-2404
+          - os: blacksmith-4vcpu-ubuntu-2404
             target: x86_64-unknown-linux-gnu
-          - os: blacksmith-8vcpu-ubuntu-2404
+          - os: blacksmith-4vcpu-ubuntu-2404
             target: aarch64-unknown-linux-gnu
           - os: windows-2025
             target: x86_64-pc-windows-msvc
@@ -70,7 +70,7 @@ jobs:
 
   publish-napi:
     name: Publish @ox-content/napi
-    runs-on: blacksmith-8vcpu-ubuntu-2404
+    runs-on: blacksmith-4vcpu-ubuntu-2404
     needs: build-napi
     environment: npm
     permissions:
@@ -186,7 +186,7 @@ jobs:
 
   publish-packages:
     name: Publish npm packages
-    runs-on: blacksmith-8vcpu-ubuntu-2404
+    runs-on: blacksmith-4vcpu-ubuntu-2404
     needs: publish-napi
     environment: npm
     permissions:
@@ -331,7 +331,7 @@ jobs:
 
   publish-crates:
     name: Publish to crates.io
-    runs-on: blacksmith-8vcpu-ubuntu-2404
+    runs-on: blacksmith-4vcpu-ubuntu-2404
     permissions:
       contents: read
       id-token: write
@@ -372,7 +372,7 @@ jobs:
 
   create-release:
     name: Create GitHub Release
-    runs-on: blacksmith-8vcpu-ubuntu-2404
+    runs-on: blacksmith-4vcpu-ubuntu-2404
     needs: [publish-packages, publish-crates]
     permissions:
       contents: write
