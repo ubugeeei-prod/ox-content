@@ -348,6 +348,7 @@ async function runBenchmarks() {
   const { unified } = await import("unified");
   const remarkParse = (await import("remark-parse")).default;
   const remarkHtml = (await import("remark-html")).default;
+  const { markdownToMdast: satteriParse, markdownToHtml: satteriRender } = await import("satteri");
   await initMd4w();
 
   // Try to import NAPI
@@ -386,6 +387,7 @@ async function runBenchmarks() {
     { name: "md4x (napi)", fn: (input) => md4xParseAST(input) },
     { name: "markdown-it", fn: (input) => md.parse(input, {}) },
     { name: "remark", fn: (input) => remarkParseProcessor.parse(input) },
+    { name: "satteri", fn: (input) => satteriParse(input) },
   );
 
   // Define renderers (parse + render)
@@ -408,6 +410,7 @@ async function runBenchmarks() {
       name: "remark",
       fn: (input) => remarkFullProcessor.processSync(input).toString(),
     },
+    { name: "satteri", fn: (input) => satteriRender(input) },
   );
 
   // Define async renderers
