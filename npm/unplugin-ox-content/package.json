@@ -93,6 +93,6 @@
     "typescript": "catalog:",
     "vite": "catalog:",
     "vite-plus": "catalog:",
-    "webpack": "^5.106.2"
+    "webpack": "^5.107.2"
   }
 }
