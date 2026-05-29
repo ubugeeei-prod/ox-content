@@ -8,7 +8,8 @@ use std::sync::OnceLock;
 use regex::Regex;
 use serde::{Deserialize, Serialize};
 
-const DOC_KIND_ORDER: [&str; 6] = ["function", "class", "interface", "type", "variable", "module"];
+const DOC_KIND_ORDER: [&str; 7] =
+    ["function", "class", "interface", "type", "enum", "variable", "module"];
 
 type RegexCache = OnceLock<Option<Regex>>;
 
@@ -157,6 +158,9 @@ pub struct MarkdownDocsOptions {
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub base_path: Option<String>,
     /// Output path strategy.
+    ///
+    /// Only applies when `group_by` is `"file"`. Category grouping always emits
+    /// flat `{kind}s.md` pages regardless of this setting.
     #[serde(default)]
     pub path_strategy: MarkdownPathStrategy,
 }
@@ -444,6 +448,7 @@ fn typedoc_kind_segment(kind: &str) -> &'static str {
         "class" => "classes",
         "interface" => "interfaces",
         "type" => "type-aliases",
+        "enum" => "enumerations",
         "variable" | "const" => "variables",
         "module" => "modules",
         _ => "symbols",
@@ -456,6 +461,7 @@ fn typedoc_kind_title(kind: &str) -> &'static str {
         "class" => "Classes",
         "interface" => "Interfaces",
         "type" => "Type Aliases",
+        "enum" => "Enumerations",
         "variable" | "const" => "Variables",
         "module" => "Modules",
         _ => "Symbols",
@@ -1009,6 +1015,7 @@ fn doc_kind_plural(kind: &str) -> &'static str {
         "class" => "classes",
         "interface" => "interfaces",
         "type" => "types",
+        "enum" => "enumerations",
         "variable" => "variables",
         "module" => "modules",
         _ => "symbols",
@@ -2619,6 +2626,110 @@ mod tests {
         assert!(default_page.contains("<a href=\"/api/default/interfaces/Command\">Command</a>"));
         assert!(plugin_page.contains("<a href=\"/api/plugin/interfaces/Command\">Command</a>"));
         assert!(!default_page.contains(".md"));
+    }
+
+    #[test]
+    fn category_group_ignores_typedoc_path_strategy() {
+        let docs = link_test_docs();
+
+        let category_flat = generate_markdown(
+            &docs,
+            &MarkdownDocsOptions {
+                group_by: "category".to_string(),
+                ..MarkdownDocsOptions::default()
+            },
+        );
+        let category_typedoc = generate_markdown(
+            &docs,
+            &MarkdownDocsOptions {
+                group_by: "category".to_string(),
+                path_strategy: MarkdownPathStrategy::TypeDoc,
+                ..MarkdownDocsOptions::default()
+            },
+        );
+
+        let mut flat_keys = category_flat.keys().cloned().collect::<Vec<_>>();
+        let mut typedoc_keys = category_typedoc.keys().cloned().collect::<Vec<_>>();
+        flat_keys.sort();
+        typedoc_keys.sort();
+        assert_eq!(flat_keys, typedoc_keys);
+
+        assert!(category_typedoc.contains_key("functions.md"));
+        assert!(category_typedoc.contains_key("interfaces.md"));
+        assert!(!category_typedoc.keys().any(|key| key.contains('/')));
+    }
+
+    #[test]
+    fn typedoc_path_strategy_emits_enumerations_directory() {
+        let docs = vec![ApiDocModule {
+            file: "default".to_string(),
+            entries: vec![
+                ApiDocEntry {
+                    name: "Mode".to_string(),
+                    kind: "enum".to_string(),
+                    description: "Execution mode.".to_string(),
+                    params: vec![],
+                    returns: None,
+                    examples: vec![],
+                    tags: vec![],
+                    private: false,
+                    file: "/repo/src/mode.ts".to_string(),
+                    line: 1,
+                    end_line: 5,
+                    signature: Some("export enum Mode".to_string()),
+                    members: vec![ApiDocMember {
+                        name: "Strict".to_string(),
+                        kind: "enumMember".to_string(),
+                        description: "Strict mode.".to_string(),
+                        signature: None,
+                        type_annotation: Some("\"strict\"".to_string()),
+                        params: vec![],
+                        returns: None,
+                        optional: false,
+                        readonly: false,
+                        r#static: false,
+                        private: false,
+                        tags: vec![],
+                        line: 2,
+                        end_line: 2,
+                    }],
+                },
+                ApiDocEntry {
+                    name: "run".to_string(),
+                    kind: "function".to_string(),
+                    description: "Runs in {@link Mode} or {@linkcode Mode.Strict}.".to_string(),
+                    params: vec![],
+                    returns: None,
+                    examples: vec![],
+                    tags: vec![],
+                    private: false,
+                    file: "/repo/src/run.ts".to_string(),
+                    line: 1,
+                    end_line: 5,
+                    signature: Some("export function run(mode: Mode): void".to_string()),
+                    members: vec![],
+                },
+            ],
+        }];
+
+        let markdown = generate_markdown(
+            &docs,
+            &MarkdownDocsOptions {
+                path_strategy: MarkdownPathStrategy::TypeDoc,
+                ..MarkdownDocsOptions::default()
+            },
+        );
+        let mode_page = markdown.get("default/enumerations/Mode.md").unwrap();
+        let run_page = markdown.get("default/functions/run.md").unwrap();
+        let module_index = markdown.get("default/index.md").unwrap();
+
+        assert!(module_index.contains("## Enumerations"));
+        assert!(module_index.contains("[`Mode`](./enumerations/Mode.md)"));
+        assert!(mode_page.contains("<tr id=\"enumeration-member-strict\">"));
+        assert!(run_page.contains("<a href=\"../enumerations/Mode.md\">Mode</a>"));
+        assert!(run_page.contains(
+            "<a href=\"../enumerations/Mode.md#enumeration-member-strict\"><code>Mode.Strict</code></a>"
+        ));
     }
 
     #[test]

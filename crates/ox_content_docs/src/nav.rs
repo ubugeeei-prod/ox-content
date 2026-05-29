@@ -176,8 +176,8 @@ fn module_file_name(file_path: &str) -> String {
 }
 
 fn ordered_entry_kinds(entries: &[ApiDocEntry]) -> Vec<String> {
-    const DOC_KIND_ORDER: [&str; 6] =
-        ["function", "class", "interface", "type", "variable", "module"];
+    const DOC_KIND_ORDER: [&str; 7] =
+        ["function", "class", "interface", "type", "enum", "variable", "module"];
 
     let mut kinds = Vec::new();
     for kind in DOC_KIND_ORDER {
@@ -202,6 +202,7 @@ fn typedoc_kind_segment(kind: &str) -> &'static str {
         "class" => "classes",
         "interface" => "interfaces",
         "type" => "type-aliases",
+        "enum" => "enumerations",
         "variable" | "const" => "variables",
         "module" => "modules",
         _ => "symbols",
@@ -214,6 +215,7 @@ fn typedoc_kind_title(kind: &str) -> &'static str {
         "class" => "Classes",
         "interface" => "Interfaces",
         "type" => "Type Aliases",
+        "enum" => "Enumerations",
         "variable" | "const" => "Variables",
         "module" => "Modules",
         _ => "Symbols",
@@ -361,6 +363,39 @@ mod tests {
         assert_eq!(
             children[1].children.as_ref().unwrap()[0].path,
             "/api/default/interfaces/Command"
+        );
+    }
+
+    #[test]
+    fn generates_typedoc_nav_metadata_includes_enumerations() {
+        let docs = vec![ApiDocModule {
+            file: "default".to_string(),
+            entries: vec![ApiDocEntry {
+                name: "Mode".to_string(),
+                kind: "enum".to_string(),
+                description: String::new(),
+                params: vec![],
+                returns: None,
+                examples: vec![],
+                tags: vec![],
+                private: false,
+                file: "mode.ts".to_string(),
+                line: 1,
+                end_line: 1,
+                signature: None,
+                members: vec![],
+            }],
+        }];
+
+        let nav =
+            generate_nav_metadata_from_docs(&docs, Some("/api"), MarkdownPathStrategy::TypeDoc);
+        let children = nav[0].children.as_ref().unwrap();
+
+        assert_eq!(children[0].title, "Enumerations");
+        assert_eq!(children[0].path, "/api/default/enumerations");
+        assert_eq!(
+            children[0].children.as_ref().unwrap()[0].path,
+            "/api/default/enumerations/Mode"
         );
     }
 

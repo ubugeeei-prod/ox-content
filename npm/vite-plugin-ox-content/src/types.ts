@@ -812,7 +812,7 @@ export interface ResolvedDocsOptions {
  */
 export interface DocEntry {
   name: string;
-  kind: "function" | "class" | "interface" | "type" | "variable" | "module";
+  kind: "function" | "class" | "interface" | "type" | "enum" | "variable" | "module";
   description: string;
   params?: ParamDoc[];
   returns?: ReturnDoc;

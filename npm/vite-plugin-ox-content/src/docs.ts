@@ -245,7 +245,7 @@ export async function writeDocs(
   );
 }
 
-function toRustDocsModules(docs: ExtractedDocs[]) {
+export function toRustDocsModules(docs: ExtractedDocs[]) {
   return docs.map((doc) => ({
     file: doc.file,
     entries: doc.entries.map((entry) => ({
