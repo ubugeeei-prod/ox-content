@@ -9,6 +9,7 @@ mod mdast;
 mod mdast_raw;
 mod transfer;
 mod transformer;
+mod youtube;
 
 use napi::bindgen_prelude::*;
 use napi::Task;
@@ -1157,6 +1158,37 @@ pub fn write_generated_docs(
 #[napi]
 pub fn merge_highlighted_code_blocks(original_html: String, highlighted_html: String) -> String {
     highlight::merge_highlighted_code_blocks(&original_html, &highlighted_html)
+}
+
+/// Options for [`transform_youtube_embeds`]; all optional, matching the TS
+/// `YouTubeOptions` defaults when omitted.
+#[napi(object)]
+pub struct JsYouTubeOptions {
+    /// Use privacy-enhanced mode (youtube-nocookie.com). Default: true.
+    pub privacy_enhanced: Option<bool>,
+    /// Default aspect ratio. Default: "16/9".
+    pub aspect_ratio: Option<String>,
+    /// Allow fullscreen. Default: true.
+    pub allow_fullscreen: Option<bool>,
+    /// Lazy-load the iframe. Default: true.
+    pub lazy_load: Option<bool>,
+}
+
+/// Rewrites `<youtube …>` elements in rendered HTML into responsive,
+/// privacy-enhanced iframe embeds. Rust port of the TS `transformYouTube`.
+#[napi]
+pub fn transform_youtube_embeds(html: String, options: Option<JsYouTubeOptions>) -> String {
+    let defaults = youtube::YouTubeEmbedOptions::default();
+    let resolved = match options {
+        Some(options) => youtube::YouTubeEmbedOptions {
+            privacy_enhanced: options.privacy_enhanced.unwrap_or(defaults.privacy_enhanced),
+            aspect_ratio: options.aspect_ratio.unwrap_or(defaults.aspect_ratio),
+            allow_fullscreen: options.allow_fullscreen.unwrap_or(defaults.allow_fullscreen),
+            lazy_load: options.lazy_load.unwrap_or(defaults.lazy_load),
+        },
+        None => defaults,
+    };
+    youtube::transform_youtube(&html, &resolved)
 }
 
 /// Transforms Markdown source into HTML, frontmatter, and TOC.
