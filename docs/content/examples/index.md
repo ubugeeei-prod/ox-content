@@ -136,7 +136,7 @@ Static Site Generation example using Vite.
 
 ```bash
 # Clone the repository
-git clone https://github.com/ubugeeei/ox-content.git
+git clone https://github.com/ubugeeei-prod/ox-content.git
 cd ox-content
 
 # Install dependencies

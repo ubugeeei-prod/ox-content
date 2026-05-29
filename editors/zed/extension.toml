@@ -4,7 +4,7 @@ version = "0.1.0"
 schema_version = 1
 authors = ["ubugeeei"]
 description = "Ox Content authoring support for Zed"
-repository = "https://github.com/ubugeeei/ox-content"
+repository = "https://github.com/ubugeeei-prod/ox-content"
 
 [language_servers.ox-content-lsp]
 name = "ox-content-lsp"

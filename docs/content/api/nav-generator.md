@@ -1,6 +1,6 @@
 # nav-generator.ts
 
-**[Source](https://github.com/ubugeeei/ox-content/blob/main/npm/vite-plugin-ox-content/src/nav-generator.ts)**
+**[Source](https://github.com/ubugeeei-prod/ox-content/blob/main/npm/vite-plugin-ox-content/src/nav-generator.ts)**
 
 > 4 documented symbols. Read the signatures first, then expand each item for parameters, return types, and examples.
 
@@ -41,7 +41,7 @@ export const apiNav: NavItem[] = [
 <li><strong>Self-Documenting</strong>: Includes notice that file is auto-generated Use custom names for different navigation sections ready to write to a .ts file</li>
 </ul>
 </div>
-<p class="ox-api-entry__source"><a href="https://github.com/ubugeeei/ox-content/blob/main/npm/vite-plugin-ox-content/src/nav-generator.ts#L246-L262">View source</a></p>
+<p class="ox-api-entry__source"><a href="https://github.com/ubugeeei-prod/ox-content/blob/main/npm/vite-plugin-ox-content/src/nav-generator.ts#L246-L262">View source</a></p>
 <div class="ox-api-entry__section ox-api-entry__section--params">
 <h4>Parameters</h4>
 <ul class="ox-api-entry__params">
@@ -110,7 +110,7 @@ await fs.promises.writeFile(&#39;docs/api/nav.ts&#39;, code, &#39;utf-8&#39;);</
 <li>Path <code>/api/index</code> → Import from <code>../api/index.md</code> Use &#39;/api&#39; for main API docs, &#39;/helpers&#39; for utilities, etc.</li>
 </ul>
 </div>
-<p class="ox-api-entry__source"><a href="https://github.com/ubugeeei/ox-content/blob/main/npm/vite-plugin-ox-content/src/nav-generator.ts#L116-L128">View source</a></p>
+<p class="ox-api-entry__source"><a href="https://github.com/ubugeeei-prod/ox-content/blob/main/npm/vite-plugin-ox-content/src/nav-generator.ts#L116-L128">View source</a></p>
 <div class="ox-api-entry__section ox-api-entry__section--params">
 <h4>Parameters</h4>
 <ul class="ox-api-entry__params">
@@ -181,7 +181,7 @@ await fs.promises.writeFile(&#39;docs/api/nav.ts&#39;, code, &#39;utf-8&#39;);</
 <li><code>&#39;myFunction.ts&#39;</code> → <code>&#39;My Function&#39;</code> (with camelCase handling)</li>
 </ul>
 </div>
-<p class="ox-api-entry__source"><a href="https://github.com/ubugeeei/ox-content/blob/main/npm/vite-plugin-ox-content/src/nav-generator.ts#L152-L165">View source</a></p>
+<p class="ox-api-entry__source"><a href="https://github.com/ubugeeei-prod/ox-content/blob/main/npm/vite-plugin-ox-content/src/nav-generator.ts#L152-L165">View source</a></p>
 <div class="ox-api-entry__section ox-api-entry__section--params">
 <h4>Parameters</h4>
 <ul class="ox-api-entry__params">
@@ -218,7 +218,7 @@ await fs.promises.writeFile(&#39;docs/api/nav.ts&#39;, code, &#39;utf-8&#39;);</
 <li>Special handling for index files to maintain consistency</li>
 </ul>
 </div>
-<p class="ox-api-entry__source"><a href="https://github.com/ubugeeei/ox-content/blob/main/npm/vite-plugin-ox-content/src/nav-generator.ts#L179-L189">View source</a></p>
+<p class="ox-api-entry__source"><a href="https://github.com/ubugeeei-prod/ox-content/blob/main/npm/vite-plugin-ox-content/src/nav-generator.ts#L179-L189">View source</a></p>
 <div class="ox-api-entry__section ox-api-entry__section--params">
 <h4>Parameters</h4>
 <ul class="ox-api-entry__params">

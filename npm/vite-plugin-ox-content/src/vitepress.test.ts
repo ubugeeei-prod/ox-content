@@ -39,7 +39,7 @@ describe("vitepress migration helpers", () => {
   it("converts VitePress nav dropdowns into grouped sidebar navigation", () => {
     const navigation = convertVitePressNav([
       { text: "Guide", items: [{ text: "Intro", link: "/guide/intro" }] },
-      { text: "GitHub", link: "https://github.com/ubugeeei/ox-content" },
+      { text: "GitHub", link: "https://github.com/ubugeeei-prod/ox-content" },
     ]);
 
     expect(navigation).toEqual([
@@ -48,7 +48,7 @@ describe("vitepress migration helpers", () => {
         items: [
           {
             title: "GitHub",
-            href: "https://github.com/ubugeeei/ox-content",
+            href: "https://github.com/ubugeeei-prod/ox-content",
           },
         ],
       },
@@ -66,7 +66,7 @@ describe("vitepress migration helpers", () => {
         base: "/docs/",
         themeConfig: {
           logo: "/logo.svg",
-          socialLinks: [{ icon: "github", link: "https://github.com/ubugeeei/ox-content" }],
+          socialLinks: [{ icon: "github", link: "https://github.com/ubugeeei-prod/ox-content" }],
           footer: { copyright: "2026" },
           sidebar: [{ text: "Intro", link: "/intro" }],
           search: { placeholder: "Search VitePress docs" },
@@ -107,7 +107,7 @@ describe("vitepress migration helpers", () => {
     if (!socialLinks || Array.isArray(socialLinks)) {
       throw new Error("Expected migrated social links");
     }
-    expect(socialLinks.github).toBe("https://github.com/ubugeeei/ox-content");
+    expect(socialLinks.github).toBe("https://github.com/ubugeeei-prod/ox-content");
     expect(ssg.theme?.footer?.copyright).toBe("2026");
     expect(ssg.theme?.footer?.message).toBe("Migrated from VitePress");
   });

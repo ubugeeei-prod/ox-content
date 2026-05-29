@@ -15,7 +15,7 @@
   "author": "ubugeeei",
   "repository": {
     "type": "git",
-    "url": "https://github.com/ubugeeei/ox-content.git",
+    "url": "https://github.com/ubugeeei-prod/ox-content.git",
     "directory": "npm/unplugin-ox-content"
   },
   "files": [

@@ -148,7 +148,7 @@ fn main() {
 5. Run `cargo bench -p ox_content_parser` to confirm the synthetic
    benchmarks haven't regressed.
 
-This was the loop used to land [issue #159](https://github.com/ubugeeei/ox-content/issues/159):
+This was the loop used to land [issue #159](https://github.com/ubugeeei-prod/ox-content/issues/159):
 the first run on `docs/content/api/types.md` showed `parse_html_block`
 consuming 86.9% of pipeline time with `to_ascii_lowercase()` allocating
 per line; replacing that with a byte-level case-insensitive search and
