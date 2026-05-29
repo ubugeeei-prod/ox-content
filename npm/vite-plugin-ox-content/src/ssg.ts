@@ -137,6 +137,44 @@ export function generateBareHtmlPage(content: string, title: string): string {
   return importNapiModuleSync().generateSsgBareHtml(content, title);
 }
 
+/** NAPI-facing nav group shape produced from a [`NavGroup`]. */
+interface RustNavGroup {
+  title: string;
+  collapsed?: boolean;
+  items: SsgNavItem[];
+}
+
+/**
+ * Per-build cache for the Rust-facing nav conversion. `navGroups` is the same
+ * `context.navItems` reference for every page in a build, so the deep recursive
+ * copy below only needs to run once per build instead of once per page.
+ */
+const navGroupsForRustCache = new WeakMap<NavGroup[], RustNavGroup[]>();
+
+function toRustNavItem(item: SsgNavItem): SsgNavItem {
+  return {
+    title: item.title,
+    path: item.path,
+    href: item.href,
+    children: item.children?.map(toRustNavItem),
+    collapsed: item.collapsed,
+  };
+}
+
+function convertNavGroupsForRust(navGroups: NavGroup[]): RustNavGroup[] {
+  const cached = navGroupsForRustCache.get(navGroups);
+  if (cached) {
+    return cached;
+  }
+  const converted = navGroups.map((group) => ({
+    title: group.title,
+    collapsed: group.collapsed,
+    items: group.items.map(toRustNavItem),
+  }));
+  navGroupsForRustCache.set(navGroups, converted);
+  return converted;
+}
+
 /**
  * Generates HTML page with navigation using Rust NAPI bindings.
  */
@@ -161,20 +199,8 @@ export async function generateHtmlPage(
   });
   const tocForRust = pageData.toc.map(toRustTocEntry);
 
-  // Convert NavGroup to the format expected by Rust
-  const toRustNavItem = (item: SsgNavItem): SsgNavItem => ({
-    title: item.title,
-    path: item.path,
-    href: item.href,
-    children: item.children?.map(toRustNavItem),
-    collapsed: item.collapsed,
-  });
-
-  const navGroupsForRust = navGroups.map((group) => ({
-    title: group.title,
-    collapsed: group.collapsed,
-    items: group.items.map(toRustNavItem),
-  }));
+  // Convert NavGroup to the format expected by Rust (cached per build).
+  const navGroupsForRust = convertNavGroupsForRust(navGroups);
 
   // Convert theme to NAPI format if provided
   const themeForRust = theme ? themeToNapi(theme) : undefined;
