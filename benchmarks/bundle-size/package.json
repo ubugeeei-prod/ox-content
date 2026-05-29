@@ -18,6 +18,7 @@
     "micromark": "^4.0.1",
     "remark-html": "^16.0.1",
     "remark-parse": "^11.0.0",
+    "satteri": "^0.6.3",
     "showdown": "^2.1.0",
     "unified": "^11.0.5"
   },
