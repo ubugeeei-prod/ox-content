@@ -903,6 +903,65 @@ fn write_url_escaped_into(out: &mut String, s: &str) {
     }
 }
 
+/// Case-insensitive index over the first byte of every registered autolink
+/// pattern, used to skip the long runs of text that can't begin a URL.
+///
+/// The default patterns (`http://`, `https://`) share the single leading
+/// letter `h`, so [`Self::next`] collapses to a `memchr2` over `{b'h', b'H'}`
+/// — letting the scanner jump straight to candidate offsets instead of
+/// testing the word-boundary + prefix at every byte. Up to three distinct
+/// leading bytes keep the SIMD `memchr` fast path; beyond that (rare, only
+/// with many custom schemes) it falls back to a 256-entry lookup table.
+struct FirstByteIndex {
+    table: [bool; 256],
+    needles: [u8; 3],
+    needle_len: usize,
+    overflow: bool,
+}
+
+impl FirstByteIndex {
+    fn from_patterns(patterns: &[String]) -> Self {
+        let mut table = [false; 256];
+        let mut needles = [0u8; 3];
+        let mut needle_len = 0usize;
+        let mut overflow = false;
+        for pat in patterns {
+            let Some(&first) = pat.as_bytes().first() else {
+                continue;
+            };
+            for cand in [first.to_ascii_lowercase(), first.to_ascii_uppercase()] {
+                if table[cand as usize] {
+                    continue;
+                }
+                table[cand as usize] = true;
+                if needle_len < needles.len() {
+                    needles[needle_len] = cand;
+                }
+                // Count past the array so >3 distinct bytes trips `overflow`.
+                needle_len += 1;
+            }
+        }
+        if needle_len > needles.len() {
+            overflow = true;
+        }
+        Self { table, needles, needle_len, overflow }
+    }
+
+    /// Byte offset of the next possible pattern start within `hay`, or `None`.
+    #[inline]
+    fn next(&self, hay: &[u8]) -> Option<usize> {
+        if self.overflow {
+            return hay.iter().position(|&b| self.table[b as usize]);
+        }
+        match self.needle_len {
+            1 => memchr::memchr(self.needles[0], hay),
+            2 => memchr::memchr2(self.needles[0], self.needles[1], hay),
+            3 => memchr::memchr3(self.needles[0], self.needles[1], self.needles[2], hay),
+            _ => None,
+        }
+    }
+}
+
 /// Scans `s` from `from` for the next position that begins one of the
 /// registered URL prefixes at a word boundary, and returns the
 /// `(match_start, url_end)` byte range with trailing punctuation trimmed.
@@ -912,10 +971,21 @@ fn write_url_escaped_into(out: &mut String, s: &str) {
 /// `"see http://x"` matches but `"shttp://x"` doesn't. The URL extends to
 /// the next whitespace, `<`, `>`, `"`, `'`, or backtick, and we then strip
 /// trailing `.,;:!?` plus an unbalanced `)`, `]`, or `}`.
-fn find_autolink_match(s: &str, from: usize, patterns: &[String]) -> Option<(usize, usize)> {
+///
+/// `index` skips ahead to the next byte that could start a pattern, so the
+/// per-byte boundary and prefix checks below only run at real candidates
+/// rather than across every byte of non-URL prose.
+fn find_autolink_match(
+    s: &str,
+    from: usize,
+    patterns: &[String],
+    index: &FirstByteIndex,
+) -> Option<(usize, usize)> {
     let bytes = s.as_bytes();
-    let mut i = from;
-    while i < bytes.len() {
+    let mut base = from;
+    while base < bytes.len() {
+        let rel = index.next(&bytes[base..])?;
+        let i = base + rel;
         // Word boundary: the previous byte must not be ASCII alphanumeric.
         let is_boundary = i == 0 || !bytes[i - 1].is_ascii_alphanumeric();
         if is_boundary {
@@ -942,7 +1012,7 @@ fn find_autolink_match(s: &str, from: usize, patterns: &[String]) -> Option<(usi
                 }
             }
         }
-        i += 1;
+        base = i + 1;
     }
     None
 }
@@ -1399,10 +1469,13 @@ impl HtmlRenderer {
     fn write_text_with_autolinks(&mut self, s: &str) {
         profile_span!("renderer::write_text_with_autolinks");
         let bytes = s.as_bytes();
+        // Build the first-byte skip index once per text node, then reuse it
+        // for every cursor advance below.
+        let index = FirstByteIndex::from_patterns(&self.options.autolink_patterns);
         let mut cursor = 0usize;
         while cursor < bytes.len() {
             let Some((match_start, url_end)) =
-                find_autolink_match(s, cursor, &self.options.autolink_patterns)
+                find_autolink_match(s, cursor, &self.options.autolink_patterns, &index)
             else {
                 break;
             };
@@ -2950,6 +3023,35 @@ mod tests {
             html.contains("<a href=\"mailto:foo@example.com\""),
             "missing custom-pattern autolink: {html}"
         );
+    }
+
+    #[test]
+    fn test_autolink_many_patterns_uses_table_fallback() {
+        // Five patterns with five distinct leading letters exceed the
+        // three-needle SIMD fast path, exercising the `FirstByteIndex`
+        // lookup-table fallback. All schemes must still autolink.
+        let allocator = Allocator::new();
+        let doc = Parser::new(
+            &allocator,
+            "a http://h.test b ftp://f.test c mailto:m@x d tel:123 e ssh://s.test f",
+        )
+        .parse()
+        .unwrap();
+        let mut renderer = HtmlRenderer::with_options(HtmlRendererOptions {
+            autolink_urls: true,
+            autolink_patterns: vec![
+                "http://".to_string(),
+                "ftp://".to_string(),
+                "mailto:".to_string(),
+                "tel:".to_string(),
+                "ssh://".to_string(),
+            ],
+            ..Default::default()
+        });
+        let html = renderer.render(&doc);
+        for href in ["http://h.test", "ftp://f.test", "mailto:m@x", "tel:123", "ssh://s.test"] {
+            assert!(html.contains(&format!("<a href=\"{href}\"")), "missing {href} in: {html}");
+        }
     }
 
     #[test]
