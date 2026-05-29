@@ -8,7 +8,8 @@ use std::sync::OnceLock;
 use regex::Regex;
 use serde::{Deserialize, Serialize};
 
-const DOC_KIND_ORDER: [&str; 6] = ["function", "class", "interface", "type", "variable", "module"];
+const DOC_KIND_ORDER: [&str; 7] =
+    ["function", "class", "interface", "type", "enum", "variable", "module"];
 
 type RegexCache = OnceLock<Option<Regex>>;
 
@@ -156,6 +157,12 @@ pub struct MarkdownDocsOptions {
     /// Optional absolute route prefix for generated documentation links.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub base_path: Option<String>,
+    /// Output path strategy.
+    ///
+    /// Only applies when `group_by` is `"file"`. Category grouping always emits
+    /// flat `{kind}s.md` pages regardless of this setting.
+    #[serde(default)]
+    pub path_strategy: MarkdownPathStrategy,
 }
 
 /// Internal documentation link style.
@@ -169,6 +176,17 @@ pub enum MarkdownLinkStyle {
     Clean,
 }
 
+/// Generated Markdown output path strategy.
+#[derive(Debug, Clone, Copy, Serialize, Deserialize, PartialEq, Eq, Default)]
+#[serde(rename_all = "kebab-case")]
+pub enum MarkdownPathStrategy {
+    /// Keep the historical flat module/category files with entry anchors.
+    #[default]
+    Flat,
+    /// Emit TypeDoc-style module/kind/symbol pages.
+    TypeDoc,
+}
+
 impl Default for MarkdownDocsOptions {
     fn default() -> Self {
         Self {
@@ -176,6 +194,7 @@ impl Default for MarkdownDocsOptions {
             github_url: None,
             link_style: MarkdownLinkStyle::Markdown,
             base_path: None,
+            path_strategy: MarkdownPathStrategy::Flat,
         }
     }
 }
@@ -203,15 +222,17 @@ struct EntryBadge {
 
 #[derive(Debug, Clone)]
 struct SymbolLocation {
+    module_name: String,
     file_name: String,
-    anchor: String,
+    anchor: Option<String>,
 }
 
 #[derive(Debug, Clone)]
 struct MarkdownLinkContext<'a> {
     options: &'a MarkdownDocsOptions,
     current_file_name: &'a str,
-    symbol_map: &'a HashMap<String, SymbolLocation>,
+    current_module_name: &'a str,
+    symbol_map: &'a HashMap<String, Vec<SymbolLocation>>,
 }
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
@@ -239,13 +260,14 @@ pub fn generate_markdown(
     let symbol_map = build_symbol_map(&sorted_docs, options);
 
     if options.group_by == "file" {
+        if options.path_strategy == MarkdownPathStrategy::TypeDoc {
+            return generate_typedoc_markdown(&sorted_docs, options, &symbol_map);
+        }
+
         let mut doc_to_file = HashMap::new();
 
         for doc in &sorted_docs {
-            let mut file_name = file_stem(&doc.file);
-            if file_name == "index" {
-                file_name = "index-module".to_string();
-            }
+            let file_name = module_file_name(&doc.file);
             doc_to_file.insert(doc.file.clone(), file_name.clone());
 
             let markdown = generate_file_markdown(doc, options, &file_name, &symbol_map);
@@ -286,7 +308,23 @@ pub fn generate_markdown(
 }
 
 fn doc_page_href(options: &MarkdownDocsOptions, file_name: &str, anchor: Option<&str>) -> String {
+    doc_page_href_from(options, "", file_name, anchor)
+}
+
+fn doc_page_href_from(
+    options: &MarkdownDocsOptions,
+    current_file_name: &str,
+    target_file_name: &str,
+    anchor: Option<&str>,
+) -> String {
+    if target_file_name == current_file_name {
+        if let Some(anchor) = anchor.filter(|anchor| !anchor.is_empty()) {
+            return format!("#{anchor}");
+        }
+    }
+
     let mut href = String::new();
+    let target_file_name = route_file_name(options, target_file_name);
 
     if let Some(base_path) =
         options.base_path.as_deref().map(str::trim).filter(|base| !base.is_empty())
@@ -296,11 +334,11 @@ fn doc_page_href(options: &MarkdownDocsOptions, file_name: &str, anchor: Option<
             href.push_str(&base_path);
         }
         href.push('/');
+        href.push_str(&target_file_name);
     } else {
-        href.push_str("./");
+        href.push_str(&relative_doc_href_path(current_file_name, &target_file_name));
     }
 
-    href.push_str(file_name);
     if options.link_style == MarkdownLinkStyle::Markdown {
         href.push_str(".md");
     }
@@ -310,6 +348,41 @@ fn doc_page_href(options: &MarkdownDocsOptions, file_name: &str, anchor: Option<
     }
 
     href
+}
+
+fn route_file_name(options: &MarkdownDocsOptions, file_name: &str) -> String {
+    if options.link_style == MarkdownLinkStyle::Clean {
+        file_name.strip_suffix("/index").unwrap_or(file_name).to_string()
+    } else {
+        file_name.to_string()
+    }
+}
+
+fn relative_doc_href_path(current_file_name: &str, target_file_name: &str) -> String {
+    let current_dir =
+        current_file_name.rsplit_once('/').map_or("", |(directory, _)| directory).trim_matches('/');
+    let current_parts = current_dir.split('/').filter(|part| !part.is_empty()).collect::<Vec<_>>();
+    let target_parts =
+        target_file_name.split('/').filter(|part| !part.is_empty()).collect::<Vec<_>>();
+
+    let mut common = 0;
+    while current_parts.get(common) == target_parts.get(common) {
+        if current_parts.get(common).is_none() {
+            break;
+        }
+        common += 1;
+    }
+
+    let mut parts = Vec::new();
+    parts.extend(std::iter::repeat_n("..", current_parts.len().saturating_sub(common)));
+    parts.extend(target_parts.iter().skip(common).copied());
+
+    let path = if parts.is_empty() { target_file_name.to_string() } else { parts.join("/") };
+    if path.starts_with("../") {
+        path
+    } else {
+        format!("./{path}")
+    }
 }
 
 fn normalize_base_path(base_path: &str) -> String {
@@ -339,16 +412,124 @@ fn entry_anchor(name: &str) -> String {
     name.to_lowercase()
 }
 
-fn member_anchor(entry_name: &str, member_name: &str) -> String {
-    format!("{}-{}", entry_anchor(entry_name), entry_anchor(member_name))
+fn member_anchor(
+    entry_name: &str,
+    member: &ApiDocMember,
+    path_strategy: MarkdownPathStrategy,
+) -> String {
+    match path_strategy {
+        MarkdownPathStrategy::Flat => {
+            format!("{}-{}", entry_anchor(entry_name), entry_anchor(&member.name))
+        }
+        MarkdownPathStrategy::TypeDoc => {
+            let prefix = match member.kind.as_str() {
+                "constructor" => return "constructor".to_string(),
+                "method" => "method",
+                "getter" | "setter" => "accessor",
+                "enumMember" => "enumeration-member",
+                _ => "property",
+            };
+            format!("{prefix}-{}", entry_anchor(&member.name))
+        }
+    }
+}
+
+fn module_file_name(file_path: &str) -> String {
+    let mut file_name = file_stem(file_path);
+    if file_name == "index" {
+        file_name = "index-module".to_string();
+    }
+    sanitize_doc_path_segment(&file_name)
+}
+
+fn typedoc_kind_segment(kind: &str) -> &'static str {
+    match kind {
+        "function" => "functions",
+        "class" => "classes",
+        "interface" => "interfaces",
+        "type" => "type-aliases",
+        "enum" => "enumerations",
+        "variable" | "const" => "variables",
+        "module" => "modules",
+        _ => "symbols",
+    }
+}
+
+fn typedoc_kind_title(kind: &str) -> &'static str {
+    match kind {
+        "function" => "Functions",
+        "class" => "Classes",
+        "interface" => "Interfaces",
+        "type" => "Type Aliases",
+        "enum" => "Enumerations",
+        "variable" | "const" => "Variables",
+        "module" => "Modules",
+        _ => "Symbols",
+    }
+}
+
+fn typedoc_entry_file_name(module_name: &str, entry: &ApiDocEntry) -> String {
+    format!(
+        "{}/{}/{}",
+        module_name,
+        typedoc_kind_segment(&entry.kind),
+        sanitize_doc_path_segment(&entry.name)
+    )
+}
+
+fn typedoc_module_index_file_name(module_name: &str) -> String {
+    format!("{module_name}/index")
+}
+
+fn sanitize_doc_path_segment(value: &str) -> String {
+    let sanitized = value
+        .chars()
+        .map(|ch| match ch {
+            '/' | '\\' | '?' | '#' | '[' | ']' | '<' | '>' | ':' | '"' | '|' | '*' => '-',
+            _ => ch,
+        })
+        .collect::<String>();
+    if sanitized.is_empty() {
+        "symbol".to_string()
+    } else {
+        sanitized
+    }
 }
 
 fn format_symbol_href(context: &MarkdownLinkContext<'_>, location: &SymbolLocation) -> String {
     if location.file_name == context.current_file_name {
-        format!("#{}", location.anchor)
+        if let Some(anchor) = location.anchor.as_deref().filter(|anchor| !anchor.is_empty()) {
+            format!("#{anchor}")
+        } else {
+            doc_page_href_from(
+                context.options,
+                context.current_file_name,
+                &location.file_name,
+                None,
+            )
+        }
     } else {
-        doc_page_href(context.options, &location.file_name, Some(&location.anchor))
+        doc_page_href_from(
+            context.options,
+            context.current_file_name,
+            &location.file_name,
+            location.anchor.as_deref(),
+        )
     }
+}
+
+fn resolve_symbol_location<'a>(
+    symbol_name: &str,
+    context: &'a MarkdownLinkContext<'_>,
+) -> Option<&'a SymbolLocation> {
+    let locations = context.symbol_map.get(symbol_name)?;
+    locations
+        .iter()
+        .find(|location| location.module_name == context.current_module_name)
+        .or_else(|| {
+            locations.iter().find(|location| location.file_name == context.current_file_name)
+        })
+        .or_else(|| locations.first())
 }
 
 fn resolve_jsdoc_link_target(
@@ -361,7 +542,7 @@ fn resolve_jsdoc_link_target(
     }
 
     let context = context?;
-    context.symbol_map.get(target).map(|location| format_symbol_href(context, location))
+    resolve_symbol_location(target, context).map(|location| format_symbol_href(context, location))
 }
 
 fn parse_jsdoc_inline_link_body(body: &str) -> Option<(&str, Option<&str>)> {
@@ -834,6 +1015,7 @@ fn doc_kind_plural(kind: &str) -> &'static str {
         "class" => "classes",
         "interface" => "interfaces",
         "type" => "types",
+        "enum" => "enumerations",
         "variable" => "variables",
         "module" => "modules",
         _ => "symbols",
@@ -873,7 +1055,7 @@ fn generate_file_markdown(
     doc: &ApiDocModule,
     options: &MarkdownDocsOptions,
     current_file_name: &str,
-    symbol_map: &HashMap<String, SymbolLocation>,
+    symbol_map: &HashMap<String, Vec<SymbolLocation>>,
 ) -> String {
     let display_name = file_name(&doc.file);
     let mut markdown = String::new();
@@ -910,11 +1092,188 @@ fn generate_file_markdown(
             entry,
             options,
             Some(current_file_name),
+            Some(current_file_name),
             Some(symbol_map),
         ));
     }
 
     markdown
+}
+
+fn generate_typedoc_markdown(
+    docs: &[ApiDocModule],
+    options: &MarkdownDocsOptions,
+    symbol_map: &HashMap<String, Vec<SymbolLocation>>,
+) -> BTreeMap<String, String> {
+    let mut result = BTreeMap::new();
+
+    result.insert("index.md".to_string(), generate_typedoc_root_index(docs, options, symbol_map));
+
+    for doc in docs {
+        let module_name = module_file_name(&doc.file);
+        let module_index_file_name = typedoc_module_index_file_name(&module_name);
+        result.insert(
+            format!("{module_index_file_name}.md"),
+            generate_typedoc_module_index(doc, options, &module_name, symbol_map),
+        );
+
+        for entry in &doc.entries {
+            let entry_file_name = typedoc_entry_file_name(&module_name, entry);
+            result.insert(
+                format!("{entry_file_name}.md"),
+                generate_typedoc_entry_page(
+                    entry,
+                    options,
+                    &module_name,
+                    &entry_file_name,
+                    symbol_map,
+                ),
+            );
+        }
+    }
+
+    result
+}
+
+fn generate_typedoc_root_index(
+    docs: &[ApiDocModule],
+    options: &MarkdownDocsOptions,
+    symbol_map: &HashMap<String, Vec<SymbolLocation>>,
+) -> String {
+    let link_context = MarkdownLinkContext {
+        options,
+        current_file_name: "index",
+        current_module_name: "",
+        symbol_map,
+    };
+    let mut markdown = "# API Documentation\n\n".to_string();
+    markdown.push_str("Generated by [Ox Content](https://github.com/ubugeeei-prod/ox-content)\n\n");
+    markdown.push_str(&render_stats_html(
+        &summarize_entries(docs.iter().flat_map(|doc| doc.entries.iter())),
+        Some(docs.len()),
+    ));
+    markdown.push_str("\n\n## Modules\n\n");
+
+    for doc in docs {
+        let module_name = module_file_name(&doc.file);
+        let href = doc_page_href_from(
+            options,
+            "index",
+            &typedoc_module_index_file_name(&module_name),
+            None,
+        );
+        let summary = clean_summary_text(
+            &doc.entries.first().map_or_else(String::new, |entry| {
+                process_doc_text(&entry.description, Some(&link_context))
+            }),
+            88,
+        );
+        if summary.is_empty() {
+            push_fmt(
+                &mut markdown,
+                format_args!("- [{}]({href})\n", capitalize_ascii(&module_name)),
+            );
+        } else {
+            push_fmt(
+                &mut markdown,
+                format_args!("- [{}]({href}) - {summary}\n", capitalize_ascii(&module_name)),
+            );
+        }
+    }
+
+    markdown
+}
+
+fn generate_typedoc_module_index(
+    doc: &ApiDocModule,
+    options: &MarkdownDocsOptions,
+    module_name: &str,
+    symbol_map: &HashMap<String, Vec<SymbolLocation>>,
+) -> String {
+    let current_file_name = typedoc_module_index_file_name(module_name);
+    let link_context = MarkdownLinkContext {
+        options,
+        current_file_name: &current_file_name,
+        current_module_name: module_name,
+        symbol_map,
+    };
+    let mut markdown = fmt_args(format_args!("# {}\n\n", capitalize_ascii(module_name)));
+
+    if let Some(github_url) = &options.github_url {
+        markdown.push_str(&generate_source_link(&doc.file, github_url, None, None));
+        markdown.push_str("\n\n");
+    }
+
+    markdown.push_str(&render_stats_html(&summarize_entries(&doc.entries), None));
+    markdown.push_str("\n\n");
+
+    for kind in ordered_entry_kinds(&doc.entries) {
+        let entries = doc.entries.iter().filter(|entry| entry.kind == kind).collect::<Vec<_>>();
+        if entries.is_empty() {
+            continue;
+        }
+
+        push_fmt(&mut markdown, format_args!("## {}\n\n", typedoc_kind_title(&kind)));
+        for entry in entries {
+            let href = doc_page_href_from(
+                options,
+                &current_file_name,
+                &typedoc_entry_file_name(module_name, entry),
+                None,
+            );
+            markdown.push_str(&render_overview_line(entry, &href, Some(&link_context)));
+        }
+        markdown.push('\n');
+    }
+
+    markdown
+}
+
+fn generate_typedoc_entry_page(
+    entry: &ApiDocEntry,
+    options: &MarkdownDocsOptions,
+    module_name: &str,
+    current_file_name: &str,
+    symbol_map: &HashMap<String, Vec<SymbolLocation>>,
+) -> String {
+    let link_context = MarkdownLinkContext {
+        options,
+        current_file_name,
+        current_module_name: module_name,
+        symbol_map,
+    };
+    let body = render_entry_body_html(entry, options, Some(&link_context));
+    let mut markdown = fmt_args(format_args!("# {}\n\n", entry.name));
+    push_fmt(
+        &mut markdown,
+        format_args!(
+            "<div id=\"{}\" class=\"ox-api-entry ox-api-entry--page\">
+{}
+</div>
+",
+            entry_anchor(&entry.name),
+            body
+        ),
+    );
+    markdown
+}
+
+fn ordered_entry_kinds(entries: &[ApiDocEntry]) -> Vec<String> {
+    let mut kinds = Vec::new();
+    for kind in DOC_KIND_ORDER {
+        if entries.iter().any(|entry| entry.kind == kind) {
+            kinds.push(kind.to_string());
+        }
+    }
+    let mut extra = entries
+        .iter()
+        .map(|entry| entry.kind.clone())
+        .filter(|kind| !DOC_KIND_ORDER.contains(&kind.as_str()))
+        .collect::<Vec<_>>();
+    extra.sort();
+    extra.dedup();
+    kinds.extend(extra);
+    kinds
 }
 
 fn normalize_signature(signature: Option<&str>) -> Option<String> {
@@ -1277,7 +1636,13 @@ fn render_member_table_html(
   <td>{}</td>
   <td>{}</td>
 </tr>",
-                escape_html(&member_anchor(entry_name, &member.name)),
+                escape_html(&member_anchor(
+                    entry_name,
+                    member,
+                    context.map_or(MarkdownPathStrategy::Flat, |context| context
+                        .options
+                        .path_strategy),
+                )),
                 escape_html(&member.name),
                 render_member_flags(member),
                 escape_html(&member.kind),
@@ -1399,18 +1764,12 @@ fn render_members_table_html(
     )
 }
 
-fn generate_entry_markdown(
+fn render_entry_body_html(
     entry: &ApiDocEntry,
     options: &MarkdownDocsOptions,
-    current_file_name: Option<&str>,
-    symbol_map: Option<&HashMap<String, SymbolLocation>>,
+    link_context: Option<&MarkdownLinkContext<'_>>,
 ) -> String {
-    let link_context = current_file_name.zip(symbol_map).map(|(current_file_name, symbol_map)| {
-        MarkdownLinkContext { options, current_file_name, symbol_map }
-    });
-    let link_context = link_context.as_ref();
     let processed_description = process_doc_text(&entry.description, link_context);
-    let summary_signature = normalize_signature(entry.signature.as_deref());
     let source_href = options.github_url.as_ref().map(|github_url| {
         generate_source_href(&entry.file, github_url, Some(entry.line), Some(entry.end_line))
     });
@@ -1510,6 +1869,29 @@ fn generate_entry_markdown(
         body.push('\n');
     }
 
+    body.trim().to_string()
+}
+
+fn generate_entry_markdown(
+    entry: &ApiDocEntry,
+    options: &MarkdownDocsOptions,
+    current_file_name: Option<&str>,
+    current_module_name: Option<&str>,
+    symbol_map: Option<&HashMap<String, Vec<SymbolLocation>>>,
+) -> String {
+    let link_context = current_file_name.zip(current_module_name).zip(symbol_map).map(
+        |((current_file_name, current_module_name), symbol_map)| MarkdownLinkContext {
+            options,
+            current_file_name,
+            current_module_name,
+            symbol_map,
+        },
+    );
+    let link_context = link_context.as_ref();
+    let processed_description = process_doc_text(&entry.description, link_context);
+    let summary_signature = normalize_signature(entry.signature.as_deref());
+    let body = render_entry_body_html(entry, options, link_context);
+
     let summary_description = clean_summary_text(
         &processed_description,
         if summary_signature.is_some() { 80 } else { 120 },
@@ -1554,7 +1936,7 @@ fn generate_entry_markdown(
 ",
         entry_anchor(&entry.name),
         summary_parts.join(""),
-        body.trim()
+        body
     )
 }
 
@@ -1562,15 +1944,16 @@ fn generate_index(
     docs: &[ApiDocModule],
     options: &MarkdownDocsOptions,
     doc_to_file: Option<&HashMap<String, String>>,
-    symbol_map: Option<&HashMap<String, SymbolLocation>>,
+    symbol_map: Option<&HashMap<String, Vec<SymbolLocation>>>,
 ) -> String {
     let link_context = symbol_map.map(|symbol_map| MarkdownLinkContext {
         options,
         current_file_name: "index",
+        current_module_name: "",
         symbol_map,
     });
     let mut markdown = "# API Documentation\n\n".to_string();
-    markdown.push_str("Generated by [Ox Content](https://github.com/ubugeeei/ox-content)\n\n");
+    markdown.push_str("Generated by [Ox Content](https://github.com/ubugeeei-prod/ox-content)\n\n");
     markdown.push_str(
         "> Use search scopes like `@api transform` to limit results to the generated API reference.\n\n",
     );
@@ -1646,11 +2029,15 @@ fn generate_category_markdown(
     kind: &str,
     entries: &[ApiDocEntry],
     options: &MarkdownDocsOptions,
-    symbol_map: &HashMap<String, SymbolLocation>,
+    symbol_map: &HashMap<String, Vec<SymbolLocation>>,
 ) -> String {
     let category_file_name = fmt_args(format_args!("{kind}s"));
-    let link_context =
-        MarkdownLinkContext { options, current_file_name: &category_file_name, symbol_map };
+    let link_context = MarkdownLinkContext {
+        options,
+        current_file_name: &category_file_name,
+        current_module_name: "",
+        symbol_map,
+    };
     let mut markdown = fmt_args(format_args!("# {}s\n\n", capitalize_ascii(kind)));
     push_fmt(
         &mut markdown,
@@ -1682,6 +2069,7 @@ fn generate_category_markdown(
             entry,
             options,
             Some(&category_file_name),
+            Some(""),
             Some(symbol_map),
         ));
     }
@@ -1692,11 +2080,16 @@ fn generate_category_markdown(
 fn generate_category_index(
     by_kind: &BTreeMap<String, Vec<ApiDocEntry>>,
     options: &MarkdownDocsOptions,
-    symbol_map: &HashMap<String, SymbolLocation>,
+    symbol_map: &HashMap<String, Vec<SymbolLocation>>,
 ) -> String {
-    let link_context = MarkdownLinkContext { options, current_file_name: "index", symbol_map };
+    let link_context = MarkdownLinkContext {
+        options,
+        current_file_name: "index",
+        current_module_name: "",
+        symbol_map,
+    };
     let mut markdown = "# API Documentation\n\n".to_string();
-    markdown.push_str("Generated by [Ox Content](https://github.com/ubugeeei/ox-content)\n\n");
+    markdown.push_str("Generated by [Ox Content](https://github.com/ubugeeei-prod/ox-content)\n\n");
     markdown.push_str(&render_stats_html(
         &summarize_entries(by_kind.values().flat_map(|entries| entries.iter())),
         None,
@@ -1752,7 +2145,7 @@ fn convert_symbol_links(text: &str, context: &MarkdownLinkContext<'_>) -> String
         }
 
         let symbol_name = captures.get(1).map_or("", |value| value.as_str());
-        let Some(location) = context.symbol_map.get(symbol_name) else {
+        let Some(location) = resolve_symbol_location(symbol_name, context) else {
             continue;
         };
 
@@ -1775,30 +2168,38 @@ fn convert_symbol_links(text: &str, context: &MarkdownLinkContext<'_>) -> String
 fn build_symbol_map(
     docs: &[ApiDocModule],
     options: &MarkdownDocsOptions,
-) -> HashMap<String, SymbolLocation> {
+) -> HashMap<String, Vec<SymbolLocation>> {
     let mut map = HashMap::new();
 
     for doc in docs {
+        let module_name = module_file_name(&doc.file);
         for entry in &doc.entries {
-            let mut file_name = if options.group_by == "category" {
-                fmt_args(format_args!("{}s", entry.kind))
-            } else {
-                file_stem(&doc.file)
+            let (file_name, anchor) = match (options.group_by.as_str(), options.path_strategy) {
+                ("file", MarkdownPathStrategy::TypeDoc) => {
+                    (typedoc_entry_file_name(&module_name, entry), None)
+                }
+                ("category", _) => {
+                    (fmt_args(format_args!("{}s", entry.kind)), Some(entry_anchor(&entry.name)))
+                }
+                _ => (module_name.clone(), Some(entry_anchor(&entry.name))),
             };
-            if file_name == "index" {
-                file_name = "index-module".to_string();
-            }
-
-            map.insert(
+            insert_symbol_location(
+                &mut map,
                 entry.name.clone(),
-                SymbolLocation { file_name: file_name.clone(), anchor: entry_anchor(&entry.name) },
+                SymbolLocation {
+                    module_name: module_name.clone(),
+                    file_name: file_name.clone(),
+                    anchor,
+                },
             );
             for member in &entry.members {
-                map.insert(
+                insert_symbol_location(
+                    &mut map,
                     fmt_args(format_args!("{}.{}", entry.name, member.name)),
                     SymbolLocation {
+                        module_name: module_name.clone(),
                         file_name: file_name.clone(),
-                        anchor: member_anchor(&entry.name, &member.name),
+                        anchor: Some(member_anchor(&entry.name, member, options.path_strategy)),
                     },
                 );
             }
@@ -1806,6 +2207,14 @@ fn build_symbol_map(
     }
 
     map
+}
+
+fn insert_symbol_location(
+    map: &mut HashMap<String, Vec<SymbolLocation>>,
+    symbol_name: String,
+    location: SymbolLocation,
+) {
+    map.entry(symbol_name).or_default().push(location);
 }
 
 fn generate_source_href(
@@ -2084,6 +2493,243 @@ mod tests {
         assert!(command_page.contains("<tr id=\"command-args\">"));
         assert!(command_page.contains("<a href=\"#command-args\"><code>Command.args</code></a>"));
         assert!(index.contains("Builds command metadata."));
+    }
+
+    #[test]
+    fn typedoc_path_strategy_emits_per_symbol_pages_and_links() {
+        let docs = vec![ApiDocModule {
+            file: "default".to_string(),
+            entries: vec![
+                ApiDocEntry {
+                    name: "cli".to_string(),
+                    kind: "function".to_string(),
+                    description:
+                        "Run with {@link CliOptions} and {@linkcode CliOptions.usageSilent}."
+                            .to_string(),
+                    params: vec![],
+                    returns: None,
+                    examples: vec![],
+                    tags: vec![],
+                    private: false,
+                    file: "/repo/src/cli.ts".to_string(),
+                    line: 1,
+                    end_line: 10,
+                    signature: Some("export function cli(options: CliOptions): void".to_string()),
+                    members: vec![],
+                },
+                ApiDocEntry {
+                    name: "CliOptions".to_string(),
+                    kind: "interface".to_string(),
+                    description: "CLI options.".to_string(),
+                    params: vec![],
+                    returns: None,
+                    examples: vec![],
+                    tags: vec![],
+                    private: false,
+                    file: "/repo/src/types.ts".to_string(),
+                    line: 1,
+                    end_line: 20,
+                    signature: Some("export interface CliOptions".to_string()),
+                    members: vec![ApiDocMember {
+                        name: "usageSilent".to_string(),
+                        kind: "property".to_string(),
+                        description: "Suppress usage output.".to_string(),
+                        signature: None,
+                        type_annotation: Some("boolean".to_string()),
+                        params: vec![],
+                        returns: None,
+                        optional: true,
+                        readonly: false,
+                        r#static: false,
+                        private: false,
+                        tags: vec![],
+                        line: 5,
+                        end_line: 5,
+                    }],
+                },
+                test_entry("Plugin", "type", "/repo/src/plugin.ts", "Plugin type."),
+                test_entry(
+                    "CLI_OPTIONS_DEFAULT",
+                    "variable",
+                    "/repo/src/constants.ts",
+                    "Default options.",
+                ),
+            ],
+        }];
+
+        let markdown = generate_markdown(
+            &docs,
+            &MarkdownDocsOptions {
+                path_strategy: MarkdownPathStrategy::TypeDoc,
+                ..MarkdownDocsOptions::default()
+            },
+        );
+        let cli_page = markdown.get("default/functions/cli.md").unwrap();
+        let options_page = markdown.get("default/interfaces/CliOptions.md").unwrap();
+        let module_index = markdown.get("default/index.md").unwrap();
+
+        assert!(markdown.contains_key("index.md"));
+        assert!(markdown.contains_key("default/type-aliases/Plugin.md"));
+        assert!(markdown.contains_key("default/variables/CLI_OPTIONS_DEFAULT.md"));
+        assert!(module_index.contains("[`cli`](./functions/cli.md)"));
+        assert!(module_index.contains("[`CliOptions`](./interfaces/CliOptions.md)"));
+        assert!(cli_page.contains("<a href=\"../interfaces/CliOptions.md\">CliOptions</a>"));
+        assert!(cli_page.contains(
+            "<a href=\"../interfaces/CliOptions.md#property-usagesilent\"><code>CliOptions.usageSilent</code></a>"
+        ));
+        assert!(options_page.contains("<tr id=\"property-usagesilent\">"));
+    }
+
+    #[test]
+    fn typedoc_path_strategy_uses_clean_base_path_and_module_scope() {
+        let docs = vec![
+            ApiDocModule {
+                file: "default".to_string(),
+                entries: vec![
+                    test_entry("Command", "interface", "/repo/src/default.ts", "Default command."),
+                    test_entry(
+                        "runDefault",
+                        "function",
+                        "/repo/src/default.ts",
+                        "Runs {@link Command}.",
+                    ),
+                ],
+            },
+            ApiDocModule {
+                file: "plugin".to_string(),
+                entries: vec![
+                    test_entry("Command", "interface", "/repo/src/plugin.ts", "Plugin command."),
+                    test_entry(
+                        "runPlugin",
+                        "function",
+                        "/repo/src/plugin.ts",
+                        "Runs {@link Command}.",
+                    ),
+                ],
+            },
+        ];
+
+        let markdown = generate_markdown(
+            &docs,
+            &MarkdownDocsOptions {
+                link_style: MarkdownLinkStyle::Clean,
+                base_path: Some("/api".to_string()),
+                path_strategy: MarkdownPathStrategy::TypeDoc,
+                ..MarkdownDocsOptions::default()
+            },
+        );
+        let default_page = markdown.get("default/functions/runDefault.md").unwrap();
+        let plugin_page = markdown.get("plugin/functions/runPlugin.md").unwrap();
+        let index = markdown.get("index.md").unwrap();
+
+        assert!(index.contains("[Default](/api/default)"));
+        assert!(default_page.contains("<a href=\"/api/default/interfaces/Command\">Command</a>"));
+        assert!(plugin_page.contains("<a href=\"/api/plugin/interfaces/Command\">Command</a>"));
+        assert!(!default_page.contains(".md"));
+    }
+
+    #[test]
+    fn category_group_ignores_typedoc_path_strategy() {
+        let docs = link_test_docs();
+
+        let category_flat = generate_markdown(
+            &docs,
+            &MarkdownDocsOptions {
+                group_by: "category".to_string(),
+                ..MarkdownDocsOptions::default()
+            },
+        );
+        let category_typedoc = generate_markdown(
+            &docs,
+            &MarkdownDocsOptions {
+                group_by: "category".to_string(),
+                path_strategy: MarkdownPathStrategy::TypeDoc,
+                ..MarkdownDocsOptions::default()
+            },
+        );
+
+        let mut flat_keys = category_flat.keys().cloned().collect::<Vec<_>>();
+        let mut typedoc_keys = category_typedoc.keys().cloned().collect::<Vec<_>>();
+        flat_keys.sort();
+        typedoc_keys.sort();
+        assert_eq!(flat_keys, typedoc_keys);
+
+        assert!(category_typedoc.contains_key("functions.md"));
+        assert!(category_typedoc.contains_key("interfaces.md"));
+        assert!(!category_typedoc.keys().any(|key| key.contains('/')));
+    }
+
+    #[test]
+    fn typedoc_path_strategy_emits_enumerations_directory() {
+        let docs = vec![ApiDocModule {
+            file: "default".to_string(),
+            entries: vec![
+                ApiDocEntry {
+                    name: "Mode".to_string(),
+                    kind: "enum".to_string(),
+                    description: "Execution mode.".to_string(),
+                    params: vec![],
+                    returns: None,
+                    examples: vec![],
+                    tags: vec![],
+                    private: false,
+                    file: "/repo/src/mode.ts".to_string(),
+                    line: 1,
+                    end_line: 5,
+                    signature: Some("export enum Mode".to_string()),
+                    members: vec![ApiDocMember {
+                        name: "Strict".to_string(),
+                        kind: "enumMember".to_string(),
+                        description: "Strict mode.".to_string(),
+                        signature: None,
+                        type_annotation: Some("\"strict\"".to_string()),
+                        params: vec![],
+                        returns: None,
+                        optional: false,
+                        readonly: false,
+                        r#static: false,
+                        private: false,
+                        tags: vec![],
+                        line: 2,
+                        end_line: 2,
+                    }],
+                },
+                ApiDocEntry {
+                    name: "run".to_string(),
+                    kind: "function".to_string(),
+                    description: "Runs in {@link Mode} or {@linkcode Mode.Strict}.".to_string(),
+                    params: vec![],
+                    returns: None,
+                    examples: vec![],
+                    tags: vec![],
+                    private: false,
+                    file: "/repo/src/run.ts".to_string(),
+                    line: 1,
+                    end_line: 5,
+                    signature: Some("export function run(mode: Mode): void".to_string()),
+                    members: vec![],
+                },
+            ],
+        }];
+
+        let markdown = generate_markdown(
+            &docs,
+            &MarkdownDocsOptions {
+                path_strategy: MarkdownPathStrategy::TypeDoc,
+                ..MarkdownDocsOptions::default()
+            },
+        );
+        let mode_page = markdown.get("default/enumerations/Mode.md").unwrap();
+        let run_page = markdown.get("default/functions/run.md").unwrap();
+        let module_index = markdown.get("default/index.md").unwrap();
+
+        assert!(module_index.contains("## Enumerations"));
+        assert!(module_index.contains("[`Mode`](./enumerations/Mode.md)"));
+        assert!(mode_page.contains("<tr id=\"enumeration-member-strict\">"));
+        assert!(run_page.contains("<a href=\"../enumerations/Mode.md\">Mode</a>"));
+        assert!(run_page.contains(
+            "<a href=\"../enumerations/Mode.md#enumeration-member-strict\"><code>Mode.Strict</code></a>"
+        ));
     }
 
     #[test]

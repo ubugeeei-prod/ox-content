@@ -24,7 +24,7 @@ hero:
       link: getting-started.md
     - theme: alt
       text: View on GitHub
-      link: https://github.com/ubugeeei/ox-content
+      link: https://github.com/ubugeeei-prod/ox-content
     - theme: alt
       text: Sponsor
       link: https://github.com/sponsors/ubugeeei
@@ -98,7 +98,7 @@ Under the hood, Ox Content is not only a docs theme. It also exposes the Markdow
 - [API Reference](./api/index.md) - Generated API docs for the public surface
 - [Vite Plugin](./packages/vite-plugin-ox-content.md) - Main docs pipeline package
 - [Packages](./packages/napi.md) - Node.js, WebAssembly, framework, and i18n package docs
-- [GitHub](https://github.com/ubugeeei/ox-content) - Source code and issues
+- [GitHub](https://github.com/ubugeeei-prod/ox-content) - Source code and issues
 
 ## Community Credits
 

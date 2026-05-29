@@ -98,6 +98,14 @@ export declare function generateDocsNavCode(navItems: Array<JsDocsNavItem>, expo
 /** Generates sidebar navigation metadata from documentation file paths. */
 export declare function generateDocsNavMetadata(files: Array<string>, basePath?: string | undefined | null): Array<JsDocsNavItem>
 
+/**
+ * Generates sidebar navigation metadata from extracted documentation modules.
+ *
+ * Use this when the output `pathStrategy` is `"typedoc"` so that the navigation
+ * tree mirrors the nested module/category/symbol pages.
+ */
+export declare function generateDocsNavMetadataFromDocs(docs: Array<JsDocsMarkdownModule>, options?: JsDocsNavOptions | undefined | null): Array<JsDocsNavItem>
+
 /** Generates the `virtual:ox-content/i18n` runtime module. */
 export declare function generateI18nModule(dictDir: string, config: JsI18NRuntimeConfig): string
 
@@ -274,6 +282,7 @@ export interface JsDocsMarkdownOptions {
   githubUrl?: string
   linkStyle?: 'markdown' | 'clean'
   basePath?: string
+  pathStrategy?: 'flat' | 'typedoc'
 }
 
 /** Ordered JSDoc tag used by generated API Markdown. */
@@ -289,12 +298,19 @@ export interface JsDocsNavItem {
   children?: Array<JsDocsNavItem>
 }
 
+/** Options for generating sidebar navigation metadata from extracted docs. */
+export interface JsDocsNavOptions {
+  basePath?: string
+  pathStrategy?: 'flat' | 'typedoc'
+}
+
 /** Options for writing generated API documentation files. */
 export interface JsDocsOutputOptions {
   generateNav?: boolean
   groupBy?: string
   generatedAt?: string
   basePath?: string
+  pathStrategy?: 'flat' | 'typedoc'
 }
 
 /** Entry page configuration. */
@@ -834,6 +850,17 @@ export interface JsSsgSidebarItem {
   collapsed?: boolean
 }
 
+/** Result of [`transform_tabs_embeds`]. */
+export interface JsTabsTransformResult {
+  /** HTML with every `<tabs>` block expanded. */
+  html: string
+  /**
+   * Number of tab groups expanded; the caller advances its group counter by
+   * this amount so generated CSS covers exactly the emitted groups.
+   */
+  groupCount: number
+}
+
 /** Theme colors for JavaScript. */
 export interface JsThemeColors {
   /** Primary accent color. */
@@ -1000,6 +1027,21 @@ export interface JsTransformOptions {
    * Defaults to true; ignored when [`Self::autolink_urls`] is off.
    */
   autolinkTargetBlank?: boolean
+}
+
+/**
+ * Options for [`transform_youtube_embeds`]; all optional, matching the TS
+ * `YouTubeOptions` defaults when omitted.
+ */
+export interface JsYouTubeOptions {
+  /** Use privacy-enhanced mode (youtube-nocookie.com). Default: true. */
+  privacyEnhanced?: boolean
+  /** Default aspect ratio. Default: "16/9". */
+  aspectRatio?: string
+  /** Allow fullscreen. Default: true. */
+  allowFullscreen?: boolean
+  /** Lazy-load the iframe. Default: true. */
+  lazyLoad?: boolean
 }
 
 export declare function lintMarkdown(source: string, options?: JsMarkdownLintOptions | undefined | null): JsMarkdownLintResult
@@ -1180,6 +1222,19 @@ export interface TransformResult {
   /** Parse/render errors, if any. */
   errors: Array<string>
 }
+
+/**
+ * Rewrites `<tabs><tab>…</tab></tabs>` blocks in rendered HTML into the no-JS
+ * CSS tab widget plus a `<details>` fallback. Rust port of the TS
+ * `transformTabs`. Groups are numbered from `start_group`.
+ */
+export declare function transformTabsEmbeds(html: string, startGroup: number): JsTabsTransformResult
+
+/**
+ * Rewrites `<youtube …>` elements in rendered HTML into responsive,
+ * privacy-enhanced iframe embeds. Rust port of the TS `transformYouTube`.
+ */
+export declare function transformYoutubeEmbeds(html: string, options?: JsYouTubeOptions | undefined | null): string
 
 /**
  * Validates an MF2 message string.

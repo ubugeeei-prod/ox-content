@@ -756,7 +756,7 @@ export interface DocsOptions {
   /**
    * GitHub repository URL for source code links.
    * When provided, generated documentation will include links to source code.
-   * Example: 'https://github.com/ubugeeei/ox-content'
+   * Example: 'https://github.com/ubugeeei-prod/ox-content'
    */
   githubUrl?: string;
 
@@ -771,6 +771,12 @@ export interface DocsOptions {
    * Nav metadata falls back to '/api' when this is not set.
    */
   basePath?: string;
+
+  /**
+   * Generated Markdown output path strategy.
+   * @default 'flat'
+   */
+  pathStrategy?: "flat" | "typedoc";
 
   /**
    * Generate navigation metadata file.
@@ -797,6 +803,7 @@ export interface ResolvedDocsOptions {
   githubUrl?: string;
   linkStyle: "markdown" | "clean";
   basePath?: string;
+  pathStrategy: "flat" | "typedoc";
   generateNav: boolean;
 }
 
@@ -805,7 +812,7 @@ export interface ResolvedDocsOptions {
  */
 export interface DocEntry {
   name: string;
-  kind: "function" | "class" | "interface" | "type" | "variable" | "module";
+  kind: "function" | "class" | "interface" | "type" | "enum" | "variable" | "module";
   description: string;
   params?: ParamDoc[];
   returns?: ReturnDoc;

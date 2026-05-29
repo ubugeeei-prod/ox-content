@@ -1,5 +1,30 @@
 # Changelog
 
+## [2.26.0] - 2026-05-29
+
+### Performance
+
+- port the tabs embed transform to Rust (#221)
+- port the YouTube embed transform to Rust (#220)
+- skip no-op rehype round-trips and redundant per-page work (#218)
+- skip non-URL text in autolink scan via memchr (#217)
+
+## [2.25.0] - 2026-05-29
+
+## [2.24.0] - 2026-05-29
+
+## [2.23.0] - 2026-05-29
+
+### Features
+
+- complete typedoc path strategy support (#214)
+- autolink bare URLs in text (#205)
+
+### Bug Fixes
+
+- support typedoc markdown paths (#209)
+- render JSDoc inline links (#204)
+
 ## [2.22.0] - 2026-05-28
 
 ### Features

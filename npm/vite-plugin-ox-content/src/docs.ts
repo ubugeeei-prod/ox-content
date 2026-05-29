@@ -49,7 +49,13 @@
  * ```
  */
 
-import type { ResolvedDocsOptions, ExtractedDocs, DocEntry, ResolvedDocsEntryPoint } from "./types";
+import type {
+  ResolvedDocsOptions,
+  ExtractedDocs,
+  DocEntry,
+  ResolvedDocsEntryPoint,
+  DocsOptions,
+} from "./types";
 import { importNapiModule, importNapiModuleSync } from "./napi";
 
 const DEFAULT_DOCS_INCLUDE = [
@@ -204,6 +210,7 @@ export function generateMarkdown(
     githubUrl: options.githubUrl,
     linkStyle: options.linkStyle,
     basePath: options.basePath,
+    pathStrategy: options.pathStrategy,
   });
 }
 
@@ -233,11 +240,12 @@ export async function writeDocs(
       groupBy: options?.groupBy ?? "file",
       generatedAt: new Date().toISOString(),
       basePath: options?.basePath,
+      pathStrategy: options?.pathStrategy,
     },
   );
 }
 
-function toRustDocsModules(docs: ExtractedDocs[]) {
+export function toRustDocsModules(docs: ExtractedDocs[]) {
   return docs.map((doc) => ({
     file: doc.file,
     entries: doc.entries.map((entry) => ({
@@ -263,8 +271,13 @@ function toRustDocsModules(docs: ExtractedDocs[]) {
 /**
  * Resolves docs options with defaults.
  */
+export function resolveDocsOptions(options: false): false;
+export function resolveDocsOptions(options?: DocsOptions): ResolvedDocsOptions;
 export function resolveDocsOptions(
-  options: import("./types").DocsOptions | false | undefined,
+  options: DocsOptions | false | undefined,
+): ResolvedDocsOptions | false;
+export function resolveDocsOptions(
+  options: DocsOptions | false | undefined,
 ): ResolvedDocsOptions | false {
   if (options === false) {
     return false;
@@ -289,6 +302,7 @@ export function resolveDocsOptions(
     githubUrl: opts.githubUrl,
     linkStyle: opts.linkStyle ?? "markdown",
     basePath: opts.basePath,
+    pathStrategy: opts.pathStrategy ?? "flat",
     generateNav: opts.generateNav ?? true,
   };
 }

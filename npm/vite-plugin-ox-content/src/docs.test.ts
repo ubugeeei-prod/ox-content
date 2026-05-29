@@ -141,6 +141,44 @@ describe("writeDocs", () => {
       '"path": "/api-ox/context"',
     );
   });
+
+  it("writes typedoc nested files and nav tree when pathStrategy is typedoc", async () => {
+    const outDir = await fs.mkdtemp(path.join(os.tmpdir(), "ox-content-docs-"));
+    tempDirs.push(outDir);
+
+    const extractedDocs: ExtractedDocs[] = [
+      {
+        file: "default",
+        entries: [
+          {
+            name: "cli",
+            kind: "function",
+            description: "Runs the CLI.",
+            file: "/repo/src/cli.ts",
+            line: 1,
+            endLine: 1,
+            signature: "export function cli(): void",
+          },
+        ],
+      },
+    ];
+
+    const options = resolveDocsOptions({
+      generateNav: true,
+      basePath: "/api",
+      pathStrategy: "typedoc",
+      linkStyle: "clean",
+    });
+    const markdown = generateMarkdown(extractedDocs, options);
+
+    await writeDocs(markdown, outDir, extractedDocs, options);
+
+    await expect(fs.access(path.join(outDir, "default/index.md"))).resolves.not.toThrow();
+    await expect(fs.access(path.join(outDir, "default/functions/cli.md"))).resolves.not.toThrow();
+    await expect(fs.readFile(path.join(outDir, "nav.ts"), "utf-8")).resolves.toContain(
+      '"path": "/api/default/functions/cli"',
+    );
+  });
 });
 
 describe("generateMarkdown", () => {
@@ -199,6 +237,48 @@ describe("generateMarkdown", () => {
     expect(markdown["index.md"]).toContain('href="/api-ox/context"');
     expect(markdown["index.md"]).toContain('href="/api-ox/context#commandcontext"');
     expect(markdown["index.md"]).not.toContain(".md#commandcontext");
+  });
+
+  it("emits TypeDoc-style paths when pathStrategy is typedoc", () => {
+    const docs: ExtractedDocs[] = [
+      {
+        file: "default",
+        entries: [
+          {
+            name: "Command",
+            kind: "interface",
+            description: "Runtime command.",
+            file: "/repo/src/types.ts",
+            line: 1,
+            endLine: 1,
+            signature: "export interface Command",
+          },
+          {
+            name: "cli",
+            kind: "function",
+            description: "Runs {@link Command}.",
+            file: "/repo/src/cli.ts",
+            line: 1,
+            endLine: 1,
+            signature: "export function cli(): void",
+          },
+        ],
+      },
+    ];
+
+    const markdown = generateMarkdown(
+      docs,
+      resolveDocsOptions({
+        linkStyle: "clean",
+        basePath: "/api",
+        pathStrategy: "typedoc",
+      })!,
+    );
+
+    expect(markdown["default/index.md"]).toContain("[`cli`](/api/default/functions/cli)");
+    expect(markdown["default/functions/cli.md"]).toContain(
+      'href="/api/default/interfaces/Command"',
+    );
   });
 });
 
