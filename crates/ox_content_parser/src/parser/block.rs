@@ -67,8 +67,23 @@ impl<'a> Parser<'a> {
 
     pub(super) fn parse_paragraph(&mut self, start: usize) -> ParseResult<Option<Node<'a>>> {
         profile_span!("parser::parse_paragraph");
-        let mut content_end = start;
         let bytes = self.source.as_bytes();
+
+        // `parse_block` is the sole caller and only reaches here after
+        // `skip_blank_lines` + its block dispatch — the very checks
+        // `line_starts_block` re-runs — have already classified the current
+        // line as a non-blank, non-block paragraph line. So consume the first
+        // line unconditionally instead of re-deriving that verdict with
+        // another `current_line` memchr + `trim_start` + dispatch (+ table
+        // `memchr`). This also removes the infinite-loop hazard the two
+        // dispatchers guard against: by always advancing past line one we can
+        // never return `Ok(None)` without progress on a non-blank line.
+        let mut content_end = if let Some(off) = memchr(b'\n', &bytes[start..]) {
+            start + off + 1
+        } else {
+            self.source.len()
+        };
+        self.position = content_end;
 
         loop {
             if self.is_at_end() {
