@@ -1,5 +1,15 @@
 # Changelog
 
+## [2.28.0] - 2026-05-30
+
+### Features
+
+- package-manager install tabs with opt-in synced groups (#257)
+
+### Bug Fixes
+
+- restore Bun.markdown row in PR benchmark (#258)
+
 ## [2.27.0] - 2026-05-30
 
 ### Bug Fixes
