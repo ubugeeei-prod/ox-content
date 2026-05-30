@@ -385,6 +385,19 @@ async function runBenchmarks() {
     console.log("@mizchi/markdown not available, skipping mizchi comparisons\n");
   }
 
+  // @astrojs/markdown-remark is the Markdown renderer Astro uses internally
+  // (remark/rehype under the hood). Its processor renders asynchronously, so
+  // it only joins the async render comparison. Loaded defensively like the
+  // others so an older checkout without the dependency skips it.
+  let astroProcessor = null;
+  try {
+    const { createMarkdownProcessor } = await import("@astrojs/markdown-remark");
+    astroProcessor = await createMarkdownProcessor({});
+    console.log("Using @astrojs/markdown-remark (Astro)\n");
+  } catch {
+    console.log("@astrojs/markdown-remark not available, skipping Astro comparisons\n");
+  }
+
   // Try to import NAPI
   let napi = null;
   try {
@@ -468,6 +481,13 @@ async function runBenchmarks() {
     asyncRenderers.push({
       name: "@ox-content/napi (async)",
       fn: (input) => napi.parseAndRenderAsync(input),
+    });
+  }
+
+  if (astroProcessor) {
+    asyncRenderers.push({
+      name: "@astrojs/markdown-remark",
+      fn: (input) => astroProcessor.render(input),
     });
   }
 
