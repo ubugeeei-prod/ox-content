@@ -4,6 +4,7 @@
 //! including raw-buffer AST transfer for JavaScript interoperability.
 
 mod highlight;
+mod html_scan;
 mod lint;
 mod mdast;
 mod mdast_raw;

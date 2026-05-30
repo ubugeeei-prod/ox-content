@@ -13,6 +13,8 @@ use std::sync::LazyLock;
 
 use regex::Regex;
 
+use crate::html_scan::find_ci;
+
 /// Options mirroring the TS `YouTubeOptions`, with the same defaults.
 #[derive(Debug, Clone)]
 pub struct YouTubeEmbedOptions {
@@ -170,7 +172,19 @@ fn find_youtube_element(html: &str, from: usize) -> Option<YouTubeElement> {
         let self_closing = tag_end > after_name && bytes[tag_end - 1] == b'/';
 
         let inner_end = if self_closing { tag_end - 1 } else { tag_end };
-        let attrs = parse_attributes(&html[after_name..inner_end]);
+
+        // Pull out the three attributes we care about in a single pass, keeping
+        // the first occurrence of each (matching hast's first-wins semantics)
+        // and moving the values out instead of cloning them.
+        let (mut id, mut url, mut title) = (None, None, None);
+        for (name, value) in parse_attributes(&html[after_name..inner_end]) {
+            match name.as_str() {
+                "id" if id.is_none() => id = Some(value),
+                "url" if url.is_none() => url = Some(value),
+                "title" if title.is_none() => title = Some(value),
+                _ => {}
+            }
+        }
 
         let span_end = if self_closing {
             tag_end + 1
@@ -182,12 +196,7 @@ fn find_youtube_element(html: &str, from: usize) -> Option<YouTubeElement> {
             }
         };
 
-        return Some(YouTubeElement {
-            span: (tag_start, span_end),
-            id: attrs.iter().find(|(n, _)| n == "id").map(|(_, v)| v.clone()),
-            url: attrs.iter().find(|(n, _)| n == "url").map(|(_, v)| v.clone()),
-            title: attrs.iter().find(|(n, _)| n == "title").map(|(_, v)| v.clone()),
-        });
+        return Some(YouTubeElement { span: (tag_start, span_end), id, url, title });
     }
 }
 
@@ -251,23 +260,6 @@ fn parse_attributes(inner: &str) -> Vec<(String, String)> {
         attrs.push((name, value));
     }
     attrs
-}
-
-/// Case-insensitive search for `needle` in `haystack[from..]`, returning an
-/// absolute byte offset. `needle` must be ASCII (it always is here).
-fn find_ci(haystack: &str, from: usize, needle: &str) -> Option<usize> {
-    let hay = haystack.as_bytes();
-    let pat = needle.as_bytes();
-    if pat.is_empty() || from > hay.len() || hay.len() - from < pat.len() {
-        return None;
-    }
-    let last = hay.len() - pat.len();
-    for i in from..=last {
-        if hay[i..i + pat.len()].eq_ignore_ascii_case(pat) {
-            return Some(i);
-        }
-    }
-    None
 }
 
 /// Transform every `<youtube …>` element in `html` into an iframe embed.
