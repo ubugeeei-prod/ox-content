@@ -282,8 +282,10 @@ const scoreOxContentSearchTerms = (searchIndex, parsedQuery, tokens) => {
         ? // Prefix expansion scans the whole vocabulary. Materialize the term
           // list once and reuse it across keystrokes instead of rebuilding the
           // `Object.keys` array on every query.
-          (searchIndex.__oxIndexKeys || (searchIndex.__oxIndexKeys = Object.keys(searchIndex.index)))
-            .filter((term) => term.startsWith(token))
+          (
+            searchIndex.__oxIndexKeys ||
+            (searchIndex.__oxIndexKeys = Object.keys(searchIndex.index))
+          ).filter((term) => term.startsWith(token))
         : searchIndex.index[token]
           ? [token]
           : [];
