@@ -87,9 +87,11 @@ fn build_embed_url(video_id: &str, options: &YouTubeEmbedOptions) -> String {
 
 fn render_embed(video_id: &str, options: &YouTubeEmbedOptions, title: Option<&str>) -> String {
     let embed_url = build_embed_url(video_id, options);
-    let title_value = match title {
-        Some(title) => title.to_string(),
-        None => format!("YouTube video {video_id}"),
+    // Escape the borrowed title directly instead of copying it into an owned
+    // String first (`escape_attribute` already returns an owned String).
+    let escaped_title = match title {
+        Some(title) => escape_attribute(title),
+        None => escape_attribute(&format!("YouTube video {video_id}")),
     };
     let mut html = String::new();
     html.push_str("<div class=\"ox-youtube\" style=\"aspect-ratio: ");
@@ -97,7 +99,7 @@ fn render_embed(video_id: &str, options: &YouTubeEmbedOptions, title: Option<&st
     html.push_str(";\"><iframe src=\"");
     html.push_str(&escape_attribute(&embed_url));
     html.push_str("\" title=\"");
-    html.push_str(&escape_attribute(&title_value));
+    html.push_str(&escaped_title);
     html.push_str("\" allow=\"accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share\" referrerpolicy=\"strict-origin-when-cross-origin\"");
     if options.allow_fullscreen {
         html.push_str(" allowfullscreen");
