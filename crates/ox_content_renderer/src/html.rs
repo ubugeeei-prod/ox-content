@@ -1426,13 +1426,12 @@ impl HtmlRenderer {
         // Build the autolink first-byte index once per render (it depends only
         // on the immutable pattern list) so `write_text_with_autolinks` can
         // reuse it instead of rebuilding a 256-byte table per text node.
-        self.autolink_index = if self.options.autolink_urls
-            && !self.options.autolink_patterns.is_empty()
-        {
-            Some(FirstByteIndex::from_patterns(&self.options.autolink_patterns))
-        } else {
-            None
-        };
+        self.autolink_index =
+            if self.options.autolink_urls && !self.options.autolink_patterns.is_empty() {
+                Some(FirstByteIndex::from_patterns(&self.options.autolink_patterns))
+            } else {
+                None
+            };
         // HTML output is typically 2×–3× the markdown source (every
         // `**bold**` becomes `<strong>...</strong>` etc.) so the prior
         // 1.5× estimate kept undersizing the buffer and forcing 1–2
