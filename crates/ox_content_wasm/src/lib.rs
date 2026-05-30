@@ -147,8 +147,8 @@ pub fn parse_and_render(source: &str, options: Option<WasmParserOptions>) -> JsV
             let mut renderer = HtmlRenderer::with_options(HtmlRendererOptions {
                 toc_max_depth: opts.toc_max_depth,
                 autolink_urls: opts.autolink_urls,
-                autolink_patterns: opts.autolink_patterns.clone(),
                 autolink_target_blank: opts.autolink_target_blank,
+                autolink_patterns: opts.autolink_patterns,
                 ..Default::default()
             });
             let html = renderer.render(&doc);
