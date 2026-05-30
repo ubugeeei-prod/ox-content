@@ -3,7 +3,9 @@
 //! This crate provides WASM bindings for using Ox Content in browsers
 //! and other WebAssembly environments.
 
+use std::borrow::Cow;
 use std::collections::HashMap;
+
 use wasm_bindgen::prelude::*;
 
 use ox_content_allocator::Allocator;
@@ -190,7 +192,9 @@ pub fn transform(source: &str, options: Option<WasmParserOptions>) -> JsValue {
             let mut renderer = HtmlRenderer::with_options(HtmlRendererOptions {
                 toc_max_depth,
                 autolink_urls: opts.autolink_urls,
-                autolink_patterns: opts.autolink_patterns.clone(),
+                // `opts` is owned and unused after this literal, so move the
+                // pattern Vec instead of deep-cloning it every call.
+                autolink_patterns: opts.autolink_patterns,
                 autolink_target_blank: opts.autolink_target_blank,
                 ..Default::default()
             });
@@ -220,16 +224,16 @@ pub fn version() -> String {
 }
 
 /// Parses YAML frontmatter from Markdown content.
-fn parse_frontmatter(source: &str) -> (String, HashMap<String, serde_json::Value>) {
+fn parse_frontmatter(source: &str) -> (Cow<'_, str>, HashMap<String, serde_json::Value>) {
     let mut frontmatter = HashMap::new();
 
     if !source.starts_with("---") {
-        return (source.to_string(), frontmatter);
+        return (Cow::Borrowed(source), frontmatter);
     }
 
     let rest = &source[3..];
     let Some(end_pos) = rest.find("\n---") else {
-        return (source.to_string(), frontmatter);
+        return (Cow::Borrowed(source), frontmatter);
     };
 
     let frontmatter_str = rest[..end_pos].trim_start_matches('\n');
@@ -265,7 +269,7 @@ fn parse_frontmatter(source: &str) -> (String, HashMap<String, serde_json::Value
         }
     }
 
-    (content.to_string(), frontmatter)
+    (Cow::Borrowed(content), frontmatter)
 }
 
 /// Extracts table of contents from document headings.
