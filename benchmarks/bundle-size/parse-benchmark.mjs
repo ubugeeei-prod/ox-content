@@ -466,13 +466,7 @@ async function runBenchmarks() {
     console.log(`\n## ${sizeName.toUpperCase()} (${sizeKB} KB)`);
 
     const iterations =
-      sizeName === "huge"
-        ? 5
-        : sizeName === "large"
-          ? 20
-          : sizeName === "medium"
-            ? 50
-            : 100;
+      sizeName === "huge" ? 5 : sizeName === "large" ? 20 : sizeName === "medium" ? 50 : 100;
     const suites = {};
 
     // Parse only benchmark
