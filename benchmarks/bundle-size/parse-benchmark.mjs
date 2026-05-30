@@ -312,7 +312,17 @@ function loadBunMarkdownBenchmarks() {
 
   if (run.status !== 0) {
     const details = run.stderr.trim() || run.stdout.trim();
-    console.warn(`Failed to run Bun benchmark helper: ${details}`);
+    // `Bun.markdown` only exists in Bun >= 1.3.8. On an older bun the helper
+    // throws this exact message; call it out so the missing Bun.markdown row
+    // is traced to the bun version rather than read as a transient failure.
+    if (details.includes("Bun.markdown is not available")) {
+      console.warn(
+        `Bun ${version.stdout.trim()} predates Bun.markdown (added in 1.3.8); ` +
+          "skipping Bun.markdown comparisons. Upgrade bun to include it.",
+      );
+    } else {
+      console.warn(`Failed to run Bun benchmark helper: ${details}`);
+    }
     return null;
   }
 
