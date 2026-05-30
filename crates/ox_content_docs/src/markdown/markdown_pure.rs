@@ -16,28 +16,28 @@ use crate::model::{ApiDocEntry, ApiDocMember};
 pub(super) fn render_stats_markdown(stats: &EntryStats, module_count: Option<usize>) -> String {
     let mut parts = Vec::new();
     if let Some(module_count) = module_count {
-        parts.push(format!("{module_count} modules"));
+        parts.push(fmt_args(format_args!("{module_count} modules")));
     }
-    parts.push(format!("{} symbols", stats.entries));
+    parts.push(fmt_args(format_args!("{} symbols", stats.entries)));
     for kind in super::DOC_KIND_ORDER {
         if let Some(count) = stats.by_kind.get(kind).copied().filter(|count| *count > 0) {
-            parts.push(format!("{count} {}", super::doc_kind_plural(kind)));
+            parts.push(fmt_args(format_args!("{count} {}", super::doc_kind_plural(kind))));
         }
     }
     if stats.params > 0 {
-        parts.push(format!("{} parameters", stats.params));
+        parts.push(fmt_args(format_args!("{} parameters", stats.params)));
     }
     if stats.members > 0 {
-        parts.push(format!("{} members", stats.members));
+        parts.push(fmt_args(format_args!("{} members", stats.members)));
     }
     if stats.returns > 0 {
-        parts.push(format!("{} returns", stats.returns));
+        parts.push(fmt_args(format_args!("{} returns", stats.returns)));
     }
     if stats.examples > 0 {
-        parts.push(format!("{} examples", stats.examples));
+        parts.push(fmt_args(format_args!("{} examples", stats.examples)));
     }
     if stats.deprecated > 0 {
-        parts.push(format!("{} deprecated", stats.deprecated));
+        parts.push(fmt_args(format_args!("{} deprecated", stats.deprecated)));
     }
     fmt_args(format_args!("_{}_", parts.join(" · ")))
 }
@@ -85,14 +85,14 @@ pub(super) fn render_entry_body_pure(
                 flags.push("optional".to_string());
             }
             if let Some(default_value) = &param.default_value {
-                flags.push(format!("default: {default_value}"));
+                flags.push(fmt_args(format_args!("default: {default_value}")));
             }
             if !flags.is_empty() {
                 let flags = flags.join(", ");
                 description = if description.is_empty() {
-                    format!("_{flags}_")
+                    fmt_args(format_args!("_{flags}_"))
                 } else {
-                    format!("{description} _({flags})_")
+                    fmt_args(format_args!("{description} _({flags})_"))
                 };
             }
             push_fmt(
@@ -143,30 +143,35 @@ pub(super) fn render_entry_body_pure(
 
 /// Renders the member tables for an entry, grouped to match the HTML renderer.
 fn render_members_pure(entry: &ApiDocEntry, context: Option<&MarkdownLinkContext<'_>>) -> String {
-    let constructors = members_of(entry, |member| member.kind == "constructor");
-    let static_methods = members_of(entry, |member| {
-        member.r#static && matches!(member.kind.as_str(), "method" | "getter" | "setter")
-    });
-    let methods = members_of(entry, |member| {
-        !member.r#static && matches!(member.kind.as_str(), "method" | "getter" | "setter")
-    });
-    let static_properties =
-        members_of(entry, |member| member.r#static && member.kind == "property");
-    let properties = members_of(entry, |member| !member.r#static && member.kind == "property");
-    let enum_members = members_of(entry, |member| member.kind == "enumMember");
+    // Bucket the members lazily: each `match` arm below only uses a subset of
+    // these groups (the default arm uses none of them), so computing every
+    // bucket up front wasted a full `members` pass + `Vec` per unused group.
+    // Mirrors the same optimization in the HTML renderer's
+    // `render_members_table_html`.
+    let methods = |is_static: bool| {
+        members_of(entry, move |member| {
+            member.r#static == is_static
+                && matches!(member.kind.as_str(), "method" | "getter" | "setter")
+        })
+    };
+    let properties = |is_static: bool| {
+        members_of(entry, move |member| member.r#static == is_static && member.kind == "property")
+    };
 
     let groups: Vec<(&str, Vec<&ApiDocMember>)> = match entry.kind.as_str() {
         "class" => vec![
-            ("Constructors", constructors),
-            ("Static Methods", static_methods),
-            ("Methods", methods),
-            ("Static Properties", static_properties),
-            ("Properties", properties),
+            ("Constructors", members_of(entry, |member| member.kind == "constructor")),
+            ("Static Methods", methods(true)),
+            ("Methods", methods(false)),
+            ("Static Properties", properties(true)),
+            ("Properties", properties(false)),
         ],
-        "interface" => vec![("Properties", properties), ("Methods", methods)],
-        "type" => {
-            vec![("Properties", properties), ("Methods", methods), ("Enum Members", enum_members)]
-        }
+        "interface" => vec![("Properties", properties(false)), ("Methods", methods(false))],
+        "type" => vec![
+            ("Properties", properties(false)),
+            ("Methods", methods(false)),
+            ("Enum Members", members_of(entry, |member| member.kind == "enumMember")),
+        ],
         _ => vec![("Members", entry.members.iter().collect())],
     };
 
@@ -225,7 +230,7 @@ fn member_name_cell(member: &ApiDocMember) -> String {
     if flags.is_empty() {
         name
     } else {
-        format!("{name} _({})_", flags.join(", "))
+        fmt_args(format_args!("{name} _({})_", flags.join(", ")))
     }
 }
 
@@ -246,7 +251,8 @@ fn member_description(member: &ApiDocMember, context: Option<&MarkdownLinkContex
     }
     if let Some(returns) = &member.returns {
         if !returns.description.is_empty() {
-            parts.push(format!("Returns: {}", inline(&returns.description, context)));
+            parts
+                .push(fmt_args(format_args!("Returns: {}", inline(&returns.description, context))));
         }
     }
     parts.join(" ")
@@ -273,6 +279,6 @@ fn code_cell(value: &str) -> String {
     if value.is_empty() {
         String::new()
     } else {
-        format!("`{}`", value.replace('|', "\\|"))
+        fmt_args(format_args!("`{}`", value.replace('|', "\\|")))
     }
 }
