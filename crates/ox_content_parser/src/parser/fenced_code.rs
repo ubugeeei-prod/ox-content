@@ -133,7 +133,10 @@ impl<'a> Parser<'a> {
 
                 if line_indent <= 3 {
                     self.position = line_start;
-                    let indent_to_skip = self.calc_indentation(line_start).min(3);
+                    // `line_indent` was just computed from the same leading
+                    // whitespace `calc_indentation(line_start)` would re-scan,
+                    // and is already <= 3, so the `.min(3)` was a no-op.
+                    let indent_to_skip = line_indent;
                     for _ in 0..indent_to_skip {
                         if self.peek() == Some(' ') {
                             self.advance();
