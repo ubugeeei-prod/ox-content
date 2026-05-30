@@ -7,8 +7,17 @@
 
 import type { GitHubOptions } from "./github";
 import type { OgpOptions } from "./ogp";
+import type { PmOptions } from "./pm";
 
-export { transformTabs, generateTabsCSS, resetTabGroupCounter } from "./tabs";
+export {
+  transformTabs,
+  generateTabsCSS,
+  resetTabGroupCounter,
+  getTabGroupCounter,
+  setTabGroupCounter,
+} from "./tabs";
+
+export { transformPm, type PmOptions } from "./pm";
 
 export { transformYouTube, extractVideoId, type YouTubeOptions } from "./youtube";
 
@@ -46,6 +55,12 @@ export { transformMermaidStatic, mermaidClientScript, type MermaidOptions } from
  */
 export interface TransformAllOptions {
   tabs?: boolean;
+  /**
+   * Expand `<pm>` package-manager blocks into install tabs. Pass an object to
+   * opt in to synced groups (`{ sync: true }`); syncing is off by default.
+   * @default true
+   */
+  pm?: boolean | PmOptions;
   youtube?: boolean;
   github?: boolean | GitHubOptions;
   ogp?: boolean | OgpOptions;
@@ -63,6 +78,7 @@ export async function transformAllPlugins(
 ): Promise<string> {
   const {
     tabs = true,
+    pm = true,
     youtube = true,
     github = true,
     ogp,
@@ -80,6 +96,14 @@ export async function transformAllPlugins(
   if (tabs) {
     const { transformTabs } = await import("./tabs");
     result = await transformTabs(result);
+  }
+
+  // 1b. Package-manager tabs (no external dependencies). Shares the tab-group
+  // counter with the tabs transform, so it runs right after it. Syncing is
+  // opt-in via `{ pm: { sync: true } }` and off by default.
+  if (pm !== false) {
+    const { transformPm } = await import("./pm");
+    result = await transformPm(result, typeof pm === "object" ? pm : {});
   }
 
   // 2. YouTube (no external dependencies)
