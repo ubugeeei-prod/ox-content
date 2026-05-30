@@ -24,51 +24,51 @@
 
   <text x="120" y="56" text-anchor="end" class="label">@ox-content/napi</text>
   <rect x="130" y="42" width="300" height="20" rx="4" fill="url(#oxGrad)"/>
-  <text x="540" y="56" text-anchor="end" class="value">3,272</text>
+  <text x="540" y="56" text-anchor="end" class="value">2,578</text>
   <text x="545" y="56" class="unit">ops/s</text>
   <text x="636" y="56" text-anchor="end" class="ratio">1.00x</text>
 
   <text x="120" y="86" text-anchor="end" class="label">satteri</text>
-  <rect x="130" y="72" width="154" height="20" rx="4" fill="url(#grayGrad)"/>
-  <text x="540" y="86" text-anchor="end" class="value">1,682</text>
+  <rect x="130" y="72" width="132" height="20" rx="4" fill="url(#grayGrad)"/>
+  <text x="540" y="86" text-anchor="end" class="value">1,137</text>
   <text x="545" y="86" class="unit">ops/s</text>
-  <text x="636" y="86" text-anchor="end" class="ratio">1.95x</text>
+  <text x="636" y="86" text-anchor="end" class="ratio">2.27x</text>
 
   <text x="120" y="116" text-anchor="end" class="label">md4w (md4c)</text>
-  <rect x="130" y="102" width="61" height="20" rx="4" fill="url(#grayGrad)"/>
-  <text x="540" y="116" text-anchor="end" class="value">670</text>
+  <rect x="130" y="102" width="60" height="20" rx="4" fill="url(#grayGrad)"/>
+  <text x="540" y="116" text-anchor="end" class="value">519</text>
   <text x="545" y="116" class="unit">ops/s</text>
-  <text x="636" y="116" text-anchor="end" class="ratio">4.88x</text>
+  <text x="636" y="116" text-anchor="end" class="ratio">4.96x</text>
 
   <text x="120" y="146" text-anchor="end" class="label">md4x (napi)</text>
-  <rect x="130" y="132" width="57" height="20" rx="4" fill="url(#grayGrad)"/>
-  <text x="540" y="146" text-anchor="end" class="value">623</text>
+  <rect x="130" y="132" width="60" height="20" rx="4" fill="url(#grayGrad)"/>
+  <text x="540" y="146" text-anchor="end" class="value">513</text>
   <text x="545" y="146" class="unit">ops/s</text>
-  <text x="636" y="146" text-anchor="end" class="ratio">5.25x</text>
+  <text x="636" y="146" text-anchor="end" class="ratio">5.03x</text>
 
   <text x="120" y="176" text-anchor="end" class="label">markdown-it</text>
-  <rect x="130" y="162" width="55" height="20" rx="4" fill="url(#grayGrad)"/>
-  <text x="540" y="176" text-anchor="end" class="value">596</text>
+  <rect x="130" y="162" width="53" height="20" rx="4" fill="url(#grayGrad)"/>
+  <text x="540" y="176" text-anchor="end" class="value">455</text>
   <text x="545" y="176" class="unit">ops/s</text>
-  <text x="636" y="176" text-anchor="end" class="ratio">5.49x</text>
+  <text x="636" y="176" text-anchor="end" class="ratio">5.67x</text>
 
   <text x="120" y="206" text-anchor="end" class="label">marked</text>
-  <rect x="130" y="192" width="35" height="20" rx="4" fill="url(#grayGrad)"/>
-  <text x="540" y="206" text-anchor="end" class="value">386</text>
+  <rect x="130" y="192" width="31" height="20" rx="4" fill="url(#grayGrad)"/>
+  <text x="540" y="206" text-anchor="end" class="value">265</text>
   <text x="545" y="206" class="unit">ops/s</text>
-  <text x="636" y="206" text-anchor="end" class="ratio">8.47x</text>
+  <text x="636" y="206" text-anchor="end" class="ratio">9.73x</text>
 
   <text x="120" y="236" text-anchor="end" class="label">@mizchi/markdown</text>
   <rect x="130" y="222" width="4" height="20" rx="4" fill="url(#grayGrad)"/>
-  <text x="540" y="236" text-anchor="end" class="value">41</text>
+  <text x="540" y="236" text-anchor="end" class="value">25</text>
   <text x="545" y="236" class="unit">ops/s</text>
-  <text x="636" y="236" text-anchor="end" class="ratio">79.15x</text>
+  <text x="636" y="236" text-anchor="end" class="ratio">102x</text>
 
   <text x="120" y="266" text-anchor="end" class="label">remark</text>
   <rect x="130" y="252" width="4" height="20" rx="4" fill="url(#grayGrad)"/>
-  <text x="540" y="266" text-anchor="end" class="value">27</text>
+  <text x="540" y="266" text-anchor="end" class="value">18</text>
   <text x="545" y="266" class="unit">ops/s</text>
-  <text x="636" y="266" text-anchor="end" class="ratio">120x</text>
+  <text x="636" y="266" text-anchor="end" class="ratio">141x</text>
 
   <text x="325" y="296" text-anchor="middle" class="unit">Higher is better. Ratio shows how much slower vs ox-content.</text>
 </svg>
