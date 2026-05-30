@@ -276,13 +276,22 @@ fn collect_text(node: &Node, text: &mut String) {
 }
 
 fn slugify(text: &str) -> String {
-    text.to_lowercase()
+    let mapped: String = text
+        .to_lowercase()
         .chars()
         .map(|c| if c.is_alphanumeric() || c == ' ' || c == '-' { c } else { ' ' })
-        .collect::<String>()
-        .split_whitespace()
-        .collect::<Vec<_>>()
-        .join("-")
+        .collect();
+    // Join the whitespace-split tokens with '-' directly, skipping the
+    // intermediate `Vec<&str>` and the separate `join` allocation. `mapped.len()`
+    // is a safe upper bound for the slug (separators only shrink it).
+    let mut slug = String::with_capacity(mapped.len());
+    for token in mapped.split_whitespace() {
+        if !slug.is_empty() {
+            slug.push('-');
+        }
+        slug.push_str(token);
+    }
+    slug
 }
 
 fn unique_slug(slug: String, counts: &mut HashMap<String, usize>) -> String {

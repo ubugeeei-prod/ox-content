@@ -34,7 +34,7 @@ const defaultOptions: Required<OgpOptions> = {
   timeout: 10000,
   cache: true,
   cacheTTL: 3600000,
-  userAgent: "ox-content-ogp-bot/1.0 (compatible; +https://github.com/ubugeeei/ox-content)",
+  userAgent: "ox-content-ogp-bot/1.0 (compatible; +https://github.com/ubugeeei-prod/ox-content)",
 };
 
 // Simple in-memory cache

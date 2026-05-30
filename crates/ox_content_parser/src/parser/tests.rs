@@ -125,6 +125,26 @@ fn test_parse_strikethrough() {
 }
 
 #[test]
+fn test_parse_strikethrough_lone_tilde_not_matched() {
+    // A trailing lone `~` (and a single `~` mid-text) must not be treated as a
+    // closing run: the `~~` opener falls back to literal text. This pins the
+    // `inner_end + 1 < len` boundary preserved by the memchr-based scan.
+    let allocator = Allocator::new();
+    for input in ["~~open ~ but no close", "~~trailing tilde~"] {
+        let doc = Parser::with_options(&allocator, input, ParserOptions::gfm()).parse().unwrap();
+        match &doc.children[0] {
+            Node::Paragraph(p) => {
+                assert!(
+                    !p.children.iter().any(|n| matches!(n, Node::Delete(_))),
+                    "{input:?} should not produce a Delete node"
+                );
+            }
+            _ => panic!("expected paragraph"),
+        }
+    }
+}
+
+#[test]
 fn test_parse_hard_break() {
     let allocator = Allocator::new();
     let doc = Parser::new(&allocator, "line 1\\\nline 2").parse().unwrap();

@@ -576,6 +576,29 @@ export interface JsParserOptions {
   autolinks?: boolean
 }
 
+/** Options for [`transform_pm_embeds`]. */
+export interface JsPmOptions {
+  /**
+   * Enable opt-in synced package-manager tab groups. When `true`, a
+   * `data-ox-tab-group="pkg-manager"` attribute is emitted so the client
+   * runtime keeps every pm tab group on the page in sync via `localStorage`.
+   * Off by default; when omitted/`false` the output has no group attribute
+   * and behaves exactly like a standalone tab group.
+   */
+  sync?: boolean
+}
+
+/** Result of [`transform_pm_embeds`]. */
+export interface JsPmTransformResult {
+  /** HTML with every `<pm>` block expanded into a package-manager tab widget. */
+  html: string
+  /**
+   * Number of tab groups expanded; the caller advances its shared tab-group
+   * counter by this amount.
+   */
+  groupCount: number
+}
+
 /** Public export metadata. */
 export interface JsPublicExport {
   name: string
@@ -851,6 +874,17 @@ export interface JsSsgSidebarItem {
   collapsed?: boolean
 }
 
+/** Result of [`transform_tabs_embeds`]. */
+export interface JsTabsTransformResult {
+  /** HTML with every `<tabs>` block expanded. */
+  html: string
+  /**
+   * Number of tab groups expanded; the caller advances its group counter by
+   * this amount so generated CSS covers exactly the emitted groups.
+   */
+  groupCount: number
+}
+
 /** Theme colors for JavaScript. */
 export interface JsThemeColors {
   /** Primary accent color. */
@@ -1017,6 +1051,21 @@ export interface JsTransformOptions {
    * Defaults to true; ignored when [`Self::autolink_urls`] is off.
    */
   autolinkTargetBlank?: boolean
+}
+
+/**
+ * Options for [`transform_youtube_embeds`]; all optional, matching the TS
+ * `YouTubeOptions` defaults when omitted.
+ */
+export interface JsYouTubeOptions {
+  /** Use privacy-enhanced mode (youtube-nocookie.com). Default: true. */
+  privacyEnhanced?: boolean
+  /** Default aspect ratio. Default: "16/9". */
+  aspectRatio?: string
+  /** Allow fullscreen. Default: true. */
+  allowFullscreen?: boolean
+  /** Lazy-load the iframe. Default: true. */
+  lazyLoad?: boolean
 }
 
 export declare function lintMarkdown(source: string, options?: JsMarkdownLintOptions | undefined | null): JsMarkdownLintResult
@@ -1186,6 +1235,16 @@ export declare function transformMdastRaw(source: string, options?: JsTransformO
  */
 export declare function transformMermaid(html: string, mmdcPath: string): MermaidTransformResult
 
+/**
+ * Expand `<pm>` blocks in rendered HTML into npm/pnpm/yarn/bun install tabs.
+ *
+ * The single npm-style command inside each `<pm>` element is converted to the
+ * equivalent command for every package manager and rendered into the shared
+ * `ox-tabs` widget. Groups are numbered from `start_group`. Syncing is opt-in
+ * via `options.sync` and off by default.
+ */
+export declare function transformPmEmbeds(html: string, startGroup: number, options?: JsPmOptions | undefined | null): JsPmTransformResult
+
 /** Transform result containing HTML, frontmatter, and TOC. */
 export interface TransformResult {
   /** The rendered HTML. */
@@ -1197,6 +1256,19 @@ export interface TransformResult {
   /** Parse/render errors, if any. */
   errors: Array<string>
 }
+
+/**
+ * Rewrites `<tabs><tab>…</tab></tabs>` blocks in rendered HTML into the no-JS
+ * CSS tab widget plus a `<details>` fallback. Rust port of the TS
+ * `transformTabs`. Groups are numbered from `start_group`.
+ */
+export declare function transformTabsEmbeds(html: string, startGroup: number): JsTabsTransformResult
+
+/**
+ * Rewrites `<youtube …>` elements in rendered HTML into responsive,
+ * privacy-enhanced iframe embeds. Rust port of the TS `transformYouTube`.
+ */
+export declare function transformYoutubeEmbeds(html: string, options?: JsYouTubeOptions | undefined | null): string
 
 /**
  * Validates an MF2 message string.

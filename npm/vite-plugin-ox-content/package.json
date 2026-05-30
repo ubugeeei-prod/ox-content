@@ -1,6 +1,6 @@
 {
   "name": "@ox-content/vite-plugin",
-  "version": "2.22.0",
+  "version": "2.27.0",
   "description": "Vite plugin for Ox Content - High-performance Markdown processing with Environment API",
   "keywords": [
     "environment-api",
@@ -14,7 +14,7 @@
   "author": "ubugeeei",
   "repository": {
     "type": "git",
-    "url": "https://github.com/ubugeeei/ox-content.git",
+    "url": "https://github.com/ubugeeei-prod/ox-content.git",
     "directory": "npm/vite-plugin-ox-content"
   },
   "bin": {

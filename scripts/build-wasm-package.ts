@@ -68,14 +68,14 @@ function normalizePackageJson(): void {
   pkg.name = "@ox-content/wasm";
   pkg.author = "ubugeeei";
   delete pkg.collaborators;
-  pkg.homepage = "https://ubugeeei.github.io/ox-content/packages/wasm";
+  pkg.homepage = "https://ubugeeei-prod.github.io/ox-content/packages/wasm";
   pkg.repository = {
     type: "git",
-    url: "https://github.com/ubugeeei/ox-content.git",
+    url: "https://github.com/ubugeeei-prod/ox-content.git",
     directory: "crates/ox_content_wasm",
   };
   pkg.bugs = {
-    url: "https://github.com/ubugeeei/ox-content/issues",
+    url: "https://github.com/ubugeeei-prod/ox-content/issues",
   };
   pkg.publishConfig = {
     access: "public",

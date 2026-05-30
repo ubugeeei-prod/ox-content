@@ -1,6 +1,6 @@
 {
   "name": "@ox-content/vite-plugin-vue",
-  "version": "2.22.0",
+  "version": "2.27.0",
   "description": "Vue integration for Ox Content - Embed Vue components in Markdown",
   "keywords": [
     "markdown",
@@ -14,7 +14,7 @@
   "author": "ubugeeei",
   "repository": {
     "type": "git",
-    "url": "https://github.com/ubugeeei/ox-content.git",
+    "url": "https://github.com/ubugeeei-prod/ox-content.git",
     "directory": "npm/vite-plugin-ox-content-vue"
   },
   "files": [

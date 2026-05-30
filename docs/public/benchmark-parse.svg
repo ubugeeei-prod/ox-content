@@ -1,4 +1,4 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 650 260">
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 650 308">
   <defs>
     <linearGradient id="oxGrad" x1="0%" y1="0%" x2="100%" y2="0%">
       <stop offset="0%" style="stop-color:#7a5cff"/>
@@ -18,45 +18,57 @@
     .ratio { font: bold 10px IBM Plex Sans, system-ui, sans-serif; fill: #364462; }
   </style>
 
-  <rect width="650" height="260" fill="#f5f7fb" rx="8"/>
+  <rect width="650" height="308" fill="#f5f7fb" rx="8"/>
 
   <text x="325" y="24" text-anchor="middle" class="title">Parse Speed (Large 48.7 KB)</text>
 
-  <text x="120" y="58" text-anchor="end" class="label">@ox-content/napi</text>
-  <rect x="130" y="45" width="400" height="20" rx="4" fill="url(#oxGrad)"/>
-  <text x="495" y="58" class="ratio" style="fill:#fff">1.00x</text>
-  <text x="540" y="58" class="value">4,572</text>
-  <text x="588" y="58" class="unit">ops/s</text>
+  <text x="120" y="56" text-anchor="end" class="label">@ox-content/napi</text>
+  <rect x="130" y="42" width="300" height="20" rx="4" fill="url(#oxGrad)"/>
+  <text x="540" y="56" text-anchor="end" class="value">2,578</text>
+  <text x="545" y="56" class="unit">ops/s</text>
+  <text x="636" y="56" text-anchor="end" class="ratio">1.00x</text>
 
-  <text x="120" y="88" text-anchor="end" class="label">md4x (napi)</text>
-  <rect x="130" y="75" width="101" height="20" rx="4" fill="url(#grayGrad)"/>
-  <text x="239" y="88" class="value">1,155</text>
-  <text x="287" y="88" class="unit">ops/s</text>
-  <text x="337" y="88" class="ratio">3.96x</text>
+  <text x="120" y="86" text-anchor="end" class="label">satteri</text>
+  <rect x="130" y="72" width="132" height="20" rx="4" fill="url(#grayGrad)"/>
+  <text x="540" y="86" text-anchor="end" class="value">1,137</text>
+  <text x="545" y="86" class="unit">ops/s</text>
+  <text x="636" y="86" text-anchor="end" class="ratio">2.27x</text>
 
-  <text x="120" y="118" text-anchor="end" class="label">md4w (md4c)</text>
-  <rect x="130" y="105" width="87" height="20" rx="4" fill="url(#grayGrad)"/>
-  <text x="225" y="118" class="value">990</text>
-  <text x="257" y="118" class="unit">ops/s</text>
-  <text x="307" y="118" class="ratio">4.62x</text>
+  <text x="120" y="116" text-anchor="end" class="label">md4w (md4c)</text>
+  <rect x="130" y="102" width="60" height="20" rx="4" fill="url(#grayGrad)"/>
+  <text x="540" y="116" text-anchor="end" class="value">519</text>
+  <text x="545" y="116" class="unit">ops/s</text>
+  <text x="636" y="116" text-anchor="end" class="ratio">4.96x</text>
 
-  <text x="120" y="148" text-anchor="end" class="label">markdown-it</text>
-  <rect x="130" y="135" width="81" height="20" rx="4" fill="url(#grayGrad)"/>
-  <text x="219" y="148" class="value">925</text>
-  <text x="251" y="148" class="unit">ops/s</text>
-  <text x="301" y="148" class="ratio">4.94x</text>
+  <text x="120" y="146" text-anchor="end" class="label">md4x (napi)</text>
+  <rect x="130" y="132" width="60" height="20" rx="4" fill="url(#grayGrad)"/>
+  <text x="540" y="146" text-anchor="end" class="value">513</text>
+  <text x="545" y="146" class="unit">ops/s</text>
+  <text x="636" y="146" text-anchor="end" class="ratio">5.03x</text>
 
-  <text x="120" y="178" text-anchor="end" class="label">marked</text>
-  <rect x="130" y="165" width="43" height="20" rx="4" fill="url(#grayGrad)"/>
-  <text x="181" y="178" class="value">488</text>
-  <text x="213" y="178" class="unit">ops/s</text>
-  <text x="263" y="178" class="ratio">9.37x</text>
+  <text x="120" y="176" text-anchor="end" class="label">markdown-it</text>
+  <rect x="130" y="162" width="53" height="20" rx="4" fill="url(#grayGrad)"/>
+  <text x="540" y="176" text-anchor="end" class="value">455</text>
+  <text x="545" y="176" class="unit">ops/s</text>
+  <text x="636" y="176" text-anchor="end" class="ratio">5.67x</text>
 
-  <text x="120" y="208" text-anchor="end" class="label">remark</text>
-  <rect x="130" y="195" width="3" height="20" rx="1" fill="url(#grayGrad)"/>
-  <text x="140" y="208" class="value">37</text>
-  <text x="160" y="208" class="unit">ops/s</text>
-  <text x="205" y="208" class="ratio">123x</text>
+  <text x="120" y="206" text-anchor="end" class="label">marked</text>
+  <rect x="130" y="192" width="31" height="20" rx="4" fill="url(#grayGrad)"/>
+  <text x="540" y="206" text-anchor="end" class="value">265</text>
+  <text x="545" y="206" class="unit">ops/s</text>
+  <text x="636" y="206" text-anchor="end" class="ratio">9.73x</text>
 
-  <text x="325" y="240" text-anchor="middle" class="unit">Higher is better. Ratio shows how much slower vs ox-content.</text>
+  <text x="120" y="236" text-anchor="end" class="label">@mizchi/markdown</text>
+  <rect x="130" y="222" width="4" height="20" rx="4" fill="url(#grayGrad)"/>
+  <text x="540" y="236" text-anchor="end" class="value">25</text>
+  <text x="545" y="236" class="unit">ops/s</text>
+  <text x="636" y="236" text-anchor="end" class="ratio">102x</text>
+
+  <text x="120" y="266" text-anchor="end" class="label">remark</text>
+  <rect x="130" y="252" width="4" height="20" rx="4" fill="url(#grayGrad)"/>
+  <text x="540" y="266" text-anchor="end" class="value">18</text>
+  <text x="545" y="266" class="unit">ops/s</text>
+  <text x="636" y="266" text-anchor="end" class="ratio">141x</text>
+
+  <text x="325" y="296" text-anchor="middle" class="unit">Higher is better. Ratio shows how much slower vs ox-content.</text>
 </svg>

@@ -137,6 +137,103 @@ export function generateBareHtmlPage(content: string, title: string): string {
   return importNapiModuleSync().generateSsgBareHtml(content, title);
 }
 
+/** NAPI-facing nav group shape produced from a [`NavGroup`]. */
+interface RustNavGroup {
+  title: string;
+  collapsed?: boolean;
+  items: SsgNavItem[];
+}
+
+/**
+ * Per-build cache for the Rust-facing nav conversion. `navGroups` is the same
+ * `context.navItems` reference for every page in a build, so the deep recursive
+ * copy below only needs to run once per build instead of once per page.
+ */
+const navGroupsForRustCache = new WeakMap<NavGroup[], RustNavGroup[]>();
+
+function toRustNavItem(item: SsgNavItem): SsgNavItem {
+  return {
+    title: item.title,
+    path: item.path,
+    href: item.href,
+    children: item.children?.map(toRustNavItem),
+    collapsed: item.collapsed,
+  };
+}
+
+function convertNavGroupsForRust(navGroups: NavGroup[]): RustNavGroup[] {
+  const cached = navGroupsForRustCache.get(navGroups);
+  if (cached) {
+    return cached;
+  }
+  const converted = navGroups.map((group) => ({
+    title: group.title,
+    collapsed: group.collapsed,
+    items: group.items.map(toRustNavItem),
+  }));
+  navGroupsForRustCache.set(navGroups, converted);
+  return converted;
+}
+
+/**
+ * Converts a `TocEntry` tree into the plain shape the Rust binding expects.
+ * Hoisted to module scope so it isn't reallocated for every page; the
+ * per-page `.map` over `pageData.toc` still runs since the TOC is page-specific.
+ */
+function toRustTocEntry(entry: TocEntry): TocEntry {
+  return {
+    depth: entry.depth,
+    text: entry.text,
+    slug: entry.slug,
+    children: entry.children?.map(toRustTocEntry) ?? [],
+  };
+}
+
+/** Rust-facing locale shape. */
+interface RustLocale {
+  code: string;
+  name: string;
+  dir: string;
+}
+
+/**
+ * Per-build cache for the Rust-facing locale list. `i18n.locales` is the same
+ * reference for every page in a build, so this mapping (and the `?? "ltr"`
+ * default) only runs once per build instead of once per page.
+ */
+const rustLocalesCache = new WeakMap<LocaleConfig[], RustLocale[]>();
+
+function toRustLocales(locales: LocaleConfig[]): RustLocale[] {
+  const cached = rustLocalesCache.get(locales);
+  if (cached) {
+    return cached;
+  }
+  const converted = locales.map((locale) => ({
+    code: locale.code,
+    name: locale.name,
+    dir: locale.dir ?? "ltr",
+  }));
+  rustLocalesCache.set(locales, converted);
+  return converted;
+}
+
+/**
+ * Per-build cache for the locale-code list passed to `getSsgPageLocale`. The
+ * `i18n.locales` reference is stable across a build, so the `.map` to codes
+ * runs once instead of once per page.
+ */
+const localeCodesCache = new WeakMap<LocaleConfig[], string[]>();
+
+function localeCodesFor(locales: LocaleConfig[]): string[] {
+  const cached = localeCodesCache.get(locales);
+  if (cached) {
+    return cached;
+  }
+  const codes = locales.map((locale) => locale.code);
+  localeCodesCache.set(locales, codes);
+  return codes;
+}
+
 /**
  * Generates HTML page with navigation using Rust NAPI bindings.
  */
@@ -152,29 +249,11 @@ export async function generateHtmlPage(
 ): Promise<string> {
   const mod = await importNapiModule();
 
-  // Convert TocEntry to the format expected by Rust
-  const toRustTocEntry = (entry: TocEntry): TocEntry => ({
-    depth: entry.depth,
-    text: entry.text,
-    slug: entry.slug,
-    children: entry.children?.map(toRustTocEntry) ?? [],
-  });
+  // Convert TocEntry to the format expected by Rust (converter is module-scoped).
   const tocForRust = pageData.toc.map(toRustTocEntry);
 
-  // Convert NavGroup to the format expected by Rust
-  const toRustNavItem = (item: SsgNavItem): SsgNavItem => ({
-    title: item.title,
-    path: item.path,
-    href: item.href,
-    children: item.children?.map(toRustNavItem),
-    collapsed: item.collapsed,
-  });
-
-  const navGroupsForRust = navGroups.map((group) => ({
-    title: group.title,
-    collapsed: group.collapsed,
-    items: group.items.map(toRustNavItem),
-  }));
+  // Convert NavGroup to the format expected by Rust (cached per build).
+  const navGroupsForRust = convertNavGroupsForRust(navGroups);
 
   // Convert theme to NAPI format if provided
   const themeForRust = theme ? themeToNapi(theme) : undefined;
@@ -237,11 +316,7 @@ export async function generateHtmlPage(
       ogImage,
       theme: themeForRust,
       locale,
-      availableLocales: availableLocales?.map((l) => ({
-        code: l.code,
-        name: l.name,
-        dir: l.dir ?? "ltr",
-      })),
+      availableLocales: availableLocales ? toRustLocales(availableLocales) : undefined,
     },
   );
 }
@@ -333,7 +408,7 @@ export function getPageLocale(urlPath: string, i18n: ResolvedOptions["i18n"]): s
     importNapiModuleSync().getSsgPageLocale(
       urlPath,
       i18n.defaultLocale,
-      i18n.locales.map((locale) => locale.code),
+      localeCodesFor(i18n.locales),
     ) ?? undefined
   );
 }

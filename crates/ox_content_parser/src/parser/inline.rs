@@ -1,3 +1,4 @@
+use memchr::memchr;
 use ox_content_allocator::Vec;
 use ox_content_ast::{Node, Span};
 
@@ -105,7 +106,14 @@ impl<'a> Parser<'a> {
         let mut inner_end = inner_start;
 
         while inner_end + 1 < content.len() {
-            if bytes[inner_end] == b'~' && bytes[inner_end + 1] == b'~' {
+            // Restrict the scan to `..content.len() - 1` so any `~` memchr finds
+            // has a valid `inner_end + 1` byte to test — preserving the original
+            // `inner_end + 1 < content.len()` guard exactly.
+            match memchr(b'~', &bytes[inner_end..content.len() - 1]) {
+                Some(off) => inner_end += off,
+                None => break,
+            }
+            if bytes[inner_end + 1] == b'~' {
                 let inner_children =
                     self.parse_inline(&content[inner_start..inner_end], offset + inner_start)?;
                 let span = Span::new((offset + *pos) as u32, (offset + inner_end + 2) as u32);
@@ -168,9 +176,12 @@ impl<'a> Parser<'a> {
     ) {
         *pos += 1;
         let code_start = *pos;
-        while *pos < content.len() && content.as_bytes()[*pos] != b'`' {
-            *pos += 1;
-        }
+        let bytes = content.as_bytes();
+        // Jump to the closing backtick via SIMD memchr instead of a per-byte loop.
+        *pos = match memchr(b'`', &bytes[code_start..]) {
+            Some(off) => code_start + off,
+            None => content.len(),
+        };
 
         if *pos < content.len() {
             let span = Span::new((offset + code_start - 1) as u32, (offset + *pos + 1) as u32);

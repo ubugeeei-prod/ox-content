@@ -13,7 +13,7 @@ already be fixed.
 ## Reporting a Vulnerability
 
 Please report suspected security vulnerabilities privately through
-[GitHub Security Advisories](https://github.com/ubugeeei/ox-content/security/advisories/new).
+[GitHub Security Advisories](https://github.com/ubugeeei-prod/ox-content/security/advisories/new).
 Do not open a public issue, discussion, or pull request for a vulnerability until
 it has been coordinated.
 

@@ -287,7 +287,7 @@ async function main(): Promise<void> {
   console.log("\nNext steps:");
   console.log("  1. GitHub Actions will automatically publish to npm");
   console.log("  2. Create a GitHub release at:");
-  console.log(`     https://github.com/ubugeeei/ox-content/releases/new?tag=v${newVersion}`);
+  console.log(`     https://github.com/ubugeeei-prod/ox-content/releases/new?tag=v${newVersion}`);
 }
 
 main().catch((e) => {

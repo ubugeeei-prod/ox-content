@@ -903,6 +903,65 @@ fn write_url_escaped_into(out: &mut String, s: &str) {
     }
 }
 
+/// Case-insensitive index over the first byte of every registered autolink
+/// pattern, used to skip the long runs of text that can't begin a URL.
+///
+/// The default patterns (`http://`, `https://`) share the single leading
+/// letter `h`, so [`Self::next`] collapses to a `memchr2` over `{b'h', b'H'}`
+/// — letting the scanner jump straight to candidate offsets instead of
+/// testing the word-boundary + prefix at every byte. Up to three distinct
+/// leading bytes keep the SIMD `memchr` fast path; beyond that (rare, only
+/// with many custom schemes) it falls back to a 256-entry lookup table.
+struct FirstByteIndex {
+    table: [bool; 256],
+    needles: [u8; 3],
+    needle_len: usize,
+    overflow: bool,
+}
+
+impl FirstByteIndex {
+    fn from_patterns(patterns: &[String]) -> Self {
+        let mut table = [false; 256];
+        let mut needles = [0u8; 3];
+        let mut needle_len = 0usize;
+        let mut overflow = false;
+        for pat in patterns {
+            let Some(&first) = pat.as_bytes().first() else {
+                continue;
+            };
+            for cand in [first.to_ascii_lowercase(), first.to_ascii_uppercase()] {
+                if table[cand as usize] {
+                    continue;
+                }
+                table[cand as usize] = true;
+                if needle_len < needles.len() {
+                    needles[needle_len] = cand;
+                }
+                // Count past the array so >3 distinct bytes trips `overflow`.
+                needle_len += 1;
+            }
+        }
+        if needle_len > needles.len() {
+            overflow = true;
+        }
+        Self { table, needles, needle_len, overflow }
+    }
+
+    /// Byte offset of the next possible pattern start within `hay`, or `None`.
+    #[inline]
+    fn next(&self, hay: &[u8]) -> Option<usize> {
+        if self.overflow {
+            return hay.iter().position(|&b| self.table[b as usize]);
+        }
+        match self.needle_len {
+            1 => memchr::memchr(self.needles[0], hay),
+            2 => memchr::memchr2(self.needles[0], self.needles[1], hay),
+            3 => memchr::memchr3(self.needles[0], self.needles[1], self.needles[2], hay),
+            _ => None,
+        }
+    }
+}
+
 /// Scans `s` from `from` for the next position that begins one of the
 /// registered URL prefixes at a word boundary, and returns the
 /// `(match_start, url_end)` byte range with trailing punctuation trimmed.
@@ -912,10 +971,21 @@ fn write_url_escaped_into(out: &mut String, s: &str) {
 /// `"see http://x"` matches but `"shttp://x"` doesn't. The URL extends to
 /// the next whitespace, `<`, `>`, `"`, `'`, or backtick, and we then strip
 /// trailing `.,;:!?` plus an unbalanced `)`, `]`, or `}`.
-fn find_autolink_match(s: &str, from: usize, patterns: &[String]) -> Option<(usize, usize)> {
+///
+/// `index` skips ahead to the next byte that could start a pattern, so the
+/// per-byte boundary and prefix checks below only run at real candidates
+/// rather than across every byte of non-URL prose.
+fn find_autolink_match(
+    s: &str,
+    from: usize,
+    patterns: &[String],
+    index: &FirstByteIndex,
+) -> Option<(usize, usize)> {
     let bytes = s.as_bytes();
-    let mut i = from;
-    while i < bytes.len() {
+    let mut base = from;
+    while base < bytes.len() {
+        let rel = index.next(&bytes[base..])?;
+        let i = base + rel;
         // Word boundary: the previous byte must not be ASCII alphanumeric.
         let is_boundary = i == 0 || !bytes[i - 1].is_ascii_alphanumeric();
         if is_boundary {
@@ -942,7 +1012,7 @@ fn find_autolink_match(s: &str, from: usize, patterns: &[String]) -> Option<(usi
                 }
             }
         }
-        i += 1;
+        base = i + 1;
     }
     None
 }
@@ -1300,6 +1370,13 @@ pub struct HtmlRenderer {
     /// (paragraphs, headings, emphasis, …) and only the link case needs
     /// to mask it out.
     in_link: bool,
+    /// First-byte skip index for the autolink scanner. It depends only on
+    /// `options.autolink_patterns`, which is immutable for the duration of a
+    /// render, so it is built once at `render()` entry and reused for every
+    /// text node instead of being rebuilt per node (the prior behaviour zeroed
+    /// and filled a 256-byte table on the hottest inline path). `None` when
+    /// autolinking is disabled or there are no patterns.
+    autolink_index: Option<FirstByteIndex>,
 }
 
 impl HtmlRenderer {
@@ -1326,6 +1403,7 @@ impl HtmlRenderer {
             heading_text_scratch: String::with_capacity(64),
             heading_slug_scratch: String::with_capacity(64),
             in_link: false,
+            autolink_index: None,
         }
     }
 
@@ -1345,6 +1423,15 @@ impl HtmlRenderer {
             collect_inline_toc_entries(document, self.options.toc_max_depth, &mut self.toc_entries);
         }
         self.heading_id_counts.clear();
+        // Build the autolink first-byte index once per render (it depends only
+        // on the immutable pattern list) so `write_text_with_autolinks` can
+        // reuse it instead of rebuilding a 256-byte table per text node.
+        self.autolink_index =
+            if self.options.autolink_urls && !self.options.autolink_patterns.is_empty() {
+                Some(FirstByteIndex::from_patterns(&self.options.autolink_patterns))
+            } else {
+                None
+            };
         // HTML output is typically 2×–3× the markdown source (every
         // `**bold**` becomes `<strong>...</strong>` etc.) so the prior
         // 1.5× estimate kept undersizing the buffer and forcing 1–2
@@ -1399,32 +1486,43 @@ impl HtmlRenderer {
     fn write_text_with_autolinks(&mut self, s: &str) {
         profile_span!("renderer::write_text_with_autolinks");
         let bytes = s.as_bytes();
+        // Reuse the per-render first-byte index (see `autolink_index`). If it's
+        // absent the caller's gating slipped — fall back to emitting the text
+        // verbatim rather than rebuilding the index here.
+        let Some(index) = self.autolink_index.as_ref() else {
+            write_escaped_into(&mut self.output, s);
+            return;
+        };
+        // Borrow the relevant fields disjointly so the URL scan (which only
+        // reads `options`/`autolink_index`) and the output writes can coexist.
+        let patterns = &self.options.autolink_patterns;
+        let target_blank = self.options.autolink_target_blank;
+        let out = &mut self.output;
         let mut cursor = 0usize;
         while cursor < bytes.len() {
-            let Some((match_start, url_end)) =
-                find_autolink_match(s, cursor, &self.options.autolink_patterns)
+            let Some((match_start, url_end)) = find_autolink_match(s, cursor, patterns, index)
             else {
                 break;
             };
             // Emit the literal text preceding the URL.
             if match_start > cursor {
-                write_escaped_into(&mut self.output, &s[cursor..match_start]);
+                write_escaped_into(out, &s[cursor..match_start]);
             }
             let url = &s[match_start..url_end];
-            self.output.push_str("<a href=\"");
-            write_url_escaped_into(&mut self.output, url);
-            self.output.push('"');
-            if self.options.autolink_target_blank {
-                self.output.push_str(" target=\"_blank\" rel=\"noopener noreferrer\"");
+            out.push_str("<a href=\"");
+            write_url_escaped_into(out, url);
+            out.push('"');
+            if target_blank {
+                out.push_str(" target=\"_blank\" rel=\"noopener noreferrer\"");
             }
-            self.output.push('>');
+            out.push('>');
             // The visible text is the URL itself; escape it like any text.
-            write_escaped_into(&mut self.output, url);
-            self.output.push_str("</a>");
+            write_escaped_into(out, url);
+            out.push_str("</a>");
             cursor = url_end;
         }
         if cursor < bytes.len() {
-            write_escaped_into(&mut self.output, &s[cursor..]);
+            write_escaped_into(out, &s[cursor..]);
         }
     }
 
@@ -1710,10 +1808,10 @@ impl HtmlRenderer {
                 // common case — flag off — collapses back to the original
                 // single `write_escaped_into` call thanks to the early
                 // boolean check.
-                if self.options.autolink_urls
-                    && !self.in_link
-                    && !self.options.autolink_patterns.is_empty()
-                {
+                // `autolink_index` is `Some` iff `autolink_urls` and a non-empty
+                // pattern list (computed once at `render()` entry), so this one
+                // Option check replaces the three field reads.
+                if self.autolink_index.is_some() && !self.in_link {
                     self.write_text_with_autolinks(text.value);
                 } else {
                     write_escaped_into(&mut self.output, text.value);
@@ -2168,8 +2266,9 @@ impl<'a> Visit<'a> for HtmlRenderer {
 
     fn visit_text(&mut self, text: &Text<'a>) {
         profile_span!("renderer::visit_text");
-        if self.options.autolink_urls && !self.in_link && !self.options.autolink_patterns.is_empty()
-        {
+        // See the matching gate in `visit_inline_node`: the cached
+        // `autolink_index` already encodes `autolink_urls && !patterns.is_empty()`.
+        if self.autolink_index.is_some() && !self.in_link {
             self.write_text_with_autolinks(text.value);
         } else {
             self.write_escaped(text.value);
@@ -2950,6 +3049,35 @@ mod tests {
             html.contains("<a href=\"mailto:foo@example.com\""),
             "missing custom-pattern autolink: {html}"
         );
+    }
+
+    #[test]
+    fn test_autolink_many_patterns_uses_table_fallback() {
+        // Five patterns with five distinct leading letters exceed the
+        // three-needle SIMD fast path, exercising the `FirstByteIndex`
+        // lookup-table fallback. All schemes must still autolink.
+        let allocator = Allocator::new();
+        let doc = Parser::new(
+            &allocator,
+            "a http://h.test b ftp://f.test c mailto:m@x d tel:123 e ssh://s.test f",
+        )
+        .parse()
+        .unwrap();
+        let mut renderer = HtmlRenderer::with_options(HtmlRendererOptions {
+            autolink_urls: true,
+            autolink_patterns: vec![
+                "http://".to_string(),
+                "ftp://".to_string(),
+                "mailto:".to_string(),
+                "tel:".to_string(),
+                "ssh://".to_string(),
+            ],
+            ..Default::default()
+        });
+        let html = renderer.render(&doc);
+        for href in ["http://h.test", "ftp://f.test", "mailto:m@x", "tel:123", "ssh://s.test"] {
+            assert!(html.contains(&format!("<a href=\"{href}\"")), "missing {href} in: {html}");
+        }
     }
 
     #[test]

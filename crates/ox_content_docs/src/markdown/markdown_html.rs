@@ -7,6 +7,8 @@
 
 use std::sync::OnceLock;
 
+use regex::Regex;
+
 use super::{
     cached_regex, clean_summary_text, doc_kind_plural, doc_page_href, entry_anchor, fmt_args,
     format_kind_label, generate_source_href, get_entry_badges, member_anchor, normalize_signature,
@@ -16,12 +18,25 @@ use super::{
 use crate::model::{ApiDocEntry, ApiDocMember, ApiDocModule, ApiDocTag, ApiParamDoc};
 
 fn escape_html(value: &str) -> String {
-    value
-        .replace('&', "&amp;")
-        .replace('<', "&lt;")
-        .replace('>', "&gt;")
-        .replace('"', "&quot;")
-        .replace('\'', "&#39;")
+    // Most inputs (symbol names, type annotations, kind labels) contain none of
+    // these characters, so a single scan with an early-out avoids the five
+    // full-string passes + five intermediate allocations the chained
+    // `replace()` calls performed unconditionally.
+    if !value.bytes().any(|b| matches!(b, b'&' | b'<' | b'>' | b'"' | b'\'')) {
+        return value.to_string();
+    }
+    let mut out = String::with_capacity(value.len() + 16);
+    for ch in value.chars() {
+        match ch {
+            '&' => out.push_str("&amp;"),
+            '<' => out.push_str("&lt;"),
+            '>' => out.push_str("&gt;"),
+            '"' => out.push_str("&quot;"),
+            '\'' => out.push_str("&#39;"),
+            _ => out.push(ch),
+        }
+    }
+    out
 }
 
 fn render_doc_inline_html(text: &str, context: Option<&MarkdownLinkContext<'_>>) -> String {
@@ -73,20 +88,37 @@ fn render_inline_html(text: &str) -> String {
     html.replace('\n', "<br>")
 }
 
-fn is_fence_start(line: &str) -> Option<String> {
+// The four block-start regexes are cached once and shared between the
+// value-returning helpers (which capture a group) and `is_markdown_block_start`
+// (which only needs a boolean and so can use the allocation-free `is_match`).
+fn fence_re() -> Option<&'static Regex> {
     static FENCE_RE: RegexCache = OnceLock::new();
+    cached_regex(&FENCE_RE, r"^```([\w-]+)?\s*$")
+}
 
-    let fence_re = cached_regex(&FENCE_RE, r"^```([\w-]+)?\s*$")?;
-    fence_re
+fn heading_re() -> Option<&'static Regex> {
+    static HEADING_RE: RegexCache = OnceLock::new();
+    cached_regex(&HEADING_RE, r"^(#{1,6})\s+(.*)$")
+}
+
+fn ordered_re() -> Option<&'static Regex> {
+    static ORDERED_RE: RegexCache = OnceLock::new();
+    cached_regex(&ORDERED_RE, r"^\d+\.\s+(.*)$")
+}
+
+fn unordered_re() -> Option<&'static Regex> {
+    static UNORDERED_RE: RegexCache = OnceLock::new();
+    cached_regex(&UNORDERED_RE, r"^[-*+]\s+(.*)$")
+}
+
+fn is_fence_start(line: &str) -> Option<String> {
+    fence_re()?
         .captures(line.trim())
         .map(|captures| captures.get(1).map_or("text", |value| value.as_str()).to_string())
 }
 
 fn heading_match(line: &str) -> Option<(usize, String)> {
-    static HEADING_RE: RegexCache = OnceLock::new();
-
-    let heading_re = cached_regex(&HEADING_RE, r"^(#{1,6})\s+(.*)$")?;
-    heading_re.captures(line.trim()).map(|captures| {
+    heading_re()?.captures(line.trim()).map(|captures| {
         (
             captures.get(1).map_or(1, |value| value.as_str().len()).min(6),
             captures.get(2).map_or("", |value| value.as_str()).trim().to_string(),
@@ -95,28 +127,26 @@ fn heading_match(line: &str) -> Option<(usize, String)> {
 }
 
 fn ordered_list_item(line: &str) -> Option<String> {
-    static ORDERED_RE: RegexCache = OnceLock::new();
-
-    let ordered_re = cached_regex(&ORDERED_RE, r"^\d+\.\s+(.*)$")?;
-    ordered_re
+    ordered_re()?
         .captures(line.trim())
         .and_then(|captures| captures.get(1).map(|value| value.as_str().to_string()))
 }
 
 fn unordered_list_item(line: &str) -> Option<String> {
-    static UNORDERED_RE: RegexCache = OnceLock::new();
-
-    let unordered_re = cached_regex(&UNORDERED_RE, r"^[-*+]\s+(.*)$")?;
-    unordered_re
+    unordered_re()?
         .captures(line.trim())
         .and_then(|captures| captures.get(1).map(|value| value.as_str().to_string()))
 }
 
 fn is_markdown_block_start(line: &str) -> bool {
-    is_fence_start(line).is_some()
-        || heading_match(line).is_some()
-        || ordered_list_item(line).is_some()
-        || unordered_list_item(line).is_some()
+    // Only a boolean is needed, so use `is_match` (no capture allocation) and
+    // trim once. The regexes are `^…$`-anchored, so `is_match(trimmed)` is true
+    // exactly when the corresponding `captures(trimmed)` was `Some`.
+    let trimmed = line.trim();
+    fence_re().is_some_and(|re| re.is_match(trimmed))
+        || heading_re().is_some_and(|re| re.is_match(trimmed))
+        || ordered_re().is_some_and(|re| re.is_match(trimmed))
+        || unordered_re().is_some_and(|re| re.is_match(trimmed))
 }
 
 fn render_markdown_blocks_html(text: &str) -> String {
@@ -612,38 +642,31 @@ fn render_members_table_html(
         return String::new();
     }
 
-    let constructors =
-        entry.members.iter().filter(|member| member.kind == "constructor").collect::<Vec<_>>();
-    let static_methods = entry
-        .members
-        .iter()
-        .filter(|member| {
-            member.r#static && matches!(member.kind.as_str(), "method" | "getter" | "setter")
-        })
-        .collect::<Vec<_>>();
-    let methods = entry
-        .members
-        .iter()
-        .filter(|member| {
-            !member.r#static && matches!(member.kind.as_str(), "method" | "getter" | "setter")
-        })
-        .collect::<Vec<_>>();
-    let static_properties = entry
-        .members
-        .iter()
-        .filter(|member| member.r#static && member.kind == "property")
-        .collect::<Vec<_>>();
-    let properties = entry
-        .members
-        .iter()
-        .filter(|member| !member.r#static && member.kind == "property")
-        .collect::<Vec<_>>();
-    let enum_members =
-        entry.members.iter().filter(|member| member.kind == "enumMember").collect::<Vec<_>>();
+    // Bucket the members lazily: each `match` arm below only uses a subset of
+    // these groups (the default arm uses none of them), so computing every
+    // bucket up front wasted a full `members` pass + `Vec` per unused group.
+    let members = entry.members.as_slice();
+    let methods = |is_static: bool| {
+        members
+            .iter()
+            .filter(|member| {
+                member.r#static == is_static
+                    && matches!(member.kind.as_str(), "method" | "getter" | "setter")
+            })
+            .collect::<Vec<_>>()
+    };
+    let properties = |is_static: bool| {
+        members
+            .iter()
+            .filter(|member| member.r#static == is_static && member.kind == "property")
+            .collect::<Vec<_>>()
+    };
 
     let mut groups = Vec::new();
     match entry.kind.as_str() {
         "class" => {
+            let constructors =
+                members.iter().filter(|member| member.kind == "constructor").collect::<Vec<_>>();
             groups.push(render_member_table_html(
                 &entry.name,
                 "Constructors",
@@ -653,25 +676,42 @@ fn render_members_table_html(
             groups.push(render_member_table_html(
                 &entry.name,
                 "Static Methods",
-                &static_methods,
+                &methods(true),
                 context,
             ));
-            groups.push(render_member_table_html(&entry.name, "Methods", &methods, context));
+            groups.push(render_member_table_html(&entry.name, "Methods", &methods(false), context));
             groups.push(render_member_table_html(
                 &entry.name,
                 "Static Properties",
-                &static_properties,
+                &properties(true),
                 context,
             ));
-            groups.push(render_member_table_html(&entry.name, "Properties", &properties, context));
+            groups.push(render_member_table_html(
+                &entry.name,
+                "Properties",
+                &properties(false),
+                context,
+            ));
         }
         "interface" => {
-            groups.push(render_member_table_html(&entry.name, "Properties", &properties, context));
-            groups.push(render_member_table_html(&entry.name, "Methods", &methods, context));
+            groups.push(render_member_table_html(
+                &entry.name,
+                "Properties",
+                &properties(false),
+                context,
+            ));
+            groups.push(render_member_table_html(&entry.name, "Methods", &methods(false), context));
         }
         "type" => {
-            groups.push(render_member_table_html(&entry.name, "Properties", &properties, context));
-            groups.push(render_member_table_html(&entry.name, "Methods", &methods, context));
+            let enum_members =
+                members.iter().filter(|member| member.kind == "enumMember").collect::<Vec<_>>();
+            groups.push(render_member_table_html(
+                &entry.name,
+                "Properties",
+                &properties(false),
+                context,
+            ));
+            groups.push(render_member_table_html(&entry.name, "Methods", &methods(false), context));
             groups.push(render_member_table_html(
                 &entry.name,
                 "Enum Members",
@@ -682,7 +722,7 @@ fn render_members_table_html(
         _ => groups.push(render_member_table_html(
             &entry.name,
             "Members",
-            &entry.members.iter().collect::<Vec<_>>(),
+            &members.iter().collect::<Vec<_>>(),
             context,
         )),
     }

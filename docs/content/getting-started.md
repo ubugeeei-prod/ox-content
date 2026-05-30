@@ -207,7 +207,7 @@ Avoid publishing from the workspace root here unless you intentionally want a br
 
 If your npm account enforces 2FA for publishing, npm will prompt for the one-time code during `npm publish`.
 
-The current WASM surface exposes `parseAndRender`, `transform`, `version`, and `WasmParserOptions` from [`crates/ox_content_wasm/src/lib.rs`](https://github.com/ubugeeei/ox-content/blob/main/crates/ox_content_wasm/src/lib.rs).
+The current WASM surface exposes `parseAndRender`, `transform`, `version`, and `WasmParserOptions` from [`crates/ox_content_wasm/src/lib.rs`](https://github.com/ubugeeei-prod/ox-content/blob/main/crates/ox_content_wasm/src/lib.rs).
 
 ## 4. Rust Crates
 
@@ -217,10 +217,10 @@ If you want the lowest-level building blocks directly, use the Rust crates.
 
 ```toml
 [dependencies]
-ox_content_allocator = "2.22.0"
-ox_content_ast = "2.22.0"
-ox_content_parser = "2.22.0"
-ox_content_renderer = "2.22.0"
+ox_content_allocator = "2.27.0"
+ox_content_ast = "2.27.0"
+ox_content_parser = "2.27.0"
+ox_content_renderer = "2.27.0"
 ```
 
 ### Parse and Render in Rust

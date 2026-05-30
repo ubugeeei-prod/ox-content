@@ -43,6 +43,8 @@ const sizes = {
   small: sampleMarkdown,
   medium: Array(10).fill(sampleMarkdown).join("\n\n"),
   large: Array(100).fill(sampleMarkdown).join("\n\n"),
+  // Keep the size set in sync with parse-benchmark.mjs (~1 MB document).
+  huge: Array(2150).fill(sampleMarkdown).join("\n\n"),
 };
 
 function benchmark(name, fn, input, iterations = 100) {
@@ -70,7 +72,8 @@ function benchmark(name, fn, input, iterations = 100) {
 const render = {};
 
 for (const [sizeName, content] of Object.entries(sizes)) {
-  const iterations = sizeName === "large" ? 20 : sizeName === "medium" ? 50 : 100;
+  const iterations =
+    sizeName === "huge" ? 5 : sizeName === "large" ? 20 : sizeName === "medium" ? 50 : 100;
 
   render[sizeName] = benchmark(
     "Bun.markdown.html",
