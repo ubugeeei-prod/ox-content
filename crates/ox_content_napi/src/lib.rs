@@ -8,6 +8,7 @@ mod html_scan;
 mod lint;
 mod mdast;
 mod mdast_raw;
+mod pm;
 mod tabs;
 mod transfer;
 mod transformer;
@@ -1210,6 +1211,45 @@ pub struct JsTabsTransformResult {
 pub fn transform_tabs_embeds(html: String, start_group: u32) -> JsTabsTransformResult {
     let result = tabs::transform_tabs(&html, start_group);
     JsTabsTransformResult { html: result.html, group_count: result.group_count }
+}
+
+/// Options for [`transform_pm_embeds`].
+#[napi(object)]
+pub struct JsPmOptions {
+    /// Enable opt-in synced package-manager tab groups. When `true`, a
+    /// `data-ox-tab-group="pkg-manager"` attribute is emitted so the client
+    /// runtime keeps every pm tab group on the page in sync via `localStorage`.
+    /// Off by default; when omitted/`false` the output has no group attribute
+    /// and behaves exactly like a standalone tab group.
+    pub sync: Option<bool>,
+}
+
+/// Result of [`transform_pm_embeds`].
+#[napi(object)]
+pub struct JsPmTransformResult {
+    /// HTML with every `<pm>` block expanded into a package-manager tab widget.
+    pub html: String,
+    /// Number of tab groups expanded; the caller advances its shared tab-group
+    /// counter by this amount.
+    pub group_count: u32,
+}
+
+/// Expand `<pm>` blocks in rendered HTML into npm/pnpm/yarn/bun install tabs.
+///
+/// The single npm-style command inside each `<pm>` element is converted to the
+/// equivalent command for every package manager and rendered into the shared
+/// `ox-tabs` widget. Groups are numbered from `start_group`. Syncing is opt-in
+/// via `options.sync` and off by default.
+#[napi]
+pub fn transform_pm_embeds(
+    html: String,
+    start_group: u32,
+    options: Option<JsPmOptions>,
+) -> JsPmTransformResult {
+    let resolved =
+        pm::PmOptions { sync: options.and_then(|options| options.sync).unwrap_or(false) };
+    let result = pm::transform_pm(&html, start_group, resolved);
+    JsPmTransformResult { html: result.html, group_count: result.group_count }
 }
 
 /// Transforms Markdown source into HTML, frontmatter, and TOC.

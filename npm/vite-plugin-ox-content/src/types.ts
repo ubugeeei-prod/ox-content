@@ -436,6 +436,28 @@ export interface BuiltinEmbedOptions {
    * @default true
    */
   openGraph?: boolean | OgpOptions;
+
+  /**
+   * Expand `<pm>npm install …</pm>` blocks into npm/pnpm/yarn/bun install tabs.
+   *
+   * Accepts a boolean to toggle the feature, or an options object to opt in to
+   * synced tab groups. Synced groups are OFF by default; when enabled with
+   * `{ sync: true }`, selecting a package manager in one block selects it in
+   * every other package-manager block on the page (persisted in localStorage).
+   * @default true
+   */
+  pm?: boolean | BuiltinPmOptions;
+}
+
+/**
+ * Options for the package-manager install-tab transform.
+ */
+export interface BuiltinPmOptions {
+  /**
+   * Enable opt-in synced package-manager tab groups.
+   * @default false
+   */
+  sync?: boolean;
 }
 
 /**
@@ -444,6 +466,7 @@ export interface BuiltinEmbedOptions {
 export interface ResolvedBuiltinEmbedOptions {
   github: GitHubOptions | false;
   openGraph: OgpOptions | false;
+  pm: BuiltinPmOptions | false;
 }
 
 /**
