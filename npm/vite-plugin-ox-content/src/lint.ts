@@ -550,8 +550,18 @@ async function runStandardSpellcheckDocuments(
           settings,
         );
 
+        // Precompute the document's newline offsets once so each issue's line
+        // can be resolved with a binary search instead of a fresh O(N) scan
+        // from offset 0 (which made line resolution O(issues * length)).
+        const newlineOffsets: number[] = [];
+        for (let i = 0; i < maskedDocument.length; i++) {
+          if (maskedDocument.charCodeAt(i) === 10) {
+            newlineOffsets.push(i);
+          }
+        }
+
         return result.issues.map((issue) =>
-          mapStandardIssueToDiagnostic(issue, standard.languages, maskedDocument),
+          mapStandardIssueToDiagnostic(issue, standard.languages, newlineOffsets),
         );
       }),
     );
@@ -592,9 +602,9 @@ async function loadCspellLib(): Promise<typeof import("cspell-lib")> {
 function mapStandardIssueToDiagnostic(
   issue: ValidationIssue,
   languages: MarkdownLintLanguage[],
-  documentText: string,
+  newlineOffsets: number[],
 ): MarkdownLintDiagnostic {
-  const line = getLineNumberAtOffset(documentText, issue.line.offset);
+  const line = getLineNumberAtOffset(newlineOffsets, issue.line.offset);
   const column = issue.offset - issue.line.offset + 1;
   const length = issue.length ?? issue.text.length;
 
@@ -611,16 +621,23 @@ function mapStandardIssueToDiagnostic(
   };
 }
 
-function getLineNumberAtOffset(text: string, offset: number): number {
-  let line = 1;
-
-  for (let index = 0; index < offset && index < text.length; index++) {
-    if (text.charCodeAt(index) === 10) {
-      line++;
+function getLineNumberAtOffset(newlineOffsets: number[], offset: number): number {
+  // Line number = 1 + (count of newline offsets strictly less than `offset`).
+  // This matches the old linear scan exactly: a newline can only exist at an
+  // index < text.length, so counting positions `< offset` over the whole
+  // document gives the same count for every `offset` (including past EOF).
+  let lo = 0;
+  let hi = newlineOffsets.length;
+  while (lo < hi) {
+    const mid = (lo + hi) >>> 1;
+    if (newlineOffsets[mid] < offset) {
+      lo = mid + 1;
+    } else {
+      hi = mid;
     }
   }
 
-  return line;
+  return lo + 1;
 }
 
 function inferStandardIssueLanguage(
