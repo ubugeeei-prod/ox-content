@@ -251,7 +251,8 @@ fn member_description(member: &ApiDocMember, context: Option<&MarkdownLinkContex
     }
     if let Some(returns) = &member.returns {
         if !returns.description.is_empty() {
-            parts.push(fmt_args(format_args!("Returns: {}", inline(&returns.description, context))));
+            parts
+                .push(fmt_args(format_args!("Returns: {}", inline(&returns.description, context))));
         }
     }
     parts.join(" ")
