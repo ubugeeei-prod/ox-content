@@ -313,11 +313,13 @@ const addOxContentTermScores = (searchIndex, scores, scopes, terms, k1, b) => {
             (posting.tf + k1 * (1 - b + (b * doc.body.length) / searchIndex.avg_dl))) *
           boost;
 
-      if (!scores.has(posting.doc_idx)) {
-        scores.set(posting.doc_idx, { score: 0, matches: new Set() });
+      // One Map lookup in the steady state (entry present) instead of the
+      // has/get pair; this runs once per posting per term on every keystroke.
+      let entry = scores.get(posting.doc_idx);
+      if (entry === undefined) {
+        entry = { score: 0, matches: new Set() };
+        scores.set(posting.doc_idx, entry);
       }
-
-      const entry = scores.get(posting.doc_idx);
       entry.score += score;
       entry.matches.add(term);
     }
