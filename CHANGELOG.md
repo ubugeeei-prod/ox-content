@@ -1,5 +1,34 @@
 # Changelog
 
+## [2.27.0] - 2026-05-30
+
+### Bug Fixes
+
+- remove needless raw string hashes in tabs tests
+
+### Performance
+
+- search runtime (#241)
+- borrow frontmatter content and move the autolink patterns (#235)
+- resolve spellcheck issue lines via binary search (#236)
+- gate text autolinking on the cached autolink_index (#234)
+- drop redundant allocations in slugify and the YouTube embed (#233)
+- cut per-symbol allocations on the generation path (#232)
+- tighten leaf/list/fenced block scans (#231)
+- SIMD-accelerate inline scanning with memchr (#230)
+- hoist per-page constant work out of the page loop (#227)
+- memoize per-doc scopes and the prefix-scan vocabulary (#228)
+- build the autolink first-byte index once per render (#225)
+- cache sort keys and bucket members lazily (#226)
+- skip redundant block dispatch on a paragraph's first line (#222)
+- SIMD-accelerate the static embed transforms (#224)
+
+### Documentation
+
+- add an MDX & Components guide (#240)
+- add JSDoc API-docs and i18n guides (#239)
+- document dark mode, embed slots, social icons, custom CSS (#238)
+
 ## [2.26.0] - 2026-05-29
 
 ### Performance
