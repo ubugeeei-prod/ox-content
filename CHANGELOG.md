@@ -1,5 +1,11 @@
 # Changelog
 
+## [2.29.0] - 2026-05-30
+
+### Features
+
+- add pure markdown render mode via renderStyle option (#261)
+
 ## [2.28.0] - 2026-05-30
 
 ### Features
