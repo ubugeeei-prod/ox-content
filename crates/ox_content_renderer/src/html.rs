@@ -1808,10 +1808,10 @@ impl HtmlRenderer {
                 // common case — flag off — collapses back to the original
                 // single `write_escaped_into` call thanks to the early
                 // boolean check.
-                if self.options.autolink_urls
-                    && !self.in_link
-                    && !self.options.autolink_patterns.is_empty()
-                {
+                // `autolink_index` is `Some` iff `autolink_urls` and a non-empty
+                // pattern list (computed once at `render()` entry), so this one
+                // Option check replaces the three field reads.
+                if self.autolink_index.is_some() && !self.in_link {
                     self.write_text_with_autolinks(text.value);
                 } else {
                     write_escaped_into(&mut self.output, text.value);
@@ -2266,8 +2266,9 @@ impl<'a> Visit<'a> for HtmlRenderer {
 
     fn visit_text(&mut self, text: &Text<'a>) {
         profile_span!("renderer::visit_text");
-        if self.options.autolink_urls && !self.in_link && !self.options.autolink_patterns.is_empty()
-        {
+        // See the matching gate in `visit_inline_node`: the cached
+        // `autolink_index` already encodes `autolink_urls && !patterns.is_empty()`.
+        if self.autolink_index.is_some() && !self.in_link {
             self.write_text_with_autolinks(text.value);
         } else {
             self.write_escaped(text.value);
