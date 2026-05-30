@@ -70,6 +70,14 @@ oxContent({
 });
 ```
 
+### [Package Manager Tabs](./package-manager-tabs.md)
+
+Author one npm command and render it as npm/pnpm/yarn/bun install tabs, with opt-in synced tab groups.
+
+```md
+<pm>npm install -D vite</pm>
+```
+
 ### [markdown-it Plugin](./plugin-markdown-it.md)
 
 Use Ox Content as a markdown-it plugin for existing markdown-it projects.

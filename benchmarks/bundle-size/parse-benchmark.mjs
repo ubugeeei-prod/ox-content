@@ -312,7 +312,17 @@ function loadBunMarkdownBenchmarks() {
 
   if (run.status !== 0) {
     const details = run.stderr.trim() || run.stdout.trim();
-    console.warn(`Failed to run Bun benchmark helper: ${details}`);
+    // `Bun.markdown` only exists in Bun >= 1.3.8. On an older bun the helper
+    // throws this exact message; call it out so the missing Bun.markdown row
+    // is traced to the bun version rather than read as a transient failure.
+    if (details.includes("Bun.markdown is not available")) {
+      console.warn(
+        `Bun ${version.stdout.trim()} predates Bun.markdown (added in 1.3.8); ` +
+          "skipping Bun.markdown comparisons. Upgrade bun to include it.",
+      );
+    } else {
+      console.warn(`Failed to run Bun benchmark helper: ${details}`);
+    }
     return null;
   }
 
@@ -373,6 +383,19 @@ async function runBenchmarks() {
     console.log("Using @mizchi/markdown\n");
   } catch {
     console.log("@mizchi/markdown not available, skipping mizchi comparisons\n");
+  }
+
+  // @astrojs/markdown-remark is the Markdown renderer Astro uses internally
+  // (remark/rehype under the hood). Its processor renders asynchronously, so
+  // it only joins the async render comparison. Loaded defensively like the
+  // others so an older checkout without the dependency skips it.
+  let astroProcessor = null;
+  try {
+    const { createMarkdownProcessor } = await import("@astrojs/markdown-remark");
+    astroProcessor = await createMarkdownProcessor({});
+    console.log("Using @astrojs/markdown-remark (Astro)\n");
+  } catch {
+    console.log("@astrojs/markdown-remark not available, skipping Astro comparisons\n");
   }
 
   // Try to import NAPI
@@ -458,6 +481,13 @@ async function runBenchmarks() {
     asyncRenderers.push({
       name: "@ox-content/napi (async)",
       fn: (input) => napi.parseAndRenderAsync(input),
+    });
+  }
+
+  if (astroProcessor) {
+    asyncRenderers.push({
+      name: "@astrojs/markdown-remark",
+      fn: (input) => astroProcessor.render(input),
     });
   }
 
