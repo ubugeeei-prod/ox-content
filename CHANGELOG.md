@@ -1,5 +1,11 @@
 # Changelog
 
+## [2.30.0] - 2026-05-30
+
+### Performance
+
+- lazily bucket members and drop format! in pure markdown renderer (#262)
+
 ## [2.29.0] - 2026-05-30
 
 ### Features
