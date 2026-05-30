@@ -483,6 +483,11 @@ const ISLAND_CSS: &str = include_str!("plugins/island.css");
 /// JavaScript for SSG pages.
 const SSG_JS: &str = include_str!("ssg.js");
 
+/// Client runtime for opt-in synced tab groups. Only acts on tab groups that
+/// carry a `data-ox-tab-group` attribute (emitted when syncing is enabled), so
+/// it is inert for the default no-JavaScript tab widget.
+const TABS_JS: &str = include_str!("plugins/tabs.js");
+
 /// Generates CSS variable overrides for theme colors.
 fn generate_theme_css(theme: &ThemeConfig) -> String {
     let mut css = String::new();
@@ -967,7 +972,8 @@ pub fn generate_html(page_data: &PageData, nav_groups: &[NavGroup], config: &Ssg
 
     // Custom JS
     let custom_js = theme.and_then(|t| t.js.as_deref()).unwrap_or("");
-    let all_js = format!("{}\n{}", SSG_JS.replace("{{base}}", &config.base), custom_js);
+    let all_js =
+        format!("{}\n{}\n{}", SSG_JS.replace("{{base}}", &config.base), TABS_JS, custom_js);
 
     // Social links
     let social_links_html = theme
