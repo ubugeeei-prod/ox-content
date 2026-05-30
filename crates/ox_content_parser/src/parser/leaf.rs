@@ -1,3 +1,4 @@
+use memchr::memchr;
 use ox_content_ast::{Node, Span};
 
 use super::Parser;
@@ -61,25 +62,23 @@ impl<'a> Parser<'a> {
     /// Parses a heading.
     pub(super) fn parse_heading(&mut self, start: usize) -> ParseResult<Option<Node<'a>>> {
         profile_span!("parser::parse_heading");
+        let bytes = self.source.as_bytes();
         let mut depth = 0u8;
-        while self.peek() == Some('#') {
+        // `#` is ASCII, so count the leading run with direct byte compares
+        // instead of routing each through `peek()`/`advance()`.
+        while self.position < bytes.len() && bytes[self.position] == b'#' {
             depth += 1;
-            self.advance();
+            self.position += 1;
         }
 
         self.skip_whitespace();
 
         let content_start = self.position;
-        let mut content_end = content_start;
-
-        // Read until end of line
-        while let Some(ch) = self.peek() {
-            if ch == '\n' {
-                break;
-            }
-            self.advance();
-            content_end = self.position;
-        }
+        // The heading content runs to the end of the line; find it in one
+        // memchr scan rather than a per-char peek/advance walk.
+        let content_end = memchr(b'\n', &bytes[content_start..])
+            .map_or(self.source.len(), |off| content_start + off);
+        self.position = content_end;
 
         // Skip trailing hashes and whitespace
         let content = self.source[content_start..content_end].trim_end();
@@ -104,13 +103,10 @@ impl<'a> Parser<'a> {
 
     /// Parses a thematic break.
     pub(super) fn parse_thematic_break(&mut self, start: usize) -> ParseResult<Option<Node<'a>>> {
-        // Skip to end of line
-        while let Some(ch) = self.peek() {
-            self.advance();
-            if ch == '\n' {
-                break;
-            }
-        }
+        // Skip to (and past) the end of the current line. `consume_line`
+        // advances to `line_end + 1`, or to EOF when there's no newline —
+        // exactly the two positions the old peek/advance loop produced.
+        self.consume_line();
 
         let span = Span::new(start as u32, self.position as u32);
         Ok(Some(Node::ThematicBreak(ox_content_ast::ThematicBreak { span })))

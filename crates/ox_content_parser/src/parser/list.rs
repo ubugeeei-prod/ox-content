@@ -165,8 +165,12 @@ impl<'a> Parser<'a> {
                 }
 
                 if current_indent == baseline_indent {
+                    // Reuse the line already scanned at the top of the loop
+                    // (`continuation_line`) instead of re-finding the newline;
+                    // only `next.ordered` is read, which a trailing `\r` cannot
+                    // affect.
                     if self
-                        .parse_list_item_line(continuation_start)
+                        .parse_list_item_line_from_line(continuation_start, continuation_line)
                         .is_some_and(|next| next.ordered == ordered)
                     {
                         break;
