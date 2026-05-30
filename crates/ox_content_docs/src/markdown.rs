@@ -405,12 +405,25 @@ fn normalize_base_path(base_path: &str) -> String {
 }
 
 fn escape_html(value: &str) -> String {
-    value
-        .replace('&', "&amp;")
-        .replace('<', "&lt;")
-        .replace('>', "&gt;")
-        .replace('"', "&quot;")
-        .replace('\'', "&#39;")
+    // Most inputs (symbol names, type annotations, kind labels) contain none of
+    // these characters, so a single scan with an early-out avoids the five
+    // full-string passes + five intermediate allocations the chained
+    // `replace()` calls performed unconditionally.
+    if !value.bytes().any(|b| matches!(b, b'&' | b'<' | b'>' | b'"' | b'\'')) {
+        return value.to_string();
+    }
+    let mut out = String::with_capacity(value.len() + 16);
+    for ch in value.chars() {
+        match ch {
+            '&' => out.push_str("&amp;"),
+            '<' => out.push_str("&lt;"),
+            '>' => out.push_str("&gt;"),
+            '"' => out.push_str("&quot;"),
+            '\'' => out.push_str("&#39;"),
+            _ => out.push(ch),
+        }
+    }
+    out
 }
 
 fn entry_anchor(name: &str) -> String {
@@ -672,12 +685,16 @@ fn clean_summary_text(text: &str, max_length: usize) -> String {
         return truncate_summary_text(&fallback(), max_length);
     };
 
-    let collapsed = markdown_link_re.replace_all(text, "$1").to_string();
-    let collapsed = bracket_link_re.replace_all(&collapsed, "$1").to_string();
-    let collapsed = inline_code_re.replace_all(&collapsed, "$1").to_string();
-    let collapsed = whitespace_re.replace_all(&collapsed, " ").trim().to_string();
+    // `replace_all` returns `Cow::Borrowed` (no allocation) when the pattern
+    // doesn't match — the common case for short summaries. Thread the Cow
+    // through each stage instead of forcing a `String` after every one, and
+    // materialize only at the final `truncate_summary_text` (which takes `&str`).
+    let s1 = markdown_link_re.replace_all(text, "$1");
+    let s2 = bracket_link_re.replace_all(&s1, "$1");
+    let s3 = inline_code_re.replace_all(&s2, "$1");
+    let s4 = whitespace_re.replace_all(&s3, " ");
 
-    truncate_summary_text(&collapsed, max_length)
+    truncate_summary_text(s4.trim(), max_length)
 }
 
 fn truncate_summary_text(text: &str, max_length: usize) -> String {
@@ -738,20 +755,37 @@ fn render_inline_html(text: &str) -> String {
     html.replace('\n', "<br>")
 }
 
-fn is_fence_start(line: &str) -> Option<String> {
+// The four block-start regexes are cached once and shared between the
+// value-returning helpers (which capture a group) and `is_markdown_block_start`
+// (which only needs a boolean and so can use the allocation-free `is_match`).
+fn fence_re() -> Option<&'static Regex> {
     static FENCE_RE: RegexCache = OnceLock::new();
+    cached_regex(&FENCE_RE, r"^```([\w-]+)?\s*$")
+}
 
-    let fence_re = cached_regex(&FENCE_RE, r"^```([\w-]+)?\s*$")?;
-    fence_re
+fn heading_re() -> Option<&'static Regex> {
+    static HEADING_RE: RegexCache = OnceLock::new();
+    cached_regex(&HEADING_RE, r"^(#{1,6})\s+(.*)$")
+}
+
+fn ordered_re() -> Option<&'static Regex> {
+    static ORDERED_RE: RegexCache = OnceLock::new();
+    cached_regex(&ORDERED_RE, r"^\d+\.\s+(.*)$")
+}
+
+fn unordered_re() -> Option<&'static Regex> {
+    static UNORDERED_RE: RegexCache = OnceLock::new();
+    cached_regex(&UNORDERED_RE, r"^[-*+]\s+(.*)$")
+}
+
+fn is_fence_start(line: &str) -> Option<String> {
+    fence_re()?
         .captures(line.trim())
         .map(|captures| captures.get(1).map_or("text", |value| value.as_str()).to_string())
 }
 
 fn heading_match(line: &str) -> Option<(usize, String)> {
-    static HEADING_RE: RegexCache = OnceLock::new();
-
-    let heading_re = cached_regex(&HEADING_RE, r"^(#{1,6})\s+(.*)$")?;
-    heading_re.captures(line.trim()).map(|captures| {
+    heading_re()?.captures(line.trim()).map(|captures| {
         (
             captures.get(1).map_or(1, |value| value.as_str().len()).min(6),
             captures.get(2).map_or("", |value| value.as_str()).trim().to_string(),
@@ -760,28 +794,26 @@ fn heading_match(line: &str) -> Option<(usize, String)> {
 }
 
 fn ordered_list_item(line: &str) -> Option<String> {
-    static ORDERED_RE: RegexCache = OnceLock::new();
-
-    let ordered_re = cached_regex(&ORDERED_RE, r"^\d+\.\s+(.*)$")?;
-    ordered_re
+    ordered_re()?
         .captures(line.trim())
         .and_then(|captures| captures.get(1).map(|value| value.as_str().to_string()))
 }
 
 fn unordered_list_item(line: &str) -> Option<String> {
-    static UNORDERED_RE: RegexCache = OnceLock::new();
-
-    let unordered_re = cached_regex(&UNORDERED_RE, r"^[-*+]\s+(.*)$")?;
-    unordered_re
+    unordered_re()?
         .captures(line.trim())
         .and_then(|captures| captures.get(1).map(|value| value.as_str().to_string()))
 }
 
 fn is_markdown_block_start(line: &str) -> bool {
-    is_fence_start(line).is_some()
-        || heading_match(line).is_some()
-        || ordered_list_item(line).is_some()
-        || unordered_list_item(line).is_some()
+    // Only a boolean is needed, so use `is_match` (no capture allocation) and
+    // trim once. The regexes are `^…$`-anchored, so `is_match(trimmed)` is true
+    // exactly when the corresponding `captures(trimmed)` was `Some`.
+    let trimmed = line.trim();
+    fence_re().is_some_and(|re| re.is_match(trimmed))
+        || heading_re().is_some_and(|re| re.is_match(trimmed))
+        || ordered_re().is_some_and(|re| re.is_match(trimmed))
+        || unordered_re().is_some_and(|re| re.is_match(trimmed))
 }
 
 fn render_markdown_blocks_html(text: &str) -> String {
