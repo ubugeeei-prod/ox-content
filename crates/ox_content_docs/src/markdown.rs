@@ -288,7 +288,12 @@ pub fn generate_markdown(
         }
 
         for entries in by_kind.values_mut() {
-            entries.sort_by(|left, right| compare_strings(&left.name, &right.name));
+            // Case-insensitive sort with a case-sensitive tiebreak. Caching the
+            // (lowercase, original) key computes each side's lowercase form once
+            // per entry instead of on every comparison (O(n) vs O(n log n)
+            // allocations); the tuple's lexicographic order reproduces the
+            // previous "lowercase, then original" ordering exactly.
+            entries.sort_by_cached_key(|entry| (entry.name.to_lowercase(), entry.name.clone()));
         }
 
         for (kind, entries) in &by_kind {
@@ -1036,18 +1041,17 @@ fn normalize_doc_file_path(file_path: &str) -> String {
     normalized.trim_start_matches('/').to_string()
 }
 
-fn compare_strings(left: &str, right: &str) -> std::cmp::Ordering {
-    left.to_lowercase().cmp(&right.to_lowercase()).then_with(|| left.cmp(right))
-}
-
 fn sort_extracted_docs(docs: &[ApiDocModule]) -> Vec<ApiDocModule> {
     let mut sorted = docs.to_vec();
 
     for doc in &mut sorted {
-        doc.entries.sort_by(|left, right| compare_strings(&left.name, &right.name));
+        doc.entries.sort_by_cached_key(|entry| (entry.name.to_lowercase(), entry.name.clone()));
     }
 
-    sorted.sort_by(|left, right| compare_strings(&file_name(&left.file), &file_name(&right.file)));
+    sorted.sort_by_cached_key(|module| {
+        let name = file_name(&module.file);
+        (name.to_lowercase(), name)
+    });
     sorted
 }
 
@@ -1675,38 +1679,31 @@ fn render_members_table_html(
         return String::new();
     }
 
-    let constructors =
-        entry.members.iter().filter(|member| member.kind == "constructor").collect::<Vec<_>>();
-    let static_methods = entry
-        .members
-        .iter()
-        .filter(|member| {
-            member.r#static && matches!(member.kind.as_str(), "method" | "getter" | "setter")
-        })
-        .collect::<Vec<_>>();
-    let methods = entry
-        .members
-        .iter()
-        .filter(|member| {
-            !member.r#static && matches!(member.kind.as_str(), "method" | "getter" | "setter")
-        })
-        .collect::<Vec<_>>();
-    let static_properties = entry
-        .members
-        .iter()
-        .filter(|member| member.r#static && member.kind == "property")
-        .collect::<Vec<_>>();
-    let properties = entry
-        .members
-        .iter()
-        .filter(|member| !member.r#static && member.kind == "property")
-        .collect::<Vec<_>>();
-    let enum_members =
-        entry.members.iter().filter(|member| member.kind == "enumMember").collect::<Vec<_>>();
+    // Bucket the members lazily: each `match` arm below only uses a subset of
+    // these groups (the default arm uses none of them), so computing every
+    // bucket up front wasted a full `members` pass + `Vec` per unused group.
+    let members = entry.members.as_slice();
+    let methods = |is_static: bool| {
+        members
+            .iter()
+            .filter(|member| {
+                member.r#static == is_static
+                    && matches!(member.kind.as_str(), "method" | "getter" | "setter")
+            })
+            .collect::<Vec<_>>()
+    };
+    let properties = |is_static: bool| {
+        members
+            .iter()
+            .filter(|member| member.r#static == is_static && member.kind == "property")
+            .collect::<Vec<_>>()
+    };
 
     let mut groups = Vec::new();
     match entry.kind.as_str() {
         "class" => {
+            let constructors =
+                members.iter().filter(|member| member.kind == "constructor").collect::<Vec<_>>();
             groups.push(render_member_table_html(
                 &entry.name,
                 "Constructors",
@@ -1716,25 +1713,42 @@ fn render_members_table_html(
             groups.push(render_member_table_html(
                 &entry.name,
                 "Static Methods",
-                &static_methods,
+                &methods(true),
                 context,
             ));
-            groups.push(render_member_table_html(&entry.name, "Methods", &methods, context));
+            groups.push(render_member_table_html(&entry.name, "Methods", &methods(false), context));
             groups.push(render_member_table_html(
                 &entry.name,
                 "Static Properties",
-                &static_properties,
+                &properties(true),
                 context,
             ));
-            groups.push(render_member_table_html(&entry.name, "Properties", &properties, context));
+            groups.push(render_member_table_html(
+                &entry.name,
+                "Properties",
+                &properties(false),
+                context,
+            ));
         }
         "interface" => {
-            groups.push(render_member_table_html(&entry.name, "Properties", &properties, context));
-            groups.push(render_member_table_html(&entry.name, "Methods", &methods, context));
+            groups.push(render_member_table_html(
+                &entry.name,
+                "Properties",
+                &properties(false),
+                context,
+            ));
+            groups.push(render_member_table_html(&entry.name, "Methods", &methods(false), context));
         }
         "type" => {
-            groups.push(render_member_table_html(&entry.name, "Properties", &properties, context));
-            groups.push(render_member_table_html(&entry.name, "Methods", &methods, context));
+            let enum_members =
+                members.iter().filter(|member| member.kind == "enumMember").collect::<Vec<_>>();
+            groups.push(render_member_table_html(
+                &entry.name,
+                "Properties",
+                &properties(false),
+                context,
+            ));
+            groups.push(render_member_table_html(&entry.name, "Methods", &methods(false), context));
             groups.push(render_member_table_html(
                 &entry.name,
                 "Enum Members",
@@ -1745,7 +1759,7 @@ fn render_members_table_html(
         _ => groups.push(render_member_table_html(
             &entry.name,
             "Members",
-            &entry.members.iter().collect::<Vec<_>>(),
+            &members.iter().collect::<Vec<_>>(),
             context,
         )),
     }
