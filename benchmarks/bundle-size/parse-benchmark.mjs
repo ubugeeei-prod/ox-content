@@ -60,6 +60,9 @@ const sizes = {
   small: sampleMarkdown,
   medium: Array(10).fill(sampleMarkdown).join("\n\n"),
   large: Array(100).fill(sampleMarkdown).join("\n\n"),
+  // ~1 MB document: stresses parsers at a scale typical of a large
+  // single-file handbook chapter or a concatenated docs bundle.
+  huge: Array(2150).fill(sampleMarkdown).join("\n\n"),
 };
 
 /**
@@ -361,6 +364,17 @@ async function runBenchmarks() {
     console.log("satteri not available, skipping satteri comparisons\n");
   }
 
+  // @mizchi/markdown (markdown.mbt) is a MoonBit-authored Markdown compiler
+  // shipped as a pure-JS build. Loaded defensively like satteri so an older
+  // checkout without the dependency skips it rather than crashing.
+  let mizchi = null;
+  try {
+    mizchi = await import("@mizchi/markdown");
+    console.log("Using @mizchi/markdown\n");
+  } catch {
+    console.log("@mizchi/markdown not available, skipping mizchi comparisons\n");
+  }
+
   // Try to import NAPI
   let napi = null;
   try {
@@ -403,6 +417,10 @@ async function runBenchmarks() {
     parsers.push({ name: "satteri", fn: (input) => satteri.markdownToMdast(input) });
   }
 
+  if (mizchi) {
+    parsers.push({ name: "@mizchi/markdown", fn: (input) => mizchi.parse(input) });
+  }
+
   // Define renderers (parse + render)
   const renderers = [];
 
@@ -429,6 +447,10 @@ async function runBenchmarks() {
     renderers.push({ name: "satteri", fn: (input) => satteri.markdownToHtml(input) });
   }
 
+  if (mizchi) {
+    renderers.push({ name: "@mizchi/markdown", fn: (input) => mizchi.toHtml(input) });
+  }
+
   // Define async renderers
   const asyncRenderers = [];
 
@@ -443,7 +465,14 @@ async function runBenchmarks() {
     const sizeKB = (content.length / 1024).toFixed(1);
     console.log(`\n## ${sizeName.toUpperCase()} (${sizeKB} KB)`);
 
-    const iterations = sizeName === "large" ? 20 : sizeName === "medium" ? 50 : 100;
+    const iterations =
+      sizeName === "huge"
+        ? 5
+        : sizeName === "large"
+          ? 20
+          : sizeName === "medium"
+            ? 50
+            : 100;
     const suites = {};
 
     // Parse only benchmark
@@ -477,8 +506,9 @@ async function runBenchmarks() {
     suites.parseAndRender = renderResults;
     printTable("Parse + Render", renderResults);
 
-    // Async benchmark (only for large)
-    if (asyncRenderers.length > 0 && sizeName === "large") {
+    // Async benchmark (only for the large and ~1 MB cases, where offloading
+    // to a worker thread can actually pay for its overhead)
+    if (asyncRenderers.length > 0 && (sizeName === "large" || sizeName === "huge")) {
       const asyncResults = [];
       for (const renderer of asyncRenderers) {
         try {

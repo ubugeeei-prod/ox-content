@@ -10,6 +10,7 @@
     "clean": "rm -rf apps/*/dist apps/*/.vitepress/dist"
   },
   "dependencies": {
+    "@mizchi/markdown": "^0.6.2",
     "@ox-content/napi": "workspace:*",
     "markdown-it": "^14.1.1",
     "marked": "^18.0.3",

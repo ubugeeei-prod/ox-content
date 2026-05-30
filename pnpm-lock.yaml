@@ -68,6 +68,9 @@ importers:
 
   benchmarks/bundle-size:
     dependencies:
+      '@mizchi/markdown':
+        specifier: ^0.6.2
+        version: 0.6.2
       '@ox-content/napi':
         specifier: workspace:*
         version: link:../../crates/ox_content_napi
@@ -192,6 +195,8 @@ importers:
       '@napi-rs/cli':
         specifier: ^3.6.2
         version: 3.6.2(@emnapi/core@1.10.0)(@emnapi/runtime@1.10.0)(@types/node@25.9.1)
+
+  crates/ox_content_wasm/pkg: {}
 
   docs:
     devDependencies:
@@ -1962,6 +1967,14 @@ packages:
 
   '@mermaid-js/parser@1.1.1':
     resolution: {integrity: sha512-VuHdsYMK1bT6X2JbcAaWAhugTRvRBRyuZgd+c22swUeI9g/ntaxF7CY7dYarhZovofCbUNO0G7JesfmNtjYOCw==}
+
+  '@mizchi/markdown@0.6.2':
+    resolution: {integrity: sha512-9UxjHLs9mXc7tOZeIF6qxulbnIRrHossQUXDfB+GJkY58zss8H4cLPSAVsCiFlpgczJo0KsmbzEdGqyq/OhgXw==}
+    peerDependencies:
+      '@luna_ui/luna': ^0.11.0
+    peerDependenciesMeta:
+      '@luna_ui/luna':
+        optional: true
 
   '@napi-rs/canvas-android-arm64@0.1.100':
     resolution: {integrity: sha512-hjhCKhntPv9+t4ckHymdx0phYNcVW+GKQR6Lzw2zE+pOVjOplSmtx9nNNknTjbEDLcuLZqA1y8ufKg1XfgftzQ==}
@@ -8005,6 +8018,8 @@ snapshots:
   '@mermaid-js/parser@1.1.1':
     dependencies:
       '@chevrotain/types': 11.1.2
+
+  '@mizchi/markdown@0.6.2': {}
 
   '@napi-rs/canvas-android-arm64@0.1.100':
     optional: true
