@@ -802,6 +802,17 @@ export interface DocsOptions {
   pathStrategy?: "flat" | "typedoc";
 
   /**
+   * Rendering style for generated API Markdown.
+   *
+   * - `'html'` (default): HTML-laced Markdown with collapsible entries, stat
+   *   blocks and member tables (ox-content theme).
+   * - `'markdown'`: pure Markdown (headings, tables, fenced code) with no raw
+   *   HTML scaffolding, suitable for plain Markdown hosts such as VitePress.
+   * @default 'html'
+   */
+  renderStyle?: "html" | "markdown";
+
+  /**
    * Generate navigation metadata file.
    * @default true
    */
@@ -827,6 +838,7 @@ export interface ResolvedDocsOptions {
   linkStyle: "markdown" | "clean";
   basePath?: string;
   pathStrategy: "flat" | "typedoc";
+  renderStyle: "html" | "markdown";
   generateNav: boolean;
 }
 

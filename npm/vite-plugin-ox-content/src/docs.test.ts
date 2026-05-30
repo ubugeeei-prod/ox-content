@@ -211,6 +211,37 @@ describe("generateMarkdown", () => {
     expect(markdown["index.md"]).toContain("`@api transform`");
   });
 
+  it("emits pure Markdown without raw HTML when renderStyle is markdown", () => {
+    const docs: ExtractedDocs[] = [
+      {
+        file: "/repo/src/utils.ts",
+        entries: [
+          {
+            name: "capitalize",
+            kind: "function",
+            description: "Capitalizes the first letter of a string.",
+            file: "/repo/src/utils.ts",
+            line: 4,
+            endLine: 4,
+            signature: "export function capitalize(str: string): string",
+            params: [{ name: "str", type: "string", description: "Input string" }],
+            returns: { type: "string", description: "Capitalized string" },
+          },
+        ],
+      },
+    ];
+
+    const markdown = generateMarkdown(docs, resolveDocsOptions({ renderStyle: "markdown" })!);
+
+    const page = markdown["utils.md"];
+    expect(page).not.toContain("<details");
+    expect(page).not.toContain('class="ox-api');
+    expect(page).not.toContain("<table");
+    expect(page).toContain("### capitalize");
+    expect(page).toContain("```ts");
+    expect(page).toContain("| Name | Type | Description |");
+  });
+
   it("passes clean link options to generated Markdown", () => {
     const docs: ExtractedDocs[] = [
       {

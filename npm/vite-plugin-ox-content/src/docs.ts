@@ -211,6 +211,7 @@ export function generateMarkdown(
     linkStyle: options.linkStyle,
     basePath: options.basePath,
     pathStrategy: options.pathStrategy,
+    renderStyle: options.renderStyle,
   });
 }
 
@@ -303,6 +304,7 @@ export function resolveDocsOptions(
     linkStyle: opts.linkStyle ?? "markdown",
     basePath: opts.basePath,
     pathStrategy: opts.pathStrategy ?? "flat",
+    renderStyle: opts.renderStyle ?? "html",
     generateNav: opts.generateNav ?? true,
   };
 }
