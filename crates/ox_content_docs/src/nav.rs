@@ -4,7 +4,8 @@ use std::path::Path;
 
 use serde::{Deserialize, Serialize};
 
-use crate::markdown::{ApiDocEntry, ApiDocModule, MarkdownPathStrategy};
+use crate::markdown::MarkdownPathStrategy;
+use crate::model::{ApiDocEntry, ApiDocModule};
 
 const DEFAULT_BASE_PATH: &str = "/api";
 const DEFAULT_EXPORT_NAME: &str = "apiNav";

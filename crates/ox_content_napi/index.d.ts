@@ -283,6 +283,7 @@ export interface JsDocsMarkdownOptions {
   linkStyle?: 'markdown' | 'clean'
   basePath?: string
   pathStrategy?: 'flat' | 'typedoc'
+  renderStyle?: 'html' | 'markdown'
 }
 
 /** Ordered JSDoc tag used by generated API Markdown. */

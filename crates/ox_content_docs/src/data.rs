@@ -1,6 +1,6 @@
 use serde_json::{json, Map, Value};
 
-use crate::markdown::{ApiDocEntry, ApiDocMember, ApiDocModule, ApiParamDoc, ApiReturnDoc};
+use crate::model::{ApiDocEntry, ApiDocMember, ApiDocModule, ApiParamDoc, ApiReturnDoc};
 
 const DOC_KIND_ORDER: [&str; 7] =
     ["function", "class", "interface", "type", "enum", "variable", "module"];
@@ -203,7 +203,7 @@ fn normalize_doc_file_path(file_path: &str) -> String {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::markdown::{ApiDocTag, ApiParamDoc};
+    use crate::model::{ApiDocTag, ApiParamDoc};
 
     #[test]
     fn generated_docs_data_counts_and_normalizes_paths() {

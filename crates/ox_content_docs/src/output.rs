@@ -7,7 +7,8 @@ use std::path::Path;
 use thiserror::Error;
 
 use crate::data::generate_docs_data_json;
-use crate::markdown::{ApiDocModule, MarkdownPathStrategy};
+use crate::markdown::MarkdownPathStrategy;
+use crate::model::ApiDocModule;
 use crate::nav::{generate_nav_code, generate_nav_metadata_from_docs};
 
 const DOCS_MANIFEST_FILE: &str = ".ox-content-docs-manifest.json";
@@ -217,7 +218,8 @@ mod tests {
 
     #[test]
     fn writes_typedoc_docs_with_consistent_nav_and_data() {
-        use crate::markdown::{generate_markdown, ApiDocEntry, ApiDocMember, MarkdownDocsOptions};
+        use crate::markdown::{generate_markdown, MarkdownDocsOptions};
+        use crate::model::{ApiDocEntry, ApiDocMember};
 
         let out_dir = temp_dir();
         let extracted = vec![ApiDocModule {
