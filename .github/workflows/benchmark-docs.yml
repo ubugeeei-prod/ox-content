@@ -26,7 +26,10 @@ env:
 jobs:
   refresh:
     name: Refresh benchmark docs
-    runs-on: ubuntu-24.04
+    # Highest Blacksmith tier (32 vCPU, whole bare-metal host) — best single-thread
+    # performance and host isolation for stable numbers, and matches the runner used
+    # by benchmark.yml so committed numbers track the PR-benchmark environment.
+    runs-on: blacksmith-32vcpu-ubuntu-2404
     permissions:
       contents: write
       pull-requests: write
@@ -81,8 +84,8 @@ jobs:
           title: "docs: refresh benchmark numbers"
           body: |
             Automated refresh of the Markdown benchmark tables and charts from the
-            Benchmark docs workflow (clean `ubuntu-24.04` runner, Bun 1.3.14 so the
-            `Bun.markdown.html` row is included).
+            Benchmark docs workflow (`blacksmith-32vcpu-ubuntu-2404` runner, Bun 1.3.14
+            so the `Bun.markdown.html` row is included).
 
             Updated:
             - `README.md` and `docs/content/performance.md` benchmark tables
