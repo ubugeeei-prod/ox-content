@@ -67,6 +67,10 @@ pub struct EntryPointDocsOptions {
     pub include_private: bool,
     /// Include `@internal` docs.
     pub include_internal: bool,
+    /// Opt in to TSDoc-style type-parameter docs (`@typeParam` / `<T>` table).
+    /// Off by default (JSDoc semantics).
+    #[serde(default)]
+    pub type_parameters: bool,
 }
 
 /// Resolved export graph.
@@ -328,8 +332,12 @@ pub fn extract_docs_from_entry_points(
             }
 
             let matched = {
-                let module_entries =
-                    normalized_entries_for_module(&mut docs_cache, &extractor, module)?;
+                let module_entries = normalized_entries_for_module(
+                    &mut docs_cache,
+                    &extractor,
+                    module,
+                    options.type_parameters,
+                )?;
                 let mut matched = false;
                 for entry in module_entries.iter().filter(|entry| entry.name == *original_name) {
                     matched = true;
@@ -360,6 +368,7 @@ pub fn extract_docs_from_entry_points(
                 &mut all_docs_cache,
                 &all_visibility_extractor,
                 module,
+                options.type_parameters,
             )?;
             if let Some(hidden_entry) =
                 all_module_entries.iter().find(|entry| entry.name == *original_name)
@@ -397,12 +406,16 @@ pub fn extract_docs_from_entry_points(
         // by the extractor as a `Module`-kind entry but is never an export, so it
         // is dropped from `entries` above. Pull it out of the entry file's
         // normalized items and carry it as the module description.
-        let description =
-            normalized_entries_for_module(&mut docs_cache, &extractor, &entrypoint.source_path)?
-                .iter()
-                .find(|entry| entry.kind == NormalizedDocKind::Module)
-                .map(|entry| entry.description.clone())
-                .unwrap_or_default();
+        let description = normalized_entries_for_module(
+            &mut docs_cache,
+            &extractor,
+            &entrypoint.source_path,
+            options.type_parameters,
+        )?
+        .iter()
+        .find(|entry| entry.kind == NormalizedDocKind::Module)
+        .map(|entry| entry.description.clone())
+        .unwrap_or_default();
 
         modules.push(EntrypointDocsModule {
             file: entrypoint.name.clone(),
@@ -431,12 +444,13 @@ fn normalized_entries_for_module<'a>(
     docs_cache: &'a mut FxHashMap<PathBuf, Vec<NormalizedDocEntry>>,
     extractor: &DocExtractor,
     module: &PathBuf,
+    type_parameters: bool,
 ) -> Result<&'a [NormalizedDocEntry], GraphError> {
     if !docs_cache.contains_key(module) {
         let items = extractor
             .extract_file(module)
             .map_err(|source| GraphError::Extract { path: module.clone(), source })?;
-        docs_cache.insert(module.clone(), normalize_doc_items(items));
+        docs_cache.insert(module.clone(), normalize_doc_items(items, type_parameters));
     }
 
     Ok(docs_cache.get(module).expect("normalized docs cache entry").as_slice())
@@ -1231,6 +1245,7 @@ export function label(value: string): string {
                 graph: graph_options,
                 include_private: false,
                 include_internal: false,
+                type_parameters: false,
             },
         )
         .unwrap();
@@ -1300,6 +1315,7 @@ export function plugin(): void {}
                 graph: graph_options,
                 include_private: false,
                 include_internal: false,
+                type_parameters: false,
             },
         )
         .unwrap();
@@ -1349,6 +1365,7 @@ export const CLI_OPTIONS_DEFAULT: CliOptions<DefaultGunshiParams> = {
                 graph: GraphOptions { root: Some(root.clone()), ..GraphOptions::default() },
                 include_private: false,
                 include_internal: false,
+                type_parameters: false,
             },
         )
         .unwrap();
@@ -1403,6 +1420,7 @@ export type ExtractArgs<G> = G extends { args: infer A } ? A : never;
                 graph: GraphOptions { root: Some(root.clone()), ..GraphOptions::default() },
                 include_private: false,
                 include_internal: false,
+                type_parameters: false,
             },
         )
         .unwrap();
@@ -1419,6 +1437,7 @@ export type ExtractArgs<G> = G extends { args: infer A } ? A : never;
                 graph: GraphOptions { root: Some(root.clone()), ..GraphOptions::default() },
                 include_private: false,
                 include_internal: true,
+                type_parameters: false,
             },
         )
         .unwrap();
@@ -1470,6 +1489,7 @@ export interface ExternalThing {
                 graph: graph_options,
                 include_private: false,
                 include_internal: false,
+                type_parameters: false,
             },
         )
         .unwrap();
@@ -1535,6 +1555,7 @@ export { a };
                 graph: graph_options,
                 include_private: false,
                 include_internal: false,
+                type_parameters: false,
             },
         )
         .unwrap();
@@ -1585,6 +1606,7 @@ export function helper(): void {}
                 graph: graph_options,
                 include_private: false,
                 include_internal: false,
+                type_parameters: false,
             },
         )
         .unwrap();

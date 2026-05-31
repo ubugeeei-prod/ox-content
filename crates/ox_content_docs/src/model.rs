@@ -50,6 +50,9 @@ pub struct ApiDocEntry {
     /// Members belonging to class/interface/type/enum entries.
     #[serde(default)]
     pub members: Vec<ApiDocMember>,
+    /// Declaration type parameters (opt-in; empty unless enabled).
+    #[serde(default)]
+    pub type_parameters: Vec<ApiTypeParamDoc>,
 }
 
 /// Documentation for a member of a class/interface/type/enum entry.
@@ -112,6 +115,19 @@ pub struct ApiReturnDoc {
     /// Return type.
     pub type_annotation: String,
     /// Return description.
+    pub description: String,
+}
+
+/// Type parameter documentation (`<T extends C = D>`).
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
+pub struct ApiTypeParamDoc {
+    /// Type parameter name (e.g. `T`).
+    pub name: String,
+    /// Constraint after `extends`, when present.
+    pub constraint: Option<String>,
+    /// Default type after `=`, when present.
+    pub default: Option<String>,
+    /// Description merged from a `@typeParam` / `@template` tag.
     pub description: String,
 }
 

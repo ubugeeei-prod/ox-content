@@ -145,7 +145,12 @@ export async function extractDocs(
       napi as {
         extractDocsFromEntryPoints?: (
           entryPoints: ResolvedDocsEntryPoint[],
-          options?: { root?: string; private?: boolean; internal?: boolean },
+          options?: {
+            root?: string;
+            private?: boolean;
+            internal?: boolean;
+            typeParameters?: boolean;
+          },
         ) => Array<{ file: string; entries: DocEntry[] }>;
       }
     ).extractDocsFromEntryPoints;
@@ -160,6 +165,7 @@ export async function extractDocs(
       root: process.cwd(),
       private: options.private,
       internal: options.internal,
+      typeParameters: options.typeParameters,
     }).map((doc) => ({ file: doc.file, entries: doc.entries }));
   }
 
@@ -171,6 +177,7 @@ export async function extractDocs(
         exclude: string[],
         includePrivate?: boolean,
         includeInternal?: boolean,
+        typeParameters?: boolean,
       ) => Array<{ file: string; entries: DocEntry[] }>;
     }
   ).extractDocsFromDirectories;
@@ -187,6 +194,7 @@ export async function extractDocs(
     options.exclude,
     options.private,
     options.internal,
+    options.typeParameters,
   ).map((doc) => ({ file: doc.file, entries: doc.entries }));
 }
 
@@ -305,6 +313,7 @@ export function resolveDocsOptions(
     basePath: opts.basePath,
     pathStrategy: opts.pathStrategy ?? "flat",
     renderStyle: opts.renderStyle ?? "html",
+    typeParameters: opts.typeParameters ?? false,
     generateNav: opts.generateNav ?? true,
   };
 }
