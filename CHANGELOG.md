@@ -1,5 +1,11 @@
 # Changelog
 
+## [2.36.0] - 2026-05-31
+
+### Bug Fixes
+
+- render pure markdown sections as sequential headings instead of bold paragraphs (#275)
+
 ## [2.35.0] - 2026-05-31
 
 ### Bug Fixes
