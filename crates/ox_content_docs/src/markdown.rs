@@ -859,7 +859,8 @@ fn generate_typedoc_entry_page(
         symbol_map,
     };
     if options.render_style == MarkdownRenderStyle::Markdown {
-        let body = markdown_pure::render_entry_body_pure(entry, options, Some(&link_context));
+        // Per-symbol page: title is `# {name}` (H1), so sections render at H2.
+        let body = markdown_pure::render_entry_body_pure(entry, options, Some(&link_context), 2);
         let mut markdown = fmt_args(format_args!("# {}\n\n", entry.name));
         if !body.is_empty() {
             markdown.push_str(&body);
@@ -1029,7 +1030,8 @@ fn generate_entry_markdown(
     let link_context = link_context.as_ref();
 
     if options.render_style == MarkdownRenderStyle::Markdown {
-        let body = markdown_pure::render_entry_body_pure(entry, options, link_context);
+        // Flat entry heading is `### {name}` (H3), so sections render at H4.
+        let body = markdown_pure::render_entry_body_pure(entry, options, link_context, 4);
         let mut markdown = fmt_args(format_args!("### {}\n\n", entry.name));
         if !body.is_empty() {
             markdown.push_str(&body);
@@ -1486,6 +1488,33 @@ mod tests {
         assert!(!markdown.contains("ox-api-controls"), "unexpected controls in:\n{markdown}");
     }
 
+    /// Asserts heading levels never increase by more than one (markdownlint
+    /// MD001), ignoring `#` lines inside fenced code blocks.
+    fn assert_no_heading_level_skips(markdown: &str) {
+        let mut previous = 0usize;
+        let mut in_fence = false;
+        for line in markdown.lines() {
+            if line.trim_start().starts_with("```") {
+                in_fence = !in_fence;
+                continue;
+            }
+            if in_fence {
+                continue;
+            }
+            let hashes = line.chars().take_while(|&ch| ch == '#').count();
+            if hashes == 0 || line.as_bytes().get(hashes) != Some(&b' ') {
+                continue;
+            }
+            if previous != 0 {
+                assert!(
+                    hashes <= previous + 1,
+                    "heading level skip {previous} -> {hashes} at: {line}\nin:\n{markdown}"
+                );
+            }
+            previous = hashes;
+        }
+    }
+
     #[test]
     fn render_style_markdown_flat_emits_pure_markdown() {
         let options = MarkdownDocsOptions {
@@ -1498,10 +1527,14 @@ mod tests {
         let page = out.get("cli.md").unwrap();
         assert_no_api_html(page);
         assert!(page.contains("### cli"));
-        assert!(page.contains("**Signature**"));
+        // Flat entry heading is H3, so body sections render at H4.
+        assert!(page.lines().any(|line| line == "#### Signature"));
+        assert!(!page.contains("**Signature**"));
         assert!(page.contains("```ts"));
         assert!(page.contains("| Name | Type | Description |"));
-        assert!(page.contains("**Members**"));
+        // The interface member group is a real heading (no `**Members**` wrapper).
+        assert!(page.lines().any(|line| line == "#### Methods"));
+        assert!(!page.contains("**Members**"));
         assert!(page.contains("| Name | Kind | Type | Description |"));
         assert!(page.contains("[View source](https://github.com/x/y/blob/main/"));
 
@@ -1543,6 +1576,68 @@ mod tests {
         let functions = out.get("functions.md").unwrap();
         assert_no_api_html(functions);
         assert!(functions.contains("### cli"));
+    }
+
+    #[test]
+    fn render_style_markdown_typedoc_sections_are_sequential_headings() {
+        let options = MarkdownDocsOptions {
+            render_style: MarkdownRenderStyle::Markdown,
+            path_strategy: MarkdownPathStrategy::TypeDoc,
+            github_url: Some("https://github.com/x/y".to_string()),
+            ..MarkdownDocsOptions::default()
+        };
+        let out = generate_markdown(&pure_test_docs(), &options);
+
+        // Function page: every section is a real H2 heading under the H1 title,
+        // with no bold-as-header, no skipped levels.
+        let fn_key =
+            out.keys().find(|key| key.ends_with("functions/cli.md")).expect("cli page").clone();
+        let page = out.get(&fn_key).unwrap();
+        assert!(page.starts_with("# cli"));
+        assert!(page.contains("## Signature"));
+        assert!(page.contains("## Parameters"));
+        assert!(page.contains("## Returns"));
+        assert!(page.contains("## Examples"));
+        assert!(page.contains("## Tags"));
+        assert!(!page.contains("**Signature**"));
+        assert!(!page.contains("**Returns**"));
+        assert!(!page.contains("#### "));
+        assert_no_heading_level_skips(page);
+
+        // Returns is its own heading with the value on the following line.
+        let after_returns = page.split("## Returns\n\n").nth(1).expect("returns section");
+        assert!(after_returns.starts_with("`void`"), "returns value on next line:\n{page}");
+
+        // Interface page: member group is a real H2 heading (## Methods), not a
+        // `#### Properties`/`**Members**` mix.
+        let if_key = out
+            .keys()
+            .find(|key| key.ends_with("interfaces/Command.md"))
+            .expect("Command page")
+            .clone();
+        let page = out.get(&if_key).unwrap();
+        assert!(page.contains("## Methods"));
+        assert!(!page.contains("#### "));
+        assert!(!page.contains("**Members**"));
+        assert_no_heading_level_skips(page);
+    }
+
+    #[test]
+    fn render_style_markdown_flat_sections_render_at_h4() {
+        let options = MarkdownDocsOptions {
+            render_style: MarkdownRenderStyle::Markdown,
+            ..MarkdownDocsOptions::default()
+        };
+        let out = generate_markdown(&pure_test_docs(), &options);
+        let page = out.get("cli.md").unwrap();
+
+        // Flat entry heading is H3, so its sections render at H4 (sequential).
+        assert!(page.contains("### cli"));
+        assert!(page.lines().any(|line| line == "#### Signature"));
+        assert!(page.lines().any(|line| line == "#### Parameters"));
+        assert!(page.lines().any(|line| line == "#### Returns"));
+        assert!(!page.lines().any(|line| line == "## Signature"));
+        assert_no_heading_level_skips(page);
     }
 
     #[test]
@@ -1944,7 +2039,8 @@ mod tests {
         );
         let page = markdown.get("mod/functions/make.md").unwrap();
 
-        assert!(page.contains("**Type Parameters**"));
+        assert!(page.contains("## Type Parameters"));
+        assert!(!page.contains("**Type Parameters**"));
         assert!(page.contains("`G` *extends* `Base` = `Default`"));
         assert!(page.contains("| `T` | The value type. |"));
     }
