@@ -725,6 +725,20 @@ export {
   type ExtractedCodeBlock,
   type TypecheckCodeBlockOptions,
 } from "./code-blocks";
+export {
+  collectDocsTests,
+  DocsTestRunError,
+  runDocsTests,
+  writeDocsTestFiles,
+  type CollectedDocsTest,
+  type DocsTestFileOptions,
+  type DocsTestHarnessOptions,
+  type DocsTestRunResult,
+  type DocsTestSource,
+  type DocsTestWriteResult,
+  type RunDocsTestsOptions,
+  type WrittenDocsTestFile,
+} from "./docs-tests";
 export { extractDocs, generateMarkdown, writeDocs, resolveDocsOptions } from "./docs";
 export { lintMarkdown, lintMarkdownAsync } from "./lint";
 export { lintMarkdownFile, lintMarkdownFiles, shouldLintMarkdownFile } from "./lint-files";
