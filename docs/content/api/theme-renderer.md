@@ -84,11 +84,12 @@ import { DefaultLayout } from &#39;./layouts/Default&#39;;
 import { EntryLayout } from &#39;./layouts/Entry&#39;;
 
 export default createTheme({
-  layouts: {
-    default: DefaultLayout,
-    entry: EntryLayout,
-  },
+layouts: {
+default: DefaultLayout,
+entry: EntryLayout,
+},
 });</code></pre>
+
 </div>
 </div>
   </div>
@@ -302,4 +303,3 @@ export default createTheme({
 <p class="ox-api-entry__source"><a class="ox-api-entry__source-link" href="https://github.com/ubugeeei-prod/ox-content/blob/main/npm/vite-plugin-ox-content/src/theme-renderer.ts#L62-L75" target="_blank" rel="noopener noreferrer">View source<span class="ox-api-entry__source-icon" aria-hidden="true"></span></a></p>
   </div>
 </details>
-
