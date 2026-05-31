@@ -1,4 +1,81 @@
 import { renderSlideEditorClientSource } from "./editor-client";
+import {
+  SLIDE_ACCENT_OPTIONS,
+  SLIDE_ALIGN_OPTIONS,
+  SLIDE_DENSITY_OPTIONS,
+  SLIDE_LAYOUT_OPTIONS,
+  type SlideChoice,
+} from "./slide-schema";
+
+const EDITOR_UI_THEME = {
+  light: {
+    bg: "#f3f4f1",
+    panel: "#fbfbf8",
+    line: "rgba(23, 31, 28, 0.11)",
+    lineStrong: "rgba(23, 31, 28, 0.24)",
+    text: "#17201e",
+    muted: "#6a716b",
+    accent: "#2f5d50",
+    accentSoft: "rgba(47, 93, 80, 0.12)",
+    code: "#ecefea",
+    primary: "#24483f",
+    primaryText: "#fff",
+  },
+  dark: {
+    bg: "#101311",
+    panel: "#171b18",
+    line: "rgba(237, 241, 235, 0.12)",
+    lineStrong: "rgba(237, 241, 235, 0.24)",
+    text: "#edf1eb",
+    muted: "#9fa79f",
+    accent: "#8fb8aa",
+    accentSoft: "rgba(143, 184, 170, 0.14)",
+    code: "#1e231f",
+    primary: "#8fb8aa",
+    primaryText: "#101311",
+  },
+} as const;
+
+function cssVarName(key: string): string {
+  return key.replace(/[A-Z]/g, (letter) => `-${letter.toLowerCase()}`);
+}
+
+function renderEditorThemeVars(tokens: Record<string, string>): string {
+  return Object.entries(tokens)
+    .map(([key, value]) => `        --${cssVarName(key)}: ${value};`)
+    .join("\n");
+}
+
+function escapeHtmlAttribute(value: string): string {
+  return value
+    .replace(/&/g, "&amp;")
+    .replace(/"/g, "&quot;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;");
+}
+
+function renderSegmentedOptions(
+  kind: "layout" | "align" | "density",
+  options: readonly SlideChoice<string>[],
+): string {
+  return options
+    .map(
+      (option) =>
+        `<button class="segment" type="button" data-${kind}-value="${escapeHtmlAttribute(option.value)}" title="${escapeHtmlAttribute(option.title)}">${option.label}</button>`,
+    )
+    .join("\n              ");
+}
+
+function renderAccentControls(): string {
+  const swatches = SLIDE_ACCENT_OPTIONS.map(
+    (option) =>
+      `<button class="swatch" type="button" data-accent-value="${escapeHtmlAttribute(option.value)}" style="--swatch: ${escapeHtmlAttribute(option.value)}" title="${escapeHtmlAttribute(option.title)}"></button>`,
+  ).join("\n              ");
+  const defaultAccent = SLIDE_ACCENT_OPTIONS[0].value;
+
+  return `${swatches}
+              <input class="color-input" type="color" data-accent-custom value="${escapeHtmlAttribute(defaultAccent)}" title="Custom accent" />`;
+}
 
 /**
  * Renders the dev-only browser editor shell.
@@ -16,27 +93,11 @@ export function renderSlideEditorHtml(apiPrefix: string): string {
     <style>
       :root {
         color-scheme: light dark;
-        --bg: #f3f4f1;
-        --panel: #fbfbf8;
-        --line: rgba(23, 31, 28, 0.11);
-        --line-strong: rgba(23, 31, 28, 0.24);
-        --text: #17201e;
-        --muted: #6a716b;
-        --accent: #2f5d50;
-        --accent-soft: rgba(47, 93, 80, 0.12);
-        --code: #ecefea;
+${renderEditorThemeVars(EDITOR_UI_THEME.light)}
       }
       @media (prefers-color-scheme: dark) {
         :root {
-          --bg: #101311;
-          --panel: #171b18;
-          --line: rgba(237, 241, 235, 0.12);
-          --line-strong: rgba(237, 241, 235, 0.24);
-          --text: #edf1eb;
-          --muted: #9fa79f;
-          --accent: #8fb8aa;
-          --accent-soft: rgba(143, 184, 170, 0.14);
-          --code: #1e231f;
+${renderEditorThemeVars(EDITOR_UI_THEME.dark)}
         }
       }
       * { box-sizing: border-box; }
@@ -224,8 +285,8 @@ export function renderSlideEditorHtml(apiPrefix: string): string {
       }
       .button[data-primary="true"] {
         border-color: transparent;
-        background: #24483f;
-        color: #fff;
+        background: var(--primary);
+        color: var(--primary-text);
       }
       .icon {
         width: 16px;
@@ -321,38 +382,25 @@ export function renderSlideEditorHtml(apiPrefix: string): string {
           <div class="control-row">
             <div class="control-label">Layout</div>
             <div class="segmented" data-layout-group>
-              <button class="segment" type="button" data-layout-value="stack" title="Stacked content">Stack</button>
-              <button class="segment" type="button" data-layout-value="statement" title="Centered statement">Statement</button>
-              <button class="segment" type="button" data-layout-value="split" title="Two-column split">Split</button>
-              <button class="segment" type="button" data-layout-value="quote" title="Quote emphasis">Quote</button>
-              <button class="segment" type="button" data-layout-value="code" title="Code-first slide">Code</button>
-              <button class="segment" type="button" data-layout-value="canvas" title="Directly place slide elements">Canvas</button>
+              ${renderSegmentedOptions("layout", SLIDE_LAYOUT_OPTIONS)}
             </div>
           </div>
           <div class="control-row">
             <div class="control-label">Align</div>
             <div class="segmented" data-align-group>
-              <button class="segment" type="button" data-align-value="start" title="Align start">Start</button>
-              <button class="segment" type="button" data-align-value="center" title="Align center">Center</button>
-              <button class="segment" type="button" data-align-value="end" title="Align end">End</button>
+              ${renderSegmentedOptions("align", SLIDE_ALIGN_OPTIONS)}
             </div>
           </div>
           <div class="control-row">
             <div class="control-label">Density</div>
             <div class="segmented" data-density-group>
-              <button class="segment" type="button" data-density-value="compact" title="Compact spacing">Compact</button>
-              <button class="segment" type="button" data-density-value="balanced" title="Balanced spacing">Balanced</button>
-              <button class="segment" type="button" data-density-value="spacious" title="Spacious spacing">Spacious</button>
+              ${renderSegmentedOptions("density", SLIDE_DENSITY_OPTIONS)}
             </div>
           </div>
           <div class="control-row">
             <div class="control-label">Accent</div>
             <div class="swatches">
-              <button class="swatch" type="button" data-accent-value="#176b5d" style="--swatch: #176b5d" title="Teal"></button>
-              <button class="swatch" type="button" data-accent-value="#8b3a62" style="--swatch: #8b3a62" title="Plum"></button>
-              <button class="swatch" type="button" data-accent-value="#b45f24" style="--swatch: #b45f24" title="Copper"></button>
-              <button class="swatch" type="button" data-accent-value="#334155" style="--swatch: #334155" title="Ink"></button>
-              <input class="color-input" type="color" data-accent-custom value="#176b5d" title="Custom accent" />
+              ${renderAccentControls()}
             </div>
           </div>
         </section>

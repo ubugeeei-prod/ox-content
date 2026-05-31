@@ -1,31 +1,41 @@
-const LAYOUTS = new Set(["stack", "statement", "split", "quote", "code", "canvas"]);
-const ALIGNS = new Set(["start", "center", "end"]);
-const DENSITIES = new Set(["compact", "balanced", "spacious"]);
+import {
+  CANVAS_PLACEMENT_BOUNDS,
+  CANVAS_SLIDE_LAYOUT,
+  DEFAULT_CANVAS_PLACEMENT,
+  SLIDE_ALIGN_OPTIONS,
+  SLIDE_DENSITY_OPTIONS,
+  SLIDE_DOM,
+  SLIDE_FRONTMATTER_KEYS,
+  SLIDE_LAYOUT_DEFAULTS,
+  SLIDE_LAYOUT_OPTIONS,
+  type SlideAlign,
+  type SlideDensity,
+  type SlideLayout,
+  type SlideLayoutSettings,
+  type SlidePlacement,
+} from "./slide-schema";
 
-interface SlideLayoutSettings {
-  layout: string;
-  align: string;
-  density: string;
-  accent?: string;
-}
-
-interface SlidePlacement {
-  x: number;
-  y: number;
-  w: number;
-  h: number;
-}
-
-const PERCENT_MIN = 0;
-const PERCENT_MAX = 100;
+const LAYOUTS = valueSet(SLIDE_LAYOUT_OPTIONS);
+const ALIGNS = valueSet(SLIDE_ALIGN_OPTIONS);
+const DENSITIES = valueSet(SLIDE_DENSITY_OPTIONS);
 
 function stringValue(value: unknown): string | undefined {
   return typeof value === "string" && value.trim() ? value.trim() : undefined;
 }
 
-function optionValue(value: unknown, allowed: Set<string>, fallback: string): string {
+function valueSet<const TValue extends string>(
+  options: readonly { value: TValue }[],
+): ReadonlySet<TValue> {
+  return new Set(options.map((option) => option.value));
+}
+
+function optionValue<const TValue extends string>(
+  value: unknown,
+  allowed: ReadonlySet<TValue>,
+  fallback: TValue,
+): TValue {
   const normalized = stringValue(value)?.toLowerCase();
-  return normalized && allowed.has(normalized) ? normalized : fallback;
+  return normalized && allowed.has(normalized as TValue) ? (normalized as TValue) : fallback;
 }
 
 function isCssColorToken(value: string): boolean {
@@ -56,7 +66,10 @@ function hashString(value: string): string {
 function clampPercent(value: unknown, fallback: number): number {
   const number = typeof value === "number" ? value : Number(value);
   if (!Number.isFinite(number)) return fallback;
-  return Math.min(PERCENT_MAX, Math.max(PERCENT_MIN, number));
+  return Math.min(
+    CANVAS_PLACEMENT_BOUNDS.maxPercent,
+    Math.max(CANVAS_PLACEMENT_BOUNDS.minPercent, number),
+  );
 }
 
 function parsePlacement(value: unknown): SlidePlacement | undefined {
@@ -64,10 +77,10 @@ function parsePlacement(value: unknown): SlidePlacement | undefined {
   const item = value as Record<string, unknown>;
 
   return {
-    x: clampPercent(item.x, 8),
-    y: clampPercent(item.y, 8),
-    w: clampPercent(item.w, 84),
-    h: clampPercent(item.h, 18),
+    x: clampPercent(item.x, DEFAULT_CANVAS_PLACEMENT.x),
+    y: clampPercent(item.y, DEFAULT_CANVAS_PLACEMENT.y),
+    w: clampPercent(item.w, DEFAULT_CANVAS_PLACEMENT.w),
+    h: clampPercent(item.h, DEFAULT_CANVAS_PLACEMENT.h),
   };
 }
 
@@ -87,7 +100,7 @@ function parsePlacementList(value: unknown): unknown[] {
  * Extracts canvas placements from slide frontmatter.
  */
 export function resolveSlidePlacements(frontmatter: Record<string, unknown>): SlidePlacement[] {
-  return parsePlacementList(frontmatter.placements)
+  return parsePlacementList(frontmatter[SLIDE_FRONTMATTER_KEYS.placements])
     .map(parsePlacement)
     .filter((placement) => Boolean(placement)) as SlidePlacement[];
 }
@@ -97,7 +110,7 @@ function renderPlacementStyle(className: string, placements: SlidePlacement[]): 
 
   const rules = placements
     .map((placement, index) => {
-      const selector = `.${className}.ox-slide-layout--canvas > :nth-child(${index + 1})`;
+      const selector = `.${className}.${SLIDE_DOM.canvasLayoutClass} > :nth-child(${index + 1})`;
       return `${selector}{left:${placement.x.toFixed(3)}%;top:${placement.y.toFixed(3)}%;width:${placement.w.toFixed(3)}%;height:${placement.h.toFixed(3)}%;}`;
     })
     .join("");
@@ -109,12 +122,24 @@ function renderPlacementStyle(className: string, placements: SlidePlacement[]): 
  * Extracts layout tokens from slide frontmatter.
  */
 export function resolveSlideLayout(frontmatter: Record<string, unknown>): SlideLayoutSettings {
-  const accent = stringValue(frontmatter.accent);
+  const accent = stringValue(frontmatter[SLIDE_FRONTMATTER_KEYS.accent]);
 
   return {
-    layout: optionValue(frontmatter.layout, LAYOUTS, "stack"),
-    align: optionValue(frontmatter.align, ALIGNS, "start"),
-    density: optionValue(frontmatter.density, DENSITIES, "balanced"),
+    layout: optionValue<SlideLayout>(
+      frontmatter[SLIDE_FRONTMATTER_KEYS.layout],
+      LAYOUTS,
+      SLIDE_LAYOUT_DEFAULTS.layout,
+    ),
+    align: optionValue<SlideAlign>(
+      frontmatter[SLIDE_FRONTMATTER_KEYS.align],
+      ALIGNS,
+      SLIDE_LAYOUT_DEFAULTS.align,
+    ),
+    density: optionValue<SlideDensity>(
+      frontmatter[SLIDE_FRONTMATTER_KEYS.density],
+      DENSITIES,
+      SLIDE_LAYOUT_DEFAULTS.density,
+    ),
     accent: accent && isCssColorToken(accent) ? accent : undefined,
   };
 }
@@ -124,14 +149,15 @@ export function resolveSlideLayout(frontmatter: Record<string, unknown>): SlideL
  */
 export function wrapSlideContent(html: string, frontmatter: Record<string, unknown>): string {
   const layout = resolveSlideLayout(frontmatter);
-  const placements = layout.layout === "canvas" ? resolveSlidePlacements(frontmatter) : [];
+  const placements =
+    layout.layout === CANVAS_SLIDE_LAYOUT ? resolveSlidePlacements(frontmatter) : [];
   const placementClass =
     placements.length > 0
-      ? `ox-slide-placement-${hashString(`${html}${JSON.stringify(placements)}`)}`
+      ? `${SLIDE_DOM.placementClassPrefix}-${hashString(`${html}${JSON.stringify(placements)}`)}`
       : "";
   const classes = [
-    "ox-slide-layout",
-    `ox-slide-layout--${layout.layout}`,
+    SLIDE_DOM.layoutClass,
+    `${SLIDE_DOM.layoutClass}--${layout.layout}`,
     `ox-slide-align--${layout.align}`,
     `ox-slide-density--${layout.density}`,
     placementClass,
@@ -139,7 +165,7 @@ export function wrapSlideContent(html: string, frontmatter: Record<string, unkno
   const style = layout.accent
     ? ` style="--ox-slide-accent: ${escapeHtmlAttribute(layout.accent)}"`
     : "";
-  const placementAttr = placements.length > 0 ? ' data-ox-has-placements="true"' : "";
+  const placementAttr = placements.length > 0 ? ` ${SLIDE_DOM.hasPlacementsAttribute}="true"` : "";
 
   return `${renderPlacementStyle(placementClass, placements)}<div class="${classes.filter(Boolean).join(" ")}"${placementAttr}${style}>${html}</div>`;
 }

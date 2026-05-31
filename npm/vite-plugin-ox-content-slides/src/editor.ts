@@ -6,6 +6,7 @@ import { buildSlideDecks } from "./decks";
 import { renderSlideEditorHtml } from "./editor-html";
 import type { ResolvedSlidesPluginOptions } from "./internal-types";
 import { normalizeExtension } from "./path-utils";
+import { SLIDE_FRONTMATTER_KEYS, SLIDE_LAYOUT_DEFAULTS } from "./slide-schema";
 
 interface EditorSlide {
   filePath: string;
@@ -54,6 +55,27 @@ function assertInside(parent: string, child: string): void {
 
 function sourceId(root: string, options: ResolvedSlidesPluginOptions, sourcePath: string): string {
   return toPosixPath(path.relative(slidesDir(root, options), sourcePath));
+}
+
+function renderNewSlideSource(title: string): string {
+  const keys = SLIDE_FRONTMATTER_KEYS;
+  const defaults = SLIDE_LAYOUT_DEFAULTS;
+
+  return `---
+${keys.title}: "${title}"
+${keys.layout}: "${defaults.layout}"
+${keys.align}: "${defaults.align}"
+${keys.density}: "${defaults.density}"
+---
+
+# ${title}
+
+- Write the next point here.
+
+<!-- Notes:
+Add speaker notes here.
+-->
+`;
 }
 
 function resolveSourcePath(
@@ -165,7 +187,7 @@ async function createSlide(
   const fileName = `${String(slideNumber).padStart(4, "0")}.md`;
   const sourcePath = path.join(dir, fileName);
   const title = `Slide ${slideNumber}`;
-  const source = `---\ntitle: "${title}"\nlayout: "stack"\nalign: "start"\ndensity: "balanced"\n---\n\n# ${title}\n\n- Write the next point here.\n\n<!-- Notes:\nAdd speaker notes here.\n-->\n`;
+  const source = renderNewSlideSource(title);
   await fs.writeFile(sourcePath, source, { encoding: "utf-8", flag: "wx" });
 
   return { filePath: sourceId(root, options, sourcePath), sourcePath };

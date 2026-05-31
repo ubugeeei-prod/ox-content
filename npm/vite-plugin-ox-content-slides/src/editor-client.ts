@@ -1,3 +1,24 @@
+import {
+  CANVAS_AUTO_PLACEMENT,
+  CANVAS_EDITOR_CLASSES,
+  CANVAS_EDITOR_STYLE,
+  CANVAS_PLACEMENT_BOUNDS,
+  CANVAS_SLIDE_LAYOUT,
+  CANVAS_SNAP,
+  DEFAULT_CANVAS_PLACEMENT,
+  SLIDE_ALIGN_OPTIONS,
+  SLIDE_DENSITY_OPTIONS,
+  SLIDE_DOM,
+  SLIDE_FRONTMATTER_KEYS,
+  SLIDE_FRONTMATTER_ORDER,
+  SLIDE_LAYOUT_DEFAULTS,
+  SLIDE_LAYOUT_OPTIONS,
+  type SlideAlign,
+  type SlideDensity,
+  type SlideLayout,
+  type SlidePlacement,
+} from "./slide-schema";
+
 interface EditorSlide {
   filePath: string;
   title: string;
@@ -25,17 +46,10 @@ interface ParsedFrontmatter {
 }
 
 interface LayoutSettings {
-  layout: string;
-  align: string;
-  density: string;
+  layout: SlideLayout;
+  align: SlideAlign;
+  density: SlideDensity;
   accent: string;
-}
-
-interface SlidePlacement {
-  x: number;
-  y: number;
-  w: number;
-  h: number;
 }
 
 type CanvasDragMode = "move" | "resize";
@@ -78,8 +92,56 @@ declare global {
   var __OX_SLIDE_EDITOR_API__: string | undefined;
 }
 
-const CANVAS_GRID_STEP = 2.5;
-const CANVAS_SNAP_THRESHOLD = 0.55;
+interface EditorClientConfig {
+  frontmatter: {
+    keys: typeof SLIDE_FRONTMATTER_KEYS;
+    order: readonly string[];
+  };
+  defaults: {
+    layout: SlideLayout;
+    align: SlideAlign;
+    density: SlideDensity;
+    accent: string;
+  };
+  values: {
+    layout: readonly SlideLayout[];
+    align: readonly SlideAlign[];
+    density: readonly SlideDensity[];
+  };
+  dom: typeof SLIDE_DOM;
+  canvas: {
+    layout: typeof CANVAS_SLIDE_LAYOUT;
+    snap: typeof CANVAS_SNAP;
+    placementBounds: typeof CANVAS_PLACEMENT_BOUNDS;
+    defaultPlacement: SlidePlacement;
+    autoPlacement: typeof CANVAS_AUTO_PLACEMENT;
+    editorClasses: typeof CANVAS_EDITOR_CLASSES;
+    editorStyle: typeof CANVAS_EDITOR_STYLE;
+  };
+}
+
+const SLIDE_EDITOR_CONFIG: EditorClientConfig = {
+  frontmatter: {
+    keys: SLIDE_FRONTMATTER_KEYS,
+    order: SLIDE_FRONTMATTER_ORDER,
+  },
+  defaults: SLIDE_LAYOUT_DEFAULTS,
+  values: {
+    layout: SLIDE_LAYOUT_OPTIONS.map((option) => option.value),
+    align: SLIDE_ALIGN_OPTIONS.map((option) => option.value),
+    density: SLIDE_DENSITY_OPTIONS.map((option) => option.value),
+  },
+  dom: SLIDE_DOM,
+  canvas: {
+    layout: CANVAS_SLIDE_LAYOUT,
+    snap: CANVAS_SNAP,
+    placementBounds: CANVAS_PLACEMENT_BOUNDS,
+    defaultPlacement: DEFAULT_CANVAS_PLACEMENT,
+    autoPlacement: CANVAS_AUTO_PLACEMENT,
+    editorClasses: CANVAS_EDITOR_CLASSES,
+    editorStyle: CANVAS_EDITOR_STYLE,
+  },
+};
 
 function queryElement<T extends Element>(selector: string): T {
   const element = document.querySelector<T>(selector);
@@ -133,7 +195,7 @@ function writeFrontmatter(source: string, updates: Record<string, string | undef
     if (value === "" || value === undefined) delete data[key];
   }
 
-  const preferred = ["title", "description", "layout", "align", "density", "accent", "placements"];
+  const preferred = SLIDE_EDITOR_CONFIG.frontmatter.order;
   const keys = [...new Set([...preferred, ...parsed.order, ...Object.keys(data)])].filter((key) =>
     Object.prototype.hasOwnProperty.call(data, key),
   );
@@ -150,13 +212,13 @@ function pressed(buttons: NodeListOf<HTMLButtonElement>, attr: string, value: st
   }
 }
 
-function normalizeToken(
+function normalizeToken<const TValue extends string>(
   value: string | undefined,
-  allowed: ReadonlySet<string>,
-  fallback: string,
-): string {
+  allowed: ReadonlySet<TValue>,
+  fallback: TValue,
+): TValue {
   const normalized = value?.toLowerCase();
-  return normalized && allowed.has(normalized) ? normalized : fallback;
+  return normalized && allowed.has(normalized as TValue) ? (normalized as TValue) : fallback;
 }
 
 function clampNumber(value: number, min: number, max: number): number {
@@ -176,37 +238,46 @@ function normalizePlacement(
   value: Partial<SlidePlacement>,
   fallback: SlidePlacement,
 ): SlidePlacement {
-  const w = clampNumber(finiteNumber(value.w) ?? fallback.w, 5, 100);
-  const h = clampNumber(finiteNumber(value.h) ?? fallback.h, 5, 100);
-  const maxX = Math.max(0, 100 - w);
-  const maxY = Math.max(0, 100 - h);
+  const bounds = SLIDE_EDITOR_CONFIG.canvas.placementBounds;
+  const w = clampNumber(
+    finiteNumber(value.w) ?? fallback.w,
+    bounds.minSizePercent,
+    bounds.maxPercent,
+  );
+  const h = clampNumber(
+    finiteNumber(value.h) ?? fallback.h,
+    bounds.minSizePercent,
+    bounds.maxPercent,
+  );
+  const maxX = Math.max(bounds.minPercent, bounds.maxPercent - w);
+  const maxY = Math.max(bounds.minPercent, bounds.maxPercent - h);
 
   return {
-    x: roundedPercent(clampNumber(finiteNumber(value.x) ?? fallback.x, 0, maxX)),
-    y: roundedPercent(clampNumber(finiteNumber(value.y) ?? fallback.y, 0, maxY)),
+    x: roundedPercent(clampNumber(finiteNumber(value.x) ?? fallback.x, bounds.minPercent, maxX)),
+    y: roundedPercent(clampNumber(finiteNumber(value.y) ?? fallback.y, bounds.minPercent, maxY)),
     w: roundedPercent(w),
     h: roundedPercent(h),
   };
 }
 
 function defaultPlacement(index: number, count: number): SlidePlacement {
+  const auto = SLIDE_EDITOR_CONFIG.canvas.autoPlacement;
   const safeCount = Math.max(1, count);
-  const columns = safeCount > 2 ? 2 : 1;
+  const columns = safeCount >= auto.multiColumnMinItems ? auto.multiColumnCount : 1;
   const rows = Math.ceil(safeCount / columns);
   const column = index % columns;
   const row = Math.floor(index / columns);
-  const gap = 4;
-  const width = 88 / columns - gap;
-  const height = 84 / rows - gap;
+  const width = auto.widthPercent / columns - auto.gapPercent;
+  const height = auto.heightPercent / rows - auto.gapPercent;
 
   return normalizePlacement(
     {
-      x: 6 + column * (88 / columns),
-      y: 8 + row * (84 / rows),
+      x: auto.xPercent + column * (auto.widthPercent / columns),
+      y: auto.yPercent + row * (auto.heightPercent / rows),
       w: width,
       h: height,
     },
-    { x: 8, y: 8, w: 84, h: 18 },
+    SLIDE_EDITOR_CONFIG.canvas.defaultPlacement,
   );
 }
 
@@ -248,8 +319,9 @@ function formatPlacements(placements: SlidePlacement[]): string {
 }
 
 function softSnapPercent(value: number): { value: number; snapped: boolean } {
-  const snapped = Math.round(value / CANVAS_GRID_STEP) * CANVAS_GRID_STEP;
-  const shouldSnap = Math.abs(snapped - value) <= CANVAS_SNAP_THRESHOLD;
+  const { gridStepPercent, thresholdPercent } = SLIDE_EDITOR_CONFIG.canvas.snap;
+  const snapped = Math.round(value / gridStepPercent) * gridStepPercent;
+  const shouldSnap = Math.abs(snapped - value) <= thresholdPercent;
   return {
     value: roundedPercent(shouldSnap ? snapped : value),
     snapped: shouldSnap,
@@ -334,41 +406,45 @@ function applyCanvasLayoutStyles(layout: HTMLElement, placements: SlidePlacement
 }
 
 function renderCanvasEditorStyle(): string {
+  const { editorClasses: classes, editorStyle: style, snap } = SLIDE_EDITOR_CONFIG.canvas;
+  const majorStep = `${snap.majorGridStepPercent}%`;
+  const minorStep = `${snap.gridStepPercent}%`;
+
   return `
-    .ox-editor-canvas-overlay {
+    .${classes.overlay} {
       position: fixed;
-      z-index: 2147483647;
+      z-index: ${style.zIndex};
       pointer-events: auto;
       background-image:
-        linear-gradient(to right, rgba(78, 93, 104, 0.16) 1px, transparent 1px),
-        linear-gradient(to bottom, rgba(78, 93, 104, 0.16) 1px, transparent 1px),
-        linear-gradient(to right, rgba(78, 93, 104, 0.08) 1px, transparent 1px),
-        linear-gradient(to bottom, rgba(78, 93, 104, 0.08) 1px, transparent 1px);
-      background-size: 10% 10%, 10% 10%, 2.5% 2.5%, 2.5% 2.5%;
+        linear-gradient(to right, ${style.majorGridLine} 1px, transparent 1px),
+        linear-gradient(to bottom, ${style.majorGridLine} 1px, transparent 1px),
+        linear-gradient(to right, ${style.minorGridLine} 1px, transparent 1px),
+        linear-gradient(to bottom, ${style.minorGridLine} 1px, transparent 1px);
+      background-size: ${majorStep} ${majorStep}, ${majorStep} ${majorStep}, ${minorStep} ${minorStep}, ${minorStep} ${minorStep};
     }
-    .ox-editor-canvas-overlay::before {
+    .${classes.overlay}::before {
       position: absolute;
       inset: 0;
       content: "";
       pointer-events: none;
       background:
-        linear-gradient(to right, transparent calc(50% - 0.5px), rgba(65, 83, 94, 0.22) calc(50% - 0.5px), rgba(65, 83, 94, 0.22) calc(50% + 0.5px), transparent calc(50% + 0.5px)),
-        linear-gradient(to bottom, transparent calc(50% - 0.5px), rgba(65, 83, 94, 0.22) calc(50% - 0.5px), rgba(65, 83, 94, 0.22) calc(50% + 0.5px), transparent calc(50% + 0.5px));
+        linear-gradient(to right, transparent calc(50% - 0.5px), ${style.centerGuideLine} calc(50% - 0.5px), ${style.centerGuideLine} calc(50% + 0.5px), transparent calc(50% + 0.5px)),
+        linear-gradient(to bottom, transparent calc(50% - 0.5px), ${style.centerGuideLine} calc(50% - 0.5px), ${style.centerGuideLine} calc(50% + 0.5px), transparent calc(50% + 0.5px));
     }
-    .ox-editor-canvas-box {
+    .${classes.box} {
       position: absolute;
-      border: 1.5px solid #2f6f87;
-      background: rgba(47, 111, 135, 0.05);
-      box-shadow: 0 0 0 1px rgba(255, 255, 255, 0.78), 0 8px 24px rgba(15, 23, 42, 0.13);
+      border: 1.5px solid ${style.selectionBorder};
+      background: ${style.selectionFill};
+      box-shadow: ${style.selectionShadow};
       cursor: move;
       pointer-events: auto;
       touch-action: none;
     }
-    .ox-editor-canvas-box[data-selected="true"] {
-      border-color: #1d4f73;
-      background: rgba(29, 79, 115, 0.08);
+    .${classes.box}[data-selected="true"] {
+      border-color: ${style.activeBorder};
+      background: ${style.activeFill};
     }
-    .ox-editor-canvas-label {
+    .${classes.label} {
       position: absolute;
       left: -1px;
       top: -25px;
@@ -378,38 +454,38 @@ function renderCanvasEditorStyle(): string {
       align-items: center;
       justify-content: center;
       border-radius: 4px 4px 0 0;
-      background: #2f6f87;
-      color: #fff;
+      background: ${style.selectionBorder};
+      color: ${style.labelText};
       font: 650 12px/1 system-ui, sans-serif;
     }
-    .ox-editor-canvas-box[data-selected="true"] .ox-editor-canvas-label {
-      background: #1d4f73;
+    .${classes.box}[data-selected="true"] .${classes.label} {
+      background: ${style.activeBorder};
     }
-    .ox-editor-canvas-resize {
+    .${classes.resize} {
       position: absolute;
       right: -7px;
       bottom: -7px;
       width: 14px;
       height: 14px;
-      border: 2px solid #fff;
+      border: 2px solid ${style.handleBorder};
       border-radius: 3px;
-      background: #2f6f87;
+      background: ${style.selectionBorder};
       cursor: nwse-resize;
       touch-action: none;
     }
-    .ox-editor-canvas-guide {
+    .${classes.guide} {
       position: absolute;
       z-index: 1;
       display: none;
       pointer-events: none;
-      background: rgba(30, 90, 128, 0.58);
+      background: ${style.guideLine};
     }
-    .ox-editor-canvas-guide--vertical {
+    .${classes.verticalGuide} {
       top: 0;
       bottom: 0;
       width: 1px;
     }
-    .ox-editor-canvas-guide--horizontal {
+    .${classes.horizontalGuide} {
       left: 0;
       right: 0;
       height: 1px;
@@ -430,13 +506,14 @@ function installCanvasEditorOverlay(
   style.textContent = renderCanvasEditorStyle();
   doc.head.append(style);
 
+  const classes = SLIDE_EDITOR_CONFIG.canvas.editorClasses;
   const overlay = doc.createElement("div");
-  overlay.className = "ox-editor-canvas-overlay";
+  overlay.className = classes.overlay;
   doc.body.append(overlay);
   const verticalGuide = doc.createElement("div");
-  verticalGuide.className = "ox-editor-canvas-guide ox-editor-canvas-guide--vertical";
+  verticalGuide.className = `${classes.guide} ${classes.verticalGuide}`;
   const horizontalGuide = doc.createElement("div");
-  horizontalGuide.className = "ox-editor-canvas-guide ox-editor-canvas-guide--horizontal";
+  horizontalGuide.className = `${classes.guide} ${classes.horizontalGuide}`;
   overlay.append(verticalGuide, horizontalGuide);
 
   let current = placements.map((placement) => ({ ...placement }));
@@ -444,7 +521,7 @@ function installCanvasEditorOverlay(
 
   const boxes = current.map((placement, index) => {
     const box = doc.createElement("div");
-    box.className = "ox-editor-canvas-box";
+    box.className = classes.box;
     box.dataset.index = String(index);
     box.style.left = `${placement.x}%`;
     box.style.top = `${placement.y}%`;
@@ -452,11 +529,11 @@ function installCanvasEditorOverlay(
     box.style.height = `${placement.h}%`;
 
     const label = doc.createElement("span");
-    label.className = "ox-editor-canvas-label";
+    label.className = classes.label;
     label.textContent = String(index + 1);
 
     const handle = doc.createElement("span");
-    handle.className = "ox-editor-canvas-resize";
+    handle.className = classes.resize;
     handle.title = "Resize";
 
     box.append(label, handle);
@@ -618,11 +695,11 @@ export function createSlideEditorClient(): void {
     accentButtons: document.querySelectorAll("[data-accent-value]"),
     accentCustom: queryElement("[data-accent-custom]"),
   };
-  const defaults = { layout: "stack", align: "start", density: "balanced", accent: "" };
+  const { defaults } = SLIDE_EDITOR_CONFIG;
   const allowed = {
-    layout: new Set(["stack", "statement", "split", "quote", "code", "canvas"]),
-    align: new Set(["start", "center", "end"]),
-    density: new Set(["compact", "balanced", "spacious"]),
+    layout: new Set(SLIDE_EDITOR_CONFIG.values.layout),
+    align: new Set(SLIDE_EDITOR_CONFIG.values.align),
+    density: new Set(SLIDE_EDITOR_CONFIG.values.density),
   };
 
   async function request<T>(requestPath: string, init?: RequestInit): Promise<T> {
@@ -638,12 +715,13 @@ export function createSlideEditorClient(): void {
 
   function readLayoutSettings(): LayoutSettings {
     const data = parseFrontmatter(elements.source.value).data;
+    const keys = SLIDE_EDITOR_CONFIG.frontmatter.keys;
 
     return {
-      layout: normalizeToken(data.layout, allowed.layout, defaults.layout),
-      align: normalizeToken(data.align, allowed.align, defaults.align),
-      density: normalizeToken(data.density, allowed.density, defaults.density),
-      accent: data.accent ?? defaults.accent,
+      layout: normalizeToken(data[keys.layout], allowed.layout, defaults.layout),
+      align: normalizeToken(data[keys.align], allowed.align, defaults.align),
+      density: normalizeToken(data[keys.density], allowed.density, defaults.density),
+      accent: data[keys.accent] ?? defaults.accent,
     };
   }
 
@@ -664,14 +742,17 @@ export function createSlideEditorClient(): void {
   }
 
   function readCanvasPlacements(): SlidePlacement[] {
-    return parsePlacements(parseFrontmatter(elements.source.value).data.placements);
+    return parsePlacements(
+      parseFrontmatter(elements.source.value).data[SLIDE_EDITOR_CONFIG.frontmatter.keys.placements],
+    );
   }
 
   function getPreviewLayout(): HTMLElement | undefined {
     try {
       return (
-        elements.preview.contentDocument?.querySelector<HTMLElement>(".ox-slide-layout") ??
-        undefined
+        elements.preview.contentDocument?.querySelector<HTMLElement>(
+          `.${SLIDE_EDITOR_CONFIG.dom.layoutClass}`,
+        ) ?? undefined
       );
     } catch {
       return undefined;
@@ -704,7 +785,7 @@ export function createSlideEditorClient(): void {
 
   function syncCanvasEditor(): void {
     clearPreviewEditor();
-    if (readLayoutSettings().layout !== "canvas") return;
+    if (readLayoutSettings().layout !== SLIDE_EDITOR_CONFIG.canvas.layout) return;
 
     const doc = elements.preview.contentDocument;
     const layout = getPreviewLayout();
@@ -714,8 +795,8 @@ export function createSlideEditorClient(): void {
     applyCanvasLayoutStyles(layout, placements);
     cleanupPreviewEditor = installCanvasEditorOverlay(doc, layout, placements, (nextPlacements) => {
       applyFrontmatterUpdate({
-        layout: "canvas",
-        placements: formatPlacements(nextPlacements),
+        [SLIDE_EDITOR_CONFIG.frontmatter.keys.layout]: SLIDE_EDITOR_CONFIG.canvas.layout,
+        [SLIDE_EDITOR_CONFIG.frontmatter.keys.placements]: formatPlacements(nextPlacements),
       });
     });
   }
@@ -832,34 +913,43 @@ export function createSlideEditorClient(): void {
     button.addEventListener("click", () => {
       const layout = button.dataset.layoutValue;
       if (!layout) return;
-      if (layout === "canvas") {
+      if (layout === SLIDE_EDITOR_CONFIG.canvas.layout) {
         const placements = measurePreviewPlacements();
         applyFrontmatterUpdate({
-          layout,
-          placements: placements.length > 0 ? formatPlacements(placements) : undefined,
+          [SLIDE_EDITOR_CONFIG.frontmatter.keys.layout]: layout,
+          [SLIDE_EDITOR_CONFIG.frontmatter.keys.placements]:
+            placements.length > 0 ? formatPlacements(placements) : undefined,
         });
         return;
       }
-      applyFrontmatterUpdate({ layout });
+      applyFrontmatterUpdate({ [SLIDE_EDITOR_CONFIG.frontmatter.keys.layout]: layout });
     });
   }
   for (const button of elements.alignButtons) {
     button.addEventListener("click", () => {
-      applyFrontmatterUpdate({ align: button.dataset.alignValue });
+      applyFrontmatterUpdate({
+        [SLIDE_EDITOR_CONFIG.frontmatter.keys.align]: button.dataset.alignValue,
+      });
     });
   }
   for (const button of elements.densityButtons) {
     button.addEventListener("click", () => {
-      applyFrontmatterUpdate({ density: button.dataset.densityValue });
+      applyFrontmatterUpdate({
+        [SLIDE_EDITOR_CONFIG.frontmatter.keys.density]: button.dataset.densityValue,
+      });
     });
   }
   for (const button of elements.accentButtons) {
     button.addEventListener("click", () => {
-      applyFrontmatterUpdate({ accent: button.dataset.accentValue });
+      applyFrontmatterUpdate({
+        [SLIDE_EDITOR_CONFIG.frontmatter.keys.accent]: button.dataset.accentValue,
+      });
     });
   }
   elements.accentCustom.addEventListener("input", () => {
-    applyFrontmatterUpdate({ accent: elements.accentCustom.value });
+    applyFrontmatterUpdate({
+      [SLIDE_EDITOR_CONFIG.frontmatter.keys.accent]: elements.accentCustom.value,
+    });
   });
   elements.preview.addEventListener("load", () => {
     syncCanvasEditor();
@@ -888,6 +978,7 @@ function queryElementFrom<T extends Element>(root: ParentNode, selector: string)
 export function renderSlideEditorClientSource(apiJson: string): string {
   return [
     `globalThis.__OX_SLIDE_EDITOR_API__ = ${apiJson};`,
+    `const SLIDE_EDITOR_CONFIG = ${JSON.stringify(SLIDE_EDITOR_CONFIG)};`,
     queryElement.toString(),
     parseFrontmatter.toString(),
     formatFrontmatterValue.toString(),
@@ -902,8 +993,6 @@ export function renderSlideEditorClientSource(apiJson: string): string {
     isPlacement.toString(),
     parsePlacements.toString(),
     formatPlacements.toString(),
-    `const CANVAS_GRID_STEP = ${CANVAS_GRID_STEP};`,
-    `const CANVAS_SNAP_THRESHOLD = ${CANVAS_SNAP_THRESHOLD};`,
     softSnapPercent.toString(),
     snapPlacementToGrid.toString(),
     isHtmlElement.toString(),
