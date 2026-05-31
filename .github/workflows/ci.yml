@@ -227,9 +227,14 @@ jobs:
         if: runner.os != 'Windows'
         uses: Swatinem/rust-cache@e18b497796c12c097a38f9edb9d0641fb99eee32 # v2
 
+      # Debug build: the smoke test only verifies the binding loads and that
+      # parseAndRender produces correct output — it does not benchmark. A debug
+      # build validates the same ABI/load/correctness path far faster than the
+      # release profile (fat LTO + codegen-units=1). Release artifacts are built
+      # and verified separately in publish.yml.
       - name: Build local NAPI binding
         working-directory: crates/ox_content_napi
-        run: vp exec -- napi build --release
+        run: vp exec -- napi build
 
       - name: Load and parse smoke test
         shell: bash
@@ -266,6 +271,16 @@ jobs:
 
       - name: Cache cargo
         uses: Swatinem/rust-cache@e18b497796c12c097a38f9edb9d0641fb99eee32 # v2
+
+      - name: Cache rendering browsers
+        uses: actions/cache@27d5ce7f107fe9357f9df03efb73ab90386fccae # v5.0.5
+        with:
+          path: |
+            ~/.cache/ms-playwright
+            ~/.cache/puppeteer
+          key: ${{ runner.os }}-browsers-${{ hashFiles('pnpm-lock.yaml') }}
+          restore-keys: |
+            ${{ runner.os }}-browsers-
 
       - name: Install browsers for docs rendering
         run: |
