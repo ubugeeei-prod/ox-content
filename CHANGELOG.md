@@ -1,5 +1,12 @@
 # Changelog
 
+## [2.34.0] - 2026-05-31
+
+### Features
+
+- add vitest docs test harness (#271)
+- add opt-in type parameter docs (#272)
+
 ## [2.33.0] - 2026-05-31
 
 ### Bug Fixes

@@ -1,6 +1,6 @@
 {
   "name": "@ox-content/vite-plugin-svelte",
-  "version": "2.33.0",
+  "version": "2.34.0",
   "description": "Svelte integration for Ox Content - Embed Svelte components in Markdown",
   "keywords": [
     "markdown",
