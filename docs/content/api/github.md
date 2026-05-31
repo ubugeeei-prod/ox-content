@@ -49,7 +49,7 @@
     <code class="ox-api-entry__param-name">html</code>
     <code class="ox-api-entry__param-type">string</code>
   </div>
-  
+
 </li>
 </ul>
 </div>
@@ -57,7 +57,7 @@
 <h4>Returns</h4>
 <div class="ox-api-entry__return">
   <code class="ox-api-entry__return-type">Promise&lt;string[]&gt;</code>
-  
+
 </div>
 </div>
   </div>
@@ -82,7 +82,7 @@
     <code class="ox-api-entry__param-name">html</code>
     <code class="ox-api-entry__param-type">string</code>
   </div>
-  
+
 </li>
 </ul>
 </div>
@@ -90,7 +90,7 @@
 <h4>Returns</h4>
 <div class="ox-api-entry__return">
   <code class="ox-api-entry__return-type">Promise&lt;GitHubSourceRef[]&gt;</code>
-  
+
 </div>
 </div>
   </div>
@@ -115,7 +115,7 @@
     <code class="ox-api-entry__param-name">repo</code>
     <code class="ox-api-entry__param-type">string</code>
   </div>
-  
+
 </li>
 </ul>
 </div>
@@ -123,7 +123,7 @@
 <h4>Returns</h4>
 <div class="ox-api-entry__return">
   <code class="ox-api-entry__return-type">Element</code>
-  
+
 </div>
 </div>
   </div>
@@ -148,7 +148,7 @@
     <code class="ox-api-entry__param-name">repoData</code>
     <code class="ox-api-entry__param-type">GitHubRepoData</code>
   </div>
-  
+
 </li>
 </ul>
 </div>
@@ -156,7 +156,7 @@
 <h4>Returns</h4>
 <div class="ox-api-entry__return">
   <code class="ox-api-entry__return-type">Element</code>
-  
+
 </div>
 </div>
   </div>
@@ -181,14 +181,14 @@
     <code class="ox-api-entry__param-name">source</code>
     <code class="ox-api-entry__param-type">GitHubSourceRef</code>
   </div>
-  
+
 </li>
 <li class="ox-api-entry__param">
   <div class="ox-api-entry__param-heading">
     <code class="ox-api-entry__param-name">options</code>
     <code class="ox-api-entry__param-type">Required&lt;GitHubOptions&gt;</code>
   </div>
-  
+
 </li>
 </ul>
 </div>
@@ -196,7 +196,7 @@
 <h4>Returns</h4>
 <div class="ox-api-entry__return">
   <code class="ox-api-entry__return-type">Promise&lt;GitHubSourceData | null&gt;</code>
-  
+
 </div>
 </div>
   </div>
@@ -221,14 +221,14 @@
     <code class="ox-api-entry__param-name">repo</code>
     <code class="ox-api-entry__param-type">string</code>
   </div>
-  
+
 </li>
 <li class="ox-api-entry__param">
   <div class="ox-api-entry__param-heading">
     <code class="ox-api-entry__param-name">options</code>
     <code class="ox-api-entry__param-type">Required&lt;GitHubOptions&gt;</code>
   </div>
-  
+
 </li>
 </ul>
 </div>
@@ -236,7 +236,7 @@
 <h4>Returns</h4>
 <div class="ox-api-entry__return">
   <code class="ox-api-entry__return-type">Promise&lt;GitHubRepoData | null&gt;</code>
-  
+
 </div>
 </div>
   </div>
@@ -261,7 +261,7 @@
     <code class="ox-api-entry__param-name">num</code>
     <code class="ox-api-entry__param-type">number</code>
   </div>
-  
+
 </li>
 </ul>
 </div>
@@ -269,7 +269,7 @@
 <h4>Returns</h4>
 <div class="ox-api-entry__return">
   <code class="ox-api-entry__return-type">string</code>
-  
+
 </div>
 </div>
   </div>
@@ -294,14 +294,14 @@
     <code class="ox-api-entry__param-name">el</code>
     <code class="ox-api-entry__param-type">Element</code>
   </div>
-  
+
 </li>
 <li class="ox-api-entry__param">
   <div class="ox-api-entry__param-heading">
     <code class="ox-api-entry__param-name">name</code>
     <code class="ox-api-entry__param-type">string</code>
   </div>
-  
+
 </li>
 </ul>
 </div>
@@ -309,7 +309,7 @@
 <h4>Returns</h4>
 <div class="ox-api-entry__return">
   <code class="ox-api-entry__return-type">string | undefined</code>
-  
+
 </div>
 </div>
   </div>
@@ -334,7 +334,7 @@
     <code class="ox-api-entry__param-name">repos</code>
     <code class="ox-api-entry__param-type">string[]</code>
   </div>
-  
+
 </li>
 <li class="ox-api-entry__param">
   <div class="ox-api-entry__param-heading">
@@ -349,7 +349,7 @@
 <h4>Returns</h4>
 <div class="ox-api-entry__return">
   <code class="ox-api-entry__return-type">Promise&lt;Map&lt;string, GitHubRepoData | null&gt;&gt;</code>
-  
+
 </div>
 </div>
   </div>
@@ -374,7 +374,7 @@
     <code class="ox-api-entry__param-name">sources</code>
     <code class="ox-api-entry__param-type">GitHubSourceRef[]</code>
   </div>
-  
+
 </li>
 <li class="ox-api-entry__param">
   <div class="ox-api-entry__param-heading">
@@ -389,7 +389,7 @@
 <h4>Returns</h4>
 <div class="ox-api-entry__return">
   <code class="ox-api-entry__return-type">Promise&lt;Map&lt;string, GitHubSourceData | null&gt;&gt;</code>
-  
+
 </div>
 </div>
   </div>
@@ -414,21 +414,21 @@
     <code class="ox-api-entry__param-name">repoDataMap</code>
     <code class="ox-api-entry__param-type">Map&lt;string, GitHubRepoData | null&gt;</code>
   </div>
-  
+
 </li>
 <li class="ox-api-entry__param">
   <div class="ox-api-entry__param-heading">
     <code class="ox-api-entry__param-name">sourceDataMap</code>
     <code class="ox-api-entry__param-type">Map&lt;string, GitHubSourceData | null&gt;</code>
   </div>
-  
+
 </li>
 <li class="ox-api-entry__param">
   <div class="ox-api-entry__param-heading">
     <code class="ox-api-entry__param-name">options</code>
     <code class="ox-api-entry__param-type">Required&lt;GitHubOptions&gt;</code>
   </div>
-  
+
 </li>
 </ul>
 </div>
@@ -454,7 +454,7 @@
     <code class="ox-api-entry__param-name">html</code>
     <code class="ox-api-entry__param-type">string</code>
   </div>
-  
+
 </li>
 <li class="ox-api-entry__param">
   <div class="ox-api-entry__param-heading">
@@ -476,7 +476,7 @@
 <h4>Returns</h4>
 <div class="ox-api-entry__return">
   <code class="ox-api-entry__return-type">Promise&lt;string&gt;</code>
-  
+
 </div>
 </div>
   </div>

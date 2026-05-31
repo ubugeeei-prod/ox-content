@@ -1,0 +1,62 @@
+{
+  "name": "@ox-content/vite-plugin-slides",
+  "version": "2.3.0",
+  "description": "Slide deck mode for Ox Content with presenter mode and MPA output",
+  "keywords": [
+    "markdown",
+    "ox-content",
+    "slides",
+    "vite",
+    "vite-plugin"
+  ],
+  "license": "MIT",
+  "author": "ubugeeei",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/ubugeeei/ox-content.git",
+    "directory": "npm/vite-plugin-ox-content-slides"
+  },
+  "files": [
+    "dist"
+  ],
+  "type": "module",
+  "main": "./dist/index.cjs",
+  "types": "./dist/index.d.mts",
+  "exports": {
+    ".": {
+      "import": "./dist/index.mjs",
+      "require": "./dist/index.cjs",
+      "types": "./dist/index.d.mts"
+    }
+  },
+  "publishConfig": {
+    "access": "public",
+    "provenance": true
+  },
+  "scripts": {
+    "build": "vp pack",
+    "dev": "vp pack --watch",
+    "test:unit": "vp test run",
+    "typecheck": "tsgo --noEmit",
+    "test:vrt": "playwright test",
+    "test:vrt:update": "playwright test --update-snapshots"
+  },
+  "dependencies": {
+    "@ox-content/napi": "workspace:*",
+    "@ox-content/vite-plugin": "workspace:*",
+    "glob": "^11.0.0",
+    "playwright": "^1.59.1"
+  },
+  "devDependencies": {
+    "@playwright/test": "^1.59.1",
+    "@types/node": "catalog:",
+    "@typescript/native-preview": "catalog:",
+    "typescript": "catalog:",
+    "vite": "catalog:",
+    "vite-plus": "catalog:",
+    "vitest": "catalog:"
+  },
+  "peerDependencies": {
+    "vite": "catalog:"
+  }
+}

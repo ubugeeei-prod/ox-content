@@ -1,0 +1,187 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>{{ page_title }}</title>
+    {% if let Some(description) = description %}
+    <meta name="description" content="{{ description }}" />
+    {% endif %}
+    <style>
+      :root {
+        --ox-slide-font-sans: {{ theme.font_sans|safe }};
+        --ox-slide-font-mono: {{ theme.font_mono|safe }};
+        --ox-slide-text: {{ theme.color_text|safe }};
+        --ox-slide-text-muted: {{ theme.color_text_muted|safe }};
+        --ox-slide-primary: {{ theme.color_primary|safe }};
+        --ox-slide-border: {{ theme.color_border|safe }};
+        --ox-slide-canvas: {{ theme.canvas_background|safe }};
+        --ox-slide-surface: {{ theme.surface_background|safe }};
+        --ox-slide-surface-border: {{ theme.surface_border|safe }};
+        --ox-slide-code-surface: {{ theme.code_background|safe }};
+        --ox-slide-aspect-ratio: {{ theme.aspect_ratio|safe }};
+        --ox-slide-padding: {{ theme.padding|safe }};
+        --ox-slide-radius: {{ theme.surface_radius|safe }};
+        --ox-slide-page-width: {{ page_width|safe }};
+        --ox-slide-page-height: {{ page_height|safe }};
+        --ox-slide-dark-canvas: {{ theme.dark_canvas_background|safe }};
+        --ox-slide-dark-surface: {{ theme.dark_surface_background|safe }};
+        --ox-slide-dark-surface-border: {{ theme.dark_surface_border|safe }};
+        --ox-slide-dark-code-surface: {{ theme.dark_code_background|safe }};
+        --ox-slide-dark-text: {{ theme.dark_color_text|safe }};
+        --ox-slide-dark-text-muted: {{ theme.dark_color_text_muted|safe }};
+        --ox-slide-dark-primary: {{ theme.dark_color_primary|safe }};
+        --ox-slide-dark-border: {{ theme.dark_color_border|safe }};
+        color-scheme: light dark;
+      }
+      @page {
+        size: {{ page_width|safe }} {{ page_height|safe }};
+        margin: 0;
+      }
+      * { box-sizing: border-box; }
+      html, body { margin: 0; padding: 0; }
+      body {
+        font-family: var(--ox-slide-font-sans);
+        color: var(--ox-slide-text);
+        background: var(--ox-slide-canvas);
+      }
+      @media screen and (prefers-color-scheme: dark) {
+        :root {
+          --ox-slide-text: var(--ox-slide-dark-text);
+          --ox-slide-text-muted: var(--ox-slide-dark-text-muted);
+          --ox-slide-primary: var(--ox-slide-dark-primary);
+          --ox-slide-border: var(--ox-slide-dark-border);
+          --ox-slide-canvas: var(--ox-slide-dark-canvas);
+          --ox-slide-surface: var(--ox-slide-dark-surface);
+          --ox-slide-surface-border: var(--ox-slide-dark-surface-border);
+          --ox-slide-code-surface: var(--ox-slide-dark-code-surface);
+        }
+      }
+      .ox-slide-print-page {
+        width: var(--ox-slide-page-width);
+        height: var(--ox-slide-page-height);
+        padding: 0.08in;
+        display: grid;
+        background: var(--ox-slide-canvas);
+        break-after: page;
+        page-break-after: always;
+      }
+      .ox-slide-print-page:last-of-type {
+        break-after: auto;
+        page-break-after: auto;
+      }
+      .ox-slide-print-frame {
+        min-width: 0;
+        min-height: 0;
+        display: grid;
+        grid-template-rows: auto 1fr auto;
+        gap: 14px;
+        background: var(--ox-slide-surface);
+        border: 1px solid var(--ox-slide-surface-border);
+        border-radius: var(--ox-slide-radius);
+        padding: var(--ox-slide-padding);
+        overflow: hidden;
+      }
+      .ox-slide-print-header,
+      .ox-slide-print-footer {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 16px;
+        color: var(--ox-slide-text-muted);
+        font-size: 0.82rem;
+      }
+      .ox-slide-print-title {
+        font-size: 1.05rem;
+        font-weight: 600;
+        color: var(--ox-slide-text);
+      }
+      .ox-slide-print-content {
+        display: grid;
+        grid-template-rows: minmax(0, 1fr);
+        height: 100%;
+        min-height: 0;
+        font-size: clamp(1rem, 1.45vw, 1.4rem);
+        line-height: 1.45;
+        overflow: hidden;
+      }
+      .ox-slide-layout {
+        --ox-slide-accent: var(--ox-slide-primary);
+        --ox-slide-layout-gap: 1rem;
+        --ox-slide-layout-scale: 1;
+        display: grid;
+        align-content: start;
+        gap: var(--ox-slide-layout-gap);
+        width: 100%;
+        min-height: 100%;
+        font-size: calc(1em * var(--ox-slide-layout-scale));
+      }
+      .ox-slide-density--compact { --ox-slide-layout-gap: 0.64rem; --ox-slide-layout-scale: 0.92; }
+      .ox-slide-density--spacious { --ox-slide-layout-gap: 1.45rem; --ox-slide-layout-scale: 1.08; }
+      .ox-slide-align--center { justify-items: center; text-align: center; }
+      .ox-slide-align--end { justify-items: end; text-align: right; }
+      .ox-slide-layout--statement,
+      .ox-slide-layout--quote,
+      .ox-slide-layout--code {
+        align-content: center;
+      }
+      .ox-slide-layout--split {
+        grid-template-columns: minmax(0, 1fr) minmax(0, 0.92fr);
+        align-items: center;
+        column-gap: clamp(1.2rem, 4vw, 3rem);
+      }
+      .ox-slide-layout--quote {
+        border-left: 5px solid var(--ox-slide-accent);
+        padding-left: 1.4rem;
+      }
+      .ox-slide-layout--canvas {
+        position: relative;
+        display: block;
+        height: 100%;
+        min-height: 100%;
+      }
+      .ox-slide-layout--canvas[data-ox-has-placements="true"] > * {
+        position: absolute;
+        min-width: 0;
+        min-height: 0;
+        margin: 0;
+        overflow: auto;
+      }
+      .ox-slide-layout :is(a, strong) {
+        color: var(--ox-slide-accent);
+      }
+      .ox-slide-print-content pre {
+        padding: 1rem 1.15rem;
+        border: 1px solid var(--ox-slide-surface-border);
+        background: var(--ox-slide-code-surface);
+        overflow: auto;
+      }
+      .ox-slide-print-content > :first-child { margin-top: 0; }
+      .ox-slide-print-content > :last-child { margin-bottom: 0; }
+      .ox-slide-print-content img,
+      .ox-slide-print-content svg,
+      .ox-slide-print-content video,
+      .ox-slide-print-content canvas {
+        max-width: 100%;
+        max-height: 100%;
+      }
+    </style>
+  </head>
+  <body>
+    {% for slide in slides %}
+    <section class="ox-slide-print-page">
+      <article class="ox-slide-print-frame">
+        <header class="ox-slide-print-header">
+          <span>{{ deck_title }}</span>
+          <span>{{ slide.slide_number }} / {{ slide.slide_count }}</span>
+        </header>
+        <div class="ox-slide-print-content">{{ slide.slide_content_html|safe }}</div>
+        <footer class="ox-slide-print-footer">
+          <span class="ox-slide-print-title">{{ slide.slide_title }}</span>
+          <span>{{ slide.slide_number }} / {{ slide.slide_count }}</span>
+        </footer>
+      </article>
+    </section>
+    {% endfor %}
+  </body>
+</html>

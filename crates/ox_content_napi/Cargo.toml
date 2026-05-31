@@ -27,6 +27,7 @@ ox_content_docs = { workspace = true }
 ox_content_og_image = { workspace = true }
 ox_content_search = { workspace = true }
 ox_content_ssg = { workspace = true }
+ox_content_slides = { workspace = true }
 ox_content_i18n = { workspace = true }
 ox_content_i18n_checker = { workspace = true }
 oxc_span = { workspace = true }

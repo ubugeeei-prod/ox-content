@@ -1,0 +1,344 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>{{ page_title }}</title>
+    {% if let Some(description) = description %}
+    <meta name="description" content="{{ description }}" />
+    {% endif %}
+    <style>
+      :root {
+        --ox-slide-font-sans: {{ theme.font_sans|safe }};
+        --ox-slide-font-mono: {{ theme.font_mono|safe }};
+        --ox-slide-text: {{ theme.color_text|safe }};
+        --ox-slide-text-muted: {{ theme.color_text_muted|safe }};
+        --ox-slide-primary: {{ theme.color_primary|safe }};
+        --ox-slide-border: {{ theme.color_border|safe }};
+        --ox-slide-canvas: {{ theme.canvas_background|safe }};
+        --ox-slide-surface: {{ theme.surface_background|safe }};
+        --ox-slide-surface-border: {{ theme.surface_border|safe }};
+        --ox-slide-sidebar: {{ theme.presenter_sidebar_background|safe }};
+        --ox-slide-code-surface: {{ theme.code_background|safe }};
+        --ox-slide-aspect-ratio: {{ theme.aspect_ratio|safe }};
+        --ox-slide-max-width: {{ theme.max_width|safe }};
+        --ox-slide-max-height: {{ theme.max_height|safe }};
+        --ox-slide-padding: {{ theme.padding|safe }};
+        --ox-slide-radius: {{ theme.surface_radius|safe }};
+        --ox-slide-dark-canvas: {{ theme.dark_canvas_background|safe }};
+        --ox-slide-dark-surface: {{ theme.dark_surface_background|safe }};
+        --ox-slide-dark-surface-border: {{ theme.dark_surface_border|safe }};
+        --ox-slide-dark-sidebar: {{ theme.dark_presenter_sidebar_background|safe }};
+        --ox-slide-dark-code-surface: {{ theme.dark_code_background|safe }};
+        --ox-slide-dark-text: {{ theme.dark_color_text|safe }};
+        --ox-slide-dark-text-muted: {{ theme.dark_color_text_muted|safe }};
+        --ox-slide-dark-primary: {{ theme.dark_color_primary|safe }};
+        --ox-slide-dark-border: {{ theme.dark_color_border|safe }};
+        color-scheme: light dark;
+      }
+      * { box-sizing: border-box; }
+      .ox-ui-icon { width: 0.95rem; height: 0.95rem; flex: 0 0 auto; stroke: currentColor; fill: none; stroke-width: 1.7; stroke-linecap: round; stroke-linejoin: round; }
+      html, body { margin: 0; min-height: 100%; }
+      body { font-family: var(--ox-slide-font-sans); color: var(--ox-slide-text); background: var(--ox-slide-canvas); }
+      @media (prefers-color-scheme: dark) {
+        :root { --ox-slide-text: var(--ox-slide-dark-text); --ox-slide-text-muted: var(--ox-slide-dark-text-muted); --ox-slide-primary: var(--ox-slide-dark-primary); --ox-slide-border: var(--ox-slide-dark-border); --ox-slide-canvas: var(--ox-slide-dark-canvas); --ox-slide-surface: var(--ox-slide-dark-surface); --ox-slide-surface-border: var(--ox-slide-dark-surface-border); --ox-slide-sidebar: var(--ox-slide-dark-sidebar); --ox-slide-code-surface: var(--ox-slide-dark-code-surface); }
+      }
+      a { color: inherit; text-decoration: none; }
+      .ox-slide-page { min-height: 100vh; padding: 4px; display: grid; grid-template-rows: auto 1fr auto; gap: 4px; }
+      .ox-slide-toolbar,
+      .ox-slide-nav {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 12px;
+        width: min(100%, var(--ox-slide-max-width));
+        margin: 0 auto;
+        padding: 12px 16px;
+        border: 1px solid var(--ox-slide-surface-border);
+        background: var(--ox-slide-surface);
+        border-radius: var(--ox-slide-radius);
+      }
+      .ox-slide-toolbar__brand,
+      .ox-slide-toolbar__actions,
+      .ox-slide-nav__slot { display: flex; align-items: center; gap: 10px; min-width: 0; }
+      .ox-slide-toolbar__actions { justify-content: flex-end; flex-wrap: wrap; }
+      .ox-slide-toolbar__stack,
+      .ox-slide-nav__status { display: grid; gap: 2px; min-width: 0; }
+      .ox-slide-nav__status { flex: 1; justify-items: center; }
+      .ox-slide-toolbar__title,
+      .ox-slide-progress { min-width: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+      .ox-slide-toolbar__title { font-weight: 600; color: var(--ox-slide-text); max-width: 30ch; }
+      .ox-slide-toolbar__label { font-size: 0.72rem; text-transform: uppercase; letter-spacing: 0.08em; color: var(--ox-slide-text-muted); }
+      .ox-slide-toolbar__meta { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; color: var(--ox-slide-text-muted); font-size: 0.98rem; letter-spacing: 0.02em; }
+      .ox-slide-toolbar__badge,
+      .ox-slide-toolbar__link,
+      .ox-slide-nav a {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        min-height: 42px;
+        padding: 0 16px;
+        border: 1px solid var(--ox-slide-surface-border);
+        background: var(--ox-slide-surface);
+        border-radius: var(--ox-slide-radius);
+      }
+      .ox-slide-toolbar__badge,
+      .ox-slide-toolbar__link,
+      .ox-slide-nav a { gap: 8px; font-weight: 500; }
+      .ox-slide-toolbar__badge { min-width: 72px; font-family: var(--ox-slide-font-mono); color: var(--ox-slide-text); }
+      .ox-slide-toolbar__link:hover,
+      .ox-slide-nav a:hover { border-color: var(--ox-slide-border); color: var(--ox-slide-text); }
+      .ox-slide-nav__slot { flex: 1; }
+      .ox-slide-nav__slot--end { justify-content: flex-end; }
+      .ox-slide-stage { display: grid; place-items: center; min-height: 0; }
+      .ox-slide-frame {
+        width: min(100%, var(--ox-slide-max-width));
+        max-height: var(--ox-slide-max-height);
+        aspect-ratio: var(--ox-slide-aspect-ratio);
+        background: var(--ox-slide-surface);
+        border: 1px solid var(--ox-slide-surface-border);
+        border-radius: var(--ox-slide-radius);
+        padding: var(--ox-slide-padding);
+        overflow: auto;
+      }
+      .ox-slide-content {
+        display: grid;
+        grid-template-rows: minmax(0, 1fr);
+        align-content: start;
+        height: 100%;
+        min-height: 100%;
+        font-size: clamp(1.14rem, 1.5vw, 1.72rem);
+        line-height: 1.42;
+      }
+      .ox-slide-layout {
+        --ox-slide-accent: var(--ox-slide-primary);
+        --ox-slide-layout-gap: 1rem;
+        --ox-slide-layout-scale: 1;
+        display: grid;
+        align-content: start;
+        gap: var(--ox-slide-layout-gap);
+        width: 100%;
+        min-height: 100%;
+        font-size: calc(1em * var(--ox-slide-layout-scale));
+      }
+      .ox-slide-density--compact { --ox-slide-layout-gap: 0.64rem; --ox-slide-layout-scale: 0.92; }
+      .ox-slide-density--spacious { --ox-slide-layout-gap: 1.45rem; --ox-slide-layout-scale: 1.08; }
+      .ox-slide-align--center { justify-items: center; text-align: center; }
+      .ox-slide-align--end { justify-items: end; text-align: right; }
+      .ox-slide-layout--statement {
+        place-content: center;
+        min-height: 100%;
+      }
+      .ox-slide-layout--statement h1,
+      .ox-slide-layout--statement h2 {
+        max-width: 14ch;
+      }
+      .ox-slide-layout--split {
+        grid-template-columns: minmax(0, 1fr) minmax(0, 0.92fr);
+        align-items: center;
+        column-gap: clamp(2rem, 4vw, 4.8rem);
+      }
+      .ox-slide-layout--split > :first-child {
+        align-self: center;
+      }
+      .ox-slide-layout--quote {
+        align-content: center;
+        border-left: 6px solid var(--ox-slide-accent);
+        padding-left: clamp(1.2rem, 2vw, 2.4rem);
+      }
+      .ox-slide-layout--quote blockquote {
+        border: 0;
+        padding: 0;
+        color: var(--ox-slide-text);
+      }
+      .ox-slide-layout--code {
+        align-content: center;
+      }
+      .ox-slide-layout--canvas {
+        position: relative;
+        display: block;
+        height: 100%;
+        min-height: 100%;
+      }
+      .ox-slide-layout--canvas[data-ox-has-placements="true"] > * {
+        position: absolute;
+        min-width: 0;
+        min-height: 0;
+        margin: 0;
+        overflow: auto;
+      }
+      .ox-slide-layout :is(a, strong) {
+        color: var(--ox-slide-accent);
+      }
+      .ox-slide-content h1,
+      .ox-slide-content h2,
+      .ox-slide-content h3,
+      .ox-slide-content p,
+      .ox-slide-content ul,
+      .ox-slide-content ol,
+      .ox-slide-content pre,
+      .ox-slide-content blockquote {
+        margin: 0;
+      }
+      .ox-slide-content h1 {
+        max-width: 12ch;
+        font-size: clamp(3.6rem, 6vw, 6.6rem);
+        line-height: 0.9;
+        letter-spacing: -0.05em;
+      }
+      .ox-slide-content h2 {
+        max-width: 16ch;
+        font-size: clamp(2.6rem, 4vw, 4.3rem);
+        line-height: 0.95;
+        letter-spacing: -0.04em;
+      }
+      .ox-slide-content h3 {
+        font-size: clamp(1.6rem, 2.2vw, 2.3rem);
+        line-height: 1.08;
+      }
+      .ox-slide-content p,
+      .ox-slide-content li {
+        max-width: 68ch;
+      }
+      .ox-slide-content ul,
+      .ox-slide-content ol {
+        padding-left: 1.25em;
+        display: grid;
+        gap: 0.55em;
+      }
+      .ox-slide-content code {
+        font-family: var(--ox-slide-font-mono);
+        font-size: 0.92em;
+      }
+      .ox-slide-content pre {
+        padding: 1rem 1.15rem;
+        border: 1px solid var(--ox-slide-surface-border);
+        background: var(--ox-slide-code-surface);
+        overflow: auto;
+      }
+      .ox-slide-content img,
+      .ox-slide-content svg,
+      .ox-slide-content video,
+      .ox-slide-content canvas {
+        max-width: 100%;
+        max-height: 100%;
+      }
+      .ox-slide-content > :first-child { margin-top: 0; }
+      .ox-slide-content > :last-child { margin-bottom: 0; }
+      .ox-slide-progress { text-align: center; color: var(--ox-slide-text-muted); }
+      {% if theme.builtin_animations %}
+      @media (prefers-reduced-motion: no-preference) {
+        .ox-slide-toolbar, .ox-slide-nav { animation: ox-slide-fade 280ms ease-out both; }
+        .ox-slide-frame { animation: ox-slide-enter 360ms ease-out both; }
+        .ox-slide-content > * { animation: ox-slide-rise 420ms ease-out both; }
+        .ox-slide-content > :nth-child(2) { animation-delay: 40ms; }
+        .ox-slide-content > :nth-child(3) { animation-delay: 80ms; }
+        .ox-slide-content > :nth-child(n + 4) { animation-delay: 120ms; }
+        .ox-slide-page:has(.ox-slide-layout--canvas) .ox-slide-toolbar,
+        .ox-slide-page:has(.ox-slide-layout--canvas) .ox-slide-nav,
+        .ox-slide-page:has(.ox-slide-layout--canvas) .ox-slide-frame,
+        .ox-slide-page:has(.ox-slide-layout--canvas) .ox-slide-content > * {
+          animation: none;
+        }
+      }
+      @keyframes ox-slide-fade { from { opacity: 0; } to { opacity: 1; } }
+      @keyframes ox-slide-enter { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: none; } }
+      @keyframes ox-slide-rise { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: none; } }
+      {% endif %}
+      @media (max-width: 900px) {
+        .ox-slide-page {
+          padding: 4px;
+          gap: 4px;
+        }
+        .ox-slide-toolbar,
+        .ox-slide-nav {
+          padding: 10px 12px;
+        }
+        .ox-slide-toolbar,
+        .ox-slide-nav { flex-wrap: wrap; }
+        .ox-slide-nav__status,
+        .ox-slide-nav__slot,
+        .ox-slide-nav__slot--end { width: 100%; justify-content: center; }
+        .ox-slide-layout--split { grid-template-columns: 1fr; }
+      }
+    </style>
+  </head>
+  <body>
+    <div class="ox-slide-page">
+      <header class="ox-slide-toolbar">
+        <div class="ox-slide-toolbar__brand">
+          <svg class="ox-ui-icon" viewBox="0 0 24 24" aria-hidden="true">
+            <path d="M4 6.5 12 3l8 3.5-8 3.5L4 6.5Z" />
+            <path d="M4 12l8 3.5 8-3.5" />
+            <path d="M4 17.5 12 21l8-3.5" />
+          </svg>
+          <div class="ox-slide-toolbar__stack">
+            <span class="ox-slide-toolbar__label">Deck</span
+            ><span class="ox-slide-toolbar__title">{{ deck_title }}</span>
+          </div>
+          <span class="ox-slide-toolbar__badge"
+            ><svg class="ox-ui-icon" viewBox="0 0 24 24" aria-hidden="true">
+              <rect x="4" y="5" width="16" height="14" rx="2" />
+              <path d="M9 9h6M9 13h4" /></svg
+            >{{ slide_number }} / {{ slide_count }}</span
+          >
+        </div>
+        <div class="ox-slide-toolbar__actions">
+          {% if has_presenter %}
+          <a
+            class="ox-slide-toolbar__link"
+            href="{{ presenter_href }}"
+            target="_blank"
+            rel="noreferrer"
+            ><svg class="ox-ui-icon" viewBox="0 0 24 24" aria-hidden="true">
+              <rect x="3" y="4" width="18" height="12" rx="2" />
+              <path d="M8 20h8M12 16v4" /></svg
+            ><span>Presenter</span></a
+          >
+          {% endif %}
+          <a class="ox-slide-toolbar__link" href="{{ home_href }}"
+            ><svg class="ox-ui-icon" viewBox="0 0 24 24" aria-hidden="true">
+              <path d="m4 11 8-6 8 6" />
+              <path d="M6.5 10.5V20h11v-9.5" /></svg
+            ><span>Home</span></a
+          >
+        </div>
+      </header>
+      <main class="ox-slide-stage">
+        <article class="ox-slide-frame">
+          <div class="ox-slide-content">{{ slide_content_html|safe }}</div>
+        </article>
+      </main>
+      <nav class="ox-slide-nav">
+        <div class="ox-slide-nav__slot">
+          {% if has_previous %}
+          <a href="{{ previous_href }}" rel="prev"
+            ><svg class="ox-ui-icon" viewBox="0 0 24 24" aria-hidden="true">
+              <path d="m15 18-6-6 6-6" />
+              <path d="M9 12h10" /></svg
+            ><span>Previous</span></a
+          >
+          {% endif %}
+        </div>
+        <div class="ox-slide-nav__status">
+          <span class="ox-slide-toolbar__label">Current</span>
+          <div class="ox-slide-progress">{{ slide_title }}</div>
+        </div>
+        <div class="ox-slide-nav__slot ox-slide-nav__slot--end">
+          {% if has_next %}
+          <a href="{{ next_href }}" rel="next"
+            ><span>Next</span
+            ><svg class="ox-ui-icon" viewBox="0 0 24 24" aria-hidden="true">
+              <path d="m9 6 6 6-6 6" />
+              <path d="M5 12h10" /></svg
+          ></a>
+          {% endif %}
+        </div>
+      </nav>
+    </div>
+    <script type="module">
+      const previousHref = {{ previous_href_js|safe }}, nextHref = {{ next_href_js|safe }}, presenterHref = {{ presenter_href_js|safe }}, navigate = (href) => href && window.location.assign(href);
+      document.addEventListener("keydown", (event) => { const tag = event.target instanceof HTMLElement ? event.target.tagName : ""; if (tag === "INPUT" || tag === "TEXTAREA" || tag === "SELECT") return; if (event.key === "ArrowRight" || event.key === "PageDown" || event.key === " ") { event.preventDefault(); navigate(nextHref); } if (event.key === "ArrowLeft" || event.key === "PageUp" || event.key === "Backspace") { event.preventDefault(); navigate(previousHref); } if ((event.key === "p" || event.key === "P") && presenterHref) window.open(presenterHref, "_blank", "noopener,noreferrer"); });
+    </script>
+  </body>
+</html>

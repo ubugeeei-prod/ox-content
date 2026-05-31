@@ -1,0 +1,270 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>{{ page_title }}</title>
+    <style>
+      :root {
+        --ox-slide-font-sans: {{ theme.font_sans|safe }};
+        --ox-slide-font-mono: {{ theme.font_mono|safe }};
+        --ox-slide-text: {{ theme.color_text|safe }};
+        --ox-slide-text-muted: {{ theme.color_text_muted|safe }};
+        --ox-slide-primary: {{ theme.color_primary|safe }};
+        --ox-slide-border: {{ theme.color_border|safe }};
+        --ox-slide-canvas: {{ theme.canvas_background|safe }};
+        --ox-slide-surface: {{ theme.surface_background|safe }};
+        --ox-slide-surface-border: {{ theme.surface_border|safe }};
+        --ox-slide-sidebar: {{ theme.presenter_sidebar_background|safe }};
+        --ox-slide-aspect-ratio: {{ theme.aspect_ratio|safe }};
+        --ox-slide-radius: {{ theme.surface_radius|safe }};
+        --ox-slide-dark-canvas: {{ theme.dark_canvas_background|safe }};
+        --ox-slide-dark-surface: {{ theme.dark_surface_background|safe }};
+        --ox-slide-dark-surface-border: {{ theme.dark_surface_border|safe }};
+        --ox-slide-dark-sidebar: {{ theme.dark_presenter_sidebar_background|safe }};
+        --ox-slide-dark-text: {{ theme.dark_color_text|safe }};
+        --ox-slide-dark-text-muted: {{ theme.dark_color_text_muted|safe }};
+        --ox-slide-dark-primary: {{ theme.dark_color_primary|safe }};
+        --ox-slide-dark-border: {{ theme.dark_color_border|safe }};
+        color-scheme: light dark;
+      }
+      .ox-ui-icon { width: 0.95rem; height: 0.95rem; flex: 0 0 auto; stroke: currentColor; fill: none; stroke-width: 1.7; stroke-linecap: round; stroke-linejoin: round; }
+      * { box-sizing: border-box; }
+      html, body { margin: 0; min-height: 100%; }
+      body { font-family: var(--ox-slide-font-sans); color: var(--ox-slide-text); background: var(--ox-slide-canvas); }
+      @media (prefers-color-scheme: dark) {
+        :root { --ox-slide-text: var(--ox-slide-dark-text); --ox-slide-text-muted: var(--ox-slide-dark-text-muted); --ox-slide-primary: var(--ox-slide-dark-primary); --ox-slide-border: var(--ox-slide-dark-border); --ox-slide-canvas: var(--ox-slide-dark-canvas); --ox-slide-surface: var(--ox-slide-dark-surface); --ox-slide-surface-border: var(--ox-slide-dark-surface-border); --ox-slide-sidebar: var(--ox-slide-dark-sidebar); }
+      }
+      .ox-presenter { min-height: 100vh; display: grid; grid-template-columns: minmax(0, 2.45fr) minmax(300px, 0.75fr); gap: 4px; padding: 4px; }
+      .ox-presenter__panel, .ox-presenter__sidebar {
+        border: 1px solid var(--ox-slide-surface-border); background: var(--ox-slide-surface); overflow: hidden;
+        border-radius: var(--ox-slide-radius);
+      }
+      .ox-presenter__panel { display: grid; grid-template-rows: auto 1fr; min-height: 0; }
+      .ox-presenter__panel-header,
+      .ox-presenter__section-heading,
+      .ox-presenter__title-row { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
+      .ox-presenter__panel-header { padding: 12px 16px; border-bottom: 1px solid var(--ox-slide-border); }
+      .ox-presenter__panel-meta,
+      .ox-presenter__section-heading { justify-content: flex-start; min-width: 0; }
+      .ox-presenter__panel-title { min-width: 0; font-size: 0.98rem; font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+      .ox-presenter__chip { display: inline-flex; align-items: center; gap: 6px; min-height: 32px; padding: 0 10px; border: 1px solid var(--ox-slide-surface-border); background: var(--ox-slide-surface); border-radius: var(--ox-slide-radius); font-family: var(--ox-slide-font-mono); font-size: 0.88rem; color: var(--ox-slide-text-muted); }
+      .ox-presenter__panel iframe {
+        display: block; width: 100%; height: 100%; min-height: 0; border: 0; background: var(--ox-slide-surface);
+      }
+      .ox-presenter__sidebar { display: grid; grid-template-rows: auto auto 1fr auto; background: var(--ox-slide-sidebar); }
+      .ox-presenter__section { padding: 16px; border-bottom: 1px solid var(--ox-slide-border); }
+      .ox-presenter__eyebrow {
+        margin: 0;
+        font-size: 0.8rem;
+        text-transform: uppercase;
+        letter-spacing: 0.08em;
+        color: var(--ox-slide-text-muted);
+      }
+      .ox-presenter__timer-value {
+        font-family: var(--ox-slide-font-mono);
+        font-size: 1.8rem;
+        font-weight: 700;
+      }
+      .ox-presenter__timer-actions { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 12px; }
+      .ox-presenter__nav { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin-top: 16px; }
+      .ox-presenter__button {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        gap: 8px;
+        min-height: 40px;
+        padding: 0 14px;
+        border: 1px solid var(--ox-slide-surface-border);
+        background: var(--ox-slide-surface);
+        border-radius: var(--ox-slide-radius);
+        color: var(--ox-slide-text);
+        text-decoration: none;
+        font: inherit;
+      }
+      .ox-presenter__button:hover { border-color: var(--ox-slide-border); color: var(--ox-slide-text); }
+      .ox-presenter__title {
+        margin: 0;
+        font-size: 1.45rem;
+        line-height: 1.04;
+        letter-spacing: -0.03em;
+      }
+      .ox-presenter__meta {
+        display: block;
+        margin-top: 8px;
+        font-size: 0.92rem;
+        font-weight: 500;
+        color: var(--ox-slide-text-muted);
+      }
+      .ox-presenter__notes { display: grid; gap: 0.75rem; font-size: 0.98rem; line-height: 1.58; }
+      .ox-presenter__notes > :first-child, .ox-presenter__notes > :last-child { margin-block: 0; }
+      .ox-presenter__next-frame { display: block; width: 100%; aspect-ratio: var(--ox-slide-aspect-ratio); border: 0; background: var(--ox-slide-surface); }
+      .ox-presenter__empty { margin: 0; display: flex; align-items: center; gap: 8px; color: var(--ox-slide-text-muted); }
+      {% if theme.builtin_animations %}
+      @media (prefers-reduced-motion: no-preference) {
+        .ox-presenter__panel, .ox-presenter__sidebar, .ox-presenter__section { animation: ox-slide-fade 320ms ease-out both; }
+        .ox-presenter__section:nth-child(2) { animation-delay: 40ms; }
+        .ox-presenter__section:nth-child(3) { animation-delay: 80ms; }
+        .ox-presenter__section:nth-child(4) { animation-delay: 120ms; }
+      }
+      @keyframes ox-slide-fade { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: none; } }
+      {% endif %}
+      @media (max-width: 1200px) {
+        .ox-presenter { grid-template-columns: 1fr; }
+        .ox-presenter__panel iframe { min-height: 60vh; }
+      }
+    </style>
+  </head>
+  <body>
+    <div class="ox-presenter">
+      <section class="ox-presenter__panel">
+        <header class="ox-presenter__panel-header">
+          <div class="ox-presenter__panel-meta">
+            <svg class="ox-ui-icon" viewBox="0 0 24 24" aria-hidden="true">
+              <rect x="3" y="4" width="18" height="12" rx="2" />
+              <path d="M8 20h8M12 16v4" />
+            </svg>
+            <div>
+              <p class="ox-presenter__eyebrow">Current Slide</p>
+              <div class="ox-presenter__panel-title">{{ slide_title }}</div>
+            </div>
+          </div>
+          <span class="ox-presenter__chip"
+            ><svg class="ox-ui-icon" viewBox="0 0 24 24" aria-hidden="true">
+              <rect x="4" y="5" width="16" height="14" rx="2" />
+              <path d="M9 9h6M9 13h4" /></svg
+            >{{ slide_number }} / {{ slide_count }}</span
+          >
+        </header>
+        <iframe src="{{ slide_href }}" title="Current slide"></iframe>
+      </section>
+      <aside class="ox-presenter__sidebar">
+        <section class="ox-presenter__section">
+          <div class="ox-presenter__section-heading">
+            <svg class="ox-ui-icon" viewBox="0 0 24 24" aria-hidden="true">
+              <path d="M4 6.5 12 3l8 3.5-8 3.5L4 6.5Z" />
+              <path d="M4 12l8 3.5 8-3.5" />
+              <path d="M4 17.5 12 21l8-3.5" />
+            </svg>
+            <p class="ox-presenter__eyebrow">{{ deck_title }}</p>
+          </div>
+          <h1 class="ox-presenter__title">
+            {{ slide_title }}<span class="ox-presenter__meta"
+              >Slide {{ slide_number }} / {{ slide_count }}</span
+            >
+          </h1>
+        </section>
+        <section class="ox-presenter__section">
+          <div class="ox-presenter__section-heading">
+            <svg class="ox-ui-icon" viewBox="0 0 24 24" aria-hidden="true">
+              <circle cx="12" cy="12" r="8" />
+              <path d="M12 8v4l2.5 2.5" />
+              <path d="M9 2h6" />
+            </svg>
+            <p class="ox-presenter__eyebrow">Timer</p>
+          </div>
+          <div class="ox-presenter__timer-value" data-timer-value>00:00</div>
+          <div class="ox-presenter__timer-actions">
+            <button class="ox-presenter__button" type="button" data-timer-start>
+              <svg class="ox-ui-icon" viewBox="0 0 24 24" aria-hidden="true">
+                <path d="m9 7 8 5-8 5z" /></svg
+              ><span>Start</span>
+            </button>
+            <button class="ox-presenter__button" type="button" data-timer-pause>
+              <svg class="ox-ui-icon" viewBox="0 0 24 24" aria-hidden="true">
+                <path d="M10 7v10M14 7v10" /></svg
+              ><span>Pause</span>
+            </button>
+            <button class="ox-presenter__button" type="button" data-timer-reset>
+              <svg class="ox-ui-icon" viewBox="0 0 24 24" aria-hidden="true">
+                <path d="M20 11a8 8 0 1 0-2.3 5.7" />
+                <path d="M20 4v7h-7" /></svg
+              ><span>Reset</span>
+            </button>
+          </div>
+        </section>
+        <section class="ox-presenter__section">
+          <div class="ox-presenter__section-heading">
+            <svg class="ox-ui-icon" viewBox="0 0 24 24" aria-hidden="true">
+              <path
+                d="M5 6.5A2.5 2.5 0 0 1 7.5 4h9A2.5 2.5 0 0 1 19 6.5v11a2.5 2.5 0 0 1-2.5 2.5h-9A2.5 2.5 0 0 1 5 17.5z"
+              />
+              <path d="M9 9h6M9 12.5h6M9 16h4" />
+            </svg>
+            <p class="ox-presenter__eyebrow">Talk Script</p>
+          </div>
+          {% if has_notes %}
+          <div class="ox-presenter__notes">{{ notes_html|safe }}</div>
+          {% else %}
+          <p class="ox-presenter__empty">
+            <svg class="ox-ui-icon" viewBox="0 0 24 24" aria-hidden="true">
+              <circle cx="12" cy="12" r="8" />
+              <path d="M12 8.5h.01M11 12h1v3h1" /></svg
+            ><span>No speaker notes for this slide.</span>
+          </p>
+          {% endif %}
+        </section>
+        <section class="ox-presenter__section">
+          <div class="ox-presenter__section-heading">
+            <svg class="ox-ui-icon" viewBox="0 0 24 24" aria-hidden="true">
+              <path d="M5 12h10" />
+              <path d="m11 6 6 6-6 6" />
+              <path d="M5 5v14" />
+            </svg>
+            <p class="ox-presenter__eyebrow">Next</p>
+          </div>
+          {% if has_next_preview %}
+          <iframe
+            src="{{ next_slide_href }}"
+            title="Next slide preview"
+            class="ox-presenter__next-frame"
+          ></iframe>
+          {% else %}
+          <p class="ox-presenter__empty">
+            <svg class="ox-ui-icon" viewBox="0 0 24 24" aria-hidden="true">
+              <path d="M6 6l12 12M18 6 6 18" /></svg
+            ><span>This is the last slide.</span>
+          </p>
+          {% endif %}
+          <div class="ox-presenter__nav">
+            <div>
+              {% if has_previous %}
+              <a class="ox-presenter__button" href="{{ previous_href }}"
+                ><svg class="ox-ui-icon" viewBox="0 0 24 24" aria-hidden="true">
+                  <path d="m15 18-6-6 6-6" />
+                  <path d="M9 12h10" /></svg
+                ><span>Previous</span></a
+              >
+              {% endif %}
+            </div>
+            <a class="ox-presenter__button" href="{{ slide_href }}" target="_blank" rel="noreferrer"
+              ><svg class="ox-ui-icon" viewBox="0 0 24 24" aria-hidden="true">
+                <path d="M14 5h5v5" />
+                <path d="M10 14 19 5" />
+                <path d="M19 14v4a1 1 0 0 1-1 1h-12a1 1 0 0 1-1-1V6a1 1 0 0 1 1-1h4" /></svg
+              ><span>Open Current</span></a
+            >
+            <div>
+              {% if has_next %}
+              <a class="ox-presenter__button" href="{{ next_href }}"
+                ><span>Next</span
+                ><svg class="ox-ui-icon" viewBox="0 0 24 24" aria-hidden="true">
+                  <path d="m9 6 6 6-6 6" />
+                  <path d="M5 12h10" /></svg
+              ></a>
+              {% endif %}
+            </div>
+          </div>
+        </section>
+      </aside>
+    </div>
+    <script type="module">
+      const storageKey = {{ storage_key_js|safe }}, previousHref = {{ previous_href_js|safe }}, nextHref = {{ next_href_js|safe }}, timerValue = document.querySelector("[data-timer-value]"), startButton = document.querySelector("[data-timer-start]"), pauseButton = document.querySelector("[data-timer-pause]"), resetButton = document.querySelector("[data-timer-reset]");
+      const readState = () => { try { return JSON.parse(localStorage.getItem(storageKey) || "null") || { elapsed: 0, startedAt: null }; } catch { return { elapsed: 0, startedAt: null }; } }, writeState = (state) => localStorage.setItem(storageKey, JSON.stringify(state)), format = (ms) => { const totalSeconds = Math.floor(ms / 1000), minutes = Math.floor(totalSeconds / 60).toString().padStart(2, "0"), seconds = (totalSeconds % 60).toString().padStart(2, "0"); return minutes + ":" + seconds; };
+      let state = readState(); const renderTimer = () => { const now = state.startedAt ? Date.now() - state.startedAt + state.elapsed : state.elapsed; if (timerValue) timerValue.textContent = format(now); };
+      startButton?.addEventListener("click", () => { if (!state.startedAt) { state.startedAt = Date.now(); writeState(state); renderTimer(); } }); pauseButton?.addEventListener("click", () => { if (state.startedAt) { state.elapsed = Date.now() - state.startedAt + state.elapsed; state.startedAt = null; writeState(state); renderTimer(); } }); resetButton?.addEventListener("click", () => { state = { elapsed: 0, startedAt: null }; writeState(state); renderTimer(); });
+      setInterval(renderTimer, 500); renderTimer();
+      document.addEventListener("keydown", (event) => { const tag = event.target instanceof HTMLElement ? event.target.tagName : ""; if (tag === "INPUT" || tag === "TEXTAREA" || tag === "SELECT") return; if ((event.key === "ArrowRight" || event.key === "PageDown" || event.key === " ") && nextHref) { event.preventDefault(); window.location.assign(nextHref); } if ((event.key === "ArrowLeft" || event.key === "PageUp" || event.key === "Backspace") && previousHref) { event.preventDefault(); window.location.assign(previousHref); } });
+    </script>
+  </body>
+</html>

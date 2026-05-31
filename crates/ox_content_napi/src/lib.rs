@@ -12,6 +12,7 @@ mod mdast_raw;
 mod media_embeds;
 mod pm;
 mod sanitize;
+mod slides;
 mod tabs;
 mod transfer;
 mod transformer;
@@ -46,6 +47,8 @@ use ox_content_search::{
 };
 use transfer::TransferPayloadKind;
 use transformer::{parse_frontmatter, MarkdownTransformer};
+
+pub use slides::*;
 
 fn create_allocator_for_source(source: &str) -> Allocator {
     Allocator::for_source_len(source.len())

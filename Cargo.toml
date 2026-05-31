@@ -73,6 +73,7 @@ ox_content_og_image = { version = "2.36.0", path = "crates/ox_content_og_image" 
 ox_content_docs = { version = "2.36.0", path = "crates/ox_content_docs" }
 ox_content_search = { version = "2.36.0", path = "crates/ox_content_search" }
 ox_content_ssg = { version = "2.36.0", path = "crates/ox_content_ssg" }
+ox_content_slides = { version = "2.36.0", path = "crates/ox_content_slides" }
 ox_content_i18n = { version = "2.36.0", path = "crates/ox_content_i18n" }
 ox_content_i18n_checker = { version = "2.36.0", path = "crates/ox_content_i18n_checker" }
 ox_content_mdc_checker = { version = "2.36.0", path = "crates/ox_content_mdc_checker" }

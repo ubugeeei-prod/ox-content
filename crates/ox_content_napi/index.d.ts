@@ -79,6 +79,9 @@ export declare function extractFileDocs(filePath: string, includePrivate?: boole
  */
 export declare function extractSearchContent(source: string, id: string, url: string, options?: JsParserOptions | undefined | null): JsSearchDocument
 
+/** Extracts HTML comment-based speaker notes from a slide source. */
+export declare function extractSlideComments(source: string): JsExtractedSlideComments
+
 /** Extracts a page title from frontmatter title or rendered HTML. */
 export declare function extractSsgTitle(content: string, frontmatterTitle?: string | undefined | null): string
 
@@ -91,6 +94,9 @@ export declare function extractTranslationKeys(source: string, filePath: string,
 
 /** Formats a file or directory segment as an SSG title. */
 export declare function formatSsgTitle(name: string): string
+
+/** Generates a print-friendly HTML shell for deck-wide PDF export. */
+export declare function generateDeckPrintHtml(data: JsDeckPrintRenderData, theme?: JsSlideTheme | undefined | null): string
 
 /** Generates the machine-readable docs data JSON payload. */
 export declare function generateDocsDataJson(docs: Array<JsDocsMarkdownModule>, generatedAt: string): string
@@ -123,11 +129,17 @@ export declare function generateI18nModule(dictDir: string, config: JsI18NRuntim
  */
 export declare function generateOgImageSvg(data: JsOgImageData, config?: JsOgImageConfig | undefined | null): string
 
+/** Generates the presenter-mode HTML shell for a slide page. */
+export declare function generatePresenterHtml(data: JsSlideRenderData, theme?: JsSlideTheme | undefined | null): string
+
 /** Generates the client-side search runtime module. */
 export declare function generateSearchModule(optionsJson: string, indexPath: string): string
 
 /** Generates the client-side search runtime module from typed options. */
 export declare function generateSearchModuleFromOptions(options: JsSearchRuntimeOptions, indexPath: string): string
+
+/** Generates the standalone HTML shell for a slide page. */
+export declare function generateSlideHtml(data: JsSlideRenderData, theme?: JsSlideTheme | undefined | null): string
 
 /** Generates a bare SSG HTML page without navigation or styles. */
 export declare function generateSsgBareHtml(content: string, title: string): string
@@ -244,6 +256,15 @@ export interface JsCodeImportOptions {
   enabled?: boolean
   /** Root directory used for `@/` and absolute snippet imports. */
   rootDir?: string
+}
+
+/** Deck-level print shell render data for JavaScript. */
+export interface JsDeckPrintRenderData {
+  deckTitle: string
+  deckDescription?: string
+  pageWidth: string
+  pageHeight: string
+  slides: Array<JsPrintSlideRenderData>
 }
 
 /** Normalized documentation entry used by generated API docs. */
@@ -479,6 +500,12 @@ export interface JsExtractedDocsModule {
   entries: Array<JsDocEntry>
 }
 
+/** Extracted slide comments result for JavaScript. */
+export interface JsExtractedSlideComments {
+  content: string
+  notes: Array<string>
+}
+
 /** Feature card for entry page. */
 export interface JsFeatureConfig {
   /** Icon - supports: "mdi:icon-name" (Iconify), image URL, or emoji. */
@@ -670,6 +697,12 @@ export interface JsOgImageData {
   author?: string
 }
 
+/** Parsed Markdown slide deck for JavaScript. */
+export interface JsParsedSlideDeck {
+  frontmatter: string
+  slides: Array<JsSlideSource>
+}
+
 /** Parser options for JavaScript. */
 export interface JsParserOptions {
   /** Enable GFM extensions. */
@@ -707,6 +740,14 @@ export interface JsPmTransformResult {
    * counter by this amount.
    */
   groupCount: number
+}
+
+/** Print shell render data for a single slide. */
+export interface JsPrintSlideRenderData {
+  slideTitle: string
+  slideContentHtml: string
+  slideNumber: number
+  slideCount: number
 }
 
 /** Public export metadata. */
@@ -798,6 +839,60 @@ export interface JsSearchRuntimeOptions {
   placeholder: string
   /** Keyboard shortcut to focus search. */
   hotkey: string
+}
+
+/** Slide page render data for JavaScript. */
+export interface JsSlideRenderData {
+  deckTitle: string
+  slideTitle: string
+  slideDescription?: string
+  slideContentHtml: string
+  slideNotesHtml?: string
+  slideNumber: number
+  slideCount: number
+  homeHref: string
+  slideHref: string
+  presenterHref?: string
+  previousHref?: string
+  nextHref?: string
+  nextSlideHref?: string
+}
+
+/** A parsed slide source for JavaScript. */
+export interface JsSlideSource {
+  content: string
+  notes: Array<string>
+}
+
+/** Slide theme configuration for JavaScript. */
+export interface JsSlideTheme {
+  aspectRatio?: string
+  maxWidth?: string
+  maxHeight?: string
+  padding?: string
+  surfaceRadius?: string
+  codeBackground?: string
+  builtinAnimations?: boolean
+  canvasBackground?: string
+  surfaceBackground?: string
+  surfaceBorder?: string
+  surfaceShadow?: string
+  presenterSidebarBackground?: string
+  fontSans?: string
+  fontMono?: string
+  colorText?: string
+  colorTextMuted?: string
+  colorPrimary?: string
+  colorBorder?: string
+  darkCanvasBackground?: string
+  darkSurfaceBackground?: string
+  darkSurfaceBorder?: string
+  darkPresenterSidebarBackground?: string
+  darkCodeBackground?: string
+  darkColorText?: string
+  darkColorTextMuted?: string
+  darkColorPrimary?: string
+  darkColorBorder?: string
 }
 
 /** Custom social link for JavaScript. */
@@ -1285,6 +1380,9 @@ export declare function parseAndRender(source: string, options?: JsParserOptions
 
 /** Parses Markdown and renders to HTML asynchronously (runs on worker thread). */
 export declare function parseAndRenderAsync(source: string, options?: JsParserOptions | undefined | null): Promise<unknown>
+
+/** Parses a Markdown slide deck with optional frontmatter and `---` separators. */
+export declare function parseMarkdownSlideDeck(source: string, separator?: string | undefined | null): JsParsedSlideDeck
 
 /** Parses Markdown source into a raw mdast memory block for JavaScript-side deserialization. */
 export declare function parseMdastRaw(source: string, options?: JsParserOptions | undefined | null): Uint8Array

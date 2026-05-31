@@ -66,6 +66,7 @@ export default defineConfig(({ mode }) => {
                 items: [
                   { text: "Getting Started", link: "/getting-started.md" },
                   { text: "Built-in Features", link: "/built-in-features.md" },
+                  { text: "Slides", link: "/slides.md" },
                   { text: "Theming", link: "/theming.md" },
                   { text: "MDX & Components", link: "/mdx.md" },
                   { text: "API Docs from JSDoc", link: "/jsdoc.md" },
