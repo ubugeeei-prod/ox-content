@@ -23,10 +23,6 @@
 </span>
 <span class="ox-api-stat">
   <strong>2</strong>
-  <span>members</span>
-</span>
-<span class="ox-api-stat">
-  <strong>2</strong>
   <span>returns</span>
 </span>
 </div>
@@ -39,7 +35,7 @@
 </div>
 
 <details id="mermaidsvgprotection" class="ox-api-entry">
-  <summary><span class="ox-api-entry__kind">interface</span><span class="ox-api-entry__summary-main"><code class="ox-api-entry__signature ox-api-entry__signature--highlighted language-typescript">MermaidSvgProtection</code><span class="ox-api-entry__description">Protects mermaid SVG content from rehype HTML5 parser corruption. rehypeParse +…</span><span class="ox-api-entry__meta"><span class="ox-api-badge">2 members</span></span></span></summary>
+  <summary><span class="ox-api-entry__kind">interface</span><span class="ox-api-entry__summary-main"><code class="ox-api-entry__signature ox-api-entry__signature--highlighted language-typescript">MermaidSvgProtection</code><span class="ox-api-entry__description">Protects mermaid SVG content from rehype HTML5 parser corruption. rehypeParse +…</span></span></summary>
   <div class="ox-api-entry__body">
 <div class="ox-api-entry__prose">
 <p>Protects mermaid SVG content from rehype HTML5 parser corruption.</p>
@@ -51,29 +47,6 @@
 <pre><code class="language-typescript">export interface MermaidSvgProtection</code></pre>
 </div>
 <p class="ox-api-entry__source"><a class="ox-api-entry__source-link" href="https://github.com/ubugeeei-prod/ox-content/blob/main/npm/vite-plugin-ox-content/src/plugins/mermaid-protect.ts#L12-L15" target="_blank" rel="noopener noreferrer">View source<span class="ox-api-entry__source-icon" aria-hidden="true"></span></a></p>
-<div class="ox-api-entry__section ox-api-entry__section--members">
-<h4>Members</h4>
-<div class="ox-api-entry__member-group">
-<h5>Properties</h5>
-<table class="ox-api-entry__members-table">
-<thead><tr><th>Name</th><th>Kind</th><th>Type</th><th>Description</th></tr></thead>
-<tbody>
-<tr id="mermaidsvgprotection-html">
-  <td><code>html</code></td>
-  <td><span class="ox-api-entry__member-kind">property</span></td>
-  <td><code class="ox-api-entry__member-type language-typescript">string</code></td>
-  <td></td>
-</tr>
-<tr id="mermaidsvgprotection-svgs">
-  <td><code>svgs</code></td>
-  <td><span class="ox-api-entry__member-kind">property</span></td>
-  <td><code class="ox-api-entry__member-type language-typescript">Map&lt;string, string&gt;</code></td>
-  <td></td>
-</tr>
-</tbody>
-</table>
-</div>
-</div>
   </div>
 </details>
 
@@ -149,3 +122,4 @@
 </div>
   </div>
 </details>
+

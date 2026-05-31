@@ -271,7 +271,8 @@ impl DocExtractor {
             self.include_undocumented_declarations,
             jsdoc_cache,
         );
-        if let Some(module_item) = visitor.extract_module_entry(&comments) {
+        let first_stmt_start = ret.program.body.first().map(|statement| statement.span().start);
+        if let Some(module_item) = visitor.extract_module_entry(&comments, first_stmt_start) {
             visitor.items.push(module_item);
         }
         visitor.visit_program(&ret.program);
@@ -298,11 +299,49 @@ impl Default for DocExtractor {
 /// Pre-parsed JSDoc data for one comment: `(raw, description, tags)`.
 type ParsedJsdoc = (String, String, Vec<DocTag>);
 
+/// JSDoc/TSDoc tags that mark a leading comment as a module/file comment.
+const MODULE_MARKER_TAGS: [&str; 3] = ["module", "packageDocumentation", "fileoverview"];
+
 /// Extract the JSDoc content body from a comment with a single allocation.
 fn extract_raw_jsdoc(comment: &Comment, source: &str) -> String {
     let content = comment.content_span().source_text(source);
     let trimmed = content.strip_prefix('*').unwrap_or(content);
     trimmed.trim_matches('\n').to_string()
+}
+
+/// Parse a single JSDoc comment into `(raw, description, tags)` directly from its
+/// own span.
+///
+/// Unlike [`build_jsdoc_cache`], this does not key by `attached_to`, so it stays
+/// correct for comments that share an `attached_to` target — e.g. two leading
+/// file comments (`/** … @module */` followed by `/** @author … */`) that the
+/// parser both attaches to the first statement. Keying by `attached_to` would let
+/// the second comment overwrite the first in the cache.
+fn parse_jsdoc_payload(source: &str, comment: &Comment) -> ParsedJsdoc {
+    let raw = extract_raw_jsdoc(comment, source);
+    let items = [JsdocBatchItem {
+        source_text: comment.span.source_text(source),
+        base_offset: comment.span.start,
+    }];
+    let options = JsdocParseOptions { preserve_whitespace: true, ..JsdocParseOptions::default() };
+    let result = parse_jsdoc_batch_to_bytes(&items, options);
+
+    if result.diagnostics.is_empty() {
+        if let Ok(source_file) =
+            ox_jsdoc::decoder::source_file::LazySourceFile::new(&result.binary_bytes)
+        {
+            if let Some(Some(root)) = source_file.asts().next() {
+                let doc = root
+                    .description_text(false)
+                    .map_or_else(String::new, |description| description.trim().to_string());
+                let tags = root.tags().map(DocVisitor::convert_jsdoc_tag).collect();
+                return (raw, doc, tags);
+            }
+        }
+    }
+
+    let (doc, tags) = DocVisitor::parse_jsdoc_fallback(&raw);
+    (raw, doc, tags)
 }
 
 /// Pre-parse every JSDoc comment in the program with a single batch call so the
@@ -444,10 +483,39 @@ impl<'a> DocVisitor<'a> {
         self.include_undocumented_declarations.then(|| (None, None, Vec::new()))
     }
 
-    fn extract_module_entry(&self, comments: &[Comment]) -> Option<DocItem> {
+    fn extract_module_entry(
+        &self,
+        comments: &[Comment],
+        first_stmt_start: Option<u32>,
+    ) -> Option<DocItem> {
         let comment = comments.iter().find(|comment| comment.is_jsdoc())?;
-        let (raw, doc, tags) = self.extract_jsdoc(comment.attached_to)?;
-        let (module_name, module_description) = Self::parse_module_tag(&tags)?;
+
+        // Only the leading file comment (before the first statement) can be the
+        // module comment; a JSDoc that follows code documents that declaration.
+        if let Some(stmt_start) = first_stmt_start {
+            if comment.span.start > stmt_start {
+                return None;
+            }
+        }
+
+        // Parse the candidate from its own span rather than the `attached_to`
+        // cache, which collides when two leading comments share a target.
+        let (raw, doc, tags) = parse_jsdoc_payload(self.source, comment);
+
+        // Treat the leading comment as the module description when it either
+        // carries a module marker tag (`@module` / `@packageDocumentation` /
+        // `@fileoverview`, matching TypeDoc) or is detached from the following
+        // code by a blank line. Otherwise it belongs to the first declaration.
+        let has_module_marker =
+            tags.iter().any(|tag| MODULE_MARKER_TAGS.contains(&tag.tag.as_str()));
+        if !has_module_marker
+            && !self.is_detached_leading_comment(comment, comments, first_stmt_start)
+        {
+            return None;
+        }
+
+        let (module_name, module_description) =
+            Self::parse_module_tag(&tags).unwrap_or((None, None));
         let name = module_name.unwrap_or_else(|| self.file_stem_module_name());
         let (line, end_line) = self.span_lines(comment.span.start, comment.span.end);
 
@@ -471,6 +539,39 @@ impl<'a> DocVisitor<'a> {
             tags,
             type_parameters: Vec::new(),
         })
+    }
+
+    /// Returns true when the first leading JSDoc comment is detached from the
+    /// following code by a blank line (or is the file's only content). Such a
+    /// comment is a file-level/module comment rather than the doc of the first
+    /// declaration, matching TypeDoc's leading-comment handling.
+    fn is_detached_leading_comment(
+        &self,
+        comment: &Comment,
+        comments: &[Comment],
+        first_stmt_start: Option<u32>,
+    ) -> bool {
+        let after = comment.span.end;
+        // The next syntactic element after this comment: the nearest of the
+        // first statement and any later comment.
+        let next_comment =
+            comments.iter().map(|other| other.span.start).filter(|&start| start > after).min();
+        let next_pos = match (next_comment, first_stmt_start) {
+            (Some(comment_start), Some(stmt_start)) => Some(comment_start.min(stmt_start)),
+            (Some(position), None) | (None, Some(position)) => Some(position),
+            (None, None) => None,
+        };
+        // Nothing follows the comment: a comment-only file is a module comment.
+        let Some(next_pos) = next_pos else {
+            return true;
+        };
+        if next_pos <= after {
+            return false;
+        }
+        // A blank line means two or more newlines between the comment and the
+        // next element.
+        self.source[after as usize..next_pos as usize].bytes().filter(|&byte| byte == b'\n').count()
+            >= 2
     }
 
     fn parse_module_tag(tags: &[DocTag]) -> Option<(Option<String>, Option<String>)> {
@@ -2146,6 +2247,81 @@ export function make<G extends Base = Default, V>(value: V): G {
         assert_eq!(func.type_parameters[1].name, "V");
         assert_eq!(func.type_parameters[1].constraint, None);
         assert_eq!(func.type_parameters[1].default, None);
+    }
+
+    #[test]
+    fn test_module_description_survives_trailing_author_comment() {
+        // Regression: `@module` block immediately followed by a second leading
+        // block comment (`@author`/`@license`). Both comments attach to the same
+        // first statement, so an `attached_to`-keyed lookup would surface the
+        // second comment and drop the `@module` description.
+        let source = r"
+/**
+ * Module summary.
+ * @module
+ */
+
+/**
+ * @author kazupon
+ * @license MIT
+ */
+export const z = 1;
+";
+
+        let extractor = DocExtractor::new();
+        let items = extractor.extract_source(source, "src/context.ts", SourceType::ts()).unwrap();
+        let module = items.iter().find(|item| item.kind == DocItemKind::Module).unwrap();
+
+        assert_eq!(module.name, "context");
+        assert_eq!(module.doc.as_deref(), Some("Module summary."));
+        assert!(module.tags.iter().any(|tag| tag.tag == "module"));
+    }
+
+    #[test]
+    fn test_module_description_from_detached_comment_without_module_tag() {
+        // Gap 1: a leading file comment without `@module`, separated from the code
+        // by a blank line, should still be used as the module description
+        // (matching TypeDoc). The file stem becomes the module name.
+        let source = r"
+/**
+ * The entry point for AI agent detection utility.
+ *
+ * @author kazupon
+ * @license MIT
+ */
+
+import { agentInfo } from 'std-env';
+
+/** A profile. */
+export function getAgentProfile(): void {}
+";
+
+        let extractor = DocExtractor::new();
+        let items = extractor.extract_source(source, "src/agent.ts", SourceType::ts()).unwrap();
+        let module = items.iter().find(|item| item.kind == DocItemKind::Module).unwrap();
+
+        assert_eq!(module.name, "agent");
+        assert_eq!(module.doc.as_deref(), Some("The entry point for AI agent detection utility."));
+        // The real declaration is still extracted with its own doc.
+        let func = items.iter().find(|item| item.name == "getAgentProfile").unwrap();
+        assert_eq!(func.doc.as_deref(), Some("A profile."));
+    }
+
+    #[test]
+    fn test_leading_comment_attached_to_declaration_is_not_a_module() {
+        // A doc comment that directly precedes the first declaration (no blank
+        // line, no module marker) documents that declaration, not the module.
+        let source = r"
+/** Documents foo. */
+export function foo(): void {}
+";
+
+        let extractor = DocExtractor::new();
+        let items = extractor.extract_source(source, "src/foo.ts", SourceType::ts()).unwrap();
+
+        assert!(items.iter().all(|item| item.kind != DocItemKind::Module));
+        let func = items.iter().find(|item| item.name == "foo").unwrap();
+        assert_eq!(func.doc.as_deref(), Some("Documents foo."));
     }
 
     #[test]

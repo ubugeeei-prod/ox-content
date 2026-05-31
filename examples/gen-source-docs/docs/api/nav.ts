@@ -12,11 +12,11 @@ export interface NavItem {
 
 export const apiNav: NavItem[] = [
   {
-    title: "Math",
-    path: "/api/math",
+    "title": "Math",
+    "path": "/api/math"
   },
   {
-    title: "Utils",
-    path: "/api/utils",
-  },
+    "title": "Utils",
+    "path": "/api/utils"
+  }
 ] as const;

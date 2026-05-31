@@ -165,3 +165,4 @@ truncate(&#39;Hi&#39;, 10) // =&gt; &#39;Hi&#39;</code></pre>
 </div>
   </div>
 </details>
+
