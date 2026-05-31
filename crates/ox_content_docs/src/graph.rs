@@ -14,7 +14,9 @@ use rustc_hash::{FxBuildHasher, FxHashMap, FxHashSet};
 use serde::{Deserialize, Serialize};
 use thiserror::Error;
 
-use crate::{normalize_doc_items, DocExtractor, ExtractError, NormalizedDocEntry};
+use crate::{
+    normalize_doc_items, DocExtractor, ExtractError, NormalizedDocEntry, NormalizedDocKind,
+};
 
 /// Entry point used to group generated API docs.
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
@@ -160,6 +162,10 @@ pub struct EntrypointDocsModule {
     pub file: String,
     /// Source file path.
     pub source_path: PathBuf,
+    /// Module-level description from the entry file's `@module` block or leading
+    /// file comment. Empty when the entry file has no module-level JSDoc.
+    #[serde(default)]
+    pub description: String,
     /// Normalized docs entries for reachable exports.
     pub entries: Vec<NormalizedDocEntry>,
     /// Public export metadata, including external re-exports.
@@ -379,10 +385,22 @@ pub fn extract_docs_from_entry_points(
             ));
         }
 
+        // The entry file's own module-level `@module` / leading JSDoc is emitted
+        // by the extractor as a `Module`-kind entry but is never an export, so it
+        // is dropped from `entries` above. Pull it out of the entry file's
+        // normalized items and carry it as the module description.
+        let description =
+            normalized_entries_for_module(&mut docs_cache, &extractor, &entrypoint.source_path)?
+                .iter()
+                .find(|entry| entry.kind == NormalizedDocKind::Module)
+                .map(|entry| entry.description.clone())
+                .unwrap_or_default();
+
         modules.push(EntrypointDocsModule {
             file: entrypoint.name.clone(),
             name: entrypoint.name,
             source_path: entrypoint.source_path,
+            description,
             entries,
             exports: entrypoint.exports,
             diagnostics,
@@ -1201,6 +1219,82 @@ export function label(value: string): string {
         .unwrap();
         let names = docs[0].entries.iter().map(|entry| entry.name.as_str()).collect::<Vec<_>>();
         assert_eq!(names, ["sum", "Options", "label"]);
+
+        fs::remove_dir_all(root).unwrap();
+    }
+
+    #[test]
+    fn entrypoint_docs_capture_module_level_description() {
+        let root = temp_root();
+        fs::create_dir_all(root.join("src")).unwrap();
+        // Entry file with a module-level `@module` summary that only re-exports.
+        fs::write(
+            root.join("src/context.ts"),
+            r"
+/**
+ * The entry for gunshi context.
+ *
+ * @module
+ */
+export { createCommandContext } from './context-impl';
+",
+        )
+        .unwrap();
+        fs::write(
+            root.join("src/context-impl.ts"),
+            r"
+/** Creates a command context. */
+export function createCommandContext(): void {}
+",
+        )
+        .unwrap();
+        // Entry file without any module-level comment.
+        fs::write(
+            root.join("src/plugin.ts"),
+            r"
+export { plugin } from './plugin-impl';
+",
+        )
+        .unwrap();
+        fs::write(
+            root.join("src/plugin-impl.ts"),
+            r"
+/** Defines a plugin. */
+export function plugin(): void {}
+",
+        )
+        .unwrap();
+
+        let entrypoints = [
+            EntryPointSpec {
+                path: PathBuf::from("src/context.ts"),
+                name: Some("context".to_string()),
+            },
+            EntryPointSpec {
+                path: PathBuf::from("src/plugin.ts"),
+                name: Some("plugin".to_string()),
+            },
+        ];
+        let graph_options = GraphOptions { root: Some(root.clone()), ..GraphOptions::default() };
+
+        let docs = extract_docs_from_entry_points(
+            &entrypoints,
+            &EntryPointDocsOptions {
+                graph: graph_options,
+                include_private: false,
+                include_internal: false,
+            },
+        )
+        .unwrap();
+
+        let context = docs.iter().find(|module| module.name == "context").unwrap();
+        assert_eq!(context.description, "The entry for gunshi context.");
+        // The module entry itself is not surfaced as a regular export entry.
+        assert!(context.entries.iter().all(|entry| entry.kind != NormalizedDocKind::Module));
+        assert!(context.entries.iter().any(|entry| entry.name == "createCommandContext"));
+
+        let plugin = docs.iter().find(|module| module.name == "plugin").unwrap();
+        assert!(plugin.description.is_empty());
 
         fs::remove_dir_all(root).unwrap();
     }

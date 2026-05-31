@@ -266,6 +266,8 @@ pub struct JsDocsMarkdownEntry {
 #[derive(Clone)]
 pub struct JsDocsMarkdownModule {
     pub file: String,
+    /// Module-level description from the entry file's `@module` / leading JSDoc.
+    pub description: Option<String>,
     pub entries: Vec<JsDocsMarkdownEntry>,
 }
 
@@ -395,6 +397,8 @@ pub struct JsEntrypointDocsModule {
     pub name: String,
     pub file: String,
     pub source_path: String,
+    /// Module-level description from the entry file's `@module` / leading JSDoc.
+    pub description: String,
     pub entries: Vec<JsDocEntry>,
     pub exports: Vec<JsPublicExport>,
     pub diagnostics: Vec<JsDocsDiagnostic>,
@@ -1114,6 +1118,7 @@ fn convert_markdown_entry(entry: JsDocsMarkdownEntry) -> ApiDocEntry {
 fn convert_markdown_module(module: JsDocsMarkdownModule) -> ApiDocModule {
     ApiDocModule {
         file: module.file,
+        description: module.description.unwrap_or_default(),
         entries: module.entries.into_iter().map(convert_markdown_entry).collect(),
     }
 }
@@ -1269,6 +1274,7 @@ pub fn extract_docs_from_entry_points_napi(
             name: module.name,
             file: module.file,
             source_path: path_to_string(&module.source_path),
+            description: module.description,
             entries: module.entries.into_iter().map(map_normalized_doc_entry).collect(),
             exports: module.exports.into_iter().map(map_public_export).collect(),
             diagnostics: module.diagnostics.into_iter().map(map_docs_diagnostic).collect(),
@@ -3381,6 +3387,7 @@ mod tests {
     #[test]
     fn generate_docs_markdown_accepts_clean_link_options() {
         let docs = vec![JsDocsMarkdownModule {
+            description: None,
             file: "/repo/src/context.ts".to_string(),
             entries: vec![JsDocsMarkdownEntry {
                 name: "CommandContext".to_string(),
@@ -3418,6 +3425,7 @@ mod tests {
     #[test]
     fn generate_docs_markdown_render_style_markdown_omits_html() {
         let docs = vec![JsDocsMarkdownModule {
+            description: None,
             file: "/repo/src/context.ts".to_string(),
             entries: vec![JsDocsMarkdownEntry {
                 name: "CommandContext".to_string(),
@@ -3458,6 +3466,7 @@ mod tests {
     fn generate_docs_markdown_resolves_jsdoc_inline_links() {
         let docs = vec![
             JsDocsMarkdownModule {
+                description: None,
                 file: "/repo/src/command.ts".to_string(),
                 entries: vec![JsDocsMarkdownEntry {
                     name: "Command".to_string(),
@@ -3491,6 +3500,7 @@ mod tests {
                 }],
             },
             JsDocsMarkdownModule {
+                description: None,
                 file: "/repo/src/build.ts".to_string(),
                 entries: vec![JsDocsMarkdownEntry {
                     name: "buildCommand".to_string(),
@@ -3542,6 +3552,7 @@ mod tests {
     #[test]
     fn generate_docs_markdown_accepts_typedoc_path_strategy() {
         let docs = vec![JsDocsMarkdownModule {
+            description: None,
             file: "default".to_string(),
             entries: vec![
                 JsDocsMarkdownEntry {
@@ -3596,8 +3607,50 @@ mod tests {
     }
 
     #[test]
+    fn generate_docs_markdown_renders_module_description_in_typedoc_index() {
+        let docs = vec![JsDocsMarkdownModule {
+            description: Some("The entry for gunshi context.".to_string()),
+            file: "context".to_string(),
+            entries: vec![JsDocsMarkdownEntry {
+                name: "createCommandContext".to_string(),
+                kind: "function".to_string(),
+                description: "Creates a command context.".to_string(),
+                params: None,
+                returns: None,
+                examples: None,
+                tags: None,
+                private: false,
+                file: "/repo/src/context.ts".to_string(),
+                line: 1,
+                end_line: 10,
+                signature: Some("export function createCommandContext(): void".to_string()),
+                members: None,
+            }],
+        }];
+
+        let markdown = generate_docs_markdown(
+            docs,
+            Some(JsDocsMarkdownOptions {
+                group_by: Some("file".to_string()),
+                github_url: None,
+                link_style: Some("markdown".to_string()),
+                base_path: None,
+                path_strategy: Some("typedoc".to_string()),
+                render_style: Some("markdown".to_string()),
+            }),
+        );
+
+        let index = markdown.get("index.md").unwrap();
+        assert!(index.contains("The entry for gunshi context."));
+        assert!(!index.contains("Creates a command context."));
+        let module_index = markdown.get("context/index.md").unwrap();
+        assert!(module_index.contains("The entry for gunshi context."));
+    }
+
+    #[test]
     fn generate_docs_nav_metadata_from_docs_returns_typedoc_tree() {
         let docs = vec![JsDocsMarkdownModule {
+            description: None,
             file: "default".to_string(),
             entries: vec![
                 JsDocsMarkdownEntry {
@@ -3656,6 +3709,7 @@ mod tests {
     #[test]
     fn generate_docs_nav_metadata_from_docs_defaults_to_flat() {
         let docs = vec![JsDocsMarkdownModule {
+            description: None,
             file: "/repo/src/context.ts".to_string(),
             entries: vec![],
         }];
@@ -3677,6 +3731,7 @@ mod tests {
             .join(format!("ox-content-napi-typedoc-write-{}-{unique}", std::process::id()));
 
         let extracted = vec![JsDocsMarkdownModule {
+            description: None,
             file: "default".to_string(),
             entries: vec![JsDocsMarkdownEntry {
                 name: "cli".to_string(),

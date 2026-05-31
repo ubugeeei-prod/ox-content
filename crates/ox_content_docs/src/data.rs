@@ -70,6 +70,7 @@ fn build_docs_summary(docs: &[ApiDocModule]) -> Value {
 fn module_to_json(module: &ApiDocModule) -> Value {
     json!({
         "file": normalize_doc_file_path(&module.file),
+        "description": module.description,
         "entries": module.entries.iter().map(entry_to_json).collect::<Vec<_>>(),
     })
 }
@@ -208,6 +209,7 @@ mod tests {
     #[test]
     fn generated_docs_data_counts_and_normalizes_paths() {
         let docs = vec![ApiDocModule {
+            description: String::new(),
             file: "/repo/src/math.ts".to_string(),
             entries: vec![ApiDocEntry {
                 name: "clamp".to_string(),
@@ -243,5 +245,19 @@ mod tests {
         assert_eq!(value["modules"][0]["file"], "src/math.ts");
         assert_eq!(value["modules"][0]["entries"][0]["file"], "src/math.ts");
         assert_eq!(value["modules"][0]["entries"][0]["endLine"], 10);
+    }
+
+    #[test]
+    fn generated_docs_data_carries_module_description() {
+        let docs = vec![ApiDocModule {
+            description: "The entry for gunshi context.".to_string(),
+            file: "/repo/src/context.ts".to_string(),
+            entries: vec![],
+        }];
+
+        let json = generate_docs_data_json(&docs, "2026-05-31T00:00:00.000Z").unwrap();
+        let value: Value = serde_json::from_str(&json).unwrap();
+
+        assert_eq!(value["modules"][0]["description"], "The entry for gunshi context.");
     }
 }
