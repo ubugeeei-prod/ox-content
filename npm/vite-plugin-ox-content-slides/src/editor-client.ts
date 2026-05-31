@@ -40,6 +40,12 @@ interface SlidePlacement {
 
 type CanvasDragMode = "move" | "resize";
 
+interface CanvasSnapResult {
+  placement: SlidePlacement;
+  guideX?: number;
+  guideY?: number;
+}
+
 interface CanvasDragState {
   mode: CanvasDragMode;
   index: number;
@@ -71,6 +77,9 @@ interface EditorElements {
 declare global {
   var __OX_SLIDE_EDITOR_API__: string | undefined;
 }
+
+const CANVAS_GRID_STEP = 2.5;
+const CANVAS_SNAP_THRESHOLD = 0.55;
 
 function queryElement<T extends Element>(selector: string): T {
   const element = document.querySelector<T>(selector);
@@ -238,6 +247,41 @@ function formatPlacements(placements: SlidePlacement[]): string {
   );
 }
 
+function softSnapPercent(value: number): { value: number; snapped: boolean } {
+  const snapped = Math.round(value / CANVAS_GRID_STEP) * CANVAS_GRID_STEP;
+  const shouldSnap = Math.abs(snapped - value) <= CANVAS_SNAP_THRESHOLD;
+  return {
+    value: roundedPercent(shouldSnap ? snapped : value),
+    snapped: shouldSnap,
+  };
+}
+
+function snapPlacementToGrid(
+  placement: SlidePlacement,
+  fallback: SlidePlacement,
+  mode: CanvasDragMode,
+): CanvasSnapResult {
+  if (mode === "move") {
+    const x = softSnapPercent(placement.x);
+    const y = softSnapPercent(placement.y);
+    return {
+      placement: normalizePlacement({ ...placement, x: x.value, y: y.value }, fallback),
+      guideX: x.snapped ? x.value : undefined,
+      guideY: y.snapped ? y.value : undefined,
+    };
+  }
+
+  const w = softSnapPercent(placement.w);
+  const h = softSnapPercent(placement.h);
+  const next = normalizePlacement({ ...placement, w: w.value, h: h.value }, fallback);
+
+  return {
+    placement: next,
+    guideX: w.snapped ? roundedPercent(next.x + next.w) : undefined,
+    guideY: h.snapped ? roundedPercent(next.y + next.h) : undefined,
+  };
+}
+
 function isHtmlElement(value: unknown): value is HTMLElement {
   return (
     value !== null &&
@@ -295,36 +339,51 @@ function renderCanvasEditorStyle(): string {
       position: fixed;
       z-index: 2147483647;
       pointer-events: auto;
+      background-image:
+        linear-gradient(to right, rgba(78, 93, 104, 0.16) 1px, transparent 1px),
+        linear-gradient(to bottom, rgba(78, 93, 104, 0.16) 1px, transparent 1px),
+        linear-gradient(to right, rgba(78, 93, 104, 0.08) 1px, transparent 1px),
+        linear-gradient(to bottom, rgba(78, 93, 104, 0.08) 1px, transparent 1px);
+      background-size: 10% 10%, 10% 10%, 2.5% 2.5%, 2.5% 2.5%;
+    }
+    .ox-editor-canvas-overlay::before {
+      position: absolute;
+      inset: 0;
+      content: "";
+      pointer-events: none;
+      background:
+        linear-gradient(to right, transparent calc(50% - 0.5px), rgba(65, 83, 94, 0.22) calc(50% - 0.5px), rgba(65, 83, 94, 0.22) calc(50% + 0.5px), transparent calc(50% + 0.5px)),
+        linear-gradient(to bottom, transparent calc(50% - 0.5px), rgba(65, 83, 94, 0.22) calc(50% - 0.5px), rgba(65, 83, 94, 0.22) calc(50% + 0.5px), transparent calc(50% + 0.5px));
     }
     .ox-editor-canvas-box {
       position: absolute;
-      border: 2px solid #176b5d;
-      background: rgba(23, 107, 93, 0.06);
-      box-shadow: 0 0 0 1px rgba(255, 255, 255, 0.84), 0 10px 28px rgba(10, 18, 28, 0.18);
+      border: 1.5px solid #2f6f87;
+      background: rgba(47, 111, 135, 0.05);
+      box-shadow: 0 0 0 1px rgba(255, 255, 255, 0.78), 0 8px 24px rgba(15, 23, 42, 0.13);
       cursor: move;
       pointer-events: auto;
       touch-action: none;
     }
     .ox-editor-canvas-box[data-selected="true"] {
-      border-color: #d15a2f;
-      background: rgba(209, 90, 47, 0.08);
+      border-color: #1d4f73;
+      background: rgba(29, 79, 115, 0.08);
     }
     .ox-editor-canvas-label {
       position: absolute;
-      left: -2px;
-      top: -28px;
+      left: -1px;
+      top: -25px;
       min-width: 26px;
-      height: 24px;
+      height: 23px;
       display: inline-flex;
       align-items: center;
       justify-content: center;
-      border-radius: 5px 5px 0 0;
-      background: #176b5d;
+      border-radius: 4px 4px 0 0;
+      background: #2f6f87;
       color: #fff;
-      font: 700 12px/1 system-ui, sans-serif;
+      font: 650 12px/1 system-ui, sans-serif;
     }
     .ox-editor-canvas-box[data-selected="true"] .ox-editor-canvas-label {
-      background: #d15a2f;
+      background: #1d4f73;
     }
     .ox-editor-canvas-resize {
       position: absolute;
@@ -333,10 +392,27 @@ function renderCanvasEditorStyle(): string {
       width: 14px;
       height: 14px;
       border: 2px solid #fff;
-      border-radius: 4px;
-      background: #176b5d;
+      border-radius: 3px;
+      background: #2f6f87;
       cursor: nwse-resize;
       touch-action: none;
+    }
+    .ox-editor-canvas-guide {
+      position: absolute;
+      z-index: 1;
+      display: none;
+      pointer-events: none;
+      background: rgba(30, 90, 128, 0.58);
+    }
+    .ox-editor-canvas-guide--vertical {
+      top: 0;
+      bottom: 0;
+      width: 1px;
+    }
+    .ox-editor-canvas-guide--horizontal {
+      left: 0;
+      right: 0;
+      height: 1px;
     }
   `;
 }
@@ -357,6 +433,11 @@ function installCanvasEditorOverlay(
   const overlay = doc.createElement("div");
   overlay.className = "ox-editor-canvas-overlay";
   doc.body.append(overlay);
+  const verticalGuide = doc.createElement("div");
+  verticalGuide.className = "ox-editor-canvas-guide ox-editor-canvas-guide--vertical";
+  const horizontalGuide = doc.createElement("div");
+  horizontalGuide.className = "ox-editor-canvas-guide ox-editor-canvas-guide--horizontal";
+  overlay.append(verticalGuide, horizontalGuide);
 
   let current = placements.map((placement) => ({ ...placement }));
   let drag: CanvasDragState | undefined;
@@ -415,6 +496,22 @@ function installCanvasEditorOverlay(
     return box;
   });
 
+  function updateGuides(result: CanvasSnapResult | undefined): void {
+    if (result?.guideX !== undefined) {
+      verticalGuide.style.left = `${result.guideX}%`;
+      verticalGuide.style.display = "block";
+    } else {
+      verticalGuide.style.display = "none";
+    }
+
+    if (result?.guideY !== undefined) {
+      horizontalGuide.style.top = `${result.guideY}%`;
+      horizontalGuide.style.display = "block";
+    } else {
+      horizontalGuide.style.display = "none";
+    }
+  }
+
   function updateOverlayBounds(): void {
     const rect = layout.getBoundingClientRect();
     overlay.style.left = `${rect.left}px`;
@@ -436,7 +533,7 @@ function installCanvasEditorOverlay(
     if (!drag) return;
     const dx = ((event.clientX - drag.startX) / drag.layoutRect.width) * 100;
     const dy = ((event.clientY - drag.startY) / drag.layoutRect.height) * 100;
-    const next =
+    const rawPlacement =
       drag.mode === "move"
         ? normalizePlacement(
             {
@@ -454,9 +551,12 @@ function installCanvasEditorOverlay(
             },
             drag.start,
           );
+    const snapped = snapPlacementToGrid(rawPlacement, drag.start, drag.mode);
+    const next = snapped.placement;
 
     current[drag.index] = next;
     applyElementPlacement(drag.target, next);
+    updateGuides(snapped);
     updateOverlayBounds();
   }
 
@@ -464,6 +564,7 @@ function installCanvasEditorOverlay(
     if (!drag) return;
     doc.body.style.userSelect = "";
     drag = undefined;
+    updateGuides(undefined);
     onCommit(current.map((placement) => ({ ...placement })));
   }
 
@@ -801,6 +902,10 @@ export function renderSlideEditorClientSource(apiJson: string): string {
     isPlacement.toString(),
     parsePlacements.toString(),
     formatPlacements.toString(),
+    `const CANVAS_GRID_STEP = ${CANVAS_GRID_STEP};`,
+    `const CANVAS_SNAP_THRESHOLD = ${CANVAS_SNAP_THRESHOLD};`,
+    softSnapPercent.toString(),
+    snapPlacementToGrid.toString(),
     isHtmlElement.toString(),
     ensurePlacementCount.toString(),
     applyElementPlacement.toString(),

@@ -117,9 +117,10 @@ Supported layout controls:
 
 The `canvas` layout turns each top-level Markdown block into a movable layer in
 the preview. Drag the layer body to place it and drag the corner handle to
-resize it. The editor writes the result back to frontmatter as `placements`, so
-direct manipulation, text editing, code review, and automation all share one
-source file.
+resize it. The canvas shows a subtle grid, center guides, and light snap
+correction while dragging, but the editor still writes the result back to
+frontmatter as `placements`, so direct manipulation, text editing, code review,
+and automation all share one source file.
 
 ```md
 ---

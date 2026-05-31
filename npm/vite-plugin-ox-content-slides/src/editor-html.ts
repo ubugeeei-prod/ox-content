@@ -16,25 +16,27 @@ export function renderSlideEditorHtml(apiPrefix: string): string {
     <style>
       :root {
         color-scheme: light dark;
-        --bg: #f7f4ec;
-        --panel: #ffffff;
-        --line: rgba(18, 24, 38, 0.12);
-        --line-strong: rgba(18, 24, 38, 0.22);
-        --text: #101522;
-        --muted: #696358;
-        --accent: #176b5d;
-        --code: #f2eee4;
+        --bg: #f3f4f1;
+        --panel: #fbfbf8;
+        --line: rgba(23, 31, 28, 0.11);
+        --line-strong: rgba(23, 31, 28, 0.24);
+        --text: #17201e;
+        --muted: #6a716b;
+        --accent: #2f5d50;
+        --accent-soft: rgba(47, 93, 80, 0.12);
+        --code: #ecefea;
       }
       @media (prefers-color-scheme: dark) {
         :root {
-          --bg: #0b0c10;
-          --panel: #15161c;
-          --line: rgba(255, 255, 255, 0.11);
-          --line-strong: rgba(255, 255, 255, 0.2);
-          --text: #f4efe4;
-          --muted: #aaa397;
-          --accent: #75c7b6;
-          --code: #1d1d24;
+          --bg: #101311;
+          --panel: #171b18;
+          --line: rgba(237, 241, 235, 0.12);
+          --line-strong: rgba(237, 241, 235, 0.24);
+          --text: #edf1eb;
+          --muted: #9fa79f;
+          --accent: #8fb8aa;
+          --accent-soft: rgba(143, 184, 170, 0.14);
+          --code: #1e231f;
         }
       }
       * { box-sizing: border-box; }
@@ -74,7 +76,7 @@ export function renderSlideEditorHtml(apiPrefix: string): string {
         min-height: 58px;
         padding: 10px 12px;
         border-bottom: 1px solid var(--line);
-        background: var(--panel);
+        background: color-mix(in srgb, var(--panel) 94%, var(--bg));
       }
       .title {
         min-width: 0;
@@ -92,7 +94,7 @@ export function renderSlideEditorHtml(apiPrefix: string): string {
         gap: 10px;
         padding: 12px;
         border-bottom: 1px solid var(--line);
-        background: color-mix(in srgb, var(--panel) 86%, var(--bg));
+        background: color-mix(in srgb, var(--panel) 72%, var(--bg));
       }
       .control-row {
         display: grid;
@@ -112,7 +114,7 @@ export function renderSlideEditorHtml(apiPrefix: string): string {
         grid-auto-columns: 1fr;
         min-width: 0;
         border: 1px solid var(--line);
-        border-radius: 7px;
+        border-radius: 4px;
         overflow: hidden;
         background: var(--panel);
       }
@@ -128,8 +130,9 @@ export function renderSlideEditorHtml(apiPrefix: string): string {
       }
       .segment:last-child { border-right: 0; }
       .segment[aria-pressed="true"] {
-        background: var(--accent);
-        color: #fff;
+        background: var(--accent-soft);
+        color: var(--text);
+        box-shadow: inset 0 0 0 1px var(--accent);
       }
       .swatches {
         display: flex;
@@ -142,7 +145,7 @@ export function renderSlideEditorHtml(apiPrefix: string): string {
         width: 32px;
         height: 32px;
         border: 1px solid var(--line-strong);
-        border-radius: 7px;
+        border-radius: 4px;
         background: var(--swatch);
         cursor: pointer;
       }
@@ -155,7 +158,7 @@ export function renderSlideEditorHtml(apiPrefix: string): string {
         height: 34px;
         padding: 0;
         border: 1px solid var(--line-strong);
-        border-radius: 7px;
+        border-radius: 4px;
         background: var(--panel);
         cursor: pointer;
       }
@@ -180,7 +183,7 @@ export function renderSlideEditorHtml(apiPrefix: string): string {
         padding: 6px 8px;
         border: 1px solid transparent;
         background: transparent;
-        border-radius: 6px;
+        border-radius: 4px;
         text-align: left;
         cursor: pointer;
       }
@@ -195,7 +198,7 @@ export function renderSlideEditorHtml(apiPrefix: string): string {
         width: 30px;
         height: 30px;
         border: 1px solid var(--line);
-        border-radius: 6px;
+        border-radius: 4px;
         color: var(--muted);
         font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
         font-size: 0.78rem;
@@ -214,14 +217,14 @@ export function renderSlideEditorHtml(apiPrefix: string): string {
         min-height: 36px;
         padding: 0 11px;
         border: 1px solid var(--line-strong);
-        border-radius: 6px;
+        border-radius: 4px;
         background: var(--panel);
         text-decoration: none;
         cursor: pointer;
       }
       .button[data-primary="true"] {
         border-color: transparent;
-        background: var(--accent);
+        background: #24483f;
         color: #fff;
       }
       .icon {

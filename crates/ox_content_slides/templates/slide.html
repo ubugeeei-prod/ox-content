@@ -234,6 +234,12 @@
         .ox-slide-content > :nth-child(2) { animation-delay: 40ms; }
         .ox-slide-content > :nth-child(3) { animation-delay: 80ms; }
         .ox-slide-content > :nth-child(n + 4) { animation-delay: 120ms; }
+        .ox-slide-page:has(.ox-slide-layout--canvas) .ox-slide-toolbar,
+        .ox-slide-page:has(.ox-slide-layout--canvas) .ox-slide-nav,
+        .ox-slide-page:has(.ox-slide-layout--canvas) .ox-slide-frame,
+        .ox-slide-page:has(.ox-slide-layout--canvas) .ox-slide-content > * {
+          animation: none;
+        }
       }
       @keyframes ox-slide-fade { from { opacity: 0; } to { opacity: 1; } }
       @keyframes ox-slide-enter { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: none; } }
