@@ -3,6 +3,7 @@ packages:
   - crates/ox_content_wasm/pkg
   - npm/*
   - docs
+  - deploy
   - examples/*
   - benchmarks/*
   - benchmarks/bundle-size/apps/*

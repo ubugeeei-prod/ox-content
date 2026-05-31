@@ -1,5 +1,19 @@
 # Changelog
 
+## [2.31.0] - 2026-05-31
+
+### Features
+
+- add opt-in content transforms (#265)
+
+### Bug Fixes
+
+- deploy docs from void root
+
+### Performance
+
+- debug-build NAPI smoke and cache rendering browsers (#263)
+
 ## [2.30.0] - 2026-05-30
 
 ### Performance

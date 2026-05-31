@@ -1,0 +1,9 @@
+{
+  "name": "deploy",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "docs": "node ../scripts/deploy-docs-to-void.mjs"
+  }
+}
