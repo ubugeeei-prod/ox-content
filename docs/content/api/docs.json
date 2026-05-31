@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "generatedAt": "2026-05-31T06:48:17.262Z",
+  "generatedAt": "2026-05-31T08:02:48.654Z",
   "summary": {
     "modules": 32,
     "entries": 283,
@@ -1275,7 +1275,9 @@
             "type": "JSXNode",
             "description": ""
           },
-          "examples": ["```tsx\n<div>{raw('<strong>Bold</strong>')}</div>\n```"],
+          "examples": [
+            "```tsx\n<div>{raw('<strong>Bold</strong>')}</div>\n```"
+          ],
           "file": "npm/vite-plugin-ox-content/src/jsx-runtime.ts",
           "line": 262,
           "endLine": 264,
@@ -1301,7 +1303,9 @@
             "type": "JSXNode",
             "description": ""
           },
-          "examples": ["```tsx\n{when(isLoggedIn, <UserMenu />)}\n```"],
+          "examples": [
+            "```tsx\n{when(isLoggedIn, <UserMenu />)}\n```"
+          ],
           "file": "npm/vite-plugin-ox-content/src/jsx-runtime.ts",
           "line": 274,
           "endLine": 276,
@@ -1327,7 +1331,9 @@
             "type": "JSXNode",
             "description": ""
           },
-          "examples": ["```tsx\n{each(items, (item) => <li>{item.name}</li>)}\n```"],
+          "examples": [
+            "```tsx\n{each(items, (item) => <li>{item.name}</li>)}\n```"
+          ],
           "file": "npm/vite-plugin-ox-content/src/jsx-runtime.ts",
           "line": 286,
           "endLine": 289,
@@ -7298,8 +7304,8 @@
               "type": "number",
               "optional": true,
               "tags": {
-                "default": "3",
                 "min": "1",
+                "default": "3",
                 "max": "6"
               },
               "line": 194,
@@ -7529,8 +7535,8 @@
             "description": ""
           },
           "file": "npm/vite-plugin-ox-content/src/transform.ts",
-          "line": 679,
-          "endLine": 728,
+          "line": 681,
+          "endLine": 730,
           "signature": "function generateModuleCode(html: string, frontmatter: Record<string, unknown>, toc: TocEntry[], filePath: string, _options: ResolvedOptions): string"
         },
         {
@@ -7549,8 +7555,8 @@
             "description": ""
           },
           "file": "npm/vite-plugin-ox-content/src/transform.ts",
-          "line": 735,
-          "endLine": 745,
+          "line": 737,
+          "endLine": 747,
           "signature": "export function extractImports(content: string): string[]"
         },
         {
@@ -7575,8 +7581,8 @@
             "description": "SVG string or null if NAPI bindings are unavailable"
           },
           "file": "npm/vite-plugin-ox-content/src/transform.ts",
-          "line": 761,
-          "endLine": 783,
+          "line": 763,
+          "endLine": 785,
           "signature": "export async function generateOgImageSvg(data: OgImageData, config?: OgImageConfig): Promise<string | null>"
         }
       ]

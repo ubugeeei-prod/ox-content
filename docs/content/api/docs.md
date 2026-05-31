@@ -115,16 +115,15 @@
 
 // Returns:
 // [
-// {
-// file: &#39;/path/to/transform.ts&#39;,
-// entries: [
-// { name: &#39;transformMarkdown&#39;, kind: &#39;function&#39;, ... },
-// { name: &#39;loadNapiBindings&#39;, kind: &#39;function&#39;, ... },
-// ]
-// },
-// ...
+//   {
+//     file: &#39;/path/to/transform.ts&#39;,
+//     entries: [
+//       { name: &#39;transformMarkdown&#39;, kind: &#39;function&#39;, ... },
+//       { name: &#39;loadNapiBindings&#39;, kind: &#39;function&#39;, ... },
+//     ]
+//   },
+//   ...
 // ]</code></pre>
-
 </div>
 </div>
   </div>
@@ -256,3 +255,4 @@
 </div>
   </div>
 </details>
+

@@ -88,12 +88,11 @@ import { DefaultLayout } from &#39;./layouts/Default&#39;;
 import { EntryLayout } from &#39;./layouts/Entry&#39;;
 
 export default createTheme({
-layouts: {
-default: DefaultLayout,
-entry: EntryLayout,
-},
+  layouts: {
+    default: DefaultLayout,
+    entry: EntryLayout,
+  },
 });</code></pre>
-
 </div>
 </div>
   </div>
@@ -436,3 +435,4 @@ entry: EntryLayout,
 </div>
   </div>
 </details>
+

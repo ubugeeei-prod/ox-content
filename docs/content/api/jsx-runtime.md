@@ -567,13 +567,12 @@
 
 // MyComponent.tsx
 export function Hero({ title }: { title: string }) {
-return (
-&lt;section class=&quot;hero&quot;&gt;
-&lt;h1&gt;{title}&lt;/h1&gt;
-&lt;/section&gt;
-);
+  return (
+    &lt;section class=&quot;hero&quot;&gt;
+      &lt;h1&gt;{title}&lt;/h1&gt;
+    &lt;/section&gt;
+  );
 }</code></pre>
-
 </div>
 </div>
   </div>
@@ -625,3 +624,4 @@ return (
 </div>
   </div>
 </details>
+
