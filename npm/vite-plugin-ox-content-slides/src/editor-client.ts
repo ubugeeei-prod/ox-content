@@ -444,22 +444,34 @@ function renderCanvasEditorStyle(): string {
       border-color: ${style.activeBorder};
       background: ${style.activeFill};
     }
-    .${classes.label} {
+    .${classes.grabHandle} {
       position: absolute;
       left: -1px;
-      top: -25px;
-      min-width: 26px;
-      height: 23px;
+      top: -21px;
+      width: 22px;
+      height: 20px;
       display: inline-flex;
       align-items: center;
       justify-content: center;
       border-radius: 4px 4px 0 0;
       background: ${style.selectionBorder};
-      color: ${style.labelText};
-      font: 650 12px/1 system-ui, sans-serif;
+      color: ${style.handleText};
+      opacity: 0;
+      transform: translateY(2px);
+      transition: opacity 120ms ease, transform 120ms ease;
     }
-    .${classes.box}[data-selected="true"] .${classes.label} {
+    .${classes.box}:hover .${classes.grabHandle},
+    .${classes.box}[data-selected="true"] .${classes.grabHandle} {
+      opacity: 1;
+      transform: none;
+    }
+    .${classes.box}[data-selected="true"] .${classes.grabHandle} {
       background: ${style.activeBorder};
+    }
+    .${classes.grabHandle} svg {
+      width: 12px;
+      height: 12px;
+      fill: currentColor;
     }
     .${classes.resize} {
       position: absolute;
@@ -528,15 +540,17 @@ function installCanvasEditorOverlay(
     box.style.width = `${placement.w}%`;
     box.style.height = `${placement.h}%`;
 
-    const label = doc.createElement("span");
-    label.className = classes.label;
-    label.textContent = String(index + 1);
+    const grabHandle = doc.createElement("span");
+    grabHandle.className = classes.grabHandle;
+    grabHandle.title = "Move";
+    grabHandle.innerHTML =
+      '<svg viewBox="0 0 16 16" aria-hidden="true"><circle cx="5" cy="4" r="1.15"/><circle cx="11" cy="4" r="1.15"/><circle cx="5" cy="8" r="1.15"/><circle cx="11" cy="8" r="1.15"/><circle cx="5" cy="12" r="1.15"/><circle cx="11" cy="12" r="1.15"/></svg>';
 
     const handle = doc.createElement("span");
     handle.className = classes.resize;
     handle.title = "Resize";
 
-    box.append(label, handle);
+    box.append(grabHandle, handle);
     overlay.append(box);
 
     function startDrag(event: PointerEvent, mode: CanvasDragMode): void {

@@ -12,13 +12,13 @@ describe("slide layout metadata", () => {
         layout: "Canvas",
         align: "center",
         density: "spacious",
-        accent: "#176b5d",
+        accent: "#111111",
       }),
     ).toEqual({
       layout: "canvas",
       align: "center",
       density: "spacious",
-      accent: "#176b5d",
+      accent: "#111111",
     });
   });
 

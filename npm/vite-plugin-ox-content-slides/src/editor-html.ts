@@ -15,10 +15,10 @@ const EDITOR_UI_THEME = {
     lineStrong: "rgba(23, 31, 28, 0.24)",
     text: "#17201e",
     muted: "#6a716b",
-    accent: "#2f5d50",
-    accentSoft: "rgba(47, 93, 80, 0.12)",
+    accent: "#1f1f1f",
+    accentSoft: "rgba(17, 17, 17, 0.08)",
     code: "#ecefea",
-    primary: "#24483f",
+    primary: "#1f1f1f",
     primaryText: "#fff",
   },
   dark: {
@@ -28,13 +28,51 @@ const EDITOR_UI_THEME = {
     lineStrong: "rgba(237, 241, 235, 0.24)",
     text: "#edf1eb",
     muted: "#9fa79f",
-    accent: "#8fb8aa",
-    accentSoft: "rgba(143, 184, 170, 0.14)",
+    accent: "#e5e5e5",
+    accentSoft: "rgba(255, 255, 255, 0.1)",
     code: "#1e231f",
-    primary: "#8fb8aa",
+    primary: "#e5e5e5",
     primaryText: "#101311",
   },
 } as const;
+
+const EDITOR_ICONS = {
+  alignCenter: '<path d="M5 6h14M8 12h8M6 18h12"/>',
+  alignEnd: '<path d="M5 6h14M9 12h10M7 18h12"/>',
+  alignStart: '<path d="M5 6h14M5 12h10M5 18h12"/>',
+  canvas: '<rect x="5" y="5" width="14" height="14" rx="2"/><path d="M9 9h3M9 13h6"/>',
+  code: '<path d="m9 8-4 4 4 4M15 8l4 4-4 4"/>',
+  densityBalanced: '<path d="M6 7h12M6 12h12M6 17h12"/>',
+  densityCompact: '<path d="M6 9h12M6 12h12M6 15h12"/>',
+  densitySpacious: '<path d="M6 6h12M6 12h12M6 18h12"/>',
+  external:
+    '<path d="M14 5h5v5"/><path d="m13 11 6-6"/><path d="M19 14v4a1 1 0 0 1-1 1H6a1 1 0 0 1-1-1V6a1 1 0 0 1 1-1h4"/>',
+  plus: '<path d="M12 5v14M5 12h14"/>',
+  presenter: '<rect x="3" y="4" width="18" height="12" rx="2"/><path d="M8 20h8M12 16v4"/>',
+  quote: '<path d="M8 11h3v6H5v-5c0-3 1.5-5 4-6M18 11h3v6h-6v-5c0-3 1.5-5 4-6"/>',
+  save: '<path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2Z"/><path d="M17 21v-8H7v8M7 3v5h8"/>',
+  split: '<rect x="4" y="5" width="16" height="14" rx="2"/><path d="M12 5v14"/>',
+  stack:
+    '<rect x="5" y="6" width="14" height="4" rx="1"/><rect x="5" y="14" width="14" height="4" rx="1"/>',
+  statement: '<path d="M7 8h10M9 12h6M10 16h4"/>',
+} as const;
+
+type EditorIconName = keyof typeof EDITOR_ICONS;
+
+const SEGMENT_ICONS: Record<string, EditorIconName> = {
+  "align:center": "alignCenter",
+  "align:end": "alignEnd",
+  "align:start": "alignStart",
+  "density:balanced": "densityBalanced",
+  "density:compact": "densityCompact",
+  "density:spacious": "densitySpacious",
+  "layout:canvas": "canvas",
+  "layout:code": "code",
+  "layout:quote": "quote",
+  "layout:split": "split",
+  "layout:stack": "stack",
+  "layout:statement": "statement",
+};
 
 function cssVarName(key: string): string {
   return key.replace(/[A-Z]/g, (letter) => `-${letter.toLowerCase()}`);
@@ -54,22 +92,28 @@ function escapeHtmlAttribute(value: string): string {
     .replace(/>/g, "&gt;");
 }
 
+function renderIcon(name: EditorIconName, className = "icon"): string {
+  return `<svg class="${className}" viewBox="0 0 24 24" aria-hidden="true">${EDITOR_ICONS[name]}</svg>`;
+}
+
 function renderSegmentedOptions(
   kind: "layout" | "align" | "density",
   options: readonly SlideChoice<string>[],
 ): string {
   return options
-    .map(
-      (option) =>
-        `<button class="segment" type="button" data-${kind}-value="${escapeHtmlAttribute(option.value)}" title="${escapeHtmlAttribute(option.title)}">${option.label}</button>`,
-    )
+    .map((option) => {
+      const icon = SEGMENT_ICONS[`${kind}:${option.value}`];
+      const iconHtml = icon ? renderIcon(icon, "segment-icon") : "";
+
+      return `<button class="segment" type="button" data-${kind}-value="${escapeHtmlAttribute(option.value)}" title="${escapeHtmlAttribute(option.title)}" aria-label="${escapeHtmlAttribute(option.title)}">${iconHtml}<span class="segment-label sr-only">${option.label}</span></button>`;
+    })
     .join("\n              ");
 }
 
 function renderAccentControls(): string {
   const swatches = SLIDE_ACCENT_OPTIONS.map(
     (option) =>
-      `<button class="swatch" type="button" data-accent-value="${escapeHtmlAttribute(option.value)}" style="--swatch: ${escapeHtmlAttribute(option.value)}" title="${escapeHtmlAttribute(option.title)}"></button>`,
+      `<button class="swatch" type="button" data-accent-value="${escapeHtmlAttribute(option.value)}" style="--swatch: ${escapeHtmlAttribute(option.value)}; --swatch-foreground: ${escapeHtmlAttribute(option.foreground)}" title="${escapeHtmlAttribute(option.title)}" aria-label="${escapeHtmlAttribute(option.title)}"></button>`,
   ).join("\n              ");
   const defaultAccent = SLIDE_ACCENT_OPTIONS[0].value;
 
@@ -111,6 +155,17 @@ ${renderEditorThemeVars(EDITOR_UI_THEME.dark)}
       button, textarea, input {
         color: inherit;
         font: inherit;
+      }
+      .sr-only {
+        position: absolute;
+        width: 1px;
+        height: 1px;
+        padding: 0;
+        margin: -1px;
+        overflow: hidden;
+        clip: rect(0, 0, 0, 0);
+        white-space: nowrap;
+        border: 0;
       }
       .app {
         display: grid;
@@ -180,14 +235,28 @@ ${renderEditorThemeVars(EDITOR_UI_THEME.dark)}
         background: var(--panel);
       }
       .segment {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        gap: 6px;
         min-width: 0;
         min-height: 34px;
-        padding: 0 8px;
+        padding: 0;
         border: 0;
         border-right: 1px solid var(--line);
         background: transparent;
         color: var(--muted);
         cursor: pointer;
+      }
+      .segment-icon {
+        width: 14px;
+        height: 14px;
+        flex: 0 0 auto;
+        stroke: currentColor;
+        fill: none;
+        stroke-width: 1.8;
+        stroke-linecap: round;
+        stroke-linejoin: round;
       }
       .segment:last-child { border-right: 0; }
       .segment[aria-pressed="true"] {
@@ -198,25 +267,44 @@ ${renderEditorThemeVars(EDITOR_UI_THEME.dark)}
       .swatches {
         display: flex;
         align-items: center;
-        gap: 8px;
+        gap: 7px;
         min-width: 0;
         flex-wrap: wrap;
       }
       .swatch {
-        width: 32px;
-        height: 32px;
+        position: relative;
+        width: 28px;
+        height: 28px;
         border: 1px solid var(--line-strong);
         border-radius: 4px;
         background: var(--swatch);
+        box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.16);
         cursor: pointer;
       }
+      .swatch:hover {
+        transform: translateY(-1px);
+      }
       .swatch[aria-pressed="true"] {
-        outline: 2px solid var(--accent);
-        outline-offset: 2px;
+        border-color: color-mix(in srgb, var(--swatch) 80%, var(--text));
+        box-shadow:
+          inset 0 0 0 1px rgba(255, 255, 255, 0.2),
+          0 0 0 2px var(--panel),
+          0 0 0 4px color-mix(in srgb, var(--swatch) 72%, var(--text));
+      }
+      .swatch[aria-pressed="true"]::after {
+        position: absolute;
+        left: 50%;
+        top: 50%;
+        width: 9px;
+        height: 5px;
+        border-left: 2px solid var(--swatch-foreground);
+        border-bottom: 2px solid var(--swatch-foreground);
+        content: "";
+        transform: translate(-50%, -62%) rotate(-45deg);
       }
       .color-input {
         width: 42px;
-        height: 34px;
+        height: 28px;
         padding: 0;
         border: 1px solid var(--line-strong);
         border-radius: 4px;
@@ -287,6 +375,11 @@ ${renderEditorThemeVars(EDITOR_UI_THEME.dark)}
         border-color: transparent;
         background: var(--primary);
         color: var(--primary-text);
+      }
+      .button[data-icon-only="true"] {
+        width: 36px;
+        padding: 0;
+        gap: 0;
       }
       .icon {
         width: 16px;
@@ -361,9 +454,9 @@ ${renderEditorThemeVars(EDITOR_UI_THEME.dark)}
       <aside class="sidebar">
         <header class="bar">
           <div class="title">Slides</div>
-          <button class="button" type="button" data-new>
-            <svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg>
-            <span>New</span>
+          <button class="button" type="button" data-new data-icon-only="true" title="New slide" aria-label="New slide">
+            ${renderIcon("plus")}
+            <span class="sr-only">New</span>
           </button>
         </header>
         <div class="deck-list" data-decks></div>
@@ -373,9 +466,9 @@ ${renderEditorThemeVars(EDITOR_UI_THEME.dark)}
           <div class="title" data-current-file>Editor</div>
           <span class="status" data-status>Clean</span>
           <div class="spacer"></div>
-          <button class="button" type="button" data-save data-primary="true">
-            <svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2Z"/><path d="M17 21v-8H7v8M7 3v5h8"/></svg>
-            <span>Save</span>
+          <button class="button" type="button" data-save data-primary="true" data-icon-only="true" title="Save" aria-label="Save">
+            ${renderIcon("save")}
+            <span class="sr-only">Save</span>
           </button>
         </header>
         <section class="inspector" data-inspector>
@@ -412,8 +505,8 @@ ${renderEditorThemeVars(EDITOR_UI_THEME.dark)}
         <header class="bar">
           <div class="title">Preview</div>
           <div class="spacer"></div>
-          <a class="button" data-open target="_blank" rel="noreferrer">Open</a>
-          <a class="button" data-presenter target="_blank" rel="noreferrer">Presenter</a>
+          <a class="button" data-open data-icon-only="true" target="_blank" rel="noreferrer" title="Open" aria-label="Open">${renderIcon("external")}<span class="sr-only">Open</span></a>
+          <a class="button" data-presenter data-icon-only="true" target="_blank" rel="noreferrer" title="Presenter" aria-label="Presenter">${renderIcon("presenter")}<span class="sr-only">Presenter</span></a>
         </header>
         <iframe data-preview title="Slide preview"></iframe>
       </section>

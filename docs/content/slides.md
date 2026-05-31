@@ -97,7 +97,7 @@ layout edits made in the GUI remain easy to review and edit by hand.
 layout: "split"
 align: "center"
 density: "spacious"
-accent: "#176b5d"
+accent: "#111111"
 ---
 
 # Source-first editing
@@ -233,7 +233,7 @@ import type { SlideThemeConfig } from "@ox-content/vite-plugin-slides";
 export const editorialTheme = {
   fontSans: '"IBM Plex Sans", system-ui, sans-serif',
   fontMono: '"IBM Plex Mono", ui-monospace, monospace',
-  colorPrimary: "#176b5d",
+  colorPrimary: "#111111",
   surfaceRadius: "4px",
   padding: "4.8rem",
 } satisfies SlideThemeConfig;

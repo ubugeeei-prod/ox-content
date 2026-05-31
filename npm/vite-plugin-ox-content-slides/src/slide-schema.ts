@@ -24,6 +24,10 @@ export interface SlideChoice<TValue extends string> {
   title: string;
 }
 
+export interface SlideAccentChoice<TValue extends string> extends SlideChoice<TValue> {
+  foreground: string;
+}
+
 export const SLIDE_LAYOUT_OPTIONS = [
   { value: "stack", label: "Stack", title: "Stacked content" },
   { value: "statement", label: "Statement", title: "Centered statement" },
@@ -46,11 +50,15 @@ export const SLIDE_DENSITY_OPTIONS = [
 ] as const satisfies readonly SlideChoice<string>[];
 
 export const SLIDE_ACCENT_OPTIONS = [
-  { value: "#176b5d", label: "Teal", title: "Teal" },
-  { value: "#8b3a62", label: "Plum", title: "Plum" },
-  { value: "#b45f24", label: "Copper", title: "Copper" },
-  { value: "#334155", label: "Ink", title: "Ink" },
-] as const satisfies readonly SlideChoice<string>[];
+  { value: "#111111", label: "Night", title: "Night black", foreground: "#ffffff" },
+  { value: "#1f1f1f", label: "Ink", title: "Ink black", foreground: "#ffffff" },
+  { value: "#2b2b2b", label: "Graphite", title: "Graphite", foreground: "#ffffff" },
+  { value: "#3a3a3a", label: "Charcoal", title: "Charcoal", foreground: "#ffffff" },
+  { value: "#4a4a4a", label: "Iron", title: "Iron gray", foreground: "#ffffff" },
+  { value: "#5c5c5c", label: "Smoke", title: "Smoke gray", foreground: "#ffffff" },
+  { value: "#666666", label: "Ash", title: "Ash gray", foreground: "#ffffff" },
+  { value: "#737373", label: "Neutral", title: "Neutral gray", foreground: "#ffffff" },
+] as const satisfies readonly SlideAccentChoice<string>[];
 
 export type SlideLayout = (typeof SLIDE_LAYOUT_OPTIONS)[number]["value"];
 export type SlideAlign = (typeof SLIDE_ALIGN_OPTIONS)[number]["value"];
@@ -124,7 +132,7 @@ export const CANVAS_SNAP = {
 export const CANVAS_EDITOR_CLASSES = {
   overlay: "ox-editor-canvas-overlay",
   box: "ox-editor-canvas-box",
-  label: "ox-editor-canvas-label",
+  grabHandle: "ox-editor-canvas-grab-handle",
   resize: "ox-editor-canvas-resize",
   guide: "ox-editor-canvas-guide",
   verticalGuide: "ox-editor-canvas-guide--vertical",
@@ -136,12 +144,12 @@ export const CANVAS_EDITOR_STYLE = {
   majorGridLine: "rgba(78, 93, 104, 0.16)",
   minorGridLine: "rgba(78, 93, 104, 0.08)",
   centerGuideLine: "rgba(65, 83, 94, 0.22)",
-  selectionBorder: "#2f6f87",
-  selectionFill: "rgba(47, 111, 135, 0.05)",
+  selectionBorder: "#2f3437",
+  selectionFill: "rgba(17, 17, 17, 0.035)",
   selectionShadow: "0 0 0 1px rgba(255, 255, 255, 0.78), 0 8px 24px rgba(15, 23, 42, 0.13)",
-  activeBorder: "#1d4f73",
-  activeFill: "rgba(29, 79, 115, 0.08)",
-  labelText: "#fff",
+  activeBorder: "#111111",
+  activeFill: "rgba(17, 17, 17, 0.06)",
+  handleText: "#ffffff",
   handleBorder: "#fff",
-  guideLine: "rgba(30, 90, 128, 0.58)",
+  guideLine: "rgba(17, 17, 17, 0.58)",
 } as const;
