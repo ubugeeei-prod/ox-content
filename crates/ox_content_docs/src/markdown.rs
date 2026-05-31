@@ -1368,7 +1368,7 @@ fn capitalize_ascii(value: &str) -> String {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::model::{ApiDocTag, ApiParamDoc, ApiReturnDoc};
+    use crate::model::{ApiDocTag, ApiParamDoc, ApiReturnDoc, ApiTypeParamDoc};
 
     fn test_entry(name: &str, kind: &str, file: &str, description: &str) -> ApiDocEntry {
         ApiDocEntry {
@@ -1385,6 +1385,7 @@ mod tests {
             end_line: 1,
             signature: Some(format!("export function {name}(): void")),
             members: vec![],
+            type_parameters: vec![],
         }
     }
 
@@ -1441,6 +1442,7 @@ mod tests {
                     end_line: 3,
                     signature: Some("export function cli(argv: string[]): void".to_string()),
                     members: vec![],
+                    type_parameters: vec![],
                 },
                 ApiDocEntry {
                     name: "Command".to_string(),
@@ -1471,6 +1473,7 @@ mod tests {
                         line: 6,
                         end_line: 6,
                     }],
+                    type_parameters: vec![],
                 },
             ],
         }]
@@ -1670,6 +1673,7 @@ mod tests {
                         line: 5,
                         end_line: 5,
                     }],
+                    type_parameters: vec![],
                 }],
             },
             ApiDocModule {
@@ -1710,6 +1714,7 @@ mod tests {
                         "export function buildCommand(entry: Command): AgentProfile".to_string(),
                     ),
                     members: vec![],
+                    type_parameters: vec![],
                 }],
             },
         ];
@@ -1755,6 +1760,7 @@ mod tests {
                     end_line: 10,
                     signature: Some("export function cli(options: CliOptions): void".to_string()),
                     members: vec![],
+                    type_parameters: vec![],
                 },
                 ApiDocEntry {
                     name: "CliOptions".to_string(),
@@ -1785,6 +1791,7 @@ mod tests {
                         line: 5,
                         end_line: 5,
                     }],
+                    type_parameters: vec![],
                 },
                 test_entry("Plugin", "type", "/repo/src/plugin.ts", "Plugin type."),
                 test_entry(
@@ -1905,6 +1912,44 @@ mod tests {
     }
 
     #[test]
+    fn type_parameters_render_as_a_section() {
+        let mut entry = test_entry("make", "function", "src/make.ts", "Make a thing.");
+        entry.type_parameters = vec![
+            ApiTypeParamDoc {
+                name: "G".to_string(),
+                constraint: Some("Base".to_string()),
+                default: Some("Default".to_string()),
+                description: String::new(),
+            },
+            ApiTypeParamDoc {
+                name: "T".to_string(),
+                constraint: None,
+                default: None,
+                description: "The value type.".to_string(),
+            },
+        ];
+        let docs = vec![ApiDocModule {
+            description: String::new(),
+            file: "mod".to_string(),
+            entries: vec![entry],
+        }];
+
+        let markdown = generate_markdown(
+            &docs,
+            &MarkdownDocsOptions {
+                path_strategy: MarkdownPathStrategy::TypeDoc,
+                render_style: MarkdownRenderStyle::Markdown,
+                ..MarkdownDocsOptions::default()
+            },
+        );
+        let page = markdown.get("mod/functions/make.md").unwrap();
+
+        assert!(page.contains("**Type Parameters**"));
+        assert!(page.contains("`G` *extends* `Base` = `Default`"));
+        assert!(page.contains("| `T` | The value type. |"));
+    }
+
+    #[test]
     fn typedoc_path_strategy_uses_clean_base_path_and_module_scope() {
         let docs = vec![
             ApiDocModule {
@@ -2020,6 +2065,7 @@ mod tests {
                         line: 2,
                         end_line: 2,
                     }],
+                    type_parameters: vec![],
                 },
                 ApiDocEntry {
                     name: "run".to_string(),
@@ -2035,6 +2081,7 @@ mod tests {
                     end_line: 5,
                     signature: Some("export function run(mode: Mode): void".to_string()),
                     members: vec![],
+                    type_parameters: vec![],
                 },
             ],
         }];
@@ -2120,6 +2167,7 @@ mod tests {
                         end_line: 7,
                     },
                 ],
+                type_parameters: vec![],
             }],
         }];
 

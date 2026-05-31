@@ -1023,6 +1023,17 @@ export interface DocsOptions {
   renderStyle?: "html" | "markdown";
 
   /**
+   * Opt in to TSDoc-style type-parameter documentation.
+   *
+   * When enabled, declaration type parameters (`<T extends C = D>`) are
+   * extracted into a structured "Type Parameters" section and `@typeParam` /
+   * `@template` tags are merged in (and removed from the generic tag list).
+   * `@typeParam` is a TSDoc feature, so this is off by default (JSDoc semantics).
+   * @default false
+   */
+  typeParameters?: boolean;
+
+  /**
    * Generate navigation metadata file.
    * @default true
    */
@@ -1049,6 +1060,7 @@ export interface ResolvedDocsOptions {
   basePath?: string;
   pathStrategy: "flat" | "typedoc";
   renderStyle: "html" | "markdown";
+  typeParameters: boolean;
   generateNav: boolean;
 }
 

@@ -154,13 +154,15 @@ pub fn extract_docs_from_directories(
     exclude: &[String],
     include_private: bool,
     include_internal: bool,
+    type_parameters: bool,
 ) -> ExtractResult<Vec<ExtractedDocModule>> {
     let extractor = DocExtractor::with_visibility(include_private, include_internal);
     let mut modules = Vec::new();
 
     for src_dir in src_dirs {
         for file in collect_source_files(src_dir, include, exclude) {
-            let entries = normalize_doc_items(extractor.extract_file(Path::new(&file))?);
+            let entries =
+                normalize_doc_items(extractor.extract_file(Path::new(&file))?, type_parameters);
             if !entries.is_empty() {
                 modules.push(ExtractedDocModule { file, entries });
             }

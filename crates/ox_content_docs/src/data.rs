@@ -1,6 +1,8 @@
 use serde_json::{json, Map, Value};
 
-use crate::model::{ApiDocEntry, ApiDocMember, ApiDocModule, ApiParamDoc, ApiReturnDoc};
+use crate::model::{
+    ApiDocEntry, ApiDocMember, ApiDocModule, ApiParamDoc, ApiReturnDoc, ApiTypeParamDoc,
+};
 
 const DOC_KIND_ORDER: [&str; 7] =
     ["function", "class", "interface", "type", "enum", "variable", "module"];
@@ -81,6 +83,12 @@ fn entry_to_json(entry: &ApiDocEntry) -> Value {
     value.insert("kind".to_string(), json!(entry.kind));
     value.insert("description".to_string(), json!(entry.description));
 
+    if !entry.type_parameters.is_empty() {
+        value.insert(
+            "typeParameters".to_string(),
+            Value::Array(entry.type_parameters.iter().map(type_param_to_json).collect()),
+        );
+    }
     if !entry.params.is_empty() {
         value.insert(
             "params".to_string(),
@@ -193,6 +201,21 @@ fn return_to_json(return_doc: &ApiReturnDoc) -> Value {
     })
 }
 
+fn type_param_to_json(type_param: &ApiTypeParamDoc) -> Value {
+    let mut value = Map::new();
+    value.insert("name".to_string(), json!(type_param.name));
+    if let Some(constraint) = &type_param.constraint {
+        value.insert("constraint".to_string(), json!(constraint));
+    }
+    if let Some(default) = &type_param.default {
+        value.insert("default".to_string(), json!(default));
+    }
+    if !type_param.description.is_empty() {
+        value.insert("description".to_string(), json!(type_param.description));
+    }
+    Value::Object(value)
+}
+
 fn normalize_doc_file_path(file_path: &str) -> String {
     let normalized = file_path.replace('\\', "/");
     for prefix in ["npm/", "packages/", "crates/", "src/"] {
@@ -236,6 +259,7 @@ mod tests {
                 end_line: 10,
                 signature: Some("export function clamp(value: number): number".to_string()),
                 members: vec![],
+                type_parameters: vec![],
             }],
         }];
 
@@ -286,6 +310,7 @@ mod tests {
                 end_line: 23,
                 signature: Some("type Combinator = unknown".to_string()),
                 members: vec![],
+                type_parameters: vec![],
             }],
         }];
 
@@ -299,5 +324,53 @@ mod tests {
         assert!(entry.get("file").is_none());
         assert!(entry.get("line").is_none());
         assert!(entry.get("endLine").is_none());
+    }
+
+    #[test]
+    fn entry_type_parameters_serialize_to_json() {
+        let docs = vec![ApiDocModule {
+            description: String::new(),
+            file: "/repo/src/make.ts".to_string(),
+            entries: vec![ApiDocEntry {
+                name: "make".to_string(),
+                kind: "function".to_string(),
+                description: "Make.".to_string(),
+                params: vec![],
+                returns: None,
+                examples: vec![],
+                tags: vec![],
+                private: false,
+                file: "/repo/src/make.ts".to_string(),
+                line: 1,
+                end_line: 1,
+                signature: None,
+                members: vec![],
+                type_parameters: vec![
+                    ApiTypeParamDoc {
+                        name: "G".to_string(),
+                        constraint: Some("Base".to_string()),
+                        default: Some("Default".to_string()),
+                        description: String::new(),
+                    },
+                    ApiTypeParamDoc {
+                        name: "T".to_string(),
+                        constraint: None,
+                        default: None,
+                        description: "Value.".to_string(),
+                    },
+                ],
+            }],
+        }];
+
+        let json = generate_docs_data_json(&docs, "2026-05-31T00:00:00.000Z").unwrap();
+        let value: Value = serde_json::from_str(&json).unwrap();
+        let type_params = &value["modules"][0]["entries"][0]["typeParameters"];
+
+        assert_eq!(type_params[0]["name"], "G");
+        assert_eq!(type_params[0]["constraint"], "Base");
+        assert_eq!(type_params[0]["default"], "Default");
+        assert!(type_params[0].get("description").is_none());
+        assert_eq!(type_params[1]["name"], "T");
+        assert_eq!(type_params[1]["description"], "Value.");
     }
 }

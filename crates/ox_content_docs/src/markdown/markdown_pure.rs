@@ -10,7 +10,7 @@ use super::{
     fmt_args, generate_source_href, parse_example_block, process_doc_text, push_fmt, EntryStats,
     MarkdownDocsOptions, MarkdownLinkContext,
 };
-use crate::model::{ApiDocEntry, ApiDocMember};
+use crate::model::{ApiDocEntry, ApiDocMember, ApiTypeParamDoc};
 
 /// Renders the per-page stats summary as a single italic Markdown line.
 pub(super) fn render_stats_markdown(stats: &EntryStats, module_count: Option<usize>) -> String {
@@ -77,6 +77,22 @@ pub(super) fn render_entry_body_pure(
             );
             push_fmt(&mut out, format_args!("[View source]({href})\n\n"));
         }
+    }
+
+    if !entry.type_parameters.is_empty() {
+        out.push_str("**Type Parameters**\n\n");
+        out.push_str("| Name | Description |\n| --- | --- |\n");
+        for type_param in &entry.type_parameters {
+            push_fmt(
+                &mut out,
+                format_args!(
+                    "| {} | {} |\n",
+                    type_param_name_cell(type_param),
+                    table_cell(&inline(&type_param.description, context)),
+                ),
+            );
+        }
+        out.push('\n');
     }
 
     if !entry.members.is_empty() {
@@ -289,4 +305,17 @@ fn code_cell(value: &str) -> String {
     } else {
         fmt_args(format_args!("`{}`", value.replace('|', "\\|")))
     }
+}
+
+/// Builds the Name cell for a type parameter: `` `T` `` plus optional `*extends*`
+/// constraint and `=` default, each rendered as inline code.
+fn type_param_name_cell(type_param: &ApiTypeParamDoc) -> String {
+    let mut cell = code_cell(&type_param.name);
+    if let Some(constraint) = &type_param.constraint {
+        push_fmt(&mut cell, format_args!(" *extends* {}", code_cell(constraint)));
+    }
+    if let Some(default) = &type_param.default {
+        push_fmt(&mut cell, format_args!(" = {}", code_cell(default)));
+    }
+    cell
 }

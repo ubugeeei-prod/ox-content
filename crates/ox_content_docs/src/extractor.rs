@@ -78,6 +78,9 @@ pub struct DocItem {
     pub children: Vec<DocItem>,
     /// JSDoc tags.
     pub tags: Vec<DocTag>,
+    /// Declaration type parameters (`<T extends C = D>`), in declaration order.
+    #[serde(default)]
+    pub type_parameters: Vec<TypeParamDoc>,
 }
 
 /// Parameter documentation.
@@ -93,6 +96,19 @@ pub struct ParamDoc {
     pub default_value: Option<String>,
     /// Description from JSDoc @param tag.
     pub description: Option<String>,
+}
+
+/// Type parameter documentation (`<T extends C = D>`).
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct TypeParamDoc {
+    /// Type parameter name (e.g. `T`).
+    pub name: String,
+    /// Constraint after `extends`, when present.
+    pub constraint: Option<String>,
+    /// Default type after `=`, when present.
+    pub default: Option<String>,
+    /// Description merged from a `@typeParam` / `@template` tag (TSDoc).
+    pub description: String,
 }
 
 /// JSDoc tag.
@@ -453,6 +469,7 @@ impl<'a> DocVisitor<'a> {
             return_type: None,
             children: Vec::new(),
             tags,
+            type_parameters: Vec::new(),
         })
     }
 
@@ -637,6 +654,34 @@ impl<'a> DocVisitor<'a> {
         type_params
             .map(|type_params| self.slice(type_params.span().start, type_params.span().end))
             .unwrap_or_default()
+    }
+
+    /// Extracts structured type parameters (`name`, `extends` constraint, `=`
+    /// default) from a declaration's type-parameter list. Descriptions are filled
+    /// later from `@typeParam` tags during normalization.
+    fn extract_type_parameters(
+        &self,
+        type_params: Option<&oxc_allocator::Box<'a, oxc_ast::ast::TSTypeParameterDeclaration<'a>>>,
+    ) -> Vec<TypeParamDoc> {
+        let Some(type_params) = type_params else {
+            return Vec::new();
+        };
+        type_params
+            .params
+            .iter()
+            .map(|param| TypeParamDoc {
+                name: param.name.name.to_string(),
+                constraint: param
+                    .constraint
+                    .as_ref()
+                    .map(|constraint| self.slice(constraint.span().start, constraint.span().end)),
+                default: param
+                    .default
+                    .as_ref()
+                    .map(|default| self.slice(default.span().start, default.span().end)),
+                description: String::new(),
+            })
+            .collect()
     }
 
     fn format_formal_parameters(&self, params: &oxc_ast::ast::FormalParameters<'a>) -> String {
@@ -1235,6 +1280,7 @@ impl<'a> DocVisitor<'a> {
             return_type: self.extract_return_type(func, &tags),
             children: Vec::new(),
             tags,
+            type_parameters: self.extract_type_parameters(func.type_parameters.as_ref()),
         })
     }
 
@@ -1306,6 +1352,7 @@ impl<'a> DocVisitor<'a> {
                         return_type: self.extract_return_type(&method.value, &method_tags),
                         children: Vec::new(),
                         tags: method_tags,
+                        type_parameters: Vec::new(),
                     });
                 }
                 oxc_ast::ast::ClassElement::PropertyDefinition(prop) => {
@@ -1348,6 +1395,7 @@ impl<'a> DocVisitor<'a> {
                         return_type: None,
                         children: Vec::new(),
                         tags: prop_tags,
+                        type_parameters: Vec::new(),
                     });
                 }
                 _ => {}
@@ -1372,6 +1420,7 @@ impl<'a> DocVisitor<'a> {
             return_type: None,
             children,
             tags,
+            type_parameters: self.extract_type_parameters(class.type_parameters.as_ref()),
         })
     }
 
@@ -1420,6 +1469,7 @@ impl<'a> DocVisitor<'a> {
                         return_type: None,
                         children: Vec::new(),
                         tags: prop_tags,
+                        type_parameters: Vec::new(),
                     });
                 }
                 TSSignature::TSMethodSignature(method) => {
@@ -1472,6 +1522,7 @@ impl<'a> DocVisitor<'a> {
                         ),
                         children: Vec::new(),
                         tags: method_tags,
+                        type_parameters: Vec::new(),
                     });
                 }
                 _ => {}
@@ -1613,6 +1664,7 @@ impl<'a> DocVisitor<'a> {
                         .extract_return_type_from_annotation(arrow.return_type.as_ref(), &tags),
                     children: Vec::new(),
                     tags: tags.clone(),
+                    type_parameters: self.extract_type_parameters(arrow.type_parameters.as_ref()),
                 },
                 Expression::FunctionExpression(func_expr) => DocItem {
                     name: name.clone(),
@@ -1638,6 +1690,8 @@ impl<'a> DocVisitor<'a> {
                     return_type: self.extract_return_type(func_expr, &tags),
                     children: Vec::new(),
                     tags: tags.clone(),
+                    type_parameters: self
+                        .extract_type_parameters(func_expr.type_parameters.as_ref()),
                 },
                 other => DocItem {
                     name: name.clone(),
@@ -1663,6 +1717,7 @@ impl<'a> DocVisitor<'a> {
                     return_type: None,
                     children: Vec::new(),
                     tags: tags.clone(),
+                    type_parameters: Vec::new(),
                 },
             };
             self.items.push(item);
@@ -1704,6 +1759,7 @@ impl<'a> DocVisitor<'a> {
             return_type: None,
             children,
             tags,
+            type_parameters: self.extract_type_parameters(type_alias.type_parameters.as_ref()),
         });
     }
 
@@ -1737,6 +1793,7 @@ impl<'a> DocVisitor<'a> {
             return_type: None,
             children,
             tags,
+            type_parameters: self.extract_type_parameters(interface.type_parameters.as_ref()),
         });
     }
 
@@ -1775,6 +1832,7 @@ impl<'a> DocVisitor<'a> {
             return_type: None,
             children,
             tags,
+            type_parameters: Vec::new(),
         });
     }
 
@@ -1818,6 +1876,7 @@ impl<'a> DocVisitor<'a> {
             return_type: None,
             children: Vec::new(),
             tags: member_tags,
+            type_parameters: Vec::new(),
         })
     }
 }
@@ -2066,6 +2125,27 @@ export function cli(): void {}
         assert_eq!(items[0].doc.as_deref(), Some("Main entry point for the framework."));
         assert!(items[0].tags.iter().any(|tag| tag.tag == "module"));
         assert_eq!(items[1].name, "cli");
+    }
+
+    #[test]
+    fn test_extract_function_type_parameters() {
+        let source = r"
+/** Make a thing. */
+export function make<G extends Base = Default, V>(value: V): G {
+  return value as unknown as G;
+}
+";
+        let extractor = DocExtractor::new();
+        let items = extractor.extract_source(source, "src/make.ts", SourceType::ts()).unwrap();
+        let func = items.iter().find(|item| item.name == "make").unwrap();
+
+        assert_eq!(func.type_parameters.len(), 2);
+        assert_eq!(func.type_parameters[0].name, "G");
+        assert_eq!(func.type_parameters[0].constraint.as_deref(), Some("Base"));
+        assert_eq!(func.type_parameters[0].default.as_deref(), Some("Default"));
+        assert_eq!(func.type_parameters[1].name, "V");
+        assert_eq!(func.type_parameters[1].constraint, None);
+        assert_eq!(func.type_parameters[1].default, None);
     }
 
     #[test]

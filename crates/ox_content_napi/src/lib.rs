@@ -30,13 +30,13 @@ use ox_content_docs::{
     build_export_graph, extract_docs_from_directories, extract_docs_from_entry_points,
     generate_docs_data_json, generate_markdown, generate_nav_code, generate_nav_metadata,
     generate_nav_metadata_from_docs, normalize_doc_items, write_docs_output, ApiDocEntry,
-    ApiDocMember, ApiDocModule, ApiDocTag, ApiParamDoc, ApiReturnDoc, DocExtractor, DocItem,
-    DocItemKind, DocTag, DocsDiagnostic, DocsDiagnosticCode, DocsNavItem, DocsOutputOptions,
-    EntryPointDocsOptions, EntryPointSpec, ExportGraph, ExportKind, ExportSource,
-    ExternalDocsOptions, ExternalPackageSource, ExtractedDocModule, GraphOptions,
+    ApiDocMember, ApiDocModule, ApiDocTag, ApiParamDoc, ApiReturnDoc, ApiTypeParamDoc,
+    DocExtractor, DocItem, DocItemKind, DocTag, DocsDiagnostic, DocsDiagnosticCode, DocsNavItem,
+    DocsOutputOptions, EntryPointDocsOptions, EntryPointSpec, ExportGraph, ExportKind,
+    ExportSource, ExternalDocsOptions, ExternalPackageSource, ExtractedDocModule, GraphOptions,
     MarkdownDocsOptions, MarkdownLinkStyle, MarkdownPathStrategy, MarkdownRenderStyle,
-    NormalizedDocEntry, NormalizedMember, NormalizedParamDoc, NormalizedReturnDoc, ParamDoc,
-    PublicExport,
+    NormalizedDocEntry, NormalizedMember, NormalizedParamDoc, NormalizedReturnDoc,
+    NormalizedTypeParam, ParamDoc, PublicExport,
 };
 use ox_content_parser::{Parser, ParserOptions};
 use ox_content_renderer::HtmlRenderer;
@@ -177,6 +177,16 @@ pub struct JsDocReturn {
     pub description: String,
 }
 
+/// Type parameter documentation (`<T extends C = D>`) used by generated API docs.
+#[napi(object)]
+#[derive(Clone)]
+pub struct JsTypeParam {
+    pub name: String,
+    pub constraint: Option<String>,
+    pub r#default: Option<String>,
+    pub description: String,
+}
+
 /// Normalized member documentation used by generated API docs.
 #[napi(object)]
 #[derive(Clone)]
@@ -214,6 +224,7 @@ pub struct JsDocEntry {
     pub end_line: u32,
     pub signature: Option<String>,
     pub members: Option<Vec<JsDocMember>>,
+    pub type_parameters: Option<Vec<JsTypeParam>>,
 }
 
 /// Navigation item emitted for generated documentation.
@@ -259,6 +270,7 @@ pub struct JsDocsMarkdownEntry {
     pub end_line: u32,
     pub signature: Option<String>,
     pub members: Option<Vec<JsDocMember>>,
+    pub type_parameters: Option<Vec<JsTypeParam>>,
 }
 
 /// Extracted docs for one source file used by generated API Markdown.
@@ -334,6 +346,9 @@ pub struct JsEntryPointDocsOptions {
     pub internal: Option<bool>,
     pub external_docs: Option<bool>,
     pub external_package_sources: Option<Vec<JsExternalPackageSource>>,
+    /// Opt in to TSDoc-style type-parameter docs (`@typeParam` / `<T>` table).
+    /// Off by default.
+    pub type_parameters: Option<bool>,
 }
 
 /// Explicit source entry for an external package.
@@ -891,6 +906,17 @@ fn map_normalized_doc_entry(entry: NormalizedDocEntry) -> JsDocEntry {
         signature: entry.signature,
         members: (!entry.members.is_empty())
             .then(|| entry.members.into_iter().map(map_normalized_member).collect()),
+        type_parameters: (!entry.type_parameters.is_empty())
+            .then(|| entry.type_parameters.into_iter().map(map_normalized_type_param).collect()),
+    }
+}
+
+fn map_normalized_type_param(type_param: NormalizedTypeParam) -> JsTypeParam {
+    JsTypeParam {
+        name: type_param.name,
+        constraint: type_param.constraint,
+        r#default: type_param.default,
+        description: type_param.description,
     }
 }
 
@@ -929,6 +955,7 @@ fn convert_entrypoint_docs_options(
         },
         include_private: options.private.unwrap_or(false),
         include_internal: options.internal.unwrap_or(false),
+        type_parameters: options.type_parameters.unwrap_or(false),
     }
 }
 
@@ -1112,6 +1139,21 @@ fn convert_markdown_entry(entry: JsDocsMarkdownEntry) -> ApiDocEntry {
             .into_iter()
             .map(convert_markdown_member)
             .collect(),
+        type_parameters: entry
+            .type_parameters
+            .unwrap_or_default()
+            .into_iter()
+            .map(convert_markdown_type_param)
+            .collect(),
+    }
+}
+
+fn convert_markdown_type_param(type_param: JsTypeParam) -> ApiTypeParamDoc {
+    ApiTypeParamDoc {
+        name: type_param.name,
+        constraint: type_param.constraint,
+        default: type_param.r#default,
+        description: type_param.description,
     }
 }
 
@@ -1165,6 +1207,7 @@ pub fn extract_file_doc_entries(
     file_path: String,
     include_private: Option<bool>,
     include_internal: Option<bool>,
+    type_parameters: Option<bool>,
 ) -> Result<Vec<JsDocEntry>> {
     let extractor = DocExtractor::with_visibility(
         include_private.unwrap_or(false),
@@ -1174,7 +1217,10 @@ pub fn extract_file_doc_entries(
         .extract_file(Path::new(&file_path))
         .map_err(|err| Error::from_reason(err.to_string()))?;
 
-    Ok(normalize_doc_items(items).into_iter().map(map_normalized_doc_entry).collect())
+    Ok(normalize_doc_items(items, type_parameters.unwrap_or(false))
+        .into_iter()
+        .map(map_normalized_doc_entry)
+        .collect())
 }
 
 /// Generates sidebar navigation metadata from documentation file paths.
@@ -1232,6 +1278,7 @@ pub fn extract_docs_from_directories_napi(
     exclude: Vec<String>,
     include_private: Option<bool>,
     include_internal: Option<bool>,
+    type_parameters: Option<bool>,
 ) -> Result<Vec<JsExtractedDocsModule>> {
     let modules = extract_docs_from_directories(
         &src_dirs,
@@ -1239,6 +1286,7 @@ pub fn extract_docs_from_directories_napi(
         &exclude,
         include_private.unwrap_or(false),
         include_internal.unwrap_or(false),
+        type_parameters.unwrap_or(false),
     )
     .map_err(|err| Error::from_reason(err.to_string()))?;
 
@@ -3305,7 +3353,7 @@ mod tests {
         generate_docs_nav_metadata_from_docs_napi, get_git_last_updated, map_normalized_doc_entry,
         JsDocMember, JsDocParam, JsDocReturn, JsDocsMarkdownEntry, JsDocsMarkdownModule,
         JsDocsMarkdownOptions, JsDocsMarkdownTag, JsDocsNavOptions, JsEntryPointDocsOptions,
-        JsEntryPointSpec,
+        JsEntryPointSpec, JsTypeParam,
     };
 
     #[test]
@@ -3372,6 +3420,7 @@ mod tests {
                 line: 4,
                 end_line: 4,
             }],
+            type_parameters: vec![],
         };
 
         let js_entry = map_normalized_doc_entry(entry);
@@ -3403,6 +3452,7 @@ mod tests {
                 end_line: 1,
                 signature: Some("export interface CommandContext".to_string()),
                 members: None,
+                type_parameters: None,
             }],
         }];
         let markdown = generate_docs_markdown(
@@ -3441,6 +3491,7 @@ mod tests {
                 end_line: 1,
                 signature: Some("export interface CommandContext".to_string()),
                 members: None,
+                type_parameters: None,
             }],
         }];
         let markdown = generate_docs_markdown(
@@ -3497,6 +3548,7 @@ mod tests {
                         line: 5,
                         end_line: 5,
                     }]),
+                    type_parameters: None,
                 }],
             },
             JsDocsMarkdownModule {
@@ -3530,6 +3582,7 @@ mod tests {
                         "export function buildCommand(entry: Command): Command".to_string(),
                     ),
                     members: None,
+                    type_parameters: None,
                 }],
             },
         ];
@@ -3569,6 +3622,7 @@ mod tests {
                     end_line: 10,
                     signature: Some("export interface Command".to_string()),
                     members: None,
+                    type_parameters: None,
                 },
                 JsDocsMarkdownEntry {
                     name: "cli".to_string(),
@@ -3584,6 +3638,7 @@ mod tests {
                     end_line: 10,
                     signature: Some("export function cli(): void".to_string()),
                     members: None,
+                    type_parameters: None,
                 },
             ],
         }];
@@ -3607,6 +3662,52 @@ mod tests {
     }
 
     #[test]
+    fn generate_docs_markdown_renders_type_parameters() {
+        let docs = vec![JsDocsMarkdownModule {
+            description: None,
+            file: "default".to_string(),
+            entries: vec![JsDocsMarkdownEntry {
+                name: "make".to_string(),
+                kind: "function".to_string(),
+                description: "Make a thing.".to_string(),
+                params: None,
+                returns: None,
+                examples: None,
+                tags: None,
+                private: false,
+                file: "/repo/src/make.ts".to_string(),
+                line: 1,
+                end_line: 1,
+                signature: Some("export function make<G>(): G".to_string()),
+                members: None,
+                type_parameters: Some(vec![JsTypeParam {
+                    name: "G".to_string(),
+                    constraint: Some("Base".to_string()),
+                    r#default: Some("Default".to_string()),
+                    description: "The thing type.".to_string(),
+                }]),
+            }],
+        }];
+
+        let markdown = generate_docs_markdown(
+            docs,
+            Some(JsDocsMarkdownOptions {
+                group_by: Some("file".to_string()),
+                github_url: None,
+                link_style: Some("markdown".to_string()),
+                base_path: None,
+                path_strategy: Some("typedoc".to_string()),
+                render_style: Some("markdown".to_string()),
+            }),
+        );
+        let page = markdown.get("default/functions/make.md").unwrap();
+
+        assert!(page.contains("**Type Parameters**"));
+        assert!(page.contains("`G` *extends* `Base` = `Default`"));
+        assert!(page.contains("The thing type."));
+    }
+
+    #[test]
     fn generate_docs_markdown_renders_module_description_in_typedoc_index() {
         let docs = vec![JsDocsMarkdownModule {
             description: Some("The entry for gunshi context.".to_string()),
@@ -3625,6 +3726,7 @@ mod tests {
                 end_line: 10,
                 signature: Some("export function createCommandContext(): void".to_string()),
                 members: None,
+                type_parameters: None,
             }],
         }];
 
@@ -3667,6 +3769,7 @@ mod tests {
                     end_line: 1,
                     signature: None,
                     members: None,
+                    type_parameters: None,
                 },
                 JsDocsMarkdownEntry {
                     name: "Mode".to_string(),
@@ -3682,6 +3785,7 @@ mod tests {
                     end_line: 1,
                     signature: None,
                     members: None,
+                    type_parameters: None,
                 },
             ],
         }];
@@ -3747,6 +3851,7 @@ mod tests {
                 end_line: 1,
                 signature: Some("export function cli(): void".to_string()),
                 members: None,
+                type_parameters: None,
             }],
         }];
 
