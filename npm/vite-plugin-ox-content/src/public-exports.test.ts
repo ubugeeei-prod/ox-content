@@ -6,9 +6,12 @@ describe("public export surface", () => {
     const guardedExports = [
       "DEFAULT_HTML_TEMPLATE",
       "DEFAULT_MARKDOWN_EXTENSIONS",
+      "DocsTestRunError",
       "buildSearchIndex",
       "buildSsg",
+      "collectDocsTests",
       "extractDocs",
+      "extractDocsTests",
       "generateMarkdown",
       "isMarkdownFilePath",
       "oxContent",
@@ -17,8 +20,10 @@ describe("public export surface", () => {
       "resolveOgImageOptions",
       "resolveSearchOptions",
       "resolveSsgOptions",
+      "runDocsTests",
       "transformMarkdown",
       "writeDocs",
+      "writeDocsTestFiles",
       "writeSearchIndex",
     ].sort();
 
