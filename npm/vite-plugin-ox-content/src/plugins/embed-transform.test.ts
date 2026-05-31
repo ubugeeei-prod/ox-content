@@ -1,4 +1,5 @@
 import { describe, expect, it } from "vite-plus/test";
+import { transformPm } from "./pm";
 import { resetTabGroupCounter, transformTabs } from "./tabs";
 import { transformYouTube } from "./youtube";
 
@@ -71,5 +72,38 @@ describe("transformTabs output", () => {
   it("returns input unchanged when there is no <tabs> element", async () => {
     const html = `<p>Plain prose with a <a href="/x">link</a> and no embeds.</p>`;
     expect(await transformTabs(html)).toBe(html);
+  });
+});
+
+describe("transformPm output", () => {
+  it("expands <pm> into npm/pnpm/yarn/bun install tabs", async () => {
+    resetTabGroupCounter();
+    const html = await transformPm(`<pm>npm install -D vite</pm>`);
+    expect(html).toContain(`<label for="ox-tab-0-0">npm</label>`);
+    expect(html).toContain(`<label for="ox-tab-0-1">pnpm</label>`);
+    expect(html).toContain(`<label for="ox-tab-0-2">yarn</label>`);
+    expect(html).toContain(`<label for="ox-tab-0-3">bun</label>`);
+    expect(html).toContain(`<pre><code>npm install -D vite</code></pre>`);
+    expect(html).toContain(`<pre><code>pnpm add -D vite</code></pre>`);
+    expect(html).toContain(`<pre><code>yarn add -D vite</code></pre>`);
+    expect(html).toContain(`<pre><code>bun add -D vite</code></pre>`);
+  });
+
+  it("omits the sync group attribute by default", async () => {
+    resetTabGroupCounter();
+    const html = await transformPm(`<pm>npm i vite</pm>`);
+    expect(html).not.toContain("data-ox-tab-group");
+  });
+
+  it("emits the sync group attribute when sync is enabled", async () => {
+    resetTabGroupCounter();
+    const html = await transformPm(`<pm>npm i vite</pm>`, { sync: true });
+    expect(html).toContain(`data-ox-tab-group="pkg-manager"`);
+  });
+
+  it("returns input unchanged when there is no <pm> element", async () => {
+    resetTabGroupCounter();
+    const html = `<p>Plain prose with a <a href="/x">link</a> and no embeds.</p>`;
+    expect(await transformPm(html)).toBe(html);
   });
 });

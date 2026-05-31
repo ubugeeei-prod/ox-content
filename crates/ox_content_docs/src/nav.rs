@@ -4,7 +4,8 @@ use std::path::Path;
 
 use serde::{Deserialize, Serialize};
 
-use crate::markdown::{ApiDocEntry, ApiDocModule, MarkdownPathStrategy};
+use crate::markdown::MarkdownPathStrategy;
+use crate::model::{ApiDocEntry, ApiDocModule};
 
 const DEFAULT_BASE_PATH: &str = "/api";
 const DEFAULT_EXPORT_NAME: &str = "apiNav";
@@ -27,7 +28,10 @@ pub fn generate_nav_metadata(files: &[String], base_path: Option<&str>) -> Vec<D
     let base_path = normalize_base_path(base_path.unwrap_or(DEFAULT_BASE_PATH));
     let mut sorted_files = files.to_vec();
 
-    sorted_files.sort_by_key(|file| get_doc_display_name(file));
+    // `sort_by_cached_key` derives each display name once instead of
+    // recomputing it (a `file_stem` + title-format allocation) on every
+    // comparison; the ordering is identical.
+    sorted_files.sort_by_cached_key(|file| get_doc_display_name(file));
 
     sorted_files
         .into_iter()
@@ -60,7 +64,7 @@ fn generate_typedoc_nav_metadata(
 ) -> Vec<DocsNavItem> {
     let base_path = normalize_base_path(base_path.unwrap_or(DEFAULT_BASE_PATH));
     let mut docs = docs.to_vec();
-    docs.sort_by_key(|doc| module_file_name(&doc.file));
+    docs.sort_by_cached_key(|doc| module_file_name(&doc.file));
 
     docs.into_iter()
         .map(|doc| {

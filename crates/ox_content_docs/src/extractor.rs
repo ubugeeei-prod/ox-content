@@ -968,14 +968,18 @@ impl<'a> DocVisitor<'a> {
         })
     }
 
-    fn find_param_tag(tags: &[DocTag], name: &str) -> Option<ParsedParamTag> {
-        tags.iter()
-            .filter(|tag| matches!(tag.tag.as_str(), "param" | "arg" | "argument"))
-            .filter_map(Self::parse_param_tag)
-            .find(|tag| {
-                let tag_name = tag.name.trim_start_matches("...");
-                tag_name == name || tag_name.split('.').next() == Some(name)
-            })
+    /// Find the first pre-parsed `@param` tag matching `name`, using the same
+    /// predicate as before (strip a leading `...`, then exact-name or
+    /// dotted-prefix match). Operating on already-parsed tags avoids
+    /// re-parsing every `@param` for each formal parameter.
+    fn find_parsed_param_tag<'t>(
+        parsed: &'t [ParsedParamTag],
+        name: &str,
+    ) -> Option<&'t ParsedParamTag> {
+        parsed.iter().find(|tag| {
+            let tag_name = tag.name.trim_start_matches("...");
+            tag_name == name || tag_name.split('.').next() == Some(name)
+        })
     }
 
     fn parse_return_tag(tag: &DocTag) -> (Option<String>, Option<String>) {
@@ -1114,12 +1118,21 @@ impl<'a> DocVisitor<'a> {
         params: &oxc_ast::ast::FormalParameters<'a>,
         tags: &[DocTag],
     ) -> Vec<ParamDoc> {
+        // Parse the `@param`/`@arg`/`@argument` tags once, in source order,
+        // instead of re-filtering and re-parsing them for every formal
+        // parameter (the old `find_param_tag` did O(P*T) parses).
+        let parsed_param_tags: Vec<ParsedParamTag> = tags
+            .iter()
+            .filter(|tag| matches!(tag.tag.as_str(), "param" | "arg" | "argument"))
+            .filter_map(Self::parse_param_tag)
+            .collect();
+
         let mut docs = params
             .items
             .iter()
             .map(|param| {
                 let name = Self::binding_pattern_name(&param.pattern);
-                let tag = Self::find_param_tag(tags, &name);
+                let tag = Self::find_parsed_param_tag(&parsed_param_tags, &name);
                 let default_value = self
                     .binding_pattern_default_value(&param.pattern)
                     .or_else(|| {
@@ -1128,18 +1141,18 @@ impl<'a> DocVisitor<'a> {
                             .as_ref()
                             .map(|init| self.slice(init.span().start, init.span().end))
                     })
-                    .or_else(|| tag.as_ref().and_then(|tag| tag.default_value.clone()));
+                    .or_else(|| tag.and_then(|tag| tag.default_value.clone()));
 
                 let type_annotation = param
                     .type_annotation
                     .as_ref()
                     .map(|t| self.format_ts_type(&t.type_annotation))
-                    .or_else(|| tag.as_ref().and_then(|tag| tag.type_annotation.clone()));
+                    .or_else(|| tag.and_then(|tag| tag.type_annotation.clone()));
 
                 let optional = param.optional
                     || default_value.is_some()
-                    || tag.as_ref().is_some_and(|tag| tag.optional);
-                let description = tag.and_then(|tag| tag.description);
+                    || tag.is_some_and(|tag| tag.optional);
+                let description = tag.and_then(|tag| tag.description.clone());
 
                 ParamDoc { name, type_annotation, optional, default_value, description }
             })
@@ -1147,19 +1160,19 @@ impl<'a> DocVisitor<'a> {
 
         if let Some(rest) = params.rest.as_ref() {
             let name = Self::binding_pattern_name(&rest.rest.argument);
-            let tag = Self::find_param_tag(tags, &name);
+            let tag = Self::find_parsed_param_tag(&parsed_param_tags, &name);
             let type_annotation = rest
                 .type_annotation
                 .as_ref()
                 .map(|t| self.format_ts_type(&t.type_annotation))
-                .or_else(|| tag.as_ref().and_then(|tag| tag.type_annotation.clone()));
+                .or_else(|| tag.and_then(|tag| tag.type_annotation.clone()));
 
             docs.push(ParamDoc {
                 name,
                 type_annotation,
-                optional: tag.as_ref().is_some_and(|tag| tag.optional),
-                default_value: tag.as_ref().and_then(|tag| tag.default_value.clone()),
-                description: tag.and_then(|tag| tag.description),
+                optional: tag.is_some_and(|tag| tag.optional),
+                default_value: tag.and_then(|tag| tag.default_value.clone()),
+                description: tag.and_then(|tag| tag.description.clone()),
             });
         }
 

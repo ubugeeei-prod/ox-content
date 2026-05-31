@@ -4,9 +4,11 @@
 //! including raw-buffer AST transfer for JavaScript interoperability.
 
 mod highlight;
+mod html_scan;
 mod lint;
 mod mdast;
 mod mdast_raw;
+mod pm;
 mod tabs;
 mod transfer;
 mod transformer;
@@ -29,8 +31,9 @@ use ox_content_docs::{
     DocItemKind, DocTag, DocsDiagnostic, DocsDiagnosticCode, DocsNavItem, DocsOutputOptions,
     EntryPointDocsOptions, EntryPointSpec, ExportGraph, ExportKind, ExportSource,
     ExternalDocsOptions, ExternalPackageSource, ExtractedDocModule, GraphOptions,
-    MarkdownDocsOptions, MarkdownLinkStyle, MarkdownPathStrategy, NormalizedDocEntry,
-    NormalizedMember, NormalizedParamDoc, NormalizedReturnDoc, ParamDoc, PublicExport,
+    MarkdownDocsOptions, MarkdownLinkStyle, MarkdownPathStrategy, MarkdownRenderStyle,
+    NormalizedDocEntry, NormalizedMember, NormalizedParamDoc, NormalizedReturnDoc, ParamDoc,
+    PublicExport,
 };
 use ox_content_parser::{Parser, ParserOptions};
 use ox_content_renderer::HtmlRenderer;
@@ -282,6 +285,8 @@ pub struct JsDocsMarkdownOptions {
     pub base_path: Option<String>,
     #[napi(ts_type = "'flat' | 'typedoc'")]
     pub path_strategy: Option<String>,
+    #[napi(ts_type = "'html' | 'markdown'")]
+    pub render_style: Option<String>,
 }
 
 /// Options for writing generated API documentation files.
@@ -1104,6 +1109,7 @@ pub fn generate_docs_markdown(
             link_style: parse_markdown_link_style(options.link_style.as_deref()),
             base_path: options.base_path,
             path_strategy: parse_markdown_path_strategy(options.path_strategy.as_deref()),
+            render_style: parse_markdown_render_style(options.render_style.as_deref()),
         });
     generate_markdown(&docs.into_iter().map(convert_markdown_module).collect::<Vec<_>>(), &options)
         .into_iter()
@@ -1121,6 +1127,13 @@ fn parse_markdown_path_strategy(path_strategy: Option<&str>) -> MarkdownPathStra
     match path_strategy {
         Some("typedoc") => MarkdownPathStrategy::TypeDoc,
         _ => MarkdownPathStrategy::Flat,
+    }
+}
+
+fn parse_markdown_render_style(render_style: Option<&str>) -> MarkdownRenderStyle {
+    match render_style {
+        Some("markdown") => MarkdownRenderStyle::Markdown,
+        _ => MarkdownRenderStyle::Html,
     }
 }
 
@@ -1209,6 +1222,45 @@ pub struct JsTabsTransformResult {
 pub fn transform_tabs_embeds(html: String, start_group: u32) -> JsTabsTransformResult {
     let result = tabs::transform_tabs(&html, start_group);
     JsTabsTransformResult { html: result.html, group_count: result.group_count }
+}
+
+/// Options for [`transform_pm_embeds`].
+#[napi(object)]
+pub struct JsPmOptions {
+    /// Enable opt-in synced package-manager tab groups. When `true`, a
+    /// `data-ox-tab-group="pkg-manager"` attribute is emitted so the client
+    /// runtime keeps every pm tab group on the page in sync via `localStorage`.
+    /// Off by default; when omitted/`false` the output has no group attribute
+    /// and behaves exactly like a standalone tab group.
+    pub sync: Option<bool>,
+}
+
+/// Result of [`transform_pm_embeds`].
+#[napi(object)]
+pub struct JsPmTransformResult {
+    /// HTML with every `<pm>` block expanded into a package-manager tab widget.
+    pub html: String,
+    /// Number of tab groups expanded; the caller advances its shared tab-group
+    /// counter by this amount.
+    pub group_count: u32,
+}
+
+/// Expand `<pm>` blocks in rendered HTML into npm/pnpm/yarn/bun install tabs.
+///
+/// The single npm-style command inside each `<pm>` element is converted to the
+/// equivalent command for every package manager and rendered into the shared
+/// `ox-tabs` widget. Groups are numbered from `start_group`. Syncing is opt-in
+/// via `options.sync` and off by default.
+#[napi]
+pub fn transform_pm_embeds(
+    html: String,
+    start_group: u32,
+    options: Option<JsPmOptions>,
+) -> JsPmTransformResult {
+    let resolved =
+        pm::PmOptions { sync: options.and_then(|options| options.sync).unwrap_or(false) };
+    let result = pm::transform_pm(&html, start_group, resolved);
+    JsPmTransformResult { html: result.html, group_count: result.group_count }
 }
 
 /// Transforms Markdown source into HTML, frontmatter, and TOC.
@@ -3141,12 +3193,52 @@ mod tests {
                 link_style: Some("clean".to_string()),
                 base_path: Some("/api-ox".to_string()),
                 path_strategy: None,
+                render_style: None,
             }),
         );
         let index = markdown.get("index.md").unwrap();
 
         assert!(index.contains("href=\"/api-ox/context\""));
         assert!(index.contains("href=\"/api-ox/context#commandcontext\""));
+    }
+
+    #[test]
+    fn generate_docs_markdown_render_style_markdown_omits_html() {
+        let docs = vec![JsDocsMarkdownModule {
+            file: "/repo/src/context.ts".to_string(),
+            entries: vec![JsDocsMarkdownEntry {
+                name: "CommandContext".to_string(),
+                kind: "interface".to_string(),
+                description: "Runtime context.".to_string(),
+                params: None,
+                returns: None,
+                examples: None,
+                tags: None,
+                private: false,
+                file: "/repo/src/context.ts".to_string(),
+                line: 1,
+                end_line: 1,
+                signature: Some("export interface CommandContext".to_string()),
+                members: None,
+            }],
+        }];
+        let markdown = generate_docs_markdown(
+            docs,
+            Some(JsDocsMarkdownOptions {
+                group_by: Some("file".to_string()),
+                github_url: None,
+                link_style: None,
+                base_path: None,
+                path_strategy: None,
+                render_style: Some("markdown".to_string()),
+            }),
+        );
+        let page = markdown.get("context.md").unwrap();
+
+        assert!(!page.contains("<details"));
+        assert!(!page.contains("class=\"ox-api"));
+        assert!(page.contains("### CommandContext"));
+        assert!(page.contains("```ts"));
     }
 
     #[test]
@@ -3280,6 +3372,7 @@ mod tests {
                 link_style: Some("clean".to_string()),
                 base_path: Some("/api".to_string()),
                 path_strategy: Some("typedoc".to_string()),
+                render_style: None,
             }),
         );
         let cli_page = markdown.get("default/functions/cli.md").unwrap();
@@ -3397,6 +3490,7 @@ mod tests {
                 link_style: Some("clean".to_string()),
                 base_path: Some("/api".to_string()),
                 path_strategy: Some("typedoc".to_string()),
+                render_style: None,
             }),
         );
 

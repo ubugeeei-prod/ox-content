@@ -13,6 +13,8 @@
 //! itself stays on the JS side. The exact output is pinned by the
 //! `embed-transform` characterization tests in `@ox-content/vite-plugin`.
 
+use crate::html_scan::find_ci;
+
 struct Tab {
     label: String,
     /// Raw inner HTML of the `<tab>` element, copied verbatim.
@@ -37,7 +39,7 @@ pub fn transform_tabs(html: &str, start_group: u32) -> TabsTransform {
     let mut cursor = 0;
     let mut next_group = start_group;
 
-    while let Some(open_at) = find_tag(html, cursor, "tabs") {
+    while let Some(open_at) = find_tag(html, cursor, "<tabs") {
         // Emit everything up to the `<tabs>`.
         out.push_str(&html[cursor..open_at]);
 
@@ -56,7 +58,7 @@ pub fn transform_tabs(html: &str, start_group: u32) -> TabsTransform {
         }
 
         // Find the matching `</tabs>` accounting for nested `<tabs>`.
-        let Some(close_start) = find_matching_close(html, tag.end, "tabs", "</tabs>") else {
+        let Some(close_start) = find_matching_close(html, tag.end, "<tabs", "</tabs>") else {
             out.push_str(&html[open_at..tag.end]);
             cursor = tag.end;
             continue;
@@ -83,7 +85,7 @@ pub fn transform_tabs(html: &str, start_group: u32) -> TabsTransform {
 fn parse_tabs(inner: &str) -> Vec<Tab> {
     let mut tabs = Vec::new();
     let mut cursor = 0;
-    while let Some(open_at) = find_tag(inner, cursor, "tab") {
+    while let Some(open_at) = find_tag(inner, cursor, "<tab") {
         let Some(tag) = scan_start_tag(inner, open_at) else {
             cursor = open_at + 1;
             continue;
@@ -98,7 +100,7 @@ fn parse_tabs(inner: &str) -> Vec<Tab> {
             continue;
         }
 
-        let Some(close_start) = find_matching_close(inner, tag.end, "tab", "</tab>") else {
+        let Some(close_start) = find_matching_close(inner, tag.end, "<tab", "</tab>") else {
             // Unterminated `<tab>`: stop collecting.
             break;
         };
@@ -109,25 +111,29 @@ fn parse_tabs(inner: &str) -> Vec<Tab> {
 }
 
 fn render_tabs(tabs: &[Tab], group: u32) -> String {
+    use std::fmt::Write;
+
+    // The group number is interpolated many times below; format it once and
+    // reuse the string instead of allocating per use. The per-tab index is
+    // written directly into `out` via `write!`, avoiding a temporary `String`
+    // per number.
+    let group_str = group.to_string();
+
     let mut out = String::new();
     out.push_str("<div class=\"ox-tabs-container\"><div class=\"ox-tabs\" data-group=\"");
-    out.push_str(&group.to_string());
+    out.push_str(&group_str);
     out.push_str("\"><div class=\"ox-tabs-header\">");
     for (index, tab) in tabs.iter().enumerate() {
         out.push_str("<input type=\"radio\" name=\"ox-tabs-");
-        out.push_str(&group.to_string());
+        out.push_str(&group_str);
         out.push_str("\" id=\"ox-tab-");
-        out.push_str(&group.to_string());
-        out.push('-');
-        out.push_str(&index.to_string());
+        let _ = write!(out, "{group_str}-{index}");
         out.push('"');
         if index == 0 {
             out.push_str(" checked");
         }
         out.push_str("><label for=\"ox-tab-");
-        out.push_str(&group.to_string());
-        out.push('-');
-        out.push_str(&index.to_string());
+        let _ = write!(out, "{group_str}-{index}");
         out.push_str("\">");
         out.push_str(&escape_text(&tab.label));
         out.push_str("</label>");
@@ -135,7 +141,7 @@ fn render_tabs(tabs: &[Tab], group: u32) -> String {
     out.push_str("</div>");
     for (index, tab) in tabs.iter().enumerate() {
         out.push_str("<div class=\"ox-tab-panel\" data-tab=\"");
-        out.push_str(&index.to_string());
+        let _ = write!(out, "{index}");
         out.push_str("\">");
         out.push_str(&tab.content);
         out.push_str("</div>");
@@ -207,16 +213,15 @@ fn scan_start_tag(html: &str, pos: usize) -> Option<StartTag> {
     Some(StartTag { name_end, inner_end, end: tag_end + 1, self_closing })
 }
 
-/// Find the next `<name` start tag at or after `from` with a proper element
-/// boundary, so `<tab` never matches `<tabs`/`<table` and `<tabs` never matches
-/// `<tabset>`.
-fn find_tag(html: &str, from: usize, name: &str) -> Option<usize> {
-    let needle = format!("<{name}");
+/// Find the next start tag at or after `from` with a proper element boundary.
+/// `open` is the `<name` literal (e.g. `"<tabs"`); the boundary check means
+/// `<tab` never matches `<tabs`/`<table` and `<tabs` never matches `<tabset>`.
+fn find_tag(html: &str, from: usize, open: &str) -> Option<usize> {
     let bytes = html.as_bytes();
     let mut search = from;
     loop {
-        let at = find_ci(html, search, &needle)?;
-        let after = at + needle.len();
+        let at = find_ci(html, search, open)?;
+        let after = at + open.len();
         let boundary = bytes.get(after).copied();
         if matches!(boundary, Some(b) if b == b'>' || b == b'/' || b.is_ascii_whitespace()) {
             return Some(at);
@@ -226,12 +231,12 @@ fn find_tag(html: &str, from: usize, name: &str) -> Option<usize> {
 }
 
 /// Given the position just past a `<name …>` start tag, find the byte offset of
-/// its matching `close` literal, accounting for nested `<name …>` opens.
-fn find_matching_close(html: &str, from: usize, name: &str, close: &str) -> Option<usize> {
+/// its matching `close` literal, accounting for nested `open` (`<name`) tags.
+fn find_matching_close(html: &str, from: usize, open: &str, close: &str) -> Option<usize> {
     let mut depth = 1usize;
     let mut search = from;
     loop {
-        let next_open = find_tag(html, search, name);
+        let next_open = find_tag(html, search, open);
         let next_close = find_ci(html, search, close);
         match (next_open, next_close) {
             (Some(open_at), Some(close_at)) if open_at < close_at => {
@@ -327,22 +332,6 @@ fn escape_text(value: &str) -> String {
         }
     }
     out
-}
-
-/// Case-insensitive ASCII substring search in `haystack[from..]`.
-fn find_ci(haystack: &str, from: usize, needle: &str) -> Option<usize> {
-    let hay = haystack.as_bytes();
-    let pat = needle.as_bytes();
-    if pat.is_empty() || from > hay.len() || hay.len() - from < pat.len() {
-        return None;
-    }
-    let last = hay.len() - pat.len();
-    for i in from..=last {
-        if hay[i..i + pat.len()].eq_ignore_ascii_case(pat) {
-            return Some(i);
-        }
-    }
-    None
 }
 
 #[cfg(test)]

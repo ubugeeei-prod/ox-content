@@ -10,6 +10,7 @@ mod extractor;
 mod generator;
 mod graph;
 mod markdown;
+mod model;
 mod nav;
 mod normalize;
 mod output;
@@ -30,9 +31,10 @@ pub use graph::{
     PublicExport, ResolvedModule,
 };
 pub use markdown::{
-    generate_markdown, ApiDocEntry, ApiDocMember, ApiDocModule, ApiDocTag, ApiParamDoc,
-    ApiReturnDoc, MarkdownDocsOptions, MarkdownLinkStyle, MarkdownPathStrategy,
+    generate_markdown, MarkdownDocsOptions, MarkdownLinkStyle, MarkdownPathStrategy,
+    MarkdownRenderStyle,
 };
+pub use model::{ApiDocEntry, ApiDocMember, ApiDocModule, ApiDocTag, ApiParamDoc, ApiReturnDoc};
 pub use nav::{
     generate_nav_code, generate_nav_metadata, generate_nav_metadata_from_docs, DocsNavItem,
 };

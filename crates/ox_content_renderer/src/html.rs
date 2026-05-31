@@ -1370,6 +1370,13 @@ pub struct HtmlRenderer {
     /// (paragraphs, headings, emphasis, …) and only the link case needs
     /// to mask it out.
     in_link: bool,
+    /// First-byte skip index for the autolink scanner. It depends only on
+    /// `options.autolink_patterns`, which is immutable for the duration of a
+    /// render, so it is built once at `render()` entry and reused for every
+    /// text node instead of being rebuilt per node (the prior behaviour zeroed
+    /// and filled a 256-byte table on the hottest inline path). `None` when
+    /// autolinking is disabled or there are no patterns.
+    autolink_index: Option<FirstByteIndex>,
 }
 
 impl HtmlRenderer {
@@ -1396,6 +1403,7 @@ impl HtmlRenderer {
             heading_text_scratch: String::with_capacity(64),
             heading_slug_scratch: String::with_capacity(64),
             in_link: false,
+            autolink_index: None,
         }
     }
 
@@ -1415,6 +1423,15 @@ impl HtmlRenderer {
             collect_inline_toc_entries(document, self.options.toc_max_depth, &mut self.toc_entries);
         }
         self.heading_id_counts.clear();
+        // Build the autolink first-byte index once per render (it depends only
+        // on the immutable pattern list) so `write_text_with_autolinks` can
+        // reuse it instead of rebuilding a 256-byte table per text node.
+        self.autolink_index =
+            if self.options.autolink_urls && !self.options.autolink_patterns.is_empty() {
+                Some(FirstByteIndex::from_patterns(&self.options.autolink_patterns))
+            } else {
+                None
+            };
         // HTML output is typically 2×–3× the markdown source (every
         // `**bold**` becomes `<strong>...</strong>` etc.) so the prior
         // 1.5× estimate kept undersizing the buffer and forcing 1–2
@@ -1469,35 +1486,43 @@ impl HtmlRenderer {
     fn write_text_with_autolinks(&mut self, s: &str) {
         profile_span!("renderer::write_text_with_autolinks");
         let bytes = s.as_bytes();
-        // Build the first-byte skip index once per text node, then reuse it
-        // for every cursor advance below.
-        let index = FirstByteIndex::from_patterns(&self.options.autolink_patterns);
+        // Reuse the per-render first-byte index (see `autolink_index`). If it's
+        // absent the caller's gating slipped — fall back to emitting the text
+        // verbatim rather than rebuilding the index here.
+        let Some(index) = self.autolink_index.as_ref() else {
+            write_escaped_into(&mut self.output, s);
+            return;
+        };
+        // Borrow the relevant fields disjointly so the URL scan (which only
+        // reads `options`/`autolink_index`) and the output writes can coexist.
+        let patterns = &self.options.autolink_patterns;
+        let target_blank = self.options.autolink_target_blank;
+        let out = &mut self.output;
         let mut cursor = 0usize;
         while cursor < bytes.len() {
-            let Some((match_start, url_end)) =
-                find_autolink_match(s, cursor, &self.options.autolink_patterns, &index)
+            let Some((match_start, url_end)) = find_autolink_match(s, cursor, patterns, index)
             else {
                 break;
             };
             // Emit the literal text preceding the URL.
             if match_start > cursor {
-                write_escaped_into(&mut self.output, &s[cursor..match_start]);
+                write_escaped_into(out, &s[cursor..match_start]);
             }
             let url = &s[match_start..url_end];
-            self.output.push_str("<a href=\"");
-            write_url_escaped_into(&mut self.output, url);
-            self.output.push('"');
-            if self.options.autolink_target_blank {
-                self.output.push_str(" target=\"_blank\" rel=\"noopener noreferrer\"");
+            out.push_str("<a href=\"");
+            write_url_escaped_into(out, url);
+            out.push('"');
+            if target_blank {
+                out.push_str(" target=\"_blank\" rel=\"noopener noreferrer\"");
             }
-            self.output.push('>');
+            out.push('>');
             // The visible text is the URL itself; escape it like any text.
-            write_escaped_into(&mut self.output, url);
-            self.output.push_str("</a>");
+            write_escaped_into(out, url);
+            out.push_str("</a>");
             cursor = url_end;
         }
         if cursor < bytes.len() {
-            write_escaped_into(&mut self.output, &s[cursor..]);
+            write_escaped_into(out, &s[cursor..]);
         }
     }
 
@@ -1783,10 +1808,10 @@ impl HtmlRenderer {
                 // common case — flag off — collapses back to the original
                 // single `write_escaped_into` call thanks to the early
                 // boolean check.
-                if self.options.autolink_urls
-                    && !self.in_link
-                    && !self.options.autolink_patterns.is_empty()
-                {
+                // `autolink_index` is `Some` iff `autolink_urls` and a non-empty
+                // pattern list (computed once at `render()` entry), so this one
+                // Option check replaces the three field reads.
+                if self.autolink_index.is_some() && !self.in_link {
                     self.write_text_with_autolinks(text.value);
                 } else {
                     write_escaped_into(&mut self.output, text.value);
@@ -2241,8 +2266,9 @@ impl<'a> Visit<'a> for HtmlRenderer {
 
     fn visit_text(&mut self, text: &Text<'a>) {
         profile_span!("renderer::visit_text");
-        if self.options.autolink_urls && !self.in_link && !self.options.autolink_patterns.is_empty()
-        {
+        // See the matching gate in `visit_inline_node`: the cached
+        // `autolink_index` already encodes `autolink_urls && !patterns.is_empty()`.
+        if self.autolink_index.is_some() && !self.in_link {
             self.write_text_with_autolinks(text.value);
         } else {
             self.write_escaped(text.value);

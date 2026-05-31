@@ -206,7 +206,10 @@ const getOxContentScopesForDoc = (doc) => {
 
 const matchesOxContentScopes = (doc, scopes) => {
   if (!scopes.length) return true;
-  const docScopes = new Set(getOxContentScopesForDoc(doc));
+  // A doc's scopes derive only from its (immutable) id/url, but this runs once
+  // per posting per term — the same doc is revisited many times in a query.
+  // Cache the Set on the doc so it's built once for the index's lifetime.
+  const docScopes = doc.__oxScopes || (doc.__oxScopes = new Set(getOxContentScopesForDoc(doc)));
   return scopes.some((scope) => docScopes.has(scope));
 };
 
@@ -276,7 +279,13 @@ const scoreOxContentSearchTerms = (searchIndex, parsedQuery, tokens) => {
       isLast = i === tokens.length - 1;
     const terms =
       isLast && token.length >= 2
-        ? Object.keys(searchIndex.index).filter((term) => term.startsWith(token))
+        ? // Prefix expansion scans the whole vocabulary. Materialize the term
+          // list once and reuse it across keystrokes instead of rebuilding the
+          // `Object.keys` array on every query.
+          (
+            searchIndex.__oxIndexKeys ||
+            (searchIndex.__oxIndexKeys = Object.keys(searchIndex.index))
+          ).filter((term) => term.startsWith(token))
         : searchIndex.index[token]
           ? [token]
           : [];
@@ -304,11 +313,13 @@ const addOxContentTermScores = (searchIndex, scores, scopes, terms, k1, b) => {
             (posting.tf + k1 * (1 - b + (b * doc.body.length) / searchIndex.avg_dl))) *
           boost;
 
-      if (!scores.has(posting.doc_idx)) {
-        scores.set(posting.doc_idx, { score: 0, matches: new Set() });
+      // One Map lookup in the steady state (entry present) instead of the
+      // has/get pair; this runs once per posting per term on every keystroke.
+      let entry = scores.get(posting.doc_idx);
+      if (entry === undefined) {
+        entry = { score: 0, matches: new Set() };
+        scores.set(posting.doc_idx, entry);
       }
-
-      const entry = scores.get(posting.doc_idx);
       entry.score += score;
       entry.matches.add(term);
     }
