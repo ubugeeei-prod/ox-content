@@ -339,6 +339,14 @@ pub fn extract_docs_from_entry_points(
                     }
                     let mut entry = entry.clone();
                     entry.name.clone_from(&export.name);
+                    if is_dependency_source(module) {
+                        // Source lives in an installed dependency (under a
+                        // node_modules directory): drop the absolute path so we emit
+                        // no "View source" link and never leak a local absolute path
+                        // (matches TypeDoc's inlined external symbols). Workspace
+                        // sources resolved inside the repo keep their path.
+                        entry.file = String::new();
+                    }
                     entries.push(entry);
                 }
                 matched
@@ -408,6 +416,15 @@ pub fn extract_docs_from_entry_points(
     }
 
     Ok(modules)
+}
+
+/// Returns true when a resolved module path is an installed dependency, i.e. it
+/// lives under a `node_modules` directory. Such sources are not in the consumer's
+/// repository, so generated docs must not link to them or leak their absolute
+/// local path. Workspace sources resolved inside the repo return false and keep
+/// their source location.
+fn is_dependency_source(module: &Path) -> bool {
+    module.components().any(|component| component.as_os_str() == "node_modules")
 }
 
 fn normalized_entries_for_module<'a>(
@@ -1524,7 +1541,9 @@ export { a };
 
         assert_eq!(docs[0].entries[0].name, "parseArgs");
         assert_eq!(docs[0].entries[0].description, "Parse args.");
-        assert!(docs[0].entries[0].file.ends_with("parser-hash.d.ts"));
+        // The alias resolved to a declaration under node_modules, so its absolute
+        // source path is dropped (no "View source" link, no local-path leak).
+        assert!(docs[0].entries[0].file.is_empty());
 
         fs::remove_dir_all(root).unwrap();
     }

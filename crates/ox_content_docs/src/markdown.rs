@@ -1871,6 +1871,40 @@ mod tests {
     }
 
     #[test]
+    fn entries_without_file_omit_source_link() {
+        let docs = vec![ApiDocModule {
+            description: String::new(),
+            file: "mod".to_string(),
+            entries: vec![
+                test_entry("localSym", "function", "packages/x/src/a.ts", "Local symbol."),
+                // Empty file = external-package source: no in-repo source location.
+                test_entry("externalSym", "function", "", "External symbol."),
+            ],
+        }];
+
+        for render_style in [MarkdownRenderStyle::Html, MarkdownRenderStyle::Markdown] {
+            let markdown = generate_markdown(
+                &docs,
+                &MarkdownDocsOptions {
+                    github_url: Some("https://github.com/o/r".to_string()),
+                    path_strategy: MarkdownPathStrategy::TypeDoc,
+                    render_style,
+                    ..MarkdownDocsOptions::default()
+                },
+            );
+
+            let local_page = markdown.get("mod/functions/localSym.md").unwrap();
+            let external_page = markdown.get("mod/functions/externalSym.md").unwrap();
+
+            // The local symbol links to its in-repo source.
+            assert!(local_page.contains("https://github.com/o/r/blob/main/packages/x/src/a.ts"));
+            // The external symbol emits no source link and leaks no path.
+            assert!(!external_page.contains("blob/main"));
+            assert!(!external_page.contains("View source"));
+        }
+    }
+
+    #[test]
     fn typedoc_path_strategy_uses_clean_base_path_and_module_scope() {
         let docs = vec![
             ApiDocModule {

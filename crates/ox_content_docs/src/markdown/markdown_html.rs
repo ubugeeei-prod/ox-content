@@ -747,9 +747,12 @@ fn render_entry_body_html(
     link_context: Option<&MarkdownLinkContext<'_>>,
 ) -> String {
     let processed_description = process_doc_text(&entry.description, link_context);
-    let source_href = options.github_url.as_ref().map(|github_url| {
-        generate_source_href(&entry.file, github_url, Some(entry.line), Some(entry.end_line))
-    });
+    // Entries with an empty `file` (e.g. symbols re-exported from an external
+    // package) have no source in the consumer's repo, so emit no source link.
+    let source_href =
+        options.github_url.as_ref().filter(|_| !entry.file.is_empty()).map(|github_url| {
+            generate_source_href(&entry.file, github_url, Some(entry.line), Some(entry.end_line))
+        });
     let mut body = String::new();
 
     if !processed_description.is_empty() {

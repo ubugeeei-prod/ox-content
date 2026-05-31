@@ -65,10 +65,18 @@ pub(super) fn render_entry_body_pure(
         push_fmt(&mut out, format_args!("**Signature**\n\n```ts\n{}\n```\n\n", signature.trim()));
     }
 
+    // Entries with an empty `file` (e.g. symbols re-exported from an external
+    // package) have no source in the consumer's repo, so emit no source link.
     if let Some(github_url) = &options.github_url {
-        let href =
-            generate_source_href(&entry.file, github_url, Some(entry.line), Some(entry.end_line));
-        push_fmt(&mut out, format_args!("[View source]({href})\n\n"));
+        if !entry.file.is_empty() {
+            let href = generate_source_href(
+                &entry.file,
+                github_url,
+                Some(entry.line),
+                Some(entry.end_line),
+            );
+            push_fmt(&mut out, format_args!("[View source]({href})\n\n"));
+        }
     }
 
     if !entry.members.is_empty() {
