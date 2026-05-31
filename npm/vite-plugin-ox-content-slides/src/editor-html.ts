@@ -47,10 +47,14 @@ const EDITOR_ICONS = {
   densitySpacious: '<path d="M6 6h12M6 12h12M6 18h12"/>',
   external:
     '<path d="M14 5h5v5"/><path d="m13 11 6-6"/><path d="M19 14v4a1 1 0 0 1-1 1H6a1 1 0 0 1-1-1V6a1 1 0 0 1 1-1h4"/>',
+  layout: '<rect x="4" y="5" width="16" height="14" rx="2"/><path d="M8 5v14M4 10h16"/>',
+  palette:
+    '<path d="M12 22a10 10 0 1 1 10-10 3 3 0 0 1-3 3h-1.6a1.4 1.4 0 0 0-1.2 2.1l.3.5A2.7 2.7 0 0 1 14.1 22H12Z"/><circle cx="7.5" cy="10.5" r=".7"/><circle cx="10" cy="7.5" r=".7"/><circle cx="14" cy="7.5" r=".7"/><circle cx="16.5" cy="10.5" r=".7"/>',
   plus: '<path d="M12 5v14M5 12h14"/>',
   presenter: '<rect x="3" y="4" width="18" height="12" rx="2"/><path d="M8 20h8M12 16v4"/>',
   quote: '<path d="M8 11h3v6H5v-5c0-3 1.5-5 4-6M18 11h3v6h-6v-5c0-3 1.5-5 4-6"/>',
   save: '<path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2Z"/><path d="M17 21v-8H7v8M7 3v5h8"/>',
+  settings: '<path d="M4 7h16M7 7v0M4 12h16M12 12v0M4 17h16M17 17v0"/>',
   split: '<rect x="4" y="5" width="16" height="14" rx="2"/><path d="M12 5v14"/>',
   stack:
     '<rect x="5" y="6" width="14" height="4" rx="1"/><rect x="5" y="14" width="14" height="4" rx="1"/>',
@@ -121,6 +125,15 @@ function renderAccentControls(): string {
               <input class="color-input" type="color" data-accent-custom value="${escapeHtmlAttribute(defaultAccent)}" title="Custom accent" />`;
 }
 
+function renderControlGroup(title: string, icon: EditorIconName, content: string): string {
+  return `<details class="control-group" open>
+            <summary class="control-summary">${renderIcon(icon, "control-icon")}<span>${title}</span></summary>
+            <div class="control-content">
+              ${content}
+            </div>
+          </details>`;
+}
+
 /**
  * Renders the dev-only browser editor shell.
  */
@@ -168,8 +181,10 @@ ${renderEditorThemeVars(EDITOR_UI_THEME.dark)}
         border: 0;
       }
       .app {
+        --sidebar-width: 250px;
+        --editor-width: minmax(320px, 0.78fr);
         display: grid;
-        grid-template-columns: 250px minmax(320px, 0.78fr) minmax(380px, 1.22fr);
+        grid-template-columns: var(--sidebar-width) 6px var(--editor-width) 6px minmax(380px, 1.22fr);
         min-height: 100vh;
       }
       .sidebar, .editor, .preview {
@@ -184,6 +199,18 @@ ${renderEditorThemeVars(EDITOR_UI_THEME.dark)}
       .editor {
         display: grid;
         grid-template-rows: auto auto minmax(0, 1fr);
+      }
+      .pane-resizer {
+        min-height: 100vh;
+        border-right: 1px solid var(--line);
+        background:
+          linear-gradient(to right, transparent 0, transparent 2px, var(--line) 2px, var(--line) 3px, transparent 3px);
+        cursor: col-resize;
+      }
+      .pane-resizer:hover,
+      .pane-resizer[data-active="true"] {
+        background:
+          linear-gradient(to right, transparent 0, transparent 2px, var(--line-strong) 2px, var(--line-strong) 3px, transparent 3px);
       }
       .bar {
         display: flex;
@@ -207,22 +234,40 @@ ${renderEditorThemeVars(EDITOR_UI_THEME.dark)}
       }
       .inspector {
         display: grid;
-        gap: 10px;
-        padding: 12px;
+        gap: 6px;
+        padding: 8px;
         border-bottom: 1px solid var(--line);
         background: color-mix(in srgb, var(--panel) 72%, var(--bg));
       }
-      .control-row {
-        display: grid;
-        grid-template-columns: 72px minmax(0, 1fr);
-        align-items: center;
-        gap: 10px;
+      .control-group {
+        border: 1px solid var(--line);
+        border-radius: 4px;
+        background: color-mix(in srgb, var(--panel) 86%, var(--bg));
       }
-      .control-label {
+      .control-summary {
+        display: flex;
+        align-items: center;
+        gap: 7px;
+        min-height: 32px;
+        padding: 0 8px;
         color: var(--muted);
+        cursor: pointer;
         font-size: 0.78rem;
         font-weight: 700;
         text-transform: uppercase;
+      }
+      .control-summary::-webkit-details-marker { display: none; }
+      .control-icon {
+        width: 14px;
+        height: 14px;
+        stroke: currentColor;
+        fill: none;
+        stroke-width: 1.8;
+        stroke-linecap: round;
+        stroke-linejoin: round;
+      }
+      .control-content {
+        padding: 0 8px 8px;
       }
       .segmented {
         display: grid;
@@ -424,6 +469,7 @@ ${renderEditorThemeVars(EDITOR_UI_THEME.dark)}
           grid-template-columns: 220px minmax(0, 1fr);
           grid-template-rows: auto minmax(0, 1fr);
         }
+        .pane-resizer { display: none; }
         .sidebar { grid-row: 1 / span 2; }
         .editor {
           grid-column: 2;
@@ -445,7 +491,6 @@ ${renderEditorThemeVars(EDITOR_UI_THEME.dark)}
           min-height: auto;
         }
         .preview { min-height: 70vh; }
-        .control-row { grid-template-columns: 1fr; }
       }
     </style>
   </head>
@@ -461,6 +506,7 @@ ${renderEditorThemeVars(EDITOR_UI_THEME.dark)}
         </header>
         <div class="deck-list" data-decks></div>
       </aside>
+      <div class="pane-resizer" data-resize-pane="sidebar" title="Resize slide list" aria-hidden="true"></div>
       <section class="editor">
         <header class="bar">
           <div class="title" data-current-file>Editor</div>
@@ -472,35 +518,40 @@ ${renderEditorThemeVars(EDITOR_UI_THEME.dark)}
           </button>
         </header>
         <section class="inspector" data-inspector>
-          <div class="control-row">
-            <div class="control-label">Layout</div>
-            <div class="segmented" data-layout-group>
-              ${renderSegmentedOptions("layout", SLIDE_LAYOUT_OPTIONS)}
-            </div>
-          </div>
-          <div class="control-row">
-            <div class="control-label">Align</div>
-            <div class="segmented" data-align-group>
-              ${renderSegmentedOptions("align", SLIDE_ALIGN_OPTIONS)}
-            </div>
-          </div>
-          <div class="control-row">
-            <div class="control-label">Density</div>
-            <div class="segmented" data-density-group>
-              ${renderSegmentedOptions("density", SLIDE_DENSITY_OPTIONS)}
-            </div>
-          </div>
-          <div class="control-row">
-            <div class="control-label">Accent</div>
-            <div class="swatches">
-              ${renderAccentControls()}
-            </div>
-          </div>
+          ${renderControlGroup(
+            "Layout",
+            "layout",
+            `<div class="segmented" data-layout-group>
+                ${renderSegmentedOptions("layout", SLIDE_LAYOUT_OPTIONS)}
+              </div>`,
+          )}
+          ${renderControlGroup(
+            "Align",
+            "alignStart",
+            `<div class="segmented" data-align-group>
+                ${renderSegmentedOptions("align", SLIDE_ALIGN_OPTIONS)}
+              </div>`,
+          )}
+          ${renderControlGroup(
+            "Density",
+            "settings",
+            `<div class="segmented" data-density-group>
+                ${renderSegmentedOptions("density", SLIDE_DENSITY_OPTIONS)}
+              </div>`,
+          )}
+          ${renderControlGroup(
+            "Accent",
+            "palette",
+            `<div class="swatches">
+                ${renderAccentControls()}
+              </div>`,
+          )}
         </section>
         <main class="editor-body">
           <textarea data-source spellcheck="false"></textarea>
         </main>
       </section>
+      <div class="pane-resizer" data-resize-pane="editor" title="Resize editor" aria-hidden="true"></div>
       <section class="preview">
         <header class="bar">
           <div class="title">Preview</div>

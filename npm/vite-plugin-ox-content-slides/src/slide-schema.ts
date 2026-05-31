@@ -76,6 +76,7 @@ export interface SlidePlacement {
   y: number;
   w: number;
   h: number;
+  scale: number;
 }
 
 export const SLIDE_LAYOUT_DEFAULTS = {
@@ -105,12 +106,15 @@ export const DEFAULT_CANVAS_PLACEMENT = {
   y: 8,
   w: 84,
   h: 18,
+  scale: 1,
 } as const satisfies SlidePlacement;
 
 export const CANVAS_PLACEMENT_BOUNDS = {
   minPercent: 0,
   maxPercent: 100,
   minSizePercent: 5,
+  minScale: 0.25,
+  maxScale: 3,
 } as const;
 
 export const CANVAS_AUTO_PLACEMENT = {
@@ -134,6 +138,8 @@ export const CANVAS_EDITOR_CLASSES = {
   box: "ox-editor-canvas-box",
   grabHandle: "ox-editor-canvas-grab-handle",
   resize: "ox-editor-canvas-resize",
+  scale: "ox-editor-canvas-scale",
+  textEditor: "ox-editor-canvas-text-editor",
   guide: "ox-editor-canvas-guide",
   verticalGuide: "ox-editor-canvas-guide--vertical",
   horizontalGuide: "ox-editor-canvas-guide--horizontal",

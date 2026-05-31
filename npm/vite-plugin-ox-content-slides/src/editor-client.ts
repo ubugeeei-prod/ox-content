@@ -52,7 +52,7 @@ interface LayoutSettings {
   accent: string;
 }
 
-type CanvasDragMode = "move" | "resize";
+type CanvasDragMode = "move" | "resize" | "scale";
 
 interface CanvasSnapResult {
   placement: SlidePlacement;
@@ -71,7 +71,18 @@ interface CanvasDragState {
   box: HTMLElement;
 }
 
+interface PaneResizeState {
+  pointerId: number;
+  variable: "--sidebar-width" | "--editor-width";
+  startX: number;
+  startWidth: number;
+  minWidth: number;
+  maxWidth: number;
+  handle: HTMLElement;
+}
+
 interface EditorElements {
+  app: HTMLElement;
   decks: HTMLElement;
   source: HTMLTextAreaElement;
   file: HTMLElement;
@@ -86,6 +97,12 @@ interface EditorElements {
   densityButtons: NodeListOf<HTMLButtonElement>;
   accentButtons: NodeListOf<HTMLButtonElement>;
   accentCustom: HTMLInputElement;
+  paneResizers: NodeListOf<HTMLElement>;
+}
+
+interface MarkdownBlock {
+  text: string;
+  editable: boolean;
 }
 
 declare global {
@@ -206,6 +223,112 @@ function writeFrontmatter(source: string, updates: Record<string, string | undef
     : parsed.body;
 }
 
+function replaceMarkdownBody(source: string, body: string): string {
+  const nextBody = body.replace(/^\n+/, "");
+  const lines = source.split(/\r?\n/);
+  if (lines[0]?.trim() !== "---") return nextBody;
+
+  const end = lines.findIndex((line, index) => index > 0 && line.trim() === "---");
+  if (end === -1) return nextBody;
+
+  return `${lines.slice(0, end + 1).join("\n")}\n\n${nextBody}`;
+}
+
+function isEditableMarkdownBlock(text: string): boolean {
+  const trimmed = text.trim();
+  return Boolean(trimmed) && !/^(<!--|import\s|export\s|<)/.test(trimmed);
+}
+
+function splitMarkdownBlocks(body: string): MarkdownBlock[] {
+  const blocks: string[] = [];
+  let current: string[] = [];
+  let fence: string | undefined;
+
+  function pushCurrent(): void {
+    const text = current.join("\n").trim();
+    if (text) blocks.push(text);
+    current = [];
+  }
+
+  for (const line of body.split(/\r?\n/)) {
+    const trimmed = line.trim();
+    const fenceMatch = trimmed.match(/^(```+|~~~+)/);
+    if (fenceMatch?.[1]) {
+      const marker = fenceMatch[1].startsWith("`") ? "```" : "~~~";
+      fence = fence === marker ? undefined : marker;
+    }
+
+    if (!fence && trimmed === "") {
+      pushCurrent();
+      continue;
+    }
+    current.push(line);
+  }
+  pushCurrent();
+
+  return blocks.map((text) => ({ text, editable: isEditableMarkdownBlock(text) }));
+}
+
+function formatEditedMarkdownBlock(original: string, text: string): string {
+  const nextText = text.replace(/\r\n?/g, "\n").trim();
+  if (!nextText) return original;
+
+  const originalLines = original.trim().split("\n");
+  const nextLines = nextText.split("\n").map((line) => line.trimEnd());
+  const heading = originalLines[0]?.match(/^(#{1,6})\s+/);
+  if (heading?.[1]) return `${heading[1]} ${nextLines.join(" ")}`;
+
+  const everyOriginalLine = (pattern: RegExp): boolean =>
+    originalLines.every((line) => !line.trim() || pattern.test(line.trim()));
+
+  if (everyOriginalLine(/^[-*+]\s+/)) {
+    return nextLines
+      .filter((line) => line.trim())
+      .map((line) => `- ${line.replace(/^[-*+]\s+/, "")}`)
+      .join("\n");
+  }
+  if (everyOriginalLine(/^\d+\.\s+/)) {
+    return nextLines
+      .filter((line) => line.trim())
+      .map((line, index) => `${index + 1}. ${line.replace(/^\d+\.\s+/, "")}`)
+      .join("\n");
+  }
+  if (everyOriginalLine(/^>\s?/)) {
+    return nextLines.map((line) => `> ${line.replace(/^>\s?/, "")}`).join("\n");
+  }
+
+  const firstLine = originalLines[0] ?? "";
+  if (/^(```+|~~~+)/.test(firstLine.trim())) {
+    const fence = firstLine.trim().startsWith("`") ? "```" : "~~~";
+    return `${firstLine}\n${nextText}\n${fence}`;
+  }
+
+  return nextText;
+}
+
+function updateMarkdownBlock(source: string, blockIndex: number, text: string): string {
+  const parsed = parseFrontmatter(source);
+  const blocks = splitMarkdownBlocks(parsed.body);
+  let renderedIndex = -1;
+  let changed = false;
+
+  const nextBlocks = blocks.map((item) => {
+    if (/^(<!--|import\s|export\s)/.test(item.text.trim())) return item.text;
+    renderedIndex += 1;
+    if (renderedIndex !== blockIndex || !item.editable) return item.text;
+    changed = true;
+    return formatEditedMarkdownBlock(item.text, text);
+  });
+  if (!changed) return source;
+  return replaceMarkdownBody(source, nextBlocks.join("\n\n"));
+}
+
+function appendMarkdownBlock(source: string, markdown: string): string {
+  const parsed = parseFrontmatter(source);
+  const body = parsed.body.trimEnd();
+  return replaceMarkdownBody(source, body ? `${body}\n\n${markdown}` : markdown);
+}
+
 function pressed(buttons: NodeListOf<HTMLButtonElement>, attr: string, value: string): void {
   for (const button of buttons) {
     button.setAttribute("aria-pressed", String(button.getAttribute(attr) === value));
@@ -229,6 +352,11 @@ function roundedPercent(value: number): number {
   return Number(clampNumber(value, 0, 100).toFixed(3));
 }
 
+function roundedScale(value: number): number {
+  const { minScale, maxScale } = SLIDE_EDITOR_CONFIG.canvas.placementBounds;
+  return Number(clampNumber(value, minScale, maxScale).toFixed(3));
+}
+
 function finiteNumber(value: unknown): number | undefined {
   const number = typeof value === "number" ? value : Number(value);
   return Number.isFinite(number) ? number : undefined;
@@ -239,24 +367,19 @@ function normalizePlacement(
   fallback: SlidePlacement,
 ): SlidePlacement {
   const bounds = SLIDE_EDITOR_CONFIG.canvas.placementBounds;
-  const w = clampNumber(
-    finiteNumber(value.w) ?? fallback.w,
-    bounds.minSizePercent,
-    bounds.maxPercent,
-  );
-  const h = clampNumber(
-    finiteNumber(value.h) ?? fallback.h,
-    bounds.minSizePercent,
-    bounds.maxPercent,
-  );
-  const maxX = Math.max(bounds.minPercent, bounds.maxPercent - w);
-  const maxY = Math.max(bounds.minPercent, bounds.maxPercent - h);
+  const scale = roundedScale(finiteNumber(value.scale) ?? fallback.scale);
+  const maxSize = bounds.maxPercent / scale;
+  const w = clampNumber(finiteNumber(value.w) ?? fallback.w, bounds.minSizePercent, maxSize);
+  const h = clampNumber(finiteNumber(value.h) ?? fallback.h, bounds.minSizePercent, maxSize);
+  const maxX = Math.max(bounds.minPercent, bounds.maxPercent - w * scale);
+  const maxY = Math.max(bounds.minPercent, bounds.maxPercent - h * scale);
 
   return {
     x: roundedPercent(clampNumber(finiteNumber(value.x) ?? fallback.x, bounds.minPercent, maxX)),
     y: roundedPercent(clampNumber(finiteNumber(value.y) ?? fallback.y, bounds.minPercent, maxY)),
     w: roundedPercent(w),
     h: roundedPercent(h),
+    scale,
   };
 }
 
@@ -298,6 +421,7 @@ function parsePlacements(value: string | undefined): SlidePlacement[] {
           y: Number(placement.y),
           w: Number(placement.w),
           h: Number(placement.h),
+          scale: Number(placement.scale),
         },
         defaultPlacement(index, items.length),
       ),
@@ -314,6 +438,7 @@ function formatPlacements(placements: SlidePlacement[]): string {
       y: roundedPercent(placement.y),
       w: roundedPercent(placement.w),
       h: roundedPercent(placement.h),
+      scale: roundedScale(placement.scale),
     })),
   );
 }
@@ -340,6 +465,14 @@ function snapPlacementToGrid(
       placement: normalizePlacement({ ...placement, x: x.value, y: y.value }, fallback),
       guideX: x.snapped ? x.value : undefined,
       guideY: y.snapped ? y.value : undefined,
+    };
+  }
+
+  if (mode === "scale") {
+    const scaleStep = 0.05;
+    const scale = Math.round(placement.scale / scaleStep) * scaleStep;
+    return {
+      placement: normalizePlacement({ ...placement, scale }, fallback),
     };
   }
 
@@ -379,6 +512,14 @@ function applyElementPlacement(element: HTMLElement, placement: SlidePlacement):
   element.style.height = `${placement.h}%`;
   element.style.margin = "0";
   element.style.overflow = "auto";
+  element.style.transformOrigin = "0 0";
+  element.style.transform = `scale(${placement.scale})`;
+}
+
+function isSamePlacement(a: SlidePlacement | undefined, b: SlidePlacement): boolean {
+  return (
+    Boolean(a) && a?.x === b.x && a.y === b.y && a.w === b.w && a.h === b.h && a.scale === b.scale
+  );
 }
 
 function applyCanvasLayoutStyles(layout: HTMLElement, placements: SlidePlacement[]): void {
@@ -485,6 +626,42 @@ function renderCanvasEditorStyle(): string {
       cursor: nwse-resize;
       touch-action: none;
     }
+    .${classes.scale} {
+      position: absolute;
+      right: -7px;
+      top: -7px;
+      width: 14px;
+      height: 14px;
+      border: 2px solid ${style.handleBorder};
+      border-radius: 999px;
+      background: ${style.selectionBorder};
+      cursor: nesw-resize;
+      touch-action: none;
+    }
+    .${classes.textEditor} {
+      position: absolute;
+      inset: 0;
+      z-index: 2;
+      width: 100%;
+      height: 100%;
+      min-height: 100%;
+      padding: 12px;
+      border: 1px solid ${style.activeBorder};
+      border-radius: 2px;
+      outline: 0;
+      resize: none;
+      background: rgba(255, 255, 255, 0.96);
+      color: #111;
+      box-shadow: ${style.selectionShadow};
+      font: 600 14px/1.45 ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      cursor: text;
+      pointer-events: auto;
+    }
+    .${classes.overlay}[data-drop-target="true"] {
+      outline: 1.5px solid ${style.activeBorder};
+      outline-offset: -1.5px;
+      background-color: rgba(17, 17, 17, 0.03);
+    }
     .${classes.guide} {
       position: absolute;
       z-index: 1;
@@ -505,11 +682,69 @@ function renderCanvasEditorStyle(): string {
   `;
 }
 
+function escapeMarkdownAlt(text: string): string {
+  return text
+    .replace(/[\r\n]+/g, " ")
+    .replace(/[[\]\\]/g, "\\$&")
+    .trim();
+}
+
+function droppedFileToDataUrl(file: File): Promise<string> {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.addEventListener("load", () => {
+      if (typeof reader.result === "string") {
+        resolve(reader.result);
+        return;
+      }
+      reject(new Error("Unable to read dropped image."));
+    });
+    reader.addEventListener("error", () => {
+      reject(reader.error ?? new Error("Unable to read dropped image."));
+    });
+    reader.readAsDataURL(file);
+  });
+}
+
+function isImageUrl(value: string): boolean {
+  return (
+    /^data:image\//i.test(value) ||
+    /^blob:/i.test(value) ||
+    /^(https?:\/\/|\/).+\.(png|jpe?g|gif|webp|avif|svg)([?#].*)?$/i.test(value)
+  );
+}
+
+function formatMarkdownImage(alt: string, url: string): string {
+  const safeUrl = /\s|\)/.test(url) ? `<${url.replace(/>/g, "%3E")}>` : url;
+  return `![${escapeMarkdownAlt(alt)}](${safeUrl})`;
+}
+
+async function readDroppedImageMarkdown(event: DragEvent): Promise<string | undefined> {
+  const transfer = event.dataTransfer;
+  if (!transfer) return undefined;
+
+  const file = Array.from(transfer.files).find((item) => item.type.startsWith("image/"));
+  if (file) {
+    const dataUrl = await droppedFileToDataUrl(file);
+    const alt = file.name.replace(/\.[^.]+$/, "");
+    return formatMarkdownImage(alt, dataUrl);
+  }
+
+  const uri = transfer.getData("text/uri-list").split(/\r?\n/).find(Boolean);
+  if (uri && isImageUrl(uri)) return formatMarkdownImage("", uri);
+
+  const text = transfer.getData("text/plain").trim();
+  if (text && isImageUrl(text)) return formatMarkdownImage("", text);
+  return undefined;
+}
+
 function installCanvasEditorOverlay(
   doc: Document,
   layout: HTMLElement,
   placements: SlidePlacement[],
   onCommit: (placements: SlidePlacement[]) => void,
+  onTextCommit: (index: number, text: string) => void,
+  onImageDrop: (markdown: string) => void,
 ): () => void {
   const win = doc.defaultView;
   if (!win) return () => {};
@@ -531,14 +766,68 @@ function installCanvasEditorOverlay(
   let current = placements.map((placement) => ({ ...placement }));
   let drag: CanvasDragState | undefined;
 
-  const boxes = current.map((placement, index) => {
-    const box = doc.createElement("div");
-    box.className = classes.box;
-    box.dataset.index = String(index);
+  function applyBoxPlacement(box: HTMLElement, placement: SlidePlacement): void {
     box.style.left = `${placement.x}%`;
     box.style.top = `${placement.y}%`;
     box.style.width = `${placement.w}%`;
     box.style.height = `${placement.h}%`;
+    box.style.transformOrigin = "0 0";
+    box.style.transform = `scale(${placement.scale})`;
+  }
+
+  function startTextEdit(index: number, target: HTMLElement, box: HTMLElement): void {
+    if (box.querySelector(`.${classes.textEditor}`)) return;
+
+    const text = target.innerText.trim();
+    if (!text) return;
+
+    for (const item of boxes) item.dataset.selected = "false";
+    box.dataset.selected = "true";
+
+    const editor = doc.createElement("textarea");
+    editor.className = classes.textEditor;
+    editor.value = text;
+    editor.spellcheck = false;
+    box.append(editor);
+
+    let committed = false;
+    const commit = (): void => {
+      if (committed) return;
+      committed = true;
+      onTextCommit(index, editor.value);
+      editor.remove();
+    };
+    const cancel = (): void => {
+      committed = true;
+      editor.remove();
+    };
+
+    editor.addEventListener("pointerdown", (event) => {
+      event.stopPropagation();
+    });
+    editor.addEventListener("click", (event) => {
+      event.stopPropagation();
+    });
+    editor.addEventListener("keydown", (event) => {
+      if (event.key === "Escape") {
+        event.preventDefault();
+        cancel();
+      }
+      if (event.key === "Enter" && (event.metaKey || event.ctrlKey)) {
+        event.preventDefault();
+        commit();
+      }
+    });
+    editor.addEventListener("blur", commit);
+    editor.focus();
+    editor.select();
+  }
+
+  const boxes = current.map((placement, index) => {
+    const box = doc.createElement("div");
+    box.className = classes.box;
+    box.dataset.index = String(index);
+    applyBoxPlacement(box, placement);
 
     const grabHandle = doc.createElement("span");
     grabHandle.className = classes.grabHandle;
@@ -550,7 +839,11 @@ function installCanvasEditorOverlay(
     handle.className = classes.resize;
     handle.title = "Resize";
 
-    box.append(grabHandle, handle);
+    const scaleHandle = doc.createElement("span");
+    scaleHandle.className = classes.scale;
+    scaleHandle.title = "Scale";
+
+    box.append(grabHandle, handle, scaleHandle);
     overlay.append(box);
 
     function startDrag(event: PointerEvent, mode: CanvasDragMode): void {
@@ -583,8 +876,35 @@ function installCanvasEditorOverlay(
     handle.addEventListener("pointerdown", (event) => {
       startDrag(event, "resize");
     });
+    scaleHandle.addEventListener("pointerdown", (event) => {
+      startDrag(event, "scale");
+    });
+    box.addEventListener("dblclick", (event) => {
+      const target = layout.children[index];
+      if (!isHtmlElement(target)) return;
+      event.preventDefault();
+      event.stopPropagation();
+      startTextEdit(index, target, box);
+    });
 
     return box;
+  });
+
+  overlay.addEventListener("dragover", (event) => {
+    if (!event.dataTransfer) return;
+    event.preventDefault();
+    event.dataTransfer.dropEffect = "copy";
+    overlay.dataset.dropTarget = "true";
+  });
+  overlay.addEventListener("dragleave", (event) => {
+    if (event.target === overlay) delete overlay.dataset.dropTarget;
+  });
+  overlay.addEventListener("drop", (event) => {
+    event.preventDefault();
+    delete overlay.dataset.dropTarget;
+    void readDroppedImageMarkdown(event).then((markdown) => {
+      if (markdown) onImageDrop(markdown);
+    });
   });
 
   function updateGuides(result: CanvasSnapResult | undefined): void {
@@ -613,10 +933,7 @@ function installCanvasEditorOverlay(
     boxes.forEach((box, index) => {
       const placement = current[index];
       if (!placement) return;
-      box.style.left = `${placement.x}%`;
-      box.style.top = `${placement.y}%`;
-      box.style.width = `${placement.w}%`;
-      box.style.height = `${placement.h}%`;
+      applyBoxPlacement(box, placement);
     });
   }
 
@@ -624,24 +941,35 @@ function installCanvasEditorOverlay(
     if (!drag) return;
     const dx = ((event.clientX - drag.startX) / drag.layoutRect.width) * 100;
     const dy = ((event.clientY - drag.startY) / drag.layoutRect.height) * 100;
-    const rawPlacement =
-      drag.mode === "move"
-        ? normalizePlacement(
-            {
-              ...drag.start,
-              x: drag.start.x + dx,
-              y: drag.start.y + dy,
-            },
-            drag.start,
-          )
-        : normalizePlacement(
-            {
-              ...drag.start,
-              w: drag.start.w + dx,
-              h: drag.start.h + dy,
-            },
-            drag.start,
-          );
+    let rawPlacement: SlidePlacement;
+    if (drag.mode === "move") {
+      rawPlacement = normalizePlacement(
+        {
+          ...drag.start,
+          x: drag.start.x + dx,
+          y: drag.start.y + dy,
+        },
+        drag.start,
+      );
+    } else if (drag.mode === "scale") {
+      const scaleDelta = Math.max(dx / Math.max(drag.start.w, 1), dy / Math.max(drag.start.h, 1));
+      rawPlacement = normalizePlacement(
+        {
+          ...drag.start,
+          scale: drag.start.scale + scaleDelta,
+        },
+        drag.start,
+      );
+    } else {
+      rawPlacement = normalizePlacement(
+        {
+          ...drag.start,
+          w: drag.start.w + dx / drag.start.scale,
+          h: drag.start.h + dy / drag.start.scale,
+        },
+        drag.start,
+      );
+    }
     const snapped = snapPlacementToGrid(rawPlacement, drag.start, drag.mode);
     const next = snapped.placement;
 
@@ -653,10 +981,11 @@ function installCanvasEditorOverlay(
 
   function finishDrag(): void {
     if (!drag) return;
+    const shouldCommit = !isSamePlacement(current[drag.index], drag.start);
     doc.body.style.userSelect = "";
     drag = undefined;
     updateGuides(undefined);
-    onCommit(current.map((placement) => ({ ...placement })));
+    if (shouldCommit) onCommit(current.map((placement) => ({ ...placement })));
   }
 
   function onPointerMove(event: PointerEvent): void {
@@ -684,6 +1013,55 @@ function installCanvasEditorOverlay(
   };
 }
 
+function installPaneResizers(elements: EditorElements): void {
+  let resize: PaneResizeState | undefined;
+
+  function finishResize(): void {
+    if (!resize) return;
+    resize.handle.dataset.active = "false";
+    document.body.style.cursor = "";
+    document.body.style.userSelect = "";
+    resize = undefined;
+  }
+
+  window.addEventListener("pointermove", (event) => {
+    if (!resize) return;
+    const width = clampNumber(
+      resize.startWidth + event.clientX - resize.startX,
+      resize.minWidth,
+      resize.maxWidth,
+    );
+    elements.app.style.setProperty(resize.variable, `${Math.round(width)}px`);
+  });
+  window.addEventListener("pointerup", finishResize);
+
+  for (const handle of elements.paneResizers) {
+    handle.addEventListener("pointerdown", (event) => {
+      const pane = handle.dataset.resizePane;
+      const target =
+        pane === "sidebar"
+          ? document.querySelector<HTMLElement>(".sidebar")
+          : document.querySelector<HTMLElement>(".editor");
+      if (!target || (pane !== "sidebar" && pane !== "editor")) return;
+
+      event.preventDefault();
+      handle.setPointerCapture(event.pointerId);
+      handle.dataset.active = "true";
+      document.body.style.cursor = "col-resize";
+      document.body.style.userSelect = "none";
+      resize = {
+        pointerId: event.pointerId,
+        variable: pane === "sidebar" ? "--sidebar-width" : "--editor-width",
+        startX: event.clientX,
+        startWidth: target.getBoundingClientRect().width,
+        minWidth: pane === "sidebar" ? 190 : 300,
+        maxWidth: pane === "sidebar" ? 420 : 760,
+        handle,
+      };
+    });
+  }
+}
+
 /**
  * Browser client for the dev-only slide editor.
  */
@@ -694,6 +1072,7 @@ export function createSlideEditorClient(): void {
   const state: EditorState = { decks: [], selected: null, dirty: false, saveTimer: 0 };
   let cleanupPreviewEditor: (() => void) | undefined;
   const elements: EditorElements = {
+    app: queryElement(".app"),
     decks: queryElement("[data-decks]"),
     source: queryElement("[data-source]"),
     file: queryElement("[data-current-file]"),
@@ -708,6 +1087,7 @@ export function createSlideEditorClient(): void {
     densityButtons: document.querySelectorAll("[data-density-value]"),
     accentButtons: document.querySelectorAll("[data-accent-value]"),
     accentCustom: queryElement("[data-accent-custom]"),
+    paneResizers: document.querySelectorAll("[data-resize-pane]"),
   };
   const { defaults } = SLIDE_EDITOR_CONFIG;
   const allowed = {
@@ -715,6 +1095,7 @@ export function createSlideEditorClient(): void {
     align: new Set(SLIDE_EDITOR_CONFIG.values.align),
     density: new Set(SLIDE_EDITOR_CONFIG.values.density),
   };
+  installPaneResizers(elements);
 
   async function request<T>(requestPath: string, init?: RequestInit): Promise<T> {
     const response = await fetch(api + requestPath, init);
@@ -778,6 +1159,7 @@ export function createSlideEditorClient(): void {
     if (!layout) return [];
     const children = Array.from(layout.children);
     const layoutRect = layout.getBoundingClientRect();
+    const existingPlacements = readCanvasPlacements();
     if (children.length === 0) return [];
     if (layoutRect.width <= 0 || layoutRect.height <= 0) {
       return ensurePlacementCount([], children.length);
@@ -785,12 +1167,15 @@ export function createSlideEditorClient(): void {
 
     return children.map((child, index) => {
       const rect = child.getBoundingClientRect();
+      const scale =
+        existingPlacements[index]?.scale ?? SLIDE_EDITOR_CONFIG.canvas.defaultPlacement.scale;
       return normalizePlacement(
         {
           x: ((rect.left - layoutRect.left) / layoutRect.width) * 100,
           y: ((rect.top - layoutRect.top) / layoutRect.height) * 100,
-          w: (rect.width / layoutRect.width) * 100,
-          h: (rect.height / layoutRect.height) * 100,
+          w: ((rect.width / layoutRect.width) * 100) / scale,
+          h: ((rect.height / layoutRect.height) * 100) / scale,
+          scale,
         },
         defaultPlacement(index, children.length),
       );
@@ -807,12 +1192,47 @@ export function createSlideEditorClient(): void {
 
     const placements = ensurePlacementCount(readCanvasPlacements(), layout.children.length);
     applyCanvasLayoutStyles(layout, placements);
-    cleanupPreviewEditor = installCanvasEditorOverlay(doc, layout, placements, (nextPlacements) => {
-      applyFrontmatterUpdate({
-        [SLIDE_EDITOR_CONFIG.frontmatter.keys.layout]: SLIDE_EDITOR_CONFIG.canvas.layout,
-        [SLIDE_EDITOR_CONFIG.frontmatter.keys.placements]: formatPlacements(nextPlacements),
-      });
+    cleanupPreviewEditor = installCanvasEditorOverlay(
+      doc,
+      layout,
+      placements,
+      (nextPlacements) => {
+        applyFrontmatterUpdate({
+          [SLIDE_EDITOR_CONFIG.frontmatter.keys.layout]: SLIDE_EDITOR_CONFIG.canvas.layout,
+          [SLIDE_EDITOR_CONFIG.frontmatter.keys.placements]: formatPlacements(nextPlacements),
+        });
+      },
+      (index, text) => {
+        const nextSource = updateMarkdownBlock(elements.source.value, index, text);
+        if (nextSource === elements.source.value) return;
+        elements.source.value = nextSource;
+        updateInspector();
+        setDirty(true);
+        scheduleSave();
+      },
+      (markdown) => {
+        appendCanvasMarkdownBlock(markdown);
+      },
+    );
+  }
+
+  function appendCanvasMarkdownBlock(markdown: string): void {
+    const layout = getPreviewLayout();
+    const parsed = parseFrontmatter(elements.source.value);
+    const existingCount = Math.max(
+      layout?.children.length ?? 0,
+      splitMarkdownBlocks(parsed.body).length,
+    );
+    const nextPlacements = ensurePlacementCount(readCanvasPlacements(), existingCount + 1);
+    const nextSource = appendMarkdownBlock(elements.source.value, markdown);
+
+    elements.source.value = writeFrontmatter(nextSource, {
+      [SLIDE_EDITOR_CONFIG.frontmatter.keys.layout]: SLIDE_EDITOR_CONFIG.canvas.layout,
+      [SLIDE_EDITOR_CONFIG.frontmatter.keys.placements]: formatPlacements(nextPlacements),
     });
+    updateInspector();
+    setDirty(true);
+    scheduleSave();
   }
 
   async function save(): Promise<void> {
@@ -997,10 +1417,17 @@ export function renderSlideEditorClientSource(apiJson: string): string {
     parseFrontmatter.toString(),
     formatFrontmatterValue.toString(),
     writeFrontmatter.toString(),
+    replaceMarkdownBody.toString(),
+    isEditableMarkdownBlock.toString(),
+    splitMarkdownBlocks.toString(),
+    formatEditedMarkdownBlock.toString(),
+    updateMarkdownBlock.toString(),
+    appendMarkdownBlock.toString(),
     pressed.toString(),
     normalizeToken.toString(),
     clampNumber.toString(),
     roundedPercent.toString(),
+    roundedScale.toString(),
     finiteNumber.toString(),
     normalizePlacement.toString(),
     defaultPlacement.toString(),
@@ -1012,9 +1439,16 @@ export function renderSlideEditorClientSource(apiJson: string): string {
     isHtmlElement.toString(),
     ensurePlacementCount.toString(),
     applyElementPlacement.toString(),
+    isSamePlacement.toString(),
     applyCanvasLayoutStyles.toString(),
     renderCanvasEditorStyle.toString(),
+    escapeMarkdownAlt.toString(),
+    droppedFileToDataUrl.toString(),
+    isImageUrl.toString(),
+    formatMarkdownImage.toString(),
+    readDroppedImageMarkdown.toString(),
     installCanvasEditorOverlay.toString(),
+    installPaneResizers.toString(),
     queryElementFrom.toString(),
     `(${createSlideEditorClient.toString()})();`,
   ].join("\n");

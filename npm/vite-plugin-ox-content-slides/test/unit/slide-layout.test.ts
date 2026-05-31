@@ -47,14 +47,18 @@ describe("slide layout metadata", () => {
   it("emits canvas placement styles from JSON frontmatter", () => {
     const html = wrapSlideContent("<h1>Hello</h1><p>World</p>", {
       layout: "canvas",
-      placements: '[{"x":10,"y":12,"w":40,"h":20},{"x":55,"y":24,"w":35,"h":52}]',
+      placements: '[{"x":10,"y":12,"w":40,"h":20,"scale":1.25},{"x":55,"y":24,"w":35,"h":52}]',
     });
 
     expect(resolveSlidePlacements({ placements: '[{"x":10,"y":12,"w":40,"h":20}]' })).toEqual([
-      { x: 10, y: 12, w: 40, h: 20 },
+      { x: 10, y: 12, w: 40, h: 20, scale: 1 },
     ]);
     expect(html).toContain('data-ox-has-placements="true"');
-    expect(html).toContain("left:10.000%;top:12.000%;width:40.000%;height:20.000%;");
-    expect(html).toContain("left:55.000%;top:24.000%;width:35.000%;height:52.000%;");
+    expect(html).toContain(
+      "left:10.000%;top:12.000%;width:40.000%;height:20.000%;transform-origin:0 0;transform:scale(1.250);",
+    );
+    expect(html).toContain(
+      "left:55.000%;top:24.000%;width:35.000%;height:52.000%;transform-origin:0 0;transform:scale(1.000);",
+    );
   });
 });

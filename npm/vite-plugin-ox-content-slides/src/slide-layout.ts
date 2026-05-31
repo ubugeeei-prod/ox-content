@@ -72,6 +72,15 @@ function clampPercent(value: unknown, fallback: number): number {
   );
 }
 
+function clampScale(value: unknown, fallback: number): number {
+  const number = typeof value === "number" ? value : Number(value);
+  if (!Number.isFinite(number)) return fallback;
+  return Math.min(
+    CANVAS_PLACEMENT_BOUNDS.maxScale,
+    Math.max(CANVAS_PLACEMENT_BOUNDS.minScale, number),
+  );
+}
+
 function parsePlacement(value: unknown): SlidePlacement | undefined {
   if (!value || typeof value !== "object") return undefined;
   const item = value as Record<string, unknown>;
@@ -81,6 +90,7 @@ function parsePlacement(value: unknown): SlidePlacement | undefined {
     y: clampPercent(item.y, DEFAULT_CANVAS_PLACEMENT.y),
     w: clampPercent(item.w, DEFAULT_CANVAS_PLACEMENT.w),
     h: clampPercent(item.h, DEFAULT_CANVAS_PLACEMENT.h),
+    scale: clampScale(item.scale, DEFAULT_CANVAS_PLACEMENT.scale),
   };
 }
 
@@ -111,7 +121,7 @@ function renderPlacementStyle(className: string, placements: SlidePlacement[]): 
   const rules = placements
     .map((placement, index) => {
       const selector = `.${className}.${SLIDE_DOM.canvasLayoutClass} > :nth-child(${index + 1})`;
-      return `${selector}{left:${placement.x.toFixed(3)}%;top:${placement.y.toFixed(3)}%;width:${placement.w.toFixed(3)}%;height:${placement.h.toFixed(3)}%;}`;
+      return `${selector}{left:${placement.x.toFixed(3)}%;top:${placement.y.toFixed(3)}%;width:${placement.w.toFixed(3)}%;height:${placement.h.toFixed(3)}%;transform-origin:0 0;transform:scale(${placement.scale.toFixed(3)});}`;
     })
     .join("");
 
