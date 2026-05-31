@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "generatedAt": "2026-05-27T15:18:43.356Z",
+  "generatedAt": "2026-05-31T12:41:13.724Z",
   "summary": {
     "modules": 2,
     "entries": 6,
@@ -16,6 +16,7 @@
   "modules": [
     {
       "file": "src/math.ts",
+      "description": "",
       "entries": [
         {
           "name": "clamp",
@@ -111,6 +112,7 @@
     },
     {
       "file": "src/utils.ts",
+      "description": "",
       "entries": [
         {
           "name": "capitalize",
