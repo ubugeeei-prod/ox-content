@@ -1,6 +1,10 @@
+import { dirname, resolve } from "node:path";
+import { fileURLToPath } from "node:url";
 import { describe, expect, it } from "vite-plus/test";
 import { transformMarkdown } from "./transform";
 import type { ResolvedOptions } from "./types";
+
+const repoRoot = resolve(dirname(fileURLToPath(import.meta.url)), "../../..");
 
 describe("transformMarkdown", () => {
   it("uses Rust frontmatter parsing and Rust-built TOC trees", async () => {
@@ -74,17 +78,17 @@ describe("transformMarkdown", () => {
   it("can append edit links and import source snippets when opted in", async () => {
     const result = await transformMarkdown(
       "<<< @/README.md{1-1}",
-      "/Users/ubugeeei/Source/github.com/ubugeeei/ox-content/docs/import.md",
+      resolve(repoRoot, "docs/import.md"),
       createResolvedOptions({
         codeImports: {
           enabled: true,
-          rootDir: "/Users/ubugeeei/Source/github.com/ubugeeei/ox-content",
+          rootDir: repoRoot,
         },
         editThisPage: {
           enabled: true,
           repoUrl: "https://github.com/ubugeeei-prod/ox-content",
           branch: "main",
-          rootDir: "/Users/ubugeeei/Source/github.com/ubugeeei/ox-content",
+          rootDir: repoRoot,
           label: "Suggest an edit",
         },
       }),
