@@ -87,13 +87,11 @@ _Benchmark sweep generated on 2026-05-30 (median of 1 runs). Numbers track the h
 
 <!-- benchmark:tables:end -->
 
-The tables above are regenerated from a clean CI environment by the
+The tables above are regenerated from a clean Blacksmith 32 vCPU CI environment by the
 [Benchmark docs workflow](https://github.com/ubugeeei-prod/ox-content/blob/main/.github/workflows/benchmark-docs.yml);
-run `node benchmarks/bundle-size/parse-benchmark.mjs --runs 7 --json /tmp/b.json`
-followed by `node scripts/render-benchmark-tables.mjs /tmp/b.json` to refresh
-them locally. Absolute ops/sec track the host (earlier sweeps on faster hardware
-report higher numbers); the relative ordering between engines is the stable
-signal.
+run `OX_CONTENT_BENCHMARK_RUNS=7 vp run bench:docs` to refresh them locally.
+Absolute ops/sec track the host (earlier sweeps on faster hardware report higher
+numbers); the relative ordering between engines is the stable signal.
 
 On the 48.7 KB document Ox Content leads every comparison: ~1.95x ahead of the
 next-fastest parser (`satteri`) on parse-only and ~1.65x ahead of `md4x (napi)`

@@ -99,9 +99,7 @@
                 sha256 = "a3367ab4151b12a4ea771515c314a0d48b62294c0b671325d42731f2be973f66";
               };
             };
-            target =
-              selector.${system}
-                or (throw "blacksmith CLI: unsupported system ${system}");
+            target = selector.${system} or (throw "blacksmith CLI: unsupported system ${system}");
           in
           pkgs.stdenvNoCC.mkDerivation {
             pname = "blacksmith-cli";
@@ -116,7 +114,8 @@
 
             nativeBuildInputs = [
               pkgs.makeWrapper
-            ] ++ lib.optionals pkgs.stdenv.isLinux [ pkgs.autoPatchelfHook ];
+            ]
+            ++ lib.optionals pkgs.stdenv.isLinux [ pkgs.autoPatchelfHook ];
 
             installPhase = ''
               runHook preInstall
@@ -129,7 +128,12 @@
             # the caller's PATH.
             postFixup = ''
               wrapProgram "$out/bin/blacksmith" \
-                --prefix PATH : ${lib.makeBinPath [ pkgs.rsync pkgs.gh ]}
+                --prefix PATH : ${
+                  lib.makeBinPath [
+                    pkgs.rsync
+                    pkgs.gh
+                  ]
+                }
             '';
 
             meta = {
@@ -141,25 +145,25 @@
       in
       {
         devShells.default = pkgs.mkShell {
-          packages =
-            [
-              nodejs
-              pnpm
-              workspaceVp
-              blacksmith
-              rustToolchain
-              pkgs.rust-analyzer
-              pkgs.wasm-pack
-              pkgs.wasm-bindgen-cli
-              pkgs.binaryen
-              pkgs.cargo-watch
-              pkgs.cargo-llvm-cov
-              pkgs.git
-              pkgs.jq
-              pkgs.pkg-config
-              pkgs.rsync
-            ]
-            ++ lib.optionals pkgs.stdenv.isDarwin [ pkgs.libiconv ];
+          packages = [
+            nodejs
+            pnpm
+            workspaceVp
+            blacksmith
+            rustToolchain
+            pkgs.rust-analyzer
+            pkgs.wasm-pack
+            pkgs.wasm-bindgen-cli
+            pkgs.binaryen
+            pkgs.cargo-watch
+            pkgs.cargo-llvm-cov
+            pkgs.git
+            pkgs.gh
+            pkgs.jq
+            pkgs.pkg-config
+            pkgs.rsync
+          ]
+          ++ lib.optionals pkgs.stdenv.isDarwin [ pkgs.libiconv ];
 
           RUST_BACKTRACE = "1";
           RUST_SRC_PATH = "${rustToolchain}/lib/rustlib/src/rust/library";
@@ -173,7 +177,7 @@
             echo "Ox Content dev shell ready."
             echo "Run: vp install"
             echo "Then: vp run ready"
-            echo "Testbox: blacksmith auth login && blacksmith testbox warmup --workflow testbox.yml"
+            echo "Testbox: blacksmith auth login && vp run testbox:warmup"
           '';
         };
 

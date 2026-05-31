@@ -269,7 +269,7 @@ _Benchmark sweep generated on 2026-05-30 (median of 1 runs). Numbers track the h
 
 <!-- benchmark:tables:end -->
 
-The benchmark tables above are regenerated from a clean CI environment by the [Benchmark docs workflow](.github/workflows/benchmark-docs.yml); run `node benchmarks/bundle-size/parse-benchmark.mjs --runs 7 --json /tmp/b.json && node scripts/render-benchmark-tables.mjs /tmp/b.json` to refresh them locally. Ox Content leads every comparison: 1.95× ahead of the next-fastest parser (`satteri`) on parse-only and 1.65× ahead of `md4x (napi)` on parse+render at 48.7 KB, and it holds that lead at ~1 MB (2.7× / 1.6×) while sustaining ~148–168 MB/s. The incremental CST parser (`@mizchi/markdown`) and the `unified`/`remark` and `micromark` pipelines fall to ~1 op/sec at 1 MB. See `node benchmarks/bundle-size/parse-benchmark.mjs` for the full sweep across small, medium, large, and ~1 MB inputs.
+The benchmark tables above are regenerated from a clean Blacksmith 32 vCPU CI environment by the [Benchmark docs workflow](.github/workflows/benchmark-docs.yml); run `OX_CONTENT_BENCHMARK_RUNS=7 vp run bench:docs` to refresh them locally. Ox Content leads every comparison: 1.95× ahead of the next-fastest parser (`satteri`) on parse-only and 1.65× ahead of `md4x (napi)` on parse+render at 48.7 KB, and it holds that lead at ~1 MB (2.7× / 1.6×) while sustaining ~148–168 MB/s. The incremental CST parser (`@mizchi/markdown`) and the `unified`/`remark` and `micromark` pipelines fall to ~1 op/sec at 1 MB. See `node benchmarks/bundle-size/parse-benchmark.mjs` for the full sweep across small, medium, large, and ~1 MB inputs.
 
 Run the benchmark with:
 
