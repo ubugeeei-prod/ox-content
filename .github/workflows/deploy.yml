@@ -41,6 +41,16 @@ jobs:
           restore-keys: |
             ${{ runner.os }}-cargo-
 
+      - name: Cache rendering browsers
+        uses: actions/cache@27d5ce7f107fe9357f9df03efb73ab90386fccae # v5.0.5
+        with:
+          path: |
+            ~/.cache/ms-playwright
+            ~/.cache/puppeteer
+          key: ${{ runner.os }}-browsers-${{ hashFiles('pnpm-lock.yaml') }}
+          restore-keys: |
+            ${{ runner.os }}-browsers-
+
       - name: Install browsers for docs rendering
         run: |
           vp exec --filter @ox-content/vite-plugin -- playwright install --with-deps chromium
