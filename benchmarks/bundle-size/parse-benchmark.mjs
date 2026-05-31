@@ -60,6 +60,9 @@ const sizes = {
   small: sampleMarkdown,
   medium: Array(10).fill(sampleMarkdown).join("\n\n"),
   large: Array(100).fill(sampleMarkdown).join("\n\n"),
+  // ~1 MB document: stresses parsers at a scale typical of a large
+  // single-file handbook chapter or a concatenated docs bundle.
+  huge: Array(2150).fill(sampleMarkdown).join("\n\n"),
 };
 
 /**
@@ -309,7 +312,17 @@ function loadBunMarkdownBenchmarks() {
 
   if (run.status !== 0) {
     const details = run.stderr.trim() || run.stdout.trim();
-    console.warn(`Failed to run Bun benchmark helper: ${details}`);
+    // `Bun.markdown` only exists in Bun >= 1.3.8. On an older bun the helper
+    // throws this exact message; call it out so the missing Bun.markdown row
+    // is traced to the bun version rather than read as a transient failure.
+    if (details.includes("Bun.markdown is not available")) {
+      console.warn(
+        `Bun ${version.stdout.trim()} predates Bun.markdown (added in 1.3.8); ` +
+          "skipping Bun.markdown comparisons. Upgrade bun to include it.",
+      );
+    } else {
+      console.warn(`Failed to run Bun benchmark helper: ${details}`);
+    }
     return null;
   }
 
@@ -350,6 +363,41 @@ async function runBenchmarks() {
   const remarkHtml = (await import("remark-html")).default;
   await initMd4w();
 
+  // satteri is an optional comparison target. It may be missing when the
+  // benchmark runs against an older checkout (e.g. the CI base ref that
+  // predates this dependency), so load it defensively like @ox-content/napi.
+  let satteri = null;
+  try {
+    satteri = await import("satteri");
+    console.log("Using satteri\n");
+  } catch {
+    console.log("satteri not available, skipping satteri comparisons\n");
+  }
+
+  // @mizchi/markdown (markdown.mbt) is a MoonBit-authored Markdown compiler
+  // shipped as a pure-JS build. Loaded defensively like satteri so an older
+  // checkout without the dependency skips it rather than crashing.
+  let mizchi = null;
+  try {
+    mizchi = await import("@mizchi/markdown");
+    console.log("Using @mizchi/markdown\n");
+  } catch {
+    console.log("@mizchi/markdown not available, skipping mizchi comparisons\n");
+  }
+
+  // @astrojs/markdown-remark is the Markdown renderer Astro uses internally
+  // (remark/rehype under the hood). Its processor renders asynchronously, so
+  // it only joins the async render comparison. Loaded defensively like the
+  // others so an older checkout without the dependency skips it.
+  let astroProcessor = null;
+  try {
+    const { createMarkdownProcessor } = await import("@astrojs/markdown-remark");
+    astroProcessor = await createMarkdownProcessor({});
+    console.log("Using @astrojs/markdown-remark (Astro)\n");
+  } catch {
+    console.log("@astrojs/markdown-remark not available, skipping Astro comparisons\n");
+  }
+
   // Try to import NAPI
   let napi = null;
   try {
@@ -388,6 +436,14 @@ async function runBenchmarks() {
     { name: "remark", fn: (input) => remarkParseProcessor.parse(input) },
   );
 
+  if (satteri) {
+    parsers.push({ name: "satteri", fn: (input) => satteri.markdownToMdast(input) });
+  }
+
+  if (mizchi) {
+    parsers.push({ name: "@mizchi/markdown", fn: (input) => mizchi.parse(input) });
+  }
+
   // Define renderers (parse + render)
   const renderers = [];
 
@@ -410,6 +466,14 @@ async function runBenchmarks() {
     },
   );
 
+  if (satteri) {
+    renderers.push({ name: "satteri", fn: (input) => satteri.markdownToHtml(input) });
+  }
+
+  if (mizchi) {
+    renderers.push({ name: "@mizchi/markdown", fn: (input) => mizchi.toHtml(input) });
+  }
+
   // Define async renderers
   const asyncRenderers = [];
 
@@ -420,11 +484,19 @@ async function runBenchmarks() {
     });
   }
 
+  if (astroProcessor) {
+    asyncRenderers.push({
+      name: "@astrojs/markdown-remark",
+      fn: (input) => astroProcessor.render(input),
+    });
+  }
+
   for (const [sizeName, content] of Object.entries(sizes)) {
     const sizeKB = (content.length / 1024).toFixed(1);
     console.log(`\n## ${sizeName.toUpperCase()} (${sizeKB} KB)`);
 
-    const iterations = sizeName === "large" ? 20 : sizeName === "medium" ? 50 : 100;
+    const iterations =
+      sizeName === "huge" ? 5 : sizeName === "large" ? 20 : sizeName === "medium" ? 50 : 100;
     const suites = {};
 
     // Parse only benchmark
@@ -458,8 +530,9 @@ async function runBenchmarks() {
     suites.parseAndRender = renderResults;
     printTable("Parse + Render", renderResults);
 
-    // Async benchmark (only for large)
-    if (asyncRenderers.length > 0 && sizeName === "large") {
+    // Async benchmark (only for the large and ~1 MB cases, where offloading
+    // to a worker thread can actually pay for its overhead)
+    if (asyncRenderers.length > 0 && (sizeName === "large" || sizeName === "huge")) {
       const asyncResults = [];
       for (const renderer of asyncRenderers) {
         try {

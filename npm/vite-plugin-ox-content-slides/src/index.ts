@@ -6,4 +6,5 @@ export type {
   SlideSourceRenderResult,
   SlideThemeConfig,
 } from "./public-types";
+export type { SlideEditorOptions } from "./editor-options";
 export type { SlidePdfOptions } from "./pdf-options";

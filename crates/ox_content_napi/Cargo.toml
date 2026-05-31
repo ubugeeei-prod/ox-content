@@ -37,6 +37,7 @@ serde = { workspace = true }
 serde_json = { workspace = true }
 serde_yaml = { workspace = true }
 regex = { workspace = true }
+memchr = { workspace = true }
 unicode-normalization = { workspace = true }
 
 [build-dependencies]

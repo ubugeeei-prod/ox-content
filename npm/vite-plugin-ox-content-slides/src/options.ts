@@ -3,6 +3,7 @@ import {
   resolveSsgOptions,
   type ResolvedOptions,
 } from "@ox-content/vite-plugin";
+import { resolveSlideEditorOptions } from "./editor-options";
 import { toNapiTheme } from "./napi";
 import type { ResolvedSlidesPluginOptions } from "./internal-types";
 import { normalizeExtension, normalizeRouteSegment, DEFAULT_EXTENSIONS } from "./path-utils";
@@ -23,6 +24,7 @@ export function resolveOptions(options: OxContentSlidesOptions): ResolvedSlidesP
     routeBase,
     routePrefix: `/${routeBase}`,
     animations: options.animations ?? true,
+    editor: resolveSlideEditorOptions(options.editor, routeBase),
     presenter: options.presenter ?? true,
     separator: options.separator ?? "---",
     extensions: [
@@ -74,6 +76,31 @@ export function createMarkdownOptions(options: ResolvedSlidesPluginOptions): Res
       metaKey: "annotate",
       defaultLineNumbers: false,
     },
+    wikiLinks: { enabled: false, baseUrl: options.base },
+    emojiShortcodes: { enabled: false, custom: {} },
+    attrs: { enabled: false },
+    codeImports: { enabled: false },
+    sanitize: { enabled: false },
+    editThisPage: { enabled: false, branch: "main", label: "Edit this page" },
+    cjkEmphasis: false,
+    codeBlockLint: {
+      enabled: false,
+      requireLanguage: false,
+      trailingSpaces: true,
+      mode: "warn",
+    },
+    codeBlockTypecheck: {
+      enabled: false,
+      languages: ["ts", "tsx"],
+      requireMeta: true,
+      tsgoCommand: "tsgo",
+      mode: "warn",
+    },
+    docsTests: {
+      enabled: false,
+      languages: ["js", "jsx", "ts", "tsx"],
+      requireMeta: true,
+    },
     mermaid: options.mermaid,
     frontmatter: true,
     toc: true,
@@ -90,7 +117,16 @@ export function createMarkdownOptions(options: ResolvedSlidesPluginOptions): Res
       hotkey: "k",
     },
     ogViewer: false,
-    embeds: { github: false, openGraph: false },
+    embeds: {
+      github: false,
+      openGraph: false,
+      pm: false,
+      spotify: false,
+      stackBlitz: false,
+      twitter: false,
+      bluesky: false,
+      webContainer: false,
+    },
     i18n: false,
   };
 }

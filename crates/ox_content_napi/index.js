@@ -89,6 +89,7 @@ module.exports.buildExportGraph = binding.buildExportGraph;
 module.exports.extractDocsFromDirectories = binding.extractDocsFromDirectories;
 module.exports.extractDocsFromEntryPoints = binding.extractDocsFromEntryPoints;
 module.exports.generateDocsNavMetadata = binding.generateDocsNavMetadata;
+module.exports.generateDocsNavMetadataFromDocs = binding.generateDocsNavMetadataFromDocs;
 module.exports.generateDocsNavCode = binding.generateDocsNavCode;
 module.exports.collectDocsSourceFiles = binding.collectDocsSourceFiles;
 module.exports.generateDocsDataJson = binding.generateDocsDataJson;

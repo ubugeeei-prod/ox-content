@@ -49,7 +49,13 @@
  * ```
  */
 
-import type { ResolvedDocsOptions, ExtractedDocs, DocEntry, ResolvedDocsEntryPoint } from "./types";
+import type {
+  ResolvedDocsOptions,
+  ExtractedDocs,
+  DocEntry,
+  ResolvedDocsEntryPoint,
+  DocsOptions,
+} from "./types";
 import { importNapiModule, importNapiModuleSync } from "./napi";
 
 const DEFAULT_DOCS_INCLUDE = [
@@ -139,7 +145,12 @@ export async function extractDocs(
       napi as {
         extractDocsFromEntryPoints?: (
           entryPoints: ResolvedDocsEntryPoint[],
-          options?: { root?: string; private?: boolean; internal?: boolean },
+          options?: {
+            root?: string;
+            private?: boolean;
+            internal?: boolean;
+            typeParameters?: boolean;
+          },
         ) => Array<{ file: string; entries: DocEntry[] }>;
       }
     ).extractDocsFromEntryPoints;
@@ -154,6 +165,7 @@ export async function extractDocs(
       root: process.cwd(),
       private: options.private,
       internal: options.internal,
+      typeParameters: options.typeParameters,
     }).map((doc) => ({ file: doc.file, entries: doc.entries }));
   }
 
@@ -165,6 +177,7 @@ export async function extractDocs(
         exclude: string[],
         includePrivate?: boolean,
         includeInternal?: boolean,
+        typeParameters?: boolean,
       ) => Array<{ file: string; entries: DocEntry[] }>;
     }
   ).extractDocsFromDirectories;
@@ -181,6 +194,7 @@ export async function extractDocs(
     options.exclude,
     options.private,
     options.internal,
+    options.typeParameters,
   ).map((doc) => ({ file: doc.file, entries: doc.entries }));
 }
 
@@ -204,6 +218,8 @@ export function generateMarkdown(
     githubUrl: options.githubUrl,
     linkStyle: options.linkStyle,
     basePath: options.basePath,
+    pathStrategy: options.pathStrategy,
+    renderStyle: options.renderStyle,
   });
 }
 
@@ -233,11 +249,12 @@ export async function writeDocs(
       groupBy: options?.groupBy ?? "file",
       generatedAt: new Date().toISOString(),
       basePath: options?.basePath,
+      pathStrategy: options?.pathStrategy,
     },
   );
 }
 
-function toRustDocsModules(docs: ExtractedDocs[]) {
+export function toRustDocsModules(docs: ExtractedDocs[]) {
   return docs.map((doc) => ({
     file: doc.file,
     entries: doc.entries.map((entry) => ({
@@ -263,8 +280,13 @@ function toRustDocsModules(docs: ExtractedDocs[]) {
 /**
  * Resolves docs options with defaults.
  */
+export function resolveDocsOptions(options: false): false;
+export function resolveDocsOptions(options?: DocsOptions): ResolvedDocsOptions;
 export function resolveDocsOptions(
-  options: import("./types").DocsOptions | false | undefined,
+  options: DocsOptions | false | undefined,
+): ResolvedDocsOptions | false;
+export function resolveDocsOptions(
+  options: DocsOptions | false | undefined,
 ): ResolvedDocsOptions | false {
   if (options === false) {
     return false;
@@ -289,6 +311,9 @@ export function resolveDocsOptions(
     githubUrl: opts.githubUrl,
     linkStyle: opts.linkStyle ?? "markdown",
     basePath: opts.basePath,
+    pathStrategy: opts.pathStrategy ?? "flat",
+    renderStyle: opts.renderStyle ?? "html",
+    typeParameters: opts.typeParameters ?? false,
     generateNav: opts.generateNav ?? true,
   };
 }

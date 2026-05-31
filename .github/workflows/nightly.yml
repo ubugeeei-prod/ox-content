@@ -30,6 +30,7 @@ permissions:
 
 env:
   CARGO_TERM_COLOR: always
+  STICKY_CACHE_SCOPE: ${{ github.event_name == 'pull_request' && format('pr-{0}', github.event.pull_request.number) || github.ref_name }}
 
 jobs:
   build-napi:
@@ -46,10 +47,10 @@ jobs:
           - os: macos-latest
             target: aarch64-apple-darwin
             platform: darwin-arm64
-          - os: ubuntu-latest
+          - os: blacksmith-32vcpu-ubuntu-2404
             target: x86_64-unknown-linux-gnu
             platform: linux-x64-gnu
-          - os: ubuntu-latest
+          - os: blacksmith-32vcpu-ubuntu-2404
             target: aarch64-unknown-linux-gnu
             platform: linux-arm64-gnu
           - os: windows-latest
@@ -57,26 +58,38 @@ jobs:
             platform: win32-x64-msvc
 
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
         with:
           persist-credentials: false
 
       - name: Setup Vite+
-        uses: voidzero-dev/setup-vp@v1
+        uses: voidzero-dev/setup-vp@ca1c46663915d6c1042ae23bd39ab85718bfb0fa # v1.10.0
         with:
           node-version-file: ".node-version"
           cache: true
           run-install: true
 
       - name: Setup Rust
-        uses: dtolnay/rust-toolchain@stable
+        uses: dtolnay/rust-toolchain@29eef336d9b2848a0b548edc03f92a220660cdb8 # stable
         with:
           targets: ${{ matrix.target }}
 
+      - name: Mount sticky cache
+        if: startsWith(matrix.os, 'blacksmith-')
+        uses: ./.github/actions/mount-sticky-cache
+        with:
+          key-prefix: ${{ github.repository }}-nightly-${{ github.job }}-${{ matrix.target }}-${{ env.STICKY_CACHE_SCOPE }}
+          cargo: "true"
+          target: target
+
       - name: Cache cargo build
-        uses: Swatinem/rust-cache@v2
+        if: ${{ !startsWith(matrix.os, 'blacksmith-') }}
+        # zizmor: ignore[cache-poisoning] save-if restricts writes to main pushes, so PR runs cannot poison release builds.
+        uses: Swatinem/rust-cache@e18b497796c12c097a38f9edb9d0641fb99eee32 # v2.9.1
         with:
           shared-key: nightly-${{ matrix.target }}
+          # Only save cache on main pushes to prevent PR runs from poisoning the cache used by release builds.
+          save-if: ${{ github.event_name == 'push' && github.ref == 'refs/heads/main' }}
 
       - name: Install zig (Linux ARM64)
         if: matrix.target == 'aarch64-unknown-linux-gnu'
@@ -94,7 +107,7 @@ jobs:
         run: vp exec -- napi build --release --target ${{ matrix.target }} ${{ matrix.target == 'aarch64-unknown-linux-gnu' && '--cross-compile' || '' }}
 
       - name: Upload artifact
-        uses: actions/upload-artifact@v7
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
         with:
           name: napi-${{ matrix.target }}
           path: crates/ox_content_napi/*.node
@@ -102,7 +115,7 @@ jobs:
 
   release:
     name: Publish preview via pkg-pr-new
-    runs-on: ubuntu-latest
+    runs-on: blacksmith-32vcpu-ubuntu-2404
     needs: build-napi
     # Skip when explicitly disabled via workflow_dispatch.
     # Use always() so this still runs when build-napi was skipped (skip_build mode).
@@ -114,18 +127,20 @@ jobs:
     steps:
       - name: Validate napi_run_id when skip_build is true
         if: github.event_name == 'workflow_dispatch' && inputs.skip_build == true
+        env:
+          NAPI_RUN_ID: ${{ inputs.napi_run_id }}
         run: |
-          if [ -z "${{ inputs.napi_run_id }}" ]; then
+          if [ -z "$NAPI_RUN_ID" ]; then
             echo "::error::napi_run_id input is required when skip_build is true."
             exit 1
           fi
 
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
         with:
           persist-credentials: false
 
       - name: Setup Vite+
-        uses: voidzero-dev/setup-vp@v1
+        uses: voidzero-dev/setup-vp@ca1c46663915d6c1042ae23bd39ab85718bfb0fa # v1.10.0
         with:
           node-version-file: ".node-version"
           cache: true
@@ -133,14 +148,14 @@ jobs:
 
       - name: Download artifacts (same run)
         if: github.event_name != 'workflow_dispatch' || inputs.skip_build != true
-        uses: actions/download-artifact@v8
+        uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8.0.1
         with:
           pattern: napi-*
           path: crates/ox_content_napi/artifacts
 
       - name: Download artifacts (from previous run)
         if: github.event_name == 'workflow_dispatch' && inputs.skip_build == true
-        uses: actions/download-artifact@v8
+        uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8.0.1
         with:
           pattern: napi-*
           path: crates/ox_content_napi/artifacts
@@ -184,6 +199,20 @@ jobs:
       - name: Update optionalDependencies (napi pre-publish)
         working-directory: crates/ox_content_napi
         run: vp exec -- napi pre-publish -t npm --npm-dir ../../binding-packages --no-gh-release --skip-optional-publish
+
+      # `pnpm build` recompiles @ox-content/napi via `napi build --release`,
+      # so the job needs a Rust toolchain. Pin stable instead of relying on the
+      # runner image's preinstalled rustc: the Blacksmith image ships an older
+      # rustc than the oxc dependencies' MSRV (1.93).
+      - name: Setup Rust
+        uses: dtolnay/rust-toolchain@29eef336d9b2848a0b548edc03f92a220660cdb8 # stable
+
+      - name: Mount sticky cache
+        uses: ./.github/actions/mount-sticky-cache
+        with:
+          key-prefix: ${{ github.repository }}-nightly-${{ github.job }}-${{ env.STICKY_CACHE_SCOPE }}
+          cargo: "true"
+          target: target
 
       - name: Build TS packages
         run: vp exec -- pnpm --filter "@ox-content/*" build

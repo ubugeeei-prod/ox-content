@@ -12,9 +12,12 @@ concurrency:
   group: pages
   cancel-in-progress: false
 
+env:
+  STICKY_CACHE_SCOPE: ${{ github.ref_name }}
+
 jobs:
   build:
-    runs-on: ubuntu-24.04
+    runs-on: blacksmith-32vcpu-ubuntu-2404
     steps:
       - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
         with:
@@ -30,16 +33,13 @@ jobs:
           cache: true
           run-install: true
 
-      - name: Cache cargo registry
-        uses: actions/cache@27d5ce7f107fe9357f9df03efb73ab90386fccae # v5.0.5
+      - name: Mount sticky cache
+        uses: ./.github/actions/mount-sticky-cache
         with:
-          path: |
-            ~/.cargo/registry
-            ~/.cargo/git
-            target
-          key: ${{ runner.os }}-cargo-${{ hashFiles('**/Cargo.lock') }}
-          restore-keys: |
-            ${{ runner.os }}-cargo-
+          key-prefix: ${{ github.repository }}-deploy-${{ github.job }}-${{ env.STICKY_CACHE_SCOPE }}
+          cargo: "true"
+          target: target
+          browsers: "true"
 
       - name: Install browsers for docs rendering
         run: |
@@ -73,7 +73,7 @@ jobs:
     environment:
       name: github-pages
       url: ${{ steps.deployment.outputs.page_url }}
-    runs-on: ubuntu-24.04
+    runs-on: blacksmith-32vcpu-ubuntu-2404
     needs: build
     permissions:
       pages: write

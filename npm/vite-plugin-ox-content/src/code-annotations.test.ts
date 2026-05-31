@@ -108,6 +108,34 @@ throw new Error("boom") // [!code error]
     expect(result.html).toContain("ox-code-line--warning");
     expect(result.html).toContain("ox-code-line--error");
   });
+
+  it("supports VitePress-style escape-next-line directives", async () => {
+    const markdown = `\`\`\`ts
+// [!code escape]
+console.warn(literal) // [!code warning]
+console.warn(annotated) // [!code warning]
+\`\`\`
+`;
+
+    const result = await transformMarkdown(
+      markdown,
+      "docs/vitepress-escape.md",
+      createResolvedOptions({
+        highlight: false,
+        codeAnnotations: {
+          enabled: true,
+          notation: "vitepress",
+          metaKey: "annotate",
+          defaultLineNumbers: false,
+        },
+      }),
+    );
+
+    expect(result.html).not.toContain("[!code escape]");
+    expect(result.html).toContain("console.warn(literal) // [!code warning]");
+    expect(result.html).toContain("console.warn(annotated)");
+    expect(result.html.match(/ox-code-line--warning/g)?.length ?? 0).toBe(1);
+  });
 });
 
 function createResolvedOptions(overrides: Partial<ResolvedOptions> = {}): ResolvedOptions {
@@ -138,6 +166,27 @@ function createResolvedOptions(overrides: Partial<ResolvedOptions> = {}): Resolv
       metaKey: "annotate",
       defaultLineNumbers: false,
     },
+    wikiLinks: { enabled: false, baseUrl: "/" },
+    emojiShortcodes: { enabled: false, custom: {} },
+    attrs: { enabled: false },
+    codeImports: { enabled: false },
+    sanitize: { enabled: false },
+    editThisPage: { enabled: false, branch: "main", label: "Edit this page" },
+    cjkEmphasis: false,
+    codeBlockLint: {
+      enabled: false,
+      requireLanguage: false,
+      trailingSpaces: true,
+      mode: "warn",
+    },
+    codeBlockTypecheck: {
+      enabled: false,
+      languages: ["ts", "tsx"],
+      requireMeta: true,
+      tsgoCommand: "tsgo",
+      mode: "warn",
+    },
+    docsTests: { enabled: false, languages: ["js", "jsx", "ts", "tsx"], requireMeta: true },
     mermaid: false,
     frontmatter: true,
     toc: true,
@@ -163,6 +212,12 @@ function createResolvedOptions(overrides: Partial<ResolvedOptions> = {}): Resolv
     embeds: {
       github: {},
       openGraph: {},
+      pm: false,
+      spotify: false,
+      stackBlitz: false,
+      twitter: false,
+      bluesky: false,
+      webContainer: false,
     },
     i18n: false,
     ...overrides,

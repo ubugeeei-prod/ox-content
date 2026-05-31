@@ -1,6 +1,6 @@
 # index.ts
 
-**[Source](https://github.com/ubugeeei/ox-content/blob/main/npm/vite-plugin-ox-content/src/plugins/index.ts)**
+**[Source](https://github.com/ubugeeei-prod/ox-content/blob/main/npm/vite-plugin-ox-content/src/plugins/index.ts)**
 
 > 3 documented symbols. Read the signatures first, then expand each item for parameters, return types, and examples.
 
@@ -44,12 +44,12 @@
 <h4>Signature</h4>
 <pre><code class="language-typescript">export interface TransformAllOptions</code></pre>
 </div>
-<p class="ox-api-entry__source"><a class="ox-api-entry__source-link" href="https://github.com/ubugeeei/ox-content/blob/main/npm/vite-plugin-ox-content/src/plugins/index.ts#L47-L55" target="_blank" rel="noopener noreferrer">View source<span class="ox-api-entry__source-icon" aria-hidden="true"></span></a></p>
+<p class="ox-api-entry__source"><a class="ox-api-entry__source-link" href="https://github.com/ubugeeei-prod/ox-content/blob/main/npm/vite-plugin-ox-content/src/plugins/index.ts#L58-L77" target="_blank" rel="noopener noreferrer">View source<span class="ox-api-entry__source-icon" aria-hidden="true"></span></a></p>
   </div>
 </details>
 
 <details id="transformallplugins" class="ox-api-entry">
-  <summary><span class="ox-api-entry__kind">fn</span><span class="ox-api-entry__summary-main"><code class="ox-api-entry__signature ox-api-entry__signature--highlighted language-typescript">transformAllPlugins(html: string, options: TransformAllOptions = {}): Promise&lt;string&gt;</code><span class="ox-api-entry__description">Transform all enabled plugins in HTML content.</span><span class="ox-api-entry__meta"><span class="ox-api-badge">2 params</span><span class="ox-api-badge">returns Promise</span></span></span></summary>
+  <summary><span class="ox-api-entry__kind">fn</span><span class="ox-api-entry__summary-main"><code class="ox-api-entry__signature ox-api-entry__signature--highlighted language-typescript">transformAllPlugins(html: string, options: TransformAllOptions = {}): Promise&lt;string&gt;</code><span class="ox-api-entry__description">Transform all enabled plugins in HTML content.</span><span class="ox-api-entry__meta"><span class="ox-api-badge">2 params</span><span class="ox-api-badge">returns Promise&lt;string&gt;</span></span></span></summary>
   <div class="ox-api-entry__body">
 <div class="ox-api-entry__prose">
 <p>Transform all enabled plugins in HTML content.</p>
@@ -58,7 +58,7 @@
 <h4>Signature</h4>
 <pre><code class="language-typescript">export async function transformAllPlugins(html: string, options: TransformAllOptions = {}): Promise&lt;string&gt;</code></pre>
 </div>
-<p class="ox-api-entry__source"><a class="ox-api-entry__source-link" href="https://github.com/ubugeeei/ox-content/blob/main/npm/vite-plugin-ox-content/src/plugins/index.ts#L60-L115" target="_blank" rel="noopener noreferrer">View source<span class="ox-api-entry__source-icon" aria-hidden="true"></span></a></p>
+<p class="ox-api-entry__source"><a class="ox-api-entry__source-link" href="https://github.com/ubugeeei-prod/ox-content/blob/main/npm/vite-plugin-ox-content/src/plugins/index.ts#L82-L157" target="_blank" rel="noopener noreferrer">View source<span class="ox-api-entry__source-icon" aria-hidden="true"></span></a></p>
 <div class="ox-api-entry__section ox-api-entry__section--params">
 <h4>Parameters</h4>
 <ul class="ox-api-entry__params">
@@ -81,7 +81,7 @@
 <div class="ox-api-entry__section ox-api-entry__section--returns">
 <h4>Returns</h4>
 <div class="ox-api-entry__return">
-  <code class="ox-api-entry__return-type">Promise</code>
+  <code class="ox-api-entry__return-type">Promise&lt;string&gt;</code>
   
 </div>
 </div>
@@ -89,7 +89,7 @@
 </details>
 
 <details id="transformbuiltinembeds" class="ox-api-entry">
-  <summary><span class="ox-api-entry__kind">fn</span><span class="ox-api-entry__summary-main"><code class="ox-api-entry__signature ox-api-entry__signature--highlighted language-typescript">transformBuiltinEmbeds(html: string, options: { github: GitHubOptions | false; openGraph: OgpOptions | false; }): Promise&lt;string&gt;</code><span class="ox-api-entry__description">Transform built-in embed components in HTML content.</span><span class="ox-api-entry__meta"><span class="ox-api-badge">2 params</span><span class="ox-api-badge">returns Promise</span></span></span></summary>
+  <summary><span class="ox-api-entry__kind">fn</span><span class="ox-api-entry__summary-main"><code class="ox-api-entry__signature ox-api-entry__signature--highlighted language-typescript">transformBuiltinEmbeds(html: string, options: { github: GitHubOptions | false; openGraph: OgpOptions | false; pm?: PmOptions | false; spotify?: boolean; stackBlitz?: boolean; twitter?: boolean; bluesky?: boolean; webContainer?: boolean; }): Promise&lt;string&gt;</code><span class="ox-api-entry__description">Transform built-in embed components in HTML content.</span><span class="ox-api-entry__meta"><span class="ox-api-badge">2 params</span><span class="ox-api-badge">returns Promise&lt;string&gt;</span></span></span></summary>
   <div class="ox-api-entry__body">
 <div class="ox-api-entry__prose">
 <p>Transform built-in embed components in HTML content.</p>
@@ -99,9 +99,15 @@
 <pre><code class="language-typescript">export async function transformBuiltinEmbeds(html: string, options: {
     github: GitHubOptions | false;
     openGraph: OgpOptions | false;
+    pm?: PmOptions | false;
+    spotify?: boolean;
+    stackBlitz?: boolean;
+    twitter?: boolean;
+    bluesky?: boolean;
+    webContainer?: boolean;
   }): Promise&lt;string&gt;</code></pre>
 </div>
-<p class="ox-api-entry__source"><a class="ox-api-entry__source-link" href="https://github.com/ubugeeei/ox-content/blob/main/npm/vite-plugin-ox-content/src/plugins/index.ts#L120-L143" target="_blank" rel="noopener noreferrer">View source<span class="ox-api-entry__source-icon" aria-hidden="true"></span></a></p>
+<p class="ox-api-entry__source"><a class="ox-api-entry__source-link" href="https://github.com/ubugeeei-prod/ox-content/blob/main/npm/vite-plugin-ox-content/src/plugins/index.ts#L162-L208" target="_blank" rel="noopener noreferrer">View source<span class="ox-api-entry__source-icon" aria-hidden="true"></span></a></p>
 <div class="ox-api-entry__section ox-api-entry__section--params">
 <h4>Parameters</h4>
 <ul class="ox-api-entry__params">
@@ -124,7 +130,7 @@
 <div class="ox-api-entry__section ox-api-entry__section--returns">
 <h4>Returns</h4>
 <div class="ox-api-entry__return">
-  <code class="ox-api-entry__return-type">Promise</code>
+  <code class="ox-api-entry__return-type">Promise&lt;string&gt;</code>
   
 </div>
 </div>

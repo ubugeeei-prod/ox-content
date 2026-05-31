@@ -1,5 +1,6 @@
 import type { LanguageRegistration, ThemeRegistration } from "@ox-content/vite-plugin";
 import type { OgImageOptions, SsgOptions } from "@ox-content/vite-plugin";
+import type { SlideEditorOptions } from "./editor-options";
 import type { SlidePdfOptions } from "./pdf-options";
 import type { ResolvedSlidesPluginOptions } from "./internal-types";
 
@@ -73,6 +74,8 @@ export interface OxContentSlidesOptions {
   routeBase?: string;
   /** Enables the built-in shell animations for slide and presenter pages. */
   animations?: boolean;
+  /** Enables the dev-server GUI editor without adding JavaScript to built slide pages. */
+  editor?: SlideEditorOptions | boolean;
   presenter?: boolean;
   separator?: string;
   ssg?: SsgOptions | boolean;

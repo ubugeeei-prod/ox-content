@@ -65,6 +65,60 @@ if (import.meta.hot) {
   return html.replace("</head>", `${hmrScript}\n</head>`);
 }
 
+function escapeHtmlAttribute(value: string): string {
+  return value
+    .replace(/&/g, "&amp;")
+    .replace(/"/g, "&quot;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;");
+}
+
+function absoluteSiteUrl(siteUrl: string | undefined, pathname: string): string | undefined {
+  if (!siteUrl) {
+    return undefined;
+  }
+
+  return `${siteUrl.replace(/\/$/, "")}${pathname}`;
+}
+
+function metaProperty(property: string, content: string | undefined): string | undefined {
+  return content
+    ? `<meta property="${property}" content="${escapeHtmlAttribute(content)}">`
+    : undefined;
+}
+
+function metaName(name: string, content: string | undefined): string | undefined {
+  return content ? `<meta name="${name}" content="${escapeHtmlAttribute(content)}">` : undefined;
+}
+
+function createSeoTags(
+  options: ResolvedSlidesPluginOptions,
+  route: SlideRouteData,
+  ogImage: string | undefined,
+): string {
+  const canonicalHref = absoluteSiteUrl(options.ssg.siteUrl, route.slide.href);
+  const title = `${route.slide.title} | ${route.deck.title}`;
+  const description = route.slide.description ?? route.deck.description;
+  const tags = [
+    canonicalHref
+      ? `<link rel="canonical" href="${escapeHtmlAttribute(canonicalHref)}">`
+      : undefined,
+    metaName("robots", "index,follow"),
+    metaProperty("og:type", "article"),
+    metaProperty("og:title", title),
+    metaProperty("og:description", description),
+    metaProperty("og:url", canonicalHref),
+    metaProperty("og:site_name", route.deck.title),
+    metaProperty("og:image", ogImage),
+    metaName("twitter:card", ogImage ? "summary_large_image" : "summary"),
+    metaName("twitter:title", title),
+    metaName("twitter:description", description),
+    metaName("twitter:image", ogImage),
+  ];
+
+  return tags.filter(Boolean).join("\n");
+}
+
 /**
  * Renders a slide or presenter route using the Rust-backed HTML shells.
  */
@@ -103,11 +157,8 @@ export async function renderRouteHtml(
       : generatedOgImage
     : options.ssg.ogImage;
 
-  if (!route.presenter && pageOgImage) {
-    html = html.replace(
-      "</head>",
-      `<meta property="og:image" content="${pageOgImage}">\n<meta name="twitter:image" content="${pageOgImage}">\n</head>`,
-    );
+  if (!route.presenter) {
+    html = html.replace("</head>", `${createSeoTags(options, route, pageOgImage)}\n</head>`);
   }
 
   return html;

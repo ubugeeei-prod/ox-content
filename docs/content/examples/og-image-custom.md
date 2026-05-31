@@ -465,7 +465,7 @@ To force a full rebuild, delete `.cache/og-images/` or set `cache: false`.
 
 ## Example
 
-See the full working example at [`examples/og-image-custom/`](https://github.com/ubugeeei/ox-content/tree/main/examples/og-image-custom).
+See the full working example at [`examples/og-image-custom/`](https://github.com/ubugeeei-prod/ox-content/tree/main/examples/og-image-custom).
 
 ```
 examples/og-image-custom/

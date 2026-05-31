@@ -2,6 +2,7 @@ import * as path from "node:path";
 import type { Plugin } from "vite";
 import { buildOutput } from "./build";
 import { buildSlideDecks } from "./decks";
+import { configureSlideEditor } from "./editor";
 import { injectViteHmrClient, renderRouteHtml } from "./html";
 import type { SlideBuildArtifacts } from "./internal-types";
 import { loadNapiModule } from "./napi";
@@ -44,6 +45,14 @@ export function oxContentSlides(rawOptions: OxContentSlidesOptions = {}): Plugin
       if (!options.ssg.enabled) return;
 
       server.watcher.add(path.resolve(root, options.srcDir));
+      const invalidate = (file: string) => {
+        if (!isSlideFile(file)) return;
+        invalidateArtifacts();
+        server.ws.send({ type: "custom", event: "ox-content:slides:update", data: { file } });
+      };
+
+      configureSlideEditor({ server, options, root, invalidateArtifacts });
+
       server.middlewares.use(async (req, res, next) => {
         const routeKey = req.url ? getSlideRouteLookupKey(options, req.url) : null;
         if (!routeKey) return next();
@@ -65,12 +74,6 @@ export function oxContentSlides(rawOptions: OxContentSlidesOptions = {}): Plugin
         res.setHeader("Content-Type", "text/html");
         res.end(html);
       });
-
-      const invalidate = (file: string) => {
-        if (!isSlideFile(file)) return;
-        invalidateArtifacts();
-        server.ws.send({ type: "custom", event: "ox-content:slides:update", data: { file } });
-      };
 
       server.watcher.on("add", invalidate);
       server.watcher.on("unlink", invalidate);

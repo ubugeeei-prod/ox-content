@@ -103,11 +103,72 @@
       }
       .ox-slide-content {
         display: grid;
+        grid-template-rows: minmax(0, 1fr);
         align-content: start;
-        gap: 1rem;
+        height: 100%;
         min-height: 100%;
         font-size: clamp(1.14rem, 1.5vw, 1.72rem);
         line-height: 1.42;
+      }
+      .ox-slide-layout {
+        --ox-slide-accent: var(--ox-slide-primary);
+        --ox-slide-layout-gap: 1rem;
+        --ox-slide-layout-scale: 1;
+        display: grid;
+        align-content: start;
+        gap: var(--ox-slide-layout-gap);
+        width: 100%;
+        min-height: 100%;
+        font-size: calc(1em * var(--ox-slide-layout-scale));
+      }
+      .ox-slide-density--compact { --ox-slide-layout-gap: 0.64rem; --ox-slide-layout-scale: 0.92; }
+      .ox-slide-density--spacious { --ox-slide-layout-gap: 1.45rem; --ox-slide-layout-scale: 1.08; }
+      .ox-slide-align--center { justify-items: center; text-align: center; }
+      .ox-slide-align--end { justify-items: end; text-align: right; }
+      .ox-slide-layout--statement {
+        place-content: center;
+        min-height: 100%;
+      }
+      .ox-slide-layout--statement h1,
+      .ox-slide-layout--statement h2 {
+        max-width: 14ch;
+      }
+      .ox-slide-layout--split {
+        grid-template-columns: minmax(0, 1fr) minmax(0, 0.92fr);
+        align-items: center;
+        column-gap: clamp(2rem, 4vw, 4.8rem);
+      }
+      .ox-slide-layout--split > :first-child {
+        align-self: center;
+      }
+      .ox-slide-layout--quote {
+        align-content: center;
+        border-left: 6px solid var(--ox-slide-accent);
+        padding-left: clamp(1.2rem, 2vw, 2.4rem);
+      }
+      .ox-slide-layout--quote blockquote {
+        border: 0;
+        padding: 0;
+        color: var(--ox-slide-text);
+      }
+      .ox-slide-layout--code {
+        align-content: center;
+      }
+      .ox-slide-layout--canvas {
+        position: relative;
+        display: block;
+        height: 100%;
+        min-height: 100%;
+      }
+      .ox-slide-layout--canvas[data-ox-has-placements="true"] > * {
+        position: absolute;
+        min-width: 0;
+        min-height: 0;
+        margin: 0;
+        overflow: auto;
+      }
+      .ox-slide-layout :is(a, strong) {
+        color: var(--ox-slide-accent);
       }
       .ox-slide-content h1,
       .ox-slide-content h2,
@@ -192,6 +253,7 @@
         .ox-slide-nav__status,
         .ox-slide-nav__slot,
         .ox-slide-nav__slot--end { width: 100%; justify-content: center; }
+        .ox-slide-layout--split { grid-template-columns: 1fr; }
       }
     </style>
   </head>

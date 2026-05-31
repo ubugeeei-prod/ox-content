@@ -3,6 +3,7 @@ import { transformMarkdown, type ResolvedOptions } from "@ox-content/vite-plugin
 import { loadNapiModule } from "./napi";
 import type { ResolvedSlidesPluginOptions, SlidePageData } from "./internal-types";
 import { normalizeExtension } from "./path-utils";
+import { wrapSlideContent } from "./slide-layout";
 
 /**
  * Shared render payload produced by every slide source renderer.
@@ -67,7 +68,7 @@ export async function renderMarkdownSlide(
   return {
     title: extractTitle(transformed.html, frontmatter, fallbackTitle),
     description: typeof frontmatter.description === "string" ? frontmatter.description : undefined,
-    contentHtml: transformed.html,
+    contentHtml: wrapSlideContent(transformed.html, frontmatter),
     notesHtml: await renderNotesHtml(notes, sourcePath, markdownOptions),
     notes,
     frontmatter,
@@ -92,7 +93,7 @@ export async function renderHtmlSlide(
     title: extractTitle(extracted.content, deckFrontmatter, fallbackTitle),
     description:
       typeof deckFrontmatter.description === "string" ? deckFrontmatter.description : undefined,
-    contentHtml: extracted.content,
+    contentHtml: wrapSlideContent(extracted.content, deckFrontmatter),
     notesHtml: await renderNotesHtml(extracted.notes, sourcePath, options.markdown),
     notes: extracted.notes,
     frontmatter: { ...deckFrontmatter },
@@ -125,7 +126,7 @@ export async function renderCustomSlide(
     description:
       result.description ??
       (typeof frontmatter.description === "string" ? frontmatter.description : undefined),
-    contentHtml: result.html,
+    contentHtml: wrapSlideContent(result.html, frontmatter),
     notesHtml: await renderNotesHtml(notes, sourcePath, options.markdown),
     notes,
     frontmatter,

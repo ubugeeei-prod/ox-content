@@ -64,6 +64,9 @@ ox-content's `layout: entry`.
 
 ## Options
 
+For a consolidated default table, including which non-standard features are
+opt-in, see [Built-in Features](../built-in-features.md).
+
 ### srcDir
 
 - Type: `string`
@@ -212,18 +215,21 @@ Generate table of contents.
 ### embeds
 
 - Type: `BuiltinEmbedOptions | false`
-- Default: `{ github: true, openGraph: true }`
+- Default: `{ github: true, openGraph: true, pm: false, spotify: false, stackBlitz: false, twitter: false, bluesky: false, webContainer: false }`
 
 Built-in static embeds are rendered at transform time, with no client-side JavaScript.
+Non-standard embeds are opt-in.
+See [Built-in Features](../built-in-features.md#built-in-embeds) for the full
+default table.
 
 ```md
-<GitHub repo="ubugeeei/ox-content" />
+<GitHub repo="ubugeeei-prod/ox-content" />
 
-<GitHub permalink="https://github.com/ubugeeei/ox-content/blob/278098b/README.md#L1-L12" />
+<GitHub permalink="https://github.com/ubugeeei-prod/ox-content/blob/278098b/README.md#L1-L12" />
 
-<GitHub repo="ubugeeei/ox-content" path="README.md" ref="main" loc="1-12" />
+<GitHub repo="ubugeeei-prod/ox-content" path="README.md" ref="main" loc="1-12" />
 
-<OgCard url="https://github.com/ubugeeei/ox-content" />
+<OgCard url="https://github.com/ubugeeei-prod/ox-content" />
 ```
 
 `permalink`, `url`, and `href` accept GitHub `blob` URLs. The `#L1-L12` fragment is used as the source line range. You can also use `repo`, `path`, `ref`, and `loc` when you do not want to paste the full permalink. Source embeds fetch the GitHub contents API and render code directly instead of using an Open Graph preview.
@@ -241,6 +247,7 @@ oxContent({
     openGraph: {
       timeout: 5000,
     },
+    pm: true,
   },
 });
 ```

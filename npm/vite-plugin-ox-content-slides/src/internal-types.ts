@@ -5,6 +5,7 @@ import type {
   ResolvedSsgOptions,
   ThemeRegistration,
 } from "@ox-content/vite-plugin";
+import type { ResolvedSlideEditorOptions } from "./editor-options";
 import type { ResolvedSlidePdfOptions } from "./pdf-options";
 import type { OxContentSlidesOptions, SlideSourceRenderer, SlideThemeConfig } from "./public-types";
 
@@ -22,6 +23,7 @@ export interface ResolvedSlidesPluginOptions extends Omit<
   routeBase: string;
   routePrefix: string;
   animations: boolean;
+  editor: ResolvedSlideEditorOptions;
   presenter: boolean;
   separator: string;
   extensions: string[];

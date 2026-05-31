@@ -3,13 +3,20 @@
 //! This crate provides NAPI bindings for using Ox Content from Node.js,
 //! including raw-buffer AST transfer for JavaScript interoperability.
 
+pub(crate) mod features;
 mod highlight;
+mod html_scan;
 mod lint;
 mod mdast;
 mod mdast_raw;
+mod media_embeds;
+mod pm;
+mod sanitize;
 mod slides;
+mod tabs;
 mod transfer;
 mod transformer;
+mod youtube;
 
 use napi::bindgen_prelude::*;
 use napi::Task;
@@ -23,12 +30,14 @@ use ox_content_allocator::Allocator;
 use ox_content_docs::{
     build_export_graph, extract_docs_from_directories, extract_docs_from_entry_points,
     generate_docs_data_json, generate_markdown, generate_nav_code, generate_nav_metadata,
-    normalize_doc_items, write_docs_output, ApiDocEntry, ApiDocMember, ApiDocModule, ApiDocTag,
-    ApiParamDoc, ApiReturnDoc, DocExtractor, DocItem, DocItemKind, DocTag, DocsDiagnostic,
-    DocsDiagnosticCode, DocsNavItem, DocsOutputOptions, EntryPointDocsOptions, EntryPointSpec,
-    ExportGraph, ExportKind, ExportSource, ExternalDocsOptions, ExternalPackageSource,
-    ExtractedDocModule, GraphOptions, MarkdownDocsOptions, MarkdownLinkStyle, NormalizedDocEntry,
-    NormalizedMember, NormalizedParamDoc, NormalizedReturnDoc, ParamDoc, PublicExport,
+    generate_nav_metadata_from_docs, normalize_doc_items, write_docs_output, ApiDocEntry,
+    ApiDocMember, ApiDocModule, ApiDocTag, ApiParamDoc, ApiReturnDoc, ApiTypeParamDoc,
+    DocExtractor, DocItem, DocItemKind, DocTag, DocsDiagnostic, DocsDiagnosticCode, DocsNavItem,
+    DocsOutputOptions, EntryPointDocsOptions, EntryPointSpec, ExportGraph, ExportKind,
+    ExportSource, ExternalDocsOptions, ExternalPackageSource, ExtractedDocModule, GraphOptions,
+    MarkdownDocsOptions, MarkdownLinkStyle, MarkdownPathStrategy, MarkdownRenderStyle,
+    NormalizedDocEntry, NormalizedMember, NormalizedParamDoc, NormalizedReturnDoc,
+    NormalizedTypeParam, ParamDoc, PublicExport,
 };
 use ox_content_parser::{Parser, ParserOptions};
 use ox_content_renderer::HtmlRenderer;
@@ -171,6 +180,16 @@ pub struct JsDocReturn {
     pub description: String,
 }
 
+/// Type parameter documentation (`<T extends C = D>`) used by generated API docs.
+#[napi(object)]
+#[derive(Clone)]
+pub struct JsTypeParam {
+    pub name: String,
+    pub constraint: Option<String>,
+    pub r#default: Option<String>,
+    pub description: String,
+}
+
 /// Normalized member documentation used by generated API docs.
 #[napi(object)]
 #[derive(Clone)]
@@ -208,6 +227,7 @@ pub struct JsDocEntry {
     pub end_line: u32,
     pub signature: Option<String>,
     pub members: Option<Vec<JsDocMember>>,
+    pub type_parameters: Option<Vec<JsTypeParam>>,
 }
 
 /// Navigation item emitted for generated documentation.
@@ -217,6 +237,15 @@ pub struct JsDocsNavItem {
     pub title: String,
     pub path: String,
     pub children: Option<Vec<JsDocsNavItem>>,
+}
+
+/// Options for generating sidebar navigation metadata from extracted docs.
+#[napi(object)]
+#[derive(Default)]
+pub struct JsDocsNavOptions {
+    pub base_path: Option<String>,
+    #[napi(ts_type = "'flat' | 'typedoc'")]
+    pub path_strategy: Option<String>,
 }
 
 /// Ordered JSDoc tag used by generated API Markdown.
@@ -244,6 +273,7 @@ pub struct JsDocsMarkdownEntry {
     pub end_line: u32,
     pub signature: Option<String>,
     pub members: Option<Vec<JsDocMember>>,
+    pub type_parameters: Option<Vec<JsTypeParam>>,
 }
 
 /// Extracted docs for one source file used by generated API Markdown.
@@ -251,6 +281,8 @@ pub struct JsDocsMarkdownEntry {
 #[derive(Clone)]
 pub struct JsDocsMarkdownModule {
     pub file: String,
+    /// Module-level description from the entry file's `@module` / leading JSDoc.
+    pub description: Option<String>,
     pub entries: Vec<JsDocsMarkdownEntry>,
 }
 
@@ -271,6 +303,10 @@ pub struct JsDocsMarkdownOptions {
     #[napi(ts_type = "'markdown' | 'clean'")]
     pub link_style: Option<String>,
     pub base_path: Option<String>,
+    #[napi(ts_type = "'flat' | 'typedoc'")]
+    pub path_strategy: Option<String>,
+    #[napi(ts_type = "'html' | 'markdown'")]
+    pub render_style: Option<String>,
 }
 
 /// Options for writing generated API documentation files.
@@ -281,6 +317,8 @@ pub struct JsDocsOutputOptions {
     pub group_by: Option<String>,
     pub generated_at: Option<String>,
     pub base_path: Option<String>,
+    #[napi(ts_type = "'flat' | 'typedoc'")]
+    pub path_strategy: Option<String>,
 }
 
 /// Entry point used to group generated API docs.
@@ -311,6 +349,9 @@ pub struct JsEntryPointDocsOptions {
     pub internal: Option<bool>,
     pub external_docs: Option<bool>,
     pub external_package_sources: Option<Vec<JsExternalPackageSource>>,
+    /// Opt in to TSDoc-style type-parameter docs (`@typeParam` / `<T>` table).
+    /// Off by default.
+    pub type_parameters: Option<bool>,
 }
 
 /// Explicit source entry for an external package.
@@ -374,6 +415,8 @@ pub struct JsEntrypointDocsModule {
     pub name: String,
     pub file: String,
     pub source_path: String,
+    /// Module-level description from the entry file's `@module` / leading JSDoc.
+    pub description: String,
     pub entries: Vec<JsDocEntry>,
     pub exports: Vec<JsPublicExport>,
     pub diagnostics: Vec<JsDocsDiagnostic>,
@@ -389,6 +432,168 @@ pub struct JsDocsDiagnostic {
     pub export_kind: String,
     pub source: JsExportSource,
     pub message: String,
+}
+
+/// Wiki-link transform options.
+#[napi(object)]
+#[derive(Default, Clone)]
+pub struct JsWikiLinkOptions {
+    /// Enable `[[target]]` and `[[target|label]]` expansion.
+    pub enabled: Option<bool>,
+    /// Base URL used for site-relative wiki links.
+    pub base_url: Option<String>,
+}
+
+/// Emoji-shortcode transform options.
+#[napi(object)]
+#[derive(Default, Clone)]
+pub struct JsEmojiShortcodeOptions {
+    /// Enable `:shortcode:` expansion.
+    pub enabled: Option<bool>,
+    /// Custom shortcode map. Values are emitted verbatim.
+    pub custom: Option<HashMap<String, String>>,
+}
+
+/// Attribute syntax transform options.
+#[napi(object)]
+#[derive(Default, Clone)]
+pub struct JsAttrsOptions {
+    /// Enable markdown-it-attrs style `{#id .class key=value}`.
+    pub enabled: Option<bool>,
+}
+
+/// Code import / snippet injection options.
+#[napi(object)]
+#[derive(Default, Clone)]
+pub struct JsCodeImportOptions {
+    /// Enable `<<< path{selector}` snippet injection.
+    pub enabled: Option<bool>,
+    /// Root directory used for `@/` and absolute snippet imports.
+    pub root_dir: Option<String>,
+}
+
+/// HTML sanitizer options.
+#[napi(object)]
+#[derive(Default, Clone)]
+pub struct JsSanitizeOptions {
+    /// Enable sanitizer. When omitted, passing this object enables it.
+    pub enabled: Option<bool>,
+    /// Allowed tag names. Omit for safe defaults.
+    pub allowed_tags: Option<Vec<String>>,
+    /// Allowed attribute names. Omit for safe defaults.
+    pub allowed_attributes: Option<Vec<String>>,
+    /// Allowed URL schemes for href/src/action attributes. Omit for safe defaults.
+    pub allowed_url_schemes: Option<Vec<String>>,
+}
+
+/// Edit-this-page link options.
+#[napi(object)]
+#[derive(Default, Clone)]
+pub struct JsEditThisPageOptions {
+    /// Enable edit link generation.
+    pub enabled: Option<bool>,
+    /// GitHub repository URL, e.g. `https://github.com/owner/repo`.
+    pub repo_url: Option<String>,
+    /// Branch used in edit URLs.
+    pub branch: Option<String>,
+    /// Root directory used to relativize `sourcePath`.
+    pub root_dir: Option<String>,
+    /// Link label.
+    pub label: Option<String>,
+}
+
+/// Code block linting options.
+#[napi(object)]
+#[derive(Default, Clone)]
+pub struct JsCodeBlockLintOptions {
+    /// Enable code block linting.
+    pub enabled: Option<bool>,
+    /// Restrict linting to these language identifiers.
+    pub languages: Option<Vec<String>>,
+    /// Report fences without a language identifier.
+    pub require_language: Option<bool>,
+    /// Report trailing whitespace in code block lines.
+    pub trailing_spaces: Option<bool>,
+}
+
+/// Docs-as-tests extraction options.
+#[napi(object)]
+#[derive(Default, Clone)]
+pub struct JsDocsTestOptions {
+    /// Enable docs test extraction.
+    pub enabled: Option<bool>,
+    /// Languages that can be emitted as test cases.
+    pub languages: Option<Vec<String>>,
+    /// Require fence meta such as `test`, `runnable`, or `vitest`.
+    pub require_meta: Option<bool>,
+}
+
+/// Built-in media embed transform switches.
+#[napi(object)]
+#[derive(Default, Clone)]
+pub struct JsMediaEmbedsOptions {
+    /// Render `<Spotify>` embeds.
+    pub spotify: Option<bool>,
+    /// Render `<StackBlitz>` embeds.
+    pub stack_blitz: Option<bool>,
+    /// Render `<Tweet>` / `<XPost>` static cards.
+    pub twitter: Option<bool>,
+    /// Render `<Bluesky>` static cards.
+    pub bluesky: Option<bool>,
+    /// Render `<WebContainer>` lazy placeholder blocks.
+    pub web_container: Option<bool>,
+}
+
+/// Extracted fenced code block.
+#[napi(object)]
+#[derive(Clone)]
+pub struct JsCodeBlock {
+    pub language: String,
+    pub meta: String,
+    pub code: String,
+    pub start_line: u32,
+    pub end_line: u32,
+}
+
+/// Diagnostic emitted by code block linting.
+#[napi(object)]
+#[derive(Clone)]
+pub struct JsCodeBlockDiagnostic {
+    pub rule_id: String,
+    pub severity: String,
+    pub message: String,
+    pub line: u32,
+    pub column: u32,
+    pub end_line: u32,
+    pub end_column: u32,
+    pub language: Option<String>,
+}
+
+impl From<features::ExtractedCodeBlock> for JsCodeBlock {
+    fn from(block: features::ExtractedCodeBlock) -> Self {
+        Self {
+            language: block.language,
+            meta: block.meta,
+            code: block.code,
+            start_line: block.start_line,
+            end_line: block.end_line,
+        }
+    }
+}
+
+impl From<features::CodeBlockDiagnostic> for JsCodeBlockDiagnostic {
+    fn from(diagnostic: features::CodeBlockDiagnostic) -> Self {
+        Self {
+            rule_id: diagnostic.rule_id,
+            severity: diagnostic.severity,
+            message: diagnostic.message,
+            line: diagnostic.line,
+            column: diagnostic.column,
+            end_line: diagnostic.end_line,
+            end_column: diagnostic.end_column,
+            language: diagnostic.language,
+        }
+    }
 }
 
 /// Transform options for JavaScript.
@@ -435,6 +640,21 @@ pub struct JsTransformOptions {
     /// Add `target="_blank" rel="noopener noreferrer"` to auto-linked URLs.
     /// Defaults to true; ignored when [`Self::autolink_urls`] is off.
     pub autolink_target_blank: Option<bool>,
+    /// Opt-in Obsidian-style wiki links.
+    pub wiki_links: Option<JsWikiLinkOptions>,
+    /// Opt-in emoji shortcode expansion.
+    pub emoji_shortcodes: Option<JsEmojiShortcodeOptions>,
+    /// Opt-in markdown-it-attrs style attributes.
+    pub attributes: Option<JsAttrsOptions>,
+    /// Opt-in CJK emphasis compatibility flag. The parser is already CJK-friendly;
+    /// this keeps the feature explicit in the public API.
+    pub cjk_emphasis: Option<bool>,
+    /// Opt-in VitePress-style code import/snippet injection.
+    pub code_imports: Option<JsCodeImportOptions>,
+    /// Opt-in HTML sanitizer.
+    pub sanitize: Option<JsSanitizeOptions>,
+    /// Opt-in edit-this-page link generation.
+    pub edit_this_page: Option<JsEditThisPageOptions>,
 }
 
 /// Source preparation options for JavaScript.
@@ -689,6 +909,17 @@ fn map_normalized_doc_entry(entry: NormalizedDocEntry) -> JsDocEntry {
         signature: entry.signature,
         members: (!entry.members.is_empty())
             .then(|| entry.members.into_iter().map(map_normalized_member).collect()),
+        type_parameters: (!entry.type_parameters.is_empty())
+            .then(|| entry.type_parameters.into_iter().map(map_normalized_type_param).collect()),
+    }
+}
+
+fn map_normalized_type_param(type_param: NormalizedTypeParam) -> JsTypeParam {
+    JsTypeParam {
+        name: type_param.name,
+        constraint: type_param.constraint,
+        r#default: type_param.default,
+        description: type_param.description,
     }
 }
 
@@ -727,6 +958,7 @@ fn convert_entrypoint_docs_options(
         },
         include_private: options.private.unwrap_or(false),
         include_internal: options.internal.unwrap_or(false),
+        type_parameters: options.type_parameters.unwrap_or(false),
     }
 }
 
@@ -910,12 +1142,28 @@ fn convert_markdown_entry(entry: JsDocsMarkdownEntry) -> ApiDocEntry {
             .into_iter()
             .map(convert_markdown_member)
             .collect(),
+        type_parameters: entry
+            .type_parameters
+            .unwrap_or_default()
+            .into_iter()
+            .map(convert_markdown_type_param)
+            .collect(),
+    }
+}
+
+fn convert_markdown_type_param(type_param: JsTypeParam) -> ApiTypeParamDoc {
+    ApiTypeParamDoc {
+        name: type_param.name,
+        constraint: type_param.constraint,
+        default: type_param.r#default,
+        description: type_param.description,
     }
 }
 
 fn convert_markdown_module(module: JsDocsMarkdownModule) -> ApiDocModule {
     ApiDocModule {
         file: module.file,
+        description: module.description.unwrap_or_default(),
         entries: module.entries.into_iter().map(convert_markdown_entry).collect(),
     }
 }
@@ -934,6 +1182,7 @@ fn convert_docs_output_options(options: Option<JsDocsOutputOptions>) -> DocsOutp
         group_by: options.group_by.unwrap_or_else(|| "file".to_string()),
         generated_at: options.generated_at.unwrap_or_default(),
         base_path: options.base_path,
+        path_strategy: parse_markdown_path_strategy(options.path_strategy.as_deref()),
     }
 }
 
@@ -961,6 +1210,7 @@ pub fn extract_file_doc_entries(
     file_path: String,
     include_private: Option<bool>,
     include_internal: Option<bool>,
+    type_parameters: Option<bool>,
 ) -> Result<Vec<JsDocEntry>> {
     let extractor = DocExtractor::with_visibility(
         include_private.unwrap_or(false),
@@ -970,7 +1220,10 @@ pub fn extract_file_doc_entries(
         .extract_file(Path::new(&file_path))
         .map_err(|err| Error::from_reason(err.to_string()))?;
 
-    Ok(normalize_doc_items(items).into_iter().map(map_normalized_doc_entry).collect())
+    Ok(normalize_doc_items(items, type_parameters.unwrap_or(false))
+        .into_iter()
+        .map(map_normalized_doc_entry)
+        .collect())
 }
 
 /// Generates sidebar navigation metadata from documentation file paths.
@@ -980,6 +1233,24 @@ pub fn generate_docs_nav_metadata(
     base_path: Option<String>,
 ) -> Vec<JsDocsNavItem> {
     generate_nav_metadata(&files, base_path.as_deref()).into_iter().map(map_docs_nav_item).collect()
+}
+
+/// Generates sidebar navigation metadata from extracted documentation modules.
+///
+/// Use this when the output `pathStrategy` is `"typedoc"` so that the navigation
+/// tree mirrors the nested module/category/symbol pages.
+#[napi(js_name = "generateDocsNavMetadataFromDocs")]
+pub fn generate_docs_nav_metadata_from_docs_napi(
+    docs: Vec<JsDocsMarkdownModule>,
+    options: Option<JsDocsNavOptions>,
+) -> Vec<JsDocsNavItem> {
+    let options = options.unwrap_or_default();
+    let strategy = parse_markdown_path_strategy(options.path_strategy.as_deref());
+    let modules = docs.into_iter().map(convert_markdown_module).collect::<Vec<_>>();
+    generate_nav_metadata_from_docs(&modules, options.base_path.as_deref(), strategy)
+        .into_iter()
+        .map(map_docs_nav_item)
+        .collect()
 }
 
 /// Generates TypeScript source code for documentation navigation metadata.
@@ -1010,6 +1281,7 @@ pub fn extract_docs_from_directories_napi(
     exclude: Vec<String>,
     include_private: Option<bool>,
     include_internal: Option<bool>,
+    type_parameters: Option<bool>,
 ) -> Result<Vec<JsExtractedDocsModule>> {
     let modules = extract_docs_from_directories(
         &src_dirs,
@@ -1017,6 +1289,7 @@ pub fn extract_docs_from_directories_napi(
         &exclude,
         include_private.unwrap_or(false),
         include_internal.unwrap_or(false),
+        type_parameters.unwrap_or(false),
     )
     .map_err(|err| Error::from_reason(err.to_string()))?;
 
@@ -1052,6 +1325,7 @@ pub fn extract_docs_from_entry_points_napi(
             name: module.name,
             file: module.file,
             source_path: path_to_string(&module.source_path),
+            description: module.description,
             entries: module.entries.into_iter().map(map_normalized_doc_entry).collect(),
             exports: module.exports.into_iter().map(map_public_export).collect(),
             diagnostics: module.diagnostics.into_iter().map(map_docs_diagnostic).collect(),
@@ -1071,6 +1345,8 @@ pub fn generate_docs_markdown(
             github_url: options.github_url,
             link_style: parse_markdown_link_style(options.link_style.as_deref()),
             base_path: options.base_path,
+            path_strategy: parse_markdown_path_strategy(options.path_strategy.as_deref()),
+            render_style: parse_markdown_render_style(options.render_style.as_deref()),
         });
     generate_markdown(&docs.into_iter().map(convert_markdown_module).collect::<Vec<_>>(), &options)
         .into_iter()
@@ -1081,6 +1357,20 @@ fn parse_markdown_link_style(link_style: Option<&str>) -> MarkdownLinkStyle {
     match link_style {
         Some("clean") => MarkdownLinkStyle::Clean,
         _ => MarkdownLinkStyle::Markdown,
+    }
+}
+
+fn parse_markdown_path_strategy(path_strategy: Option<&str>) -> MarkdownPathStrategy {
+    match path_strategy {
+        Some("typedoc") => MarkdownPathStrategy::TypeDoc,
+        _ => MarkdownPathStrategy::Flat,
+    }
+}
+
+fn parse_markdown_render_style(render_style: Option<&str>) -> MarkdownRenderStyle {
+    match render_style {
+        Some("markdown") => MarkdownRenderStyle::Markdown,
+        _ => MarkdownRenderStyle::Html,
     }
 }
 
@@ -1121,6 +1411,95 @@ pub fn merge_highlighted_code_blocks(original_html: String, highlighted_html: St
     highlight::merge_highlighted_code_blocks(&original_html, &highlighted_html)
 }
 
+/// Options for [`transform_youtube_embeds`]; all optional, matching the TS
+/// `YouTubeOptions` defaults when omitted.
+#[napi(object)]
+pub struct JsYouTubeOptions {
+    /// Use privacy-enhanced mode (youtube-nocookie.com). Default: true.
+    pub privacy_enhanced: Option<bool>,
+    /// Default aspect ratio. Default: "16/9".
+    pub aspect_ratio: Option<String>,
+    /// Allow fullscreen. Default: true.
+    pub allow_fullscreen: Option<bool>,
+    /// Lazy-load the iframe. Default: true.
+    pub lazy_load: Option<bool>,
+}
+
+/// Rewrites `<youtube …>` elements in rendered HTML into responsive,
+/// privacy-enhanced iframe embeds. Rust port of the TS `transformYouTube`.
+#[napi]
+pub fn transform_youtube_embeds(html: String, options: Option<JsYouTubeOptions>) -> String {
+    let defaults = youtube::YouTubeEmbedOptions::default();
+    let resolved = match options {
+        Some(options) => youtube::YouTubeEmbedOptions {
+            privacy_enhanced: options.privacy_enhanced.unwrap_or(defaults.privacy_enhanced),
+            aspect_ratio: options.aspect_ratio.unwrap_or(defaults.aspect_ratio),
+            allow_fullscreen: options.allow_fullscreen.unwrap_or(defaults.allow_fullscreen),
+            lazy_load: options.lazy_load.unwrap_or(defaults.lazy_load),
+        },
+        None => defaults,
+    };
+    youtube::transform_youtube(&html, &resolved)
+}
+
+/// Result of [`transform_tabs_embeds`].
+#[napi(object)]
+pub struct JsTabsTransformResult {
+    /// HTML with every `<tabs>` block expanded.
+    pub html: String,
+    /// Number of tab groups expanded; the caller advances its group counter by
+    /// this amount so generated CSS covers exactly the emitted groups.
+    pub group_count: u32,
+}
+
+/// Rewrites `<tabs><tab>…</tab></tabs>` blocks in rendered HTML into the no-JS
+/// CSS tab widget plus a `<details>` fallback. Rust port of the TS
+/// `transformTabs`. Groups are numbered from `start_group`.
+#[napi]
+pub fn transform_tabs_embeds(html: String, start_group: u32) -> JsTabsTransformResult {
+    let result = tabs::transform_tabs(&html, start_group);
+    JsTabsTransformResult { html: result.html, group_count: result.group_count }
+}
+
+/// Options for [`transform_pm_embeds`].
+#[napi(object)]
+pub struct JsPmOptions {
+    /// Enable opt-in synced package-manager tab groups. When `true`, a
+    /// `data-ox-tab-group="pkg-manager"` attribute is emitted so the client
+    /// runtime keeps every pm tab group on the page in sync via `localStorage`.
+    /// Off by default; when omitted/`false` the output has no group attribute
+    /// and behaves exactly like a standalone tab group.
+    pub sync: Option<bool>,
+}
+
+/// Result of [`transform_pm_embeds`].
+#[napi(object)]
+pub struct JsPmTransformResult {
+    /// HTML with every `<pm>` block expanded into a package-manager tab widget.
+    pub html: String,
+    /// Number of tab groups expanded; the caller advances its shared tab-group
+    /// counter by this amount.
+    pub group_count: u32,
+}
+
+/// Expand `<pm>` blocks in rendered HTML into npm/pnpm/yarn/bun install tabs.
+///
+/// The single npm-style command inside each `<pm>` element is converted to the
+/// equivalent command for every package manager and rendered into the shared
+/// `ox-tabs` widget. Groups are numbered from `start_group`. Syncing is opt-in
+/// via `options.sync` and off by default.
+#[napi]
+pub fn transform_pm_embeds(
+    html: String,
+    start_group: u32,
+    options: Option<JsPmOptions>,
+) -> JsPmTransformResult {
+    let resolved =
+        pm::PmOptions { sync: options.and_then(|options| options.sync).unwrap_or(false) };
+    let result = pm::transform_pm(&html, start_group, resolved);
+    JsPmTransformResult { html: result.html, group_count: result.group_count }
+}
+
 /// Transforms Markdown source into HTML, frontmatter, and TOC.
 ///
 /// This is the main entry point for @ox-content/unplugin.
@@ -1128,6 +1507,39 @@ pub fn merge_highlighted_code_blocks(original_html: String, highlighted_html: St
 pub fn transform(source: String, options: Option<JsTransformOptions>) -> TransformResult {
     let opts = options.unwrap_or_default();
     MarkdownTransformer::from_options(&opts).transform(&source)
+}
+
+/// Sanitize an HTML string with safe defaults or an explicit allow-list.
+#[napi(js_name = "sanitizeHtml")]
+pub fn sanitize_html_binding(html: String, options: Option<JsSanitizeOptions>) -> String {
+    sanitize::sanitize_html(&html, options.as_ref())
+}
+
+/// Transform opt-in static media embed components in already-rendered HTML.
+#[napi(js_name = "transformMediaEmbeds")]
+pub fn transform_media_embeds(html: String, options: Option<JsMediaEmbedsOptions>) -> String {
+    media_embeds::transform_media_embeds(&html, options.as_ref())
+}
+
+/// Extract fenced code blocks from Markdown.
+#[napi(js_name = "extractCodeBlocks")]
+pub fn extract_code_blocks(source: String) -> Vec<JsCodeBlock> {
+    features::extract_code_blocks(&source).into_iter().map(Into::into).collect()
+}
+
+/// Lint fenced code blocks in Markdown.
+#[napi(js_name = "lintCodeBlocks")]
+pub fn lint_code_blocks(
+    source: String,
+    options: Option<JsCodeBlockLintOptions>,
+) -> Vec<JsCodeBlockDiagnostic> {
+    features::lint_code_blocks(&source, options.as_ref()).into_iter().map(Into::into).collect()
+}
+
+/// Extract runnable documentation examples for Vitest harness generation.
+#[napi(js_name = "extractDocsTests")]
+pub fn extract_docs_tests(source: String, options: Option<JsDocsTestOptions>) -> Vec<JsCodeBlock> {
+    features::extract_docs_tests(&source, options.as_ref()).into_iter().map(Into::into).collect()
 }
 
 /// Transforms Markdown into a raw mdast transfer buffer.
@@ -2940,10 +3352,11 @@ mod tests {
 
     use super::transformer::parse_frontmatter;
     use super::{
-        extract_docs_from_entry_points_napi, generate_docs_markdown, get_git_last_updated,
-        map_normalized_doc_entry, JsDocMember, JsDocParam, JsDocReturn, JsDocsMarkdownEntry,
-        JsDocsMarkdownModule, JsDocsMarkdownOptions, JsDocsMarkdownTag, JsEntryPointDocsOptions,
-        JsEntryPointSpec,
+        extract_docs_from_entry_points_napi, generate_docs_markdown,
+        generate_docs_nav_metadata_from_docs_napi, get_git_last_updated, map_normalized_doc_entry,
+        JsDocMember, JsDocParam, JsDocReturn, JsDocsMarkdownEntry, JsDocsMarkdownModule,
+        JsDocsMarkdownOptions, JsDocsMarkdownTag, JsDocsNavOptions, JsEntryPointDocsOptions,
+        JsEntryPointSpec, JsTypeParam,
     };
 
     #[test]
@@ -3010,6 +3423,7 @@ mod tests {
                 line: 4,
                 end_line: 4,
             }],
+            type_parameters: vec![],
         };
 
         let js_entry = map_normalized_doc_entry(entry);
@@ -3025,6 +3439,7 @@ mod tests {
     #[test]
     fn generate_docs_markdown_accepts_clean_link_options() {
         let docs = vec![JsDocsMarkdownModule {
+            description: None,
             file: "/repo/src/context.ts".to_string(),
             entries: vec![JsDocsMarkdownEntry {
                 name: "CommandContext".to_string(),
@@ -3040,6 +3455,7 @@ mod tests {
                 end_line: 1,
                 signature: Some("export interface CommandContext".to_string()),
                 members: None,
+                type_parameters: None,
             }],
         }];
         let markdown = generate_docs_markdown(
@@ -3049,6 +3465,8 @@ mod tests {
                 github_url: None,
                 link_style: Some("clean".to_string()),
                 base_path: Some("/api-ox".to_string()),
+                path_strategy: None,
+                render_style: None,
             }),
         );
         let index = markdown.get("index.md").unwrap();
@@ -3058,9 +3476,51 @@ mod tests {
     }
 
     #[test]
+    fn generate_docs_markdown_render_style_markdown_omits_html() {
+        let docs = vec![JsDocsMarkdownModule {
+            description: None,
+            file: "/repo/src/context.ts".to_string(),
+            entries: vec![JsDocsMarkdownEntry {
+                name: "CommandContext".to_string(),
+                kind: "interface".to_string(),
+                description: "Runtime context.".to_string(),
+                params: None,
+                returns: None,
+                examples: None,
+                tags: None,
+                private: false,
+                file: "/repo/src/context.ts".to_string(),
+                line: 1,
+                end_line: 1,
+                signature: Some("export interface CommandContext".to_string()),
+                members: None,
+                type_parameters: None,
+            }],
+        }];
+        let markdown = generate_docs_markdown(
+            docs,
+            Some(JsDocsMarkdownOptions {
+                group_by: Some("file".to_string()),
+                github_url: None,
+                link_style: None,
+                base_path: None,
+                path_strategy: None,
+                render_style: Some("markdown".to_string()),
+            }),
+        );
+        let page = markdown.get("context.md").unwrap();
+
+        assert!(!page.contains("<details"));
+        assert!(!page.contains("class=\"ox-api"));
+        assert!(page.contains("### CommandContext"));
+        assert!(page.contains("```ts"));
+    }
+
+    #[test]
     fn generate_docs_markdown_resolves_jsdoc_inline_links() {
         let docs = vec![
             JsDocsMarkdownModule {
+                description: None,
                 file: "/repo/src/command.ts".to_string(),
                 entries: vec![JsDocsMarkdownEntry {
                     name: "Command".to_string(),
@@ -3091,9 +3551,11 @@ mod tests {
                         line: 5,
                         end_line: 5,
                     }]),
+                    type_parameters: None,
                 }],
             },
             JsDocsMarkdownModule {
+                description: None,
                 file: "/repo/src/build.ts".to_string(),
                 entries: vec![JsDocsMarkdownEntry {
                     name: "buildCommand".to_string(),
@@ -3123,6 +3585,7 @@ mod tests {
                         "export function buildCommand(entry: Command): Command".to_string(),
                     ),
                     members: None,
+                    type_parameters: None,
                 }],
             },
         ];
@@ -3140,6 +3603,295 @@ mod tests {
         assert!(build_page.contains("<a href=\"https://github.com/unjs/std-env\">std-env</a>"));
         assert!(command_page.contains("<tr id=\"command-args\">"));
         assert!(command_page.contains("<a href=\"#command-args\"><code>Command.args</code></a>"));
+    }
+
+    #[test]
+    fn generate_docs_markdown_accepts_typedoc_path_strategy() {
+        let docs = vec![JsDocsMarkdownModule {
+            description: None,
+            file: "default".to_string(),
+            entries: vec![
+                JsDocsMarkdownEntry {
+                    name: "Command".to_string(),
+                    kind: "interface".to_string(),
+                    description: "Runtime command.".to_string(),
+                    params: None,
+                    returns: None,
+                    examples: None,
+                    tags: None,
+                    private: false,
+                    file: "/repo/src/types.ts".to_string(),
+                    line: 1,
+                    end_line: 10,
+                    signature: Some("export interface Command".to_string()),
+                    members: None,
+                    type_parameters: None,
+                },
+                JsDocsMarkdownEntry {
+                    name: "cli".to_string(),
+                    kind: "function".to_string(),
+                    description: "Runs {@link Command}.".to_string(),
+                    params: None,
+                    returns: None,
+                    examples: None,
+                    tags: None,
+                    private: false,
+                    file: "/repo/src/cli.ts".to_string(),
+                    line: 1,
+                    end_line: 10,
+                    signature: Some("export function cli(): void".to_string()),
+                    members: None,
+                    type_parameters: None,
+                },
+            ],
+        }];
+
+        let markdown = generate_docs_markdown(
+            docs,
+            Some(JsDocsMarkdownOptions {
+                group_by: Some("file".to_string()),
+                github_url: None,
+                link_style: Some("clean".to_string()),
+                base_path: Some("/api".to_string()),
+                path_strategy: Some("typedoc".to_string()),
+                render_style: None,
+            }),
+        );
+        let cli_page = markdown.get("default/functions/cli.md").unwrap();
+
+        assert!(markdown.contains_key("default/index.md"));
+        assert!(markdown.contains_key("default/interfaces/Command.md"));
+        assert!(cli_page.contains("<a href=\"/api/default/interfaces/Command\">Command</a>"));
+    }
+
+    #[test]
+    fn generate_docs_markdown_renders_type_parameters() {
+        let docs = vec![JsDocsMarkdownModule {
+            description: None,
+            file: "default".to_string(),
+            entries: vec![JsDocsMarkdownEntry {
+                name: "make".to_string(),
+                kind: "function".to_string(),
+                description: "Make a thing.".to_string(),
+                params: None,
+                returns: None,
+                examples: None,
+                tags: None,
+                private: false,
+                file: "/repo/src/make.ts".to_string(),
+                line: 1,
+                end_line: 1,
+                signature: Some("export function make<G>(): G".to_string()),
+                members: None,
+                type_parameters: Some(vec![JsTypeParam {
+                    name: "G".to_string(),
+                    constraint: Some("Base".to_string()),
+                    r#default: Some("Default".to_string()),
+                    description: "The thing type.".to_string(),
+                }]),
+            }],
+        }];
+
+        let markdown = generate_docs_markdown(
+            docs,
+            Some(JsDocsMarkdownOptions {
+                group_by: Some("file".to_string()),
+                github_url: None,
+                link_style: Some("markdown".to_string()),
+                base_path: None,
+                path_strategy: Some("typedoc".to_string()),
+                render_style: Some("markdown".to_string()),
+            }),
+        );
+        let page = markdown.get("default/functions/make.md").unwrap();
+
+        assert!(page.contains("## Type Parameters"));
+        assert!(!page.contains("**Type Parameters**"));
+        assert!(page.contains("`G` *extends* `Base` = `Default`"));
+        assert!(page.contains("The thing type."));
+    }
+
+    #[test]
+    fn generate_docs_markdown_renders_module_description_in_typedoc_index() {
+        let docs = vec![JsDocsMarkdownModule {
+            description: Some("The entry for gunshi context.".to_string()),
+            file: "context".to_string(),
+            entries: vec![JsDocsMarkdownEntry {
+                name: "createCommandContext".to_string(),
+                kind: "function".to_string(),
+                description: "Creates a command context.".to_string(),
+                params: None,
+                returns: None,
+                examples: None,
+                tags: None,
+                private: false,
+                file: "/repo/src/context.ts".to_string(),
+                line: 1,
+                end_line: 10,
+                signature: Some("export function createCommandContext(): void".to_string()),
+                members: None,
+                type_parameters: None,
+            }],
+        }];
+
+        let markdown = generate_docs_markdown(
+            docs,
+            Some(JsDocsMarkdownOptions {
+                group_by: Some("file".to_string()),
+                github_url: None,
+                link_style: Some("markdown".to_string()),
+                base_path: None,
+                path_strategy: Some("typedoc".to_string()),
+                render_style: Some("markdown".to_string()),
+            }),
+        );
+
+        let index = markdown.get("index.md").unwrap();
+        assert!(index.contains("The entry for gunshi context."));
+        assert!(!index.contains("Creates a command context."));
+        let module_index = markdown.get("context/index.md").unwrap();
+        assert!(module_index.contains("The entry for gunshi context."));
+    }
+
+    #[test]
+    fn generate_docs_nav_metadata_from_docs_returns_typedoc_tree() {
+        let docs = vec![JsDocsMarkdownModule {
+            description: None,
+            file: "default".to_string(),
+            entries: vec![
+                JsDocsMarkdownEntry {
+                    name: "cli".to_string(),
+                    kind: "function".to_string(),
+                    description: String::new(),
+                    params: None,
+                    returns: None,
+                    examples: None,
+                    tags: None,
+                    private: false,
+                    file: "/repo/src/cli.ts".to_string(),
+                    line: 1,
+                    end_line: 1,
+                    signature: None,
+                    members: None,
+                    type_parameters: None,
+                },
+                JsDocsMarkdownEntry {
+                    name: "Mode".to_string(),
+                    kind: "enum".to_string(),
+                    description: String::new(),
+                    params: None,
+                    returns: None,
+                    examples: None,
+                    tags: None,
+                    private: false,
+                    file: "/repo/src/mode.ts".to_string(),
+                    line: 1,
+                    end_line: 1,
+                    signature: None,
+                    members: None,
+                    type_parameters: None,
+                },
+            ],
+        }];
+
+        let nav = generate_docs_nav_metadata_from_docs_napi(
+            docs,
+            Some(JsDocsNavOptions {
+                base_path: Some("/api".to_string()),
+                path_strategy: Some("typedoc".to_string()),
+            }),
+        );
+
+        assert_eq!(nav[0].title, "Default");
+        assert_eq!(nav[0].path, "/api/default");
+        let children = nav[0].children.as_ref().unwrap();
+        assert_eq!(children[0].title, "Functions");
+        assert_eq!(children[0].children.as_ref().unwrap()[0].path, "/api/default/functions/cli");
+        assert_eq!(children[1].title, "Enumerations");
+        assert_eq!(
+            children[1].children.as_ref().unwrap()[0].path,
+            "/api/default/enumerations/Mode"
+        );
+    }
+
+    #[test]
+    fn generate_docs_nav_metadata_from_docs_defaults_to_flat() {
+        let docs = vec![JsDocsMarkdownModule {
+            description: None,
+            file: "/repo/src/context.ts".to_string(),
+            entries: vec![],
+        }];
+
+        let nav = generate_docs_nav_metadata_from_docs_napi(docs, None);
+
+        assert_eq!(nav.len(), 1);
+        assert_eq!(nav[0].path, "/api/context");
+        assert!(nav[0].children.is_none());
+    }
+
+    #[test]
+    fn write_generated_docs_writes_typedoc_nested_files() {
+        use super::{write_generated_docs, JsDocsOutputOptions};
+
+        let unique =
+            std::time::SystemTime::now().duration_since(std::time::UNIX_EPOCH).unwrap().as_nanos();
+        let out_dir = std::env::temp_dir()
+            .join(format!("ox-content-napi-typedoc-write-{}-{unique}", std::process::id()));
+
+        let extracted = vec![JsDocsMarkdownModule {
+            description: None,
+            file: "default".to_string(),
+            entries: vec![JsDocsMarkdownEntry {
+                name: "cli".to_string(),
+                kind: "function".to_string(),
+                description: "Runs the CLI.".to_string(),
+                params: None,
+                returns: None,
+                examples: None,
+                tags: None,
+                private: false,
+                file: "/repo/src/cli.ts".to_string(),
+                line: 1,
+                end_line: 1,
+                signature: Some("export function cli(): void".to_string()),
+                members: None,
+                type_parameters: None,
+            }],
+        }];
+
+        let markdown = generate_docs_markdown(
+            extracted.clone(),
+            Some(JsDocsMarkdownOptions {
+                group_by: Some("file".to_string()),
+                github_url: None,
+                link_style: Some("clean".to_string()),
+                base_path: Some("/api".to_string()),
+                path_strategy: Some("typedoc".to_string()),
+                render_style: None,
+            }),
+        );
+
+        write_generated_docs(
+            markdown,
+            out_dir.to_string_lossy().to_string(),
+            Some(extracted),
+            Some(JsDocsOutputOptions {
+                generate_nav: Some(true),
+                group_by: Some("file".to_string()),
+                generated_at: Some("2026-01-01T00:00:00.000Z".to_string()),
+                base_path: Some("/api".to_string()),
+                path_strategy: Some("typedoc".to_string()),
+            }),
+        )
+        .unwrap();
+
+        assert!(out_dir.join("default/index.md").exists());
+        assert!(out_dir.join("default/functions/cli.md").exists());
+
+        let nav = fs::read_to_string(out_dir.join("nav.ts")).unwrap();
+        assert!(nav.contains("\"/api/default/functions/cli\""));
+
+        fs::remove_dir_all(&out_dir).unwrap();
     }
 
     #[test]
@@ -3307,6 +4059,7 @@ export type ExtractArgs<G> = G extends { args: infer A } ? A : never;
             "generateDocsMarkdown",
             "generateDocsNavCode",
             "generateDocsNavMetadata",
+            "generateDocsNavMetadataFromDocs",
             "generateI18nModule",
             "generateOgImageSvg",
             "generateSearchModule",

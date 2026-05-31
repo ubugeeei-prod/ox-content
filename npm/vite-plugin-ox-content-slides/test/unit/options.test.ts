@@ -10,6 +10,9 @@ describe("resolveOptions", () => {
     expect(options.routePrefix).toBe("/slides");
     expect(options.baseHref).toBe("/");
     expect(options.animations).toBe(true);
+    expect(options.editor.enabled).toBe(true);
+    expect(options.editor.routePrefix).toBe("/slides/editor");
+    expect(options.editor.apiPrefix).toBe("/slides/editor/api");
     expect(options.presenter).toBe(true);
     expect(options.pdf.enabled).toBe(false);
   });
@@ -19,6 +22,9 @@ describe("resolveOptions", () => {
       base: "/docs",
       routeBase: "/decks/",
       animations: false,
+      editor: {
+        route: "/deckhouse/",
+      },
       theme: {
         surfaceRadius: "6px",
         darkCanvasBackground: "#000814",
@@ -35,6 +41,7 @@ describe("resolveOptions", () => {
     expect(options.routeBase).toBe("decks");
     expect(options.routePrefix).toBe("/decks");
     expect(options.animations).toBe(false);
+    expect(options.editor.routePrefix).toBe("/deckhouse");
     expect(options.theme.surfaceRadius).toBe("6px");
     expect(options.theme.darkCanvasBackground).toBe("#000814");
     expect(options.napiTheme.surfaceRadius).toBe("6px");
@@ -43,5 +50,12 @@ describe("resolveOptions", () => {
     expect(options.pdf.enabled).toBe(true);
     expect(options.pdf.fileName).toBe("talk.pdf");
     expect(options.pdf.scale).toBe(2);
+  });
+
+  it("can disable the browser editor", () => {
+    const options = resolveOptions({ editor: false });
+
+    expect(options.editor.enabled).toBe(false);
+    expect(options.editor.routePrefix).toBe("");
   });
 });

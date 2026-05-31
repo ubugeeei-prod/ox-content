@@ -1,0 +1,54 @@
+name: Mount sticky cache
+description: Mount Blacksmith sticky disks for large CI caches.
+
+inputs:
+  key-prefix:
+    description: Prefix shared by all sticky disk keys mounted by this action.
+    required: true
+  cargo:
+    description: Mount Cargo registry and git caches.
+    default: "false"
+  target:
+    description: Cargo target directory to mount. Leave empty to skip.
+    default: ""
+  browsers:
+    description: Mount Playwright and Puppeteer browser caches.
+    default: "false"
+
+runs:
+  using: composite
+  steps:
+    - name: Mount Cargo registry
+      if: inputs.cargo == 'true'
+      uses: ./.github/actions/stickydisk
+      with:
+        key: ${{ inputs.key-prefix }}-cargo-registry
+        path: ~/.cargo/registry
+
+    - name: Mount Cargo git
+      if: inputs.cargo == 'true'
+      uses: ./.github/actions/stickydisk
+      with:
+        key: ${{ inputs.key-prefix }}-cargo-git
+        path: ~/.cargo/git
+
+    - name: Mount Cargo target
+      if: inputs.target != ''
+      uses: ./.github/actions/stickydisk
+      with:
+        key: ${{ inputs.key-prefix }}-cargo-target
+        path: ${{ inputs.target }}
+
+    - name: Mount Playwright browsers
+      if: inputs.browsers == 'true'
+      uses: ./.github/actions/stickydisk
+      with:
+        key: ${{ inputs.key-prefix }}-playwright-browsers
+        path: ~/.cache/ms-playwright
+
+    - name: Mount Puppeteer browsers
+      if: inputs.browsers == 'true'
+      uses: ./.github/actions/stickydisk
+      with:
+        key: ${{ inputs.key-prefix }}-puppeteer-browsers
+        path: ~/.cache/puppeteer

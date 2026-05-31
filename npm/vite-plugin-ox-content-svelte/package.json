@@ -1,6 +1,6 @@
 {
   "name": "@ox-content/vite-plugin-svelte",
-  "version": "2.22.0",
+  "version": "2.36.0",
   "description": "Svelte integration for Ox Content - Embed Svelte components in Markdown",
   "keywords": [
     "markdown",
@@ -13,7 +13,7 @@
   "author": "ubugeeei",
   "repository": {
     "type": "git",
-    "url": "https://github.com/ubugeeei/ox-content.git",
+    "url": "https://github.com/ubugeeei-prod/ox-content.git",
     "directory": "npm/vite-plugin-ox-content-svelte"
   },
   "files": [

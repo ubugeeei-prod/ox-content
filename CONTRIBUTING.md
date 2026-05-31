@@ -36,8 +36,17 @@ vp run ready
 vp run doc:cargo
 vp run dev:docs
 vp run dev:playground
+vp run deploy#docs
 vp run bench:parse
 ```
+
+`vp run deploy#docs` builds the docs site and deploys `docs/dist/docs` to Void.
+It builds with `OX_CONTENT_DOCS_BASE=/` and
+`OX_CONTENT_DOCS_SITE_URL=https://ox-content.void.app` by default so asset URLs
+resolve from the Void domain root. It uses the `VOID_PROJECT` environment
+variable when set, otherwise it targets the `ox-content` Void project. Pass
+additional Void CLI flags after the task specifier, for example
+`vp run deploy#docs --debug`.
 
 For allocation-aware performance work, use the in-tree profiler. It installs
 a counting global allocator and turns on per-span timing for the parser and

@@ -141,6 +141,44 @@ describe("writeDocs", () => {
       '"path": "/api-ox/context"',
     );
   });
+
+  it("writes typedoc nested files and nav tree when pathStrategy is typedoc", async () => {
+    const outDir = await fs.mkdtemp(path.join(os.tmpdir(), "ox-content-docs-"));
+    tempDirs.push(outDir);
+
+    const extractedDocs: ExtractedDocs[] = [
+      {
+        file: "default",
+        entries: [
+          {
+            name: "cli",
+            kind: "function",
+            description: "Runs the CLI.",
+            file: "/repo/src/cli.ts",
+            line: 1,
+            endLine: 1,
+            signature: "export function cli(): void",
+          },
+        ],
+      },
+    ];
+
+    const options = resolveDocsOptions({
+      generateNav: true,
+      basePath: "/api",
+      pathStrategy: "typedoc",
+      linkStyle: "clean",
+    });
+    const markdown = generateMarkdown(extractedDocs, options);
+
+    await writeDocs(markdown, outDir, extractedDocs, options);
+
+    await expect(fs.access(path.join(outDir, "default/index.md"))).resolves.not.toThrow();
+    await expect(fs.access(path.join(outDir, "default/functions/cli.md"))).resolves.not.toThrow();
+    await expect(fs.readFile(path.join(outDir, "nav.ts"), "utf-8")).resolves.toContain(
+      '"path": "/api/default/functions/cli"',
+    );
+  });
 });
 
 describe("generateMarkdown", () => {
@@ -173,6 +211,37 @@ describe("generateMarkdown", () => {
     expect(markdown["index.md"]).toContain("`@api transform`");
   });
 
+  it("emits pure Markdown without raw HTML when renderStyle is markdown", () => {
+    const docs: ExtractedDocs[] = [
+      {
+        file: "/repo/src/utils.ts",
+        entries: [
+          {
+            name: "capitalize",
+            kind: "function",
+            description: "Capitalizes the first letter of a string.",
+            file: "/repo/src/utils.ts",
+            line: 4,
+            endLine: 4,
+            signature: "export function capitalize(str: string): string",
+            params: [{ name: "str", type: "string", description: "Input string" }],
+            returns: { type: "string", description: "Capitalized string" },
+          },
+        ],
+      },
+    ];
+
+    const markdown = generateMarkdown(docs, resolveDocsOptions({ renderStyle: "markdown" })!);
+
+    const page = markdown["utils.md"];
+    expect(page).not.toContain("<details");
+    expect(page).not.toContain('class="ox-api');
+    expect(page).not.toContain("<table");
+    expect(page).toContain("### capitalize");
+    expect(page).toContain("```ts");
+    expect(page).toContain("| Name | Type | Description |");
+  });
+
   it("passes clean link options to generated Markdown", () => {
     const docs: ExtractedDocs[] = [
       {
@@ -199,6 +268,48 @@ describe("generateMarkdown", () => {
     expect(markdown["index.md"]).toContain('href="/api-ox/context"');
     expect(markdown["index.md"]).toContain('href="/api-ox/context#commandcontext"');
     expect(markdown["index.md"]).not.toContain(".md#commandcontext");
+  });
+
+  it("emits TypeDoc-style paths when pathStrategy is typedoc", () => {
+    const docs: ExtractedDocs[] = [
+      {
+        file: "default",
+        entries: [
+          {
+            name: "Command",
+            kind: "interface",
+            description: "Runtime command.",
+            file: "/repo/src/types.ts",
+            line: 1,
+            endLine: 1,
+            signature: "export interface Command",
+          },
+          {
+            name: "cli",
+            kind: "function",
+            description: "Runs {@link Command}.",
+            file: "/repo/src/cli.ts",
+            line: 1,
+            endLine: 1,
+            signature: "export function cli(): void",
+          },
+        ],
+      },
+    ];
+
+    const markdown = generateMarkdown(
+      docs,
+      resolveDocsOptions({
+        linkStyle: "clean",
+        basePath: "/api",
+        pathStrategy: "typedoc",
+      })!,
+    );
+
+    expect(markdown["default/index.md"]).toContain("[`cli`](/api/default/functions/cli)");
+    expect(markdown["default/functions/cli.md"]).toContain(
+      'href="/api/default/interfaces/Command"',
+    );
   });
 });
 

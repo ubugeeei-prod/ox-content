@@ -6,6 +6,7 @@ if (app) {
       <h1>ox-content slides example</h1>
       <p>Open <code>/slides/</code> to view the deck.</p>
       <p>Open <code>/slides/presenter/1/</code> for presenter mode.</p>
+      <p>Open <code>/slides/editor/</code> for the dev editor.</p>
     </main>
   `;
 }

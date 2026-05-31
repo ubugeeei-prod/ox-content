@@ -24,7 +24,7 @@ hero:
       link: getting-started.md
     - theme: alt
       text: View on GitHub
-      link: https://github.com/ubugeeei/ox-content
+      link: https://github.com/ubugeeei-prod/ox-content
     - theme: alt
       text: Sponsor
       link: https://github.com/sponsors/ubugeeei
@@ -80,6 +80,7 @@ Under the hood, Ox Content is not only a docs theme. It also exposes the Markdow
 ## User Guide
 
 - [Getting Started](./getting-started.md) - Installation and first steps
+- [Built-in Features](./built-in-features.md) - Defaults, opt-in features, embeds, emoji shortcodes, and code annotations
 - [Theming](./theming.md) - Customize your documentation site
 - [Examples](./examples/index.md) - Integration, source docs, OG image, and SSG examples
 
@@ -91,6 +92,7 @@ Under the hood, Ox Content is not only a docs theme. It also exposes the Markdow
 - [unplugin mdast Bridge Example](./examples/unplugin-mdast-bridge.md) - Native parser plus unified-compatible mdast plugins
 - [unplugin markdown-it Token Bridge](./examples/unplugin-markdown-it-token-bridge.md) - `markdown-it` plugins plus downstream unified token access
 - [Development Setup](./development-setup.md) - Build ox-content itself and work on the repo
+- [Docs Deployment](./deployment.md) - Deploy the documentation site to Void with `vp run deploy#docs`
 - [Editor Extension Roadmap](./editor-extension-roadmap.md) - VS Code and Neovim plan, PR-by-PR
 
 ## Reference
@@ -98,7 +100,7 @@ Under the hood, Ox Content is not only a docs theme. It also exposes the Markdow
 - [API Reference](./api/index.md) - Generated API docs for the public surface
 - [Vite Plugin](./packages/vite-plugin-ox-content.md) - Main docs pipeline package
 - [Packages](./packages/napi.md) - Node.js, WebAssembly, framework, and i18n package docs
-- [GitHub](https://github.com/ubugeeei/ox-content) - Source code and issues
+- [GitHub](https://github.com/ubugeeei-prod/ox-content) - Source code and issues
 
 ## Community Credits
 

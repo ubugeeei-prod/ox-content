@@ -10,10 +10,12 @@ import { oxContentHighlightTheme } from "./ox-content-highlight-theme";
  */
 export default defineConfig(({ mode }) => {
   const isProd = mode === "production";
-  const base = isProd ? "/ox-content/" : "/";
+  const base = process.env.OX_CONTENT_DOCS_BASE ?? (isProd ? "/ox-content/" : "/");
+  const siteUrl = process.env.OX_CONTENT_DOCS_SITE_URL ?? "https://ubugeeei-prod.github.io";
+  const ogImage = new URL("og-image.png", siteUrl.replace(/\/?$/, base)).href;
 
   return {
-    // Site base path (for GitHub Pages in prod, root for dev)
+    // Site base path: GitHub Pages uses /ox-content/, Void uses /.
     base,
 
     plugins: [
@@ -28,9 +30,9 @@ export default defineConfig(({ mode }) => {
         // SSG options with theme customization
         ssg: {
           siteName: "Ox Content",
-          siteUrl: "https://ubugeeei.github.io",
+          siteUrl,
           generateOgImage: true,
-          ogImage: "https://ubugeeei.github.io/ox-content/og-image.png",
+          ogImage,
           theme: defineTheme({
             extends: defaultTheme,
             header: {
@@ -63,7 +65,12 @@ export default defineConfig(({ mode }) => {
                 text: "Guide",
                 items: [
                   { text: "Getting Started", link: "/getting-started.md" },
+                  { text: "Built-in Features", link: "/built-in-features.md" },
+                  { text: "Slides", link: "/slides.md" },
                   { text: "Theming", link: "/theming.md" },
+                  { text: "MDX & Components", link: "/mdx.md" },
+                  { text: "API Docs from JSDoc", link: "/jsdoc.md" },
+                  { text: "Internationalization", link: "/i18n.md" },
                   { text: "Examples", link: "/examples/index.md" },
                 ],
               },
@@ -79,6 +86,7 @@ export default defineConfig(({ mode }) => {
                     link: "/examples/unplugin-markdown-it-token-bridge.md",
                   },
                   { text: "Development Setup", link: "/development-setup.md" },
+                  { text: "Docs Deployment", link: "/deployment.md" },
                   {
                     text: "Editor Extension Roadmap",
                     link: "/editor-extension-roadmap.md",
@@ -118,6 +126,9 @@ export default defineConfig(({ mode }) => {
         codeAnnotations: {
           notation: "both",
         },
+        embeds: {
+          pm: true,
+        },
 
         // Mermaid diagrams (native mmdc via NAPI)
         mermaid: true,
@@ -131,7 +142,7 @@ export default defineConfig(({ mode }) => {
           exclude: ["**/*.test.*"],
           toc: true,
           groupBy: "file",
-          githubUrl: "https://github.com/ubugeeei/ox-content",
+          githubUrl: "https://github.com/ubugeeei-prod/ox-content",
           generateNav: true,
         },
       }),

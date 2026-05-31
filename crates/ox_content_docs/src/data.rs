@@ -1,8 +1,11 @@
 use serde_json::{json, Map, Value};
 
-use crate::markdown::{ApiDocEntry, ApiDocMember, ApiDocModule, ApiParamDoc, ApiReturnDoc};
+use crate::model::{
+    ApiDocEntry, ApiDocMember, ApiDocModule, ApiParamDoc, ApiReturnDoc, ApiTypeParamDoc,
+};
 
-const DOC_KIND_ORDER: [&str; 6] = ["function", "class", "interface", "type", "variable", "module"];
+const DOC_KIND_ORDER: [&str; 7] =
+    ["function", "class", "interface", "type", "enum", "variable", "module"];
 
 #[derive(Default)]
 struct EntryStats {
@@ -69,6 +72,7 @@ fn build_docs_summary(docs: &[ApiDocModule]) -> Value {
 fn module_to_json(module: &ApiDocModule) -> Value {
     json!({
         "file": normalize_doc_file_path(&module.file),
+        "description": module.description,
         "entries": module.entries.iter().map(entry_to_json).collect::<Vec<_>>(),
     })
 }
@@ -79,6 +83,12 @@ fn entry_to_json(entry: &ApiDocEntry) -> Value {
     value.insert("kind".to_string(), json!(entry.kind));
     value.insert("description".to_string(), json!(entry.description));
 
+    if !entry.type_parameters.is_empty() {
+        value.insert(
+            "typeParameters".to_string(),
+            Value::Array(entry.type_parameters.iter().map(type_param_to_json).collect()),
+        );
+    }
     if !entry.params.is_empty() {
         value.insert(
             "params".to_string(),
@@ -109,9 +119,14 @@ fn entry_to_json(entry: &ApiDocEntry) -> Value {
         value.insert("private".to_string(), json!(true));
     }
 
-    value.insert("file".to_string(), json!(normalize_doc_file_path(&entry.file)));
-    value.insert("line".to_string(), json!(entry.line));
-    value.insert("endLine".to_string(), json!(entry.end_line));
+    // An empty `file` means the symbol has no source in the consumer's repo
+    // (e.g. re-exported from an external package): omit the source location
+    // entirely rather than leak an absolute local path.
+    if !entry.file.is_empty() {
+        value.insert("file".to_string(), json!(normalize_doc_file_path(&entry.file)));
+        value.insert("line".to_string(), json!(entry.line));
+        value.insert("endLine".to_string(), json!(entry.end_line));
+    }
     if let Some(signature) = &entry.signature {
         value.insert("signature".to_string(), json!(signature));
     }
@@ -186,6 +201,21 @@ fn return_to_json(return_doc: &ApiReturnDoc) -> Value {
     })
 }
 
+fn type_param_to_json(type_param: &ApiTypeParamDoc) -> Value {
+    let mut value = Map::new();
+    value.insert("name".to_string(), json!(type_param.name));
+    if let Some(constraint) = &type_param.constraint {
+        value.insert("constraint".to_string(), json!(constraint));
+    }
+    if let Some(default) = &type_param.default {
+        value.insert("default".to_string(), json!(default));
+    }
+    if !type_param.description.is_empty() {
+        value.insert("description".to_string(), json!(type_param.description));
+    }
+    Value::Object(value)
+}
+
 fn normalize_doc_file_path(file_path: &str) -> String {
     let normalized = file_path.replace('\\', "/");
     for prefix in ["npm/", "packages/", "crates/", "src/"] {
@@ -202,11 +232,12 @@ fn normalize_doc_file_path(file_path: &str) -> String {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::markdown::{ApiDocTag, ApiParamDoc};
+    use crate::model::{ApiDocTag, ApiParamDoc};
 
     #[test]
     fn generated_docs_data_counts_and_normalizes_paths() {
         let docs = vec![ApiDocModule {
+            description: String::new(),
             file: "/repo/src/math.ts".to_string(),
             entries: vec![ApiDocEntry {
                 name: "clamp".to_string(),
@@ -228,6 +259,7 @@ mod tests {
                 end_line: 10,
                 signature: Some("export function clamp(value: number): number".to_string()),
                 members: vec![],
+                type_parameters: vec![],
             }],
         }];
 
@@ -242,5 +274,103 @@ mod tests {
         assert_eq!(value["modules"][0]["file"], "src/math.ts");
         assert_eq!(value["modules"][0]["entries"][0]["file"], "src/math.ts");
         assert_eq!(value["modules"][0]["entries"][0]["endLine"], 10);
+    }
+
+    #[test]
+    fn generated_docs_data_carries_module_description() {
+        let docs = vec![ApiDocModule {
+            description: "The entry for gunshi context.".to_string(),
+            file: "/repo/src/context.ts".to_string(),
+            entries: vec![],
+        }];
+
+        let json = generate_docs_data_json(&docs, "2026-05-31T00:00:00.000Z").unwrap();
+        let value: Value = serde_json::from_str(&json).unwrap();
+
+        assert_eq!(value["modules"][0]["description"], "The entry for gunshi context.");
+    }
+
+    #[test]
+    fn entry_without_file_omits_source_location() {
+        let docs = vec![ApiDocModule {
+            description: String::new(),
+            file: "/repo/src/combinators.ts".to_string(),
+            entries: vec![ApiDocEntry {
+                name: "Combinator".to_string(),
+                kind: "type".to_string(),
+                description: "A combinator.".to_string(),
+                params: vec![],
+                returns: None,
+                examples: vec![],
+                tags: vec![],
+                private: false,
+                // External-package source: no in-repo location.
+                file: String::new(),
+                line: 15,
+                end_line: 23,
+                signature: Some("type Combinator = unknown".to_string()),
+                members: vec![],
+                type_parameters: vec![],
+            }],
+        }];
+
+        let json = generate_docs_data_json(&docs, "2026-05-31T00:00:00.000Z").unwrap();
+        let value: Value = serde_json::from_str(&json).unwrap();
+        let entry = &value["modules"][0]["entries"][0];
+
+        assert_eq!(entry["name"], "Combinator");
+        assert_eq!(entry["signature"], "type Combinator = unknown");
+        // No source location keys, so no absolute local path can leak.
+        assert!(entry.get("file").is_none());
+        assert!(entry.get("line").is_none());
+        assert!(entry.get("endLine").is_none());
+    }
+
+    #[test]
+    fn entry_type_parameters_serialize_to_json() {
+        let docs = vec![ApiDocModule {
+            description: String::new(),
+            file: "/repo/src/make.ts".to_string(),
+            entries: vec![ApiDocEntry {
+                name: "make".to_string(),
+                kind: "function".to_string(),
+                description: "Make.".to_string(),
+                params: vec![],
+                returns: None,
+                examples: vec![],
+                tags: vec![],
+                private: false,
+                file: "/repo/src/make.ts".to_string(),
+                line: 1,
+                end_line: 1,
+                signature: None,
+                members: vec![],
+                type_parameters: vec![
+                    ApiTypeParamDoc {
+                        name: "G".to_string(),
+                        constraint: Some("Base".to_string()),
+                        default: Some("Default".to_string()),
+                        description: String::new(),
+                    },
+                    ApiTypeParamDoc {
+                        name: "T".to_string(),
+                        constraint: None,
+                        default: None,
+                        description: "Value.".to_string(),
+                    },
+                ],
+            }],
+        }];
+
+        let json = generate_docs_data_json(&docs, "2026-05-31T00:00:00.000Z").unwrap();
+        let value: Value = serde_json::from_str(&json).unwrap();
+        let type_params = &value["modules"][0]["entries"][0]["typeParameters"];
+
+        assert_eq!(type_params[0]["name"], "G");
+        assert_eq!(type_params[0]["constraint"], "Base");
+        assert_eq!(type_params[0]["default"], "Default");
+        assert!(type_params[0].get("description").is_none());
+        assert_eq!(type_params[1]["name"], "T");
+        assert_eq!(type_params[1]["description"], "Value.");
     }
 }

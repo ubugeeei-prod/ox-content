@@ -1,5 +1,5 @@
 import { createRequire } from "node:module";
-import type { CSpellUserSettings, ValidationIssue } from "cspell-lib";
+import type { CSpellUserSettings, SpellCheckFileOptions, ValidationIssue } from "cspell-lib";
 
 const require = createRequire(import.meta.url);
 
@@ -14,12 +14,12 @@ const DEFAULT_RULES = {
   spellcheck: true,
   trailingSpaces: true,
 } as const;
-const DEFAULT_CSPELL_IMPORTS = {
+const DEFAULT_CSPELL_IMPORTS: Partial<Record<MarkdownLintLanguage, string>> = {
   de: "@cspell/dict-de-de/cspell-ext.json",
   en: "@cspell/dict-en_us/cspell-ext.json",
   fr: "@cspell/dict-fr-fr/cspell-ext.json",
   pl: "@cspell/dict-pl_pl/cspell-ext.json",
-} as const satisfies Partial<Record<MarkdownLintLanguage, string>>;
+};
 
 export type MarkdownLintLanguage = (typeof SUPPORTED_MARKDOWN_LINT_LANGUAGES)[number];
 export type MarkdownLintSeverity = "error" | "warning" | "info";
@@ -433,12 +433,19 @@ function stripMaskedDocument(result: NapiMarkdownLintResult): MarkdownLintResult
 }
 
 function normalizeLintOptions(options: MarkdownLintOptions): InternalNormalizedMarkdownLintOptions {
-  const languages = options.languages?.filter((language): language is MarkdownLintLanguage =>
+  const standardDictionary =
+    options.dictionary?.standard && typeof options.dictionary.standard === "object"
+      ? options.dictionary.standard
+      : undefined;
+  const optionLanguages = options.languages?.filter((language): language is MarkdownLintLanguage =>
     SUPPORTED_MARKDOWN_LINT_LANGUAGES.includes(language),
-  ) ??
-    options.dictionary?.standard?.languages?.filter((language): language is MarkdownLintLanguage =>
+  );
+  const standardLanguages = standardDictionary?.languages?.filter(
+    (language): language is MarkdownLintLanguage =>
       SUPPORTED_MARKDOWN_LINT_LANGUAGES.includes(language),
-    ) ?? [...DEFAULT_LANGUAGES];
+  );
+  const languages: MarkdownLintLanguage[] = optionLanguages ??
+    standardLanguages ?? [...DEFAULT_LANGUAGES];
 
   const standard = normalizeStandardDictionaryOptions(options.dictionary?.standard, languages);
 
@@ -519,6 +526,12 @@ async function runStandardSpellcheckDocuments(
     const { spellCheckDocument } = await loadCspellLib();
     const locale = standard.languages.join(",");
     const settings = createStandardSpellcheckSettings(options, locale);
+    const spellCheckOptions = {
+      generateSuggestions: true,
+      noConfigSearch: true,
+      numSuggestions: 3,
+      resolveImportsRelativeTo: standard.resolveImportsRelativeTo,
+    } satisfies SpellCheckFileOptions & { resolveImportsRelativeTo: string | URL };
 
     return Promise.all(
       maskedDocuments.map(async (maskedDocument, index) => {
@@ -533,17 +546,22 @@ async function runStandardSpellcheckDocuments(
             text: maskedDocument,
             uri: `file:///ox-content-lint-${index}.md`,
           },
-          {
-            generateSuggestions: true,
-            noConfigSearch: true,
-            numSuggestions: 3,
-            resolveImportsRelativeTo: standard.resolveImportsRelativeTo,
-          },
+          spellCheckOptions,
           settings,
         );
 
+        // Precompute the document's newline offsets once so each issue's line
+        // can be resolved with a binary search instead of a fresh O(N) scan
+        // from offset 0 (which made line resolution O(issues * length)).
+        const newlineOffsets: number[] = [];
+        for (let i = 0; i < maskedDocument.length; i++) {
+          if (maskedDocument.charCodeAt(i) === 10) {
+            newlineOffsets.push(i);
+          }
+        }
+
         return result.issues.map((issue) =>
-          mapStandardIssueToDiagnostic(issue, standard.languages),
+          mapStandardIssueToDiagnostic(issue, standard.languages, newlineOffsets),
         );
       }),
     );
@@ -584,8 +602,9 @@ async function loadCspellLib(): Promise<typeof import("cspell-lib")> {
 function mapStandardIssueToDiagnostic(
   issue: ValidationIssue,
   languages: MarkdownLintLanguage[],
+  newlineOffsets: number[],
 ): MarkdownLintDiagnostic {
-  const line = issue.line.position.line + 1;
+  const line = getLineNumberAtOffset(newlineOffsets, issue.line.offset);
   const column = issue.offset - issue.line.offset + 1;
   const length = issue.length ?? issue.text.length;
 
@@ -600,6 +619,25 @@ function mapStandardIssueToDiagnostic(
     severity: "warning",
     suggestions: issue.suggestions?.slice(0, 3),
   };
+}
+
+function getLineNumberAtOffset(newlineOffsets: number[], offset: number): number {
+  // Line number = 1 + (count of newline offsets strictly less than `offset`).
+  // This matches the old linear scan exactly: a newline can only exist at an
+  // index < text.length, so counting positions `< offset` over the whole
+  // document gives the same count for every `offset` (including past EOF).
+  let lo = 0;
+  let hi = newlineOffsets.length;
+  while (lo < hi) {
+    const mid = (lo + hi) >>> 1;
+    if (newlineOffsets[mid] < offset) {
+      lo = mid + 1;
+    } else {
+      hi = mid;
+    }
+  }
+
+  return lo + 1;
 }
 
 function inferStandardIssueLanguage(

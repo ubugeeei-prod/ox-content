@@ -1,6 +1,6 @@
 # renderer.ts
 
-**[Source](https://github.com/ubugeeei/ox-content/blob/main/npm/vite-plugin-ox-content/src/og-image/renderer.ts)**
+**[Source](https://github.com/ubugeeei-prod/ox-content/blob/main/npm/vite-plugin-ox-content/src/og-image/renderer.ts)**
 
 > 2 documented symbols. Read the signatures first, then expand each item for parameters, return types, and examples.
 
@@ -31,7 +31,7 @@
 </div>
 
 <details id="renderhtmltopng" class="ox-api-entry">
-  <summary><span class="ox-api-entry__kind">fn</span><span class="ox-api-entry__summary-main"><code class="ox-api-entry__signature ox-api-entry__signature--highlighted language-typescript">renderHtmlToPng(page: Page, html: string, width: number, height: number, publicDir?: string): Promise&lt;Buffer&gt;</code><span class="ox-api-entry__description">Renders an HTML string to a PNG buffer using Chromium.</span><span class="ox-api-entry__meta"><span class="ox-api-badge">5 params</span><span class="ox-api-badge">returns Promise</span></span></span></summary>
+  <summary><span class="ox-api-entry__kind">fn</span><span class="ox-api-entry__summary-main"><code class="ox-api-entry__signature ox-api-entry__signature--highlighted language-typescript">renderHtmlToPng(page: Page, html: string, width: number, height: number, publicDir?: string): Promise&lt;Buffer&gt;</code><span class="ox-api-entry__description">Renders an HTML string to a PNG buffer using Chromium.</span><span class="ox-api-entry__meta"><span class="ox-api-badge">5 params</span><span class="ox-api-badge">returns Promise&lt;Buffer&gt;</span></span></span></summary>
   <div class="ox-api-entry__body">
 <div class="ox-api-entry__prose">
 <p>Renders an HTML string to a PNG buffer using Chromium.</p>
@@ -40,7 +40,7 @@
 <h4>Signature</h4>
 <pre><code class="language-typescript">export async function renderHtmlToPng(page: Page, html: string, width: number, height: number, publicDir?: string): Promise&lt;Buffer&gt;</code></pre>
 </div>
-<p class="ox-api-entry__source"><a class="ox-api-entry__source-link" href="https://github.com/ubugeeei/ox-content/blob/main/npm/vite-plugin-ox-content/src/og-image/renderer.ts#L36-L91" target="_blank" rel="noopener noreferrer">View source<span class="ox-api-entry__source-icon" aria-hidden="true"></span></a></p>
+<p class="ox-api-entry__source"><a class="ox-api-entry__source-link" href="https://github.com/ubugeeei-prod/ox-content/blob/main/npm/vite-plugin-ox-content/src/og-image/renderer.ts#L36-L91" target="_blank" rel="noopener noreferrer">View source<span class="ox-api-entry__source-icon" aria-hidden="true"></span></a></p>
 <div class="ox-api-entry__section ox-api-entry__section--params">
 <h4>Parameters</h4>
 <ul class="ox-api-entry__params">
@@ -84,7 +84,7 @@
 <div class="ox-api-entry__section ox-api-entry__section--returns">
 <h4>Returns</h4>
 <div class="ox-api-entry__return">
-  <code class="ox-api-entry__return-type">Promise</code>
+  <code class="ox-api-entry__return-type">Promise&lt;Buffer&gt;</code>
   <p class="ox-api-entry__return-description">PNG buffer</p>
 </div>
 </div>
@@ -101,7 +101,7 @@
 <h4>Signature</h4>
 <pre><code class="language-typescript">function wrapHtml(bodyHtml: string, width: number, height: number, useBaseUrl: boolean): string</code></pre>
 </div>
-<p class="ox-api-entry__source"><a class="ox-api-entry__source-link" href="https://github.com/ubugeeei/ox-content/blob/main/npm/vite-plugin-ox-content/src/og-image/renderer.ts#L11-L24" target="_blank" rel="noopener noreferrer">View source<span class="ox-api-entry__source-icon" aria-hidden="true"></span></a></p>
+<p class="ox-api-entry__source"><a class="ox-api-entry__source-link" href="https://github.com/ubugeeei-prod/ox-content/blob/main/npm/vite-plugin-ox-content/src/og-image/renderer.ts#L11-L24" target="_blank" rel="noopener noreferrer">View source<span class="ox-api-entry__source-icon" aria-hidden="true"></span></a></p>
 <div class="ox-api-entry__section ox-api-entry__section--params">
 <h4>Parameters</h4>
 <ul class="ox-api-entry__params">

@@ -4,13 +4,14 @@ use std::collections::BTreeMap;
 
 use serde::{Deserialize, Serialize};
 
-use crate::extractor::{DocItem, DocItemKind, DocTag, ParamDoc};
+use crate::extractor::{DocItem, DocItemKind, DocTag, ParamDoc, TypeParamDoc};
 
 const UNKNOWN_TYPE: &str = "unknown";
 const PARAM_TAG_NAMES: [&str; 3] = ["param", "arg", "argument"];
 const RETURN_TAG_NAMES: [&str; 2] = ["returns", "return"];
 const EXAMPLE_TAG_NAME: &str = "example";
 const PRIVATE_TAG_NAME: &str = "private";
+const TYPE_PARAM_TAG_NAMES: [&str; 2] = ["typeParam", "template"];
 
 /// Documentation item kind supported by the generated API reference.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
@@ -22,8 +23,10 @@ pub enum NormalizedDocKind {
     Class,
     /// TypeScript interface declaration.
     Interface,
-    /// Type alias or enum.
+    /// Type alias.
     Type,
+    /// Enum declaration.
+    Enum,
     /// Variable declaration.
     Variable,
     /// Module or namespace.
@@ -38,7 +41,8 @@ impl NormalizedDocKind {
             DocItemKind::Function => Some(Self::Function),
             DocItemKind::Class => Some(Self::Class),
             DocItemKind::Interface => Some(Self::Interface),
-            DocItemKind::Type | DocItemKind::Enum => Some(Self::Type),
+            DocItemKind::Type => Some(Self::Type),
+            DocItemKind::Enum => Some(Self::Enum),
             DocItemKind::Variable => Some(Self::Variable),
             DocItemKind::Module => Some(Self::Module),
             DocItemKind::Method
@@ -58,6 +62,7 @@ impl NormalizedDocKind {
             Self::Class => "class",
             Self::Interface => "interface",
             Self::Type => "type",
+            Self::Enum => "enum",
             Self::Variable => "variable",
             Self::Module => "module",
         }
@@ -142,6 +147,19 @@ pub struct NormalizedReturnDoc {
     pub description: String,
 }
 
+/// Normalized type parameter documentation (`<T extends C = D>`).
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+pub struct NormalizedTypeParam {
+    /// Type parameter name (e.g. `T`).
+    pub name: String,
+    /// Constraint after `extends`, when present.
+    pub constraint: Option<String>,
+    /// Default type after `=`, when present.
+    pub default: Option<String>,
+    /// Description merged from a `@typeParam` / `@template` tag.
+    pub description: String,
+}
+
 /// Normalized documentation for a member of a class/interface/type/enum entry.
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 pub struct NormalizedMember {
@@ -211,23 +229,37 @@ pub struct NormalizedDocEntry {
     /// Members belonging to class/interface/type/enum entries.
     #[serde(default)]
     pub members: Vec<NormalizedMember>,
+    /// Declaration type parameters. Populated only when type-parameter docs are
+    /// enabled (opt-in); empty otherwise.
+    #[serde(default)]
+    pub type_parameters: Vec<NormalizedTypeParam>,
 }
 
 /// Normalizes extracted documentation items into API reference entries.
 #[must_use]
-pub fn normalize_doc_items(items: Vec<DocItem>) -> Vec<NormalizedDocEntry> {
-    items.into_iter().filter_map(normalize_doc_item).collect()
+pub fn normalize_doc_items(items: Vec<DocItem>, type_parameters: bool) -> Vec<NormalizedDocEntry> {
+    items.into_iter().filter_map(|item| normalize_doc_item(item, type_parameters)).collect()
 }
 
 /// Normalizes a single extracted documentation item into an API reference entry.
+///
+/// `type_parameters` opts in to TSDoc-style type-parameter docs: when `true`,
+/// `@typeParam` / `@template` tags are merged into structured type parameters and
+/// removed from the generic tag map; when `false` they remain generic tags and
+/// `type_parameters` stays empty (default JSDoc behavior).
 #[must_use]
-pub fn normalize_doc_item(item: DocItem) -> Option<NormalizedDocEntry> {
+pub fn normalize_doc_item(item: DocItem, type_parameters: bool) -> Option<NormalizedDocEntry> {
     let kind = NormalizedDocKind::from_doc_item_kind(item.kind)?;
 
-    let mut metadata = normalize_doc_metadata(&item.tags);
+    let mut metadata = normalize_doc_metadata(&item.tags, type_parameters);
     merge_extracted_params(&mut metadata.params, item.params);
     merge_extracted_return(&mut metadata.returns, item.return_type);
     let members = item.children.into_iter().filter_map(normalize_member).collect();
+    let type_parameters = if type_parameters {
+        build_type_parameters(item.type_parameters, &metadata.type_param_descriptions)
+    } else {
+        Vec::new()
+    };
 
     Some(NormalizedDocEntry {
         name: item.name,
@@ -243,12 +275,14 @@ pub fn normalize_doc_item(item: DocItem) -> Option<NormalizedDocEntry> {
         end_line: item.end_line,
         signature: item.signature,
         members,
+        type_parameters,
     })
 }
 
 fn normalize_member(item: DocItem) -> Option<NormalizedMember> {
     let kind = NormalizedMemberKind::from_doc_item_kind(item.kind)?;
-    let mut metadata = normalize_doc_metadata(&item.tags);
+    // Member-level type parameters are out of scope; keep generic-tag behavior.
+    let mut metadata = normalize_doc_metadata(&item.tags, false);
     merge_extracted_params(&mut metadata.params, item.params);
     merge_extracted_return(&mut metadata.returns, item.return_type);
 
@@ -283,14 +317,16 @@ struct NormalizedDocMetadata {
     returns: Option<NormalizedReturnDoc>,
     examples: Vec<String>,
     tags: BTreeMap<String, String>,
+    type_param_descriptions: BTreeMap<String, String>,
     private: bool,
 }
 
-fn normalize_doc_metadata(tags: &[DocTag]) -> NormalizedDocMetadata {
+fn normalize_doc_metadata(tags: &[DocTag], type_parameters: bool) -> NormalizedDocMetadata {
     let mut params = Vec::new();
     let mut returns = None;
     let mut examples = Vec::new();
     let mut normalized_tags = BTreeMap::new();
+    let mut type_param_descriptions = BTreeMap::new();
     let mut private = false;
 
     for tag in tags {
@@ -313,13 +349,84 @@ fn normalize_doc_metadata(tags: &[DocTag]) -> NormalizedDocMetadata {
             PRIVATE_TAG_NAME => {
                 private = true;
             }
+            // TSDoc `@typeParam` / `@template`: only handled specially when opted
+            // in. Otherwise it falls through to the generic tag map (JSDoc default).
+            tag_name if type_parameters && TYPE_PARAM_TAG_NAMES.contains(&tag_name) => {
+                if let Some((name, description)) = parse_type_param_tag(tag) {
+                    type_param_descriptions.entry(name).or_insert(description);
+                }
+            }
             tag_name => {
                 normalized_tags.entry(tag_name.to_string()).or_insert_with(|| tag.value.clone());
             }
         }
     }
 
-    NormalizedDocMetadata { params, returns, examples, tags: normalized_tags, private }
+    NormalizedDocMetadata {
+        params,
+        returns,
+        examples,
+        tags: normalized_tags,
+        type_param_descriptions,
+        private,
+    }
+}
+
+/// Parses a `@typeParam` / `@template` tag into `(name, description)`.
+/// Prefers the structured `name`/`description` from the JSDoc parser; otherwise
+/// splits the raw value as `"<name>[ - ]<description>"`.
+fn parse_type_param_tag(tag: &DocTag) -> Option<(String, String)> {
+    if let Some(name) = tag.name.as_ref().map(|name| name.trim()).filter(|name| !name.is_empty()) {
+        let description = tag.description.clone().unwrap_or_default().trim().to_string();
+        return Some((name.to_string(), description));
+    }
+
+    let value = tag.value.trim();
+    if value.is_empty() {
+        return None;
+    }
+    let mut parts = value.splitn(2, char::is_whitespace);
+    let name = parts.next()?.trim();
+    if name.is_empty() {
+        return None;
+    }
+    let description = parts.next().unwrap_or("").trim().trim_start_matches('-').trim().to_string();
+    Some((name.to_string(), description))
+}
+
+/// Merges `@typeParam` descriptions into the AST-derived type parameters by name.
+/// Descriptions with no matching declaration parameter are appended as
+/// name+description-only entries so they are not lost.
+fn build_type_parameters(
+    ast: Vec<TypeParamDoc>,
+    descriptions: &BTreeMap<String, String>,
+) -> Vec<NormalizedTypeParam> {
+    let mut used = std::collections::BTreeSet::new();
+    let mut result: Vec<NormalizedTypeParam> = ast
+        .into_iter()
+        .map(|param| {
+            used.insert(param.name.clone());
+            NormalizedTypeParam {
+                description: descriptions.get(&param.name).cloned().unwrap_or_default(),
+                name: param.name,
+                constraint: param.constraint,
+                default: param.default,
+            }
+        })
+        .collect();
+
+    for (name, description) in descriptions {
+        if !used.contains(name) {
+            result.push(NormalizedTypeParam {
+                name: name.clone(),
+                constraint: None,
+                default: None,
+                description: description.clone(),
+            });
+        }
+    }
+
+    result
 }
 
 fn merge_extracted_params(params: &mut Vec<NormalizedParamDoc>, extracted_params: Vec<ParamDoc>) {
@@ -442,7 +549,7 @@ export function label(value, maxLength = 20) {
 
         let extractor = DocExtractor::new();
         let items = extractor.extract_source(source, "labels.js", SourceType::mjs()).unwrap();
-        let entries = normalize_doc_items(items);
+        let entries = normalize_doc_items(items, false);
 
         assert_eq!(entries.len(), 1);
         let entry = &entries[0];
@@ -480,14 +587,14 @@ export function internalHelper(): void {}
 
         let extractor = DocExtractor::with_private(true);
         let items = extractor.extract_source(source, "internal.ts", SourceType::ts()).unwrap();
-        let entries = normalize_doc_items(items);
+        let entries = normalize_doc_items(items, false);
 
         assert_eq!(entries.len(), 1);
         assert!(entries[0].private);
     }
 
     #[test]
-    fn maps_enums_to_type_entries() {
+    fn preserves_enum_kind_in_normalized_entries() {
         let source = r"
 /**
  * Available modes.
@@ -500,10 +607,10 @@ export enum Mode {
 
         let extractor = DocExtractor::new();
         let items = extractor.extract_source(source, "mode.ts", SourceType::ts()).unwrap();
-        let entries = normalize_doc_items(items);
+        let entries = normalize_doc_items(items, false);
 
         assert_eq!(entries.len(), 1);
-        assert_eq!(entries[0].kind, NormalizedDocKind::Type);
+        assert_eq!(entries[0].kind, NormalizedDocKind::Enum);
     }
 
     #[test]
@@ -522,7 +629,7 @@ export interface Command {
 
         let extractor = DocExtractor::new();
         let items = extractor.extract_source(source, "command.ts", SourceType::ts()).unwrap();
-        let entries = normalize_doc_items(items);
+        let entries = normalize_doc_items(items, false);
         let members = &entries[0].members;
 
         assert_eq!(members.len(), 2);
@@ -555,7 +662,7 @@ export interface Command {
 
         let extractor = DocExtractor::new();
         let items = extractor.extract_source(source, "command.ts", SourceType::ts()).unwrap();
-        let entries = normalize_doc_items(items);
+        let entries = normalize_doc_items(items, false);
         let member = &entries[0].members[0];
 
         assert_eq!(member.name, "run");
@@ -592,7 +699,7 @@ export class Registry {
 
         let extractor = DocExtractor::new();
         let items = extractor.extract_source(source, "registry.ts", SourceType::ts()).unwrap();
-        let entries = normalize_doc_items(items);
+        let entries = normalize_doc_items(items, false);
         let members = &entries[0].members;
 
         assert_eq!(
@@ -621,7 +728,7 @@ export enum Mode {
 
         let extractor = DocExtractor::new();
         let items = extractor.extract_source(source, "mode.ts", SourceType::ts()).unwrap();
-        let entries = normalize_doc_items(items);
+        let entries = normalize_doc_items(items, false);
         let members = &entries[0].members;
 
         assert_eq!(
@@ -656,7 +763,7 @@ export interface Command {
 
         let public_items =
             DocExtractor::new().extract_source(source, "command.ts", SourceType::ts()).unwrap();
-        let public_entries = normalize_doc_items(public_items);
+        let public_entries = normalize_doc_items(public_items, false);
         assert_eq!(
             public_entries[0].members.iter().map(|member| member.name.as_str()).collect::<Vec<_>>(),
             ["name"]
@@ -665,11 +772,43 @@ export interface Command {
         let all_items = DocExtractor::with_visibility(true, true)
             .extract_source(source, "command.ts", SourceType::ts())
             .unwrap();
-        let all_entries = normalize_doc_items(all_items);
+        let all_entries = normalize_doc_items(all_items, false);
         assert_eq!(
             all_entries[0].members.iter().map(|member| member.name.as_str()).collect::<Vec<_>>(),
             ["name", "token", "secret"]
         );
         assert!(all_entries[0].members[2].private);
+    }
+
+    #[test]
+    fn type_parameters_opt_in_merges_typeparam_and_excludes_tag() {
+        let source = r"
+/**
+ * A combinator.
+ * @typeParam T - The parsed value type.
+ * @experimental
+ */
+export type Combinator<T> = { parse: (value: string) => T };
+";
+        let items =
+            DocExtractor::new().extract_source(source, "src/c.ts", SourceType::ts()).unwrap();
+
+        // Opted out (default): `@typeParam` stays a generic tag, no type parameters.
+        let off = normalize_doc_items(items.clone(), false);
+        let off = off.iter().find(|entry| entry.name == "Combinator").unwrap();
+        assert!(off.type_parameters.is_empty());
+        assert_eq!(
+            off.tags.get("typeParam").map(String::as_str),
+            Some("T - The parsed value type.")
+        );
+
+        // Opted in: structured type parameter with merged description; tag removed.
+        let on = normalize_doc_items(items, true);
+        let on = on.iter().find(|entry| entry.name == "Combinator").unwrap();
+        assert_eq!(on.type_parameters.len(), 1);
+        assert_eq!(on.type_parameters[0].name, "T");
+        assert_eq!(on.type_parameters[0].description, "The parsed value type.");
+        assert!(!on.tags.contains_key("typeParam"));
+        assert!(on.tags.contains_key("experimental"));
     }
 }

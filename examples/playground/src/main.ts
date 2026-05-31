@@ -71,7 +71,7 @@ export default {
 
 > This browser demo uses a lightweight parser shim so you can iterate on content and inspect the shape of the output.
 
-Visit the [repository](https://github.com/ubugeeei/ox-content) to see the full project.`;
+Visit the [repository](https://github.com/ubugeeei-prod/ox-content) to see the full project.`;
 
 function escapeHtml(value: string): string {
   return value.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");

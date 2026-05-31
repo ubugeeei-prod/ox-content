@@ -19,7 +19,7 @@ Before you begin, ensure you have the following installed:
 
 ```bash
 # Clone the repository
-git clone https://github.com/ubugeeei/ox-content.git
+git clone https://github.com/ubugeeei-prod/ox-content.git
 cd ox-content
 
 # Enter the pinned development shell
@@ -69,6 +69,7 @@ vp run ready
 # Documentation
 vp run doc:cargo
 vp run doc:cargo-open
+vp run deploy#docs
 
 # Docs and examples
 vp run dev
@@ -159,6 +160,20 @@ vp run playground
 
 Then open [http://127.0.0.1:4173](http://127.0.0.1:4173) for the docs site and [http://127.0.0.1:5173](http://127.0.0.1:5173) for the playground.
 
+## Deploying the Docs to Void
+
+Deploy the documentation site to Void with:
+
+```bash
+vp run deploy#docs
+```
+
+The task builds the Rust workspace and local npm packages before running
+`void deploy`, and it uses a root base path so assets resolve correctly on
+`https://ox-content.void.app`.
+
+See [Docs Deployment](./deployment.md) for environment variables and overrides.
+
 ## Running Benchmarks
 
 ```bash
@@ -166,6 +181,30 @@ vp run bench
 vp run bench:rust
 vp run bench:parse
 vp run bench:bundle
+```
+
+For committed benchmark tables and charts, use the Blacksmith-backed docs
+refresh workflow instead of a local machine:
+
+```bash
+gh workflow run benchmark-docs.yml --ref main -f runs=7
+```
+
+That workflow runs on `blacksmith-32vcpu-ubuntu-2404` and opens a PR with the
+updated `README.md`, `docs/content/performance.md`, and benchmark SVGs. To run
+the same generator locally, use:
+
+```bash
+vp run bench:docs
+```
+
+For quick remote checks against the Blacksmith testbox runner:
+
+```bash
+blacksmith auth login
+TESTBOX_ID=$(blacksmith testbox warmup .github/workflows/testbox.yml --job testbox --idle-timeout 60)
+blacksmith testbox run --id "$TESTBOX_ID" "vp run bench"
+blacksmith testbox stop --id "$TESTBOX_ID"
 ```
 
 The latest published benchmark snapshot lives on [Performance](./performance.md).
@@ -232,5 +271,5 @@ If you are not using Nix, install `wasm-pack` manually and make sure `wasm32-unk
 
 ## Getting Help
 
-- [GitHub Issues](https://github.com/ubugeeei/ox-content/issues)
-- [Discussions](https://github.com/ubugeeei/ox-content/discussions)
+- [GitHub Issues](https://github.com/ubugeeei-prod/ox-content/issues)
+- [Discussions](https://github.com/ubugeeei-prod/ox-content/discussions)

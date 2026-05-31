@@ -70,6 +70,14 @@ oxContent({
 });
 ```
 
+### [Package Manager Tabs](./package-manager-tabs.md)
+
+Opt in to package-manager tabs, then author one npm command and render it as npm/pnpm/yarn/bun install tabs.
+
+```md
+<pm>npm install -D vite</pm>
+```
+
 ### [markdown-it Plugin](./plugin-markdown-it.md)
 
 Use Ox Content as a markdown-it plugin for existing markdown-it projects.
@@ -136,7 +144,7 @@ Static Site Generation example using Vite.
 
 ```bash
 # Clone the repository
-git clone https://github.com/ubugeeei/ox-content.git
+git clone https://github.com/ubugeeei-prod/ox-content.git
 cd ox-content
 
 # Install dependencies

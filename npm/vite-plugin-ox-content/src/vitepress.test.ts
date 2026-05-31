@@ -39,7 +39,7 @@ describe("vitepress migration helpers", () => {
   it("converts VitePress nav dropdowns into grouped sidebar navigation", () => {
     const navigation = convertVitePressNav([
       { text: "Guide", items: [{ text: "Intro", link: "/guide/intro" }] },
-      { text: "GitHub", link: "https://github.com/ubugeeei/ox-content" },
+      { text: "GitHub", link: "https://github.com/ubugeeei-prod/ox-content" },
     ]);
 
     expect(navigation).toEqual([
@@ -48,7 +48,7 @@ describe("vitepress migration helpers", () => {
         items: [
           {
             title: "GitHub",
-            href: "https://github.com/ubugeeei/ox-content",
+            href: "https://github.com/ubugeeei-prod/ox-content",
           },
         ],
       },
@@ -66,7 +66,7 @@ describe("vitepress migration helpers", () => {
         base: "/docs/",
         themeConfig: {
           logo: "/logo.svg",
-          socialLinks: [{ icon: "github", link: "https://github.com/ubugeeei/ox-content" }],
+          socialLinks: [{ icon: "github", link: "https://github.com/ubugeeei-prod/ox-content" }],
           footer: { copyright: "2026" },
           sidebar: [{ text: "Intro", link: "/intro" }],
           search: { placeholder: "Search VitePress docs" },
@@ -89,21 +89,27 @@ describe("vitepress migration helpers", () => {
     expect(options.search).toEqual({ placeholder: "Search VitePress docs" });
 
     expect(options.ssg).not.toBe(false);
-    if (options.ssg === false) {
+    if (!options.ssg || options.ssg === true) {
       throw new Error("Expected migrated SSG options");
     }
 
-    expect(options.ssg.siteName).toBe("Docs");
-    expect(options.ssg.navigation).toEqual([
+    const ssg = options.ssg;
+
+    expect(ssg.siteName).toBe("Docs");
+    expect(ssg.navigation).toEqual([
       {
         title: "Guide",
         items: [{ title: "Intro", path: "/intro" }],
       },
     ]);
-    expect(options.ssg.theme?.header?.logo).toBe("/logo.svg");
-    expect(options.ssg.theme?.socialLinks?.github).toBe("https://github.com/ubugeeei/ox-content");
-    expect(options.ssg.theme?.footer?.copyright).toBe("2026");
-    expect(options.ssg.theme?.footer?.message).toBe("Migrated from VitePress");
+    expect(ssg.theme?.header?.logo).toBe("/logo.svg");
+    const socialLinks = ssg.theme?.socialLinks;
+    if (!socialLinks || Array.isArray(socialLinks)) {
+      throw new Error("Expected migrated social links");
+    }
+    expect(socialLinks.github).toBe("https://github.com/ubugeeei-prod/ox-content");
+    expect(ssg.theme?.footer?.copyright).toBe("2026");
+    expect(ssg.theme?.footer?.message).toBe("Migrated from VitePress");
   });
 
   it("generates an editable ox-content options module", () => {

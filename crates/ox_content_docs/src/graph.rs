@@ -14,7 +14,9 @@ use rustc_hash::{FxBuildHasher, FxHashMap, FxHashSet};
 use serde::{Deserialize, Serialize};
 use thiserror::Error;
 
-use crate::{normalize_doc_items, DocExtractor, ExtractError, NormalizedDocEntry};
+use crate::{
+    normalize_doc_items, DocExtractor, ExtractError, NormalizedDocEntry, NormalizedDocKind,
+};
 
 /// Entry point used to group generated API docs.
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
@@ -65,6 +67,10 @@ pub struct EntryPointDocsOptions {
     pub include_private: bool,
     /// Include `@internal` docs.
     pub include_internal: bool,
+    /// Opt in to TSDoc-style type-parameter docs (`@typeParam` / `<T>` table).
+    /// Off by default (JSDoc semantics).
+    #[serde(default)]
+    pub type_parameters: bool,
 }
 
 /// Resolved export graph.
@@ -160,6 +166,10 @@ pub struct EntrypointDocsModule {
     pub file: String,
     /// Source file path.
     pub source_path: PathBuf,
+    /// Module-level description from the entry file's `@module` block or leading
+    /// file comment. Empty when the entry file has no module-level JSDoc.
+    #[serde(default)]
+    pub description: String,
     /// Normalized docs entries for reachable exports.
     pub entries: Vec<NormalizedDocEntry>,
     /// Public export metadata, including external re-exports.
@@ -322,8 +332,12 @@ pub fn extract_docs_from_entry_points(
             }
 
             let matched = {
-                let module_entries =
-                    normalized_entries_for_module(&mut docs_cache, &extractor, module)?;
+                let module_entries = normalized_entries_for_module(
+                    &mut docs_cache,
+                    &extractor,
+                    module,
+                    options.type_parameters,
+                )?;
                 let mut matched = false;
                 for entry in module_entries.iter().filter(|entry| entry.name == *original_name) {
                     matched = true;
@@ -333,6 +347,14 @@ pub fn extract_docs_from_entry_points(
                     }
                     let mut entry = entry.clone();
                     entry.name.clone_from(&export.name);
+                    if is_dependency_source(module) {
+                        // Source lives in an installed dependency (under a
+                        // node_modules directory): drop the absolute path so we emit
+                        // no "View source" link and never leak a local absolute path
+                        // (matches TypeDoc's inlined external symbols). Workspace
+                        // sources resolved inside the repo keep their path.
+                        entry.file = String::new();
+                    }
                     entries.push(entry);
                 }
                 matched
@@ -346,6 +368,7 @@ pub fn extract_docs_from_entry_points(
                 &mut all_docs_cache,
                 &all_visibility_extractor,
                 module,
+                options.type_parameters,
             )?;
             if let Some(hidden_entry) =
                 all_module_entries.iter().find(|entry| entry.name == *original_name)
@@ -379,10 +402,26 @@ pub fn extract_docs_from_entry_points(
             ));
         }
 
+        // The entry file's own module-level `@module` / leading JSDoc is emitted
+        // by the extractor as a `Module`-kind entry but is never an export, so it
+        // is dropped from `entries` above. Pull it out of the entry file's
+        // normalized items and carry it as the module description.
+        let description = normalized_entries_for_module(
+            &mut docs_cache,
+            &extractor,
+            &entrypoint.source_path,
+            options.type_parameters,
+        )?
+        .iter()
+        .find(|entry| entry.kind == NormalizedDocKind::Module)
+        .map(|entry| entry.description.clone())
+        .unwrap_or_default();
+
         modules.push(EntrypointDocsModule {
             file: entrypoint.name.clone(),
             name: entrypoint.name,
             source_path: entrypoint.source_path,
+            description,
             entries,
             exports: entrypoint.exports,
             diagnostics,
@@ -392,16 +431,26 @@ pub fn extract_docs_from_entry_points(
     Ok(modules)
 }
 
+/// Returns true when a resolved module path is an installed dependency, i.e. it
+/// lives under a `node_modules` directory. Such sources are not in the consumer's
+/// repository, so generated docs must not link to them or leak their absolute
+/// local path. Workspace sources resolved inside the repo return false and keep
+/// their source location.
+fn is_dependency_source(module: &Path) -> bool {
+    module.components().any(|component| component.as_os_str() == "node_modules")
+}
+
 fn normalized_entries_for_module<'a>(
     docs_cache: &'a mut FxHashMap<PathBuf, Vec<NormalizedDocEntry>>,
     extractor: &DocExtractor,
     module: &PathBuf,
+    type_parameters: bool,
 ) -> Result<&'a [NormalizedDocEntry], GraphError> {
     if !docs_cache.contains_key(module) {
         let items = extractor
             .extract_file(module)
             .map_err(|source| GraphError::Extract { path: module.clone(), source })?;
-        docs_cache.insert(module.clone(), normalize_doc_items(items));
+        docs_cache.insert(module.clone(), normalize_doc_items(items, type_parameters));
     }
 
     Ok(docs_cache.get(module).expect("normalized docs cache entry").as_slice())
@@ -1196,11 +1245,89 @@ export function label(value: string): string {
                 graph: graph_options,
                 include_private: false,
                 include_internal: false,
+                type_parameters: false,
             },
         )
         .unwrap();
         let names = docs[0].entries.iter().map(|entry| entry.name.as_str()).collect::<Vec<_>>();
         assert_eq!(names, ["sum", "Options", "label"]);
+
+        fs::remove_dir_all(root).unwrap();
+    }
+
+    #[test]
+    fn entrypoint_docs_capture_module_level_description() {
+        let root = temp_root();
+        fs::create_dir_all(root.join("src")).unwrap();
+        // Entry file with a module-level `@module` summary that only re-exports.
+        fs::write(
+            root.join("src/context.ts"),
+            r"
+/**
+ * The entry for gunshi context.
+ *
+ * @module
+ */
+export { createCommandContext } from './context-impl';
+",
+        )
+        .unwrap();
+        fs::write(
+            root.join("src/context-impl.ts"),
+            r"
+/** Creates a command context. */
+export function createCommandContext(): void {}
+",
+        )
+        .unwrap();
+        // Entry file without any module-level comment.
+        fs::write(
+            root.join("src/plugin.ts"),
+            r"
+export { plugin } from './plugin-impl';
+",
+        )
+        .unwrap();
+        fs::write(
+            root.join("src/plugin-impl.ts"),
+            r"
+/** Defines a plugin. */
+export function plugin(): void {}
+",
+        )
+        .unwrap();
+
+        let entrypoints = [
+            EntryPointSpec {
+                path: PathBuf::from("src/context.ts"),
+                name: Some("context".to_string()),
+            },
+            EntryPointSpec {
+                path: PathBuf::from("src/plugin.ts"),
+                name: Some("plugin".to_string()),
+            },
+        ];
+        let graph_options = GraphOptions { root: Some(root.clone()), ..GraphOptions::default() };
+
+        let docs = extract_docs_from_entry_points(
+            &entrypoints,
+            &EntryPointDocsOptions {
+                graph: graph_options,
+                include_private: false,
+                include_internal: false,
+                type_parameters: false,
+            },
+        )
+        .unwrap();
+
+        let context = docs.iter().find(|module| module.name == "context").unwrap();
+        assert_eq!(context.description, "The entry for gunshi context.");
+        // The module entry itself is not surfaced as a regular export entry.
+        assert!(context.entries.iter().all(|entry| entry.kind != NormalizedDocKind::Module));
+        assert!(context.entries.iter().any(|entry| entry.name == "createCommandContext"));
+
+        let plugin = docs.iter().find(|module| module.name == "plugin").unwrap();
+        assert!(plugin.description.is_empty());
 
         fs::remove_dir_all(root).unwrap();
     }
@@ -1238,6 +1365,7 @@ export const CLI_OPTIONS_DEFAULT: CliOptions<DefaultGunshiParams> = {
                 graph: GraphOptions { root: Some(root.clone()), ..GraphOptions::default() },
                 include_private: false,
                 include_internal: false,
+                type_parameters: false,
             },
         )
         .unwrap();
@@ -1292,6 +1420,7 @@ export type ExtractArgs<G> = G extends { args: infer A } ? A : never;
                 graph: GraphOptions { root: Some(root.clone()), ..GraphOptions::default() },
                 include_private: false,
                 include_internal: false,
+                type_parameters: false,
             },
         )
         .unwrap();
@@ -1308,6 +1437,7 @@ export type ExtractArgs<G> = G extends { args: infer A } ? A : never;
                 graph: GraphOptions { root: Some(root.clone()), ..GraphOptions::default() },
                 include_private: false,
                 include_internal: true,
+                type_parameters: false,
             },
         )
         .unwrap();
@@ -1359,6 +1489,7 @@ export interface ExternalThing {
                 graph: graph_options,
                 include_private: false,
                 include_internal: false,
+                type_parameters: false,
             },
         )
         .unwrap();
@@ -1424,13 +1555,16 @@ export { a };
                 graph: graph_options,
                 include_private: false,
                 include_internal: false,
+                type_parameters: false,
             },
         )
         .unwrap();
 
         assert_eq!(docs[0].entries[0].name, "parseArgs");
         assert_eq!(docs[0].entries[0].description, "Parse args.");
-        assert!(docs[0].entries[0].file.ends_with("parser-hash.d.ts"));
+        // The alias resolved to a declaration under node_modules, so its absolute
+        // source path is dropped (no "View source" link, no local-path leak).
+        assert!(docs[0].entries[0].file.is_empty());
 
         fs::remove_dir_all(root).unwrap();
     }
@@ -1472,6 +1606,7 @@ export function helper(): void {}
                 graph: graph_options,
                 include_private: false,
                 include_internal: false,
+                type_parameters: false,
             },
         )
         .unwrap();

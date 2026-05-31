@@ -312,6 +312,67 @@ export interface OxContentOptions {
   codeAnnotations?: boolean | CodeAnnotationsOptions;
 
   /**
+   * Expand Obsidian-style `[[page]]` and `[[page|label]]` links.
+   * @default false
+   */
+  wikiLinks?: boolean | WikiLinkOptions;
+
+  /**
+   * Expand `:shortcode:` emoji aliases to Unicode.
+   * @default false
+   */
+  emojiShortcodes?: boolean | EmojiShortcodeOptions;
+
+  /**
+   * Enable markdown-it-attrs style `{#id .class key=value}` attributes.
+   * @default false
+   */
+  attrs?: boolean | AttrsOptions;
+
+  /**
+   * Import source snippets into fences with `<<< @/path/to/file.ts{region}`.
+   * @default false
+   */
+  codeImports?: boolean | CodeImportOptions;
+
+  /**
+   * Sanitize rendered HTML with safe defaults or explicit allow lists.
+   * @default false
+   */
+  sanitize?: boolean | SanitizeOptions;
+
+  /**
+   * Append an "edit this page" link to rendered Markdown.
+   * @default false
+   */
+  editThisPage?: boolean | EditThisPageOptions;
+
+  /**
+   * Recognize emphasis adjacent to CJK text. The native parser already supports
+   * this behavior; the option documents the compatibility contract.
+   * @default false
+   */
+  cjkEmphasis?: boolean;
+
+  /**
+   * Lint fenced code blocks during Markdown transforms.
+   * @default false
+   */
+  codeBlockLint?: boolean | CodeBlockLintOptions;
+
+  /**
+   * Type-check TypeScript/TSX code fences via tsgo.
+   * @default false
+   */
+  codeBlockTypecheck?: boolean | CodeBlockTypecheckOptions;
+
+  /**
+   * Extract runnable fenced examples for Vitest docs-as-tests harnesses.
+   * @default false
+   */
+  docsTests?: boolean | DocsTestOptions;
+
+  /**
    * Enable mermaid diagram rendering.
    * @default false
    */
@@ -405,6 +466,16 @@ export interface ResolvedOptions {
   highlightTheme: string | ThemeRegistration;
   highlightLangs: LanguageRegistration[];
   codeAnnotations: ResolvedCodeAnnotationsOptions;
+  wikiLinks: ResolvedWikiLinkOptions;
+  emojiShortcodes: ResolvedEmojiShortcodeOptions;
+  attrs: ResolvedAttrsOptions;
+  codeImports: ResolvedCodeImportOptions;
+  sanitize: ResolvedSanitizeOptions;
+  editThisPage: ResolvedEditThisPageOptions;
+  cjkEmphasis: boolean;
+  codeBlockLint: ResolvedCodeBlockLintOptions;
+  codeBlockTypecheck: ResolvedCodeBlockTypecheckOptions;
+  docsTests: ResolvedDocsTestOptions;
   mermaid: boolean;
   frontmatter: boolean;
   toc: boolean;
@@ -436,6 +507,58 @@ export interface BuiltinEmbedOptions {
    * @default true
    */
   openGraph?: boolean | OgpOptions;
+
+  /**
+   * Expand `<pm>npm install …</pm>` blocks into npm/pnpm/yarn/bun install tabs.
+   *
+   * Accepts a boolean to toggle the feature, or an options object to opt in to
+   * synced tab groups. Synced groups are OFF by default; when enabled with
+   * `{ sync: true }`, selecting a package manager in one block selects it in
+   * every other package-manager block on the page (persisted in localStorage).
+   * @default false
+   */
+  pm?: boolean | BuiltinPmOptions;
+
+  /**
+   * Render `<Spotify url="https://open.spotify.com/track/...">` iframes.
+   * @default false
+   */
+  spotify?: boolean;
+
+  /**
+   * Render `<StackBlitz url="https://stackblitz.com/edit/...">` iframes.
+   * @default false
+   */
+  stackBlitz?: boolean;
+
+  /**
+   * Render `<Tweet>` / `<XPost>` as static privacy-conscious cards.
+   * @default false
+   */
+  twitter?: boolean;
+
+  /**
+   * Render `<Bluesky>` as static cards.
+   * @default false
+   */
+  bluesky?: boolean;
+
+  /**
+   * Render `<WebContainer>` lazy placeholders with isolation metadata.
+   * @default false
+   */
+  webContainer?: boolean;
+}
+
+/**
+ * Options for the package-manager install-tab transform.
+ */
+export interface BuiltinPmOptions {
+  /**
+   * Enable opt-in synced package-manager tab groups.
+   * @default false
+   */
+  sync?: boolean;
 }
 
 /**
@@ -444,6 +567,116 @@ export interface BuiltinEmbedOptions {
 export interface ResolvedBuiltinEmbedOptions {
   github: GitHubOptions | false;
   openGraph: OgpOptions | false;
+  pm: BuiltinPmOptions | false;
+  spotify: boolean;
+  stackBlitz: boolean;
+  twitter: boolean;
+  bluesky: boolean;
+  webContainer: boolean;
+}
+
+export interface WikiLinkOptions {
+  baseUrl?: string;
+}
+
+export interface ResolvedWikiLinkOptions {
+  enabled: boolean;
+  baseUrl: string;
+}
+
+export interface EmojiShortcodeOptions {
+  custom?: Record<string, string>;
+}
+
+export interface ResolvedEmojiShortcodeOptions {
+  enabled: boolean;
+  custom: Record<string, string>;
+}
+
+export interface AttrsOptions {
+  enabled?: boolean;
+}
+
+export interface ResolvedAttrsOptions {
+  enabled: boolean;
+}
+
+export interface CodeImportOptions {
+  rootDir?: string;
+}
+
+export interface ResolvedCodeImportOptions {
+  enabled: boolean;
+  rootDir?: string;
+}
+
+export interface SanitizeOptions {
+  allowedTags?: string[];
+  allowedAttributes?: string[];
+  allowedUrlSchemes?: string[];
+}
+
+export interface ResolvedSanitizeOptions {
+  enabled: boolean;
+  allowedTags?: string[];
+  allowedAttributes?: string[];
+  allowedUrlSchemes?: string[];
+}
+
+export interface EditThisPageOptions {
+  repoUrl: string;
+  branch?: string;
+  rootDir?: string;
+  label?: string;
+}
+
+export interface ResolvedEditThisPageOptions {
+  enabled: boolean;
+  repoUrl?: string;
+  branch: string;
+  rootDir?: string;
+  label: string;
+}
+
+export interface CodeBlockLintOptions {
+  languages?: string[];
+  requireLanguage?: boolean;
+  trailingSpaces?: boolean;
+  mode?: "warn" | "error";
+}
+
+export interface ResolvedCodeBlockLintOptions {
+  enabled: boolean;
+  languages?: string[];
+  requireLanguage: boolean;
+  trailingSpaces: boolean;
+  mode: "warn" | "error";
+}
+
+export interface CodeBlockTypecheckOptions {
+  languages?: string[];
+  requireMeta?: boolean;
+  tsgoCommand?: string;
+  mode?: "warn" | "error";
+}
+
+export interface ResolvedCodeBlockTypecheckOptions {
+  enabled: boolean;
+  languages: string[];
+  requireMeta: boolean;
+  tsgoCommand: string;
+  mode: "warn" | "error";
+}
+
+export interface DocsTestOptions {
+  languages?: string[];
+  requireMeta?: boolean;
+}
+
+export interface ResolvedDocsTestOptions {
+  enabled: boolean;
+  languages: string[];
+  requireMeta: boolean;
 }
 
 /**
@@ -756,7 +989,7 @@ export interface DocsOptions {
   /**
    * GitHub repository URL for source code links.
    * When provided, generated documentation will include links to source code.
-   * Example: 'https://github.com/ubugeeei/ox-content'
+   * Example: 'https://github.com/ubugeeei-prod/ox-content'
    */
   githubUrl?: string;
 
@@ -771,6 +1004,34 @@ export interface DocsOptions {
    * Nav metadata falls back to '/api' when this is not set.
    */
   basePath?: string;
+
+  /**
+   * Generated Markdown output path strategy.
+   * @default 'flat'
+   */
+  pathStrategy?: "flat" | "typedoc";
+
+  /**
+   * Rendering style for generated API Markdown.
+   *
+   * - `'html'` (default): HTML-laced Markdown with collapsible entries, stat
+   *   blocks and member tables (ox-content theme).
+   * - `'markdown'`: pure Markdown (headings, tables, fenced code) with no raw
+   *   HTML scaffolding, suitable for plain Markdown hosts such as VitePress.
+   * @default 'html'
+   */
+  renderStyle?: "html" | "markdown";
+
+  /**
+   * Opt in to TSDoc-style type-parameter documentation.
+   *
+   * When enabled, declaration type parameters (`<T extends C = D>`) are
+   * extracted into a structured "Type Parameters" section and `@typeParam` /
+   * `@template` tags are merged in (and removed from the generic tag list).
+   * `@typeParam` is a TSDoc feature, so this is off by default (JSDoc semantics).
+   * @default false
+   */
+  typeParameters?: boolean;
 
   /**
    * Generate navigation metadata file.
@@ -797,6 +1058,9 @@ export interface ResolvedDocsOptions {
   githubUrl?: string;
   linkStyle: "markdown" | "clean";
   basePath?: string;
+  pathStrategy: "flat" | "typedoc";
+  renderStyle: "html" | "markdown";
+  typeParameters: boolean;
   generateNav: boolean;
 }
 
@@ -805,7 +1069,7 @@ export interface ResolvedDocsOptions {
  */
 export interface DocEntry {
   name: string;
-  kind: "function" | "class" | "interface" | "type" | "variable" | "module";
+  kind: "function" | "class" | "interface" | "type" | "enum" | "variable" | "module";
   description: string;
   params?: ParamDoc[];
   returns?: ReturnDoc;
