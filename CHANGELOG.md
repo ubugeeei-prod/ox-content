@@ -1,5 +1,11 @@
 # Changelog
 
+## [2.35.0] - 2026-05-31
+
+### Bug Fixes
+
+- extract module description without @module and across split header comments (#274)
+
 ## [2.34.0] - 2026-05-31
 
 ### Features
