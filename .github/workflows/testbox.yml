@@ -18,6 +18,7 @@ permissions:
 
 env:
   CARGO_TERM_COLOR: always
+  STICKY_CACHE_SCOPE: ${{ github.ref_name }}
   # begin-testbox / run-testbox are JavaScript actions that require Node 24.
   FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: "true"
 
@@ -53,22 +54,17 @@ jobs:
       - name: Setup Rust
         uses: dtolnay/rust-toolchain@29eef336d9b2848a0b548edc03f92a220660cdb8 # stable
 
-      - name: Cache cargo
-        uses: Swatinem/rust-cache@e18b497796c12c097a38f9edb9d0641fb99eee32 # v2
+      - name: Mount sticky cache
+        uses: ./.github/actions/mount-sticky-cache
+        with:
+          key-prefix: ${{ github.repository }}-testbox-${{ github.job }}-${{ env.STICKY_CACHE_SCOPE }}
+          cargo: "true"
+          target: target
+          browsers: "true"
 
       # `vp build` renders docs with a headless browser. Cache the downloads so
       # repeated warmups skip the ~150MB fetch; `--with-deps` still runs the apt
       # step on a hit, keeping system libraries in place.
-      - name: Cache rendering browsers
-        uses: actions/cache@27d5ce7f107fe9357f9df03efb73ab90386fccae # v5.0.5
-        with:
-          path: |
-            ~/.cache/ms-playwright
-            ~/.cache/puppeteer
-          key: ${{ runner.os }}-browsers-${{ hashFiles('pnpm-lock.yaml') }}
-          restore-keys: |
-            ${{ runner.os }}-browsers-
-
       - name: Install browsers for docs rendering
         run: |
           vp exec --filter @ox-content/vite-plugin -- playwright install --with-deps chromium
