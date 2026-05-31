@@ -1,5 +1,30 @@
 # Changelog
 
+## [2.32.0] - 2026-05-31
+
+### Features
+
+- add opt-in content transforms (#265)
+
+### Bug Fixes
+
+- carry module-level @module description through to generated output (#268)
+- deploy docs from void root
+
+### Performance
+
+- debug-build NAPI smoke and cache rendering browsers (#263)
+
+### Refactoring
+
+- split html renderer modules (#266)
+
+### Documentation
+
+- expand built-in feature and Void deploy guides (#269)
+- format generated API reference
+- refresh generated API reference
+
 ## [2.31.0] - 2026-05-31
 
 ### Features
