@@ -240,6 +240,7 @@ mod tests {
                     end_line: 5,
                     signature: Some("export function cli(): void".to_string()),
                     members: vec![],
+                    type_parameters: vec![],
                 },
                 ApiDocEntry {
                     name: "Mode".to_string(),
@@ -270,6 +271,7 @@ mod tests {
                         line: 2,
                         end_line: 2,
                     }],
+                    type_parameters: vec![],
                 },
             ],
         }];

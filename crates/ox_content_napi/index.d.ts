@@ -58,7 +58,7 @@ export declare function externalizeSsgAssets(pages: Array<JsSsgGeneratedHtmlPage
 export declare function extractCodeBlocks(source: string): Array<JsCodeBlock>
 
 /** Extracts normalized documentation entries from source directories using Oxc. */
-export declare function extractDocsFromDirectories(srcDirs: Array<string>, include: Array<string>, exclude: Array<string>, includePrivate?: boolean | undefined | null, includeInternal?: boolean | undefined | null): Array<JsExtractedDocsModule>
+export declare function extractDocsFromDirectories(srcDirs: Array<string>, include: Array<string>, exclude: Array<string>, includePrivate?: boolean | undefined | null, includeInternal?: boolean | undefined | null, typeParameters?: boolean | undefined | null): Array<JsExtractedDocsModule>
 
 /** Extracts generated API docs grouped by public entry points. */
 export declare function extractDocsFromEntryPoints(entryPoints: Array<JsEntryPointSpec>, options?: JsEntryPointDocsOptions | undefined | null): Array<JsEntrypointDocsModule>
@@ -67,7 +67,7 @@ export declare function extractDocsFromEntryPoints(entryPoints: Array<JsEntryPoi
 export declare function extractDocsTests(source: string, options?: JsDocsTestOptions | undefined | null): Array<JsCodeBlock>
 
 /** Extracts normalized documentation entries from a JavaScript/TypeScript file using Oxc. */
-export declare function extractFileDocEntries(filePath: string, includePrivate?: boolean | undefined | null, includeInternal?: boolean | undefined | null): Array<JsDocEntry>
+export declare function extractFileDocEntries(filePath: string, includePrivate?: boolean | undefined | null, includeInternal?: boolean | undefined | null, typeParameters?: boolean | undefined | null): Array<JsDocEntry>
 
 /** Extracts documented declarations from a JavaScript/TypeScript file using Oxc. */
 export declare function extractFileDocs(filePath: string, includePrivate?: boolean | undefined | null, includeInternal?: boolean | undefined | null): Array<JsSourceDocItem>
@@ -261,6 +261,7 @@ export interface JsDocEntry {
   endLine: number
   signature?: string
   members?: Array<JsDocMember>
+  typeParameters?: Array<JsTypeParam>
 }
 
 /** Normalized member documentation used by generated API docs. */
@@ -321,6 +322,7 @@ export interface JsDocsMarkdownEntry {
   endLine: number
   signature?: string
   members?: Array<JsDocMember>
+  typeParameters?: Array<JsTypeParam>
 }
 
 /** Extracted docs for one source file used by generated API Markdown. */
@@ -429,6 +431,11 @@ export interface JsEntryPointDocsOptions {
   internal?: boolean
   externalDocs?: boolean
   externalPackageSources?: Array<JsExternalPackageSource>
+  /**
+   * Opt in to TSDoc-style type-parameter docs (`@typeParam` / `<T>` table).
+   * Off by default.
+   */
+  typeParameters?: boolean
 }
 
 /** Public entry point module. */
@@ -1183,6 +1190,14 @@ export interface JsTransformOptions {
   sanitize?: JsSanitizeOptions
   /** Opt-in edit-this-page link generation. */
   editThisPage?: JsEditThisPageOptions
+}
+
+/** Type parameter documentation (`<T extends C = D>`) used by generated API docs. */
+export interface JsTypeParam {
+  name: string
+  constraint?: string
+  default?: string
+  description: string
 }
 
 /** Wiki-link transform options. */

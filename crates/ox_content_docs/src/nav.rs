@@ -336,6 +336,7 @@ mod tests {
                     end_line: 1,
                     signature: None,
                     members: vec![],
+                    type_parameters: vec![],
                 },
                 ApiDocEntry {
                     name: "Command".to_string(),
@@ -351,6 +352,7 @@ mod tests {
                     end_line: 1,
                     signature: None,
                     members: vec![],
+                    type_parameters: vec![],
                 },
             ],
         }];
@@ -390,6 +392,7 @@ mod tests {
                 end_line: 1,
                 signature: None,
                 members: vec![],
+                type_parameters: vec![],
             }],
         }];
 

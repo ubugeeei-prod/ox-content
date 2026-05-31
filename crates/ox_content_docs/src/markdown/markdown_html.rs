@@ -15,7 +15,9 @@ use super::{
     parse_example_block, process_doc_text, push_fmt, EntryStats, MarkdownDocsOptions,
     MarkdownLinkContext, MarkdownPathStrategy, RegexCache, DOC_KIND_ORDER,
 };
-use crate::model::{ApiDocEntry, ApiDocMember, ApiDocModule, ApiDocTag, ApiParamDoc};
+use crate::model::{
+    ApiDocEntry, ApiDocMember, ApiDocModule, ApiDocTag, ApiParamDoc, ApiTypeParamDoc,
+};
 
 fn escape_html(value: &str) -> String {
     // Most inputs (symbol names, type annotations, kind labels) contain none of
@@ -479,6 +481,48 @@ fn render_params_list_html(
     )
 }
 
+fn render_type_parameters_html(
+    type_parameters: &[ApiTypeParamDoc],
+    context: Option<&MarkdownLinkContext<'_>>,
+) -> String {
+    let rows = type_parameters
+        .iter()
+        .map(|type_param| {
+            let mut name = format!("<code>{}</code>", escape_html(&type_param.name));
+            if let Some(constraint) = &type_param.constraint {
+                push_fmt(
+                    &mut name,
+                    format_args!(" <em>extends</em> <code>{}</code>", escape_html(constraint)),
+                );
+            }
+            if let Some(default) = &type_param.default {
+                push_fmt(&mut name, format_args!(" = <code>{}</code>", escape_html(default)));
+            }
+            format!(
+                "<tr>
+  <td>{}</td>
+  <td>{}</td>
+</tr>",
+                name,
+                render_doc_inline_html(&type_param.description, context)
+            )
+        })
+        .collect::<Vec<_>>()
+        .join("\n");
+
+    format!(
+        "<div class=\"ox-api-entry__section ox-api-entry__section--type-parameters\">
+<h4>Type Parameters</h4>
+<table class=\"ox-api-entry__type-parameters-table\">
+<thead><tr><th>Name</th><th>Description</th></tr></thead>
+<tbody>
+{rows}
+</tbody>
+</table>
+</div>"
+    )
+}
+
 fn render_tag_list_html(tags: &[ApiDocTag], context: Option<&MarkdownLinkContext<'_>>) -> String {
     let mut items = String::new();
     for tag in tags {
@@ -778,6 +822,11 @@ fn render_entry_body_html(
             "<p class=\"ox-api-entry__source\"><a class=\"ox-api-entry__source-link\" href=\"{}\" target=\"_blank\" rel=\"noopener noreferrer\">View source<span class=\"ox-api-entry__source-icon\" aria-hidden=\"true\"></span></a></p>\n",
             escape_html(&source_href)
         ));
+    }
+
+    if !entry.type_parameters.is_empty() {
+        body.push_str(&render_type_parameters_html(&entry.type_parameters, link_context));
+        body.push('\n');
     }
 
     if !entry.members.is_empty() {
