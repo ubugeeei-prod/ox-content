@@ -66,6 +66,15 @@ const uncachedTask = (
 
 const vpBuiltin = (command: string) => `${lifecycleEnvName}=1 ${command}`;
 
+const benchmarkDocsCommand = [
+  "set -eu",
+  'bench_json="${RUNNER_TEMP:-/tmp}/ox-bench-result.json"',
+  'node benchmarks/bundle-size/parse-benchmark.mjs --runs "${OX_CONTENT_BENCHMARK_RUNS:-7}" --json "$bench_json"',
+  'node scripts/render-benchmark-tables.mjs "$bench_json"',
+  'node scripts/render-benchmark-charts.mjs "$bench_json" --size large',
+  'node scripts/render-benchmark-charts.mjs "$bench_json" --size huge',
+].join("\n");
+
 export default defineConfig({
   fmt: {
     ignorePatterns: ["crates/ox_content_napi/index.d.ts", "crates/ox_content_ssg/templates/*.html"],
@@ -154,6 +163,9 @@ export default defineConfig({
       "bench:rust": uncachedTask("cargo bench --workspace"),
       "bench:parse": uncachedTask("vp run --filter ./benchmarks/bundle-size benchmark:parse"),
       "bench:bundle": uncachedTask("vp run --filter ./benchmarks/bundle-size benchmark"),
+      "bench:docs": uncachedTask(benchmarkDocsCommand, {
+        dependsOn: ["build:npm"],
+      }),
 
       "doc:cargo": task("cargo doc --workspace --no-deps", {
         dependsOn: ["build:napi"],
@@ -166,6 +178,16 @@ export default defineConfig({
 
       "workspace:ci": noopTask(["fmt:rust-check", "lint:rust", "check:ts", "workspace:test"]),
       actrun: uncachedTask("actrun workflow run .github/workflows/ci.yml --trust"),
+      "testbox:warmup": uncachedTask(
+        "blacksmith testbox warmup .github/workflows/testbox.yml --job testbox --idle-timeout 60",
+      ),
+      "testbox:bench": uncachedTask(
+        [
+          "set -eu",
+          'if [ -z "${TESTBOX_ID:-}" ]; then echo "TESTBOX_ID is required. Run vp run testbox:warmup first." >&2; exit 2; fi',
+          'blacksmith testbox run --id "$TESTBOX_ID" "vp run bench"',
+        ].join("\n"),
+      ),
       "workspace:ready": noopTask(["workspace:fmt", "workspace:lint", "workspace:test"]),
       coverage: uncachedTask("cargo llvm-cov --workspace --html"),
       setup: uncachedTask(
