@@ -34,6 +34,7 @@ This is the default entry point for most users.
 
 The Vite plugin gives you the full Ox Content pipeline: Markdown transforms, static site generation, theming, search, OG images, and generated API docs.
 It already brings in the native runtime it needs, so you do not need to install `@ox-content/napi` separately for the Vite-based path.
+Common Markdown behavior is enabled by default, while non-standard authoring features such as emoji shortcodes, code annotations, package-manager tabs, and social embeds are opt-in. See [Built-in Features](./built-in-features.md) when choosing those options.
 
 ### Install
 
@@ -99,6 +100,7 @@ vp install @ox-content/vite-plugin-svelte svelte @sveltejs/vite-plugin-svelte
 Read more:
 
 - [@ox-content/vite-plugin](./packages/vite-plugin-ox-content.md)
+- [Built-in Features](./built-in-features.md)
 - [Vue integration](./packages/vite-plugin-ox-content-vue.md)
 - [React integration](./packages/vite-plugin-ox-content-react.md)
 - [Svelte integration](./packages/vite-plugin-ox-content-svelte.md)
