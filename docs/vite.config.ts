@@ -10,10 +10,12 @@ import { oxContentHighlightTheme } from "./ox-content-highlight-theme";
  */
 export default defineConfig(({ mode }) => {
   const isProd = mode === "production";
-  const base = isProd ? "/ox-content/" : "/";
+  const base = process.env.OX_CONTENT_DOCS_BASE ?? (isProd ? "/ox-content/" : "/");
+  const siteUrl = process.env.OX_CONTENT_DOCS_SITE_URL ?? "https://ubugeeei-prod.github.io";
+  const ogImage = new URL("og-image.png", siteUrl.replace(/\/?$/, base)).href;
 
   return {
-    // Site base path (for GitHub Pages in prod, root for dev)
+    // Site base path: GitHub Pages uses /ox-content/, Void uses /.
     base,
 
     plugins: [
@@ -28,9 +30,9 @@ export default defineConfig(({ mode }) => {
         // SSG options with theme customization
         ssg: {
           siteName: "Ox Content",
-          siteUrl: "https://ubugeeei-prod.github.io",
+          siteUrl,
           generateOgImage: true,
-          ogImage: "https://ubugeeei-prod.github.io/ox-content/og-image.png",
+          ogImage,
           theme: defineTheme({
             extends: defaultTheme,
             header: {
