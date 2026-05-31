@@ -1,0 +1,73 @@
+name: Testbox
+
+# Blacksmith testbox. `blacksmith testbox warmup --workflow testbox.yml` dispatches
+# this workflow with a testbox_id; the job provisions the same toolchain as CI
+# (Vite+, Rust, docs-rendering browsers) and then hands control to run-testbox,
+# which rsyncs your local working tree into the microVM. From there you can run
+# `vp test` / `vp lint` / `vp build` against the real CI environment in seconds.
+on:
+  workflow_dispatch:
+    inputs:
+      testbox_id:
+        description: "Testbox session ID (from `blacksmith testbox warmup`)"
+        type: string
+        required: true
+
+permissions:
+  contents: read
+
+env:
+  CARGO_TERM_COLOR: always
+  # begin-testbox / run-testbox are JavaScript actions that require Node 24.
+  FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: "true"
+
+jobs:
+  testbox:
+    name: Testbox
+    runs-on: blacksmith-32vcpu-ubuntu-2404
+    timeout-minutes: 30
+    steps:
+      - name: Begin Testbox
+        uses: useblacksmith/begin-testbox@233448af4bfdc6fca509a7f0974411ac6d8a8043 # v2
+        with:
+          testbox_id: ${{ inputs.testbox_id }}
+
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+        with:
+          persist-credentials: false
+
+      - name: Setup Vite+
+        uses: voidzero-dev/setup-vp@ca1c46663915d6c1042ae23bd39ab85718bfb0fa # v1
+        with:
+          node-version-file: ".node-version"
+          cache: true
+          run-install: true
+
+      - name: Setup Rust
+        uses: dtolnay/rust-toolchain@29eef336d9b2848a0b548edc03f92a220660cdb8 # stable
+
+      - name: Cache cargo
+        uses: Swatinem/rust-cache@e18b497796c12c097a38f9edb9d0641fb99eee32 # v2
+
+      # `vp build` renders docs with a headless browser. Cache the downloads so
+      # repeated warmups skip the ~150MB fetch; `--with-deps` still runs the apt
+      # step on a hit, keeping system libraries in place.
+      - name: Cache rendering browsers
+        uses: actions/cache@27d5ce7f107fe9357f9df03efb73ab90386fccae # v5.0.5
+        with:
+          path: |
+            ~/.cache/ms-playwright
+            ~/.cache/puppeteer
+          key: ${{ runner.os }}-browsers-${{ hashFiles('pnpm-lock.yaml') }}
+          restore-keys: |
+            ${{ runner.os }}-browsers-
+
+      - name: Install browsers for docs rendering
+        run: |
+          vp exec --filter @ox-content/vite-plugin -- playwright install --with-deps chromium
+          vp exec --filter @ox-content/vite-plugin -- puppeteer browsers install chrome-headless-shell
+
+      - name: Run Testbox
+        uses: useblacksmith/run-testbox@5ca05834db1d3813554d1dd109e5f2087a8d7cbc # v2
+        env:
+          FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: "true"
