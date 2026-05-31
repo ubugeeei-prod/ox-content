@@ -65,6 +65,7 @@ export default defineConfig(({ mode }) => {
                 text: "Guide",
                 items: [
                   { text: "Getting Started", link: "/getting-started.md" },
+                  { text: "Built-in Features", link: "/built-in-features.md" },
                   { text: "Theming", link: "/theming.md" },
                   { text: "MDX & Components", link: "/mdx.md" },
                   { text: "API Docs from JSDoc", link: "/jsdoc.md" },
@@ -84,6 +85,7 @@ export default defineConfig(({ mode }) => {
                     link: "/examples/unplugin-markdown-it-token-bridge.md",
                   },
                   { text: "Development Setup", link: "/development-setup.md" },
+                  { text: "Docs Deployment", link: "/deployment.md" },
                   {
                     text: "Editor Extension Roadmap",
                     link: "/editor-extension-roadmap.md",
