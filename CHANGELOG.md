@@ -1,5 +1,11 @@
 # Changelog
 
+## [2.33.0] - 2026-05-31
+
+### Bug Fixes
+
+- drop source links for external dependency symbols (#270)
+
 ## [2.32.0] - 2026-05-31
 
 ### Features
