@@ -17,7 +17,7 @@ env:
 jobs:
   benchmark:
     name: Benchmark
-    runs-on: ubuntu-24.04
+    runs-on: blacksmith-32vcpu-ubuntu-2404
     env:
       CARGO_TARGET_DIR: /tmp/ox-content-cargo-target
     steps:
@@ -90,7 +90,7 @@ jobs:
 
   comment:
     name: Comment
-    runs-on: ubuntu-24.04
+    runs-on: blacksmith-32vcpu-ubuntu-2404
     needs: benchmark
     if: ${{ github.event.pull_request.head.repo.full_name == github.repository }}
     permissions:
