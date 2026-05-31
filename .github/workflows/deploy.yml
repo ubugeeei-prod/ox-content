@@ -12,6 +12,9 @@ concurrency:
   group: pages
   cancel-in-progress: false
 
+env:
+  STICKY_CACHE_SCOPE: ${{ github.ref_name }}
+
 jobs:
   build:
     runs-on: blacksmith-32vcpu-ubuntu-2404
@@ -30,26 +33,13 @@ jobs:
           cache: true
           run-install: true
 
-      - name: Cache cargo registry
-        uses: actions/cache@27d5ce7f107fe9357f9df03efb73ab90386fccae # v5.0.5
+      - name: Mount sticky cache
+        uses: ./.github/actions/mount-sticky-cache
         with:
-          path: |
-            ~/.cargo/registry
-            ~/.cargo/git
-            target
-          key: ${{ runner.os }}-cargo-${{ hashFiles('**/Cargo.lock') }}
-          restore-keys: |
-            ${{ runner.os }}-cargo-
-
-      - name: Cache rendering browsers
-        uses: actions/cache@27d5ce7f107fe9357f9df03efb73ab90386fccae # v5.0.5
-        with:
-          path: |
-            ~/.cache/ms-playwright
-            ~/.cache/puppeteer
-          key: ${{ runner.os }}-browsers-${{ hashFiles('pnpm-lock.yaml') }}
-          restore-keys: |
-            ${{ runner.os }}-browsers-
+          key-prefix: ${{ github.repository }}-deploy-${{ github.job }}-${{ env.STICKY_CACHE_SCOPE }}
+          cargo: "true"
+          target: target
+          browsers: "true"
 
       - name: Install browsers for docs rendering
         run: |

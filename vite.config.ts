@@ -77,9 +77,14 @@ const benchmarkDocsCommand = [
 
 export default defineConfig({
   fmt: {
-    ignorePatterns: ["crates/ox_content_napi/index.d.ts", "crates/ox_content_ssg/templates/*.html"],
+    ignorePatterns: [
+      ".github/actions/stickydisk/dist/**/*.js",
+      "crates/ox_content_napi/index.d.ts",
+      "crates/ox_content_ssg/templates/*.html",
+    ],
   },
   lint: {
+    ignorePatterns: [".github/actions/stickydisk/dist/**/*.js"],
     options: {
       typeAware: true,
     },

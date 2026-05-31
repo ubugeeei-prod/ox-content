@@ -1,0 +1,15 @@
+name: Blacksmith Sticky Disk
+description: Creates a sticky disk on Blacksmith.
+
+inputs:
+  key:
+    description: A unique key to identify the sticky disk.
+    required: true
+  path:
+    description: The path at which to mount the sticky disk.
+    required: true
+
+runs:
+  using: node24
+  main: dist/index.js
+  post: dist/post/index.js

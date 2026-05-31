@@ -8,6 +8,8 @@ local_skip_actions = [
   "actions/setup-python",
   "actions/setup-go",
   "actions-rust-lang/setup-rust-toolchain",
+  "./.github/actions/mount-sticky-cache",
+  "./.github/actions/stickydisk",
   "dtolnay/rust-toolchain",
   "Swatinem/rust-cache",
   "voidzero-dev/setup-vp",

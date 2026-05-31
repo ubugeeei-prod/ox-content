@@ -34,6 +34,8 @@ crates/ox_content_wasm/pkg/
 /_build/
 /dist
 **/dist/
+!.github/actions/stickydisk/dist/
+!.github/actions/stickydisk/dist/**
 **/.astro/
 *.so
 *.dylib
