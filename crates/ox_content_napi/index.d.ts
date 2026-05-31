@@ -326,6 +326,8 @@ export interface JsDocsMarkdownEntry {
 /** Extracted docs for one source file used by generated API Markdown. */
 export interface JsDocsMarkdownModule {
   file: string
+  /** Module-level description from the entry file's `@module` / leading JSDoc. */
+  description?: string
   entries: Array<JsDocsMarkdownEntry>
 }
 
@@ -412,6 +414,8 @@ export interface JsEntrypointDocsModule {
   name: string
   file: string
   sourcePath: string
+  /** Module-level description from the entry file's `@module` / leading JSDoc. */
+  description: string
   entries: Array<JsDocEntry>
   exports: Array<JsPublicExport>
   diagnostics: Array<JsDocsDiagnostic>

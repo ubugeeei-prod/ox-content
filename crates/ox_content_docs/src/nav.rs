@@ -319,6 +319,7 @@ mod tests {
     #[test]
     fn generates_typedoc_nav_metadata_from_docs() {
         let docs = vec![ApiDocModule {
+            description: String::new(),
             file: "default".to_string(),
             entries: vec![
                 ApiDocEntry {
@@ -373,6 +374,7 @@ mod tests {
     #[test]
     fn generates_typedoc_nav_metadata_includes_enumerations() {
         let docs = vec![ApiDocModule {
+            description: String::new(),
             file: "default".to_string(),
             entries: vec![ApiDocEntry {
                 name: "Mode".to_string(),

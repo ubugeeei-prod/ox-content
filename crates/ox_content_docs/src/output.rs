@@ -223,6 +223,7 @@ mod tests {
 
         let out_dir = temp_dir();
         let extracted = vec![ApiDocModule {
+            description: String::new(),
             file: "default".to_string(),
             entries: vec![
                 ApiDocEntry {

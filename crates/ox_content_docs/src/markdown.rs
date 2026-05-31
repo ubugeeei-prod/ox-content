@@ -775,12 +775,8 @@ fn generate_typedoc_root_index(
             &typedoc_module_index_file_name(&module_name),
             None,
         );
-        let summary = clean_summary_text(
-            &doc.entries.first().map_or_else(String::new, |entry| {
-                process_doc_text(&entry.description, Some(&link_context))
-            }),
-            88,
-        );
+        let summary =
+            clean_summary_text(&process_doc_text(&doc.description, Some(&link_context)), 88);
         if summary.is_empty() {
             push_fmt(
                 &mut markdown,
@@ -811,6 +807,13 @@ fn generate_typedoc_module_index(
         symbol_map,
     };
     let mut markdown = fmt_args(format_args!("# {}\n\n", capitalize_ascii(module_name)));
+
+    let description = process_doc_text(&doc.description, Some(&link_context));
+    let description = description.trim();
+    if !description.is_empty() {
+        markdown.push_str(description);
+        markdown.push_str("\n\n");
+    }
 
     if let Some(github_url) = &options.github_url {
         markdown.push_str(&generate_source_link(&doc.file, github_url, None, None));
@@ -1388,6 +1391,7 @@ mod tests {
     fn link_test_docs() -> Vec<ApiDocModule> {
         vec![
             ApiDocModule {
+                description: String::new(),
                 file: "/repo/src/context.ts".to_string(),
                 entries: vec![test_entry(
                     "CommandContext",
@@ -1397,6 +1401,7 @@ mod tests {
                 )],
             },
             ApiDocModule {
+                description: String::new(),
                 file: "/repo/src/command.ts".to_string(),
                 entries: vec![test_entry(
                     "Command",
@@ -1410,6 +1415,7 @@ mod tests {
 
     fn pure_test_docs() -> Vec<ApiDocModule> {
         vec![ApiDocModule {
+            description: String::new(),
             file: "/repo/src/cli.ts".to_string(),
             entries: vec![
                 ApiDocEntry {
@@ -1622,6 +1628,7 @@ mod tests {
     fn jsdoc_inline_links_render_across_doc_fields() {
         let docs = vec![
             ApiDocModule {
+                description: String::new(),
                 file: "/repo/src/agent.ts".to_string(),
                 entries: vec![test_entry(
                     "AgentProfile",
@@ -1631,6 +1638,7 @@ mod tests {
                 )],
             },
             ApiDocModule {
+                description: String::new(),
                 file: "/repo/src/command.ts".to_string(),
                 entries: vec![ApiDocEntry {
                     name: "Command".to_string(),
@@ -1665,6 +1673,7 @@ mod tests {
                 }],
             },
             ApiDocModule {
+                description: String::new(),
                 file: "/repo/src/build.ts".to_string(),
                 entries: vec![ApiDocEntry {
                     name: "buildCommand".to_string(),
@@ -1727,6 +1736,7 @@ mod tests {
     #[test]
     fn typedoc_path_strategy_emits_per_symbol_pages_and_links() {
         let docs = vec![ApiDocModule {
+            description: String::new(),
             file: "default".to_string(),
             entries: vec![
                 ApiDocEntry {
@@ -1810,9 +1820,61 @@ mod tests {
     }
 
     #[test]
+    fn typedoc_index_uses_module_description_not_symbol_description() {
+        let docs = vec![
+            ApiDocModule {
+                description: "The entry for gunshi context.".to_string(),
+                file: "context".to_string(),
+                entries: vec![test_entry(
+                    "CommandContextParams",
+                    "interface",
+                    "/repo/src/context.ts",
+                    "Parameters of createCommandContext.",
+                )],
+            },
+            ApiDocModule {
+                description: String::new(),
+                file: "plugin".to_string(),
+                entries: vec![test_entry(
+                    "plugin",
+                    "function",
+                    "/repo/src/plugin.ts",
+                    "Define a plugin.",
+                )],
+            },
+        ];
+
+        let markdown = generate_markdown(
+            &docs,
+            &MarkdownDocsOptions {
+                path_strategy: MarkdownPathStrategy::TypeDoc,
+                render_style: MarkdownRenderStyle::Markdown,
+                ..MarkdownDocsOptions::default()
+            },
+        );
+
+        // Root module list shows the module-level `@module` description, never a
+        // symbol's description, and renders nothing for a module without one.
+        let index = markdown.get("index.md").unwrap();
+        assert!(index.contains("The entry for gunshi context."));
+        assert!(!index.contains("Parameters of createCommandContext"));
+        assert!(!index.contains("Define a plugin."));
+
+        // The module index page renders its own description as a paragraph under
+        // the heading (followed by the stats line, which starts with `_`); an
+        // empty description emits no paragraph, so the heading is followed
+        // directly by the stats line.
+        let context_index = markdown.get("context/index.md").unwrap();
+        assert!(context_index.starts_with("# Context\n\nThe entry for gunshi context.\n\n_"));
+        let plugin_index = markdown.get("plugin/index.md").unwrap();
+        assert!(plugin_index.starts_with("# Plugin\n\n_"));
+    }
+
+    #[test]
     fn typedoc_path_strategy_uses_clean_base_path_and_module_scope() {
         let docs = vec![
             ApiDocModule {
+                description: String::new(),
                 file: "default".to_string(),
                 entries: vec![
                     test_entry("Command", "interface", "/repo/src/default.ts", "Default command."),
@@ -1825,6 +1887,7 @@ mod tests {
                 ],
             },
             ApiDocModule {
+                description: String::new(),
                 file: "plugin".to_string(),
                 entries: vec![
                     test_entry("Command", "interface", "/repo/src/plugin.ts", "Plugin command."),
@@ -1891,6 +1954,7 @@ mod tests {
     #[test]
     fn typedoc_path_strategy_emits_enumerations_directory() {
         let docs = vec![ApiDocModule {
+            description: String::new(),
             file: "default".to_string(),
             entries: vec![
                 ApiDocEntry {
@@ -1964,6 +2028,7 @@ mod tests {
     #[test]
     fn renders_interface_members_table() {
         let docs = vec![ApiDocModule {
+            description: String::new(),
             file: "/repo/src/command.ts".to_string(),
             entries: vec![ApiDocEntry {
                 name: "Command".to_string(),

@@ -12,6 +12,10 @@ use serde::{Deserialize, Serialize};
 pub struct ApiDocModule {
     /// Source file path.
     pub file: String,
+    /// Module-level description from the entry file's `@module` block or leading
+    /// file comment. Empty when the source has no module-level JSDoc.
+    #[serde(default)]
+    pub description: String,
     /// Documented entries in the source file.
     pub entries: Vec<ApiDocEntry>,
 }
