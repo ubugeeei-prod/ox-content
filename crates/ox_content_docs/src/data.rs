@@ -111,9 +111,14 @@ fn entry_to_json(entry: &ApiDocEntry) -> Value {
         value.insert("private".to_string(), json!(true));
     }
 
-    value.insert("file".to_string(), json!(normalize_doc_file_path(&entry.file)));
-    value.insert("line".to_string(), json!(entry.line));
-    value.insert("endLine".to_string(), json!(entry.end_line));
+    // An empty `file` means the symbol has no source in the consumer's repo
+    // (e.g. re-exported from an external package): omit the source location
+    // entirely rather than leak an absolute local path.
+    if !entry.file.is_empty() {
+        value.insert("file".to_string(), json!(normalize_doc_file_path(&entry.file)));
+        value.insert("line".to_string(), json!(entry.line));
+        value.insert("endLine".to_string(), json!(entry.end_line));
+    }
     if let Some(signature) = &entry.signature {
         value.insert("signature".to_string(), json!(signature));
     }
@@ -259,5 +264,40 @@ mod tests {
         let value: Value = serde_json::from_str(&json).unwrap();
 
         assert_eq!(value["modules"][0]["description"], "The entry for gunshi context.");
+    }
+
+    #[test]
+    fn entry_without_file_omits_source_location() {
+        let docs = vec![ApiDocModule {
+            description: String::new(),
+            file: "/repo/src/combinators.ts".to_string(),
+            entries: vec![ApiDocEntry {
+                name: "Combinator".to_string(),
+                kind: "type".to_string(),
+                description: "A combinator.".to_string(),
+                params: vec![],
+                returns: None,
+                examples: vec![],
+                tags: vec![],
+                private: false,
+                // External-package source: no in-repo location.
+                file: String::new(),
+                line: 15,
+                end_line: 23,
+                signature: Some("type Combinator = unknown".to_string()),
+                members: vec![],
+            }],
+        }];
+
+        let json = generate_docs_data_json(&docs, "2026-05-31T00:00:00.000Z").unwrap();
+        let value: Value = serde_json::from_str(&json).unwrap();
+        let entry = &value["modules"][0]["entries"][0];
+
+        assert_eq!(entry["name"], "Combinator");
+        assert_eq!(entry["signature"], "type Combinator = unknown");
+        // No source location keys, so no absolute local path can leak.
+        assert!(entry.get("file").is_none());
+        assert!(entry.get("line").is_none());
+        assert!(entry.get("endLine").is_none());
     }
 }
