@@ -80,6 +80,7 @@ Under the hood, Ox Content is not only a docs theme. It also exposes the Markdow
 ## User Guide
 
 - [Getting Started](./getting-started.md) - Installation and first steps
+- [Built-in Features](./built-in-features.md) - Defaults, opt-in features, embeds, emoji shortcodes, and code annotations
 - [Theming](./theming.md) - Customize your documentation site
 - [Examples](./examples/index.md) - Integration, source docs, OG image, and SSG examples
 
@@ -91,6 +92,7 @@ Under the hood, Ox Content is not only a docs theme. It also exposes the Markdow
 - [unplugin mdast Bridge Example](./examples/unplugin-mdast-bridge.md) - Native parser plus unified-compatible mdast plugins
 - [unplugin markdown-it Token Bridge](./examples/unplugin-markdown-it-token-bridge.md) - `markdown-it` plugins plus downstream unified token access
 - [Development Setup](./development-setup.md) - Build ox-content itself and work on the repo
+- [Docs Deployment](./deployment.md) - Deploy the documentation site to Void with `vp run deploy#docs`
 - [Editor Extension Roadmap](./editor-extension-roadmap.md) - VS Code and Neovim plan, PR-by-PR
 
 ## Reference

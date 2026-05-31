@@ -69,6 +69,7 @@ vp run ready
 # Documentation
 vp run doc:cargo
 vp run doc:cargo-open
+vp run deploy#docs
 
 # Docs and examples
 vp run dev
@@ -158,6 +159,20 @@ vp run playground
 ```
 
 Then open [http://127.0.0.1:4173](http://127.0.0.1:4173) for the docs site and [http://127.0.0.1:5173](http://127.0.0.1:5173) for the playground.
+
+## Deploying the Docs to Void
+
+Deploy the documentation site to Void with:
+
+```bash
+vp run deploy#docs
+```
+
+The task builds the Rust workspace and local npm packages before running
+`void deploy`, and it uses a root base path so assets resolve correctly on
+`https://ox-content.void.app`.
+
+See [Docs Deployment](./deployment.md) for environment variables and overrides.
 
 ## Running Benchmarks
 

@@ -64,6 +64,9 @@ ox-content's `layout: entry`.
 
 ## Options
 
+For a consolidated default table, including which non-standard features are
+opt-in, see [Built-in Features](../built-in-features.md).
+
 ### srcDir
 
 - Type: `string`
@@ -216,6 +219,8 @@ Generate table of contents.
 
 Built-in static embeds are rendered at transform time, with no client-side JavaScript.
 Non-standard embeds are opt-in.
+See [Built-in Features](../built-in-features.md#built-in-embeds) for the full
+default table.
 
 ```md
 <GitHub repo="ubugeeei-prod/ox-content" />
