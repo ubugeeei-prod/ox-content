@@ -100,6 +100,10 @@ function renderIcon(name: EditorIconName, className = "icon"): string {
   return `<svg class="${className}" viewBox="0 0 24 24" aria-hidden="true">${EDITOR_ICONS[name]}</svg>`;
 }
 
+function renderTooltipAttribute(value: string): string {
+  return `data-tooltip="${escapeHtmlAttribute(value)}"`;
+}
+
 function renderSegmentedOptions(
   kind: "layout" | "align" | "density",
   options: readonly SlideChoice<string>[],
@@ -109,7 +113,7 @@ function renderSegmentedOptions(
       const icon = SEGMENT_ICONS[`${kind}:${option.value}`];
       const iconHtml = icon ? renderIcon(icon, "segment-icon") : "";
 
-      return `<button class="segment" type="button" data-${kind}-value="${escapeHtmlAttribute(option.value)}" title="${escapeHtmlAttribute(option.title)}" aria-label="${escapeHtmlAttribute(option.title)}">${iconHtml}<span class="segment-label sr-only">${option.label}</span></button>`;
+      return `<button class="segment" type="button" data-${kind}-value="${escapeHtmlAttribute(option.value)}" ${renderTooltipAttribute(option.title)} aria-label="${escapeHtmlAttribute(option.title)}">${iconHtml}<span class="segment-label sr-only">${option.label}</span></button>`;
     })
     .join("\n              ");
 }
@@ -117,12 +121,12 @@ function renderSegmentedOptions(
 function renderAccentControls(): string {
   const swatches = SLIDE_ACCENT_OPTIONS.map(
     (option) =>
-      `<button class="swatch" type="button" data-accent-value="${escapeHtmlAttribute(option.value)}" style="--swatch: ${escapeHtmlAttribute(option.value)}; --swatch-foreground: ${escapeHtmlAttribute(option.foreground)}" title="${escapeHtmlAttribute(option.title)}" aria-label="${escapeHtmlAttribute(option.title)}"></button>`,
+      `<button class="swatch" type="button" data-accent-value="${escapeHtmlAttribute(option.value)}" style="--swatch: ${escapeHtmlAttribute(option.value)}; --swatch-foreground: ${escapeHtmlAttribute(option.foreground)}" ${renderTooltipAttribute(option.title)} aria-label="${escapeHtmlAttribute(option.title)}"></button>`,
   ).join("\n              ");
   const defaultAccent = SLIDE_ACCENT_OPTIONS[0].value;
 
   return `${swatches}
-              <input class="color-input" type="color" data-accent-custom value="${escapeHtmlAttribute(defaultAccent)}" title="Custom accent" />`;
+              <input class="color-input" type="color" data-accent-custom value="${escapeHtmlAttribute(defaultAccent)}" ${renderTooltipAttribute("Custom accent")} aria-label="Custom accent" />`;
 }
 
 function renderControlGroup(title: string, icon: EditorIconName, content: string): string {
@@ -276,7 +280,7 @@ ${renderEditorThemeVars(EDITOR_UI_THEME.dark)}
         min-width: 0;
         border: 1px solid var(--line);
         border-radius: 4px;
-        overflow: hidden;
+        overflow: visible;
         background: var(--panel);
       }
       .segment {
@@ -464,6 +468,43 @@ ${renderEditorThemeVars(EDITOR_UI_THEME.dark)}
         color: var(--muted);
         font-size: 0.88rem;
       }
+      [data-tooltip] {
+        position: relative;
+      }
+      [data-tooltip]::after {
+        position: absolute;
+        left: 50%;
+        top: calc(100% + 8px);
+        z-index: 2147483647;
+        max-width: min(280px, calc(100vw - 24px));
+        content: attr(data-tooltip);
+        padding: 7px 9px;
+        border: 1px solid color-mix(in srgb, var(--text) 18%, transparent);
+        border-radius: 999px;
+        background: color-mix(in srgb, var(--text) 92%, var(--panel));
+        color: var(--panel);
+        box-shadow: 0 10px 28px rgba(0, 0, 0, 0.18);
+        visibility: hidden;
+        font-size: 0.74rem;
+        font-weight: 700;
+        line-height: 1;
+        letter-spacing: 0;
+        opacity: 0;
+        pointer-events: none;
+        transform: translate(-50%, -2px) scale(0.98);
+        transition:
+          opacity 120ms ease,
+          transform 120ms ease,
+          visibility 0s linear 120ms;
+        white-space: nowrap;
+      }
+      [data-tooltip]:hover::after,
+      [data-tooltip]:focus-visible::after {
+        visibility: visible;
+        opacity: 1;
+        transform: translate(-50%, 0) scale(1);
+        transition-delay: 1s;
+      }
       @media (max-width: 1100px) {
         .app {
           grid-template-columns: 220px minmax(0, 1fr);
@@ -499,20 +540,20 @@ ${renderEditorThemeVars(EDITOR_UI_THEME.dark)}
       <aside class="sidebar">
         <header class="bar">
           <div class="title">Slides</div>
-          <button class="button" type="button" data-new data-icon-only="true" title="New slide" aria-label="New slide">
+          <button class="button" type="button" data-new data-icon-only="true" ${renderTooltipAttribute("New slide")} aria-label="New slide">
             ${renderIcon("plus")}
             <span class="sr-only">New</span>
           </button>
         </header>
         <div class="deck-list" data-decks></div>
       </aside>
-      <div class="pane-resizer" data-resize-pane="sidebar" title="Resize slide list" aria-hidden="true"></div>
+      <div class="pane-resizer" data-resize-pane="sidebar" ${renderTooltipAttribute("Resize slide list")} aria-hidden="true"></div>
       <section class="editor">
         <header class="bar">
           <div class="title" data-current-file>Editor</div>
           <span class="status" data-status>Clean</span>
           <div class="spacer"></div>
-          <button class="button" type="button" data-save data-primary="true" data-icon-only="true" title="Save" aria-label="Save">
+          <button class="button" type="button" data-save data-primary="true" data-icon-only="true" ${renderTooltipAttribute("Save")} aria-label="Save">
             ${renderIcon("save")}
             <span class="sr-only">Save</span>
           </button>
@@ -551,13 +592,13 @@ ${renderEditorThemeVars(EDITOR_UI_THEME.dark)}
           <textarea data-source spellcheck="false"></textarea>
         </main>
       </section>
-      <div class="pane-resizer" data-resize-pane="editor" title="Resize editor" aria-hidden="true"></div>
+      <div class="pane-resizer" data-resize-pane="editor" ${renderTooltipAttribute("Resize editor")} aria-hidden="true"></div>
       <section class="preview">
         <header class="bar">
           <div class="title">Preview</div>
           <div class="spacer"></div>
-          <a class="button" data-open data-icon-only="true" target="_blank" rel="noreferrer" title="Open" aria-label="Open">${renderIcon("external")}<span class="sr-only">Open</span></a>
-          <a class="button" data-presenter data-icon-only="true" target="_blank" rel="noreferrer" title="Presenter" aria-label="Presenter">${renderIcon("presenter")}<span class="sr-only">Presenter</span></a>
+          <a class="button" data-open data-icon-only="true" target="_blank" rel="noreferrer" ${renderTooltipAttribute("Open")} aria-label="Open">${renderIcon("external")}<span class="sr-only">Open</span></a>
+          <a class="button" data-presenter data-icon-only="true" target="_blank" rel="noreferrer" ${renderTooltipAttribute("Presenter")} aria-label="Presenter">${renderIcon("presenter")}<span class="sr-only">Presenter</span></a>
         </header>
         <iframe data-preview title="Slide preview"></iframe>
       </section>
