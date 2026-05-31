@@ -13,6 +13,22 @@ for the tabs themselves).
 
 ## Authoring package-manager tabs
 
+Package-manager tabs are opt-in. Enable them before authoring `<pm>` blocks:
+
+```ts
+import { oxContent } from "@ox-content/vite-plugin";
+
+export default {
+  plugins: [
+    oxContent({
+      embeds: {
+        pm: true,
+      },
+    }),
+  ],
+};
+```
+
 Write a `<pm>` element containing a single npm-style command:
 
 ```html
@@ -52,7 +68,7 @@ JavaScript. You can **opt in** to syncing so that selecting (for example) pnpm i
 one block selects pnpm in every other package-manager block on the page, with the
 choice persisted in `localStorage`.
 
-Enable it through the plugin's `tabs` option:
+Enable it through the `embeds.pm` option:
 
 ```ts
 import { oxContent } from "@ox-content/vite-plugin";
@@ -61,7 +77,9 @@ export default {
   plugins: [
     oxContent({
       // Synced tab groups are OFF by default.
-      tabs: { syncGroups: true },
+      embeds: {
+        pm: { sync: true },
+      },
     }),
   ],
 };

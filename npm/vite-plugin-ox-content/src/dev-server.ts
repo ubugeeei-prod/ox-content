@@ -305,6 +305,12 @@ async function renderPage(
     youtube: true,
     github: options.embeds.github,
     openGraph: options.embeds.openGraph,
+    pm: options.embeds.pm,
+    spotify: options.embeds.spotify,
+    stackBlitz: options.embeds.stackBlitz,
+    twitter: options.embeds.twitter,
+    bluesky: options.embeds.bluesky,
+    webContainer: options.embeds.webContainer,
     mermaid: true,
     githubToken: process.env.GITHUB_TOKEN,
   });

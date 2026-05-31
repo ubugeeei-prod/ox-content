@@ -3,12 +3,15 @@
 //! This crate provides NAPI bindings for using Ox Content from Node.js,
 //! including raw-buffer AST transfer for JavaScript interoperability.
 
+pub(crate) mod features;
 mod highlight;
 mod html_scan;
 mod lint;
 mod mdast;
 mod mdast_raw;
+mod media_embeds;
 mod pm;
+mod sanitize;
 mod tabs;
 mod transfer;
 mod transformer;
@@ -409,6 +412,168 @@ pub struct JsDocsDiagnostic {
     pub message: String,
 }
 
+/// Wiki-link transform options.
+#[napi(object)]
+#[derive(Default, Clone)]
+pub struct JsWikiLinkOptions {
+    /// Enable `[[target]]` and `[[target|label]]` expansion.
+    pub enabled: Option<bool>,
+    /// Base URL used for site-relative wiki links.
+    pub base_url: Option<String>,
+}
+
+/// Emoji-shortcode transform options.
+#[napi(object)]
+#[derive(Default, Clone)]
+pub struct JsEmojiShortcodeOptions {
+    /// Enable `:shortcode:` expansion.
+    pub enabled: Option<bool>,
+    /// Custom shortcode map. Values are emitted verbatim.
+    pub custom: Option<HashMap<String, String>>,
+}
+
+/// Attribute syntax transform options.
+#[napi(object)]
+#[derive(Default, Clone)]
+pub struct JsAttrsOptions {
+    /// Enable markdown-it-attrs style `{#id .class key=value}`.
+    pub enabled: Option<bool>,
+}
+
+/// Code import / snippet injection options.
+#[napi(object)]
+#[derive(Default, Clone)]
+pub struct JsCodeImportOptions {
+    /// Enable `<<< path{selector}` snippet injection.
+    pub enabled: Option<bool>,
+    /// Root directory used for `@/` and absolute snippet imports.
+    pub root_dir: Option<String>,
+}
+
+/// HTML sanitizer options.
+#[napi(object)]
+#[derive(Default, Clone)]
+pub struct JsSanitizeOptions {
+    /// Enable sanitizer. When omitted, passing this object enables it.
+    pub enabled: Option<bool>,
+    /// Allowed tag names. Omit for safe defaults.
+    pub allowed_tags: Option<Vec<String>>,
+    /// Allowed attribute names. Omit for safe defaults.
+    pub allowed_attributes: Option<Vec<String>>,
+    /// Allowed URL schemes for href/src/action attributes. Omit for safe defaults.
+    pub allowed_url_schemes: Option<Vec<String>>,
+}
+
+/// Edit-this-page link options.
+#[napi(object)]
+#[derive(Default, Clone)]
+pub struct JsEditThisPageOptions {
+    /// Enable edit link generation.
+    pub enabled: Option<bool>,
+    /// GitHub repository URL, e.g. `https://github.com/owner/repo`.
+    pub repo_url: Option<String>,
+    /// Branch used in edit URLs.
+    pub branch: Option<String>,
+    /// Root directory used to relativize `sourcePath`.
+    pub root_dir: Option<String>,
+    /// Link label.
+    pub label: Option<String>,
+}
+
+/// Code block linting options.
+#[napi(object)]
+#[derive(Default, Clone)]
+pub struct JsCodeBlockLintOptions {
+    /// Enable code block linting.
+    pub enabled: Option<bool>,
+    /// Restrict linting to these language identifiers.
+    pub languages: Option<Vec<String>>,
+    /// Report fences without a language identifier.
+    pub require_language: Option<bool>,
+    /// Report trailing whitespace in code block lines.
+    pub trailing_spaces: Option<bool>,
+}
+
+/// Docs-as-tests extraction options.
+#[napi(object)]
+#[derive(Default, Clone)]
+pub struct JsDocsTestOptions {
+    /// Enable docs test extraction.
+    pub enabled: Option<bool>,
+    /// Languages that can be emitted as test cases.
+    pub languages: Option<Vec<String>>,
+    /// Require fence meta such as `test`, `runnable`, or `vitest`.
+    pub require_meta: Option<bool>,
+}
+
+/// Built-in media embed transform switches.
+#[napi(object)]
+#[derive(Default, Clone)]
+pub struct JsMediaEmbedsOptions {
+    /// Render `<Spotify>` embeds.
+    pub spotify: Option<bool>,
+    /// Render `<StackBlitz>` embeds.
+    pub stack_blitz: Option<bool>,
+    /// Render `<Tweet>` / `<XPost>` static cards.
+    pub twitter: Option<bool>,
+    /// Render `<Bluesky>` static cards.
+    pub bluesky: Option<bool>,
+    /// Render `<WebContainer>` lazy placeholder blocks.
+    pub web_container: Option<bool>,
+}
+
+/// Extracted fenced code block.
+#[napi(object)]
+#[derive(Clone)]
+pub struct JsCodeBlock {
+    pub language: String,
+    pub meta: String,
+    pub code: String,
+    pub start_line: u32,
+    pub end_line: u32,
+}
+
+/// Diagnostic emitted by code block linting.
+#[napi(object)]
+#[derive(Clone)]
+pub struct JsCodeBlockDiagnostic {
+    pub rule_id: String,
+    pub severity: String,
+    pub message: String,
+    pub line: u32,
+    pub column: u32,
+    pub end_line: u32,
+    pub end_column: u32,
+    pub language: Option<String>,
+}
+
+impl From<features::ExtractedCodeBlock> for JsCodeBlock {
+    fn from(block: features::ExtractedCodeBlock) -> Self {
+        Self {
+            language: block.language,
+            meta: block.meta,
+            code: block.code,
+            start_line: block.start_line,
+            end_line: block.end_line,
+        }
+    }
+}
+
+impl From<features::CodeBlockDiagnostic> for JsCodeBlockDiagnostic {
+    fn from(diagnostic: features::CodeBlockDiagnostic) -> Self {
+        Self {
+            rule_id: diagnostic.rule_id,
+            severity: diagnostic.severity,
+            message: diagnostic.message,
+            line: diagnostic.line,
+            column: diagnostic.column,
+            end_line: diagnostic.end_line,
+            end_column: diagnostic.end_column,
+            language: diagnostic.language,
+        }
+    }
+}
+
 /// Transform options for JavaScript.
 #[napi(object)]
 #[derive(Default, Clone)]
@@ -453,6 +618,21 @@ pub struct JsTransformOptions {
     /// Add `target="_blank" rel="noopener noreferrer"` to auto-linked URLs.
     /// Defaults to true; ignored when [`Self::autolink_urls`] is off.
     pub autolink_target_blank: Option<bool>,
+    /// Opt-in Obsidian-style wiki links.
+    pub wiki_links: Option<JsWikiLinkOptions>,
+    /// Opt-in emoji shortcode expansion.
+    pub emoji_shortcodes: Option<JsEmojiShortcodeOptions>,
+    /// Opt-in markdown-it-attrs style attributes.
+    pub attributes: Option<JsAttrsOptions>,
+    /// Opt-in CJK emphasis compatibility flag. The parser is already CJK-friendly;
+    /// this keeps the feature explicit in the public API.
+    pub cjk_emphasis: Option<bool>,
+    /// Opt-in VitePress-style code import/snippet injection.
+    pub code_imports: Option<JsCodeImportOptions>,
+    /// Opt-in HTML sanitizer.
+    pub sanitize: Option<JsSanitizeOptions>,
+    /// Opt-in edit-this-page link generation.
+    pub edit_this_page: Option<JsEditThisPageOptions>,
 }
 
 /// Source preparation options for JavaScript.
@@ -1270,6 +1450,39 @@ pub fn transform_pm_embeds(
 pub fn transform(source: String, options: Option<JsTransformOptions>) -> TransformResult {
     let opts = options.unwrap_or_default();
     MarkdownTransformer::from_options(&opts).transform(&source)
+}
+
+/// Sanitize an HTML string with safe defaults or an explicit allow-list.
+#[napi(js_name = "sanitizeHtml")]
+pub fn sanitize_html_binding(html: String, options: Option<JsSanitizeOptions>) -> String {
+    sanitize::sanitize_html(&html, options.as_ref())
+}
+
+/// Transform opt-in static media embed components in already-rendered HTML.
+#[napi(js_name = "transformMediaEmbeds")]
+pub fn transform_media_embeds(html: String, options: Option<JsMediaEmbedsOptions>) -> String {
+    media_embeds::transform_media_embeds(&html, options.as_ref())
+}
+
+/// Extract fenced code blocks from Markdown.
+#[napi(js_name = "extractCodeBlocks")]
+pub fn extract_code_blocks(source: String) -> Vec<JsCodeBlock> {
+    features::extract_code_blocks(&source).into_iter().map(Into::into).collect()
+}
+
+/// Lint fenced code blocks in Markdown.
+#[napi(js_name = "lintCodeBlocks")]
+pub fn lint_code_blocks(
+    source: String,
+    options: Option<JsCodeBlockLintOptions>,
+) -> Vec<JsCodeBlockDiagnostic> {
+    features::lint_code_blocks(&source, options.as_ref()).into_iter().map(Into::into).collect()
+}
+
+/// Extract runnable documentation examples for Vitest harness generation.
+#[napi(js_name = "extractDocsTests")]
+pub fn extract_docs_tests(source: String, options: Option<JsDocsTestOptions>) -> Vec<JsCodeBlock> {
+    features::extract_docs_tests(&source, options.as_ref()).into_iter().map(Into::into).collect()
 }
 
 /// Transforms Markdown into a raw mdast transfer buffer.

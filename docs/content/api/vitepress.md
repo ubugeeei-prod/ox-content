@@ -185,7 +185,7 @@
 </details>
 
 <details id="normalizevitepressfrontmatter" class="ox-api-entry">
-  <summary><span class="ox-api-entry__kind">fn</span><span class="ox-api-entry__summary-main"><code class="ox-api-entry__signature ox-api-entry__signature--highlighted language-typescript">normalizeVitePressFrontmatter(frontmatter: Record&lt;string, unknown&gt;): Record&lt;string, unknown&gt;</code><span class="ox-api-entry__description">Normalizes VitePress-specific frontmatter into ox-content&#39;s entry-page shape.</span><span class="ox-api-entry__meta"><span class="ox-api-badge">1 param</span><span class="ox-api-badge">returns Record</span></span></span></summary>
+  <summary><span class="ox-api-entry__kind">fn</span><span class="ox-api-entry__summary-main"><code class="ox-api-entry__signature ox-api-entry__signature--highlighted language-typescript">normalizeVitePressFrontmatter(frontmatter: Record&lt;string, unknown&gt;): Record&lt;string, unknown&gt;</code><span class="ox-api-entry__description">Normalizes VitePress-specific frontmatter into ox-content&#39;s entry-page shape.</span><span class="ox-api-entry__meta"><span class="ox-api-badge">1 param</span><span class="ox-api-badge">returns Record&lt;string, unknown&gt;</span></span></span></summary>
   <div class="ox-api-entry__body">
 <div class="ox-api-entry__prose">
 <p>Normalizes VitePress-specific frontmatter into ox-content&#39;s entry-page shape.</p>
@@ -201,7 +201,7 @@
 <li class="ox-api-entry__param">
   <div class="ox-api-entry__param-heading">
     <code class="ox-api-entry__param-name">frontmatter</code>
-    <code class="ox-api-entry__param-type">Record</code>
+    <code class="ox-api-entry__param-type">Record&lt;string, unknown&gt;</code>
   </div>
   
 </li>
@@ -210,7 +210,7 @@
 <div class="ox-api-entry__section ox-api-entry__section--returns">
 <h4>Returns</h4>
 <div class="ox-api-entry__return">
-  <code class="ox-api-entry__return-type">Record</code>
+  <code class="ox-api-entry__return-type">Record&lt;string, unknown&gt;</code>
   
 </div>
 </div>

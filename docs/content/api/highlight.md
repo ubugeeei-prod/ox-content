@@ -31,7 +31,7 @@
 </div>
 
 <details id="gethighlighter" class="ox-api-entry">
-  <summary><span class="ox-api-entry__kind">fn</span><span class="ox-api-entry__summary-main"><code class="ox-api-entry__signature ox-api-entry__signature--highlighted language-typescript">getHighlighter(theme: string | ThemeRegistration, customLangs: LanguageRegistration[] = []): Promise&lt;Highlighter&gt;</code><span class="ox-api-entry__description">Get or create the Shiki highlighter.</span><span class="ox-api-entry__meta"><span class="ox-api-badge">2 params</span><span class="ox-api-badge">returns Promise</span></span></span></summary>
+  <summary><span class="ox-api-entry__kind">fn</span><span class="ox-api-entry__summary-main"><code class="ox-api-entry__signature ox-api-entry__signature--highlighted language-typescript">getHighlighter(theme: string | ThemeRegistration, customLangs: LanguageRegistration[] = []): Promise&lt;Highlighter&gt;</code><span class="ox-api-entry__description">Get or create the Shiki highlighter.</span><span class="ox-api-entry__meta"><span class="ox-api-badge">2 params</span><span class="ox-api-badge">returns Promise&lt;Highlighter&gt;</span></span></span></summary>
   <div class="ox-api-entry__body">
 <div class="ox-api-entry__prose">
 <p>Get or create the Shiki highlighter.</p>
@@ -63,7 +63,7 @@
 <div class="ox-api-entry__section ox-api-entry__section--returns">
 <h4>Returns</h4>
 <div class="ox-api-entry__return">
-  <code class="ox-api-entry__return-type">Promise</code>
+  <code class="ox-api-entry__return-type">Promise&lt;Highlighter&gt;</code>
   
 </div>
 </div>
@@ -104,7 +104,7 @@
 </details>
 
 <details id="highlightcode" class="ox-api-entry">
-  <summary><span class="ox-api-entry__kind">fn</span><span class="ox-api-entry__summary-main"><code class="ox-api-entry__signature ox-api-entry__signature--highlighted language-typescript">highlightCode(html: string, theme: string | ThemeRegistration = &quot;github-dark&quot;, langs: LanguageRegistration[] = []): Promise&lt;string&gt;</code><span class="ox-api-entry__description">Apply syntax highlighting to HTML using Shiki.</span><span class="ox-api-entry__meta"><span class="ox-api-badge">3 params</span><span class="ox-api-badge">returns Promise</span></span></span></summary>
+  <summary><span class="ox-api-entry__kind">fn</span><span class="ox-api-entry__summary-main"><code class="ox-api-entry__signature ox-api-entry__signature--highlighted language-typescript">highlightCode(html: string, theme: string | ThemeRegistration = &quot;github-dark&quot;, langs: LanguageRegistration[] = []): Promise&lt;string&gt;</code><span class="ox-api-entry__description">Apply syntax highlighting to HTML using Shiki.</span><span class="ox-api-entry__meta"><span class="ox-api-badge">3 params</span><span class="ox-api-badge">returns Promise&lt;string&gt;</span></span></span></summary>
   <div class="ox-api-entry__body">
 <div class="ox-api-entry__prose">
 <p>Apply syntax highlighting to HTML using Shiki.</p>
@@ -143,7 +143,7 @@
 <div class="ox-api-entry__section ox-api-entry__section--returns">
 <h4>Returns</h4>
 <div class="ox-api-entry__return">
-  <code class="ox-api-entry__return-type">Promise</code>
+  <code class="ox-api-entry__return-type">Promise&lt;string&gt;</code>
   
 </div>
 </div>

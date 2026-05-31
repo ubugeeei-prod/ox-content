@@ -130,4 +130,43 @@ describe("builtin embed input hardening", () => {
       }),
     ).resolves.toBe(input);
   });
+
+  it("keeps package-manager tabs opt-in", async () => {
+    const input = "<pm>npm install -D vite</pm>";
+
+    await expect(
+      transformBuiltinEmbeds(input, {
+        github: false,
+        openGraph: false,
+      }),
+    ).resolves.toBe(input);
+
+    const html = await transformBuiltinEmbeds(input, {
+      github: false,
+      openGraph: false,
+      pm: {},
+    });
+    expect(html).toContain("ox-tabs");
+    expect(html).toContain("pnpm add -D vite");
+  });
+
+  it("renders opt-in static media embeds through the shared builtin transform", async () => {
+    const html = await transformBuiltinEmbeds(
+      [
+        '<Spotify url="https://open.spotify.com/track/abc123"></Spotify>',
+        '<Tweet id="123">static text</Tweet>',
+      ].join(""),
+      {
+        github: false,
+        openGraph: false,
+        spotify: true,
+        twitter: true,
+      },
+    );
+
+    expect(html).toContain("ox-spotify");
+    expect(html).toContain("https://open.spotify.com/embed/track/abc123");
+    expect(html).toContain("https://x.com/i/web/status/123");
+    expect(html).toContain("static text");
+  });
 });

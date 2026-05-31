@@ -312,6 +312,67 @@ export interface OxContentOptions {
   codeAnnotations?: boolean | CodeAnnotationsOptions;
 
   /**
+   * Expand Obsidian-style `[[page]]` and `[[page|label]]` links.
+   * @default false
+   */
+  wikiLinks?: boolean | WikiLinkOptions;
+
+  /**
+   * Expand `:shortcode:` emoji aliases to Unicode.
+   * @default false
+   */
+  emojiShortcodes?: boolean | EmojiShortcodeOptions;
+
+  /**
+   * Enable markdown-it-attrs style `{#id .class key=value}` attributes.
+   * @default false
+   */
+  attrs?: boolean | AttrsOptions;
+
+  /**
+   * Import source snippets into fences with `<<< @/path/to/file.ts{region}`.
+   * @default false
+   */
+  codeImports?: boolean | CodeImportOptions;
+
+  /**
+   * Sanitize rendered HTML with safe defaults or explicit allow lists.
+   * @default false
+   */
+  sanitize?: boolean | SanitizeOptions;
+
+  /**
+   * Append an "edit this page" link to rendered Markdown.
+   * @default false
+   */
+  editThisPage?: boolean | EditThisPageOptions;
+
+  /**
+   * Recognize emphasis adjacent to CJK text. The native parser already supports
+   * this behavior; the option documents the compatibility contract.
+   * @default false
+   */
+  cjkEmphasis?: boolean;
+
+  /**
+   * Lint fenced code blocks during Markdown transforms.
+   * @default false
+   */
+  codeBlockLint?: boolean | CodeBlockLintOptions;
+
+  /**
+   * Type-check TypeScript/TSX code fences via tsgo.
+   * @default false
+   */
+  codeBlockTypecheck?: boolean | CodeBlockTypecheckOptions;
+
+  /**
+   * Extract runnable fenced examples for Vitest docs-as-tests harnesses.
+   * @default false
+   */
+  docsTests?: boolean | DocsTestOptions;
+
+  /**
    * Enable mermaid diagram rendering.
    * @default false
    */
@@ -405,6 +466,16 @@ export interface ResolvedOptions {
   highlightTheme: string | ThemeRegistration;
   highlightLangs: LanguageRegistration[];
   codeAnnotations: ResolvedCodeAnnotationsOptions;
+  wikiLinks: ResolvedWikiLinkOptions;
+  emojiShortcodes: ResolvedEmojiShortcodeOptions;
+  attrs: ResolvedAttrsOptions;
+  codeImports: ResolvedCodeImportOptions;
+  sanitize: ResolvedSanitizeOptions;
+  editThisPage: ResolvedEditThisPageOptions;
+  cjkEmphasis: boolean;
+  codeBlockLint: ResolvedCodeBlockLintOptions;
+  codeBlockTypecheck: ResolvedCodeBlockTypecheckOptions;
+  docsTests: ResolvedDocsTestOptions;
   mermaid: boolean;
   frontmatter: boolean;
   toc: boolean;
@@ -444,9 +515,39 @@ export interface BuiltinEmbedOptions {
    * synced tab groups. Synced groups are OFF by default; when enabled with
    * `{ sync: true }`, selecting a package manager in one block selects it in
    * every other package-manager block on the page (persisted in localStorage).
-   * @default true
+   * @default false
    */
   pm?: boolean | BuiltinPmOptions;
+
+  /**
+   * Render `<Spotify url="https://open.spotify.com/track/...">` iframes.
+   * @default false
+   */
+  spotify?: boolean;
+
+  /**
+   * Render `<StackBlitz url="https://stackblitz.com/edit/...">` iframes.
+   * @default false
+   */
+  stackBlitz?: boolean;
+
+  /**
+   * Render `<Tweet>` / `<XPost>` as static privacy-conscious cards.
+   * @default false
+   */
+  twitter?: boolean;
+
+  /**
+   * Render `<Bluesky>` as static cards.
+   * @default false
+   */
+  bluesky?: boolean;
+
+  /**
+   * Render `<WebContainer>` lazy placeholders with isolation metadata.
+   * @default false
+   */
+  webContainer?: boolean;
 }
 
 /**
@@ -467,6 +568,115 @@ export interface ResolvedBuiltinEmbedOptions {
   github: GitHubOptions | false;
   openGraph: OgpOptions | false;
   pm: BuiltinPmOptions | false;
+  spotify: boolean;
+  stackBlitz: boolean;
+  twitter: boolean;
+  bluesky: boolean;
+  webContainer: boolean;
+}
+
+export interface WikiLinkOptions {
+  baseUrl?: string;
+}
+
+export interface ResolvedWikiLinkOptions {
+  enabled: boolean;
+  baseUrl: string;
+}
+
+export interface EmojiShortcodeOptions {
+  custom?: Record<string, string>;
+}
+
+export interface ResolvedEmojiShortcodeOptions {
+  enabled: boolean;
+  custom: Record<string, string>;
+}
+
+export interface AttrsOptions {
+  enabled?: boolean;
+}
+
+export interface ResolvedAttrsOptions {
+  enabled: boolean;
+}
+
+export interface CodeImportOptions {
+  rootDir?: string;
+}
+
+export interface ResolvedCodeImportOptions {
+  enabled: boolean;
+  rootDir?: string;
+}
+
+export interface SanitizeOptions {
+  allowedTags?: string[];
+  allowedAttributes?: string[];
+  allowedUrlSchemes?: string[];
+}
+
+export interface ResolvedSanitizeOptions {
+  enabled: boolean;
+  allowedTags?: string[];
+  allowedAttributes?: string[];
+  allowedUrlSchemes?: string[];
+}
+
+export interface EditThisPageOptions {
+  repoUrl: string;
+  branch?: string;
+  rootDir?: string;
+  label?: string;
+}
+
+export interface ResolvedEditThisPageOptions {
+  enabled: boolean;
+  repoUrl?: string;
+  branch: string;
+  rootDir?: string;
+  label: string;
+}
+
+export interface CodeBlockLintOptions {
+  languages?: string[];
+  requireLanguage?: boolean;
+  trailingSpaces?: boolean;
+  mode?: "warn" | "error";
+}
+
+export interface ResolvedCodeBlockLintOptions {
+  enabled: boolean;
+  languages?: string[];
+  requireLanguage: boolean;
+  trailingSpaces: boolean;
+  mode: "warn" | "error";
+}
+
+export interface CodeBlockTypecheckOptions {
+  languages?: string[];
+  requireMeta?: boolean;
+  tsgoCommand?: string;
+  mode?: "warn" | "error";
+}
+
+export interface ResolvedCodeBlockTypecheckOptions {
+  enabled: boolean;
+  languages: string[];
+  requireMeta: boolean;
+  tsgoCommand: string;
+  mode: "warn" | "error";
+}
+
+export interface DocsTestOptions {
+  languages?: string[];
+  requireMeta?: boolean;
+}
+
+export interface ResolvedDocsTestOptions {
+  enabled: boolean;
+  languages: string[];
+  requireMeta: boolean;
 }
 
 /**

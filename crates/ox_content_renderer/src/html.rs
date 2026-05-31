@@ -299,10 +299,15 @@ struct PendingCodeAnnotation {
     remaining: usize,
 }
 
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+enum InlineDirectiveAction {
+    Annotate { kind: CodeAnnotationKind, count: usize },
+    EscapeNextLine,
+}
+
 #[derive(Debug, Clone)]
 struct ParsedInlineDirective {
-    kind: CodeAnnotationKind,
-    count: usize,
+    action: InlineDirectiveAction,
     stripped_line: String,
     standalone: bool,
 }
@@ -634,15 +639,22 @@ fn parse_annotation_count(value: &str) -> usize {
     value.trim().parse::<usize>().ok().filter(|count| *count > 0).unwrap_or(1)
 }
 
-fn parse_vitepress_directive_kind(value: &str) -> Option<(CodeAnnotationKind, usize)> {
+fn parse_vitepress_directive_action(value: &str) -> Option<InlineDirectiveAction> {
     let trimmed = value.trim();
 
+    if matches!(trimmed, "escape" | "ignore" | "no-annotate") {
+        return Some(InlineDirectiveAction::EscapeNextLine);
+    }
+
     if trimmed == "++" {
-        return Some((CodeAnnotationKind::Add, 1));
+        return Some(InlineDirectiveAction::Annotate { kind: CodeAnnotationKind::Add, count: 1 });
     }
 
     if trimmed == "--" {
-        return Some((CodeAnnotationKind::Remove, 1));
+        return Some(InlineDirectiveAction::Annotate {
+            kind: CodeAnnotationKind::Remove,
+            count: 1,
+        });
     }
 
     if let Some((kind, count)) = trimmed.split_once(':') {
@@ -653,16 +665,21 @@ fn parse_vitepress_directive_kind(value: &str) -> Option<(CodeAnnotationKind, us
             "error" => CodeAnnotationKind::Error,
             _ => return None,
         };
-        return Some((parsed_kind, parse_annotation_count(count)));
+        return Some(InlineDirectiveAction::Annotate {
+            kind: parsed_kind,
+            count: parse_annotation_count(count),
+        });
     }
 
-    match trimmed {
-        "highlight" => Some((CodeAnnotationKind::Highlight, 1)),
-        "warning" => Some((CodeAnnotationKind::Warning, 1)),
-        "error" => Some((CodeAnnotationKind::Error, 1)),
-        "focus" => Some((CodeAnnotationKind::Focus, 1)),
+    let kind = match trimmed {
+        "highlight" => Some(CodeAnnotationKind::Highlight),
+        "warning" => Some(CodeAnnotationKind::Warning),
+        "error" => Some(CodeAnnotationKind::Error),
+        "focus" => Some(CodeAnnotationKind::Focus),
         _ => None,
-    }
+    }?;
+
+    Some(InlineDirectiveAction::Annotate { kind, count: 1 })
 }
 
 fn parse_vitepress_inline_directive(line: &str) -> Option<ParsedInlineDirective> {
@@ -697,39 +714,55 @@ fn parse_vitepress_inline_directive(line: &str) -> Option<ParsedInlineDirective>
 
     let stripped_line = before_marker[..comment_start].trim_end().to_string();
     let standalone = stripped_line.trim().is_empty();
-    let (kind, count) = parse_vitepress_directive_kind(directive)?;
+    let action = parse_vitepress_directive_action(directive)?;
+    if matches!(action, InlineDirectiveAction::EscapeNextLine) && !standalone {
+        return None;
+    }
 
-    Some(ParsedInlineDirective { kind, count, stripped_line, standalone })
+    Some(ParsedInlineDirective { action, stripped_line, standalone })
 }
 
 fn parse_vitepress_inline_annotations(value: &str) -> Vec<CodeLineRenderState> {
     let mut lines = Vec::new();
     let mut pending_annotations: Vec<PendingCodeAnnotation> = Vec::new();
+    let mut escape_next_line = false;
 
     for raw_line in value.split('\n') {
-        if let Some(directive) = parse_vitepress_inline_directive(raw_line) {
-            if directive.standalone {
-                pending_annotations.push(PendingCodeAnnotation {
-                    kind: directive.kind,
-                    remaining: directive.count,
-                });
-                continue;
-            }
-
-            let mut line =
-                CodeLineRenderState { value: directive.stripped_line, annotations: Vec::new() };
-            apply_pending_annotations(&mut line, &mut pending_annotations);
-            if !line.annotations.contains(&directive.kind) {
-                line.annotations.push(directive.kind);
-            }
-            if directive.count > 1 {
-                pending_annotations.push(PendingCodeAnnotation {
-                    kind: directive.kind,
-                    remaining: directive.count - 1,
-                });
-            }
-            lines.push(line);
+        if escape_next_line {
+            lines
+                .push(CodeLineRenderState { value: raw_line.to_string(), annotations: Vec::new() });
+            escape_next_line = false;
             continue;
+        }
+
+        if let Some(directive) = parse_vitepress_inline_directive(raw_line) {
+            match directive.action {
+                InlineDirectiveAction::EscapeNextLine => {
+                    escape_next_line = true;
+                    continue;
+                }
+                InlineDirectiveAction::Annotate { kind, count } => {
+                    if directive.standalone {
+                        pending_annotations.push(PendingCodeAnnotation { kind, remaining: count });
+                        continue;
+                    }
+
+                    let mut line = CodeLineRenderState {
+                        value: directive.stripped_line,
+                        annotations: Vec::new(),
+                    };
+                    apply_pending_annotations(&mut line, &mut pending_annotations);
+                    if !line.annotations.contains(&kind) {
+                        line.annotations.push(kind);
+                    }
+                    if count > 1 {
+                        pending_annotations
+                            .push(PendingCodeAnnotation { kind, remaining: count - 1 });
+                    }
+                    lines.push(line);
+                    continue;
+                }
+            }
         }
 
         let mut line = CodeLineRenderState { value: raw_line.to_string(), annotations: Vec::new() };
@@ -2711,6 +2744,28 @@ mod tests {
         assert!(html.contains("ox-code-line--error"));
         assert!(html.contains("console.log(&#39;old value&#39;)"));
         assert!(html.contains("console.log(&#39;new value&#39;)"));
+    }
+
+    #[test]
+    fn test_render_code_block_with_vitepress_escape_next_line() {
+        let allocator = Allocator::new();
+        let doc = Parser::new(
+            &allocator,
+            "```ts\n// [!code escape]\nconsole.warn('literal') // [!code warning]\nconsole.warn('annotated') // [!code warning]\n```",
+        )
+        .parse()
+        .unwrap();
+        let mut renderer = HtmlRenderer::with_options(HtmlRendererOptions {
+            code_annotations: true,
+            code_annotation_syntax: CodeAnnotationSyntax::VitePress,
+            ..Default::default()
+        });
+        let html = renderer.render(&doc);
+
+        assert!(!html.contains("[!code escape]"));
+        assert!(html.contains("console.warn(&#39;literal&#39;) // [!code warning]"));
+        assert!(html.contains("console.warn(&#39;annotated&#39;)"));
+        assert_eq!(html.matches("ox-code-line--warning").count(), 1);
     }
 
     #[test]

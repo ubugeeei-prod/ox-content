@@ -54,11 +54,17 @@ export declare function collectSsgMarkdownFiles(srcDir: string, extensions: Arra
 /** Extracts shared CSS and JavaScript assets from generated SSG pages. */
 export declare function externalizeSsgAssets(pages: Array<JsSsgGeneratedHtmlPage>, outDir: string, base: string): JsSsgExternalizedAssets
 
+/** Extract fenced code blocks from Markdown. */
+export declare function extractCodeBlocks(source: string): Array<JsCodeBlock>
+
 /** Extracts normalized documentation entries from source directories using Oxc. */
 export declare function extractDocsFromDirectories(srcDirs: Array<string>, include: Array<string>, exclude: Array<string>, includePrivate?: boolean | undefined | null, includeInternal?: boolean | undefined | null): Array<JsExtractedDocsModule>
 
 /** Extracts generated API docs grouped by public entry points. */
 export declare function extractDocsFromEntryPoints(entryPoints: Array<JsEntryPointSpec>, options?: JsEntryPointDocsOptions | undefined | null): Array<JsEntrypointDocsModule>
+
+/** Extract runnable documentation examples for Vitest harness generation. */
+export declare function extractDocsTests(source: string, options?: JsDocsTestOptions | undefined | null): Array<JsCodeBlock>
 
 /** Extracts normalized documentation entries from a JavaScript/TypeScript file using Oxc. */
 export declare function extractFileDocEntries(filePath: string, includePrivate?: boolean | undefined | null, includeInternal?: boolean | undefined | null): Array<JsDocEntry>
@@ -193,6 +199,53 @@ export interface I18NLoadResult {
   errors: Array<string>
 }
 
+/** Attribute syntax transform options. */
+export interface JsAttrsOptions {
+  /** Enable markdown-it-attrs style `{#id .class key=value}`. */
+  enabled?: boolean
+}
+
+/** Extracted fenced code block. */
+export interface JsCodeBlock {
+  language: string
+  meta: string
+  code: string
+  startLine: number
+  endLine: number
+}
+
+/** Diagnostic emitted by code block linting. */
+export interface JsCodeBlockDiagnostic {
+  ruleId: string
+  severity: string
+  message: string
+  line: number
+  column: number
+  endLine: number
+  endColumn: number
+  language?: string
+}
+
+/** Code block linting options. */
+export interface JsCodeBlockLintOptions {
+  /** Enable code block linting. */
+  enabled?: boolean
+  /** Restrict linting to these language identifiers. */
+  languages?: Array<string>
+  /** Report fences without a language identifier. */
+  requireLanguage?: boolean
+  /** Report trailing whitespace in code block lines. */
+  trailingSpaces?: boolean
+}
+
+/** Code import / snippet injection options. */
+export interface JsCodeImportOptions {
+  /** Enable `<<< path{selector}` snippet injection. */
+  enabled?: boolean
+  /** Root directory used for `@/` and absolute snippet imports. */
+  rootDir?: string
+}
+
 /** Normalized documentation entry used by generated API docs. */
 export interface JsDocEntry {
   name: string
@@ -312,6 +365,38 @@ export interface JsDocsOutputOptions {
   generatedAt?: string
   basePath?: string
   pathStrategy?: 'flat' | 'typedoc'
+}
+
+/** Docs-as-tests extraction options. */
+export interface JsDocsTestOptions {
+  /** Enable docs test extraction. */
+  enabled?: boolean
+  /** Languages that can be emitted as test cases. */
+  languages?: Array<string>
+  /** Require fence meta such as `test`, `runnable`, or `vitest`. */
+  requireMeta?: boolean
+}
+
+/** Edit-this-page link options. */
+export interface JsEditThisPageOptions {
+  /** Enable edit link generation. */
+  enabled?: boolean
+  /** GitHub repository URL, e.g. `https://github.com/owner/repo`. */
+  repoUrl?: string
+  /** Branch used in edit URLs. */
+  branch?: string
+  /** Root directory used to relativize `sourcePath`. */
+  rootDir?: string
+  /** Link label. */
+  label?: string
+}
+
+/** Emoji-shortcode transform options. */
+export interface JsEmojiShortcodeOptions {
+  /** Enable `:shortcode:` expansion. */
+  enabled?: boolean
+  /** Custom shortcode map. Values are emitted verbatim. */
+  custom?: Record<string, string>
 }
 
 /** Entry page configuration. */
@@ -532,6 +617,20 @@ export interface JsMarkdownLintRuleOptions {
   trailingSpaces?: boolean
 }
 
+/** Built-in media embed transform switches. */
+export interface JsMediaEmbedsOptions {
+  /** Render `<Spotify>` embeds. */
+  spotify?: boolean
+  /** Render `<StackBlitz>` embeds. */
+  stackBlitz?: boolean
+  /** Render `<Tweet>` / `<XPost>` static cards. */
+  twitter?: boolean
+  /** Render `<Bluesky>` static cards. */
+  bluesky?: boolean
+  /** Render `<WebContainer>` lazy placeholder blocks. */
+  webContainer?: boolean
+}
+
 /** OG image configuration for JavaScript. */
 export interface JsOgImageConfig {
   /** Image width in pixels. */
@@ -610,6 +709,18 @@ export interface JsPublicExport {
 export interface JsResolvedModule {
   path: string
   exports: Array<JsPublicExport>
+}
+
+/** HTML sanitizer options. */
+export interface JsSanitizeOptions {
+  /** Enable sanitizer. When omitted, passing this object enables it. */
+  enabled?: boolean
+  /** Allowed tag names. Omit for safe defaults. */
+  allowedTags?: Array<string>
+  /** Allowed attribute names. Omit for safe defaults. */
+  allowedAttributes?: Array<string>
+  /** Allowed URL schemes for href/src/action attributes. Omit for safe defaults. */
+  allowedUrlSchemes?: Array<string>
 }
 
 /** Search query split into free text and scope prefixes. */
@@ -1051,6 +1162,31 @@ export interface JsTransformOptions {
    * Defaults to true; ignored when [`Self::autolink_urls`] is off.
    */
   autolinkTargetBlank?: boolean
+  /** Opt-in Obsidian-style wiki links. */
+  wikiLinks?: JsWikiLinkOptions
+  /** Opt-in emoji shortcode expansion. */
+  emojiShortcodes?: JsEmojiShortcodeOptions
+  /** Opt-in markdown-it-attrs style attributes. */
+  attributes?: JsAttrsOptions
+  /**
+   * Opt-in CJK emphasis compatibility flag. The parser is already CJK-friendly;
+   * this keeps the feature explicit in the public API.
+   */
+  cjkEmphasis?: boolean
+  /** Opt-in VitePress-style code import/snippet injection. */
+  codeImports?: JsCodeImportOptions
+  /** Opt-in HTML sanitizer. */
+  sanitize?: JsSanitizeOptions
+  /** Opt-in edit-this-page link generation. */
+  editThisPage?: JsEditThisPageOptions
+}
+
+/** Wiki-link transform options. */
+export interface JsWikiLinkOptions {
+  /** Enable `[[target]]` and `[[target|label]]` expansion. */
+  enabled?: boolean
+  /** Base URL used for site-relative wiki links. */
+  baseUrl?: string
 }
 
 /**
@@ -1067,6 +1203,9 @@ export interface JsYouTubeOptions {
   /** Lazy-load the iframe. Default: true. */
   lazyLoad?: boolean
 }
+
+/** Lint fenced code blocks in Markdown. */
+export declare function lintCodeBlocks(source: string, options?: JsCodeBlockLintOptions | undefined | null): Array<JsCodeBlockDiagnostic>
 
 export declare function lintMarkdown(source: string, options?: JsMarkdownLintOptions | undefined | null): JsMarkdownLintResult
 
@@ -1188,6 +1327,9 @@ export declare function resolveSsgNavigationGroups(navigation: Array<JsSsgNaviga
 /** Resolves all output and public route paths for an SSG page. */
 export declare function resolveSsgRoutePaths(inputPath: string, srcDir: string, outDir: string, base: string, extension: string, siteUrl?: string | undefined | null): JsSsgRoutePaths
 
+/** Sanitize an HTML string with safe defaults or an explicit allow-list. */
+export declare function sanitizeHtml(html: string, options?: JsSanitizeOptions | undefined | null): string
+
 /**
  * Searches a serialized index.
  *
@@ -1225,6 +1367,9 @@ export declare function transformAsync(source: string, options?: JsTransformOpti
  * transfers a single external memory block to JavaScript for deserialization.
  */
 export declare function transformMdastRaw(source: string, options?: JsTransformOptions | undefined | null): Uint8Array
+
+/** Transform opt-in static media embed components in already-rendered HTML. */
+export declare function transformMediaEmbeds(html: string, options?: JsMediaEmbedsOptions | undefined | null): string
 
 /**
  * Transforms mermaid code blocks in HTML to rendered SVG diagrams.
