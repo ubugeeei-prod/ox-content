@@ -7,6 +7,7 @@ use ox_content_parser::{ParseError, Parser, ParserOptions};
 use ox_content_renderer::{HtmlRenderer, HtmlRendererOptions};
 
 use crate::{
+    features::{self, TransformFeatureOptions},
     mdast_raw::{
         self, MDAST_SECTION_CONTENT, MDAST_SECTION_FRONTMATTER, MDAST_SECTION_SOURCE_ORIGIN,
     },
@@ -24,6 +25,8 @@ pub struct MarkdownTransformer {
     toc_max_depth: u8,
     parser_options: ParserOptions,
     renderer_options: HtmlRendererOptions,
+    feature_options: TransformFeatureOptions,
+    sanitize_options: Option<crate::JsSanitizeOptions>,
 }
 
 pub struct PreparedMarkdownSource {
@@ -58,6 +61,8 @@ impl MarkdownTransformer {
             toc_max_depth: 3,
             parser_options: ParserOptions::default(),
             renderer_options: HtmlRendererOptions::new(),
+            feature_options: TransformFeatureOptions::default(),
+            sanitize_options: None,
         }
     }
 
@@ -67,39 +72,61 @@ impl MarkdownTransformer {
             toc_max_depth: options.toc_max_depth.unwrap_or(3),
             parser_options: transform_options_to_parser_options(options),
             renderer_options: transform_options_to_renderer_options(options),
+            feature_options: TransformFeatureOptions::from_js(options),
+            sanitize_options: options.sanitize.clone(),
         }
     }
 
     pub(crate) fn transform(&self, source: &str) -> TransformResult {
         let prepared = self.prepare_source(source);
-        let allocator = Allocator::for_source_len(prepared.content.len());
-        let parse_result = self.parse_document(&allocator, &prepared.content);
+        let preprocessed = features::preprocess_markdown(&prepared.content, &self.feature_options);
+        let content = preprocessed.source.as_ref();
+        let allocator = Allocator::for_source_len(content.len());
+        let parse_result = self.parse_document(&allocator, content);
+        let mut errors = preprocessed.errors;
 
         match parse_result {
-            Ok(document) => TransformResult {
-                html: self.render_html(&document),
-                frontmatter: serde_json::to_string(&prepared.frontmatter)
-                    .unwrap_or_else(|_| "{}".to_string()),
-                toc: extract_toc(&document, self.toc_max_depth),
-                errors: vec![],
-            },
+            Ok(document) => {
+                let mut html = self.render_html(&document);
+                if self.feature_options.has_postprocess() {
+                    let postprocessed = features::postprocess_html(&html, &self.feature_options);
+                    html = postprocessed.html;
+                    errors.extend(postprocessed.errors);
+                }
+                if self.sanitize_options.is_some() {
+                    html = crate::sanitize::sanitize_html(&html, self.sanitize_options.as_ref());
+                }
+
+                TransformResult {
+                    html,
+                    frontmatter: serde_json::to_string(&prepared.frontmatter)
+                        .unwrap_or_else(|_| "{}".to_string()),
+                    toc: extract_toc(&document, self.toc_max_depth),
+                    errors,
+                }
+            }
             Err(error) => TransformResult {
                 html: String::new(),
                 frontmatter: "{}".to_string(),
                 toc: vec![],
-                errors: vec![error.to_string()],
+                errors: {
+                    errors.push(error.to_string());
+                    errors
+                },
             },
         }
     }
 
     pub(crate) fn transform_mdast_raw(&self, source: &str) -> napi::Result<Uint8Array> {
         let prepared = self.prepare_source(source);
-        let content_bytes = prepared.content.as_bytes().to_vec();
+        let preprocessed = features::preprocess_markdown(&prepared.content, &self.feature_options);
+        let content = preprocessed.source.as_ref();
+        let content_bytes = content.as_bytes().to_vec();
         let frontmatter_bytes = serde_json::to_vec(&prepared.frontmatter)
             .map_err(|error| napi::Error::from_reason(error.to_string()))?;
-        let allocator = Allocator::for_source_len(prepared.content.len());
+        let allocator = Allocator::for_source_len(content.len());
         let document = self
-            .parse_document(&allocator, &prepared.content)
+            .parse_document(&allocator, content)
             .map_err(|error| napi::Error::from_reason(error.to_string()))?;
 
         mdast_raw::to_mdast_raw_with_sections(

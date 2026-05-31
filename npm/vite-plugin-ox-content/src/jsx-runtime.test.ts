@@ -1,5 +1,15 @@
 import { describe, it, expect } from "vite-plus/test";
-import { jsx, jsxs, Fragment, renderToString, raw, when, each, type JSXNode } from "./jsx-runtime";
+import {
+  jsx,
+  jsxs,
+  Fragment,
+  renderToString,
+  raw,
+  when,
+  each,
+  type JSXChild,
+  type JSXNode,
+} from "./jsx-runtime";
 
 describe("jsx-runtime", () => {
   describe("jsx — intrinsic elements", () => {
@@ -85,8 +95,10 @@ describe("jsx-runtime", () => {
 
   describe("jsx — function components", () => {
     it("invokes a function component with merged props and children", () => {
-      const Card = (props: { title: string; children?: unknown }): JSXNode =>
-        jsx("section", { children: [jsx("h2", { children: props.title }), props.children] });
+      const Card = (props: Record<string, unknown>): JSXNode =>
+        jsx("section", {
+          children: [jsx("h2", { children: String(props.title) }), props.children as JSXChild],
+        });
       expect(jsx(Card, { title: "T", children: raw("<p>body</p>") }).__html).toBe(
         "<section><h2>T</h2><p>body</p></section>",
       );

@@ -26,6 +26,10 @@
   <span>parameters</span>
 </span>
 <span class="ox-api-stat">
+  <strong>3</strong>
+  <span>members</span>
+</span>
+<span class="ox-api-stat">
   <strong>9</strong>
   <span>returns</span>
 </span>
@@ -69,7 +73,7 @@
 <h4>Signature</h4>
 <pre><code class="language-typescript">export function createDevServerMiddleware(options: ResolvedOptions, root: string, cache: DevServerCache): Connect.NextHandleFunction</code></pre>
 </div>
-<p class="ox-api-entry__source"><a class="ox-api-entry__source-link" href="https://github.com/ubugeeei-prod/ox-content/blob/main/npm/vite-plugin-ox-content/src/dev-server.ts#L365-L430" target="_blank" rel="noopener noreferrer">View source<span class="ox-api-entry__source-icon" aria-hidden="true"></span></a></p>
+<p class="ox-api-entry__source"><a class="ox-api-entry__source-link" href="https://github.com/ubugeeei-prod/ox-content/blob/main/npm/vite-plugin-ox-content/src/dev-server.ts#L371-L436" target="_blank" rel="noopener noreferrer">View source<span class="ox-api-entry__source-icon" aria-hidden="true"></span></a></p>
 <div class="ox-api-entry__section ox-api-entry__section--params">
 <h4>Parameters</h4>
 <ul class="ox-api-entry__params">
@@ -107,7 +111,7 @@
 </details>
 
 <details id="devservercache" class="ox-api-entry">
-  <summary><span class="ox-api-entry__kind">interface</span><span class="ox-api-entry__summary-main"><code class="ox-api-entry__signature ox-api-entry__signature--highlighted language-typescript">DevServerCache</code><span class="ox-api-entry__description">Dev server state for caching.</span></span></summary>
+  <summary><span class="ox-api-entry__kind">interface</span><span class="ox-api-entry__summary-main"><code class="ox-api-entry__signature ox-api-entry__signature--highlighted language-typescript">DevServerCache</code><span class="ox-api-entry__description">Dev server state for caching.</span><span class="ox-api-entry__meta"><span class="ox-api-badge">3 members</span></span></span></summary>
   <div class="ox-api-entry__body">
 <div class="ox-api-entry__prose">
 <p>Dev server state for caching.</p>
@@ -117,6 +121,35 @@
 <pre><code class="language-typescript">interface DevServerCache</code></pre>
 </div>
 <p class="ox-api-entry__source"><a class="ox-api-entry__source-link" href="https://github.com/ubugeeei-prod/ox-content/blob/main/npm/vite-plugin-ox-content/src/dev-server.ts#L211-L218" target="_blank" rel="noopener noreferrer">View source<span class="ox-api-entry__source-icon" aria-hidden="true"></span></a></p>
+<div class="ox-api-entry__section ox-api-entry__section--members">
+<h4>Members</h4>
+<div class="ox-api-entry__member-group">
+<h5>Properties</h5>
+<table class="ox-api-entry__members-table">
+<thead><tr><th>Name</th><th>Kind</th><th>Type</th><th>Description</th></tr></thead>
+<tbody>
+<tr id="devservercache-navgroups">
+  <td><code>navGroups</code></td>
+  <td><span class="ox-api-entry__member-kind">property</span></td>
+  <td><code class="ox-api-entry__member-type language-typescript">NavGroup[] | null</code></td>
+  <td><div class="ox-api-entry__member-description">Cached navigation groups. Invalidated on file add/unlink.</div></td>
+</tr>
+<tr id="devservercache-pages">
+  <td><code>pages</code></td>
+  <td><span class="ox-api-entry__member-kind">property</span></td>
+  <td><code class="ox-api-entry__member-type language-typescript">Map&lt;string, string&gt;</code></td>
+  <td><div class="ox-api-entry__member-description">Cached rendered HTML keyed by absolute file path.</div></td>
+</tr>
+<tr id="devservercache-sitename">
+  <td><code>siteName</code></td>
+  <td><span class="ox-api-entry__member-kind">property</span></td>
+  <td><code class="ox-api-entry__member-type language-typescript">string | null</code></td>
+  <td><div class="ox-api-entry__member-description">Cached site name. Computed once.</div></td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
   </div>
 </details>
 
@@ -227,7 +260,7 @@
 </details>
 
 <details id="renderpage" class="ox-api-entry">
-  <summary><span class="ox-api-entry__kind">fn</span><span class="ox-api-entry__summary-main"><code class="ox-api-entry__signature ox-api-entry__signature--highlighted language-typescript">renderPage(filePath: string, options: ResolvedOptions, navGroups: NavGroup[], siteName: string, base: string, root: string): Promise&lt;string&gt;</code><span class="ox-api-entry__description">Render a single markdown page to full HTML.</span><span class="ox-api-entry__meta"><span class="ox-api-badge">6 params</span><span class="ox-api-badge">returns Promise</span></span></span></summary>
+  <summary><span class="ox-api-entry__kind">fn</span><span class="ox-api-entry__summary-main"><code class="ox-api-entry__signature ox-api-entry__signature--highlighted language-typescript">renderPage(filePath: string, options: ResolvedOptions, navGroups: NavGroup[], siteName: string, base: string, root: string): Promise&lt;string&gt;</code><span class="ox-api-entry__description">Render a single markdown page to full HTML.</span><span class="ox-api-entry__meta"><span class="ox-api-badge">6 params</span><span class="ox-api-badge">returns Promise&lt;string&gt;</span></span></span></summary>
   <div class="ox-api-entry__body">
 <div class="ox-api-entry__prose">
 <p>Render a single markdown page to full HTML.</p>
@@ -236,7 +269,7 @@
 <h4>Signature</h4>
 <pre><code class="language-typescript">async function renderPage(filePath: string, options: ResolvedOptions, navGroups: NavGroup[], siteName: string, base: string, root: string): Promise&lt;string&gt;</code></pre>
 </div>
-<p class="ox-api-entry__source"><a class="ox-api-entry__source-link" href="https://github.com/ubugeeei-prod/ox-content/blob/main/npm/vite-plugin-ox-content/src/dev-server.ts#L271-L360" target="_blank" rel="noopener noreferrer">View source<span class="ox-api-entry__source-icon" aria-hidden="true"></span></a></p>
+<p class="ox-api-entry__source"><a class="ox-api-entry__source-link" href="https://github.com/ubugeeei-prod/ox-content/blob/main/npm/vite-plugin-ox-content/src/dev-server.ts#L271-L366" target="_blank" rel="noopener noreferrer">View source<span class="ox-api-entry__source-icon" aria-hidden="true"></span></a></p>
 <div class="ox-api-entry__section ox-api-entry__section--params">
 <h4>Parameters</h4>
 <ul class="ox-api-entry__params">
@@ -287,7 +320,7 @@
 <div class="ox-api-entry__section ox-api-entry__section--returns">
 <h4>Returns</h4>
 <div class="ox-api-entry__return">
-  <code class="ox-api-entry__return-type">Promise</code>
+  <code class="ox-api-entry__return-type">Promise&lt;string&gt;</code>
   
 </div>
 </div>
@@ -295,7 +328,7 @@
 </details>
 
 <details id="resolvemarkdownfile" class="ox-api-entry">
-  <summary><span class="ox-api-entry__kind">fn</span><span class="ox-api-entry__summary-main"><code class="ox-api-entry__signature ox-api-entry__signature--highlighted language-typescript">resolveMarkdownFile(url: string, srcDir: string, extensions: readonly string[]): Promise&lt;string | null&gt;</code><span class="ox-api-entry__description">Resolve a request URL to a markdown file path. Returns null if no matching file…</span><span class="ox-api-entry__meta"><span class="ox-api-badge">3 params</span><span class="ox-api-badge">returns Promise</span></span></span></summary>
+  <summary><span class="ox-api-entry__kind">fn</span><span class="ox-api-entry__summary-main"><code class="ox-api-entry__signature ox-api-entry__signature--highlighted language-typescript">resolveMarkdownFile(url: string, srcDir: string, extensions: readonly string[]): Promise&lt;string | null&gt;</code><span class="ox-api-entry__description">Resolve a request URL to a markdown file path. Returns null if no matching file…</span><span class="ox-api-entry__meta"><span class="ox-api-badge">3 params</span><span class="ox-api-badge">returns Promise&lt;string | null&gt;</span></span></span></summary>
   <div class="ox-api-entry__body">
 <div class="ox-api-entry__prose">
 <p>Resolve a request URL to a markdown file path. Returns null if no matching file exists.</p>
@@ -334,7 +367,7 @@
 <div class="ox-api-entry__section ox-api-entry__section--returns">
 <h4>Returns</h4>
 <div class="ox-api-entry__return">
-  <code class="ox-api-entry__return-type">Promise</code>
+  <code class="ox-api-entry__return-type">Promise&lt;string | null&gt;</code>
   
 </div>
 </div>
@@ -342,7 +375,7 @@
 </details>
 
 <details id="resolvesitename" class="ox-api-entry">
-  <summary><span class="ox-api-entry__kind">fn</span><span class="ox-api-entry__summary-main"><code class="ox-api-entry__signature ox-api-entry__signature--highlighted language-typescript">resolveSiteName(options: ResolvedOptions, root: string): Promise&lt;string&gt;</code><span class="ox-api-entry__description">Resolve site name from options or package.json.</span><span class="ox-api-entry__meta"><span class="ox-api-badge">2 params</span><span class="ox-api-badge">returns Promise</span></span></span></summary>
+  <summary><span class="ox-api-entry__kind">fn</span><span class="ox-api-entry__summary-main"><code class="ox-api-entry__signature ox-api-entry__signature--highlighted language-typescript">resolveSiteName(options: ResolvedOptions, root: string): Promise&lt;string&gt;</code><span class="ox-api-entry__description">Resolve site name from options or package.json.</span><span class="ox-api-entry__meta"><span class="ox-api-badge">2 params</span><span class="ox-api-badge">returns Promise&lt;string&gt;</span></span></span></summary>
   <div class="ox-api-entry__body">
 <div class="ox-api-entry__prose">
 <p>Resolve site name from options or package.json.</p>
@@ -374,7 +407,7 @@
 <div class="ox-api-entry__section ox-api-entry__section--returns">
 <h4>Returns</h4>
 <div class="ox-api-entry__return">
-  <code class="ox-api-entry__return-type">Promise</code>
+  <code class="ox-api-entry__return-type">Promise&lt;string&gt;</code>
   
 </div>
 </div>

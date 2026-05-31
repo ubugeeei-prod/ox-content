@@ -31,7 +31,7 @@
 </div>
 
 <details id="extractislandinfo" class="ox-api-entry">
-  <summary><span class="ox-api-entry__kind">fn</span><span class="ox-api-entry__summary-main"><code class="ox-api-entry__signature ox-api-entry__signature--highlighted language-typescript">extractIslandInfo(html: string): Promise&lt;IslandInfo[]&gt;</code><span class="ox-api-entry__description">Extract island info without transforming HTML. Useful for analysis/bundling pur…</span><span class="ox-api-entry__meta"><span class="ox-api-badge">1 param</span><span class="ox-api-badge">returns Promise</span></span></span></summary>
+  <summary><span class="ox-api-entry__kind">fn</span><span class="ox-api-entry__summary-main"><code class="ox-api-entry__signature ox-api-entry__signature--highlighted language-typescript">extractIslandInfo(html: string): Promise&lt;IslandInfo[]&gt;</code><span class="ox-api-entry__description">Extract island info without transforming HTML. Useful for analysis/bundling pur…</span><span class="ox-api-entry__meta"><span class="ox-api-badge">1 param</span><span class="ox-api-badge">returns Promise&lt;IslandInfo[]&gt;</span></span></span></summary>
   <div class="ox-api-entry__body">
 <div class="ox-api-entry__prose">
 <p>Extract island info without transforming HTML. Useful for analysis/bundling purposes.</p>
@@ -56,7 +56,7 @@
 <div class="ox-api-entry__section ox-api-entry__section--returns">
 <h4>Returns</h4>
 <div class="ox-api-entry__return">
-  <code class="ox-api-entry__return-type">Promise</code>
+  <code class="ox-api-entry__return-type">Promise&lt;IslandInfo[]&gt;</code>
   
 </div>
 </div>
@@ -236,7 +236,7 @@
 </details>
 
 <details id="parseprops" class="ox-api-entry">
-  <summary><span class="ox-api-entry__kind">fn</span><span class="ox-api-entry__summary-main"><code class="ox-api-entry__signature ox-api-entry__signature--highlighted language-typescript">parseProps(el: Element): Record&lt;string, unknown&gt;</code><span class="ox-api-entry__description">Parse JSX-style props from attributes.</span><span class="ox-api-entry__meta"><span class="ox-api-badge">1 param</span><span class="ox-api-badge">returns Record</span></span></span></summary>
+  <summary><span class="ox-api-entry__kind">fn</span><span class="ox-api-entry__summary-main"><code class="ox-api-entry__signature ox-api-entry__signature--highlighted language-typescript">parseProps(el: Element): Record&lt;string, unknown&gt;</code><span class="ox-api-entry__description">Parse JSX-style props from attributes.</span><span class="ox-api-entry__meta"><span class="ox-api-badge">1 param</span><span class="ox-api-badge">returns Record&lt;string, unknown&gt;</span></span></span></summary>
   <div class="ox-api-entry__body">
 <div class="ox-api-entry__prose">
 <p>Parse JSX-style props from attributes.</p>
@@ -261,7 +261,7 @@
 <div class="ox-api-entry__section ox-api-entry__section--returns">
 <h4>Returns</h4>
 <div class="ox-api-entry__return">
-  <code class="ox-api-entry__return-type">Record</code>
+  <code class="ox-api-entry__return-type">Record&lt;string, unknown&gt;</code>
   
 </div>
 </div>
@@ -316,7 +316,7 @@
 </details>
 
 <details id="transformislands" class="ox-api-entry">
-  <summary><span class="ox-api-entry__kind">fn</span><span class="ox-api-entry__summary-main"><code class="ox-api-entry__signature ox-api-entry__signature--highlighted language-typescript">transformIslands(html: string): Promise&lt;ParseIslandsResult&gt;</code><span class="ox-api-entry__description">Transform Island components in HTML. Converts: ```html &lt;Island load=&quot;visible&quot;&gt;…</span><span class="ox-api-entry__meta"><span class="ox-api-badge">1 param</span><span class="ox-api-badge">returns Promise</span></span></span></summary>
+  <summary><span class="ox-api-entry__kind">fn</span><span class="ox-api-entry__summary-main"><code class="ox-api-entry__signature ox-api-entry__signature--highlighted language-typescript">transformIslands(html: string): Promise&lt;ParseIslandsResult&gt;</code><span class="ox-api-entry__description">Transform Island components in HTML. Converts: ``html &lt;Island load=&quot;visible&quot;&gt; &lt;…</span><span class="ox-api-entry__meta"><span class="ox-api-badge">1 param</span><span class="ox-api-badge">returns Promise&lt;ParseIslandsResult&gt;</span></span></span></summary>
   <div class="ox-api-entry__body">
 <div class="ox-api-entry__prose">
 <p>Transform Island components in HTML.</p>
@@ -353,7 +353,7 @@
 <div class="ox-api-entry__section ox-api-entry__section--returns">
 <h4>Returns</h4>
 <div class="ox-api-entry__return">
-  <code class="ox-api-entry__return-type">Promise</code>
+  <code class="ox-api-entry__return-type">Promise&lt;ParseIslandsResult&gt;</code>
   
 </div>
 </div>

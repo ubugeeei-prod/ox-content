@@ -37,6 +37,7 @@ import { importNapiModule } from "./napi";
 import { transformMermaidStatic } from "./plugins/mermaid";
 import { transformBuiltinEmbeds } from "./plugins";
 import { protectMermaidSvgs, restoreMermaidSvgs } from "./plugins/mermaid-protect";
+import { typecheckCodeBlocks } from "./code-blocks";
 
 /**
  * NAPI bindings for Rust-based Markdown processing.
@@ -93,6 +94,10 @@ interface NapiBindings {
    * @returns Highlighted HTML with original code block metadata reapplied
    */
   mergeHighlightedCodeBlocks: (originalHtml: string, highlightedHtml: string) => string;
+
+  sanitizeHtml: (html: string, options?: JsSanitizeOptions) => string;
+
+  lintCodeBlocks: (source: string, options?: JsCodeBlockLintOptions) => JsCodeBlockDiagnostic[];
 }
 
 /**
@@ -229,6 +234,62 @@ interface JsTransformOptions {
    * @default false
    */
   codeAnnotationDefaultLineNumbers?: boolean;
+
+  wikiLinks?: {
+    enabled?: boolean;
+    baseUrl?: string;
+  };
+
+  emojiShortcodes?: {
+    enabled?: boolean;
+    custom?: Record<string, string>;
+  };
+
+  attributes?: {
+    enabled?: boolean;
+  };
+
+  cjkEmphasis?: boolean;
+
+  codeImports?: {
+    enabled?: boolean;
+    rootDir?: string;
+  };
+
+  sanitize?: JsSanitizeOptions;
+
+  editThisPage?: {
+    enabled?: boolean;
+    repoUrl?: string;
+    branch?: string;
+    rootDir?: string;
+    label?: string;
+  };
+}
+
+interface JsSanitizeOptions {
+  enabled?: boolean;
+  allowedTags?: string[];
+  allowedAttributes?: string[];
+  allowedUrlSchemes?: string[];
+}
+
+interface JsCodeBlockLintOptions {
+  enabled?: boolean;
+  languages?: string[];
+  requireLanguage?: boolean;
+  trailingSpaces?: boolean;
+}
+
+interface JsCodeBlockDiagnostic {
+  ruleId: string;
+  severity: string;
+  message: string;
+  line: number;
+  column: number;
+  endLine: number;
+  endColumn: number;
+  language?: string;
 }
 
 /**
@@ -415,6 +476,9 @@ export async function transformMarkdown(
   }
 
   // Use Rust-based transformation, including frontmatter preparation.
+  runCodeBlockLint(source, napi, options);
+  await runCodeBlockTypecheck(source, options);
+
   const result = napi.transform(source, {
     gfm: options.gfm,
     footnotes: options.footnotes,
@@ -426,10 +490,42 @@ export async function transformMarkdown(
     convertMdLinks: ssgOptions?.convertMdLinks,
     baseUrl: ssgOptions?.baseUrl,
     sourcePath: ssgOptions?.sourcePath ?? filePath,
-    codeAnnotations: options.codeAnnotations.enabled,
-    codeAnnotationMetaKey: options.codeAnnotations.metaKey,
-    codeAnnotationSyntax: options.codeAnnotations.notation,
-    codeAnnotationDefaultLineNumbers: options.codeAnnotations.defaultLineNumbers,
+    codeAnnotations: options.codeAnnotations?.enabled ?? false,
+    codeAnnotationMetaKey: options.codeAnnotations?.metaKey ?? "annotate",
+    codeAnnotationSyntax: options.codeAnnotations?.notation ?? "attribute",
+    codeAnnotationDefaultLineNumbers: options.codeAnnotations?.defaultLineNumbers ?? false,
+    wikiLinks: options.wikiLinks?.enabled
+      ? {
+          enabled: true,
+          baseUrl: options.wikiLinks.baseUrl,
+        }
+      : undefined,
+    emojiShortcodes: options.emojiShortcodes?.enabled
+      ? {
+          enabled: true,
+          custom: options.emojiShortcodes.custom,
+        }
+      : undefined,
+    attributes: options.attrs?.enabled ? { enabled: true } : undefined,
+    cjkEmphasis: options.cjkEmphasis ?? false,
+    codeImports: options.codeImports?.enabled
+      ? {
+          enabled: true,
+          rootDir: options.codeImports.rootDir,
+        }
+      : undefined,
+    // Sanitize once at the end of the JS pipeline so opt-in embeds can be
+    // expanded before the allow-list is applied.
+    sanitize: undefined,
+    editThisPage: options.editThisPage?.enabled
+      ? {
+          enabled: true,
+          repoUrl: options.editThisPage.repoUrl,
+          branch: options.editThisPage.branch,
+          rootDir: options.editThisPage.rootDir,
+          label: options.editThisPage.label,
+        }
+      : undefined,
   });
 
   if (result.errors.length > 0) {
@@ -473,6 +569,10 @@ export async function transformMarkdown(
   // Restore protected SVGs
   html = restoreMermaidSvgs(html, svgs);
 
+  if (options.sanitize?.enabled) {
+    html = napi.sanitizeHtml(html, toJsSanitizeOptions(options.sanitize));
+  }
+
   // Generate JavaScript module code
   const code = generateModuleCode(html, frontmatter, toc, filePath, options);
 
@@ -481,6 +581,68 @@ export async function transformMarkdown(
     html,
     frontmatter,
     toc,
+  };
+}
+
+async function runCodeBlockTypecheck(source: string, options: ResolvedOptions): Promise<void> {
+  const typecheck = options.codeBlockTypecheck;
+  if (!typecheck?.enabled || !source.includes("```")) {
+    return;
+  }
+
+  const diagnostics = await typecheckCodeBlocks(source, {
+    languages: typecheck.languages,
+    requireMeta: typecheck.requireMeta,
+    tsgoCommand: typecheck.tsgoCommand,
+  });
+  if (diagnostics.length === 0) {
+    return;
+  }
+
+  const message = diagnostics
+    .slice(0, 3)
+    .map((diagnostic) => `${diagnostic.ruleId} at ${diagnostic.line}: ${diagnostic.message}`)
+    .join("\n");
+  if (typecheck.mode === "error") {
+    throw new Error(`[ox-content] Code block type-checking failed:\n${message}`);
+  }
+  console.warn(`[ox-content] Code block type-checking warnings:\n${message}`);
+}
+
+function runCodeBlockLint(source: string, napi: NapiBindings, options: ResolvedOptions): void {
+  const lint = options.codeBlockLint;
+  if (!lint?.enabled || !source.includes("```")) {
+    return;
+  }
+
+  const diagnostics = napi.lintCodeBlocks(source, {
+    enabled: true,
+    languages: lint.languages,
+    requireLanguage: lint.requireLanguage,
+    trailingSpaces: lint.trailingSpaces,
+  });
+  if (diagnostics.length === 0) {
+    return;
+  }
+
+  const message = diagnostics
+    .slice(0, 5)
+    .map((diagnostic) => {
+      return `${diagnostic.ruleId} at ${diagnostic.line}:${diagnostic.column} ${diagnostic.message}`;
+    })
+    .join("\n");
+  if (lint.mode === "error") {
+    throw new Error(`[ox-content] Code block lint failed:\n${message}`);
+  }
+  console.warn(`[ox-content] Code block lint warnings:\n${message}`);
+}
+
+function toJsSanitizeOptions(options: ResolvedOptions["sanitize"]): JsSanitizeOptions {
+  return {
+    enabled: true,
+    allowedTags: options.allowedTags,
+    allowedAttributes: options.allowedAttributes,
+    allowedUrlSchemes: options.allowedUrlSchemes,
   };
 }
 

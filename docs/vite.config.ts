@@ -121,6 +121,9 @@ export default defineConfig(({ mode }) => {
         codeAnnotations: {
           notation: "both",
         },
+        embeds: {
+          pm: true,
+        },
 
         // Mermaid diagrams (native mmdc via NAPI)
         mermaid: true,

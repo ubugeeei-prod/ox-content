@@ -31,7 +31,7 @@
 </div>
 
 <details id="collectgithubrepos" class="ox-api-entry">
-  <summary><span class="ox-api-entry__kind">fn</span><span class="ox-api-entry__summary-main"><code class="ox-api-entry__signature ox-api-entry__signature--highlighted language-typescript">collectGitHubRepos(html: string): Promise&lt;string[]&gt;</code><span class="ox-api-entry__description">Collect all GitHub repos from HTML for pre-fetching.</span><span class="ox-api-entry__meta"><span class="ox-api-badge">1 param</span><span class="ox-api-badge">returns Promise</span></span></span></summary>
+  <summary><span class="ox-api-entry__kind">fn</span><span class="ox-api-entry__summary-main"><code class="ox-api-entry__signature ox-api-entry__signature--highlighted language-typescript">collectGitHubRepos(html: string): Promise&lt;string[]&gt;</code><span class="ox-api-entry__description">Collect all GitHub repos from HTML for pre-fetching.</span><span class="ox-api-entry__meta"><span class="ox-api-badge">1 param</span><span class="ox-api-badge">returns Promise&lt;string[]&gt;</span></span></span></summary>
   <div class="ox-api-entry__body">
 <div class="ox-api-entry__prose">
 <p>Collect all GitHub repos from HTML for pre-fetching.</p>
@@ -56,7 +56,7 @@
 <div class="ox-api-entry__section ox-api-entry__section--returns">
 <h4>Returns</h4>
 <div class="ox-api-entry__return">
-  <code class="ox-api-entry__return-type">Promise</code>
+  <code class="ox-api-entry__return-type">Promise&lt;string[]&gt;</code>
   
 </div>
 </div>
@@ -64,7 +64,7 @@
 </details>
 
 <details id="collectgithubsources" class="ox-api-entry">
-  <summary><span class="ox-api-entry__kind">fn</span><span class="ox-api-entry__summary-main"><code class="ox-api-entry__signature ox-api-entry__signature--highlighted language-typescript">collectGitHubSources(html: string): Promise&lt;GitHubSourceRef[]&gt;</code><span class="ox-api-entry__description">Collect all GitHub source references from HTML for pre-fetching.</span><span class="ox-api-entry__meta"><span class="ox-api-badge">1 param</span><span class="ox-api-badge">returns Promise</span></span></span></summary>
+  <summary><span class="ox-api-entry__kind">fn</span><span class="ox-api-entry__summary-main"><code class="ox-api-entry__signature ox-api-entry__signature--highlighted language-typescript">collectGitHubSources(html: string): Promise&lt;GitHubSourceRef[]&gt;</code><span class="ox-api-entry__description">Collect all GitHub source references from HTML for pre-fetching.</span><span class="ox-api-entry__meta"><span class="ox-api-badge">1 param</span><span class="ox-api-badge">returns Promise&lt;GitHubSourceRef[]&gt;</span></span></span></summary>
   <div class="ox-api-entry__body">
 <div class="ox-api-entry__prose">
 <p>Collect all GitHub source references from HTML for pre-fetching.</p>
@@ -89,7 +89,7 @@
 <div class="ox-api-entry__section ox-api-entry__section--returns">
 <h4>Returns</h4>
 <div class="ox-api-entry__return">
-  <code class="ox-api-entry__return-type">Promise</code>
+  <code class="ox-api-entry__return-type">Promise&lt;GitHubSourceRef[]&gt;</code>
   
 </div>
 </div>
@@ -163,7 +163,7 @@
 </details>
 
 <details id="fetchgithubsource" class="ox-api-entry">
-  <summary><span class="ox-api-entry__kind">fn</span><span class="ox-api-entry__summary-main"><code class="ox-api-entry__signature ox-api-entry__signature--highlighted language-typescript">fetchGitHubSource(source: GitHubSourceRef, options: Required&lt;GitHubOptions&gt;): Promise&lt;GitHubSourceData | null&gt;</code><span class="ox-api-entry__description">Fetch source file data from GitHub API.</span><span class="ox-api-entry__meta"><span class="ox-api-badge">2 params</span><span class="ox-api-badge">returns Promise</span></span></span></summary>
+  <summary><span class="ox-api-entry__kind">fn</span><span class="ox-api-entry__summary-main"><code class="ox-api-entry__signature ox-api-entry__signature--highlighted language-typescript">fetchGitHubSource(source: GitHubSourceRef, options: Required&lt;GitHubOptions&gt;): Promise&lt;GitHubSourceData | null&gt;</code><span class="ox-api-entry__description">Fetch source file data from GitHub API.</span><span class="ox-api-entry__meta"><span class="ox-api-badge">2 params</span><span class="ox-api-badge">returns Promise&lt;GitHubSourceData | null&gt;</span></span></span></summary>
   <div class="ox-api-entry__body">
 <div class="ox-api-entry__prose">
 <p>Fetch source file data from GitHub API.</p>
@@ -186,7 +186,7 @@
 <li class="ox-api-entry__param">
   <div class="ox-api-entry__param-heading">
     <code class="ox-api-entry__param-name">options</code>
-    <code class="ox-api-entry__param-type">Required</code>
+    <code class="ox-api-entry__param-type">Required&lt;GitHubOptions&gt;</code>
   </div>
   
 </li>
@@ -195,7 +195,7 @@
 <div class="ox-api-entry__section ox-api-entry__section--returns">
 <h4>Returns</h4>
 <div class="ox-api-entry__return">
-  <code class="ox-api-entry__return-type">Promise</code>
+  <code class="ox-api-entry__return-type">Promise&lt;GitHubSourceData | null&gt;</code>
   
 </div>
 </div>
@@ -203,7 +203,7 @@
 </details>
 
 <details id="fetchrepodata" class="ox-api-entry">
-  <summary><span class="ox-api-entry__kind">fn</span><span class="ox-api-entry__summary-main"><code class="ox-api-entry__signature ox-api-entry__signature--highlighted language-typescript">fetchRepoData(repo: string, options: Required&lt;GitHubOptions&gt;): Promise&lt;GitHubRepoData | null&gt;</code><span class="ox-api-entry__description">Fetch repository data from GitHub API.</span><span class="ox-api-entry__meta"><span class="ox-api-badge">2 params</span><span class="ox-api-badge">returns Promise</span></span></span></summary>
+  <summary><span class="ox-api-entry__kind">fn</span><span class="ox-api-entry__summary-main"><code class="ox-api-entry__signature ox-api-entry__signature--highlighted language-typescript">fetchRepoData(repo: string, options: Required&lt;GitHubOptions&gt;): Promise&lt;GitHubRepoData | null&gt;</code><span class="ox-api-entry__description">Fetch repository data from GitHub API.</span><span class="ox-api-entry__meta"><span class="ox-api-badge">2 params</span><span class="ox-api-badge">returns Promise&lt;GitHubRepoData | null&gt;</span></span></span></summary>
   <div class="ox-api-entry__body">
 <div class="ox-api-entry__prose">
 <p>Fetch repository data from GitHub API.</p>
@@ -226,7 +226,7 @@
 <li class="ox-api-entry__param">
   <div class="ox-api-entry__param-heading">
     <code class="ox-api-entry__param-name">options</code>
-    <code class="ox-api-entry__param-type">Required</code>
+    <code class="ox-api-entry__param-type">Required&lt;GitHubOptions&gt;</code>
   </div>
   
 </li>
@@ -235,7 +235,7 @@
 <div class="ox-api-entry__section ox-api-entry__section--returns">
 <h4>Returns</h4>
 <div class="ox-api-entry__return">
-  <code class="ox-api-entry__return-type">Promise</code>
+  <code class="ox-api-entry__return-type">Promise&lt;GitHubRepoData | null&gt;</code>
   
 </div>
 </div>
@@ -316,7 +316,7 @@
 </details>
 
 <details id="prefetchgithubrepos" class="ox-api-entry">
-  <summary><span class="ox-api-entry__kind">fn</span><span class="ox-api-entry__summary-main"><code class="ox-api-entry__signature ox-api-entry__signature--highlighted language-typescript">prefetchGitHubRepos(repos: string[], options?: GitHubOptions): Promise&lt;Map&lt;string, GitHubRepoData | null&gt;&gt;</code><span class="ox-api-entry__description">Pre-fetch all GitHub repos data.</span><span class="ox-api-entry__meta"><span class="ox-api-badge">2 params</span><span class="ox-api-badge">returns Promise</span></span></span></summary>
+  <summary><span class="ox-api-entry__kind">fn</span><span class="ox-api-entry__summary-main"><code class="ox-api-entry__signature ox-api-entry__signature--highlighted language-typescript">prefetchGitHubRepos(repos: string[], options?: GitHubOptions): Promise&lt;Map&lt;string, GitHubRepoData | null&gt;&gt;</code><span class="ox-api-entry__description">Pre-fetch all GitHub repos data.</span><span class="ox-api-entry__meta"><span class="ox-api-badge">2 params</span><span class="ox-api-badge">returns Promise&lt;Map&lt;string, GitHubRepoData | null&gt;&gt;</span></span></span></summary>
   <div class="ox-api-entry__body">
 <div class="ox-api-entry__prose">
 <p>Pre-fetch all GitHub repos data.</p>
@@ -348,7 +348,7 @@
 <div class="ox-api-entry__section ox-api-entry__section--returns">
 <h4>Returns</h4>
 <div class="ox-api-entry__return">
-  <code class="ox-api-entry__return-type">Promise</code>
+  <code class="ox-api-entry__return-type">Promise&lt;Map&lt;string, GitHubRepoData | null&gt;&gt;</code>
   
 </div>
 </div>
@@ -356,7 +356,7 @@
 </details>
 
 <details id="prefetchgithubsources" class="ox-api-entry">
-  <summary><span class="ox-api-entry__kind">fn</span><span class="ox-api-entry__summary-main"><code class="ox-api-entry__signature ox-api-entry__signature--highlighted language-typescript">prefetchGitHubSources(sources: GitHubSourceRef[], options?: GitHubOptions): Promise&lt;Map&lt;string, GitHubSourceData | null&gt;&gt;</code><span class="ox-api-entry__description">Pre-fetch all GitHub source files.</span><span class="ox-api-entry__meta"><span class="ox-api-badge">2 params</span><span class="ox-api-badge">returns Promise</span></span></span></summary>
+  <summary><span class="ox-api-entry__kind">fn</span><span class="ox-api-entry__summary-main"><code class="ox-api-entry__signature ox-api-entry__signature--highlighted language-typescript">prefetchGitHubSources(sources: GitHubSourceRef[], options?: GitHubOptions): Promise&lt;Map&lt;string, GitHubSourceData | null&gt;&gt;</code><span class="ox-api-entry__description">Pre-fetch all GitHub source files.</span><span class="ox-api-entry__meta"><span class="ox-api-badge">2 params</span><span class="ox-api-badge">returns Promise&lt;Map&lt;string, GitHubSourceData | null&gt;&gt;</span></span></span></summary>
   <div class="ox-api-entry__body">
 <div class="ox-api-entry__prose">
 <p>Pre-fetch all GitHub source files.</p>
@@ -388,7 +388,7 @@
 <div class="ox-api-entry__section ox-api-entry__section--returns">
 <h4>Returns</h4>
 <div class="ox-api-entry__return">
-  <code class="ox-api-entry__return-type">Promise</code>
+  <code class="ox-api-entry__return-type">Promise&lt;Map&lt;string, GitHubSourceData | null&gt;&gt;</code>
   
 </div>
 </div>
@@ -412,21 +412,21 @@
 <li class="ox-api-entry__param">
   <div class="ox-api-entry__param-heading">
     <code class="ox-api-entry__param-name">repoDataMap</code>
-    <code class="ox-api-entry__param-type">Map</code>
+    <code class="ox-api-entry__param-type">Map&lt;string, GitHubRepoData | null&gt;</code>
   </div>
   
 </li>
 <li class="ox-api-entry__param">
   <div class="ox-api-entry__param-heading">
     <code class="ox-api-entry__param-name">sourceDataMap</code>
-    <code class="ox-api-entry__param-type">Map</code>
+    <code class="ox-api-entry__param-type">Map&lt;string, GitHubSourceData | null&gt;</code>
   </div>
   
 </li>
 <li class="ox-api-entry__param">
   <div class="ox-api-entry__param-heading">
     <code class="ox-api-entry__param-name">options</code>
-    <code class="ox-api-entry__param-type">Required</code>
+    <code class="ox-api-entry__param-type">Required&lt;GitHubOptions&gt;</code>
   </div>
   
 </li>
@@ -436,7 +436,7 @@
 </details>
 
 <details id="transformgithub" class="ox-api-entry">
-  <summary><span class="ox-api-entry__kind">fn</span><span class="ox-api-entry__summary-main"><code class="ox-api-entry__signature ox-api-entry__signature--highlighted language-typescript">transformGitHub(html: string, repoDataMap?: Map&lt;string, GitHubRepoData | null&gt;, options?: GitHubOptions): Promise&lt;string&gt;</code><span class="ox-api-entry__description">Transform GitHub components in HTML.</span><span class="ox-api-entry__meta"><span class="ox-api-badge">3 params</span><span class="ox-api-badge">returns Promise</span></span></span></summary>
+  <summary><span class="ox-api-entry__kind">fn</span><span class="ox-api-entry__summary-main"><code class="ox-api-entry__signature ox-api-entry__signature--highlighted language-typescript">transformGitHub(html: string, repoDataMap?: Map&lt;string, GitHubRepoData | null&gt;, options?: GitHubOptions): Promise&lt;string&gt;</code><span class="ox-api-entry__description">Transform GitHub components in HTML.</span><span class="ox-api-entry__meta"><span class="ox-api-badge">3 params</span><span class="ox-api-badge">returns Promise&lt;string&gt;</span></span></span></summary>
   <div class="ox-api-entry__body">
 <div class="ox-api-entry__prose">
 <p>Transform GitHub components in HTML.</p>
@@ -459,7 +459,7 @@
 <li class="ox-api-entry__param">
   <div class="ox-api-entry__param-heading">
     <code class="ox-api-entry__param-name">repoDataMap</code>
-    <code class="ox-api-entry__param-type">Map</code>
+    <code class="ox-api-entry__param-type">Map&lt;string, GitHubRepoData | null&gt;</code>
   </div>
   <p class="ox-api-entry__param-description">optional</p>
 </li>
@@ -475,7 +475,7 @@
 <div class="ox-api-entry__section ox-api-entry__section--returns">
 <h4>Returns</h4>
 <div class="ox-api-entry__return">
-  <code class="ox-api-entry__return-type">Promise</code>
+  <code class="ox-api-entry__return-type">Promise&lt;string&gt;</code>
   
 </div>
 </div>

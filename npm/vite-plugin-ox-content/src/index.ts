@@ -27,7 +27,7 @@ import {
 import { createOgViewerPlugin } from "./og-viewer";
 import { resolveI18nOptions, createI18nPlugin } from "./i18n";
 import { isMarkdownFilePath, normalizeMarkdownExtensions } from "./markdown";
-import type { OxContentOptions, ResolvedOptions } from "./types";
+import type { BuiltinPmOptions, OxContentOptions, ResolvedOptions } from "./types";
 
 export type { OxContentOptions } from "./types";
 export type { LanguageRegistration, ThemeRegistration } from "shiki";
@@ -35,6 +35,24 @@ export type {
   CodeAnnotationSyntax,
   CodeAnnotationsOptions,
   ResolvedCodeAnnotationsOptions,
+  WikiLinkOptions,
+  ResolvedWikiLinkOptions,
+  EmojiShortcodeOptions,
+  ResolvedEmojiShortcodeOptions,
+  AttrsOptions,
+  ResolvedAttrsOptions,
+  CodeImportOptions,
+  ResolvedCodeImportOptions,
+  SanitizeOptions,
+  ResolvedSanitizeOptions,
+  EditThisPageOptions,
+  ResolvedEditThisPageOptions,
+  CodeBlockLintOptions,
+  ResolvedCodeBlockLintOptions,
+  CodeBlockTypecheckOptions,
+  ResolvedCodeBlockTypecheckOptions,
+  DocsTestOptions,
+  ResolvedDocsTestOptions,
   DocsOptions,
   ResolvedDocsOptions,
   DocEntry,
@@ -61,6 +79,7 @@ export type {
   LocaleConfig,
   BuiltinEmbedOptions,
   ResolvedBuiltinEmbedOptions,
+  BuiltinPmOptions,
 } from "./types";
 
 /**
@@ -421,6 +440,16 @@ function resolveOptions(options: OxContentOptions): ResolvedOptions {
     highlightTheme: options.highlightTheme ?? "github-dark",
     highlightLangs: options.highlightLangs ?? [],
     codeAnnotations: resolveCodeAnnotationsOptions(options.codeAnnotations),
+    wikiLinks: resolveWikiLinkOptions(options.wikiLinks, options.base ?? "/"),
+    emojiShortcodes: resolveEmojiShortcodeOptions(options.emojiShortcodes),
+    attrs: resolveAttrsOptions(options.attrs),
+    codeImports: resolveCodeImportOptions(options.codeImports),
+    sanitize: resolveSanitizeOptions(options.sanitize),
+    editThisPage: resolveEditThisPageOptions(options.editThisPage),
+    cjkEmphasis: options.cjkEmphasis ?? false,
+    codeBlockLint: resolveCodeBlockLintOptions(options.codeBlockLint),
+    codeBlockTypecheck: resolveCodeBlockTypecheckOptions(options.codeBlockTypecheck),
+    docsTests: resolveDocsTestOptions(options.docsTests),
     mermaid: options.mermaid ?? false,
     frontmatter: options.frontmatter ?? true,
     toc: options.toc ?? true,
@@ -443,12 +472,24 @@ export function resolveBuiltinEmbedOptions(
     return {
       github: false,
       openGraph: false,
+      pm: false,
+      spotify: false,
+      stackBlitz: false,
+      twitter: false,
+      bluesky: false,
+      webContainer: false,
     };
   }
 
   return {
     github: resolveSingleEmbedOptions(options?.github),
     openGraph: resolveSingleEmbedOptions(options?.openGraph),
+    pm: resolvePmOptions(options?.pm),
+    spotify: options?.spotify === true,
+    stackBlitz: options?.stackBlitz === true,
+    twitter: options?.twitter === true,
+    bluesky: options?.bluesky === true,
+    webContainer: options?.webContainer === true,
   };
 }
 
@@ -456,6 +497,134 @@ function resolveSingleEmbedOptions<T extends object>(options: boolean | T | unde
   if (options === false) return false;
   if (options === true || options === undefined) return {} as T;
   return options;
+}
+
+function resolvePmOptions(
+  options: boolean | BuiltinPmOptions | undefined,
+): BuiltinPmOptions | false {
+  if (options === false || options === undefined) return false;
+  if (options === true) return {};
+  return options;
+}
+
+function resolveWikiLinkOptions(
+  options: OxContentOptions["wikiLinks"],
+  baseUrl: string,
+): ResolvedOptions["wikiLinks"] {
+  if (!options) return { enabled: false, baseUrl };
+  if (options === true) return { enabled: true, baseUrl };
+  return { enabled: true, baseUrl: options.baseUrl ?? baseUrl };
+}
+
+function resolveEmojiShortcodeOptions(
+  options: OxContentOptions["emojiShortcodes"],
+): ResolvedOptions["emojiShortcodes"] {
+  if (!options) return { enabled: false, custom: {} };
+  if (options === true) return { enabled: true, custom: {} };
+  return { enabled: true, custom: options.custom ?? {} };
+}
+
+function resolveAttrsOptions(options: OxContentOptions["attrs"]): ResolvedOptions["attrs"] {
+  if (!options) return { enabled: false };
+  if (options === true) return { enabled: true };
+  return { enabled: options.enabled ?? true };
+}
+
+function resolveCodeImportOptions(
+  options: OxContentOptions["codeImports"],
+): ResolvedOptions["codeImports"] {
+  if (!options) return { enabled: false };
+  if (options === true) return { enabled: true };
+  return { enabled: true, rootDir: options.rootDir };
+}
+
+function resolveSanitizeOptions(
+  options: OxContentOptions["sanitize"],
+): ResolvedOptions["sanitize"] {
+  if (!options) return { enabled: false };
+  if (options === true) return { enabled: true };
+  return {
+    enabled: true,
+    allowedTags: options.allowedTags,
+    allowedAttributes: options.allowedAttributes,
+    allowedUrlSchemes: options.allowedUrlSchemes,
+  };
+}
+
+function resolveEditThisPageOptions(
+  options: OxContentOptions["editThisPage"],
+): ResolvedOptions["editThisPage"] {
+  if (!options) return { enabled: false, branch: "main", label: "Edit this page" };
+  if (options === true) return { enabled: false, branch: "main", label: "Edit this page" };
+  return {
+    enabled: Boolean(options.repoUrl),
+    repoUrl: options.repoUrl,
+    branch: options.branch ?? "main",
+    rootDir: options.rootDir,
+    label: options.label ?? "Edit this page",
+  };
+}
+
+function resolveCodeBlockLintOptions(
+  options: OxContentOptions["codeBlockLint"],
+): ResolvedOptions["codeBlockLint"] {
+  if (!options) {
+    return { enabled: false, requireLanguage: false, trailingSpaces: true, mode: "warn" };
+  }
+  if (options === true) {
+    return { enabled: true, requireLanguage: false, trailingSpaces: true, mode: "warn" };
+  }
+  return {
+    enabled: true,
+    languages: options.languages,
+    requireLanguage: options.requireLanguage ?? false,
+    trailingSpaces: options.trailingSpaces ?? true,
+    mode: options.mode ?? "warn",
+  };
+}
+
+function resolveCodeBlockTypecheckOptions(
+  options: OxContentOptions["codeBlockTypecheck"],
+): ResolvedOptions["codeBlockTypecheck"] {
+  if (!options) {
+    return {
+      enabled: false,
+      languages: ["ts", "tsx"],
+      requireMeta: true,
+      tsgoCommand: "tsgo",
+      mode: "warn",
+    };
+  }
+  if (options === true) {
+    return {
+      enabled: true,
+      languages: ["ts", "tsx"],
+      requireMeta: true,
+      tsgoCommand: "tsgo",
+      mode: "warn",
+    };
+  }
+  return {
+    enabled: true,
+    languages: options.languages ?? ["ts", "tsx"],
+    requireMeta: options.requireMeta ?? true,
+    tsgoCommand: options.tsgoCommand ?? "tsgo",
+    mode: options.mode ?? "warn",
+  };
+}
+
+function resolveDocsTestOptions(
+  options: OxContentOptions["docsTests"],
+): ResolvedOptions["docsTests"] {
+  if (!options) return { enabled: false, languages: ["js", "jsx", "ts", "tsx"], requireMeta: true };
+  if (options === true) {
+    return { enabled: true, languages: ["js", "jsx", "ts", "tsx"], requireMeta: true };
+  }
+  return {
+    enabled: true,
+    languages: options.languages ?? ["js", "jsx", "ts", "tsx"],
+    requireMeta: options.requireMeta ?? true,
+  };
 }
 
 function resolveCodeAnnotationsOptions(
@@ -547,6 +716,15 @@ function normalizeRuntimeBase(base: string): string {
 // Re-export types and utilities
 export { createMarkdownEnvironment } from "./environment";
 export { transformMarkdown } from "./transform";
+export {
+  extractCodeBlocks,
+  extractDocsTests,
+  lintCodeBlocks,
+  typecheckCodeBlocks,
+  type CodeBlockDiagnostic,
+  type ExtractedCodeBlock,
+  type TypecheckCodeBlockOptions,
+} from "./code-blocks";
 export { extractDocs, generateMarkdown, writeDocs, resolveDocsOptions } from "./docs";
 export { lintMarkdown, lintMarkdownAsync } from "./lint";
 export { lintMarkdownFile, lintMarkdownFiles, shouldLintMarkdownFile } from "./lint-files";

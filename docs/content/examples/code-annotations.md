@@ -52,6 +52,17 @@ console.warn("Token expires soon") // [!code warning]
 throw new Error("Token is invalid") // [!code error]
 ```
 
+Use a standalone comment directive when the next line should be rendered
+literally even if it contains annotation-looking text:
+
+````md
+```ts
+// [!code escape]
+console.warn("literal"); // [!code warning]
+console.warn("annotated"); // [!code warning]
+```
+````
+
 ## Rendered example
 
 ```ts annotate="highlight:1,6;warning:2;error:3"

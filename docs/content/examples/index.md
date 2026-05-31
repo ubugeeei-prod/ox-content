@@ -72,7 +72,7 @@ oxContent({
 
 ### [Package Manager Tabs](./package-manager-tabs.md)
 
-Author one npm command and render it as npm/pnpm/yarn/bun install tabs, with opt-in synced tab groups.
+Opt in to package-manager tabs, then author one npm command and render it as npm/pnpm/yarn/bun install tabs.
 
 ```md
 <pm>npm install -D vite</pm>
