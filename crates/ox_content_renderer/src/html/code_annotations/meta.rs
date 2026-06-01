@@ -6,15 +6,18 @@
 
 use std::collections::BTreeMap;
 
+use compact_str::CompactString;
+use smallvec::SmallVec;
+
 use super::state::{
     CodeAnnotationKind, CodeLineRenderState, MetaToken, MetaTokenKind, NormalizedCodeBlockInfo,
     PendingCodeAnnotation,
 };
 
-pub(in crate::html) fn split_code_block_meta(meta: &str) -> Vec<MetaToken<'_>> {
+pub(in crate::html) fn split_code_block_meta(meta: &str) -> SmallVec<[MetaToken<'_>; 4]> {
     let bytes = meta.as_bytes();
     let mut index = 0;
-    let mut tokens = Vec::new();
+    let mut tokens = SmallVec::new();
 
     while index < bytes.len() {
         while index < bytes.len() && bytes[index].is_ascii_whitespace() {
@@ -109,13 +112,13 @@ pub(in crate::html) fn normalize_code_block_info(
     lang: Option<&str>,
     meta: Option<&str>,
 ) -> NormalizedCodeBlockInfo {
-    let mut meta_parts: Vec<&str> = Vec::new();
+    let mut meta_parts: SmallVec<[&str; 2]> = SmallVec::new();
     let mut language = None;
 
     if let Some(raw_lang) = lang.map(str::trim).filter(|value| !value.is_empty()) {
         let (normalized_lang, inline_meta) = split_code_block_language_token(raw_lang);
         if !normalized_lang.is_empty() {
-            language = Some(normalized_lang.to_string());
+            language = Some(CompactString::from(normalized_lang));
         }
         if !inline_meta.trim().is_empty() {
             meta_parts.push(inline_meta.trim());
@@ -126,7 +129,13 @@ pub(in crate::html) fn normalize_code_block_info(
         meta_parts.push(raw_meta);
     }
 
-    NormalizedCodeBlockInfo { language, meta: meta_parts.join(" ") }
+    let meta = if meta_parts.is_empty() {
+        CompactString::default()
+    } else {
+        CompactString::from(meta_parts.join(" "))
+    };
+
+    NormalizedCodeBlockInfo { language, meta }
 }
 
 pub(in crate::html) fn normalize_code_block_language(lang: Option<&str>) -> Option<&str> {
@@ -159,7 +168,7 @@ pub(in crate::html) fn apply_annotation_numbers(
 
 pub(in crate::html) fn apply_btree_annotations(
     lines: &mut [CodeLineRenderState],
-    annotations: &BTreeMap<usize, Vec<CodeAnnotationKind>>,
+    annotations: &BTreeMap<usize, SmallVec<[CodeAnnotationKind; 2]>>,
 ) {
     for (line_number, kinds) in annotations {
         let Some(line) = lines.get_mut(line_number.saturating_sub(1)) else {
@@ -175,9 +184,9 @@ pub(in crate::html) fn apply_btree_annotations(
 
 pub(in crate::html) fn apply_pending_annotations(
     line: &mut CodeLineRenderState,
-    pending_annotations: &mut Vec<PendingCodeAnnotation>,
+    pending_annotations: &mut SmallVec<[PendingCodeAnnotation; 2]>,
 ) {
-    let mut remaining = Vec::new();
+    let mut remaining = SmallVec::new();
 
     for mut pending in pending_annotations.drain(..) {
         if !line.annotations.contains(&pending.kind) {

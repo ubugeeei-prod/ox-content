@@ -4,6 +4,8 @@
 //! as `// [!code ++]`. This module owns the inline directive grammar and converts it
 //! into the same semantic line states used by ox-content's attribute syntax.
 
+use smallvec::SmallVec;
+
 use super::meta::{apply_pending_annotations, parse_annotation_count};
 use super::state::{
     CodeAnnotationKind, CodeLineRenderState, InlineDirectiveAction, ParsedInlineDirective,
@@ -95,13 +97,15 @@ fn parse_vitepress_inline_directive(line: &str) -> Option<ParsedInlineDirective>
 
 pub(in crate::html) fn parse_vitepress_inline_annotations(value: &str) -> Vec<CodeLineRenderState> {
     let mut lines = Vec::new();
-    let mut pending_annotations: Vec<PendingCodeAnnotation> = Vec::new();
+    let mut pending_annotations: SmallVec<[PendingCodeAnnotation; 2]> = SmallVec::new();
     let mut escape_next_line = false;
 
     for raw_line in value.split('\n') {
         if escape_next_line {
-            lines
-                .push(CodeLineRenderState { value: raw_line.to_string(), annotations: Vec::new() });
+            lines.push(CodeLineRenderState {
+                value: raw_line.to_string(),
+                annotations: SmallVec::new(),
+            });
             escape_next_line = false;
             continue;
         }
@@ -120,7 +124,7 @@ pub(in crate::html) fn parse_vitepress_inline_annotations(value: &str) -> Vec<Co
 
                     let mut line = CodeLineRenderState {
                         value: directive.stripped_line,
-                        annotations: Vec::new(),
+                        annotations: SmallVec::new(),
                     };
                     apply_pending_annotations(&mut line, &mut pending_annotations);
                     if !line.annotations.contains(&kind) {
@@ -136,7 +140,8 @@ pub(in crate::html) fn parse_vitepress_inline_annotations(value: &str) -> Vec<Co
             }
         }
 
-        let mut line = CodeLineRenderState { value: raw_line.to_string(), annotations: Vec::new() };
+        let mut line =
+            CodeLineRenderState { value: raw_line.to_string(), annotations: SmallVec::new() };
         apply_pending_annotations(&mut line, &mut pending_annotations);
         lines.push(line);
     }

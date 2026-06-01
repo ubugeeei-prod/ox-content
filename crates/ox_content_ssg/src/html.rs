@@ -3,6 +3,7 @@
 use std::fmt::Write as _;
 
 use askama::Template;
+use memchr::memmem;
 use serde::{Deserialize, Serialize};
 
 // =============================================================================
@@ -781,7 +782,8 @@ fn wrap_css_section(name: &str, css: &str) -> String {
 }
 
 fn page_content_contains_any(content: &str, needles: &[&str]) -> bool {
-    needles.iter().any(|needle| content.contains(needle))
+    let haystack = content.as_bytes();
+    needles.iter().any(|needle| memmem::find(haystack, needle.as_bytes()).is_some())
 }
 
 fn escape_html(value: &str) -> String {

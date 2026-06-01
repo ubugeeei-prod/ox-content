@@ -4,7 +4,9 @@
 //! resulting line states become `<pre><code>` attributes, wrapper spans, line numbers,
 //! and compatibility classes.
 
+use compact_str::CompactString;
 use ox_content_ast::CodeBlock;
+use smallvec::SmallVec;
 
 use super::super::code_annotations::{
     apply_annotation_numbers, apply_btree_annotations, normalize_code_block_info,
@@ -29,7 +31,7 @@ impl HtmlRenderer {
                 .split('\n')
                 .map(|line| CodeLineRenderState {
                     value: line.to_string(),
-                    annotations: Vec::new(),
+                    annotations: SmallVec::new(),
                 })
                 .collect()
         };
@@ -46,13 +48,15 @@ impl HtmlRenderer {
 
         if self.options.code_annotations && !info.meta.is_empty() {
             if syntax.includes_attribute() {
-                let annotations =
-                    parse_code_annotations(&info.meta, &self.options.code_annotation_meta_key);
+                let annotations = parse_code_annotations(
+                    info.meta.as_str(),
+                    &self.options.code_annotation_meta_key,
+                );
                 apply_btree_annotations(&mut lines, &annotations);
             }
 
             if syntax.includes_vitepress() {
-                for token in split_code_block_meta(&info.meta) {
+                for token in split_code_block_meta(info.meta.as_str()) {
                     match token.kind {
                         MetaTokenKind::Braces => {
                             let line_numbers = parse_line_numbers(token.value);
@@ -64,7 +68,7 @@ impl HtmlRenderer {
                         }
                         MetaTokenKind::Brackets => {
                             if title.is_none() && !token.value.trim().is_empty() {
-                                title = Some(token.value.trim().to_string());
+                                title = Some(CompactString::from(token.value.trim()));
                             }
                         }
                         MetaTokenKind::Raw => {
@@ -97,7 +101,9 @@ impl HtmlRenderer {
 
         for (index, line) in state.lines.iter().enumerate() {
             let line_number = index + 1;
-            let mut class_names: Vec<&str> = vec!["line", "ox-code-line"];
+            let mut class_names: SmallVec<[&str; 8]> = SmallVec::new();
+            class_names.push("line");
+            class_names.push("ox-code-line");
 
             for annotation in &line.annotations {
                 let class_name = annotation.class_name();

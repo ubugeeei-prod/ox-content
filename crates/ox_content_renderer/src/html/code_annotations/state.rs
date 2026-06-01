@@ -4,6 +4,9 @@
 //! writer. Parsers attach semantic annotation kinds to line states; the writer later
 //! turns those semantic kinds into class names and `data-*` attributes.
 
+use compact_str::CompactString;
+use smallvec::SmallVec;
+
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub(in crate::html) enum CodeAnnotationKind {
     Highlight,
@@ -61,13 +64,13 @@ impl CodeAnnotationKind {
 #[derive(Debug, Clone)]
 pub(in crate::html) struct CodeLineRenderState {
     pub(in crate::html) value: String,
-    pub(in crate::html) annotations: Vec<CodeAnnotationKind>,
+    pub(in crate::html) annotations: SmallVec<[CodeAnnotationKind; 2]>,
 }
 
 #[derive(Debug, Clone)]
 pub(in crate::html) struct CodeBlockRenderState {
-    pub(in crate::html) language: Option<String>,
-    pub(in crate::html) title: Option<String>,
+    pub(in crate::html) language: Option<CompactString>,
+    pub(in crate::html) title: Option<CompactString>,
     pub(in crate::html) line_numbers_start: Option<usize>,
     pub(in crate::html) lines: Vec<CodeLineRenderState>,
 }
@@ -81,8 +84,8 @@ impl CodeBlockRenderState {
         self.lines.iter().any(|line| line.annotations.contains(&CodeAnnotationKind::Focus))
     }
 
-    pub(in crate::html) fn block_classes(&self) -> Vec<&'static str> {
-        let mut classes = Vec::new();
+    pub(in crate::html) fn block_classes(&self) -> SmallVec<[&'static str; 8]> {
+        let mut classes = SmallVec::new();
         if self.has_annotations() || self.line_numbers_start.is_some() || self.title.is_some() {
             classes.push("ox-code-block");
         }
@@ -117,8 +120,8 @@ impl CodeBlockRenderState {
 
 #[derive(Debug, Clone)]
 pub(in crate::html) struct NormalizedCodeBlockInfo {
-    pub(in crate::html) language: Option<String>,
-    pub(in crate::html) meta: String,
+    pub(in crate::html) language: Option<CompactString>,
+    pub(in crate::html) meta: CompactString,
 }
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]

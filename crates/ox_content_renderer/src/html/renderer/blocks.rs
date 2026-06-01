@@ -6,7 +6,7 @@
 
 use ox_content_ast::{
     BlockQuote, CodeBlock, Heading, Html, List, ListItem, Paragraph, Table, TableCell, TableRow,
-    ThematicBreak, Visit,
+    ThematicBreak,
 };
 
 use super::super::code_annotations::normalize_code_block_language;
@@ -77,7 +77,7 @@ impl HtmlRenderer {
 
         self.write("<blockquote>\n");
         for child in &block_quote.children {
-            self.visit_node(child);
+            self.render_node(child);
         }
         self.write("</blockquote>\n");
     }
@@ -123,7 +123,7 @@ impl HtmlRenderer {
         }
 
         for child in &list_item.children {
-            self.visit_node(child);
+            self.render_node(child);
         }
 
         self.write("</li>\n");

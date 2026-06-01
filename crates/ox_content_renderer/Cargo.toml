@@ -20,6 +20,8 @@ ox_content_ast = { workspace = true }
 thiserror = { workspace = true }
 memchr = { workspace = true }
 rustc-hash = { workspace = true }
+compact_str = { workspace = true }
+smallvec = { workspace = true }
 ox_content_profiler = { workspace = true, optional = true }
 
 [features]

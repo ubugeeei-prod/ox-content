@@ -1,3 +1,9 @@
 disallowed-macros = [
   { path = "std::format", reason = "avoid heap-allocating formatted temporary strings in hot paths; use StringBuilder or direct buffer writes instead" },
 ]
+
+disallowed-types = [
+  { path = "std::boxed::Box", reason = "prefer concrete/static dispatch or arena-owned ox_content_allocator::Box in hot paths" },
+  { path = "std::string::String", reason = "prefer CompactString, Cow<str>, arena strings, or direct buffer writes unless an owned API boundary requires std::String" },
+  { path = "std::vec::Vec", reason = "prefer SmallVec, slices, iterators, or arena-owned ox_content_allocator::Vec unless an owned API boundary requires std::Vec" },
+]

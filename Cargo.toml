@@ -41,6 +41,7 @@ useless_format = "deny"
 write_with_newline = "deny"
 writeln_empty_string = "deny"
 disallowed_macros = "allow"
+disallowed_types = "allow"
 
 # Allow
 match_same_arms = "allow"
@@ -91,6 +92,8 @@ ox_jsdoc = "0.0.16"
 
 # Memory allocation
 bumpalo = "3.16"
+compact_str = "0.9.1"
+smallvec = "1.15"
 
 # NAPI bindings
 napi = { version = "3", features = ["serde-json"] }
@@ -155,3 +158,16 @@ debug-assertions = false
 overflow-checks = false
 incremental = false
 panic = "abort"
+
+[profile.release.build-override]
+opt-level = 3
+codegen-units = 1
+
+[profile.bench]
+opt-level = 3
+lto = "fat"
+codegen-units = 1
+debug = false
+debug-assertions = false
+overflow-checks = false
+incremental = false

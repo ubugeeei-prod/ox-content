@@ -6,7 +6,7 @@
 
 use ox_content_ast::{
     Break, Delete, Emphasis, FootnoteDefinition, FootnoteReference, Image, InlineCode, Link,
-    Strong, Text, Visit,
+    Strong, Text,
 };
 
 use super::HtmlRenderer;
@@ -127,7 +127,7 @@ impl HtmlRenderer {
         self.write_escaped(footnote_def.identifier);
         self.write("\" class=\"footnote\">\n");
         for child in &footnote_def.children {
-            self.visit_node(child);
+            self.render_node(child);
         }
         self.write("<a href=\"#fnref-");
         self.write_escaped(footnote_def.identifier);
