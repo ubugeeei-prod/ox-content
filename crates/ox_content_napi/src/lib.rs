@@ -280,6 +280,10 @@ pub struct JsDocsMarkdownModule {
     pub file: String,
     /// Module-level description from the entry file's `@module` / leading JSDoc.
     pub description: Option<String>,
+    /// Absolute source path of the entry point (from `extractDocsFromEntryPoints`'
+    /// `sourcePath`). Optional; when provided, the TypeDoc path strategy places a
+    /// re-exported symbol's canonical page under its defining module.
+    pub source_path: Option<String>,
     pub entries: Vec<JsDocsMarkdownEntry>,
 }
 
@@ -1161,6 +1165,7 @@ fn convert_markdown_module(module: JsDocsMarkdownModule) -> ApiDocModule {
     ApiDocModule {
         file: module.file,
         description: module.description.unwrap_or_default(),
+        source_path: module.source_path.unwrap_or_default(),
         entries: module.entries.into_iter().map(convert_markdown_entry).collect(),
     }
 }
@@ -3438,6 +3443,7 @@ mod tests {
         let docs = vec![JsDocsMarkdownModule {
             description: None,
             file: "/repo/src/context.ts".to_string(),
+            source_path: None,
             entries: vec![JsDocsMarkdownEntry {
                 name: "CommandContext".to_string(),
                 kind: "interface".to_string(),
@@ -3477,6 +3483,7 @@ mod tests {
         let docs = vec![JsDocsMarkdownModule {
             description: None,
             file: "/repo/src/context.ts".to_string(),
+            source_path: None,
             entries: vec![JsDocsMarkdownEntry {
                 name: "CommandContext".to_string(),
                 kind: "interface".to_string(),
@@ -3519,6 +3526,7 @@ mod tests {
             JsDocsMarkdownModule {
                 description: None,
                 file: "/repo/src/command.ts".to_string(),
+                source_path: None,
                 entries: vec![JsDocsMarkdownEntry {
                     name: "Command".to_string(),
                     kind: "interface".to_string(),
@@ -3554,6 +3562,7 @@ mod tests {
             JsDocsMarkdownModule {
                 description: None,
                 file: "/repo/src/build.ts".to_string(),
+                source_path: None,
                 entries: vec![JsDocsMarkdownEntry {
                     name: "buildCommand".to_string(),
                     kind: "function".to_string(),
@@ -3607,6 +3616,7 @@ mod tests {
         let docs = vec![JsDocsMarkdownModule {
             description: None,
             file: "default".to_string(),
+            source_path: None,
             entries: vec![
                 JsDocsMarkdownEntry {
                     name: "Command".to_string(),
@@ -3662,10 +3672,63 @@ mod tests {
     }
 
     #[test]
+    fn generate_docs_markdown_dedupes_cross_entrypoint_reexports() {
+        // The same symbol re-exported from two entry points should yield a single
+        // canonical page placed under its defining module via `sourcePath`.
+        let entry = |name: &str| JsDocsMarkdownEntry {
+            name: name.to_string(),
+            kind: "function".to_string(),
+            description: "Creates a command context.".to_string(),
+            params: None,
+            returns: None,
+            examples: None,
+            tags: None,
+            private: false,
+            file: "/repo/src/context.ts".to_string(),
+            line: 1,
+            end_line: 1,
+            signature: Some("export function createCommandContext(): void".to_string()),
+            members: None,
+            type_parameters: None,
+        };
+        let docs = vec![
+            JsDocsMarkdownModule {
+                description: None,
+                file: "context".to_string(),
+                source_path: Some("/repo/src/context.ts".to_string()),
+                entries: vec![entry("createCommandContext")],
+            },
+            JsDocsMarkdownModule {
+                description: None,
+                file: "default".to_string(),
+                source_path: Some("/repo/src/index.ts".to_string()),
+                entries: vec![entry("createCommandContext")],
+            },
+        ];
+
+        let markdown = generate_docs_markdown(
+            docs,
+            Some(JsDocsMarkdownOptions {
+                group_by: Some("file".to_string()),
+                github_url: None,
+                link_style: Some("markdown".to_string()),
+                base_path: None,
+                path_strategy: Some("typedoc".to_string()),
+                render_style: None,
+            }),
+        );
+
+        assert!(markdown.contains_key("context/functions/createCommandContext.md"));
+        assert!(!markdown.contains_key("default/functions/createCommandContext.md"));
+        assert!(markdown.get("default/index.md").unwrap().contains("Re-exports"));
+    }
+
+    #[test]
     fn generate_docs_markdown_renders_type_parameters() {
         let docs = vec![JsDocsMarkdownModule {
             description: None,
             file: "default".to_string(),
+            source_path: None,
             entries: vec![JsDocsMarkdownEntry {
                 name: "make".to_string(),
                 kind: "function".to_string(),
@@ -3712,6 +3775,7 @@ mod tests {
         let docs = vec![JsDocsMarkdownModule {
             description: Some("The entry for gunshi context.".to_string()),
             file: "context".to_string(),
+            source_path: None,
             entries: vec![JsDocsMarkdownEntry {
                 name: "createCommandContext".to_string(),
                 kind: "function".to_string(),
@@ -3754,6 +3818,7 @@ mod tests {
         let docs = vec![JsDocsMarkdownModule {
             description: None,
             file: "default".to_string(),
+            source_path: None,
             entries: vec![
                 JsDocsMarkdownEntry {
                     name: "cli".to_string(),
@@ -3815,6 +3880,7 @@ mod tests {
         let docs = vec![JsDocsMarkdownModule {
             description: None,
             file: "/repo/src/context.ts".to_string(),
+            source_path: None,
             entries: vec![],
         }];
 
@@ -3837,6 +3903,7 @@ mod tests {
         let extracted = vec![JsDocsMarkdownModule {
             description: None,
             file: "default".to_string(),
+            source_path: None,
             entries: vec![JsDocsMarkdownEntry {
                 name: "cli".to_string(),
                 kind: "function".to_string(),

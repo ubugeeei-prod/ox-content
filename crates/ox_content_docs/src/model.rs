@@ -16,6 +16,14 @@ pub struct ApiDocModule {
     /// file comment. Empty when the source has no module-level JSDoc.
     #[serde(default)]
     pub description: String,
+    /// Absolute source path of the entry point this module was generated from.
+    ///
+    /// Used by the TypeDoc path strategy to place a re-exported symbol's
+    /// canonical page under its defining module (when that module is itself an
+    /// entry point). Empty when the caller does not supply it; dedup then falls
+    /// back to the first module that exports the symbol.
+    #[serde(default)]
+    pub source_path: String,
     /// Documented entries in the source file.
     pub entries: Vec<ApiDocEntry>,
 }
