@@ -118,12 +118,12 @@ thiserror = "2"
 miette = { version = "7", features = ["fancy"] }
 
 # OXC parser
-oxc_allocator = "0.132"
-oxc_parser = "0.132"
-oxc_ast = "0.132"
-oxc_ast_visit = "0.132"
-oxc_span = "0.132"
-oxc_resolver = "4.2.0"
+oxc_allocator = "0.133"
+oxc_parser = "0.133"
+oxc_ast = "0.133"
+oxc_ast_visit = "0.133"
+oxc_span = "0.133"
+oxc_resolver = "11.20.0"
 
 # Testing
 criterion = "0.8"

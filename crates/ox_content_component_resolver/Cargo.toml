@@ -15,7 +15,7 @@ description = "Resolves component props for Markdown/MDC docs via typescript-go 
 workspace = true
 
 [dependencies]
-corsa_client = "0.10"
+corsa_client = "0.34"
 serde = { workspace = true }
 serde_json = { workspace = true }
 thiserror = { workspace = true }
