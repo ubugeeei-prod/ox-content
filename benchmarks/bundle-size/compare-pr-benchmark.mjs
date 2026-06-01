@@ -131,6 +131,8 @@ function buildComment({ basePath, headPath, baseBundlePath, headBundlePath, base
     baseBundlePath && headBundlePath
       ? compareBundleReports(readJson(baseBundlePath), readJson(headBundlePath))
       : [];
+  const competitiveRows = collectCompetitiveRows(head);
+  const environmentRows = collectEnvironmentRows(base, head);
   const summary = summarizeRows(runtimeRows, bundleRows);
   const regressions = collectRegressions(runtimeRows, bundleRows);
   const overrideEnabled = process.env[BENCHMARK_OVERRIDE_ENV] === "1";
@@ -166,6 +168,43 @@ function buildComment({ basePath, headPath, baseBundlePath, headBundlePath, base
     `Values are from the large runtime benchmarks. Time is shown in milliseconds to microsecond precision. Head speed is normalized with base = 1.00 (100%); changes within +/-${NOISE_THRESHOLD_PERCENT}% are treated as noise.`,
     "",
   );
+
+  lines.push(
+    "### Competitive Snapshot",
+    "",
+    "| Suite | Size | Target | Target ops/sec | Next competitor | Competitor ops/sec | Target speedup |",
+    "| --- | --- | --- | ---: | --- | ---: | ---: |",
+  );
+
+  if (competitiveRows.length === 0) {
+    lines.push("| n/a | n/a | n/a | n/a | n/a | n/a | n/a |");
+  } else {
+    for (const row of competitiveRows) {
+      lines.push(
+        `| ${row.suiteLabel} | ${row.sizeName} | ${row.targetName} | ${formatOps(row.targetOps)} | ${row.competitorName} | ${formatOps(row.competitorOps)} | ${formatRatio(row.speedup)} |`,
+      );
+    }
+  }
+
+  lines.push(
+    "",
+    "This snapshot uses the head commit and the same input corpus as the regression gate. Higher runtime ops/sec is better.",
+    "",
+    "### Environment",
+    "",
+    "| Field | Base | Head |",
+    "| --- | --- | --- |",
+  );
+
+  if (environmentRows.length === 0) {
+    lines.push("| n/a | n/a | n/a |");
+  } else {
+    for (const row of environmentRows) {
+      lines.push(`| ${row.label} | ${row.base} | ${row.head} |`);
+    }
+  }
+
+  lines.push("");
 
   if (baseBundlePath && headBundlePath) {
     lines.push(
@@ -274,6 +313,75 @@ function compareBundleReports(base, head) {
       deltaPercent: percentChange(baseGzipped, headGzipped),
     };
   });
+}
+
+function collectCompetitiveRows(report) {
+  const rows = [];
+
+  for (const sizeName of COMMENT_SIZE_NAMES) {
+    const sizeReport = report.sizes?.[sizeName];
+    if (!sizeReport) {
+      continue;
+    }
+
+    for (const suiteKey of SUITE_ORDER) {
+      const results = (sizeReport.suites?.[suiteKey] ?? [])
+        .filter(
+          (result) => !result.error && Number.isFinite(result.opsPerSec) && result.opsPerSec > 0,
+        )
+        .map((result) => ({
+          name: String(result.name),
+          opsPerSec: Number(result.opsPerSec),
+        }));
+      if (results.length === 0) {
+        continue;
+      }
+
+      for (const target of results.filter((result) => TARGET_NAMES.has(result.name))) {
+        const competitor = results
+          .filter((result) => result.name !== target.name && !TARGET_NAMES.has(result.name))
+          .sort((left, right) => right.opsPerSec - left.opsPerSec)[0];
+        if (!competitor) {
+          continue;
+        }
+
+        rows.push({
+          suiteLabel: SUITE_LABELS[suiteKey] ?? "Unknown",
+          sizeName,
+          targetName: target.name,
+          targetOps: target.opsPerSec,
+          competitorName: competitor.name,
+          competitorOps: competitor.opsPerSec,
+          speedup: target.opsPerSec / competitor.opsPerSec,
+        });
+      }
+    }
+  }
+
+  return rows;
+}
+
+function collectEnvironmentRows(base, head) {
+  const fields = [
+    { label: "Runner label", read: (report) => report.environment?.runnerLabel },
+    { label: "Runner OS", read: (report) => report.environment?.runnerOs },
+    { label: "Runner arch", read: (report) => report.environment?.runnerArch },
+    { label: "CPU", read: (report) => report.environment?.cpuModel },
+    { label: "CPU cores", read: (report) => report.environment?.cpuCount },
+    { label: "Memory", read: (report) => formatMemoryGB(report.environment?.totalMemoryGB) },
+    { label: "Node", read: (report) => report.environment?.node },
+    { label: "Bun", read: (report) => report.environment?.bun },
+    { label: "Median runs", read: (report) => report.runs },
+    { label: "Generated at", read: (report) => report.generatedAt },
+  ];
+
+  return fields
+    .map((field) => ({
+      label: field.label,
+      base: formatCell(field.read(base)),
+      head: formatCell(field.read(head)),
+    }))
+    .filter((row) => row.base !== "n/a" || row.head !== "n/a");
 }
 
 function collectBundleRows(report) {
@@ -421,6 +529,22 @@ function formatNumber(value) {
   return Math.round(value).toLocaleString("en-US");
 }
 
+function formatOps(value) {
+  if (!Number.isFinite(value)) {
+    return "n/a";
+  }
+
+  return Math.round(value).toLocaleString("en-US");
+}
+
+function formatRatio(value) {
+  if (!Number.isFinite(value)) {
+    return "n/a";
+  }
+
+  return `${value.toFixed(2)}x`;
+}
+
 function formatTimeMs(opsPerSec) {
   if (!Number.isFinite(opsPerSec) || opsPerSec <= 0) {
     return "n/a";
@@ -458,6 +582,22 @@ function formatDelta(value) {
 
   const sign = value > 0 ? "+" : "";
   return `${sign}${value.toFixed(2)}%`;
+}
+
+function formatMemoryGB(value) {
+  if (!Number.isFinite(value)) {
+    return null;
+  }
+
+  return `${value} GB`;
+}
+
+function formatCell(value) {
+  if (value === null || value === undefined || value === "") {
+    return "n/a";
+  }
+
+  return String(value).replace(/\|/g, "\\|");
 }
 
 function shortSha(value) {

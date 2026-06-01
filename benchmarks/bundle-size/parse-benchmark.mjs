@@ -5,6 +5,7 @@
 
 import { spawnSync } from "node:child_process";
 import { writeFileSync } from "node:fs";
+import { cpus, totalmem } from "node:os";
 import { performance } from "node:perf_hooks";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
@@ -206,6 +207,27 @@ function medianSample(samples) {
   return sorted[Math.floor(sorted.length / 2)];
 }
 
+function collectEnvironment() {
+  const cpuList = cpus();
+  const firstCpu = cpuList[0];
+
+  return {
+    node: process.version,
+    v8: process.versions.v8,
+    bun: null,
+    platform: process.platform,
+    arch: process.arch,
+    ci: process.env.CI === "true",
+    runnerName: process.env.RUNNER_NAME ?? null,
+    runnerOs: process.env.RUNNER_OS ?? null,
+    runnerArch: process.env.RUNNER_ARCH ?? null,
+    runnerLabel: process.env.OX_CONTENT_BENCHMARK_RUNNER ?? null,
+    cpuModel: firstCpu?.model ?? null,
+    cpuCount: cpuList.length,
+    totalMemoryGB: Number((totalmem() / 1024 ** 3).toFixed(2)),
+  };
+}
+
 function printUsage() {
   console.log(`Usage: node parse-benchmark.mjs [--json <path>] [--runs <count>]
 
@@ -305,7 +327,7 @@ function loadBunMarkdownBenchmarks() {
     return null;
   }
 
-  const run = spawnSync("bun", [BUN_BENCHMARK_SCRIPT], {
+  const run = spawnSync("bun", [BUN_BENCHMARK_SCRIPT, "--runs", String(options.runs)], {
     cwd: __dirname,
     encoding: "utf8",
   });
@@ -348,6 +370,7 @@ async function runBenchmarks() {
     name: "Parse/Render Speed Benchmark",
     generatedAt: new Date().toISOString(),
     runs: options.runs,
+    environment: collectEnvironment(),
     sizes: {},
   };
 
@@ -409,6 +432,7 @@ async function runBenchmarks() {
 
   const bunMarkdown = loadBunMarkdownBenchmarks();
   if (bunMarkdown) {
+    report.environment.bun = bunMarkdown.version;
     console.log(`Using Bun.markdown (Bun ${bunMarkdown.version})\n`);
   } else {
     console.log("bun not available, skipping Bun.markdown comparisons\n");

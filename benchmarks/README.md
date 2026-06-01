@@ -60,3 +60,8 @@ local command is:
 ```bash
 OX_CONTENT_BENCHMARK_RUNS=7 vp run bench:docs
 ```
+
+Pull requests use the same Blacksmith runner class for base/head runtime and
+bundle comparisons. The comment includes the regression gate, a head-commit
+competitive snapshot, and the captured runner/runtime metadata so result drift
+can be traced back to the environment.

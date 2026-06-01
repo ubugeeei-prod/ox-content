@@ -24,7 +24,7 @@ run("vp", ["run", "build:npm"]);
 run("node", [
   "benchmarks/bundle-size/parse-benchmark.mjs",
   "--runs",
-  "3",
+  options.runs,
   "--json",
   options.runtimeJson,
 ]);
@@ -32,13 +32,14 @@ run("node", ["benchmarks/bundle-size/measure.mjs", "--skip-install", "--json", o
 
 /**
  * @param {string[]} args
- * @returns {{ source: string | null; runtimeJson: string; bundleJson: string }}
+ * @returns {{ source: string | null; runtimeJson: string; bundleJson: string; runs: string }}
  */
 function parseOptions(args) {
   const parsed = {
     source: null,
     runtimeJson: null,
     bundleJson: null,
+    runs: process.env.OX_CONTENT_BENCHMARK_RUNS || "5",
   };
 
   for (let index = 0; index < args.length; index++) {
@@ -55,6 +56,10 @@ function parseOptions(args) {
       parsed.bundleJson = readOptionValue(args, ++index, "--bundle-json");
       continue;
     }
+    if (arg === "--runs") {
+      parsed.runs = String(readPositiveIntegerOption(args, ++index, "--runs"));
+      continue;
+    }
 
     throw new Error(`Unknown argument: ${arg}`);
   }
@@ -65,6 +70,7 @@ function parseOptions(args) {
   if (!parsed.bundleJson) {
     throw new Error("--bundle-json is required");
   }
+  parsePositiveInteger(parsed.runs, "--runs");
 
   return parsed;
 }
@@ -82,6 +88,30 @@ function readOptionValue(args, index, optionName) {
   }
 
   return value;
+}
+
+/**
+ * @param {string[]} args
+ * @param {number} index
+ * @param {string} optionName
+ * @returns {number}
+ */
+function readPositiveIntegerOption(args, index, optionName) {
+  return parsePositiveInteger(readOptionValue(args, index, optionName), optionName);
+}
+
+/**
+ * @param {string} value
+ * @param {string} optionName
+ * @returns {number}
+ */
+function parsePositiveInteger(value, optionName) {
+  const parsed = Number.parseInt(value, 10);
+  if (!Number.isSafeInteger(parsed) || parsed < 1 || String(parsed) !== value) {
+    throw new Error(`${optionName} requires a positive integer`);
+  }
+
+  return parsed;
 }
 
 /**

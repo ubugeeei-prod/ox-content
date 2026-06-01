@@ -13,6 +13,8 @@ concurrency:
 
 env:
   CARGO_TERM_COLOR: always
+  OX_CONTENT_BENCHMARK_RUNNER: blacksmith-32vcpu-ubuntu-2404
+  OX_CONTENT_BENCHMARK_RUNS: "5"
   STICKY_CACHE_SCOPE: ${{ github.event_name == 'pull_request' && format('pr-{0}', github.event.pull_request.number) || github.ref_name }}
 
 jobs:
@@ -71,11 +73,21 @@ jobs:
 
       - name: Benchmark base
         working-directory: .benchmark/base
-        run: node "$GITHUB_WORKSPACE/.github/scripts/run-pr-benchmark.mjs" --source "$GITHUB_WORKSPACE" --runtime-json "$RUNNER_TEMP/benchmark-base.json" --bundle-json "$RUNNER_TEMP/bundle-base.json"
+        run: |
+          node "$GITHUB_WORKSPACE/.github/scripts/run-pr-benchmark.mjs" \
+            --source "$GITHUB_WORKSPACE" \
+            --runs "$OX_CONTENT_BENCHMARK_RUNS" \
+            --runtime-json "$RUNNER_TEMP/benchmark-base.json" \
+            --bundle-json "$RUNNER_TEMP/bundle-base.json"
 
       - name: Benchmark head
         working-directory: .benchmark/head
-        run: node "$GITHUB_WORKSPACE/.github/scripts/run-pr-benchmark.mjs" --source "$GITHUB_WORKSPACE" --runtime-json "$RUNNER_TEMP/benchmark-head.json" --bundle-json "$RUNNER_TEMP/bundle-head.json"
+        run: |
+          node "$GITHUB_WORKSPACE/.github/scripts/run-pr-benchmark.mjs" \
+            --source "$GITHUB_WORKSPACE" \
+            --runs "$OX_CONTENT_BENCHMARK_RUNS" \
+            --runtime-json "$RUNNER_TEMP/benchmark-head.json" \
+            --bundle-json "$RUNNER_TEMP/bundle-head.json"
 
       - name: Compare benchmarks
         env:

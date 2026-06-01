@@ -170,11 +170,16 @@ when doing so would create path-resolution risk or extra request overhead.
 ## PR Regression Gate
 
 Pull requests run the benchmark workflow against both the base commit and the
-head commit. The workflow posts one report with runtime and bundle-size sections.
+head commit on `blacksmith-32vcpu-ubuntu-2404`. The workflow posts one report
+with runtime, competitive snapshot, environment, and bundle-size sections.
 
 Runtime rows compare the large benchmark target for `@ox-content/napi` and
 `@ox-content/napi (async)`. Changes within +/-5% are treated as noise, and the
 check fails when head throughput is more than 10% slower than base.
+
+The competitive snapshot is not a gate. It uses the head commit to show the
+target package against the next fastest comparison package for the same large
+input corpus.
 
 Bundle rows compare gzipped output for each successful benchmark app. The check
 fails when gzipped size grows by more than 5%. Maintainers can intentionally
