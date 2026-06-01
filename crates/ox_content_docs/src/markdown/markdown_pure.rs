@@ -7,40 +7,54 @@
 //! tables and fenced code blocks (no `<details>`, no theme-specific HTML).
 
 use super::{
-    effective_members_format, effective_parameters_format, fmt_args, generate_source_href,
-    parse_example_block, process_doc_text, push_fmt, EntryStats, MarkdownDisplayFormat,
-    MarkdownDocsOptions, MarkdownLinkContext,
+    effective_members_format, effective_parameters_format, generate_source_href,
+    parse_example_block, process_doc_text, EntryStats, MarkdownDisplayFormat, MarkdownDocsOptions,
+    MarkdownLinkContext,
 };
 use crate::model::{ApiDocEntry, ApiDocMember, ApiParamDoc, ApiTypeParamDoc};
+use crate::string_builder::StringBuilder;
 
 /// Renders the per-page stats summary as a single italic Markdown line.
 pub(super) fn render_stats_markdown(stats: &EntryStats, module_count: Option<usize>) -> String {
-    let mut parts = Vec::new();
+    let mut out = StringBuilder::new();
+    let mut has_parts = false;
+    out.push_char('_');
     if let Some(module_count) = module_count {
-        parts.push(fmt_args(format_args!("{module_count} modules")));
+        push_stat_part(&mut out, &mut has_parts, module_count, "modules");
     }
-    parts.push(fmt_args(format_args!("{} symbols", stats.entries)));
+    push_stat_part(&mut out, &mut has_parts, stats.entries, "symbols");
     for kind in super::DOC_KIND_ORDER {
         if let Some(count) = stats.by_kind.get(kind).copied().filter(|count| *count > 0) {
-            parts.push(fmt_args(format_args!("{count} {}", super::doc_kind_plural(kind))));
+            push_stat_part(&mut out, &mut has_parts, count, super::doc_kind_plural(kind));
         }
     }
     if stats.params > 0 {
-        parts.push(fmt_args(format_args!("{} parameters", stats.params)));
+        push_stat_part(&mut out, &mut has_parts, stats.params, "parameters");
     }
     if stats.members > 0 {
-        parts.push(fmt_args(format_args!("{} members", stats.members)));
+        push_stat_part(&mut out, &mut has_parts, stats.members, "members");
     }
     if stats.returns > 0 {
-        parts.push(fmt_args(format_args!("{} returns", stats.returns)));
+        push_stat_part(&mut out, &mut has_parts, stats.returns, "returns");
     }
     if stats.examples > 0 {
-        parts.push(fmt_args(format_args!("{} examples", stats.examples)));
+        push_stat_part(&mut out, &mut has_parts, stats.examples, "examples");
     }
     if stats.deprecated > 0 {
-        parts.push(fmt_args(format_args!("{} deprecated", stats.deprecated)));
+        push_stat_part(&mut out, &mut has_parts, stats.deprecated, "deprecated");
     }
-    fmt_args(format_args!("_{}_", parts.join(" · ")))
+    out.push_char('_');
+    out.into_string()
+}
+
+fn push_stat_part(out: &mut StringBuilder, has_parts: &mut bool, count: usize, label: &str) {
+    if *has_parts {
+        out.push_str(" · ");
+    }
+    out.push_usize(count);
+    out.push_char(' ');
+    out.push_str(label);
+    *has_parts = true;
 }
 
 /// Renders the body of one entry (everything below its heading) as pure Markdown.
@@ -71,10 +85,10 @@ pub(super) fn render_entry_body_pure(
     }
 
     if let Some(signature) = &entry.signature {
-        push_fmt(
-            &mut out,
-            format_args!("{heading} Signature\n\n```ts\n{}\n```\n\n", signature.trim()),
-        );
+        out.push_str(&heading);
+        out.push_str(" Signature\n\n```ts\n");
+        out.push_str(signature.trim());
+        out.push_str("\n```\n\n");
     }
 
     // Entries with an empty `file` (e.g. symbols re-exported from an external
@@ -87,43 +101,36 @@ pub(super) fn render_entry_body_pure(
                 Some(entry.line),
                 Some(entry.end_line),
             );
-            push_fmt(&mut out, format_args!("[View source]({href})\n\n"));
+            out.push_str("[View source](");
+            out.push_str(&href);
+            out.push_str(")\n\n");
         }
     }
 
     if !entry.type_parameters.is_empty() {
-        push_fmt(&mut out, format_args!("{heading} Type Parameters\n\n"));
+        out.push_str(&heading);
+        out.push_str(" Type Parameters\n\n");
         match effective_parameters_format(options) {
             MarkdownDisplayFormat::Table => {
                 out.push_str("| Name | Description |\n| --- | --- |\n");
                 for type_param in &entry.type_parameters {
-                    push_fmt(
-                        &mut out,
-                        format_args!(
-                            "| {} | {} |\n",
-                            type_param_name_cell(type_param),
-                            table_cell(&inline(&type_param.description, context)),
-                        ),
-                    );
+                    out.push_str("| ");
+                    out.push_str(&type_param_name_cell(type_param));
+                    out.push_str(" | ");
+                    out.push_str(&table_cell(&inline(&type_param.description, context)));
+                    out.push_str(" |\n");
                 }
             }
             _ => {
                 for type_param in &entry.type_parameters {
                     let description = inline(&type_param.description, context);
-                    if description.is_empty() {
-                        push_fmt(
-                            &mut out,
-                            format_args!("- {}\n", type_param_name_span(type_param)),
-                        );
-                    } else {
-                        push_fmt(
-                            &mut out,
-                            format_args!(
-                                "- {} - {description}\n",
-                                type_param_name_span(type_param)
-                            ),
-                        );
+                    out.push_str("- ");
+                    out.push_str(&type_param_name_span(type_param));
+                    if !description.is_empty() {
+                        out.push_str(" - ");
+                        out.push_str(&description);
                     }
+                    out.push('\n');
                 }
             }
         }
@@ -135,34 +142,35 @@ pub(super) fn render_entry_body_pure(
     }
 
     if !entry.params.is_empty() {
-        push_fmt(&mut out, format_args!("{heading} Parameters\n\n"));
+        out.push_str(&heading);
+        out.push_str(" Parameters\n\n");
         match effective_parameters_format(options) {
             MarkdownDisplayFormat::Table => {
                 out.push_str("| Name | Type | Description |\n| --- | --- | --- |\n");
                 for param in &entry.params {
-                    push_fmt(
-                        &mut out,
-                        format_args!(
-                            "| {} | {} | {} |\n",
-                            code_cell(&param.name),
-                            code_cell(&param.type_annotation),
-                            table_cell(&param_description(param, context)),
-                        ),
-                    );
+                    out.push_str("| ");
+                    out.push_str(&code_cell(&param.name));
+                    out.push_str(" | ");
+                    out.push_str(&code_cell(&param.type_annotation));
+                    out.push_str(" | ");
+                    out.push_str(&table_cell(&param_description(param, context)));
+                    out.push_str(" |\n");
                 }
             }
             _ => {
                 for param in &entry.params {
-                    let mut line = fmt_args(format_args!("- {}", code_span(&param.name)));
+                    let mut line = String::new();
+                    line.push_str("- ");
+                    line.push_str(&code_span(&param.name));
                     if !param.type_annotation.is_empty() {
-                        push_fmt(
-                            &mut line,
-                            format_args!(" ({})", code_span(&param.type_annotation)),
-                        );
+                        line.push_str(" (");
+                        line.push_str(&code_span(&param.type_annotation));
+                        line.push(')');
                     }
                     let description = param_description(param, context);
                     if !description.is_empty() {
-                        push_fmt(&mut line, format_args!(" - {description}"));
+                        line.push_str(" - ");
+                        line.push_str(&description);
                     }
                     out.push_str(&line);
                     out.push('\n');
@@ -173,30 +181,42 @@ pub(super) fn render_entry_body_pure(
     }
 
     if let Some(returns) = &entry.returns {
-        push_fmt(&mut out, format_args!("{heading} Returns\n\n"));
+        out.push_str(&heading);
+        out.push_str(" Returns\n\n");
         out.push_str(&code_cell(&returns.type_annotation));
         if !returns.description.is_empty() {
-            push_fmt(&mut out, format_args!(" — {}", inline(&returns.description, context)));
+            out.push_str(" — ");
+            out.push_str(&inline(&returns.description, context));
         }
         out.push_str("\n\n");
     }
 
     if !entry.examples.is_empty() {
-        push_fmt(&mut out, format_args!("{heading} Examples\n\n"));
+        out.push_str(&heading);
+        out.push_str(" Examples\n\n");
         for example in &entry.examples {
             let (code, language) = parse_example_block(example);
-            push_fmt(&mut out, format_args!("```{language}\n{code}\n```\n\n"));
+            out.push_str("```");
+            out.push_str(&language);
+            out.push('\n');
+            out.push_str(&code);
+            out.push_str("\n```\n\n");
         }
     }
 
     if !entry.tags.is_empty() {
-        push_fmt(&mut out, format_args!("{heading} Tags\n\n"));
+        out.push_str(&heading);
+        out.push_str(" Tags\n\n");
         for tag in &entry.tags {
             let value = inline(&tag.value, context);
+            out.push_str("- `@");
+            out.push_str(&tag.tag);
             if value.is_empty() {
-                push_fmt(&mut out, format_args!("- `@{}`\n", tag.tag));
+                out.push_str("`\n");
             } else {
-                push_fmt(&mut out, format_args!("- `@{}` — {value}\n", tag.tag));
+                out.push_str("` — ");
+                out.push_str(&value);
+                out.push('\n');
             }
         }
         out.push('\n');
@@ -256,18 +276,27 @@ fn render_members_pure(
         if members.is_empty() {
             continue;
         }
-        push_fmt(&mut out, format_args!("{heading} {title}\n\n"));
+        out.push_str(&heading);
+        out.push(' ');
+        out.push_str(title);
+        out.push_str("\n\n");
         if effective_members_format(options, &entry.kind, title) == MarkdownDisplayFormat::List {
             for member in &members {
-                let mut line =
-                    fmt_args(format_args!("- {} `{}`", member_name_span(member), member.kind));
+                let mut line = String::new();
+                line.push_str("- ");
+                line.push_str(&member_name_span(member));
+                line.push_str(" `");
+                line.push_str(&member.kind);
+                line.push('`');
                 let member_type = member_type(member);
                 if !member_type.is_empty() {
-                    push_fmt(&mut line, format_args!(" {}", code_span(&member_type)));
+                    line.push(' ');
+                    line.push_str(&code_span(member_type));
                 }
                 let description = member_description(member, context);
                 if !description.is_empty() {
-                    push_fmt(&mut line, format_args!(" - {description}"));
+                    line.push_str(" - ");
+                    line.push_str(&description);
                 }
                 out.push_str(&line);
                 out.push('\n');
@@ -275,16 +304,15 @@ fn render_members_pure(
         } else {
             out.push_str("| Name | Kind | Type | Description |\n| --- | --- | --- | --- |\n");
             for member in &members {
-                push_fmt(
-                    &mut out,
-                    format_args!(
-                        "| {} | {} | {} | {} |\n",
-                        member_name_cell(member),
-                        table_cell(&member.kind),
-                        code_cell(&member_type(member)),
-                        table_cell(&member_description(member, context)),
-                    ),
-                );
+                out.push_str("| ");
+                out.push_str(&member_name_cell(member));
+                out.push_str(" | ");
+                out.push_str(&table_cell(&member.kind));
+                out.push_str(" | ");
+                out.push_str(&code_cell(member_type(member)));
+                out.push_str(" | ");
+                out.push_str(&table_cell(&member_description(member, context)));
+                out.push_str(" |\n");
             }
         }
         out.push('\n');
@@ -312,34 +340,37 @@ fn render_member_parameter_sections_pure(
             continue;
         }
 
-        push_fmt(&mut out, format_args!("{heading} {} Parameters\n\n", member.name));
+        out.push_str(&heading);
+        out.push(' ');
+        out.push_str(&member.name);
+        out.push_str(" Parameters\n\n");
         match effective_parameters_format(options) {
             MarkdownDisplayFormat::Table => {
                 out.push_str("| Name | Type | Description |\n| --- | --- | --- |\n");
                 for param in &member.params {
-                    push_fmt(
-                        &mut out,
-                        format_args!(
-                            "| {} | {} | {} |\n",
-                            code_cell(&param.name),
-                            code_cell(&param.type_annotation),
-                            table_cell(&param_description(param, context)),
-                        ),
-                    );
+                    out.push_str("| ");
+                    out.push_str(&code_cell(&param.name));
+                    out.push_str(" | ");
+                    out.push_str(&code_cell(&param.type_annotation));
+                    out.push_str(" | ");
+                    out.push_str(&table_cell(&param_description(param, context)));
+                    out.push_str(" |\n");
                 }
             }
             _ => {
                 for param in &member.params {
-                    let mut line = fmt_args(format_args!("- {}", code_span(&param.name)));
+                    let mut line = String::new();
+                    line.push_str("- ");
+                    line.push_str(&code_span(&param.name));
                     if !param.type_annotation.is_empty() {
-                        push_fmt(
-                            &mut line,
-                            format_args!(" ({})", code_span(&param.type_annotation)),
-                        );
+                        line.push_str(" (");
+                        line.push_str(&code_span(&param.type_annotation));
+                        line.push(')');
                     }
                     let description = param_description(param, context);
                     if !description.is_empty() {
-                        push_fmt(&mut line, format_args!(" - {description}"));
+                        line.push_str(" - ");
+                        line.push_str(&description);
                     }
                     out.push_str(&line);
                     out.push('\n');
@@ -386,32 +417,40 @@ fn member_name(member: &ApiDocMember, code: fn(&str) -> String) -> String {
     if flags.is_empty() {
         name
     } else {
-        fmt_args(format_args!("{name} _({})_", flags.join(", ")))
+        let flags = flags.join(", ");
+        let mut out = StringBuilder::with_capacity(name.len() + flags.len() + 5);
+        out.push_str(&name);
+        out.push_str(" _(");
+        out.push_str(&flags);
+        out.push_str(")_");
+        out.into_string()
     }
 }
 
-fn member_type(member: &ApiDocMember) -> String {
+fn member_type(member: &ApiDocMember) -> &str {
     member
         .signature
         .as_deref()
         .or(member.type_annotation.as_deref())
         .or_else(|| member.returns.as_ref().map(|returns| returns.type_annotation.as_str()))
         .unwrap_or_default()
-        .to_string()
 }
 
 fn member_description(member: &ApiDocMember, context: Option<&MarkdownLinkContext<'_>>) -> String {
-    let mut parts = Vec::new();
+    let mut description = String::new();
     if !member.description.is_empty() {
-        parts.push(inline(&member.description, context));
+        description.push_str(&inline(&member.description, context));
     }
     if let Some(returns) = &member.returns {
         if !returns.description.is_empty() {
-            parts
-                .push(fmt_args(format_args!("Returns: {}", inline(&returns.description, context))));
+            if !description.is_empty() {
+                description.push(' ');
+            }
+            description.push_str("Returns: ");
+            description.push_str(&inline(&returns.description, context));
         }
     }
-    parts.join(" ")
+    description
 }
 
 fn param_description(param: &ApiParamDoc, context: Option<&MarkdownLinkContext<'_>>) -> String {
@@ -421,14 +460,26 @@ fn param_description(param: &ApiParamDoc, context: Option<&MarkdownLinkContext<'
         flags.push("optional".to_string());
     }
     if let Some(default_value) = &param.default_value {
-        flags.push(fmt_args(format_args!("default: {default_value}")));
+        let mut flag = StringBuilder::with_capacity("default: ".len() + default_value.len());
+        flag.push_str("default: ");
+        flag.push_str(default_value);
+        flags.push(flag.into_string());
     }
     if !flags.is_empty() {
         let flags = flags.join(", ");
         description = if description.is_empty() {
-            fmt_args(format_args!("_{flags}_"))
+            let mut out = StringBuilder::with_capacity(flags.len() + 2);
+            out.push_char('_');
+            out.push_str(&flags);
+            out.push_char('_');
+            out.into_string()
         } else {
-            fmt_args(format_args!("{description} _({flags})_"))
+            let mut out = StringBuilder::with_capacity(description.len() + flags.len() + 5);
+            out.push_str(&description);
+            out.push_str(" _(");
+            out.push_str(&flags);
+            out.push_str(")_");
+            out.into_string()
         };
     }
     description
@@ -436,7 +487,28 @@ fn param_description(param: &ApiParamDoc, context: Option<&MarkdownLinkContext<'
 
 /// Collapses runs of whitespace (including newlines) into single spaces.
 fn collapse_whitespace(text: &str) -> String {
-    text.split_whitespace().collect::<Vec<_>>().join(" ")
+    let text = text.trim();
+    if text.is_empty() {
+        return String::new();
+    }
+    if !text.chars().any(char::is_whitespace) {
+        return text.to_string();
+    }
+
+    let mut out = String::with_capacity(text.len());
+    let mut pending_space = false;
+    for ch in text.chars() {
+        if ch.is_whitespace() {
+            pending_space = !out.is_empty();
+        } else {
+            if pending_space {
+                out.push(' ');
+                pending_space = false;
+            }
+            out.push(ch);
+        }
+    }
+    out
 }
 
 /// Inline Markdown for a doc-text fragment (resolves `{@link}`), single-line.
@@ -446,7 +518,11 @@ fn inline(text: &str, context: Option<&MarkdownLinkContext<'_>>) -> String {
 
 /// Escapes a value for use inside a Markdown table cell.
 fn table_cell(text: &str) -> String {
-    text.replace('|', "\\|")
+    if text.contains('|') {
+        text.replace('|', "\\|")
+    } else {
+        text.to_string()
+    }
 }
 
 /// Inline code for normal Markdown text; empty string if blank.
@@ -455,7 +531,11 @@ fn code_span(value: &str) -> String {
     if value.is_empty() {
         String::new()
     } else {
-        fmt_args(format_args!("`{value}`"))
+        let mut code = StringBuilder::with_capacity(value.len() + 2);
+        code.push_char('`');
+        code.push_str(&value);
+        code.push_char('`');
+        code.into_string()
     }
 }
 
@@ -465,7 +545,12 @@ fn code_cell(value: &str) -> String {
     if value.is_empty() {
         String::new()
     } else {
-        fmt_args(format_args!("`{}`", value.replace('|', "\\|")))
+        let cell = table_cell(&value);
+        let mut code = StringBuilder::with_capacity(cell.len() + 2);
+        code.push_char('`');
+        code.push_str(&cell);
+        code.push_char('`');
+        code.into_string()
     }
 }
 
@@ -482,10 +567,12 @@ fn type_param_name_span(type_param: &ApiTypeParamDoc) -> String {
 fn type_param_name(type_param: &ApiTypeParamDoc, code: fn(&str) -> String) -> String {
     let mut cell = code(&type_param.name);
     if let Some(constraint) = &type_param.constraint {
-        push_fmt(&mut cell, format_args!(" *extends* {}", code(constraint)));
+        cell.push_str(" *extends* ");
+        cell.push_str(&code(constraint));
     }
     if let Some(default) = &type_param.default {
-        push_fmt(&mut cell, format_args!(" = {}", code(default)));
+        cell.push_str(" = ");
+        cell.push_str(&code(default));
     }
     cell
 }

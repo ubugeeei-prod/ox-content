@@ -11,14 +11,15 @@ use regex::Regex;
 
 use super::{
     cached_regex, clean_summary_text, doc_kind_plural, doc_page_href, effective_members_format,
-    effective_parameters_format, entry_anchor, file_stem, fmt_args, format_kind_label,
+    effective_parameters_format, entry_anchor, file_stem, format_count_label, format_kind_label,
     generate_source_href, get_entry_badges, member_anchor, normalize_signature,
-    parse_example_block, process_doc_text, push_fmt, EntryStats, MarkdownDisplayFormat,
-    MarkdownDocsOptions, MarkdownLinkContext, MarkdownPathStrategy, RegexCache, DOC_KIND_ORDER,
+    parse_example_block, process_doc_text, EntryStats, MarkdownDisplayFormat, MarkdownDocsOptions,
+    MarkdownLinkContext, MarkdownPathStrategy, RegexCache, DOC_KIND_ORDER,
 };
 use crate::model::{
     ApiDocEntry, ApiDocMember, ApiDocModule, ApiDocTag, ApiParamDoc, ApiTypeParamDoc,
 };
+use crate::string_builder::{join3, StringBuilder};
 use std::collections::HashMap;
 
 fn escape_html(value: &str) -> String {
@@ -47,6 +48,14 @@ fn render_doc_inline_html(text: &str, context: Option<&MarkdownLinkContext<'_>>)
     render_inline_html(&process_doc_text(text, context))
 }
 
+fn replace_line_breaks_html(html: String) -> String {
+    if html.contains('\n') {
+        html.replace('\n', "<br>")
+    } else {
+        html
+    }
+}
+
 fn render_inline_html(text: &str) -> String {
     static TOKEN_RE: RegexCache = OnceLock::new();
 
@@ -54,8 +63,12 @@ fn render_inline_html(text: &str) -> String {
         &TOKEN_RE,
         r"`([^`]+)`|\[([^\]]+)\]\(([^)]+)\)|\*\*([^*]+)\*\*|__([^_]+)__|\*([^*]+)\*|_([^_]+)_",
     ) else {
-        return escape_html(text).replace('\n', "<br>");
+        return replace_line_breaks_html(escape_html(text));
     };
+    if !token_re.is_match(text) {
+        return replace_line_breaks_html(escape_html(text));
+    }
+
     let mut html = String::new();
     let mut last_index = 0;
 
@@ -66,30 +79,30 @@ fn render_inline_html(text: &str) -> String {
         html.push_str(&escape_html(&text[last_index..mat.start()]));
 
         if let Some(code) = captures.get(1) {
-            push_fmt(&mut html, format_args!("<code>{}</code>", escape_html(code.as_str())));
+            html.push_str("<code>");
+            html.push_str(&escape_html(code.as_str()));
+            html.push_str("</code>");
         } else if let (Some(label), Some(href)) = (captures.get(2), captures.get(3)) {
-            push_fmt(
-                &mut html,
-                format_args!(
-                    "<a href=\"{}\">{}</a>",
-                    escape_html(href.as_str()),
-                    render_inline_html(label.as_str())
-                ),
-            );
+            html.push_str("<a href=\"");
+            html.push_str(&escape_html(href.as_str()));
+            html.push_str("\">");
+            html.push_str(&render_inline_html(label.as_str()));
+            html.push_str("</a>");
         } else if let Some(strong) = captures.get(4).or_else(|| captures.get(5)) {
-            push_fmt(
-                &mut html,
-                format_args!("<strong>{}</strong>", render_inline_html(strong.as_str())),
-            );
+            html.push_str("<strong>");
+            html.push_str(&render_inline_html(strong.as_str()));
+            html.push_str("</strong>");
         } else if let Some(emphasis) = captures.get(6).or_else(|| captures.get(7)) {
-            push_fmt(&mut html, format_args!("<em>{}</em>", render_inline_html(emphasis.as_str())));
+            html.push_str("<em>");
+            html.push_str(&render_inline_html(emphasis.as_str()));
+            html.push_str("</em>");
         }
 
         last_index = mat.end();
     }
 
     html.push_str(&escape_html(&text[last_index..]));
-    html.replace('\n', "<br>")
+    replace_line_breaks_html(html)
 }
 
 // The four block-start regexes are cached once and shared between the
@@ -191,7 +204,16 @@ fn render_markdown_blocks_html(text: &str) -> String {
         }
 
         if let Some((level, content)) = heading_match(line) {
-            blocks.push(format!("<h{level}>{}</h{level}>", render_inline_html(&content)));
+            let content = render_inline_html(&content);
+            let mut block = StringBuilder::with_capacity(content.len() + 9);
+            block.push_str("<h");
+            block.push_usize(level);
+            block.push_char('>');
+            block.push_str(&content);
+            block.push_str("</h");
+            block.push_usize(level);
+            block.push_char('>');
+            blocks.push(block.into_string());
             index += 1;
             continue;
         }
@@ -225,14 +247,14 @@ fn render_markdown_blocks_html(text: &str) -> String {
                     index += 1;
                 }
 
-                items.push(format!("<li>{}</li>", render_inline_html(&item_lines.join(" "))));
+                items.push(join3("<li>", &render_inline_html(&item_lines.join(" ")), "</li>"));
 
                 if index < lines.len() && lines[index].trim().is_empty() {
                     break;
                 }
             }
 
-            blocks.push(format!("<ol>\n{}\n</ol>", items.join("\n")));
+            blocks.push(join3("<ol>\n", &items.join("\n"), "\n</ol>"));
             continue;
         }
 
@@ -265,14 +287,14 @@ fn render_markdown_blocks_html(text: &str) -> String {
                     index += 1;
                 }
 
-                items.push(format!("<li>{}</li>", render_inline_html(&item_lines.join(" "))));
+                items.push(join3("<li>", &render_inline_html(&item_lines.join(" ")), "</li>"));
 
                 if index < lines.len() && lines[index].trim().is_empty() {
                     break;
                 }
             }
 
-            blocks.push(format!("<ul>\n{}\n</ul>", items.join("\n")));
+            blocks.push(join3("<ul>\n", &items.join("\n"), "\n</ul>"));
             continue;
         }
 
@@ -291,80 +313,104 @@ fn render_markdown_blocks_html(text: &str) -> String {
             index += 1;
         }
 
-        blocks.push(format!("<p>{}</p>", render_inline_html(&paragraph_lines.join(" "))));
+        blocks.push(join3("<p>", &render_inline_html(&paragraph_lines.join(" ")), "</p>"));
     }
 
-    format!("<div class=\"ox-api-entry__prose\">\n{}\n</div>", blocks.join("\n"))
+    join3("<div class=\"ox-api-entry__prose\">\n", &blocks.join("\n"), "\n</div>")
 }
 
 fn render_code_block_html(code: &str, language: &str) -> String {
-    format!("<pre><code class=\"language-{language}\">{}</code></pre>", escape_html(code))
+    let code = escape_html(code);
+    let mut out = StringBuilder::with_capacity(
+        "<pre><code class=\"language-\"></code></pre>".len() + language.len() + code.len(),
+    );
+    out.push_str("<pre><code class=\"language-");
+    out.push_str(language);
+    out.push_str("\">");
+    out.push_str(&code);
+    out.push_str("</code></pre>");
+    out.into_string()
 }
 
 fn render_highlighted_inline_code_html(code: &str, class_name: &str, language: &str) -> String {
-    format!(
-        "<code class=\"{} language-{language}\">{}</code>",
-        escape_html(class_name),
-        escape_html(code)
-    )
+    let class_name = escape_html(class_name);
+    let code = escape_html(code);
+    let mut out = StringBuilder::with_capacity(
+        "<code class=\" language-\"></code>".len() + class_name.len() + language.len() + code.len(),
+    );
+    out.push_str("<code class=\"");
+    out.push_str(&class_name);
+    out.push_str(" language-");
+    out.push_str(language);
+    out.push_str("\">");
+    out.push_str(&code);
+    out.push_str("</code>");
+    out.into_string()
 }
 
 pub(super) fn render_details_controls_html(target_selector: &str) -> String {
-    format!(
-        "<div class=\"ox-api-controls\" data-ox-api-target=\"{target_selector}\" role=\"toolbar\" aria-label=\"Reference display controls\">
+    let mut out = StringBuilder::with_capacity(260 + target_selector.len());
+    out.push_str("<div class=\"ox-api-controls\" data-ox-api-target=\"");
+    out.push_str(target_selector);
+    out.push_str("\" role=\"toolbar\" aria-label=\"Reference display controls\">
 <button type=\"button\" class=\"ox-api-controls__button\" data-ox-api-toggle=\"expand\">Open all</button>
 <button type=\"button\" class=\"ox-api-controls__button\" data-ox-api-toggle=\"collapse\">Close all</button>
-</div>"
-    )
+</div>");
+    out.into_string()
 }
 
 pub(super) fn render_stats_html(stats: &EntryStats, module_count: Option<usize>) -> String {
-    let mut items = Vec::new();
-
+    let mut rendered_items = StringBuilder::new();
     if let Some(module_count) = module_count {
-        items.push(("modules".to_string(), module_count, None));
+        push_stat_html(&mut rendered_items, "modules", module_count, None);
     }
 
-    items.push(("symbols".to_string(), stats.entries, None));
+    push_stat_html(&mut rendered_items, "symbols", stats.entries, None);
 
     for kind in DOC_KIND_ORDER {
         if let Some(count) = stats.by_kind.get(kind).copied().filter(|count| *count > 0) {
-            items.push((doc_kind_plural(kind).to_string(), count, None));
+            push_stat_html(&mut rendered_items, doc_kind_plural(kind), count, None);
         }
     }
 
     if stats.params > 0 {
-        items.push(("parameters".to_string(), stats.params, None));
+        push_stat_html(&mut rendered_items, "parameters", stats.params, None);
     }
     if stats.members > 0 {
-        items.push(("members".to_string(), stats.members, None));
+        push_stat_html(&mut rendered_items, "members", stats.members, None);
     }
     if stats.returns > 0 {
-        items.push(("returns".to_string(), stats.returns, None));
+        push_stat_html(&mut rendered_items, "returns", stats.returns, None);
     }
     if stats.examples > 0 {
-        items.push(("examples".to_string(), stats.examples, None));
+        push_stat_html(&mut rendered_items, "examples", stats.examples, None);
     }
     if stats.deprecated > 0 {
-        items.push(("deprecated".to_string(), stats.deprecated, Some("warning")));
+        push_stat_html(&mut rendered_items, "deprecated", stats.deprecated, Some("warning"));
     }
 
-    let rendered_items = items
-        .into_iter()
-        .map(|(label, value, tone)| {
-            format!(
-                "<span class=\"ox-api-stat{}\">
-  <strong>{value}</strong>
-  <span>{}</span>
-</span>",
-                tone.map_or(String::new(), |tone| format!(" ox-api-stat--{tone}")),
-                escape_html(&label)
-            )
-        })
-        .collect::<Vec<_>>()
-        .join("\n");
+    let rendered_items = rendered_items.into_string();
+    let mut out = StringBuilder::with_capacity(rendered_items.len() + 80);
+    out.push_str("<div class=\"ox-api-stats\" aria-label=\"API reference summary\">\n");
+    out.push_str(&rendered_items);
+    out.push_str("\n</div>");
+    out.into_string()
+}
 
-    format!("<div class=\"ox-api-stats\" aria-label=\"API reference summary\">\n{rendered_items}\n</div>")
+fn push_stat_html(out: &mut StringBuilder, label: &str, value: usize, tone: Option<&str>) {
+    if !out.is_empty() {
+        out.push_char('\n');
+    }
+    out.push_str("<span class=\"ox-api-stat");
+    if let Some(tone) = tone {
+        out.push_str(" ox-api-stat--");
+        out.push_str(tone);
+    }
+    out.push_str("\">\n  <strong>");
+    out.push_usize(value);
+    out.push_str("</strong>\n  <span>");
+    out.push_str(label);
+    out.push_str("</span>\n</span>");
 }
 
 fn render_entry_badges_html(entry: &ApiDocEntry, class_name: &str) -> String {
@@ -373,22 +419,26 @@ fn render_entry_badges_html(entry: &ApiDocEntry, class_name: &str) -> String {
         return String::new();
     }
 
-    let mut rendered = String::new();
+    let mut rendered = StringBuilder::new();
     for badge in badges {
-        let tone_class = badge
-            .tone
-            .map_or(String::new(), |tone| fmt_args(format_args!(" ox-api-badge--{tone}")));
-        push_fmt(
-            &mut rendered,
-            format_args!(
-                "<span class=\"ox-api-badge{}\">{}</span>",
-                tone_class,
-                escape_html(&badge.label)
-            ),
-        );
+        rendered.push_str("<span class=\"ox-api-badge");
+        if let Some(tone) = badge.tone {
+            rendered.push_str(" ox-api-badge--");
+            rendered.push_str(tone);
+        }
+        rendered.push_str("\">");
+        rendered.push_str(&escape_html(&badge.label));
+        rendered.push_str("</span>");
     }
 
-    fmt_args(format_args!("<span class=\"{class_name}\">{rendered}</span>"))
+    let rendered = rendered.into_string();
+    let mut out = StringBuilder::with_capacity(class_name.len() + rendered.len() + 23);
+    out.push_str("<span class=\"");
+    out.push_str(class_name);
+    out.push_str("\">");
+    out.push_str(&rendered);
+    out.push_str("</span>");
+    out.into_string()
 }
 
 fn render_overview_html_item(
@@ -399,236 +449,243 @@ fn render_overview_html_item(
     let signature = normalize_signature(entry.signature.as_deref());
     let summary = clean_summary_text(&process_doc_text(&entry.description, context), 88);
     let meta = render_entry_badges_html(entry, "ox-api-module__meta");
+    let href = escape_html(href);
     let heading = if let Some(signature) = signature {
-        format!(
-            "<a href=\"{}\" class=\"ox-api-module__link\">{}</a>",
-            escape_html(href),
-            render_highlighted_inline_code_html(
-                &signature,
-                "ox-api-module__signature ox-api-module__signature--highlighted",
-                "typescript",
-            )
-        )
+        let content = render_highlighted_inline_code_html(
+            &signature,
+            "ox-api-module__signature ox-api-module__signature--highlighted",
+            "typescript",
+        );
+        let mut heading = StringBuilder::with_capacity(href.len() + content.len() + 43);
+        heading.push_str("<a href=\"");
+        heading.push_str(&href);
+        heading.push_str("\" class=\"ox-api-module__link\">");
+        heading.push_str(&content);
+        heading.push_str("</a>");
+        heading.into_string()
     } else {
-        format!(
-            "<a href=\"{}\" class=\"ox-api-module__link\"><code class=\"ox-api-module__name\">{}</code></a>",
-            escape_html(href),
-            escape_html(&entry.name)
-        )
+        let name = escape_html(&entry.name);
+        let mut heading = StringBuilder::with_capacity(href.len() + name.len() + 80);
+        heading.push_str("<a href=\"");
+        heading.push_str(&href);
+        heading.push_str("\" class=\"ox-api-module__link\"><code class=\"ox-api-module__name\">");
+        heading.push_str(&name);
+        heading.push_str("</code></a>");
+        heading.into_string()
     };
 
-    format!(
-        "<li><span class=\"ox-api-module__kind\">{}</span><div class=\"ox-api-module__item\">{}{summary_html}{meta}</div></li>",
-        escape_html(format_kind_label(&entry.kind)),
-        heading,
-        summary_html = if summary.is_empty() {
-            String::new()
-        } else {
-            format!("<span class=\"ox-api-module__summary\">{}</span>", render_inline_html(&summary))
-        }
-    )
+    let summary_html = if summary.is_empty() {
+        String::new()
+    } else {
+        join3("<span class=\"ox-api-module__summary\">", &render_inline_html(&summary), "</span>")
+    };
+    let kind = escape_html(format_kind_label(&entry.kind));
+    let mut item = StringBuilder::with_capacity(
+        kind.len() + heading.len() + summary_html.len() + meta.len() + 92,
+    );
+    item.push_str("<li><span class=\"ox-api-module__kind\">");
+    item.push_str(&kind);
+    item.push_str("</span><div class=\"ox-api-module__item\">");
+    item.push_str(&heading);
+    item.push_str(&summary_html);
+    item.push_str(&meta);
+    item.push_str("</div></li>");
+    item.into_string()
 }
 
 fn render_params_list_html(
     params: &[ApiParamDoc],
     context: Option<&MarkdownLinkContext<'_>>,
 ) -> String {
-    let rows = params
-        .iter()
-        .map(|param| {
-            let mut flags = Vec::new();
-            if param.optional {
-                flags.push("optional".to_string());
-            }
-            if let Some(default_value) = &param.default_value {
-                flags.push(format!("default: {default_value}"));
-            }
-            let flag_text = flags.join(" · ");
-            let description = [param.description.as_str(), flag_text.as_str()]
-                .into_iter()
-                .filter(|value| !value.is_empty())
-                .collect::<Vec<_>>()
-                .join(" — ");
+    let mut rows = StringBuilder::new();
+    for param in params {
+        if !rows.is_empty() {
+            rows.push_char('\n');
+        }
+        let description = render_member_param_description(param);
+        rows.push_str("<li class=\"ox-api-entry__param\">\n  <div class=\"ox-api-entry__param-heading\">\n    <code class=\"ox-api-entry__param-name\">");
+        rows.push_str(&escape_html(&param.name));
+        rows.push_str("</code>\n    <code class=\"ox-api-entry__param-type\">");
+        rows.push_str(&escape_html(&param.type_annotation));
+        rows.push_str("</code>\n  </div>\n  ");
+        if !description.is_empty() {
+            rows.push_str("<p class=\"ox-api-entry__param-description\">");
+            rows.push_str(&render_doc_inline_html(&description, context));
+            rows.push_str("</p>");
+        }
+        rows.push_str("\n</li>");
+    }
+    let rows = rows.into_string();
 
-            format!(
-                "<li class=\"ox-api-entry__param\">
-  <div class=\"ox-api-entry__param-heading\">
-    <code class=\"ox-api-entry__param-name\">{}</code>
-    <code class=\"ox-api-entry__param-type\">{}</code>
-  </div>
-  {}
-</li>",
-                escape_html(&param.name),
-                escape_html(&param.type_annotation),
-                if description.is_empty() {
-                    String::new()
-                } else {
-                    format!(
-                        "<p class=\"ox-api-entry__param-description\">{}</p>",
-                        render_doc_inline_html(&description, context)
-                    )
-                }
-            )
-        })
-        .collect::<Vec<_>>()
-        .join("\n");
-
-    format!(
+    let mut out = StringBuilder::with_capacity(rows.len() + 125);
+    out.push_str(
         "<div class=\"ox-api-entry__section ox-api-entry__section--params\">
 <h4>Parameters</h4>
 <ul class=\"ox-api-entry__params\">
-{rows}
+",
+    );
+    out.push_str(&rows);
+    out.push_str(
+        "
 </ul>
-</div>"
-    )
+</div>",
+    );
+    out.into_string()
 }
 
 fn render_params_table_html(
     params: &[ApiParamDoc],
     context: Option<&MarkdownLinkContext<'_>>,
 ) -> String {
-    let rows = params
-        .iter()
-        .map(|param| {
-            let mut flags = Vec::new();
-            if param.optional {
-                flags.push("optional".to_string());
-            }
-            if let Some(default_value) = &param.default_value {
-                flags.push(format!("default: {default_value}"));
-            }
-            let flag_text = flags.join(" · ");
-            let description = [param.description.as_str(), flag_text.as_str()]
-                .into_iter()
-                .filter(|value| !value.is_empty())
-                .collect::<Vec<_>>()
-                .join(" — ");
+    let mut rows = StringBuilder::new();
+    for param in params {
+        if !rows.is_empty() {
+            rows.push_char('\n');
+        }
+        let description = render_member_param_description(param);
+        rows.push_str("<tr>\n  <td><code>");
+        rows.push_str(&escape_html(&param.name));
+        rows.push_str("</code></td>\n  <td><code>");
+        rows.push_str(&escape_html(&param.type_annotation));
+        rows.push_str("</code></td>\n  <td>");
+        rows.push_str(&render_doc_inline_html(&description, context));
+        rows.push_str("</td>\n</tr>");
+    }
+    let rows = rows.into_string();
 
-            format!(
-                "<tr>
-  <td><code>{}</code></td>
-  <td><code>{}</code></td>
-  <td>{}</td>
-</tr>",
-                escape_html(&param.name),
-                escape_html(&param.type_annotation),
-                render_doc_inline_html(&description, context)
-            )
-        })
-        .collect::<Vec<_>>()
-        .join("\n");
-
-    format!(
+    let mut out = StringBuilder::with_capacity(rows.len() + 220);
+    out.push_str(
         "<div class=\"ox-api-entry__section ox-api-entry__section--params\">
 <h4>Parameters</h4>
 <table class=\"ox-api-entry__params-table\">
 <thead><tr><th>Name</th><th>Type</th><th>Description</th></tr></thead>
 <tbody>
-{rows}
+",
+    );
+    out.push_str(&rows);
+    out.push_str(
+        "
 </tbody>
 </table>
-</div>"
-    )
+</div>",
+    );
+    out.into_string()
 }
 
 fn render_type_parameter_name_html(type_param: &ApiTypeParamDoc) -> String {
-    let mut name = format!("<code>{}</code>", escape_html(&type_param.name));
+    let mut name = StringBuilder::new();
+    name.push_str("<code>");
+    name.push_str(&escape_html(&type_param.name));
+    name.push_str("</code>");
     if let Some(constraint) = &type_param.constraint {
-        push_fmt(
-            &mut name,
-            format_args!(" <em>extends</em> <code>{}</code>", escape_html(constraint)),
-        );
+        name.push_str(" <em>extends</em> <code>");
+        name.push_str(&escape_html(constraint));
+        name.push_str("</code>");
     }
     if let Some(default) = &type_param.default {
-        push_fmt(&mut name, format_args!(" = <code>{}</code>", escape_html(default)));
+        name.push_str(" = <code>");
+        name.push_str(&escape_html(default));
+        name.push_str("</code>");
     }
-    name
+    name.into_string()
 }
 
 fn render_type_parameters_table_html(
     type_parameters: &[ApiTypeParamDoc],
     context: Option<&MarkdownLinkContext<'_>>,
 ) -> String {
-    let rows = type_parameters
-        .iter()
-        .map(|type_param| {
-            format!(
-                "<tr>
-  <td>{}</td>
-  <td>{}</td>
-</tr>",
-                render_type_parameter_name_html(type_param),
-                render_doc_inline_html(&type_param.description, context)
-            )
-        })
-        .collect::<Vec<_>>()
-        .join("\n");
+    let mut rows = StringBuilder::new();
+    for type_param in type_parameters {
+        if !rows.is_empty() {
+            rows.push_char('\n');
+        }
+        rows.push_str("<tr>\n  <td>");
+        rows.push_str(&render_type_parameter_name_html(type_param));
+        rows.push_str("</td>\n  <td>");
+        rows.push_str(&render_doc_inline_html(&type_param.description, context));
+        rows.push_str("</td>\n</tr>");
+    }
+    let rows = rows.into_string();
 
-    format!(
+    let mut out = StringBuilder::with_capacity(rows.len() + 235);
+    out.push_str(
         "<div class=\"ox-api-entry__section ox-api-entry__section--type-parameters\">
 <h4>Type Parameters</h4>
 <table class=\"ox-api-entry__type-parameters-table\">
 <thead><tr><th>Name</th><th>Description</th></tr></thead>
 <tbody>
-{rows}
+",
+    );
+    out.push_str(&rows);
+    out.push_str(
+        "
 </tbody>
 </table>
-</div>"
-    )
+</div>",
+    );
+    out.into_string()
 }
 
 fn render_type_parameters_list_html(
     type_parameters: &[ApiTypeParamDoc],
     context: Option<&MarkdownLinkContext<'_>>,
 ) -> String {
-    let items = type_parameters
-        .iter()
-        .map(|type_param| {
-            format!(
-                "<li class=\"ox-api-entry__type-parameter\">
-  <div class=\"ox-api-entry__type-parameter-heading\">{}</div>
-  {}
-</li>",
-                render_type_parameter_name_html(type_param),
-                if type_param.description.is_empty() {
-                    String::new()
-                } else {
-                    format!(
-                        "<p class=\"ox-api-entry__type-parameter-description\">{}</p>",
-                        render_doc_inline_html(&type_param.description, context)
-                    )
-                }
-            )
-        })
-        .collect::<Vec<_>>()
-        .join("\n");
+    let mut items = StringBuilder::new();
+    for type_param in type_parameters {
+        if !items.is_empty() {
+            items.push_char('\n');
+        }
+        items.push_str("<li class=\"ox-api-entry__type-parameter\">\n  <div class=\"ox-api-entry__type-parameter-heading\">");
+        items.push_str(&render_type_parameter_name_html(type_param));
+        items.push_str("</div>\n  ");
+        if !type_param.description.is_empty() {
+            items.push_str("<p class=\"ox-api-entry__type-parameter-description\">");
+            items.push_str(&render_doc_inline_html(&type_param.description, context));
+            items.push_str("</p>");
+        }
+        items.push_str("\n</li>");
+    }
+    let items = items.into_string();
 
-    format!(
+    let mut out = StringBuilder::with_capacity(items.len() + 145);
+    out.push_str(
         "<div class=\"ox-api-entry__section ox-api-entry__section--type-parameters\">
 <h4>Type Parameters</h4>
 <ul class=\"ox-api-entry__type-parameters\">
-{items}
+",
+    );
+    out.push_str(&items);
+    out.push_str(
+        "
 </ul>
-</div>"
-    )
+</div>",
+    );
+    out.into_string()
 }
 
 fn render_tag_list_html(tags: &[ApiDocTag], context: Option<&MarkdownLinkContext<'_>>) -> String {
-    let mut items = String::new();
+    let mut items = StringBuilder::new();
     for tag in tags {
-        push_fmt(&mut items, format_args!(
-            "<li><span class=\"ox-api-entry__tag-name\">@{}</span><span class=\"ox-api-entry__tag-value\">{}</span></li>",
-            escape_html(&tag.tag),
-            render_doc_inline_html(&tag.value, context)
-        ));
+        items.push_str("<li><span class=\"ox-api-entry__tag-name\">@");
+        items.push_str(&escape_html(&tag.tag));
+        items.push_str("</span><span class=\"ox-api-entry__tag-value\">");
+        items.push_str(&render_doc_inline_html(&tag.value, context));
+        items.push_str("</span></li>");
     }
+    let items = items.into_string();
 
-    format!(
+    let mut out = StringBuilder::with_capacity(items.len() + 115);
+    out.push_str(
         "<div class=\"ox-api-entry__section ox-api-entry__section--tags\">
 <h4>Tags</h4>
-<ul class=\"ox-api-entry__tags\">{items}</ul>
-</div>"
-    )
+<ul class=\"ox-api-entry__tags\">",
+    );
+    out.push_str(&items);
+    out.push_str(
+        "</ul>
+</div>",
+    );
+    out.into_string()
 }
 
 fn render_member_flags(member: &ApiDocMember) -> String {
@@ -648,7 +705,9 @@ fn render_member_flags(member: &ApiDocMember) -> String {
 
     let mut html = String::new();
     for flag in flags {
-        push_fmt(&mut html, format_args!("<span class=\"ox-api-badge\">{flag}</span>"));
+        html.push_str("<span class=\"ox-api-badge\">");
+        html.push_str(flag);
+        html.push_str("</span>");
     }
     html
 }
@@ -673,9 +732,10 @@ fn render_member_description_html(
     let mut blocks = Vec::new();
 
     if !member.description.is_empty() {
-        blocks.push(format!(
-            "<div class=\"ox-api-entry__member-description\">{}</div>",
-            render_doc_inline_html(&member.description, context)
+        blocks.push(join3(
+            "<div class=\"ox-api-entry__member-description\">",
+            &render_doc_inline_html(&member.description, context),
+            "</div>",
         ));
     }
 
@@ -685,9 +745,10 @@ fn render_member_description_html(
 
     if let Some(returns) = &member.returns {
         if !returns.description.is_empty() {
-            blocks.push(format!(
-                "<div class=\"ox-api-entry__member-return\"><span>Returns</span> {}</div>",
-                render_doc_inline_html(&returns.description, context)
+            blocks.push(join3(
+                "<div class=\"ox-api-entry__member-return\"><span>Returns</span> ",
+                &render_doc_inline_html(&returns.description, context),
+                "</div>",
             ));
         }
     }
@@ -697,20 +758,22 @@ fn render_member_description_html(
 
 fn render_member_param_description(param: &ApiParamDoc) -> String {
     let mut description = param.description.clone();
-    let mut flags = Vec::new();
+    let mut flags = String::new();
     if param.optional {
-        flags.push("optional".to_string());
+        flags.push_str("optional");
     }
     if let Some(default_value) = &param.default_value {
-        flags.push(format!("default: {default_value}"));
+        if !flags.is_empty() {
+            flags.push_str(" · ");
+        }
+        flags.push_str("default: ");
+        flags.push_str(default_value);
     }
     if !flags.is_empty() {
-        let flags = flags.join(" · ");
-        if description.is_empty() {
-            description.push_str(&flags);
-        } else {
-            push_fmt(&mut description, format_args!(" — {flags}"));
+        if !description.is_empty() {
+            description.push_str(" — ");
         }
+        description.push_str(&flags);
     }
     description
 }
@@ -721,42 +784,39 @@ fn render_member_params_html(
     context: Option<&MarkdownLinkContext<'_>>,
 ) -> String {
     if effective_parameters_format(options) == MarkdownDisplayFormat::Table {
-        let mut rows = String::new();
+        let mut rows = StringBuilder::new();
         for param in params {
             let description = render_member_param_description(param);
-            push_fmt(
-                &mut rows,
-                format_args!(
-                    "<tr><td><code>{}</code></td><td><code>{}</code></td><td>{}</td></tr>",
-                    escape_html(&param.name),
-                    escape_html(&param.type_annotation),
-                    render_doc_inline_html(&description, context)
-                ),
-            );
+            rows.push_str("<tr><td><code>");
+            rows.push_str(&escape_html(&param.name));
+            rows.push_str("</code></td><td><code>");
+            rows.push_str(&escape_html(&param.type_annotation));
+            rows.push_str("</code></td><td>");
+            rows.push_str(&render_doc_inline_html(&description, context));
+            rows.push_str("</td></tr>");
         }
+        let rows = rows.into_string();
 
-        return format!(
-            "<table class=\"ox-api-entry__member-params-table\"><thead><tr><th>Name</th><th>Type</th><th>Description</th></tr></thead><tbody>{rows}</tbody></table>"
+        return join3(
+            "<table class=\"ox-api-entry__member-params-table\"><thead><tr><th>Name</th><th>Type</th><th>Description</th></tr></thead><tbody>",
+            &rows,
+            "</tbody></table>",
         );
     }
 
-    let mut items = String::new();
+    let mut items = StringBuilder::new();
     for param in params {
         let description = render_member_param_description(param);
-        push_fmt(
-            &mut items,
-            format_args!(
-                "<li><code>{}</code>{}</li>",
-                escape_html(&param.name),
-                if description.is_empty() {
-                    String::new()
-                } else {
-                    format!(" {}", render_doc_inline_html(&description, context))
-                }
-            ),
-        );
+        items.push_str("<li><code>");
+        items.push_str(&escape_html(&param.name));
+        items.push_str("</code>");
+        if !description.is_empty() {
+            items.push_char(' ');
+            items.push_str(&render_doc_inline_html(&description, context));
+        }
+        items.push_str("</li>");
     }
-    format!("<ul class=\"ox-api-entry__member-params\">{items}</ul>")
+    join3("<ul class=\"ox-api-entry__member-params\">", &items.into_string(), "</ul>")
 }
 
 fn render_member_table_html(
@@ -770,45 +830,53 @@ fn render_member_table_html(
         return String::new();
     }
 
-    let rows = members
-        .iter()
-        .map(|member| {
-            format!(
-                "<tr id=\"{}\">
-  <td><code>{}</code>{}</td>
-  <td><span class=\"ox-api-entry__member-kind\">{}</span></td>
-  <td>{}</td>
-  <td>{}</td>
-</tr>",
-                escape_html(&member_anchor(
-                    entry_name,
-                    member,
-                    context.map_or(MarkdownPathStrategy::Flat, |context| context
-                        .options
-                        .path_strategy),
-                )),
-                escape_html(&member.name),
-                render_member_flags(member),
-                escape_html(&member.kind),
-                render_member_type_html(member),
-                render_member_description_html(member, options, context)
-            )
-        })
-        .collect::<Vec<_>>()
-        .join("\n");
+    let mut rows = StringBuilder::new();
+    for member in members {
+        if !rows.is_empty() {
+            rows.push_char('\n');
+        }
+        rows.push_str("<tr id=\"");
+        rows.push_str(&escape_html(&member_anchor(
+            entry_name,
+            member,
+            context.map_or(MarkdownPathStrategy::Flat, |context| context.options.path_strategy),
+        )));
+        rows.push_str("\">\n  <td><code>");
+        rows.push_str(&escape_html(&member.name));
+        rows.push_str("</code>");
+        rows.push_str(&render_member_flags(member));
+        rows.push_str("</td>\n  <td><span class=\"ox-api-entry__member-kind\">");
+        rows.push_str(&escape_html(&member.kind));
+        rows.push_str("</span></td>\n  <td>");
+        rows.push_str(&render_member_type_html(member));
+        rows.push_str("</td>\n  <td>");
+        rows.push_str(&render_member_description_html(member, options, context));
+        rows.push_str("</td>\n</tr>");
+    }
+    let rows = rows.into_string();
 
-    format!(
+    let title = escape_html(title);
+    let mut out = StringBuilder::with_capacity(rows.len() + title.len() + 235);
+    out.push_str(
         "<div class=\"ox-api-entry__member-group\">
-<h5>{}</h5>
+<h5>",
+    );
+    out.push_str(&title);
+    out.push_str(
+        "</h5>
 <table class=\"ox-api-entry__members-table\">
 <thead><tr><th>Name</th><th>Kind</th><th>Type</th><th>Description</th></tr></thead>
 <tbody>
-{rows}
+",
+    );
+    out.push_str(&rows);
+    out.push_str(
+        "
 </tbody>
 </table>
 </div>",
-        escape_html(title)
-    )
+    );
+    out.into_string()
 }
 
 fn render_member_list_html(
@@ -822,44 +890,50 @@ fn render_member_list_html(
         return String::new();
     }
 
-    let items = members
-        .iter()
-        .map(|member| {
-            format!(
-                "<li id=\"{}\" class=\"ox-api-entry__member\">
-  <div class=\"ox-api-entry__member-heading\">
-    <code class=\"ox-api-entry__member-name\">{}</code>{}
-    <span class=\"ox-api-entry__member-kind\">{}</span>
-    {}
-  </div>
-  {}
-</li>",
-                escape_html(&member_anchor(
-                    entry_name,
-                    member,
-                    context.map_or(MarkdownPathStrategy::Flat, |context| context
-                        .options
-                        .path_strategy),
-                )),
-                escape_html(&member.name),
-                render_member_flags(member),
-                escape_html(&member.kind),
-                render_member_type_html(member),
-                render_member_description_html(member, options, context)
-            )
-        })
-        .collect::<Vec<_>>()
-        .join("\n");
+    let mut items = StringBuilder::new();
+    for member in members {
+        if !items.is_empty() {
+            items.push_char('\n');
+        }
+        items.push_str("<li id=\"");
+        items.push_str(&escape_html(&member_anchor(
+            entry_name,
+            member,
+            context.map_or(MarkdownPathStrategy::Flat, |context| context.options.path_strategy),
+        )));
+        items.push_str("\" class=\"ox-api-entry__member\">\n  <div class=\"ox-api-entry__member-heading\">\n    <code class=\"ox-api-entry__member-name\">");
+        items.push_str(&escape_html(&member.name));
+        items.push_str("</code>");
+        items.push_str(&render_member_flags(member));
+        items.push_str("\n    <span class=\"ox-api-entry__member-kind\">");
+        items.push_str(&escape_html(&member.kind));
+        items.push_str("</span>\n    ");
+        items.push_str(&render_member_type_html(member));
+        items.push_str("\n  </div>\n  ");
+        items.push_str(&render_member_description_html(member, options, context));
+        items.push_str("\n</li>");
+    }
+    let items = items.into_string();
 
-    format!(
+    let title = escape_html(title);
+    let mut out = StringBuilder::with_capacity(items.len() + title.len() + 135);
+    out.push_str(
         "<div class=\"ox-api-entry__member-group\">
-<h5>{}</h5>
+<h5>",
+    );
+    out.push_str(&title);
+    out.push_str(
+        "</h5>
 <ul class=\"ox-api-entry__members-list\">
-{items}
+",
+    );
+    out.push_str(&items);
+    out.push_str(
+        "
 </ul>
 </div>",
-        escape_html(title)
-    )
+    );
+    out.into_string()
 }
 
 fn render_member_group_html(
@@ -1001,12 +1075,13 @@ fn render_members_html(
         return String::new();
     }
 
-    format!(
+    join3(
         "<div class=\"ox-api-entry__section ox-api-entry__section--members\">
 <h4>Members</h4>
-{}
+",
+        &groups.join("\n"),
+        "
 </div>",
-        groups.join("\n")
     )
 }
 
@@ -1030,23 +1105,24 @@ fn render_entry_body_html(
     }
 
     if let Some(signature) = &entry.signature {
-        push_fmt(
-            &mut body,
-            format_args!(
-                "<div class=\"ox-api-entry__section ox-api-entry__section--signature\">
+        body.push_str(
+            "<div class=\"ox-api-entry__section ox-api-entry__section--signature\">
 <h4>Signature</h4>
-{}
+",
+        );
+        body.push_str(&render_code_block_html(signature, "typescript"));
+        body.push_str(
+            "
 </div>\n",
-                render_code_block_html(signature, "typescript")
-            ),
         );
     }
 
     if let Some(source_href) = source_href {
-        push_fmt(&mut body, format_args!(
-            "<p class=\"ox-api-entry__source\"><a class=\"ox-api-entry__source-link\" href=\"{}\" target=\"_blank\" rel=\"noopener noreferrer\">View source<span class=\"ox-api-entry__source-icon\" aria-hidden=\"true\"></span></a></p>\n",
-            escape_html(&source_href)
-        ));
+        body.push_str(
+            "<p class=\"ox-api-entry__source\"><a class=\"ox-api-entry__source-link\" href=\"",
+        );
+        body.push_str(&escape_html(&source_href));
+        body.push_str("\" target=\"_blank\" rel=\"noopener noreferrer\">View source<span class=\"ox-api-entry__source-icon\" aria-hidden=\"true\"></span></a></p>\n");
     }
 
     if !entry.type_parameters.is_empty() {
@@ -1073,56 +1149,61 @@ fn render_entry_body_html(
     }
 
     if let Some(returns) = &entry.returns {
-        push_fmt(
-            &mut body,
-            format_args!(
-                "<div class=\"ox-api-entry__section ox-api-entry__section--returns\">
+        body.push_str(
+            "<div class=\"ox-api-entry__section ox-api-entry__section--returns\">
 <h4>Returns</h4>
 <div class=\"ox-api-entry__return\">
-  <code class=\"ox-api-entry__return-type\">{}</code>
-  {}
+  <code class=\"ox-api-entry__return-type\">",
+        );
+        body.push_str(&escape_html(&returns.type_annotation));
+        body.push_str(
+            "</code>
+  ",
+        );
+        if !returns.description.is_empty() {
+            body.push_str("<p class=\"ox-api-entry__return-description\">");
+            body.push_str(&render_doc_inline_html(&returns.description, link_context));
+            body.push_str("</p>");
+        }
+        body.push_str(
+            "
 </div>
 </div>\n",
-                escape_html(&returns.type_annotation),
-                if returns.description.is_empty() {
-                    String::new()
-                } else {
-                    format!(
-                        "<p class=\"ox-api-entry__return-description\">{}</p>",
-                        render_doc_inline_html(&returns.description, link_context)
-                    )
-                }
-            ),
         );
     }
 
     if !entry.examples.is_empty() {
-        let examples_html = entry
-            .examples
-            .iter()
-            .enumerate()
-            .map(|(index, example)| {
-                let (code, language) = parse_example_block(example);
-                format!(
-                    "<div class=\"ox-api-entry__example\">
-<div class=\"ox-api-entry__example-heading\">Example {}</div>
-{}
+        let mut examples_html = StringBuilder::new();
+        for (index, example) in entry.examples.iter().enumerate() {
+            if !examples_html.is_empty() {
+                examples_html.push_char('\n');
+            }
+            let (code, language) = parse_example_block(example);
+            examples_html.push_str(
+                "<div class=\"ox-api-entry__example\">
+<div class=\"ox-api-entry__example-heading\">Example ",
+            );
+            examples_html.push_usize(index + 1);
+            examples_html.push_str(
+                "</div>
+",
+            );
+            examples_html.push_str(&render_code_block_html(&code, &language));
+            examples_html.push_str(
+                "
 </div>",
-                    index + 1,
-                    render_code_block_html(&code, &language)
-                )
-            })
-            .collect::<Vec<_>>()
-            .join("\n");
+            );
+        }
 
-        push_fmt(
-            &mut body,
-            format_args!(
-                "<div class=\"ox-api-entry__section ox-api-entry__section--examples\">
+        body.push_str(
+            "<div class=\"ox-api-entry__section ox-api-entry__section--examples\">
 <h4>Examples</h4>
-{examples_html}
-</div>\n"
-            ),
+",
+        );
+        body.push_str(&examples_html.into_string());
+        body.push_str(
+            "
+</div>\n",
         );
     }
 
@@ -1154,41 +1235,54 @@ pub(super) fn render_entry_html(
             "typescript",
         )
     } else {
-        format!("<code class=\"ox-api-entry__name\">{}</code>", escape_html(&entry.name))
+        join3("<code class=\"ox-api-entry__name\">", &escape_html(&entry.name), "</code>")
     };
-    let summary_parts = [
-        format!(
-            "<span class=\"ox-api-entry__kind\">{}</span>",
-            escape_html(format_kind_label(&entry.kind))
-        ),
-        format!(
-            "<span class=\"ox-api-entry__summary-main\">{}{}{}</span>",
-            summary_heading,
-            if summary_description.is_empty() {
-                String::new()
-            } else {
-                format!(
-                    "<span class=\"ox-api-entry__description\">{}</span>",
-                    render_inline_html(&summary_description)
-                )
-            },
-            render_entry_badges_html(entry, "ox-api-entry__meta")
-        ),
-    ];
+    let summary_description = if summary_description.is_empty() {
+        String::new()
+    } else {
+        join3(
+            "<span class=\"ox-api-entry__description\">",
+            &render_inline_html(&summary_description),
+            "</span>",
+        )
+    };
+    let badges = render_entry_badges_html(entry, "ox-api-entry__meta");
+    let kind = escape_html(format_kind_label(&entry.kind));
+    let mut summary = StringBuilder::with_capacity(
+        kind.len() + summary_heading.len() + summary_description.len() + badges.len() + 92,
+    );
+    summary.push_str("<span class=\"ox-api-entry__kind\">");
+    summary.push_str(&kind);
+    summary.push_str("</span><span class=\"ox-api-entry__summary-main\">");
+    summary.push_str(&summary_heading);
+    summary.push_str(&summary_description);
+    summary.push_str(&badges);
+    summary.push_str("</span>");
+    let summary = summary.into_string();
+    let anchor = entry_anchor(&entry.name);
 
-    format!(
-        "<details id=\"{}\" class=\"ox-api-entry\">
-  <summary>{}</summary>
+    let mut out = StringBuilder::with_capacity(anchor.len() + summary.len() + body.len() + 120);
+    out.push_str("<details id=\"");
+    out.push_str(&anchor);
+    out.push_str(
+        "\" class=\"ox-api-entry\">
+  <summary>",
+    );
+    out.push_str(&summary);
+    out.push_str(
+        "</summary>
   <div class=\"ox-api-entry__body\">
-{}
+",
+    );
+    out.push_str(&body);
+    out.push_str(
+        "
   </div>
 </details>
 
 ",
-        entry_anchor(&entry.name),
-        summary_parts.join(""),
-        body
-    )
+    );
+    out.into_string()
 }
 
 pub(super) fn render_entry_page_html(
@@ -1197,14 +1291,21 @@ pub(super) fn render_entry_page_html(
     link_context: Option<&MarkdownLinkContext<'_>>,
 ) -> String {
     let body = render_entry_body_html(entry, options, link_context);
-    fmt_args(format_args!(
-        "<div id=\"{}\" class=\"ox-api-entry ox-api-entry--page\">
-{}
+    let anchor = entry_anchor(&entry.name);
+    let mut out = StringBuilder::with_capacity(anchor.len() + body.len() + 64);
+    out.push_str("<div id=\"");
+    out.push_str(&anchor);
+    out.push_str(
+        "\" class=\"ox-api-entry ox-api-entry--page\">
+",
+    );
+    out.push_str(&body);
+    out.push_str(
+        "
 </div>
 ",
-        entry_anchor(&entry.name),
-        body
-    ))
+    );
+    out.into_string()
 }
 
 pub(super) fn render_module_section_html(
@@ -1215,25 +1316,33 @@ pub(super) fn render_module_section_html(
     count_label: &str,
     link_context: Option<&MarkdownLinkContext<'_>>,
 ) -> String {
-    let mut markdown = fmt_args(format_args!(
+    let mut markdown = String::new();
+    markdown.push_str(
         "<details class=\"ox-api-module\">
   <summary>
-    <span class=\"ox-api-module__title\"><a href=\"{}\">{}</a></span>
-    <span class=\"ox-api-module__count\">{count_label}</span>
+    <span class=\"ox-api-module__title\"><a href=\"",
+    );
+    markdown.push_str(&escape_html(&doc_page_href(options, file_name, None)));
+    markdown.push_str("\">");
+    markdown.push_str(&escape_html(display_name));
+    markdown.push_str(
+        "</a></span>
+    <span class=\"ox-api-module__count\">",
+    );
+    markdown.push_str(count_label);
+    markdown.push_str(
+        "</span>
   </summary>
   <div class=\"ox-api-module__body\">
     <ul class=\"ox-api-module__list\">
 ",
-        escape_html(&doc_page_href(options, file_name, None)),
-        escape_html(display_name)
-    ));
+    );
 
     for entry in &doc.entries {
         let href = doc_page_href(options, file_name, Some(&entry_anchor(&entry.name)));
-        push_fmt(
-            &mut markdown,
-            format_args!("      {}\n", render_overview_html_item(entry, &href, link_context)),
-        );
+        markdown.push_str("      ");
+        markdown.push_str(&render_overview_html_item(entry, &href, link_context));
+        markdown.push('\n');
     }
 
     markdown.push_str(
@@ -1268,11 +1377,7 @@ pub(super) fn render_module_index_html(
                 file_name = "index-module".to_string();
             }
 
-            let count_label = fmt_args(format_args!(
-                "{} symbol{}",
-                doc.entries.len(),
-                if doc.entries.len() == 1 { "" } else { "s" }
-            ));
+            let count_label = format_count_label(doc.entries.len(), "symbol", Some("symbols"));
             let href = doc_page_href(options, &file_name, None);
             let summary = clean_summary_text(&process_doc_text(&doc.description, link_context), 88);
             (display_name, href, count_label, summary)
@@ -1280,58 +1385,73 @@ pub(super) fn render_module_index_html(
         .collect::<Vec<_>>();
 
     if display_format == MarkdownDisplayFormat::Table {
-        let rows = items
-            .iter()
-            .map(|(display_name, href, count_label, summary)| {
-                format!(
-                    "<tr><td><a href=\"{}\">{}</a></td><td>{}</td><td>{}</td></tr>",
-                    escape_html(href),
-                    escape_html(display_name),
-                    escape_html(count_label),
-                    render_inline_html(summary)
-                )
-            })
-            .collect::<Vec<_>>()
-            .join("\n");
+        let mut rows = StringBuilder::new();
+        for (display_name, href, count_label, summary) in &items {
+            if !rows.is_empty() {
+                rows.push_char('\n');
+            }
+            rows.push_str("<tr><td><a href=\"");
+            rows.push_str(&escape_html(href));
+            rows.push_str("\">");
+            rows.push_str(&escape_html(display_name));
+            rows.push_str("</a></td><td>");
+            rows.push_str(&escape_html(count_label));
+            rows.push_str("</td><td>");
+            rows.push_str(&render_inline_html(summary));
+            rows.push_str("</td></tr>");
+        }
+        let rows = rows.into_string();
 
-        return format!(
+        let mut out = StringBuilder::with_capacity(rows.len() + 150);
+        out.push_str(
             "<table class=\"ox-api-modules-table\">
 <thead><tr><th>Module</th><th>Symbols</th><th>Description</th></tr></thead>
 <tbody>
-{rows}
+",
+        );
+        out.push_str(&rows);
+        out.push_str(
+            "
 </tbody>
 </table>
 
-"
+",
         );
+        return out.into_string();
     }
 
-    let rows = items
-        .iter()
-        .map(|(display_name, href, count_label, summary)| {
-            format!(
-                "<li><a href=\"{}\">{}</a><span class=\"ox-api-module__count\">{}</span>{}</li>",
-                escape_html(href),
-                escape_html(display_name),
-                escape_html(count_label),
-                if summary.is_empty() {
-                    String::new()
-                } else {
-                    format!(
-                        "<span class=\"ox-api-module__summary\">{}</span>",
-                        render_inline_html(summary)
-                    )
-                }
-            )
-        })
-        .collect::<Vec<_>>()
-        .join("\n");
+    let mut rows = StringBuilder::new();
+    for (display_name, href, count_label, summary) in &items {
+        if !rows.is_empty() {
+            rows.push_char('\n');
+        }
+        rows.push_str("<li><a href=\"");
+        rows.push_str(&escape_html(href));
+        rows.push_str("\">");
+        rows.push_str(&escape_html(display_name));
+        rows.push_str("</a><span class=\"ox-api-module__count\">");
+        rows.push_str(&escape_html(count_label));
+        rows.push_str("</span>");
+        if !summary.is_empty() {
+            rows.push_str("<span class=\"ox-api-module__summary\">");
+            rows.push_str(&render_inline_html(summary));
+            rows.push_str("</span>");
+        }
+        rows.push_str("</li>");
+    }
+    let rows = rows.into_string();
 
-    format!(
+    let mut out = StringBuilder::with_capacity(rows.len() + 40);
+    out.push_str(
         "<ul class=\"ox-api-modules-list\">
-{rows}
+",
+    );
+    out.push_str(&rows);
+    out.push_str(
+        "
 </ul>
 
-"
-    )
+",
+    );
+    out.into_string()
 }

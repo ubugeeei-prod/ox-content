@@ -182,7 +182,8 @@ impl HtmlRenderer {
             *count += 1;
             self.output.push_str(&self.heading_slug_scratch);
             // `write!` into `String` is infallible; the formatter pushes
-            // bytes directly into the existing buffer with no `format!`
+            // bytes directly into the existing buffer with no formatted
+            // temporary string allocation.
             // intermediate allocation.
             let _ = write!(self.output, "-{n}");
             return;

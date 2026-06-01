@@ -4,6 +4,8 @@
 //! generating documentation from source code using OXC parser
 //! for JavaScript/TypeScript files.
 
+#![deny(clippy::disallowed_macros)]
+
 mod config;
 mod data;
 mod extractor;
@@ -14,6 +16,7 @@ mod model;
 mod nav;
 mod normalize;
 mod output;
+mod string_builder;
 
 pub use config::DocsConfig;
 pub use data::generate_docs_data_json;

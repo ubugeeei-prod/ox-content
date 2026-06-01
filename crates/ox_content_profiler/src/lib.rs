@@ -40,6 +40,7 @@
 //! ```
 
 #![deny(unsafe_op_in_unsafe_fn)]
+#![deny(clippy::disallowed_macros)]
 #![allow(clippy::module_name_repetitions)]
 // The profiler is intentionally lossy with floating-point math (percentiles,
 // MB/s, histogram bar widths) and uses `as` casts between u64 / u128 / f64.
