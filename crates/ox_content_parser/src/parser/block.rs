@@ -49,7 +49,11 @@ impl<'a> Parser<'a> {
             Some(b'`' | b'~') if Self::try_parse_fenced_code_at(line, trimmed) => {
                 return self.parse_fenced_code(start);
             }
-            Some(b'<') if self.try_parse_html_block() => return self.parse_html_block(start),
+            Some(b'<') => {
+                if let Some(html_start) = Self::parse_html_block_start(trimmed) {
+                    return self.parse_html_block(start, html_start);
+                }
+            }
             Some(b'+' | b'0'..=b'9') if Self::try_parse_list_line(trimmed) => {
                 return self.parse_list(start);
             }

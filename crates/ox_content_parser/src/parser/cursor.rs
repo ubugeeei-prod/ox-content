@@ -100,7 +100,7 @@ impl<'a> Parser<'a> {
             Some(b'_') => Self::try_parse_thematic_break_line(line),
             Some(b'>') => true,
             Some(b'`' | b'~') => Self::try_parse_fenced_code_at(line, trimmed),
-            Some(b'<') => self.try_parse_html_block(),
+            Some(b'<') => Self::parse_html_block_start(trimmed).is_some(),
             Some(b'+' | b'0'..=b'9') => Self::try_parse_list_line(trimmed),
             _ => false,
         };
