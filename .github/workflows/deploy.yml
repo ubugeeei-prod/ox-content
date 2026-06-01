@@ -27,7 +27,7 @@ jobs:
         uses: dtolnay/rust-toolchain@29eef336d9b2848a0b548edc03f92a220660cdb8 # stable
 
       - name: Setup Vite+
-        uses: voidzero-dev/setup-vp@ca1c46663915d6c1042ae23bd39ab85718bfb0fa # v1
+        uses: voidzero-dev/setup-vp@329490fff19dd4ecd8ff2a74d7c45bee0448f3a6 # v1
         with:
           node-version-file: ".node-version"
           cache: true
