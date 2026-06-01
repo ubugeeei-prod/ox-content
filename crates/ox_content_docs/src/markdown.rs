@@ -5,6 +5,7 @@ use std::fmt::Write as _;
 use std::path::Path;
 use std::sync::OnceLock;
 
+use phf::phf_map;
 use regex::Regex;
 use serde::{Deserialize, Serialize};
 
@@ -348,45 +349,53 @@ fn module_file_name(file_path: &str) -> String {
     sanitize_doc_path_segment(&file_name)
 }
 
-fn typedoc_kind_segment(kind: &str) -> &'static str {
-    match kind {
-        "function" => "functions",
-        "class" => "classes",
-        "interface" => "interfaces",
-        "type" => "type-aliases",
-        "enum" => "enumerations",
-        "variable" | "const" => "variables",
-        "module" => "modules",
-        _ => "symbols",
-    }
-}
+/// Directory segment for each documentation kind under the TypeDoc path strategy.
+static TYPEDOC_KIND_SEGMENT: phf::Map<&'static str, &'static str> = phf_map! {
+    "function" => "functions",
+    "class" => "classes",
+    "interface" => "interfaces",
+    "type" => "type-aliases",
+    "enum" => "enumerations",
+    "variable" => "variables",
+    "const" => "variables",
+    "module" => "modules",
+};
 
-fn typedoc_kind_title(kind: &str) -> &'static str {
-    match kind {
-        "function" => "Functions",
-        "class" => "Classes",
-        "interface" => "Interfaces",
-        "type" => "Type Aliases",
-        "enum" => "Enumerations",
-        "variable" | "const" => "Variables",
-        "module" => "Modules",
-        _ => "Symbols",
-    }
-}
+/// Plural category heading for each documentation kind.
+static TYPEDOC_KIND_TITLE: phf::Map<&'static str, &'static str> = phf_map! {
+    "function" => "Functions",
+    "class" => "Classes",
+    "interface" => "Interfaces",
+    "type" => "Type Aliases",
+    "enum" => "Enumerations",
+    "variable" => "Variables",
+    "const" => "Variables",
+    "module" => "Modules",
+};
 
 /// Singular category label used as the first column header of a module index
 /// table (matches TypeDoc, e.g. `Function`, `Type Alias`).
+static TYPEDOC_KIND_SINGULAR: phf::Map<&'static str, &'static str> = phf_map! {
+    "function" => "Function",
+    "class" => "Class",
+    "interface" => "Interface",
+    "type" => "Type Alias",
+    "enum" => "Enumeration",
+    "variable" => "Variable",
+    "const" => "Variable",
+    "module" => "Module",
+};
+
+fn typedoc_kind_segment(kind: &str) -> &'static str {
+    TYPEDOC_KIND_SEGMENT.get(kind).copied().unwrap_or("symbols")
+}
+
+fn typedoc_kind_title(kind: &str) -> &'static str {
+    TYPEDOC_KIND_TITLE.get(kind).copied().unwrap_or("Symbols")
+}
+
 fn typedoc_kind_singular(kind: &str) -> &'static str {
-    match kind {
-        "function" => "Function",
-        "class" => "Class",
-        "interface" => "Interface",
-        "type" => "Type Alias",
-        "enum" => "Enumeration",
-        "variable" | "const" => "Variable",
-        "module" => "Module",
-        _ => "Symbol",
-    }
+    TYPEDOC_KIND_SINGULAR.get(kind).copied().unwrap_or("Symbol")
 }
 
 fn typedoc_entry_file_name(module_name: &str, entry: &ApiDocEntry) -> String {

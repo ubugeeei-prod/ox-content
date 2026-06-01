@@ -2,6 +2,7 @@
 
 use std::path::Path;
 
+use phf::phf_map;
 use serde::{Deserialize, Serialize};
 
 use crate::markdown::{CanonicalOwners, MarkdownPathStrategy};
@@ -206,30 +207,36 @@ fn ordered_entry_kinds(entries: &[ApiDocEntry]) -> Vec<String> {
     kinds
 }
 
+/// Directory segment for each documentation kind under the TypeDoc path strategy.
+static TYPEDOC_KIND_SEGMENT: phf::Map<&'static str, &'static str> = phf_map! {
+    "function" => "functions",
+    "class" => "classes",
+    "interface" => "interfaces",
+    "type" => "type-aliases",
+    "enum" => "enumerations",
+    "variable" => "variables",
+    "const" => "variables",
+    "module" => "modules",
+};
+
+/// Plural category heading for each documentation kind.
+static TYPEDOC_KIND_TITLE: phf::Map<&'static str, &'static str> = phf_map! {
+    "function" => "Functions",
+    "class" => "Classes",
+    "interface" => "Interfaces",
+    "type" => "Type Aliases",
+    "enum" => "Enumerations",
+    "variable" => "Variables",
+    "const" => "Variables",
+    "module" => "Modules",
+};
+
 fn typedoc_kind_segment(kind: &str) -> &'static str {
-    match kind {
-        "function" => "functions",
-        "class" => "classes",
-        "interface" => "interfaces",
-        "type" => "type-aliases",
-        "enum" => "enumerations",
-        "variable" | "const" => "variables",
-        "module" => "modules",
-        _ => "symbols",
-    }
+    TYPEDOC_KIND_SEGMENT.get(kind).copied().unwrap_or("symbols")
 }
 
 fn typedoc_kind_title(kind: &str) -> &'static str {
-    match kind {
-        "function" => "Functions",
-        "class" => "Classes",
-        "interface" => "Interfaces",
-        "type" => "Type Aliases",
-        "enum" => "Enumerations",
-        "variable" | "const" => "Variables",
-        "module" => "Modules",
-        _ => "Symbols",
-    }
+    TYPEDOC_KIND_TITLE.get(kind).copied().unwrap_or("Symbols")
 }
 
 fn sanitize_doc_path_segment(value: &str) -> String {
