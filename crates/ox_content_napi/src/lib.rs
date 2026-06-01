@@ -3665,9 +3665,14 @@ mod tests {
             }),
         );
         let cli_page = markdown.get("default/functions/cli.md").unwrap();
+        let root_index = markdown.get("index.md").unwrap();
+        let module_index = markdown.get("default/index.md").unwrap();
 
         assert!(markdown.contains_key("default/index.md"));
         assert!(markdown.contains_key("default/interfaces/Command.md"));
+        assert!(root_index.contains("[default](/api/default)"));
+        assert!(!root_index.contains("[Default]"));
+        assert!(module_index.starts_with("# default\n\n"));
         assert!(cli_page.contains("<a href=\"/api/default/interfaces/Command\">Command</a>"));
     }
 
@@ -3864,7 +3869,7 @@ mod tests {
             }),
         );
 
-        assert_eq!(nav[0].title, "Default");
+        assert_eq!(nav[0].title, "default");
         assert_eq!(nav[0].path, "/api/default");
         let children = nav[0].children.as_ref().unwrap();
         assert_eq!(children[0].title, "Functions");
@@ -3953,9 +3958,48 @@ mod tests {
         assert!(out_dir.join("default/functions/cli.md").exists());
 
         let nav = fs::read_to_string(out_dir.join("nav.ts")).unwrap();
+        assert!(nav.contains(r#""title": "default""#));
         assert!(nav.contains("\"/api/default/functions/cli\""));
 
         fs::remove_dir_all(&out_dir).unwrap();
+    }
+
+    #[test]
+    fn extract_docs_from_entry_points_preserves_explicit_module_name() {
+        let unique =
+            std::time::SystemTime::now().duration_since(std::time::UNIX_EPOCH).unwrap().as_nanos();
+        let root = std::env::temp_dir()
+            .join(format!("ox-content-napi-module-name-{}-{unique}", std::process::id()));
+        let _ = fs::remove_dir_all(&root);
+        fs::create_dir_all(root.join("src")).unwrap();
+        fs::write(
+            root.join("src/index.ts"),
+            r"
+/**
+ * gunshi cli entry point.
+ *
+ * @module default
+ */
+/** Runs the CLI. */
+export function cli(): void {}
+",
+        )
+        .unwrap();
+
+        let modules = extract_docs_from_entry_points_napi(
+            vec![JsEntryPointSpec { path: "src/index.ts".to_string(), name: None }],
+            Some(JsEntryPointDocsOptions {
+                root: Some(root.to_string_lossy().into_owned()),
+                ..Default::default()
+            }),
+        )
+        .unwrap();
+
+        assert_eq!(modules[0].name, "default");
+        assert_eq!(modules[0].file, "default");
+        assert_eq!(modules[0].description, "gunshi cli entry point.");
+
+        let _ = fs::remove_dir_all(root);
     }
 
     #[test]
