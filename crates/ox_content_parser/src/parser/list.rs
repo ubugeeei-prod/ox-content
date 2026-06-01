@@ -1,5 +1,5 @@
 use ox_content_allocator::Vec;
-use ox_content_ast::{List, ListItem, Node, Span};
+use ox_content_ast::{List, ListItem, Node, Paragraph, Span};
 
 use super::Parser;
 use crate::error::ParseResult;
@@ -92,20 +92,7 @@ impl<'a> Parser<'a> {
             }
 
             let content_indent = item.content_offset.saturating_sub(line_start);
-            // Bump-allocate the per-item buffer so we don't go System →
-            // arena for every list item. Most items are a single short
-            // line — over-sizing the capacity wastes arena bytes that
-            // bumpalo can't reclaim until reset. Use the item header
-            // length as the floor and let push_str grow only when the
-            // item actually spans continuation lines.
-            let mut item_source = ox_content_allocator::String::with_capacity_in(
-                item.content.len() + 1,
-                self.allocator.bump(),
-            );
-            item_source.push_str(item.content);
-            if consumed_newline {
-                item_source.push('\n');
-            }
+            let mut item_source = None;
             let mut item_end = self.position;
             let mut item_spread = false;
 
@@ -146,6 +133,11 @@ impl<'a> Parser<'a> {
                     }
 
                     if next_indent >= content_indent {
+                        if item_source.is_none() {
+                            item_source =
+                                Some(self.init_list_item_source(item.content, consumed_newline));
+                        }
+                        let item_source = item_source.as_mut().expect("item source initialized");
                         for _ in 0..blank_count {
                             item_source.push('\n');
                         }
@@ -179,6 +171,10 @@ impl<'a> Parser<'a> {
                     break;
                 }
 
+                if item_source.is_none() {
+                    item_source = Some(self.init_list_item_source(item.content, consumed_newline));
+                }
+                let item_source = item_source.as_mut().expect("item source initialized");
                 let stripped = Self::strip_indent_columns(continuation_line, content_indent);
                 item_source.push_str(stripped);
                 item_source.push('\n');
@@ -186,14 +182,23 @@ impl<'a> Parser<'a> {
                 item_end = self.position;
             }
 
-            let item_source = item_source.into_bump_str();
-            let sub_parser =
-                Parser::with_options(self.allocator, item_source, self.options.clone());
-            let sub_doc = sub_parser.parse()?;
-            let mut item_children = sub_doc.children;
-            for child in &mut item_children {
-                Self::offset_node_spans(child, item.content_offset as u32);
-            }
+            let item_children = if item_source.is_none()
+                && Self::can_inline_parse_list_item(item.content)
+            {
+                self.parse_inline_list_item_children(item.content, item.content_offset, item_end)?
+            } else {
+                let item_source = item_source
+                    .unwrap_or_else(|| self.init_list_item_source(item.content, consumed_newline))
+                    .into_bump_str();
+                let sub_parser =
+                    Parser::with_options(self.allocator, item_source, self.options.clone());
+                let sub_doc = sub_parser.parse()?;
+                let mut item_children = sub_doc.children;
+                for child in &mut item_children {
+                    Self::offset_node_spans(child, item.content_offset as u32);
+                }
+                item_children
+            };
 
             let list_item = ListItem {
                 checked: item.checked,
@@ -212,5 +217,57 @@ impl<'a> Parser<'a> {
             children,
             span,
         })))
+    }
+
+    fn init_list_item_source(
+        &self,
+        content: &'a str,
+        consumed_newline: bool,
+    ) -> ox_content_allocator::String<'a> {
+        // Bump-allocate the per-item buffer so we don't go System → arena.
+        // This is now only paid for list items that actually need block
+        // parsing: multi-line items, nested blocks, or block-looking
+        // single-line contents such as `# heading`.
+        let mut source = ox_content_allocator::String::with_capacity_in(
+            content.len() + usize::from(consumed_newline),
+            self.allocator.bump(),
+        );
+        source.push_str(content);
+        if consumed_newline {
+            source.push('\n');
+        }
+        source
+    }
+
+    fn can_inline_parse_list_item(content: &str) -> bool {
+        let Some(&first) = content.trim_start().as_bytes().first() else {
+            return true;
+        };
+
+        // These are the same leading-byte families that `parse_block` may
+        // treat as block syntax in a freshly spawned sub-parser. Keep those
+        // on the old path so `- # heading`, nested lists, fenced code, raw
+        // HTML blocks, etc. preserve their current AST.
+        !matches!(first, b'#' | b'-' | b'*' | b'_' | b'>' | b'`' | b'~' | b'<' | b'+' | b'0'..=b'9')
+    }
+
+    fn parse_inline_list_item_children(
+        &self,
+        content: &'a str,
+        content_offset: usize,
+        item_end: usize,
+    ) -> ParseResult<Vec<'a, Node<'a>>> {
+        let mut children = self.allocator.new_vec();
+        let inline = content.trim();
+        if inline.is_empty() {
+            return Ok(children);
+        }
+
+        let paragraph_children = self.parse_inline(inline, content_offset)?;
+        children.push(Node::Paragraph(Paragraph {
+            children: paragraph_children,
+            span: Span::new(content_offset as u32, item_end as u32),
+        }));
+        Ok(children)
     }
 }
