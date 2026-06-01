@@ -1,5 +1,18 @@
 # Changelog
 
+## [2.40.0] - 2026-06-01
+
+### Features
+
+- add Markdown display formats (#284)
+
+### Bug Fixes
+
+- preserve typedoc module names (#283)
+- format module index references as typedoc-style heading entries (#282)
+- render typedoc module index members as compact tables instead of bullet lists (#281)
+- emit one canonical typedoc page per symbol for cross-entrypoint re-exports (#280)
+
 ## [2.39.0] - 2026-06-01
 
 ### Bug Fixes
