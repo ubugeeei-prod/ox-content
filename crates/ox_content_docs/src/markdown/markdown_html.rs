@@ -23,10 +23,12 @@ use crate::string_builder::{join3, StringBuilder};
 use std::collections::HashMap;
 
 fn escape_html(value: &str) -> String {
-    // Most inputs (symbol names, type annotations, kind labels) contain none of
-    // these characters, so a single scan with an early-out avoids the five
-    // full-string passes + five intermediate allocations the chained
-    // `replace()` calls performed unconditionally.
+    // Most inputs here are symbol names, type annotations, and kind labels,
+    // which usually contain no escapable HTML bytes. The early scan keeps that
+    // path to one pass plus `to_string()`, while the escaping path still does a
+    // single allocation sized near the input. This replaces chained
+    // `replace()` calls that performed five full-string passes and could
+    // allocate five intermediate strings for every rendered cell.
     if !value.bytes().any(|b| matches!(b, b'&' | b'<' | b'>' | b'"' | b'\'')) {
         return value.to_string();
     }
@@ -65,6 +67,9 @@ fn render_inline_html(text: &str) -> String {
     ) else {
         return replace_line_breaks_html(escape_html(text));
     };
+    // Check for a token before allocating the output buffer or entering the
+    // capture iterator. Plain prose dominates generated descriptions, and for
+    // that case escaping plus newline replacement is enough.
     if !token_re.is_match(text) {
         return replace_line_breaks_html(escape_html(text));
     }
@@ -106,8 +111,10 @@ fn render_inline_html(text: &str) -> String {
 }
 
 // The four block-start regexes are cached once and shared between the
-// value-returning helpers (which capture a group) and `is_markdown_block_start`
-// (which only needs a boolean and so can use the allocation-free `is_match`).
+// value-returning helpers, which need captures, and `is_markdown_block_start`,
+// which only needs a boolean and therefore uses allocation-free `is_match`.
+// This keeps list/paragraph continuation checks from rebuilding regexes or
+// allocating capture groups on every line.
 fn fence_re() -> Option<&'static Regex> {
     static FENCE_RE: RegexCache = OnceLock::new();
     cached_regex(&FENCE_RE, r"^```([\w-]+)?\s*$")
@@ -167,6 +174,11 @@ fn is_markdown_block_start(line: &str) -> bool {
 }
 
 fn render_markdown_blocks_html(text: &str) -> String {
+    // This renderer handles the small Markdown subset embedded in generated
+    // API descriptions. It walks the line slice once and emits blocks as soon
+    // as they are recognized. Continuation checks use cached regexes and the
+    // inline renderer's own token precheck so ordinary paragraphs do not pay
+    // for full Markdown parsing.
     static ORDERED_CONTINUATION_RE: RegexCache = OnceLock::new();
     static UNORDERED_CONTINUATION_RE: RegexCache = OnceLock::new();
 

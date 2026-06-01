@@ -21,6 +21,9 @@ pub fn document_symbols(
         (source, 0)
     };
 
+    // Symbol extraction only needs headings, but the parser still constructs
+    // the full AST. Pre-sizing the arena removes allocator churn from repeated
+    // outline refreshes while preserving parser behavior.
     let allocator = Allocator::for_source_len(content.len());
     let parser = Parser::with_options(&allocator, content, ParserOptions::gfm());
     let ast = parser.parse()?;

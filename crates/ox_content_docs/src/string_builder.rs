@@ -1,3 +1,10 @@
+/// Small append-only string builder used by documentation generation hot paths.
+///
+/// This wraps `String` so call sites can express "append a few known pieces"
+/// without reaching for `format!` or `to_string()` for small numeric fragments.
+/// The helper methods keep the final output allocation explicit via
+/// `with_capacity`, and `push_usize` writes decimal digits through a stack
+/// buffer so count-heavy renderers do not allocate temporary strings.
 pub struct StringBuilder {
     output: String,
 }
@@ -20,6 +27,10 @@ impl StringBuilder {
     }
 
     pub fn push_usize(&mut self, value: usize) {
+        // Maximum decimal length of `usize` on supported targets is 20 bytes
+        // (`u64::MAX`). Fill the stack buffer from the back, then append the
+        // valid suffix in one `push_str`; this replaces `value.to_string()`
+        // in loops that render stats, anchors, headings, and file names.
         let mut buffer = [0_u8; 20];
         let mut cursor = buffer.len();
         let mut rest = value;
@@ -39,6 +50,8 @@ impl StringBuilder {
 
     #[cfg(test)]
     pub fn push_u128(&mut self, value: u128) {
+        // Test-only wide variant for boundary coverage of the digit writer.
+        // `u128::MAX` is 39 decimal digits.
         let mut buffer = [0_u8; 39];
         let mut cursor = buffer.len();
         let mut rest = value;
@@ -66,6 +79,9 @@ impl StringBuilder {
 }
 
 pub fn join2(first: &str, second: &str) -> String {
+    // These tiny join helpers replace `format!("{a}{b}...")` in render loops.
+    // They pre-size exactly for the literal pieces and avoid the formatting
+    // machinery when no formatting is needed.
     let mut out = StringBuilder::with_capacity(first.len() + second.len());
     out.push_str(first);
     out.push_str(second);

@@ -20,6 +20,11 @@ impl<'a> Parser<'a> {
 
         while pos < content.len() {
             let start = pos;
+            // Plain text is the common inline case. Jump over bytes that
+            // cannot start any inline construct, then push that entire run as
+            // one Text node. This keeps the parser on bulk byte scans for
+            // prose and only enters the slower match when a real marker byte
+            // has been reached.
             pos = next_inline_special(bytes, pos);
 
             if pos > start {
@@ -201,8 +206,13 @@ impl<'a> Parser<'a> {
     }
 }
 
-/// Lookup table: `INLINE_SPECIAL[b] == 1` iff the byte is one of the
-/// inline-special markers.
+/// Lookup table: `INLINE_SPECIAL[b] == 1` iff the byte can begin an inline
+/// construct handled by `parse_inline_special`.
+///
+/// The table deliberately stores flags instead of enum variants. The scan in
+/// `next_inline_special` ORs eight table entries at a time, which gives LLVM a
+/// simple branch-free loop for long runs of normal text. The actual parser
+/// decision still happens only after a candidate byte is found.
 static INLINE_SPECIAL: [u8; 256] = {
     let mut t = [0u8; 256];
     t[b'*' as usize] = 1;
@@ -218,6 +228,10 @@ static INLINE_SPECIAL: [u8; 256] = {
 
 #[inline]
 fn next_inline_special(bytes: &[u8], from: usize) -> usize {
+    // Skip eight bytes at a time while the OR of their marker flags is zero.
+    // This is not a semantic parser: it only proves that none of those bytes
+    // can start inline syntax, so returning the first flagged byte preserves
+    // the exact same marker positions as the previous per-byte loop.
     let mut i = from;
     let end = bytes.len();
 

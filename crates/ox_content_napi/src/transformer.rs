@@ -81,6 +81,10 @@ impl MarkdownTransformer {
         let prepared = self.prepare_source(source);
         let preprocessed = features::preprocess_markdown(&prepared.content, &self.feature_options);
         let content = preprocessed.source.as_ref();
+        // Preprocessors may return borrowed or owned content. Size the arena
+        // from the exact slice that will be parsed, not the original source, so
+        // generated feature content and stripped frontmatter both get an arena
+        // that matches their actual AST footprint.
         let allocator = Allocator::for_source_len(content.len());
         let parse_result = self.parse_document(&allocator, content);
         let mut errors = preprocessed.errors;
@@ -172,6 +176,9 @@ impl MarkdownTransformer {
         if self.frontmatter {
             parse_frontmatter_with_origin(source)
         } else {
+            // Frontmatter-disabled mode keeps a simple owned copy because this
+            // value may cross NAPI as a prepared-source payload; the parse hot
+            // path borrows from this string rather than reparsing YAML.
             PreparedMarkdownSource {
                 content: source.to_string(),
                 frontmatter: HashMap::new(),
@@ -210,6 +217,9 @@ fn parse_frontmatter_with_origin(source: &str) -> PreparedMarkdownSource {
     let content = rest[end_pos + 4..].trim_start_matches('\n');
     frontmatter = serde_yaml::from_str(frontmatter_str).unwrap_or_default();
 
+    // Keep both byte and UTF-16 offsets for the stripped body. The byte offset
+    // lets Rust spans be rebased without scanning again, while the UTF-16
+    // offset gives JS/LSP consumers editor-native positions.
     let source_origin = source_origin_for_content(source, content);
 
     PreparedMarkdownSource { content: content.to_string(), frontmatter, source_origin }
@@ -309,8 +319,9 @@ fn slugify(text: &str) -> String {
         .map(|c| if c.is_alphanumeric() || c == ' ' || c == '-' { c } else { ' ' })
         .collect();
     // Join the whitespace-split tokens with '-' directly, skipping the
-    // intermediate `Vec<&str>` and the separate `join` allocation. `mapped.len()`
-    // is a safe upper bound for the slug (separators only shrink it).
+    // intermediate `Vec<&str>` and the separate `join` allocation. This TOC
+    // slugger runs for every heading in NAPI transforms; `mapped.len()` is a
+    // safe upper bound for the slug because separators only shrink it.
     let mut slug = String::with_capacity(mapped.len());
     for token in mapped.split_whitespace() {
         if !slug.is_empty() {

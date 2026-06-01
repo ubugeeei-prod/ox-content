@@ -83,6 +83,9 @@ pub fn transform_tabs(html: &str, start_group: u32) -> TabsTransform {
 
 /// Collect the direct `<tab>` children of a `<tabs>` block's inner HTML.
 fn parse_tabs(inner: &str) -> Vec<Tab> {
+    // Scan the already-rendered HTML slice and copy panel contents verbatim.
+    // This avoids a DOM allocation while preserving the previous rehype output
+    // for arbitrary Markdown-rendered HTML inside a tab.
     let mut tabs = Vec::new();
     let mut cursor = 0;
     while let Some(open_at) = find_tag(inner, cursor, "<tab") {
@@ -262,6 +265,9 @@ fn find_matching_close(html: &str, from: usize, open: &str, close: &str) -> Opti
 /// Read the value of `name` (case-insensitive) from a start tag's attribute
 /// region. Supports quoted and unquoted values; missing value yields `""`.
 fn attribute_value(attrs: &str, name: &str) -> Option<String> {
+    // The transform only needs one requested attribute from a start-tag slice.
+    // A narrow byte scan is faster and simpler than constructing a generic
+    // attribute map for every tab element.
     let bytes = attrs.as_bytes();
     let mut i = 0;
     while i < bytes.len() {

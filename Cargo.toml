@@ -145,10 +145,17 @@ insta = "1"
 debug = 2
 
 [profile.dev.package]
+# Snapshot testing spends most of its time in diff/render helpers rather than
+# ox-content itself. Optimizing only these dev dependencies keeps normal debug
+# builds fast while making `cargo test` output comparison cheaper.
 insta.opt-level = 3
 similar.opt-level = 3
 
 [profile.release]
+# Published binaries and CI benchmarks use this profile. It intentionally
+# favors runtime throughput over compile time: fat LTO plus a single codegen
+# unit gives LLVM whole-workspace visibility, while stripping and aborting
+# panics remove unwinding/symbol-table overhead from shipped artifacts.
 opt-level = 3
 lto = "fat"
 codegen-units = 1
@@ -160,10 +167,15 @@ incremental = false
 panic = "abort"
 
 [profile.release.build-override]
+# Build scripts are tiny but run during release packaging and NAPI builds; keep
+# their codegen deterministic with the same single-unit optimization policy.
 opt-level = 3
 codegen-units = 1
 
 [profile.bench]
+# Benchmarks should measure the production hot paths, not a lighter
+# benchmark-only profile. Keep this aligned with `profile.release` except for
+# fields Cargo ignores for benchmark harnesses.
 opt-level = 3
 lto = "fat"
 codegen-units = 1

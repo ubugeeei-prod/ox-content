@@ -80,6 +80,9 @@ fn escape_attribute(value: &str) -> String {
 }
 
 fn build_embed_url(video_id: &str, options: &YouTubeEmbedOptions) -> String {
+    // Build directly from the validated id and option-selected host. Query
+    // string support is intentionally absent because the TS transform being
+    // ported dropped `start` before URL construction.
     let domain =
         if options.privacy_enhanced { "www.youtube-nocookie.com" } else { "www.youtube.com" };
     format!("https://{domain}/embed/{video_id}")
@@ -205,6 +208,9 @@ fn find_youtube_element(html: &str, from: usize) -> Option<YouTubeElement> {
 /// Parse `name="value"` / `name='value'` / `name=value` / bare `name`
 /// attributes from the inside of a start tag. Names are lower-cased.
 fn parse_attributes(inner: &str) -> Vec<(String, String)> {
+    // Returning a small vector keeps first-wins semantics obvious at the call
+    // site. The scan respects quoted values so it can run on raw HTML without
+    // the rehype parse/stringify round-trip this Rust port replaced.
     let bytes = inner.as_bytes();
     let mut attrs = Vec::new();
     let mut i = 0;

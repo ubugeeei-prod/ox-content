@@ -19,6 +19,9 @@ pub(super) fn markdown_parse_diagnostics(
         |block| (&document.text()[block.block_end_offset..], block.block_end_offset),
     );
 
+    // Diagnostics run on keystrokes and the input length is known. Start the
+    // parser with a source-sized arena so editor feedback does not pay bumpalo
+    // chunk growth on every parse.
     let allocator = Allocator::for_source_len(source.len());
     let parser = Parser::with_options(&allocator, source, ParserOptions::gfm());
     let diagnostics = match parser.parse() {

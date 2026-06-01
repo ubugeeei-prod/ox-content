@@ -83,6 +83,9 @@ impl SearchIndex {
             let is_last = i == tokens.len() - 1;
 
             if is_last && options.prefix && token.len() >= MIN_PREFIX_MATCH_LEN {
+                // Prefix expansion is limited to the final token so a query
+                // like "render mar" can reuse exact postings for "render" and
+                // only scan vocabulary terms for the active completion token.
                 for term in self.index.keys().filter(|term| term.starts_with(token)) {
                     self.score_matching_term(term, &mut doc_scores);
                 }
@@ -91,8 +94,10 @@ impl SearchIndex {
             }
         }
 
-        // Sort and limit candidates before constructing result payloads. Snippet generation
-        // scans document bodies, so doing it only for returned results avoids wasted work.
+        // Sort and limit candidates before constructing result payloads.
+        // Snippet generation scans and lowercases document bodies, so doing it
+        // only for returned results avoids wasted work on documents that lose
+        // the ranking step.
         let mut ranked_docs: Vec<_> = doc_scores
             .into_iter()
             .filter(|(_, (score, _))| *score >= options.threshold)
@@ -151,6 +156,10 @@ impl SearchIndex {
                 * ((tf * (K1 + 1.0)) / K1.mul_add(1.0 - B + B * doc_len / self.avg_dl, tf))
                 * posting.field.boost();
 
+            // Accumulate in one per-document entry so repeated matches across
+            // query tokens do not allocate intermediate result rows. The small
+            // `matches` Vec is de-duplicated in place because it is surfaced in
+            // the final result payload.
             let entry = doc_scores.entry(posting.doc_idx).or_insert((0.0, Vec::new()));
             entry.0 += score;
             if !entry.1.iter().any(|matched| matched == term) {

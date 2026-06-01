@@ -56,6 +56,9 @@ fn parse_vitepress_directive_action(value: &str) -> Option<InlineDirectiveAction
 }
 
 fn parse_vitepress_inline_directive(line: &str) -> Option<ParsedInlineDirective> {
+    // Inline directives must be inside a recognized comment form. Validating
+    // the prefix/suffix while parsing lets rendering remove directive comments
+    // without a secondary cleanup pass over the code line.
     let marker_start = line.find("[!code ")?;
     let directive_start = marker_start + "[!code ".len();
     let marker_end = line[directive_start..].find(']')? + directive_start;
@@ -96,6 +99,10 @@ fn parse_vitepress_inline_directive(line: &str) -> Option<ParsedInlineDirective>
 }
 
 pub(in crate::html) fn parse_vitepress_inline_annotations(value: &str) -> Vec<CodeLineRenderState> {
+    // Walk the code block once. Each line becomes its final render state as it
+    // is seen, while standalone directives update a small pending list for the
+    // following lines. This avoids first collecting directive positions and
+    // then doing a second pass to apply them.
     let mut lines = Vec::new();
     let mut pending_annotations: SmallVec<[PendingCodeAnnotation; 2]> = SmallVec::new();
     let mut escape_next_line = false;

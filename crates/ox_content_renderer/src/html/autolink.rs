@@ -21,6 +21,13 @@ pub(super) struct FirstByteIndex {
 }
 
 impl FirstByteIndex {
+    /// Builds a compact candidate-start index for the configured patterns.
+    ///
+    /// Each pattern contributes both lowercase and uppercase variants of its
+    /// first byte so later prefix checks can stay case-insensitive without
+    /// lowercasing the whole text node. One to three distinct bytes are stored
+    /// in `needles` for `memchr`, `memchr2`, or `memchr3`; larger custom
+    /// pattern sets keep correctness by falling back to the table scan.
     pub(super) fn from_patterns(patterns: &[String]) -> Self {
         let mut table = [false; 256];
         let mut needles = [0u8; 3];
@@ -52,6 +59,9 @@ impl FirstByteIndex {
     #[inline]
     fn next(&self, hay: &[u8]) -> Option<usize> {
         if self.overflow {
+            // Rare custom-pattern case. The table is still a single indexed
+            // load per byte, but the common one/two/three-needle cases use
+            // memchr's specialized search loops instead.
             return hay.iter().position(|&b| self.table[b as usize]);
         }
         match self.needle_len {
