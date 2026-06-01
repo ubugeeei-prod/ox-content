@@ -2,16 +2,31 @@
 
 use std::collections::BTreeMap;
 
+use phf::phf_set;
 use serde::{Deserialize, Serialize};
 
 use crate::extractor::{DocItem, DocItemKind, DocTag, ParamDoc, TypeParamDoc};
 
 const UNKNOWN_TYPE: &str = "unknown";
-const PARAM_TAG_NAMES: [&str; 3] = ["param", "arg", "argument"];
-const RETURN_TAG_NAMES: [&str; 2] = ["returns", "return"];
+const PARAM_TAG_NAME: &str = "param";
 const EXAMPLE_TAG_NAME: &str = "example";
 const PRIVATE_TAG_NAME: &str = "private";
-const TYPE_PARAM_TAG_NAMES: [&str; 2] = ["typeParam", "template"];
+
+static PARAM_TAG_NAMES: phf::Set<&'static str> = phf_set! {
+    "param",
+    "arg",
+    "argument",
+};
+
+static RETURN_TAG_NAMES: phf::Set<&'static str> = phf_set! {
+    "returns",
+    "return",
+};
+
+static TYPE_PARAM_TAG_NAMES: phf::Set<&'static str> = phf_set! {
+    "typeParam",
+    "template",
+};
 
 /// Documentation item kind supported by the generated API reference.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
@@ -331,12 +346,12 @@ fn normalize_doc_metadata(tags: &[DocTag], type_parameters: bool) -> NormalizedD
 
     for tag in tags {
         match tag.tag.as_str() {
-            tag_name if PARAM_TAG_NAMES.contains(&tag_name) => {
+            tag_name if PARAM_TAG_NAMES.contains(tag_name) => {
                 if let Some(param) = normalized_param_from_tag(tag) {
                     merge_param(&mut params, param);
                 }
             }
-            tag_name if RETURN_TAG_NAMES.contains(&tag_name) => {
+            tag_name if RETURN_TAG_NAMES.contains(tag_name) => {
                 let parsed_returns = normalized_return_from_tag(tag);
                 merge_returns(&mut returns, parsed_returns);
             }
@@ -351,7 +366,7 @@ fn normalize_doc_metadata(tags: &[DocTag], type_parameters: bool) -> NormalizedD
             }
             // TSDoc `@typeParam` / `@template`: only handled specially when opted
             // in. Otherwise it falls through to the generic tag map (JSDoc default).
-            tag_name if type_parameters && TYPE_PARAM_TAG_NAMES.contains(&tag_name) => {
+            tag_name if type_parameters && TYPE_PARAM_TAG_NAMES.contains(tag_name) => {
                 if let Some((name, description)) = parse_type_param_tag(tag) {
                     type_param_descriptions.entry(name).or_insert(description);
                 }
@@ -464,7 +479,7 @@ fn merge_extracted_return(returns: &mut Option<NormalizedReturnDoc>, return_type
 
 fn is_placeholder_param(existing_params: &[NormalizedParamDoc], param: &ParamDoc) -> bool {
     !existing_params.is_empty()
-        && param.name == PARAM_TAG_NAMES[0]
+        && param.name == PARAM_TAG_NAME
         && param.type_annotation.is_none()
         && param.description.is_none()
         && param.default_value.is_none()

@@ -56,11 +56,10 @@ pub(super) fn scan_document_for_render(document: &Document<'_>) -> DocumentRende
 fn scan_node_for_render(node: &Node<'_>, scan: &mut DocumentRenderScan) {
     match node {
         Node::Heading(_) => scan.heading_count += 1,
-        Node::Paragraph(p) => {
-            if !scan.has_toc_marker && is_toc_marker_paragraph(p) {
-                scan.has_toc_marker = true;
-            }
+        Node::Paragraph(p) if !scan.has_toc_marker && is_toc_marker_paragraph(p) => {
+            scan.has_toc_marker = true;
         }
+        Node::Paragraph(_) => {}
         Node::BlockQuote(bq) => {
             for child in &bq.children {
                 scan_node_for_render(child, scan);

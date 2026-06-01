@@ -7,12 +7,14 @@
 
 use std::collections::BTreeMap;
 
+use smallvec::SmallVec;
+
 use super::state::CodeAnnotationKind;
 
 pub(in crate::html) fn parse_code_annotations(
     meta: &str,
     key: &str,
-) -> BTreeMap<usize, Vec<CodeAnnotationKind>> {
+) -> BTreeMap<usize, SmallVec<[CodeAnnotationKind; 2]>> {
     let Some(value) = extract_meta_attribute(meta, key) else {
         return BTreeMap::new();
     };
@@ -108,8 +110,8 @@ fn extract_meta_attribute<'a>(meta: &'a str, target: &str) -> Option<&'a str> {
     None
 }
 
-pub(in crate::html) fn parse_line_numbers(value: &str) -> Vec<usize> {
-    let mut line_numbers = Vec::new();
+pub(in crate::html) fn parse_line_numbers(value: &str) -> SmallVec<[usize; 4]> {
+    let mut line_numbers = SmallVec::new();
 
     for part in value.split(',').map(str::trim).filter(|part| !part.is_empty()) {
         if let Some((raw_start, raw_end)) = part.split_once('-') {
@@ -146,7 +148,7 @@ pub(in crate::html) fn parse_line_numbers(value: &str) -> Vec<usize> {
 }
 
 fn push_code_annotation(
-    annotations: &mut BTreeMap<usize, Vec<CodeAnnotationKind>>,
+    annotations: &mut BTreeMap<usize, SmallVec<[CodeAnnotationKind; 2]>>,
     line_number: usize,
     kind: CodeAnnotationKind,
 ) {

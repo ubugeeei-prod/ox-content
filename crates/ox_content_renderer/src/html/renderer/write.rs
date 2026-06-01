@@ -6,7 +6,6 @@
 
 use std::fmt::{Display, Write as _};
 
-use ox_content_ast::Visit;
 use ox_content_ast::{Heading, Node};
 
 use super::super::autolink::find_autolink_match;
@@ -157,7 +156,7 @@ impl HtmlRenderer {
                 }
             }
             Node::Html(html) => self.write_html_value(html.value),
-            _ => self.visit_node(node),
+            _ => self.render_node(node),
         }
     }
 

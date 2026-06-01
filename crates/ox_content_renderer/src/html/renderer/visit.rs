@@ -6,17 +6,19 @@
 
 use ox_content_ast::{
     BlockQuote, Break, CodeBlock, Definition, Delete, Document, Emphasis, FootnoteDefinition,
-    FootnoteReference, Heading, Html, Image, InlineCode, Link, List, ListItem, Paragraph, Strong,
-    Table, Text, ThematicBreak, Visit,
+    FootnoteReference, Heading, Html, Image, InlineCode, Link, List, ListItem, Node, Paragraph,
+    Strong, Table, Text, ThematicBreak, Visit,
 };
 
 use super::HtmlRenderer;
 
 impl<'a> Visit<'a> for HtmlRenderer {
     fn visit_document(&mut self, document: &Document<'a>) {
-        for child in &document.children {
-            self.visit_node(child);
-        }
+        self.render_document(document);
+    }
+
+    fn visit_node(&mut self, node: &Node<'a>) {
+        self.render_node(node);
     }
 
     fn visit_paragraph(&mut self, paragraph: &Paragraph<'a>) {

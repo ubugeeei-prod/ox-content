@@ -13,7 +13,7 @@ mod links;
 mod visit;
 mod write;
 
-use ox_content_ast::{Document, Visit};
+use ox_content_ast::{Document, Node};
 use rustc_hash::FxHashMap;
 
 use super::autolink::FirstByteIndex;
@@ -131,8 +131,40 @@ impl HtmlRenderer {
         if self.output.capacity() < estimated_len {
             self.output.reserve(estimated_len - self.output.capacity());
         }
-        self.visit_document(document);
+        self.render_document(document);
         std::mem::take(&mut self.output)
+    }
+
+    pub(in crate::html::renderer) fn render_document(&mut self, document: &Document<'_>) {
+        for child in &document.children {
+            self.render_node(child);
+        }
+    }
+
+    #[inline]
+    pub(in crate::html::renderer) fn render_node(&mut self, node: &Node<'_>) {
+        match node {
+            Node::Paragraph(node) => self.render_paragraph(node),
+            Node::Heading(node) => self.render_heading(node),
+            Node::ThematicBreak(node) => self.render_thematic_break(node),
+            Node::BlockQuote(node) => self.render_block_quote(node),
+            Node::List(node) => self.render_list(node),
+            Node::ListItem(node) => self.render_list_item(node),
+            Node::CodeBlock(node) => self.render_code_block(node),
+            Node::Html(node) => self.render_html(node),
+            Node::Table(node) => self.render_table(node),
+            Node::Text(node) => self.render_text(node),
+            Node::Emphasis(node) => self.render_emphasis(node),
+            Node::Strong(node) => self.render_strong(node),
+            Node::InlineCode(node) => self.render_inline_code(node),
+            Node::Break(node) => self.render_break(node),
+            Node::Link(node) => self.render_link(node),
+            Node::Image(node) => self.render_image(node),
+            Node::Delete(node) => self.render_delete(node),
+            Node::FootnoteReference(node) => self.render_footnote_reference(node),
+            Node::Definition(_) => {}
+            Node::FootnoteDefinition(node) => self.render_footnote_definition(node),
+        }
     }
 
     pub(in crate::html::renderer) fn render_inline_toc(&mut self) {

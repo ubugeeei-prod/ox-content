@@ -4,7 +4,6 @@
 //! marker in the first paragraph, strip it from the body, and emit the themed wrapper
 //! while leaving non-callout block quotes on the regular rendering path.
 
-use ox_content_ast::Visit;
 use ox_content_ast::{BlockQuote, Node, Paragraph};
 
 use super::super::callout::CalloutKind;
@@ -29,7 +28,7 @@ impl HtmlRenderer {
                     renderer.write_escaped(&text.value[skip_chars..]);
                     skip_chars = 0;
                 }
-                _ => renderer.visit_node(child),
+                _ => renderer.render_node(child),
             }
         }
 
@@ -102,7 +101,7 @@ impl HtmlRenderer {
         }
 
         for child in block_quote.children.iter().skip(1) {
-            self.visit_node(child);
+            self.render_node(child);
         }
 
         self.write("</blockquote>\n");
