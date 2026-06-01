@@ -220,6 +220,14 @@ export function generateMarkdown(
     basePath: options.basePath,
     pathStrategy: options.pathStrategy,
     renderStyle: options.renderStyle,
+    indexFormat: options.indexFormat,
+    parametersFormat: options.parametersFormat,
+    interfacePropertiesFormat: options.interfacePropertiesFormat,
+    classPropertiesFormat: options.classPropertiesFormat,
+    typeAliasPropertiesFormat: options.typeAliasPropertiesFormat,
+    enumMembersFormat: options.enumMembersFormat,
+    propertyMembersFormat: options.propertyMembersFormat,
+    typeDeclarationFormat: options.typeDeclarationFormat,
   });
 }
 
@@ -313,6 +321,14 @@ export function resolveDocsOptions(
     basePath: opts.basePath,
     pathStrategy: opts.pathStrategy ?? "flat",
     renderStyle: opts.renderStyle ?? "html",
+    indexFormat: opts.indexFormat ?? "none",
+    parametersFormat: opts.parametersFormat ?? "none",
+    interfacePropertiesFormat: opts.interfacePropertiesFormat ?? "none",
+    classPropertiesFormat: opts.classPropertiesFormat ?? "none",
+    typeAliasPropertiesFormat: opts.typeAliasPropertiesFormat ?? "none",
+    enumMembersFormat: opts.enumMembersFormat ?? "none",
+    propertyMembersFormat: opts.propertyMembersFormat ?? "none",
+    typeDeclarationFormat: opts.typeDeclarationFormat ?? "none",
     typeParameters: opts.typeParameters ?? false,
     generateNav: opts.generateNav ?? true,
   };

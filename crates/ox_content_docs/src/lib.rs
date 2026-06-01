@@ -31,8 +31,8 @@ pub use graph::{
     PublicExport, ResolvedModule,
 };
 pub use markdown::{
-    generate_markdown, MarkdownDocsOptions, MarkdownLinkStyle, MarkdownPathStrategy,
-    MarkdownRenderStyle,
+    generate_markdown, MarkdownDisplayFormat, MarkdownDocsOptions, MarkdownLinkStyle,
+    MarkdownPathStrategy, MarkdownRenderStyle,
 };
 pub use model::{
     ApiDocEntry, ApiDocMember, ApiDocModule, ApiDocTag, ApiParamDoc, ApiReturnDoc, ApiTypeParamDoc,

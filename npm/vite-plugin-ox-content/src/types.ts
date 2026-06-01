@@ -909,6 +909,8 @@ export type DocsEntryPoint =
       name?: string;
     };
 
+export type MarkdownDisplayFormat = "none" | "list" | "table";
+
 /**
  * Resolved public API entry point.
  */
@@ -1023,6 +1025,54 @@ export interface DocsOptions {
   renderStyle?: "html" | "markdown";
 
   /**
+   * Display format for index items.
+   * @default 'none'
+   */
+  indexFormat?: MarkdownDisplayFormat;
+
+  /**
+   * Display format for value and type parameters.
+   * @default 'none'
+   */
+  parametersFormat?: MarkdownDisplayFormat;
+
+  /**
+   * Display format for interface property groups.
+   * @default 'none'
+   */
+  interfacePropertiesFormat?: MarkdownDisplayFormat;
+
+  /**
+   * Display format for class property groups.
+   * @default 'none'
+   */
+  classPropertiesFormat?: MarkdownDisplayFormat;
+
+  /**
+   * Display format for type alias property groups.
+   * @default 'none'
+   */
+  typeAliasPropertiesFormat?: MarkdownDisplayFormat;
+
+  /**
+   * Display format for enum member groups.
+   * @default 'none'
+   */
+  enumMembersFormat?: MarkdownDisplayFormat;
+
+  /**
+   * Reserved display format for property-owned object literal members.
+   * @default 'none'
+   */
+  propertyMembersFormat?: MarkdownDisplayFormat;
+
+  /**
+   * Reserved display format for type declaration members.
+   * @default 'none'
+   */
+  typeDeclarationFormat?: MarkdownDisplayFormat;
+
+  /**
    * Opt in to TSDoc-style type-parameter documentation.
    *
    * When enabled, declaration type parameters (`<T extends C = D>`) are
@@ -1060,6 +1110,14 @@ export interface ResolvedDocsOptions {
   basePath?: string;
   pathStrategy: "flat" | "typedoc";
   renderStyle: "html" | "markdown";
+  indexFormat: MarkdownDisplayFormat;
+  parametersFormat: MarkdownDisplayFormat;
+  interfacePropertiesFormat: MarkdownDisplayFormat;
+  classPropertiesFormat: MarkdownDisplayFormat;
+  typeAliasPropertiesFormat: MarkdownDisplayFormat;
+  enumMembersFormat: MarkdownDisplayFormat;
+  propertyMembersFormat: MarkdownDisplayFormat;
+  typeDeclarationFormat: MarkdownDisplayFormat;
   typeParameters: boolean;
   generateNav: boolean;
 }

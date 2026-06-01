@@ -239,7 +239,38 @@ describe("generateMarkdown", () => {
     expect(page).not.toContain("<table");
     expect(page).toContain("### capitalize");
     expect(page).toContain("```ts");
+    expect(page).toContain("- `str` (`string`) - Input string");
+    expect(page).not.toContain("| Name | Type | Description |");
+  });
+
+  it("passes Markdown display format options to generated Markdown", () => {
+    const docs: ExtractedDocs[] = [
+      {
+        file: "/repo/src/utils.ts",
+        entries: [
+          {
+            name: "capitalize",
+            kind: "function",
+            description: "Capitalizes the first letter of a string.",
+            file: "/repo/src/utils.ts",
+            line: 4,
+            endLine: 4,
+            signature: "export function capitalize(str: string): string",
+            params: [{ name: "str", type: "string", description: "Input string" }],
+            returns: { type: "string", description: "Capitalized string" },
+          },
+        ],
+      },
+    ];
+
+    const markdown = generateMarkdown(
+      docs,
+      resolveDocsOptions({ renderStyle: "markdown", parametersFormat: "table" })!,
+    );
+
+    const page = markdown["utils.md"];
     expect(page).toContain("| Name | Type | Description |");
+    expect(page).toContain("| `str` | `string` | Input string |");
   });
 
   it("passes clean link options to generated Markdown", () => {

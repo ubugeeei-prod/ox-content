@@ -7,10 +7,11 @@
 //! tables and fenced code blocks (no `<details>`, no theme-specific HTML).
 
 use super::{
-    fmt_args, generate_source_href, parse_example_block, process_doc_text, push_fmt, EntryStats,
+    effective_members_format, effective_parameters_format, fmt_args, generate_source_href,
+    parse_example_block, process_doc_text, push_fmt, EntryStats, MarkdownDisplayFormat,
     MarkdownDocsOptions, MarkdownLinkContext,
 };
-use crate::model::{ApiDocEntry, ApiDocMember, ApiTypeParamDoc};
+use crate::model::{ApiDocEntry, ApiDocMember, ApiParamDoc, ApiTypeParamDoc};
 
 /// Renders the per-page stats summary as a single italic Markdown line.
 pub(super) fn render_stats_markdown(stats: &EntryStats, module_count: Option<usize>) -> String {
@@ -92,53 +93,81 @@ pub(super) fn render_entry_body_pure(
 
     if !entry.type_parameters.is_empty() {
         push_fmt(&mut out, format_args!("{heading} Type Parameters\n\n"));
-        out.push_str("| Name | Description |\n| --- | --- |\n");
-        for type_param in &entry.type_parameters {
-            push_fmt(
-                &mut out,
-                format_args!(
-                    "| {} | {} |\n",
-                    type_param_name_cell(type_param),
-                    table_cell(&inline(&type_param.description, context)),
-                ),
-            );
+        match effective_parameters_format(options) {
+            MarkdownDisplayFormat::Table => {
+                out.push_str("| Name | Description |\n| --- | --- |\n");
+                for type_param in &entry.type_parameters {
+                    push_fmt(
+                        &mut out,
+                        format_args!(
+                            "| {} | {} |\n",
+                            type_param_name_cell(type_param),
+                            table_cell(&inline(&type_param.description, context)),
+                        ),
+                    );
+                }
+            }
+            _ => {
+                for type_param in &entry.type_parameters {
+                    let description = inline(&type_param.description, context);
+                    if description.is_empty() {
+                        push_fmt(
+                            &mut out,
+                            format_args!("- {}\n", type_param_name_span(type_param)),
+                        );
+                    } else {
+                        push_fmt(
+                            &mut out,
+                            format_args!(
+                                "- {} - {description}\n",
+                                type_param_name_span(type_param)
+                            ),
+                        );
+                    }
+                }
+            }
         }
         out.push('\n');
     }
 
     if !entry.members.is_empty() {
-        out.push_str(&render_members_pure(entry, context, section_level));
+        out.push_str(&render_members_pure(entry, options, context, section_level));
     }
 
     if !entry.params.is_empty() {
         push_fmt(&mut out, format_args!("{heading} Parameters\n\n"));
-        out.push_str("| Name | Type | Description |\n| --- | --- | --- |\n");
-        for param in &entry.params {
-            let mut description = inline(&param.description, context);
-            let mut flags = Vec::new();
-            if param.optional {
-                flags.push("optional".to_string());
+        match effective_parameters_format(options) {
+            MarkdownDisplayFormat::Table => {
+                out.push_str("| Name | Type | Description |\n| --- | --- | --- |\n");
+                for param in &entry.params {
+                    push_fmt(
+                        &mut out,
+                        format_args!(
+                            "| {} | {} | {} |\n",
+                            code_cell(&param.name),
+                            code_cell(&param.type_annotation),
+                            table_cell(&param_description(param, context)),
+                        ),
+                    );
+                }
             }
-            if let Some(default_value) = &param.default_value {
-                flags.push(fmt_args(format_args!("default: {default_value}")));
+            _ => {
+                for param in &entry.params {
+                    let mut line = fmt_args(format_args!("- {}", code_span(&param.name)));
+                    if !param.type_annotation.is_empty() {
+                        push_fmt(
+                            &mut line,
+                            format_args!(" ({})", code_span(&param.type_annotation)),
+                        );
+                    }
+                    let description = param_description(param, context);
+                    if !description.is_empty() {
+                        push_fmt(&mut line, format_args!(" - {description}"));
+                    }
+                    out.push_str(&line);
+                    out.push('\n');
+                }
             }
-            if !flags.is_empty() {
-                let flags = flags.join(", ");
-                description = if description.is_empty() {
-                    fmt_args(format_args!("_{flags}_"))
-                } else {
-                    fmt_args(format_args!("{description} _({flags})_"))
-                };
-            }
-            push_fmt(
-                &mut out,
-                format_args!(
-                    "| {} | {} | {} |\n",
-                    code_cell(&param.name),
-                    code_cell(&param.type_annotation),
-                    table_cell(&description),
-                ),
-            );
         }
         out.push('\n');
     }
@@ -184,6 +213,7 @@ pub(super) fn render_entry_body_pure(
 /// tables under a separate "Members" heading.
 fn render_members_pure(
     entry: &ApiDocEntry,
+    options: &MarkdownDocsOptions,
     context: Option<&MarkdownLinkContext<'_>>,
     section_level: usize,
 ) -> String {
@@ -216,6 +246,7 @@ fn render_members_pure(
             ("Methods", methods(false)),
             ("Enum Members", members_of(entry, |member| member.kind == "enumMember")),
         ],
+        "enum" => vec![("Enum Members", members_of(entry, |member| member.kind == "enumMember"))],
         _ => vec![("Members", entry.members.iter().collect())],
     };
 
@@ -226,21 +257,98 @@ fn render_members_pure(
             continue;
         }
         push_fmt(&mut out, format_args!("{heading} {title}\n\n"));
-        out.push_str("| Name | Kind | Type | Description |\n| --- | --- | --- | --- |\n");
-        for member in members {
-            push_fmt(
-                &mut out,
-                format_args!(
-                    "| {} | {} | {} | {} |\n",
-                    member_name_cell(member),
-                    table_cell(&member.kind),
-                    code_cell(&member_type(member)),
-                    table_cell(&member_description(member, context)),
-                ),
-            );
+        if effective_members_format(options, &entry.kind, title) == MarkdownDisplayFormat::List {
+            for member in &members {
+                let mut line =
+                    fmt_args(format_args!("- {} `{}`", member_name_span(member), member.kind));
+                let member_type = member_type(member);
+                if !member_type.is_empty() {
+                    push_fmt(&mut line, format_args!(" {}", code_span(&member_type)));
+                }
+                let description = member_description(member, context);
+                if !description.is_empty() {
+                    push_fmt(&mut line, format_args!(" - {description}"));
+                }
+                out.push_str(&line);
+                out.push('\n');
+            }
+        } else {
+            out.push_str("| Name | Kind | Type | Description |\n| --- | --- | --- | --- |\n");
+            for member in &members {
+                push_fmt(
+                    &mut out,
+                    format_args!(
+                        "| {} | {} | {} | {} |\n",
+                        member_name_cell(member),
+                        table_cell(&member.kind),
+                        code_cell(&member_type(member)),
+                        table_cell(&member_description(member, context)),
+                    ),
+                );
+            }
+        }
+        out.push('\n');
+        out.push_str(&render_member_parameter_sections_pure(
+            &members,
+            options,
+            context,
+            section_level + 1,
+        ));
+    }
+    out
+}
+
+fn render_member_parameter_sections_pure(
+    members: &[&ApiDocMember],
+    options: &MarkdownDocsOptions,
+    context: Option<&MarkdownLinkContext<'_>>,
+    section_level: usize,
+) -> String {
+    let mut out = String::new();
+    let heading = "#".repeat(section_level);
+
+    for member in members {
+        if member.params.is_empty() {
+            continue;
+        }
+
+        push_fmt(&mut out, format_args!("{heading} {} Parameters\n\n", member.name));
+        match effective_parameters_format(options) {
+            MarkdownDisplayFormat::Table => {
+                out.push_str("| Name | Type | Description |\n| --- | --- | --- |\n");
+                for param in &member.params {
+                    push_fmt(
+                        &mut out,
+                        format_args!(
+                            "| {} | {} | {} |\n",
+                            code_cell(&param.name),
+                            code_cell(&param.type_annotation),
+                            table_cell(&param_description(param, context)),
+                        ),
+                    );
+                }
+            }
+            _ => {
+                for param in &member.params {
+                    let mut line = fmt_args(format_args!("- {}", code_span(&param.name)));
+                    if !param.type_annotation.is_empty() {
+                        push_fmt(
+                            &mut line,
+                            format_args!(" ({})", code_span(&param.type_annotation)),
+                        );
+                    }
+                    let description = param_description(param, context);
+                    if !description.is_empty() {
+                        push_fmt(&mut line, format_args!(" - {description}"));
+                    }
+                    out.push_str(&line);
+                    out.push('\n');
+                }
+            }
         }
         out.push('\n');
     }
+
     out
 }
 
@@ -252,6 +360,14 @@ fn members_of<'a>(
 }
 
 fn member_name_cell(member: &ApiDocMember) -> String {
+    member_name(member, code_cell)
+}
+
+fn member_name_span(member: &ApiDocMember) -> String {
+    member_name(member, code_span)
+}
+
+fn member_name(member: &ApiDocMember, code: fn(&str) -> String) -> String {
     let mut flags = Vec::new();
     if member.optional {
         flags.push("optional");
@@ -266,7 +382,7 @@ fn member_name_cell(member: &ApiDocMember) -> String {
         flags.push("private");
     }
 
-    let name = code_cell(&member.name);
+    let name = code(&member.name);
     if flags.is_empty() {
         name
     } else {
@@ -298,6 +414,26 @@ fn member_description(member: &ApiDocMember, context: Option<&MarkdownLinkContex
     parts.join(" ")
 }
 
+fn param_description(param: &ApiParamDoc, context: Option<&MarkdownLinkContext<'_>>) -> String {
+    let mut description = inline(&param.description, context);
+    let mut flags = Vec::new();
+    if param.optional {
+        flags.push("optional".to_string());
+    }
+    if let Some(default_value) = &param.default_value {
+        flags.push(fmt_args(format_args!("default: {default_value}")));
+    }
+    if !flags.is_empty() {
+        let flags = flags.join(", ");
+        description = if description.is_empty() {
+            fmt_args(format_args!("_{flags}_"))
+        } else {
+            fmt_args(format_args!("{description} _({flags})_"))
+        };
+    }
+    description
+}
+
 /// Collapses runs of whitespace (including newlines) into single spaces.
 fn collapse_whitespace(text: &str) -> String {
     text.split_whitespace().collect::<Vec<_>>().join(" ")
@@ -313,6 +449,16 @@ fn table_cell(text: &str) -> String {
     text.replace('|', "\\|")
 }
 
+/// Inline code for normal Markdown text; empty string if blank.
+fn code_span(value: &str) -> String {
+    let value = collapse_whitespace(value);
+    if value.is_empty() {
+        String::new()
+    } else {
+        fmt_args(format_args!("`{value}`"))
+    }
+}
+
 /// Inline code for a Markdown table cell (`|` escaped); empty string if blank.
 fn code_cell(value: &str) -> String {
     let value = collapse_whitespace(value);
@@ -326,12 +472,20 @@ fn code_cell(value: &str) -> String {
 /// Builds the Name cell for a type parameter: `` `T` `` plus optional `*extends*`
 /// constraint and `=` default, each rendered as inline code.
 fn type_param_name_cell(type_param: &ApiTypeParamDoc) -> String {
-    let mut cell = code_cell(&type_param.name);
+    type_param_name(type_param, code_cell)
+}
+
+fn type_param_name_span(type_param: &ApiTypeParamDoc) -> String {
+    type_param_name(type_param, code_span)
+}
+
+fn type_param_name(type_param: &ApiTypeParamDoc, code: fn(&str) -> String) -> String {
+    let mut cell = code(&type_param.name);
     if let Some(constraint) = &type_param.constraint {
-        push_fmt(&mut cell, format_args!(" *extends* {}", code_cell(constraint)));
+        push_fmt(&mut cell, format_args!(" *extends* {}", code(constraint)));
     }
     if let Some(default) = &type_param.default {
-        push_fmt(&mut cell, format_args!(" = {}", code_cell(default)));
+        push_fmt(&mut cell, format_args!(" = {}", code(default)));
     }
     cell
 }
