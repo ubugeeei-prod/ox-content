@@ -14,17 +14,17 @@ catalog:
   "@types/react": ^19.2.14
   "@types/react-dom": ^19.0.0
   "@vitejs/plugin-react": ^6.0.2
-  "@vitejs/plugin-vue": ^6.0.0
-  "@typescript/native-preview": ^7.0.0-dev.20260518.1
-  esbuild: ^0.27.4
+  "@vitejs/plugin-vue": ^6.0.7
+  "@typescript/native-preview": ^7.0.0-dev.20260527.2
+  esbuild: ^0.28.0
   react: ^19.0.0
   react-dom: ^19.0.0
-  svelte: ^5.55.7
+  svelte: ^5.56.0
   typescript: ^6.0.3
   vite: npm:@voidzero-dev/vite-plus-core@0.1.21
   vitest: npm:@voidzero-dev/vite-plus-test@0.1.21
-  vue: ^3.5.34
-  vite-plus: 0.1.21
+  vue: ^3.5.35
+  vite-plus: 0.1.23
 
 onlyBuiltDependencies:
   - esbuild
