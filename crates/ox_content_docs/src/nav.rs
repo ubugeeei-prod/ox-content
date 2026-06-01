@@ -4,7 +4,7 @@ use std::path::Path;
 
 use serde::{Deserialize, Serialize};
 
-use crate::markdown::MarkdownPathStrategy;
+use crate::markdown::{CanonicalOwners, MarkdownPathStrategy};
 use crate::model::{ApiDocEntry, ApiDocModule};
 
 const DEFAULT_BASE_PATH: &str = "/api";
@@ -65,14 +65,20 @@ fn generate_typedoc_nav_metadata(
     let base_path = normalize_base_path(base_path.unwrap_or(DEFAULT_BASE_PATH));
     let mut docs = docs.to_vec();
     docs.sort_by_cached_key(|doc| module_file_name(&doc.file));
+    // A re-exported symbol appears in the sidebar only under the module that owns
+    // its canonical page (matching TypeDoc's single-location listing).
+    let owners = CanonicalOwners::compute(&docs);
 
     docs.into_iter()
         .map(|doc| {
             let module_name = module_file_name(&doc.file);
             let mut children = Vec::new();
             for kind in ordered_entry_kinds(&doc.entries) {
-                let entries =
-                    doc.entries.iter().filter(|entry| entry.kind == kind).collect::<Vec<_>>();
+                let entries = doc
+                    .entries
+                    .iter()
+                    .filter(|entry| entry.kind == kind && owners.is_canonical(&doc, entry))
+                    .collect::<Vec<_>>();
                 if entries.is_empty() {
                     continue;
                 }
@@ -321,6 +327,7 @@ mod tests {
         let docs = vec![ApiDocModule {
             description: String::new(),
             file: "default".to_string(),
+            source_path: String::new(),
             entries: vec![
                 ApiDocEntry {
                     name: "cli".to_string(),
@@ -378,6 +385,7 @@ mod tests {
         let docs = vec![ApiDocModule {
             description: String::new(),
             file: "default".to_string(),
+            source_path: String::new(),
             entries: vec![ApiDocEntry {
                 name: "Mode".to_string(),
                 kind: "enum".to_string(),
@@ -405,6 +413,45 @@ mod tests {
         assert_eq!(
             children[0].children.as_ref().unwrap()[0].path,
             "/api/default/enumerations/Mode"
+        );
+    }
+
+    #[test]
+    fn typedoc_nav_omits_reexports_from_non_owner_modules() {
+        let make = |module: &str, source: &str| ApiDocModule {
+            description: String::new(),
+            file: module.to_string(),
+            source_path: source.to_string(),
+            entries: vec![ApiDocEntry {
+                name: "createCommandContext".to_string(),
+                kind: "function".to_string(),
+                description: String::new(),
+                params: vec![],
+                returns: None,
+                examples: vec![],
+                tags: vec![],
+                private: false,
+                file: "/repo/src/context.ts".to_string(),
+                line: 1,
+                end_line: 1,
+                signature: None,
+                members: vec![],
+                type_parameters: vec![],
+            }],
+        };
+        // `context` defines the symbol; `default` only re-exports it.
+        let docs =
+            vec![make("context", "/repo/src/context.ts"), make("default", "/repo/src/index.ts")];
+
+        let nav =
+            generate_nav_metadata_from_docs(&docs, Some("/api"), MarkdownPathStrategy::TypeDoc);
+
+        let context = nav.iter().find(|item| item.path == "/api/context").unwrap();
+        assert!(context.children.is_some(), "owner module keeps the symbol in the sidebar");
+        let default = nav.iter().find(|item| item.path == "/api/default").unwrap();
+        assert!(
+            default.children.is_none(),
+            "re-exporting module omits the symbol from the sidebar"
         );
     }
 

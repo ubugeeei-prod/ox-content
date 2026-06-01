@@ -330,6 +330,12 @@ export interface JsDocsMarkdownModule {
   file: string
   /** Module-level description from the entry file's `@module` / leading JSDoc. */
   description?: string
+  /**
+   * Absolute source path of the entry point (from `extractDocsFromEntryPoints`'
+   * `sourcePath`). Optional; when provided, the TypeDoc path strategy places a
+   * re-exported symbol's canonical page under its defining module.
+   */
+  sourcePath?: string
   entries: Array<JsDocsMarkdownEntry>
 }
 

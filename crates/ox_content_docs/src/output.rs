@@ -225,6 +225,7 @@ mod tests {
         let extracted = vec![ApiDocModule {
             description: String::new(),
             file: "default".to_string(),
+            source_path: String::new(),
             entries: vec![
                 ApiDocEntry {
                     name: "cli".to_string(),

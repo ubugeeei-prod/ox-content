@@ -712,12 +712,73 @@ fn generate_file_markdown(
     markdown
 }
 
+/// Resolves, for each distinct symbol, the single module that owns its canonical
+/// TypeDoc per-symbol page. A symbol re-exported from several entry points
+/// otherwise produces an identical page under each one; TypeDoc emits one page.
+///
+/// A symbol is keyed by `(name, defining_file)` so that two distinct symbols
+/// sharing a name (different source files) keep separate pages. The owner is:
+///
+/// 1. the module whose own entry-point source (`source_path`) is the symbol's
+///    defining file (i.e. the symbol is declared in that entry point), else
+/// 2. the first module that exports it, in the same order pages are emitted.
+pub struct CanonicalOwners {
+    owners: HashMap<(String, String), String>,
+}
+
+impl CanonicalOwners {
+    pub fn compute(docs: &[ApiDocModule]) -> Self {
+        // Build the owner table in the same deterministic order that pages are
+        // emitted (see `sort_extracted_docs`) so the fallback "first exporter"
+        // rule agrees between the page generator and the nav generator,
+        // regardless of the caller's input order.
+        let mut order: Vec<&ApiDocModule> = docs.iter().collect();
+        order.sort_by_cached_key(|module| {
+            let name = file_name(&module.file);
+            (name.to_lowercase(), name)
+        });
+
+        let mut owners: HashMap<(String, String), String> = HashMap::new();
+        let mut fallback: HashMap<(String, String), String> = HashMap::new();
+        for doc in order {
+            let module_name = module_file_name(&doc.file);
+            for entry in &doc.entries {
+                let key = (entry.name.clone(), entry.file.clone());
+                fallback.entry(key.clone()).or_insert_with(|| module_name.clone());
+                // Rule 1: the defining module wins, if it is itself an entry point.
+                if !entry.file.is_empty() && doc.source_path == entry.file {
+                    owners.entry(key).or_insert_with(|| module_name.clone());
+                }
+            }
+        }
+        // Rule 2: symbols with no defining-module match fall back to the first
+        // module that exported them.
+        for (key, module_name) in fallback {
+            owners.entry(key).or_insert(module_name);
+        }
+
+        Self { owners }
+    }
+
+    /// The module name owning `entry`'s canonical page, if known.
+    fn canonical_module(&self, entry: &ApiDocEntry) -> Option<&str> {
+        self.owners.get(&(entry.name.clone(), entry.file.clone())).map(String::as_str)
+    }
+
+    /// True when `entry` should render its full page under `doc` (rather than be
+    /// a re-export reference to another module's canonical page).
+    pub fn is_canonical(&self, doc: &ApiDocModule, entry: &ApiDocEntry) -> bool {
+        self.canonical_module(entry) == Some(module_file_name(&doc.file).as_str())
+    }
+}
+
 fn generate_typedoc_markdown(
     docs: &[ApiDocModule],
     options: &MarkdownDocsOptions,
     symbol_map: &HashMap<String, Vec<SymbolLocation>>,
 ) -> BTreeMap<String, String> {
     let mut result = BTreeMap::new();
+    let owners = CanonicalOwners::compute(docs);
 
     result.insert("index.md".to_string(), generate_typedoc_root_index(docs, options, symbol_map));
 
@@ -726,10 +787,16 @@ fn generate_typedoc_markdown(
         let module_index_file_name = typedoc_module_index_file_name(&module_name);
         result.insert(
             format!("{module_index_file_name}.md"),
-            generate_typedoc_module_index(doc, options, &module_name, symbol_map),
+            generate_typedoc_module_index(doc, options, &module_name, symbol_map, &owners),
         );
 
         for entry in &doc.entries {
+            // A symbol re-exported from several entry points gets one canonical
+            // page (matching TypeDoc); non-canonical occurrences are surfaced as
+            // re-export references in the module index instead of duplicate pages.
+            if !owners.is_canonical(doc, entry) {
+                continue;
+            }
             let entry_file_name = typedoc_entry_file_name(&module_name, entry);
             result.insert(
                 format!("{entry_file_name}.md"),
@@ -798,6 +865,7 @@ fn generate_typedoc_module_index(
     options: &MarkdownDocsOptions,
     module_name: &str,
     symbol_map: &HashMap<String, Vec<SymbolLocation>>,
+    owners: &CanonicalOwners,
 ) -> String {
     let current_file_name = typedoc_module_index_file_name(module_name);
     let link_context = MarkdownLinkContext {
@@ -824,7 +892,13 @@ fn generate_typedoc_module_index(
     markdown.push_str("\n\n");
 
     for kind in ordered_entry_kinds(&doc.entries) {
-        let entries = doc.entries.iter().filter(|entry| entry.kind == kind).collect::<Vec<_>>();
+        // Only entries whose canonical page lives in this module are listed in
+        // the kind sections; re-exports are collected into "References" below.
+        let entries = doc
+            .entries
+            .iter()
+            .filter(|entry| entry.kind == kind && owners.is_canonical(doc, entry))
+            .collect::<Vec<_>>();
         if entries.is_empty() {
             continue;
         }
@@ -838,6 +912,28 @@ fn generate_typedoc_module_index(
                 None,
             );
             markdown.push_str(&render_overview_line(entry, &href, Some(&link_context)));
+        }
+        markdown.push('\n');
+    }
+
+    // Symbols this module re-exports but does not own: link to the canonical page
+    // instead of emitting a duplicate (matches TypeDoc's "References" section).
+    let references = doc
+        .entries
+        .iter()
+        .filter(|entry| !owners.is_canonical(doc, entry))
+        .filter_map(|entry| owners.canonical_module(entry).map(|owner| (entry, owner)))
+        .collect::<Vec<_>>();
+    if !references.is_empty() {
+        markdown.push_str("## References\n\n");
+        for (entry, owner) in references {
+            let href = doc_page_href_from(
+                options,
+                &current_file_name,
+                &typedoc_entry_file_name(owner, entry),
+                None,
+            );
+            push_fmt(&mut markdown, format_args!("- Re-exports [`{}`]({href})\n", entry.name));
         }
         markdown.push('\n');
     }
@@ -1267,13 +1363,23 @@ fn build_symbol_map(
     options: &MarkdownDocsOptions,
 ) -> HashMap<String, Vec<SymbolLocation>> {
     let mut map = HashMap::new();
+    // In the TypeDoc strategy a re-exported symbol has a single canonical page;
+    // resolve every reference to that owner module so cross-links never point at
+    // a duplicate page that is no longer emitted.
+    let canonical = (options.group_by == "file"
+        && options.path_strategy == MarkdownPathStrategy::TypeDoc)
+        .then(|| CanonicalOwners::compute(docs));
 
     for doc in docs {
         let module_name = module_file_name(&doc.file);
         for entry in &doc.entries {
             let (file_name, anchor) = match (options.group_by.as_str(), options.path_strategy) {
                 ("file", MarkdownPathStrategy::TypeDoc) => {
-                    (typedoc_entry_file_name(&module_name, entry), None)
+                    let owner_module = canonical
+                        .as_ref()
+                        .and_then(|owners| owners.canonical_module(entry))
+                        .unwrap_or(module_name.as_str());
+                    (typedoc_entry_file_name(owner_module, entry), None)
                 }
                 ("category", _) => {
                     (fmt_args(format_args!("{}s", entry.kind)), Some(entry_anchor(&entry.name)))
@@ -1396,6 +1502,7 @@ mod tests {
             ApiDocModule {
                 description: String::new(),
                 file: "/repo/src/context.ts".to_string(),
+                source_path: String::new(),
                 entries: vec![test_entry(
                     "CommandContext",
                     "interface",
@@ -1406,6 +1513,7 @@ mod tests {
             ApiDocModule {
                 description: String::new(),
                 file: "/repo/src/command.ts".to_string(),
+                source_path: String::new(),
                 entries: vec![test_entry(
                     "Command",
                     "function",
@@ -1420,6 +1528,7 @@ mod tests {
         vec![ApiDocModule {
             description: String::new(),
             file: "/repo/src/cli.ts".to_string(),
+            source_path: String::new(),
             entries: vec![
                 ApiDocEntry {
                     name: "cli".to_string(),
@@ -1728,6 +1837,7 @@ mod tests {
             ApiDocModule {
                 description: String::new(),
                 file: "/repo/src/agent.ts".to_string(),
+                source_path: String::new(),
                 entries: vec![test_entry(
                     "AgentProfile",
                     "interface",
@@ -1738,6 +1848,7 @@ mod tests {
             ApiDocModule {
                 description: String::new(),
                 file: "/repo/src/command.ts".to_string(),
+                source_path: String::new(),
                 entries: vec![ApiDocEntry {
                     name: "Command".to_string(),
                     kind: "interface".to_string(),
@@ -1774,6 +1885,7 @@ mod tests {
             ApiDocModule {
                 description: String::new(),
                 file: "/repo/src/build.ts".to_string(),
+                source_path: String::new(),
                 entries: vec![ApiDocEntry {
                     name: "buildCommand".to_string(),
                     kind: "function".to_string(),
@@ -1838,6 +1950,7 @@ mod tests {
         let docs = vec![ApiDocModule {
             description: String::new(),
             file: "default".to_string(),
+            source_path: String::new(),
             entries: vec![
                 ApiDocEntry {
                     name: "cli".to_string(),
@@ -1927,6 +2040,7 @@ mod tests {
             ApiDocModule {
                 description: "The entry for gunshi context.".to_string(),
                 file: "context".to_string(),
+                source_path: String::new(),
                 entries: vec![test_entry(
                     "CommandContextParams",
                     "interface",
@@ -1937,6 +2051,7 @@ mod tests {
             ApiDocModule {
                 description: String::new(),
                 file: "plugin".to_string(),
+                source_path: String::new(),
                 entries: vec![test_entry(
                     "plugin",
                     "function",
@@ -1977,6 +2092,7 @@ mod tests {
         let docs = vec![ApiDocModule {
             description: String::new(),
             file: "mod".to_string(),
+            source_path: String::new(),
             entries: vec![
                 test_entry("localSym", "function", "packages/x/src/a.ts", "Local symbol."),
                 // Empty file = external-package source: no in-repo source location.
@@ -2026,6 +2142,7 @@ mod tests {
         let docs = vec![ApiDocModule {
             description: String::new(),
             file: "mod".to_string(),
+            source_path: String::new(),
             entries: vec![entry],
         }];
 
@@ -2051,6 +2168,7 @@ mod tests {
             ApiDocModule {
                 description: String::new(),
                 file: "default".to_string(),
+                source_path: String::new(),
                 entries: vec![
                     test_entry("Command", "interface", "/repo/src/default.ts", "Default command."),
                     test_entry(
@@ -2064,6 +2182,7 @@ mod tests {
             ApiDocModule {
                 description: String::new(),
                 file: "plugin".to_string(),
+                source_path: String::new(),
                 entries: vec![
                     test_entry("Command", "interface", "/repo/src/plugin.ts", "Plugin command."),
                     test_entry(
@@ -2093,6 +2212,127 @@ mod tests {
         assert!(default_page.contains("<a href=\"/api/default/interfaces/Command\">Command</a>"));
         assert!(plugin_page.contains("<a href=\"/api/plugin/interfaces/Command\">Command</a>"));
         assert!(!default_page.contains(".md"));
+    }
+
+    #[test]
+    fn typedoc_dedupes_cross_entrypoint_reexports_to_canonical_page() {
+        // `createCommandContext` is defined in context.ts and re-exported from
+        // the default and plugin entry points. It must produce a single page
+        // under its defining module (context), with the re-exporters linking to
+        // it via a References section.
+        let docs = vec![
+            ApiDocModule {
+                description: String::new(),
+                file: "context".to_string(),
+                source_path: "/repo/src/context.ts".to_string(),
+                entries: vec![test_entry(
+                    "createCommandContext",
+                    "function",
+                    "/repo/src/context.ts",
+                    "Creates a command context.",
+                )],
+            },
+            ApiDocModule {
+                description: String::new(),
+                file: "default".to_string(),
+                source_path: "/repo/src/index.ts".to_string(),
+                entries: vec![
+                    test_entry(
+                        "createCommandContext",
+                        "function",
+                        "/repo/src/context.ts",
+                        "Creates a command context.",
+                    ),
+                    test_entry(
+                        "runDefault",
+                        "function",
+                        "/repo/src/index.ts",
+                        "Uses {@link createCommandContext}.",
+                    ),
+                ],
+            },
+            ApiDocModule {
+                description: String::new(),
+                file: "plugin".to_string(),
+                source_path: "/repo/src/plugin.ts".to_string(),
+                entries: vec![test_entry(
+                    "createCommandContext",
+                    "function",
+                    "/repo/src/context.ts",
+                    "Creates a command context.",
+                )],
+            },
+        ];
+
+        let out = generate_markdown(
+            &docs,
+            &MarkdownDocsOptions {
+                path_strategy: MarkdownPathStrategy::TypeDoc,
+                ..MarkdownDocsOptions::default()
+            },
+        );
+
+        // Exactly one canonical page, placed under the defining module.
+        assert!(out.contains_key("context/functions/createCommandContext.md"));
+        assert!(!out.contains_key("default/functions/createCommandContext.md"));
+        assert!(!out.contains_key("plugin/functions/createCommandContext.md"));
+
+        // The defining module lists it as a real entry; re-exporters reference it.
+        let context_index = out.get("context/index.md").unwrap();
+        assert!(context_index.contains("## Functions"));
+        assert!(!context_index.contains("## References"));
+
+        let default_index = out.get("default/index.md").unwrap();
+        assert!(default_index.contains("## References"));
+        assert!(default_index.contains("Re-exports [`createCommandContext`]"));
+        // The re-export reference and any cross-link resolve to the canonical page.
+        assert!(default_index.contains("context/functions/createCommandContext"));
+
+        let run_default = out.get("default/functions/runDefault.md").unwrap();
+        assert!(run_default.contains("context/functions/createCommandContext"));
+    }
+
+    #[test]
+    fn typedoc_dedupe_without_source_path_uses_first_module() {
+        // `Command` is defined in a non-entry-point file (command.ts), so no
+        // module owns it via source_path; the canonical page falls back to the
+        // first module (sorted) that exports it.
+        let docs = vec![
+            ApiDocModule {
+                description: String::new(),
+                file: "default".to_string(),
+                source_path: "/repo/src/index.ts".to_string(),
+                entries: vec![test_entry(
+                    "Command",
+                    "interface",
+                    "/repo/src/command.ts",
+                    "A command.",
+                )],
+            },
+            ApiDocModule {
+                description: String::new(),
+                file: "plugin".to_string(),
+                source_path: "/repo/src/plugin.ts".to_string(),
+                entries: vec![test_entry(
+                    "Command",
+                    "interface",
+                    "/repo/src/command.ts",
+                    "A command.",
+                )],
+            },
+        ];
+
+        let out = generate_markdown(
+            &docs,
+            &MarkdownDocsOptions {
+                path_strategy: MarkdownPathStrategy::TypeDoc,
+                ..MarkdownDocsOptions::default()
+            },
+        );
+
+        assert!(out.contains_key("default/interfaces/Command.md"));
+        assert!(!out.contains_key("plugin/interfaces/Command.md"));
+        assert!(out.get("plugin/index.md").unwrap().contains("Re-exports [`Command`]"));
     }
 
     #[test]
@@ -2131,6 +2371,7 @@ mod tests {
         let docs = vec![ApiDocModule {
             description: String::new(),
             file: "default".to_string(),
+            source_path: String::new(),
             entries: vec![
                 ApiDocEntry {
                     name: "Mode".to_string(),
@@ -2207,6 +2448,7 @@ mod tests {
         let docs = vec![ApiDocModule {
             description: String::new(),
             file: "/repo/src/command.ts".to_string(),
+            source_path: String::new(),
             entries: vec![ApiDocEntry {
                 name: "Command".to_string(),
                 kind: "interface".to_string(),

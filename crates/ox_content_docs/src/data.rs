@@ -239,6 +239,7 @@ mod tests {
         let docs = vec![ApiDocModule {
             description: String::new(),
             file: "/repo/src/math.ts".to_string(),
+            source_path: String::new(),
             entries: vec![ApiDocEntry {
                 name: "clamp".to_string(),
                 kind: "function".to_string(),
@@ -281,6 +282,7 @@ mod tests {
         let docs = vec![ApiDocModule {
             description: "The entry for gunshi context.".to_string(),
             file: "/repo/src/context.ts".to_string(),
+            source_path: String::new(),
             entries: vec![],
         }];
 
@@ -295,6 +297,7 @@ mod tests {
         let docs = vec![ApiDocModule {
             description: String::new(),
             file: "/repo/src/combinators.ts".to_string(),
+            source_path: String::new(),
             entries: vec![ApiDocEntry {
                 name: "Combinator".to_string(),
                 kind: "type".to_string(),
@@ -331,6 +334,7 @@ mod tests {
         let docs = vec![ApiDocModule {
             description: String::new(),
             file: "/repo/src/make.ts".to_string(),
+            source_path: String::new(),
             entries: vec![ApiDocEntry {
                 name: "make".to_string(),
                 kind: "function".to_string(),
