@@ -972,24 +972,33 @@ fn generate_typedoc_module_index(
 
     // Symbols this module re-exports but does not own: link to the canonical page
     // instead of emitting a duplicate (matches TypeDoc's "References" section).
+    // Overloads share a name, so collapse them to a single reference.
+    let mut seen_references = std::collections::HashSet::new();
     let references = doc
         .entries
         .iter()
         .filter(|entry| !owners.is_canonical(doc, entry))
         .filter_map(|entry| owners.canonical_module(entry).map(|owner| (entry, owner)))
+        .filter(|(entry, _)| seen_references.insert(entry.name.as_str()))
         .collect::<Vec<_>>();
     if !references.is_empty() {
         markdown.push_str("## References\n\n");
-        for (entry, owner) in references {
+        for (index, (entry, owner)) in references.iter().enumerate() {
+            // TypeDoc separates consecutive reference entries with a thematic break.
+            if index > 0 {
+                markdown.push_str("***\n\n");
+            }
             let href = doc_page_href_from(
                 options,
                 &current_file_name,
                 &typedoc_entry_file_name(owner, entry),
                 None,
             );
-            push_fmt(&mut markdown, format_args!("- Re-exports [`{}`]({href})\n", entry.name));
+            push_fmt(
+                &mut markdown,
+                format_args!("### {}\n\nRe-exports [{}]({href})\n\n", entry.name, entry.name),
+            );
         }
-        markdown.push('\n');
     }
 
     markdown
@@ -2452,12 +2461,104 @@ mod tests {
 
         let default_index = out.get("default/index.md").unwrap();
         assert!(default_index.contains("## References"));
-        assert!(default_index.contains("Re-exports [`createCommandContext`]"));
+        // TypeDoc-style reference entry (heading + "Re-exports" link), not a bullet.
+        assert!(default_index.contains("### createCommandContext"));
+        assert!(default_index.contains("Re-exports [createCommandContext]("));
+        assert!(!default_index.contains("- Re-exports"));
         // The re-export reference and any cross-link resolve to the canonical page.
         assert!(default_index.contains("context/functions/createCommandContext"));
 
         let run_default = out.get("default/functions/runDefault.md").unwrap();
         assert!(run_default.contains("context/functions/createCommandContext"));
+    }
+
+    #[test]
+    fn typedoc_references_section_uses_typedoc_layout() {
+        // Two symbols defined in `context` and re-exported from `default` produce
+        // a TypeDoc-style References section: `### Name` headings, `Re-exports`
+        // links, and a `***` separator between entries.
+        let make = |module: &str, source: &str, entries: Vec<ApiDocEntry>| ApiDocModule {
+            description: String::new(),
+            file: module.to_string(),
+            source_path: source.to_string(),
+            entries,
+        };
+        let docs = vec![
+            make(
+                "context",
+                "/repo/src/context.ts",
+                vec![
+                    test_entry("createCommandContext", "function", "/repo/src/context.ts", "Ctx."),
+                    test_entry("CommandContextParams", "interface", "/repo/src/context.ts", "P."),
+                ],
+            ),
+            make(
+                "default",
+                "/repo/src/index.ts",
+                vec![
+                    test_entry("createCommandContext", "function", "/repo/src/context.ts", "Ctx."),
+                    test_entry("CommandContextParams", "interface", "/repo/src/context.ts", "P."),
+                ],
+            ),
+        ];
+
+        let out = generate_markdown(
+            &docs,
+            &MarkdownDocsOptions {
+                path_strategy: MarkdownPathStrategy::TypeDoc,
+                ..MarkdownDocsOptions::default()
+            },
+        );
+        let default_index = out.get("default/index.md").unwrap();
+
+        assert!(default_index.contains("## References"));
+        assert!(default_index.contains("### CommandContextParams"));
+        // The link resolves to the canonical page under the owner module (context).
+        assert!(default_index.contains(
+            "Re-exports [CommandContextParams](../context/interfaces/CommandContextParams.md)"
+        ));
+        assert!(default_index.contains("### createCommandContext"));
+        // Two references → exactly one thematic-break separator between them.
+        assert_eq!(default_index.matches("\n***\n").count(), 1);
+        assert!(!default_index.contains("- Re-exports"));
+    }
+
+    #[test]
+    fn typedoc_references_collapse_overloads_to_one_entry() {
+        // An overloaded function (two signatures) re-exported from another module
+        // is referenced once, not once per overload.
+        let docs = vec![
+            ApiDocModule {
+                description: String::new(),
+                file: "definition".to_string(),
+                source_path: "/repo/src/definition.ts".to_string(),
+                entries: vec![
+                    test_entry("define", "function", "/repo/src/definition.ts", "Define."),
+                    test_entry("define", "function", "/repo/src/definition.ts", "Define."),
+                ],
+            },
+            ApiDocModule {
+                description: String::new(),
+                file: "default".to_string(),
+                source_path: "/repo/src/index.ts".to_string(),
+                entries: vec![
+                    test_entry("define", "function", "/repo/src/definition.ts", "Define."),
+                    test_entry("define", "function", "/repo/src/definition.ts", "Define."),
+                ],
+            },
+        ];
+
+        let out = generate_markdown(
+            &docs,
+            &MarkdownDocsOptions {
+                path_strategy: MarkdownPathStrategy::TypeDoc,
+                ..MarkdownDocsOptions::default()
+            },
+        );
+        let default_index = out.get("default/index.md").unwrap();
+
+        assert_eq!(default_index.matches("### define").count(), 1);
+        assert_eq!(default_index.matches("Re-exports [define]").count(), 1);
     }
 
     #[test]
@@ -2500,7 +2601,9 @@ mod tests {
 
         assert!(out.contains_key("default/interfaces/Command.md"));
         assert!(!out.contains_key("plugin/interfaces/Command.md"));
-        assert!(out.get("plugin/index.md").unwrap().contains("Re-exports [`Command`]"));
+        let plugin_index = out.get("plugin/index.md").unwrap();
+        assert!(plugin_index.contains("### Command"));
+        assert!(plugin_index.contains("Re-exports [Command]("));
     }
 
     #[test]
