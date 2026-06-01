@@ -65,14 +65,15 @@ fn generate_typedoc_nav_metadata(
 ) -> Vec<DocsNavItem> {
     let base_path = normalize_base_path(base_path.unwrap_or(DEFAULT_BASE_PATH));
     let mut docs = docs.to_vec();
-    docs.sort_by_cached_key(|doc| module_file_name(&doc.file));
+    docs.sort_by_cached_key(typedoc_module_route_name);
     // A re-exported symbol appears in the sidebar only under the module that owns
     // its canonical page (matching TypeDoc's single-location listing).
     let owners = CanonicalOwners::compute(&docs);
 
     docs.into_iter()
         .map(|doc| {
-            let module_name = module_file_name(&doc.file);
+            let module_name = typedoc_module_route_name(&doc);
+            let module_title = typedoc_module_display_name(&doc);
             let mut children = Vec::new();
             for kind in ordered_entry_kinds(&doc.entries) {
                 let entries = doc
@@ -110,7 +111,7 @@ fn generate_typedoc_nav_metadata(
             }
 
             DocsNavItem {
-                title: format_doc_title(&module_name),
+                title: module_title,
                 path: nav_route_path(&base_path, &format!("{module_name}/index")),
                 children: if children.is_empty() { None } else { Some(children) },
             }
@@ -184,6 +185,23 @@ fn module_file_name(file_path: &str) -> String {
         file_name = "index-module".to_string();
     }
     sanitize_doc_path_segment(&file_name)
+}
+
+fn typedoc_module_route_name(doc: &ApiDocModule) -> String {
+    module_file_name(&doc.file)
+}
+
+fn typedoc_module_display_name(doc: &ApiDocModule) -> String {
+    if !doc.source_path.is_empty() {
+        return doc.file.clone();
+    }
+
+    let display_name = file_stem(&doc.file);
+    if display_name.is_empty() {
+        doc.file.clone()
+    } else {
+        display_name
+    }
 }
 
 fn ordered_entry_kinds(entries: &[ApiDocEntry]) -> Vec<String> {
@@ -374,7 +392,7 @@ mod tests {
         let nav =
             generate_nav_metadata_from_docs(&docs, Some("/api"), MarkdownPathStrategy::TypeDoc);
 
-        assert_eq!(nav[0].title, "Default");
+        assert_eq!(nav[0].title, "default");
         assert_eq!(nav[0].path, "/api/default");
         let children = nav[0].children.as_ref().unwrap();
         assert_eq!(children[0].title, "Functions");

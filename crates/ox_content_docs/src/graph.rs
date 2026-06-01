@@ -406,22 +406,21 @@ pub fn extract_docs_from_entry_points(
         // by the extractor as a `Module`-kind entry but is never an export, so it
         // is dropped from `entries` above. Pull it out of the entry file's
         // normalized items and carry it as the module description.
-        let description = normalized_entries_for_module(
-            &mut docs_cache,
-            &extractor,
-            &entrypoint.source_path,
-            options.type_parameters,
-        )?
-        .iter()
-        .find(|entry| entry.kind == NormalizedDocKind::Module)
-        .map(|entry| entry.description.clone())
-        .unwrap_or_default();
+        let module_metadata = resolve_entrypoint_module_metadata(
+            &entrypoint.name,
+            normalized_entries_for_module(
+                &mut docs_cache,
+                &extractor,
+                &entrypoint.source_path,
+                options.type_parameters,
+            )?,
+        );
 
         modules.push(EntrypointDocsModule {
-            file: entrypoint.name.clone(),
-            name: entrypoint.name,
+            file: module_metadata.name.clone(),
+            name: module_metadata.name,
             source_path: entrypoint.source_path,
-            description,
+            description: module_metadata.description,
             entries,
             exports: entrypoint.exports,
             diagnostics,
@@ -429,6 +428,35 @@ pub fn extract_docs_from_entry_points(
     }
 
     Ok(modules)
+}
+
+struct EntrypointModuleMetadata {
+    name: String,
+    description: String,
+}
+
+fn resolve_entrypoint_module_metadata(
+    entrypoint_name: &str,
+    entries: &[NormalizedDocEntry],
+) -> EntrypointModuleMetadata {
+    let module_entry = entries.iter().find(|entry| entry.kind == NormalizedDocKind::Module);
+    let explicit_module_name =
+        module_entry.and_then(|entry| explicit_module_name_from_tags(&entry.tags));
+
+    EntrypointModuleMetadata {
+        name: explicit_module_name.unwrap_or(entrypoint_name).to_string(),
+        description: module_entry.map(|entry| entry.description.clone()).unwrap_or_default(),
+    }
+}
+
+fn explicit_module_name_from_tags(
+    tags: &std::collections::BTreeMap<String, String>,
+) -> Option<&str> {
+    tags.get("module")
+        .map(|value| value.trim())
+        .filter(|value| !value.is_empty())
+        .and_then(|value| value.split_whitespace().next())
+        .filter(|value| !value.is_empty())
 }
 
 /// Returns true when a resolved module path is an installed dependency, i.e. it
@@ -1321,13 +1349,89 @@ export function plugin(): void {}
         .unwrap();
 
         let context = docs.iter().find(|module| module.name == "context").unwrap();
+        assert_eq!(context.file, "context");
         assert_eq!(context.description, "The entry for gunshi context.");
         // The module entry itself is not surfaced as a regular export entry.
         assert!(context.entries.iter().all(|entry| entry.kind != NormalizedDocKind::Module));
         assert!(context.entries.iter().any(|entry| entry.name == "createCommandContext"));
 
         let plugin = docs.iter().find(|module| module.name == "plugin").unwrap();
+        assert_eq!(plugin.file, "plugin");
         assert!(plugin.description.is_empty());
+
+        fs::remove_dir_all(root).unwrap();
+    }
+
+    #[test]
+    fn entrypoint_docs_prefers_explicit_module_name() {
+        let root = temp_root();
+        fs::create_dir_all(root.join("src")).unwrap();
+        fs::write(
+            root.join("src/index.ts"),
+            r"
+/**
+ * Default entry point.
+ *
+ * @module default
+ */
+/** Runs the CLI. */
+export function cli(): void {}
+",
+        )
+        .unwrap();
+
+        let docs = extract_docs_from_entry_points(
+            &[EntryPointSpec {
+                path: PathBuf::from("src/index.ts"),
+                name: Some("entry".to_string()),
+            }],
+            &EntryPointDocsOptions {
+                graph: GraphOptions { root: Some(root.clone()), ..GraphOptions::default() },
+                include_private: false,
+                include_internal: false,
+                type_parameters: false,
+            },
+        )
+        .unwrap();
+
+        assert_eq!(docs[0].name, "default");
+        assert_eq!(docs[0].file, "default");
+        assert_eq!(docs[0].description, "Default entry point.");
+
+        fs::remove_dir_all(root).unwrap();
+    }
+
+    #[test]
+    fn entrypoint_docs_uses_entrypoint_name_without_module_tag() {
+        let root = temp_root();
+        fs::create_dir_all(root.join("src")).unwrap();
+        fs::write(
+            root.join("src/agent.ts"),
+            r"
+export function isAiAgent(): boolean {
+  return false;
+}
+",
+        )
+        .unwrap();
+
+        let docs = extract_docs_from_entry_points(
+            &[EntryPointSpec {
+                path: PathBuf::from("src/agent.ts"),
+                name: Some("agent".to_string()),
+            }],
+            &EntryPointDocsOptions {
+                graph: GraphOptions { root: Some(root.clone()), ..GraphOptions::default() },
+                include_private: false,
+                include_internal: false,
+                type_parameters: false,
+            },
+        )
+        .unwrap();
+
+        assert_eq!(docs[0].name, "agent");
+        assert_eq!(docs[0].file, "agent");
+        assert!(docs[0].description.is_empty());
 
         fs::remove_dir_all(root).unwrap();
     }

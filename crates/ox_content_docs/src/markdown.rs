@@ -349,6 +349,23 @@ fn module_file_name(file_path: &str) -> String {
     sanitize_doc_path_segment(&file_name)
 }
 
+fn module_route_name(doc: &ApiDocModule) -> String {
+    module_file_name(&doc.file)
+}
+
+fn module_display_name(doc: &ApiDocModule) -> String {
+    if !doc.source_path.is_empty() {
+        return doc.file.clone();
+    }
+
+    let display_name = file_stem(&doc.file);
+    if display_name.is_empty() {
+        doc.file.clone()
+    } else {
+        display_name
+    }
+}
+
 /// Directory segment for each documentation kind under the TypeDoc path strategy.
 static TYPEDOC_KIND_SEGMENT: phf::Map<&'static str, &'static str> = phf_map! {
     "function" => "functions",
@@ -873,7 +890,8 @@ fn generate_typedoc_root_index(
     markdown.push_str("\n\n## Modules\n\n");
 
     for doc in docs {
-        let module_name = module_file_name(&doc.file);
+        let module_name = module_route_name(doc);
+        let display_name = module_display_name(doc);
         let href = doc_page_href_from(
             options,
             "index",
@@ -883,15 +901,9 @@ fn generate_typedoc_root_index(
         let summary =
             clean_summary_text(&process_doc_text(&doc.description, Some(&link_context)), 88);
         if summary.is_empty() {
-            push_fmt(
-                &mut markdown,
-                format_args!("- [{}]({href})\n", capitalize_ascii(&module_name)),
-            );
+            push_fmt(&mut markdown, format_args!("- [{display_name}]({href})\n"));
         } else {
-            push_fmt(
-                &mut markdown,
-                format_args!("- [{}]({href}) - {summary}\n", capitalize_ascii(&module_name)),
-            );
+            push_fmt(&mut markdown, format_args!("- [{display_name}]({href}) - {summary}\n"));
         }
     }
 
@@ -912,7 +924,8 @@ fn generate_typedoc_module_index(
         current_module_name: module_name,
         symbol_map,
     };
-    let mut markdown = fmt_args(format_args!("# {}\n\n", capitalize_ascii(module_name)));
+    let display_name = module_display_name(doc);
+    let mut markdown = fmt_args(format_args!("# {display_name}\n\n"));
 
     let description = process_doc_text(&doc.description, Some(&link_context));
     let description = description.trim();
@@ -2141,6 +2154,10 @@ mod tests {
         // Root module list shows the module-level `@module` description, never a
         // symbol's description, and renders nothing for a module without one.
         let index = markdown.get("index.md").unwrap();
+        assert!(index.contains("[context](./context/index.md)"));
+        assert!(index.contains("[plugin](./plugin/index.md)"));
+        assert!(!index.contains("[Context]"));
+        assert!(!index.contains("[Plugin]"));
         assert!(index.contains("The entry for gunshi context."));
         assert!(!index.contains("Parameters of createCommandContext"));
         assert!(!index.contains("Define a plugin."));
@@ -2150,9 +2167,9 @@ mod tests {
         // empty description emits no paragraph, so the heading is followed
         // directly by the stats line.
         let context_index = markdown.get("context/index.md").unwrap();
-        assert!(context_index.starts_with("# Context\n\nThe entry for gunshi context.\n\n_"));
+        assert!(context_index.starts_with("# context\n\nThe entry for gunshi context.\n\n_"));
         let plugin_index = markdown.get("plugin/index.md").unwrap();
-        assert!(plugin_index.starts_with("# Plugin\n\n_"));
+        assert!(plugin_index.starts_with("# plugin\n\n_"));
     }
 
     #[test]
@@ -2385,7 +2402,7 @@ mod tests {
         let plugin_page = markdown.get("plugin/functions/runPlugin.md").unwrap();
         let index = markdown.get("index.md").unwrap();
 
-        assert!(index.contains("[Default](/api/default)"));
+        assert!(index.contains("[default](/api/default)"));
         assert!(default_page.contains("<a href=\"/api/default/interfaces/Command\">Command</a>"));
         assert!(plugin_page.contains("<a href=\"/api/plugin/interfaces/Command\">Command</a>"));
         assert!(!default_page.contains(".md"));
