@@ -51,8 +51,8 @@ fn indented_heading_like_text_does_not_loop() {
     // position, so " # heading" caused `parse_paragraph` to break
     // immediately ("looks like a heading") and `parse_block` to return
     // `Ok(None)` without advancing — spinning the outer loop forever.
-    // The fix is for `line_starts_block` to defer to
-    // `self.try_parse_heading_at()` so both checks see the same offset.
+    // The fix is for `line_starts_block` and `parse_block` to share the same
+    // untrimmed-line-start heading check.
     let allocator = Allocator::new();
     let doc = Parser::new(&allocator, " # heading\n").parse().unwrap();
     assert_eq!(doc.children.len(), 1);

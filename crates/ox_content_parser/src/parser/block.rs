@@ -24,17 +24,22 @@ impl<'a> Parser<'a> {
         }
 
         let start = self.position;
-        let line = self.current_line();
-        let trimmed = line.trim_start();
-        let first = trimmed.as_bytes().first().copied();
+        let bytes = self.source.as_bytes();
+        let Some(trimmed_start) = self.first_non_whitespace_in_line(start) else {
+            return Ok(None);
+        };
 
-        // Try to parse different block types. Each dispatch arm hands the
-        // already-scanned `line` / `trimmed` slices to the matching
-        // `*_at` helper so the inner check doesn't re-run `memchr` +
-        // `trim_start` on the same line.
-        match first {
-            Some(b'#') if self.try_parse_heading_at(trimmed) => return self.parse_heading(start),
-            Some(b'-' | b'*') => {
+        // Try to parse different block types. Common prose lines usually
+        // start with a non-marker byte, so classify that byte first and only
+        // materialize `line` / `trimmed` for syntax families that need the
+        // rest of the line.
+        match bytes[trimmed_start] {
+            b'#' if self.try_parse_heading_start(start, trimmed_start) => {
+                return self.parse_heading(start);
+            }
+            b'-' | b'*' => {
+                let line = self.line_at(start);
+                let trimmed = &line[trimmed_start - start..];
                 if Self::try_parse_thematic_break_line(line) {
                     return self.parse_thematic_break(start);
                 }
@@ -42,26 +47,35 @@ impl<'a> Parser<'a> {
                     return self.parse_list(start);
                 }
             }
-            Some(b'_') if Self::try_parse_thematic_break_line(line) => {
+            b'_' if Self::try_parse_thematic_break_line(self.line_at(start)) => {
                 return self.parse_thematic_break(start);
             }
-            Some(b'>') => return self.parse_block_quote(start),
-            Some(b'`' | b'~') if Self::try_parse_fenced_code_at(line, trimmed) => {
-                return self.parse_fenced_code(start);
+            b'>' => return self.parse_block_quote(start),
+            b'`' | b'~' => {
+                let line = self.line_at(start);
+                let trimmed = &line[trimmed_start - start..];
+                if Self::try_parse_fenced_code_at(line, trimmed) {
+                    return self.parse_fenced_code(start);
+                }
             }
-            Some(b'<') => {
+            b'<' => {
+                let line = self.line_at(start);
+                let trimmed = &line[trimmed_start - start..];
                 if let Some(html_start) = Self::parse_html_block_start(trimmed) {
                     return self.parse_html_block(start, html_start);
                 }
             }
-            Some(b'+' | b'0'..=b'9') if Self::try_parse_list_line(trimmed) => {
-                return self.parse_list(start);
+            b'+' | b'0'..=b'9' => {
+                let line = self.line_at(start);
+                let trimmed = &line[trimmed_start - start..];
+                if Self::try_parse_list_line(trimmed) {
+                    return self.parse_list(start);
+                }
             }
             _ => {}
         }
 
-        if self.options.tables && memchr(b'|', line.as_bytes()).is_some() && self.try_parse_table()
-        {
+        if self.options.tables && self.line_contains_byte(start, b'|') && self.try_parse_table() {
             return self.parse_table(start);
         }
 
