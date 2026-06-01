@@ -1,5 +1,13 @@
 # Changelog
 
+## [2.41.0] - 2026-06-01
+
+### Performance
+
+- optimize Rust hot paths and release profiles (#287)
+- optimize html block parsing (#286)
+- optimize docs markdown rendering (#285)
+
 ## [2.40.0] - 2026-06-01
 
 ### Features
