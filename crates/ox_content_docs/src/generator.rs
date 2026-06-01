@@ -256,6 +256,7 @@ fn glob_match(pattern: &str, path: &str) -> bool {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::string_builder::StringBuilder;
 
     #[test]
     fn test_glob_match() {
@@ -275,8 +276,10 @@ mod tests {
 
     #[test]
     fn collects_source_files_with_doc_filters() {
-        let root =
-            std::env::temp_dir().join(format!("ox-content-docs-files-{}", std::process::id()));
+        let mut dirname = StringBuilder::with_capacity("ox-content-docs-files-".len() + 20);
+        dirname.push_str("ox-content-docs-files-");
+        dirname.push_usize(std::process::id() as usize);
+        let root = std::env::temp_dir().join(dirname.into_string());
         let _ = std::fs::remove_dir_all(&root);
         std::fs::create_dir_all(root.join("src/nested")).unwrap();
         std::fs::create_dir_all(root.join("src/node_modules/pkg")).unwrap();

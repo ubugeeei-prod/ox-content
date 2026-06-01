@@ -1,7 +1,6 @@
 //! Markdown rendering for generated API reference documentation.
 
 use std::collections::{BTreeMap, HashMap};
-use std::fmt::Write as _;
 use std::path::Path;
 use std::sync::OnceLock;
 
@@ -10,6 +9,7 @@ use regex::Regex;
 use serde::{Deserialize, Serialize};
 
 use crate::model::{ApiDocEntry, ApiDocMember, ApiDocModule};
+use crate::string_builder::{join2, join3, join4, join5, StringBuilder};
 
 mod markdown_html;
 mod markdown_pure;
@@ -21,18 +21,6 @@ type RegexCache = OnceLock<Option<Regex>>;
 
 fn cached_regex(cache: &'static RegexCache, pattern: &'static str) -> Option<&'static Regex> {
     cache.get_or_init(|| Regex::new(pattern).ok()).as_ref()
-}
-
-fn push_fmt(output: &mut String, args: std::fmt::Arguments<'_>) {
-    if output.write_fmt(args).is_err() {
-        output.push_str("[formatting failed]");
-    }
-}
-
-fn fmt_args(args: std::fmt::Arguments<'_>) -> String {
-    let mut output = String::new();
-    push_fmt(&mut output, args);
-    output
 }
 
 /// Options for generated API Markdown.
@@ -227,7 +215,7 @@ pub fn generate_markdown(
             doc_to_file.insert(doc.file.clone(), file_name.clone());
 
             let markdown = generate_file_markdown(doc, options, &file_name, &symbol_map);
-            result.insert(format!("{file_name}.md"), markdown);
+            result.insert(join2(&file_name, ".md"), markdown);
         }
 
         result.insert(
@@ -254,7 +242,7 @@ pub fn generate_markdown(
 
         for (kind, entries) in &by_kind {
             result.insert(
-                format!("{kind}s.md"),
+                join3(kind, "s", ".md"),
                 generate_category_markdown(kind, entries, options, &symbol_map),
             );
         }
@@ -280,7 +268,7 @@ fn doc_page_href_from(
 ) -> String {
     if target_file_name == current_file_name {
         if let Some(anchor) = anchor.filter(|anchor| !anchor.is_empty()) {
-            return format!("#{anchor}");
+            return join2("#", anchor);
         }
     }
 
@@ -342,7 +330,7 @@ fn relative_doc_href_path(current_file_name: &str, target_file_name: &str) -> St
     if path.starts_with("../") {
         path
     } else {
-        format!("./{path}")
+        join2("./", &path)
     }
 }
 
@@ -356,7 +344,7 @@ fn normalize_base_path(base_path: &str) -> String {
     if base_path.starts_with('/') {
         base_path.to_string()
     } else {
-        format!("/{base_path}")
+        join2("/", base_path)
     }
 }
 
@@ -371,7 +359,7 @@ fn member_anchor(
 ) -> String {
     match path_strategy {
         MarkdownPathStrategy::Flat => {
-            format!("{}-{}", entry_anchor(entry_name), entry_anchor(&member.name))
+            join3(&entry_anchor(entry_name), "-", &entry_anchor(&member.name))
         }
         MarkdownPathStrategy::TypeDoc => {
             let prefix = match member.kind.as_str() {
@@ -381,7 +369,7 @@ fn member_anchor(
                 "enumMember" => "enumeration-member",
                 _ => "property",
             };
-            format!("{prefix}-{}", entry_anchor(&member.name))
+            join3(prefix, "-", &entry_anchor(&member.name))
         }
     }
 }
@@ -461,16 +449,12 @@ fn typedoc_kind_singular(kind: &str) -> &'static str {
 }
 
 fn typedoc_entry_file_name(module_name: &str, entry: &ApiDocEntry) -> String {
-    format!(
-        "{}/{}/{}",
-        module_name,
-        typedoc_kind_segment(&entry.kind),
-        sanitize_doc_path_segment(&entry.name)
-    )
+    let segment = sanitize_doc_path_segment(&entry.name);
+    join5(module_name, "/", typedoc_kind_segment(&entry.kind), "/", &segment)
 }
 
 fn typedoc_module_index_file_name(module_name: &str) -> String {
-    format!("{module_name}/index")
+    join3(module_name, "/", "index")
 }
 
 fn sanitize_doc_path_segment(value: &str) -> String {
@@ -491,7 +475,7 @@ fn sanitize_doc_path_segment(value: &str) -> String {
 fn format_symbol_href(context: &MarkdownLinkContext<'_>, location: &SymbolLocation) -> String {
     if location.file_name == context.current_file_name {
         if let Some(anchor) = location.anchor.as_deref().filter(|anchor| !anchor.is_empty()) {
-            format!("#{anchor}")
+            join2("#", anchor)
         } else {
             doc_page_href_from(
                 context.options,
@@ -588,13 +572,13 @@ fn render_jsdoc_inline_link(
     let label = link.label.unwrap_or(link.target).trim();
     let label = if label.is_empty() { link.target.trim() } else { label };
     let label = if link.kind == JsdocInlineLinkKind::LinkCode {
-        format!("`{}`", label.trim_matches('`'))
+        join3("`", label.trim_matches('`'), "`")
     } else {
         label.to_string()
     };
 
     if let Some(href) = resolve_jsdoc_link_target(link.target, context) {
-        format!("[{label}]({href})")
+        join5("[", &label, "](", &href, ")")
     } else {
         label
     }
@@ -810,21 +794,24 @@ fn generate_file_markdown(
 ) -> String {
     let display_name = file_name(&doc.file);
     let mut markdown = String::new();
-    push_fmt(&mut markdown, format_args!("# {display_name}\n\n"));
+    markdown.push_str("# ");
+    markdown.push_str(&display_name);
+    markdown.push_str("\n\n");
 
     if let Some(github_url) = &options.github_url {
         markdown.push_str(&generate_source_link(&doc.file, github_url, None, None));
         markdown.push_str("\n\n");
     }
 
-    push_fmt(
-        &mut markdown,
-        format_args!(
-            "> {} documented symbol{}. ",
-            doc.entries.len(),
-            if doc.entries.len() == 1 { "" } else { "s" }
-        ),
-    );
+    markdown.push_str("> ");
+    let mut count = StringBuilder::new();
+    count.push_usize(doc.entries.len());
+    markdown.push_str(&count.into_string());
+    markdown.push_str(" documented symbol");
+    if doc.entries.len() != 1 {
+        markdown.push('s');
+    }
+    markdown.push_str(". ");
     markdown.push_str(
         "Read the signatures first, then expand each item for parameters, return types, and examples.\n\n",
     );
@@ -925,7 +912,7 @@ fn generate_typedoc_markdown(
         let module_name = module_file_name(&doc.file);
         let module_index_file_name = typedoc_module_index_file_name(&module_name);
         result.insert(
-            format!("{module_index_file_name}.md"),
+            join2(&module_index_file_name, ".md"),
             generate_typedoc_module_index(doc, options, &module_name, symbol_map, &owners),
         );
 
@@ -938,7 +925,7 @@ fn generate_typedoc_markdown(
             }
             let entry_file_name = typedoc_entry_file_name(&module_name, entry);
             result.insert(
-                format!("{entry_file_name}.md"),
+                join2(&entry_file_name, ".md"),
                 generate_typedoc_entry_page(
                     entry,
                     options,
@@ -985,7 +972,13 @@ fn generate_typedoc_root_index(
                 None,
             );
             let summary = typedoc_index_summary(&doc.description, &link_context);
-            push_fmt(&mut markdown, format_args!("| [{display_name}]({href}) | {summary} |\n"));
+            markdown.push_str("| [");
+            markdown.push_str(&display_name);
+            markdown.push_str("](");
+            markdown.push_str(&href);
+            markdown.push_str(") | ");
+            markdown.push_str(&summary);
+            markdown.push_str(" |\n");
         }
         return markdown;
     }
@@ -1001,10 +994,16 @@ fn generate_typedoc_root_index(
         );
         let summary =
             clean_summary_text(&process_doc_text(&doc.description, Some(&link_context)), 88);
+        markdown.push_str("- [");
+        markdown.push_str(&display_name);
+        markdown.push_str("](");
+        markdown.push_str(&href);
         if summary.is_empty() {
-            push_fmt(&mut markdown, format_args!("- [{display_name}]({href})\n"));
+            markdown.push_str(")\n");
         } else {
-            push_fmt(&mut markdown, format_args!("- [{display_name}]({href}) - {summary}\n"));
+            markdown.push_str(") - ");
+            markdown.push_str(&summary);
+            markdown.push('\n');
         }
     }
 
@@ -1026,7 +1025,11 @@ fn generate_typedoc_module_index(
         symbol_map,
     };
     let display_name = module_display_name(doc);
-    let mut markdown = fmt_args(format_args!("# {display_name}\n\n"));
+    let mut builder = StringBuilder::with_capacity(display_name.len() + 4);
+    builder.push_str("# ");
+    builder.push_str(&display_name);
+    builder.push_str("\n\n");
+    let mut markdown = builder.into_string();
 
     let description = process_doc_text(&doc.description, Some(&link_context));
     let description = description.trim();
@@ -1056,7 +1059,9 @@ fn generate_typedoc_module_index(
             continue;
         }
 
-        push_fmt(&mut markdown, format_args!("## {}\n\n", typedoc_kind_title(&kind)));
+        markdown.push_str("## ");
+        markdown.push_str(typedoc_kind_title(&kind));
+        markdown.push_str("\n\n");
         let mut seen = std::collections::HashSet::new();
         if index_format == MarkdownDisplayFormat::List {
             for entry in entries {
@@ -1074,13 +1079,16 @@ fn generate_typedoc_module_index(
                     &process_doc_text(&entry.description, Some(&link_context)),
                     88,
                 );
+                markdown.push_str("- [");
+                markdown.push_str(&entry.name);
+                markdown.push_str("](");
+                markdown.push_str(&href);
                 if summary.is_empty() {
-                    push_fmt(&mut markdown, format_args!("- [{}]({href})\n", entry.name));
+                    markdown.push_str(")\n");
                 } else {
-                    push_fmt(
-                        &mut markdown,
-                        format_args!("- [{}]({href}) - {summary}\n", entry.name),
-                    );
+                    markdown.push_str(") - ");
+                    markdown.push_str(&summary);
+                    markdown.push('\n');
                 }
             }
             markdown.push('\n');
@@ -1090,13 +1098,9 @@ fn generate_typedoc_module_index(
         // Render a compact `Name | Description` table (matching TypeDoc) rather
         // than a bullet list with the full signature inlined; the signature
         // stays on the per-symbol page.
-        push_fmt(
-            &mut markdown,
-            format_args!(
-                "| {} | Description |\n| ------ | ------ |\n",
-                typedoc_kind_singular(&kind)
-            ),
-        );
+        markdown.push_str("| ");
+        markdown.push_str(typedoc_kind_singular(&kind));
+        markdown.push_str(" | Description |\n| ------ | ------ |\n");
         for entry in entries {
             // Overloads share a name (and page); collapse them to one row.
             if !seen.insert(entry.name.as_str()) {
@@ -1109,7 +1113,13 @@ fn generate_typedoc_module_index(
                 None,
             );
             let summary = typedoc_index_summary(&entry.description, &link_context);
-            push_fmt(&mut markdown, format_args!("| [{}]({href}) | {summary} |\n", entry.name));
+            markdown.push_str("| [");
+            markdown.push_str(&entry.name);
+            markdown.push_str("](");
+            markdown.push_str(&href);
+            markdown.push_str(") | ");
+            markdown.push_str(&summary);
+            markdown.push_str(" |\n");
         }
         markdown.push('\n');
     }
@@ -1138,10 +1148,13 @@ fn generate_typedoc_module_index(
                 &typedoc_entry_file_name(owner, entry),
                 None,
             );
-            push_fmt(
-                &mut markdown,
-                format_args!("### {}\n\nRe-exports [{}]({href})\n\n", entry.name, entry.name),
-            );
+            markdown.push_str("### ");
+            markdown.push_str(&entry.name);
+            markdown.push_str("\n\nRe-exports [");
+            markdown.push_str(&entry.name);
+            markdown.push_str("](");
+            markdown.push_str(&href);
+            markdown.push_str(")\n\n");
         }
     }
 
@@ -1164,7 +1177,11 @@ fn generate_typedoc_entry_page(
     if options.render_style == MarkdownRenderStyle::Markdown {
         // Per-symbol page: title is `# {name}` (H1), so sections render at H2.
         let body = markdown_pure::render_entry_body_pure(entry, options, Some(&link_context), 2);
-        let mut markdown = fmt_args(format_args!("# {}\n\n", entry.name));
+        let mut builder = StringBuilder::with_capacity(entry.name.len() + 4);
+        builder.push_str("# ");
+        builder.push_str(&entry.name);
+        builder.push_str("\n\n");
+        let mut markdown = builder.into_string();
         if !body.is_empty() {
             markdown.push_str(&body);
             markdown.push('\n');
@@ -1172,7 +1189,11 @@ fn generate_typedoc_entry_page(
         return markdown;
     }
 
-    let mut markdown = fmt_args(format_args!("# {}\n\n", entry.name));
+    let mut builder = StringBuilder::with_capacity(entry.name.len() + 4);
+    builder.push_str("# ");
+    builder.push_str(&entry.name);
+    builder.push_str("\n\n");
+    let mut markdown = builder.into_string();
     markdown.push_str(&markdown_html::render_entry_page_html(entry, options, Some(&link_context)));
     markdown
 }
@@ -1231,7 +1252,40 @@ fn format_kind_label(kind: &str) -> &str {
 
 fn format_count_label(count: usize, singular: &str, plural: Option<&str>) -> String {
     let label = if count == 1 { singular } else { plural.unwrap_or(singular) };
-    fmt_args(format_args!("{count} {label}"))
+    let mut out = StringBuilder::new();
+    out.push_usize(count);
+    out.push_char(' ');
+    out.push_str(label);
+    out.into_string()
+}
+
+fn plural_kind_file_name(kind: &str) -> String {
+    let mut file_name = StringBuilder::with_capacity(kind.len() + 1);
+    file_name.push_str(kind);
+    file_name.push_char('s');
+    file_name.into_string()
+}
+
+fn anchor_href(name: &str) -> String {
+    let anchor = entry_anchor(name);
+    let mut href = StringBuilder::with_capacity(anchor.len() + 1);
+    href.push_char('#');
+    href.push_str(&anchor);
+    href.into_string()
+}
+
+fn plural_kind_title(kind: &str) -> String {
+    let mut title = capitalize_ascii(kind);
+    title.push('s');
+    title
+}
+
+fn member_symbol_name(entry_name: &str, member_name: &str) -> String {
+    let mut symbol_name = StringBuilder::with_capacity(entry_name.len() + member_name.len() + 1);
+    symbol_name.push_str(entry_name);
+    symbol_name.push_char('.');
+    symbol_name.push_str(member_name);
+    symbol_name.into_string()
 }
 
 fn entry_tag_value<'a>(entry: &'a ApiDocEntry, tag_name: &str) -> Option<&'a str> {
@@ -1257,10 +1311,11 @@ fn get_entry_badges(entry: &ApiDocEntry) -> Vec<EntryBadge> {
         });
     }
     if let Some(returns) = &entry.returns {
-        badges.push(EntryBadge {
-            label: fmt_args(format_args!("returns {}", returns.type_annotation)),
-            tone: None,
-        });
+        let mut label =
+            StringBuilder::with_capacity("returns ".len() + returns.type_annotation.len());
+        label.push_str("returns ");
+        label.push_str(&returns.type_annotation);
+        badges.push(EntryBadge { label: label.into_string(), tone: None });
     }
     if !entry.examples.is_empty() {
         badges.push(EntryBadge {
@@ -1269,7 +1324,10 @@ fn get_entry_badges(entry: &ApiDocEntry) -> Vec<EntryBadge> {
         });
     }
     if let Some(since) = entry_tag_value(entry, "since") {
-        badges.push(EntryBadge { label: fmt_args(format_args!("since {since}")), tone: None });
+        let mut label = StringBuilder::with_capacity("since ".len() + since.len());
+        label.push_str("since ");
+        label.push_str(since);
+        badges.push(EntryBadge { label: label.into_string(), tone: None });
     }
     if entry.private {
         badges.push(EntryBadge { label: "private".to_string(), tone: Some("warning") });
@@ -1302,17 +1360,28 @@ fn render_overview_line(
 ) -> String {
     let signature = normalize_signature(entry.signature.as_deref());
     let summary = clean_summary_text(&process_doc_text(&entry.description, context), 88);
-    let mut parts = vec![format!("- [`{}`]({href})", entry.name), format!("`{}`", entry.kind)];
+    let mut line = StringBuilder::new();
+    line.push_str("- [`");
+    line.push_str(&entry.name);
+    line.push_str("`](");
+    line.push_str(href);
+    line.push_str(") `");
+    line.push_str(&entry.kind);
+    line.push_char('`');
 
     if let Some(signature) = signature {
-        parts.push(format!("`{signature}`"));
+        line.push_str(" `");
+        line.push_str(&signature);
+        line.push_char('`');
     }
 
     if !summary.is_empty() {
-        parts.push(format!("- {summary}"));
+        line.push_str(" - ");
+        line.push_str(&summary);
     }
 
-    format!("{}\n", parts.join(" "))
+    line.push_char('\n');
+    line.into_string()
 }
 
 fn render_overview_table_row(
@@ -1321,7 +1390,17 @@ fn render_overview_table_row(
     context: Option<&MarkdownLinkContext<'_>>,
 ) -> String {
     let summary = markdown_index_summary(&entry.description, context);
-    fmt_args(format_args!("| [`{}`]({href}) | `{}` | {summary} |\n", entry.name, entry.kind))
+    let mut row = StringBuilder::new();
+    row.push_str("| [`");
+    row.push_str(&entry.name);
+    row.push_str("`](");
+    row.push_str(href);
+    row.push_str(") | `");
+    row.push_str(&entry.kind);
+    row.push_str("` | ");
+    row.push_str(&summary);
+    row.push_str(" |\n");
+    row.into_string()
 }
 
 fn generate_entry_markdown(
@@ -1344,7 +1423,11 @@ fn generate_entry_markdown(
     if options.render_style == MarkdownRenderStyle::Markdown {
         // Flat entry heading is `### {name}` (H3), so sections render at H4.
         let body = markdown_pure::render_entry_body_pure(entry, options, link_context, 4);
-        let mut markdown = fmt_args(format_args!("### {}\n\n", entry.name));
+        let mut builder = StringBuilder::with_capacity(entry.name.len() + 6);
+        builder.push_str("### ");
+        builder.push_str(&entry.name);
+        builder.push_str("\n\n");
+        let mut markdown = builder.into_string();
         if !body.is_empty() {
             markdown.push_str(&body);
             markdown.push_str("\n\n");
@@ -1411,21 +1494,16 @@ fn generate_index(
             file_name = "index-module".to_string();
         }
 
-        let count_label = fmt_args(format_args!(
-            "{} symbol{}",
-            doc.entries.len(),
-            if doc.entries.len() == 1 { "" } else { "s" }
-        ));
+        let count_label = format_count_label(doc.entries.len(), "symbol", Some("symbols"));
 
         if options.render_style == MarkdownRenderStyle::Markdown {
-            push_fmt(
-                &mut markdown,
-                format_args!(
-                    "### [{}]({}) — {count_label}\n\n",
-                    display_name,
-                    doc_page_href(options, &file_name, None)
-                ),
-            );
+            markdown.push_str("### [");
+            markdown.push_str(&display_name);
+            markdown.push_str("](");
+            markdown.push_str(&doc_page_href(options, &file_name, None));
+            markdown.push_str(") — ");
+            markdown.push_str(&count_label);
+            markdown.push_str("\n\n");
             if effective_index_format(options) == MarkdownDisplayFormat::Table {
                 markdown.push_str("| Name | Kind | Description |\n| --- | --- | --- |\n");
                 for entry in &doc.entries {
@@ -1465,22 +1543,29 @@ fn generate_category_markdown(
     options: &MarkdownDocsOptions,
     symbol_map: &HashMap<String, Vec<SymbolLocation>>,
 ) -> String {
-    let category_file_name = fmt_args(format_args!("{kind}s"));
+    let category_file_name = plural_kind_file_name(kind);
     let link_context = MarkdownLinkContext {
         options,
         current_file_name: &category_file_name,
         current_module_name: "",
         symbol_map,
     };
-    let mut markdown = fmt_args(format_args!("# {}s\n\n", capitalize_ascii(kind)));
-    push_fmt(
-        &mut markdown,
-        format_args!(
-            "> {} documented {kind}{} collected across modules.\n\n",
-            entries.len(),
-            if entries.len() == 1 { "" } else { "s" }
-        ),
-    );
+    let kind_title = plural_kind_title(kind);
+    let mut builder = StringBuilder::with_capacity(kind_title.len() + 4);
+    builder.push_str("# ");
+    builder.push_str(&kind_title);
+    builder.push_str("\n\n");
+    let mut markdown = builder.into_string();
+    markdown.push_str("> ");
+    let mut count = StringBuilder::new();
+    count.push_usize(entries.len());
+    markdown.push_str(&count.into_string());
+    markdown.push_str(" documented ");
+    markdown.push_str(kind);
+    if entries.len() != 1 {
+        markdown.push('s');
+    }
+    markdown.push_str(" collected across modules.\n\n");
     markdown.push_str(&render_stats(options, &summarize_entries(entries), None));
     markdown.push_str("\n\n");
 
@@ -1488,19 +1573,13 @@ fn generate_category_markdown(
     if effective_index_format(options) == MarkdownDisplayFormat::Table {
         markdown.push_str("| Name | Kind | Description |\n| --- | --- | --- |\n");
         for entry in entries {
-            markdown.push_str(&render_overview_table_row(
-                entry,
-                &fmt_args(format_args!("#{}", entry_anchor(&entry.name))),
-                Some(&link_context),
-            ));
+            let href = anchor_href(&entry.name);
+            markdown.push_str(&render_overview_table_row(entry, &href, Some(&link_context)));
         }
     } else {
         for entry in entries {
-            markdown.push_str(&render_overview_line(
-                entry,
-                &fmt_args(format_args!("#{}", entry_anchor(&entry.name))),
-                Some(&link_context),
-            ));
+            let href = anchor_href(&entry.name);
+            markdown.push_str(&render_overview_line(entry, &href, Some(&link_context)));
         }
     }
     markdown.push_str("\n## Reference\n\n");
@@ -1543,23 +1622,21 @@ fn generate_category_index(
     markdown.push_str("\n\n");
 
     for (kind, entries) in by_kind {
-        let kind_title = fmt_args(format_args!("{}s", capitalize_ascii(kind)));
-        let category_file_name = fmt_args(format_args!("{kind}s"));
-        push_fmt(
-            &mut markdown,
-            format_args!(
-                "## [{kind_title}]({})\n\n",
-                doc_page_href(options, &category_file_name, None)
-            ),
-        );
-        push_fmt(
-            &mut markdown,
-            format_args!(
-                "> {} item{}.\n\n",
-                entries.len(),
-                if entries.len() == 1 { "" } else { "s" }
-            ),
-        );
+        let kind_title = plural_kind_title(kind);
+        let category_file_name = plural_kind_file_name(kind);
+        markdown.push_str("## [");
+        markdown.push_str(&kind_title);
+        markdown.push_str("](");
+        markdown.push_str(&doc_page_href(options, &category_file_name, None));
+        markdown.push_str(")\n\n> ");
+        let mut count = StringBuilder::new();
+        count.push_usize(entries.len());
+        markdown.push_str(&count.into_string());
+        markdown.push_str(" item");
+        if entries.len() != 1 {
+            markdown.push('s');
+        }
+        markdown.push_str(".\n\n");
 
         if effective_index_format(options) == MarkdownDisplayFormat::Table {
             markdown.push_str("| Name | Kind | Description |\n| --- | --- | --- |\n");
@@ -1605,10 +1682,11 @@ fn convert_symbol_links(text: &str, context: &MarkdownLinkContext<'_>) -> String
         };
 
         result.push_str(&text[last_index..mat.start()]);
-        push_fmt(
-            &mut result,
-            format_args!("[{symbol_name}]({})", format_symbol_href(context, location)),
-        );
+        result.push('[');
+        result.push_str(symbol_name);
+        result.push_str("](");
+        result.push_str(&format_symbol_href(context, location));
+        result.push(')');
         last_index = mat.end();
     }
 
@@ -1644,7 +1722,7 @@ fn build_symbol_map(
                     (typedoc_entry_file_name(owner_module, entry), None)
                 }
                 ("category", _) => {
-                    (fmt_args(format_args!("{}s", entry.kind)), Some(entry_anchor(&entry.name)))
+                    (plural_kind_file_name(&entry.kind), Some(entry_anchor(&entry.name)))
                 }
                 _ => (module_name.clone(), Some(entry_anchor(&entry.name))),
             };
@@ -1660,7 +1738,7 @@ fn build_symbol_map(
             for member in &entry.members {
                 insert_symbol_location(
                     &mut map,
-                    fmt_args(format_args!("{}.{}", entry.name, member.name)),
+                    member_symbol_name(&entry.name, &member.name),
                     SymbolLocation {
                         module_name: module_name.clone(),
                         file_name: file_name.clone(),
@@ -1690,15 +1768,21 @@ fn generate_source_href(
 ) -> String {
     let relative_path = normalize_doc_file_path(file_path);
     let fragment = if let Some(line_number) = line_number {
-        match end_line_number.filter(|end_line_number| *end_line_number > line_number) {
-            Some(end_line_number) => format!("#L{line_number}-L{end_line_number}"),
-            None => format!("#L{line_number}"),
+        let mut fragment = StringBuilder::with_capacity(24);
+        fragment.push_str("#L");
+        fragment.push_usize(line_number as usize);
+        if let Some(end_line_number) =
+            end_line_number.filter(|end_line_number| *end_line_number > line_number)
+        {
+            fragment.push_str("-L");
+            fragment.push_usize(end_line_number as usize);
         }
+        fragment.into_string()
     } else {
         String::new()
     };
 
-    format!("{github_url}/blob/main/{relative_path}{fragment}")
+    join4(github_url, "/blob/main/", &relative_path, &fragment)
 }
 
 fn generate_source_link(
@@ -1707,10 +1791,8 @@ fn generate_source_link(
     line_number: Option<u32>,
     end_line_number: Option<u32>,
 ) -> String {
-    format!(
-        "**[Source]({})**",
-        generate_source_href(file_path, github_url, line_number, end_line_number)
-    )
+    let href = generate_source_href(file_path, github_url, line_number, end_line_number);
+    join3("**[Source](", &href, ")**")
 }
 
 fn file_name(file_path: &str) -> String {
@@ -1730,7 +1812,13 @@ fn file_stem(file_path: &str) -> String {
 fn capitalize_ascii(value: &str) -> String {
     let mut chars = value.chars();
     match chars.next() {
-        Some(first) => format!("{}{}", first.to_ascii_uppercase(), chars.as_str()),
+        Some(first) => {
+            let rest = chars.as_str();
+            let mut out = StringBuilder::with_capacity(first.len_utf8() + rest.len());
+            out.push_char(first.to_ascii_uppercase());
+            out.push_str(rest);
+            out.into_string()
+        }
         None => String::new(),
     }
 }
@@ -1753,7 +1841,7 @@ mod tests {
             file: file.to_string(),
             line: 1,
             end_line: 1,
-            signature: Some(format!("export function {name}(): void")),
+            signature: Some(join3("export function ", name, "(): void")),
             members: vec![],
             type_parameters: vec![],
         }

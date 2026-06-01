@@ -381,13 +381,22 @@ fn aggregate_spans(iters: &[&IterationRecord]) -> Vec<SpanAggregate> {
 fn fmt_duration(d: Duration) -> String {
     let ns = d.as_nanos();
     if ns < 1_000 {
-        fmt_args(format_args!("{ns} ns"))
+        let mut out = String::with_capacity(24);
+        push_u128(&mut out, ns);
+        out.push_str(" ns");
+        out
     } else if ns < 1_000_000 {
-        fmt_args(format_args!("{:.2} µs", ns as f64 / 1_000.0))
+        let mut out = String::new();
+        push_fmt(&mut out, format_args!("{:.2} µs", ns as f64 / 1_000.0));
+        out
     } else if ns < 1_000_000_000 {
-        fmt_args(format_args!("{:.2} ms", ns as f64 / 1_000_000.0))
+        let mut out = String::new();
+        push_fmt(&mut out, format_args!("{:.2} ms", ns as f64 / 1_000_000.0));
+        out
     } else {
-        fmt_args(format_args!("{:.3} s", d.as_secs_f64()))
+        let mut out = String::new();
+        push_fmt(&mut out, format_args!("{:.3} s", d.as_secs_f64()));
+        out
     }
 }
 
@@ -403,11 +412,13 @@ fn fmt_bytes_f(b: f64) -> String {
         value /= 1024.0;
         unit += 1;
     }
+    let mut out = String::new();
     if unit == 0 {
-        fmt_args(format_args!("{value:.0} {}", UNITS[unit]))
+        push_fmt(&mut out, format_args!("{value:.0} {}", UNITS[unit]));
     } else {
-        fmt_args(format_args!("{value:.2} {}", UNITS[unit]))
+        push_fmt(&mut out, format_args!("{value:.2} {}", UNITS[unit]));
     }
+    out
 }
 
 fn truncate(s: &str, max: usize) -> String {
@@ -453,10 +464,22 @@ fn push_fmt(output: &mut String, args: std::fmt::Arguments<'_>) {
     }
 }
 
-fn fmt_args(args: std::fmt::Arguments<'_>) -> String {
-    let mut output = String::new();
-    push_fmt(&mut output, args);
-    output
+fn push_u128(output: &mut String, value: u128) {
+    let mut buffer = [0_u8; 39];
+    let mut cursor = buffer.len();
+    let mut rest = value;
+
+    loop {
+        cursor -= 1;
+        buffer[cursor] = b'0' + (rest % 10) as u8;
+        rest /= 10;
+        if rest == 0 {
+            break;
+        }
+    }
+
+    let digits = std::str::from_utf8(&buffer[cursor..]).expect("digits are valid utf-8");
+    output.push_str(digits);
 }
 
 fn push_json_control_escape(output: &mut String, value: u32) {

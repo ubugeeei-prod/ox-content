@@ -340,7 +340,11 @@ impl SizeHistogram {
         }
         let lo = 1u64 << (i - 1);
         let hi = 1u64 << i.min(63);
-        format!("{lo}..{hi}")
+        let mut label = String::with_capacity(42);
+        push_u64(&mut label, lo);
+        label.push_str("..");
+        push_u64(&mut label, hi);
+        label
     }
 
     /// Iterates `(label, count)` pairs, skipping empty buckets.
@@ -351,6 +355,24 @@ impl SizeHistogram {
             .filter(|(_, c)| **c > 0)
             .map(|(i, c)| (Self::bucket_label(i), *c))
     }
+}
+
+fn push_u64(output: &mut String, value: u64) {
+    let mut buffer = [0_u8; 20];
+    let mut cursor = buffer.len();
+    let mut rest = value;
+
+    loop {
+        cursor -= 1;
+        buffer[cursor] = b'0' + (rest % 10) as u8;
+        rest /= 10;
+        if rest == 0 {
+            break;
+        }
+    }
+
+    let digits = std::str::from_utf8(&buffer[cursor..]).expect("digits are valid utf-8");
+    output.push_str(digits);
 }
 
 /// Convenience guard: takes a baseline snapshot on construction, exposes the

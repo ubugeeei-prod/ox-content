@@ -664,7 +664,11 @@ fn test_autolink_many_patterns_uses_table_fallback() {
     });
     let html = renderer.render(&doc);
     for href in ["http://h.test", "ftp://f.test", "mailto:m@x", "tel:123", "ssh://s.test"] {
-        assert!(html.contains(&format!("<a href=\"{href}\"")), "missing {href} in: {html}");
+        let mut needle = String::with_capacity(href.len() + 9);
+        needle.push_str("<a href=\"");
+        needle.push_str(href);
+        needle.push('"');
+        assert!(html.contains(&needle), "missing {href} in: {html}");
     }
 }
 

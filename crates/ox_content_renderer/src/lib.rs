@@ -19,6 +19,8 @@
 //! let html = renderer.render(&document);
 //! ```
 
+#![deny(clippy::disallowed_macros)]
+
 /// Lightweight RAII span guard used internally by the renderer modules.
 ///
 /// Compiles to nothing without the `profile` feature so non-profiling

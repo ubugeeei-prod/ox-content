@@ -147,6 +147,7 @@ mod tests {
     use std::time::{SystemTime, UNIX_EPOCH};
 
     use super::*;
+    use crate::string_builder::StringBuilder;
 
     fn temp_dir() -> std::path::PathBuf {
         // A timestamp alone is not unique enough: under parallel test execution the
@@ -159,7 +160,13 @@ mod tests {
             .expect("system time should be valid")
             .as_nanos();
         let seq = COUNTER.fetch_add(1, Ordering::Relaxed);
-        std::env::temp_dir().join(format!("ox-content-docs-output-{nonce}-{seq}"))
+        let mut dirname =
+            StringBuilder::with_capacity("ox-content-docs-output-".len() + 39 + 1 + 20);
+        dirname.push_str("ox-content-docs-output-");
+        dirname.push_u128(nonce);
+        dirname.push_char('-');
+        dirname.push_u128(u128::from(seq));
+        std::env::temp_dir().join(dirname.into_string())
     }
 
     fn options() -> DocsOutputOptions {

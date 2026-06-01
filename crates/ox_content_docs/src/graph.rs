@@ -14,6 +14,7 @@ use rustc_hash::{FxBuildHasher, FxHashMap, FxHashSet};
 use serde::{Deserialize, Serialize};
 use thiserror::Error;
 
+use crate::string_builder::{join2, join4, StringBuilder};
 use crate::{
     normalize_doc_items, DocExtractor, ExtractError, NormalizedDocEntry, NormalizedDocKind,
 };
@@ -310,9 +311,10 @@ pub fn extract_docs_from_entry_points(
                         DocsDiagnosticCode::UnresolvedExternal,
                         &entrypoint.name,
                         export,
-                        format!(
-                            "export \"{}\" from entrypoint \"{}\" was not documented because its external source could not be resolved",
-                            export.name, entrypoint.name
+                        export_entrypoint_message(
+                            &export.name,
+                            &entrypoint.name,
+                            " was not documented because its external source could not be resolved",
                         ),
                     ));
                     continue;
@@ -323,9 +325,10 @@ pub fn extract_docs_from_entry_points(
                     DocsDiagnosticCode::UnsupportedExport,
                     &entrypoint.name,
                     export,
-                    format!(
-                        "export \"{}\" from entrypoint \"{}\" was not documented because namespace exports are not emitted as docs entries",
-                        export.name, entrypoint.name
+                    export_entrypoint_message(
+                        &export.name,
+                        &entrypoint.name,
+                        " was not documented because namespace exports are not emitted as docs entries",
                     ),
                 ));
                 continue;
@@ -341,7 +344,14 @@ pub fn extract_docs_from_entry_points(
                 let mut matched = false;
                 for entry in module_entries.iter().filter(|entry| entry.name == *original_name) {
                     matched = true;
-                    let key = format!("{}\0{}\0{}", export.name, entry.file, entry.line);
+                    let mut key =
+                        StringBuilder::with_capacity(export.name.len() + entry.file.len() + 2 + 20);
+                    key.push_str(&export.name);
+                    key.push_char('\0');
+                    key.push_str(&entry.file);
+                    key.push_char('\0');
+                    key.push_usize(entry.line as usize);
+                    let key = key.into_string();
                     if !seen.insert(key) {
                         continue;
                     }
@@ -378,14 +388,12 @@ pub fn extract_docs_from_entry_points(
                     options.include_private,
                     options.include_internal,
                 ) {
+                    let suffix = join2(" was excluded from docs because it is marked ", reason);
                     diagnostics.push(docs_diagnostic(
                         DocsDiagnosticCode::FilteredByVisibility,
                         &entrypoint.name,
                         export,
-                        format!(
-                            "export \"{}\" from entrypoint \"{}\" was excluded from docs because it is marked {reason}",
-                            export.name, entrypoint.name
-                        ),
+                        export_entrypoint_message(&export.name, &entrypoint.name, &suffix),
                     ));
                     continue;
                 }
@@ -395,9 +403,10 @@ pub fn extract_docs_from_entry_points(
                 DocsDiagnosticCode::MissingDeclaration,
                 &entrypoint.name,
                 export,
-                format!(
-                    "export \"{}\" from entrypoint \"{}\" was not documented because no matching declaration was extracted",
-                    export.name, entrypoint.name
+                export_entrypoint_message(
+                    &export.name,
+                    &entrypoint.name,
+                    " was not documented because no matching declaration was extracted",
                 ),
             ));
         }
@@ -512,6 +521,18 @@ fn docs_diagnostic(
         source: export.source.clone(),
         message,
     }
+}
+
+fn export_entrypoint_message(export_name: &str, entrypoint_name: &str, suffix: &str) -> String {
+    let mut message =
+        StringBuilder::with_capacity(export_name.len() + entrypoint_name.len() + suffix.len() + 27);
+    message.push_str("export \"");
+    message.push_str(export_name);
+    message.push_str("\" from entrypoint \"");
+    message.push_str(entrypoint_name);
+    message.push_char('"');
+    message.push_str(suffix);
+    message.into_string()
 }
 
 struct ModuleResolver {
@@ -1133,6 +1154,16 @@ fn module_export_name(name: &ModuleExportName<'_>) -> String {
     }
 }
 
+fn export_kind_key(kind: ExportKind) -> &'static str {
+    match kind {
+        ExportKind::Value => "value",
+        ExportKind::Type => "type",
+        ExportKind::ValueAndType => "valueAndType",
+        ExportKind::Namespace => "namespace",
+        ExportKind::Default => "default",
+    }
+}
+
 fn dedupe_exports(exports: Vec<PublicExport>) -> Result<Vec<PublicExport>, GraphError> {
     let mut seen = FxHashSet::default();
     let mut deduped = Vec::with_capacity(exports.len());
@@ -1140,16 +1171,43 @@ fn dedupe_exports(exports: Vec<PublicExport>) -> Result<Vec<PublicExport>, Graph
     for export in exports {
         let source_key = match &export.source {
             ExportSource::Local { module, original_name } => {
-                format!("local:{}:{original_name}", module.display())
+                let module = module.to_string_lossy();
+                join4("local:", module.as_ref(), ":", original_name)
             }
             ExportSource::External { package, specifier, module, original_name, type_only } => {
-                format!(
-                    "external:{package}:{specifier}:{}:{original_name}:{type_only}",
-                    module.as_ref().map_or(String::new(), |module| module.display().to_string())
-                )
+                let module = module.as_ref().map(|module| module.to_string_lossy());
+                let module = module.as_deref().unwrap_or_default();
+                let type_only = if *type_only { "true" } else { "false" };
+                let mut key = StringBuilder::with_capacity(
+                    "external:::::".len()
+                        + package.len()
+                        + specifier.len()
+                        + module.len()
+                        + original_name.len()
+                        + type_only.len(),
+                );
+                key.push_str("external:");
+                key.push_str(package);
+                key.push_char(':');
+                key.push_str(specifier);
+                key.push_char(':');
+                key.push_str(module);
+                key.push_char(':');
+                key.push_str(original_name);
+                key.push_char(':');
+                key.push_str(type_only);
+                key.into_string()
             }
         };
-        let key = format!("{}:{:?}:{source_key}", export.name, export.kind);
+        let mut key = StringBuilder::with_capacity(
+            export.name.len() + export_kind_key(export.kind).len() + source_key.len() + 2,
+        );
+        key.push_str(&export.name);
+        key.push_char(':');
+        key.push_str(export_kind_key(export.kind));
+        key.push_char(':');
+        key.push_str(&source_key);
+        let key = key.into_string();
         if seen.insert(key) {
             deduped.push(export);
         }
@@ -1179,7 +1237,7 @@ fn external_package_name(specifier: &str) -> String {
         let scope = segments.next().unwrap_or_default();
         let package = segments.next().unwrap_or_default();
         if !scope.is_empty() && !package.is_empty() {
-            return format!("@{scope}/{package}");
+            return join4("@", scope, "/", package);
         }
     }
 
@@ -1201,6 +1259,7 @@ fn normalize_existing_path(path: &Path) -> PathBuf {
 #[cfg(test)]
 mod tests {
     use std::fs;
+    use std::sync::atomic::{AtomicU64, Ordering};
     use std::time::{SystemTime, UNIX_EPOCH};
 
     use super::*;
@@ -1723,29 +1782,39 @@ export function helper(): void {}
     }
 
     fn temp_root() -> PathBuf {
+        static COUNTER: AtomicU64 = AtomicU64::new(0);
         let nanos = SystemTime::now().duration_since(UNIX_EPOCH).unwrap().as_nanos();
-        std::env::temp_dir().join(format!("ox-content-docs-graph-{nanos}"))
+        let seq = COUNTER.fetch_add(1, Ordering::Relaxed);
+        let mut dirname =
+            StringBuilder::with_capacity("ox-content-docs-graph-".len() + 39 + 1 + 20);
+        dirname.push_str("ox-content-docs-graph-");
+        dirname.push_u128(nanos);
+        dirname.push_char('-');
+        dirname.push_u128(u128::from(seq));
+        std::env::temp_dir().join(dirname.into_string())
     }
 
     fn write_external_package(root: &Path, name: &str, declaration: &str) {
         let package_root = root.join("node_modules").join(name);
         fs::create_dir_all(package_root.join("lib")).unwrap();
-        fs::write(
-            package_root.join("package.json"),
-            format!(
-                r#"{{
-  "name": "{name}",
+        let mut package_json = StringBuilder::with_capacity(150 + name.len());
+        package_json.push_str(
+            r#"{
+  "name": ""#,
+        );
+        package_json.push_str(name);
+        package_json.push_str(
+            r#"",
   "type": "module",
-  "exports": {{
-    ".": {{
+  "exports": {
+    ".": {
       "types": "./lib/index.d.ts",
       "default": "./lib/index.js"
-    }}
-  }}
-}}"#
-            ),
-        )
-        .unwrap();
+    }
+  }
+}"#,
+        );
+        fs::write(package_root.join("package.json"), package_json.into_string()).unwrap();
         fs::write(package_root.join("lib/index.d.ts"), declaration).unwrap();
     }
 }

@@ -19,6 +19,8 @@ use serde::{Deserialize, Serialize};
 use std::path::Path;
 use thiserror::Error;
 
+use crate::string_builder::{join2, join3, join5, StringBuilder};
+
 /// Result type for extraction operations.
 pub type ExtractResult<T> = Result<T, ExtractError>;
 
@@ -634,7 +636,8 @@ impl<'a> DocVisitor<'a> {
             let raw_body = tag.raw_body().map(str::trim).filter(|value| !value.is_empty())?;
             let without_type = type_annotation
                 .and_then(|type_annotation| {
-                    raw_body.strip_prefix(&format!("{{{type_annotation}}}")).map(str::trim_start)
+                    let type_prefix = join3("{", type_annotation, "}");
+                    raw_body.strip_prefix(&type_prefix).map(str::trim_start)
                 })
                 .unwrap_or(raw_body);
             return Self::clean_tag_description(without_type);
@@ -656,7 +659,7 @@ impl<'a> DocVisitor<'a> {
         if let Some(raw_type) = tag.raw_type() {
             let raw_type = raw_type.raw().trim();
             if !raw_type.is_empty() {
-                parts.push(format!("{{{raw_type}}}"));
+                parts.push(join3("{", raw_type, "}"));
             }
         }
 
@@ -665,8 +668,8 @@ impl<'a> DocVisitor<'a> {
             if !name.is_empty() {
                 let name = if tag.optional() {
                     tag.default_value().map_or_else(
-                        || format!("[{name}]"),
-                        |default_value| format!("[{name}={default_value}]"),
+                        || join3("[", name, "]"),
+                        |default_value| join5("[", name, "=", default_value, "]"),
                     )
                 } else {
                     name.to_string()
@@ -681,7 +684,7 @@ impl<'a> DocVisitor<'a> {
             if parts.is_empty() {
                 parts.push(description.to_string());
             } else {
-                parts.push(format!("- {description}"));
+                parts.push(join2("- ", description));
             }
         }
 
@@ -1199,7 +1202,7 @@ impl<'a> DocVisitor<'a> {
             TSType::TSTypeReference(ref_type) => {
                 self.slice(ref_type.span().start, ref_type.span().end)
             }
-            TSType::TSArrayType(arr) => format!("{}[]", self.format_ts_type(&arr.element_type)),
+            TSType::TSArrayType(arr) => join2(&self.format_ts_type(&arr.element_type), "[]"),
             TSType::TSUnionType(union) => {
                 let types: Vec<String> =
                     union.types.iter().map(|t| self.format_ts_type(t)).collect();
@@ -1224,7 +1227,13 @@ impl<'a> DocVisitor<'a> {
                     })
                     .collect();
                 let ret = self.format_ts_type(&func.return_type.type_annotation);
-                format!("({}) => {}", params.join(", "), ret)
+                let params = params.join(", ");
+                let mut out = StringBuilder::with_capacity(params.len() + ret.len() + 6);
+                out.push_char('(');
+                out.push_str(&params);
+                out.push_str(") => ");
+                out.push_str(&ret);
+                out.into_string()
             }
             TSType::TSTypeLiteral(_) => "{ ... }".to_string(),
             TSType::TSTupleType(tuple) => {
@@ -1233,10 +1242,10 @@ impl<'a> DocVisitor<'a> {
                     .iter()
                     .map(|t| self.format_ts_type(t.to_ts_type()))
                     .collect();
-                format!("[{}]", types.join(", "))
+                join3("[", &types.join(", "), "]")
             }
             TSType::TSLiteralType(lit) => match &lit.literal {
-                oxc_ast::ast::TSLiteral::StringLiteral(s) => format!("\"{}\"", s.value),
+                oxc_ast::ast::TSLiteral::StringLiteral(s) => join3("\"", s.value.as_str(), "\""),
                 oxc_ast::ast::TSLiteral::NumericLiteral(n) => n
                     .raw
                     .as_ref()
@@ -1253,7 +1262,7 @@ impl<'a> DocVisitor<'a> {
         match name {
             TSTypeName::IdentifierReference(id) => id.name.to_string(),
             TSTypeName::QualifiedName(qn) => {
-                format!("{}.{}", Self::format_ts_type_name(&qn.left), qn.right.name)
+                join3(&Self::format_ts_type_name(&qn.left), ".", qn.right.name.as_str())
             }
             TSTypeName::ThisExpression(_) => "this".to_string(),
         }

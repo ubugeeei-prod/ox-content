@@ -31,9 +31,9 @@ impl HtmlRenderer {
         if base.is_empty() {
             None
         } else if path == "/" {
-            Some(format!("{base}/{suffix}"))
+            Some(join3(base, "/", suffix))
         } else {
-            Some(format!("{base}{path}{suffix}"))
+            Some(join3(base, path, suffix))
         }
     }
 
@@ -131,9 +131,9 @@ impl HtmlRenderer {
             let path_without_slash = &path_without_ext[1..];
             let base = &self.options.base_url;
             if path_without_slash.is_empty() || path_without_slash == "index" {
-                format!("{base}index.html")
+                join2(base, "index.html")
             } else {
-                format!("{base}{path_without_slash}/index.html")
+                join3(base, path_without_slash, "/index.html")
             }
         } else if path.starts_with("./") {
             // Same-directory relative path
@@ -144,12 +144,12 @@ impl HtmlRenderer {
             } else if source_is_index {
                 // Source is index.md, so we're at directory level
                 // ./types.md -> ./types/index.html
-                format!("./{name}/index.html")
+                join3("./", name, "/index.html")
             } else {
                 // Source is not index.md (e.g., types.md -> types/index.html)
                 // So we need to go up one level
                 // ./types.md -> ../types/index.html
-                format!("../{name}/index.html")
+                join3("../", name, "/index.html")
             }
         } else if path.starts_with("../") {
             // Parent-relative path
@@ -162,10 +162,10 @@ impl HtmlRenderer {
                     if dir.is_empty() {
                         "../index.html".to_string()
                     } else {
-                        format!("../{dir}/index.html")
+                        join3("../", dir, "/index.html")
                     }
                 } else {
-                    format!("../{rest}/index.html")
+                    join3("../", rest, "/index.html")
                 }
             } else {
                 // Source is not index.md, need extra ../
@@ -175,10 +175,10 @@ impl HtmlRenderer {
                     if dir.is_empty() {
                         "../../index.html".to_string()
                     } else {
-                        format!("../../{dir}/index.html")
+                        join3("../../", dir, "/index.html")
                     }
                 } else {
-                    format!("../../{rest}/index.html")
+                    join3("../../", rest, "/index.html")
                 }
             }
         } else {
@@ -188,24 +188,24 @@ impl HtmlRenderer {
                 if dir.is_empty() {
                     "./index.html".to_string()
                 } else if source_is_index {
-                    format!("./{dir}/index.html")
+                    join3("./", dir, "/index.html")
                 } else {
-                    format!("../{dir}/index.html")
+                    join3("../", dir, "/index.html")
                 }
             } else if source_is_index {
                 // Source is index.md
                 // types.md -> ./types/index.html
-                format!("./{path_without_ext}/index.html")
+                join3("./", path_without_ext, "/index.html")
             } else {
                 // Source is not index.md
                 // types.md -> ../types/index.html
-                format!("../{path_without_ext}/index.html")
+                join3("../", path_without_ext, "/index.html")
             }
         };
 
         // Reattach fragment if present
         Some(match fragment {
-            Some(f) => format!("{converted}#{f}"),
+            Some(f) => append_fragment(converted, f),
             None => converted,
         })
     }
@@ -218,4 +218,26 @@ impl HtmlRenderer {
         let source = std::path::Path::new(&self.options.source_path);
         source.file_stem().is_some_and(|stem| stem.eq_ignore_ascii_case("index"))
     }
+}
+
+fn join2(a: &str, b: &str) -> String {
+    let mut out = String::with_capacity(a.len() + b.len());
+    out.push_str(a);
+    out.push_str(b);
+    out
+}
+
+fn join3(a: &str, b: &str, c: &str) -> String {
+    let mut out = String::with_capacity(a.len() + b.len() + c.len());
+    out.push_str(a);
+    out.push_str(b);
+    out.push_str(c);
+    out
+}
+
+fn append_fragment(mut converted: String, fragment: &str) -> String {
+    converted.reserve(1 + fragment.len());
+    converted.push('#');
+    converted.push_str(fragment);
+    converted
 }
