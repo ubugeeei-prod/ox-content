@@ -17,6 +17,17 @@ pub(super) struct InlineTocEntry {
     pub(super) id: String,
 }
 
+/// Cheap document-level facts needed at `HtmlRenderer::render` entry.
+///
+/// Rendering already scans for `[[toc]]` before deciding whether to collect
+/// TOC entries. Counting headings in the same traversal lets the renderer
+/// reserve the heading-id map once, avoiding incremental hash-map growth
+/// while preserving the lazy TOC behavior for documents without a marker.
+pub(super) struct DocumentRenderScan {
+    pub(super) has_toc_marker: bool,
+    pub(super) heading_count: usize,
+}
+
 pub(super) fn collect_inline_toc_entries(
     document: &Document<'_>,
     max_depth: u8,
@@ -29,27 +40,51 @@ pub(super) fn collect_inline_toc_entries(
     }
 }
 
-/// Cheap, allocation-free scan for a standalone `[[toc]]` paragraph. The
-/// directive is recognized only when the paragraph contains a single text
-/// node whose trimmed value is exactly `[[toc]]` — which is also the only
-/// form `visit_paragraph` will render as a TOC.
-pub(super) fn document_has_toc_marker(document: &Document<'_>) -> bool {
-    document.children.iter().any(node_has_toc_marker)
+/// Cheap, allocation-free scan for renderer setup.
+///
+/// The TOC directive is recognized only when a paragraph's text content trims
+/// to exactly `[[toc]]`, which is also the only form `visit_paragraph` will
+/// render as a TOC.
+pub(super) fn scan_document_for_render(document: &Document<'_>) -> DocumentRenderScan {
+    let mut scan = DocumentRenderScan { has_toc_marker: false, heading_count: 0 };
+    for node in &document.children {
+        scan_node_for_render(node, &mut scan);
+    }
+    scan
 }
 
-fn node_has_toc_marker(node: &Node<'_>) -> bool {
+fn scan_node_for_render(node: &Node<'_>, scan: &mut DocumentRenderScan) {
     match node {
-        Node::Paragraph(p) => is_toc_marker_paragraph(p),
-        Node::BlockQuote(bq) => bq.children.iter().any(node_has_toc_marker),
-        Node::List(list) => list.children.iter().any(list_item_has_toc_marker),
-        Node::ListItem(item) => list_item_has_toc_marker(item),
-        Node::FootnoteDefinition(def) => def.children.iter().any(node_has_toc_marker),
-        _ => false,
+        Node::Heading(_) => scan.heading_count += 1,
+        Node::Paragraph(p) => {
+            if !scan.has_toc_marker && is_toc_marker_paragraph(p) {
+                scan.has_toc_marker = true;
+            }
+        }
+        Node::BlockQuote(bq) => {
+            for child in &bq.children {
+                scan_node_for_render(child, scan);
+            }
+        }
+        Node::List(list) => {
+            for item in &list.children {
+                scan_list_item_for_render(item, scan);
+            }
+        }
+        Node::ListItem(item) => scan_list_item_for_render(item, scan),
+        Node::FootnoteDefinition(def) => {
+            for child in &def.children {
+                scan_node_for_render(child, scan);
+            }
+        }
+        _ => {}
     }
 }
 
-fn list_item_has_toc_marker(item: &ListItem<'_>) -> bool {
-    item.children.iter().any(node_has_toc_marker)
+fn scan_list_item_for_render(item: &ListItem<'_>, scan: &mut DocumentRenderScan) {
+    for child in &item.children {
+        scan_node_for_render(child, scan);
+    }
 }
 
 pub(super) fn is_toc_marker_paragraph(paragraph: &Paragraph<'_>) -> bool {

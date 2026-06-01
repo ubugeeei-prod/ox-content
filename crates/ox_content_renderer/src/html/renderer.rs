@@ -19,7 +19,7 @@ use rustc_hash::FxHashMap;
 use super::autolink::FirstByteIndex;
 use super::escape::{write_escaped_into, write_url_escaped_into};
 use super::options::HtmlRendererOptions;
-use super::toc::{collect_inline_toc_entries, document_has_toc_marker, InlineTocEntry};
+use super::toc::{collect_inline_toc_entries, scan_document_for_render, InlineTocEntry};
 use crate::render::{RenderResult, Renderer};
 
 /// Stateful HTML renderer for Markdown AST documents.
@@ -102,14 +102,16 @@ impl HtmlRenderer {
         // TOC collection walks every heading and allocates a slug per entry,
         // which used to fire on every render regardless of whether a
         // `[[toc]]` directive was actually present. Pre-scan the document
-        // cheaply (no allocations) and skip the work when no marker exists —
-        // this is the common case for normal docs.
+        // cheaply (no allocations), skip TOC work when no marker exists, and
+        // reuse the heading count to reserve the unique-id map.
         self.toc_entries.clear();
-        self.document_has_toc_marker = document_has_toc_marker(document);
+        let document_scan = scan_document_for_render(document);
+        self.document_has_toc_marker = document_scan.has_toc_marker;
         if self.document_has_toc_marker {
             collect_inline_toc_entries(document, self.options.toc_max_depth, &mut self.toc_entries);
         }
         self.heading_id_counts.clear();
+        self.heading_id_counts.reserve(document_scan.heading_count);
         // Build the autolink first-byte index once per render (it depends only
         // on the immutable pattern list) so `write_text_with_autolinks` can
         // reuse it instead of rebuilding a 256-byte table per text node.
