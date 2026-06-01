@@ -34,9 +34,9 @@ use ox_content_docs::{
     DocExtractor, DocItem, DocItemKind, DocTag, DocsDiagnostic, DocsDiagnosticCode, DocsNavItem,
     DocsOutputOptions, EntryPointDocsOptions, EntryPointSpec, ExportGraph, ExportKind,
     ExportSource, ExternalDocsOptions, ExternalPackageSource, ExtractedDocModule, GraphOptions,
-    MarkdownDocsOptions, MarkdownLinkStyle, MarkdownPathStrategy, MarkdownRenderStyle,
-    NormalizedDocEntry, NormalizedMember, NormalizedParamDoc, NormalizedReturnDoc,
-    NormalizedTypeParam, ParamDoc, PublicExport,
+    MarkdownDisplayFormat, MarkdownDocsOptions, MarkdownLinkStyle, MarkdownPathStrategy,
+    MarkdownRenderStyle, NormalizedDocEntry, NormalizedMember, NormalizedParamDoc,
+    NormalizedReturnDoc, NormalizedTypeParam, ParamDoc, PublicExport,
 };
 use ox_content_parser::{Parser, ParserOptions};
 use ox_content_renderer::HtmlRenderer;
@@ -297,7 +297,7 @@ pub struct JsExtractedDocsModule {
 
 /// Options for generated API Markdown.
 #[napi(object)]
-#[derive(Clone)]
+#[derive(Clone, Default)]
 pub struct JsDocsMarkdownOptions {
     pub group_by: Option<String>,
     pub github_url: Option<String>,
@@ -308,6 +308,22 @@ pub struct JsDocsMarkdownOptions {
     pub path_strategy: Option<String>,
     #[napi(ts_type = "'html' | 'markdown'")]
     pub render_style: Option<String>,
+    #[napi(ts_type = "'none' | 'list' | 'table'")]
+    pub index_format: Option<String>,
+    #[napi(ts_type = "'none' | 'list' | 'table'")]
+    pub parameters_format: Option<String>,
+    #[napi(ts_type = "'none' | 'list' | 'table'")]
+    pub interface_properties_format: Option<String>,
+    #[napi(ts_type = "'none' | 'list' | 'table'")]
+    pub class_properties_format: Option<String>,
+    #[napi(ts_type = "'none' | 'list' | 'table'")]
+    pub type_alias_properties_format: Option<String>,
+    #[napi(ts_type = "'none' | 'list' | 'table'")]
+    pub enum_members_format: Option<String>,
+    #[napi(ts_type = "'none' | 'list' | 'table'")]
+    pub property_members_format: Option<String>,
+    #[napi(ts_type = "'none' | 'list' | 'table'")]
+    pub type_declaration_format: Option<String>,
 }
 
 /// Options for writing generated API documentation files.
@@ -1349,6 +1365,26 @@ pub fn generate_docs_markdown(
             base_path: options.base_path,
             path_strategy: parse_markdown_path_strategy(options.path_strategy.as_deref()),
             render_style: parse_markdown_render_style(options.render_style.as_deref()),
+            index_format: parse_markdown_display_format(options.index_format.as_deref()),
+            parameters_format: parse_markdown_display_format(options.parameters_format.as_deref()),
+            interface_properties_format: parse_markdown_display_format(
+                options.interface_properties_format.as_deref(),
+            ),
+            class_properties_format: parse_markdown_display_format(
+                options.class_properties_format.as_deref(),
+            ),
+            type_alias_properties_format: parse_markdown_display_format(
+                options.type_alias_properties_format.as_deref(),
+            ),
+            enum_members_format: parse_markdown_display_format(
+                options.enum_members_format.as_deref(),
+            ),
+            property_members_format: parse_markdown_display_format(
+                options.property_members_format.as_deref(),
+            ),
+            type_declaration_format: parse_markdown_display_format(
+                options.type_declaration_format.as_deref(),
+            ),
         });
     generate_markdown(&docs.into_iter().map(convert_markdown_module).collect::<Vec<_>>(), &options)
         .into_iter()
@@ -1373,6 +1409,14 @@ fn parse_markdown_render_style(render_style: Option<&str>) -> MarkdownRenderStyl
     match render_style {
         Some("markdown") => MarkdownRenderStyle::Markdown,
         _ => MarkdownRenderStyle::Html,
+    }
+}
+
+fn parse_markdown_display_format(format: Option<&str>) -> MarkdownDisplayFormat {
+    match format {
+        Some("list") => MarkdownDisplayFormat::List,
+        Some("table") => MarkdownDisplayFormat::Table,
+        _ => MarkdownDisplayFormat::None,
     }
 }
 
@@ -3470,6 +3514,7 @@ mod tests {
                 base_path: Some("/api-ox".to_string()),
                 path_strategy: None,
                 render_style: None,
+                ..Default::default()
             }),
         );
         let index = markdown.get("index.md").unwrap();
@@ -3510,6 +3555,7 @@ mod tests {
                 base_path: None,
                 path_strategy: None,
                 render_style: Some("markdown".to_string()),
+                ..Default::default()
             }),
         );
         let page = markdown.get("context.md").unwrap();
@@ -3518,6 +3564,51 @@ mod tests {
         assert!(!page.contains("class=\"ox-api"));
         assert!(page.contains("### CommandContext"));
         assert!(page.contains("```ts"));
+    }
+
+    #[test]
+    fn generate_docs_markdown_accepts_display_format_options() {
+        let docs = vec![JsDocsMarkdownModule {
+            description: None,
+            file: "default".to_string(),
+            source_path: None,
+            entries: vec![JsDocsMarkdownEntry {
+                name: "make".to_string(),
+                kind: "function".to_string(),
+                description: "Make a thing.".to_string(),
+                params: Some(vec![JsDocParam {
+                    name: "value".to_string(),
+                    r#type: "string".to_string(),
+                    description: "Input value.".to_string(),
+                    optional: Some(false),
+                    r#default: None,
+                }]),
+                returns: None,
+                examples: None,
+                tags: None,
+                private: false,
+                file: "/repo/src/make.ts".to_string(),
+                line: 1,
+                end_line: 1,
+                signature: Some("export function make(value: string): void".to_string()),
+                members: None,
+                type_parameters: None,
+            }],
+        }];
+
+        let markdown = generate_docs_markdown(
+            docs,
+            Some(JsDocsMarkdownOptions {
+                group_by: Some("file".to_string()),
+                render_style: Some("markdown".to_string()),
+                parameters_format: Some("table".to_string()),
+                ..Default::default()
+            }),
+        );
+        let page = markdown.get("default.md").unwrap();
+
+        assert!(page.contains("| Name | Type | Description |"));
+        assert!(page.contains("| `value` | `string` | Input value. |"));
     }
 
     #[test]
@@ -3662,6 +3753,7 @@ mod tests {
                 base_path: Some("/api".to_string()),
                 path_strategy: Some("typedoc".to_string()),
                 render_style: None,
+                ..Default::default()
             }),
         );
         let cli_page = markdown.get("default/functions/cli.md").unwrap();
@@ -3720,6 +3812,7 @@ mod tests {
                 base_path: None,
                 path_strategy: Some("typedoc".to_string()),
                 render_style: None,
+                ..Default::default()
             }),
         );
 
@@ -3766,6 +3859,7 @@ mod tests {
                 base_path: None,
                 path_strategy: Some("typedoc".to_string()),
                 render_style: Some("markdown".to_string()),
+                ..Default::default()
             }),
         );
         let page = markdown.get("default/functions/make.md").unwrap();
@@ -3809,6 +3903,7 @@ mod tests {
                 base_path: None,
                 path_strategy: Some("typedoc".to_string()),
                 render_style: Some("markdown".to_string()),
+                ..Default::default()
             }),
         );
 
@@ -3937,6 +4032,7 @@ mod tests {
                 base_path: Some("/api".to_string()),
                 path_strategy: Some("typedoc".to_string()),
                 render_style: None,
+                ..Default::default()
             }),
         );
 

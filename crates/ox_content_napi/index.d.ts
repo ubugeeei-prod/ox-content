@@ -347,6 +347,14 @@ export interface JsDocsMarkdownOptions {
   basePath?: string
   pathStrategy?: 'flat' | 'typedoc'
   renderStyle?: 'html' | 'markdown'
+  indexFormat?: 'none' | 'list' | 'table'
+  parametersFormat?: 'none' | 'list' | 'table'
+  interfacePropertiesFormat?: 'none' | 'list' | 'table'
+  classPropertiesFormat?: 'none' | 'list' | 'table'
+  typeAliasPropertiesFormat?: 'none' | 'list' | 'table'
+  enumMembersFormat?: 'none' | 'list' | 'table'
+  propertyMembersFormat?: 'none' | 'list' | 'table'
+  typeDeclarationFormat?: 'none' | 'list' | 'table'
 }
 
 /** Ordered JSDoc tag used by generated API Markdown. */

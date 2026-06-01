@@ -53,6 +53,7 @@ export type {
   ResolvedCodeBlockTypecheckOptions,
   DocsTestOptions,
   ResolvedDocsTestOptions,
+  MarkdownDisplayFormat,
   DocsOptions,
   ResolvedDocsOptions,
   DocEntry,

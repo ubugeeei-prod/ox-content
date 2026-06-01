@@ -59,6 +59,30 @@ pub struct MarkdownDocsOptions {
     /// Rendering style: HTML-laced Markdown (default) or pure Markdown.
     #[serde(default)]
     pub render_style: MarkdownRenderStyle,
+    /// Display format for index items.
+    #[serde(default)]
+    pub index_format: MarkdownDisplayFormat,
+    /// Display format for value and type parameters.
+    #[serde(default)]
+    pub parameters_format: MarkdownDisplayFormat,
+    /// Display format for interface property groups.
+    #[serde(default)]
+    pub interface_properties_format: MarkdownDisplayFormat,
+    /// Display format for class property groups.
+    #[serde(default)]
+    pub class_properties_format: MarkdownDisplayFormat,
+    /// Display format for type alias property groups.
+    #[serde(default)]
+    pub type_alias_properties_format: MarkdownDisplayFormat,
+    /// Display format for enum member groups.
+    #[serde(default)]
+    pub enum_members_format: MarkdownDisplayFormat,
+    /// Display format for property-owned object literal members.
+    #[serde(default)]
+    pub property_members_format: MarkdownDisplayFormat,
+    /// Display format for type declaration members.
+    #[serde(default)]
+    pub type_declaration_format: MarkdownDisplayFormat,
 }
 
 /// Internal documentation link style.
@@ -97,6 +121,19 @@ pub enum MarkdownRenderStyle {
     Markdown,
 }
 
+/// TypeDoc-compatible Markdown display format.
+#[derive(Debug, Clone, Copy, Serialize, Deserialize, PartialEq, Eq, Default)]
+#[serde(rename_all = "lowercase")]
+pub enum MarkdownDisplayFormat {
+    /// Use the renderer's default behavior.
+    #[default]
+    None,
+    /// Render supported sections as Markdown lists.
+    List,
+    /// Render supported sections as Markdown tables.
+    Table,
+}
+
 impl Default for MarkdownDocsOptions {
     fn default() -> Self {
         Self {
@@ -106,6 +143,14 @@ impl Default for MarkdownDocsOptions {
             base_path: None,
             path_strategy: MarkdownPathStrategy::Flat,
             render_style: MarkdownRenderStyle::Html,
+            index_format: MarkdownDisplayFormat::None,
+            parameters_format: MarkdownDisplayFormat::None,
+            interface_properties_format: MarkdownDisplayFormat::None,
+            class_properties_format: MarkdownDisplayFormat::None,
+            type_alias_properties_format: MarkdownDisplayFormat::None,
+            enum_members_format: MarkdownDisplayFormat::None,
+            property_members_format: MarkdownDisplayFormat::None,
+            type_declaration_format: MarkdownDisplayFormat::None,
         }
     }
 }
@@ -594,7 +639,11 @@ fn process_doc_text(text: &str, context: Option<&MarkdownLinkContext<'_>>) -> St
 /// [`clean_summary_text`] it does not strip links/code, so the index matches
 /// TypeDoc (e.g. `An object that contains [argument schema](…).`).
 fn typedoc_index_summary(description: &str, context: &MarkdownLinkContext<'_>) -> String {
-    let resolved = process_doc_text(description, Some(context));
+    markdown_index_summary(description, Some(context))
+}
+
+fn markdown_index_summary(description: &str, context: Option<&MarkdownLinkContext<'_>>) -> String {
+    let resolved = process_doc_text(description, context);
     let first_paragraph = resolved.split("\n\n").next().unwrap_or_default();
     let one_line = first_paragraph.split_whitespace().collect::<Vec<_>>().join(" ");
     one_line.replace('|', "\\|")
@@ -716,6 +765,39 @@ fn render_stats(
         MarkdownRenderStyle::Html => markdown_html::render_stats_html(stats, module_count),
         MarkdownRenderStyle::Markdown => markdown_pure::render_stats_markdown(stats, module_count),
     }
+}
+
+fn effective_display_format(
+    options: &MarkdownDocsOptions,
+    format: MarkdownDisplayFormat,
+) -> MarkdownDisplayFormat {
+    match (options.render_style, format) {
+        (MarkdownRenderStyle::Markdown, MarkdownDisplayFormat::None) => MarkdownDisplayFormat::List,
+        (_, format) => format,
+    }
+}
+
+fn effective_index_format(options: &MarkdownDocsOptions) -> MarkdownDisplayFormat {
+    effective_display_format(options, options.index_format)
+}
+
+fn effective_parameters_format(options: &MarkdownDocsOptions) -> MarkdownDisplayFormat {
+    effective_display_format(options, options.parameters_format)
+}
+
+fn effective_members_format(
+    options: &MarkdownDocsOptions,
+    entry_kind: &str,
+    group_title: &str,
+) -> MarkdownDisplayFormat {
+    let format = match (entry_kind, group_title) {
+        ("class", "Properties" | "Static Properties") => options.class_properties_format,
+        ("interface", "Properties") => options.interface_properties_format,
+        ("type", "Properties") => options.type_alias_properties_format,
+        ("enum", "Enum Members") | ("type", "Enum Members") => options.enum_members_format,
+        _ => return MarkdownDisplayFormat::None,
+    };
+    effective_display_format(options, format)
 }
 
 fn generate_file_markdown(
@@ -889,6 +971,23 @@ fn generate_typedoc_root_index(
     ));
     markdown.push_str("\n\n## Modules\n\n");
 
+    if effective_index_format(options) == MarkdownDisplayFormat::Table {
+        markdown.push_str("| Module | Description |\n| ------ | ------ |\n");
+        for doc in docs {
+            let module_name = module_route_name(doc);
+            let display_name = module_display_name(doc);
+            let href = doc_page_href_from(
+                options,
+                "index",
+                &typedoc_module_index_file_name(&module_name),
+                None,
+            );
+            let summary = typedoc_index_summary(&doc.description, &link_context);
+            push_fmt(&mut markdown, format_args!("| [{display_name}]({href}) | {summary} |\n"));
+        }
+        return markdown;
+    }
+
     for doc in docs {
         let module_name = module_route_name(doc);
         let display_name = module_display_name(doc);
@@ -942,6 +1041,7 @@ fn generate_typedoc_module_index(
     markdown.push_str(&render_stats(options, &summarize_entries(&doc.entries), None));
     markdown.push_str("\n\n");
 
+    let index_format = effective_index_format(options);
     for kind in ordered_entry_kinds(&doc.entries) {
         // Only entries whose canonical page lives in this module are listed in
         // the kind sections; re-exports are collected into "References" below.
@@ -954,10 +1054,40 @@ fn generate_typedoc_module_index(
             continue;
         }
 
+        push_fmt(&mut markdown, format_args!("## {}\n\n", typedoc_kind_title(&kind)));
+        let mut seen = std::collections::HashSet::new();
+        if index_format == MarkdownDisplayFormat::List {
+            for entry in entries {
+                // Overloads share a name (and page); collapse them to one row.
+                if !seen.insert(entry.name.as_str()) {
+                    continue;
+                }
+                let href = doc_page_href_from(
+                    options,
+                    &current_file_name,
+                    &typedoc_entry_file_name(module_name, entry),
+                    None,
+                );
+                let summary = clean_summary_text(
+                    &process_doc_text(&entry.description, Some(&link_context)),
+                    88,
+                );
+                if summary.is_empty() {
+                    push_fmt(&mut markdown, format_args!("- [{}]({href})\n", entry.name));
+                } else {
+                    push_fmt(
+                        &mut markdown,
+                        format_args!("- [{}]({href}) - {summary}\n", entry.name),
+                    );
+                }
+            }
+            markdown.push('\n');
+            continue;
+        }
+
         // Render a compact `Name | Description` table (matching TypeDoc) rather
         // than a bullet list with the full signature inlined; the signature
         // stays on the per-symbol page.
-        push_fmt(&mut markdown, format_args!("## {}\n\n", typedoc_kind_title(&kind)));
         push_fmt(
             &mut markdown,
             format_args!(
@@ -965,7 +1095,6 @@ fn generate_typedoc_module_index(
                 typedoc_kind_singular(&kind)
             ),
         );
-        let mut seen = std::collections::HashSet::new();
         for entry in entries {
             // Overloads share a name (and page); collapse them to one row.
             if !seen.insert(entry.name.as_str()) {
@@ -1184,6 +1313,15 @@ fn render_overview_line(
     format!("{}\n", parts.join(" "))
 }
 
+fn render_overview_table_row(
+    entry: &ApiDocEntry,
+    href: &str,
+    context: Option<&MarkdownLinkContext<'_>>,
+) -> String {
+    let summary = markdown_index_summary(&entry.description, context);
+    fmt_args(format_args!("| [`{}`]({href}) | `{}` | {summary} |\n", entry.name, entry.kind))
+}
+
 fn generate_entry_markdown(
     entry: &ApiDocEntry,
     options: &MarkdownDocsOptions,
@@ -1272,9 +1410,21 @@ fn generate_index(
                     doc_page_href(options, &file_name, None)
                 ),
             );
-            for entry in &doc.entries {
-                let href = doc_page_href(options, &file_name, Some(&entry_anchor(&entry.name)));
-                markdown.push_str(&render_overview_line(entry, &href, link_context.as_ref()));
+            if effective_index_format(options) == MarkdownDisplayFormat::Table {
+                markdown.push_str("| Name | Kind | Description |\n| --- | --- | --- |\n");
+                for entry in &doc.entries {
+                    let href = doc_page_href(options, &file_name, Some(&entry_anchor(&entry.name)));
+                    markdown.push_str(&render_overview_table_row(
+                        entry,
+                        &href,
+                        link_context.as_ref(),
+                    ));
+                }
+            } else {
+                for entry in &doc.entries {
+                    let href = doc_page_href(options, &file_name, Some(&entry_anchor(&entry.name)));
+                    markdown.push_str(&render_overview_line(entry, &href, link_context.as_ref()));
+                }
             }
             markdown.push('\n');
             continue;
@@ -1319,12 +1469,23 @@ fn generate_category_markdown(
     markdown.push_str("\n\n");
 
     markdown.push_str("## Overview\n\n");
-    for entry in entries {
-        markdown.push_str(&render_overview_line(
-            entry,
-            &fmt_args(format_args!("#{}", entry_anchor(&entry.name))),
-            Some(&link_context),
-        ));
+    if effective_index_format(options) == MarkdownDisplayFormat::Table {
+        markdown.push_str("| Name | Kind | Description |\n| --- | --- | --- |\n");
+        for entry in entries {
+            markdown.push_str(&render_overview_table_row(
+                entry,
+                &fmt_args(format_args!("#{}", entry_anchor(&entry.name))),
+                Some(&link_context),
+            ));
+        }
+    } else {
+        for entry in entries {
+            markdown.push_str(&render_overview_line(
+                entry,
+                &fmt_args(format_args!("#{}", entry_anchor(&entry.name))),
+                Some(&link_context),
+            ));
+        }
     }
     markdown.push_str("\n## Reference\n\n");
     if options.render_style == MarkdownRenderStyle::Html && entries.len() > 1 {
@@ -1384,10 +1545,19 @@ fn generate_category_index(
             ),
         );
 
-        for entry in entries {
-            let href =
-                doc_page_href(options, &category_file_name, Some(&entry_anchor(&entry.name)));
-            markdown.push_str(&render_overview_line(entry, &href, Some(&link_context)));
+        if effective_index_format(options) == MarkdownDisplayFormat::Table {
+            markdown.push_str("| Name | Kind | Description |\n| --- | --- | --- |\n");
+            for entry in entries {
+                let href =
+                    doc_page_href(options, &category_file_name, Some(&entry_anchor(&entry.name)));
+                markdown.push_str(&render_overview_table_row(entry, &href, Some(&link_context)));
+            }
+        } else {
+            for entry in entries {
+                let href =
+                    doc_page_href(options, &category_file_name, Some(&entry_anchor(&entry.name)));
+                markdown.push_str(&render_overview_line(entry, &href, Some(&link_context)));
+            }
         }
         markdown.push('\n');
     }
@@ -1716,7 +1886,8 @@ mod tests {
         assert!(page.lines().any(|line| line == "#### Signature"));
         assert!(!page.contains("**Signature**"));
         assert!(page.contains("```ts"));
-        assert!(page.contains("| Name | Type | Description |"));
+        assert!(page.contains("- `argv` (`string[]`) - Arguments."));
+        assert!(!page.contains("| Name | Type | Description |"));
         // The interface member group is a real heading (no `**Members**` wrapper).
         assert!(page.lines().any(|line| line == "#### Methods"));
         assert!(!page.contains("**Members**"));
@@ -2244,7 +2415,103 @@ mod tests {
         assert!(page.contains("## Type Parameters"));
         assert!(!page.contains("**Type Parameters**"));
         assert!(page.contains("`G` *extends* `Base` = `Default`"));
-        assert!(page.contains("| `T` | The value type. |"));
+        assert!(page.contains("- `T` - The value type."));
+    }
+
+    #[test]
+    fn markdown_display_format_options_render_tables() {
+        let mut entry = test_entry("make", "function", "src/make.ts", "Make a thing.");
+        entry.params = vec![ApiParamDoc {
+            name: "value".to_string(),
+            type_annotation: "string".to_string(),
+            description: "Input value.".to_string(),
+            optional: false,
+            default_value: None,
+        }];
+        entry.type_parameters = vec![ApiTypeParamDoc {
+            name: "T".to_string(),
+            constraint: None,
+            default: None,
+            description: "Value type.".to_string(),
+        }];
+        let docs = vec![ApiDocModule {
+            description: String::new(),
+            file: "mod".to_string(),
+            source_path: String::new(),
+            entries: vec![entry],
+        }];
+
+        let markdown = generate_markdown(
+            &docs,
+            &MarkdownDocsOptions {
+                path_strategy: MarkdownPathStrategy::TypeDoc,
+                render_style: MarkdownRenderStyle::Markdown,
+                index_format: MarkdownDisplayFormat::Table,
+                parameters_format: MarkdownDisplayFormat::Table,
+                ..MarkdownDocsOptions::default()
+            },
+        );
+        let index = markdown.get("mod/index.md").unwrap();
+        let page = markdown.get("mod/functions/make.md").unwrap();
+
+        assert!(index.contains("| Function | Description |"));
+        assert!(page.contains("| Name | Type | Description |"));
+        assert!(page.contains("| `value` | `string` | Input value. |"));
+        assert!(page.contains("| `T` | Value type. |"));
+    }
+
+    #[test]
+    fn markdown_property_display_format_controls_property_groups() {
+        let mut entry = test_entry("Command", "interface", "src/types.ts", "Command options.");
+        entry.members = vec![ApiDocMember {
+            name: "name".to_string(),
+            kind: "property".to_string(),
+            description: "Command name.".to_string(),
+            signature: None,
+            type_annotation: Some("string".to_string()),
+            params: vec![],
+            returns: None,
+            optional: false,
+            readonly: true,
+            r#static: false,
+            private: false,
+            tags: vec![],
+            line: 2,
+            end_line: 2,
+        }];
+        let docs = vec![ApiDocModule {
+            description: String::new(),
+            file: "mod".to_string(),
+            source_path: String::new(),
+            entries: vec![entry],
+        }];
+
+        let list_markdown = generate_markdown(
+            &docs,
+            &MarkdownDocsOptions {
+                path_strategy: MarkdownPathStrategy::TypeDoc,
+                render_style: MarkdownRenderStyle::Markdown,
+                ..MarkdownDocsOptions::default()
+            },
+        );
+        let list_page = list_markdown.get("mod/interfaces/Command.md").unwrap();
+        assert!(list_page.contains("- `name` _(readonly)_ `property` `string` - Command name."));
+        assert!(!list_page.contains("| Name | Kind | Type | Description |"));
+
+        let table_markdown = generate_markdown(
+            &docs,
+            &MarkdownDocsOptions {
+                path_strategy: MarkdownPathStrategy::TypeDoc,
+                render_style: MarkdownRenderStyle::Markdown,
+                interface_properties_format: MarkdownDisplayFormat::Table,
+                ..MarkdownDocsOptions::default()
+            },
+        );
+        let table_page = table_markdown.get("mod/interfaces/Command.md").unwrap();
+        assert!(table_page.contains("| Name | Kind | Type | Description |"));
+        assert!(
+            table_page.contains("| `name` _(readonly)_ | property | `string` | Command name. |")
+        );
     }
 
     #[test]
