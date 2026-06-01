@@ -1,5 +1,11 @@
 # Changelog
 
+## [2.39.0] - 2026-06-01
+
+### Bug Fixes
+
+- format module index references as typedoc-style heading entries (#282)
+
 ## [2.38.0] - 2026-06-01
 
 ### Features
