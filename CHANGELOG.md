@@ -1,5 +1,59 @@
 # Changelog
 
+## [2.37.0] - 2026-06-01
+
+### Features
+
+- add vitest docs test harness (#271)
+- add opt-in type parameter docs (#272)
+- add opt-in content transforms (#265)
+- add pure markdown render mode via renderStyle option (#261)
+- package-manager install tabs with opt-in synced groups (#257)
+
+### Bug Fixes
+
+- render typedoc module index members as compact tables instead of bullet lists (#281)
+- emit one canonical typedoc page per symbol for cross-entrypoint re-exports (#280)
+- render pure markdown sections as sequential headings instead of bold paragraphs (#275)
+- extract module description without @module and across split header comments (#274)
+- drop source links for external dependency symbols (#270)
+- carry module-level @module description through to generated output (#268)
+- deploy docs from void root
+- restore Bun.markdown row in PR benchmark (#258)
+- remove needless raw string hashes in tabs tests
+
+### Performance
+
+- debug-build NAPI smoke and cache rendering browsers (#263)
+- lazily bucket members and drop format! in pure markdown renderer (#262)
+- search runtime (#241)
+- borrow frontmatter content and move the autolink patterns (#235)
+- resolve spellcheck issue lines via binary search (#236)
+- gate text autolinking on the cached autolink_index (#234)
+- drop redundant allocations in slugify and the YouTube embed (#233)
+- cut per-symbol allocations on the generation path (#232)
+- tighten leaf/list/fenced block scans (#231)
+- SIMD-accelerate inline scanning with memchr (#230)
+- hoist per-page constant work out of the page loop (#227)
+- memoize per-doc scopes and the prefix-scan vocabulary (#228)
+- build the autolink first-byte index once per render (#225)
+- cache sort keys and bucket members lazily (#226)
+- skip redundant block dispatch on a paragraph's first line (#222)
+- SIMD-accelerate the static embed transforms (#224)
+
+### Refactoring
+
+- split html renderer modules (#266)
+
+### Documentation
+
+- expand built-in feature and Void deploy guides (#269)
+- format generated API reference
+- refresh generated API reference
+- add an MDX & Components guide (#240)
+- add JSDoc API-docs and i18n guides (#239)
+- document dark mode, embed slots, social icons, custom CSS (#238)
+
 ## [2.36.0] - 2026-05-31
 
 ### Bug Fixes
