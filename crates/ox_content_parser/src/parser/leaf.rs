@@ -7,13 +7,9 @@ use crate::error::ParseResult;
 use crate::profile_span;
 
 impl<'a> Parser<'a> {
-    pub(super) fn try_parse_heading_at(&self, trimmed: &str) -> bool {
-        let bytes = self.source.as_bytes();
-        let pos = self.position;
-        if pos < bytes.len() && matches!(bytes[pos], b' ' | b'\t') {
-            return false;
-        }
-        is_atx_heading_prefix(trimmed.as_bytes())
+    pub(super) fn try_parse_heading_start(&self, line_start: usize, trimmed_start: usize) -> bool {
+        line_start == trimmed_start
+            && is_atx_heading_prefix(&self.source.as_bytes()[trimmed_start..])
     }
 
     pub(super) fn try_parse_thematic_break_line(line: &str) -> bool {

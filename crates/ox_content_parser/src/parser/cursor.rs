@@ -1,4 +1,4 @@
-use memchr::memchr;
+use memchr::{memchr, memchr2};
 
 use super::Parser;
 
@@ -74,40 +74,40 @@ impl<'a> Parser<'a> {
     }
 
     pub(super) fn line_starts_block(&self) -> bool {
-        let line = self.current_line();
-        let trimmed = line.trim_start();
-        let first = trimmed.as_bytes().first().copied();
+        let line_start = self.position;
+        let bytes = self.source.as_bytes();
+        let Some(trimmed_start) = self.first_non_whitespace_in_line(line_start) else {
+            return false;
+        };
 
-        // NB: dispatch arms must use the same checks as `parse_block`,
-        // which test at `self.position` (the un-trimmed offset). Using
-        // `is_atx_heading_prefix(trimmed.as_bytes())` here would diverge
-        // from `parse_block`'s `Some(b'#') if self.try_parse_heading_at()`
-        // check on indented inputs like `" # heading"`:
-        // `line_starts_block` would say "yes, a heading", `parse_block`
-        // would say "no" (since the byte at position 0 is a space) and
-        // fall through to `parse_paragraph`, which would immediately break
-        // with no content — `parse_block` then returns `Ok(None)` without
-        // advancing position, and the outer `parse()` loop spins forever
-        // on the same offset. We route every arm through the same
-        // line-cached helpers as `parse_block` so the two dispatchers stay
-        // in lock-step and we only `memchr` + `trim_start` the current
-        // line once per call.
-        let starts_block = match first {
-            Some(b'#') => self.try_parse_heading_at(trimmed),
-            Some(b'-' | b'*') => {
+        let starts_block = match bytes[trimmed_start] {
+            b'#' => self.try_parse_heading_start(line_start, trimmed_start),
+            b'-' | b'*' => {
+                let line = self.line_at(line_start);
+                let trimmed = &line[trimmed_start - line_start..];
                 Self::try_parse_thematic_break_line(line) || Self::try_parse_list_line(trimmed)
             }
-            Some(b'_') => Self::try_parse_thematic_break_line(line),
-            Some(b'>') => true,
-            Some(b'`' | b'~') => Self::try_parse_fenced_code_at(line, trimmed),
-            Some(b'<') => Self::parse_html_block_start(trimmed).is_some(),
-            Some(b'+' | b'0'..=b'9') => Self::try_parse_list_line(trimmed),
+            b'_' => Self::try_parse_thematic_break_line(self.line_at(line_start)),
+            b'>' => true,
+            b'`' | b'~' => {
+                let line = self.line_at(line_start);
+                let trimmed = &line[trimmed_start - line_start..];
+                Self::try_parse_fenced_code_at(line, trimmed)
+            }
+            b'<' => {
+                let line = self.line_at(line_start);
+                Self::parse_html_block_start(&line[trimmed_start - line_start..]).is_some()
+            }
+            b'+' | b'0'..=b'9' => {
+                let line = self.line_at(line_start);
+                Self::try_parse_list_line(&line[trimmed_start - line_start..])
+            }
             _ => false,
         };
 
         starts_block
             || (self.options.tables
-                && memchr(b'|', line.as_bytes()).is_some()
+                && self.line_contains_byte(line_start, b'|')
                 && self.try_parse_table())
     }
 
@@ -136,6 +136,29 @@ impl<'a> Parser<'a> {
         } else {
             self.position = self.source.len();
             &self.source[start..]
+        }
+    }
+
+    pub(super) fn first_non_whitespace_in_line(&self, line_start: usize) -> Option<usize> {
+        let bytes = self.source.as_bytes();
+        let mut cursor = line_start;
+
+        while cursor < bytes.len() {
+            match bytes[cursor] {
+                b' ' | b'\t' => cursor += 1,
+                b'\n' => return None,
+                _ => return Some(cursor),
+            }
+        }
+
+        None
+    }
+
+    pub(super) fn line_contains_byte(&self, line_start: usize, needle: u8) -> bool {
+        let bytes = self.source.as_bytes();
+        match memchr2(needle, b'\n', &bytes[line_start..]) {
+            Some(off) => bytes[line_start + off] == needle,
+            None => false,
         }
     }
 }
