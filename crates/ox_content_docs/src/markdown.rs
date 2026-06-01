@@ -5,6 +5,7 @@ use std::fmt::Write as _;
 use std::path::Path;
 use std::sync::OnceLock;
 
+use phf::phf_map;
 use regex::Regex;
 use serde::{Deserialize, Serialize};
 
@@ -348,30 +349,53 @@ fn module_file_name(file_path: &str) -> String {
     sanitize_doc_path_segment(&file_name)
 }
 
+/// Directory segment for each documentation kind under the TypeDoc path strategy.
+static TYPEDOC_KIND_SEGMENT: phf::Map<&'static str, &'static str> = phf_map! {
+    "function" => "functions",
+    "class" => "classes",
+    "interface" => "interfaces",
+    "type" => "type-aliases",
+    "enum" => "enumerations",
+    "variable" => "variables",
+    "const" => "variables",
+    "module" => "modules",
+};
+
+/// Plural category heading for each documentation kind.
+static TYPEDOC_KIND_TITLE: phf::Map<&'static str, &'static str> = phf_map! {
+    "function" => "Functions",
+    "class" => "Classes",
+    "interface" => "Interfaces",
+    "type" => "Type Aliases",
+    "enum" => "Enumerations",
+    "variable" => "Variables",
+    "const" => "Variables",
+    "module" => "Modules",
+};
+
+/// Singular category label used as the first column header of a module index
+/// table (matches TypeDoc, e.g. `Function`, `Type Alias`).
+static TYPEDOC_KIND_SINGULAR: phf::Map<&'static str, &'static str> = phf_map! {
+    "function" => "Function",
+    "class" => "Class",
+    "interface" => "Interface",
+    "type" => "Type Alias",
+    "enum" => "Enumeration",
+    "variable" => "Variable",
+    "const" => "Variable",
+    "module" => "Module",
+};
+
 fn typedoc_kind_segment(kind: &str) -> &'static str {
-    match kind {
-        "function" => "functions",
-        "class" => "classes",
-        "interface" => "interfaces",
-        "type" => "type-aliases",
-        "enum" => "enumerations",
-        "variable" | "const" => "variables",
-        "module" => "modules",
-        _ => "symbols",
-    }
+    TYPEDOC_KIND_SEGMENT.get(kind).copied().unwrap_or("symbols")
 }
 
 fn typedoc_kind_title(kind: &str) -> &'static str {
-    match kind {
-        "function" => "Functions",
-        "class" => "Classes",
-        "interface" => "Interfaces",
-        "type" => "Type Aliases",
-        "enum" => "Enumerations",
-        "variable" | "const" => "Variables",
-        "module" => "Modules",
-        _ => "Symbols",
-    }
+    TYPEDOC_KIND_TITLE.get(kind).copied().unwrap_or("Symbols")
+}
+
+fn typedoc_kind_singular(kind: &str) -> &'static str {
+    TYPEDOC_KIND_SINGULAR.get(kind).copied().unwrap_or("Symbol")
 }
 
 fn typedoc_entry_file_name(module_name: &str, entry: &ApiDocEntry) -> String {
@@ -543,6 +567,20 @@ fn process_doc_text(text: &str, context: Option<&MarkdownLinkContext<'_>>) -> St
     let text =
         context.map_or_else(|| text.to_string(), |context| convert_symbol_links(text, context));
     convert_jsdoc_inline_links(&text, context)
+}
+
+/// One-line summary for a module index table cell.
+///
+/// Resolves `{@link}`/`{@linkcode}` exactly like the per-symbol pages (keeping
+/// the produced Markdown links and inline code), takes the first paragraph,
+/// collapses it to a single line, and escapes table-cell pipes. Unlike
+/// [`clean_summary_text`] it does not strip links/code, so the index matches
+/// TypeDoc (e.g. `An object that contains [argument schema](…).`).
+fn typedoc_index_summary(description: &str, context: &MarkdownLinkContext<'_>) -> String {
+    let resolved = process_doc_text(description, Some(context));
+    let first_paragraph = resolved.split("\n\n").next().unwrap_or_default();
+    let one_line = first_paragraph.split_whitespace().collect::<Vec<_>>().join(" ");
+    one_line.replace('|', "\\|")
 }
 
 fn clean_summary_text(text: &str, max_length: usize) -> String {
@@ -903,15 +941,31 @@ fn generate_typedoc_module_index(
             continue;
         }
 
+        // Render a compact `Name | Description` table (matching TypeDoc) rather
+        // than a bullet list with the full signature inlined; the signature
+        // stays on the per-symbol page.
         push_fmt(&mut markdown, format_args!("## {}\n\n", typedoc_kind_title(&kind)));
+        push_fmt(
+            &mut markdown,
+            format_args!(
+                "| {} | Description |\n| ------ | ------ |\n",
+                typedoc_kind_singular(&kind)
+            ),
+        );
+        let mut seen = std::collections::HashSet::new();
         for entry in entries {
+            // Overloads share a name (and page); collapse them to one row.
+            if !seen.insert(entry.name.as_str()) {
+                continue;
+            }
             let href = doc_page_href_from(
                 options,
                 &current_file_name,
                 &typedoc_entry_file_name(module_name, entry),
                 None,
             );
-            markdown.push_str(&render_overview_line(entry, &href, Some(&link_context)));
+            let summary = typedoc_index_summary(&entry.description, &link_context);
+            push_fmt(&mut markdown, format_args!("| [{}]({href}) | {summary} |\n", entry.name));
         }
         markdown.push('\n');
     }
@@ -2025,8 +2079,13 @@ mod tests {
         assert!(markdown.contains_key("index.md"));
         assert!(markdown.contains_key("default/type-aliases/Plugin.md"));
         assert!(markdown.contains_key("default/variables/CLI_OPTIONS_DEFAULT.md"));
-        assert!(module_index.contains("[`cli`](./functions/cli.md)"));
-        assert!(module_index.contains("[`CliOptions`](./interfaces/CliOptions.md)"));
+        // The module index lists members as a compact table, not bullets with
+        // the full signature inlined.
+        assert!(module_index.contains("| Function | Description |"));
+        assert!(module_index.contains("| [cli](./functions/cli.md) |"));
+        assert!(module_index.contains("| [CliOptions](./interfaces/CliOptions.md) |"));
+        assert!(!module_index.contains("[`cli`]"));
+        assert!(!module_index.contains("export function cli"));
         assert!(cli_page.contains("<a href=\"../interfaces/CliOptions.md\">CliOptions</a>"));
         assert!(cli_page.contains(
             "<a href=\"../interfaces/CliOptions.md#property-usagesilent\"><code>CliOptions.usageSilent</code></a>"
@@ -2160,6 +2219,115 @@ mod tests {
         assert!(!page.contains("**Type Parameters**"));
         assert!(page.contains("`G` *extends* `Base` = `Default`"));
         assert!(page.contains("| `T` | The value type. |"));
+    }
+
+    #[test]
+    fn typedoc_module_index_renders_member_tables() {
+        let docs = vec![ApiDocModule {
+            description: String::new(),
+            file: "default".to_string(),
+            source_path: String::new(),
+            entries: vec![
+                test_entry("cli", "function", "/repo/src/cli.ts", "Run the command."),
+                test_entry("CliOptions", "interface", "/repo/src/types.ts", "CLI options."),
+            ],
+        }];
+
+        let out = generate_markdown(
+            &docs,
+            &MarkdownDocsOptions {
+                path_strategy: MarkdownPathStrategy::TypeDoc,
+                ..MarkdownDocsOptions::default()
+            },
+        );
+        let index = out.get("default/index.md").unwrap();
+
+        assert!(index.contains("## Functions"));
+        assert!(index.contains("| Function | Description |\n| ------ | ------ |"));
+        assert!(index.contains("| [cli](./functions/cli.md) | Run the command. |"));
+        assert!(index.contains("## Interfaces"));
+        assert!(index.contains("| Interface | Description |"));
+        assert!(index.contains("| [CliOptions](./interfaces/CliOptions.md) | CLI options. |"));
+        // No bullet list, no inlined kind label or signature.
+        assert!(!index.contains("- [`cli`]"));
+        assert!(!index.contains("`function`"));
+        assert!(!index.contains("export function cli"));
+    }
+
+    #[test]
+    fn typedoc_module_index_resolves_links_in_table_cells() {
+        let docs = vec![ApiDocModule {
+            description: String::new(),
+            file: "default".to_string(),
+            source_path: String::new(),
+            entries: vec![
+                test_entry(
+                    "Args",
+                    "interface",
+                    "/repo/src/args.ts",
+                    "An object that contains {@link ArgSchema | argument schema}.",
+                ),
+                test_entry("ArgSchema", "interface", "/repo/src/args.ts", "A schema."),
+            ],
+        }];
+
+        let out = generate_markdown(
+            &docs,
+            &MarkdownDocsOptions {
+                path_strategy: MarkdownPathStrategy::TypeDoc,
+                ..MarkdownDocsOptions::default()
+            },
+        );
+        let index = out.get("default/index.md").unwrap();
+
+        // The `{@link}` is resolved to a Markdown link inside the cell, not left raw.
+        assert!(index.contains("[argument schema](./interfaces/ArgSchema.md)"));
+        assert!(!index.contains("{@link"));
+    }
+
+    #[test]
+    fn typedoc_module_index_collapses_overloads_to_one_row() {
+        let docs = vec![ApiDocModule {
+            description: String::new(),
+            file: "default".to_string(),
+            source_path: String::new(),
+            entries: vec![
+                test_entry("cli", "function", "/repo/src/cli.ts", "Run the command."),
+                test_entry("cli", "function", "/repo/src/cli.ts", "Run the command."),
+            ],
+        }];
+
+        let out = generate_markdown(
+            &docs,
+            &MarkdownDocsOptions {
+                path_strategy: MarkdownPathStrategy::TypeDoc,
+                ..MarkdownDocsOptions::default()
+            },
+        );
+        let index = out.get("default/index.md").unwrap();
+
+        assert_eq!(index.matches("| [cli](./functions/cli.md) |").count(), 1);
+    }
+
+    #[test]
+    fn typedoc_module_index_escapes_pipes_in_table_cells() {
+        let docs = vec![ApiDocModule {
+            description: String::new(),
+            file: "default".to_string(),
+            source_path: String::new(),
+            entries: vec![test_entry("toUnion", "function", "/repo/src/u.ts", "Returns A | B.")],
+        }];
+
+        let out = generate_markdown(
+            &docs,
+            &MarkdownDocsOptions {
+                path_strategy: MarkdownPathStrategy::TypeDoc,
+                ..MarkdownDocsOptions::default()
+            },
+        );
+        let index = out.get("default/index.md").unwrap();
+
+        assert!(index.contains("Returns A \\| B."));
     }
 
     #[test]
@@ -2435,7 +2603,8 @@ mod tests {
         let module_index = markdown.get("default/index.md").unwrap();
 
         assert!(module_index.contains("## Enumerations"));
-        assert!(module_index.contains("[`Mode`](./enumerations/Mode.md)"));
+        assert!(module_index.contains("| Enumeration | Description |"));
+        assert!(module_index.contains("| [Mode](./enumerations/Mode.md) |"));
         assert!(mode_page.contains("<tr id=\"enumeration-member-strict\">"));
         assert!(run_page.contains("<a href=\"../enumerations/Mode.md\">Mode</a>"));
         assert!(run_page.contains(

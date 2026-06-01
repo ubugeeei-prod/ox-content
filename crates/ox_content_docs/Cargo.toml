@@ -25,6 +25,7 @@ serde = { workspace = true }
 serde_json = { workspace = true }
 regex = { workspace = true }
 rustc-hash = { workspace = true }
+phf = { workspace = true }
 
 # OXC for JS/TS parsing
 oxc_allocator = { workspace = true }

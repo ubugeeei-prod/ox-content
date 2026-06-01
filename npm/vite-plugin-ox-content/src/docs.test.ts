@@ -306,7 +306,13 @@ describe("generateMarkdown", () => {
       })!,
     );
 
-    expect(markdown["default/index.md"]).toContain("[`cli`](/api/default/functions/cli)");
+    // The module index lists members as a compact table (Name | Description),
+    // with the `{@link}` summary resolved in the cell, not a bullet with the
+    // full signature inlined.
+    expect(markdown["default/index.md"]).toContain("| Function | Description |");
+    expect(markdown["default/index.md"]).toContain(
+      "| [cli](/api/default/functions/cli) | Runs [Command](/api/default/interfaces/Command). |",
+    );
     expect(markdown["default/functions/cli.md"]).toContain(
       'href="/api/default/interfaces/Command"',
     );
