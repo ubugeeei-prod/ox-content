@@ -43,12 +43,20 @@ pub(super) fn render_stats_markdown(stats: &EntryStats, module_count: Option<usi
 }
 
 /// Renders the body of one entry (everything below its heading) as pure Markdown.
+///
+/// `section_level` is the heading level (number of `#`) for the entry's
+/// top-level sections — `2` under a page `# Title` (typedoc per-symbol pages),
+/// `4` under a flat `### Entry` heading. Sections are emitted as real Markdown
+/// headings (not bold paragraphs) so they appear in the VitePress outline, get
+/// anchors, and keep a sequential level hierarchy (markdownlint MD001).
 pub(super) fn render_entry_body_pure(
     entry: &ApiDocEntry,
     options: &MarkdownDocsOptions,
     context: Option<&MarkdownLinkContext<'_>>,
+    section_level: usize,
 ) -> String {
     let mut out = String::new();
+    let heading = "#".repeat(section_level);
 
     if entry.tags.iter().any(|tag| tag.tag == "deprecated") {
         out.push_str("**Deprecated.**\n\n");
@@ -62,7 +70,10 @@ pub(super) fn render_entry_body_pure(
     }
 
     if let Some(signature) = &entry.signature {
-        push_fmt(&mut out, format_args!("**Signature**\n\n```ts\n{}\n```\n\n", signature.trim()));
+        push_fmt(
+            &mut out,
+            format_args!("{heading} Signature\n\n```ts\n{}\n```\n\n", signature.trim()),
+        );
     }
 
     // Entries with an empty `file` (e.g. symbols re-exported from an external
@@ -80,7 +91,7 @@ pub(super) fn render_entry_body_pure(
     }
 
     if !entry.type_parameters.is_empty() {
-        out.push_str("**Type Parameters**\n\n");
+        push_fmt(&mut out, format_args!("{heading} Type Parameters\n\n"));
         out.push_str("| Name | Description |\n| --- | --- |\n");
         for type_param in &entry.type_parameters {
             push_fmt(
@@ -96,11 +107,11 @@ pub(super) fn render_entry_body_pure(
     }
 
     if !entry.members.is_empty() {
-        out.push_str(&render_members_pure(entry, context));
+        out.push_str(&render_members_pure(entry, context, section_level));
     }
 
     if !entry.params.is_empty() {
-        out.push_str("**Parameters**\n\n");
+        push_fmt(&mut out, format_args!("{heading} Parameters\n\n"));
         out.push_str("| Name | Type | Description |\n| --- | --- | --- |\n");
         for param in &entry.params {
             let mut description = inline(&param.description, context);
@@ -133,7 +144,7 @@ pub(super) fn render_entry_body_pure(
     }
 
     if let Some(returns) = &entry.returns {
-        out.push_str("**Returns** ");
+        push_fmt(&mut out, format_args!("{heading} Returns\n\n"));
         out.push_str(&code_cell(&returns.type_annotation));
         if !returns.description.is_empty() {
             push_fmt(&mut out, format_args!(" — {}", inline(&returns.description, context)));
@@ -142,7 +153,7 @@ pub(super) fn render_entry_body_pure(
     }
 
     if !entry.examples.is_empty() {
-        out.push_str("**Examples**\n\n");
+        push_fmt(&mut out, format_args!("{heading} Examples\n\n"));
         for example in &entry.examples {
             let (code, language) = parse_example_block(example);
             push_fmt(&mut out, format_args!("```{language}\n{code}\n```\n\n"));
@@ -150,7 +161,7 @@ pub(super) fn render_entry_body_pure(
     }
 
     if !entry.tags.is_empty() {
-        out.push_str("**Tags**\n\n");
+        push_fmt(&mut out, format_args!("{heading} Tags\n\n"));
         for tag in &entry.tags {
             let value = inline(&tag.value, context);
             if value.is_empty() {
@@ -166,7 +177,16 @@ pub(super) fn render_entry_body_pure(
 }
 
 /// Renders the member tables for an entry, grouped to match the HTML renderer.
-fn render_members_pure(entry: &ApiDocEntry, context: Option<&MarkdownLinkContext<'_>>) -> String {
+///
+/// Each member group (`Properties`, `Methods`, …) is emitted as a real heading
+/// at `section_level` — the same level as the entry's other sections — matching
+/// TypeDoc, which renders `## Properties` directly rather than nesting member
+/// tables under a separate "Members" heading.
+fn render_members_pure(
+    entry: &ApiDocEntry,
+    context: Option<&MarkdownLinkContext<'_>>,
+    section_level: usize,
+) -> String {
     // Bucket the members lazily: each `match` arm below only uses a subset of
     // these groups (the default arm uses none of them), so computing every
     // bucket up front wasted a full `members` pass + `Vec` per unused group.
@@ -200,16 +220,12 @@ fn render_members_pure(entry: &ApiDocEntry, context: Option<&MarkdownLinkContext
     };
 
     let mut out = String::new();
-    let mut wrote_heading = false;
+    let heading = "#".repeat(section_level);
     for (title, members) in groups {
         if members.is_empty() {
             continue;
         }
-        if !wrote_heading {
-            out.push_str("**Members**\n\n");
-            wrote_heading = true;
-        }
-        push_fmt(&mut out, format_args!("#### {title}\n\n"));
+        push_fmt(&mut out, format_args!("{heading} {title}\n\n"));
         out.push_str("| Name | Kind | Type | Description |\n| --- | --- | --- | --- |\n");
         for member in members {
             push_fmt(

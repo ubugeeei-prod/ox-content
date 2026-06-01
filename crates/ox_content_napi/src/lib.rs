@@ -3765,7 +3765,8 @@ mod tests {
         );
         let page = markdown.get("default/functions/make.md").unwrap();
 
-        assert!(page.contains("**Type Parameters**"));
+        assert!(page.contains("## Type Parameters"));
+        assert!(!page.contains("**Type Parameters**"));
         assert!(page.contains("`G` *extends* `Base` = `Default`"));
         assert!(page.contains("The thing type."));
     }
