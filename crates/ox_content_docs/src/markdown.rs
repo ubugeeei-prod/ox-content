@@ -794,7 +794,9 @@ fn effective_members_format(
         ("class", "Properties" | "Static Properties") => options.class_properties_format,
         ("interface", "Properties") => options.interface_properties_format,
         ("type", "Properties") => options.type_alias_properties_format,
-        ("enum", "Enum Members") | ("type", "Enum Members") => options.enum_members_format,
+        ("enum", "Enum Members" | "Members") | ("type", "Enum Members") => {
+            options.enum_members_format
+        }
         _ => return MarkdownDisplayFormat::None,
     };
     effective_display_format(options, format)
@@ -1378,6 +1380,20 @@ fn generate_index(
     markdown.push_str("\n\n");
 
     markdown.push_str("## Modules\n\n");
+    let index_format = effective_index_format(options);
+    if options.render_style == MarkdownRenderStyle::Html
+        && matches!(index_format, MarkdownDisplayFormat::List | MarkdownDisplayFormat::Table)
+    {
+        markdown.push_str(&markdown_html::render_module_index_html(
+            docs,
+            options,
+            doc_to_file,
+            index_format,
+            link_context.as_ref(),
+        ));
+        return markdown;
+    }
+
     if options.render_style == MarkdownRenderStyle::Html && docs.len() > 1 {
         markdown.push_str(&markdown_html::render_details_controls_html(".ox-api-module"));
         markdown.push_str("\n\n");
@@ -2512,6 +2528,169 @@ mod tests {
         assert!(
             table_page.contains("| `name` _(readonly)_ | property | `string` | Command name. |")
         );
+    }
+
+    #[test]
+    fn markdown_member_parameters_follow_parameters_format() {
+        let mut entry = test_entry("Command", "interface", "src/types.ts", "Command options.");
+        entry.members = vec![ApiDocMember {
+            name: "run".to_string(),
+            kind: "method".to_string(),
+            description: "Runs the command.".to_string(),
+            signature: Some("run(ctx: Context): Promise<void>".to_string()),
+            type_annotation: None,
+            params: vec![ApiParamDoc {
+                name: "ctx".to_string(),
+                type_annotation: "Context".to_string(),
+                description: "Runtime context.".to_string(),
+                optional: false,
+                default_value: None,
+            }],
+            returns: None,
+            optional: false,
+            readonly: false,
+            r#static: false,
+            private: false,
+            tags: vec![],
+            line: 2,
+            end_line: 2,
+        }];
+        let docs = vec![ApiDocModule {
+            description: String::new(),
+            file: "mod".to_string(),
+            source_path: String::new(),
+            entries: vec![entry],
+        }];
+
+        let list_markdown = generate_markdown(
+            &docs,
+            &MarkdownDocsOptions {
+                path_strategy: MarkdownPathStrategy::TypeDoc,
+                render_style: MarkdownRenderStyle::Markdown,
+                ..MarkdownDocsOptions::default()
+            },
+        );
+        let list_page = list_markdown.get("mod/interfaces/Command.md").unwrap();
+        assert!(list_page.contains("### run Parameters"));
+        assert!(list_page.contains("- `ctx` (`Context`) - Runtime context."));
+
+        let table_markdown = generate_markdown(
+            &docs,
+            &MarkdownDocsOptions {
+                path_strategy: MarkdownPathStrategy::TypeDoc,
+                render_style: MarkdownRenderStyle::Markdown,
+                parameters_format: MarkdownDisplayFormat::Table,
+                ..MarkdownDocsOptions::default()
+            },
+        );
+        let table_page = table_markdown.get("mod/interfaces/Command.md").unwrap();
+        assert!(table_page.contains("### run Parameters"));
+        assert!(table_page.contains("| Name | Type | Description |"));
+        assert!(table_page.contains("| `ctx` | `Context` | Runtime context. |"));
+    }
+
+    #[test]
+    fn html_display_format_options_switch_explicit_sections() {
+        let mut make = test_entry("make", "function", "src/make.ts", "Make a thing.");
+        make.params = vec![ApiParamDoc {
+            name: "value".to_string(),
+            type_annotation: "string".to_string(),
+            description: "Input value.".to_string(),
+            optional: false,
+            default_value: None,
+        }];
+        make.type_parameters = vec![ApiTypeParamDoc {
+            name: "T".to_string(),
+            constraint: None,
+            default: None,
+            description: "Value type.".to_string(),
+        }];
+
+        let mut command = test_entry("Command", "interface", "src/types.ts", "Command options.");
+        command.members = vec![
+            ApiDocMember {
+                name: "name".to_string(),
+                kind: "property".to_string(),
+                description: "Command name.".to_string(),
+                signature: None,
+                type_annotation: Some("string".to_string()),
+                params: vec![],
+                returns: None,
+                optional: false,
+                readonly: true,
+                r#static: false,
+                private: false,
+                tags: vec![],
+                line: 2,
+                end_line: 2,
+            },
+            ApiDocMember {
+                name: "run".to_string(),
+                kind: "method".to_string(),
+                description: "Runs the command.".to_string(),
+                signature: Some("run(ctx: Context): Promise<void>".to_string()),
+                type_annotation: None,
+                params: vec![ApiParamDoc {
+                    name: "ctx".to_string(),
+                    type_annotation: "Context".to_string(),
+                    description: "Runtime context.".to_string(),
+                    optional: false,
+                    default_value: None,
+                }],
+                returns: None,
+                optional: false,
+                readonly: false,
+                r#static: false,
+                private: false,
+                tags: vec![],
+                line: 3,
+                end_line: 3,
+            },
+        ];
+
+        let docs = vec![ApiDocModule {
+            description: String::new(),
+            file: "mod".to_string(),
+            source_path: String::new(),
+            entries: vec![make, command],
+        }];
+
+        let table_markdown = generate_markdown(
+            &docs,
+            &MarkdownDocsOptions {
+                index_format: MarkdownDisplayFormat::Table,
+                parameters_format: MarkdownDisplayFormat::Table,
+                interface_properties_format: MarkdownDisplayFormat::List,
+                ..MarkdownDocsOptions::default()
+            },
+        );
+        let index = table_markdown.get("index.md").unwrap();
+        assert!(index.contains("<table class=\"ox-api-modules-table\">"));
+        assert!(index.contains("<th>Module</th><th>Symbols</th><th>Description</th>"));
+
+        let page = table_markdown.get("mod.md").unwrap();
+        assert!(page.contains("<table class=\"ox-api-entry__params-table\">"));
+        assert!(page.contains("<table class=\"ox-api-entry__member-params-table\">"));
+        assert!(!page.contains("<ul class=\"ox-api-entry__params\">"));
+        assert!(page.contains("<ul class=\"ox-api-entry__members-list\">"));
+        assert!(page.contains("<li id=\"command-name\" class=\"ox-api-entry__member\">"));
+
+        let list_markdown = generate_markdown(
+            &docs,
+            &MarkdownDocsOptions {
+                index_format: MarkdownDisplayFormat::List,
+                parameters_format: MarkdownDisplayFormat::List,
+                ..MarkdownDocsOptions::default()
+            },
+        );
+        let index = list_markdown.get("index.md").unwrap();
+        assert!(index.contains("<ul class=\"ox-api-modules-list\">"));
+        assert!(!index.contains("<details class=\"ox-api-module\">"));
+
+        let page = list_markdown.get("mod.md").unwrap();
+        assert!(page.contains("<ul class=\"ox-api-entry__type-parameters\">"));
+        assert!(page.contains("<ul class=\"ox-api-entry__member-params\">"));
+        assert!(!page.contains("<table class=\"ox-api-entry__type-parameters-table\">"));
     }
 
     #[test]

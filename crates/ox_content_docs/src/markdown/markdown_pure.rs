@@ -258,7 +258,7 @@ fn render_members_pure(
         }
         push_fmt(&mut out, format_args!("{heading} {title}\n\n"));
         if effective_members_format(options, &entry.kind, title) == MarkdownDisplayFormat::List {
-            for member in members {
+            for member in &members {
                 let mut line =
                     fmt_args(format_args!("- {} `{}`", member_name_span(member), member.kind));
                 let member_type = member_type(member);
@@ -274,7 +274,7 @@ fn render_members_pure(
             }
         } else {
             out.push_str("| Name | Kind | Type | Description |\n| --- | --- | --- | --- |\n");
-            for member in members {
+            for member in &members {
                 push_fmt(
                     &mut out,
                     format_args!(
@@ -288,7 +288,67 @@ fn render_members_pure(
             }
         }
         out.push('\n');
+        out.push_str(&render_member_parameter_sections_pure(
+            &members,
+            options,
+            context,
+            section_level + 1,
+        ));
     }
+    out
+}
+
+fn render_member_parameter_sections_pure(
+    members: &[&ApiDocMember],
+    options: &MarkdownDocsOptions,
+    context: Option<&MarkdownLinkContext<'_>>,
+    section_level: usize,
+) -> String {
+    let mut out = String::new();
+    let heading = "#".repeat(section_level);
+
+    for member in members {
+        if member.params.is_empty() {
+            continue;
+        }
+
+        push_fmt(&mut out, format_args!("{heading} {} Parameters\n\n", member.name));
+        match effective_parameters_format(options) {
+            MarkdownDisplayFormat::Table => {
+                out.push_str("| Name | Type | Description |\n| --- | --- | --- |\n");
+                for param in &member.params {
+                    push_fmt(
+                        &mut out,
+                        format_args!(
+                            "| {} | {} | {} |\n",
+                            code_cell(&param.name),
+                            code_cell(&param.type_annotation),
+                            table_cell(&param_description(param, context)),
+                        ),
+                    );
+                }
+            }
+            _ => {
+                for param in &member.params {
+                    let mut line = fmt_args(format_args!("- {}", code_span(&param.name)));
+                    if !param.type_annotation.is_empty() {
+                        push_fmt(
+                            &mut line,
+                            format_args!(" ({})", code_span(&param.type_annotation)),
+                        );
+                    }
+                    let description = param_description(param, context);
+                    if !description.is_empty() {
+                        push_fmt(&mut line, format_args!(" - {description}"));
+                    }
+                    out.push_str(&line);
+                    out.push('\n');
+                }
+            }
+        }
+        out.push('\n');
+    }
+
     out
 }
 
