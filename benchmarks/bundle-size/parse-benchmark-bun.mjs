@@ -4,6 +4,8 @@ if (!globalThis.Bun?.markdown) {
   throw new Error("Bun.markdown is not available in this runtime");
 }
 
+const options = parseOptions(process.argv.slice(2));
+
 const sampleMarkdown = `
 # Heading 1
 
@@ -47,7 +49,21 @@ const sizes = {
   huge: Array(2150).fill(sampleMarkdown).join("\n\n"),
 };
 
-function benchmark(name, fn, input, iterations = 100) {
+function benchmark(name, fn, input, iterations = 100, runs = 1) {
+  const samples = [];
+
+  for (let run = 0; run < runs; run++) {
+    samples.push(benchmarkOnce(fn, input, iterations));
+  }
+
+  return {
+    name,
+    ...medianSample(samples),
+    samples,
+  };
+}
+
+function benchmarkOnce(fn, input, iterations) {
   for (let i = 0; i < 5; i++) {
     fn(input);
   }
@@ -62,11 +78,67 @@ function benchmark(name, fn, input, iterations = 100) {
   const opsPerSec = 1000 / avgMs;
 
   return {
-    name,
     opsPerSec,
     avgMs,
     throughputMBs: (input.length / 1024 / 1024) * opsPerSec,
   };
+}
+
+function medianSample(samples) {
+  const sorted = [...samples].sort((a, b) => a.opsPerSec - b.opsPerSec);
+  return sorted[Math.floor(sorted.length / 2)];
+}
+
+function parseOptions(args) {
+  const parsed = {
+    runs: 1,
+  };
+
+  for (let index = 0; index < args.length; index++) {
+    const arg = args[index];
+    if (arg === "--runs") {
+      parsed.runs = readPositiveIntegerOption(args, ++index, "--runs");
+      continue;
+    }
+    if (arg.startsWith("--runs=")) {
+      parsed.runs = parsePositiveInteger(arg.slice("--runs=".length), "--runs");
+      continue;
+    }
+    if (arg === "--help" || arg === "-h") {
+      printUsage();
+      process.exit(0);
+    }
+
+    throw new Error(`Unknown argument: ${arg}`);
+  }
+
+  return parsed;
+}
+
+function readPositiveIntegerOption(args, index, optionName) {
+  const value = args[index];
+  if (!value || value.startsWith("--")) {
+    throw new Error(`${optionName} requires a positive integer`);
+  }
+
+  return parsePositiveInteger(value, optionName);
+}
+
+function parsePositiveInteger(value, optionName) {
+  const parsed = Number.parseInt(value, 10);
+  if (!Number.isSafeInteger(parsed) || parsed < 1 || String(parsed) !== value) {
+    throw new Error(`${optionName} requires a positive integer`);
+  }
+
+  return parsed;
+}
+
+function printUsage() {
+  console.log(`Usage: bun parse-benchmark-bun.mjs [--runs <count>]
+
+Options:
+  --runs <count> Use the median result from repeated runs
+  -h, --help     Show this help message`);
 }
 
 const render = {};
@@ -80,6 +152,7 @@ for (const [sizeName, content] of Object.entries(sizes)) {
     (input) => Bun.markdown.html(input),
     content,
     iterations,
+    options.runs,
   );
 }
 

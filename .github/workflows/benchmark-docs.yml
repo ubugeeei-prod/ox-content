@@ -22,6 +22,7 @@ permissions:
 
 env:
   CARGO_TERM_COLOR: always
+  OX_CONTENT_BENCHMARK_RUNNER: blacksmith-32vcpu-ubuntu-2404
   STICKY_CACHE_SCOPE: ${{ github.ref_name }}
 
 jobs:
@@ -79,7 +80,8 @@ jobs:
           body: |
             Automated refresh of the Markdown benchmark tables and charts from the
             Benchmark docs workflow (`blacksmith-32vcpu-ubuntu-2404` runner, Bun 1.3.14
-            so the `Bun.markdown.html` row is included).
+            so the `Bun.markdown.html` row is included, median of
+            ${{ github.event_name == 'workflow_dispatch' && inputs.runs || '7' }} runs).
 
             Updated:
             - `README.md` and `docs/content/performance.md` benchmark tables

@@ -1,5 +1,6 @@
 import { execSync } from "node:child_process";
 import { existsSync, readdirSync, readFileSync, writeFileSync } from "node:fs";
+import { cpus, totalmem } from "node:os";
 import { dirname, join, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 import { gzipSizeSync } from "gzip-size";
@@ -279,6 +280,26 @@ function formatBytes(bytes) {
   return `${(bytes / (1024 * 1024)).toFixed(2)} MB`;
 }
 
+function collectEnvironment() {
+  const cpuList = cpus();
+  const firstCpu = cpuList[0];
+
+  return {
+    node: process.version,
+    v8: process.versions.v8,
+    platform: process.platform,
+    arch: process.arch,
+    ci: process.env.CI === "true",
+    runnerName: process.env.RUNNER_NAME ?? null,
+    runnerOs: process.env.RUNNER_OS ?? null,
+    runnerArch: process.env.RUNNER_ARCH ?? null,
+    runnerLabel: process.env.OX_CONTENT_BENCHMARK_RUNNER ?? null,
+    cpuModel: firstCpu?.model ?? null,
+    cpuCount: cpuList.length,
+    totalMemoryGB: Number((totalmem() / 1024 ** 3).toFixed(2)),
+  };
+}
+
 /**
  * @typedef {Object} AppConfig
  * @property {string} name
@@ -529,6 +550,7 @@ async function main() {
   const report = {
     name: "Bundle Size Benchmark",
     generatedAt: new Date().toISOString(),
+    environment: collectEnvironment(),
     baseline,
     results,
   };
