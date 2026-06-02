@@ -48,6 +48,10 @@ use transfer::TransferPayloadKind;
 use transformer::{parse_frontmatter, MarkdownTransformer};
 
 fn create_allocator_for_source(source: &str) -> Allocator {
+    // NAPI parse/render calls know the full Markdown string length before
+    // parsing. Use the shared source-length heuristic so synchronous native
+    // calls start with one appropriately sized bump chunk instead of growing
+    // from `Bump::new()` while JavaScript is blocked.
     Allocator::for_source_len(source.len())
 }
 
@@ -766,7 +770,10 @@ pub fn parse_transfer_raw(
 
     match payload_kind {
         TransferPayloadKind::Mdast => {
-            let allocator = Allocator::new();
+            // Raw mdast transfer serializes immediately after parsing, so it
+            // has the same arena shape as `parse`/`parseAndRender`; pre-sizing
+            // keeps large transfer requests from paying bumpalo chunk growth.
+            let allocator = create_allocator_for_source(&source);
             let parser_options = options.map(ParserOptions::from).unwrap_or_default();
             let parser = Parser::with_options(&allocator, &source, parser_options);
             let document =

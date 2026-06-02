@@ -122,6 +122,11 @@ impl<'a> Parser<'a> {
         count
     }
 
+    /// Finds the next emphasis/strong delimiter run of at least `min_count`.
+    ///
+    /// Only occurrences of `marker` can change the result. Using `memchr` to
+    /// jump between marker runs preserves the delimiter positions visited by
+    /// the old byte-by-byte loop while making long non-marker spans cheap.
     pub(super) fn find_marker_run(
         bytes: &[u8],
         mut cursor: usize,
@@ -143,6 +148,12 @@ impl<'a> Parser<'a> {
         None
     }
 
+    /// Scans a balanced delimiter region and returns the matching close byte.
+    ///
+    /// Link labels and destinations only care about nested `open`/`close`
+    /// delimiters; every other byte is inert. `memchr2` moves directly to the
+    /// next byte that can affect depth, which keeps deeply textual labels from
+    /// paying a branch for each character.
     fn scan_balanced(bytes: &[u8], mut cursor: usize, open: u8, close: u8) -> usize {
         let mut depth = 1;
         while cursor < bytes.len() {

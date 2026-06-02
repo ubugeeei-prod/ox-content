@@ -7,6 +7,12 @@ use crate::error::ParseResult;
 use crate::profile_span;
 
 impl<'a> Parser<'a> {
+    /// Parses a block quote by stripping quote markers into arena storage.
+    ///
+    /// The nested parser needs a contiguous source string without the leading
+    /// `>` markers. Building that string directly in the bump arena avoids the
+    /// old two-step path of filling a system `String` and then copying it into
+    /// arena storage before recursive parsing.
     pub(super) fn parse_block_quote(&mut self, start: usize) -> ParseResult<Option<Node<'a>>> {
         profile_span!("parser::parse_block_quote");
         self.nesting_depth += 1;

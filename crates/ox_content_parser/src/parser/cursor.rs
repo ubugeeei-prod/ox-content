@@ -73,6 +73,14 @@ impl<'a> Parser<'a> {
         &self.source[self.position..end]
     }
 
+    /// Returns true when the current line begins a block-level construct.
+    ///
+    /// This is the paragraph-continuation counterpart of `parse_block`'s
+    /// first-byte dispatcher. Paragraph parsing calls it for each following
+    /// line, so it deliberately avoids `current_line().trim_start()` unless
+    /// the leading marker byte makes a block parse plausible. Keeping this
+    /// byte-dispatch table aligned with `parse_block` preserves Markdown
+    /// behavior while avoiding repeated full-line scans on ordinary prose.
     pub(super) fn line_starts_block(&self) -> bool {
         let line_start = self.position;
         let bytes = self.source.as_bytes();
@@ -139,6 +147,12 @@ impl<'a> Parser<'a> {
         }
     }
 
+    /// Finds the first non-space, non-tab byte before the next newline.
+    ///
+    /// The parser only treats ASCII space and tab as indentation in these
+    /// block-level dispatchers. Returning the byte offset, rather than a
+    /// trimmed `&str`, lets callers inspect the discriminator byte first and
+    /// defer `line_at()` until they know a full line slice is needed.
     pub(super) fn first_non_whitespace_in_line(&self, line_start: usize) -> Option<usize> {
         let bytes = self.source.as_bytes();
         let mut cursor = line_start;
@@ -154,6 +168,12 @@ impl<'a> Parser<'a> {
         None
     }
 
+    /// Checks whether `needle` appears before the end of the current line.
+    ///
+    /// `memchr2` searches for either `needle` or `\n` in one pass. This is
+    /// used as a guard for rare syntax families such as tables: the common
+    /// no-marker case stops at the newline and avoids constructing the line
+    /// slice or running the full parser for that feature.
     pub(super) fn line_contains_byte(&self, line_start: usize, needle: u8) -> bool {
         let bytes = self.source.as_bytes();
         match memchr2(needle, b'\n', &bytes[line_start..]) {

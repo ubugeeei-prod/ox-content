@@ -483,6 +483,11 @@ fn normalized_entries_for_module<'a>(
     module: &PathBuf,
     type_parameters: bool,
 ) -> Result<&'a [NormalizedDocEntry], GraphError> {
+    // Dependency graph construction can revisit the same module through many
+    // re-export edges. Cache normalized entries per resolved path so each file
+    // is parsed and normalized once, then return borrowed slices for all later
+    // graph edges. The explicit insert-before-get shape keeps the returned
+    // borrow simple while avoiding repeated extractor work.
     if !docs_cache.contains_key(module) {
         let items = extractor
             .extract_file(module)

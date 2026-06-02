@@ -27,10 +27,14 @@ impl HtmlRenderer {
         write_escaped_into(&mut self.output, s);
     }
 
-    /// Walks `s` and emits an `<a>` tag for each registered URL pattern
-    /// match, escaping the non-URL spans the normal way. Caller is expected
-    /// to have already gated this on the autolink flag — the function does
-    /// no flag checks of its own.
+    /// Walks `s` and emits an `<a>` tag for each registered URL pattern match.
+    ///
+    /// The caller has already gated on the autolink option and link nesting
+    /// state, so this routine can focus on the hot loop: use the per-render
+    /// first-byte index to jump to possible URL starts, escape the intervening
+    /// non-URL text in chunks, then write the matched URL once for `href` and
+    /// once for visible text. If the index is absent, we fail open by emitting
+    /// escaped text rather than rebuilding the index here.
     pub(in crate::html::renderer) fn write_text_with_autolinks(&mut self, s: &str) {
         crate::profile_span!("renderer::write_text_with_autolinks");
         let bytes = s.as_bytes();
@@ -161,10 +165,12 @@ impl HtmlRenderer {
     }
 
     /// Writes the heading's slugified id directly into `self.output`.
-    /// Avoids allocating a return `String`: the unique-heading hot path
-    /// now pays for exactly one `String` allocation (the slug clone that
-    /// becomes the map key) and the duplicate-heading path pays for
-    /// zero, since the `-N` suffix is written directly via `write!`.
+    ///
+    /// This avoids allocating a return `String`. The unique-heading path pays
+    /// for exactly one owned string, the slug clone that becomes the map key.
+    /// The duplicate-heading path pays for zero additional strings because the
+    /// existing scratch slug is written directly and the numeric suffix is
+    /// formatted into `self.output`.
     pub(in crate::html::renderer) fn write_heading_id(&mut self, heading: &Heading<'_>) {
         use std::fmt::Write as _;
 
@@ -180,10 +186,8 @@ impl HtmlRenderer {
             let n = *count;
             *count += 1;
             self.output.push_str(&self.heading_slug_scratch);
-            // `write!` into `String` is infallible; the formatter pushes
-            // bytes directly into the existing buffer with no formatted
-            // temporary string allocation.
-            // intermediate allocation.
+            // `write!` into `String` is infallible; the formatter pushes bytes
+            // directly into the existing buffer with no temporary allocation.
             let _ = write!(self.output, "-{n}");
             return;
         }

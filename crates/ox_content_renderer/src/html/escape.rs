@@ -51,13 +51,21 @@ static URL_ESCAPE_FLAG: [u8; 256] = {
 
 #[inline]
 pub(super) fn write_escaped_into(out: &mut String, s: &str) {
+    // The invariant for this routine is: bytes in `s[start..i]` have not yet
+    // been copied, and every byte before `start` has already been emitted in
+    // escaped form. Safe runs are copied with one `push_str`; only bytes that
+    // require replacement are handled individually. `reserve(s.len())` covers
+    // the no-escape case exactly and reduces growth even when replacements make
+    // the final output longer.
     let bytes = s.as_bytes();
     let mut start = 0usize;
     let mut i = 0usize;
     out.reserve(s.len());
 
-    // 8-byte chunk fast-skip — the OR over 8 lookups vectorizes well and
-    // dominates the inner loop on long no-escape runs (most plain text).
+    // 8-byte chunk fast-skip: the OR over 8 lookups vectorizes well and
+    // dominates the inner loop on long no-escape runs (most plain text). A
+    // nonzero mask only says "at least one byte in this chunk needs the slow
+    // path"; the scalar loop below still finds the exact byte to replace.
     while i + 8 <= bytes.len() {
         let chunk = &bytes[i..i + 8];
         let mask = ESCAPE_FLAG[chunk[0] as usize]
@@ -111,6 +119,10 @@ pub(super) fn write_escaped_into(out: &mut String, s: &str) {
 }
 
 pub(super) fn write_url_escaped_into(out: &mut String, s: &str) {
+    // Same chunked scanner as `write_escaped_into`, but with URL attribute
+    // semantics. Ampersand remains HTML-escaped because the result is written
+    // inside an HTML attribute, while spaces and tag delimiters are percent
+    // encoded to keep the URL value itself stable.
     let bytes = s.as_bytes();
     let mut start = 0usize;
     let mut i = 0usize;

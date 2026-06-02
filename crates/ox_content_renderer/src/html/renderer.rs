@@ -99,11 +99,13 @@ impl HtmlRenderer {
     pub fn render(&mut self, document: &Document<'_>) -> String {
         crate::profile_span!("renderer::render");
         self.output.clear();
-        // TOC collection walks every heading and allocates a slug per entry,
-        // which used to fire on every render regardless of whether a
-        // `[[toc]]` directive was actually present. Pre-scan the document
-        // cheaply (no allocations), skip TOC work when no marker exists, and
-        // reuse the heading count to reserve the unique-id map.
+        // Renderer setup is intentionally split into a cheap structural scan
+        // and the expensive optional work. TOC collection walks every heading
+        // and allocates a slug per entry, which used to fire on every render
+        // regardless of whether a `[[toc]]` directive existed. The scan below
+        // records only booleans/counts, so documents without TOC markers skip
+        // all TOC allocation while the heading count still lets us reserve the
+        // unique-id map once.
         self.toc_entries.clear();
         let document_scan = scan_document_for_render(document);
         self.document_has_toc_marker = document_scan.has_toc_marker;
@@ -112,9 +114,10 @@ impl HtmlRenderer {
         }
         self.heading_id_counts.clear();
         self.heading_id_counts.reserve(document_scan.heading_count);
-        // Build the autolink first-byte index once per render (it depends only
-        // on the immutable pattern list) so `write_text_with_autolinks` can
-        // reuse it instead of rebuilding a 256-byte table per text node.
+        // Build the autolink first-byte index once per render. It depends only
+        // on the immutable pattern list, not on the text node being rendered,
+        // so reusing it avoids rebuilding a 256-byte table on every inline
+        // text visit.
         self.autolink_index =
             if self.options.autolink_urls && !self.options.autolink_patterns.is_empty() {
                 Some(FirstByteIndex::from_patterns(&self.options.autolink_patterns))

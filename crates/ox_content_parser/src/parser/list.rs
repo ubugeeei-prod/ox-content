@@ -219,6 +219,14 @@ impl<'a> Parser<'a> {
         })))
     }
 
+    /// Builds the synthetic source used when a list item needs block parsing.
+    ///
+    /// Simple single-line list items take `parse_inline_list_item_children`
+    /// instead and never allocate this buffer. When continuation lines, nested
+    /// blocks, or block-looking inline text require the historical sub-parser
+    /// path, the buffer is allocated directly in the bump arena so ownership
+    /// matches the resulting AST and we avoid a system `String` followed by an
+    /// arena copy.
     fn init_list_item_source(
         &self,
         content: &'a str,
@@ -239,6 +247,15 @@ impl<'a> Parser<'a> {
         source
     }
 
+    /// Returns true when a single-line list item can bypass the sub-parser.
+    ///
+    /// A list item like `- hello **world**` has exactly one paragraph child in
+    /// the old implementation: the sub-parser parsed the item source as a
+    /// document, then offset the paragraph spans back into the parent source.
+    /// Reconstructing that paragraph directly removes a parser allocation and
+    /// a second block-dispatch pass. Items whose first non-space byte can open
+    /// a block stay on the old path so cases such as `- # heading`, nested
+    /// lists, fenced code, thematic breaks, and HTML blocks keep their AST.
     fn can_inline_parse_list_item(content: &str) -> bool {
         let Some(&first) = content.trim_start().as_bytes().first() else {
             return true;
@@ -251,6 +268,13 @@ impl<'a> Parser<'a> {
         !matches!(first, b'#' | b'-' | b'*' | b'_' | b'>' | b'`' | b'~' | b'<' | b'+' | b'0'..=b'9')
     }
 
+    /// Creates the direct AST for the single-paragraph list-item fast path.
+    ///
+    /// `content_offset` is the byte position of `content` in the original
+    /// document, so inline spans are produced with their final coordinates on
+    /// the first parse. `item_end` remains the list-item line end to preserve
+    /// the paragraph span that callers observed when this went through the
+    /// sub-parser.
     fn parse_inline_list_item_children(
         &self,
         content: &'a str,

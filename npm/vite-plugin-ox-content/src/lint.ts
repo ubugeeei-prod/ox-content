@@ -595,6 +595,9 @@ function createStandardSpellcheckSettings(
 }
 
 async function loadCspellLib(): Promise<typeof import("cspell-lib")> {
+  // CSpell is optional and relatively heavy; lazy-load it only when standard
+  // dictionaries are enabled, then reuse the same module promise for all files
+  // in the lint run.
   cspellLibPromise ??= import("cspell-lib");
   return cspellLibPromise;
 }

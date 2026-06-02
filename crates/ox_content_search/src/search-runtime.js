@@ -51,6 +51,9 @@ function matchesScopes(doc, scopes) {
     return true;
   }
 
+  // Scope checks run once per posting during scoring. Keep the transformation
+  // from doc id/url to cumulative scope strings isolated here so generated
+  // runtimes can cache it without touching BM25 scoring.
   const docScopes = new Set(getScopesForDoc(doc));
   return scopes.some((scope) => docScopes.has(scope));
 }
@@ -180,6 +183,9 @@ export async function search(query, options = {}) {
     const isLast = i === tokens.length - 1;
 
     if (prefix && isLast && token.length >= MIN_PREFIX_MATCH_LENGTH) {
+      // Only the active final token expands across the vocabulary. Completed
+      // tokens score exact postings, keeping multi-word queries from
+      // multiplying prefix scan cost by token count.
       for (const term in index.index) {
         if (term.startsWith(token)) {
           scoreTerm(term);
@@ -201,6 +207,9 @@ export async function search(query, options = {}) {
     })
     .slice(0, limit)
     .map(([docIdx, data]) => {
+      // Snippets require lowercasing and scanning the document body, so they
+      // are built only after ranking and limiting rather than for every scored
+      // candidate.
       const doc = index.documents[docIdx];
       const matches = Array.from(data.matches);
       const scopes = getScopesForDoc(doc);

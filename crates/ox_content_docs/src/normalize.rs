@@ -337,6 +337,9 @@ struct NormalizedDocMetadata {
 }
 
 fn normalize_doc_metadata(tags: &[DocTag], type_parameters: bool) -> NormalizedDocMetadata {
+    // Normalize tags in one pass. The PHF sets keep alias checks (`@arg`,
+    // `@returns`, `@template`, etc.) allocation-free and avoid re-parsing the
+    // same tag list for params, returns, examples, privacy, and generic tags.
     let mut params = Vec::new();
     let mut returns = None;
     let mut examples = Vec::new();

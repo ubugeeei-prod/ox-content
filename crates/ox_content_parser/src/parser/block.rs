@@ -29,10 +29,19 @@ impl<'a> Parser<'a> {
             return Ok(None);
         };
 
-        // Try to parse different block types. Common prose lines usually
-        // start with a non-marker byte, so classify that byte first and only
-        // materialize `line` / `trimmed` for syntax families that need the
-        // rest of the line.
+        // Fast block dispatch.
+        //
+        // Most documentation lines are plain paragraph text. The old shape
+        // built `line` and `trimmed` up front, then tried each block parser in
+        // sequence; that meant every paragraph paid for newline search,
+        // trimming, and several failed recognizers. Here the first
+        // non-whitespace byte is used as a cheap discriminator. Only marker
+        // families that can actually begin with that byte materialize the
+        // full line slice and run their more expensive syntax checks.
+        //
+        // Keep this table in sync with `line_starts_block`: paragraph parsing
+        // uses that helper to decide when a following line terminates the
+        // paragraph, so the two dispatchers must agree on block starts.
         match bytes[trimmed_start] {
             b'#' if self.try_parse_heading_start(start, trimmed_start) => {
                 return self.parse_heading(start);
@@ -75,6 +84,11 @@ impl<'a> Parser<'a> {
             _ => {}
         }
 
+        // Table recognition is the one feature that cannot be decided from
+        // the first byte because table headers usually look like ordinary
+        // paragraph text. Guard the expensive two-line delimiter check with a
+        // same-line `|` probe so non-table prose does one memchr2 scan and
+        // then falls through to paragraph parsing.
         if self.options.tables && self.line_contains_byte(start, b'|') && self.try_parse_table() {
             return self.parse_table(start);
         }

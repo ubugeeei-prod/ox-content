@@ -85,6 +85,10 @@ impl CodeBlockRenderState {
     }
 
     pub(in crate::html) fn block_classes(&self) -> SmallVec<[&'static str; 8]> {
+        // Most code blocks need only the base class, line-number class, and at
+        // most one semantic aggregate (`has-diff`, `has-focused`, etc.).
+        // SmallVec avoids a heap allocation for that common case while still
+        // allowing class de-duplication across many annotated lines.
         let mut classes = SmallVec::new();
         if self.has_annotations() || self.line_numbers_start.is_some() || self.title.is_some() {
             classes.push("ox-code-block");
