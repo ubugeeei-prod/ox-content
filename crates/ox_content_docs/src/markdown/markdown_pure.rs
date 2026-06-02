@@ -11,8 +11,46 @@ use super::{
     parse_example_block, process_doc_text, EntryStats, MarkdownDisplayFormat, MarkdownDocsOptions,
     MarkdownLinkContext,
 };
-use crate::model::{ApiDocEntry, ApiDocMember, ApiParamDoc, ApiTypeParamDoc};
+use crate::model::{ApiDocEntry, ApiDocMember, ApiDocTag, ApiParamDoc, ApiTypeParamDoc};
 use crate::string_builder::StringBuilder;
+
+/// JSDoc lifecycle tags rendered as GitHub alerts rather than generic `## Tags`
+/// entries: `@experimental` → `> [!WARNING]`, `@deprecated` → `> [!CAUTION]`.
+const LIFECYCLE_TAGS: [&str; 2] = ["deprecated", "experimental"];
+
+/// Renders GitHub alert blocks for the lifecycle tags (`@experimental`,
+/// `@deprecated`) present in `tags`, in source order. Uses the tag's own text as
+/// the alert body (with `{@link}` resolved), falling back to a default message.
+/// Returns an empty string when no lifecycle tag is present.
+pub(super) fn render_lifecycle_alerts(
+    tags: &[ApiDocTag],
+    context: Option<&MarkdownLinkContext<'_>>,
+) -> String {
+    let mut out = String::new();
+    for tag in tags {
+        let (kind, default) = match tag.tag.as_str() {
+            "deprecated" => {
+                ("CAUTION", "This API is deprecated and may be removed in a future version.")
+            }
+            "experimental" => {
+                ("WARNING", "This API is experimental and may change in future versions.")
+            }
+            _ => continue,
+        };
+        let body = inline(&tag.value, context);
+        let body = if body.is_empty() { default } else { body.as_str() };
+        out.push_str("> [!");
+        out.push_str(kind);
+        out.push_str("]\n");
+        for line in body.lines() {
+            out.push_str("> ");
+            out.push_str(line);
+            out.push('\n');
+        }
+        out.push('\n');
+    }
+    out
+}
 
 /// Renders the per-page stats summary as a single italic Markdown line.
 pub(super) fn render_stats_markdown(stats: &EntryStats, module_count: Option<usize>) -> String {
@@ -73,9 +111,9 @@ pub(super) fn render_entry_body_pure(
     let mut out = String::new();
     let heading = "#".repeat(section_level);
 
-    if entry.tags.iter().any(|tag| tag.tag == "deprecated") {
-        out.push_str("**Deprecated.**\n\n");
-    }
+    // Lifecycle tags (`@experimental` / `@deprecated`) render as GitHub alerts
+    // near the summary instead of a generic `## Tags` entry.
+    out.push_str(&render_lifecycle_alerts(&entry.tags, context));
 
     let description = process_doc_text(&entry.description, context);
     let description = description.trim();
@@ -204,10 +242,16 @@ pub(super) fn render_entry_body_pure(
         }
     }
 
-    if !entry.tags.is_empty() {
+    // Lifecycle tags are rendered as alerts above, so exclude them here.
+    let other_tags = entry
+        .tags
+        .iter()
+        .filter(|tag| !LIFECYCLE_TAGS.contains(&tag.tag.as_str()))
+        .collect::<Vec<_>>();
+    if !other_tags.is_empty() {
         out.push_str(&heading);
         out.push_str(" Tags\n\n");
-        for tag in &entry.tags {
+        for tag in other_tags {
             let value = inline(&tag.value, context);
             out.push_str("- `@");
             out.push_str(&tag.tag);
@@ -439,15 +483,27 @@ fn member_type(member: &ApiDocMember) -> &str {
 
 fn member_description(member: &ApiDocMember, context: Option<&MarkdownLinkContext<'_>>) -> String {
     let mut description = String::new();
+    // Lifecycle tags cannot hold a GitHub alert inside a table cell, so surface
+    // them as a short bold marker prefix instead.
+    let push_part = |description: &mut String, part: &str| {
+        if !description.is_empty() {
+            description.push(' ');
+        }
+        description.push_str(part);
+    };
+    if member.tags.iter().any(|tag| tag.tag == "deprecated") {
+        push_part(&mut description, "**Deprecated.**");
+    }
+    if member.tags.iter().any(|tag| tag.tag == "experimental") {
+        push_part(&mut description, "**Experimental.**");
+    }
     if !member.description.is_empty() {
-        description.push_str(&inline(&member.description, context));
+        push_part(&mut description, &inline(&member.description, context));
     }
     if let Some(returns) = &member.returns {
         if !returns.description.is_empty() {
-            if !description.is_empty() {
-                description.push(' ');
-            }
-            description.push_str("Returns: ");
+            push_part(&mut description, "Returns:");
+            description.push(' ');
             description.push_str(&inline(&returns.description, context));
         }
     }

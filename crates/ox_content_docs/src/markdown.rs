@@ -1043,6 +1043,12 @@ fn generate_typedoc_module_index(
     builder.push_str("\n\n");
     let mut markdown = builder.into_string();
 
+    // Module-level `@experimental` / `@deprecated` render as GitHub alerts just
+    // below the title (markdown render style only; HTML keeps its own structure).
+    if options.render_style == MarkdownRenderStyle::Markdown {
+        markdown.push_str(&markdown_pure::render_lifecycle_alerts(&doc.tags, Some(&link_context)));
+    }
+
     let description = process_doc_text(&doc.description, Some(&link_context));
     let description = description.trim();
     if !description.is_empty() {
@@ -3046,6 +3052,138 @@ mod tests {
         assert!(default_page.contains("<a href=\"/api/default/interfaces/Command\">Command</a>"));
         assert!(plugin_page.contains("<a href=\"/api/plugin/interfaces/Command\">Command</a>"));
         assert!(!default_page.contains(".md"));
+    }
+
+    fn lifecycle_module(entry: ApiDocEntry) -> Vec<ApiDocModule> {
+        vec![ApiDocModule {
+            description: String::new(),
+            file: "combinators".to_string(),
+            source_path: String::new(),
+            examples: vec![],
+            tags: vec![],
+            entries: vec![entry],
+        }]
+    }
+
+    fn markdown_typedoc_options() -> MarkdownDocsOptions {
+        MarkdownDocsOptions {
+            path_strategy: MarkdownPathStrategy::TypeDoc,
+            render_style: MarkdownRenderStyle::Markdown,
+            ..MarkdownDocsOptions::default()
+        }
+    }
+
+    #[test]
+    fn typedoc_renders_experimental_tag_as_warning_alert() {
+        let mut entry =
+            test_entry("string", "function", "/repo/src/combinators.ts", "Create a string schema.");
+        entry.tags = vec![ApiDocTag { tag: "experimental".to_string(), value: String::new() }];
+        let out = generate_markdown(&lifecycle_module(entry), &markdown_typedoc_options());
+        let page = out.get("combinators/functions/string.md").unwrap();
+
+        assert!(page.contains(
+            "> [!WARNING]\n> This API is experimental and may change in future versions."
+        ));
+        // Lifecycle tags move to the alert, not the generic Tags section.
+        assert!(!page.contains("## Tags"));
+        assert!(!page.contains("@experimental"));
+        assert!(!page.contains("**Deprecated.**"));
+    }
+
+    #[test]
+    fn typedoc_renders_deprecated_tag_as_caution_alert_with_body() {
+        let mut entry =
+            test_entry("oldDefine", "function", "/repo/src/definition.ts", "Old helper.");
+        entry.tags = vec![ApiDocTag {
+            tag: "deprecated".to_string(),
+            value: "Use `define` instead.".to_string(),
+        }];
+        let out = generate_markdown(&lifecycle_module(entry), &markdown_typedoc_options());
+        let page = out.get("combinators/functions/oldDefine.md").unwrap();
+
+        assert!(page.contains("> [!CAUTION]\n> Use `define` instead."));
+        assert!(!page.contains("## Tags"));
+    }
+
+    #[test]
+    fn typedoc_keeps_non_lifecycle_tags_in_tags_section() {
+        let mut entry = test_entry("run", "function", "/repo/src/run.ts", "Run it.");
+        entry.tags = vec![
+            ApiDocTag { tag: "since".to_string(), value: "1.0.0".to_string() },
+            ApiDocTag { tag: "experimental".to_string(), value: String::new() },
+        ];
+        let out = generate_markdown(&lifecycle_module(entry), &markdown_typedoc_options());
+        let page = out.get("combinators/functions/run.md").unwrap();
+
+        assert!(page.contains("> [!WARNING]"));
+        assert!(page.contains("## Tags"));
+        assert!(page.contains("`@since`"));
+        assert!(!page.contains("`@experimental`"));
+    }
+
+    #[test]
+    fn typedoc_marks_experimental_members_in_table() {
+        let mut entry =
+            test_entry("StringOptions", "interface", "/repo/src/combinators.ts", "String options.");
+        entry.members = vec![ApiDocMember {
+            name: "minLength".to_string(),
+            kind: "property".to_string(),
+            description: "Minimum string length.".to_string(),
+            signature: None,
+            type_annotation: Some("number".to_string()),
+            params: vec![],
+            returns: None,
+            optional: true,
+            readonly: false,
+            r#static: false,
+            private: false,
+            tags: vec![ApiDocTag { tag: "experimental".to_string(), value: String::new() }],
+            line: 1,
+            end_line: 1,
+        }];
+        let out = generate_markdown(&lifecycle_module(entry), &markdown_typedoc_options());
+        let page = out.get("combinators/interfaces/StringOptions.md").unwrap();
+
+        assert!(page.contains("**Experimental.** Minimum string length."));
+    }
+
+    #[test]
+    fn typedoc_renders_module_level_experimental_alert() {
+        let docs = vec![ApiDocModule {
+            description: "Parser combinator entry point.".to_string(),
+            file: "combinators".to_string(),
+            source_path: String::new(),
+            examples: vec![],
+            tags: vec![ApiDocTag {
+                tag: "experimental".to_string(),
+                value: "This module is experimental and may change in future versions.".to_string(),
+            }],
+            entries: vec![test_entry("string", "function", "/repo/src/combinators.ts", "S.")],
+        }];
+        let out = generate_markdown(&docs, &markdown_typedoc_options());
+        let index = out.get("combinators/index.md").unwrap();
+
+        // Alert sits between the title and the description.
+        assert!(index.contains(
+            "# combinators\n\n> [!WARNING]\n> This module is experimental and may change in future versions.\n\nParser combinator entry point."
+        ));
+    }
+
+    #[test]
+    fn typedoc_resolves_links_in_lifecycle_alert_body() {
+        let mut entry = test_entry("string", "function", "/repo/src/combinators.ts", "S.");
+        entry.tags = vec![ApiDocTag {
+            tag: "deprecated".to_string(),
+            value: "Use {@link integer} instead.".to_string(),
+        }];
+        let mut docs = lifecycle_module(entry);
+        docs[0].entries.push(test_entry("integer", "function", "/repo/src/combinators.ts", "I."));
+        let out = generate_markdown(&docs, &markdown_typedoc_options());
+        let page = out.get("combinators/functions/string.md").unwrap();
+
+        assert!(page.contains("> [!CAUTION]"));
+        assert!(page.contains("Use [integer](./integer.md) instead."));
+        assert!(!page.contains("{@link"));
     }
 
     #[test]
