@@ -379,8 +379,9 @@ pub(super) fn render_stats_html(stats: &EntryStats, module_count: Option<usize>)
 
     push_stat_html(&mut rendered_items, "symbols", stats.entries, None);
 
-    for kind in DOC_KIND_ORDER {
-        if let Some(count) = stats.by_kind.get(kind).copied().filter(|count| *count > 0) {
+    for (index, kind) in DOC_KIND_ORDER.iter().enumerate() {
+        let count = stats.by_kind[index];
+        if count > 0 {
             push_stat_html(&mut rendered_items, doc_kind_plural(kind), count, None);
         }
     }
@@ -429,7 +430,7 @@ pub(super) fn render_module_examples_html(examples: &[String]) -> String {
             "</div>
 ",
         );
-        examples_html.push_str(&render_code_block_html(&code, &language));
+        examples_html.push_str(&render_code_block_html(code, language));
         examples_html.push_str(
             "
 </div>",
@@ -1248,7 +1249,7 @@ fn render_entry_body_html(
                 "</div>
 ",
             );
-            examples_html.push_str(&render_code_block_html(&code, &language));
+            examples_html.push_str(&render_code_block_html(code, language));
             examples_html.push_str(
                 "
 </div>",

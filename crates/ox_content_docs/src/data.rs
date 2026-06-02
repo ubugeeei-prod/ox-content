@@ -15,7 +15,7 @@ struct EntryStats {
     returns: u32,
     examples: u32,
     deprecated: u32,
-    by_kind: Map<String, Value>,
+    by_kind: [u32; DOC_KIND_ORDER.len()],
 }
 
 /// Generates the machine-readable docs data JSON payload.
@@ -41,8 +41,9 @@ fn build_docs_summary(docs: &[ApiDocModule]) -> Value {
         stats.examples += module.examples.len() as u32;
         for entry in &module.entries {
             stats.entries += 1;
-            let count = stats.by_kind.get(&entry.kind).and_then(Value::as_u64).unwrap_or(0) + 1;
-            stats.by_kind.insert(entry.kind.clone(), json!(count));
+            if let Some(index) = doc_kind_index(&entry.kind) {
+                stats.by_kind[index] += 1;
+            }
             stats.members += entry.members.len() as u32;
             stats.params += entry.params.len() as u32;
             stats.returns += u32::from(entry.returns.is_some());
@@ -52,9 +53,10 @@ fn build_docs_summary(docs: &[ApiDocModule]) -> Value {
     }
 
     let mut by_kind = Map::new();
-    for kind in DOC_KIND_ORDER {
-        if let Some(count) = stats.by_kind.get(kind) {
-            by_kind.insert(kind.to_string(), count.clone());
+    for (index, kind) in DOC_KIND_ORDER.iter().enumerate() {
+        let count = stats.by_kind[index];
+        if count > 0 {
+            by_kind.insert((*kind).to_string(), json!(count));
         }
     }
 
@@ -68,6 +70,19 @@ fn build_docs_summary(docs: &[ApiDocModule]) -> Value {
         "examples": stats.examples,
         "deprecated": stats.deprecated,
     })
+}
+
+fn doc_kind_index(kind: &str) -> Option<usize> {
+    match kind {
+        "function" => Some(0),
+        "class" => Some(1),
+        "interface" => Some(2),
+        "type" => Some(3),
+        "enum" => Some(4),
+        "variable" => Some(5),
+        "module" => Some(6),
+        _ => None,
+    }
 }
 
 fn module_to_json(module: &ApiDocModule) -> Value {
