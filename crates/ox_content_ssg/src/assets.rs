@@ -89,6 +89,11 @@ struct AssetCache {
 }
 
 impl AssetCache {
+    /// Returns an existing content-addressed chunk or creates it once.
+    ///
+    /// Multiple pages often share identical base CSS, plugin CSS, and client
+    /// runtime JS. Keying by full content means each unique payload is hashed
+    /// and written once, while every page receives the same public URL.
     fn get_or_create(
         &mut self,
         kind: AssetKind,
@@ -113,6 +118,11 @@ impl AssetCache {
 }
 
 /// Extracts shared CSS/JS chunks from generated HTML pages.
+///
+/// The Rust HTML generator emits marked style/script regions. This pass walks
+/// each generated page once, replaces those inline regions with links/scripts
+/// to content-addressed shared files, and preserves page-local inline CSS when
+/// externalizing would break relative `url(...)` references.
 #[must_use]
 pub fn externalize_shared_page_assets(
     pages: Vec<GeneratedHtmlPage>,
@@ -179,6 +189,10 @@ fn build_style_replacement(
     out_dir: &str,
     base: &str,
 ) -> String {
+    // CSS is split by `ox-content:css:*` section markers so globally shared
+    // base/footer/plugin styles can become cacheable files while page-specific
+    // theme overrides may stay inline. Without this split every page's full
+    // `<style>` block would differ as soon as theme CSS differed.
     let sections = extract_css_sections(css_content);
     let effective_sections = if sections.is_empty() {
         vec![CssSection { name: "css".to_string(), content: css_content.trim().to_string() }]
@@ -234,6 +248,10 @@ fn build_script_replacement(
     out_dir: &str,
     base: &str,
 ) -> String {
+    // The search UI runtime is large and only needed after the user opens
+    // search. Split it into its own deferred chunk and replace the placeholder
+    // in the core runtime with that chunk URL. If the marker is absent, fall
+    // back to one shared JS asset for the whole script block.
     if let Some(search_chunk) = find_search_chunk(js_content) {
         if js_content.contains(SEARCH_CHUNK_PLACEHOLDER) {
             let search_content = search_chunk.content.trim();
@@ -294,6 +312,9 @@ fn create_shared_asset_chunk(
 }
 
 fn create_content_hash(content: &str) -> String {
+    // Five SHA-256 bytes are enough for stable cache-busting filenames here:
+    // chunks are generated per site build, not used as a security boundary, and
+    // the content map above still de-duplicates exact matches before hashing.
     let hash = Sha256::digest(content.as_bytes());
     let mut output = String::with_capacity(10);
     for byte in hash.iter().take(5) {
@@ -332,6 +353,9 @@ fn to_public_asset_path(base: &str, file_name: &str) -> String {
 }
 
 fn extract_css_sections(css_content: &str) -> Vec<CssSection> {
+    // Section markers are emitted as CSS comments, so they survive template
+    // rendering and minification-free builds. Parse with string searches rather
+    // than regex to keep this pass cheap over the full page stylesheet.
     let mut sections = Vec::new();
     let mut cursor = 0;
 
@@ -365,6 +389,9 @@ fn extract_css_sections(css_content: &str) -> Vec<CssSection> {
 }
 
 fn has_relative_css_urls(css: &str) -> bool {
+    // Relative URLs are resolved relative to the HTML page when CSS is inline,
+    // but relative to `/assets/...` after extraction. Detect those sections and
+    // leave them inline rather than rewriting every CSS URL.
     let mut cursor = 0;
     let bytes = css.as_bytes();
 

@@ -174,7 +174,9 @@ pub fn transform(source: &str, options: Option<WasmParserOptions>) -> JsValue {
     let opts = options.unwrap_or_default();
     let toc_max_depth = opts.toc_max_depth;
 
-    // Parse frontmatter
+    // Parse frontmatter into a borrowed content slice. In the common "no
+    // frontmatter" case this avoids allocating a second Markdown string before
+    // handing the source to the parser.
     let (content, frontmatter) = parse_frontmatter(source);
 
     // Parse markdown
@@ -225,6 +227,9 @@ pub fn version() -> String {
 
 /// Parses YAML frontmatter from Markdown content.
 fn parse_frontmatter(source: &str) -> (Cow<'_, str>, HashMap<String, serde_json::Value>) {
+    // wasm-bindgen exposes the JS string as `&str` for this call. Return
+    // `Cow::Borrowed` for the Markdown body so stripping frontmatter adjusts
+    // slice boundaries instead of copying the body into a new `String`.
     let mut frontmatter = HashMap::new();
 
     if !source.starts_with("---") {

@@ -20,6 +20,10 @@ const DOC_KIND_ORDER: [&str; 7] =
 type RegexCache = OnceLock<Option<Regex>>;
 
 fn cached_regex(cache: &'static RegexCache, pattern: &'static str) -> Option<&'static Regex> {
+    // Regex construction is expensive and these helpers run throughout doc
+    // generation. Cache both success and failure in `OnceLock<Option<_>>` so a
+    // bad pattern degrades to the fallback path without recompiling on every
+    // call.
     cache.get_or_init(|| Regex::new(pattern).ok()).as_ref()
 }
 
@@ -657,10 +661,10 @@ fn clean_summary_text(text: &str, max_length: usize) -> String {
         return truncate_summary_text(&fallback(), max_length);
     };
 
-    // `replace_all` returns `Cow::Borrowed` (no allocation) when the pattern
-    // doesn't match — the common case for short summaries. Thread the Cow
-    // through each stage instead of forcing a `String` after every one, and
-    // materialize only at the final `truncate_summary_text` (which takes `&str`).
+    // Summary cleanup is called for every entry in index views. `replace_all`
+    // returns `Cow::Borrowed` when a pattern does not match, which is common
+    // for short summaries, so thread the borrowed/owned value through each
+    // regex stage and materialize only in `truncate_summary_text`.
     let s1 = markdown_link_re.replace_all(text, "$1");
     let s2 = bracket_link_re.replace_all(&s1, "$1");
     let s3 = inline_code_re.replace_all(&s2, "$1");

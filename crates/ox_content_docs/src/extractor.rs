@@ -346,8 +346,16 @@ fn parse_jsdoc_payload(source: &str, comment: &Comment) -> ParsedJsdoc {
     (raw, doc, tags)
 }
 
-/// Pre-parse every JSDoc comment in the program with a single batch call so the
-/// AST visitor can resolve documentation by `attached_to` via a cheap lookup.
+/// Pre-parses every JSDoc comment in the program with a single batch call.
+///
+/// Oxc exposes comments separately from declarations, and the visitor resolves
+/// documentation by `attached_to` while walking the AST. Parsing each comment
+/// on demand repeats decoder setup and makes the visitor pay parse cost at
+/// every declaration. This cache batches decoder input once, stores the parsed
+/// `(raw, description, tags)` payload by `attached_to`, and lets the visitor do
+/// a cheap hash lookup in the hot declaration path. Comments that fail the
+/// batch parser still fall back individually so diagnostics do not poison the
+/// whole file.
 fn build_jsdoc_cache(source: &str, comments: &[Comment]) -> FxHashMap<u32, ParsedJsdoc> {
     let jsdoc_comments: Vec<&Comment> =
         comments.iter().filter(|comment| comment.is_jsdoc()).collect();

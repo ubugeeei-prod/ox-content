@@ -39,6 +39,9 @@ pub(in crate::html) fn parse_code_annotations(
 }
 
 fn extract_meta_attribute<'a>(meta: &'a str, target: &str) -> Option<&'a str> {
+    // Fence meta is short but this parser runs for every annotated code block.
+    // Scan the byte slice once and return a borrowed value slice for the target
+    // attribute instead of tokenizing every key/value pair into owned strings.
     let bytes = meta.as_bytes();
     let mut index = 0;
 
@@ -111,6 +114,9 @@ fn extract_meta_attribute<'a>(meta: &'a str, target: &str) -> Option<&'a str> {
 }
 
 pub(in crate::html) fn parse_line_numbers(value: &str) -> SmallVec<[usize; 4]> {
+    // Line lists are usually tiny (`1`, `1,3`, `2-4`), so SmallVec keeps the
+    // common case stack-backed. Sorting once at the end gives deterministic
+    // application order without a heap allocation for typical metadata.
     let mut line_numbers = SmallVec::new();
 
     for part in value.split(',').map(str::trim).filter(|part| !part.is_empty()) {

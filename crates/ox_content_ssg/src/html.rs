@@ -778,15 +778,25 @@ fn wrap_css_section(name: &str, css: &str) -> String {
         return String::new();
     }
 
+    // These markers let `externalize_shared_page_assets` split one generated
+    // `<style>` block into stable shared chunks. They are CSS comments, so the
+    // page remains valid even before the extraction pass runs.
     format!("/* ox-content:css:{name}:start */\n{css}\n/* ox-content:css:{name}:end */\n")
 }
 
 fn page_content_contains_any(content: &str, needles: &[&str]) -> bool {
+    // Page asset detection checks for a small set of HTML markers in the final
+    // content. `memmem` keeps each probe on optimized byte search instead of
+    // Rust's substring machinery, and the caller short-circuits as soon as one
+    // marker is present.
     let haystack = content.as_bytes();
     needles.iter().any(|needle| memmem::find(haystack, needle.as_bytes()).is_some())
 }
 
 fn escape_html(value: &str) -> String {
+    // SSG escaping favors predictable allocation over chained `replace()`:
+    // allocate once at the input length, stream characters into the output,
+    // and let `String` grow only if replacements make the result longer.
     let mut output = String::with_capacity(value.len());
     for ch in value.chars() {
         match ch {
@@ -892,6 +902,9 @@ pub fn generate_html(page_data: &PageData, nav_groups: &[NavGroup], config: &Ssg
 
     // Check if this is an entry page
     let is_entry_page = page_data.entry_page.is_some();
+    // Build CSS as named sections instead of one anonymous blob. Shared,
+    // content-addressed extraction can then pull out only the sections that are
+    // globally cacheable and keep page-specific or relative-url CSS inline.
     let mut css_sections = vec![wrap_css_section("base", SSG_CSS)];
 
     if is_entry_page {

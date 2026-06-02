@@ -17,6 +17,13 @@ use super::super::code_annotations::{
 use super::HtmlRenderer;
 
 impl HtmlRenderer {
+    /// Builds the normalized render state for one fenced code block.
+    ///
+    /// The renderer only pays the expensive annotation parsers when annotation
+    /// output is enabled and the configured syntax can produce them. Plain code
+    /// blocks become a simple line list, while VitePress inline annotations and
+    /// meta annotations share the same `CodeLineRenderState` vector so later
+    /// rendering walks each line once.
     pub(in crate::html::renderer) fn build_code_block_state(
         &self,
         code_block: &CodeBlock<'_>,
@@ -96,6 +103,12 @@ impl HtmlRenderer {
         CodeBlockRenderState { language: info.language, title, line_numbers_start, lines }
     }
 
+    /// Emits annotated code lines from precomputed render state.
+    ///
+    /// Class names use `SmallVec` because typical lines have only one or two
+    /// classes, but focus/highlight/diff combinations can add a few more. This
+    /// keeps the common case stack-backed while still preserving de-duplication
+    /// when multiple annotations imply the same class.
     pub(in crate::html::renderer) fn write_code_lines(&mut self, state: &CodeBlockRenderState) {
         let has_focus = state.has_focus();
 

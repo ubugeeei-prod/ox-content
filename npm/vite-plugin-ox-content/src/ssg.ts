@@ -337,6 +337,9 @@ async function externalizeSharedPageAssets(
   outDir: string,
   base: string,
 ): Promise<{ pages: GeneratedHtmlPage[]; assets: string[] }> {
+  // Asset extraction is batched after all pages are rendered so the Rust side
+  // can de-duplicate identical CSS/JS chunks across the whole build. Doing it
+  // page-by-page would miss shared chunks and write duplicate assets.
   const mod = await importNapiModule();
   const optimized = mod.externalizeSsgAssets(pages, outDir, base) as {
     pages: GeneratedHtmlPage[];
@@ -659,6 +662,10 @@ async function transformSsgPage(
 }
 
 async function transformSsgHtml(html: string, options: ResolvedOptions): Promise<string> {
+  // Mermaid SVGs are protected before plugin transforms because some transforms
+  // still use HTML parser/stringifier steps that can corrupt SVG foreignObject
+  // markup. The protect/restore pair keeps the rest of the pipeline free to
+  // operate on normal HTML strings.
   const { html: protectedHtml, svgs: mermaidSvgs } = protectMermaidSvgs(html);
   const pluginOptions: TransformAllOptions = {
     tabs: true,
@@ -858,6 +865,9 @@ async function writeGeneratedPages(
   context: BuildSsgContext,
   generatedFiles: string[],
 ): Promise<void> {
+  // Shared asset extraction needs the complete page set to maximize
+  // de-duplication. Only after replacement do we write pages and record both
+  // the generated assets and the rewritten HTML files.
   const optimizedOutput = await externalizeSharedPageAssets(
     generatedPages,
     context.outDir,

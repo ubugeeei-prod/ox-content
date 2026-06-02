@@ -109,6 +109,9 @@ fn remove_stale_files(out_dir: &Path, generated_files: &[String]) -> DocsOutputR
         Err(error) => return Err(error.into()),
     };
 
+    // `generated_files` is sorted and deduped by the caller, so stale detection
+    // is a binary search per previous file instead of repeatedly scanning the
+    // new file list while cleaning nested TypeDoc output trees.
     for stale_file in previous_files {
         if generated_files.binary_search(&stale_file).is_ok() {
             continue;

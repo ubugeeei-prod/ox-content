@@ -206,9 +206,11 @@ const getOxContentScopesForDoc = (doc) => {
 
 const matchesOxContentScopes = (doc, scopes) => {
   if (!scopes.length) return true;
-  // A doc's scopes derive only from its (immutable) id/url, but this runs once
-  // per posting per term — the same doc is revisited many times in a query.
-  // Cache the Set on the doc so it's built once for the index's lifetime.
+  // A doc's scopes derive only from its immutable id/url, but this predicate
+  // runs once per posting per term. The same doc is therefore revisited many
+  // times during a single query and across subsequent keystrokes. Cache the
+  // Set on the document object so scope membership becomes one property read
+  // plus `Set.has` for the rest of the index lifetime.
   const docScopes = doc.__oxScopes || (doc.__oxScopes = new Set(getOxContentScopesForDoc(doc)));
   return scopes.some((scope) => docScopes.has(scope));
 };
@@ -279,9 +281,10 @@ const scoreOxContentSearchTerms = (searchIndex, parsedQuery, tokens) => {
       isLast = i === tokens.length - 1;
     const terms =
       isLast && token.length >= 2
-        ? // Prefix expansion scans the whole vocabulary. Materialize the term
-          // list once and reuse it across keystrokes instead of rebuilding the
-          // `Object.keys` array on every query.
+        ? // Prefix expansion scans the whole vocabulary. Materialize the
+          // vocabulary key list once and reuse it across keystrokes instead of
+          // rebuilding `Object.keys(searchIndex.index)` on every query. The
+          // final `filter` still runs per query because the prefix changes.
           (
             searchIndex.__oxIndexKeys ||
             (searchIndex.__oxIndexKeys = Object.keys(searchIndex.index))
@@ -313,8 +316,9 @@ const addOxContentTermScores = (searchIndex, scores, scopes, terms, k1, b) => {
             (posting.tf + k1 * (1 - b + (b * doc.body.length) / searchIndex.avg_dl))) *
           boost;
 
-      // One Map lookup in the steady state (entry present) instead of the
-      // has/get pair; this runs once per posting per term on every keystroke.
+      // One Map lookup in the steady state instead of `has` followed by `get`.
+      // This runs once per posting per term on every keystroke, so removing
+      // the duplicate lookup matters more than the few cold inserts.
       let entry = scores.get(posting.doc_idx);
       if (entry === undefined) {
         entry = { score: 0, matches: new Set() };

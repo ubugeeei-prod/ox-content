@@ -7,6 +7,12 @@ use crate::error::ParseResult;
 use crate::profile_span;
 
 impl<'a> Parser<'a> {
+    /// Cheap recognizer for ATX heading starts used by block dispatch.
+    ///
+    /// The caller has already found the first non-whitespace byte. Requiring
+    /// `line_start == trimmed_start` preserves the current rule that headings
+    /// are not indented, while `is_atx_heading_prefix` validates the marker
+    /// with byte checks and without allocating a trimmed line.
     pub(super) fn try_parse_heading_start(&self, line_start: usize, trimmed_start: usize) -> bool {
         line_start == trimmed_start
             && is_atx_heading_prefix(&self.source.as_bytes()[trimmed_start..])
@@ -32,6 +38,12 @@ impl<'a> Parser<'a> {
         count >= 3
     }
 
+    /// Checks whether a line begins a fenced code block.
+    ///
+    /// `line` is used only for indentation, and `trimmed` is the caller's
+    /// already-sliced view starting at the first non-whitespace byte. This
+    /// avoids recomputing `trim_start` in both `parse_block` and
+    /// `line_starts_block`.
     pub(super) fn try_parse_fenced_code_at(line: &str, trimmed: &str) -> bool {
         if Self::indentation_columns(line) > 3 {
             return false;
@@ -110,6 +122,9 @@ impl<'a> Parser<'a> {
 }
 
 fn is_atx_heading_prefix(bytes: &[u8]) -> bool {
+    // Count at most six leading hashes with direct byte checks. The following
+    // byte must be whitespace, newline, or EOF, which lets the dispatcher
+    // reject `#not-heading` without materializing a line string.
     let mut hashes = 0;
     while hashes < bytes.len() && bytes[hashes] == b'#' {
         hashes += 1;

@@ -22,6 +22,9 @@ pub fn render_preview(source: &str) -> Result<PreviewPayload, ParseError> {
     // inside it. `block_end_offset` points just past the closing `---` line.
     let content = block.as_ref().map_or(source, |block| &source[block.block_end_offset..]);
 
+    // Preview rendering is latency-sensitive and reparses the current document
+    // often. Use the same source-length arena heuristic as NAPI so editor
+    // previews do not benchmark a zero-capacity allocator.
     let allocator = Allocator::for_source_len(content.len());
     let parser = Parser::with_options(&allocator, content, ParserOptions::gfm());
     let ast = parser.parse()?;

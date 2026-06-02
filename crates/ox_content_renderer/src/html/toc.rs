@@ -54,6 +54,11 @@ pub(super) fn scan_document_for_render(document: &Document<'_>) -> DocumentRende
 }
 
 fn scan_node_for_render(node: &Node<'_>, scan: &mut DocumentRenderScan) {
+    // This traversal intentionally collects only facts that are free to derive:
+    // "does any paragraph equal the TOC marker?" and "how many headings exist?".
+    // It does not slugify headings or collect text. That keeps the no-TOC
+    // render path allocation-free while still giving `HtmlRenderer::render`
+    // enough information to reserve the heading-id map up front.
     match node {
         Node::Heading(_) => scan.heading_count += 1,
         Node::Paragraph(p) if !scan.has_toc_marker && is_toc_marker_paragraph(p) => {

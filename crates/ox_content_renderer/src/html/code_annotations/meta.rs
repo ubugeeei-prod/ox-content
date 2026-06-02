@@ -15,6 +15,9 @@ use super::state::{
 };
 
 pub(in crate::html) fn split_code_block_meta(meta: &str) -> SmallVec<[MetaToken<'_>; 4]> {
+    // Split the metadata once into borrowed tokens. VitePress braces/brackets
+    // and raw `:line-numbers` tokens are then consumed by later stages without
+    // repeatedly rescanning the original string or allocating token strings.
     let bytes = meta.as_bytes();
     let mut index = 0;
     let mut tokens = SmallVec::new();
@@ -93,6 +96,9 @@ pub(in crate::html) fn split_code_block_meta(meta: &str) -> SmallVec<[MetaToken<
 }
 
 fn split_code_block_language_token(raw: &str) -> (&str, &str) {
+    // Some authors put VitePress metadata directly in the language token
+    // (`js{1}` or `ts:line-numbers`). Return borrowed slices so normalization
+    // can merge this inline metadata with the separate fence meta field.
     for (index, ch) in raw.char_indices() {
         match ch {
             '{' | '[' => return (&raw[..index], &raw[index..]),
@@ -186,6 +192,10 @@ pub(in crate::html) fn apply_pending_annotations(
     line: &mut CodeLineRenderState,
     pending_annotations: &mut SmallVec<[PendingCodeAnnotation; 2]>,
 ) {
+    // Standalone VitePress directives annotate following lines. Drain the
+    // current pending list into the line and rebuild only the entries whose
+    // remaining count extends past this line, keeping the list tiny and
+    // stack-backed in normal use.
     let mut remaining = SmallVec::new();
 
     for mut pending in pending_annotations.drain(..) {

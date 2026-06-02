@@ -237,11 +237,12 @@ fn render_members_pure(
     context: Option<&MarkdownLinkContext<'_>>,
     section_level: usize,
 ) -> String {
-    // Bucket the members lazily: each `match` arm below only uses a subset of
-    // these groups (the default arm uses none of them), so computing every
-    // bucket up front wasted a full `members` pass + `Vec` per unused group.
-    // Mirrors the same optimization in the HTML renderer's
-    // `render_members_table_html`.
+    // Bucket members lazily. Each entry kind uses a different subset of
+    // groups, and the default arm uses none of the specialized buckets, so the
+    // eager version spent one full member pass plus one `Vec` allocation per
+    // unused group. The closures below defer each filter pass until that group
+    // is actually requested by the selected entry kind, matching the HTML
+    // renderer's optimized member table path.
     let methods = |is_static: bool| {
         members_of(entry, move |member| {
             member.r#static == is_static

@@ -8,9 +8,13 @@ use crate::error::ParseResult;
 use crate::profile_span;
 
 impl<'a> Parser<'a> {
+    /// Returns true when the next two lines look like a GFM table header.
+    ///
+    /// Table detection sits behind a cheap `|` guard in block dispatch, but it
+    /// still runs on many prose lines containing pipes. Peek the first two
+    /// lines directly with `memchr` and inspect slices in place instead of
+    /// collecting `lines().take(2)` into a temporary `Vec`.
     pub(super) fn try_parse_table(&self) -> bool {
-        // Avoid the `Vec` allocation: peek the first two lines directly via
-        // `memchr` and inspect them in place.
         let bytes = self.source.as_bytes();
         let p0 = self.position;
         let nl0 = match memchr(b'\n', &bytes[p0..]) {
@@ -71,8 +75,10 @@ impl<'a> Parser<'a> {
             align.push(alignment);
         }
 
-        // Build the table AST directly instead of first collecting row
-        // slices into short-lived heap Vecs.
+        // Build the table AST directly instead of first collecting row slices
+        // into short-lived heap Vecs. Each consumed source line is parsed into
+        // arena-backed cells immediately, which keeps the table path linear in
+        // the input and avoids throwaway row containers.
         let mut children: Vec<'a, TableRow<'a>> = self.allocator.new_vec();
         children.push(self.parse_table_row(header_line)?);
 
@@ -110,6 +116,10 @@ impl<'a> Parser<'a> {
 
     /// Parses a table row into arena-backed AST cells without temporary heap
     /// collection.
+    ///
+    /// The row iterator yields borrowed cell slices from the original line.
+    /// Inline parsing then writes cell children into the parser arena, so no
+    /// intermediate `Vec<&str>` or owned cell text is needed.
     pub(super) fn parse_table_row(&self, line: &'a str) -> ParseResult<TableRow<'a>> {
         let mut cells: Vec<'a, TableCell<'a>> = self.allocator.new_vec();
         for cell_content in Self::table_row_cells(line) {
@@ -120,6 +130,9 @@ impl<'a> Parser<'a> {
     }
 
     /// Iterates table row cells from a line.
+    ///
+    /// Leading/trailing pipes are syntax delimiters, not empty cells in this
+    /// parser's table model, so they are stripped once before splitting.
     pub(super) fn table_row_cells(line: &'a str) -> impl Iterator<Item = &'a str> {
         let trimmed = line.trim();
         let trimmed = trimmed.strip_prefix('|').unwrap_or(trimmed);

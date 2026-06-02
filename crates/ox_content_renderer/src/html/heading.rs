@@ -52,14 +52,19 @@ pub(super) fn slugify_heading(text: &str) -> String {
     out
 }
 
-/// Slugify `text` into `out`. `out` is **not** cleared by this function —
-/// callers should clear it themselves so they can reuse a long-lived
-/// scratch buffer across many headings without giving up the allocation.
+/// Slugify `text` into `out`.
+///
+/// `out` is **not** cleared by this function. Renderers keep a long-lived
+/// scratch buffer for heading IDs, clear it at the call site, and pass it back
+/// here on every heading. That avoids allocating one temporary slug string per
+/// heading while still leaving ownership decisions, such as cloning the final
+/// unique id into a hash map, with the caller.
 pub(super) fn slugify_heading_into(text: &str, out: &mut String) {
-    // Single-pass slugify. Hot path is the all-ASCII byte loop (no
-    // UTF-8 decode, no `char::to_lowercase` iterator allocation per
-    // character); we fall back to the char iterator only when a
-    // non-ASCII byte appears.
+    // Single-pass slugify. The hot path is the all-ASCII byte loop: no UTF-8
+    // decode and no `char::to_lowercase` iterator allocation per character.
+    // We switch to the Unicode-aware char iterator only for contiguous
+    // non-ASCII runs, preserving Japanese and other non-Latin heading text
+    // without slowing down the common ASCII API-doc heading.
     let bytes = text.as_bytes();
     out.reserve(text.len());
     let start_len = out.len();

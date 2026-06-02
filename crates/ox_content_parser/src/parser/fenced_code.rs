@@ -7,6 +7,13 @@ use crate::error::{ParseError, ParseResult};
 use crate::profile_span;
 
 impl<'a> Parser<'a> {
+    /// Finds the body end and cursor position after a closing fence.
+    ///
+    /// This helper is used only by the zero-copy fenced-code path where the
+    /// opening fence has no indentation. In that case body lines do not need
+    /// stripping, so the parser can search line starts in the original source
+    /// and return a borrowed body slice. The tuple separates the end of code
+    /// content from the end of the closing fence line.
     pub(super) fn find_fenced_close(
         &self,
         fence_char: char,
@@ -113,9 +120,9 @@ impl<'a> Parser<'a> {
             &self.source[body_start..body_end]
         } else {
             // Indented opening fence: lines may need leading-space stripping,
-            // so we have to materialize a new string. Write directly into a
-            // bump-allocated string so we don't pay for `String` (system
-            // allocator) → `alloc_str` (arena copy).
+            // so a borrowed source slice would be wrong. Materialize only this
+            // uncommon case, and write directly into a bump-allocated string
+            // so the final AST can borrow it without a second arena copy.
             let remaining_estimate = self.source.len().saturating_sub(self.position);
             let mut value = ox_content_allocator::String::with_capacity_in(
                 remaining_estimate.min(8 * 1024),
