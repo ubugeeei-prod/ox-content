@@ -154,7 +154,7 @@ fn default_group_by() -> String {
 #[derive(Debug, Clone, Default)]
 struct EntryStats {
     entries: usize,
-    by_kind: BTreeMap<String, usize>,
+    by_kind: [usize; DOC_KIND_ORDER.len()],
     members: usize,
     params: usize,
     returns: usize,
@@ -452,27 +452,38 @@ fn typedoc_kind_singular(kind: &str) -> &'static str {
     TYPEDOC_KIND_SINGULAR.get(kind).copied().unwrap_or("Symbol")
 }
 
-/// TypeDoc-style H1 title for a per-symbol page, e.g. `Function: args()`,
-/// `Interface: Command<G>`, `Variable: CLI_OPTIONS_DEFAULT`. Functions append
-/// `()` (no type parameters); other kinds append `<…>` when generic.
-fn typedoc_entry_page_title(entry: &ApiDocEntry) -> String {
-    let mut title = String::new();
-    title.push_str(typedoc_kind_singular(&entry.kind));
-    title.push_str(": ");
-    title.push_str(&entry.name);
+fn typedoc_entry_page_title_len(entry: &ApiDocEntry) -> usize {
+    let mut len = typedoc_kind_singular(&entry.kind).len() + ": ".len() + entry.name.len();
     if entry.kind == "function" {
-        title.push_str("()");
+        len += "()".len();
     } else if !entry.type_parameters.is_empty() {
-        title.push('<');
+        len += "<>".len();
+        len += entry.type_parameters.iter().map(|type_param| type_param.name.len()).sum::<usize>();
+        len += ", ".len() * entry.type_parameters.len().saturating_sub(1);
+    }
+    len
+}
+
+/// Appends a TypeDoc-style H1 title for a per-symbol page, e.g.
+/// `Function: args()`, `Interface: Command<G>`, `Variable: CLI_OPTIONS_DEFAULT`.
+/// Functions append `()` (no type parameters); other kinds append `<...>` when
+/// generic.
+fn push_typedoc_entry_page_title(out: &mut String, entry: &ApiDocEntry) {
+    out.push_str(typedoc_kind_singular(&entry.kind));
+    out.push_str(": ");
+    out.push_str(&entry.name);
+    if entry.kind == "function" {
+        out.push_str("()");
+    } else if !entry.type_parameters.is_empty() {
+        out.push('<');
         for (index, type_param) in entry.type_parameters.iter().enumerate() {
             if index > 0 {
-                title.push_str(", ");
+                out.push_str(", ");
             }
-            title.push_str(&type_param.name);
+            out.push_str(&type_param.name);
         }
-        title.push('>');
+        out.push('>');
     }
-    title
 }
 
 fn typedoc_entry_file_name(module_name: &str, entry: &ApiDocEntry) -> String {
@@ -714,7 +725,9 @@ fn summarize_entries<'a>(entries: impl IntoIterator<Item = &'a ApiDocEntry>) -> 
 
     for entry in entries {
         stats.entries += 1;
-        *stats.by_kind.entry(entry.kind.clone()).or_default() += 1;
+        if let Some(index) = doc_kind_index(&entry.kind) {
+            stats.by_kind[index] += 1;
+        }
         stats.members += entry.members.len();
         stats.params += entry.params.len();
         stats.returns += usize::from(entry.returns.is_some());
@@ -735,6 +748,19 @@ fn summarize_docs(docs: &[ApiDocModule]) -> EntryStats {
     let mut stats = summarize_entries(docs.iter().flat_map(|doc| doc.entries.iter()));
     stats.examples += docs.iter().map(|doc| doc.examples.len()).sum::<usize>();
     stats
+}
+
+fn doc_kind_index(kind: &str) -> Option<usize> {
+    match kind {
+        "function" => Some(0),
+        "class" => Some(1),
+        "interface" => Some(2),
+        "type" => Some(3),
+        "enum" => Some(4),
+        "variable" => Some(5),
+        "module" => Some(6),
+        _ => None,
+    }
 }
 
 fn doc_kind_plural(kind: &str) -> &'static str {
@@ -1069,7 +1095,7 @@ fn generate_typedoc_module_index(
     // Module-level `@experimental` / `@deprecated` render as GitHub alerts just
     // below the title (markdown render style only; HTML keeps its own structure).
     if options.render_style == MarkdownRenderStyle::Markdown {
-        markdown.push_str(&markdown_pure::render_lifecycle_alerts(&doc.tags, Some(&link_context)));
+        markdown_pure::push_lifecycle_alerts(&mut markdown, &doc.tags, Some(&link_context));
     }
 
     let description = process_doc_text(&doc.description, Some(&link_context));
@@ -1225,28 +1251,23 @@ fn generate_typedoc_entry_page(
     };
     // TypeDoc-style H1 includes the declaration kind (and generics / `()`),
     // e.g. `# Function: cli()`, `# Interface: Command<G>`.
-    let title = typedoc_entry_page_title(entry);
-    if options.render_style == MarkdownRenderStyle::Markdown {
+    let title_len = typedoc_entry_page_title_len(entry);
+    let body = if options.render_style == MarkdownRenderStyle::Markdown {
         // Per-symbol page: title is `# {title}` (H1), so sections render at H2.
-        let body = markdown_pure::render_entry_body_pure(entry, options, Some(&link_context), 2);
-        let mut builder = StringBuilder::with_capacity(title.len() + 4);
-        builder.push_str("# ");
-        builder.push_str(&title);
-        builder.push_str("\n\n");
-        let mut markdown = builder.into_string();
-        if !body.is_empty() {
-            markdown.push_str(&body);
+        markdown_pure::render_entry_body_pure(entry, options, Some(&link_context), 2)
+    } else {
+        markdown_html::render_entry_page_html(entry, options, Some(&link_context))
+    };
+    let mut markdown = String::with_capacity(title_len + 4 + body.len() + 1);
+    markdown.push_str("# ");
+    push_typedoc_entry_page_title(&mut markdown, entry);
+    markdown.push_str("\n\n");
+    if !body.is_empty() {
+        markdown.push_str(&body);
+        if options.render_style == MarkdownRenderStyle::Markdown {
             markdown.push('\n');
         }
-        return markdown;
     }
-
-    let mut builder = StringBuilder::with_capacity(title.len() + 4);
-    builder.push_str("# ");
-    builder.push_str(&title);
-    builder.push_str("\n\n");
-    let mut markdown = builder.into_string();
-    markdown.push_str(&markdown_html::render_entry_page_html(entry, options, Some(&link_context)));
     markdown
 }
 
@@ -1388,20 +1409,20 @@ fn get_entry_badges(entry: &ApiDocEntry) -> Vec<EntryBadge> {
     badges
 }
 
-fn parse_example_block(example: &str) -> (String, String) {
+fn parse_example_block(example: &str) -> (&str, &str) {
     static FENCE_RE: RegexCache = OnceLock::new();
 
     let trimmed = example.trim();
     let Some(fence_re) = cached_regex(&FENCE_RE, r"(?s)^```([\w-]+)?[^\n]*\n(.*?)\n?```$") else {
-        return (trimmed.to_string(), "ts".to_string());
+        return (trimmed, "ts");
     };
 
     if let Some(captures) = fence_re.captures(trimmed) {
-        let language = captures.get(1).map_or("ts", |value| value.as_str()).to_string();
-        let code = captures.get(2).map_or("", |value| value.as_str()).to_string();
+        let language = captures.get(1).map_or("ts", |value| value.as_str());
+        let code = captures.get(2).map_or("", |value| value.as_str());
         (code, language)
     } else {
-        (trimmed.to_string(), "ts".to_string())
+        (trimmed, "ts")
     }
 }
 
@@ -1413,9 +1434,9 @@ fn render_module_examples_markdown(examples: &[String]) -> String {
     for example in examples {
         let (code, language) = parse_example_block(example);
         out.push_str("```");
-        out.push_str(&language);
+        out.push_str(language);
         out.push('\n');
-        out.push_str(&code);
+        out.push_str(code);
         out.push_str("\n```\n\n");
     }
     out

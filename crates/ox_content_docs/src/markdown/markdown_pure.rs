@@ -16,17 +16,14 @@ use crate::string_builder::StringBuilder;
 
 /// JSDoc lifecycle tags rendered as GitHub alerts rather than generic `## Tags`
 /// entries: `@experimental` → `> [!WARNING]`, `@deprecated` → `> [!CAUTION]`.
-const LIFECYCLE_TAGS: [&str; 2] = ["deprecated", "experimental"];
-
-/// Renders GitHub alert blocks for the lifecycle tags (`@experimental`,
+/// Appends GitHub alert blocks for lifecycle tags (`@experimental`,
 /// `@deprecated`) present in `tags`, in source order. Uses the tag's own text as
 /// the alert body (with `{@link}` resolved), falling back to a default message.
-/// Returns an empty string when no lifecycle tag is present.
-pub(super) fn render_lifecycle_alerts(
+pub(super) fn push_lifecycle_alerts(
+    out: &mut String,
     tags: &[ApiDocTag],
     context: Option<&MarkdownLinkContext<'_>>,
-) -> String {
-    let mut out = String::new();
+) {
     for tag in tags {
         let (kind, default) = match tag.tag.as_str() {
             "deprecated" => {
@@ -37,8 +34,17 @@ pub(super) fn render_lifecycle_alerts(
             }
             _ => continue,
         };
-        let body = inline(&tag.value, context);
-        let body = if body.is_empty() { default } else { body.as_str() };
+        let body_storage;
+        let body = if tag.value.trim().is_empty() {
+            default
+        } else {
+            body_storage = inline(&tag.value, context);
+            if body_storage.is_empty() {
+                default
+            } else {
+                body_storage.as_str()
+            }
+        };
         out.push_str("> [!");
         out.push_str(kind);
         out.push_str("]\n");
@@ -49,7 +55,10 @@ pub(super) fn render_lifecycle_alerts(
         }
         out.push('\n');
     }
-    out
+}
+
+fn is_lifecycle_tag(tag: &str) -> bool {
+    matches!(tag, "deprecated" | "experimental")
 }
 
 /// Renders the per-page stats summary as a single italic Markdown line.
@@ -61,8 +70,9 @@ pub(super) fn render_stats_markdown(stats: &EntryStats, module_count: Option<usi
         push_stat_part(&mut out, &mut has_parts, module_count, "modules");
     }
     push_stat_part(&mut out, &mut has_parts, stats.entries, "symbols");
-    for kind in super::DOC_KIND_ORDER {
-        if let Some(count) = stats.by_kind.get(kind).copied().filter(|count| *count > 0) {
+    for (index, kind) in super::DOC_KIND_ORDER.iter().enumerate() {
+        let count = stats.by_kind[index];
+        if count > 0 {
             push_stat_part(&mut out, &mut has_parts, count, super::doc_kind_plural(kind));
         }
     }
@@ -113,7 +123,7 @@ pub(super) fn render_entry_body_pure(
 
     // Lifecycle tags (`@experimental` / `@deprecated`) render as GitHub alerts
     // near the summary instead of a generic `## Tags` entry.
-    out.push_str(&render_lifecycle_alerts(&entry.tags, context));
+    push_lifecycle_alerts(&mut out, &entry.tags, context);
 
     let description = process_doc_text(&entry.description, context);
     let description = description.trim();
@@ -235,34 +245,36 @@ pub(super) fn render_entry_body_pure(
         for example in &entry.examples {
             let (code, language) = parse_example_block(example);
             out.push_str("```");
-            out.push_str(&language);
+            out.push_str(language);
             out.push('\n');
-            out.push_str(&code);
+            out.push_str(code);
             out.push_str("\n```\n\n");
         }
     }
 
     // Lifecycle tags are rendered as alerts above, so exclude them here.
-    let other_tags = entry
-        .tags
-        .iter()
-        .filter(|tag| !LIFECYCLE_TAGS.contains(&tag.tag.as_str()))
-        .collect::<Vec<_>>();
-    if !other_tags.is_empty() {
-        out.push_str(&heading);
-        out.push_str(" Tags\n\n");
-        for tag in other_tags {
-            let value = inline(&tag.value, context);
-            out.push_str("- `@");
-            out.push_str(&tag.tag);
-            if value.is_empty() {
-                out.push_str("`\n");
-            } else {
-                out.push_str("` — ");
-                out.push_str(&value);
-                out.push('\n');
-            }
+    let mut rendered_tags_heading = false;
+    for tag in &entry.tags {
+        if is_lifecycle_tag(&tag.tag) {
+            continue;
         }
+        if !rendered_tags_heading {
+            out.push_str(&heading);
+            out.push_str(" Tags\n\n");
+            rendered_tags_heading = true;
+        }
+        let value = inline(&tag.value, context);
+        out.push_str("- `@");
+        out.push_str(&tag.tag);
+        if value.is_empty() {
+            out.push_str("`\n");
+        } else {
+            out.push_str("` — ");
+            out.push_str(&value);
+            out.push('\n');
+        }
+    }
+    if rendered_tags_heading {
         out.push('\n');
     }
 
@@ -281,94 +293,125 @@ fn render_members_pure(
     context: Option<&MarkdownLinkContext<'_>>,
     section_level: usize,
 ) -> String {
-    // Bucket members lazily. Each entry kind uses a different subset of
-    // groups, and the default arm uses none of the specialized buckets, so the
-    // eager version spent one full member pass plus one `Vec` allocation per
-    // unused group. The closures below defer each filter pass until that group
-    // is actually requested by the selected entry kind, matching the HTML
-    // renderer's optimized member table path.
-    let methods = |is_static: bool| {
-        members_of(entry, move |member| {
-            member.r#static == is_static
-                && matches!(member.kind.as_str(), "method" | "getter" | "setter")
-        })
-    };
-    let properties = |is_static: bool| {
-        members_of(entry, move |member| member.r#static == is_static && member.kind == "property")
-    };
-
-    let groups: Vec<(&str, Vec<&ApiDocMember>)> = match entry.kind.as_str() {
-        "class" => vec![
-            ("Constructors", members_of(entry, |member| member.kind == "constructor")),
-            ("Static Methods", methods(true)),
-            ("Methods", methods(false)),
-            ("Static Properties", properties(true)),
-            ("Properties", properties(false)),
-        ],
-        "interface" => vec![("Properties", properties(false)), ("Methods", methods(false))],
-        "type" => vec![
-            ("Properties", properties(false)),
-            ("Methods", methods(false)),
-            ("Enum Members", members_of(entry, |member| member.kind == "enumMember")),
-        ],
-        "enum" => vec![("Enum Members", members_of(entry, |member| member.kind == "enumMember"))],
-        _ => vec![("Members", entry.members.iter().collect())],
-    };
-
     let mut out = String::new();
     let heading = "#".repeat(section_level);
-    for (title, members) in groups {
-        if members.is_empty() {
-            continue;
-        }
-        out.push_str(&heading);
-        out.push(' ');
-        out.push_str(title);
-        out.push_str("\n\n");
-        if effective_members_format(options, &entry.kind, title) == MarkdownDisplayFormat::List {
-            for member in &members {
-                let mut line = String::new();
-                line.push_str("- ");
-                line.push_str(&member_name_span(member));
-                line.push_str(" `");
-                line.push_str(&member.kind);
-                line.push('`');
-                let member_type = member_type(member);
-                if !member_type.is_empty() {
-                    line.push(' ');
-                    line.push_str(&code_span(member_type));
+    let group_context = MemberGroupRenderContext {
+        entry_kind: &entry.kind,
+        options,
+        link_context: context,
+        parameter_section_level: section_level + 1,
+    };
+
+    match entry.kind.as_str() {
+        "class" => {
+            let mut constructors = Vec::new();
+            let mut static_methods = Vec::new();
+            let mut methods = Vec::new();
+            let mut static_properties = Vec::new();
+            let mut properties = Vec::new();
+
+            for member in &entry.members {
+                match member.kind.as_str() {
+                    "constructor" => constructors.push(member),
+                    "method" | "getter" | "setter" if member.r#static => {
+                        static_methods.push(member);
+                    }
+                    "method" | "getter" | "setter" => methods.push(member),
+                    "property" if member.r#static => static_properties.push(member),
+                    "property" => properties.push(member),
+                    _ => {}
                 }
-                let description = member_description(member, context);
-                if !description.is_empty() {
-                    line.push_str(" - ");
-                    line.push_str(&description);
-                }
-                out.push_str(&line);
-                out.push('\n');
             }
-        } else {
-            out.push_str("| Name | Kind | Type | Description |\n| --- | --- | --- | --- |\n");
-            for member in &members {
-                out.push_str("| ");
-                out.push_str(&member_name_cell(member));
-                out.push_str(" | ");
-                out.push_str(&table_cell(&member.kind));
-                out.push_str(" | ");
-                out.push_str(&code_cell(member_type(member)));
-                out.push_str(" | ");
-                out.push_str(&table_cell(&member_description(member, context)));
-                out.push_str(" |\n");
-            }
+            render_member_group_pure(
+                &mut out,
+                &heading,
+                "Constructors",
+                &constructors,
+                &group_context,
+            );
+            render_member_group_pure(
+                &mut out,
+                &heading,
+                "Static Methods",
+                &static_methods,
+                &group_context,
+            );
+            render_member_group_pure(&mut out, &heading, "Methods", &methods, &group_context);
+            render_member_group_pure(
+                &mut out,
+                &heading,
+                "Static Properties",
+                &static_properties,
+                &group_context,
+            );
+            render_member_group_pure(&mut out, &heading, "Properties", &properties, &group_context);
         }
-        out.push('\n');
-        out.push_str(&render_member_parameter_sections_pure(
-            &members,
-            options,
-            context,
-            section_level + 1,
-        ));
+        "interface" => {
+            let mut properties = Vec::new();
+            let mut methods = Vec::new();
+
+            for member in &entry.members {
+                match member.kind.as_str() {
+                    "method" | "getter" | "setter" if !member.r#static => methods.push(member),
+                    "property" if !member.r#static => properties.push(member),
+                    _ => {}
+                }
+            }
+            render_member_group_pure(&mut out, &heading, "Properties", &properties, &group_context);
+            render_member_group_pure(&mut out, &heading, "Methods", &methods, &group_context);
+        }
+        "type" => {
+            let mut properties = Vec::new();
+            let mut methods = Vec::new();
+            let mut enum_members = Vec::new();
+
+            for member in &entry.members {
+                match member.kind.as_str() {
+                    "method" | "getter" | "setter" if !member.r#static => methods.push(member),
+                    "property" if !member.r#static => properties.push(member),
+                    "enumMember" => enum_members.push(member),
+                    _ => {}
+                }
+            }
+            render_member_group_pure(&mut out, &heading, "Properties", &properties, &group_context);
+            render_member_group_pure(&mut out, &heading, "Methods", &methods, &group_context);
+            render_member_group_pure(
+                &mut out,
+                &heading,
+                "Enum Members",
+                &enum_members,
+                &group_context,
+            );
+        }
+        "enum" => {
+            let mut enum_members = Vec::new();
+
+            for member in &entry.members {
+                if member.kind == "enumMember" {
+                    enum_members.push(member);
+                }
+            }
+            render_member_group_pure(
+                &mut out,
+                &heading,
+                "Enum Members",
+                &enum_members,
+                &group_context,
+            );
+        }
+        _ => {
+            let members = entry.members.iter().collect::<Vec<_>>();
+            render_member_group_pure(&mut out, &heading, "Members", &members, &group_context);
+        }
     }
     out
+}
+
+struct MemberGroupRenderContext<'a, 'ctx> {
+    entry_kind: &'a str,
+    options: &'a MarkdownDocsOptions,
+    link_context: Option<&'a MarkdownLinkContext<'ctx>>,
+    parameter_section_level: usize,
 }
 
 fn render_member_parameter_sections_pure(
@@ -428,11 +471,65 @@ fn render_member_parameter_sections_pure(
     out
 }
 
-fn members_of<'a>(
-    entry: &'a ApiDocEntry,
-    predicate: impl Fn(&&'a ApiDocMember) -> bool,
-) -> Vec<&'a ApiDocMember> {
-    entry.members.iter().filter(predicate).collect()
+fn render_member_group_pure(
+    out: &mut String,
+    heading: &str,
+    title: &str,
+    members: &[&ApiDocMember],
+    context: &MemberGroupRenderContext<'_, '_>,
+) {
+    if members.is_empty() {
+        return;
+    }
+
+    out.push_str(heading);
+    out.push(' ');
+    out.push_str(title);
+    out.push_str("\n\n");
+    if effective_members_format(context.options, context.entry_kind, title)
+        == MarkdownDisplayFormat::List
+    {
+        for member in members {
+            let mut line = String::new();
+            line.push_str("- ");
+            line.push_str(&member_name_span(member));
+            line.push_str(" `");
+            line.push_str(&member.kind);
+            line.push('`');
+            let member_type = member_type(member);
+            if !member_type.is_empty() {
+                line.push(' ');
+                line.push_str(&code_span(member_type));
+            }
+            let description = member_description(member, context.link_context);
+            if !description.is_empty() {
+                line.push_str(" - ");
+                line.push_str(&description);
+            }
+            out.push_str(&line);
+            out.push('\n');
+        }
+    } else {
+        out.push_str("| Name | Kind | Type | Description |\n| --- | --- | --- | --- |\n");
+        for member in members {
+            out.push_str("| ");
+            out.push_str(&member_name_cell(member));
+            out.push_str(" | ");
+            out.push_str(&table_cell(&member.kind));
+            out.push_str(" | ");
+            out.push_str(&code_cell(member_type(member)));
+            out.push_str(" | ");
+            out.push_str(&table_cell(&member_description(member, context.link_context)));
+            out.push_str(" |\n");
+        }
+    }
+    out.push('\n');
+    out.push_str(&render_member_parameter_sections_pure(
+        members,
+        context.options,
+        context.link_context,
+        context.parameter_section_level,
+    ));
 }
 
 fn member_name_cell(member: &ApiDocMember) -> String {
@@ -491,10 +588,22 @@ fn member_description(member: &ApiDocMember, context: Option<&MarkdownLinkContex
         }
         description.push_str(part);
     };
-    if member.tags.iter().any(|tag| tag.tag == "deprecated") {
+    let mut deprecated = false;
+    let mut experimental = false;
+    for tag in &member.tags {
+        match tag.tag.as_str() {
+            "deprecated" => deprecated = true,
+            "experimental" => experimental = true,
+            _ => {}
+        }
+        if deprecated && experimental {
+            break;
+        }
+    }
+    if deprecated {
         push_part(&mut description, "**Deprecated.**");
     }
-    if member.tags.iter().any(|tag| tag.tag == "experimental") {
+    if experimental {
         push_part(&mut description, "**Experimental.**");
     }
     if !member.description.is_empty() {
