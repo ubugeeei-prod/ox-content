@@ -2221,7 +2221,9 @@ mod tests {
         assert!(page.contains("## Parameters"));
         assert!(page.contains("## Returns"));
         assert!(page.contains("## Examples"));
-        assert!(page.contains("## Tags"));
+        // `@since` renders as a dedicated `## Since` section, not generic `## Tags`.
+        assert!(page.contains("## Since"));
+        assert!(!page.contains("## Tags"));
         assert!(!page.contains("**Signature**"));
         assert!(!page.contains("**Returns**"));
         assert!(!page.contains("#### "));
@@ -3221,9 +3223,12 @@ mod tests {
     }
 
     #[test]
-    fn typedoc_keeps_non_lifecycle_tags_in_tags_section() {
+    fn typedoc_keeps_non_structured_tags_in_tags_section() {
+        // `@see` is neither a lifecycle tag nor a `@since`/`@version` tag, so it
+        // stays in the generic `## Tags` list while structured tags move out.
         let mut entry = test_entry("run", "function", "/repo/src/run.ts", "Run it.");
         entry.tags = vec![
+            ApiDocTag { tag: "see".to_string(), value: "related".to_string() },
             ApiDocTag { tag: "since".to_string(), value: "1.0.0".to_string() },
             ApiDocTag { tag: "experimental".to_string(), value: String::new() },
         ];
@@ -3231,8 +3236,10 @@ mod tests {
         let page = out.get("combinators/functions/run.md").unwrap();
 
         assert!(page.contains("> [!WARNING]"));
+        assert!(page.contains("## Since"));
         assert!(page.contains("## Tags"));
-        assert!(page.contains("`@since`"));
+        assert!(page.contains("`@see`"));
+        assert!(!page.contains("`@since`"));
         assert!(!page.contains("`@experimental`"));
     }
 
@@ -3260,6 +3267,70 @@ mod tests {
         let page = out.get("combinators/interfaces/StringOptions.md").unwrap();
 
         assert!(page.contains("**Experimental.** Minimum string length."));
+    }
+
+    #[test]
+    fn typedoc_renders_since_as_dedicated_section() {
+        let mut entry = test_entry("Example", "interface", "/repo/src/example.ts", "Example API.");
+        entry.tags = vec![ApiDocTag { tag: "since".to_string(), value: "v0.27.0".to_string() }];
+        let out = generate_markdown(&lifecycle_module(entry), &markdown_typedoc_options());
+        let page = out.get("combinators/interfaces/Example.md").unwrap();
+
+        assert!(page.contains("## Since\n\nv0.27.0"));
+        assert!(!page.contains("## Tags"));
+        assert!(!page.contains("@since"));
+    }
+
+    #[test]
+    fn typedoc_normalizes_version_into_since_section() {
+        let mut entry = test_entry("Example", "interface", "/repo/src/example.ts", "Example API.");
+        entry.tags = vec![ApiDocTag { tag: "version".to_string(), value: "1.2.3".to_string() }];
+        let out = generate_markdown(&lifecycle_module(entry), &markdown_typedoc_options());
+        let page = out.get("combinators/interfaces/Example.md").unwrap();
+
+        assert!(page.contains("## Since\n\n1.2.3"));
+        assert!(!page.contains("## Version"));
+        assert!(!page.contains("## Tags"));
+    }
+
+    #[test]
+    fn typedoc_combines_since_and_version_into_one_section() {
+        let mut entry = test_entry("Example", "interface", "/repo/src/example.ts", "Example API.");
+        entry.tags = vec![
+            ApiDocTag { tag: "since".to_string(), value: "v0.27.0".to_string() },
+            ApiDocTag { tag: "version".to_string(), value: "1.2.3".to_string() },
+        ];
+        let out = generate_markdown(&lifecycle_module(entry), &markdown_typedoc_options());
+        let page = out.get("combinators/interfaces/Example.md").unwrap();
+
+        assert!(page.contains("## Since\n\nv0.27.0\n\n1.2.3"));
+        assert_eq!(page.matches("## Since").count(), 1);
+    }
+
+    #[test]
+    fn typedoc_renders_member_since_inline() {
+        let mut entry =
+            test_entry("PluginOptions", "interface", "/repo/src/plugin.ts", "Plugin options.");
+        entry.members = vec![ApiDocMember {
+            name: "entry".to_string(),
+            kind: "property".to_string(),
+            description: "Whether this is an entry command.".to_string(),
+            signature: None,
+            type_annotation: Some("boolean".to_string()),
+            params: vec![],
+            returns: None,
+            optional: true,
+            readonly: false,
+            r#static: false,
+            private: false,
+            tags: vec![ApiDocTag { tag: "since".to_string(), value: "v0.27.0".to_string() }],
+            line: 1,
+            end_line: 1,
+        }];
+        let out = generate_markdown(&lifecycle_module(entry), &markdown_typedoc_options());
+        let page = out.get("combinators/interfaces/PluginOptions.md").unwrap();
+
+        assert!(page.contains("Whether this is an entry command. **Since** v0.27.0"));
     }
 
     #[test]
