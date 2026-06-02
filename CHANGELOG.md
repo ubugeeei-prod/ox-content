@@ -1,5 +1,12 @@
 # Changelog
 
+## [2.43.0] - 2026-06-02
+
+### Bug Fixes
+
+- include declaration kind in typedoc symbol page H1 titles (#294)
+- render @experimental and @deprecated as GitHub alerts in markdown output (#293)
+
 ## [2.42.0] - 2026-06-02
 
 ### Features
