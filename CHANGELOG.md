@@ -1,5 +1,15 @@
 # Changelog
 
+## [2.44.0] - 2026-06-02
+
+### Bug Fixes
+
+- render @since and @version as a Since section in markdown output (#296)
+
+### Performance
+
+- reduce markdown renderer allocations (#295)
+
 ## [2.43.0] - 2026-06-02
 
 ### Bug Fixes
