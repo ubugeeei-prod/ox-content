@@ -452,6 +452,29 @@ fn typedoc_kind_singular(kind: &str) -> &'static str {
     TYPEDOC_KIND_SINGULAR.get(kind).copied().unwrap_or("Symbol")
 }
 
+/// TypeDoc-style H1 title for a per-symbol page, e.g. `Function: args()`,
+/// `Interface: Command<G>`, `Variable: CLI_OPTIONS_DEFAULT`. Functions append
+/// `()` (no type parameters); other kinds append `<…>` when generic.
+fn typedoc_entry_page_title(entry: &ApiDocEntry) -> String {
+    let mut title = String::new();
+    title.push_str(typedoc_kind_singular(&entry.kind));
+    title.push_str(": ");
+    title.push_str(&entry.name);
+    if entry.kind == "function" {
+        title.push_str("()");
+    } else if !entry.type_parameters.is_empty() {
+        title.push('<');
+        for (index, type_param) in entry.type_parameters.iter().enumerate() {
+            if index > 0 {
+                title.push_str(", ");
+            }
+            title.push_str(&type_param.name);
+        }
+        title.push('>');
+    }
+    title
+}
+
 fn typedoc_entry_file_name(module_name: &str, entry: &ApiDocEntry) -> String {
     let segment = sanitize_doc_path_segment(&entry.name);
     join5(module_name, "/", typedoc_kind_segment(&entry.kind), "/", &segment)
@@ -1200,12 +1223,15 @@ fn generate_typedoc_entry_page(
         current_module_name: module_name,
         symbol_map,
     };
+    // TypeDoc-style H1 includes the declaration kind (and generics / `()`),
+    // e.g. `# Function: cli()`, `# Interface: Command<G>`.
+    let title = typedoc_entry_page_title(entry);
     if options.render_style == MarkdownRenderStyle::Markdown {
-        // Per-symbol page: title is `# {name}` (H1), so sections render at H2.
+        // Per-symbol page: title is `# {title}` (H1), so sections render at H2.
         let body = markdown_pure::render_entry_body_pure(entry, options, Some(&link_context), 2);
-        let mut builder = StringBuilder::with_capacity(entry.name.len() + 4);
+        let mut builder = StringBuilder::with_capacity(title.len() + 4);
         builder.push_str("# ");
-        builder.push_str(&entry.name);
+        builder.push_str(&title);
         builder.push_str("\n\n");
         let mut markdown = builder.into_string();
         if !body.is_empty() {
@@ -1215,9 +1241,9 @@ fn generate_typedoc_entry_page(
         return markdown;
     }
 
-    let mut builder = StringBuilder::with_capacity(entry.name.len() + 4);
+    let mut builder = StringBuilder::with_capacity(title.len() + 4);
     builder.push_str("# ");
-    builder.push_str(&entry.name);
+    builder.push_str(&title);
     builder.push_str("\n\n");
     let mut markdown = builder.into_string();
     markdown.push_str(&markdown_html::render_entry_page_html(entry, options, Some(&link_context)));
@@ -2068,7 +2094,7 @@ mod tests {
             .clone();
         let page = out.get(&key).unwrap();
         assert_no_api_html(page);
-        assert!(page.starts_with("# cli"));
+        assert!(page.starts_with("# Function: cli()"));
         assert!(page.contains("```ts"));
     }
 
@@ -2086,6 +2112,74 @@ mod tests {
         assert!(functions.contains("### cli"));
     }
 
+    fn typedoc_title_page(entry: ApiDocEntry) -> String {
+        let docs = vec![ApiDocModule {
+            description: String::new(),
+            file: "mod".to_string(),
+            source_path: String::new(),
+            examples: vec![],
+            tags: vec![],
+            entries: vec![entry],
+        }];
+        let out = generate_markdown(
+            &docs,
+            &MarkdownDocsOptions {
+                path_strategy: MarkdownPathStrategy::TypeDoc,
+                render_style: MarkdownRenderStyle::Markdown,
+                ..MarkdownDocsOptions::default()
+            },
+        );
+        out.into_iter()
+            .find(|(key, _)| {
+                key.contains('/') && key.ends_with(".md") && !key.ends_with("index.md")
+            })
+            .map(|(_, page)| page)
+            .expect("a per-symbol page")
+    }
+
+    #[test]
+    fn typedoc_symbol_page_h1_includes_declaration_kind() {
+        // Function: kind prefix + `()`, no type parameters in the title.
+        let mut func =
+            test_entry("args", "function", "/repo/src/combinators.ts", "Schema factory.");
+        func.type_parameters = vec![ApiTypeParamDoc {
+            name: "T".to_string(),
+            constraint: None,
+            default: None,
+            description: String::new(),
+        }];
+        assert!(typedoc_title_page(func).starts_with("# Function: args()"));
+
+        // Interface with a generic parameter (names only).
+        let mut iface = test_entry("Command", "interface", "/repo/src/types.ts", "A command.");
+        iface.type_parameters = vec![ApiTypeParamDoc {
+            name: "G".to_string(),
+            constraint: Some("GunshiParams".to_string()),
+            default: None,
+            description: String::new(),
+        }];
+        assert!(typedoc_title_page(iface).starts_with("# Interface: Command<G>"));
+
+        // Type alias with a generic parameter.
+        let mut alias = test_entry("Plugin", "type", "/repo/src/plugin.ts", "Plugin type.");
+        alias.type_parameters = vec![ApiTypeParamDoc {
+            name: "E".to_string(),
+            constraint: None,
+            default: None,
+            description: String::new(),
+        }];
+        assert!(typedoc_title_page(alias).starts_with("# Type Alias: Plugin<E>"));
+
+        // Class without type parameters: kind prefix only.
+        let class = test_entry("DefaultTranslation", "class", "/repo/src/i18n.ts", "Translation.");
+        assert!(typedoc_title_page(class).starts_with("# Class: DefaultTranslation\n"));
+
+        // Variable: kind prefix only, no `()` or `<>`.
+        let variable =
+            test_entry("CLI_OPTIONS_DEFAULT", "variable", "/repo/src/constants.ts", "Defaults.");
+        assert!(typedoc_title_page(variable).starts_with("# Variable: CLI_OPTIONS_DEFAULT\n"));
+    }
+
     #[test]
     fn render_style_markdown_typedoc_sections_are_sequential_headings() {
         let options = MarkdownDocsOptions {
@@ -2101,7 +2195,7 @@ mod tests {
         let fn_key =
             out.keys().find(|key| key.ends_with("functions/cli.md")).expect("cli page").clone();
         let page = out.get(&fn_key).unwrap();
-        assert!(page.starts_with("# cli"));
+        assert!(page.starts_with("# Function: cli()"));
         assert!(page.contains("## Signature"));
         assert!(page.contains("## Parameters"));
         assert!(page.contains("## Returns"));
