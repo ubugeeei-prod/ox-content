@@ -284,9 +284,7 @@ export function toRustDocsModules(docs: ExtractedDocs[]) {
     description: doc.description,
     sourcePath: doc.sourcePath,
     examples: doc.examples,
-    tags: doc.tags
-      ? Object.entries(doc.tags).map(([tag, value]) => ({ tag, value }))
-      : undefined,
+    tags: doc.tags ? Object.entries(doc.tags).map(([tag, value]) => ({ tag, value })) : undefined,
     entries: doc.entries.map((entry) => ({
       name: entry.name,
       kind: entry.kind,
