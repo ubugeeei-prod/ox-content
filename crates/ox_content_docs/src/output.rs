@@ -236,6 +236,8 @@ mod tests {
             description: String::new(),
             file: "default".to_string(),
             source_path: String::new(),
+            examples: vec![],
+            tags: vec![],
             entries: vec![
                 ApiDocEntry {
                     name: "cli".to_string(),

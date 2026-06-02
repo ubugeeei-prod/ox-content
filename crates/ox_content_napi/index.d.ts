@@ -336,6 +336,10 @@ export interface JsDocsMarkdownModule {
    * re-exported symbol's canonical page under its defining module.
    */
   sourcePath?: string
+  /** Module-level example blocks from the entry file's `@module` / leading JSDoc. */
+  examples?: Array<string>
+  /** Module-level custom JSDoc tags. */
+  tags?: Array<JsDocsMarkdownTag>
   entries: Array<JsDocsMarkdownEntry>
 }
 
@@ -432,6 +436,10 @@ export interface JsEntrypointDocsModule {
   sourcePath: string
   /** Module-level description from the entry file's `@module` / leading JSDoc. */
   description: string
+  /** Module-level example blocks from the entry file's `@module` / leading JSDoc. */
+  examples: Array<string>
+  /** Module-level custom JSDoc tags. */
+  tags: Array<JsDocsMarkdownTag>
   entries: Array<JsDocEntry>
   exports: Array<JsPublicExport>
   diagnostics: Array<JsDocsDiagnostic>

@@ -288,6 +288,10 @@ pub struct JsDocsMarkdownModule {
     /// `sourcePath`). Optional; when provided, the TypeDoc path strategy places a
     /// re-exported symbol's canonical page under its defining module.
     pub source_path: Option<String>,
+    /// Module-level example blocks from the entry file's `@module` / leading JSDoc.
+    pub examples: Option<Vec<String>>,
+    /// Module-level custom JSDoc tags.
+    pub tags: Option<Vec<JsDocsMarkdownTag>>,
     pub entries: Vec<JsDocsMarkdownEntry>,
 }
 
@@ -438,6 +442,10 @@ pub struct JsEntrypointDocsModule {
     pub source_path: String,
     /// Module-level description from the entry file's `@module` / leading JSDoc.
     pub description: String,
+    /// Module-level example blocks from the entry file's `@module` / leading JSDoc.
+    pub examples: Vec<String>,
+    /// Module-level custom JSDoc tags.
+    pub tags: Vec<JsDocsMarkdownTag>,
     pub entries: Vec<JsDocEntry>,
     pub exports: Vec<JsPublicExport>,
     pub diagnostics: Vec<JsDocsDiagnostic>,
@@ -1122,6 +1130,10 @@ fn convert_markdown_tag(tag: JsDocsMarkdownTag) -> ApiDocTag {
     ApiDocTag { tag: tag.tag, value: tag.value }
 }
 
+fn map_api_doc_tag(tag: ApiDocTag) -> JsDocsMarkdownTag {
+    JsDocsMarkdownTag { tag: tag.tag, value: tag.value }
+}
+
 fn convert_markdown_member(member: JsDocMember) -> ApiDocMember {
     ApiDocMember {
         name: member.name,
@@ -1189,6 +1201,8 @@ fn convert_markdown_module(module: JsDocsMarkdownModule) -> ApiDocModule {
         file: module.file,
         description: module.description.unwrap_or_default(),
         source_path: module.source_path.unwrap_or_default(),
+        examples: module.examples.unwrap_or_default(),
+        tags: module.tags.unwrap_or_default().into_iter().map(convert_markdown_tag).collect(),
         entries: module.entries.into_iter().map(convert_markdown_entry).collect(),
     }
 }
@@ -1351,6 +1365,8 @@ pub fn extract_docs_from_entry_points_napi(
             file: module.file,
             source_path: path_to_string(&module.source_path),
             description: module.description,
+            examples: module.examples,
+            tags: module.tags.into_iter().map(map_api_doc_tag).collect(),
             entries: module.entries.into_iter().map(map_normalized_doc_entry).collect(),
             exports: module.exports.into_iter().map(map_public_export).collect(),
             diagnostics: module.diagnostics.into_iter().map(map_docs_diagnostic).collect(),
@@ -3495,6 +3511,8 @@ mod tests {
             description: None,
             file: "/repo/src/context.ts".to_string(),
             source_path: None,
+            examples: None,
+            tags: None,
             entries: vec![JsDocsMarkdownEntry {
                 name: "CommandContext".to_string(),
                 kind: "interface".to_string(),
@@ -3536,6 +3554,8 @@ mod tests {
             description: None,
             file: "/repo/src/context.ts".to_string(),
             source_path: None,
+            examples: None,
+            tags: None,
             entries: vec![JsDocsMarkdownEntry {
                 name: "CommandContext".to_string(),
                 kind: "interface".to_string(),
@@ -3579,6 +3599,8 @@ mod tests {
             description: None,
             file: "default".to_string(),
             source_path: None,
+            examples: None,
+            tags: None,
             entries: vec![JsDocsMarkdownEntry {
                 name: "make".to_string(),
                 kind: "function".to_string(),
@@ -3625,6 +3647,8 @@ mod tests {
                 description: None,
                 file: "/repo/src/command.ts".to_string(),
                 source_path: None,
+                examples: None,
+                tags: None,
                 entries: vec![JsDocsMarkdownEntry {
                     name: "Command".to_string(),
                     kind: "interface".to_string(),
@@ -3661,6 +3685,8 @@ mod tests {
                 description: None,
                 file: "/repo/src/build.ts".to_string(),
                 source_path: None,
+                examples: None,
+                tags: None,
                 entries: vec![JsDocsMarkdownEntry {
                     name: "buildCommand".to_string(),
                     kind: "function".to_string(),
@@ -3715,6 +3741,8 @@ mod tests {
             description: None,
             file: "default".to_string(),
             source_path: None,
+            examples: None,
+            tags: None,
             entries: vec![
                 JsDocsMarkdownEntry {
                     name: "Command".to_string(),
@@ -3800,12 +3828,16 @@ mod tests {
                 description: None,
                 file: "context".to_string(),
                 source_path: Some("/repo/src/context.ts".to_string()),
+                examples: None,
+                tags: None,
                 entries: vec![entry("createCommandContext")],
             },
             JsDocsMarkdownModule {
                 description: None,
                 file: "default".to_string(),
                 source_path: Some("/repo/src/index.ts".to_string()),
+                examples: None,
+                tags: None,
                 entries: vec![entry("createCommandContext")],
             },
         ];
@@ -3834,6 +3866,8 @@ mod tests {
             description: None,
             file: "default".to_string(),
             source_path: None,
+            examples: None,
+            tags: None,
             entries: vec![JsDocsMarkdownEntry {
                 name: "make".to_string(),
                 kind: "function".to_string(),
@@ -3883,6 +3917,8 @@ mod tests {
             description: Some("The entry for gunshi context.".to_string()),
             file: "context".to_string(),
             source_path: None,
+            examples: Some(vec!["```ts\ncreateCommandContext()\n```".to_string()]),
+            tags: None,
             entries: vec![JsDocsMarkdownEntry {
                 name: "createCommandContext".to_string(),
                 kind: "function".to_string(),
@@ -3919,6 +3955,7 @@ mod tests {
         assert!(!index.contains("Creates a command context."));
         let module_index = markdown.get("context/index.md").unwrap();
         assert!(module_index.contains("The entry for gunshi context."));
+        assert!(module_index.contains("## Example\n\n```ts\ncreateCommandContext()\n```"));
     }
 
     #[test]
@@ -3927,6 +3964,8 @@ mod tests {
             description: None,
             file: "default".to_string(),
             source_path: None,
+            examples: None,
+            tags: None,
             entries: vec![
                 JsDocsMarkdownEntry {
                     name: "cli".to_string(),
@@ -3989,6 +4028,8 @@ mod tests {
             description: None,
             file: "/repo/src/context.ts".to_string(),
             source_path: None,
+            examples: None,
+            tags: None,
             entries: vec![],
         }];
 
@@ -4012,6 +4053,8 @@ mod tests {
             description: None,
             file: "default".to_string(),
             source_path: None,
+            examples: None,
+            tags: None,
             entries: vec![JsDocsMarkdownEntry {
                 name: "cli".to_string(),
                 kind: "function".to_string(),
@@ -4081,6 +4124,13 @@ mod tests {
 /**
  * gunshi cli entry point.
  *
+ * @example
+ * ```ts
+ * cli()
+ * ```
+ *
+ * @experimental This module is experimental.
+ *
  * @module default
  */
 /** Runs the CLI. */
@@ -4101,6 +4151,10 @@ export function cli(): void {}
         assert_eq!(modules[0].name, "default");
         assert_eq!(modules[0].file, "default");
         assert_eq!(modules[0].description, "gunshi cli entry point.");
+        assert_eq!(modules[0].examples, vec!["```ts\ncli()\n```".to_string()]);
+        assert_eq!(modules[0].tags.len(), 1);
+        assert_eq!(modules[0].tags[0].tag, "experimental");
+        assert_eq!(modules[0].tags[0].value, "This module is experimental.");
 
         let _ = fs::remove_dir_all(root);
     }

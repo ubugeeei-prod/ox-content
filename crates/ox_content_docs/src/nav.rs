@@ -365,6 +365,8 @@ mod tests {
             description: String::new(),
             file: "default".to_string(),
             source_path: String::new(),
+            examples: vec![],
+            tags: vec![],
             entries: vec![
                 ApiDocEntry {
                     name: "cli".to_string(),
@@ -423,6 +425,8 @@ mod tests {
             description: String::new(),
             file: "default".to_string(),
             source_path: String::new(),
+            examples: vec![],
+            tags: vec![],
             entries: vec![ApiDocEntry {
                 name: "Mode".to_string(),
                 kind: "enum".to_string(),
@@ -459,6 +463,8 @@ mod tests {
             description: String::new(),
             file: module.to_string(),
             source_path: source.to_string(),
+            examples: vec![],
+            tags: vec![],
             entries: vec![ApiDocEntry {
                 name: "createCommandContext".to_string(),
                 kind: "function".to_string(),

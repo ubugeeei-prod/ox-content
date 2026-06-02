@@ -16,7 +16,8 @@ use thiserror::Error;
 
 use crate::string_builder::{join2, join4, StringBuilder};
 use crate::{
-    normalize_doc_items, DocExtractor, ExtractError, NormalizedDocEntry, NormalizedDocKind,
+    normalize_doc_items, ApiDocTag, DocExtractor, ExtractError, NormalizedDocEntry,
+    NormalizedDocKind,
 };
 
 /// Entry point used to group generated API docs.
@@ -171,6 +172,13 @@ pub struct EntrypointDocsModule {
     /// file comment. Empty when the entry file has no module-level JSDoc.
     #[serde(default)]
     pub description: String,
+    /// Module-level example blocks from the entry file's `@module` block or
+    /// leading file comment.
+    #[serde(default)]
+    pub examples: Vec<String>,
+    /// Module-level custom JSDoc tags.
+    #[serde(default)]
+    pub tags: Vec<ApiDocTag>,
     /// Normalized docs entries for reachable exports.
     pub entries: Vec<NormalizedDocEntry>,
     /// Public export metadata, including external re-exports.
@@ -430,6 +438,8 @@ pub fn extract_docs_from_entry_points(
             name: module_metadata.name,
             source_path: entrypoint.source_path,
             description: module_metadata.description,
+            examples: module_metadata.examples,
+            tags: module_metadata.tags,
             entries,
             exports: entrypoint.exports,
             diagnostics,
@@ -442,6 +452,8 @@ pub fn extract_docs_from_entry_points(
 struct EntrypointModuleMetadata {
     name: String,
     description: String,
+    examples: Vec<String>,
+    tags: Vec<ApiDocTag>,
 }
 
 fn resolve_entrypoint_module_metadata(
@@ -455,7 +467,18 @@ fn resolve_entrypoint_module_metadata(
     EntrypointModuleMetadata {
         name: explicit_module_name.unwrap_or(entrypoint_name).to_string(),
         description: module_entry.map(|entry| entry.description.clone()).unwrap_or_default(),
+        examples: module_entry.map(|entry| entry.examples.clone()).unwrap_or_default(),
+        tags: module_entry.map(module_tags_from_normalized_entry).unwrap_or_default(),
     }
+}
+
+fn module_tags_from_normalized_entry(entry: &NormalizedDocEntry) -> Vec<ApiDocTag> {
+    entry
+        .tags
+        .iter()
+        .filter(|(tag, _)| tag.as_str() != "module")
+        .map(|(tag, value)| ApiDocTag { tag: tag.clone(), value: value.clone() })
+        .collect()
 }
 
 fn explicit_module_name_from_tags(
@@ -1358,6 +1381,13 @@ export function label(value: string): string {
 /**
  * The entry for gunshi context.
  *
+ * @example
+ * ```ts
+ * createCommandContext()
+ * ```
+ *
+ * @experimental This entry point is experimental.
+ *
  * @module
  */
 export { createCommandContext } from './context-impl';
@@ -1415,6 +1445,10 @@ export function plugin(): void {}
         let context = docs.iter().find(|module| module.name == "context").unwrap();
         assert_eq!(context.file, "context");
         assert_eq!(context.description, "The entry for gunshi context.");
+        assert_eq!(context.examples, vec!["```ts\ncreateCommandContext()\n```".to_string()]);
+        assert_eq!(context.tags.len(), 1);
+        assert_eq!(context.tags[0].tag, "experimental");
+        assert_eq!(context.tags[0].value, "This entry point is experimental.");
         // The module entry itself is not surfaced as a regular export entry.
         assert!(context.entries.iter().all(|entry| entry.kind != NormalizedDocKind::Module));
         assert!(context.entries.iter().any(|entry| entry.name == "createCommandContext"));

@@ -260,6 +260,8 @@ fn docs(module_count: usize, entries_per_module: usize) -> Vec<ApiDocModule> {
                 file: file.clone(),
                 description,
                 source_path: file,
+                examples: vec![],
+                tags: vec![],
                 entries: (0..entries_per_module).map(|index| entry(module, index)).collect(),
             }
         })

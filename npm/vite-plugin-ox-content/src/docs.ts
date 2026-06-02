@@ -58,6 +58,8 @@ import type {
 } from "./types";
 import { importNapiModule, importNapiModuleSync } from "./napi";
 
+type NapiMarkdownTag = { tag: string; value: string };
+
 const DEFAULT_DOCS_INCLUDE = [
   "**/*.ts",
   "**/*.tsx",
@@ -151,7 +153,14 @@ export async function extractDocs(
             internal?: boolean;
             typeParameters?: boolean;
           },
-        ) => Array<{ file: string; entries: DocEntry[] }>;
+        ) => Array<{
+          file: string;
+          description?: string;
+          sourcePath?: string;
+          examples?: string[];
+          tags?: NapiMarkdownTag[];
+          entries: DocEntry[];
+        }>;
       }
     ).extractDocsFromEntryPoints;
 
@@ -166,7 +175,14 @@ export async function extractDocs(
       private: options.private,
       internal: options.internal,
       typeParameters: options.typeParameters,
-    }).map((doc) => ({ file: doc.file, entries: doc.entries }));
+    }).map((doc) => ({
+      file: doc.file,
+      description: doc.description,
+      sourcePath: doc.sourcePath,
+      examples: doc.examples,
+      tags: toTagRecord(doc.tags),
+      entries: doc.entries,
+    }));
   }
 
   const extractDocsFromDirectories = (
@@ -265,6 +281,10 @@ export async function writeDocs(
 export function toRustDocsModules(docs: ExtractedDocs[]) {
   return docs.map((doc) => ({
     file: doc.file,
+    description: doc.description,
+    sourcePath: doc.sourcePath,
+    examples: doc.examples,
+    tags: doc.tags ? Object.entries(doc.tags).map(([tag, value]) => ({ tag, value })) : undefined,
     entries: doc.entries.map((entry) => ({
       name: entry.name,
       kind: entry.kind,
@@ -283,6 +303,13 @@ export function toRustDocsModules(docs: ExtractedDocs[]) {
       members: entry.members,
     })),
   }));
+}
+
+function toTagRecord(tags: NapiMarkdownTag[] | undefined) {
+  if (!tags?.length) {
+    return undefined;
+  }
+  return Object.fromEntries(tags.map(({ tag, value }) => [tag, value]));
 }
 
 /**
