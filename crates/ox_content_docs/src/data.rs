@@ -38,6 +38,7 @@ fn build_docs_summary(docs: &[ApiDocModule]) -> Value {
     let mut stats = EntryStats::default();
 
     for module in docs {
+        stats.examples += module.examples.len() as u32;
         for entry in &module.entries {
             stats.entries += 1;
             let count = stats.by_kind.get(&entry.kind).and_then(Value::as_u64).unwrap_or(0) + 1;
@@ -70,11 +71,26 @@ fn build_docs_summary(docs: &[ApiDocModule]) -> Value {
 }
 
 fn module_to_json(module: &ApiDocModule) -> Value {
-    json!({
-        "file": normalize_doc_file_path(&module.file),
-        "description": module.description,
-        "entries": module.entries.iter().map(entry_to_json).collect::<Vec<_>>(),
-    })
+    let mut value = Map::new();
+    value.insert("file".to_string(), json!(normalize_doc_file_path(&module.file)));
+    value.insert("description".to_string(), json!(module.description));
+    if !module.examples.is_empty() {
+        value.insert("examples".to_string(), json!(module.examples));
+    }
+    if !module.tags.is_empty() {
+        value.insert(
+            "tags".to_string(),
+            Value::Object(
+                module.tags.iter().map(|tag| (tag.tag.clone(), json!(tag.value))).collect(),
+            ),
+        );
+    }
+    value.insert(
+        "entries".to_string(),
+        Value::Array(module.entries.iter().map(entry_to_json).collect()),
+    );
+
+    Value::Object(value)
 }
 
 fn entry_to_json(entry: &ApiDocEntry) -> Value {
@@ -240,6 +256,8 @@ mod tests {
             description: String::new(),
             file: "/repo/src/math.ts".to_string(),
             source_path: String::new(),
+            examples: vec![],
+            tags: vec![],
             entries: vec![ApiDocEntry {
                 name: "clamp".to_string(),
                 kind: "function".to_string(),
@@ -278,18 +296,29 @@ mod tests {
     }
 
     #[test]
-    fn generated_docs_data_carries_module_description() {
+    fn generated_docs_data_carries_module_metadata() {
         let docs = vec![ApiDocModule {
             description: "The entry for gunshi context.".to_string(),
             file: "/repo/src/context.ts".to_string(),
             source_path: String::new(),
+            examples: vec!["```ts\ncreateCommandContext()\n```".to_string()],
+            tags: vec![ApiDocTag {
+                tag: "experimental".to_string(),
+                value: "This entry point is experimental.".to_string(),
+            }],
             entries: vec![],
         }];
 
         let json = generate_docs_data_json(&docs, "2026-05-31T00:00:00.000Z").unwrap();
         let value: Value = serde_json::from_str(&json).unwrap();
 
+        assert_eq!(value["summary"]["examples"], 1);
         assert_eq!(value["modules"][0]["description"], "The entry for gunshi context.");
+        assert_eq!(value["modules"][0]["examples"][0], "```ts\ncreateCommandContext()\n```");
+        assert_eq!(
+            value["modules"][0]["tags"]["experimental"],
+            "This entry point is experimental."
+        );
     }
 
     #[test]
@@ -298,6 +327,8 @@ mod tests {
             description: String::new(),
             file: "/repo/src/combinators.ts".to_string(),
             source_path: String::new(),
+            examples: vec![],
+            tags: vec![],
             entries: vec![ApiDocEntry {
                 name: "Combinator".to_string(),
                 kind: "type".to_string(),
@@ -335,6 +366,8 @@ mod tests {
             description: String::new(),
             file: "/repo/src/make.ts".to_string(),
             source_path: String::new(),
+            examples: vec![],
+            tags: vec![],
             entries: vec![ApiDocEntry {
                 name: "make".to_string(),
                 kind: "function".to_string(),

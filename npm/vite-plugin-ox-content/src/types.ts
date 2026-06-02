@@ -1185,6 +1185,10 @@ export interface ReturnDoc {
  */
 export interface ExtractedDocs {
   file: string;
+  description?: string;
+  sourcePath?: string;
+  examples?: string[];
+  tags?: Record<string, string>;
   entries: DocEntry[];
 }
 

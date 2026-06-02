@@ -24,6 +24,14 @@ pub struct ApiDocModule {
     /// back to the first module that exports the symbol.
     #[serde(default)]
     pub source_path: String,
+    /// Module-level example blocks from the entry file's `@module` block or
+    /// leading file comment.
+    #[serde(default)]
+    pub examples: Vec<String>,
+    /// Module-level custom JSDoc tags, kept in source insertion order where the
+    /// caller provides ordered tags.
+    #[serde(default)]
+    pub tags: Vec<ApiDocTag>,
     /// Documented entries in the source file.
     pub entries: Vec<ApiDocEntry>,
 }

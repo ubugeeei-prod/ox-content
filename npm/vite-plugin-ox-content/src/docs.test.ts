@@ -65,6 +65,9 @@ describe("writeDocs", () => {
     const extractedDocs: ExtractedDocs[] = [
       {
         file: "/repo/src/math.ts",
+        description: "Math helpers.",
+        examples: ["```ts\nclamp(1, 0, 2)\n```"],
+        tags: { experimental: "This module is experimental." },
         entries: [
           {
             name: "clamp",
@@ -100,11 +103,15 @@ describe("writeDocs", () => {
     expect(docsJson.summary).toMatchObject({
       modules: 1,
       entries: 1,
+      examples: 1,
       byKind: {
         function: 1,
       },
     });
     expect(docsJson.modules[0]?.file).toBe("src/math.ts");
+    expect(docsJson.modules[0]?.description).toBe("Math helpers.");
+    expect(docsJson.modules[0]?.examples?.[0]).toBe("```ts\nclamp(1, 0, 2)\n```");
+    expect(docsJson.modules[0]?.tags?.experimental).toBe("This module is experimental.");
     expect(docsJson.modules[0]?.entries[0]?.file).toBe("src/math.ts");
     expect(docsJson.modules[0]?.entries[0]?.name).toBe("clamp");
   });

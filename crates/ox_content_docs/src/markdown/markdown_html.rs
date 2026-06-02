@@ -397,6 +397,54 @@ pub(super) fn render_stats_html(stats: &EntryStats, module_count: Option<usize>)
     out.into_string()
 }
 
+pub(super) fn render_module_examples_html(examples: &[String]) -> String {
+    if examples.is_empty() {
+        return String::new();
+    }
+
+    let mut examples_html = StringBuilder::new();
+    for (index, example) in examples.iter().enumerate() {
+        if !examples_html.is_empty() {
+            examples_html.push_char('\n');
+        }
+        let (code, language) = parse_example_block(example);
+        examples_html.push_str(
+            "<div class=\"ox-api-entry__example\">
+<div class=\"ox-api-entry__example-heading\">Example ",
+        );
+        examples_html.push_usize(index + 1);
+        examples_html.push_str(
+            "</div>
+",
+        );
+        examples_html.push_str(&render_code_block_html(&code, &language));
+        examples_html.push_str(
+            "
+</div>",
+        );
+    }
+
+    let heading = if examples.len() == 1 { "Example" } else { "Examples" };
+    let mut section = StringBuilder::new();
+    section.push_str(
+        "<div class=\"ox-api-entry__section ox-api-entry__section--examples\">
+<h2>",
+    );
+    section.push_str(heading);
+    section.push_str(
+        "</h2>
+",
+    );
+    section.push_str(&examples_html.into_string());
+    section.push_str(
+        "
+</div>
+
+",
+    );
+    section.into_string()
+}
+
 fn push_stat_html(out: &mut StringBuilder, label: &str, value: usize, tone: Option<&str>) {
     if !out.is_empty() {
         out.push_char('\n');
