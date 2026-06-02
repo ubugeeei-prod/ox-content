@@ -14,6 +14,16 @@ use super::{
 use crate::model::{ApiDocEntry, ApiDocMember, ApiDocTag, ApiParamDoc, ApiTypeParamDoc};
 use crate::string_builder::StringBuilder;
 
+/// JSDoc tags folded into a dedicated `## Since` section (TypeDoc parity) instead
+/// of generic `## Tags`. `@version` is normalized into the same section.
+const SINCE_TAGS: [&str; 2] = ["since", "version"];
+
+/// True when a tag is rendered as a structured section/alert and therefore must
+/// not also appear in the generic `## Tags` list.
+fn is_structured_tag(name: &str) -> bool {
+    is_lifecycle_tag(name) || SINCE_TAGS.contains(&name)
+}
+
 /// JSDoc lifecycle tags rendered as GitHub alerts rather than generic `## Tags`
 /// entries: `@experimental` → `> [!WARNING]`, `@deprecated` → `> [!CAUTION]`.
 /// Appends GitHub alert blocks for lifecycle tags (`@experimental`,
@@ -59,6 +69,31 @@ pub(super) fn push_lifecycle_alerts(
 
 fn is_lifecycle_tag(tag: &str) -> bool {
     matches!(tag, "deprecated" | "experimental")
+}
+
+/// Renders a `## Since` section from `@since` / `@version` tags (both folded into
+/// one section, matching TypeDoc), or "" when none carry a value. `heading` is
+/// the section prefix (`##` on typedoc per-symbol pages).
+fn render_since_section(
+    tags: &[ApiDocTag],
+    context: Option<&MarkdownLinkContext<'_>>,
+    heading: &str,
+) -> String {
+    let values = tags
+        .iter()
+        .filter(|tag| SINCE_TAGS.contains(&tag.tag.as_str()))
+        .map(|tag| inline(&tag.value, context))
+        .filter(|value| !value.is_empty())
+        .collect::<Vec<_>>();
+    if values.is_empty() {
+        return String::new();
+    }
+    let mut out = String::new();
+    out.push_str(heading);
+    out.push_str(" Since\n\n");
+    out.push_str(&values.join("\n\n"));
+    out.push_str("\n\n");
+    out
 }
 
 /// Renders the per-page stats summary as a single italic Markdown line.
@@ -131,6 +166,10 @@ pub(super) fn render_entry_body_pure(
         out.push_str(description);
         out.push_str("\n\n");
     }
+
+    // `@since` / `@version` render as a dedicated `## Since` section near the
+    // summary instead of a generic `## Tags` entry.
+    out.push_str(&render_since_section(&entry.tags, context, &heading));
 
     if let Some(signature) = &entry.signature {
         out.push_str(&heading);
@@ -252,10 +291,11 @@ pub(super) fn render_entry_body_pure(
         }
     }
 
-    // Lifecycle tags are rendered as alerts above, so exclude them here.
+    // Structured tags (lifecycle alerts, `## Since`) are rendered above, so
+    // exclude them from the generic list here.
     let mut rendered_tags_heading = false;
     for tag in &entry.tags {
-        if is_lifecycle_tag(&tag.tag) {
+        if is_structured_tag(&tag.tag) {
             continue;
         }
         if !rendered_tags_heading {
@@ -615,6 +655,20 @@ fn member_description(member: &ApiDocMember, context: Option<&MarkdownLinkContex
             description.push(' ');
             description.push_str(&inline(&returns.description, context));
         }
+    }
+    // `@since` / `@version` render inline (TypeDoc shows them in the cell); a
+    // GitHub alert or section cannot live inside a table cell.
+    let since = member
+        .tags
+        .iter()
+        .filter(|tag| SINCE_TAGS.contains(&tag.tag.as_str()))
+        .map(|tag| inline(&tag.value, context))
+        .filter(|value| !value.is_empty())
+        .collect::<Vec<_>>();
+    if !since.is_empty() {
+        push_part(&mut description, "**Since**");
+        description.push(' ');
+        description.push_str(&since.join(", "));
     }
     description
 }
