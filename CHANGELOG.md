@@ -1,5 +1,28 @@
 # Changelog
 
+## [2.42.0] - 2026-06-02
+
+### Features
+
+- add Markdown display formats (#284)
+
+### Bug Fixes
+
+- render module-level examples (#292)
+- preserve typedoc module names (#283)
+
+### Performance
+
+- fast-path block dispatch (#290)
+- fast-path simple list items (#289)
+- optimize Rust hot paths and release profiles (#287)
+- optimize html block parsing (#286)
+- optimize docs markdown rendering (#285)
+
+### Documentation
+
+- document optimization hot paths (#291)
+
 ## [2.41.0] - 2026-06-01
 
 ### Performance
