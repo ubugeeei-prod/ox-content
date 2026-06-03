@@ -6,10 +6,12 @@
 //! same per-entry information as the HTML renderer — but as Markdown headings,
 //! tables and fenced code blocks (no `<details>`, no theme-specific HTML).
 
+use std::collections::HashSet;
+
 use super::{
     effective_members_format, effective_parameters_format, generate_source_href,
-    parse_example_block, process_doc_text, EntryStats, MarkdownDisplayFormat, MarkdownDocsOptions,
-    MarkdownLinkContext,
+    parse_example_block, process_doc_text, resolve_type_fragments, EntryStats,
+    MarkdownDisplayFormat, MarkdownDocsOptions, MarkdownLinkContext, TypeFragment,
 };
 use crate::model::{
     ApiDocEntry, ApiDocMember, ApiDocTag, ApiParamDoc, ApiReturnDoc, ApiTypeParamDoc,
@@ -289,12 +291,13 @@ fn push_type_parameters(
     }
     out.push_str(heading);
     out.push_str(" Type Parameters\n\n");
+    let skip: HashSet<&str> = type_parameters.iter().map(|param| param.name.as_str()).collect();
     match effective_parameters_format(options) {
         MarkdownDisplayFormat::Table => {
             out.push_str("| Name | Description |\n| --- | --- |\n");
             for type_param in type_parameters {
                 out.push_str("| ");
-                out.push_str(&type_param_name_cell(type_param));
+                out.push_str(&type_param_name_cell(type_param, context, &skip));
                 out.push_str(" | ");
                 out.push_str(&table_cell(&inline(&type_param.description, context)));
                 out.push_str(" |\n");
@@ -304,7 +307,7 @@ fn push_type_parameters(
             for type_param in type_parameters {
                 let description = inline(&type_param.description, context);
                 out.push_str("- ");
-                out.push_str(&type_param_name_span(type_param));
+                out.push_str(&type_param_name_span(type_param, context, &skip));
                 if !description.is_empty() {
                     out.push_str(" - ");
                     out.push_str(&description);
@@ -336,7 +339,7 @@ fn push_parameters(
                 out.push_str("| ");
                 out.push_str(&code_cell(&param.name));
                 out.push_str(" | ");
-                out.push_str(&code_cell(&param.type_annotation));
+                out.push_str(&linked_type_cell(&param.type_annotation, context));
                 out.push_str(" | ");
                 out.push_str(&table_cell(&param_description(param, context)));
                 out.push_str(" |\n");
@@ -349,7 +352,7 @@ fn push_parameters(
                 line.push_str(&code_span(&param.name));
                 if !param.type_annotation.is_empty() {
                     line.push_str(" (");
-                    line.push_str(&code_span(&param.type_annotation));
+                    line.push_str(&linked_type_span(&param.type_annotation, context));
                     line.push(')');
                 }
                 let description = param_description(param, context);
@@ -374,7 +377,7 @@ fn push_returns(
 ) {
     out.push_str(heading);
     out.push_str(" Returns\n\n");
-    out.push_str(&code_cell(&returns.type_annotation));
+    out.push_str(&linked_type_cell(&returns.type_annotation, context));
     if !returns.description.is_empty() {
         out.push_str(" — ");
         out.push_str(&inline(&returns.description, context));
@@ -591,7 +594,7 @@ fn render_member_parameter_sections_pure(
                     out.push_str("| ");
                     out.push_str(&code_cell(&param.name));
                     out.push_str(" | ");
-                    out.push_str(&code_cell(&param.type_annotation));
+                    out.push_str(&linked_type_cell(&param.type_annotation, context));
                     out.push_str(" | ");
                     out.push_str(&table_cell(&param_description(param, context)));
                     out.push_str(" |\n");
@@ -604,7 +607,7 @@ fn render_member_parameter_sections_pure(
                     line.push_str(&code_span(&param.name));
                     if !param.type_annotation.is_empty() {
                         line.push_str(" (");
-                        line.push_str(&code_span(&param.type_annotation));
+                        line.push_str(&linked_type_span(&param.type_annotation, context));
                         line.push(')');
                     }
                     let description = param_description(param, context);
@@ -651,7 +654,7 @@ fn render_member_group_pure(
             let member_type = member_type(member);
             if !member_type.is_empty() {
                 line.push(' ');
-                line.push_str(&code_span(member_type));
+                line.push_str(&linked_type_span(member_type, context.link_context));
             }
             let description = member_description(member, context.link_context);
             if !description.is_empty() {
@@ -676,7 +679,7 @@ fn render_member_group_pure(
                 out.push_str(&table_cell(&member.kind));
                 out.push_str(" | ");
             }
-            out.push_str(&code_cell(member_type(member)));
+            out.push_str(&linked_type_cell(member_type(member), context.link_context));
             out.push_str(" | ");
             out.push_str(&table_cell(&member_description(member, context.link_context)));
             out.push_str(" |\n");
@@ -893,25 +896,101 @@ fn code_cell(value: &str) -> String {
     }
 }
 
+/// Escapes Markdown-significant characters in a type annotation's non-identifier
+/// text (generics, unions, arrays, …) so they render literally. Pipes are only
+/// escaped inside table cells.
+fn escape_type_text(text: &str, in_cell: bool) -> String {
+    let mut out = String::with_capacity(text.len());
+    for ch in text.chars() {
+        match ch {
+            '\\' => out.push_str("\\\\"),
+            '`' => out.push_str("\\`"),
+            '<' => out.push_str("\\<"),
+            '>' => out.push_str("\\>"),
+            '[' => out.push_str("\\["),
+            ']' => out.push_str("\\]"),
+            '|' if in_cell => out.push_str("\\|"),
+            _ => out.push(ch),
+        }
+    }
+    out
+}
+
+/// Renders a TypeScript type annotation, linking known symbols. When no identifier
+/// resolves to a symbol page the type is returned unchanged as a single inline-code
+/// span (`code(value)`); otherwise it is fragmented TypeDoc-style: each identifier
+/// is its own inline-code span (linked when resolvable) and punctuation is escaped.
+fn linked_type(
+    value: &str,
+    context: Option<&MarkdownLinkContext<'_>>,
+    skip: &HashSet<&str>,
+    code: fn(&str) -> String,
+    in_cell: bool,
+) -> String {
+    match resolve_type_fragments(value, context, skip) {
+        None => code(value),
+        Some(fragments) => {
+            let mut out = String::new();
+            for fragment in fragments {
+                match fragment {
+                    TypeFragment::Text(text) => out.push_str(&escape_type_text(&text, in_cell)),
+                    TypeFragment::Code(text) => out.push_str(&code(&text)),
+                    TypeFragment::Link { name, href } => {
+                        out.push('[');
+                        out.push_str(&code(&name));
+                        out.push_str("](");
+                        out.push_str(&href);
+                        out.push(')');
+                    }
+                }
+            }
+            out
+        }
+    }
+}
+
+fn linked_type_cell(value: &str, context: Option<&MarkdownLinkContext<'_>>) -> String {
+    linked_type(value, context, &HashSet::new(), code_cell, true)
+}
+
+fn linked_type_span(value: &str, context: Option<&MarkdownLinkContext<'_>>) -> String {
+    linked_type(value, context, &HashSet::new(), code_span, false)
+}
+
 /// Builds the Name cell for a type parameter: `` `T` `` plus optional `*extends*`
-/// constraint and `=` default, each rendered as inline code.
-fn type_param_name_cell(type_param: &ApiTypeParamDoc) -> String {
-    type_param_name(type_param, code_cell)
+/// constraint and `=` default. The constraint/default link known symbols; the
+/// parameter's own name and its siblings (`skip`) are never linked.
+fn type_param_name_cell(
+    type_param: &ApiTypeParamDoc,
+    context: Option<&MarkdownLinkContext<'_>>,
+    skip: &HashSet<&str>,
+) -> String {
+    type_param_name(type_param, context, skip, code_cell, true)
 }
 
-fn type_param_name_span(type_param: &ApiTypeParamDoc) -> String {
-    type_param_name(type_param, code_span)
+fn type_param_name_span(
+    type_param: &ApiTypeParamDoc,
+    context: Option<&MarkdownLinkContext<'_>>,
+    skip: &HashSet<&str>,
+) -> String {
+    type_param_name(type_param, context, skip, code_span, false)
 }
 
-fn type_param_name(type_param: &ApiTypeParamDoc, code: fn(&str) -> String) -> String {
+fn type_param_name(
+    type_param: &ApiTypeParamDoc,
+    context: Option<&MarkdownLinkContext<'_>>,
+    skip: &HashSet<&str>,
+    code: fn(&str) -> String,
+    in_cell: bool,
+) -> String {
     let mut cell = code(&type_param.name);
     if let Some(constraint) = &type_param.constraint {
         cell.push_str(" *extends* ");
-        cell.push_str(&code(constraint));
+        cell.push_str(&linked_type(constraint, context, skip, code, in_cell));
     }
     if let Some(default) = &type_param.default {
         cell.push_str(" = ");
-        cell.push_str(&code(default));
+        cell.push_str(&linked_type(default, context, skip, code, in_cell));
     }
     cell
 }

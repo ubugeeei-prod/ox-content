@@ -1,6 +1,6 @@
 //! Markdown rendering for generated API reference documentation.
 
-use std::collections::{BTreeMap, HashMap};
+use std::collections::{BTreeMap, HashMap, HashSet};
 use std::path::Path;
 use std::sync::OnceLock;
 
@@ -2083,6 +2083,98 @@ fn convert_symbol_links(text: &str, context: &MarkdownLinkContext<'_>) -> String
     result
 }
 
+/// A fragment of a tokenized TypeScript type annotation.
+enum TypeFragment {
+    /// Punctuation / separators / whitespace between identifiers (raw, unescaped).
+    Text(String),
+    /// An identifier that did not resolve to a known symbol (render as code).
+    Code(String),
+    /// An identifier that resolved to a symbol page (render as a linked code span).
+    Link { name: String, href: String },
+}
+
+fn is_type_ident_start(byte: u8) -> bool {
+    byte.is_ascii_alphabetic() || byte == b'_' || byte == b'$'
+}
+
+fn is_type_ident_part(byte: u8) -> bool {
+    byte.is_ascii_alphanumeric() || byte == b'_' || byte == b'$'
+}
+
+/// Tokenizes a TypeScript type annotation and resolves its identifiers against the
+/// symbol map. Returns `None` when no identifier resolves to a link, so callers can
+/// keep their existing single-code-span rendering (zero output churn for unlinkable
+/// types). String and template literals are read as opaque text so literal types
+/// like `"Command"` never produce false links.
+fn resolve_type_fragments(
+    value: &str,
+    context: Option<&MarkdownLinkContext<'_>>,
+    skip: &HashSet<&str>,
+) -> Option<Vec<TypeFragment>> {
+    let context = context?;
+    let bytes = value.as_bytes();
+    let mut fragments = Vec::new();
+    let mut text_start = 0;
+    let mut index = 0;
+    let mut has_link = false;
+
+    while index < bytes.len() {
+        let byte = bytes[index];
+
+        // String / template literals stay opaque text (no identifier linking inside).
+        if byte == b'\'' || byte == b'"' || byte == b'`' {
+            index += 1;
+            while index < bytes.len() {
+                if bytes[index] == b'\\' {
+                    index += 2;
+                    continue;
+                }
+                let closing = bytes[index] == byte;
+                index += 1;
+                if closing {
+                    break;
+                }
+            }
+            continue;
+        }
+
+        if is_type_ident_start(byte) {
+            let start = index;
+            index += 1;
+            while index < bytes.len() && is_type_ident_part(bytes[index]) {
+                index += 1;
+            }
+            let ident = &value[start..index];
+
+            if text_start < start {
+                fragments.push(TypeFragment::Text(value[text_start..start].to_string()));
+            }
+            text_start = index;
+
+            if !skip.contains(ident) {
+                if let Some(location) = resolve_symbol_location(ident, context) {
+                    fragments.push(TypeFragment::Link {
+                        name: ident.to_string(),
+                        href: format_symbol_href(context, location),
+                    });
+                    has_link = true;
+                    continue;
+                }
+            }
+            fragments.push(TypeFragment::Code(ident.to_string()));
+            continue;
+        }
+
+        index += 1;
+    }
+
+    if text_start < value.len() {
+        fragments.push(TypeFragment::Text(value[text_start..].to_string()));
+    }
+
+    has_link.then_some(fragments)
+}
+
 fn build_symbol_map(
     docs: &[ApiDocModule],
     options: &MarkdownDocsOptions,
@@ -3727,6 +3819,204 @@ mod tests {
             line: 1,
             end_line: 1,
         }
+    }
+
+    fn type_param(name: &str) -> ApiParamDoc {
+        ApiParamDoc {
+            name: name.to_string(),
+            type_annotation: String::new(),
+            description: String::new(),
+            optional: false,
+            default_value: None,
+        }
+    }
+
+    /// A parameter with a name and a type annotation (no description/flags).
+    fn param(name: &str, type_annotation: &str) -> ApiParamDoc {
+        ApiParamDoc { type_annotation: type_annotation.to_string(), ..type_param(name) }
+    }
+
+    /// A `type` entry stub so its name resolves in the symbol map (for type links).
+    fn type_stub(name: &str) -> ApiDocEntry {
+        let mut entry = test_entry(name, "type", "/repo/src/types.ts", "");
+        entry.signature = None;
+        entry
+    }
+
+    /// A module containing `entry` plus stub `type` entries whose names are used as
+    /// linkable symbols inside type annotations in the type-link tests.
+    fn type_link_module(entry: ApiDocEntry) -> Vec<ApiDocModule> {
+        vec![ApiDocModule {
+            description: String::new(),
+            file: "combinators".to_string(),
+            source_path: String::new(),
+            examples: vec![],
+            tags: vec![],
+            entries: vec![
+                entry,
+                type_stub("RenderingOptions"),
+                type_stub("SubCommandable"),
+                type_stub("CommandRunner"),
+                type_stub("GunshiParamsConstraint"),
+                type_stub("DefaultGunshiParams"),
+                type_stub("U"),
+            ],
+        }]
+    }
+
+    #[test]
+    fn typedoc_links_known_symbols_in_param_types() {
+        let mut entry = test_entry("make", "function", "/repo/src/make.ts", "Make.");
+        entry.params = vec![param("options", "RenderingOptions<G>"), param("count", "number")];
+        let options = MarkdownDocsOptions {
+            parameters_format: MarkdownDisplayFormat::Table,
+            ..markdown_typedoc_options()
+        };
+        let out = generate_markdown(&type_link_module(entry), &options);
+        let page = out.get("combinators/functions/make.md").unwrap();
+
+        // Known symbol links (label is the symbol in inline code), `.md` link style.
+        assert!(page.contains("[`RenderingOptions`]("));
+        assert!(page.contains("RenderingOptions.md"));
+        // Generic arg `G` (a type parameter) and primitive `number` stay plain code.
+        assert!(page.contains("`G`"));
+        assert!(!page.contains("[`G`]"));
+        assert!(page.contains("`number`"));
+        assert!(!page.contains("[`number`]"));
+    }
+
+    #[test]
+    fn typedoc_links_known_symbol_in_return_type() {
+        let mut entry = test_entry("make", "function", "/repo/src/make.ts", "Make.");
+        entry.returns = Some(ApiReturnDoc {
+            type_annotation: "CommandRunner<G>".to_string(),
+            description: String::new(),
+        });
+        let out = generate_markdown(&type_link_module(entry), &markdown_typedoc_options());
+        let page = out.get("combinators/functions/make.md").unwrap();
+
+        assert!(page.contains("[`CommandRunner`]("));
+    }
+
+    #[test]
+    fn typedoc_links_type_parameter_constraint_and_default() {
+        let mut entry = test_entry("make", "function", "/repo/src/make.ts", "Make.");
+        entry.type_parameters = vec![ApiTypeParamDoc {
+            name: "G".to_string(),
+            constraint: Some("GunshiParamsConstraint".to_string()),
+            default: Some("DefaultGunshiParams".to_string()),
+            description: "The constraint.".to_string(),
+        }];
+        let options = MarkdownDocsOptions {
+            parameters_format: MarkdownDisplayFormat::Table,
+            ..markdown_typedoc_options()
+        };
+        let out = generate_markdown(&type_link_module(entry), &options);
+        let page = out.get("combinators/functions/make.md").unwrap();
+
+        assert!(page.contains("*extends* [`GunshiParamsConstraint`]("));
+        assert!(page.contains("= [`DefaultGunshiParams`]("));
+        // The type parameter's own name is never linked.
+        assert!(page.contains("| `G` *extends*"));
+    }
+
+    #[test]
+    fn typedoc_does_not_link_sibling_type_parameter_names() {
+        let mut entry = test_entry("make", "function", "/repo/src/make.ts", "Make.");
+        // `U` is both a sibling type parameter and an exported symbol stub; the
+        // constraint must keep it as code, not a link.
+        entry.type_parameters = vec![
+            ApiTypeParamDoc {
+                name: "T".to_string(),
+                constraint: Some("U".to_string()),
+                default: None,
+                description: String::new(),
+            },
+            ApiTypeParamDoc {
+                name: "U".to_string(),
+                constraint: None,
+                default: None,
+                description: String::new(),
+            },
+        ];
+        let out = generate_markdown(&type_link_module(entry), &markdown_typedoc_options());
+        let page = out.get("combinators/functions/make.md").unwrap();
+
+        assert!(!page.contains("[`U`]"));
+    }
+
+    #[test]
+    fn typedoc_links_symbols_in_generic_and_union_types() {
+        let mut entry = test_entry("Command", "interface", "/repo/src/types.ts", "A command.");
+        let mut sub = member("subCommands", "property", false);
+        sub.type_annotation =
+            Some("Record<string, SubCommandable> | Map<string, SubCommandable>".to_string());
+        entry.members = vec![sub];
+        let options = MarkdownDocsOptions {
+            interface_properties_format: MarkdownDisplayFormat::Table,
+            ..markdown_typedoc_options()
+        };
+        let out = generate_markdown(&type_link_module(entry), &options);
+        let page = out.get("combinators/interfaces/Command.md").unwrap();
+
+        // Both occurrences of the symbol link; the built-ins stay plain code.
+        assert_eq!(page.matches("[`SubCommandable`](").count(), 2);
+        assert!(page.contains("`Record`"));
+        assert!(page.contains("`Map`"));
+        assert!(page.contains("`string`"));
+        assert!(!page.contains("[`Record`]"));
+    }
+
+    #[test]
+    fn typedoc_keeps_unlinkable_type_as_single_code_span() {
+        // Regression guard: a type with no resolvable symbol is unchanged.
+        let mut entry = test_entry("make", "function", "/repo/src/make.ts", "Make.");
+        entry.params = vec![param("value", "string | number")];
+        let out = generate_markdown(&type_link_module(entry), &markdown_typedoc_options());
+        let page = out.get("combinators/functions/make.md").unwrap();
+
+        assert!(page.contains("`string | number`"));
+    }
+
+    #[test]
+    fn typedoc_does_not_link_symbols_inside_string_literal_types() {
+        let mut entry = test_entry("make", "function", "/repo/src/make.ts", "Make.");
+        // `RenderingOptions` exists as a symbol, but inside a string literal type it
+        // must not be linked.
+        entry.params = vec![param("mode", "\"RenderingOptions\"")];
+        let out = generate_markdown(&type_link_module(entry), &markdown_typedoc_options());
+        let page = out.get("combinators/functions/make.md").unwrap();
+
+        assert!(!page.contains("[`RenderingOptions`]"));
+        assert!(page.contains("`\"RenderingOptions\"`"));
+    }
+
+    #[test]
+    fn typedoc_html_links_known_symbols_in_types() {
+        let mut entry = test_entry("Command", "interface", "/repo/src/types.ts", "A command.");
+        let mut rendering = member("rendering", "property", false);
+        rendering.type_annotation = Some("RenderingOptions<G>".to_string());
+        entry.members = vec![rendering];
+        let out = generate_markdown(&type_link_module(entry), &html_typedoc_options());
+        let page = out.get("combinators/interfaces/Command.md").unwrap();
+
+        // Anchor lives inside the member-type <code> wrapper; `G` stays escaped text.
+        assert!(page.contains("ox-api-entry__member-type language-typescript"));
+        assert!(page.contains("<a href=\""));
+        assert!(page.contains(">RenderingOptions</a>"));
+        assert!(!page.contains(">G</a>"));
+    }
+
+    #[test]
+    fn typedoc_html_keeps_unlinkable_type_unchanged() {
+        let mut entry = test_entry("make", "function", "/repo/src/make.ts", "Make.");
+        entry.params = vec![param("value", "string | number")];
+        let out = generate_markdown(&type_link_module(entry), &html_typedoc_options());
+        let page = out.get("combinators/functions/make.md").unwrap();
+
+        // No anchor in the type cell; escaped union pipe preserved.
+        assert!(page.contains("string | number"));
+        assert!(!page.contains("<a href=\"./type-aliases"));
     }
 
     #[test]
