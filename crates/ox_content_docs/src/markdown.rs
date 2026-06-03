@@ -1,5 +1,6 @@
 //! Markdown rendering for generated API reference documentation.
 
+use std::cmp::Ordering;
 use std::collections::{BTreeMap, HashMap, HashSet};
 use std::path::Path;
 use std::sync::OnceLock;
@@ -14,7 +15,7 @@ use crate::string_builder::{join2, join3, join4, join5, StringBuilder};
 mod markdown_html;
 mod markdown_pure;
 
-const DOC_KIND_ORDER: [&str; 7] =
+pub const DOC_KIND_ORDER: [&str; 7] =
     ["function", "class", "interface", "type", "enum", "variable", "module"];
 
 type RegexCache = OnceLock<Option<Regex>>;
@@ -85,6 +86,22 @@ pub struct MarkdownDocsOptions {
     /// unlisted groups alphabetically at `*` (or at the end when `*` is absent).
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub group_order: Option<Vec<String>>,
+    /// TypeDoc-style `sort`: ordered list of sort strategies applied to entries and
+    /// members. Later strategies break ties left by earlier ones. `None` keeps the
+    /// historical behavior (entries/members alphabetical, enum members in
+    /// declaration order). Unsupported strategies are ignored.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub sort: Option<Vec<String>>,
+    /// TypeDoc-style `sortEntryPoints`: when `true` (default) modules/entry points
+    /// are ordered alphabetically; when `false` the caller-provided input order is
+    /// preserved.
+    #[serde(default = "default_sort_entry_points")]
+    pub sort_entry_points: bool,
+    /// TypeDoc-style `kindSortOrder`: declaration kind ranking used by the `kind`
+    /// sort strategy and as the base order for module index sections / nav groups
+    /// (before `group_order` is applied). `None` keeps the historical kind order.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub kind_sort_order: Option<Vec<String>>,
 }
 
 /// Internal documentation link style.
@@ -155,6 +172,9 @@ impl Default for MarkdownDocsOptions {
             type_declaration_format: MarkdownDisplayFormat::None,
             render_stats: true,
             group_order: None,
+            sort: None,
+            sort_entry_points: default_sort_entry_points(),
+            kind_sort_order: None,
         }
     }
 }
@@ -164,6 +184,10 @@ fn default_group_by() -> String {
 }
 
 fn default_render_stats() -> bool {
+    true
+}
+
+fn default_sort_entry_points() -> bool {
     true
 }
 
@@ -220,7 +244,7 @@ pub fn generate_markdown(
     options: &MarkdownDocsOptions,
 ) -> BTreeMap<String, String> {
     let mut result = BTreeMap::new();
-    let sorted_docs = sort_extracted_docs(docs);
+    let sorted_docs = sort_extracted_docs(docs, options);
     let symbol_map = build_symbol_map(&sorted_docs, options);
 
     if options.group_by == "file" {
@@ -251,13 +275,19 @@ pub fn generate_markdown(
             }
         }
 
+        let strategies = options.sort.as_deref().map(parse_sort_strategies);
+        let kind_order = kind_order_slice(options.kind_sort_order.as_deref());
         for entries in by_kind.values_mut() {
-            // Case-insensitive sort with a case-sensitive tiebreak. Caching the
-            // (lowercase, original) key computes each side's lowercase form once
-            // per entry instead of on every comparison (O(n) vs O(n log n)
-            // allocations); the tuple's lexicographic order reproduces the
-            // previous "lowercase, then original" ordering exactly.
-            entries.sort_by_cached_key(|entry| (entry.name.to_lowercase(), entry.name.clone()));
+            if let Some(strategies) = &strategies {
+                entries.sort_by(|a, b| compare_entries(a, b, strategies, &kind_order));
+            } else {
+                // Case-insensitive sort with a case-sensitive tiebreak. Caching the
+                // (lowercase, original) key computes each side's lowercase form once
+                // per entry instead of on every comparison (O(n) vs O(n log n)
+                // allocations); the tuple's lexicographic order reproduces the
+                // previous "lowercase, then original" ordering exactly.
+                entries.sort_by_cached_key(|entry| (entry.name.to_lowercase(), entry.name.clone()));
+            }
         }
 
         for (kind, entries) in &by_kind {
@@ -806,27 +836,158 @@ fn normalize_doc_file_path(file_path: &str) -> String {
     normalized.trim_start_matches('/').to_string()
 }
 
-fn sort_extracted_docs(docs: &[ApiDocModule]) -> Vec<ApiDocModule> {
+/// A TypeDoc-compatible sort strategy that maps onto ox-content's data model.
+/// Strategies whose required data is unavailable (`enum-value-*`, `documents-*`)
+/// are not represented here and are dropped during parsing, so they act as no-ops.
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum SortStrategy {
+    SourceOrder,
+    Alphabetical,
+    Kind,
+    StaticFirst,
+    InstanceFirst,
+    RequiredFirst,
+    Visibility,
+    ExternalLast,
+}
+
+/// Parses TypeDoc `sort` strategy names, dropping unsupported/unknown ones so they
+/// fall through to the next strategy (matching TypeDoc's tie-breaking semantics).
+/// `alphabetical-ignoring-documents` maps to `Alphabetical` (ox-content has no
+/// document reflections).
+pub fn parse_sort_strategies(raw: &[String]) -> Vec<SortStrategy> {
+    raw.iter()
+        .filter_map(|strategy| match strategy.as_str() {
+            "source-order" => Some(SortStrategy::SourceOrder),
+            "alphabetical" | "alphabetical-ignoring-documents" => Some(SortStrategy::Alphabetical),
+            "kind" => Some(SortStrategy::Kind),
+            "static-first" => Some(SortStrategy::StaticFirst),
+            "instance-first" => Some(SortStrategy::InstanceFirst),
+            "required-first" => Some(SortStrategy::RequiredFirst),
+            "visibility" => Some(SortStrategy::Visibility),
+            "external-last" => Some(SortStrategy::ExternalLast),
+            _ => None,
+        })
+        .collect()
+}
+
+/// The declaration-kind ranking used by the `kind` strategy and as the base order
+/// for module index sections / nav groups: `kind_sort_order` when provided, else
+/// the historical [`DOC_KIND_ORDER`].
+pub fn kind_order_slice(kind_sort_order: Option<&[String]>) -> Vec<&str> {
+    match kind_sort_order {
+        Some(order) => order.iter().map(String::as_str).collect(),
+        None => DOC_KIND_ORDER.to_vec(),
+    }
+}
+
+/// Rank of `kind` within `kind_order`; unlisted kinds sort after listed ones.
+fn kind_rank(kind: &str, kind_order: &[&str]) -> usize {
+    kind_order.iter().position(|candidate| *candidate == kind).unwrap_or(kind_order.len())
+}
+
+/// Case-insensitive name comparison with a case-sensitive tiebreak. Used as the
+/// final, always-decisive tiebreak so sorts are total and stable.
+fn compare_names(a: &str, b: &str) -> Ordering {
+    a.to_lowercase().cmp(&b.to_lowercase()).then_with(|| a.cmp(b))
+}
+
+/// Compares two entries under an ordered list of sort strategies (later strategies
+/// only break ties). A trailing name comparison guarantees a total order.
+pub fn compare_entries(
+    a: &ApiDocEntry,
+    b: &ApiDocEntry,
+    sort: &[SortStrategy],
+    kind_order: &[&str],
+) -> Ordering {
+    for strategy in sort {
+        let ordering = match strategy {
+            SortStrategy::SourceOrder => a.line.cmp(&b.line),
+            SortStrategy::Alphabetical => compare_names(&a.name, &b.name),
+            SortStrategy::Kind => {
+                kind_rank(&a.kind, kind_order).cmp(&kind_rank(&b.kind, kind_order))
+            }
+            // External (no source file in the consumer repo) sorts last.
+            SortStrategy::ExternalLast => a.file.is_empty().cmp(&b.file.is_empty()),
+            // Member-only strategies do not apply to entries.
+            SortStrategy::StaticFirst
+            | SortStrategy::InstanceFirst
+            | SortStrategy::RequiredFirst
+            | SortStrategy::Visibility => Ordering::Equal,
+        };
+        if ordering != Ordering::Equal {
+            return ordering;
+        }
+    }
+    compare_names(&a.name, &b.name)
+}
+
+/// Compares two members under an ordered list of sort strategies (later strategies
+/// only break ties). A trailing name comparison guarantees a total order.
+fn compare_members(
+    a: &ApiDocMember,
+    b: &ApiDocMember,
+    sort: &[SortStrategy],
+    kind_order: &[&str],
+) -> Ordering {
+    for strategy in sort {
+        let ordering = match strategy {
+            SortStrategy::SourceOrder => a.line.cmp(&b.line),
+            SortStrategy::Alphabetical => compare_names(&a.name, &b.name),
+            SortStrategy::Kind => {
+                kind_rank(&a.kind, kind_order).cmp(&kind_rank(&b.kind, kind_order))
+            }
+            // Static members before instance members (and vice versa).
+            SortStrategy::StaticFirst => b.r#static.cmp(&a.r#static),
+            SortStrategy::InstanceFirst => a.r#static.cmp(&b.r#static),
+            // Required (non-optional) members before optional ones.
+            SortStrategy::RequiredFirst => a.optional.cmp(&b.optional),
+            // Public members before private ones.
+            SortStrategy::Visibility => a.private.cmp(&b.private),
+            // Entry-only strategy.
+            SortStrategy::ExternalLast => Ordering::Equal,
+        };
+        if ordering != Ordering::Equal {
+            return ordering;
+        }
+    }
+    compare_names(&a.name, &b.name)
+}
+
+fn sort_extracted_docs(docs: &[ApiDocModule], options: &MarkdownDocsOptions) -> Vec<ApiDocModule> {
     let mut sorted = docs.to_vec();
+    let strategies = options.sort.as_deref().map(parse_sort_strategies);
+    let kind_order = kind_order_slice(options.kind_sort_order.as_deref());
 
     for doc in &mut sorted {
-        doc.entries.sort_by_cached_key(|entry| (entry.name.to_lowercase(), entry.name.clone()));
-        for entry in &mut doc.entries {
-            sort_api_doc_members(entry);
+        if let Some(strategies) = &strategies {
+            doc.entries.sort_by(|a, b| compare_entries(a, b, strategies, &kind_order));
+            for entry in &mut doc.entries {
+                entry.members.sort_by(|a, b| compare_members(a, b, strategies, &kind_order));
+            }
+        } else {
+            doc.entries.sort_by_cached_key(|entry| (entry.name.to_lowercase(), entry.name.clone()));
+            for entry in &mut doc.entries {
+                sort_api_doc_members(entry);
+            }
         }
     }
 
-    sorted.sort_by_cached_key(|module| {
-        let name = file_name(&module.file);
-        (name.to_lowercase(), name)
-    });
+    // `sortEntryPoints: false` preserves the caller-provided module order.
+    if options.sort_entry_points {
+        sorted.sort_by_cached_key(|module| {
+            let name = file_name(&module.file);
+            (name.to_lowercase(), name)
+        });
+    }
     sorted
 }
 
 /// Sorts an entry's members alphabetically (case-insensitive) for the member kinds
 /// TypeDoc sorts. Enum members keep declaration order, which can be semantically
 /// meaningful. Renderers bucket members by group while preserving relative order,
-/// so a single global sort yields alphabetical order within each group.
+/// so a single global sort yields alphabetical order within each group. Used when
+/// no explicit `sort` is configured (historical default behavior).
 fn sort_api_doc_members(entry: &mut ApiDocEntry) {
     if matches!(entry.kind.as_str(), "class" | "interface" | "type") {
         entry
@@ -1291,7 +1452,8 @@ fn generate_typedoc_module_index(
     // section, then order them by `group_order` before rendering. TypeDoc treats
     // References as just another group, so it participates in the ordering too.
     let mut sections: Vec<(String, IndexSection)> = Vec::new();
-    for kind in ordered_entry_kinds(&doc.entries) {
+    let kind_order = kind_order_slice(options.kind_sort_order.as_deref());
+    for kind in ordered_entry_kinds(&doc.entries, &kind_order) {
         // Only entries whose canonical page lives in this module are listed in
         // the kind sections; re-exports are collected into "References" below.
         let entries = doc
@@ -1485,17 +1647,20 @@ fn generate_typedoc_entry_page(
     markdown
 }
 
-fn ordered_entry_kinds(entries: &[ApiDocEntry]) -> Vec<String> {
+/// Present declaration kinds in `kind_order` (the historical [`DOC_KIND_ORDER`] or
+/// a caller-provided `kindSortOrder`), with any kinds not listed in `kind_order`
+/// appended alphabetically. Shared by the module index sections and the nav groups.
+pub fn ordered_entry_kinds(entries: &[ApiDocEntry], kind_order: &[&str]) -> Vec<String> {
     let mut kinds = Vec::new();
-    for kind in DOC_KIND_ORDER {
-        if entries.iter().any(|entry| entry.kind == kind) {
-            kinds.push(kind.to_string());
+    for kind in kind_order {
+        if entries.iter().any(|entry| entry.kind == *kind) {
+            kinds.push((*kind).to_string());
         }
     }
     let mut extra = entries
         .iter()
         .map(|entry| entry.kind.clone())
-        .filter(|kind| !DOC_KIND_ORDER.contains(&kind.as_str()))
+        .filter(|kind| !kind_order.contains(&kind.as_str()))
         .collect::<Vec<_>>();
     extra.sort();
     extra.dedup();
@@ -3726,6 +3891,122 @@ mod tests {
         assert!(variables < classes);
         assert!(classes < interfaces);
         assert!(interfaces < functions);
+    }
+
+    #[test]
+    fn typedoc_kind_sort_order_reorders_module_index_sections() {
+        let options = MarkdownDocsOptions {
+            kind_sort_order: Some(vec![
+                "variable".to_string(),
+                "function".to_string(),
+                "class".to_string(),
+                "interface".to_string(),
+            ]),
+            ..markdown_typedoc_options()
+        };
+        let out = generate_markdown(&group_order_docs(), &options);
+        let index = out.get("default/index.md").unwrap();
+        let variables = index.find("## Variables").unwrap();
+        let functions = index.find("## Functions").unwrap();
+        let classes = index.find("## Classes").unwrap();
+        let interfaces = index.find("## Interfaces").unwrap();
+
+        // Sections follow the configured kind order.
+        assert!(variables < functions);
+        assert!(functions < classes);
+        assert!(classes < interfaces);
+    }
+
+    #[test]
+    fn typedoc_group_order_takes_precedence_over_kind_sort_order() {
+        let options = MarkdownDocsOptions {
+            kind_sort_order: Some(vec![
+                "variable".to_string(),
+                "function".to_string(),
+                "class".to_string(),
+                "interface".to_string(),
+            ]),
+            group_order: Some(vec!["Interfaces".to_string(), "Functions".to_string()]),
+            ..markdown_typedoc_options()
+        };
+        let out = generate_markdown(&group_order_docs(), &options);
+        let index = out.get("default/index.md").unwrap();
+        let interfaces = index.find("## Interfaces").unwrap();
+        let functions = index.find("## Functions").unwrap();
+        let classes = index.find("## Classes").unwrap();
+        let variables = index.find("## Variables").unwrap();
+
+        // group_order leads (Interfaces, Functions); unlisted groups follow
+        // alphabetically (Classes, Variables) — group_order wins over kind_sort_order.
+        assert!(interfaces < functions);
+        assert!(functions < classes);
+        assert!(classes < variables);
+    }
+
+    #[test]
+    fn typedoc_sort_source_order_orders_entries_by_line() {
+        let mut zebra = test_entry("zebra", "function", "/repo/src/z.ts", "Z.");
+        zebra.line = 1;
+        let mut alpha = test_entry("alpha", "function", "/repo/src/a.ts", "A.");
+        alpha.line = 2;
+        let docs = vec![ApiDocModule {
+            description: String::new(),
+            file: "default".to_string(),
+            source_path: String::new(),
+            examples: vec![],
+            tags: vec![],
+            entries: vec![zebra, alpha],
+        }];
+
+        let options = MarkdownDocsOptions {
+            sort: Some(vec!["source-order".to_string()]),
+            ..markdown_typedoc_options()
+        };
+        let out = generate_markdown(&docs, &options);
+        let index = out.get("default/index.md").unwrap();
+        // Source order: `zebra` (line 1) before `alpha` (line 2).
+        assert!(index.find("zebra").unwrap() < index.find("alpha").unwrap());
+
+        // The default (alphabetical) ordering is the opposite.
+        let default_out = generate_markdown(&docs, &markdown_typedoc_options());
+        let default_index = default_out.get("default/index.md").unwrap();
+        assert!(default_index.find("alpha").unwrap() < default_index.find("zebra").unwrap());
+    }
+
+    #[test]
+    fn typedoc_sort_required_first_then_alphabetical_orders_members() {
+        let mut iface = test_entry("Opts", "interface", "/repo/src/o.ts", "Options.");
+        let mut optional_b = member("b", "property", false);
+        optional_b.optional = true;
+        let mut required_z = member("z", "property", false);
+        required_z.optional = false;
+        let mut required_a = member("a", "property", false);
+        required_a.optional = false;
+        iface.members = vec![optional_b, required_z, required_a];
+        let docs = vec![ApiDocModule {
+            description: String::new(),
+            file: "default".to_string(),
+            source_path: String::new(),
+            examples: vec![],
+            tags: vec![],
+            entries: vec![iface],
+        }];
+
+        let options = MarkdownDocsOptions {
+            sort: Some(vec!["required-first".to_string(), "alphabetical".to_string()]),
+            interface_properties_format: MarkdownDisplayFormat::Table,
+            ..markdown_typedoc_options()
+        };
+        let out = generate_markdown(&docs, &options);
+        let page = out.get("default/interfaces/Opts.md").unwrap();
+        let a = page.find("`a`").unwrap();
+        let z = page.find("`z`").unwrap();
+        let b = page.find("`b`").unwrap();
+
+        // Required members first (a, z), then optional (b); the later `alphabetical`
+        // strategy breaks the tie between the two required members.
+        assert!(a < z);
+        assert!(z < b);
     }
 
     fn stats_docs() -> Vec<ApiDocModule> {

@@ -253,6 +253,15 @@ pub struct JsDocsNavOptions {
     /// TypeDoc-style group order for nav groups (matches `generateDocsMarkdown`'s
     /// `groupOrder` so the sidebar and page order stay in sync).
     pub group_order: Option<Vec<String>>,
+    /// TypeDoc-style `sort`: ordered sort strategies for nav leaf entries (matches
+    /// `generateDocsMarkdown`'s `sort`). Unsupported strategies are ignored.
+    pub sort: Option<Vec<String>>,
+    /// TypeDoc-style `sortEntryPoints`: when `false`, preserve the caller-provided
+    /// module order instead of sorting alphabetically. Defaults to `true`.
+    pub sort_entry_points: Option<bool>,
+    /// TypeDoc-style `kindSortOrder`: kind ranking used for nav group order (before
+    /// `groupOrder`) and the `kind` sort strategy.
+    pub kind_sort_order: Option<Vec<String>>,
 }
 
 /// Ordered JSDoc tag used by generated API Markdown.
@@ -347,6 +356,21 @@ pub struct JsDocsMarkdownOptions {
     /// TypeDoc-style group order for module index sections and nav groups. Unlisted
     /// groups are sorted alphabetically at `*` (or at the end when `*` is absent).
     pub group_order: Option<Vec<String>>,
+    /// TypeDoc-style `sort`: ordered sort strategies applied to entries and members.
+    /// Later strategies break ties left by earlier ones. Omit to keep the default
+    /// (alphabetical, with enum members in declaration order). Unsupported
+    /// strategies (e.g. `enum-value-*`, `documents-*`) are ignored.
+    #[napi(
+        ts_type = "Array<'source-order' | 'alphabetical' | 'alphabetical-ignoring-documents' | 'enum-value-ascending' | 'enum-value-descending' | 'static-first' | 'instance-first' | 'visibility' | 'required-first' | 'kind' | 'external-last' | 'documents-first' | 'documents-last'>"
+    )]
+    pub sort: Option<Vec<String>>,
+    /// TypeDoc-style `sortEntryPoints`: when `false`, preserve the caller-provided
+    /// module order instead of sorting alphabetically. Defaults to `true`.
+    pub sort_entry_points: Option<bool>,
+    /// TypeDoc-style `kindSortOrder`: declaration kind ranking used as the base order
+    /// for module index sections / nav groups (before `groupOrder`) and the `kind`
+    /// sort strategy.
+    pub kind_sort_order: Option<Vec<String>>,
 }
 
 /// Options for writing generated API documentation files.
@@ -1308,6 +1332,9 @@ pub fn generate_docs_nav_metadata_from_docs_napi(
         options.base_path.as_deref(),
         strategy,
         options.group_order.as_deref(),
+        options.sort.as_deref(),
+        options.sort_entry_points.unwrap_or(true),
+        options.kind_sort_order.as_deref(),
     )
     .into_iter()
     .map(map_docs_nav_item)
@@ -1432,6 +1459,9 @@ pub fn generate_docs_markdown(
             ),
             render_stats: options.render_stats.unwrap_or(true),
             group_order: options.group_order,
+            sort: options.sort,
+            sort_entry_points: options.sort_entry_points.unwrap_or(true),
+            kind_sort_order: options.kind_sort_order,
         });
     generate_markdown(&docs.into_iter().map(convert_markdown_module).collect::<Vec<_>>(), &options)
         .into_iter()
@@ -4204,6 +4234,9 @@ mod tests {
                 base_path: Some("/api".to_string()),
                 path_strategy: Some("typedoc".to_string()),
                 group_order: None,
+                sort: None,
+                sort_entry_points: None,
+                kind_sort_order: None,
             }),
         );
 

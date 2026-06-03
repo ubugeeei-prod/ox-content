@@ -377,6 +377,24 @@ export interface JsDocsMarkdownOptions {
    * groups are sorted alphabetically at `*` (or at the end when `*` is absent).
    */
   groupOrder?: Array<string>
+  /**
+   * TypeDoc-style `sort`: ordered sort strategies applied to entries and members.
+   * Later strategies break ties left by earlier ones. Omit to keep the default
+   * (alphabetical, with enum members in declaration order). Unsupported
+   * strategies (e.g. `enum-value-*`, `documents-*`) are ignored.
+   */
+  sort?: Array<'source-order' | 'alphabetical' | 'alphabetical-ignoring-documents' | 'enum-value-ascending' | 'enum-value-descending' | 'static-first' | 'instance-first' | 'visibility' | 'required-first' | 'kind' | 'external-last' | 'documents-first' | 'documents-last'>
+  /**
+   * TypeDoc-style `sortEntryPoints`: when `false`, preserve the caller-provided
+   * module order instead of sorting alphabetically. Defaults to `true`.
+   */
+  sortEntryPoints?: boolean
+  /**
+   * TypeDoc-style `kindSortOrder`: declaration kind ranking used as the base order
+   * for module index sections / nav groups (before `groupOrder`) and the `kind`
+   * sort strategy.
+   */
+  kindSortOrder?: Array<string>
 }
 
 /** Ordered JSDoc tag used by generated API Markdown. */
@@ -401,6 +419,21 @@ export interface JsDocsNavOptions {
    * `groupOrder` so the sidebar and page order stay in sync).
    */
   groupOrder?: Array<string>
+  /**
+   * TypeDoc-style `sort`: ordered sort strategies for nav leaf entries (matches
+   * `generateDocsMarkdown`'s `sort`). Unsupported strategies are ignored.
+   */
+  sort?: Array<string>
+  /**
+   * TypeDoc-style `sortEntryPoints`: when `false`, preserve the caller-provided
+   * module order instead of sorting alphabetically. Defaults to `true`.
+   */
+  sortEntryPoints?: boolean
+  /**
+   * TypeDoc-style `kindSortOrder`: kind ranking used for nav group order (before
+   * `groupOrder`) and the `kind` sort strategy.
+   */
+  kindSortOrder?: Array<string>
 }
 
 /** Options for writing generated API documentation files. */
