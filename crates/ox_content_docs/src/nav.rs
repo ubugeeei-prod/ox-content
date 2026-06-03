@@ -5,8 +5,11 @@ use std::path::Path;
 use phf::phf_map;
 use serde::{Deserialize, Serialize};
 
-use crate::markdown::{order_by_group_title, CanonicalOwners, MarkdownPathStrategy};
-use crate::model::{ApiDocEntry, ApiDocModule};
+use crate::markdown::{
+    compare_entries, kind_order_slice, order_by_group_title, ordered_entry_kinds,
+    parse_sort_strategies, CanonicalOwners, MarkdownPathStrategy,
+};
+use crate::model::ApiDocModule;
 use crate::string_builder::{join2, join3, join5, StringBuilder};
 
 const DEFAULT_BASE_PATH: &str = "/api";
@@ -51,21 +54,32 @@ pub fn generate_nav_metadata(files: &[String], base_path: Option<&str>) -> Vec<D
 /// Generates sidebar navigation metadata from extracted docs and the output path strategy.
 ///
 /// `group_order` reorders the TypeDoc nav kind groups (matching the module index
-/// section order); `None` keeps the historical fixed order.
+/// section order). `sort` / `kind_sort_order` mirror the Markdown organization
+/// options so the sidebar order never diverges from the generated pages, and
+/// `sort_entry_points` preserves the caller-provided module order when `false`.
+/// `None` / `true` keep the historical fixed order.
 pub fn generate_nav_metadata_from_docs(
     docs: &[ApiDocModule],
     base_path: Option<&str>,
     path_strategy: MarkdownPathStrategy,
     group_order: Option<&[String]>,
+    sort: Option<&[String]>,
+    sort_entry_points: bool,
+    kind_sort_order: Option<&[String]>,
 ) -> Vec<DocsNavItem> {
     match path_strategy {
         MarkdownPathStrategy::Flat => {
             let files = docs.iter().map(|doc| doc.file.clone()).collect::<Vec<_>>();
             generate_nav_metadata(&files, base_path)
         }
-        MarkdownPathStrategy::TypeDoc => {
-            generate_typedoc_nav_metadata(docs, base_path, group_order)
-        }
+        MarkdownPathStrategy::TypeDoc => generate_typedoc_nav_metadata(
+            docs,
+            base_path,
+            group_order,
+            sort,
+            sort_entry_points,
+            kind_sort_order,
+        ),
     }
 }
 
@@ -73,10 +87,18 @@ fn generate_typedoc_nav_metadata(
     docs: &[ApiDocModule],
     base_path: Option<&str>,
     group_order: Option<&[String]>,
+    sort: Option<&[String]>,
+    sort_entry_points: bool,
+    kind_sort_order: Option<&[String]>,
 ) -> Vec<DocsNavItem> {
     let base_path = normalize_base_path(base_path.unwrap_or(DEFAULT_BASE_PATH));
+    let strategies = sort.map(parse_sort_strategies);
+    let kind_order = kind_order_slice(kind_sort_order);
     let mut docs = docs.to_vec();
-    docs.sort_by_cached_key(typedoc_module_route_name);
+    // `sortEntryPoints: false` preserves the caller-provided module order.
+    if sort_entry_points {
+        docs.sort_by_cached_key(typedoc_module_route_name);
+    }
     // A re-exported symbol appears in the sidebar only under the module that owns
     // its canonical page (matching TypeDoc's single-location listing).
     let owners = CanonicalOwners::compute(&docs);
@@ -86,10 +108,10 @@ fn generate_typedoc_nav_metadata(
             let module_name = typedoc_module_route_name(&doc);
             let module_title = typedoc_module_display_name(&doc);
             let mut children = Vec::new();
-            // Collect the present kind groups (title-tagged) in the historical
-            // order, then reorder them by `group_order` so the sidebar matches the
-            // module index section order.
-            let kind_groups = ordered_entry_kinds(&doc.entries)
+            // Collect the present kind groups (title-tagged) in the base kind order
+            // (`kindSortOrder` or the historical order), then reorder them by
+            // `group_order` so the sidebar matches the module index section order.
+            let kind_groups = ordered_entry_kinds(&doc.entries, &kind_order)
                 .into_iter()
                 .filter(|kind| {
                     doc.entries
@@ -107,9 +129,16 @@ fn generate_typedoc_nav_metadata(
                 if entries.is_empty() {
                     continue;
                 }
-                // Sort leaf entries alphabetically (case-insensitive) to match
-                // TypeDoc's sidebar and ox-content's generated Markdown module index.
-                entries.sort_by_cached_key(|entry| (entry.name.to_lowercase(), entry.name.clone()));
+                // Sort leaf entries to match ox-content's generated Markdown module
+                // index: by the configured `sort` strategies when set, otherwise
+                // alphabetically (case-insensitive).
+                if let Some(strategies) = &strategies {
+                    entries.sort_by(|a, b| compare_entries(a, b, strategies, &kind_order));
+                } else {
+                    entries.sort_by_cached_key(|entry| {
+                        (entry.name.to_lowercase(), entry.name.clone())
+                    });
+                }
 
                 let kind_segment = typedoc_kind_segment(&kind);
                 let kind_file_name = join3(&module_name, "/", kind_segment);
@@ -242,27 +271,6 @@ fn typedoc_module_display_name(doc: &ApiDocModule) -> String {
     }
 }
 
-fn ordered_entry_kinds(entries: &[ApiDocEntry]) -> Vec<String> {
-    const DOC_KIND_ORDER: [&str; 7] =
-        ["function", "class", "interface", "type", "enum", "variable", "module"];
-
-    let mut kinds = Vec::new();
-    for kind in DOC_KIND_ORDER {
-        if entries.iter().any(|entry| entry.kind == kind) {
-            kinds.push(kind.to_string());
-        }
-    }
-    let mut extra = entries
-        .iter()
-        .map(|entry| entry.kind.clone())
-        .filter(|kind| !DOC_KIND_ORDER.contains(&kind.as_str()))
-        .collect::<Vec<_>>();
-    extra.sort();
-    extra.dedup();
-    kinds.extend(extra);
-    kinds
-}
-
 /// Directory segment for each documentation kind under the TypeDoc path strategy.
 static TYPEDOC_KIND_SEGMENT: phf::Map<&'static str, &'static str> = phf_map! {
     "function" => "functions",
@@ -344,6 +352,7 @@ fn format_doc_title(name: &str) -> String {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::model::ApiDocEntry;
 
     fn nav_entry(name: &str, kind: &str) -> ApiDocEntry {
         ApiDocEntry {
@@ -385,6 +394,9 @@ mod tests {
             Some("/api"),
             MarkdownPathStrategy::TypeDoc,
             Some(&group_order),
+            None,
+            true,
+            None,
         );
         let children = nav[0].children.as_ref().unwrap();
         let titles = children.iter().map(|child| child.title.as_str()).collect::<Vec<_>>();
@@ -415,6 +427,9 @@ mod tests {
             Some("/api"),
             MarkdownPathStrategy::TypeDoc,
             None,
+            None,
+            true,
+            None,
         );
         let functions = nav[0].children.as_ref().unwrap()[0].children.as_ref().unwrap();
         let leaves = functions.iter().map(|child| child.title.as_str()).collect::<Vec<_>>();
@@ -422,6 +437,122 @@ mod tests {
         // Leaf entries are sorted case-insensitively, matching TypeDoc and the
         // generated Markdown module index.
         assert_eq!(leaves, vec!["cli", "parseArgs", "plugin", "resolveArgs"]);
+    }
+
+    #[test]
+    fn typedoc_nav_sort_entry_points_false_preserves_module_order() {
+        let module = |file: &str, entry: &str| ApiDocModule {
+            description: String::new(),
+            file: file.to_string(),
+            source_path: String::new(),
+            examples: vec![],
+            tags: vec![],
+            entries: vec![nav_entry(entry, "function")],
+        };
+        // Supplied in non-alphabetical order.
+        let docs = vec![module("zebra", "z"), module("alpha", "a")];
+
+        // Default sorts modules alphabetically.
+        let sorted = generate_nav_metadata_from_docs(
+            &docs,
+            Some("/api"),
+            MarkdownPathStrategy::TypeDoc,
+            None,
+            None,
+            true,
+            None,
+        );
+        assert_eq!(
+            sorted.iter().map(|module| module.title.as_str()).collect::<Vec<_>>(),
+            vec!["alpha", "zebra"]
+        );
+
+        // `sortEntryPoints: false` preserves the caller-provided module order.
+        let preserved = generate_nav_metadata_from_docs(
+            &docs,
+            Some("/api"),
+            MarkdownPathStrategy::TypeDoc,
+            None,
+            None,
+            false,
+            None,
+        );
+        assert_eq!(
+            preserved.iter().map(|module| module.title.as_str()).collect::<Vec<_>>(),
+            vec!["zebra", "alpha"]
+        );
+    }
+
+    #[test]
+    fn typedoc_nav_kind_sort_order_reorders_groups() {
+        let docs = vec![ApiDocModule {
+            description: String::new(),
+            file: "default".to_string(),
+            source_path: String::new(),
+            examples: vec![],
+            tags: vec![],
+            entries: vec![
+                nav_entry("alpha", "function"),
+                nav_entry("Engine", "class"),
+                nav_entry("VERSION", "variable"),
+            ],
+        }];
+        let kind_sort_order = ["variable".to_string(), "class".to_string(), "function".to_string()];
+        let nav = generate_nav_metadata_from_docs(
+            &docs,
+            Some("/api"),
+            MarkdownPathStrategy::TypeDoc,
+            None,
+            None,
+            true,
+            Some(&kind_sort_order),
+        );
+        let titles = nav[0]
+            .children
+            .as_ref()
+            .unwrap()
+            .iter()
+            .map(|child| child.title.as_str())
+            .collect::<Vec<_>>();
+
+        // Nav groups follow the configured kind order.
+        assert_eq!(titles, vec!["Variables", "Classes", "Functions"]);
+    }
+
+    #[test]
+    fn typedoc_nav_sort_orders_leaf_entries() {
+        let mut zebra = nav_entry("zebra", "function");
+        zebra.line = 1;
+        let mut alpha = nav_entry("alpha", "function");
+        alpha.line = 2;
+        let docs = vec![ApiDocModule {
+            description: String::new(),
+            file: "default".to_string(),
+            source_path: String::new(),
+            examples: vec![],
+            tags: vec![],
+            entries: vec![zebra, alpha],
+        }];
+        let sort = ["source-order".to_string()];
+        let nav = generate_nav_metadata_from_docs(
+            &docs,
+            Some("/api"),
+            MarkdownPathStrategy::TypeDoc,
+            None,
+            Some(&sort),
+            true,
+            None,
+        );
+        let leaves = nav[0].children.as_ref().unwrap()[0]
+            .children
+            .as_ref()
+            .unwrap()
+            .iter()
+            .map(|child| child.title.as_str())
+            .collect::<Vec<_>>();
+
+        // Source order: `zebra` (line 1) before `alpha` (line 2).
+        assert_eq!(leaves, vec!["zebra", "alpha"]);
     }
 
     #[test]
@@ -445,6 +576,9 @@ mod tests {
             &docs,
             Some("/api"),
             MarkdownPathStrategy::TypeDoc,
+            None,
+            None,
+            true,
             None,
         );
         let functions = nav[0].children.as_ref().unwrap()[0].children.as_ref().unwrap();
@@ -545,6 +679,9 @@ mod tests {
             Some("/api"),
             MarkdownPathStrategy::TypeDoc,
             None,
+            None,
+            true,
+            None,
         );
 
         assert_eq!(nav[0].title, "default");
@@ -592,6 +729,9 @@ mod tests {
             Some("/api"),
             MarkdownPathStrategy::TypeDoc,
             None,
+            None,
+            true,
+            None,
         );
         let children = nav[0].children.as_ref().unwrap();
 
@@ -637,6 +777,9 @@ mod tests {
             &docs,
             Some("/api"),
             MarkdownPathStrategy::TypeDoc,
+            None,
+            None,
+            true,
             None,
         );
 
