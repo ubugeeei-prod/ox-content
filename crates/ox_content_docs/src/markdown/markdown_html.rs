@@ -5,6 +5,7 @@
 //! extraction/formatting/link helpers via `super::` and emits the ox-content theme
 //! HTML structures (`<details>`, stats, member tables, prose blocks, …).
 
+use std::collections::HashSet;
 use std::sync::OnceLock;
 
 use regex::Regex;
@@ -13,8 +14,9 @@ use super::{
     cached_regex, clean_summary_text, doc_kind_plural, doc_page_href, effective_members_format,
     effective_parameters_format, entry_anchor, file_stem, format_count_label, format_kind_label,
     generate_source_href, get_entry_badges, member_anchor, normalize_signature,
-    parse_example_block, process_doc_text, EntryStats, MarkdownDisplayFormat, MarkdownDocsOptions,
-    MarkdownLinkContext, MarkdownPathStrategy, RegexCache, DOC_KIND_ORDER,
+    parse_example_block, process_doc_text, resolve_type_fragments, EntryStats,
+    MarkdownDisplayFormat, MarkdownDocsOptions, MarkdownLinkContext, MarkdownPathStrategy,
+    RegexCache, TypeFragment, DOC_KIND_ORDER,
 };
 use crate::model::{
     ApiDocEntry, ApiDocMember, ApiDocModule, ApiDocTag, ApiParamDoc, ApiReturnDoc, ApiTypeParamDoc,
@@ -363,6 +365,39 @@ fn render_highlighted_inline_code_html(code: &str, class_name: &str, language: &
     out.into_string()
 }
 
+/// Inner HTML for a TypeScript type annotation: escaped text with `<a>` anchors for
+/// known symbols. When nothing resolves to a symbol page this equals
+/// `escape_html(value)` exactly (HTML escaping is per-character), so callers keep
+/// their existing `<code …>` wrappers byte-for-byte and only gain anchors when a
+/// type actually links.
+fn render_type_inner_html(
+    value: &str,
+    context: Option<&MarkdownLinkContext<'_>>,
+    skip: &HashSet<&str>,
+) -> String {
+    match resolve_type_fragments(value, context, skip) {
+        None => escape_html(value),
+        Some(fragments) => {
+            let mut out = String::new();
+            for fragment in fragments {
+                match fragment {
+                    TypeFragment::Text(text) | TypeFragment::Code(text) => {
+                        out.push_str(&escape_html(&text));
+                    }
+                    TypeFragment::Link { name, href } => {
+                        out.push_str("<a href=\"");
+                        out.push_str(&escape_html(&href));
+                        out.push_str("\">");
+                        out.push_str(&escape_html(&name));
+                        out.push_str("</a>");
+                    }
+                }
+            }
+            out
+        }
+    }
+}
+
 pub(super) fn render_details_controls_html(target_selector: &str) -> String {
     let mut out = StringBuilder::with_capacity(260 + target_selector.len());
     out.push_str("<div class=\"ox-api-controls\" data-ox-api-target=\"");
@@ -587,7 +622,7 @@ fn render_params_list_html(
         rows.push_str("<li class=\"ox-api-entry__param\">\n  <div class=\"ox-api-entry__param-heading\">\n    <code class=\"ox-api-entry__param-name\">");
         rows.push_str(&escape_html(&param.name));
         rows.push_str("</code>\n    <code class=\"ox-api-entry__param-type\">");
-        rows.push_str(&escape_html(&param.type_annotation));
+        rows.push_str(&render_type_inner_html(&param.type_annotation, context, &HashSet::new()));
         rows.push_str("</code>\n  </div>\n  ");
         if !description.is_empty() {
             rows.push_str("<p class=\"ox-api-entry__param-description\">");
@@ -627,7 +662,7 @@ fn render_params_table_html(
         rows.push_str("<tr>\n  <td><code>");
         rows.push_str(&escape_html(&param.name));
         rows.push_str("</code></td>\n  <td><code>");
-        rows.push_str(&escape_html(&param.type_annotation));
+        rows.push_str(&render_type_inner_html(&param.type_annotation, context, &HashSet::new()));
         rows.push_str("</code></td>\n  <td>");
         rows.push_str(&render_doc_inline_html(&description, context));
         rows.push_str("</td>\n</tr>");
@@ -653,35 +688,46 @@ fn render_params_table_html(
     out.into_string()
 }
 
-fn render_type_parameter_name_html(type_param: &ApiTypeParamDoc) -> String {
+fn render_type_parameter_name_html(
+    type_param: &ApiTypeParamDoc,
+    context: Option<&MarkdownLinkContext<'_>>,
+    skip: &HashSet<&str>,
+) -> String {
     let mut name = StringBuilder::new();
     name.push_str("<code>");
     name.push_str(&escape_html(&type_param.name));
     name.push_str("</code>");
     if let Some(constraint) = &type_param.constraint {
         name.push_str(" <em>extends</em> <code>");
-        name.push_str(&escape_html(constraint));
+        name.push_str(&render_type_inner_html(constraint, context, skip));
         name.push_str("</code>");
     }
     if let Some(default) = &type_param.default {
         name.push_str(" = <code>");
-        name.push_str(&escape_html(default));
+        name.push_str(&render_type_inner_html(default, context, skip));
         name.push_str("</code>");
     }
     name.into_string()
+}
+
+/// Names of all type parameters in a list (never linked inside their own siblings'
+/// constraints/defaults).
+fn type_parameter_skip_set(type_parameters: &[ApiTypeParamDoc]) -> HashSet<&str> {
+    type_parameters.iter().map(|param| param.name.as_str()).collect()
 }
 
 fn render_type_parameters_table_html(
     type_parameters: &[ApiTypeParamDoc],
     context: Option<&MarkdownLinkContext<'_>>,
 ) -> String {
+    let skip = type_parameter_skip_set(type_parameters);
     let mut rows = StringBuilder::new();
     for type_param in type_parameters {
         if !rows.is_empty() {
             rows.push_char('\n');
         }
         rows.push_str("<tr>\n  <td>");
-        rows.push_str(&render_type_parameter_name_html(type_param));
+        rows.push_str(&render_type_parameter_name_html(type_param, context, &skip));
         rows.push_str("</td>\n  <td>");
         rows.push_str(&render_doc_inline_html(&type_param.description, context));
         rows.push_str("</td>\n</tr>");
@@ -711,13 +757,14 @@ fn render_type_parameters_list_html(
     type_parameters: &[ApiTypeParamDoc],
     context: Option<&MarkdownLinkContext<'_>>,
 ) -> String {
+    let skip = type_parameter_skip_set(type_parameters);
     let mut items = StringBuilder::new();
     for type_param in type_parameters {
         if !items.is_empty() {
             items.push_char('\n');
         }
         items.push_str("<li class=\"ox-api-entry__type-parameter\">\n  <div class=\"ox-api-entry__type-parameter-heading\">");
-        items.push_str(&render_type_parameter_name_html(type_param));
+        items.push_str(&render_type_parameter_name_html(type_param, context, &skip));
         items.push_str("</div>\n  ");
         if !type_param.description.is_empty() {
             items.push_str("<p class=\"ox-api-entry__type-parameter-description\">");
@@ -798,15 +845,26 @@ fn render_member_flags(member: &ApiDocMember) -> String {
     html
 }
 
-fn render_member_type_html(member: &ApiDocMember) -> String {
+fn render_member_type_html(
+    member: &ApiDocMember,
+    context: Option<&MarkdownLinkContext<'_>>,
+    skip: &HashSet<&str>,
+) -> String {
     let value = member
         .signature
         .as_deref()
         .or(member.type_annotation.as_deref())
         .or_else(|| member.returns.as_ref().map(|returns| returns.type_annotation.as_str()));
 
+    // Same `<code …>` wrapper as `render_highlighted_inline_code_html`; the inner
+    // is byte-identical to `escape_html(value)` when nothing links, so unlinked
+    // member types are unchanged and only linked symbols become anchors.
     value.map_or_else(String::new, |value| {
-        render_highlighted_inline_code_html(value, "ox-api-entry__member-type", "typescript")
+        let mut out = StringBuilder::new();
+        out.push_str("<code class=\"ox-api-entry__member-type language-typescript\">");
+        out.push_str(&render_type_inner_html(value, context, skip));
+        out.push_str("</code>");
+        out.into_string()
     })
 }
 
@@ -906,7 +964,11 @@ fn render_member_params_html(
             rows.push_str("<tr><td><code>");
             rows.push_str(&escape_html(&param.name));
             rows.push_str("</code></td><td><code>");
-            rows.push_str(&escape_html(&param.type_annotation));
+            rows.push_str(&render_type_inner_html(
+                &param.type_annotation,
+                context,
+                &HashSet::new(),
+            ));
             rows.push_str("</code></td><td>");
             rows.push_str(&render_doc_inline_html(&description, context));
             rows.push_str("</td></tr>");
@@ -970,7 +1032,7 @@ fn render_member_table_html(
             rows.push_str("</span></td>\n  ");
         }
         rows.push_str("<td>");
-        rows.push_str(&render_member_type_html(member));
+        rows.push_str(&render_member_type_html(member, context, &HashSet::new()));
         rows.push_str("</td>\n  <td>");
         rows.push_str(&render_member_description_html(member, options, context));
         rows.push_str("</td>\n</tr>");
@@ -1039,7 +1101,7 @@ fn render_member_list_html(
         items.push_str("\n    <span class=\"ox-api-entry__member-kind\">");
         items.push_str(&escape_html(&member.kind));
         items.push_str("</span>\n    ");
-        items.push_str(&render_member_type_html(member));
+        items.push_str(&render_member_type_html(member, context, &HashSet::new()));
         items.push_str("\n  </div>\n  ");
         items.push_str(&render_member_description_html(member, options, context));
         items.push_str("\n</li>");
@@ -1335,7 +1397,7 @@ fn push_returns_html(
 <div class=\"ox-api-entry__return\">
   <code class=\"ox-api-entry__return-type\">",
     );
-    body.push_str(&escape_html(&returns.type_annotation));
+    body.push_str(&render_type_inner_html(&returns.type_annotation, link_context, &HashSet::new()));
     body.push_str(
         "</code>
   ",
