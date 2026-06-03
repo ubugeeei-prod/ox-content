@@ -4,7 +4,7 @@ use std::collections::{BTreeMap, HashMap, HashSet};
 use std::path::Path;
 use std::sync::OnceLock;
 
-use phf::phf_map;
+use phf::{phf_map, phf_set};
 use regex::Regex;
 use serde::{Deserialize, Serialize};
 
@@ -2093,6 +2093,29 @@ enum TypeFragment {
     Link { name: String, href: String },
 }
 
+/// TypeScript intrinsic / primitive type names. These are language built-ins, so
+/// they are never linked inside a type annotation even when a same-named symbol
+/// exists in the docs (e.g. a `string()` / `boolean()` combinator). This matches
+/// TypeDoc, which renders intrinsic types as plain code. Applies to type
+/// annotations only — JSDoc `{@link}` / `[Symbol]` references are unaffected.
+static TS_INTRINSIC_TYPES: phf::Set<&'static str> = phf_set! {
+    "any",
+    "bigint",
+    "boolean",
+    "false",
+    "never",
+    "null",
+    "number",
+    "object",
+    "string",
+    "symbol",
+    "this",
+    "true",
+    "undefined",
+    "unknown",
+    "void",
+};
+
 fn is_type_ident_start(byte: u8) -> bool {
     byte.is_ascii_alphabetic() || byte == b'_' || byte == b'$'
 }
@@ -2151,7 +2174,7 @@ fn resolve_type_fragments(
             }
             text_start = index;
 
-            if !skip.contains(ident) {
+            if !skip.contains(ident) && !TS_INTRINSIC_TYPES.contains(ident) {
                 if let Some(location) = resolve_symbol_location(ident, context) {
                     fragments.push(TypeFragment::Link {
                         name: ident.to_string(),
@@ -3843,6 +3866,12 @@ mod tests {
         entry
     }
 
+    /// A `function` entry stub (e.g. a combinator) so its name resolves in the
+    /// symbol map even when it collides with a primitive type name.
+    fn function_stub(name: &str) -> ApiDocEntry {
+        test_entry(name, "function", "/repo/src/combinators.ts", "")
+    }
+
     /// A module containing `entry` plus stub `type` entries whose names are used as
     /// linkable symbols inside type annotations in the type-link tests.
     fn type_link_module(entry: ApiDocEntry) -> Vec<ApiDocModule> {
@@ -3860,6 +3889,12 @@ mod tests {
                 type_stub("GunshiParamsConstraint"),
                 type_stub("DefaultGunshiParams"),
                 type_stub("U"),
+                // Symbols that collide with TypeScript intrinsic primitive types,
+                // mirroring gunshi's `string()` / `boolean()` / `number()`
+                // combinators. These must never be linked inside a type annotation.
+                function_stub("string"),
+                function_stub("boolean"),
+                function_stub("number"),
             ],
         }]
     }
@@ -3965,6 +4000,35 @@ mod tests {
         assert!(page.contains("`Map`"));
         assert!(page.contains("`string`"));
         assert!(!page.contains("[`Record`]"));
+        // `string` is intrinsic even though a `string()` symbol exists.
+        assert!(!page.contains("[`string`]"));
+    }
+
+    #[test]
+    fn typedoc_does_not_link_primitive_types_with_colliding_symbols() {
+        // gunshi exports `string()` / `boolean()` / `number()` combinators, so those
+        // names resolve in the symbol map. Primitive type annotations must still
+        // render as plain code, never linking to the combinator pages.
+        let mut entry = test_entry("make", "function", "/repo/src/make.ts", "Make.");
+        entry.params =
+            vec![param("flag", "boolean"), param("name", "string"), param("count", "number")];
+        let options = MarkdownDocsOptions {
+            parameters_format: MarkdownDisplayFormat::Table,
+            ..markdown_typedoc_options()
+        };
+        let out = generate_markdown(&type_link_module(entry), &options);
+        let page = out.get("combinators/functions/make.md").unwrap();
+
+        for primitive in ["boolean", "string", "number"] {
+            assert!(
+                page.contains(&format!("`{primitive}`")),
+                "expected `{primitive}` as plain code"
+            );
+            assert!(
+                !page.contains(&format!("[`{primitive}`]")),
+                "`{primitive}` must not be linked"
+            );
+        }
     }
 
     #[test]
