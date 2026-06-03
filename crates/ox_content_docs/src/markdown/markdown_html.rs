@@ -240,7 +240,8 @@ fn render_markdown_blocks_html(text: &str) -> String {
                     break;
                 };
 
-                let mut item_lines = vec![item_text.trim().to_string()];
+                let mut item_lines = Vec::new();
+                item_lines.push(String::from(item_text.trim()));
                 index += 1;
 
                 while index < lines.len() {
@@ -280,7 +281,8 @@ fn render_markdown_blocks_html(text: &str) -> String {
                     break;
                 };
 
-                let mut item_lines = vec![item_text.trim().to_string()];
+                let mut item_lines = Vec::new();
+                item_lines.push(String::from(item_text.trim()));
                 index += 1;
 
                 while index < lines.len() {
@@ -310,7 +312,8 @@ fn render_markdown_blocks_html(text: &str) -> String {
             continue;
         }
 
-        let mut paragraph_lines = vec![trimmed.to_string()];
+        let mut paragraph_lines = Vec::new();
+        paragraph_lines.push(String::from(trimmed));
         index += 1;
 
         while index < lines.len() {

@@ -1,5 +1,10 @@
 disallowed-macros = [
   { path = "std::format", reason = "avoid heap-allocating formatted temporary strings in hot paths; use StringBuilder or direct buffer writes instead" },
+  { path = "std::vec", reason = "prefer ox_content_allocator::Vec or SmallVec over heap-allocated std::Vec literals in allocator-aware code", replacement = "ox_content_allocator::Vec" },
+]
+
+disallowed-methods = [
+  { path = "std::string::ToString::to_string", reason = "prefer borrowed strings, CompactString, or allocator-owned strings instead of creating std::String temporaries" },
 ]
 
 disallowed-types = [

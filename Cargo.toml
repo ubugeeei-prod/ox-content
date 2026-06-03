@@ -41,6 +41,7 @@ useless_format = "deny"
 write_with_newline = "deny"
 writeln_empty_string = "deny"
 disallowed_macros = "allow"
+disallowed_methods = "allow"
 disallowed_types = "allow"
 
 # Allow

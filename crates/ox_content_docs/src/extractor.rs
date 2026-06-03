@@ -437,7 +437,8 @@ impl<'a> DocVisitor<'a> {
         include_undocumented_declarations: bool,
         jsdoc_cache: FxHashMap<u32, ParsedJsdoc>,
     ) -> Self {
-        let mut line_starts = vec![0];
+        let mut line_starts = Vec::new();
+        line_starts.push(0);
         line_starts.extend(
             source
                 .bytes()
@@ -747,7 +748,7 @@ impl<'a> DocVisitor<'a> {
                     .unwrap_or(without_at.len());
                 let tag_name = without_at[..split_at].to_string();
                 let tag_value = without_at[split_at..].trim_start().to_string();
-                current_tag = Some((tag_name, vec![tag_value]));
+                current_tag = Some((tag_name, Vec::from([tag_value])));
             } else if let Some((_, ref mut value_lines)) = current_tag {
                 value_lines.push(line);
             } else {

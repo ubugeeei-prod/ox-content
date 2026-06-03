@@ -66,7 +66,7 @@ impl HtmlRendererOptions {
             code_annotation_default_line_numbers: false,
             toc_max_depth: 3,
             autolink_urls: false,
-            autolink_patterns: vec!["http://".to_string(), "https://".to_string()],
+            autolink_patterns: Vec::from([String::from("http://"), String::from("https://")]),
             autolink_target_blank: true,
         }
     }

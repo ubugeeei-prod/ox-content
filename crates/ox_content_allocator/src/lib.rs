@@ -3,6 +3,8 @@
 //! This crate provides a high-performance arena allocator based on bumpalo,
 //! designed for efficient memory management during parsing operations.
 
+#![deny(clippy::disallowed_macros, clippy::disallowed_methods, clippy::disallowed_types)]
+
 use std::ops::Deref;
 
 pub use bumpalo::Bump;

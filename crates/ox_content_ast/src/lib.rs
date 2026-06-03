@@ -4,6 +4,8 @@
 //! designed to be compatible with mdast (Markdown AST) specification while
 //! providing efficient arena-based allocation.
 
+#![deny(clippy::disallowed_macros, clippy::disallowed_methods, clippy::disallowed_types)]
+
 mod ast;
 mod span;
 mod visit;
