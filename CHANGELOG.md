@@ -1,5 +1,17 @@
 # Changelog
 
+## [2.46.0] - 2026-06-03
+
+### Features
+
+- add groupOrder option to control typedoc section and nav group order (#299)
+- add renderStats option to omit generated markdown stats summaries (#298)
+
+### Bug Fixes
+
+- bring html render style to feature parity with markdown (#300)
+- render all overload call signatures on typedoc symbol pages (#297)
+
 ## [2.45.0] - 2026-06-03
 
 ### Features
