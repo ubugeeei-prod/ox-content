@@ -1,5 +1,12 @@
 # Changelog
 
+## [2.47.0] - 2026-06-03
+
+### Bug Fixes
+
+- sort class/interface/type members alphabetically to match typedoc (#303)
+- sort and dedupe typedoc nav leaf entries to match markdown order (#302)
+
 ## [2.46.0] - 2026-06-03
 
 ### Features
