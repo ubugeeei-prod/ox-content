@@ -1,5 +1,11 @@
 # Changelog
 
+## [2.49.0] - 2026-06-03
+
+### Bug Fixes
+
+- link known symbols inside rendered type annotations (#305)
+
 ## [2.48.0] - 2026-06-03
 
 ### Bug Fixes
