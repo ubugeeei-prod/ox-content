@@ -370,6 +370,8 @@ export interface JsDocsMarkdownOptions {
   enumMembersFormat?: 'none' | 'list' | 'table'
   propertyMembersFormat?: 'none' | 'list' | 'table'
   typeDeclarationFormat?: 'none' | 'list' | 'table'
+  /** Emit the stats summary line on index pages (default: true). */
+  renderStats?: boolean
 }
 
 /** Ordered JSDoc tag used by generated API Markdown. */

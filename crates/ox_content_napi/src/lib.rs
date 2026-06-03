@@ -339,6 +339,8 @@ pub struct JsDocsMarkdownOptions {
     pub property_members_format: Option<String>,
     #[napi(ts_type = "'none' | 'list' | 'table'")]
     pub type_declaration_format: Option<String>,
+    /// Emit the stats summary line on index pages (default: true).
+    pub render_stats: Option<bool>,
 }
 
 /// Options for writing generated API documentation files.
@@ -1417,6 +1419,7 @@ pub fn generate_docs_markdown(
             type_declaration_format: parse_markdown_display_format(
                 options.type_declaration_format.as_deref(),
             ),
+            render_stats: options.render_stats.unwrap_or(true),
         });
     generate_markdown(&docs.into_iter().map(convert_markdown_module).collect::<Vec<_>>(), &options)
         .into_iter()
@@ -3887,6 +3890,52 @@ mod tests {
         assert!(!root_index.contains("[Default]"));
         assert!(module_index.starts_with("# default\n\n"));
         assert!(cli_page.contains("<a href=\"/api/default/interfaces/Command\">Command</a>"));
+    }
+
+    #[test]
+    fn generate_docs_markdown_render_stats_option_toggles_stats_summary() {
+        fn module() -> Vec<JsDocsMarkdownModule> {
+            vec![JsDocsMarkdownModule {
+                description: None,
+                file: "default".to_string(),
+                source_path: None,
+                examples: None,
+                tags: None,
+                entries: vec![JsDocsMarkdownEntry {
+                    name: "cli".to_string(),
+                    kind: "function".to_string(),
+                    description: "Run.".to_string(),
+                    params: None,
+                    returns: None,
+                    examples: None,
+                    tags: None,
+                    private: false,
+                    file: "/repo/src/cli.ts".to_string(),
+                    line: 1,
+                    end_line: 1,
+                    signature: Some("export function cli(): void".to_string()),
+                    has_body: None,
+                    members: None,
+                    type_parameters: None,
+                }],
+            }]
+        }
+        fn options(render_stats: Option<bool>) -> JsDocsMarkdownOptions {
+            JsDocsMarkdownOptions {
+                path_strategy: Some("typedoc".to_string()),
+                render_style: Some("markdown".to_string()),
+                render_stats,
+                ..Default::default()
+            }
+        }
+
+        // Default (None -> true) keeps the stats summary.
+        let with_stats = generate_docs_markdown(module(), Some(options(None)));
+        assert!(with_stats.get("default/index.md").unwrap().contains("symbols ·"));
+
+        // Explicit false omits it.
+        let without_stats = generate_docs_markdown(module(), Some(options(Some(false))));
+        assert!(!without_stats.get("default/index.md").unwrap().contains("symbols ·"));
     }
 
     #[test]
