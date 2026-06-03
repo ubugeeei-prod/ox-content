@@ -811,6 +811,9 @@ fn sort_extracted_docs(docs: &[ApiDocModule]) -> Vec<ApiDocModule> {
 
     for doc in &mut sorted {
         doc.entries.sort_by_cached_key(|entry| (entry.name.to_lowercase(), entry.name.clone()));
+        for entry in &mut doc.entries {
+            sort_api_doc_members(entry);
+        }
     }
 
     sorted.sort_by_cached_key(|module| {
@@ -818,6 +821,18 @@ fn sort_extracted_docs(docs: &[ApiDocModule]) -> Vec<ApiDocModule> {
         (name.to_lowercase(), name)
     });
     sorted
+}
+
+/// Sorts an entry's members alphabetically (case-insensitive) for the member kinds
+/// TypeDoc sorts. Enum members keep declaration order, which can be semantically
+/// meaningful. Renderers bucket members by group while preserving relative order,
+/// so a single global sort yields alphabetical order within each group.
+fn sort_api_doc_members(entry: &mut ApiDocEntry) {
+    if matches!(entry.kind.as_str(), "class" | "interface" | "type") {
+        entry
+            .members
+            .sort_by_cached_key(|member| (member.name.to_lowercase(), member.name.clone()));
+    }
 }
 
 /// Renders the per-page stats summary in the configured render style.
@@ -3683,6 +3698,94 @@ mod tests {
             render_style: MarkdownRenderStyle::Html,
             ..MarkdownDocsOptions::default()
         }
+    }
+
+    fn member(name: &str, kind: &str, is_static: bool) -> ApiDocMember {
+        ApiDocMember {
+            name: name.to_string(),
+            kind: kind.to_string(),
+            description: String::new(),
+            signature: None,
+            type_annotation: Some("unknown".to_string()),
+            params: vec![],
+            returns: None,
+            optional: false,
+            readonly: false,
+            r#static: is_static,
+            private: false,
+            tags: vec![],
+            line: 1,
+            end_line: 1,
+        }
+    }
+
+    #[test]
+    fn typedoc_sorts_interface_members_alphabetically() {
+        let mut entry = test_entry("Command", "interface", "/repo/src/types.ts", "A command.");
+        // Declared out of alphabetical order.
+        entry.members = vec![
+            member("zebra", "property", false),
+            member("apple", "property", false),
+            member("mango", "property", false),
+        ];
+        let out = generate_markdown(&lifecycle_module(entry), &markdown_typedoc_options());
+        let page = out.get("combinators/interfaces/Command.md").unwrap();
+
+        let pos = |name: &str| page.find(&join3("`", name, "`")).unwrap();
+        assert!(pos("apple") < pos("mango"));
+        assert!(pos("mango") < pos("zebra"));
+    }
+
+    #[test]
+    fn typedoc_sorts_class_members_within_each_group() {
+        let mut entry = test_entry("Engine", "class", "/repo/src/engine.ts", "Engine.");
+        entry.members = vec![
+            member("zeta", "property", false),
+            member("alpha", "property", false),
+            member("run", "method", false),
+            member("build", "method", false),
+        ];
+        let out = generate_markdown(&lifecycle_module(entry), &markdown_typedoc_options());
+        let page = out.get("combinators/classes/Engine.md").unwrap();
+
+        let pos = |name: &str| page.find(&join3("`", name, "`")).unwrap();
+        // Properties group alphabetical.
+        assert!(pos("alpha") < pos("zeta"));
+        // Methods group alphabetical.
+        assert!(pos("build") < pos("run"));
+    }
+
+    #[test]
+    fn typedoc_keeps_enum_members_in_declaration_order() {
+        let mut entry = test_entry("Level", "enum", "/repo/src/level.ts", "Level.");
+        // Non-alphabetical declaration order, which must be preserved for enums.
+        entry.members = vec![
+            member("Medium", "enumMember", false),
+            member("High", "enumMember", false),
+            member("Low", "enumMember", false),
+        ];
+        let out = generate_markdown(&lifecycle_module(entry), &markdown_typedoc_options());
+        let page = out.get("combinators/enumerations/Level.md").unwrap();
+
+        let pos = |name: &str| page.find(&join3("`", name, "`")).unwrap();
+        assert!(pos("Medium") < pos("High"));
+        assert!(pos("High") < pos("Low"));
+    }
+
+    #[test]
+    fn typedoc_html_sorts_interface_members_alphabetically() {
+        let mut entry = test_entry("Command", "interface", "/repo/src/types.ts", "A command.");
+        entry.members = vec![
+            member("zebra", "property", false),
+            member("apple", "property", false),
+            member("mango", "property", false),
+        ];
+        let out = generate_markdown(&lifecycle_module(entry), &html_typedoc_options());
+        let page = out.get("combinators/interfaces/Command.md").unwrap();
+
+        let pos = |name: &str| page.find(&join3("<code>", name, "</code>")).unwrap();
+        assert!(pos("apple") < pos("mango"));
+        assert!(pos("mango") < pos("zebra"));
     }
 
     #[test]

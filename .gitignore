@@ -69,3 +69,7 @@ benchmarks/corpus/
 
 # Local VS Code extension test harness downloads
 .vscode-test/
+
+# Playwright VRT output (screenshots/diffs/last-run are transient; baselines live
+# under `*-snapshots/` and are committed)
+test-results/
