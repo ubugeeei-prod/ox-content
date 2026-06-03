@@ -252,6 +252,7 @@ mod tests {
                     line: 1,
                     end_line: 5,
                     signature: Some("export function cli(): void".to_string()),
+                    has_body: false,
                     members: vec![],
                     type_parameters: vec![],
                 },
@@ -268,6 +269,7 @@ mod tests {
                     line: 1,
                     end_line: 4,
                     signature: Some("export enum Mode".to_string()),
+                    has_body: false,
                     members: vec![ApiDocMember {
                         name: "Strict".to_string(),
                         kind: "enumMember".to_string(),

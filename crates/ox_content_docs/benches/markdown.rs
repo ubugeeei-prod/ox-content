@@ -230,6 +230,7 @@ fn entry(module: usize, index: usize) -> ApiDocEntry {
                 signature
             }
         }),
+        has_body: false,
         members: if kind != "function" {
             (0..16).map(|i| member(module, index, i)).collect()
         } else {

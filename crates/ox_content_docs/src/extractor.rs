@@ -63,6 +63,12 @@ pub struct DocItem {
     pub exported: bool,
     /// Type signature (if applicable).
     pub signature: Option<String>,
+    /// Whether a function/method declaration carries an implementation body.
+    /// `false` for overload signatures and ambient (`declare` / `.d.ts`)
+    /// declarations, and for non-callable items. Used to hide the implementation
+    /// signature when grouping overloads on TypeDoc symbol pages.
+    #[serde(default)]
+    pub has_body: bool,
     /// Whether the item is optional.
     #[serde(default)]
     pub optional: bool,
@@ -540,6 +546,7 @@ impl<'a> DocVisitor<'a> {
             jsdoc: Some(raw),
             exported: true,
             signature: None,
+            has_body: false,
             optional: false,
             readonly: false,
             r#static: false,
@@ -1391,6 +1398,7 @@ impl<'a> DocVisitor<'a> {
                 func.id.as_ref()?.name.as_str(),
                 exported,
             )),
+            has_body: func.body.is_some(),
             optional: false,
             readonly: false,
             r#static: false,
@@ -1463,6 +1471,7 @@ impl<'a> DocVisitor<'a> {
                             &method.value.params,
                             method.value.return_type.as_ref(),
                         )),
+                        has_body: false,
                         optional: method.optional,
                         readonly: false,
                         r#static: method.r#static,
@@ -1506,6 +1515,7 @@ impl<'a> DocVisitor<'a> {
                         jsdoc: prop_jsdoc,
                         exported: false,
                         signature: type_annotation,
+                        has_body: false,
                         optional: prop.optional,
                         readonly: prop.readonly,
                         r#static: prop.r#static,
@@ -1531,6 +1541,7 @@ impl<'a> DocVisitor<'a> {
             jsdoc,
             exported,
             signature: Some(self.format_class_signature(class, name, exported)),
+            has_body: false,
             optional: false,
             readonly: false,
             r#static: false,
@@ -1580,6 +1591,7 @@ impl<'a> DocVisitor<'a> {
                         jsdoc: prop_jsdoc,
                         exported: false,
                         signature: type_annotation,
+                        has_body: false,
                         optional: prop.optional,
                         readonly: prop.readonly,
                         r#static: false,
@@ -1630,6 +1642,7 @@ impl<'a> DocVisitor<'a> {
                             &method.params,
                             method.return_type.as_ref(),
                         )),
+                        has_body: false,
                         optional: method.optional,
                         readonly: false,
                         r#static: false,
@@ -1774,6 +1787,7 @@ impl<'a> DocVisitor<'a> {
                         &arrow.params,
                         arrow.return_type.as_ref(),
                     )),
+                    has_body: false,
                     optional: false,
                     readonly: false,
                     r#static: false,
@@ -1801,6 +1815,7 @@ impl<'a> DocVisitor<'a> {
                         &func_expr.params,
                         func_expr.return_type.as_ref(),
                     )),
+                    has_body: false,
                     optional: false,
                     readonly: false,
                     r#static: false,
@@ -1828,6 +1843,7 @@ impl<'a> DocVisitor<'a> {
                         declarator.type_annotation.as_deref(),
                         Some(other),
                     )),
+                    has_body: false,
                     optional: false,
                     readonly: false,
                     r#static: false,
@@ -1870,6 +1886,7 @@ impl<'a> DocVisitor<'a> {
             jsdoc,
             exported,
             signature: Some(self.format_type_alias_signature(type_alias, exported)),
+            has_body: false,
             optional: false,
             readonly: false,
             r#static: false,
@@ -1904,6 +1921,7 @@ impl<'a> DocVisitor<'a> {
             jsdoc,
             exported,
             signature: Some(self.format_interface_signature(interface, exported)),
+            has_body: false,
             optional: false,
             readonly: false,
             r#static: false,
@@ -1943,6 +1961,7 @@ impl<'a> DocVisitor<'a> {
             jsdoc,
             exported,
             signature: None,
+            has_body: false,
             optional: false,
             readonly: false,
             r#static: false,
@@ -1987,6 +2006,7 @@ impl<'a> DocVisitor<'a> {
                 .initializer
                 .as_ref()
                 .map(|initializer| self.slice(initializer.span().start, initializer.span().end)),
+            has_body: false,
             optional: false,
             readonly: false,
             r#static: false,
@@ -2002,6 +2022,36 @@ impl<'a> DocVisitor<'a> {
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[test]
+    fn extract_overloaded_function_marks_only_implementation_has_body() {
+        let source = r"
+/**
+ * Define a plugin with extension.
+ */
+export function plugin<E>(options: WithExt): WithExtResult;
+/**
+ * Define a plugin without extension.
+ */
+export function plugin(options: WithoutExt): WithoutExtResult;
+/**
+ * Define a plugin.
+ */
+export function plugin(options: any = {}): any {
+    return options;
+}
+";
+
+        let extractor = DocExtractor::new();
+        let items = extractor.extract_source(source, "plugin.ts", SourceType::ts()).unwrap();
+        let plugins = items.iter().filter(|item| item.name == "plugin").collect::<Vec<_>>();
+
+        assert_eq!(plugins.len(), 3);
+        // Overload signatures carry no body; only the implementation does.
+        assert!(!plugins[0].has_body);
+        assert!(!plugins[1].has_body);
+        assert!(plugins[2].has_body);
+    }
 
     #[test]
     fn test_extract_function() {

@@ -227,6 +227,9 @@ pub struct JsDocEntry {
     pub line: u32,
     pub end_line: u32,
     pub signature: Option<String>,
+    /// Whether a function declaration carries an implementation body. `false` for
+    /// overload signatures and ambient declarations.
+    pub has_body: bool,
     pub members: Option<Vec<JsDocMember>>,
     pub type_parameters: Option<Vec<JsTypeParam>>,
 }
@@ -273,6 +276,10 @@ pub struct JsDocsMarkdownEntry {
     pub line: u32,
     pub end_line: u32,
     pub signature: Option<String>,
+    /// Whether a function declaration carries an implementation body. Optional so
+    /// callers that build entries by hand need not set it; defaults to `false`.
+    /// Round-trips from `extractDocsFromEntryPoints` output unchanged.
+    pub has_body: Option<bool>,
     pub members: Option<Vec<JsDocMember>>,
     pub type_parameters: Option<Vec<JsTypeParam>>,
 }
@@ -939,6 +946,7 @@ fn map_normalized_doc_entry(entry: NormalizedDocEntry) -> JsDocEntry {
         line: entry.line,
         end_line: entry.end_line,
         signature: entry.signature,
+        has_body: entry.has_body,
         members: (!entry.members.is_empty())
             .then(|| entry.members.into_iter().map(map_normalized_member).collect()),
         type_parameters: (!entry.type_parameters.is_empty())
@@ -1172,6 +1180,7 @@ fn convert_markdown_entry(entry: JsDocsMarkdownEntry) -> ApiDocEntry {
         line: entry.line,
         end_line: entry.end_line,
         signature: entry.signature,
+        has_body: entry.has_body.unwrap_or(false),
         members: entry
             .members
             .unwrap_or_default()
@@ -3421,7 +3430,7 @@ mod tests {
 
     use super::transformer::parse_frontmatter;
     use super::{
-        extract_docs_from_entry_points_napi, generate_docs_markdown,
+        convert_markdown_entry, extract_docs_from_entry_points_napi, generate_docs_markdown,
         generate_docs_nav_metadata_from_docs_napi, get_git_last_updated, map_normalized_doc_entry,
         JsDocMember, JsDocParam, JsDocReturn, JsDocsMarkdownEntry, JsDocsMarkdownModule,
         JsDocsMarkdownOptions, JsDocsMarkdownTag, JsDocsNavOptions, JsEntryPointDocsOptions,
@@ -3476,6 +3485,7 @@ mod tests {
             line: 1,
             end_line: 8,
             signature: Some("export interface Command".to_string()),
+            has_body: false,
             members: vec![NormalizedMember {
                 name: "name".to_string(),
                 kind: NormalizedMemberKind::Property,
@@ -3506,6 +3516,75 @@ mod tests {
     }
 
     #[test]
+    fn has_body_round_trips_from_extract_output_to_markdown_model() {
+        let normalized = NormalizedDocEntry {
+            name: "plugin".to_string(),
+            kind: NormalizedDocKind::Function,
+            description: String::new(),
+            params: vec![],
+            returns: None,
+            examples: vec![],
+            tags: BTreeMap::new(),
+            private: false,
+            file: "plugin.ts".to_string(),
+            line: 1,
+            end_line: 1,
+            signature: Some("export function plugin(): void".to_string()),
+            has_body: true,
+            members: vec![],
+            type_parameters: vec![],
+        };
+
+        // `extractDocsFromEntryPoints` output exposes the flag ...
+        let js_entry = map_normalized_doc_entry(normalized);
+        assert!(js_entry.has_body);
+
+        // ... and `generateDocsMarkdown` input round-trips it back into the model
+        // (gunshi's `{ ...entry }` spread carries it across the boundary).
+        let markdown_entry = JsDocsMarkdownEntry {
+            name: js_entry.name,
+            kind: js_entry.kind,
+            description: js_entry.description,
+            params: None,
+            returns: None,
+            examples: None,
+            tags: None,
+            private: js_entry.private,
+            file: js_entry.file,
+            line: js_entry.line,
+            end_line: js_entry.end_line,
+            signature: js_entry.signature,
+            has_body: Some(js_entry.has_body),
+            members: None,
+            type_parameters: None,
+        };
+        assert!(convert_markdown_entry(markdown_entry).has_body);
+    }
+
+    #[test]
+    fn convert_markdown_entry_defaults_has_body_to_false_when_absent() {
+        let entry = JsDocsMarkdownEntry {
+            name: "Command".to_string(),
+            kind: "interface".to_string(),
+            description: String::new(),
+            params: None,
+            returns: None,
+            examples: None,
+            tags: None,
+            private: false,
+            file: "command.ts".to_string(),
+            line: 1,
+            end_line: 1,
+            signature: Some("export interface Command".to_string()),
+            has_body: None,
+            members: None,
+            type_parameters: None,
+        };
+
+        assert!(!convert_markdown_entry(entry).has_body);
+    }
+
+    #[test]
     fn generate_docs_markdown_accepts_clean_link_options() {
         let docs = vec![JsDocsMarkdownModule {
             description: None,
@@ -3526,6 +3605,7 @@ mod tests {
                 line: 1,
                 end_line: 1,
                 signature: Some("export interface CommandContext".to_string()),
+                has_body: None,
                 members: None,
                 type_parameters: None,
             }],
@@ -3569,6 +3649,7 @@ mod tests {
                 line: 1,
                 end_line: 1,
                 signature: Some("export interface CommandContext".to_string()),
+                has_body: None,
                 members: None,
                 type_parameters: None,
             }],
@@ -3620,6 +3701,7 @@ mod tests {
                 line: 1,
                 end_line: 1,
                 signature: Some("export function make(value: string): void".to_string()),
+                has_body: None,
                 members: None,
                 type_parameters: None,
             }],
@@ -3662,6 +3744,7 @@ mod tests {
                     line: 1,
                     end_line: 10,
                     signature: Some("export interface Command".to_string()),
+                    has_body: None,
                     members: Some(vec![JsDocMember {
                         name: "args".to_string(),
                         kind: "property".to_string(),
@@ -3714,6 +3797,7 @@ mod tests {
                     signature: Some(
                         "export function buildCommand(entry: Command): Command".to_string(),
                     ),
+                    has_body: None,
                     members: None,
                     type_parameters: None,
                 }],
@@ -3757,6 +3841,7 @@ mod tests {
                     line: 1,
                     end_line: 10,
                     signature: Some("export interface Command".to_string()),
+                    has_body: None,
                     members: None,
                     type_parameters: None,
                 },
@@ -3773,6 +3858,7 @@ mod tests {
                     line: 1,
                     end_line: 10,
                     signature: Some("export function cli(): void".to_string()),
+                    has_body: None,
                     members: None,
                     type_parameters: None,
                 },
@@ -3820,6 +3906,7 @@ mod tests {
             line: 1,
             end_line: 1,
             signature: Some("export function createCommandContext(): void".to_string()),
+            has_body: None,
             members: None,
             type_parameters: None,
         };
@@ -3881,6 +3968,7 @@ mod tests {
                 line: 1,
                 end_line: 1,
                 signature: Some("export function make<G>(): G".to_string()),
+                has_body: None,
                 members: None,
                 type_parameters: Some(vec![JsTypeParam {
                     name: "G".to_string(),
@@ -3932,6 +4020,7 @@ mod tests {
                 line: 1,
                 end_line: 10,
                 signature: Some("export function createCommandContext(): void".to_string()),
+                has_body: None,
                 members: None,
                 type_parameters: None,
             }],
@@ -3980,6 +4069,7 @@ mod tests {
                     line: 1,
                     end_line: 1,
                     signature: None,
+                    has_body: None,
                     members: None,
                     type_parameters: None,
                 },
@@ -3996,6 +4086,7 @@ mod tests {
                     line: 1,
                     end_line: 1,
                     signature: None,
+                    has_body: None,
                     members: None,
                     type_parameters: None,
                 },
@@ -4068,6 +4159,7 @@ mod tests {
                 line: 1,
                 end_line: 1,
                 signature: Some("export function cli(): void".to_string()),
+                has_body: None,
                 members: None,
                 type_parameters: None,
             }],

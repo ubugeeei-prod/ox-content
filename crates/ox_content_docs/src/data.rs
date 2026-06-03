@@ -292,6 +292,7 @@ mod tests {
                 line: 10,
                 end_line: 10,
                 signature: Some("export function clamp(value: number): number".to_string()),
+                has_body: false,
                 members: vec![],
                 type_parameters: vec![],
             }],
@@ -358,6 +359,7 @@ mod tests {
                 line: 15,
                 end_line: 23,
                 signature: Some("type Combinator = unknown".to_string()),
+                has_body: false,
                 members: vec![],
                 type_parameters: vec![],
             }],
@@ -396,6 +398,7 @@ mod tests {
                 line: 1,
                 end_line: 1,
                 signature: None,
+                has_body: false,
                 members: vec![],
                 type_parameters: vec![
                     ApiTypeParamDoc {
