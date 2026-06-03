@@ -1440,8 +1440,15 @@ fn generate_typedoc_module_index(
     }
 
     if let Some(github_url) = &options.github_url {
-        markdown.push_str(&generate_source_link(&doc.file, github_url, None, None));
-        markdown.push_str("\n\n");
+        // Link to the entry point's real source file. `doc.file` is the module
+        // route name (e.g. `default`) under the TypeDoc strategy, which would
+        // produce a dead link; `doc.source_path` holds the actual entry-point
+        // path. Omit the link when no source path is available (matching the
+        // per-symbol pages and TypeDoc, which has no module source line).
+        if !doc.source_path.is_empty() {
+            markdown.push_str(&generate_source_link(&doc.source_path, github_url, None, None));
+            markdown.push_str("\n\n");
+        }
     }
 
     push_stats(&mut markdown, options, &summarize_module(doc), None);
@@ -3772,6 +3779,48 @@ mod tests {
             render_style: MarkdownRenderStyle::Markdown,
             ..MarkdownDocsOptions::default()
         }
+    }
+
+    fn module_with_source_path(source_path: &str) -> Vec<ApiDocModule> {
+        vec![ApiDocModule {
+            description: String::new(),
+            // `file` is the module route name, not a real path.
+            file: "default".to_string(),
+            source_path: source_path.to_string(),
+            examples: vec![],
+            tags: vec![],
+            entries: vec![test_entry("cli", "function", "/repo/packages/x/src/cli.ts", "Run.")],
+        }]
+    }
+
+    #[test]
+    fn typedoc_module_index_source_link_uses_source_path() {
+        let options = MarkdownDocsOptions {
+            github_url: Some("https://github.com/x/y".to_string()),
+            ..markdown_typedoc_options()
+        };
+        let out =
+            generate_markdown(&module_with_source_path("/repo/packages/x/src/index.ts"), &options);
+        let index = out.get("default/index.md").unwrap();
+
+        // Links to the real entry-point file, never the dead `blob/main/default`.
+        assert!(index
+            .contains("**[Source](https://github.com/x/y/blob/main/packages/x/src/index.ts)**"));
+        assert!(!index.contains("blob/main/default"));
+    }
+
+    #[test]
+    fn typedoc_module_index_omits_source_link_without_source_path() {
+        let options = MarkdownDocsOptions {
+            github_url: Some("https://github.com/x/y".to_string()),
+            ..markdown_typedoc_options()
+        };
+        let out = generate_markdown(&module_with_source_path(""), &options);
+        let index = out.get("default/index.md").unwrap();
+
+        // No source path → no module source line (and no dead link).
+        assert!(!index.contains("**[Source]"));
+        assert!(!index.contains("blob/main/default"));
     }
 
     fn group_order_docs() -> Vec<ApiDocModule> {
