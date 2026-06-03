@@ -1,5 +1,11 @@
 # Changelog
 
+## [2.48.0] - 2026-06-03
+
+### Bug Fixes
+
+- drop redundant Kind column from named member tables (#304)
+
 ## [2.47.0] - 2026-06-03
 
 ### Bug Fixes
