@@ -1,5 +1,15 @@
 # Changelog
 
+## [2.45.0] - 2026-06-03
+
+### Features
+
+- add renderStats option to omit generated markdown stats summaries (#298)
+
+### Bug Fixes
+
+- render all overload call signatures on typedoc symbol pages (#297)
+
 ## [2.44.0] - 2026-06-02
 
 ### Bug Fixes

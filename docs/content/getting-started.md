@@ -219,10 +219,10 @@ If you want the lowest-level building blocks directly, use the Rust crates.
 
 ```toml
 [dependencies]
-ox_content_allocator = "2.44.0"
-ox_content_ast = "2.44.0"
-ox_content_parser = "2.44.0"
-ox_content_renderer = "2.44.0"
+ox_content_allocator = "2.45.0"
+ox_content_ast = "2.45.0"
+ox_content_parser = "2.45.0"
+ox_content_renderer = "2.45.0"
 ```
 
 ### Parse and Render in Rust
