@@ -80,6 +80,11 @@ pub struct MarkdownDocsOptions {
     /// without stats.
     #[serde(default = "default_render_stats")]
     pub render_stats: bool,
+    /// TypeDoc-style group order for module index sections and nav groups. `None`
+    /// keeps the historical fixed order; `Some` reorders groups by title, placing
+    /// unlisted groups alphabetically at `*` (or at the end when `*` is absent).
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub group_order: Option<Vec<String>>,
 }
 
 /// Internal documentation link style.
@@ -149,6 +154,7 @@ impl Default for MarkdownDocsOptions {
             property_members_format: MarkdownDisplayFormat::None,
             type_declaration_format: MarkdownDisplayFormat::None,
             render_stats: true,
+            group_order: None,
         }
     }
 }
@@ -1264,6 +1270,11 @@ fn generate_typedoc_module_index(
     push_stats(&mut markdown, options, &summarize_module(doc), None);
 
     let index_format = effective_index_format(options);
+
+    // Collect the kind sections (in the historical order) plus the References
+    // section, then order them by `group_order` before rendering. TypeDoc treats
+    // References as just another group, so it participates in the ordering too.
+    let mut sections: Vec<(String, IndexSection)> = Vec::new();
     for kind in ordered_entry_kinds(&doc.entries) {
         // Only entries whose canonical page lives in this module are listed in
         // the kind sections; re-exports are collected into "References" below.
@@ -1275,70 +1286,8 @@ fn generate_typedoc_module_index(
         if entries.is_empty() {
             continue;
         }
-
-        markdown.push_str("## ");
-        markdown.push_str(typedoc_kind_title(&kind));
-        markdown.push_str("\n\n");
-        let mut seen = std::collections::HashSet::new();
-        if index_format == MarkdownDisplayFormat::List {
-            for entry in entries {
-                // Overloads share a name (and page); collapse them to one row.
-                if !seen.insert(entry.name.as_str()) {
-                    continue;
-                }
-                let href = doc_page_href_from(
-                    options,
-                    &current_file_name,
-                    &typedoc_entry_file_name(module_name, entry),
-                    None,
-                );
-                let summary = clean_summary_text(
-                    &process_doc_text(&entry.description, Some(&link_context)),
-                    88,
-                );
-                markdown.push_str("- [");
-                markdown.push_str(&entry.name);
-                markdown.push_str("](");
-                markdown.push_str(&href);
-                if summary.is_empty() {
-                    markdown.push_str(")\n");
-                } else {
-                    markdown.push_str(") - ");
-                    markdown.push_str(&summary);
-                    markdown.push('\n');
-                }
-            }
-            markdown.push('\n');
-            continue;
-        }
-
-        // Render a compact `Name | Description` table (matching TypeDoc) rather
-        // than a bullet list with the full signature inlined; the signature
-        // stays on the per-symbol page.
-        markdown.push_str("| ");
-        markdown.push_str(typedoc_kind_singular(&kind));
-        markdown.push_str(" | Description |\n| ------ | ------ |\n");
-        for entry in entries {
-            // Overloads share a name (and page); collapse them to one row.
-            if !seen.insert(entry.name.as_str()) {
-                continue;
-            }
-            let href = doc_page_href_from(
-                options,
-                &current_file_name,
-                &typedoc_entry_file_name(module_name, entry),
-                None,
-            );
-            let summary = typedoc_index_summary(&entry.description, &link_context);
-            markdown.push_str("| [");
-            markdown.push_str(&entry.name);
-            markdown.push_str("](");
-            markdown.push_str(&href);
-            markdown.push_str(") | ");
-            markdown.push_str(&summary);
-            markdown.push_str(" |\n");
-        }
-        markdown.push('\n');
+        let title = typedoc_kind_title(&kind).to_string();
+        sections.push((title, IndexSection::Kind { kind, entries }));
     }
 
     // Symbols this module re-exports but does not own: link to the canonical page
@@ -1349,33 +1298,140 @@ fn generate_typedoc_module_index(
         .entries
         .iter()
         .filter(|entry| !owners.is_canonical(doc, entry))
-        .filter_map(|entry| owners.canonical_module(entry).map(|owner| (entry, owner)))
+        .filter_map(|entry| owners.canonical_module(entry).map(|owner| (entry, owner.to_string())))
         .filter(|(entry, _)| seen_references.insert(entry.name.as_str()))
         .collect::<Vec<_>>();
     if !references.is_empty() {
-        markdown.push_str("## References\n\n");
-        for (index, (entry, owner)) in references.iter().enumerate() {
-            // TypeDoc separates consecutive reference entries with a thematic break.
-            if index > 0 {
-                markdown.push_str("***\n\n");
+        sections.push(("References".to_string(), IndexSection::References(references)));
+    }
+
+    for (_title, section) in order_by_group_title(sections, options.group_order.as_deref()) {
+        match section {
+            IndexSection::Kind { kind, entries } => render_typedoc_kind_section(
+                &mut markdown,
+                &kind,
+                &entries,
+                &link_context,
+                index_format,
+            ),
+            IndexSection::References(references) => {
+                render_typedoc_references_section(&mut markdown, &references, &link_context);
             }
-            let href = doc_page_href_from(
-                options,
-                &current_file_name,
-                &typedoc_entry_file_name(owner, entry),
-                None,
-            );
-            markdown.push_str("### ");
-            markdown.push_str(&entry.name);
-            markdown.push_str("\n\nRe-exports [");
-            markdown.push_str(&entry.name);
-            markdown.push_str("](");
-            markdown.push_str(&href);
-            markdown.push_str(")\n\n");
         }
     }
 
     markdown
+}
+
+/// A renderable section of a TypeDoc module index, kept title-tagged so
+/// `group_order` can reorder kinds and References together.
+enum IndexSection<'a> {
+    Kind { kind: String, entries: Vec<&'a ApiDocEntry> },
+    References(Vec<(&'a ApiDocEntry, String)>),
+}
+
+/// Renders one `## {kind title}` section (table or list) for a module index.
+fn render_typedoc_kind_section(
+    markdown: &mut String,
+    kind: &str,
+    entries: &[&ApiDocEntry],
+    link_context: &MarkdownLinkContext<'_>,
+    index_format: MarkdownDisplayFormat,
+) {
+    let options = link_context.options;
+    let module_name = link_context.current_module_name;
+    let current_file_name = link_context.current_file_name;
+    markdown.push_str("## ");
+    markdown.push_str(typedoc_kind_title(kind));
+    markdown.push_str("\n\n");
+    let mut seen = std::collections::HashSet::new();
+    if index_format == MarkdownDisplayFormat::List {
+        for entry in entries {
+            // Overloads share a name (and page); collapse them to one row.
+            if !seen.insert(entry.name.as_str()) {
+                continue;
+            }
+            let href = doc_page_href_from(
+                options,
+                current_file_name,
+                &typedoc_entry_file_name(module_name, entry),
+                None,
+            );
+            let summary =
+                clean_summary_text(&process_doc_text(&entry.description, Some(link_context)), 88);
+            markdown.push_str("- [");
+            markdown.push_str(&entry.name);
+            markdown.push_str("](");
+            markdown.push_str(&href);
+            if summary.is_empty() {
+                markdown.push_str(")\n");
+            } else {
+                markdown.push_str(") - ");
+                markdown.push_str(&summary);
+                markdown.push('\n');
+            }
+        }
+        markdown.push('\n');
+        return;
+    }
+
+    // Render a compact `Name | Description` table (matching TypeDoc) rather than a
+    // bullet list with the full signature inlined; the signature stays on the
+    // per-symbol page.
+    markdown.push_str("| ");
+    markdown.push_str(typedoc_kind_singular(kind));
+    markdown.push_str(" | Description |\n| ------ | ------ |\n");
+    for entry in entries {
+        // Overloads share a name (and page); collapse them to one row.
+        if !seen.insert(entry.name.as_str()) {
+            continue;
+        }
+        let href = doc_page_href_from(
+            options,
+            current_file_name,
+            &typedoc_entry_file_name(module_name, entry),
+            None,
+        );
+        let summary = typedoc_index_summary(&entry.description, link_context);
+        markdown.push_str("| [");
+        markdown.push_str(&entry.name);
+        markdown.push_str("](");
+        markdown.push_str(&href);
+        markdown.push_str(") | ");
+        markdown.push_str(&summary);
+        markdown.push_str(" |\n");
+    }
+    markdown.push('\n');
+}
+
+/// Renders the `## References` section for a module index.
+fn render_typedoc_references_section(
+    markdown: &mut String,
+    references: &[(&ApiDocEntry, String)],
+    link_context: &MarkdownLinkContext<'_>,
+) {
+    let options = link_context.options;
+    let current_file_name = link_context.current_file_name;
+    markdown.push_str("## References\n\n");
+    for (index, (entry, owner)) in references.iter().enumerate() {
+        // TypeDoc separates consecutive reference entries with a thematic break.
+        if index > 0 {
+            markdown.push_str("***\n\n");
+        }
+        let href = doc_page_href_from(
+            options,
+            current_file_name,
+            &typedoc_entry_file_name(owner, entry),
+            None,
+        );
+        markdown.push_str("### ");
+        markdown.push_str(&entry.name);
+        markdown.push_str("\n\nRe-exports [");
+        markdown.push_str(&entry.name);
+        markdown.push_str("](");
+        markdown.push_str(&href);
+        markdown.push_str(")\n\n");
+    }
 }
 
 fn generate_typedoc_entry_page(
@@ -1429,6 +1485,62 @@ fn ordered_entry_kinds(entries: &[ApiDocEntry]) -> Vec<String> {
     extra.dedup();
     kinds.extend(extra);
     kinds
+}
+
+/// Reorders `(group_title, payload)` sections by a TypeDoc-style `group_order`.
+///
+/// `None` returns the input unchanged (preserving the caller's default order).
+/// Otherwise titles listed before `*` lead in the given order, titles after `*`
+/// trail in the given order, and titles not listed are placed at the `*` position
+/// (or the end when there is no `*`) sorted alphabetically. Listed titles that are
+/// not present are ignored.
+pub fn order_by_group_title<T>(
+    sections: Vec<(String, T)>,
+    group_order: Option<&[String]>,
+) -> Vec<(String, T)> {
+    let Some(group_order) = group_order else {
+        return sections;
+    };
+    let star = group_order.iter().position(|group| group == "*");
+    let (head, tail): (&[String], &[String]) = match star {
+        Some(index) => (&group_order[..index], &group_order[index + 1..]),
+        None => (group_order, &group_order[group_order.len()..]),
+    };
+
+    let mut remaining: Vec<Option<(String, T)>> = sections.into_iter().map(Some).collect();
+    let mut result = Vec::with_capacity(remaining.len());
+
+    for title in head {
+        if let Some(section) = take_section(&mut remaining, title) {
+            result.push(section);
+        }
+    }
+
+    let mut unspecified = Vec::new();
+    for slot in &mut remaining {
+        let is_tail = slot.as_ref().is_some_and(|(title, _)| tail.iter().any(|t| t == title));
+        if !is_tail {
+            if let Some(section) = slot.take() {
+                unspecified.push(section);
+            }
+        }
+    }
+    unspecified.sort_by(|a, b| a.0.cmp(&b.0));
+    result.extend(unspecified);
+
+    for title in tail {
+        if let Some(section) = take_section(&mut remaining, title) {
+            result.push(section);
+        }
+    }
+    result
+}
+
+fn take_section<T>(remaining: &mut [Option<(String, T)>], title: &str) -> Option<(String, T)> {
+    remaining
+        .iter_mut()
+        .find(|slot| slot.as_ref().is_some_and(|(t, _)| t == title))
+        .and_then(Option::take)
 }
 
 fn normalize_signature(signature: Option<&str>) -> Option<String> {
@@ -3336,6 +3448,125 @@ mod tests {
             render_style: MarkdownRenderStyle::Markdown,
             ..MarkdownDocsOptions::default()
         }
+    }
+
+    fn group_order_docs() -> Vec<ApiDocModule> {
+        vec![ApiDocModule {
+            description: "Module description.".to_string(),
+            file: "default".to_string(),
+            source_path: String::new(),
+            examples: vec![],
+            tags: vec![],
+            entries: vec![
+                test_entry("alpha", "function", "/repo/src/a.ts", "A function."),
+                test_entry("Config", "interface", "/repo/src/c.ts", "An interface."),
+                test_entry("Engine", "class", "/repo/src/e.ts", "A class."),
+                test_entry("VERSION", "variable", "/repo/src/v.ts", "A variable."),
+            ],
+        }]
+    }
+
+    #[test]
+    fn order_by_group_title_none_preserves_order() {
+        let sections = vec![("Functions".to_string(), 1), ("Variables".to_string(), 2)];
+        assert_eq!(order_by_group_title(sections.clone(), None), sections);
+    }
+
+    #[test]
+    fn order_by_group_title_orders_listed_then_alphabetical() {
+        let sections = vec![
+            ("Functions".to_string(), 1),
+            ("Classes".to_string(), 2),
+            ("Interfaces".to_string(), 3),
+            ("References".to_string(), 4),
+            ("Type Aliases".to_string(), 5),
+            ("Variables".to_string(), 6),
+        ];
+        let group_order = ["Variables".to_string(), "Functions".to_string(), "Class".to_string()];
+        let titles = order_by_group_title(sections, Some(&group_order))
+            .into_iter()
+            .map(|(title, _)| title)
+            .collect::<Vec<_>>();
+
+        // `Class` does not match the `Classes` group and is ignored; unlisted
+        // groups (including References) follow alphabetically.
+        assert_eq!(
+            titles,
+            vec!["Variables", "Functions", "Classes", "Interfaces", "References", "Type Aliases"]
+        );
+    }
+
+    #[test]
+    fn order_by_group_title_places_unspecified_at_star() {
+        let sections = vec![
+            ("Functions".to_string(), 1),
+            ("Classes".to_string(), 2),
+            ("Variables".to_string(), 3),
+        ];
+        let group_order = ["Variables".to_string(), "*".to_string(), "Functions".to_string()];
+        let titles = order_by_group_title(sections, Some(&group_order))
+            .into_iter()
+            .map(|(title, _)| title)
+            .collect::<Vec<_>>();
+
+        assert_eq!(titles, vec!["Variables", "Classes", "Functions"]);
+    }
+
+    #[test]
+    fn typedoc_group_order_defaults_to_fixed_kind_order() {
+        let out = generate_markdown(&group_order_docs(), &markdown_typedoc_options());
+        let index = out.get("default/index.md").unwrap();
+        let functions = index.find("## Functions").unwrap();
+        let classes = index.find("## Classes").unwrap();
+        let interfaces = index.find("## Interfaces").unwrap();
+        let variables = index.find("## Variables").unwrap();
+
+        // Unchanged historical order (DOC_KIND_ORDER).
+        assert!(functions < classes);
+        assert!(classes < interfaces);
+        assert!(interfaces < variables);
+    }
+
+    #[test]
+    fn typedoc_group_order_reorders_module_index_sections() {
+        let options = MarkdownDocsOptions {
+            group_order: Some(vec!["Variables".to_string(), "Functions".to_string()]),
+            ..markdown_typedoc_options()
+        };
+        let out = generate_markdown(&group_order_docs(), &options);
+        let index = out.get("default/index.md").unwrap();
+        let variables = index.find("## Variables").unwrap();
+        let functions = index.find("## Functions").unwrap();
+        let classes = index.find("## Classes").unwrap();
+        let interfaces = index.find("## Interfaces").unwrap();
+
+        // Listed groups lead in order; the rest follow alphabetically.
+        assert!(variables < functions);
+        assert!(functions < classes);
+        assert!(classes < interfaces);
+    }
+
+    #[test]
+    fn typedoc_group_order_supports_star_wildcard() {
+        let options = MarkdownDocsOptions {
+            group_order: Some(vec![
+                "Variables".to_string(),
+                "*".to_string(),
+                "Functions".to_string(),
+            ]),
+            ..markdown_typedoc_options()
+        };
+        let out = generate_markdown(&group_order_docs(), &options);
+        let index = out.get("default/index.md").unwrap();
+        let variables = index.find("## Variables").unwrap();
+        let classes = index.find("## Classes").unwrap();
+        let interfaces = index.find("## Interfaces").unwrap();
+        let functions = index.find("## Functions").unwrap();
+
+        // Variables first, unspecified groups (alphabetical) in the middle, Functions last.
+        assert!(variables < classes);
+        assert!(classes < interfaces);
+        assert!(interfaces < functions);
     }
 
     fn stats_docs() -> Vec<ApiDocModule> {

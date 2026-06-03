@@ -5,7 +5,7 @@ use std::path::Path;
 use phf::phf_map;
 use serde::{Deserialize, Serialize};
 
-use crate::markdown::{CanonicalOwners, MarkdownPathStrategy};
+use crate::markdown::{order_by_group_title, CanonicalOwners, MarkdownPathStrategy};
 use crate::model::{ApiDocEntry, ApiDocModule};
 use crate::string_builder::{join2, join3, join5, StringBuilder};
 
@@ -49,23 +49,30 @@ pub fn generate_nav_metadata(files: &[String], base_path: Option<&str>) -> Vec<D
 }
 
 /// Generates sidebar navigation metadata from extracted docs and the output path strategy.
+///
+/// `group_order` reorders the TypeDoc nav kind groups (matching the module index
+/// section order); `None` keeps the historical fixed order.
 pub fn generate_nav_metadata_from_docs(
     docs: &[ApiDocModule],
     base_path: Option<&str>,
     path_strategy: MarkdownPathStrategy,
+    group_order: Option<&[String]>,
 ) -> Vec<DocsNavItem> {
     match path_strategy {
         MarkdownPathStrategy::Flat => {
             let files = docs.iter().map(|doc| doc.file.clone()).collect::<Vec<_>>();
             generate_nav_metadata(&files, base_path)
         }
-        MarkdownPathStrategy::TypeDoc => generate_typedoc_nav_metadata(docs, base_path),
+        MarkdownPathStrategy::TypeDoc => {
+            generate_typedoc_nav_metadata(docs, base_path, group_order)
+        }
     }
 }
 
 fn generate_typedoc_nav_metadata(
     docs: &[ApiDocModule],
     base_path: Option<&str>,
+    group_order: Option<&[String]>,
 ) -> Vec<DocsNavItem> {
     let base_path = normalize_base_path(base_path.unwrap_or(DEFAULT_BASE_PATH));
     let mut docs = docs.to_vec();
@@ -79,7 +86,19 @@ fn generate_typedoc_nav_metadata(
             let module_name = typedoc_module_route_name(&doc);
             let module_title = typedoc_module_display_name(&doc);
             let mut children = Vec::new();
-            for kind in ordered_entry_kinds(&doc.entries) {
+            // Collect the present kind groups (title-tagged) in the historical
+            // order, then reorder them by `group_order` so the sidebar matches the
+            // module index section order.
+            let kind_groups = ordered_entry_kinds(&doc.entries)
+                .into_iter()
+                .filter(|kind| {
+                    doc.entries
+                        .iter()
+                        .any(|entry| entry.kind == *kind && owners.is_canonical(&doc, entry))
+                })
+                .map(|kind| (typedoc_kind_title(&kind).to_string(), kind))
+                .collect::<Vec<_>>();
+            for (_title, kind) in order_by_group_title(kind_groups, group_order) {
                 let entries = doc
                     .entries
                     .iter()
@@ -319,6 +338,54 @@ fn format_doc_title(name: &str) -> String {
 mod tests {
     use super::*;
 
+    fn nav_entry(name: &str, kind: &str) -> ApiDocEntry {
+        ApiDocEntry {
+            name: name.to_string(),
+            kind: kind.to_string(),
+            description: String::new(),
+            params: vec![],
+            returns: None,
+            examples: vec![],
+            tags: vec![],
+            private: false,
+            file: join3("/repo/src/", name, ".ts"),
+            line: 1,
+            end_line: 1,
+            signature: None,
+            has_body: false,
+            members: vec![],
+            type_parameters: vec![],
+        }
+    }
+
+    #[test]
+    fn typedoc_nav_respects_group_order() {
+        let docs = vec![ApiDocModule {
+            description: String::new(),
+            file: "default".to_string(),
+            source_path: String::new(),
+            examples: vec![],
+            tags: vec![],
+            entries: vec![
+                nav_entry("alpha", "function"),
+                nav_entry("Engine", "class"),
+                nav_entry("VERSION", "variable"),
+            ],
+        }];
+        let group_order = ["Variables".to_string(), "Functions".to_string()];
+        let nav = generate_nav_metadata_from_docs(
+            &docs,
+            Some("/api"),
+            MarkdownPathStrategy::TypeDoc,
+            Some(&group_order),
+        );
+        let children = nav[0].children.as_ref().unwrap();
+        let titles = children.iter().map(|child| child.title.as_str()).collect::<Vec<_>>();
+
+        // Listed groups lead in order; the rest follow alphabetically.
+        assert_eq!(titles, vec!["Variables", "Functions", "Classes"]);
+    }
+
     #[test]
     fn generates_nav_metadata_from_file_paths() {
         let nav = generate_nav_metadata(
@@ -405,8 +472,12 @@ mod tests {
             ],
         }];
 
-        let nav =
-            generate_nav_metadata_from_docs(&docs, Some("/api"), MarkdownPathStrategy::TypeDoc);
+        let nav = generate_nav_metadata_from_docs(
+            &docs,
+            Some("/api"),
+            MarkdownPathStrategy::TypeDoc,
+            None,
+        );
 
         assert_eq!(nav[0].title, "default");
         assert_eq!(nav[0].path, "/api/default");
@@ -448,8 +519,12 @@ mod tests {
             }],
         }];
 
-        let nav =
-            generate_nav_metadata_from_docs(&docs, Some("/api"), MarkdownPathStrategy::TypeDoc);
+        let nav = generate_nav_metadata_from_docs(
+            &docs,
+            Some("/api"),
+            MarkdownPathStrategy::TypeDoc,
+            None,
+        );
         let children = nav[0].children.as_ref().unwrap();
 
         assert_eq!(children[0].title, "Enumerations");
@@ -490,8 +565,12 @@ mod tests {
         let docs =
             vec![make("context", "/repo/src/context.ts"), make("default", "/repo/src/index.ts")];
 
-        let nav =
-            generate_nav_metadata_from_docs(&docs, Some("/api"), MarkdownPathStrategy::TypeDoc);
+        let nav = generate_nav_metadata_from_docs(
+            &docs,
+            Some("/api"),
+            MarkdownPathStrategy::TypeDoc,
+            None,
+        );
 
         let context = nav.iter().find(|item| item.path == "/api/context").unwrap();
         assert!(context.children.is_some(), "owner module keeps the symbol in the sidebar");

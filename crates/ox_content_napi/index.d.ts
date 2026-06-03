@@ -372,6 +372,11 @@ export interface JsDocsMarkdownOptions {
   typeDeclarationFormat?: 'none' | 'list' | 'table'
   /** Emit the stats summary line on index pages (default: true). */
   renderStats?: boolean
+  /**
+   * TypeDoc-style group order for module index sections and nav groups. Unlisted
+   * groups are sorted alphabetically at `*` (or at the end when `*` is absent).
+   */
+  groupOrder?: Array<string>
 }
 
 /** Ordered JSDoc tag used by generated API Markdown. */
@@ -391,6 +396,11 @@ export interface JsDocsNavItem {
 export interface JsDocsNavOptions {
   basePath?: string
   pathStrategy?: 'flat' | 'typedoc'
+  /**
+   * TypeDoc-style group order for nav groups (matches `generateDocsMarkdown`'s
+   * `groupOrder` so the sidebar and page order stay in sync).
+   */
+  groupOrder?: Array<string>
 }
 
 /** Options for writing generated API documentation files. */
