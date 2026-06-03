@@ -250,6 +250,9 @@ pub struct JsDocsNavOptions {
     pub base_path: Option<String>,
     #[napi(ts_type = "'flat' | 'typedoc'")]
     pub path_strategy: Option<String>,
+    /// TypeDoc-style group order for nav groups (matches `generateDocsMarkdown`'s
+    /// `groupOrder` so the sidebar and page order stay in sync).
+    pub group_order: Option<Vec<String>>,
 }
 
 /// Ordered JSDoc tag used by generated API Markdown.
@@ -341,6 +344,9 @@ pub struct JsDocsMarkdownOptions {
     pub type_declaration_format: Option<String>,
     /// Emit the stats summary line on index pages (default: true).
     pub render_stats: Option<bool>,
+    /// TypeDoc-style group order for module index sections and nav groups. Unlisted
+    /// groups are sorted alphabetically at `*` (or at the end when `*` is absent).
+    pub group_order: Option<Vec<String>>,
 }
 
 /// Options for writing generated API documentation files.
@@ -1297,10 +1303,15 @@ pub fn generate_docs_nav_metadata_from_docs_napi(
     let options = options.unwrap_or_default();
     let strategy = parse_markdown_path_strategy(options.path_strategy.as_deref());
     let modules = docs.into_iter().map(convert_markdown_module).collect::<Vec<_>>();
-    generate_nav_metadata_from_docs(&modules, options.base_path.as_deref(), strategy)
-        .into_iter()
-        .map(map_docs_nav_item)
-        .collect()
+    generate_nav_metadata_from_docs(
+        &modules,
+        options.base_path.as_deref(),
+        strategy,
+        options.group_order.as_deref(),
+    )
+    .into_iter()
+    .map(map_docs_nav_item)
+    .collect()
 }
 
 /// Generates TypeScript source code for documentation navigation metadata.
@@ -1420,6 +1431,7 @@ pub fn generate_docs_markdown(
                 options.type_declaration_format.as_deref(),
             ),
             render_stats: options.render_stats.unwrap_or(true),
+            group_order: options.group_order,
         });
     generate_markdown(&docs.into_iter().map(convert_markdown_module).collect::<Vec<_>>(), &options)
         .into_iter()
@@ -3893,6 +3905,50 @@ mod tests {
     }
 
     #[test]
+    fn generate_docs_markdown_group_order_reorders_module_index() {
+        fn entry(name: &str, kind: &str) -> JsDocsMarkdownEntry {
+            JsDocsMarkdownEntry {
+                name: name.to_string(),
+                kind: kind.to_string(),
+                description: String::new(),
+                params: None,
+                returns: None,
+                examples: None,
+                tags: None,
+                private: false,
+                file: format!("/repo/src/{name}.ts"),
+                line: 1,
+                end_line: 1,
+                signature: Some(format!("export declare const {name}: unknown")),
+                has_body: None,
+                members: None,
+                type_parameters: None,
+            }
+        }
+        let docs = vec![JsDocsMarkdownModule {
+            description: None,
+            file: "default".to_string(),
+            source_path: None,
+            examples: None,
+            tags: None,
+            entries: vec![entry("alpha", "function"), entry("VERSION", "variable")],
+        }];
+
+        let markdown = generate_docs_markdown(
+            docs,
+            Some(JsDocsMarkdownOptions {
+                path_strategy: Some("typedoc".to_string()),
+                render_style: Some("markdown".to_string()),
+                group_order: Some(vec!["Variables".to_string(), "Functions".to_string()]),
+                ..Default::default()
+            }),
+        );
+        let index = markdown.get("default/index.md").unwrap();
+
+        assert!(index.find("## Variables").unwrap() < index.find("## Functions").unwrap());
+    }
+
+    #[test]
     fn generate_docs_markdown_render_stats_option_toggles_stats_summary() {
         fn module() -> Vec<JsDocsMarkdownModule> {
             vec![JsDocsMarkdownModule {
@@ -4147,6 +4203,7 @@ mod tests {
             Some(JsDocsNavOptions {
                 base_path: Some("/api".to_string()),
                 path_strategy: Some("typedoc".to_string()),
+                group_order: None,
             }),
         );
 

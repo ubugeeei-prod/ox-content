@@ -83,6 +83,7 @@ pub fn write_docs_output(
                 extracted_docs,
                 Some(base_path),
                 options.path_strategy,
+                None,
             );
             fs::write(
                 out_dir.join(DOCS_NAV_FILE),
