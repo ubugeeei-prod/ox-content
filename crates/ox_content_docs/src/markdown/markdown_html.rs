@@ -17,7 +17,7 @@ use super::{
     MarkdownLinkContext, MarkdownPathStrategy, RegexCache, DOC_KIND_ORDER,
 };
 use crate::model::{
-    ApiDocEntry, ApiDocMember, ApiDocModule, ApiDocTag, ApiParamDoc, ApiTypeParamDoc,
+    ApiDocEntry, ApiDocMember, ApiDocModule, ApiDocTag, ApiParamDoc, ApiReturnDoc, ApiTypeParamDoc,
 };
 use crate::string_builder::{join3, StringBuilder};
 use std::collections::HashMap;
@@ -458,6 +458,23 @@ pub(super) fn render_module_examples_html(examples: &[String]) -> String {
     section.into_string()
 }
 
+/// Renders module-level lifecycle tags (`@deprecated` / `@experimental`) as a badge
+/// row for the HTML module index (the markdown renderer uses GitHub alerts here).
+/// Returns "" when no lifecycle tags are present.
+pub(super) fn render_module_lifecycle_badges_html(tags: &[ApiDocTag]) -> String {
+    let mut markers = String::new();
+    if tags.iter().any(|tag| tag.tag == "deprecated") {
+        markers.push_str("<span class=\"ox-api-badge ox-api-badge--warning\">deprecated</span>");
+    }
+    if tags.iter().any(|tag| tag.tag == "experimental") {
+        markers.push_str("<span class=\"ox-api-badge ox-api-badge--warning\">experimental</span>");
+    }
+    if markers.is_empty() {
+        return String::new();
+    }
+    join3("<p class=\"ox-api-module__meta\">", &markers, "</p>\n\n")
+}
+
 fn push_stat_html(out: &mut StringBuilder, label: &str, value: usize, tone: Option<&str>) {
     if !out.is_empty() {
         out.push_char('\n');
@@ -727,6 +744,11 @@ fn render_type_parameters_list_html(
 fn render_tag_list_html(tags: &[ApiDocTag], context: Option<&MarkdownLinkContext<'_>>) -> String {
     let mut items = StringBuilder::new();
     for tag in tags {
+        // Structured tags (lifecycle / since / version) are surfaced as badges, so
+        // exclude them here to avoid duplicating them in the generic tag list.
+        if super::is_structured_tag(&tag.tag) {
+            continue;
+        }
         items.push_str("<li><span class=\"ox-api-entry__tag-name\">@");
         items.push_str(&escape_html(&tag.tag));
         items.push_str("</span><span class=\"ox-api-entry__tag-value\">");
@@ -792,6 +814,19 @@ fn render_member_description_html(
 ) -> String {
     let mut blocks = Vec::new();
 
+    // Lifecycle tags can't hold a callout inside a table cell, so surface them as
+    // inline badges (matching the markdown renderer's bold markers).
+    let mut markers = String::new();
+    if member.tags.iter().any(|tag| tag.tag == "deprecated") {
+        markers.push_str("<span class=\"ox-api-badge ox-api-badge--warning\">deprecated</span>");
+    }
+    if member.tags.iter().any(|tag| tag.tag == "experimental") {
+        markers.push_str("<span class=\"ox-api-badge ox-api-badge--warning\">experimental</span>");
+    }
+    if !markers.is_empty() {
+        blocks.push(join3("<div class=\"ox-api-entry__member-meta\">", &markers, "</div>"));
+    }
+
     if !member.description.is_empty() {
         blocks.push(join3(
             "<div class=\"ox-api-entry__member-description\">",
@@ -812,6 +847,23 @@ fn render_member_description_html(
                 "</div>",
             ));
         }
+    }
+
+    // `@since` / `@version` rendered inline as a badge (matching the markdown
+    // renderer's `**Since**` member marker).
+    let since = member
+        .tags
+        .iter()
+        .filter(|tag| super::SINCE_TAGS.contains(&tag.tag.as_str()))
+        .map(|tag| tag.value.trim())
+        .filter(|value| !value.is_empty())
+        .collect::<Vec<_>>()
+        .join(", ");
+    if !since.is_empty() {
+        let mut badge = String::from("<span class=\"ox-api-badge\">since ");
+        badge.push_str(&escape_html(&since));
+        badge.push_str("</span>");
+        blocks.push(join3("<div class=\"ox-api-entry__member-meta\">", &badge, "</div>"));
     }
 
     blocks.join("")
@@ -1186,94 +1238,142 @@ fn render_entry_body_html(
         body.push_str("\" target=\"_blank\" rel=\"noopener noreferrer\">View source<span class=\"ox-api-entry__source-icon\" aria-hidden=\"true\"></span></a></p>\n");
     }
 
-    if !entry.type_parameters.is_empty() {
-        if effective_parameters_format(options) == MarkdownDisplayFormat::List {
-            body.push_str(&render_type_parameters_list_html(&entry.type_parameters, link_context));
-        } else {
-            body.push_str(&render_type_parameters_table_html(&entry.type_parameters, link_context));
-        }
-        body.push('\n');
-    }
+    push_type_parameters_html(&mut body, &entry.type_parameters, options, link_context);
 
     if !entry.members.is_empty() {
         body.push_str(&render_members_html(entry, options, link_context));
         body.push('\n');
     }
 
-    if !entry.params.is_empty() {
-        if effective_parameters_format(options) == MarkdownDisplayFormat::Table {
-            body.push_str(&render_params_table_html(&entry.params, link_context));
-        } else {
-            body.push_str(&render_params_list_html(&entry.params, link_context));
-        }
-        body.push('\n');
-    }
+    push_params_html(&mut body, &entry.params, options, link_context);
 
     if let Some(returns) = &entry.returns {
-        body.push_str(
-            "<div class=\"ox-api-entry__section ox-api-entry__section--returns\">
+        push_returns_html(&mut body, returns, link_context);
+    }
+
+    push_examples_html(&mut body, &entry.examples);
+
+    push_tag_list_html(&mut body, &entry.tags, link_context);
+
+    body.trim().to_string()
+}
+
+/// Appends the type-parameters section (table or list), or nothing when empty.
+fn push_type_parameters_html(
+    body: &mut String,
+    type_parameters: &[ApiTypeParamDoc],
+    options: &MarkdownDocsOptions,
+    link_context: Option<&MarkdownLinkContext<'_>>,
+) {
+    if type_parameters.is_empty() {
+        return;
+    }
+    if effective_parameters_format(options) == MarkdownDisplayFormat::List {
+        body.push_str(&render_type_parameters_list_html(type_parameters, link_context));
+    } else {
+        body.push_str(&render_type_parameters_table_html(type_parameters, link_context));
+    }
+    body.push('\n');
+}
+
+/// Appends the parameters section (table or list), or nothing when empty.
+fn push_params_html(
+    body: &mut String,
+    params: &[ApiParamDoc],
+    options: &MarkdownDocsOptions,
+    link_context: Option<&MarkdownLinkContext<'_>>,
+) {
+    if params.is_empty() {
+        return;
+    }
+    if effective_parameters_format(options) == MarkdownDisplayFormat::Table {
+        body.push_str(&render_params_table_html(params, link_context));
+    } else {
+        body.push_str(&render_params_list_html(params, link_context));
+    }
+    body.push('\n');
+}
+
+/// Appends the returns section for a return doc.
+fn push_returns_html(
+    body: &mut String,
+    returns: &ApiReturnDoc,
+    link_context: Option<&MarkdownLinkContext<'_>>,
+) {
+    body.push_str(
+        "<div class=\"ox-api-entry__section ox-api-entry__section--returns\">
 <h4>Returns</h4>
 <div class=\"ox-api-entry__return\">
   <code class=\"ox-api-entry__return-type\">",
-        );
-        body.push_str(&escape_html(&returns.type_annotation));
-        body.push_str(
-            "</code>
+    );
+    body.push_str(&escape_html(&returns.type_annotation));
+    body.push_str(
+        "</code>
   ",
-        );
-        if !returns.description.is_empty() {
-            body.push_str("<p class=\"ox-api-entry__return-description\">");
-            body.push_str(&render_doc_inline_html(&returns.description, link_context));
-            body.push_str("</p>");
-        }
-        body.push_str(
-            "
+    );
+    if !returns.description.is_empty() {
+        body.push_str("<p class=\"ox-api-entry__return-description\">");
+        body.push_str(&render_doc_inline_html(&returns.description, link_context));
+        body.push_str("</p>");
+    }
+    body.push_str(
+        "
 </div>
 </div>\n",
+    );
+}
+
+/// Appends the examples section, or nothing when empty.
+fn push_examples_html(body: &mut String, examples: &[String]) {
+    if examples.is_empty() {
+        return;
+    }
+    let mut examples_html = StringBuilder::new();
+    for (index, example) in examples.iter().enumerate() {
+        if !examples_html.is_empty() {
+            examples_html.push_char('\n');
+        }
+        let (code, language) = parse_example_block(example);
+        examples_html.push_str(
+            "<div class=\"ox-api-entry__example\">
+<div class=\"ox-api-entry__example-heading\">Example ",
+        );
+        examples_html.push_usize(index + 1);
+        examples_html.push_str(
+            "</div>
+",
+        );
+        examples_html.push_str(&render_code_block_html(code, language));
+        examples_html.push_str(
+            "
+</div>",
         );
     }
 
-    if !entry.examples.is_empty() {
-        let mut examples_html = StringBuilder::new();
-        for (index, example) in entry.examples.iter().enumerate() {
-            if !examples_html.is_empty() {
-                examples_html.push_char('\n');
-            }
-            let (code, language) = parse_example_block(example);
-            examples_html.push_str(
-                "<div class=\"ox-api-entry__example\">
-<div class=\"ox-api-entry__example-heading\">Example ",
-            );
-            examples_html.push_usize(index + 1);
-            examples_html.push_str(
-                "</div>
-",
-            );
-            examples_html.push_str(&render_code_block_html(code, language));
-            examples_html.push_str(
-                "
-</div>",
-            );
-        }
-
-        body.push_str(
-            "<div class=\"ox-api-entry__section ox-api-entry__section--examples\">
+    body.push_str(
+        "<div class=\"ox-api-entry__section ox-api-entry__section--examples\">
 <h4>Examples</h4>
 ",
-        );
-        body.push_str(&examples_html.into_string());
-        body.push_str(
-            "
+    );
+    body.push_str(&examples_html.into_string());
+    body.push_str(
+        "
 </div>\n",
-        );
-    }
+    );
+}
 
-    if !entry.tags.is_empty() {
-        body.push_str(&render_tag_list_html(&entry.tags, link_context));
-        body.push('\n');
+/// Appends the generic tags section, excluding structured tags (lifecycle / since)
+/// which are surfaced as badges instead. Emits nothing when no tags remain.
+fn push_tag_list_html(
+    body: &mut String,
+    tags: &[ApiDocTag],
+    link_context: Option<&MarkdownLinkContext<'_>>,
+) {
+    if tags.iter().all(|tag| super::is_structured_tag(&tag.tag)) {
+        return;
     }
-
-    body.trim().to_string()
+    body.push_str(&render_tag_list_html(tags, link_context));
+    body.push('\n');
 }
 
 pub(super) fn render_entry_html(
@@ -1352,14 +1452,22 @@ pub(super) fn render_entry_page_html(
     link_context: Option<&MarkdownLinkContext<'_>>,
 ) -> String {
     let body = render_entry_body_html(entry, options, link_context);
+    // A per-symbol page has no `<summary>`, so structured tags (lifecycle / since)
+    // would otherwise be invisible once excluded from the generic tag list. Surface
+    // them as a badge row at the top of the page instead.
+    let badges = render_entry_badges_html(entry, "ox-api-entry__meta");
     let anchor = entry_anchor(&entry.name);
-    let mut out = StringBuilder::with_capacity(anchor.len() + body.len() + 64);
+    let mut out = StringBuilder::with_capacity(anchor.len() + badges.len() + body.len() + 80);
     out.push_str("<div id=\"");
     out.push_str(&anchor);
     out.push_str(
         "\" class=\"ox-api-entry ox-api-entry--page\">
 ",
     );
+    if !badges.is_empty() {
+        out.push_str(&badges);
+        out.push_char('\n');
+    }
     out.push_str(&body);
     out.push_str(
         "
@@ -1367,6 +1475,69 @@ pub(super) fn render_entry_page_html(
 ",
     );
     out.into_string()
+}
+
+/// Renders an overloaded function's symbol page body in HTML: a symbol-level badge
+/// row + comment hoisted from the implementation, then one `Call Signature` section
+/// per public overload. The implementation signature is omitted (TypeDoc parity).
+pub(super) fn render_overload_body_html(
+    public: &[&ApiDocEntry],
+    implementation: Option<&ApiDocEntry>,
+    options: &MarkdownDocsOptions,
+    link_context: Option<&MarkdownLinkContext<'_>>,
+) -> String {
+    // Symbol-level badges/comment come from the implementation when present;
+    // otherwise fall back to the first public signature.
+    let symbol = implementation.or_else(|| public.first().copied());
+    let anchor = symbol.map(|entry| entry_anchor(&entry.name)).unwrap_or_default();
+
+    let mut out = String::new();
+    out.push_str("<div id=\"");
+    out.push_str(&anchor);
+    out.push_str("\" class=\"ox-api-entry ox-api-entry--page\">\n");
+
+    if let Some(symbol) = symbol {
+        let badges = render_entry_badges_html(symbol, "ox-api-entry__meta");
+        if !badges.is_empty() {
+            out.push_str(&badges);
+            out.push('\n');
+        }
+    }
+    if let Some(implementation) = implementation {
+        let description = process_doc_text(&implementation.description, link_context);
+        if !description.is_empty() {
+            out.push_str(&render_markdown_blocks_html(&description));
+            out.push('\n');
+        }
+    }
+
+    for signature in public {
+        out.push_str(
+            "<div class=\"ox-api-entry__section ox-api-entry__section--call-signature\">
+<h4>Call Signature</h4>
+",
+        );
+        if let Some(code) = &signature.signature {
+            out.push_str(&render_code_block_html(code, "typescript"));
+            out.push('\n');
+        }
+        let description = process_doc_text(&signature.description, link_context);
+        if !description.is_empty() {
+            out.push_str(&render_markdown_blocks_html(&description));
+            out.push('\n');
+        }
+        push_type_parameters_html(&mut out, &signature.type_parameters, options, link_context);
+        push_params_html(&mut out, &signature.params, options, link_context);
+        if let Some(returns) = &signature.returns {
+            push_returns_html(&mut out, returns, link_context);
+        }
+        push_examples_html(&mut out, &signature.examples);
+        push_tag_list_html(&mut out, &signature.tags, link_context);
+        out.push_str("</div>\n");
+    }
+
+    out.push_str("</div>\n");
+    out
 }
 
 pub(super) fn render_module_section_html(

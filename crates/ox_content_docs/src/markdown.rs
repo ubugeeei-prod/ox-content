@@ -1013,42 +1013,20 @@ fn generate_typedoc_markdown(
             generate_typedoc_module_index(doc, options, &module_name, symbol_map, &owners),
         );
 
-        if options.render_style == MarkdownRenderStyle::Markdown {
-            // Markdown render style groups a symbol's overload signatures onto a
-            // single page so every public call signature survives (TypeDoc
-            // parity); see `generate_typedoc_entry_page_grouped`.
-            for (entry_file_name, entries) in typedoc_canonical_groups(doc, &owners, &module_name) {
-                result.insert(
-                    join2(&entry_file_name, ".md"),
-                    generate_typedoc_entry_page_grouped(
-                        &entries,
-                        options,
-                        &module_name,
-                        &entry_file_name,
-                        symbol_map,
-                    ),
-                );
-            }
-        } else {
-            for entry in &doc.entries {
-                // A symbol re-exported from several entry points gets one canonical
-                // page (matching TypeDoc); non-canonical occurrences are surfaced as
-                // re-export references in the module index instead of duplicate pages.
-                if !owners.is_canonical(doc, entry) {
-                    continue;
-                }
-                let entry_file_name = typedoc_entry_file_name(&module_name, entry);
-                result.insert(
-                    join2(&entry_file_name, ".md"),
-                    generate_typedoc_entry_page(
-                        entry,
-                        options,
-                        &module_name,
-                        &entry_file_name,
-                        symbol_map,
-                    ),
-                );
-            }
+        // Both render styles group a symbol's overload signatures onto a single
+        // page so every public call signature survives (TypeDoc parity); see
+        // `generate_typedoc_entry_page_grouped`.
+        for (entry_file_name, entries) in typedoc_canonical_groups(doc, &owners, &module_name) {
+            result.insert(
+                join2(&entry_file_name, ".md"),
+                generate_typedoc_entry_page_grouped(
+                    &entries,
+                    options,
+                    &module_name,
+                    &entry_file_name,
+                    symbol_map,
+                ),
+            );
         }
     }
 
@@ -1134,14 +1112,24 @@ fn generate_typedoc_entry_page_grouped(
         symbol_map,
     };
     // The H1 title is name + kind only (functions render `Function: name()` with no
-    // generics), so any overload yields the same title.
-    let body = markdown_pure::render_overload_body_pure(
-        &public,
-        implementation,
-        options,
-        Some(&link_context),
-        2,
-    );
+    // generics), so any overload yields the same title. The body is rendered in the
+    // configured style; both keep all public signatures and hide the implementation.
+    let body = if options.render_style == MarkdownRenderStyle::Markdown {
+        markdown_pure::render_overload_body_pure(
+            &public,
+            implementation,
+            options,
+            Some(&link_context),
+            2,
+        )
+    } else {
+        markdown_html::render_overload_body_html(
+            &public,
+            implementation,
+            options,
+            Some(&link_context),
+        )
+    };
     let mut markdown =
         String::with_capacity(typedoc_entry_page_title_len(public[0]) + 4 + body.len() + 1);
     markdown.push_str("# ");
@@ -1149,7 +1137,9 @@ fn generate_typedoc_entry_page_grouped(
     markdown.push_str("\n\n");
     if !body.is_empty() {
         markdown.push_str(&body);
-        markdown.push('\n');
+        if options.render_style == MarkdownRenderStyle::Markdown {
+            markdown.push('\n');
+        }
     }
     markdown
 }
@@ -1241,10 +1231,12 @@ fn generate_typedoc_module_index(
     builder.push_str("\n\n");
     let mut markdown = builder.into_string();
 
-    // Module-level `@experimental` / `@deprecated` render as GitHub alerts just
-    // below the title (markdown render style only; HTML keeps its own structure).
+    // Module-level `@experimental` / `@deprecated`: GitHub alerts in markdown,
+    // a badge row in HTML — so both styles surface module lifecycle state.
     if options.render_style == MarkdownRenderStyle::Markdown {
         markdown_pure::push_lifecycle_alerts(&mut markdown, &doc.tags, Some(&link_context));
+    } else {
+        markdown.push_str(&markdown_html::render_module_lifecycle_badges_html(&doc.tags));
     }
 
     let description = process_doc_text(&doc.description, Some(&link_context));
@@ -1619,11 +1611,32 @@ fn entry_tag_value<'a>(entry: &'a ApiDocEntry, tag_name: &str) -> Option<&'a str
     entry.tags.iter().find(|tag| tag.tag == tag_name).map(|tag| tag.value.as_str())
 }
 
+/// JSDoc tags folded into a dedicated `Since` element (TypeDoc parity) instead of
+/// the generic tag list. `@version` is normalized alongside `@since`. Shared by
+/// both renderers (`super::SINCE_TAGS`).
+const SINCE_TAGS: [&str; 2] = ["since", "version"];
+
+/// JSDoc lifecycle tags surfaced as structured callouts — GitHub alerts in the
+/// markdown renderer, badges in the HTML renderer — rather than generic tags.
+fn is_lifecycle_tag(tag: &str) -> bool {
+    matches!(tag, "deprecated" | "experimental")
+}
+
+/// True when a tag is rendered as a structured element (lifecycle callout / Since)
+/// and therefore must not also appear in the generic tag list. Shared by both
+/// renderers so the generic-tag exclusion stays consistent.
+fn is_structured_tag(name: &str) -> bool {
+    is_lifecycle_tag(name) || SINCE_TAGS.contains(&name)
+}
+
 fn get_entry_badges(entry: &ApiDocEntry) -> Vec<EntryBadge> {
     let mut badges = Vec::new();
 
     if entry_tag_value(entry, "deprecated").is_some() {
         badges.push(EntryBadge { label: "deprecated".to_string(), tone: Some("warning") });
+    }
+    if entry_tag_value(entry, "experimental").is_some() {
+        badges.push(EntryBadge { label: "experimental".to_string(), tone: Some("warning") });
     }
     if !entry.params.is_empty() {
         badges.push(EntryBadge {
@@ -1654,6 +1667,12 @@ fn get_entry_badges(entry: &ApiDocEntry) -> Vec<EntryBadge> {
         let mut label = StringBuilder::with_capacity("since ".len() + since.len());
         label.push_str("since ");
         label.push_str(since);
+        badges.push(EntryBadge { label: label.into_string(), tone: None });
+    }
+    if let Some(version) = entry_tag_value(entry, "version") {
+        let mut label = StringBuilder::with_capacity("version ".len() + version.len());
+        label.push_str("version ");
+        label.push_str(version);
         badges.push(EntryBadge { label: label.into_string(), tone: None });
     }
     if entry.private {
@@ -3656,6 +3675,124 @@ mod tests {
             tags: vec![],
             entries,
         }]
+    }
+
+    fn html_typedoc_options() -> MarkdownDocsOptions {
+        MarkdownDocsOptions {
+            path_strategy: MarkdownPathStrategy::TypeDoc,
+            render_style: MarkdownRenderStyle::Html,
+            ..MarkdownDocsOptions::default()
+        }
+    }
+
+    #[test]
+    fn typedoc_html_overloads_render_all_call_signatures() {
+        let docs = overload_module(vec![
+            overload_entry(
+                "plugin",
+                "/repo/src/plugin.ts",
+                "Define a plugin with extension.",
+                "export function plugin<E>(options: WithExt): PluginWithExtension<E>",
+                false,
+            ),
+            overload_entry(
+                "plugin",
+                "/repo/src/plugin.ts",
+                "Define a plugin without extension.",
+                "export function plugin(options: WithoutExt): PluginWithoutExtension",
+                false,
+            ),
+            overload_entry(
+                "plugin",
+                "/repo/src/plugin.ts",
+                "Define a plugin",
+                "export function plugin(options: any = {}): any",
+                true,
+            ),
+        ]);
+        let out = generate_markdown(&docs, &html_typedoc_options());
+        let page = out.get("default/functions/plugin.md").unwrap();
+
+        // Both public overloads survive on one html page; the implementation is hidden.
+        assert_eq!(page.matches("<h4>Call Signature</h4>").count(), 2);
+        assert!(page.contains("PluginWithExtension"));
+        assert!(page.contains("PluginWithoutExtension"));
+        assert!(!page.contains("options: any = {}"));
+    }
+
+    #[test]
+    fn typedoc_html_badges_include_experimental_and_version() {
+        let mut entry = test_entry("widget", "function", "/repo/src/w.ts", "A widget.");
+        entry.tags = vec![
+            ApiDocTag { tag: "experimental".to_string(), value: String::new() },
+            ApiDocTag { tag: "version".to_string(), value: "1.2.3".to_string() },
+        ];
+        let out = generate_markdown(&lifecycle_module(entry), &html_typedoc_options());
+        let page = out.get("combinators/functions/widget.md").unwrap();
+
+        assert!(page.contains(">experimental</span>"));
+        assert!(page.contains("version 1.2.3"));
+        // Every tag is structured, so no generic tag list is emitted.
+        assert!(!page.contains("ox-api-entry__section--tags"));
+    }
+
+    #[test]
+    fn typedoc_html_dedups_structured_tags_from_tag_list() {
+        let mut entry = test_entry("run", "function", "/repo/src/run.ts", "Run.");
+        entry.tags = vec![
+            ApiDocTag { tag: "see".to_string(), value: "related".to_string() },
+            ApiDocTag { tag: "deprecated".to_string(), value: "use other".to_string() },
+            ApiDocTag { tag: "since".to_string(), value: "1.0.0".to_string() },
+        ];
+        let out = generate_markdown(&lifecycle_module(entry), &html_typedoc_options());
+        let page = out.get("combinators/functions/run.md").unwrap();
+
+        // Structured tags become badges (not duplicated in the tag list); `@see` stays.
+        assert!(page.contains(">deprecated</span>"));
+        assert!(page.contains("since 1.0.0"));
+        assert!(page.contains("@see"));
+        assert!(!page.contains("@deprecated"));
+        assert!(!page.contains("@since"));
+    }
+
+    #[test]
+    fn typedoc_html_member_table_shows_lifecycle_and_since_markers() {
+        let mut entry = test_entry("Options", "interface", "/repo/src/o.ts", "Options.");
+        entry.members = vec![ApiDocMember {
+            name: "mode".to_string(),
+            kind: "property".to_string(),
+            description: "The mode.".to_string(),
+            signature: None,
+            type_annotation: Some("string".to_string()),
+            params: vec![],
+            returns: None,
+            optional: false,
+            readonly: false,
+            r#static: false,
+            private: false,
+            tags: vec![
+                ApiDocTag { tag: "deprecated".to_string(), value: String::new() },
+                ApiDocTag { tag: "since".to_string(), value: "1.0.0".to_string() },
+            ],
+            line: 1,
+            end_line: 1,
+        }];
+        let out = generate_markdown(&lifecycle_module(entry), &html_typedoc_options());
+        let page = out.get("combinators/interfaces/Options.md").unwrap();
+
+        assert!(page.contains(">deprecated</span>"));
+        assert!(page.contains("since 1.0.0"));
+    }
+
+    #[test]
+    fn typedoc_html_module_index_shows_lifecycle_badges() {
+        let mut docs = lifecycle_module(test_entry("run", "function", "/repo/src/run.ts", "Run."));
+        docs[0].tags = vec![ApiDocTag { tag: "experimental".to_string(), value: String::new() }];
+        let out = generate_markdown(&docs, &html_typedoc_options());
+        let module_index = out.get("combinators/index.md").unwrap();
+
+        assert!(module_index.contains("ox-api-module__meta"));
+        assert!(module_index.contains(">experimental</span>"));
     }
 
     #[test]

@@ -16,16 +16,6 @@ use crate::model::{
 };
 use crate::string_builder::StringBuilder;
 
-/// JSDoc tags folded into a dedicated `## Since` section (TypeDoc parity) instead
-/// of generic `## Tags`. `@version` is normalized into the same section.
-const SINCE_TAGS: [&str; 2] = ["since", "version"];
-
-/// True when a tag is rendered as a structured section/alert and therefore must
-/// not also appear in the generic `## Tags` list.
-fn is_structured_tag(name: &str) -> bool {
-    is_lifecycle_tag(name) || SINCE_TAGS.contains(&name)
-}
-
 /// JSDoc lifecycle tags rendered as GitHub alerts rather than generic `## Tags`
 /// entries: `@experimental` → `> [!WARNING]`, `@deprecated` → `> [!CAUTION]`.
 /// Appends GitHub alert blocks for lifecycle tags (`@experimental`,
@@ -69,10 +59,6 @@ pub(super) fn push_lifecycle_alerts(
     }
 }
 
-fn is_lifecycle_tag(tag: &str) -> bool {
-    matches!(tag, "deprecated" | "experimental")
-}
-
 /// Renders a `## Since` section from `@since` / `@version` tags (both folded into
 /// one section, matching TypeDoc), or "" when none carry a value. `heading` is
 /// the section prefix (`##` on typedoc per-symbol pages).
@@ -83,7 +69,7 @@ fn render_since_section(
 ) -> String {
     let values = tags
         .iter()
-        .filter(|tag| SINCE_TAGS.contains(&tag.tag.as_str()))
+        .filter(|tag| super::SINCE_TAGS.contains(&tag.tag.as_str()))
         .map(|tag| inline(&tag.value, context))
         .filter(|value| !value.is_empty())
         .collect::<Vec<_>>();
@@ -423,7 +409,7 @@ fn push_generic_tags(
 ) {
     let mut rendered_tags_heading = false;
     for tag in tags {
-        if is_structured_tag(&tag.tag) {
+        if super::is_structured_tag(&tag.tag) {
             continue;
         }
         if !rendered_tags_heading {
@@ -787,7 +773,7 @@ fn member_description(member: &ApiDocMember, context: Option<&MarkdownLinkContex
     let since = member
         .tags
         .iter()
-        .filter(|tag| SINCE_TAGS.contains(&tag.tag.as_str()))
+        .filter(|tag| super::SINCE_TAGS.contains(&tag.tag.as_str()))
         .map(|tag| inline(&tag.value, context))
         .filter(|value| !value.is_empty())
         .collect::<Vec<_>>();
