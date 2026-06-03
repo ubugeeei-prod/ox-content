@@ -8,6 +8,7 @@ pub type ParseResult<T> = Result<T, ParseError>;
 
 /// Parse error.
 #[derive(Debug, Error)]
+#[allow(clippy::disallowed_types)]
 pub enum ParseError {
     /// Unexpected token encountered.
     #[error("unexpected token at {span:?}: expected {expected}, found {found}")]

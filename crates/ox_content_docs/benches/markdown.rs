@@ -127,7 +127,11 @@ fn member(module: usize, entry: usize, index: usize) -> ApiDocMember {
         description,
         signature,
         type_annotation: (kind == "property").then(|| "Record<string, unknown>".to_string()),
-        params: if kind != "property" { vec![param(module, entry, index)] } else { Vec::new() },
+        params: if kind != "property" {
+            Vec::from([param(module, entry, index)])
+        } else {
+            Vec::new()
+        },
         returns: (kind != "property").then(|| ApiReturnDoc {
             type_annotation: "boolean".to_string(),
             description: "Whether the member accepted the value.".to_string(),
@@ -136,7 +140,7 @@ fn member(module: usize, entry: usize, index: usize) -> ApiDocMember {
         readonly: index % 3 == 0,
         r#static: index % 11 == 0,
         private: false,
-        tags: vec![],
+        tags: Vec::new(),
         line: index as u32 + 10,
         end_line: index as u32 + 10,
     }
@@ -188,14 +192,14 @@ fn entry(module: usize, index: usize) -> ApiDocEntry {
             },
             description: "A processed result object.".to_string(),
         }),
-        examples: vec![{
+        examples: Vec::from([{
             let mut example = String::with_capacity(name.len() + 80);
             example.push_str("```ts\nconst result = await ");
             example.push_str(&name);
             example.push_str("({ enabled: true });\nconsole.log(result);\n```");
             example
-        }],
-        tags: vec![ApiDocTag { tag: "since".to_string(), value: "2.0.0".to_string() }],
+        }]),
+        tags: Vec::from([ApiDocTag { tag: "since".to_string(), value: "2.0.0".to_string() }]),
         private: false,
         file,
         line: index as u32 * 8 + 1,
@@ -236,12 +240,12 @@ fn entry(module: usize, index: usize) -> ApiDocEntry {
         } else {
             Vec::new()
         },
-        type_parameters: vec![ApiTypeParamDoc {
+        type_parameters: Vec::from([ApiTypeParamDoc {
             name: "T".to_string(),
             constraint: Some("object".to_string()),
             default: Some("Record<string, unknown>".to_string()),
             description: "Payload shape.".to_string(),
-        }],
+        }]),
     }
 }
 
@@ -261,8 +265,8 @@ fn docs(module_count: usize, entries_per_module: usize) -> Vec<ApiDocModule> {
                 file: file.clone(),
                 description,
                 source_path: file,
-                examples: vec![],
-                tags: vec![],
+                examples: Vec::new(),
+                tags: Vec::new(),
                 entries: (0..entries_per_module).map(|index| entry(module, index)).collect(),
             }
         })

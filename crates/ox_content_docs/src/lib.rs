@@ -5,6 +5,7 @@
 //! for JavaScript/TypeScript files.
 
 #![deny(clippy::disallowed_macros)]
+#![cfg_attr(test, allow(clippy::disallowed_macros))]
 
 mod config;
 mod data;

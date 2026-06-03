@@ -30,20 +30,20 @@ pub struct DocsConfig {
 impl Default for DocsConfig {
     fn default() -> Self {
         Self {
-            src_dirs: vec!["src".to_string()],
+            src_dirs: Vec::from([String::from("src")]),
             out_dir: "docs".to_string(),
-            include: vec![
-                "**/*.ts".to_string(),
-                "**/*.tsx".to_string(),
-                "**/*.js".to_string(),
-                "**/*.jsx".to_string(),
-            ],
-            exclude: vec![
-                "**/node_modules/**".to_string(),
-                "**/dist/**".to_string(),
-                "**/*.test.*".to_string(),
-                "**/*.spec.*".to_string(),
-            ],
+            include: Vec::from([
+                String::from("**/*.ts"),
+                String::from("**/*.tsx"),
+                String::from("**/*.js"),
+                String::from("**/*.jsx"),
+            ]),
+            exclude: Vec::from([
+                String::from("**/node_modules/**"),
+                String::from("**/dist/**"),
+                String::from("**/*.test.*"),
+                String::from("**/*.spec.*"),
+            ]),
             json: false,
             document_private: false,
             theme: None,

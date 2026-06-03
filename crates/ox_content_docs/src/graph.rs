@@ -592,47 +592,51 @@ struct ImportBinding {
 impl ModuleResolver {
     fn new(root: &Path, options: &GraphOptions) -> Self {
         let mut resolve_options = ResolveOptions {
-            extensions: vec![
-                ".d.ts".to_string(),
-                ".d.mts".to_string(),
-                ".d.cts".to_string(),
-                ".ts".to_string(),
-                ".tsx".to_string(),
-                ".mts".to_string(),
-                ".cts".to_string(),
-                ".js".to_string(),
-                ".jsx".to_string(),
-                ".mjs".to_string(),
-                ".cjs".to_string(),
-                ".json".to_string(),
-                ".node".to_string(),
-            ],
-            extension_alias: vec![
+            extensions: Vec::from([
+                String::from(".d.ts"),
+                String::from(".d.mts"),
+                String::from(".d.cts"),
+                String::from(".ts"),
+                String::from(".tsx"),
+                String::from(".mts"),
+                String::from(".cts"),
+                String::from(".js"),
+                String::from(".jsx"),
+                String::from(".mjs"),
+                String::from(".cjs"),
+                String::from(".json"),
+                String::from(".node"),
+            ]),
+            extension_alias: Vec::from([
                 (
-                    ".js".to_string(),
-                    vec![
-                        ".ts".to_string(),
-                        ".tsx".to_string(),
-                        ".d.ts".to_string(),
-                        ".js".to_string(),
-                    ],
+                    String::from(".js"),
+                    Vec::from([
+                        String::from(".ts"),
+                        String::from(".tsx"),
+                        String::from(".d.ts"),
+                        String::from(".js"),
+                    ]),
                 ),
                 (
-                    ".mjs".to_string(),
-                    vec![".mts".to_string(), ".d.mts".to_string(), ".mjs".to_string()],
+                    String::from(".mjs"),
+                    Vec::from([String::from(".mts"), String::from(".d.mts"), String::from(".mjs")]),
                 ),
                 (
-                    ".cjs".to_string(),
-                    vec![".cts".to_string(), ".d.cts".to_string(), ".cjs".to_string()],
+                    String::from(".cjs"),
+                    Vec::from([String::from(".cts"), String::from(".d.cts"), String::from(".cjs")]),
                 ),
-            ],
-            condition_names: vec![
-                "types".to_string(),
-                "import".to_string(),
-                "module".to_string(),
-                "default".to_string(),
-            ],
-            main_fields: vec!["types".to_string(), "module".to_string(), "main".to_string()],
+            ]),
+            condition_names: Vec::from([
+                String::from("types"),
+                String::from("import"),
+                String::from("module"),
+                String::from("default"),
+            ]),
+            main_fields: Vec::from([
+                String::from("types"),
+                String::from("module"),
+                String::from("main"),
+            ]),
             ..ResolveOptions::default()
         };
 

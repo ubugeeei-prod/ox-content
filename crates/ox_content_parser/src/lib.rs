@@ -21,6 +21,8 @@
 //! let document = parser.parse();
 //! ```
 
+#![deny(clippy::disallowed_macros, clippy::disallowed_methods, clippy::disallowed_types)]
+
 /// Lightweight RAII span guard used internally by the parser modules.
 ///
 /// Compiles to `let _ = ();` when the `profile` feature is disabled (the
