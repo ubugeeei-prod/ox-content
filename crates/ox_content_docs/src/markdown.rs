@@ -835,6 +835,15 @@ fn sort_api_doc_members(entry: &mut ApiDocEntry) {
     }
 }
 
+/// Whether a member table should keep the `Kind` column. Named member groups
+/// (`Properties`, `Methods`, `Constructors`, `Enum Members`, `Static …`) state the
+/// kind in their heading, so the column is redundant and dropped to match TypeDoc.
+/// Only the generic `Members` fallback (mixed kinds) keeps it. Shared by both
+/// renderers via `super::member_table_includes_kind`.
+fn member_table_includes_kind(group_title: &str) -> bool {
+    group_title == "Members"
+}
+
 /// Renders the per-page stats summary in the configured render style.
 fn render_stats_summary(
     options: &MarkdownDocsOptions,
@@ -2376,11 +2385,12 @@ mod tests {
         assert!(!page.contains("**Signature**"));
         assert!(page.contains("```ts"));
         assert!(page.contains("- `argv` (`string[]`) - Arguments."));
-        assert!(!page.contains("| Name | Type | Description |"));
+        // Named member groups drop the redundant Kind column (the heading states it).
+        assert!(page.contains("| Name | Type | Description |"));
+        assert!(!page.contains("| Name | Kind | Type | Description |"));
         // The interface member group is a real heading (no `**Members**` wrapper).
         assert!(page.lines().any(|line| line == "#### Methods"));
         assert!(!page.contains("**Members**"));
-        assert!(page.contains("| Name | Kind | Type | Description |"));
         assert!(page.contains("[View source](https://github.com/x/y/blob/main/"));
 
         let index = out.get("index.md").unwrap();
@@ -3119,10 +3129,10 @@ mod tests {
             },
         );
         let table_page = table_markdown.get("mod/interfaces/Command.md").unwrap();
-        assert!(table_page.contains("| Name | Kind | Type | Description |"));
-        assert!(
-            table_page.contains("| `name` _(readonly)_ | property | `string` | Command name. |")
-        );
+        // The `Properties` heading states the kind, so the table omits the Kind column.
+        assert!(table_page.contains("| Name | Type | Description |"));
+        assert!(!table_page.contains("| Name | Kind | Type | Description |"));
+        assert!(table_page.contains("| `name` _(readonly)_ | `string` | Command name. |"));
     }
 
     #[test]
@@ -3786,6 +3796,79 @@ mod tests {
         let pos = |name: &str| page.find(&join3("<code>", name, "</code>")).unwrap();
         assert!(pos("apple") < pos("mango"));
         assert!(pos("mango") < pos("zebra"));
+    }
+
+    #[test]
+    fn typedoc_member_table_drops_kind_for_named_groups() {
+        // The `Properties` heading already states the kind, so the table omits it.
+        let mut entry = test_entry("Command", "interface", "/repo/src/types.ts", "A command.");
+        entry.members = vec![member("name", "property", false)];
+        let options = MarkdownDocsOptions {
+            interface_properties_format: MarkdownDisplayFormat::Table,
+            ..markdown_typedoc_options()
+        };
+        let out = generate_markdown(&lifecycle_module(entry), &options);
+        let page = out.get("combinators/interfaces/Command.md").unwrap();
+
+        assert!(page.contains("| Name | Type | Description |"));
+        assert!(!page.contains("| Name | Kind | Type | Description |"));
+        // The redundant per-row kind cell is gone too.
+        assert!(!page.contains("| property |"));
+    }
+
+    #[test]
+    fn typedoc_enum_member_table_drops_kind() {
+        let mut entry = test_entry("Level", "enum", "/repo/src/level.ts", "Level.");
+        entry.members = vec![member("Low", "enumMember", false)];
+        let options = MarkdownDocsOptions {
+            enum_members_format: MarkdownDisplayFormat::Table,
+            ..markdown_typedoc_options()
+        };
+        let out = generate_markdown(&lifecycle_module(entry), &options);
+        let page = out.get("combinators/enumerations/Level.md").unwrap();
+
+        assert!(page.contains("| Name | Type | Description |"));
+        assert!(!page.contains("| Name | Kind | Type | Description |"));
+    }
+
+    #[test]
+    fn typedoc_html_member_table_drops_kind_for_named_groups() {
+        let mut entry = test_entry("Command", "interface", "/repo/src/types.ts", "A command.");
+        entry.members = vec![member("name", "property", false)];
+        let out = generate_markdown(&lifecycle_module(entry), &html_typedoc_options());
+        let page = out.get("combinators/interfaces/Command.md").unwrap();
+
+        assert!(page.contains("<th>Name</th><th>Type</th><th>Description</th>"));
+        assert!(!page.contains("<th>Kind</th>"));
+        assert!(!page.contains("ox-api-entry__member-kind"));
+    }
+
+    #[test]
+    fn typedoc_html_enum_member_table_drops_kind() {
+        // The html renderer groups enum members under `Enum Members` (parity with
+        // the markdown renderer), so the redundant Kind column is dropped.
+        let mut entry = test_entry("Level", "enum", "/repo/src/level.ts", "Level.");
+        entry.members =
+            vec![member("Low", "enumMember", false), member("High", "enumMember", false)];
+        let out = generate_markdown(&lifecycle_module(entry), &html_typedoc_options());
+        let page = out.get("combinators/enumerations/Level.md").unwrap();
+
+        assert!(page.contains("<h5>Enum Members</h5>"));
+        assert!(page.contains("<th>Name</th><th>Type</th><th>Description</th>"));
+        assert!(!page.contains("<th>Kind</th>"));
+    }
+
+    #[test]
+    fn typedoc_html_members_fallback_keeps_kind_column() {
+        // A non class/interface/type/enum entry falls back to a mixed-kind `Members`
+        // group, where the Kind column stays meaningful.
+        let mut entry = test_entry("config", "variable", "/repo/src/config.ts", "Config.");
+        entry.members = vec![member("name", "property", false), member("load", "method", false)];
+        let out = generate_markdown(&lifecycle_module(entry), &html_typedoc_options());
+        let page = out.get("combinators/variables/config.md").unwrap();
+
+        assert!(page.contains("<th>Name</th><th>Kind</th><th>Type</th><th>Description</th>"));
+        assert!(page.contains("ox-api-entry__member-kind"));
     }
 
     #[test]
