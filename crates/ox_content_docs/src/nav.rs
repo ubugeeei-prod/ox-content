@@ -99,7 +99,7 @@ fn generate_typedoc_nav_metadata(
                 .map(|kind| (typedoc_kind_title(&kind).to_string(), kind))
                 .collect::<Vec<_>>();
             for (_title, kind) in order_by_group_title(kind_groups, group_order) {
-                let entries = doc
+                let mut entries = doc
                     .entries
                     .iter()
                     .filter(|entry| entry.kind == kind && owners.is_canonical(&doc, entry))
@@ -107,12 +107,19 @@ fn generate_typedoc_nav_metadata(
                 if entries.is_empty() {
                     continue;
                 }
+                // Sort leaf entries alphabetically (case-insensitive) to match
+                // TypeDoc's sidebar and ox-content's generated Markdown module index.
+                entries.sort_by_cached_key(|entry| (entry.name.to_lowercase(), entry.name.clone()));
 
                 let kind_segment = typedoc_kind_segment(&kind);
                 let kind_file_name = join3(&module_name, "/", kind_segment);
                 let kind_path = nav_route_path(&base_path, &kind_file_name);
+                // Overloads share a name and resolve to one typedoc page, so collapse
+                // them to a single sidebar leaf (matching the module index).
+                let mut seen = std::collections::HashSet::new();
                 let entry_children = entries
                     .into_iter()
+                    .filter(|entry| seen.insert(entry.name.as_str()))
                     .map(|entry| {
                         let entry_file_name = join5(
                             &module_name,
@@ -384,6 +391,67 @@ mod tests {
 
         // Listed groups lead in order; the rest follow alphabetically.
         assert_eq!(titles, vec!["Variables", "Functions", "Classes"]);
+    }
+
+    #[test]
+    fn typedoc_nav_sorts_leaf_entries_alphabetically() {
+        let docs = vec![ApiDocModule {
+            description: String::new(),
+            file: "default".to_string(),
+            source_path: String::new(),
+            examples: vec![],
+            tags: vec![],
+            // Supplied out of order.
+            entries: vec![
+                nav_entry("plugin", "function"),
+                nav_entry("cli", "function"),
+                nav_entry("resolveArgs", "function"),
+                nav_entry("parseArgs", "function"),
+            ],
+        }];
+
+        let nav = generate_nav_metadata_from_docs(
+            &docs,
+            Some("/api"),
+            MarkdownPathStrategy::TypeDoc,
+            None,
+        );
+        let functions = nav[0].children.as_ref().unwrap()[0].children.as_ref().unwrap();
+        let leaves = functions.iter().map(|child| child.title.as_str()).collect::<Vec<_>>();
+
+        // Leaf entries are sorted case-insensitively, matching TypeDoc and the
+        // generated Markdown module index.
+        assert_eq!(leaves, vec!["cli", "parseArgs", "plugin", "resolveArgs"]);
+    }
+
+    #[test]
+    fn typedoc_nav_collapses_overloads_to_one_leaf() {
+        let docs = vec![ApiDocModule {
+            description: String::new(),
+            file: "default".to_string(),
+            source_path: String::new(),
+            examples: vec![],
+            tags: vec![],
+            // `cli` is overloaded (multiple same-name entries resolving to one page).
+            entries: vec![
+                nav_entry("cli", "function"),
+                nav_entry("cli", "function"),
+                nav_entry("cli", "function"),
+                nav_entry("define", "function"),
+            ],
+        }];
+
+        let nav = generate_nav_metadata_from_docs(
+            &docs,
+            Some("/api"),
+            MarkdownPathStrategy::TypeDoc,
+            None,
+        );
+        let functions = nav[0].children.as_ref().unwrap()[0].children.as_ref().unwrap();
+        let leaves = functions.iter().map(|child| child.title.as_str()).collect::<Vec<_>>();
+
+        // The overloaded `cli` appears once, like TypeDoc's sidebar.
+        assert_eq!(leaves, vec!["cli", "define"]);
     }
 
     #[test]
