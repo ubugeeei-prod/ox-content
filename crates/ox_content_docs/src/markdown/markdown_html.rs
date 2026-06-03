@@ -946,6 +946,8 @@ fn render_member_table_html(
         return String::new();
     }
 
+    let include_kind = super::member_table_includes_kind(title);
+
     let mut rows = StringBuilder::new();
     for member in members {
         if !rows.is_empty() {
@@ -961,9 +963,13 @@ fn render_member_table_html(
         rows.push_str(&escape_html(&member.name));
         rows.push_str("</code>");
         rows.push_str(&render_member_flags(member));
-        rows.push_str("</td>\n  <td><span class=\"ox-api-entry__member-kind\">");
-        rows.push_str(&escape_html(&member.kind));
-        rows.push_str("</span></td>\n  <td>");
+        rows.push_str("</td>\n  ");
+        if include_kind {
+            rows.push_str("<td><span class=\"ox-api-entry__member-kind\">");
+            rows.push_str(&escape_html(&member.kind));
+            rows.push_str("</span></td>\n  ");
+        }
+        rows.push_str("<td>");
         rows.push_str(&render_member_type_html(member));
         rows.push_str("</td>\n  <td>");
         rows.push_str(&render_member_description_html(member, options, context));
@@ -981,8 +987,17 @@ fn render_member_table_html(
     out.push_str(
         "</h5>
 <table class=\"ox-api-entry__members-table\">
-<thead><tr><th>Name</th><th>Kind</th><th>Type</th><th>Description</th></tr></thead>
-<tbody>
+",
+    );
+    if include_kind {
+        out.push_str(
+            "<thead><tr><th>Name</th><th>Kind</th><th>Type</th><th>Description</th></tr></thead>\n",
+        );
+    } else {
+        out.push_str("<thead><tr><th>Name</th><th>Type</th><th>Description</th></tr></thead>\n");
+    }
+    out.push_str(
+        "<tbody>
 ",
     );
     out.push_str(&rows);
@@ -1169,6 +1184,17 @@ fn render_members_html(
                 options,
                 context,
             ));
+            groups.push(render_member_group_html(
+                entry,
+                "Enum Members",
+                &enum_members,
+                options,
+                context,
+            ));
+        }
+        "enum" => {
+            let enum_members =
+                members.iter().filter(|member| member.kind == "enumMember").collect::<Vec<_>>();
             groups.push(render_member_group_html(
                 entry,
                 "Enum Members",

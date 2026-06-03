@@ -662,13 +662,20 @@ fn render_member_group_pure(
             out.push('\n');
         }
     } else {
-        out.push_str("| Name | Kind | Type | Description |\n| --- | --- | --- | --- |\n");
+        let include_kind = super::member_table_includes_kind(title);
+        if include_kind {
+            out.push_str("| Name | Kind | Type | Description |\n| --- | --- | --- | --- |\n");
+        } else {
+            out.push_str("| Name | Type | Description |\n| --- | --- | --- |\n");
+        }
         for member in members {
             out.push_str("| ");
             out.push_str(&member_name_cell(member));
             out.push_str(" | ");
-            out.push_str(&table_cell(&member.kind));
-            out.push_str(" | ");
+            if include_kind {
+                out.push_str(&table_cell(&member.kind));
+                out.push_str(" | ");
+            }
             out.push_str(&code_cell(member_type(member)));
             out.push_str(" | ");
             out.push_str(&table_cell(&member_description(member, context.link_context)));
