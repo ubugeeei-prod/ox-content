@@ -241,6 +241,11 @@ pub struct NormalizedDocEntry {
     pub end_line: u32,
     /// Signature text.
     pub signature: Option<String>,
+    /// Whether a function declaration carries an implementation body (`false` for
+    /// overload signatures and ambient declarations). Used to hide the
+    /// implementation signature when grouping overloads on TypeDoc symbol pages.
+    #[serde(default)]
+    pub has_body: bool,
     /// Members belonging to class/interface/type/enum entries.
     #[serde(default)]
     pub members: Vec<NormalizedMember>,
@@ -289,6 +294,7 @@ pub fn normalize_doc_item(item: DocItem, type_parameters: bool) -> Option<Normal
         line: item.line,
         end_line: item.end_line,
         signature: item.signature,
+        has_body: item.has_body,
         members,
         type_parameters,
     })

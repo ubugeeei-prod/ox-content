@@ -63,6 +63,12 @@ pub struct ApiDocEntry {
     pub end_line: u32,
     /// Full source signature.
     pub signature: Option<String>,
+    /// Whether a function declaration carries an implementation body. `false` for
+    /// overload signatures and ambient (`declare` / `.d.ts`) declarations. The
+    /// TypeDoc path renderer uses this to hide the implementation signature when a
+    /// symbol's overloads are grouped onto one page.
+    #[serde(default)]
+    pub has_body: bool,
     /// Members belonging to class/interface/type/enum entries.
     #[serde(default)]
     pub members: Vec<ApiDocMember>,

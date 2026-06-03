@@ -260,6 +260,11 @@ export interface JsDocEntry {
   line: number
   endLine: number
   signature?: string
+  /**
+   * Whether a function declaration carries an implementation body. `false` for
+   * overload signatures and ambient declarations.
+   */
+  hasBody: boolean
   members?: Array<JsDocMember>
   typeParameters?: Array<JsTypeParam>
 }
@@ -321,6 +326,12 @@ export interface JsDocsMarkdownEntry {
   line: number
   endLine: number
   signature?: string
+  /**
+   * Whether a function declaration carries an implementation body. Optional so
+   * callers that build entries by hand need not set it; defaults to `false`.
+   * Round-trips from `extractDocsFromEntryPoints` output unchanged.
+   */
+  hasBody?: boolean
   members?: Array<JsDocMember>
   typeParameters?: Array<JsTypeParam>
 }

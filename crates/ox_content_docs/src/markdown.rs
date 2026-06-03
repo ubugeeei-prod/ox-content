@@ -981,28 +981,145 @@ fn generate_typedoc_markdown(
             generate_typedoc_module_index(doc, options, &module_name, symbol_map, &owners),
         );
 
-        for entry in &doc.entries {
-            // A symbol re-exported from several entry points gets one canonical
-            // page (matching TypeDoc); non-canonical occurrences are surfaced as
-            // re-export references in the module index instead of duplicate pages.
-            if !owners.is_canonical(doc, entry) {
-                continue;
+        if options.render_style == MarkdownRenderStyle::Markdown {
+            // Markdown render style groups a symbol's overload signatures onto a
+            // single page so every public call signature survives (TypeDoc
+            // parity); see `generate_typedoc_entry_page_grouped`.
+            for (entry_file_name, entries) in typedoc_canonical_groups(doc, &owners, &module_name) {
+                result.insert(
+                    join2(&entry_file_name, ".md"),
+                    generate_typedoc_entry_page_grouped(
+                        &entries,
+                        options,
+                        &module_name,
+                        &entry_file_name,
+                        symbol_map,
+                    ),
+                );
             }
-            let entry_file_name = typedoc_entry_file_name(&module_name, entry);
-            result.insert(
-                join2(&entry_file_name, ".md"),
-                generate_typedoc_entry_page(
-                    entry,
-                    options,
-                    &module_name,
-                    &entry_file_name,
-                    symbol_map,
-                ),
-            );
+        } else {
+            for entry in &doc.entries {
+                // A symbol re-exported from several entry points gets one canonical
+                // page (matching TypeDoc); non-canonical occurrences are surfaced as
+                // re-export references in the module index instead of duplicate pages.
+                if !owners.is_canonical(doc, entry) {
+                    continue;
+                }
+                let entry_file_name = typedoc_entry_file_name(&module_name, entry);
+                result.insert(
+                    join2(&entry_file_name, ".md"),
+                    generate_typedoc_entry_page(
+                        entry,
+                        options,
+                        &module_name,
+                        &entry_file_name,
+                        symbol_map,
+                    ),
+                );
+            }
         }
     }
 
     result
+}
+
+/// Groups a module's canonical entries by their TypeDoc page file name, preserving
+/// first-seen (source) order. Entries that map to the same page — a symbol's
+/// overload signatures plus its implementation — are collected together so the
+/// renderer can emit one page per symbol instead of overwriting it per entry.
+fn typedoc_canonical_groups<'a>(
+    doc: &'a ApiDocModule,
+    owners: &CanonicalOwners,
+    module_name: &str,
+) -> Vec<(String, Vec<&'a ApiDocEntry>)> {
+    let mut order: Vec<String> = Vec::new();
+    let mut groups: HashMap<String, Vec<&ApiDocEntry>> = HashMap::new();
+    for entry in &doc.entries {
+        if !owners.is_canonical(doc, entry) {
+            continue;
+        }
+        let file_name = typedoc_entry_file_name(module_name, entry);
+        if !groups.contains_key(&file_name) {
+            order.push(file_name.clone());
+        }
+        groups.entry(file_name).or_default().push(entry);
+    }
+    order
+        .into_iter()
+        .map(|file_name| {
+            let entries = groups.remove(&file_name).unwrap_or_default();
+            (file_name, entries)
+        })
+        .collect()
+}
+
+/// Renders one TypeDoc symbol page for a group of entries that share a page.
+///
+/// A single entry (the common case) renders exactly as before. When a symbol has
+/// overloads, the implementation signature (the body-carrying entry) is hidden and
+/// each public overload is rendered as a `## Call Signature` section; a lone public
+/// overload collapses back to the normal single-signature page.
+fn generate_typedoc_entry_page_grouped(
+    entries: &[&ApiDocEntry],
+    options: &MarkdownDocsOptions,
+    module_name: &str,
+    file_name: &str,
+    symbol_map: &HashMap<String, Vec<SymbolLocation>>,
+) -> String {
+    if entries.len() == 1 {
+        return generate_typedoc_entry_page(
+            entries[0],
+            options,
+            module_name,
+            file_name,
+            symbol_map,
+        );
+    }
+
+    // Overload signatures have no body; the implementation does. Hide the
+    // implementation and render the public signatures, matching TypeDoc.
+    let implementation = entries.iter().copied().rfind(|entry| entry.has_body);
+    let public: Vec<&ApiDocEntry> = {
+        let signatures =
+            entries.iter().copied().filter(|entry| !entry.has_body).collect::<Vec<_>>();
+        if signatures.is_empty() {
+            entries.to_vec()
+        } else {
+            signatures
+        }
+    };
+
+    // A single public signature is just a normal symbol page (implementation
+    // omitted) — no `## Call Signature` wrapper, like TypeDoc.
+    if public.len() == 1 {
+        return generate_typedoc_entry_page(public[0], options, module_name, file_name, symbol_map);
+    }
+
+    let link_context = MarkdownLinkContext {
+        options,
+        current_file_name: file_name,
+        current_module_name: module_name,
+        symbol_map,
+    };
+    // The H1 title is name + kind only (functions render `Function: name()` with no
+    // generics), so any overload yields the same title.
+    let body = markdown_pure::render_overload_body_pure(
+        &public,
+        implementation,
+        options,
+        Some(&link_context),
+        2,
+    );
+    let mut markdown =
+        String::with_capacity(typedoc_entry_page_title_len(public[0]) + 4 + body.len() + 1);
+    markdown.push_str("# ");
+    push_typedoc_entry_page_title(&mut markdown, public[0]);
+    markdown.push_str("\n\n");
+    if !body.is_empty() {
+        markdown.push_str(&body);
+        markdown.push('\n');
+    }
+    markdown
 }
 
 fn generate_typedoc_root_index(
@@ -1931,6 +2048,7 @@ mod tests {
             line: 1,
             end_line: 1,
             signature: Some(join3("export function ", name, "(): void")),
+            has_body: false,
             members: vec![],
             type_parameters: vec![],
         }
@@ -1997,6 +2115,7 @@ mod tests {
                     line: 1,
                     end_line: 3,
                     signature: Some("export function cli(argv: string[]): void".to_string()),
+                    has_body: false,
                     members: vec![],
                     type_parameters: vec![],
                 },
@@ -2013,6 +2132,7 @@ mod tests {
                     line: 5,
                     end_line: 8,
                     signature: Some("export interface Command".to_string()),
+                    has_body: false,
                     members: vec![ApiDocMember {
                         name: "run".to_string(),
                         kind: "method".to_string(),
@@ -2382,6 +2502,7 @@ mod tests {
                     line: 1,
                     end_line: 10,
                     signature: Some("export interface Command".to_string()),
+                    has_body: false,
                     members: vec![ApiDocMember {
                         name: "args".to_string(),
                         kind: "property".to_string(),
@@ -2442,6 +2563,7 @@ mod tests {
                     signature: Some(
                         "export function buildCommand(entry: Command): AgentProfile".to_string(),
                     ),
+                    has_body: false,
                     members: vec![],
                     type_parameters: vec![],
                 }],
@@ -2491,6 +2613,7 @@ mod tests {
                     line: 1,
                     end_line: 10,
                     signature: Some("export function cli(options: CliOptions): void".to_string()),
+                    has_body: false,
                     members: vec![],
                     type_parameters: vec![],
                 },
@@ -2507,6 +2630,7 @@ mod tests {
                     line: 1,
                     end_line: 20,
                     signature: Some("export interface CliOptions".to_string()),
+                    has_body: false,
                     members: vec![ApiDocMember {
                         name: "usageSilent".to_string(),
                         kind: "property".to_string(),
@@ -3190,6 +3314,207 @@ mod tests {
         }
     }
 
+    fn overload_entry(
+        name: &str,
+        file: &str,
+        description: &str,
+        signature: &str,
+        has_body: bool,
+    ) -> ApiDocEntry {
+        ApiDocEntry {
+            name: name.to_string(),
+            kind: "function".to_string(),
+            description: description.to_string(),
+            params: vec![],
+            returns: None,
+            examples: vec![],
+            tags: vec![],
+            private: false,
+            file: file.to_string(),
+            line: 1,
+            end_line: 1,
+            signature: Some(signature.to_string()),
+            has_body,
+            members: vec![],
+            type_parameters: vec![],
+        }
+    }
+
+    fn overload_module(entries: Vec<ApiDocEntry>) -> Vec<ApiDocModule> {
+        vec![ApiDocModule {
+            description: String::new(),
+            file: "default".to_string(),
+            source_path: String::new(),
+            examples: vec![],
+            tags: vec![],
+            entries,
+        }]
+    }
+
+    #[test]
+    fn typedoc_overloads_render_all_call_signatures() {
+        let docs = overload_module(vec![
+            overload_entry(
+                "plugin",
+                "/repo/src/plugin.ts",
+                "Define a plugin with extension.",
+                "export function plugin<E>(options: WithExt): PluginWithExtension<E>",
+                false,
+            ),
+            overload_entry(
+                "plugin",
+                "/repo/src/plugin.ts",
+                "Define a plugin without extension.",
+                "export function plugin(options: WithoutExt): PluginWithoutExtension",
+                false,
+            ),
+            overload_entry(
+                "plugin",
+                "/repo/src/plugin.ts",
+                "Define a plugin",
+                "export function plugin(options: any = {}): any",
+                true,
+            ),
+        ]);
+        let out = generate_markdown(&docs, &markdown_typedoc_options());
+        let page = out.get("default/functions/plugin.md").unwrap();
+
+        assert!(page.contains("# Function: plugin()"));
+        // Both public overloads survive on one page (not overwritten by the last).
+        assert_eq!(page.matches("## Call Signature").count(), 2);
+        assert!(page.contains("PluginWithExtension<E>"));
+        assert!(page.contains("PluginWithoutExtension"));
+    }
+
+    #[test]
+    fn typedoc_overloads_omit_implementation_signature() {
+        let docs = overload_module(vec![
+            overload_entry(
+                "plugin",
+                "/repo/src/plugin.ts",
+                "Define a plugin with extension.",
+                "export function plugin<E>(options: WithExt): PluginWithExtension<E>",
+                false,
+            ),
+            overload_entry(
+                "plugin",
+                "/repo/src/plugin.ts",
+                "Define a plugin without extension.",
+                "export function plugin(options: WithoutExt): PluginWithoutExtension",
+                false,
+            ),
+            overload_entry(
+                "plugin",
+                "/repo/src/plugin.ts",
+                "Define a plugin",
+                "export function plugin(options: any = {}): any",
+                true,
+            ),
+        ]);
+        let out = generate_markdown(&docs, &markdown_typedoc_options());
+        let page = out.get("default/functions/plugin.md").unwrap();
+
+        // The implementation signature is hidden, not rendered as a call signature.
+        assert!(!page.contains("options: any = {}"));
+        assert!(!page.contains("## Signature"));
+    }
+
+    #[test]
+    fn typedoc_overload_page_hoists_implementation_summary_and_since() {
+        let mut implementation = overload_entry(
+            "plugin",
+            "/repo/src/plugin.ts",
+            "Define a plugin",
+            "export function plugin(options: any = {}): any",
+            true,
+        );
+        implementation.tags =
+            vec![ApiDocTag { tag: "since".to_string(), value: "v0.27.0".to_string() }];
+        let docs = overload_module(vec![
+            overload_entry(
+                "plugin",
+                "/repo/src/plugin.ts",
+                "Define a plugin with extension.",
+                "export function plugin<E>(options: WithExt): PluginWithExtension<E>",
+                false,
+            ),
+            overload_entry(
+                "plugin",
+                "/repo/src/plugin.ts",
+                "Define a plugin without extension.",
+                "export function plugin(options: WithoutExt): PluginWithoutExtension",
+                false,
+            ),
+            implementation,
+        ]);
+        let out = generate_markdown(&docs, &markdown_typedoc_options());
+        let page = out.get("default/functions/plugin.md").unwrap();
+
+        // The implementation's summary and `## Since` are hoisted above the first
+        // call signature (TypeDoc treats the implementation comment as the symbol
+        // comment).
+        assert!(page.contains("Define a plugin\n\n## Since\n\nv0.27.0"));
+        let since = page.find("## Since").unwrap();
+        let call = page.find("## Call Signature").unwrap();
+        assert!(since < call);
+    }
+
+    #[test]
+    fn typedoc_single_public_overload_renders_inline() {
+        let docs = overload_module(vec![
+            overload_entry(
+                "define",
+                "/repo/src/definition.ts",
+                "Define a command.",
+                "export function define<G>(definition: CommandDefinition<G>): CommandDefinitionResult<G>",
+                false,
+            ),
+            overload_entry(
+                "define",
+                "/repo/src/definition.ts",
+                "Define a command.",
+                "export function define(definition: any): any",
+                true,
+            ),
+        ]);
+        let out = generate_markdown(&docs, &markdown_typedoc_options());
+        let page = out.get("default/functions/define.md").unwrap();
+
+        // A single public overload collapses to a normal symbol page (no
+        // `## Call Signature` wrapper) showing the typed signature, not `any`.
+        assert!(!page.contains("## Call Signature"));
+        assert!(page.contains("## Signature"));
+        assert!(page.contains("CommandDefinition<G>"));
+        assert!(!page.contains("definition: any"));
+    }
+
+    #[test]
+    fn typedoc_dts_overloads_without_implementation_render_all() {
+        let docs = overload_module(vec![
+            overload_entry(
+                "merge",
+                "/repo/src/merge.d.ts",
+                "Merge one source.",
+                "export function merge(a: A): A",
+                false,
+            ),
+            overload_entry(
+                "merge",
+                "/repo/src/merge.d.ts",
+                "Merge two sources.",
+                "export function merge(a: A, b: B): A & B",
+                false,
+            ),
+        ]);
+        let out = generate_markdown(&docs, &markdown_typedoc_options());
+        let page = out.get("default/functions/merge.md").unwrap();
+
+        // No implementation exists (.d.ts); every call signature is preserved.
+        assert_eq!(page.matches("## Call Signature").count(), 2);
+        assert!(page.contains("merge(a: A): A"));
+        assert!(page.contains("merge(a: A, b: B): A & B"));
+    }
+
     #[test]
     fn typedoc_renders_experimental_tag_as_warning_alert() {
         let mut entry =
@@ -3656,6 +3981,7 @@ mod tests {
                     line: 1,
                     end_line: 5,
                     signature: Some("export enum Mode".to_string()),
+                    has_body: false,
                     members: vec![ApiDocMember {
                         name: "Strict".to_string(),
                         kind: "enumMember".to_string(),
@@ -3687,6 +4013,7 @@ mod tests {
                     line: 1,
                     end_line: 5,
                     signature: Some("export function run(mode: Mode): void".to_string()),
+                    has_body: false,
                     members: vec![],
                     type_parameters: vec![],
                 },
@@ -3735,6 +4062,7 @@ mod tests {
                 line: 1,
                 end_line: 10,
                 signature: Some("export interface Command".to_string()),
+                has_body: false,
                 members: vec![
                     ApiDocMember {
                         name: "name".to_string(),

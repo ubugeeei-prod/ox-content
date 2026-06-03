@@ -11,7 +11,9 @@ use super::{
     parse_example_block, process_doc_text, EntryStats, MarkdownDisplayFormat, MarkdownDocsOptions,
     MarkdownLinkContext,
 };
-use crate::model::{ApiDocEntry, ApiDocMember, ApiDocTag, ApiParamDoc, ApiTypeParamDoc};
+use crate::model::{
+    ApiDocEntry, ApiDocMember, ApiDocTag, ApiParamDoc, ApiReturnDoc, ApiTypeParamDoc,
+};
 use crate::string_builder::StringBuilder;
 
 /// JSDoc tags folded into a dedicated `## Since` section (TypeDoc parity) instead
@@ -194,112 +196,238 @@ pub(super) fn render_entry_body_pure(
         }
     }
 
-    if !entry.type_parameters.is_empty() {
-        out.push_str(&heading);
-        out.push_str(" Type Parameters\n\n");
-        match effective_parameters_format(options) {
-            MarkdownDisplayFormat::Table => {
-                out.push_str("| Name | Description |\n| --- | --- |\n");
-                for type_param in &entry.type_parameters {
-                    out.push_str("| ");
-                    out.push_str(&type_param_name_cell(type_param));
-                    out.push_str(" | ");
-                    out.push_str(&table_cell(&inline(&type_param.description, context)));
-                    out.push_str(" |\n");
-                }
-            }
-            _ => {
-                for type_param in &entry.type_parameters {
-                    let description = inline(&type_param.description, context);
-                    out.push_str("- ");
-                    out.push_str(&type_param_name_span(type_param));
-                    if !description.is_empty() {
-                        out.push_str(" - ");
-                        out.push_str(&description);
-                    }
-                    out.push('\n');
-                }
-            }
-        }
-        out.push('\n');
-    }
+    push_type_parameters(&mut out, &entry.type_parameters, options, context, &heading);
 
     if !entry.members.is_empty() {
         out.push_str(&render_members_pure(entry, options, context, section_level));
     }
 
-    if !entry.params.is_empty() {
-        out.push_str(&heading);
-        out.push_str(" Parameters\n\n");
-        match effective_parameters_format(options) {
-            MarkdownDisplayFormat::Table => {
-                out.push_str("| Name | Type | Description |\n| --- | --- | --- |\n");
-                for param in &entry.params {
-                    out.push_str("| ");
-                    out.push_str(&code_cell(&param.name));
-                    out.push_str(" | ");
-                    out.push_str(&code_cell(&param.type_annotation));
-                    out.push_str(" | ");
-                    out.push_str(&table_cell(&param_description(param, context)));
-                    out.push_str(" |\n");
-                }
-            }
-            _ => {
-                for param in &entry.params {
-                    let mut line = String::new();
-                    line.push_str("- ");
-                    line.push_str(&code_span(&param.name));
-                    if !param.type_annotation.is_empty() {
-                        line.push_str(" (");
-                        line.push_str(&code_span(&param.type_annotation));
-                        line.push(')');
-                    }
-                    let description = param_description(param, context);
-                    if !description.is_empty() {
-                        line.push_str(" - ");
-                        line.push_str(&description);
-                    }
-                    out.push_str(&line);
-                    out.push('\n');
-                }
-            }
-        }
-        out.push('\n');
-    }
+    push_parameters(&mut out, &entry.params, options, context, &heading);
 
     if let Some(returns) = &entry.returns {
-        out.push_str(&heading);
-        out.push_str(" Returns\n\n");
-        out.push_str(&code_cell(&returns.type_annotation));
-        if !returns.description.is_empty() {
-            out.push_str(" — ");
-            out.push_str(&inline(&returns.description, context));
-        }
-        out.push_str("\n\n");
+        push_returns(&mut out, returns, context, &heading);
     }
 
-    if !entry.examples.is_empty() {
-        out.push_str(&heading);
-        out.push_str(" Examples\n\n");
-        for example in &entry.examples {
-            let (code, language) = parse_example_block(example);
-            out.push_str("```");
-            out.push_str(language);
-            out.push('\n');
-            out.push_str(code);
-            out.push_str("\n```\n\n");
-        }
-    }
+    push_examples(&mut out, &entry.examples, &heading);
 
     // Structured tags (lifecycle alerts, `## Since`) are rendered above, so
     // exclude them from the generic list here.
+    push_generic_tags(&mut out, &entry.tags, context, &heading);
+
+    out.trim_end().to_string()
+}
+
+/// Renders an overloaded function's symbol page body: an optional symbol-level
+/// comment hoisted from the implementation (summary, lifecycle alerts, `## Since`)
+/// followed by one `## Call Signature` block per public overload. The
+/// implementation signature itself is omitted from the call-signature list,
+/// matching TypeDoc. `public` must contain the signatures to render (at least
+/// two); `implementation` is the body-carrying entry when present.
+pub(super) fn render_overload_body_pure(
+    public: &[&ApiDocEntry],
+    implementation: Option<&ApiDocEntry>,
+    options: &MarkdownDocsOptions,
+    context: Option<&MarkdownLinkContext<'_>>,
+    section_level: usize,
+) -> String {
+    let mut out = String::new();
+    let heading = "#".repeat(section_level);
+    let sub = "#".repeat(section_level + 1);
+
+    // Symbol-level comment, hoisted from the implementation declaration (TypeDoc
+    // uses the implementation's doc comment as the symbol comment).
+    if let Some(entry) = implementation {
+        push_lifecycle_alerts(&mut out, &entry.tags, context);
+        let description = process_doc_text(&entry.description, context);
+        let description = description.trim();
+        if !description.is_empty() {
+            out.push_str(description);
+            out.push_str("\n\n");
+        }
+        out.push_str(&render_since_section(&entry.tags, context, &heading));
+    }
+
+    // One `## Call Signature` per public overload; its own sections nest at the
+    // next heading level (`### Type Parameters` / `### Parameters` / `### Returns`).
+    for entry in public {
+        out.push_str(&heading);
+        out.push_str(" Call Signature\n\n");
+        if let Some(signature) = &entry.signature {
+            out.push_str("```ts\n");
+            out.push_str(signature.trim());
+            out.push_str("\n```\n\n");
+        }
+        push_lifecycle_alerts(&mut out, &entry.tags, context);
+        let description = process_doc_text(&entry.description, context);
+        let description = description.trim();
+        if !description.is_empty() {
+            out.push_str(description);
+            out.push_str("\n\n");
+        }
+        out.push_str(&render_since_section(&entry.tags, context, &sub));
+        if let Some(github_url) = &options.github_url {
+            if !entry.file.is_empty() {
+                let href = generate_source_href(
+                    &entry.file,
+                    github_url,
+                    Some(entry.line),
+                    Some(entry.end_line),
+                );
+                out.push_str("[View source](");
+                out.push_str(&href);
+                out.push_str(")\n\n");
+            }
+        }
+        push_type_parameters(&mut out, &entry.type_parameters, options, context, &sub);
+        push_parameters(&mut out, &entry.params, options, context, &sub);
+        if let Some(returns) = &entry.returns {
+            push_returns(&mut out, returns, context, &sub);
+        }
+        push_examples(&mut out, &entry.examples, &sub);
+        push_generic_tags(&mut out, &entry.tags, context, &sub);
+    }
+
+    out.trim_end().to_string()
+}
+
+/// Appends a `{heading} Type Parameters` section, or nothing when empty.
+fn push_type_parameters(
+    out: &mut String,
+    type_parameters: &[ApiTypeParamDoc],
+    options: &MarkdownDocsOptions,
+    context: Option<&MarkdownLinkContext<'_>>,
+    heading: &str,
+) {
+    if type_parameters.is_empty() {
+        return;
+    }
+    out.push_str(heading);
+    out.push_str(" Type Parameters\n\n");
+    match effective_parameters_format(options) {
+        MarkdownDisplayFormat::Table => {
+            out.push_str("| Name | Description |\n| --- | --- |\n");
+            for type_param in type_parameters {
+                out.push_str("| ");
+                out.push_str(&type_param_name_cell(type_param));
+                out.push_str(" | ");
+                out.push_str(&table_cell(&inline(&type_param.description, context)));
+                out.push_str(" |\n");
+            }
+        }
+        _ => {
+            for type_param in type_parameters {
+                let description = inline(&type_param.description, context);
+                out.push_str("- ");
+                out.push_str(&type_param_name_span(type_param));
+                if !description.is_empty() {
+                    out.push_str(" - ");
+                    out.push_str(&description);
+                }
+                out.push('\n');
+            }
+        }
+    }
+    out.push('\n');
+}
+
+/// Appends a `{heading} Parameters` section, or nothing when empty.
+fn push_parameters(
+    out: &mut String,
+    params: &[ApiParamDoc],
+    options: &MarkdownDocsOptions,
+    context: Option<&MarkdownLinkContext<'_>>,
+    heading: &str,
+) {
+    if params.is_empty() {
+        return;
+    }
+    out.push_str(heading);
+    out.push_str(" Parameters\n\n");
+    match effective_parameters_format(options) {
+        MarkdownDisplayFormat::Table => {
+            out.push_str("| Name | Type | Description |\n| --- | --- | --- |\n");
+            for param in params {
+                out.push_str("| ");
+                out.push_str(&code_cell(&param.name));
+                out.push_str(" | ");
+                out.push_str(&code_cell(&param.type_annotation));
+                out.push_str(" | ");
+                out.push_str(&table_cell(&param_description(param, context)));
+                out.push_str(" |\n");
+            }
+        }
+        _ => {
+            for param in params {
+                let mut line = String::new();
+                line.push_str("- ");
+                line.push_str(&code_span(&param.name));
+                if !param.type_annotation.is_empty() {
+                    line.push_str(" (");
+                    line.push_str(&code_span(&param.type_annotation));
+                    line.push(')');
+                }
+                let description = param_description(param, context);
+                if !description.is_empty() {
+                    line.push_str(" - ");
+                    line.push_str(&description);
+                }
+                out.push_str(&line);
+                out.push('\n');
+            }
+        }
+    }
+    out.push('\n');
+}
+
+/// Appends a `{heading} Returns` section for a return doc.
+fn push_returns(
+    out: &mut String,
+    returns: &ApiReturnDoc,
+    context: Option<&MarkdownLinkContext<'_>>,
+    heading: &str,
+) {
+    out.push_str(heading);
+    out.push_str(" Returns\n\n");
+    out.push_str(&code_cell(&returns.type_annotation));
+    if !returns.description.is_empty() {
+        out.push_str(" — ");
+        out.push_str(&inline(&returns.description, context));
+    }
+    out.push_str("\n\n");
+}
+
+/// Appends a `{heading} Examples` section, or nothing when empty.
+fn push_examples(out: &mut String, examples: &[String], heading: &str) {
+    if examples.is_empty() {
+        return;
+    }
+    out.push_str(heading);
+    out.push_str(" Examples\n\n");
+    for example in examples {
+        let (code, language) = parse_example_block(example);
+        out.push_str("```");
+        out.push_str(language);
+        out.push('\n');
+        out.push_str(code);
+        out.push_str("\n```\n\n");
+    }
+}
+
+/// Appends a `{heading} Tags` list for non-structured tags, or nothing when none
+/// remain after structured tags (lifecycle alerts, `Since`) are excluded.
+fn push_generic_tags(
+    out: &mut String,
+    tags: &[ApiDocTag],
+    context: Option<&MarkdownLinkContext<'_>>,
+    heading: &str,
+) {
     let mut rendered_tags_heading = false;
-    for tag in &entry.tags {
+    for tag in tags {
         if is_structured_tag(&tag.tag) {
             continue;
         }
         if !rendered_tags_heading {
-            out.push_str(&heading);
+            out.push_str(heading);
             out.push_str(" Tags\n\n");
             rendered_tags_heading = true;
         }
@@ -317,8 +445,6 @@ pub(super) fn render_entry_body_pure(
     if rendered_tags_heading {
         out.push('\n');
     }
-
-    out.trim_end().to_string()
 }
 
 /// Renders the member tables for an entry, grouped to match the HTML renderer.
