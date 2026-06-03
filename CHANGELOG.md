@@ -1,5 +1,20 @@
 # Changelog
 
+## [2.50.0] - 2026-06-03
+
+### Features
+
+- add groupOrder option to control typedoc section and nav group order (#299)
+
+### Bug Fixes
+
+- never link TypeScript primitive types in annotations (#306)
+- link known symbols inside rendered type annotations (#305)
+- drop redundant Kind column from named member tables (#304)
+- sort class/interface/type members alphabetically to match typedoc (#303)
+- sort and dedupe typedoc nav leaf entries to match markdown order (#302)
+- bring html render style to feature parity with markdown (#300)
+
 ## [2.49.0] - 2026-06-03
 
 ### Bug Fixes
