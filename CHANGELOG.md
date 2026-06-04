@@ -1,5 +1,20 @@
 # Changelog
 
+## [2.54.0] - 2026-06-04
+
+### Features
+
+- add JS/TS docs-generator profiling mode (#309)
+
+### Performance
+
+- append Markdown table cells directly instead of per-cell Strings (#319)
+- extract docs during the export-graph walk to avoid a second parse (#318)
+- reduce TypeDoc render allocations (symbol map + list rows) (#317)
+- skip raw JSDoc text and param formatting on normalize paths (#316)
+- reuse the OXC arena allocator across files (#314)
+- borrow instead of allocate in doc-text/link processing (#315)
+
 ## [2.53.0] - 2026-06-04
 
 ## [2.52.0] - 2026-06-04
