@@ -156,7 +156,10 @@ pub fn extract_docs_from_directories(
     include_internal: bool,
     type_parameters: bool,
 ) -> ExtractResult<Vec<ExtractedDocModule>> {
-    let extractor = DocExtractor::with_visibility(include_private, include_internal);
+    // This path normalizes immediately, so the verbatim JSDoc text is never
+    // surfaced — skip capturing it to avoid a per-comment allocation.
+    let extractor =
+        DocExtractor::with_visibility(include_private, include_internal).without_raw_jsdoc();
     let mut modules = Vec::new();
 
     for src_dir in src_dirs {

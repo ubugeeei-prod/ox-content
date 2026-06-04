@@ -209,6 +209,12 @@ pub struct DocExtractor {
     include_internal: bool,
     /// Include declarations without JSDoc. Used for public entry point exports.
     include_undocumented_declarations: bool,
+    /// Capture the verbatim JSDoc comment text into [`DocItem::jsdoc`].
+    ///
+    /// Only the raw `extract_file_docs` NAPI path reads it; the normalize-bound
+    /// paths (directory + entry-point extraction) discard it, so they opt out
+    /// to skip a per-comment allocation and a per-declaration clone.
+    capture_jsdoc_raw: bool,
 }
 
 impl DocExtractor {
@@ -219,25 +225,53 @@ impl DocExtractor {
             include_private: false,
             include_internal: false,
             include_undocumented_declarations: false,
+            capture_jsdoc_raw: true,
         }
     }
 
     /// Creates a new extractor that includes private items.
     #[must_use]
     pub fn with_private(include_private: bool) -> Self {
-        Self { include_private, include_internal: false, include_undocumented_declarations: false }
+        Self {
+            include_private,
+            include_internal: false,
+            include_undocumented_declarations: false,
+            capture_jsdoc_raw: true,
+        }
     }
 
     /// Creates a new extractor with explicit visibility options.
     #[must_use]
     pub fn with_visibility(include_private: bool, include_internal: bool) -> Self {
-        Self { include_private, include_internal, include_undocumented_declarations: false }
+        Self {
+            include_private,
+            include_internal,
+            include_undocumented_declarations: false,
+            capture_jsdoc_raw: true,
+        }
+    }
+
+    /// Drops the verbatim JSDoc text from extracted items.
+    ///
+    /// For callers that immediately normalize (which discards `DocItem::jsdoc`),
+    /// this avoids allocating and cloning the raw comment text per declaration.
+    #[must_use]
+    pub fn without_raw_jsdoc(mut self) -> Self {
+        self.capture_jsdoc_raw = false;
+        self
     }
 
     /// Creates a new extractor for public entry point exports.
+    ///
+    /// This path always normalizes, so it never captures the raw JSDoc text.
     #[must_use]
     pub(crate) fn for_entrypoint_exports(include_private: bool, include_internal: bool) -> Self {
-        Self { include_private, include_internal, include_undocumented_declarations: true }
+        Self {
+            include_private,
+            include_internal,
+            include_undocumented_declarations: true,
+            capture_jsdoc_raw: false,
+        }
     }
 
     /// Extracts documentation from a source file.
@@ -275,7 +309,7 @@ impl DocExtractor {
         }
 
         let comments: Vec<Comment> = ret.program.comments.iter().copied().collect();
-        let jsdoc_cache = build_jsdoc_cache(source, &comments);
+        let jsdoc_cache = build_jsdoc_cache(source, &comments, self.capture_jsdoc_raw);
 
         let mut visitor = DocVisitor::new(
             source,
@@ -351,7 +385,10 @@ fn parse_jsdoc_payload(source: &str, comment: &Comment) -> ParsedJsdoc {
                 let doc = root
                     .description_text(false)
                     .map_or_else(String::new, |description| description.trim().to_string());
-                let tags = root.tags().map(DocVisitor::convert_jsdoc_tag).collect();
+                // Module-entry parse happens once per file, so always format the
+                // tag value (cheap, and the raw path may surface it).
+                let tags =
+                    root.tags().map(|tag| DocVisitor::convert_jsdoc_tag(tag, true)).collect();
                 return (raw, doc, tags);
             }
         }
@@ -371,7 +408,11 @@ fn parse_jsdoc_payload(source: &str, comment: &Comment) -> ParsedJsdoc {
 /// a cheap hash lookup in the hot declaration path. Comments that fail the
 /// batch parser still fall back individually so diagnostics do not poison the
 /// whole file.
-fn build_jsdoc_cache(source: &str, comments: &[Comment]) -> FxHashMap<u32, ParsedJsdoc> {
+fn build_jsdoc_cache(
+    source: &str,
+    comments: &[Comment],
+    capture_raw: bool,
+) -> FxHashMap<u32, ParsedJsdoc> {
     profile_span!("docs::parse_jsdoc");
     let jsdoc_comments: Vec<&Comment> =
         comments.iter().filter(|comment| comment.is_jsdoc()).collect();
@@ -400,16 +441,27 @@ fn build_jsdoc_cache(source: &str, comments: &[Comment]) -> FxHashMap<u32, Parse
         ox_jsdoc::decoder::source_file::LazySourceFile::new(&result.binary_bytes)
     {
         for (index, (comment, root)) in jsdoc_comments.iter().zip(source_file.asts()).enumerate() {
-            let raw = extract_raw_jsdoc(comment, source);
-            let (doc, tags) = match root {
+            let (raw, doc, tags) = match root {
                 Some(root) if !failed.contains(&(index as u32)) => {
                     let doc = root
                         .description_text(false)
                         .map_or_else(String::new, |description| description.trim().to_string());
-                    let tags = root.tags().map(DocVisitor::convert_jsdoc_tag).collect();
-                    (doc, tags)
+                    let tags = root
+                        .tags()
+                        .map(|tag| DocVisitor::convert_jsdoc_tag(tag, capture_raw))
+                        .collect();
+                    // The decoder gave us the description/tags directly, so the
+                    // raw text is only needed when the caller will surface it.
+                    let raw = capture_raw.then(|| extract_raw_jsdoc(comment, source));
+                    (raw.unwrap_or_default(), doc, tags)
                 }
-                _ => DocVisitor::parse_jsdoc_fallback(&raw),
+                _ => {
+                    // The fallback parser works off the raw text, so we always
+                    // build it here; keep it only when the caller captures raw.
+                    let raw = extract_raw_jsdoc(comment, source);
+                    let (doc, tags) = DocVisitor::parse_jsdoc_fallback(&raw);
+                    (if capture_raw { raw } else { String::new() }, doc, tags)
+                }
             };
             cache.insert(comment.attached_to, (raw, doc, tags));
         }
@@ -417,7 +469,10 @@ fn build_jsdoc_cache(source: &str, comments: &[Comment]) -> FxHashMap<u32, Parse
         for comment in &jsdoc_comments {
             let raw = extract_raw_jsdoc(comment, source);
             let (doc, tags) = DocVisitor::parse_jsdoc_fallback(&raw);
-            cache.insert(comment.attached_to, (raw, doc, tags));
+            cache.insert(
+                comment.attached_to,
+                (if capture_raw { raw } else { String::new() }, doc, tags),
+            );
         }
     }
 
@@ -500,11 +555,18 @@ impl<'a> DocVisitor<'a> {
         &self,
         attached_to: u32,
     ) -> Option<(Option<String>, Option<String>, Vec<DocTag>)> {
-        if let Some((jsdoc, doc, tags)) = self.extract_jsdoc(attached_to) {
-            if self.should_skip_by_visibility(&tags) {
+        if let Some((jsdoc, doc, tags)) = self.jsdoc_cache.get(&attached_to) {
+            // Borrow from the cache and apply the visibility filter first, so a
+            // private/internal declaration is dropped without cloning the whole
+            // (raw, description, tags) payload only to throw it away.
+            if self.should_skip_by_visibility(tags) {
                 return None;
             }
-            return Some((Some(jsdoc), (!doc.is_empty()).then_some(doc), tags));
+            return Some((
+                Some(jsdoc.clone()),
+                (!doc.is_empty()).then(|| doc.clone()),
+                tags.clone(),
+            ));
         }
 
         self.include_undocumented_declarations.then(|| (None, None, Vec::new()))
@@ -628,9 +690,17 @@ impl<'a> DocVisitor<'a> {
             .to_string()
     }
 
-    fn convert_jsdoc_tag(tag: LazyJsdocTag<'_>) -> DocTag {
+    fn convert_jsdoc_tag(tag: LazyJsdocTag<'_>, capture_value: bool) -> DocTag {
         let tag_name = tag.tag().value().to_string();
-        let value = Self::format_jsdoc_tag_value(&tag_name, &tag);
+        // `value` is the formatted tag body that the raw `extract_file_docs`
+        // path surfaces. Normalize ignores it for param-family tags (it reads
+        // the structured name/type/description instead), so skip the costly
+        // `format_jsdoc_tag_value` join when the caller will not read it.
+        let value = if capture_value || !matches!(tag_name.as_str(), "param" | "arg" | "argument") {
+            Self::format_jsdoc_tag_value(&tag_name, &tag)
+        } else {
+            String::new()
+        };
         let type_annotation = tag
             .raw_type()
             .map(|raw_type| raw_type.raw().trim().to_string())
