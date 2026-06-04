@@ -47,9 +47,9 @@ use ox_content_docs::{
     collect_source_files, extract_docs_from_directories, extract_docs_from_entry_points,
     generate_markdown, ApiDocEntry, ApiDocMember, ApiDocModule, ApiDocTag, ApiParamDoc,
     ApiReturnDoc, ApiTypeParamDoc, EntryPointDocsOptions, EntryPointSpec, ExtractedDocModule,
-    GraphOptions, MarkdownDocsOptions, MarkdownPathStrategy, MarkdownRenderStyle,
-    NormalizedDocEntry, NormalizedMember, NormalizedParamDoc, NormalizedReturnDoc,
-    NormalizedTypeParam,
+    GraphOptions, MarkdownDisplayFormat, MarkdownDocsOptions, MarkdownPathStrategy,
+    MarkdownRenderStyle, NormalizedDocEntry, NormalizedMember, NormalizedParamDoc,
+    NormalizedReturnDoc, NormalizedTypeParam,
 };
 use ox_content_parser::{Parser, ParserOptions};
 use ox_content_profiler::{report::ReportConfig, scope, CountingAllocator, Recorder};
@@ -240,9 +240,19 @@ fn run_markdown(cli: &Cli) -> std::io::Result<()> {
 /// the TypeDoc page layout with pure-Markdown output (rather than the legacy
 /// flat/HTML defaults).
 fn docs_markdown_options() -> MarkdownDocsOptions {
+    // Mirror a real consumer (gunshi): TypeDoc page layout, pure-Markdown output,
+    // and `table` display formats for indexes / params / members, so the driver
+    // exercises the table render path published packages actually use.
     MarkdownDocsOptions {
         path_strategy: MarkdownPathStrategy::TypeDoc,
         render_style: MarkdownRenderStyle::Markdown,
+        index_format: MarkdownDisplayFormat::Table,
+        parameters_format: MarkdownDisplayFormat::Table,
+        interface_properties_format: MarkdownDisplayFormat::Table,
+        class_properties_format: MarkdownDisplayFormat::Table,
+        type_alias_properties_format: MarkdownDisplayFormat::Table,
+        enum_members_format: MarkdownDisplayFormat::Table,
+        property_members_format: MarkdownDisplayFormat::Table,
         ..MarkdownDocsOptions::default()
     }
 }
