@@ -1912,20 +1912,47 @@ fn get_entry_badges(entry: &ApiDocEntry) -> Vec<EntryBadge> {
     badges
 }
 
-fn parse_example_block(example: &str) -> (&str, &str) {
+/// A parsed `@example` body.
+enum ExampleBlock<'a> {
+    /// Pure code: a single fenced block (unwrapped, with its language) or a bare
+    /// code body (defaulting to `ts`). Rendered inside a code fence / `<pre>`.
+    Code { code: &'a str, language: &'a str },
+    /// Mixed Markdown (prose and/or fenced code). Rendered as Markdown as-is so it
+    /// is not wrapped in an extra code fence.
+    Markdown(&'a str),
+}
+
+/// True when any line is a code-fence line (opens with ```` ``` ````). Counts fence
+/// *lines* only, so a stray ```` ``` ```` inside a single-line string literal is
+/// ignored.
+fn example_has_fence_line(text: &str) -> bool {
+    text.lines().any(|line| line.trim_start().starts_with("```"))
+}
+
+/// Classifies an `@example` body. A whole-body single fence is unwrapped to
+/// [`ExampleBlock::Code`]; a body that still contains a fence line (prose + code,
+/// multiple blocks, …) is kept verbatim as [`ExampleBlock::Markdown`] so it is not
+/// double-wrapped; a fence-free body is treated as bare code (`ts`).
+fn parse_example_block(example: &str) -> ExampleBlock<'_> {
     static FENCE_RE: RegexCache = OnceLock::new();
 
     let trimmed = example.trim();
-    let Some(fence_re) = cached_regex(&FENCE_RE, r"(?s)^```([\w-]+)?[^\n]*\n(.*?)\n?```$") else {
-        return (trimmed, "ts");
-    };
+    if let Some(fence_re) = cached_regex(&FENCE_RE, r"(?s)^```([\w-]+)?[^\n]*\n(.*?)\n?```$") {
+        if let Some(captures) = fence_re.captures(trimmed) {
+            let language = captures.get(1).map_or("ts", |value| value.as_str());
+            let code = captures.get(2).map_or("", |value| value.as_str());
+            // Only a single whole-body fence when the inner code has no further
+            // fence line; otherwise the body is multiple blocks → Markdown.
+            if !example_has_fence_line(code) {
+                return ExampleBlock::Code { code, language };
+            }
+        }
+    }
 
-    if let Some(captures) = fence_re.captures(trimmed) {
-        let language = captures.get(1).map_or("ts", |value| value.as_str());
-        let code = captures.get(2).map_or("", |value| value.as_str());
-        (code, language)
+    if example_has_fence_line(trimmed) {
+        ExampleBlock::Markdown(trimmed)
     } else {
-        (trimmed, "ts")
+        ExampleBlock::Code { code: trimmed, language: "ts" }
     }
 }
 
@@ -1935,12 +1962,19 @@ fn render_module_examples_markdown(examples: &[String]) -> String {
     out.push_str(if examples.len() == 1 { "Example" } else { "Examples" });
     out.push_str("\n\n");
     for example in examples {
-        let (code, language) = parse_example_block(example);
-        out.push_str("```");
-        out.push_str(language);
-        out.push('\n');
-        out.push_str(code);
-        out.push_str("\n```\n\n");
+        match parse_example_block(example) {
+            ExampleBlock::Code { code, language } => {
+                out.push_str("```");
+                out.push_str(language);
+                out.push('\n');
+                out.push_str(code);
+                out.push_str("\n```\n\n");
+            }
+            ExampleBlock::Markdown(markdown) => {
+                out.push_str(markdown);
+                out.push_str("\n\n");
+            }
+        }
     }
     out
 }
@@ -3279,6 +3313,66 @@ mod tests {
         assert!(module_index.contains("<h2>Example</h2>"));
         assert!(module_index.contains("<pre><code class=\"language-ts\">string()</code></pre>"));
         assert!(module_index.contains(">1</strong>\n  <span>examples</span>"));
+    }
+
+    #[test]
+    fn markdown_example_with_prose_and_fence_is_not_double_wrapped() {
+        let mut entry = test_entry("ArgSchema", "interface", "/repo/src/a.ts", "Schema.");
+        entry.examples = vec![
+            "Basic string argument:\n```ts\nconst schema = { type: 'string' }\n```".to_string(),
+        ];
+        let out = generate_markdown(&lifecycle_module(entry), &markdown_typedoc_options());
+        let page = out.get("combinators/interfaces/ArgSchema.md").unwrap();
+
+        // Prose stays a real line immediately followed by the single code fence; the
+        // whole example is not wrapped in another ```ts (which would put the fence
+        // before the prose).
+        assert!(
+            page.contains("Basic string argument:\n```ts\nconst schema = { type: 'string' }\n```")
+        );
+        assert!(!page.contains("```ts\nBasic string argument:"));
+    }
+
+    #[test]
+    fn markdown_example_single_fence_is_unchanged() {
+        let mut entry = test_entry("ArgSchema", "interface", "/repo/src/a.ts", "Schema.");
+        entry.examples = vec!["```ts\nconst x = 1\n```".to_string()];
+        let out = generate_markdown(&lifecycle_module(entry), &markdown_typedoc_options());
+        let page = out.get("combinators/interfaces/ArgSchema.md").unwrap();
+        assert!(page.contains("```ts\nconst x = 1\n```"));
+    }
+
+    #[test]
+    fn markdown_example_bare_code_is_wrapped_in_ts_fence() {
+        let mut entry = test_entry("ArgSchema", "interface", "/repo/src/a.ts", "Schema.");
+        entry.examples = vec!["const x = 1".to_string()];
+        let out = generate_markdown(&lifecycle_module(entry), &markdown_typedoc_options());
+        let page = out.get("combinators/interfaces/ArgSchema.md").unwrap();
+        assert!(page.contains("```ts\nconst x = 1\n```"));
+    }
+
+    #[test]
+    fn markdown_example_with_multiple_fences_passes_through() {
+        let mut entry = test_entry("ArgSchema", "interface", "/repo/src/a.ts", "Schema.");
+        entry.examples = vec!["```ts\na\n```\n\n```js\nb\n```".to_string()];
+        let out = generate_markdown(&lifecycle_module(entry), &markdown_typedoc_options());
+        let page = out.get("combinators/interfaces/ArgSchema.md").unwrap();
+
+        // Both fenced blocks are preserved verbatim (not collapsed or double-wrapped).
+        assert!(page.contains("```ts\na\n```\n\n```js\nb\n```"));
+    }
+
+    #[test]
+    fn html_example_with_prose_and_fence_renders_blocks() {
+        let mut entry = test_entry("ArgSchema", "interface", "/repo/src/a.ts", "Schema.");
+        entry.examples = vec!["Basic string argument:\n```ts\nconst schema = 1\n```".to_string()];
+        let out = generate_markdown(&lifecycle_module(entry), &html_typedoc_options());
+        let page = out.get("combinators/interfaces/ArgSchema.md").unwrap();
+
+        // Prose becomes a paragraph and the code a code block, rather than the whole
+        // mixed example being escaped inside a single <pre><code>.
+        assert!(page.contains("<p>Basic string argument:</p>"));
+        assert!(page.contains("<pre><code class=\"language-ts\">const schema = 1</code></pre>"));
     }
 
     #[test]

@@ -14,7 +14,7 @@ use super::{
     cached_regex, clean_summary_text, doc_kind_plural, doc_page_href, effective_members_format,
     effective_parameters_format, entry_anchor, file_stem, format_count_label, format_kind_label,
     generate_source_href, get_entry_badges, member_anchor, normalize_signature,
-    parse_example_block, process_doc_text, resolve_type_fragments, EntryStats,
+    parse_example_block, process_doc_text, resolve_type_fragments, EntryStats, ExampleBlock,
     MarkdownDisplayFormat, MarkdownDocsOptions, MarkdownLinkContext, MarkdownPathStrategy,
     RegexCache, TypeFragment, DOC_KIND_ORDER,
 };
@@ -458,7 +458,13 @@ pub(super) fn render_module_examples_html(examples: &[String]) -> String {
         if !examples_html.is_empty() {
             examples_html.push_char('\n');
         }
-        let (code, language) = parse_example_block(example);
+        // Mixed Markdown examples (prose + fenced code) render as HTML blocks; a
+        // pure-code example renders as a single highlighted code block. This avoids
+        // double-wrapping a Markdown example in another `<pre><code>`.
+        let rendered = match parse_example_block(example) {
+            ExampleBlock::Code { code, language } => render_code_block_html(code, language),
+            ExampleBlock::Markdown(markdown) => render_markdown_blocks_html(markdown),
+        };
         examples_html.push_str(
             "<div class=\"ox-api-entry__example\">
 <div class=\"ox-api-entry__example-heading\">Example ",
@@ -468,7 +474,7 @@ pub(super) fn render_module_examples_html(examples: &[String]) -> String {
             "</div>
 ",
         );
-        examples_html.push_str(&render_code_block_html(code, language));
+        examples_html.push_str(&rendered);
         examples_html.push_str(
             "
 </div>",
@@ -1424,7 +1430,13 @@ fn push_examples_html(body: &mut String, examples: &[String]) {
         if !examples_html.is_empty() {
             examples_html.push_char('\n');
         }
-        let (code, language) = parse_example_block(example);
+        // Mixed Markdown examples (prose + fenced code) render as HTML blocks; a
+        // pure-code example renders as a single highlighted code block. This avoids
+        // double-wrapping a Markdown example in another `<pre><code>`.
+        let rendered = match parse_example_block(example) {
+            ExampleBlock::Code { code, language } => render_code_block_html(code, language),
+            ExampleBlock::Markdown(markdown) => render_markdown_blocks_html(markdown),
+        };
         examples_html.push_str(
             "<div class=\"ox-api-entry__example\">
 <div class=\"ox-api-entry__example-heading\">Example ",
@@ -1434,7 +1446,7 @@ fn push_examples_html(body: &mut String, examples: &[String]) {
             "</div>
 ",
         );
-        examples_html.push_str(&render_code_block_html(code, language));
+        examples_html.push_str(&rendered);
         examples_html.push_str(
             "
 </div>",

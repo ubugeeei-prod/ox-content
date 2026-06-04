@@ -11,7 +11,7 @@ use std::collections::HashSet;
 
 use super::{
     effective_members_format, effective_parameters_format, generate_source_href,
-    parse_example_block, process_doc_text, resolve_type_fragments, EntryStats,
+    parse_example_block, process_doc_text, resolve_type_fragments, EntryStats, ExampleBlock,
     MarkdownDisplayFormat, MarkdownDocsOptions, MarkdownLinkContext, TypeFragment,
 };
 use crate::model::{
@@ -392,12 +392,19 @@ fn push_examples(out: &mut String, examples: &[String], heading: &str) {
     out.push_str(heading);
     out.push_str(" Examples\n\n");
     for example in examples {
-        let (code, language) = parse_example_block(example);
-        out.push_str("```");
-        out.push_str(language);
-        out.push('\n');
-        out.push_str(code);
-        out.push_str("\n```\n\n");
+        match parse_example_block(example) {
+            ExampleBlock::Code { code, language } => {
+                out.push_str("```");
+                out.push_str(language);
+                out.push('\n');
+                out.push_str(code);
+                out.push_str("\n```\n\n");
+            }
+            ExampleBlock::Markdown(markdown) => {
+                out.push_str(markdown);
+                out.push_str("\n\n");
+            }
+        }
     }
 }
 
