@@ -300,7 +300,7 @@ fn push_type_parameters(
                 out.push_str("| ");
                 out.push_str(&type_param_name_cell(type_param, context, &skip));
                 out.push_str(" | ");
-                out.push_str(&table_cell(&inline(&type_param.description, context)));
+                push_table_cell(out, &inline(&type_param.description, context));
                 out.push_str(" |\n");
             }
         }
@@ -342,7 +342,7 @@ fn push_parameters(
                 out.push_str(" | ");
                 out.push_str(&linked_type_cell(&param.type_annotation, context));
                 out.push_str(" | ");
-                out.push_str(&table_cell(&param_description(param, context)));
+                push_table_cell(out, &param_description(param, context));
                 out.push_str(" |\n");
             }
         }
@@ -595,7 +595,7 @@ fn render_member_parameter_sections_pure(
                     out.push_str(" | ");
                     out.push_str(&linked_type_cell(&param.type_annotation, context));
                     out.push_str(" | ");
-                    out.push_str(&table_cell(&param_description(param, context)));
+                    push_table_cell(&mut out, &param_description(param, context));
                     out.push_str(" |\n");
                 }
             }
@@ -673,12 +673,12 @@ fn render_member_group_pure(
             out.push_str(&member_name_cell(member));
             out.push_str(" | ");
             if include_kind {
-                out.push_str(&table_cell(&member.kind));
+                push_table_cell(out, &member.kind);
                 out.push_str(" | ");
             }
             out.push_str(&linked_type_cell(member_type(member), context.link_context));
             out.push_str(" | ");
-            out.push_str(&table_cell(&member_description(member, context.link_context)));
+            push_table_cell(out, &member_description(member, context.link_context));
             out.push_str(" |\n");
         }
     }
@@ -876,6 +876,22 @@ fn table_cell(text: &str) -> String {
         text.replace('|', "\\|")
     } else {
         text.to_string()
+    }
+}
+
+/// Append a table-cell value directly to `out` (pipes escaped), avoiding the
+/// intermediate `String` that [`table_cell`] allocates for every cell.
+fn push_table_cell(out: &mut String, text: &str) {
+    if text.contains('|') {
+        let mut rest = text;
+        while let Some(index) = rest.find('|') {
+            out.push_str(&rest[..index]);
+            out.push_str("\\|");
+            rest = &rest[index + 1..];
+        }
+        out.push_str(rest);
+    } else {
+        out.push_str(text);
     }
 }
 
