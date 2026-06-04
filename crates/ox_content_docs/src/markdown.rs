@@ -4,6 +4,7 @@ use std::borrow::Cow;
 use std::cmp::Ordering;
 use std::collections::{BTreeMap, HashMap, HashSet};
 use std::path::Path;
+use std::rc::Rc;
 use std::sync::OnceLock;
 
 use phf::{phf_map, phf_set};
@@ -213,8 +214,11 @@ struct EntryBadge {
 
 #[derive(Debug, Clone)]
 struct SymbolLocation {
-    module_name: String,
-    file_name: String,
+    // `Rc<str>` because `build_symbol_map` shares one module name across every
+    // entry in a module and one file name across an entry and all its members;
+    // cloning the location into the map is then a refcount bump, not a heap copy.
+    module_name: Rc<str>,
+    file_name: Rc<str>,
     anchor: Option<String>,
 }
 
@@ -561,7 +565,7 @@ fn sanitize_doc_path_segment(value: &str) -> String {
 }
 
 fn format_symbol_href(context: &MarkdownLinkContext<'_>, location: &SymbolLocation) -> String {
-    if location.file_name == context.current_file_name {
+    if location.file_name.as_ref() == context.current_file_name {
         if let Some(anchor) = location.anchor.as_deref().filter(|anchor| !anchor.is_empty()) {
             join2("#", anchor)
         } else {
@@ -589,9 +593,11 @@ fn resolve_symbol_location<'a>(
     let locations = context.symbol_map.get(symbol_name)?;
     locations
         .iter()
-        .find(|location| location.module_name == context.current_module_name)
+        .find(|location| location.module_name.as_ref() == context.current_module_name)
         .or_else(|| {
-            locations.iter().find(|location| location.file_name == context.current_file_name)
+            locations
+                .iter()
+                .find(|location| location.file_name.as_ref() == context.current_file_name)
         })
         .or_else(|| locations.first())
 }
@@ -2412,27 +2418,30 @@ fn build_symbol_map(
         .then(|| CanonicalOwners::compute(docs));
 
     for doc in docs {
-        let module_name = module_file_name(&doc.file);
+        // Interned once per module and shared by every entry + member below.
+        let module_name: Rc<str> = Rc::from(module_file_name(&doc.file));
         for entry in &doc.entries {
-            let (file_name, anchor) = match (options.group_by.as_str(), options.path_strategy) {
-                ("file", MarkdownPathStrategy::TypeDoc) => {
-                    let owner_module = canonical
-                        .as_ref()
-                        .and_then(|owners| owners.canonical_module(entry))
-                        .unwrap_or(module_name.as_str());
-                    (typedoc_entry_file_name(owner_module, entry), None)
-                }
-                ("category", _) => {
-                    (plural_kind_file_name(&entry.kind), Some(entry_anchor(&entry.name)))
-                }
-                _ => (module_name.clone(), Some(entry_anchor(&entry.name))),
-            };
+            let (file_name, anchor): (Rc<str>, Option<String>) =
+                match (options.group_by.as_str(), options.path_strategy) {
+                    ("file", MarkdownPathStrategy::TypeDoc) => {
+                        let owner_module = canonical
+                            .as_ref()
+                            .and_then(|owners| owners.canonical_module(entry))
+                            .unwrap_or(&module_name);
+                        (Rc::from(typedoc_entry_file_name(owner_module, entry)), None)
+                    }
+                    ("category", _) => (
+                        Rc::from(plural_kind_file_name(&entry.kind)),
+                        Some(entry_anchor(&entry.name)),
+                    ),
+                    _ => (Rc::clone(&module_name), Some(entry_anchor(&entry.name))),
+                };
             insert_symbol_location(
                 &mut map,
                 entry.name.clone(),
                 SymbolLocation {
-                    module_name: module_name.clone(),
-                    file_name: file_name.clone(),
+                    module_name: Rc::clone(&module_name),
+                    file_name: Rc::clone(&file_name),
                     anchor,
                 },
             );
@@ -2441,8 +2450,8 @@ fn build_symbol_map(
                     &mut map,
                     member_symbol_name(&entry.name, &member.name),
                     SymbolLocation {
-                        module_name: module_name.clone(),
-                        file_name: file_name.clone(),
+                        module_name: Rc::clone(&module_name),
+                        file_name: Rc::clone(&file_name),
                         anchor: Some(member_anchor(&entry.name, member, options.path_strategy)),
                     },
                 );
