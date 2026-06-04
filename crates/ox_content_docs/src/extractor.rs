@@ -343,7 +343,23 @@ impl DocExtractor {
             return Err(ExtractError::Parse(error_msg));
         }
 
-        let comments: Vec<Comment> = ret.program.comments.iter().copied().collect();
+        Ok(self.extract_items_from_program(source, file_path, &ret.program))
+    }
+
+    /// Extract doc items from an already-parsed program (build the JSDoc cache,
+    /// then walk the AST).
+    ///
+    /// Shared by [`extract_source_with`](Self::extract_source_with) and the
+    /// export-graph walk: the graph parses every reachable module to collect its
+    /// exports, so it extracts docs from that same AST instead of parsing the
+    /// file a second time.
+    pub(crate) fn extract_items_from_program(
+        &self,
+        source: &str,
+        file_path: &str,
+        program: &oxc_ast::ast::Program<'_>,
+    ) -> Vec<DocItem> {
+        let comments: Vec<Comment> = program.comments.iter().copied().collect();
         let jsdoc_cache = build_jsdoc_cache(source, &comments, self.capture_jsdoc_raw);
 
         let mut visitor = DocVisitor::new(
@@ -354,16 +370,16 @@ impl DocExtractor {
             self.include_undocumented_declarations,
             jsdoc_cache,
         );
-        let first_stmt_start = ret.program.body.first().map(|statement| statement.span().start);
+        let first_stmt_start = program.body.first().map(|statement| statement.span().start);
         {
             profile_span!("docs::visit_ast");
             if let Some(module_item) = visitor.extract_module_entry(&comments, first_stmt_start) {
                 visitor.items.push(module_item);
             }
-            visitor.visit_program(&ret.program);
+            visitor.visit_program(program);
         }
 
-        Ok(visitor.items)
+        visitor.items
     }
 
     /// Extracts documentation from a JavaScript/TypeScript file, reusing the
