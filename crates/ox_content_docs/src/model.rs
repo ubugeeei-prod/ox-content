@@ -138,6 +138,9 @@ pub struct ApiReturnDoc {
     pub type_annotation: String,
     /// Return description.
     pub description: String,
+    /// Members of an inline object literal return type.
+    #[serde(default)]
+    pub members: Vec<ApiDocMember>,
 }
 
 /// Type parameter documentation (`<T extends C = D>`).

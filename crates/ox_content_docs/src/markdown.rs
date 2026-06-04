@@ -11,7 +11,7 @@ use phf::{phf_map, phf_set};
 use regex::Regex;
 use serde::{Deserialize, Serialize};
 
-use crate::model::{ApiDocEntry, ApiDocMember, ApiDocModule};
+use crate::model::{ApiDocEntry, ApiDocMember, ApiDocModule, ApiReturnDoc};
 #[allow(unused_imports)]
 use crate::profile_span;
 use crate::string_builder::{join2, join3, join4, join5, StringBuilder};
@@ -1067,11 +1067,13 @@ fn sort_extracted_docs(docs: &[ApiDocModule], options: &MarkdownDocsOptions) -> 
             doc.entries.sort_by(|a, b| compare_entries(a, b, strategies, &kind_order));
             for entry in &mut doc.entries {
                 entry.members.sort_by(|a, b| compare_members(a, b, strategies, &kind_order));
+                sort_api_doc_return_members(entry, Some(strategies), &kind_order);
             }
         } else {
             doc.entries.sort_by_cached_key(|entry| (entry.name.to_lowercase(), entry.name.clone()));
             for entry in &mut doc.entries {
                 sort_api_doc_members(entry);
+                sort_api_doc_return_members(entry, None, &kind_order);
             }
         }
     }
@@ -1096,6 +1098,37 @@ fn sort_api_doc_members(entry: &mut ApiDocEntry) {
         entry
             .members
             .sort_by_cached_key(|member| (member.name.to_lowercase(), member.name.clone()));
+    }
+}
+
+fn sort_api_doc_return_members(
+    entry: &mut ApiDocEntry,
+    strategies: Option<&[SortStrategy]>,
+    kind_order: &[&str],
+) {
+    sort_return_members(entry.returns.as_mut(), strategies, kind_order);
+    for member in &mut entry.members {
+        sort_return_members(member.returns.as_mut(), strategies, kind_order);
+    }
+}
+
+fn sort_return_members(
+    returns: Option<&mut ApiReturnDoc>,
+    strategies: Option<&[SortStrategy]>,
+    kind_order: &[&str],
+) {
+    let Some(returns) = returns else {
+        return;
+    };
+    if let Some(strategies) = strategies {
+        returns.members.sort_by(|a, b| compare_members(a, b, strategies, kind_order));
+    } else {
+        returns
+            .members
+            .sort_by_cached_key(|member| (member.name.to_lowercase(), member.name.clone()));
+    }
+    for member in &mut returns.members {
+        sort_return_members(member.returns.as_mut(), strategies, kind_order);
     }
 }
 
@@ -2643,7 +2676,7 @@ fn capitalize_ascii(value: &str) -> String {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::model::{ApiDocTag, ApiParamDoc, ApiReturnDoc, ApiTypeParamDoc};
+    use crate::model::{ApiDocMember, ApiDocTag, ApiParamDoc, ApiReturnDoc, ApiTypeParamDoc};
 
     fn test_entry(name: &str, kind: &str, file: &str, description: &str) -> ApiDocEntry {
         ApiDocEntry {
@@ -2718,6 +2751,7 @@ mod tests {
                     returns: Some(ApiReturnDoc {
                         type_annotation: "void".to_string(),
                         description: "Nothing.".to_string(),
+                        members: Vec::new(),
                     }),
                     examples: vec!["```ts\ncli([])\n```".to_string()],
                     tags: vec![ApiDocTag { tag: "since".to_string(), value: "1.0.0".to_string() }],
@@ -3155,6 +3189,7 @@ mod tests {
                     returns: Some(ApiReturnDoc {
                         type_annotation: "AgentProfile".to_string(),
                         description: "An {@link AgentProfile} result.".to_string(),
+                        members: Vec::new(),
                     }),
                     examples: vec![],
                     tags: vec![
@@ -4424,6 +4459,8 @@ mod tests {
                 type_stub("GunshiParamsConstraint"),
                 type_stub("DefaultGunshiParams"),
                 type_stub("PluginExtension"),
+                type_stub("ArgValues"),
+                type_stub("ArgExplicitlyProvided"),
                 type_stub("U"),
                 // Symbols that collide with TypeScript intrinsic primitive types,
                 // mirroring gunshi's `string()` / `boolean()` / `number()`
@@ -4460,6 +4497,25 @@ mod tests {
         ]
     }
 
+    fn return_property(name: &str, type_annotation: &str) -> ApiDocMember {
+        ApiDocMember {
+            name: name.to_string(),
+            kind: "property".to_string(),
+            description: String::new(),
+            signature: None,
+            type_annotation: Some(type_annotation.to_string()),
+            params: vec![],
+            returns: None,
+            optional: false,
+            readonly: false,
+            r#static: false,
+            private: false,
+            tags: vec![],
+            line: 1,
+            end_line: 1,
+        }
+    }
+
     #[test]
     fn typedoc_links_known_symbols_in_param_types() {
         let mut entry = test_entry("make", "function", "/repo/src/make.ts", "Make.");
@@ -4487,11 +4543,51 @@ mod tests {
         entry.returns = Some(ApiReturnDoc {
             type_annotation: "CommandRunner<G>".to_string(),
             description: String::new(),
+            members: Vec::new(),
         });
         let out = generate_markdown(&type_link_module(entry), &markdown_typedoc_options());
         let page = out.get("combinators/functions/make.md").unwrap();
 
         assert!(page.contains("[`CommandRunner`]("));
+    }
+
+    #[test]
+    fn typedoc_markdown_renders_return_type_literal_members() {
+        let mut entry = test_entry("resolveArgs", "function", "/repo/src/resolver.ts", "Resolve.");
+        entry.returns = Some(ApiReturnDoc {
+            type_annotation: "object".to_string(),
+            description: "Resolved args.".to_string(),
+            members: vec![
+                return_property("values", "ArgValues<A>"),
+                return_property("positionals", "string[]"),
+                return_property("error", "AggregateError | undefined"),
+                return_property("explicit", "ArgExplicitlyProvided<A>"),
+            ],
+        });
+        let out = generate_markdown(&type_link_module(entry), &markdown_typedoc_options());
+        let page = out.get("combinators/functions/resolveArgs.md").unwrap();
+
+        assert!(page.contains("## Returns\n\n`object` — Resolved args.\n\n"));
+        assert!(page.contains("### error\n\n```ts\nerror: AggregateError | undefined;\n```"));
+        assert!(page.contains("### explicit\n\n```ts\nexplicit: ArgExplicitlyProvided<A>;\n```"));
+        assert!(page.contains("### values\n\n```ts\nvalues: ArgValues<A>;\n```"));
+    }
+
+    #[test]
+    fn typedoc_html_renders_return_type_literal_members() {
+        let mut entry = test_entry("resolveArgs", "function", "/repo/src/resolver.ts", "Resolve.");
+        entry.returns = Some(ApiReturnDoc {
+            type_annotation: "object".to_string(),
+            description: "Resolved args.".to_string(),
+            members: vec![return_property("values", "ArgValues<A>")],
+        });
+        let out = generate_markdown(&type_link_module(entry), &html_typedoc_options());
+        let page = out.get("combinators/functions/resolveArgs.md").unwrap();
+
+        assert!(page.contains("ox-api-entry__return-members"));
+        assert!(page.contains("<h5>values</h5>"));
+        assert!(page
+            .contains("values: <a href=\"../type-aliases/ArgValues.md\">ArgValues</a>&lt;A&gt;;"));
     }
 
     #[test]
@@ -5681,6 +5777,7 @@ mod tests {
                         returns: Some(ApiReturnDoc {
                             type_annotation: "Promise".to_string(),
                             description: "Run result.".to_string(),
+                            members: Vec::new(),
                         }),
                         optional: false,
                         readonly: false,

@@ -158,6 +158,7 @@ pub struct JsSourceDocItem {
     pub signature: Option<String>,
     pub params: Vec<JsSourceDocParam>,
     pub return_type: Option<String>,
+    pub return_members: Option<Vec<JsSourceDocItem>>,
     pub members: Option<Vec<JsSourceDocItem>>,
     pub tags: Vec<JsSourceDocTag>,
 }
@@ -179,6 +180,7 @@ pub struct JsDocParam {
 pub struct JsDocReturn {
     pub r#type: String,
     pub description: String,
+    pub members: Option<Vec<JsDocMember>>,
 }
 
 /// Type parameter documentation (`<T extends C = D>`) used by generated API docs.
@@ -909,6 +911,8 @@ fn map_param_doc(param: ParamDoc) -> JsSourceDocParam {
 }
 
 fn map_doc_item(item: DocItem) -> JsSourceDocItem {
+    let return_members = (!item.return_members.is_empty())
+        .then(|| item.return_members.into_iter().map(map_doc_item).collect());
     let members =
         (!item.children.is_empty()).then(|| item.children.into_iter().map(map_doc_item).collect());
 
@@ -924,6 +928,7 @@ fn map_doc_item(item: DocItem) -> JsSourceDocItem {
         signature: item.signature,
         params: item.params.into_iter().map(map_param_doc).collect(),
         return_type: item.return_type,
+        return_members,
         members,
         tags: item.tags.into_iter().map(map_doc_tag).collect(),
     }
@@ -940,7 +945,12 @@ fn map_normalized_param_doc(param: NormalizedParamDoc) -> JsDocParam {
 }
 
 fn map_normalized_return_doc(return_doc: NormalizedReturnDoc) -> JsDocReturn {
-    JsDocReturn { r#type: return_doc.type_annotation, description: return_doc.description }
+    JsDocReturn {
+        r#type: return_doc.type_annotation,
+        description: return_doc.description,
+        members: (!return_doc.members.is_empty())
+            .then(|| return_doc.members.into_iter().map(map_normalized_member).collect()),
+    }
 }
 
 fn map_normalized_member(member: NormalizedMember) -> JsDocMember {
@@ -1163,7 +1173,16 @@ fn convert_markdown_param(param: JsDocParam) -> ApiParamDoc {
 }
 
 fn convert_markdown_return(return_doc: JsDocReturn) -> ApiReturnDoc {
-    ApiReturnDoc { type_annotation: return_doc.r#type, description: return_doc.description }
+    ApiReturnDoc {
+        type_annotation: return_doc.r#type,
+        description: return_doc.description,
+        members: return_doc
+            .members
+            .unwrap_or_default()
+            .into_iter()
+            .map(convert_markdown_member)
+            .collect(),
+    }
 }
 
 fn convert_markdown_tag(tag: JsDocsMarkdownTag) -> ApiDocTag {
@@ -3467,6 +3486,7 @@ pub fn extract_translation_keys(
 mod tests {
     use ox_content_docs::{
         NormalizedDocEntry, NormalizedDocKind, NormalizedMember, NormalizedMemberKind,
+        NormalizedReturnDoc,
     };
     use serde_json::json;
     use std::collections::BTreeMap;
@@ -3558,6 +3578,54 @@ mod tests {
         assert_eq!(member.r#type.as_deref(), Some("string"));
         assert_eq!(member.optional, Some(true));
         assert_eq!(member.readonly, Some(true));
+    }
+
+    #[test]
+    fn normalized_doc_entry_maps_return_members_to_js_shape() {
+        let entry = NormalizedDocEntry {
+            name: "resolveArgs".to_string(),
+            kind: NormalizedDocKind::Function,
+            description: "Resolve.".to_string(),
+            params: vec![],
+            returns: Some(NormalizedReturnDoc {
+                type_annotation: "object".to_string(),
+                description: "Resolved args.".to_string(),
+                members: vec![NormalizedMember {
+                    name: "values".to_string(),
+                    kind: NormalizedMemberKind::Property,
+                    description: String::new(),
+                    signature: None,
+                    type_annotation: Some("ArgValues<A>".to_string()),
+                    params: vec![],
+                    returns: None,
+                    optional: false,
+                    readonly: false,
+                    r#static: false,
+                    private: false,
+                    tags: BTreeMap::new(),
+                    line: 3,
+                    end_line: 3,
+                }],
+            }),
+            examples: vec![],
+            tags: BTreeMap::new(),
+            private: false,
+            file: "resolver.ts".to_string(),
+            line: 1,
+            end_line: 8,
+            signature: Some("export function resolveArgs(): object".to_string()),
+            has_body: false,
+            members: vec![],
+            type_parameters: vec![],
+        };
+
+        let js_entry = map_normalized_doc_entry(entry);
+        let returns = js_entry.returns.as_ref().unwrap();
+        let member = &returns.members.as_ref().unwrap()[0];
+
+        assert_eq!(returns.r#type, "object");
+        assert_eq!(member.name, "values");
+        assert_eq!(member.r#type.as_deref(), Some("ArgValues<A>"));
     }
 
     #[test]
@@ -3829,6 +3897,7 @@ mod tests {
                     returns: Some(JsDocReturn {
                         r#type: "Command".to_string(),
                         description: "A {@link Command} result.".to_string(),
+                        members: None,
                     }),
                     examples: None,
                     tags: Some(vec![JsDocsMarkdownTag {
@@ -4209,6 +4278,85 @@ mod tests {
         assert!(page.contains("| `PluginExt` *extends* [`PluginExtension`](../type-aliases/PluginExtension.md)\\<`Extension`, [`DefaultGunshiParams`](../type-aliases/DefaultGunshiParams.md)\\> = [`PluginExtension`](../type-aliases/PluginExtension.md)\\<`Extension`, `ResolvedDepExtensions`\\> |  |"));
         assert!(!page.contains("\\<\n"));
         assert!(!page.contains("ResolvedDepExtensions`\n"));
+    }
+
+    #[test]
+    fn generate_docs_markdown_renders_return_members() {
+        let docs = vec![JsDocsMarkdownModule {
+            description: None,
+            file: "default".to_string(),
+            source_path: None,
+            examples: None,
+            tags: None,
+            entries: vec![
+                JsDocsMarkdownEntry {
+                    name: "resolveArgs".to_string(),
+                    kind: "function".to_string(),
+                    description: "Resolve.".to_string(),
+                    params: None,
+                    returns: Some(JsDocReturn {
+                        r#type: "object".to_string(),
+                        description: "Resolved args.".to_string(),
+                        members: Some(vec![JsDocMember {
+                            name: "values".to_string(),
+                            kind: "property".to_string(),
+                            description: String::new(),
+                            signature: None,
+                            r#type: Some("ArgValues<A>".to_string()),
+                            params: None,
+                            returns: None,
+                            optional: Some(false),
+                            readonly: Some(false),
+                            r#static: Some(false),
+                            private: Some(false),
+                            tags: None,
+                            line: 1,
+                            end_line: 1,
+                        }]),
+                    }),
+                    examples: None,
+                    tags: None,
+                    private: false,
+                    file: "/repo/src/resolver.ts".to_string(),
+                    line: 1,
+                    end_line: 1,
+                    signature: Some("export function resolveArgs(): object".to_string()),
+                    has_body: None,
+                    members: None,
+                    type_parameters: None,
+                },
+                JsDocsMarkdownEntry {
+                    name: "ArgValues".to_string(),
+                    kind: "type".to_string(),
+                    description: String::new(),
+                    params: None,
+                    returns: None,
+                    examples: None,
+                    tags: None,
+                    private: false,
+                    file: "/repo/src/types.ts".to_string(),
+                    line: 1,
+                    end_line: 1,
+                    signature: Some("export type ArgValues = unknown".to_string()),
+                    has_body: None,
+                    members: None,
+                    type_parameters: None,
+                },
+            ],
+        }];
+
+        let markdown = generate_docs_markdown(
+            docs,
+            Some(JsDocsMarkdownOptions {
+                path_strategy: Some("typedoc".to_string()),
+                render_style: Some("markdown".to_string()),
+                ..Default::default()
+            }),
+        );
+        let page = markdown.get("default/functions/resolveArgs.md").unwrap();
+
+        assert!(page.contains("## Returns\n\n`object` — Resolved args."));
+        assert!(page.contains("### values\n\n```ts\nvalues: ArgValues<A>;\n```"));
     }
 
     #[test]

@@ -502,6 +502,7 @@ fn to_api_return(return_doc: NormalizedReturnDoc) -> ApiReturnDoc {
     ApiReturnDoc {
         type_annotation: return_doc.type_annotation,
         description: return_doc.description,
+        members: return_doc.members.into_iter().map(to_api_member).collect(),
     }
 }
 
