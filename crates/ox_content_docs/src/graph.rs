@@ -18,7 +18,7 @@ use thiserror::Error;
 use crate::profile_span;
 use crate::string_builder::{join2, join4, StringBuilder};
 use crate::{
-    normalize_doc_items, ApiDocTag, DocExtractor, ExtractError, NormalizedDocEntry,
+    normalize_doc_items, ApiDocTag, DocExtractor, DocItem, ExtractError, NormalizedDocEntry,
     NormalizedDocKind,
 };
 
@@ -270,6 +270,21 @@ pub fn build_export_graph(
     entrypoints: &[EntryPointSpec],
     options: &GraphOptions,
 ) -> Result<ExportGraph, GraphError> {
+    Ok(build_export_graph_inner(entrypoints, options, None)?.0)
+}
+
+/// Shared implementation behind [`build_export_graph`] and
+/// [`extract_docs_from_entry_points`].
+///
+/// When `doc_extractor` is `Some`, doc items are extracted from each module's
+/// already-parsed AST during the walk and returned in the second tuple element,
+/// keyed by normalized path, so the extraction phase can reuse them instead of
+/// re-parsing every module.
+fn build_export_graph_inner(
+    entrypoints: &[EntryPointSpec],
+    options: &GraphOptions,
+    doc_extractor: Option<DocExtractor>,
+) -> Result<(ExportGraph, FxHashMap<PathBuf, Vec<DocItem>>), GraphError> {
     profile_span!("docs::build_export_graph");
     let root = graph_root(options);
     let resolver = ModuleResolver::new(&root, options);
@@ -278,6 +293,8 @@ pub fn build_export_graph(
         resolver,
         modules: FxHashMap::with_hasher(FxBuildHasher),
         active: FxHashSet::default(),
+        doc_extractor,
+        docs: FxHashMap::with_hasher(FxBuildHasher),
     };
 
     let mut graph_entrypoints = Vec::with_capacity(entrypoints.len());
@@ -288,7 +305,7 @@ pub fn build_export_graph(
         graph_entrypoints.push(EntrypointModule { name, source_path, exports });
     }
 
-    Ok(ExportGraph { entrypoints: graph_entrypoints, modules: builder.modules })
+    Ok((ExportGraph { entrypoints: graph_entrypoints, modules: builder.modules }, builder.docs))
 }
 
 /// Extracts normalized docs grouped by public entry points.
@@ -297,7 +314,16 @@ pub fn extract_docs_from_entry_points(
     options: &EntryPointDocsOptions,
 ) -> Result<Vec<EntrypointDocsModule>, GraphError> {
     profile_span!("docs::extract_entry_points");
-    let graph = build_export_graph(entrypoints, &options.graph)?;
+    // Build the export graph and extract docs from the same parse in one walk,
+    // so each reachable module is parsed once here instead of again below.
+    let (graph, mut walk_docs) = build_export_graph_inner(
+        entrypoints,
+        &options.graph,
+        Some(DocExtractor::for_entrypoint_exports(
+            options.include_private,
+            options.include_internal,
+        )),
+    )?;
     let extractor =
         DocExtractor::for_entrypoint_exports(options.include_private, options.include_internal);
     let all_visibility_extractor = DocExtractor::for_entrypoint_exports(true, true);
@@ -349,6 +375,7 @@ pub fn extract_docs_from_entry_points(
             let matched = {
                 let module_entries = normalized_entries_for_module(
                     &mut docs_cache,
+                    Some(&mut walk_docs),
                     &extractor,
                     module,
                     options.type_parameters,
@@ -388,6 +415,7 @@ pub fn extract_docs_from_entry_points(
 
             let all_module_entries = normalized_entries_for_module(
                 &mut all_docs_cache,
+                None,
                 &all_visibility_extractor,
                 module,
                 options.type_parameters,
@@ -431,6 +459,7 @@ pub fn extract_docs_from_entry_points(
             &entrypoint.name,
             normalized_entries_for_module(
                 &mut docs_cache,
+                Some(&mut walk_docs),
                 &extractor,
                 &entrypoint.source_path,
                 options.type_parameters,
@@ -506,6 +535,7 @@ fn is_dependency_source(module: &Path) -> bool {
 
 fn normalized_entries_for_module<'a>(
     docs_cache: &'a mut FxHashMap<PathBuf, Vec<NormalizedDocEntry>>,
+    walk_docs: Option<&mut FxHashMap<PathBuf, Vec<DocItem>>>,
     extractor: &DocExtractor,
     module: &PathBuf,
     type_parameters: bool,
@@ -516,9 +546,17 @@ fn normalized_entries_for_module<'a>(
     // graph edges. The explicit insert-before-get shape keeps the returned
     // borrow simple while avoiding repeated extractor work.
     if !docs_cache.contains_key(module) {
-        let items = extractor
-            .extract_file(module)
-            .map_err(|source| GraphError::Extract { path: module.clone(), source })?;
+        // Take the doc items the export-graph walk already extracted from this
+        // module's AST when available — `remove` so they move into the cache
+        // rather than being cloned (each module is normalized once). Only parse
+        // the file again on a miss (the all-visibility fallback, or a module the
+        // walk didn't visit).
+        let items = match walk_docs.and_then(|docs| docs.remove(&normalize_existing_path(module))) {
+            Some(items) => items,
+            None => extractor
+                .extract_file(module)
+                .map_err(|source| GraphError::Extract { path: module.clone(), source })?,
+        };
         docs_cache.insert(module.clone(), normalize_doc_items(items, type_parameters));
     }
 
@@ -727,6 +765,12 @@ struct GraphBuilder {
     resolver: ModuleResolver,
     modules: FxHashMap<PathBuf, ResolvedModule>,
     active: FxHashSet<PathBuf>,
+    /// When set, doc items are extracted from each module's already-parsed AST
+    /// during the walk and stashed in `docs`, so the doc-extraction phase reuses
+    /// them instead of parsing every module a second time. `None` for the
+    /// standalone `build_export_graph` (exports only).
+    doc_extractor: Option<DocExtractor>,
+    docs: FxHashMap<PathBuf, Vec<DocItem>>,
 }
 
 impl GraphBuilder {
@@ -774,6 +818,15 @@ impl GraphBuilder {
                 .collect::<Vec<_>>()
                 .join(", ");
             return Err(GraphError::Parse { path: path.to_path_buf(), message });
+        }
+
+        // Extract docs from this same AST when requested, so the doc-extraction
+        // phase reads them from the cache rather than parsing the file again.
+        // Disjoint field borrows: `&self.doc_extractor` then `&mut self.docs`.
+        if let Some(items) = self.doc_extractor.as_ref().map(|extractor| {
+            extractor.extract_items_from_program(source, &path.to_string_lossy(), &ret.program)
+        }) {
+            self.docs.insert(path.to_path_buf(), items);
         }
 
         let mut exports = Vec::new();
