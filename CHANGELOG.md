@@ -1,5 +1,15 @@
 # Changelog
 
+## [2.51.0] - 2026-06-04
+
+### Features
+
+- add sort, sortEntryPoints, and kindSortOrder organization options (#307)
+
+### Bug Fixes
+
+- use entry source path for typedoc module index source link (#308)
+
 ## [2.50.0] - 2026-06-03
 
 ### Features
