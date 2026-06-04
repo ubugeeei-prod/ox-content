@@ -63,6 +63,12 @@ pub struct ApiDocEntry {
     pub end_line: u32,
     /// Full source signature.
     pub signature: Option<String>,
+    /// Extended base class/interface names.
+    #[serde(default)]
+    pub extends: Vec<String>,
+    /// Implemented interface names.
+    #[serde(default)]
+    pub implements: Vec<String>,
     /// Whether a function declaration carries an implementation body. `false` for
     /// overload signatures and ambient (`declare` / `.d.ts`) declarations. The
     /// TypeDoc path renderer uses this to hide the implementation signature when a
@@ -110,6 +116,9 @@ pub struct ApiDocMember {
     /// Custom JSDoc tags, kept in source insertion order.
     #[serde(default)]
     pub tags: Vec<ApiDocTag>,
+    /// Implemented interface members this member satisfies.
+    #[serde(default)]
+    pub implementation_of: Vec<String>,
     /// Declaration start line.
     pub line: u32,
     /// Declaration end line.

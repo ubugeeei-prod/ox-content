@@ -65,6 +65,12 @@ pub struct DocItem {
     pub exported: bool,
     /// Type signature (if applicable).
     pub signature: Option<String>,
+    /// Extended base class/interface names.
+    #[serde(default)]
+    pub extends: Vec<String>,
+    /// Implemented interface names.
+    #[serde(default)]
+    pub implements: Vec<String>,
     /// Whether a function/method declaration carries an implementation body.
     /// `false` for overload signatures and ambient (`declare` / `.d.ts`)
     /// declarations, and for non-callable items. Used to hide the implementation
@@ -674,6 +680,8 @@ impl<'a> DocVisitor<'a> {
             jsdoc: Some(raw),
             exported: true,
             signature: None,
+            extends: Vec::new(),
+            implements: Vec::new(),
             has_body: false,
             optional: false,
             readonly: false,
@@ -1033,15 +1041,34 @@ impl<'a> DocVisitor<'a> {
         sig.push_str(name);
         sig.push_str(&self.format_type_parameter_declaration(class.type_parameters.as_ref()));
 
-        if let Some(super_class) = &class.super_class {
+        let extends = self.extract_class_extends(class);
+        if !extends.is_empty() {
             sig.push_str(" extends ");
-            sig.push_str(&self.slice(super_class.span().start, super_class.span().end));
-            if let Some(type_params) = &class.super_type_arguments {
-                sig.push_str(&self.format_type_parameter_declaration(Some(type_params)));
-            }
+            sig.push_str(&extends.join(", "));
         }
 
-        let implements = class
+        let implements = self.extract_class_implements(class);
+        if !implements.is_empty() {
+            sig.push_str(" implements ");
+            sig.push_str(&implements.join(", "));
+        }
+
+        sig
+    }
+
+    fn extract_class_extends(&self, class: &Class<'a>) -> Vec<String> {
+        let Some(super_class) = &class.super_class else {
+            return Vec::new();
+        };
+        let mut value = self.slice(super_class.span().start, super_class.span().end);
+        if let Some(type_params) = &class.super_type_arguments {
+            value.push_str(&self.format_type_parameter_declaration(Some(type_params)));
+        }
+        Vec::from([value])
+    }
+
+    fn extract_class_implements(&self, class: &Class<'a>) -> Vec<String> {
+        class
             .implements
             .iter()
             .map(|item| {
@@ -1051,15 +1078,7 @@ impl<'a> DocVisitor<'a> {
                 }
                 value
             })
-            .collect::<Vec<_>>()
-            .join(", ");
-
-        if !implements.is_empty() {
-            sig.push_str(" implements ");
-            sig.push_str(&implements);
-        }
-
-        sig
+            .collect()
     }
 
     fn format_interface_signature(
@@ -1078,7 +1097,21 @@ impl<'a> DocVisitor<'a> {
         sig.push_str(interface.id.name.as_str());
         sig.push_str(&self.format_type_parameter_declaration(interface.type_parameters.as_ref()));
 
-        let extends = interface
+        let extends = self.extract_interface_extends(interface);
+
+        if !extends.is_empty() {
+            sig.push_str(" extends ");
+            sig.push_str(&extends.join(", "));
+        }
+
+        sig
+    }
+
+    fn extract_interface_extends(
+        &self,
+        interface: &oxc_ast::ast::TSInterfaceDeclaration<'a>,
+    ) -> Vec<String> {
+        interface
             .extends
             .iter()
             .map(|item| {
@@ -1089,15 +1122,7 @@ impl<'a> DocVisitor<'a> {
                 }
                 value
             })
-            .collect::<Vec<_>>()
-            .join(", ");
-
-        if !extends.is_empty() {
-            sig.push_str(" extends ");
-            sig.push_str(&extends);
-        }
-
-        sig
+            .collect()
     }
 
     fn format_type_alias_signature(
@@ -1556,6 +1581,8 @@ impl<'a> DocVisitor<'a> {
                 func.id.as_ref()?.name.as_str(),
                 exported,
             )),
+            extends: Vec::new(),
+            implements: Vec::new(),
             has_body: func.body.is_some(),
             optional: false,
             readonly: false,
@@ -1632,6 +1659,8 @@ impl<'a> DocVisitor<'a> {
                             &method.value.params,
                             method.value.return_type.as_ref(),
                         )),
+                        extends: Vec::new(),
+                        implements: Vec::new(),
                         has_body: false,
                         optional: method.optional,
                         readonly: false,
@@ -1677,6 +1706,8 @@ impl<'a> DocVisitor<'a> {
                         jsdoc: prop_jsdoc,
                         exported: false,
                         signature: type_annotation,
+                        extends: Vec::new(),
+                        implements: Vec::new(),
                         has_body: false,
                         optional: prop.optional,
                         readonly: prop.readonly,
@@ -1704,6 +1735,8 @@ impl<'a> DocVisitor<'a> {
             jsdoc,
             exported,
             signature: Some(self.format_class_signature(class, name, exported)),
+            extends: self.extract_class_extends(class),
+            implements: self.extract_class_implements(class),
             has_body: false,
             optional: false,
             readonly: false,
@@ -1755,6 +1788,8 @@ impl<'a> DocVisitor<'a> {
                         jsdoc: prop_jsdoc,
                         exported: false,
                         signature: type_annotation,
+                        extends: Vec::new(),
+                        implements: Vec::new(),
                         has_body: false,
                         optional: prop.optional,
                         readonly: prop.readonly,
@@ -1809,6 +1844,8 @@ impl<'a> DocVisitor<'a> {
                             &method.params,
                             method.return_type.as_ref(),
                         )),
+                        extends: Vec::new(),
+                        implements: Vec::new(),
                         has_body: false,
                         optional: method.optional,
                         readonly: false,
@@ -1955,6 +1992,8 @@ impl<'a> DocVisitor<'a> {
                             &arrow.params,
                             arrow.return_type.as_ref(),
                         )),
+                        extends: Vec::new(),
+                        implements: Vec::new(),
                         has_body: false,
                         optional: false,
                         readonly: false,
@@ -1987,6 +2026,8 @@ impl<'a> DocVisitor<'a> {
                             &func_expr.params,
                             func_expr.return_type.as_ref(),
                         )),
+                        extends: Vec::new(),
+                        implements: Vec::new(),
                         has_body: false,
                         optional: false,
                         readonly: false,
@@ -2017,6 +2058,8 @@ impl<'a> DocVisitor<'a> {
                         declarator.type_annotation.as_deref(),
                         Some(other),
                     )),
+                    extends: Vec::new(),
+                    implements: Vec::new(),
                     has_body: false,
                     optional: false,
                     readonly: false,
@@ -2061,6 +2104,8 @@ impl<'a> DocVisitor<'a> {
             jsdoc,
             exported,
             signature: Some(self.format_type_alias_signature(type_alias, exported)),
+            extends: Vec::new(),
+            implements: Vec::new(),
             has_body: false,
             optional: false,
             readonly: false,
@@ -2097,6 +2142,8 @@ impl<'a> DocVisitor<'a> {
             jsdoc,
             exported,
             signature: Some(self.format_interface_signature(interface, exported)),
+            extends: self.extract_interface_extends(interface),
+            implements: Vec::new(),
             has_body: false,
             optional: false,
             readonly: false,
@@ -2138,6 +2185,8 @@ impl<'a> DocVisitor<'a> {
             jsdoc,
             exported,
             signature: None,
+            extends: Vec::new(),
+            implements: Vec::new(),
             has_body: false,
             optional: false,
             readonly: false,
@@ -2184,6 +2233,8 @@ impl<'a> DocVisitor<'a> {
                 .initializer
                 .as_ref()
                 .map(|initializer| self.slice(initializer.span().start, initializer.span().end)),
+            extends: Vec::new(),
+            implements: Vec::new(),
             has_body: false,
             optional: false,
             readonly: false,
@@ -2311,6 +2362,56 @@ export interface User {
         assert_eq!(items[0].name, "User");
         assert_eq!(items[0].kind, DocItemKind::Interface);
         assert_eq!(items[0].children.len(), 2);
+    }
+
+    #[test]
+    fn extracts_interface_extends_and_class_implements() {
+        let source = r"
+/**
+ * Base runtime adapter.
+ */
+export interface BaseAdapter {}
+
+/**
+ * Runtime adapter.
+ */
+export interface TranslationAdapter extends BaseAdapter {
+    /**
+     * Gets a locale resource.
+     * @param locale - Locale name.
+     * @returns The locale resource.
+     */
+    getResource(locale: string): Record<string, string> | undefined;
+}
+
+/**
+ * Default runtime adapter.
+ */
+export class DefaultTranslation implements TranslationAdapter {
+    /**
+     * Gets a locale resource.
+     * @param locale - Locale name.
+     * @returns The locale resource.
+     */
+    getResource(locale: string): Record<string, string> | undefined {
+        return undefined;
+    }
+}
+";
+
+        let extractor = DocExtractor::new();
+        let items = extractor.extract_source(source, "adapter.ts", SourceType::ts()).unwrap();
+        let adapter = items.iter().find(|item| item.name == "TranslationAdapter").unwrap();
+        let implementation = items.iter().find(|item| item.name == "DefaultTranslation").unwrap();
+
+        assert_eq!(adapter.kind, DocItemKind::Interface);
+        assert_eq!(adapter.extends, vec!["BaseAdapter"]);
+        assert_eq!(implementation.kind, DocItemKind::Class);
+        assert_eq!(implementation.implements, vec!["TranslationAdapter"]);
+        assert_eq!(
+            implementation.signature.as_deref(),
+            Some("export class DefaultTranslation implements TranslationAdapter")
+        );
     }
 
     #[test]

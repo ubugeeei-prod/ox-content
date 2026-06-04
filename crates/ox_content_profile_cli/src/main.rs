@@ -463,6 +463,8 @@ fn to_api_entry(entry: NormalizedDocEntry) -> ApiDocEntry {
         line: entry.line,
         end_line: entry.end_line,
         signature: entry.signature,
+        extends: entry.extends,
+        implements: entry.implements,
         has_body: entry.has_body,
         members: entry.members.into_iter().map(to_api_member).collect(),
         type_parameters: entry.type_parameters.into_iter().map(to_api_type_param).collect(),
@@ -483,6 +485,7 @@ fn to_api_member(member: NormalizedMember) -> ApiDocMember {
         r#static: member.r#static,
         private: member.private,
         tags: member.tags.into_iter().map(|(tag, value)| ApiDocTag { tag, value }).collect(),
+        implementation_of: Vec::new(),
         line: member.line,
         end_line: member.end_line,
     }

@@ -246,6 +246,12 @@ pub struct NormalizedDocEntry {
     pub end_line: u32,
     /// Signature text.
     pub signature: Option<String>,
+    /// Extended base class/interface names.
+    #[serde(default)]
+    pub extends: Vec<String>,
+    /// Implemented interface names.
+    #[serde(default)]
+    pub implements: Vec<String>,
     /// Whether a function declaration carries an implementation body (`false` for
     /// overload signatures and ambient declarations). Used to hide the
     /// implementation signature when grouping overloads on TypeDoc symbol pages.
@@ -300,6 +306,8 @@ pub fn normalize_doc_item(item: DocItem, type_parameters: bool) -> Option<Normal
         line: item.line,
         end_line: item.end_line,
         signature: item.signature,
+        extends: item.extends,
+        implements: item.implements,
         has_body: item.has_body,
         members,
         type_parameters,
@@ -730,6 +738,36 @@ export interface Command {
                 members: Vec::new()
             })
         );
+    }
+
+    #[test]
+    fn preserves_heritage_fields_in_normalized_entries() {
+        let source = r"
+/**
+ * Base adapter.
+ */
+export interface BaseAdapter {}
+
+/**
+ * Runtime adapter.
+ */
+export interface TranslationAdapter extends BaseAdapter {}
+
+/**
+ * Default runtime adapter.
+ */
+export class DefaultTranslation implements TranslationAdapter {}
+";
+
+        let extractor = DocExtractor::new();
+        let items = extractor.extract_source(source, "adapter.ts", SourceType::ts()).unwrap();
+        let entries = normalize_doc_items(items, false);
+        let adapter = entries.iter().find(|entry| entry.name == "TranslationAdapter").unwrap();
+        let implementation =
+            entries.iter().find(|entry| entry.name == "DefaultTranslation").unwrap();
+
+        assert_eq!(adapter.extends, vec!["BaseAdapter"]);
+        assert_eq!(implementation.implements, vec!["TranslationAdapter"]);
     }
 
     #[test]
