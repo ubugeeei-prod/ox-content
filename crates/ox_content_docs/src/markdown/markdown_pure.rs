@@ -348,20 +348,18 @@ fn push_parameters(
         }
         _ => {
             for param in params {
-                let mut line = String::new();
-                line.push_str("- ");
-                line.push_str(&code_span(&param.name));
+                out.push_str("- ");
+                out.push_str(&code_span(&param.name));
                 if !param.type_annotation.is_empty() {
-                    line.push_str(" (");
-                    line.push_str(&linked_type_span(&param.type_annotation, context));
-                    line.push(')');
+                    out.push_str(" (");
+                    out.push_str(&linked_type_span(&param.type_annotation, context));
+                    out.push(')');
                 }
                 let description = param_description(param, context);
                 if !description.is_empty() {
-                    line.push_str(" - ");
-                    line.push_str(&description);
+                    out.push_str(" - ");
+                    out.push_str(&description);
                 }
-                out.push_str(&line);
                 out.push('\n');
             }
         }
@@ -603,20 +601,18 @@ fn render_member_parameter_sections_pure(
             }
             _ => {
                 for param in &member.params {
-                    let mut line = String::new();
-                    line.push_str("- ");
-                    line.push_str(&code_span(&param.name));
+                    out.push_str("- ");
+                    out.push_str(&code_span(&param.name));
                     if !param.type_annotation.is_empty() {
-                        line.push_str(" (");
-                        line.push_str(&linked_type_span(&param.type_annotation, context));
-                        line.push(')');
+                        out.push_str(" (");
+                        out.push_str(&linked_type_span(&param.type_annotation, context));
+                        out.push(')');
                     }
                     let description = param_description(param, context);
                     if !description.is_empty() {
-                        line.push_str(" - ");
-                        line.push_str(&description);
+                        out.push_str(" - ");
+                        out.push_str(&description);
                     }
-                    out.push_str(&line);
                     out.push('\n');
                 }
             }
@@ -646,23 +642,23 @@ fn render_member_group_pure(
         == MarkdownDisplayFormat::List
     {
         for member in members {
-            let mut line = String::new();
-            line.push_str("- ");
-            line.push_str(&member_name_span(member));
-            line.push_str(" `");
-            line.push_str(&member.kind);
-            line.push('`');
+            // Append straight into `out`; the row is always emitted, so an
+            // intermediate per-member `String` would just be an extra alloc.
+            out.push_str("- ");
+            out.push_str(&member_name_span(member));
+            out.push_str(" `");
+            out.push_str(&member.kind);
+            out.push('`');
             let member_type = member_type(member);
             if !member_type.is_empty() {
-                line.push(' ');
-                line.push_str(&linked_type_span(member_type, context.link_context));
+                out.push(' ');
+                out.push_str(&linked_type_span(member_type, context.link_context));
             }
             let description = member_description(member, context.link_context);
             if !description.is_empty() {
-                line.push_str(" - ");
-                line.push_str(&description);
+                out.push_str(" - ");
+                out.push_str(&description);
             }
-            out.push_str(&line);
             out.push('\n');
         }
     } else {
