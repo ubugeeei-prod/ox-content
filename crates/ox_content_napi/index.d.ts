@@ -300,6 +300,7 @@ export interface JsDocParam {
 export interface JsDocReturn {
   type: string
   description: string
+  members?: Array<JsDocMember>
 }
 
 /** Diagnostic for an entry point export during docs extraction. */
@@ -915,6 +916,7 @@ export interface JsSourceDocItem {
   signature?: string
   params: Array<JsSourceDocParam>
   returnType?: string
+  returnMembers?: Array<JsSourceDocItem>
   members?: Array<JsSourceDocItem>
   tags: Array<JsSourceDocTag>
 }

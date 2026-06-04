@@ -135,6 +135,7 @@ fn member(module: usize, entry: usize, index: usize) -> ApiDocMember {
         returns: (kind != "property").then(|| ApiReturnDoc {
             type_annotation: "boolean".to_string(),
             description: "Whether the member accepted the value.".to_string(),
+            members: Vec::new(),
         }),
         optional: index % 2 == 0,
         readonly: index % 3 == 0,
@@ -191,6 +192,7 @@ fn entry(module: usize, index: usize) -> ApiDocEntry {
                 type_annotation
             },
             description: "A processed result object.".to_string(),
+            members: Vec::new(),
         }),
         examples: Vec::from([{
             let mut example = String::with_capacity(name.len() + 80);

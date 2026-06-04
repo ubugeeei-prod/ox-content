@@ -84,6 +84,9 @@ pub struct DocItem {
     pub params: Vec<ParamDoc>,
     /// Return type (for functions/methods).
     pub return_type: Option<String>,
+    /// Members of an inline object literal return type.
+    #[serde(default)]
+    pub return_members: Vec<DocItem>,
     /// Child items (for classes, modules, etc.).
     pub children: Vec<DocItem>,
     /// JSDoc tags.
@@ -677,6 +680,7 @@ impl<'a> DocVisitor<'a> {
             r#static: false,
             params: Vec::new(),
             return_type: None,
+            return_members: Vec::new(),
             children: Vec::new(),
             tags,
             type_parameters: Vec::new(),
@@ -1500,9 +1504,29 @@ impl<'a> DocVisitor<'a> {
         })
     }
 
-    /// Extract return type from tags.
-    fn extract_return_type(&self, func: &Function, tags: &[DocTag]) -> Option<String> {
-        self.extract_return_type_from_annotation(func.return_type.as_ref(), tags)
+    fn extract_return_from_annotation(
+        &self,
+        return_type: Option<&oxc_allocator::Box<'a, oxc_ast::ast::TSTypeAnnotation<'a>>>,
+        tags: &[DocTag],
+    ) -> (Option<String>, Vec<DocItem>) {
+        if let Some(return_type) = return_type {
+            if let TSType::TSTypeLiteral(type_literal) = &return_type.type_annotation {
+                let members = self.extract_ts_signature_members(&type_literal.members);
+                let type_annotation = if members.is_empty() {
+                    self.format_ts_type(&return_type.type_annotation)
+                } else {
+                    "object".to_string()
+                };
+                return (Some(type_annotation), members);
+            }
+            return (Some(self.format_ts_type(&return_type.type_annotation)), Vec::new());
+        }
+
+        (self.extract_return_type_from_annotation(None, tags), Vec::new())
+    }
+
+    fn extract_return(&self, func: &Function, tags: &[DocTag]) -> (Option<String>, Vec<DocItem>) {
+        self.extract_return_from_annotation(func.return_type.as_ref(), tags)
     }
 
     /// Create a DocItem from a function.
@@ -1515,6 +1539,7 @@ impl<'a> DocVisitor<'a> {
         let name = func.id.as_ref()?.name.to_string();
         let (jsdoc, doc, tags) = self.extract_declaration_docs(attached_to)?;
         let (line, end_line) = self.span_lines(attached_to, func.span.end);
+        let (return_type, return_members) = self.extract_return(func, &tags);
 
         Some(DocItem {
             name,
@@ -1536,7 +1561,8 @@ impl<'a> DocVisitor<'a> {
             readonly: false,
             r#static: false,
             params: self.extract_params(func, &tags),
-            return_type: self.extract_return_type(func, &tags),
+            return_type,
+            return_members,
             children: Vec::new(),
             tags,
             type_parameters: self.extract_type_parameters(func.type_parameters.as_ref()),
@@ -1582,6 +1608,8 @@ impl<'a> DocVisitor<'a> {
                     }
                     let (method_line, method_end_line) =
                         self.span_lines(method.span.start, method.span.end);
+                    let (return_type, return_members) =
+                        self.extract_return(&method.value, &method_tags);
 
                     children.push(DocItem {
                         name: method_name.clone(),
@@ -1609,7 +1637,8 @@ impl<'a> DocVisitor<'a> {
                         readonly: false,
                         r#static: method.r#static,
                         params: self.extract_params(&method.value, &method_tags),
-                        return_type: self.extract_return_type(&method.value, &method_tags),
+                        return_type,
+                        return_members,
                         children: Vec::new(),
                         tags: method_tags,
                         type_parameters: Vec::new(),
@@ -1654,6 +1683,7 @@ impl<'a> DocVisitor<'a> {
                         r#static: prop.r#static,
                         params: Vec::new(),
                         return_type: None,
+                        return_members: Vec::new(),
                         children: Vec::new(),
                         tags: prop_tags,
                         type_parameters: Vec::new(),
@@ -1680,6 +1710,7 @@ impl<'a> DocVisitor<'a> {
             r#static: false,
             params: Vec::new(),
             return_type: None,
+            return_members: Vec::new(),
             children,
             tags,
             type_parameters: self.extract_type_parameters(class.type_parameters.as_ref()),
@@ -1730,6 +1761,7 @@ impl<'a> DocVisitor<'a> {
                         r#static: false,
                         params: Vec::new(),
                         return_type: None,
+                        return_members: Vec::new(),
                         children: Vec::new(),
                         tags: prop_tags,
                         type_parameters: Vec::new(),
@@ -1751,6 +1783,8 @@ impl<'a> DocVisitor<'a> {
                     }
                     let (method_line, method_end_line) =
                         self.span_lines(method.span.start, method.span.end);
+                    let (return_type, return_members) = self
+                        .extract_return_from_annotation(method.return_type.as_ref(), &method_tags);
 
                     let kind = match method.kind {
                         oxc_ast::ast::TSMethodSignatureKind::Method => DocItemKind::Method,
@@ -1780,10 +1814,8 @@ impl<'a> DocVisitor<'a> {
                         readonly: false,
                         r#static: false,
                         params: self.extract_params_from_formals(&method.params, &method_tags),
-                        return_type: self.extract_return_type_from_annotation(
-                            method.return_type.as_ref(),
-                            &method_tags,
-                        ),
+                        return_type,
+                        return_members,
                         children: Vec::new(),
                         tags: method_tags,
                         type_parameters: Vec::new(),
@@ -1903,62 +1935,71 @@ impl<'a> DocVisitor<'a> {
 
             let name = id.name.to_string();
             let item = match initializer {
-                Expression::ArrowFunctionExpression(arrow) => DocItem {
-                    name: name.clone(),
-                    kind: DocItemKind::Function,
-                    doc: doc.clone(),
-                    source_path: self.file_path.to_string(),
-                    line,
-                    end_line,
-                    column: self.column_number(attached_to),
-                    jsdoc: jsdoc.clone(),
-                    exported,
-                    signature: Some(self.format_assigned_function_signature(
-                        &name,
-                        arrow.r#async,
-                        arrow.type_parameters.as_ref(),
-                        &arrow.params,
-                        arrow.return_type.as_ref(),
-                    )),
-                    has_body: false,
-                    optional: false,
-                    readonly: false,
-                    r#static: false,
-                    params: self.extract_params_from_formals(&arrow.params, &tags),
-                    return_type: self
-                        .extract_return_type_from_annotation(arrow.return_type.as_ref(), &tags),
-                    children: Vec::new(),
-                    tags: tags.clone(),
-                    type_parameters: self.extract_type_parameters(arrow.type_parameters.as_ref()),
-                },
-                Expression::FunctionExpression(func_expr) => DocItem {
-                    name: name.clone(),
-                    kind: DocItemKind::Function,
-                    doc: doc.clone(),
-                    source_path: self.file_path.to_string(),
-                    line,
-                    end_line,
-                    column: self.column_number(attached_to),
-                    jsdoc: jsdoc.clone(),
-                    exported,
-                    signature: Some(self.format_assigned_function_signature(
-                        &name,
-                        func_expr.r#async,
-                        func_expr.type_parameters.as_ref(),
-                        &func_expr.params,
-                        func_expr.return_type.as_ref(),
-                    )),
-                    has_body: false,
-                    optional: false,
-                    readonly: false,
-                    r#static: false,
-                    params: self.extract_params(func_expr, &tags),
-                    return_type: self.extract_return_type(func_expr, &tags),
-                    children: Vec::new(),
-                    tags: tags.clone(),
-                    type_parameters: self
-                        .extract_type_parameters(func_expr.type_parameters.as_ref()),
-                },
+                Expression::ArrowFunctionExpression(arrow) => {
+                    let (return_type, return_members) =
+                        self.extract_return_from_annotation(arrow.return_type.as_ref(), &tags);
+                    DocItem {
+                        name: name.clone(),
+                        kind: DocItemKind::Function,
+                        doc: doc.clone(),
+                        source_path: self.file_path.to_string(),
+                        line,
+                        end_line,
+                        column: self.column_number(attached_to),
+                        jsdoc: jsdoc.clone(),
+                        exported,
+                        signature: Some(self.format_assigned_function_signature(
+                            &name,
+                            arrow.r#async,
+                            arrow.type_parameters.as_ref(),
+                            &arrow.params,
+                            arrow.return_type.as_ref(),
+                        )),
+                        has_body: false,
+                        optional: false,
+                        readonly: false,
+                        r#static: false,
+                        params: self.extract_params_from_formals(&arrow.params, &tags),
+                        return_type,
+                        return_members,
+                        children: Vec::new(),
+                        tags: tags.clone(),
+                        type_parameters: self
+                            .extract_type_parameters(arrow.type_parameters.as_ref()),
+                    }
+                }
+                Expression::FunctionExpression(func_expr) => {
+                    let (return_type, return_members) = self.extract_return(func_expr, &tags);
+                    DocItem {
+                        name: name.clone(),
+                        kind: DocItemKind::Function,
+                        doc: doc.clone(),
+                        source_path: self.file_path.to_string(),
+                        line,
+                        end_line,
+                        column: self.column_number(attached_to),
+                        jsdoc: jsdoc.clone(),
+                        exported,
+                        signature: Some(self.format_assigned_function_signature(
+                            &name,
+                            func_expr.r#async,
+                            func_expr.type_parameters.as_ref(),
+                            &func_expr.params,
+                            func_expr.return_type.as_ref(),
+                        )),
+                        has_body: false,
+                        optional: false,
+                        readonly: false,
+                        r#static: false,
+                        params: self.extract_params(func_expr, &tags),
+                        return_type,
+                        return_members,
+                        children: Vec::new(),
+                        tags: tags.clone(),
+                        type_parameters: self
+                            .extract_type_parameters(func_expr.type_parameters.as_ref()),
+                    }
+                }
                 other => DocItem {
                     name: name.clone(),
                     kind: DocItemKind::Variable,
@@ -1982,6 +2023,7 @@ impl<'a> DocVisitor<'a> {
                     r#static: false,
                     params: Vec::new(),
                     return_type: None,
+                    return_members: Vec::new(),
                     children: Vec::new(),
                     tags: tags.clone(),
                     type_parameters: Vec::new(),
@@ -2025,6 +2067,7 @@ impl<'a> DocVisitor<'a> {
             r#static: false,
             params: Vec::new(),
             return_type: None,
+            return_members: Vec::new(),
             children,
             tags,
             type_parameters: self.extract_type_parameters(type_alias.type_parameters.as_ref()),
@@ -2060,6 +2103,7 @@ impl<'a> DocVisitor<'a> {
             r#static: false,
             params: Vec::new(),
             return_type: None,
+            return_members: Vec::new(),
             children,
             tags,
             type_parameters: self.extract_type_parameters(interface.type_parameters.as_ref()),
@@ -2100,6 +2144,7 @@ impl<'a> DocVisitor<'a> {
             r#static: false,
             params: Vec::new(),
             return_type: None,
+            return_members: Vec::new(),
             children,
             tags,
             type_parameters: Vec::new(),
@@ -2145,6 +2190,7 @@ impl<'a> DocVisitor<'a> {
             r#static: false,
             params: Vec::new(),
             return_type: None,
+            return_members: Vec::new(),
             children: Vec::new(),
             tags: member_tags,
             type_parameters: Vec::new(),
@@ -2209,6 +2255,39 @@ export function add(a: number, b: number): number {
         assert!(items[0].exported);
         assert!(items[0].doc.as_ref().unwrap().contains("Adds two numbers"));
         assert_eq!(items[0].params.len(), 2);
+    }
+
+    #[test]
+    fn function_return_type_literal_emits_return_members() {
+        let source = r"
+/**
+ * Resolve arguments.
+ * @returns Resolved args.
+ */
+export function resolveArgs<A extends Args>(): {
+    values: ArgValues<A>;
+    positionals: string[];
+    error: AggregateError | undefined;
+} {
+    return {} as any;
+}
+";
+
+        let extractor = DocExtractor::new();
+        let items = extractor.extract_source(source, "resolver.ts", SourceType::ts()).unwrap();
+
+        assert_eq!(items.len(), 1);
+        assert_eq!(items[0].return_type.as_deref(), Some("object"));
+        assert_eq!(
+            items[0].return_members.iter().map(|member| member.name.as_str()).collect::<Vec<_>>(),
+            ["values", "positionals", "error"]
+        );
+        assert_eq!(items[0].return_members[0].signature.as_deref(), Some("ArgValues<A>"));
+        assert_eq!(items[0].return_members[1].signature.as_deref(), Some("string[]"));
+        assert_eq!(
+            items[0].return_members[2].signature.as_deref(),
+            Some("AggregateError | undefined")
+        );
     }
 
     #[test]

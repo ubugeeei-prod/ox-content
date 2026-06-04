@@ -162,6 +162,9 @@ pub struct NormalizedReturnDoc {
     pub type_annotation: String,
     /// Return value description.
     pub description: String,
+    /// Members of an inline object literal return type.
+    #[serde(default)]
+    pub members: Vec<NormalizedMember>,
 }
 
 /// Normalized type parameter documentation (`<T extends C = D>`).
@@ -276,7 +279,7 @@ pub fn normalize_doc_item(item: DocItem, type_parameters: bool) -> Option<Normal
 
     let mut metadata = normalize_doc_metadata(&item.tags, type_parameters);
     merge_extracted_params(&mut metadata.params, item.params);
-    merge_extracted_return(&mut metadata.returns, item.return_type);
+    merge_extracted_return(&mut metadata.returns, item.return_type, item.return_members);
     let members = item.children.into_iter().filter_map(normalize_member).collect();
     let type_parameters = if type_parameters {
         build_type_parameters(item.type_parameters, &metadata.type_param_descriptions)
@@ -308,7 +311,7 @@ fn normalize_member(item: DocItem) -> Option<NormalizedMember> {
     // Member-level type parameters are out of scope; keep generic-tag behavior.
     let mut metadata = normalize_doc_metadata(&item.tags, false);
     merge_extracted_params(&mut metadata.params, item.params);
-    merge_extracted_return(&mut metadata.returns, item.return_type);
+    merge_extracted_return(&mut metadata.returns, item.return_type, item.return_members);
 
     let (signature, type_annotation) = match kind {
         NormalizedMemberKind::Property | NormalizedMemberKind::EnumMember => (None, item.signature),
@@ -475,16 +478,31 @@ fn merge_extracted_params(params: &mut Vec<NormalizedParamDoc>, extracted_params
     }
 }
 
-fn merge_extracted_return(returns: &mut Option<NormalizedReturnDoc>, return_type: Option<String>) {
-    if let Some(return_type) = return_type {
-        match returns {
-            Some(current) => current.type_annotation = return_type,
-            None => {
-                *returns = Some(NormalizedReturnDoc {
-                    type_annotation: return_type,
-                    description: String::new(),
-                });
+fn merge_extracted_return(
+    returns: &mut Option<NormalizedReturnDoc>,
+    return_type: Option<String>,
+    return_members: Vec<DocItem>,
+) {
+    let members = return_members.into_iter().filter_map(normalize_member).collect::<Vec<_>>();
+    if return_type.is_none() && members.is_empty() {
+        return;
+    }
+
+    match returns {
+        Some(current) => {
+            if let Some(return_type) = return_type {
+                current.type_annotation = return_type;
             }
+            if !members.is_empty() {
+                current.members = members;
+            }
+        }
+        None => {
+            *returns = Some(NormalizedReturnDoc {
+                type_annotation: return_type.unwrap_or_else(|| UNKNOWN_TYPE.to_string()),
+                description: String::new(),
+                members,
+            });
         }
     }
 }
@@ -529,6 +547,9 @@ fn merge_returns(returns: &mut Option<NormalizedReturnDoc>, next: NormalizedRetu
     if existing.description.is_empty() {
         existing.description = next.description;
     }
+    if existing.members.is_empty() {
+        existing.members = next.members;
+    }
 }
 
 fn normalized_param_from_tag(tag: &DocTag) -> Option<NormalizedParamDoc> {
@@ -546,6 +567,7 @@ fn normalized_return_from_tag(tag: &DocTag) -> NormalizedReturnDoc {
     NormalizedReturnDoc {
         type_annotation: tag.type_annotation.clone().unwrap_or_else(|| UNKNOWN_TYPE.to_string()),
         description: tag.description.clone().unwrap_or_default(),
+        members: Vec::new(),
     }
 }
 
@@ -595,7 +617,8 @@ export function label(value, maxLength = 20) {
             entry.returns,
             Some(NormalizedReturnDoc {
                 type_annotation: "string".to_string(),
-                description: "Formatted label".to_string()
+                description: "Formatted label".to_string(),
+                members: Vec::new()
             })
         );
         assert_eq!(entry.examples, vec!["label(\"hello\", 3)"]);
@@ -703,8 +726,43 @@ export interface Command {
             member.returns,
             Some(NormalizedReturnDoc {
                 type_annotation: "Promise<void>".to_string(),
-                description: "Run result".to_string()
+                description: "Run result".to_string(),
+                members: Vec::new()
             })
+        );
+    }
+
+    #[test]
+    fn function_return_type_literal_members_are_normalized() {
+        let source = r"
+/**
+ * Resolve arguments.
+ * @returns Resolved args.
+ */
+export function resolveArgs<A extends Args>(): {
+    values: ArgValues<A>;
+    positionals: string[];
+    error: AggregateError | undefined;
+} {
+    return {} as any;
+}
+";
+
+        let extractor = DocExtractor::new();
+        let items = extractor.extract_source(source, "resolver.ts", SourceType::ts()).unwrap();
+        let entries = normalize_doc_items(items, false);
+        let returns = entries[0].returns.as_ref().unwrap();
+
+        assert_eq!(returns.type_annotation, "object");
+        assert_eq!(returns.description, "Resolved args.");
+        assert_eq!(
+            returns.members.iter().map(|member| member.name.as_str()).collect::<Vec<_>>(),
+            ["values", "positionals", "error"]
+        );
+        assert_eq!(returns.members[0].type_annotation.as_deref(), Some("ArgValues<A>"));
+        assert_eq!(
+            returns.members[2].type_annotation.as_deref(),
+            Some("AggregateError | undefined")
         );
     }
 

@@ -229,10 +229,16 @@ fn param_to_json(param: &ApiParamDoc) -> Value {
 }
 
 fn return_to_json(return_doc: &ApiReturnDoc) -> Value {
-    json!({
-        "type": return_doc.type_annotation,
-        "description": return_doc.description,
-    })
+    let mut value = Map::new();
+    value.insert("type".to_string(), json!(return_doc.type_annotation));
+    value.insert("description".to_string(), json!(return_doc.description));
+    if !return_doc.members.is_empty() {
+        value.insert(
+            "members".to_string(),
+            Value::Array(return_doc.members.iter().map(member_to_json).collect()),
+        );
+    }
+    Value::Object(value)
 }
 
 fn type_param_to_json(type_param: &ApiTypeParamDoc) -> Value {
@@ -266,7 +272,7 @@ fn normalize_doc_file_path(file_path: &str) -> String {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::model::{ApiDocTag, ApiParamDoc};
+    use crate::model::{ApiDocMember, ApiDocTag, ApiParamDoc, ApiReturnDoc};
 
     #[test]
     fn generated_docs_data_counts_and_normalizes_paths() {
@@ -430,5 +436,60 @@ mod tests {
         assert!(type_params[0].get("description").is_none());
         assert_eq!(type_params[1]["name"], "T");
         assert_eq!(type_params[1]["description"], "Value.");
+    }
+
+    #[test]
+    fn return_members_serialize_to_json() {
+        let docs = vec![ApiDocModule {
+            description: String::new(),
+            file: "/repo/src/resolver.ts".to_string(),
+            source_path: String::new(),
+            examples: vec![],
+            tags: vec![],
+            entries: vec![ApiDocEntry {
+                name: "resolveArgs".to_string(),
+                kind: "function".to_string(),
+                description: "Resolve.".to_string(),
+                params: vec![],
+                returns: Some(ApiReturnDoc {
+                    type_annotation: "object".to_string(),
+                    description: "Resolved args.".to_string(),
+                    members: vec![ApiDocMember {
+                        name: "values".to_string(),
+                        kind: "property".to_string(),
+                        description: String::new(),
+                        signature: None,
+                        type_annotation: Some("ArgValues<A>".to_string()),
+                        params: vec![],
+                        returns: None,
+                        optional: false,
+                        readonly: false,
+                        r#static: false,
+                        private: false,
+                        tags: vec![],
+                        line: 3,
+                        end_line: 3,
+                    }],
+                }),
+                examples: vec![],
+                tags: vec![],
+                private: false,
+                file: "/repo/src/resolver.ts".to_string(),
+                line: 1,
+                end_line: 6,
+                signature: None,
+                has_body: false,
+                members: vec![],
+                type_parameters: vec![],
+            }],
+        }];
+
+        let json = generate_docs_data_json(&docs, "2026-05-31T00:00:00.000Z").unwrap();
+        let value: Value = serde_json::from_str(&json).unwrap();
+        let returns = &value["modules"][0]["entries"][0]["returns"];
+
+        assert_eq!(returns["type"], "object");
+        assert_eq!(returns["members"][0]["name"], "values");
+        assert_eq!(returns["members"][0]["type"], "ArgValues<A>");
     }
 }

@@ -382,6 +382,62 @@ fn push_returns(
         out.push_str(&inline(&returns.description, context));
     }
     out.push_str("\n\n");
+    push_return_members(out, &returns.members, context, heading);
+}
+
+fn push_return_members(
+    out: &mut String,
+    members: &[ApiDocMember],
+    context: Option<&MarkdownLinkContext<'_>>,
+    heading: &str,
+) {
+    if members.is_empty() {
+        return;
+    }
+
+    for member in members {
+        out.push_str(heading);
+        out.push('#');
+        out.push(' ');
+        out.push_str(&member.name);
+        out.push_str("\n\n```ts\n");
+        out.push_str(&return_member_signature(member));
+        out.push_str("\n```\n\n");
+        let description = member_description(member, context);
+        if !description.is_empty() {
+            out.push_str(&description);
+            out.push_str("\n\n");
+        }
+    }
+}
+
+fn return_member_signature(member: &ApiDocMember) -> String {
+    if let Some(signature) = member.signature.as_deref().filter(|signature| !signature.is_empty()) {
+        let signature = signature.trim();
+        return if signature.ends_with(';') {
+            signature.to_string()
+        } else {
+            let mut out = StringBuilder::with_capacity(signature.len() + 1);
+            out.push_str(signature);
+            out.push_char(';');
+            out.into_string()
+        };
+    }
+
+    let member_type = member_type(member);
+    let member_type = if member_type.is_empty() { "unknown" } else { member_type };
+    let mut out = StringBuilder::with_capacity(member.name.len() + member_type.len() + 16);
+    if member.readonly {
+        out.push_str("readonly ");
+    }
+    out.push_str(&member.name);
+    if member.optional {
+        out.push_char('?');
+    }
+    out.push_str(": ");
+    out.push_str(member_type);
+    out.push_char(';');
+    out.into_string()
 }
 
 /// Appends a `{heading} Examples` section, or nothing when empty.
