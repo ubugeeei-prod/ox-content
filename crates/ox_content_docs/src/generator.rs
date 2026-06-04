@@ -2,6 +2,8 @@
 
 use std::path::Path;
 
+use oxc_allocator::Allocator;
+
 use crate::config::DocsConfig;
 use crate::extractor::{DocExtractor, DocItem, ExtractResult};
 use crate::normalize::{normalize_doc_items, NormalizedDocEntry};
@@ -66,17 +68,19 @@ impl DocsGenerator {
     /// Extracts documentation from all source files.
     pub fn extract_all(&self) -> ExtractResult<Vec<DocItem>> {
         let mut all_items = Vec::new();
+        // One arena reused across every file in the tree (rewound per file).
+        let mut allocator = Allocator::default();
 
         for src_dir in &self.config.src_dirs {
-            let items = self.extract_dir(Path::new(src_dir))?;
+            let items = self.extract_dir(&mut allocator, Path::new(src_dir))?;
             all_items.extend(items);
         }
 
         Ok(all_items)
     }
 
-    /// Extracts documentation from a directory.
-    fn extract_dir(&self, dir: &Path) -> ExtractResult<Vec<DocItem>> {
+    /// Extracts documentation from a directory, reusing one arena allocator.
+    fn extract_dir(&self, allocator: &mut Allocator, dir: &Path) -> ExtractResult<Vec<DocItem>> {
         let mut items = Vec::new();
 
         if !dir.is_dir() {
@@ -88,9 +92,9 @@ impl DocsGenerator {
             let path = entry.path();
 
             if path.is_dir() {
-                items.extend(self.extract_dir(&path)?);
+                items.extend(self.extract_dir(allocator, &path)?);
             } else if self.should_include(&path) {
-                if let Ok(file_items) = self.extractor.extract_file(&path) {
+                if let Ok(file_items) = self.extractor.extract_file_with(allocator, &path) {
                     items.extend(file_items);
                 }
             }
@@ -158,11 +162,16 @@ pub fn extract_docs_from_directories(
 ) -> ExtractResult<Vec<ExtractedDocModule>> {
     let extractor = DocExtractor::with_visibility(include_private, include_internal);
     let mut modules = Vec::new();
+    // One arena reused across every file (rewound per file) instead of
+    // allocating and freeing a fresh multi-MB arena for each parse.
+    let mut allocator = Allocator::default();
 
     for src_dir in src_dirs {
         for file in collect_source_files(src_dir, include, exclude) {
-            let entries =
-                normalize_doc_items(extractor.extract_file(Path::new(&file))?, type_parameters);
+            let entries = normalize_doc_items(
+                extractor.extract_file_with(&mut allocator, Path::new(&file))?,
+                type_parameters,
+            );
             if !entries.is_empty() {
                 modules.push(ExtractedDocModule { file, entries });
             }

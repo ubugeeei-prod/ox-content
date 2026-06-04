@@ -242,10 +242,29 @@ impl DocExtractor {
 
     /// Extracts documentation from a source file.
     pub fn extract_file(&self, path: &Path) -> ExtractResult<Vec<DocItem>> {
+        let mut allocator = Allocator::default();
+        self.extract_file_with(&mut allocator, path)
+    }
+
+    /// Like [`extract_file`](Self::extract_file), but reuses a caller-owned
+    /// arena allocator.
+    ///
+    /// Batch callers (directory walks, multi-file extraction) create one
+    /// [`Allocator`] and pass it to every file. The arena is rewound at the
+    /// start of each parse, so a single allocation is reused instead of
+    /// allocating and freeing a fresh multi-MB arena per file. The public
+    /// [`extract_file`](Self::extract_file) wrapper just hands in a fresh one.
+    pub(crate) fn extract_file_with(
+        &self,
+        allocator: &mut Allocator,
+        path: &Path,
+    ) -> ExtractResult<Vec<DocItem>> {
         let extension = path.extension().and_then(|e| e.to_str()).unwrap_or("");
 
         match extension {
-            "ts" | "tsx" | "js" | "jsx" | "mts" | "mjs" | "cts" | "cjs" => self.extract_js_ts(path),
+            "ts" | "tsx" | "js" | "jsx" | "mts" | "mjs" | "cts" | "cjs" => {
+                self.extract_js_ts(allocator, path)
+            }
             _ => Err(ExtractError::UnsupportedFile(extension.to_string())),
         }
     }
@@ -257,11 +276,27 @@ impl DocExtractor {
         file_path: &str,
         source_type: SourceType,
     ) -> ExtractResult<Vec<DocItem>> {
+        let mut allocator = Allocator::default();
+        self.extract_source_with(&mut allocator, source, file_path, source_type)
+    }
+
+    /// Like [`extract_source`](Self::extract_source), but reuses a caller-owned
+    /// arena allocator. See [`extract_file_with`](Self::extract_file_with).
+    pub(crate) fn extract_source_with(
+        &self,
+        allocator: &mut Allocator,
+        source: &str,
+        file_path: &str,
+        source_type: SourceType,
+    ) -> ExtractResult<Vec<DocItem>> {
         profile_span!("docs::extract_source");
-        let allocator = Allocator::default();
+        // Rewind the arena so a reused allocator starts clean for this file.
+        // Extraction returns owned `DocItem`s, so by the time the next file
+        // resets, nothing borrows the previous file's arena.
+        allocator.reset();
         let ret = {
             profile_span!("docs::oxc_parse");
-            Parser::new(&allocator, source, source_type).parse()
+            Parser::new(&*allocator, source, source_type).parse()
         };
 
         if !ret.errors.is_empty() {
@@ -297,13 +332,14 @@ impl DocExtractor {
         Ok(visitor.items)
     }
 
-    /// Extracts documentation from a JavaScript/TypeScript file.
-    fn extract_js_ts(&self, path: &Path) -> ExtractResult<Vec<DocItem>> {
+    /// Extracts documentation from a JavaScript/TypeScript file, reusing the
+    /// caller-owned arena allocator.
+    fn extract_js_ts(&self, allocator: &mut Allocator, path: &Path) -> ExtractResult<Vec<DocItem>> {
         let content = std::fs::read_to_string(path)?;
         let file_path = path.to_string_lossy().to_string();
         let source_type = SourceType::from_path(path).unwrap_or_default();
 
-        self.extract_source(&content, &file_path, source_type)
+        self.extract_source_with(allocator, &content, &file_path, source_type)
     }
 }
 
