@@ -160,7 +160,10 @@ pub fn extract_docs_from_directories(
     include_internal: bool,
     type_parameters: bool,
 ) -> ExtractResult<Vec<ExtractedDocModule>> {
-    let extractor = DocExtractor::with_visibility(include_private, include_internal);
+    // This path normalizes immediately, so the verbatim JSDoc text is never
+    // surfaced — skip capturing it to avoid a per-comment allocation.
+    let extractor =
+        DocExtractor::with_visibility(include_private, include_internal).without_raw_jsdoc();
     let mut modules = Vec::new();
     // One arena reused across every file (rewound per file) instead of
     // allocating and freeing a fresh multi-MB arena for each parse.
