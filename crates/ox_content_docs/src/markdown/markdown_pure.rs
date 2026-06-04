@@ -6,6 +6,7 @@
 //! same per-entry information as the HTML renderer — but as Markdown headings,
 //! tables and fenced code blocks (no `<details>`, no theme-specific HTML).
 
+use std::borrow::Cow;
 use std::collections::HashSet;
 
 use super::{
@@ -828,13 +829,28 @@ fn param_description(param: &ApiParamDoc, context: Option<&MarkdownLinkContext<'
 }
 
 /// Collapses runs of whitespace (including newlines) into single spaces.
-fn collapse_whitespace(text: &str) -> String {
+///
+/// Borrows the input (after trimming) when it is already collapsed — i.e. every
+/// whitespace char is a single ASCII space with no runs — so the common case of
+/// already-clean doc text allocates nothing.
+fn collapse_whitespace(text: &str) -> Cow<'_, str> {
     let text = text.trim();
     if text.is_empty() {
-        return String::new();
+        return Cow::Borrowed("");
     }
-    if !text.chars().any(char::is_whitespace) {
-        return text.to_string();
+    // Fast path: nothing to collapse iff every whitespace char is a lone ASCII
+    // space. Any other whitespace char, or two adjacent whitespace chars, would
+    // be rewritten below, so it must be owned.
+    let needs_collapse = {
+        let mut prev_ws = false;
+        text.chars().any(|ch| {
+            let collapse = ch.is_whitespace() && (ch != ' ' || prev_ws);
+            prev_ws = ch.is_whitespace();
+            collapse
+        })
+    };
+    if !needs_collapse {
+        return Cow::Borrowed(text);
     }
 
     let mut out = String::with_capacity(text.len());
@@ -850,12 +866,12 @@ fn collapse_whitespace(text: &str) -> String {
             out.push(ch);
         }
     }
-    out
+    Cow::Owned(out)
 }
 
 /// Inline Markdown for a doc-text fragment (resolves `{@link}`), single-line.
 fn inline(text: &str, context: Option<&MarkdownLinkContext<'_>>) -> String {
-    collapse_whitespace(&process_doc_text(text, context))
+    collapse_whitespace(&process_doc_text(text, context)).into_owned()
 }
 
 /// Escapes a value for use inside a Markdown table cell.

@@ -1,5 +1,6 @@
 //! Markdown rendering for generated API reference documentation.
 
+use std::borrow::Cow;
 use std::cmp::Ordering;
 use std::collections::{BTreeMap, HashMap, HashSet};
 use std::path::Path;
@@ -671,7 +672,10 @@ fn render_jsdoc_inline_link(
     }
 }
 
-fn convert_jsdoc_inline_links(text: &str, context: Option<&MarkdownLinkContext<'_>>) -> String {
+fn convert_jsdoc_inline_links<'a>(
+    text: &'a str,
+    context: Option<&MarkdownLinkContext<'_>>,
+) -> Cow<'a, str> {
     let mut result = String::new();
     let mut cursor = 0;
 
@@ -689,17 +693,26 @@ fn convert_jsdoc_inline_links(text: &str, context: Option<&MarkdownLinkContext<'
     }
 
     if cursor == 0 {
-        return text.to_string();
+        return Cow::Borrowed(text);
     }
 
     result.push_str(&text[cursor..]);
-    result
+    Cow::Owned(result)
 }
 
-fn process_doc_text(text: &str, context: Option<&MarkdownLinkContext<'_>>) -> String {
-    let text =
-        context.map_or_else(|| text.to_string(), |context| convert_symbol_links(text, context));
-    convert_jsdoc_inline_links(&text, context)
+fn process_doc_text<'a>(text: &'a str, context: Option<&MarkdownLinkContext<'_>>) -> Cow<'a, str> {
+    // Resolve `[Symbol]` references first, then `{@link}` inline tags. Both
+    // passes borrow the input untouched when there is nothing to rewrite, so a
+    // description with no links allocates nothing.
+    match context {
+        Some(context) => match convert_symbol_links(text, context) {
+            Cow::Borrowed(borrowed) => convert_jsdoc_inline_links(borrowed, Some(context)),
+            Cow::Owned(owned) => {
+                Cow::Owned(convert_jsdoc_inline_links(&owned, Some(context)).into_owned())
+            }
+        },
+        None => convert_jsdoc_inline_links(text, None),
+    }
 }
 
 /// One-line summary for a module index table cell.
@@ -716,7 +729,15 @@ fn typedoc_index_summary(description: &str, context: &MarkdownLinkContext<'_>) -
 fn markdown_index_summary(description: &str, context: Option<&MarkdownLinkContext<'_>>) -> String {
     let resolved = process_doc_text(description, context);
     let first_paragraph = resolved.split("\n\n").next().unwrap_or_default();
-    let one_line = first_paragraph.split_whitespace().collect::<Vec<_>>().join(" ");
+    // Collapse the first paragraph onto one line (words joined by single
+    // spaces) without an intermediate `Vec`, then escape table-cell pipes.
+    let mut one_line = String::with_capacity(first_paragraph.len());
+    for word in first_paragraph.split_whitespace() {
+        if !one_line.is_empty() {
+            one_line.push(' ');
+        }
+        one_line.push_str(word);
+    }
     one_line.replace('|', "\\|")
 }
 
@@ -2222,11 +2243,11 @@ fn generate_category_index(
     markdown
 }
 
-fn convert_symbol_links(text: &str, context: &MarkdownLinkContext<'_>) -> String {
+fn convert_symbol_links<'a>(text: &'a str, context: &MarkdownLinkContext<'_>) -> Cow<'a, str> {
     static SYMBOL_RE: RegexCache = OnceLock::new();
 
     let Some(symbol_re) = cached_regex(&SYMBOL_RE, r"\[([A-Z_]\w*)\]") else {
-        return text.to_string();
+        return Cow::Borrowed(text);
     };
     let mut result = String::new();
     let mut last_index = 0;
@@ -2255,11 +2276,11 @@ fn convert_symbol_links(text: &str, context: &MarkdownLinkContext<'_>) -> String
     }
 
     if last_index == 0 {
-        return text.to_string();
+        return Cow::Borrowed(text);
     }
 
     result.push_str(&text[last_index..]);
-    result
+    Cow::Owned(result)
 }
 
 /// A fragment of a tokenized TypeScript type annotation.
