@@ -14,6 +14,8 @@ use rustc_hash::{FxBuildHasher, FxHashMap, FxHashSet};
 use serde::{Deserialize, Serialize};
 use thiserror::Error;
 
+#[allow(unused_imports)]
+use crate::profile_span;
 use crate::string_builder::{join2, join4, StringBuilder};
 use crate::{
     normalize_doc_items, ApiDocTag, DocExtractor, ExtractError, NormalizedDocEntry,
@@ -268,6 +270,7 @@ pub fn build_export_graph(
     entrypoints: &[EntryPointSpec],
     options: &GraphOptions,
 ) -> Result<ExportGraph, GraphError> {
+    profile_span!("docs::build_export_graph");
     let root = graph_root(options);
     let resolver = ModuleResolver::new(&root, options);
     let mut builder = GraphBuilder {
@@ -293,6 +296,7 @@ pub fn extract_docs_from_entry_points(
     entrypoints: &[EntryPointSpec],
     options: &EntryPointDocsOptions,
 ) -> Result<Vec<EntrypointDocsModule>, GraphError> {
+    profile_span!("docs::extract_entry_points");
     let graph = build_export_graph(entrypoints, &options.graph)?;
     let extractor =
         DocExtractor::for_entrypoint_exports(options.include_private, options.include_internal);
@@ -669,6 +673,7 @@ impl ModuleResolver {
         importer: &Path,
         specifier: &str,
     ) -> Result<Option<ResolvedModuleRef>, GraphError> {
+        profile_span!("docs::resolve_specifier");
         if !is_local_specifier(specifier) && !self.external_docs_enabled {
             return Ok(None);
         }
@@ -731,6 +736,7 @@ impl GraphBuilder {
     }
 
     fn collect_module_exports(&mut self, path: &Path) -> Result<Vec<PublicExport>, GraphError> {
+        profile_span!("docs::collect_exports");
         let path = normalize_existing_path(path);
         if let Some(module) = self.modules.get(&path) {
             return Ok(module.exports.clone());
@@ -756,7 +762,10 @@ impl GraphBuilder {
     ) -> Result<Vec<PublicExport>, GraphError> {
         let allocator = Allocator::default();
         let source_type = SourceType::from_path(path).unwrap_or_default();
-        let ret = Parser::new(&allocator, source, source_type).parse();
+        let ret = {
+            profile_span!("docs::graph_oxc_parse");
+            Parser::new(&allocator, source, source_type).parse()
+        };
         if !ret.errors.is_empty() {
             let message = ret
                 .errors

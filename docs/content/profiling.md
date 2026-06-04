@@ -24,12 +24,14 @@ There are three independent layers, all exposed through one CLI:
 
 2. **Hierarchical timing spans** (`ox_content_profiler::scope`) maintain a
    thread-local span stack with self / inclusive time aggregation, plus
-   per-span allocation deltas. The parser and renderer crates each have a
-   `profile` Cargo feature that swaps in real `profile_span!` guards at
-   their hot block-level entry points (`parse_block`, `parse_html_block`,
-   `visit_heading`, `write_escaped`, etc.). With the feature disabled
-   (the default), `profile_span!` expands to a zero-sized binding the
-   optimizer drops.
+   per-span allocation deltas. The parser, renderer, and docs-generator
+   crates each have a `profile` Cargo feature that swaps in real
+   `profile_span!` guards at their hot entry points — `parse_block`,
+   `parse_html_block`, `visit_heading`, `write_escaped` in the Markdown
+   engine, and `docs::oxc_parse`, `docs::parse_jsdoc`, `docs::visit_ast`,
+   `docs::render_entry_page`, etc. in the JS/TS docs generator. With the
+   feature disabled (the default), `profile_span!` expands to a zero-sized
+   binding the optimizer drops.
 
 3. **Report formatting** (`ox_content_profiler::Report`) folds per-iteration
    records into percentile timings, allocation summaries, span breakdown,
@@ -62,6 +64,30 @@ cargo run --release -p ox_content_profile_cli -- pipeline --json path/to/file.md
 
 Always build `--release`: the macro-expanded `profile_span!` guards are
 cheap, but in a debug build they dominate the actual work.
+
+### Profiling the JS/TS docs generator
+
+The `docs-*` subcommands profile `ox_content_docs` (the "cargo doc for
+JavaScript" generator) over a source **directory** rather than a single
+Markdown file. They reproduce the production pipeline — OXC parse → JSDoc
+parse → AST visit → normalize → TypeDoc/pure-Markdown render:
+
+```bash
+# Extraction only: OXC parse + JSDoc parse + AST visit + normalize,
+# for every .ts/.tsx/.mts/.cts file under the directory.
+cargo run --release -p ox_content_profile_cli -- docs-extract path/to/src
+
+# Render only: extraction is hoisted out of the measurement loop so the
+# timing reflects the Markdown render path in isolation.
+cargo run --release -p ox_content_profile_cli -- docs-render path/to/src
+
+# Full pipeline: extraction + normalize + Markdown render.
+cargo run --release -p ox_content_profile_cli -- docs-pipeline path/to/src --json
+```
+
+The report's throughput is computed over the total bytes of source ingested,
+and span rows are prefixed with `docs::` so they're easy to tell apart from
+the Markdown-engine spans.
 
 ## Reading the report
 

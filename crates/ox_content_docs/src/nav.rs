@@ -10,6 +10,8 @@ use crate::markdown::{
     parse_sort_strategies, CanonicalOwners, MarkdownPathStrategy,
 };
 use crate::model::ApiDocModule;
+#[allow(unused_imports)]
+use crate::profile_span;
 use crate::string_builder::{join2, join3, join5, StringBuilder};
 
 const DEFAULT_BASE_PATH: &str = "/api";
@@ -67,6 +69,7 @@ pub fn generate_nav_metadata_from_docs(
     sort_entry_points: bool,
     kind_sort_order: Option<&[String]>,
 ) -> Vec<DocsNavItem> {
+    profile_span!("docs::generate_nav");
     match path_strategy {
         MarkdownPathStrategy::Flat => {
             let files = docs.iter().map(|doc| doc.file.clone()).collect::<Vec<_>>();

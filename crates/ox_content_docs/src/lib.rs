@@ -7,6 +7,27 @@
 #![deny(clippy::disallowed_macros)]
 #![cfg_attr(test, allow(clippy::disallowed_macros))]
 
+/// Lightweight RAII span guard used internally by the docs generator modules.
+///
+/// Compiles to nothing when the `profile` feature is disabled (the default)
+/// so non-profiling builds pay zero overhead. Under `--features profile`,
+/// expands to `ox_content_profiler::ScopeGuard::enter(name)` which records the
+/// scope timing + allocation delta into the thread-local span tree. See
+/// `ox_content_parser::profile_span` for the same pattern in the parser.
+#[cfg(feature = "profile")]
+macro_rules! profile_span {
+    ($name:literal) => {
+        let __ox_profile_guard = ::ox_content_profiler::ScopeGuard::enter($name);
+    };
+}
+
+#[cfg(not(feature = "profile"))]
+macro_rules! profile_span {
+    ($name:literal) => {};
+}
+
+pub(crate) use profile_span;
+
 mod config;
 mod data;
 mod extractor;

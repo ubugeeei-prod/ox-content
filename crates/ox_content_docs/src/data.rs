@@ -3,6 +3,8 @@ use serde_json::{json, Map, Value};
 use crate::model::{
     ApiDocEntry, ApiDocMember, ApiDocModule, ApiParamDoc, ApiReturnDoc, ApiTypeParamDoc,
 };
+#[allow(unused_imports)]
+use crate::profile_span;
 
 const DOC_KIND_ORDER: [&str; 7] =
     ["function", "class", "interface", "type", "enum", "variable", "module"];
@@ -26,6 +28,7 @@ pub fn generate_docs_data_json(
     docs: &[ApiDocModule],
     generated_at: &str,
 ) -> serde_json::Result<String> {
+    profile_span!("docs::generate_json");
     serde_json::to_string_pretty(&json!({
         "version": 1,
         "generatedAt": generated_at,

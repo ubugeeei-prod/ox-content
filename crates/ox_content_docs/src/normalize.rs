@@ -6,6 +6,8 @@ use phf::phf_set;
 use serde::{Deserialize, Serialize};
 
 use crate::extractor::{DocItem, DocItemKind, DocTag, ParamDoc, TypeParamDoc};
+#[allow(unused_imports)]
+use crate::profile_span;
 
 const UNKNOWN_TYPE: &str = "unknown";
 const PARAM_TAG_NAME: &str = "param";
@@ -258,6 +260,7 @@ pub struct NormalizedDocEntry {
 /// Normalizes extracted documentation items into API reference entries.
 #[must_use]
 pub fn normalize_doc_items(items: Vec<DocItem>, type_parameters: bool) -> Vec<NormalizedDocEntry> {
+    profile_span!("docs::normalize_items");
     items.into_iter().filter_map(|item| normalize_doc_item(item, type_parameters)).collect()
 }
 

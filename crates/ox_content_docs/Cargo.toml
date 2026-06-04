@@ -35,6 +35,18 @@ oxc_ast_visit = { workspace = true }
 oxc_span = { workspace = true }
 oxc_resolver = { workspace = true }
 
+ox_content_profiler = { workspace = true, optional = true }
+
+[features]
+default = []
+# Compiles in lightweight RAII span guards at the docs generator's hot-path
+# boundaries (OXC parse, JSDoc parse, AST visit, export-graph resolution,
+# normalize, Markdown render, nav/JSON emit). Off by default: when disabled,
+# `profile_span!` expands to nothing and call sites pay zero overhead. Enable
+# via `cargo check -p ox_content_docs --features profile` or through the
+# `ox_content_profile_cli` binary's `docs-*` subcommands.
+profile = ["dep:ox_content_profiler"]
+
 [dev-dependencies]
 criterion = { workspace = true }
 
