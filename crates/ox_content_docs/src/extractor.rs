@@ -1026,7 +1026,14 @@ impl<'a> DocVisitor<'a> {
         sig
     }
 
-    fn format_class_signature(&self, class: &Class, name: &str, exported: bool) -> String {
+    fn format_class_signature(
+        &self,
+        class: &Class,
+        name: &str,
+        exported: bool,
+        extends: &[String],
+        implements: &[String],
+    ) -> String {
         let mut sig = String::new();
         if exported {
             sig.push_str("export ");
@@ -1041,16 +1048,14 @@ impl<'a> DocVisitor<'a> {
         sig.push_str(name);
         sig.push_str(&self.format_type_parameter_declaration(class.type_parameters.as_ref()));
 
-        let extends = self.extract_class_extends(class);
         if !extends.is_empty() {
             sig.push_str(" extends ");
-            sig.push_str(&extends.join(", "));
+            Self::push_joined(&mut sig, extends);
         }
 
-        let implements = self.extract_class_implements(class);
         if !implements.is_empty() {
             sig.push_str(" implements ");
-            sig.push_str(&implements.join(", "));
+            Self::push_joined(&mut sig, implements);
         }
 
         sig
@@ -1085,6 +1090,7 @@ impl<'a> DocVisitor<'a> {
         &self,
         interface: &oxc_ast::ast::TSInterfaceDeclaration<'a>,
         exported: bool,
+        extends: &[String],
     ) -> String {
         let mut sig = String::new();
         if exported {
@@ -1097,14 +1103,21 @@ impl<'a> DocVisitor<'a> {
         sig.push_str(interface.id.name.as_str());
         sig.push_str(&self.format_type_parameter_declaration(interface.type_parameters.as_ref()));
 
-        let extends = self.extract_interface_extends(interface);
-
         if !extends.is_empty() {
             sig.push_str(" extends ");
-            sig.push_str(&extends.join(", "));
+            Self::push_joined(&mut sig, extends);
         }
 
         sig
+    }
+
+    fn push_joined(out: &mut String, items: &[String]) {
+        for (index, item) in items.iter().enumerate() {
+            if index > 0 {
+                out.push_str(", ");
+            }
+            out.push_str(item);
+        }
     }
 
     fn extract_interface_extends(
@@ -1724,6 +1737,10 @@ impl<'a> DocVisitor<'a> {
             }
         }
 
+        let extends = self.extract_class_extends(class);
+        let implements = self.extract_class_implements(class);
+        let signature = self.format_class_signature(class, name, exported, &extends, &implements);
+
         Some(DocItem {
             name: name.to_string(),
             kind: DocItemKind::Class,
@@ -1734,9 +1751,9 @@ impl<'a> DocVisitor<'a> {
             column: self.column_number(attached_to),
             jsdoc,
             exported,
-            signature: Some(self.format_class_signature(class, name, exported)),
-            extends: self.extract_class_extends(class),
-            implements: self.extract_class_implements(class),
+            signature: Some(signature),
+            extends,
+            implements,
             has_body: false,
             optional: false,
             readonly: false,
@@ -2130,6 +2147,8 @@ impl<'a> DocVisitor<'a> {
         };
         let (line, end_line) = self.span_lines(attached_to, interface.span.end);
         let children = self.extract_ts_signature_members(&interface.body.body);
+        let extends = self.extract_interface_extends(interface);
+        let signature = self.format_interface_signature(interface, exported, &extends);
 
         self.items.push(DocItem {
             name: interface.id.name.to_string(),
@@ -2141,8 +2160,8 @@ impl<'a> DocVisitor<'a> {
             column: self.column_number(attached_to),
             jsdoc,
             exported,
-            signature: Some(self.format_interface_signature(interface, exported)),
-            extends: self.extract_interface_extends(interface),
+            signature: Some(signature),
+            extends,
             implements: Vec::new(),
             has_body: false,
             optional: false,

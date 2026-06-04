@@ -809,7 +809,7 @@ fn render_callable_member_details_pure(
         }
         out.push_str(&member_heading);
         out.push(' ');
-        out.push_str(&callable_member_heading(member, title));
+        push_callable_member_heading(out, member, title);
         out.push_str("\n\n");
 
         if let Some(signature) = callable_member_signature(member, context.entry_name) {
@@ -854,19 +854,15 @@ fn is_callable_member(member: &ApiDocMember) -> bool {
     matches!(member.kind.as_str(), "constructor" | "method" | "getter" | "setter")
 }
 
-fn callable_member_heading(member: &ApiDocMember, title: &str) -> String {
+fn push_callable_member_heading(out: &mut String, member: &ApiDocMember, title: &str) {
     if member.kind == "constructor" {
-        return "Constructor".to_string();
+        out.push_str("Constructor");
+        return;
     }
-    if matches!(member.kind.as_str(), "getter" | "setter") {
-        return member.name.clone();
+    out.push_str(&member.name);
+    if !matches!(member.kind.as_str(), "getter" | "setter") && title.contains("Methods") {
+        out.push_str("()");
     }
-    let mut heading = StringBuilder::with_capacity(member.name.len() + 2);
-    heading.push_str(&member.name);
-    if title.contains("Methods") {
-        heading.push_str("()");
-    }
-    heading.into_string()
 }
 
 fn callable_member_signature(member: &ApiDocMember, entry_name: &str) -> Option<String> {

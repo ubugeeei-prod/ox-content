@@ -1141,6 +1141,9 @@ fn render_member_group_html(
     options: &MarkdownDocsOptions,
     context: Option<&MarkdownLinkContext<'_>>,
 ) -> String {
+    if members.is_empty() {
+        return String::new();
+    }
     if members.iter().all(|member| is_callable_member(member)) {
         return render_callable_member_group_html(entry, title, members, options, context);
     }
@@ -1158,10 +1161,6 @@ fn render_callable_member_group_html(
     options: &MarkdownDocsOptions,
     context: Option<&MarkdownLinkContext<'_>>,
 ) -> String {
-    if members.is_empty() {
-        return String::new();
-    }
-
     let mut details = StringBuilder::new();
     for member in members {
         details.push_str("<section id=\"");
@@ -1171,7 +1170,7 @@ fn render_callable_member_group_html(
             context.map_or(MarkdownPathStrategy::Flat, |context| context.options.path_strategy),
         )));
         details.push_str("\" class=\"ox-api-entry__member-detail\">\n<h5>");
-        details.push_str(&escape_html(&callable_member_heading(member, title)));
+        push_callable_member_heading_html(&mut details, member, title);
         details.push_str("</h5>\n");
         if let Some(signature) = callable_member_signature(member, &entry.name) {
             details.push_str(&render_code_block_html(&signature, "typescript"));
@@ -1209,19 +1208,15 @@ fn is_callable_member(member: &ApiDocMember) -> bool {
     matches!(member.kind.as_str(), "constructor" | "method" | "getter" | "setter")
 }
 
-fn callable_member_heading(member: &ApiDocMember, title: &str) -> String {
+fn push_callable_member_heading_html(out: &mut StringBuilder, member: &ApiDocMember, title: &str) {
     if member.kind == "constructor" {
-        return "Constructor".to_string();
+        out.push_str("Constructor");
+        return;
     }
-    if matches!(member.kind.as_str(), "getter" | "setter") {
-        return member.name.clone();
+    out.push_str(&escape_html(&member.name));
+    if !matches!(member.kind.as_str(), "getter" | "setter") && title.contains("Methods") {
+        out.push_str("()");
     }
-    let mut heading = StringBuilder::with_capacity(member.name.len() + 2);
-    heading.push_str(&member.name);
-    if title.contains("Methods") {
-        heading.push_str("()");
-    }
-    heading.into_string()
 }
 
 fn callable_member_signature(member: &ApiDocMember, entry_name: &str) -> Option<String> {
@@ -1254,10 +1249,22 @@ fn render_member_detail_description_html(
     context: Option<&MarkdownLinkContext<'_>>,
 ) -> String {
     let mut out = StringBuilder::new();
-    if member.tags.iter().any(|tag| tag.tag == "deprecated") {
+    let mut deprecated = false;
+    let mut experimental = false;
+    for tag in &member.tags {
+        match tag.tag.as_str() {
+            "deprecated" => deprecated = true,
+            "experimental" => experimental = true,
+            _ => {}
+        }
+        if deprecated && experimental {
+            break;
+        }
+    }
+    if deprecated {
         out.push_str("<div class=\"ox-api-entry__member-meta\"><span class=\"ox-api-badge ox-api-badge--warning\">deprecated</span></div>");
     }
-    if member.tags.iter().any(|tag| tag.tag == "experimental") {
+    if experimental {
         out.push_str("<div class=\"ox-api-entry__member-meta\"><span class=\"ox-api-badge ox-api-badge--warning\">experimental</span></div>");
     }
     if !member.description.is_empty() {
