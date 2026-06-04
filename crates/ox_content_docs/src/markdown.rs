@@ -721,6 +721,79 @@ fn process_doc_text<'a>(text: &'a str, context: Option<&MarkdownLinkContext<'_>>
     }
 }
 
+/// Collapses runs of whitespace (including newlines) into single spaces.
+///
+/// Borrows the input (after trimming) when it is already collapsed — i.e. every
+/// whitespace char is a single ASCII space with no runs — so the common case of
+/// already-clean doc text allocates nothing.
+fn collapse_inline_whitespace(text: &str) -> Cow<'_, str> {
+    let text = text.trim();
+    if text.is_empty() {
+        return Cow::Borrowed("");
+    }
+    // Fast path: nothing to collapse iff every whitespace char is a lone ASCII
+    // space. Any other whitespace char, or two adjacent whitespace chars, would
+    // be rewritten below, so it must be owned.
+    let needs_collapse = {
+        let mut prev_ws = false;
+        text.chars().any(|ch| {
+            let collapse = ch.is_whitespace() && (ch != ' ' || prev_ws);
+            prev_ws = ch.is_whitespace();
+            collapse
+        })
+    };
+    if !needs_collapse {
+        return Cow::Borrowed(text);
+    }
+
+    let mut out = String::with_capacity(text.len());
+    let mut pending_space = false;
+    for ch in text.chars() {
+        if ch.is_whitespace() {
+            pending_space = !out.is_empty();
+        } else {
+            if pending_space {
+                out.push(' ');
+                pending_space = false;
+            }
+            out.push(ch);
+        }
+    }
+    Cow::Owned(out)
+}
+
+/// Collapses type annotations for inline rendering while avoiding spaces created
+/// by multiline generic formatting, e.g. `Foo<\n  Bar\n>` -> `Foo<Bar>`.
+fn collapse_type_annotation_whitespace(text: &str) -> Cow<'_, str> {
+    let text = text.trim();
+    if text.is_empty() {
+        return Cow::Borrowed("");
+    }
+
+    let mut out = String::with_capacity(text.len());
+    let mut pending_space = false;
+    for ch in text.chars() {
+        if ch.is_whitespace() {
+            pending_space = !out.is_empty();
+            continue;
+        }
+
+        if pending_space {
+            if !matches!(out.chars().next_back(), Some('<')) && ch != '>' {
+                out.push(' ');
+            }
+            pending_space = false;
+        }
+        out.push(ch);
+    }
+
+    if out == text {
+        Cow::Borrowed(text)
+    } else {
+        Cow::Owned(out)
+    }
+}
+
 /// One-line summary for a module index table cell.
 ///
 /// Resolves `{@link}`/`{@linkcode}` exactly like the per-symbol pages (keeping
@@ -4350,6 +4423,7 @@ mod tests {
                 type_stub("CommandRunner"),
                 type_stub("GunshiParamsConstraint"),
                 type_stub("DefaultGunshiParams"),
+                type_stub("PluginExtension"),
                 type_stub("U"),
                 // Symbols that collide with TypeScript intrinsic primitive types,
                 // mirroring gunshi's `string()` / `boolean()` / `number()`
@@ -4359,6 +4433,31 @@ mod tests {
                 function_stub("number"),
             ],
         }]
+    }
+
+    fn multiline_plugin_ext_type_parameters() -> Vec<ApiTypeParamDoc> {
+        vec![
+            ApiTypeParamDoc {
+                name: "Extension".to_string(),
+                constraint: None,
+                default: None,
+                description: String::new(),
+            },
+            ApiTypeParamDoc {
+                name: "ResolvedDepExtensions".to_string(),
+                constraint: None,
+                default: None,
+                description: String::new(),
+            },
+            ApiTypeParamDoc {
+                name: "PluginExt".to_string(),
+                constraint: Some("PluginExtension<Extension, DefaultGunshiParams>".to_string()),
+                default: Some(
+                    "PluginExtension<\n    Extension,\n    ResolvedDepExtensions\n  >".to_string(),
+                ),
+                description: String::new(),
+            },
+        ]
     }
 
     #[test]
@@ -4415,6 +4514,34 @@ mod tests {
         assert!(page.contains("= [`DefaultGunshiParams`]("));
         // The type parameter's own name is never linked.
         assert!(page.contains("| `G` *extends*"));
+    }
+
+    #[test]
+    fn typedoc_markdown_table_collapses_multiline_linked_type_parameter_defaults() {
+        let mut entry = test_entry("make", "function", "/repo/src/make.ts", "Make.");
+        entry.type_parameters = multiline_plugin_ext_type_parameters();
+        let options = MarkdownDocsOptions {
+            parameters_format: MarkdownDisplayFormat::Table,
+            ..markdown_typedoc_options()
+        };
+        let out = generate_markdown(&type_link_module(entry), &options);
+        let page = out.get("combinators/functions/make.md").unwrap();
+
+        assert!(page.contains("| `PluginExt` *extends* [`PluginExtension`](../type-aliases/PluginExtension.md)\\<`Extension`, [`DefaultGunshiParams`](../type-aliases/DefaultGunshiParams.md)\\> = [`PluginExtension`](../type-aliases/PluginExtension.md)\\<`Extension`, `ResolvedDepExtensions`\\> |  |"));
+        assert!(!page.contains("\\<\n"));
+        assert!(!page.contains("ResolvedDepExtensions`\n"));
+    }
+
+    #[test]
+    fn typedoc_markdown_list_collapses_multiline_linked_type_parameter_defaults() {
+        let mut entry = test_entry("make", "function", "/repo/src/make.ts", "Make.");
+        entry.type_parameters = multiline_plugin_ext_type_parameters();
+        let out = generate_markdown(&type_link_module(entry), &markdown_typedoc_options());
+        let page = out.get("combinators/functions/make.md").unwrap();
+
+        assert!(page.contains("- `PluginExt` *extends* [`PluginExtension`](../type-aliases/PluginExtension.md)\\<`Extension`, [`DefaultGunshiParams`](../type-aliases/DefaultGunshiParams.md)\\> = [`PluginExtension`](../type-aliases/PluginExtension.md)\\<`Extension`, `ResolvedDepExtensions`\\>"));
+        assert!(!page.contains("\\<\n"));
+        assert!(!page.contains("`Extension`,\n"));
     }
 
     #[test]
@@ -4543,6 +4670,18 @@ mod tests {
         // No anchor in the type cell; escaped union pipe preserved.
         assert!(page.contains("string | number"));
         assert!(!page.contains("<a href=\"./type-aliases"));
+    }
+
+    #[test]
+    fn typedoc_html_collapses_multiline_linked_type_parameter_defaults() {
+        let mut entry = test_entry("make", "function", "/repo/src/make.ts", "Make.");
+        entry.type_parameters = multiline_plugin_ext_type_parameters();
+        let out = generate_markdown(&type_link_module(entry), &html_typedoc_options());
+        let page = out.get("combinators/functions/make.md").unwrap();
+
+        assert!(page.contains("= <code><a href=\"../type-aliases/PluginExtension.md\">PluginExtension</a>&lt;Extension, ResolvedDepExtensions&gt;</code>"));
+        assert!(!page.contains("&lt;\n"));
+        assert!(!page.contains("ResolvedDepExtensions\n"));
     }
 
     #[test]
