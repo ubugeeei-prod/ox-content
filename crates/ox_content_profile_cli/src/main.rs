@@ -44,11 +44,11 @@ use std::process::ExitCode;
 use clap::{Parser as ClapParser, Subcommand};
 use ox_content_allocator::Allocator;
 use ox_content_docs::{
-    collect_source_files, extract_docs_from_directories, generate_markdown, ApiDocEntry,
-    ApiDocMember, ApiDocModule, ApiDocTag, ApiParamDoc, ApiReturnDoc, ApiTypeParamDoc,
-    ExtractedDocModule, MarkdownDocsOptions, MarkdownPathStrategy, MarkdownRenderStyle,
-    NormalizedDocEntry, NormalizedMember, NormalizedParamDoc, NormalizedReturnDoc,
-    NormalizedTypeParam,
+    collect_source_files, extract_docs_from_directories, extract_docs_from_entry_points,
+    generate_markdown, ApiDocEntry, ApiDocMember, ApiDocModule, ApiDocTag, ApiParamDoc,
+    ApiReturnDoc, ApiTypeParamDoc, EntryPointDocsOptions, EntryPointSpec, ExtractedDocModule,
+    GraphOptions, MarkdownDocsOptions, MarkdownPathStrategy, MarkdownRenderStyle, NormalizedDocEntry,
+    NormalizedMember, NormalizedParamDoc, NormalizedReturnDoc, NormalizedTypeParam,
 };
 use ox_content_parser::{Parser, ParserOptions};
 use ox_content_profiler::{report::ReportConfig, scope, CountingAllocator, Recorder};
@@ -104,6 +104,11 @@ enum Cmd {
     DocsRender { dir: PathBuf },
     /// Profile the full docs pipeline: extraction + normalize + Markdown render.
     DocsPipeline { dir: PathBuf },
+    /// Profile the entry-point docs path (`extractDocsFromEntryPoints`): builds
+    /// the export graph and extracts normalized docs for the given entry files.
+    /// This is the path published packages (e.g. gunshi) use, where the export
+    /// graph and doc extraction each parse every reachable module.
+    DocsEntrypoints { entries: Vec<PathBuf> },
 }
 
 /// Which slice of the docs pipeline a `docs-*` run measures.
@@ -154,6 +159,7 @@ fn run(cli: &Cli) -> std::io::Result<()> {
         Cmd::DocsExtract { dir } => run_docs(cli, dir, DocsPhase::Extract),
         Cmd::DocsRender { dir } => run_docs(cli, dir, DocsPhase::Render),
         Cmd::DocsPipeline { dir } => run_docs(cli, dir, DocsPhase::Pipeline),
+        Cmd::DocsEntrypoints { entries } => run_docs_entrypoints(cli, entries),
         Cmd::Parse { .. } | Cmd::Render { .. } | Cmd::Pipeline { .. } => run_markdown(cli),
     }
 }
@@ -320,6 +326,54 @@ fn run_docs(cli: &Cli, dir: &Path, phase: DocsPhase) -> std::io::Result<()> {
                 })?;
             }
         }
+    }
+
+    emit_report(recorder, cli);
+    Ok(())
+}
+
+/// Profile `extract_docs_from_entry_points` over the given entry files — the
+/// published-package path. Today it parses every reachable module twice (once
+/// to build the export graph, once to extract docs), visible as the
+/// `docs::graph_oxc_parse` and `docs::oxc_parse` spans.
+fn run_docs_entrypoints(cli: &Cli, entries: &[PathBuf]) -> std::io::Result<()> {
+    if entries.is_empty() {
+        return Err(std::io::Error::new(
+            std::io::ErrorKind::InvalidInput,
+            "docs-entrypoints needs at least one entry file",
+        ));
+    }
+
+    // Canonicalize entry paths so resolution doesn't depend on the graph root.
+    let mut specs = Vec::with_capacity(entries.len());
+    let mut label = String::from("docs-entrypoints (");
+    for (index, entry) in entries.iter().enumerate() {
+        let path = std::fs::canonicalize(entry)?;
+        if index > 0 {
+            label.push_str(", ");
+        }
+        push_fmt(&mut label, format_args!("{}", entry.display()));
+        specs.push(EntryPointSpec { path, name: None });
+    }
+    label.push(')');
+
+    let options = EntryPointDocsOptions {
+        graph: GraphOptions::default(),
+        include_private: false,
+        include_internal: false,
+        type_parameters: true,
+    };
+
+    let total_iters = cli.warmup + cli.iters;
+    let config = ReportConfig { input_bytes: None, warmup: cli.warmup, max_span_rows: 32 };
+    let mut recorder = Recorder::new(label).with_config(config);
+
+    for _ in 0..total_iters {
+        recorder.record(|| -> std::io::Result<()> {
+            let modules = extract_docs_from_entry_points(&specs, &options).map_err(docs_error)?;
+            black_box(modules);
+            Ok(())
+        })?;
     }
 
     emit_report(recorder, cli);
