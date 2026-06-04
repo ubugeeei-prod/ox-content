@@ -10,6 +10,8 @@ use regex::Regex;
 use serde::{Deserialize, Serialize};
 
 use crate::model::{ApiDocEntry, ApiDocMember, ApiDocModule};
+#[allow(unused_imports)]
+use crate::profile_span;
 use crate::string_builder::{join2, join3, join4, join5, StringBuilder};
 
 mod markdown_html;
@@ -243,6 +245,7 @@ pub fn generate_markdown(
     docs: &[ApiDocModule],
     options: &MarkdownDocsOptions,
 ) -> BTreeMap<String, String> {
+    profile_span!("docs::generate_markdown");
     let mut result = BTreeMap::new();
     let sorted_docs = sort_extracted_docs(docs, options);
     let symbol_map = build_symbol_map(&sorted_docs, options);
@@ -1075,6 +1078,7 @@ fn generate_file_markdown(
     current_file_name: &str,
     symbol_map: &HashMap<String, Vec<SymbolLocation>>,
 ) -> String {
+    profile_span!("docs::render_file");
     let display_name = file_name(&doc.file);
     let mut markdown = String::new();
     markdown.push_str("# ");
@@ -1185,6 +1189,7 @@ fn generate_typedoc_markdown(
     options: &MarkdownDocsOptions,
     symbol_map: &HashMap<String, Vec<SymbolLocation>>,
 ) -> BTreeMap<String, String> {
+    profile_span!("docs::render_typedoc");
     let mut result = BTreeMap::new();
     let owners = CanonicalOwners::compute(docs);
 
@@ -1261,6 +1266,7 @@ fn generate_typedoc_entry_page_grouped(
     file_name: &str,
     symbol_map: &HashMap<String, Vec<SymbolLocation>>,
 ) -> String {
+    profile_span!("docs::render_entry_page");
     if entries.len() == 1 {
         return generate_typedoc_entry_page(
             entries[0],
@@ -1402,6 +1408,7 @@ fn generate_typedoc_module_index(
     symbol_map: &HashMap<String, Vec<SymbolLocation>>,
     owners: &CanonicalOwners,
 ) -> String {
+    profile_span!("docs::render_module_index");
     let current_file_name = typedoc_module_index_file_name(module_name);
     let link_context = MarkdownLinkContext {
         options,
@@ -2374,6 +2381,7 @@ fn build_symbol_map(
     docs: &[ApiDocModule],
     options: &MarkdownDocsOptions,
 ) -> HashMap<String, Vec<SymbolLocation>> {
+    profile_span!("docs::build_symbol_map");
     let mut map = HashMap::new();
     // In the TypeDoc strategy a re-exported symbol has a single canonical page;
     // resolve every reference to that owner module so cross-links never point at

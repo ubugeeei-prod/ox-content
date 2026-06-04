@@ -21,13 +21,35 @@
 //!
 //! Without a `<FILE>` the embedded corpus is used so the binary stays
 //! useful in CI / first-time setup.
+//!
+//! The `docs-*` subcommands profile the JS/TS documentation generator
+//! (`ox_content_docs`) over a source directory instead of a Markdown file:
+//!
+//! ```text
+//! cargo run --release -p ox_content_profile_cli -- docs-extract <DIR>
+//! cargo run --release -p ox_content_profile_cli -- docs-render <DIR>
+//! cargo run --release -p ox_content_profile_cli -- docs-pipeline <DIR>
+//! ```
+//!
+//! These exercise the OXC parse + JSDoc parse + AST visit + normalize path
+//! (`docs-extract`), the TypeDoc/pure-Markdown render path (`docs-render`,
+//! extraction hoisted out of the measurement loop), or both end to end
+//! (`docs-pipeline`).
 
 use std::fmt::Write as _;
-use std::path::PathBuf;
+use std::hint::black_box;
+use std::path::{Path, PathBuf};
 use std::process::ExitCode;
 
 use clap::{Parser as ClapParser, Subcommand};
 use ox_content_allocator::Allocator;
+use ox_content_docs::{
+    collect_source_files, extract_docs_from_directories, generate_markdown, ApiDocEntry,
+    ApiDocMember, ApiDocModule, ApiDocTag, ApiParamDoc, ApiReturnDoc, ApiTypeParamDoc,
+    ExtractedDocModule, MarkdownDocsOptions, MarkdownPathStrategy, MarkdownRenderStyle,
+    NormalizedDocEntry, NormalizedMember, NormalizedParamDoc, NormalizedReturnDoc,
+    NormalizedTypeParam,
+};
 use ox_content_parser::{Parser, ParserOptions};
 use ox_content_profiler::{report::ReportConfig, scope, CountingAllocator, Recorder};
 use ox_content_renderer::{HtmlRenderer, HtmlRendererOptions};
@@ -74,6 +96,22 @@ enum Cmd {
     Render { file: Option<PathBuf> },
     /// Profile the full pipeline: allocator + parse + render.
     Pipeline { file: Option<PathBuf> },
+    /// Profile JS/TS docs extraction over a directory tree: OXC parse + JSDoc
+    /// parse + AST visit + normalize, for every matched source file.
+    DocsExtract { dir: PathBuf },
+    /// Profile the docs Markdown render path. Extraction runs once outside the
+    /// measurement loop so the timing reflects rendering in isolation.
+    DocsRender { dir: PathBuf },
+    /// Profile the full docs pipeline: extraction + normalize + Markdown render.
+    DocsPipeline { dir: PathBuf },
+}
+
+/// Which slice of the docs pipeline a `docs-*` run measures.
+#[derive(Clone, Copy)]
+enum DocsPhase {
+    Extract,
+    Render,
+    Pipeline,
 }
 
 fn load_input(file: Option<&PathBuf>) -> std::io::Result<(String, String)> {
@@ -100,32 +138,54 @@ fn parse_error(err: impl std::fmt::Display) -> std::io::Error {
     std::io::Error::new(std::io::ErrorKind::InvalidData, message)
 }
 
+/// Which slice of the Markdown engine a `parse`/`render`/`pipeline` run measures.
+#[derive(Clone, Copy)]
+enum MarkdownPhase {
+    Parse,
+    Render,
+    Pipeline,
+}
+
 fn run(cli: &Cli) -> std::io::Result<()> {
     CountingAllocator::enable();
     scope::enable();
 
-    let (label_input, source) = match &cli.cmd {
-        Cmd::Parse { file } | Cmd::Render { file } | Cmd::Pipeline { file } => {
-            load_input(file.as_ref())?
-        }
+    match &cli.cmd {
+        Cmd::DocsExtract { dir } => run_docs(cli, dir, DocsPhase::Extract),
+        Cmd::DocsRender { dir } => run_docs(cli, dir, DocsPhase::Render),
+        Cmd::DocsPipeline { dir } => run_docs(cli, dir, DocsPhase::Pipeline),
+        Cmd::Parse { .. } | Cmd::Render { .. } | Cmd::Pipeline { .. } => run_markdown(cli),
+    }
+}
+
+/// Profile the Markdown parse/render/pipeline path against a single input file
+/// (or the embedded corpus when none is given).
+fn run_markdown(cli: &Cli) -> std::io::Result<()> {
+    let (phase, file) = match &cli.cmd {
+        Cmd::Parse { file } => (MarkdownPhase::Parse, file.as_ref()),
+        Cmd::Render { file } => (MarkdownPhase::Render, file.as_ref()),
+        Cmd::Pipeline { file } => (MarkdownPhase::Pipeline, file.as_ref()),
+        // docs-* commands are dispatched to run_docs in run().
+        _ => unreachable!("non-Markdown command routed to run_markdown"),
     };
+    let (label_input, source) = load_input(file)?;
     let bytes = source.len() as u64;
 
     let total_iters = cli.warmup + cli.iters;
     let config = ReportConfig { input_bytes: Some(bytes), warmup: cli.warmup, max_span_rows: 24 };
 
-    let label_prefix = match &cli.cmd {
-        Cmd::Parse { .. } => "parse",
-        Cmd::Render { .. } => "render",
-        Cmd::Pipeline { .. } => "pipeline",
+    let label_prefix = match phase {
+        MarkdownPhase::Parse => "parse",
+        MarkdownPhase::Render => "render",
+        MarkdownPhase::Pipeline => "pipeline",
     };
     let mut label = String::new();
     push_fmt(&mut label, format_args!("{label_prefix} ({label_input}, {bytes} bytes)"));
 
     let mut recorder = Recorder::new(label).with_config(config);
 
-    match &cli.cmd {
-        Cmd::Parse { .. } => {
+    match phase {
+        MarkdownPhase::Parse => {
             for _ in 0..total_iters {
                 recorder.record(|| -> std::io::Result<()> {
                     let alloc = Allocator::for_source_len(source.len());
@@ -135,7 +195,7 @@ fn run(cli: &Cli) -> std::io::Result<()> {
                 })?;
             }
         }
-        Cmd::Render { .. } => {
+        MarkdownPhase::Render => {
             // Renderer needs a pre-parsed document. Allocate one for each
             // iteration to keep the AST distinct (rendering itself mutates
             // shared HtmlRenderer state across iterations otherwise).
@@ -149,7 +209,7 @@ fn run(cli: &Cli) -> std::io::Result<()> {
                 });
             }
         }
-        Cmd::Pipeline { .. } => {
+        MarkdownPhase::Pipeline => {
             for _ in 0..total_iters {
                 recorder.record(|| -> std::io::Result<()> {
                     let alloc = Allocator::for_source_len(source.len());
@@ -163,20 +223,230 @@ fn run(cli: &Cli) -> std::io::Result<()> {
         }
     }
 
-    let report = recorder.finish();
+    emit_report(recorder, cli);
+    Ok(())
+}
 
-    // We disable instrumentation before stringifying so the report's own
-    // allocations don't pollute the final picture if a user re-uses
-    // `AllocSnapshot::capture` after this.
+/// Markdown render options used by the `docs-render` / `docs-pipeline` drivers.
+///
+/// Mirrors the modern VitePress-style production path that recent work targets:
+/// the TypeDoc page layout with pure-Markdown output (rather than the legacy
+/// flat/HTML defaults).
+fn docs_markdown_options() -> MarkdownDocsOptions {
+    MarkdownDocsOptions {
+        path_strategy: MarkdownPathStrategy::TypeDoc,
+        render_style: MarkdownRenderStyle::Markdown,
+        ..MarkdownDocsOptions::default()
+    }
+}
+
+/// Glob filters matching the source files a typical docs build ingests.
+fn docs_filters() -> (Vec<String>, Vec<String>) {
+    let include = ["**/*.ts", "**/*.tsx", "**/*.mts", "**/*.cts"]
+        .iter()
+        .map(|pattern| (*pattern).to_string())
+        .collect();
+    let exclude = ["**/*.d.ts", "**/*.test.*", "**/*.spec.*", "node_modules"]
+        .iter()
+        .map(|pattern| (*pattern).to_string())
+        .collect();
+    (include, exclude)
+}
+
+/// Profile the JS/TS docs generator over `dir`.
+fn run_docs(cli: &Cli, dir: &Path, phase: DocsPhase) -> std::io::Result<()> {
+    if !dir.is_dir() {
+        let mut message = String::from("docs profiling target is not a directory: ");
+        push_fmt(&mut message, format_args!("{}", dir.display()));
+        return Err(std::io::Error::new(std::io::ErrorKind::NotFound, message));
+    }
+
+    let dir_str = dir.display().to_string();
+    let (include, exclude) = docs_filters();
+    let src_dirs = [dir_str.clone()];
+
+    // Total source bytes processed, so the report's MB/s reflects throughput
+    // over the real input rather than a single synthetic buffer.
+    let files = collect_source_files(&dir_str, &include, &exclude);
+    let file_count = files.len();
+    let bytes: u64 =
+        files.iter().filter_map(|file| std::fs::metadata(file).ok()).map(|meta| meta.len()).sum();
+
+    let total_iters = cli.warmup + cli.iters;
+    let config = ReportConfig { input_bytes: Some(bytes), warmup: cli.warmup, max_span_rows: 32 };
+
+    let label_prefix = match phase {
+        DocsPhase::Extract => "docs-extract",
+        DocsPhase::Render => "docs-render",
+        DocsPhase::Pipeline => "docs-pipeline",
+    };
+    let mut label = String::new();
+    push_fmt(
+        &mut label,
+        format_args!("{label_prefix} ({dir_str}, {file_count} files, {bytes} bytes)"),
+    );
+    let mut recorder = Recorder::new(label).with_config(config);
+
+    match phase {
+        DocsPhase::Extract => {
+            for _ in 0..total_iters {
+                recorder.record(|| -> std::io::Result<()> {
+                    let modules = extract_docs(&src_dirs, &include, &exclude)?;
+                    black_box(modules);
+                    Ok(())
+                })?;
+            }
+        }
+        DocsPhase::Render => {
+            // Extraction is hoisted out of the loop so the timing reflects the
+            // Markdown render path in isolation.
+            let api_modules = extract_api_modules(&src_dirs, &include, &exclude)?;
+            let options = docs_markdown_options();
+            for _ in 0..total_iters {
+                recorder.record(|| {
+                    let pages = generate_markdown(&api_modules, &options);
+                    black_box(pages);
+                });
+            }
+        }
+        DocsPhase::Pipeline => {
+            let options = docs_markdown_options();
+            for _ in 0..total_iters {
+                recorder.record(|| -> std::io::Result<()> {
+                    let api_modules = extract_api_modules(&src_dirs, &include, &exclude)?;
+                    let pages = generate_markdown(&api_modules, &options);
+                    black_box(pages);
+                    Ok(())
+                })?;
+            }
+        }
+    }
+
+    emit_report(recorder, cli);
+    Ok(())
+}
+
+/// Run extraction + normalization over `src_dirs`, mapping the error into the
+/// CLI's `io::Error` channel.
+fn extract_docs(
+    src_dirs: &[String],
+    include: &[String],
+    exclude: &[String],
+) -> std::io::Result<Vec<ExtractedDocModule>> {
+    extract_docs_from_directories(src_dirs, include, exclude, false, false, true)
+        .map_err(docs_error)
+}
+
+/// Extract and convert into the render IR consumed by `generate_markdown`.
+fn extract_api_modules(
+    src_dirs: &[String],
+    include: &[String],
+    exclude: &[String],
+) -> std::io::Result<Vec<ApiDocModule>> {
+    Ok(extract_docs(src_dirs, include, exclude)?.into_iter().map(to_api_module).collect())
+}
+
+/// Finish a recording window and print the report.
+///
+/// Instrumentation is disabled before stringifying so the report's own
+/// allocations don't pollute the final picture.
+fn emit_report(recorder: Recorder, cli: &Cli) {
+    let report = recorder.finish();
     CountingAllocator::disable();
     scope::disable();
-
     if cli.json {
         println!("{}", report.render_json());
     } else {
         println!("{}", report.render_table());
     }
-    Ok(())
+}
+
+fn docs_error(err: impl std::fmt::Display) -> std::io::Error {
+    let mut message = String::from("failed to extract docs for profiling: ");
+    push_fmt(&mut message, format_args!("{err}"));
+    std::io::Error::new(std::io::ErrorKind::InvalidData, message)
+}
+
+// Bridge the normalized extraction output into the `ApiDocModule` render IR.
+// `generate_markdown` consumes the IR that the NAPI layer reconstructs in JS
+// between the `extractDocsFrom*` and `generateDocsMarkdown` calls; this mirrors
+// that conversion so the full pipeline can be profiled in-process. The mapping
+// tracks `ox_content_napi`'s `convert_markdown_*` helpers.
+
+fn to_api_module(module: ExtractedDocModule) -> ApiDocModule {
+    ApiDocModule {
+        file: module.file,
+        description: String::new(),
+        source_path: String::new(),
+        examples: Vec::new(),
+        tags: Vec::new(),
+        entries: module.entries.into_iter().map(to_api_entry).collect(),
+    }
+}
+
+fn to_api_entry(entry: NormalizedDocEntry) -> ApiDocEntry {
+    ApiDocEntry {
+        name: entry.name,
+        kind: entry.kind.as_str().to_string(),
+        description: entry.description,
+        params: entry.params.into_iter().map(to_api_param).collect(),
+        returns: entry.returns.map(to_api_return),
+        examples: entry.examples,
+        tags: entry.tags.into_iter().map(|(tag, value)| ApiDocTag { tag, value }).collect(),
+        private: entry.private,
+        file: entry.file,
+        line: entry.line,
+        end_line: entry.end_line,
+        signature: entry.signature,
+        has_body: entry.has_body,
+        members: entry.members.into_iter().map(to_api_member).collect(),
+        type_parameters: entry.type_parameters.into_iter().map(to_api_type_param).collect(),
+    }
+}
+
+fn to_api_member(member: NormalizedMember) -> ApiDocMember {
+    ApiDocMember {
+        name: member.name,
+        kind: member.kind.as_str().to_string(),
+        description: member.description,
+        signature: member.signature,
+        type_annotation: member.type_annotation,
+        params: member.params.into_iter().map(to_api_param).collect(),
+        returns: member.returns.map(to_api_return),
+        optional: member.optional,
+        readonly: member.readonly,
+        r#static: member.r#static,
+        private: member.private,
+        tags: member.tags.into_iter().map(|(tag, value)| ApiDocTag { tag, value }).collect(),
+        line: member.line,
+        end_line: member.end_line,
+    }
+}
+
+fn to_api_param(param: NormalizedParamDoc) -> ApiParamDoc {
+    ApiParamDoc {
+        name: param.name,
+        type_annotation: param.type_annotation,
+        description: param.description,
+        optional: param.optional,
+        default_value: param.default_value,
+    }
+}
+
+fn to_api_return(return_doc: NormalizedReturnDoc) -> ApiReturnDoc {
+    ApiReturnDoc {
+        type_annotation: return_doc.type_annotation,
+        description: return_doc.description,
+    }
+}
+
+fn to_api_type_param(type_param: NormalizedTypeParam) -> ApiTypeParamDoc {
+    ApiTypeParamDoc {
+        name: type_param.name,
+        constraint: type_param.constraint,
+        default: type_param.default,
+        description: type_param.description,
+    }
 }
 
 fn push_fmt(output: &mut String, args: std::fmt::Arguments<'_>) {

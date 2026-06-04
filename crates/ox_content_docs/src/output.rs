@@ -10,6 +10,8 @@ use crate::data::generate_docs_data_json;
 use crate::markdown::MarkdownPathStrategy;
 use crate::model::ApiDocModule;
 use crate::nav::{generate_nav_code, generate_nav_metadata_from_docs};
+#[allow(unused_imports)]
+use crate::profile_span;
 
 const DOCS_MANIFEST_FILE: &str = ".ox-content-docs-manifest.json";
 const DOCS_DATA_FILE: &str = "docs.json";
@@ -54,6 +56,7 @@ pub fn write_docs_output(
     extracted_docs: Option<&[ApiDocModule]>,
     options: &DocsOutputOptions,
 ) -> DocsOutputResult<()> {
+    profile_span!("docs::write_output");
     fs::create_dir_all(out_dir)?;
 
     let mut generated_files = docs.keys().cloned().collect::<Vec<_>>();

@@ -19,6 +19,8 @@ use serde::{Deserialize, Serialize};
 use std::path::Path;
 use thiserror::Error;
 
+#[allow(unused_imports)]
+use crate::profile_span;
 use crate::string_builder::{join2, join3, join5, StringBuilder};
 
 /// Result type for extraction operations.
@@ -255,8 +257,12 @@ impl DocExtractor {
         file_path: &str,
         source_type: SourceType,
     ) -> ExtractResult<Vec<DocItem>> {
+        profile_span!("docs::extract_source");
         let allocator = Allocator::default();
-        let ret = Parser::new(&allocator, source, source_type).parse();
+        let ret = {
+            profile_span!("docs::oxc_parse");
+            Parser::new(&allocator, source, source_type).parse()
+        };
 
         if !ret.errors.is_empty() {
             let error_msg = ret
@@ -280,10 +286,13 @@ impl DocExtractor {
             jsdoc_cache,
         );
         let first_stmt_start = ret.program.body.first().map(|statement| statement.span().start);
-        if let Some(module_item) = visitor.extract_module_entry(&comments, first_stmt_start) {
-            visitor.items.push(module_item);
+        {
+            profile_span!("docs::visit_ast");
+            if let Some(module_item) = visitor.extract_module_entry(&comments, first_stmt_start) {
+                visitor.items.push(module_item);
+            }
+            visitor.visit_program(&ret.program);
         }
-        visitor.visit_program(&ret.program);
 
         Ok(visitor.items)
     }
@@ -363,6 +372,7 @@ fn parse_jsdoc_payload(source: &str, comment: &Comment) -> ParsedJsdoc {
 /// batch parser still fall back individually so diagnostics do not poison the
 /// whole file.
 fn build_jsdoc_cache(source: &str, comments: &[Comment]) -> FxHashMap<u32, ParsedJsdoc> {
+    profile_span!("docs::parse_jsdoc");
     let jsdoc_comments: Vec<&Comment> =
         comments.iter().filter(|comment| comment.is_jsdoc()).collect();
     if jsdoc_comments.is_empty() {
