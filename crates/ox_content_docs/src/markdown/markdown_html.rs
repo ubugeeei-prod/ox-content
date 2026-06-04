@@ -11,12 +11,12 @@ use std::sync::OnceLock;
 use regex::Regex;
 
 use super::{
-    cached_regex, clean_summary_text, doc_kind_plural, doc_page_href, effective_members_format,
-    effective_parameters_format, entry_anchor, file_stem, format_count_label, format_kind_label,
-    generate_source_href, get_entry_badges, member_anchor, normalize_signature,
-    parse_example_block, process_doc_text, resolve_type_fragments, EntryStats, ExampleBlock,
-    MarkdownDisplayFormat, MarkdownDocsOptions, MarkdownLinkContext, MarkdownPathStrategy,
-    RegexCache, TypeFragment, DOC_KIND_ORDER,
+    cached_regex, clean_summary_text, collapse_type_annotation_whitespace, doc_kind_plural,
+    doc_page_href, effective_members_format, effective_parameters_format, entry_anchor, file_stem,
+    format_count_label, format_kind_label, generate_source_href, get_entry_badges, member_anchor,
+    normalize_signature, parse_example_block, process_doc_text, resolve_type_fragments, EntryStats,
+    ExampleBlock, MarkdownDisplayFormat, MarkdownDocsOptions, MarkdownLinkContext,
+    MarkdownPathStrategy, RegexCache, TypeFragment, DOC_KIND_ORDER,
 };
 use crate::model::{
     ApiDocEntry, ApiDocMember, ApiDocModule, ApiDocTag, ApiParamDoc, ApiReturnDoc, ApiTypeParamDoc,
@@ -365,18 +365,17 @@ fn render_highlighted_inline_code_html(code: &str, class_name: &str, language: &
     out.into_string()
 }
 
-/// Inner HTML for a TypeScript type annotation: escaped text with `<a>` anchors for
-/// known symbols. When nothing resolves to a symbol page this equals
-/// `escape_html(value)` exactly (HTML escaping is per-character), so callers keep
-/// their existing `<code …>` wrappers byte-for-byte and only gain anchors when a
-/// type actually links.
+/// Inner HTML for a TypeScript type annotation: escaped text with `<a>` anchors
+/// for known symbols. Type annotations are always rendered as inline code, so
+/// multiline generic formatting is collapsed before link resolution.
 fn render_type_inner_html(
     value: &str,
     context: Option<&MarkdownLinkContext<'_>>,
     skip: &HashSet<&str>,
 ) -> String {
-    match resolve_type_fragments(value, context, skip) {
-        None => escape_html(value),
+    let value = collapse_type_annotation_whitespace(value);
+    match resolve_type_fragments(&value, context, skip) {
+        None => escape_html(&value),
         Some(fragments) => {
             let mut out = String::new();
             for fragment in fragments {

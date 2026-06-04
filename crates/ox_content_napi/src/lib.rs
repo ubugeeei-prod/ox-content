@@ -4135,6 +4135,83 @@ mod tests {
     }
 
     #[test]
+    fn generate_docs_markdown_collapses_multiline_linked_type_parameter_defaults() {
+        fn entry(name: &str, kind: &str, signature: &str) -> JsDocsMarkdownEntry {
+            JsDocsMarkdownEntry {
+                name: name.to_string(),
+                kind: kind.to_string(),
+                description: String::new(),
+                params: None,
+                returns: None,
+                examples: None,
+                tags: None,
+                private: false,
+                file: format!("/repo/src/{name}.ts"),
+                line: 1,
+                end_line: 1,
+                signature: Some(signature.to_string()),
+                has_body: None,
+                members: None,
+                type_parameters: None,
+            }
+        }
+
+        let mut plugin = entry("plugin", "function", "export function plugin(): void");
+        plugin.type_parameters = Some(vec![
+            JsTypeParam {
+                name: "Extension".to_string(),
+                constraint: None,
+                r#default: None,
+                description: String::new(),
+            },
+            JsTypeParam {
+                name: "ResolvedDepExtensions".to_string(),
+                constraint: None,
+                r#default: None,
+                description: String::new(),
+            },
+            JsTypeParam {
+                name: "PluginExt".to_string(),
+                constraint: Some("PluginExtension<Extension, DefaultGunshiParams>".to_string()),
+                r#default: Some(
+                    "PluginExtension<\n    Extension,\n    ResolvedDepExtensions\n  >".to_string(),
+                ),
+                description: String::new(),
+            },
+        ]);
+
+        let docs = vec![JsDocsMarkdownModule {
+            description: None,
+            file: "default".to_string(),
+            source_path: None,
+            examples: None,
+            tags: None,
+            entries: vec![
+                plugin,
+                entry("PluginExtension", "type", "export type PluginExtension = unknown"),
+                entry("DefaultGunshiParams", "type", "export type DefaultGunshiParams = unknown"),
+            ],
+        }];
+
+        let markdown = generate_docs_markdown(
+            docs,
+            Some(JsDocsMarkdownOptions {
+                group_by: Some("file".to_string()),
+                link_style: Some("markdown".to_string()),
+                path_strategy: Some("typedoc".to_string()),
+                render_style: Some("markdown".to_string()),
+                parameters_format: Some("table".to_string()),
+                ..Default::default()
+            }),
+        );
+        let page = markdown.get("default/functions/plugin.md").unwrap();
+
+        assert!(page.contains("| `PluginExt` *extends* [`PluginExtension`](../type-aliases/PluginExtension.md)\\<`Extension`, [`DefaultGunshiParams`](../type-aliases/DefaultGunshiParams.md)\\> = [`PluginExtension`](../type-aliases/PluginExtension.md)\\<`Extension`, `ResolvedDepExtensions`\\> |  |"));
+        assert!(!page.contains("\\<\n"));
+        assert!(!page.contains("ResolvedDepExtensions`\n"));
+    }
+
+    #[test]
     fn generate_docs_markdown_renders_module_description_in_typedoc_index() {
         let docs = vec![JsDocsMarkdownModule {
             description: Some("The entry for gunshi context.".to_string()),

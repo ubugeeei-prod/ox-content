@@ -6,13 +6,13 @@
 //! same per-entry information as the HTML renderer — but as Markdown headings,
 //! tables and fenced code blocks (no `<details>`, no theme-specific HTML).
 
-use std::borrow::Cow;
 use std::collections::HashSet;
 
 use super::{
-    effective_members_format, effective_parameters_format, generate_source_href,
-    parse_example_block, process_doc_text, resolve_type_fragments, EntryStats, ExampleBlock,
-    MarkdownDisplayFormat, MarkdownDocsOptions, MarkdownLinkContext, TypeFragment,
+    collapse_inline_whitespace, collapse_type_annotation_whitespace, effective_members_format,
+    effective_parameters_format, generate_source_href, parse_example_block, process_doc_text,
+    resolve_type_fragments, EntryStats, ExampleBlock, MarkdownDisplayFormat, MarkdownDocsOptions,
+    MarkdownLinkContext, TypeFragment,
 };
 use crate::model::{
     ApiDocEntry, ApiDocMember, ApiDocTag, ApiParamDoc, ApiReturnDoc, ApiTypeParamDoc,
@@ -831,50 +831,9 @@ fn param_description(param: &ApiParamDoc, context: Option<&MarkdownLinkContext<'
     description
 }
 
-/// Collapses runs of whitespace (including newlines) into single spaces.
-///
-/// Borrows the input (after trimming) when it is already collapsed — i.e. every
-/// whitespace char is a single ASCII space with no runs — so the common case of
-/// already-clean doc text allocates nothing.
-fn collapse_whitespace(text: &str) -> Cow<'_, str> {
-    let text = text.trim();
-    if text.is_empty() {
-        return Cow::Borrowed("");
-    }
-    // Fast path: nothing to collapse iff every whitespace char is a lone ASCII
-    // space. Any other whitespace char, or two adjacent whitespace chars, would
-    // be rewritten below, so it must be owned.
-    let needs_collapse = {
-        let mut prev_ws = false;
-        text.chars().any(|ch| {
-            let collapse = ch.is_whitespace() && (ch != ' ' || prev_ws);
-            prev_ws = ch.is_whitespace();
-            collapse
-        })
-    };
-    if !needs_collapse {
-        return Cow::Borrowed(text);
-    }
-
-    let mut out = String::with_capacity(text.len());
-    let mut pending_space = false;
-    for ch in text.chars() {
-        if ch.is_whitespace() {
-            pending_space = !out.is_empty();
-        } else {
-            if pending_space {
-                out.push(' ');
-                pending_space = false;
-            }
-            out.push(ch);
-        }
-    }
-    Cow::Owned(out)
-}
-
 /// Inline Markdown for a doc-text fragment (resolves `{@link}`), single-line.
 fn inline(text: &str, context: Option<&MarkdownLinkContext<'_>>) -> String {
-    collapse_whitespace(&process_doc_text(text, context)).into_owned()
+    collapse_inline_whitespace(&process_doc_text(text, context)).into_owned()
 }
 
 /// Escapes a value for use inside a Markdown table cell.
@@ -904,7 +863,7 @@ fn push_table_cell(out: &mut String, text: &str) {
 
 /// Inline code for normal Markdown text; empty string if blank.
 fn code_span(value: &str) -> String {
-    let value = collapse_whitespace(value);
+    let value = collapse_inline_whitespace(value);
     if value.is_empty() {
         String::new()
     } else {
@@ -918,7 +877,7 @@ fn code_span(value: &str) -> String {
 
 /// Inline code for a Markdown table cell (`|` escaped); empty string if blank.
 fn code_cell(value: &str) -> String {
-    let value = collapse_whitespace(value);
+    let value = collapse_inline_whitespace(value);
     if value.is_empty() {
         String::new()
     } else {
@@ -962,8 +921,9 @@ fn linked_type(
     code: fn(&str) -> String,
     in_cell: bool,
 ) -> String {
-    match resolve_type_fragments(value, context, skip) {
-        None => code(value),
+    let value = collapse_type_annotation_whitespace(value);
+    match resolve_type_fragments(&value, context, skip) {
+        None => code(&value),
         Some(fragments) => {
             let mut out = String::new();
             for fragment in fragments {
