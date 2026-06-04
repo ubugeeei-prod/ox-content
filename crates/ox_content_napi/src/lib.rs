@@ -156,6 +156,8 @@ pub struct JsSourceDocItem {
     pub end_line: u32,
     pub exported: bool,
     pub signature: Option<String>,
+    pub extends: Option<Vec<String>>,
+    pub implements: Option<Vec<String>>,
     pub params: Vec<JsSourceDocParam>,
     pub return_type: Option<String>,
     pub return_members: Option<Vec<JsSourceDocItem>>,
@@ -209,6 +211,7 @@ pub struct JsDocMember {
     pub r#static: Option<bool>,
     pub private: Option<bool>,
     pub tags: Option<HashMap<String, String>>,
+    pub implementation_of: Option<Vec<String>>,
     pub line: u32,
     pub end_line: u32,
 }
@@ -229,6 +232,8 @@ pub struct JsDocEntry {
     pub line: u32,
     pub end_line: u32,
     pub signature: Option<String>,
+    pub extends: Option<Vec<String>>,
+    pub implements: Option<Vec<String>>,
     /// Whether a function declaration carries an implementation body. `false` for
     /// overload signatures and ambient declarations.
     pub has_body: bool,
@@ -290,6 +295,8 @@ pub struct JsDocsMarkdownEntry {
     pub line: u32,
     pub end_line: u32,
     pub signature: Option<String>,
+    pub extends: Option<Vec<String>>,
+    pub implements: Option<Vec<String>>,
     /// Whether a function declaration carries an implementation body. Optional so
     /// callers that build entries by hand need not set it; defaults to `false`.
     /// Round-trips from `extractDocsFromEntryPoints` output unchanged.
@@ -926,6 +933,8 @@ fn map_doc_item(item: DocItem) -> JsSourceDocItem {
         end_line: item.end_line,
         exported: item.exported,
         signature: item.signature,
+        extends: (!item.extends.is_empty()).then_some(item.extends),
+        implements: (!item.implements.is_empty()).then_some(item.implements),
         params: item.params.into_iter().map(map_param_doc).collect(),
         return_type: item.return_type,
         return_members,
@@ -968,6 +977,7 @@ fn map_normalized_member(member: NormalizedMember) -> JsDocMember {
         r#static: member.r#static.then_some(true),
         private: member.private.then_some(true),
         tags: (!member.tags.is_empty()).then(|| member.tags.into_iter().collect()),
+        implementation_of: None,
         line: member.line,
         end_line: member.end_line,
     }
@@ -988,6 +998,8 @@ fn map_normalized_doc_entry(entry: NormalizedDocEntry) -> JsDocEntry {
         line: entry.line,
         end_line: entry.end_line,
         signature: entry.signature,
+        extends: (!entry.extends.is_empty()).then_some(entry.extends),
+        implements: (!entry.implements.is_empty()).then_some(entry.implements),
         has_body: entry.has_body,
         members: (!entry.members.is_empty())
             .then(|| entry.members.into_iter().map(map_normalized_member).collect()),
@@ -1212,6 +1224,7 @@ fn convert_markdown_member(member: JsDocMember) -> ApiDocMember {
             .into_iter()
             .map(|(tag, value)| ApiDocTag { tag, value })
             .collect(),
+        implementation_of: member.implementation_of.unwrap_or_default(),
         line: member.line,
         end_line: member.end_line,
     }
@@ -1231,6 +1244,8 @@ fn convert_markdown_entry(entry: JsDocsMarkdownEntry) -> ApiDocEntry {
         line: entry.line,
         end_line: entry.end_line,
         signature: entry.signature,
+        extends: entry.extends.unwrap_or_default(),
+        implements: entry.implements.unwrap_or_default(),
         has_body: entry.has_body.unwrap_or(false),
         members: entry
             .members
@@ -3550,6 +3565,8 @@ mod tests {
             line: 1,
             end_line: 8,
             signature: Some("export interface Command".to_string()),
+            extends: vec![],
+            implements: vec![],
             has_body: false,
             members: vec![NormalizedMember {
                 name: "name".to_string(),
@@ -3578,6 +3595,34 @@ mod tests {
         assert_eq!(member.r#type.as_deref(), Some("string"));
         assert_eq!(member.optional, Some(true));
         assert_eq!(member.readonly, Some(true));
+    }
+
+    #[test]
+    fn normalized_doc_entry_maps_heritage_to_js_shape() {
+        let entry = NormalizedDocEntry {
+            name: "DefaultTranslation".to_string(),
+            kind: NormalizedDocKind::Class,
+            description: "Default adapter.".to_string(),
+            params: vec![],
+            returns: None,
+            examples: vec![],
+            tags: BTreeMap::new(),
+            private: false,
+            file: "adapter.ts".to_string(),
+            line: 1,
+            end_line: 10,
+            signature: Some("class DefaultTranslation implements TranslationAdapter".to_string()),
+            extends: vec!["BaseTranslation".to_string()],
+            implements: vec!["TranslationAdapter".to_string()],
+            has_body: false,
+            members: vec![],
+            type_parameters: vec![],
+        };
+
+        let js_entry = map_normalized_doc_entry(entry);
+
+        assert_eq!(js_entry.extends, Some(vec!["BaseTranslation".to_string()]));
+        assert_eq!(js_entry.implements, Some(vec!["TranslationAdapter".to_string()]));
     }
 
     #[test]
@@ -3614,6 +3659,8 @@ mod tests {
             line: 1,
             end_line: 8,
             signature: Some("export function resolveArgs(): object".to_string()),
+            extends: vec![],
+            implements: vec![],
             has_body: false,
             members: vec![],
             type_parameters: vec![],
@@ -3643,6 +3690,8 @@ mod tests {
             line: 1,
             end_line: 1,
             signature: Some("export function plugin(): void".to_string()),
+            extends: vec![],
+            implements: vec![],
             has_body: true,
             members: vec![],
             type_parameters: vec![],
@@ -3667,6 +3716,8 @@ mod tests {
             line: js_entry.line,
             end_line: js_entry.end_line,
             signature: js_entry.signature,
+            extends: None,
+            implements: None,
             has_body: Some(js_entry.has_body),
             members: None,
             type_parameters: None,
@@ -3689,12 +3740,61 @@ mod tests {
             line: 1,
             end_line: 1,
             signature: Some("export interface Command".to_string()),
+            extends: None,
+            implements: None,
             has_body: None,
             members: None,
             type_parameters: None,
         };
 
         assert!(!convert_markdown_entry(entry).has_body);
+    }
+
+    #[test]
+    fn convert_markdown_entry_preserves_heritage_and_implementation_metadata() {
+        let entry = JsDocsMarkdownEntry {
+            name: "DefaultTranslation".to_string(),
+            kind: "class".to_string(),
+            description: "Default adapter.".to_string(),
+            params: None,
+            returns: None,
+            examples: None,
+            tags: None,
+            private: false,
+            file: "adapter.ts".to_string(),
+            line: 1,
+            end_line: 10,
+            signature: Some("class DefaultTranslation implements TranslationAdapter".to_string()),
+            extends: Some(vec!["BaseTranslation".to_string()]),
+            implements: Some(vec!["TranslationAdapter".to_string()]),
+            has_body: None,
+            members: Some(vec![JsDocMember {
+                name: "getResource".to_string(),
+                kind: "method".to_string(),
+                description: "Gets a locale resource.".to_string(),
+                signature: Some(
+                    "getResource(locale: string): Record<string, string> | undefined".to_string(),
+                ),
+                r#type: None,
+                params: None,
+                returns: None,
+                optional: None,
+                readonly: None,
+                r#static: None,
+                private: None,
+                tags: None,
+                implementation_of: Some(vec!["TranslationAdapter.getResource".to_string()]),
+                line: 5,
+                end_line: 8,
+            }]),
+            type_parameters: None,
+        };
+
+        let converted = convert_markdown_entry(entry);
+
+        assert_eq!(converted.extends, vec!["BaseTranslation"]);
+        assert_eq!(converted.implements, vec!["TranslationAdapter"]);
+        assert_eq!(converted.members[0].implementation_of, vec!["TranslationAdapter.getResource"]);
     }
 
     #[test]
@@ -3718,6 +3818,8 @@ mod tests {
                 line: 1,
                 end_line: 1,
                 signature: Some("export interface CommandContext".to_string()),
+                extends: None,
+                implements: None,
                 has_body: None,
                 members: None,
                 type_parameters: None,
@@ -3762,6 +3864,8 @@ mod tests {
                 line: 1,
                 end_line: 1,
                 signature: Some("export interface CommandContext".to_string()),
+                extends: None,
+                implements: None,
                 has_body: None,
                 members: None,
                 type_parameters: None,
@@ -3814,6 +3918,8 @@ mod tests {
                 line: 1,
                 end_line: 1,
                 signature: Some("export function make(value: string): void".to_string()),
+                extends: None,
+                implements: None,
                 has_body: None,
                 members: None,
                 type_parameters: None,
@@ -3857,6 +3963,8 @@ mod tests {
                     line: 1,
                     end_line: 10,
                     signature: Some("export interface Command".to_string()),
+                    extends: None,
+                    implements: None,
                     has_body: None,
                     members: Some(vec![JsDocMember {
                         name: "args".to_string(),
@@ -3871,6 +3979,7 @@ mod tests {
                         r#static: Some(false),
                         private: Some(false),
                         tags: None,
+                        implementation_of: None,
                         line: 5,
                         end_line: 5,
                     }]),
@@ -3911,6 +4020,8 @@ mod tests {
                     signature: Some(
                         "export function buildCommand(entry: Command): Command".to_string(),
                     ),
+                    extends: None,
+                    implements: None,
                     has_body: None,
                     members: None,
                     type_parameters: None,
@@ -3955,6 +4066,8 @@ mod tests {
                     line: 1,
                     end_line: 10,
                     signature: Some("export interface Command".to_string()),
+                    extends: None,
+                    implements: None,
                     has_body: None,
                     members: None,
                     type_parameters: None,
@@ -3972,6 +4085,8 @@ mod tests {
                     line: 1,
                     end_line: 10,
                     signature: Some("export function cli(): void".to_string()),
+                    extends: None,
+                    implements: None,
                     has_body: None,
                     members: None,
                     type_parameters: None,
@@ -4019,6 +4134,8 @@ mod tests {
                 line: 1,
                 end_line: 1,
                 signature: Some(format!("export declare const {name}: unknown")),
+                extends: None,
+                implements: None,
                 has_body: None,
                 members: None,
                 type_parameters: None,
@@ -4069,6 +4186,8 @@ mod tests {
                     line: 1,
                     end_line: 1,
                     signature: Some("export function cli(): void".to_string()),
+                    extends: None,
+                    implements: None,
                     has_body: None,
                     members: None,
                     type_parameters: None,
@@ -4110,6 +4229,8 @@ mod tests {
             line: 1,
             end_line: 1,
             signature: Some("export function createCommandContext(): void".to_string()),
+            extends: None,
+            implements: None,
             has_body: None,
             members: None,
             type_parameters: None,
@@ -4172,6 +4293,8 @@ mod tests {
                 line: 1,
                 end_line: 1,
                 signature: Some("export function make<G>(): G".to_string()),
+                extends: None,
+                implements: None,
                 has_body: None,
                 members: None,
                 type_parameters: Some(vec![JsTypeParam {
@@ -4219,6 +4342,8 @@ mod tests {
                 line: 1,
                 end_line: 1,
                 signature: Some(signature.to_string()),
+                extends: None,
+                implements: None,
                 has_body: None,
                 members: None,
                 type_parameters: None,
@@ -4310,6 +4435,7 @@ mod tests {
                             r#static: Some(false),
                             private: Some(false),
                             tags: None,
+                            implementation_of: None,
                             line: 1,
                             end_line: 1,
                         }]),
@@ -4321,6 +4447,8 @@ mod tests {
                     line: 1,
                     end_line: 1,
                     signature: Some("export function resolveArgs(): object".to_string()),
+                    extends: None,
+                    implements: None,
                     has_body: None,
                     members: None,
                     type_parameters: None,
@@ -4338,6 +4466,8 @@ mod tests {
                     line: 1,
                     end_line: 1,
                     signature: Some("export type ArgValues = unknown".to_string()),
+                    extends: None,
+                    implements: None,
                     has_body: None,
                     members: None,
                     type_parameters: None,
@@ -4380,6 +4510,8 @@ mod tests {
                 line: 1,
                 end_line: 10,
                 signature: Some("export function createCommandContext(): void".to_string()),
+                extends: None,
+                implements: None,
                 has_body: None,
                 members: None,
                 type_parameters: None,
@@ -4429,6 +4561,8 @@ mod tests {
                     line: 1,
                     end_line: 1,
                     signature: None,
+                    extends: None,
+                    implements: None,
                     has_body: None,
                     members: None,
                     type_parameters: None,
@@ -4446,6 +4580,8 @@ mod tests {
                     line: 1,
                     end_line: 1,
                     signature: None,
+                    extends: None,
+                    implements: None,
                     has_body: None,
                     members: None,
                     type_parameters: None,
@@ -4523,6 +4659,8 @@ mod tests {
                 line: 1,
                 end_line: 1,
                 signature: Some("export function cli(): void".to_string()),
+                extends: None,
+                implements: None,
                 has_body: None,
                 members: None,
                 type_parameters: None,

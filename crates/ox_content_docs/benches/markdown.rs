@@ -142,6 +142,7 @@ fn member(module: usize, entry: usize, index: usize) -> ApiDocMember {
         r#static: index % 11 == 0,
         private: false,
         tags: Vec::new(),
+        implementation_of: Vec::new(),
         line: index as u32 + 10,
         end_line: index as u32 + 10,
     }
@@ -236,6 +237,8 @@ fn entry(module: usize, index: usize) -> ApiDocEntry {
                 signature
             }
         }),
+        extends: Vec::new(),
+        implements: Vec::new(),
         has_body: false,
         members: if kind != "function" {
             (0..16).map(|i| member(module, index, i)).collect()

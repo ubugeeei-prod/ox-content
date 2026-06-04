@@ -252,7 +252,8 @@ pub fn generate_markdown(
 ) -> BTreeMap<String, String> {
     profile_span!("docs::generate_markdown");
     let mut result = BTreeMap::new();
-    let sorted_docs = sort_extracted_docs(docs, options);
+    let mut sorted_docs = sort_extracted_docs(docs, options);
+    annotate_implementation_relationships(&mut sorted_docs);
     let symbol_map = build_symbol_map(&sorted_docs, options);
 
     if options.group_by == "file" {
@@ -1086,6 +1087,87 @@ fn sort_extracted_docs(docs: &[ApiDocModule], options: &MarkdownDocsOptions) -> 
         });
     }
     sorted
+}
+
+fn annotate_implementation_relationships(docs: &mut [ApiDocModule]) {
+    let mut implemented_names = HashSet::new();
+    for doc in docs.iter() {
+        for entry in &doc.entries {
+            if entry.kind != "class" || entry.implements.is_empty() {
+                continue;
+            }
+            for implemented in &entry.implements {
+                let display_name = heritage_display_name(implemented);
+                implemented_names.insert(heritage_lookup_name(display_name.as_ref()).to_string());
+            }
+        }
+    }
+    if implemented_names.is_empty() {
+        return;
+    }
+
+    let mut implementable_members: HashMap<String, HashSet<String>> =
+        HashMap::with_capacity(implemented_names.len());
+    for doc in docs.iter() {
+        for entry in &doc.entries {
+            if !matches!(entry.kind.as_str(), "interface" | "type") {
+                continue;
+            }
+            if !implemented_names.contains(entry.name.as_str()) {
+                continue;
+            }
+            let members =
+                entry.members.iter().map(|member| member.name.clone()).collect::<HashSet<_>>();
+            implementable_members.insert(entry.name.clone(), members);
+        }
+    }
+    if implementable_members.is_empty() {
+        return;
+    }
+
+    for doc in docs {
+        for entry in &mut doc.entries {
+            if entry.kind != "class" || entry.implements.is_empty() {
+                continue;
+            }
+            for implemented in &entry.implements {
+                let display_name = heritage_display_name(implemented);
+                let lookup_name = heritage_lookup_name(display_name.as_ref());
+                let Some(interface_members) = implementable_members.get(lookup_name) else {
+                    continue;
+                };
+                for member in &mut entry.members {
+                    if interface_members.contains(&member.name) {
+                        let mut implementation = StringBuilder::new();
+                        implementation.push_str(display_name.as_ref());
+                        implementation.push_char('.');
+                        implementation.push_str(&member.name);
+                        let implementation = implementation.into_string();
+                        if !member
+                            .implementation_of
+                            .iter()
+                            .any(|existing| existing == &implementation)
+                        {
+                            member.implementation_of.push(implementation);
+                        }
+                    }
+                }
+            }
+        }
+    }
+}
+
+fn heritage_lookup_name(display_name: &str) -> &str {
+    display_name.rsplit_once('.').map_or(display_name, |(_, tail)| tail)
+}
+
+fn heritage_display_name(name: &str) -> Cow<'_, str> {
+    let trimmed = name.trim();
+    if let Some(index) = trimmed.find('<') {
+        Cow::Owned(trimmed[..index].trim().to_string())
+    } else {
+        Cow::Borrowed(trimmed)
+    }
 }
 
 /// Sorts an entry's members alphabetically (case-insensitive) for the member kinds
@@ -2692,6 +2774,8 @@ mod tests {
             line: 1,
             end_line: 1,
             signature: Some(join3("export function ", name, "(): void")),
+            extends: vec![],
+            implements: vec![],
             has_body: false,
             members: vec![],
             type_parameters: vec![],
@@ -2760,6 +2844,8 @@ mod tests {
                     line: 1,
                     end_line: 3,
                     signature: Some("export function cli(argv: string[]): void".to_string()),
+                    extends: vec![],
+                    implements: vec![],
                     has_body: false,
                     members: vec![],
                     type_parameters: vec![],
@@ -2777,6 +2863,8 @@ mod tests {
                     line: 5,
                     end_line: 8,
                     signature: Some("export interface Command".to_string()),
+                    extends: vec![],
+                    implements: vec![],
                     has_body: false,
                     members: vec![ApiDocMember {
                         name: "run".to_string(),
@@ -2791,6 +2879,7 @@ mod tests {
                         r#static: false,
                         private: false,
                         tags: vec![],
+                        implementation_of: vec![],
                         line: 6,
                         end_line: 6,
                     }],
@@ -2851,11 +2940,9 @@ mod tests {
         assert!(!page.contains("**Signature**"));
         assert!(page.contains("```ts"));
         assert!(page.contains("- `argv` (`string[]`) - Arguments."));
-        // Named member groups drop the redundant Kind column (the heading states it).
-        assert!(page.contains("| Name | Type | Description |"));
-        assert!(!page.contains("| Name | Kind | Type | Description |"));
-        // The interface member group is a real heading (no `**Members**` wrapper).
+        // The callable interface member group renders as real detail headings.
         assert!(page.lines().any(|line| line == "#### Methods"));
+        assert!(page.lines().any(|line| line == "##### run()"));
         assert!(!page.contains("**Members**"));
         assert!(page.contains("[View source](https://github.com/x/y/blob/main/"));
 
@@ -3148,6 +3235,8 @@ mod tests {
                     line: 1,
                     end_line: 10,
                     signature: Some("export interface Command".to_string()),
+                    extends: vec![],
+                    implements: vec![],
                     has_body: false,
                     members: vec![ApiDocMember {
                         name: "args".to_string(),
@@ -3163,6 +3252,7 @@ mod tests {
                         r#static: false,
                         private: false,
                         tags: vec![],
+                        implementation_of: vec![],
                         line: 5,
                         end_line: 5,
                     }],
@@ -3210,6 +3300,8 @@ mod tests {
                     signature: Some(
                         "export function buildCommand(entry: Command): AgentProfile".to_string(),
                     ),
+                    extends: vec![],
+                    implements: vec![],
                     has_body: false,
                     members: vec![],
                     type_parameters: vec![],
@@ -3260,6 +3352,8 @@ mod tests {
                     line: 1,
                     end_line: 10,
                     signature: Some("export function cli(options: CliOptions): void".to_string()),
+                    extends: vec![],
+                    implements: vec![],
                     has_body: false,
                     members: vec![],
                     type_parameters: vec![],
@@ -3277,6 +3371,8 @@ mod tests {
                     line: 1,
                     end_line: 20,
                     signature: Some("export interface CliOptions".to_string()),
+                    extends: vec![],
+                    implements: vec![],
                     has_body: false,
                     members: vec![ApiDocMember {
                         name: "usageSilent".to_string(),
@@ -3291,6 +3387,7 @@ mod tests {
                         r#static: false,
                         private: false,
                         tags: vec![],
+                        implementation_of: vec![],
                         line: 5,
                         end_line: 5,
                     }],
@@ -3622,6 +3719,7 @@ mod tests {
             r#static: false,
             private: false,
             tags: vec![],
+            implementation_of: vec![],
             line: 2,
             end_line: 2,
         }];
@@ -3684,6 +3782,7 @@ mod tests {
             r#static: false,
             private: false,
             tags: vec![],
+            implementation_of: vec![],
             line: 2,
             end_line: 2,
         }];
@@ -3705,7 +3804,8 @@ mod tests {
             },
         );
         let list_page = list_markdown.get("mod/interfaces/Command.md").unwrap();
-        assert!(list_page.contains("### run Parameters"));
+        assert!(list_page.contains("### run()"));
+        assert!(list_page.contains("#### Parameters"));
         assert!(list_page.contains("- `ctx` (`Context`) - Runtime context."));
 
         let table_markdown = generate_markdown(
@@ -3718,9 +3818,145 @@ mod tests {
             },
         );
         let table_page = table_markdown.get("mod/interfaces/Command.md").unwrap();
-        assert!(table_page.contains("### run Parameters"));
+        assert!(table_page.contains("### run()"));
+        assert!(table_page.contains("#### Parameters"));
         assert!(table_page.contains("| Name | Type | Description |"));
         assert!(table_page.contains("| `ctx` | `Context` | Runtime context. |"));
+    }
+
+    #[test]
+    fn typedoc_markdown_renders_class_callable_member_details() {
+        let mut adapter =
+            test_entry("TranslationAdapter", "interface", "/repo/src/i18n.ts", "Runtime adapter.");
+        adapter.members = vec![ApiDocMember {
+            name: "getResource".to_string(),
+            kind: "method".to_string(),
+            description: "Gets a locale resource.".to_string(),
+            signature: Some(
+                "getResource(locale: string): Record<string, string> | undefined".to_string(),
+            ),
+            type_annotation: None,
+            params: vec![ApiParamDoc {
+                name: "locale".to_string(),
+                type_annotation: "string".to_string(),
+                description: "Locale name.".to_string(),
+                optional: false,
+                default_value: None,
+            }],
+            returns: Some(ApiReturnDoc {
+                type_annotation: "Record<string, string> | undefined".to_string(),
+                description: "The locale resource.".to_string(),
+                members: Vec::new(),
+            }),
+            optional: false,
+            readonly: false,
+            r#static: false,
+            private: false,
+            tags: vec![],
+            implementation_of: vec![],
+            line: 4,
+            end_line: 4,
+        }];
+
+        let mut implementation = test_entry(
+            "DefaultTranslation",
+            "class",
+            "/repo/src/i18n.ts",
+            "Default runtime adapter.",
+        );
+        implementation.signature =
+            Some("class DefaultTranslation implements TranslationAdapter".to_string());
+        implementation.implements = vec!["TranslationAdapter".to_string()];
+        implementation.members = vec![
+            ApiDocMember {
+                name: "constructor".to_string(),
+                kind: "constructor".to_string(),
+                description: "Creates the adapter.".to_string(),
+                signature: Some(
+                    "constructor(options: TranslationAdapterFactoryOptions)".to_string(),
+                ),
+                type_annotation: None,
+                params: vec![ApiParamDoc {
+                    name: "options".to_string(),
+                    type_annotation: "TranslationAdapterFactoryOptions".to_string(),
+                    description: "Adapter options.".to_string(),
+                    optional: false,
+                    default_value: None,
+                }],
+                returns: None,
+                optional: false,
+                readonly: false,
+                r#static: false,
+                private: false,
+                tags: vec![],
+                implementation_of: vec![],
+                line: 10,
+                end_line: 10,
+            },
+            ApiDocMember {
+                name: "getResource".to_string(),
+                kind: "method".to_string(),
+                description: "Gets a locale resource.".to_string(),
+                signature: Some(
+                    "getResource(locale: string): Record<string, string> | undefined".to_string(),
+                ),
+                type_annotation: None,
+                params: vec![ApiParamDoc {
+                    name: "locale".to_string(),
+                    type_annotation: "string".to_string(),
+                    description: "Locale name.".to_string(),
+                    optional: false,
+                    default_value: None,
+                }],
+                returns: Some(ApiReturnDoc {
+                    type_annotation: "Record<string, string> | undefined".to_string(),
+                    description: "The locale resource.".to_string(),
+                    members: Vec::new(),
+                }),
+                optional: false,
+                readonly: false,
+                r#static: false,
+                private: false,
+                tags: vec![],
+                implementation_of: vec![],
+                line: 14,
+                end_line: 16,
+            },
+        ];
+        let docs = vec![ApiDocModule {
+            description: String::new(),
+            file: "default".to_string(),
+            source_path: String::new(),
+            examples: vec![],
+            tags: vec![],
+            entries: vec![adapter, implementation],
+        }];
+
+        let markdown = generate_markdown(
+            &docs,
+            &MarkdownDocsOptions {
+                parameters_format: MarkdownDisplayFormat::Table,
+                ..markdown_typedoc_options()
+            },
+        );
+        let page = markdown.get("default/classes/DefaultTranslation.md").unwrap();
+
+        assert!(page.contains("## Implements"));
+        assert!(page.contains("TranslationAdapter"));
+        assert!(page.contains("## Constructors"));
+        assert!(page.contains("### Constructor"));
+        assert!(page.contains(
+            "new DefaultTranslation(options: TranslationAdapterFactoryOptions): DefaultTranslation;"
+        ));
+        assert!(page.contains("#### Returns"));
+        assert!(page.contains("`DefaultTranslation`"));
+        assert!(page.contains("## Methods"));
+        assert!(page.contains("### getResource()"));
+        assert!(page.contains("getResource(locale: string): Record<string, string> | undefined;"));
+        assert!(page.contains("#### Parameters"));
+        assert!(page.contains("| `locale` | `string` | Locale name. |"));
+        assert!(page.contains("#### Implementation of"));
+        assert!(page.contains("TranslationAdapter.getResource"));
     }
 
     #[test]
@@ -3755,6 +3991,7 @@ mod tests {
                 r#static: false,
                 private: false,
                 tags: vec![],
+                implementation_of: vec![],
                 line: 2,
                 end_line: 2,
             },
@@ -3777,6 +4014,7 @@ mod tests {
                 r#static: false,
                 private: false,
                 tags: vec![],
+                implementation_of: vec![],
                 line: 3,
                 end_line: 3,
             },
@@ -4370,6 +4608,8 @@ mod tests {
             line: 1,
             end_line: 1,
             signature: Some(signature.to_string()),
+            extends: vec![],
+            implements: vec![],
             has_body,
             members: vec![],
             type_parameters: vec![],
@@ -4395,6 +4635,100 @@ mod tests {
         }
     }
 
+    #[test]
+    fn typedoc_html_renders_class_callable_member_details() {
+        let mut adapter =
+            test_entry("TranslationAdapter", "interface", "/repo/src/i18n.ts", "Runtime adapter.");
+        adapter.members = vec![ApiDocMember {
+            name: "getResource".to_string(),
+            kind: "method".to_string(),
+            description: "Gets a locale resource.".to_string(),
+            signature: Some(
+                "getResource(locale: string): Record<string, string> | undefined".to_string(),
+            ),
+            type_annotation: None,
+            params: vec![ApiParamDoc {
+                name: "locale".to_string(),
+                type_annotation: "string".to_string(),
+                description: "Locale name.".to_string(),
+                optional: false,
+                default_value: None,
+            }],
+            returns: Some(ApiReturnDoc {
+                type_annotation: "Record<string, string> | undefined".to_string(),
+                description: "The locale resource.".to_string(),
+                members: Vec::new(),
+            }),
+            optional: false,
+            readonly: false,
+            r#static: false,
+            private: false,
+            tags: vec![],
+            implementation_of: vec![],
+            line: 4,
+            end_line: 4,
+        }];
+
+        let mut implementation = test_entry(
+            "DefaultTranslation",
+            "class",
+            "/repo/src/i18n.ts",
+            "Default runtime adapter.",
+        );
+        implementation.signature =
+            Some("class DefaultTranslation implements TranslationAdapter".to_string());
+        implementation.implements = vec!["TranslationAdapter".to_string()];
+        implementation.members = vec![ApiDocMember {
+            name: "getResource".to_string(),
+            kind: "method".to_string(),
+            description: "Gets a locale resource.".to_string(),
+            signature: Some(
+                "getResource(locale: string): Record<string, string> | undefined".to_string(),
+            ),
+            type_annotation: None,
+            params: vec![ApiParamDoc {
+                name: "locale".to_string(),
+                type_annotation: "string".to_string(),
+                description: "Locale name.".to_string(),
+                optional: false,
+                default_value: None,
+            }],
+            returns: Some(ApiReturnDoc {
+                type_annotation: "Record<string, string> | undefined".to_string(),
+                description: "The locale resource.".to_string(),
+                members: Vec::new(),
+            }),
+            optional: false,
+            readonly: false,
+            r#static: false,
+            private: false,
+            tags: vec![],
+            implementation_of: vec![],
+            line: 14,
+            end_line: 16,
+        }];
+        let docs = vec![ApiDocModule {
+            description: String::new(),
+            file: "default".to_string(),
+            source_path: String::new(),
+            examples: vec![],
+            tags: vec![],
+            entries: vec![adapter, implementation],
+        }];
+
+        let markdown = generate_markdown(&docs, &html_typedoc_options());
+        let page = markdown.get("default/classes/DefaultTranslation.md").unwrap();
+
+        assert!(page.contains("<h4>Implements</h4>"));
+        assert!(page.contains("TranslationAdapter"));
+        assert!(page.contains("ox-api-entry__member-group--details"));
+        assert!(page.contains("<h5>getResource()</h5>"));
+        assert!(page.contains("ox-api-entry__member-detail-section--params"));
+        assert!(page.contains("<h6>Returns</h6>"));
+        assert!(page.contains("ox-api-entry__member-detail-section--implementation-of"));
+        assert!(page.contains("TranslationAdapter.getResource"));
+    }
+
     fn member(name: &str, kind: &str, is_static: bool) -> ApiDocMember {
         ApiDocMember {
             name: name.to_string(),
@@ -4409,6 +4743,7 @@ mod tests {
             r#static: is_static,
             private: false,
             tags: vec![],
+            implementation_of: vec![],
             line: 1,
             end_line: 1,
         }
@@ -4511,6 +4846,7 @@ mod tests {
             r#static: false,
             private: false,
             tags: vec![],
+            implementation_of: vec![],
             line: 1,
             end_line: 1,
         }
@@ -4809,11 +5145,12 @@ mod tests {
         let out = generate_markdown(&lifecycle_module(entry), &markdown_typedoc_options());
         let page = out.get("combinators/classes/Engine.md").unwrap();
 
-        let pos = |name: &str| page.find(&join3("`", name, "`")).unwrap();
+        let property_pos = |name: &str| page.find(&join3("`", name, "`")).unwrap();
+        let method_pos = |name: &str| page.find(&join3("### ", name, "()")).unwrap();
         // Properties group alphabetical.
-        assert!(pos("alpha") < pos("zeta"));
+        assert!(property_pos("alpha") < property_pos("zeta"));
         // Methods group alphabetical.
-        assert!(pos("build") < pos("run"));
+        assert!(method_pos("build") < method_pos("run"));
     }
 
     #[test]
@@ -5011,6 +5348,7 @@ mod tests {
                 ApiDocTag { tag: "deprecated".to_string(), value: String::new() },
                 ApiDocTag { tag: "since".to_string(), value: "1.0.0".to_string() },
             ],
+            implementation_of: vec![],
             line: 1,
             end_line: 1,
         }];
@@ -5266,6 +5604,7 @@ mod tests {
             r#static: false,
             private: false,
             tags: vec![ApiDocTag { tag: "experimental".to_string(), value: String::new() }],
+            implementation_of: vec![],
             line: 1,
             end_line: 1,
         }];
@@ -5330,6 +5669,7 @@ mod tests {
             r#static: false,
             private: false,
             tags: vec![ApiDocTag { tag: "since".to_string(), value: "v0.27.0".to_string() }],
+            implementation_of: vec![],
             line: 1,
             end_line: 1,
         }];
@@ -5662,6 +6002,8 @@ mod tests {
                     line: 1,
                     end_line: 5,
                     signature: Some("export enum Mode".to_string()),
+                    extends: vec![],
+                    implements: vec![],
                     has_body: false,
                     members: vec![ApiDocMember {
                         name: "Strict".to_string(),
@@ -5676,6 +6018,7 @@ mod tests {
                         r#static: false,
                         private: false,
                         tags: vec![],
+                        implementation_of: vec![],
                         line: 2,
                         end_line: 2,
                     }],
@@ -5694,6 +6037,8 @@ mod tests {
                     line: 1,
                     end_line: 5,
                     signature: Some("export function run(mode: Mode): void".to_string()),
+                    extends: vec![],
+                    implements: vec![],
                     has_body: false,
                     members: vec![],
                     type_parameters: vec![],
@@ -5743,6 +6088,8 @@ mod tests {
                 line: 1,
                 end_line: 10,
                 signature: Some("export interface Command".to_string()),
+                extends: vec![],
+                implements: vec![],
                 has_body: false,
                 members: vec![
                     ApiDocMember {
@@ -5758,6 +6105,7 @@ mod tests {
                         r#static: false,
                         private: false,
                         tags: vec![],
+                        implementation_of: vec![],
                         line: 5,
                         end_line: 5,
                     },
@@ -5784,6 +6132,7 @@ mod tests {
                         r#static: false,
                         private: false,
                         tags: vec![],
+                        implementation_of: vec![],
                         line: 7,
                         end_line: 7,
                     },

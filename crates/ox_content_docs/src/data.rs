@@ -164,6 +164,12 @@ fn entry_to_json(entry: &ApiDocEntry) -> Value {
     if let Some(signature) = &entry.signature {
         value.insert("signature".to_string(), json!(signature));
     }
+    if !entry.extends.is_empty() {
+        value.insert("extends".to_string(), json!(entry.extends));
+    }
+    if !entry.implements.is_empty() {
+        value.insert("implements".to_string(), json!(entry.implements));
+    }
 
     Value::Object(value)
 }
@@ -207,6 +213,9 @@ fn member_to_json(member: &ApiDocMember) -> Value {
                 member.tags.iter().map(|tag| (tag.tag.clone(), json!(tag.value))).collect(),
             ),
         );
+    }
+    if !member.implementation_of.is_empty() {
+        value.insert("implementationOf".to_string(), json!(member.implementation_of));
     }
     value.insert("line".to_string(), json!(member.line));
     value.insert("endLine".to_string(), json!(member.end_line));
@@ -301,6 +310,8 @@ mod tests {
                 line: 10,
                 end_line: 10,
                 signature: Some("export function clamp(value: number): number".to_string()),
+                extends: vec![],
+                implements: vec![],
                 has_body: false,
                 members: vec![],
                 type_parameters: vec![],
@@ -368,6 +379,8 @@ mod tests {
                 line: 15,
                 end_line: 23,
                 signature: Some("type Combinator = unknown".to_string()),
+                extends: vec![],
+                implements: vec![],
                 has_body: false,
                 members: vec![],
                 type_parameters: vec![],
@@ -407,6 +420,8 @@ mod tests {
                 line: 1,
                 end_line: 1,
                 signature: None,
+                extends: vec![],
+                implements: vec![],
                 has_body: false,
                 members: vec![],
                 type_parameters: vec![
@@ -467,6 +482,7 @@ mod tests {
                         r#static: false,
                         private: false,
                         tags: vec![],
+                        implementation_of: vec![],
                         line: 3,
                         end_line: 3,
                     }],
@@ -478,6 +494,8 @@ mod tests {
                 line: 1,
                 end_line: 6,
                 signature: None,
+                extends: vec![],
+                implements: vec![],
                 has_body: false,
                 members: vec![],
                 type_parameters: vec![],
@@ -491,5 +509,64 @@ mod tests {
         assert_eq!(returns["type"], "object");
         assert_eq!(returns["members"][0]["name"], "values");
         assert_eq!(returns["members"][0]["type"], "ArgValues<A>");
+    }
+
+    #[test]
+    fn heritage_and_implementation_metadata_serialize_to_json() {
+        let docs = vec![ApiDocModule {
+            description: String::new(),
+            file: "/repo/src/adapter.ts".to_string(),
+            source_path: String::new(),
+            examples: vec![],
+            tags: vec![],
+            entries: vec![ApiDocEntry {
+                name: "DefaultTranslation".to_string(),
+                kind: "class".to_string(),
+                description: "Default adapter.".to_string(),
+                params: vec![],
+                returns: None,
+                examples: vec![],
+                tags: vec![],
+                private: false,
+                file: "/repo/src/adapter.ts".to_string(),
+                line: 1,
+                end_line: 10,
+                signature: Some(
+                    "class DefaultTranslation implements TranslationAdapter".to_string(),
+                ),
+                extends: vec!["BaseTranslation".to_string()],
+                implements: vec!["TranslationAdapter".to_string()],
+                has_body: false,
+                members: vec![ApiDocMember {
+                    name: "getResource".to_string(),
+                    kind: "method".to_string(),
+                    description: "Gets a locale resource.".to_string(),
+                    signature: Some(
+                        "getResource(locale: string): Record<string, string> | undefined"
+                            .to_string(),
+                    ),
+                    type_annotation: None,
+                    params: vec![],
+                    returns: None,
+                    optional: false,
+                    readonly: false,
+                    r#static: false,
+                    private: false,
+                    tags: vec![],
+                    implementation_of: vec!["TranslationAdapter.getResource".to_string()],
+                    line: 5,
+                    end_line: 8,
+                }],
+                type_parameters: vec![],
+            }],
+        }];
+
+        let json = generate_docs_data_json(&docs, "2026-06-05T00:00:00.000Z").unwrap();
+        let value: Value = serde_json::from_str(&json).unwrap();
+        let entry = &value["modules"][0]["entries"][0];
+
+        assert_eq!(entry["extends"][0], "BaseTranslation");
+        assert_eq!(entry["implements"][0], "TranslationAdapter");
+        assert_eq!(entry["members"][0]["implementationOf"][0], "TranslationAdapter.getResource");
     }
 }

@@ -260,6 +260,8 @@ export interface JsDocEntry {
   line: number
   endLine: number
   signature?: string
+  extends?: Array<string>
+  implements?: Array<string>
   /**
    * Whether a function declaration carries an implementation body. `false` for
    * overload signatures and ambient declarations.
@@ -283,6 +285,7 @@ export interface JsDocMember {
   static?: boolean
   private?: boolean
   tags?: Record<string, string>
+  implementationOf?: Array<string>
   line: number
   endLine: number
 }
@@ -327,6 +330,8 @@ export interface JsDocsMarkdownEntry {
   line: number
   endLine: number
   signature?: string
+  extends?: Array<string>
+  implements?: Array<string>
   /**
    * Whether a function declaration carries an implementation body. Optional so
    * callers that build entries by hand need not set it; defaults to `false`.
@@ -914,6 +919,8 @@ export interface JsSourceDocItem {
   endLine: number
   exported: boolean
   signature?: string
+  extends?: Array<string>
+  implements?: Array<string>
   params: Array<JsSourceDocParam>
   returnType?: string
   returnMembers?: Array<JsSourceDocItem>

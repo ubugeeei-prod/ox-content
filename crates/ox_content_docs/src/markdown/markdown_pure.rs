@@ -161,6 +161,7 @@ pub(super) fn render_entry_body_pure(
     // `@since` / `@version` render as a dedicated `## Since` section near the
     // summary instead of a generic `## Tags` entry.
     out.push_str(&render_since_section(&entry.tags, context, &heading));
+    push_heritage_sections(&mut out, entry, context, &heading);
 
     if let Some(signature) = &entry.signature {
         out.push_str(&heading);
@@ -204,6 +205,38 @@ pub(super) fn render_entry_body_pure(
     push_generic_tags(&mut out, &entry.tags, context, &heading);
 
     out.trim_end().to_string()
+}
+
+fn push_heritage_sections(
+    out: &mut String,
+    entry: &ApiDocEntry,
+    context: Option<&MarkdownLinkContext<'_>>,
+    heading: &str,
+) {
+    push_heritage_section(out, "Extends", &entry.extends, context, heading);
+    push_heritage_section(out, "Implements", &entry.implements, context, heading);
+}
+
+fn push_heritage_section(
+    out: &mut String,
+    title: &str,
+    items: &[String],
+    context: Option<&MarkdownLinkContext<'_>>,
+    heading: &str,
+) {
+    if items.is_empty() {
+        return;
+    }
+    out.push_str(heading);
+    out.push(' ');
+    out.push_str(title);
+    out.push_str("\n\n");
+    for item in items {
+        out.push_str("- ");
+        out.push_str(&linked_type_span(item, context));
+        out.push('\n');
+    }
+    out.push('\n');
 }
 
 /// Renders an overloaded function's symbol page body: an optional symbol-level
@@ -513,6 +546,7 @@ fn render_members_pure(
     let mut out = String::new();
     let heading = "#".repeat(section_level);
     let group_context = MemberGroupRenderContext {
+        entry_name: &entry.name,
         entry_kind: &entry.kind,
         options,
         link_context: context,
@@ -625,6 +659,7 @@ fn render_members_pure(
 }
 
 struct MemberGroupRenderContext<'a, 'ctx> {
+    entry_name: &'a str,
     entry_kind: &'a str,
     options: &'a MarkdownDocsOptions,
     link_context: Option<&'a MarkdownLinkContext<'ctx>>,
@@ -701,6 +736,11 @@ fn render_member_group_pure(
     out.push(' ');
     out.push_str(title);
     out.push_str("\n\n");
+    if members.iter().all(|member| is_callable_member(member)) {
+        render_callable_member_details_pure(out, title, members, context);
+        return;
+    }
+
     if effective_members_format(context.options, context.entry_kind, title)
         == MarkdownDisplayFormat::List
     {
@@ -752,6 +792,115 @@ fn render_member_group_pure(
         context.link_context,
         context.parameter_section_level,
     ));
+}
+
+fn render_callable_member_details_pure(
+    out: &mut String,
+    title: &str,
+    members: &[&ApiDocMember],
+    context: &MemberGroupRenderContext<'_, '_>,
+) {
+    let member_heading = "#".repeat(context.parameter_section_level);
+    let detail_heading = "#".repeat(context.parameter_section_level + 1);
+
+    for (index, member) in members.iter().enumerate() {
+        if index > 0 {
+            out.push_str("***\n\n");
+        }
+        out.push_str(&member_heading);
+        out.push(' ');
+        push_callable_member_heading(out, member, title);
+        out.push_str("\n\n");
+
+        if let Some(signature) = callable_member_signature(member, context.entry_name) {
+            out.push_str("```ts\n");
+            out.push_str(&signature);
+            out.push_str("\n```\n\n");
+        }
+
+        push_lifecycle_alerts(out, &member.tags, context.link_context);
+
+        let description = process_doc_text(&member.description, context.link_context);
+        let description = description.trim();
+        if !description.is_empty() {
+            out.push_str(description);
+            out.push_str("\n\n");
+        }
+
+        out.push_str(&render_since_section(&member.tags, context.link_context, &detail_heading));
+        push_parameters(
+            out,
+            &member.params,
+            context.options,
+            context.link_context,
+            &detail_heading,
+        );
+        if let Some(returns) = &member.returns {
+            push_returns(out, returns, context.link_context, &detail_heading);
+        } else if member.kind == "constructor" {
+            let returns = ApiReturnDoc {
+                type_annotation: context.entry_name.to_string(),
+                description: String::new(),
+                members: Vec::new(),
+            };
+            push_returns(out, &returns, context.link_context, &detail_heading);
+        }
+        push_implementation_of(out, &member.implementation_of, &detail_heading);
+        push_generic_tags(out, &member.tags, context.link_context, &detail_heading);
+    }
+}
+
+fn is_callable_member(member: &ApiDocMember) -> bool {
+    matches!(member.kind.as_str(), "constructor" | "method" | "getter" | "setter")
+}
+
+fn push_callable_member_heading(out: &mut String, member: &ApiDocMember, title: &str) {
+    if member.kind == "constructor" {
+        out.push_str("Constructor");
+        return;
+    }
+    out.push_str(&member.name);
+    if !matches!(member.kind.as_str(), "getter" | "setter") && title.contains("Methods") {
+        out.push_str("()");
+    }
+}
+
+fn callable_member_signature(member: &ApiDocMember, entry_name: &str) -> Option<String> {
+    let signature = member.signature.as_deref()?.trim();
+    if signature.is_empty() {
+        return None;
+    }
+
+    let signature = signature.trim_end_matches(';').trim_end();
+    let mut out = StringBuilder::new();
+    if member.kind == "constructor" {
+        if let Some(args) = signature.strip_prefix("constructor") {
+            out.push_str("new ");
+            out.push_str(entry_name);
+            out.push_str(args.trim());
+            out.push_str(": ");
+            out.push_str(entry_name);
+        } else {
+            out.push_str(signature);
+        }
+    } else {
+        out.push_str(signature);
+    }
+    out.push_char(';');
+    Some(out.into_string())
+}
+
+fn push_implementation_of(out: &mut String, implementation_of: &[String], heading: &str) {
+    if implementation_of.is_empty() {
+        return;
+    }
+    out.push_str(heading);
+    out.push_str(" Implementation of\n\n");
+    for implementation in implementation_of {
+        out.push_str("```ts\n");
+        out.push_str(implementation.trim());
+        out.push_str("\n```\n\n");
+    }
 }
 
 fn member_name_cell(member: &ApiDocMember) -> String {
