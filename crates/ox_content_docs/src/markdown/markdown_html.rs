@@ -901,6 +901,10 @@ fn render_member_description_html(
         ));
     }
 
+    if !member.type_parameters.is_empty() {
+        blocks.push(render_member_type_parameters_html(&member.type_parameters, options, context));
+    }
+
     if !member.params.is_empty() {
         blocks.push(render_member_params_html(&member.params, options, context));
     }
@@ -1000,6 +1004,43 @@ fn render_member_params_html(
         items.push_str("</li>");
     }
     join3("<ul class=\"ox-api-entry__member-params\">", &items.into_string(), "</ul>")
+}
+
+fn render_member_type_parameters_html(
+    type_parameters: &[ApiTypeParamDoc],
+    options: &MarkdownDocsOptions,
+    context: Option<&MarkdownLinkContext<'_>>,
+) -> String {
+    let skip = type_parameter_skip_set(type_parameters);
+    if effective_parameters_format(options) == MarkdownDisplayFormat::Table {
+        let mut rows = StringBuilder::new();
+        for type_param in type_parameters {
+            rows.push_str("<tr><td>");
+            rows.push_str(&render_type_parameter_name_html(type_param, context, &skip));
+            rows.push_str("</td><td>");
+            rows.push_str(&render_doc_inline_html(&type_param.description, context));
+            rows.push_str("</td></tr>");
+        }
+        return join3(
+            "<table class=\"ox-api-entry__type-parameters-table\"><thead><tr><th>Name</th><th>Description</th></tr></thead><tbody>",
+            &rows.into_string(),
+            "</tbody></table>",
+        );
+    }
+
+    let mut items = StringBuilder::new();
+    for type_param in type_parameters {
+        items.push_str("<li class=\"ox-api-entry__type-parameter\"><div class=\"ox-api-entry__type-parameter-heading\">");
+        items.push_str(&render_type_parameter_name_html(type_param, context, &skip));
+        items.push_str("</div>");
+        if !type_param.description.is_empty() {
+            items.push_str("<p class=\"ox-api-entry__type-parameter-description\">");
+            items.push_str(&render_doc_inline_html(&type_param.description, context));
+            items.push_str("</p>");
+        }
+        items.push_str("</li>");
+    }
+    join3("<ul class=\"ox-api-entry__type-parameters\">", &items.into_string(), "</ul>")
 }
 
 fn render_member_table_html(
@@ -1177,6 +1218,7 @@ fn render_callable_member_group_html(
             details.push_char('\n');
         }
         details.push_str(&render_member_detail_description_html(member, context));
+        details.push_str(&render_member_detail_type_parameters_html(member, options, context));
         details.push_str(&render_member_detail_params_html(member, options, context));
         if let Some(returns) = &member.returns {
             details.push_str(&render_member_detail_returns_html(returns, context));
@@ -1286,6 +1328,21 @@ fn render_member_detail_params_html(
     let mut out = StringBuilder::new();
     out.push_str("<div class=\"ox-api-entry__member-detail-section ox-api-entry__member-detail-section--params\">\n<h6>Parameters</h6>\n");
     out.push_str(&render_member_params_html(&member.params, options, context));
+    out.push_str("\n</div>");
+    out.into_string()
+}
+
+fn render_member_detail_type_parameters_html(
+    member: &ApiDocMember,
+    options: &MarkdownDocsOptions,
+    context: Option<&MarkdownLinkContext<'_>>,
+) -> String {
+    if member.type_parameters.is_empty() {
+        return String::new();
+    }
+    let mut out = StringBuilder::new();
+    out.push_str("<div class=\"ox-api-entry__member-detail-section ox-api-entry__member-detail-section--type-parameters\">\n<h6>Type Parameters</h6>\n");
+    out.push_str(&render_member_type_parameters_html(&member.type_parameters, options, context));
     out.push_str("\n</div>");
     out.into_string()
 }

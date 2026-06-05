@@ -288,6 +288,7 @@ mod tests {
                         signature: None,
                         type_annotation: Some("\"strict\"".to_string()),
                         params: vec![],
+                        type_parameters: vec![],
                         returns: None,
                         optional: false,
                         readonly: false,

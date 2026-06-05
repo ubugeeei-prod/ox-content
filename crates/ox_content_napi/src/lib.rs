@@ -205,6 +205,7 @@ pub struct JsDocMember {
     pub signature: Option<String>,
     pub r#type: Option<String>,
     pub params: Option<Vec<JsDocParam>>,
+    pub type_parameters: Option<Vec<JsTypeParam>>,
     pub returns: Option<JsDocReturn>,
     pub optional: Option<bool>,
     pub readonly: Option<bool>,
@@ -972,6 +973,8 @@ fn map_normalized_member(member: NormalizedMember) -> JsDocMember {
         r#type: member.type_annotation,
         params: (!member.params.is_empty())
             .then(|| member.params.into_iter().map(map_normalized_param_doc).collect()),
+        type_parameters: (!member.type_parameters.is_empty())
+            .then(|| member.type_parameters.into_iter().map(map_normalized_type_param).collect()),
         returns: member.returns.map(map_normalized_return_doc),
         optional: member.optional.then_some(true),
         readonly: member.readonly.then_some(true),
@@ -1214,6 +1217,12 @@ fn convert_markdown_member(member: JsDocMember) -> ApiDocMember {
         signature: member.signature,
         type_annotation: member.r#type,
         params: member.params.unwrap_or_default().into_iter().map(convert_markdown_param).collect(),
+        type_parameters: member
+            .type_parameters
+            .unwrap_or_default()
+            .into_iter()
+            .map(convert_markdown_type_param)
+            .collect(),
         returns: member.returns.map(convert_markdown_return),
         optional: member.optional.unwrap_or(false),
         readonly: member.readonly.unwrap_or(false),
@@ -3502,7 +3511,7 @@ pub fn extract_translation_keys(
 mod tests {
     use ox_content_docs::{
         NormalizedDocEntry, NormalizedDocKind, NormalizedMember, NormalizedMemberKind,
-        NormalizedReturnDoc,
+        NormalizedReturnDoc, NormalizedTypeParam,
     };
     use serde_json::json;
     use std::collections::BTreeMap;
@@ -3576,6 +3585,12 @@ mod tests {
                 signature: None,
                 type_annotation: Some("string".to_string()),
                 params: vec![],
+                type_parameters: vec![NormalizedTypeParam {
+                    name: "T".to_string(),
+                    constraint: Some("Base".to_string()),
+                    default: Some("Default".to_string()),
+                    description: "Value type.".to_string(),
+                }],
                 returns: None,
                 optional: true,
                 readonly: true,
@@ -3594,6 +3609,11 @@ mod tests {
         assert_eq!(member.name, "name");
         assert_eq!(member.kind, "property");
         assert_eq!(member.r#type.as_deref(), Some("string"));
+        let type_param = &member.type_parameters.as_ref().unwrap()[0];
+        assert_eq!(type_param.name, "T");
+        assert_eq!(type_param.constraint.as_deref(), Some("Base"));
+        assert_eq!(type_param.r#default.as_deref(), Some("Default"));
+        assert_eq!(type_param.description, "Value type.");
         assert_eq!(member.optional, Some(true));
         assert_eq!(member.readonly, Some(true));
     }
@@ -3629,6 +3649,7 @@ mod tests {
                     optional: false,
                     default_value: None,
                 }],
+                type_parameters: vec![],
                 returns: None,
                 optional: false,
                 readonly: true,
@@ -3698,6 +3719,7 @@ mod tests {
                     signature: None,
                     type_annotation: Some("ArgValues<A>".to_string()),
                     params: vec![],
+                    type_parameters: vec![],
                     returns: None,
                     optional: false,
                     readonly: false,
@@ -3939,6 +3961,12 @@ export function plugin<Id, PluginExt>(options: {
                 ),
                 r#type: None,
                 params: None,
+                type_parameters: Some(vec![JsTypeParam {
+                    name: "L".to_string(),
+                    constraint: Some("Base".to_string()),
+                    r#default: Some("Default".to_string()),
+                    description: "Locale type.".to_string(),
+                }]),
                 returns: None,
                 optional: None,
                 readonly: None,
@@ -3957,6 +3985,8 @@ export function plugin<Id, PluginExt>(options: {
         assert_eq!(converted.extends, vec!["BaseTranslation"]);
         assert_eq!(converted.implements, vec!["TranslationAdapter"]);
         assert_eq!(converted.members[0].implementation_of, vec!["TranslationAdapter.getResource"]);
+        assert_eq!(converted.members[0].type_parameters[0].name, "L");
+        assert_eq!(converted.members[0].type_parameters[0].constraint.as_deref(), Some("Base"));
     }
 
     #[test]
@@ -4135,6 +4165,7 @@ export function plugin<Id, PluginExt>(options: {
                         signature: None,
                         r#type: Some("Record<string, unknown>".to_string()),
                         params: None,
+                        type_parameters: None,
                         returns: None,
                         optional: Some(false),
                         readonly: Some(false),
@@ -4591,6 +4622,7 @@ export function plugin<Id, PluginExt>(options: {
                             signature: None,
                             r#type: Some("ArgValues<A>".to_string()),
                             params: None,
+                            type_parameters: None,
                             returns: None,
                             optional: Some(false),
                             readonly: Some(false),
@@ -4924,6 +4956,7 @@ export function plugin<Id, PluginExt>(options: {
                             optional: None,
                             r#default: None,
                         }]),
+                        type_parameters: None,
                         returns: None,
                         optional: Some(false),
                         readonly: Some(true),

@@ -99,6 +99,9 @@ pub struct ApiDocMember {
     /// Parameters.
     #[serde(default)]
     pub params: Vec<ApiParamDoc>,
+    /// Member type parameters (opt-in; empty unless enabled).
+    #[serde(default)]
+    pub type_parameters: Vec<ApiTypeParamDoc>,
     /// Return documentation.
     pub returns: Option<ApiReturnDoc>,
     /// Whether the member is optional.

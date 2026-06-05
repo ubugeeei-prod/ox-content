@@ -279,6 +279,7 @@ export interface JsDocMember {
   signature?: string
   type?: string
   params?: Array<JsDocParam>
+  typeParameters?: Array<JsTypeParam>
   returns?: JsDocReturn
   optional?: boolean
   readonly?: boolean

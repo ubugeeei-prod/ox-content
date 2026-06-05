@@ -202,6 +202,10 @@ pub struct NormalizedMember {
     /// Parameters, if any.
     #[serde(default)]
     pub params: Vec<NormalizedParamDoc>,
+    /// Member type parameters. Populated only when type-parameter docs are
+    /// enabled (opt-in); empty otherwise.
+    #[serde(default)]
+    pub type_parameters: Vec<NormalizedTypeParam>,
     /// Return documentation, if any.
     pub returns: Option<NormalizedReturnDoc>,
     /// Whether the member is optional.
@@ -291,8 +295,17 @@ pub fn normalize_doc_item(item: DocItem, type_parameters: bool) -> Option<Normal
 
     let mut metadata = normalize_doc_metadata(&item.tags, type_parameters);
     merge_extracted_params(&mut metadata.params, item.params);
-    merge_extracted_return(&mut metadata.returns, item.return_type, item.return_members);
-    let members = item.children.into_iter().filter_map(normalize_member).collect();
+    merge_extracted_return(
+        &mut metadata.returns,
+        item.return_type,
+        item.return_members,
+        type_parameters,
+    );
+    let members = item
+        .children
+        .into_iter()
+        .filter_map(|item| normalize_member(item, type_parameters))
+        .collect();
     let type_parameters = if type_parameters {
         build_type_parameters(item.type_parameters, &metadata.type_param_descriptions)
     } else {
@@ -320,15 +333,24 @@ pub fn normalize_doc_item(item: DocItem, type_parameters: bool) -> Option<Normal
     })
 }
 
-fn normalize_member(item: DocItem) -> Option<NormalizedMember> {
+fn normalize_member(item: DocItem, type_parameters: bool) -> Option<NormalizedMember> {
     let kind = NormalizedMemberKind::from_doc_item_kind(item.kind)?;
-    // Member-level type parameters are out of scope; keep generic-tag behavior.
-    let mut metadata = normalize_doc_metadata(&item.tags, false);
+    let mut metadata = normalize_doc_metadata(&item.tags, type_parameters);
     merge_extracted_params(&mut metadata.params, item.params);
     let mut return_type = item.return_type;
     if kind != NormalizedMemberKind::IndexSignature {
-        merge_extracted_return(&mut metadata.returns, return_type.take(), item.return_members);
+        merge_extracted_return(
+            &mut metadata.returns,
+            return_type.take(),
+            item.return_members,
+            type_parameters,
+        );
     }
+    let type_parameters = if type_parameters {
+        build_type_parameters(item.type_parameters, &metadata.type_param_descriptions)
+    } else {
+        Vec::new()
+    };
 
     let (signature, type_annotation) = match kind {
         NormalizedMemberKind::Property | NormalizedMemberKind::EnumMember => (None, item.signature),
@@ -346,6 +368,7 @@ fn normalize_member(item: DocItem) -> Option<NormalizedMember> {
         signature,
         type_annotation,
         params: metadata.params,
+        type_parameters,
         returns: metadata.returns,
         optional: item.optional,
         readonly: item.readonly,
@@ -500,8 +523,12 @@ fn merge_extracted_return(
     returns: &mut Option<NormalizedReturnDoc>,
     return_type: Option<String>,
     return_members: Vec<DocItem>,
+    type_parameters: bool,
 ) {
-    let members = return_members.into_iter().filter_map(normalize_member).collect::<Vec<_>>();
+    let members = return_members
+        .into_iter()
+        .filter_map(|item| normalize_member(item, type_parameters))
+        .collect::<Vec<_>>();
     if return_type.is_none() && members.is_empty() {
         return;
     }
@@ -1106,5 +1133,47 @@ export type Combinator<T> = { parse: (value: string) => T };
         assert_eq!(on.type_parameters[0].description, "The parsed value type.");
         assert!(!on.tags.contains_key("typeParam"));
         assert!(on.tags.contains_key("experimental"));
+    }
+
+    #[test]
+    fn member_type_parameters_opt_in_merges_typeparam_and_excludes_tag() {
+        let source = r"
+/** Plugin context. */
+export interface PluginContext<G> {
+  /**
+   * Decorate the command.
+   * @typeParam L - Extension context.
+   * @experimental
+   */
+  decorateCommand<L extends Record<string, unknown> = DefaultExtensions>(
+    decorator: (value: L) => void
+  ): void;
+}
+";
+        let items =
+            DocExtractor::new().extract_source(source, "src/context.ts", SourceType::ts()).unwrap();
+
+        let off = normalize_doc_items(items.clone(), false);
+        let off_member =
+            off[0].members.iter().find(|member| member.name == "decorateCommand").unwrap();
+        assert!(off_member.type_parameters.is_empty());
+        assert_eq!(
+            off_member.tags.get("typeParam").map(String::as_str),
+            Some("L - Extension context.")
+        );
+
+        let on = normalize_doc_items(items, true);
+        let on_member =
+            on[0].members.iter().find(|member| member.name == "decorateCommand").unwrap();
+        assert_eq!(on_member.type_parameters.len(), 1);
+        assert_eq!(on_member.type_parameters[0].name, "L");
+        assert_eq!(
+            on_member.type_parameters[0].constraint.as_deref(),
+            Some("Record<string, unknown>")
+        );
+        assert_eq!(on_member.type_parameters[0].default.as_deref(), Some("DefaultExtensions"));
+        assert_eq!(on_member.type_parameters[0].description, "Extension context.");
+        assert!(!on_member.tags.contains_key("typeParam"));
+        assert!(on_member.tags.contains_key("experimental"));
     }
 }
