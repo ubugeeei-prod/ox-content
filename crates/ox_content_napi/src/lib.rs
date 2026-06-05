@@ -4669,9 +4669,70 @@ export type OnPluginExtension<G> = (
         assert!(page.contains("CommandContext"));
         assert!(page.contains("## Returns"));
         assert!(!page.contains("| `ctx` | `unknown` |"));
-        assert!(page.contains("`Awaitable<string \\| void>`"));
+        assert!(page.contains("`Awaitable<string | void>`"));
         assert!(page.contains("CLI output."));
         assert!(!page.contains("`unknown`"));
+    }
+
+    #[test]
+    fn generate_docs_markdown_does_not_escape_return_union_pipe_inside_inline_code() {
+        let docs = vec![JsDocsMarkdownModule {
+            description: None,
+            file: "default".to_string(),
+            source_path: None,
+            examples: None,
+            tags: None,
+            entries: vec![JsDocsMarkdownEntry {
+                name: "cli".to_string(),
+                kind: "function".to_string(),
+                description: "Run the command.".to_string(),
+                params: Some(vec![JsDocParam {
+                    name: "entry".to_string(),
+                    r#type: "Command<G> | CommandRunner<G>".to_string(),
+                    description: "Command entry.".to_string(),
+                    optional: Some(false),
+                    r#default: None,
+                }]),
+                returns: Some(JsDocReturn {
+                    r#type: "Promise<string | undefined>".to_string(),
+                    description: "A rendered usage or undefined.".to_string(),
+                    members: None,
+                }),
+                examples: None,
+                tags: None,
+                private: false,
+                file: "/repo/src/cli.ts".to_string(),
+                line: 1,
+                end_line: 5,
+                signature: Some(
+                    "export function cli(entry: Command<G> | CommandRunner<G>): Promise<string | undefined>"
+                        .to_string(),
+                ),
+                extends: None,
+                implements: None,
+                has_body: None,
+                members: None,
+                type_parameters: None,
+            }],
+        }];
+
+        let markdown = generate_docs_markdown(
+            docs,
+            Some(JsDocsMarkdownOptions {
+                group_by: Some("file".to_string()),
+                path_strategy: Some("typedoc".to_string()),
+                render_style: Some("markdown".to_string()),
+                parameters_format: Some("table".to_string()),
+                ..Default::default()
+            }),
+        );
+        let page = markdown.get("default/functions/cli.md").unwrap();
+
+        assert!(page.contains("| `entry` | `Command<G> \\| CommandRunner<G>` | Command entry. |"));
+        assert!(page.contains(
+            "## Returns\n\n`Promise<string | undefined>` — A rendered usage or undefined."
+        ));
+        assert!(!page.contains("`Promise<string \\| undefined>`"));
     }
 
     #[test]

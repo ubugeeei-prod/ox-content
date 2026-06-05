@@ -409,7 +409,7 @@ fn push_returns(
 ) {
     out.push_str(heading);
     out.push_str(" Returns\n\n");
-    out.push_str(&linked_type_cell(&returns.type_annotation, context));
+    out.push_str(&linked_type_span(&returns.type_annotation, context));
     if !returns.description.is_empty() {
         out.push_str(" — ");
         out.push_str(&inline(&returns.description, context));
@@ -815,7 +815,7 @@ fn render_member_parameter_sections_pure(
             out.push(' ');
             out.push_str(&member.name);
             out.push_str(" Returns\n\n");
-            out.push_str(&linked_type_cell(&returns.type_annotation, context));
+            out.push_str(&linked_type_span(&returns.type_annotation, context));
             if !returns.description.is_empty() {
                 out.push_str(" — ");
                 out.push_str(&inline(&returns.description, context));

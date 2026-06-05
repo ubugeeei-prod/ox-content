@@ -3101,6 +3101,44 @@ mod tests {
     }
 
     #[test]
+    fn typedoc_markdown_return_union_pipe_is_not_escaped_inside_inline_code() {
+        let mut entry = test_entry("cli", "function", "/repo/src/cli.ts", "Run the command.");
+        entry.signature = Some(
+            "export function cli(entry: Command<G> | CommandRunner<G>): Promise<string | undefined>"
+                .to_string(),
+        );
+        entry.params = vec![param("entry", "Command<G> | CommandRunner<G>")];
+        entry.returns = Some(ApiReturnDoc {
+            type_annotation: "Promise<string | undefined>".to_string(),
+            description: "A rendered usage or undefined.".to_string(),
+            members: Vec::new(),
+        });
+        let docs = vec![ApiDocModule {
+            description: String::new(),
+            file: "default".to_string(),
+            source_path: String::new(),
+            examples: vec![],
+            tags: vec![],
+            entries: vec![entry],
+        }];
+
+        let out = generate_markdown(
+            &docs,
+            &MarkdownDocsOptions {
+                parameters_format: MarkdownDisplayFormat::Table,
+                ..markdown_typedoc_options()
+            },
+        );
+        let page = out.get("default/functions/cli.md").unwrap();
+
+        assert!(page.contains("| `entry` | `Command<G> \\| CommandRunner<G>` |"));
+        assert!(page.contains(
+            "## Returns\n\n`Promise<string | undefined>` — A rendered usage or undefined."
+        ));
+        assert!(!page.contains("`Promise<string \\| undefined>`"));
+    }
+
+    #[test]
     fn render_style_markdown_flat_sections_render_at_h4() {
         let options = MarkdownDocsOptions {
             render_style: MarkdownRenderStyle::Markdown,
@@ -3477,7 +3515,7 @@ mod tests {
         assert!(page.contains("[`CommandContext`](../interfaces/CommandContext.md)\\<`G`\\>"));
         assert!(page.contains("## Returns"));
         assert!(!page.contains("| `ctx` | `unknown` |"));
-        assert!(page.contains("`Awaitable<string \\| void>`"));
+        assert!(page.contains("`Awaitable<string | void>`"));
         assert!(page.contains("CLI output."));
         assert!(!page.contains("`unknown`"));
         assert!(page.contains("[`CommandContext`](../interfaces/CommandContext.md)"));
@@ -4090,6 +4128,9 @@ mod tests {
         assert!(page.contains("getResource(locale: string): Record<string, string> | undefined;"));
         assert!(page.contains("#### Parameters"));
         assert!(page.contains("| `locale` | `string` | Locale name. |"));
+        assert!(page.contains("#### Returns"));
+        assert!(page.contains("`Record<string, string> | undefined` — The locale resource."));
+        assert!(!page.contains("`Record<string, string> \\| undefined`"));
         assert!(page.contains("#### Implementation of"));
         assert!(page.contains("TranslationAdapter.getResource"));
     }
@@ -4103,7 +4144,7 @@ mod tests {
             kind: "property".to_string(),
             description: "Parses a raw value.".to_string(),
             signature: None,
-            type_annotation: Some("(value: string) => any".to_string()),
+            type_annotation: Some("(value: string) => string | undefined".to_string()),
             params: vec![ApiParamDoc {
                 name: "value".to_string(),
                 type_annotation: "string".to_string(),
@@ -4112,7 +4153,7 @@ mod tests {
                 default_value: None,
             }],
             returns: Some(ApiReturnDoc {
-                type_annotation: "any".to_string(),
+                type_annotation: "string | undefined".to_string(),
                 description: "Parsed value.".to_string(),
                 members: Vec::new(),
             }),
@@ -4144,11 +4185,12 @@ mod tests {
         );
         let page = markdown.get("default/interfaces/ArgSchema.md").unwrap();
 
-        assert!(page.contains("| `parse` _(optional)_ | `(value: string) => any` | Parses a raw value. Returns: Parsed value. |"));
+        assert!(page.contains("| `parse` _(optional)_ | `(value: string) => string \\| undefined` | Parses a raw value. Returns: Parsed value. |"));
         assert!(page.contains("### parse Parameters"));
         assert!(page.contains("| `value` | `string` | Raw string value from command line. |"));
         assert!(page.contains("### parse Returns"));
-        assert!(page.contains("`any` — Parsed value."));
+        assert!(page.contains("`string | undefined` — Parsed value."));
+        assert!(!page.contains("`string \\| undefined` — Parsed value."));
         assert!(!page.contains("`unknown`"));
     }
 
@@ -5680,14 +5722,20 @@ mod tests {
 
     #[test]
     fn typedoc_overloads_render_all_call_signatures() {
+        let mut with_extension = overload_entry(
+            "plugin",
+            "/repo/src/plugin.ts",
+            "Define a plugin with extension.",
+            "export function plugin<E>(options: WithExt): Promise<string | undefined>",
+            false,
+        );
+        with_extension.returns = Some(ApiReturnDoc {
+            type_annotation: "Promise<string | undefined>".to_string(),
+            description: "A rendered usage or undefined.".to_string(),
+            members: Vec::new(),
+        });
         let docs = overload_module(vec![
-            overload_entry(
-                "plugin",
-                "/repo/src/plugin.ts",
-                "Define a plugin with extension.",
-                "export function plugin<E>(options: WithExt): PluginWithExtension<E>",
-                false,
-            ),
+            with_extension,
             overload_entry(
                 "plugin",
                 "/repo/src/plugin.ts",
@@ -5709,8 +5757,12 @@ mod tests {
         assert!(page.contains("# Function: plugin()"));
         // Both public overloads survive on one page (not overwritten by the last).
         assert_eq!(page.matches("## Call Signature").count(), 2);
-        assert!(page.contains("PluginWithExtension<E>"));
+        assert!(page.contains("Promise<string | undefined>"));
         assert!(page.contains("PluginWithoutExtension"));
+        assert!(page.contains(
+            "### Returns\n\n`Promise<string | undefined>` — A rendered usage or undefined."
+        ));
+        assert!(!page.contains("`Promise<string \\| undefined>`"));
     }
 
     #[test]
