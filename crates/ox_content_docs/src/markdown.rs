@@ -3484,6 +3484,89 @@ mod tests {
     }
 
     #[test]
+    fn typedoc_type_alias_without_returns_tag_renders_return_section() {
+        let mut entry = test_entry(
+            "OnPluginExtension",
+            "type",
+            "/repo/src/plugin.ts",
+            "Plugin extension hook.",
+        );
+        entry.signature = Some(
+            "export type OnPluginExtension<G> = (ctx: Readonly<CommandContext<G>>, cmd: Readonly<Command<G>>) => Awaitable<void>"
+                .to_string(),
+        );
+        entry.params = vec![
+            ApiParamDoc {
+                name: "ctx".to_string(),
+                type_annotation: "Readonly<CommandContext<G>>".to_string(),
+                description: "The command context.".to_string(),
+                optional: false,
+                default_value: None,
+            },
+            ApiParamDoc {
+                name: "cmd".to_string(),
+                type_annotation: "Readonly<Command<G>>".to_string(),
+                description: "The command.".to_string(),
+                optional: false,
+                default_value: None,
+            },
+        ];
+        entry.returns = Some(ApiReturnDoc {
+            type_annotation: "Awaitable<void>".to_string(),
+            description: String::new(),
+            members: Vec::new(),
+        });
+
+        let mut docs = type_link_module(entry);
+        if let Some(module) = docs.get_mut(0) {
+            let mut command_context =
+                test_entry("CommandContext", "interface", "/repo/src/context.ts", "");
+            command_context.signature = Some("export interface CommandContext<G> {}".to_string());
+            let mut command = test_entry("Command", "interface", "/repo/src/command.ts", "");
+            command.signature = Some("export interface Command<G> {}".to_string());
+            module.entries.push(command_context);
+            module.entries.push(command);
+        }
+        let out = generate_markdown(&docs, &markdown_typedoc_options());
+        let page = out.get("combinators/type-aliases/OnPluginExtension.md").unwrap();
+
+        assert!(page.contains("## Parameters"));
+        assert!(page.contains("The command context."));
+        assert!(page.contains("The command."));
+        assert!(page.contains("[`CommandContext`](../interfaces/CommandContext.md)"));
+        assert!(page.contains("[`Command`](../interfaces/Command.md)"));
+        assert!(page.contains("## Returns\n\n`Awaitable<void>`"));
+        assert!(!page.contains("`unknown`"));
+    }
+
+    #[test]
+    fn typedoc_html_type_alias_without_returns_tag_renders_return_section() {
+        let mut entry = test_entry(
+            "OnPluginExtension",
+            "type",
+            "/repo/src/plugin.ts",
+            "Plugin extension hook.",
+        );
+        entry.signature = Some(
+            "export type OnPluginExtension<G> = (ctx: Readonly<CommandContext<G>>, cmd: Readonly<Command<G>>) => Awaitable<void>"
+                .to_string(),
+        );
+        entry.params = vec![param("ctx", "Readonly<CommandContext<G>>")];
+        entry.returns = Some(ApiReturnDoc {
+            type_annotation: "Awaitable<void>".to_string(),
+            description: String::new(),
+            members: Vec::new(),
+        });
+
+        let out = generate_markdown(&type_link_module(entry), &html_typedoc_options());
+        let page = out.get("combinators/type-aliases/OnPluginExtension.md").unwrap();
+
+        assert!(page.contains("<h4>Returns</h4>"));
+        assert!(page.contains("Awaitable&lt;void&gt;"));
+        assert!(!page.contains("unknown"));
+    }
+
+    #[test]
     fn typedoc_index_uses_module_description_not_symbol_description() {
         let docs = vec![
             ApiDocModule {

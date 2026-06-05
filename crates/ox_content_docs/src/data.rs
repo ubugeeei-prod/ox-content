@@ -697,6 +697,68 @@ mod tests {
     }
 
     #[test]
+    fn function_type_alias_return_without_description_serializes_to_json() {
+        let docs = vec![ApiDocModule {
+            description: String::new(),
+            file: "/repo/src/plugin.ts".to_string(),
+            source_path: String::new(),
+            examples: vec![],
+            tags: vec![],
+            entries: vec![ApiDocEntry {
+                name: "OnPluginExtension".to_string(),
+                kind: "type".to_string(),
+                description: "Plugin extension hook.".to_string(),
+                params: vec![
+                    ApiParamDoc {
+                        name: "ctx".to_string(),
+                        type_annotation: "Readonly<CommandContext<G>>".to_string(),
+                        description: "The command context.".to_string(),
+                        optional: false,
+                        default_value: None,
+                    },
+                    ApiParamDoc {
+                        name: "cmd".to_string(),
+                        type_annotation: "Readonly<Command<G>>".to_string(),
+                        description: "The command.".to_string(),
+                        optional: false,
+                        default_value: None,
+                    },
+                ],
+                returns: Some(ApiReturnDoc {
+                    type_annotation: "Awaitable<void>".to_string(),
+                    description: String::new(),
+                    members: Vec::new(),
+                }),
+                examples: vec![],
+                tags: vec![],
+                private: false,
+                file: "/repo/src/plugin.ts".to_string(),
+                line: 1,
+                end_line: 5,
+                signature: Some(
+                    "export type OnPluginExtension<G> = (ctx: Readonly<CommandContext<G>>, cmd: Readonly<Command<G>>) => Awaitable<void>"
+                        .to_string(),
+                ),
+                extends: vec![],
+                implements: vec![],
+                has_body: false,
+                members: vec![],
+                type_parameters: vec![],
+            }],
+        }];
+
+        let json = generate_docs_data_json(&docs, "2026-06-05T00:00:00.000Z").unwrap();
+        let value: Value = serde_json::from_str(&json).unwrap();
+        let entry = &value["modules"][0]["entries"][0];
+
+        assert_eq!(entry["name"], "OnPluginExtension");
+        assert_eq!(entry["params"][0]["type"], "Readonly<CommandContext<G>>");
+        assert_eq!(entry["params"][1]["type"], "Readonly<Command<G>>");
+        assert_eq!(entry["returns"]["type"], "Awaitable<void>");
+        assert_eq!(entry["returns"]["description"], "");
+    }
+
+    #[test]
     fn heritage_and_implementation_metadata_serialize_to_json() {
         let docs = vec![ApiDocModule {
             description: String::new(),

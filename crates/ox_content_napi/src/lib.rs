@@ -3511,11 +3511,11 @@ mod tests {
 
     use super::transformer::parse_frontmatter;
     use super::{
-        convert_markdown_entry, extract_docs_from_entry_points_napi, generate_docs_markdown,
-        generate_docs_nav_metadata_from_docs_napi, get_git_last_updated, map_normalized_doc_entry,
-        JsDocMember, JsDocParam, JsDocReturn, JsDocsMarkdownEntry, JsDocsMarkdownModule,
-        JsDocsMarkdownOptions, JsDocsMarkdownTag, JsDocsNavOptions, JsEntryPointDocsOptions,
-        JsEntryPointSpec, JsTypeParam,
+        convert_markdown_entry, extract_docs_from_entry_points_napi, extract_file_doc_entries,
+        generate_docs_markdown, generate_docs_nav_metadata_from_docs_napi, get_git_last_updated,
+        map_normalized_doc_entry, JsDocMember, JsDocParam, JsDocReturn, JsDocsMarkdownEntry,
+        JsDocsMarkdownModule, JsDocsMarkdownOptions, JsDocsMarkdownTag, JsDocsNavOptions,
+        JsEntryPointDocsOptions, JsEntryPointSpec, JsTypeParam,
     };
 
     #[test]
@@ -3729,6 +3729,50 @@ mod tests {
         assert_eq!(returns.r#type, "object");
         assert_eq!(member.name, "values");
         assert_eq!(member.r#type.as_deref(), Some("ArgValues<A>"));
+    }
+
+    #[test]
+    fn extract_file_doc_entries_preserves_type_alias_return_without_returns_tag() {
+        let unique =
+            std::time::SystemTime::now().duration_since(std::time::UNIX_EPOCH).unwrap().as_nanos();
+        let root = std::env::temp_dir()
+            .join(format!("ox-content-napi-type-alias-return-{}-{unique}", std::process::id()));
+        let _ = fs::remove_dir_all(&root);
+        fs::create_dir_all(&root).unwrap();
+        let file = root.join("plugin.ts");
+        fs::write(
+            &file,
+            r"
+/**
+ * Plugin extension hook.
+ *
+ * @param ctx - The command context.
+ * @param cmd - The command.
+ */
+export type OnPluginExtension<G> = (
+    ctx: Readonly<CommandContext<G>>,
+    cmd: Readonly<Command<G>>
+) => Awaitable<void>;
+",
+        )
+        .unwrap();
+
+        let entries =
+            extract_file_doc_entries(file.to_string_lossy().into_owned(), None, None, None)
+                .unwrap();
+        let entry = entries.iter().find(|entry| entry.name == "OnPluginExtension").unwrap();
+        let params = entry.params.as_ref().unwrap();
+        let returns = entry.returns.as_ref().unwrap();
+
+        assert_eq!(params.len(), 2);
+        assert_eq!(params[0].r#type, "Readonly<CommandContext<G>>");
+        assert_eq!(params[0].description, "The command context.");
+        assert_eq!(params[1].r#type, "Readonly<Command<G>>");
+        assert_eq!(params[1].description, "The command.");
+        assert_eq!(returns.r#type, "Awaitable<void>");
+        assert_eq!(returns.description, "");
+
+        let _ = fs::remove_dir_all(root);
     }
 
     #[test]
@@ -4627,6 +4671,76 @@ mod tests {
         assert!(!page.contains("| `ctx` | `unknown` |"));
         assert!(page.contains("`Awaitable<string \\| void>`"));
         assert!(page.contains("CLI output."));
+        assert!(!page.contains("`unknown`"));
+    }
+
+    #[test]
+    fn generate_docs_markdown_renders_type_alias_return_without_description() {
+        let docs = vec![JsDocsMarkdownModule {
+            description: None,
+            file: "default".to_string(),
+            source_path: None,
+            examples: None,
+            tags: None,
+            entries: vec![JsDocsMarkdownEntry {
+                name: "OnPluginExtension".to_string(),
+                kind: "type".to_string(),
+                description: "Plugin extension hook.".to_string(),
+                params: Some(vec![
+                    JsDocParam {
+                        name: "ctx".to_string(),
+                        r#type: "Readonly<CommandContext<G>>".to_string(),
+                        description: "The command context.".to_string(),
+                        optional: Some(false),
+                        r#default: None,
+                    },
+                    JsDocParam {
+                        name: "cmd".to_string(),
+                        r#type: "Readonly<Command<G>>".to_string(),
+                        description: "The command.".to_string(),
+                        optional: Some(false),
+                        r#default: None,
+                    },
+                ]),
+                returns: Some(JsDocReturn {
+                    r#type: "Awaitable<void>".to_string(),
+                    description: String::new(),
+                    members: None,
+                }),
+                examples: None,
+                tags: None,
+                private: false,
+                file: "/repo/src/plugin.ts".to_string(),
+                line: 1,
+                end_line: 5,
+                signature: Some(
+                    "export type OnPluginExtension<G> = (ctx: Readonly<CommandContext<G>>, cmd: Readonly<Command<G>>) => Awaitable<void>"
+                        .to_string(),
+                ),
+                extends: None,
+                implements: None,
+                has_body: None,
+                members: None,
+                type_parameters: None,
+            }],
+        }];
+
+        let markdown = generate_docs_markdown(
+            docs,
+            Some(JsDocsMarkdownOptions {
+                group_by: Some("file".to_string()),
+                path_strategy: Some("typedoc".to_string()),
+                render_style: Some("markdown".to_string()),
+                parameters_format: Some("table".to_string()),
+                ..Default::default()
+            }),
+        );
+        let page = markdown.get("default/type-aliases/OnPluginExtension.md").unwrap();
+
+        assert!(page.contains("## Parameters"));
+        assert!(page.contains("The command context."));
+        assert!(page.contains("The command."));
+        assert!(page.contains("## Returns\n\n`Awaitable<void>`"));
         assert!(!page.contains("`unknown`"));
     }
 
