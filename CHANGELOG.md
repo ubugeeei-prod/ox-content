@@ -1,5 +1,17 @@
 # Changelog
 
+## [2.55.0] - 2026-06-05
+
+### Bug Fixes
+
+- preserve function type alias metadata (#326)
+- preserve function-valued property types (#325)
+- render TypeScript index signatures (#324)
+- render class method details (#323)
+- render return type literal members (#322)
+- collapse multiline type params (#321)
+- do not double-wrap mixed markdown @example bodies in a code fence (#320)
+
 ## [2.54.0] - 2026-06-04
 
 ### Features
