@@ -1011,6 +1011,47 @@ export type PluginFunction<G> = (ctx: Readonly<PluginContext<G>>) => Awaitable<v
     }
 
     #[test]
+    fn intersection_type_alias_merges_callable_reference_metadata() {
+        let source = r"
+/**
+ * Plugin function.
+ */
+export type PluginFunction<G> = (ctx: Readonly<PluginContext<G>>) => Awaitable<void>;
+
+/**
+ * Plugin.
+ * @param ctx - Plugin context.
+ * @returns Plugin setup result.
+ */
+export type Plugin<E> = PluginFunction & {
+    id: string;
+    name?: string;
+};
+";
+
+        let extractor = DocExtractor::new();
+        let entries = normalize_doc_items(
+            extractor.extract_source(source, "plugin.ts", SourceType::ts()).unwrap(),
+            false,
+        );
+        let alias = entries.iter().find(|entry| entry.name == "Plugin").unwrap();
+
+        assert_eq!(alias.params.len(), 1);
+        assert_eq!(alias.params[0].name, "ctx");
+        assert_eq!(alias.params[0].type_annotation, "Readonly<PluginContext<G>>");
+        assert_eq!(alias.params[0].description, "Plugin context.");
+        let returns = alias.returns.as_ref().unwrap();
+        assert_eq!(returns.type_annotation, "Awaitable<void>");
+        assert_eq!(returns.description, "Plugin setup result.");
+        assert_eq!(
+            alias.members.iter().map(|member| member.name.as_str()).collect::<Vec<_>>(),
+            ["id", "name"]
+        );
+        assert_eq!(alias.members[0].type_annotation.as_deref(), Some("string"));
+        assert!(alias.members[1].optional);
+    }
+
+    #[test]
     fn function_type_alias_without_returns_tag_still_normalizes_return_section() {
         let source = r"
 /**

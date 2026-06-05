@@ -131,11 +131,33 @@ pub struct TypeParamDoc {
     pub description: String,
 }
 
+#[derive(Debug, Clone)]
 struct FunctionTypeMetadata {
     params: Vec<ParamDoc>,
     return_type: Option<String>,
     return_members: Vec<DocItem>,
     type_parameters: Vec<TypeParamDoc>,
+}
+
+impl FunctionTypeMetadata {
+    fn as_reference_metadata(&self) -> Self {
+        Self {
+            params: self
+                .params
+                .iter()
+                .map(|param| ParamDoc {
+                    name: param.name.clone(),
+                    type_annotation: param.type_annotation.clone(),
+                    optional: param.optional,
+                    default_value: param.default_value.clone(),
+                    description: None,
+                })
+                .collect(),
+            return_type: self.return_type.clone(),
+            return_members: self.return_members.clone(),
+            type_parameters: Vec::new(),
+        }
+    }
 }
 
 /// JSDoc tag.
@@ -561,6 +583,7 @@ struct DocVisitor<'a> {
     jsdoc_cache: FxHashMap<u32, ParsedJsdoc>,
     line_starts: Vec<usize>,
     items: Vec<DocItem>,
+    type_alias_function_metadata: FxHashMap<String, FunctionTypeMetadata>,
     /// Track default export
     has_default_export: bool,
 }
@@ -592,6 +615,7 @@ impl<'a> DocVisitor<'a> {
             jsdoc_cache,
             line_starts,
             items: Vec::new(),
+            type_alias_function_metadata: FxHashMap::default(),
             has_default_export: false,
         }
     }
@@ -1886,7 +1910,7 @@ impl<'a> DocVisitor<'a> {
 
     fn extract_function_type_metadata(
         &self,
-        ts_type: &TSType,
+        ts_type: &TSType<'a>,
         tags: &[DocTag],
     ) -> Option<FunctionTypeMetadata> {
         match ts_type {
@@ -1903,7 +1927,26 @@ impl<'a> DocVisitor<'a> {
             TSType::TSParenthesizedType(paren) => {
                 self.extract_function_type_metadata(&paren.type_annotation, tags)
             }
+            TSType::TSTypeReference(ref_type) => {
+                let name = Self::type_reference_identifier_name(ref_type)?;
+                self.type_alias_function_metadata
+                    .get(&name)
+                    .map(FunctionTypeMetadata::as_reference_metadata)
+            }
+            TSType::TSIntersectionType(inter) => inter
+                .types
+                .iter()
+                .find_map(|ts_type| self.extract_function_type_metadata(ts_type, tags)),
             _ => None,
+        }
+    }
+
+    fn type_reference_identifier_name(
+        ref_type: &oxc_ast::ast::TSTypeReference<'a>,
+    ) -> Option<String> {
+        match &ref_type.type_name {
+            TSTypeName::IdentifierReference(id) => Some(id.name.to_string()),
+            TSTypeName::QualifiedName(_) | TSTypeName::ThisExpression(_) => None,
         }
     }
 
@@ -2262,6 +2305,23 @@ impl<'a> DocVisitor<'a> {
         children
     }
 
+    fn extract_type_alias_members_from_type(&self, ts_type: &TSType<'a>) -> Vec<DocItem> {
+        match ts_type {
+            TSType::TSTypeLiteral(type_literal) => {
+                self.extract_ts_signature_members(&type_literal.members)
+            }
+            TSType::TSParenthesizedType(paren) => {
+                self.extract_type_alias_members_from_type(&paren.type_annotation)
+            }
+            TSType::TSIntersectionType(intersection) => intersection
+                .types
+                .iter()
+                .flat_map(|ts_type| self.extract_type_alias_members_from_type(ts_type))
+                .collect(),
+            _ => Vec::new(),
+        }
+    }
+
     fn create_index_signature_item(
         &self,
         index_signature: &TSIndexSignature<'a>,
@@ -2557,32 +2617,35 @@ impl<'a> DocVisitor<'a> {
         exported: bool,
         attached_to: u32,
     ) {
+        let name = type_alias.id.name.to_string();
+        if let Some(metadata) =
+            self.extract_function_type_metadata(&type_alias.type_annotation, &[])
+        {
+            self.type_alias_function_metadata
+                .insert(name.clone(), metadata.as_reference_metadata());
+        }
+
         let Some((jsdoc, doc, tags)) = self.extract_declaration_docs(attached_to) else {
             return;
         };
         let (line, end_line) = self.span_lines(attached_to, type_alias.span.end);
-        let mut children = Vec::new();
-        let mut params = Vec::new();
-        let mut return_type = None;
-        let mut return_members = Vec::new();
-        let mut function_type_parameters = Vec::new();
-
-        match &type_alias.type_annotation {
-            TSType::TSTypeLiteral(type_literal) => {
-                children = self.extract_ts_signature_members(&type_literal.members);
-            }
-            ts_type => {
-                if let Some(metadata) = self.extract_function_type_metadata(ts_type, &tags) {
-                    params = metadata.params;
-                    return_type = metadata.return_type;
-                    return_members = metadata.return_members;
-                    function_type_parameters = metadata.type_parameters;
-                }
-            }
-        }
+        let children = self.extract_type_alias_members_from_type(&type_alias.type_annotation);
+        let (params, return_type, return_members, function_type_parameters) =
+            if let Some(metadata) =
+                self.extract_function_type_metadata(&type_alias.type_annotation, &tags)
+            {
+                (
+                    metadata.params,
+                    metadata.return_type,
+                    metadata.return_members,
+                    metadata.type_parameters,
+                )
+            } else {
+                (Vec::new(), None, Vec::new(), Vec::new())
+            };
 
         self.items.push(DocItem {
-            name: type_alias.id.name.to_string(),
+            name,
             kind: DocItemKind::Type,
             doc,
             source_path: self.file_path.to_string(),
@@ -3175,7 +3238,7 @@ export type CommandOptions = {
     }
 
     #[test]
-    fn type_alias_intersection_falls_back_to_signature_only() {
+    fn type_alias_intersection_extracts_object_literal_members() {
         let source = r"
 /**
  * Command options.
@@ -3191,8 +3254,47 @@ export type CommandOptions = BaseOptions & {
 
         assert_eq!(items.len(), 1);
         assert_eq!(items[0].name, "CommandOptions");
-        assert!(items[0].children.is_empty());
+        assert_eq!(items[0].children.len(), 1);
+        assert_eq!(items[0].children[0].name, "name");
+        assert_eq!(items[0].children[0].signature.as_deref(), Some("string"));
         assert!(items[0].signature.as_deref().unwrap().contains("BaseOptions &"));
+    }
+
+    #[test]
+    fn type_alias_intersection_resolves_callable_alias_and_members() {
+        let source = r"
+/**
+ * Plugin function.
+ */
+export type PluginFunction<G> = (ctx: Readonly<PluginContext<G>>) => Awaitable<void>;
+
+/**
+ * Plugin.
+ * @param ctx - Plugin context.
+ * @returns Plugin setup result.
+ */
+export type Plugin<E> = PluginFunction & {
+    id: string;
+    name?: string;
+};
+";
+
+        let extractor = DocExtractor::new();
+        let items = extractor.extract_source(source, "plugin.ts", SourceType::ts()).unwrap();
+        let plugin = items.iter().find(|item| item.name == "Plugin").unwrap();
+
+        assert_eq!(plugin.params.len(), 1);
+        assert_eq!(plugin.params[0].name, "ctx");
+        assert_eq!(plugin.params[0].type_annotation.as_deref(), Some("Readonly<PluginContext<G>>"));
+        assert_eq!(plugin.params[0].description, None);
+        assert_eq!(plugin.return_type.as_deref(), Some("Awaitable<void>"));
+        assert_eq!(
+            plugin.children.iter().map(|child| child.name.as_str()).collect::<Vec<_>>(),
+            ["id", "name"]
+        );
+        assert_eq!(plugin.children[0].signature.as_deref(), Some("string"));
+        assert_eq!(plugin.children[1].signature.as_deref(), Some("string"));
+        assert!(plugin.children[1].optional);
     }
 
     #[test]
