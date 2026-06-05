@@ -903,6 +903,40 @@ export type PluginFunction<G> = (ctx: Readonly<PluginContext<G>>) => Awaitable<v
     }
 
     #[test]
+    fn function_type_alias_without_returns_tag_still_normalizes_return_section() {
+        let source = r"
+/**
+ * Plugin extension hook.
+ *
+ * @param ctx - The command context.
+ * @param cmd - The command.
+ */
+export type OnPluginExtension<G> = (
+    ctx: Readonly<CommandContext<G>>,
+    cmd: Readonly<Command<G>>
+) => Awaitable<void>;
+";
+
+        let extractor = DocExtractor::new();
+        let entries = normalize_doc_items(
+            extractor.extract_source(source, "plugin.ts", SourceType::ts()).unwrap(),
+            false,
+        );
+        let alias = entries.iter().find(|entry| entry.name == "OnPluginExtension").unwrap();
+
+        assert_eq!(alias.params.len(), 2);
+        assert_eq!(alias.params[0].name, "ctx");
+        assert_eq!(alias.params[0].type_annotation, "Readonly<CommandContext<G>>");
+        assert_eq!(alias.params[0].description, "The command context.");
+        assert_eq!(alias.params[1].name, "cmd");
+        assert_eq!(alias.params[1].type_annotation, "Readonly<Command<G>>");
+        assert_eq!(alias.params[1].description, "The command.");
+        let returns = alias.returns.as_ref().unwrap();
+        assert_eq!(returns.type_annotation, "Awaitable<void>");
+        assert_eq!(returns.description, "");
+    }
+
+    #[test]
     fn index_signature_members_are_normalized_with_parameter_and_value_types() {
         let source = r"
 /**

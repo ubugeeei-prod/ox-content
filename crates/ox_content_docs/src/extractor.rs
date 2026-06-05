@@ -2843,6 +2843,35 @@ export type PluginExtension<T, G> = (ctx: CommandContextCore<G>, cmd: Command<G>
     }
 
     #[test]
+    fn type_alias_function_with_jsdoc_params_but_no_returns_tag_extracts_return() {
+        let source = r"
+/**
+ * Plugin extension hook.
+ *
+ * @param ctx - The command context.
+ * @param cmd - The command.
+ */
+export type OnPluginExtension<G> = (
+    ctx: Readonly<CommandContext<G>>,
+    cmd: Readonly<Command<G>>
+) => Awaitable<void>;
+";
+
+        let extractor = DocExtractor::new();
+        let items = extractor.extract_source(source, "plugin.ts", SourceType::ts()).unwrap();
+        let alias = items.iter().find(|item| item.name == "OnPluginExtension").unwrap();
+
+        assert_eq!(alias.params.len(), 2);
+        assert_eq!(alias.params[0].name, "ctx");
+        assert_eq!(alias.params[0].type_annotation.as_deref(), Some("Readonly<CommandContext<G>>"));
+        assert_eq!(alias.params[0].description.as_deref(), Some("The command context."));
+        assert_eq!(alias.params[1].name, "cmd");
+        assert_eq!(alias.params[1].type_annotation.as_deref(), Some("Readonly<Command<G>>"));
+        assert_eq!(alias.params[1].description.as_deref(), Some("The command."));
+        assert_eq!(alias.return_type.as_deref(), Some("Awaitable<void>"));
+    }
+
+    #[test]
     fn type_alias_function_with_function_param_and_return_extracts_nested_function_types() {
         let source = r"
 /**
