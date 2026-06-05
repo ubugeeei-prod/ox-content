@@ -4546,6 +4546,91 @@ mod tests {
     }
 
     #[test]
+    fn generate_docs_markdown_renders_type_alias_function_metadata() {
+        let docs = vec![JsDocsMarkdownModule {
+            description: None,
+            file: "default".to_string(),
+            source_path: None,
+            examples: None,
+            tags: None,
+            entries: vec![
+                JsDocsMarkdownEntry {
+                    name: "CommandRunner".to_string(),
+                    kind: "type".to_string(),
+                    description: "Run a command.".to_string(),
+                    params: Some(vec![JsDocParam {
+                        name: "ctx".to_string(),
+                        r#type: "Readonly<CommandContext<G>>".to_string(),
+                        description: String::new(),
+                        optional: Some(false),
+                        r#default: None,
+                    }]),
+                    returns: Some(JsDocReturn {
+                        r#type: "Awaitable<string | void>".to_string(),
+                        description: "CLI output.".to_string(),
+                        members: None,
+                    }),
+                    examples: None,
+                    tags: None,
+                    private: false,
+                    file: "/repo/src/types.ts".to_string(),
+                    line: 1,
+                    end_line: 1,
+                    signature: Some(
+                        "export type CommandRunner<G> = (ctx: Readonly<CommandContext<G>>) => Awaitable<string | void>"
+                            .to_string(),
+                    ),
+                    extends: None,
+                    implements: None,
+                    has_body: None,
+                    members: None,
+                    type_parameters: None,
+                },
+                JsDocsMarkdownEntry {
+                    name: "CommandContext".to_string(),
+                    kind: "type".to_string(),
+                    description: String::new(),
+                    params: Some(vec![]),
+                    returns: None,
+                    examples: None,
+                    tags: None,
+                    private: false,
+                    file: "/repo/src/context.ts".to_string(),
+                    line: 1,
+                    end_line: 1,
+                    signature: Some("export type CommandContext = unknown".to_string()),
+                    extends: None,
+                    implements: None,
+                    has_body: None,
+                    members: None,
+                    type_parameters: None,
+                },
+            ],
+        }];
+
+        let markdown = generate_docs_markdown(
+            docs,
+            Some(JsDocsMarkdownOptions {
+                group_by: Some("file".to_string()),
+                path_strategy: Some("typedoc".to_string()),
+                render_style: Some("markdown".to_string()),
+                parameters_format: Some("table".to_string()),
+                ..Default::default()
+            }),
+        );
+        let page = markdown.get("default/type-aliases/CommandRunner.md").unwrap();
+
+        assert!(page.contains("## Parameters"));
+        assert!(page.contains("Readonly"));
+        assert!(page.contains("CommandContext"));
+        assert!(page.contains("## Returns"));
+        assert!(!page.contains("| `ctx` | `unknown` |"));
+        assert!(page.contains("`Awaitable<string \\| void>`"));
+        assert!(page.contains("CLI output."));
+        assert!(!page.contains("`unknown`"));
+    }
+
+    #[test]
     fn generate_docs_markdown_renders_index_signature_members() {
         let docs = vec![JsDocsMarkdownModule {
             description: None,

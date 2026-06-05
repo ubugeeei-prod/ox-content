@@ -645,6 +645,58 @@ mod tests {
     }
 
     #[test]
+    fn function_type_alias_metadata_serializes_to_json() {
+        let docs = vec![ApiDocModule {
+            description: String::new(),
+            file: "/repo/src/plugin.ts".to_string(),
+            source_path: String::new(),
+            examples: vec![],
+            tags: vec![],
+            entries: vec![ApiDocEntry {
+                name: "CommandRunner".to_string(),
+                kind: "type".to_string(),
+                description: "Command runner type.".to_string(),
+                params: vec![ApiParamDoc {
+                    name: "ctx".to_string(),
+                    type_annotation: "Readonly<CommandContext<G>>".to_string(),
+                    description: String::new(),
+                    optional: false,
+                    default_value: None,
+                }],
+                returns: Some(ApiReturnDoc {
+                    type_annotation: "Awaitable<string | void>".to_string(),
+                    description: String::new(),
+                    members: Vec::new(),
+                }),
+                examples: vec![],
+                tags: vec![],
+                private: false,
+                file: "/repo/src/plugin.ts".to_string(),
+                line: 1,
+                end_line: 1,
+                signature: Some(
+                    "export type CommandRunner<G> = (ctx: Readonly<CommandContext<G>>) => Awaitable<string | void>".to_string(),
+                ),
+                extends: vec![],
+                implements: vec![],
+                has_body: false,
+                members: vec![],
+                type_parameters: vec![],
+            }],
+        }];
+
+        let json = generate_docs_data_json(&docs, "2026-06-05T00:00:00.000Z").unwrap();
+        let value: Value = serde_json::from_str(&json).unwrap();
+        let entry = &value["modules"][0]["entries"][0];
+
+        assert_eq!(entry["kind"], "type");
+        assert_eq!(entry["name"], "CommandRunner");
+        assert_eq!(entry["params"][0]["name"], "ctx");
+        assert_eq!(entry["params"][0]["type"], "Readonly<CommandContext<G>>");
+        assert_eq!(entry["returns"]["type"], "Awaitable<string | void>");
+    }
+
+    #[test]
     fn heritage_and_implementation_metadata_serialize_to_json() {
         let docs = vec![ApiDocModule {
             description: String::new(),

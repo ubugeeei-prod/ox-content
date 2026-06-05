@@ -853,6 +853,56 @@ export function resolveArgs<A extends Args>(): {
     }
 
     #[test]
+    fn function_type_alias_metadata_keeps_extracted_types_and_jsdoc_descriptions() {
+        let source = r"
+/**
+ * Run a command.
+ * @param ctx - Command execution context.
+ * @returns CLI output result.
+ */
+export type CommandRunner<G> = (ctx: Readonly<CommandContext<G>>) => Awaitable<string | void>;
+";
+
+        let extractor = DocExtractor::new();
+        let entries = normalize_doc_items(
+            extractor.extract_source(source, "runner.ts", SourceType::ts()).unwrap(),
+            false,
+        );
+        let alias = entries.iter().find(|entry| entry.name == "CommandRunner").unwrap();
+
+        assert_eq!(alias.params.len(), 1);
+        assert_eq!(alias.params[0].name, "ctx");
+        assert_eq!(alias.params[0].type_annotation, "Readonly<CommandContext<G>>");
+        assert_eq!(alias.params[0].description, "Command execution context.");
+        let returns = alias.returns.as_ref().unwrap();
+        assert_eq!(returns.type_annotation, "Awaitable<string | void>");
+        assert_eq!(returns.description, "CLI output result.");
+    }
+
+    #[test]
+    fn function_type_alias_without_jsdoc_tags_still_has_type_information() {
+        let source = r"
+/**
+ * Plugin function.
+ */
+export type PluginFunction<G> = (ctx: Readonly<PluginContext<G>>) => Awaitable<void>;
+";
+
+        let extractor = DocExtractor::new();
+        let entries = normalize_doc_items(
+            extractor.extract_source(source, "plugin.ts", SourceType::ts()).unwrap(),
+            false,
+        );
+        let alias = entries.iter().find(|entry| entry.name == "PluginFunction").unwrap();
+
+        assert_eq!(alias.params.len(), 1);
+        assert_eq!(alias.params[0].name, "ctx");
+        assert_eq!(alias.params[0].type_annotation, "Readonly<PluginContext<G>>");
+        assert_eq!(alias.params[0].description, "");
+        assert_eq!(alias.returns.as_ref().unwrap().type_annotation, "Awaitable<void>");
+    }
+
+    #[test]
     fn index_signature_members_are_normalized_with_parameter_and_value_types() {
         let source = r"
 /**
