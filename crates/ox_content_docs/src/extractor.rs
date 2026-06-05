@@ -10,7 +10,7 @@ use oxc_ast::ast::{
     BindingPattern, Class, Comment, Declaration, ExportDefaultDeclarationKind, Expression,
     Function, Statement, TSEnumDeclaration, TSEnumMember, TSIndexSignature, TSIndexSignatureName,
     TSInterfaceDeclaration, TSSignature, TSType, TSTypeAliasDeclaration, TSTypeAnnotation,
-    TSTypeName, VariableDeclaration,
+    TSTypeLiteral, TSTypeName, VariableDeclaration,
 };
 use oxc_ast_visit::{walk, Visit};
 use oxc_parser::Parser;
@@ -966,6 +966,40 @@ impl<'a> DocVisitor<'a> {
         items.join(", ")
     }
 
+    fn format_type_formal_parameters(&self, params: &oxc_ast::ast::FormalParameters<'a>) -> String {
+        let mut items = Vec::with_capacity(params.items.len() + usize::from(params.rest.is_some()));
+
+        for param in &params.items {
+            let name = Self::binding_pattern_name(&param.pattern);
+            let mut item = StringBuilder::with_capacity(name.len() + 16);
+            item.push_str(&name);
+            if param.optional {
+                item.push_char('?');
+            }
+            if let Some(type_annotation) = param.type_annotation.as_ref() {
+                let formatted = self.format_ts_type(&type_annotation.type_annotation);
+                item.push_str(": ");
+                item.push_str(&formatted);
+            }
+            items.push(item.into_string());
+        }
+
+        if let Some(rest) = params.rest.as_ref() {
+            let name = Self::binding_pattern_name(&rest.rest.argument);
+            let mut item = StringBuilder::with_capacity(name.len() + 19);
+            item.push_str("...");
+            item.push_str(&name);
+            if let Some(type_annotation) = rest.type_annotation.as_ref() {
+                let formatted = self.format_ts_type(&type_annotation.type_annotation);
+                item.push_str(": ");
+                item.push_str(&formatted);
+            }
+            items.push(item.into_string());
+        }
+
+        items.join(", ")
+    }
+
     fn format_function_signature(&self, func: &Function<'a>, name: &str, exported: bool) -> String {
         let mut sig = String::new();
 
@@ -1325,6 +1359,13 @@ impl<'a> DocVisitor<'a> {
         })
     }
 
+    fn find_exact_parsed_param_tag<'t>(
+        parsed: &'t [ParsedParamTag],
+        name: &str,
+    ) -> Option<&'t ParsedParamTag> {
+        parsed.iter().find(|tag| tag.name.trim_start_matches("...").trim_end_matches('?') == name)
+    }
+
     fn parse_return_tag(tag: &DocTag) -> (Option<String>, Option<String>) {
         if tag.type_annotation.is_some() || tag.description.is_some() {
             return (tag.type_annotation.clone(), tag.description.clone());
@@ -1368,7 +1409,7 @@ impl<'a> DocVisitor<'a> {
             TSType::TSObjectKeyword(_) => "object".to_string(),
             TSType::TSUnknownKeyword(_) => "unknown".to_string(),
             TSType::TSTypeReference(ref_type) => {
-                self.slice(ref_type.span().start, ref_type.span().end)
+                self.format_type_span(ref_type.span().start, ref_type.span().end)
             }
             TSType::TSArrayType(arr) => join2(&self.format_ts_type(&arr.element_type), "[]"),
             TSType::TSTypeOperatorType(op) => {
@@ -1390,7 +1431,7 @@ impl<'a> DocVisitor<'a> {
                 types.join(" & ")
             }
             TSType::TSFunctionType(func) => {
-                let params = self.format_formal_parameters(&func.params);
+                let params = self.format_type_formal_parameters(&func.params);
                 let ret = self.format_ts_type(&func.return_type.type_annotation);
                 let mut out = StringBuilder::with_capacity(params.len() + ret.len() + 6);
                 out.push_char('(');
@@ -1399,7 +1440,7 @@ impl<'a> DocVisitor<'a> {
                 out.push_str(&ret);
                 out.into_string()
             }
-            TSType::TSTypeLiteral(_) => "{ ... }".to_string(),
+            TSType::TSTypeLiteral(type_literal) => self.format_type_literal(type_literal),
             TSType::TSParenthesizedType(paren) => {
                 join3("(", &self.format_ts_type(&paren.type_annotation), ")")
             }
@@ -1425,12 +1466,122 @@ impl<'a> DocVisitor<'a> {
     }
 
     fn format_type_from_span(&self, ts_type: &TSType) -> String {
-        self.slice(ts_type.span().start, ts_type.span().end)
-            .split_whitespace()
-            .collect::<Vec<_>>()
-            .join(" ")
-            .trim()
-            .to_string()
+        self.format_type_span(ts_type.span().start, ts_type.span().end)
+    }
+
+    fn format_span(&self, start: u32, end: u32) -> String {
+        self.slice(start, end).split_whitespace().collect::<Vec<_>>().join(" ").trim().to_string()
+    }
+
+    fn format_type_span(&self, start: u32, end: u32) -> String {
+        Self::collapse_type_annotation_text(&self.slice(start, end))
+    }
+
+    fn collapse_type_annotation_text(text: &str) -> String {
+        let text = text.trim();
+        if text.is_empty() {
+            return String::new();
+        }
+
+        let mut out = String::with_capacity(text.len());
+        let mut pending_space = false;
+        for ch in text.chars() {
+            if ch.is_whitespace() {
+                pending_space = !out.is_empty();
+                continue;
+            }
+
+            if pending_space {
+                if !matches!(out.chars().next_back(), Some('<')) && ch != '>' {
+                    out.push(' ');
+                }
+                pending_space = false;
+            }
+            out.push(ch);
+        }
+        out
+    }
+
+    fn property_key_name(key: &oxc_ast::ast::PropertyKey<'a>) -> Option<String> {
+        match key {
+            oxc_ast::ast::PropertyKey::StaticIdentifier(id) => Some(id.name.to_string()),
+            _ => None,
+        }
+    }
+
+    fn format_type_literal(&self, type_literal: &TSTypeLiteral<'a>) -> String {
+        let members = type_literal
+            .members
+            .iter()
+            .map(|member| self.format_type_literal_member(member))
+            .filter(|member| !member.is_empty())
+            .collect::<Vec<_>>();
+
+        if members.is_empty() {
+            "{}".to_string()
+        } else {
+            join3("{ ", &members.join("; "), " }")
+        }
+    }
+
+    fn format_type_literal_member(&self, member: &TSSignature<'a>) -> String {
+        match member {
+            TSSignature::TSPropertySignature(prop) => {
+                let Some(name) = Self::property_key_name(&prop.key) else {
+                    return self.format_span(prop.span.start, prop.span.end);
+                };
+                let type_annotation = prop.type_annotation.as_ref().map_or_else(
+                    || "unknown".to_string(),
+                    |t| self.format_ts_type(&t.type_annotation),
+                );
+                let mut out = StringBuilder::with_capacity(name.len() + type_annotation.len() + 16);
+                if prop.readonly {
+                    out.push_str("readonly ");
+                }
+                out.push_str(&name);
+                if prop.optional {
+                    out.push_char('?');
+                }
+                out.push_str(": ");
+                out.push_str(&type_annotation);
+                out.into_string()
+            }
+            TSSignature::TSMethodSignature(method) => {
+                let Some(name) = Self::property_key_name(&method.key) else {
+                    return self.format_span(method.span.start, method.span.end);
+                };
+                let params = self.format_type_formal_parameters(&method.params);
+                let return_type = method.return_type.as_ref().map_or_else(
+                    || "unknown".to_string(),
+                    |t| self.format_ts_type(&t.type_annotation),
+                );
+                let type_parameters =
+                    self.format_type_parameter_declaration(method.type_parameters.as_ref());
+                let mut out = StringBuilder::with_capacity(
+                    name.len() + type_parameters.len() + params.len() + return_type.len() + 8,
+                );
+                out.push_str(&name);
+                if method.optional {
+                    out.push_char('?');
+                }
+                out.push_str(&type_parameters);
+                out.push_char('(');
+                out.push_str(&params);
+                out.push_str("): ");
+                out.push_str(&return_type);
+                out.into_string()
+            }
+            TSSignature::TSIndexSignature(index_signature) => {
+                let Some(parameter) = index_signature.parameters.first() else {
+                    return self.format_span(index_signature.span.start, index_signature.span.end);
+                };
+                let (name, _, _) = self.format_index_signature_name(parameter);
+                let value_type =
+                    self.format_ts_type(&index_signature.type_annotation.type_annotation);
+                Self::format_index_signature(index_signature, &name, &value_type)
+            }
+            _ => self.format_span(member.span().start, member.span().end),
+        }
     }
 
     /// Format a TypeScript type name.
@@ -1458,36 +1609,51 @@ impl<'a> DocVisitor<'a> {
             .filter_map(Self::parse_param_tag)
             .collect();
 
-        let mut docs = params
-            .items
-            .iter()
-            .map(|param| {
-                let name = Self::binding_pattern_name(&param.pattern);
-                let tag = Self::find_parsed_param_tag(&parsed_param_tags, &name);
-                let default_value = self
-                    .binding_pattern_default_value(&param.pattern)
-                    .or_else(|| {
-                        param
-                            .initializer
-                            .as_ref()
-                            .map(|init| self.slice(init.span().start, init.span().end))
-                    })
-                    .or_else(|| tag.and_then(|tag| tag.default_value.clone()));
+        let mut docs = Vec::with_capacity(params.items.len() + usize::from(params.rest.is_some()));
 
-                let type_annotation = param
-                    .type_annotation
-                    .as_ref()
-                    .map(|t| self.format_ts_type(&t.type_annotation))
-                    .or_else(|| tag.and_then(|tag| tag.type_annotation.clone()));
+        for param in &params.items {
+            let name = Self::binding_pattern_name(&param.pattern);
+            let tag = Self::find_parsed_param_tag(&parsed_param_tags, &name);
+            let default_value = self
+                .binding_pattern_default_value(&param.pattern)
+                .or_else(|| {
+                    param
+                        .initializer
+                        .as_ref()
+                        .map(|init| self.slice(init.span().start, init.span().end))
+                })
+                .or_else(|| tag.and_then(|tag| tag.default_value.clone()));
 
-                let optional = param.optional
-                    || default_value.is_some()
-                    || tag.is_some_and(|tag| tag.optional);
-                let description = tag.and_then(|tag| tag.description.clone());
+            let type_annotation = param
+                .type_annotation
+                .as_ref()
+                .map(|t| self.format_ts_type(&t.type_annotation))
+                .or_else(|| tag.and_then(|tag| tag.type_annotation.clone()));
 
-                ParamDoc { name, type_annotation, optional, default_value, description }
-            })
-            .collect::<Vec<_>>();
+            let optional =
+                param.optional || default_value.is_some() || tag.is_some_and(|tag| tag.optional);
+            let description = tag.and_then(|tag| tag.description.clone());
+
+            docs.push(ParamDoc {
+                name: name.clone(),
+                type_annotation,
+                optional,
+                default_value,
+                description,
+            });
+
+            if let Some(type_literal) = param
+                .type_annotation
+                .as_ref()
+                .and_then(|t| Self::type_literal_from_ts_type(&t.type_annotation))
+            {
+                docs.extend(self.extract_type_literal_param_members(
+                    &name,
+                    type_literal,
+                    &parsed_param_tags,
+                ));
+            }
+        }
 
         if let Some(rest) = params.rest.as_ref() {
             let name = Self::binding_pattern_name(&rest.rest.argument);
@@ -1499,15 +1665,104 @@ impl<'a> DocVisitor<'a> {
                 .or_else(|| tag.and_then(|tag| tag.type_annotation.clone()));
 
             docs.push(ParamDoc {
-                name,
+                name: name.clone(),
                 type_annotation,
                 optional: tag.is_some_and(|tag| tag.optional),
                 default_value: tag.and_then(|tag| tag.default_value.clone()),
                 description: tag.and_then(|tag| tag.description.clone()),
             });
+
+            if let Some(type_literal) = rest
+                .type_annotation
+                .as_ref()
+                .and_then(|t| Self::type_literal_from_ts_type(&t.type_annotation))
+            {
+                docs.extend(self.extract_type_literal_param_members(
+                    &name,
+                    type_literal,
+                    &parsed_param_tags,
+                ));
+            }
         }
 
         docs
+    }
+
+    fn type_literal_from_ts_type<'t>(ts_type: &'t TSType<'a>) -> Option<&'t TSTypeLiteral<'a>> {
+        match ts_type {
+            TSType::TSTypeLiteral(type_literal) => Some(type_literal),
+            TSType::TSParenthesizedType(paren) => {
+                Self::type_literal_from_ts_type(&paren.type_annotation)
+            }
+            _ => None,
+        }
+    }
+
+    fn extract_type_literal_param_members(
+        &self,
+        parent_name: &str,
+        type_literal: &TSTypeLiteral<'a>,
+        parsed_param_tags: &[ParsedParamTag],
+    ) -> Vec<ParamDoc> {
+        let mut params = Vec::new();
+        for member in &type_literal.members {
+            match member {
+                TSSignature::TSPropertySignature(prop) => {
+                    let Some(property_name) = Self::property_key_name(&prop.key) else {
+                        continue;
+                    };
+                    let lookup_name = join3(parent_name, ".", &property_name);
+                    let tag = Self::find_exact_parsed_param_tag(parsed_param_tags, &lookup_name);
+                    let optional = prop.optional || tag.is_some_and(|tag| tag.optional);
+                    let name =
+                        if optional { join2(&lookup_name, "?") } else { lookup_name.clone() };
+                    let type_annotation = prop
+                        .type_annotation
+                        .as_ref()
+                        .map(|t| self.format_ts_type(&t.type_annotation))
+                        .or_else(|| tag.and_then(|tag| tag.type_annotation.clone()));
+
+                    params.push(ParamDoc {
+                        name,
+                        type_annotation,
+                        optional,
+                        default_value: tag.and_then(|tag| tag.default_value.clone()),
+                        description: tag.and_then(|tag| tag.description.clone()),
+                    });
+                }
+                TSSignature::TSMethodSignature(method) => {
+                    let Some(method_name) = Self::property_key_name(&method.key) else {
+                        continue;
+                    };
+                    let lookup_name = join3(parent_name, ".", &method_name);
+                    let tag = Self::find_exact_parsed_param_tag(parsed_param_tags, &lookup_name);
+                    let optional = method.optional || tag.is_some_and(|tag| tag.optional);
+                    let name =
+                        if optional { join2(&lookup_name, "?") } else { lookup_name.clone() };
+                    let params_text = self.format_type_formal_parameters(&method.params);
+                    let return_type = method.return_type.as_ref().map_or_else(
+                        || "unknown".to_string(),
+                        |t| self.format_ts_type(&t.type_annotation),
+                    );
+                    let mut type_annotation =
+                        StringBuilder::with_capacity(params_text.len() + return_type.len() + 6);
+                    type_annotation.push_char('(');
+                    type_annotation.push_str(&params_text);
+                    type_annotation.push_str(") => ");
+                    type_annotation.push_str(&return_type);
+
+                    params.push(ParamDoc {
+                        name,
+                        type_annotation: Some(type_annotation.into_string()),
+                        optional,
+                        default_value: tag.and_then(|tag| tag.default_value.clone()),
+                        description: tag.and_then(|tag| tag.description.clone()),
+                    });
+                }
+                _ => {}
+            }
+        }
+        params
     }
 
     /// Extract parameters from a function.
@@ -2464,6 +2719,73 @@ export function add(a: number, b: number): number {
         assert!(items[0].exported);
         assert!(items[0].doc.as_ref().unwrap().contains("Adds two numbers"));
         assert_eq!(items[0].params.len(), 2);
+    }
+
+    #[test]
+    fn function_object_literal_parameter_preserves_type_and_members() {
+        let source = r"
+/**
+ * Define a plugin.
+ *
+ * @param options - Plugin options.
+ * @param options.id - Plugin id.
+ * @param options.name - Plugin display name.
+ * @param options.setup - Setup hook.
+ */
+export function plugin<Id, Deps, PluginExt, MergedExtensions>(options: {
+    id: Id;
+    name?: string;
+    dependencies?: Deps;
+    setup?: (
+        ctx: Readonly<
+            PluginContext<MergedExtensions>
+        >
+    ) => Awaitable<void>;
+    extension: PluginExt;
+    onExtension?: OnPluginExtension<MergedExtensions>;
+}): PluginWithExtension<PluginExt>;
+";
+
+        let extractor = DocExtractor::new();
+        let items = extractor.extract_source(source, "plugin.ts", SourceType::ts()).unwrap();
+        let plugin = items.iter().find(|item| item.name == "plugin").unwrap();
+
+        assert_eq!(plugin.params.len(), 7);
+        assert_eq!(plugin.params[0].name, "options");
+        let parent_type = plugin.params[0].type_annotation.as_deref().unwrap();
+        assert_ne!(parent_type, "{ ... }");
+        assert!(parent_type.contains("id: Id"));
+        assert!(parent_type.contains("name?: string"));
+        assert!(parent_type.contains(
+            "setup?: (ctx: Readonly<PluginContext<MergedExtensions>>) => Awaitable<void>"
+        ));
+        assert_eq!(plugin.params[0].description.as_deref(), Some("Plugin options."));
+
+        let names = plugin.params.iter().map(|param| param.name.as_str()).collect::<Vec<_>>();
+        assert_eq!(
+            names,
+            [
+                "options",
+                "options.id",
+                "options.name?",
+                "options.dependencies?",
+                "options.setup?",
+                "options.extension",
+                "options.onExtension?",
+            ]
+        );
+        assert_eq!(plugin.params[1].type_annotation.as_deref(), Some("Id"));
+        assert_eq!(plugin.params[1].description.as_deref(), Some("Plugin id."));
+        assert_eq!(plugin.params[2].description.as_deref(), Some("Plugin display name."));
+        assert_eq!(
+            plugin.params[4].type_annotation.as_deref(),
+            Some("(ctx: Readonly<PluginContext<MergedExtensions>>) => Awaitable<void>")
+        );
+        assert_eq!(plugin.params[4].description.as_deref(), Some("Setup hook."));
+        assert!(plugin.params[2].optional);
+        assert!(plugin.params[3].optional);
+        assert!(plugin.params[4].optional);
+        assert!(plugin.params[6].optional);
     }
 
     #[test]

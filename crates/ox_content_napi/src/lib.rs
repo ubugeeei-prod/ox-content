@@ -3776,6 +3776,68 @@ export type OnPluginExtension<G> = (
     }
 
     #[test]
+    fn extract_file_doc_entries_preserves_object_literal_parameter_members() {
+        let unique =
+            std::time::SystemTime::now().duration_since(std::time::UNIX_EPOCH).unwrap().as_nanos();
+        let root = std::env::temp_dir()
+            .join(format!("ox-content-napi-object-literal-param-{}-{unique}", std::process::id()));
+        let _ = fs::remove_dir_all(&root);
+        fs::create_dir_all(&root).unwrap();
+        let file = root.join("plugin.ts");
+        fs::write(
+            &file,
+            r"
+/**
+ * Define a plugin.
+ *
+ * @param options - Plugin options.
+ * @param options.id - Plugin id.
+ * @param options.name - Plugin display name.
+ */
+export function plugin<Id, PluginExt>(options: {
+    id: Id;
+    name?: string;
+    setup?: (
+        ctx: Readonly<
+            PluginContext
+        >
+    ) => Awaitable<void>;
+    extension: PluginExt;
+}): PluginWithExtension<PluginExt>;
+",
+        )
+        .unwrap();
+
+        let entries =
+            extract_file_doc_entries(file.to_string_lossy().into_owned(), None, None, None)
+                .unwrap();
+        let entry = entries.iter().find(|entry| entry.name == "plugin").unwrap();
+        let params = entry.params.as_ref().unwrap();
+
+        assert_eq!(params.len(), 5);
+        assert_eq!(params[0].name, "options");
+        assert_ne!(params[0].r#type, "{ ... }");
+        assert!(params[0].r#type.contains("id: Id"));
+        assert!(params[0].r#type.contains("name?: string"));
+        assert!(params[0]
+            .r#type
+            .contains("setup?: (ctx: Readonly<PluginContext>) => Awaitable<void>"));
+        assert_eq!(params[0].description, "Plugin options.");
+        assert_eq!(params[1].name, "options.id");
+        assert_eq!(params[1].r#type, "Id");
+        assert_eq!(params[1].description, "Plugin id.");
+        assert_eq!(params[2].name, "options.name?");
+        assert_eq!(params[2].description, "Plugin display name.");
+        assert_eq!(params[2].optional, Some(true));
+        assert_eq!(params[3].name, "options.setup?");
+        assert_eq!(params[3].r#type, "(ctx: Readonly<PluginContext>) => Awaitable<void>");
+        assert_eq!(params[4].name, "options.extension");
+        assert_eq!(params[4].r#type, "PluginExt");
+
+        let _ = fs::remove_dir_all(root);
+    }
+
+    #[test]
     fn has_body_round_trips_from_extract_output_to_markdown_model() {
         let normalized = NormalizedDocEntry {
             name: "plugin".to_string(),
