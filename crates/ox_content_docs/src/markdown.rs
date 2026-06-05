@@ -4807,6 +4807,25 @@ mod tests {
         }]
     }
 
+    fn index_signature_docs() -> Vec<ApiDocModule> {
+        let mut schema = test_entry("ArgSchema", "interface", "/repo/src/args.ts", "Value type.");
+        schema.signature = Some("export interface ArgSchema".to_string());
+
+        let mut args = test_entry("Args", "interface", "/repo/src/args.ts", "Arguments.");
+        args.signature = Some("export interface Args".to_string());
+        args.members =
+            vec![index_signature_member("[option: string]", "option", "string", "ArgSchema", true)];
+
+        vec![ApiDocModule {
+            description: String::new(),
+            file: "default".to_string(),
+            source_path: String::new(),
+            examples: vec![],
+            tags: vec![],
+            entries: vec![schema, args],
+        }]
+    }
+
     fn multiline_plugin_ext_type_parameters() -> Vec<ApiTypeParamDoc> {
         vec![
             ApiTypeParamDoc {
@@ -4843,6 +4862,36 @@ mod tests {
             returns: None,
             optional: false,
             readonly: false,
+            r#static: false,
+            private: false,
+            tags: vec![],
+            implementation_of: vec![],
+            line: 1,
+            end_line: 1,
+        }
+    }
+
+    fn index_signature_member(
+        name: &str,
+        param_name: &str,
+        param_type: &str,
+        value_type: &str,
+        readonly: bool,
+    ) -> ApiDocMember {
+        ApiDocMember {
+            name: name.to_string(),
+            kind: "indexSignature".to_string(),
+            description: "Argument schema by option name.".to_string(),
+            signature: Some(if readonly {
+                format!("readonly {name}: {value_type}")
+            } else {
+                format!("{name}: {value_type}")
+            }),
+            type_annotation: Some(value_type.to_string()),
+            params: vec![param(param_name, param_type)],
+            returns: None,
+            optional: false,
+            readonly,
             r#static: false,
             private: false,
             tags: vec![],
@@ -4924,6 +4973,72 @@ mod tests {
         assert!(page.contains("<h5>values</h5>"));
         assert!(page
             .contains("values: <a href=\"../type-aliases/ArgValues.md\">ArgValues</a>&lt;A&gt;;"));
+    }
+
+    #[test]
+    fn typedoc_markdown_renders_index_signature_members() {
+        let out = generate_markdown(&index_signature_docs(), &markdown_typedoc_options());
+        let page = out.get("default/interfaces/Args.md").unwrap();
+
+        assert!(page.contains("## Indexable\n\n"));
+        assert!(page.contains("```ts\nreadonly [option: string]: ArgSchema\n```"));
+        assert!(page.contains("Argument schema by option name."));
+    }
+
+    #[test]
+    fn typedoc_html_renders_index_signature_members() {
+        let out = generate_markdown(&index_signature_docs(), &html_typedoc_options());
+        let page = out.get("default/interfaces/Args.md").unwrap();
+
+        assert!(page.contains("ox-api-entry__member-group--indexable"));
+        assert!(page.contains("<h5>Indexable</h5>"));
+        assert!(
+            page.contains("readonly [option: string]: <a href=\"./ArgSchema.md\">ArgSchema</a>")
+        );
+        assert!(page.contains("Argument schema by option name."));
+    }
+
+    #[test]
+    fn typedoc_markdown_renders_return_index_signature_members() {
+        let mut entry = test_entry("makeArgs", "function", "/repo/src/resolver.ts", "Make.");
+        entry.returns = Some(ApiReturnDoc {
+            type_annotation: "object".to_string(),
+            description: "Resolved args.".to_string(),
+            members: vec![index_signature_member(
+                "[option: string]",
+                "option",
+                "string",
+                "ArgSchema",
+                false,
+            )],
+        });
+        let out = generate_markdown(&type_link_module(entry), &markdown_typedoc_options());
+        let page = out.get("combinators/functions/makeArgs.md").unwrap();
+
+        assert!(page.contains("## Returns\n\n`object` — Resolved args.\n\n"));
+        assert!(page.contains("### Indexable\n\n```ts\n[option: string]: ArgSchema\n```"));
+    }
+
+    #[test]
+    fn typedoc_html_renders_return_index_signature_members() {
+        let mut entry = test_entry("makeArgs", "function", "/repo/src/resolver.ts", "Make.");
+        entry.returns = Some(ApiReturnDoc {
+            type_annotation: "object".to_string(),
+            description: "Resolved args.".to_string(),
+            members: vec![index_signature_member(
+                "[option: string]",
+                "option",
+                "string",
+                "ArgSchema",
+                false,
+            )],
+        });
+        let out = generate_markdown(&type_link_module(entry), &html_typedoc_options());
+        let page = out.get("combinators/functions/makeArgs.md").unwrap();
+
+        assert!(page.contains("ox-api-entry__return-member--indexable"));
+        assert!(page.contains("<h5>Indexable</h5>"));
+        assert!(page.contains("[option: string]: ArgSchema"));
     }
 
     #[test]

@@ -512,6 +512,70 @@ mod tests {
     }
 
     #[test]
+    fn index_signature_members_serialize_to_json() {
+        let docs = vec![ApiDocModule {
+            description: String::new(),
+            file: "/repo/src/args.ts".to_string(),
+            source_path: String::new(),
+            examples: vec![],
+            tags: vec![],
+            entries: vec![ApiDocEntry {
+                name: "Args".to_string(),
+                kind: "interface".to_string(),
+                description: "Arguments.".to_string(),
+                params: vec![],
+                returns: None,
+                examples: vec![],
+                tags: vec![],
+                private: false,
+                file: "/repo/src/args.ts".to_string(),
+                line: 1,
+                end_line: 5,
+                signature: Some("export interface Args".to_string()),
+                extends: vec![],
+                implements: vec![],
+                has_body: false,
+                members: vec![ApiDocMember {
+                    name: "[option: string]".to_string(),
+                    kind: "indexSignature".to_string(),
+                    description: "Argument schema by option name.".to_string(),
+                    signature: Some("readonly [option: string]: ArgSchema".to_string()),
+                    type_annotation: Some("ArgSchema".to_string()),
+                    params: vec![ApiParamDoc {
+                        name: "option".to_string(),
+                        type_annotation: "string".to_string(),
+                        description: String::new(),
+                        optional: false,
+                        default_value: None,
+                    }],
+                    returns: None,
+                    optional: false,
+                    readonly: true,
+                    r#static: false,
+                    private: false,
+                    tags: vec![],
+                    implementation_of: vec![],
+                    line: 4,
+                    end_line: 4,
+                }],
+                type_parameters: vec![],
+            }],
+        }];
+
+        let json = generate_docs_data_json(&docs, "2026-05-31T00:00:00.000Z").unwrap();
+        let value: Value = serde_json::from_str(&json).unwrap();
+        let member = &value["modules"][0]["entries"][0]["members"][0];
+
+        assert_eq!(member["name"], "[option: string]");
+        assert_eq!(member["kind"], "indexSignature");
+        assert_eq!(member["signature"], "readonly [option: string]: ArgSchema");
+        assert_eq!(member["type"], "ArgSchema");
+        assert_eq!(member["params"][0]["name"], "option");
+        assert_eq!(member["params"][0]["type"], "string");
+        assert_eq!(member["readonly"], true);
+    }
+
+    #[test]
     fn heritage_and_implementation_metadata_serialize_to_json() {
         let docs = vec![ApiDocModule {
             description: String::new(),
