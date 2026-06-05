@@ -1,5 +1,13 @@
 # Changelog
 
+## [2.56.0] - 2026-06-05
+
+### Bug Fixes
+
+- render member type parameters (#330)
+- expand object literal params (#329)
+- avoid escaping return union pipes (#328)
+
 ## [2.55.0] - 2026-06-05
 
 ### Bug Fixes
