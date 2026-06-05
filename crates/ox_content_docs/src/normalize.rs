@@ -534,11 +534,15 @@ fn is_placeholder_param(existing_params: &[NormalizedParamDoc], param: &ParamDoc
 }
 
 fn merge_param(params: &mut Vec<NormalizedParamDoc>, next: NormalizedParamDoc) {
-    let Some(existing) = params.iter_mut().find(|param| param.name == next.name) else {
+    let Some(existing) = params.iter_mut().find(|param| param_names_match(&param.name, &next.name))
+    else {
         params.push(next);
         return;
     };
 
+    if existing.name != next.name && next.name.ends_with('?') {
+        existing.name.clone_from(&next.name);
+    }
     if existing.type_annotation == UNKNOWN_TYPE || next.type_annotation != UNKNOWN_TYPE {
         existing.type_annotation = next.type_annotation;
     }
@@ -551,6 +555,10 @@ fn merge_param(params: &mut Vec<NormalizedParamDoc>, next: NormalizedParamDoc) {
     if next.default_value.is_some() {
         existing.default_value = next.default_value;
     }
+}
+
+fn param_names_match(left: &str, right: &str) -> bool {
+    left == right || left.trim_end_matches('?') == right.trim_end_matches('?')
 }
 
 fn merge_returns(returns: &mut Option<NormalizedReturnDoc>, next: NormalizedReturnDoc) {

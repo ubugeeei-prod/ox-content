@@ -4494,6 +4494,43 @@ mod tests {
         }
     }
 
+    fn object_literal_parameter_entry() -> ApiDocEntry {
+        let mut entry = test_entry("plugin", "function", "/repo/src/plugin.ts", "Define a plugin.");
+        entry.params = vec![
+            ApiParamDoc {
+                name: "options".to_string(),
+                type_annotation:
+                    "{ id: Id; name?: string; setup?: (ctx: PluginContext) => Awaitable<void> }"
+                        .to_string(),
+                description: "Plugin options.".to_string(),
+                optional: false,
+                default_value: None,
+            },
+            ApiParamDoc {
+                name: "options.id".to_string(),
+                type_annotation: "Id".to_string(),
+                description: "Plugin id.".to_string(),
+                optional: false,
+                default_value: None,
+            },
+            ApiParamDoc {
+                name: "options.name?".to_string(),
+                type_annotation: "string".to_string(),
+                description: String::new(),
+                optional: true,
+                default_value: None,
+            },
+            ApiParamDoc {
+                name: "options.setup?".to_string(),
+                type_annotation: "(ctx: PluginContext) => Awaitable<void>".to_string(),
+                description: "Setup hook.".to_string(),
+                optional: true,
+                default_value: None,
+            },
+        ];
+        entry
+    }
+
     fn module_with_source_path(source_path: &str) -> Vec<ApiDocModule> {
         vec![ApiDocModule {
             description: String::new(),
@@ -4504,6 +4541,43 @@ mod tests {
             tags: vec![],
             entries: vec![test_entry("cli", "function", "/repo/packages/x/src/cli.ts", "Run.")],
         }]
+    }
+
+    #[test]
+    fn typedoc_markdown_renders_object_literal_parameter_members() {
+        let options = MarkdownDocsOptions {
+            parameters_format: MarkdownDisplayFormat::Table,
+            ..markdown_typedoc_options()
+        };
+        let out = generate_markdown(&type_link_module(object_literal_parameter_entry()), &options);
+        let page = out.get("combinators/functions/plugin.md").unwrap();
+
+        assert!(!page.contains("{ ... }"));
+        assert!(page.contains("| `options` | `{ id: Id; name?: string; setup?: (ctx: PluginContext) => Awaitable<void> }` | Plugin options. |"));
+        assert!(page.contains("| `options.id` | `Id` | Plugin id. |"));
+        assert!(page.contains("| `options.name?` | `string` | _optional_ |"));
+        assert!(page.contains(
+            "| `options.setup?` | `(ctx: PluginContext) => Awaitable<void>` | Setup hook. _(optional)_ |"
+        ));
+    }
+
+    #[test]
+    fn typedoc_html_renders_object_literal_parameter_members() {
+        let options = MarkdownDocsOptions {
+            parameters_format: MarkdownDisplayFormat::Table,
+            ..html_typedoc_options()
+        };
+        let out = generate_markdown(&type_link_module(object_literal_parameter_entry()), &options);
+        let page = out.get("combinators/functions/plugin.md").unwrap();
+
+        assert!(!page.contains("{ ... }"));
+        assert!(page.contains(
+            "{ id: Id; name?: string; setup?: (ctx: PluginContext) =&gt; Awaitable&lt;void&gt; }"
+        ));
+        assert!(page.contains("options.id"));
+        assert!(page.contains("Plugin id."));
+        assert!(page.contains("options.setup?"));
+        assert!(page.contains("Setup hook."));
     }
 
     #[test]
