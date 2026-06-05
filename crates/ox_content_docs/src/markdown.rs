@@ -3960,6 +3960,64 @@ mod tests {
     }
 
     #[test]
+    fn typedoc_markdown_renders_function_valued_property_details() {
+        let mut schema =
+            test_entry("ArgSchema", "interface", "/repo/src/schema.ts", "Argument schema.");
+        schema.members = vec![ApiDocMember {
+            name: "parse".to_string(),
+            kind: "property".to_string(),
+            description: "Parses a raw value.".to_string(),
+            signature: None,
+            type_annotation: Some("(value: string) => any".to_string()),
+            params: vec![ApiParamDoc {
+                name: "value".to_string(),
+                type_annotation: "string".to_string(),
+                description: "Raw string value from command line.".to_string(),
+                optional: false,
+                default_value: None,
+            }],
+            returns: Some(ApiReturnDoc {
+                type_annotation: "any".to_string(),
+                description: "Parsed value.".to_string(),
+                members: Vec::new(),
+            }),
+            optional: true,
+            readonly: false,
+            r#static: false,
+            private: false,
+            tags: vec![],
+            implementation_of: vec![],
+            line: 5,
+            end_line: 10,
+        }];
+        let docs = vec![ApiDocModule {
+            description: String::new(),
+            file: "default".to_string(),
+            source_path: String::new(),
+            examples: vec![],
+            tags: vec![],
+            entries: vec![schema],
+        }];
+
+        let markdown = generate_markdown(
+            &docs,
+            &MarkdownDocsOptions {
+                interface_properties_format: MarkdownDisplayFormat::Table,
+                parameters_format: MarkdownDisplayFormat::Table,
+                ..markdown_typedoc_options()
+            },
+        );
+        let page = markdown.get("default/interfaces/ArgSchema.md").unwrap();
+
+        assert!(page.contains("| `parse` _(optional)_ | `(value: string) => any` | Parses a raw value. Returns: Parsed value. |"));
+        assert!(page.contains("### parse Parameters"));
+        assert!(page.contains("| `value` | `string` | Raw string value from command line. |"));
+        assert!(page.contains("### parse Returns"));
+        assert!(page.contains("`any` — Parsed value."));
+        assert!(!page.contains("`unknown`"));
+    }
+
+    #[test]
     fn html_display_format_options_switch_explicit_sections() {
         let mut make = test_entry("make", "function", "src/make.ts", "Make a thing.");
         make.params = vec![ApiParamDoc {

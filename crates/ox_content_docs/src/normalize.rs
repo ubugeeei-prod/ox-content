@@ -751,6 +751,44 @@ export interface Command {
     }
 
     #[test]
+    fn function_valued_property_merges_extracted_types_with_description_only_tags() {
+        let source = r"
+/**
+ * Argument schema.
+ */
+export interface ArgSchema {
+    /**
+     * Parses a raw value.
+     * @param value - Raw string value from command line.
+     * @returns Parsed value.
+     */
+    parse?: (value: string) => any;
+}
+";
+
+        let extractor = DocExtractor::new();
+        let items = extractor.extract_source(source, "schema.ts", SourceType::ts()).unwrap();
+        let entries = normalize_doc_items(items, false);
+        let member = &entries[0].members[0];
+
+        assert_eq!(member.name, "parse");
+        assert_eq!(member.kind, NormalizedMemberKind::Property);
+        assert_eq!(member.type_annotation.as_deref(), Some("(value: string) => any"));
+        assert_eq!(member.params.len(), 1);
+        assert_eq!(member.params[0].name, "value");
+        assert_eq!(member.params[0].type_annotation, "string");
+        assert_eq!(member.params[0].description, "Raw string value from command line.");
+        assert_eq!(
+            member.returns,
+            Some(NormalizedReturnDoc {
+                type_annotation: "any".to_string(),
+                description: "Parsed value.".to_string(),
+                members: Vec::new()
+            })
+        );
+    }
+
+    #[test]
     fn preserves_heritage_fields_in_normalized_entries() {
         let source = r"
 /**
