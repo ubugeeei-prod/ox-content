@@ -3432,6 +3432,58 @@ mod tests {
     }
 
     #[test]
+    fn typedoc_type_alias_renders_concrete_function_metadata() {
+        let mut entry = test_entry("CommandRunner", "type", "/repo/src/types.ts", "Run a command.");
+        entry.signature = Some(
+            "export type CommandRunner<G> = (ctx: Readonly<CommandContext<G>>) => Awaitable<string | void>"
+                .to_string(),
+        );
+        entry.params = vec![param("ctx", "Readonly<CommandContext<G>>")];
+        entry.returns = Some(ApiReturnDoc {
+            type_annotation: "Awaitable<string | void>".to_string(),
+            description: "CLI output.".to_string(),
+            members: Vec::new(),
+        });
+
+        let mut docs = type_link_module(entry);
+        if let Some(module) = docs.get_mut(0) {
+            module.entries.push(ApiDocEntry {
+                name: "CommandContext".to_string(),
+                kind: "interface".to_string(),
+                description: "Command context.".to_string(),
+                params: Vec::new(),
+                returns: None,
+                examples: Vec::new(),
+                tags: Vec::new(),
+                private: false,
+                file: "/repo/src/context.ts".to_string(),
+                line: 1,
+                end_line: 1,
+                signature: Some(
+                    "export interface CommandContext<G = DefaultGunshiParams> {}".to_string(),
+                ),
+                extends: Vec::new(),
+                implements: Vec::new(),
+                has_body: false,
+                members: Vec::new(),
+                type_parameters: Vec::new(),
+            });
+            module.entries.push(type_stub("CommandContextCore"));
+        }
+        let out = generate_markdown(&docs, &markdown_typedoc_options());
+        let page = out.get("combinators/type-aliases/CommandRunner.md").unwrap();
+
+        assert!(page.contains("## Parameters"));
+        assert!(page.contains("[`CommandContext`](../interfaces/CommandContext.md)\\<`G`\\>"));
+        assert!(page.contains("## Returns"));
+        assert!(!page.contains("| `ctx` | `unknown` |"));
+        assert!(page.contains("`Awaitable<string \\| void>`"));
+        assert!(page.contains("CLI output."));
+        assert!(!page.contains("`unknown`"));
+        assert!(page.contains("[`CommandContext`](../interfaces/CommandContext.md)"));
+    }
+
+    #[test]
     fn typedoc_index_uses_module_description_not_symbol_description() {
         let docs = vec![
             ApiDocModule {
