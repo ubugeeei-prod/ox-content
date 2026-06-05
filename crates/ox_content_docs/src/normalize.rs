@@ -336,15 +336,28 @@ pub fn normalize_doc_item(item: DocItem, type_parameters: bool) -> Option<Normal
 fn normalize_member(item: DocItem, type_parameters: bool) -> Option<NormalizedMember> {
     let kind = NormalizedMemberKind::from_doc_item_kind(item.kind)?;
     let mut metadata = normalize_doc_metadata(&item.tags, type_parameters);
+    let has_extracted_params = !item.params.is_empty();
+    let has_extracted_return = item.return_type.is_some() || !item.return_members.is_empty();
+    let has_callable_shape = matches!(
+        kind,
+        NormalizedMemberKind::Method
+            | NormalizedMemberKind::Constructor
+            | NormalizedMemberKind::Getter
+            | NormalizedMemberKind::Setter
+    ) || has_extracted_params
+        || has_extracted_return;
     merge_extracted_params(&mut metadata.params, item.params);
     let mut return_type = item.return_type;
-    if kind != NormalizedMemberKind::IndexSignature {
+
+    if has_callable_shape && kind != NormalizedMemberKind::IndexSignature {
         merge_extracted_return(
             &mut metadata.returns,
             return_type.take(),
             item.return_members,
             type_parameters,
         );
+    } else {
+        metadata.returns = None;
     }
     let type_parameters = if type_parameters {
         build_type_parameters(item.type_parameters, &metadata.type_param_descriptions)
@@ -745,6 +758,35 @@ export interface Command {
         assert_eq!(members[1].name, "args");
         assert_eq!(members[1].type_annotation.as_deref(), Some("string[]"));
         assert!(members[1].optional);
+    }
+
+    #[test]
+    fn normal_property_suppresses_description_only_returns_tag() {
+        let source = r"
+/**
+ * Plugin context.
+ */
+export interface PluginContext {
+    /**
+     * Get the global options.
+     *
+     * @returns A map of global options.
+     */
+    readonly globalOptions: Map<string, ArgSchema>;
+}
+";
+
+        let extractor = DocExtractor::new();
+        let items = extractor.extract_source(source, "context.ts", SourceType::ts()).unwrap();
+        let entries = normalize_doc_items(items, false);
+        let member = &entries[0].members[0];
+
+        assert_eq!(member.name, "globalOptions");
+        assert_eq!(member.kind, NormalizedMemberKind::Property);
+        assert_eq!(member.description, "Get the global options.");
+        assert_eq!(member.type_annotation.as_deref(), Some("Map<string, ArgSchema>"));
+        assert!(member.readonly);
+        assert!(member.returns.is_none());
     }
 
     #[test]
