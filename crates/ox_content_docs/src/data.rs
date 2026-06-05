@@ -576,6 +576,75 @@ mod tests {
     }
 
     #[test]
+    fn function_valued_property_metadata_serializes_to_json() {
+        let docs = vec![ApiDocModule {
+            description: String::new(),
+            file: "/repo/src/schema.ts".to_string(),
+            source_path: String::new(),
+            examples: vec![],
+            tags: vec![],
+            entries: vec![ApiDocEntry {
+                name: "ArgSchema".to_string(),
+                kind: "interface".to_string(),
+                description: "Argument schema.".to_string(),
+                params: vec![],
+                returns: None,
+                examples: vec![],
+                tags: vec![],
+                private: false,
+                file: "/repo/src/schema.ts".to_string(),
+                line: 1,
+                end_line: 10,
+                signature: Some("export interface ArgSchema".to_string()),
+                extends: vec![],
+                implements: vec![],
+                has_body: false,
+                members: vec![ApiDocMember {
+                    name: "parse".to_string(),
+                    kind: "property".to_string(),
+                    description: "Parses a raw value.".to_string(),
+                    signature: None,
+                    type_annotation: Some("(value: string) => any".to_string()),
+                    params: vec![ApiParamDoc {
+                        name: "value".to_string(),
+                        type_annotation: "string".to_string(),
+                        description: "Raw string value from command line.".to_string(),
+                        optional: false,
+                        default_value: None,
+                    }],
+                    returns: Some(ApiReturnDoc {
+                        type_annotation: "any".to_string(),
+                        description: "Parsed value.".to_string(),
+                        members: Vec::new(),
+                    }),
+                    optional: true,
+                    readonly: false,
+                    r#static: false,
+                    private: false,
+                    tags: vec![],
+                    implementation_of: vec![],
+                    line: 5,
+                    end_line: 10,
+                }],
+                type_parameters: vec![],
+            }],
+        }];
+
+        let json = generate_docs_data_json(&docs, "2026-05-31T00:00:00.000Z").unwrap();
+        let value: Value = serde_json::from_str(&json).unwrap();
+        let member = &value["modules"][0]["entries"][0]["members"][0];
+
+        assert_eq!(member["name"], "parse");
+        assert_eq!(member["kind"], "property");
+        assert_eq!(member["type"], "(value: string) => any");
+        assert_eq!(member["params"][0]["name"], "value");
+        assert_eq!(member["params"][0]["type"], "string");
+        assert_eq!(member["returns"]["type"], "any");
+        assert_eq!(member["returns"]["description"], "Parsed value.");
+        assert_eq!(member["optional"], true);
+    }
+
+    #[test]
     fn heritage_and_implementation_metadata_serialize_to_json() {
         let docs = vec![ApiDocModule {
             description: String::new(),

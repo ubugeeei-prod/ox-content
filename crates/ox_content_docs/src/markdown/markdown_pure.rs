@@ -767,46 +767,62 @@ fn render_member_parameter_sections_pure(
     let heading = "#".repeat(section_level);
 
     for member in members {
-        if member.params.is_empty() {
+        if member.params.is_empty() && member.returns.is_none() {
             continue;
         }
 
-        out.push_str(&heading);
-        out.push(' ');
-        out.push_str(&member.name);
-        out.push_str(" Parameters\n\n");
-        match effective_parameters_format(options) {
-            MarkdownDisplayFormat::Table => {
-                out.push_str("| Name | Type | Description |\n| --- | --- | --- |\n");
-                for param in &member.params {
-                    out.push_str("| ");
-                    out.push_str(&code_cell(&param.name));
-                    out.push_str(" | ");
-                    out.push_str(&linked_type_cell(&param.type_annotation, context));
-                    out.push_str(" | ");
-                    push_table_cell(&mut out, &param_description(param, context));
-                    out.push_str(" |\n");
+        if !member.params.is_empty() {
+            out.push_str(&heading);
+            out.push(' ');
+            out.push_str(&member.name);
+            out.push_str(" Parameters\n\n");
+            match effective_parameters_format(options) {
+                MarkdownDisplayFormat::Table => {
+                    out.push_str("| Name | Type | Description |\n| --- | --- | --- |\n");
+                    for param in &member.params {
+                        out.push_str("| ");
+                        out.push_str(&code_cell(&param.name));
+                        out.push_str(" | ");
+                        out.push_str(&linked_type_cell(&param.type_annotation, context));
+                        out.push_str(" | ");
+                        push_table_cell(&mut out, &param_description(param, context));
+                        out.push_str(" |\n");
+                    }
+                }
+                _ => {
+                    for param in &member.params {
+                        out.push_str("- ");
+                        out.push_str(&code_span(&param.name));
+                        if !param.type_annotation.is_empty() {
+                            out.push_str(" (");
+                            out.push_str(&linked_type_span(&param.type_annotation, context));
+                            out.push(')');
+                        }
+                        let description = param_description(param, context);
+                        if !description.is_empty() {
+                            out.push_str(" - ");
+                            out.push_str(&description);
+                        }
+                        out.push('\n');
+                    }
                 }
             }
-            _ => {
-                for param in &member.params {
-                    out.push_str("- ");
-                    out.push_str(&code_span(&param.name));
-                    if !param.type_annotation.is_empty() {
-                        out.push_str(" (");
-                        out.push_str(&linked_type_span(&param.type_annotation, context));
-                        out.push(')');
-                    }
-                    let description = param_description(param, context);
-                    if !description.is_empty() {
-                        out.push_str(" - ");
-                        out.push_str(&description);
-                    }
-                    out.push('\n');
-                }
-            }
+            out.push('\n');
         }
-        out.push('\n');
+
+        if let Some(returns) = &member.returns {
+            out.push_str(&heading);
+            out.push(' ');
+            out.push_str(&member.name);
+            out.push_str(" Returns\n\n");
+            out.push_str(&linked_type_cell(&returns.type_annotation, context));
+            if !returns.description.is_empty() {
+                out.push_str(" — ");
+                out.push_str(&inline(&returns.description, context));
+            }
+            out.push_str("\n\n");
+            push_return_members(&mut out, &returns.members, context, &heading);
+        }
     }
 
     out

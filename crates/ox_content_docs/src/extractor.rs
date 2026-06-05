@@ -1352,33 +1352,6 @@ impl<'a> DocVisitor<'a> {
         }
     }
 
-    /// Format a binding pattern.
-    fn format_binding_pattern(
-        &self,
-        pattern: &BindingPattern<'a>,
-        optional: bool,
-        type_annotation: Option<&TSTypeAnnotation<'a>>,
-    ) -> String {
-        match pattern {
-            BindingPattern::BindingIdentifier(id) => {
-                let mut s = id.name.to_string();
-                if optional {
-                    s.push('?');
-                }
-                if let Some(type_ann) = type_annotation {
-                    s.push_str(": ");
-                    s.push_str(&self.format_ts_type(&type_ann.type_annotation));
-                }
-                s
-            }
-            BindingPattern::ObjectPattern(_) => "{...}".to_string(),
-            BindingPattern::ArrayPattern(_) => "[...]".to_string(),
-            BindingPattern::AssignmentPattern(assign) => {
-                self.format_binding_pattern(&assign.left, optional, type_annotation)
-            }
-        }
-    }
-
     /// Format a TypeScript type.
     fn format_ts_type(&self, ts_type: &TSType) -> String {
         match ts_type {
@@ -1393,10 +1366,19 @@ impl<'a> DocVisitor<'a> {
             TSType::TSBigIntKeyword(_) => "bigint".to_string(),
             TSType::TSSymbolKeyword(_) => "symbol".to_string(),
             TSType::TSObjectKeyword(_) => "object".to_string(),
+            TSType::TSUnknownKeyword(_) => "unknown".to_string(),
             TSType::TSTypeReference(ref_type) => {
                 self.slice(ref_type.span().start, ref_type.span().end)
             }
             TSType::TSArrayType(arr) => join2(&self.format_ts_type(&arr.element_type), "[]"),
+            TSType::TSTypeOperatorType(op) => {
+                let inner = self.format_ts_type(&op.type_annotation);
+                match op.operator {
+                    oxc_ast::ast::TSTypeOperatorOperator::Keyof => join2("keyof ", &inner),
+                    oxc_ast::ast::TSTypeOperatorOperator::Unique => join2("unique ", &inner),
+                    oxc_ast::ast::TSTypeOperatorOperator::Readonly => join2("readonly ", &inner),
+                }
+            }
             TSType::TSUnionType(union) => {
                 let types: Vec<String> =
                     union.types.iter().map(|t| self.format_ts_type(t)).collect();
@@ -1408,20 +1390,8 @@ impl<'a> DocVisitor<'a> {
                 types.join(" & ")
             }
             TSType::TSFunctionType(func) => {
-                let params: Vec<String> = func
-                    .params
-                    .items
-                    .iter()
-                    .map(|p| {
-                        self.format_binding_pattern(
-                            &p.pattern,
-                            p.optional,
-                            p.type_annotation.as_deref(),
-                        )
-                    })
-                    .collect();
+                let params = self.format_formal_parameters(&func.params);
                 let ret = self.format_ts_type(&func.return_type.type_annotation);
-                let params = params.join(", ");
                 let mut out = StringBuilder::with_capacity(params.len() + ret.len() + 6);
                 out.push_char('(');
                 out.push_str(&params);
@@ -1430,6 +1400,9 @@ impl<'a> DocVisitor<'a> {
                 out.into_string()
             }
             TSType::TSTypeLiteral(_) => "{ ... }".to_string(),
+            TSType::TSParenthesizedType(paren) => {
+                join3("(", &self.format_ts_type(&paren.type_annotation), ")")
+            }
             TSType::TSTupleType(tuple) => {
                 let types: Vec<String> = tuple
                     .element_types
@@ -1447,8 +1420,17 @@ impl<'a> DocVisitor<'a> {
                 oxc_ast::ast::TSLiteral::BooleanLiteral(b) => b.value.to_string(),
                 _ => "literal".to_string(),
             },
-            _ => "unknown".to_string(),
+            _ => self.format_type_from_span(ts_type),
         }
+    }
+
+    fn format_type_from_span(&self, ts_type: &TSType) -> String {
+        self.slice(ts_type.span().start, ts_type.span().end)
+            .split_whitespace()
+            .collect::<Vec<_>>()
+            .join(" ")
+            .trim()
+            .to_string()
     }
 
     /// Format a TypeScript type name.
@@ -1535,7 +1517,7 @@ impl<'a> DocVisitor<'a> {
 
     fn extract_return_type_from_annotation(
         &self,
-        return_type: Option<&oxc_allocator::Box<'a, oxc_ast::ast::TSTypeAnnotation<'a>>>,
+        return_type: Option<&oxc_ast::ast::TSTypeAnnotation<'a>>,
         tags: &[DocTag],
     ) -> Option<String> {
         return_type.map(|r| self.format_ts_type(&r.type_annotation)).or_else(|| {
@@ -1548,7 +1530,7 @@ impl<'a> DocVisitor<'a> {
 
     fn extract_return_from_annotation(
         &self,
-        return_type: Option<&oxc_allocator::Box<'a, oxc_ast::ast::TSTypeAnnotation<'a>>>,
+        return_type: Option<&oxc_ast::ast::TSTypeAnnotation<'a>>,
         tags: &[DocTag],
     ) -> (Option<String>, Vec<DocItem>) {
         if let Some(return_type) = return_type {
@@ -1568,7 +1550,29 @@ impl<'a> DocVisitor<'a> {
     }
 
     fn extract_return(&self, func: &Function, tags: &[DocTag]) -> (Option<String>, Vec<DocItem>) {
-        self.extract_return_from_annotation(func.return_type.as_ref(), tags)
+        self.extract_return_from_annotation(func.return_type.as_ref().map(AsRef::as_ref), tags)
+    }
+
+    fn extract_function_type_metadata(
+        &self,
+        ts_type: &TSType,
+        tags: &[DocTag],
+    ) -> Option<(Vec<ParamDoc>, Option<String>, Vec<DocItem>)> {
+        match ts_type {
+            TSType::TSFunctionType(func) => {
+                let (return_type, return_members) =
+                    self.extract_return_from_annotation(Some(&func.return_type), tags);
+                Some((
+                    self.extract_params_from_formals(&func.params, tags),
+                    return_type,
+                    return_members,
+                ))
+            }
+            TSType::TSParenthesizedType(paren) => {
+                self.extract_function_type_metadata(&paren.type_annotation, tags)
+            }
+            _ => None,
+        }
     }
 
     /// Create a DocItem from a function.
@@ -1707,10 +1711,24 @@ impl<'a> DocVisitor<'a> {
                     let (prop_line, prop_end_line) =
                         self.span_lines(prop.span.start, prop.span.end);
 
-                    let type_annotation = prop
-                        .type_annotation
-                        .as_ref()
-                        .map(|t| self.format_ts_type(&t.type_annotation));
+                    let mut params = Vec::new();
+                    let mut return_type = None;
+                    let mut return_members = Vec::new();
+                    let type_annotation = prop.type_annotation.as_ref().map(|t| {
+                        let ts_type = &t.type_annotation;
+                        if let Some((
+                            extracted_params,
+                            extracted_return_type,
+                            extracted_return_members,
+                        )) = self.extract_function_type_metadata(ts_type, &prop_tags)
+                        {
+                            params = extracted_params;
+                            return_type = extracted_return_type;
+                            return_members = extracted_return_members;
+                        }
+
+                        self.format_ts_type(ts_type)
+                    });
 
                     children.push(DocItem {
                         name: prop_name,
@@ -1729,9 +1747,9 @@ impl<'a> DocVisitor<'a> {
                         optional: prop.optional,
                         readonly: prop.readonly,
                         r#static: prop.r#static,
-                        params: Vec::new(),
-                        return_type: None,
-                        return_members: Vec::new(),
+                        params,
+                        return_type,
+                        return_members,
                         children: Vec::new(),
                         tags: prop_tags,
                         type_parameters: Vec::new(),
@@ -1798,10 +1816,24 @@ impl<'a> DocVisitor<'a> {
                     let (prop_line, prop_end_line) =
                         self.span_lines(prop.span.start, prop.span.end);
 
-                    let type_annotation = prop
-                        .type_annotation
-                        .as_ref()
-                        .map(|t| self.format_ts_type(&t.type_annotation));
+                    let mut params = Vec::new();
+                    let mut return_type = None;
+                    let mut return_members = Vec::new();
+                    let type_annotation = prop.type_annotation.as_ref().map(|t| {
+                        let ts_type = &t.type_annotation;
+                        if let Some((
+                            extracted_params,
+                            extracted_return_type,
+                            extracted_return_members,
+                        )) = self.extract_function_type_metadata(ts_type, &prop_tags)
+                        {
+                            params = extracted_params;
+                            return_type = extracted_return_type;
+                            return_members = extracted_return_members;
+                        }
+
+                        self.format_ts_type(ts_type)
+                    });
 
                     children.push(DocItem {
                         name: prop_name,
@@ -1820,9 +1852,9 @@ impl<'a> DocVisitor<'a> {
                         optional: prop.optional,
                         readonly: prop.readonly,
                         r#static: false,
-                        params: Vec::new(),
-                        return_type: None,
-                        return_members: Vec::new(),
+                        params,
+                        return_type,
+                        return_members,
                         children: Vec::new(),
                         tags: prop_tags,
                         type_parameters: Vec::new(),
@@ -1844,8 +1876,10 @@ impl<'a> DocVisitor<'a> {
                     }
                     let (method_line, method_end_line) =
                         self.span_lines(method.span.start, method.span.end);
-                    let (return_type, return_members) = self
-                        .extract_return_from_annotation(method.return_type.as_ref(), &method_tags);
+                    let (return_type, return_members) = self.extract_return_from_annotation(
+                        method.return_type.as_deref(),
+                        &method_tags,
+                    );
 
                     let kind = match method.kind {
                         oxc_ast::ast::TSMethodSignatureKind::Method => DocItemKind::Method,
@@ -2083,7 +2117,7 @@ impl<'a> DocVisitor<'a> {
             let item = match initializer {
                 Expression::ArrowFunctionExpression(arrow) => {
                     let (return_type, return_members) =
-                        self.extract_return_from_annotation(arrow.return_type.as_ref(), &tags);
+                        self.extract_return_from_annotation(arrow.return_type.as_deref(), &tags);
                     DocItem {
                         name: name.clone(),
                         kind: DocItemKind::Function,
@@ -2195,12 +2229,25 @@ impl<'a> DocVisitor<'a> {
             return;
         };
         let (line, end_line) = self.span_lines(attached_to, type_alias.span.end);
-        let children = match &type_alias.type_annotation {
+        let mut children = Vec::new();
+        let mut params = Vec::new();
+        let mut return_type = None;
+        let mut return_members = Vec::new();
+
+        match &type_alias.type_annotation {
             TSType::TSTypeLiteral(type_literal) => {
-                self.extract_ts_signature_members(&type_literal.members)
+                children = self.extract_ts_signature_members(&type_literal.members);
             }
-            _ => Vec::new(),
-        };
+            ts_type => {
+                if let Some((extracted_params, extracted_return_type, extracted_return_members)) =
+                    self.extract_function_type_metadata(ts_type, &tags)
+                {
+                    params = extracted_params;
+                    return_type = extracted_return_type;
+                    return_members = extracted_return_members;
+                }
+            }
+        }
 
         self.items.push(DocItem {
             name: type_alias.id.name.to_string(),
@@ -2219,9 +2266,9 @@ impl<'a> DocVisitor<'a> {
             optional: false,
             readonly: false,
             r#static: false,
-            params: Vec::new(),
-            return_type: None,
-            return_members: Vec::new(),
+            params,
+            return_type,
+            return_members,
             children,
             tags,
             type_parameters: self.extract_type_parameters(type_alias.type_parameters.as_ref()),
@@ -2667,6 +2714,111 @@ export type CommandOptions = BaseOptions & {
         assert_eq!(items[0].name, "CommandOptions");
         assert!(items[0].children.is_empty());
         assert!(items[0].signature.as_deref().unwrap().contains("BaseOptions &"));
+    }
+
+    #[test]
+    fn function_valued_interface_property_extracts_params_and_returns() {
+        let source = r"
+/**
+ * Options for parsing.
+ */
+export interface ArgSchema {
+    /**
+     * Parse a value.
+     */
+    parse?: (value: string) => any;
+}
+";
+
+        let extractor = DocExtractor::new();
+        let items = extractor.extract_source(source, "options.ts", SourceType::ts()).unwrap();
+        let schema = items.iter().find(|item| item.name == "ArgSchema").unwrap();
+        let parse = schema.children.iter().find(|member| member.name == "parse").unwrap();
+
+        assert_eq!(parse.kind, DocItemKind::Property);
+        assert_eq!(parse.signature.as_deref(), Some("(value: string) => any"));
+        assert_eq!(parse.params.len(), 1);
+        assert_eq!(parse.params[0].name, "value");
+        assert_eq!(parse.params[0].type_annotation.as_deref(), Some("string"));
+        assert_eq!(parse.return_type.as_deref(), Some("any"));
+    }
+
+    #[test]
+    fn function_valued_class_property_extracts_params_and_returns() {
+        let source = r"
+/**
+ * Argument parser.
+ */
+export class ArgParser {
+    /**
+     * Parse a value.
+     */
+    parse: (value: string) => any;
+}
+";
+
+        let extractor = DocExtractor::new();
+        let items = extractor.extract_source(source, "parser.ts", SourceType::ts()).unwrap();
+        let parser = items.iter().find(|item| item.name == "ArgParser").unwrap();
+        let parse = parser.children.iter().find(|member| member.name == "parse").unwrap();
+
+        assert_eq!(parse.kind, DocItemKind::Property);
+        assert_eq!(parse.signature.as_deref(), Some("(value: string) => any"));
+        assert_eq!(parse.params[0].name, "value");
+        assert_eq!(parse.params[0].type_annotation.as_deref(), Some("string"));
+        assert_eq!(parse.return_type.as_deref(), Some("any"));
+    }
+
+    #[test]
+    fn readonly_type_and_parenthesized_union_preserve_types() {
+        let source = r"
+/**
+ * Command arguments.
+ */
+export interface ArgSchema {
+    /**
+     * Parse a value.
+     */
+    choices?: string[] | readonly string[];
+}
+
+/**
+ * Example rendering hooks.
+ */
+export interface SubCommandable {
+    examples?: string | ((...args: any[]) => any);
+}
+";
+
+        let extractor = DocExtractor::new();
+        let items = extractor.extract_source(source, "schemas.ts", SourceType::ts()).unwrap();
+        let arg_schema = items.iter().find(|item| item.name == "ArgSchema").unwrap();
+        let sub = items.iter().find(|item| item.name == "SubCommandable").unwrap();
+
+        let choices = arg_schema.children.iter().find(|member| member.name == "choices").unwrap();
+        assert_eq!(choices.signature.as_deref(), Some("string[] | readonly string[]"));
+
+        let examples = sub.children.iter().find(|member| member.name == "examples").unwrap();
+        assert_eq!(examples.signature.as_deref(), Some("string | ((...args: any[]) => any)"));
+    }
+
+    #[test]
+    fn type_alias_function_extracts_params_and_returns() {
+        let source = r"
+/**
+ * Run a command.
+ */
+export type CommandRunner<G> = (ctx: Readonly<CommandContext<G>>) => Awaitable<string | void>;
+";
+
+        let extractor = DocExtractor::new();
+        let items = extractor.extract_source(source, "runner.ts", SourceType::ts()).unwrap();
+        let alias = items.iter().find(|item| item.name == "CommandRunner").unwrap();
+
+        assert_eq!(alias.params.len(), 1);
+        assert_eq!(alias.params[0].name, "ctx");
+        assert_eq!(alias.params[0].type_annotation.as_deref(), Some("Readonly<CommandContext<G>>"));
+        assert_eq!(alias.return_type.as_deref(), Some("Awaitable<string | void>"));
     }
 
     #[test]
