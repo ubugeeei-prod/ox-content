@@ -1,5 +1,13 @@
 # Changelog
 
+## [2.57.0] - 2026-06-05
+
+### Bug Fixes
+
+- resolve intersection callable aliases (#333)
+- merge destructured param docs (#332)
+- suppress property returns sections (#331)
+
 ## [2.56.0] - 2026-06-05
 
 ### Bug Fixes
