@@ -2630,19 +2630,19 @@ impl<'a> DocVisitor<'a> {
         };
         let (line, end_line) = self.span_lines(attached_to, type_alias.span.end);
         let children = self.extract_type_alias_members_from_type(&type_alias.type_annotation);
-        let mut params = Vec::new();
-        let mut return_type = None;
-        let mut return_members = Vec::new();
-        let mut function_type_parameters = Vec::new();
-
-        if let Some(metadata) =
-            self.extract_function_type_metadata(&type_alias.type_annotation, &tags)
-        {
-            params = metadata.params;
-            return_type = metadata.return_type;
-            return_members = metadata.return_members;
-            function_type_parameters = metadata.type_parameters;
-        }
+        let (params, return_type, return_members, function_type_parameters) =
+            if let Some(metadata) =
+                self.extract_function_type_metadata(&type_alias.type_annotation, &tags)
+            {
+                (
+                    metadata.params,
+                    metadata.return_type,
+                    metadata.return_members,
+                    metadata.type_parameters,
+                )
+            } else {
+                (Vec::new(), None, Vec::new(), Vec::new())
+            };
 
         self.items.push(DocItem {
             name,
