@@ -132,6 +132,7 @@ fn member(module: usize, entry: usize, index: usize) -> ApiDocMember {
         } else {
             Vec::new()
         },
+        type_parameters: Vec::new(),
         returns: (kind != "property").then(|| ApiReturnDoc {
             type_annotation: "boolean".to_string(),
             description: "Whether the member accepted the value.".to_string(),

@@ -767,8 +767,43 @@ fn render_member_parameter_sections_pure(
     let heading = "#".repeat(section_level);
 
     for member in members {
-        if member.params.is_empty() && member.returns.is_none() {
+        if member.type_parameters.is_empty() && member.params.is_empty() && member.returns.is_none()
+        {
             continue;
+        }
+
+        if !member.type_parameters.is_empty() {
+            out.push_str(&heading);
+            out.push(' ');
+            out.push_str(&member.name);
+            out.push_str(" Type Parameters\n\n");
+            let skip: HashSet<&str> =
+                member.type_parameters.iter().map(|param| param.name.as_str()).collect();
+            match effective_parameters_format(options) {
+                MarkdownDisplayFormat::Table => {
+                    out.push_str("| Name | Description |\n| --- | --- |\n");
+                    for type_param in &member.type_parameters {
+                        out.push_str("| ");
+                        out.push_str(&type_param_name_cell(type_param, context, &skip));
+                        out.push_str(" | ");
+                        push_table_cell(&mut out, &inline(&type_param.description, context));
+                        out.push_str(" |\n");
+                    }
+                }
+                _ => {
+                    for type_param in &member.type_parameters {
+                        let description = inline(&type_param.description, context);
+                        out.push_str("- ");
+                        out.push_str(&type_param_name_span(type_param, context, &skip));
+                        if !description.is_empty() {
+                            out.push_str(" - ");
+                            out.push_str(&description);
+                        }
+                        out.push('\n');
+                    }
+                }
+            }
+            out.push('\n');
         }
 
         if !member.params.is_empty() {
@@ -935,6 +970,13 @@ fn render_callable_member_details_pure(
         }
 
         out.push_str(&render_since_section(&member.tags, context.link_context, &detail_heading));
+        push_type_parameters(
+            out,
+            &member.type_parameters,
+            context.options,
+            context.link_context,
+            &detail_heading,
+        );
         push_parameters(
             out,
             &member.params,

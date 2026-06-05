@@ -2873,6 +2873,7 @@ mod tests {
                         signature: Some("run(): void".to_string()),
                         type_annotation: None,
                         params: vec![],
+                        type_parameters: vec![],
                         returns: None,
                         optional: false,
                         readonly: false,
@@ -3284,6 +3285,7 @@ mod tests {
                         signature: None,
                         type_annotation: Some("Record<string, unknown>".to_string()),
                         params: vec![],
+                        type_parameters: vec![],
                         returns: None,
                         optional: false,
                         readonly: false,
@@ -3419,6 +3421,7 @@ mod tests {
                         signature: None,
                         type_annotation: Some("boolean".to_string()),
                         params: vec![],
+                        type_parameters: vec![],
                         returns: None,
                         optional: true,
                         readonly: false,
@@ -3886,6 +3889,7 @@ mod tests {
             signature: None,
             type_annotation: Some("string".to_string()),
             params: vec![],
+            type_parameters: vec![],
             returns: None,
             optional: false,
             readonly: true,
@@ -3949,6 +3953,7 @@ mod tests {
                 optional: false,
                 default_value: None,
             }],
+            type_parameters: vec![],
             returns: None,
             optional: false,
             readonly: false,
@@ -3998,6 +4003,81 @@ mod tests {
     }
 
     #[test]
+    fn markdown_member_type_parameters_render_before_parameters() {
+        let mut entry =
+            test_entry("PluginContext", "interface", "src/context.ts", "Plugin context.");
+        entry.members = vec![ApiDocMember {
+            name: "decorateCommand".to_string(),
+            kind: "method".to_string(),
+            description: "Decorate the command.".to_string(),
+            signature: Some(
+                "decorateCommand<L extends Record<string, unknown> = DefaultExtensions>(decorator: (value: L) => void): void"
+                    .to_string(),
+            ),
+            type_annotation: None,
+            params: vec![ApiParamDoc {
+                name: "decorator".to_string(),
+                type_annotation: "(value: L) => void".to_string(),
+                description: "Decorator function.".to_string(),
+                optional: false,
+                default_value: None,
+            }],
+            type_parameters: vec![ApiTypeParamDoc {
+                name: "L".to_string(),
+                constraint: Some("Record<string, unknown>".to_string()),
+                default: Some("DefaultExtensions".to_string()),
+                description: "Extension context.".to_string(),
+            }],
+            returns: None,
+            optional: false,
+            readonly: false,
+            r#static: false,
+            private: false,
+            tags: vec![],
+            implementation_of: vec![],
+            line: 2,
+            end_line: 5,
+        }];
+        let docs = vec![ApiDocModule {
+            description: String::new(),
+            file: "mod".to_string(),
+            source_path: String::new(),
+            examples: vec![],
+            tags: vec![],
+            entries: vec![entry],
+        }];
+
+        let pure = generate_markdown(
+            &docs,
+            &MarkdownDocsOptions {
+                path_strategy: MarkdownPathStrategy::TypeDoc,
+                render_style: MarkdownRenderStyle::Markdown,
+                parameters_format: MarkdownDisplayFormat::Table,
+                ..MarkdownDocsOptions::default()
+            },
+        );
+        let page = pure.get("mod/interfaces/PluginContext.md").unwrap();
+        let type_parameters = page.find("#### Type Parameters").unwrap();
+        let parameters = page.find("#### Parameters").unwrap();
+        assert!(type_parameters < parameters);
+        assert!(page.contains("`L` *extends*"));
+        assert!(page.contains("Extension context."));
+
+        let html = generate_markdown(
+            &docs,
+            &MarkdownDocsOptions {
+                path_strategy: MarkdownPathStrategy::TypeDoc,
+                render_style: MarkdownRenderStyle::Html,
+                parameters_format: MarkdownDisplayFormat::Table,
+                ..MarkdownDocsOptions::default()
+            },
+        );
+        let page = html.get("mod/interfaces/PluginContext.md").unwrap();
+        assert!(page.contains("<h6>Type Parameters</h6>"));
+        assert!(page.contains("Extension context."));
+    }
+
+    #[test]
     fn typedoc_markdown_renders_class_callable_member_details() {
         let mut adapter =
             test_entry("TranslationAdapter", "interface", "/repo/src/i18n.ts", "Runtime adapter.");
@@ -4016,6 +4096,7 @@ mod tests {
                 optional: false,
                 default_value: None,
             }],
+            type_parameters: vec![],
             returns: Some(ApiReturnDoc {
                 type_annotation: "Record<string, string> | undefined".to_string(),
                 description: "The locale resource.".to_string(),
@@ -4056,6 +4137,7 @@ mod tests {
                     optional: false,
                     default_value: None,
                 }],
+                type_parameters: vec![],
                 returns: None,
                 optional: false,
                 readonly: false,
@@ -4081,6 +4163,7 @@ mod tests {
                     optional: false,
                     default_value: None,
                 }],
+                type_parameters: vec![],
                 returns: Some(ApiReturnDoc {
                     type_annotation: "Record<string, string> | undefined".to_string(),
                     description: "The locale resource.".to_string(),
@@ -4152,6 +4235,7 @@ mod tests {
                 optional: false,
                 default_value: None,
             }],
+            type_parameters: vec![],
             returns: Some(ApiReturnDoc {
                 type_annotation: "string | undefined".to_string(),
                 description: "Parsed value.".to_string(),
@@ -4220,6 +4304,7 @@ mod tests {
                 signature: None,
                 type_annotation: Some("string".to_string()),
                 params: vec![],
+                type_parameters: vec![],
                 returns: None,
                 optional: false,
                 readonly: true,
@@ -4243,6 +4328,7 @@ mod tests {
                     optional: false,
                     default_value: None,
                 }],
+                type_parameters: vec![],
                 returns: None,
                 optional: false,
                 readonly: false,
@@ -4963,6 +5049,7 @@ mod tests {
                 optional: false,
                 default_value: None,
             }],
+            type_parameters: vec![],
             returns: Some(ApiReturnDoc {
                 type_annotation: "Record<string, string> | undefined".to_string(),
                 description: "The locale resource.".to_string(),
@@ -5002,6 +5089,7 @@ mod tests {
                 optional: false,
                 default_value: None,
             }],
+            type_parameters: vec![],
             returns: Some(ApiReturnDoc {
                 type_annotation: "Record<string, string> | undefined".to_string(),
                 description: "The locale resource.".to_string(),
@@ -5046,6 +5134,7 @@ mod tests {
             signature: None,
             type_annotation: Some("unknown".to_string()),
             params: vec![],
+            type_parameters: vec![],
             returns: None,
             optional: false,
             readonly: false,
@@ -5168,6 +5257,7 @@ mod tests {
             signature: None,
             type_annotation: Some(type_annotation.to_string()),
             params: vec![],
+            type_parameters: vec![],
             returns: None,
             optional: false,
             readonly: false,
@@ -5198,6 +5288,7 @@ mod tests {
             }),
             type_annotation: Some(value_type.to_string()),
             params: vec![param(param_name, param_type)],
+            type_parameters: vec![],
             returns: None,
             optional: false,
             readonly,
@@ -5763,6 +5854,7 @@ mod tests {
             signature: None,
             type_annotation: Some("string".to_string()),
             params: vec![],
+            type_parameters: vec![],
             returns: None,
             optional: false,
             readonly: false,
@@ -6032,6 +6124,7 @@ mod tests {
             signature: None,
             type_annotation: Some("number".to_string()),
             params: vec![],
+            type_parameters: vec![],
             returns: None,
             optional: true,
             readonly: false,
@@ -6097,6 +6190,7 @@ mod tests {
             signature: None,
             type_annotation: Some("boolean".to_string()),
             params: vec![],
+            type_parameters: vec![],
             returns: None,
             optional: true,
             readonly: false,
@@ -6446,6 +6540,7 @@ mod tests {
                         signature: None,
                         type_annotation: Some("\"strict\"".to_string()),
                         params: vec![],
+                        type_parameters: vec![],
                         returns: None,
                         optional: false,
                         readonly: false,
@@ -6533,6 +6628,7 @@ mod tests {
                         signature: None,
                         type_annotation: Some("string".to_string()),
                         params: vec![],
+                        type_parameters: vec![],
                         returns: None,
                         optional: false,
                         readonly: true,
@@ -6556,6 +6652,7 @@ mod tests {
                             optional: false,
                             default_value: None,
                         }],
+                        type_parameters: vec![],
                         returns: Some(ApiReturnDoc {
                             type_annotation: "Promise".to_string(),
                             description: "Run result.".to_string(),

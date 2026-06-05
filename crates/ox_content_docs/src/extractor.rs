@@ -131,6 +131,13 @@ pub struct TypeParamDoc {
     pub description: String,
 }
 
+struct FunctionTypeMetadata {
+    params: Vec<ParamDoc>,
+    return_type: Option<String>,
+    return_members: Vec<DocItem>,
+    type_parameters: Vec<TypeParamDoc>,
+}
+
 /// JSDoc tag.
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct DocTag {
@@ -1812,16 +1819,17 @@ impl<'a> DocVisitor<'a> {
         &self,
         ts_type: &TSType,
         tags: &[DocTag],
-    ) -> Option<(Vec<ParamDoc>, Option<String>, Vec<DocItem>)> {
+    ) -> Option<FunctionTypeMetadata> {
         match ts_type {
             TSType::TSFunctionType(func) => {
                 let (return_type, return_members) =
                     self.extract_return_from_annotation(Some(&func.return_type), tags);
-                Some((
-                    self.extract_params_from_formals(&func.params, tags),
+                Some(FunctionTypeMetadata {
+                    params: self.extract_params_from_formals(&func.params, tags),
                     return_type,
                     return_members,
-                ))
+                    type_parameters: self.extract_type_parameters(func.type_parameters.as_ref()),
+                })
             }
             TSType::TSParenthesizedType(paren) => {
                 self.extract_function_type_metadata(&paren.type_annotation, tags)
@@ -1946,7 +1954,8 @@ impl<'a> DocVisitor<'a> {
                         return_members,
                         children: Vec::new(),
                         tags: method_tags,
-                        type_parameters: Vec::new(),
+                        type_parameters: self
+                            .extract_type_parameters(method.value.type_parameters.as_ref()),
                     });
                 }
                 oxc_ast::ast::ClassElement::PropertyDefinition(prop) => {
@@ -1969,17 +1978,16 @@ impl<'a> DocVisitor<'a> {
                     let mut params = Vec::new();
                     let mut return_type = None;
                     let mut return_members = Vec::new();
+                    let mut type_parameters = Vec::new();
                     let type_annotation = prop.type_annotation.as_ref().map(|t| {
                         let ts_type = &t.type_annotation;
-                        if let Some((
-                            extracted_params,
-                            extracted_return_type,
-                            extracted_return_members,
-                        )) = self.extract_function_type_metadata(ts_type, &prop_tags)
+                        if let Some(metadata) =
+                            self.extract_function_type_metadata(ts_type, &prop_tags)
                         {
-                            params = extracted_params;
-                            return_type = extracted_return_type;
-                            return_members = extracted_return_members;
+                            params = metadata.params;
+                            return_type = metadata.return_type;
+                            return_members = metadata.return_members;
+                            type_parameters = metadata.type_parameters;
                         }
 
                         self.format_ts_type(ts_type)
@@ -2007,7 +2015,7 @@ impl<'a> DocVisitor<'a> {
                         return_members,
                         children: Vec::new(),
                         tags: prop_tags,
-                        type_parameters: Vec::new(),
+                        type_parameters,
                     });
                 }
                 oxc_ast::ast::ClassElement::TSIndexSignature(index_signature) => {
@@ -2074,17 +2082,16 @@ impl<'a> DocVisitor<'a> {
                     let mut params = Vec::new();
                     let mut return_type = None;
                     let mut return_members = Vec::new();
+                    let mut type_parameters = Vec::new();
                     let type_annotation = prop.type_annotation.as_ref().map(|t| {
                         let ts_type = &t.type_annotation;
-                        if let Some((
-                            extracted_params,
-                            extracted_return_type,
-                            extracted_return_members,
-                        )) = self.extract_function_type_metadata(ts_type, &prop_tags)
+                        if let Some(metadata) =
+                            self.extract_function_type_metadata(ts_type, &prop_tags)
                         {
-                            params = extracted_params;
-                            return_type = extracted_return_type;
-                            return_members = extracted_return_members;
+                            params = metadata.params;
+                            return_type = metadata.return_type;
+                            return_members = metadata.return_members;
+                            type_parameters = metadata.type_parameters;
                         }
 
                         self.format_ts_type(ts_type)
@@ -2112,7 +2119,7 @@ impl<'a> DocVisitor<'a> {
                         return_members,
                         children: Vec::new(),
                         tags: prop_tags,
-                        type_parameters: Vec::new(),
+                        type_parameters,
                     });
                 }
                 TSSignature::TSMethodSignature(method) => {
@@ -2170,7 +2177,8 @@ impl<'a> DocVisitor<'a> {
                         return_members,
                         children: Vec::new(),
                         tags: method_tags,
-                        type_parameters: Vec::new(),
+                        type_parameters: self
+                            .extract_type_parameters(method.type_parameters.as_ref()),
                     });
                 }
                 TSSignature::TSIndexSignature(index_signature) => {
@@ -2488,18 +2496,18 @@ impl<'a> DocVisitor<'a> {
         let mut params = Vec::new();
         let mut return_type = None;
         let mut return_members = Vec::new();
+        let mut function_type_parameters = Vec::new();
 
         match &type_alias.type_annotation {
             TSType::TSTypeLiteral(type_literal) => {
                 children = self.extract_ts_signature_members(&type_literal.members);
             }
             ts_type => {
-                if let Some((extracted_params, extracted_return_type, extracted_return_members)) =
-                    self.extract_function_type_metadata(ts_type, &tags)
-                {
-                    params = extracted_params;
-                    return_type = extracted_return_type;
-                    return_members = extracted_return_members;
+                if let Some(metadata) = self.extract_function_type_metadata(ts_type, &tags) {
+                    params = metadata.params;
+                    return_type = metadata.return_type;
+                    return_members = metadata.return_members;
+                    function_type_parameters = metadata.type_parameters;
                 }
             }
         }
@@ -2526,7 +2534,12 @@ impl<'a> DocVisitor<'a> {
             return_members,
             children,
             tags,
-            type_parameters: self.extract_type_parameters(type_alias.type_parameters.as_ref()),
+            type_parameters: {
+                let mut type_parameters =
+                    self.extract_type_parameters(type_alias.type_parameters.as_ref());
+                type_parameters.extend(function_type_parameters);
+                type_parameters
+            },
         });
     }
 
@@ -3378,6 +3391,46 @@ export function make<G extends Base = Default, V>(value: V): G {
         assert_eq!(func.type_parameters[1].name, "V");
         assert_eq!(func.type_parameters[1].constraint, None);
         assert_eq!(func.type_parameters[1].default, None);
+    }
+
+    #[test]
+    fn test_extract_member_type_parameters() {
+        let source = r"
+/** Plugin context. */
+export interface PluginContext<G> {
+  /**
+   * Decorate the command.
+   * @typeParam L - Extension context.
+   */
+  decorateCommand<L extends Record<string, unknown> = DefaultExtensions>(
+    decorator: (value: L) => void
+  ): void;
+
+  /**
+   * Setup hook.
+   * @typeParam T - Hook value.
+   */
+  setup?: <T extends BaseHook = DefaultHook>(value: T) => Result;
+}
+";
+        let extractor = DocExtractor::new();
+        let items = extractor.extract_source(source, "src/context.ts", SourceType::ts()).unwrap();
+        let interface = items.iter().find(|item| item.name == "PluginContext").unwrap();
+
+        let method = interface.children.iter().find(|item| item.name == "decorateCommand").unwrap();
+        assert_eq!(method.type_parameters.len(), 1);
+        assert_eq!(method.type_parameters[0].name, "L");
+        assert_eq!(
+            method.type_parameters[0].constraint.as_deref(),
+            Some("Record<string, unknown>")
+        );
+        assert_eq!(method.type_parameters[0].default.as_deref(), Some("DefaultExtensions"));
+
+        let property = interface.children.iter().find(|item| item.name == "setup").unwrap();
+        assert_eq!(property.type_parameters.len(), 1);
+        assert_eq!(property.type_parameters[0].name, "T");
+        assert_eq!(property.type_parameters[0].constraint.as_deref(), Some("BaseHook"));
+        assert_eq!(property.type_parameters[0].default.as_deref(), Some("DefaultHook"));
     }
 
     #[test]

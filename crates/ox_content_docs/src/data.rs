@@ -191,6 +191,12 @@ fn member_to_json(member: &ApiDocMember) -> Value {
             Value::Array(member.params.iter().map(param_to_json).collect()),
         );
     }
+    if !member.type_parameters.is_empty() {
+        value.insert(
+            "typeParameters".to_string(),
+            Value::Array(member.type_parameters.iter().map(type_param_to_json).collect()),
+        );
+    }
     if let Some(returns) = &member.returns {
         value.insert("returns".to_string(), return_to_json(returns));
     }
@@ -476,6 +482,7 @@ mod tests {
                         signature: None,
                         type_annotation: Some("ArgValues<A>".to_string()),
                         params: vec![],
+                        type_parameters: vec![],
                         returns: None,
                         optional: false,
                         readonly: false,
@@ -548,6 +555,7 @@ mod tests {
                         optional: false,
                         default_value: None,
                     }],
+                    type_parameters: vec![],
                     returns: None,
                     optional: false,
                     readonly: true,
@@ -612,6 +620,12 @@ mod tests {
                         optional: false,
                         default_value: None,
                     }],
+                    type_parameters: vec![ApiTypeParamDoc {
+                        name: "T".to_string(),
+                        constraint: Some("Base".to_string()),
+                        default: Some("Default".to_string()),
+                        description: "Parsed value type.".to_string(),
+                    }],
                     returns: Some(ApiReturnDoc {
                         type_annotation: "any".to_string(),
                         description: "Parsed value.".to_string(),
@@ -639,6 +653,10 @@ mod tests {
         assert_eq!(member["type"], "(value: string) => any");
         assert_eq!(member["params"][0]["name"], "value");
         assert_eq!(member["params"][0]["type"], "string");
+        assert_eq!(member["typeParameters"][0]["name"], "T");
+        assert_eq!(member["typeParameters"][0]["constraint"], "Base");
+        assert_eq!(member["typeParameters"][0]["default"], "Default");
+        assert_eq!(member["typeParameters"][0]["description"], "Parsed value type.");
         assert_eq!(member["returns"]["type"], "any");
         assert_eq!(member["returns"]["description"], "Parsed value.");
         assert_eq!(member["optional"], true);
@@ -794,6 +812,7 @@ mod tests {
                     ),
                     type_annotation: None,
                     params: vec![],
+                    type_parameters: vec![],
                     returns: None,
                     optional: false,
                     readonly: false,
