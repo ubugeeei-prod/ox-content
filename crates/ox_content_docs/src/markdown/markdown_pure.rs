@@ -17,7 +17,7 @@ use super::{
 use crate::model::{
     ApiDocEntry, ApiDocMember, ApiDocTag, ApiParamDoc, ApiReturnDoc, ApiTypeParamDoc,
 };
-use crate::string_builder::StringBuilder;
+use crate::string_builder::{join2, StringBuilder};
 
 /// JSDoc lifecycle tags rendered as GitHub alerts rather than generic `## Tags`
 /// entries: `@experimental` → `> [!WARNING]`, `@deprecated` → `> [!CAUTION]`.
@@ -428,7 +428,18 @@ fn push_return_members(
         return;
     }
 
+    let mut rendered_indexable_heading = false;
     for member in members {
+        if member.kind == "indexSignature" {
+            if !rendered_indexable_heading {
+                out.push_str(heading);
+                out.push_str("# Indexable\n\n");
+                rendered_indexable_heading = true;
+            }
+            let detail_heading = join2(heading, "##");
+            push_index_signature_detail_pure(out, member, context, &detail_heading);
+            continue;
+        }
         out.push_str(heading);
         out.push('#');
         out.push(' ');
@@ -558,6 +569,7 @@ fn render_members_pure(
             let mut constructors = Vec::new();
             let mut static_methods = Vec::new();
             let mut methods = Vec::new();
+            let mut index_signatures = Vec::new();
             let mut static_properties = Vec::new();
             let mut properties = Vec::new();
 
@@ -568,6 +580,7 @@ fn render_members_pure(
                         static_methods.push(member);
                     }
                     "method" | "getter" | "setter" => methods.push(member),
+                    "indexSignature" => index_signatures.push(member),
                     "property" if member.r#static => static_properties.push(member),
                     "property" => properties.push(member),
                     _ => {}
@@ -588,6 +601,12 @@ fn render_members_pure(
                 &group_context,
             );
             render_member_group_pure(&mut out, &heading, "Methods", &methods, &group_context);
+            render_index_signature_group_pure(
+                &mut out,
+                &heading,
+                &index_signatures,
+                &group_context,
+            );
             render_member_group_pure(
                 &mut out,
                 &heading,
@@ -600,30 +619,46 @@ fn render_members_pure(
         "interface" => {
             let mut properties = Vec::new();
             let mut methods = Vec::new();
+            let mut index_signatures = Vec::new();
 
             for member in &entry.members {
                 match member.kind.as_str() {
+                    "indexSignature" => index_signatures.push(member),
                     "method" | "getter" | "setter" if !member.r#static => methods.push(member),
                     "property" if !member.r#static => properties.push(member),
                     _ => {}
                 }
             }
+            render_index_signature_group_pure(
+                &mut out,
+                &heading,
+                &index_signatures,
+                &group_context,
+            );
             render_member_group_pure(&mut out, &heading, "Properties", &properties, &group_context);
             render_member_group_pure(&mut out, &heading, "Methods", &methods, &group_context);
         }
         "type" => {
             let mut properties = Vec::new();
             let mut methods = Vec::new();
+            let mut index_signatures = Vec::new();
             let mut enum_members = Vec::new();
 
             for member in &entry.members {
                 match member.kind.as_str() {
+                    "indexSignature" => index_signatures.push(member),
                     "method" | "getter" | "setter" if !member.r#static => methods.push(member),
                     "property" if !member.r#static => properties.push(member),
                     "enumMember" => enum_members.push(member),
                     _ => {}
                 }
             }
+            render_index_signature_group_pure(
+                &mut out,
+                &heading,
+                &index_signatures,
+                &group_context,
+            );
             render_member_group_pure(&mut out, &heading, "Properties", &properties, &group_context);
             render_member_group_pure(&mut out, &heading, "Methods", &methods, &group_context);
             render_member_group_pure(
@@ -656,6 +691,62 @@ fn render_members_pure(
         }
     }
     out
+}
+
+fn push_index_signature_detail_pure(
+    out: &mut String,
+    member: &ApiDocMember,
+    context: Option<&MarkdownLinkContext<'_>>,
+    detail_heading: &str,
+) {
+    out.push_str("```ts\n");
+    push_index_signature_code_pure(out, member);
+    out.push_str("\n```\n\n");
+
+    push_lifecycle_alerts(out, &member.tags, context);
+    let description = process_doc_text(&member.description, context);
+    let description = description.trim();
+    if !description.is_empty() {
+        out.push_str(description);
+        out.push_str("\n\n");
+    }
+    out.push_str(&render_since_section(&member.tags, context, detail_heading));
+    push_generic_tags(out, &member.tags, context, detail_heading);
+}
+
+fn render_index_signature_group_pure(
+    out: &mut String,
+    heading: &str,
+    members: &[&ApiDocMember],
+    context: &MemberGroupRenderContext<'_, '_>,
+) {
+    if members.is_empty() {
+        return;
+    }
+    let detail_heading = "#".repeat(context.parameter_section_level);
+    out.push_str(heading);
+    out.push_str(" Indexable\n\n");
+    for member in members {
+        push_index_signature_detail_pure(out, member, context.link_context, &detail_heading);
+    }
+}
+
+fn push_index_signature_code_pure(out: &mut String, member: &ApiDocMember) {
+    if let Some(signature) = member.signature.as_deref().filter(|signature| !signature.is_empty()) {
+        out.push_str(signature.trim().trim_end_matches(';').trim_end());
+        return;
+    }
+    if member.readonly {
+        out.push_str("readonly ");
+    }
+    out.push_str(&member.name);
+    out.push_str(": ");
+    let member_type = member
+        .type_annotation
+        .as_deref()
+        .or_else(|| member.returns.as_ref().map(|returns| returns.type_annotation.as_str()))
+        .unwrap_or("unknown");
+    out.push_str(member_type);
 }
 
 struct MemberGroupRenderContext<'a, 'ctx> {

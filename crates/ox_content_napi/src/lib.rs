@@ -899,6 +899,7 @@ fn doc_item_kind_to_string(kind: DocItemKind) -> String {
         DocItemKind::Getter => "getter",
         DocItemKind::Setter => "setter",
         DocItemKind::EnumMember => "enumMember",
+        DocItemKind::IndexSignature => "indexSignature",
     }
     .to_string()
 }
@@ -3598,6 +3599,61 @@ mod tests {
     }
 
     #[test]
+    fn normalized_doc_entry_maps_index_signature_members_to_js_shape() {
+        let entry = NormalizedDocEntry {
+            name: "Args".to_string(),
+            kind: NormalizedDocKind::Interface,
+            description: "Arguments.".to_string(),
+            params: vec![],
+            returns: None,
+            examples: vec![],
+            tags: BTreeMap::new(),
+            private: false,
+            file: "args.ts".to_string(),
+            line: 1,
+            end_line: 5,
+            signature: Some("export interface Args".to_string()),
+            extends: vec![],
+            implements: vec![],
+            has_body: false,
+            members: vec![NormalizedMember {
+                name: "[option: string]".to_string(),
+                kind: NormalizedMemberKind::IndexSignature,
+                description: "Argument schema by option name.".to_string(),
+                signature: Some("readonly [option: string]: ArgSchema".to_string()),
+                type_annotation: Some("ArgSchema".to_string()),
+                params: vec![ox_content_docs::NormalizedParamDoc {
+                    name: "option".to_string(),
+                    type_annotation: "string".to_string(),
+                    description: String::new(),
+                    optional: false,
+                    default_value: None,
+                }],
+                returns: None,
+                optional: false,
+                readonly: true,
+                r#static: false,
+                private: false,
+                tags: BTreeMap::new(),
+                line: 4,
+                end_line: 4,
+            }],
+            type_parameters: vec![],
+        };
+
+        let js_entry = map_normalized_doc_entry(entry);
+        let member = &js_entry.members.as_ref().unwrap()[0];
+
+        assert_eq!(member.name, "[option: string]");
+        assert_eq!(member.kind, "indexSignature");
+        assert_eq!(member.signature.as_deref(), Some("readonly [option: string]: ArgSchema"));
+        assert_eq!(member.r#type.as_deref(), Some("ArgSchema"));
+        assert_eq!(member.params.as_ref().unwrap()[0].name, "option");
+        assert_eq!(member.params.as_ref().unwrap()[0].r#type, "string");
+        assert_eq!(member.readonly, Some(true));
+    }
+
+    #[test]
     fn normalized_doc_entry_maps_heritage_to_js_shape() {
         let entry = NormalizedDocEntry {
             name: "DefaultTranslation".to_string(),
@@ -4487,6 +4543,93 @@ mod tests {
 
         assert!(page.contains("## Returns\n\n`object` — Resolved args."));
         assert!(page.contains("### values\n\n```ts\nvalues: ArgValues<A>;\n```"));
+    }
+
+    #[test]
+    fn generate_docs_markdown_renders_index_signature_members() {
+        let docs = vec![JsDocsMarkdownModule {
+            description: None,
+            file: "default".to_string(),
+            source_path: None,
+            examples: None,
+            tags: None,
+            entries: vec![
+                JsDocsMarkdownEntry {
+                    name: "ArgSchema".to_string(),
+                    kind: "interface".to_string(),
+                    description: "Value type.".to_string(),
+                    params: None,
+                    returns: None,
+                    examples: None,
+                    tags: None,
+                    private: false,
+                    file: "/repo/src/args.ts".to_string(),
+                    line: 1,
+                    end_line: 1,
+                    signature: Some("export interface ArgSchema".to_string()),
+                    extends: None,
+                    implements: None,
+                    has_body: None,
+                    members: None,
+                    type_parameters: None,
+                },
+                JsDocsMarkdownEntry {
+                    name: "Args".to_string(),
+                    kind: "interface".to_string(),
+                    description: "Arguments.".to_string(),
+                    params: None,
+                    returns: None,
+                    examples: None,
+                    tags: None,
+                    private: false,
+                    file: "/repo/src/args.ts".to_string(),
+                    line: 1,
+                    end_line: 5,
+                    signature: Some("export interface Args".to_string()),
+                    extends: None,
+                    implements: None,
+                    has_body: None,
+                    members: Some(vec![JsDocMember {
+                        name: "[option: string]".to_string(),
+                        kind: "indexSignature".to_string(),
+                        description: "Argument schema by option name.".to_string(),
+                        signature: Some("readonly [option: string]: ArgSchema".to_string()),
+                        r#type: Some("ArgSchema".to_string()),
+                        params: Some(vec![JsDocParam {
+                            name: "option".to_string(),
+                            r#type: "string".to_string(),
+                            description: String::new(),
+                            optional: None,
+                            r#default: None,
+                        }]),
+                        returns: None,
+                        optional: Some(false),
+                        readonly: Some(true),
+                        r#static: Some(false),
+                        private: Some(false),
+                        tags: None,
+                        implementation_of: None,
+                        line: 4,
+                        end_line: 4,
+                    }]),
+                    type_parameters: None,
+                },
+            ],
+        }];
+
+        let markdown = generate_docs_markdown(
+            docs,
+            Some(JsDocsMarkdownOptions {
+                path_strategy: Some("typedoc".to_string()),
+                render_style: Some("markdown".to_string()),
+                ..Default::default()
+            }),
+        );
+        let page = markdown.get("default/interfaces/Args.md").unwrap();
+
+        assert!(page.contains("## Indexable\n\n"));
+        assert!(page.contains("```ts\nreadonly [option: string]: ArgSchema\n```"));
+        assert!(page.contains("Argument schema by option name."));
     }
 
     #[test]

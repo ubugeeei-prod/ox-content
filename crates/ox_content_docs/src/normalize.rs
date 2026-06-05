@@ -67,7 +67,8 @@ impl NormalizedDocKind {
             | DocItemKind::Constructor
             | DocItemKind::Getter
             | DocItemKind::Setter
-            | DocItemKind::EnumMember => None,
+            | DocItemKind::EnumMember
+            | DocItemKind::IndexSignature => None,
         }
     }
 
@@ -103,6 +104,9 @@ pub enum NormalizedMemberKind {
     /// Enum member.
     #[serde(rename = "enumMember")]
     EnumMember,
+    /// TypeScript index signature.
+    #[serde(rename = "indexSignature")]
+    IndexSignature,
 }
 
 impl NormalizedMemberKind {
@@ -116,6 +120,7 @@ impl NormalizedMemberKind {
             DocItemKind::Getter => Some(Self::Getter),
             DocItemKind::Setter => Some(Self::Setter),
             DocItemKind::EnumMember => Some(Self::EnumMember),
+            DocItemKind::IndexSignature => Some(Self::IndexSignature),
             DocItemKind::Module
             | DocItemKind::Function
             | DocItemKind::Class
@@ -136,6 +141,7 @@ impl NormalizedMemberKind {
             Self::Getter => "getter",
             Self::Setter => "setter",
             Self::EnumMember => "enumMember",
+            Self::IndexSignature => "indexSignature",
         }
     }
 }
@@ -319,10 +325,14 @@ fn normalize_member(item: DocItem) -> Option<NormalizedMember> {
     // Member-level type parameters are out of scope; keep generic-tag behavior.
     let mut metadata = normalize_doc_metadata(&item.tags, false);
     merge_extracted_params(&mut metadata.params, item.params);
-    merge_extracted_return(&mut metadata.returns, item.return_type, item.return_members);
+    let mut return_type = item.return_type;
+    if kind != NormalizedMemberKind::IndexSignature {
+        merge_extracted_return(&mut metadata.returns, return_type.take(), item.return_members);
+    }
 
     let (signature, type_annotation) = match kind {
         NormalizedMemberKind::Property | NormalizedMemberKind::EnumMember => (None, item.signature),
+        NormalizedMemberKind::IndexSignature => (item.signature, return_type),
         NormalizedMemberKind::Method
         | NormalizedMemberKind::Constructor
         | NormalizedMemberKind::Getter
@@ -802,6 +812,39 @@ export function resolveArgs<A extends Args>(): {
             returns.members[2].type_annotation.as_deref(),
             Some("AggregateError | undefined")
         );
+    }
+
+    #[test]
+    fn index_signature_members_are_normalized_with_parameter_and_value_types() {
+        let source = r"
+/**
+ * Value type.
+ */
+export interface ArgSchema {}
+
+/**
+ * Arguments.
+ */
+export interface Args {
+    /** Argument schema by option name. */
+    readonly [option: string]: ArgSchema;
+}
+";
+
+        let extractor = DocExtractor::new();
+        let items = extractor.extract_source(source, "args.ts", SourceType::ts()).unwrap();
+        let entries = normalize_doc_items(items, false);
+        let args = entries.iter().find(|entry| entry.name == "Args").unwrap();
+        let member = &args.members[0];
+
+        assert_eq!(member.name, "[option: string]");
+        assert_eq!(member.kind, NormalizedMemberKind::IndexSignature);
+        assert_eq!(member.signature.as_deref(), Some("readonly [option: string]: ArgSchema"));
+        assert_eq!(member.type_annotation.as_deref(), Some("ArgSchema"));
+        assert_eq!(member.params[0].name, "option");
+        assert_eq!(member.params[0].type_annotation, "string");
+        assert!(member.readonly);
+        assert!(member.returns.is_none());
     }
 
     #[test]

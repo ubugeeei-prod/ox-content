@@ -8,8 +8,9 @@ use ox_jsdoc::parser::{
 use oxc_allocator::Allocator;
 use oxc_ast::ast::{
     BindingPattern, Class, Comment, Declaration, ExportDefaultDeclarationKind, Expression,
-    Function, Statement, TSEnumDeclaration, TSEnumMember, TSInterfaceDeclaration, TSSignature,
-    TSType, TSTypeAliasDeclaration, TSTypeAnnotation, TSTypeName, VariableDeclaration,
+    Function, Statement, TSEnumDeclaration, TSEnumMember, TSIndexSignature, TSIndexSignatureName,
+    TSInterfaceDeclaration, TSSignature, TSType, TSTypeAliasDeclaration, TSTypeAnnotation,
+    TSTypeName, VariableDeclaration,
 };
 use oxc_ast_visit::{walk, Visit};
 use oxc_parser::Parser;
@@ -208,6 +209,9 @@ pub enum DocItemKind {
     /// Enum member.
     #[serde(rename = "enumMember")]
     EnumMember,
+    /// TypeScript index signature.
+    #[serde(rename = "indexSignature")]
+    IndexSignature,
 }
 
 /// Documentation extractor.
@@ -1733,6 +1737,11 @@ impl<'a> DocVisitor<'a> {
                         type_parameters: Vec::new(),
                     });
                 }
+                oxc_ast::ast::ClassElement::TSIndexSignature(index_signature) => {
+                    if let Some(item) = self.create_index_signature_item(index_signature) {
+                        children.push(item);
+                    }
+                }
                 _ => {}
             }
         }
@@ -1875,11 +1884,94 @@ impl<'a> DocVisitor<'a> {
                         type_parameters: Vec::new(),
                     });
                 }
+                TSSignature::TSIndexSignature(index_signature) => {
+                    if let Some(item) = self.create_index_signature_item(index_signature) {
+                        children.push(item);
+                    }
+                }
                 _ => {}
             }
         }
 
         children
+    }
+
+    fn create_index_signature_item(
+        &self,
+        index_signature: &TSIndexSignature<'a>,
+    ) -> Option<DocItem> {
+        let parameter = index_signature.parameters.first()?;
+        let (name, param_name, param_type) = self.format_index_signature_name(parameter);
+        let value_type = self.format_ts_type(&index_signature.type_annotation.type_annotation);
+        let signature = Self::format_index_signature(index_signature, &name, &value_type);
+
+        let (jsdoc, doc, tags) = self
+            .extract_jsdoc(index_signature.span.start)
+            .map_or((None, None, Vec::new()), |(jsdoc, doc, tags)| {
+                (Some(jsdoc), (!doc.is_empty()).then_some(doc), tags)
+            });
+        if self.should_skip_by_visibility(&tags) {
+            return None;
+        }
+        let (line, end_line) =
+            self.span_lines(index_signature.span.start, index_signature.span.end);
+        let params = Vec::from([ParamDoc {
+            name: param_name,
+            type_annotation: Some(param_type),
+            optional: false,
+            default_value: None,
+            description: None,
+        }]);
+
+        Some(DocItem {
+            name,
+            kind: DocItemKind::IndexSignature,
+            doc,
+            source_path: self.file_path.to_string(),
+            line,
+            end_line,
+            column: self.column_number(index_signature.span.start),
+            jsdoc,
+            exported: false,
+            signature: Some(signature),
+            extends: Vec::new(),
+            implements: Vec::new(),
+            has_body: false,
+            optional: false,
+            readonly: index_signature.readonly,
+            r#static: index_signature.r#static,
+            params,
+            return_type: Some(value_type),
+            return_members: Vec::new(),
+            children: Vec::new(),
+            tags,
+            type_parameters: Vec::new(),
+        })
+    }
+
+    fn format_index_signature_name(
+        &self,
+        parameter: &TSIndexSignatureName<'a>,
+    ) -> (String, String, String) {
+        let param_name = parameter.name.to_string();
+        let param_type = self.format_ts_type(&parameter.type_annotation.type_annotation);
+        let name = join5("[", &param_name, ": ", &param_type, "]");
+        (name, param_name, param_type)
+    }
+
+    fn format_index_signature(
+        index_signature: &TSIndexSignature<'a>,
+        name: &str,
+        value_type: &str,
+    ) -> String {
+        let mut signature = StringBuilder::new();
+        if index_signature.readonly {
+            signature.push_str("readonly ");
+        }
+        signature.push_str(name);
+        signature.push_str(": ");
+        signature.push_str(value_type);
+        signature.into_string()
     }
 }
 
@@ -2358,6 +2450,76 @@ export function resolveArgs<A extends Args>(): {
             items[0].return_members[2].signature.as_deref(),
             Some("AggregateError | undefined")
         );
+    }
+
+    #[test]
+    fn index_signatures_are_extracted_from_members_and_return_literals() {
+        let source = r"
+/**
+ * Value type.
+ */
+export interface ArgSchema {}
+
+/**
+ * Arguments.
+ */
+export interface Args {
+    /** Argument schema by option name. */
+    readonly [option: string]: ArgSchema;
+}
+
+/**
+ * Numeric arguments.
+ */
+export type NumericArgs = {
+    [index: number]: ArgSchema;
+};
+
+/**
+ * Argument store.
+ */
+export class Store {
+    [key: string]: ArgSchema;
+}
+
+/**
+ * Makes arguments.
+ */
+export function makeArgs(): {
+    [key: string]: ArgSchema;
+} {
+    return {} as any;
+}
+";
+
+        let extractor = DocExtractor::new();
+        let items = extractor.extract_source(source, "args.ts", SourceType::ts()).unwrap();
+        let args = items.iter().find(|item| item.name == "Args").unwrap();
+        let numeric_args = items.iter().find(|item| item.name == "NumericArgs").unwrap();
+        let store = items.iter().find(|item| item.name == "Store").unwrap();
+        let make_args = items.iter().find(|item| item.name == "makeArgs").unwrap();
+
+        let args_member = &args.children[0];
+        assert_eq!(args_member.kind, DocItemKind::IndexSignature);
+        assert_eq!(args_member.name, "[option: string]");
+        assert_eq!(args_member.signature.as_deref(), Some("readonly [option: string]: ArgSchema"));
+        assert_eq!(args_member.return_type.as_deref(), Some("ArgSchema"));
+        assert_eq!(args_member.params[0].name, "option");
+        assert_eq!(args_member.params[0].type_annotation.as_deref(), Some("string"));
+        assert!(args_member.readonly);
+
+        let numeric_member = &numeric_args.children[0];
+        assert_eq!(numeric_member.kind, DocItemKind::IndexSignature);
+        assert_eq!(numeric_member.name, "[index: number]");
+        assert_eq!(numeric_member.signature.as_deref(), Some("[index: number]: ArgSchema"));
+
+        let store_member = &store.children[0];
+        assert_eq!(store_member.kind, DocItemKind::IndexSignature);
+        assert_eq!(store_member.signature.as_deref(), Some("[key: string]: ArgSchema"));
+
+        let return_member = &make_args.return_members[0];
+        assert_eq!(return_member.kind, DocItemKind::IndexSignature);
+        assert_eq!(return_member.signature.as_deref(), Some("[key: string]: ArgSchema"));
     }
 
     #[test]
