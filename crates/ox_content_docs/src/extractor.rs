@@ -1356,11 +1356,8 @@ impl<'a> DocVisitor<'a> {
     /// predicate as before (strip a leading `...`, then exact-name or
     /// dotted-prefix match). Operating on already-parsed tags avoids
     /// re-parsing every `@param` for each formal parameter.
-    fn find_parsed_param_tag<'t>(
-        parsed: &'t [ParsedParamTag],
-        name: &str,
-    ) -> Option<&'t ParsedParamTag> {
-        parsed.iter().find(|tag| {
+    fn find_parsed_param_tag_index(parsed: &[ParsedParamTag], name: &str) -> Option<usize> {
+        parsed.iter().position(|tag| {
             let tag_name = tag.name.trim_start_matches("...");
             tag_name == name || tag_name.split('.').next() == Some(name)
         })
@@ -1389,6 +1386,52 @@ impl<'a> DocVisitor<'a> {
             BindingPattern::ObjectPattern(_) => "param".to_string(),
             BindingPattern::ArrayPattern(_) => "param".to_string(),
         }
+    }
+
+    fn binding_pattern_identifier_name(pattern: &BindingPattern<'a>) -> Option<String> {
+        match pattern {
+            BindingPattern::BindingIdentifier(id) => Some(id.name.to_string()),
+            BindingPattern::AssignmentPattern(assign) => {
+                Self::binding_pattern_identifier_name(&assign.left)
+            }
+            BindingPattern::ObjectPattern(_) | BindingPattern::ArrayPattern(_) => None,
+        }
+    }
+
+    fn binding_pattern_is_destructured(pattern: &BindingPattern<'a>) -> bool {
+        match pattern {
+            BindingPattern::AssignmentPattern(assign) => {
+                Self::binding_pattern_is_destructured(&assign.left)
+            }
+            BindingPattern::ObjectPattern(_) | BindingPattern::ArrayPattern(_) => true,
+            BindingPattern::BindingIdentifier(_) => false,
+        }
+    }
+
+    fn top_level_param_tag_name(tag: &ParsedParamTag) -> Option<&str> {
+        let raw_name = tag.name.trim();
+        if raw_name.starts_with("...") {
+            return None;
+        }
+        let name = raw_name.trim_end_matches('?');
+        (!name.is_empty() && !name.contains('.')).then_some(name)
+    }
+
+    fn find_destructured_param_tag_index(
+        parsed: &[ParsedParamTag],
+        used_indices: &[usize],
+        reserved_names: &[String],
+    ) -> Option<usize> {
+        parsed.iter().enumerate().find_map(|(index, tag)| {
+            if used_indices.contains(&index) {
+                return None;
+            }
+            let name = Self::top_level_param_tag_name(tag)?;
+            if reserved_names.iter().any(|reserved| reserved == name) {
+                return None;
+            }
+            Some(index)
+        })
     }
 
     fn binding_pattern_default_value(&self, pattern: &BindingPattern<'a>) -> Option<String> {
@@ -1615,12 +1658,37 @@ impl<'a> DocVisitor<'a> {
             .filter(|tag| matches!(tag.tag.as_str(), "param" | "arg" | "argument"))
             .filter_map(Self::parse_param_tag)
             .collect();
+        let mut reserved_param_names = params
+            .items
+            .iter()
+            .filter_map(|param| Self::binding_pattern_identifier_name(&param.pattern))
+            .collect::<Vec<_>>();
+        if let Some(rest) = params.rest.as_ref() {
+            if let Some(name) = Self::binding_pattern_identifier_name(&rest.rest.argument) {
+                reserved_param_names.push(name);
+            }
+        }
+        let mut used_param_tag_indices = Vec::new();
 
         let mut docs = Vec::with_capacity(params.items.len() + usize::from(params.rest.is_some()));
 
         for param in &params.items {
-            let name = Self::binding_pattern_name(&param.pattern);
-            let tag = Self::find_parsed_param_tag(&parsed_param_tags, &name);
+            let fallback_name = Self::binding_pattern_name(&param.pattern);
+            let tag_index = if Self::binding_pattern_is_destructured(&param.pattern) {
+                Self::find_destructured_param_tag_index(
+                    &parsed_param_tags,
+                    &used_param_tag_indices,
+                    &reserved_param_names,
+                )
+            } else {
+                Self::find_parsed_param_tag_index(&parsed_param_tags, &fallback_name)
+            };
+            let tag = tag_index.map(|index| &parsed_param_tags[index]);
+            if let Some(index) = tag_index {
+                used_param_tag_indices.push(index);
+            }
+            let name =
+                tag.and_then(Self::top_level_param_tag_name).unwrap_or(&fallback_name).to_string();
             let default_value = self
                 .binding_pattern_default_value(&param.pattern)
                 .or_else(|| {
@@ -1664,7 +1732,8 @@ impl<'a> DocVisitor<'a> {
 
         if let Some(rest) = params.rest.as_ref() {
             let name = Self::binding_pattern_name(&rest.rest.argument);
-            let tag = Self::find_parsed_param_tag(&parsed_param_tags, &name);
+            let tag_index = Self::find_parsed_param_tag_index(&parsed_param_tags, &name);
+            let tag = tag_index.map(|index| &parsed_param_tags[index]);
             let type_annotation = rest
                 .type_annotation
                 .as_ref()
@@ -2799,6 +2868,81 @@ export function plugin<Id, Deps, PluginExt, MergedExtensions>(options: {
         assert!(plugin.params[3].optional);
         assert!(plugin.params[4].optional);
         assert!(plugin.params[6].optional);
+    }
+
+    #[test]
+    fn destructured_parameter_uses_jsdoc_name_and_extracted_type() {
+        let source = r"
+/**
+ * Resolve command line arguments.
+ *
+ * @param args - Argument schema.
+ * @param tokens - Parsed tokens.
+ * @param resolveArgs - Resolve options.
+ */
+export declare function resolveArgs<A extends Args>(
+    args: A,
+    tokens: ArgToken[],
+    { shortGrouping, skipPositional, toKebab }?: ResolveArgs
+): void;
+";
+
+        let extractor = DocExtractor::new();
+        let items = extractor.extract_source(source, "resolver.ts", SourceType::ts()).unwrap();
+        let resolve = items.iter().find(|item| item.name == "resolveArgs").unwrap();
+
+        assert_eq!(
+            resolve.params.iter().map(|param| param.name.as_str()).collect::<Vec<_>>(),
+            ["args", "tokens", "resolveArgs"]
+        );
+        assert_eq!(resolve.params[2].type_annotation.as_deref(), Some("ResolveArgs"));
+        assert!(resolve.params[2].optional);
+        assert_eq!(resolve.params[2].description.as_deref(), Some("Resolve options."));
+    }
+
+    #[test]
+    fn destructured_parameter_without_jsdoc_name_keeps_param_fallback() {
+        let source = r"
+/**
+ * Run a command.
+ */
+export declare function run({ cwd }: RunOptions): void;
+";
+
+        let extractor = DocExtractor::new();
+        let items = extractor.extract_source(source, "runner.ts", SourceType::ts()).unwrap();
+        let run = items.iter().find(|item| item.name == "run").unwrap();
+
+        assert_eq!(run.params.len(), 1);
+        assert_eq!(run.params[0].name, "param");
+        assert_eq!(run.params[0].type_annotation.as_deref(), Some("RunOptions"));
+        assert_eq!(run.params[0].description, None);
+    }
+
+    #[test]
+    fn destructured_parameter_keeps_nested_param_tags_on_members() {
+        let source = r"
+/**
+ * Run a command.
+ *
+ * @param options - Runtime options.
+ * @param options.cwd - Working directory.
+ */
+export declare function run({ cwd }: { cwd: string }): void;
+";
+
+        let extractor = DocExtractor::new();
+        let items = extractor.extract_source(source, "runner.ts", SourceType::ts()).unwrap();
+        let run = items.iter().find(|item| item.name == "run").unwrap();
+
+        assert_eq!(
+            run.params.iter().map(|param| param.name.as_str()).collect::<Vec<_>>(),
+            ["options", "options.cwd"]
+        );
+        assert_eq!(run.params[0].type_annotation.as_deref(), Some("{ cwd: string }"));
+        assert_eq!(run.params[0].description.as_deref(), Some("Runtime options."));
+        assert_eq!(run.params[1].type_annotation.as_deref(), Some("string"));
+        assert_eq!(run.params[1].description.as_deref(), Some("Working directory."));
     }
 
     #[test]

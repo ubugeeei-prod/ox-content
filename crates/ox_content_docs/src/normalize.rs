@@ -828,6 +828,37 @@ export interface Command {
     }
 
     #[test]
+    fn destructured_parameter_merges_jsdoc_name_without_unknown_duplicate() {
+        let source = r"
+/**
+ * Resolve command line arguments.
+ *
+ * @param args - Argument schema.
+ * @param tokens - Parsed tokens.
+ * @param resolveArgs - Resolve options.
+ */
+export declare function resolveArgs<A extends Args>(
+    args: A,
+    tokens: ArgToken[],
+    { shortGrouping, skipPositional, toKebab }?: ResolveArgs
+): void;
+";
+
+        let extractor = DocExtractor::new();
+        let items = extractor.extract_source(source, "resolver.ts", SourceType::ts()).unwrap();
+        let entries = normalize_doc_items(items, false);
+        let entry = entries.iter().find(|entry| entry.name == "resolveArgs").unwrap();
+
+        assert_eq!(
+            entry.params.iter().map(|param| param.name.as_str()).collect::<Vec<_>>(),
+            ["args", "tokens", "resolveArgs"]
+        );
+        assert_eq!(entry.params[2].type_annotation, "ResolveArgs");
+        assert_eq!(entry.params[2].description, "Resolve options.");
+        assert!(entry.params[2].optional);
+    }
+
+    #[test]
     fn function_valued_property_merges_extracted_types_with_description_only_tags() {
         let source = r"
 /**
