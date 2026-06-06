@@ -379,6 +379,8 @@ export interface JsDocsMarkdownOptions {
   typeDeclarationFormat?: 'none' | 'list' | 'table'
   /** Emit the stats summary line on index pages (default: true). */
   renderStats?: boolean
+  /** Emit the generated-by attribution on root index pages (default: true). */
+  renderGeneratedBy?: boolean
   /**
    * TypeDoc-style group order for module index sections and nav groups. Unlisted
    * groups are sorted alphabetically at `*` (or at the end when `*` is absent).
