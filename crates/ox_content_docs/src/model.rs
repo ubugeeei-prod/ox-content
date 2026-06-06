@@ -104,6 +104,9 @@ pub struct ApiDocMember {
     pub type_parameters: Vec<ApiTypeParamDoc>,
     /// Return documentation.
     pub returns: Option<ApiReturnDoc>,
+    /// Nested members owned by this member (for property-owned object literals).
+    #[serde(default)]
+    pub members: Vec<ApiDocMember>,
     /// Whether the member is optional.
     #[serde(default)]
     pub optional: bool,

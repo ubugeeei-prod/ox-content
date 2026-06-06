@@ -207,6 +207,7 @@ pub struct JsDocMember {
     pub params: Option<Vec<JsDocParam>>,
     pub type_parameters: Option<Vec<JsTypeParam>>,
     pub returns: Option<JsDocReturn>,
+    pub members: Option<Vec<JsDocMember>>,
     pub optional: Option<bool>,
     pub readonly: Option<bool>,
     pub r#static: Option<bool>,
@@ -978,6 +979,8 @@ fn map_normalized_member(member: NormalizedMember) -> JsDocMember {
         type_parameters: (!member.type_parameters.is_empty())
             .then(|| member.type_parameters.into_iter().map(map_normalized_type_param).collect()),
         returns: member.returns.map(map_normalized_return_doc),
+        members: (!member.members.is_empty())
+            .then(|| member.members.into_iter().map(map_normalized_member).collect()),
         optional: member.optional.then_some(true),
         readonly: member.readonly.then_some(true),
         r#static: member.r#static.then_some(true),
@@ -1226,6 +1229,12 @@ fn convert_markdown_member(member: JsDocMember) -> ApiDocMember {
             .map(convert_markdown_type_param)
             .collect(),
         returns: member.returns.map(convert_markdown_return),
+        members: member
+            .members
+            .unwrap_or_default()
+            .into_iter()
+            .map(convert_markdown_member)
+            .collect(),
         optional: member.optional.unwrap_or(false),
         readonly: member.readonly.unwrap_or(false),
         r#static: member.r#static.unwrap_or(false),
@@ -3595,6 +3604,24 @@ mod tests {
                     description: "Value type.".to_string(),
                 }],
                 returns: None,
+                members: vec![NormalizedMember {
+                    name: "timeout".to_string(),
+                    kind: NormalizedMemberKind::Property,
+                    description: "Request timeout.".to_string(),
+                    signature: None,
+                    type_annotation: Some("number".to_string()),
+                    params: vec![],
+                    type_parameters: vec![],
+                    returns: None,
+                    members: vec![],
+                    optional: true,
+                    readonly: false,
+                    r#static: false,
+                    private: false,
+                    tags: BTreeMap::new(),
+                    line: 5,
+                    end_line: 5,
+                }],
                 optional: true,
                 readonly: true,
                 r#static: false,
@@ -3619,6 +3646,12 @@ mod tests {
         assert_eq!(type_param.description, "Value type.");
         assert_eq!(member.optional, Some(true));
         assert_eq!(member.readonly, Some(true));
+        let nested_member = &member.members.as_ref().unwrap()[0];
+        assert_eq!(nested_member.name, "timeout");
+        assert_eq!(nested_member.kind, "property");
+        assert_eq!(nested_member.r#type.as_deref(), Some("number"));
+        assert_eq!(nested_member.description, "Request timeout.");
+        assert_eq!(nested_member.optional, Some(true));
     }
 
     #[test]
@@ -3654,6 +3687,7 @@ mod tests {
                 }],
                 type_parameters: vec![],
                 returns: None,
+                members: vec![],
                 optional: false,
                 readonly: true,
                 r#static: false,
@@ -3724,6 +3758,7 @@ mod tests {
                     params: vec![],
                     type_parameters: vec![],
                     returns: None,
+                    members: vec![],
                     optional: false,
                     readonly: false,
                     r#static: false,
@@ -3971,6 +4006,7 @@ export function plugin<Id, PluginExt>(options: {
                     description: "Locale type.".to_string(),
                 }]),
                 returns: None,
+                members: None,
                 optional: None,
                 readonly: None,
                 r#static: None,
@@ -4137,6 +4173,180 @@ export function plugin<Id, PluginExt>(options: {
     }
 
     #[test]
+    fn generate_docs_markdown_type_declaration_format_table_renders_html() {
+        let docs = vec![JsDocsMarkdownModule {
+            description: None,
+            file: "default".to_string(),
+            source_path: None,
+            examples: None,
+            tags: None,
+            entries: vec![
+                JsDocsMarkdownEntry {
+                    name: "resolveArgs".to_string(),
+                    kind: "function".to_string(),
+                    description: "Resolve.".to_string(),
+                    params: None,
+                    returns: Some(JsDocReturn {
+                        r#type: "object".to_string(),
+                        description: "Resolved args.".to_string(),
+                        members: Some(vec![JsDocMember {
+                            name: "values".to_string(),
+                            kind: "property".to_string(),
+                            description: "Resolved values.".to_string(),
+                            signature: None,
+                            r#type: Some("ArgValues<A>".to_string()),
+                            params: None,
+                            type_parameters: None,
+                            returns: None,
+                            members: None,
+                            optional: Some(false),
+                            readonly: Some(false),
+                            r#static: Some(false),
+                            private: Some(false),
+                            tags: None,
+                            implementation_of: None,
+                            line: 1,
+                            end_line: 1,
+                        }]),
+                    }),
+                    examples: None,
+                    tags: None,
+                    private: false,
+                    file: "/repo/src/resolver.ts".to_string(),
+                    line: 1,
+                    end_line: 1,
+                    signature: Some("export function resolveArgs(): object".to_string()),
+                    extends: None,
+                    implements: None,
+                    has_body: None,
+                    members: None,
+                    type_parameters: None,
+                },
+                JsDocsMarkdownEntry {
+                    name: "ArgValues".to_string(),
+                    kind: "type".to_string(),
+                    description: String::new(),
+                    params: None,
+                    returns: None,
+                    examples: None,
+                    tags: None,
+                    private: false,
+                    file: "/repo/src/types.ts".to_string(),
+                    line: 1,
+                    end_line: 1,
+                    signature: Some("export type ArgValues = unknown".to_string()),
+                    extends: None,
+                    implements: None,
+                    has_body: None,
+                    members: None,
+                    type_parameters: None,
+                },
+            ],
+        }];
+
+        let markdown = generate_docs_markdown(
+            docs,
+            Some(JsDocsMarkdownOptions {
+                group_by: Some("file".to_string()),
+                path_strategy: Some("typedoc".to_string()),
+                render_style: Some("html".to_string()),
+                type_declaration_format: Some("table".to_string()),
+                ..Default::default()
+            }),
+        );
+        let page = markdown.get("default/functions/resolveArgs.md").unwrap();
+
+        assert!(page.contains("ox-api-entry__type-declaration-table"));
+        assert!(page.contains("<td><code>values</code></td>"));
+        assert!(page.contains("Resolved values."));
+        assert!(!page.contains("ox-api-entry__return-members"));
+    }
+
+    #[test]
+    fn generate_docs_markdown_property_members_format_table_renders_html() {
+        let docs = vec![JsDocsMarkdownModule {
+            description: None,
+            file: "default".to_string(),
+            source_path: None,
+            examples: None,
+            tags: None,
+            entries: vec![JsDocsMarkdownEntry {
+                name: "Options".to_string(),
+                kind: "interface".to_string(),
+                description: "Request options.".to_string(),
+                params: None,
+                returns: None,
+                examples: None,
+                tags: None,
+                private: false,
+                file: "/repo/src/options.ts".to_string(),
+                line: 1,
+                end_line: 8,
+                signature: Some("export interface Options".to_string()),
+                extends: None,
+                implements: None,
+                has_body: None,
+                members: Some(vec![JsDocMember {
+                    name: "http".to_string(),
+                    kind: "property".to_string(),
+                    description: "HTTP options.".to_string(),
+                    signature: None,
+                    r#type: Some("{ timeout?: number }".to_string()),
+                    params: None,
+                    type_parameters: None,
+                    returns: None,
+                    members: Some(vec![JsDocMember {
+                        name: "timeout".to_string(),
+                        kind: "property".to_string(),
+                        description: "Request timeout.".to_string(),
+                        signature: None,
+                        r#type: Some("number".to_string()),
+                        params: None,
+                        type_parameters: None,
+                        returns: None,
+                        members: None,
+                        optional: Some(true),
+                        readonly: Some(false),
+                        r#static: Some(false),
+                        private: Some(false),
+                        tags: None,
+                        implementation_of: None,
+                        line: 4,
+                        end_line: 4,
+                    }]),
+                    optional: Some(false),
+                    readonly: Some(false),
+                    r#static: Some(false),
+                    private: Some(false),
+                    tags: None,
+                    implementation_of: None,
+                    line: 3,
+                    end_line: 6,
+                }]),
+                type_parameters: None,
+            }],
+        }];
+
+        let markdown = generate_docs_markdown(
+            docs,
+            Some(JsDocsMarkdownOptions {
+                group_by: Some("file".to_string()),
+                path_strategy: Some("typedoc".to_string()),
+                render_style: Some("html".to_string()),
+                interface_properties_format: Some("table".to_string()),
+                property_members_format: Some("table".to_string()),
+                ..Default::default()
+            }),
+        );
+        let page = markdown.get("default/interfaces/Options.md").unwrap();
+
+        assert!(page.contains("ox-api-entry__property-members-table"));
+        assert!(page
+            .contains("<td><code>timeout</code><span class=\"ox-api-badge\">optional</span></td>"));
+        assert!(page.contains("Request timeout."));
+    }
+
+    #[test]
     fn generate_docs_markdown_resolves_jsdoc_inline_links() {
         let docs = vec![
             JsDocsMarkdownModule {
@@ -4170,6 +4380,7 @@ export function plugin<Id, PluginExt>(options: {
                         params: None,
                         type_parameters: None,
                         returns: None,
+                        members: None,
                         optional: Some(false),
                         readonly: Some(false),
                         r#static: Some(false),
@@ -4656,6 +4867,7 @@ export function plugin<Id, PluginExt>(options: {
                             params: None,
                             type_parameters: None,
                             returns: None,
+                            members: None,
                             optional: Some(false),
                             readonly: Some(false),
                             r#static: Some(false),
@@ -4990,6 +5202,7 @@ export function plugin<Id, PluginExt>(options: {
                         }]),
                         type_parameters: None,
                         returns: None,
+                        members: None,
                         optional: Some(false),
                         readonly: Some(true),
                         r#static: Some(false),

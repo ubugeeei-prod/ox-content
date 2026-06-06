@@ -208,6 +208,9 @@ pub struct NormalizedMember {
     pub type_parameters: Vec<NormalizedTypeParam>,
     /// Return documentation, if any.
     pub returns: Option<NormalizedReturnDoc>,
+    /// Nested members owned by this member (for property-owned object literals).
+    #[serde(default)]
+    pub members: Vec<NormalizedMember>,
     /// Whether the member is optional.
     #[serde(default)]
     pub optional: bool,
@@ -334,6 +337,7 @@ pub fn normalize_doc_item(item: DocItem, type_parameters: bool) -> Option<Normal
 }
 
 fn normalize_member(item: DocItem, type_parameters: bool) -> Option<NormalizedMember> {
+    let include_type_parameters = type_parameters;
     let kind = NormalizedMemberKind::from_doc_item_kind(item.kind)?;
     let mut metadata = normalize_doc_metadata(&item.tags, type_parameters);
     let has_extracted_params = !item.params.is_empty();
@@ -359,11 +363,16 @@ fn normalize_member(item: DocItem, type_parameters: bool) -> Option<NormalizedMe
     } else {
         metadata.returns = None;
     }
-    let type_parameters = if type_parameters {
+    let type_parameters = if include_type_parameters {
         build_type_parameters(item.type_parameters, &metadata.type_param_descriptions)
     } else {
         Vec::new()
     };
+    let members = item
+        .children
+        .into_iter()
+        .filter_map(|item| normalize_member(item, include_type_parameters))
+        .collect();
 
     let (signature, type_annotation) = match kind {
         NormalizedMemberKind::Property | NormalizedMemberKind::EnumMember => (None, item.signature),
@@ -383,6 +392,7 @@ fn normalize_member(item: DocItem, type_parameters: bool) -> Option<NormalizedMe
         params: metadata.params,
         type_parameters,
         returns: metadata.returns,
+        members,
         optional: item.optional,
         readonly: item.readonly,
         r#static: item.r#static,
@@ -758,6 +768,40 @@ export interface Command {
         assert_eq!(members[1].name, "args");
         assert_eq!(members[1].type_annotation.as_deref(), Some("string[]"));
         assert!(members[1].optional);
+    }
+
+    #[test]
+    fn interface_property_type_literal_members_are_normalized() {
+        let source = r"
+/**
+ * Request options.
+ */
+export interface RequestOptions {
+    /** HTTP options. */
+    http: {
+        /** Request timeout. */
+        timeout?: number;
+        /** Request headers. */
+        headers: Record<string, string>;
+    };
+}
+";
+
+        let extractor = DocExtractor::new();
+        let items = extractor.extract_source(source, "request.ts", SourceType::ts()).unwrap();
+        let entries = normalize_doc_items(items, false);
+        let http = &entries[0].members[0];
+
+        assert_eq!(http.name, "http");
+        assert_eq!(http.kind, NormalizedMemberKind::Property);
+        assert_eq!(http.description, "HTTP options.");
+        assert_eq!(http.members.len(), 2);
+        assert_eq!(http.members[0].name, "timeout");
+        assert_eq!(http.members[0].description, "Request timeout.");
+        assert_eq!(http.members[0].type_annotation.as_deref(), Some("number"));
+        assert!(http.members[0].optional);
+        assert_eq!(http.members[1].name, "headers");
+        assert_eq!(http.members[1].type_annotation.as_deref(), Some("Record<string, string>"));
     }
 
     #[test]

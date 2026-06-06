@@ -2086,6 +2086,7 @@ impl<'a> DocVisitor<'a> {
                     let mut return_type = None;
                     let mut return_members = Vec::new();
                     let mut type_parameters = Vec::new();
+                    let mut property_members = Vec::new();
                     let type_annotation = prop.type_annotation.as_ref().map(|t| {
                         let ts_type = &t.type_annotation;
                         if let Some(metadata) =
@@ -2096,6 +2097,7 @@ impl<'a> DocVisitor<'a> {
                             return_members = metadata.return_members;
                             type_parameters = metadata.type_parameters;
                         }
+                        property_members = self.extract_type_alias_members_from_type(ts_type);
 
                         self.format_ts_type(ts_type)
                     });
@@ -2120,7 +2122,7 @@ impl<'a> DocVisitor<'a> {
                         params,
                         return_type,
                         return_members,
-                        children: Vec::new(),
+                        children: property_members,
                         tags: prop_tags,
                         type_parameters,
                     });
@@ -2190,6 +2192,7 @@ impl<'a> DocVisitor<'a> {
                     let mut return_type = None;
                     let mut return_members = Vec::new();
                     let mut type_parameters = Vec::new();
+                    let mut property_members = Vec::new();
                     let type_annotation = prop.type_annotation.as_ref().map(|t| {
                         let ts_type = &t.type_annotation;
                         if let Some(metadata) =
@@ -2200,6 +2203,7 @@ impl<'a> DocVisitor<'a> {
                             return_members = metadata.return_members;
                             type_parameters = metadata.type_parameters;
                         }
+                        property_members = self.extract_type_alias_members_from_type(ts_type);
 
                         self.format_ts_type(ts_type)
                     });
@@ -2224,7 +2228,7 @@ impl<'a> DocVisitor<'a> {
                         params,
                         return_type,
                         return_members,
-                        children: Vec::new(),
+                        children: property_members,
                         tags: prop_tags,
                         type_parameters,
                     });
@@ -3204,6 +3208,38 @@ export type CommandOptions = {
         assert_eq!(items[0].children[1].name, "aliases");
         assert_eq!(items[0].children[1].signature.as_deref(), Some("string[]"));
         assert!(items[0].children[1].optional);
+    }
+
+    #[test]
+    fn interface_property_type_literal_emits_property_members() {
+        let source = r"
+/**
+ * Request options.
+ */
+export interface RequestOptions {
+    /** HTTP options. */
+    http: {
+        /** Request timeout. */
+        timeout?: number;
+        /** Request headers. */
+        headers: Record<string, string>;
+    };
+}
+";
+
+        let extractor = DocExtractor::new();
+        let items = extractor.extract_source(source, "request.ts", SourceType::ts()).unwrap();
+        let http = &items[0].children[0];
+
+        assert_eq!(http.name, "http");
+        assert_eq!(http.kind, DocItemKind::Property);
+        assert_eq!(http.children.len(), 2);
+        assert_eq!(http.children[0].name, "timeout");
+        assert_eq!(http.children[0].doc.as_deref(), Some("Request timeout."));
+        assert_eq!(http.children[0].signature.as_deref(), Some("number"));
+        assert!(http.children[0].optional);
+        assert_eq!(http.children[1].name, "headers");
+        assert_eq!(http.children[1].signature.as_deref(), Some("Record<string, string>"));
     }
 
     #[test]

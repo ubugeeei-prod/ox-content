@@ -2894,6 +2894,7 @@ mod tests {
                         params: vec![],
                         type_parameters: vec![],
                         returns: None,
+                        members: vec![],
                         optional: false,
                         readonly: false,
                         r#static: false,
@@ -3306,6 +3307,7 @@ mod tests {
                         params: vec![],
                         type_parameters: vec![],
                         returns: None,
+                        members: vec![],
                         optional: false,
                         readonly: false,
                         r#static: false,
@@ -3442,6 +3444,7 @@ mod tests {
                         params: vec![],
                         type_parameters: vec![],
                         returns: None,
+                        members: vec![],
                         optional: true,
                         readonly: false,
                         r#static: false,
@@ -4053,6 +4056,7 @@ mod tests {
             params: vec![],
             type_parameters: vec![],
             returns: None,
+            members: vec![],
             optional: false,
             readonly: true,
             r#static: false,
@@ -4117,6 +4121,7 @@ mod tests {
             }],
             type_parameters: vec![],
             returns: None,
+            members: vec![],
             optional: false,
             readonly: false,
             r#static: false,
@@ -4199,6 +4204,7 @@ mod tests {
                 },
             ],
             returns: None,
+            members: vec![],
             optional: false,
             readonly: false,
             r#static: false,
@@ -4275,6 +4281,7 @@ mod tests {
                 description: "The locale resource.".to_string(),
                 members: Vec::new(),
             }),
+            members: vec![],
             optional: false,
             readonly: false,
             r#static: false,
@@ -4312,6 +4319,7 @@ mod tests {
                 }],
                 type_parameters: vec![],
                 returns: None,
+                members: vec![],
                 optional: false,
                 readonly: false,
                 r#static: false,
@@ -4342,6 +4350,7 @@ mod tests {
                     description: "The locale resource.".to_string(),
                     members: Vec::new(),
                 }),
+                members: vec![],
                 optional: false,
                 readonly: false,
                 r#static: false,
@@ -4453,6 +4462,7 @@ mod tests {
                 params: vec![],
                 type_parameters: vec![],
                 returns: None,
+                members: vec![],
                 optional: false,
                 readonly: true,
                 r#static: false,
@@ -4477,6 +4487,7 @@ mod tests {
                 }],
                 type_parameters: vec![],
                 returns: None,
+                members: vec![],
                 optional: false,
                 readonly: false,
                 r#static: false,
@@ -5271,6 +5282,7 @@ mod tests {
                 description: "The locale resource.".to_string(),
                 members: Vec::new(),
             }),
+            members: vec![],
             optional: false,
             readonly: false,
             r#static: false,
@@ -5311,6 +5323,7 @@ mod tests {
                 description: "The locale resource.".to_string(),
                 members: Vec::new(),
             }),
+            members: vec![],
             optional: false,
             readonly: false,
             r#static: false,
@@ -5352,6 +5365,7 @@ mod tests {
             params: vec![],
             type_parameters: vec![],
             returns: None,
+            members: vec![],
             optional: false,
             readonly: false,
             r#static: is_static,
@@ -5383,6 +5397,7 @@ mod tests {
                 description: "Parsed value.".to_string(),
                 members: Vec::new(),
             }),
+            members: vec![],
             optional: true,
             readonly: false,
             r#static: false,
@@ -5506,6 +5521,7 @@ mod tests {
             params: vec![],
             type_parameters: vec![],
             returns: None,
+            members: vec![],
             optional: false,
             readonly: false,
             r#static: false,
@@ -5537,6 +5553,7 @@ mod tests {
             params: vec![param(param_name, param_type)],
             type_parameters: vec![],
             returns: None,
+            members: vec![],
             optional: false,
             readonly,
             r#static: false,
@@ -5620,6 +5637,53 @@ mod tests {
         assert!(page.contains("<h5>values</h5>"));
         assert!(page
             .contains("values: <a href=\"../type-aliases/ArgValues.md\">ArgValues</a>&lt;A&gt;;"));
+    }
+
+    #[test]
+    fn typedoc_html_type_declaration_format_table_renders_return_members_table() {
+        let mut values = return_property("values", "ArgValues<A>");
+        values.description = "Resolved values.".to_string();
+        let mut entry = test_entry("resolveArgs", "function", "/repo/src/resolver.ts", "Resolve.");
+        entry.returns = Some(ApiReturnDoc {
+            type_annotation: "object".to_string(),
+            description: "Resolved args.".to_string(),
+            members: vec![values],
+        });
+        let options = MarkdownDocsOptions {
+            type_declaration_format: MarkdownDisplayFormat::Table,
+            ..html_typedoc_options()
+        };
+        let out = generate_markdown(&type_link_module(entry), &options);
+        let page = out.get("combinators/functions/resolveArgs.md").unwrap();
+
+        assert!(page.contains("ox-api-entry__type-declaration-table"));
+        assert!(page.contains("<td><code>values</code></td>"));
+        assert!(page.contains("<a href=\"../type-aliases/ArgValues.md\">ArgValues</a>&lt;A&gt;"));
+        assert!(page.contains("Resolved values."));
+        assert!(!page.contains("ox-api-entry__return-members"));
+    }
+
+    #[test]
+    fn typedoc_html_type_declaration_format_list_renders_return_members_list() {
+        let mut values = return_property("values", "ArgValues<A>");
+        values.description = "Resolved values.".to_string();
+        let mut entry = test_entry("resolveArgs", "function", "/repo/src/resolver.ts", "Resolve.");
+        entry.returns = Some(ApiReturnDoc {
+            type_annotation: "object".to_string(),
+            description: "Resolved args.".to_string(),
+            members: vec![values],
+        });
+        let options = MarkdownDocsOptions {
+            type_declaration_format: MarkdownDisplayFormat::List,
+            ..html_typedoc_options()
+        };
+        let out = generate_markdown(&type_link_module(entry), &options);
+        let page = out.get("combinators/functions/resolveArgs.md").unwrap();
+
+        assert!(page.contains("ox-api-entry__type-declaration-list"));
+        assert!(page.contains("ox-api-entry__type-declaration-member"));
+        assert!(page.contains("Resolved values."));
+        assert!(!page.contains("ox-api-entry__return-members"));
     }
 
     #[test]
@@ -6107,6 +6171,7 @@ mod tests {
             params: vec![],
             type_parameters: vec![],
             returns: None,
+            members: vec![],
             optional: false,
             readonly: false,
             r#static: false,
@@ -6124,6 +6189,88 @@ mod tests {
 
         assert!(page.contains(">deprecated</span>"));
         assert!(page.contains("since 1.0.0"));
+    }
+
+    #[test]
+    fn typedoc_html_property_members_format_table_renders_owned_members() {
+        let mut http = member("http", "property", false);
+        http.description = "HTTP options.".to_string();
+        http.type_annotation =
+            Some("{ timeout?: number; headers: Record<string, string> }".to_string());
+        let mut timeout = member("timeout", "property", false);
+        timeout.description = "Request timeout.".to_string();
+        timeout.type_annotation = Some("number".to_string());
+        timeout.optional = true;
+        http.members = vec![timeout];
+
+        let mut entry = test_entry("Options", "interface", "/repo/src/o.ts", "Options.");
+        entry.members = vec![http];
+        let out = generate_markdown(
+            &lifecycle_module(entry),
+            &MarkdownDocsOptions {
+                interface_properties_format: MarkdownDisplayFormat::Table,
+                property_members_format: MarkdownDisplayFormat::Table,
+                ..html_typedoc_options()
+            },
+        );
+        let page = out.get("combinators/interfaces/Options.md").unwrap();
+
+        assert!(page.contains("ox-api-entry__property-members-row"));
+        assert!(page.contains("ox-api-entry__property-members-table"));
+        assert!(page
+            .contains("<td><code>timeout</code><span class=\"ox-api-badge\">optional</span></td>"));
+        assert!(page.contains("Request timeout."));
+    }
+
+    #[test]
+    fn typedoc_html_property_members_format_list_renders_owned_members() {
+        let mut http = member("http", "property", false);
+        http.description = "HTTP options.".to_string();
+        http.type_annotation = Some("{ timeout?: number }".to_string());
+        let mut timeout = member("timeout", "property", false);
+        timeout.description = "Request timeout.".to_string();
+        timeout.type_annotation = Some("number".to_string());
+        timeout.optional = true;
+        http.members = vec![timeout];
+
+        let mut entry = test_entry("Options", "interface", "/repo/src/o.ts", "Options.");
+        entry.members = vec![http];
+        let out = generate_markdown(
+            &lifecycle_module(entry),
+            &MarkdownDocsOptions {
+                interface_properties_format: MarkdownDisplayFormat::List,
+                property_members_format: MarkdownDisplayFormat::List,
+                ..html_typedoc_options()
+            },
+        );
+        let page = out.get("combinators/interfaces/Options.md").unwrap();
+
+        assert!(page.contains("ox-api-entry__property-members-list"));
+        assert!(page.contains("ox-api-entry__property-member"));
+        assert!(page.contains("Request timeout."));
+    }
+
+    #[test]
+    fn typedoc_html_property_members_format_none_omits_owned_members() {
+        let mut http = member("http", "property", false);
+        http.description = "HTTP options.".to_string();
+        http.type_annotation = Some("{ timeout?: number }".to_string());
+        http.members = vec![member("timeout", "property", false)];
+
+        let mut entry = test_entry("Options", "interface", "/repo/src/o.ts", "Options.");
+        entry.members = vec![http];
+        let out = generate_markdown(
+            &lifecycle_module(entry),
+            &MarkdownDocsOptions {
+                interface_properties_format: MarkdownDisplayFormat::Table,
+                property_members_format: MarkdownDisplayFormat::None,
+                ..html_typedoc_options()
+            },
+        );
+        let page = out.get("combinators/interfaces/Options.md").unwrap();
+
+        assert!(!page.contains("ox-api-entry__property-members-table"));
+        assert!(!page.contains("ox-api-entry__property-members-list"));
     }
 
     #[test]
@@ -6401,6 +6548,7 @@ mod tests {
             params: vec![],
             type_parameters: vec![],
             returns: None,
+            members: vec![],
             optional: true,
             readonly: false,
             r#static: false,
@@ -6467,6 +6615,7 @@ mod tests {
             params: vec![],
             type_parameters: vec![],
             returns: None,
+            members: vec![],
             optional: true,
             readonly: false,
             r#static: false,
@@ -6817,6 +6966,7 @@ mod tests {
                         params: vec![],
                         type_parameters: vec![],
                         returns: None,
+                        members: vec![],
                         optional: false,
                         readonly: false,
                         r#static: false,
@@ -6905,6 +7055,7 @@ mod tests {
                         params: vec![],
                         type_parameters: vec![],
                         returns: None,
+                        members: vec![],
                         optional: false,
                         readonly: true,
                         r#static: false,
@@ -6933,6 +7084,7 @@ mod tests {
                             description: "Run result.".to_string(),
                             members: Vec::new(),
                         }),
+                        members: vec![],
                         optional: false,
                         readonly: false,
                         r#static: false,
