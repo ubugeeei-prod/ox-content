@@ -87,6 +87,10 @@ fn render_since_section(
     out
 }
 
+fn type_parameters_have_descriptions(type_parameters: &[ApiTypeParamDoc]) -> bool {
+    type_parameters.iter().any(|type_param| !type_param.description.trim().is_empty())
+}
+
 /// Renders the per-page stats summary as a single italic Markdown line.
 pub(super) fn render_stats_markdown(stats: &EntryStats, module_count: Option<usize>) -> String {
     let mut out = StringBuilder::new();
@@ -328,12 +332,28 @@ fn push_type_parameters(
     let skip: HashSet<&str> = type_parameters.iter().map(|param| param.name.as_str()).collect();
     match effective_parameters_format(options) {
         MarkdownDisplayFormat::Table => {
-            out.push_str("| Name | Description |\n| --- | --- |\n");
+            let has_description = type_parameters_have_descriptions(type_parameters);
+            if has_description {
+                out.push_str("| Name | Description |\n| --- | --- |\n");
+            } else {
+                out.push_str("| Name |\n| --- |\n");
+            }
             for type_param in type_parameters {
                 out.push_str("| ");
                 out.push_str(&type_param_name_cell(type_param, context, &skip));
-                out.push_str(" | ");
-                push_table_cell(out, &inline(&type_param.description, context));
+                if has_description {
+                    out.push_str(" | ");
+                    if type_param.description.trim().is_empty() {
+                        out.push('-');
+                    } else {
+                        let description = inline(&type_param.description, context);
+                        if description.is_empty() {
+                            out.push('-');
+                        } else {
+                            push_table_cell(out, &description);
+                        }
+                    }
+                }
                 out.push_str(" |\n");
             }
         }
@@ -781,12 +801,29 @@ fn render_member_parameter_sections_pure(
                 member.type_parameters.iter().map(|param| param.name.as_str()).collect();
             match effective_parameters_format(options) {
                 MarkdownDisplayFormat::Table => {
-                    out.push_str("| Name | Description |\n| --- | --- |\n");
+                    let has_description =
+                        type_parameters_have_descriptions(&member.type_parameters);
+                    if has_description {
+                        out.push_str("| Name | Description |\n| --- | --- |\n");
+                    } else {
+                        out.push_str("| Name |\n| --- |\n");
+                    }
                     for type_param in &member.type_parameters {
                         out.push_str("| ");
                         out.push_str(&type_param_name_cell(type_param, context, &skip));
-                        out.push_str(" | ");
-                        push_table_cell(&mut out, &inline(&type_param.description, context));
+                        if has_description {
+                            out.push_str(" | ");
+                            if type_param.description.trim().is_empty() {
+                                out.push('-');
+                            } else {
+                                let description = inline(&type_param.description, context);
+                                if description.is_empty() {
+                                    out.push('-');
+                                } else {
+                                    push_table_cell(&mut out, &description);
+                                }
+                            }
+                        }
                         out.push_str(" |\n");
                     }
                 }

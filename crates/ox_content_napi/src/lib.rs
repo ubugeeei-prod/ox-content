@@ -4593,7 +4593,9 @@ export function plugin<Id, PluginExt>(options: {
         );
         let page = markdown.get("default/functions/plugin.md").unwrap();
 
-        assert!(page.contains("| `PluginExt` *extends* [`PluginExtension`](../type-aliases/PluginExtension.md)\\<`Extension`, [`DefaultGunshiParams`](../type-aliases/DefaultGunshiParams.md)\\> = [`PluginExtension`](../type-aliases/PluginExtension.md)\\<`Extension`, `ResolvedDepExtensions`\\> |  |"));
+        assert!(page.contains("| Name |\n| --- |"));
+        assert!(!page.contains("| Name | Description |"));
+        assert!(page.contains("| `PluginExt` *extends* [`PluginExtension`](../type-aliases/PluginExtension.md)\\<`Extension`, [`DefaultGunshiParams`](../type-aliases/DefaultGunshiParams.md)\\> = [`PluginExtension`](../type-aliases/PluginExtension.md)\\<`Extension`, `ResolvedDepExtensions`\\> |"));
         assert!(!page.contains("\\<\n"));
         assert!(!page.contains("ResolvedDepExtensions`\n"));
     }
