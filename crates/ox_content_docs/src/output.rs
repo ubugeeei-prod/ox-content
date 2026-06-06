@@ -32,6 +32,14 @@ pub struct DocsOutputOptions {
     pub base_path: Option<String>,
     /// Output path strategy used for navigation metadata.
     pub path_strategy: MarkdownPathStrategy,
+    /// TypeDoc-style group order for nav groups.
+    pub group_order: Option<Vec<String>>,
+    /// TypeDoc-style sort strategies for nav leaf entries.
+    pub sort: Option<Vec<String>>,
+    /// Whether to sort entry points alphabetically.
+    pub sort_entry_points: bool,
+    /// TypeDoc-style kind ranking for nav groups.
+    pub kind_sort_order: Option<Vec<String>>,
 }
 
 /// Error returned while writing generated docs.
@@ -86,10 +94,10 @@ pub fn write_docs_output(
                 extracted_docs,
                 Some(base_path),
                 options.path_strategy,
-                None,
-                None,
-                true,
-                None,
+                options.group_order.as_deref(),
+                options.sort.as_deref(),
+                options.sort_entry_points,
+                options.kind_sort_order.as_deref(),
             );
             fs::write(
                 out_dir.join(DOCS_NAV_FILE),
@@ -186,6 +194,10 @@ mod tests {
             generated_at: "2026-01-01T00:00:00.000Z".to_string(),
             base_path: None,
             path_strategy: MarkdownPathStrategy::Flat,
+            group_order: None,
+            sort: None,
+            sort_entry_points: true,
+            kind_sort_order: None,
         }
     }
 
@@ -318,6 +330,10 @@ mod tests {
             generated_at: "2026-01-01T00:00:00.000Z".to_string(),
             base_path: Some("/api".to_string()),
             path_strategy: MarkdownPathStrategy::TypeDoc,
+            group_order: None,
+            sort: None,
+            sort_entry_points: true,
+            kind_sort_order: None,
         };
         write_docs_output(&docs, &out_dir, Some(&extracted), &output_options).unwrap();
 

@@ -911,6 +911,21 @@ export type DocsEntryPoint =
 
 export type MarkdownDisplayFormat = "none" | "list" | "table";
 
+export type DocsSortStrategy =
+  | "source-order"
+  | "alphabetical"
+  | "alphabetical-ignoring-documents"
+  | "enum-value-ascending"
+  | "enum-value-descending"
+  | "static-first"
+  | "instance-first"
+  | "visibility"
+  | "required-first"
+  | "kind"
+  | "external-last"
+  | "documents-first"
+  | "documents-last";
+
 /**
  * Resolved public API entry point.
  */
@@ -1084,6 +1099,39 @@ export interface DocsOptions {
   typeParameters?: boolean;
 
   /**
+   * Emit the stats summary line on generated index pages.
+   * @default true
+   */
+  renderStats?: boolean;
+
+  /**
+   * Emit the generated-by attribution on generated root index pages.
+   * @default true
+   */
+  renderGeneratedBy?: boolean;
+
+  /**
+   * TypeDoc-style group order for module index sections and nav groups.
+   */
+  groupOrder?: string[];
+
+  /**
+   * TypeDoc-style sort strategies applied to entries and members.
+   */
+  sort?: DocsSortStrategy[];
+
+  /**
+   * Preserve caller-provided entry point order when false.
+   * @default true
+   */
+  sortEntryPoints?: boolean;
+
+  /**
+   * TypeDoc-style declaration kind ranking for module sections and nav groups.
+   */
+  kindSortOrder?: string[];
+
+  /**
    * Generate navigation metadata file.
    * @default true
    */
@@ -1119,6 +1167,12 @@ export interface ResolvedDocsOptions {
   propertyMembersFormat: MarkdownDisplayFormat;
   typeDeclarationFormat: MarkdownDisplayFormat;
   typeParameters: boolean;
+  renderStats: boolean;
+  renderGeneratedBy: boolean;
+  groupOrder?: string[];
+  sort?: DocsSortStrategy[];
+  sortEntryPoints: boolean;
+  kindSortOrder?: string[];
   generateNav: boolean;
 }
 

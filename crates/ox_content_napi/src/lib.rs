@@ -396,6 +396,14 @@ pub struct JsDocsOutputOptions {
     pub base_path: Option<String>,
     #[napi(ts_type = "'flat' | 'typedoc'")]
     pub path_strategy: Option<String>,
+    /// TypeDoc-style group order for generated nav groups.
+    pub group_order: Option<Vec<String>>,
+    /// TypeDoc-style sort strategies for generated nav leaf entries.
+    pub sort: Option<Vec<String>>,
+    /// TypeDoc-style `sortEntryPoints`: when `false`, preserve module order.
+    pub sort_entry_points: Option<bool>,
+    /// TypeDoc-style kind ranking for generated nav groups.
+    pub kind_sort_order: Option<Vec<String>>,
 }
 
 /// Entry point used to group generated API docs.
@@ -1318,6 +1326,10 @@ fn convert_docs_output_options(options: Option<JsDocsOutputOptions>) -> DocsOutp
         generated_at: options.generated_at.unwrap_or_default(),
         base_path: options.base_path,
         path_strategy: parse_markdown_path_strategy(options.path_strategy.as_deref()),
+        group_order: options.group_order,
+        sort: options.sort,
+        sort_entry_points: options.sort_entry_points.unwrap_or(true),
+        kind_sort_order: options.kind_sort_order,
     }
 }
 
@@ -5389,25 +5401,46 @@ export function plugin<Id, PluginExt>(options: {
             source_path: None,
             examples: None,
             tags: None,
-            entries: vec![JsDocsMarkdownEntry {
-                name: "cli".to_string(),
-                kind: "function".to_string(),
-                description: "Runs the CLI.".to_string(),
-                params: None,
-                returns: None,
-                examples: None,
-                tags: None,
-                private: false,
-                file: "/repo/src/cli.ts".to_string(),
-                line: 1,
-                end_line: 1,
-                signature: Some("export function cli(): void".to_string()),
-                extends: None,
-                implements: None,
-                has_body: None,
-                members: None,
-                type_parameters: None,
-            }],
+            entries: vec![
+                JsDocsMarkdownEntry {
+                    name: "cli".to_string(),
+                    kind: "function".to_string(),
+                    description: "Runs the CLI.".to_string(),
+                    params: None,
+                    returns: None,
+                    examples: None,
+                    tags: None,
+                    private: false,
+                    file: "/repo/src/cli.ts".to_string(),
+                    line: 1,
+                    end_line: 1,
+                    signature: Some("export function cli(): void".to_string()),
+                    extends: None,
+                    implements: None,
+                    has_body: None,
+                    members: None,
+                    type_parameters: None,
+                },
+                JsDocsMarkdownEntry {
+                    name: "version".to_string(),
+                    kind: "variable".to_string(),
+                    description: "Package version.".to_string(),
+                    params: None,
+                    returns: None,
+                    examples: None,
+                    tags: None,
+                    private: false,
+                    file: "/repo/src/version.ts".to_string(),
+                    line: 2,
+                    end_line: 2,
+                    signature: Some("export const version = '1.0.0'".to_string()),
+                    extends: None,
+                    implements: None,
+                    has_body: None,
+                    members: None,
+                    type_parameters: None,
+                },
+            ],
         }];
 
         let markdown = generate_docs_markdown(
@@ -5433,16 +5466,26 @@ export function plugin<Id, PluginExt>(options: {
                 generated_at: Some("2026-01-01T00:00:00.000Z".to_string()),
                 base_path: Some("/api".to_string()),
                 path_strategy: Some("typedoc".to_string()),
+                group_order: Some(vec!["Variables".to_string(), "Functions".to_string()]),
+                sort: None,
+                sort_entry_points: None,
+                kind_sort_order: None,
             }),
         )
         .unwrap();
 
         assert!(out_dir.join("default/index.md").exists());
         assert!(out_dir.join("default/functions/cli.md").exists());
+        assert!(out_dir.join("default/variables/version.md").exists());
 
         let nav = fs::read_to_string(out_dir.join("nav.ts")).unwrap();
         assert!(nav.contains(r#""title": "default""#));
         assert!(nav.contains("\"/api/default/functions/cli\""));
+        assert!(nav.contains("\"/api/default/variables/version\""));
+        assert!(
+            nav.find(r#""title": "Variables""#).unwrap()
+                < nav.find(r#""title": "Functions""#).unwrap()
+        );
 
         fs::remove_dir_all(&out_dir).unwrap();
     }
