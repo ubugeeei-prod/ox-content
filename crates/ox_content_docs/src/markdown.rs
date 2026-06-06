@@ -4395,34 +4395,7 @@ mod tests {
     fn typedoc_markdown_renders_function_valued_property_details() {
         let mut schema =
             test_entry("ArgSchema", "interface", "/repo/src/schema.ts", "Argument schema.");
-        schema.members = vec![ApiDocMember {
-            name: "parse".to_string(),
-            kind: "property".to_string(),
-            description: "Parses a raw value.".to_string(),
-            signature: None,
-            type_annotation: Some("(value: string) => string | undefined".to_string()),
-            params: vec![ApiParamDoc {
-                name: "value".to_string(),
-                type_annotation: "string".to_string(),
-                description: "Raw string value from command line.".to_string(),
-                optional: false,
-                default_value: None,
-            }],
-            type_parameters: vec![],
-            returns: Some(ApiReturnDoc {
-                type_annotation: "string | undefined".to_string(),
-                description: "Parsed value.".to_string(),
-                members: Vec::new(),
-            }),
-            optional: true,
-            readonly: false,
-            r#static: false,
-            private: false,
-            tags: vec![],
-            implementation_of: vec![],
-            line: 5,
-            end_line: 10,
-        }];
+        schema.members = vec![function_valued_parse_member()];
         let docs = vec![ApiDocModule {
             description: String::new(),
             file: "default".to_string(),
@@ -4442,7 +4415,8 @@ mod tests {
         );
         let page = markdown.get("default/interfaces/ArgSchema.md").unwrap();
 
-        assert!(page.contains("| `parse` _(optional)_ | `(value: string) => string \\| undefined` | Parses a raw value. Returns: Parsed value. |"));
+        assert!(page.contains("| `parse` _(optional)_ | `(value: string) => string \\| undefined` | Parses a raw value. |"));
+        assert!(!page.contains("Parses a raw value. Returns: Parsed value."));
         assert!(page.contains("### parse Parameters"));
         assert!(page.contains("| `value` | `string` | Raw string value from command line. |"));
         assert!(page.contains("### parse Returns"));
@@ -5389,6 +5363,37 @@ mod tests {
         }
     }
 
+    fn function_valued_parse_member() -> ApiDocMember {
+        ApiDocMember {
+            name: "parse".to_string(),
+            kind: "property".to_string(),
+            description: "Parses a raw value.".to_string(),
+            signature: None,
+            type_annotation: Some("(value: string) => string | undefined".to_string()),
+            params: vec![ApiParamDoc {
+                name: "value".to_string(),
+                type_annotation: "string".to_string(),
+                description: "Raw string value from command line.".to_string(),
+                optional: false,
+                default_value: None,
+            }],
+            type_parameters: vec![],
+            returns: Some(ApiReturnDoc {
+                type_annotation: "string | undefined".to_string(),
+                description: "Parsed value.".to_string(),
+                members: Vec::new(),
+            }),
+            optional: true,
+            readonly: false,
+            r#static: false,
+            private: false,
+            tags: vec![],
+            implementation_of: vec![],
+            line: 5,
+            end_line: 10,
+        }
+    }
+
     fn type_param(name: &str) -> ApiParamDoc {
         ApiParamDoc {
             name: name.to_string(),
@@ -6119,6 +6124,30 @@ mod tests {
 
         assert!(page.contains(">deprecated</span>"));
         assert!(page.contains("since 1.0.0"));
+    }
+
+    #[test]
+    fn typedoc_html_renders_function_valued_property_return_once() {
+        let mut entry =
+            test_entry("ArgSchema", "interface", "/repo/src/schema.ts", "Argument schema.");
+        entry.members = vec![function_valued_parse_member()];
+        let out = generate_markdown(
+            &lifecycle_module(entry),
+            &MarkdownDocsOptions {
+                interface_properties_format: MarkdownDisplayFormat::Table,
+                parameters_format: MarkdownDisplayFormat::Table,
+                ..html_typedoc_options()
+            },
+        );
+        let page = out.get("combinators/interfaces/ArgSchema.md").unwrap();
+
+        assert!(page.contains("Parses a raw value."));
+        assert!(page.contains("<table class=\"ox-api-entry__member-params-table\">"));
+        assert!(page.contains(
+            "<div class=\"ox-api-entry__member-return\"><span>Returns</span> Parsed value.</div>"
+        ));
+        assert_eq!(page.matches("Parsed value.").count(), 1);
+        assert!(!page.contains("ox-api-entry__member-detail-section--returns"));
     }
 
     #[test]

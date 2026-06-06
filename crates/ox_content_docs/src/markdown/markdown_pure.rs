@@ -467,7 +467,7 @@ fn push_return_members(
         out.push_str("\n\n```ts\n");
         out.push_str(&return_member_signature(member));
         out.push_str("\n```\n\n");
-        let description = member_description(member, context);
+        let description = member_description(member, context, true);
         if !description.is_empty() {
             out.push_str(&description);
             out.push_str("\n\n");
@@ -936,7 +936,7 @@ fn render_member_group_pure(
                 out.push(' ');
                 out.push_str(&linked_type_span(member_type, context.link_context));
             }
-            let description = member_description(member, context.link_context);
+            let description = member_description(member, context.link_context, false);
             if !description.is_empty() {
                 out.push_str(" - ");
                 out.push_str(&description);
@@ -960,7 +960,7 @@ fn render_member_group_pure(
             }
             out.push_str(&linked_type_cell(member_type(member), context.link_context));
             out.push_str(" | ");
-            push_table_cell(out, &member_description(member, context.link_context));
+            push_table_cell(out, &member_description(member, context.link_context, false));
             out.push_str(" |\n");
         }
     }
@@ -1135,7 +1135,11 @@ fn member_type(member: &ApiDocMember) -> &str {
         .unwrap_or_default()
 }
 
-fn member_description(member: &ApiDocMember, context: Option<&MarkdownLinkContext<'_>>) -> String {
+fn member_description(
+    member: &ApiDocMember,
+    context: Option<&MarkdownLinkContext<'_>>,
+    include_returns: bool,
+) -> String {
     let mut description = String::new();
     // Lifecycle tags cannot hold a GitHub alert inside a table cell, so surface
     // them as a short bold marker prefix instead.
@@ -1166,11 +1170,13 @@ fn member_description(member: &ApiDocMember, context: Option<&MarkdownLinkContex
     if !member.description.is_empty() {
         push_part(&mut description, &inline(&member.description, context));
     }
-    if let Some(returns) = &member.returns {
-        if !returns.description.is_empty() {
-            push_part(&mut description, "Returns:");
-            description.push(' ');
-            description.push_str(&inline(&returns.description, context));
+    if include_returns {
+        if let Some(returns) = &member.returns {
+            if !returns.description.is_empty() {
+                push_part(&mut description, "Returns:");
+                description.push(' ');
+                description.push_str(&inline(&returns.description, context));
+            }
         }
     }
     // `@since` / `@version` render inline (TypeDoc shows them in the cell); a
