@@ -3880,6 +3880,149 @@ mod tests {
     }
 
     #[test]
+    fn markdown_type_parameter_table_omits_description_column_when_all_empty() {
+        let mut entry = test_entry("make", "function", "src/make.ts", "Make a thing.");
+        entry.type_parameters = vec![
+            ApiTypeParamDoc {
+                name: "G".to_string(),
+                constraint: Some("Base".to_string()),
+                default: Some("Default".to_string()),
+                description: String::new(),
+            },
+            ApiTypeParamDoc {
+                name: "V".to_string(),
+                constraint: None,
+                default: None,
+                description: "   ".to_string(),
+            },
+        ];
+        let docs = vec![ApiDocModule {
+            description: String::new(),
+            file: "mod".to_string(),
+            source_path: String::new(),
+            examples: vec![],
+            tags: vec![],
+            entries: vec![entry],
+        }];
+
+        let markdown = generate_markdown(
+            &docs,
+            &MarkdownDocsOptions {
+                path_strategy: MarkdownPathStrategy::TypeDoc,
+                render_style: MarkdownRenderStyle::Markdown,
+                parameters_format: MarkdownDisplayFormat::Table,
+                ..MarkdownDocsOptions::default()
+            },
+        );
+        let page = markdown.get("mod/functions/make.md").unwrap();
+
+        assert!(page.contains("## Type Parameters"));
+        assert!(page.contains("| Name |\n| --- |"));
+        assert!(!page.contains("| Name | Description |"));
+        assert!(page.contains("| `G` *extends* `Base` = `Default` |"));
+        assert!(page.contains("| `V` |"));
+        assert!(!page.contains("|  |"));
+    }
+
+    #[test]
+    fn markdown_type_parameter_table_renders_dash_for_missing_descriptions() {
+        let mut entry = test_entry("make", "function", "src/make.ts", "Make a thing.");
+        entry.type_parameters = vec![
+            ApiTypeParamDoc {
+                name: "T".to_string(),
+                constraint: None,
+                default: None,
+                description: "Value type.".to_string(),
+            },
+            ApiTypeParamDoc {
+                name: "G".to_string(),
+                constraint: Some("Base".to_string()),
+                default: Some("Default".to_string()),
+                description: String::new(),
+            },
+        ];
+        let docs = vec![ApiDocModule {
+            description: String::new(),
+            file: "mod".to_string(),
+            source_path: String::new(),
+            examples: vec![],
+            tags: vec![],
+            entries: vec![entry],
+        }];
+
+        let markdown = generate_markdown(
+            &docs,
+            &MarkdownDocsOptions {
+                path_strategy: MarkdownPathStrategy::TypeDoc,
+                render_style: MarkdownRenderStyle::Markdown,
+                parameters_format: MarkdownDisplayFormat::Table,
+                ..MarkdownDocsOptions::default()
+            },
+        );
+        let page = markdown.get("mod/functions/make.md").unwrap();
+
+        assert!(page.contains("| Name | Description |\n| --- | --- |"));
+        assert!(page.contains("| `T` | Value type. |"));
+        assert!(page.contains("| `G` *extends* `Base` = `Default` | - |"));
+        assert!(!page.contains("| `G` *extends* `Base` = `Default` |  |"));
+    }
+
+    #[test]
+    fn html_type_parameter_tables_follow_empty_description_policy() {
+        let mut all_empty = test_entry("make", "function", "src/make.ts", "Make a thing.");
+        all_empty.type_parameters = vec![ApiTypeParamDoc {
+            name: "G".to_string(),
+            constraint: Some("Base".to_string()),
+            default: Some("Default".to_string()),
+            description: String::new(),
+        }];
+
+        let mut mixed = test_entry("build", "function", "src/build.ts", "Build a thing.");
+        mixed.type_parameters = vec![
+            ApiTypeParamDoc {
+                name: "T".to_string(),
+                constraint: None,
+                default: None,
+                description: "Value type.".to_string(),
+            },
+            ApiTypeParamDoc {
+                name: "G".to_string(),
+                constraint: Some("Base".to_string()),
+                default: Some("Default".to_string()),
+                description: String::new(),
+            },
+        ];
+
+        let docs = vec![ApiDocModule {
+            description: String::new(),
+            file: "mod".to_string(),
+            source_path: String::new(),
+            examples: vec![],
+            tags: vec![],
+            entries: vec![all_empty, mixed],
+        }];
+        let html = generate_markdown(
+            &docs,
+            &MarkdownDocsOptions {
+                path_strategy: MarkdownPathStrategy::TypeDoc,
+                render_style: MarkdownRenderStyle::Html,
+                parameters_format: MarkdownDisplayFormat::Table,
+                ..MarkdownDocsOptions::default()
+            },
+        );
+        let all_empty_page = html.get("mod/functions/make.md").unwrap();
+        let mixed_page = html.get("mod/functions/build.md").unwrap();
+
+        assert!(all_empty_page.contains("<thead><tr><th>Name</th></tr></thead>"));
+        assert!(!all_empty_page.contains("<th>Description</th>"));
+        assert!(!all_empty_page.contains("<td></td>"));
+
+        assert!(mixed_page.contains("<thead><tr><th>Name</th><th>Description</th></tr></thead>"));
+        assert!(mixed_page.contains("<td>Value type.</td>"));
+        assert!(mixed_page.contains("<td>-</td>"));
+    }
+
+    #[test]
     fn markdown_property_display_format_controls_property_groups() {
         let mut entry = test_entry("Command", "interface", "src/types.ts", "Command options.");
         entry.members = vec![ApiDocMember {
@@ -4022,12 +4165,20 @@ mod tests {
                 optional: false,
                 default_value: None,
             }],
-            type_parameters: vec![ApiTypeParamDoc {
-                name: "L".to_string(),
-                constraint: Some("Record<string, unknown>".to_string()),
-                default: Some("DefaultExtensions".to_string()),
-                description: "Extension context.".to_string(),
-            }],
+            type_parameters: vec![
+                ApiTypeParamDoc {
+                    name: "L".to_string(),
+                    constraint: Some("Record<string, unknown>".to_string()),
+                    default: Some("DefaultExtensions".to_string()),
+                    description: "Extension context.".to_string(),
+                },
+                ApiTypeParamDoc {
+                    name: "Fallback".to_string(),
+                    constraint: None,
+                    default: None,
+                    description: String::new(),
+                },
+            ],
             returns: None,
             optional: false,
             readonly: false,
@@ -4062,6 +4213,8 @@ mod tests {
         assert!(type_parameters < parameters);
         assert!(page.contains("`L` *extends*"));
         assert!(page.contains("Extension context."));
+        assert!(page.contains("| `Fallback` | - |"));
+        assert!(!page.contains("| `Fallback` |  |"));
 
         let html = generate_markdown(
             &docs,
@@ -4075,6 +4228,7 @@ mod tests {
         let page = html.get("mod/interfaces/PluginContext.md").unwrap();
         assert!(page.contains("<h6>Type Parameters</h6>"));
         assert!(page.contains("Extension context."));
+        assert!(page.contains("<td><code>Fallback</code></td><td>-</td>"));
     }
 
     #[test]
@@ -5474,7 +5628,9 @@ mod tests {
         let out = generate_markdown(&type_link_module(entry), &options);
         let page = out.get("combinators/functions/make.md").unwrap();
 
-        assert!(page.contains("| `PluginExt` *extends* [`PluginExtension`](../type-aliases/PluginExtension.md)\\<`Extension`, [`DefaultGunshiParams`](../type-aliases/DefaultGunshiParams.md)\\> = [`PluginExtension`](../type-aliases/PluginExtension.md)\\<`Extension`, `ResolvedDepExtensions`\\> |  |"));
+        assert!(page.contains("| Name |\n| --- |"));
+        assert!(!page.contains("| Name | Description |"));
+        assert!(page.contains("| `PluginExt` *extends* [`PluginExtension`](../type-aliases/PluginExtension.md)\\<`Extension`, [`DefaultGunshiParams`](../type-aliases/DefaultGunshiParams.md)\\> = [`PluginExtension`](../type-aliases/PluginExtension.md)\\<`Extension`, `ResolvedDepExtensions`\\> |"));
         assert!(!page.contains("\\<\n"));
         assert!(!page.contains("ResolvedDepExtensions`\n"));
     }
@@ -5626,6 +5782,8 @@ mod tests {
         let out = generate_markdown(&type_link_module(entry), &html_typedoc_options());
         let page = out.get("combinators/functions/make.md").unwrap();
 
+        assert!(page.contains("<thead><tr><th>Name</th></tr></thead>"));
+        assert!(!page.contains("<th>Description</th>"));
         assert!(page.contains("= <code><a href=\"../type-aliases/PluginExtension.md\">PluginExtension</a>&lt;Extension, ResolvedDepExtensions&gt;</code>"));
         assert!(!page.contains("&lt;\n"));
         assert!(!page.contains("ResolvedDepExtensions\n"));
