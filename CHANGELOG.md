@@ -1,5 +1,15 @@
 # Changelog
 
+## [2.61.0] - 2026-06-06
+
+### Features
+
+- support NAPI docs options (#339)
+
+### Bug Fixes
+
+- render nested HTML member formats (#338)
+
 ## [2.60.0] - 2026-06-06
 
 ## [2.59.0] - 2026-06-06
