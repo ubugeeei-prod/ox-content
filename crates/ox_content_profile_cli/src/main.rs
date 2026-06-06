@@ -481,6 +481,7 @@ fn to_api_member(member: NormalizedMember) -> ApiDocMember {
         params: member.params.into_iter().map(to_api_param).collect(),
         type_parameters: member.type_parameters.into_iter().map(to_api_type_param).collect(),
         returns: member.returns.map(to_api_return),
+        members: member.members.into_iter().map(to_api_member).collect(),
         optional: member.optional,
         readonly: member.readonly,
         r#static: member.r#static,

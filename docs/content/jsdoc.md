@@ -46,24 +46,27 @@ To turn it off entirely, set `docs: { enabled: false }`.
 
 ## Options
 
-| Option         | Default                                          | Description                                                                   |
-| -------------- | ------------------------------------------------ | ----------------------------------------------------------------------------- |
-| `enabled`      | `true`                                           | Enable/disable docs generation.                                               |
-| `src`          | `['./src']`                                      | Source directories to scan.                                                   |
-| `out`          | `'docs/api'`                                     | Output directory for generated docs.                                          |
-| `include`      | `['**/*.ts', '**/*.tsx', …]`                     | Glob patterns of files to include.                                            |
-| `exclude`      | `['**/*.test.*', '**/*.spec.*', 'node_modules']` | Glob patterns to exclude.                                                     |
-| `entryPoints`  | —                                                | Public API entry points used to group re-exported docs (see below).           |
-| `format`       | `'markdown'`                                     | `'markdown'`, `'json'`, or `'html'`.                                          |
-| `private`      | `false`                                          | Include `@private` members.                                                   |
-| `internal`     | `false`                                          | Include `@internal` members.                                                  |
-| `toc`          | `true`                                           | Emit a table of contents per file.                                            |
-| `groupBy`      | `'file'`                                         | Group output by `'file'` or `'category'`.                                     |
-| `githubUrl`    | —                                                | Repository URL; when set, signatures link to their source lines.              |
-| `linkStyle`    | `'markdown'`                                     | Internal link style: `'markdown'` (`.md` links) or `'clean'` (extensionless). |
-| `basePath`     | `'/api'`                                         | Route prefix for generated links and nav metadata.                            |
-| `pathStrategy` | `'flat'`                                         | Output layout: `'flat'` or `'typedoc'` (see below).                           |
-| `generateNav`  | `true`                                           | Emit the `nav.ts` navigation file.                                            |
+| Option                  | Default                                          | Description                                                                         |
+| ----------------------- | ------------------------------------------------ | ----------------------------------------------------------------------------------- |
+| `enabled`               | `true`                                           | Enable/disable docs generation.                                                     |
+| `src`                   | `['./src']`                                      | Source directories to scan.                                                         |
+| `out`                   | `'docs/api'`                                     | Output directory for generated docs.                                                |
+| `include`               | `['**/*.ts', '**/*.tsx', …]`                     | Glob patterns of files to include.                                                  |
+| `exclude`               | `['**/*.test.*', '**/*.spec.*', 'node_modules']` | Glob patterns to exclude.                                                           |
+| `entryPoints`           | —                                                | Public API entry points used to group re-exported docs (see below).                 |
+| `format`                | `'markdown'`                                     | `'markdown'`, `'json'`, or `'html'`.                                                |
+| `private`               | `false`                                          | Include `@private` members.                                                         |
+| `internal`              | `false`                                          | Include `@internal` members.                                                        |
+| `toc`                   | `true`                                           | Emit a table of contents per file.                                                  |
+| `groupBy`               | `'file'`                                         | Group output by `'file'` or `'category'`.                                           |
+| `githubUrl`             | —                                                | Repository URL; when set, signatures link to their source lines.                    |
+| `linkStyle`             | `'markdown'`                                     | Internal link style: `'markdown'` (`.md` links) or `'clean'` (extensionless).       |
+| `basePath`              | `'/api'`                                         | Route prefix for generated links and nav metadata.                                  |
+| `pathStrategy`          | `'flat'`                                         | Output layout: `'flat'` or `'typedoc'` (see below).                                 |
+| `renderStyle`           | `'html'`                                         | Output renderer: themed HTML-in-Markdown or plain Markdown.                         |
+| `propertyMembersFormat` | `'none'`                                         | Display nested object-literal members owned by properties as `'list'` or `'table'`. |
+| `typeDeclarationFormat` | `'none'`                                         | Display return type declaration members as `'list'` or `'table'`.                   |
+| `generateNav`           | `true`                                           | Emit the `nav.ts` navigation file.                                                  |
 
 ## What gets extracted
 
@@ -115,6 +118,18 @@ exported as.
 Alongside the Markdown, `writeDocs` emits `docs.json` (the structured payload)
 and, when `generateNav` is on, `nav.ts`. A manifest tracks generated files so
 stale pages are cleaned up on the next run.
+
+## Display formats
+
+`renderStyle` controls the generated page body:
+
+- **`html`** (default) — emits ox-content themed HTML inside Markdown files.
+- **`markdown`** — emits plain Markdown without raw HTML scaffolding.
+
+Display-format options accept `'none'`, `'list'`, or `'table'`. With
+`renderStyle: 'html'`, `propertyMembersFormat` and `typeDeclarationFormat`
+render the requested HTML list/table for nested property object literals and
+return type declaration members.
 
 ## Wire the nav into your sidebar
 

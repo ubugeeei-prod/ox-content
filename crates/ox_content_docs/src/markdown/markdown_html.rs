@@ -1122,6 +1122,15 @@ fn render_member_table_html(
         rows.push_str("</td>\n  <td>");
         rows.push_str(&render_member_description_html(member, options, context));
         rows.push_str("</td>\n</tr>");
+        let property_members = render_property_members_html(&member.members, options, context);
+        if !property_members.is_empty() {
+            let colspan = if include_kind { 4 } else { 3 };
+            rows.push_str("\n<tr class=\"ox-api-entry__property-members-row\"><td colspan=\"");
+            rows.push_usize(colspan);
+            rows.push_str("\">");
+            rows.push_str(&property_members);
+            rows.push_str("</td></tr>");
+        }
     }
     let rows = rows.into_string();
 
@@ -1190,6 +1199,11 @@ fn render_member_list_html(
         items.push_str(&render_member_type_html(member, context, &HashSet::new()));
         items.push_str("\n  </div>\n  ");
         items.push_str(&render_member_description_html(member, options, context));
+        let property_members = render_property_members_html(&member.members, options, context);
+        if !property_members.is_empty() {
+            items.push_char('\n');
+            items.push_str(&property_members);
+        }
         items.push_str("\n</li>");
     }
     let items = items.into_string();
@@ -1261,14 +1275,14 @@ fn render_callable_member_group_html(
         details.push_str(&render_member_detail_type_parameters_html(member, options, context));
         details.push_str(&render_member_detail_params_html(member, options, context));
         if let Some(returns) = &member.returns {
-            details.push_str(&render_member_detail_returns_html(returns, context));
+            details.push_str(&render_member_detail_returns_html(returns, options, context));
         } else if member.kind == "constructor" {
             let returns = ApiReturnDoc {
                 type_annotation: entry.name.clone(),
                 description: String::new(),
                 members: Vec::new(),
             };
-            details.push_str(&render_member_detail_returns_html(&returns, context));
+            details.push_str(&render_member_detail_returns_html(&returns, options, context));
         }
         details.push_str(&render_implementation_of_html(&member.implementation_of));
         details.push_str("</section>");
@@ -1389,6 +1403,7 @@ fn render_member_detail_type_parameters_html(
 
 fn render_member_detail_returns_html(
     returns: &ApiReturnDoc,
+    options: &MarkdownDocsOptions,
     context: Option<&MarkdownLinkContext<'_>>,
 ) -> String {
     let mut out = StringBuilder::new();
@@ -1400,7 +1415,7 @@ fn render_member_detail_returns_html(
         out.push_str(&render_doc_inline_html(&returns.description, context));
         out.push_str("</p>");
     }
-    out.push_str(&render_return_members_html(&returns.members, context));
+    out.push_str(&render_return_members_html(&returns.members, options, context));
     out.push_str("\n</div>");
     out.into_string()
 }
@@ -1688,7 +1703,7 @@ fn render_entry_body_html(
     push_params_html(&mut body, &entry.params, options, link_context);
 
     if let Some(returns) = &entry.returns {
-        push_returns_html(&mut body, returns, link_context);
+        push_returns_html(&mut body, returns, options, link_context);
     }
 
     push_examples_html(&mut body, &entry.examples);
@@ -1767,6 +1782,7 @@ fn push_params_html(
 fn push_returns_html(
     body: &mut String,
     returns: &ApiReturnDoc,
+    options: &MarkdownDocsOptions,
     link_context: Option<&MarkdownLinkContext<'_>>,
 ) {
     body.push_str(
@@ -1785,7 +1801,7 @@ fn push_returns_html(
         body.push_str(&render_doc_inline_html(&returns.description, link_context));
         body.push_str("</p>");
     }
-    body.push_str(&render_return_members_html(&returns.members, link_context));
+    body.push_str(&render_return_members_html(&returns.members, options, link_context));
     body.push_str(
         "
 </div>
@@ -1795,10 +1811,21 @@ fn push_returns_html(
 
 fn render_return_members_html(
     members: &[ApiDocMember],
+    options: &MarkdownDocsOptions,
     link_context: Option<&MarkdownLinkContext<'_>>,
 ) -> String {
     if members.is_empty() {
         return String::new();
+    }
+
+    match options.type_declaration_format {
+        MarkdownDisplayFormat::Table => {
+            return render_type_declaration_members_table_html(members, link_context);
+        }
+        MarkdownDisplayFormat::List => {
+            return render_type_declaration_members_list_html(members, link_context);
+        }
+        MarkdownDisplayFormat::None => {}
     }
 
     let mut rendered = StringBuilder::new();
@@ -1826,6 +1853,167 @@ fn render_return_members_html(
     }
     rendered.push_str("\n</div>");
     rendered.into_string()
+}
+
+fn render_type_declaration_members_table_html(
+    members: &[ApiDocMember],
+    link_context: Option<&MarkdownLinkContext<'_>>,
+) -> String {
+    render_nested_members_table_html(members, "ox-api-entry__type-declaration-table", link_context)
+}
+
+fn render_type_declaration_members_list_html(
+    members: &[ApiDocMember],
+    link_context: Option<&MarkdownLinkContext<'_>>,
+) -> String {
+    render_nested_members_list_html(
+        members,
+        "ox-api-entry__type-declaration-list",
+        "ox-api-entry__type-declaration-member",
+        "ox-api-entry__type-declaration-member-heading",
+        "ox-api-entry__type-declaration-member-description",
+        link_context,
+    )
+}
+
+fn render_property_members_html(
+    members: &[ApiDocMember],
+    options: &MarkdownDocsOptions,
+    link_context: Option<&MarkdownLinkContext<'_>>,
+) -> String {
+    if members.is_empty() {
+        return String::new();
+    }
+
+    match options.property_members_format {
+        MarkdownDisplayFormat::Table => render_nested_members_table_html(
+            members,
+            "ox-api-entry__property-members-table",
+            link_context,
+        ),
+        MarkdownDisplayFormat::List => render_nested_members_list_html(
+            members,
+            "ox-api-entry__property-members-list",
+            "ox-api-entry__property-member",
+            "ox-api-entry__property-member-heading",
+            "ox-api-entry__property-member-description",
+            link_context,
+        ),
+        MarkdownDisplayFormat::None => String::new(),
+    }
+}
+
+fn render_nested_members_table_html(
+    members: &[ApiDocMember],
+    class_name: &str,
+    link_context: Option<&MarkdownLinkContext<'_>>,
+) -> String {
+    let mut rows = StringBuilder::new();
+    for member in members {
+        if !rows.is_empty() {
+            rows.push_char('\n');
+        }
+        rows.push_str("<tr>\n  <td>");
+        rows.push_str(&render_nested_member_name_html(member));
+        rows.push_str("</td>\n  <td>");
+        rows.push_str(&render_nested_member_type_html(member, link_context));
+        rows.push_str("</td>\n  <td>");
+        rows.push_str(&render_nested_member_description_html(member, link_context));
+        rows.push_str("</td>\n</tr>");
+    }
+
+    let mut out = StringBuilder::new();
+    out.push_str("<table class=\"");
+    out.push_str(class_name);
+    out.push_str(
+        "\"><thead><tr><th>Name</th><th>Type</th><th>Description</th></tr></thead><tbody>\n",
+    );
+    out.push_str(&rows.into_string());
+    out.push_str("\n</tbody></table>");
+    out.into_string()
+}
+
+fn render_nested_members_list_html(
+    members: &[ApiDocMember],
+    list_class_name: &str,
+    item_class_name: &str,
+    heading_class_name: &str,
+    description_class_name: &str,
+    link_context: Option<&MarkdownLinkContext<'_>>,
+) -> String {
+    let mut items = StringBuilder::new();
+    for member in members {
+        if !items.is_empty() {
+            items.push_char('\n');
+        }
+        items.push_str("<li class=\"");
+        items.push_str(item_class_name);
+        items.push_str("\">");
+        items.push_str("<div class=\"");
+        items.push_str(heading_class_name);
+        items.push_str("\">");
+        items.push_str(&render_nested_member_name_html(member));
+        let member_type = render_nested_member_type_html(member, link_context);
+        if !member_type.is_empty() {
+            items.push_char(' ');
+            items.push_str(&member_type);
+        }
+        items.push_str("</div>");
+        let description = render_nested_member_description_html(member, link_context);
+        if !description.is_empty() {
+            items.push_str("<div class=\"");
+            items.push_str(description_class_name);
+            items.push_str("\">");
+            items.push_str(&description);
+            items.push_str("</div>");
+        }
+        items.push_str("</li>");
+    }
+
+    let mut out = StringBuilder::new();
+    out.push_str("<ul class=\"");
+    out.push_str(list_class_name);
+    out.push_str("\">\n");
+    out.push_str(&items.into_string());
+    out.push_str("\n</ul>");
+    out.into_string()
+}
+
+fn render_nested_member_name_html(member: &ApiDocMember) -> String {
+    let mut out = StringBuilder::new();
+    out.push_str("<code>");
+    out.push_str(&escape_html(&member.name));
+    out.push_str("</code>");
+    out.push_str(&render_member_flags(member));
+    out.into_string()
+}
+
+fn render_nested_member_type_html(
+    member: &ApiDocMember,
+    link_context: Option<&MarkdownLinkContext<'_>>,
+) -> String {
+    let Some(member_type) = member
+        .type_annotation
+        .as_deref()
+        .or_else(|| member.returns.as_ref().map(|returns| returns.type_annotation.as_str()))
+        .or(member.signature.as_deref())
+        .filter(|value| !value.is_empty())
+    else {
+        return String::new();
+    };
+
+    let mut out = StringBuilder::new();
+    out.push_str("<code class=\"ox-api-entry__member-type language-typescript\">");
+    out.push_str(&render_type_inner_html(member_type, link_context, &HashSet::new()));
+    out.push_str("</code>");
+    out.into_string()
+}
+
+fn render_nested_member_description_html(
+    member: &ApiDocMember,
+    link_context: Option<&MarkdownLinkContext<'_>>,
+) -> String {
+    render_member_description_html(member, &MarkdownDocsOptions::default(), link_context)
 }
 
 fn push_return_member_signature_html(
@@ -2070,7 +2258,7 @@ pub(super) fn render_overload_body_html(
         push_type_parameters_html(&mut out, &signature.type_parameters, options, link_context);
         push_params_html(&mut out, &signature.params, options, link_context);
         if let Some(returns) = &signature.returns {
-            push_returns_html(&mut out, returns, link_context);
+            push_returns_html(&mut out, returns, options, link_context);
         }
         push_examples_html(&mut out, &signature.examples);
         push_tag_list_html(&mut out, &signature.tags, link_context);

@@ -1061,13 +1061,13 @@ export interface DocsOptions {
   enumMembersFormat?: MarkdownDisplayFormat;
 
   /**
-   * Reserved display format for property-owned object literal members.
+   * Display format for property-owned object literal members.
    * @default 'none'
    */
   propertyMembersFormat?: MarkdownDisplayFormat;
 
   /**
-   * Reserved display format for type declaration members.
+   * Display format for return type declaration members.
    * @default 'none'
    */
   typeDeclarationFormat?: MarkdownDisplayFormat;

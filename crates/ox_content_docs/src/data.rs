@@ -200,6 +200,12 @@ fn member_to_json(member: &ApiDocMember) -> Value {
     if let Some(returns) = &member.returns {
         value.insert("returns".to_string(), return_to_json(returns));
     }
+    if !member.members.is_empty() {
+        value.insert(
+            "members".to_string(),
+            Value::Array(member.members.iter().map(member_to_json).collect()),
+        );
+    }
     if member.optional {
         value.insert("optional".to_string(), json!(true));
     }
@@ -484,6 +490,7 @@ mod tests {
                         params: vec![],
                         type_parameters: vec![],
                         returns: None,
+                        members: vec![],
                         optional: false,
                         readonly: false,
                         r#static: false,
@@ -516,6 +523,82 @@ mod tests {
         assert_eq!(returns["type"], "object");
         assert_eq!(returns["members"][0]["name"], "values");
         assert_eq!(returns["members"][0]["type"], "ArgValues<A>");
+    }
+
+    #[test]
+    fn property_members_serialize_to_json() {
+        let docs = vec![ApiDocModule {
+            description: String::new(),
+            file: "/repo/src/options.ts".to_string(),
+            source_path: String::new(),
+            examples: vec![],
+            tags: vec![],
+            entries: vec![ApiDocEntry {
+                name: "Options".to_string(),
+                kind: "interface".to_string(),
+                description: "Request options.".to_string(),
+                params: vec![],
+                returns: None,
+                examples: vec![],
+                tags: vec![],
+                private: false,
+                file: "/repo/src/options.ts".to_string(),
+                line: 1,
+                end_line: 8,
+                signature: Some("export interface Options".to_string()),
+                extends: vec![],
+                implements: vec![],
+                has_body: false,
+                members: vec![ApiDocMember {
+                    name: "http".to_string(),
+                    kind: "property".to_string(),
+                    description: "HTTP options.".to_string(),
+                    signature: None,
+                    type_annotation: Some("{ timeout?: number }".to_string()),
+                    params: vec![],
+                    type_parameters: vec![],
+                    returns: None,
+                    members: vec![ApiDocMember {
+                        name: "timeout".to_string(),
+                        kind: "property".to_string(),
+                        description: "Request timeout.".to_string(),
+                        signature: None,
+                        type_annotation: Some("number".to_string()),
+                        params: vec![],
+                        type_parameters: vec![],
+                        returns: None,
+                        members: vec![],
+                        optional: true,
+                        readonly: false,
+                        r#static: false,
+                        private: false,
+                        tags: vec![],
+                        implementation_of: vec![],
+                        line: 4,
+                        end_line: 4,
+                    }],
+                    optional: false,
+                    readonly: false,
+                    r#static: false,
+                    private: false,
+                    tags: vec![],
+                    implementation_of: vec![],
+                    line: 3,
+                    end_line: 6,
+                }],
+                type_parameters: vec![],
+            }],
+        }];
+
+        let json = generate_docs_data_json(&docs, "2026-05-31T00:00:00.000Z").unwrap();
+        let value: Value = serde_json::from_str(&json).unwrap();
+        let nested_member = &value["modules"][0]["entries"][0]["members"][0]["members"][0];
+
+        assert_eq!(nested_member["name"], "timeout");
+        assert_eq!(nested_member["kind"], "property");
+        assert_eq!(nested_member["description"], "Request timeout.");
+        assert_eq!(nested_member["type"], "number");
+        assert_eq!(nested_member["optional"], true);
     }
 
     #[test]
@@ -557,6 +640,7 @@ mod tests {
                     }],
                     type_parameters: vec![],
                     returns: None,
+                    members: vec![],
                     optional: false,
                     readonly: true,
                     r#static: false,
@@ -631,6 +715,7 @@ mod tests {
                         description: "Parsed value.".to_string(),
                         members: Vec::new(),
                     }),
+                    members: vec![],
                     optional: true,
                     readonly: false,
                     r#static: false,
@@ -814,6 +899,7 @@ mod tests {
                     params: vec![],
                     type_parameters: vec![],
                     returns: None,
+                    members: vec![],
                     optional: false,
                     readonly: false,
                     r#static: false,

@@ -290,6 +290,7 @@ mod tests {
                         params: vec![],
                         type_parameters: vec![],
                         returns: None,
+                        members: vec![],
                         optional: false,
                         readonly: false,
                         r#static: false,
