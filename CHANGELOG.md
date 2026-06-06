@@ -1,5 +1,17 @@
 # Changelog
 
+## [2.59.0] - 2026-06-06
+
+### Features
+
+- add renderGeneratedBy option (#335)
+
+### Bug Fixes
+
+- avoid duplicate property returns (#337)
+- strip JSDoc from type alias signatures (#336)
+- omit empty type parameter descriptions (#334)
+
 ## [2.58.0] - 2026-06-06
 
 ### Features
