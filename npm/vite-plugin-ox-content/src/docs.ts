@@ -244,6 +244,12 @@ export function generateMarkdown(
     enumMembersFormat: options.enumMembersFormat,
     propertyMembersFormat: options.propertyMembersFormat,
     typeDeclarationFormat: options.typeDeclarationFormat,
+    renderStats: options.renderStats,
+    renderGeneratedBy: options.renderGeneratedBy,
+    groupOrder: options.groupOrder,
+    sort: options.sort,
+    sortEntryPoints: options.sortEntryPoints,
+    kindSortOrder: options.kindSortOrder,
   });
 }
 
@@ -274,6 +280,10 @@ export async function writeDocs(
       generatedAt: new Date().toISOString(),
       basePath: options?.basePath,
       pathStrategy: options?.pathStrategy,
+      groupOrder: options?.groupOrder,
+      sort: options?.sort,
+      sortEntryPoints: options?.sortEntryPoints,
+      kindSortOrder: options?.kindSortOrder,
     },
   );
 }
@@ -357,6 +367,12 @@ export function resolveDocsOptions(
     propertyMembersFormat: opts.propertyMembersFormat ?? "none",
     typeDeclarationFormat: opts.typeDeclarationFormat ?? "none",
     typeParameters: opts.typeParameters ?? false,
+    renderStats: opts.renderStats ?? true,
+    renderGeneratedBy: opts.renderGeneratedBy ?? true,
+    groupOrder: opts.groupOrder,
+    sort: opts.sort,
+    sortEntryPoints: opts.sortEntryPoints ?? true,
+    kindSortOrder: opts.kindSortOrder,
     generateNav: opts.generateNav ?? true,
   };
 }

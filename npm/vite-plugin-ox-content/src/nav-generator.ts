@@ -1,10 +1,14 @@
-import type { ExtractedDocs, NavItem } from "./types";
+import type { DocsSortStrategy, ExtractedDocs, NavItem } from "./types";
 import { toRustDocsModules } from "./docs";
 import { importNapiModuleSync } from "./napi";
 
 export interface GenerateNavMetadataOptions {
   basePath?: string;
   pathStrategy?: "flat" | "typedoc";
+  groupOrder?: string[];
+  sort?: DocsSortStrategy[];
+  sortEntryPoints?: boolean;
+  kindSortOrder?: string[];
 }
 
 export function generateNavMetadata(
@@ -20,6 +24,10 @@ export function generateNavMetadata(
     return napi.generateDocsNavMetadataFromDocs(toRustDocsModules(docs), {
       basePath,
       pathStrategy: "typedoc",
+      groupOrder: options.groupOrder,
+      sort: options.sort,
+      sortEntryPoints: options.sortEntryPoints,
+      kindSortOrder: options.kindSortOrder,
     });
   }
 

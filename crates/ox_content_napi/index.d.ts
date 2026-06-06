@@ -453,6 +453,14 @@ export interface JsDocsOutputOptions {
   generatedAt?: string
   basePath?: string
   pathStrategy?: 'flat' | 'typedoc'
+  /** TypeDoc-style group order for generated nav groups. */
+  groupOrder?: Array<string>
+  /** TypeDoc-style sort strategies for generated nav leaf entries. */
+  sort?: Array<string>
+  /** TypeDoc-style `sortEntryPoints`: when `false`, preserve module order. */
+  sortEntryPoints?: boolean
+  /** TypeDoc-style kind ranking for generated nav groups. */
+  kindSortOrder?: Array<string>
 }
 
 /** Docs-as-tests extraction options. */
