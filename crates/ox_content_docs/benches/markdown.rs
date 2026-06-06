@@ -138,6 +138,7 @@ fn member(module: usize, entry: usize, index: usize) -> ApiDocMember {
             description: "Whether the member accepted the value.".to_string(),
             members: Vec::new(),
         }),
+        members: Vec::new(),
         optional: index % 2 == 0,
         readonly: index % 3 == 0,
         r#static: index % 11 == 0,
