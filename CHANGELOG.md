@@ -1,5 +1,47 @@
 # Changelog
 
+## [2.62.0] - 2026-06-07
+
+### Features
+
+- add document links for Markdown links and images (#344)
+- add folding ranges for headings, code blocks, and frontmatter (#343)
+- support NAPI docs options (#339)
+- add renderGeneratedBy option (#335)
+- add JS/TS docs-generator profiling mode (#309)
+- add sort, sortEntryPoints, and kindSortOrder organization options (#307)
+
+### Bug Fixes
+
+- allow media embeds through sanitizer (#342)
+- render nested HTML member formats (#338)
+- avoid duplicate property returns (#337)
+- strip JSDoc from type alias signatures (#336)
+- omit empty type parameter descriptions (#334)
+- resolve intersection callable aliases (#333)
+- merge destructured param docs (#332)
+- suppress property returns sections (#331)
+- render member type parameters (#330)
+- expand object literal params (#329)
+- avoid escaping return union pipes (#328)
+- preserve function type alias metadata (#326)
+- preserve function-valued property types (#325)
+- render TypeScript index signatures (#324)
+- render class method details (#323)
+- render return type literal members (#322)
+- collapse multiline type params (#321)
+- do not double-wrap mixed markdown @example bodies in a code fence (#320)
+- use entry source path for typedoc module index source link (#308)
+
+### Performance
+
+- append Markdown table cells directly instead of per-cell Strings (#319)
+- extract docs during the export-graph walk to avoid a second parse (#318)
+- reduce TypeDoc render allocations (symbol map + list rows) (#317)
+- skip raw JSDoc text and param formatting on normalize paths (#316)
+- reuse the OXC arena allocator across files (#314)
+- borrow instead of allocate in doc-text/link processing (#315)
+
 ## [2.61.0] - 2026-06-06
 
 ### Features
