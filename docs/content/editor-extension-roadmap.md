@@ -43,6 +43,7 @@ must not depend on a later one in the list.
 | 8   | Frontmatter schema completion + diagnostics     | present                  | none (validated through LSP) | present                  | present                     | needs CLI        |
 | 9   | Document structure (outline + folding)          | symbols + folding ranges | none (unit-tested headless)  | outline + folding        | outline + folding           | shipped          |
 | 10  | Document links (Markdown links + images)        | document link provider   | none (unit-tested headless)  | clickable links          | clickable links             | shipped          |
+| 11  | Selection ranges (expand selection)             | selection range provider | none (unit-tested headless)  | expand/shrink selection  | expand/shrink selection     | shipped          |
 
 ## PR Sequence
 

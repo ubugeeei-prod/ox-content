@@ -246,6 +246,22 @@ impl Backend {
         let links = crate::document_link::document_links(&document, &path, root.as_deref());
         (!links.is_empty()).then_some(links)
     }
+
+    pub(super) async fn selection_range_response(
+        &self,
+        uri: &Url,
+        positions: &[Position],
+    ) -> Option<Vec<SelectionRange>> {
+        let Ok(path) = uri.to_file_path() else {
+            return None;
+        };
+        if !is_markdown_path(&path) {
+            return None;
+        }
+
+        let document = self.state.document(uri).await?;
+        Some(crate::selection_range::selection_ranges(&document, positions))
+    }
 }
 
 fn push_fmt(output: &mut String, args: std::fmt::Arguments<'_>) {
