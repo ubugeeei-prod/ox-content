@@ -1,15 +1,14 @@
-import * as path from "node:path";
 import * as vscode from "vscode";
 
 import { getConfig } from "./config";
-import {
-  NOTIFICATION_PREVIEW_DID_CHANGE,
-  SERVER_COMMAND_PREVIEW_HTML,
-  SERVER_COMMAND_PREVIEW_SUBSCRIBE,
-  SERVER_COMMAND_PREVIEW_UNSUBSCRIBE,
-} from "./constants";
+import { NOTIFICATION_PREVIEW_DID_CHANGE, SERVER_COMMAND_PREVIEW_UNSUBSCRIBE } from "./constants";
 import { onServerNotification, sendServerCommand } from "./client";
 import { errorHtml } from "./internal/preview-html";
+import {
+  previewPanelTitle,
+  previewSeedCommand,
+  pushedPreviewTitle,
+} from "./internal/preview-state";
 import type { PreviewEntry, PreviewPayload } from "./types";
 
 const previewEntries = new Map<string, PreviewEntry>();
@@ -84,9 +83,7 @@ async function renderInitialPreview(
   panel: vscode.WebviewPanel,
   document: vscode.TextDocument,
 ): Promise<void> {
-  const command = previewAutoRefreshEnabled()
-    ? SERVER_COMMAND_PREVIEW_SUBSCRIBE
-    : SERVER_COMMAND_PREVIEW_HTML;
+  const command = previewSeedCommand(previewAutoRefreshEnabled());
 
   try {
     const payload = await sendServerCommand<PreviewPayload>(command, [document.uri.toString()]);
@@ -107,7 +104,7 @@ function applyPushedPreview(params: PreviewDidChangeParams): void {
   if (!entry) {
     return;
   }
-  entry.panel.title = params.title || entry.panel.title;
+  entry.panel.title = pushedPreviewTitle(params.title, entry.panel.title);
   entry.panel.webview.html = params.html;
 }
 
@@ -116,7 +113,7 @@ function applyPayload(
   document: vscode.TextDocument,
   payload: PreviewPayload,
 ): void {
-  panel.title = payload.title || `${path.basename(document.fileName) || "Untitled"} Preview`;
+  panel.title = previewPanelTitle(payload.title, document.fileName);
   panel.webview.html = payload.html;
 }
 
