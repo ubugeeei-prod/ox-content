@@ -177,6 +177,15 @@ fn snapshot_unordered_list_dash_marker() {
 }
 
 #[test]
+fn snapshot_wrapped_list_item_continuation() {
+    check(
+        "wrapped_list_item_continuation",
+        "- [Blacksmith](https://www.blacksmith.sh/) for sponsoring CI and\n  Testbox infrastructure across projects.\n- [Mates Inc.](https://eng.mates.education/) for supporting OSS and\n  adopting Vize in production.\n",
+        ParserOptions::default(),
+    );
+}
+
+#[test]
 fn snapshot_ordered_list_with_start() {
     check("ordered_list_with_start", "3. third\n4. fourth\n", ParserOptions::default());
 }

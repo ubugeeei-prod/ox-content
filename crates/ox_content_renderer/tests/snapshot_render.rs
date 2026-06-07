@@ -109,6 +109,16 @@ fn html_unordered_list_basic() {
 }
 
 #[test]
+fn html_wrapped_list_item_continuation() {
+    check(
+        "wrapped_list_item_continuation",
+        "- [Blacksmith](https://www.blacksmith.sh/) for sponsoring CI and\n  Testbox infrastructure across projects.\n- [Mates Inc.](https://eng.mates.education/) for supporting OSS and\n  adopting Vize in production.\n",
+        ParserOptions::default(),
+        HtmlRendererOptions::default(),
+    );
+}
+
+#[test]
 fn html_ordered_list_with_start() {
     check(
         "ordered_list_with_start",

@@ -826,7 +826,7 @@ export interface JsSanitizeOptions {
   allowedTags?: Array<string>
   /** Allowed attribute names. Omit for safe defaults. */
   allowedAttributes?: Array<string>
-  /** Allowed URL schemes for href/src/action attributes. Omit for safe defaults. */
+  /** Allowed URL schemes for URL-bearing attributes. Omit for safe defaults. */
   allowedUrlSchemes?: Array<string>
 }
 

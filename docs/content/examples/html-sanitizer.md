@@ -6,7 +6,8 @@ description: Sanitize rendered HTML with configurable allow lists.
 # HTML Sanitizer
 
 The sanitizer is opt-in. When enabled with `true`, it uses safe defaults for
-common documentation HTML.
+common documentation HTML, including embedded media elements such as `video`,
+`audio`, `source`, `track`, and `picture`.
 
 ```ts
 import { oxContent } from "@ox-content/vite-plugin";

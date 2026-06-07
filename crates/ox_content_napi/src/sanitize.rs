@@ -23,6 +23,7 @@ impl Default for SanitizeConfig {
         Self {
             tags: [
                 "a",
+                "audio",
                 "blockquote",
                 "br",
                 "code",
@@ -44,7 +45,9 @@ impl Default for SanitizeConfig {
                 "nav",
                 "ol",
                 "p",
+                "picture",
                 "pre",
+                "source",
                 "span",
                 "strong",
                 "summary",
@@ -54,8 +57,10 @@ impl Default for SanitizeConfig {
                 "td",
                 "th",
                 "thead",
+                "track",
                 "tr",
                 "ul",
+                "video",
             ]
             .into_iter()
             .map(ToString::to_string)
@@ -65,8 +70,12 @@ impl Default for SanitizeConfig {
                 "allowfullscreen",
                 "alt",
                 "aria-label",
+                "autoplay",
                 "checked",
                 "class",
+                "controls",
+                "controlslist",
+                "crossorigin",
                 "data-code-title",
                 "data-group",
                 "data-line",
@@ -74,16 +83,30 @@ impl Default for SanitizeConfig {
                 "data-line-number-start",
                 "data-line-numbers",
                 "data-ox-tab-group",
+                "default",
                 "disabled",
+                "disablepictureinpicture",
+                "disableremoteplayback",
                 "height",
                 "href",
                 "id",
+                "kind",
+                "label",
                 "loading",
+                "loop",
+                "media",
+                "muted",
                 "name",
+                "playsinline",
+                "poster",
+                "preload",
                 "referrerpolicy",
                 "rel",
                 "sandbox",
+                "sizes",
                 "src",
+                "srcset",
+                "srclang",
                 "style",
                 "target",
                 "title",
@@ -152,6 +175,19 @@ impl SanitizeConfig {
             .flat_map(char::to_lowercase)
             .collect::<String>();
         self.url_schemes.contains(&scheme)
+    }
+
+    fn allows_srcset(&self, value: &str) -> bool {
+        value.split(',').all(|candidate| {
+            let candidate = candidate.trim();
+            if candidate.is_empty() {
+                return false;
+            }
+            let url_end =
+                candidate.find(|ch: char| ch.is_ascii_whitespace()).unwrap_or(candidate.len());
+            let url = &candidate[..url_end];
+            !url.is_empty() && self.allows_url(url)
+        })
     }
 }
 
@@ -337,10 +373,12 @@ fn write_sanitized_attr(out: &mut String, attr: &ParsedAttr<'_>, config: &Saniti
     if attr.name.starts_with("on") || !is_attr_name(&attr.name) || !config.allows_attr(&attr.name) {
         return;
     }
-    if matches!(attr.name.as_str(), "href" | "src" | "action")
-        && attr.value.is_some_and(|value| !config.allows_url(value))
-    {
-        return;
+    if let Some(value) = attr.value {
+        match attr.name.as_str() {
+            "href" | "src" | "action" | "poster" if !config.allows_url(value) => return,
+            "srcset" if !config.allows_srcset(value) => return,
+            _ => {}
+        }
     }
     out.push(' ');
     out.push_str(&attr.name);
@@ -443,5 +481,36 @@ mod tests {
 
         assert!(sanitized.contains("<iframe"));
         assert!(sanitized.contains("src=\"https://open.spotify.com/embed/track/a\""));
+    }
+
+    #[test]
+    fn keeps_safe_media_tags_and_attributes() {
+        let html = r#"<video controls muted loop playsinline poster="/poster.jpg" width="640" height="360" preload="metadata"><source src="/demo.webm" type="video/webm"><track src="/captions.vtt" kind="captions" srclang="en" label="English" default>Fallback</video><audio controls src="./clip.mp3"></audio><picture><source media="(min-width: 800px)" srcset="/hero-large.jpg 2x, /hero.jpg 1x" sizes="100vw"><img src="/hero.jpg" alt="Hero"></picture>"#;
+        let sanitized = sanitize_html(html, Some(&JsSanitizeOptions::default()));
+
+        assert!(sanitized.contains(
+            r#"<video controls muted loop playsinline poster="/poster.jpg" width="640" height="360" preload="metadata">"#
+        ));
+        assert!(sanitized.contains(r#"<source src="/demo.webm" type="video/webm">"#));
+        assert!(sanitized.contains(
+            r#"<track src="/captions.vtt" kind="captions" srclang="en" label="English" default>"#
+        ));
+        assert!(sanitized.contains("Fallback</video>"));
+        assert!(sanitized.contains(r#"<audio controls src="./clip.mp3"></audio>"#));
+        assert!(sanitized.contains(
+            r#"<source media="(min-width: 800px)" srcset="/hero-large.jpg 2x, /hero.jpg 1x" sizes="100vw">"#
+        ));
+    }
+
+    #[test]
+    fn removes_unsafe_media_urls() {
+        let html = r#"<video poster="javascript:alert(1)"><source src="javascript:alert(2)" srcset="javascript:alert(3) 1x, /safe.jpg 2x"></video><img src="/safe.jpg" srcset="/safe.jpg 1x, javascript:alert(4) 2x">"#;
+        let sanitized = sanitize_html(html, Some(&JsSanitizeOptions::default()));
+
+        assert!(!sanitized.contains("javascript"));
+        assert!(!sanitized.contains("poster="));
+        assert!(!sanitized.contains("srcset="));
+        assert!(sanitized.contains("<source>"));
+        assert!(sanitized.contains(r#"<img src="/safe.jpg">"#));
     }
 }

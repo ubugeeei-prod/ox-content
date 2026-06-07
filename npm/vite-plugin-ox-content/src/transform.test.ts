@@ -131,6 +131,45 @@ describe("transformMarkdown", () => {
     expect(optInResult.html).toContain("pnpm add -D vite");
   });
 
+  it("preserves wrapped continuation lines inside list items", async () => {
+    const result = await transformMarkdown(
+      [
+        "- [Blacksmith](https://www.blacksmith.sh/) for sponsoring CI and",
+        "  Testbox infrastructure across projects.",
+        "- [Mates Inc.](https://eng.mates.education/) for supporting OSS and",
+        "  adopting Vize in production.",
+      ].join("\n"),
+      "docs/credits.md",
+      createResolvedOptions(),
+    );
+
+    expect(result.html).toContain("Testbox infrastructure across projects.");
+    expect(result.html).toContain("adopting Vize in production.");
+    expect(result.html).toContain('<a href="https://www.blacksmith.sh/"');
+    expect(result.html).toContain('<a href="https://eng.mates.education/"');
+  });
+
+  it("preserves safe raw media tags when sanitizing", async () => {
+    const result = await transformMarkdown(
+      [
+        '<video controls muted playsinline poster="/poster.jpg">',
+        '  <source src="/demo.webm" type="video/webm">',
+        '  <track src="/captions.vtt" kind="captions" srclang="en" label="English" default>',
+        "  Fallback",
+        "</video>",
+        '<picture><source media="(min-width: 800px)" srcset="/hero-large.jpg 2x, /hero.jpg 1x"><img src="/hero.jpg" alt="Hero"></picture>',
+      ].join("\n"),
+      "docs/media.md",
+      createResolvedOptions({ sanitize: { enabled: true } }),
+    );
+
+    expect(result.html).toContain("<video controls muted playsinline");
+    expect(result.html).toContain('poster="/poster.jpg"');
+    expect(result.html).toContain('<source src="/demo.webm" type="video/webm">');
+    expect(result.html).toContain('<track src="/captions.vtt"');
+    expect(result.html).toContain('srcset="/hero-large.jpg 2x, /hero.jpg 1x"');
+  });
+
   it("sanitizes after opt-in embeds are rendered", async () => {
     const result = await transformMarkdown(
       [
