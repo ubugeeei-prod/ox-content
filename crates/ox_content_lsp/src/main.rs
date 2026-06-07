@@ -8,10 +8,12 @@
 //! - editor-triggered insertion commands
 //! - preview HTML generation via `workspace/executeCommand`
 //! - heading symbols for document outline navigation
+//! - folding ranges for headings, code blocks, and frontmatter
 
 mod backend;
 mod config;
 mod document;
+mod folding;
 mod frontmatter;
 mod i18n;
 mod preview;
