@@ -110,12 +110,35 @@ impl Server {
         }
     }
 
+    /// Reads messages until a notification with `method` arrives,
+    /// skipping responses and other notifications. Returns its `params`.
+    fn await_notification(&mut self, method: &str) -> Value {
+        loop {
+            let message = self.read_message();
+            if message.get("method").and_then(Value::as_str) == Some(method) {
+                return message.get("params").cloned().unwrap_or(Value::Null);
+            }
+        }
+    }
+
     /// Runs the standard handshake and opens `uri` with `text` as a
     /// Markdown document.
     fn initialize_and_open(&mut self, uri: &str, text: &str) -> Value {
+        self.initialize_and_open_with(uri, text, json!({}))
+    }
+
+    /// Like [`initialize_and_open`], but forwards `init_options` as the
+    /// server's `initializationOptions` (used to point the server at a
+    /// frontmatter schema).
+    fn initialize_and_open_with(&mut self, uri: &str, text: &str, init_options: Value) -> Value {
         let id = self.request(
             "initialize",
-            json!({ "capabilities": {}, "processId": null, "rootUri": null }),
+            json!({
+                "capabilities": {},
+                "processId": null,
+                "rootUri": null,
+                "initializationOptions": init_options,
+            }),
         );
         let init_result = self.await_response(id);
         self.notify("initialized", json!({}));
@@ -242,6 +265,110 @@ fn document_symbol_returns_headings() {
 
     assert!(names.iter().any(|name| name == "Title"), "missing Title heading, got {names:?}");
     assert!(names.iter().any(|name| name == "Section"), "missing Section heading, got {names:?}");
+
+    server.shutdown();
+}
+
+#[test]
+fn folding_range_includes_the_frontmatter_block() {
+    let mut server = Server::start();
+    let uri = temp_uri("frontmatter-fold.md");
+    server.initialize_and_open(&uri, "---\ntitle: Doc\ntags: a\n---\n\n# Heading\n\nbody\n");
+
+    let id = server.request("textDocument/foldingRange", json!({ "textDocument": { "uri": uri } }));
+    let ranges = server.await_response(id);
+    let folds: Vec<(i64, i64)> = ranges
+        .as_array()
+        .expect("foldingRange returns an array")
+        .iter()
+        .map(|range| (range["startLine"].as_i64().unwrap(), range["endLine"].as_i64().unwrap()))
+        .collect();
+
+    // The frontmatter block spans lines 0..3 (opening `---` through
+    // closing `---`).
+    assert!(folds.contains(&(0, 3)), "missing frontmatter fold, got {folds:?}");
+
+    server.shutdown();
+}
+
+#[test]
+fn completion_offers_markdown_snippets() {
+    let mut server = Server::start();
+    let uri = temp_uri("completion.md");
+    server.initialize_and_open(&uri, "# Title\n\n\n");
+
+    // An empty line offers the Markdown snippet set.
+    let id = server.request(
+        "textDocument/completion",
+        json!({ "textDocument": { "uri": uri }, "position": { "line": 2, "character": 0 } }),
+    );
+    let response = server.await_response(id);
+    // The response is either a bare array or a CompletionList `{ items }`.
+    let items = response
+        .get("items")
+        .and_then(Value::as_array)
+        .or_else(|| response.as_array())
+        .expect("completion returns items");
+    let labels: Vec<String> =
+        items.iter().map(|item| item["label"].as_str().unwrap_or_default().to_string()).collect();
+
+    assert!(labels.iter().any(|label| label == "h1"), "missing h1 snippet, got {labels:?}");
+    assert!(labels.iter().any(|label| label == "table"), "missing table snippet, got {labels:?}");
+
+    server.shutdown();
+}
+
+#[test]
+fn diagnostics_report_a_dead_relative_link() {
+    let mut server = Server::start();
+    let uri = temp_uri("dead-link.md");
+    // The link target does not exist under the temp dir, so the link
+    // checker should flag it on open.
+    server.initialize_and_open(&uri, "See [missing](./does-not-exist.md).\n");
+
+    let params = server.await_notification("textDocument/publishDiagnostics");
+    assert_eq!(params["uri"].as_str(), Some(uri.as_str()));
+    let diagnostics = params["diagnostics"].as_array().expect("diagnostics array");
+    assert!(
+        diagnostics.iter().any(|diag| diag["source"].as_str() == Some("ox-content-link")),
+        "expected an ox-content-link diagnostic, got {diagnostics:?}"
+    );
+
+    server.shutdown();
+}
+
+#[test]
+fn hover_describes_a_frontmatter_field() {
+    // Hover over a frontmatter key only resolves when a schema is
+    // configured, so write one to a temp file and point the server at it
+    // via initializationOptions.
+    let mut schema_path = std::env::temp_dir();
+    schema_path.push("ox-content-lsp-e2e");
+    std::fs::create_dir_all(&schema_path).expect("create temp dir");
+    schema_path.push("hover-schema.json");
+    std::fs::write(
+        &schema_path,
+        r#"{ "properties": { "title": { "type": "string", "description": "The page title" } } }"#,
+    )
+    .expect("write schema");
+
+    let mut server = Server::start();
+    let uri = temp_uri("hover.md");
+    server.initialize_and_open_with(
+        &uri,
+        "---\ntitle: Hello\n---\n\n# Heading\n",
+        json!({ "frontmatterSchema": schema_path.display().to_string() }),
+    );
+
+    // The `title` key sits on line 1; hover in the middle of it.
+    let id = server.request(
+        "textDocument/hover",
+        json!({ "textDocument": { "uri": uri }, "position": { "line": 1, "character": 2 } }),
+    );
+    let hover = server.await_response(id);
+    let value = hover["contents"]["value"].as_str().expect("hover markup value");
+    assert!(value.contains("title"), "hover should name the field, got {value:?}");
+    assert!(value.contains("string"), "hover should state the type, got {value:?}");
 
     server.shutdown();
 }
