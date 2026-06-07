@@ -42,6 +42,7 @@ must not depend on a later one in the list.
 | 7   | textlint integration                            | on-save diagnostics      | via configured command       | enabled per setting      | enabled per setting         | shipped (opt-in) |
 | 8   | Frontmatter schema completion + diagnostics     | present                  | none (validated through LSP) | present                  | present                     | needs CLI        |
 | 9   | Document structure (outline + folding)          | symbols + folding ranges | none (unit-tested headless)  | outline + folding        | outline + folding           | shipped          |
+| 10  | Document links (Markdown links + images)        | document link provider   | none (unit-tested headless)  | clickable links          | clickable links             | shipped          |
 
 ## PR Sequence
 
