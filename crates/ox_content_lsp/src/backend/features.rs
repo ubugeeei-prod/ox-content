@@ -232,6 +232,20 @@ impl Backend {
         let ranges = crate::folding::folding_ranges(&document);
         (!ranges.is_empty()).then_some(ranges)
     }
+
+    pub(super) async fn document_link_response(&self, uri: &Url) -> Option<Vec<DocumentLink>> {
+        let Ok(path) = uri.to_file_path() else {
+            return None;
+        };
+        if !is_markdown_path(&path) {
+            return None;
+        }
+
+        let document = self.state.document(uri).await?;
+        let root = self.state.root().await;
+        let links = crate::document_link::document_links(&document, &path, root.as_deref());
+        (!links.is_empty()).then_some(links)
+    }
 }
 
 fn push_fmt(output: &mut String, args: std::fmt::Arguments<'_>) {

@@ -9,10 +9,12 @@
 //! - preview HTML generation via `workspace/executeCommand`
 //! - heading symbols for document outline navigation
 //! - folding ranges for headings, code blocks, and frontmatter
+//! - document links for Markdown links and images
 
 mod backend;
 mod config;
 mod document;
+mod document_link;
 mod folding;
 mod frontmatter;
 mod i18n;
