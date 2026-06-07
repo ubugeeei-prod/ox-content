@@ -571,7 +571,7 @@ pub struct JsSanitizeOptions {
     pub allowed_tags: Option<Vec<String>>,
     /// Allowed attribute names. Omit for safe defaults.
     pub allowed_attributes: Option<Vec<String>>,
-    /// Allowed URL schemes for href/src/action attributes. Omit for safe defaults.
+    /// Allowed URL schemes for URL-bearing attributes. Omit for safe defaults.
     pub allowed_url_schemes: Option<Vec<String>>,
 }
 

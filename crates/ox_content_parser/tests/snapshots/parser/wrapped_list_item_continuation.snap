@@ -1,0 +1,16 @@
+---
+source: crates/ox_content_parser/tests/snapshot_parse.rs
+description: "- [Blacksmith](https://www.blacksmith.sh/) for sponsoring CI and\n  Testbox infrastructure across projects.\n- [Mates Inc.](https://eng.mates.education/) for supporting OSS and\n  adopting Vize in production.\n"
+---
+Document [0..206]
+  List ordered=false start=- spread=false [0..206]
+    ListItem spread=false checked=- [0..107]
+      Paragraph [2..105]
+        Link url="https://www.blacksmith.sh/" title=None [2..42]
+          Text "Blacksmith" [3..13]
+        Text " for sponsoring CI and\nTestbox infrastructure across projects." [42..104]
+    ListItem spread=false checked=- [107..206]
+      Paragraph [109..204]
+        Link url="https://eng.mates.education/" title=None [109..151]
+          Text "Mates Inc." [110..120]
+        Text " for supporting OSS and\nadopting Vize in production." [151..203]
