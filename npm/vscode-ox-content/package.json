@@ -27,12 +27,12 @@
     "@types/mocha": "^10.0.10",
     "@types/node": "catalog:",
     "@types/vscode": "^1.120.0",
-    "@vscode/test-cli": "^0.0.10",
+    "@vscode/test-cli": "^0.0.12",
     "@vscode/test-electron": "^2.4.1",
-    "mocha": "^10.7.3",
+    "mocha": "^11.7.6",
     "typescript": "catalog:",
     "vitest": "catalog:",
-    "vscode-languageclient": "^9.0.1"
+    "vscode-languageclient": "^10.0.0"
   },
   "contributes": {
     "commands": [
