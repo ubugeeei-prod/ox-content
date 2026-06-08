@@ -1,5 +1,6 @@
 use napi_derive::napi;
 
+/// Raw JSDoc tag extracted from source code.
 #[napi(object)]
 #[derive(Clone)]
 pub struct JsSourceDocTag {

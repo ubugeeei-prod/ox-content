@@ -2,6 +2,7 @@ use napi_derive::napi;
 
 use crate::TocEntry;
 
+/// Navigation item for SSG.
 #[napi(object)]
 #[derive(Clone)]
 pub struct JsSsgNavItem {
