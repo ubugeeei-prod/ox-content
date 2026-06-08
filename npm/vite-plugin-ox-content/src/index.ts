@@ -716,6 +716,20 @@ function normalizeRuntimeBase(base: string): string {
 
 // Re-export types and utilities
 export { createMarkdownEnvironment } from "./environment";
+export {
+  IncrementalMarkdownParser,
+  IncrementalMarkdownRenderer,
+  createIncrementalMarkdownParser,
+  createIncrementalMarkdownRenderer,
+  renderMarkdownStream,
+  type IncrementalMarkdownParseAppendOptions,
+  type IncrementalMarkdownParseResult,
+  type IncrementalMarkdownParserOptions,
+  type IncrementalMarkdownRenderAppendOptions,
+  type IncrementalMarkdownRenderResult,
+  type IncrementalMarkdownRendererOptions,
+  type MarkdownChunkSource,
+} from "./incremental";
 export { transformMarkdown } from "./transform";
 export {
   extractCodeBlocks,

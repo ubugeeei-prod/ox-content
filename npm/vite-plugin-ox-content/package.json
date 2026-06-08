@@ -33,6 +33,11 @@
       "require": "./dist/index.cjs",
       "types": "./dist/index.d.mts"
     },
+    "./incremental-dom": {
+      "import": "./dist/incremental-dom.mjs",
+      "require": "./dist/incremental-dom.cjs",
+      "types": "./dist/incremental-dom.d.mts"
+    },
     "./vitepress-migrate": {
       "import": "./dist/vitepress-cli.mjs",
       "types": "./dist/vitepress-cli.d.mts"

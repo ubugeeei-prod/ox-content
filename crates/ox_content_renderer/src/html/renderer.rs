@@ -8,6 +8,7 @@
 mod blocks;
 mod callout;
 mod code_block;
+mod incremental;
 mod inlines;
 mod links;
 mod visit;
