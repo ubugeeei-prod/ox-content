@@ -359,28 +359,57 @@ jobs:
         env:
           CARGO_REGISTRY_TOKEN: ${{ steps.crates-io-auth.outputs.token }}
         run: |
+          VERSION=$(sed -n 's/^version = "\(.*\)"/\1/p' Cargo.toml | head -1)
+
+          crate_exists() {
+            local crate="$1"
+            curl -fsSL -A "ox-content-release" "https://crates.io/api/v1/crates/${crate}/${VERSION}" >/dev/null
+          }
+
+          publish_crate() {
+            local crate="$1"
+            shift
+
+            if crate_exists "$crate"; then
+              echo "Skipping ${crate}@${VERSION} (already published)"
+              return 0
+            fi
+
+            if cargo publish -p "$crate" --allow-dirty "$@"; then
+              return 0
+            fi
+
+            if crate_exists "$crate"; then
+              echo "Skipping ${crate}@${VERSION} (published despite non-zero cargo publish exit)"
+              return 0
+            fi
+
+            echo "::error::Failed to publish ${crate}@${VERSION}"
+            return 1
+          }
+
           # Publish in dependency order with delays for crates.io index update
-          cargo publish -p ox_content_allocator --allow-dirty || true
+          publish_crate ox_content_allocator
           sleep 30
-          cargo publish -p ox_content_ast --allow-dirty || true
+          publish_crate ox_content_ast
           sleep 30
-          cargo publish -p ox_content_profiler --allow-dirty || true
+          publish_crate ox_content_profiler
           sleep 30
-          cargo publish -p ox_content_parser --allow-dirty --config 'patch.crates-io.ox_content_renderer.path="crates/ox_content_renderer"' || true
+          publish_crate ox_content_parser --config 'patch.crates-io.ox_content_renderer.path="crates/ox_content_renderer"'
           sleep 30
-          cargo publish -p ox_content_renderer --allow-dirty || true
+          publish_crate ox_content_renderer
           sleep 30
-          cargo publish -p ox_content_incremental --allow-dirty || true
+          publish_crate ox_content_incremental
           sleep 30
-          cargo publish -p ox_content_og_image --allow-dirty || true
+          publish_crate ox_content_og_image
           sleep 30
-          cargo publish -p ox_content_search --allow-dirty || true
+          publish_crate ox_content_search
           sleep 30
-          cargo publish -p ox_content_ssg --allow-dirty || true
+          publish_crate ox_content_ssg
           sleep 30
-          cargo publish -p ox_content_docs --allow-dirty || true
+          publish_crate ox_content_docs
           sleep 30
-          cargo publish -p ox_content_vite --allow-dirty || true
+          publish_crate ox_content_vite
 
   create-release:
     name: Create GitHub Release
