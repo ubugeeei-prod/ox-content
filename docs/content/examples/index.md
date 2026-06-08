@@ -1,6 +1,10 @@
 # Examples
 
-Ox Content provides several examples demonstrating different use cases.
+Ox Content provides runnable examples and small source snippets demonstrating
+different use cases.
+
+Small built-in feature snippets live in the repository under
+`examples/builtin-features/`.
 
 ## Integration Examples
 

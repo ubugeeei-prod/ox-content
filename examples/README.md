@@ -1,114 +1,62 @@
 # Ox Content Examples
 
-This directory contains example integrations and use cases for Ox Content.
+This directory contains runnable projects and small source examples.
+
+## Built-in Features
+
+| Example                                | Description                     | Run style            |
+| -------------------------------------- | ------------------------------- | -------------------- |
+| [builtin-features](./builtin-features) | Small Markdown and config input | Copy into a Vite app |
 
 ## Framework Integrations
 
-| Example                                    | Description     | Features                                   |
-| ------------------------------------------ | --------------- | ------------------------------------------ |
-| [vue-integration](./vue-integration)       | Vue 3 + Vite    | Composition API, reactive Markdown preview |
-| [react-integration](./react-integration)   | React 18 + Vite | Hooks, useMemo optimization                |
-| [svelte-integration](./svelte-integration) | Svelte 5 + Vite | Runes, reactive state                      |
-| [vite-ssg](./vite-ssg)                     | Vite SSG        | Environment API, static generation         |
+| Example                        | Description     | Shows                                |
+| ------------------------------ | --------------- | ------------------------------------ |
+| [integ-vue](./integ-vue)       | Vue 3 + Vite    | Vue component islands in Markdown    |
+| [integ-react](./integ-react)   | React + Vite    | React component islands in Markdown  |
+| [integ-svelte](./integ-svelte) | Svelte 5 + Vite | Svelte component islands in Markdown |
 
-## Plugin Integrations
+## Site and Tooling
 
-| Example                                                | Description                | Use Case                                                   |
-| ------------------------------------------------------ | -------------------------- | ---------------------------------------------------------- |
-| [markdown-it-plugin](./markdown-it-plugin)             | markdown-it integration    | Use Ox Content parser with markdown-it plugins             |
-| [rehype-plugin](./rehype-plugin)                       | unified/rehype integration | Post-process HTML with rehype plugins                      |
-| [unplugin-vite-ox-content](./unplugin-vite-ox-content) | mdast/unified bridge       | Run custom mdast and existing remark plugins on Ox Content |
+| Example                                      | Description               | Shows                                |
+| -------------------------------------------- | ------------------------- | ------------------------------------ |
+| [playground](./playground)                   | Browser playground        | Live Markdown preview                |
+| [ssg-vite](./ssg-vite)                       | Vite static site          | SSG output and generated routes      |
+| [gen-source-docs](./gen-source-docs)         | Source documentation      | API docs generated from TypeScript   |
+| [og-image-custom](./og-image-custom)         | Custom OG image templates | React, Svelte, Vue, and TS templates |
+| [incremental-html-js](./incremental-html-js) | Incremental rendering     | Plain Node.js, HTML, CSS, and SSE    |
 
-## Tooling Examples
+## Parser and Pipeline Plugins
 
-| Example                                      | Description               | Features                                     |
-| -------------------------------------------- | ------------------------- | -------------------------------------------- |
-| [source-docs](./source-docs)                 | Source code documentation | JSDoc extraction, Markdown generation        |
-| [basic-playground](./basic-playground)       | Interactive playground    | Live preview, AST visualization              |
-| [incremental-html-js](./incremental-html-js) | Incremental renderer demo | Plain HTML/CSS/JS, SSE, native Rust renderer |
+| Example                                                  | Description        | Shows                                     |
+| -------------------------------------------------------- | ------------------ | ----------------------------------------- |
+| [plugin-markdown-it](./plugin-markdown-it)               | markdown-it plugin | Parser reuse in markdown-it               |
+| [plugin-rehype](./plugin-rehype)                         | rehype plugin      | HTML post-processing with unified         |
+| [unplugin-vite-ox-content](./unplugin-vite-ox-content)   | Vite bridge        | Native parser plus unified-compatible AST |
+| [unplugin-vite-markdown-it](./unplugin-vite-markdown-it) | Vite bridge        | markdown-it token bridge                  |
+| [unplugin-vite-rehype](./unplugin-vite-rehype)           | Vite bridge        | rehype transform pipeline                 |
+| [unplugin-vite-remark](./unplugin-vite-remark)           | Vite bridge        | remark transform pipeline                 |
+| [unplugin-esbuild](./unplugin-esbuild)                   | esbuild plugin     | Markdown imports in esbuild               |
+| [unplugin-rollup](./unplugin-rollup)                     | Rollup plugin      | Markdown imports in Rollup                |
+| [unplugin-webpack](./unplugin-webpack)                   | webpack plugin     | Markdown imports in webpack               |
 
-## Running Examples
+## Running
 
-Each example is a standalone project. Navigate to the example directory and run:
+Most examples are workspace packages. Run them from the repository root:
 
 ```bash
-# Install dependencies
-npm install
-
-# Start development server (for web examples)
-npm run dev
-
-# Or run directly (for Node.js examples)
-npm start
+corepack pnpm --filter ./examples/integ-vue dev
+corepack pnpm --filter ./examples/ssg-vite build
+corepack pnpm --filter ./examples/plugin-markdown-it start
 ```
 
-## Example Structure
+`builtin-features` is a source catalog instead of a standalone app. Copy the
+Markdown or config file you want into `ssg-vite` or a framework integration.
 
-```
-examples/
-├── vue-integration/        # Vue 3 integration
-├── react-integration/      # React 18 integration
-├── svelte-integration/     # Svelte 5 integration
-├── vite-ssg/              # Vite SSG with Environment API
-├── markdown-it-plugin/    # markdown-it plugin
-├── rehype-plugin/         # rehype/unified plugin
-├── source-docs/           # Source code documentation
-├── incremental-html-js/   # Plain HTML/CSS/JS incremental rendering
-└── basic-playground/      # Interactive playground
-```
+## Adding Examples
 
-## Creating New Examples
-
-1. Create a new directory in `examples/`
-2. Add a `package.json` with necessary dependencies
-3. Include a `README.md` explaining the integration
-4. Add the example to this README
-
-## Integration Patterns
-
-### Vite Environment API
-
-```typescript
-import { oxContent } from "@ox-content/vite-plugin";
-
-export default defineConfig({
-  plugins: [
-    oxContent({
-      srcDir: "docs",
-      gfm: true,
-    }),
-  ],
-});
-```
-
-### Direct NAPI Usage
-
-```javascript
-import { parseAndRender } from "@ox-content/napi";
-
-const { html, frontmatter, toc } = parseAndRender(markdown, {
-  gfm: true,
-});
-```
-
-### markdown-it Plugin
-
-```javascript
-import MarkdownIt from "markdown-it";
-import { oxContentPlugin } from "./plugin.js";
-
-const md = new MarkdownIt();
-md.use(oxContentPlugin, { gfm: true });
-```
-
-### rehype Pipeline
-
-```javascript
-import { unified } from "unified";
-import rehypeParse from "rehype-parse";
-
-const result = await unified()
-  .use(rehypeParse, { fragment: true })
-  .use(myRehypePlugin)
-  .process(oxContentHtml);
-```
+1. Prefer a small, focused directory under `examples/`.
+2. Add a short `README.md` when the example is not self-explanatory.
+3. Add runnable examples to the pnpm workspace with a `package.json`.
+4. Add copyable snippets without a `package.json` when a full app would obscure the feature.
+5. Add the new entry to this README.

@@ -35,9 +35,10 @@ Write a `<pm>` element containing a single npm-style command:
 <pm>npm install -D vite</pm>
 ```
 
-The renderer expands it into the same tab widget used by [`<tabs>`](./tabs.md),
-so styling and keyboard navigation are consistent. Each tab body is a code block
-with the command converted for that package manager.
+The renderer expands it into the same tab widget used by `<tabs>`, so styling
+and keyboard navigation are consistent. See
+`examples/builtin-features/content/tabs.md` for the compact tab source. Each tab
+body is a code block with the command converted for that package manager.
 
 ## Rendered example
 
