@@ -21,10 +21,10 @@ This directory contains example integrations and use cases for Ox Content.
 
 ## Tooling Examples
 
-| Example                                | Description               | Features                              |
-| -------------------------------------- | ------------------------- | ------------------------------------- |
-| [source-docs](./source-docs)           | Source code documentation | JSDoc extraction, Markdown generation |
-| [basic-playground](./basic-playground) | Interactive playground    | Live preview, AST visualization       |
+| Example                                      | Description               | Features                                     |
+| -------------------------------------------- | ------------------------- | -------------------------------------------- |
+| [source-docs](./source-docs)                 | Source code documentation | JSDoc extraction, Markdown generation        |
+| [basic-playground](./basic-playground)       | Interactive playground    | Live preview, AST visualization              |
 | [incremental-html-js](./incremental-html-js) | Incremental renderer demo | Plain HTML/CSS/JS, SSE, native Rust renderer |
 
 ## Running Examples

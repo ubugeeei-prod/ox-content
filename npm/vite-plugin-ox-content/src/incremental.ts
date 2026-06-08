@@ -57,8 +57,10 @@ export interface IncrementalMarkdownRenderAppendOptions {
 export type IncrementalMarkdownRenderResult =
   import("@ox-content/napi").IncrementalMarkdownRenderResult;
 
-export interface IncrementalMarkdownParseResult<TAst = unknown>
-  extends Omit<NativeParseResult, "ast" | "pendingAst"> {
+export interface IncrementalMarkdownParseResult<TAst = unknown> extends Omit<
+  NativeParseResult,
+  "ast" | "pendingAst"
+> {
   /** Parsed mdast for the newly committed Markdown prefix, or null when nothing committed. */
   ast: TAst | null;
   /** Raw mdast JSON for the newly committed Markdown prefix. */
@@ -104,7 +106,9 @@ export class IncrementalMarkdownParser<TAst = unknown> {
   readonly #includePendingAst: boolean;
   readonly #completeInline: boolean;
 
-  constructor(options: IncrementalMarkdownParserOptions & IncrementalMarkdownParseAppendOptions = {}) {
+  constructor(
+    options: IncrementalMarkdownParserOptions & IncrementalMarkdownParseAppendOptions = {},
+  ) {
     const napi = importNapiModuleSync();
     this.#native = new napi.IncrementalMarkdownParser(toNativeParserOptions(options));
     this.#includePendingAst = options.includePendingAst ?? false;
@@ -124,7 +128,9 @@ export class IncrementalMarkdownParser<TAst = unknown> {
     );
   }
 
-  finish(options: IncrementalMarkdownParseAppendOptions = {}): IncrementalMarkdownParseResult<TAst> {
+  finish(
+    options: IncrementalMarkdownParseAppendOptions = {},
+  ): IncrementalMarkdownParseResult<TAst> {
     return normalizeParseResult<TAst>(
       this.#native.finish({
         includePendingAst: options.includePendingAst ?? this.#includePendingAst,

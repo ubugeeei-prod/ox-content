@@ -17,15 +17,11 @@ describe("incremental markdown", () => {
 
     const emphasis = renderer.append("lo **wor");
     expect(emphasis.didCommit).toBe(false);
-    expect(emphasis.pendingHtml).toBe(
-      '<h1 id="hello-wor">Hello <strong>wor</strong></h1>\n',
-    );
+    expect(emphasis.pendingHtml).toBe('<h1 id="hello-wor">Hello <strong>wor</strong></h1>\n');
 
     const committed = renderer.append("ld**\n\nNext");
     expect(committed.didCommit).toBe(true);
-    expect(committed.deltaHtml).toBe(
-      '<h1 id="hello-world">Hello <strong>world</strong></h1>\n',
-    );
+    expect(committed.deltaHtml).toBe('<h1 id="hello-world">Hello <strong>world</strong></h1>\n');
     expect(committed.pendingHtml).toBe("<p>Next</p>\n");
     expect(committed.html).toBe(
       '<h1 id="hello-world">Hello <strong>world</strong></h1>\n<p>Next</p>\n',

@@ -36,9 +36,7 @@ export const incrementalMarkdownDomStyles = `
 export function injectIncrementalMarkdownDomStyles(
   document: Document = globalThis.document,
 ): HTMLStyleElement {
-  const existing = document.querySelector<HTMLStyleElement>(
-    "style[data-ox-incremental-dom]",
-  );
+  const existing = document.querySelector<HTMLStyleElement>("style[data-ox-incremental-dom]");
   if (existing) {
     return existing;
   }

@@ -1,13 +1,7 @@
 /// <reference lib="dom" />
 
-import {
-  prepareCharacterFade,
-  resolveAnimationOptions,
-} from "./incremental-dom-animation";
-import {
-  DEFAULT_COMMITTED_CLASS,
-  DEFAULT_PENDING_CLASS,
-} from "./incremental-dom-styles";
+import { prepareCharacterFade, resolveAnimationOptions } from "./incremental-dom-animation";
+import { DEFAULT_COMMITTED_CLASS, DEFAULT_PENDING_CLASS } from "./incremental-dom-styles";
 import type {
   IncrementalMarkdownDomApplyOptions,
   IncrementalMarkdownDomOptions,
@@ -61,7 +55,12 @@ export function createIncrementalMarkdownDomRenderer(
     const fragment = parseHtml(html);
     const committedText = fragment.textContent ?? "";
     const visiblePrefix = commonPrefixLength(previousPendingText, committedText);
-    prepareCharacterFade(document, fragment, animation, animation.committed ? visiblePrefix : Infinity);
+    prepareCharacterFade(
+      document,
+      fragment,
+      animation,
+      animation.committed ? visiblePrefix : Infinity,
+    );
     committedRoot.append(fragment);
   }
 
