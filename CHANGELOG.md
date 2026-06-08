@@ -1,5 +1,11 @@
 # Changelog
 
+## [2.64.0] - 2026-06-08
+
+### Features
+
+- opt-in incremental markdown parsing/rendering (#357)
+
 ## [2.63.0] - 2026-06-08
 
 ### Features
