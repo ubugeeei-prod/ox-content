@@ -10,6 +10,7 @@
 //! - heading symbols for document outline navigation
 //! - folding ranges for headings, code blocks, and frontmatter
 //! - document links for Markdown links and images
+//! - smart selection ranges for expand-selection
 
 mod backend;
 mod config;
@@ -19,6 +20,7 @@ mod folding;
 mod frontmatter;
 mod i18n;
 mod preview;
+mod selection_range;
 mod state;
 mod textlint;
 
