@@ -199,6 +199,9 @@ pub struct NormalizedMember {
     pub signature: Option<String>,
     /// Property or enum member type/value annotation.
     pub type_annotation: Option<String>,
+    /// Default value extracted from `@default` / `@defaultValue`.
+    #[serde(default)]
+    pub default_value: Option<String>,
     /// Parameters, if any.
     #[serde(default)]
     pub params: Vec<NormalizedParamDoc>,
@@ -340,6 +343,10 @@ fn normalize_member(item: DocItem, type_parameters: bool) -> Option<NormalizedMe
     let include_type_parameters = type_parameters;
     let kind = NormalizedMemberKind::from_doc_item_kind(item.kind)?;
     let mut metadata = normalize_doc_metadata(&item.tags, type_parameters);
+    let default_value = member_default_value_from_tags(&item.tags);
+    if default_value.is_some() {
+        remove_member_default_tags(&mut metadata.tags);
+    }
     let has_extracted_params = !item.params.is_empty();
     let has_extracted_return = item.return_type.is_some() || !item.return_members.is_empty();
     let has_callable_shape = matches!(
@@ -389,6 +396,7 @@ fn normalize_member(item: DocItem, type_parameters: bool) -> Option<NormalizedMe
         description: item.doc.unwrap_or_default(),
         signature,
         type_annotation,
+        default_value,
         params: metadata.params,
         type_parameters,
         returns: metadata.returns,
@@ -401,6 +409,33 @@ fn normalize_member(item: DocItem, type_parameters: bool) -> Option<NormalizedMe
         line: item.line,
         end_line: item.end_line,
     })
+}
+
+fn member_default_value_from_tags(tags: &[DocTag]) -> Option<String> {
+    for tag in tags {
+        if !matches!(tag.tag.as_str(), "default" | "defaultValue" | "defaultvalue") {
+            continue;
+        }
+
+        let value = tag.value.trim();
+        let value = if value.is_empty() {
+            tag.default_value.as_deref().unwrap_or("").trim()
+        } else {
+            value
+        };
+
+        if !value.is_empty() {
+            return Some(value.to_string());
+        }
+    }
+
+    None
+}
+
+fn remove_member_default_tags(tags: &mut BTreeMap<String, String>) {
+    tags.remove("default");
+    tags.remove("defaultValue");
+    tags.remove("defaultvalue");
 }
 
 struct NormalizedDocMetadata {
@@ -768,6 +803,94 @@ export interface Command {
         assert_eq!(members[1].name, "args");
         assert_eq!(members[1].type_annotation.as_deref(), Some("string[]"));
         assert!(members[1].optional);
+    }
+
+    #[test]
+    fn property_default_tags_are_normalized_to_member_defaults() {
+        let source = r#"
+/**
+ * Runtime options.
+ */
+export interface Options {
+    /**
+     * Request timeout.
+     * @default 5000
+     */
+    timeout?: number;
+    /**
+     * Retry mode.
+     * @defaultValue "exponential"
+     */
+    retryMode?: "none" | "linear" | "exponential";
+    /** HTTP options. */
+    http: {
+        /**
+         * Request headers.
+         * @defaultValue {}
+         */
+        headers: Record<string, string>;
+    };
+}
+"#;
+
+        let extractor = DocExtractor::new();
+        let items = extractor.extract_source(source, "options.ts", SourceType::ts()).unwrap();
+        let entries = normalize_doc_items(items, false);
+        let members = &entries[0].members;
+
+        assert_eq!(members[0].name, "timeout");
+        assert_eq!(members[0].default_value.as_deref(), Some("5000"));
+        assert!(!members[0].tags.contains_key("default"));
+
+        assert_eq!(members[1].name, "retryMode");
+        assert_eq!(members[1].default_value.as_deref(), Some("\"exponential\""));
+        assert!(!members[1].tags.contains_key("defaultValue"));
+
+        assert_eq!(members[2].name, "http");
+        assert_eq!(members[2].members[0].name, "headers");
+        assert_eq!(members[2].members[0].default_value.as_deref(), Some("{}"));
+        assert!(!members[2].members[0].tags.contains_key("defaultValue"));
+    }
+
+    #[test]
+    fn class_and_type_alias_property_default_tags_are_normalized() {
+        let source = r"
+/**
+ * Runtime options.
+ */
+export class RuntimeOptions {
+    /**
+     * Enables cache.
+     * @default true
+     */
+    cache?: boolean;
+}
+
+/**
+ * Retry options.
+ */
+export type RetryOptions = {
+    /**
+     * Retry count.
+     * @defaultValue 3
+     */
+    retries?: number;
+};
+";
+
+        let extractor = DocExtractor::new();
+        let items = extractor.extract_source(source, "options.ts", SourceType::ts()).unwrap();
+        let entries = normalize_doc_items(items, false);
+
+        let class = entries.iter().find(|entry| entry.name == "RuntimeOptions").unwrap();
+        assert_eq!(class.members[0].name, "cache");
+        assert_eq!(class.members[0].default_value.as_deref(), Some("true"));
+        assert!(!class.members[0].tags.contains_key("default"));
+
+        let alias = entries.iter().find(|entry| entry.name == "RetryOptions").unwrap();
+        assert_eq!(alias.members[0].name, "retries");
+        assert_eq!(alias.members[0].default_value.as_deref(), Some("3"));
+        assert!(!alias.members[0].tags.contains_key("defaultValue"));
     }
 
     #[test]

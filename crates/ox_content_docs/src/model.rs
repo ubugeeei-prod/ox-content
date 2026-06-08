@@ -96,6 +96,9 @@ pub struct ApiDocMember {
     pub signature: Option<String>,
     /// Property or enum member type/value annotation.
     pub type_annotation: Option<String>,
+    /// Default value extracted from `@default` / `@defaultValue`.
+    #[serde(default)]
+    pub default_value: Option<String>,
     /// Parameters.
     #[serde(default)]
     pub params: Vec<ApiParamDoc>,

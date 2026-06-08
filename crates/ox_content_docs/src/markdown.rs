@@ -2891,6 +2891,7 @@ mod tests {
                         description: "Runs it.".to_string(),
                         signature: Some("run(): void".to_string()),
                         type_annotation: None,
+                        default_value: None,
                         params: vec![],
                         type_parameters: vec![],
                         returns: None,
@@ -3304,6 +3305,7 @@ mod tests {
                             .to_string(),
                         signature: None,
                         type_annotation: Some("Record<string, unknown>".to_string()),
+                        default_value: None,
                         params: vec![],
                         type_parameters: vec![],
                         returns: None,
@@ -3441,6 +3443,7 @@ mod tests {
                         description: "Suppress usage output.".to_string(),
                         signature: None,
                         type_annotation: Some("boolean".to_string()),
+                        default_value: None,
                         params: vec![],
                         type_parameters: vec![],
                         returns: None,
@@ -4053,6 +4056,7 @@ mod tests {
             description: "Command name.".to_string(),
             signature: None,
             type_annotation: Some("string".to_string()),
+            default_value: None,
             params: vec![],
             type_parameters: vec![],
             returns: None,
@@ -4104,6 +4108,66 @@ mod tests {
     }
 
     #[test]
+    fn markdown_renders_member_default_values() {
+        let mut entry = test_entry("Command", "interface", "src/types.ts", "Command options.");
+        entry.members = vec![ApiDocMember {
+            name: "timeout".to_string(),
+            kind: "property".to_string(),
+            description: "Request timeout.".to_string(),
+            signature: None,
+            type_annotation: Some("number".to_string()),
+            default_value: Some("5000".to_string()),
+            params: vec![],
+            type_parameters: vec![],
+            returns: None,
+            members: vec![],
+            optional: true,
+            readonly: false,
+            r#static: false,
+            private: false,
+            tags: vec![],
+            implementation_of: vec![],
+            line: 2,
+            end_line: 2,
+        }];
+        let docs = vec![ApiDocModule {
+            description: String::new(),
+            file: "mod".to_string(),
+            source_path: String::new(),
+            examples: vec![],
+            tags: vec![],
+            entries: vec![entry],
+        }];
+
+        let html = generate_markdown(
+            &docs,
+            &MarkdownDocsOptions {
+                path_strategy: MarkdownPathStrategy::TypeDoc,
+                interface_properties_format: MarkdownDisplayFormat::Table,
+                ..MarkdownDocsOptions::default()
+            },
+        );
+        let html_page = html.get("mod/interfaces/Command.md").unwrap();
+        assert!(html_page.contains("ox-api-entry__member-default"));
+        assert!(html_page
+            .contains("<span>Default</span> <code class=\"language-typescript\">5000</code>"));
+
+        let markdown = generate_markdown(
+            &docs,
+            &MarkdownDocsOptions {
+                path_strategy: MarkdownPathStrategy::TypeDoc,
+                render_style: MarkdownRenderStyle::Markdown,
+                interface_properties_format: MarkdownDisplayFormat::Table,
+                ..MarkdownDocsOptions::default()
+            },
+        );
+        let markdown_page = markdown.get("mod/interfaces/Command.md").unwrap();
+        assert!(markdown_page.contains(
+            "| `timeout` _(optional)_ | `number` | Request timeout. **Default:** `5000` |"
+        ));
+    }
+
+    #[test]
     fn markdown_member_parameters_follow_parameters_format() {
         let mut entry = test_entry("Command", "interface", "src/types.ts", "Command options.");
         entry.members = vec![ApiDocMember {
@@ -4112,6 +4176,7 @@ mod tests {
             description: "Runs the command.".to_string(),
             signature: Some("run(ctx: Context): Promise<void>".to_string()),
             type_annotation: None,
+            default_value: None,
             params: vec![ApiParamDoc {
                 name: "ctx".to_string(),
                 type_annotation: "Context".to_string(),
@@ -4182,6 +4247,7 @@ mod tests {
                     .to_string(),
             ),
             type_annotation: None,
+            default_value: None,
             params: vec![ApiParamDoc {
                 name: "decorator".to_string(),
                 type_annotation: "(value: L) => void".to_string(),
@@ -4268,6 +4334,7 @@ mod tests {
                 "getResource(locale: string): Record<string, string> | undefined".to_string(),
             ),
             type_annotation: None,
+            default_value: None,
             params: vec![ApiParamDoc {
                 name: "locale".to_string(),
                 type_annotation: "string".to_string(),
@@ -4310,6 +4377,7 @@ mod tests {
                     "constructor(options: TranslationAdapterFactoryOptions)".to_string(),
                 ),
                 type_annotation: None,
+                default_value: None,
                 params: vec![ApiParamDoc {
                     name: "options".to_string(),
                     type_annotation: "TranslationAdapterFactoryOptions".to_string(),
@@ -4337,6 +4405,7 @@ mod tests {
                     "getResource(locale: string): Record<string, string> | undefined".to_string(),
                 ),
                 type_annotation: None,
+                default_value: None,
                 params: vec![ApiParamDoc {
                     name: "locale".to_string(),
                     type_annotation: "string".to_string(),
@@ -4459,6 +4528,7 @@ mod tests {
                 description: "Command name.".to_string(),
                 signature: None,
                 type_annotation: Some("string".to_string()),
+                default_value: None,
                 params: vec![],
                 type_parameters: vec![],
                 returns: None,
@@ -4478,6 +4548,7 @@ mod tests {
                 description: "Runs the command.".to_string(),
                 signature: Some("run(ctx: Context): Promise<void>".to_string()),
                 type_annotation: None,
+                default_value: None,
                 params: vec![ApiParamDoc {
                     name: "ctx".to_string(),
                     type_annotation: "Context".to_string(),
@@ -5269,6 +5340,7 @@ mod tests {
                 "getResource(locale: string): Record<string, string> | undefined".to_string(),
             ),
             type_annotation: None,
+            default_value: None,
             params: vec![ApiParamDoc {
                 name: "locale".to_string(),
                 type_annotation: "string".to_string(),
@@ -5310,6 +5382,7 @@ mod tests {
                 "getResource(locale: string): Record<string, string> | undefined".to_string(),
             ),
             type_annotation: None,
+            default_value: None,
             params: vec![ApiParamDoc {
                 name: "locale".to_string(),
                 type_annotation: "string".to_string(),
@@ -5362,6 +5435,7 @@ mod tests {
             description: String::new(),
             signature: None,
             type_annotation: Some("unknown".to_string()),
+            default_value: None,
             params: vec![],
             type_parameters: vec![],
             returns: None,
@@ -5384,6 +5458,7 @@ mod tests {
             description: "Parses a raw value.".to_string(),
             signature: None,
             type_annotation: Some("(value: string) => string | undefined".to_string()),
+            default_value: None,
             params: vec![ApiParamDoc {
                 name: "value".to_string(),
                 type_annotation: "string".to_string(),
@@ -5518,6 +5593,7 @@ mod tests {
             description: String::new(),
             signature: None,
             type_annotation: Some(type_annotation.to_string()),
+            default_value: None,
             params: vec![],
             type_parameters: vec![],
             returns: None,
@@ -5550,6 +5626,7 @@ mod tests {
                 format!("{name}: {value_type}")
             }),
             type_annotation: Some(value_type.to_string()),
+            default_value: None,
             params: vec![param(param_name, param_type)],
             type_parameters: vec![],
             returns: None,
@@ -6168,6 +6245,7 @@ mod tests {
             description: "The mode.".to_string(),
             signature: None,
             type_annotation: Some("string".to_string()),
+            default_value: None,
             params: vec![],
             type_parameters: vec![],
             returns: None,
@@ -6545,6 +6623,7 @@ mod tests {
             description: "Minimum string length.".to_string(),
             signature: None,
             type_annotation: Some("number".to_string()),
+            default_value: None,
             params: vec![],
             type_parameters: vec![],
             returns: None,
@@ -6612,6 +6691,7 @@ mod tests {
             description: "Whether this is an entry command.".to_string(),
             signature: None,
             type_annotation: Some("boolean".to_string()),
+            default_value: None,
             params: vec![],
             type_parameters: vec![],
             returns: None,
@@ -6963,6 +7043,7 @@ mod tests {
                         description: "Strict mode.".to_string(),
                         signature: None,
                         type_annotation: Some("\"strict\"".to_string()),
+                        default_value: None,
                         params: vec![],
                         type_parameters: vec![],
                         returns: None,
@@ -7052,6 +7133,7 @@ mod tests {
                         description: "Command name.".to_string(),
                         signature: None,
                         type_annotation: Some("string".to_string()),
+                        default_value: None,
                         params: vec![],
                         type_parameters: vec![],
                         returns: None,
@@ -7071,6 +7153,7 @@ mod tests {
                         description: "Runs the command.".to_string(),
                         signature: Some("run(ctx: Context): Promise<void>".to_string()),
                         type_annotation: None,
+                        default_value: None,
                         params: vec![ApiParamDoc {
                             name: "ctx".to_string(),
                             type_annotation: "Context".to_string(),

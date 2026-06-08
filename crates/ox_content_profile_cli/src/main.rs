@@ -478,6 +478,7 @@ fn to_api_member(member: NormalizedMember) -> ApiDocMember {
         description: member.description,
         signature: member.signature,
         type_annotation: member.type_annotation,
+        default_value: member.default_value,
         params: member.params.into_iter().map(to_api_param).collect(),
         type_parameters: member.type_parameters.into_iter().map(to_api_type_param).collect(),
         returns: member.returns.map(to_api_return),

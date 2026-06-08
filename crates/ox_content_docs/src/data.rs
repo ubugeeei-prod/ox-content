@@ -185,6 +185,9 @@ fn member_to_json(member: &ApiDocMember) -> Value {
     if let Some(type_annotation) = &member.type_annotation {
         value.insert("type".to_string(), json!(type_annotation));
     }
+    if let Some(default_value) = &member.default_value {
+        value.insert("default".to_string(), json!(default_value));
+    }
     if !member.params.is_empty() {
         value.insert(
             "params".to_string(),
@@ -487,6 +490,7 @@ mod tests {
                         description: String::new(),
                         signature: None,
                         type_annotation: Some("ArgValues<A>".to_string()),
+                        default_value: Some("{}".to_string()),
                         params: vec![],
                         type_parameters: vec![],
                         returns: None,
@@ -523,6 +527,7 @@ mod tests {
         assert_eq!(returns["type"], "object");
         assert_eq!(returns["members"][0]["name"], "values");
         assert_eq!(returns["members"][0]["type"], "ArgValues<A>");
+        assert_eq!(returns["members"][0]["default"], "{}");
     }
 
     #[test]
@@ -555,6 +560,7 @@ mod tests {
                     description: "HTTP options.".to_string(),
                     signature: None,
                     type_annotation: Some("{ timeout?: number }".to_string()),
+                    default_value: None,
                     params: vec![],
                     type_parameters: vec![],
                     returns: None,
@@ -564,6 +570,7 @@ mod tests {
                         description: "Request timeout.".to_string(),
                         signature: None,
                         type_annotation: Some("number".to_string()),
+                        default_value: None,
                         params: vec![],
                         type_parameters: vec![],
                         returns: None,
@@ -631,6 +638,7 @@ mod tests {
                     description: "Argument schema by option name.".to_string(),
                     signature: Some("readonly [option: string]: ArgSchema".to_string()),
                     type_annotation: Some("ArgSchema".to_string()),
+                    default_value: None,
                     params: vec![ApiParamDoc {
                         name: "option".to_string(),
                         type_annotation: "string".to_string(),
@@ -697,6 +705,7 @@ mod tests {
                     description: "Parses a raw value.".to_string(),
                     signature: None,
                     type_annotation: Some("(value: string) => any".to_string()),
+                    default_value: None,
                     params: vec![ApiParamDoc {
                         name: "value".to_string(),
                         type_annotation: "string".to_string(),
@@ -896,6 +905,7 @@ mod tests {
                             .to_string(),
                     ),
                     type_annotation: None,
+                    default_value: None,
                     params: vec![],
                     type_parameters: vec![],
                     returns: None,
