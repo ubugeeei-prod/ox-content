@@ -1,5 +1,6 @@
 use napi_derive::napi;
 
+/// OG image configuration for JavaScript.
 #[napi(object)]
 #[derive(Default, Clone)]
 pub struct JsOgImageConfig {

@@ -8,6 +8,7 @@ use ox_content_renderer::HtmlRenderer;
 
 use crate::{create_allocator_for_source, mdast, mdast_raw, transfer::TransferPayloadKind};
 
+/// Parse result containing the AST as JSON.
 #[napi(object)]
 pub struct ParseResult {
     /// The AST as a JSON string.
@@ -76,7 +77,7 @@ pub struct PreparedSourceResult {
     pub source_offset: JsSourceOrigin,
 }
 
-/// Raw JSDoc tag extracted from source code.
+/// Source preparation options for JavaScript.
 #[napi(object)]
 #[derive(Default, Clone)]
 pub struct JsSourceOptions {

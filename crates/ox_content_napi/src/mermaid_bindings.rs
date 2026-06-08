@@ -1,5 +1,6 @@
 use napi_derive::napi;
 
+/// Mermaid transform result.
 #[napi(object)]
 pub struct MermaidTransformResult {
     /// The transformed HTML with mermaid code blocks replaced by rendered SVGs.

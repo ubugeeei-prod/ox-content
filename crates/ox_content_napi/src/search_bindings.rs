@@ -11,6 +11,7 @@ use ox_content_search::{
 
 use crate::{create_allocator_for_source, transformer::parse_frontmatter, JsParserOptions};
 
+/// Search document for JavaScript.
 #[napi(object)]
 #[derive(Clone)]
 pub struct JsSearchDocument {
@@ -298,7 +299,6 @@ pub fn write_search_index(index_json: String, out_dir: String) -> Result<()> {
 // SSG HTML Generation API
 // =============================================================================
 
-/// Navigation item for SSG.
 /// Extracts searchable content from Markdown source.
 ///
 /// Parses the Markdown and extracts title, body text, headings, and code.

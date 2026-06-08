@@ -2,6 +2,7 @@ use std::collections::HashMap;
 
 use napi_derive::napi;
 
+/// Result of loading dictionaries.
 #[napi(object)]
 pub struct I18nLoadResult {
     /// Number of locales loaded.
