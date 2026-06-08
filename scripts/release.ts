@@ -8,9 +8,10 @@
  * This script:
  *   1. Updates all package.json versions
  *   2. Updates Rust dependency versions in docs
- *   3. Generates CHANGELOG.md
- *   4. Creates a git commit and tag
- *   5. Pushes to remote
+ *   3. Verifies crates.io release targets
+ *   4. Generates CHANGELOG.md
+ *   5. Creates a git commit and tag
+ *   6. Pushes to remote
  */
 
 import { execSync } from "child_process";
@@ -32,7 +33,22 @@ const NPM_PACKAGES = [
   "npm/vite-plugin-ox-content-vue",
 ];
 
+const CARGO_PUBLISH_PACKAGES = [
+  "ox_content_allocator",
+  "ox_content_ast",
+  "ox_content_profiler",
+  "ox_content_parser",
+  "ox_content_renderer",
+  "ox_content_incremental",
+  "ox_content_og_image",
+  "ox_content_search",
+  "ox_content_ssg",
+  "ox_content_docs",
+  "ox_content_vite",
+];
+
 const CARGO_TOML = "Cargo.toml";
+const PUBLISH_WORKFLOW = ".github/workflows/publish.yml";
 const RUST_DOC_FILES = ["docs/content/getting-started.md"];
 
 function exec(cmd: string, options: { cwd?: string; stdio?: "inherit" | "pipe" } = {}): string {
@@ -95,6 +111,22 @@ function updateRustDocsVersion(version: string): void {
       console.log(`  No Rust crate versions to update in ${relativePath}`);
     }
   }
+}
+
+function verifyCargoPublishPackages(): void {
+  const fullPath = path.join(ROOT, PUBLISH_WORKFLOW);
+  const workflow = fs.readFileSync(fullPath, "utf-8");
+  const missing = CARGO_PUBLISH_PACKAGES.filter(
+    (pkg) => !workflow.includes(`cargo publish -p ${pkg}`),
+  );
+
+  if (missing.length) {
+    throw new Error(
+      `Missing crates.io publish targets in ${PUBLISH_WORKFLOW}: ${missing.join(", ")}`,
+    );
+  }
+
+  console.log(`  Verified crates.io publish targets: ${CARGO_PUBLISH_PACKAGES.join(", ")}`);
 }
 
 function bumpVersion(
@@ -264,6 +296,9 @@ async function main(): Promise<void> {
   // Update Rust dependency versions in docs
   console.log("Updating Rust docs versions...");
   updateRustDocsVersion(newVersion);
+
+  console.log("Verifying crates.io release targets...");
+  verifyCargoPublishPackages();
 
   // Generate changelog
   console.log("\nGenerating changelog...");
