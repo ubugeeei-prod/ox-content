@@ -262,6 +262,22 @@ impl Backend {
         let document = self.state.document(uri).await?;
         Some(crate::selection_range::selection_ranges(&document, positions))
     }
+
+    pub(super) async fn document_highlight_response(
+        &self,
+        uri: &Url,
+        position: Position,
+    ) -> Option<Vec<DocumentHighlight>> {
+        let Ok(path) = uri.to_file_path() else {
+            return None;
+        };
+        if !is_markdown_path(&path) {
+            return None;
+        }
+
+        let document = self.state.document(uri).await?;
+        crate::document_highlight::document_highlights(&document, position)
+    }
 }
 
 fn push_fmt(output: &mut String, args: std::fmt::Arguments<'_>) {

@@ -61,6 +61,7 @@ impl LanguageServer for Backend {
                     work_done_progress_options: WorkDoneProgressOptions::default(),
                 }),
                 selection_range_provider: Some(SelectionRangeProviderCapability::Simple(true)),
+                document_highlight_provider: Some(OneOf::Left(true)),
                 code_action_provider: Some(CodeActionProviderCapability::Simple(true)),
                 execute_command_provider: Some(ExecuteCommandOptions {
                     commands: vec![
@@ -166,6 +167,18 @@ impl LanguageServer for Backend {
         params: SelectionRangeParams,
     ) -> Result<Option<Vec<SelectionRange>>> {
         Ok(self.selection_range_response(&params.text_document.uri, &params.positions).await)
+    }
+
+    async fn document_highlight(
+        &self,
+        params: DocumentHighlightParams,
+    ) -> Result<Option<Vec<DocumentHighlight>>> {
+        Ok(self
+            .document_highlight_response(
+                &params.text_document_position_params.text_document.uri,
+                params.text_document_position_params.position,
+            )
+            .await)
     }
 
     async fn code_action(&self, params: CodeActionParams) -> Result<Option<CodeActionResponse>> {
