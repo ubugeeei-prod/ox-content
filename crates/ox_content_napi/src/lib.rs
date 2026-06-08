@@ -6,6 +6,9 @@
 pub(crate) mod features;
 mod highlight;
 mod html_scan;
+mod incremental;
+mod incremental_result;
+mod incremental_types;
 mod lint;
 mod mdast;
 mod mdast_raw;
@@ -16,6 +19,12 @@ mod tabs;
 mod transfer;
 mod transformer;
 mod youtube;
+
+pub use incremental::{IncrementalMarkdownParser, IncrementalMarkdownRenderer};
+pub use incremental_types::{
+    IncrementalMarkdownParseResult, IncrementalMarkdownRenderResult, JsIncrementalParseOptions,
+    JsIncrementalRenderOptions,
+};
 
 use napi::bindgen_prelude::*;
 use napi::Task;

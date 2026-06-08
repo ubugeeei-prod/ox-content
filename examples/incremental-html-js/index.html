@@ -1,0 +1,56 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Ox Content Incremental Renderer</title>
+    <link rel="stylesheet" href="/style.css" />
+  </head>
+  <body>
+    <main class="shell">
+      <section class="toolbar" aria-label="Streaming controls">
+        <div>
+          <p class="eyebrow">Markdown stream</p>
+          <h1>Incremental preview</h1>
+        </div>
+        <div class="actions">
+          <button id="replay" type="button">Replay stream</button>
+          <button id="stop" type="button" class="secondary">Stop</button>
+        </div>
+      </section>
+
+      <section class="metrics" aria-label="Render state">
+        <div>
+          <span>Committed bytes</span>
+          <strong id="committedBytes">0 B</strong>
+        </div>
+        <div>
+          <span>Pending bytes</span>
+          <strong id="pendingBytes">0 B</strong>
+        </div>
+        <div>
+          <span>Stream state</span>
+          <strong id="status">idle</strong>
+        </div>
+      </section>
+
+      <section class="workspace">
+        <article class="panel">
+          <header>
+            <h2>Markdown stream</h2>
+          </header>
+          <pre id="source" class="source" aria-live="polite"></pre>
+        </article>
+
+        <article class="panel preview-panel">
+          <header>
+            <h2>Rendered HTML</h2>
+          </header>
+          <div id="preview" class="preview" aria-live="polite"></div>
+        </article>
+      </section>
+    </main>
+
+    <script type="module" src="/client.js"></script>
+  </body>
+</html>

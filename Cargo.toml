@@ -77,6 +77,7 @@ ox_content_allocator = { version = "2.63.0", path = "crates/ox_content_allocator
 ox_content_ast = { version = "2.63.0", path = "crates/ox_content_ast" }
 ox_content_parser = { version = "2.63.0", path = "crates/ox_content_parser" }
 ox_content_renderer = { version = "2.63.0", path = "crates/ox_content_renderer" }
+ox_content_incremental = { version = "2.63.0", path = "crates/ox_content_incremental" }
 ox_content_napi = { version = "2.63.0", path = "crates/ox_content_napi" }
 ox_content_vite = { version = "2.63.0", path = "crates/ox_content_vite" }
 ox_content_og_image = { version = "2.63.0", path = "crates/ox_content_og_image" }

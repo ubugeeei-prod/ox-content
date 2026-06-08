@@ -6,7 +6,7 @@ export default defineConfig({
     ignorePatterns: ["dist/**"],
   },
   pack: definePackConfig({
-    entry: ["src/index.ts", "src/vitepress-cli.ts"],
+    entry: ["src/index.ts", "src/vitepress-cli.ts", "src/incremental-dom.ts"],
     format: ["esm", "cjs"],
     target: "es2022",
     dts: true,
