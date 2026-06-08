@@ -1,0 +1,193 @@
+use super::*;
+
+#[test]
+fn generate_docs_nav_metadata_from_docs_returns_typedoc_tree() {
+    let docs = vec![JsDocsMarkdownModule {
+        description: None,
+        file: "default".to_string(),
+        source_path: None,
+        examples: None,
+        tags: None,
+        entries: vec![
+            JsDocsMarkdownEntry {
+                name: "cli".to_string(),
+                kind: "function".to_string(),
+                description: String::new(),
+                params: None,
+                returns: None,
+                examples: None,
+                tags: None,
+                private: false,
+                file: "/repo/src/cli.ts".to_string(),
+                line: 1,
+                end_line: 1,
+                signature: None,
+                extends: None,
+                implements: None,
+                has_body: None,
+                members: None,
+                type_parameters: None,
+            },
+            JsDocsMarkdownEntry {
+                name: "Mode".to_string(),
+                kind: "enum".to_string(),
+                description: String::new(),
+                params: None,
+                returns: None,
+                examples: None,
+                tags: None,
+                private: false,
+                file: "/repo/src/mode.ts".to_string(),
+                line: 1,
+                end_line: 1,
+                signature: None,
+                extends: None,
+                implements: None,
+                has_body: None,
+                members: None,
+                type_parameters: None,
+            },
+        ],
+    }];
+
+    let nav = generate_docs_nav_metadata_from_docs_napi(
+        docs,
+        Some(JsDocsNavOptions {
+            base_path: Some("/api".to_string()),
+            path_strategy: Some("typedoc".to_string()),
+            group_order: None,
+            sort: None,
+            sort_entry_points: None,
+            kind_sort_order: None,
+        }),
+    );
+
+    assert_eq!(nav[0].title, "default");
+    assert_eq!(nav[0].path, "/api/default");
+    let children = nav[0].children.as_ref().unwrap();
+    assert_eq!(children[0].title, "Functions");
+    assert_eq!(children[0].children.as_ref().unwrap()[0].path, "/api/default/functions/cli");
+    assert_eq!(children[1].title, "Enumerations");
+    assert_eq!(children[1].children.as_ref().unwrap()[0].path, "/api/default/enumerations/Mode");
+}
+
+#[test]
+fn generate_docs_nav_metadata_from_docs_defaults_to_flat() {
+    let docs = vec![JsDocsMarkdownModule {
+        description: None,
+        file: "/repo/src/context.ts".to_string(),
+        source_path: None,
+        examples: None,
+        tags: None,
+        entries: vec![],
+    }];
+
+    let nav = generate_docs_nav_metadata_from_docs_napi(docs, None);
+
+    assert_eq!(nav.len(), 1);
+    assert_eq!(nav[0].path, "/api/context");
+    assert!(nav[0].children.is_none());
+}
+
+#[test]
+fn write_generated_docs_writes_typedoc_nested_files() {
+    use crate::{write_generated_docs, JsDocsOutputOptions};
+
+    let unique =
+        std::time::SystemTime::now().duration_since(std::time::UNIX_EPOCH).unwrap().as_nanos();
+    let out_dir = std::env::temp_dir()
+        .join(format!("ox-content-napi-typedoc-write-{}-{unique}", std::process::id()));
+
+    let extracted = vec![JsDocsMarkdownModule {
+        description: None,
+        file: "default".to_string(),
+        source_path: None,
+        examples: None,
+        tags: None,
+        entries: vec![
+            JsDocsMarkdownEntry {
+                name: "cli".to_string(),
+                kind: "function".to_string(),
+                description: "Runs the CLI.".to_string(),
+                params: None,
+                returns: None,
+                examples: None,
+                tags: None,
+                private: false,
+                file: "/repo/src/cli.ts".to_string(),
+                line: 1,
+                end_line: 1,
+                signature: Some("export function cli(): void".to_string()),
+                extends: None,
+                implements: None,
+                has_body: None,
+                members: None,
+                type_parameters: None,
+            },
+            JsDocsMarkdownEntry {
+                name: "version".to_string(),
+                kind: "variable".to_string(),
+                description: "Package version.".to_string(),
+                params: None,
+                returns: None,
+                examples: None,
+                tags: None,
+                private: false,
+                file: "/repo/src/version.ts".to_string(),
+                line: 2,
+                end_line: 2,
+                signature: Some("export const version = '1.0.0'".to_string()),
+                extends: None,
+                implements: None,
+                has_body: None,
+                members: None,
+                type_parameters: None,
+            },
+        ],
+    }];
+
+    let markdown = generate_docs_markdown(
+        extracted.clone(),
+        Some(JsDocsMarkdownOptions {
+            group_by: Some("file".to_string()),
+            github_url: None,
+            link_style: Some("clean".to_string()),
+            base_path: Some("/api".to_string()),
+            path_strategy: Some("typedoc".to_string()),
+            render_style: None,
+            ..Default::default()
+        }),
+    );
+
+    write_generated_docs(
+        markdown,
+        out_dir.to_string_lossy().to_string(),
+        Some(extracted),
+        Some(JsDocsOutputOptions {
+            generate_nav: Some(true),
+            group_by: Some("file".to_string()),
+            generated_at: Some("2026-01-01T00:00:00.000Z".to_string()),
+            base_path: Some("/api".to_string()),
+            path_strategy: Some("typedoc".to_string()),
+            group_order: Some(vec!["Variables".to_string(), "Functions".to_string()]),
+            sort: None,
+            sort_entry_points: None,
+            kind_sort_order: None,
+        }),
+    )
+    .unwrap();
+
+    assert!(out_dir.join("default/index.md").exists());
+    assert!(out_dir.join("default/functions/cli.md").exists());
+    assert!(out_dir.join("default/variables/version.md").exists());
+
+    let nav = fs::read_to_string(out_dir.join("nav.ts")).unwrap();
+    assert!(nav.contains(r#""title": "default""#));
+    assert!(nav.contains("\"/api/default/functions/cli\""));
+    assert!(nav.contains("\"/api/default/variables/version\""));
+    assert!(
+        nav.find(r#""title": "Variables""#).unwrap() < nav.find(r#""title": "Functions""#).unwrap()
+    );
+
+    fs::remove_dir_all(&out_dir).unwrap();
+}
