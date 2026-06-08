@@ -204,6 +204,7 @@ pub struct JsDocMember {
     pub description: String,
     pub signature: Option<String>,
     pub r#type: Option<String>,
+    pub r#default: Option<String>,
     pub params: Option<Vec<JsDocParam>>,
     pub type_parameters: Option<Vec<JsTypeParam>>,
     pub returns: Option<JsDocReturn>,
@@ -982,6 +983,7 @@ fn map_normalized_member(member: NormalizedMember) -> JsDocMember {
         description: member.description,
         signature: member.signature,
         r#type: member.type_annotation,
+        r#default: member.default_value,
         params: (!member.params.is_empty())
             .then(|| member.params.into_iter().map(map_normalized_param_doc).collect()),
         type_parameters: (!member.type_parameters.is_empty())
@@ -1229,6 +1231,7 @@ fn convert_markdown_member(member: JsDocMember) -> ApiDocMember {
         description: member.description,
         signature: member.signature,
         type_annotation: member.r#type,
+        default_value: member.r#default,
         params: member.params.unwrap_or_default().into_iter().map(convert_markdown_param).collect(),
         type_parameters: member
             .type_parameters
@@ -3608,6 +3611,7 @@ mod tests {
                 description: "Command name.".to_string(),
                 signature: None,
                 type_annotation: Some("string".to_string()),
+                default_value: Some("\"cli\"".to_string()),
                 params: vec![],
                 type_parameters: vec![NormalizedTypeParam {
                     name: "T".to_string(),
@@ -3622,6 +3626,7 @@ mod tests {
                     description: "Request timeout.".to_string(),
                     signature: None,
                     type_annotation: Some("number".to_string()),
+                    default_value: Some("5000".to_string()),
                     params: vec![],
                     type_parameters: vec![],
                     returns: None,
@@ -3651,6 +3656,7 @@ mod tests {
         assert_eq!(member.name, "name");
         assert_eq!(member.kind, "property");
         assert_eq!(member.r#type.as_deref(), Some("string"));
+        assert_eq!(member.r#default.as_deref(), Some("\"cli\""));
         let type_param = &member.type_parameters.as_ref().unwrap()[0];
         assert_eq!(type_param.name, "T");
         assert_eq!(type_param.constraint.as_deref(), Some("Base"));
@@ -3662,6 +3668,7 @@ mod tests {
         assert_eq!(nested_member.name, "timeout");
         assert_eq!(nested_member.kind, "property");
         assert_eq!(nested_member.r#type.as_deref(), Some("number"));
+        assert_eq!(nested_member.r#default.as_deref(), Some("5000"));
         assert_eq!(nested_member.description, "Request timeout.");
         assert_eq!(nested_member.optional, Some(true));
     }
@@ -3690,6 +3697,7 @@ mod tests {
                 description: "Argument schema by option name.".to_string(),
                 signature: Some("readonly [option: string]: ArgSchema".to_string()),
                 type_annotation: Some("ArgSchema".to_string()),
+                default_value: None,
                 params: vec![ox_content_docs::NormalizedParamDoc {
                     name: "option".to_string(),
                     type_annotation: "string".to_string(),
@@ -3767,6 +3775,7 @@ mod tests {
                     description: String::new(),
                     signature: None,
                     type_annotation: Some("ArgValues<A>".to_string()),
+                    default_value: None,
                     params: vec![],
                     type_parameters: vec![],
                     returns: None,
@@ -4010,6 +4019,7 @@ export function plugin<Id, PluginExt>(options: {
                     "getResource(locale: string): Record<string, string> | undefined".to_string(),
                 ),
                 r#type: None,
+                r#default: Some("undefined".to_string()),
                 params: None,
                 type_parameters: Some(vec![JsTypeParam {
                     name: "L".to_string(),
@@ -4036,6 +4046,7 @@ export function plugin<Id, PluginExt>(options: {
         assert_eq!(converted.extends, vec!["BaseTranslation"]);
         assert_eq!(converted.implements, vec!["TranslationAdapter"]);
         assert_eq!(converted.members[0].implementation_of, vec!["TranslationAdapter.getResource"]);
+        assert_eq!(converted.members[0].default_value.as_deref(), Some("undefined"));
         assert_eq!(converted.members[0].type_parameters[0].name, "L");
         assert_eq!(converted.members[0].type_parameters[0].constraint.as_deref(), Some("Base"));
     }
@@ -4207,6 +4218,7 @@ export function plugin<Id, PluginExt>(options: {
                             description: "Resolved values.".to_string(),
                             signature: None,
                             r#type: Some("ArgValues<A>".to_string()),
+                            r#default: None,
                             params: None,
                             type_parameters: None,
                             returns: None,
@@ -4304,6 +4316,7 @@ export function plugin<Id, PluginExt>(options: {
                     description: "HTTP options.".to_string(),
                     signature: None,
                     r#type: Some("{ timeout?: number }".to_string()),
+                    r#default: None,
                     params: None,
                     type_parameters: None,
                     returns: None,
@@ -4313,6 +4326,7 @@ export function plugin<Id, PluginExt>(options: {
                         description: "Request timeout.".to_string(),
                         signature: None,
                         r#type: Some("number".to_string()),
+                        r#default: None,
                         params: None,
                         type_parameters: None,
                         returns: None,
@@ -4389,6 +4403,7 @@ export function plugin<Id, PluginExt>(options: {
                         description: "All {@linkcode Command.args} names.".to_string(),
                         signature: None,
                         r#type: Some("Record<string, unknown>".to_string()),
+                        r#default: None,
                         params: None,
                         type_parameters: None,
                         returns: None,
@@ -4876,6 +4891,7 @@ export function plugin<Id, PluginExt>(options: {
                             description: String::new(),
                             signature: None,
                             r#type: Some("ArgValues<A>".to_string()),
+                            r#default: None,
                             params: None,
                             type_parameters: None,
                             returns: None,
@@ -5205,6 +5221,7 @@ export function plugin<Id, PluginExt>(options: {
                         description: "Argument schema by option name.".to_string(),
                         signature: Some("readonly [option: string]: ArgSchema".to_string()),
                         r#type: Some("ArgSchema".to_string()),
+                        r#default: None,
                         params: Some(vec![JsDocParam {
                             name: "option".to_string(),
                             r#type: "string".to_string(),

@@ -299,6 +299,7 @@ mod tests {
                         description: "Strict mode.".to_string(),
                         signature: None,
                         type_annotation: Some("\"strict\"".to_string()),
+                        default_value: None,
                         params: vec![],
                         type_parameters: vec![],
                         returns: None,

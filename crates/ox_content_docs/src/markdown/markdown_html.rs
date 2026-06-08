@@ -923,6 +923,12 @@ fn render_member_description_html(
         ));
     }
 
+    if let Some(default_value) =
+        member.default_value.as_deref().map(str::trim).filter(|value| !value.is_empty())
+    {
+        blocks.push(render_member_default_html(default_value));
+    }
+
     if !member.type_parameters.is_empty() {
         blocks.push(render_member_type_parameters_html(&member.type_parameters, options, context));
     }
@@ -959,6 +965,15 @@ fn render_member_description_html(
     }
 
     blocks.join("")
+}
+
+fn render_member_default_html(default_value: &str) -> String {
+    let mut out = StringBuilder::with_capacity(default_value.len() + 102);
+    out.push_str("<div class=\"ox-api-entry__member-default\"><span>Default</span> ");
+    out.push_str("<code class=\"language-typescript\">");
+    out.push_str(&escape_html(default_value));
+    out.push_str("</code></div>");
+    out.into_string()
 }
 
 fn render_member_param_description(param: &ApiParamDoc) -> String {

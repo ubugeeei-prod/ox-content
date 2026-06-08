@@ -127,6 +127,7 @@ fn member(module: usize, entry: usize, index: usize) -> ApiDocMember {
         description,
         signature,
         type_annotation: (kind == "property").then(|| "Record<string, unknown>".to_string()),
+        default_value: None,
         params: if kind != "property" {
             Vec::from([param(module, entry, index)])
         } else {

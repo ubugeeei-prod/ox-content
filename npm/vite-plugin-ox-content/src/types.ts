@@ -1204,6 +1204,7 @@ export interface DocMember {
   description: string;
   signature?: string;
   type?: string;
+  default?: string;
   params?: ParamDoc[];
   returns?: ReturnDoc;
   optional?: boolean;

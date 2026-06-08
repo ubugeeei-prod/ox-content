@@ -1170,6 +1170,17 @@ fn member_description(
     if !member.description.is_empty() {
         push_part(&mut description, &inline(&member.description, context));
     }
+    if let Some(default_value) =
+        member.default_value.as_deref().map(str::trim).filter(|value| !value.is_empty())
+    {
+        let default = code_span(default_value);
+        if !default.is_empty() {
+            let mut part = StringBuilder::with_capacity(default.len() + 14);
+            part.push_str("**Default:** ");
+            part.push_str(&default);
+            push_part(&mut description, &part.into_string());
+        }
+    }
     if include_returns {
         if let Some(returns) = &member.returns {
             if !returns.description.is_empty() {
