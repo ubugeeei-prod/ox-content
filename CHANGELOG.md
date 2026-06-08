@@ -1,5 +1,19 @@
 # Changelog
 
+## [2.63.0] - 2026-06-08
+
+### Features
+
+- render jsdoc member default values (#356)
+- add document highlights for matching link targets (#355)
+- add smart selection ranges (expand selection) (#350)
+- add document links for Markdown links and images (#344)
+- add folding ranges for headings, code blocks, and frontmatter (#343)
+
+### Bug Fixes
+
+- allow media embeds through sanitizer (#342)
+
 ## [2.62.0] - 2026-06-07
 
 ### Features
