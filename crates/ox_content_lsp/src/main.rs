@@ -10,11 +10,13 @@
 //! - heading symbols for document outline navigation
 //! - folding ranges for headings, code blocks, and frontmatter
 //! - document links for Markdown links and images
+//! - document highlights for matching link/image targets
 //! - smart selection ranges for expand-selection
 
 mod backend;
 mod config;
 mod document;
+mod document_highlight;
 mod document_link;
 mod folding;
 mod frontmatter;
