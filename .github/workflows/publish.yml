@@ -364,9 +364,13 @@ jobs:
           sleep 30
           cargo publish -p ox_content_ast --allow-dirty || true
           sleep 30
-          cargo publish -p ox_content_parser --allow-dirty || true
+          cargo publish -p ox_content_profiler --allow-dirty || true
+          sleep 30
+          cargo publish -p ox_content_parser --allow-dirty --config 'patch.crates-io.ox_content_renderer.path="crates/ox_content_renderer"' || true
           sleep 30
           cargo publish -p ox_content_renderer --allow-dirty || true
+          sleep 30
+          cargo publish -p ox_content_incremental --allow-dirty || true
           sleep 30
           cargo publish -p ox_content_og_image --allow-dirty || true
           sleep 30
