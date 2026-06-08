@@ -123,9 +123,37 @@ export default defineConfig({
       // real VS Code Electron host and needs xvfb on Linux runners. CI
       // exposes it via its own job; here we only chain the pure-node
       // unit suite so `vp run test` stays headless.
-      "test:ts": noopTask(["test:ts-unit", "test:vscode-unit", "test:vrt"]),
+      "test:ts": noopTask([
+        "test:ts-unit",
+        "test:framework-integrations",
+        "test:vscode-unit",
+        "test:vrt",
+      ]),
       "test:ts-unit": task("vp exec --filter @ox-content/vite-plugin -- vp test src", {
         dependsOn: ["build:napi"],
+      }),
+      "build:vite-plugin": task("vp run --filter @ox-content/vite-plugin build", {
+        dependsOn: ["build:napi"],
+      }),
+      "test:framework-integrations": noopTask([
+        "test:framework-react",
+        "test:framework-svelte",
+        "test:framework-vue",
+      ]),
+      "test:framework-react": task(
+        "vp exec --filter @ox-content/vite-plugin-react -- vp test src",
+        {
+          dependsOn: ["build:vite-plugin"],
+        },
+      ),
+      "test:framework-svelte": task(
+        "vp exec --filter @ox-content/vite-plugin-svelte -- vp test src",
+        {
+          dependsOn: ["build:vite-plugin"],
+        },
+      ),
+      "test:framework-vue": task("vp exec --filter @ox-content/vite-plugin-vue -- vp test src", {
+        dependsOn: ["build:vite-plugin"],
       }),
       "test:vscode-unit": task("vp exec --filter vscode-ox-content -- vp test src/test/unit"),
       "test:vscode": uncachedTask("node scripts/run-vscode-tests.mjs", {

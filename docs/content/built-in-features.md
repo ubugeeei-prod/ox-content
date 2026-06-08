@@ -162,9 +162,36 @@ oxContent({
 });
 ```
 
-See [Package Manager Tabs](./examples/package-manager-tabs.md) for a rendered
-tab example, and see the [Vite Plugin embeds reference](./packages/vite-plugin-ox-content.md#embeds)
-for GitHub and Open Graph authoring forms.
+Copyable source snippets for these forms live in
+`examples/builtin-features/content/`.
+
+## Mermaid Diagrams
+
+Mermaid rendering is opt-in:
+
+```ts
+oxContent({
+  mermaid: true,
+});
+```
+
+See `examples/builtin-features/content/mermaid-diagram.md` for a small diagram
+source.
+
+## Search Index
+
+Search is enabled by default for SSG builds. Configure or disable it explicitly:
+
+```ts
+oxContent({
+  search: {
+    limit: 8,
+    hotkey: "/",
+  },
+});
+```
+
+See `examples/builtin-features/client/search.ts` for the virtual module import.
 
 ## Code Quality Hooks
 
@@ -178,5 +205,6 @@ Documentation-specific checks are also opt-in:
 | `sanitize`           | `false` | Raw or third-party HTML should be cleaned before rendering.    |
 | `codeImports`        | `false` | Markdown should import checked source snippets from files.     |
 
-The feature pages under [Examples](./examples/index.md) show each hook in
-isolation, so a site can enable only the pieces it actually uses.
+The feature pages under [Examples](./examples/index.md) and the snippets under
+`examples/builtin-features/` show each hook in isolation, so a site can enable
+only the pieces it actually uses.

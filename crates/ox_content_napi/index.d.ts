@@ -107,6 +107,7 @@ export declare function extractFileDocEntries(filePath: string, includePrivate?:
 export declare function extractFileDocs(filePath: string, includePrivate?: boolean | undefined | null, includeInternal?: boolean | undefined | null): Array<JsSourceDocItem>
 
 /**
+ * Navigation item for SSG.
  * Extracts searchable content from Markdown source.
  *
  * Parses the Markdown and extracts title, body text, headings, and code.
@@ -223,7 +224,6 @@ export interface I18NKeyUsage {
   endColumn: number
 }
 
-/** Result of loading dictionaries. */
 export interface I18NLoadResult {
   /** Number of locales loaded. */
   localeCount: number
@@ -827,7 +827,6 @@ export interface JsMediaEmbedsOptions {
   webContainer?: boolean
 }
 
-/** OG image configuration for JavaScript. */
 export interface JsOgImageConfig {
   /** Image width in pixels. */
   width?: number
@@ -927,7 +926,6 @@ export interface JsScopedSearchQuery {
   scopes: Array<string>
 }
 
-/** Search document for JavaScript. */
 export interface JsSearchDocument {
   /** Unique document identifier. */
   id: string
@@ -1038,13 +1036,12 @@ export interface JsSourceDocParam {
   description?: string
 }
 
-/** Raw JSDoc tag extracted from source code. */
 export interface JsSourceDocTag {
   tag: string
   value: string
 }
 
-/** Source preparation options for JavaScript. */
+/** Raw JSDoc tag extracted from source code. */
 export interface JsSourceOptions {
   /** Parse YAML frontmatter before returning the content payload. */
   frontmatter?: boolean
@@ -1118,7 +1115,6 @@ export interface JsSsgNavigationItem {
   href?: string
 }
 
-/** Navigation item for SSG. */
 export interface JsSsgNavItem {
   /** Display title. */
   title: string
@@ -1440,7 +1436,6 @@ export declare function matchesSearchScopes(id: string, url: string, scopes: Arr
 /** Restores code block metadata after JavaScript-side syntax highlighting. */
 export declare function mergeHighlightedCodeBlocks(originalHtml: string, highlightedHtml: string): string
 
-/** Mermaid transform result. */
 export interface MermaidTransformResult {
   /** The transformed HTML with mermaid code blocks replaced by rendered SVGs. */
   html: string
@@ -1477,7 +1472,6 @@ export declare function parseAndRenderAsync(source: string, options?: JsParserOp
 /** Parses Markdown source into a raw mdast memory block for JavaScript-side deserialization. */
 export declare function parseMdastRaw(source: string, options?: JsParserOptions | undefined | null): Uint8Array
 
-/** Parse result containing the AST as JSON. */
 export interface ParseResult {
   /** The AST as a JSON string. */
   ast: string
