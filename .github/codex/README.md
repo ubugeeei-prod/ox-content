@@ -1,28 +1,52 @@
-# Issue Agent
+# Local Issue Agent
 
-This repository can run Codex from GitHub Issues and open a pull request with the generated patch.
+This repository can run Codex locally against GitHub Issues and open a pull request with the generated patch.
 
 ## How it works
 
-1. A new or reopened issue triggers `.github/workflows/issue-agent.yml`.
-2. The workflow checks out the default branch, prepares the repository, and runs `openai/codex-action`.
-3. Codex writes a local patch only. The OpenAI API key is not passed to the PR creation job.
-4. The PR job applies the patch, creates a branch, opens a pull request, dispatches `CI`, and waits for the result.
-5. The workflow comments on the issue with the PR URL and CI result.
+1. Start the local watcher with `pnpm issue-agent watch`.
+2. The watcher polls open GitHub Issues through `gh`.
+3. When it sees a new issue, it creates a local branch from the default branch and runs `codex exec`.
+4. If Codex leaves a patch, the watcher commits it, pushes the branch, opens a conventional-title PR, and waits for PR checks.
+5. The watcher records processed issues under `.cache/issue-agent/state.json`.
 
-The workflow allows all GitHub users to trigger Codex from issues. It still blocks generated patches that modify GitHub workflow, GitHub action, or Codex automation files, because the PR job dispatches CI for the generated branch.
+This is intentionally local rather than a GitHub Actions workflow. Codex runs with the local user's Codex auth and local machine permissions, and GitHub only receives the resulting branch and pull request.
 
 ## Required setup
 
-- Create a repository or organization secret named `OPENAI_API_KEY`.
-- In repository Actions settings, allow GitHub Actions to create pull requests.
+- Install and authenticate `gh`.
+- Install and authenticate Codex CLI, or set the Codex auth environment expected by your local setup.
+- Keep the working tree clean before starting the watcher.
+
+## Commands
+
+Run once for a specific issue:
+
+```bash
+pnpm issue-agent run --issue 123
+```
+
+Watch for new issues:
+
+```bash
+pnpm issue-agent watch
+```
+
+On the first `watch` run, existing open issues are marked as seen so the watcher only reacts to issues opened after it starts. To process existing open issues too, pass `--backfill`.
+
+Useful options:
+
+- `--repo owner/name` overrides repository detection.
+- `--base main` overrides the target branch.
+- `--interval 60` changes the watch polling interval in seconds.
+- `--no-watch-ci` opens the PR without waiting for checks.
 
 ## Pull request titles
 
-The workflow derives the PR title from the issue title when it is already conventional, for example `feat: add parser option`. `bug: ...` issue titles become `fix: ...`. Otherwise the workflow falls back to a conventional title inferred from labels, such as `feat: ...`, `fix: ...`, or `chore: implement issue #123`.
+The script derives the PR title from the issue title when it is already conventional, for example `feat: add parser option`. `bug: ...` issue titles become `fix: ...`. Otherwise the script falls back to a conventional title inferred from labels, such as `feat: ...`, `fix: ...`, or `chore: implement issue #123`.
 
-The workflow never prefixes PR titles with `[codex]`.
+The script never prefixes PR titles with `[codex]`.
 
-## CI
+## Guardrails
 
-Pull requests created with the default `GITHUB_TOKEN` may not automatically trigger `pull_request` workflows. To make CI verification deterministic, `CI` also supports `workflow_dispatch`, and the issue agent manually dispatches `ci.yml` for the generated branch before reporting the result.
+The issue title and body are treated as untrusted prompt context. If Codex changes GitHub workflow, GitHub action, Codex prompt, or the local issue-agent script files, the script refuses to open a PR and leaves the branch for maintainer inspection.
