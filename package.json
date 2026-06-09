@@ -7,6 +7,7 @@
     "fmt": "vp run workspace:fmt",
     "fmt:check": "vp run workspace:fmt:check",
     "check": "vp run workspace:check",
+    "check:file-lines": "node scripts/check-file-lines.ts",
     "lint": "vp run workspace:lint",
     "test": "vp run workspace:test",
     "build": "vp run workspace:build",
