@@ -113,12 +113,25 @@ function updateRustDocsVersion(version: string): void {
   }
 }
 
+function escapeRegExp(value: string): string {
+  return value.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+}
+
+function hasCargoPublishTarget(workflow: string, pkg: string): boolean {
+  const escapedPkg = escapeRegExp(pkg);
+  const packageRef = `(?:"${escapedPkg}"|'${escapedPkg}'|${escapedPkg})`;
+  const directCargoPublish = new RegExp(
+    `\\bcargo\\s+publish\\b[^\\n]*(?:-p|--package)\\s+${packageRef}(?=\\s|$)`,
+  );
+  const publishHelperCall = new RegExp(`\\bpublish_crate\\s+${packageRef}(?=\\s|$)`);
+
+  return directCargoPublish.test(workflow) || publishHelperCall.test(workflow);
+}
+
 function verifyCargoPublishPackages(): void {
   const fullPath = path.join(ROOT, PUBLISH_WORKFLOW);
   const workflow = fs.readFileSync(fullPath, "utf-8");
-  const missing = CARGO_PUBLISH_PACKAGES.filter(
-    (pkg) => !workflow.includes(`cargo publish -p ${pkg}`),
-  );
+  const missing = CARGO_PUBLISH_PACKAGES.filter((pkg) => !hasCargoPublishTarget(workflow, pkg));
 
   if (missing.length) {
     throw new Error(
