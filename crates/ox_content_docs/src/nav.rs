@@ -7,7 +7,7 @@ use serde::{Deserialize, Serialize};
 
 use crate::markdown::{
     compare_entries, kind_order_slice, order_by_group_title, ordered_entry_kinds,
-    parse_sort_strategies, CanonicalOwners, MarkdownPathStrategy,
+    parse_sort_strategies, CanonicalOwners, MarkdownPathStrategy, MarkdownSingleEntryRoot,
 };
 use crate::model::ApiDocModule;
 #[allow(unused_imports)]
@@ -28,6 +28,25 @@ pub struct DocsNavItem {
     /// Child navigation items.
     #[serde(skip_serializing_if = "Option::is_none")]
     pub children: Option<Vec<DocsNavItem>>,
+}
+
+/// Options for generated navigation metadata from extracted docs.
+#[derive(Debug, Clone, Copy)]
+pub struct DocsNavMetadataOptions<'a> {
+    /// Route prefix for generated navigation links.
+    pub base_path: Option<&'a str>,
+    /// Output path strategy the nav should mirror.
+    pub path_strategy: MarkdownPathStrategy,
+    /// TypeDoc-style group order for nav groups.
+    pub group_order: Option<&'a [String]>,
+    /// TypeDoc-style sort strategies for nav leaves.
+    pub sort: Option<&'a [String]>,
+    /// Whether to sort entry points alphabetically.
+    pub sort_entry_points: bool,
+    /// TypeDoc-style kind ranking for nav groups.
+    pub kind_sort_order: Option<&'a [String]>,
+    /// Single-entry root handling for TypeDoc-style nav.
+    pub single_entry_root: MarkdownSingleEntryRoot,
 }
 
 /// Generates sidebar navigation metadata from documentation file paths.
@@ -69,20 +88,59 @@ pub fn generate_nav_metadata_from_docs(
     sort_entry_points: bool,
     kind_sort_order: Option<&[String]>,
 ) -> Vec<DocsNavItem> {
-    profile_span!("docs::generate_nav");
-    match path_strategy {
-        MarkdownPathStrategy::Flat => {
-            let files = docs.iter().map(|doc| doc.file.clone()).collect::<Vec<_>>();
-            generate_nav_metadata(&files, base_path)
-        }
-        MarkdownPathStrategy::TypeDoc => generate_typedoc_nav_metadata(
-            docs,
+    generate_nav_metadata_from_docs_with_options(
+        docs,
+        &DocsNavMetadataOptions {
             base_path,
+            path_strategy,
             group_order,
             sort,
             sort_entry_points,
             kind_sort_order,
-        ),
+            single_entry_root: MarkdownSingleEntryRoot::Preserve,
+        },
+    )
+}
+
+/// Generates sidebar navigation metadata with explicit nav options.
+pub fn generate_nav_metadata_from_docs_with_options(
+    docs: &[ApiDocModule],
+    options: &DocsNavMetadataOptions<'_>,
+) -> Vec<DocsNavItem> {
+    profile_span!("docs::generate_nav");
+    match options.path_strategy {
+        MarkdownPathStrategy::Flat => {
+            let files = docs.iter().map(|doc| doc.file.clone()).collect::<Vec<_>>();
+            generate_nav_metadata(&files, options.base_path)
+        }
+        MarkdownPathStrategy::TypeDoc => {
+            let nav = generate_typedoc_nav_metadata(
+                docs,
+                options.base_path,
+                options.group_order,
+                options.sort,
+                options.sort_entry_points,
+                options.kind_sort_order,
+            );
+            if options.single_entry_root == MarkdownSingleEntryRoot::Flatten {
+                flatten_single_entry_typedoc_nav(nav)
+            } else {
+                nav
+            }
+        }
+    }
+}
+
+fn flatten_single_entry_typedoc_nav(mut nav: Vec<DocsNavItem>) -> Vec<DocsNavItem> {
+    if nav.len() != 1 {
+        return nav;
+    }
+
+    let children = nav[0].children.take();
+    if let Some(children) = children.filter(|children| !children.is_empty()) {
+        children
+    } else {
+        nav
     }
 }
 
@@ -704,6 +762,40 @@ mod tests {
             children[1].children.as_ref().unwrap()[0].path,
             "/api/default/interfaces/Command"
         );
+    }
+
+    #[test]
+    fn typedoc_nav_single_entry_root_flatten_promotes_kind_groups() {
+        let docs = vec![ApiDocModule {
+            description: String::new(),
+            file: "default".to_string(),
+            source_path: String::new(),
+            examples: vec![],
+            tags: vec![],
+            entries: vec![nav_entry("cli", "function"), nav_entry("Command", "interface")],
+        }];
+
+        let nav = generate_nav_metadata_from_docs_with_options(
+            &docs,
+            &DocsNavMetadataOptions {
+                base_path: Some("/api"),
+                path_strategy: MarkdownPathStrategy::TypeDoc,
+                group_order: None,
+                sort: None,
+                sort_entry_points: true,
+                kind_sort_order: None,
+                single_entry_root: MarkdownSingleEntryRoot::Flatten,
+            },
+        );
+
+        assert_eq!(
+            nav.iter().map(|item| item.title.as_str()).collect::<Vec<_>>(),
+            vec!["Functions", "Interfaces"]
+        );
+        assert_eq!(nav[0].path, "/api/default/functions");
+        assert_eq!(nav[0].children.as_ref().unwrap()[0].path, "/api/default/functions/cli");
+        assert_eq!(nav[1].path, "/api/default/interfaces");
+        assert_eq!(nav[1].children.as_ref().unwrap()[0].path, "/api/default/interfaces/Command");
     }
 
     #[test]

@@ -1132,6 +1132,16 @@ export interface DocsOptions {
   kindSortOrder?: string[];
 
   /**
+   * Single-entry root handling for TypeDoc-style generated docs.
+   *
+   * When set to `'flatten'`, a single TypeDoc entry point uses the root
+   * `index.md` as its landing page and omits the extra module level from
+   * generated nav metadata. Symbol page paths stay under the entry point.
+   * @default 'preserve'
+   */
+  singleEntryRoot?: "preserve" | "flatten";
+
+  /**
    * Generate navigation metadata file.
    * @default true
    */
@@ -1173,6 +1183,7 @@ export interface ResolvedDocsOptions {
   sort?: DocsSortStrategy[];
   sortEntryPoints: boolean;
   kindSortOrder?: string[];
+  singleEntryRoot: "preserve" | "flatten";
   generateNav: boolean;
 }
 

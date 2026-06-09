@@ -109,6 +109,9 @@ pub struct JsDocsNavOptions {
     /// TypeDoc-style `kindSortOrder`: kind ranking used for nav group order (before
     /// `groupOrder`) and the `kind` sort strategy.
     pub kind_sort_order: Option<Vec<String>>,
+    /// Single-entry root handling for TypeDoc-style nav.
+    #[napi(ts_type = "'preserve' | 'flatten'")]
+    pub single_entry_root: Option<String>,
 }
 
 /// Ordered JSDoc tag used by generated API Markdown.
@@ -222,6 +225,9 @@ pub struct JsDocsMarkdownOptions {
     /// for module index sections / nav groups (before `groupOrder`) and the `kind`
     /// sort strategy.
     pub kind_sort_order: Option<Vec<String>>,
+    /// Single-entry root handling for TypeDoc-style Markdown output.
+    #[napi(ts_type = "'preserve' | 'flatten'")]
+    pub single_entry_root: Option<String>,
 }
 
 /// Options for writing generated API documentation files.
@@ -242,4 +248,7 @@ pub struct JsDocsOutputOptions {
     pub sort_entry_points: Option<bool>,
     /// TypeDoc-style kind ranking for generated nav groups.
     pub kind_sort_order: Option<Vec<String>>,
+    /// Single-entry root handling for generated nav metadata.
+    #[napi(ts_type = "'preserve' | 'flatten'")]
+    pub single_entry_root: Option<String>,
 }
