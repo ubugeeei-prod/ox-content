@@ -1,0 +1,367 @@
+name: Issue Agent
+
+on:
+  issues:
+    types: [opened, reopened]
+
+permissions:
+  contents: read
+
+concurrency:
+  group: issue-agent-${{ github.event.issue.number }}
+  cancel-in-progress: false
+
+jobs:
+  generate_patch:
+    name: Generate patch
+    if: ${{ !github.event.issue.pull_request }}
+    runs-on: ubuntu-24.04
+    timeout-minutes: 90
+    permissions:
+      contents: read
+    outputs:
+      has_patch: ${{ steps.diff.outputs.has_patch }}
+      patch_status: ${{ steps.diff.outputs.patch_status }}
+      restricted_changes: ${{ steps.diff.outputs.restricted_changes }}
+      final_message: ${{ steps.run_codex.outputs.final-message }}
+    steps:
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+        with:
+          ref: ${{ github.event.repository.default_branch }}
+          fetch-depth: 0
+          persist-credentials: false
+
+      - name: Setup Vite+
+        uses: voidzero-dev/setup-vp@ca1c46663915d6c1042ae23bd39ab85718bfb0fa # v1
+        with:
+          node-version-file: ".node-version"
+          cache: true
+          run-install: true
+
+      - name: Setup Rust
+        uses: dtolnay/rust-toolchain@29eef336d9b2848a0b548edc03f92a220660cdb8 # stable
+        with:
+          components: clippy,rustfmt
+
+      - name: Prepare Codex prompt
+        run: |
+          node <<'NODE'
+          import { mkdirSync, readFileSync, writeFileSync } from "node:fs";
+
+          const event = JSON.parse(readFileSync(process.env.GITHUB_EVENT_PATH, "utf8"));
+          const issue = event.issue;
+          const labels = issue.labels.map((label) => label.name).join(", ") || "(none)";
+          const assignees = issue.assignees.map((assignee) => assignee.login).join(", ") || "(none)";
+          const template = readFileSync(".github/codex/prompts/implement-issue.md", "utf8");
+
+          const replacements = {
+            ISSUE_NUMBER: String(issue.number),
+            ISSUE_TITLE: issue.title,
+            ISSUE_AUTHOR: issue.user.login,
+            ISSUE_LABELS: labels,
+            ISSUE_ASSIGNEES: assignees,
+            ISSUE_URL: issue.html_url,
+            ISSUE_BODY: issue.body || "(empty)",
+          };
+
+          const prompt = template.replace(/\{\{([A-Z_]+)\}\}/g, (_, key) => replacements[key] ?? "");
+
+          mkdirSync(".github/codex/runtime", { recursive: true });
+          writeFileSync(".github/codex/runtime/issue-prompt.md", prompt);
+          NODE
+
+      - name: Run Codex
+        id: run_codex
+        uses: openai/codex-action@e0fdf01220eb9a88167c4898839d273e3f2609d1 # v1
+        with:
+          openai-api-key: ${{ secrets.OPENAI_API_KEY }}
+          prompt-file: .github/codex/runtime/issue-prompt.md
+          output-file: .github/codex/runtime/codex-output.md
+          sandbox: workspace-write
+          codex-args: '["--ephemeral"]'
+          allow-users: "*"
+
+      - name: Create patch artifact
+        id: diff
+        run: |
+          rm -rf .github/codex/runtime
+          git add -N .
+
+          restricted_changes="$(git diff --name-only HEAD -- '.github/workflows/**' '.github/actions/**' '.github/codex/**' || true)"
+          if [ -n "$restricted_changes" ]; then
+            echo "has_patch=false" >> "$GITHUB_OUTPUT"
+            echo "patch_status=restricted" >> "$GITHUB_OUTPUT"
+            {
+              echo "restricted_changes<<EOF"
+              echo "$restricted_changes"
+              echo "EOF"
+            } >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+
+          git diff --binary HEAD > codex.patch
+          if [ -s codex.patch ]; then
+            echo "has_patch=true" >> "$GITHUB_OUTPUT"
+            echo "patch_status=ready" >> "$GITHUB_OUTPUT"
+          else
+            echo "has_patch=false" >> "$GITHUB_OUTPUT"
+            echo "patch_status=none" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Upload patch artifact
+        if: steps.diff.outputs.has_patch == 'true'
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+        with:
+          name: issue-agent-patch
+          path: codex.patch
+          if-no-files-found: error
+
+  open_pr:
+    name: Open pull request
+    needs: generate_patch
+    if: needs.generate_patch.outputs.has_patch == 'true'
+    runs-on: ubuntu-24.04
+    timeout-minutes: 180
+    permissions:
+      actions: write
+      checks: read
+      contents: write
+      issues: write
+      pull-requests: write
+      statuses: read
+    steps:
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+        with:
+          ref: ${{ github.event.repository.default_branch }}
+          fetch-depth: 0
+
+      - name: Download patch artifact
+        uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4
+        with:
+          name: issue-agent-patch
+
+      - name: Apply patch
+        run: git apply --index codex.patch
+
+      - name: Prepare pull request metadata
+        id: metadata
+        env:
+          RUN_ID: ${{ github.run_id }}
+          RUN_ATTEMPT: ${{ github.run_attempt }}
+        run: |
+          node <<'NODE'
+          import { appendFileSync, readFileSync } from "node:fs";
+
+          const event = JSON.parse(readFileSync(process.env.GITHUB_EVENT_PATH, "utf8"));
+          const issue = event.issue;
+          const labels = issue.labels.map((label) => label.name);
+          const normalizedTitle = issue.title.replace(/\s+/g, " ").trim();
+          const conventionalPattern = /^(build|chore|ci|docs|feat|fix|perf|refactor|revert|style|test)(\([^)]+\))?!?:\s+\S/i;
+
+          const inferType = () => {
+            if (labels.includes("bug")) return "fix";
+            if (labels.includes("documentation")) return "docs";
+            if (labels.includes("enhancement")) return "feat";
+            return "chore";
+          };
+
+          let prTitle = normalizedTitle;
+          const bugTitle = normalizedTitle.match(/^bug:\s*(.+)$/i);
+          if (bugTitle) {
+            prTitle = `fix: ${bugTitle[1].trim()}`;
+          } else if (!conventionalPattern.test(prTitle)) {
+            const summary = normalizedTitle.replace(/^[a-z]+:\s*/i, "").trim() || `implement issue #${issue.number}`;
+            prTitle = `${inferType()}: ${summary}`;
+          }
+
+          if (!conventionalPattern.test(prTitle)) {
+            prTitle = `chore: implement issue #${issue.number}`;
+          }
+
+          if (prTitle.length > 120) {
+            prTitle = `${prTitle.slice(0, 117).trimEnd()}...`;
+          }
+
+          const slugSource = prTitle.replace(/^[^:]+:\s*/, "");
+          const slug =
+            slugSource
+              .normalize("NFKD")
+              .toLowerCase()
+              .replace(/[^a-z0-9]+/g, "-")
+              .replace(/^-+|-+$/g, "")
+              .slice(0, 48)
+              .replace(/-+$/g, "") || "task";
+          const branchName = `codex/issue-${issue.number}-${slug}-${process.env.RUN_ID}-${process.env.RUN_ATTEMPT}`;
+
+          appendFileSync(process.env.GITHUB_OUTPUT, `pr_title<<EOF\n${prTitle}\nEOF\n`);
+          appendFileSync(process.env.GITHUB_OUTPUT, `branch_name=${branchName}\n`);
+          NODE
+
+      - name: Commit and push patch
+        id: commit
+        env:
+          BRANCH_NAME: ${{ steps.metadata.outputs.branch_name }}
+          PR_TITLE: ${{ steps.metadata.outputs.pr_title }}
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git switch -c "$BRANCH_NAME"
+          git commit -m "$PR_TITLE"
+          git push origin "$BRANCH_NAME"
+          echo "head_sha=$(git rev-parse HEAD)" >> "$GITHUB_OUTPUT"
+
+      - name: Create pull request
+        id: pr
+        env:
+          GH_TOKEN: ${{ github.token }}
+          BRANCH_NAME: ${{ steps.metadata.outputs.branch_name }}
+          ISSUE_NUMBER: ${{ github.event.issue.number }}
+          ISSUE_URL: ${{ github.event.issue.html_url }}
+          PR_TITLE: ${{ steps.metadata.outputs.pr_title }}
+        run: |
+          {
+            echo "## Summary"
+            echo
+            echo "- Implements #$ISSUE_NUMBER with the issue agent."
+            echo
+            echo "## Risk"
+            echo
+            echo "- Risk level: medium"
+            echo "- User or production impact: Generated from issue context and requires maintainer review."
+            echo "- Rollback plan: Revert this PR."
+            echo
+            echo "## Validation"
+            echo
+            echo "- [ ] Automated tests or checks run: CI is dispatched and watched by this workflow."
+            echo "- [ ] Manual verification completed: Maintainer review required."
+            echo "- [ ] Edge cases or failure modes considered: Review the issue and generated diff before merge."
+            echo
+            echo "## Release and docs checklist"
+            echo
+            echo "- [ ] Documentation, comments, or runbooks updated, or not needed."
+            echo "- [ ] Configuration, migration, or environment changes documented, or not needed."
+            echo "- [ ] Observability, logging, and alerting impact considered, or not needed."
+            echo "- [ ] Security, privacy, and dependency impact considered, or not needed."
+            echo
+            echo "Closes #$ISSUE_NUMBER"
+            echo
+            echo "Source issue: $ISSUE_URL"
+          } > pr-body.md
+
+          pr_url="$(gh pr create \
+            --base "${{ github.event.repository.default_branch }}" \
+            --head "$BRANCH_NAME" \
+            --title "$PR_TITLE" \
+            --body-file pr-body.md)"
+
+          echo "pr_url=$pr_url" >> "$GITHUB_OUTPUT"
+          gh issue comment "$ISSUE_NUMBER" --body "Created pull request: $pr_url"
+
+      - name: Dispatch and watch CI
+        id: ci
+        env:
+          GH_TOKEN: ${{ github.token }}
+          BRANCH_NAME: ${{ steps.metadata.outputs.branch_name }}
+          HEAD_SHA: ${{ steps.commit.outputs.head_sha }}
+          ISSUE_NUMBER: ${{ github.event.issue.number }}
+          PR_URL: ${{ steps.pr.outputs.pr_url }}
+        run: |
+          gh workflow run ci.yml --ref "$BRANCH_NAME"
+
+          run_id=""
+          for _ in {1..40}; do
+            run_id="$(gh run list \
+              --workflow ci.yml \
+              --branch "$BRANCH_NAME" \
+              --event workflow_dispatch \
+              --json databaseId,headSha \
+              --jq ".[] | select(.headSha == \"$HEAD_SHA\") | .databaseId" \
+              | head -n 1)"
+
+            if [ -n "$run_id" ]; then
+              break
+            fi
+
+            sleep 10
+          done
+
+          if [ -z "$run_id" ]; then
+            echo "Unable to find dispatched CI run for $HEAD_SHA" >&2
+            exit 1
+          fi
+
+          echo "run_id=$run_id" >> "$GITHUB_OUTPUT"
+
+          set +e
+          gh run watch "$run_id" --exit-status --interval 30
+          ci_status=$?
+          set -e
+
+          gh run view "$run_id" --json conclusion,url --jq '"conclusion=\(.conclusion)\nurl=\(.url)"' >> "$GITHUB_OUTPUT"
+
+          exit "$ci_status"
+
+      - name: Comment CI result
+        if: always() && steps.pr.outputs.pr_url != ''
+        env:
+          GH_TOKEN: ${{ github.token }}
+          ISSUE_NUMBER: ${{ github.event.issue.number }}
+          PR_URL: ${{ steps.pr.outputs.pr_url }}
+          CI_CONCLUSION: ${{ steps.ci.outputs.conclusion }}
+          CI_URL: ${{ steps.ci.outputs.url }}
+        run: |
+          if [ "$CI_CONCLUSION" = "success" ]; then
+            gh issue comment "$ISSUE_NUMBER" --body "CI passed for $PR_URL"$'\n\n'"CI run: $CI_URL"
+          else
+            gh issue comment "$ISSUE_NUMBER" --body "CI did not pass for $PR_URL"$'\n\n'"Conclusion: ${CI_CONCLUSION:-unknown}"$'\n'"CI run: ${CI_URL:-unavailable}"
+          fi
+
+  report_no_patch:
+    name: Report no patch
+    needs: generate_patch
+    if: needs.generate_patch.outputs.patch_status == 'none'
+    runs-on: ubuntu-24.04
+    permissions:
+      issues: write
+    steps:
+      - name: Comment no patch
+        env:
+          GH_TOKEN: ${{ github.token }}
+          ISSUE_NUMBER: ${{ github.event.issue.number }}
+          FINAL_MESSAGE: ${{ needs.generate_patch.outputs.final_message }}
+        run: |
+          {
+            echo "The issue agent did not produce a patch, so no pull request was opened."
+            if [ -n "$FINAL_MESSAGE" ]; then
+              echo
+              echo "Codex final message:"
+              echo
+              echo "$FINAL_MESSAGE"
+            fi
+          } > issue-agent-no-patch.md
+          gh issue comment "$ISSUE_NUMBER" --body-file issue-agent-no-patch.md
+
+  report_restricted_patch:
+    name: Report restricted patch
+    needs: generate_patch
+    if: needs.generate_patch.outputs.patch_status == 'restricted'
+    runs-on: ubuntu-24.04
+    permissions:
+      issues: write
+    steps:
+      - name: Comment restricted patch
+        env:
+          GH_TOKEN: ${{ github.token }}
+          ISSUE_NUMBER: ${{ github.event.issue.number }}
+          RESTRICTED_CHANGES: ${{ needs.generate_patch.outputs.restricted_changes }}
+        run: |
+          {
+            echo "The issue agent produced changes to restricted automation files, so no pull request was opened."
+            echo
+            echo "Restricted files:"
+            echo
+            echo "$RESTRICTED_CHANGES"
+            echo
+            echo "A maintainer should implement workflow or Codex automation changes manually."
+          } > issue-agent-restricted-patch.md
+          gh issue comment "$ISSUE_NUMBER" --body-file issue-agent-restricted-patch.md
