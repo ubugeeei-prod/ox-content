@@ -13,6 +13,7 @@
     "build": "vp run workspace:build",
     "dev": "vp run workspace:dev",
     "ci": "vp run workspace:ci",
+    "issue-agent": "node scripts/issue-agent.mjs",
     "ready": "vp run workspace:ready",
     "release": "vp run workspace:release"
   },
