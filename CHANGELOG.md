@@ -1,5 +1,24 @@
 # Changelog
 
+## [2.65.0] - 2026-06-09
+
+### Features
+
+- support flattened single entry roots (#361)
+
+### Bug Fixes
+
+- detect helper-based cargo publish targets (#362)
+- preserve napi declaration docs (#359)
+
+### Refactoring
+
+- split large binding and markdown test modules (#358)
+
+### Documentation
+
+- add builtin examples and framework tests (#360)
+
 ## [2.64.0] - 2026-06-08
 
 ### Features
