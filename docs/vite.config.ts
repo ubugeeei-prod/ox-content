@@ -71,6 +71,7 @@ export default defineConfig(({ mode }) => {
                   { text: "API Docs from JSDoc", link: "/jsdoc.md" },
                   { text: "Internationalization", link: "/i18n.md" },
                   { text: "Examples", link: "/examples/index.md" },
+                  { text: "Credits", link: "/credits.md" },
                 ],
               },
               {

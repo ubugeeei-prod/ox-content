@@ -300,6 +300,8 @@ See the [documentation](https://ubugeeei-prod.github.io/ox-content/) for more de
 
 Special thanks to [kazupon](https://github.com/kazupon) for substantial community contributions around JSDoc support, including the API docs generation pipeline and documentation quality.
 
+See [Credits](./docs/content/credits.md) for the contribution summary.
+
 ## Sponsor
 
 If you find Ox Content useful, please consider [sponsoring](https://github.com/sponsors/ubugeeei) the project.

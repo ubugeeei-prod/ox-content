@@ -83,6 +83,7 @@ Under the hood, Ox Content is not only a docs theme. It also exposes the Markdow
 - [Built-in Features](./built-in-features.md) - Defaults, opt-in features, embeds, emoji shortcodes, and code annotations
 - [Theming](./theming.md) - Customize your documentation site
 - [Examples](./examples/index.md) - Integration, source docs, OG image, and SSG examples
+- [Credits](./credits.md) - Community credits and contribution summaries
 
 ## Advanced Docs
 
@@ -105,6 +106,8 @@ Under the hood, Ox Content is not only a docs theme. It also exposes the Markdow
 ## Community Credits
 
 Special thanks to [kazupon](https://github.com/kazupon) for substantial community contributions around JSDoc support, including the API docs generation pipeline and documentation quality.
+
+See [Credits](./credits.md) for the contribution summary.
 
 ## Sponsor
 
