@@ -250,6 +250,7 @@ export function generateMarkdown(
     sort: options.sort,
     sortEntryPoints: options.sortEntryPoints,
     kindSortOrder: options.kindSortOrder,
+    singleEntryRoot: options.singleEntryRoot,
   });
 }
 
@@ -284,6 +285,7 @@ export async function writeDocs(
       sort: options?.sort,
       sortEntryPoints: options?.sortEntryPoints,
       kindSortOrder: options?.kindSortOrder,
+      singleEntryRoot: options?.singleEntryRoot,
     },
   );
 }
@@ -373,6 +375,7 @@ export function resolveDocsOptions(
     sort: opts.sort,
     sortEntryPoints: opts.sortEntryPoints ?? true,
     kindSortOrder: opts.kindSortOrder,
+    singleEntryRoot: opts.singleEntryRoot ?? "preserve",
     generateNav: opts.generateNav ?? true,
   };
 }

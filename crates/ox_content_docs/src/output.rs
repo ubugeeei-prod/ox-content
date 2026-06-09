@@ -7,9 +7,11 @@ use std::path::Path;
 use thiserror::Error;
 
 use crate::data::generate_docs_data_json;
-use crate::markdown::MarkdownPathStrategy;
+use crate::markdown::{MarkdownPathStrategy, MarkdownSingleEntryRoot};
 use crate::model::ApiDocModule;
-use crate::nav::{generate_nav_code, generate_nav_metadata_from_docs};
+use crate::nav::{
+    generate_nav_code, generate_nav_metadata_from_docs_with_options, DocsNavMetadataOptions,
+};
 #[allow(unused_imports)]
 use crate::profile_span;
 
@@ -40,6 +42,8 @@ pub struct DocsOutputOptions {
     pub sort_entry_points: bool,
     /// TypeDoc-style kind ranking for nav groups.
     pub kind_sort_order: Option<Vec<String>>,
+    /// Single-entry root handling for generated nav metadata.
+    pub single_entry_root: MarkdownSingleEntryRoot,
 }
 
 /// Error returned while writing generated docs.
@@ -90,14 +94,17 @@ pub fn write_docs_output(
     if let Some(extracted_docs) = extracted_docs {
         if options.generate_nav && options.group_by == "file" {
             let base_path = options.base_path.as_deref().unwrap_or(DOCS_NAV_BASE_PATH);
-            let nav_items = generate_nav_metadata_from_docs(
+            let nav_items = generate_nav_metadata_from_docs_with_options(
                 extracted_docs,
-                Some(base_path),
-                options.path_strategy,
-                options.group_order.as_deref(),
-                options.sort.as_deref(),
-                options.sort_entry_points,
-                options.kind_sort_order.as_deref(),
+                &DocsNavMetadataOptions {
+                    base_path: Some(base_path),
+                    path_strategy: options.path_strategy,
+                    group_order: options.group_order.as_deref(),
+                    sort: options.sort.as_deref(),
+                    sort_entry_points: options.sort_entry_points,
+                    kind_sort_order: options.kind_sort_order.as_deref(),
+                    single_entry_root: options.single_entry_root,
+                },
             );
             fs::write(
                 out_dir.join(DOCS_NAV_FILE),
@@ -198,6 +205,7 @@ mod tests {
             sort: None,
             sort_entry_points: true,
             kind_sort_order: None,
+            single_entry_root: MarkdownSingleEntryRoot::Preserve,
         }
     }
 
@@ -335,6 +343,7 @@ mod tests {
             sort: None,
             sort_entry_points: true,
             kind_sort_order: None,
+            single_entry_root: MarkdownSingleEntryRoot::Preserve,
         };
         write_docs_output(&docs, &out_dir, Some(&extracted), &output_options).unwrap();
 

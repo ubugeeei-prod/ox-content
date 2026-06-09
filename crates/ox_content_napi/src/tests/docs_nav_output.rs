@@ -59,6 +59,7 @@ fn generate_docs_nav_metadata_from_docs_returns_typedoc_tree() {
             sort: None,
             sort_entry_points: None,
             kind_sort_order: None,
+            single_entry_root: None,
         }),
     );
 
@@ -69,6 +70,78 @@ fn generate_docs_nav_metadata_from_docs_returns_typedoc_tree() {
     assert_eq!(children[0].children.as_ref().unwrap()[0].path, "/api/default/functions/cli");
     assert_eq!(children[1].title, "Enumerations");
     assert_eq!(children[1].children.as_ref().unwrap()[0].path, "/api/default/enumerations/Mode");
+}
+
+#[test]
+fn generate_docs_nav_metadata_from_docs_flattens_single_typedoc_entry() {
+    let docs = vec![JsDocsMarkdownModule {
+        description: None,
+        file: "default".to_string(),
+        source_path: None,
+        examples: None,
+        tags: None,
+        entries: vec![
+            JsDocsMarkdownEntry {
+                name: "cli".to_string(),
+                kind: "function".to_string(),
+                description: String::new(),
+                params: None,
+                returns: None,
+                examples: None,
+                tags: None,
+                private: false,
+                file: "/repo/src/cli.ts".to_string(),
+                line: 1,
+                end_line: 1,
+                signature: None,
+                extends: None,
+                implements: None,
+                has_body: None,
+                members: None,
+                type_parameters: None,
+            },
+            JsDocsMarkdownEntry {
+                name: "Command".to_string(),
+                kind: "interface".to_string(),
+                description: String::new(),
+                params: None,
+                returns: None,
+                examples: None,
+                tags: None,
+                private: false,
+                file: "/repo/src/types.ts".to_string(),
+                line: 1,
+                end_line: 1,
+                signature: None,
+                extends: None,
+                implements: None,
+                has_body: None,
+                members: None,
+                type_parameters: None,
+            },
+        ],
+    }];
+
+    let nav = generate_docs_nav_metadata_from_docs_napi(
+        docs,
+        Some(JsDocsNavOptions {
+            base_path: Some("/api".to_string()),
+            path_strategy: Some("typedoc".to_string()),
+            group_order: None,
+            sort: None,
+            sort_entry_points: None,
+            kind_sort_order: None,
+            single_entry_root: Some("flatten".to_string()),
+        }),
+    );
+
+    assert_eq!(
+        nav.iter().map(|item| item.title.as_str()).collect::<Vec<_>>(),
+        vec!["Functions", "Interfaces"]
+    );
+    assert_eq!(nav[0].path, "/api/default/functions");
+    assert_eq!(nav[0].children.as_ref().unwrap()[0].path, "/api/default/functions/cli");
+    assert_eq!(nav[1].children.as_ref().unwrap()[0].path, "/api/default/interfaces/Command");
 }
 
 #[test]
@@ -173,6 +246,7 @@ fn write_generated_docs_writes_typedoc_nested_files() {
             sort: None,
             sort_entry_points: None,
             kind_sort_order: None,
+            single_entry_root: None,
         }),
     )
     .unwrap();
@@ -188,6 +262,87 @@ fn write_generated_docs_writes_typedoc_nested_files() {
     assert!(
         nav.find(r#""title": "Variables""#).unwrap() < nav.find(r#""title": "Functions""#).unwrap()
     );
+
+    fs::remove_dir_all(&out_dir).unwrap();
+}
+
+#[test]
+fn write_generated_docs_writes_flattened_single_entry_nav() {
+    use crate::{write_generated_docs, JsDocsOutputOptions};
+
+    let unique =
+        std::time::SystemTime::now().duration_since(std::time::UNIX_EPOCH).unwrap().as_nanos();
+    let out_dir = std::env::temp_dir()
+        .join(format!("ox-content-napi-flatten-write-{}-{unique}", std::process::id()));
+
+    let extracted = vec![JsDocsMarkdownModule {
+        description: Some("Runtime API.".to_string()),
+        file: "default".to_string(),
+        source_path: None,
+        examples: None,
+        tags: None,
+        entries: vec![JsDocsMarkdownEntry {
+            name: "cli".to_string(),
+            kind: "function".to_string(),
+            description: "Runs the CLI.".to_string(),
+            params: None,
+            returns: None,
+            examples: None,
+            tags: None,
+            private: false,
+            file: "/repo/src/cli.ts".to_string(),
+            line: 1,
+            end_line: 1,
+            signature: Some("export function cli(): void".to_string()),
+            extends: None,
+            implements: None,
+            has_body: None,
+            members: None,
+            type_parameters: None,
+        }],
+    }];
+
+    let markdown = generate_docs_markdown(
+        extracted.clone(),
+        Some(JsDocsMarkdownOptions {
+            group_by: Some("file".to_string()),
+            github_url: None,
+            link_style: Some("clean".to_string()),
+            base_path: Some("/api".to_string()),
+            path_strategy: Some("typedoc".to_string()),
+            render_style: Some("markdown".to_string()),
+            single_entry_root: Some("flatten".to_string()),
+            ..Default::default()
+        }),
+    );
+
+    write_generated_docs(
+        markdown,
+        out_dir.to_string_lossy().to_string(),
+        Some(extracted),
+        Some(JsDocsOutputOptions {
+            generate_nav: Some(true),
+            group_by: Some("file".to_string()),
+            generated_at: Some("2026-01-01T00:00:00.000Z".to_string()),
+            base_path: Some("/api".to_string()),
+            path_strategy: Some("typedoc".to_string()),
+            group_order: None,
+            sort: None,
+            sort_entry_points: None,
+            kind_sort_order: None,
+            single_entry_root: Some("flatten".to_string()),
+        }),
+    )
+    .unwrap();
+
+    assert!(out_dir.join("index.md").exists());
+    assert!(!out_dir.join("default/index.md").exists());
+    assert!(out_dir.join("default/functions/cli.md").exists());
+
+    let nav = fs::read_to_string(out_dir.join("nav.ts")).unwrap();
+    assert!(!nav.contains(r#""title": "default""#));
+    assert!(nav.contains(r#""title": "Functions""#));
+    assert!(nav.contains("\"/api/default/functions/cli\""));
 
     fs::remove_dir_all(&out_dir).unwrap();
 }

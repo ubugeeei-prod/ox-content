@@ -6,14 +6,15 @@ use napi_derive::napi;
 use ox_content_docs::{
     build_export_graph, extract_docs_from_directories, extract_docs_from_entry_points,
     generate_docs_data_json, generate_markdown, generate_nav_code, generate_nav_metadata,
-    generate_nav_metadata_from_docs, normalize_doc_items, write_docs_output, ApiDocEntry,
-    ApiDocMember, ApiDocModule, ApiDocTag, ApiParamDoc, ApiReturnDoc, ApiTypeParamDoc,
+    generate_nav_metadata_from_docs_with_options, normalize_doc_items, write_docs_output,
+    ApiDocEntry, ApiDocMember, ApiDocModule, ApiDocTag, ApiParamDoc, ApiReturnDoc, ApiTypeParamDoc,
     DocExtractor, DocItem, DocItemKind, DocTag, DocsDiagnostic, DocsDiagnosticCode, DocsNavItem,
-    DocsOutputOptions, EntryPointDocsOptions, EntryPointSpec, ExportGraph, ExportKind,
-    ExportSource, ExternalDocsOptions, ExternalPackageSource, ExtractedDocModule, GraphOptions,
-    MarkdownDisplayFormat, MarkdownDocsOptions, MarkdownLinkStyle, MarkdownPathStrategy,
-    MarkdownRenderStyle, NormalizedDocEntry, NormalizedMember, NormalizedParamDoc,
-    NormalizedReturnDoc, NormalizedTypeParam, ParamDoc, PublicExport,
+    DocsNavMetadataOptions, DocsOutputOptions, EntryPointDocsOptions, EntryPointSpec, ExportGraph,
+    ExportKind, ExportSource, ExternalDocsOptions, ExternalPackageSource, ExtractedDocModule,
+    GraphOptions, MarkdownDisplayFormat, MarkdownDocsOptions, MarkdownLinkStyle,
+    MarkdownPathStrategy, MarkdownRenderStyle, MarkdownSingleEntryRoot, NormalizedDocEntry,
+    NormalizedMember, NormalizedParamDoc, NormalizedReturnDoc, NormalizedTypeParam, ParamDoc,
+    PublicExport,
 };
 
 use crate::{
@@ -461,6 +462,7 @@ fn convert_docs_output_options(options: Option<JsDocsOutputOptions>) -> DocsOutp
         sort: options.sort,
         sort_entry_points: options.sort_entry_points.unwrap_or(true),
         kind_sort_order: options.kind_sort_order,
+        single_entry_root: parse_single_entry_root(options.single_entry_root.as_deref()),
     }
 }
 
@@ -525,14 +527,17 @@ pub fn generate_docs_nav_metadata_from_docs_napi(
     let options = options.unwrap_or_default();
     let strategy = parse_markdown_path_strategy(options.path_strategy.as_deref());
     let modules = docs.into_iter().map(convert_markdown_module).collect::<Vec<_>>();
-    generate_nav_metadata_from_docs(
+    generate_nav_metadata_from_docs_with_options(
         &modules,
-        options.base_path.as_deref(),
-        strategy,
-        options.group_order.as_deref(),
-        options.sort.as_deref(),
-        options.sort_entry_points.unwrap_or(true),
-        options.kind_sort_order.as_deref(),
+        &DocsNavMetadataOptions {
+            base_path: options.base_path.as_deref(),
+            path_strategy: strategy,
+            group_order: options.group_order.as_deref(),
+            sort: options.sort.as_deref(),
+            sort_entry_points: options.sort_entry_points.unwrap_or(true),
+            kind_sort_order: options.kind_sort_order.as_deref(),
+            single_entry_root: parse_single_entry_root(options.single_entry_root.as_deref()),
+        },
     )
     .into_iter()
     .map(map_docs_nav_item)
@@ -661,6 +666,7 @@ pub fn generate_docs_markdown(
             sort: options.sort,
             sort_entry_points: options.sort_entry_points.unwrap_or(true),
             kind_sort_order: options.kind_sort_order,
+            single_entry_root: parse_single_entry_root(options.single_entry_root.as_deref()),
         });
     generate_markdown(&docs.into_iter().map(convert_markdown_module).collect::<Vec<_>>(), &options)
         .into_iter()
@@ -678,6 +684,13 @@ fn parse_markdown_path_strategy(path_strategy: Option<&str>) -> MarkdownPathStra
     match path_strategy {
         Some("typedoc") => MarkdownPathStrategy::TypeDoc,
         _ => MarkdownPathStrategy::Flat,
+    }
+}
+
+fn parse_single_entry_root(value: Option<&str>) -> MarkdownSingleEntryRoot {
+    match value {
+        Some("flatten") => MarkdownSingleEntryRoot::Flatten,
+        _ => MarkdownSingleEntryRoot::Preserve,
     }
 }
 

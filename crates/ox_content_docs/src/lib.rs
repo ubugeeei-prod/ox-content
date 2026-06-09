@@ -57,13 +57,14 @@ pub use graph::{
 };
 pub use markdown::{
     generate_markdown, MarkdownDisplayFormat, MarkdownDocsOptions, MarkdownLinkStyle,
-    MarkdownPathStrategy, MarkdownRenderStyle,
+    MarkdownPathStrategy, MarkdownRenderStyle, MarkdownSingleEntryRoot,
 };
 pub use model::{
     ApiDocEntry, ApiDocMember, ApiDocModule, ApiDocTag, ApiParamDoc, ApiReturnDoc, ApiTypeParamDoc,
 };
 pub use nav::{
-    generate_nav_code, generate_nav_metadata, generate_nav_metadata_from_docs, DocsNavItem,
+    generate_nav_code, generate_nav_metadata, generate_nav_metadata_from_docs,
+    generate_nav_metadata_from_docs_with_options, DocsNavItem, DocsNavMetadataOptions,
 };
 pub use normalize::{
     normalize_doc_item, normalize_doc_items, NormalizedDocEntry, NormalizedDocKind,

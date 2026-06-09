@@ -200,6 +200,64 @@ describe("writeDocs", () => {
     expect(nav).toContain('"path": "/api/default/variables/version"');
     expect(nav.indexOf('"title": "Variables"')).toBeLessThan(nav.indexOf('"title": "Functions"'));
   });
+
+  it("flattens single typedoc entry root when singleEntryRoot is flatten", async () => {
+    const outDir = await fs.mkdtemp(path.join(os.tmpdir(), "ox-content-docs-"));
+    tempDirs.push(outDir);
+
+    const extractedDocs: ExtractedDocs[] = [
+      {
+        file: "default",
+        description: "Runtime API.",
+        entries: [
+          {
+            name: "cli",
+            kind: "function",
+            description: "Runs the CLI.",
+            file: "/repo/src/cli.ts",
+            line: 1,
+            endLine: 1,
+            signature: "export function cli(): void",
+          },
+          {
+            name: "Command",
+            kind: "interface",
+            description: "Runtime command.",
+            file: "/repo/src/types.ts",
+            line: 1,
+            endLine: 1,
+            signature: "export interface Command",
+          },
+        ],
+      },
+    ];
+
+    const options = resolveDocsOptions({
+      generateNav: true,
+      basePath: "/api",
+      pathStrategy: "typedoc",
+      linkStyle: "clean",
+      renderStyle: "markdown",
+      singleEntryRoot: "flatten",
+    });
+    const markdown = generateMarkdown(extractedDocs, options);
+
+    expect(markdown["index.md"]).toContain("# API Documentation");
+    expect(markdown["index.md"]).toContain("Runtime API.");
+    expect(markdown["index.md"]).toContain("[cli](/api/default/functions/cli)");
+    expect(markdown["default/index.md"]).toBeUndefined();
+
+    await writeDocs(markdown, outDir, extractedDocs, options);
+
+    await expect(fs.access(path.join(outDir, "index.md"))).resolves.not.toThrow();
+    await expect(fs.access(path.join(outDir, "default/index.md"))).rejects.toThrow();
+    await expect(fs.access(path.join(outDir, "default/functions/cli.md"))).resolves.not.toThrow();
+
+    const nav = await fs.readFile(path.join(outDir, "nav.ts"), "utf-8");
+    expect(nav).not.toContain('"title": "default"');
+    expect(nav).toContain('"title": "Functions"');
+    expect(nav).toContain('"path": "/api/default/functions/cli"');
+  });
 });
 
 describe("generateMarkdown", () => {

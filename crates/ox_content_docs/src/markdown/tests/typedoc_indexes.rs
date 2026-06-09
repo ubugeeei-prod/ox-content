@@ -88,6 +88,43 @@ fn typedoc_index_uses_module_description_not_symbol_description() {
 }
 
 #[test]
+fn typedoc_single_entry_root_flatten_uses_root_as_module_index() {
+    let docs = vec![ApiDocModule {
+        description: "Runtime API.".to_string(),
+        file: "default".to_string(),
+        source_path: String::new(),
+        examples: vec![],
+        tags: vec![],
+        entries: vec![
+            test_entry("cli", "function", "/repo/src/cli.ts", "Run the CLI."),
+            test_entry("Command", "interface", "/repo/src/types.ts", "Runtime command."),
+        ],
+    }];
+
+    let markdown = generate_markdown(
+        &docs,
+        &MarkdownDocsOptions {
+            path_strategy: MarkdownPathStrategy::TypeDoc,
+            render_style: MarkdownRenderStyle::Markdown,
+            single_entry_root: MarkdownSingleEntryRoot::Flatten,
+            ..MarkdownDocsOptions::default()
+        },
+    );
+
+    assert!(markdown.contains_key("index.md"));
+    assert!(!markdown.contains_key("default/index.md"));
+    assert!(markdown.contains_key("default/functions/cli.md"));
+    assert!(markdown.contains_key("default/interfaces/Command.md"));
+
+    let index = markdown.get("index.md").unwrap();
+    assert!(index.starts_with("# API Documentation\n\n"));
+    assert!(index.contains("Runtime API."));
+    assert!(index.contains("## Functions"));
+    assert!(index.contains("[cli](./default/functions/cli.md)"));
+    assert!(index.contains("[Command](./default/interfaces/Command.md)"));
+}
+
+#[test]
 fn typedoc_module_index_renders_module_examples_in_html_style() {
     let docs = vec![ApiDocModule {
         description: "Parser combinator entry point.".to_string(),

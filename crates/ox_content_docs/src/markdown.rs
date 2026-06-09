@@ -111,6 +111,13 @@ pub struct MarkdownDocsOptions {
     /// (before `group_order` is applied). `None` keeps the historical kind order.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub kind_sort_order: Option<Vec<String>>,
+    /// Single-entry root handling for TypeDoc-style file output.
+    ///
+    /// `Preserve` keeps the historical root index plus module index hierarchy.
+    /// `Flatten` uses the root index as the single module landing page when only
+    /// one module is present, while keeping symbol page paths stable.
+    #[serde(default)]
+    pub single_entry_root: MarkdownSingleEntryRoot,
 }
 
 /// Internal documentation link style.
@@ -133,6 +140,17 @@ pub enum MarkdownPathStrategy {
     Flat,
     /// Emit TypeDoc-style module/kind/symbol pages.
     TypeDoc,
+}
+
+/// Single-entry root handling for generated TypeDoc-style API docs.
+#[derive(Debug, Clone, Copy, Serialize, Deserialize, PartialEq, Eq, Default)]
+#[serde(rename_all = "kebab-case")]
+pub enum MarkdownSingleEntryRoot {
+    /// Preserve the historical root/module hierarchy.
+    #[default]
+    Preserve,
+    /// Flatten a single module's groups into the root page/nav level.
+    Flatten,
 }
 
 /// API documentation rendering style.
@@ -185,6 +203,7 @@ impl Default for MarkdownDocsOptions {
             sort: None,
             sort_entry_points: default_sort_entry_points(),
             kind_sort_order: None,
+            single_entry_root: MarkdownSingleEntryRoot::Preserve,
         }
     }
 }
@@ -1426,16 +1445,42 @@ fn generate_typedoc_markdown(
     profile_span!("docs::render_typedoc");
     let mut result = BTreeMap::new();
     let owners = CanonicalOwners::compute(docs);
+    let flatten_single_entry =
+        options.single_entry_root == MarkdownSingleEntryRoot::Flatten && docs.len() == 1;
 
-    result.insert("index.md".to_string(), generate_typedoc_root_index(docs, options, symbol_map));
+    if flatten_single_entry {
+        if let Some(doc) = docs.first() {
+            let module_name = module_file_name(&doc.file);
+            result.insert(
+                "index.md".to_string(),
+                generate_typedoc_module_index_for_file(
+                    doc,
+                    options,
+                    &module_name,
+                    TypedocModuleIndexPage {
+                        current_file_name: "index",
+                        title: "API Documentation",
+                        include_generated_by: true,
+                    },
+                    symbol_map,
+                    &owners,
+                ),
+            );
+        }
+    } else {
+        result
+            .insert("index.md".to_string(), generate_typedoc_root_index(docs, options, symbol_map));
+    }
 
     for doc in docs {
         let module_name = module_file_name(&doc.file);
-        let module_index_file_name = typedoc_module_index_file_name(&module_name);
-        result.insert(
-            join2(&module_index_file_name, ".md"),
-            generate_typedoc_module_index(doc, options, &module_name, symbol_map, &owners),
-        );
+        if !flatten_single_entry {
+            let module_index_file_name = typedoc_module_index_file_name(&module_name);
+            result.insert(
+                join2(&module_index_file_name, ".md"),
+                generate_typedoc_module_index(doc, options, &module_name, symbol_map, &owners),
+            );
+        }
 
         // Both render styles group a symbol's overload signatures onto a single
         // page so every public call signature survives (TypeDoc parity); see
@@ -1642,20 +1687,51 @@ fn generate_typedoc_module_index(
     symbol_map: &HashMap<String, Vec<SymbolLocation>>,
     owners: &CanonicalOwners,
 ) -> String {
-    profile_span!("docs::render_module_index");
     let current_file_name = typedoc_module_index_file_name(module_name);
+    let display_name = module_display_name(doc);
+    generate_typedoc_module_index_for_file(
+        doc,
+        options,
+        module_name,
+        TypedocModuleIndexPage {
+            current_file_name: &current_file_name,
+            title: &display_name,
+            include_generated_by: false,
+        },
+        symbol_map,
+        owners,
+    )
+}
+
+struct TypedocModuleIndexPage<'a> {
+    current_file_name: &'a str,
+    title: &'a str,
+    include_generated_by: bool,
+}
+
+fn generate_typedoc_module_index_for_file(
+    doc: &ApiDocModule,
+    options: &MarkdownDocsOptions,
+    module_name: &str,
+    page: TypedocModuleIndexPage<'_>,
+    symbol_map: &HashMap<String, Vec<SymbolLocation>>,
+    owners: &CanonicalOwners,
+) -> String {
+    profile_span!("docs::render_module_index");
     let link_context = MarkdownLinkContext {
         options,
-        current_file_name: &current_file_name,
+        current_file_name: page.current_file_name,
         current_module_name: module_name,
         symbol_map,
     };
-    let display_name = module_display_name(doc);
-    let mut builder = StringBuilder::with_capacity(display_name.len() + 4);
+    let mut builder = StringBuilder::with_capacity(page.title.len() + 4);
     builder.push_str("# ");
-    builder.push_str(&display_name);
+    builder.push_str(page.title);
     builder.push_str("\n\n");
     let mut markdown = builder.into_string();
+    if page.include_generated_by {
+        push_generated_by(&mut markdown, options);
+    }
 
     // Module-level `@experimental` / `@deprecated`: GitHub alerts in markdown,
     // a badge row in HTML — so both styles surface module lifecycle state.
