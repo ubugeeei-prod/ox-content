@@ -1,7 +1,28 @@
 const { existsSync } = require("fs");
 const path = require("path");
 
+function getErrorCode(error) {
+  if (error && typeof error === "object" && "code" in error) {
+    return error.code;
+  }
+}
+
+function getErrorMessage(error) {
+  if (error && typeof error === "object" && "message" in error) {
+    return error.message;
+  }
+  return String(error);
+}
+
+function formatLoadError(target, error) {
+  const code = getErrorCode(error);
+  const suffix = code ? ` [${code}]` : "";
+  return `  - ${target}${suffix}: ${getErrorMessage(error)}`;
+}
+
 function loadBinding() {
+  const loadErrors = [];
+
   // 1. Try loading the local binary (napi build output)
   const napiOutput = path.join(__dirname, "ox-content.node");
   if (existsSync(napiOutput)) {
@@ -56,12 +77,19 @@ function loadBinding() {
   if (subPackage) {
     try {
       return require(subPackage);
-    } catch {}
+    } catch (error) {
+      loadErrors.push(formatLoadError(subPackage, error));
+    }
   }
+
+  const details = loadErrors.length
+    ? `\n\nNative load attempts failed:\n${loadErrors.join("\n")}`
+    : "";
 
   throw new Error(
     `@ox-content/napi: No compatible binary found for ${platform}-${arch}. ` +
-      `If you're working from the repository, run 'nix develop -c vp run build:napi' from the repository root.`,
+      `If you're working from the repository, run 'nix develop -c vp run build:napi' from the repository root.` +
+      details,
   );
 }
 
