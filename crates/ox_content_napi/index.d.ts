@@ -269,7 +269,11 @@ export interface IncrementalMarkdownRenderResult {
 
 /** Attribute syntax transform options. */
 export interface JsAttrsOptions {
-  /** Enable markdown-it-attrs style `{#id .class key=value}`. */
+  /**
+   * Enable markdown-it-attrs style `{#id .class key=value}`.
+   *
+   * Default: `false`.
+   */
   enabled?: boolean
 }
 
@@ -296,21 +300,45 @@ export interface JsCodeBlockDiagnostic {
 
 /** Code block linting options. */
 export interface JsCodeBlockLintOptions {
-  /** Enable code block linting. */
+  /**
+   * Enable code block linting.
+   *
+   * Default: `false` when the whole option is omitted.
+   */
   enabled?: boolean
-  /** Restrict linting to these language identifiers. */
+  /**
+   * Restrict linting to these language identifiers.
+   *
+   * Default: all fenced block languages.
+   */
   languages?: Array<string>
-  /** Report fences without a language identifier. */
+  /**
+   * Report fences without a language identifier.
+   *
+   * Default: `false`.
+   */
   requireLanguage?: boolean
-  /** Report trailing whitespace in code block lines. */
+  /**
+   * Report trailing whitespace in code block lines.
+   *
+   * Default: `true`.
+   */
   trailingSpaces?: boolean
 }
 
 /** Code import / snippet injection options. */
 export interface JsCodeImportOptions {
-  /** Enable `<<< path{selector}` snippet injection. */
+  /**
+   * Enable `<<< path{selector}` snippet injection.
+   *
+   * Default: `false`.
+   */
   enabled?: boolean
-  /** Root directory used for `@/` and absolute snippet imports. */
+  /**
+   * Root directory used for `@/` and absolute snippet imports.
+   *
+   * Default: project root from the JavaScript caller.
+   */
   rootDir?: string
 }
 
@@ -540,33 +568,69 @@ export interface JsDocsOutputOptions {
 
 /** Docs-as-tests extraction options. */
 export interface JsDocsTestOptions {
-  /** Enable docs test extraction. */
+  /**
+   * Enable docs test extraction.
+   *
+   * Default: `false` when the whole option is omitted.
+   */
   enabled?: boolean
-  /** Languages that can be emitted as test cases. */
+  /**
+   * Languages that can be emitted as test cases.
+   *
+   * Default: `["js", "jsx", "ts", "tsx", "mjs", "mts"]`.
+   */
   languages?: Array<string>
-  /** Require fence meta such as `test`, `runnable`, or `vitest`. */
+  /**
+   * Require fence meta such as `test`, `runnable`, or `vitest`.
+   *
+   * Default: `true`.
+   */
   requireMeta?: boolean
 }
 
 /** Edit-this-page link options. */
 export interface JsEditThisPageOptions {
-  /** Enable edit link generation. */
+  /**
+   * Enable edit link generation.
+   *
+   * Default: `false` unless `repo_url` is provided by the JavaScript resolver.
+   */
   enabled?: boolean
   /** GitHub repository URL, e.g. `https://github.com/owner/repo`. */
   repoUrl?: string
-  /** Branch used in edit URLs. */
+  /**
+   * Branch used in edit URLs.
+   *
+   * Default: `"main"`.
+   */
   branch?: string
-  /** Root directory used to relativize `sourcePath`. */
+  /**
+   * Root directory used to relativize `sourcePath`.
+   *
+   * Default: no extra root prefix.
+   */
   rootDir?: string
-  /** Link label. */
+  /**
+   * Link label.
+   *
+   * Default: `"Edit this page"`.
+   */
   label?: string
 }
 
 /** Emoji-shortcode transform options. */
 export interface JsEmojiShortcodeOptions {
-  /** Enable `:shortcode:` expansion. */
+  /**
+   * Enable `:shortcode:` expansion.
+   *
+   * Default: `false`.
+   */
   enabled?: boolean
-  /** Custom shortcode map. Values are emitted verbatim. */
+  /**
+   * Custom shortcode map. Values are emitted verbatim.
+   *
+   * Default: `{}`.
+   */
   custom?: Record<string, string>
 }
 
@@ -821,15 +885,35 @@ export interface JsMarkdownLintRuleOptions {
 
 /** Built-in media embed transform switches. */
 export interface JsMediaEmbedsOptions {
-  /** Render `<Spotify>` embeds. */
+  /**
+   * Render `<Spotify>` embeds.
+   *
+   * Default: `false`.
+   */
   spotify?: boolean
-  /** Render `<StackBlitz>` embeds. */
+  /**
+   * Render `<StackBlitz>` embeds.
+   *
+   * Default: `false`.
+   */
   stackBlitz?: boolean
-  /** Render `<Tweet>` / `<XPost>` static cards. */
+  /**
+   * Render `<Tweet>` / `<XPost>` static cards.
+   *
+   * Default: `false`.
+   */
   twitter?: boolean
-  /** Render `<Bluesky>` static cards. */
+  /**
+   * Render `<Bluesky>` static cards.
+   *
+   * Default: `false`.
+   */
   bluesky?: boolean
-  /** Render `<WebContainer>` lazy placeholder blocks. */
+  /**
+   * Render `<WebContainer>` lazy placeholder blocks.
+   *
+   * Default: `false`.
+   */
   webContainer?: boolean
 }
 
@@ -861,19 +945,47 @@ export interface JsOgImageData {
   author?: string
 }
 
-/** Parser options for JavaScript. */
+/**
+ * Parser options for JavaScript.
+ *
+ * When `gfm` is `true`, omitted extension flags inherit the GFM profile.
+ */
 export interface JsParserOptions {
-  /** Enable GFM extensions. */
+  /**
+   * Enable the GFM convenience profile.
+   *
+   * Default: `false`.
+   */
   gfm?: boolean
-  /** Enable footnotes. */
+  /**
+   * Enable footnote references and definitions.
+   *
+   * Default: `false`, or `true` when `gfm` is `true`.
+   */
   footnotes?: boolean
-  /** Enable task lists. */
+  /**
+   * Enable GFM task-list item markers.
+   *
+   * Default: `false`, or `true` when `gfm` is `true`.
+   */
   taskLists?: boolean
-  /** Enable tables. */
+  /**
+   * Enable GFM pipe tables.
+   *
+   * Default: `false`, or `true` when `gfm` is `true`.
+   */
   tables?: boolean
-  /** Enable strikethrough. */
+  /**
+   * Enable GFM strikethrough spans.
+   *
+   * Default: `false`, or `true` when `gfm` is `true`.
+   */
   strikethrough?: boolean
-  /** Enable autolinks. */
+  /**
+   * Enable GFM autolinks.
+   *
+   * Default: `false`, or `true` when `gfm` is `true`.
+   */
   autolinks?: boolean
 }
 
@@ -915,13 +1027,29 @@ export interface JsResolvedModule {
 
 /** HTML sanitizer options. */
 export interface JsSanitizeOptions {
-  /** Enable sanitizer. When omitted, passing this object enables it. */
+  /**
+   * Enable sanitizer. When omitted, passing this object enables it.
+   *
+   * Default: `false` when the whole option is omitted; `true` when this object is present.
+   */
   enabled?: boolean
-  /** Allowed tag names. Omit for safe defaults. */
+  /**
+   * Allowed tag names. Omit for safe defaults.
+   *
+   * Default: built-in safe tag allow list.
+   */
   allowedTags?: Array<string>
-  /** Allowed attribute names. Omit for safe defaults. */
+  /**
+   * Allowed attribute names. Omit for safe defaults.
+   *
+   * Default: built-in safe attribute allow list.
+   */
   allowedAttributes?: Array<string>
-  /** Allowed URL schemes for URL-bearing attributes. Omit for safe defaults. */
+  /**
+   * Allowed URL schemes for URL-bearing attributes. Omit for safe defaults.
+   *
+   * Default: built-in safe URL scheme allow list.
+   */
   allowedUrlSchemes?: Array<string>
 }
 
@@ -1052,7 +1180,11 @@ export interface JsSourceDocTag {
 
 /** Source preparation options for JavaScript. */
 export interface JsSourceOptions {
-  /** Parse YAML frontmatter before returning the content payload. */
+  /**
+   * Parse YAML frontmatter before returning the content payload.
+   *
+   * Default: `false`.
+   */
   frontmatter?: boolean
 }
 
@@ -1323,70 +1455,166 @@ export interface JsThemeLayout {
   maxContentWidth?: string
 }
 
-/** Transform options for JavaScript. */
+/**
+ * Transform options for JavaScript.
+ *
+ * Omitted parser flags inherit the GFM profile when `gfm` is `true`; otherwise
+ * they use the parser defaults.
+ */
 export interface JsTransformOptions {
-  /** Enable GFM extensions. */
+  /**
+   * Enable the GFM convenience profile.
+   *
+   * Default: `false`.
+   */
   gfm?: boolean
-  /** Enable footnotes. */
+  /**
+   * Enable footnote references and definitions.
+   *
+   * Default: `false`, or `true` when `gfm` is `true`.
+   */
   footnotes?: boolean
-  /** Enable task lists. */
+  /**
+   * Enable GFM task-list item markers.
+   *
+   * Default: `false`, or `true` when `gfm` is `true`.
+   */
   taskLists?: boolean
-  /** Enable tables. */
+  /**
+   * Enable GFM pipe tables.
+   *
+   * Default: `false`, or `true` when `gfm` is `true`.
+   */
   tables?: boolean
-  /** Enable strikethrough. */
+  /**
+   * Enable GFM strikethrough spans.
+   *
+   * Default: `false`, or `true` when `gfm` is `true`.
+   */
   strikethrough?: boolean
-  /** Enable autolinks. */
+  /**
+   * Enable GFM autolinks.
+   *
+   * Default: `false`, or `true` when `gfm` is `true`.
+   */
   autolinks?: boolean
-  /** Parse YAML frontmatter before transforming. */
+  /**
+   * Parse YAML frontmatter before transforming.
+   *
+   * Default: `false`.
+   */
   frontmatter?: boolean
-  /** Maximum TOC depth (1-6). */
+  /**
+   * Maximum TOC depth (1-6).
+   *
+   * Default: `3`.
+   */
   tocMaxDepth?: number
-  /** Convert `.md` links to `.html` links for SSG output. */
+  /**
+   * Convert `.md` links to `.html` links for SSG output.
+   *
+   * Default: `false`.
+   */
   convertMdLinks?: boolean
-  /** Base URL for absolute link conversion (e.g., "/" or "/docs/"). */
+  /**
+   * Base URL for absolute link conversion (e.g., "/" or "/docs/").
+   *
+   * Default: `"/"`.
+   */
   baseUrl?: string
-  /** Source file path for relative link resolution. */
+  /**
+   * Source file path for relative link resolution.
+   *
+   * Default: empty string.
+   */
   sourcePath?: string
-  /** Enable line annotations for code blocks using fence meta. */
+  /**
+   * Enable line annotations for code blocks using fence meta.
+   *
+   * Default: `false`.
+   */
   codeAnnotations?: boolean
-  /** Fence meta key used to read code annotations. */
+  /**
+   * Fence meta key used to read code annotations.
+   *
+   * Default: `"annotate"`.
+   */
   codeAnnotationMetaKey?: string
-  /** Code annotation syntax mode. */
+  /**
+   * Code annotation syntax mode.
+   *
+   * Default: `"attribute"`.
+   */
   codeAnnotationSyntax?: string
-  /** Enable line numbers for all code blocks by default. */
+  /**
+   * Enable line numbers for all code blocks by default.
+   *
+   * Default: `false`.
+   */
   codeAnnotationDefaultLineNumbers?: boolean
   /**
    * Auto-link bare URLs in text. When enabled, the renderer wraps any
    * text occurrence starting with a registered pattern (default `http://`
    * and `https://`) in an `<a>` tag.
+   *
+   * Default: `false`.
    */
   autolinkUrls?: boolean
   /**
    * URL prefix patterns for [`Self::autolink_urls`]. Overrides the
    * default `["http://", "https://"]` when set.
+   *
+   * Default: `["http://", "https://"]`.
    */
   autolinkPatterns?: Array<string>
   /**
    * Add `target="_blank" rel="noopener noreferrer"` to auto-linked URLs.
-   * Defaults to true; ignored when [`Self::autolink_urls`] is off.
+   *
+   * Default: `true`; ignored when [`Self::autolink_urls`] is off.
    */
   autolinkTargetBlank?: boolean
-  /** Opt-in Obsidian-style wiki links. */
+  /**
+   * Opt-in Obsidian-style wiki links.
+   *
+   * Default: disabled.
+   */
   wikiLinks?: JsWikiLinkOptions
-  /** Opt-in emoji shortcode expansion. */
+  /**
+   * Opt-in emoji shortcode expansion.
+   *
+   * Default: disabled.
+   */
   emojiShortcodes?: JsEmojiShortcodeOptions
-  /** Opt-in markdown-it-attrs style attributes. */
+  /**
+   * Opt-in markdown-it-attrs style attributes.
+   *
+   * Default: disabled.
+   */
   attributes?: JsAttrsOptions
   /**
    * Opt-in CJK emphasis compatibility flag. The parser is already CJK-friendly;
    * this keeps the feature explicit in the public API.
+   *
+   * Default: `false`.
    */
   cjkEmphasis?: boolean
-  /** Opt-in VitePress-style code import/snippet injection. */
+  /**
+   * Opt-in VitePress-style code import/snippet injection.
+   *
+   * Default: disabled.
+   */
   codeImports?: JsCodeImportOptions
-  /** Opt-in HTML sanitizer. */
+  /**
+   * Opt-in HTML sanitizer.
+   *
+   * Default: disabled.
+   */
   sanitize?: JsSanitizeOptions
-  /** Opt-in edit-this-page link generation. */
+  /**
+   * Opt-in edit-this-page link generation.
+   *
+   * Default: disabled.
+   */
   editThisPage?: JsEditThisPageOptions
 }
 
@@ -1400,9 +1628,17 @@ export interface JsTypeParam {
 
 /** Wiki-link transform options. */
 export interface JsWikiLinkOptions {
-  /** Enable `[[target]]` and `[[target|label]]` expansion. */
+  /**
+   * Enable `[[target]]` and `[[target|label]]` expansion.
+   *
+   * Default: `false`.
+   */
   enabled?: boolean
-  /** Base URL used for site-relative wiki links. */
+  /**
+   * Base URL used for site-relative wiki links.
+   *
+   * Default: `"/"`.
+   */
   baseUrl?: string
 }
 
@@ -1411,13 +1647,29 @@ export interface JsWikiLinkOptions {
  * `YouTubeOptions` defaults when omitted.
  */
 export interface JsYouTubeOptions {
-  /** Use privacy-enhanced mode (youtube-nocookie.com). Default: true. */
+  /**
+   * Use privacy-enhanced mode (`youtube-nocookie.com`).
+   *
+   * Default: `true`.
+   */
   privacyEnhanced?: boolean
-  /** Default aspect ratio. Default: "16/9". */
+  /**
+   * Default iframe aspect ratio.
+   *
+   * Default: `"16/9"`.
+   */
   aspectRatio?: string
-  /** Allow fullscreen. Default: true. */
+  /**
+   * Allow fullscreen playback.
+   *
+   * Default: `true`.
+   */
   allowFullscreen?: boolean
-  /** Lazy-load the iframe. Default: true. */
+  /**
+   * Lazy-load the iframe.
+   *
+   * Default: `true`.
+   */
   lazyLoad?: boolean
 }
 
