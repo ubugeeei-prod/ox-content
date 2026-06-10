@@ -1109,6 +1109,7 @@ export interface JsSsgNavGroup {
   /** Navigation items. */
   items: Array<JsSsgNavItem>
   collapsed?: boolean
+  stickyCollapsed?: boolean
 }
 
 /** Manual SSG navigation group supplied by user configuration. */
@@ -1134,6 +1135,7 @@ export interface JsSsgNavItem {
   href: string
   children?: Array<JsSsgNavItem>
   collapsed?: boolean
+  stickyCollapsed?: boolean
 }
 
 /** Page data for SSG. */
@@ -1188,6 +1190,8 @@ export interface JsSsgSidebarItem {
   items?: Array<JsSsgSidebarItem>
   /** Whether this group is collapsed by default. */
   collapsed?: boolean
+  /** Whether this group's open state persists across page navigations. */
+  stickyCollapsed?: boolean
 }
 
 /** Result of [`transform_tabs_embeds`]. */

@@ -96,6 +96,7 @@ describe("SSG route helpers", () => {
         {
           text: "Guide",
           collapsed: true,
+          stickyCollapsed: true,
           items: [{ text: "Install", link: "guide/install.md#cli" }],
         },
         { text: "Unsafe", link: "javascript:alert(1)" },
@@ -108,6 +109,7 @@ describe("SSG route helpers", () => {
     expect(groups[1]).toMatchObject({
       title: "Guide",
       collapsed: true,
+      stickyCollapsed: true,
       items: [
         { title: "Install", path: "guide/install", href: "/docs/guide/install/index.html#cli" },
       ],

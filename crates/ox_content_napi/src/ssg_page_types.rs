@@ -14,6 +14,7 @@ pub struct JsSsgNavItem {
     pub href: String,
     pub children: Option<Vec<JsSsgNavItem>>,
     pub collapsed: Option<bool>,
+    pub sticky_collapsed: Option<bool>,
 }
 
 /// Navigation group for SSG.
@@ -25,6 +26,7 @@ pub struct JsSsgNavGroup {
     /// Navigation items.
     pub items: Vec<JsSsgNavItem>,
     pub collapsed: Option<bool>,
+    pub sticky_collapsed: Option<bool>,
 }
 
 /// Resolved SSG output and public route paths.
@@ -54,6 +56,8 @@ pub struct JsSsgSidebarItem {
     pub items: Option<Vec<JsSsgSidebarItem>>,
     /// Whether this group is collapsed by default.
     pub collapsed: Option<bool>,
+    /// Whether this group's open state persists across page navigations.
+    pub sticky_collapsed: Option<bool>,
 }
 
 /// Manual SSG navigation item supplied by user configuration.

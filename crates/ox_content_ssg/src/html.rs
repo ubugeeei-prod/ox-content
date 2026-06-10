@@ -267,6 +267,8 @@ pub struct NavItem {
     pub children: Vec<NavItem>,
     #[serde(default)]
     pub collapsed: Option<bool>,
+    #[serde(default)]
+    pub sticky_collapsed: Option<bool>,
 }
 
 /// Navigation group for SSG.
@@ -278,6 +280,8 @@ pub struct NavGroup {
     pub items: Vec<NavItem>,
     #[serde(default)]
     pub collapsed: Option<bool>,
+    #[serde(default)]
+    pub sticky_collapsed: Option<bool>,
 }
 
 /// Table of contents entry.
@@ -1191,14 +1195,22 @@ fn validate_social_svg(svg: &str) -> Option<&str> {
 
 fn generate_nav_html(nav_groups: &[NavGroup], current_path: &str) -> String {
     let mut html = String::new();
-    for group in nav_groups {
+    for (group_index, group) in nav_groups.iter().enumerate() {
         if group.collapsed.is_some() {
             let open = if group.collapsed == Some(true) { "" } else { " open" };
+            let state_key = format!("group:{group_index}:{}", group.title);
+            let state_attr = nav_state_attr(group.sticky_collapsed, &state_key);
             push_fmt(&mut html, format_args!(
-                "<details class=\"nav-section nav-section--collapsible\"{open}>\n  <summary class=\"nav-title nav-title--summary\">{}</summary>\n",
+                "<details class=\"nav-section nav-section--collapsible\"{open}{state_attr}>\n  <summary class=\"nav-title nav-title--summary\">{}</summary>\n",
                 escape_html(&group.title)
             ));
-            render_nav_list(&mut html, &group.items, current_path, false);
+            render_nav_list(
+                &mut html,
+                &group.items,
+                current_path,
+                false,
+                &format!("group:{group_index}"),
+            );
             html.push_str("</details>\n");
         } else {
             push_fmt(
@@ -1208,23 +1220,35 @@ fn generate_nav_html(nav_groups: &[NavGroup], current_path: &str) -> String {
                     escape_html(&group.title)
                 ),
             );
-            render_nav_list(&mut html, &group.items, current_path, false);
+            render_nav_list(
+                &mut html,
+                &group.items,
+                current_path,
+                false,
+                &format!("group:{group_index}"),
+            );
             html.push_str("</div>\n");
         }
     }
     html
 }
 
-fn render_nav_list(html: &mut String, items: &[NavItem], current_path: &str, nested: bool) {
+fn render_nav_list(
+    html: &mut String,
+    items: &[NavItem],
+    current_path: &str,
+    nested: bool,
+    key_prefix: &str,
+) {
     let class_name = if nested { "nav-list nav-list--nested" } else { "nav-list" };
     push_fmt(html, format_args!("  <ul class=\"{class_name}\">\n"));
-    for item in items {
-        render_nav_item(html, item, current_path);
+    for (index, item) in items.iter().enumerate() {
+        render_nav_item(html, item, current_path, &format!("{key_prefix}.{index}"));
     }
     html.push_str("  </ul>\n");
 }
 
-fn render_nav_item(html: &mut String, item: &NavItem, current_path: &str) {
+fn render_nav_item(html: &mut String, item: &NavItem, current_path: &str, key_path: &str) {
     let href = safe_nav_href(&item.href);
     let title = escape_html(&item.title);
     let active_class = if item.path == current_path { " active" } else { "" };
@@ -1236,11 +1260,21 @@ fn render_nav_item(html: &mut String, item: &NavItem, current_path: &str) {
     }
 
     let open = if item.collapsed == Some(true) { "" } else { " open" };
+    let state_key = format!("item:{key_path}:{}:{}", item.path, item.title);
+    let state_attr = nav_state_attr(item.sticky_collapsed, &state_key);
     push_fmt(html, format_args!(
-        "    <li class=\"nav-item nav-item--group\"><details class=\"nav-details\"{open}><summary class=\"nav-summary\"><a href=\"{href}\" class=\"nav-link nav-link--summary{active_class}\">{title}</a></summary>\n"
+        "    <li class=\"nav-item nav-item--group\"><details class=\"nav-details\"{open}{state_attr}><summary class=\"nav-summary\"><a href=\"{href}\" class=\"nav-link nav-link--summary{active_class}\">{title}</a></summary>\n"
     ));
-    render_nav_list(html, &item.children, current_path, true);
+    render_nav_list(html, &item.children, current_path, true, key_path);
     html.push_str("    </details></li>\n");
+}
+
+fn nav_state_attr(sticky_collapsed: Option<bool>, key: &str) -> String {
+    if sticky_collapsed == Some(true) {
+        format!(" data-ox-nav-state-key=\"{}\"", escape_html(key))
+    } else {
+        String::new()
+    }
 }
 
 fn safe_nav_href(href: &str) -> String {
@@ -1285,8 +1319,10 @@ mod tests {
                 href: "/docs/test/index.html".to_string(),
                 children: vec![],
                 collapsed: None,
+                sticky_collapsed: None,
             }],
             collapsed: None,
+            sticky_collapsed: None,
         }];
 
         let config = SsgConfig {
@@ -1340,23 +1376,31 @@ mod tests {
         let nav_groups = vec![NavGroup {
             title: "Guide & API".to_string(),
             collapsed: Some(true),
+            sticky_collapsed: Some(true),
             items: vec![NavItem {
                 title: "Runtime <Core>".to_string(),
                 path: "runtime".to_string(),
                 href: "javascript:alert(1)".to_string(),
                 collapsed: Some(false),
+                sticky_collapsed: Some(true),
                 children: vec![NavItem {
                     title: "Setup".to_string(),
                     path: "runtime/setup".to_string(),
                     href: "/docs/runtime/setup/index.html".to_string(),
                     children: vec![],
                     collapsed: None,
+                    sticky_collapsed: None,
                 }],
             }],
         }];
 
         let html = generate_nav_html(&nav_groups, "runtime/setup");
-        assert!(html.contains("<details class=\"nav-section nav-section--collapsible\">"));
+        assert!(html.contains(
+            "<details class=\"nav-section nav-section--collapsible\" data-ox-nav-state-key=\"group:0:Guide &amp; API\">"
+        ));
+        assert!(html.contains(
+            "<details class=\"nav-details\" open data-ox-nav-state-key=\"item:group:0.0:runtime:Runtime &lt;Core&gt;\">"
+        ));
         assert!(html.contains("Guide &amp; API"));
         assert!(html.contains("Runtime &lt;Core&gt;"));
         assert!(html.contains("href=\"#\""));

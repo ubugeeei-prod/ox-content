@@ -24,6 +24,36 @@ if (sidebar) {
   );
 }
 
+const navStateStoragePrefix = "ox-content:nav:{{base}}:";
+const getNavState = (key) => {
+  try {
+    return localStorage.getItem(navStateStoragePrefix + key);
+  } catch {
+    return null;
+  }
+};
+const setNavState = (key, open) => {
+  try {
+    localStorage.setItem(navStateStoragePrefix + key, open ? "open" : "closed");
+  } catch {
+    // Ignore storage failures so navigation remains usable.
+  }
+};
+
+document.querySelectorAll("details[data-ox-nav-state-key]").forEach((details) => {
+  const key = details.getAttribute("data-ox-nav-state-key");
+  if (!key) return;
+
+  const savedState = getNavState(key);
+  if (savedState === "open") {
+    details.open = true;
+  } else if (savedState === "closed") {
+    details.open = false;
+  }
+
+  details.addEventListener("toggle", () => setNavState(key, details.open));
+});
+
 const themeToggle = document.querySelector(".theme-toggle"),
   setTheme = (theme) => {
     document.documentElement.setAttribute("data-theme", theme);

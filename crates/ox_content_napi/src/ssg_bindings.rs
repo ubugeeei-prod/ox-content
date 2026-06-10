@@ -156,6 +156,7 @@ fn convert_nav_item(item: JsSsgNavItem) -> ox_content_ssg::NavItem {
         href: item.href,
         children: item.children.unwrap_or_default().into_iter().map(convert_nav_item).collect(),
         collapsed: item.collapsed,
+        sticky_collapsed: item.sticky_collapsed,
     }
 }
 
@@ -170,6 +171,7 @@ fn map_nav_item(item: ox_content_ssg::NavItem) -> JsSsgNavItem {
             Some(item.children.into_iter().map(map_nav_item).collect())
         },
         collapsed: item.collapsed,
+        sticky_collapsed: item.sticky_collapsed,
     }
 }
 
@@ -178,6 +180,7 @@ fn map_nav_group(group: ox_content_ssg::NavGroup) -> JsSsgNavGroup {
         title: group.title,
         items: group.items.into_iter().map(map_nav_item).collect(),
         collapsed: group.collapsed,
+        sticky_collapsed: group.sticky_collapsed,
     }
 }
 
@@ -187,6 +190,7 @@ fn convert_sidebar_item(item: JsSsgSidebarItem) -> ox_content_ssg::SidebarItem {
         link: item.link,
         items: item.items.unwrap_or_default().into_iter().map(convert_sidebar_item).collect(),
         collapsed: item.collapsed,
+        sticky_collapsed: item.sticky_collapsed,
     }
 }
 
@@ -388,6 +392,7 @@ pub fn generate_ssg_html(
             title: g.title,
             items: g.items.into_iter().map(convert_nav_item).collect(),
             collapsed: g.collapsed,
+            sticky_collapsed: g.sticky_collapsed,
         })
         .collect();
 
