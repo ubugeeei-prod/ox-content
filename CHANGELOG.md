@@ -1,5 +1,15 @@
 # Changelog
 
+## [2.66.0] - 2026-06-10
+
+### Bug Fixes
+
+- lower linux x64 binding glibc baseline (#369)
+
+### Documentation
+
+- add kazupon credits summary (#367)
+
 ## [2.65.0] - 2026-06-09
 
 ### Features
