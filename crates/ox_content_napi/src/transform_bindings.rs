@@ -14,8 +14,13 @@ use crate::{
 #[derive(Default, Clone)]
 pub struct JsWikiLinkOptions {
     /// Enable `[[target]]` and `[[target|label]]` expansion.
+    ///
+    /// Default: `false`.
     pub enabled: Option<bool>,
+
     /// Base URL used for site-relative wiki links.
+    ///
+    /// Default: `"/"`.
     pub base_url: Option<String>,
 }
 
@@ -24,8 +29,13 @@ pub struct JsWikiLinkOptions {
 #[derive(Default, Clone)]
 pub struct JsEmojiShortcodeOptions {
     /// Enable `:shortcode:` expansion.
+    ///
+    /// Default: `false`.
     pub enabled: Option<bool>,
+
     /// Custom shortcode map. Values are emitted verbatim.
+    ///
+    /// Default: `{}`.
     pub custom: Option<HashMap<String, String>>,
 }
 
@@ -34,6 +44,8 @@ pub struct JsEmojiShortcodeOptions {
 #[derive(Default, Clone)]
 pub struct JsAttrsOptions {
     /// Enable markdown-it-attrs style `{#id .class key=value}`.
+    ///
+    /// Default: `false`.
     pub enabled: Option<bool>,
 }
 
@@ -42,8 +54,13 @@ pub struct JsAttrsOptions {
 #[derive(Default, Clone)]
 pub struct JsCodeImportOptions {
     /// Enable `<<< path{selector}` snippet injection.
+    ///
+    /// Default: `false`.
     pub enabled: Option<bool>,
+
     /// Root directory used for `@/` and absolute snippet imports.
+    ///
+    /// Default: project root from the JavaScript caller.
     pub root_dir: Option<String>,
 }
 
@@ -52,12 +69,23 @@ pub struct JsCodeImportOptions {
 #[derive(Default, Clone)]
 pub struct JsSanitizeOptions {
     /// Enable sanitizer. When omitted, passing this object enables it.
+    ///
+    /// Default: `false` when the whole option is omitted; `true` when this object is present.
     pub enabled: Option<bool>,
+
     /// Allowed tag names. Omit for safe defaults.
+    ///
+    /// Default: built-in safe tag allow list.
     pub allowed_tags: Option<Vec<String>>,
+
     /// Allowed attribute names. Omit for safe defaults.
+    ///
+    /// Default: built-in safe attribute allow list.
     pub allowed_attributes: Option<Vec<String>>,
+
     /// Allowed URL schemes for URL-bearing attributes. Omit for safe defaults.
+    ///
+    /// Default: built-in safe URL scheme allow list.
     pub allowed_url_schemes: Option<Vec<String>>,
 }
 
@@ -66,14 +94,26 @@ pub struct JsSanitizeOptions {
 #[derive(Default, Clone)]
 pub struct JsEditThisPageOptions {
     /// Enable edit link generation.
+    ///
+    /// Default: `false` unless `repo_url` is provided by the JavaScript resolver.
     pub enabled: Option<bool>,
+
     /// GitHub repository URL, e.g. `https://github.com/owner/repo`.
     pub repo_url: Option<String>,
+
     /// Branch used in edit URLs.
+    ///
+    /// Default: `"main"`.
     pub branch: Option<String>,
+
     /// Root directory used to relativize `sourcePath`.
+    ///
+    /// Default: no extra root prefix.
     pub root_dir: Option<String>,
+
     /// Link label.
+    ///
+    /// Default: `"Edit this page"`.
     pub label: Option<String>,
 }
 
@@ -82,12 +122,23 @@ pub struct JsEditThisPageOptions {
 #[derive(Default, Clone)]
 pub struct JsCodeBlockLintOptions {
     /// Enable code block linting.
+    ///
+    /// Default: `false` when the whole option is omitted.
     pub enabled: Option<bool>,
+
     /// Restrict linting to these language identifiers.
+    ///
+    /// Default: all fenced block languages.
     pub languages: Option<Vec<String>>,
+
     /// Report fences without a language identifier.
+    ///
+    /// Default: `false`.
     pub require_language: Option<bool>,
+
     /// Report trailing whitespace in code block lines.
+    ///
+    /// Default: `true`.
     pub trailing_spaces: Option<bool>,
 }
 
@@ -96,10 +147,18 @@ pub struct JsCodeBlockLintOptions {
 #[derive(Default, Clone)]
 pub struct JsDocsTestOptions {
     /// Enable docs test extraction.
+    ///
+    /// Default: `false` when the whole option is omitted.
     pub enabled: Option<bool>,
+
     /// Languages that can be emitted as test cases.
+    ///
+    /// Default: `["js", "jsx", "ts", "tsx", "mjs", "mts"]`.
     pub languages: Option<Vec<String>>,
+
     /// Require fence meta such as `test`, `runnable`, or `vitest`.
+    ///
+    /// Default: `true`.
     pub require_meta: Option<bool>,
 }
 
@@ -108,14 +167,28 @@ pub struct JsDocsTestOptions {
 #[derive(Default, Clone)]
 pub struct JsMediaEmbedsOptions {
     /// Render `<Spotify>` embeds.
+    ///
+    /// Default: `false`.
     pub spotify: Option<bool>,
+
     /// Render `<StackBlitz>` embeds.
+    ///
+    /// Default: `false`.
     pub stack_blitz: Option<bool>,
+
     /// Render `<Tweet>` / `<XPost>` static cards.
+    ///
+    /// Default: `false`.
     pub twitter: Option<bool>,
+
     /// Render `<Bluesky>` static cards.
+    ///
+    /// Default: `false`.
     pub bluesky: Option<bool>,
+
     /// Render `<WebContainer>` lazy placeholder blocks.
+    ///
+    /// Default: `false`.
     pub web_container: Option<bool>,
 }
 
@@ -172,63 +245,139 @@ impl From<features::CodeBlockDiagnostic> for JsCodeBlockDiagnostic {
 }
 
 /// Transform options for JavaScript.
+///
+/// Omitted parser flags inherit the GFM profile when `gfm` is `true`; otherwise
+/// they use the parser defaults.
 #[napi(object)]
 #[derive(Default, Clone)]
 pub struct JsTransformOptions {
-    /// Enable GFM extensions.
+    /// Enable the GFM convenience profile.
+    ///
+    /// Default: `false`.
     pub gfm: Option<bool>,
-    /// Enable footnotes.
+
+    /// Enable footnote references and definitions.
+    ///
+    /// Default: `false`, or `true` when `gfm` is `true`.
     pub footnotes: Option<bool>,
-    /// Enable task lists.
+
+    /// Enable GFM task-list item markers.
+    ///
+    /// Default: `false`, or `true` when `gfm` is `true`.
     pub task_lists: Option<bool>,
-    /// Enable tables.
+
+    /// Enable GFM pipe tables.
+    ///
+    /// Default: `false`, or `true` when `gfm` is `true`.
     pub tables: Option<bool>,
-    /// Enable strikethrough.
+
+    /// Enable GFM strikethrough spans.
+    ///
+    /// Default: `false`, or `true` when `gfm` is `true`.
     pub strikethrough: Option<bool>,
-    /// Enable autolinks.
+
+    /// Enable GFM autolinks.
+    ///
+    /// Default: `false`, or `true` when `gfm` is `true`.
     pub autolinks: Option<bool>,
+
     /// Parse YAML frontmatter before transforming.
+    ///
+    /// Default: `false`.
     pub frontmatter: Option<bool>,
+
     /// Maximum TOC depth (1-6).
+    ///
+    /// Default: `3`.
     pub toc_max_depth: Option<u8>,
+
     /// Convert `.md` links to `.html` links for SSG output.
+    ///
+    /// Default: `false`.
     pub convert_md_links: Option<bool>,
+
     /// Base URL for absolute link conversion (e.g., "/" or "/docs/").
+    ///
+    /// Default: `"/"`.
     pub base_url: Option<String>,
+
     /// Source file path for relative link resolution.
+    ///
+    /// Default: empty string.
     pub source_path: Option<String>,
+
     /// Enable line annotations for code blocks using fence meta.
+    ///
+    /// Default: `false`.
     pub code_annotations: Option<bool>,
+
     /// Fence meta key used to read code annotations.
+    ///
+    /// Default: `"annotate"`.
     pub code_annotation_meta_key: Option<String>,
+
     /// Code annotation syntax mode.
+    ///
+    /// Default: `"attribute"`.
     pub code_annotation_syntax: Option<String>,
+
     /// Enable line numbers for all code blocks by default.
+    ///
+    /// Default: `false`.
     pub code_annotation_default_line_numbers: Option<bool>,
+
     /// Auto-link bare URLs in text. When enabled, the renderer wraps any
     /// text occurrence starting with a registered pattern (default `http://`
     /// and `https://`) in an `<a>` tag.
+    ///
+    /// Default: `false`.
     pub autolink_urls: Option<bool>,
+
     /// URL prefix patterns for [`Self::autolink_urls`]. Overrides the
     /// default `["http://", "https://"]` when set.
+    ///
+    /// Default: `["http://", "https://"]`.
     pub autolink_patterns: Option<Vec<String>>,
+
     /// Add `target="_blank" rel="noopener noreferrer"` to auto-linked URLs.
-    /// Defaults to true; ignored when [`Self::autolink_urls`] is off.
+    ///
+    /// Default: `true`; ignored when [`Self::autolink_urls`] is off.
     pub autolink_target_blank: Option<bool>,
+
     /// Opt-in Obsidian-style wiki links.
+    ///
+    /// Default: disabled.
     pub wiki_links: Option<JsWikiLinkOptions>,
+
     /// Opt-in emoji shortcode expansion.
+    ///
+    /// Default: disabled.
     pub emoji_shortcodes: Option<JsEmojiShortcodeOptions>,
+
     /// Opt-in markdown-it-attrs style attributes.
+    ///
+    /// Default: disabled.
     pub attributes: Option<JsAttrsOptions>,
+
     /// Opt-in CJK emphasis compatibility flag. The parser is already CJK-friendly;
     /// this keeps the feature explicit in the public API.
+    ///
+    /// Default: `false`.
     pub cjk_emphasis: Option<bool>,
+
     /// Opt-in VitePress-style code import/snippet injection.
+    ///
+    /// Default: disabled.
     pub code_imports: Option<JsCodeImportOptions>,
+
     /// Opt-in HTML sanitizer.
+    ///
+    /// Default: disabled.
     pub sanitize: Option<JsSanitizeOptions>,
+
     /// Opt-in edit-this-page link generation.
+    ///
+    /// Default: disabled.
     pub edit_this_page: Option<JsEditThisPageOptions>,
 }
 
@@ -242,13 +391,24 @@ pub fn merge_highlighted_code_blocks(original_html: String, highlighted_html: St
 /// `YouTubeOptions` defaults when omitted.
 #[napi(object)]
 pub struct JsYouTubeOptions {
-    /// Use privacy-enhanced mode (youtube-nocookie.com). Default: true.
+    /// Use privacy-enhanced mode (`youtube-nocookie.com`).
+    ///
+    /// Default: `true`.
     pub privacy_enhanced: Option<bool>,
-    /// Default aspect ratio. Default: "16/9".
+
+    /// Default iframe aspect ratio.
+    ///
+    /// Default: `"16/9"`.
     pub aspect_ratio: Option<String>,
-    /// Allow fullscreen. Default: true.
+
+    /// Allow fullscreen playback.
+    ///
+    /// Default: `true`.
     pub allow_fullscreen: Option<bool>,
-    /// Lazy-load the iframe. Default: true.
+
+    /// Lazy-load the iframe.
+    ///
+    /// Default: `true`.
     pub lazy_load: Option<bool>,
 }
 
@@ -274,6 +434,7 @@ pub fn transform_youtube_embeds(html: String, options: Option<JsYouTubeOptions>)
 pub struct JsTabsTransformResult {
     /// HTML with every `<tabs>` block expanded.
     pub html: String,
+
     /// Number of tab groups expanded; the caller advances its group counter by
     /// this amount so generated CSS covers exactly the emitted groups.
     pub group_count: u32,
@@ -304,6 +465,7 @@ pub struct JsPmOptions {
 pub struct JsPmTransformResult {
     /// HTML with every `<pm>` block expanded into a package-manager tab widget.
     pub html: String,
+
     /// Number of tab groups expanded; the caller advances its shared tab-group
     /// counter by this amount.
     pub group_count: u32,

@@ -54,6 +54,7 @@ export interface MarkdownLintStandardDictionaryOptions {
    *
    * This can point at installed packages like
    * `@cspell/dict-fr-fr/cspell-ext.json` or local CSpell config files.
+   * @default []
    */
   imports?: string[];
 
@@ -71,16 +72,19 @@ export interface MarkdownLintStandardDictionaryOptions {
 export interface MarkdownLintDictionaryOptions {
   /**
    * Words ignored across all configured languages.
+   * @default []
    */
   words?: string[];
 
   /**
    * Extra words to allow per language.
+   * @default {}
    */
   byLanguage?: Partial<Record<MarkdownLintLanguage, string[]>>;
 
   /**
    * Words that should never produce diagnostics.
+   * @default []
    */
   ignoredWords?: string[];
 
@@ -89,6 +93,7 @@ export interface MarkdownLintDictionaryOptions {
    *
    * By default the linter stays on a minimal built-in dictionary. Enable this
    * to load larger locale dictionaries from a standard external source.
+   * @default false
    */
   standard?: MarkdownLintStandardDictionaryOptions | false;
 }
@@ -156,11 +161,14 @@ export interface MarkdownLintOptions {
 
   /**
    * Rule configuration.
+   * Omitted fields use `MarkdownLintRuleOptions` defaults.
+   * @default {}
    */
   rules?: MarkdownLintRuleOptions;
 
   /**
    * Built-in and opt-in standard dictionary overrides.
+   * @default {}
    */
   dictionary?: MarkdownLintDictionaryOptions;
 }

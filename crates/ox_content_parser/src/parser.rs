@@ -26,21 +26,47 @@ mod table;
 mod tests;
 
 /// Parser options.
+///
+/// `Default::default()` keeps optional Markdown extensions disabled. Use
+/// [`ParserOptions::gfm`] to enable the GitHub Flavored Markdown profile.
 #[derive(Debug, Clone, Default)]
 pub struct ParserOptions {
-    /// Enable GFM (GitHub Flavored Markdown) extensions.
+    /// Enable the GFM convenience profile.
+    ///
+    /// When set through [`ParserOptions::gfm`], this also enables footnotes,
+    /// task lists, tables, strikethrough, and autolinks.
+    ///
+    /// Default: `false`; [`ParserOptions::gfm`] sets this to `true`.
     pub gfm: bool,
-    /// Enable footnotes.
+
+    /// Enable footnote references and definitions.
+    ///
+    /// Default: `false`; [`ParserOptions::gfm`] sets this to `true`.
     pub footnotes: bool,
-    /// Enable task lists.
+
+    /// Enable GFM task-list item markers such as `- [x]`.
+    ///
+    /// Default: `false`; [`ParserOptions::gfm`] sets this to `true`.
     pub task_lists: bool,
-    /// Enable tables.
+
+    /// Enable GFM pipe tables.
+    ///
+    /// Default: `false`; [`ParserOptions::gfm`] sets this to `true`.
     pub tables: bool,
-    /// Enable strikethrough.
+
+    /// Enable GFM strikethrough spans.
+    ///
+    /// Default: `false`; [`ParserOptions::gfm`] sets this to `true`.
     pub strikethrough: bool,
-    /// Enable autolinks.
+
+    /// Enable GFM autolinks.
+    ///
+    /// Default: `false`; [`ParserOptions::gfm`] sets this to `true`.
     pub autolinks: bool,
+
     /// Maximum nesting depth for block elements.
+    ///
+    /// Default: `0`; [`ParserOptions::gfm`] sets this to `100`.
     pub max_nesting_depth: usize,
 }
 
@@ -64,12 +90,16 @@ impl ParserOptions {
 pub struct Parser<'a> {
     /// Arena allocator.
     allocator: &'a Allocator,
+
     /// Source text.
     source: &'a str,
+
     /// Parser options.
     options: ParserOptions,
+
     /// Current position in the source.
     position: usize,
+
     /// Current nesting depth.
     nesting_depth: usize,
 }

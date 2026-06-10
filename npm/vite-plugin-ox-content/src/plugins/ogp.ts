@@ -20,13 +20,28 @@ export interface OgpData {
 }
 
 export interface OgpOptions {
-  /** Request timeout in milliseconds. Default: 10000 */
+  /**
+   * Request timeout in milliseconds.
+   * @default 10000
+   */
   timeout?: number;
-  /** Cache fetched data. Default: true */
+
+  /**
+   * Cache fetched Open Graph metadata in memory for the current process.
+   * @default true
+   */
   cache?: boolean;
-  /** Cache TTL in milliseconds. Default: 3600000 (1 hour) */
+
+  /**
+   * Cache TTL in milliseconds.
+   * @default 3600000
+   */
   cacheTTL?: number;
-  /** User agent for requests */
+
+  /**
+   * User agent sent with metadata fetch requests.
+   * @default 'ox-content-ogp-bot/1.0 (compatible; +https://github.com/ubugeeei-prod/ox-content)'
+   */
   userAgent?: string;
 }
 

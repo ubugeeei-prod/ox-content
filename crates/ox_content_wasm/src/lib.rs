@@ -30,7 +30,10 @@ pub struct TransformResult {
     pub errors: Vec<String>,
 }
 
-/// Parser options.
+/// Parser and renderer options exposed to JavaScript.
+///
+/// `new WasmParserOptions()` disables optional Markdown extensions by default
+/// and uses renderer defaults for TOC and auto-link handling.
 #[wasm_bindgen]
 #[derive(Default)]
 pub struct WasmParserOptions {
@@ -48,6 +51,11 @@ pub struct WasmParserOptions {
 
 #[wasm_bindgen]
 impl WasmParserOptions {
+    /// Creates options with all Markdown extension flags disabled.
+    ///
+    /// Defaults: `gfm = false`, `tocMaxDepth = 3`, `autolinkUrls = false`,
+    /// `autolinkPatterns = ["http://", "https://"]`, and
+    /// `autolinkTargetBlank = true`.
     #[wasm_bindgen(constructor)]
     pub fn new() -> Self {
         Self {
@@ -64,36 +72,57 @@ impl WasmParserOptions {
         }
     }
 
+    /// Enables the GFM convenience profile.
+    ///
+    /// Default: `false`.
     #[wasm_bindgen(setter)]
     pub fn set_gfm(&mut self, value: bool) {
         self.gfm = value;
     }
 
+    /// Enables footnote references and definitions.
+    ///
+    /// Default: `false`.
     #[wasm_bindgen(setter)]
     pub fn set_footnotes(&mut self, value: bool) {
         self.footnotes = value;
     }
 
+    /// Enables GFM task-list item markers such as `- [x]`.
+    ///
+    /// Default: `false`.
     #[wasm_bindgen(setter = taskLists)]
     pub fn set_task_lists(&mut self, value: bool) {
         self.task_lists = value;
     }
 
+    /// Enables GFM pipe tables.
+    ///
+    /// Default: `false`.
     #[wasm_bindgen(setter)]
     pub fn set_tables(&mut self, value: bool) {
         self.tables = value;
     }
 
+    /// Enables GFM strikethrough spans.
+    ///
+    /// Default: `false`.
     #[wasm_bindgen(setter)]
     pub fn set_strikethrough(&mut self, value: bool) {
         self.strikethrough = value;
     }
 
+    /// Enables GFM autolinks in the parser.
+    ///
+    /// Default: `false`.
     #[wasm_bindgen(setter)]
     pub fn set_autolinks(&mut self, value: bool) {
         self.autolinks = value;
     }
 
+    /// Sets the maximum heading depth included in inline TOCs.
+    ///
+    /// Default: `3`.
     #[wasm_bindgen(setter = tocMaxDepth)]
     pub fn set_toc_max_depth(&mut self, value: u8) {
         self.toc_max_depth = value;
@@ -101,6 +130,8 @@ impl WasmParserOptions {
 
     /// Enables the renderer's URL auto-linking builtin. Bare URLs matching
     /// any registered pattern are wrapped in an `<a>` tag.
+    ///
+    /// Default: `false`.
     #[wasm_bindgen(setter = autolinkUrls)]
     pub fn set_autolink_urls(&mut self, value: bool) {
         self.autolink_urls = value;
@@ -108,6 +139,8 @@ impl WasmParserOptions {
 
     /// Replaces the URL prefix patterns used by auto-linking. Pass a JS
     /// array of strings such as `["http://", "https://", "ftp://"]`.
+    ///
+    /// Default: `["http://", "https://"]`.
     #[wasm_bindgen(setter = autolinkPatterns)]
     pub fn set_autolink_patterns(&mut self, value: Vec<String>) {
         self.autolink_patterns = value;
@@ -115,6 +148,8 @@ impl WasmParserOptions {
 
     /// Toggles `target="_blank" rel="noopener noreferrer"` on auto-linked
     /// URLs. Has no effect when `autolinkUrls` is off.
+    ///
+    /// Default: `true`.
     #[wasm_bindgen(setter = autolinkTargetBlank)]
     pub fn set_autolink_target_blank(&mut self, value: bool) {
         self.autolink_target_blank = value;

@@ -8,18 +8,31 @@ use crate::index::SearchIndex;
 use crate::tokenizer::tokenize_query;
 
 /// Search options.
+///
+/// Defaults match the client-side search runtime defaults.
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct SearchOptions {
     /// Maximum number of results to return.
+    ///
+    /// Default: `10`.
     #[serde(default = "default_limit")]
     pub limit: usize,
+
     /// Enable prefix matching for the last token.
+    ///
+    /// Default: `true`.
     #[serde(default = "default_prefix")]
     pub prefix: bool,
+
     /// Enable fuzzy matching (edit distance).
+    ///
+    /// Default: `false`.
     #[serde(default)]
     pub fuzzy: bool,
+
     /// Minimum score threshold (0.0 - 1.0).
+    ///
+    /// Default: `0.0`.
     #[serde(default)]
     pub threshold: f64,
 }
@@ -43,14 +56,19 @@ impl Default for SearchOptions {
 pub struct SearchResult {
     /// Document ID.
     pub id: String,
+
     /// Document title.
     pub title: String,
+
     /// Document URL.
     pub url: String,
+
     /// Relevance score.
     pub score: f64,
+
     /// Matched terms.
     pub matches: Vec<String>,
+
     /// Content snippet with highlights.
     pub snippet: String,
 }

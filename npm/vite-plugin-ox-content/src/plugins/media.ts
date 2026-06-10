@@ -1,10 +1,34 @@
 import { importNapiModule } from "../napi";
 
 export interface MediaEmbedOptions {
+  /**
+   * Render `<Spotify>` embeds.
+   * @default false
+   */
   spotify?: boolean;
+
+  /**
+   * Render `<StackBlitz>` embeds.
+   * @default false
+   */
   stackBlitz?: boolean;
+
+  /**
+   * Render `<Tweet>` / `<XPost>` static cards.
+   * @default false
+   */
   twitter?: boolean;
+
+  /**
+   * Render `<Bluesky>` static cards.
+   * @default false
+   */
   bluesky?: boolean;
+
+  /**
+   * Render `<WebContainer>` lazy placeholder blocks.
+   * @default false
+   */
   webContainer?: boolean;
 }
 

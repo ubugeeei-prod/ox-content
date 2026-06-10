@@ -3,11 +3,40 @@ import { toRustDocsModules } from "./docs";
 import { importNapiModuleSync } from "./napi";
 
 export interface GenerateNavMetadataOptions {
+  /**
+   * Route prefix used by generated navigation links.
+   * @default '/api'
+   */
   basePath?: string;
+
+  /**
+   * Generated Markdown output path strategy.
+   * @default 'flat'
+   */
   pathStrategy?: "flat" | "typedoc";
+
+  /**
+   * TypeDoc-style group order for nav groups.
+   * @default undefined
+   */
   groupOrder?: string[];
+
+  /**
+   * TypeDoc-style sort strategies applied to nav leaf entries.
+   * @default undefined
+   */
   sort?: DocsSortStrategy[];
+
+  /**
+   * Sort entry points alphabetically instead of preserving caller order.
+   * @default true
+   */
   sortEntryPoints?: boolean;
+
+  /**
+   * TypeDoc-style declaration kind ranking for nav groups.
+   * @default undefined
+   */
   kindSortOrder?: string[];
 }
 

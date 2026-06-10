@@ -11,24 +11,56 @@ export interface IncrementalMarkdownParserOptions {
    * @default true
    */
   gfm?: boolean;
-  /** Enable footnotes. */
+
+  /**
+   * Enable footnotes.
+   * @default true
+   */
   footnotes?: boolean;
-  /** Enable task list items. */
+
+  /**
+   * Enable task list items.
+   * @default true
+   */
   taskLists?: boolean;
-  /** Enable GFM tables. */
+
+  /**
+   * Enable GFM tables.
+   * @default true
+   */
   tables?: boolean;
-  /** Enable strikethrough. */
+
+  /**
+   * Enable strikethrough.
+   * @default true
+   */
   strikethrough?: boolean;
-  /** Enable Markdown autolinks. */
+
+  /**
+   * Enable Markdown autolinks.
+   * @default true
+   */
   autolinks?: boolean;
 }
 
 export interface IncrementalMarkdownParseAppendOptions {
-  /** Commit the current chunk as the final stream input. */
+  /**
+   * Commit the current chunk as the final stream input.
+   * @default false
+   */
   final?: boolean;
-  /** Include a provisional AST for the current replaceable tail. */
+
+  /**
+   * Include a provisional AST for the current replaceable tail.
+   * The constructor-level value is reused when omitted on `append`.
+   * @default false
+   */
   includePendingAst?: boolean;
-  /** Temporarily close unmatched inline delimiters in the provisional AST. */
+
+  /**
+   * Temporarily close unmatched inline delimiters in the provisional AST.
+   * @default true
+   */
   completeInline?: boolean;
 }
 
@@ -38,6 +70,7 @@ export interface IncrementalMarkdownRendererOptions extends IncrementalMarkdownP
    * @default true
    */
   renderPending?: boolean;
+
   /**
    * Temporarily close unmatched inline delimiters in provisional HTML.
    * @default true
@@ -46,11 +79,23 @@ export interface IncrementalMarkdownRendererOptions extends IncrementalMarkdownP
 }
 
 export interface IncrementalMarkdownRenderAppendOptions {
-  /** Commit the current chunk as the final stream input. */
+  /**
+   * Commit the current chunk as the final stream input.
+   * @default false
+   */
   final?: boolean;
-  /** Render the unstable tail as replaceable provisional HTML. */
+
+  /**
+   * Render the unstable tail as replaceable provisional HTML.
+   * The constructor-level value is reused when omitted on `append`.
+   * @default true
+   */
   renderPending?: boolean;
-  /** Temporarily close unmatched inline delimiters in provisional HTML. */
+
+  /**
+   * Temporarily close unmatched inline delimiters in provisional HTML.
+   * @default true
+   */
   completeInline?: boolean;
 }
 
@@ -63,10 +108,13 @@ export interface IncrementalMarkdownParseResult<TAst = unknown> extends Omit<
 > {
   /** Parsed mdast for the newly committed Markdown prefix, or null when nothing committed. */
   ast: TAst | null;
+
   /** Raw mdast JSON for the newly committed Markdown prefix. */
   astJson: string;
+
   /** Provisional parsed mdast for the current replaceable tail, or null when not requested. */
   pendingAst: TAst | null;
+
   /** Raw provisional mdast JSON for the current replaceable tail. */
   pendingAstJson: string;
 }

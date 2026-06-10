@@ -8,14 +8,28 @@ const SEARCH_RUNTIME_MODULE: &str = include_str!("search-runtime.js");
 #[derive(Clone, Debug, Serialize)]
 pub struct SearchRuntimeOptions {
     /// Whether search is enabled.
+    ///
+    /// Default from the Vite plugin resolver: `true`.
     pub enabled: bool,
+
     /// Maximum number of results.
+    ///
+    /// Default from the Vite plugin resolver: `10`.
     pub limit: u32,
+
     /// Enable prefix matching.
+    ///
+    /// Default from the Vite plugin resolver: `true`.
     pub prefix: bool,
+
     /// Search input placeholder.
+    ///
+    /// Default from the Vite plugin resolver: `"Search documentation..."`.
     pub placeholder: String,
+
     /// Keyboard shortcut to focus search.
+    ///
+    /// Default from the Vite plugin resolver: `"/"`.
     pub hotkey: String,
 }
 

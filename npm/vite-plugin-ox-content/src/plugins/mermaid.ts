@@ -12,7 +12,10 @@ import { dirname, join } from "node:path";
 import { importNapiModule } from "../napi";
 
 export interface MermaidOptions {
-  /** Mermaid theme. Default: "neutral" */
+  /**
+   * Mermaid theme used by the CLI renderer.
+   * @default 'neutral'
+   */
   theme?: "default" | "dark" | "forest" | "neutral" | "base";
 }
 
