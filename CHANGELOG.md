@@ -1,5 +1,27 @@
 # Changelog
 
+## [2.67.0] - 2026-06-10
+
+### Features
+
+- persist sticky sidebar state (#371)
+- support flattened single entry roots (#361)
+
+### Bug Fixes
+
+- lower linux x64 binding glibc baseline (#369)
+- detect helper-based cargo publish targets (#362)
+- preserve napi declaration docs (#359)
+
+### Refactoring
+
+- split large binding and markdown test modules (#358)
+
+### Documentation
+
+- add kazupon credits summary (#367)
+- add builtin examples and framework tests (#360)
+
 ## [2.66.0] - 2026-06-10
 
 ### Bug Fixes
