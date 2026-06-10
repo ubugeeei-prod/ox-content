@@ -98,6 +98,16 @@ fn javascript_wrapper_and_declarations_cover_expected_exports() {
 }
 
 #[test]
+fn javascript_wrapper_reports_native_load_errors() {
+    let manifest_dir = std::path::Path::new(env!("CARGO_MANIFEST_DIR"));
+    let index_js = fs::read_to_string(manifest_dir.join("index.js")).unwrap();
+
+    assert!(!index_js.contains("catch {}"));
+    assert!(index_js.contains("Native load attempts failed:"));
+    assert!(index_js.contains("formatLoadError(subPackage, error)"));
+}
+
+#[test]
 fn transform_passes_toc_depth_to_inline_toc() {
     let result = crate::transform(
         "[[toc]]\n\n## Intro\n### API".to_string(),

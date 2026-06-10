@@ -47,7 +47,7 @@ jobs:
           - os: macos-latest
             target: aarch64-apple-darwin
             platform: darwin-arm64
-          - os: blacksmith-32vcpu-ubuntu-2404
+          - os: ubuntu-22.04
             target: x86_64-unknown-linux-gnu
             platform: linux-x64-gnu
           - os: blacksmith-32vcpu-ubuntu-2404
