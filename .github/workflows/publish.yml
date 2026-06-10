@@ -340,6 +340,7 @@ jobs:
   publish-crates:
     name: Publish to crates.io
     runs-on: blacksmith-32vcpu-ubuntu-2404
+    environment: crates.io
     permissions:
       contents: read
       id-token: write
