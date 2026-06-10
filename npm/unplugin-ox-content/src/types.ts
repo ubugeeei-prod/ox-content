@@ -169,7 +169,15 @@ export type RehypePlugin = UnifiedAttacher | UnifiedPluginTuple | UnifiedPreset;
  */
 export type OxContentPlugin = (html: string) => string | Promise<string>;
 
+/**
+ * Code annotation options for the framework-agnostic unplugin package.
+ */
 export interface CodeAnnotationsOptions {
+  /**
+   * Attribute name read from the code fence meta string.
+   *
+   * @default 'annotate'
+   */
   metaKey?: string;
 }
 
@@ -180,7 +188,10 @@ export interface ResolvedCodeAnnotationsOptions {
 
 /**
  * API documentation generation configuration.
- * Similar to cargo docs for Rust.
+ *
+ * The unplugin package keeps this surface smaller than the Vite plugin's docs
+ * generator, but follows the same convention: provide `true` for defaults or an
+ * object to customize scanning and output.
  */
 export interface DocsConfig {
   /**
@@ -191,6 +202,10 @@ export interface DocsConfig {
 
   /**
    * Source directories to scan for documentation.
+   *
+   * Paths are resolved from the bundler project root before include/exclude
+   * matching.
+   *
    * @default ['./src']
    */
   src?: string[];
@@ -203,6 +218,9 @@ export interface DocsConfig {
 
   /**
    * File patterns to include.
+   *
+   * Patterns are evaluated inside each configured `src` directory.
+   *
    * @default ['**\/*.ts', '**\/*.tsx', '**\/*.js', '**\/*.jsx']
    */
   include?: string[];
@@ -233,17 +251,23 @@ export interface DocsConfig {
 }
 
 /**
- * Plugin configuration for various markdown ecosystems.
+ * Plugin configuration for various Markdown ecosystems.
+ *
+ * Plugins run in the order listed for their respective pipeline stage. Use this
+ * when migrating from markdown-it, remark, or rehype based stacks while keeping
+ * ox-content as the parser/renderer bridge.
  */
 export interface PluginConfig {
   /**
    * Ox-content native plugins.
    * Transform HTML after rendering.
+   * @default []
    */
   oxContent?: OxContentPlugin[];
 
   /**
    * Markdown-it plugins.
+   * @default []
    * @see https://www.npmjs.com/search?q=markdown-it-plugin
    */
   markdownIt?: MarkdownItPlugin[];
@@ -251,29 +275,39 @@ export interface PluginConfig {
   /**
    * mdast plugins.
    * Accepts both Ox Content-native mdast plugins and existing remark plugins.
+   * @default []
    */
   mdast?: MdastPlugin[];
 
   /**
    * Remark plugins (unified ecosystem).
    * Kept for compatibility; runs in the same mdast stage as `plugin.mdast`.
+   * @default []
    * @see https://github.com/remarkjs/remark/blob/main/doc/plugins.md
    */
   remark?: RemarkPlugin[];
 
   /**
    * Rehype plugins (unified ecosystem).
+   * @default []
    * @see https://github.com/rehypejs/rehype/blob/main/doc/plugins.md
    */
   rehype?: RehypePlugin[];
 }
 
 /**
- * Plugin options.
+ * Options for the framework-agnostic ox-content unplugin.
+ *
+ * This package is intended for bundlers such as webpack, Rollup, esbuild,
+ * Rspack, and Vite. It exposes a compact subset of the core Vite plugin options
+ * plus ecosystem plugin hooks.
  */
 export interface OxContentOptions {
   /**
    * Source directory for Markdown files.
+   *
+   * Used as the logical content root for generated modules and docs output.
+   *
    * @default 'docs'
    */
   srcDir?: string;
@@ -322,7 +356,16 @@ export interface OxContentOptions {
 
   /**
    * Opt-in line annotations for fenced code blocks.
-   * Example: `annotate="highlight:1,3-4;warning:6"`
+   *
+   * Pass `true` to enable the default `annotate` meta key, or pass an object to
+   * configure the key.
+   *
+   * @example
+   * ~~~md
+   * ```ts annotate="highlight:1,3-4;warning:6"
+   * ```
+   * ~~~
+   *
    * @default false
    */
   codeAnnotations?: boolean | CodeAnnotationsOptions;
@@ -359,16 +402,22 @@ export interface OxContentOptions {
 
   /**
    * Files/patterns to include.
+   * Empty by default, which lets the Markdown extension filter decide.
+   * @default []
    */
   include?: string | RegExp | RegExp[];
 
   /**
    * Files/patterns to exclude.
+   * Empty by default.
+   * @default []
    */
   exclude?: string | RegExp | RegExp[];
 
   /**
    * Plugin configuration for markdown processing.
+   * Each plugin list defaults to an empty array.
+   * @default {}
    */
   plugin?: PluginConfig;
 

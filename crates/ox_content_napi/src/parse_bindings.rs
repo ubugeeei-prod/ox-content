@@ -13,6 +13,7 @@ use crate::{create_allocator_for_source, mdast, mdast_raw, transfer::TransferPay
 pub struct ParseResult {
     /// The AST as a JSON string.
     pub ast: String,
+
     /// Parse errors, if any.
     pub errors: Vec<String>,
 }
@@ -22,6 +23,7 @@ pub struct ParseResult {
 pub struct RenderResult {
     /// The rendered HTML.
     pub html: String,
+
     /// Render errors, if any.
     pub errors: Vec<String>,
 }
@@ -32,10 +34,13 @@ pub struct RenderResult {
 pub struct TocEntry {
     /// Heading depth (1-6).
     pub depth: u8,
+
     /// Heading text.
     pub text: String,
+
     /// URL-friendly slug.
     pub slug: String,
+
     /// Child entries.
     pub children: Vec<TocEntry>,
 }
@@ -45,10 +50,13 @@ pub struct TocEntry {
 pub struct TransformResult {
     /// The rendered HTML.
     pub html: String,
+
     /// Parsed frontmatter as JSON string.
     pub frontmatter: String,
+
     /// Table of contents entries.
     pub toc: Vec<TocEntry>,
+
     /// Parse/render errors, if any.
     pub errors: Vec<String>,
 }
@@ -58,10 +66,13 @@ pub struct TransformResult {
 pub struct JsSourceOrigin {
     /// UTF-8 byte offset.
     pub byte_offset: u32,
+
     /// UTF-16 code-unit offset.
     pub offset: u32,
+
     /// 1-based line number.
     pub line: u32,
+
     /// 1-based column number.
     pub column: u32,
 }
@@ -71,8 +82,10 @@ pub struct JsSourceOrigin {
 pub struct PreparedSourceResult {
     /// Markdown content after optional frontmatter removal.
     pub content: String,
+
     /// Parsed frontmatter object.
     pub frontmatter: HashMap<String, serde_json::Value>,
+
     /// Source position where `content` starts in the original source.
     pub source_offset: JsSourceOrigin,
 }
@@ -82,24 +95,45 @@ pub struct PreparedSourceResult {
 #[derive(Default, Clone)]
 pub struct JsSourceOptions {
     /// Parse YAML frontmatter before returning the content payload.
+    ///
+    /// Default: `false`.
     pub frontmatter: Option<bool>,
 }
 
 /// Parser options for JavaScript.
+///
+/// When `gfm` is `true`, omitted extension flags inherit the GFM profile.
 #[napi(object)]
 #[derive(Default, Clone)]
 pub struct JsParserOptions {
-    /// Enable GFM extensions.
+    /// Enable the GFM convenience profile.
+    ///
+    /// Default: `false`.
     pub gfm: Option<bool>,
-    /// Enable footnotes.
+
+    /// Enable footnote references and definitions.
+    ///
+    /// Default: `false`, or `true` when `gfm` is `true`.
     pub footnotes: Option<bool>,
-    /// Enable task lists.
+
+    /// Enable GFM task-list item markers.
+    ///
+    /// Default: `false`, or `true` when `gfm` is `true`.
     pub task_lists: Option<bool>,
-    /// Enable tables.
+
+    /// Enable GFM pipe tables.
+    ///
+    /// Default: `false`, or `true` when `gfm` is `true`.
     pub tables: Option<bool>,
-    /// Enable strikethrough.
+
+    /// Enable GFM strikethrough spans.
+    ///
+    /// Default: `false`, or `true` when `gfm` is `true`.
     pub strikethrough: Option<bool>,
-    /// Enable autolinks.
+
+    /// Enable GFM autolinks.
+    ///
+    /// Default: `false`, or `true` when `gfm` is `true`.
     pub autolinks: Option<bool>,
 }
 

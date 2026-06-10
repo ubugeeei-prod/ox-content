@@ -50,15 +50,34 @@ export interface GitHubSourceData {
 }
 
 export interface GitHubOptions {
-  /** GitHub API token for higher rate limits. */
+  /**
+   * GitHub API token used for higher rate limits and private repository access.
+   * @default ''
+   */
   token?: string;
-  /** Cache fetched data. Default: true */
+
+  /**
+   * Cache fetched repository and source data in memory for the current process.
+   * @default true
+   */
   cache?: boolean;
-  /** Cache TTL in milliseconds. Default: 3600000 (1 hour) */
+
+  /**
+   * Cache TTL in milliseconds.
+   * @default 3600000
+   */
   cacheTTL?: number;
-  /** Maximum source file size to inline in bytes. Default: 200000 */
+
+  /**
+   * Maximum source file size to inline in bytes.
+   * @default 200000
+   */
   maxSourceBytes?: number;
-  /** Maximum source lines to inline when no line range is specified. Default: 120 */
+
+  /**
+   * Maximum source lines to inline when no line range is specified.
+   * @default 120
+   */
   maxSourceLines?: number;
 }
 

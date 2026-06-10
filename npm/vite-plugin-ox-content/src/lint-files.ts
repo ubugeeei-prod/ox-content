@@ -40,6 +40,8 @@ export interface MarkdownLintFileOptions extends MarkdownLintOptions {
 
   /**
    * Alias of `exclude`.
+   * When omitted, only `exclude` is used.
+   * @default undefined
    */
   ignore?: string[];
 }

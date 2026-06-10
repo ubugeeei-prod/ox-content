@@ -27,19 +27,56 @@ export interface CodeBlockDiagnostic {
 }
 
 export interface CodeBlockLintOptions {
+  /**
+   * Languages to lint. Omit to lint every fenced block language.
+   * @default undefined
+   */
   languages?: string[];
+
+  /**
+   * Report fences without a language identifier.
+   * @default false
+   */
   requireLanguage?: boolean;
+
+  /**
+   * Report trailing whitespace in code block lines.
+   * @default true
+   */
   trailingSpaces?: boolean;
 }
 
 export interface DocsTestOptions {
+  /**
+   * Fence languages to collect as runnable examples.
+   * @default ['js', 'jsx', 'ts', 'tsx', 'mjs', 'mts']
+   */
   languages?: string[];
+
+  /**
+   * Require fence meta such as `test`, `runnable`, `vitest`, or `docs-test`.
+   * @default true
+   */
   requireMeta?: boolean;
 }
 
 export interface TypecheckCodeBlockOptions {
+  /**
+   * Fence languages to type-check.
+   * @default ['ts', 'tsx']
+   */
   languages?: string[];
+
+  /**
+   * Require fence meta such as `typecheck`, `twoslash`, or `typecheck=...`.
+   * @default true
+   */
   requireMeta?: boolean;
+
+  /**
+   * Command used to run the TypeScript checker.
+   * @default 'tsgo'
+   */
   tsgoCommand?: string;
 }
 

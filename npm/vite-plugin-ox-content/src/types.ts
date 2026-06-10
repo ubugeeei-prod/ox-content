@@ -16,8 +16,10 @@ import type { GitHubOptions, OgpOptions } from "./plugins";
 export interface HeroAction {
   /** Button theme: 'brand' (primary) or 'alt' (secondary) */
   theme?: "brand" | "alt";
+
   /** Button text */
   text: string;
+
   /** Link URL */
   link: string;
 }
@@ -28,14 +30,19 @@ export interface HeroAction {
 export interface HeroImage {
   /** Image source URL */
   src: string;
+
   /** Light mode image source URL */
   lightSrc?: string;
+
   /** Dark mode image source URL */
   darkSrc?: string;
+
   /** Alt text */
   alt?: string;
+
   /** Image width */
   width?: number;
+
   /** Image height */
   height?: number;
 }
@@ -46,6 +53,7 @@ export interface HeroImage {
 export interface HeroNotice {
   /** Notice title */
   title?: string;
+
   /** Notice paragraphs */
   body?: string[];
 }
@@ -56,14 +64,19 @@ export interface HeroNotice {
 export interface HeroConfig {
   /** Main title (large, gradient text) */
   name?: string;
+
   /** Secondary text (medium size) */
   text?: string;
+
   /** Tagline (smaller, muted) */
   tagline?: string;
+
   /** Notice shown near the top of the hero */
   notice?: HeroNotice;
+
   /** Hero image */
   image?: HeroImage;
+
   /** Action buttons */
   actions?: HeroAction[];
 }
@@ -74,12 +87,16 @@ export interface HeroConfig {
 export interface FeatureConfig {
   /** Icon - supports: "mdi:icon-name" (Iconify), image URL, or emoji */
   icon?: string;
+
   /** Feature title */
   title: string;
+
   /** Feature description */
   details?: string;
+
   /** Optional link */
   link?: string;
+
   /** Link text */
   linkText?: string;
 }
@@ -90,8 +107,10 @@ export interface FeatureConfig {
 export interface EntryPageConfig {
   /** Layout type - set to 'entry' for entry page */
   layout: "entry";
+
   /** Hero section */
   hero?: HeroConfig;
+
   /** Feature cards */
   features?: FeatureConfig[];
 }
@@ -102,11 +121,13 @@ export interface EntryPageConfig {
 export interface SsgNavigationItem {
   /** Display title */
   title: string;
+
   /**
    * Route path used for active-state matching.
    * Internal links should use site-relative paths such as `/getting-started`.
    */
   path?: string;
+
   /**
    * Final href used in the rendered HTML.
    * When omitted for internal links, ox-content derives it from `path`.
@@ -120,53 +141,88 @@ export interface SsgNavigationItem {
 export interface SsgNavigationGroup {
   /** Group heading */
   title: string;
+
   /** Navigation items within this group */
   items: SsgNavigationItem[];
 }
 
 /**
- * SSG (Static Site Generation) options.
+ * Static Site Generation options.
+ *
+ * These options control the HTML files emitted at build time and the matching
+ * dev-server preview behavior. Pass `false` to the top-level `ssg` option to
+ * disable the whole SSG pipeline, or pass an object to customize the defaults.
  */
 export interface SsgOptions {
   /**
-   * Enable SSG mode.
+   * Enable the SSG pipeline.
+   *
+   * Keep this enabled when ox-content owns page rendering. Disable it only when
+   * another framework integration will consume the Markdown modules directly.
+   *
    * @default true
    */
   enabled?: boolean;
 
   /**
-   * Output file extension.
+   * File extension used for generated routes.
+   *
+   * The value should include the leading dot. For example, `.html` emits
+   * `guide.html`, while an empty string can be used by custom deployments that
+   * map extensionless output themselves.
+   *
    * @default '.html'
    */
   extension?: string;
 
   /**
-   * Clean output directory before build.
+   * Remove previously generated files from the output directory before writing
+   * the new SSG result.
+   *
+   * Leave this disabled when the output directory also contains assets produced
+   * by other Vite plugins or external build steps.
+   *
    * @default false
    */
   clean?: boolean;
 
   /**
-   * Bare HTML output (no navigation, no styles).
-   * Useful for benchmarking or when using custom layouts.
+   * Emit bare HTML with only the rendered Markdown body.
+   *
+   * This skips the default navigation, layout shell, and theme styles. It is
+   * mainly useful for benchmarking, fixture generation, or projects that wrap
+   * the output in their own shell.
+   *
    * @default false
    */
   bare?: boolean;
 
   /**
-   * Site name for header and title suffix.
+   * Site name shown in the default theme header and title suffix.
+   *
+   * When omitted, the renderer falls back to project metadata where available.
+   *
+   * @default undefined
    */
   siteName?: string;
 
   /**
-   * OG image URL for social sharing (static URL).
-   * If generateOgImage is enabled, this serves as the fallback.
+   * Static Open Graph image URL used for social sharing.
+   *
+   * When `generateOgImage` is enabled, this value is still useful as a fallback
+   * for pages that cannot produce a generated image.
+   *
+   * @default undefined
    */
   ogImage?: string;
 
   /**
-   * Generate OG images per page using Rust-based generator.
-   * When enabled, each page will have a unique OG image.
+   * Generate one Open Graph image per page.
+   *
+   * Generated images are written alongside the SSG output and referenced from
+   * each page's metadata. Configure rendering details with the top-level
+   * `ogImageOptions` option.
+   *
    * @default false
    */
   generateOgImage?: boolean;
@@ -178,21 +234,38 @@ export interface SsgOptions {
   lastUpdated?: boolean;
 
   /**
-   * Site URL for generating absolute OG image URLs.
-   * Required for proper SNS sharing.
-   * Example: 'https://example.com'
+   * Absolute site URL used when generating social metadata.
+   *
+   * Set this when pages need absolute Open Graph image URLs. Include the origin
+   * and any deployment base path, without a trailing page path.
+   *
+   * @example
+   * ```ts
+   * siteUrl: 'https://example.com/docs'
+   * ```
+   *
+   * @default undefined
    */
   siteUrl?: string;
 
   /**
-   * Theme configuration for customizing the SSG output.
-   * Use defineTheme() to create a theme configuration.
+   * Theme configuration for generated pages.
+   *
+   * Use `defineTheme()` to build this object so custom theme modules and the
+   * default theme extension points keep their expected shape.
+   *
+   * @default defaultTheme
    */
   theme?: ThemeConfig;
 
   /**
-   * Override the auto-generated sidebar navigation.
-   * Useful when migrating from tools with explicit navigation config such as VitePress.
+   * Sidebar navigation override.
+   *
+   * When omitted, ox-content derives navigation from the Markdown file tree.
+   * Provide this when migrating from systems such as VitePress where navigation
+   * is intentionally hand-authored.
+   *
+   * @default undefined
    */
   navigation?: SsgNavigationGroup[];
 }
@@ -215,36 +288,65 @@ export interface ResolvedSsgOptions {
 }
 
 /**
- * Plugin options.
+ * Options for the core `oxContent()` Vite plugin.
+ *
+ * The top-level options describe where content lives, which Markdown features
+ * are enabled, and which build-time features should run. Feature toggles that
+ * accept `boolean | Options` follow the same convention:
+ *
+ * - `false` disables the feature.
+ * - `true` enables the feature with its documented defaults.
+ * - an object enables the feature and overrides only the provided fields.
  */
 export interface OxContentOptions {
   /**
-   * Source directory for Markdown files.
+   * Directory containing Markdown source files.
+   *
+   * The path is resolved from the Vite project root. SSG, search indexing, and
+   * dev-server routing all use this directory as the content root.
+   *
    * @default 'content'
    */
   srcDir?: string;
 
   /**
-   * Output directory for built files.
+   * Directory where generated files are written.
+   *
+   * SSG HTML, search indexes, and generated assets are emitted under this
+   * directory during production builds.
+   *
    * @default 'dist'
    */
   outDir?: string;
 
   /**
-   * Base path for the site.
+   * Base path prepended to generated internal URLs.
+   *
+   * Use this when the site is deployed below a sub-path, such as GitHub Pages or
+   * a documentation route inside a larger application.
+   *
    * @default '/'
    */
   base?: string;
 
   /**
    * Markdown-like file extensions to process.
+   *
+   * Extensions are normalized with a leading dot and matched case-insensitively.
+   * Add custom extensions when another authoring format is compiled to Markdown
+   * before ox-content sees it.
+   *
    * @default ['.md', '.markdown', '.mdx']
    */
   extensions?: string[];
 
   /**
-   * SSG (Static Site Generation) options.
-   * Set to false to disable SSG completely.
+   * Static Site Generation options.
+   *
+   * Passing `true` or omitting this option enables SSG with defaults. Passing
+   * `false` disables the SSG plugin while still allowing Markdown module
+   * transforms to run.
+   *
    * @default { enabled: true }
    */
   ssg?: SsgOptions | boolean;
@@ -295,17 +397,23 @@ export interface OxContentOptions {
    * Additional languages for syntax highlighting.
    * Accepts Shiki LanguageRegistration objects (e.g., TextMate grammars).
    * These are loaded alongside the built-in languages.
+   * @default []
    */
   highlightLangs?: LanguageRegistration[];
 
   /**
-   * Opt-in code block annotations for fenced code blocks.
+   * Code block line annotations for fenced code blocks.
    *
-   * Supports the configurable attribute syntax by default, and can also opt
-   * into VitePress-compatible fence metadata and inline notation.
+   * This feature is opt-in because it changes rendered code-block markup. Pass
+   * `true` to enable ox-content's attribute syntax, or pass an options object to
+   * change the meta key or enable VitePress-compatible notation.
    *
-   * Example:
-   * ` ```ts annotate="highlight:1,3-4;warning:6;error:7" `
+   * @example
+   * ~~~md
+   * ```ts annotate="highlight:1,3-4;warning:6;error:7"
+   * const value = compute()
+   * ```
+   * ~~~
    *
    * @default false
    */
@@ -313,36 +421,64 @@ export interface OxContentOptions {
 
   /**
    * Expand Obsidian-style `[[page]]` and `[[page|label]]` links.
+   *
+   * Use this for knowledge-base style content where authors prefer short,
+   * document-relative link syntax. Pass an object to override the base URL used
+   * when resolving generated hrefs.
+   *
    * @default false
    */
   wikiLinks?: boolean | WikiLinkOptions;
 
   /**
    * Expand `:shortcode:` emoji aliases to Unicode.
+   *
+   * Built-in aliases cover common emoji names. Provide `custom` entries for
+   * project-specific aliases or to override a built-in mapping.
+   *
    * @default false
    */
   emojiShortcodes?: boolean | EmojiShortcodeOptions;
 
   /**
    * Enable markdown-it-attrs style `{#id .class key=value}` attributes.
+   *
+   * Attribute blocks can be attached to headings, paragraphs, links, images, and
+   * other supported Markdown nodes depending on parser context.
+   *
    * @default false
    */
   attrs?: boolean | AttrsOptions;
 
   /**
    * Import source snippets into fences with `<<< @/path/to/file.ts{region}`.
+   *
+   * This is useful for documentation that must stay synchronized with examples
+   * in the repository. Use `rootDir` when snippets should resolve from a
+   * directory other than the Vite project root.
+   *
    * @default false
    */
   codeImports?: boolean | CodeImportOptions;
 
   /**
    * Sanitize rendered HTML with safe defaults or explicit allow lists.
+   *
+   * Enable this for untrusted Markdown. The default allow lists are conservative;
+   * pass an options object only when the content model intentionally needs extra
+   * tags, attributes, or URL schemes.
+   *
    * @default false
    */
   sanitize?: boolean | SanitizeOptions;
 
   /**
    * Append an "edit this page" link to rendered Markdown.
+   *
+   * The feature is enabled only when `repoUrl` is provided in the options object.
+   * Passing `true` keeps the feature disabled because there is not enough
+   * repository information to generate valid links.
+   *
    * @default false
    */
   editThisPage?: boolean | EditThisPageOptions;
@@ -356,18 +492,32 @@ export interface OxContentOptions {
 
   /**
    * Lint fenced code blocks during Markdown transforms.
+   *
+   * Use this as a lightweight authoring check for missing languages or trailing
+   * whitespace inside fences. For project-wide linting, prefer the exported
+   * `lintCodeBlocks()` helper or the Markdown lint APIs.
+   *
    * @default false
    */
   codeBlockLint?: boolean | CodeBlockLintOptions;
 
   /**
    * Type-check TypeScript/TSX code fences via tsgo.
+   *
+   * By default only fences with explicit opt-in metadata are checked. This keeps
+   * incidental examples cheap while allowing docs-as-code snippets to fail the
+   * build when configured with `mode: 'error'`.
+   *
    * @default false
    */
   codeBlockTypecheck?: boolean | CodeBlockTypecheckOptions;
 
   /**
    * Extract runnable fenced examples for Vitest docs-as-tests harnesses.
+   *
+   * Collected examples can be written by the docs test helpers and executed as
+   * part of a normal Vitest suite.
+   *
    * @default false
    */
   docsTests?: boolean | DocsTestOptions;
@@ -404,11 +554,15 @@ export interface OxContentOptions {
 
   /**
    * OG image generation options.
+   * Ignored unless `ogImage` or `ssg.generateOgImage` is enabled.
+   * @default { vuePlugin: 'vitejs', width: 1200, height: 630, cache: true, concurrency: 1 }
    */
   ogImageOptions?: OgImageOptions;
 
   /**
    * Custom AST transformers.
+   * Transformers run after parsing and before the final JavaScript module is emitted.
+   * @default []
    */
   transformers?: MarkdownTransformer[];
 
@@ -575,47 +729,160 @@ export interface ResolvedBuiltinEmbedOptions {
   webContainer: boolean;
 }
 
+/**
+ * Options for expanding Obsidian-style wiki links.
+ *
+ * The transform accepts `[[target]]` and `[[target|label]]` syntax and rewrites
+ * it to regular links before rendering. It is intentionally small: path
+ * resolution is based on the configured base URL rather than a full backlink
+ * graph.
+ */
 export interface WikiLinkOptions {
+  /**
+   * Base URL prepended to resolved wiki-link targets.
+   *
+   * When omitted, the top-level `base` option is used.
+   *
+   * @default options.base
+   */
   baseUrl?: string;
 }
 
+/**
+ * Resolved wiki-link transform options.
+ */
 export interface ResolvedWikiLinkOptions {
   enabled: boolean;
   baseUrl: string;
 }
 
+/**
+ * Options for expanding `:shortcode:` emoji aliases.
+ *
+ * The transform replaces recognized shortcode tokens with their Unicode emoji
+ * equivalents during Markdown transformation. Unknown shortcodes are left
+ * untouched so colon-delimited text can still be used by other tools.
+ */
 export interface EmojiShortcodeOptions {
+  /**
+   * Custom shortcode map merged with the built-in emoji aliases.
+   *
+   * Keys should omit the surrounding colons.
+   *
+   * @example
+   * ```ts
+   * custom: { shipit: '\u{1F6A2}' }
+   * ```
+   *
+   * @default {}
+   */
   custom?: Record<string, string>;
 }
 
+/**
+ * Resolved emoji-shortcode transform options.
+ */
 export interface ResolvedEmojiShortcodeOptions {
   enabled: boolean;
   custom: Record<string, string>;
 }
 
+/**
+ * Options for markdown-it-attrs style attribute blocks.
+ *
+ * Attribute blocks let authors attach IDs, classes, and key/value attributes to
+ * nearby Markdown nodes with syntax such as `{#install .lead}`.
+ */
 export interface AttrsOptions {
+  /**
+   * Enable the attrs transform when an options object is supplied.
+   *
+   * Set to `false` to keep the object shape while disabling the transform.
+   * This is mainly useful for config merging where callers want to preserve a
+   * stable object structure.
+   *
+   * @default true
+   */
   enabled?: boolean;
 }
 
+/**
+ * Resolved attrs transform options.
+ */
 export interface ResolvedAttrsOptions {
   enabled: boolean;
 }
 
+/**
+ * Options for importing source snippets into code fences.
+ *
+ * The transform resolves `<<<` imports before code highlighting and other
+ * code-block features run. Imported snippets therefore behave like ordinary
+ * fenced code in later stages.
+ */
 export interface CodeImportOptions {
+  /**
+   * Directory used to resolve `<<<` imports.
+   *
+   * When omitted, imports resolve from the Vite project root and configured aliases.
+   *
+   * @example
+   * ```ts
+   * rootDir: 'examples'
+   * ```
+   *
+   * @default undefined
+   */
   rootDir?: string;
 }
 
+/**
+ * Resolved code-import transform options.
+ */
 export interface ResolvedCodeImportOptions {
   enabled: boolean;
   rootDir?: string;
 }
 
+/**
+ * Options for sanitizing rendered HTML.
+ *
+ * Sanitization happens after Markdown is rendered to HTML. This makes it useful
+ * for user-authored content, but consumers should avoid enabling extra tags or
+ * schemes unless the rendered output explicitly requires them.
+ */
 export interface SanitizeOptions {
+  /**
+   * Allowed HTML tag names. Omit to use the built-in safe tag allow list.
+   *
+   * Provide a full replacement list, not a list of additions.
+   *
+   * @default undefined
+   */
   allowedTags?: string[];
+
+  /**
+   * Allowed HTML attribute names. Omit to use the built-in safe attribute allow list.
+   *
+   * Provide a full replacement list, not a list of additions.
+   *
+   * @default undefined
+   */
   allowedAttributes?: string[];
+
+  /**
+   * Allowed URL schemes for link-like attributes.
+   *
+   * Omit to use the built-in safe scheme allow list.
+   *
+   * @default undefined
+   */
   allowedUrlSchemes?: string[];
 }
 
+/**
+ * Resolved sanitize transform options.
+ */
 export interface ResolvedSanitizeOptions {
   enabled: boolean;
   allowedTags?: string[];
@@ -623,13 +890,58 @@ export interface ResolvedSanitizeOptions {
   allowedUrlSchemes?: string[];
 }
 
+/**
+ * Options for appending an "edit this page" link.
+ *
+ * The generated link points at the source Markdown file rather than the emitted
+ * HTML route. Configure `branch` and `rootDir` to match the repository layout
+ * users should edit.
+ */
 export interface EditThisPageOptions {
+  /**
+   * Repository URL used to build edit links.
+   *
+   * The transform is enabled only when this value is provided.
+   *
+   * @example
+   * ```ts
+   * repoUrl: 'https://github.com/owner/project'
+   * ```
+   */
   repoUrl: string;
+
+  /**
+   * Branch used in generated edit links.
+   *
+   * Use the branch that accepts documentation changes, not necessarily the
+   * branch that produced the deployed site.
+   *
+   * @default 'main'
+   */
   branch?: string;
+
+  /**
+   * Source root inside the repository, used before the page path.
+   *
+   * Set this when `srcDir` is nested in a package or docs workspace.
+   *
+   * @default undefined
+   */
   rootDir?: string;
+
+  /**
+   * Link text rendered in the page footer.
+   *
+   * Keep this short; the default theme renders it as a compact footer action.
+   *
+   * @default 'Edit this page'
+   */
   label?: string;
 }
 
+/**
+ * Resolved edit-link transform options.
+ */
 export interface ResolvedEditThisPageOptions {
   enabled: boolean;
   repoUrl?: string;
@@ -638,13 +950,55 @@ export interface ResolvedEditThisPageOptions {
   label: string;
 }
 
+/**
+ * Options for linting fenced code blocks during Markdown transforms.
+ *
+ * These checks are intentionally local to each fence. They do not execute code
+ * or parse a project graph, so they are safe to run during normal Markdown
+ * transformation.
+ */
 export interface CodeBlockLintOptions {
+  /**
+   * Languages to lint. Omit to lint every fenced block language.
+   *
+   * Language names are compared case-insensitively.
+   *
+   * @default undefined
+   */
   languages?: string[];
+
+  /**
+   * Require every fenced code block to declare a language.
+   *
+   * This is helpful for documentation sites where every example should be
+   * highlighted and searchable by language.
+   *
+   * @default false
+   */
   requireLanguage?: boolean;
+
+  /**
+   * Report trailing whitespace inside fenced code blocks.
+   *
+   * The check reports the exact line and column range inside the fence content.
+   *
+   * @default true
+   */
   trailingSpaces?: boolean;
+
+  /**
+   * Diagnostic severity for lint failures.
+   *
+   * Use `'error'` when code-block lint failures should fail the build.
+   *
+   * @default 'warn'
+   */
   mode?: "warn" | "error";
 }
 
+/**
+ * Resolved code-block lint options.
+ */
 export interface ResolvedCodeBlockLintOptions {
   enabled: boolean;
   languages?: string[];
@@ -653,13 +1007,55 @@ export interface ResolvedCodeBlockLintOptions {
   mode: "warn" | "error";
 }
 
+/**
+ * Options for type-checking TypeScript and TSX fenced code blocks.
+ *
+ * Type-checking writes matching snippets to a temporary directory and invokes
+ * `tsgo`. It is best suited for concise examples that should stay synchronized
+ * with the public TypeScript API.
+ */
 export interface CodeBlockTypecheckOptions {
+  /**
+   * Fence languages to type-check.
+   *
+   * Language names are compared case-insensitively.
+   *
+   * @default ['ts', 'tsx']
+   */
   languages?: string[];
+
+  /**
+   * Require an opt-in fence meta marker before type-checking.
+   *
+   * When enabled, only fences with metadata such as `typecheck` or `twoslash`
+   * are checked.
+   *
+   * @default true
+   */
   requireMeta?: boolean;
+
+  /**
+   * Command used to run the TypeScript checker.
+   *
+   * Override this for package-manager scripts or workspace-local binaries.
+   *
+   * @default 'tsgo'
+   */
   tsgoCommand?: string;
+
+  /**
+   * Diagnostic severity for type-check failures.
+   *
+   * Use `'error'` to fail the Markdown transform on broken snippets.
+   *
+   * @default 'warn'
+   */
   mode?: "warn" | "error";
 }
 
+/**
+ * Resolved code-block type-check options.
+ */
 export interface ResolvedCodeBlockTypecheckOptions {
   enabled: boolean;
   languages: string[];
@@ -668,11 +1064,36 @@ export interface ResolvedCodeBlockTypecheckOptions {
   mode: "warn" | "error";
 }
 
+/**
+ * Options for extracting fenced examples into docs-as-tests fixtures.
+ *
+ * The extractor collects code fences that can be written into test files and
+ * executed by the exported docs test harness helpers.
+ */
 export interface DocsTestOptions {
+  /**
+   * Fence languages to collect as runnable examples.
+   *
+   * Language names are compared case-insensitively.
+   *
+   * @default ['js', 'jsx', 'ts', 'tsx']
+   */
   languages?: string[];
+
+  /**
+   * Require an opt-in fence meta marker before collecting an example.
+   *
+   * When enabled, only fences marked with metadata such as `test`, `runnable`,
+   * `vitest`, or `docs-test` are collected.
+   *
+   * @default true
+   */
   requireMeta?: boolean;
 }
 
+/**
+ * Resolved docs-as-tests extraction options.
+ */
 export interface ResolvedDocsTestOptions {
   enabled: boolean;
   languages: string[];
@@ -936,45 +1357,82 @@ export interface ResolvedDocsEntryPoint {
 
 /**
  * Options for source documentation generation.
+ *
+ * The generator extracts JSDoc/TSDoc comments from JavaScript and TypeScript
+ * source files, normalizes the declarations, and writes Markdown plus optional
+ * navigation metadata. The defaults are optimized for documenting a package's
+ * public `src` tree without exposing private implementation details.
  */
 export interface DocsOptions {
   /**
-   * Enable/disable docs generation.
-   * @default true (opt-out)
+   * Enable source documentation generation.
+   *
+   * The top-level `docs` option is opt-out: omitting it enables docs generation
+   * with defaults, while `docs: false` disables the docs plugin entirely.
+   *
+   * @default true
    */
   enabled?: boolean;
 
   /**
    * Source directories to scan for documentation.
+   *
+   * Paths are resolved from the Vite project root before applying `include` and
+   * `exclude` patterns.
+   *
    * @default ['./src']
    */
   src?: string[];
 
   /**
    * Output directory for generated documentation.
+   *
+   * The path is resolved from the Vite project root. Markdown pages, `docs.json`,
+   * and generated navigation metadata are written under this directory.
+   *
    * @default 'docs/api'
    */
   out?: string;
 
   /**
    * Glob patterns for files to include.
+   *
+   * Patterns are evaluated inside each `src` directory.
+   *
    * @default ['**\/*.ts', '**\/*.tsx', '**\/*.js', '**\/*.jsx', '**\/*.mts', '**\/*.mjs', '**\/*.cts', '**\/*.cjs']
    */
   include?: string[];
 
   /**
    * Glob patterns for files to exclude.
+   *
+   * Excludes run after `include` matching and should cover tests, generated
+   * files, and implementation-only entry points.
+   *
    * @default ['**\/*.test.*', '**\/*.spec.*', 'node_modules']
    */
   exclude?: string[];
 
   /**
    * Public API entry points used to group re-exported docs.
+   *
+   * When omitted, docs are generated from the discovered source files without
+   * entry-point grouping.
+   *
+   * Use entry points when a package exposes a smaller public surface than its
+   * source tree. Re-exported declarations are grouped under the entry point that
+   * exposes them.
+   *
+   * @default undefined
    */
   entryPoints?: DocsEntryPoint[];
 
   /**
    * Output format.
+   *
+   * `markdown` is the primary supported format. `json` and `html` are reserved
+   * for consumers that want to post-process extracted documentation data.
+   *
    * @default 'markdown'
    */
   format?: "markdown" | "json" | "html";
@@ -993,7 +1451,8 @@ export interface DocsOptions {
 
   /**
    * Generate table of contents for each file.
-   * @default true
+   * Reserved for future use; current generated API pages do not emit this TOC.
+   * @default false
    */
   toc?: boolean;
 
@@ -1005,25 +1464,44 @@ export interface DocsOptions {
 
   /**
    * GitHub repository URL for source code links.
-   * When provided, generated documentation will include links to source code.
-   * Example: 'https://github.com/ubugeeei-prod/ox-content'
+   *
+   * When provided, generated documentation includes links back to the source
+   * declaration lines.
+   *
+   * @example
+   * ```ts
+   * githubUrl: 'https://github.com/ubugeeei-prod/ox-content'
+   * ```
+   *
+   * @default undefined
    */
   githubUrl?: string;
 
   /**
    * Internal documentation link style.
+   *
+   * Use `markdown` for generated `.md` targets and `clean` for route-style links
+   * consumed by static-site frameworks.
+   *
    * @default 'markdown'
    */
   linkStyle?: "markdown" | "clean";
 
   /**
    * Route prefix used by generated documentation links and nav metadata.
-   * Nav metadata falls back to '/api' when this is not set.
+   *
+   * Nav metadata falls back to `/api` when this is not set.
+   *
+   * @default undefined
    */
   basePath?: string;
 
   /**
    * Generated Markdown output path strategy.
+   *
+   * `flat` emits one page per source module or category. `typedoc` emits
+   * TypeDoc-like module, kind, and symbol pages for larger API references.
+   *
    * @default 'flat'
    */
   pathStrategy?: "flat" | "typedoc";
@@ -1112,11 +1590,15 @@ export interface DocsOptions {
 
   /**
    * TypeDoc-style group order for module index sections and nav groups.
+   * Use `*` as the insertion point for unlisted groups.
+   * @default undefined
    */
   groupOrder?: string[];
 
   /**
    * TypeDoc-style sort strategies applied to entries and members.
+   * Strategies run in order; later strategies break ties from earlier ones.
+   * @default undefined
    */
   sort?: DocsSortStrategy[];
 
@@ -1128,6 +1610,7 @@ export interface DocsOptions {
 
   /**
    * TypeDoc-style declaration kind ranking for module sections and nav groups.
+   * @default undefined
    */
   kindSortOrder?: string[];
 
@@ -1189,20 +1672,49 @@ export interface ResolvedDocsOptions {
 
 /**
  * A single documentation entry extracted from source.
+ *
+ * Entries represent top-level declarations such as functions, classes,
+ * interfaces, type aliases, enums, variables, and modules. Members of compound
+ * declarations are stored in `members`.
  */
 export interface DocEntry {
+  /** Exported or declared symbol name. */
   name: string;
+
+  /** Normalized declaration kind used for grouping and rendering. */
   kind: "function" | "class" | "interface" | "type" | "enum" | "variable" | "module";
+
+  /** Main prose extracted from the leading JSDoc/TSDoc block. */
   description: string;
+
+  /** Function, method, or constructor parameter documentation. */
   params?: ParamDoc[];
+
+  /** Return value documentation for callable declarations. */
   returns?: ReturnDoc;
+
+  /** Code examples collected from `@example` tags. */
   examples?: string[];
+
+  /** Additional tags preserved by tag name after known tags are normalized. */
   tags?: Record<string, string>;
+
+  /** True when the entry is marked private or matched by private filtering. */
   private?: boolean;
+
+  /** Source file path relative to the extraction root when available. */
   file: string;
+
+  /** 1-based start line of the declaration in the source file. */
   line: number;
+
+  /** 1-based end line of the declaration in the source file. */
   endLine: number;
-  signature?: string; // Full function/type signature (for functions and type aliases)
+
+  /** Full declaration signature, when the renderer can extract one. */
+  signature?: string;
+
+  /** Members belonging to classes, interfaces, object types, and enums. */
   members?: DocMember[];
 }
 
@@ -1210,20 +1722,49 @@ export interface DocEntry {
  * A member belonging to a class, interface, type alias, or enum entry.
  */
 export interface DocMember {
+  /** Member name as it appears in the containing declaration. */
   name: string;
+
+  /** Normalized member kind used for rendering and sorting. */
   kind: "property" | "method" | "constructor" | "getter" | "setter" | "enumMember";
+
+  /** Main prose extracted from the member's documentation comment. */
   description: string;
+
+  /** Full member signature, when available. */
   signature?: string;
+
+  /** Rendered TypeScript type text for properties and enum members. */
   type?: string;
+
+  /** Default value extracted from syntax or `@default` tags. */
   default?: string;
+
+  /** Parameter documentation for methods and constructors. */
   params?: ParamDoc[];
+
+  /** Return value documentation for methods and accessors. */
   returns?: ReturnDoc;
+
+  /** True when the member is optional in the source declaration. */
   optional?: boolean;
+
+  /** True when the member is declared readonly. */
   readonly?: boolean;
+
+  /** True when the member is static. */
   static?: boolean;
+
+  /** True when the member is marked private or matched by private filtering. */
   private?: boolean;
+
+  /** Additional tags preserved by tag name after known tags are normalized. */
   tags?: Record<string, string>;
+
+  /** 1-based start line of the member declaration. */
   line: number;
+
+  /** 1-based end line of the member declaration. */
   endLine: number;
 }
 
@@ -1231,10 +1772,19 @@ export interface DocMember {
  * Parameter documentation.
  */
 export interface ParamDoc {
+  /** Parameter name, including dotted names for destructured properties. */
   name: string;
+
+  /** Rendered TypeScript type text. */
   type: string;
+
+  /** Prose extracted from `@param` / `@arg` documentation. */
   description: string;
+
+  /** True when the parameter is optional. */
   optional?: boolean;
+
+  /** Default value extracted from syntax or `@default` tags. */
   default?: string;
 }
 
@@ -1242,7 +1792,10 @@ export interface ParamDoc {
  * Return type documentation.
  */
 export interface ReturnDoc {
+  /** Rendered TypeScript type text for the return value. */
   type: string;
+
+  /** Prose extracted from `@returns` / `@return` documentation. */
   description: string;
 }
 
@@ -1250,11 +1803,22 @@ export interface ReturnDoc {
  * Extracted documentation for a single file.
  */
 export interface ExtractedDocs {
+  /** Source module or file identifier used by generated output. */
   file: string;
+
+  /** Optional module-level description extracted from a file header comment. */
   description?: string;
+
+  /** Absolute source path, when available for source links and diagnostics. */
   sourcePath?: string;
+
+  /** Module-level examples collected from a file header comment. */
   examples?: string[];
+
+  /** Module-level tags preserved by tag name. */
   tags?: Record<string, string>;
+
+  /** Top-level documented declarations found in this module. */
   entries: DocEntry[];
 }
 
@@ -1262,12 +1826,25 @@ export interface ExtractedDocs {
  * Summary counts emitted with generated documentation data.
  */
 export interface DocsSummary {
+  /** Number of modules included in the generated payload. */
   modules: number;
+
+  /** Number of top-level entries across all modules. */
   entries: number;
+
+  /** Entry counts grouped by normalized declaration kind. */
   byKind: Record<string, number>;
+
+  /** Number of documented parameters. */
   params: number;
+
+  /** Number of documented return values. */
   returns: number;
+
+  /** Number of collected examples. */
   examples: number;
+
+  /** Number of entries or members marked with `@deprecated`. */
   deprecated: number;
 }
 
@@ -1275,9 +1852,16 @@ export interface DocsSummary {
  * Machine-readable payload emitted alongside generated docs.
  */
 export interface GeneratedDocsData {
+  /** Payload schema version. Increment when the JSON shape changes incompatibly. */
   version: 1;
+
+  /** ISO timestamp for the generation run. */
   generatedAt: string;
+
+  /** Aggregate counts useful for dashboards and generated index pages. */
   summary: DocsSummary;
+
+  /** Extracted documentation modules in render order. */
   modules: ExtractedDocs[];
 }
 
@@ -1307,34 +1891,57 @@ export interface NavItem {
 
 /**
  * Options for full-text search.
+ *
+ * Search indexes are built from Markdown content at build time and loaded by
+ * the client runtime from `search-index.json`. Pass `false` to the top-level
+ * `search` option to disable both index generation and the virtual search
+ * module.
  */
 export interface SearchOptions {
   /**
    * Enable search functionality.
+   *
+   * Set this to `false` when config merging requires an object shape but search
+   * should be disabled.
+   *
    * @default true
    */
   enabled?: boolean;
 
   /**
    * Maximum number of search results.
+   *
+   * This controls client-side result truncation, not the number of documents in
+   * the generated index.
+   *
    * @default 10
    */
   limit?: number;
 
   /**
    * Enable prefix matching for autocomplete.
+   *
+   * Prefix matching applies to the final query token, which keeps normal terms
+   * precise while still supporting typeahead-style interactions.
+   *
    * @default true
    */
   prefix?: boolean;
 
   /**
    * Placeholder text for the search input.
+   *
+   * This value is embedded in the virtual search module for UI consumers.
+   *
    * @default 'Search documentation...'
    */
   placeholder?: string;
 
   /**
    * Keyboard shortcut to focus search (without modifier).
+   *
+   * Use an empty string to let the UI opt out of registering a shortcut.
+   *
    * @default '/'
    */
   hotkey?: string;
@@ -1355,11 +1962,22 @@ export interface ResolvedSearchOptions {
  * Search document structure.
  */
 export interface SearchDocument {
+  /** Stable document identifier used by the search index. */
   id: string;
+
+  /** Human-readable document title. */
   title: string;
+
+  /** URL returned to search consumers. */
   url: string;
+
+  /** Plain-text body content used for scoring and snippets. */
   body: string;
+
+  /** Headings extracted from the document. */
   headings: string[];
+
+  /** Code block text extracted from the document. */
   code: string[];
 }
 
@@ -1367,12 +1985,25 @@ export interface SearchDocument {
  * Search result structure.
  */
 export interface SearchResult {
+  /** Matching document identifier. */
   id: string;
+
+  /** Matching document title. */
   title: string;
+
+  /** URL to open when the result is selected. */
   url: string;
+
+  /** Relevance score returned by the BM25 search engine. */
   score: number;
+
+  /** Query terms that matched the document. */
   matches: string[];
+
+  /** Context snippet with highlighted terms when available. */
   snippet: string;
+
+  /** Hierarchical scopes derived from the result URL or document id. */
   scopes?: string[];
 }
 
@@ -1380,7 +2011,10 @@ export interface SearchResult {
  * Parsed search query with optional scope prefixes.
  */
 export interface ScopedSearchQuery {
+  /** Query text after `@scope` prefixes have been removed. */
   text: string;
+
+  /** Deduplicated lowercase scope prefixes requested by the query. */
   scopes: string[];
 }
 
@@ -1390,59 +2024,96 @@ export interface ScopedSearchQuery {
 
 /**
  * Locale configuration.
+ *
+ * Locales define the routing and display metadata used by the i18n plugin.
  */
 export interface LocaleConfig {
   /** BCP 47 locale tag (e.g., 'en', 'ja', 'zh-Hans'). */
   code: string;
+
   /** Display name for this locale (e.g., 'English', '日本語'). */
   name: string;
-  /** Text direction. @default 'ltr' */
+
+  /**
+   * Text direction for rendered pages.
+   *
+   * @default 'ltr'
+   */
   dir?: "ltr" | "rtl";
 }
 
 /**
  * i18n (internationalization) options.
+ *
+ * i18n is opt-in because it changes routing and build-time validation. Set
+ * `enabled: true` and configure at least `defaultLocale` / `locales` when the
+ * same content tree should serve multiple languages.
  */
 export interface I18nOptions {
   /**
    * Enable i18n.
+   *
+   * The resolver returns `false` unless this is explicitly set to `true`.
+   *
    * @default false
    */
   enabled?: boolean;
 
   /**
    * Path to i18n dictionary directory (relative to project root).
+   *
+   * Dictionary files are watched in development and checked during builds when
+   * `check` is enabled.
+   *
    * @default 'content/i18n'
    */
   dir?: string;
 
   /**
    * Default locale tag.
+   *
+   * The default locale is added to `locales` automatically when omitted from the
+   * list.
+   *
    * @default 'en'
    */
   defaultLocale?: string;
 
   /**
    * Available locales.
+   *
+   * When omitted, ox-content creates a single locale from `defaultLocale`.
+   *
+   * @default [{ code: defaultLocale, name: defaultLocale }]
    */
   locales?: LocaleConfig[];
 
   /**
    * Hide default locale prefix in URLs.
+   *
    * When true, `/page` serves the default locale and `/ja/page` serves Japanese.
    * When false, all locales get prefixed: `/en/page`, `/ja/page`.
+   *
    * @default true
    */
   hideDefaultLocale?: boolean;
 
   /**
    * Run i18n checks during build.
+   *
+   * Checks validate dictionary coverage and translation function usage when the
+   * native i18n checker is available.
+   *
    * @default true
    */
   check?: boolean;
 
   /**
    * Translation function names to detect in source code.
+   *
+   * Add framework-specific wrappers here so build-time checks can find all
+   * translation keys.
+   *
    * @default ['t', '$t']
    */
   functionNames?: string[];

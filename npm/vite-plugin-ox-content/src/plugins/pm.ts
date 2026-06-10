@@ -24,7 +24,8 @@ export interface PmOptions {
    * Enable opt-in synced package-manager tab groups. When `true`, a
    * `data-ox-tab-group="pkg-manager"` attribute is emitted so the client runtime
    * syncs the active package manager across every pm group on the page and
-   * persists the choice in localStorage. Default: false.
+   * persists the choice in localStorage.
+   * @default false
    */
   sync?: boolean;
 }

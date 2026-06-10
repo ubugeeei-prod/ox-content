@@ -13,13 +13,28 @@
 import { importNapiModule } from "../napi";
 
 export interface YouTubeOptions {
-  /** Use privacy-enhanced mode (youtube-nocookie.com). Default: true */
+  /**
+   * Use privacy-enhanced mode (`youtube-nocookie.com`).
+   * @default true
+   */
   privacyEnhanced?: boolean;
-  /** Default aspect ratio. Default: "16/9" */
+
+  /**
+   * Default iframe aspect ratio.
+   * @default '16/9'
+   */
   aspectRatio?: string;
-  /** Allow fullscreen. Default: true */
+
+  /**
+   * Allow fullscreen playback.
+   * @default true
+   */
   allowFullscreen?: boolean;
-  /** Lazy load iframe. Default: true */
+
+  /**
+   * Lazy load the iframe.
+   * @default true
+   */
   lazyLoad?: boolean;
 }
 
