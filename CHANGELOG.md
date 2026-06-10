@@ -1,5 +1,11 @@
 # Changelog
 
+## [2.68.0] - 2026-06-10
+
+### Bug Fixes
+
+- use crates.io environment for publishing (#373)
+
 ## [2.67.0] - 2026-06-10
 
 ### Features
