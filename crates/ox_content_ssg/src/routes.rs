@@ -42,6 +42,8 @@ pub struct SidebarItem {
     pub items: Vec<SidebarItem>,
     /// Whether this group is collapsed by default.
     pub collapsed: Option<bool>,
+    /// Whether this group's open state persists across page navigations.
+    pub sticky_collapsed: Option<bool>,
 }
 
 /// Manual navigation group supplied by user configuration.
@@ -249,6 +251,7 @@ pub fn build_nav_items(
             href: get_href(file, src_dir, base, extension),
             children: Vec::new(),
             collapsed: None,
+            sticky_collapsed: None,
         });
     }
 
@@ -264,6 +267,7 @@ pub fn build_nav_items(
                     },
                     items: sort_nav_items(items),
                     collapsed: None,
+                    sticky_collapsed: None,
                 });
             }
         }
@@ -275,6 +279,7 @@ pub fn build_nav_items(
                 title: format_title(&key),
                 items: sort_nav_items(items),
                 collapsed: None,
+                sticky_collapsed: None,
             });
         }
     }
@@ -299,6 +304,7 @@ pub fn build_theme_nav_items(
             href: sidebar_href(item.link.as_deref(), base, extension),
             children: item.items.iter().map(|child| to_nav_item(child, base, extension)).collect(),
             collapsed: item.collapsed,
+            sticky_collapsed: item.sticky_collapsed,
         }
     }
 
@@ -312,6 +318,7 @@ pub fn build_theme_nav_items(
                 title: item.text.clone().unwrap_or_else(|| DEFAULT_ROOT_GROUP_TITLE.to_string()),
                 items: item.items.iter().map(|child| to_nav_item(child, base, extension)).collect(),
                 collapsed: item.collapsed,
+                sticky_collapsed: item.sticky_collapsed,
             });
         } else {
             loose_items.push(to_nav_item(item, base, extension));
@@ -338,6 +345,7 @@ pub fn resolve_navigation_groups(
                 .filter_map(|item| resolve_manual_nav_item(item, base, extension))
                 .collect(),
             collapsed: None,
+            sticky_collapsed: None,
         })
         .collect()
 }
@@ -348,6 +356,7 @@ fn flush_loose_items(groups: &mut Vec<NavGroup>, loose_items: &mut Vec<NavItem>)
             title: DEFAULT_ROOT_GROUP_TITLE.to_string(),
             items: std::mem::take(loose_items),
             collapsed: None,
+            sticky_collapsed: None,
         });
     }
 }
@@ -412,6 +421,7 @@ fn resolve_manual_nav_item(
             href: raw_href.to_string(),
             children: Vec::new(),
             collapsed: None,
+            sticky_collapsed: None,
         });
     }
 
@@ -434,6 +444,7 @@ fn resolve_manual_nav_item(
         href,
         children: Vec::new(),
         collapsed: None,
+        sticky_collapsed: None,
     })
 }
 

@@ -138,6 +138,7 @@ export interface SidebarItem {
   link?: string;
   items?: SidebarItem[];
   collapsed?: boolean;
+  stickyCollapsed?: boolean;
 }
 
 /**

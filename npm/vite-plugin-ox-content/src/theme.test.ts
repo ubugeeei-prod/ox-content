@@ -110,10 +110,22 @@ describe("theme", () => {
 
     it("should preserve explicit sidebar config", () => {
       const resolved = resolveTheme({
-        sidebar: [{ text: "Guide", items: [{ text: "Intro", link: "/intro" }], collapsed: true }],
+        sidebar: [
+          {
+            text: "Guide",
+            items: [{ text: "Intro", link: "/intro" }],
+            collapsed: true,
+            stickyCollapsed: true,
+          },
+        ],
       });
       expect(resolved.sidebar).toEqual([
-        { text: "Guide", items: [{ text: "Intro", link: "/intro" }], collapsed: true },
+        {
+          text: "Guide",
+          items: [{ text: "Intro", link: "/intro" }],
+          collapsed: true,
+          stickyCollapsed: true,
+        },
       ]);
     });
   });

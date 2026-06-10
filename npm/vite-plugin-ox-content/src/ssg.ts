@@ -36,6 +36,7 @@ export interface SsgNavItem {
   href: string;
   children?: SsgNavItem[];
   collapsed?: boolean;
+  stickyCollapsed?: boolean;
 }
 
 /**
@@ -141,6 +142,7 @@ export function generateBareHtmlPage(content: string, title: string): string {
 interface RustNavGroup {
   title: string;
   collapsed?: boolean;
+  stickyCollapsed?: boolean;
   items: SsgNavItem[];
 }
 
@@ -158,6 +160,7 @@ function toRustNavItem(item: SsgNavItem): SsgNavItem {
     href: item.href,
     children: item.children?.map(toRustNavItem),
     collapsed: item.collapsed,
+    stickyCollapsed: item.stickyCollapsed,
   };
 }
 
@@ -169,6 +172,7 @@ function convertNavGroupsForRust(navGroups: NavGroup[]): RustNavGroup[] {
   const converted = navGroups.map((group) => ({
     title: group.title,
     collapsed: group.collapsed,
+    stickyCollapsed: group.stickyCollapsed,
     items: group.items.map(toRustNavItem),
   }));
   navGroupsForRustCache.set(navGroups, converted);
@@ -458,6 +462,7 @@ export interface NavGroup {
   title: string;
   items: SsgNavItem[];
   collapsed?: boolean;
+  stickyCollapsed?: boolean;
 }
 
 /**
