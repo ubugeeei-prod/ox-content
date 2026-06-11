@@ -1,6 +1,7 @@
 use std::fmt::Write as _;
 
-use super::{escape_html, NavGroup, NavItem};
+use super::utils::escape_html;
+use super::{NavGroup, NavItem};
 
 pub(super) fn generate_nav_html(nav_groups: &[NavGroup], current_path: &str) -> String {
     let mut html = String::new();
