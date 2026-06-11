@@ -1,9 +1,8 @@
 use oxc_ast::ast::{ImportOrExportKind, ModuleExportName};
 use rustc_hash::FxHashSet;
 
-use super::{
-    ExportKind, ExportSource, ExternalModuleRef, GraphError, PublicExport, ResolvedModuleRef,
-};
+use super::resolver::{ExternalModuleRef, ResolvedModuleRef};
+use super::{ExportKind, ExportSource, GraphError, PublicExport};
 use crate::string_builder::{join4, StringBuilder};
 
 pub(super) fn reexport_module_export(
