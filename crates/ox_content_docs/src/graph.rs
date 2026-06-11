@@ -3,16 +3,15 @@
 use std::path::{Path, PathBuf};
 
 use oxc_allocator::Allocator;
-use oxc_ast::ast::{
-    BindingPattern, Declaration, ExportDefaultDeclarationKind, ImportDeclarationSpecifier,
-    ImportOrExportKind, ModuleExportName, Statement,
-};
+use oxc_ast::ast::{ExportDefaultDeclarationKind, Statement};
 use oxc_parser::Parser;
 use oxc_span::SourceType;
 use rustc_hash::{FxBuildHasher, FxHashMap, FxHashSet};
 
 mod docs;
 mod error;
+mod export_sources;
+mod exports;
 mod model;
 mod options;
 mod resolver;
@@ -22,6 +21,11 @@ use docs::{
     normalized_entries_for_module, resolve_entrypoint_module_metadata,
 };
 pub use error::GraphError;
+use export_sources::{
+    dedupe_exports, export_kind, export_source_from_resolved, externalize_source,
+    module_export_name, reexport_module_export, specifier_kind,
+};
+use exports::{append_declaration_exports, append_external_reexports, collect_import_bindings};
 pub use model::{
     DocsDiagnostic, DocsDiagnosticCode, EntrypointDocsModule, EntrypointModule, ExportGraph,
     ExportKind, ExportSource, PublicExport, ResolvedModule,
@@ -536,283 +540,6 @@ impl GraphBuilder {
             source: export_source_from_resolved(resolved, original_name, kind == ExportKind::Type),
         })
     }
-}
-
-fn append_declaration_exports(
-    exports: &mut Vec<PublicExport>,
-    path: &Path,
-    declaration: &Declaration<'_>,
-) {
-    match declaration {
-        Declaration::FunctionDeclaration(function) => {
-            if let Some(id) = &function.id {
-                append_local_export(exports, path, id.name.as_str(), ExportKind::Value);
-            }
-        }
-        Declaration::ClassDeclaration(class) => {
-            if let Some(id) = &class.id {
-                append_local_export(exports, path, id.name.as_str(), ExportKind::Value);
-            }
-        }
-        Declaration::VariableDeclaration(variable) => {
-            for declarator in &variable.declarations {
-                if let BindingPattern::BindingIdentifier(id) = &declarator.id {
-                    append_local_export(exports, path, id.name.as_str(), ExportKind::Value);
-                }
-            }
-        }
-        Declaration::TSTypeAliasDeclaration(type_alias) => {
-            append_local_export(exports, path, type_alias.id.name.as_str(), ExportKind::Type);
-        }
-        Declaration::TSInterfaceDeclaration(interface) => {
-            append_local_export(exports, path, interface.id.name.as_str(), ExportKind::Type);
-        }
-        Declaration::TSEnumDeclaration(enum_decl) => {
-            append_local_export(
-                exports,
-                path,
-                enum_decl.id.name.as_str(),
-                ExportKind::ValueAndType,
-            );
-        }
-        _ => {}
-    }
-}
-
-fn append_local_export(exports: &mut Vec<PublicExport>, path: &Path, name: &str, kind: ExportKind) {
-    exports.push(PublicExport {
-        name: name.to_string(),
-        kind,
-        source: ExportSource::Local { module: path.to_path_buf(), original_name: name.to_string() },
-    });
-}
-
-fn append_external_reexports(
-    exports: &mut Vec<PublicExport>,
-    specifier: &str,
-    module: Option<PathBuf>,
-    specifiers: &[oxc_ast::ast::ExportSpecifier<'_>],
-    statement_kind: ExportKind,
-) {
-    let package = external_package_name(specifier);
-    for export_specifier in specifiers {
-        let kind = specifier_kind(statement_kind, export_specifier.export_kind);
-        exports.push(PublicExport {
-            name: module_export_name(&export_specifier.exported),
-            kind,
-            source: ExportSource::External {
-                package: package.clone(),
-                specifier: specifier.to_string(),
-                module: module.clone(),
-                original_name: module_export_name(&export_specifier.local),
-                type_only: kind == ExportKind::Type,
-            },
-        });
-    }
-}
-
-fn collect_import_bindings(statements: &[Statement<'_>]) -> FxHashMap<String, ImportBinding> {
-    let mut imports = FxHashMap::default();
-
-    for statement in statements {
-        let Statement::ImportDeclaration(import) = statement else {
-            continue;
-        };
-        let Some(specifiers) = &import.specifiers else {
-            continue;
-        };
-
-        let statement_type_only = import.import_kind == ImportOrExportKind::Type;
-        for specifier in specifiers {
-            let specifier =
-                import_binding(import.source.value.as_str(), statement_type_only, specifier);
-            imports.insert(specifier.0, specifier.1);
-        }
-    }
-
-    imports
-}
-
-fn import_binding(
-    specifier: &str,
-    statement_type_only: bool,
-    import_specifier: &ImportDeclarationSpecifier<'_>,
-) -> (String, ImportBinding) {
-    match import_specifier {
-        ImportDeclarationSpecifier::ImportSpecifier(import) => (
-            import.local.name.to_string(),
-            ImportBinding {
-                specifier: specifier.to_string(),
-                imported_name: module_export_name(&import.imported),
-                type_only: statement_type_only || import.import_kind == ImportOrExportKind::Type,
-            },
-        ),
-        ImportDeclarationSpecifier::ImportDefaultSpecifier(import) => (
-            import.local.name.to_string(),
-            ImportBinding {
-                specifier: specifier.to_string(),
-                imported_name: "default".to_string(),
-                type_only: statement_type_only,
-            },
-        ),
-        ImportDeclarationSpecifier::ImportNamespaceSpecifier(import) => (
-            import.local.name.to_string(),
-            ImportBinding {
-                specifier: specifier.to_string(),
-                imported_name: "*".to_string(),
-                type_only: statement_type_only,
-            },
-        ),
-    }
-}
-
-fn reexport_module_export(
-    mut export: PublicExport,
-    resolved: &ResolvedModuleRef,
-    statement_kind: ExportKind,
-) -> PublicExport {
-    if statement_kind == ExportKind::Type {
-        export.kind = ExportKind::Type;
-    }
-
-    if let Some(external) = &resolved.external {
-        export.source =
-            externalize_source(export.source, external, export.kind == ExportKind::Type);
-    }
-
-    export
-}
-
-fn export_source_from_resolved(
-    resolved: &ResolvedModuleRef,
-    original_name: String,
-    type_only: bool,
-) -> ExportSource {
-    if let Some(external) = &resolved.external {
-        ExportSource::External {
-            package: external.package.clone(),
-            specifier: external.specifier.clone(),
-            module: Some(resolved.path.clone()),
-            original_name,
-            type_only,
-        }
-    } else {
-        ExportSource::Local { module: resolved.path.clone(), original_name }
-    }
-}
-
-fn externalize_source(
-    source: ExportSource,
-    external: &ExternalModuleRef,
-    type_only: bool,
-) -> ExportSource {
-    match source {
-        ExportSource::Local { module, original_name } => ExportSource::External {
-            package: external.package.clone(),
-            specifier: external.specifier.clone(),
-            module: Some(module),
-            original_name,
-            type_only,
-        },
-        ExportSource::External {
-            package,
-            specifier,
-            module,
-            original_name,
-            type_only: source_type_only,
-        } => ExportSource::External {
-            package,
-            specifier,
-            module,
-            original_name,
-            type_only: type_only || source_type_only,
-        },
-    }
-}
-
-fn specifier_kind(statement_kind: ExportKind, specifier_kind: ImportOrExportKind) -> ExportKind {
-    if statement_kind == ExportKind::Type || specifier_kind == ImportOrExportKind::Type {
-        ExportKind::Type
-    } else {
-        ExportKind::Value
-    }
-}
-
-fn export_kind(kind: ImportOrExportKind) -> ExportKind {
-    match kind {
-        ImportOrExportKind::Value => ExportKind::Value,
-        ImportOrExportKind::Type => ExportKind::Type,
-    }
-}
-
-fn module_export_name(name: &ModuleExportName<'_>) -> String {
-    match name {
-        ModuleExportName::IdentifierName(identifier) => identifier.name.to_string(),
-        ModuleExportName::IdentifierReference(identifier) => identifier.name.to_string(),
-        ModuleExportName::StringLiteral(literal) => literal.value.to_string(),
-    }
-}
-
-fn export_kind_key(kind: ExportKind) -> &'static str {
-    match kind {
-        ExportKind::Value => "value",
-        ExportKind::Type => "type",
-        ExportKind::ValueAndType => "valueAndType",
-        ExportKind::Namespace => "namespace",
-        ExportKind::Default => "default",
-    }
-}
-
-fn dedupe_exports(exports: Vec<PublicExport>) -> Result<Vec<PublicExport>, GraphError> {
-    let mut seen = FxHashSet::default();
-    let mut deduped = Vec::with_capacity(exports.len());
-
-    for export in exports {
-        let source_key = match &export.source {
-            ExportSource::Local { module, original_name } => {
-                let module = module.to_string_lossy();
-                join4("local:", module.as_ref(), ":", original_name)
-            }
-            ExportSource::External { package, specifier, module, original_name, type_only } => {
-                let module = module.as_ref().map(|module| module.to_string_lossy());
-                let module = module.as_deref().unwrap_or_default();
-                let type_only = if *type_only { "true" } else { "false" };
-                let mut key = StringBuilder::with_capacity(
-                    "external:::::".len()
-                        + package.len()
-                        + specifier.len()
-                        + module.len()
-                        + original_name.len()
-                        + type_only.len(),
-                );
-                key.push_str("external:");
-                key.push_str(package);
-                key.push_char(':');
-                key.push_str(specifier);
-                key.push_char(':');
-                key.push_str(module);
-                key.push_char(':');
-                key.push_str(original_name);
-                key.push_char(':');
-                key.push_str(type_only);
-                key.into_string()
-            }
-        };
-        let mut key = StringBuilder::with_capacity(
-            export.name.len() + export_kind_key(export.kind).len() + source_key.len() + 2,
-        );
-        key.push_str(&export.name);
-        key.push_char(':');
-        key.push_str(export_kind_key(export.kind));
-        key.push_char(':');
-        key.push_str(&source_key);
-        let key = key.into_string();
-        if seen.insert(key) {
-            deduped.push(export);
-        }
-    }
-
-    Ok(deduped)
 }
 
 fn graph_root(options: &GraphOptions) -> PathBuf {
