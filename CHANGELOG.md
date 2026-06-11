@@ -1,5 +1,17 @@
 # Changelog
 
+## [2.70.0] - 2026-06-11
+
+### Features
+
+- support jsdoc throws tags (#374)
+
+### Refactoring
+
+- use compact strings for small state (#377)
+- prefer fx hash collections (#376)
+- add defaults for docs fixtures (#375)
+
 ## [2.69.0] - 2026-06-11
 
 ### Features
