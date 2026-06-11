@@ -46,10 +46,10 @@ use ox_content_allocator::Allocator;
 use ox_content_docs::{
     collect_source_files, extract_docs_from_directories, extract_docs_from_entry_points,
     generate_markdown, ApiDocEntry, ApiDocMember, ApiDocModule, ApiDocTag, ApiParamDoc,
-    ApiReturnDoc, ApiTypeParamDoc, EntryPointDocsOptions, EntryPointSpec, ExtractedDocModule,
-    GraphOptions, MarkdownDisplayFormat, MarkdownDocsOptions, MarkdownPathStrategy,
-    MarkdownRenderStyle, NormalizedDocEntry, NormalizedMember, NormalizedParamDoc,
-    NormalizedReturnDoc, NormalizedTypeParam,
+    ApiReturnDoc, ApiThrowsDoc, ApiTypeParamDoc, EntryPointDocsOptions, EntryPointSpec,
+    ExtractedDocModule, GraphOptions, MarkdownDisplayFormat, MarkdownDocsOptions,
+    MarkdownPathStrategy, MarkdownRenderStyle, NormalizedDocEntry, NormalizedMember,
+    NormalizedParamDoc, NormalizedReturnDoc, NormalizedThrowsDoc, NormalizedTypeParam,
 };
 use ox_content_parser::{Parser, ParserOptions};
 use ox_content_profiler::{report::ReportConfig, scope, CountingAllocator, Recorder};
@@ -456,6 +456,7 @@ fn to_api_entry(entry: NormalizedDocEntry) -> ApiDocEntry {
         description: entry.description,
         params: entry.params.into_iter().map(to_api_param).collect(),
         returns: entry.returns.map(to_api_return),
+        throws: entry.throws.into_iter().map(to_api_throws).collect(),
         examples: entry.examples,
         tags: entry.tags.into_iter().map(|(tag, value)| ApiDocTag { tag, value }).collect(),
         private: entry.private,
@@ -482,6 +483,7 @@ fn to_api_member(member: NormalizedMember) -> ApiDocMember {
         params: member.params.into_iter().map(to_api_param).collect(),
         type_parameters: member.type_parameters.into_iter().map(to_api_type_param).collect(),
         returns: member.returns.map(to_api_return),
+        throws: member.throws.into_iter().map(to_api_throws).collect(),
         members: member.members.into_iter().map(to_api_member).collect(),
         optional: member.optional,
         readonly: member.readonly,
@@ -510,6 +512,10 @@ fn to_api_return(return_doc: NormalizedReturnDoc) -> ApiReturnDoc {
         description: return_doc.description,
         members: return_doc.members.into_iter().map(to_api_member).collect(),
     }
+}
+
+fn to_api_throws(throws: NormalizedThrowsDoc) -> ApiThrowsDoc {
+    ApiThrowsDoc { type_annotation: throws.type_annotation, description: throws.description }
 }
 
 fn to_api_type_param(type_param: NormalizedTypeParam) -> ApiTypeParamDoc {
