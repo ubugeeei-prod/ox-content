@@ -1,38 +1,37 @@
 //! Markdown rendering for generated API reference documentation.
 
-use rustc_hash::{FxHashMap, FxHashSet};
-use std::borrow::Cow;
+use rustc_hash::FxHashMap;
 // BTreeMap keeps generated API section and tag output deterministic.
 use std::collections::BTreeMap;
-use std::rc::Rc;
-use std::sync::OnceLock;
-
-use phf::phf_set;
-use regex::Regex;
 
 use crate::model::{ApiDocEntry, ApiDocModule};
 #[allow(unused_imports)]
 use crate::profile_span;
-use crate::string_builder::{join2, join3, join5, StringBuilder};
+use crate::string_builder::{join2, join3, StringBuilder};
 
 mod examples;
 mod group_order;
 mod implementation;
 mod labels;
+mod links;
 mod markdown_html;
 mod markdown_pure;
 mod options;
 mod paths;
+mod regex_cache;
 mod sort;
 mod stats;
 mod summary;
+mod symbol_map;
 mod tags;
+mod type_links;
 mod typedoc;
 
 use examples::{parse_example_block, render_module_examples_markdown, ExampleBlock};
 pub use group_order::{order_by_group_title, ordered_entry_kinds};
 use implementation::annotate_implementation_relationships;
 use labels::{format_count_label, format_kind_label, normalize_signature};
+use links::{process_doc_text, MarkdownLinkContext, SymbolLocation};
 pub use options::{
     MarkdownDisplayFormat, MarkdownDocsOptions, MarkdownLinkStyle, MarkdownPathStrategy,
     MarkdownRenderStyle, MarkdownSingleEntryRoot, DOC_KIND_ORDER,
@@ -42,6 +41,7 @@ use paths::{
     generate_source_href, generate_source_link, member_anchor, module_display_name,
     module_file_name, module_route_name,
 };
+use regex_cache::{cached_regex, RegexCache};
 use sort::sort_extracted_docs;
 #[allow(unused_imports)]
 pub use sort::SortStrategy;
@@ -55,54 +55,14 @@ use summary::{
     clean_summary_text, collapse_inline_whitespace, collapse_type_annotation_whitespace,
     markdown_index_summary, typedoc_index_summary,
 };
+use symbol_map::build_symbol_map;
 use tags::{get_entry_badges, is_structured_tag, is_throws_tag, rendered_throws, SINCE_TAGS};
+use type_links::{resolve_type_fragments, TypeFragment};
 use typedoc::{
     anchor_href, plural_kind_file_name, plural_kind_title, push_typedoc_entry_page_title,
     sanitize_doc_path_segment, typedoc_entry_file_name, typedoc_entry_page_title_len,
     typedoc_kind_singular, typedoc_kind_title, typedoc_module_index_file_name,
 };
-
-type RegexCache = OnceLock<Option<Regex>>;
-
-fn cached_regex(cache: &'static RegexCache, pattern: &'static str) -> Option<&'static Regex> {
-    // Regex construction is expensive and these helpers run throughout doc
-    // generation. Cache both success and failure in `OnceLock<Option<_>>` so a
-    // bad pattern degrades to the fallback path without recompiling on every
-    // call.
-    cache.get_or_init(|| Regex::new(pattern).ok()).as_ref()
-}
-
-#[derive(Debug, Clone)]
-struct SymbolLocation {
-    // `Rc<str>` because `build_symbol_map` shares one module name across every
-    // entry in a module and one file name across an entry and all its members;
-    // cloning the location into the map is then a refcount bump, not a heap copy.
-    module_name: Rc<str>,
-    file_name: Rc<str>,
-    anchor: Option<String>,
-}
-
-#[derive(Debug, Clone)]
-struct MarkdownLinkContext<'a> {
-    options: &'a MarkdownDocsOptions,
-    current_file_name: &'a str,
-    current_module_name: &'a str,
-    symbol_map: &'a FxHashMap<String, Vec<SymbolLocation>>,
-}
-
-#[derive(Debug, Clone, Copy, PartialEq, Eq)]
-enum JsdocInlineLinkKind {
-    Link,
-    LinkCode,
-    LinkPlain,
-}
-
-#[derive(Debug, Clone, Copy, PartialEq, Eq)]
-struct JsdocInlineLink<'a> {
-    kind: JsdocInlineLinkKind,
-    target: &'a str,
-    label: Option<&'a str>,
-}
 
 /// Generates Markdown documentation pages from extracted API docs.
 #[must_use]
@@ -173,163 +133,6 @@ pub fn generate_markdown(
     }
 
     result
-}
-
-fn format_symbol_href(context: &MarkdownLinkContext<'_>, location: &SymbolLocation) -> String {
-    if location.file_name.as_ref() == context.current_file_name {
-        if let Some(anchor) = location.anchor.as_deref().filter(|anchor| !anchor.is_empty()) {
-            join2("#", anchor)
-        } else {
-            doc_page_href_from(
-                context.options,
-                context.current_file_name,
-                &location.file_name,
-                None,
-            )
-        }
-    } else {
-        doc_page_href_from(
-            context.options,
-            context.current_file_name,
-            &location.file_name,
-            location.anchor.as_deref(),
-        )
-    }
-}
-
-fn resolve_symbol_location<'a>(
-    symbol_name: &str,
-    context: &'a MarkdownLinkContext<'_>,
-) -> Option<&'a SymbolLocation> {
-    let locations = context.symbol_map.get(symbol_name)?;
-    locations
-        .iter()
-        .find(|location| location.module_name.as_ref() == context.current_module_name)
-        .or_else(|| {
-            locations
-                .iter()
-                .find(|location| location.file_name.as_ref() == context.current_file_name)
-        })
-        .or_else(|| locations.first())
-}
-
-fn resolve_jsdoc_link_target(
-    target: &str,
-    context: Option<&MarkdownLinkContext<'_>>,
-) -> Option<String> {
-    let target = target.trim();
-    if target.starts_with("http://") || target.starts_with("https://") {
-        return Some(target.to_string());
-    }
-
-    let context = context?;
-    resolve_symbol_location(target, context).map(|location| format_symbol_href(context, location))
-}
-
-fn parse_jsdoc_inline_link_body(body: &str) -> Option<(&str, Option<&str>)> {
-    let body = body.trim();
-    if body.is_empty() {
-        return None;
-    }
-
-    let (target, label) =
-        body.split_once('|').map_or((body, None), |(target, label)| (target, Some(label)));
-    let target = target.trim();
-    if target.is_empty() {
-        return None;
-    }
-
-    Some((target, label.map(str::trim).filter(|label| !label.is_empty())))
-}
-
-fn parse_jsdoc_inline_link_at(text: &str, start: usize) -> Option<(JsdocInlineLink<'_>, usize)> {
-    let after_open = text.get(start + 2..)?;
-    let (kind, tag_len) = if after_open.starts_with("linkcode") {
-        (JsdocInlineLinkKind::LinkCode, "linkcode".len())
-    } else if after_open.starts_with("linkplain") {
-        (JsdocInlineLinkKind::LinkPlain, "linkplain".len())
-    } else if after_open.starts_with("link") {
-        (JsdocInlineLinkKind::Link, "link".len())
-    } else {
-        return None;
-    };
-
-    let body_start = start + 2 + tag_len;
-    if !text
-        .get(body_start..)
-        .and_then(|value| value.chars().next())
-        .is_some_and(|value| value.is_whitespace() || value == '}')
-    {
-        return None;
-    }
-
-    let body_end = body_start + text.get(body_start..)?.find('}')?;
-    let body = text.get(body_start..body_end)?;
-    let (target, label) = parse_jsdoc_inline_link_body(body)?;
-
-    Some((JsdocInlineLink { kind, target, label }, body_end + 1))
-}
-
-fn render_jsdoc_inline_link(
-    link: &JsdocInlineLink<'_>,
-    context: Option<&MarkdownLinkContext<'_>>,
-) -> String {
-    let label = link.label.unwrap_or(link.target).trim();
-    let label = if label.is_empty() { link.target.trim() } else { label };
-    let label = if link.kind == JsdocInlineLinkKind::LinkCode {
-        join3("`", label.trim_matches('`'), "`")
-    } else {
-        label.to_string()
-    };
-
-    if let Some(href) = resolve_jsdoc_link_target(link.target, context) {
-        join5("[", &label, "](", &href, ")")
-    } else {
-        label
-    }
-}
-
-fn convert_jsdoc_inline_links<'a>(
-    text: &'a str,
-    context: Option<&MarkdownLinkContext<'_>>,
-) -> Cow<'a, str> {
-    let mut result = String::new();
-    let mut cursor = 0;
-
-    while let Some(start_offset) = text[cursor..].find("{@") {
-        let start = cursor + start_offset;
-        let Some((link, end)) = parse_jsdoc_inline_link_at(text, start) else {
-            result.push_str(&text[cursor..start + 2]);
-            cursor = start + 2;
-            continue;
-        };
-
-        result.push_str(&text[cursor..start]);
-        result.push_str(&render_jsdoc_inline_link(&link, context));
-        cursor = end;
-    }
-
-    if cursor == 0 {
-        return Cow::Borrowed(text);
-    }
-
-    result.push_str(&text[cursor..]);
-    Cow::Owned(result)
-}
-
-fn process_doc_text<'a>(text: &'a str, context: Option<&MarkdownLinkContext<'_>>) -> Cow<'a, str> {
-    // Resolve `[Symbol]` references first, then `{@link}` inline tags. Both
-    // passes borrow the input untouched when there is nothing to rewrite, so a
-    // description with no links allocates nothing.
-    match context {
-        Some(context) => match convert_symbol_links(text, context) {
-            Cow::Borrowed(borrowed) => convert_jsdoc_inline_links(borrowed, Some(context)),
-            Cow::Owned(owned) => {
-                Cow::Owned(convert_jsdoc_inline_links(&owned, Some(context)).into_owned())
-            }
-        },
-        None => convert_jsdoc_inline_links(text, None),
-    }
 }
 
 fn generate_file_markdown(
@@ -1288,227 +1091,6 @@ fn generate_category_index(
     }
 
     markdown
-}
-
-fn convert_symbol_links<'a>(text: &'a str, context: &MarkdownLinkContext<'_>) -> Cow<'a, str> {
-    static SYMBOL_RE: RegexCache = OnceLock::new();
-
-    let Some(symbol_re) = cached_regex(&SYMBOL_RE, r"\[([A-Z_]\w*)\]") else {
-        return Cow::Borrowed(text);
-    };
-    let mut result = String::new();
-    let mut last_index = 0;
-
-    for captures in symbol_re.captures_iter(text) {
-        let Some(mat) = captures.get(0) else {
-            continue;
-        };
-
-        if text[mat.end()..].starts_with('(') {
-            continue;
-        }
-
-        let symbol_name = captures.get(1).map_or("", |value| value.as_str());
-        let Some(location) = resolve_symbol_location(symbol_name, context) else {
-            continue;
-        };
-
-        result.push_str(&text[last_index..mat.start()]);
-        result.push('[');
-        result.push_str(symbol_name);
-        result.push_str("](");
-        result.push_str(&format_symbol_href(context, location));
-        result.push(')');
-        last_index = mat.end();
-    }
-
-    if last_index == 0 {
-        return Cow::Borrowed(text);
-    }
-
-    result.push_str(&text[last_index..]);
-    Cow::Owned(result)
-}
-
-/// A fragment of a tokenized TypeScript type annotation.
-enum TypeFragment {
-    /// Punctuation / separators / whitespace between identifiers (raw, unescaped).
-    Text(String),
-    /// An identifier that did not resolve to a known symbol (render as code).
-    Code(String),
-    /// An identifier that resolved to a symbol page (render as a linked code span).
-    Link { name: String, href: String },
-}
-
-/// TypeScript intrinsic / primitive type names. These are language built-ins, so
-/// they are never linked inside a type annotation even when a same-named symbol
-/// exists in the docs (e.g. a `string()` / `boolean()` combinator). This matches
-/// TypeDoc, which renders intrinsic types as plain code. Applies to type
-/// annotations only — JSDoc `{@link}` / `[Symbol]` references are unaffected.
-static TS_INTRINSIC_TYPES: phf::Set<&'static str> = phf_set! {
-    "any",
-    "bigint",
-    "boolean",
-    "false",
-    "never",
-    "null",
-    "number",
-    "object",
-    "string",
-    "symbol",
-    "this",
-    "true",
-    "undefined",
-    "unknown",
-    "void",
-};
-
-fn is_type_ident_start(byte: u8) -> bool {
-    byte.is_ascii_alphabetic() || byte == b'_' || byte == b'$'
-}
-
-fn is_type_ident_part(byte: u8) -> bool {
-    byte.is_ascii_alphanumeric() || byte == b'_' || byte == b'$'
-}
-
-/// Tokenizes a TypeScript type annotation and resolves its identifiers against the
-/// symbol map. Returns `None` when no identifier resolves to a link, so callers can
-/// keep their existing single-code-span rendering (zero output churn for unlinkable
-/// types). String and template literals are read as opaque text so literal types
-/// like `"Command"` never produce false links.
-fn resolve_type_fragments(
-    value: &str,
-    context: Option<&MarkdownLinkContext<'_>>,
-    skip: &FxHashSet<&str>,
-) -> Option<Vec<TypeFragment>> {
-    let context = context?;
-    let bytes = value.as_bytes();
-    let mut fragments = Vec::new();
-    let mut text_start = 0;
-    let mut index = 0;
-    let mut has_link = false;
-
-    while index < bytes.len() {
-        let byte = bytes[index];
-
-        // String / template literals stay opaque text (no identifier linking inside).
-        if byte == b'\'' || byte == b'"' || byte == b'`' {
-            index += 1;
-            while index < bytes.len() {
-                if bytes[index] == b'\\' {
-                    index += 2;
-                    continue;
-                }
-                let closing = bytes[index] == byte;
-                index += 1;
-                if closing {
-                    break;
-                }
-            }
-            continue;
-        }
-
-        if is_type_ident_start(byte) {
-            let start = index;
-            index += 1;
-            while index < bytes.len() && is_type_ident_part(bytes[index]) {
-                index += 1;
-            }
-            let ident = &value[start..index];
-
-            if text_start < start {
-                fragments.push(TypeFragment::Text(value[text_start..start].to_string()));
-            }
-            text_start = index;
-
-            if !skip.contains(ident) && !TS_INTRINSIC_TYPES.contains(ident) {
-                if let Some(location) = resolve_symbol_location(ident, context) {
-                    fragments.push(TypeFragment::Link {
-                        name: ident.to_string(),
-                        href: format_symbol_href(context, location),
-                    });
-                    has_link = true;
-                    continue;
-                }
-            }
-            fragments.push(TypeFragment::Code(ident.to_string()));
-            continue;
-        }
-
-        index += 1;
-    }
-
-    if text_start < value.len() {
-        fragments.push(TypeFragment::Text(value[text_start..].to_string()));
-    }
-
-    has_link.then_some(fragments)
-}
-
-fn build_symbol_map(
-    docs: &[ApiDocModule],
-    options: &MarkdownDocsOptions,
-) -> FxHashMap<String, Vec<SymbolLocation>> {
-    profile_span!("docs::build_symbol_map");
-    let mut map = FxHashMap::default();
-    // In the TypeDoc strategy a re-exported symbol has a single canonical page;
-    // resolve every reference to that owner module so cross-links never point at
-    // a duplicate page that is no longer emitted.
-    let canonical = (options.group_by == "file"
-        && options.path_strategy == MarkdownPathStrategy::TypeDoc)
-        .then(|| CanonicalOwners::compute(docs));
-
-    for doc in docs {
-        // Interned once per module and shared by every entry + member below.
-        let module_name: Rc<str> = Rc::from(module_file_name(&doc.file));
-        for entry in &doc.entries {
-            let (file_name, anchor): (Rc<str>, Option<String>) =
-                match (options.group_by.as_str(), options.path_strategy) {
-                    ("file", MarkdownPathStrategy::TypeDoc) => {
-                        let owner_module = canonical
-                            .as_ref()
-                            .and_then(|owners| owners.canonical_module(entry))
-                            .unwrap_or(&module_name);
-                        (Rc::from(typedoc_entry_file_name(owner_module, entry)), None)
-                    }
-                    ("category", _) => (
-                        Rc::from(plural_kind_file_name(&entry.kind)),
-                        Some(entry_anchor(&entry.name)),
-                    ),
-                    _ => (Rc::clone(&module_name), Some(entry_anchor(&entry.name))),
-                };
-            insert_symbol_location(
-                &mut map,
-                entry.name.clone(),
-                SymbolLocation {
-                    module_name: Rc::clone(&module_name),
-                    file_name: Rc::clone(&file_name),
-                    anchor,
-                },
-            );
-            for member in &entry.members {
-                insert_symbol_location(
-                    &mut map,
-                    member_symbol_name(&entry.name, &member.name),
-                    SymbolLocation {
-                        module_name: Rc::clone(&module_name),
-                        file_name: Rc::clone(&file_name),
-                        anchor: Some(member_anchor(&entry.name, member, options.path_strategy)),
-                    },
-                );
-            }
-        }
-    }
-
-    map
-}
-
-fn insert_symbol_location(
-    map: &mut FxHashMap<String, Vec<SymbolLocation>>,
-    symbol_name: String,
-    location: SymbolLocation,
-) {
-    map.entry(symbol_name).or_default().push(location);
 }
 
 #[cfg(test)]
