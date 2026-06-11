@@ -4,24 +4,26 @@ use rustc_hash::{FxHashMap, FxHashSet};
 use std::borrow::Cow;
 // BTreeMap keeps generated API section and tag output deterministic.
 use std::collections::BTreeMap;
-use std::path::Path;
 use std::rc::Rc;
 use std::sync::OnceLock;
 
 use phf::{phf_map, phf_set};
 use regex::Regex;
 
-use crate::model::{ApiDocEntry, ApiDocMember, ApiDocModule, ApiDocTag, ApiThrowsDoc};
+use crate::model::{ApiDocEntry, ApiDocModule, ApiDocTag, ApiThrowsDoc};
 #[allow(unused_imports)]
 use crate::profile_span;
-use crate::string_builder::{join2, join3, join4, join5, StringBuilder};
+use crate::string_builder::{join2, join3, join5, StringBuilder};
 
 mod group_order;
 mod implementation;
 mod markdown_html;
 mod markdown_pure;
 mod options;
+mod paths;
 mod sort;
+mod stats;
+mod summary;
 
 pub use group_order::{order_by_group_title, ordered_entry_kinds};
 use implementation::annotate_implementation_relationships;
@@ -29,10 +31,24 @@ pub use options::{
     MarkdownDisplayFormat, MarkdownDocsOptions, MarkdownLinkStyle, MarkdownPathStrategy,
     MarkdownRenderStyle, MarkdownSingleEntryRoot, DOC_KIND_ORDER,
 };
+use paths::{
+    capitalize_ascii, doc_page_href, doc_page_href_from, entry_anchor, file_name, file_stem,
+    generate_source_href, generate_source_link, member_anchor, module_display_name,
+    module_file_name, module_route_name,
+};
 use sort::sort_extracted_docs;
 #[allow(unused_imports)]
 pub use sort::SortStrategy;
 pub use sort::{compare_entries, kind_order_slice, parse_sort_strategies};
+use stats::{
+    doc_kind_plural, effective_index_format, effective_members_format, effective_parameters_format,
+    member_table_includes_kind, push_generated_by, push_stats, summarize_docs, summarize_entries,
+    summarize_module, EntryStats,
+};
+use summary::{
+    clean_summary_text, collapse_inline_whitespace, collapse_type_annotation_whitespace,
+    markdown_index_summary, typedoc_index_summary,
+};
 
 type RegexCache = OnceLock<Option<Regex>>;
 
@@ -42,17 +58,6 @@ fn cached_regex(cache: &'static RegexCache, pattern: &'static str) -> Option<&'s
     // bad pattern degrades to the fallback path without recompiling on every
     // call.
     cache.get_or_init(|| Regex::new(pattern).ok()).as_ref()
-}
-
-#[derive(Debug, Clone, Default)]
-struct EntryStats {
-    entries: usize,
-    by_kind: [usize; DOC_KIND_ORDER.len()],
-    members: usize,
-    params: usize,
-    returns: usize,
-    examples: usize,
-    deprecated: usize,
 }
 
 #[derive(Debug, Clone)]
@@ -162,149 +167,6 @@ pub fn generate_markdown(
     }
 
     result
-}
-
-fn doc_page_href(options: &MarkdownDocsOptions, file_name: &str, anchor: Option<&str>) -> String {
-    doc_page_href_from(options, "", file_name, anchor)
-}
-
-fn doc_page_href_from(
-    options: &MarkdownDocsOptions,
-    current_file_name: &str,
-    target_file_name: &str,
-    anchor: Option<&str>,
-) -> String {
-    if target_file_name == current_file_name {
-        if let Some(anchor) = anchor.filter(|anchor| !anchor.is_empty()) {
-            return join2("#", anchor);
-        }
-    }
-
-    let mut href = String::new();
-    let target_file_name = route_file_name(options, target_file_name);
-
-    if let Some(base_path) =
-        options.base_path.as_deref().map(str::trim).filter(|base| !base.is_empty())
-    {
-        let base_path = normalize_base_path(base_path);
-        if !base_path.is_empty() {
-            href.push_str(&base_path);
-        }
-        href.push('/');
-        href.push_str(&target_file_name);
-    } else {
-        href.push_str(&relative_doc_href_path(current_file_name, &target_file_name));
-    }
-
-    if options.link_style == MarkdownLinkStyle::Markdown {
-        href.push_str(".md");
-    }
-    if let Some(anchor) = anchor.filter(|anchor| !anchor.is_empty()) {
-        href.push('#');
-        href.push_str(anchor);
-    }
-
-    href
-}
-
-fn route_file_name(options: &MarkdownDocsOptions, file_name: &str) -> String {
-    if options.link_style == MarkdownLinkStyle::Clean {
-        file_name.strip_suffix("/index").unwrap_or(file_name).to_string()
-    } else {
-        file_name.to_string()
-    }
-}
-
-fn relative_doc_href_path(current_file_name: &str, target_file_name: &str) -> String {
-    let current_dir =
-        current_file_name.rsplit_once('/').map_or("", |(directory, _)| directory).trim_matches('/');
-    let current_parts = current_dir.split('/').filter(|part| !part.is_empty()).collect::<Vec<_>>();
-    let target_parts =
-        target_file_name.split('/').filter(|part| !part.is_empty()).collect::<Vec<_>>();
-
-    let mut common = 0;
-    while current_parts.get(common) == target_parts.get(common) {
-        if current_parts.get(common).is_none() {
-            break;
-        }
-        common += 1;
-    }
-
-    let mut parts = Vec::new();
-    parts.extend(std::iter::repeat_n("..", current_parts.len().saturating_sub(common)));
-    parts.extend(target_parts.iter().skip(common).copied());
-
-    let path = if parts.is_empty() { target_file_name.to_string() } else { parts.join("/") };
-    if path.starts_with("../") {
-        path
-    } else {
-        join2("./", &path)
-    }
-}
-
-fn normalize_base_path(base_path: &str) -> String {
-    let base_path = base_path.trim().trim_end_matches('/');
-
-    if base_path.is_empty() || base_path == "/" {
-        return String::new();
-    }
-
-    if base_path.starts_with('/') {
-        base_path.to_string()
-    } else {
-        join2("/", base_path)
-    }
-}
-
-fn entry_anchor(name: &str) -> String {
-    name.to_lowercase()
-}
-
-fn member_anchor(
-    entry_name: &str,
-    member: &ApiDocMember,
-    path_strategy: MarkdownPathStrategy,
-) -> String {
-    match path_strategy {
-        MarkdownPathStrategy::Flat => {
-            join3(&entry_anchor(entry_name), "-", &entry_anchor(&member.name))
-        }
-        MarkdownPathStrategy::TypeDoc => {
-            let prefix = match member.kind.as_str() {
-                "constructor" => return "constructor".to_string(),
-                "method" => "method",
-                "getter" | "setter" => "accessor",
-                "enumMember" => "enumeration-member",
-                _ => "property",
-            };
-            join3(prefix, "-", &entry_anchor(&member.name))
-        }
-    }
-}
-
-fn module_file_name(file_path: &str) -> String {
-    let mut file_name = file_stem(file_path);
-    if file_name == "index" {
-        file_name = "index-module".to_string();
-    }
-    sanitize_doc_path_segment(&file_name)
-}
-
-fn module_route_name(doc: &ApiDocModule) -> String {
-    module_file_name(&doc.file)
-}
-
-fn module_display_name(doc: &ApiDocModule) -> String {
-    if !doc.source_path.is_empty() {
-        return doc.file.clone();
-    }
-
-    let display_name = file_stem(&doc.file);
-    if display_name.is_empty() {
-        doc.file.clone()
-    } else {
-        display_name
-    }
 }
 
 /// Directory segment for each documentation kind under the TypeDoc path strategy.
@@ -569,306 +431,6 @@ fn process_doc_text<'a>(text: &'a str, context: Option<&MarkdownLinkContext<'_>>
         },
         None => convert_jsdoc_inline_links(text, None),
     }
-}
-
-/// Collapses runs of whitespace (including newlines) into single spaces.
-///
-/// Borrows the input (after trimming) when it is already collapsed — i.e. every
-/// whitespace char is a single ASCII space with no runs — so the common case of
-/// already-clean doc text allocates nothing.
-fn collapse_inline_whitespace(text: &str) -> Cow<'_, str> {
-    let text = text.trim();
-    if text.is_empty() {
-        return Cow::Borrowed("");
-    }
-    // Fast path: nothing to collapse iff every whitespace char is a lone ASCII
-    // space. Any other whitespace char, or two adjacent whitespace chars, would
-    // be rewritten below, so it must be owned.
-    let needs_collapse = {
-        let mut prev_ws = false;
-        text.chars().any(|ch| {
-            let collapse = ch.is_whitespace() && (ch != ' ' || prev_ws);
-            prev_ws = ch.is_whitespace();
-            collapse
-        })
-    };
-    if !needs_collapse {
-        return Cow::Borrowed(text);
-    }
-
-    let mut out = String::with_capacity(text.len());
-    let mut pending_space = false;
-    for ch in text.chars() {
-        if ch.is_whitespace() {
-            pending_space = !out.is_empty();
-        } else {
-            if pending_space {
-                out.push(' ');
-                pending_space = false;
-            }
-            out.push(ch);
-        }
-    }
-    Cow::Owned(out)
-}
-
-/// Collapses type annotations for inline rendering while avoiding spaces created
-/// by multiline generic formatting, e.g. `Foo<\n  Bar\n>` -> `Foo<Bar>`.
-fn collapse_type_annotation_whitespace(text: &str) -> Cow<'_, str> {
-    let text = text.trim();
-    if text.is_empty() {
-        return Cow::Borrowed("");
-    }
-
-    let mut out = String::with_capacity(text.len());
-    let mut pending_space = false;
-    for ch in text.chars() {
-        if ch.is_whitespace() {
-            pending_space = !out.is_empty();
-            continue;
-        }
-
-        if pending_space {
-            if !matches!(out.chars().next_back(), Some('<')) && ch != '>' {
-                out.push(' ');
-            }
-            pending_space = false;
-        }
-        out.push(ch);
-    }
-
-    if out == text {
-        Cow::Borrowed(text)
-    } else {
-        Cow::Owned(out)
-    }
-}
-
-/// One-line summary for a module index table cell.
-///
-/// Resolves `{@link}`/`{@linkcode}` exactly like the per-symbol pages (keeping
-/// the produced Markdown links and inline code), takes the first paragraph,
-/// collapses it to a single line, and escapes table-cell pipes. Unlike
-/// [`clean_summary_text`] it does not strip links/code, so the index matches
-/// TypeDoc (e.g. `An object that contains [argument schema](…).`).
-fn typedoc_index_summary(description: &str, context: &MarkdownLinkContext<'_>) -> String {
-    markdown_index_summary(description, Some(context))
-}
-
-fn markdown_index_summary(description: &str, context: Option<&MarkdownLinkContext<'_>>) -> String {
-    let resolved = process_doc_text(description, context);
-    let first_paragraph = resolved.split("\n\n").next().unwrap_or_default();
-    // Collapse the first paragraph onto one line (words joined by single
-    // spaces) without an intermediate `Vec`, then escape table-cell pipes.
-    let mut one_line = String::with_capacity(first_paragraph.len());
-    for word in first_paragraph.split_whitespace() {
-        if !one_line.is_empty() {
-            one_line.push(' ');
-        }
-        one_line.push_str(word);
-    }
-    one_line.replace('|', "\\|")
-}
-
-fn clean_summary_text(text: &str, max_length: usize) -> String {
-    static MARKDOWN_LINK_RE: RegexCache = OnceLock::new();
-    static BRACKET_LINK_RE: RegexCache = OnceLock::new();
-    static INLINE_CODE_RE: RegexCache = OnceLock::new();
-    static WHITESPACE_RE: RegexCache = OnceLock::new();
-
-    if text.is_empty() {
-        return String::new();
-    }
-
-    let fallback = || text.split_whitespace().collect::<Vec<_>>().join(" ");
-    let Some(markdown_link_re) = cached_regex(&MARKDOWN_LINK_RE, r"\[([^\]]+)\]\([^)]+\)") else {
-        return truncate_summary_text(&fallback(), max_length);
-    };
-    let Some(bracket_link_re) = cached_regex(&BRACKET_LINK_RE, r"\[([^\]]+)\]") else {
-        return truncate_summary_text(&fallback(), max_length);
-    };
-    let Some(inline_code_re) = cached_regex(&INLINE_CODE_RE, r"`([^`]+)`") else {
-        return truncate_summary_text(&fallback(), max_length);
-    };
-    let Some(whitespace_re) = cached_regex(&WHITESPACE_RE, r"\s+") else {
-        return truncate_summary_text(&fallback(), max_length);
-    };
-
-    // Summary cleanup is called for every entry in index views. `replace_all`
-    // returns `Cow::Borrowed` when a pattern does not match, which is common
-    // for short summaries, so thread the borrowed/owned value through each
-    // regex stage and materialize only in `truncate_summary_text`.
-    let s1 = markdown_link_re.replace_all(text, "$1");
-    let s2 = bracket_link_re.replace_all(&s1, "$1");
-    let s3 = inline_code_re.replace_all(&s2, "$1");
-    let s4 = whitespace_re.replace_all(&s3, " ");
-
-    truncate_summary_text(s4.trim(), max_length)
-}
-
-fn truncate_summary_text(text: &str, max_length: usize) -> String {
-    if text.chars().count() <= max_length {
-        return text.to_string();
-    }
-
-    let truncated: String = text.chars().take(max_length.saturating_sub(1)).collect();
-    let trimmed = truncated.trim_end();
-    let mut value = String::with_capacity(trimmed.len() + "…".len());
-    value.push_str(trimmed);
-    value.push('…');
-    value
-}
-
-fn summarize_entries<'a>(entries: impl IntoIterator<Item = &'a ApiDocEntry>) -> EntryStats {
-    let mut stats = EntryStats::default();
-
-    for entry in entries {
-        stats.entries += 1;
-        if let Some(index) = doc_kind_index(&entry.kind) {
-            stats.by_kind[index] += 1;
-        }
-        stats.members += entry.members.len();
-        stats.params += entry.params.len();
-        stats.returns += usize::from(entry.returns.is_some());
-        stats.examples += entry.examples.len();
-        stats.deprecated += usize::from(entry.tags.iter().any(|tag| tag.tag == "deprecated"));
-    }
-
-    stats
-}
-
-fn summarize_module(module: &ApiDocModule) -> EntryStats {
-    let mut stats = summarize_entries(&module.entries);
-    stats.examples += module.examples.len();
-    stats
-}
-
-fn summarize_docs(docs: &[ApiDocModule]) -> EntryStats {
-    let mut stats = summarize_entries(docs.iter().flat_map(|doc| doc.entries.iter()));
-    stats.examples += docs.iter().map(|doc| doc.examples.len()).sum::<usize>();
-    stats
-}
-
-fn doc_kind_index(kind: &str) -> Option<usize> {
-    match kind {
-        "function" => Some(0),
-        "class" => Some(1),
-        "interface" => Some(2),
-        "type" => Some(3),
-        "enum" => Some(4),
-        "variable" => Some(5),
-        "module" => Some(6),
-        _ => None,
-    }
-}
-
-fn doc_kind_plural(kind: &str) -> &'static str {
-    match kind {
-        "function" => "functions",
-        "class" => "classes",
-        "interface" => "interfaces",
-        "type" => "types",
-        "enum" => "enumerations",
-        "variable" => "variables",
-        "module" => "modules",
-        _ => "symbols",
-    }
-}
-
-fn normalize_doc_file_path(file_path: &str) -> String {
-    let normalized = file_path.replace('\\', "/");
-
-    for marker in ["npm/", "packages/", "crates/", "src/"] {
-        if let Some(index) = normalized.find(marker) {
-            if index == 0 || normalized.as_bytes().get(index - 1) == Some(&b'/') {
-                return normalized[index..].to_string();
-            }
-        }
-    }
-
-    normalized.trim_start_matches('/').to_string()
-}
-
-/// Whether a member table should keep the `Kind` column. Named member groups
-/// (`Properties`, `Methods`, `Constructors`, `Enum Members`, `Static …`) state the
-/// kind in their heading, so the column is redundant and dropped to match TypeDoc.
-/// Only the generic `Members` fallback (mixed kinds) keeps it. Shared by both
-/// renderers via `super::member_table_includes_kind`.
-fn member_table_includes_kind(group_title: &str) -> bool {
-    group_title == "Members"
-}
-
-/// Renders the per-page stats summary in the configured render style.
-fn render_stats_summary(
-    options: &MarkdownDocsOptions,
-    stats: &EntryStats,
-    module_count: Option<usize>,
-) -> String {
-    match options.render_style {
-        MarkdownRenderStyle::Html => markdown_html::render_stats_html(stats, module_count),
-        MarkdownRenderStyle::Markdown => markdown_pure::render_stats_markdown(stats, module_count),
-    }
-}
-
-/// Appends the stats summary plus its trailing blank line, unless stats are
-/// disabled via `options.render_stats`. Centralizing the gate keeps every
-/// index/overview generator from leaving a stray blank line when stats are
-/// omitted.
-fn push_stats(
-    markdown: &mut String,
-    options: &MarkdownDocsOptions,
-    stats: &EntryStats,
-    module_count: Option<usize>,
-) {
-    if !options.render_stats {
-        return;
-    }
-    markdown.push_str(&render_stats_summary(options, stats, module_count));
-    markdown.push_str("\n\n");
-}
-
-/// Appends the generated-by attribution plus its trailing blank line, unless it
-/// is disabled via `options.render_generated_by`.
-fn push_generated_by(markdown: &mut String, options: &MarkdownDocsOptions) {
-    if !options.render_generated_by {
-        return;
-    }
-    markdown.push_str("Generated by [Ox Content](https://github.com/ubugeeei-prod/ox-content)\n\n");
-}
-
-fn effective_display_format(
-    options: &MarkdownDocsOptions,
-    format: MarkdownDisplayFormat,
-) -> MarkdownDisplayFormat {
-    match (options.render_style, format) {
-        (MarkdownRenderStyle::Markdown, MarkdownDisplayFormat::None) => MarkdownDisplayFormat::List,
-        (_, format) => format,
-    }
-}
-
-fn effective_index_format(options: &MarkdownDocsOptions) -> MarkdownDisplayFormat {
-    effective_display_format(options, options.index_format)
-}
-
-fn effective_parameters_format(options: &MarkdownDocsOptions) -> MarkdownDisplayFormat {
-    effective_display_format(options, options.parameters_format)
-}
-
-fn effective_members_format(
-    options: &MarkdownDocsOptions,
-    entry_kind: &str,
-    group_title: &str,
-) -> MarkdownDisplayFormat {
-    let format = match (entry_kind, group_title) {
-        ("class", "Properties" | "Static Properties") => options.class_properties_format,
-        ("interface", "Properties") => options.interface_properties_format,
-        ("type", "Properties") => options.type_alias_properties_format,
-        ("enum", "Enum Members" | "Members") | ("type", "Enum Members") => {
-            options.enum_members_format
-        }
-        _ => return MarkdownDisplayFormat::None,
-    };
-    effective_display_format(options, format)
 }
 
 fn generate_file_markdown(
@@ -2291,69 +1853,6 @@ fn insert_symbol_location(
     location: SymbolLocation,
 ) {
     map.entry(symbol_name).or_default().push(location);
-}
-
-fn generate_source_href(
-    file_path: &str,
-    github_url: &str,
-    line_number: Option<u32>,
-    end_line_number: Option<u32>,
-) -> String {
-    let relative_path = normalize_doc_file_path(file_path);
-    let fragment = if let Some(line_number) = line_number {
-        let mut fragment = StringBuilder::with_capacity(24);
-        fragment.push_str("#L");
-        fragment.push_usize(line_number as usize);
-        if let Some(end_line_number) =
-            end_line_number.filter(|end_line_number| *end_line_number > line_number)
-        {
-            fragment.push_str("-L");
-            fragment.push_usize(end_line_number as usize);
-        }
-        fragment.into_string()
-    } else {
-        String::new()
-    };
-
-    join4(github_url, "/blob/main/", &relative_path, &fragment)
-}
-
-fn generate_source_link(
-    file_path: &str,
-    github_url: &str,
-    line_number: Option<u32>,
-    end_line_number: Option<u32>,
-) -> String {
-    let href = generate_source_href(file_path, github_url, line_number, end_line_number);
-    join3("**[Source](", &href, ")**")
-}
-
-fn file_name(file_path: &str) -> String {
-    Path::new(file_path)
-        .file_name()
-        .and_then(|value| value.to_str())
-        .map_or_else(|| file_path.to_string(), ToString::to_string)
-}
-
-fn file_stem(file_path: &str) -> String {
-    Path::new(file_path)
-        .file_stem()
-        .and_then(|value| value.to_str())
-        .map_or_else(|| file_path.to_string(), ToString::to_string)
-}
-
-fn capitalize_ascii(value: &str) -> String {
-    let mut chars = value.chars();
-    match chars.next() {
-        Some(first) => {
-            let rest = chars.as_str();
-            let mut out = StringBuilder::with_capacity(first.len_utf8() + rest.len());
-            out.push_char(first.to_ascii_uppercase());
-            out.push_str(rest);
-            out.into_string()
-        }
-        None => String::new(),
-    }
 }
 
 #[cfg(test)]
