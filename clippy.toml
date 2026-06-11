@@ -4,10 +4,17 @@ disallowed-macros = [
 ]
 
 disallowed-methods = [
+  { path = "alloc::string::ToString::to_string", reason = "prefer borrowed strings, CompactString, or allocator-owned strings instead of creating std::String temporaries" },
   { path = "std::string::ToString::to_string", reason = "prefer borrowed strings, CompactString, or allocator-owned strings instead of creating std::String temporaries" },
 ]
 
 disallowed-types = [
+  { path = "alloc::string::String", reason = "prefer CompactString, Cow<str>, arena strings, or direct buffer writes unless an owned API boundary requires std::String" },
+  { path = "alloc::vec::Vec", reason = "prefer SmallVec, slices, iterators, or arena-owned ox_content_allocator::Vec unless an owned API boundary requires std::Vec" },
+  { path = "std::collections::BTreeMap", reason = "avoid tree maps in hot paths unless ordering is required and documented" },
+  { path = "std::collections::BTreeSet", reason = "avoid tree sets in hot paths unless ordering is required and documented" },
+  { path = "std::collections::HashMap", reason = "prefer rustc_hash::FxHashMap for hot paths" },
+  { path = "std::collections::HashSet", reason = "prefer rustc_hash::FxHashSet for hot paths" },
   { path = "std::boxed::Box", reason = "prefer concrete/static dispatch or arena-owned ox_content_allocator::Box in hot paths" },
   { path = "std::string::String", reason = "prefer CompactString, Cow<str>, arena strings, or direct buffer writes unless an owned API boundary requires std::String" },
   { path = "std::vec::Vec", reason = "prefer SmallVec, slices, iterators, or arena-owned ox_content_allocator::Vec unless an owned API boundary requires std::Vec" },

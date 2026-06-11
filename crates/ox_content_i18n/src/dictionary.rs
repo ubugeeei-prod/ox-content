@@ -1,7 +1,7 @@
 pub mod json;
 pub mod yaml;
 
-use std::collections::HashMap;
+use rustc_hash::FxHashMap;
 use std::path::Path;
 
 use crate::error::{I18nError, I18nResult};
@@ -11,7 +11,7 @@ use crate::locale::Locale;
 /// A flat map of translation keys to their MF2 message strings for one locale.
 #[derive(Debug, Clone, Default)]
 pub struct Dictionary {
-    entries: HashMap<String, String>,
+    entries: FxHashMap<String, String>,
 }
 
 impl Dictionary {
@@ -58,7 +58,7 @@ impl Dictionary {
 /// A collection of dictionaries, one per locale.
 #[derive(Debug, Clone, Default)]
 pub struct DictionarySet {
-    dictionaries: HashMap<String, Dictionary>,
+    dictionaries: FxHashMap<String, Dictionary>,
     default_locale: Option<Locale>,
 }
 

@@ -1,4 +1,4 @@
-use std::collections::HashSet;
+use rustc_hash::FxHashSet;
 
 use tower_lsp::lsp_types::{
     CompletionItem, CompletionItemKind, Documentation, Hover, HoverContents, InsertTextFormat,
@@ -74,7 +74,7 @@ fn property_items(
     block: &FrontmatterBlock,
     schema: &FrontmatterSchema,
 ) -> Vec<CompletionItem> {
-    let existing: HashSet<&str> =
+    let existing: FxHashSet<&str> =
         block.top_level_keys.iter().map(|key| key.name.as_str()).collect();
     let replace = document.word_range_at(position, |ch| {
         ch.is_ascii_alphanumeric() || ch == '-' || ch == '_' || ch == '"'

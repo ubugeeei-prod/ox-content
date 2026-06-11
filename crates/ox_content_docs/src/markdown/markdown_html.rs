@@ -5,7 +5,7 @@
 //! extraction/formatting/link helpers via `super::` and emits the ox-content theme
 //! HTML structures (`<details>`, stats, member tables, prose blocks, …).
 
-use std::collections::HashSet;
+use rustc_hash::FxHashSet;
 use std::sync::OnceLock;
 
 use regex::Regex;
@@ -23,7 +23,7 @@ use crate::model::{
     ApiTypeParamDoc,
 };
 use crate::string_builder::{join3, StringBuilder};
-use std::collections::HashMap;
+use rustc_hash::FxHashMap;
 
 fn escape_html(value: &str) -> String {
     // Most inputs here are symbol names, type annotations, and kind labels,
@@ -372,7 +372,7 @@ fn render_highlighted_inline_code_html(code: &str, class_name: &str, language: &
 fn render_type_inner_html(
     value: &str,
     context: Option<&MarkdownLinkContext<'_>>,
-    skip: &HashSet<&str>,
+    skip: &FxHashSet<&str>,
 ) -> String {
     let value = collapse_type_annotation_whitespace(value);
     match resolve_type_fragments(&value, context, skip) {
@@ -628,7 +628,11 @@ fn render_params_list_html(
         rows.push_str("<li class=\"ox-api-entry__param\">\n  <div class=\"ox-api-entry__param-heading\">\n    <code class=\"ox-api-entry__param-name\">");
         rows.push_str(&escape_html(&param.name));
         rows.push_str("</code>\n    <code class=\"ox-api-entry__param-type\">");
-        rows.push_str(&render_type_inner_html(&param.type_annotation, context, &HashSet::new()));
+        rows.push_str(&render_type_inner_html(
+            &param.type_annotation,
+            context,
+            &FxHashSet::default(),
+        ));
         rows.push_str("</code>\n  </div>\n  ");
         if !description.is_empty() {
             rows.push_str("<p class=\"ox-api-entry__param-description\">");
@@ -668,7 +672,11 @@ fn render_params_table_html(
         rows.push_str("<tr>\n  <td><code>");
         rows.push_str(&escape_html(&param.name));
         rows.push_str("</code></td>\n  <td><code>");
-        rows.push_str(&render_type_inner_html(&param.type_annotation, context, &HashSet::new()));
+        rows.push_str(&render_type_inner_html(
+            &param.type_annotation,
+            context,
+            &FxHashSet::default(),
+        ));
         rows.push_str("</code></td>\n  <td>");
         rows.push_str(&render_doc_inline_html(&description, context));
         rows.push_str("</td>\n</tr>");
@@ -697,7 +705,7 @@ fn render_params_table_html(
 fn render_type_parameter_name_html(
     type_param: &ApiTypeParamDoc,
     context: Option<&MarkdownLinkContext<'_>>,
-    skip: &HashSet<&str>,
+    skip: &FxHashSet<&str>,
 ) -> String {
     let mut name = StringBuilder::new();
     name.push_str("<code>");
@@ -718,7 +726,7 @@ fn render_type_parameter_name_html(
 
 /// Names of all type parameters in a list (never linked inside their own siblings'
 /// constraints/defaults).
-fn type_parameter_skip_set(type_parameters: &[ApiTypeParamDoc]) -> HashSet<&str> {
+fn type_parameter_skip_set(type_parameters: &[ApiTypeParamDoc]) -> FxHashSet<&str> {
     type_parameters.iter().map(|param| param.name.as_str()).collect()
 }
 
@@ -876,7 +884,7 @@ fn render_member_flags(member: &ApiDocMember) -> String {
 fn render_member_type_html(
     member: &ApiDocMember,
     context: Option<&MarkdownLinkContext<'_>>,
-    skip: &HashSet<&str>,
+    skip: &FxHashSet<&str>,
 ) -> String {
     let value = member
         .signature
@@ -1024,7 +1032,7 @@ fn render_member_params_html(
             rows.push_str(&render_type_inner_html(
                 &param.type_annotation,
                 context,
-                &HashSet::new(),
+                &FxHashSet::default(),
             ));
             rows.push_str("</code></td><td>");
             rows.push_str(&render_doc_inline_html(&description, context));
@@ -1144,7 +1152,7 @@ fn render_member_table_html(
             rows.push_str("</span></td>\n  ");
         }
         rows.push_str("<td>");
-        rows.push_str(&render_member_type_html(member, context, &HashSet::new()));
+        rows.push_str(&render_member_type_html(member, context, &FxHashSet::default()));
         rows.push_str("</td>\n  <td>");
         rows.push_str(&render_member_description_html(member, options, context));
         rows.push_str("</td>\n</tr>");
@@ -1222,7 +1230,7 @@ fn render_member_list_html(
         items.push_str("\n    <span class=\"ox-api-entry__member-kind\">");
         items.push_str(&escape_html(&member.kind));
         items.push_str("</span>\n    ");
-        items.push_str(&render_member_type_html(member, context, &HashSet::new()));
+        items.push_str(&render_member_type_html(member, context, &FxHashSet::default()));
         items.push_str("\n  </div>\n  ");
         items.push_str(&render_member_description_html(member, options, context));
         let property_members = render_property_members_html(&member.members, options, context);
@@ -1435,7 +1443,7 @@ fn render_member_detail_returns_html(
 ) -> String {
     let mut out = StringBuilder::new();
     out.push_str("<div class=\"ox-api-entry__member-detail-section ox-api-entry__member-detail-section--returns\">\n<h6>Returns</h6>\n<code class=\"ox-api-entry__return-type\">");
-    out.push_str(&render_type_inner_html(&returns.type_annotation, context, &HashSet::new()));
+    out.push_str(&render_type_inner_html(&returns.type_annotation, context, &FxHashSet::default()));
     out.push_str("</code>");
     if !returns.description.is_empty() {
         out.push_str("<p class=\"ox-api-entry__return-description\">");
@@ -1685,14 +1693,14 @@ fn push_index_signature_code_html(
     out.push_char('[');
     out.push_str(&escape_html(&param.name));
     out.push_str(": ");
-    out.push_str(&render_type_inner_html(&param.type_annotation, context, &HashSet::new()));
+    out.push_str(&render_type_inner_html(&param.type_annotation, context, &FxHashSet::default()));
     out.push_str("]: ");
     let member_type = member
         .type_annotation
         .as_deref()
         .or_else(|| member.returns.as_ref().map(|returns| returns.type_annotation.as_str()))
         .unwrap_or("unknown");
-    out.push_str(&render_type_inner_html(member_type, context, &HashSet::new()));
+    out.push_str(&render_type_inner_html(member_type, context, &FxHashSet::default()));
 }
 
 fn render_entry_body_html(
@@ -1781,7 +1789,7 @@ fn push_heritage_section_html(
     body.push_str("</h4>\n<ul class=\"ox-api-entry__heritage-list\">");
     for item in items {
         body.push_str("<li><code>");
-        body.push_str(&render_type_inner_html(item, link_context, &HashSet::new()));
+        body.push_str(&render_type_inner_html(item, link_context, &FxHashSet::default()));
         body.push_str("</code></li>");
     }
     body.push_str("</ul>\n</div>\n");
@@ -1836,7 +1844,11 @@ fn push_returns_html(
 <div class=\"ox-api-entry__return\">
   <code class=\"ox-api-entry__return-type\">",
     );
-    body.push_str(&render_type_inner_html(&returns.type_annotation, link_context, &HashSet::new()));
+    body.push_str(&render_type_inner_html(
+        &returns.type_annotation,
+        link_context,
+        &FxHashSet::default(),
+    ));
     body.push_str(
         "</code>
   ",
@@ -1934,7 +1946,7 @@ fn render_throws_item_html(
     let mut out = StringBuilder::new();
     if let Some(type_annotation) = type_annotation {
         out.push_str("<code class=\"ox-api-entry__throws-type\">");
-        out.push_str(&render_type_inner_html(type_annotation, link_context, &HashSet::new()));
+        out.push_str(&render_type_inner_html(type_annotation, link_context, &FxHashSet::default()));
         out.push_str("</code>");
         if !description.is_empty() {
             out.push_str(" <span class=\"ox-api-entry__throws-description\">");
@@ -2144,7 +2156,7 @@ fn render_nested_member_type_html(
 
     let mut out = StringBuilder::new();
     out.push_str("<code class=\"ox-api-entry__member-type language-typescript\">");
-    out.push_str(&render_type_inner_html(member_type, link_context, &HashSet::new()));
+    out.push_str(&render_type_inner_html(member_type, link_context, &FxHashSet::default()));
     out.push_str("</code>");
     out.into_string()
 }
@@ -2182,7 +2194,7 @@ fn push_return_member_signature_html(
         .as_deref()
         .or_else(|| member.returns.as_ref().map(|returns| returns.type_annotation.as_str()))
         .unwrap_or("unknown");
-    out.push_str(&render_type_inner_html(member_type, link_context, &HashSet::new()));
+    out.push_str(&render_type_inner_html(member_type, link_context, &FxHashSet::default()));
     out.push_char(';');
 }
 
@@ -2461,7 +2473,7 @@ pub(super) fn render_module_section_html(
 pub(super) fn render_module_index_html(
     docs: &[ApiDocModule],
     options: &MarkdownDocsOptions,
-    doc_to_file: Option<&HashMap<String, String>>,
+    doc_to_file: Option<&FxHashMap<String, String>>,
     display_format: MarkdownDisplayFormat,
     link_context: Option<&MarkdownLinkContext<'_>>,
 ) -> String {

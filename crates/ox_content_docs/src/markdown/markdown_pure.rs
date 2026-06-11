@@ -6,7 +6,7 @@
 //! same per-entry information as the HTML renderer — but as Markdown headings,
 //! tables and fenced code blocks (no `<details>`, no theme-specific HTML).
 
-use std::collections::HashSet;
+use rustc_hash::FxHashSet;
 
 use super::{
     collapse_inline_whitespace, collapse_type_annotation_whitespace, effective_members_format,
@@ -334,7 +334,7 @@ fn push_type_parameters(
     }
     out.push_str(heading);
     out.push_str(" Type Parameters\n\n");
-    let skip: HashSet<&str> = type_parameters.iter().map(|param| param.name.as_str()).collect();
+    let skip: FxHashSet<&str> = type_parameters.iter().map(|param| param.name.as_str()).collect();
     match effective_parameters_format(options) {
         MarkdownDisplayFormat::Table => {
             let has_description = type_parameters_have_descriptions(type_parameters);
@@ -845,7 +845,7 @@ fn render_member_parameter_sections_pure(
             out.push(' ');
             out.push_str(&member.name);
             out.push_str(" Type Parameters\n\n");
-            let skip: HashSet<&str> =
+            let skip: FxHashSet<&str> =
                 member.type_parameters.iter().map(|param| param.name.as_str()).collect();
             match effective_parameters_format(options) {
                 MarkdownDisplayFormat::Table => {
@@ -1411,7 +1411,7 @@ fn escape_type_text(text: &str, in_cell: bool) -> String {
 fn linked_type(
     value: &str,
     context: Option<&MarkdownLinkContext<'_>>,
-    skip: &HashSet<&str>,
+    skip: &FxHashSet<&str>,
     code: fn(&str) -> String,
     in_cell: bool,
 ) -> String {
@@ -1439,11 +1439,11 @@ fn linked_type(
 }
 
 fn linked_type_cell(value: &str, context: Option<&MarkdownLinkContext<'_>>) -> String {
-    linked_type(value, context, &HashSet::new(), code_cell, true)
+    linked_type(value, context, &FxHashSet::default(), code_cell, true)
 }
 
 fn linked_type_span(value: &str, context: Option<&MarkdownLinkContext<'_>>) -> String {
-    linked_type(value, context, &HashSet::new(), code_span, false)
+    linked_type(value, context, &FxHashSet::default(), code_span, false)
 }
 
 /// Builds the Name cell for a type parameter: `` `T` `` plus optional `*extends*`
@@ -1452,7 +1452,7 @@ fn linked_type_span(value: &str, context: Option<&MarkdownLinkContext<'_>>) -> S
 fn type_param_name_cell(
     type_param: &ApiTypeParamDoc,
     context: Option<&MarkdownLinkContext<'_>>,
-    skip: &HashSet<&str>,
+    skip: &FxHashSet<&str>,
 ) -> String {
     type_param_name(type_param, context, skip, code_cell, true)
 }
@@ -1460,7 +1460,7 @@ fn type_param_name_cell(
 fn type_param_name_span(
     type_param: &ApiTypeParamDoc,
     context: Option<&MarkdownLinkContext<'_>>,
-    skip: &HashSet<&str>,
+    skip: &FxHashSet<&str>,
 ) -> String {
     type_param_name(type_param, context, skip, code_span, false)
 }
@@ -1468,7 +1468,7 @@ fn type_param_name_span(
 fn type_param_name(
     type_param: &ApiTypeParamDoc,
     context: Option<&MarkdownLinkContext<'_>>,
-    skip: &HashSet<&str>,
+    skip: &FxHashSet<&str>,
     code: fn(&str) -> String,
     in_cell: bool,
 ) -> String {

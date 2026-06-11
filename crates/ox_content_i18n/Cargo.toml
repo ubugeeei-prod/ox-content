@@ -15,6 +15,7 @@ description = "i18n core library for Ox Content — MF2 parser, dictionary manag
 workspace = true
 
 [dependencies]
+rustc-hash = { workspace = true }
 serde = { workspace = true }
 serde_json = { workspace = true }
 serde_yaml = { workspace = true }

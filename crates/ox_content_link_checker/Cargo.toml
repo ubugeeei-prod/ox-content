@@ -23,5 +23,6 @@ ox_content_allocator = { workspace = true }
 ox_content_ast = { workspace = true }
 ox_content_parser = { workspace = true }
 clap = { workspace = true }
+rustc-hash = { workspace = true }
 serde = { workspace = true }
 serde_json = { workspace = true }

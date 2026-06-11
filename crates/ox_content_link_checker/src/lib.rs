@@ -19,7 +19,7 @@
 //! assert_eq!(diagnostics.len(), 1);
 //! ```
 
-use std::collections::HashSet;
+use rustc_hash::FxHashSet;
 use std::path::{Path, PathBuf};
 
 use ox_content_allocator::Allocator;
@@ -118,7 +118,7 @@ pub fn check_source(source: &str, options: &CheckOptions) -> Vec<Diagnostic> {
 struct Walker<'src, 'opts> {
     diagnostics: Vec<Diagnostic>,
     line_index: &'src LineIndex,
-    anchors: &'src HashSet<String>,
+    anchors: &'src FxHashSet<String>,
     base_dir: Option<&'opts Path>,
     src_dir: Option<&'opts Path>,
     ignore_patterns: &'opts [String],
@@ -321,13 +321,17 @@ fn anchor_of(target: &str) -> Option<&str> {
     target.strip_prefix('#')
 }
 
-fn collect_anchors<'src>(source: &str, document: &'src Document<'src>) -> HashSet<String> {
-    let mut anchors = HashSet::new();
+fn collect_anchors<'src>(source: &str, document: &'src Document<'src>) -> FxHashSet<String> {
+    let mut anchors = FxHashSet::default();
     collect_anchors_into(source, &document.children, &mut anchors);
     anchors
 }
 
-fn collect_anchors_into<'src>(source: &str, nodes: &'src [Node<'src>], out: &mut HashSet<String>) {
+fn collect_anchors_into<'src>(
+    source: &str,
+    nodes: &'src [Node<'src>],
+    out: &mut FxHashSet<String>,
+) {
     for node in nodes {
         if let Node::Heading(heading) = node {
             let text = inline_text(source, &heading.children);

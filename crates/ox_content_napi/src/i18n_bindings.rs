@@ -1,5 +1,7 @@
 use std::collections::HashMap;
 
+use rustc_hash::FxHashSet;
+
 use napi_derive::napi;
 
 /// Result of loading dictionaries.
@@ -136,9 +138,14 @@ pub fn load_dictionaries(dir: String) -> I18nLoadResult {
 /// Each locale maps to a flat `{ "namespace.key": "value" }` structure.
 /// Supports both JSON and YAML dictionary files.
 #[napi]
+#[allow(clippy::disallowed_types, clippy::implicit_hasher)]
 pub fn load_dictionaries_flat(dir: String) -> HashMap<String, HashMap<String, String>> {
     let path = std::path::Path::new(&dir);
-    ox_content_i18n::runtime::load_flat_dictionaries(path).unwrap_or_default()
+    ox_content_i18n::runtime::load_flat_dictionaries(path)
+        .unwrap_or_default()
+        .into_iter()
+        .map(|(locale, dictionary)| (locale, dictionary.into_iter().collect()))
+        .collect()
 }
 
 /// Generates the `virtual:ox-content/i18n` runtime module.
@@ -191,7 +198,7 @@ pub fn check_i18n(dict_dir: String, used_keys: Vec<String>) -> I18nCheckResult {
         Err(e) => return i18n_check_error(e.to_string()),
     };
 
-    let keys_set: std::collections::HashSet<String> = used_keys.into_iter().collect();
+    let keys_set: FxHashSet<String> = used_keys.into_iter().collect();
     let diagnostics = ox_content_i18n::checker::check_all(&keys_set, &dict_set);
 
     i18n_check_result_from_diagnostics(diagnostics)

@@ -1,4 +1,4 @@
-use std::collections::{HashMap, HashSet};
+use rustc_hash::{FxHashMap, FxHashSet};
 use std::path::PathBuf;
 use std::sync::Arc;
 
@@ -15,14 +15,14 @@ pub struct LspState {
 
 #[derive(Default)]
 struct Inner {
-    documents: HashMap<Url, TextDocumentState>,
+    documents: FxHashMap<Url, TextDocumentState>,
     root: Option<PathBuf>,
     init_options: InitializationOptions,
     /// Set of document URIs the client has subscribed to preview updates
     /// for. When a subscribed document changes, the backend re-renders
     /// and pushes a `oxContent/previewDidChange` notification, replacing
     /// the polling-style refresh editors used to do client-side.
-    preview_subscriptions: HashSet<Url>,
+    preview_subscriptions: FxHashSet<Url>,
 }
 
 impl LspState {

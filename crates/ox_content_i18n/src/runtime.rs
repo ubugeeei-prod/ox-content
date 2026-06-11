@@ -1,6 +1,6 @@
 //! JavaScript runtime module generation for Ox Content i18n.
 
-use std::collections::HashMap;
+use rustc_hash::FxHashMap;
 use std::path::Path;
 
 use serde::{Deserialize, Serialize};
@@ -39,17 +39,19 @@ pub struct I18nRuntimeConfig {
 }
 
 /// Flat dictionaries keyed by locale, then translation key.
-pub type FlatDictionaries = HashMap<String, HashMap<String, String>>;
+pub type FlatDictionaries = FxHashMap<String, FxHashMap<String, String>>;
 
 /// Converts a dictionary set into the flat shape consumed by the JS runtime.
 #[must_use]
 pub fn flatten_dictionary_set(set: &DictionarySet) -> FlatDictionaries {
-    let mut result = HashMap::new();
+    let mut result = FxHashMap::default();
 
     for locale in set.locales() {
         if let Some(dict) = set.get(locale) {
-            let flat =
-                dict.iter().map(|(key, value)| (key.to_string(), value.to_string())).collect();
+            let flat = dict
+                .iter()
+                .map(|(key, value)| (key.to_string(), value.to_string()))
+                .collect::<FxHashMap<_, _>>();
             result.insert(locale.to_string(), flat);
         }
     }
@@ -108,10 +110,10 @@ mod tests {
 
     #[test]
     fn runtime_module_embeds_config_and_dictionaries() {
-        let mut dictionaries = FlatDictionaries::new();
+        let mut dictionaries = FlatDictionaries::default();
         dictionaries.insert(
             "en-US".to_string(),
-            HashMap::from([("common.greeting".to_string(), "Hello".to_string())]),
+            std::iter::once(("common.greeting".to_string(), "Hello".to_string())).collect(),
         );
 
         let module = generate_runtime_module(&test_config(), &dictionaries);

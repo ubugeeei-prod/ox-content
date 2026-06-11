@@ -1,3 +1,4 @@
+// BTreeMap keeps JavaScript-facing docs output deterministic.
 use std::collections::{BTreeMap, HashMap};
 use std::path::{Path, PathBuf};
 
@@ -648,6 +649,7 @@ pub fn extract_docs_from_entry_points_napi(
 
 /// Generates Markdown API reference pages from extracted documentation entries.
 #[napi(js_name = "generateDocsMarkdown")]
+#[allow(clippy::disallowed_types)]
 pub fn generate_docs_markdown(
     docs: Vec<JsDocsMarkdownModule>,
     options: Option<JsDocsMarkdownOptions>,
@@ -744,7 +746,7 @@ pub fn generate_docs_data_json_napi(
 
 /// Writes generated API documentation files and native sidecars.
 #[napi(js_name = "writeGeneratedDocs")]
-#[allow(clippy::implicit_hasher)]
+#[allow(clippy::disallowed_types, clippy::implicit_hasher)]
 pub fn write_generated_docs(
     docs: HashMap<String, String>,
     out_dir: String,

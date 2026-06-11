@@ -1,4 +1,4 @@
-use std::collections::{HashMap, HashSet};
+use rustc_hash::{FxHashMap, FxHashSet};
 use std::path::{Path, PathBuf};
 use std::sync::Arc;
 use tokio::sync::RwLock;
@@ -21,11 +21,11 @@ struct Inner {
     /// Loaded dictionaries.
     dict_set: DictionarySet,
     /// Cache of file → collected key usages.
-    file_keys: HashMap<String, Vec<KeyUsage>>,
+    file_keys: FxHashMap<String, Vec<KeyUsage>>,
     /// All used keys (union of file_keys values).
-    all_keys: HashSet<String>,
+    all_keys: FxHashSet<String>,
     /// Text content of currently open documents.
-    document_texts: HashMap<String, String>,
+    document_texts: FxHashMap<String, String>,
     /// URIs of currently open documents.
     open_uris: Vec<Url>,
 }
@@ -38,9 +38,9 @@ impl LspState {
                 root: None,
                 dict_dir: None,
                 dict_set: DictionarySet::new(),
-                file_keys: HashMap::new(),
-                all_keys: HashSet::new(),
-                document_texts: HashMap::new(),
+                file_keys: FxHashMap::default(),
+                all_keys: FxHashSet::default(),
+                document_texts: FxHashMap::default(),
                 open_uris: Vec::new(),
             })),
         }
@@ -107,7 +107,7 @@ impl LspState {
     /// Returns all translation keys from all locales' dictionaries.
     pub async fn all_dictionary_keys(&self) -> Vec<String> {
         let inner = self.inner.read().await;
-        let mut keys = HashSet::new();
+        let mut keys = FxHashSet::default();
         for locale in inner.dict_set.locales() {
             if let Some(dict) = inner.dict_set.get(locale) {
                 for key in dict.keys() {

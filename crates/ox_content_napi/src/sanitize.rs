@@ -1,4 +1,4 @@
-use std::collections::HashSet;
+use rustc_hash::FxHashSet;
 
 use crate::JsSanitizeOptions;
 
@@ -13,9 +13,9 @@ pub fn sanitize_html(html: &str, options: Option<&JsSanitizeOptions>) -> String 
 }
 
 struct SanitizeConfig {
-    tags: HashSet<String>,
-    attributes: HashSet<String>,
-    url_schemes: HashSet<String>,
+    tags: FxHashSet<String>,
+    attributes: FxHashSet<String>,
+    url_schemes: FxHashSet<String>,
 }
 
 impl Default for SanitizeConfig {

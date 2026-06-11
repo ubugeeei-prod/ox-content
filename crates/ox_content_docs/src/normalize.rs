@@ -1,5 +1,6 @@
 //! Normalized documentation entries for JavaScript-facing generators.
 
+// BTreeMap/BTreeSet keep generated tag and type-parameter output deterministic.
 use std::collections::BTreeMap;
 
 use phf::phf_set;

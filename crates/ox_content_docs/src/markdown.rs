@@ -1,8 +1,10 @@
 //! Markdown rendering for generated API reference documentation.
 
+use rustc_hash::{FxBuildHasher, FxHashMap, FxHashSet};
 use std::borrow::Cow;
 use std::cmp::Ordering;
-use std::collections::{BTreeMap, HashMap, HashSet};
+// BTreeMap keeps generated API section and tag output deterministic.
+use std::collections::BTreeMap;
 use std::path::Path;
 use std::rc::Rc;
 use std::sync::OnceLock;
@@ -258,7 +260,7 @@ struct MarkdownLinkContext<'a> {
     options: &'a MarkdownDocsOptions,
     current_file_name: &'a str,
     current_module_name: &'a str,
-    symbol_map: &'a HashMap<String, Vec<SymbolLocation>>,
+    symbol_map: &'a FxHashMap<String, Vec<SymbolLocation>>,
 }
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
@@ -292,7 +294,7 @@ pub fn generate_markdown(
             return generate_typedoc_markdown(&sorted_docs, options, &symbol_map);
         }
 
-        let mut doc_to_file = HashMap::new();
+        let mut doc_to_file = FxHashMap::default();
 
         for doc in &sorted_docs {
             let file_name = module_file_name(&doc.file);
@@ -1121,7 +1123,7 @@ fn sort_extracted_docs(docs: &[ApiDocModule], options: &MarkdownDocsOptions) -> 
 }
 
 fn annotate_implementation_relationships(docs: &mut [ApiDocModule]) {
-    let mut implemented_names = HashSet::new();
+    let mut implemented_names = FxHashSet::default();
     for doc in docs.iter() {
         for entry in &doc.entries {
             if entry.kind != "class" || entry.implements.is_empty() {
@@ -1137,8 +1139,8 @@ fn annotate_implementation_relationships(docs: &mut [ApiDocModule]) {
         return;
     }
 
-    let mut implementable_members: HashMap<String, HashSet<String>> =
-        HashMap::with_capacity(implemented_names.len());
+    let mut implementable_members: FxHashMap<String, FxHashSet<String>> =
+        FxHashMap::with_capacity_and_hasher(implemented_names.len(), FxBuildHasher);
     for doc in docs.iter() {
         for entry in &doc.entries {
             if !matches!(entry.kind.as_str(), "interface" | "type") {
@@ -1148,7 +1150,7 @@ fn annotate_implementation_relationships(docs: &mut [ApiDocModule]) {
                 continue;
             }
             let members =
-                entry.members.iter().map(|member| member.name.clone()).collect::<HashSet<_>>();
+                entry.members.iter().map(|member| member.name.clone()).collect::<FxHashSet<_>>();
             implementable_members.insert(entry.name.clone(), members);
         }
     }
@@ -1331,7 +1333,7 @@ fn generate_file_markdown(
     doc: &ApiDocModule,
     options: &MarkdownDocsOptions,
     current_file_name: &str,
-    symbol_map: &HashMap<String, Vec<SymbolLocation>>,
+    symbol_map: &FxHashMap<String, Vec<SymbolLocation>>,
 ) -> String {
     profile_span!("docs::render_file");
     let display_name = file_name(&doc.file);
@@ -1390,7 +1392,7 @@ fn generate_file_markdown(
 ///    defining file (i.e. the symbol is declared in that entry point), else
 /// 2. the first module that exports it, in the same order pages are emitted.
 pub struct CanonicalOwners {
-    owners: HashMap<(String, String), String>,
+    owners: FxHashMap<(String, String), String>,
 }
 
 impl CanonicalOwners {
@@ -1405,8 +1407,8 @@ impl CanonicalOwners {
             (name.to_lowercase(), name)
         });
 
-        let mut owners: HashMap<(String, String), String> = HashMap::new();
-        let mut fallback: HashMap<(String, String), String> = HashMap::new();
+        let mut owners: FxHashMap<(String, String), String> = FxHashMap::default();
+        let mut fallback: FxHashMap<(String, String), String> = FxHashMap::default();
         for doc in order {
             let module_name = module_file_name(&doc.file);
             for entry in &doc.entries {
@@ -1442,7 +1444,7 @@ impl CanonicalOwners {
 fn generate_typedoc_markdown(
     docs: &[ApiDocModule],
     options: &MarkdownDocsOptions,
-    symbol_map: &HashMap<String, Vec<SymbolLocation>>,
+    symbol_map: &FxHashMap<String, Vec<SymbolLocation>>,
 ) -> BTreeMap<String, String> {
     profile_span!("docs::render_typedoc");
     let mut result = BTreeMap::new();
@@ -1514,7 +1516,7 @@ fn typedoc_canonical_groups<'a>(
     module_name: &str,
 ) -> Vec<(String, Vec<&'a ApiDocEntry>)> {
     let mut order: Vec<String> = Vec::new();
-    let mut groups: HashMap<String, Vec<&ApiDocEntry>> = HashMap::new();
+    let mut groups: FxHashMap<String, Vec<&ApiDocEntry>> = FxHashMap::default();
     for entry in &doc.entries {
         if !owners.is_canonical(doc, entry) {
             continue;
@@ -1545,7 +1547,7 @@ fn generate_typedoc_entry_page_grouped(
     options: &MarkdownDocsOptions,
     module_name: &str,
     file_name: &str,
-    symbol_map: &HashMap<String, Vec<SymbolLocation>>,
+    symbol_map: &FxHashMap<String, Vec<SymbolLocation>>,
 ) -> String {
     profile_span!("docs::render_entry_page");
     if entries.len() == 1 {
@@ -1619,7 +1621,7 @@ fn generate_typedoc_entry_page_grouped(
 fn generate_typedoc_root_index(
     docs: &[ApiDocModule],
     options: &MarkdownDocsOptions,
-    symbol_map: &HashMap<String, Vec<SymbolLocation>>,
+    symbol_map: &FxHashMap<String, Vec<SymbolLocation>>,
 ) -> String {
     let link_context = MarkdownLinkContext {
         options,
@@ -1686,7 +1688,7 @@ fn generate_typedoc_module_index(
     doc: &ApiDocModule,
     options: &MarkdownDocsOptions,
     module_name: &str,
-    symbol_map: &HashMap<String, Vec<SymbolLocation>>,
+    symbol_map: &FxHashMap<String, Vec<SymbolLocation>>,
     owners: &CanonicalOwners,
 ) -> String {
     let current_file_name = typedoc_module_index_file_name(module_name);
@@ -1716,7 +1718,7 @@ fn generate_typedoc_module_index_for_file(
     options: &MarkdownDocsOptions,
     module_name: &str,
     page: TypedocModuleIndexPage<'_>,
-    symbol_map: &HashMap<String, Vec<SymbolLocation>>,
+    symbol_map: &FxHashMap<String, Vec<SymbolLocation>>,
     owners: &CanonicalOwners,
 ) -> String {
     profile_span!("docs::render_module_index");
@@ -1797,7 +1799,7 @@ fn generate_typedoc_module_index_for_file(
     // Symbols this module re-exports but does not own: link to the canonical page
     // instead of emitting a duplicate (matches TypeDoc's "References" section).
     // Overloads share a name, so collapse them to a single reference.
-    let mut seen_references = std::collections::HashSet::new();
+    let mut seen_references = rustc_hash::FxHashSet::default();
     let references = doc
         .entries
         .iter()
@@ -1848,7 +1850,7 @@ fn render_typedoc_kind_section(
     markdown.push_str("## ");
     markdown.push_str(typedoc_kind_title(kind));
     markdown.push_str("\n\n");
-    let mut seen = std::collections::HashSet::new();
+    let mut seen = rustc_hash::FxHashSet::default();
     if index_format == MarkdownDisplayFormat::List {
         for entry in entries {
             // Overloads share a name (and page); collapse them to one row.
@@ -1943,7 +1945,7 @@ fn generate_typedoc_entry_page(
     options: &MarkdownDocsOptions,
     module_name: &str,
     current_file_name: &str,
-    symbol_map: &HashMap<String, Vec<SymbolLocation>>,
+    symbol_map: &FxHashMap<String, Vec<SymbolLocation>>,
 ) -> String {
     let link_context = MarkdownLinkContext {
         options,
@@ -2356,7 +2358,7 @@ fn generate_entry_markdown(
     options: &MarkdownDocsOptions,
     current_file_name: Option<&str>,
     current_module_name: Option<&str>,
-    symbol_map: Option<&HashMap<String, Vec<SymbolLocation>>>,
+    symbol_map: Option<&FxHashMap<String, Vec<SymbolLocation>>>,
 ) -> String {
     let link_context = current_file_name.zip(current_module_name).zip(symbol_map).map(
         |((current_file_name, current_module_name), symbol_map)| MarkdownLinkContext {
@@ -2389,8 +2391,8 @@ fn generate_entry_markdown(
 fn generate_index(
     docs: &[ApiDocModule],
     options: &MarkdownDocsOptions,
-    doc_to_file: Option<&HashMap<String, String>>,
-    symbol_map: Option<&HashMap<String, Vec<SymbolLocation>>>,
+    doc_to_file: Option<&FxHashMap<String, String>>,
+    symbol_map: Option<&FxHashMap<String, Vec<SymbolLocation>>>,
 ) -> String {
     let link_context = symbol_map.map(|symbol_map| MarkdownLinkContext {
         options,
@@ -2489,7 +2491,7 @@ fn generate_category_markdown(
     kind: &str,
     entries: &[ApiDocEntry],
     options: &MarkdownDocsOptions,
-    symbol_map: &HashMap<String, Vec<SymbolLocation>>,
+    symbol_map: &FxHashMap<String, Vec<SymbolLocation>>,
 ) -> String {
     let category_file_name = plural_kind_file_name(kind);
     let link_context = MarkdownLinkContext {
@@ -2551,7 +2553,7 @@ fn generate_category_markdown(
 fn generate_category_index(
     by_kind: &BTreeMap<String, Vec<ApiDocEntry>>,
     options: &MarkdownDocsOptions,
-    symbol_map: &HashMap<String, Vec<SymbolLocation>>,
+    symbol_map: &FxHashMap<String, Vec<SymbolLocation>>,
 ) -> String {
     let link_context = MarkdownLinkContext {
         options,
@@ -2694,7 +2696,7 @@ fn is_type_ident_part(byte: u8) -> bool {
 fn resolve_type_fragments(
     value: &str,
     context: Option<&MarkdownLinkContext<'_>>,
-    skip: &HashSet<&str>,
+    skip: &FxHashSet<&str>,
 ) -> Option<Vec<TypeFragment>> {
     let context = context?;
     let bytes = value.as_bytes();
@@ -2763,9 +2765,9 @@ fn resolve_type_fragments(
 fn build_symbol_map(
     docs: &[ApiDocModule],
     options: &MarkdownDocsOptions,
-) -> HashMap<String, Vec<SymbolLocation>> {
+) -> FxHashMap<String, Vec<SymbolLocation>> {
     profile_span!("docs::build_symbol_map");
-    let mut map = HashMap::new();
+    let mut map = FxHashMap::default();
     // In the TypeDoc strategy a re-exported symbol has a single canonical page;
     // resolve every reference to that owner module so cross-links never point at
     // a duplicate page that is no longer emitted.
@@ -2819,7 +2821,7 @@ fn build_symbol_map(
 }
 
 fn insert_symbol_location(
-    map: &mut HashMap<String, Vec<SymbolLocation>>,
+    map: &mut FxHashMap<String, Vec<SymbolLocation>>,
     symbol_name: String,
     location: SymbolLocation,
 ) {

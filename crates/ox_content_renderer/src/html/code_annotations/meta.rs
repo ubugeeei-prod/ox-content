@@ -4,6 +4,7 @@
 //! syntax reads it. The token splitter preserves bracketed and braced VitePress
 //! sections as independent tokens so later stages do not need to rescan raw strings.
 
+// BTreeMap preserves ascending code line order during annotation rendering.
 use std::collections::BTreeMap;
 
 use compact_str::CompactString;

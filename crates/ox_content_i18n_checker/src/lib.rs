@@ -21,7 +21,7 @@ pub mod diagnostic;
 pub mod key_collector;
 pub mod md_key_collector;
 
-use std::collections::HashSet;
+use rustc_hash::FxHashSet;
 use std::path::Path;
 
 use ox_content_i18n::checker::{self, Diagnostic};
@@ -65,7 +65,7 @@ impl Default for CheckConfig {
 /// Result of running the i18n check.
 pub struct CheckResult {
     pub diagnostics: Vec<Diagnostic>,
-    pub used_keys: HashSet<String>,
+    pub used_keys: FxHashSet<String>,
     pub error_count: usize,
     pub warning_count: usize,
 }
@@ -90,7 +90,7 @@ pub fn check(config: &CheckConfig) -> Result<CheckResult, String> {
         KeyCollector::with_function_names(config.function_names.clone())
     };
 
-    let mut used_keys = HashSet::new();
+    let mut used_keys = FxHashSet::default();
 
     for src_dir in &config.src_dirs {
         collect_keys_recursive(Path::new(src_dir), &collector, &config.extensions, &mut used_keys)?;
@@ -111,7 +111,7 @@ fn collect_keys_recursive(
     dir: &Path,
     collector: &KeyCollector,
     extensions: &[String],
-    keys: &mut HashSet<String>,
+    keys: &mut FxHashSet<String>,
 ) -> Result<(), String> {
     if !dir.exists() {
         return Ok(());

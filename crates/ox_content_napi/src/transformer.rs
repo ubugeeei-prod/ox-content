@@ -1,4 +1,4 @@
-use std::collections::HashMap;
+use rustc_hash::FxHashMap;
 
 use napi::bindgen_prelude::Uint8Array;
 use ox_content_allocator::Allocator;
@@ -31,7 +31,7 @@ pub struct MarkdownTransformer {
 
 pub struct PreparedMarkdownSource {
     pub content: String,
-    pub frontmatter: HashMap<String, serde_json::Value>,
+    pub frontmatter: FxHashMap<String, serde_json::Value>,
     pub source_origin: SourceOrigin,
 }
 
@@ -181,20 +181,20 @@ impl MarkdownTransformer {
             // path borrows from this string rather than reparsing YAML.
             PreparedMarkdownSource {
                 content: source.to_string(),
-                frontmatter: HashMap::new(),
+                frontmatter: FxHashMap::default(),
                 source_origin: SourceOrigin { line: 1, column: 1, ..SourceOrigin::default() },
             }
         }
     }
 }
 
-pub fn parse_frontmatter(source: &str) -> (String, HashMap<String, serde_json::Value>) {
+pub fn parse_frontmatter(source: &str) -> (String, FxHashMap<String, serde_json::Value>) {
     let prepared = parse_frontmatter_with_origin(source);
     (prepared.content, prepared.frontmatter)
 }
 
 fn parse_frontmatter_with_origin(source: &str) -> PreparedMarkdownSource {
-    let mut frontmatter = HashMap::new();
+    let mut frontmatter = FxHashMap::default();
 
     if !source.starts_with("---") {
         return PreparedMarkdownSource {
@@ -247,7 +247,7 @@ fn source_origin_for_content(source: &str, content: &str) -> SourceOrigin {
 
 fn extract_toc(doc: &Document, max_depth: u8) -> Vec<TocEntry> {
     let mut entries = Vec::new();
-    let mut slug_counts = HashMap::new();
+    let mut slug_counts = FxHashMap::default();
 
     for node in &doc.children {
         if let Node::Heading(heading) = node {
@@ -332,7 +332,7 @@ fn slugify(text: &str) -> String {
     slug
 }
 
-fn unique_slug(slug: String, counts: &mut HashMap<String, usize>) -> String {
+fn unique_slug(slug: String, counts: &mut FxHashMap<String, usize>) -> String {
     let slug = if slug.is_empty() { "section".to_string() } else { slug };
     let count = counts.entry(slug.clone()).or_insert(0);
     let unique = if *count == 0 { slug } else { format!("{slug}-{count}") };

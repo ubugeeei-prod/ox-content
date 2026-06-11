@@ -27,6 +27,7 @@ pub struct JsWikiLinkOptions {
 /// Emoji-shortcode transform options.
 #[napi(object)]
 #[derive(Default, Clone)]
+#[allow(clippy::disallowed_types)]
 pub struct JsEmojiShortcodeOptions {
     /// Enable `:shortcode:` expansion.
     ///
@@ -562,7 +563,7 @@ pub fn prepare_source(source: String, options: Option<JsSourceOptions>) -> Prepa
 
     PreparedSourceResult {
         content: prepared.content,
-        frontmatter: prepared.frontmatter,
+        frontmatter: prepared.frontmatter.into_iter().collect(),
         source_offset: JsSourceOrigin {
             byte_offset: prepared.source_origin.byte_offset,
             offset: prepared.source_origin.offset,

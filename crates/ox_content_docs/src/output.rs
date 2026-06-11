@@ -1,5 +1,6 @@
 //! Generated API documentation output writing.
 
+// BTreeMap keeps generated file output deterministic across runs.
 use std::collections::BTreeMap;
 use std::fs;
 use std::path::Path;

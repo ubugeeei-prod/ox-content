@@ -1,6 +1,6 @@
 //! Shared asset extraction for generated SSG pages.
 
-use std::collections::HashMap;
+use rustc_hash::FxHashMap;
 use std::path::Path;
 
 use serde::{Deserialize, Serialize};
@@ -84,7 +84,7 @@ struct BlockMatch {
 
 #[derive(Default)]
 struct AssetCache {
-    indexes_by_content: HashMap<String, usize>,
+    indexes_by_content: FxHashMap<String, usize>,
     chunks: Vec<SharedAsset>,
 }
 

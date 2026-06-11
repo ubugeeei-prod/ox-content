@@ -30,6 +30,7 @@ struct EditCommandPayload {
 }
 
 impl Backend {
+    #[allow(clippy::disallowed_types)]
     pub(super) async fn insert_template(
         &self,
         command: &str,
@@ -49,6 +50,7 @@ impl Backend {
             _ => return Ok(None),
         };
 
+        // `WorkspaceEdit` comes from lsp-types and its public shape requires std::HashMap.
         let mut changes = HashMap::new();
         changes.insert(
             uri,
