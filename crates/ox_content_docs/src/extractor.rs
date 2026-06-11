@@ -1,5 +1,7 @@
 //! Documentation extraction from source code using OXC parser.
 
+mod context;
+mod driver;
 mod jsdoc;
 mod jsdoc_tags;
 mod model;
@@ -8,24 +10,23 @@ mod returns;
 mod tags;
 mod types;
 
-use oxc_allocator::Allocator;
 use oxc_ast::ast::{
-    BindingPattern, Class, Comment, Declaration, ExportDefaultDeclarationKind, Expression,
-    Function, Statement, TSEnumDeclaration, TSEnumMember, TSIndexSignature, TSIndexSignatureName,
+    BindingPattern, Class, Declaration, ExportDefaultDeclarationKind, Expression, Function,
+    Statement, TSEnumDeclaration, TSEnumMember, TSIndexSignature, TSIndexSignatureName,
     TSInterfaceDeclaration, TSSignature, TSType, TSTypeAliasDeclaration, TSTypeAnnotation,
     VariableDeclaration,
 };
 use oxc_ast_visit::{walk, Visit};
-use oxc_parser::Parser;
-use oxc_span::{GetSpan, SourceType};
+use oxc_span::GetSpan;
+#[cfg(test)]
+use oxc_span::SourceType;
 use rustc_hash::FxHashMap;
-use std::path::Path;
 
 #[allow(unused_imports)]
 use crate::profile_span;
 use crate::string_builder::{join5, StringBuilder};
 
-use self::jsdoc::{build_jsdoc_cache, parse_jsdoc_payload, ParsedJsdoc, MODULE_MARKER_TAGS};
+use self::jsdoc::ParsedJsdoc;
 use self::model::FunctionTypeMetadata;
 pub use self::model::{
     DocItem, DocItemKind, DocTag, ExtractError, ExtractResult, ParamDoc, TypeParamDoc,
@@ -47,188 +48,6 @@ pub struct DocExtractor {
     capture_jsdoc_raw: bool,
 }
 
-impl DocExtractor {
-    /// Creates a new documentation extractor.
-    #[must_use]
-    pub fn new() -> Self {
-        Self {
-            include_private: false,
-            include_internal: false,
-            include_undocumented_declarations: false,
-            capture_jsdoc_raw: true,
-        }
-    }
-
-    /// Creates a new extractor that includes private items.
-    #[must_use]
-    pub fn with_private(include_private: bool) -> Self {
-        Self {
-            include_private,
-            include_internal: false,
-            include_undocumented_declarations: false,
-            capture_jsdoc_raw: true,
-        }
-    }
-
-    /// Creates a new extractor with explicit visibility options.
-    #[must_use]
-    pub fn with_visibility(include_private: bool, include_internal: bool) -> Self {
-        Self {
-            include_private,
-            include_internal,
-            include_undocumented_declarations: false,
-            capture_jsdoc_raw: true,
-        }
-    }
-
-    /// Drops the verbatim JSDoc text from extracted items.
-    ///
-    /// For callers that immediately normalize (which discards `DocItem::jsdoc`),
-    /// this avoids allocating and cloning the raw comment text per declaration.
-    #[must_use]
-    pub fn without_raw_jsdoc(mut self) -> Self {
-        self.capture_jsdoc_raw = false;
-        self
-    }
-
-    /// Creates a new extractor for public entry point exports.
-    ///
-    /// This path always normalizes, so it never captures the raw JSDoc text.
-    #[must_use]
-    pub(crate) fn for_entrypoint_exports(include_private: bool, include_internal: bool) -> Self {
-        Self {
-            include_private,
-            include_internal,
-            include_undocumented_declarations: true,
-            capture_jsdoc_raw: false,
-        }
-    }
-
-    /// Extracts documentation from a source file.
-    pub fn extract_file(&self, path: &Path) -> ExtractResult<Vec<DocItem>> {
-        let mut allocator = Allocator::default();
-        self.extract_file_with(&mut allocator, path)
-    }
-
-    /// Like [`extract_file`](Self::extract_file), but reuses a caller-owned
-    /// arena allocator.
-    ///
-    /// Batch callers (directory walks, multi-file extraction) create one
-    /// [`Allocator`] and pass it to every file. The arena is rewound at the
-    /// start of each parse, so a single allocation is reused instead of
-    /// allocating and freeing a fresh multi-MB arena per file. The public
-    /// [`extract_file`](Self::extract_file) wrapper just hands in a fresh one.
-    pub(crate) fn extract_file_with(
-        &self,
-        allocator: &mut Allocator,
-        path: &Path,
-    ) -> ExtractResult<Vec<DocItem>> {
-        let extension = path.extension().and_then(|e| e.to_str()).unwrap_or("");
-
-        match extension {
-            "ts" | "tsx" | "js" | "jsx" | "mts" | "mjs" | "cts" | "cjs" => {
-                self.extract_js_ts(allocator, path)
-            }
-            _ => Err(ExtractError::UnsupportedFile(extension.to_string())),
-        }
-    }
-
-    /// Extracts documentation from source code string.
-    pub fn extract_source(
-        &self,
-        source: &str,
-        file_path: &str,
-        source_type: SourceType,
-    ) -> ExtractResult<Vec<DocItem>> {
-        let mut allocator = Allocator::default();
-        self.extract_source_with(&mut allocator, source, file_path, source_type)
-    }
-
-    /// Like [`extract_source`](Self::extract_source), but reuses a caller-owned
-    /// arena allocator. See [`extract_file_with`](Self::extract_file_with).
-    pub(crate) fn extract_source_with(
-        &self,
-        allocator: &mut Allocator,
-        source: &str,
-        file_path: &str,
-        source_type: SourceType,
-    ) -> ExtractResult<Vec<DocItem>> {
-        profile_span!("docs::extract_source");
-        // Rewind the arena so a reused allocator starts clean for this file.
-        // Extraction returns owned `DocItem`s, so by the time the next file
-        // resets, nothing borrows the previous file's arena.
-        allocator.reset();
-        let ret = {
-            profile_span!("docs::oxc_parse");
-            Parser::new(&*allocator, source, source_type).parse()
-        };
-
-        if !ret.errors.is_empty() {
-            let error_msg = ret
-                .errors
-                .iter()
-                .map(std::string::ToString::to_string)
-                .collect::<Vec<_>>()
-                .join(", ");
-            return Err(ExtractError::Parse(error_msg));
-        }
-
-        Ok(self.extract_items_from_program(source, file_path, &ret.program))
-    }
-
-    /// Extract doc items from an already-parsed program (build the JSDoc cache,
-    /// then walk the AST).
-    ///
-    /// Shared by [`extract_source_with`](Self::extract_source_with) and the
-    /// export-graph walk: the graph parses every reachable module to collect its
-    /// exports, so it extracts docs from that same AST instead of parsing the
-    /// file a second time.
-    pub(crate) fn extract_items_from_program(
-        &self,
-        source: &str,
-        file_path: &str,
-        program: &oxc_ast::ast::Program<'_>,
-    ) -> Vec<DocItem> {
-        let comments: Vec<Comment> = program.comments.iter().copied().collect();
-        let jsdoc_cache = build_jsdoc_cache(source, &comments, self.capture_jsdoc_raw);
-
-        let mut visitor = DocVisitor::new(
-            source,
-            file_path,
-            self.include_private,
-            self.include_internal,
-            self.include_undocumented_declarations,
-            jsdoc_cache,
-        );
-        let first_stmt_start = program.body.first().map(|statement| statement.span().start);
-        {
-            profile_span!("docs::visit_ast");
-            if let Some(module_item) = visitor.extract_module_entry(&comments, first_stmt_start) {
-                visitor.items.push(module_item);
-            }
-            visitor.visit_program(program);
-        }
-
-        visitor.items
-    }
-
-    /// Extracts documentation from a JavaScript/TypeScript file, reusing the
-    /// caller-owned arena allocator.
-    fn extract_js_ts(&self, allocator: &mut Allocator, path: &Path) -> ExtractResult<Vec<DocItem>> {
-        let content = std::fs::read_to_string(path)?;
-        let file_path = path.to_string_lossy().to_string();
-        let source_type = SourceType::from_path(path).unwrap_or_default();
-
-        self.extract_source_with(allocator, &content, &file_path, source_type)
-    }
-}
-
-impl Default for DocExtractor {
-    fn default() -> Self {
-        Self::new()
-    }
-}
-
 /// AST visitor for extracting documentation.
 struct DocVisitor<'a> {
     source: &'a str,
@@ -245,206 +64,6 @@ struct DocVisitor<'a> {
 }
 
 impl<'a> DocVisitor<'a> {
-    fn new(
-        source: &'a str,
-        file_path: &'a str,
-        include_private: bool,
-        include_internal: bool,
-        include_undocumented_declarations: bool,
-        jsdoc_cache: FxHashMap<u32, ParsedJsdoc>,
-    ) -> Self {
-        let mut line_starts = Vec::new();
-        line_starts.push(0);
-        line_starts.extend(
-            source
-                .bytes()
-                .enumerate()
-                .filter_map(|(index, byte)| (byte == b'\n').then_some(index + 1)),
-        );
-
-        Self {
-            source,
-            file_path,
-            include_private,
-            include_internal,
-            include_undocumented_declarations,
-            jsdoc_cache,
-            line_starts,
-            items: Vec::new(),
-            type_alias_function_metadata: FxHashMap::default(),
-            has_default_export: false,
-        }
-    }
-
-    fn slice(&self, start: u32, end: u32) -> String {
-        self.source[start as usize..end as usize].to_string()
-    }
-
-    fn line_number(&self, position: u32) -> u32 {
-        let position = position as usize;
-        self.line_starts.partition_point(|&start| start <= position) as u32
-    }
-
-    fn column_number(&self, position: u32) -> u32 {
-        let position = position as usize;
-        let line_index = self.line_starts.partition_point(|&start| start <= position);
-        let line_start = self.line_starts[line_index.saturating_sub(1)];
-        (position.saturating_sub(line_start)) as u32
-    }
-
-    fn span_lines(&self, start: u32, end: u32) -> (u32, u32) {
-        let start_line = self.line_number(start);
-        let end_position = end.saturating_sub(1).max(start);
-        let end_line = self.line_number(end_position);
-        (start_line, end_line)
-    }
-
-    fn extract_jsdoc(&self, attached_to: u32) -> Option<(String, String, Vec<DocTag>)> {
-        self.jsdoc_cache.get(&attached_to).cloned()
-    }
-
-    fn extract_declaration_docs(
-        &self,
-        attached_to: u32,
-    ) -> Option<(Option<String>, Option<String>, Vec<DocTag>)> {
-        if let Some((jsdoc, doc, tags)) = self.jsdoc_cache.get(&attached_to) {
-            // Borrow from the cache and apply the visibility filter first, so a
-            // private/internal declaration is dropped without cloning the whole
-            // (raw, description, tags) payload only to throw it away.
-            if self.should_skip_by_visibility(tags) {
-                return None;
-            }
-            return Some((
-                Some(jsdoc.clone()),
-                (!doc.is_empty()).then(|| doc.clone()),
-                tags.clone(),
-            ));
-        }
-
-        self.include_undocumented_declarations.then(|| (None, None, Vec::new()))
-    }
-
-    fn extract_module_entry(
-        &self,
-        comments: &[Comment],
-        first_stmt_start: Option<u32>,
-    ) -> Option<DocItem> {
-        let comment = comments.iter().find(|comment| comment.is_jsdoc())?;
-
-        // Only the leading file comment (before the first statement) can be the
-        // module comment; a JSDoc that follows code documents that declaration.
-        if let Some(stmt_start) = first_stmt_start {
-            if comment.span.start > stmt_start {
-                return None;
-            }
-        }
-
-        // Parse the candidate from its own span rather than the `attached_to`
-        // cache, which collides when two leading comments share a target.
-        let (raw, doc, tags) = parse_jsdoc_payload(self.source, comment);
-
-        // Treat the leading comment as the module description when it either
-        // carries a module marker tag (`@module` / `@packageDocumentation` /
-        // `@fileoverview`, matching TypeDoc) or is detached from the following
-        // code by a blank line. Otherwise it belongs to the first declaration.
-        let has_module_marker =
-            tags.iter().any(|tag| MODULE_MARKER_TAGS.contains(&tag.tag.as_str()));
-        if !has_module_marker
-            && !self.is_detached_leading_comment(comment, comments, first_stmt_start)
-        {
-            return None;
-        }
-
-        let (module_name, module_description) =
-            Self::parse_module_tag(&tags).unwrap_or((None, None));
-        let name = module_name.unwrap_or_else(|| self.file_stem_module_name());
-        let (line, end_line) = self.span_lines(comment.span.start, comment.span.end);
-
-        Some(DocItem {
-            name,
-            kind: DocItemKind::Module,
-            doc: if doc.is_empty() { module_description } else { Some(doc) },
-            source_path: self.file_path.to_string(),
-            line,
-            end_line,
-            column: self.column_number(comment.span.start),
-            jsdoc: Some(raw),
-            exported: true,
-            signature: None,
-            extends: Vec::new(),
-            implements: Vec::new(),
-            has_body: false,
-            optional: false,
-            readonly: false,
-            r#static: false,
-            params: Vec::new(),
-            return_type: None,
-            return_members: Vec::new(),
-            children: Vec::new(),
-            tags,
-            type_parameters: Vec::new(),
-        })
-    }
-
-    /// Returns true when the first leading JSDoc comment is detached from the
-    /// following code by a blank line (or is the file's only content). Such a
-    /// comment is a file-level/module comment rather than the doc of the first
-    /// declaration, matching TypeDoc's leading-comment handling.
-    fn is_detached_leading_comment(
-        &self,
-        comment: &Comment,
-        comments: &[Comment],
-        first_stmt_start: Option<u32>,
-    ) -> bool {
-        let after = comment.span.end;
-        // The next syntactic element after this comment: the nearest of the
-        // first statement and any later comment.
-        let next_comment =
-            comments.iter().map(|other| other.span.start).filter(|&start| start > after).min();
-        let next_pos = match (next_comment, first_stmt_start) {
-            (Some(comment_start), Some(stmt_start)) => Some(comment_start.min(stmt_start)),
-            (Some(position), None) | (None, Some(position)) => Some(position),
-            (None, None) => None,
-        };
-        // Nothing follows the comment: a comment-only file is a module comment.
-        let Some(next_pos) = next_pos else {
-            return true;
-        };
-        if next_pos <= after {
-            return false;
-        }
-        // A blank line means two or more newlines between the comment and the
-        // next element.
-        self.source[after as usize..next_pos as usize].bytes().filter(|&byte| byte == b'\n').count()
-            >= 2
-    }
-
-    fn parse_module_tag(tags: &[DocTag]) -> Option<(Option<String>, Option<String>)> {
-        let tag = tags.iter().find(|tag| tag.tag == "module")?;
-        let value = tag.value.trim();
-        if value.is_empty() {
-            return Some((None, tag.description.clone()));
-        }
-
-        let split_at = value
-            .char_indices()
-            .find_map(|(index, ch)| ch.is_whitespace().then_some(index))
-            .unwrap_or(value.len());
-        let name = value[..split_at].trim();
-        let rest = value[split_at..].trim();
-        let description = Self::clean_tag_description(rest).or_else(|| tag.description.clone());
-
-        Some(((!name.is_empty()).then(|| name.to_string()), description))
-    }
-
-    fn file_stem_module_name(&self) -> String {
-        Path::new(self.file_path)
-            .file_stem()
-            .and_then(|stem| stem.to_str())
-            .unwrap_or("module")
-            .to_string()
-    }
-
     fn format_type_parameter_declaration<T>(
         &self,
         type_params: Option<&oxc_allocator::Box<'a, T>>,
