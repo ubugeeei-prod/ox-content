@@ -25,6 +25,11 @@ static RETURN_TAG_NAMES: phf::Set<&'static str> = phf_set! {
     "return",
 };
 
+static THROWS_TAG_NAMES: phf::Set<&'static str> = phf_set! {
+    "throws",
+    "exception",
+};
+
 static TYPE_PARAM_TAG_NAMES: phf::Set<&'static str> = phf_set! {
     "typeParam",
     "template",
@@ -173,6 +178,15 @@ pub struct NormalizedReturnDoc {
     pub members: Vec<NormalizedMember>,
 }
 
+/// Normalized exception/error documentation.
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+pub struct NormalizedThrowsDoc {
+    /// Error type, when documented.
+    pub type_annotation: Option<String>,
+    /// Error condition description.
+    pub description: String,
+}
+
 /// Normalized type parameter documentation (`<T extends C = D>`).
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 pub struct NormalizedTypeParam {
@@ -211,6 +225,9 @@ pub struct NormalizedMember {
     pub type_parameters: Vec<NormalizedTypeParam>,
     /// Return documentation, if any.
     pub returns: Option<NormalizedReturnDoc>,
+    /// Exceptions/errors documented with `@throws` / `@exception`.
+    #[serde(default)]
+    pub throws: Vec<NormalizedThrowsDoc>,
     /// Nested members owned by this member (for property-owned object literals).
     #[serde(default)]
     pub members: Vec<NormalizedMember>,
@@ -248,6 +265,9 @@ pub struct NormalizedDocEntry {
     pub params: Vec<NormalizedParamDoc>,
     /// Return documentation, if any.
     pub returns: Option<NormalizedReturnDoc>,
+    /// Exceptions/errors documented with `@throws` / `@exception`.
+    #[serde(default)]
+    pub throws: Vec<NormalizedThrowsDoc>,
     /// Example blocks.
     pub examples: Vec<String>,
     /// Custom JSDoc tags.
@@ -324,6 +344,7 @@ pub fn normalize_doc_item(item: DocItem, type_parameters: bool) -> Option<Normal
         description: item.doc.unwrap_or_default(),
         params: metadata.params,
         returns: metadata.returns,
+        throws: metadata.throws,
         examples: metadata.examples,
         tags: metadata.tags,
         private: metadata.private,
@@ -400,6 +421,7 @@ fn normalize_member(item: DocItem, type_parameters: bool) -> Option<NormalizedMe
         params: metadata.params,
         type_parameters,
         returns: metadata.returns,
+        throws: metadata.throws,
         members,
         optional: item.optional,
         readonly: item.readonly,
@@ -441,6 +463,7 @@ fn remove_member_default_tags(tags: &mut BTreeMap<String, String>) {
 struct NormalizedDocMetadata {
     params: Vec<NormalizedParamDoc>,
     returns: Option<NormalizedReturnDoc>,
+    throws: Vec<NormalizedThrowsDoc>,
     examples: Vec<String>,
     tags: BTreeMap<String, String>,
     type_param_descriptions: BTreeMap<String, String>,
@@ -453,6 +476,7 @@ fn normalize_doc_metadata(tags: &[DocTag], type_parameters: bool) -> NormalizedD
     // same tag list for params, returns, examples, privacy, and generic tags.
     let mut params = Vec::new();
     let mut returns = None;
+    let mut throws = Vec::new();
     let mut examples = Vec::new();
     let mut normalized_tags = BTreeMap::new();
     let mut type_param_descriptions = BTreeMap::new();
@@ -468,6 +492,11 @@ fn normalize_doc_metadata(tags: &[DocTag], type_parameters: bool) -> NormalizedD
             tag_name if RETURN_TAG_NAMES.contains(tag_name) => {
                 let parsed_returns = normalized_return_from_tag(tag);
                 merge_returns(&mut returns, parsed_returns);
+            }
+            tag_name if THROWS_TAG_NAMES.contains(tag_name) => {
+                if let Some(parsed_throws) = normalized_throws_from_tag(tag) {
+                    throws.push(parsed_throws);
+                }
             }
             EXAMPLE_TAG_NAME => {
                 let example = tag.value.trim();
@@ -494,6 +523,7 @@ fn normalize_doc_metadata(tags: &[DocTag], type_parameters: bool) -> NormalizedD
     NormalizedDocMetadata {
         params,
         returns,
+        throws,
         examples,
         tags: normalized_tags,
         type_param_descriptions,
@@ -682,6 +712,66 @@ fn normalized_return_from_tag(tag: &DocTag) -> NormalizedReturnDoc {
     }
 }
 
+fn normalized_throws_from_tag(tag: &DocTag) -> Option<NormalizedThrowsDoc> {
+    let type_annotation = tag
+        .type_annotation
+        .as_ref()
+        .map(|value| value.trim())
+        .filter(|value| !value.is_empty())
+        .map(ToString::to_string);
+    let description = throws_description_from_tag(tag);
+    if !description.is_empty() {
+        return Some(NormalizedThrowsDoc { type_annotation, description });
+    }
+
+    let value = tag.value.trim();
+    if value.is_empty() {
+        return type_annotation.map(|type_annotation| NormalizedThrowsDoc {
+            type_annotation: Some(type_annotation),
+            description: String::new(),
+        });
+    }
+
+    if type_annotation.is_some() {
+        return Some(NormalizedThrowsDoc { type_annotation, description: value.to_string() });
+    }
+
+    if let Some((type_annotation, description)) = parse_throws_tag_value(value) {
+        return Some(NormalizedThrowsDoc { type_annotation: Some(type_annotation), description });
+    }
+
+    Some(NormalizedThrowsDoc { type_annotation: None, description: value.to_string() })
+}
+
+fn throws_description_from_tag(tag: &DocTag) -> String {
+    let name = tag.name.as_ref().map(|value| value.trim()).filter(|value| !value.is_empty());
+    let description =
+        tag.description.as_ref().map(|value| value.trim()).filter(|value| !value.is_empty());
+    match (name, description) {
+        (Some(name), Some(description)) => {
+            let mut value = String::with_capacity(name.len() + description.len() + 1);
+            value.push_str(name);
+            value.push(' ');
+            value.push_str(description);
+            value
+        }
+        (Some(name), None) => name.to_string(),
+        (None, Some(description)) => description.to_string(),
+        (None, None) => String::new(),
+    }
+}
+
+fn parse_throws_tag_value(value: &str) -> Option<(String, String)> {
+    let rest = value.strip_prefix('{')?;
+    let end = rest.find('}')?;
+    let type_annotation = rest[..end].trim();
+    if type_annotation.is_empty() {
+        return None;
+    }
+    let description = rest[end + 1..].trim().trim_start_matches('-').trim().to_string();
+    Some((type_annotation.to_string(), description))
+}
+
 #[cfg(test)]
 mod tests {
     use oxc_span::SourceType;
@@ -698,6 +788,8 @@ mod tests {
  * @param {string} value - The label source
  * @param {number} [maxLength=20] - Maximum length before truncation
  * @returns {string} Formatted label
+ * @throws {RangeError} When maxLength is negative.
+ * @exception {TypeError} When value is not a string.
  * @example
  * label("hello", 3)
  * @since 1.2.3
@@ -732,8 +824,23 @@ export function label(value, maxLength = 20) {
                 members: Vec::new()
             })
         );
+        assert_eq!(
+            entry.throws,
+            vec![
+                NormalizedThrowsDoc {
+                    type_annotation: Some("RangeError".to_string()),
+                    description: "When maxLength is negative.".to_string(),
+                },
+                NormalizedThrowsDoc {
+                    type_annotation: Some("TypeError".to_string()),
+                    description: "When value is not a string.".to_string(),
+                }
+            ]
+        );
         assert_eq!(entry.examples, vec!["label(\"hello\", 3)"]);
         assert_eq!(entry.tags.get("since").map(String::as_str), Some("1.2.3"));
+        assert!(!entry.tags.contains_key("throws"));
+        assert!(!entry.tags.contains_key("exception"));
     }
 
     #[test]
@@ -967,6 +1074,7 @@ export interface Command {
      * Runs the command.
      * @param ctx - Runtime context
      * @returns Run result
+     * @throws {RunError} When the command fails.
      */
     run(ctx: Context): Promise<void>;
 }
@@ -992,6 +1100,14 @@ export interface Command {
                 members: Vec::new()
             })
         );
+        assert_eq!(
+            member.throws,
+            vec![NormalizedThrowsDoc {
+                type_annotation: Some("RunError".to_string()),
+                description: "When the command fails.".to_string(),
+            }]
+        );
+        assert!(!member.tags.contains_key("throws"));
     }
 
     #[test]

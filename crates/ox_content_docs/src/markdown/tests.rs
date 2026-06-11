@@ -1,5 +1,7 @@
 use super::*;
-use crate::model::{ApiDocMember, ApiDocTag, ApiParamDoc, ApiReturnDoc, ApiTypeParamDoc};
+use crate::model::{
+    ApiDocMember, ApiDocTag, ApiParamDoc, ApiReturnDoc, ApiThrowsDoc, ApiTypeParamDoc,
+};
 
 mod helpers;
 use helpers::*;

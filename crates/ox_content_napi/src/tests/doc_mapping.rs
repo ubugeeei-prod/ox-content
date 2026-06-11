@@ -8,6 +8,10 @@ fn normalized_doc_entry_maps_members_to_js_shape() {
         description: "Runtime command.".to_string(),
         params: vec![],
         returns: None,
+        throws: vec![NormalizedThrowsDoc {
+            type_annotation: Some("CommandError".to_string()),
+            description: "When command metadata is invalid.".to_string(),
+        }],
         examples: vec![],
         tags: BTreeMap::new(),
         private: false,
@@ -33,6 +37,10 @@ fn normalized_doc_entry_maps_members_to_js_shape() {
                 description: "Value type.".to_string(),
             }],
             returns: None,
+            throws: vec![NormalizedThrowsDoc {
+                type_annotation: Some("NameError".to_string()),
+                description: "When command name cannot be resolved.".to_string(),
+            }],
             members: vec![NormalizedMember {
                 name: "timeout".to_string(),
                 kind: NormalizedMemberKind::Property,
@@ -43,6 +51,7 @@ fn normalized_doc_entry_maps_members_to_js_shape() {
                 params: vec![],
                 type_parameters: vec![],
                 returns: None,
+                throws: vec![],
                 members: vec![],
                 optional: true,
                 readonly: false,
@@ -77,6 +86,12 @@ fn normalized_doc_entry_maps_members_to_js_shape() {
     assert_eq!(type_param.description, "Value type.");
     assert_eq!(member.optional, Some(true));
     assert_eq!(member.readonly, Some(true));
+    let entry_throws = &js_entry.throws.as_ref().unwrap()[0];
+    assert_eq!(entry_throws.r#type.as_deref(), Some("CommandError"));
+    assert_eq!(entry_throws.description, "When command metadata is invalid.");
+    let member_throws = &member.throws.as_ref().unwrap()[0];
+    assert_eq!(member_throws.r#type.as_deref(), Some("NameError"));
+    assert_eq!(member_throws.description, "When command name cannot be resolved.");
     let nested_member = &member.members.as_ref().unwrap()[0];
     assert_eq!(nested_member.name, "timeout");
     assert_eq!(nested_member.kind, "property");
@@ -94,6 +109,7 @@ fn normalized_doc_entry_maps_index_signature_members_to_js_shape() {
         description: "Arguments.".to_string(),
         params: vec![],
         returns: None,
+        throws: vec![],
         examples: vec![],
         tags: BTreeMap::new(),
         private: false,
@@ -120,6 +136,7 @@ fn normalized_doc_entry_maps_index_signature_members_to_js_shape() {
             }],
             type_parameters: vec![],
             returns: None,
+            throws: vec![],
             members: vec![],
             optional: false,
             readonly: true,
@@ -152,6 +169,7 @@ fn normalized_doc_entry_maps_heritage_to_js_shape() {
         description: "Default adapter.".to_string(),
         params: vec![],
         returns: None,
+        throws: vec![],
         examples: vec![],
         tags: BTreeMap::new(),
         private: false,
@@ -192,6 +210,7 @@ fn normalized_doc_entry_maps_return_members_to_js_shape() {
                 params: vec![],
                 type_parameters: vec![],
                 returns: None,
+                throws: vec![],
                 members: vec![],
                 optional: false,
                 readonly: false,
@@ -202,6 +221,7 @@ fn normalized_doc_entry_maps_return_members_to_js_shape() {
                 end_line: 3,
             }],
         }),
+        throws: vec![],
         examples: vec![],
         tags: BTreeMap::new(),
         private: false,

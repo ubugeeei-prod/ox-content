@@ -49,6 +49,9 @@ pub struct ApiDocEntry {
     pub params: Vec<ApiParamDoc>,
     /// Return documentation.
     pub returns: Option<ApiReturnDoc>,
+    /// Exceptions/errors documented with `@throws` / `@exception`.
+    #[serde(default)]
+    pub throws: Vec<ApiThrowsDoc>,
     /// Example blocks.
     pub examples: Vec<String>,
     /// Custom JSDoc tags, kept in source insertion order.
@@ -107,6 +110,9 @@ pub struct ApiDocMember {
     pub type_parameters: Vec<ApiTypeParamDoc>,
     /// Return documentation.
     pub returns: Option<ApiReturnDoc>,
+    /// Exceptions/errors documented with `@throws` / `@exception`.
+    #[serde(default)]
+    pub throws: Vec<ApiThrowsDoc>,
     /// Nested members owned by this member (for property-owned object literals).
     #[serde(default)]
     pub members: Vec<ApiDocMember>,
@@ -159,6 +165,15 @@ pub struct ApiReturnDoc {
     /// Members of an inline object literal return type.
     #[serde(default)]
     pub members: Vec<ApiDocMember>,
+}
+
+/// Exception/error documentation.
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
+pub struct ApiThrowsDoc {
+    /// Error type.
+    pub type_annotation: Option<String>,
+    /// Error condition description.
+    pub description: String,
 }
 
 /// Type parameter documentation (`<T extends C = D>`).

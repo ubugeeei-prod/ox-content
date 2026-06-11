@@ -124,10 +124,13 @@ fn render_style_markdown_typedoc_sections_are_sequential_headings() {
     assert!(page.contains("## Signature"));
     assert!(page.contains("## Parameters"));
     assert!(page.contains("## Returns"));
+    assert!(page.contains("## Throws"));
+    assert!(page.contains("- `CliError` — When argument parsing fails."));
     assert!(page.contains("## Examples"));
     // `@since` renders as a dedicated `## Since` section, not generic `## Tags`.
     assert!(page.contains("## Since"));
     assert!(!page.contains("## Tags"));
+    assert!(!page.contains("@throws"));
     assert!(!page.contains("**Signature**"));
     assert!(!page.contains("**Returns**"));
     assert!(!page.contains("#### "));
@@ -146,7 +149,7 @@ fn render_style_markdown_typedoc_sections_are_sequential_headings() {
         .clone();
     let page = out.get(&if_key).unwrap();
     assert!(page.contains("## Methods"));
-    assert!(!page.contains("#### "));
+    assert!(!page.contains("#### Properties"));
     assert!(!page.contains("**Members**"));
     assert_no_heading_level_skips(page);
 }
@@ -202,6 +205,18 @@ fn render_style_markdown_flat_sections_render_at_h4() {
     assert!(page.lines().any(|line| line == "#### Signature"));
     assert!(page.lines().any(|line| line == "#### Parameters"));
     assert!(page.lines().any(|line| line == "#### Returns"));
+    assert!(page.lines().any(|line| line == "#### Throws"));
     assert!(!page.lines().any(|line| line == "## Signature"));
     assert_no_heading_level_skips(page);
+}
+
+#[test]
+fn render_style_html_renders_throws_section() {
+    let out = generate_markdown(&pure_test_docs(), &MarkdownDocsOptions::default());
+    let page = out.get("cli.md").unwrap();
+
+    assert!(page.contains("ox-api-entry__section--throws"));
+    assert!(page.contains("<h4>Throws</h4>"));
+    assert!(page.contains("CliError"));
+    assert!(!page.contains("@throws"));
 }

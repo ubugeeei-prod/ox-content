@@ -110,6 +110,7 @@ fn jsdoc_inline_links_render_across_doc_fields() {
                 description: "Runtime command.".to_string(),
                 params: vec![],
                 returns: None,
+                throws: vec![],
                 examples: vec![],
                 tags: vec![],
                 private: false,
@@ -130,6 +131,7 @@ fn jsdoc_inline_links_render_across_doc_fields() {
                     params: vec![],
                     type_parameters: vec![],
                     returns: None,
+                    throws: vec![],
                     members: vec![],
                     optional: false,
                     readonly: false,
@@ -165,6 +167,7 @@ fn jsdoc_inline_links_render_across_doc_fields() {
                     description: "An {@link AgentProfile} result.".to_string(),
                     members: Vec::new(),
                 }),
+                throws: vec![],
                 examples: vec![],
                 tags: vec![
                     ApiDocTag {

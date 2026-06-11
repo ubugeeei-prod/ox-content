@@ -22,6 +22,14 @@ pub struct JsDocReturn {
     pub members: Option<Vec<JsDocMember>>,
 }
 
+/// Exception/error documentation used by generated API docs.
+#[napi(object)]
+#[derive(Clone)]
+pub struct JsDocThrows {
+    pub r#type: Option<String>,
+    pub description: String,
+}
+
 /// Type parameter documentation (`<T extends C = D>`) used by generated API docs.
 #[napi(object)]
 #[derive(Clone)]
@@ -45,6 +53,7 @@ pub struct JsDocMember {
     pub params: Option<Vec<JsDocParam>>,
     pub type_parameters: Option<Vec<JsTypeParam>>,
     pub returns: Option<JsDocReturn>,
+    pub throws: Option<Vec<JsDocThrows>>,
     pub members: Option<Vec<JsDocMember>>,
     pub optional: Option<bool>,
     pub readonly: Option<bool>,
@@ -65,6 +74,7 @@ pub struct JsDocEntry {
     pub description: String,
     pub params: Option<Vec<JsDocParam>>,
     pub returns: Option<JsDocReturn>,
+    pub throws: Option<Vec<JsDocThrows>>,
     pub examples: Option<Vec<String>>,
     pub tags: Option<HashMap<String, String>>,
     pub private: bool,
@@ -131,6 +141,7 @@ pub struct JsDocsMarkdownEntry {
     pub description: String,
     pub params: Option<Vec<JsDocParam>>,
     pub returns: Option<JsDocReturn>,
+    pub throws: Option<Vec<JsDocThrows>>,
     pub examples: Option<Vec<String>>,
     pub tags: Option<Vec<JsDocsMarkdownTag>>,
     pub private: bool,

@@ -1,7 +1,8 @@
 use serde_json::{json, Map, Value};
 
 use crate::model::{
-    ApiDocEntry, ApiDocMember, ApiDocModule, ApiParamDoc, ApiReturnDoc, ApiTypeParamDoc,
+    ApiDocEntry, ApiDocMember, ApiDocModule, ApiParamDoc, ApiReturnDoc, ApiThrowsDoc,
+    ApiTypeParamDoc,
 };
 #[allow(unused_imports)]
 use crate::profile_span;
@@ -132,6 +133,12 @@ fn entry_to_json(entry: &ApiDocEntry) -> Value {
     if let Some(returns) = &entry.returns {
         value.insert("returns".to_string(), return_to_json(returns));
     }
+    if !entry.throws.is_empty() {
+        value.insert(
+            "throws".to_string(),
+            Value::Array(entry.throws.iter().map(throws_to_json).collect()),
+        );
+    }
     if !entry.examples.is_empty() {
         value.insert("examples".to_string(), json!(entry.examples));
     }
@@ -203,6 +210,12 @@ fn member_to_json(member: &ApiDocMember) -> Value {
     if let Some(returns) = &member.returns {
         value.insert("returns".to_string(), return_to_json(returns));
     }
+    if !member.throws.is_empty() {
+        value.insert(
+            "throws".to_string(),
+            Value::Array(member.throws.iter().map(throws_to_json).collect()),
+        );
+    }
     if !member.members.is_empty() {
         value.insert(
             "members".to_string(),
@@ -265,6 +278,15 @@ fn return_to_json(return_doc: &ApiReturnDoc) -> Value {
     Value::Object(value)
 }
 
+fn throws_to_json(throws: &ApiThrowsDoc) -> Value {
+    let mut value = Map::new();
+    if let Some(type_annotation) = &throws.type_annotation {
+        value.insert("type".to_string(), json!(type_annotation));
+    }
+    value.insert("description".to_string(), json!(throws.description));
+    Value::Object(value)
+}
+
 fn type_param_to_json(type_param: &ApiTypeParamDoc) -> Value {
     let mut value = Map::new();
     value.insert("name".to_string(), json!(type_param.name));
@@ -296,7 +318,7 @@ fn normalize_doc_file_path(file_path: &str) -> String {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::model::{ApiDocMember, ApiDocTag, ApiParamDoc, ApiReturnDoc};
+    use crate::model::{ApiDocMember, ApiDocTag, ApiParamDoc, ApiReturnDoc, ApiThrowsDoc};
 
     #[test]
     fn generated_docs_data_counts_and_normalizes_paths() {
@@ -318,6 +340,10 @@ mod tests {
                     default_value: None,
                 }],
                 returns: None,
+                throws: vec![ApiThrowsDoc {
+                    type_annotation: Some("RangeError".to_string()),
+                    description: "When value is out of range.".to_string(),
+                }],
                 examples: vec![],
                 tags: vec![ApiDocTag { tag: "deprecated".to_string(), value: String::new() }],
                 private: false,
@@ -344,6 +370,13 @@ mod tests {
         assert_eq!(value["modules"][0]["file"], "src/math.ts");
         assert_eq!(value["modules"][0]["entries"][0]["file"], "src/math.ts");
         assert_eq!(value["modules"][0]["entries"][0]["endLine"], 10);
+        assert_eq!(
+            value["modules"][0]["entries"][0]["throws"][0],
+            json!({
+                "type": "RangeError",
+                "description": "When value is out of range."
+            })
+        );
     }
 
     #[test]
@@ -386,6 +419,7 @@ mod tests {
                 description: "A combinator.".to_string(),
                 params: vec![],
                 returns: None,
+                throws: vec![],
                 examples: vec![],
                 tags: vec![],
                 private: false,
@@ -428,6 +462,7 @@ mod tests {
                 description: "Make.".to_string(),
                 params: vec![],
                 returns: None,
+                throws: vec![],
                 examples: vec![],
                 tags: vec![],
                 private: false,
@@ -494,6 +529,7 @@ mod tests {
                         params: vec![],
                         type_parameters: vec![],
                         returns: None,
+                        throws: vec![],
                         members: vec![],
                         optional: false,
                         readonly: false,
@@ -505,6 +541,7 @@ mod tests {
                         end_line: 3,
                     }],
                 }),
+                throws: vec![],
                 examples: vec![],
                 tags: vec![],
                 private: false,
@@ -544,6 +581,7 @@ mod tests {
                 description: "Request options.".to_string(),
                 params: vec![],
                 returns: None,
+                throws: vec![],
                 examples: vec![],
                 tags: vec![],
                 private: false,
@@ -564,6 +602,7 @@ mod tests {
                     params: vec![],
                     type_parameters: vec![],
                     returns: None,
+                    throws: vec![],
                     members: vec![ApiDocMember {
                         name: "timeout".to_string(),
                         kind: "property".to_string(),
@@ -574,6 +613,7 @@ mod tests {
                         params: vec![],
                         type_parameters: vec![],
                         returns: None,
+                        throws: vec![],
                         members: vec![],
                         optional: true,
                         readonly: false,
@@ -622,6 +662,7 @@ mod tests {
                 description: "Arguments.".to_string(),
                 params: vec![],
                 returns: None,
+                throws: vec![],
                 examples: vec![],
                 tags: vec![],
                 private: false,
@@ -648,6 +689,7 @@ mod tests {
                     }],
                     type_parameters: vec![],
                     returns: None,
+                    throws: vec![],
                     members: vec![],
                     optional: false,
                     readonly: true,
@@ -689,6 +731,7 @@ mod tests {
                 description: "Argument schema.".to_string(),
                 params: vec![],
                 returns: None,
+                throws: vec![],
                 examples: vec![],
                 tags: vec![],
                 private: false,
@@ -724,6 +767,10 @@ mod tests {
                         description: "Parsed value.".to_string(),
                         members: Vec::new(),
                     }),
+                    throws: vec![ApiThrowsDoc {
+                        type_annotation: Some("ParseError".to_string()),
+                        description: "When the raw value cannot be parsed.".to_string(),
+                    }],
                     members: vec![],
                     optional: true,
                     readonly: false,
@@ -753,6 +800,8 @@ mod tests {
         assert_eq!(member["typeParameters"][0]["description"], "Parsed value type.");
         assert_eq!(member["returns"]["type"], "any");
         assert_eq!(member["returns"]["description"], "Parsed value.");
+        assert_eq!(member["throws"][0]["type"], "ParseError");
+        assert_eq!(member["throws"][0]["description"], "When the raw value cannot be parsed.");
         assert_eq!(member["optional"], true);
     }
 
@@ -780,6 +829,7 @@ mod tests {
                     description: String::new(),
                     members: Vec::new(),
                 }),
+                throws: vec![],
                 examples: vec![],
                 tags: vec![],
                 private: false,
@@ -841,6 +891,7 @@ mod tests {
                     description: String::new(),
                     members: Vec::new(),
                 }),
+                throws: vec![],
                 examples: vec![],
                 tags: vec![],
                 private: false,
@@ -884,6 +935,7 @@ mod tests {
                 description: "Default adapter.".to_string(),
                 params: vec![],
                 returns: None,
+                throws: vec![],
                 examples: vec![],
                 tags: vec![],
                 private: false,
@@ -909,6 +961,7 @@ mod tests {
                     params: vec![],
                     type_parameters: vec![],
                     returns: None,
+                    throws: vec![],
                     members: vec![],
                     optional: false,
                     readonly: false,

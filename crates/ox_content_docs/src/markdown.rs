@@ -11,7 +11,9 @@ use phf::{phf_map, phf_set};
 use regex::Regex;
 use serde::{Deserialize, Serialize};
 
-use crate::model::{ApiDocEntry, ApiDocMember, ApiDocModule, ApiReturnDoc};
+use crate::model::{
+    ApiDocEntry, ApiDocMember, ApiDocModule, ApiDocTag, ApiReturnDoc, ApiThrowsDoc,
+};
 #[allow(unused_imports)]
 use crate::profile_span;
 use crate::string_builder::{join2, join3, join4, join5, StringBuilder};
@@ -2135,11 +2137,48 @@ fn is_lifecycle_tag(tag: &str) -> bool {
     matches!(tag, "deprecated" | "experimental")
 }
 
-/// True when a tag is rendered as a structured element (lifecycle callout / Since)
-/// and therefore must not also appear in the generic tag list. Shared by both
-/// renderers so the generic-tag exclusion stays consistent.
+fn is_throws_tag(tag: &str) -> bool {
+    matches!(tag, "throws" | "exception")
+}
+
+fn rendered_throws<'a>(throws: &'a [ApiThrowsDoc], tags: &[ApiDocTag]) -> Cow<'a, [ApiThrowsDoc]> {
+    if !throws.is_empty() {
+        return Cow::Borrowed(throws);
+    }
+
+    Cow::Owned(tags.iter().filter_map(api_throws_from_tag).collect())
+}
+
+fn api_throws_from_tag(tag: &ApiDocTag) -> Option<ApiThrowsDoc> {
+    if !is_throws_tag(&tag.tag) {
+        return None;
+    }
+    let value = tag.value.trim();
+    if value.is_empty() {
+        return None;
+    }
+    if let Some((type_annotation, description)) = parse_throws_tag_value(value) {
+        return Some(ApiThrowsDoc { type_annotation: Some(type_annotation), description });
+    }
+    Some(ApiThrowsDoc { type_annotation: None, description: value.to_string() })
+}
+
+fn parse_throws_tag_value(value: &str) -> Option<(String, String)> {
+    let rest = value.strip_prefix('{')?;
+    let end = rest.find('}')?;
+    let type_annotation = rest[..end].trim();
+    if type_annotation.is_empty() {
+        return None;
+    }
+    let description = rest[end + 1..].trim().trim_start_matches('-').trim().to_string();
+    Some((type_annotation.to_string(), description))
+}
+
+/// True when a tag is rendered as a structured element (lifecycle callout / Since
+/// / Throws) and therefore must not also appear in the generic tag list. Shared
+/// by both renderers so the generic-tag exclusion stays consistent.
 fn is_structured_tag(name: &str) -> bool {
-    is_lifecycle_tag(name) || SINCE_TAGS.contains(&name)
+    is_lifecycle_tag(name) || SINCE_TAGS.contains(&name) || is_throws_tag(name)
 }
 
 fn get_entry_badges(entry: &ApiDocEntry) -> Vec<EntryBadge> {
