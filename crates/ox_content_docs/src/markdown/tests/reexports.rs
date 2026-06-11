@@ -8,24 +8,19 @@ fn typedoc_dedupes_cross_entrypoint_reexports_to_canonical_page() {
     // it via a References section.
     let docs = vec![
         ApiDocModule {
-            description: String::new(),
             file: "context".to_string(),
             source_path: "/repo/src/context.ts".to_string(),
-            examples: vec![],
-            tags: vec![],
             entries: vec![test_entry(
                 "createCommandContext",
                 "function",
                 "/repo/src/context.ts",
                 "Creates a command context.",
             )],
+            ..ApiDocModule::default()
         },
         ApiDocModule {
-            description: String::new(),
             file: "default".to_string(),
             source_path: "/repo/src/index.ts".to_string(),
-            examples: vec![],
-            tags: vec![],
             entries: vec![
                 test_entry(
                     "createCommandContext",
@@ -40,19 +35,18 @@ fn typedoc_dedupes_cross_entrypoint_reexports_to_canonical_page() {
                     "Uses {@link createCommandContext}.",
                 ),
             ],
+            ..ApiDocModule::default()
         },
         ApiDocModule {
-            description: String::new(),
             file: "plugin".to_string(),
             source_path: "/repo/src/plugin.ts".to_string(),
-            examples: vec![],
-            tags: vec![],
             entries: vec![test_entry(
                 "createCommandContext",
                 "function",
                 "/repo/src/context.ts",
                 "Creates a command context.",
             )],
+            ..ApiDocModule::default()
         },
     ];
 
@@ -93,12 +87,10 @@ fn typedoc_references_section_uses_typedoc_layout() {
     // a TypeDoc-style References section: `### Name` headings, `Re-exports`
     // links, and a `***` separator between entries.
     let make = |module: &str, source: &str, entries: Vec<ApiDocEntry>| ApiDocModule {
-        description: String::new(),
         file: module.to_string(),
         source_path: source.to_string(),
-        examples: vec![],
-        tags: vec![],
         entries,
+        ..ApiDocModule::default()
     };
     let docs = vec![
         make(
@@ -146,26 +138,22 @@ fn typedoc_references_collapse_overloads_to_one_entry() {
     // is referenced once, not once per overload.
     let docs = vec![
         ApiDocModule {
-            description: String::new(),
             file: "definition".to_string(),
             source_path: "/repo/src/definition.ts".to_string(),
-            examples: vec![],
-            tags: vec![],
             entries: vec![
                 test_entry("define", "function", "/repo/src/definition.ts", "Define."),
                 test_entry("define", "function", "/repo/src/definition.ts", "Define."),
             ],
+            ..ApiDocModule::default()
         },
         ApiDocModule {
-            description: String::new(),
             file: "default".to_string(),
             source_path: "/repo/src/index.ts".to_string(),
-            examples: vec![],
-            tags: vec![],
             entries: vec![
                 test_entry("define", "function", "/repo/src/definition.ts", "Define."),
                 test_entry("define", "function", "/repo/src/definition.ts", "Define."),
             ],
+            ..ApiDocModule::default()
         },
     ];
 
@@ -189,20 +177,16 @@ fn typedoc_dedupe_without_source_path_uses_first_module() {
     // first module (sorted) that exports it.
     let docs = vec![
         ApiDocModule {
-            description: String::new(),
             file: "default".to_string(),
             source_path: "/repo/src/index.ts".to_string(),
-            examples: vec![],
-            tags: vec![],
             entries: vec![test_entry("Command", "interface", "/repo/src/command.ts", "A command.")],
+            ..ApiDocModule::default()
         },
         ApiDocModule {
-            description: String::new(),
             file: "plugin".to_string(),
             source_path: "/repo/src/plugin.ts".to_string(),
-            examples: vec![],
-            tags: vec![],
             entries: vec![test_entry("Command", "interface", "/repo/src/command.ts", "A command.")],
+            ..ApiDocModule::default()
         },
     ];
 

@@ -12,7 +12,7 @@ fn typedoc_overloads_render_all_call_signatures() {
     with_extension.returns = Some(ApiReturnDoc {
         type_annotation: "Promise<string | undefined>".to_string(),
         description: "A rendered usage or undefined.".to_string(),
-        members: Vec::new(),
+        ..ApiReturnDoc::default()
     });
     let docs = overload_module(vec![
         with_extension,

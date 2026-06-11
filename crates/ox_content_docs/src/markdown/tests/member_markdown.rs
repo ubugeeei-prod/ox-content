@@ -7,30 +7,16 @@ fn markdown_property_display_format_controls_property_groups() {
         name: "name".to_string(),
         kind: "property".to_string(),
         description: "Command name.".to_string(),
-        signature: None,
         type_annotation: Some("string".to_string()),
-        default_value: None,
-        params: vec![],
-        type_parameters: vec![],
-        returns: None,
-        throws: vec![],
-        members: vec![],
-        optional: false,
         readonly: true,
-        r#static: false,
-        private: false,
-        tags: vec![],
-        implementation_of: vec![],
         line: 2,
         end_line: 2,
+        ..ApiDocMember::default()
     }];
     let docs = vec![ApiDocModule {
-        description: String::new(),
         file: "mod".to_string(),
-        source_path: String::new(),
-        examples: vec![],
-        tags: vec![],
         entries: vec![entry],
+        ..ApiDocModule::default()
     }];
 
     let list_markdown = generate_markdown(
@@ -68,30 +54,17 @@ fn markdown_renders_member_default_values() {
         name: "timeout".to_string(),
         kind: "property".to_string(),
         description: "Request timeout.".to_string(),
-        signature: None,
         type_annotation: Some("number".to_string()),
         default_value: Some("5000".to_string()),
-        params: vec![],
-        type_parameters: vec![],
-        returns: None,
-        throws: vec![],
-        members: vec![],
         optional: true,
-        readonly: false,
-        r#static: false,
-        private: false,
-        tags: vec![],
-        implementation_of: vec![],
         line: 2,
         end_line: 2,
+        ..ApiDocMember::default()
     }];
     let docs = vec![ApiDocModule {
-        description: String::new(),
         file: "mod".to_string(),
-        source_path: String::new(),
-        examples: vec![],
-        tags: vec![],
         entries: vec![entry],
+        ..ApiDocModule::default()
     }];
 
     let html = generate_markdown(
@@ -130,35 +103,20 @@ fn markdown_member_parameters_follow_parameters_format() {
         kind: "method".to_string(),
         description: "Runs the command.".to_string(),
         signature: Some("run(ctx: Context): Promise<void>".to_string()),
-        type_annotation: None,
-        default_value: None,
         params: vec![ApiParamDoc {
             name: "ctx".to_string(),
             type_annotation: "Context".to_string(),
             description: "Runtime context.".to_string(),
-            optional: false,
-            default_value: None,
+            ..ApiParamDoc::default()
         }],
-        type_parameters: vec![],
-        returns: None,
-        throws: vec![],
-        members: vec![],
-        optional: false,
-        readonly: false,
-        r#static: false,
-        private: false,
-        tags: vec![],
-        implementation_of: vec![],
         line: 2,
         end_line: 2,
+        ..ApiDocMember::default()
     }];
     let docs = vec![ApiDocModule {
-        description: String::new(),
         file: "mod".to_string(),
-        source_path: String::new(),
-        examples: vec![],
-        tags: vec![],
         entries: vec![entry],
+        ..ApiDocModule::default()
     }];
 
     let list_markdown = generate_markdown(

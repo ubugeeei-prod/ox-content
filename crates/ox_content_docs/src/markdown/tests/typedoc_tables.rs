@@ -3,11 +3,7 @@ use super::*;
 #[test]
 fn typedoc_module_index_resolves_links_in_table_cells() {
     let docs = vec![ApiDocModule {
-        description: String::new(),
         file: "default".to_string(),
-        source_path: String::new(),
-        examples: vec![],
-        tags: vec![],
         entries: vec![
             test_entry(
                 "Args",
@@ -17,6 +13,7 @@ fn typedoc_module_index_resolves_links_in_table_cells() {
             ),
             test_entry("ArgSchema", "interface", "/repo/src/args.ts", "A schema."),
         ],
+        ..ApiDocModule::default()
     }];
 
     let out = generate_markdown(
@@ -36,15 +33,12 @@ fn typedoc_module_index_resolves_links_in_table_cells() {
 #[test]
 fn typedoc_module_index_collapses_overloads_to_one_row() {
     let docs = vec![ApiDocModule {
-        description: String::new(),
         file: "default".to_string(),
-        source_path: String::new(),
-        examples: vec![],
-        tags: vec![],
         entries: vec![
             test_entry("cli", "function", "/repo/src/cli.ts", "Run the command."),
             test_entry("cli", "function", "/repo/src/cli.ts", "Run the command."),
         ],
+        ..ApiDocModule::default()
     }];
 
     let out = generate_markdown(
@@ -62,12 +56,9 @@ fn typedoc_module_index_collapses_overloads_to_one_row() {
 #[test]
 fn typedoc_module_index_escapes_pipes_in_table_cells() {
     let docs = vec![ApiDocModule {
-        description: String::new(),
         file: "default".to_string(),
-        source_path: String::new(),
-        examples: vec![],
-        tags: vec![],
         entries: vec![test_entry("toUnion", "function", "/repo/src/u.ts", "Returns A | B.")],
+        ..ApiDocModule::default()
     }];
 
     let out = generate_markdown(
@@ -86,11 +77,7 @@ fn typedoc_module_index_escapes_pipes_in_table_cells() {
 fn typedoc_path_strategy_uses_clean_base_path_and_module_scope() {
     let docs = vec![
         ApiDocModule {
-            description: String::new(),
             file: "default".to_string(),
-            source_path: String::new(),
-            examples: vec![],
-            tags: vec![],
             entries: vec![
                 test_entry("Command", "interface", "/repo/src/default.ts", "Default command."),
                 test_entry(
@@ -100,17 +87,15 @@ fn typedoc_path_strategy_uses_clean_base_path_and_module_scope() {
                     "Runs {@link Command}.",
                 ),
             ],
+            ..ApiDocModule::default()
         },
         ApiDocModule {
-            description: String::new(),
             file: "plugin".to_string(),
-            source_path: String::new(),
-            examples: vec![],
-            tags: vec![],
             entries: vec![
                 test_entry("Command", "interface", "/repo/src/plugin.ts", "Plugin command."),
                 test_entry("runPlugin", "function", "/repo/src/plugin.ts", "Runs {@link Command}."),
             ],
+            ..ApiDocModule::default()
         },
     ];
 

@@ -4,7 +4,7 @@ use napi_derive::napi;
 
 /// Normalized parameter documentation used by generated API docs.
 #[napi(object)]
-#[derive(Clone)]
+#[derive(Clone, Default)]
 pub struct JsDocParam {
     pub name: String,
     pub r#type: String,
@@ -15,7 +15,7 @@ pub struct JsDocParam {
 
 /// Normalized return documentation used by generated API docs.
 #[napi(object)]
-#[derive(Clone)]
+#[derive(Clone, Default)]
 pub struct JsDocReturn {
     pub r#type: String,
     pub description: String,
@@ -24,7 +24,7 @@ pub struct JsDocReturn {
 
 /// Exception/error documentation used by generated API docs.
 #[napi(object)]
-#[derive(Clone)]
+#[derive(Clone, Default)]
 pub struct JsDocThrows {
     pub r#type: Option<String>,
     pub description: String,
@@ -32,7 +32,7 @@ pub struct JsDocThrows {
 
 /// Type parameter documentation (`<T extends C = D>`) used by generated API docs.
 #[napi(object)]
-#[derive(Clone)]
+#[derive(Clone, Default)]
 pub struct JsTypeParam {
     pub name: String,
     pub constraint: Option<String>,
@@ -65,6 +65,32 @@ pub struct JsDocMember {
     pub end_line: u32,
 }
 
+impl Default for JsDocMember {
+    fn default() -> Self {
+        Self {
+            name: String::new(),
+            kind: String::new(),
+            description: String::new(),
+            signature: None,
+            r#type: None,
+            r#default: None,
+            params: None,
+            type_parameters: None,
+            returns: None,
+            throws: None,
+            members: None,
+            optional: None,
+            readonly: None,
+            r#static: None,
+            private: None,
+            tags: None,
+            implementation_of: None,
+            line: 1,
+            end_line: 1,
+        }
+    }
+}
+
 /// Normalized documentation entry used by generated API docs.
 #[napi(object)]
 #[derive(Clone)]
@@ -91,9 +117,34 @@ pub struct JsDocEntry {
     pub type_parameters: Option<Vec<JsTypeParam>>,
 }
 
+impl Default for JsDocEntry {
+    fn default() -> Self {
+        Self {
+            name: String::new(),
+            kind: String::new(),
+            description: String::new(),
+            params: None,
+            returns: None,
+            throws: None,
+            examples: None,
+            tags: None,
+            private: false,
+            file: String::new(),
+            line: 1,
+            end_line: 1,
+            signature: None,
+            extends: None,
+            implements: None,
+            has_body: false,
+            members: None,
+            type_parameters: None,
+        }
+    }
+}
+
 /// Navigation item emitted for generated documentation.
 #[napi(object)]
-#[derive(Clone)]
+#[derive(Clone, Default)]
 pub struct JsDocsNavItem {
     pub title: String,
     pub path: String,
@@ -126,7 +177,7 @@ pub struct JsDocsNavOptions {
 
 /// Ordered JSDoc tag used by generated API Markdown.
 #[napi(object)]
-#[derive(Clone)]
+#[derive(Clone, Default)]
 pub struct JsDocsMarkdownTag {
     pub tag: String,
     pub value: String,
@@ -159,9 +210,34 @@ pub struct JsDocsMarkdownEntry {
     pub type_parameters: Option<Vec<JsTypeParam>>,
 }
 
+impl Default for JsDocsMarkdownEntry {
+    fn default() -> Self {
+        Self {
+            name: String::new(),
+            kind: String::new(),
+            description: String::new(),
+            params: None,
+            returns: None,
+            throws: None,
+            examples: None,
+            tags: None,
+            private: false,
+            file: String::new(),
+            line: 1,
+            end_line: 1,
+            signature: None,
+            extends: None,
+            implements: None,
+            has_body: None,
+            members: None,
+            type_parameters: None,
+        }
+    }
+}
+
 /// Extracted docs for one source file used by generated API Markdown.
 #[napi(object)]
-#[derive(Clone)]
+#[derive(Clone, Default)]
 pub struct JsDocsMarkdownModule {
     pub file: String,
     /// Module-level description from the entry file's `@module` / leading JSDoc.
@@ -179,7 +255,7 @@ pub struct JsDocsMarkdownModule {
 
 /// Extracted docs for one source file returned to JavaScript callers.
 #[napi(object)]
-#[derive(Clone)]
+#[derive(Clone, Default)]
 pub struct JsExtractedDocsModule {
     pub file: String,
     pub entries: Vec<JsDocEntry>,

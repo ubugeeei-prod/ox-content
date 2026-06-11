@@ -31,7 +31,7 @@ fn typedoc_dts_overloads_without_implementation_render_all() {
 fn typedoc_renders_experimental_tag_as_warning_alert() {
     let mut entry =
         test_entry("string", "function", "/repo/src/combinators.ts", "Create a string schema.");
-    entry.tags = vec![ApiDocTag { tag: "experimental".to_string(), value: String::new() }];
+    entry.tags = vec![ApiDocTag { tag: "experimental".to_string(), ..Default::default() }];
     let out = generate_markdown(&lifecycle_module(entry), &markdown_typedoc_options());
     let page = out.get("combinators/functions/string.md").unwrap();
 
@@ -65,7 +65,7 @@ fn typedoc_keeps_non_structured_tags_in_tags_section() {
     entry.tags = vec![
         ApiDocTag { tag: "see".to_string(), value: "related".to_string() },
         ApiDocTag { tag: "since".to_string(), value: "1.0.0".to_string() },
-        ApiDocTag { tag: "experimental".to_string(), value: String::new() },
+        ApiDocTag { tag: "experimental".to_string(), ..Default::default() },
     ];
     let out = generate_markdown(&lifecycle_module(entry), &markdown_typedoc_options());
     let page = out.get("combinators/functions/run.md").unwrap();
@@ -86,22 +86,10 @@ fn typedoc_marks_experimental_members_in_table() {
         name: "minLength".to_string(),
         kind: "property".to_string(),
         description: "Minimum string length.".to_string(),
-        signature: None,
         type_annotation: Some("number".to_string()),
-        default_value: None,
-        params: vec![],
-        type_parameters: vec![],
-        returns: None,
-        throws: vec![],
-        members: vec![],
         optional: true,
-        readonly: false,
-        r#static: false,
-        private: false,
-        tags: vec![ApiDocTag { tag: "experimental".to_string(), value: String::new() }],
-        implementation_of: vec![],
-        line: 1,
-        end_line: 1,
+        tags: vec![ApiDocTag { tag: "experimental".to_string(), ..Default::default() }],
+        ..ApiDocMember::default()
     }];
     let out = generate_markdown(&lifecycle_module(entry), &markdown_typedoc_options());
     let page = out.get("combinators/interfaces/StringOptions.md").unwrap();
@@ -155,22 +143,10 @@ fn typedoc_renders_member_since_inline() {
         name: "entry".to_string(),
         kind: "property".to_string(),
         description: "Whether this is an entry command.".to_string(),
-        signature: None,
         type_annotation: Some("boolean".to_string()),
-        default_value: None,
-        params: vec![],
-        type_parameters: vec![],
-        returns: None,
-        throws: vec![],
-        members: vec![],
         optional: true,
-        readonly: false,
-        r#static: false,
-        private: false,
         tags: vec![ApiDocTag { tag: "since".to_string(), value: "v0.27.0".to_string() }],
-        implementation_of: vec![],
-        line: 1,
-        end_line: 1,
+        ..ApiDocMember::default()
     }];
     let out = generate_markdown(&lifecycle_module(entry), &markdown_typedoc_options());
     let page = out.get("combinators/interfaces/PluginOptions.md").unwrap();
@@ -183,13 +159,12 @@ fn typedoc_renders_module_level_experimental_alert() {
     let docs = vec![ApiDocModule {
         description: "Parser combinator entry point.".to_string(),
         file: "combinators".to_string(),
-        source_path: String::new(),
-        examples: vec![],
         tags: vec![ApiDocTag {
             tag: "experimental".to_string(),
             value: "This module is experimental and may change in future versions.".to_string(),
         }],
         entries: vec![test_entry("string", "function", "/repo/src/combinators.ts", "S.")],
+        ..ApiDocModule::default()
     }];
     let out = generate_markdown(&docs, &markdown_typedoc_options());
     let index = out.get("combinators/index.md").unwrap();

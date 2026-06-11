@@ -52,7 +52,7 @@ fn typedoc_html_overloads_render_all_call_signatures() {
 fn typedoc_html_badges_include_experimental_and_version() {
     let mut entry = test_entry("widget", "function", "/repo/src/w.ts", "A widget.");
     entry.tags = vec![
-        ApiDocTag { tag: "experimental".to_string(), value: String::new() },
+        ApiDocTag { tag: "experimental".to_string(), ..Default::default() },
         ApiDocTag { tag: "version".to_string(), value: "1.2.3".to_string() },
     ];
     let out = generate_markdown(&lifecycle_module(entry), &html_typedoc_options());
@@ -90,25 +90,12 @@ fn typedoc_html_member_table_shows_lifecycle_and_since_markers() {
         name: "mode".to_string(),
         kind: "property".to_string(),
         description: "The mode.".to_string(),
-        signature: None,
         type_annotation: Some("string".to_string()),
-        default_value: None,
-        params: vec![],
-        type_parameters: vec![],
-        returns: None,
-        throws: vec![],
-        members: vec![],
-        optional: false,
-        readonly: false,
-        r#static: false,
-        private: false,
         tags: vec![
-            ApiDocTag { tag: "deprecated".to_string(), value: String::new() },
+            ApiDocTag { tag: "deprecated".to_string(), ..Default::default() },
             ApiDocTag { tag: "since".to_string(), value: "1.0.0".to_string() },
         ],
-        implementation_of: vec![],
-        line: 1,
-        end_line: 1,
+        ..ApiDocMember::default()
     }];
     let out = generate_markdown(&lifecycle_module(entry), &html_typedoc_options());
     let page = out.get("combinators/interfaces/Options.md").unwrap();
@@ -226,7 +213,7 @@ fn typedoc_html_renders_function_valued_property_return_once() {
 #[test]
 fn typedoc_html_module_index_shows_lifecycle_badges() {
     let mut docs = lifecycle_module(test_entry("run", "function", "/repo/src/run.ts", "Run."));
-    docs[0].tags = vec![ApiDocTag { tag: "experimental".to_string(), value: String::new() }];
+    docs[0].tags = vec![ApiDocTag { tag: "experimental".to_string(), ..Default::default() }];
     let out = generate_markdown(&docs, &html_typedoc_options());
     let module_index = out.get("combinators/index.md").unwrap();
 

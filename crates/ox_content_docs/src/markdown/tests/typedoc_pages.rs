@@ -3,72 +3,36 @@ use super::*;
 #[test]
 fn typedoc_path_strategy_emits_per_symbol_pages_and_links() {
     let docs = vec![ApiDocModule {
-        description: String::new(),
         file: "default".to_string(),
-        source_path: String::new(),
-        examples: vec![],
-        tags: vec![],
         entries: vec![
             ApiDocEntry {
                 name: "cli".to_string(),
                 kind: "function".to_string(),
                 description: "Run with {@link CliOptions} and {@linkcode CliOptions.usageSilent}."
                     .to_string(),
-                params: vec![],
-                returns: None,
-                throws: vec![],
-                examples: vec![],
-                tags: vec![],
-                private: false,
                 file: "/repo/src/cli.ts".to_string(),
-                line: 1,
                 end_line: 10,
                 signature: Some("export function cli(options: CliOptions): void".to_string()),
-                extends: vec![],
-                implements: vec![],
-                has_body: false,
-                members: vec![],
-                type_parameters: vec![],
+                ..ApiDocEntry::default()
             },
             ApiDocEntry {
                 name: "CliOptions".to_string(),
                 kind: "interface".to_string(),
                 description: "CLI options.".to_string(),
-                params: vec![],
-                returns: None,
-                throws: vec![],
-                examples: vec![],
-                tags: vec![],
-                private: false,
                 file: "/repo/src/types.ts".to_string(),
-                line: 1,
                 end_line: 20,
                 signature: Some("export interface CliOptions".to_string()),
-                extends: vec![],
-                implements: vec![],
-                has_body: false,
                 members: vec![ApiDocMember {
                     name: "usageSilent".to_string(),
                     kind: "property".to_string(),
                     description: "Suppress usage output.".to_string(),
-                    signature: None,
                     type_annotation: Some("boolean".to_string()),
-                    default_value: None,
-                    params: vec![],
-                    type_parameters: vec![],
-                    returns: None,
-                    throws: vec![],
-                    members: vec![],
                     optional: true,
-                    readonly: false,
-                    r#static: false,
-                    private: false,
-                    tags: vec![],
-                    implementation_of: vec![],
                     line: 5,
                     end_line: 5,
+                    ..ApiDocMember::default()
                 }],
-                type_parameters: vec![],
+                ..ApiDocEntry::default()
             },
             test_entry("Plugin", "type", "/repo/src/plugin.ts", "Plugin type."),
             test_entry(
@@ -78,6 +42,7 @@ fn typedoc_path_strategy_emits_per_symbol_pages_and_links() {
                 "Default options.",
             ),
         ],
+        ..ApiDocModule::default()
     }];
 
     let markdown = generate_markdown(
@@ -119,7 +84,7 @@ fn typedoc_type_alias_renders_concrete_function_metadata() {
     entry.returns = Some(ApiReturnDoc {
         type_annotation: "Awaitable<string | void>".to_string(),
         description: "CLI output.".to_string(),
-        members: Vec::new(),
+        ..ApiReturnDoc::default()
     });
 
     let mut docs = type_link_module(entry);
@@ -128,23 +93,11 @@ fn typedoc_type_alias_renders_concrete_function_metadata() {
             name: "CommandContext".to_string(),
             kind: "interface".to_string(),
             description: "Command context.".to_string(),
-            params: Vec::new(),
-            returns: None,
-            throws: vec![],
-            examples: Vec::new(),
-            tags: Vec::new(),
-            private: false,
             file: "/repo/src/context.ts".to_string(),
-            line: 1,
-            end_line: 1,
             signature: Some(
                 "export interface CommandContext<G = DefaultGunshiParams> {}".to_string(),
             ),
-            extends: Vec::new(),
-            implements: Vec::new(),
-            has_body: false,
-            members: Vec::new(),
-            type_parameters: Vec::new(),
+            ..ApiDocEntry::default()
         });
         module.entries.push(type_stub("CommandContextCore"));
     }
@@ -174,21 +127,18 @@ fn typedoc_type_alias_without_returns_tag_renders_return_section() {
             name: "ctx".to_string(),
             type_annotation: "Readonly<CommandContext<G>>".to_string(),
             description: "The command context.".to_string(),
-            optional: false,
-            default_value: None,
+            ..ApiParamDoc::default()
         },
         ApiParamDoc {
             name: "cmd".to_string(),
             type_annotation: "Readonly<Command<G>>".to_string(),
             description: "The command.".to_string(),
-            optional: false,
-            default_value: None,
+            ..ApiParamDoc::default()
         },
     ];
     entry.returns = Some(ApiReturnDoc {
         type_annotation: "Awaitable<void>".to_string(),
-        description: String::new(),
-        members: Vec::new(),
+        ..ApiReturnDoc::default()
     });
 
     let mut docs = type_link_module(entry);

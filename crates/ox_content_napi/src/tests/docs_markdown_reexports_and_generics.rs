@@ -8,38 +8,22 @@ fn generate_docs_markdown_dedupes_cross_entrypoint_reexports() {
         name: name.to_string(),
         kind: "function".to_string(),
         description: "Creates a command context.".to_string(),
-        params: None,
-        returns: None,
-        throws: None,
-        examples: None,
-        tags: None,
-        private: false,
         file: "/repo/src/context.ts".to_string(),
-        line: 1,
-        end_line: 1,
         signature: Some("export function createCommandContext(): void".to_string()),
-        extends: None,
-        implements: None,
-        has_body: None,
-        members: None,
-        type_parameters: None,
+        ..Default::default()
     };
     let docs = vec![
         JsDocsMarkdownModule {
-            description: None,
             file: "context".to_string(),
             source_path: Some("/repo/src/context.ts".to_string()),
-            examples: None,
-            tags: None,
             entries: vec![entry("createCommandContext")],
+            ..Default::default()
         },
         JsDocsMarkdownModule {
-            description: None,
             file: "default".to_string(),
             source_path: Some("/repo/src/index.ts".to_string()),
-            examples: None,
-            tags: None,
             entries: vec![entry("createCommandContext")],
+            ..Default::default()
         },
     ];
 
@@ -47,11 +31,8 @@ fn generate_docs_markdown_dedupes_cross_entrypoint_reexports() {
         docs,
         Some(JsDocsMarkdownOptions {
             group_by: Some("file".to_string()),
-            github_url: None,
             link_style: Some("markdown".to_string()),
-            base_path: None,
             path_strategy: Some("typedoc".to_string()),
-            render_style: None,
             ..Default::default()
         }),
     );
@@ -64,45 +45,29 @@ fn generate_docs_markdown_dedupes_cross_entrypoint_reexports() {
 #[test]
 fn generate_docs_markdown_renders_type_parameters() {
     let docs = vec![JsDocsMarkdownModule {
-        description: None,
         file: "default".to_string(),
-        source_path: None,
-        examples: None,
-        tags: None,
         entries: vec![JsDocsMarkdownEntry {
             name: "make".to_string(),
             kind: "function".to_string(),
             description: "Make a thing.".to_string(),
-            params: None,
-            returns: None,
-            throws: None,
-            examples: None,
-            tags: None,
-            private: false,
             file: "/repo/src/make.ts".to_string(),
-            line: 1,
-            end_line: 1,
             signature: Some("export function make<G>(): G".to_string()),
-            extends: None,
-            implements: None,
-            has_body: None,
-            members: None,
             type_parameters: Some(vec![JsTypeParam {
                 name: "G".to_string(),
                 constraint: Some("Base".to_string()),
                 r#default: Some("Default".to_string()),
                 description: "The thing type.".to_string(),
             }]),
+            ..Default::default()
         }],
+        ..Default::default()
     }];
 
     let markdown = generate_docs_markdown(
         docs,
         Some(JsDocsMarkdownOptions {
             group_by: Some("file".to_string()),
-            github_url: None,
             link_style: Some("markdown".to_string()),
-            base_path: None,
             path_strategy: Some("typedoc".to_string()),
             render_style: Some("markdown".to_string()),
             ..Default::default()
@@ -122,60 +87,34 @@ fn generate_docs_markdown_collapses_multiline_linked_type_parameter_defaults() {
         JsDocsMarkdownEntry {
             name: name.to_string(),
             kind: kind.to_string(),
-            description: String::new(),
-            params: None,
-            returns: None,
-            throws: None,
-            examples: None,
-            tags: None,
-            private: false,
             file: format!("/repo/src/{name}.ts"),
-            line: 1,
-            end_line: 1,
             signature: Some(signature.to_string()),
-            extends: None,
-            implements: None,
-            has_body: None,
-            members: None,
-            type_parameters: None,
+            ..Default::default()
         }
     }
 
     let mut plugin = entry("plugin", "function", "export function plugin(): void");
     plugin.type_parameters = Some(vec![
-        JsTypeParam {
-            name: "Extension".to_string(),
-            constraint: None,
-            r#default: None,
-            description: String::new(),
-        },
-        JsTypeParam {
-            name: "ResolvedDepExtensions".to_string(),
-            constraint: None,
-            r#default: None,
-            description: String::new(),
-        },
+        JsTypeParam { name: "Extension".to_string(), ..Default::default() },
+        JsTypeParam { name: "ResolvedDepExtensions".to_string(), ..Default::default() },
         JsTypeParam {
             name: "PluginExt".to_string(),
             constraint: Some("PluginExtension<Extension, DefaultGunshiParams>".to_string()),
             r#default: Some(
                 "PluginExtension<\n    Extension,\n    ResolvedDepExtensions\n  >".to_string(),
             ),
-            description: String::new(),
+            ..Default::default()
         },
     ]);
 
     let docs = vec![JsDocsMarkdownModule {
-        description: None,
         file: "default".to_string(),
-        source_path: None,
-        examples: None,
-        tags: None,
         entries: vec![
             plugin,
             entry("PluginExtension", "type", "export type PluginExtension = unknown"),
             entry("DefaultGunshiParams", "type", "export type DefaultGunshiParams = unknown"),
         ],
+        ..Default::default()
     }];
 
     let markdown = generate_docs_markdown(

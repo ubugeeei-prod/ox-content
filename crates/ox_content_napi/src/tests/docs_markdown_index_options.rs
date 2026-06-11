@@ -6,31 +6,15 @@ fn generate_docs_markdown_group_order_reorders_module_index() {
         JsDocsMarkdownEntry {
             name: name.to_string(),
             kind: kind.to_string(),
-            description: String::new(),
-            params: None,
-            returns: None,
-            throws: None,
-            examples: None,
-            tags: None,
-            private: false,
             file: format!("/repo/src/{name}.ts"),
-            line: 1,
-            end_line: 1,
             signature: Some(format!("export declare const {name}: unknown")),
-            extends: None,
-            implements: None,
-            has_body: None,
-            members: None,
-            type_parameters: None,
+            ..Default::default()
         }
     }
     let docs = vec![JsDocsMarkdownModule {
-        description: None,
         file: "default".to_string(),
-        source_path: None,
-        examples: None,
-        tags: None,
         entries: vec![entry("alpha", "function"), entry("VERSION", "variable")],
+        ..Default::default()
     }];
 
     let markdown = generate_docs_markdown(
@@ -49,31 +33,16 @@ fn generate_docs_markdown_group_order_reorders_module_index() {
 
 fn docs_markdown_module() -> Vec<JsDocsMarkdownModule> {
     vec![JsDocsMarkdownModule {
-        description: None,
         file: "default".to_string(),
-        source_path: None,
-        examples: None,
-        tags: None,
         entries: vec![JsDocsMarkdownEntry {
             name: "cli".to_string(),
             kind: "function".to_string(),
             description: "Run.".to_string(),
-            params: None,
-            returns: None,
-            throws: None,
-            examples: None,
-            tags: None,
-            private: false,
             file: "/repo/src/cli.ts".to_string(),
-            line: 1,
-            end_line: 1,
             signature: Some("export function cli(): void".to_string()),
-            extends: None,
-            implements: None,
-            has_body: None,
-            members: None,
-            type_parameters: None,
+            ..Default::default()
         }],
+        ..Default::default()
     }]
 }
 

@@ -156,12 +156,9 @@ fn typedoc_sort_source_order_orders_entries_by_line() {
     let mut alpha = test_entry("alpha", "function", "/repo/src/a.ts", "A.");
     alpha.line = 2;
     let docs = vec![ApiDocModule {
-        description: String::new(),
         file: "default".to_string(),
-        source_path: String::new(),
-        examples: vec![],
-        tags: vec![],
         entries: vec![zebra, alpha],
+        ..ApiDocModule::default()
     }];
 
     let options = MarkdownDocsOptions {
@@ -190,12 +187,9 @@ fn typedoc_sort_required_first_then_alphabetical_orders_members() {
     required_a.optional = false;
     iface.members = vec![optional_b, required_z, required_a];
     let docs = vec![ApiDocModule {
-        description: String::new(),
         file: "default".to_string(),
-        source_path: String::new(),
-        examples: vec![],
-        tags: vec![],
         entries: vec![iface],
+        ..ApiDocModule::default()
     }];
 
     let options = MarkdownDocsOptions {

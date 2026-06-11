@@ -67,12 +67,8 @@ fn render_style_markdown_category_emits_pure_markdown() {
 fn typedoc_symbol_page_h1_includes_declaration_kind() {
     // Function: kind prefix + `()`, no type parameters in the title.
     let mut func = test_entry("args", "function", "/repo/src/combinators.ts", "Schema factory.");
-    func.type_parameters = vec![ApiTypeParamDoc {
-        name: "T".to_string(),
-        constraint: None,
-        default: None,
-        description: String::new(),
-    }];
+    func.type_parameters =
+        vec![ApiTypeParamDoc { name: "T".to_string(), ..ApiTypeParamDoc::default() }];
     assert!(typedoc_title_page(func).starts_with("# Function: args()"));
 
     // Interface with a generic parameter (names only).
@@ -80,19 +76,14 @@ fn typedoc_symbol_page_h1_includes_declaration_kind() {
     iface.type_parameters = vec![ApiTypeParamDoc {
         name: "G".to_string(),
         constraint: Some("GunshiParams".to_string()),
-        default: None,
-        description: String::new(),
+        ..ApiTypeParamDoc::default()
     }];
     assert!(typedoc_title_page(iface).starts_with("# Interface: Command<G>"));
 
     // Type alias with a generic parameter.
     let mut alias = test_entry("Plugin", "type", "/repo/src/plugin.ts", "Plugin type.");
-    alias.type_parameters = vec![ApiTypeParamDoc {
-        name: "E".to_string(),
-        constraint: None,
-        default: None,
-        description: String::new(),
-    }];
+    alias.type_parameters =
+        vec![ApiTypeParamDoc { name: "E".to_string(), ..ApiTypeParamDoc::default() }];
     assert!(typedoc_title_page(alias).starts_with("# Type Alias: Plugin<E>"));
 
     // Class without type parameters: kind prefix only.
@@ -165,15 +156,12 @@ fn typedoc_markdown_return_union_pipe_is_not_escaped_inside_inline_code() {
     entry.returns = Some(ApiReturnDoc {
         type_annotation: "Promise<string | undefined>".to_string(),
         description: "A rendered usage or undefined.".to_string(),
-        members: Vec::new(),
+        ..ApiReturnDoc::default()
     });
     let docs = vec![ApiDocModule {
-        description: String::new(),
         file: "default".to_string(),
-        source_path: String::new(),
-        examples: vec![],
-        tags: vec![],
         entries: vec![entry],
+        ..ApiDocModule::default()
     }];
 
     let out = generate_markdown(
