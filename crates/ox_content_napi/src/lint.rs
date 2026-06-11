@@ -3,6 +3,7 @@
 use rustc_hash::{FxHashMap, FxHashSet};
 use std::sync::LazyLock;
 
+use compact_str::CompactString;
 use napi_derive::napi;
 use regex::Regex;
 use serde::Deserialize;
@@ -1350,7 +1351,7 @@ fn normalize_latin_word(word: &str) -> String {
 }
 
 fn collapse_whitespace(text: &str) -> String {
-    let mut collapsed = String::new();
+    let mut collapsed = CompactString::default();
     let mut needs_space = false;
 
     for part in text.split_whitespace() {
@@ -1361,7 +1362,7 @@ fn collapse_whitespace(text: &str) -> String {
         needs_space = true;
     }
 
-    collapsed
+    collapsed.into_string()
 }
 
 fn count_code_points(text: &str) -> usize {

@@ -1,5 +1,6 @@
 #![allow(clippy::redundant_pub_crate)]
 
+use compact_str::CompactString;
 use rustc_hash::FxHashSet;
 
 use crate::{JsCodeBlockLintOptions, JsDocsTestOptions};
@@ -30,8 +31,8 @@ pub(crate) fn extract_code_blocks(source: &str) -> Vec<ExtractedCodeBlock> {
     let mut in_fence = false;
     let mut fence_char = b'\0';
     let mut fence_len = 0usize;
-    let mut language = String::new();
-    let mut meta = String::new();
+    let mut language = CompactString::default();
+    let mut meta = CompactString::default();
     let mut code = String::new();
     let mut start_line = 0u32;
     let mut line_number = 0u32;
@@ -41,17 +42,15 @@ pub(crate) fn extract_code_blocks(source: &str) -> Vec<ExtractedCodeBlock> {
         if in_fence {
             if super::is_closing_fence(line, fence_char, fence_len) {
                 blocks.push(ExtractedCodeBlock {
-                    language: language.clone(),
-                    meta: meta.clone(),
-                    code: code.trim_end_matches('\n').to_string(),
+                    language: std::mem::take(&mut language).into_string(),
+                    meta: std::mem::take(&mut meta).into_string(),
+                    code: String::from(code.trim_end_matches('\n')),
                     start_line,
                     end_line: line_number.saturating_sub(1),
                 });
                 in_fence = false;
                 fence_char = b'\0';
                 fence_len = 0;
-                language.clear();
-                meta.clear();
                 code.clear();
             } else {
                 code.push_str(line);

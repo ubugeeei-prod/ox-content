@@ -19,6 +19,7 @@ workspace = true
 crate-type = ["cdylib", "rlib"]
 
 [dependencies]
+compact_str = { workspace = true }
 ox_content_allocator = { workspace = true }
 ox_content_ast = { workspace = true }
 ox_content_parser = { workspace = true }

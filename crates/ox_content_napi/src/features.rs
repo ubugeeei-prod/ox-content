@@ -1,5 +1,6 @@
 #![allow(clippy::redundant_pub_crate)]
 
+use compact_str::CompactString;
 use rustc_hash::FxHashMap;
 use std::borrow::Cow;
 use std::path::PathBuf;
@@ -707,8 +708,8 @@ fn percent_encode_path(path: &str) -> String {
 struct FenceOpen {
     fence_char: u8,
     fence_len: usize,
-    language: String,
-    meta: String,
+    language: CompactString,
+    meta: CompactString,
 }
 
 fn parse_opening_fence(line: &str) -> Option<FenceOpen> {
@@ -724,8 +725,8 @@ fn parse_opening_fence(line: &str) -> Option<FenceOpen> {
     }
     let rest = trimmed[fence_len..].trim();
     let mut parts = rest.splitn(2, char::is_whitespace);
-    let language = parts.next().unwrap_or_default().to_string();
-    let meta = parts.next().unwrap_or_default().trim().to_string();
+    let language = CompactString::from(parts.next().unwrap_or_default());
+    let meta = CompactString::from(parts.next().unwrap_or_default().trim());
     Some(FenceOpen { fence_char, fence_len, language, meta })
 }
 

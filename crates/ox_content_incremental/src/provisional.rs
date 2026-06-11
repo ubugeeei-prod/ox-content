@@ -1,5 +1,6 @@
 use std::borrow::Cow;
 
+use compact_str::CompactString;
 use memchr::memchr;
 use ox_content_parser::ParserOptions;
 
@@ -96,7 +97,7 @@ fn provisional_inline_closers(source: &str, options: &ParserOptions) -> String {
 }
 
 fn inline_closers(mut stack: Vec<InlineDelimiter>) -> String {
-    let mut closers = String::new();
+    let mut closers = CompactString::default();
     while let Some(delimiter) = stack.pop() {
         match delimiter {
             InlineDelimiter::Strong(b'*') => closers.push_str("**"),
@@ -113,7 +114,7 @@ fn inline_closers(mut stack: Vec<InlineDelimiter>) -> String {
             }
         }
     }
-    closers
+    closers.into_string()
 }
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
