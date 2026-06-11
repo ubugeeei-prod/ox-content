@@ -17,6 +17,7 @@ type RunGitOptions = {
 type FileLineViolation = {
   file: string;
   lines: number;
+  baseLines?: number;
 };
 
 const defaultLimit = 250;
@@ -45,21 +46,31 @@ const violations: FileLineViolation[] = [];
 
 for (const file of checkedFiles) {
   const lines = countLines(file);
-  if (lines > limit) {
-    violations.push({ file, lines });
+  if (lines <= limit) {
+    continue;
   }
+
+  const baseLines = countBaseLines(baseRef, file);
+  if (baseLines !== undefined && baseLines > limit) {
+    continue;
+  }
+
+  violations.push({ file, lines, baseLines });
 }
 
 if (violations.length > 0) {
-  console.error(`Changed source files should stay within ${limit} lines.`);
+  console.error(`New or newly oversized source files should stay within ${limit} lines.`);
   console.error("Split these files before opening or merging the PR:");
-  for (const { file, lines } of violations) {
-    console.error(`  - ${file}: ${lines} lines`);
+  for (const { file, lines, baseLines } of violations) {
+    const baseDetail = baseLines === undefined ? "new file" : `${baseLines} lines on base`;
+    console.error(`  - ${file}: ${lines} lines (${baseDetail})`);
   }
   process.exit(1);
 }
 
-console.log(`Checked ${checkedFiles.length} changed source file(s); all are <= ${limit} lines.`);
+console.log(
+  `Checked ${checkedFiles.length} changed source file(s); no new files exceed ${limit} lines.`,
+);
 
 function parseArgs(args: string[]): Options {
   const parsed: Options = {};
@@ -188,6 +199,23 @@ function shouldCheckFile(file: string): boolean {
 
 function countLines(file: string): number {
   const content = readFileSync(file, "utf8");
+  return countTextLines(content);
+}
+
+function countBaseLines(base: string, file: string): number | undefined {
+  if (base === "HEAD") {
+    return undefined;
+  }
+
+  const result = runGit(["show", `${base}:${file}`], { allowFailure: true });
+  if (result.status !== 0) {
+    return undefined;
+  }
+
+  return countTextLines(result.stdout);
+}
+
+function countTextLines(content: string): number {
   if (content.length === 0) {
     return 0;
   }

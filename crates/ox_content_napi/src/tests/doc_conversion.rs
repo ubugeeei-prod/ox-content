@@ -42,7 +42,6 @@ export type OnPluginExtension<G> = (
 
     let _ = fs::remove_dir_all(root);
 }
-
 #[test]
 fn extract_file_doc_entries_preserves_object_literal_parameter_members() {
     let unique =
