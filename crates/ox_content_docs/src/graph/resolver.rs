@@ -3,10 +3,8 @@ use std::path::{Path, PathBuf};
 use oxc_resolver::{ResolveOptions, Resolver, TsconfigOptions, TsconfigReferences};
 use rustc_hash::FxHashMap;
 
-use super::{
-    absolutize, external_package_name, is_local_specifier, normalize_existing_path, GraphError,
-    GraphOptions,
-};
+use super::util::{absolutize, external_package_name, is_local_specifier, normalize_existing_path};
+use super::{GraphError, GraphOptions};
 #[allow(unused_imports)]
 use crate::profile_span;
 

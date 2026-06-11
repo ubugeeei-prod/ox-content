@@ -5,8 +5,10 @@ use oxc_ast::ast::{
 };
 use rustc_hash::FxHashMap;
 
+use super::builder::ImportBinding;
 use super::export_sources::{module_export_name, specifier_kind};
-use super::{external_package_name, ExportKind, ExportSource, ImportBinding, PublicExport};
+use super::util::external_package_name;
+use super::{ExportKind, ExportSource, PublicExport};
 
 pub(super) fn append_declaration_exports(
     exports: &mut Vec<PublicExport>,

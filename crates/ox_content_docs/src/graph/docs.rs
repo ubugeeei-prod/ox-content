@@ -2,9 +2,8 @@ use std::path::{Path, PathBuf};
 
 use rustc_hash::FxHashMap;
 
-use super::{
-    normalize_existing_path, DocsDiagnostic, DocsDiagnosticCode, GraphError, PublicExport,
-};
+use super::util::normalize_existing_path;
+use super::{DocsDiagnostic, DocsDiagnosticCode, GraphError, PublicExport};
 use crate::string_builder::StringBuilder;
 use crate::{
     normalize_doc_items, ApiDocTag, DocExtractor, DocItem, NormalizedDocEntry, NormalizedDocKind,
