@@ -998,7 +998,7 @@ export interface JsParserOptions {
   autolinks?: boolean
 }
 
-/** Options for [`transform_pm_embeds`]. */
+/** Options for [`super::transform_pm_embeds`]. */
 export interface JsPmOptions {
   /**
    * Enable opt-in synced package-manager tab groups. When `true`, a
@@ -1010,7 +1010,7 @@ export interface JsPmOptions {
   sync?: boolean
 }
 
-/** Result of [`transform_pm_embeds`]. */
+/** Result of [`super::transform_pm_embeds`]. */
 export interface JsPmTransformResult {
   /** HTML with every `<pm>` block expanded into a package-manager tab widget. */
   html: string
@@ -1335,7 +1335,7 @@ export interface JsSsgSidebarItem {
   stickyCollapsed?: boolean
 }
 
-/** Result of [`transform_tabs_embeds`]. */
+/** Result of [`super::transform_tabs_embeds`]. */
 export interface JsTabsTransformResult {
   /** HTML with every `<tabs>` block expanded. */
   html: string
@@ -1652,8 +1652,8 @@ export interface JsWikiLinkOptions {
 }
 
 /**
- * Options for [`transform_youtube_embeds`]; all optional, matching the TS
- * `YouTubeOptions` defaults when omitted.
+ * Options for [`super::transform_youtube_embeds`]; all optional, matching the
+ * TS `YouTubeOptions` defaults when omitted.
  */
 export interface JsYouTubeOptions {
   /**
@@ -1881,14 +1881,14 @@ export interface TransformResult {
 }
 
 /**
- * Rewrites `<tabs><tab>…</tab></tabs>` blocks in rendered HTML into the no-JS
+ * Rewrites `<tabs><tab>...</tab></tabs>` blocks in rendered HTML into the no-JS
  * CSS tab widget plus a `<details>` fallback. Rust port of the TS
  * `transformTabs`. Groups are numbered from `start_group`.
  */
 export declare function transformTabsEmbeds(html: string, startGroup: number): JsTabsTransformResult
 
 /**
- * Rewrites `<youtube …>` elements in rendered HTML into responsive,
+ * Rewrites `<youtube ...>` elements in rendered HTML into responsive,
  * privacy-enhanced iframe embeds. Rust port of the TS `transformYouTube`.
  */
 export declare function transformYoutubeEmbeds(html: string, options?: JsYouTubeOptions | undefined | null): string
