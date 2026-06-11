@@ -7,16 +7,18 @@ use std::collections::BTreeMap;
 use std::rc::Rc;
 use std::sync::OnceLock;
 
-use phf::{phf_map, phf_set};
+use phf::phf_set;
 use regex::Regex;
 
-use crate::model::{ApiDocEntry, ApiDocModule, ApiDocTag, ApiThrowsDoc};
+use crate::model::{ApiDocEntry, ApiDocModule};
 #[allow(unused_imports)]
 use crate::profile_span;
 use crate::string_builder::{join2, join3, join5, StringBuilder};
 
+mod examples;
 mod group_order;
 mod implementation;
+mod labels;
 mod markdown_html;
 mod markdown_pure;
 mod options;
@@ -24,9 +26,13 @@ mod paths;
 mod sort;
 mod stats;
 mod summary;
+mod tags;
+mod typedoc;
 
+use examples::{parse_example_block, render_module_examples_markdown, ExampleBlock};
 pub use group_order::{order_by_group_title, ordered_entry_kinds};
 use implementation::annotate_implementation_relationships;
+use labels::{format_count_label, format_kind_label, normalize_signature};
 pub use options::{
     MarkdownDisplayFormat, MarkdownDocsOptions, MarkdownLinkStyle, MarkdownPathStrategy,
     MarkdownRenderStyle, MarkdownSingleEntryRoot, DOC_KIND_ORDER,
@@ -49,6 +55,12 @@ use summary::{
     clean_summary_text, collapse_inline_whitespace, collapse_type_annotation_whitespace,
     markdown_index_summary, typedoc_index_summary,
 };
+use tags::{get_entry_badges, is_structured_tag, is_throws_tag, rendered_throws, SINCE_TAGS};
+use typedoc::{
+    anchor_href, plural_kind_file_name, plural_kind_title, push_typedoc_entry_page_title,
+    sanitize_doc_path_segment, typedoc_entry_file_name, typedoc_entry_page_title_len,
+    typedoc_kind_singular, typedoc_kind_title, typedoc_module_index_file_name,
+};
 
 type RegexCache = OnceLock<Option<Regex>>;
 
@@ -58,12 +70,6 @@ fn cached_regex(cache: &'static RegexCache, pattern: &'static str) -> Option<&'s
     // bad pattern degrades to the fallback path without recompiling on every
     // call.
     cache.get_or_init(|| Regex::new(pattern).ok()).as_ref()
-}
-
-#[derive(Debug, Clone)]
-struct EntryBadge {
-    label: String,
-    tone: Option<&'static str>,
 }
 
 #[derive(Debug, Clone)]
@@ -167,113 +173,6 @@ pub fn generate_markdown(
     }
 
     result
-}
-
-/// Directory segment for each documentation kind under the TypeDoc path strategy.
-static TYPEDOC_KIND_SEGMENT: phf::Map<&'static str, &'static str> = phf_map! {
-    "function" => "functions",
-    "class" => "classes",
-    "interface" => "interfaces",
-    "type" => "type-aliases",
-    "enum" => "enumerations",
-    "variable" => "variables",
-    "const" => "variables",
-    "module" => "modules",
-};
-
-/// Plural category heading for each documentation kind.
-static TYPEDOC_KIND_TITLE: phf::Map<&'static str, &'static str> = phf_map! {
-    "function" => "Functions",
-    "class" => "Classes",
-    "interface" => "Interfaces",
-    "type" => "Type Aliases",
-    "enum" => "Enumerations",
-    "variable" => "Variables",
-    "const" => "Variables",
-    "module" => "Modules",
-};
-
-/// Singular category label used as the first column header of a module index
-/// table (matches TypeDoc, e.g. `Function`, `Type Alias`).
-static TYPEDOC_KIND_SINGULAR: phf::Map<&'static str, &'static str> = phf_map! {
-    "function" => "Function",
-    "class" => "Class",
-    "interface" => "Interface",
-    "type" => "Type Alias",
-    "enum" => "Enumeration",
-    "variable" => "Variable",
-    "const" => "Variable",
-    "module" => "Module",
-};
-
-fn typedoc_kind_segment(kind: &str) -> &'static str {
-    TYPEDOC_KIND_SEGMENT.get(kind).copied().unwrap_or("symbols")
-}
-
-fn typedoc_kind_title(kind: &str) -> &'static str {
-    TYPEDOC_KIND_TITLE.get(kind).copied().unwrap_or("Symbols")
-}
-
-fn typedoc_kind_singular(kind: &str) -> &'static str {
-    TYPEDOC_KIND_SINGULAR.get(kind).copied().unwrap_or("Symbol")
-}
-
-fn typedoc_entry_page_title_len(entry: &ApiDocEntry) -> usize {
-    let mut len = typedoc_kind_singular(&entry.kind).len() + ": ".len() + entry.name.len();
-    if entry.kind == "function" {
-        len += "()".len();
-    } else if !entry.type_parameters.is_empty() {
-        len += "<>".len();
-        len += entry.type_parameters.iter().map(|type_param| type_param.name.len()).sum::<usize>();
-        len += ", ".len() * entry.type_parameters.len().saturating_sub(1);
-    }
-    len
-}
-
-/// Appends a TypeDoc-style H1 title for a per-symbol page, e.g.
-/// `Function: args()`, `Interface: Command<G>`, `Variable: CLI_OPTIONS_DEFAULT`.
-/// Functions append `()` (no type parameters); other kinds append `<...>` when
-/// generic.
-fn push_typedoc_entry_page_title(out: &mut String, entry: &ApiDocEntry) {
-    out.push_str(typedoc_kind_singular(&entry.kind));
-    out.push_str(": ");
-    out.push_str(&entry.name);
-    if entry.kind == "function" {
-        out.push_str("()");
-    } else if !entry.type_parameters.is_empty() {
-        out.push('<');
-        for (index, type_param) in entry.type_parameters.iter().enumerate() {
-            if index > 0 {
-                out.push_str(", ");
-            }
-            out.push_str(&type_param.name);
-        }
-        out.push('>');
-    }
-}
-
-fn typedoc_entry_file_name(module_name: &str, entry: &ApiDocEntry) -> String {
-    let segment = sanitize_doc_path_segment(&entry.name);
-    join5(module_name, "/", typedoc_kind_segment(&entry.kind), "/", &segment)
-}
-
-fn typedoc_module_index_file_name(module_name: &str) -> String {
-    join3(module_name, "/", "index")
-}
-
-fn sanitize_doc_path_segment(value: &str) -> String {
-    let sanitized = value
-        .chars()
-        .map(|ch| match ch {
-            '/' | '\\' | '?' | '#' | '[' | ']' | '<' | '>' | ':' | '"' | '|' | '*' => '-',
-            _ => ch,
-        })
-        .collect::<String>();
-    if sanitized.is_empty() {
-        "symbol".to_string()
-    } else {
-        sanitized
-    }
 }
 
 fn format_symbol_href(context: &MarkdownLinkContext<'_>, location: &SymbolLocation) -> String {
@@ -1079,255 +978,12 @@ fn generate_typedoc_entry_page(
     markdown
 }
 
-fn normalize_signature(signature: Option<&str>) -> Option<String> {
-    let signature = signature?;
-    let normalized = signature.split_whitespace().collect::<Vec<_>>().join(" ");
-    let mut value = normalized.as_str();
-
-    for prefix in [
-        "export ",
-        "declare ",
-        "abstract ",
-        "async function ",
-        "function ",
-        "class ",
-        "interface ",
-        "type ",
-    ] {
-        if let Some(stripped) = value.strip_prefix(prefix) {
-            value = stripped;
-        }
-    }
-
-    Some(value.trim().to_string()).filter(|value| !value.is_empty())
-}
-
-fn format_kind_label(kind: &str) -> &str {
-    match kind {
-        "function" => "fn",
-        "interface" => "interface",
-        "class" => "class",
-        "type" => "type",
-        "const" => "const",
-        _ => kind,
-    }
-}
-
-fn format_count_label(count: usize, singular: &str, plural: Option<&str>) -> String {
-    let label = if count == 1 { singular } else { plural.unwrap_or(singular) };
-    let mut out = StringBuilder::new();
-    out.push_usize(count);
-    out.push_char(' ');
-    out.push_str(label);
-    out.into_string()
-}
-
-fn plural_kind_file_name(kind: &str) -> String {
-    let mut file_name = StringBuilder::with_capacity(kind.len() + 1);
-    file_name.push_str(kind);
-    file_name.push_char('s');
-    file_name.into_string()
-}
-
-fn anchor_href(name: &str) -> String {
-    let anchor = entry_anchor(name);
-    let mut href = StringBuilder::with_capacity(anchor.len() + 1);
-    href.push_char('#');
-    href.push_str(&anchor);
-    href.into_string()
-}
-
-fn plural_kind_title(kind: &str) -> String {
-    let mut title = capitalize_ascii(kind);
-    title.push('s');
-    title
-}
-
 fn member_symbol_name(entry_name: &str, member_name: &str) -> String {
     let mut symbol_name = StringBuilder::with_capacity(entry_name.len() + member_name.len() + 1);
     symbol_name.push_str(entry_name);
     symbol_name.push_char('.');
     symbol_name.push_str(member_name);
     symbol_name.into_string()
-}
-
-fn entry_tag_value<'a>(entry: &'a ApiDocEntry, tag_name: &str) -> Option<&'a str> {
-    entry.tags.iter().find(|tag| tag.tag == tag_name).map(|tag| tag.value.as_str())
-}
-
-/// JSDoc tags folded into a dedicated `Since` element (TypeDoc parity) instead of
-/// the generic tag list. `@version` is normalized alongside `@since`. Shared by
-/// both renderers (`super::SINCE_TAGS`).
-const SINCE_TAGS: [&str; 2] = ["since", "version"];
-
-/// JSDoc lifecycle tags surfaced as structured callouts — GitHub alerts in the
-/// markdown renderer, badges in the HTML renderer — rather than generic tags.
-fn is_lifecycle_tag(tag: &str) -> bool {
-    matches!(tag, "deprecated" | "experimental")
-}
-
-fn is_throws_tag(tag: &str) -> bool {
-    matches!(tag, "throws" | "exception")
-}
-
-fn rendered_throws<'a>(throws: &'a [ApiThrowsDoc], tags: &[ApiDocTag]) -> Cow<'a, [ApiThrowsDoc]> {
-    if !throws.is_empty() {
-        return Cow::Borrowed(throws);
-    }
-
-    Cow::Owned(tags.iter().filter_map(api_throws_from_tag).collect())
-}
-
-fn api_throws_from_tag(tag: &ApiDocTag) -> Option<ApiThrowsDoc> {
-    if !is_throws_tag(&tag.tag) {
-        return None;
-    }
-    let value = tag.value.trim();
-    if value.is_empty() {
-        return None;
-    }
-    if let Some((type_annotation, description)) = parse_throws_tag_value(value) {
-        return Some(ApiThrowsDoc { type_annotation: Some(type_annotation), description });
-    }
-    Some(ApiThrowsDoc { type_annotation: None, description: value.to_string() })
-}
-
-fn parse_throws_tag_value(value: &str) -> Option<(String, String)> {
-    let rest = value.strip_prefix('{')?;
-    let end = rest.find('}')?;
-    let type_annotation = rest[..end].trim();
-    if type_annotation.is_empty() {
-        return None;
-    }
-    let description = rest[end + 1..].trim().trim_start_matches('-').trim().to_string();
-    Some((type_annotation.to_string(), description))
-}
-
-/// True when a tag is rendered as a structured element (lifecycle callout / Since
-/// / Throws) and therefore must not also appear in the generic tag list. Shared
-/// by both renderers so the generic-tag exclusion stays consistent.
-fn is_structured_tag(name: &str) -> bool {
-    is_lifecycle_tag(name) || SINCE_TAGS.contains(&name) || is_throws_tag(name)
-}
-
-fn get_entry_badges(entry: &ApiDocEntry) -> Vec<EntryBadge> {
-    let mut badges = Vec::new();
-
-    if entry_tag_value(entry, "deprecated").is_some() {
-        badges.push(EntryBadge { label: "deprecated".to_string(), tone: Some("warning") });
-    }
-    if entry_tag_value(entry, "experimental").is_some() {
-        badges.push(EntryBadge { label: "experimental".to_string(), tone: Some("warning") });
-    }
-    if !entry.params.is_empty() {
-        badges.push(EntryBadge {
-            label: format_count_label(entry.params.len(), "param", Some("params")),
-            tone: None,
-        });
-    }
-    if !entry.members.is_empty() {
-        badges.push(EntryBadge {
-            label: format_count_label(entry.members.len(), "member", Some("members")),
-            tone: None,
-        });
-    }
-    if let Some(returns) = &entry.returns {
-        let mut label =
-            StringBuilder::with_capacity("returns ".len() + returns.type_annotation.len());
-        label.push_str("returns ");
-        label.push_str(&returns.type_annotation);
-        badges.push(EntryBadge { label: label.into_string(), tone: None });
-    }
-    if !entry.examples.is_empty() {
-        badges.push(EntryBadge {
-            label: format_count_label(entry.examples.len(), "example", Some("examples")),
-            tone: None,
-        });
-    }
-    if let Some(since) = entry_tag_value(entry, "since") {
-        let mut label = StringBuilder::with_capacity("since ".len() + since.len());
-        label.push_str("since ");
-        label.push_str(since);
-        badges.push(EntryBadge { label: label.into_string(), tone: None });
-    }
-    if let Some(version) = entry_tag_value(entry, "version") {
-        let mut label = StringBuilder::with_capacity("version ".len() + version.len());
-        label.push_str("version ");
-        label.push_str(version);
-        badges.push(EntryBadge { label: label.into_string(), tone: None });
-    }
-    if entry.private {
-        badges.push(EntryBadge { label: "private".to_string(), tone: Some("warning") });
-    }
-
-    badges
-}
-
-/// A parsed `@example` body.
-enum ExampleBlock<'a> {
-    /// Pure code: a single fenced block (unwrapped, with its language) or a bare
-    /// code body (defaulting to `ts`). Rendered inside a code fence / `<pre>`.
-    Code { code: &'a str, language: &'a str },
-    /// Mixed Markdown (prose and/or fenced code). Rendered as Markdown as-is so it
-    /// is not wrapped in an extra code fence.
-    Markdown(&'a str),
-}
-
-/// True when any line is a code-fence line (opens with ```` ``` ````). Counts fence
-/// *lines* only, so a stray ```` ``` ```` inside a single-line string literal is
-/// ignored.
-fn example_has_fence_line(text: &str) -> bool {
-    text.lines().any(|line| line.trim_start().starts_with("```"))
-}
-
-/// Classifies an `@example` body. A whole-body single fence is unwrapped to
-/// [`ExampleBlock::Code`]; a body that still contains a fence line (prose + code,
-/// multiple blocks, …) is kept verbatim as [`ExampleBlock::Markdown`] so it is not
-/// double-wrapped; a fence-free body is treated as bare code (`ts`).
-fn parse_example_block(example: &str) -> ExampleBlock<'_> {
-    static FENCE_RE: RegexCache = OnceLock::new();
-
-    let trimmed = example.trim();
-    if let Some(fence_re) = cached_regex(&FENCE_RE, r"(?s)^```([\w-]+)?[^\n]*\n(.*?)\n?```$") {
-        if let Some(captures) = fence_re.captures(trimmed) {
-            let language = captures.get(1).map_or("ts", |value| value.as_str());
-            let code = captures.get(2).map_or("", |value| value.as_str());
-            // Only a single whole-body fence when the inner code has no further
-            // fence line; otherwise the body is multiple blocks → Markdown.
-            if !example_has_fence_line(code) {
-                return ExampleBlock::Code { code, language };
-            }
-        }
-    }
-
-    if example_has_fence_line(trimmed) {
-        ExampleBlock::Markdown(trimmed)
-    } else {
-        ExampleBlock::Code { code: trimmed, language: "ts" }
-    }
-}
-
-fn render_module_examples_markdown(examples: &[String]) -> String {
-    let mut out = String::new();
-    out.push_str("## ");
-    out.push_str(if examples.len() == 1 { "Example" } else { "Examples" });
-    out.push_str("\n\n");
-    for example in examples {
-        match parse_example_block(example) {
-            ExampleBlock::Code { code, language } => {
-                out.push_str("```");
-                out.push_str(language);
-                out.push('\n');
-                out.push_str(code);
-                out.push_str("\n```\n\n");
-            }
-            ExampleBlock::Markdown(markdown) => {
-                out.push_str(markdown);
-                out.push_str("\n\n");
-            }
-        }
-    }
-    out
 }
 
 fn render_overview_line(
