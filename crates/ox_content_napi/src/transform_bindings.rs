@@ -28,7 +28,7 @@ pub fn merge_highlighted_code_blocks(original_html: String, highlighted_html: St
     highlight::merge_highlighted_code_blocks(&original_html, &highlighted_html)
 }
 
-/// Rewrites `<youtube …>` elements in rendered HTML into responsive,
+/// Rewrites `<youtube ...>` elements in rendered HTML into responsive,
 /// privacy-enhanced iframe embeds. Rust port of the TS `transformYouTube`.
 #[napi]
 pub fn transform_youtube_embeds(html: String, options: Option<JsYouTubeOptions>) -> String {
@@ -45,7 +45,7 @@ pub fn transform_youtube_embeds(html: String, options: Option<JsYouTubeOptions>)
     youtube::transform_youtube(&html, &resolved)
 }
 
-/// Rewrites `<tabs><tab>…</tab></tabs>` blocks in rendered HTML into the no-JS
+/// Rewrites `<tabs><tab>...</tab></tabs>` blocks in rendered HTML into the no-JS
 /// CSS tab widget plus a `<details>` fallback. Rust port of the TS
 /// `transformTabs`. Groups are numbered from `start_group`.
 #[napi]

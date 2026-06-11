@@ -1,7 +1,7 @@
 use napi_derive::napi;
 
-/// Options for [`transform_youtube_embeds`]; all optional, matching the TS
-/// `YouTubeOptions` defaults when omitted.
+/// Options for [`super::transform_youtube_embeds`]; all optional, matching the
+/// TS `YouTubeOptions` defaults when omitted.
 #[napi(object)]
 pub struct JsYouTubeOptions {
     /// Use privacy-enhanced mode (`youtube-nocookie.com`).
@@ -25,7 +25,7 @@ pub struct JsYouTubeOptions {
     pub lazy_load: Option<bool>,
 }
 
-/// Result of [`transform_tabs_embeds`].
+/// Result of [`super::transform_tabs_embeds`].
 #[napi(object)]
 pub struct JsTabsTransformResult {
     /// HTML with every `<tabs>` block expanded.
@@ -36,7 +36,7 @@ pub struct JsTabsTransformResult {
     pub group_count: u32,
 }
 
-/// Options for [`transform_pm_embeds`].
+/// Options for [`super::transform_pm_embeds`].
 #[napi(object)]
 pub struct JsPmOptions {
     /// Enable opt-in synced package-manager tab groups. When `true`, a
@@ -47,7 +47,7 @@ pub struct JsPmOptions {
     pub sync: Option<bool>,
 }
 
-/// Result of [`transform_pm_embeds`].
+/// Result of [`super::transform_pm_embeds`].
 #[napi(object)]
 pub struct JsPmTransformResult {
     /// HTML with every `<pm>` block expanded into a package-manager tab widget.
