@@ -1,5 +1,16 @@
 # Changelog
 
+## [2.69.0] - 2026-06-11
+
+### Features
+
+- support jsdoc throws tags (#374)
+- persist sticky sidebar state (#371)
+
+### Bug Fixes
+
+- use crates.io environment for publishing (#373)
+
 ## [2.68.0] - 2026-06-10
 
 ### Bug Fixes
