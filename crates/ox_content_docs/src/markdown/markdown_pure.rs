@@ -9,130 +9,29 @@
 use rustc_hash::FxHashSet;
 
 use super::{
-    collapse_inline_whitespace, collapse_type_annotation_whitespace, effective_members_format,
-    effective_parameters_format, generate_source_href, parse_example_block, process_doc_text,
-    resolve_type_fragments, EntryStats, ExampleBlock, MarkdownDisplayFormat, MarkdownDocsOptions,
-    MarkdownLinkContext, TypeFragment,
+    effective_members_format, effective_parameters_format, generate_source_href,
+    parse_example_block, process_doc_text, ExampleBlock, MarkdownDisplayFormat,
+    MarkdownDocsOptions, MarkdownLinkContext,
 };
 use crate::model::{
     ApiDocEntry, ApiDocMember, ApiDocTag, ApiParamDoc, ApiReturnDoc, ApiThrowsDoc, ApiTypeParamDoc,
 };
 use crate::string_builder::{join2, StringBuilder};
 
-/// JSDoc lifecycle tags rendered as GitHub alerts rather than generic `## Tags`
-/// entries: `@experimental` → `> [!WARNING]`, `@deprecated` → `> [!CAUTION]`.
-/// Appends GitHub alert blocks for lifecycle tags (`@experimental`,
-/// `@deprecated`) present in `tags`, in source order. Uses the tag's own text as
-/// the alert body (with `{@link}` resolved), falling back to a default message.
-pub(super) fn push_lifecycle_alerts(
-    out: &mut String,
-    tags: &[ApiDocTag],
-    context: Option<&MarkdownLinkContext<'_>>,
-) {
-    for tag in tags {
-        let (kind, default) = match tag.tag.as_str() {
-            "deprecated" => {
-                ("CAUTION", "This API is deprecated and may be removed in a future version.")
-            }
-            "experimental" => {
-                ("WARNING", "This API is experimental and may change in future versions.")
-            }
-            _ => continue,
-        };
-        let body_storage;
-        let body = if tag.value.trim().is_empty() {
-            default
-        } else {
-            body_storage = inline(&tag.value, context);
-            if body_storage.is_empty() {
-                default
-            } else {
-                body_storage.as_str()
-            }
-        };
-        out.push_str("> [!");
-        out.push_str(kind);
-        out.push_str("]\n");
-        for line in body.lines() {
-            out.push_str("> ");
-            out.push_str(line);
-            out.push('\n');
-        }
-        out.push('\n');
-    }
-}
+mod format;
+mod lifecycle;
+mod stats;
 
-/// Renders a `## Since` section from `@since` / `@version` tags (both folded into
-/// one section, matching TypeDoc), or "" when none carry a value. `heading` is
-/// the section prefix (`##` on typedoc per-symbol pages).
-fn render_since_section(
-    tags: &[ApiDocTag],
-    context: Option<&MarkdownLinkContext<'_>>,
-    heading: &str,
-) -> String {
-    let values = tags
-        .iter()
-        .filter(|tag| super::SINCE_TAGS.contains(&tag.tag.as_str()))
-        .map(|tag| inline(&tag.value, context))
-        .filter(|value| !value.is_empty())
-        .collect::<Vec<_>>();
-    if values.is_empty() {
-        return String::new();
-    }
-    let mut out = String::new();
-    out.push_str(heading);
-    out.push_str(" Since\n\n");
-    out.push_str(&values.join("\n\n"));
-    out.push_str("\n\n");
-    out
-}
+use format::{
+    code_cell, code_span, inline, linked_type_cell, linked_type_span, push_table_cell,
+    type_param_name_cell, type_param_name_span,
+};
+pub(super) use lifecycle::push_lifecycle_alerts;
+use lifecycle::render_since_section;
+pub(super) use stats::render_stats_markdown;
 
 fn type_parameters_have_descriptions(type_parameters: &[ApiTypeParamDoc]) -> bool {
     type_parameters.iter().any(|type_param| !type_param.description.trim().is_empty())
-}
-
-/// Renders the per-page stats summary as a single italic Markdown line.
-pub(super) fn render_stats_markdown(stats: &EntryStats, module_count: Option<usize>) -> String {
-    let mut out = StringBuilder::new();
-    let mut has_parts = false;
-    out.push_char('_');
-    if let Some(module_count) = module_count {
-        push_stat_part(&mut out, &mut has_parts, module_count, "modules");
-    }
-    push_stat_part(&mut out, &mut has_parts, stats.entries, "symbols");
-    for (index, kind) in super::DOC_KIND_ORDER.iter().enumerate() {
-        let count = stats.by_kind[index];
-        if count > 0 {
-            push_stat_part(&mut out, &mut has_parts, count, super::doc_kind_plural(kind));
-        }
-    }
-    if stats.params > 0 {
-        push_stat_part(&mut out, &mut has_parts, stats.params, "parameters");
-    }
-    if stats.members > 0 {
-        push_stat_part(&mut out, &mut has_parts, stats.members, "members");
-    }
-    if stats.returns > 0 {
-        push_stat_part(&mut out, &mut has_parts, stats.returns, "returns");
-    }
-    if stats.examples > 0 {
-        push_stat_part(&mut out, &mut has_parts, stats.examples, "examples");
-    }
-    if stats.deprecated > 0 {
-        push_stat_part(&mut out, &mut has_parts, stats.deprecated, "deprecated");
-    }
-    out.push_char('_');
-    out.into_string()
-}
-
-fn push_stat_part(out: &mut StringBuilder, has_parts: &mut bool, count: usize, label: &str) {
-    if *has_parts {
-        out.push_str(" · ");
-    }
-    out.push_usize(count);
-    out.push_char(' ');
-    out.push_str(label);
-    *has_parts = true;
 }
 
 /// Renders the body of one entry (everything below its heading) as pure Markdown.
@@ -1323,163 +1222,4 @@ fn param_description(param: &ApiParamDoc, context: Option<&MarkdownLinkContext<'
         };
     }
     description
-}
-
-/// Inline Markdown for a doc-text fragment (resolves `{@link}`), single-line.
-fn inline(text: &str, context: Option<&MarkdownLinkContext<'_>>) -> String {
-    collapse_inline_whitespace(&process_doc_text(text, context)).into_owned()
-}
-
-/// Escapes a value for use inside a Markdown table cell.
-fn table_cell(text: &str) -> String {
-    if text.contains('|') {
-        text.replace('|', "\\|")
-    } else {
-        text.to_string()
-    }
-}
-
-/// Append a table-cell value directly to `out` (pipes escaped), avoiding the
-/// intermediate `String` that [`table_cell`] allocates for every cell.
-fn push_table_cell(out: &mut String, text: &str) {
-    if text.contains('|') {
-        let mut rest = text;
-        while let Some(index) = rest.find('|') {
-            out.push_str(&rest[..index]);
-            out.push_str("\\|");
-            rest = &rest[index + 1..];
-        }
-        out.push_str(rest);
-    } else {
-        out.push_str(text);
-    }
-}
-
-/// Inline code for normal Markdown text; empty string if blank.
-fn code_span(value: &str) -> String {
-    let value = collapse_inline_whitespace(value);
-    if value.is_empty() {
-        String::new()
-    } else {
-        let mut code = StringBuilder::with_capacity(value.len() + 2);
-        code.push_char('`');
-        code.push_str(&value);
-        code.push_char('`');
-        code.into_string()
-    }
-}
-
-/// Inline code for a Markdown table cell (`|` escaped); empty string if blank.
-fn code_cell(value: &str) -> String {
-    let value = collapse_inline_whitespace(value);
-    if value.is_empty() {
-        String::new()
-    } else {
-        let cell = table_cell(&value);
-        let mut code = StringBuilder::with_capacity(cell.len() + 2);
-        code.push_char('`');
-        code.push_str(&cell);
-        code.push_char('`');
-        code.into_string()
-    }
-}
-
-/// Escapes Markdown-significant characters in a type annotation's non-identifier
-/// text (generics, unions, arrays, …) so they render literally. Pipes are only
-/// escaped inside table cells.
-fn escape_type_text(text: &str, in_cell: bool) -> String {
-    let mut out = String::with_capacity(text.len());
-    for ch in text.chars() {
-        match ch {
-            '\\' => out.push_str("\\\\"),
-            '`' => out.push_str("\\`"),
-            '<' => out.push_str("\\<"),
-            '>' => out.push_str("\\>"),
-            '[' => out.push_str("\\["),
-            ']' => out.push_str("\\]"),
-            '|' if in_cell => out.push_str("\\|"),
-            _ => out.push(ch),
-        }
-    }
-    out
-}
-
-/// Renders a TypeScript type annotation, linking known symbols. When no identifier
-/// resolves to a symbol page the type is returned unchanged as a single inline-code
-/// span (`code(value)`); otherwise it is fragmented TypeDoc-style: each identifier
-/// is its own inline-code span (linked when resolvable) and punctuation is escaped.
-fn linked_type(
-    value: &str,
-    context: Option<&MarkdownLinkContext<'_>>,
-    skip: &FxHashSet<&str>,
-    code: fn(&str) -> String,
-    in_cell: bool,
-) -> String {
-    let value = collapse_type_annotation_whitespace(value);
-    match resolve_type_fragments(&value, context, skip) {
-        None => code(&value),
-        Some(fragments) => {
-            let mut out = String::new();
-            for fragment in fragments {
-                match fragment {
-                    TypeFragment::Text(text) => out.push_str(&escape_type_text(&text, in_cell)),
-                    TypeFragment::Code(text) => out.push_str(&code(&text)),
-                    TypeFragment::Link { name, href } => {
-                        out.push('[');
-                        out.push_str(&code(&name));
-                        out.push_str("](");
-                        out.push_str(&href);
-                        out.push(')');
-                    }
-                }
-            }
-            out
-        }
-    }
-}
-
-fn linked_type_cell(value: &str, context: Option<&MarkdownLinkContext<'_>>) -> String {
-    linked_type(value, context, &FxHashSet::default(), code_cell, true)
-}
-
-fn linked_type_span(value: &str, context: Option<&MarkdownLinkContext<'_>>) -> String {
-    linked_type(value, context, &FxHashSet::default(), code_span, false)
-}
-
-/// Builds the Name cell for a type parameter: `` `T` `` plus optional `*extends*`
-/// constraint and `=` default. The constraint/default link known symbols; the
-/// parameter's own name and its siblings (`skip`) are never linked.
-fn type_param_name_cell(
-    type_param: &ApiTypeParamDoc,
-    context: Option<&MarkdownLinkContext<'_>>,
-    skip: &FxHashSet<&str>,
-) -> String {
-    type_param_name(type_param, context, skip, code_cell, true)
-}
-
-fn type_param_name_span(
-    type_param: &ApiTypeParamDoc,
-    context: Option<&MarkdownLinkContext<'_>>,
-    skip: &FxHashSet<&str>,
-) -> String {
-    type_param_name(type_param, context, skip, code_span, false)
-}
-
-fn type_param_name(
-    type_param: &ApiTypeParamDoc,
-    context: Option<&MarkdownLinkContext<'_>>,
-    skip: &FxHashSet<&str>,
-    code: fn(&str) -> String,
-    in_cell: bool,
-) -> String {
-    let mut cell = code(&type_param.name);
-    if let Some(constraint) = &type_param.constraint {
-        cell.push_str(" *extends* ");
-        cell.push_str(&linked_type(constraint, context, skip, code, in_cell));
-    }
-    if let Some(default) = &type_param.default {
-        cell.push_str(" = ");
-        cell.push_str(&linked_type(default, context, skip, code, in_cell));
-    }
-    cell
 }
