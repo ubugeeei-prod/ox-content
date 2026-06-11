@@ -407,12 +407,6 @@ export interface JsDocReturn {
   members?: Array<JsDocMember>
 }
 
-/** Exception/error documentation used by generated API docs. */
-export interface JsDocThrows {
-  type?: string
-  description: string
-}
-
 /** Diagnostic for an entry point export during docs extraction. */
 export interface JsDocsDiagnostic {
   code: string
@@ -595,6 +589,12 @@ export interface JsDocsTestOptions {
    * Default: `true`.
    */
   requireMeta?: boolean
+}
+
+/** Exception/error documentation used by generated API docs. */
+export interface JsDocThrows {
+  type?: string
+  description: string
 }
 
 /** Edit-this-page link options. */
