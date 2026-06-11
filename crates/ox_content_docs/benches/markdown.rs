@@ -139,6 +139,7 @@ fn member(module: usize, entry: usize, index: usize) -> ApiDocMember {
             description: "Whether the member accepted the value.".to_string(),
             members: Vec::new(),
         }),
+        throws: Vec::new(),
         members: Vec::new(),
         optional: index % 2 == 0,
         readonly: index % 3 == 0,
@@ -198,6 +199,7 @@ fn entry(module: usize, index: usize) -> ApiDocEntry {
             description: "A processed result object.".to_string(),
             members: Vec::new(),
         }),
+        throws: Vec::new(),
         examples: Vec::from([{
             let mut example = String::with_capacity(name.len() + 80);
             example.push_str("```ts\nconst result = await ");
