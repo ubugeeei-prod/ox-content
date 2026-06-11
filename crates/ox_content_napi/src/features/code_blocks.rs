@@ -5,6 +5,8 @@ use rustc_hash::FxHashSet;
 
 use crate::{JsCodeBlockLintOptions, JsDocsTestOptions};
 
+use super::segments::{is_closing_fence, parse_opening_fence};
+
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub(crate) struct ExtractedCodeBlock {
     pub language: String,
@@ -40,7 +42,7 @@ pub(crate) fn extract_code_blocks(source: &str) -> Vec<ExtractedCodeBlock> {
     for line in source.lines() {
         line_number += 1;
         if in_fence {
-            if super::is_closing_fence(line, fence_char, fence_len) {
+            if is_closing_fence(line, fence_char, fence_len) {
                 blocks.push(ExtractedCodeBlock {
                     language: std::mem::take(&mut language).into_string(),
                     meta: std::mem::take(&mut meta).into_string(),
@@ -59,7 +61,7 @@ pub(crate) fn extract_code_blocks(source: &str) -> Vec<ExtractedCodeBlock> {
             continue;
         }
 
-        if let Some(open) = super::parse_opening_fence(line) {
+        if let Some(open) = parse_opening_fence(line) {
             in_fence = true;
             fence_char = open.fence_char;
             fence_len = open.fence_len;
