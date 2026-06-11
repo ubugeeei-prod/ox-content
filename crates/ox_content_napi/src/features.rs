@@ -12,13 +12,19 @@ use crate::{
 
 pub(crate) mod code_blocks;
 mod code_imports;
+mod edit;
 mod emoji;
+mod emoji_shortcodes;
+mod wiki;
 
 pub(crate) use code_blocks::{
     extract_code_blocks, extract_docs_tests, lint_code_blocks, CodeBlockDiagnostic,
     ExtractedCodeBlock,
 };
 use code_imports::CodeImportOptions;
+use edit::append_edit_this_page;
+use emoji_shortcodes::replace_emoji_shortcodes;
+use wiki::replace_wiki_links;
 
 #[derive(Clone, Default)]
 pub struct TransformFeatureOptions {
@@ -282,76 +288,6 @@ fn transform_inline_code_segments(
             return;
         }
     }
-}
-
-fn replace_wiki_links(segment: &str, options: &WikiLinkOptions, out: &mut String) {
-    let mut cursor = 0usize;
-    while let Some(relative) = segment[cursor..].find("[[") {
-        let start = cursor + relative;
-        let embed = start > 0 && segment.as_bytes()[start - 1] == b'!';
-        let literal_start = if embed { start - 1 } else { start };
-        out.push_str(&segment[cursor..literal_start]);
-        let inner_start = start + 2;
-        let Some(close_relative) = segment[inner_start..].find("]]") else {
-            out.push_str(&segment[literal_start..]);
-            return;
-        };
-        let close = inner_start + close_relative;
-        let inner = segment[inner_start..close].trim();
-        if inner.is_empty() {
-            out.push_str(&segment[literal_start..close + 2]);
-            cursor = close + 2;
-            continue;
-        }
-
-        let (target, label) = inner
-            .split_once('|')
-            .map_or((inner, None), |(target, label)| (target.trim(), Some(label.trim())));
-        let target = target.trim();
-        let label =
-            label.filter(|value| !value.is_empty()).unwrap_or_else(|| default_wiki_label(target));
-        let url = wiki_target_to_url(target, &options.base_url);
-        if embed {
-            out.push_str("![");
-        } else {
-            out.push('[');
-        }
-        escape_markdown_link_text(label, out);
-        out.push_str("](");
-        out.push_str(&url);
-        out.push(')');
-        cursor = close + 2;
-    }
-    out.push_str(&segment[cursor..]);
-}
-
-fn replace_emoji_shortcodes(segment: &str, options: &EmojiShortcodeOptions, out: &mut String) {
-    let bytes = segment.as_bytes();
-    let mut cursor = 0usize;
-    while let Some(relative) = memchr::memchr(b':', &bytes[cursor..]) {
-        let start = cursor + relative;
-        out.push_str(&segment[cursor..start]);
-        let name_start = start + 1;
-        let mut name_end = name_start;
-        while name_end < bytes.len() && emoji::is_shortcode_byte(bytes[name_end]) {
-            name_end += 1;
-        }
-        if name_end == name_start || bytes.get(name_end) != Some(&b':') {
-            out.push(':');
-            cursor = name_start;
-            continue;
-        }
-        let name = &segment[name_start..name_end];
-        if let Some(value) = options.custom.get(name) {
-            out.push_str(value);
-        } else if let Some(value) = emoji::lookup(name) {
-            out.push_str(value);
-        } else {
-            out.push_str(&segment[start..name_end + 1]);
-        }
-        cursor = name_end + 1;
-    }
-    out.push_str(&segment[cursor..]);
 }
 
 fn transform_attribute_syntax(html: &str) -> Option<String> {
@@ -665,46 +601,6 @@ fn write_attrs(out: &mut String, attrs: &ParsedAttrs) {
     }
 }
 
-fn append_edit_this_page(html: &str, options: &EditThisPageOptions) -> String {
-    let href = edit_this_page_href(options);
-    let mut out = String::with_capacity(html.len() + href.len() + options.label.len() + 96);
-    out.push_str(html);
-    if !out.ends_with('\n') {
-        out.push('\n');
-    }
-    out.push_str("<p class=\"ox-edit-this-page\"><a href=\"");
-    escape_html_attr(&href, &mut out);
-    out.push_str("\" target=\"_blank\" rel=\"noopener noreferrer\">");
-    escape_html_text(&options.label, &mut out);
-    out.push_str("</a></p>\n");
-    out
-}
-
-fn edit_this_page_href(options: &EditThisPageOptions) -> String {
-    let source = PathBuf::from(&options.source_path);
-    let absolute = if source.is_absolute() { source } else { options.root_dir.join(source) };
-    let relative = absolute
-        .strip_prefix(&options.root_dir)
-        .ok()
-        .unwrap_or(absolute.as_path())
-        .to_string_lossy()
-        .replace('\\', "/");
-    format!("{}/edit/{}/{}", options.repo_url, options.branch, percent_encode_path(&relative))
-}
-
-fn percent_encode_path(path: &str) -> String {
-    let mut out = String::with_capacity(path.len());
-    for byte in path.bytes() {
-        if byte.is_ascii_alphanumeric() || matches!(byte, b'/' | b'-' | b'_' | b'.') {
-            out.push(byte as char);
-        } else {
-            use std::fmt::Write as _;
-            let _ = write!(out, "%{byte:02X}");
-        }
-    }
-    out
-}
-
 struct FenceOpen {
     fence_char: u8,
     fence_len: usize,
@@ -759,82 +655,6 @@ fn find_closing_backticks(bytes: &[u8], from: usize, count: usize) -> Option<usi
         cursor = start + 1;
     }
     None
-}
-
-fn wiki_target_to_url(target: &str, base_url: &str) -> String {
-    if target.starts_with("http://")
-        || target.starts_with("https://")
-        || target.starts_with("mailto:")
-        || target.starts_with('#')
-    {
-        return percent_encode_spaces(target);
-    }
-
-    let (path, anchor) =
-        target.split_once('#').map_or((target, None), |(path, anchor)| (path, Some(anchor)));
-    let mut normalized = path.trim().trim_end_matches(".md").trim_end_matches("/index").to_string();
-    if normalized.is_empty() {
-        normalized.push('/');
-    }
-    let mut url = join_base_url(base_url, &normalized);
-    if let Some(anchor) = anchor {
-        if !anchor.is_empty() {
-            url.push('#');
-            slugify_anchor(anchor, &mut url);
-        }
-    }
-    percent_encode_spaces(&url)
-}
-
-fn join_base_url(base_url: &str, path: &str) -> String {
-    if path.starts_with('/') {
-        let base = base_url.trim_end_matches('/');
-        if base.is_empty() || base == "/" {
-            path.to_string()
-        } else {
-            format!("{base}{path}")
-        }
-    } else {
-        let base = if base_url.is_empty() { "/" } else { base_url };
-        format!("{}/{}", base.trim_end_matches('/'), path)
-    }
-}
-
-fn default_wiki_label(target: &str) -> &str {
-    let path = target.split('#').next().unwrap_or(target).trim();
-    path.rsplit('/').next().filter(|value| !value.is_empty()).unwrap_or(target)
-}
-
-fn escape_markdown_link_text(value: &str, out: &mut String) {
-    for ch in value.chars() {
-        if matches!(ch, '[' | ']') {
-            out.push('\\');
-        }
-        out.push(ch);
-    }
-}
-
-fn slugify_anchor(value: &str, out: &mut String) {
-    let mut last_dash = false;
-    for ch in value.trim().chars().flat_map(char::to_lowercase) {
-        if ch.is_alphanumeric() {
-            out.push(ch);
-            last_dash = false;
-        } else if !last_dash {
-            out.push('-');
-            last_dash = true;
-        }
-    }
-    if out.ends_with('-') {
-        out.pop();
-    }
-}
-
-fn percent_encode_spaces(value: &str) -> String {
-    if !value.contains(' ') {
-        return value.to_string();
-    }
-    value.replace(' ', "%20")
 }
 
 fn is_safe_attr_name(name: &str) -> bool {
