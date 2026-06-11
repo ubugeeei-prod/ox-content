@@ -1,8 +1,7 @@
 //! Markdown rendering for generated API reference documentation.
 
-use rustc_hash::{FxBuildHasher, FxHashMap, FxHashSet};
+use rustc_hash::{FxHashMap, FxHashSet};
 use std::borrow::Cow;
-use std::cmp::Ordering;
 // BTreeMap keeps generated API section and tag output deterministic.
 use std::collections::BTreeMap;
 use std::path::Path;
@@ -12,21 +11,28 @@ use std::sync::OnceLock;
 use phf::{phf_map, phf_set};
 use regex::Regex;
 
-use crate::model::{
-    ApiDocEntry, ApiDocMember, ApiDocModule, ApiDocTag, ApiReturnDoc, ApiThrowsDoc,
-};
+use crate::model::{ApiDocEntry, ApiDocMember, ApiDocModule, ApiDocTag, ApiThrowsDoc};
 #[allow(unused_imports)]
 use crate::profile_span;
 use crate::string_builder::{join2, join3, join4, join5, StringBuilder};
 
+mod group_order;
+mod implementation;
 mod markdown_html;
 mod markdown_pure;
 mod options;
+mod sort;
 
+pub use group_order::{order_by_group_title, ordered_entry_kinds};
+use implementation::annotate_implementation_relationships;
 pub use options::{
     MarkdownDisplayFormat, MarkdownDocsOptions, MarkdownLinkStyle, MarkdownPathStrategy,
     MarkdownRenderStyle, MarkdownSingleEntryRoot, DOC_KIND_ORDER,
 };
+use sort::sort_extracted_docs;
+#[allow(unused_imports)]
+pub use sort::SortStrategy;
+pub use sort::{compare_entries, kind_order_slice, parse_sort_strategies};
 
 type RegexCache = OnceLock<Option<Regex>>;
 
@@ -783,280 +789,6 @@ fn normalize_doc_file_path(file_path: &str) -> String {
     normalized.trim_start_matches('/').to_string()
 }
 
-/// A TypeDoc-compatible sort strategy that maps onto ox-content's data model.
-/// Strategies whose required data is unavailable (`enum-value-*`, `documents-*`)
-/// are not represented here and are dropped during parsing, so they act as no-ops.
-#[derive(Debug, Clone, Copy, PartialEq, Eq)]
-pub enum SortStrategy {
-    SourceOrder,
-    Alphabetical,
-    Kind,
-    StaticFirst,
-    InstanceFirst,
-    RequiredFirst,
-    Visibility,
-    ExternalLast,
-}
-
-/// Parses TypeDoc `sort` strategy names, dropping unsupported/unknown ones so they
-/// fall through to the next strategy (matching TypeDoc's tie-breaking semantics).
-/// `alphabetical-ignoring-documents` maps to `Alphabetical` (ox-content has no
-/// document reflections).
-pub fn parse_sort_strategies(raw: &[String]) -> Vec<SortStrategy> {
-    raw.iter()
-        .filter_map(|strategy| match strategy.as_str() {
-            "source-order" => Some(SortStrategy::SourceOrder),
-            "alphabetical" | "alphabetical-ignoring-documents" => Some(SortStrategy::Alphabetical),
-            "kind" => Some(SortStrategy::Kind),
-            "static-first" => Some(SortStrategy::StaticFirst),
-            "instance-first" => Some(SortStrategy::InstanceFirst),
-            "required-first" => Some(SortStrategy::RequiredFirst),
-            "visibility" => Some(SortStrategy::Visibility),
-            "external-last" => Some(SortStrategy::ExternalLast),
-            _ => None,
-        })
-        .collect()
-}
-
-/// The declaration-kind ranking used by the `kind` strategy and as the base order
-/// for module index sections / nav groups: `kind_sort_order` when provided, else
-/// the historical [`DOC_KIND_ORDER`].
-pub fn kind_order_slice(kind_sort_order: Option<&[String]>) -> Vec<&str> {
-    match kind_sort_order {
-        Some(order) => order.iter().map(String::as_str).collect(),
-        None => DOC_KIND_ORDER.to_vec(),
-    }
-}
-
-/// Rank of `kind` within `kind_order`; unlisted kinds sort after listed ones.
-fn kind_rank(kind: &str, kind_order: &[&str]) -> usize {
-    kind_order.iter().position(|candidate| *candidate == kind).unwrap_or(kind_order.len())
-}
-
-/// Case-insensitive name comparison with a case-sensitive tiebreak. Used as the
-/// final, always-decisive tiebreak so sorts are total and stable.
-fn compare_names(a: &str, b: &str) -> Ordering {
-    a.to_lowercase().cmp(&b.to_lowercase()).then_with(|| a.cmp(b))
-}
-
-/// Compares two entries under an ordered list of sort strategies (later strategies
-/// only break ties). A trailing name comparison guarantees a total order.
-pub fn compare_entries(
-    a: &ApiDocEntry,
-    b: &ApiDocEntry,
-    sort: &[SortStrategy],
-    kind_order: &[&str],
-) -> Ordering {
-    for strategy in sort {
-        let ordering = match strategy {
-            SortStrategy::SourceOrder => a.line.cmp(&b.line),
-            SortStrategy::Alphabetical => compare_names(&a.name, &b.name),
-            SortStrategy::Kind => {
-                kind_rank(&a.kind, kind_order).cmp(&kind_rank(&b.kind, kind_order))
-            }
-            // External (no source file in the consumer repo) sorts last.
-            SortStrategy::ExternalLast => a.file.is_empty().cmp(&b.file.is_empty()),
-            // Member-only strategies do not apply to entries.
-            SortStrategy::StaticFirst
-            | SortStrategy::InstanceFirst
-            | SortStrategy::RequiredFirst
-            | SortStrategy::Visibility => Ordering::Equal,
-        };
-        if ordering != Ordering::Equal {
-            return ordering;
-        }
-    }
-    compare_names(&a.name, &b.name)
-}
-
-/// Compares two members under an ordered list of sort strategies (later strategies
-/// only break ties). A trailing name comparison guarantees a total order.
-fn compare_members(
-    a: &ApiDocMember,
-    b: &ApiDocMember,
-    sort: &[SortStrategy],
-    kind_order: &[&str],
-) -> Ordering {
-    for strategy in sort {
-        let ordering = match strategy {
-            SortStrategy::SourceOrder => a.line.cmp(&b.line),
-            SortStrategy::Alphabetical => compare_names(&a.name, &b.name),
-            SortStrategy::Kind => {
-                kind_rank(&a.kind, kind_order).cmp(&kind_rank(&b.kind, kind_order))
-            }
-            // Static members before instance members (and vice versa).
-            SortStrategy::StaticFirst => b.r#static.cmp(&a.r#static),
-            SortStrategy::InstanceFirst => a.r#static.cmp(&b.r#static),
-            // Required (non-optional) members before optional ones.
-            SortStrategy::RequiredFirst => a.optional.cmp(&b.optional),
-            // Public members before private ones.
-            SortStrategy::Visibility => a.private.cmp(&b.private),
-            // Entry-only strategy.
-            SortStrategy::ExternalLast => Ordering::Equal,
-        };
-        if ordering != Ordering::Equal {
-            return ordering;
-        }
-    }
-    compare_names(&a.name, &b.name)
-}
-
-fn sort_extracted_docs(docs: &[ApiDocModule], options: &MarkdownDocsOptions) -> Vec<ApiDocModule> {
-    let mut sorted = docs.to_vec();
-    let strategies = options.sort.as_deref().map(parse_sort_strategies);
-    let kind_order = kind_order_slice(options.kind_sort_order.as_deref());
-
-    for doc in &mut sorted {
-        if let Some(strategies) = &strategies {
-            doc.entries.sort_by(|a, b| compare_entries(a, b, strategies, &kind_order));
-            for entry in &mut doc.entries {
-                entry.members.sort_by(|a, b| compare_members(a, b, strategies, &kind_order));
-                sort_api_doc_return_members(entry, Some(strategies), &kind_order);
-            }
-        } else {
-            doc.entries.sort_by_cached_key(|entry| (entry.name.to_lowercase(), entry.name.clone()));
-            for entry in &mut doc.entries {
-                sort_api_doc_members(entry);
-                sort_api_doc_return_members(entry, None, &kind_order);
-            }
-        }
-    }
-
-    // `sortEntryPoints: false` preserves the caller-provided module order.
-    if options.sort_entry_points {
-        sorted.sort_by_cached_key(|module| {
-            let name = file_name(&module.file);
-            (name.to_lowercase(), name)
-        });
-    }
-    sorted
-}
-
-fn annotate_implementation_relationships(docs: &mut [ApiDocModule]) {
-    let mut implemented_names = FxHashSet::default();
-    for doc in docs.iter() {
-        for entry in &doc.entries {
-            if entry.kind != "class" || entry.implements.is_empty() {
-                continue;
-            }
-            for implemented in &entry.implements {
-                let display_name = heritage_display_name(implemented);
-                implemented_names.insert(heritage_lookup_name(display_name.as_ref()).to_string());
-            }
-        }
-    }
-    if implemented_names.is_empty() {
-        return;
-    }
-
-    let mut implementable_members: FxHashMap<String, FxHashSet<String>> =
-        FxHashMap::with_capacity_and_hasher(implemented_names.len(), FxBuildHasher);
-    for doc in docs.iter() {
-        for entry in &doc.entries {
-            if !matches!(entry.kind.as_str(), "interface" | "type") {
-                continue;
-            }
-            if !implemented_names.contains(entry.name.as_str()) {
-                continue;
-            }
-            let members =
-                entry.members.iter().map(|member| member.name.clone()).collect::<FxHashSet<_>>();
-            implementable_members.insert(entry.name.clone(), members);
-        }
-    }
-    if implementable_members.is_empty() {
-        return;
-    }
-
-    for doc in docs {
-        for entry in &mut doc.entries {
-            if entry.kind != "class" || entry.implements.is_empty() {
-                continue;
-            }
-            for implemented in &entry.implements {
-                let display_name = heritage_display_name(implemented);
-                let lookup_name = heritage_lookup_name(display_name.as_ref());
-                let Some(interface_members) = implementable_members.get(lookup_name) else {
-                    continue;
-                };
-                for member in &mut entry.members {
-                    if interface_members.contains(&member.name) {
-                        let mut implementation = StringBuilder::new();
-                        implementation.push_str(display_name.as_ref());
-                        implementation.push_char('.');
-                        implementation.push_str(&member.name);
-                        let implementation = implementation.into_string();
-                        if !member
-                            .implementation_of
-                            .iter()
-                            .any(|existing| existing == &implementation)
-                        {
-                            member.implementation_of.push(implementation);
-                        }
-                    }
-                }
-            }
-        }
-    }
-}
-
-fn heritage_lookup_name(display_name: &str) -> &str {
-    display_name.rsplit_once('.').map_or(display_name, |(_, tail)| tail)
-}
-
-fn heritage_display_name(name: &str) -> Cow<'_, str> {
-    let trimmed = name.trim();
-    if let Some(index) = trimmed.find('<') {
-        Cow::Owned(trimmed[..index].trim().to_string())
-    } else {
-        Cow::Borrowed(trimmed)
-    }
-}
-
-/// Sorts an entry's members alphabetically (case-insensitive) for the member kinds
-/// TypeDoc sorts. Enum members keep declaration order, which can be semantically
-/// meaningful. Renderers bucket members by group while preserving relative order,
-/// so a single global sort yields alphabetical order within each group. Used when
-/// no explicit `sort` is configured (historical default behavior).
-fn sort_api_doc_members(entry: &mut ApiDocEntry) {
-    if matches!(entry.kind.as_str(), "class" | "interface" | "type") {
-        entry
-            .members
-            .sort_by_cached_key(|member| (member.name.to_lowercase(), member.name.clone()));
-    }
-}
-
-fn sort_api_doc_return_members(
-    entry: &mut ApiDocEntry,
-    strategies: Option<&[SortStrategy]>,
-    kind_order: &[&str],
-) {
-    sort_return_members(entry.returns.as_mut(), strategies, kind_order);
-    for member in &mut entry.members {
-        sort_return_members(member.returns.as_mut(), strategies, kind_order);
-    }
-}
-
-fn sort_return_members(
-    returns: Option<&mut ApiReturnDoc>,
-    strategies: Option<&[SortStrategy]>,
-    kind_order: &[&str],
-) {
-    let Some(returns) = returns else {
-        return;
-    };
-    if let Some(strategies) = strategies {
-        returns.members.sort_by(|a, b| compare_members(a, b, strategies, kind_order));
-    } else {
-        returns
-            .members
-            .sort_by_cached_key(|member| (member.name.to_lowercase(), member.name.clone()));
-    }
-    for member in &mut returns.members {
-        sort_return_members(member.returns.as_mut(), strategies, kind_order);
-    }
-}
-
 /// Whether a member table should keep the `Kind` column. Named member groups
 /// (`Properties`, `Methods`, `Constructors`, `Enum Members`, `Static …`) state the
 /// kind in their heading, so the column is redundant and dropped to match TypeDoc.
@@ -1783,83 +1515,6 @@ fn generate_typedoc_entry_page(
         }
     }
     markdown
-}
-
-/// Present declaration kinds in `kind_order` (the historical [`DOC_KIND_ORDER`] or
-/// a caller-provided `kindSortOrder`), with any kinds not listed in `kind_order`
-/// appended alphabetically. Shared by the module index sections and the nav groups.
-pub fn ordered_entry_kinds(entries: &[ApiDocEntry], kind_order: &[&str]) -> Vec<String> {
-    let mut kinds = Vec::new();
-    for kind in kind_order {
-        if entries.iter().any(|entry| entry.kind == *kind) {
-            kinds.push((*kind).to_string());
-        }
-    }
-    let mut extra = entries
-        .iter()
-        .map(|entry| entry.kind.clone())
-        .filter(|kind| !kind_order.contains(&kind.as_str()))
-        .collect::<Vec<_>>();
-    extra.sort();
-    extra.dedup();
-    kinds.extend(extra);
-    kinds
-}
-
-/// Reorders `(group_title, payload)` sections by a TypeDoc-style `group_order`.
-///
-/// `None` returns the input unchanged (preserving the caller's default order).
-/// Otherwise titles listed before `*` lead in the given order, titles after `*`
-/// trail in the given order, and titles not listed are placed at the `*` position
-/// (or the end when there is no `*`) sorted alphabetically. Listed titles that are
-/// not present are ignored.
-pub fn order_by_group_title<T>(
-    sections: Vec<(String, T)>,
-    group_order: Option<&[String]>,
-) -> Vec<(String, T)> {
-    let Some(group_order) = group_order else {
-        return sections;
-    };
-    let star = group_order.iter().position(|group| group == "*");
-    let (head, tail): (&[String], &[String]) = match star {
-        Some(index) => (&group_order[..index], &group_order[index + 1..]),
-        None => (group_order, &group_order[group_order.len()..]),
-    };
-
-    let mut remaining: Vec<Option<(String, T)>> = sections.into_iter().map(Some).collect();
-    let mut result = Vec::with_capacity(remaining.len());
-
-    for title in head {
-        if let Some(section) = take_section(&mut remaining, title) {
-            result.push(section);
-        }
-    }
-
-    let mut unspecified = Vec::new();
-    for slot in &mut remaining {
-        let is_tail = slot.as_ref().is_some_and(|(title, _)| tail.iter().any(|t| t == title));
-        if !is_tail {
-            if let Some(section) = slot.take() {
-                unspecified.push(section);
-            }
-        }
-    }
-    unspecified.sort_by(|a, b| a.0.cmp(&b.0));
-    result.extend(unspecified);
-
-    for title in tail {
-        if let Some(section) = take_section(&mut remaining, title) {
-            result.push(section);
-        }
-    }
-    result
-}
-
-fn take_section<T>(remaining: &mut [Option<(String, T)>], title: &str) -> Option<(String, T)> {
-    remaining
-        .iter_mut()
-        .find(|slot| slot.as_ref().is_some_and(|(t, _)| t == title))
-        .and_then(Option::take)
 }
 
 fn normalize_signature(signature: Option<&str>) -> Option<String> {
