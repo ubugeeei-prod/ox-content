@@ -1,7 +1,7 @@
 #![allow(clippy::redundant_pub_crate)]
 
+use rustc_hash::FxHashMap;
 use std::borrow::Cow;
-use std::collections::HashMap;
 use std::path::PathBuf;
 
 use crate::{
@@ -35,7 +35,7 @@ struct WikiLinkOptions {
 
 #[derive(Clone)]
 struct EmojiShortcodeOptions {
-    custom: HashMap<String, String>,
+    custom: FxHashMap<String, String>,
 }
 
 #[derive(Clone)]
@@ -171,7 +171,9 @@ fn resolve_emoji_shortcodes(
     if options.enabled == Some(false) {
         return None;
     }
-    Some(EmojiShortcodeOptions { custom: options.custom.clone().unwrap_or_default() })
+    Some(EmojiShortcodeOptions {
+        custom: options.custom.clone().unwrap_or_default().into_iter().collect(),
+    })
 }
 
 fn resolve_attrs(options: Option<&JsAttrsOptions>) -> bool {
@@ -880,7 +882,7 @@ mod tests {
     #[test]
     fn emoji_shortcodes_use_defaults_and_custom_values() {
         let options = EmojiShortcodeOptions {
-            custom: HashMap::from([("shipit".to_string(), "ship".to_string())]),
+            custom: std::iter::once(("shipit".to_string(), "ship".to_string())).collect(),
         };
         let mut out = String::new();
         replace_emoji_shortcodes(":smile: :shipit: :octocat: :unknown:", &options, &mut out);

@@ -1,6 +1,8 @@
 use std::collections::HashSet;
 use std::hash::BuildHasher;
 
+use rustc_hash::FxHashSet;
+
 use crate::dictionary::DictionarySet;
 use crate::mf2;
 
@@ -41,6 +43,7 @@ impl std::fmt::Display for Diagnostic {
 
 /// Checks for keys used in source code that are missing from dictionaries.
 #[must_use]
+#[allow(clippy::disallowed_types)]
 pub fn check_missing_keys<S: BuildHasher>(
     used_keys: &HashSet<String, S>,
     dict_set: &DictionarySet,
@@ -67,6 +70,7 @@ pub fn check_missing_keys<S: BuildHasher>(
 
 /// Checks for keys in dictionaries that are not used in source code.
 #[must_use]
+#[allow(clippy::disallowed_types)]
 pub fn check_unused_keys<S: BuildHasher>(
     used_keys: &HashSet<String, S>,
     dict_set: &DictionarySet,
@@ -97,7 +101,7 @@ pub fn check_type_mismatch(dict_set: &DictionarySet) -> Vec<Diagnostic> {
     let mut diagnostics = Vec::new();
 
     // Collect all keys from all locales
-    let mut all_keys: HashSet<String> = HashSet::new();
+    let mut all_keys: FxHashSet<String> = FxHashSet::default();
     for locale in dict_set.locales() {
         if let Some(dict) = dict_set.get(locale) {
             for key in dict.keys() {
@@ -108,7 +112,7 @@ pub fn check_type_mismatch(dict_set: &DictionarySet) -> Vec<Diagnostic> {
 
     // For each key, compare variable sets across locales
     for key in &all_keys {
-        let mut locale_vars: Vec<(String, HashSet<String>)> = Vec::new();
+        let mut locale_vars: Vec<(String, FxHashSet<String>)> = Vec::new();
 
         for locale in dict_set.locales() {
             if let Some(dict) = dict_set.get(locale) {
@@ -195,6 +199,7 @@ pub fn check_syntax_errors(dict_set: &DictionarySet) -> Vec<Diagnostic> {
 
 /// Runs all checks and returns combined diagnostics.
 #[must_use]
+#[allow(clippy::disallowed_types)]
 pub fn check_all<S: BuildHasher>(
     used_keys: &HashSet<String, S>,
     dict_set: &DictionarySet,
@@ -234,7 +239,7 @@ mod tests {
     #[test]
     fn missing_keys() {
         let dict_set = make_dict_set();
-        let mut used = HashSet::new();
+        let mut used = FxHashSet::default();
         used.insert("common.greeting".to_string());
         used.insert("common.unknown".to_string());
 
@@ -246,7 +251,7 @@ mod tests {
     #[test]
     fn unused_keys() {
         let dict_set = make_dict_set();
-        let used: HashSet<String> = HashSet::new(); // nothing used
+        let used: FxHashSet<String> = FxHashSet::default(); // nothing used
 
         let diags = check_unused_keys(&used, &dict_set);
         assert!(!diags.is_empty());
@@ -266,7 +271,7 @@ mod tests {
 
         let diags = check_type_mismatch(&set);
         assert!(!diags.is_empty());
-        // Depending on HashMap iteration order, the diagnostic may report
+        // Depending on hash iteration order, the diagnostic may report
         // "missing variables" or "extra variables".
         assert!(diags
             .iter()

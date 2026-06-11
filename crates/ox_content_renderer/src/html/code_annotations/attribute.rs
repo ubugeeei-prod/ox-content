@@ -5,6 +5,7 @@
 //! stays independent from VitePress metadata so users can opt into a stable native
 //! grammar without changing their code fence language token.
 
+// BTreeMap preserves ascending code line order during annotation rendering.
 use std::collections::BTreeMap;
 
 use smallvec::SmallVec;

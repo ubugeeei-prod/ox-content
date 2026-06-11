@@ -1,6 +1,7 @@
 //! Routing and navigation helpers for SSG builds.
 
 use std::cmp::Ordering;
+// BTreeMap keeps nav groups sorted deterministically before rendering.
 use std::collections::BTreeMap;
 use std::fs;
 use std::path::{Path, PathBuf};

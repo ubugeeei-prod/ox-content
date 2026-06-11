@@ -515,6 +515,7 @@ fn module_tags_from_normalized_entry(entry: &NormalizedDocEntry) -> Vec<ApiDocTa
 }
 
 fn explicit_module_name_from_tags(
+    // Normalized doc tags are ordered for deterministic generated output.
     tags: &std::collections::BTreeMap<String, String>,
 ) -> Option<&str> {
     tags.get("module")

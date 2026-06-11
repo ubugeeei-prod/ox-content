@@ -43,6 +43,7 @@ pub struct JsTypeParam {
 /// Normalized member documentation used by generated API docs.
 #[napi(object)]
 #[derive(Clone)]
+#[allow(clippy::disallowed_types)]
 pub struct JsDocMember {
     pub name: String,
     pub kind: String,
@@ -94,6 +95,7 @@ impl Default for JsDocMember {
 /// Normalized documentation entry used by generated API docs.
 #[napi(object)]
 #[derive(Clone)]
+#[allow(clippy::disallowed_types)]
 pub struct JsDocEntry {
     pub name: String,
     pub kind: String,

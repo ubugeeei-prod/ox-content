@@ -1,6 +1,6 @@
 //! Search index data structures.
 
-use std::collections::HashMap;
+use rustc_hash::FxHashMap;
 
 use serde::{Deserialize, Serialize};
 
@@ -67,9 +67,9 @@ pub struct SearchIndex {
     /// All indexed documents.
     pub documents: Vec<SearchDocument>,
     /// Inverted index: term -> list of postings.
-    pub index: HashMap<String, Vec<Posting>>,
+    pub index: FxHashMap<String, Vec<Posting>>,
     /// Document frequency: term -> number of documents containing term.
-    pub df: HashMap<String, usize>,
+    pub df: FxHashMap<String, usize>,
     /// Average document length (for BM25).
     pub avg_dl: f64,
     /// Total number of documents.
@@ -142,12 +142,12 @@ impl SearchIndexBuilder {
     /// Builds the search index.
     #[must_use]
     pub fn build(self) -> SearchIndex {
-        let mut index: HashMap<String, Vec<Posting>> = HashMap::new();
-        let mut df: HashMap<String, usize> = HashMap::new();
+        let mut index: FxHashMap<String, Vec<Posting>> = FxHashMap::default();
+        let mut df: FxHashMap<String, usize> = FxHashMap::default();
         let mut total_length = 0usize;
 
         for (doc_idx, doc) in self.documents.iter().enumerate() {
-            let mut doc_terms: HashMap<String, (u32, Field)> = HashMap::new();
+            let mut doc_terms: FxHashMap<String, (u32, Field)> = FxHashMap::default();
 
             // Index title
             for token in tokenize(&doc.title) {

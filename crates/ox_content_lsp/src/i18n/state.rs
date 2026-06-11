@@ -1,4 +1,4 @@
-use std::collections::{HashMap, HashSet};
+use rustc_hash::{FxHashMap, FxHashSet};
 use std::path::{Path, PathBuf};
 use std::sync::Arc;
 
@@ -18,8 +18,8 @@ pub struct I18nState {
 struct Inner {
     dict_dir: Option<PathBuf>,
     dict_set: DictionarySet,
-    file_keys: HashMap<String, Vec<KeyUsage>>,
-    all_keys: HashSet<String>,
+    file_keys: FxHashMap<String, Vec<KeyUsage>>,
+    all_keys: FxHashSet<String>,
     open_uris: Vec<Url>,
 }
 
@@ -78,7 +78,7 @@ impl I18nState {
 
     pub async fn all_dictionary_keys(&self) -> Vec<String> {
         let inner = self.inner.read().await;
-        let mut keys = HashSet::new();
+        let mut keys = FxHashSet::default();
         for locale in inner.dict_set.locales() {
             if let Some(dict) = inner.dict_set.get(locale) {
                 keys.extend(dict.keys().map(std::string::ToString::to_string));

@@ -1,6 +1,6 @@
 #![allow(clippy::redundant_pub_crate)]
 
-use std::collections::HashSet;
+use rustc_hash::FxHashSet;
 
 use crate::{JsCodeBlockLintOptions, JsDocsTestOptions};
 
@@ -85,7 +85,7 @@ pub(crate) fn lint_code_blocks(
     }
 
     let languages = options.languages.as_ref().map(|values| {
-        values.iter().map(|value| value.to_ascii_lowercase()).collect::<HashSet<_>>()
+        values.iter().map(|value| value.to_ascii_lowercase()).collect::<FxHashSet<_>>()
     });
     let require_language = options.require_language.unwrap_or(false);
     let trailing_spaces = options.trailing_spaces.unwrap_or(true);
@@ -152,7 +152,7 @@ pub(crate) fn extract_docs_tests(
 
     let languages = options.languages.as_ref().map_or_else(
         || ["js", "jsx", "ts", "tsx", "mjs", "mts"].into_iter().map(ToString::to_string).collect(),
-        |values| values.iter().map(|value| value.to_ascii_lowercase()).collect::<HashSet<_>>(),
+        |values| values.iter().map(|value| value.to_ascii_lowercase()).collect::<FxHashSet<_>>(),
     );
     let require_meta = options.require_meta.unwrap_or(true);
 

@@ -1,6 +1,6 @@
 #![cfg_attr(test, allow(dead_code))]
 
-use std::collections::{HashMap, HashSet};
+use rustc_hash::{FxHashMap, FxHashSet};
 use std::sync::LazyLock;
 
 use napi_derive::napi;
@@ -41,19 +41,19 @@ static LINT_DICTIONARY_DATA: LazyLock<Option<LintDictionaryData>> = LazyLock::ne
 struct LintDictionaryData {
     global: Vec<String>,
     #[serde(rename = "byLanguage")]
-    by_language: HashMap<String, Vec<String>>,
+    by_language: FxHashMap<String, Vec<String>>,
 }
 
 #[derive(Default)]
 struct PreparedLintDictionaryData {
-    global_words: HashSet<String>,
-    by_language: HashMap<String, PreparedLanguageDictionary>,
+    global_words: FxHashSet<String>,
+    by_language: FxHashMap<String, PreparedLanguageDictionary>,
 }
 
 struct PreparedLanguageDictionary {
     has_base_words: bool,
     cjk_segment_words: Vec<SegmentWord>,
-    words: HashSet<String>,
+    words: FxHashSet<String>,
 }
 
 #[derive(Clone)]
@@ -72,7 +72,7 @@ static PREPARED_LINT_DICTIONARY_DATA: LazyLock<PreparedLintDictionaryData> = Laz
         .iter()
         .map(|word| normalize_word_for_set(word))
         .filter(|word| !word.is_empty())
-        .collect::<HashSet<_>>();
+        .collect::<FxHashSet<_>>();
 
     let by_language = SUPPORTED_MARKDOWN_LINT_LANGUAGES
         .iter()
@@ -84,7 +84,7 @@ static PREPARED_LINT_DICTIONARY_DATA: LazyLock<PreparedLintDictionaryData> = Laz
                 .flatten()
                 .map(|word| normalize_word_for_set(word))
                 .filter(|word| !word.is_empty())
-                .collect::<HashSet<_>>();
+                .collect::<FxHashSet<_>>();
 
             let mut cjk_segment_words = words
                 .iter()
@@ -179,7 +179,7 @@ struct InternalMarkdownLintOptions {
 #[derive(Clone, Default)]
 struct InternalMarkdownLintDictionary {
     words: Vec<String>,
-    by_language: HashMap<String, Vec<String>>,
+    by_language: FxHashMap<String, Vec<String>>,
     ignored_words: Vec<String>,
 }
 
@@ -195,12 +195,12 @@ struct InternalMarkdownLintRules {
 }
 
 struct DictionaryBundle {
-    active_languages: HashSet<String>,
-    cjk_segment_words: HashMap<String, Vec<SegmentWord>>,
-    extra_by_language: HashMap<String, HashSet<String>>,
-    extra_global_words: HashSet<String>,
-    ignored_words: HashSet<String>,
-    latin_words: HashSet<String>,
+    active_languages: FxHashSet<String>,
+    cjk_segment_words: FxHashMap<String, Vec<SegmentWord>>,
+    extra_by_language: FxHashMap<String, FxHashSet<String>>,
+    extra_global_words: FxHashSet<String>,
+    ignored_words: FxHashSet<String>,
+    latin_words: FxHashSet<String>,
     latin_suggestion_words: Vec<String>,
 }
 
@@ -295,7 +295,7 @@ fn collect_markdown_lint_state(
 ) -> MarkdownLintState {
     let mut diagnostics = Vec::new();
     let mut masked_lines = Vec::new();
-    let mut seen_headings = HashMap::new();
+    let mut seen_headings = FxHashMap::default();
 
     let mut blank_line_streak = 0_u32;
     let mut html_comment_open = false;
@@ -534,7 +534,7 @@ fn create_dictionary_bundle(options: &InternalMarkdownLintOptions) -> Dictionary
         .iter()
         .map(|word| normalize_word_for_set(word))
         .filter(|word| !word.is_empty())
-        .collect::<HashSet<_>>();
+        .collect::<FxHashSet<_>>();
 
     let extra_by_language = options
         .dictionary
@@ -547,14 +547,14 @@ fn create_dictionary_bundle(options: &InternalMarkdownLintOptions) -> Dictionary
                     .iter()
                     .map(|word| normalize_word_for_set(word))
                     .filter(|word| !word.is_empty())
-                    .collect::<HashSet<_>>(),
+                    .collect::<FxHashSet<_>>(),
             )
         })
         .filter(|(_, words)| !words.is_empty())
-        .collect::<HashMap<_, _>>();
+        .collect::<FxHashMap<_, _>>();
 
-    let mut latin_words = HashSet::new();
-    let mut latin_suggestion_words = HashSet::new();
+    let mut latin_words = FxHashSet::default();
+    let mut latin_suggestion_words = FxHashSet::default();
 
     for language in &options.languages {
         if language == "ja" || language == "zh" {
@@ -604,7 +604,7 @@ fn create_dictionary_bundle(options: &InternalMarkdownLintOptions) -> Dictionary
         .cloned()
         .collect();
 
-    let mut cjk_segment_words = HashMap::new();
+    let mut cjk_segment_words = FxHashMap::default();
 
     for language in
         options.languages.iter().filter(|language| *language == "ja" || *language == "zh")
@@ -838,7 +838,7 @@ fn assign_latin_languages(
     fallback_language: &str,
 ) -> Vec<Token> {
     let mut scores =
-        languages.iter().map(|language| (language.clone(), 0_usize)).collect::<HashMap<_, _>>();
+        languages.iter().map(|language| (language.clone(), 0_usize)).collect::<FxHashMap<_, _>>();
 
     let matching_languages = tokens
         .iter()
@@ -1369,7 +1369,7 @@ fn count_code_points(text: &str) -> usize {
 }
 
 fn dedupe_strings(values: Vec<String>) -> Vec<String> {
-    let mut seen = HashSet::new();
+    let mut seen = FxHashSet::default();
     let mut deduped = Vec::new();
 
     for value in values {

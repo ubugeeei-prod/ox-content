@@ -220,7 +220,7 @@ fn generate_typedoc_nav_metadata(
                 let kind_path = nav_route_path(&base_path, &kind_file_name);
                 // Overloads share a name and resolve to one typedoc page, so collapse
                 // them to a single sidebar leaf (matching the module index).
-                let mut seen = std::collections::HashSet::new();
+                let mut seen = rustc_hash::FxHashSet::default();
                 let entry_children = entries
                     .into_iter()
                     .filter(|entry| seen.insert(entry.name.as_str()))

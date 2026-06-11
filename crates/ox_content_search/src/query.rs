@@ -1,6 +1,6 @@
 //! Search query engine with BM25 scoring.
 
-use std::collections::HashMap;
+use rustc_hash::FxHashMap;
 
 use serde::{Deserialize, Serialize};
 
@@ -95,7 +95,7 @@ impl SearchIndex {
         }
 
         // Calculate scores for each document
-        let mut doc_scores: HashMap<usize, (f64, Vec<String>)> = HashMap::new();
+        let mut doc_scores: FxHashMap<usize, (f64, Vec<String>)> = FxHashMap::default();
 
         for (i, token) in tokens.iter().enumerate() {
             let is_last = i == tokens.len() - 1;
@@ -155,7 +155,11 @@ impl SearchIndex {
         ((n - df + 0.5) / (df + 0.5)).ln_1p()
     }
 
-    fn score_matching_term(&self, term: &str, doc_scores: &mut HashMap<usize, (f64, Vec<String>)>) {
+    fn score_matching_term(
+        &self,
+        term: &str,
+        doc_scores: &mut FxHashMap<usize, (f64, Vec<String>)>,
+    ) {
         let Some(postings) = self.index.get(term) else {
             return;
         };

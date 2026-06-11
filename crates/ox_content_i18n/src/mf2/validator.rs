@@ -3,20 +3,20 @@ use crate::mf2::ast::{
     ComplexBody, ComplexMessage, Declaration, Expression, Message, Operand, Pattern, PatternPart,
     Variant,
 };
-use std::collections::HashSet;
+use rustc_hash::FxHashSet;
 
 /// Performs semantic validation on a parsed MF2 message.
 pub fn validate(message: &Message) -> Vec<I18nError> {
     let mut errors = Vec::new();
     match message {
-        Message::Simple(pattern) => validate_pattern(pattern, &HashSet::new(), &mut errors),
+        Message::Simple(pattern) => validate_pattern(pattern, &FxHashSet::default(), &mut errors),
         Message::Complex(complex) => validate_complex(complex, &mut errors),
     }
     errors
 }
 
 fn validate_complex(complex: &ComplexMessage, errors: &mut Vec<I18nError>) {
-    let mut declared_vars: HashSet<String> = HashSet::new();
+    let mut declared_vars: FxHashSet<String> = FxHashSet::default();
 
     // Collect declared variables
     for decl in &complex.declarations {
@@ -85,7 +85,7 @@ fn validate_complex(complex: &ComplexMessage, errors: &mut Vec<I18nError>) {
 
 fn validate_pattern(
     pattern: &Pattern,
-    declared_vars: &HashSet<String>,
+    declared_vars: &FxHashSet<String>,
     errors: &mut Vec<I18nError>,
 ) {
     for part in &pattern.parts {
@@ -97,12 +97,12 @@ fn validate_pattern(
 
 fn validate_expression(
     expr: &Expression,
-    _declared_vars: &HashSet<String>,
+    _declared_vars: &FxHashSet<String>,
     errors: &mut Vec<I18nError>,
 ) {
     // Validate that annotation options are not duplicated
     if let Some(ann) = &expr.annotation {
-        let mut seen_opts: HashSet<String> = HashSet::new();
+        let mut seen_opts: FxHashSet<String> = FxHashSet::default();
         for opt in &ann.options {
             if !seen_opts.insert(opt.name.clone()) {
                 errors.push(I18nError::Mf2Validation {
@@ -136,8 +136,8 @@ fn validate_catch_all(variants: &[Variant], selector_count: usize, errors: &mut 
 
 /// Extracts all variable names referenced in a message.
 #[must_use]
-pub fn extract_variables(message: &Message) -> HashSet<String> {
-    let mut vars = HashSet::new();
+pub fn extract_variables(message: &Message) -> FxHashSet<String> {
+    let mut vars = FxHashSet::default();
     match message {
         Message::Simple(pattern) => extract_pattern_vars(pattern, &mut vars),
         Message::Complex(complex) => {
@@ -167,7 +167,7 @@ pub fn extract_variables(message: &Message) -> HashSet<String> {
     vars
 }
 
-fn extract_pattern_vars(pattern: &Pattern, vars: &mut HashSet<String>) {
+fn extract_pattern_vars(pattern: &Pattern, vars: &mut FxHashSet<String>) {
     for part in &pattern.parts {
         if let PatternPart::Expression(expr) = part {
             extract_expression_vars(expr, vars);
@@ -175,7 +175,7 @@ fn extract_pattern_vars(pattern: &Pattern, vars: &mut HashSet<String>) {
     }
 }
 
-fn extract_expression_vars(expr: &Expression, vars: &mut HashSet<String>) {
+fn extract_expression_vars(expr: &Expression, vars: &mut FxHashSet<String>) {
     if let Some(Operand::Variable(name)) = &expr.operand {
         vars.insert(name.clone());
     }

@@ -3,8 +3,8 @@
 //! This crate provides WASM bindings for using Ox Content in browsers
 //! and other WebAssembly environments.
 
+use rustc_hash::FxHashMap;
 use std::borrow::Cow;
-use std::collections::HashMap;
 
 use wasm_bindgen::prelude::*;
 
@@ -25,7 +25,7 @@ pub struct TocEntry {
 #[derive(serde::Serialize)]
 pub struct TransformResult {
     pub html: String,
-    pub frontmatter: HashMap<String, serde_json::Value>,
+    pub frontmatter: FxHashMap<String, serde_json::Value>,
     pub toc: Vec<TocEntry>,
     pub errors: Vec<String>,
 }
@@ -244,7 +244,7 @@ pub fn transform(source: &str, options: Option<WasmParserOptions>) -> JsValue {
         Err(e) => {
             let transform_result = TransformResult {
                 html: String::new(),
-                frontmatter: HashMap::new(),
+                frontmatter: FxHashMap::default(),
                 toc: vec![],
                 errors: vec![e.to_string()],
             };
@@ -261,11 +261,11 @@ pub fn version() -> String {
 }
 
 /// Parses YAML frontmatter from Markdown content.
-fn parse_frontmatter(source: &str) -> (Cow<'_, str>, HashMap<String, serde_json::Value>) {
+fn parse_frontmatter(source: &str) -> (Cow<'_, str>, FxHashMap<String, serde_json::Value>) {
     // wasm-bindgen exposes the JS string as `&str` for this call. Return
     // `Cow::Borrowed` for the Markdown body so stripping frontmatter adjusts
     // slice boundaries instead of copying the body into a new `String`.
-    let mut frontmatter = HashMap::new();
+    let mut frontmatter = FxHashMap::default();
 
     if !source.starts_with("---") {
         return (Cow::Borrowed(source), frontmatter);
@@ -315,7 +315,7 @@ fn parse_frontmatter(source: &str) -> (Cow<'_, str>, HashMap<String, serde_json:
 /// Extracts table of contents from document headings.
 fn extract_toc(doc: &Document, max_depth: u8) -> Vec<TocEntry> {
     let mut entries = Vec::new();
-    let mut slug_counts = HashMap::new();
+    let mut slug_counts = FxHashMap::default();
 
     for node in &doc.children {
         if let Node::Heading(heading) = node {
@@ -379,7 +379,7 @@ fn slugify(text: &str) -> String {
         .join("-")
 }
 
-fn unique_slug(slug: String, counts: &mut HashMap<String, usize>) -> String {
+fn unique_slug(slug: String, counts: &mut FxHashMap<String, usize>) -> String {
     let slug = if slug.is_empty() { "section".to_string() } else { slug };
     let count = counts.entry(slug.clone()).or_insert(0);
     let unique = if *count == 0 { slug } else { format!("{slug}-{count}") };

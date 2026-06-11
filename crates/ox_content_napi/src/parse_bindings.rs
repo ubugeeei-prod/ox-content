@@ -79,6 +79,7 @@ pub struct JsSourceOrigin {
 
 /// Prepared Markdown source with parsed frontmatter.
 #[napi(object)]
+#[allow(clippy::disallowed_types)]
 pub struct PreparedSourceResult {
     /// Markdown content after optional frontmatter removal.
     pub content: String,

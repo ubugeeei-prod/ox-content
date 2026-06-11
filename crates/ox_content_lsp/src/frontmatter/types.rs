@@ -1,3 +1,4 @@
+// BTreeMap keeps frontmatter schema properties deterministic in completions.
 use std::collections::BTreeMap;
 
 use serde::Deserialize;
