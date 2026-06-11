@@ -349,6 +349,7 @@ export interface JsDocEntry {
   description: string
   params?: Array<JsDocParam>
   returns?: JsDocReturn
+  throws?: Array<JsDocThrows>
   examples?: Array<string>
   tags?: Record<string, string>
   private: boolean
@@ -378,6 +379,7 @@ export interface JsDocMember {
   params?: Array<JsDocParam>
   typeParameters?: Array<JsTypeParam>
   returns?: JsDocReturn
+  throws?: Array<JsDocThrows>
   members?: Array<JsDocMember>
   optional?: boolean
   readonly?: boolean
@@ -405,6 +407,12 @@ export interface JsDocReturn {
   members?: Array<JsDocMember>
 }
 
+/** Exception/error documentation used by generated API docs. */
+export interface JsDocThrows {
+  type?: string
+  description: string
+}
+
 /** Diagnostic for an entry point export during docs extraction. */
 export interface JsDocsDiagnostic {
   code: string
@@ -422,6 +430,7 @@ export interface JsDocsMarkdownEntry {
   description: string
   params?: Array<JsDocParam>
   returns?: JsDocReturn
+  throws?: Array<JsDocThrows>
   examples?: Array<string>
   tags?: Array<JsDocsMarkdownTag>
   private: boolean

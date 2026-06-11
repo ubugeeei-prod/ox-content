@@ -110,6 +110,7 @@ fn has_body_round_trips_from_extract_output_to_markdown_model() {
         description: String::new(),
         params: vec![],
         returns: None,
+        throws: vec![],
         examples: vec![],
         tags: BTreeMap::new(),
         private: false,
@@ -136,6 +137,7 @@ fn has_body_round_trips_from_extract_output_to_markdown_model() {
         description: js_entry.description,
         params: None,
         returns: None,
+        throws: None,
         examples: None,
         tags: None,
         private: js_entry.private,
@@ -160,6 +162,7 @@ fn convert_markdown_entry_defaults_has_body_to_false_when_absent() {
         description: String::new(),
         params: None,
         returns: None,
+        throws: None,
         examples: None,
         tags: None,
         private: false,
@@ -185,6 +188,10 @@ fn convert_markdown_entry_preserves_heritage_and_implementation_metadata() {
         description: "Default adapter.".to_string(),
         params: None,
         returns: None,
+        throws: Some(vec![JsDocThrows {
+            r#type: Some("AdapterError".to_string()),
+            description: "When adapter metadata is invalid.".to_string(),
+        }]),
         examples: None,
         tags: None,
         private: false,
@@ -212,6 +219,10 @@ fn convert_markdown_entry_preserves_heritage_and_implementation_metadata() {
                 description: "Locale type.".to_string(),
             }]),
             returns: None,
+            throws: Some(vec![JsDocThrows {
+                r#type: Some("ResourceError".to_string()),
+                description: "When resource loading fails.".to_string(),
+            }]),
             members: None,
             optional: None,
             readonly: None,
@@ -233,4 +244,8 @@ fn convert_markdown_entry_preserves_heritage_and_implementation_metadata() {
     assert_eq!(converted.members[0].default_value.as_deref(), Some("undefined"));
     assert_eq!(converted.members[0].type_parameters[0].name, "L");
     assert_eq!(converted.members[0].type_parameters[0].constraint.as_deref(), Some("Base"));
+    assert_eq!(converted.throws[0].type_annotation.as_deref(), Some("AdapterError"));
+    assert_eq!(converted.throws[0].description, "When adapter metadata is invalid.");
+    assert_eq!(converted.members[0].throws[0].type_annotation.as_deref(), Some("ResourceError"));
+    assert_eq!(converted.members[0].throws[0].description, "When resource loading fails.");
 }

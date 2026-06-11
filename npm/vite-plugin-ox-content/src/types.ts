@@ -1693,6 +1693,9 @@ export interface DocEntry {
   /** Return value documentation for callable declarations. */
   returns?: ReturnDoc;
 
+  /** Exceptions/errors documented with `@throws` / `@exception`. */
+  throws?: ThrowsDoc[];
+
   /** Code examples collected from `@example` tags. */
   examples?: string[];
 
@@ -1746,6 +1749,9 @@ export interface DocMember {
   /** Return value documentation for methods and accessors. */
   returns?: ReturnDoc;
 
+  /** Exceptions/errors documented with `@throws` / `@exception`. */
+  throws?: ThrowsDoc[];
+
   /** True when the member is optional in the source declaration. */
   optional?: boolean;
 
@@ -1796,6 +1802,17 @@ export interface ReturnDoc {
   type: string;
 
   /** Prose extracted from `@returns` / `@return` documentation. */
+  description: string;
+}
+
+/**
+ * Exception/error documentation.
+ */
+export interface ThrowsDoc {
+  /** Rendered TypeScript type text for the thrown value, when documented. */
+  type?: string;
+
+  /** Prose extracted from `@throws` / `@exception` documentation. */
   description: string;
 }
 

@@ -60,7 +60,8 @@ pub use markdown::{
     MarkdownPathStrategy, MarkdownRenderStyle, MarkdownSingleEntryRoot,
 };
 pub use model::{
-    ApiDocEntry, ApiDocMember, ApiDocModule, ApiDocTag, ApiParamDoc, ApiReturnDoc, ApiTypeParamDoc,
+    ApiDocEntry, ApiDocMember, ApiDocModule, ApiDocTag, ApiParamDoc, ApiReturnDoc, ApiThrowsDoc,
+    ApiTypeParamDoc,
 };
 pub use nav::{
     generate_nav_code, generate_nav_metadata, generate_nav_metadata_from_docs,
@@ -69,6 +70,6 @@ pub use nav::{
 pub use normalize::{
     normalize_doc_item, normalize_doc_items, NormalizedDocEntry, NormalizedDocKind,
     NormalizedMember, NormalizedMemberKind, NormalizedParamDoc, NormalizedReturnDoc,
-    NormalizedTypeParam,
+    NormalizedThrowsDoc, NormalizedTypeParam,
 };
 pub use output::{write_docs_output, DocsOutputError, DocsOutputOptions, DocsOutputResult};

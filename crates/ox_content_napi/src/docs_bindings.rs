@@ -7,21 +7,22 @@ use ox_content_docs::{
     build_export_graph, extract_docs_from_directories, extract_docs_from_entry_points,
     generate_docs_data_json, generate_markdown, generate_nav_code, generate_nav_metadata,
     generate_nav_metadata_from_docs_with_options, normalize_doc_items, write_docs_output,
-    ApiDocEntry, ApiDocMember, ApiDocModule, ApiDocTag, ApiParamDoc, ApiReturnDoc, ApiTypeParamDoc,
-    DocExtractor, DocItem, DocItemKind, DocTag, DocsDiagnostic, DocsDiagnosticCode, DocsNavItem,
-    DocsNavMetadataOptions, DocsOutputOptions, EntryPointDocsOptions, EntryPointSpec, ExportGraph,
-    ExportKind, ExportSource, ExternalDocsOptions, ExternalPackageSource, ExtractedDocModule,
-    GraphOptions, MarkdownDisplayFormat, MarkdownDocsOptions, MarkdownLinkStyle,
-    MarkdownPathStrategy, MarkdownRenderStyle, MarkdownSingleEntryRoot, NormalizedDocEntry,
-    NormalizedMember, NormalizedParamDoc, NormalizedReturnDoc, NormalizedTypeParam, ParamDoc,
+    ApiDocEntry, ApiDocMember, ApiDocModule, ApiDocTag, ApiParamDoc, ApiReturnDoc, ApiThrowsDoc,
+    ApiTypeParamDoc, DocExtractor, DocItem, DocItemKind, DocTag, DocsDiagnostic,
+    DocsDiagnosticCode, DocsNavItem, DocsNavMetadataOptions, DocsOutputOptions,
+    EntryPointDocsOptions, EntryPointSpec, ExportGraph, ExportKind, ExportSource,
+    ExternalDocsOptions, ExternalPackageSource, ExtractedDocModule, GraphOptions,
+    MarkdownDisplayFormat, MarkdownDocsOptions, MarkdownLinkStyle, MarkdownPathStrategy,
+    MarkdownRenderStyle, MarkdownSingleEntryRoot, NormalizedDocEntry, NormalizedMember,
+    NormalizedParamDoc, NormalizedReturnDoc, NormalizedThrowsDoc, NormalizedTypeParam, ParamDoc,
     PublicExport,
 };
 
 use crate::{
-    JsDocEntry, JsDocMember, JsDocParam, JsDocReturn, JsDocsDiagnostic, JsDocsMarkdownEntry,
-    JsDocsMarkdownModule, JsDocsMarkdownOptions, JsDocsMarkdownTag, JsDocsNavItem,
-    JsDocsNavOptions, JsDocsOutputOptions, JsEntryPointDocsOptions, JsEntryPointSpec,
-    JsEntrypointDocsModule, JsEntrypointModule, JsExportGraph, JsExportSource,
+    JsDocEntry, JsDocMember, JsDocParam, JsDocReturn, JsDocThrows, JsDocsDiagnostic,
+    JsDocsMarkdownEntry, JsDocsMarkdownModule, JsDocsMarkdownOptions, JsDocsMarkdownTag,
+    JsDocsNavItem, JsDocsNavOptions, JsDocsOutputOptions, JsEntryPointDocsOptions,
+    JsEntryPointSpec, JsEntrypointDocsModule, JsEntrypointModule, JsExportGraph, JsExportSource,
     JsExternalPackageSource, JsExtractedDocsModule, JsGraphOptions, JsPublicExport,
     JsResolvedModule, JsSourceDocItem, JsSourceDocParam, JsSourceDocTag, JsTypeParam,
 };
@@ -105,6 +106,10 @@ fn map_normalized_return_doc(return_doc: NormalizedReturnDoc) -> JsDocReturn {
     }
 }
 
+fn map_normalized_throws_doc(throws_doc: NormalizedThrowsDoc) -> JsDocThrows {
+    JsDocThrows { r#type: throws_doc.type_annotation, description: throws_doc.description }
+}
+
 fn map_normalized_member(member: NormalizedMember) -> JsDocMember {
     JsDocMember {
         name: member.name,
@@ -118,6 +123,8 @@ fn map_normalized_member(member: NormalizedMember) -> JsDocMember {
         type_parameters: (!member.type_parameters.is_empty())
             .then(|| member.type_parameters.into_iter().map(map_normalized_type_param).collect()),
         returns: member.returns.map(map_normalized_return_doc),
+        throws: (!member.throws.is_empty())
+            .then(|| member.throws.into_iter().map(map_normalized_throws_doc).collect()),
         members: (!member.members.is_empty())
             .then(|| member.members.into_iter().map(map_normalized_member).collect()),
         optional: member.optional.then_some(true),
@@ -139,6 +146,8 @@ pub fn map_normalized_doc_entry(entry: NormalizedDocEntry) -> JsDocEntry {
         params: (!entry.params.is_empty())
             .then(|| entry.params.into_iter().map(map_normalized_param_doc).collect()),
         returns: entry.returns.map(map_normalized_return_doc),
+        throws: (!entry.throws.is_empty())
+            .then(|| entry.throws.into_iter().map(map_normalized_throws_doc).collect()),
         examples: (!entry.examples.is_empty()).then_some(entry.examples),
         tags: (!entry.tags.is_empty()).then(|| entry.tags.into_iter().collect()),
         private: entry.private,
@@ -345,6 +354,10 @@ fn convert_markdown_return(return_doc: JsDocReturn) -> ApiReturnDoc {
     }
 }
 
+fn convert_markdown_throws(throws_doc: JsDocThrows) -> ApiThrowsDoc {
+    ApiThrowsDoc { type_annotation: throws_doc.r#type, description: throws_doc.description }
+}
+
 fn convert_markdown_tag(tag: JsDocsMarkdownTag) -> ApiDocTag {
     ApiDocTag { tag: tag.tag, value: tag.value }
 }
@@ -369,6 +382,12 @@ fn convert_markdown_member(member: JsDocMember) -> ApiDocMember {
             .map(convert_markdown_type_param)
             .collect(),
         returns: member.returns.map(convert_markdown_return),
+        throws: member
+            .throws
+            .unwrap_or_default()
+            .into_iter()
+            .map(convert_markdown_throws)
+            .collect(),
         members: member
             .members
             .unwrap_or_default()
@@ -398,6 +417,7 @@ pub fn convert_markdown_entry(entry: JsDocsMarkdownEntry) -> ApiDocEntry {
         description: entry.description,
         params: entry.params.unwrap_or_default().into_iter().map(convert_markdown_param).collect(),
         returns: entry.returns.map(convert_markdown_return),
+        throws: entry.throws.unwrap_or_default().into_iter().map(convert_markdown_throws).collect(),
         examples: entry.examples.unwrap_or_default(),
         tags: entry.tags.unwrap_or_default().into_iter().map(convert_markdown_tag).collect(),
         private: entry.private,

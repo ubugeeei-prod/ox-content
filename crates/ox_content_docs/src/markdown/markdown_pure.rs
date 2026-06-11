@@ -15,7 +15,7 @@ use super::{
     MarkdownLinkContext, TypeFragment,
 };
 use crate::model::{
-    ApiDocEntry, ApiDocMember, ApiDocTag, ApiParamDoc, ApiReturnDoc, ApiTypeParamDoc,
+    ApiDocEntry, ApiDocMember, ApiDocTag, ApiParamDoc, ApiReturnDoc, ApiThrowsDoc, ApiTypeParamDoc,
 };
 use crate::string_builder::{join2, StringBuilder};
 
@@ -202,6 +202,9 @@ pub(super) fn render_entry_body_pure(
         push_returns(&mut out, returns, context, &heading);
     }
 
+    let throws = super::rendered_throws(&entry.throws, &entry.tags);
+    push_throws(&mut out, throws.as_ref(), context, &heading);
+
     push_examples(&mut out, &entry.examples, &heading);
 
     // Structured tags (lifecycle alerts, `## Since`) are rendered above, so
@@ -309,6 +312,8 @@ pub(super) fn render_overload_body_pure(
         if let Some(returns) = &entry.returns {
             push_returns(&mut out, returns, context, &sub);
         }
+        let throws = super::rendered_throws(&entry.throws, &entry.tags);
+        push_throws(&mut out, throws.as_ref(), context, &sub);
         push_examples(&mut out, &entry.examples, &sub);
         push_generic_tags(&mut out, &entry.tags, context, &sub);
     }
@@ -436,6 +441,43 @@ fn push_returns(
     }
     out.push_str("\n\n");
     push_return_members(out, &returns.members, context, heading);
+}
+
+/// Appends a `{heading} Throws` section for exception/error docs.
+fn push_throws(
+    out: &mut String,
+    throws: &[ApiThrowsDoc],
+    context: Option<&MarkdownLinkContext<'_>>,
+    heading: &str,
+) {
+    let mut rendered_heading = false;
+    for throws_doc in throws {
+        let type_annotation =
+            throws_doc.type_annotation.as_deref().map(str::trim).filter(|value| !value.is_empty());
+        let description = inline(&throws_doc.description, context);
+        if type_annotation.is_none() && description.is_empty() {
+            continue;
+        }
+        if !rendered_heading {
+            out.push_str(heading);
+            out.push_str(" Throws\n\n");
+            rendered_heading = true;
+        }
+        out.push_str("- ");
+        if let Some(type_annotation) = type_annotation {
+            out.push_str(&linked_type_span(type_annotation, context));
+            if !description.is_empty() {
+                out.push_str(" — ");
+                out.push_str(&description);
+            }
+        } else {
+            out.push_str(&description);
+        }
+        out.push('\n');
+    }
+    if rendered_heading {
+        out.push('\n');
+    }
 }
 
 fn push_return_members(
@@ -731,6 +773,8 @@ fn push_index_signature_detail_pure(
         out.push_str("\n\n");
     }
     out.push_str(&render_since_section(&member.tags, context, detail_heading));
+    let throws = super::rendered_throws(&member.throws, &member.tags);
+    push_throws(out, throws.as_ref(), context, detail_heading);
     push_generic_tags(out, &member.tags, context, detail_heading);
 }
 
@@ -787,7 +831,11 @@ fn render_member_parameter_sections_pure(
     let heading = "#".repeat(section_level);
 
     for member in members {
-        if member.type_parameters.is_empty() && member.params.is_empty() && member.returns.is_none()
+        if member.type_parameters.is_empty()
+            && member.params.is_empty()
+            && member.returns.is_none()
+            && member.throws.is_empty()
+            && !member.tags.iter().any(|tag| super::is_throws_tag(&tag.tag))
         {
             continue;
         }
@@ -895,9 +943,45 @@ fn render_member_parameter_sections_pure(
             out.push_str("\n\n");
             push_return_members(&mut out, &returns.members, context, &heading);
         }
+
+        let throws = super::rendered_throws(&member.throws, &member.tags);
+        if !throws.is_empty() {
+            out.push_str(&heading);
+            out.push(' ');
+            out.push_str(&member.name);
+            out.push_str(" Throws\n\n");
+            push_throws_items(&mut out, throws.as_ref(), context);
+        }
     }
 
     out
+}
+
+fn push_throws_items(
+    out: &mut String,
+    throws: &[ApiThrowsDoc],
+    context: Option<&MarkdownLinkContext<'_>>,
+) {
+    for throws_doc in throws {
+        let type_annotation =
+            throws_doc.type_annotation.as_deref().map(str::trim).filter(|value| !value.is_empty());
+        let description = inline(&throws_doc.description, context);
+        if type_annotation.is_none() && description.is_empty() {
+            continue;
+        }
+        out.push_str("- ");
+        if let Some(type_annotation) = type_annotation {
+            out.push_str(&linked_type_span(type_annotation, context));
+            if !description.is_empty() {
+                out.push_str(" — ");
+                out.push_str(&description);
+            }
+        } else {
+            out.push_str(&description);
+        }
+        out.push('\n');
+    }
+    out.push('\n');
 }
 
 fn render_member_group_pure(
@@ -1031,6 +1115,8 @@ fn render_callable_member_details_pure(
             };
             push_returns(out, &returns, context.link_context, &detail_heading);
         }
+        let throws = super::rendered_throws(&member.throws, &member.tags);
+        push_throws(out, throws.as_ref(), context.link_context, &detail_heading);
         push_implementation_of(out, &member.implementation_of, &detail_heading);
         push_generic_tags(out, &member.tags, context.link_context, &detail_heading);
     }

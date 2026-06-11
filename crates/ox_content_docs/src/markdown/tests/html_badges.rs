@@ -96,6 +96,7 @@ fn typedoc_html_member_table_shows_lifecycle_and_since_markers() {
         params: vec![],
         type_parameters: vec![],
         returns: None,
+        throws: vec![],
         members: vec![],
         optional: false,
         readonly: false,

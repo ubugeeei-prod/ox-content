@@ -26,6 +26,7 @@ fn typedoc_html_renders_class_callable_member_details() {
             description: "The locale resource.".to_string(),
             members: Vec::new(),
         }),
+        throws: vec![],
         members: vec![],
         optional: false,
         readonly: false,
@@ -64,6 +65,10 @@ fn typedoc_html_renders_class_callable_member_details() {
             description: "The locale resource.".to_string(),
             members: Vec::new(),
         }),
+        throws: vec![ApiThrowsDoc {
+            type_annotation: Some("ResourceError".to_string()),
+            description: "When the locale resource cannot be loaded.".to_string(),
+        }],
         members: vec![],
         optional: false,
         readonly: false,
@@ -92,6 +97,8 @@ fn typedoc_html_renders_class_callable_member_details() {
     assert!(page.contains("<h5>getResource()</h5>"));
     assert!(page.contains("ox-api-entry__member-detail-section--params"));
     assert!(page.contains("<h6>Returns</h6>"));
+    assert!(page.contains("<h6>Throws</h6>"));
+    assert!(page.contains("ResourceError"));
     assert!(page.contains("ox-api-entry__member-detail-section--implementation-of"));
     assert!(page.contains("TranslationAdapter.getResource"));
 }
