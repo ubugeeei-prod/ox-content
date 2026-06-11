@@ -11,14 +11,11 @@ fn markdown_member_type_parameters_render_before_parameters() {
                 "decorateCommand<L extends Record<string, unknown> = DefaultExtensions>(decorator: (value: L) => void): void"
                     .to_string(),
             ),
-            type_annotation: None,
-            default_value: None,
             params: vec![ApiParamDoc {
                 name: "decorator".to_string(),
                 type_annotation: "(value: L) => void".to_string(),
                 description: "Decorator function.".to_string(),
-                optional: false,
-                default_value: None,
+                ..ApiParamDoc::default()
             }],
             type_parameters: vec![
                 ApiTypeParamDoc {
@@ -29,30 +26,17 @@ fn markdown_member_type_parameters_render_before_parameters() {
                 },
                 ApiTypeParamDoc {
                     name: "Fallback".to_string(),
-                    constraint: None,
-                    default: None,
-                    description: String::new(),
+                    ..ApiTypeParamDoc::default()
                 },
             ],
-            returns: None,
-            throws: vec![],
-            members: vec![],
-            optional: false,
-            readonly: false,
-            r#static: false,
-            private: false,
-            tags: vec![],
-            implementation_of: vec![],
             line: 2,
             end_line: 5,
+            ..ApiDocMember::default()
         }];
     let docs = vec![ApiDocModule {
-        description: String::new(),
         file: "mod".to_string(),
-        source_path: String::new(),
-        examples: vec![],
-        tags: vec![],
         entries: vec![entry],
+        ..ApiDocModule::default()
     }];
 
     let pure = generate_markdown(
@@ -99,31 +83,20 @@ fn typedoc_markdown_renders_class_callable_member_details() {
         signature: Some(
             "getResource(locale: string): Record<string, string> | undefined".to_string(),
         ),
-        type_annotation: None,
-        default_value: None,
         params: vec![ApiParamDoc {
             name: "locale".to_string(),
             type_annotation: "string".to_string(),
             description: "Locale name.".to_string(),
-            optional: false,
-            default_value: None,
+            ..ApiParamDoc::default()
         }],
-        type_parameters: vec![],
         returns: Some(ApiReturnDoc {
             type_annotation: "Record<string, string> | undefined".to_string(),
             description: "The locale resource.".to_string(),
-            members: Vec::new(),
+            ..ApiReturnDoc::default()
         }),
-        throws: vec![],
-        members: vec![],
-        optional: false,
-        readonly: false,
-        r#static: false,
-        private: false,
-        tags: vec![],
-        implementation_of: vec![],
         line: 4,
         end_line: 4,
+        ..ApiDocMember::default()
     }];
 
     let mut implementation =
@@ -137,27 +110,15 @@ fn typedoc_markdown_renders_class_callable_member_details() {
             kind: "constructor".to_string(),
             description: "Creates the adapter.".to_string(),
             signature: Some("constructor(options: TranslationAdapterFactoryOptions)".to_string()),
-            type_annotation: None,
-            default_value: None,
             params: vec![ApiParamDoc {
                 name: "options".to_string(),
                 type_annotation: "TranslationAdapterFactoryOptions".to_string(),
                 description: "Adapter options.".to_string(),
-                optional: false,
-                default_value: None,
+                ..ApiParamDoc::default()
             }],
-            type_parameters: vec![],
-            returns: None,
-            throws: vec![],
-            members: vec![],
-            optional: false,
-            readonly: false,
-            r#static: false,
-            private: false,
-            tags: vec![],
-            implementation_of: vec![],
             line: 10,
             end_line: 10,
+            ..ApiDocMember::default()
         },
         ApiDocMember {
             name: "getResource".to_string(),
@@ -166,40 +127,26 @@ fn typedoc_markdown_renders_class_callable_member_details() {
             signature: Some(
                 "getResource(locale: string): Record<string, string> | undefined".to_string(),
             ),
-            type_annotation: None,
-            default_value: None,
             params: vec![ApiParamDoc {
                 name: "locale".to_string(),
                 type_annotation: "string".to_string(),
                 description: "Locale name.".to_string(),
-                optional: false,
-                default_value: None,
+                ..ApiParamDoc::default()
             }],
-            type_parameters: vec![],
             returns: Some(ApiReturnDoc {
                 type_annotation: "Record<string, string> | undefined".to_string(),
                 description: "The locale resource.".to_string(),
-                members: Vec::new(),
+                ..ApiReturnDoc::default()
             }),
-            throws: vec![],
-            members: vec![],
-            optional: false,
-            readonly: false,
-            r#static: false,
-            private: false,
-            tags: vec![],
-            implementation_of: vec![],
             line: 14,
             end_line: 16,
+            ..ApiDocMember::default()
         },
     ];
     let docs = vec![ApiDocModule {
-        description: String::new(),
         file: "default".to_string(),
-        source_path: String::new(),
-        examples: vec![],
-        tags: vec![],
         entries: vec![adapter, implementation],
+        ..ApiDocModule::default()
     }];
 
     let markdown = generate_markdown(
@@ -238,12 +185,9 @@ fn typedoc_markdown_renders_function_valued_property_details() {
         test_entry("ArgSchema", "interface", "/repo/src/schema.ts", "Argument schema.");
     schema.members = vec![function_valued_parse_member()];
     let docs = vec![ApiDocModule {
-        description: String::new(),
         file: "default".to_string(),
-        source_path: String::new(),
-        examples: vec![],
-        tags: vec![],
         entries: vec![schema],
+        ..ApiDocModule::default()
     }];
 
     let markdown = generate_markdown(

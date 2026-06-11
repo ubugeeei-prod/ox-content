@@ -86,71 +86,39 @@ fn symbol_cross_file_links_use_configured_link_policy() {
 fn jsdoc_inline_links_render_across_doc_fields() {
     let docs = vec![
         ApiDocModule {
-            description: String::new(),
             file: "/repo/src/agent.ts".to_string(),
-            source_path: String::new(),
-            examples: vec![],
-            tags: vec![],
             entries: vec![test_entry(
                 "AgentProfile",
                 "interface",
                 "/repo/src/agent.ts",
                 "Agent profile.",
             )],
+            ..ApiDocModule::default()
         },
         ApiDocModule {
-            description: String::new(),
             file: "/repo/src/command.ts".to_string(),
-            source_path: String::new(),
-            examples: vec![],
-            tags: vec![],
             entries: vec![ApiDocEntry {
                 name: "Command".to_string(),
                 kind: "interface".to_string(),
                 description: "Runtime command.".to_string(),
-                params: vec![],
-                returns: None,
-                throws: vec![],
-                examples: vec![],
-                tags: vec![],
-                private: false,
                 file: "/repo/src/command.ts".to_string(),
-                line: 1,
                 end_line: 10,
                 signature: Some("export interface Command".to_string()),
-                extends: vec![],
-                implements: vec![],
-                has_body: false,
                 members: vec![ApiDocMember {
                     name: "args".to_string(),
                     kind: "property".to_string(),
                     description: "All {@linkcode Command.args} names use kebab-case.".to_string(),
-                    signature: None,
                     type_annotation: Some("Record<string, unknown>".to_string()),
-                    default_value: None,
-                    params: vec![],
-                    type_parameters: vec![],
-                    returns: None,
-                    throws: vec![],
-                    members: vec![],
-                    optional: false,
-                    readonly: false,
-                    r#static: false,
-                    private: false,
-                    tags: vec![],
-                    implementation_of: vec![],
                     line: 5,
                     end_line: 5,
+                    ..ApiDocMember::default()
                 }],
-                type_parameters: vec![],
+                ..ApiDocEntry::default()
             }],
+            ..ApiDocModule::default()
         },
         ApiDocModule {
-            description: String::new(),
             file: "/repo/src/build.ts".to_string(),
-            source_path: String::new(),
-            examples: vec![],
-            tags: vec![],
             entries: vec![ApiDocEntry {
                 name: "buildCommand".to_string(),
                 kind: "function".to_string(),
@@ -159,16 +127,13 @@ fn jsdoc_inline_links_render_across_doc_fields() {
                     name: "entry".to_string(),
                     type_annotation: "Command".to_string(),
                     description: "A {@linkcode Command | entry command}".to_string(),
-                    optional: false,
-                    default_value: None,
+                    ..ApiParamDoc::default()
                 }],
                 returns: Some(ApiReturnDoc {
                     type_annotation: "AgentProfile".to_string(),
                     description: "An {@link AgentProfile} result.".to_string(),
-                    members: Vec::new(),
+                    ..ApiReturnDoc::default()
                 }),
-                throws: vec![],
-                examples: vec![],
                 tags: vec![
                     ApiDocTag {
                         tag: "see".to_string(),
@@ -180,19 +145,14 @@ fn jsdoc_inline_links_render_across_doc_fields() {
                         value: "Falls back to {@link MissingSymbol | missing}.".to_string(),
                     },
                 ],
-                private: false,
                 file: "/repo/src/build.ts".to_string(),
-                line: 1,
                 end_line: 20,
                 signature: Some(
                     "export function buildCommand(entry: Command): AgentProfile".to_string(),
                 ),
-                extends: vec![],
-                implements: vec![],
-                has_body: false,
-                members: vec![],
-                type_parameters: vec![],
+                ..ApiDocEntry::default()
             }],
+            ..ApiDocModule::default()
         },
     ];
 

@@ -26,8 +26,7 @@ fn typedoc_links_known_symbol_in_return_type() {
     let mut entry = test_entry("make", "function", "/repo/src/make.ts", "Make.");
     entry.returns = Some(ApiReturnDoc {
         type_annotation: "CommandRunner<G>".to_string(),
-        description: String::new(),
-        members: Vec::new(),
+        ..ApiReturnDoc::default()
     });
     let out = generate_markdown(&type_link_module(entry), &markdown_typedoc_options());
     let page = out.get("combinators/functions/make.md").unwrap();

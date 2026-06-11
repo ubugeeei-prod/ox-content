@@ -3,7 +3,6 @@ use ox_content_docs::{
     NormalizedReturnDoc, NormalizedThrowsDoc, NormalizedTypeParam,
 };
 use serde_json::json;
-use std::collections::BTreeMap;
 use std::fs;
 use std::process::Command;
 

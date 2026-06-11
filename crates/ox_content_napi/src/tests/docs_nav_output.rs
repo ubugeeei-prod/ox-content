@@ -3,53 +3,22 @@ use super::*;
 #[test]
 fn generate_docs_nav_metadata_from_docs_returns_typedoc_tree() {
     let docs = vec![JsDocsMarkdownModule {
-        description: None,
         file: "default".to_string(),
-        source_path: None,
-        examples: None,
-        tags: None,
         entries: vec![
             JsDocsMarkdownEntry {
                 name: "cli".to_string(),
                 kind: "function".to_string(),
-                description: String::new(),
-                params: None,
-                returns: None,
-                throws: None,
-                examples: None,
-                tags: None,
-                private: false,
                 file: "/repo/src/cli.ts".to_string(),
-                line: 1,
-                end_line: 1,
-                signature: None,
-                extends: None,
-                implements: None,
-                has_body: None,
-                members: None,
-                type_parameters: None,
+                ..Default::default()
             },
             JsDocsMarkdownEntry {
                 name: "Mode".to_string(),
                 kind: "enum".to_string(),
-                description: String::new(),
-                params: None,
-                returns: None,
-                throws: None,
-                examples: None,
-                tags: None,
-                private: false,
                 file: "/repo/src/mode.ts".to_string(),
-                line: 1,
-                end_line: 1,
-                signature: None,
-                extends: None,
-                implements: None,
-                has_body: None,
-                members: None,
-                type_parameters: None,
+                ..Default::default()
             },
         ],
+        ..Default::default()
     }];
 
     let nav = generate_docs_nav_metadata_from_docs_napi(
@@ -57,11 +26,7 @@ fn generate_docs_nav_metadata_from_docs_returns_typedoc_tree() {
         Some(JsDocsNavOptions {
             base_path: Some("/api".to_string()),
             path_strategy: Some("typedoc".to_string()),
-            group_order: None,
-            sort: None,
-            sort_entry_points: None,
-            kind_sort_order: None,
-            single_entry_root: None,
+            ..Default::default()
         }),
     );
 
@@ -77,53 +42,22 @@ fn generate_docs_nav_metadata_from_docs_returns_typedoc_tree() {
 #[test]
 fn generate_docs_nav_metadata_from_docs_flattens_single_typedoc_entry() {
     let docs = vec![JsDocsMarkdownModule {
-        description: None,
         file: "default".to_string(),
-        source_path: None,
-        examples: None,
-        tags: None,
         entries: vec![
             JsDocsMarkdownEntry {
                 name: "cli".to_string(),
                 kind: "function".to_string(),
-                description: String::new(),
-                params: None,
-                returns: None,
-                throws: None,
-                examples: None,
-                tags: None,
-                private: false,
                 file: "/repo/src/cli.ts".to_string(),
-                line: 1,
-                end_line: 1,
-                signature: None,
-                extends: None,
-                implements: None,
-                has_body: None,
-                members: None,
-                type_parameters: None,
+                ..Default::default()
             },
             JsDocsMarkdownEntry {
                 name: "Command".to_string(),
                 kind: "interface".to_string(),
-                description: String::new(),
-                params: None,
-                returns: None,
-                throws: None,
-                examples: None,
-                tags: None,
-                private: false,
                 file: "/repo/src/types.ts".to_string(),
-                line: 1,
-                end_line: 1,
-                signature: None,
-                extends: None,
-                implements: None,
-                has_body: None,
-                members: None,
-                type_parameters: None,
+                ..Default::default()
             },
         ],
+        ..Default::default()
     }];
 
     let nav = generate_docs_nav_metadata_from_docs_napi(
@@ -131,11 +65,8 @@ fn generate_docs_nav_metadata_from_docs_flattens_single_typedoc_entry() {
         Some(JsDocsNavOptions {
             base_path: Some("/api".to_string()),
             path_strategy: Some("typedoc".to_string()),
-            group_order: None,
-            sort: None,
-            sort_entry_points: None,
-            kind_sort_order: None,
             single_entry_root: Some("flatten".to_string()),
+            ..Default::default()
         }),
     );
 
@@ -151,12 +82,8 @@ fn generate_docs_nav_metadata_from_docs_flattens_single_typedoc_entry() {
 #[test]
 fn generate_docs_nav_metadata_from_docs_defaults_to_flat() {
     let docs = vec![JsDocsMarkdownModule {
-        description: None,
         file: "/repo/src/context.ts".to_string(),
-        source_path: None,
-        examples: None,
-        tags: None,
-        entries: vec![],
+        ..Default::default()
     }];
 
     let nav = generate_docs_nav_metadata_from_docs_napi(docs, None);
@@ -176,64 +103,37 @@ fn write_generated_docs_writes_typedoc_nested_files() {
         .join(format!("ox-content-napi-typedoc-write-{}-{unique}", std::process::id()));
 
     let extracted = vec![JsDocsMarkdownModule {
-        description: None,
         file: "default".to_string(),
-        source_path: None,
-        examples: None,
-        tags: None,
         entries: vec![
             JsDocsMarkdownEntry {
                 name: "cli".to_string(),
                 kind: "function".to_string(),
                 description: "Runs the CLI.".to_string(),
-                params: None,
-                returns: None,
-                throws: None,
-                examples: None,
-                tags: None,
-                private: false,
                 file: "/repo/src/cli.ts".to_string(),
-                line: 1,
-                end_line: 1,
                 signature: Some("export function cli(): void".to_string()),
-                extends: None,
-                implements: None,
-                has_body: None,
-                members: None,
-                type_parameters: None,
+                ..Default::default()
             },
             JsDocsMarkdownEntry {
                 name: "version".to_string(),
                 kind: "variable".to_string(),
                 description: "Package version.".to_string(),
-                params: None,
-                returns: None,
-                throws: None,
-                examples: None,
-                tags: None,
-                private: false,
                 file: "/repo/src/version.ts".to_string(),
                 line: 2,
                 end_line: 2,
                 signature: Some("export const version = '1.0.0'".to_string()),
-                extends: None,
-                implements: None,
-                has_body: None,
-                members: None,
-                type_parameters: None,
+                ..Default::default()
             },
         ],
+        ..Default::default()
     }];
 
     let markdown = generate_docs_markdown(
         extracted.clone(),
         Some(JsDocsMarkdownOptions {
             group_by: Some("file".to_string()),
-            github_url: None,
             link_style: Some("clean".to_string()),
             base_path: Some("/api".to_string()),
             path_strategy: Some("typedoc".to_string()),
-            render_style: None,
             ..Default::default()
         }),
     );
@@ -249,10 +149,7 @@ fn write_generated_docs_writes_typedoc_nested_files() {
             base_path: Some("/api".to_string()),
             path_strategy: Some("typedoc".to_string()),
             group_order: Some(vec!["Variables".to_string(), "Functions".to_string()]),
-            sort: None,
-            sort_entry_points: None,
-            kind_sort_order: None,
-            single_entry_root: None,
+            ..Default::default()
         }),
     )
     .unwrap();
@@ -284,36 +181,21 @@ fn write_generated_docs_writes_flattened_single_entry_nav() {
     let extracted = vec![JsDocsMarkdownModule {
         description: Some("Runtime API.".to_string()),
         file: "default".to_string(),
-        source_path: None,
-        examples: None,
-        tags: None,
         entries: vec![JsDocsMarkdownEntry {
             name: "cli".to_string(),
             kind: "function".to_string(),
             description: "Runs the CLI.".to_string(),
-            params: None,
-            returns: None,
-            throws: None,
-            examples: None,
-            tags: None,
-            private: false,
             file: "/repo/src/cli.ts".to_string(),
-            line: 1,
-            end_line: 1,
             signature: Some("export function cli(): void".to_string()),
-            extends: None,
-            implements: None,
-            has_body: None,
-            members: None,
-            type_parameters: None,
+            ..Default::default()
         }],
+        ..Default::default()
     }];
 
     let markdown = generate_docs_markdown(
         extracted.clone(),
         Some(JsDocsMarkdownOptions {
             group_by: Some("file".to_string()),
-            github_url: None,
             link_style: Some("clean".to_string()),
             base_path: Some("/api".to_string()),
             path_strategy: Some("typedoc".to_string()),
@@ -333,11 +215,8 @@ fn write_generated_docs_writes_flattened_single_entry_nav() {
             generated_at: Some("2026-01-01T00:00:00.000Z".to_string()),
             base_path: Some("/api".to_string()),
             path_strategy: Some("typedoc".to_string()),
-            group_order: None,
-            sort: None,
-            sort_entry_points: None,
-            kind_sort_order: None,
             single_entry_root: Some("flatten".to_string()),
+            ..Default::default()
         }),
     )
     .unwrap();

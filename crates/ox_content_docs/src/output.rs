@@ -46,6 +46,23 @@ pub struct DocsOutputOptions {
     pub single_entry_root: MarkdownSingleEntryRoot,
 }
 
+impl Default for DocsOutputOptions {
+    fn default() -> Self {
+        Self {
+            generate_nav: false,
+            group_by: "file".to_string(),
+            generated_at: String::new(),
+            base_path: None,
+            path_strategy: MarkdownPathStrategy::Flat,
+            group_order: None,
+            sort: None,
+            sort_entry_points: true,
+            kind_sort_order: None,
+            single_entry_root: MarkdownSingleEntryRoot::Preserve,
+        }
+    }
+}
+
 /// Error returned while writing generated docs.
 #[derive(Debug, Error)]
 pub enum DocsOutputError {
@@ -197,15 +214,8 @@ mod tests {
     fn options() -> DocsOutputOptions {
         DocsOutputOptions {
             generate_nav: true,
-            group_by: "file".to_string(),
             generated_at: "2026-01-01T00:00:00.000Z".to_string(),
-            base_path: None,
-            path_strategy: MarkdownPathStrategy::Flat,
-            group_order: None,
-            sort: None,
-            sort_entry_points: true,
-            kind_sort_order: None,
-            single_entry_root: MarkdownSingleEntryRoot::Preserve,
+            ..DocsOutputOptions::default()
         }
     }
 
@@ -260,73 +270,37 @@ mod tests {
 
         let out_dir = temp_dir();
         let extracted = vec![ApiDocModule {
-            description: String::new(),
             file: "default".to_string(),
-            source_path: String::new(),
-            examples: vec![],
-            tags: vec![],
             entries: vec![
                 ApiDocEntry {
                     name: "cli".to_string(),
                     kind: "function".to_string(),
                     description: "Runs the CLI.".to_string(),
-                    params: vec![],
-                    returns: None,
-                    throws: vec![],
-                    examples: vec![],
-                    tags: vec![],
-                    private: false,
                     file: "/repo/src/cli.ts".to_string(),
-                    line: 1,
                     end_line: 5,
                     signature: Some("export function cli(): void".to_string()),
-                    extends: vec![],
-                    implements: vec![],
-                    has_body: false,
-                    members: vec![],
-                    type_parameters: vec![],
+                    ..ApiDocEntry::default()
                 },
                 ApiDocEntry {
                     name: "Mode".to_string(),
                     kind: "enum".to_string(),
                     description: "Run mode.".to_string(),
-                    params: vec![],
-                    returns: None,
-                    throws: vec![],
-                    examples: vec![],
-                    tags: vec![],
-                    private: false,
                     file: "/repo/src/mode.ts".to_string(),
-                    line: 1,
                     end_line: 4,
                     signature: Some("export enum Mode".to_string()),
-                    extends: vec![],
-                    implements: vec![],
-                    has_body: false,
                     members: vec![ApiDocMember {
                         name: "Strict".to_string(),
                         kind: "enumMember".to_string(),
                         description: "Strict mode.".to_string(),
-                        signature: None,
                         type_annotation: Some("\"strict\"".to_string()),
-                        default_value: None,
-                        params: vec![],
-                        type_parameters: vec![],
-                        returns: None,
-                        throws: vec![],
-                        members: vec![],
-                        optional: false,
-                        readonly: false,
-                        r#static: false,
-                        private: false,
-                        tags: vec![],
-                        implementation_of: vec![],
                         line: 2,
                         end_line: 2,
+                        ..ApiDocMember::default()
                     }],
-                    type_parameters: vec![],
+                    ..ApiDocEntry::default()
                 },
             ],
+            ..ApiDocModule::default()
         }];
 
         let markdown_options = MarkdownDocsOptions {
@@ -338,15 +312,10 @@ mod tests {
 
         let output_options = DocsOutputOptions {
             generate_nav: true,
-            group_by: "file".to_string(),
             generated_at: "2026-01-01T00:00:00.000Z".to_string(),
             base_path: Some("/api".to_string()),
             path_strategy: MarkdownPathStrategy::TypeDoc,
-            group_order: None,
-            sort: None,
-            sort_entry_points: true,
-            kind_sort_order: None,
-            single_entry_root: MarkdownSingleEntryRoot::Preserve,
+            ..DocsOutputOptions::default()
         };
         write_docs_output(&docs, &out_dir, Some(&extracted), &output_options).unwrap();
 

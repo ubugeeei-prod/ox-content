@@ -7,14 +7,12 @@ fn html_display_format_options_switch_explicit_sections() {
         name: "value".to_string(),
         type_annotation: "string".to_string(),
         description: "Input value.".to_string(),
-        optional: false,
-        default_value: None,
+        ..ApiParamDoc::default()
     }];
     make.type_parameters = vec![ApiTypeParamDoc {
         name: "T".to_string(),
-        constraint: None,
-        default: None,
         description: "Value type.".to_string(),
+        ..ApiTypeParamDoc::default()
     }];
 
     let mut command = test_entry("Command", "interface", "src/types.ts", "Command options.");
@@ -23,59 +21,33 @@ fn html_display_format_options_switch_explicit_sections() {
             name: "name".to_string(),
             kind: "property".to_string(),
             description: "Command name.".to_string(),
-            signature: None,
             type_annotation: Some("string".to_string()),
-            default_value: None,
-            params: vec![],
-            type_parameters: vec![],
-            returns: None,
-            throws: vec![],
-            members: vec![],
-            optional: false,
             readonly: true,
-            r#static: false,
-            private: false,
-            tags: vec![],
-            implementation_of: vec![],
             line: 2,
             end_line: 2,
+            ..ApiDocMember::default()
         },
         ApiDocMember {
             name: "run".to_string(),
             kind: "method".to_string(),
             description: "Runs the command.".to_string(),
             signature: Some("run(ctx: Context): Promise<void>".to_string()),
-            type_annotation: None,
-            default_value: None,
             params: vec![ApiParamDoc {
                 name: "ctx".to_string(),
                 type_annotation: "Context".to_string(),
                 description: "Runtime context.".to_string(),
-                optional: false,
-                default_value: None,
+                ..ApiParamDoc::default()
             }],
-            type_parameters: vec![],
-            returns: None,
-            throws: vec![],
-            members: vec![],
-            optional: false,
-            readonly: false,
-            r#static: false,
-            private: false,
-            tags: vec![],
-            implementation_of: vec![],
             line: 3,
             end_line: 3,
+            ..ApiDocMember::default()
         },
     ];
 
     let docs = vec![ApiDocModule {
-        description: String::new(),
         file: "mod".to_string(),
-        source_path: String::new(),
-        examples: vec![],
-        tags: vec![],
         entries: vec![make, command],
+        ..ApiDocModule::default()
     }];
 
     let table_markdown = generate_markdown(
@@ -119,15 +91,12 @@ fn html_display_format_options_switch_explicit_sections() {
 #[test]
 fn typedoc_module_index_renders_member_tables() {
     let docs = vec![ApiDocModule {
-        description: String::new(),
         file: "default".to_string(),
-        source_path: String::new(),
-        examples: vec![],
-        tags: vec![],
         entries: vec![
             test_entry("cli", "function", "/repo/src/cli.ts", "Run the command."),
             test_entry("CliOptions", "interface", "/repo/src/types.ts", "CLI options."),
         ],
+        ..ApiDocModule::default()
     }];
 
     let out = generate_markdown(

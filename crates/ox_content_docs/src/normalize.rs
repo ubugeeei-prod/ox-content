@@ -36,10 +36,11 @@ static TYPE_PARAM_TAG_NAMES: phf::Set<&'static str> = phf_set! {
 };
 
 /// Documentation item kind supported by the generated API reference.
-#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
+#[derive(Debug, Clone, Copy, Default, PartialEq, Eq, Serialize, Deserialize)]
 #[serde(rename_all = "lowercase")]
 pub enum NormalizedDocKind {
     /// Function declaration or function-valued variable.
+    #[default]
     Function,
     /// Class declaration.
     Class,
@@ -93,10 +94,11 @@ impl NormalizedDocKind {
 }
 
 /// Documentation item kind supported for class/interface/type/enum members.
-#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
+#[derive(Debug, Clone, Copy, Default, PartialEq, Eq, Serialize, Deserialize)]
 #[serde(rename_all = "lowercase")]
 pub enum NormalizedMemberKind {
     /// Object or class property.
+    #[default]
     Property,
     /// Method signature.
     Method,
@@ -152,7 +154,7 @@ impl NormalizedMemberKind {
 }
 
 /// Normalized parameter documentation.
-#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+#[derive(Debug, Clone, Default, PartialEq, Eq, Serialize, Deserialize)]
 pub struct NormalizedParamDoc {
     /// Parameter name.
     pub name: String,
@@ -167,7 +169,7 @@ pub struct NormalizedParamDoc {
 }
 
 /// Normalized return documentation.
-#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+#[derive(Debug, Clone, Default, PartialEq, Eq, Serialize, Deserialize)]
 pub struct NormalizedReturnDoc {
     /// Return type, or `unknown` if it cannot be inferred.
     pub type_annotation: String,
@@ -179,7 +181,7 @@ pub struct NormalizedReturnDoc {
 }
 
 /// Normalized exception/error documentation.
-#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+#[derive(Debug, Clone, Default, PartialEq, Eq, Serialize, Deserialize)]
 pub struct NormalizedThrowsDoc {
     /// Error type, when documented.
     pub type_annotation: Option<String>,
@@ -188,7 +190,7 @@ pub struct NormalizedThrowsDoc {
 }
 
 /// Normalized type parameter documentation (`<T extends C = D>`).
-#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+#[derive(Debug, Clone, Default, PartialEq, Eq, Serialize, Deserialize)]
 pub struct NormalizedTypeParam {
     /// Type parameter name (e.g. `T`).
     pub name: String,
@@ -252,6 +254,31 @@ pub struct NormalizedMember {
     pub end_line: u32,
 }
 
+impl Default for NormalizedMember {
+    fn default() -> Self {
+        Self {
+            name: String::new(),
+            kind: NormalizedMemberKind::default(),
+            description: String::new(),
+            signature: None,
+            type_annotation: None,
+            default_value: None,
+            params: Vec::new(),
+            type_parameters: Vec::new(),
+            returns: None,
+            throws: Vec::new(),
+            members: Vec::new(),
+            optional: false,
+            readonly: false,
+            r#static: false,
+            private: false,
+            tags: BTreeMap::new(),
+            line: 1,
+            end_line: 1,
+        }
+    }
+}
+
 /// Normalized documentation entry consumed by generated API docs.
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 pub struct NormalizedDocEntry {
@@ -300,6 +327,31 @@ pub struct NormalizedDocEntry {
     /// enabled (opt-in); empty otherwise.
     #[serde(default)]
     pub type_parameters: Vec<NormalizedTypeParam>,
+}
+
+impl Default for NormalizedDocEntry {
+    fn default() -> Self {
+        Self {
+            name: String::new(),
+            kind: NormalizedDocKind::default(),
+            description: String::new(),
+            params: Vec::new(),
+            returns: None,
+            throws: Vec::new(),
+            examples: Vec::new(),
+            tags: BTreeMap::new(),
+            private: false,
+            file: String::new(),
+            line: 1,
+            end_line: 1,
+            signature: None,
+            extends: Vec::new(),
+            implements: Vec::new(),
+            has_body: false,
+            members: Vec::new(),
+            type_parameters: Vec::new(),
+        }
+    }
 }
 
 /// Normalizes extracted documentation items into API reference entries.

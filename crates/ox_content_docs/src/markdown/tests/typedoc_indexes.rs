@@ -11,8 +11,7 @@ fn typedoc_html_type_alias_without_returns_tag_renders_return_section() {
     entry.params = vec![param("ctx", "Readonly<CommandContext<G>>")];
     entry.returns = Some(ApiReturnDoc {
         type_annotation: "Awaitable<void>".to_string(),
-        description: String::new(),
-        members: Vec::new(),
+        ..ApiReturnDoc::default()
     });
 
     let out = generate_markdown(&type_link_module(entry), &html_typedoc_options());
@@ -29,28 +28,24 @@ fn typedoc_index_uses_module_description_not_symbol_description() {
         ApiDocModule {
             description: "The entry for gunshi context.".to_string(),
             file: "context".to_string(),
-            source_path: String::new(),
             examples: vec!["```ts\ncreateCommandContext()\n```".to_string()],
-            tags: vec![],
             entries: vec![test_entry(
                 "CommandContextParams",
                 "interface",
                 "/repo/src/context.ts",
                 "Parameters of createCommandContext.",
             )],
+            ..ApiDocModule::default()
         },
         ApiDocModule {
-            description: String::new(),
             file: "plugin".to_string(),
-            source_path: String::new(),
-            examples: vec![],
-            tags: vec![],
             entries: vec![test_entry(
                 "plugin",
                 "function",
                 "/repo/src/plugin.ts",
                 "Define a plugin.",
             )],
+            ..ApiDocModule::default()
         },
     ];
 
@@ -92,13 +87,11 @@ fn typedoc_single_entry_root_flatten_uses_root_as_module_index() {
     let docs = vec![ApiDocModule {
         description: "Runtime API.".to_string(),
         file: "default".to_string(),
-        source_path: String::new(),
-        examples: vec![],
-        tags: vec![],
         entries: vec![
             test_entry("cli", "function", "/repo/src/cli.ts", "Run the CLI."),
             test_entry("Command", "interface", "/repo/src/types.ts", "Runtime command."),
         ],
+        ..ApiDocModule::default()
     }];
 
     let markdown = generate_markdown(
@@ -129,10 +122,8 @@ fn typedoc_module_index_renders_module_examples_in_html_style() {
     let docs = vec![ApiDocModule {
         description: "Parser combinator entry point.".to_string(),
         file: "combinators".to_string(),
-        source_path: String::new(),
         examples: vec!["```ts\nstring()\n```".to_string()],
-        tags: vec![],
-        entries: vec![],
+        ..ApiDocModule::default()
     }];
 
     let markdown = generate_markdown(

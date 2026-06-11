@@ -8,22 +8,18 @@ fn type_parameters_render_as_a_section() {
             name: "G".to_string(),
             constraint: Some("Base".to_string()),
             default: Some("Default".to_string()),
-            description: String::new(),
+            ..ApiTypeParamDoc::default()
         },
         ApiTypeParamDoc {
             name: "T".to_string(),
-            constraint: None,
-            default: None,
             description: "The value type.".to_string(),
+            ..ApiTypeParamDoc::default()
         },
     ];
     let docs = vec![ApiDocModule {
-        description: String::new(),
         file: "mod".to_string(),
-        source_path: String::new(),
-        examples: vec![],
-        tags: vec![],
         entries: vec![entry],
+        ..ApiDocModule::default()
     }];
 
     let markdown = generate_markdown(
@@ -49,22 +45,17 @@ fn markdown_display_format_options_render_tables() {
         name: "value".to_string(),
         type_annotation: "string".to_string(),
         description: "Input value.".to_string(),
-        optional: false,
-        default_value: None,
+        ..ApiParamDoc::default()
     }];
     entry.type_parameters = vec![ApiTypeParamDoc {
         name: "T".to_string(),
-        constraint: None,
-        default: None,
         description: "Value type.".to_string(),
+        ..ApiTypeParamDoc::default()
     }];
     let docs = vec![ApiDocModule {
-        description: String::new(),
         file: "mod".to_string(),
-        source_path: String::new(),
-        examples: vec![],
-        tags: vec![],
         entries: vec![entry],
+        ..ApiDocModule::default()
     }];
 
     let markdown = generate_markdown(
@@ -94,22 +85,18 @@ fn markdown_type_parameter_table_omits_description_column_when_all_empty() {
             name: "G".to_string(),
             constraint: Some("Base".to_string()),
             default: Some("Default".to_string()),
-            description: String::new(),
+            ..ApiTypeParamDoc::default()
         },
         ApiTypeParamDoc {
             name: "V".to_string(),
-            constraint: None,
-            default: None,
             description: "   ".to_string(),
+            ..ApiTypeParamDoc::default()
         },
     ];
     let docs = vec![ApiDocModule {
-        description: String::new(),
         file: "mod".to_string(),
-        source_path: String::new(),
-        examples: vec![],
-        tags: vec![],
         entries: vec![entry],
+        ..ApiDocModule::default()
     }];
 
     let markdown = generate_markdown(
@@ -137,24 +124,20 @@ fn markdown_type_parameter_table_renders_dash_for_missing_descriptions() {
     entry.type_parameters = vec![
         ApiTypeParamDoc {
             name: "T".to_string(),
-            constraint: None,
-            default: None,
             description: "Value type.".to_string(),
+            ..ApiTypeParamDoc::default()
         },
         ApiTypeParamDoc {
             name: "G".to_string(),
             constraint: Some("Base".to_string()),
             default: Some("Default".to_string()),
-            description: String::new(),
+            ..ApiTypeParamDoc::default()
         },
     ];
     let docs = vec![ApiDocModule {
-        description: String::new(),
         file: "mod".to_string(),
-        source_path: String::new(),
-        examples: vec![],
-        tags: vec![],
         entries: vec![entry],
+        ..ApiDocModule::default()
     }];
 
     let markdown = generate_markdown(
@@ -181,32 +164,28 @@ fn html_type_parameter_tables_follow_empty_description_policy() {
         name: "G".to_string(),
         constraint: Some("Base".to_string()),
         default: Some("Default".to_string()),
-        description: String::new(),
+        ..ApiTypeParamDoc::default()
     }];
 
     let mut mixed = test_entry("build", "function", "src/build.ts", "Build a thing.");
     mixed.type_parameters = vec![
         ApiTypeParamDoc {
             name: "T".to_string(),
-            constraint: None,
-            default: None,
             description: "Value type.".to_string(),
+            ..ApiTypeParamDoc::default()
         },
         ApiTypeParamDoc {
             name: "G".to_string(),
             constraint: Some("Base".to_string()),
             default: Some("Default".to_string()),
-            description: String::new(),
+            ..ApiTypeParamDoc::default()
         },
     ];
 
     let docs = vec![ApiDocModule {
-        description: String::new(),
         file: "mod".to_string(),
-        source_path: String::new(),
-        examples: vec![],
-        tags: vec![],
         entries: vec![all_empty, mixed],
+        ..ApiDocModule::default()
     }];
     let html = generate_markdown(
         &docs,

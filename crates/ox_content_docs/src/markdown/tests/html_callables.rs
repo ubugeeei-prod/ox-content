@@ -11,31 +11,20 @@ fn typedoc_html_renders_class_callable_member_details() {
         signature: Some(
             "getResource(locale: string): Record<string, string> | undefined".to_string(),
         ),
-        type_annotation: None,
-        default_value: None,
         params: vec![ApiParamDoc {
             name: "locale".to_string(),
             type_annotation: "string".to_string(),
             description: "Locale name.".to_string(),
-            optional: false,
-            default_value: None,
+            ..ApiParamDoc::default()
         }],
-        type_parameters: vec![],
         returns: Some(ApiReturnDoc {
             type_annotation: "Record<string, string> | undefined".to_string(),
             description: "The locale resource.".to_string(),
-            members: Vec::new(),
+            ..ApiReturnDoc::default()
         }),
-        throws: vec![],
-        members: vec![],
-        optional: false,
-        readonly: false,
-        r#static: false,
-        private: false,
-        tags: vec![],
-        implementation_of: vec![],
         line: 4,
         end_line: 4,
+        ..ApiDocMember::default()
     }];
 
     let mut implementation =
@@ -50,42 +39,29 @@ fn typedoc_html_renders_class_callable_member_details() {
         signature: Some(
             "getResource(locale: string): Record<string, string> | undefined".to_string(),
         ),
-        type_annotation: None,
-        default_value: None,
         params: vec![ApiParamDoc {
             name: "locale".to_string(),
             type_annotation: "string".to_string(),
             description: "Locale name.".to_string(),
-            optional: false,
-            default_value: None,
+            ..ApiParamDoc::default()
         }],
-        type_parameters: vec![],
         returns: Some(ApiReturnDoc {
             type_annotation: "Record<string, string> | undefined".to_string(),
             description: "The locale resource.".to_string(),
-            members: Vec::new(),
+            ..ApiReturnDoc::default()
         }),
         throws: vec![ApiThrowsDoc {
             type_annotation: Some("ResourceError".to_string()),
             description: "When the locale resource cannot be loaded.".to_string(),
         }],
-        members: vec![],
-        optional: false,
-        readonly: false,
-        r#static: false,
-        private: false,
-        tags: vec![],
-        implementation_of: vec![],
         line: 14,
         end_line: 16,
+        ..ApiDocMember::default()
     }];
     let docs = vec![ApiDocModule {
-        description: String::new(),
         file: "default".to_string(),
-        source_path: String::new(),
-        examples: vec![],
-        tags: vec![],
         entries: vec![adapter, implementation],
+        ..ApiDocModule::default()
     }];
 
     let markdown = generate_markdown(&docs, &html_typedoc_options());

@@ -19,7 +19,7 @@ const DEFAULT_EXPORT_NAME: &str = "apiNav";
 const OVERVIEW_TITLE: &str = "Overview";
 
 /// Navigation item for generated documentation sidebars.
-#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+#[derive(Debug, Clone, Default, PartialEq, Eq, Serialize, Deserialize)]
 pub struct DocsNavItem {
     /// Display title for the navigation item.
     pub title: String,
@@ -47,6 +47,20 @@ pub struct DocsNavMetadataOptions<'a> {
     pub kind_sort_order: Option<&'a [String]>,
     /// Single-entry root handling for TypeDoc-style nav.
     pub single_entry_root: MarkdownSingleEntryRoot,
+}
+
+impl Default for DocsNavMetadataOptions<'_> {
+    fn default() -> Self {
+        Self {
+            base_path: None,
+            path_strategy: MarkdownPathStrategy::Flat,
+            group_order: None,
+            sort: None,
+            sort_entry_points: true,
+            kind_sort_order: None,
+            single_entry_root: MarkdownSingleEntryRoot::Preserve,
+        }
+    }
 }
 
 /// Generates sidebar navigation metadata from documentation file paths.
@@ -97,7 +111,7 @@ pub fn generate_nav_metadata_from_docs(
             sort,
             sort_entry_points,
             kind_sort_order,
-            single_entry_root: MarkdownSingleEntryRoot::Preserve,
+            ..DocsNavMetadataOptions::default()
         },
     )
 }
@@ -419,38 +433,21 @@ mod tests {
         ApiDocEntry {
             name: name.to_string(),
             kind: kind.to_string(),
-            description: String::new(),
-            params: vec![],
-            returns: None,
-            throws: vec![],
-            examples: vec![],
-            tags: vec![],
-            private: false,
             file: join3("/repo/src/", name, ".ts"),
-            line: 1,
-            end_line: 1,
-            signature: None,
-            extends: vec![],
-            implements: vec![],
-            has_body: false,
-            members: vec![],
-            type_parameters: vec![],
+            ..ApiDocEntry::default()
         }
     }
 
     #[test]
     fn typedoc_nav_respects_group_order() {
         let docs = vec![ApiDocModule {
-            description: String::new(),
             file: "default".to_string(),
-            source_path: String::new(),
-            examples: vec![],
-            tags: vec![],
             entries: vec![
                 nav_entry("alpha", "function"),
                 nav_entry("Engine", "class"),
                 nav_entry("VERSION", "variable"),
             ],
+            ..ApiDocModule::default()
         }];
         let group_order = ["Variables".to_string(), "Functions".to_string()];
         let nav = generate_nav_metadata_from_docs(
@@ -472,11 +469,7 @@ mod tests {
     #[test]
     fn typedoc_nav_sorts_leaf_entries_alphabetically() {
         let docs = vec![ApiDocModule {
-            description: String::new(),
             file: "default".to_string(),
-            source_path: String::new(),
-            examples: vec![],
-            tags: vec![],
             // Supplied out of order.
             entries: vec![
                 nav_entry("plugin", "function"),
@@ -484,6 +477,7 @@ mod tests {
                 nav_entry("resolveArgs", "function"),
                 nav_entry("parseArgs", "function"),
             ],
+            ..ApiDocModule::default()
         }];
 
         let nav = generate_nav_metadata_from_docs(
@@ -506,12 +500,9 @@ mod tests {
     #[test]
     fn typedoc_nav_sort_entry_points_false_preserves_module_order() {
         let module = |file: &str, entry: &str| ApiDocModule {
-            description: String::new(),
             file: file.to_string(),
-            source_path: String::new(),
-            examples: vec![],
-            tags: vec![],
             entries: vec![nav_entry(entry, "function")],
+            ..ApiDocModule::default()
         };
         // Supplied in non-alphabetical order.
         let docs = vec![module("zebra", "z"), module("alpha", "a")];
@@ -550,16 +541,13 @@ mod tests {
     #[test]
     fn typedoc_nav_kind_sort_order_reorders_groups() {
         let docs = vec![ApiDocModule {
-            description: String::new(),
             file: "default".to_string(),
-            source_path: String::new(),
-            examples: vec![],
-            tags: vec![],
             entries: vec![
                 nav_entry("alpha", "function"),
                 nav_entry("Engine", "class"),
                 nav_entry("VERSION", "variable"),
             ],
+            ..ApiDocModule::default()
         }];
         let kind_sort_order = ["variable".to_string(), "class".to_string(), "function".to_string()];
         let nav = generate_nav_metadata_from_docs(
@@ -590,12 +578,9 @@ mod tests {
         let mut alpha = nav_entry("alpha", "function");
         alpha.line = 2;
         let docs = vec![ApiDocModule {
-            description: String::new(),
             file: "default".to_string(),
-            source_path: String::new(),
-            examples: vec![],
-            tags: vec![],
             entries: vec![zebra, alpha],
+            ..ApiDocModule::default()
         }];
         let sort = ["source-order".to_string()];
         let nav = generate_nav_metadata_from_docs(
@@ -622,11 +607,7 @@ mod tests {
     #[test]
     fn typedoc_nav_collapses_overloads_to_one_leaf() {
         let docs = vec![ApiDocModule {
-            description: String::new(),
             file: "default".to_string(),
-            source_path: String::new(),
-            examples: vec![],
-            tags: vec![],
             // `cli` is overloaded (multiple same-name entries resolving to one page).
             entries: vec![
                 nav_entry("cli", "function"),
@@ -634,6 +615,7 @@ mod tests {
                 nav_entry("cli", "function"),
                 nav_entry("define", "function"),
             ],
+            ..ApiDocModule::default()
         }];
 
         let nav = generate_nav_metadata_from_docs(
@@ -669,17 +651,17 @@ mod tests {
                 DocsNavItem {
                     title: "Nav Generator".to_string(),
                     path: "/api/nav-generator".to_string(),
-                    children: None,
+                    ..DocsNavItem::default()
                 },
                 DocsNavItem {
                     title: "Overview".to_string(),
                     path: "/api/index".to_string(),
-                    children: None,
+                    ..DocsNavItem::default()
                 },
                 DocsNavItem {
                     title: "Types".to_string(),
                     path: "/api/types".to_string(),
-                    children: None,
+                    ..DocsNavItem::default()
                 },
             ]
         );
@@ -695,53 +677,22 @@ mod tests {
     #[test]
     fn generates_typedoc_nav_metadata_from_docs() {
         let docs = vec![ApiDocModule {
-            description: String::new(),
             file: "default".to_string(),
-            source_path: String::new(),
-            examples: vec![],
-            tags: vec![],
             entries: vec![
                 ApiDocEntry {
                     name: "cli".to_string(),
                     kind: "function".to_string(),
-                    description: String::new(),
-                    params: vec![],
-                    returns: None,
-                    throws: vec![],
-                    examples: vec![],
-                    tags: vec![],
-                    private: false,
                     file: "cli.ts".to_string(),
-                    line: 1,
-                    end_line: 1,
-                    signature: None,
-                    extends: vec![],
-                    implements: vec![],
-                    has_body: false,
-                    members: vec![],
-                    type_parameters: vec![],
+                    ..ApiDocEntry::default()
                 },
                 ApiDocEntry {
                     name: "Command".to_string(),
                     kind: "interface".to_string(),
-                    description: String::new(),
-                    params: vec![],
-                    returns: None,
-                    throws: vec![],
-                    examples: vec![],
-                    tags: vec![],
-                    private: false,
                     file: "types.ts".to_string(),
-                    line: 1,
-                    end_line: 1,
-                    signature: None,
-                    extends: vec![],
-                    implements: vec![],
-                    has_body: false,
-                    members: vec![],
-                    type_parameters: vec![],
+                    ..ApiDocEntry::default()
                 },
             ],
+            ..ApiDocModule::default()
         }];
 
         let nav = generate_nav_metadata_from_docs(
@@ -770,12 +721,9 @@ mod tests {
     #[test]
     fn typedoc_nav_single_entry_root_flatten_promotes_kind_groups() {
         let docs = vec![ApiDocModule {
-            description: String::new(),
             file: "default".to_string(),
-            source_path: String::new(),
-            examples: vec![],
-            tags: vec![],
             entries: vec![nav_entry("cli", "function"), nav_entry("Command", "interface")],
+            ..ApiDocModule::default()
         }];
 
         let nav = generate_nav_metadata_from_docs_with_options(
@@ -783,11 +731,8 @@ mod tests {
             &DocsNavMetadataOptions {
                 base_path: Some("/api"),
                 path_strategy: MarkdownPathStrategy::TypeDoc,
-                group_order: None,
-                sort: None,
-                sort_entry_points: true,
-                kind_sort_order: None,
                 single_entry_root: MarkdownSingleEntryRoot::Flatten,
+                ..DocsNavMetadataOptions::default()
             },
         );
 
@@ -804,31 +749,14 @@ mod tests {
     #[test]
     fn generates_typedoc_nav_metadata_includes_enumerations() {
         let docs = vec![ApiDocModule {
-            description: String::new(),
             file: "default".to_string(),
-            source_path: String::new(),
-            examples: vec![],
-            tags: vec![],
             entries: vec![ApiDocEntry {
                 name: "Mode".to_string(),
                 kind: "enum".to_string(),
-                description: String::new(),
-                params: vec![],
-                returns: None,
-                throws: vec![],
-                examples: vec![],
-                tags: vec![],
-                private: false,
                 file: "mode.ts".to_string(),
-                line: 1,
-                end_line: 1,
-                signature: None,
-                extends: vec![],
-                implements: vec![],
-                has_body: false,
-                members: vec![],
-                type_parameters: vec![],
+                ..ApiDocEntry::default()
             }],
+            ..ApiDocModule::default()
         }];
 
         let nav = generate_nav_metadata_from_docs(
@@ -853,31 +781,15 @@ mod tests {
     #[test]
     fn typedoc_nav_omits_reexports_from_non_owner_modules() {
         let make = |module: &str, source: &str| ApiDocModule {
-            description: String::new(),
             file: module.to_string(),
             source_path: source.to_string(),
-            examples: vec![],
-            tags: vec![],
             entries: vec![ApiDocEntry {
                 name: "createCommandContext".to_string(),
                 kind: "function".to_string(),
-                description: String::new(),
-                params: vec![],
-                returns: None,
-                throws: vec![],
-                examples: vec![],
-                tags: vec![],
-                private: false,
                 file: "/repo/src/context.ts".to_string(),
-                line: 1,
-                end_line: 1,
-                signature: None,
-                extends: vec![],
-                implements: vec![],
-                has_body: false,
-                members: vec![],
-                type_parameters: vec![],
+                ..ApiDocEntry::default()
             }],
+            ..ApiDocModule::default()
         };
         // `context` defines the symbol; `default` only re-exports it.
         let docs =
@@ -908,7 +820,7 @@ mod tests {
             &[DocsNavItem {
                 title: "Docs".to_string(),
                 path: "/api/docs".to_string(),
-                children: None,
+                ..DocsNavItem::default()
             }],
             Some("apiNav"),
         );

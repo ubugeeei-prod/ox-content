@@ -3,71 +3,36 @@ use super::*;
 #[test]
 fn generate_docs_markdown_property_members_format_table_renders_html() {
     let docs = vec![JsDocsMarkdownModule {
-        description: None,
         file: "default".to_string(),
-        source_path: None,
-        examples: None,
-        tags: None,
         entries: vec![JsDocsMarkdownEntry {
             name: "Options".to_string(),
             kind: "interface".to_string(),
             description: "Request options.".to_string(),
-            params: None,
-            returns: None,
-            throws: None,
-            examples: None,
-            tags: None,
-            private: false,
             file: "/repo/src/options.ts".to_string(),
-            line: 1,
             end_line: 8,
             signature: Some("export interface Options".to_string()),
-            extends: None,
-            implements: None,
-            has_body: None,
             members: Some(vec![JsDocMember {
                 name: "http".to_string(),
                 kind: "property".to_string(),
                 description: "HTTP options.".to_string(),
-                signature: None,
                 r#type: Some("{ timeout?: number }".to_string()),
-                r#default: None,
-                params: None,
-                type_parameters: None,
-                returns: None,
-                throws: None,
                 members: Some(vec![JsDocMember {
                     name: "timeout".to_string(),
                     kind: "property".to_string(),
                     description: "Request timeout.".to_string(),
-                    signature: None,
                     r#type: Some("number".to_string()),
-                    r#default: None,
-                    params: None,
-                    type_parameters: None,
-                    returns: None,
-                    throws: None,
-                    members: None,
                     optional: Some(true),
-                    readonly: Some(false),
-                    r#static: Some(false),
-                    private: Some(false),
-                    tags: None,
-                    implementation_of: None,
                     line: 4,
                     end_line: 4,
+                    ..Default::default()
                 }]),
-                optional: Some(false),
-                readonly: Some(false),
-                r#static: Some(false),
-                private: Some(false),
-                tags: None,
-                implementation_of: None,
                 line: 3,
                 end_line: 6,
+                ..Default::default()
             }]),
-            type_parameters: None,
+            ..Default::default()
         }],
+        ..Default::default()
     }];
 
     let markdown = generate_docs_markdown(
@@ -94,58 +59,29 @@ fn generate_docs_markdown_property_members_format_table_renders_html() {
 fn generate_docs_markdown_resolves_jsdoc_inline_links() {
     let docs = vec![
         JsDocsMarkdownModule {
-            description: None,
             file: "/repo/src/command.ts".to_string(),
-            source_path: None,
-            examples: None,
-            tags: None,
             entries: vec![JsDocsMarkdownEntry {
                 name: "Command".to_string(),
                 kind: "interface".to_string(),
                 description: "Runtime command.".to_string(),
-                params: None,
-                returns: None,
-                throws: None,
-                examples: None,
-                tags: None,
-                private: false,
                 file: "/repo/src/command.ts".to_string(),
-                line: 1,
                 end_line: 10,
                 signature: Some("export interface Command".to_string()),
-                extends: None,
-                implements: None,
-                has_body: None,
                 members: Some(vec![JsDocMember {
                     name: "args".to_string(),
                     kind: "property".to_string(),
                     description: "All {@linkcode Command.args} names.".to_string(),
-                    signature: None,
                     r#type: Some("Record<string, unknown>".to_string()),
-                    r#default: None,
-                    params: None,
-                    type_parameters: None,
-                    returns: None,
-                    throws: None,
-                    members: None,
-                    optional: Some(false),
-                    readonly: Some(false),
-                    r#static: Some(false),
-                    private: Some(false),
-                    tags: None,
-                    implementation_of: None,
                     line: 5,
                     end_line: 5,
+                    ..Default::default()
                 }]),
-                type_parameters: None,
+                ..Default::default()
             }],
+            ..Default::default()
         },
         JsDocsMarkdownModule {
-            description: None,
             file: "/repo/src/build.ts".to_string(),
-            source_path: None,
-            examples: None,
-            tags: None,
             entries: vec![JsDocsMarkdownEntry {
                 name: "buildCommand".to_string(),
                 kind: "function".to_string(),
@@ -154,33 +90,25 @@ fn generate_docs_markdown_resolves_jsdoc_inline_links() {
                     name: "entry".to_string(),
                     r#type: "Command".to_string(),
                     description: "A {@linkcode Command | entry command}".to_string(),
-                    optional: Some(false),
-                    r#default: None,
+                    ..Default::default()
                 }]),
                 returns: Some(JsDocReturn {
                     r#type: "Command".to_string(),
                     description: "A {@link Command} result.".to_string(),
-                    members: None,
+                    ..Default::default()
                 }),
-                throws: None,
-                examples: None,
                 tags: Some(vec![JsDocsMarkdownTag {
                     tag: "see".to_string(),
                     value: "{@link https://github.com/unjs/std-env | std-env}".to_string(),
                 }]),
-                private: false,
                 file: "/repo/src/build.ts".to_string(),
-                line: 1,
                 end_line: 20,
                 signature: Some(
                     "export function buildCommand(entry: Command): Command".to_string(),
                 ),
-                extends: None,
-                implements: None,
-                has_body: None,
-                members: None,
-                type_parameters: None,
+                ..Default::default()
             }],
+            ..Default::default()
         },
     ];
 
@@ -200,64 +128,37 @@ fn generate_docs_markdown_resolves_jsdoc_inline_links() {
 #[test]
 fn generate_docs_markdown_accepts_typedoc_path_strategy() {
     let docs = vec![JsDocsMarkdownModule {
-        description: None,
         file: "default".to_string(),
-        source_path: None,
-        examples: None,
-        tags: None,
         entries: vec![
             JsDocsMarkdownEntry {
                 name: "Command".to_string(),
                 kind: "interface".to_string(),
                 description: "Runtime command.".to_string(),
-                params: None,
-                returns: None,
-                throws: None,
-                examples: None,
-                tags: None,
-                private: false,
                 file: "/repo/src/types.ts".to_string(),
-                line: 1,
                 end_line: 10,
                 signature: Some("export interface Command".to_string()),
-                extends: None,
-                implements: None,
-                has_body: None,
-                members: None,
-                type_parameters: None,
+                ..Default::default()
             },
             JsDocsMarkdownEntry {
                 name: "cli".to_string(),
                 kind: "function".to_string(),
                 description: "Runs {@link Command}.".to_string(),
-                params: None,
-                returns: None,
-                throws: None,
-                examples: None,
-                tags: None,
-                private: false,
                 file: "/repo/src/cli.ts".to_string(),
-                line: 1,
                 end_line: 10,
                 signature: Some("export function cli(): void".to_string()),
-                extends: None,
-                implements: None,
-                has_body: None,
-                members: None,
-                type_parameters: None,
+                ..Default::default()
             },
         ],
+        ..Default::default()
     }];
 
     let markdown = generate_docs_markdown(
         docs,
         Some(JsDocsMarkdownOptions {
             group_by: Some("file".to_string()),
-            github_url: None,
             link_style: Some("clean".to_string()),
             base_path: Some("/api".to_string()),
             path_strategy: Some("typedoc".to_string()),
-            render_style: None,
             ..Default::default()
         }),
     );

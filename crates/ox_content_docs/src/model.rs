@@ -8,7 +8,7 @@
 use serde::{Deserialize, Serialize};
 
 /// Extracted docs for one source module.
-#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
+#[derive(Debug, Clone, Default, Serialize, Deserialize, PartialEq, Eq)]
 pub struct ApiDocModule {
     /// Source file path.
     pub file: String,
@@ -86,6 +86,31 @@ pub struct ApiDocEntry {
     pub type_parameters: Vec<ApiTypeParamDoc>,
 }
 
+impl Default for ApiDocEntry {
+    fn default() -> Self {
+        Self {
+            name: String::new(),
+            kind: String::new(),
+            description: String::new(),
+            params: Vec::new(),
+            returns: None,
+            throws: Vec::new(),
+            examples: Vec::new(),
+            tags: Vec::new(),
+            private: false,
+            file: String::new(),
+            line: 1,
+            end_line: 1,
+            signature: None,
+            extends: Vec::new(),
+            implements: Vec::new(),
+            has_body: false,
+            members: Vec::new(),
+            type_parameters: Vec::new(),
+        }
+    }
+}
+
 /// Documentation for a member of a class/interface/type/enum entry.
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
 pub struct ApiDocMember {
@@ -140,8 +165,34 @@ pub struct ApiDocMember {
     pub end_line: u32,
 }
 
+impl Default for ApiDocMember {
+    fn default() -> Self {
+        Self {
+            name: String::new(),
+            kind: String::new(),
+            description: String::new(),
+            signature: None,
+            type_annotation: None,
+            default_value: None,
+            params: Vec::new(),
+            type_parameters: Vec::new(),
+            returns: None,
+            throws: Vec::new(),
+            members: Vec::new(),
+            optional: false,
+            readonly: false,
+            r#static: false,
+            private: false,
+            tags: Vec::new(),
+            implementation_of: Vec::new(),
+            line: 1,
+            end_line: 1,
+        }
+    }
+}
+
 /// Parameter documentation.
-#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
+#[derive(Debug, Clone, Default, Serialize, Deserialize, PartialEq, Eq)]
 pub struct ApiParamDoc {
     /// Parameter name.
     pub name: String,
@@ -156,7 +207,7 @@ pub struct ApiParamDoc {
 }
 
 /// Return type documentation.
-#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
+#[derive(Debug, Clone, Default, Serialize, Deserialize, PartialEq, Eq)]
 pub struct ApiReturnDoc {
     /// Return type.
     pub type_annotation: String,
@@ -168,7 +219,7 @@ pub struct ApiReturnDoc {
 }
 
 /// Exception/error documentation.
-#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
+#[derive(Debug, Clone, Default, Serialize, Deserialize, PartialEq, Eq)]
 pub struct ApiThrowsDoc {
     /// Error type.
     pub type_annotation: Option<String>,
@@ -177,7 +228,7 @@ pub struct ApiThrowsDoc {
 }
 
 /// Type parameter documentation (`<T extends C = D>`).
-#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
+#[derive(Debug, Clone, Default, Serialize, Deserialize, PartialEq, Eq)]
 pub struct ApiTypeParamDoc {
     /// Type parameter name (e.g. `T`).
     pub name: String,
@@ -190,7 +241,7 @@ pub struct ApiTypeParamDoc {
 }
 
 /// Custom JSDoc tag.
-#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
+#[derive(Debug, Clone, Default, Serialize, Deserialize, PartialEq, Eq)]
 pub struct ApiDocTag {
     /// Tag name without `@`.
     pub tag: String,

@@ -3,41 +3,23 @@ use super::*;
 #[test]
 fn generate_docs_markdown_accepts_clean_link_options() {
     let docs = vec![JsDocsMarkdownModule {
-        description: None,
         file: "/repo/src/context.ts".to_string(),
-        source_path: None,
-        examples: None,
-        tags: None,
         entries: vec![JsDocsMarkdownEntry {
             name: "CommandContext".to_string(),
             kind: "interface".to_string(),
             description: "Runtime context.".to_string(),
-            params: None,
-            returns: None,
-            throws: None,
-            examples: None,
-            tags: None,
-            private: false,
             file: "/repo/src/context.ts".to_string(),
-            line: 1,
-            end_line: 1,
             signature: Some("export interface CommandContext".to_string()),
-            extends: None,
-            implements: None,
-            has_body: None,
-            members: None,
-            type_parameters: None,
+            ..Default::default()
         }],
+        ..Default::default()
     }];
     let markdown = generate_docs_markdown(
         docs,
         Some(JsDocsMarkdownOptions {
             group_by: Some("file".to_string()),
-            github_url: None,
             link_style: Some("clean".to_string()),
             base_path: Some("/api-ox".to_string()),
-            path_strategy: None,
-            render_style: None,
             ..Default::default()
         }),
     );
@@ -50,40 +32,21 @@ fn generate_docs_markdown_accepts_clean_link_options() {
 #[test]
 fn generate_docs_markdown_render_style_markdown_omits_html() {
     let docs = vec![JsDocsMarkdownModule {
-        description: None,
         file: "/repo/src/context.ts".to_string(),
-        source_path: None,
-        examples: None,
-        tags: None,
         entries: vec![JsDocsMarkdownEntry {
             name: "CommandContext".to_string(),
             kind: "interface".to_string(),
             description: "Runtime context.".to_string(),
-            params: None,
-            returns: None,
-            throws: None,
-            examples: None,
-            tags: None,
-            private: false,
             file: "/repo/src/context.ts".to_string(),
-            line: 1,
-            end_line: 1,
             signature: Some("export interface CommandContext".to_string()),
-            extends: None,
-            implements: None,
-            has_body: None,
-            members: None,
-            type_parameters: None,
+            ..Default::default()
         }],
+        ..Default::default()
     }];
     let markdown = generate_docs_markdown(
         docs,
         Some(JsDocsMarkdownOptions {
             group_by: Some("file".to_string()),
-            github_url: None,
-            link_style: None,
-            base_path: None,
-            path_strategy: None,
             render_style: Some("markdown".to_string()),
             ..Default::default()
         }),
@@ -99,11 +62,7 @@ fn generate_docs_markdown_render_style_markdown_omits_html() {
 #[test]
 fn generate_docs_markdown_accepts_display_format_options() {
     let docs = vec![JsDocsMarkdownModule {
-        description: None,
         file: "default".to_string(),
-        source_path: None,
-        examples: None,
-        tags: None,
         entries: vec![JsDocsMarkdownEntry {
             name: "make".to_string(),
             kind: "function".to_string(),
@@ -112,24 +71,13 @@ fn generate_docs_markdown_accepts_display_format_options() {
                 name: "value".to_string(),
                 r#type: "string".to_string(),
                 description: "Input value.".to_string(),
-                optional: Some(false),
-                r#default: None,
+                ..Default::default()
             }]),
-            returns: None,
-            throws: None,
-            examples: None,
-            tags: None,
-            private: false,
             file: "/repo/src/make.ts".to_string(),
-            line: 1,
-            end_line: 1,
             signature: Some("export function make(value: string): void".to_string()),
-            extends: None,
-            implements: None,
-            has_body: None,
-            members: None,
-            type_parameters: None,
+            ..Default::default()
         }],
+        ..Default::default()
     }];
 
     let markdown = generate_docs_markdown(
@@ -150,17 +98,12 @@ fn generate_docs_markdown_accepts_display_format_options() {
 #[test]
 fn generate_docs_markdown_type_declaration_format_table_renders_html() {
     let docs = vec![JsDocsMarkdownModule {
-        description: None,
         file: "default".to_string(),
-        source_path: None,
-        examples: None,
-        tags: None,
         entries: vec![
             JsDocsMarkdownEntry {
                 name: "resolveArgs".to_string(),
                 kind: "function".to_string(),
                 description: "Resolve.".to_string(),
-                params: None,
                 returns: Some(JsDocReturn {
                     r#type: "object".to_string(),
                     description: "Resolved args.".to_string(),
@@ -168,59 +111,23 @@ fn generate_docs_markdown_type_declaration_format_table_renders_html() {
                         name: "values".to_string(),
                         kind: "property".to_string(),
                         description: "Resolved values.".to_string(),
-                        signature: None,
                         r#type: Some("ArgValues<A>".to_string()),
-                        r#default: None,
-                        params: None,
-                        type_parameters: None,
-                        returns: None,
-                        throws: None,
-                        members: None,
-                        optional: Some(false),
-                        readonly: Some(false),
-                        r#static: Some(false),
-                        private: Some(false),
-                        tags: None,
-                        implementation_of: None,
-                        line: 1,
-                        end_line: 1,
+                        ..Default::default()
                     }]),
                 }),
-                throws: None,
-                examples: None,
-                tags: None,
-                private: false,
                 file: "/repo/src/resolver.ts".to_string(),
-                line: 1,
-                end_line: 1,
                 signature: Some("export function resolveArgs(): object".to_string()),
-                extends: None,
-                implements: None,
-                has_body: None,
-                members: None,
-                type_parameters: None,
+                ..Default::default()
             },
             JsDocsMarkdownEntry {
                 name: "ArgValues".to_string(),
                 kind: "type".to_string(),
-                description: String::new(),
-                params: None,
-                returns: None,
-                throws: None,
-                examples: None,
-                tags: None,
-                private: false,
                 file: "/repo/src/types.ts".to_string(),
-                line: 1,
-                end_line: 1,
                 signature: Some("export type ArgValues = unknown".to_string()),
-                extends: None,
-                implements: None,
-                has_body: None,
-                members: None,
-                type_parameters: None,
+                ..Default::default()
             },
         ],
+        ..Default::default()
     }];
 
     let markdown = generate_docs_markdown(

@@ -39,15 +39,9 @@ fn typedoc_does_not_link_sibling_type_parameter_names() {
         ApiTypeParamDoc {
             name: "T".to_string(),
             constraint: Some("U".to_string()),
-            default: None,
-            description: String::new(),
+            ..ApiTypeParamDoc::default()
         },
-        ApiTypeParamDoc {
-            name: "U".to_string(),
-            constraint: None,
-            default: None,
-            description: String::new(),
-        },
+        ApiTypeParamDoc { name: "U".to_string(), ..ApiTypeParamDoc::default() },
     ];
     let out = generate_markdown(&type_link_module(entry), &markdown_typedoc_options());
     let page = out.get("combinators/functions/make.md").unwrap();

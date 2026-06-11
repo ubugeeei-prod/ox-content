@@ -5,62 +5,40 @@ pub(super) fn test_entry(name: &str, kind: &str, file: &str, description: &str) 
         name: name.to_string(),
         kind: kind.to_string(),
         description: description.to_string(),
-        params: vec![],
-        returns: None,
-        throws: vec![],
-        examples: vec![],
-        tags: vec![],
-        private: false,
         file: file.to_string(),
-        line: 1,
-        end_line: 1,
         signature: Some(join3("export function ", name, "(): void")),
-        extends: vec![],
-        implements: vec![],
-        has_body: false,
-        members: vec![],
-        type_parameters: vec![],
+        ..ApiDocEntry::default()
     }
 }
 
 pub(super) fn link_test_docs() -> Vec<ApiDocModule> {
     vec![
         ApiDocModule {
-            description: String::new(),
             file: "/repo/src/context.ts".to_string(),
-            source_path: String::new(),
-            examples: vec![],
-            tags: vec![],
             entries: vec![test_entry(
                 "CommandContext",
                 "interface",
                 "/repo/src/context.ts",
                 "Command context.",
             )],
+            ..ApiDocModule::default()
         },
         ApiDocModule {
-            description: String::new(),
             file: "/repo/src/command.ts".to_string(),
-            source_path: String::new(),
-            examples: vec![],
-            tags: vec![],
             entries: vec![test_entry(
                 "Command",
                 "function",
                 "/repo/src/command.ts",
                 "Runs with [CommandContext].",
             )],
+            ..ApiDocModule::default()
         },
     ]
 }
 
 pub(super) fn pure_test_docs() -> Vec<ApiDocModule> {
     vec![ApiDocModule {
-        description: String::new(),
         file: "/repo/src/cli.ts".to_string(),
-        source_path: String::new(),
-        examples: vec![],
-        tags: vec![],
         entries: vec![
             ApiDocEntry {
                 name: "cli".to_string(),
@@ -70,13 +48,12 @@ pub(super) fn pure_test_docs() -> Vec<ApiDocModule> {
                     name: "argv".to_string(),
                     type_annotation: "string[]".to_string(),
                     description: "Arguments.".to_string(),
-                    optional: false,
-                    default_value: None,
+                    ..ApiParamDoc::default()
                 }],
                 returns: Some(ApiReturnDoc {
                     type_annotation: "void".to_string(),
                     description: "Nothing.".to_string(),
-                    members: Vec::new(),
+                    ..ApiReturnDoc::default()
                 }),
                 throws: vec![ApiThrowsDoc {
                     type_annotation: Some("CliError".to_string()),
@@ -84,61 +61,36 @@ pub(super) fn pure_test_docs() -> Vec<ApiDocModule> {
                 }],
                 examples: vec!["```ts\ncli([])\n```".to_string()],
                 tags: vec![ApiDocTag { tag: "since".to_string(), value: "1.0.0".to_string() }],
-                private: false,
                 file: "/repo/src/cli.ts".to_string(),
-                line: 1,
                 end_line: 3,
                 signature: Some("export function cli(argv: string[]): void".to_string()),
-                extends: vec![],
-                implements: vec![],
-                has_body: false,
-                members: vec![],
-                type_parameters: vec![],
+                ..ApiDocEntry::default()
             },
             ApiDocEntry {
                 name: "Command".to_string(),
                 kind: "interface".to_string(),
                 description: "A command.".to_string(),
-                params: vec![],
-                returns: None,
-                throws: vec![],
-                examples: vec![],
-                tags: vec![],
-                private: false,
                 file: "/repo/src/cli.ts".to_string(),
                 line: 5,
                 end_line: 8,
                 signature: Some("export interface Command".to_string()),
-                extends: vec![],
-                implements: vec![],
-                has_body: false,
                 members: vec![ApiDocMember {
                     name: "run".to_string(),
                     kind: "method".to_string(),
                     description: "Runs it.".to_string(),
                     signature: Some("run(): void".to_string()),
-                    type_annotation: None,
-                    default_value: None,
-                    params: vec![],
-                    type_parameters: vec![],
-                    returns: None,
                     throws: vec![ApiThrowsDoc {
                         type_annotation: Some("RunError".to_string()),
                         description: "When the command cannot run.".to_string(),
                     }],
-                    members: vec![],
-                    optional: false,
-                    readonly: false,
-                    r#static: false,
-                    private: false,
-                    tags: vec![],
-                    implementation_of: vec![],
                     line: 6,
                     end_line: 6,
+                    ..ApiDocMember::default()
                 }],
-                type_parameters: vec![],
+                ..ApiDocEntry::default()
             },
         ],
+        ..ApiDocModule::default()
     }]
 }
 
@@ -177,12 +129,9 @@ pub(super) fn assert_no_heading_level_skips(markdown: &str) {
 }
 pub(super) fn typedoc_title_page(entry: ApiDocEntry) -> String {
     let docs = vec![ApiDocModule {
-        description: String::new(),
         file: "mod".to_string(),
-        source_path: String::new(),
-        examples: vec![],
-        tags: vec![],
         entries: vec![entry],
+        ..ApiDocModule::default()
     }];
     let out = generate_markdown(
         &docs,
@@ -200,12 +149,9 @@ pub(super) fn typedoc_title_page(entry: ApiDocEntry) -> String {
 
 pub(super) fn lifecycle_module(entry: ApiDocEntry) -> Vec<ApiDocModule> {
     vec![ApiDocModule {
-        description: String::new(),
         file: "combinators".to_string(),
-        source_path: String::new(),
-        examples: vec![],
-        tags: vec![],
         entries: vec![entry],
+        ..ApiDocModule::default()
     }]
 }
 
@@ -226,29 +172,26 @@ pub(super) fn object_literal_parameter_entry() -> ApiDocEntry {
                 "{ id: Id; name?: string; setup?: (ctx: PluginContext) => Awaitable<void> }"
                     .to_string(),
             description: "Plugin options.".to_string(),
-            optional: false,
-            default_value: None,
+            ..ApiParamDoc::default()
         },
         ApiParamDoc {
             name: "options.id".to_string(),
             type_annotation: "Id".to_string(),
             description: "Plugin id.".to_string(),
-            optional: false,
-            default_value: None,
+            ..ApiParamDoc::default()
         },
         ApiParamDoc {
             name: "options.name?".to_string(),
             type_annotation: "string".to_string(),
-            description: String::new(),
             optional: true,
-            default_value: None,
+            ..ApiParamDoc::default()
         },
         ApiParamDoc {
             name: "options.setup?".to_string(),
             type_annotation: "(ctx: PluginContext) => Awaitable<void>".to_string(),
             description: "Setup hook.".to_string(),
             optional: true,
-            default_value: None,
+            ..ApiParamDoc::default()
         },
     ];
     entry
@@ -256,13 +199,11 @@ pub(super) fn object_literal_parameter_entry() -> ApiDocEntry {
 
 pub(super) fn module_with_source_path(source_path: &str) -> Vec<ApiDocModule> {
     vec![ApiDocModule {
-        description: String::new(),
         // `file` is the module route name, not a real path.
         file: "default".to_string(),
         source_path: source_path.to_string(),
-        examples: vec![],
-        tags: vec![],
         entries: vec![test_entry("cli", "function", "/repo/packages/x/src/cli.ts", "Run.")],
+        ..ApiDocModule::default()
     }]
 }
 
@@ -270,15 +211,13 @@ pub(super) fn group_order_docs() -> Vec<ApiDocModule> {
     vec![ApiDocModule {
         description: "Module description.".to_string(),
         file: "default".to_string(),
-        source_path: String::new(),
-        examples: vec![],
-        tags: vec![],
         entries: vec![
             test_entry("alpha", "function", "/repo/src/a.ts", "A function."),
             test_entry("Config", "interface", "/repo/src/c.ts", "An interface."),
             test_entry("Engine", "class", "/repo/src/e.ts", "A class."),
             test_entry("VERSION", "variable", "/repo/src/v.ts", "A variable."),
         ],
+        ..ApiDocModule::default()
     }]
 }
 
@@ -286,13 +225,11 @@ pub(super) fn stats_docs() -> Vec<ApiDocModule> {
     vec![ApiDocModule {
         description: "Module description.".to_string(),
         file: "default".to_string(),
-        source_path: String::new(),
-        examples: vec![],
-        tags: vec![],
         entries: vec![
             test_entry("cli", "function", "/repo/src/cli.ts", "Run the CLI."),
             test_entry("run", "function", "/repo/src/run.ts", "Run again."),
         ],
+        ..ApiDocModule::default()
     }]
 }
 
@@ -307,33 +244,15 @@ pub(super) fn overload_entry(
         name: name.to_string(),
         kind: "function".to_string(),
         description: description.to_string(),
-        params: vec![],
-        returns: None,
-        throws: vec![],
-        examples: vec![],
-        tags: vec![],
-        private: false,
         file: file.to_string(),
-        line: 1,
-        end_line: 1,
         signature: Some(signature.to_string()),
-        extends: vec![],
-        implements: vec![],
         has_body,
-        members: vec![],
-        type_parameters: vec![],
+        ..ApiDocEntry::default()
     }
 }
 
 pub(super) fn overload_module(entries: Vec<ApiDocEntry>) -> Vec<ApiDocModule> {
-    vec![ApiDocModule {
-        description: String::new(),
-        file: "default".to_string(),
-        source_path: String::new(),
-        examples: vec![],
-        tags: vec![],
-        entries,
-    }]
+    vec![ApiDocModule { file: "default".to_string(), entries, ..ApiDocModule::default() }]
 }
 
 pub(super) fn html_typedoc_options() -> MarkdownDocsOptions {
@@ -348,23 +267,9 @@ pub(super) fn member(name: &str, kind: &str, is_static: bool) -> ApiDocMember {
     ApiDocMember {
         name: name.to_string(),
         kind: kind.to_string(),
-        description: String::new(),
-        signature: None,
         type_annotation: Some("unknown".to_string()),
-        default_value: None,
-        params: vec![],
-        type_parameters: vec![],
-        returns: None,
-        throws: vec![],
-        members: vec![],
-        optional: false,
-        readonly: false,
         r#static: is_static,
-        private: false,
-        tags: vec![],
-        implementation_of: vec![],
-        line: 1,
-        end_line: 1,
+        ..ApiDocMember::default()
     }
 }
 
@@ -373,43 +278,27 @@ pub(super) fn function_valued_parse_member() -> ApiDocMember {
         name: "parse".to_string(),
         kind: "property".to_string(),
         description: "Parses a raw value.".to_string(),
-        signature: None,
         type_annotation: Some("(value: string) => string | undefined".to_string()),
-        default_value: None,
         params: vec![ApiParamDoc {
             name: "value".to_string(),
             type_annotation: "string".to_string(),
             description: "Raw string value from command line.".to_string(),
-            optional: false,
-            default_value: None,
+            ..ApiParamDoc::default()
         }],
-        type_parameters: vec![],
         returns: Some(ApiReturnDoc {
             type_annotation: "string | undefined".to_string(),
             description: "Parsed value.".to_string(),
-            members: Vec::new(),
+            ..ApiReturnDoc::default()
         }),
-        throws: vec![],
-        members: vec![],
         optional: true,
-        readonly: false,
-        r#static: false,
-        private: false,
-        tags: vec![],
-        implementation_of: vec![],
         line: 5,
         end_line: 10,
+        ..ApiDocMember::default()
     }
 }
 
 pub(super) fn type_param(name: &str) -> ApiParamDoc {
-    ApiParamDoc {
-        name: name.to_string(),
-        type_annotation: String::new(),
-        description: String::new(),
-        optional: false,
-        default_value: None,
-    }
+    ApiParamDoc { name: name.to_string(), ..ApiParamDoc::default() }
 }
 
 /// A parameter with a name and a type annotation (no description/flags).
@@ -434,11 +323,7 @@ pub(super) fn function_stub(name: &str) -> ApiDocEntry {
 /// linkable symbols inside type annotations in the type-link tests.
 pub(super) fn type_link_module(entry: ApiDocEntry) -> Vec<ApiDocModule> {
     vec![ApiDocModule {
-        description: String::new(),
         file: "combinators".to_string(),
-        source_path: String::new(),
-        examples: vec![],
-        tags: vec![],
         entries: vec![
             entry,
             type_stub("RenderingOptions"),
@@ -457,6 +342,7 @@ pub(super) fn type_link_module(entry: ApiDocEntry) -> Vec<ApiDocModule> {
             function_stub("boolean"),
             function_stub("number"),
         ],
+        ..ApiDocModule::default()
     }]
 }
 
@@ -470,36 +356,23 @@ pub(super) fn index_signature_docs() -> Vec<ApiDocModule> {
         vec![index_signature_member("[option: string]", "option", "string", "ArgSchema", true)];
 
     vec![ApiDocModule {
-        description: String::new(),
         file: "default".to_string(),
-        source_path: String::new(),
-        examples: vec![],
-        tags: vec![],
         entries: vec![schema, args],
+        ..ApiDocModule::default()
     }]
 }
 
 pub(super) fn multiline_plugin_ext_type_parameters() -> Vec<ApiTypeParamDoc> {
     vec![
-        ApiTypeParamDoc {
-            name: "Extension".to_string(),
-            constraint: None,
-            default: None,
-            description: String::new(),
-        },
-        ApiTypeParamDoc {
-            name: "ResolvedDepExtensions".to_string(),
-            constraint: None,
-            default: None,
-            description: String::new(),
-        },
+        ApiTypeParamDoc { name: "Extension".to_string(), ..ApiTypeParamDoc::default() },
+        ApiTypeParamDoc { name: "ResolvedDepExtensions".to_string(), ..ApiTypeParamDoc::default() },
         ApiTypeParamDoc {
             name: "PluginExt".to_string(),
             constraint: Some("PluginExtension<Extension, DefaultGunshiParams>".to_string()),
             default: Some(
                 "PluginExtension<\n    Extension,\n    ResolvedDepExtensions\n  >".to_string(),
             ),
-            description: String::new(),
+            ..ApiTypeParamDoc::default()
         },
     ]
 }
@@ -508,23 +381,8 @@ pub(super) fn return_property(name: &str, type_annotation: &str) -> ApiDocMember
     ApiDocMember {
         name: name.to_string(),
         kind: "property".to_string(),
-        description: String::new(),
-        signature: None,
         type_annotation: Some(type_annotation.to_string()),
-        default_value: None,
-        params: vec![],
-        type_parameters: vec![],
-        returns: None,
-        throws: vec![],
-        members: vec![],
-        optional: false,
-        readonly: false,
-        r#static: false,
-        private: false,
-        tags: vec![],
-        implementation_of: vec![],
-        line: 1,
-        end_line: 1,
+        ..ApiDocMember::default()
     }
 }
 
@@ -545,19 +403,8 @@ pub(super) fn index_signature_member(
             format!("{name}: {value_type}")
         }),
         type_annotation: Some(value_type.to_string()),
-        default_value: None,
         params: vec![param(param_name, param_type)],
-        type_parameters: vec![],
-        returns: None,
-        throws: vec![],
-        members: vec![],
-        optional: false,
         readonly,
-        r#static: false,
-        private: false,
-        tags: vec![],
-        implementation_of: vec![],
-        line: 1,
-        end_line: 1,
+        ..ApiDocMember::default()
     }
 }

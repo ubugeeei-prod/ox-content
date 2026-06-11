@@ -31,73 +31,37 @@ fn category_group_ignores_typedoc_path_strategy() {
 #[test]
 fn typedoc_path_strategy_emits_enumerations_directory() {
     let docs = vec![ApiDocModule {
-        description: String::new(),
         file: "default".to_string(),
-        source_path: String::new(),
-        examples: vec![],
-        tags: vec![],
         entries: vec![
             ApiDocEntry {
                 name: "Mode".to_string(),
                 kind: "enum".to_string(),
                 description: "Execution mode.".to_string(),
-                params: vec![],
-                returns: None,
-                throws: vec![],
-                examples: vec![],
-                tags: vec![],
-                private: false,
                 file: "/repo/src/mode.ts".to_string(),
-                line: 1,
                 end_line: 5,
                 signature: Some("export enum Mode".to_string()),
-                extends: vec![],
-                implements: vec![],
-                has_body: false,
                 members: vec![ApiDocMember {
                     name: "Strict".to_string(),
                     kind: "enumMember".to_string(),
                     description: "Strict mode.".to_string(),
-                    signature: None,
                     type_annotation: Some("\"strict\"".to_string()),
-                    default_value: None,
-                    params: vec![],
-                    type_parameters: vec![],
-                    returns: None,
-                    throws: vec![],
-                    members: vec![],
-                    optional: false,
-                    readonly: false,
-                    r#static: false,
-                    private: false,
-                    tags: vec![],
-                    implementation_of: vec![],
                     line: 2,
                     end_line: 2,
+                    ..ApiDocMember::default()
                 }],
-                type_parameters: vec![],
+                ..ApiDocEntry::default()
             },
             ApiDocEntry {
                 name: "run".to_string(),
                 kind: "function".to_string(),
                 description: "Runs in {@link Mode} or {@linkcode Mode.Strict}.".to_string(),
-                params: vec![],
-                returns: None,
-                throws: vec![],
-                examples: vec![],
-                tags: vec![],
-                private: false,
                 file: "/repo/src/run.ts".to_string(),
-                line: 1,
                 end_line: 5,
                 signature: Some("export function run(mode: Mode): void".to_string()),
-                extends: vec![],
-                implements: vec![],
-                has_body: false,
-                members: vec![],
-                type_parameters: vec![],
+                ..ApiDocEntry::default()
             },
         ],
+        ..ApiDocModule::default()
     }];
 
     let markdown = generate_markdown(
@@ -124,84 +88,49 @@ fn typedoc_path_strategy_emits_enumerations_directory() {
 #[test]
 fn renders_interface_members_table() {
     let docs = vec![ApiDocModule {
-        description: String::new(),
         file: "/repo/src/command.ts".to_string(),
-        source_path: String::new(),
-        examples: vec![],
-        tags: vec![],
         entries: vec![ApiDocEntry {
             name: "Command".to_string(),
             kind: "interface".to_string(),
             description: "Runtime command.".to_string(),
-            params: vec![],
-            returns: None,
-            throws: vec![],
-            examples: vec![],
-            tags: vec![],
-            private: false,
             file: "/repo/src/command.ts".to_string(),
-            line: 1,
             end_line: 10,
             signature: Some("export interface Command".to_string()),
-            extends: vec![],
-            implements: vec![],
-            has_body: false,
             members: vec![
                 ApiDocMember {
                     name: "name".to_string(),
                     kind: "property".to_string(),
                     description: "Command name.".to_string(),
-                    signature: None,
                     type_annotation: Some("string".to_string()),
-                    default_value: None,
-                    params: vec![],
-                    type_parameters: vec![],
-                    returns: None,
-                    throws: vec![],
-                    members: vec![],
-                    optional: false,
                     readonly: true,
-                    r#static: false,
-                    private: false,
-                    tags: vec![],
-                    implementation_of: vec![],
                     line: 5,
                     end_line: 5,
+                    ..ApiDocMember::default()
                 },
                 ApiDocMember {
                     name: "run".to_string(),
                     kind: "method".to_string(),
                     description: "Runs the command.".to_string(),
                     signature: Some("run(ctx: Context): Promise<void>".to_string()),
-                    type_annotation: None,
-                    default_value: None,
                     params: vec![ApiParamDoc {
                         name: "ctx".to_string(),
                         type_annotation: "Context".to_string(),
                         description: "Runtime context.".to_string(),
-                        optional: false,
-                        default_value: None,
+                        ..ApiParamDoc::default()
                     }],
-                    type_parameters: vec![],
                     returns: Some(ApiReturnDoc {
                         type_annotation: "Promise".to_string(),
                         description: "Run result.".to_string(),
-                        members: Vec::new(),
+                        ..ApiReturnDoc::default()
                     }),
-                    throws: vec![],
-                    members: vec![],
-                    optional: false,
-                    readonly: false,
-                    r#static: false,
-                    private: false,
-                    tags: vec![],
-                    implementation_of: vec![],
                     line: 7,
                     end_line: 7,
+                    ..ApiDocMember::default()
                 },
             ],
-            type_parameters: vec![],
+            ..ApiDocEntry::default()
         }],
+        ..ApiDocModule::default()
     }];
 
     let markdown = generate_markdown(&docs, &MarkdownDocsOptions::default());

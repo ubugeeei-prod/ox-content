@@ -106,22 +106,10 @@ fn has_body_round_trips_from_extract_output_to_markdown_model() {
     let normalized = NormalizedDocEntry {
         name: "plugin".to_string(),
         kind: NormalizedDocKind::Function,
-        description: String::new(),
-        params: vec![],
-        returns: None,
-        throws: vec![],
-        examples: vec![],
-        tags: BTreeMap::new(),
-        private: false,
         file: "plugin.ts".to_string(),
-        line: 1,
-        end_line: 1,
         signature: Some("export function plugin(): void".to_string()),
-        extends: vec![],
-        implements: vec![],
         has_body: true,
-        members: vec![],
-        type_parameters: vec![],
+        ..Default::default()
     };
 
     // `extractDocsFromEntryPoints` output exposes the flag ...
@@ -134,21 +122,10 @@ fn has_body_round_trips_from_extract_output_to_markdown_model() {
         name: js_entry.name,
         kind: js_entry.kind,
         description: js_entry.description,
-        params: None,
-        returns: None,
-        throws: None,
-        examples: None,
-        tags: None,
-        private: js_entry.private,
         file: js_entry.file,
-        line: js_entry.line,
-        end_line: js_entry.end_line,
         signature: js_entry.signature,
-        extends: None,
-        implements: None,
         has_body: Some(js_entry.has_body),
-        members: None,
-        type_parameters: None,
+        ..Default::default()
     };
     assert!(convert_markdown_entry(markdown_entry).has_body);
 }
@@ -158,22 +135,9 @@ fn convert_markdown_entry_defaults_has_body_to_false_when_absent() {
     let entry = JsDocsMarkdownEntry {
         name: "Command".to_string(),
         kind: "interface".to_string(),
-        description: String::new(),
-        params: None,
-        returns: None,
-        throws: None,
-        examples: None,
-        tags: None,
-        private: false,
         file: "command.ts".to_string(),
-        line: 1,
-        end_line: 1,
         signature: Some("export interface Command".to_string()),
-        extends: None,
-        implements: None,
-        has_body: None,
-        members: None,
-        type_parameters: None,
+        ..Default::default()
     };
 
     assert!(!convert_markdown_entry(entry).has_body);
@@ -185,22 +149,15 @@ fn convert_markdown_entry_preserves_heritage_and_implementation_metadata() {
         name: "DefaultTranslation".to_string(),
         kind: "class".to_string(),
         description: "Default adapter.".to_string(),
-        params: None,
-        returns: None,
         throws: Some(vec![JsDocThrows {
             r#type: Some("AdapterError".to_string()),
             description: "When adapter metadata is invalid.".to_string(),
         }]),
-        examples: None,
-        tags: None,
-        private: false,
         file: "adapter.ts".to_string(),
-        line: 1,
         end_line: 10,
         signature: Some("class DefaultTranslation implements TranslationAdapter".to_string()),
         extends: Some(vec!["BaseTranslation".to_string()]),
         implements: Some(vec!["TranslationAdapter".to_string()]),
-        has_body: None,
         members: Some(vec![JsDocMember {
             name: "getResource".to_string(),
             kind: "method".to_string(),
@@ -208,31 +165,23 @@ fn convert_markdown_entry_preserves_heritage_and_implementation_metadata() {
             signature: Some(
                 "getResource(locale: string): Record<string, string> | undefined".to_string(),
             ),
-            r#type: None,
             r#default: Some("undefined".to_string()),
-            params: None,
             type_parameters: Some(vec![JsTypeParam {
                 name: "L".to_string(),
                 constraint: Some("Base".to_string()),
                 r#default: Some("Default".to_string()),
                 description: "Locale type.".to_string(),
             }]),
-            returns: None,
             throws: Some(vec![JsDocThrows {
                 r#type: Some("ResourceError".to_string()),
                 description: "When resource loading fails.".to_string(),
             }]),
-            members: None,
-            optional: None,
-            readonly: None,
-            r#static: None,
-            private: None,
-            tags: None,
             implementation_of: Some(vec!["TranslationAdapter.getResource".to_string()]),
             line: 5,
             end_line: 8,
+            ..Default::default()
         }]),
-        type_parameters: None,
+        ..Default::default()
     };
 
     let converted = convert_markdown_entry(entry);

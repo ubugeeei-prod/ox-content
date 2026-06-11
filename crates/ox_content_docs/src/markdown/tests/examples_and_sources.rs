@@ -60,16 +60,13 @@ fn html_example_with_prose_and_fence_renders_blocks() {
 #[test]
 fn entries_without_file_omit_source_link() {
     let docs = vec![ApiDocModule {
-        description: String::new(),
         file: "mod".to_string(),
-        source_path: String::new(),
-        examples: vec![],
-        tags: vec![],
         entries: vec![
             test_entry("localSym", "function", "packages/x/src/a.ts", "Local symbol."),
             // Empty file = external-package source: no in-repo source location.
             test_entry("externalSym", "function", "", "External symbol."),
         ],
+        ..ApiDocModule::default()
     }];
 
     for render_style in [MarkdownRenderStyle::Html, MarkdownRenderStyle::Markdown] {
