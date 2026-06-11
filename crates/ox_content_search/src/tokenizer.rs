@@ -1,5 +1,7 @@
 //! Text tokenization for search indexing.
 
+use compact_str::CompactString;
+
 /// Tokenizes text into searchable terms.
 ///
 /// This tokenizer:
@@ -9,7 +11,7 @@
 /// - Handles CJK characters (Japanese, Chinese, Korean)
 pub fn tokenize(text: &str) -> Vec<String> {
     let mut tokens = Vec::new();
-    let mut current_token = String::new();
+    let mut current_token = CompactString::default();
 
     for c in text.chars() {
         if is_cjk_char(c) {
@@ -17,17 +19,17 @@ pub fn tokenize(text: &str) -> Vec<String> {
             if !current_token.is_empty() {
                 let token = current_token.to_lowercase();
                 if !is_stopword(&token) && token.len() >= 2 {
-                    tokens.push(token);
+                    tokens.push(token.into_string());
                 }
                 current_token.clear();
             }
-            tokens.push(c.to_string());
+            tokens.push(String::from(c));
         } else if c.is_alphanumeric() || c == '_' {
             current_token.push(c);
         } else if !current_token.is_empty() {
             let token = current_token.to_lowercase();
             if !is_stopword(&token) && token.len() >= 2 {
-                tokens.push(token);
+                tokens.push(token.into_string());
             }
             current_token.clear();
         }
@@ -37,7 +39,7 @@ pub fn tokenize(text: &str) -> Vec<String> {
     if !current_token.is_empty() {
         let token = current_token.to_lowercase();
         if !is_stopword(&token) && token.len() >= 2 {
-            tokens.push(token);
+            tokens.push(token.into_string());
         }
     }
 
@@ -47,25 +49,28 @@ pub fn tokenize(text: &str) -> Vec<String> {
 /// Tokenizes text for query (less strict than indexing).
 pub fn tokenize_query(text: &str) -> Vec<String> {
     let mut tokens = Vec::new();
-    let mut current_token = String::new();
+    let mut current_token = CompactString::default();
 
     for c in text.chars() {
         if is_cjk_char(c) {
             if !current_token.is_empty() {
-                tokens.push(current_token.to_lowercase());
+                let token = current_token.to_lowercase();
+                tokens.push(token.into_string());
                 current_token.clear();
             }
-            tokens.push(c.to_string());
+            tokens.push(String::from(c));
         } else if c.is_alphanumeric() || c == '_' {
             current_token.push(c);
         } else if !current_token.is_empty() {
-            tokens.push(current_token.to_lowercase());
+            let token = current_token.to_lowercase();
+            tokens.push(token.into_string());
             current_token.clear();
         }
     }
 
     if !current_token.is_empty() {
-        tokens.push(current_token.to_lowercase());
+        let token = current_token.to_lowercase();
+        tokens.push(token.into_string());
     }
 
     tokens

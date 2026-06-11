@@ -19,6 +19,7 @@ name = "ox-content-lsp"
 path = "src/main.rs"
 
 [dependencies]
+compact_str = { workspace = true }
 ox_content_allocator = { workspace = true }
 ox_content_ast = { workspace = true }
 ox_content_i18n = { workspace = true }

@@ -20,6 +20,7 @@
 
 use std::path::Path;
 
+use compact_str::CompactString;
 use serde::Deserialize;
 use tower_lsp::lsp_types::{Diagnostic, DiagnosticSeverity, Position, Range};
 
@@ -168,7 +169,7 @@ pub async fn run(source: &str, file_path: &Path, config: &TextlintConfig) -> Vec
 /// three arguments).
 fn shlex_split(input: &str) -> Vec<String> {
     let mut out = Vec::new();
-    let mut current = String::new();
+    let mut current = CompactString::default();
     let mut quote: Option<char> = None;
     for ch in input.chars() {
         if let Some(q) = quote {
@@ -183,14 +184,14 @@ fn shlex_split(input: &str) -> Vec<String> {
             '"' | '\'' => quote = Some(ch),
             c if c.is_whitespace() => {
                 if !current.is_empty() {
-                    out.push(std::mem::take(&mut current));
+                    out.push(std::mem::take(&mut current).into_string());
                 }
             }
             c => current.push(c),
         }
     }
     if !current.is_empty() {
-        out.push(current);
+        out.push(current.into_string());
     }
     out
 }

@@ -1,5 +1,6 @@
 //! Scoped search query helpers.
 
+use compact_str::CompactString;
 use serde::{Deserialize, Serialize};
 
 /// Parsed free-text query and requested search scopes.
@@ -41,14 +42,14 @@ pub fn get_search_document_scopes(id: &str, url: &str) -> Vec<String> {
     }
 
     let mut scopes = Vec::new();
-    let mut current = String::new();
+    let mut current = CompactString::default();
 
     for segment in &segments[..segments.len() - 1] {
         if !current.is_empty() {
             current.push('/');
         }
         current.push_str(segment);
-        scopes.push(current.clone());
+        scopes.push(current.clone().into_string());
     }
 
     scopes

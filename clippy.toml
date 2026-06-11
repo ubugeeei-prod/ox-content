@@ -4,7 +4,9 @@ disallowed-macros = [
 ]
 
 disallowed-methods = [
+  { path = "alloc::string::String::new", reason = "avoid std::String for small rule state; use CompactString, or keep std::String only for explicit output buffers and ABI boundaries" },
   { path = "alloc::string::ToString::to_string", reason = "prefer borrowed strings, CompactString, or allocator-owned strings instead of creating std::String temporaries" },
+  { path = "std::string::String::new", reason = "avoid std::String for small rule state; use CompactString, or keep std::String only for explicit output buffers and ABI boundaries" },
   { path = "std::string::ToString::to_string", reason = "prefer borrowed strings, CompactString, or allocator-owned strings instead of creating std::String temporaries" },
 ]
 

@@ -15,6 +15,7 @@ description = "Full-text search engine for Ox Content"
 workspace = true
 
 [dependencies]
+compact_str = { workspace = true }
 ox_content_ast = { workspace = true }
 rustc-hash = { workspace = true }
 serde = { workspace = true }
