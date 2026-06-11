@@ -1,6 +1,11 @@
+use super::super::{process_doc_text, rendered_throws};
 use super::{
-    push_generic_tags, push_lifecycle_alerts, push_parameters, push_returns, push_throws,
-    push_type_parameters, render_since_section, MemberGroupRenderContext,
+    lifecycle::{push_lifecycle_alerts, render_since_section},
+    member_groups::MemberGroupRenderContext,
+    parameters::push_parameters,
+    return_members::push_returns,
+    sections::{push_generic_tags, push_throws},
+    type_parameters::push_type_parameters,
 };
 use crate::model::{ApiDocMember, ApiReturnDoc};
 use crate::string_builder::StringBuilder;
@@ -31,7 +36,7 @@ pub(super) fn render_callable_member_details_pure(
 
         push_lifecycle_alerts(out, &member.tags, context.link_context);
 
-        let description = super::process_doc_text(&member.description, context.link_context);
+        let description = process_doc_text(&member.description, context.link_context);
         let description = description.trim();
         if !description.is_empty() {
             out.push_str(description);
@@ -63,7 +68,7 @@ pub(super) fn render_callable_member_details_pure(
             };
             push_returns(out, &returns, context.link_context, &detail_heading);
         }
-        let throws = super::super::rendered_throws(&member.throws, &member.tags);
+        let throws = rendered_throws(&member.throws, &member.tags);
         push_throws(out, throws.as_ref(), context.link_context, &detail_heading);
         push_implementation_of(out, &member.implementation_of, &detail_heading);
         push_generic_tags(out, &member.tags, context.link_context, &detail_heading);

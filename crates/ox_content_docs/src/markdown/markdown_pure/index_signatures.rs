@@ -1,6 +1,8 @@
+use super::super::{process_doc_text, rendered_throws, MarkdownLinkContext};
 use super::{
-    push_generic_tags, push_lifecycle_alerts, push_throws, render_since_section,
-    MarkdownLinkContext, MemberGroupRenderContext,
+    lifecycle::{push_lifecycle_alerts, render_since_section},
+    member_groups::MemberGroupRenderContext,
+    sections::{push_generic_tags, push_throws},
 };
 use crate::model::ApiDocMember;
 
@@ -15,14 +17,14 @@ pub(super) fn push_index_signature_detail_pure(
     out.push_str("\n```\n\n");
 
     push_lifecycle_alerts(out, &member.tags, context);
-    let description = super::process_doc_text(&member.description, context);
+    let description = process_doc_text(&member.description, context);
     let description = description.trim();
     if !description.is_empty() {
         out.push_str(description);
         out.push_str("\n\n");
     }
     out.push_str(&render_since_section(&member.tags, context, detail_heading));
-    let throws = super::super::rendered_throws(&member.throws, &member.tags);
+    let throws = rendered_throws(&member.throws, &member.tags);
     push_throws(out, throws.as_ref(), context, detail_heading);
     push_generic_tags(out, &member.tags, context, detail_heading);
 }
