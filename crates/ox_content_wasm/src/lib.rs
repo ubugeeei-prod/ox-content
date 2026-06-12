@@ -4,22 +4,19 @@
 //! and other WebAssembly environments.
 
 use rustc_hash::FxHashMap;
-use std::borrow::Cow;
 
 use wasm_bindgen::prelude::*;
 
 use ox_content_allocator::Allocator;
-use ox_content_ast::{Document, Heading, Node};
 use ox_content_parser::{Parser, ParserOptions};
 use ox_content_renderer::{HtmlRenderer, HtmlRendererOptions};
 
-/// Table of contents entry.
-#[derive(serde::Serialize)]
-pub struct TocEntry {
-    pub depth: u8,
-    pub text: String,
-    pub slug: String,
-}
+use frontmatter::parse_frontmatter;
+use toc::extract_toc;
+pub use toc::TocEntry;
+
+mod frontmatter;
+mod toc;
 
 /// Transform result containing HTML, frontmatter, and TOC.
 #[derive(serde::Serialize)]
@@ -258,151 +255,4 @@ pub fn transform(source: &str, options: Option<WasmParserOptions>) -> JsValue {
 #[wasm_bindgen]
 pub fn version() -> String {
     env!("CARGO_PKG_VERSION").to_string()
-}
-
-/// Parses YAML frontmatter from Markdown content.
-fn parse_frontmatter(source: &str) -> (Cow<'_, str>, FxHashMap<String, serde_json::Value>) {
-    // wasm-bindgen exposes the JS string as `&str` for this call. Return
-    // `Cow::Borrowed` for the Markdown body so stripping frontmatter adjusts
-    // slice boundaries instead of copying the body into a new `String`.
-    let mut frontmatter = FxHashMap::default();
-
-    if !source.starts_with("---") {
-        return (Cow::Borrowed(source), frontmatter);
-    }
-
-    let rest = &source[3..];
-    let Some(end_pos) = rest.find("\n---") else {
-        return (Cow::Borrowed(source), frontmatter);
-    };
-
-    let frontmatter_str = rest[..end_pos].trim_start_matches('\n');
-    let content = rest[end_pos + 4..].trim_start_matches('\n');
-
-    for line in frontmatter_str.lines() {
-        let line = line.trim();
-        if line.is_empty() || line.starts_with('#') {
-            continue;
-        }
-
-        if let Some(colon_pos) = line.find(':') {
-            let key = line[..colon_pos].trim().to_string();
-            let value_str = line[colon_pos + 1..].trim();
-
-            let value = if value_str == "true" {
-                serde_json::Value::Bool(true)
-            } else if value_str == "false" {
-                serde_json::Value::Bool(false)
-            } else if let Ok(n) = value_str.parse::<i64>() {
-                serde_json::Value::Number(n.into())
-            } else if let Ok(n) = value_str.parse::<f64>() {
-                serde_json::Number::from_f64(n).map_or_else(
-                    || serde_json::Value::String(value_str.to_string()),
-                    serde_json::Value::Number,
-                )
-            } else {
-                let s = value_str.trim_matches('"').trim_matches('\'');
-                serde_json::Value::String(s.to_string())
-            };
-
-            frontmatter.insert(key, value);
-        }
-    }
-
-    (Cow::Borrowed(content), frontmatter)
-}
-
-/// Extracts table of contents from document headings.
-fn extract_toc(doc: &Document, max_depth: u8) -> Vec<TocEntry> {
-    let mut entries = Vec::new();
-    let mut slug_counts = FxHashMap::default();
-
-    for node in &doc.children {
-        if let Node::Heading(heading) = node {
-            if heading.depth <= max_depth {
-                let text = extract_heading_text(heading);
-                let slug = unique_slug(slugify(&text), &mut slug_counts);
-                entries.push(TocEntry { depth: heading.depth, text, slug });
-            }
-        }
-    }
-
-    entries
-}
-
-/// Extracts plain text from a heading node.
-fn extract_heading_text(heading: &Heading) -> String {
-    let mut text = String::new();
-    for child in &heading.children {
-        collect_text(child, &mut text);
-    }
-    text
-}
-
-/// Recursively collects text from nodes.
-fn collect_text(node: &Node, text: &mut String) {
-    match node {
-        Node::Text(t) => text.push_str(t.value),
-        Node::Emphasis(e) => {
-            for child in &e.children {
-                collect_text(child, text);
-            }
-        }
-        Node::Strong(s) => {
-            for child in &s.children {
-                collect_text(child, text);
-            }
-        }
-        Node::InlineCode(c) => text.push_str(c.value),
-        Node::Delete(d) => {
-            for child in &d.children {
-                collect_text(child, text);
-            }
-        }
-        Node::Link(l) => {
-            for child in &l.children {
-                collect_text(child, text);
-            }
-        }
-        _ => {}
-    }
-}
-
-/// Converts text to URL-friendly slug.
-fn slugify(text: &str) -> String {
-    text.to_lowercase()
-        .chars()
-        .map(|c| if c.is_alphanumeric() || c == ' ' || c == '-' { c } else { ' ' })
-        .collect::<String>()
-        .split_whitespace()
-        .collect::<Vec<_>>()
-        .join("-")
-}
-
-fn unique_slug(slug: String, counts: &mut FxHashMap<String, usize>) -> String {
-    let slug = if slug.is_empty() { "section".to_string() } else { slug };
-    let count = counts.entry(slug.clone()).or_insert(0);
-    let unique = if *count == 0 { slug } else { format!("{slug}-{count}") };
-    *count += 1;
-    unique
-}
-
-#[cfg(test)]
-mod tests {
-    use ox_content_allocator::Allocator;
-    use ox_content_parser::Parser;
-
-    use super::extract_toc;
-
-    #[test]
-    fn toc_slugs_are_unique_and_match_heading_ids() {
-        let allocator = Allocator::new();
-        let doc = Parser::new(&allocator, "## Setup!\n## Setup?\n##").parse().unwrap();
-
-        let toc = extract_toc(&doc, 3);
-
-        assert_eq!(toc[0].slug, "setup");
-        assert_eq!(toc[1].slug, "setup-1");
-        assert_eq!(toc[2].slug, "section");
-    }
 }
