@@ -122,3 +122,37 @@ async fn run_returns_empty_when_command_is_missing() {
     let diagnostics = run("# heading\n", std::path::Path::new("/tmp/doc.md"), &config).await;
     assert!(diagnostics.is_empty());
 }
+
+#[cfg(unix)]
+#[tokio::test]
+async fn run_parses_stdout_from_configured_command_even_when_it_exits_one() {
+    use std::os::unix::fs::PermissionsExt;
+
+    let mut script = std::env::temp_dir();
+    script.push("ox-content-textlint-tests");
+    std::fs::create_dir_all(&script).expect("create temp dir");
+    script.push("fake-textlint.sh");
+    std::fs::write(
+        &script,
+        r#"#!/bin/sh
+cat >/dev/null
+printf '%s\n' '[{"filePath":"doc.md","messages":[{"ruleId":"fixture/rule","message":"fixture message","line":2,"column":4,"severity":2}]}]'
+exit 1
+"#,
+    )
+    .expect("write fake textlint command");
+
+    let mut permissions = std::fs::metadata(&script).expect("fake command metadata").permissions();
+    permissions.set_mode(0o755);
+    std::fs::set_permissions(&script, permissions).expect("chmod fake textlint command");
+
+    let config = TextlintConfig { enabled: true, command: Some(script.display().to_string()) };
+    let diagnostics = run("# heading\n", std::path::Path::new("/tmp/doc.md"), &config).await;
+
+    assert_eq!(diagnostics.len(), 1);
+    assert_eq!(diagnostics[0].source.as_deref(), Some("textlint"));
+    assert_eq!(diagnostics[0].message, "fixture message");
+    assert_eq!(diagnostics[0].range.start.line, 1);
+    assert_eq!(diagnostics[0].range.start.character, 3);
+    assert_eq!(diagnostics[0].severity, Some(DiagnosticSeverity::ERROR));
+}

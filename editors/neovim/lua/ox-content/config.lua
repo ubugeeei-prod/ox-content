@@ -3,6 +3,10 @@ local M = {}
 local defaults = {
   cmd = nil,
   frontmatter_schema = nil,
+  textlint = {
+    enabled = false,
+    command = nil,
+  },
   auto_start = true,
 }
 
