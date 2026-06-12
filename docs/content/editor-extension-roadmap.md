@@ -202,10 +202,17 @@ Split into three sequential PRs:
 - ✅ VS Code: `oxContent.textlint.enabled` /
   `oxContent.textlint.command` settings forward into the
   initialization options.
-- ✅ 11 unit tests cover JSON parsing, severity mapping,
+- ✅ Neovim: `textlint.enabled` / `textlint.command` in
+  `require("ox-content").setup(...)` forward the same LSP
+  initialization options.
+- ✅ Zed: `lsp.ox-content-lsp.initialization_options.textlintEnabled`
+  and `textlintCommand` are documented and forwarded by the extension.
+- ✅ 12 unit tests cover JSON parsing, severity mapping,
   zero-indexed coordinates, the missing-rule-id and unknown-severity
   cases, shlex-style command splitting, and the disabled /
   missing-binary subprocess paths.
+- ✅ Protocol coverage pins the `textDocument/didSave` path that
+  publishes textlint diagnostics through LSP.
 - Pending follow-ups: code actions for textlint `--fix` suggestions,
   dedicated `ox-content-textlint` CLI (currently the user runs
   textlint directly), debounce / cancellation between rapid saves.

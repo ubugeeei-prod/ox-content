@@ -168,6 +168,42 @@ fn diagnostics_report_a_dead_relative_link() {
     server.shutdown();
 }
 
+#[cfg(unix)]
+#[test]
+fn did_save_publishes_textlint_diagnostics_when_enabled() {
+    let command = write_fake_textlint_command("protocol-textlint");
+
+    let mut server = Server::start();
+    let uri = temp_uri("textlint.md");
+    server.initialize_and_open_with(
+        &uri,
+        "Textlint fixture\n",
+        json!({
+            "textlintEnabled": true,
+            "textlintCommand": command,
+        }),
+    );
+
+    // Drain the normal on-open diagnostics first so the next publish is
+    // the save-triggered textlint run.
+    let _ = server.await_notification("textDocument/publishDiagnostics");
+    server.notify("textDocument/didSave", json!({ "textDocument": { "uri": uri } }));
+
+    let params = server.await_notification("textDocument/publishDiagnostics");
+    assert_eq!(params["uri"].as_str(), Some(uri.as_str()));
+    let diagnostics = params["diagnostics"].as_array().expect("diagnostics array");
+    assert!(
+        diagnostics.iter().any(|diag| {
+            diag["source"].as_str() == Some("textlint")
+                && diag["code"].as_str() == Some("fixture/no-textlint")
+                && diag["message"].as_str() == Some("fixture textlint diagnostic")
+        }),
+        "expected a textlint diagnostic, got {diagnostics:?}"
+    );
+
+    server.shutdown();
+}
+
 #[test]
 fn hover_describes_a_frontmatter_field() {
     // Hover over a frontmatter key only resolves when a schema is
@@ -202,4 +238,28 @@ fn hover_describes_a_frontmatter_field() {
     assert!(value.contains("string"), "hover should state the type, got {value:?}");
 
     server.shutdown();
+}
+
+#[cfg(unix)]
+fn write_fake_textlint_command(name: &str) -> String {
+    use std::os::unix::fs::PermissionsExt;
+
+    let mut path = std::env::temp_dir();
+    path.push("ox-content-lsp-e2e");
+    std::fs::create_dir_all(&path).expect("create temp dir");
+    path.push(format!("{name}.sh"));
+    std::fs::write(
+        &path,
+        r#"#!/bin/sh
+cat >/dev/null
+printf '%s\n' '[{"filePath":"doc.md","messages":[{"ruleId":"fixture/no-textlint","message":"fixture textlint diagnostic","line":1,"column":4,"severity":1}]}]'
+exit 1
+"#,
+    )
+    .expect("write fake textlint command");
+
+    let mut permissions = std::fs::metadata(&path).expect("fake command metadata").permissions();
+    permissions.set_mode(0o755);
+    std::fs::set_permissions(&path, permissions).expect("chmod fake textlint command");
+    path.display().to_string()
 }

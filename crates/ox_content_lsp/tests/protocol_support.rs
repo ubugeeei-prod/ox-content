@@ -117,7 +117,7 @@ impl Server {
     }
 
     /// Sends a notification with no response expected.
-    fn notify(&mut self, method: &str, params: Value) {
+    pub fn notify(&mut self, method: &str, params: Value) {
         let mut message = json!({ "jsonrpc": "2.0", "method": method });
         if !params.is_null() {
             message["params"] = params;

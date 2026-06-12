@@ -12,6 +12,7 @@ Features:
   the document with the LSP, and the panel reloads on every
   `oxContent/previewDidChange` notification (no client-side polling)
 - `.mdc` files associated with Markdown and component tag diagnostics
+- optional textlint diagnostics on save
 
 ## Configuration
 
@@ -20,11 +21,22 @@ Features:
 | `oxContent.server.path`         | string  | Absolute or workspace-relative path to `ox-content-lsp`. Empty falls back to `target/debug` → `target/release` → `cargo run`. |
 | `oxContent.frontmatter.schema`  | string  | Path to a frontmatter schema (Markdown + `.mdc`).                                                                             |
 | `oxContent.preview.autoRefresh` | boolean | Re-render the preview as you type (default `true`).                                                                           |
+| `oxContent.textlint.enabled`    | boolean | Run textlint through the LSP on save (default `false`).                                                                       |
+| `oxContent.textlint.command`    | string  | Optional textlint command. Empty falls back to `npx textlint`; common value: `pnpm exec textlint`.                            |
 
 The environment variable `OX_CONTENT_LSP_PATH` is honored as an override
 between `oxContent.server.path` and the local-binary probe. CI and the
 integration test runner use it so they can point at a freshly built
 `target/release/ox-content-lsp` without writing per-workspace settings.
+
+## textlint
+
+Set `oxContent.textlint.enabled: true` to have the LSP run textlint for
+Markdown and `.mdc` files on save. Findings are published as normal LSP
+diagnostics with `source: "textlint"`.
+
+The command override is passed to the server as-is before the standard
+`--format json --stdin --stdin-filename <path>` arguments are appended.
 
 ## Preview HMR
 

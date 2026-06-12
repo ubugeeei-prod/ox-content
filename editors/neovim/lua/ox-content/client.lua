@@ -60,16 +60,30 @@ local function resolve_cmd(bufnr)
 end
 
 local function resolve_init_options(bufnr)
+  local options = {}
+
   local schema = config.get().frontmatter_schema
-  if type(schema) ~= "string" or schema == "" then
-    return {}
+  if type(schema) == "string" and schema ~= "" then
+    if vim.startswith(schema, "/") or schema:match("^%a:[/\\]") then
+      options.frontmatterSchema = schema
+    else
+      options.frontmatterSchema = vim.fs.joinpath(resolve_root(bufnr), schema)
+    end
   end
 
-  if vim.startswith(schema, "/") or schema:match("^%a:[/\\]") then
-    return { frontmatterSchema = schema }
+  local textlint = config.get().textlint
+  if type(textlint) ~= "table" then
+    textlint = {}
+  end
+  if textlint.enabled == true then
+    options.textlintEnabled = true
   end
 
-  return { frontmatterSchema = vim.fs.joinpath(resolve_root(bufnr), schema) }
+  if type(textlint.command) == "string" and textlint.command ~= "" then
+    options.textlintCommand = textlint.command
+  end
+
+  return options
 end
 
 local function position_from_cursor()
