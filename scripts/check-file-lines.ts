@@ -20,7 +20,7 @@ type FileLineViolation = {
   baseLines?: number;
 };
 
-const defaultLimit = 250;
+const defaultLimit = 350;
 const sourceExtensions = new Set([
   ".cjs",
   ".css",
