@@ -6,6 +6,9 @@ use rustc_hash::FxHashSet;
 use crate::dictionary::DictionarySet;
 use crate::mf2;
 
+#[cfg(test)]
+mod tests;
+
 /// Diagnostic severity level.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum Severity {
@@ -210,72 +213,4 @@ pub fn check_all<S: BuildHasher>(
     all.extend(check_type_mismatch(dict_set));
     all.extend(check_syntax_errors(dict_set));
     all
-}
-
-#[cfg(test)]
-mod tests {
-    use super::*;
-    use crate::dictionary::Dictionary;
-    use crate::key::KeyPath;
-    use crate::locale::Locale;
-
-    fn make_dict_set() -> DictionarySet {
-        let mut set = DictionarySet::new();
-        set.set_default_locale(Locale::new("en").unwrap());
-
-        let mut en = Dictionary::new();
-        en.insert(KeyPath::new("common.greeting"), "Hello {$name}".to_string());
-        en.insert(KeyPath::new("common.farewell"), "Goodbye".to_string());
-        set.insert(Locale::new("en").unwrap(), en);
-
-        let mut ja = Dictionary::new();
-        ja.insert(KeyPath::new("common.greeting"), "こんにちは {$name}".to_string());
-        // common.farewell is intentionally missing from ja
-        set.insert(Locale::new("ja").unwrap(), ja);
-
-        set
-    }
-
-    #[test]
-    fn missing_keys() {
-        let dict_set = make_dict_set();
-        let mut used = FxHashSet::default();
-        used.insert("common.greeting".to_string());
-        used.insert("common.unknown".to_string());
-
-        let diags = check_missing_keys(&used, &dict_set);
-        assert!(!diags.is_empty());
-        assert!(diags.iter().any(|d| d.message.contains("common.unknown")));
-    }
-
-    #[test]
-    fn unused_keys() {
-        let dict_set = make_dict_set();
-        let used: FxHashSet<String> = FxHashSet::default(); // nothing used
-
-        let diags = check_unused_keys(&used, &dict_set);
-        assert!(!diags.is_empty());
-    }
-
-    #[test]
-    fn type_mismatch() {
-        let mut set = DictionarySet::new();
-
-        let mut en = Dictionary::new();
-        en.insert(KeyPath::new("msg"), "Hello {$name} {$count}".to_string());
-        set.insert(Locale::new("en").unwrap(), en);
-
-        let mut ja = Dictionary::new();
-        ja.insert(KeyPath::new("msg"), "こんにちは {$name}".to_string());
-        set.insert(Locale::new("ja").unwrap(), ja);
-
-        let diags = check_type_mismatch(&set);
-        assert!(!diags.is_empty());
-        // Depending on hash iteration order, the diagnostic may report
-        // "missing variables" or "extra variables".
-        assert!(diags
-            .iter()
-            .any(|d| d.message.contains("missing variables")
-                || d.message.contains("extra variables")));
-    }
 }
