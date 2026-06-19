@@ -732,6 +732,16 @@ export {
 } from "./incremental";
 export { transformMarkdown } from "./transform";
 export {
+  createFrameworkMarkdownOptions,
+  escapeSvelteMarkup,
+  renderHtmlToReactCreateElement,
+  renderHtmlToVueH,
+  type FrameworkComponentIsland,
+  type FrameworkMarkdownOptions,
+  type FrameworkRenderTarget,
+  type FrameworkTransformData,
+} from "./framework";
+export {
   extractCodeBlocks,
   extractDocsTests,
   lintCodeBlocks,
