@@ -4,6 +4,7 @@ use ox_content_incremental::{
     IncrementalParser as CoreIncrementalParser,
     IncrementalRenderOptions as CoreIncrementalRenderOptions,
 };
+use ox_content_mdast::mdast;
 use ox_content_parser::ParserOptions;
 
 use crate::incremental_result::{
@@ -14,7 +15,7 @@ use crate::incremental_types::{
     IncrementalMarkdownParseResult, IncrementalMarkdownRenderResult, JsIncrementalParseOptions,
     JsIncrementalRenderOptions,
 };
-use crate::{mdast, JsParserOptions};
+use crate::JsParserOptions;
 
 /// Stateful Markdown parser for append-only streams.
 #[napi]

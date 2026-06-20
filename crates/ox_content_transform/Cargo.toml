@@ -1,5 +1,5 @@
 [package]
-name = "ox_content_search"
+name = "ox_content_transform"
 version.workspace = true
 authors.workspace = true
 categories.workspace = true
@@ -9,20 +9,20 @@ keywords.workspace = true
 license.workspace = true
 repository.workspace = true
 rust-version.workspace = true
-description = "Full-text search engine for Ox Content"
+description = "Markdown transformation pipeline for Ox Content"
 
 [lints]
 workspace = true
 
 [dependencies]
 compact_str = { workspace = true }
+memchr = { workspace = true }
 ox_content_allocator = { workspace = true }
 ox_content_ast = { workspace = true }
+ox_content_mdast = { workspace = true }
 ox_content_parser = { workspace = true }
-ox_content_transform = { workspace = true }
+ox_content_renderer = { workspace = true }
+regex = { workspace = true }
 rustc-hash = { workspace = true }
-serde = { workspace = true }
 serde_json = { workspace = true }
-
-[dev-dependencies]
-insta = { workspace = true }
+serde_yaml = { workspace = true }

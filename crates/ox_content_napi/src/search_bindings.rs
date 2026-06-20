@@ -1,15 +1,9 @@
-use std::fs;
-use std::path::Path;
-
 use napi::bindgen_prelude::*;
 use napi_derive::napi;
-use ox_content_parser::{Parser, ParserOptions};
-use ox_content_search::{
-    DocumentIndexer, SearchDocument, SearchIndex, SearchIndexBuilder, SearchOptions,
-    SearchRuntimeOptions,
-};
+use ox_content_parser::ParserOptions;
+use ox_content_search::{SearchDocument, SearchIndex, SearchOptions, SearchRuntimeOptions};
 
-use crate::{create_allocator_for_source, transformer::parse_frontmatter, JsParserOptions};
+use crate::JsParserOptions;
 
 /// Search document for JavaScript.
 #[napi(object)]
@@ -38,65 +32,6 @@ fn map_search_document(doc: SearchDocument) -> JsSearchDocument {
         headings: doc.headings,
         code: doc.code,
     }
-}
-
-fn extract_search_document_from_source(
-    source: &str,
-    id: String,
-    url: String,
-    parser_options: ParserOptions,
-) -> SearchDocument {
-    let (content, frontmatter) = parse_frontmatter(source);
-    let frontmatter_title = frontmatter.get("title").and_then(|v| v.as_str()).map(String::from);
-    let allocator = create_allocator_for_source(&content);
-    let parser = Parser::with_options(&allocator, &content, parser_options);
-
-    let result = parser.parse();
-    let document = match &result {
-        Ok(doc) => {
-            let mut indexer = DocumentIndexer::new();
-            indexer.extract(doc);
-
-            SearchDocument {
-                id,
-                title: frontmatter_title
-                    .unwrap_or_else(|| indexer.title().map(String::from).unwrap_or_default()),
-                url,
-                body: indexer.body().to_string(),
-                headings: indexer.headings().to_vec(),
-                code: indexer.code().to_vec(),
-            }
-        }
-        Err(_) => SearchDocument {
-            id,
-            title: frontmatter_title.unwrap_or_default(),
-            url,
-            body: String::new(),
-            headings: Vec::new(),
-            code: Vec::new(),
-        },
-    };
-    drop(result);
-
-    document
-}
-
-fn build_search_index_json(documents: impl IntoIterator<Item = SearchDocument>) -> String {
-    let mut builder = SearchIndexBuilder::new();
-
-    for doc in documents {
-        builder.add_document(doc);
-    }
-
-    builder.build().to_json()
-}
-
-fn search_document_id(src_dir: &Path, file: &str, extensions: &[String]) -> String {
-    let file_path = Path::new(file);
-    let relative_path = file_path.strip_prefix(src_dir).unwrap_or(file_path);
-    let relative_path = relative_path.to_string_lossy().replace('\\', "/");
-
-    ox_content_search::strip_markdown_extension(&relative_path, extensions)
 }
 
 /// Search result for JavaScript.
@@ -182,7 +117,7 @@ impl From<JsSearchRuntimeOptions> for SearchRuntimeOptions {
 /// Takes an array of documents and returns a serialized search index as JSON.
 #[napi]
 pub fn build_search_index(documents: Vec<JsSearchDocument>) -> String {
-    build_search_index_json(documents.into_iter().map(|doc| SearchDocument {
+    ox_content_search::build_search_index_json(documents.into_iter().map(|doc| SearchDocument {
         id: doc.id,
         title: doc.title,
         url: doc.url,
@@ -202,19 +137,7 @@ pub fn build_search_index_from_directory(
     base: String,
     extensions: Vec<String>,
 ) -> String {
-    let src_path = Path::new(&src_dir);
-    let parser_options = ParserOptions::gfm();
-    let documents = ox_content_search::collect_markdown_files(&src_dir, &extensions)
-        .into_iter()
-        .filter_map(|file| {
-            let source = fs::read_to_string(&file).ok()?;
-            let id = search_document_id(src_path, &file, &extensions);
-            let url = format!("{base}{id}");
-
-            Some(extract_search_document_from_source(&source, id, url, parser_options.clone()))
-        });
-
-    build_search_index_json(documents)
+    ox_content_search::build_search_index_from_directory(&src_dir, &base, &extensions)
 }
 
 /// Searches a serialized index.
@@ -310,5 +233,10 @@ pub fn extract_search_content(
     options: Option<JsParserOptions>,
 ) -> JsSearchDocument {
     let parser_options = options.map(ParserOptions::from).unwrap_or_default();
-    map_search_document(extract_search_document_from_source(&source, id, url, parser_options))
+    map_search_document(ox_content_search::extract_search_document_from_source(
+        &source,
+        id,
+        url,
+        parser_options,
+    ))
 }

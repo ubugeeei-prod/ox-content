@@ -3,10 +3,11 @@ use std::collections::HashMap;
 use napi::bindgen_prelude::*;
 use napi::Task;
 use napi_derive::napi;
+use ox_content_mdast::{mdast, mdast_raw, transfer::TransferPayloadKind};
 use ox_content_parser::{Parser, ParserOptions};
 use ox_content_renderer::HtmlRenderer;
 
-use crate::{create_allocator_for_source, mdast, mdast_raw, transfer::TransferPayloadKind};
+use crate::create_allocator_for_source;
 
 /// Parse result containing the AST as JSON.
 #[napi(object)]
@@ -163,6 +164,12 @@ impl From<JsParserOptions> for ParserOptions {
     }
 }
 
+fn transfer_buffer_to_uint8(
+    buffer: ox_content_mdast::transfer::Result<Vec<u8>>,
+) -> Result<Uint8Array> {
+    buffer.map(Uint8Array::new).map_err(|error| Error::from_reason(error.to_string()))
+}
+
 /// Parses Markdown source into an AST.
 ///
 /// Returns the AST as a JSON string for compatibility-oriented JavaScript consumers.
@@ -198,7 +205,7 @@ pub fn parse_transfer_raw(
     kind: String,
     options: Option<JsParserOptions>,
 ) -> Result<Uint8Array> {
-    let payload_kind = TransferPayloadKind::from_str(&kind).ok_or_else(|| {
+    let payload_kind = TransferPayloadKind::from_str_opt(&kind).ok_or_else(|| {
         napi::Error::from_reason(format!("Unsupported transfer payload kind: {kind}"))
     })?;
 
@@ -212,7 +219,7 @@ pub fn parse_transfer_raw(
             let parser = Parser::with_options(&allocator, &source, parser_options);
             let document =
                 parser.parse().map_err(|error| napi::Error::from_reason(error.to_string()))?;
-            mdast_raw::to_mdast_raw(&document)
+            transfer_buffer_to_uint8(mdast_raw::to_mdast_raw(&document))
         }
         TransferPayloadKind::MarkdownItTokens => Err(napi::Error::from_reason(
             "markdown-it token transfer is not implemented yet; mdast is the current baseline",

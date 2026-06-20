@@ -1,6 +1,6 @@
 use napi_derive::napi;
 
-use crate::features;
+use ox_content_transform::features;
 
 /// Extracted fenced code block.
 #[napi(object)]
