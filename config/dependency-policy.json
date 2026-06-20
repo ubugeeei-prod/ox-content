@@ -121,6 +121,21 @@
         "id": "GHSA-77vg-94rm-hx3p",
         "reason": "Svelte integration example dependency; not shipped in published packages.",
         "expires": "2026-08-31"
+      },
+      {
+        "id": "GHSA-fx2h-pf6j-xcff",
+        "reason": "Vite dev/build tooling dependency (server.fs.deny Windows path bypass); revisit during scheduled dependency refresh.",
+        "expires": "2026-08-31"
+      },
+      {
+        "id": "GHSA-g8mr-85jm-7xhm",
+        "reason": "Vite dev/build tooling dependency (Vitest Browser mode, not used in production); revisit during scheduled dependency refresh.",
+        "expires": "2026-08-31"
+      },
+      {
+        "id": "GHSA-2pvr-wf23-7pc7",
+        "reason": "Benchmark/example Astro dependency; not shipped in published packages.",
+        "expires": "2026-08-31"
       }
     ]
   },

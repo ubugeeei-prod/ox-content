@@ -8,6 +8,7 @@ mod docs_graph_types;
 mod docs_markdown_types;
 mod docs_source_types;
 pub(crate) mod features;
+mod framework_codegen;
 mod highlight;
 mod html_scan;
 mod i18n_bindings;
@@ -42,6 +43,7 @@ pub use docs_bindings::{
 pub use docs_graph_types::*;
 pub use docs_markdown_types::*;
 pub use docs_source_types::*;
+pub use framework_codegen::*;
 pub use i18n_bindings::*;
 pub use incremental::{IncrementalMarkdownParser, IncrementalMarkdownRenderer};
 pub use incremental_types::{
