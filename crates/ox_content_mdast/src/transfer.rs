@@ -42,7 +42,7 @@ impl TransferPayloadKind {
         self as u16
     }
 
-    pub fn from_str(value: &str) -> Option<Self> {
+    pub fn from_str_opt(value: &str) -> Option<Self> {
         match value {
             "mdast" => Some(Self::Mdast),
             "markdown-it-tokens" | "markdown_it_tokens" | "markdown-it" => {

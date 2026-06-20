@@ -205,7 +205,7 @@ pub fn parse_transfer_raw(
     kind: String,
     options: Option<JsParserOptions>,
 ) -> Result<Uint8Array> {
-    let payload_kind = TransferPayloadKind::from_str(&kind).ok_or_else(|| {
+    let payload_kind = TransferPayloadKind::from_str_opt(&kind).ok_or_else(|| {
         napi::Error::from_reason(format!("Unsupported transfer payload kind: {kind}"))
     })?;
 
