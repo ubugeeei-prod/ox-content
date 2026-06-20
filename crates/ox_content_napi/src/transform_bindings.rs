@@ -1,10 +1,12 @@
 use napi::bindgen_prelude::*;
 use napi_derive::napi;
-
-use crate::{
+use ox_content_mdast::transfer::TransferError;
+use ox_content_transform::{
     features, highlight, media_embeds, pm, sanitize, tabs, transformer::MarkdownTransformer,
-    youtube, JsSourceOptions, JsSourceOrigin, PreparedSourceResult, TransformResult,
+    youtube,
 };
+
+use crate::{JsSourceOptions, JsSourceOrigin, PreparedSourceResult, TocEntry, TransformResult};
 
 mod async_task;
 mod code_blocks;
@@ -21,6 +23,38 @@ pub use feature_options::{
     JsWikiLinkOptions,
 };
 pub use transform_options::JsTransformOptions;
+
+impl From<ox_content_transform::TocEntry> for TocEntry {
+    fn from(entry: ox_content_transform::TocEntry) -> Self {
+        Self {
+            depth: entry.depth,
+            text: entry.text,
+            slug: entry.slug,
+            children: entry.children.into_iter().map(Into::into).collect(),
+        }
+    }
+}
+
+impl From<ox_content_transform::TransformResult> for TransformResult {
+    fn from(result: ox_content_transform::TransformResult) -> Self {
+        Self {
+            html: result.html,
+            frontmatter: result.frontmatter,
+            toc: result.toc.into_iter().map(Into::into).collect(),
+            errors: result.errors,
+        }
+    }
+}
+
+fn transfer_error_to_napi(error: TransferError) -> Error {
+    Error::from_reason(error.to_string())
+}
+
+fn transfer_buffer_to_uint8(
+    buffer: ox_content_mdast::transfer::Result<Vec<u8>>,
+) -> Result<Uint8Array> {
+    buffer.map(Uint8Array::new).map_err(transfer_error_to_napi)
+}
 
 /// Restores code block metadata after JavaScript-side syntax highlighting.
 #[napi]
@@ -78,18 +112,21 @@ pub fn transform_pm_embeds(
 #[napi]
 pub fn transform(source: String, options: Option<JsTransformOptions>) -> TransformResult {
     let opts = options.unwrap_or_default();
-    MarkdownTransformer::from_options(&opts).transform(&source)
+    let core_options = opts.into();
+    MarkdownTransformer::from_options(&core_options).transform(&source).into()
 }
 
 /// Sanitize an HTML string with safe defaults or an explicit allow-list.
 #[napi(js_name = "sanitizeHtml")]
 pub fn sanitize_html_binding(html: String, options: Option<JsSanitizeOptions>) -> String {
+    let options = options.map(Into::into);
     sanitize::sanitize_html(&html, options.as_ref())
 }
 
 /// Transform opt-in static media embed components in already-rendered HTML.
 #[napi(js_name = "transformMediaEmbeds")]
 pub fn transform_media_embeds(html: String, options: Option<JsMediaEmbedsOptions>) -> String {
+    let options = options.map(Into::into);
     media_embeds::transform_media_embeds(&html, options.as_ref())
 }
 
@@ -105,12 +142,14 @@ pub fn lint_code_blocks(
     source: String,
     options: Option<JsCodeBlockLintOptions>,
 ) -> Vec<JsCodeBlockDiagnostic> {
+    let options = options.map(Into::into);
     features::lint_code_blocks(&source, options.as_ref()).into_iter().map(Into::into).collect()
 }
 
 /// Extract runnable documentation examples for Vitest harness generation.
 #[napi(js_name = "extractDocsTests")]
 pub fn extract_docs_tests(source: String, options: Option<JsDocsTestOptions>) -> Vec<JsCodeBlock> {
+    let options = options.map(Into::into);
     features::extract_docs_tests(&source, options.as_ref()).into_iter().map(Into::into).collect()
 }
 
@@ -124,7 +163,10 @@ pub fn transform_mdast_raw(
     options: Option<JsTransformOptions>,
 ) -> Result<Uint8Array> {
     let opts = options.unwrap_or_default();
-    MarkdownTransformer::from_options(&opts).transform_mdast_raw(&source)
+    let core_options = opts.into();
+    transfer_buffer_to_uint8(
+        MarkdownTransformer::from_options(&core_options).transform_mdast_raw(&source),
+    )
 }
 
 /// Splits Markdown source into content and frontmatter in a raw transfer buffer.
@@ -134,7 +176,9 @@ pub fn transform_mdast_raw(
 #[napi]
 pub fn prepare_source_raw(source: String, options: Option<JsSourceOptions>) -> Result<Uint8Array> {
     let frontmatter = options.unwrap_or_default().frontmatter.unwrap_or(true);
-    MarkdownTransformer::with_frontmatter(frontmatter).prepare_source_raw(&source)
+    transfer_buffer_to_uint8(
+        MarkdownTransformer::with_frontmatter(frontmatter).prepare_source_raw(&source),
+    )
 }
 
 /// Splits Markdown source into content and parsed frontmatter.

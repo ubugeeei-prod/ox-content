@@ -1,7 +1,7 @@
 use napi::bindgen_prelude::*;
 use napi::Task;
+use ox_content_transform::transformer::MarkdownTransformer;
 
-use crate::transformer::MarkdownTransformer;
 use crate::{JsTransformOptions, TransformResult};
 
 pub struct TransformTask {
@@ -14,7 +14,8 @@ impl Task for TransformTask {
     type JsValue = TransformResult;
 
     fn compute(&mut self) -> Result<Self::Output> {
-        Ok(MarkdownTransformer::from_options(&self.options).transform(&self.source))
+        let options = self.options.clone().into();
+        Ok(MarkdownTransformer::from_options(&options).transform(&self.source).into())
     }
 
     fn resolve(&mut self, _env: Env, output: Self::Output) -> Result<Self::JsValue> {

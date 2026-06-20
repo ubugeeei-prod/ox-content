@@ -19,28 +19,25 @@ workspace = true
 crate-type = ["cdylib", "rlib"]
 
 [dependencies]
-compact_str = { workspace = true }
 ox_content_allocator = { workspace = true }
-ox_content_ast = { workspace = true }
+ox_content_mdast = { workspace = true }
 ox_content_parser = { workspace = true }
 ox_content_renderer = { workspace = true }
 ox_content_incremental = { workspace = true }
+ox_content_markdown_lint = { workspace = true }
+ox_content_mermaid = { workspace = true }
 ox_content_docs = { workspace = true }
 ox_content_og_image = { workspace = true }
 ox_content_search = { workspace = true }
 ox_content_ssg = { workspace = true }
+ox_content_transform = { workspace = true }
 ox_content_i18n = { workspace = true }
 ox_content_i18n_checker = { workspace = true }
 oxc_span = { workspace = true }
 napi = { workspace = true }
 napi-derive = { workspace = true }
 rustc-hash = { workspace = true }
-serde = { workspace = true }
 serde_json = { workspace = true }
-serde_yaml = { workspace = true }
-regex = { workspace = true }
-memchr = { workspace = true }
-unicode-normalization = { workspace = true }
 
 [build-dependencies]
 napi-build = { workspace = true }

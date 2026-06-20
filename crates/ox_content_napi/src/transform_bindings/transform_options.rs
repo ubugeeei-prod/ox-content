@@ -1,4 +1,5 @@
 use napi_derive::napi;
+use ox_content_transform::TransformOptions;
 
 use super::{
     JsAttrsOptions, JsCodeImportOptions, JsEditThisPageOptions, JsEmojiShortcodeOptions,
@@ -140,4 +141,36 @@ pub struct JsTransformOptions {
     ///
     /// Default: disabled.
     pub edit_this_page: Option<JsEditThisPageOptions>,
+}
+
+impl From<JsTransformOptions> for TransformOptions {
+    fn from(value: JsTransformOptions) -> Self {
+        Self {
+            gfm: value.gfm,
+            footnotes: value.footnotes,
+            task_lists: value.task_lists,
+            tables: value.tables,
+            strikethrough: value.strikethrough,
+            autolinks: value.autolinks,
+            frontmatter: value.frontmatter,
+            toc_max_depth: value.toc_max_depth,
+            convert_md_links: value.convert_md_links,
+            base_url: value.base_url,
+            source_path: value.source_path,
+            code_annotations: value.code_annotations,
+            code_annotation_meta_key: value.code_annotation_meta_key,
+            code_annotation_syntax: value.code_annotation_syntax,
+            code_annotation_default_line_numbers: value.code_annotation_default_line_numbers,
+            autolink_urls: value.autolink_urls,
+            autolink_patterns: value.autolink_patterns,
+            autolink_target_blank: value.autolink_target_blank,
+            wiki_links: value.wiki_links.map(Into::into),
+            emoji_shortcodes: value.emoji_shortcodes.map(Into::into),
+            attributes: value.attributes.map(Into::into),
+            cjk_emphasis: value.cjk_emphasis,
+            code_imports: value.code_imports.map(Into::into),
+            sanitize: value.sanitize.map(Into::into),
+            edit_this_page: value.edit_this_page.map(Into::into),
+        }
+    }
 }

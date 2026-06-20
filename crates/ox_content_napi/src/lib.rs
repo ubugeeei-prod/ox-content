@@ -7,32 +7,20 @@ mod docs_bindings;
 mod docs_graph_types;
 mod docs_markdown_types;
 mod docs_source_types;
-pub(crate) mod features;
 mod framework_codegen;
-mod highlight;
-mod html_scan;
 mod i18n_bindings;
 mod incremental;
 mod incremental_result;
 mod incremental_types;
 mod lint;
-mod mdast;
-mod mdast_raw;
-mod media_embeds;
 mod mermaid_bindings;
 mod og_image_bindings;
 mod parse_bindings;
-mod pm;
-mod sanitize;
 mod search_bindings;
 mod ssg_bindings;
 mod ssg_page_types;
 mod ssg_theme_types;
-mod tabs;
-mod transfer;
 mod transform_bindings;
-mod transformer;
-mod youtube;
 
 pub use docs_bindings::{
     build_export_graph_napi, collect_docs_source_files, extract_docs_from_directories_napi,
@@ -50,6 +38,7 @@ pub use incremental_types::{
     IncrementalMarkdownParseResult, IncrementalMarkdownRenderResult, JsIncrementalParseOptions,
     JsIncrementalRenderOptions,
 };
+pub use lint::*;
 pub use mermaid_bindings::*;
 pub use og_image_bindings::*;
 pub use parse_bindings::*;

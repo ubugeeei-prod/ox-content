@@ -1,6 +1,10 @@
 use std::collections::HashMap;
 
 use napi_derive::napi;
+use ox_content_transform::{
+    AttrsOptions, CodeBlockLintOptions, CodeImportOptions, DocsTestOptions, EditThisPageOptions,
+    EmojiShortcodeOptions, MediaEmbedsOptions, SanitizeOptions, WikiLinkOptions,
+};
 
 /// Wiki-link transform options.
 #[napi(object)]
@@ -15,6 +19,12 @@ pub struct JsWikiLinkOptions {
     ///
     /// Default: `"/"`.
     pub base_url: Option<String>,
+}
+
+impl From<JsWikiLinkOptions> for WikiLinkOptions {
+    fn from(value: JsWikiLinkOptions) -> Self {
+        Self { enabled: value.enabled, base_url: value.base_url }
+    }
 }
 
 /// Emoji-shortcode transform options.
@@ -33,6 +43,15 @@ pub struct JsEmojiShortcodeOptions {
     pub custom: Option<HashMap<String, String>>,
 }
 
+impl From<JsEmojiShortcodeOptions> for EmojiShortcodeOptions {
+    fn from(value: JsEmojiShortcodeOptions) -> Self {
+        Self {
+            enabled: value.enabled,
+            custom: value.custom.map(|values| values.into_iter().collect()),
+        }
+    }
+}
+
 /// Attribute syntax transform options.
 #[napi(object)]
 #[derive(Default, Clone)]
@@ -41,6 +60,12 @@ pub struct JsAttrsOptions {
     ///
     /// Default: `false`.
     pub enabled: Option<bool>,
+}
+
+impl From<JsAttrsOptions> for AttrsOptions {
+    fn from(value: JsAttrsOptions) -> Self {
+        Self { enabled: value.enabled }
+    }
 }
 
 /// Code import / snippet injection options.
@@ -56,6 +81,12 @@ pub struct JsCodeImportOptions {
     ///
     /// Default: project root from the JavaScript caller.
     pub root_dir: Option<String>,
+}
+
+impl From<JsCodeImportOptions> for CodeImportOptions {
+    fn from(value: JsCodeImportOptions) -> Self {
+        Self { enabled: value.enabled, root_dir: value.root_dir }
+    }
 }
 
 /// HTML sanitizer options.
@@ -81,6 +112,17 @@ pub struct JsSanitizeOptions {
     ///
     /// Default: built-in safe URL scheme allow list.
     pub allowed_url_schemes: Option<Vec<String>>,
+}
+
+impl From<JsSanitizeOptions> for SanitizeOptions {
+    fn from(value: JsSanitizeOptions) -> Self {
+        Self {
+            enabled: value.enabled,
+            allowed_tags: value.allowed_tags,
+            allowed_attributes: value.allowed_attributes,
+            allowed_url_schemes: value.allowed_url_schemes,
+        }
+    }
 }
 
 /// Edit-this-page link options.
@@ -111,6 +153,18 @@ pub struct JsEditThisPageOptions {
     pub label: Option<String>,
 }
 
+impl From<JsEditThisPageOptions> for EditThisPageOptions {
+    fn from(value: JsEditThisPageOptions) -> Self {
+        Self {
+            enabled: value.enabled,
+            repo_url: value.repo_url,
+            branch: value.branch,
+            root_dir: value.root_dir,
+            label: value.label,
+        }
+    }
+}
+
 /// Code block linting options.
 #[napi(object)]
 #[derive(Default, Clone)]
@@ -136,6 +190,17 @@ pub struct JsCodeBlockLintOptions {
     pub trailing_spaces: Option<bool>,
 }
 
+impl From<JsCodeBlockLintOptions> for CodeBlockLintOptions {
+    fn from(value: JsCodeBlockLintOptions) -> Self {
+        Self {
+            enabled: value.enabled,
+            languages: value.languages,
+            require_language: value.require_language,
+            trailing_spaces: value.trailing_spaces,
+        }
+    }
+}
+
 /// Docs-as-tests extraction options.
 #[napi(object)]
 #[derive(Default, Clone)]
@@ -154,6 +219,16 @@ pub struct JsDocsTestOptions {
     ///
     /// Default: `true`.
     pub require_meta: Option<bool>,
+}
+
+impl From<JsDocsTestOptions> for DocsTestOptions {
+    fn from(value: JsDocsTestOptions) -> Self {
+        Self {
+            enabled: value.enabled,
+            languages: value.languages,
+            require_meta: value.require_meta,
+        }
+    }
 }
 
 /// Built-in media embed transform switches.
@@ -184,4 +259,16 @@ pub struct JsMediaEmbedsOptions {
     ///
     /// Default: `false`.
     pub web_container: Option<bool>,
+}
+
+impl From<JsMediaEmbedsOptions> for MediaEmbedsOptions {
+    fn from(value: JsMediaEmbedsOptions) -> Self {
+        Self {
+            spotify: value.spotify,
+            stack_blitz: value.stack_blitz,
+            twitter: value.twitter,
+            bluesky: value.bluesky,
+            web_container: value.web_container,
+        }
+    }
 }
