@@ -1867,13 +1867,7 @@ export declare function transformMdastRaw(source: string, options?: JsTransformO
 /** Transform opt-in static media embed components in already-rendered HTML. */
 export declare function transformMediaEmbeds(html: string, options?: JsMediaEmbedsOptions | undefined | null): string
 
-/**
- * Transforms mermaid code blocks in HTML to rendered SVG diagrams.
- *
- * Extracts `<pre><code class="language-mermaid">...</code></pre>` blocks,
- * renders each in parallel using the mmdc CLI, and replaces them with
- * `<div class="ox-mermaid">...</div>`.
- */
+/** Transforms mermaid code blocks in HTML to rendered SVG diagrams. */
 export declare function transformMermaid(html: string, mmdcPath: string): MermaidTransformResult
 
 /**
