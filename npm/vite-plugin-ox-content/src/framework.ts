@@ -1,6 +1,4 @@
-import rehypeParse from "rehype-parse";
-import { unified } from "unified";
-import type { Element, Nodes, Root } from "hast";
+import { importNapiModuleSync } from "./napi";
 import type { ResolvedOptions, TocEntry } from "./types";
 
 export type FrameworkRenderTarget = "html" | "native";
@@ -125,203 +123,25 @@ export function renderHtmlToReactCreateElement(
   html: string,
   islands: readonly FrameworkComponentIsland[] = [],
 ): string {
-  const children = parseHtmlChildren(html).map((node) => renderReactNode(node, islands));
-  return `createElement('div', { className: 'ox-content' }${renderReactChildren(children)})`;
+  return importNapiModuleSync().renderFrameworkComponentCode(html, "react", toNapiIslands(islands));
 }
 
 export function renderHtmlToVueH(
   html: string,
   islands: readonly FrameworkComponentIsland[] = [],
 ): string {
-  const children = parseHtmlChildren(html).map((node) => renderVueNode(node, islands));
-  return `h('div', { class: 'ox-content' }${renderVueChildren(children)})`;
+  return importNapiModuleSync().renderFrameworkComponentCode(html, "vue", toNapiIslands(islands));
 }
 
 export function escapeSvelteMarkup(html: string): string {
-  return html.replaceAll("{", "&#123;").replaceAll("}", "&#125;");
+  return importNapiModuleSync().escapeSvelteMarkup(html);
 }
 
-function parseHtmlChildren(html: string): Nodes[] {
-  const tree = unified().use(rehypeParse, { fragment: true }).parse(html) as Root;
-  return tree.children;
-}
-
-function renderReactNode(node: Nodes, islands: readonly FrameworkComponentIsland[]): string {
-  if (node.type === "text") {
-    return JSON.stringify(node.value);
-  }
-
-  if (node.type !== "element") {
-    return "null";
-  }
-
-  const island = findIslandForElement(node, islands);
-  if (island) {
-    return renderReactIsland(island);
-  }
-
-  const props = renderReactProps(node.properties ?? {});
-  const children = node.children.map((child) => renderReactNode(child, islands));
-  return `createElement(${JSON.stringify(node.tagName)}, ${props}${renderReactChildren(children)})`;
-}
-
-function renderReactIsland(island: FrameworkComponentIsland): string {
-  const props = renderObjectLiteral(island.props);
-  const content = island.content ? `, ${JSON.stringify(island.content)}` : "";
-  return `createElement(${island.name}, ${props}${content})`;
-}
-
-function renderReactChildren(children: string[]): string {
-  const rendered = children.filter((child) => child !== "null");
-  return rendered.length > 0 ? `, ${rendered.join(", ")}` : "";
-}
-
-function renderVueNode(node: Nodes, islands: readonly FrameworkComponentIsland[]): string {
-  if (node.type === "text") {
-    return JSON.stringify(node.value);
-  }
-
-  if (node.type !== "element") {
-    return "null";
-  }
-
-  const island = findIslandForElement(node, islands);
-  if (island) {
-    return renderVueIsland(island);
-  }
-
-  const props = renderVueProps(node.properties ?? {});
-  const children = node.children.map((child) => renderVueNode(child, islands));
-  return `h(${JSON.stringify(node.tagName)}, ${props}${renderVueChildren(children)})`;
-}
-
-function renderVueIsland(island: FrameworkComponentIsland): string {
-  const props = renderObjectLiteral(island.props);
-  const content = island.content ? `, ${JSON.stringify(island.content)}` : "";
-  return `h(${island.name}, ${props}${content})`;
-}
-
-function renderVueChildren(children: string[]): string {
-  const rendered = children.filter((child) => child !== "null");
-  if (rendered.length === 0) return "";
-  if (rendered.length === 1) return `, ${rendered[0]}`;
-  return `, [${rendered.join(", ")}]`;
-}
-
-function findIslandForElement(
-  node: Element,
-  islands: readonly FrameworkComponentIsland[],
-): FrameworkComponentIsland | undefined {
-  const islandId = getPropertyString(node.properties, "dataOxId", "data-ox-id");
-  if (!islandId) return undefined;
-  return islands.find((island) => island.id === islandId);
-}
-
-function renderReactProps(properties: Element["properties"]): string {
-  const entries: string[] = [];
-
-  for (const [key, value] of Object.entries(properties)) {
-    const propName = toReactPropName(key);
-    if (shouldSkipProperty(propName, value)) continue;
-
-    if (propName === "style" && typeof value === "string") {
-      entries.push(`${JSON.stringify(propName)}: ${renderStyleObject(value)}`);
-      continue;
-    }
-
-    entries.push(`${JSON.stringify(propName)}: ${renderPropertyValue(value)}`);
-  }
-
-  return entries.length > 0 ? `{ ${entries.join(", ")} }` : "null";
-}
-
-function renderVueProps(properties: Element["properties"]): string {
-  const entries: string[] = [];
-
-  for (const [key, value] of Object.entries(properties)) {
-    const propName = toVuePropName(key);
-    if (shouldSkipProperty(propName, value)) continue;
-    entries.push(`${JSON.stringify(propName)}: ${renderPropertyValue(value)}`);
-  }
-
-  return entries.length > 0 ? `{ ${entries.join(", ")} }` : "null";
-}
-
-function shouldSkipProperty(name: string, value: unknown): boolean {
-  return name.startsWith("data-ox-") || value === null || value === undefined || value === false;
-}
-
-function toReactPropName(name: string): string {
-  if (name === "class" || name === "className") return "className";
-  if (name === "for" || name === "htmlFor") return "htmlFor";
-  return toDataOrAriaAttributeName(name);
-}
-
-function toVuePropName(name: string): string {
-  if (name === "className") return "class";
-  if (name === "htmlFor") return "for";
-  return toDataOrAriaAttributeName(name);
-}
-
-function toDataOrAriaAttributeName(name: string): string {
-  if (name.startsWith("data") && /[A-Z]/.test(name)) {
-    return camelToKebab(name);
-  }
-  if (name.startsWith("aria") && /[A-Z]/.test(name)) {
-    return camelToKebab(name);
-  }
-  return name;
-}
-
-function camelToKebab(value: string): string {
-  return value.replace(/[A-Z]/g, (char) => `-${char.toLowerCase()}`);
-}
-
-function renderPropertyValue(value: unknown): string {
-  if (Array.isArray(value)) {
-    return JSON.stringify(value.join(" "));
-  }
-  return JSON.stringify(value);
-}
-
-function renderStyleObject(value: string): string {
-  const entries = value
-    .split(";")
-    .map((part) => part.trim())
-    .filter(Boolean)
-    .map((declaration) => {
-      const separator = declaration.indexOf(":");
-      if (separator === -1) return null;
-      const name = declaration.slice(0, separator).trim();
-      const cssValue = declaration.slice(separator + 1).trim();
-      if (!name || !cssValue) return null;
-      return `${JSON.stringify(cssPropertyToReactName(name))}: ${JSON.stringify(cssValue)}`;
-    })
-    .filter((entry): entry is string => Boolean(entry));
-
-  return entries.length > 0 ? `{ ${entries.join(", ")} }` : "{}";
-}
-
-function cssPropertyToReactName(name: string): string {
-  if (name.startsWith("--")) return name;
-  return name.replace(/-([a-z])/g, (_, char: string) => char.toUpperCase());
-}
-
-function renderObjectLiteral(value: Record<string, unknown>): string {
-  const entries = Object.entries(value).map(
-    ([key, propValue]) => `${JSON.stringify(key)}: ${JSON.stringify(propValue)}`,
-  );
-  return entries.length > 0 ? `{ ${entries.join(", ")} }` : "null";
-}
-
-function getPropertyString(
-  properties: Element["properties"],
-  ...keys: string[]
-): string | undefined {
-  for (const key of keys) {
-    const value = properties[key];
-    if (typeof value === "string") return value;
-    if (typeof value === "number" || typeof value === "boolean") return String(value);
-  }
-  return undefined;
+function toNapiIslands(islands: readonly FrameworkComponentIsland[]) {
+  return islands.map((island) => ({
+    name: island.name,
+    props: island.props,
+    id: island.id,
+    content: island.content,
+  }));
 }

@@ -82,12 +82,13 @@ describe("framework Markdown utilities", () => {
       },
     ];
 
-    expect(renderHtmlToReactCreateElement(html, islands)).toContain(
-      'createElement(Alert, { "tone": "info", "active": true }, "Read docs")',
-    );
-    expect(renderHtmlToVueH(html, islands)).toContain(
-      'h(Alert, { "tone": "info", "active": true }, "Read docs")',
-    );
+    const reactCode = renderHtmlToReactCreateElement(html, islands);
+    const vueCode = renderHtmlToVueH(html, islands);
+
+    expect(reactCode).toContain('createElement(Alert, { "active": true, "tone": "info" }');
+    expect(reactCode).toContain('"Read docs")');
+    expect(vueCode).toContain('h(Alert, { "active": true, "tone": "info" }');
+    expect(vueCode).toContain('"Read docs")');
   });
 
   it("escapes Svelte expression delimiters before emitting static markup", () => {

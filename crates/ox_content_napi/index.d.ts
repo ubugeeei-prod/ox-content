@@ -85,6 +85,9 @@ export declare function collectSearchMarkdownFiles(srcDir: string, extensions: A
 /** Collects Markdown files for SSG from a source directory. */
 export declare function collectSsgMarkdownFiles(srcDir: string, extensions: Array<string>): Array<string>
 
+/** Escapes Svelte expression delimiters before emitting static compiled markup. */
+export declare function escapeSvelteMarkup(html: string): string
+
 /** Extracts shared CSS and JavaScript assets from generated SSG pages. */
 export declare function externalizeSsgAssets(pages: Array<JsSsgGeneratedHtmlPage>, outDir: string, base: string): JsSsgExternalizedAssets
 
@@ -735,6 +738,13 @@ export interface JsFeatureConfig {
   link?: string
   /** Link text. */
   linkText?: string
+}
+
+export interface JsFrameworkComponentIsland {
+  name: string
+  props: Record<string, any>
+  id: string
+  content?: string
 }
 
 /** Export graph resolution options. */
@@ -1790,6 +1800,14 @@ export declare function prepareSourceRaw(source: string, options?: JsSourceOptio
 
 /** Renders an AST (provided as JSON) to HTML. */
 export declare function render(astJson: string): RenderResult
+
+/**
+ * Renders already-produced Markdown HTML into framework-native component code.
+ *
+ * The `target` argument currently accepts `"react"` and `"vue"`. React output
+ * uses `createElement(...)`; Vue output uses `h(...)`.
+ */
+export declare function renderFrameworkComponentCode(html: string, target: string, islands?: Array<JsFrameworkComponentIsland> | undefined | null): string
 
 /** Render result containing the HTML output. */
 export interface RenderResult {
