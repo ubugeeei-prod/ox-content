@@ -1316,7 +1316,7 @@ a:hover {
     transform: translateY(100%);
     z-index: 99;
     border-radius: 4px 4px 0 0;
-    padding: 1.5rem 1rem 2rem;
+    padding: 1.5rem 1rem calc(56px + 1.5rem);
     background: color-mix(in srgb, var(--octc-color-bg-alt) 88%, var(--octc-color-bg));
   }
   .entry-page .sidebar--entry {
