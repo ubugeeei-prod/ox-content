@@ -156,11 +156,11 @@ pub fn generate_nav_code(nav_items: &[DocsNavItem], export_name: Option<&str>) -
  * Do not edit manually.
  */
 
-export interface NavItem {{
+export interface NavItem {
   title: string;
   path: string;
   children?: NavItem[];
-}}
+}
 
 export const ",
     );
