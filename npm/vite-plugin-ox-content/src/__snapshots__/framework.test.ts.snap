@@ -4,6 +4,32 @@ exports[`framework Markdown utilities > renders React VDOM code with React-compa
 
 exports[`framework Markdown utilities > renders Vue VDOM code with Vue-compatible attributes 1`] = `"h('div', { class: 'ox-content' }, h("label", { "class": "field", "for": "name" }, [h("span", null, "Name"), h("input", { "disabled": true, "type": "text" })]))"`;
 
+exports[`framework Markdown utilities > renders framework component and render-function modules 1`] = `
+{
+  "reactComponent": "import { createElement } from 'react';
+
+export default function MarkdownContent() {
+  return createElement('div', { className: 'ox-content' }, createElement("p", null, "Hello"));
+}
+",
+  "vueComponent": "import { defineComponent, h } from 'vue';
+
+export default defineComponent({
+  name: 'MarkdownContent',
+  setup() {
+    return () => h('div', { class: 'ox-content' }, h("p", null, "Hello"));
+  },
+});
+",
+  "vueRenderFunction": "import { h } from 'vue';
+
+export function renderMarkdownContent() {
+  return h('div', { class: 'ox-content' }, h("p", null, "Hello"));
+}
+",
+}
+`;
+
 exports[`framework Markdown utilities > renders framework component islands for native React and Vue targets 1`] = `
 {
   "reactCode": "createElement('div', { className: 'ox-content' }, createElement("p", null, "Before"), createElement(Alert, { "active": true, "tone": "info" }, "Read docs"))",

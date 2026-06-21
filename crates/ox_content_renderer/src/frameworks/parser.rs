@@ -1,27 +1,34 @@
+use compact_str::CompactString;
+use smallvec::SmallVec;
+
+pub(super) type HtmlNodes = Vec<HtmlNode>;
+type HtmlAttributes = Vec<HtmlAttribute>;
+type OpenElements = SmallVec<[OpenElement; 8]>;
+
 #[derive(Debug, Eq, PartialEq)]
 pub(super) enum HtmlNode {
     Element(HtmlElement),
-    Text(String),
+    Text(CompactString),
 }
 
 #[derive(Debug, Eq, PartialEq)]
 pub(super) struct HtmlElement {
-    pub tag_name: String,
-    pub attributes: Vec<HtmlAttribute>,
-    pub children: Vec<HtmlNode>,
+    pub tag_name: CompactString,
+    pub attributes: HtmlAttributes,
+    pub children: HtmlNodes,
 }
 
 #[derive(Debug, Eq, PartialEq)]
 pub(super) struct HtmlAttribute {
-    pub name: String,
-    pub value: Option<String>,
+    pub name: CompactString,
+    pub value: Option<CompactString>,
 }
 
 #[derive(Debug)]
 struct OpenElement {
-    tag_name: String,
-    attributes: Vec<HtmlAttribute>,
-    children: Vec<HtmlNode>,
+    tag_name: CompactString,
+    attributes: HtmlAttributes,
+    children: HtmlNodes,
 }
 
 impl OpenElement {
@@ -44,9 +51,9 @@ impl<'a> HtmlFragmentParser<'a> {
         Self { html, pos: 0 }
     }
 
-    pub(super) fn parse(mut self) -> Vec<HtmlNode> {
-        let mut root = Vec::new();
-        let mut stack = Vec::new();
+    pub(super) fn parse(mut self) -> HtmlNodes {
+        let mut root = HtmlNodes::new();
+        let mut stack = OpenElements::new();
 
         while self.pos < self.html.len() {
             let Some(tag_start) = find_byte(self.html, self.pos, b'<') else {
@@ -84,7 +91,7 @@ impl<'a> HtmlFragmentParser<'a> {
 
             if let Some((tag_name, attributes, self_closing)) = parse_start_tag(raw_tag) {
                 let is_void = is_void_element(&tag_name);
-                let open = OpenElement { tag_name, attributes, children: Vec::new() };
+                let open = OpenElement { tag_name, attributes, children: HtmlNodes::new() };
                 if self_closing || is_void {
                     append_node(&mut root, &mut stack, open.into_node());
                 } else {
@@ -131,21 +138,17 @@ fn find_tag_end(html: &str, start: usize) -> Option<usize> {
     None
 }
 
-fn parse_end_tag(raw_tag: &str) -> Option<String> {
+fn parse_end_tag(raw_tag: &str) -> Option<CompactString> {
     let raw_tag = raw_tag.trim_start();
     let rest = raw_tag.strip_prefix('/')?.trim_start();
     let end = rest
         .bytes()
         .position(|byte| byte.is_ascii_whitespace() || byte == b'/')
         .unwrap_or(rest.len());
-    if end == 0 {
-        None
-    } else {
-        Some(rest[..end].to_string())
-    }
+    (end != 0).then(|| CompactString::from(&rest[..end]))
 }
 
-fn parse_start_tag(raw_tag: &str) -> Option<(String, Vec<HtmlAttribute>, bool)> {
+fn parse_start_tag(raw_tag: &str) -> Option<(CompactString, HtmlAttributes, bool)> {
     let bytes = raw_tag.as_bytes();
     let mut cursor = skip_ascii_whitespace(bytes, 0);
     if cursor >= bytes.len() || matches!(bytes[cursor], b'/' | b'!' | b'?') {
@@ -163,8 +166,8 @@ fn parse_start_tag(raw_tag: &str) -> Option<(String, Vec<HtmlAttribute>, bool)> 
         return None;
     }
 
-    let tag_name = raw_tag[name_start..cursor].to_string();
-    let mut attributes = Vec::new();
+    let tag_name = CompactString::from(&raw_tag[name_start..cursor]);
+    let mut attributes = HtmlAttributes::new();
     let mut self_closing = false;
 
     while cursor < bytes.len() {
@@ -191,7 +194,7 @@ fn parse_start_tag(raw_tag: &str) -> Option<(String, Vec<HtmlAttribute>, bool)> 
             continue;
         }
 
-        let name = raw_tag[attr_start..cursor].to_string();
+        let name = CompactString::from(&raw_tag[attr_start..cursor]);
         cursor = skip_ascii_whitespace(bytes, cursor);
         let value = if cursor < bytes.len() && bytes[cursor] == b'=' {
             cursor += 1;
@@ -207,7 +210,7 @@ fn parse_start_tag(raw_tag: &str) -> Option<(String, Vec<HtmlAttribute>, bool)> 
     Some((tag_name, attributes, self_closing))
 }
 
-fn parse_attribute_value(raw_tag: &str, bytes: &[u8], cursor: &mut usize) -> String {
+fn parse_attribute_value(raw_tag: &str, bytes: &[u8], cursor: &mut usize) -> CompactString {
     if *cursor < bytes.len() && matches!(bytes[*cursor], b'\'' | b'"') {
         let quote = bytes[*cursor];
         *cursor += 1;
@@ -236,21 +239,34 @@ fn skip_ascii_whitespace(bytes: &[u8], mut cursor: usize) -> usize {
     cursor
 }
 
-fn push_text(root: &mut Vec<HtmlNode>, stack: &mut [OpenElement], value: &str) {
+fn push_text(root: &mut HtmlNodes, stack: &mut [OpenElement], value: &str) {
     if !value.is_empty() {
         append_node(root, stack, HtmlNode::Text(decode_html_entities(value)));
     }
 }
 
-fn append_node(root: &mut Vec<HtmlNode>, stack: &mut [OpenElement], node: HtmlNode) {
+fn append_node(root: &mut HtmlNodes, stack: &mut [OpenElement], node: HtmlNode) {
     if let Some(parent) = stack.last_mut() {
-        parent.children.push(node);
+        append_child(&mut parent.children, node);
     } else {
-        root.push(node);
+        append_child(root, node);
     }
 }
 
-fn close_element(root: &mut Vec<HtmlNode>, stack: &mut Vec<OpenElement>, tag_name: &str) {
+fn append_child(children: &mut HtmlNodes, node: HtmlNode) {
+    if let HtmlNode::Text(value) = node {
+        if let Some(HtmlNode::Text(previous)) = children.last_mut() {
+            previous.push_str(&value);
+        } else {
+            children.push(HtmlNode::Text(value));
+        }
+        return;
+    }
+
+    children.push(node);
+}
+
+fn close_element(root: &mut HtmlNodes, stack: &mut OpenElements, tag_name: &str) {
     let Some(position) =
         stack.iter().rposition(|element| element.tag_name.eq_ignore_ascii_case(tag_name))
     else {
@@ -264,28 +280,25 @@ fn close_element(root: &mut Vec<HtmlNode>, stack: &mut Vec<OpenElement>, tag_nam
 }
 
 fn is_void_element(tag_name: &str) -> bool {
-    matches!(
-        tag_name.to_ascii_lowercase().as_str(),
-        "area"
-            | "base"
-            | "br"
-            | "col"
-            | "embed"
-            | "hr"
-            | "img"
-            | "input"
-            | "link"
-            | "meta"
-            | "param"
-            | "source"
-            | "track"
-            | "wbr"
-    )
+    tag_name.eq_ignore_ascii_case("area")
+        || tag_name.eq_ignore_ascii_case("base")
+        || tag_name.eq_ignore_ascii_case("br")
+        || tag_name.eq_ignore_ascii_case("col")
+        || tag_name.eq_ignore_ascii_case("embed")
+        || tag_name.eq_ignore_ascii_case("hr")
+        || tag_name.eq_ignore_ascii_case("img")
+        || tag_name.eq_ignore_ascii_case("input")
+        || tag_name.eq_ignore_ascii_case("link")
+        || tag_name.eq_ignore_ascii_case("meta")
+        || tag_name.eq_ignore_ascii_case("param")
+        || tag_name.eq_ignore_ascii_case("source")
+        || tag_name.eq_ignore_ascii_case("track")
+        || tag_name.eq_ignore_ascii_case("wbr")
 }
 
-fn decode_html_entities(value: &str) -> String {
+fn decode_html_entities(value: &str) -> CompactString {
     if !value.contains('&') {
-        return value.to_string();
+        return CompactString::from(value);
     }
 
     let mut output = String::with_capacity(value.len());
@@ -314,7 +327,7 @@ fn decode_html_entities(value: &str) -> String {
         }
     }
     output.push_str(&value[cursor..]);
-    output
+    output.into()
 }
 
 fn decode_html_entity(entity: &str) -> Option<char> {

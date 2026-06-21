@@ -40,9 +40,20 @@ const sourceExtensions = new Set([
 const options = parseArgs(process.argv.slice(2));
 const limit = parsePositiveInteger(options.limit ?? process.env.FILE_LINE_LIMIT, defaultLimit);
 const baseRef = options.base ?? findDefaultBaseRef();
+const repositoryFiles = collectRepositoryFiles();
+const moduleRootViolations = repositoryFiles.filter(isForbiddenRustModuleRoot).sort();
 const files = collectChangedFiles(baseRef);
 const checkedFiles = files.filter(shouldCheckFile).sort();
 const violations: FileLineViolation[] = [];
+
+if (moduleRootViolations.length > 0) {
+  console.error("Rust module root files named mod.rs are not allowed.");
+  console.error("Use sibling module files such as foo.rs plus foo/bar.rs instead:");
+  for (const file of moduleRootViolations) {
+    console.error(`  - ${file}`);
+  }
+  process.exit(1);
+}
 
 for (const file of checkedFiles) {
   const lines = countLines(file);
@@ -153,6 +164,21 @@ function collectChangedFiles(base: string): string[] {
   return [...files];
 }
 
+function collectRepositoryFiles(): string[] {
+  const files = new Set<string>();
+  for (const file of runGitLines(["ls-files"])) {
+    files.add(file);
+  }
+
+  if (!process.env.CI) {
+    for (const file of runGitLines(["ls-files", "--others", "--exclude-standard"])) {
+      files.add(file);
+    }
+  }
+
+  return [...files].filter((file) => existsSync(file));
+}
+
 function changedFilesFromBase(base: string): string[] {
   if (base === "HEAD") {
     return [];
@@ -181,20 +207,37 @@ function shouldCheckFile(file: string): boolean {
   }
 
   const normalized = file.replaceAll("\\", "/");
+  if (isIgnoredGeneratedPath(normalized)) {
+    return false;
+  }
+
+  return sourceExtensions.has(extname(normalized));
+}
+
+function isForbiddenRustModuleRoot(file: string): boolean {
+  const normalized = file.replaceAll("\\", "/");
+  if (isIgnoredGeneratedPath(normalized)) {
+    return false;
+  }
+
+  return normalized === "mod.rs" || normalized.endsWith("/mod.rs");
+}
+
+function isIgnoredGeneratedPath(normalized: string): boolean {
   if (
     normalized.startsWith(".github/actions/stickydisk/dist/") ||
     normalized.includes("/__snapshots__/") ||
     normalized.includes("/snapshots/")
   ) {
-    return false;
+    return true;
   }
 
   const segments = normalized.split("/");
   if (segments.some((segment) => segment === "dist" || segment === "node_modules")) {
-    return false;
+    return true;
   }
 
-  return sourceExtensions.has(extname(normalized));
+  return false;
 }
 
 function countLines(file: string): number {
