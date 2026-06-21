@@ -1,5 +1,5 @@
 ---
-source: crates/ox_content_napi/src/framework_codegen/tests.rs
+source: crates/ox_content_renderer/src/frameworks/tests.rs
 expression: code
 ---
 createElement('div', { className: 'ox-content' }, createElement("section", { "className": "lead", "htmlFor": "name", "data-id": "42", "aria-label": "Intro" }, createElement("p", { "style": { "fontWeight": "bold", "--brand": "red" } }, "Hello ", createElement("strong", null, "world"))))

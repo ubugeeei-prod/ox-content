@@ -1,5 +1,5 @@
 ---
-source: crates/ox_content_napi/src/framework_codegen/tests.rs
+source: crates/ox_content_renderer/src/frameworks/tests.rs
 expression: code
 ---
 h('div', { class: 'ox-content' }, h("label", { "class": "field", "for": "name" }, [h("span", null, "Name"), h("input", { "disabled": true, "type": "text" })]))

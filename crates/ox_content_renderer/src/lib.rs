@@ -41,8 +41,15 @@ macro_rules! profile_span {
 
 pub(crate) use profile_span;
 
+#[cfg(feature = "frameworks")]
+pub mod frameworks;
 mod html;
 mod render;
 
+#[cfg(feature = "frameworks")]
+pub use frameworks::{
+    escape_svelte_markup, render_framework_component_code, FrameworkCodegenError,
+    FrameworkCodegenTarget, FrameworkComponentIsland,
+};
 pub use html::{CodeAnnotationSyntax, HtmlRenderer, HtmlRendererOptions};
 pub use render::{RenderError, RenderResult, Renderer};

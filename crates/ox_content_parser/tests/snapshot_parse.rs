@@ -20,6 +20,7 @@ mod inline;
 mod lists;
 #[path = "snapshot_parse/mixed.rs"]
 mod mixed;
+#[path = "support/pretty.rs"]
 mod pretty;
 #[path = "snapshot_parse/tables.rs"]
 mod tables;

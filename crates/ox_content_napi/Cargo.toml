@@ -22,7 +22,7 @@ crate-type = ["cdylib", "rlib"]
 ox_content_allocator = { workspace = true }
 ox_content_mdast = { workspace = true }
 ox_content_parser = { workspace = true }
-ox_content_renderer = { workspace = true }
+ox_content_renderer = { workspace = true, features = ["frameworks"] }
 ox_content_incremental = { workspace = true }
 ox_content_markdown_lint = { workspace = true }
 ox_content_mermaid = { workspace = true }
