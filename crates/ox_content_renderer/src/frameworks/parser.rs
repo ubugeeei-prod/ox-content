@@ -1,4 +1,9 @@
 use compact_str::CompactString;
+use smallvec::SmallVec;
+
+pub(super) type HtmlNodes = Vec<HtmlNode>;
+type HtmlAttributes = Vec<HtmlAttribute>;
+type OpenElements = SmallVec<[OpenElement; 8]>;
 
 #[derive(Debug, Eq, PartialEq)]
 pub(super) enum HtmlNode {
@@ -9,8 +14,8 @@ pub(super) enum HtmlNode {
 #[derive(Debug, Eq, PartialEq)]
 pub(super) struct HtmlElement {
     pub tag_name: CompactString,
-    pub attributes: Vec<HtmlAttribute>,
-    pub children: Vec<HtmlNode>,
+    pub attributes: HtmlAttributes,
+    pub children: HtmlNodes,
 }
 
 #[derive(Debug, Eq, PartialEq)]
@@ -22,8 +27,8 @@ pub(super) struct HtmlAttribute {
 #[derive(Debug)]
 struct OpenElement {
     tag_name: CompactString,
-    attributes: Vec<HtmlAttribute>,
-    children: Vec<HtmlNode>,
+    attributes: HtmlAttributes,
+    children: HtmlNodes,
 }
 
 impl OpenElement {
@@ -46,9 +51,9 @@ impl<'a> HtmlFragmentParser<'a> {
         Self { html, pos: 0 }
     }
 
-    pub(super) fn parse(mut self) -> Vec<HtmlNode> {
-        let mut root = Vec::new();
-        let mut stack = Vec::new();
+    pub(super) fn parse(mut self) -> HtmlNodes {
+        let mut root = HtmlNodes::new();
+        let mut stack = OpenElements::new();
 
         while self.pos < self.html.len() {
             let Some(tag_start) = find_byte(self.html, self.pos, b'<') else {
@@ -86,7 +91,7 @@ impl<'a> HtmlFragmentParser<'a> {
 
             if let Some((tag_name, attributes, self_closing)) = parse_start_tag(raw_tag) {
                 let is_void = is_void_element(&tag_name);
-                let open = OpenElement { tag_name, attributes, children: Vec::new() };
+                let open = OpenElement { tag_name, attributes, children: HtmlNodes::new() };
                 if self_closing || is_void {
                     append_node(&mut root, &mut stack, open.into_node());
                 } else {
@@ -140,14 +145,10 @@ fn parse_end_tag(raw_tag: &str) -> Option<CompactString> {
         .bytes()
         .position(|byte| byte.is_ascii_whitespace() || byte == b'/')
         .unwrap_or(rest.len());
-    if end == 0 {
-        None
-    } else {
-        Some(CompactString::from(&rest[..end]))
-    }
+    (end != 0).then(|| CompactString::from(&rest[..end]))
 }
 
-fn parse_start_tag(raw_tag: &str) -> Option<(CompactString, Vec<HtmlAttribute>, bool)> {
+fn parse_start_tag(raw_tag: &str) -> Option<(CompactString, HtmlAttributes, bool)> {
     let bytes = raw_tag.as_bytes();
     let mut cursor = skip_ascii_whitespace(bytes, 0);
     if cursor >= bytes.len() || matches!(bytes[cursor], b'/' | b'!' | b'?') {
@@ -166,7 +167,7 @@ fn parse_start_tag(raw_tag: &str) -> Option<(CompactString, Vec<HtmlAttribute>, 
     }
 
     let tag_name = CompactString::from(&raw_tag[name_start..cursor]);
-    let mut attributes = Vec::new();
+    let mut attributes = HtmlAttributes::new();
     let mut self_closing = false;
 
     while cursor < bytes.len() {
@@ -238,21 +239,34 @@ fn skip_ascii_whitespace(bytes: &[u8], mut cursor: usize) -> usize {
     cursor
 }
 
-fn push_text(root: &mut Vec<HtmlNode>, stack: &mut [OpenElement], value: &str) {
+fn push_text(root: &mut HtmlNodes, stack: &mut [OpenElement], value: &str) {
     if !value.is_empty() {
         append_node(root, stack, HtmlNode::Text(decode_html_entities(value)));
     }
 }
 
-fn append_node(root: &mut Vec<HtmlNode>, stack: &mut [OpenElement], node: HtmlNode) {
+fn append_node(root: &mut HtmlNodes, stack: &mut [OpenElement], node: HtmlNode) {
     if let Some(parent) = stack.last_mut() {
-        parent.children.push(node);
+        append_child(&mut parent.children, node);
     } else {
-        root.push(node);
+        append_child(root, node);
     }
 }
 
-fn close_element(root: &mut Vec<HtmlNode>, stack: &mut Vec<OpenElement>, tag_name: &str) {
+fn append_child(children: &mut HtmlNodes, node: HtmlNode) {
+    if let HtmlNode::Text(value) = node {
+        if let Some(HtmlNode::Text(previous)) = children.last_mut() {
+            previous.push_str(&value);
+        } else {
+            children.push(HtmlNode::Text(value));
+        }
+        return;
+    }
+
+    children.push(node);
+}
+
+fn close_element(root: &mut HtmlNodes, stack: &mut OpenElements, tag_name: &str) {
     let Some(position) =
         stack.iter().rposition(|element| element.tag_name.eq_ignore_ascii_case(tag_name))
     else {

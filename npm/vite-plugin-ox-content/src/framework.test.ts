@@ -2,7 +2,11 @@ import { describe, expect, it } from "vite-plus/test";
 import {
   createFrameworkMarkdownOptions,
   escapeSvelteMarkup,
+  renderHtmlToFrameworkCode,
   renderHtmlToReactCreateElement,
+  renderHtmlToReactComponent,
+  renderHtmlToSvelteComponent,
+  renderHtmlToVueComponent,
   renderHtmlToVueH,
 } from "./framework";
 
@@ -77,6 +81,36 @@ describe("framework Markdown utilities", () => {
     const vueCode = renderHtmlToVueH(html, islands);
 
     expect({ reactCode, vueCode }).toMatchSnapshot();
+  });
+
+  it("renders framework component and render-function modules", () => {
+    const html = "<p>Hello</p>";
+
+    expect({
+      reactComponent: renderHtmlToReactComponent(html),
+      vueComponent: renderHtmlToVueComponent(html),
+      vueRenderFunction: renderHtmlToFrameworkCode(html, "vue", "renderFunction"),
+    }).toMatchSnapshot();
+  });
+
+  it("renders Svelte component code without innerHTML", () => {
+    expect(renderHtmlToSvelteComponent("<p>{count}</p>")).toBe(
+      '<div class="ox-content">\n<p>&#123;count&#125;</p>\n</div>\n',
+    );
+  });
+
+  it("escapes raw HTML literals without breaking component scripts", () => {
+    const html = '</script><p title="line\nnext">{ ok }</p>';
+    const react = renderHtmlToFrameworkCode(html, "react", "innerHtml");
+    const vue = renderHtmlToFrameworkCode(html, "vue", "innerHtml");
+    const svelte = renderHtmlToFrameworkCode(html, "svelte", "innerHtml");
+
+    expect(react).not.toContain("</script>");
+    expect(vue).not.toContain("</script>");
+    expect(svelte.match(/<\/script>/g)).toHaveLength(1);
+    expect(react).toContain(String.raw`\x3C/script>\x3Cp title=\"line\nnext\">{ ok }\x3C/p>`);
+    expect(vue).toContain(String.raw`\x3C/script>\x3Cp title=\"line\nnext\">{ ok }\x3C/p>`);
+    expect(svelte).toContain(String.raw`\x3C/script>\x3Cp title=\"line\nnext\">{ ok }\x3C/p>`);
   });
 
   it("escapes Svelte expression delimiters before emitting static markup", () => {

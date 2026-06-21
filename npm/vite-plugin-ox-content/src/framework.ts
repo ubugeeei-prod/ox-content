@@ -2,6 +2,8 @@ import { importNapiModuleSync } from "./napi";
 import type { ResolvedOptions, TocEntry } from "./types";
 
 export type FrameworkRenderTarget = "html" | "native";
+export type FrameworkCodegenTarget = "react" | "vue" | "svelte";
+export type FrameworkCodegenMode = "innerHtml" | "expression" | "renderFunction" | "component";
 
 export interface FrameworkMarkdownOptions {
   srcDir: string;
@@ -123,14 +125,46 @@ export function renderHtmlToReactCreateElement(
   html: string,
   islands: readonly FrameworkComponentIsland[] = [],
 ): string {
-  return importNapiModuleSync().renderFrameworkComponentCode(html, "react", toNapiIslands(islands));
+  return renderHtmlToFrameworkCode(html, "react", "expression", islands);
 }
 
 export function renderHtmlToVueH(
   html: string,
   islands: readonly FrameworkComponentIsland[] = [],
 ): string {
-  return importNapiModuleSync().renderFrameworkComponentCode(html, "vue", toNapiIslands(islands));
+  return renderHtmlToFrameworkCode(html, "vue", "expression", islands);
+}
+
+export function renderHtmlToFrameworkCode(
+  html: string,
+  target: FrameworkCodegenTarget,
+  mode: FrameworkCodegenMode,
+  islands: readonly FrameworkComponentIsland[] = [],
+): string {
+  return importNapiModuleSync().renderFrameworkComponentCode(
+    html,
+    target,
+    toNapiIslands(islands),
+    mode,
+  );
+}
+
+export function renderHtmlToReactComponent(
+  html: string,
+  islands: readonly FrameworkComponentIsland[] = [],
+): string {
+  return renderHtmlToFrameworkCode(html, "react", "component", islands);
+}
+
+export function renderHtmlToVueComponent(
+  html: string,
+  islands: readonly FrameworkComponentIsland[] = [],
+): string {
+  return renderHtmlToFrameworkCode(html, "vue", "component", islands);
+}
+
+export function renderHtmlToSvelteComponent(html: string): string {
+  return renderHtmlToFrameworkCode(html, "svelte", "component");
 }
 
 export function escapeSvelteMarkup(html: string): string {

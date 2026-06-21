@@ -43,6 +43,44 @@ pub(super) fn render_island(island: &FrameworkComponentIsland) -> String {
     output
 }
 
+pub(super) fn render_function_module(expression: &str) -> String {
+    let mut output = String::with_capacity(68 + expression.len());
+    output.push_str("import { h } from 'vue';\n\n");
+    output.push_str("export function renderMarkdownContent() {\n  return ");
+    output.push_str(expression);
+    output.push_str(";\n}\n");
+    output
+}
+
+pub(super) fn component_module(expression: &str) -> String {
+    let mut output = String::with_capacity(138 + expression.len());
+    output.push_str("import { defineComponent, h } from 'vue';\n\n");
+    output.push_str("export default defineComponent({\n");
+    output.push_str("  name: 'MarkdownContent',\n");
+    output.push_str("  setup() {\n");
+    output.push_str("    return () => ");
+    output.push_str(expression);
+    output.push_str(";\n");
+    output.push_str("  },\n");
+    output.push_str("});\n");
+    output
+}
+
+pub(super) fn inner_html_component_module(html: &str) -> String {
+    let mut output = String::with_capacity(188 + html.len());
+    output.push_str("import { defineComponent, h } from 'vue';\n\n");
+    output.push_str("const rawHtml = ");
+    shared::push_raw_html_js_string_literal(&mut output, html);
+    output.push_str(";\n\n");
+    output.push_str("export default defineComponent({\n");
+    output.push_str("  name: 'MarkdownContent',\n");
+    output.push_str("  setup() {\n");
+    output.push_str("    return () => h('div', { class: 'ox-content', innerHTML: rawHtml });\n");
+    output.push_str("  },\n");
+    output.push_str("});\n");
+    output
+}
+
 fn push_children(output: &mut String, children: &[String]) {
     match children {
         [] => {}

@@ -43,6 +43,39 @@ pub(super) fn render_island(island: &FrameworkComponentIsland) -> String {
     output
 }
 
+pub(super) fn render_function_module(expression: &str) -> String {
+    let mut output = String::with_capacity(82 + expression.len());
+    output.push_str("import { createElement } from 'react';\n\n");
+    output.push_str("export function renderMarkdownContent() {\n  return ");
+    output.push_str(expression);
+    output.push_str(";\n}\n");
+    output
+}
+
+pub(super) fn component_module(expression: &str) -> String {
+    let mut output = String::with_capacity(88 + expression.len());
+    output.push_str("import { createElement } from 'react';\n\n");
+    output.push_str("export default function MarkdownContent() {\n  return ");
+    output.push_str(expression);
+    output.push_str(";\n}\n");
+    output
+}
+
+pub(super) fn inner_html_component_module(html: &str) -> String {
+    let mut output = String::with_capacity(184 + html.len());
+    output.push_str("import { createElement } from 'react';\n\n");
+    output.push_str("const rawHtml = ");
+    shared::push_raw_html_js_string_literal(&mut output, html);
+    output.push_str(";\n\n");
+    output.push_str("export default function MarkdownContent() {\n");
+    output.push_str("  return createElement('div', {\n");
+    output.push_str("    className: 'ox-content',\n");
+    output.push_str("    dangerouslySetInnerHTML: { __html: rawHtml },\n");
+    output.push_str("  });\n");
+    output.push_str("}\n");
+    output
+}
+
 fn push_children(output: &mut String, children: &[String]) {
     for child in children {
         output.push_str(", ");

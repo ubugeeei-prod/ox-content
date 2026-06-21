@@ -1,6 +1,5 @@
-use std::collections::HashMap;
-
 use compact_str::CompactString;
+use rustc_hash::FxHashMap;
 use smallvec::SmallVec;
 
 use super::{parser::HtmlElement, FrameworkComponentIsland};
@@ -22,7 +21,7 @@ pub(super) fn push_attribute_value(output: &mut String, value: Option<&str>) {
     }
 }
 
-pub(super) fn render_json_object_literal(value: &HashMap<String, serde_json::Value>) -> String {
+pub(super) fn render_json_object_literal(value: &FxHashMap<String, serde_json::Value>) -> String {
     let mut output = String::with_capacity(value.len().saturating_mul(24).max(4));
     push_json_object_literal(&mut output, value);
     output
@@ -30,7 +29,7 @@ pub(super) fn render_json_object_literal(value: &HashMap<String, serde_json::Val
 
 pub(super) fn push_json_object_literal(
     output: &mut String,
-    value: &HashMap<String, serde_json::Value>,
+    value: &FxHashMap<String, serde_json::Value>,
 ) {
     if value.is_empty() {
         output.push_str("null");
@@ -93,16 +92,27 @@ pub(super) fn js_string_literal(value: &str) -> String {
 }
 
 pub(super) fn push_js_string_literal(output: &mut String, value: &str) {
+    push_js_string_literal_with_options(output, value, false);
+}
+
+pub(super) fn push_raw_html_js_string_literal(output: &mut String, value: &str) {
+    push_js_string_literal_with_options(output, value, true);
+}
+
+fn push_js_string_literal_with_options(output: &mut String, value: &str, escape_markup: bool) {
     output.push('"');
     for ch in value.chars() {
         match ch {
             '"' => output.push_str("\\\""),
             '\\' => output.push_str("\\\\"),
+            '<' if escape_markup => output.push_str("\\x3C"),
             '\n' => output.push_str("\\n"),
             '\r' => output.push_str("\\r"),
             '\t' => output.push_str("\\t"),
             '\u{08}' => output.push_str("\\b"),
             '\u{0c}' => output.push_str("\\f"),
+            '\u{2028}' => output.push_str("\\u2028"),
+            '\u{2029}' => output.push_str("\\u2029"),
             ch if ch.is_control() => push_json_unicode_escape(output, ch),
             ch => output.push(ch),
         }

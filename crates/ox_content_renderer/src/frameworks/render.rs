@@ -17,6 +17,9 @@ impl FrameworkCodegen<'_> {
 
         match self.target {
             FrameworkCodegenTarget::React => react::render_root(&children),
+            FrameworkCodegenTarget::Svelte => {
+                unreachable!("svelte component output does not use the VDOM renderer")
+            }
             FrameworkCodegenTarget::Vue => vue::render_root(&children),
         }
     }
@@ -48,6 +51,9 @@ impl FrameworkCodegen<'_> {
 
         match self.target {
             FrameworkCodegenTarget::React => react::render_element(element, &children),
+            FrameworkCodegenTarget::Svelte => {
+                unreachable!("svelte component output does not use the VDOM renderer")
+            }
             FrameworkCodegenTarget::Vue => vue::render_element(element, &children),
         }
     }
@@ -55,6 +61,9 @@ impl FrameworkCodegen<'_> {
     fn render_island(&self, island: &FrameworkComponentIsland) -> String {
         match self.target {
             FrameworkCodegenTarget::React => react::render_island(island),
+            FrameworkCodegenTarget::Svelte => {
+                unreachable!("svelte component output does not use the VDOM renderer")
+            }
             FrameworkCodegenTarget::Vue => vue::render_island(island),
         }
     }
