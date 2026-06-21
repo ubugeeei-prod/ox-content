@@ -1,0 +1,8 @@
+---
+source: crates/ox_content_lsp/tests/protocol.rs
+expression: value
+---
+**title**
+Type: `string`
+
+The page title

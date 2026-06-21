@@ -3,18 +3,20 @@ use super::*;
 #[test]
 fn render_style_defaults_to_html() {
     let out = generate_markdown(&pure_test_docs(), &MarkdownDocsOptions::default());
-    let page = out.get("cli.md").unwrap();
-    assert!(page.contains("<details"));
-    assert!(page.contains("class=\"ox-api-entry\""));
+    assert_markdown_map_snapshot("render_style_defaults_to_html", &out);
 }
 
 #[test]
 fn file_group_index_links_default_to_markdown_extension() {
     let markdown = generate_markdown(&link_test_docs(), &MarkdownDocsOptions::default());
-    let index = markdown.get("index.md").unwrap();
-
-    assert!(index.contains("href=\"./context.md\""));
-    assert!(index.contains("href=\"./context.md#commandcontext\""));
+    assert_markdown_map_snapshot(
+        "file_group_index_links_default_to_markdown_extension__markdown",
+        &markdown,
+    );
+    assert_markdown_map_snapshot(
+        "file_group_index_links_default_to_markdown_extension__markdown",
+        &markdown,
+    );
 }
 
 #[test]
@@ -26,11 +28,7 @@ fn file_group_index_links_support_clean_urls() {
             ..MarkdownDocsOptions::default()
         },
     );
-    let index = markdown.get("index.md").unwrap();
-
-    assert!(index.contains("href=\"./context\""));
-    assert!(index.contains("href=\"./context#commandcontext\""));
-    assert!(!index.contains(".md#commandcontext"));
+    assert_markdown_map_snapshot("file_group_index_links_support_clean_urls__markdown", &markdown);
 }
 
 #[test]
@@ -43,10 +41,14 @@ fn file_group_index_links_support_clean_urls_with_base_path() {
             ..MarkdownDocsOptions::default()
         },
     );
-    let index = markdown.get("index.md").unwrap();
-
-    assert!(index.contains("href=\"/api-ox/context\""));
-    assert!(index.contains("href=\"/api-ox/context#commandcontext\""));
+    assert_markdown_map_snapshot(
+        "file_group_index_links_support_clean_urls_with_base_path__markdown",
+        &markdown,
+    );
+    assert_markdown_map_snapshot(
+        "file_group_index_links_support_clean_urls_with_base_path__markdown",
+        &markdown,
+    );
 }
 
 #[test]
@@ -60,11 +62,7 @@ fn category_links_use_configured_link_policy() {
             ..MarkdownDocsOptions::default()
         },
     );
-    let index = markdown.get("index.md").unwrap();
-
-    assert!(index.contains("## [Functions](/api-ox/functions)"));
-    assert!(index.contains("[`Command`](/api-ox/functions#command)"));
-    assert!(!index.contains("functions.md"));
+    assert_markdown_map_snapshot("category_links_use_configured_link_policy__markdown", &markdown);
 }
 
 #[test]
@@ -77,9 +75,14 @@ fn symbol_cross_file_links_use_configured_link_policy() {
             ..MarkdownDocsOptions::default()
         },
     );
-    let page = markdown.get("command.md").unwrap();
-
-    assert!(page.contains("<a href=\"/api-ox/context#commandcontext\">CommandContext</a>"));
+    assert_markdown_map_snapshot(
+        "symbol_cross_file_links_use_configured_link_policy__markdown",
+        &markdown,
+    );
+    assert_markdown_map_snapshot(
+        "symbol_cross_file_links_use_configured_link_policy__markdown",
+        &markdown,
+    );
 }
 
 #[test]
@@ -157,18 +160,12 @@ fn jsdoc_inline_links_render_across_doc_fields() {
     ];
 
     let markdown = generate_markdown(&docs, &MarkdownDocsOptions::default());
-    let build_page = markdown.get("build.md").unwrap();
-    let command_page = markdown.get("command.md").unwrap();
-    let index = markdown.get("index.md").unwrap();
-
-    assert!(!build_page.contains("{@link"));
-    assert!(!command_page.contains("{@link"));
-    assert!(!index.contains("{@link"));
-    assert!(build_page.contains("<a href=\"./command.md#command\"><code>entry command</code></a>"));
-    assert!(build_page.contains("<a href=\"./agent.md#agentprofile\">AgentProfile</a>"));
-    assert!(build_page.contains("<a href=\"https://github.com/unjs/std-env\">std-env</a>"));
-    assert!(build_page.contains("Falls back to missing."));
-    assert!(command_page.contains("<tr id=\"command-args\">"));
-    assert!(command_page.contains("<a href=\"#command-args\"><code>Command.args</code></a>"));
-    assert!(index.contains("Builds command metadata."));
+    assert_markdown_map_snapshot(
+        "jsdoc_inline_links_render_across_doc_fields__markdown",
+        &markdown,
+    );
+    assert_markdown_map_snapshot(
+        "jsdoc_inline_links_render_across_doc_fields__markdown",
+        &markdown,
+    );
 }

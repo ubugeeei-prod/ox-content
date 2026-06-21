@@ -1,0 +1,25 @@
+---
+source: crates/ox_content_profiler/src/report/tests.rs
+expression: table
+---
+
+──────────────────────────────────────────────────────────────────────────────
+ Profile: smoke
+ Iterations measured: 1 (warmup: 0)
+──────────────────────────────────────────────────────────────────────────────
+
+ Timing
+   min   500.00 µs
+   p50   500.00 µs
+   p95   500.00 µs
+   p99   500.00 µs
+   max   500.00 µs
+   mean  500.00 µs
+
+ Allocations (per iteration)
+   count                3.0
+   bytes              256 B
+   peak (max)         256 B
+   largest            256 B
+
+──────────────────────────────────────────────────────────────────────────────

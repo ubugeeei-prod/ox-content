@@ -18,8 +18,10 @@ fn transforms_markdown_with_frontmatter_and_toc() {
     let result = transformer.transform("---\ntitle: Example\n---\n# Hello\n\nThis is a paragraph.");
 
     assert!(result.errors.is_empty());
-    assert!(result.html.contains("<h1 id=\"hello\">Hello</h1>"));
-    assert!(result.frontmatter.contains("\"title\":\"Example\""));
+    insta::assert_snapshot!(format!(
+        "html:\n{}\nfrontmatter:\n{}",
+        result.html, result.frontmatter
+    ));
     assert_eq!(result.toc.len(), 1);
     assert_eq!(result.toc[0].slug, "hello");
 }

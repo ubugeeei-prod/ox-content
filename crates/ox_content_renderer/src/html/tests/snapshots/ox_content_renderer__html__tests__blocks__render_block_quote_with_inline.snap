@@ -1,0 +1,7 @@
+---
+source: crates/ox_content_renderer/src/html/tests/blocks.rs
+expression: html
+---
+<blockquote>
+<p><strong>Note:</strong> This is important</p>
+</blockquote>

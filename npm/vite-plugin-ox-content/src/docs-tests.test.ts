@@ -83,7 +83,7 @@ describe("docs test harness", () => {
         startLine: 12,
         endLine: 14,
       });
-      expect(blocks[0]?.code).toContain("expect(add(1, 2)).toBe(3);");
+      expect(blocks[0]?.code).toMatchSnapshot();
     } finally {
       await rm(cwd, { recursive: true, force: true });
     }
@@ -113,11 +113,7 @@ describe("docs test harness", () => {
       expect(result.files).toHaveLength(1);
       expect(result.files[0].filePath.endsWith("guide.md-L2-1.test.tsx")).toBe(true);
       const generated = await readFile(result.files[0].filePath, "utf-8");
-      expect(generated).toContain("Source: guide.md:2-4");
-      expect(generated).toContain('import { test } from "vitest";');
-      expect(generated).toContain("import { expect } from 'vitest';");
-      expect(generated).toContain('test("guide.md:2", async () => {');
-      expect(generated).toContain("  expect(value.type).toBe('span');");
+      expect(generated).toMatchSnapshot();
     } finally {
       await rm(cwd, { recursive: true, force: true });
     }

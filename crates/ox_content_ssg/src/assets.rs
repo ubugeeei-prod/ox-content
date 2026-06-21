@@ -136,14 +136,7 @@ mod tests {
 
         assert_eq!(result.pages.len(), 2);
         assert_eq!(result.assets.len(), 3);
-        assert!(result.pages[0]
-            .html
-            .contains("<link rel=\"stylesheet\" href=\"/docs/assets/ox-content-core-"));
-        assert!(result.pages[0].html.contains("<script defer src=\"/docs/assets/ox-content-core-"));
-        assert!(!result.pages[0].html.contains("ox-content:styles:start"));
-        assert!(!result.pages[0].html.contains("const searchData = true;"));
-        assert!(result.assets.iter().any(|asset| asset.output_path.ends_with(".css")));
-        assert!(result.assets.iter().any(|asset| asset.output_path.ends_with(".js")));
+        insta::assert_debug_snapshot!(result);
     }
 
     #[test]
@@ -158,9 +151,7 @@ mod tests {
         let result = externalize_shared_page_assets(pages, "/tmp/site", "/docs/");
 
         assert!(result.assets.is_empty());
-        assert!(result.pages[0]
-            .html
-            .contains("<style>.hero{background:url('./hero.png')}</style>"));
+        insta::assert_debug_snapshot!(result);
     }
 
     fn format_page(title: &str) -> String {

@@ -1,0 +1,5 @@
+---
+source: crates/ox_content_renderer/src/html/tests/autolink.rs
+expression: html
+---
+<p>find it at <a href="https://example.com" target="_blank" rel="noopener noreferrer">https://example.com</a>. or (<a href="https://example.org" target="_blank" rel="noopener noreferrer">https://example.org</a>) maybe</p>

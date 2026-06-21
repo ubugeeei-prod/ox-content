@@ -1,0 +1,16 @@
+---
+source: crates/ox_content_renderer/tests/edge_blocks.rs
+expression: html
+---
+<details>
+
+<summary>Click to expand</summary>
+
+<p><strong>bold should be markdown</strong></p>
+<ul>
+<li><p>list</p>
+</li>
+</ul>
+<pre><code class="language-js">console.log(&quot;code&quot;);
+</code></pre>
+</details>

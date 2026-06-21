@@ -7,10 +7,7 @@ fn typedoc_html_members_fallback_keeps_kind_column() {
     let mut entry = test_entry("config", "variable", "/repo/src/config.ts", "Config.");
     entry.members = vec![member("name", "property", false), member("load", "method", false)];
     let out = generate_markdown(&lifecycle_module(entry), &html_typedoc_options());
-    let page = out.get("combinators/variables/config.md").unwrap();
-
-    assert!(page.contains("<th>Name</th><th>Kind</th><th>Type</th><th>Description</th>"));
-    assert!(page.contains("ox-api-entry__member-kind"));
+    assert_markdown_map_snapshot("typedoc_html_members_fallback_keeps_kind_column", &out);
 }
 
 #[test]
@@ -39,13 +36,11 @@ fn typedoc_html_overloads_render_all_call_signatures() {
         ),
     ]);
     let out = generate_markdown(&docs, &html_typedoc_options());
+    assert_markdown_map_snapshot("typedoc_html_overloads_render_all_call_signatures", &out);
     let page = out.get("default/functions/plugin.md").unwrap();
 
     // Both public overloads survive on one html page; the implementation is hidden.
     assert_eq!(page.matches("<h4>Call Signature</h4>").count(), 2);
-    assert!(page.contains("PluginWithExtension"));
-    assert!(page.contains("PluginWithoutExtension"));
-    assert!(!page.contains("options: any = {}"));
 }
 
 #[test]
@@ -56,12 +51,9 @@ fn typedoc_html_badges_include_experimental_and_version() {
         ApiDocTag { tag: "version".to_string(), value: "1.2.3".to_string() },
     ];
     let out = generate_markdown(&lifecycle_module(entry), &html_typedoc_options());
-    let page = out.get("combinators/functions/widget.md").unwrap();
+    assert_markdown_map_snapshot("typedoc_html_badges_include_experimental_and_version", &out);
 
-    assert!(page.contains(">experimental</span>"));
-    assert!(page.contains("version 1.2.3"));
     // Every tag is structured, so no generic tag list is emitted.
-    assert!(!page.contains("ox-api-entry__section--tags"));
 }
 
 #[test]
@@ -73,14 +65,9 @@ fn typedoc_html_dedups_structured_tags_from_tag_list() {
         ApiDocTag { tag: "since".to_string(), value: "1.0.0".to_string() },
     ];
     let out = generate_markdown(&lifecycle_module(entry), &html_typedoc_options());
-    let page = out.get("combinators/functions/run.md").unwrap();
+    assert_markdown_map_snapshot("typedoc_html_dedups_structured_tags_from_tag_list", &out);
 
     // Structured tags become badges (not duplicated in the tag list); `@see` stays.
-    assert!(page.contains(">deprecated</span>"));
-    assert!(page.contains("since 1.0.0"));
-    assert!(page.contains("@see"));
-    assert!(!page.contains("@deprecated"));
-    assert!(!page.contains("@since"));
 }
 
 #[test]
@@ -98,10 +85,14 @@ fn typedoc_html_member_table_shows_lifecycle_and_since_markers() {
         ..ApiDocMember::default()
     }];
     let out = generate_markdown(&lifecycle_module(entry), &html_typedoc_options());
-    let page = out.get("combinators/interfaces/Options.md").unwrap();
-
-    assert!(page.contains(">deprecated</span>"));
-    assert!(page.contains("since 1.0.0"));
+    assert_markdown_map_snapshot(
+        "typedoc_html_member_table_shows_lifecycle_and_since_markers",
+        &out,
+    );
+    assert_markdown_map_snapshot(
+        "typedoc_html_member_table_shows_lifecycle_and_since_markers",
+        &out,
+    );
 }
 
 #[test]
@@ -126,14 +117,14 @@ fn typedoc_html_property_members_format_table_renders_owned_members() {
             ..html_typedoc_options()
         },
     );
-    let page = out.get("combinators/interfaces/Options.md").unwrap();
-
-    assert!(page.contains("ox-api-entry__property-members-row"));
-    assert!(page.contains("ox-api-entry__property-members-table"));
-    assert!(
-        page.contains("<td><code>timeout</code><span class=\"ox-api-badge\">optional</span></td>")
+    assert_markdown_map_snapshot(
+        "typedoc_html_property_members_format_table_renders_owned_members",
+        &out,
     );
-    assert!(page.contains("Request timeout."));
+    assert_markdown_map_snapshot(
+        "typedoc_html_property_members_format_table_renders_owned_members",
+        &out,
+    );
 }
 
 #[test]
@@ -157,11 +148,14 @@ fn typedoc_html_property_members_format_list_renders_owned_members() {
             ..html_typedoc_options()
         },
     );
-    let page = out.get("combinators/interfaces/Options.md").unwrap();
-
-    assert!(page.contains("ox-api-entry__property-members-list"));
-    assert!(page.contains("ox-api-entry__property-member"));
-    assert!(page.contains("Request timeout."));
+    assert_markdown_map_snapshot(
+        "typedoc_html_property_members_format_list_renders_owned_members",
+        &out,
+    );
+    assert_markdown_map_snapshot(
+        "typedoc_html_property_members_format_list_renders_owned_members",
+        &out,
+    );
 }
 
 #[test]
@@ -181,10 +175,14 @@ fn typedoc_html_property_members_format_none_omits_owned_members() {
             ..html_typedoc_options()
         },
     );
-    let page = out.get("combinators/interfaces/Options.md").unwrap();
-
-    assert!(!page.contains("ox-api-entry__property-members-table"));
-    assert!(!page.contains("ox-api-entry__property-members-list"));
+    assert_markdown_map_snapshot(
+        "typedoc_html_property_members_format_none_omits_owned_members",
+        &out,
+    );
+    assert_markdown_map_snapshot(
+        "typedoc_html_property_members_format_none_omits_owned_members",
+        &out,
+    );
 }
 
 #[test]
@@ -199,15 +197,10 @@ fn typedoc_html_renders_function_valued_property_return_once() {
             ..html_typedoc_options()
         },
     );
+    assert_markdown_map_snapshot("typedoc_html_renders_function_valued_property_return_once", &out);
     let page = out.get("combinators/interfaces/ArgSchema.md").unwrap();
 
-    assert!(page.contains("Parses a raw value."));
-    assert!(page.contains("<table class=\"ox-api-entry__member-params-table\">"));
-    assert!(page.contains(
-        "<div class=\"ox-api-entry__member-return\"><span>Returns</span> Parsed value.</div>"
-    ));
     assert_eq!(page.matches("Parsed value.").count(), 1);
-    assert!(!page.contains("ox-api-entry__member-detail-section--returns"));
 }
 
 #[test]
@@ -215,8 +208,5 @@ fn typedoc_html_module_index_shows_lifecycle_badges() {
     let mut docs = lifecycle_module(test_entry("run", "function", "/repo/src/run.ts", "Run."));
     docs[0].tags = vec![ApiDocTag { tag: "experimental".to_string(), ..Default::default() }];
     let out = generate_markdown(&docs, &html_typedoc_options());
-    let module_index = out.get("combinators/index.md").unwrap();
-
-    assert!(module_index.contains("ox-api-module__meta"));
-    assert!(module_index.contains(">experimental</span>"));
+    assert_markdown_map_snapshot("typedoc_html_module_index_shows_lifecycle_badges", &out);
 }

@@ -19,11 +19,9 @@ export type CommandOptions = BaseOptions & {
     assert_eq!(items[0].name, "CommandOptions");
     assert_eq!(items[0].children.len(), 1);
     let signature = items[0].signature.as_deref().unwrap();
-    assert!(!signature.contains("/**"));
-    assert!(signature.contains("BaseOptions & { name: string }"));
+    assert_eq!(signature, "export type CommandOptions = BaseOptions & { name: string }");
     assert_eq!(items[0].children[0].name, "name");
     assert_eq!(items[0].children[0].signature.as_deref(), Some("string"));
-    assert!(items[0].signature.as_deref().unwrap().contains("BaseOptions &"));
 }
 
 #[test]

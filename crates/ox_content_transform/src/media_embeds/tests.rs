@@ -13,7 +13,7 @@ fn renders_spotify_iframe() {
             web_container: None,
         }),
     );
-    assert!(html.contains("https://open.spotify.com/embed/track/abc123"));
+    insta::assert_snapshot!(html);
 }
 
 #[test]
@@ -28,6 +28,5 @@ fn renders_static_tweet_card() {
             web_container: None,
         }),
     );
-    assert!(html.contains("https://x.com/i/web/status/123"));
-    assert!(html.contains("hello"));
+    insta::assert_snapshot!(html);
 }

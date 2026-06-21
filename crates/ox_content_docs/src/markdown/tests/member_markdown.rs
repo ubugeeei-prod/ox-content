@@ -27,9 +27,10 @@ fn markdown_property_display_format_controls_property_groups() {
             ..MarkdownDocsOptions::default()
         },
     );
-    let list_page = list_markdown.get("mod/interfaces/Command.md").unwrap();
-    assert!(list_page.contains("- `name` _(readonly)_ `property` `string` - Command name."));
-    assert!(!list_page.contains("| Name | Kind | Type | Description |"));
+    assert_markdown_map_snapshot(
+        "markdown_property_display_format_controls_property_groups__list_markdown",
+        &list_markdown,
+    );
 
     let table_markdown = generate_markdown(
         &docs,
@@ -40,11 +41,11 @@ fn markdown_property_display_format_controls_property_groups() {
             ..MarkdownDocsOptions::default()
         },
     );
-    let table_page = table_markdown.get("mod/interfaces/Command.md").unwrap();
+    assert_markdown_map_snapshot(
+        "markdown_property_display_format_controls_property_groups__table_markdown",
+        &table_markdown,
+    );
     // The `Properties` heading states the kind, so the table omits the Kind column.
-    assert!(table_page.contains("| Name | Type | Description |"));
-    assert!(!table_page.contains("| Name | Kind | Type | Description |"));
-    assert!(table_page.contains("| `name` _(readonly)_ | `string` | Command name. |"));
 }
 
 #[test]
@@ -75,11 +76,7 @@ fn markdown_renders_member_default_values() {
             ..MarkdownDocsOptions::default()
         },
     );
-    let html_page = html.get("mod/interfaces/Command.md").unwrap();
-    assert!(html_page.contains("ox-api-entry__member-default"));
-    assert!(
-        html_page.contains("<span>Default</span> <code class=\"language-typescript\">5000</code>")
-    );
+    assert_markdown_map_snapshot("markdown_renders_member_default_values__html", &html);
 
     let markdown = generate_markdown(
         &docs,
@@ -90,9 +87,7 @@ fn markdown_renders_member_default_values() {
             ..MarkdownDocsOptions::default()
         },
     );
-    let markdown_page = markdown.get("mod/interfaces/Command.md").unwrap();
-    assert!(markdown_page
-        .contains("| `timeout` _(optional)_ | `number` | Request timeout. **Default:** `5000` |"));
+    assert_markdown_map_snapshot("markdown_renders_member_default_values__markdown", &markdown);
 }
 
 #[test]
@@ -127,10 +122,10 @@ fn markdown_member_parameters_follow_parameters_format() {
             ..MarkdownDocsOptions::default()
         },
     );
-    let list_page = list_markdown.get("mod/interfaces/Command.md").unwrap();
-    assert!(list_page.contains("### run()"));
-    assert!(list_page.contains("#### Parameters"));
-    assert!(list_page.contains("- `ctx` (`Context`) - Runtime context."));
+    assert_markdown_map_snapshot(
+        "markdown_member_parameters_follow_parameters_format__list_markdown",
+        &list_markdown,
+    );
 
     let table_markdown = generate_markdown(
         &docs,
@@ -141,9 +136,8 @@ fn markdown_member_parameters_follow_parameters_format() {
             ..MarkdownDocsOptions::default()
         },
     );
-    let table_page = table_markdown.get("mod/interfaces/Command.md").unwrap();
-    assert!(table_page.contains("### run()"));
-    assert!(table_page.contains("#### Parameters"));
-    assert!(table_page.contains("| Name | Type | Description |"));
-    assert!(table_page.contains("| `ctx` | `Context` | Runtime context. |"));
+    assert_markdown_map_snapshot(
+        "markdown_member_parameters_follow_parameters_format__table_markdown",
+        &table_markdown,
+    );
 }

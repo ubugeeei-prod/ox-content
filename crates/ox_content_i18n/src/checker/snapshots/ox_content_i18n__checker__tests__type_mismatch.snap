@@ -1,0 +1,7 @@
+---
+source: crates/ox_content_i18n/src/checker/tests.rs
+expression: messages
+---
+[
+    "locale 'en' has extra variables [\"count\"] (not in 'ja')",
+]

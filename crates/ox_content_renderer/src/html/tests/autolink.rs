@@ -8,9 +8,7 @@ fn test_autolink_disabled_by_default() {
     let doc = Parser::new(&allocator, "see http://example.com here").parse().unwrap();
     let mut renderer = HtmlRenderer::new();
     let html = renderer.render(&doc);
-    // No <a> tag is emitted unless the flag is on.
-    assert!(!html.contains("<a "), "unexpected autolink in: {html}");
-    assert!(html.contains("http://example.com"));
+    insta::assert_snapshot!(html);
 }
 
 #[test]
@@ -23,18 +21,7 @@ fn test_autolink_basic_http_and_https() {
         ..Default::default()
     });
     let html = renderer.render(&doc);
-    assert!(
-            html.contains(
-                "<a href=\"http://example.com\" target=\"_blank\" rel=\"noopener noreferrer\">http://example.com</a>"
-            ),
-            "missing http autolink in: {html}"
-        );
-    assert!(
-            html.contains(
-                "<a href=\"https://example.org\" target=\"_blank\" rel=\"noopener noreferrer\">https://example.org</a>"
-            ),
-            "missing https autolink in: {html}"
-        );
+    insta::assert_snapshot!(html);
 }
 
 #[test]
@@ -47,11 +34,7 @@ fn test_autolink_target_blank_can_be_disabled() {
         ..Default::default()
     });
     let html = renderer.render(&doc);
-    assert!(
-        html.contains("<a href=\"https://example.com\">https://example.com</a>"),
-        "expected bare anchor in: {html}"
-    );
-    assert!(!html.contains("target=\"_blank\""), "blank attr leaked: {html}");
+    insta::assert_snapshot!(html);
 }
 
 #[test]
@@ -66,9 +49,7 @@ fn test_autolink_strips_trailing_punctuation() {
         ..Default::default()
     });
     let html = renderer.render(&doc);
-    assert!(html.contains(">https://example.com</a>."), "period leaked: {html}");
-    assert!(html.contains("(<a href=\"https://example.org\""), "open paren lost: {html}");
-    assert!(html.contains(">https://example.org</a>)"), "close paren lost: {html}");
+    insta::assert_snapshot!(html);
 }
 
 #[test]
@@ -81,8 +62,7 @@ fn test_autolink_word_boundary_required() {
         ..Default::default()
     });
     let html = renderer.render(&doc);
-    assert!(!html.contains("href=\"http://x\""), "unexpected glued autolink: {html}");
-    assert!(html.contains("href=\"http://y\""), "missing real autolink: {html}");
+    insta::assert_snapshot!(html);
 }
 
 #[test]
@@ -95,10 +75,7 @@ fn test_autolink_custom_pattern_registration() {
         ..Default::default()
     });
     let html = renderer.render(&doc);
-    assert!(
-        html.contains("<a href=\"mailto:foo@example.com\""),
-        "missing custom-pattern autolink: {html}"
-    );
+    insta::assert_snapshot!(html);
 }
 
 #[test]
@@ -125,13 +102,7 @@ fn test_autolink_many_patterns_uses_table_fallback() {
         ..Default::default()
     });
     let html = renderer.render(&doc);
-    for href in ["http://h.test", "ftp://f.test", "mailto:m@x", "tel:123", "ssh://s.test"] {
-        let mut needle = String::with_capacity(href.len() + 9);
-        needle.push_str("<a href=\"");
-        needle.push_str(href);
-        needle.push('"');
-        assert!(html.contains(&needle), "missing {href} in: {html}");
-    }
+    insta::assert_snapshot!(html);
 }
 
 #[test]
@@ -146,8 +117,7 @@ fn test_autolink_does_not_nest_inside_existing_link() {
     });
     let html = renderer.render(&doc);
     assert_eq!(html.matches("<a ").count(), 1, "nested anchor in: {html}");
-    assert!(html.contains("href=\"/page\""), "outer link lost: {html}");
-    assert!(html.contains("visit https://example.com here"), "inner text lost: {html}");
+    insta::assert_snapshot!(html);
 }
 
 #[test]
@@ -161,9 +131,5 @@ fn test_autolink_escapes_query_string_safely() {
         ..Default::default()
     });
     let html = renderer.render(&doc);
-    assert!(html.contains("href=\"http://a.test/?q=foo&amp;r=bar\""), "href not escaped: {html}");
-    assert!(
-        html.contains(">http://a.test/?q=foo&amp;r=bar</a>"),
-        "visible text not escaped: {html}"
-    );
+    insta::assert_snapshot!(html);
 }

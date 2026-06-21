@@ -12,8 +12,7 @@ fn external_links_get_security_attributes() {
         HtmlRendererOptions::default(),
     );
 
-    assert!(html.contains("target=\"_blank\""));
-    assert!(html.contains("rel=\"noopener noreferrer\""));
+    insta::assert_snapshot!(html);
 }
 
 #[test]
@@ -21,8 +20,7 @@ fn relative_links_do_not_get_external_attributes() {
     let html =
         render("[guide](./guide.md)", ParserOptions::default(), HtmlRendererOptions::default());
 
-    assert!(!html.contains("target=\"_blank\""));
-    assert!(!html.contains("rel=\"noopener noreferrer\""));
+    insta::assert_snapshot!(html);
 }
 
 #[test]
@@ -37,9 +35,7 @@ fn base_prefixes_root_absolute_markdown_links() {
         },
     );
 
-    assert!(html.contains("href=\"/docs/guide\""));
-    assert!(html.contains("href=\"/docs/guide/\""));
-    assert!(html.contains("href=\"/docs/api/index.html#types\""));
+    insta::assert_snapshot!(html);
 }
 
 #[test]
@@ -69,9 +65,7 @@ fn base_prefixes_root_absolute_raw_html_attrs() {
         },
     );
 
-    assert!(html.contains("href=\"/docs/guide\""), "{html}");
-    assert!(html.contains("src='/docs/img/logo.png'"), "{html}");
-    assert!(html.contains("src=\"//cdn.example/app.js\""), "{html}");
+    insta::assert_snapshot!(html);
 }
 
 #[test]
@@ -81,7 +75,7 @@ fn nested_parentheses_in_links_are_preserved_in_output() {
         ParserOptions::default(),
         HtmlRendererOptions::default(),
     );
-    assert!(html.contains("href=\"https://example.com/a(b)c\""));
+    insta::assert_snapshot!(html);
 }
 
 #[test]
@@ -92,5 +86,5 @@ fn xhtml_images_self_close() {
         HtmlRendererOptions { xhtml: true, ..Default::default() },
     );
 
-    assert!(html.contains("<img src=\"/logo.svg\" alt=\"logo\" />"));
+    insta::assert_snapshot!(html);
 }

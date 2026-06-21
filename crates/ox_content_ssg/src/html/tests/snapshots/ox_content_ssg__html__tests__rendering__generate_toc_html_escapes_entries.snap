@@ -1,0 +1,5 @@
+---
+source: crates/ox_content_ssg/src/html/tests/rendering.rs
+expression: html
+---
+        <li class="toc-item"><a href="#a&quot; onclick=&quot;alert(1)" class="toc-link toc-link--depth-2">A &lt;script&gt;</a></li>

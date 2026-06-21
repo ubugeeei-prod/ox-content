@@ -1,0 +1,12 @@
+---
+source: crates/ox_content_ssg/src/html/tests/theme.rs
+expression: "super::snapshot_text(&html)"
+---
+
+<footer class="site-footer">
+<sp><sp>
+  <p class="footer-message">Footer message</p>
+<sp><sp><sp>
+  <p class="footer-copyright">Copyright info</p>
+<sp><sp>
+</footer>

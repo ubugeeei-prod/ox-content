@@ -30,7 +30,10 @@ fn missing_keys() {
 
     let diags = check_missing_keys(&used, &dict_set);
     assert!(!diags.is_empty());
-    assert!(diags.iter().any(|d| d.message.contains("common.unknown")));
+    let mut messages =
+        diags.iter().map(|diagnostic| diagnostic.message.as_str()).collect::<Vec<_>>();
+    messages.sort_unstable();
+    insta::assert_debug_snapshot!(messages);
 }
 
 #[test]
@@ -56,9 +59,8 @@ fn type_mismatch() {
 
     let diags = check_type_mismatch(&set);
     assert!(!diags.is_empty());
-    // Depending on hash iteration order, the diagnostic may report
-    // "missing variables" or "extra variables".
-    assert!(diags
-        .iter()
-        .any(|d| d.message.contains("missing variables") || d.message.contains("extra variables")));
+    let mut messages =
+        diags.iter().map(|diagnostic| diagnostic.message.as_str()).collect::<Vec<_>>();
+    messages.sort_unstable();
+    insta::assert_debug_snapshot!(messages);
 }

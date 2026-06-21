@@ -1,0 +1,5 @@
+---
+source: crates/ox_content_napi/src/framework_codegen/tests.rs
+expression: code
+---
+createElement('div', { className: 'ox-content' }, createElement("p", null, "Before"), createElement(Alert, { "active": true, "tone": "info" }, "Read docs"))

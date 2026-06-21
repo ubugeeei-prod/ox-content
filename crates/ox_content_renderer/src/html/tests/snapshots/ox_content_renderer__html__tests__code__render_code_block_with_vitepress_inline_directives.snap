@@ -1,0 +1,11 @@
+---
+source: crates/ox_content_renderer/src/html/tests/code.rs
+expression: html
+---
+<pre class="ox-code-block ox-code-block--annotated has-focused has-diff has-highlighted"><code class="language-ts"><span class="line ox-code-line ox-code-line--focus focused" data-line="1">const first = true;</span>
+<span class="line ox-code-line ox-code-line--focus focused" data-line="2">const second = false;</span>
+<span class="line ox-code-line ox-code-line--remove diff remove ox-code-line--dimmed" data-line="3">console.log(&#39;old value&#39;)</span>
+<span class="line ox-code-line ox-code-line--add diff add ox-code-line--dimmed" data-line="4">console.log(&#39;new value&#39;)</span>
+<span class="line ox-code-line ox-code-line--warning highlighted warning ox-code-line--dimmed" data-line="5">console.warn(&#39;careful&#39;)</span>
+<span class="line ox-code-line ox-code-line--error highlighted error ox-code-line--dimmed" data-line="6">throw new Error(&#39;boom&#39;)</span>
+<span class="line ox-code-line ox-code-line--dimmed" data-line="7"></span></code></pre>

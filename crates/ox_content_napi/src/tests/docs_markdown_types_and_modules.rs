@@ -47,13 +47,10 @@ fn generate_docs_markdown_renders_type_alias_return_without_description() {
             ..Default::default()
         }),
     );
-    let page = markdown.get("default/type-aliases/OnPluginExtension.md").unwrap();
-
-    assert!(page.contains("## Parameters"));
-    assert!(page.contains("The command context."));
-    assert!(page.contains("The command."));
-    assert!(page.contains("## Returns\n\n`Awaitable<void>`"));
-    assert!(!page.contains("`unknown`"));
+    assert_string_map_snapshot(
+        "generate_docs_markdown_renders_type_alias_return_without_description",
+        &markdown,
+    );
 }
 
 #[test]
@@ -106,11 +103,7 @@ fn generate_docs_markdown_renders_index_signature_members() {
             ..Default::default()
         }),
     );
-    let page = markdown.get("default/interfaces/Args.md").unwrap();
-
-    assert!(page.contains("## Indexable\n\n"));
-    assert!(page.contains("```ts\nreadonly [option: string]: ArgSchema\n```"));
-    assert!(page.contains("Argument schema by option name."));
+    assert_string_map_snapshot("generate_docs_markdown_renders_index_signature_members", &markdown);
 }
 
 #[test]
@@ -141,11 +134,8 @@ fn generate_docs_markdown_renders_module_description_in_typedoc_index() {
             ..Default::default()
         }),
     );
-
-    let index = markdown.get("index.md").unwrap();
-    assert!(index.contains("The entry for gunshi context."));
-    assert!(!index.contains("Creates a command context."));
-    let module_index = markdown.get("context/index.md").unwrap();
-    assert!(module_index.contains("The entry for gunshi context."));
-    assert!(module_index.contains("## Example\n\n```ts\ncreateCommandContext()\n```"));
+    assert_string_map_snapshot(
+        "generate_docs_markdown_renders_module_description_in_typedoc_index",
+        &markdown,
+    );
 }

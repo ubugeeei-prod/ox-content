@@ -1,0 +1,40 @@
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`island/parse > generateHydrationScript > imports each component and wires up initIslands 1`] = `
+"
+import { initIslands } from '@ox-content/islands';
+import Counter from './Counter';
+import Chart from './Chart';
+
+const components = {
+  Counter,
+  Chart
+};
+
+// Initialize with your framework's hydration
+// This example uses Vue, adapt for React/Svelte/etc.
+import { createApp, h } from 'vue';
+
+initIslands((el, props) => {
+  const name = el.dataset.oxIsland;
+  const Component = components[name];
+  if (!Component) {
+    console.warn(\`[ox-islands] Unknown component: \${name}\`);
+    return;
+  }
+
+  const app = createApp({ render: () => h(Component, props) });
+  app.mount(el);
+
+  return () => app.unmount();
+});
+"
+`;
+
+exports[`island/parse > transformIslands > increments island ids across multiple islands 1`] = `"<div id="ox-island-0" data-ox-island="a" data-ox-load="eager" data-ox-props="{}" class="ox-island"></div><a><div id="ox-island-1" data-ox-island="b" data-ox-load="eager" data-ox-props="{}" class="ox-island"></div></a>"`;
+
+exports[`island/parse > transformIslands > leaves island-free HTML without any island wrappers 1`] = `"<p>just prose</p>"`;
+
+exports[`island/parse > transformIslands > records a media query when present 1`] = `"<div id="ox-island-0" data-ox-island="widget" data-ox-load="media" data-ox-media="(min-width: 768px)" data-ox-props="{}" class="ox-island"></div>"`;
+
+exports[`island/parse > transformIslands > rewrites an <Island> into a data-attributed wrapper and collects its info 1`] = `"<div id="ox-island-0" data-ox-island="counter" data-ox-load="visible" data-ox-props="{&#x22;initial&#x22;:0}" class="ox-island"></div>"`;

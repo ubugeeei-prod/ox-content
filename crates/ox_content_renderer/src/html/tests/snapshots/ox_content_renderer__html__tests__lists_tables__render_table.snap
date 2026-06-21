@@ -1,0 +1,16 @@
+---
+source: crates/ox_content_renderer/src/html/tests/lists_tables.rs
+expression: html
+---
+<table>
+<thead>
+<tr>
+<th>head</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>body</td>
+</tr>
+</tbody>
+</table>

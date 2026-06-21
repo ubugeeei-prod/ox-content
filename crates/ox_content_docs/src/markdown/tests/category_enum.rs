@@ -8,6 +8,10 @@ fn category_group_ignores_typedoc_path_strategy() {
         &docs,
         &MarkdownDocsOptions { group_by: "category".to_string(), ..MarkdownDocsOptions::default() },
     );
+    assert_markdown_map_snapshot(
+        "category_group_ignores_typedoc_path_strategy__category_flat",
+        &category_flat,
+    );
     let category_typedoc = generate_markdown(
         &docs,
         &MarkdownDocsOptions {
@@ -15,6 +19,10 @@ fn category_group_ignores_typedoc_path_strategy() {
             path_strategy: MarkdownPathStrategy::TypeDoc,
             ..MarkdownDocsOptions::default()
         },
+    );
+    assert_markdown_map_snapshot(
+        "category_group_ignores_typedoc_path_strategy__category_typedoc",
+        &category_typedoc,
     );
 
     let mut flat_keys = category_flat.keys().cloned().collect::<Vec<_>>();
@@ -25,7 +33,6 @@ fn category_group_ignores_typedoc_path_strategy() {
 
     assert!(category_typedoc.contains_key("functions.md"));
     assert!(category_typedoc.contains_key("interfaces.md"));
-    assert!(!category_typedoc.keys().any(|key| key.contains('/')));
 }
 
 #[test]
@@ -71,18 +78,14 @@ fn typedoc_path_strategy_emits_enumerations_directory() {
             ..MarkdownDocsOptions::default()
         },
     );
-    let mode_page = markdown.get("default/enumerations/Mode.md").unwrap();
-    let run_page = markdown.get("default/functions/run.md").unwrap();
-    let module_index = markdown.get("default/index.md").unwrap();
-
-    assert!(module_index.contains("## Enumerations"));
-    assert!(module_index.contains("| Enumeration | Description |"));
-    assert!(module_index.contains("| [Mode](./enumerations/Mode.md) |"));
-    assert!(mode_page.contains("<tr id=\"enumeration-member-strict\">"));
-    assert!(run_page.contains("<a href=\"../enumerations/Mode.md\">Mode</a>"));
-    assert!(run_page.contains(
-            "<a href=\"../enumerations/Mode.md#enumeration-member-strict\"><code>Mode.Strict</code></a>"
-        ));
+    assert_markdown_map_snapshot(
+        "typedoc_path_strategy_emits_enumerations_directory__markdown",
+        &markdown,
+    );
+    assert_markdown_map_snapshot(
+        "typedoc_path_strategy_emits_enumerations_directory__markdown",
+        &markdown,
+    );
 }
 
 #[test]
@@ -134,14 +137,5 @@ fn renders_interface_members_table() {
     }];
 
     let markdown = generate_markdown(&docs, &MarkdownDocsOptions::default());
-    let page = markdown.get("command.md").unwrap();
-
-    assert!(page.contains("<h4>Members</h4>"));
-    assert!(page.contains("<h5>Properties</h5>"));
-    assert!(page.contains("<code>name</code>"));
-    assert!(page.contains("readonly"));
-    assert!(page.contains("Command name."));
-    assert!(page.contains("<h5>Methods</h5>"));
-    assert!(page.contains("run(ctx: Context): Promise&lt;void&gt;"));
-    assert!(page.contains("Runtime context."));
+    assert_markdown_map_snapshot("renders_interface_members_table__markdown", &markdown);
 }

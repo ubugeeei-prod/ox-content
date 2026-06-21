@@ -36,10 +36,13 @@ fn generate_docs_markdown_dedupes_cross_entrypoint_reexports() {
             ..Default::default()
         }),
     );
+    assert_string_map_snapshot(
+        "generate_docs_markdown_dedupes_cross_entrypoint_reexports",
+        &markdown,
+    );
 
     assert!(markdown.contains_key("context/functions/createCommandContext.md"));
     assert!(!markdown.contains_key("default/functions/createCommandContext.md"));
-    assert!(markdown.get("default/index.md").unwrap().contains("Re-exports"));
 }
 
 #[test]
@@ -73,12 +76,7 @@ fn generate_docs_markdown_renders_type_parameters() {
             ..Default::default()
         }),
     );
-    let page = markdown.get("default/functions/make.md").unwrap();
-
-    assert!(page.contains("## Type Parameters"));
-    assert!(!page.contains("**Type Parameters**"));
-    assert!(page.contains("`G` *extends* `Base` = `Default`"));
-    assert!(page.contains("The thing type."));
+    assert_string_map_snapshot("generate_docs_markdown_renders_type_parameters", &markdown);
 }
 
 #[test]
@@ -128,11 +126,8 @@ fn generate_docs_markdown_collapses_multiline_linked_type_parameter_defaults() {
             ..Default::default()
         }),
     );
-    let page = markdown.get("default/functions/plugin.md").unwrap();
-
-    assert!(page.contains("| Name |\n| --- |"));
-    assert!(!page.contains("| Name | Description |"));
-    assert!(page.contains("| `PluginExt` *extends* [`PluginExtension`](../type-aliases/PluginExtension.md)\\<`Extension`, [`DefaultGunshiParams`](../type-aliases/DefaultGunshiParams.md)\\> = [`PluginExtension`](../type-aliases/PluginExtension.md)\\<`Extension`, `ResolvedDepExtensions`\\> |"));
-    assert!(!page.contains("\\<\n"));
-    assert!(!page.contains("ResolvedDepExtensions`\n"));
+    assert_string_map_snapshot(
+        "generate_docs_markdown_collapses_multiline_linked_type_parameter_defaults",
+        &markdown,
+    );
 }

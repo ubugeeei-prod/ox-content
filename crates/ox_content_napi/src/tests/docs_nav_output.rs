@@ -159,12 +159,7 @@ fn write_generated_docs_writes_typedoc_nested_files() {
     assert!(out_dir.join("default/variables/version.md").exists());
 
     let nav = fs::read_to_string(out_dir.join("nav.ts")).unwrap();
-    assert!(nav.contains(r#""title": "default""#));
-    assert!(nav.contains("\"/api/default/functions/cli\""));
-    assert!(nav.contains("\"/api/default/variables/version\""));
-    assert!(
-        nav.find(r#""title": "Variables""#).unwrap() < nav.find(r#""title": "Functions""#).unwrap()
-    );
+    insta::assert_snapshot!("write_generated_docs_writes_typedoc_nested_files__nav", nav);
 
     fs::remove_dir_all(&out_dir).unwrap();
 }
@@ -226,9 +221,7 @@ fn write_generated_docs_writes_flattened_single_entry_nav() {
     assert!(out_dir.join("default/functions/cli.md").exists());
 
     let nav = fs::read_to_string(out_dir.join("nav.ts")).unwrap();
-    assert!(!nav.contains(r#""title": "default""#));
-    assert!(nav.contains(r#""title": "Functions""#));
-    assert!(nav.contains("\"/api/default/functions/cli\""));
+    insta::assert_snapshot!("write_generated_docs_writes_flattened_single_entry_nav__nav", nav);
 
     fs::remove_dir_all(&out_dir).unwrap();
 }

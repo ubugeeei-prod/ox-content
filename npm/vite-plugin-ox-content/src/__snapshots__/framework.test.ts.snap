@@ -1,0 +1,12 @@
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`framework Markdown utilities > renders React VDOM code with React-compatible attributes 1`] = `"createElement('div', { className: 'ox-content' }, createElement("section", { "className": "lead", "htmlFor": "name", "data-id": "42", "aria-label": "Intro" }, createElement("p", { "style": { "fontWeight": "bold", "--brand": "red" } }, "Hello ", createElement("strong", null, "world"))))"`;
+
+exports[`framework Markdown utilities > renders Vue VDOM code with Vue-compatible attributes 1`] = `"h('div', { class: 'ox-content' }, h("label", { "class": "field", "for": "name" }, [h("span", null, "Name"), h("input", { "disabled": true, "type": "text" })]))"`;
+
+exports[`framework Markdown utilities > renders framework component islands for native React and Vue targets 1`] = `
+{
+  "reactCode": "createElement('div', { className: 'ox-content' }, createElement("p", null, "Before"), createElement(Alert, { "active": true, "tone": "info" }, "Read docs"))",
+  "vueCode": "h('div', { class: 'ox-content' }, [h("p", null, "Before"), h(Alert, { "active": true, "tone": "info" }, "Read docs")])",
+}
+`;

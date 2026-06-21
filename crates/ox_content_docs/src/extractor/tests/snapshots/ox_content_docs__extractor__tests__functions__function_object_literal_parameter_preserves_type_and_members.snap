@@ -1,0 +1,5 @@
+---
+source: crates/ox_content_docs/src/extractor/tests/functions.rs
+expression: parent_type
+---
+{ id: Id; name?: string; dependencies?: Deps; setup?: (ctx: Readonly<PluginContext<MergedExtensions>>) => Awaitable<void>; extension: PluginExt; onExtension?: OnPluginExtension<MergedExtensions> }

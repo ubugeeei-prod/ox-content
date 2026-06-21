@@ -1,0 +1,5 @@
+---
+source: crates/ox_content_transform/src/sanitize/tests.rs
+expression: sanitized
+---
+<p>Hi<a>x</a></p>

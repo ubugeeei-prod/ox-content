@@ -51,13 +51,7 @@ describe("framework Markdown utilities", () => {
       ].join(""),
     );
 
-    expect(code).toContain("createElement('div', { className: 'ox-content' }");
-    expect(code).toContain('"className": "lead"');
-    expect(code).toContain('"htmlFor": "name"');
-    expect(code).toContain('"data-id": "42"');
-    expect(code).toContain('"aria-label": "Intro"');
-    expect(code).toContain('"style": { "fontWeight": "bold", "--brand": "red" }');
-    expect(code).toContain('createElement("strong", null, "world")');
+    expect(code).toMatchSnapshot();
   });
 
   it("renders Vue VDOM code with Vue-compatible attributes", () => {
@@ -65,10 +59,7 @@ describe("framework Markdown utilities", () => {
       '<label class="field" for="name"><span>Name</span><input disabled type="text"></label>',
     );
 
-    expect(code).toContain("h('div', { class: 'ox-content' }");
-    expect(code).toContain('h("label", { "class": "field", "for": "name" }');
-    expect(code).toContain('h("span", null, "Name")');
-    expect(code).toContain('h("input", { "disabled": true, "type": "text" })');
+    expect(code).toMatchSnapshot();
   });
 
   it("renders framework component islands for native React and Vue targets", () => {
@@ -85,10 +76,7 @@ describe("framework Markdown utilities", () => {
     const reactCode = renderHtmlToReactCreateElement(html, islands);
     const vueCode = renderHtmlToVueH(html, islands);
 
-    expect(reactCode).toContain('createElement(Alert, { "active": true, "tone": "info" }');
-    expect(reactCode).toContain('"Read docs")');
-    expect(vueCode).toContain('h(Alert, { "active": true, "tone": "info" }');
-    expect(vueCode).toContain('"Read docs")');
+    expect({ reactCode, vueCode }).toMatchSnapshot();
   });
 
   it("escapes Svelte expression delimiters before emitting static markup", () => {

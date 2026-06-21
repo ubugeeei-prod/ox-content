@@ -1,0 +1,6 @@
+---
+source: crates/ox_content_transform/src/highlight/tests.rs
+expression: merged
+---
+<pre class="shiki github-dark" style="background-color:#24292e;color:#e1e4e8" tabindex="0" data-language="rs"><code class="language-rs" data-language="rs"><span class="line"><span style="color:#E1E4E8">fn main() {}</span></span>
+</code></pre>

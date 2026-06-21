@@ -59,7 +59,5 @@ fn resolved_prop_round_trips_through_serde() {
         }),
     };
     let json = serde_json::to_string(&prop).expect("serialize");
-    assert!(json.contains("\"tone\""));
-    assert!(json.contains("'info' | 'warn' | 'error'"));
-    assert!(json.contains("\"line\":12"));
+    insta::assert_snapshot!(json);
 }

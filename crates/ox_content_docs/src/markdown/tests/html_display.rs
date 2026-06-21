@@ -59,16 +59,10 @@ fn html_display_format_options_switch_explicit_sections() {
             ..MarkdownDocsOptions::default()
         },
     );
-    let index = table_markdown.get("index.md").unwrap();
-    assert!(index.contains("<table class=\"ox-api-modules-table\">"));
-    assert!(index.contains("<th>Module</th><th>Symbols</th><th>Description</th>"));
-
-    let page = table_markdown.get("mod.md").unwrap();
-    assert!(page.contains("<table class=\"ox-api-entry__params-table\">"));
-    assert!(page.contains("<table class=\"ox-api-entry__member-params-table\">"));
-    assert!(!page.contains("<ul class=\"ox-api-entry__params\">"));
-    assert!(page.contains("<ul class=\"ox-api-entry__members-list\">"));
-    assert!(page.contains("<li id=\"command-name\" class=\"ox-api-entry__member\">"));
+    assert_markdown_map_snapshot(
+        "html_display_format_options_switch_explicit_sections__table_markdown",
+        &table_markdown,
+    );
 
     let list_markdown = generate_markdown(
         &docs,
@@ -78,14 +72,10 @@ fn html_display_format_options_switch_explicit_sections() {
             ..MarkdownDocsOptions::default()
         },
     );
-    let index = list_markdown.get("index.md").unwrap();
-    assert!(index.contains("<ul class=\"ox-api-modules-list\">"));
-    assert!(!index.contains("<details class=\"ox-api-module\">"));
-
-    let page = list_markdown.get("mod.md").unwrap();
-    assert!(page.contains("<ul class=\"ox-api-entry__type-parameters\">"));
-    assert!(page.contains("<ul class=\"ox-api-entry__member-params\">"));
-    assert!(!page.contains("<table class=\"ox-api-entry__type-parameters-table\">"));
+    assert_markdown_map_snapshot(
+        "html_display_format_options_switch_explicit_sections__list_markdown",
+        &list_markdown,
+    );
 }
 
 #[test]
@@ -106,16 +96,7 @@ fn typedoc_module_index_renders_member_tables() {
             ..MarkdownDocsOptions::default()
         },
     );
-    let index = out.get("default/index.md").unwrap();
+    assert_markdown_map_snapshot("typedoc_module_index_renders_member_tables", &out);
 
-    assert!(index.contains("## Functions"));
-    assert!(index.contains("| Function | Description |\n| ------ | ------ |"));
-    assert!(index.contains("| [cli](./functions/cli.md) | Run the command. |"));
-    assert!(index.contains("## Interfaces"));
-    assert!(index.contains("| Interface | Description |"));
-    assert!(index.contains("| [CliOptions](./interfaces/CliOptions.md) | CLI options. |"));
     // No bullet list, no inlined kind label or signature.
-    assert!(!index.contains("- [`cli`]"));
-    assert!(!index.contains("`function`"));
-    assert!(!index.contains("export function cli"));
 }

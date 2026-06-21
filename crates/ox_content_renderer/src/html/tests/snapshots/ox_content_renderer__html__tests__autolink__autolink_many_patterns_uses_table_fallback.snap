@@ -1,0 +1,5 @@
+---
+source: crates/ox_content_renderer/src/html/tests/autolink.rs
+expression: html
+---
+<p>a <a href="http://h.test" target="_blank" rel="noopener noreferrer">http://h.test</a> b <a href="ftp://f.test" target="_blank" rel="noopener noreferrer">ftp://f.test</a> c <a href="mailto:m@x" target="_blank" rel="noopener noreferrer">mailto:m@x</a> d <a href="tel:123" target="_blank" rel="noopener noreferrer">tel:123</a> e <a href="ssh://s.test" target="_blank" rel="noopener noreferrer">ssh://s.test</a> f</p>

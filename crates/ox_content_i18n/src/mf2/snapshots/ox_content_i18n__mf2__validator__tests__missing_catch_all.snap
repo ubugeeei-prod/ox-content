@@ -1,0 +1,9 @@
+---
+source: crates/ox_content_i18n/src/mf2/validator.rs
+expression: errors
+---
+[
+    Mf2Validation {
+        message: "matcher must include a catch-all variant with all wildcard (*) keys",
+    },
+]

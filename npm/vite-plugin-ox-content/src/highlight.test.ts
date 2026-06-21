@@ -8,9 +8,7 @@ describe("highlightCode", () => {
     const githubDark = await highlightCode(html, "github-dark");
     const vitesseDark = await highlightCode(html, "vitesse-dark");
 
-    expect(githubDark).toContain("github-dark");
-    expect(vitesseDark).toContain("vitesse-dark");
-    expect(vitesseDark).not.toContain("github-dark");
+    expect({ githubDark, vitesseDark }).toMatchSnapshot();
   });
 
   it("highlights standalone language-tagged code inline", async () => {
@@ -19,8 +17,6 @@ describe("highlightCode", () => {
 
     const highlighted = await highlightCode(html, "vitesse-dark");
 
-    expect(highlighted).toContain("shiki-inline");
-    expect(highlighted).toContain("ox-api-entry__signature--highlighted");
-    expect(highlighted).toContain('<span style="color:');
+    expect(highlighted).toMatchSnapshot();
   });
 });

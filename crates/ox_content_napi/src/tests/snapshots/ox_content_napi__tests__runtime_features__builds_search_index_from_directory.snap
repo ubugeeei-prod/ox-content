@@ -1,0 +1,5 @@
+---
+source: crates/ox_content_napi/src/tests/runtime_features.rs
+expression: "index.documents[0].body"
+---
+Search body text.

@@ -1,5 +1,5 @@
 use std::fs;
-use std::path::PathBuf;
+use std::path::{Path, PathBuf};
 
 use super::*;
 
@@ -12,6 +12,17 @@ fn tmp_dir(name: &str) -> PathBuf {
     let _ = fs::remove_dir_all(&dir);
     fs::create_dir_all(&dir).expect("create temp dir");
     dir
+}
+
+fn diagnostic_snapshot(diagnostic: &Diagnostic, root: &Path) -> String {
+    let root = root.to_string_lossy();
+    format!(
+        "kind: {:?}\nseverity: {:?}\ntarget: {}\nmessage: {}",
+        diagnostic.kind,
+        diagnostic.severity,
+        diagnostic.target.replace(root.as_ref(), "$ROOT"),
+        diagnostic.message.replace(root.as_ref(), "$ROOT")
+    )
 }
 
 #[test]
@@ -53,7 +64,7 @@ fn missing_relative_file_is_reported_with_resolved_path() {
     let doc = dir.join("doc.md");
     let diagnostics = run("[lost](./missing.md)\n", doc);
     assert_eq!(diagnostics.len(), 1, "{diagnostics:?}");
-    assert!(diagnostics[0].message.contains("missing.md"), "{}", diagnostics[0].message);
+    insta::assert_snapshot!(diagnostic_snapshot(&diagnostics[0], &dir));
     assert_eq!(diagnostics[0].kind, LinkKind::File);
 }
 
@@ -88,7 +99,7 @@ fn cross_file_anchor_emits_warning_until_followup_lands() {
     let diagnostics = run("[hop](./other.md#section)\n", dir.join("doc.md"));
     assert_eq!(diagnostics.len(), 1, "{diagnostics:?}");
     assert_eq!(diagnostics[0].severity, Severity::Warning);
-    assert!(diagnostics[0].message.contains("not validated yet"), "{}", diagnostics[0].message);
+    insta::assert_snapshot!(diagnostic_snapshot(&diagnostics[0], &dir));
 }
 
 #[test]
@@ -114,7 +125,7 @@ fn ignore_patterns_suppress_diagnostics() {
     let diagnostics =
         check_source("[skipped](./intentionally-broken-link.md) [reported](./other.md)\n", &opts);
     assert_eq!(diagnostics.len(), 1, "{diagnostics:?}");
-    assert!(diagnostics[0].target.contains("other.md"));
+    insta::assert_snapshot!(diagnostic_snapshot(&diagnostics[0], Path::new("/tmp")));
 }
 
 #[test]
@@ -122,7 +133,7 @@ fn image_target_is_resolved_like_links() {
     let dir = tmp_dir("image");
     let diagnostics = run("![alt](./missing.png)\n", dir.join("doc.md"));
     assert_eq!(diagnostics.len(), 1, "{diagnostics:?}");
-    assert!(diagnostics[0].message.contains("image"), "{}", diagnostics[0].message);
+    insta::assert_snapshot!(diagnostic_snapshot(&diagnostics[0], &dir));
 }
 
 #[test]

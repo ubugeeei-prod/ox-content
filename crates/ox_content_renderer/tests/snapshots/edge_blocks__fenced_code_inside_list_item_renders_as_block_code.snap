@@ -1,0 +1,10 @@
+---
+source: crates/ox_content_renderer/tests/edge_blocks.rs
+expression: html
+---
+<ol>
+<li><p>text</p>
+<pre><code class="language-ts">const a = 1;
+</code></pre>
+</li>
+</ol>

@@ -1,0 +1,10 @@
+---
+source: crates/ox_content_renderer/tests/edge_blocks.rs
+expression: html
+---
+<ol start="3">
+<li><p>third</p>
+</li>
+<li><p>fourth</p>
+</li>
+</ol>

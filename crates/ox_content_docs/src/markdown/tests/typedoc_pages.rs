@@ -52,25 +52,20 @@ fn typedoc_path_strategy_emits_per_symbol_pages_and_links() {
             ..MarkdownDocsOptions::default()
         },
     );
-    let cli_page = markdown.get("default/functions/cli.md").unwrap();
-    let options_page = markdown.get("default/interfaces/CliOptions.md").unwrap();
-    let module_index = markdown.get("default/index.md").unwrap();
+    assert_markdown_map_snapshot(
+        "typedoc_path_strategy_emits_per_symbol_pages_and_links__markdown",
+        &markdown,
+    );
+    assert_markdown_map_snapshot(
+        "typedoc_path_strategy_emits_per_symbol_pages_and_links__markdown",
+        &markdown,
+    );
 
     assert!(markdown.contains_key("index.md"));
     assert!(markdown.contains_key("default/type-aliases/Plugin.md"));
     assert!(markdown.contains_key("default/variables/CLI_OPTIONS_DEFAULT.md"));
     // The module index lists members as a compact table, not bullets with
     // the full signature inlined.
-    assert!(module_index.contains("| Function | Description |"));
-    assert!(module_index.contains("| [cli](./functions/cli.md) |"));
-    assert!(module_index.contains("| [CliOptions](./interfaces/CliOptions.md) |"));
-    assert!(!module_index.contains("[`cli`]"));
-    assert!(!module_index.contains("export function cli"));
-    assert!(cli_page.contains("<a href=\"../interfaces/CliOptions.md\">CliOptions</a>"));
-    assert!(cli_page.contains(
-            "<a href=\"../interfaces/CliOptions.md#property-usagesilent\"><code>CliOptions.usageSilent</code></a>"
-        ));
-    assert!(options_page.contains("<tr id=\"property-usagesilent\">"));
 }
 
 #[test]
@@ -102,16 +97,7 @@ fn typedoc_type_alias_renders_concrete_function_metadata() {
         module.entries.push(type_stub("CommandContextCore"));
     }
     let out = generate_markdown(&docs, &markdown_typedoc_options());
-    let page = out.get("combinators/type-aliases/CommandRunner.md").unwrap();
-
-    assert!(page.contains("## Parameters"));
-    assert!(page.contains("[`CommandContext`](../interfaces/CommandContext.md)\\<`G`\\>"));
-    assert!(page.contains("## Returns"));
-    assert!(!page.contains("| `ctx` | `unknown` |"));
-    assert!(page.contains("`Awaitable<string | void>`"));
-    assert!(page.contains("CLI output."));
-    assert!(!page.contains("`unknown`"));
-    assert!(page.contains("[`CommandContext`](../interfaces/CommandContext.md)"));
+    assert_markdown_map_snapshot("typedoc_type_alias_renders_concrete_function_metadata", &out);
 }
 
 #[test]
@@ -152,13 +138,12 @@ fn typedoc_type_alias_without_returns_tag_renders_return_section() {
         module.entries.push(command);
     }
     let out = generate_markdown(&docs, &markdown_typedoc_options());
-    let page = out.get("combinators/type-aliases/OnPluginExtension.md").unwrap();
-
-    assert!(page.contains("## Parameters"));
-    assert!(page.contains("The command context."));
-    assert!(page.contains("The command."));
-    assert!(page.contains("[`CommandContext`](../interfaces/CommandContext.md)"));
-    assert!(page.contains("[`Command`](../interfaces/Command.md)"));
-    assert!(page.contains("## Returns\n\n`Awaitable<void>`"));
-    assert!(!page.contains("`unknown`"));
+    assert_markdown_map_snapshot(
+        "typedoc_type_alias_without_returns_tag_renders_return_section",
+        &out,
+    );
+    assert_markdown_map_snapshot(
+        "typedoc_type_alias_without_returns_tag_renders_return_section",
+        &out,
+    );
 }

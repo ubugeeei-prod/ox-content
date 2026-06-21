@@ -13,13 +13,7 @@ fn merges_annotation_metadata_into_highlighted_html() {
 
     let merged = merge_highlighted_code_blocks(original, highlighted);
 
-    assert!(
-        merged.contains(r#"<pre class="shiki github-dark ox-code-block ox-code-block--annotated""#)
-    );
-    assert!(merged.contains(r#"class="language-ts" data-language="ts""#));
-    assert!(merged.contains(r#"class="line ox-code-line ox-code-line--highlight" data-line="1""#));
-    assert!(merged.contains(r#"class="line ox-code-line ox-code-line--warning" data-line="2""#));
-    assert!(merged.contains(r#"class="line ox-code-line ox-code-line--error" data-line="3""#));
+    insta::assert_snapshot!(merged);
 }
 
 #[test]
@@ -31,6 +25,5 @@ fn preserves_language_metadata_for_non_annotated_code_blocks() {
 
     let merged = merge_highlighted_code_blocks(original, highlighted);
 
-    assert!(merged.contains(r#"class="language-rs" data-language="rs""#));
-    assert!(merged.contains(r#"<pre class="shiki github-dark" style="background-color:#24292e;color:#e1e4e8" tabindex="0" data-language="rs">"#));
+    insta::assert_snapshot!(merged);
 }

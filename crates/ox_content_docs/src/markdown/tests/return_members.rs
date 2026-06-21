@@ -15,32 +15,25 @@ fn typedoc_html_type_declaration_format_list_renders_return_members_list() {
         ..html_typedoc_options()
     };
     let out = generate_markdown(&type_link_module(entry), &options);
-    let page = out.get("combinators/functions/resolveArgs.md").unwrap();
-
-    assert!(page.contains("ox-api-entry__type-declaration-list"));
-    assert!(page.contains("ox-api-entry__type-declaration-member"));
-    assert!(page.contains("Resolved values."));
-    assert!(!page.contains("ox-api-entry__return-members"));
+    assert_markdown_map_snapshot(
+        "typedoc_html_type_declaration_format_list_renders_return_members_list",
+        &out,
+    );
+    assert_markdown_map_snapshot(
+        "typedoc_html_type_declaration_format_list_renders_return_members_list",
+        &out,
+    );
 }
 #[test]
 fn typedoc_markdown_renders_index_signature_members() {
     let out = generate_markdown(&index_signature_docs(), &markdown_typedoc_options());
-    let page = out.get("default/interfaces/Args.md").unwrap();
-
-    assert!(page.contains("## Indexable\n\n"));
-    assert!(page.contains("```ts\nreadonly [option: string]: ArgSchema\n```"));
-    assert!(page.contains("Argument schema by option name."));
+    assert_markdown_map_snapshot("typedoc_markdown_renders_index_signature_members", &out);
 }
 
 #[test]
 fn typedoc_html_renders_index_signature_members() {
     let out = generate_markdown(&index_signature_docs(), &html_typedoc_options());
-    let page = out.get("default/interfaces/Args.md").unwrap();
-
-    assert!(page.contains("ox-api-entry__member-group--indexable"));
-    assert!(page.contains("<h5>Indexable</h5>"));
-    assert!(page.contains("readonly [option: string]: <a href=\"./ArgSchema.md\">ArgSchema</a>"));
-    assert!(page.contains("Argument schema by option name."));
+    assert_markdown_map_snapshot("typedoc_html_renders_index_signature_members", &out);
 }
 
 #[test]
@@ -58,10 +51,7 @@ fn typedoc_markdown_renders_return_index_signature_members() {
         )],
     });
     let out = generate_markdown(&type_link_module(entry), &markdown_typedoc_options());
-    let page = out.get("combinators/functions/makeArgs.md").unwrap();
-
-    assert!(page.contains("## Returns\n\n`object` — Resolved args.\n\n"));
-    assert!(page.contains("### Indexable\n\n```ts\n[option: string]: ArgSchema\n```"));
+    assert_markdown_map_snapshot("typedoc_markdown_renders_return_index_signature_members", &out);
 }
 
 #[test]
@@ -79,11 +69,7 @@ fn typedoc_html_renders_return_index_signature_members() {
         )],
     });
     let out = generate_markdown(&type_link_module(entry), &html_typedoc_options());
-    let page = out.get("combinators/functions/makeArgs.md").unwrap();
-
-    assert!(page.contains("ox-api-entry__return-member--indexable"));
-    assert!(page.contains("<h5>Indexable</h5>"));
-    assert!(page.contains("[option: string]: ArgSchema"));
+    assert_markdown_map_snapshot("typedoc_html_renders_return_index_signature_members", &out);
 }
 
 #[test]
@@ -100,10 +86,7 @@ fn typedoc_links_type_parameter_constraint_and_default() {
         ..markdown_typedoc_options()
     };
     let out = generate_markdown(&type_link_module(entry), &options);
-    let page = out.get("combinators/functions/make.md").unwrap();
+    assert_markdown_map_snapshot("typedoc_links_type_parameter_constraint_and_default", &out);
 
-    assert!(page.contains("*extends* [`GunshiParamsConstraint`]("));
-    assert!(page.contains("= [`DefaultGunshiParams`]("));
     // The type parameter's own name is never linked.
-    assert!(page.contains("| `G` *extends*"));
 }

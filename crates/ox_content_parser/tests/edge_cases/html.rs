@@ -15,8 +15,7 @@ fn html_details_block_is_preserved_as_raw_html() {
 
     match &doc.children[0] {
         Node::Html(html) => {
-            assert!(html.value.contains("<details id=\"symbol\">"));
-            assert!(html.value.contains("</details>"));
+            insta::assert_snapshot!(html.value);
         }
         other => panic!("expected html block, got {other:?}"),
     }
@@ -39,13 +38,14 @@ fn html_type6_details_terminates_at_first_blank_line() {
     );
 
     assert!(matches!(&doc.children[0], Node::Html(html) if html.value.trim() == "<details>"));
-    assert!(matches!(&doc.children[1], Node::Html(html) if html.value.contains("<summary>")));
+    assert!(matches!(&doc.children[1], Node::Html(_)));
     assert!(
         matches!(&doc.children[2], Node::Paragraph(paragraph) if matches!(&paragraph.children[0], Node::Strong(_)))
     );
     assert!(matches!(&doc.children[3], Node::List(_)));
     assert!(matches!(&doc.children[4], Node::CodeBlock(block) if block.lang == Some("js")));
-    assert!(matches!(&doc.children[5], Node::Html(html) if html.value.contains("</details>")));
+    assert!(matches!(&doc.children[5], Node::Html(_)));
+    insta::assert_debug_snapshot!(doc);
 }
 
 #[test]
@@ -57,11 +57,12 @@ fn html_type6_div_stops_before_markdown_after_blank_line() {
         ParserOptions::default(),
     );
 
-    assert!(matches!(&doc.children[0], Node::Html(html) if !html.value.contains("**markdown**")));
+    assert!(matches!(&doc.children[0], Node::Html(_)));
     assert!(
         matches!(&doc.children[1], Node::Paragraph(paragraph) if matches!(&paragraph.children[0], Node::Strong(_)))
     );
-    assert!(matches!(&doc.children[2], Node::Html(html) if html.value.contains("</div>")));
+    assert!(matches!(&doc.children[2], Node::Html(_)));
+    insta::assert_debug_snapshot!(doc);
 }
 
 #[test]
@@ -75,8 +76,7 @@ fn html_type1_pre_ignores_blank_lines_until_closing_tag() {
 
     match &doc.children[0] {
         Node::Html(html) => {
-            assert!(html.value.contains("**not markdown**"));
-            assert!(html.value.contains("</pre>"));
+            insta::assert_snapshot!(html.value);
         }
         other => panic!("expected html block, got {other:?}"),
     }

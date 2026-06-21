@@ -1,0 +1,5 @@
+---
+source: crates/ox_content_component_resolver/src/tests.rs
+expression: json
+---
+{"name":"tone","type_text":"'info' | 'warn' | 'error'","optional":false,"docs":"Severity of the alert","location":{"file":"/repo/src/Alert.tsx","line":12,"column":3}}

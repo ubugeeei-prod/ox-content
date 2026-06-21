@@ -1,0 +1,26 @@
+---
+source: crates/ox_content_napi/src/tests.rs
+---
+===== default/functions/cli.md =====
+# Function: cli()
+
+Run.
+
+## Signature
+
+```ts
+export function cli(): void
+```
+===== default/index.md =====
+# default
+
+## Functions
+
+- [cli](./functions/cli.md) - Run.
+
+===== index.md =====
+# API Documentation
+
+## Modules
+
+- [default](./default/index.md)

@@ -1,0 +1,5 @@
+---
+source: crates/ox_content_renderer/tests/edge_sanitize.rs
+expression: html
+---
+<p><a href="./guide.md">guide</a> <a href="mailto:hi@example.com">mail</a> <a href="tel:+123">phone</a></p>

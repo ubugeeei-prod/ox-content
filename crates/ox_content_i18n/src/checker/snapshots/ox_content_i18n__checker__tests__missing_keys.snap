@@ -1,0 +1,8 @@
+---
+source: crates/ox_content_i18n/src/checker/tests.rs
+expression: messages
+---
+[
+    "missing translation for key 'common.unknown'",
+    "missing translation for key 'common.unknown'",
+]

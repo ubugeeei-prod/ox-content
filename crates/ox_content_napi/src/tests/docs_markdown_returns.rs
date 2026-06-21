@@ -42,10 +42,7 @@ fn generate_docs_markdown_renders_return_members() {
             ..Default::default()
         }),
     );
-    let page = markdown.get("default/functions/resolveArgs.md").unwrap();
-
-    assert!(page.contains("## Returns\n\n`object` — Resolved args."));
-    assert!(page.contains("### values\n\n```ts\nvalues: ArgValues<A>;\n```"));
+    assert_string_map_snapshot("generate_docs_markdown_renders_return_members", &markdown);
 }
 
 #[test]
@@ -96,16 +93,10 @@ fn generate_docs_markdown_renders_type_alias_function_metadata() {
             ..Default::default()
         }),
     );
-    let page = markdown.get("default/type-aliases/CommandRunner.md").unwrap();
-
-    assert!(page.contains("## Parameters"));
-    assert!(page.contains("Readonly"));
-    assert!(page.contains("CommandContext"));
-    assert!(page.contains("## Returns"));
-    assert!(!page.contains("| `ctx` | `unknown` |"));
-    assert!(page.contains("`Awaitable<string | void>`"));
-    assert!(page.contains("CLI output."));
-    assert!(!page.contains("`unknown`"));
+    assert_string_map_snapshot(
+        "generate_docs_markdown_renders_type_alias_function_metadata",
+        &markdown,
+    );
 }
 
 #[test]
@@ -148,10 +139,8 @@ fn generate_docs_markdown_does_not_escape_return_union_pipe_inside_inline_code()
             ..Default::default()
         }),
     );
-    let page = markdown.get("default/functions/cli.md").unwrap();
-
-    assert!(page.contains("| `entry` | `Command<G> \\| CommandRunner<G>` | Command entry. |"));
-    assert!(page
-        .contains("## Returns\n\n`Promise<string | undefined>` — A rendered usage or undefined."));
-    assert!(!page.contains("`Promise<string \\| undefined>`"));
+    assert_string_map_snapshot(
+        "generate_docs_markdown_does_not_escape_return_union_pipe_inside_inline_code",
+        &markdown,
+    );
 }

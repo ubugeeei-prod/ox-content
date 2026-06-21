@@ -45,8 +45,7 @@ fn folding_range_returns_heading_and_nested_sections() {
 
     // The h1 owns the whole body (down to the last content line) and the
     // h2 owns its own lines.
-    assert!(folds.contains(&(0, 4)), "missing h1 section fold, got {folds:?}");
-    assert!(folds.contains(&(2, 4)), "missing h2 section fold, got {folds:?}");
+    assert_eq!(folds, vec![(0, 4), (2, 4)]);
 
     server.shutdown();
 }
@@ -117,7 +116,7 @@ fn folding_range_includes_the_frontmatter_block() {
 
     // The frontmatter block spans lines 0..3 (opening `---` through
     // closing `---`).
-    assert!(folds.contains(&(0, 3)), "missing frontmatter fold, got {folds:?}");
+    assert_eq!(folds, vec![(0, 3), (5, 7)]);
 
     server.shutdown();
 }
@@ -234,8 +233,7 @@ fn hover_describes_a_frontmatter_field() {
     );
     let hover = server.await_response(id);
     let value = hover["contents"]["value"].as_str().expect("hover markup value");
-    assert!(value.contains("title"), "hover should name the field, got {value:?}");
-    assert!(value.contains("string"), "hover should state the type, got {value:?}");
+    insta::assert_snapshot!(value);
 
     server.shutdown();
 }

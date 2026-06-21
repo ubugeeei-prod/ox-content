@@ -15,11 +15,14 @@ fn typedoc_html_type_alias_without_returns_tag_renders_return_section() {
     });
 
     let out = generate_markdown(&type_link_module(entry), &html_typedoc_options());
-    let page = out.get("combinators/type-aliases/OnPluginExtension.md").unwrap();
-
-    assert!(page.contains("<h4>Returns</h4>"));
-    assert!(page.contains("Awaitable&lt;void&gt;"));
-    assert!(!page.contains("unknown"));
+    assert_markdown_map_snapshot(
+        "typedoc_html_type_alias_without_returns_tag_renders_return_section",
+        &out,
+    );
+    assert_markdown_map_snapshot(
+        "typedoc_html_type_alias_without_returns_tag_renders_return_section",
+        &out,
+    );
 }
 
 #[test]
@@ -57,17 +60,17 @@ fn typedoc_index_uses_module_description_not_symbol_description() {
             ..MarkdownDocsOptions::default()
         },
     );
+    assert_markdown_map_snapshot(
+        "typedoc_index_uses_module_description_not_symbol_description__markdown",
+        &markdown,
+    );
+    assert_markdown_map_snapshot(
+        "typedoc_index_uses_module_description_not_symbol_description__markdown",
+        &markdown,
+    );
 
     // Root module list shows the module-level `@module` description, never a
     // symbol's description, and renders nothing for a module without one.
-    let index = markdown.get("index.md").unwrap();
-    assert!(index.contains("[context](./context/index.md)"));
-    assert!(index.contains("[plugin](./plugin/index.md)"));
-    assert!(!index.contains("[Context]"));
-    assert!(!index.contains("[Plugin]"));
-    assert!(index.contains("The entry for gunshi context."));
-    assert!(!index.contains("Parameters of createCommandContext"));
-    assert!(!index.contains("Define a plugin."));
 
     // The module index page renders its own description as a paragraph under
     // the heading (followed by the stats line, which starts with `_`); an
@@ -77,7 +80,7 @@ fn typedoc_index_uses_module_description_not_symbol_description() {
     assert!(context_index.starts_with(
             "# context\n\nThe entry for gunshi context.\n\n## Example\n\n```ts\ncreateCommandContext()\n```\n\n_"
         ));
-    assert!(context_index.contains("_1 symbols · 1 interfaces · 1 examples_"));
+
     let plugin_index = markdown.get("plugin/index.md").unwrap();
     assert!(plugin_index.starts_with("# plugin\n\n_"));
 }
@@ -103,6 +106,14 @@ fn typedoc_single_entry_root_flatten_uses_root_as_module_index() {
             ..MarkdownDocsOptions::default()
         },
     );
+    assert_markdown_map_snapshot(
+        "typedoc_single_entry_root_flatten_uses_root_as_module_index__markdown",
+        &markdown,
+    );
+    assert_markdown_map_snapshot(
+        "typedoc_single_entry_root_flatten_uses_root_as_module_index__markdown",
+        &markdown,
+    );
 
     assert!(markdown.contains_key("index.md"));
     assert!(!markdown.contains_key("default/index.md"));
@@ -111,10 +122,6 @@ fn typedoc_single_entry_root_flatten_uses_root_as_module_index() {
 
     let index = markdown.get("index.md").unwrap();
     assert!(index.starts_with("# API Documentation\n\n"));
-    assert!(index.contains("Runtime API."));
-    assert!(index.contains("## Functions"));
-    assert!(index.contains("[cli](./default/functions/cli.md)"));
-    assert!(index.contains("[Command](./default/interfaces/Command.md)"));
 }
 
 #[test]
@@ -133,9 +140,12 @@ fn typedoc_module_index_renders_module_examples_in_html_style() {
             ..MarkdownDocsOptions::default()
         },
     );
-
-    let module_index = markdown.get("combinators/index.md").unwrap();
-    assert!(module_index.contains("<h2>Example</h2>"));
-    assert!(module_index.contains("<pre><code class=\"language-ts\">string()</code></pre>"));
-    assert!(module_index.contains(">1</strong>\n  <span>examples</span>"));
+    assert_markdown_map_snapshot(
+        "typedoc_module_index_renders_module_examples_in_html_style__markdown",
+        &markdown,
+    );
+    assert_markdown_map_snapshot(
+        "typedoc_module_index_renders_module_examples_in_html_style__markdown",
+        &markdown,
+    );
 }

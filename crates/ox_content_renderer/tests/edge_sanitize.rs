@@ -65,9 +65,7 @@ fn sanitize_keeps_relative_and_allowed_url_schemes() {
         HtmlRendererOptions { sanitize: true, ..Default::default() },
     );
 
-    assert!(html.contains("href=\"./guide.md\""));
-    assert!(html.contains("href=\"mailto:hi@example.com\""));
-    assert!(html.contains("href=\"tel:+123\""));
+    insta::assert_snapshot!(html);
 }
 
 #[test]

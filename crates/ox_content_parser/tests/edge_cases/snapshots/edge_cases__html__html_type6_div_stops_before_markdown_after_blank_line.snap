@@ -1,0 +1,59 @@
+---
+source: crates/ox_content_parser/tests/edge_cases/html.rs
+expression: doc
+---
+Document {
+    children: [
+        Html(
+            Html {
+                value: "<div>\nraw html line\n",
+                span: Span {
+                    start: 0,
+                    end: 20,
+                },
+            },
+        ),
+        Paragraph(
+            Paragraph {
+                children: [
+                    Strong(
+                        Strong {
+                            children: [
+                                Text(
+                                    Text {
+                                        value: "markdown",
+                                        span: Span {
+                                            start: 23,
+                                            end: 31,
+                                        },
+                                    },
+                                ),
+                            ],
+                            span: Span {
+                                start: 21,
+                                end: 33,
+                            },
+                        },
+                    ),
+                ],
+                span: Span {
+                    start: 21,
+                    end: 34,
+                },
+            },
+        ),
+        Html(
+            Html {
+                value: "</div>",
+                span: Span {
+                    start: 35,
+                    end: 41,
+                },
+            },
+        ),
+    ],
+    span: Span {
+        start: 0,
+        end: 41,
+    },
+}

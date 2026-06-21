@@ -51,7 +51,7 @@ export function add(a: number, b: number): number {
     assert_eq!(items[0].name, "add");
     assert_eq!(items[0].kind, DocItemKind::Function);
     assert!(items[0].exported);
-    assert!(items[0].doc.as_ref().unwrap().contains("Adds two numbers"));
+    assert_eq!(items[0].doc.as_deref(), Some("Adds two numbers together."));
     assert_eq!(items[0].params.len(), 2);
 }
 
@@ -88,10 +88,7 @@ export function plugin<Id, Deps, PluginExt, MergedExtensions>(options: {
     assert_eq!(plugin.params[0].name, "options");
     let parent_type = plugin.params[0].type_annotation.as_deref().unwrap();
     assert_ne!(parent_type, "{ ... }");
-    assert!(parent_type.contains("id: Id"));
-    assert!(parent_type.contains("name?: string"));
-    assert!(parent_type
-        .contains("setup?: (ctx: Readonly<PluginContext<MergedExtensions>>) => Awaitable<void>"));
+    insta::assert_snapshot!(parent_type);
     assert_eq!(plugin.params[0].description.as_deref(), Some("Plugin options."));
 
     let names = plugin.params.iter().map(|param| param.name.as_str()).collect::<Vec<_>>();

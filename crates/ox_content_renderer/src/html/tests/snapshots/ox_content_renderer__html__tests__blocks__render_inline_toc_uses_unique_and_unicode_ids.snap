@@ -1,0 +1,14 @@
+---
+source: crates/ox_content_renderer/src/html/tests/blocks.rs
+expression: html
+---
+<nav class="ox-toc" aria-label="Table of contents">
+<ul>
+<li class="ox-toc__item ox-toc__item--depth-2"><a href="#setup">Setup</a></li>
+<li class="ox-toc__item ox-toc__item--depth-2"><a href="#setup-1">Setup</a></li>
+<li class="ox-toc__item ox-toc__item--depth-2"><a href="#はじめに">はじめに</a></li>
+</ul>
+</nav>
+<h2 id="setup">Setup</h2>
+<h2 id="setup-1">Setup</h2>
+<h2 id="はじめに">はじめに</h2>

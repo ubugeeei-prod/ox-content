@@ -1,5 +1,80 @@
 // Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
 
+exports[`docs generation snapshots > keeps generated accordion blocks as HTML through markdown transform 1`] = `
+"<h1 id="utils-ts">utils.ts</h1>
+<p><strong><a href="https://github.com/acme/ox-content/blob/main/src/utils.ts" target="_blank" rel="noopener noreferrer">Source</a></strong></p>
+<blockquote>
+<p>1 documented symbol. Read the signatures first, then expand each item for parameters, return types, and examples.</p>
+</blockquote>
+<div class="ox-api-stats" aria-label="API reference summary">
+<span class="ox-api-stat">
+  <strong>1</strong>
+  <span>symbols</span>
+</span>
+<span class="ox-api-stat">
+  <strong>1</strong>
+  <span>functions</span>
+</span>
+<span class="ox-api-stat">
+  <strong>1</strong>
+  <span>parameters</span>
+</span>
+<span class="ox-api-stat">
+  <strong>1</strong>
+  <span>returns</span>
+</span>
+<span class="ox-api-stat">
+  <strong>1</strong>
+  <span>examples</span>
+</span>
+</div>
+
+<h2 id="reference">Reference</h2>
+<details id="capitalize" class="ox-api-entry">
+  <summary><span class="ox-api-entry__kind">fn</span><span class="ox-api-entry__summary-main"><code class="ox-api-entry__signature ox-api-entry__signature--highlighted language-typescript shiki-inline" data-language="typescript"><span class="line"><span style="color:#80A665">capitalize</span><span style="color:#666666">(</span><span style="color:#BD976A">value</span><span style="color:#DBD7CAEE">: </span><span style="color:#BD976A">string</span><span style="color:#666666">)</span><span style="color:#DBD7CAEE">: </span><span style="color:#BD976A">string</span></span></code><span class="ox-api-entry__description">Capitalizes user-facing labels before they are passed to RoundMode-aware format…</span><span class="ox-api-entry__meta"><span class="ox-api-badge">1 param</span><span class="ox-api-badge">returns string</span><span class="ox-api-badge">1 example</span><span class="ox-api-badge">since 1.4.0</span></span></span></summary>
+  <div class="ox-api-entry__body">
+<div class="ox-api-entry__prose">
+<p>Capitalizes user-facing labels before they are passed to <a href="./math.md#roundmode">RoundMode</a>-aware formatters.</p>
+<p>Keeps already-uppercase acronyms unchanged.</p>
+</div>
+<div class="ox-api-entry__section ox-api-entry__section--signature">
+<h4>Signature</h4>
+<pre class="shiki vitesse-dark" style="background-color:#121212;color:#dbd7caee" tabindex="0" data-language="typescript"><code class="language-typescript" data-language="typescript"><span class="line"><span style="color:#4D9375">export</span><span style="color:#CB7676"> function</span><span style="color:#80A665"> capitalize</span><span style="color:#666666">(</span><span style="color:#BD976A">value</span><span style="color:#666666">: </span><span style="color:#5DA994">string</span><span style="color:#666666">):</span><span style="color:#5DA994"> string</span></span></code></pre>
+</div>
+<p class="ox-api-entry__source"><a class="ox-api-entry__source-link" href="https://github.com/acme/ox-content/blob/main/src/utils.ts#L4-L14" target="_blank" rel="noopener noreferrer">View source<span class="ox-api-entry__source-icon" aria-hidden="true"></span></a></p>
+<div class="ox-api-entry__section ox-api-entry__section--params">
+<h4>Parameters</h4>
+<ul class="ox-api-entry__params">
+<li class="ox-api-entry__param">
+  <div class="ox-api-entry__param-heading">
+    <code class="ox-api-entry__param-name">value</code>
+    <code class="ox-api-entry__param-type">string</code>
+  </div>
+  <p class="ox-api-entry__param-description">Source label to normalize</p>
+</li>
+</ul>
+</div>
+<div class="ox-api-entry__section ox-api-entry__section--returns">
+<h4>Returns</h4>
+<div class="ox-api-entry__return">
+  <code class="ox-api-entry__return-type">string</code>
+  <p class="ox-api-entry__return-description">Normalized label with an uppercased first glyph</p>
+</div>
+</div>
+<div class="ox-api-entry__section ox-api-entry__section--examples">
+<h4>Examples</h4>
+<div class="ox-api-entry__example">
+<div class="ox-api-entry__example-heading">Example 1</div>
+<pre class="shiki vitesse-dark" style="background-color:#121212;color:#dbd7caee" tabindex="0" data-language="ts"><code class="language-ts" data-language="ts"><span class="line"><span style="color:#80A665">capitalize</span><span style="color:#666666">(</span><span style="color:#C98A7D77">"</span><span style="color:#C98A7D">docs</span><span style="color:#C98A7D77">"</span><span style="color:#666666">);</span></span>
+<span class="line"><span style="color:#80A665">capitalize</span><span style="color:#666666">(</span><span style="color:#C98A7D77">"</span><span style="color:#C98A7D">API</span><span style="color:#C98A7D77">"</span><span style="color:#666666">);</span></span></code></pre>
+</div>
+</div>
+  </div>
+</details>
+
+"
+`;
+
 exports[`docs generation snapshots > matches the generated module and index markdown 1`] = `
 {
   "index": "# API Documentation

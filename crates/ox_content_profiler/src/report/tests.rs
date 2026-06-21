@@ -47,7 +47,5 @@ fn table_render_is_non_empty() {
     let cfg = ReportConfig::default();
     let report = Report::from_iterations("smoke".into(), iters, cfg);
     let table = report.render_table();
-    assert!(table.contains("smoke"));
-    assert!(table.contains("Timing"));
-    assert!(table.contains("Allocations"));
+    insta::assert_snapshot!(table);
 }

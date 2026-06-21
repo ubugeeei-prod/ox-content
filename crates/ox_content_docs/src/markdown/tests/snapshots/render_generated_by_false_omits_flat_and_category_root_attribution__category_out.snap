@@ -1,0 +1,44 @@
+---
+source: crates/ox_content_docs/src/markdown/tests/helpers/assertions.rs
+---
+===== functions.md =====
+# Functions
+
+> 2 documented functions collected across modules.
+
+## Overview
+
+- [`cli`](#cli) `function` `cli(): void` - Run the CLI.
+- [`run`](#run) `function` `run(): void` - Run again.
+
+## Reference
+
+### cli
+
+Run the CLI.
+
+#### Signature
+
+```ts
+export function cli(): void
+```
+
+### run
+
+Run again.
+
+#### Signature
+
+```ts
+export function run(): void
+```
+
+===== index.md =====
+# API Documentation
+
+## [Functions](./functions.md)
+
+> 2 items.
+
+- [`cli`](./functions.md#cli) `function` `cli(): void` - Run the CLI.
+- [`run`](./functions.md#run) `function` `run(): void` - Run again.

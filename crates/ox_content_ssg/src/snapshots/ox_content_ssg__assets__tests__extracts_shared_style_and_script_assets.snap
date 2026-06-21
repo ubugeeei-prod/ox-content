@@ -1,0 +1,35 @@
+---
+source: crates/ox_content_ssg/src/assets.rs
+expression: result
+---
+ExternalizedAssets {
+    pages: [
+        GeneratedHtmlPage {
+            input_path: "a.md",
+            output_path: "/tmp/site/a/index.html",
+            html: "<!doctype html>\n<html>\n<head>\n  <link rel=\"stylesheet\" href=\"/docs/assets/ox-content-core-5de625c363.css\">\n  <style>:root { --title: \"A\"; }</style>\n</head>\n<body>\n  <h1>A</h1>\n  <script defer src=\"/docs/assets/ox-content-core-7beb027b52.js\"></script>\n</body>\n</html>",
+        },
+        GeneratedHtmlPage {
+            input_path: "b.md",
+            output_path: "/tmp/site/b/index.html",
+            html: "<!doctype html>\n<html>\n<head>\n  <link rel=\"stylesheet\" href=\"/docs/assets/ox-content-core-5de625c363.css\">\n  <style>:root { --title: \"B\"; }</style>\n</head>\n<body>\n  <h1>B</h1>\n  <script defer src=\"/docs/assets/ox-content-core-7beb027b52.js\"></script>\n</body>\n</html>",
+        },
+    ],
+    assets: [
+        SharedAsset {
+            output_path: "/tmp/site/assets/ox-content-core-5de625c363.css",
+            public_path: "/docs/assets/ox-content-core-5de625c363.css",
+            content: "body { color: red; }",
+        },
+        SharedAsset {
+            output_path: "/tmp/site/assets/ox-content-search-c38ef3c490.js",
+            public_path: "/docs/assets/ox-content-search-c38ef3c490.js",
+            content: "const searchData = true;",
+        },
+        SharedAsset {
+            output_path: "/tmp/site/assets/ox-content-core-7beb027b52.js",
+            public_path: "/docs/assets/ox-content-core-7beb027b52.js",
+            content: "const boot = \"/docs/assets/ox-content-search-c38ef3c490.js\";",
+        },
+    ],
+}

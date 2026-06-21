@@ -1,0 +1,5 @@
+---
+source: crates/ox_content_vite/src/transform.rs
+expression: html
+---
+<h1 id="hello-world">Hello World</h1>

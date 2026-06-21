@@ -1,0 +1,8 @@
+---
+source: crates/ox_content_link_checker/src/tests.rs
+expression: "diagnostic_snapshot(&diagnostics[0], Path::new(\"/tmp\"))"
+---
+kind: File
+severity: Error
+target: ./other.md
+message: Broken link target: `./other.md` does not exist (resolved to $ROOT/./other.md).

@@ -1,0 +1,8 @@
+---
+source: crates/ox_content_renderer/src/html/tests/lists_tables.rs
+expression: html
+---
+<ul>
+<li><p><strong>bold</strong> text</p>
+</li>
+</ul>

@@ -1,0 +1,10 @@
+---
+source: crates/ox_content_transform/src/transformer/tests.rs
+expression: "format!(\"html:\\n{}\\nfrontmatter:\\n{}\", result.html, result.frontmatter)"
+---
+html:
+<h1 id="hello">Hello</h1>
+<p>This is a paragraph.</p>
+
+frontmatter:
+{"title":"Example"}

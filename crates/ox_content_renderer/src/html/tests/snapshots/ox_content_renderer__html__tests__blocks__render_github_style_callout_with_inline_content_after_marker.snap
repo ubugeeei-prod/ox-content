@@ -1,0 +1,8 @@
+---
+source: crates/ox_content_renderer/src/html/tests/blocks.rs
+expression: html
+---
+<blockquote class="ox-callout ox-callout--note">
+<p class="ox-callout-title">Note</p>
+<p>Supports <strong>inline</strong> content</p>
+</blockquote>

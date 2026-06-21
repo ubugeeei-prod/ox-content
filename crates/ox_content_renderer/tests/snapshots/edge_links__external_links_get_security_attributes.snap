@@ -1,0 +1,5 @@
+---
+source: crates/ox_content_renderer/tests/edge_links.rs
+expression: html
+---
+<p><a href="https://example.com" target="_blank" rel="noopener noreferrer">site</a></p>

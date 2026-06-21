@@ -1,0 +1,14 @@
+---
+source: crates/ox_content_renderer/src/html/tests/lists_tables.rs
+expression: html
+---
+<ul>
+<li><p>item 1</p>
+<ul>
+<li><p>sub 1</p>
+</li>
+</ul>
+</li>
+<li><p>item 2</p>
+</li>
+</ul>

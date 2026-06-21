@@ -1,0 +1,6 @@
+---
+source: crates/ox_content_renderer/tests/edge_blocks.rs
+expression: html
+---
+<pre><code class="language-ts">console.log(1)
+</code></pre>

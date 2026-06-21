@@ -47,13 +47,8 @@ describe("getPageLocale", () => {
 describe("SSG route helpers", () => {
   it("generates bare HTML through the NAPI-backed wrapper", () => {
     const html = generateBareHtmlPage("<main>Body</main>", "Bare <Page>");
-    const title = html.match(/<title>(.*?)<\/title>/s)?.[1] ?? "";
 
-    expect(title).toContain("Bare ");
-    expect(title).toContain("Page");
-    expect(title).not.toContain("<");
-    expect(title).not.toContain(">");
-    expect(html).toContain("<main>Body</main>");
+    expect(html).toMatchSnapshot();
   });
 
   it("resolves output paths, URL paths, and hrefs through NAPI", () => {

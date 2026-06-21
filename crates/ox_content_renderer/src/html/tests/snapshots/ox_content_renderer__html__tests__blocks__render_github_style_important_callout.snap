@@ -1,0 +1,8 @@
+---
+source: crates/ox_content_renderer/src/html/tests/blocks.rs
+expression: html
+---
+<blockquote class="ox-callout ox-callout--important">
+<p class="ox-callout-title">Important</p>
+<p>This is important.</p>
+</blockquote>

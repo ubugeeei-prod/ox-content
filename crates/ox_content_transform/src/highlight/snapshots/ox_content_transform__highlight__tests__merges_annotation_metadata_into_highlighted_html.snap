@@ -1,0 +1,8 @@
+---
+source: crates/ox_content_transform/src/highlight/tests.rs
+expression: merged
+---
+<p>Before</p><pre class="shiki github-dark ox-code-block ox-code-block--annotated" style="background-color:#24292e;color:#e1e4e8" tabindex="0" data-language="ts"><code class="language-ts" data-language="ts"><span class="line ox-code-line ox-code-line--highlight" data-line="1"><span style="color:#E1E4E8">const first = 1;</span></span>
+<span class="line ox-code-line ox-code-line--warning" data-line="2"><span style="color:#E1E4E8">const second = 2;</span></span>
+<span class="line ox-code-line ox-code-line--error" data-line="3"><span style="color:#E1E4E8">throw new Error("boom");</span></span>
+</code></pre><p>After</p>

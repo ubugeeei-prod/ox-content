@@ -1,0 +1,64 @@
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`transformMarkdown > can append edit links and import source snippets when opted in 1`] = `
+"<pre><code class="language-md">&#x3C;p align="center">
+</code></pre>
+<p class="ox-edit-this-page"><a href="https://github.com/ubugeeei-prod/ox-content/edit/main/docs/import.md" target="_blank" rel="noopener noreferrer">Suggest an edit</a></p>
+"
+`;
+
+exports[`transformMarkdown > keeps malformed frontmatter behavior on the Rust path 1`] = `
+"<h1 id="body">Body</h1>
+"
+`;
+
+exports[`transformMarkdown > keeps package-manager tabs disabled unless opted in 1`] = `
+{
+  "defaultHtml": "<p><pm>npm install -D vite</pm></p>
+",
+  "optInHtml": "<p><div class="ox-tabs-container"><div class="ox-tabs" data-group="0"><div class="ox-tabs-header"><input type="radio" name="ox-tabs-0" id="ox-tab-0-0" checked><label for="ox-tab-0-0">npm</label><input type="radio" name="ox-tabs-0" id="ox-tab-0-1"><label for="ox-tab-0-1">pnpm</label><input type="radio" name="ox-tabs-0" id="ox-tab-0-2"><label for="ox-tab-0-2">yarn</label><input type="radio" name="ox-tabs-0" id="ox-tab-0-3"><label for="ox-tab-0-3">bun</label></div><div class="ox-tab-panel" data-tab="0"><pre><code>npm install -D vite</code></pre></div><div class="ox-tab-panel" data-tab="1"><pre><code>pnpm add -D vite</code></pre></div><div class="ox-tab-panel" data-tab="2"><pre><code>yarn add -D vite</code></pre></div><div class="ox-tab-panel" data-tab="3"><pre><code>bun add -D vite</code></pre></div></div><noscript><div class="ox-tabs-fallback"><details open><summary>npm</summary><div class="ox-tabs-fallback-content"><pre><code>npm install -D vite</code></pre></div></details><details><summary>pnpm</summary><div class="ox-tabs-fallback-content"><pre><code>pnpm add -D vite</code></pre></div></details><details><summary>yarn</summary><div class="ox-tabs-fallback-content"><pre><code>yarn add -D vite</code></pre></div></details><details><summary>bun</summary><div class="ox-tabs-fallback-content"><pre><code>bun add -D vite</code></pre></div></details></div></noscript></div></p>
+",
+}
+`;
+
+exports[`transformMarkdown > preserves safe raw media tags when sanitizing 1`] = `
+"<p><video controls muted playsinline poster="/poster.jpg">
+  <source src="/demo.webm" type="video/webm">
+  <track src="/captions.vtt" kind="captions" srclang="en" label="English" default>
+  Fallback
+</video>
+<picture><source media="(min-width: 800px)" srcset="/hero-large.jpg 2x, /hero.jpg 1x"><img src="/hero.jpg" alt="Hero"></picture></p>
+"
+`;
+
+exports[`transformMarkdown > preserves wrapped continuation lines inside list items 1`] = `
+"<ul>
+<li><p><a href="https://www.blacksmith.sh/" target="_blank" rel="noopener noreferrer">Blacksmith</a> for sponsoring CI and
+Testbox infrastructure across projects.</p>
+</li>
+<li><p><a href="https://eng.mates.education/" target="_blank" rel="noopener noreferrer">Mates Inc.</a> for supporting OSS and
+adopting Vize in production.</p>
+</li>
+</ul>
+"
+`;
+
+exports[`transformMarkdown > runs opt-in native transforms without changing default behavior 1`] = `
+"<h1 id="guide-lead" class="lead">Guide</h1>
+<p>See <a href="/docs/install">Install guide</a> 🚀</p>
+<p><a>bad</a></p>
+"
+`;
+
+exports[`transformMarkdown > sanitizes after opt-in embeds are rendered 1`] = `
+"<p><iframe class="ox-spotify" src="https://open.spotify.com/embed/track/abc123" width="100%" height="352" loading="lazy" allow="autoplay; clipboard-write; encrypted-media; fullscreen; picture-in-picture" referrerpolicy="strict-origin-when-cross-origin"></iframe></p>
+
+"
+`;
+
+exports[`transformMarkdown > uses Rust frontmatter parsing and Rust-built TOC trees 1`] = `
+"<h1 id="intro">Intro</h1>
+<h2 id="install">Install</h2>
+<h3 id="cli">CLI</h3>
+"
+`;

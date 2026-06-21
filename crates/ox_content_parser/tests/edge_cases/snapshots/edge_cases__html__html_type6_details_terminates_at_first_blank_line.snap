@@ -1,0 +1,123 @@
+---
+source: crates/ox_content_parser/tests/edge_cases/html.rs
+expression: doc
+---
+Document {
+    children: [
+        Html(
+            Html {
+                value: "<details>\n",
+                span: Span {
+                    start: 0,
+                    end: 10,
+                },
+            },
+        ),
+        Html(
+            Html {
+                value: "<summary>Click to expand</summary>\n",
+                span: Span {
+                    start: 11,
+                    end: 46,
+                },
+            },
+        ),
+        Paragraph(
+            Paragraph {
+                children: [
+                    Strong(
+                        Strong {
+                            children: [
+                                Text(
+                                    Text {
+                                        value: "bold should be markdown",
+                                        span: Span {
+                                            start: 49,
+                                            end: 72,
+                                        },
+                                    },
+                                ),
+                            ],
+                            span: Span {
+                                start: 47,
+                                end: 74,
+                            },
+                        },
+                    ),
+                ],
+                span: Span {
+                    start: 47,
+                    end: 75,
+                },
+            },
+        ),
+        List(
+            List {
+                ordered: false,
+                start: None,
+                spread: false,
+                children: [
+                    ListItem {
+                        spread: false,
+                        checked: None,
+                        children: [
+                            Paragraph(
+                                Paragraph {
+                                    children: [
+                                        Text(
+                                            Text {
+                                                value: "list",
+                                                span: Span {
+                                                    start: 78,
+                                                    end: 82,
+                                                },
+                                            },
+                                        ),
+                                    ],
+                                    span: Span {
+                                        start: 78,
+                                        end: 83,
+                                    },
+                                },
+                            ),
+                        ],
+                        span: Span {
+                            start: 76,
+                            end: 83,
+                        },
+                    },
+                ],
+                span: Span {
+                    start: 76,
+                    end: 83,
+                },
+            },
+        ),
+        CodeBlock(
+            CodeBlock {
+                lang: Some(
+                    "js",
+                ),
+                meta: None,
+                value: "console.log(\"code\");\n",
+                span: Span {
+                    start: 84,
+                    end: 115,
+                },
+            },
+        ),
+        Html(
+            Html {
+                value: "</details>",
+                span: Span {
+                    start: 116,
+                    end: 126,
+                },
+            },
+        ),
+    ],
+    span: Span {
+        start: 0,
+        end: 126,
+    },
+}

@@ -46,13 +46,10 @@ fn generate_docs_markdown_property_members_format_table_renders_html() {
             ..Default::default()
         }),
     );
-    let page = markdown.get("default/interfaces/Options.md").unwrap();
-
-    assert!(page.contains("ox-api-entry__property-members-table"));
-    assert!(
-        page.contains("<td><code>timeout</code><span class=\"ox-api-badge\">optional</span></td>")
+    assert_string_map_snapshot(
+        "generate_docs_markdown_property_members_format_table_renders_html",
+        &markdown,
     );
-    assert!(page.contains("Request timeout."));
 }
 
 #[test]
@@ -113,16 +110,7 @@ fn generate_docs_markdown_resolves_jsdoc_inline_links() {
     ];
 
     let markdown = generate_docs_markdown(docs, None);
-    let build_page = markdown.get("build.md").unwrap();
-    let command_page = markdown.get("command.md").unwrap();
-
-    assert!(!build_page.contains("{@link"));
-    assert!(!command_page.contains("{@link"));
-    assert!(build_page.contains("<a href=\"./command.md#command\"><code>entry command</code></a>"));
-    assert!(build_page.contains("<a href=\"./command.md#command\">Command</a>"));
-    assert!(build_page.contains("<a href=\"https://github.com/unjs/std-env\">std-env</a>"));
-    assert!(command_page.contains("<tr id=\"command-args\">"));
-    assert!(command_page.contains("<a href=\"#command-args\"><code>Command.args</code></a>"));
+    assert_string_map_snapshot("generate_docs_markdown_resolves_jsdoc_inline_links", &markdown);
 }
 
 #[test]
@@ -162,14 +150,11 @@ fn generate_docs_markdown_accepts_typedoc_path_strategy() {
             ..Default::default()
         }),
     );
-    let cli_page = markdown.get("default/functions/cli.md").unwrap();
-    let root_index = markdown.get("index.md").unwrap();
+    assert_string_map_snapshot("generate_docs_markdown_accepts_typedoc_path_strategy", &markdown);
     let module_index = markdown.get("default/index.md").unwrap();
 
     assert!(markdown.contains_key("default/index.md"));
     assert!(markdown.contains_key("default/interfaces/Command.md"));
-    assert!(root_index.contains("[default](/api/default)"));
-    assert!(!root_index.contains("[Default]"));
+
     assert!(module_index.starts_with("# default\n\n"));
-    assert!(cli_page.contains("<a href=\"/api/default/interfaces/Command\">Command</a>"));
 }

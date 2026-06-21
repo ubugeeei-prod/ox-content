@@ -1,0 +1,20 @@
+---
+source: crates/ox_content_renderer/tests/edge_blocks.rs
+expression: html
+---
+<table>
+<thead>
+<tr>
+<th align="left">a</th>
+<th align="center">b</th>
+<th align="right">c</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td align="left">1</td>
+<td align="center">2</td>
+<td align="right">3</td>
+</tr>
+</tbody>
+</table>

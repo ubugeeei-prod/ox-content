@@ -1,0 +1,12 @@
+---
+source: crates/ox_content_docs/src/output.rs
+expression: manifest
+---
+[
+  "default/enumerations/Mode.md",
+  "default/functions/cli.md",
+  "default/index.md",
+  "docs.json",
+  "index.md",
+  "nav.ts"
+]
