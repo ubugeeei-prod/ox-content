@@ -1,5 +1,88 @@
 # Changelog
 
+## [2.72.0] - 2026-06-21
+
+### Features
+
+- add framework markdown render utilities
+- wire textlint editor integration (#426)
+- support jsdoc throws tags (#374)
+- persist sticky sidebar state (#371)
+- support flattened single entry roots (#361)
+- opt-in incremental markdown parsing/rendering (#357)
+- render jsdoc member default values (#356)
+- add document highlights for matching link targets (#355)
+- add smart selection ranges (expand selection) (#350)
+
+### Bug Fixes
+
+- generate valid docs nav TypeScript (#436)
+- use crates.io environment for publishing (#373)
+- lower linux x64 binding glibc baseline (#369)
+- detect helper-based cargo publish targets (#362)
+- preserve napi declaration docs (#359)
+
+### Refactoring
+
+- move framework codegen behind feature flag (#438)
+- split napi logic into core crates (#435)
+- split final oversized rust files
+- split wasm modules
+- split link checker modules
+- split search query tests
+- split remaining napi modules (#421)
+- split parser modules
+- split i18n modules
+- split napi transform helpers
+- split napi lint sanitize modules
+- split profile cli modules
+- split profiler modules
+- split renderer tests
+- split ssg html rendering
+- split docs export graph
+- split docs markdown pure renderer
+- split docs markdown html renderer
+- split docs markdown pages
+- split docs extractor visitor
+- split napi lint helpers
+- split napi emoji lookup
+- split napi mdast raw serialization
+- split napi transform bindings
+- split napi docs bindings
+- split napi pm helpers
+- split napi feature helpers
+- split docs graph export helpers
+- split docs graph entrypoint helpers
+- split docs graph resolver
+- split docs pure member rendering
+- split docs html member rendering
+- split docs markdown linking helpers
+- split docs extractor driver helpers
+- split docs markdown metadata helpers
+- split docs markdown core helpers
+- split docs markdown renderers
+- split docs extractor and markdown tests
+- split docs data nav normalize modules
+- split docs graph tests
+- split docs public models
+- split ssg route and asset helpers (#386)
+- split napi feature helpers (#385)
+- split ssg html modules (#384)
+- split docs crate helpers (#383)
+- split extractor tag helpers
+- split markdown ordering helpers (#381)
+- split docs Rust modules (#379)
+- split GitHub embed plugin (#378)
+- use compact strings for small state (#377)
+- prefer fx hash collections (#376)
+- add defaults for docs fixtures (#375)
+- split large binding and markdown test modules (#358)
+
+### Documentation
+
+- add kazupon credits summary (#367)
+- add builtin examples and framework tests (#360)
+
 ## [2.71.0] - 2026-06-21
 
 ### Features
