@@ -1,0 +1,5 @@
+---
+source: crates/ox_content_renderer/src/frameworks/tests.rs
+expression: code
+---
+createElement('div', { className: 'ox-content' }, createElement(Widget, { "a": {"nested":true}, "z": [3,2,1] }, "child"))

@@ -1,0 +1,28 @@
+---
+source: crates/ox_content_renderer/src/frameworks/tests.rs
+expression: "format!(\"react:\\n{react}\\n\\nvue:\\n{vue}\")"
+---
+react:
+import { createElement } from 'react';
+
+const rawHtml = "\x3Cp>Hello\x3C/p>";
+
+export default function MarkdownContent() {
+  return createElement('div', {
+    className: 'ox-content',
+    dangerouslySetInnerHTML: { __html: rawHtml },
+  });
+}
+
+
+vue:
+import { defineComponent, h } from 'vue';
+
+const rawHtml = "\x3Cp>Hello\x3C/p>";
+
+export default defineComponent({
+  name: 'MarkdownContent',
+  setup() {
+    return () => h('div', { class: 'ox-content', innerHTML: rawHtml });
+  },
+});

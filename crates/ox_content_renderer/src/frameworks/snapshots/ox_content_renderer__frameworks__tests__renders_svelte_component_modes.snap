@@ -1,0 +1,18 @@
+---
+source: crates/ox_content_renderer/src/frameworks/tests.rs
+expression: "format!(\"component:\\n{component}\\n\\ninner_html:\\n{inner_html}\")"
+---
+component:
+<div class="ox-content">
+<p>&#123;count&#125;</p>
+</div>
+
+
+inner_html:
+<script>
+  const rawHtml = "\x3Cp>{count}\x3C/p>";
+</script>
+
+<div class="ox-content">
+  {@html rawHtml}
+</div>

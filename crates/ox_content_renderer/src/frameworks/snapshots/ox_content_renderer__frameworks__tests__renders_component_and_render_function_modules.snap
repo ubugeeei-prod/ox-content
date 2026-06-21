@@ -1,0 +1,18 @@
+---
+source: crates/ox_content_renderer/src/frameworks/tests.rs
+expression: "format!(\"component:\\n{component}\\n\\nrender_function:\\n{render_function}\")"
+---
+component:
+import { createElement } from 'react';
+
+export default function MarkdownContent() {
+  return createElement('div', { className: 'ox-content' }, createElement("p", null, "Hello"));
+}
+
+
+render_function:
+import { h } from 'vue';
+
+export function renderMarkdownContent() {
+  return h('div', { class: 'ox-content' }, h("p", null, "Hello"));
+}

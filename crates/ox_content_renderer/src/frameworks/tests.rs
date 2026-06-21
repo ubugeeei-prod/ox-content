@@ -41,9 +41,7 @@ fn renders_void_and_self_closing_elements_without_children() {
         &[],
     );
 
-    assert!(code.contains(r#"createElement("img", { "src": "/logo.png" })"#));
-    assert!(code.contains(r#"createElement("br", null)"#));
-    assert!(code.contains(r#"createElement("input", { "disabled": true })"#));
+    insta::assert_snapshot!(code);
 }
 
 #[test]
@@ -54,8 +52,7 @@ fn renders_escaped_js_string_literals_for_text_and_attributes() {
         &[],
     );
 
-    assert!(code.contains(r#""title": "quote \" slash \\""#));
-    assert!(code.contains(r#""line\nnext""#));
+    insta::assert_snapshot!(code);
 }
 
 #[test]
@@ -66,8 +63,7 @@ fn renders_react_data_and_aria_camel_case_as_attributes() {
         &[],
     );
 
-    assert!(code.contains(r#""data-test-id": "save""#));
-    assert!(code.contains(r#""aria-label": "Save""#));
+    insta::assert_snapshot!(code);
 }
 
 #[test]
@@ -83,8 +79,7 @@ fn renders_vue_single_child_without_array_and_multiple_children_with_array() {
         &[],
     );
 
-    assert!(single.contains(r#"h("p", null, h("span", null, "one"))"#));
-    assert!(many.contains(r#"h("p", null, [h("span", null, "one"), h("span", null, "two")])"#));
+    insta::assert_snapshot!(format!("single:\n{single}\n\nmany:\n{many}"));
 }
 
 #[test]
@@ -146,9 +141,7 @@ fn renders_nested_json_props_in_stable_top_level_order() {
         &islands,
     );
 
-    assert!(
-        code.contains(r#"createElement(Widget, { "a": {"nested":true}, "z": [3,2,1] }, "child")"#)
-    );
+    insta::assert_snapshot!(code);
 }
 
 #[test]
@@ -168,8 +161,7 @@ fn renders_inner_html_component_modules() {
     )
     .unwrap();
 
-    assert!(react.contains("dangerouslySetInnerHTML: { __html: rawHtml }"));
-    assert!(vue.contains("innerHTML: rawHtml"));
+    insta::assert_snapshot!(format!("react:\n{react}\n\nvue:\n{vue}"));
 }
 
 #[test]
@@ -197,12 +189,7 @@ fn escapes_raw_html_literals_without_changing_runtime_html() {
     )
     .unwrap();
 
-    assert!(!react.contains("</script>"));
-    assert!(!vue.contains("</script>"));
-    assert_eq!(svelte.matches("</script>").count(), 1);
-    assert!(react.contains(r#"\x3C/script>\x3Cp title=\"line\nnext\">{ ok }\x3C/p>"#));
-    assert!(vue.contains(r#"\x3C/script>\x3Cp title=\"line\nnext\">{ ok }\x3C/p>"#));
-    assert!(svelte.contains(r#"\x3C/script>\x3Cp title=\"line\nnext\">{ ok }\x3C/p>"#));
+    insta::assert_snapshot!(format!("react:\n{react}\n\nvue:\n{vue}\n\nsvelte:\n{svelte}"));
 }
 
 #[test]
@@ -222,10 +209,9 @@ fn renders_component_and_render_function_modules() {
     )
     .unwrap();
 
-    assert!(component.contains("export default function MarkdownContent()"));
-    assert!(component.contains(r#"createElement("p", null, "Hello")"#));
-    assert!(render_function.contains("export function renderMarkdownContent()"));
-    assert!(render_function.contains(r"return h('div', { class: 'ox-content' }"));
+    insta::assert_snapshot!(format!(
+        "component:\n{component}\n\nrender_function:\n{render_function}"
+    ));
 }
 
 #[test]
@@ -245,8 +231,7 @@ fn renders_svelte_component_modes() {
     )
     .unwrap();
 
-    assert!(component.contains("<p>&#123;count&#125;</p>"));
-    assert!(inner_html.contains("{@html rawHtml}"));
+    insta::assert_snapshot!(format!("component:\n{component}\n\ninner_html:\n{inner_html}"));
 }
 
 #[test]
