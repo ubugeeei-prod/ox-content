@@ -1,6 +1,48 @@
 // Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
 
+exports[`framework Markdown utilities > escapes raw HTML literals without breaking component scripts 1`] = `
+{
+  "react": "import { createElement } from 'react';
+
+const rawHtml = "\\x3C/script>\\x3Cp title=\\"line\\nnext\\">{ ok }\\x3C/p>";
+
+export default function MarkdownContent() {
+  return createElement('div', {
+    className: 'ox-content',
+    dangerouslySetInnerHTML: { __html: rawHtml },
+  });
+}
+",
+  "svelte": "<script>
+  const rawHtml = "\\x3C/script>\\x3Cp title=\\"line\\nnext\\">{ ok }\\x3C/p>";
+</script>
+
+<div class="ox-content">
+  {@html rawHtml}
+</div>
+",
+  "vue": "import { defineComponent, h } from 'vue';
+
+const rawHtml = "\\x3C/script>\\x3Cp title=\\"line\\nnext\\">{ ok }\\x3C/p>";
+
+export default defineComponent({
+  name: 'MarkdownContent',
+  setup() {
+    return () => h('div', { class: 'ox-content', innerHTML: rawHtml });
+  },
+});
+",
+}
+`;
+
 exports[`framework Markdown utilities > renders React VDOM code with React-compatible attributes 1`] = `"createElement('div', { className: 'ox-content' }, createElement("section", { "className": "lead", "htmlFor": "name", "data-id": "42", "aria-label": "Intro" }, createElement("p", { "style": { "fontWeight": "bold", "--brand": "red" } }, "Hello ", createElement("strong", null, "world"))))"`;
+
+exports[`framework Markdown utilities > renders Svelte component code without innerHTML 1`] = `
+"<div class="ox-content">
+<p>&#123;count&#125;</p>
+</div>
+"
+`;
 
 exports[`framework Markdown utilities > renders Vue VDOM code with Vue-compatible attributes 1`] = `"h('div', { class: 'ox-content' }, h("label", { "class": "field", "for": "name" }, [h("span", null, "Name"), h("input", { "disabled": true, "type": "text" })]))"`;
 

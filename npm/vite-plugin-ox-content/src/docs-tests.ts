@@ -505,7 +505,7 @@ function rewriteImports(source: string, rewrites: Record<string, string> | undef
  * const blocks = await extractDocsTests(markdown);
  *
  * expect(blocks).toHaveLength(1);
- * expect(blocks[0]?.code).toContain("1 + 1");
+ * expect(blocks[0]?.code).toMatchInlineSnapshot('"expect(1 + 1).toBe(2);"');
  * ```
  */
 function rewriteSpecifier(specifier: string, rewrites: Record<string, string> | undefined): string {

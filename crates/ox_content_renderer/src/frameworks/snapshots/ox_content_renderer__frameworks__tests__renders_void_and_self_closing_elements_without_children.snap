@@ -1,0 +1,5 @@
+---
+source: crates/ox_content_renderer/src/frameworks/tests.rs
+expression: code
+---
+createElement('div', { className: 'ox-content' }, createElement("p", null, "Image ", createElement("img", { "src": "/logo.png" }), createElement("br", null), createElement("input", { "disabled": true })))

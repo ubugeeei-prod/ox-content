@@ -1,0 +1,9 @@
+---
+source: crates/ox_content_renderer/src/frameworks/tests.rs
+expression: "format!(\"single:\\n{single}\\n\\nmany:\\n{many}\")"
+---
+single:
+h('div', { class: 'ox-content' }, h("p", null, h("span", null, "one")))
+
+many:
+h('div', { class: 'ox-content' }, h("p", null, [h("span", null, "one"), h("span", null, "two")]))
