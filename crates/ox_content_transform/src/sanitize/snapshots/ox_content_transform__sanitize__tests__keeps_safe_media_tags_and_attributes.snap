@@ -1,0 +1,5 @@
+---
+source: crates/ox_content_transform/src/sanitize/tests.rs
+expression: sanitized
+---
+<video controls muted loop playsinline poster="/poster.jpg" width="640" height="360" preload="metadata"><source src="/demo.webm" type="video/webm"><track src="/captions.vtt" kind="captions" srclang="en" label="English" default>Fallback</video><audio controls src="./clip.mp3"></audio><picture><source media="(min-width: 800px)" srcset="/hero-large.jpg 2x, /hero.jpg 1x" sizes="100vw"><img src="/hero.jpg" alt="Hero"></picture>

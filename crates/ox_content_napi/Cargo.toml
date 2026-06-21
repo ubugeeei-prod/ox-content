@@ -45,6 +45,7 @@ napi-build = { workspace = true }
 
 [dev-dependencies]
 criterion = { workspace = true }
+insta = { workspace = true }
 
 [[bench]]
 name = "mdast_transfer"

@@ -1,0 +1,112 @@
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`transformMarkdownWithVue > honors disabled built-in embeds from framework options 1`] = `
+"
+import { h, ref, defineComponent } from 'vue';
+
+export const frontmatter = {};
+
+const rawHtml = "<p><GitHub repo=\\"ubugeeei-prod/ox-content\\"></GitHub></p>\\n";
+
+export default defineComponent({
+  name: 'MarkdownContent',
+  setup(_, { expose }) {
+    expose({ frontmatter });
+
+    return () =>
+      h('div', {
+        class: 'ox-content',
+        innerHTML: rawHtml,
+      });
+  },
+});
+"
+`;
+
+exports[`transformMarkdownWithVue > turns registered components into islands and leaves fenced tags literal 1`] = `
+"
+import { h, ref, onMounted, onBeforeUnmount, defineComponent, render } from 'vue';
+import { initIslands } from '@ox-content/islands';
+import Alert from '../src/components/Alert.vue';
+
+export const frontmatter = {"title":"Vue Guide","draft":false};
+
+const rawHtml = "<h1 id=\\"vue-guide\\">Vue Guide</h1>\\n<div data-ox-island=\\"Alert\\" data-ox-props='{\\"tone\\":\\"info\\",\\"active\\":true}' data-ox-content='Read **docs**.'></div>\\n<pre><code class=\\"language-vue\\">&lt;Alert tone=&quot;code&quot; /&gt;\\n</code></pre>\\n";
+const components = {
+  Alert,
+};
+
+function createVueHydrate(container) {
+  const mountedTargets = [];
+
+  return (element, props) => {
+    const componentName = element.dataset.oxIsland;
+    const Component = components[componentName];
+    if (!Component) return;
+
+    const islandContent = element.dataset.oxContent || element.innerHTML;
+    const children = islandContent
+      ? { default: () => h('div', { innerHTML: islandContent }) }
+      : undefined;
+
+    const vnode = h(Component, props, children);
+    render(vnode, element);
+    mountedTargets.push(element);
+
+    return () => render(null, element);
+  };
+}
+
+export default defineComponent({
+  name: 'MarkdownContent',
+  setup(_, { expose }) {
+    const container = ref(null);
+    let controller;
+
+    onMounted(() => {
+      if (container.value) {
+        controller = initIslands(createVueHydrate(container.value), {
+          selector: '.ox-content [data-ox-island]',
+        });
+      }
+    });
+
+    onBeforeUnmount(() => {
+      if (controller) controller.destroy();
+    });
+
+    expose({ frontmatter });
+
+    return () =>
+      h('div', {
+        class: 'ox-content',
+        ref: container,
+        innerHTML: rawHtml,
+      });
+  },
+});
+"
+`;
+
+exports[`transformMarkdownWithVue > uses the static html path when no registered component is present 1`] = `
+"
+import { h, ref, defineComponent } from 'vue';
+
+export const frontmatter = {};
+
+const rawHtml = "<h1 id=\\"plain\\">Plain</h1>\\n<p><Unknown /></p>\\n";
+
+export default defineComponent({
+  name: 'MarkdownContent',
+  setup(_, { expose }) {
+    expose({ frontmatter });
+
+    return () =>
+      h('div', {
+        class: 'ox-content',
+        innerHTML: rawHtml,
+      });
+  },
+});
+"
+`;

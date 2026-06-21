@@ -128,12 +128,7 @@ describe("vitepress migration helpers", () => {
       },
     );
 
-    expect(source).toContain('import type { OxContentOptions } from "@ox-content/vite-plugin";');
-    expect(source).toContain("satisfies OxContentOptions");
-    expect(source).toContain('base: "/docs/"');
-    expect(source).toContain('srcDir: "docs"');
-    expect(source).toContain('outDir: "dist"');
-    expect(source).toContain('path: "/intro"');
+    expect(source).toMatchSnapshot();
   });
 
   it("parses migration CLI options without depending on a Node process", () => {
@@ -193,9 +188,7 @@ describe("vitepress migration CLI", () => {
     }
 
     const source = stdout.join("");
-    expect(source).toContain('base: "/docs/"');
-    expect(source).toContain('srcDir: "docs"');
-    expect(source).toContain('path: "/intro"');
+    expect(source).toMatchSnapshot();
   });
 
   it("normalizes VitePress home frontmatter into ox-content entry frontmatter", () => {

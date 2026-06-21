@@ -8,24 +8,20 @@ fn render_style_markdown_flat_emits_pure_markdown() {
         ..MarkdownDocsOptions::default()
     };
     let out = generate_markdown(&pure_test_docs(), &options);
+    assert_markdown_map_snapshot("render_style_markdown_flat_emits_pure_markdown", &out);
 
     let page = out.get("cli.md").unwrap();
     assert_no_api_html(page);
-    assert!(page.contains("### cli"));
+
     // Flat entry heading is H3, so body sections render at H4.
     assert!(page.lines().any(|line| line == "#### Signature"));
-    assert!(!page.contains("**Signature**"));
-    assert!(page.contains("```ts"));
-    assert!(page.contains("- `argv` (`string[]`) - Arguments."));
+
     // The callable interface member group renders as real detail headings.
     assert!(page.lines().any(|line| line == "#### Methods"));
     assert!(page.lines().any(|line| line == "##### run()"));
-    assert!(!page.contains("**Members**"));
-    assert!(page.contains("[View source](https://github.com/x/y/blob/main/"));
 
     let index = out.get("index.md").unwrap();
     assert_no_api_html(index);
-    assert!(index.contains("## Modules"));
 }
 
 #[test]
@@ -37,6 +33,7 @@ fn render_style_markdown_typedoc_emits_pure_per_symbol_pages() {
         ..MarkdownDocsOptions::default()
     };
     let out = generate_markdown(&pure_test_docs(), &options);
+    assert_markdown_map_snapshot("render_style_markdown_typedoc_emits_pure_per_symbol_pages", &out);
 
     let key = out
         .keys()
@@ -46,7 +43,6 @@ fn render_style_markdown_typedoc_emits_pure_per_symbol_pages() {
     let page = out.get(&key).unwrap();
     assert_no_api_html(page);
     assert!(page.starts_with("# Function: cli()"));
-    assert!(page.contains("```ts"));
 }
 
 #[test]
@@ -57,10 +53,10 @@ fn render_style_markdown_category_emits_pure_markdown() {
         ..MarkdownDocsOptions::default()
     };
     let out = generate_markdown(&pure_test_docs(), &options);
+    assert_markdown_map_snapshot("render_style_markdown_category_emits_pure_markdown", &out);
 
     let functions = out.get("functions.md").unwrap();
     assert_no_api_html(functions);
-    assert!(functions.contains("### cli"));
 }
 
 #[test]
@@ -105,6 +101,14 @@ fn render_style_markdown_typedoc_sections_are_sequential_headings() {
         ..MarkdownDocsOptions::default()
     };
     let out = generate_markdown(&pure_test_docs(), &options);
+    assert_markdown_map_snapshot(
+        "render_style_markdown_typedoc_sections_are_sequential_headings",
+        &out,
+    );
+    assert_markdown_map_snapshot(
+        "render_style_markdown_typedoc_sections_are_sequential_headings",
+        &out,
+    );
 
     // Function page: every section is a real H2 heading under the H1 title,
     // with no bold-as-header, no skipped levels.
@@ -112,19 +116,9 @@ fn render_style_markdown_typedoc_sections_are_sequential_headings() {
         out.keys().find(|key| key.ends_with("functions/cli.md")).expect("cli page").clone();
     let page = out.get(&fn_key).unwrap();
     assert!(page.starts_with("# Function: cli()"));
-    assert!(page.contains("## Signature"));
-    assert!(page.contains("## Parameters"));
-    assert!(page.contains("## Returns"));
-    assert!(page.contains("## Throws"));
-    assert!(page.contains("- `CliError` — When argument parsing fails."));
-    assert!(page.contains("## Examples"));
+
     // `@since` renders as a dedicated `## Since` section, not generic `## Tags`.
-    assert!(page.contains("## Since"));
-    assert!(!page.contains("## Tags"));
-    assert!(!page.contains("@throws"));
-    assert!(!page.contains("**Signature**"));
-    assert!(!page.contains("**Returns**"));
-    assert!(!page.contains("#### "));
+
     assert_no_heading_level_skips(page);
 
     // Returns is its own heading with the value on the following line.
@@ -139,9 +133,7 @@ fn render_style_markdown_typedoc_sections_are_sequential_headings() {
         .expect("Command page")
         .clone();
     let page = out.get(&if_key).unwrap();
-    assert!(page.contains("## Methods"));
-    assert!(!page.contains("#### Properties"));
-    assert!(!page.contains("**Members**"));
+
     assert_no_heading_level_skips(page);
 }
 
@@ -171,12 +163,14 @@ fn typedoc_markdown_return_union_pipe_is_not_escaped_inside_inline_code() {
             ..markdown_typedoc_options()
         },
     );
-    let page = out.get("default/functions/cli.md").unwrap();
-
-    assert!(page.contains("| `entry` | `Command<G> \\| CommandRunner<G>` |"));
-    assert!(page
-        .contains("## Returns\n\n`Promise<string | undefined>` — A rendered usage or undefined."));
-    assert!(!page.contains("`Promise<string \\| undefined>`"));
+    assert_markdown_map_snapshot(
+        "typedoc_markdown_return_union_pipe_is_not_escaped_inside_inline_code",
+        &out,
+    );
+    assert_markdown_map_snapshot(
+        "typedoc_markdown_return_union_pipe_is_not_escaped_inside_inline_code",
+        &out,
+    );
 }
 
 #[test]
@@ -186,10 +180,11 @@ fn render_style_markdown_flat_sections_render_at_h4() {
         ..MarkdownDocsOptions::default()
     };
     let out = generate_markdown(&pure_test_docs(), &options);
+    assert_markdown_map_snapshot("render_style_markdown_flat_sections_render_at_h4", &out);
     let page = out.get("cli.md").unwrap();
 
     // Flat entry heading is H3, so its sections render at H4 (sequential).
-    assert!(page.contains("### cli"));
+
     assert!(page.lines().any(|line| line == "#### Signature"));
     assert!(page.lines().any(|line| line == "#### Parameters"));
     assert!(page.lines().any(|line| line == "#### Returns"));
@@ -201,10 +196,5 @@ fn render_style_markdown_flat_sections_render_at_h4() {
 #[test]
 fn render_style_html_renders_throws_section() {
     let out = generate_markdown(&pure_test_docs(), &MarkdownDocsOptions::default());
-    let page = out.get("cli.md").unwrap();
-
-    assert!(page.contains("ox-api-entry__section--throws"));
-    assert!(page.contains("<h4>Throws</h4>"));
-    assert!(page.contains("CliError"));
-    assert!(!page.contains("@throws"));
+    assert_markdown_map_snapshot("render_style_html_renders_throws_section", &out);
 }

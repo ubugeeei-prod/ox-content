@@ -49,6 +49,7 @@ fn order_by_group_title_places_unspecified_at_star() {
 #[test]
 fn typedoc_group_order_defaults_to_fixed_kind_order() {
     let out = generate_markdown(&group_order_docs(), &markdown_typedoc_options());
+    assert_markdown_map_snapshot("typedoc_group_order_defaults_to_fixed_kind_order", &out);
     let index = out.get("default/index.md").unwrap();
     let functions = index.find("## Functions").unwrap();
     let classes = index.find("## Classes").unwrap();
@@ -68,6 +69,7 @@ fn typedoc_group_order_reorders_module_index_sections() {
         ..markdown_typedoc_options()
     };
     let out = generate_markdown(&group_order_docs(), &options);
+    assert_markdown_map_snapshot("typedoc_group_order_reorders_module_index_sections", &out);
     let index = out.get("default/index.md").unwrap();
     let variables = index.find("## Variables").unwrap();
     let functions = index.find("## Functions").unwrap();
@@ -87,6 +89,7 @@ fn typedoc_group_order_supports_star_wildcard() {
         ..markdown_typedoc_options()
     };
     let out = generate_markdown(&group_order_docs(), &options);
+    assert_markdown_map_snapshot("typedoc_group_order_supports_star_wildcard", &out);
     let index = out.get("default/index.md").unwrap();
     let variables = index.find("## Variables").unwrap();
     let classes = index.find("## Classes").unwrap();
@@ -111,6 +114,7 @@ fn typedoc_kind_sort_order_reorders_module_index_sections() {
         ..markdown_typedoc_options()
     };
     let out = generate_markdown(&group_order_docs(), &options);
+    assert_markdown_map_snapshot("typedoc_kind_sort_order_reorders_module_index_sections", &out);
     let index = out.get("default/index.md").unwrap();
     let variables = index.find("## Variables").unwrap();
     let functions = index.find("## Functions").unwrap();
@@ -136,6 +140,7 @@ fn typedoc_group_order_takes_precedence_over_kind_sort_order() {
         ..markdown_typedoc_options()
     };
     let out = generate_markdown(&group_order_docs(), &options);
+    assert_markdown_map_snapshot("typedoc_group_order_takes_precedence_over_kind_sort_order", &out);
     let index = out.get("default/index.md").unwrap();
     let interfaces = index.find("## Interfaces").unwrap();
     let functions = index.find("## Functions").unwrap();
@@ -166,12 +171,17 @@ fn typedoc_sort_source_order_orders_entries_by_line() {
         ..markdown_typedoc_options()
     };
     let out = generate_markdown(&docs, &options);
+    assert_markdown_map_snapshot("typedoc_sort_source_order_orders_entries_by_line", &out);
     let index = out.get("default/index.md").unwrap();
     // Source order: `zebra` (line 1) before `alpha` (line 2).
     assert!(index.find("zebra").unwrap() < index.find("alpha").unwrap());
 
     // The default (alphabetical) ordering is the opposite.
     let default_out = generate_markdown(&docs, &markdown_typedoc_options());
+    assert_markdown_map_snapshot(
+        "typedoc_sort_source_order_orders_entries_by_line__default_out",
+        &default_out,
+    );
     let default_index = default_out.get("default/index.md").unwrap();
     assert!(default_index.find("alpha").unwrap() < default_index.find("zebra").unwrap());
 }
@@ -198,6 +208,10 @@ fn typedoc_sort_required_first_then_alphabetical_orders_members() {
         ..markdown_typedoc_options()
     };
     let out = generate_markdown(&docs, &options);
+    assert_markdown_map_snapshot(
+        "typedoc_sort_required_first_then_alphabetical_orders_members",
+        &out,
+    );
     let page = out.get("default/interfaces/Opts.md").unwrap();
     let a = page.find("`a`").unwrap();
     let z = page.find("`z`").unwrap();

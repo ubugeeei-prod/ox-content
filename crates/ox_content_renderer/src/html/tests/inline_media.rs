@@ -37,7 +37,7 @@ fn test_render_image() {
     let doc = Parser::new(&allocator, "![Alt text](/path/to/image.png)").parse().unwrap();
     let mut renderer = HtmlRenderer::new();
     let html = renderer.render(&doc);
-    assert!(html.contains("<img src=\"/path/to/image.png\" alt=\"Alt text\">"));
+    insta::assert_snapshot!(html);
 }
 
 #[test]
@@ -47,5 +47,5 @@ fn test_render_image_xhtml() {
     let mut renderer =
         HtmlRenderer::with_options(HtmlRendererOptions { xhtml: true, ..Default::default() });
     let html = renderer.render(&doc);
-    assert!(html.contains("<img src=\"/logo.svg\" alt=\"Logo\" />"));
+    insta::assert_snapshot!(html);
 }

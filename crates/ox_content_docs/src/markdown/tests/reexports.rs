@@ -57,6 +57,14 @@ fn typedoc_dedupes_cross_entrypoint_reexports_to_canonical_page() {
             ..MarkdownDocsOptions::default()
         },
     );
+    assert_markdown_map_snapshot(
+        "typedoc_dedupes_cross_entrypoint_reexports_to_canonical_page",
+        &out,
+    );
+    assert_markdown_map_snapshot(
+        "typedoc_dedupes_cross_entrypoint_reexports_to_canonical_page",
+        &out,
+    );
 
     // Exactly one canonical page, placed under the defining module.
     assert!(out.contains_key("context/functions/createCommandContext.md"));
@@ -64,21 +72,10 @@ fn typedoc_dedupes_cross_entrypoint_reexports_to_canonical_page() {
     assert!(!out.contains_key("plugin/functions/createCommandContext.md"));
 
     // The defining module lists it as a real entry; re-exporters reference it.
-    let context_index = out.get("context/index.md").unwrap();
-    assert!(context_index.contains("## Functions"));
-    assert!(!context_index.contains("## References"));
 
-    let default_index = out.get("default/index.md").unwrap();
-    assert!(default_index.contains("## References"));
     // TypeDoc-style reference entry (heading + "Re-exports" link), not a bullet.
-    assert!(default_index.contains("### createCommandContext"));
-    assert!(default_index.contains("Re-exports [createCommandContext]("));
-    assert!(!default_index.contains("- Re-exports"));
-    // The re-export reference and any cross-link resolve to the canonical page.
-    assert!(default_index.contains("context/functions/createCommandContext"));
 
-    let run_default = out.get("default/functions/runDefault.md").unwrap();
-    assert!(run_default.contains("context/functions/createCommandContext"));
+    // The re-export reference and any cross-link resolve to the canonical page.
 }
 
 #[test]
@@ -118,18 +115,13 @@ fn typedoc_references_section_uses_typedoc_layout() {
             ..MarkdownDocsOptions::default()
         },
     );
+    assert_markdown_map_snapshot("typedoc_references_section_uses_typedoc_layout", &out);
     let default_index = out.get("default/index.md").unwrap();
 
-    assert!(default_index.contains("## References"));
-    assert!(default_index.contains("### CommandContextParams"));
     // The link resolves to the canonical page under the owner module (context).
-    assert!(default_index.contains(
-        "Re-exports [CommandContextParams](../context/interfaces/CommandContextParams.md)"
-    ));
-    assert!(default_index.contains("### createCommandContext"));
+
     // Two references → exactly one thematic-break separator between them.
     assert_eq!(default_index.matches("\n***\n").count(), 1);
-    assert!(!default_index.contains("- Re-exports"));
 }
 
 #[test]
@@ -164,6 +156,7 @@ fn typedoc_references_collapse_overloads_to_one_entry() {
             ..MarkdownDocsOptions::default()
         },
     );
+    assert_markdown_map_snapshot("typedoc_references_collapse_overloads_to_one_entry", &out);
     let default_index = out.get("default/index.md").unwrap();
 
     assert_eq!(default_index.matches("### define").count(), 1);
@@ -197,10 +190,8 @@ fn typedoc_dedupe_without_source_path_uses_first_module() {
             ..MarkdownDocsOptions::default()
         },
     );
+    assert_markdown_map_snapshot("typedoc_dedupe_without_source_path_uses_first_module", &out);
 
     assert!(out.contains_key("default/interfaces/Command.md"));
     assert!(!out.contains_key("plugin/interfaces/Command.md"));
-    let plugin_index = out.get("plugin/index.md").unwrap();
-    assert!(plugin_index.contains("### Command"));
-    assert!(plugin_index.contains("Re-exports [Command]("));
 }

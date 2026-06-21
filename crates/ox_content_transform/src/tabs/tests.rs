@@ -14,17 +14,14 @@ fn expands_two_tabs_matching_characterization() {
 #[test]
 fn uses_label_attribute_when_present() {
     let result = transform_tabs(r#"<tabs><tab label="First">x</tab></tabs>"#, 0);
-    assert!(result.html.contains("<label for=\"ox-tab-0-0\">First</label>"));
-    assert!(result.html.contains("<summary>First</summary>"));
+    insta::assert_snapshot!(result.html);
 }
 
 #[test]
 fn numbers_groups_from_start_and_counts() {
     let result = transform_tabs(r"<tabs><tab>a</tab></tabs> middle <tabs><tab>b</tab></tabs>", 5);
     assert_eq!(result.group_count, 2);
-    assert!(result.html.contains(r#"data-group="5""#));
-    assert!(result.html.contains(r#"data-group="6""#));
-    assert!(result.html.contains(" middle "));
+    insta::assert_snapshot!(result.html);
 }
 
 #[test]
@@ -47,7 +44,5 @@ fn passes_through_without_tabs_marker() {
 fn preserves_rich_inner_content() {
     let result =
         transform_tabs(r#"<tabs><tab label="Code"><pre><code>x</code></pre></tab></tabs>"#, 0);
-    assert!(result
-        .html
-        .contains(r#"<div class="ox-tab-panel" data-tab="0"><pre><code>x</code></pre></div>"#));
+    insta::assert_snapshot!(result.html);
 }

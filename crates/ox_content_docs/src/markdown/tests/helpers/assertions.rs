@@ -1,8 +1,61 @@
+use std::collections::BTreeMap;
+
+pub(in crate::markdown::tests) fn assert_markdown_snapshot(name: &str, markdown: &str) {
+    let markdown = visible_trailing_whitespace(markdown);
+    insta::with_settings!({
+        snapshot_path => "../snapshots",
+        prepend_module_to_snapshot => false,
+        omit_expression => true,
+    }, {
+        insta::assert_snapshot!(name, markdown);
+    });
+}
+
+pub(in crate::markdown::tests) fn assert_markdown_map_snapshot(
+    name: &str,
+    markdown: &BTreeMap<String, String>,
+) {
+    let mut rendered = String::new();
+    for (path, content) in markdown {
+        rendered.push_str("===== ");
+        rendered.push_str(path);
+        rendered.push_str(" =====\n");
+        rendered.push_str(content);
+        if !content.ends_with('\n') {
+            rendered.push('\n');
+        }
+    }
+    assert_markdown_snapshot(name, &rendered);
+}
+
+fn visible_trailing_whitespace(value: &str) -> String {
+    let mut rendered = String::new();
+    for segment in value.split_inclusive('\n') {
+        let (line, has_newline) =
+            segment.strip_suffix('\n').map_or((segment, false), |line| (line, true));
+        let trimmed = line.trim_end_matches([' ', '\t']);
+        rendered.push_str(trimmed);
+        for ch in line[trimmed.len()..].chars() {
+            match ch {
+                ' ' => rendered.push_str("<sp>"),
+                '\t' => rendered.push_str("<tab>"),
+                _ => rendered.push(ch),
+            }
+        }
+        if has_newline {
+            rendered.push('\n');
+        }
+    }
+    rendered
+}
+
 pub(in crate::markdown::tests) fn assert_no_api_html(markdown: &str) {
-    assert!(!markdown.contains("<details"), "unexpected <details> in:\n{markdown}");
-    assert!(!markdown.contains("class=\"ox-api"), "unexpected ox-api html in:\n{markdown}");
-    assert!(!markdown.contains("<table"), "unexpected <table> in:\n{markdown}");
-    assert!(!markdown.contains("ox-api-controls"), "unexpected controls in:\n{markdown}");
+    assert!(
+        !["<details", "class=\"ox-api", "<table", "ox-api-controls"]
+            .iter()
+            .any(|needle| markdown.contains(needle)),
+        "unexpected API HTML in:\n{markdown}"
+    );
 }
 
 /// Asserts heading levels never increase by more than one (markdownlint

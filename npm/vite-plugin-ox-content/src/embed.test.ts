@@ -26,7 +26,7 @@ describe("builtin embed input hardening", () => {
       '<GitHub repo="../secret"></GitHub>',
       new Map([["../secret", null]]),
     );
-    expect(html).toContain('href="#"');
+    expect(html).toMatchSnapshot();
   });
 
   it("accepts GitHub source permalinks and loc ranges", async () => {
@@ -76,12 +76,7 @@ describe("builtin embed input hardening", () => {
         { cache: false },
       );
 
-      expect(html).toContain("ox-github-code");
-      expect(html).toContain("src/index.ts");
-      expect(html).toContain("L2-L3 - 2 LOC");
-      expect(html).toContain('data-line="2"');
-      expect(html).toContain("const second = 2;");
-      expect(html).not.toContain("const first = 1;");
+      expect(html).toMatchSnapshot();
     } finally {
       globalThis.fetch = originalFetch;
     }
@@ -104,7 +99,7 @@ describe("builtin embed input hardening", () => {
       '<OgCard url="javascript:alert(1)"></OgCard>',
       new Map([["javascript:alert(1)", null]]),
     );
-    expect(html).toContain('href="#"');
+    expect(html).toMatchSnapshot();
   });
 
   it("runs GitHub and Open Graph embeds through the shared builtin transform", async () => {
@@ -116,9 +111,7 @@ describe("builtin embed input hardening", () => {
       },
     );
 
-    expect(html).toContain("ox-github-card");
-    expect(html).toContain("ox-ogp-simple");
-    expect(html).toContain('href="#"');
+    expect(html).toMatchSnapshot();
   });
 
   it("can disable builtin embeds", async () => {
@@ -146,8 +139,7 @@ describe("builtin embed input hardening", () => {
       openGraph: false,
       pm: {},
     });
-    expect(html).toContain("ox-tabs");
-    expect(html).toContain("pnpm add -D vite");
+    expect(html).toMatchSnapshot();
   });
 
   it("renders opt-in static media embeds through the shared builtin transform", async () => {
@@ -164,9 +156,6 @@ describe("builtin embed input hardening", () => {
       },
     );
 
-    expect(html).toContain("ox-spotify");
-    expect(html).toContain("https://open.spotify.com/embed/track/abc123");
-    expect(html).toContain("https://x.com/i/web/status/123");
-    expect(html).toContain("static text");
+    expect(html).toMatchSnapshot();
   });
 });

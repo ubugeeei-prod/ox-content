@@ -1,0 +1,5 @@
+---
+source: crates/ox_content_renderer/src/html/tests/blocks.rs
+expression: html
+---
+<h2 id="intro">Intro</h2>

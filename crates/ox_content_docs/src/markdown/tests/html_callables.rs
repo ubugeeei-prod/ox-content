@@ -65,16 +65,12 @@ fn typedoc_html_renders_class_callable_member_details() {
     }];
 
     let markdown = generate_markdown(&docs, &html_typedoc_options());
-    let page = markdown.get("default/classes/DefaultTranslation.md").unwrap();
-
-    assert!(page.contains("<h4>Implements</h4>"));
-    assert!(page.contains("TranslationAdapter"));
-    assert!(page.contains("ox-api-entry__member-group--details"));
-    assert!(page.contains("<h5>getResource()</h5>"));
-    assert!(page.contains("ox-api-entry__member-detail-section--params"));
-    assert!(page.contains("<h6>Returns</h6>"));
-    assert!(page.contains("<h6>Throws</h6>"));
-    assert!(page.contains("ResourceError"));
-    assert!(page.contains("ox-api-entry__member-detail-section--implementation-of"));
-    assert!(page.contains("TranslationAdapter.getResource"));
+    assert_markdown_map_snapshot(
+        "typedoc_html_renders_class_callable_member_details__markdown",
+        &markdown,
+    );
+    assert_markdown_map_snapshot(
+        "typedoc_html_renders_class_callable_member_details__markdown",
+        &markdown,
+    );
 }

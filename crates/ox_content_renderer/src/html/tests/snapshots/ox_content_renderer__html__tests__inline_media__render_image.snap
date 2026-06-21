@@ -1,0 +1,5 @@
+---
+source: crates/ox_content_renderer/src/html/tests/inline_media.rs
+expression: html
+---
+<p><img src="/path/to/image.png" alt="Alt text"></p>

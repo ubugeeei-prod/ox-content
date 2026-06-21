@@ -23,11 +23,9 @@ fn typedoc_module_index_resolves_links_in_table_cells() {
             ..MarkdownDocsOptions::default()
         },
     );
-    let index = out.get("default/index.md").unwrap();
+    assert_markdown_map_snapshot("typedoc_module_index_resolves_links_in_table_cells", &out);
 
     // The `{@link}` is resolved to a Markdown link inside the cell, not left raw.
-    assert!(index.contains("[argument schema](./interfaces/ArgSchema.md)"));
-    assert!(!index.contains("{@link"));
 }
 
 #[test]
@@ -48,6 +46,7 @@ fn typedoc_module_index_collapses_overloads_to_one_row() {
             ..MarkdownDocsOptions::default()
         },
     );
+    assert_markdown_map_snapshot("typedoc_module_index_collapses_overloads_to_one_row", &out);
     let index = out.get("default/index.md").unwrap();
 
     assert_eq!(index.matches("| [cli](./functions/cli.md) |").count(), 1);
@@ -68,9 +67,7 @@ fn typedoc_module_index_escapes_pipes_in_table_cells() {
             ..MarkdownDocsOptions::default()
         },
     );
-    let index = out.get("default/index.md").unwrap();
-
-    assert!(index.contains("Returns A \\| B."));
+    assert_markdown_map_snapshot("typedoc_module_index_escapes_pipes_in_table_cells", &out);
 }
 
 #[test]
@@ -108,12 +105,12 @@ fn typedoc_path_strategy_uses_clean_base_path_and_module_scope() {
             ..MarkdownDocsOptions::default()
         },
     );
-    let default_page = markdown.get("default/functions/runDefault.md").unwrap();
-    let plugin_page = markdown.get("plugin/functions/runPlugin.md").unwrap();
-    let index = markdown.get("index.md").unwrap();
-
-    assert!(index.contains("[default](/api/default)"));
-    assert!(default_page.contains("<a href=\"/api/default/interfaces/Command\">Command</a>"));
-    assert!(plugin_page.contains("<a href=\"/api/plugin/interfaces/Command\">Command</a>"));
-    assert!(!default_page.contains(".md"));
+    assert_markdown_map_snapshot(
+        "typedoc_path_strategy_uses_clean_base_path_and_module_scope__markdown",
+        &markdown,
+    );
+    assert_markdown_map_snapshot(
+        "typedoc_path_strategy_uses_clean_base_path_and_module_scope__markdown",
+        &markdown,
+    );
 }

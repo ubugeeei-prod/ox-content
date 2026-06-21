@@ -30,12 +30,7 @@ fn type_parameters_render_as_a_section() {
             ..MarkdownDocsOptions::default()
         },
     );
-    let page = markdown.get("mod/functions/make.md").unwrap();
-
-    assert!(page.contains("## Type Parameters"));
-    assert!(!page.contains("**Type Parameters**"));
-    assert!(page.contains("`G` *extends* `Base` = `Default`"));
-    assert!(page.contains("- `T` - The value type."));
+    assert_markdown_map_snapshot("type_parameters_render_as_a_section__markdown", &markdown);
 }
 
 #[test]
@@ -68,13 +63,14 @@ fn markdown_display_format_options_render_tables() {
             ..MarkdownDocsOptions::default()
         },
     );
-    let index = markdown.get("mod/index.md").unwrap();
-    let page = markdown.get("mod/functions/make.md").unwrap();
-
-    assert!(index.contains("| Function | Description |"));
-    assert!(page.contains("| Name | Type | Description |"));
-    assert!(page.contains("| `value` | `string` | Input value. |"));
-    assert!(page.contains("| `T` | Value type. |"));
+    assert_markdown_map_snapshot(
+        "markdown_display_format_options_render_tables__markdown",
+        &markdown,
+    );
+    assert_markdown_map_snapshot(
+        "markdown_display_format_options_render_tables__markdown",
+        &markdown,
+    );
 }
 
 #[test]
@@ -108,14 +104,14 @@ fn markdown_type_parameter_table_omits_description_column_when_all_empty() {
             ..MarkdownDocsOptions::default()
         },
     );
-    let page = markdown.get("mod/functions/make.md").unwrap();
-
-    assert!(page.contains("## Type Parameters"));
-    assert!(page.contains("| Name |\n| --- |"));
-    assert!(!page.contains("| Name | Description |"));
-    assert!(page.contains("| `G` *extends* `Base` = `Default` |"));
-    assert!(page.contains("| `V` |"));
-    assert!(!page.contains("|  |"));
+    assert_markdown_map_snapshot(
+        "markdown_type_parameter_table_omits_description_column_when_all_empty__markdown",
+        &markdown,
+    );
+    assert_markdown_map_snapshot(
+        "markdown_type_parameter_table_omits_description_column_when_all_empty__markdown",
+        &markdown,
+    );
 }
 
 #[test]
@@ -149,12 +145,14 @@ fn markdown_type_parameter_table_renders_dash_for_missing_descriptions() {
             ..MarkdownDocsOptions::default()
         },
     );
-    let page = markdown.get("mod/functions/make.md").unwrap();
-
-    assert!(page.contains("| Name | Description |\n| --- | --- |"));
-    assert!(page.contains("| `T` | Value type. |"));
-    assert!(page.contains("| `G` *extends* `Base` = `Default` | - |"));
-    assert!(!page.contains("| `G` *extends* `Base` = `Default` |  |"));
+    assert_markdown_map_snapshot(
+        "markdown_type_parameter_table_renders_dash_for_missing_descriptions__markdown",
+        &markdown,
+    );
+    assert_markdown_map_snapshot(
+        "markdown_type_parameter_table_renders_dash_for_missing_descriptions__markdown",
+        &markdown,
+    );
 }
 
 #[test]
@@ -196,14 +194,8 @@ fn html_type_parameter_tables_follow_empty_description_policy() {
             ..MarkdownDocsOptions::default()
         },
     );
-    let all_empty_page = html.get("mod/functions/make.md").unwrap();
-    let mixed_page = html.get("mod/functions/build.md").unwrap();
-
-    assert!(all_empty_page.contains("<thead><tr><th>Name</th></tr></thead>"));
-    assert!(!all_empty_page.contains("<th>Description</th>"));
-    assert!(!all_empty_page.contains("<td></td>"));
-
-    assert!(mixed_page.contains("<thead><tr><th>Name</th><th>Description</th></tr></thead>"));
-    assert!(mixed_page.contains("<td>Value type.</td>"));
-    assert!(mixed_page.contains("<td>-</td>"));
+    assert_markdown_map_snapshot(
+        "html_type_parameter_tables_follow_empty_description_policy__html",
+        &html,
+    );
 }

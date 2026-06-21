@@ -83,9 +83,7 @@ export function plugin<Id, PluginExt>(options: {
     assert_eq!(params.len(), 5);
     assert_eq!(params[0].name, "options");
     assert_ne!(params[0].r#type, "{ ... }");
-    assert!(params[0].r#type.contains("id: Id"));
-    assert!(params[0].r#type.contains("name?: string"));
-    assert!(params[0].r#type.contains("setup?: (ctx: Readonly<PluginContext>) => Awaitable<void>"));
+    insta::assert_snapshot!(params[0].r#type);
     assert_eq!(params[0].description, "Plugin options.");
     assert_eq!(params[1].name, "options.id");
     assert_eq!(params[1].r#type, "Id");

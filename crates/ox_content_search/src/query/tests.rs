@@ -82,7 +82,7 @@ fn test_search_limit_generates_returned_snippets_only() {
     let results = index.search("test", &options);
     assert_eq!(results.len(), 1);
     assert_eq!(results[0].id, "1");
-    assert!(results[0].snippet.contains("test"));
+    insta::assert_snapshot!(results[0].snippet);
 }
 
 #[test]
@@ -101,7 +101,7 @@ fn test_search_snippet_handles_multibyte_boundaries() {
     let results = index.search("検索", &options);
     assert_eq!(results.len(), 1);
     assert_eq!(results[0].id, "jp");
-    assert!(results[0].snippet.contains("検索"));
+    insta::assert_snapshot!(results[0].snippet);
 }
 
 #[test]
@@ -111,8 +111,7 @@ fn test_generate_snippet_keeps_word_boundary_character() {
     let snippet =
         index.generate_snippet("alpha beta gamma delta epsilon", &[String::from("delta")], 12);
 
-    assert!(snippet.contains("gamma"));
-    assert!(snippet.contains("delta"));
+    insta::assert_snapshot!(snippet);
 }
 
 #[test]

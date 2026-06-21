@@ -1,0 +1,57 @@
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`vitepress migration CLI > runs the migration CLI through a runtime adapter 1`] = `
+"import type { OxContentOptions } from "@ox-content/vite-plugin";
+
+const config = {
+  base: "/docs/",
+  ssg: {
+    siteName: "Docs",
+    navigation: [
+      {
+        title: "Guide",
+        items: [
+          {
+            title: "Intro",
+            path: "/intro",
+          },
+        ],
+      },
+    ],
+  },
+  srcDir: "docs",
+} satisfies OxContentOptions;
+
+export default config;
+"
+`;
+
+exports[`vitepress migration helpers > generates an editable ox-content options module 1`] = `
+"import type { OxContentOptions } from "@ox-content/vite-plugin";
+
+const config = {
+  base: "/docs/",
+  search: {
+    placeholder: "Search docs",
+  },
+  ssg: {
+    siteName: "Docs",
+    navigation: [
+      {
+        title: "Guide",
+        items: [
+          {
+            title: "Intro",
+            path: "/intro",
+          },
+        ],
+      },
+    ],
+  },
+  srcDir: "docs",
+  outDir: "dist",
+} satisfies OxContentOptions;
+
+export default config;
+"
+`;

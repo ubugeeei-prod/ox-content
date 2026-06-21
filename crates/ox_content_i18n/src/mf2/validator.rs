@@ -207,22 +207,23 @@ mod tests {
         let msg = mf2::parse(source).unwrap();
         let errors = validate(&msg);
         assert!(!errors.is_empty());
-        assert!(errors.iter().any(|e| e.to_string().contains("catch-all")));
+        insta::assert_debug_snapshot!(errors);
     }
 
     #[test]
     fn duplicate_option() {
         let msg = mf2::parse("{$x :number style=decimal style=percent}").unwrap();
         let errors = validate(&msg);
-        assert!(errors.iter().any(|e| e.to_string().contains("duplicate option")));
+        insta::assert_debug_snapshot!(errors);
     }
 
     #[test]
     fn extract_variables_simple() {
         let msg = mf2::parse("Hello {$name}, you have {$count} items").unwrap();
         let vars = extract_variables(&msg);
-        assert!(vars.contains("name"));
-        assert!(vars.contains("count"));
+        let mut vars = vars.into_iter().collect::<Vec<_>>();
+        vars.sort();
+        assert_eq!(vars, vec!["count".to_string(), "name".to_string()]);
     }
 
     #[test]
@@ -230,6 +231,8 @@ mod tests {
         let source = ".input {$count :number}\n.match $count\none {{You have {$count} item.}}\n* {{You have {$count} items.}}";
         let msg = mf2::parse(source).unwrap();
         let vars = extract_variables(&msg);
-        assert!(vars.contains("count"));
+        let mut vars = vars.into_iter().collect::<Vec<_>>();
+        vars.sort();
+        assert_eq!(vars, vec!["count".to_string()]);
     }
 }

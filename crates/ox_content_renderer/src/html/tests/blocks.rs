@@ -26,8 +26,7 @@ fn test_render_heading_ids_are_unique_and_unicode() {
     let doc = Parser::new(&allocator, "## はじめに\n## はじめに").parse().unwrap();
     let mut renderer = HtmlRenderer::new();
     let html = renderer.render(&doc);
-    assert!(html.contains("<h2 id=\"はじめに\">はじめに</h2>"));
-    assert!(html.contains("<h2 id=\"はじめに-1\">はじめに</h2>"));
+    insta::assert_snapshot!(html);
 }
 
 #[test]
@@ -36,7 +35,7 @@ fn test_render_heading_id_uses_inline_text() {
     let doc = Parser::new(&allocator, "## **API** `Index` [Guide](./guide.md)").parse().unwrap();
     let mut renderer = HtmlRenderer::new();
     let html = renderer.render(&doc);
-    assert!(html.starts_with("<h2 id=\"api-index-guide\">"));
+    insta::assert_snapshot!(html);
 }
 
 #[test]
@@ -46,11 +45,7 @@ fn test_render_inline_toc_directive() {
     let mut renderer = HtmlRenderer::new();
     let html = renderer.render(&doc);
 
-    assert!(html.contains("<nav class=\"ox-toc\" aria-label=\"Table of contents\">"));
-    assert!(html.contains("<a href=\"#title\">Title</a>"));
-    assert!(html.contains("<a href=\"#intro\">Intro</a>"));
-    assert!(html.contains("<a href=\"#api\">API</a>"));
-    assert!(!html.contains("<p>[[toc]]</p>"));
+    insta::assert_snapshot!(html);
 }
 
 #[test]
@@ -61,9 +56,7 @@ fn test_render_inline_toc_uses_unique_and_unicode_ids() {
     let mut renderer = HtmlRenderer::new();
     let html = renderer.render(&doc);
 
-    assert!(html.contains("href=\"#setup\""));
-    assert!(html.contains("href=\"#setup-1\""));
-    assert!(html.contains("href=\"#はじめに\""));
+    insta::assert_snapshot!(html);
 }
 
 #[test]
@@ -73,9 +66,7 @@ fn test_render_inline_toc_requires_standalone_text() {
     let mut renderer = HtmlRenderer::new();
     let html = renderer.render(&doc);
 
-    assert!(html.contains("<p>See [[toc]] here</p>"));
-    assert!(html.contains("<p><code>[[toc]]</code></p>"));
-    assert!(!html.contains("ox-toc"));
+    insta::assert_snapshot!(html);
 }
 
 #[test]
@@ -90,8 +81,7 @@ fn test_render_inline_toc_marker_is_suppressed_when_no_headings() {
     let mut renderer = HtmlRenderer::new();
     let html = renderer.render(&doc);
 
-    assert!(!html.contains("[[toc]]"), "marker leaked into output: {html}");
-    assert!(!html.contains("<p>"), "expected no paragraph wrapper: {html}");
+    assert_eq!(html, "");
 }
 
 #[test]
@@ -104,9 +94,7 @@ fn test_render_inline_toc_marker_is_suppressed_when_filtered_by_depth() {
         HtmlRenderer::with_options(HtmlRendererOptions { toc_max_depth: 0, ..Default::default() });
     let html = renderer.render(&doc);
 
-    assert!(!html.contains("[[toc]]"), "marker leaked: {html}");
-    // The heading should still render as a heading (not as a TOC entry).
-    assert!(html.contains("<h2"), "heading missing: {html}");
+    insta::assert_snapshot!(html);
 }
 
 #[test]
@@ -117,9 +105,7 @@ fn test_render_inline_toc_honors_max_depth() {
         HtmlRenderer::with_options(HtmlRendererOptions { toc_max_depth: 2, ..Default::default() });
     let html = renderer.render(&doc);
 
-    assert!(html.contains("href=\"#title\""));
-    assert!(html.contains("href=\"#intro\""));
-    assert!(!html.contains("href=\"#api\""));
+    insta::assert_snapshot!(html);
 }
 
 #[test]
@@ -137,9 +123,7 @@ fn test_render_block_quote_with_inline() {
     let doc = Parser::new(&allocator, "> **Note:** This is important").parse().unwrap();
     let mut renderer = HtmlRenderer::new();
     let html = renderer.render(&doc);
-    assert!(html.contains("<blockquote>"));
-    assert!(html.contains("<strong>Note:</strong>"));
-    assert!(html.contains("</blockquote>"));
+    insta::assert_snapshot!(html);
 }
 
 #[test]
@@ -149,10 +133,7 @@ fn test_render_github_style_important_callout() {
     let mut renderer = HtmlRenderer::new();
     let html = renderer.render(&doc);
 
-    assert!(html.contains("<blockquote class=\"ox-callout ox-callout--important\">"));
-    assert!(html.contains("<p class=\"ox-callout-title\">Important</p>"));
-    assert!(html.contains("<p>This is important.</p>"));
-    assert!(!html.contains("[!IMPORTANT]"));
+    insta::assert_snapshot!(html);
 }
 
 #[test]
@@ -162,8 +143,5 @@ fn test_render_github_style_callout_with_inline_content_after_marker() {
     let mut renderer = HtmlRenderer::new();
     let html = renderer.render(&doc);
 
-    assert!(html.contains("<blockquote class=\"ox-callout ox-callout--note\">"));
-    assert!(html.contains("<p class=\"ox-callout-title\">Note</p>"));
-    assert!(html.contains("<p>Supports <strong>inline</strong> content</p>"));
-    assert!(!html.contains("[!NOTE]"));
+    insta::assert_snapshot!(html);
 }

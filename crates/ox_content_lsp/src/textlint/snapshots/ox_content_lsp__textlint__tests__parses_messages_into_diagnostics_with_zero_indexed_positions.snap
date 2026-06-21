@@ -1,0 +1,5 @@
+---
+source: crates/ox_content_lsp/src/textlint/tests.rs
+expression: first.message
+---
+Line 1 sentence length(82) exceeds the maximum sentence length of 80.

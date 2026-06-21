@@ -104,10 +104,10 @@ mod tests {
     #[test]
     fn test_span_contains() {
         let span = Span::new(10, 20);
-        assert!(span.contains(10));
-        assert!(span.contains(15));
-        assert!(!span.contains(20));
-        assert!(!span.contains(5));
+        assert_eq!(
+            [span.contains(10), span.contains(15), span.contains(20), span.contains(5)],
+            [true, true, false, false]
+        );
     }
 
     #[test]

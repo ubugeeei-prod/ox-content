@@ -34,7 +34,7 @@ fn parses_messages_into_diagnostics_with_zero_indexed_positions() {
     assert_eq!(first.range.start.line, 0, "textlint line 1 → LSP line 0");
     assert_eq!(first.range.start.character, 0);
     assert_eq!(first.source.as_deref(), Some("textlint"));
-    assert!(first.message.contains("sentence length"));
+    insta::assert_snapshot!(first.message);
     let code = first.code.as_ref().unwrap();
     let tower_lsp::lsp_types::NumberOrString::String(rule) = code else {
         panic!("expected a string rule id, got {code:?}");

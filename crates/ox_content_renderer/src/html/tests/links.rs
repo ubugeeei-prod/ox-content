@@ -15,10 +15,7 @@ fn test_convert_md_link_from_index_file() {
         ..Default::default()
     });
     let html = renderer.render(&doc);
-    assert!(
-        html.contains("href=\"./docs/index.html\""),
-        "Expected ./docs/index.html but got: {html}"
-    );
+    insta::assert_snapshot!(html);
 }
 
 #[test]
@@ -34,10 +31,7 @@ fn test_convert_md_link_from_non_index_file() {
         ..Default::default()
     });
     let html = renderer.render(&doc);
-    assert!(
-        html.contains("href=\"../docs/index.html\""),
-        "Expected ../docs/index.html but got: {html}"
-    );
+    insta::assert_snapshot!(html);
 }
 
 #[test]
@@ -52,10 +46,7 @@ fn test_convert_md_link_plain_relative_from_index() {
         ..Default::default()
     });
     let html = renderer.render(&doc);
-    assert!(
-        html.contains("href=\"./types/index.html\""),
-        "Expected ./types/index.html but got: {html}"
-    );
+    insta::assert_snapshot!(html);
 }
 
 #[test]
@@ -71,8 +62,7 @@ fn test_convert_mdx_and_markdown_links() {
         ..Default::default()
     });
     let html = renderer.render(&doc);
-    assert!(html.contains("href=\"./component/index.html\""), "Got: {html}");
-    assert!(html.contains("href=\"./guide/index.html\""), "Got: {html}");
+    insta::assert_snapshot!(html);
 }
 
 #[test]
@@ -87,10 +77,7 @@ fn test_convert_md_link_parent_relative_from_index() {
         ..Default::default()
     });
     let html = renderer.render(&doc);
-    assert!(
-        html.contains("href=\"../guide/index.html\""),
-        "Expected ../guide/index.html but got: {html}"
-    );
+    insta::assert_snapshot!(html);
 }
 
 #[test]
@@ -105,8 +92,5 @@ fn test_convert_md_link_parent_relative_from_non_index() {
         ..Default::default()
     });
     let html = renderer.render(&doc);
-    assert!(
-        html.contains("href=\"../../guide/index.html\""),
-        "Expected ../../guide/index.html but got: {html}"
-    );
+    insta::assert_snapshot!(html);
 }

@@ -1,0 +1,5 @@
+---
+source: crates/ox_content_transform/src/tabs/tests.rs
+expression: result.html
+---
+<div class="ox-tabs-container"><div class="ox-tabs" data-group="5"><div class="ox-tabs-header"><input type="radio" name="ox-tabs-5" id="ox-tab-5-0" checked><label for="ox-tab-5-0">Tab 1</label></div><div class="ox-tab-panel" data-tab="0">a</div></div><noscript><div class="ox-tabs-fallback"><details open><summary>Tab 1</summary><div class="ox-tabs-fallback-content">a</div></details></div></noscript></div> middle <div class="ox-tabs-container"><div class="ox-tabs" data-group="6"><div class="ox-tabs-header"><input type="radio" name="ox-tabs-6" id="ox-tab-6-0" checked><label for="ox-tab-6-0">Tab 1</label></div><div class="ox-tab-panel" data-tab="0">b</div></div><noscript><div class="ox-tabs-fallback"><details open><summary>Tab 1</summary><div class="ox-tabs-fallback-content">b</div></details></div></noscript></div>

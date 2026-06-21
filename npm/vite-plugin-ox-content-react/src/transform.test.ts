@@ -24,10 +24,7 @@ describe("transformMarkdownWithReact", () => {
 
     expect(result.frontmatter).toEqual({ title: "React Guide", draft: false });
     expect(result.usedComponents).toEqual(["Alert"]);
-    expect(result.code).toContain("import Alert from '../src/components/Alert.tsx';");
-    expect(result.code).toContain('data-ox-island=\\"Alert\\"');
-    expect(result.code).toContain("&lt;Alert tone=&quot;code&quot; /&gt;");
-    expect(result.code).toContain("initIslands");
+    expect(result.code).toMatchSnapshot();
   });
 
   it("uses the static html path when no registered component is present", async () => {
@@ -38,8 +35,7 @@ describe("transformMarkdownWithReact", () => {
     );
 
     expect(result.usedComponents).toEqual([]);
-    expect(result.code).toContain("dangerouslySetInnerHTML");
-    expect(result.code).not.toContain("@ox-content/islands");
+    expect(result.code).toMatchSnapshot();
   });
 
   it("honors disabled built-in embeds from framework options", async () => {
@@ -49,8 +45,7 @@ describe("transformMarkdownWithReact", () => {
       createOptions({ embeds: { github: false, openGraph: false } }),
     );
 
-    expect(result.code).toContain('<GitHub repo=\\"ubugeeei-prod/ox-content\\"></GitHub>');
-    expect(result.code).not.toContain("ox-github-card");
+    expect(result.code).toMatchSnapshot();
   });
 });
 

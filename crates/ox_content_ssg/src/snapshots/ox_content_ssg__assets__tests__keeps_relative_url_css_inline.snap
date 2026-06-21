@@ -1,0 +1,14 @@
+---
+source: crates/ox_content_ssg/src/assets.rs
+expression: result
+---
+ExternalizedAssets {
+    pages: [
+        GeneratedHtmlPage {
+            input_path: "a.md",
+            output_path: "/tmp/site/a/index.html",
+            html: "<html><head>  <style>.hero{background:url('./hero.png')}</style></head><body></body></html>",
+        },
+    ],
+    assets: [],
+}

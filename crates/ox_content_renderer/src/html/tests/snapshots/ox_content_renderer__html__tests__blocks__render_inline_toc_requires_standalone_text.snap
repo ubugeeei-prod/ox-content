@@ -1,0 +1,7 @@
+---
+source: crates/ox_content_renderer/src/html/tests/blocks.rs
+expression: html
+---
+<p>See [[toc]] here</p>
+<p><code>[[toc]]</code></p>
+<h2 id="intro">Intro</h2>

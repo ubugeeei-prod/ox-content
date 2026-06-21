@@ -44,7 +44,7 @@ describe("incremental markdown", () => {
 
     expect(result.didCommit).toBe(false);
     expect(result.ast).toBe(null);
-    expect(JSON.stringify(result.pendingAst)).toContain('"strong"');
+    expect(result.pendingAst).toMatchSnapshot();
   });
 
   it("streams render updates from async iterables", async () => {

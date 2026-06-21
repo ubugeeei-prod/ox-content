@@ -1,0 +1,7 @@
+---
+source: crates/ox_content_renderer/src/html/tests/code.rs
+expression: html
+---
+<pre class="ox-code-block ox-code-block--annotated has-highlighted"><code class="language-ts"><span class="line ox-code-line" data-line="1">console.warn(&#39;literal&#39;) // [!code warning]</span>
+<span class="line ox-code-line ox-code-line--warning highlighted warning" data-line="2">console.warn(&#39;annotated&#39;)</span>
+<span class="line ox-code-line" data-line="3"></span></code></pre>

@@ -172,7 +172,7 @@ export type ExtractArgs<G> = G extends { args: infer A } ? A : never;
     assert_eq!(docs[0].diagnostics.len(), 1);
     assert_eq!(docs[0].diagnostics[0].code, DocsDiagnosticCode::FilteredByVisibility);
     assert_eq!(docs[0].diagnostics[0].export_name, "ExtractArgs");
-    assert!(docs[0].diagnostics[0].message.contains("@internal"));
+    insta::assert_snapshot!(docs[0].diagnostics[0].message);
 
     let with_internal = extract_docs_from_entry_points(
         &entrypoints,

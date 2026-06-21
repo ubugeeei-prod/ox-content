@@ -1,0 +1,5 @@
+---
+source: crates/ox_content_renderer/src/html/tests/links.rs
+expression: html
+---
+<p><a href="./component/index.html">Component</a> <a href="./guide/index.html">Guide</a></p>

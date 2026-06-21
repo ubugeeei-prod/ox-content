@@ -38,13 +38,7 @@ fn renders_react_create_element_code() {
     )
     .unwrap();
 
-    assert!(code.contains("createElement('div', { className: 'ox-content' }"));
-    assert!(code.contains(r#""className": "lead""#));
-    assert!(code.contains(r#""htmlFor": "name""#));
-    assert!(code.contains(r#""data-id": "42""#));
-    assert!(code.contains(r#""aria-label": "Intro""#));
-    assert!(code.contains(r#""style": { "fontWeight": "bold", "--brand": "red" }"#));
-    assert!(code.contains(r#"createElement("strong", null, "world")"#));
+    insta::assert_snapshot!(code);
 }
 
 #[test]
@@ -57,10 +51,7 @@ fn renders_vue_h_code() {
     )
     .unwrap();
 
-    assert!(code.contains("h('div', { class: 'ox-content' }"));
-    assert!(code.contains(r#"h("label", { "class": "field", "for": "name" }"#));
-    assert!(code.contains(r#"h("span", null, "Name")"#));
-    assert!(code.contains(r#"h("input", { "disabled": true, "type": "text" })"#));
+    insta::assert_snapshot!(code);
 }
 
 #[test]
@@ -82,9 +73,7 @@ fn renders_framework_islands_with_deterministic_props() {
     )
     .unwrap();
 
-    assert!(
-        code.contains(r#"createElement(Alert, { "active": true, "tone": "info" }, "Read docs")"#)
-    );
+    insta::assert_snapshot!(code);
 }
 
 #[test]

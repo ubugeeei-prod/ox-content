@@ -87,16 +87,9 @@ fn javascript_wrapper_and_declarations_cover_expected_exports() {
         "writeSearchIndex",
     ];
 
-    for export_name in expected_exports {
-        assert!(
-            index_js.contains(&format!("module.exports.{export_name} = binding.{export_name};")),
-            "index.js is missing {export_name}"
-        );
-        assert!(
-            declarations.contains(&format!("export declare function {export_name}(")),
-            "index.d.ts is missing {export_name}"
-        );
-    }
+    insta::assert_snapshot!("javascript_wrapper_expected_exports", expected_exports.join("\n"));
+    insta::assert_snapshot!("javascript_wrapper_index_js", index_js);
+    insta::assert_snapshot!("javascript_wrapper_declarations", declarations);
 }
 
 #[test]
@@ -104,9 +97,7 @@ fn javascript_wrapper_reports_native_load_errors() {
     let manifest_dir = std::path::Path::new(env!("CARGO_MANIFEST_DIR"));
     let index_js = fs::read_to_string(manifest_dir.join("index.js")).unwrap();
 
-    assert!(!index_js.contains("catch {}"));
-    assert!(index_js.contains("Native load attempts failed:"));
-    assert!(index_js.contains("formatLoadError(subPackage, error)"));
+    insta::assert_snapshot!("javascript_wrapper_native_load_errors", index_js);
 }
 
 #[test]
@@ -116,8 +107,7 @@ fn transform_passes_toc_depth_to_inline_toc() {
         Some(crate::JsTransformOptions { toc_max_depth: Some(2), ..Default::default() }),
     );
 
-    assert!(result.html.contains("href=\"#intro\""));
-    assert!(!result.html.contains("href=\"#api\""));
+    insta::assert_snapshot!(result.html);
 }
 
 #[test]
@@ -143,7 +133,7 @@ fn builds_search_index_from_directory() {
     assert_eq!(index.documents[0].id, "guide/intro");
     assert_eq!(index.documents[0].title, "Native Search");
     assert_eq!(index.documents[0].url, "/docs/guide/intro");
-    assert!(index.documents[0].body.contains("Search body text"));
+    insta::assert_snapshot!(index.documents[0].body);
 
     let _ = fs::remove_dir_all(root);
 }
@@ -211,9 +201,7 @@ fn generates_search_module_from_typed_options() {
         "/docs/search-index.json".to_string(),
     );
 
-    assert!(module.contains(
-            r#"const searchOptions = {"enabled":true,"limit":7,"prefix":false,"placeholder":"Find","hotkey":"k"};"#
-        ));
+    insta::assert_snapshot!(module);
 }
 
 #[test]

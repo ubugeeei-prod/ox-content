@@ -34,11 +34,7 @@ describe("island/parse", () => {
       expect(islands).toHaveLength(1);
       expect(islands[0].load).toBe("visible");
       expect(islands[0].props).toEqual({ initial: 0 });
-
-      expect(html).toContain('id="ox-island-0"');
-      expect(html).toContain('data-ox-load="visible"');
-      expect(html).toContain('class="ox-island"');
-      expect(html).toContain("data-ox-island=");
+      expect(html).toMatchSnapshot();
     });
 
     it("defaults the load strategy to eager when omitted", async () => {
@@ -52,7 +48,7 @@ describe("island/parse", () => {
         '<Island load="media" media="(min-width: 768px)"><Widget /></Island>',
       );
       expect(islands[0].mediaQuery).toBe("(min-width: 768px)");
-      expect(html).toContain('data-ox-media="(min-width: 768px)"');
+      expect(html).toMatchSnapshot();
     });
 
     it("parses JSX-style prop values into JS primitives and JSON", async () => {
@@ -72,14 +68,13 @@ describe("island/parse", () => {
         "<Island><A /></Island><Island><B /></Island>",
       );
       expect(islands).toHaveLength(2);
-      expect(html).toContain('id="ox-island-0"');
-      expect(html).toContain('id="ox-island-1"');
+      expect(html).toMatchSnapshot();
     });
 
     it("leaves island-free HTML without any island wrappers", async () => {
       const { html, islands } = await transformIslands("<p>just prose</p>");
       expect(islands).toHaveLength(0);
-      expect(html).not.toContain("data-ox-island");
+      expect(html).toMatchSnapshot();
     });
   });
 
@@ -98,10 +93,7 @@ describe("island/parse", () => {
 
     it("imports each component and wires up initIslands", () => {
       const script = generateHydrationScript(["Counter", "Chart"]);
-      expect(script).toContain("import Counter from './Counter';");
-      expect(script).toContain("import Chart from './Chart';");
-      expect(script).toContain("initIslands(");
-      expect(script).toContain("@ox-content/islands");
+      expect(script).toMatchSnapshot();
     });
   });
 });

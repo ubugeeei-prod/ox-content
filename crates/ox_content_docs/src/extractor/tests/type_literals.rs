@@ -81,9 +81,6 @@ export type Combinator<T> = {
     let combinator = items.iter().find(|item| item.name == "Combinator").unwrap();
     let signature = combinator.signature.as_deref().unwrap();
 
-    assert!(!signature.contains("/**"));
-    assert!(!signature.contains("@param"));
-    assert!(!signature.contains("@returns"));
     assert_eq!(signature, "export type Combinator<T> = { parse: (value: string) => T }");
 
     let parse = &combinator.children[0];
@@ -119,8 +116,6 @@ export type CommandOptions = {
     let signature = items[0].signature.as_deref().unwrap();
     let member = &items[0].children[0];
 
-    assert!(!signature.contains("/**"));
-    assert!(!signature.contains("@param"));
     assert_eq!(signature, "export type CommandOptions = { run(ctx: Context): void }");
     assert_eq!(member.name, "run");
     assert_eq!(member.kind, DocItemKind::Method);

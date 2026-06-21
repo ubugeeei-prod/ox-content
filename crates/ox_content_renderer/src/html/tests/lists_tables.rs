@@ -10,25 +10,7 @@ fn test_render_nested_list() {
     let mut renderer = HtmlRenderer::new();
     let html = renderer.render(&doc);
 
-    // Normalize newlines for comparison
-    let normalized = html.replace('\n', "");
-    // We expect:
-    // <ul>
-    //   <li>
-    //     <p>item 1</p>
-    //     <ul>
-    //       <li><p>sub 1</p></li>
-    //     </ul>
-    //   </li>
-    //   <li><p>item 2</p></li>
-    // </ul>
-    // Note: The exact placement of <p> tags depends on how we handle list content.
-    // Assuming tight list items might not have <p> if we implement loose/tight lists,
-    // but currently everything is wrapped in <p> in parse_list implementation (wrapped in Paragraph).
-
-    // Let's just check for the structure <li>...<ul>...</ul>...</li>
-    assert!(normalized.contains("<li><p>item 1</p><ul><li><p>sub 1</p></li></ul></li>"));
-    assert!(normalized.contains("<li><p>item 2</p></li>"));
+    insta::assert_snapshot!(html);
 }
 
 #[test]
@@ -40,11 +22,7 @@ fn test_render_table() {
         .unwrap();
     let mut renderer = HtmlRenderer::new();
     let html = renderer.render(&doc);
-    assert!(html.contains("<table>"));
-    assert!(html.contains("<thead>"));
-    assert!(html.contains("<th>head</th>"));
-    assert!(html.contains("<tbody>"));
-    assert!(html.contains("<td>body</td>"));
+    insta::assert_snapshot!(html);
 }
 
 #[test]
@@ -54,8 +32,7 @@ fn test_render_table_no_gfm() {
     let doc = Parser::new(&allocator, "| head |\n| --- |\n| body |").parse().unwrap();
     let mut renderer = HtmlRenderer::new();
     let html = renderer.render(&doc);
-    assert!(!html.contains("<table>"));
-    assert!(html.contains("| head |"));
+    insta::assert_snapshot!(html);
 }
 
 #[test]
@@ -64,7 +41,7 @@ fn test_render_list_with_bold() {
     let doc = Parser::new(&allocator, "- **bold** text").parse().unwrap();
     let mut renderer = HtmlRenderer::new();
     let html = renderer.render(&doc);
-    assert!(html.contains("<strong>bold</strong>"));
+    insta::assert_snapshot!(html);
 }
 
 #[test]
@@ -76,6 +53,5 @@ fn test_render_task_list() {
         .unwrap();
     let mut renderer = HtmlRenderer::new();
     let html = renderer.render(&doc);
-    assert!(html.contains("<input type=\"checkbox\" checked disabled> <p>task 1</p>"));
-    assert!(html.contains("<input type=\"checkbox\" disabled> <p>task 2</p>"));
+    insta::assert_snapshot!(html);
 }

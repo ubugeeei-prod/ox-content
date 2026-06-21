@@ -12,9 +12,7 @@ fn reports_mismatched_and_unquoted_component_props() {
     let messages: Vec<&str> =
         diagnostics.iter().map(|diagnostic| diagnostic.message.as_str()).collect();
 
-    assert!(messages.iter().any(|message| message.contains("quoted strings")));
-    assert!(messages.iter().any(|message| message.contains("does not match")));
-    assert!(messages.iter().any(|message| message.contains("missing a closing tag")));
+    insta::assert_debug_snapshot!(messages);
 }
 
 #[test]

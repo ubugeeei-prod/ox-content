@@ -1,0 +1,14 @@
+---
+source: crates/ox_content_ssg/src/html/tests/rendering.rs
+expression: html
+---
+<details class="nav-section nav-section--collapsible" data-ox-nav-state-key="group:0:Guide &amp; API">
+  <summary class="nav-title nav-title--summary">Guide &amp; API</summary>
+  <ul class="nav-list">
+    <li class="nav-item nav-item--group"><details class="nav-details" open data-ox-nav-state-key="item:group:0.0:runtime:Runtime &lt;Core&gt;"><summary class="nav-summary"><a href="#" class="nav-link nav-link--summary">Runtime &lt;Core&gt;</a></summary>
+  <ul class="nav-list nav-list--nested">
+    <li class="nav-item"><a href="/docs/runtime/setup/index.html" class="nav-link active">Setup</a></li>
+  </ul>
+    </details></li>
+  </ul>
+</details>

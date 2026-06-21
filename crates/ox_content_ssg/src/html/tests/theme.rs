@@ -37,11 +37,7 @@ fn test_generate_html_with_theme() {
 
     let html = generate_html(&page_data, &nav_groups, &config);
 
-    // Check theme CSS is applied
-    assert!(html.contains("--octc-color-primary: #3498db;"));
-    // Check footer is present
-    assert!(html.contains("Built with ox-content"));
-    assert!(html.contains("2025 Test"));
+    insta::assert_snapshot!(super::snapshot_text(&html));
 }
 
 #[test]
@@ -77,10 +73,7 @@ fn test_generate_html_with_custom_social_link() {
 
     let html = generate_html(&page_data, &[], &config);
 
-    assert!(html.contains("aria-label=\"Example\""));
-    assert!(html.contains("href=\"https://example.com\""));
-    assert!(html.contains("<svg viewBox=\"0 0 24 24\"></svg>"));
-    assert!(html.contains("<span class=\"mobile-footer-label\">Example</span>"));
+    insta::assert_snapshot!(super::snapshot_text(&html));
 }
 
 #[test]
@@ -104,10 +97,7 @@ fn test_generate_theme_css() {
 
     let css = generate_theme_css(&theme);
 
-    assert!(css.contains("--octc-color-primary: #ff0000;"));
-    assert!(css.contains("--octc-color-bg: #ffffff;"));
-    assert!(css.contains("[data-theme=\"dark\"]"));
-    assert!(css.contains("--octc-sidebar-width: 300px;"));
+    insta::assert_snapshot!(super::snapshot_text(&css));
 }
 
 #[test]
@@ -122,7 +112,5 @@ fn test_generate_footer_html() {
 
     let html = generate_footer_html(&theme);
 
-    assert!(html.contains("site-footer"));
-    assert!(html.contains("Footer message"));
-    assert!(html.contains("Copyright info"));
+    insta::assert_snapshot!(super::snapshot_text(&html));
 }

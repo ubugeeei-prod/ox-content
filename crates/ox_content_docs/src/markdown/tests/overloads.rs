@@ -32,16 +32,11 @@ fn typedoc_overloads_render_all_call_signatures() {
         ),
     ]);
     let out = generate_markdown(&docs, &markdown_typedoc_options());
+    assert_markdown_map_snapshot("typedoc_overloads_render_all_call_signatures", &out);
     let page = out.get("default/functions/plugin.md").unwrap();
 
-    assert!(page.contains("# Function: plugin()"));
     // Both public overloads survive on one page (not overwritten by the last).
     assert_eq!(page.matches("## Call Signature").count(), 2);
-    assert!(page.contains("Promise<string | undefined>"));
-    assert!(page.contains("PluginWithoutExtension"));
-    assert!(page
-        .contains("### Returns\n\n`Promise<string | undefined>` — A rendered usage or undefined."));
-    assert!(!page.contains("`Promise<string \\| undefined>`"));
 }
 
 #[test]
@@ -70,11 +65,9 @@ fn typedoc_overloads_omit_implementation_signature() {
         ),
     ]);
     let out = generate_markdown(&docs, &markdown_typedoc_options());
-    let page = out.get("default/functions/plugin.md").unwrap();
+    assert_markdown_map_snapshot("typedoc_overloads_omit_implementation_signature", &out);
 
     // The implementation signature is hidden, not rendered as a call signature.
-    assert!(!page.contains("options: any = {}"));
-    assert!(!page.contains("## Signature"));
 }
 
 #[test]
@@ -106,12 +99,20 @@ fn typedoc_overload_page_hoists_implementation_summary_and_since() {
         implementation,
     ]);
     let out = generate_markdown(&docs, &markdown_typedoc_options());
+    assert_markdown_map_snapshot(
+        "typedoc_overload_page_hoists_implementation_summary_and_since",
+        &out,
+    );
+    assert_markdown_map_snapshot(
+        "typedoc_overload_page_hoists_implementation_summary_and_since",
+        &out,
+    );
     let page = out.get("default/functions/plugin.md").unwrap();
 
     // The implementation's summary and `## Since` are hoisted above the first
     // call signature (TypeDoc treats the implementation comment as the symbol
     // comment).
-    assert!(page.contains("Define a plugin\n\n## Since\n\nv0.27.0"));
+
     let since = page.find("## Since").unwrap();
     let call = page.find("## Call Signature").unwrap();
     assert!(since < call);
@@ -136,12 +137,8 @@ fn typedoc_single_public_overload_renders_inline() {
             ),
         ]);
     let out = generate_markdown(&docs, &markdown_typedoc_options());
-    let page = out.get("default/functions/define.md").unwrap();
+    assert_markdown_map_snapshot("typedoc_single_public_overload_renders_inline", &out);
 
     // A single public overload collapses to a normal symbol page (no
     // `## Call Signature` wrapper) showing the typed signature, not `any`.
-    assert!(!page.contains("## Call Signature"));
-    assert!(page.contains("## Signature"));
-    assert!(page.contains("CommandDefinition<G>"));
-    assert!(!page.contains("definition: any"));
 }

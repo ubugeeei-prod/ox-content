@@ -48,14 +48,14 @@ fn markdown_member_type_parameters_render_before_parameters() {
             ..MarkdownDocsOptions::default()
         },
     );
+    assert_markdown_map_snapshot(
+        "markdown_member_type_parameters_render_before_parameters__pure",
+        &pure,
+    );
     let page = pure.get("mod/interfaces/PluginContext.md").unwrap();
     let type_parameters = page.find("#### Type Parameters").unwrap();
     let parameters = page.find("#### Parameters").unwrap();
     assert!(type_parameters < parameters);
-    assert!(page.contains("`L` *extends*"));
-    assert!(page.contains("Extension context."));
-    assert!(page.contains("| `Fallback` | - |"));
-    assert!(!page.contains("| `Fallback` |  |"));
 
     let html = generate_markdown(
         &docs,
@@ -66,10 +66,10 @@ fn markdown_member_type_parameters_render_before_parameters() {
             ..MarkdownDocsOptions::default()
         },
     );
-    let page = html.get("mod/interfaces/PluginContext.md").unwrap();
-    assert!(page.contains("<h6>Type Parameters</h6>"));
-    assert!(page.contains("Extension context."));
-    assert!(page.contains("<td><code>Fallback</code></td><td>-</td>"));
+    assert_markdown_map_snapshot(
+        "markdown_member_type_parameters_render_before_parameters__html",
+        &html,
+    );
 }
 
 #[test]
@@ -156,27 +156,14 @@ fn typedoc_markdown_renders_class_callable_member_details() {
             ..markdown_typedoc_options()
         },
     );
-    let page = markdown.get("default/classes/DefaultTranslation.md").unwrap();
-
-    assert!(page.contains("## Implements"));
-    assert!(page.contains("TranslationAdapter"));
-    assert!(page.contains("## Constructors"));
-    assert!(page.contains("### Constructor"));
-    assert!(page.contains(
-        "new DefaultTranslation(options: TranslationAdapterFactoryOptions): DefaultTranslation;"
-    ));
-    assert!(page.contains("#### Returns"));
-    assert!(page.contains("`DefaultTranslation`"));
-    assert!(page.contains("## Methods"));
-    assert!(page.contains("### getResource()"));
-    assert!(page.contains("getResource(locale: string): Record<string, string> | undefined;"));
-    assert!(page.contains("#### Parameters"));
-    assert!(page.contains("| `locale` | `string` | Locale name. |"));
-    assert!(page.contains("#### Returns"));
-    assert!(page.contains("`Record<string, string> | undefined` — The locale resource."));
-    assert!(!page.contains("`Record<string, string> \\| undefined`"));
-    assert!(page.contains("#### Implementation of"));
-    assert!(page.contains("TranslationAdapter.getResource"));
+    assert_markdown_map_snapshot(
+        "typedoc_markdown_renders_class_callable_member_details__markdown",
+        &markdown,
+    );
+    assert_markdown_map_snapshot(
+        "typedoc_markdown_renders_class_callable_member_details__markdown",
+        &markdown,
+    );
 }
 
 #[test]
@@ -198,14 +185,12 @@ fn typedoc_markdown_renders_function_valued_property_details() {
             ..markdown_typedoc_options()
         },
     );
-    let page = markdown.get("default/interfaces/ArgSchema.md").unwrap();
-
-    assert!(page.contains("| `parse` _(optional)_ | `(value: string) => string \\| undefined` | Parses a raw value. |"));
-    assert!(!page.contains("Parses a raw value. Returns: Parsed value."));
-    assert!(page.contains("### parse Parameters"));
-    assert!(page.contains("| `value` | `string` | Raw string value from command line. |"));
-    assert!(page.contains("### parse Returns"));
-    assert!(page.contains("`string | undefined` — Parsed value."));
-    assert!(!page.contains("`string \\| undefined` — Parsed value."));
-    assert!(!page.contains("`unknown`"));
+    assert_markdown_map_snapshot(
+        "typedoc_markdown_renders_function_valued_property_details__markdown",
+        &markdown,
+    );
+    assert_markdown_map_snapshot(
+        "typedoc_markdown_renders_function_valued_property_details__markdown",
+        &markdown,
+    );
 }

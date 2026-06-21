@@ -10,6 +10,7 @@ fn typedoc_sorts_interface_members_alphabetically() {
         member("mango", "property", false),
     ];
     let out = generate_markdown(&lifecycle_module(entry), &markdown_typedoc_options());
+    assert_markdown_map_snapshot("typedoc_sorts_interface_members_alphabetically", &out);
     let page = out.get("combinators/interfaces/Command.md").unwrap();
 
     let pos = |name: &str| page.find(&join3("`", name, "`")).unwrap();
@@ -27,6 +28,7 @@ fn typedoc_sorts_class_members_within_each_group() {
         member("build", "method", false),
     ];
     let out = generate_markdown(&lifecycle_module(entry), &markdown_typedoc_options());
+    assert_markdown_map_snapshot("typedoc_sorts_class_members_within_each_group", &out);
     let page = out.get("combinators/classes/Engine.md").unwrap();
 
     let property_pos = |name: &str| page.find(&join3("`", name, "`")).unwrap();
@@ -47,6 +49,7 @@ fn typedoc_keeps_enum_members_in_declaration_order() {
         member("Low", "enumMember", false),
     ];
     let out = generate_markdown(&lifecycle_module(entry), &markdown_typedoc_options());
+    assert_markdown_map_snapshot("typedoc_keeps_enum_members_in_declaration_order", &out);
     let page = out.get("combinators/enumerations/Level.md").unwrap();
 
     let pos = |name: &str| page.find(&join3("`", name, "`")).unwrap();
@@ -63,6 +66,7 @@ fn typedoc_html_sorts_interface_members_alphabetically() {
         member("mango", "property", false),
     ];
     let out = generate_markdown(&lifecycle_module(entry), &html_typedoc_options());
+    assert_markdown_map_snapshot("typedoc_html_sorts_interface_members_alphabetically", &out);
     let page = out.get("combinators/interfaces/Command.md").unwrap();
 
     let pos = |name: &str| page.find(&join3("<code>", name, "</code>")).unwrap();
@@ -80,12 +84,9 @@ fn typedoc_member_table_drops_kind_for_named_groups() {
         ..markdown_typedoc_options()
     };
     let out = generate_markdown(&lifecycle_module(entry), &options);
-    let page = out.get("combinators/interfaces/Command.md").unwrap();
+    assert_markdown_map_snapshot("typedoc_member_table_drops_kind_for_named_groups", &out);
 
-    assert!(page.contains("| Name | Type | Description |"));
-    assert!(!page.contains("| Name | Kind | Type | Description |"));
     // The redundant per-row kind cell is gone too.
-    assert!(!page.contains("| property |"));
 }
 
 #[test]
@@ -97,10 +98,7 @@ fn typedoc_enum_member_table_drops_kind() {
         ..markdown_typedoc_options()
     };
     let out = generate_markdown(&lifecycle_module(entry), &options);
-    let page = out.get("combinators/enumerations/Level.md").unwrap();
-
-    assert!(page.contains("| Name | Type | Description |"));
-    assert!(!page.contains("| Name | Kind | Type | Description |"));
+    assert_markdown_map_snapshot("typedoc_enum_member_table_drops_kind", &out);
 }
 
 #[test]
@@ -108,11 +106,7 @@ fn typedoc_html_member_table_drops_kind_for_named_groups() {
     let mut entry = test_entry("Command", "interface", "/repo/src/types.ts", "A command.");
     entry.members = vec![member("name", "property", false)];
     let out = generate_markdown(&lifecycle_module(entry), &html_typedoc_options());
-    let page = out.get("combinators/interfaces/Command.md").unwrap();
-
-    assert!(page.contains("<th>Name</th><th>Type</th><th>Description</th>"));
-    assert!(!page.contains("<th>Kind</th>"));
-    assert!(!page.contains("ox-api-entry__member-kind"));
+    assert_markdown_map_snapshot("typedoc_html_member_table_drops_kind_for_named_groups", &out);
 }
 
 #[test]
@@ -122,9 +116,5 @@ fn typedoc_html_enum_member_table_drops_kind() {
     let mut entry = test_entry("Level", "enum", "/repo/src/level.ts", "Level.");
     entry.members = vec![member("Low", "enumMember", false), member("High", "enumMember", false)];
     let out = generate_markdown(&lifecycle_module(entry), &html_typedoc_options());
-    let page = out.get("combinators/enumerations/Level.md").unwrap();
-
-    assert!(page.contains("<h5>Enum Members</h5>"));
-    assert!(page.contains("<th>Name</th><th>Type</th><th>Description</th>"));
-    assert!(!page.contains("<th>Kind</th>"));
+    assert_markdown_map_snapshot("typedoc_html_enum_member_table_drops_kind", &out);
 }

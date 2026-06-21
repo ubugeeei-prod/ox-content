@@ -1,0 +1,109 @@
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`transformMarkdownWithSvelte > honors disabled built-in embeds from framework options 1`] = `
+"import 'svelte/internal/disclose-version';
+import * as $ from 'svelte/internal/client';
+
+var root = $.from_html(\`<div class="ox-content svelte-14fddvt"></div>\`);
+
+export default function Embed_md($$anchor, $$props) {
+	$.push($$props, true);
+
+	const frontmatter = {};
+	const rawHtml = "<p><GitHub repo=\\"ubugeeei-prod/ox-content\\"></GitHub></p>\\n";
+	var $$exports = { frontmatter };
+	var div = root();
+
+	$.html(div, () => rawHtml, true);
+	$.reset(div);
+	$.append($$anchor, div);
+
+	return $.pop($$exports);
+}
+export const frontmatter = {};"
+`;
+
+exports[`transformMarkdownWithSvelte > turns registered components into islands and leaves fenced tags literal 1`] = `
+"import 'svelte/internal/disclose-version';
+import * as $ from 'svelte/internal/client';
+import { createRawSnippet, onMount, mount, unmount } from 'svelte';
+import { initIslands } from '@ox-content/islands';
+import Alert from '../src/components/Alert.svelte';
+
+var root = $.from_html(\`<div class="ox-content svelte-1wrpihl"></div>\`);
+
+export default function Svelte_md($$anchor, $$props) {
+	$.push($$props, true);
+
+	const frontmatter = { "title": "Svelte Guide", "draft": false };
+	const rawHtml = "<h1 id=\\"svelte-guide\\">Svelte Guide</h1>\\n<div data-ox-island=\\"Alert\\" data-ox-props='{\\"tone\\":\\"info\\",\\"active\\":true}' data-ox-content='Read **docs**.'></div>\\n<pre><code class=\\"language-svelte\\">&lt;Alert tone=&quot;code&quot; /&gt;\\n</code></pre>\\n";
+	const components = { Alert };
+	let container;
+
+	function createSvelteHydrate() {
+		const mounted = [];
+
+		return (element, props) => {
+			const componentName = element.dataset.oxIsland;
+			const Component = components[componentName];
+
+			if (!Component) return;
+
+			const islandContent = element.dataset.oxContent || element.innerHTML;
+			const componentProps = { ...props };
+
+			if (islandContent) {
+				componentProps.children = createRawSnippet(() => ({ render: () => \`<div>\${islandContent}</div>\` }));
+			}
+
+			const instance = mount(Component, { target: element, props: componentProps });
+
+			mounted.push(instance);
+
+			return () => unmount(instance);
+		};
+	}
+
+	onMount(() => {
+		if (!container) return;
+
+		const controller = initIslands(createSvelteHydrate(), { selector: '.ox-content [data-ox-island]' });
+
+		return () => controller.destroy();
+	});
+
+	var $$exports = { frontmatter };
+	var div = root();
+
+	$.html(div, () => rawHtml, true);
+	$.reset(div);
+	$.bind_this(div, ($$value) => container = $$value, () => container);
+	$.append($$anchor, div);
+
+	return $.pop($$exports);
+}
+export const frontmatter = {"title":"Svelte Guide","draft":false};"
+`;
+
+exports[`transformMarkdownWithSvelte > uses the static html path when no registered component is present 1`] = `
+"import 'svelte/internal/disclose-version';
+import * as $ from 'svelte/internal/client';
+
+var root = $.from_html(\`<div class="ox-content svelte-ds7yms"></div>\`);
+
+export default function Plain_md($$anchor, $$props) {
+	$.push($$props, true);
+
+	const frontmatter = {};
+	const rawHtml = "<h1 id=\\"plain\\">Plain</h1>\\n<p><Unknown /></p>\\n";
+	var $$exports = { frontmatter };
+	var div = root();
+
+	$.html(div, () => rawHtml, true);
+	$.reset(div);
+	$.append($$anchor, div);
+
+	return $.pop($$exports);
+}
+export const frontmatter = {};"
+`;

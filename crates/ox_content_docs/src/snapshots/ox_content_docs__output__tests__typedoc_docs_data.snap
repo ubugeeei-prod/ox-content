@@ -1,0 +1,57 @@
+---
+source: crates/ox_content_docs/src/output.rs
+expression: data
+---
+{
+  "version": 1,
+  "generatedAt": "2026-01-01T00:00:00.000Z",
+  "summary": {
+    "modules": 1,
+    "entries": 2,
+    "byKind": {
+      "function": 1,
+      "enum": 1
+    },
+    "members": 1,
+    "params": 0,
+    "returns": 0,
+    "examples": 0,
+    "deprecated": 0
+  },
+  "modules": [
+    {
+      "file": "default",
+      "description": "",
+      "entries": [
+        {
+          "name": "cli",
+          "kind": "function",
+          "description": "Runs the CLI.",
+          "file": "src/cli.ts",
+          "line": 1,
+          "endLine": 5,
+          "signature": "export function cli(): void"
+        },
+        {
+          "name": "Mode",
+          "kind": "enum",
+          "description": "Run mode.",
+          "members": [
+            {
+              "name": "Strict",
+              "kind": "enumMember",
+              "description": "Strict mode.",
+              "type": "\"strict\"",
+              "line": 2,
+              "endLine": 2
+            }
+          ],
+          "file": "src/mode.ts",
+          "line": 1,
+          "endLine": 4,
+          "signature": "export enum Mode"
+        }
+      ]
+    }
+  ]
+}

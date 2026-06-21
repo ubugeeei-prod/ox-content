@@ -1,0 +1,42 @@
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`code annotations > keeps non-annotated highlighted blocks unchanged 1`] = `
+"<pre class="shiki github-dark" style="background-color:#24292e;color:#e1e4e8" tabindex="0" data-language="ts"><code class="language-ts" data-language="ts"><span class="line"><span style="color:#F97583">const</span><span style="color:#79B8FF"> value</span><span style="color:#F97583"> =</span><span style="color:#79B8FF"> 1</span><span style="color:#E1E4E8">;</span></span>
+<span class="line"><span style="color:#F97583">const</span><span style="color:#79B8FF"> next</span><span style="color:#F97583"> =</span><span style="color:#79B8FF"> 2</span><span style="color:#E1E4E8">;</span></span>
+<span class="line"></span></code></pre>
+"
+`;
+
+exports[`code annotations > preserves pre and line classes after syntax highlighting 1`] = `
+"<pre class="shiki github-dark ox-code-block ox-code-block--annotated has-highlighted" style="background-color:#24292e;color:#e1e4e8" tabindex="0" data-language="ts"><code class="language-ts" data-language="ts"><span class="line ox-code-line ox-code-line--highlight highlighted" data-line="1"><span style="color:#F97583">const</span><span style="color:#79B8FF"> first</span><span style="color:#F97583"> =</span><span style="color:#79B8FF"> 1</span><span style="color:#E1E4E8">;</span></span>
+<span class="line ox-code-line ox-code-line--warning highlighted warning" data-line="2"><span style="color:#F97583">const</span><span style="color:#79B8FF"> second</span><span style="color:#F97583"> =</span><span style="color:#79B8FF"> 2</span><span style="color:#E1E4E8">;</span></span>
+<span class="line ox-code-line ox-code-line--error highlighted error" data-line="3"><span style="color:#F97583">throw</span><span style="color:#F97583"> new</span><span style="color:#B392F0"> Error</span><span style="color:#E1E4E8">(</span><span style="color:#9ECBFF">"boom"</span><span style="color:#E1E4E8">);</span></span>
+<span class="line ox-code-line" data-line="4"></span></code></pre>
+"
+`;
+
+exports[`code annotations > supports VitePress-style escape-next-line directives 1`] = `
+"<pre class="ox-code-block ox-code-block--annotated has-highlighted"><code class="language-ts"><span class="line ox-code-line" data-line="1">console.warn(literal) // [!code warning]</span>
+<span class="line ox-code-line ox-code-line--warning highlighted warning" data-line="2">console.warn(annotated)</span>
+<span class="line ox-code-line" data-line="3"></span></code></pre>
+"
+`;
+
+exports[`code annotations > supports VitePress-style fence metadata 1`] = `
+"<pre class="shiki github-dark ox-code-block ox-code-block--annotated ox-code-block--line-numbers line-numbers-mode ox-code-block--with-title has-highlighted" style="background-color:#24292e;color:#e1e4e8" tabindex="0" data-language="ts" data-code-title="config.ts" data-line-numbers="true" data-line-number-start="7"><code class="language-ts" data-language="ts"><span class="line ox-code-line ox-code-line--highlight highlighted" data-line="1" data-line-number="7"><span style="color:#F97583">const</span><span style="color:#79B8FF"> first</span><span style="color:#F97583"> =</span><span style="color:#79B8FF"> true</span><span style="color:#E1E4E8">;</span></span>
+<span class="line ox-code-line" data-line="2" data-line-number="8"><span style="color:#F97583">const</span><span style="color:#79B8FF"> second</span><span style="color:#F97583"> =</span><span style="color:#79B8FF"> false</span><span style="color:#E1E4E8">;</span></span>
+<span class="line ox-code-line ox-code-line--highlight highlighted" data-line="3" data-line-number="9"><span style="color:#F97583">const</span><span style="color:#79B8FF"> third</span><span style="color:#F97583"> =</span><span style="color:#79B8FF"> true</span><span style="color:#E1E4E8">;</span></span>
+<span class="line ox-code-line" data-line="4" data-line-number="10"></span></code></pre>
+"
+`;
+
+exports[`code annotations > supports VitePress-style inline directives 1`] = `
+"<pre class="shiki github-dark ox-code-block ox-code-block--annotated has-focused has-diff has-highlighted" style="background-color:#24292e;color:#e1e4e8" tabindex="0" data-language="ts"><code class="language-ts" data-language="ts"><span class="line ox-code-line ox-code-line--focus focused" data-line="1"><span style="color:#F97583">const</span><span style="color:#79B8FF"> first</span><span style="color:#F97583"> =</span><span style="color:#79B8FF"> true</span><span style="color:#E1E4E8">;</span></span>
+<span class="line ox-code-line ox-code-line--focus focused" data-line="2"><span style="color:#F97583">const</span><span style="color:#79B8FF"> second</span><span style="color:#F97583"> =</span><span style="color:#79B8FF"> false</span><span style="color:#E1E4E8">;</span></span>
+<span class="line ox-code-line ox-code-line--remove diff remove ox-code-line--dimmed" data-line="3"><span style="color:#E1E4E8">console.</span><span style="color:#B392F0">log</span><span style="color:#E1E4E8">(</span><span style="color:#9ECBFF">"before"</span><span style="color:#E1E4E8">)</span></span>
+<span class="line ox-code-line ox-code-line--add diff add ox-code-line--dimmed" data-line="4"><span style="color:#E1E4E8">console.</span><span style="color:#B392F0">log</span><span style="color:#E1E4E8">(</span><span style="color:#9ECBFF">"after"</span><span style="color:#E1E4E8">)</span></span>
+<span class="line ox-code-line ox-code-line--warning highlighted warning ox-code-line--dimmed" data-line="5"><span style="color:#E1E4E8">console.</span><span style="color:#B392F0">warn</span><span style="color:#E1E4E8">(</span><span style="color:#9ECBFF">"careful"</span><span style="color:#E1E4E8">)</span></span>
+<span class="line ox-code-line ox-code-line--error highlighted error ox-code-line--dimmed" data-line="6"><span style="color:#F97583">throw</span><span style="color:#F97583"> new</span><span style="color:#B392F0"> Error</span><span style="color:#E1E4E8">(</span><span style="color:#9ECBFF">"boom"</span><span style="color:#E1E4E8">)</span></span>
+<span class="line ox-code-line ox-code-line--dimmed" data-line="7"></span></code></pre>
+"
+`;

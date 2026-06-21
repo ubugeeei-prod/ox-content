@@ -1,0 +1,19 @@
+---
+source: crates/ox_content_ssg/src/html/tests/theme.rs
+expression: css
+---
+:root {
+  --octc-color-primary: #ff0000;
+  --octc-color-bg: #ffffff;
+}
+[data-theme="dark"] {
+  --octc-color-primary: #ff6666;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --octc-color-primary: #ff6666;
+  }
+}
+:root {
+  --octc-sidebar-width: 300px;
+}

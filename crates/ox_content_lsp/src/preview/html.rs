@@ -110,7 +110,12 @@ mod tests {
         // double-escaped by the wrapper. Same for the title — the LSP layer
         // is responsible for sanitizing inputs before they reach here.
         let out = wrap_preview_html("Title <em>x</em>", "<h1>Body</h1>");
-        assert!(out.contains("<title>Title <em>x</em></title>"));
-        assert!(out.contains("<main><h1>Body</h1></main>"));
+        insta::with_settings!({
+            snapshot_path => "snapshots",
+            prepend_module_to_snapshot => false,
+            omit_expression => true,
+        }, {
+            insta::assert_snapshot!("body_and_title_are_not_escaped_so_pre_rendered_html_passes_through", out);
+        });
     }
 }

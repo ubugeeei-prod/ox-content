@@ -8,14 +8,13 @@ use ox_content_renderer::HtmlRendererOptions;
 fn ordered_lists_preserve_start_attribute() {
     let html =
         render("3. third\n4. fourth", ParserOptions::default(), HtmlRendererOptions::default());
-    assert!(html.starts_with("<ol start=\"3\">"));
+    insta::assert_snapshot!(html);
 }
 
 #[test]
 fn task_list_without_feature_renders_literal_text() {
     let html = render("- [x] done", ParserOptions::default(), HtmlRendererOptions::default());
-    assert!(!html.contains("type=\"checkbox\""));
-    assert!(html.contains("[x] done"));
+    insta::assert_snapshot!(html);
 }
 
 #[test]
@@ -26,12 +25,7 @@ fn aligned_tables_render_align_attributes() {
         HtmlRendererOptions::default(),
     );
 
-    assert!(html.contains("<th align=\"left\">a</th>"));
-    assert!(html.contains("<th align=\"center\">b</th>"));
-    assert!(html.contains("<th align=\"right\">c</th>"));
-    assert!(html.contains("<td align=\"left\">1</td>"));
-    assert!(html.contains("<td align=\"center\">2</td>"));
-    assert!(html.contains("<td align=\"right\">3</td>"));
+    insta::assert_snapshot!(html);
 }
 
 #[test]
@@ -42,8 +36,7 @@ fn code_block_meta_does_not_leak_into_class_name() {
         HtmlRendererOptions::default(),
     );
 
-    assert!(html.contains("<pre><code class=\"language-ts\">"));
-    assert!(!html.contains("file=main.ts"));
+    insta::assert_snapshot!(html);
 }
 
 #[test]
@@ -54,10 +47,7 @@ fn fenced_code_inside_list_item_renders_as_block_code() {
         HtmlRendererOptions::default(),
     );
 
-    assert!(html.contains("<ol>"));
-    assert!(html.contains("<li><p>text</p>"));
-    assert!(html.contains("<pre><code class=\"language-ts\">const a = 1;\n</code></pre>"));
-    assert!(!html.contains("<p><code></code><code>ts"));
+    insta::assert_snapshot!(html);
 }
 
 #[test]
@@ -85,9 +75,5 @@ fn html_type6_details_allows_markdown_after_blank_line() {
         HtmlRendererOptions::default(),
     );
 
-    assert!(html.contains("<details>"));
-    assert!(html.contains("<summary>Click to expand</summary>"));
-    assert!(html.contains("<strong>bold should be markdown</strong>"));
-    assert!(html.contains("<ul>"));
-    assert!(html.contains("<pre><code class=\"language-js\">"));
+    insta::assert_snapshot!(html);
 }

@@ -1,0 +1,10 @@
+---
+source: crates/ox_content_renderer/src/html/tests/lists_tables.rs
+expression: html
+---
+<ul>
+<li><input type="checkbox" checked disabled> <p>task 1</p>
+</li>
+<li><input type="checkbox" disabled> <p>task 2</p>
+</li>
+</ul>

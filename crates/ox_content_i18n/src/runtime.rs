@@ -118,10 +118,6 @@ mod tests {
 
         let module = generate_runtime_module(&test_config(), &dictionaries);
 
-        assert!(module.contains("defaultLocale: \"en-US\""));
-        assert!(module.contains("\"common.greeting\":\"Hello\""));
-        assert!(module.contains("export function createIntl"));
-        assert!(module.contains("formatDisplayName"));
-        assert!(module.contains("\"dir\":\"rtl\""));
+        insta::assert_snapshot!(module);
     }
 }

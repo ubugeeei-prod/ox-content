@@ -1,0 +1,11 @@
+---
+source: crates/ox_content_napi/src/tests/runtime_features.rs
+expression: result.html
+---
+<nav class="ox-toc" aria-label="Table of contents">
+<ul>
+<li class="ox-toc__item ox-toc__item--depth-2"><a href="#intro">Intro</a></li>
+</ul>
+</nav>
+<h2 id="intro">Intro</h2>
+<h3 id="api">API</h3>

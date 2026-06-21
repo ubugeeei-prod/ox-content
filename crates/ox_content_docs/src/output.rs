@@ -236,8 +236,8 @@ mod tests {
         write_docs_output(&docs, &out_dir, None, &options()).unwrap();
 
         assert!(!out_dir.join("alpha.md").exists());
-        assert!(fs::read_to_string(out_dir.join("beta.md")).unwrap().contains("updated"));
-        assert!(fs::read_to_string(out_dir.join("manual.md")).unwrap().contains("Manual"));
+        assert_eq!(fs::read_to_string(out_dir.join("beta.md")).unwrap(), "# Beta updated");
+        assert_eq!(fs::read_to_string(out_dir.join("manual.md")).unwrap(), "# Manual");
 
         fs::remove_dir_all(out_dir).unwrap();
     }
@@ -325,19 +325,13 @@ mod tests {
         assert!(out_dir.join("default/enumerations/Mode.md").exists());
 
         let nav = fs::read_to_string(out_dir.join(DOCS_NAV_FILE)).unwrap();
-        assert!(nav.contains("\"path\": \"/api/default\""));
-        assert!(nav.contains("\"path\": \"/api/default/functions/cli\""));
-        assert!(nav.contains("\"path\": \"/api/default/enumerations/Mode\""));
-        assert!(nav.contains("\"title\": \"Enumerations\""));
+        insta::assert_snapshot!("typedoc_docs_nav", nav);
 
         let data = fs::read_to_string(out_dir.join(DOCS_DATA_FILE)).unwrap();
-        assert!(data.contains("\"enum\": 1"));
+        insta::assert_snapshot!("typedoc_docs_data", data);
 
         let manifest = fs::read_to_string(out_dir.join(DOCS_MANIFEST_FILE)).unwrap();
-        assert!(manifest.contains("default/functions/cli.md"));
-        assert!(manifest.contains("default/enumerations/Mode.md"));
-        assert!(manifest.contains(DOCS_NAV_FILE));
-        assert!(manifest.contains(DOCS_DATA_FILE));
+        insta::assert_snapshot!("typedoc_docs_manifest", manifest);
 
         fs::remove_dir_all(out_dir).unwrap();
     }

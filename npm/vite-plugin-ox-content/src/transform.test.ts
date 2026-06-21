@@ -18,8 +18,6 @@ describe("transformMarkdown", () => {
       title: "Guide",
       meta: { tags: ["rust"], draft: false },
     });
-    expect(result.html).toContain('<h1 id="intro">Intro</h1>');
-    expect(result.html).not.toContain("<hr>");
     expect(result.toc).toEqual([
       {
         depth: 1,
@@ -35,6 +33,7 @@ describe("transformMarkdown", () => {
         ],
       },
     ]);
+    expect(result.html).toMatchSnapshot();
   });
 
   it("keeps malformed frontmatter behavior on the Rust path", async () => {
@@ -45,8 +44,7 @@ describe("transformMarkdown", () => {
     );
 
     expect(result.frontmatter).toEqual({});
-    expect(result.html).toContain('<h1 id="body">Body</h1>');
-    expect(result.html).not.toContain("title: [broken");
+    expect(result.html).toMatchSnapshot();
   });
 
   it("runs opt-in native transforms without changing default behavior", async () => {
@@ -67,12 +65,7 @@ describe("transformMarkdown", () => {
       }),
     );
 
-    expect(result.html).toContain('class="lead"');
-    expect(result.html).toContain('<a href="/docs/install">Install guide</a>');
-    expect(result.html).toContain("\u{1F680}");
-    expect(result.html).toContain("<a>bad</a>");
-    expect(result.html).not.toContain("javascript:");
-    expect(result.html).not.toContain("onclick");
+    expect(result.html).toMatchSnapshot();
   });
 
   it("can append edit links and import source snippets when opted in", async () => {
@@ -94,11 +87,7 @@ describe("transformMarkdown", () => {
       }),
     );
 
-    expect(result.html).toContain("<pre><code");
-    expect(result.html).toContain("Suggest an edit");
-    expect(result.html).toContain(
-      "https://github.com/ubugeeei-prod/ox-content/edit/main/docs/import.md",
-    );
+    expect(result.html).toMatchSnapshot();
   });
 
   it("keeps package-manager tabs disabled unless opted in", async () => {
@@ -109,8 +98,6 @@ describe("transformMarkdown", () => {
       "docs/package-manager.md",
       createResolvedOptions(),
     );
-    expect(defaultResult.html).toContain("<pm>npm install -D vite</pm>");
-
     const optInResult = await transformMarkdown(
       markdown,
       "docs/package-manager.md",
@@ -127,8 +114,7 @@ describe("transformMarkdown", () => {
         },
       }),
     );
-    expect(optInResult.html).toContain("ox-tabs");
-    expect(optInResult.html).toContain("pnpm add -D vite");
+    expect({ defaultHtml: defaultResult.html, optInHtml: optInResult.html }).toMatchSnapshot();
   });
 
   it("preserves wrapped continuation lines inside list items", async () => {
@@ -143,10 +129,7 @@ describe("transformMarkdown", () => {
       createResolvedOptions(),
     );
 
-    expect(result.html).toContain("Testbox infrastructure across projects.");
-    expect(result.html).toContain("adopting Vize in production.");
-    expect(result.html).toContain('<a href="https://www.blacksmith.sh/"');
-    expect(result.html).toContain('<a href="https://eng.mates.education/"');
+    expect(result.html).toMatchSnapshot();
   });
 
   it("preserves safe raw media tags when sanitizing", async () => {
@@ -163,11 +146,7 @@ describe("transformMarkdown", () => {
       createResolvedOptions({ sanitize: { enabled: true } }),
     );
 
-    expect(result.html).toContain("<video controls muted playsinline");
-    expect(result.html).toContain('poster="/poster.jpg"');
-    expect(result.html).toContain('<source src="/demo.webm" type="video/webm">');
-    expect(result.html).toContain('<track src="/captions.vtt"');
-    expect(result.html).toContain('srcset="/hero-large.jpg 2x, /hero.jpg 1x"');
+    expect(result.html).toMatchSnapshot();
   });
 
   it("sanitizes after opt-in embeds are rendered", async () => {
@@ -192,10 +171,7 @@ describe("transformMarkdown", () => {
       }),
     );
 
-    expect(result.html).toContain("ox-spotify");
-    expect(result.html).toContain("https://open.spotify.com/embed/track/abc123");
-    expect(result.html).not.toContain("<script");
-    expect(result.html).not.toContain("alert");
+    expect(result.html).toMatchSnapshot();
   });
 });
 

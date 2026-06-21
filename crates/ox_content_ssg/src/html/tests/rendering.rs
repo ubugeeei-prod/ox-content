@@ -39,13 +39,7 @@ fn test_generate_html() {
 
     let html = generate_html(&page_data, &nav_groups, &config);
 
-    assert!(html.contains("Test Page - Test Site"));
-    assert!(html.contains("<h1>Hello</h1>"));
-    assert!(html.contains("Guide"));
-    assert!(html.contains("class=\"toc\""));
-    assert!(html.contains("href=\"#hello\""));
-    assert!(html.contains("Last updated:"));
-    assert!(html.contains("<time datetime=\"1970-01-01\">1970-01-01</time>"));
+    insta::assert_snapshot!(super::snapshot_text(&html));
 }
 
 #[test]
@@ -61,17 +55,7 @@ fn test_generate_bare_html() {
 #[test]
 fn test_generate_bare_html_escapes_title_but_keeps_content_raw() {
     let html = generate_bare_html("<h1>Raw & ready</h1>", "<script>alert(1)</script>");
-    let title = html
-        .split("<title>")
-        .nth(1)
-        .and_then(|value| value.split("</title>").next())
-        .expect("bare HTML should include a title element");
-
-    assert!(title.contains("alert(1)"));
-    assert!(!title.contains('<'));
-    assert!(!title.contains('>'));
-    assert!(html.contains("<h1>Raw & ready</h1>"));
-    assert!(!html.contains("<title><script>"));
+    insta::assert_snapshot!(super::snapshot_text(&html));
 }
 
 #[test]
@@ -98,18 +82,7 @@ fn test_generate_nav_html_with_nested_collapsed_items() {
     }];
 
     let html = generate_nav_html(&nav_groups, "runtime/setup");
-    assert!(html.contains(
-        "<details class=\"nav-section nav-section--collapsible\" data-ox-nav-state-key=\"group:0:Guide &amp; API\">"
-    ));
-    assert!(html.contains(
-        "<details class=\"nav-details\" open data-ox-nav-state-key=\"item:group:0.0:runtime:Runtime &lt;Core&gt;\">"
-    ));
-    assert!(html.contains("Guide &amp; API"));
-    assert!(html.contains("Runtime &lt;Core&gt;"));
-    assert!(html.contains("href=\"#\""));
-    assert!(html.contains("nav-list nav-list--nested"));
-    assert!(html.contains("class=\"nav-link active\""));
-    assert!(!html.contains("javascript:"));
+    insta::assert_snapshot!(super::snapshot_text(&html));
 }
 
 #[test]
@@ -133,10 +106,7 @@ fn test_generate_html_without_toc_omits_outline() {
     };
 
     let html = generate_html(&page_data, &[], &config);
-
-    assert!(!html.contains("class=\"toc\""));
-    assert!(!html.contains("<main class=\"main main--with-toc\">"));
-    assert!(!html.contains("Last updated:"));
+    insta::assert_snapshot!(super::snapshot_text(&html));
 }
 
 #[test]
@@ -167,7 +137,7 @@ fn test_html_locale_attrs_use_current_locale_and_direction() {
         entry_page: None,
     };
     let html = generate_html(&page_data, &[], &config);
-    assert!(html.contains("<html lang=\"ar\" dir=\"rtl\">"));
+    insta::assert_snapshot!(super::snapshot_text(&html));
 }
 
 #[test]
@@ -178,7 +148,5 @@ fn test_generate_toc_html_escapes_entries() {
         slug: "a\" onclick=\"alert(1)".to_string(),
     }]);
 
-    assert!(html.contains("A &lt;script&gt;"));
-    assert!(html.contains("href=\"#a&quot; onclick=&quot;alert(1)\""));
-    assert!(!html.contains("A <script>"));
+    insta::assert_snapshot!(super::snapshot_text(&html));
 }

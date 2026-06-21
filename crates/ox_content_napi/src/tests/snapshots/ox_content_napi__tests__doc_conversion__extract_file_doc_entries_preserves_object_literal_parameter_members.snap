@@ -1,0 +1,5 @@
+---
+source: crates/ox_content_napi/src/tests/doc_conversion.rs
+expression: "params[0].r#type"
+---
+{ id: Id; name?: string; setup?: (ctx: Readonly<PluginContext>) => Awaitable<void>; extension: PluginExt }

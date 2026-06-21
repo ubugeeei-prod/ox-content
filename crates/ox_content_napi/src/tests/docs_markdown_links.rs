@@ -23,10 +23,7 @@ fn generate_docs_markdown_accepts_clean_link_options() {
             ..Default::default()
         }),
     );
-    let index = markdown.get("index.md").unwrap();
-
-    assert!(index.contains("href=\"/api-ox/context\""));
-    assert!(index.contains("href=\"/api-ox/context#commandcontext\""));
+    assert_string_map_snapshot("generate_docs_markdown_accepts_clean_link_options", &markdown);
 }
 
 #[test]
@@ -51,12 +48,10 @@ fn generate_docs_markdown_render_style_markdown_omits_html() {
             ..Default::default()
         }),
     );
-    let page = markdown.get("context.md").unwrap();
-
-    assert!(!page.contains("<details"));
-    assert!(!page.contains("class=\"ox-api"));
-    assert!(page.contains("### CommandContext"));
-    assert!(page.contains("```ts"));
+    assert_string_map_snapshot(
+        "generate_docs_markdown_render_style_markdown_omits_html",
+        &markdown,
+    );
 }
 
 #[test]
@@ -89,10 +84,7 @@ fn generate_docs_markdown_accepts_display_format_options() {
             ..Default::default()
         }),
     );
-    let page = markdown.get("default.md").unwrap();
-
-    assert!(page.contains("| Name | Type | Description |"));
-    assert!(page.contains("| `value` | `string` | Input value. |"));
+    assert_string_map_snapshot("generate_docs_markdown_accepts_display_format_options", &markdown);
 }
 
 #[test]
@@ -140,10 +132,8 @@ fn generate_docs_markdown_type_declaration_format_table_renders_html() {
             ..Default::default()
         }),
     );
-    let page = markdown.get("default/functions/resolveArgs.md").unwrap();
-
-    assert!(page.contains("ox-api-entry__type-declaration-table"));
-    assert!(page.contains("<td><code>values</code></td>"));
-    assert!(page.contains("Resolved values."));
-    assert!(!page.contains("ox-api-entry__return-members"));
+    assert_string_map_snapshot(
+        "generate_docs_markdown_type_declaration_format_table_renders_html",
+        &markdown,
+    );
 }

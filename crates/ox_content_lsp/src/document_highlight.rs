@@ -129,10 +129,8 @@ mod tests {
         // first should highlight both `./a.md` links and not the `./b.md`.
         let source = "[one](./a.md) [two](./b.md)\n\n[three](./a.md)\n";
         let result = highlights(source, position(0, 2));
-        assert_eq!(result.len(), 2, "expected both ./a.md links, got {result:?}");
         // Ranges hug the `./a.md` URL: `[one](` is 6 chars, URL is 6 long.
-        assert!(result.contains(&(0, 6, 0, 12)), "first link URL range missing: {result:?}");
-        assert!(result.contains(&(2, 8, 2, 14)), "third link URL range missing: {result:?}");
+        assert_eq!(result, vec![(0, 6, 0, 12), (2, 8, 2, 14)]);
     }
 
     #[test]
@@ -153,8 +151,7 @@ mod tests {
     fn single_link_highlights_only_itself() {
         let source = "[solo](./only.md)\n";
         let result = highlights(source, position(0, 3));
-        assert_eq!(result.len(), 1);
-        assert!(result.contains(&(0, 7, 0, 16)), "URL range missing: {result:?}");
+        assert_eq!(result, vec![(0, 7, 0, 16)]);
     }
 
     #[test]

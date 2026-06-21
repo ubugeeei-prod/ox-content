@@ -1,0 +1,28 @@
+---
+source: crates/ox_content_og_image/src/generator.rs
+expression: svg
+---
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="630" viewBox="0 0 1200 630">
+  <rect width="100%" height="100%" fill="#0b1220"/>
+  <rect x="0.5" y="0.5" width="1199" height="629" fill="none" stroke="#223252"/>
+  <rect width="100%" height="4" fill="#4f6fae"/>
+
+  <defs>
+    <linearGradient id="brand_mark_gradient" x1="138" y1="118" x2="360" y2="392" gradientUnits="userSpaceOnUse">
+      <stop offset="0%" stop-color="#355cff"/>
+      <stop offset="100%" stop-color="#74c7ff"/>
+    </linearGradient>
+  </defs>
+
+  <g transform="translate(64 56) scale(1.5926)">
+    <text x="2" y="43" fill="#eff6ff" font-family="IBM Plex Sans, IBM Plex Mono, Avenir Next, Segoe UI, sans-serif" font-size="34" font-weight="700" letter-spacing="-1.4px">OXCONTENT</text>
+    <text x="213" y="43.5" fill="#eff6ff" font-family="IBM Plex Sans, IBM Plex Mono, Avenir Next, Segoe UI, sans-serif" font-size="40" font-weight="400">(</text>
+    <g transform="translate(216 9) scale(0.089) rotate(-7 256 256)">
+      <path d="M161 96H286C298 96 309 101 318 110L352 144C361 153 366 164 366 176V386C366 399 355 410 342 410H161C148 410 138 399 138 386V120C138 107 148 96 161 96Z" fill="url(#brand_mark_gradient)"/>
+    </g>
+    <text x="252" y="43.5" fill="#eff6ff" font-family="IBM Plex Sans, IBM Plex Mono, Avenir Next, Segoe UI, sans-serif" font-size="40" font-weight="400">)</text>
+  </g>
+
+  <text x="64" y="300" fill="#eff6ff" font-size="70" font-weight="700" letter-spacing="-3.8px" font-family="IBM Plex Sans, system-ui, sans-serif">Test Title</text>
+  <text x="64" y="358" fill="#93a4c3" font-size="28" font-family="IBM Plex Sans, system-ui, sans-serif">Test description</text>
+</svg>

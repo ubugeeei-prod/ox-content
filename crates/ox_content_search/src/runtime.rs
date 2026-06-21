@@ -60,9 +60,7 @@ mod tests {
     fn injects_options_and_json_escaped_index_path() {
         let module = generate_search_module(r#"{"limit":5,"prefix":true}"#, "/docs/search's.json");
 
-        assert!(module.contains("const searchOptions = {\"limit\":5,\"prefix\":true};"));
-        assert!(module.contains("fetch(\"/docs/search's.json\")"));
-        assert!(module.contains("export async function search"));
+        insta::assert_snapshot!(module);
     }
 
     #[test]
@@ -78,9 +76,6 @@ mod tests {
             "/docs/search-index.json",
         );
 
-        assert!(module.contains(
-            r#"const searchOptions = {"enabled":true,"limit":12,"prefix":false,"placeholder":"Find docs","hotkey":"k"};"#
-        ));
-        assert!(module.contains(r#"fetch("/docs/search-index.json")"#));
+        insta::assert_snapshot!(module);
     }
 }

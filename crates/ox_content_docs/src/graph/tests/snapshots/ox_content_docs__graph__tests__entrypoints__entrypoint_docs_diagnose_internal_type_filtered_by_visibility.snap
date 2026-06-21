@@ -1,0 +1,5 @@
+---
+source: crates/ox_content_docs/src/graph/tests/entrypoints.rs
+expression: "docs[0].diagnostics[0].message"
+---
+export "ExtractArgs" from entrypoint "default" was excluded from docs because it is marked @internal

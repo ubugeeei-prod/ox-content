@@ -1,0 +1,15 @@
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`SSG route helpers > generates bare HTML through the NAPI-backed wrapper 1`] = `
+"<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Bare &#60;Page&#62;</title>
+</head>
+<body>
+<main>Body</main>
+</body>
+</html>"
+`;

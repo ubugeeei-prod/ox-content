@@ -55,9 +55,7 @@ describe("generateSearchModule", () => {
   it("generates the client runtime through the native binding", () => {
     const mod = generateSearchModule(resolveSearchOptions(true), "/docs/search-index.json");
 
-    expect(mod).toContain("const searchOptions =");
-    expect(mod).toContain('fetch("/docs/search-index.json")');
-    expect(mod).toContain("export async function search");
+    expect(mod).toMatchSnapshot();
   });
 });
 
@@ -83,13 +81,7 @@ Body text with a searchable phrase.
       documents: Array<{ id: string; title: string; url: string; body: string }>;
     };
 
-    expect(index.doc_count).toBe(1);
-    expect(index.documents[0]).toMatchObject({
-      id: "guide/intro",
-      title: "Native Search",
-      url: "/docs/guide/intro",
-    });
-    expect(index.documents[0]?.body).toContain("searchable phrase");
+    expect(index).toMatchSnapshot();
   });
 });
 

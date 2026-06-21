@@ -1,0 +1,5 @@
+---
+source: crates/ox_content_search/src/query/tests.rs
+expression: "results[0].snippet"
+---
+前置きの文章です。Rustで検索エンジンを作ります。追加の説明です。

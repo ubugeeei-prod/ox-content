@@ -49,6 +49,7 @@ profile = ["dep:ox_content_profiler"]
 
 [dev-dependencies]
 criterion = { workspace = true }
+insta = { workspace = true }
 
 [[bench]]
 name = "extractor"

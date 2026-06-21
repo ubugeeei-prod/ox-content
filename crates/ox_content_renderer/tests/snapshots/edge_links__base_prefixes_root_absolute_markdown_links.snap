@@ -1,0 +1,5 @@
+---
+source: crates/ox_content_renderer/tests/edge_links.rs
+expression: html
+---
+<p><a href="/docs/guide">Guide</a> <a href="/docs/guide/">Dir</a> <a href="/docs/api/index.html#types">Markdown</a></p>

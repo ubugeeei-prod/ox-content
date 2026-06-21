@@ -1,0 +1,86 @@
+---
+source: crates/ox_content_docs/src/markdown/tests/helpers/assertions.rs
+---
+===== default.md =====
+# default
+
+> 2 documented symbols. Read the signatures first, then expand each item for parameters, return types, and examples.
+
+<div class="ox-api-stats" aria-label="API reference summary">
+<span class="ox-api-stat">
+  <strong>2</strong>
+  <span>symbols</span>
+</span>
+<span class="ox-api-stat">
+  <strong>2</strong>
+  <span>functions</span>
+</span>
+</div>
+
+## Reference
+
+<div class="ox-api-controls" data-ox-api-target=".ox-api-entry" role="toolbar" aria-label="Reference display controls">
+<button type="button" class="ox-api-controls__button" data-ox-api-toggle="expand">Open all</button>
+<button type="button" class="ox-api-controls__button" data-ox-api-toggle="collapse">Close all</button>
+</div>
+
+<details id="cli" class="ox-api-entry">
+  <summary><span class="ox-api-entry__kind">fn</span><span class="ox-api-entry__summary-main"><code class="ox-api-entry__signature ox-api-entry__signature--highlighted language-typescript">cli(): void</code><span class="ox-api-entry__description">Run the CLI.</span></span></summary>
+  <div class="ox-api-entry__body">
+<div class="ox-api-entry__prose">
+<p>Run the CLI.</p>
+</div>
+<div class="ox-api-entry__section ox-api-entry__section--signature">
+<h4>Signature</h4>
+<pre><code class="language-typescript">export function cli(): void</code></pre>
+</div>
+  </div>
+</details>
+
+<details id="run" class="ox-api-entry">
+  <summary><span class="ox-api-entry__kind">fn</span><span class="ox-api-entry__summary-main"><code class="ox-api-entry__signature ox-api-entry__signature--highlighted language-typescript">run(): void</code><span class="ox-api-entry__description">Run again.</span></span></summary>
+  <div class="ox-api-entry__body">
+<div class="ox-api-entry__prose">
+<p>Run again.</p>
+</div>
+<div class="ox-api-entry__section ox-api-entry__section--signature">
+<h4>Signature</h4>
+<pre><code class="language-typescript">export function run(): void</code></pre>
+</div>
+  </div>
+</details>
+
+===== index.md =====
+# API Documentation
+
+> Use search scopes like `@api transform` to limit results to the generated API reference.
+
+<div class="ox-api-stats" aria-label="API reference summary">
+<span class="ox-api-stat">
+  <strong>1</strong>
+  <span>modules</span>
+</span>
+<span class="ox-api-stat">
+  <strong>2</strong>
+  <span>symbols</span>
+</span>
+<span class="ox-api-stat">
+  <strong>2</strong>
+  <span>functions</span>
+</span>
+</div>
+
+## Modules
+
+<details class="ox-api-module">
+  <summary>
+    <span class="ox-api-module__title"><a href="./default.md">default</a></span>
+    <span class="ox-api-module__count">2 symbols</span>
+  </summary>
+  <div class="ox-api-module__body">
+    <ul class="ox-api-module__list">
+      <li><span class="ox-api-module__kind">fn</span><div class="ox-api-module__item"><a href="./default.md#cli" class="ox-api-module__link"><code class="ox-api-module__signature ox-api-module__signature--highlighted language-typescript">cli(): void</code></a><span class="ox-api-module__summary">Run the CLI.</span></div></li>
+      <li><span class="ox-api-module__kind">fn</span><div class="ox-api-module__item"><a href="./default.md#run" class="ox-api-module__link"><code class="ox-api-module__signature ox-api-module__signature--highlighted language-typescript">run(): void</code></a><span class="ox-api-module__summary">Run again.</span></div></li>
+    </ul>
+  </div>
+</details>

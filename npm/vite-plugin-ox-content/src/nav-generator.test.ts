@@ -67,9 +67,7 @@ describe("generateNavCode", () => {
   it("generates importable TypeScript nav metadata through the native binding", () => {
     const code = generateNavCode([{ title: "Docs", path: "/api/docs" }], "apiNav");
 
-    expect(code).toContain("export interface NavItem");
-    expect(code).toContain("export const apiNav: NavItem[] = [");
-    expect(code).toContain('"title": "Docs"');
+    expect(code).toMatchSnapshot();
     expect(code).toMatch(/ as const;\n$/);
   });
 });

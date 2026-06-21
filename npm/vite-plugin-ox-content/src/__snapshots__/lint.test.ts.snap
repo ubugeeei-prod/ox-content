@@ -1,0 +1,33 @@
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`lintMarkdown > keeps the built-in default dictionary minimal and English-focused 1`] = `
+[
+  "world",
+  "word",
+]
+`;
+
+exports[`lintMarkdownAsync > flags misspellings with opt-in standard dictionaries 1`] = `
+[
+  [
+    "weld",
+    "wild",
+    "wold",
+  ],
+  [
+    "monde",
+    "Monde",
+    "mondé",
+  ],
+  [
+    "welt",
+    "Welt",
+    "wett",
+  ],
+  [
+    "dokumentacja",
+    "dokumentacją",
+    "dokumentacje",
+  ],
+]
+`;

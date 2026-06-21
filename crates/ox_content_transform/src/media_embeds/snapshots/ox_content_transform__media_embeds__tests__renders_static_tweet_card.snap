@@ -1,0 +1,5 @@
+---
+source: crates/ox_content_transform/src/media_embeds/tests.rs
+expression: html
+---
+<article class="ox-tweet"><a href="https://x.com/i/web/status/123" target="_blank" rel="noopener noreferrer"><span>X</span><strong>https://x.com/i/web/status/123</strong><p>hello</p></a></article>

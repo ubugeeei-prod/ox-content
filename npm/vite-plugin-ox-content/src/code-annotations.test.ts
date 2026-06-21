@@ -17,18 +17,7 @@ throw new Error("boom");
       createResolvedOptions(),
     );
 
-    expect(result.html).toContain("ox-code-block--annotated");
-    expect(result.html).toContain("has-highlighted");
-    expect(result.html).toContain(
-      'class="line ox-code-line ox-code-line--highlight highlighted" data-line="1"',
-    );
-    expect(result.html).toContain(
-      'class="line ox-code-line ox-code-line--warning highlighted warning" data-line="2"',
-    );
-    expect(result.html).toContain(
-      'class="line ox-code-line ox-code-line--error highlighted error" data-line="3"',
-    );
-    expect(result.html).toContain('class="language-ts" data-language="ts"');
+    expect(result.html).toMatchSnapshot();
   });
 
   it("keeps non-annotated highlighted blocks unchanged", async () => {
@@ -40,9 +29,7 @@ const next = 2;
 
     const result = await transformMarkdown(markdown, "docs/plain-code.md", createResolvedOptions());
 
-    expect(result.html).not.toContain("ox-code-line--warning");
-    expect(result.html).not.toContain("ox-code-block--annotated");
-    expect(result.html).toContain('class="language-ts" data-language="ts"');
+    expect(result.html).toMatchSnapshot();
   });
 
   it("supports VitePress-style fence metadata", async () => {
@@ -66,12 +53,7 @@ const third = true;
       }),
     );
 
-    expect(result.html).toContain('data-code-title="config.ts"');
-    expect(result.html).toContain('data-line-number-start="7"');
-    expect(result.html).toContain('data-line-number="7"');
-    expect(result.html).toContain('data-line-number="9"');
-    expect(result.html).toContain("ox-code-line--highlight");
-    expect(result.html).toContain('class="language-ts" data-language="ts"');
+    expect(result.html).toMatchSnapshot();
   });
 
   it("supports VitePress-style inline directives", async () => {
@@ -99,14 +81,7 @@ throw new Error("boom") // [!code error]
       }),
     );
 
-    expect(result.html).not.toContain("[!code");
-    expect(result.html).toContain("has-focused");
-    expect(result.html).toContain("has-diff");
-    expect(result.html).toContain("ox-code-line--focus");
-    expect(result.html).toContain("ox-code-line--remove");
-    expect(result.html).toContain("ox-code-line--add");
-    expect(result.html).toContain("ox-code-line--warning");
-    expect(result.html).toContain("ox-code-line--error");
+    expect(result.html).toMatchSnapshot();
   });
 
   it("supports VitePress-style escape-next-line directives", async () => {
@@ -131,9 +106,7 @@ console.warn(annotated) // [!code warning]
       }),
     );
 
-    expect(result.html).not.toContain("[!code escape]");
-    expect(result.html).toContain("console.warn(literal) // [!code warning]");
-    expect(result.html).toContain("console.warn(annotated)");
+    expect(result.html).toMatchSnapshot();
     expect(result.html.match(/ox-code-line--warning/g)?.length ?? 0).toBe(1);
   });
 });

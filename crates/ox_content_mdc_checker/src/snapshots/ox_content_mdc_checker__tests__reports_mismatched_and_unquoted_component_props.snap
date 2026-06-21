@@ -1,0 +1,10 @@
+---
+source: crates/ox_content_mdc_checker/src/tests.rs
+expression: messages
+---
+[
+    "MDC prop values must be quoted strings or brace expressions.",
+    "MDC closing tag </Alert> does not match <Panel>.",
+    "MDC component <Panel> is missing a closing tag.",
+    "MDC component <Alert> is missing a closing tag.",
+]

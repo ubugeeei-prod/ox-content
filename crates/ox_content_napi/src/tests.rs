@@ -3,6 +3,7 @@ use ox_content_docs::{
     NormalizedReturnDoc, NormalizedThrowsDoc, NormalizedTypeParam,
 };
 use serde_json::json;
+use std::collections::HashMap;
 use std::fs;
 use std::process::Command;
 
@@ -14,6 +15,30 @@ use super::{
     JsDocsMarkdownTag, JsDocsNavOptions, JsEntryPointDocsOptions, JsEntryPointSpec, JsTypeParam,
 };
 use ox_content_transform::transformer::parse_frontmatter;
+
+fn assert_string_map_snapshot(name: &str, map: &HashMap<String, String>) {
+    let mut entries = map.iter().collect::<Vec<_>>();
+    entries.sort_by_key(|(path, _)| *path);
+
+    let mut rendered = String::new();
+    for (path, content) in entries {
+        rendered.push_str("===== ");
+        rendered.push_str(path);
+        rendered.push_str(" =====\n");
+        rendered.push_str(content);
+        if !content.ends_with('\n') {
+            rendered.push('\n');
+        }
+    }
+
+    insta::with_settings!({
+        snapshot_path => "tests/snapshots",
+        prepend_module_to_snapshot => false,
+        omit_expression => true,
+    }, {
+        insta::assert_snapshot!(name, rendered);
+    });
+}
 
 mod doc_conversion;
 mod doc_mapping;

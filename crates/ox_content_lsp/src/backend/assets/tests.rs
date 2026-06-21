@@ -115,9 +115,7 @@ mod completion_items {
 
         let items = completion_items(AssetContext::Link, "", Some(&dir), None);
         let names = labels(&items);
-        assert!(names.contains(&"alpha.md"), "{names:?}");
-        assert!(names.contains(&"beta.png"), "{names:?}");
-        assert!(names.contains(&"subdir/"), "{names:?}");
+        assert_eq!(names, vec!["alpha.md", "beta.png", "subdir/"]);
     }
 
     #[test]
@@ -130,10 +128,7 @@ mod completion_items {
 
         let items = completion_items(AssetContext::Image, "", Some(&dir), None);
         let names = labels(&items);
-        assert!(names.contains(&"photo.png"), "{names:?}");
-        assert!(names.contains(&"clip.mp4"), "{names:?}");
-        assert!(!names.contains(&"notes.md"), "{names:?}");
-        assert!(!names.contains(&"data.json"), "{names:?}");
+        assert_eq!(names, vec!["clip.mp4", "photo.png"]);
     }
 
     #[test]
@@ -157,8 +152,7 @@ mod completion_items {
 
         let items = completion_items(AssetContext::Image, "assets/", Some(&dir), None);
         let names = labels(&items);
-        assert!(names.contains(&"hero.png"), "{names:?}");
-        assert!(names.contains(&"footer.png"), "{names:?}");
+        assert_eq!(names, vec!["footer.png", "hero.png"]);
     }
 
     #[test]
@@ -171,7 +165,7 @@ mod completion_items {
         fs::create_dir_all(&doc_dir).unwrap();
         let items = completion_items(AssetContext::Image, "/assets/", Some(&doc_dir), Some(&dir));
         let names = labels(&items);
-        assert!(names.contains(&"hero.png"), "{names:?}");
+        assert_eq!(names, vec!["hero.png"]);
     }
 
     #[test]
@@ -182,8 +176,7 @@ mod completion_items {
 
         let items = completion_items(AssetContext::Link, "", Some(&dir), None);
         let names = labels(&items);
-        assert!(!names.iter().any(|n| n.starts_with('.')), "{names:?}");
-        assert!(names.contains(&"visible.md"), "{names:?}");
+        assert_eq!(names, vec!["visible.md"]);
     }
 
     #[test]

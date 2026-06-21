@@ -1,0 +1,94 @@
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`transformMarkdownWithReact > honors disabled built-in embeds from framework options 1`] = `
+"
+import React, { createElement } from 'react';
+
+export const frontmatter = {};
+
+const rawHtml = "<p><GitHub repo=\\"ubugeeei-prod/ox-content\\"></GitHub></p>\\n";
+
+export default function MarkdownContent() {
+  return createElement('div', {
+    className: 'ox-content',
+    dangerouslySetInnerHTML: { __html: rawHtml },
+  });
+}
+"
+`;
+
+exports[`transformMarkdownWithReact > turns registered components into islands and leaves fenced tags literal 1`] = `
+"
+import React, { useEffect, useRef, createElement } from 'react';
+import { createRoot } from 'react-dom/client';
+import { initIslands } from '@ox-content/islands';
+import Alert from '../src/components/Alert.tsx';
+
+export const frontmatter = {"title":"React Guide","draft":false};
+
+const rawHtml = "<h1 id=\\"react-guide\\">React Guide</h1>\\n<div data-ox-island=\\"Alert\\" data-ox-props='{\\"tone\\":\\"info\\",\\"active\\":true}' data-ox-content='Read **docs**.'></div>\\n<pre><code class=\\"language-tsx\\">&lt;Alert tone=&quot;code&quot; /&gt;\\n</code></pre>\\n";
+const components = {
+  Alert,
+};
+
+function createReactHydrate() {
+  const mountedRoots = [];
+
+  return (element, props) => {
+    const componentName = element.dataset.oxIsland;
+    const Component = components[componentName];
+    if (!Component) return;
+
+    const islandContent = element.dataset.oxContent || element.innerHTML;
+    const vnode = islandContent
+      ? createElement(
+          Component,
+          props,
+          createElement('div', { dangerouslySetInnerHTML: { __html: islandContent } })
+        )
+      : createElement(Component, props);
+
+    const root = createRoot(element);
+    root.render(vnode);
+    mountedRoots.push(root);
+
+    return () => root.unmount();
+  };
+}
+
+export default function MarkdownContent() {
+  const containerRef = useRef(null);
+
+  useEffect(() => {
+    if (!containerRef.current) return;
+    const controller = initIslands(createReactHydrate(), {
+      selector: '.ox-content [data-ox-island]',
+    });
+    return () => controller.destroy();
+  }, []);
+
+  return createElement('div', {
+    className: 'ox-content',
+    ref: containerRef,
+    dangerouslySetInnerHTML: { __html: rawHtml },
+  });
+}
+"
+`;
+
+exports[`transformMarkdownWithReact > uses the static html path when no registered component is present 1`] = `
+"
+import React, { createElement } from 'react';
+
+export const frontmatter = {};
+
+const rawHtml = "<h1 id=\\"plain\\">Plain</h1>\\n<p><Unknown /></p>\\n";
+
+export default function MarkdownContent() {
+  return createElement('div', {
+    className: 'ox-content',
+    dangerouslySetInnerHTML: { __html: rawHtml },
+  });
+}
+"
+`;

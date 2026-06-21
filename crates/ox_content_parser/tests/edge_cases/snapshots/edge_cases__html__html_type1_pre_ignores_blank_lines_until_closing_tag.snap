@@ -1,0 +1,8 @@
+---
+source: crates/ox_content_parser/tests/edge_cases/html.rs
+expression: html.value
+---
+<pre>
+
+**not markdown**
+</pre>

@@ -249,7 +249,6 @@ mod tests {
         };
 
         let svg = generator.generate_svg(&data);
-        assert!(svg.contains("Test Title"));
-        assert!(svg.contains("Test description"));
+        insta::assert_snapshot!(svg);
     }
 }
