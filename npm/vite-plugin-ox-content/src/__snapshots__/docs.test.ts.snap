@@ -590,11 +590,11 @@ exports[`writeDocs > flattens single typedoc entry root when singleEntryRoot is 
  * Do not edit manually.
  */
 
-export interface NavItem {{
+export interface NavItem {
   title: string;
   path: string;
   children?: NavItem[];
-}}
+}
 
 export const apiNav: NavItem[] = [
   {
@@ -630,11 +630,11 @@ exports[`writeDocs > uses the configured base path for generated nav metadata 1`
  * Do not edit manually.
  */
 
-export interface NavItem {{
+export interface NavItem {
   title: string;
   path: string;
   children?: NavItem[];
-}}
+}
 
 export const apiNav: NavItem[] = [
   {
@@ -652,11 +652,11 @@ exports[`writeDocs > writes typedoc nested files and nav tree when pathStrategy 
  * Do not edit manually.
  */
 
-export interface NavItem {{
+export interface NavItem {
   title: string;
   path: string;
   children?: NavItem[];
-}}
+}
 
 export const apiNav: NavItem[] = [
   {

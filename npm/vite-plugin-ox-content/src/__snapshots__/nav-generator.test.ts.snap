@@ -7,11 +7,11 @@ exports[`generateNavCode > generates importable TypeScript nav metadata through 
  * Do not edit manually.
  */
 
-export interface NavItem {{
+export interface NavItem {
   title: string;
   path: string;
   children?: NavItem[];
-}}
+}
 
 export const apiNav: NavItem[] = [
   {
