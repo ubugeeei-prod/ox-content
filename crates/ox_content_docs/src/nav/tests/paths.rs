@@ -52,6 +52,10 @@ fn generates_nav_code() {
     );
 
     assert!(code.contains("export const apiNav: NavItem[] = ["));
+    assert!(code.contains("export interface NavItem {\n"));
+    assert!(code.contains("children?: NavItem[];\n}\n\nexport const apiNav"));
+    assert!(!code.contains("NavItem {{"));
+    assert!(!code.contains("children?: NavItem[];\n}}"));
     assert!(code.contains(r#""title": "Docs""#));
     assert!(code.ends_with(" as const;\n"));
 }
