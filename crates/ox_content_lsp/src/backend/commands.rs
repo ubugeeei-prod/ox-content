@@ -2,8 +2,8 @@ use std::collections::HashMap;
 
 use tower_lsp::jsonrpc::{Error, ErrorCode, Result};
 use tower_lsp::lsp_types::{
-    CodeAction, CodeActionKind, CodeActionOrCommand, Command, MessageType, Position, Range,
-    TextEdit, Url, WorkspaceEdit,
+    CodeAction, CodeActionKind, CodeActionOrCommand, Command, Diagnostic, MessageType, Position,
+    Range, TextEdit, Url, WorkspaceEdit,
 };
 
 use crate::preview;
@@ -182,6 +182,22 @@ pub(super) fn insert_actions(uri: &Url, position: Position) -> Vec<CodeActionOrC
     .collect()
 }
 
+pub(super) fn quickfix_actions(uri: &Url, diagnostics: &[Diagnostic]) -> Vec<CodeActionOrCommand> {
+    diagnostics
+        .iter()
+        .filter_map(|diagnostic| {
+            let edit = crate::spacing::fix_edit_from_diagnostic(diagnostic)
+                .or_else(|| crate::textlint::fix_edit_from_diagnostic(diagnostic))?;
+            let title = match diagnostic.source.as_deref() {
+                Some(crate::spacing::SOURCE) => "Fix half/full-width spacing",
+                Some("textlint") => "Apply textlint fix",
+                _ => "Apply fix",
+            };
+            Some(quickfix_action(title, uri, diagnostic, edit))
+        })
+        .collect()
+}
+
 fn code_action(title: &str, command: &str, uri: &Url, position: Position) -> CodeActionOrCommand {
     CodeActionOrCommand::CodeAction(CodeAction {
         title: title.to_string(),
@@ -194,6 +210,24 @@ fn code_action(title: &str, command: &str, uri: &Url, position: Position) -> Cod
                 "position": position,
             })]),
         }),
+        ..Default::default()
+    })
+}
+
+fn quickfix_action(
+    title: &str,
+    uri: &Url,
+    diagnostic: &Diagnostic,
+    edit: TextEdit,
+) -> CodeActionOrCommand {
+    let mut changes = HashMap::new();
+    changes.insert(uri.clone(), vec![edit]);
+    CodeActionOrCommand::CodeAction(CodeAction {
+        title: title.to_string(),
+        kind: Some(CodeActionKind::QUICKFIX),
+        diagnostics: Some(vec![diagnostic.clone()]),
+        edit: Some(WorkspaceEdit { changes: Some(changes), ..Default::default() }),
+        is_preferred: Some(true),
         ..Default::default()
     })
 }

@@ -92,7 +92,7 @@ pub struct JsTransformOptions {
     /// text occurrence starting with a registered pattern (default `http://`
     /// and `https://`) in an `<a>` tag.
     ///
-    /// Default: `false`.
+    /// Default: `true`.
     pub autolink_urls: Option<bool>,
 
     /// URL prefix patterns for [`Self::autolink_urls`]. Overrides the

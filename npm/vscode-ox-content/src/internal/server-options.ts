@@ -57,6 +57,10 @@ export interface InitializationInputs {
   textlintCommand?: string;
   /** `oxContent.mdc.components`, trimmed. */
   mdcComponents?: string;
+  /** `oxContent.spacing.betweenHalfAndFullWidth`. */
+  spaceBetweenHalfAndFullWidth?: string;
+  /** `oxContent.spacing.autoFixOnSave`. */
+  spacingAutoFixOnSave: boolean;
   /** Resolves a possibly-relative path against the workspace root. */
   resolvePath: (value: string) => string;
 }
@@ -83,6 +87,12 @@ export function buildInitializationOptions(
   }
   if (inputs.mdcComponents) {
     options.mdcComponents = inputs.resolvePath(inputs.mdcComponents);
+  }
+  if (inputs.spaceBetweenHalfAndFullWidth) {
+    options.spaceBetweenHalfAndFullWidth = inputs.spaceBetweenHalfAndFullWidth;
+  }
+  if (inputs.spacingAutoFixOnSave) {
+    options.spacingAutoFixOnSave = true;
   }
 
   return options;

@@ -1,0 +1,284 @@
+name: Publish editor extensions
+
+on:
+  push:
+    tags:
+      - "v*"
+  workflow_dispatch:
+    inputs:
+      version:
+        description: "Version to package. Defaults to package metadata."
+        required: false
+        type: string
+      publish:
+        description: "Publish VS Code / Open VSX artifacts instead of packaging only."
+        required: false
+        default: false
+        type: boolean
+
+permissions:
+  contents: read
+
+env:
+  CARGO_TERM_COLOR: always
+
+jobs:
+  vscode-vsix:
+    name: Build VS Code VSIX - ${{ matrix.vscode-target }}
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - os: blacksmith-32vcpu-ubuntu-2404
+            rust-target: x86_64-unknown-linux-gnu
+            vscode-target: linux-x64
+            binary-name: ox-content-lsp
+          - os: macos-latest
+            rust-target: x86_64-apple-darwin
+            vscode-target: darwin-x64
+            binary-name: ox-content-lsp
+          - os: macos-latest
+            rust-target: aarch64-apple-darwin
+            vscode-target: darwin-arm64
+            binary-name: ox-content-lsp
+          - os: windows-2025
+            rust-target: x86_64-pc-windows-msvc
+            vscode-target: win32-x64
+            binary-name: ox-content-lsp.exe
+
+    steps:
+      - uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10 # v6.0.3
+        with:
+          persist-credentials: false
+
+      - name: Setup Vite+
+        uses: voidzero-dev/setup-vp@2dec1e33f4ab2c6d5bce1b0c4607961bb1a3f7a1 # v1
+        with:
+          node-version-file: ".node-version"
+          cache: true
+          run-install: true
+
+      - name: Setup Rust
+        uses: dtolnay/rust-toolchain@29eef336d9b2848a0b548edc03f92a220660cdb8 # stable
+        with:
+          targets: ${{ matrix.rust-target }}
+
+      - name: Mount sticky cache
+        if: startsWith(matrix.os, 'blacksmith-')
+        uses: ./.github/actions/mount-sticky-cache
+        with:
+          key-prefix: ${{ github.repository }}-editors-${{ matrix.vscode-target }}
+          cargo: "true"
+          target: target
+
+      - name: Build ox-content-lsp
+        run: >
+          cargo build --release -p ox_content_lsp --bin ox-content-lsp
+          --target ${{ matrix.rust-target }}
+
+      - name: Build and package VSIX
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p npm/vscode-ox-content/bin dist/vscode
+          cp "target/${{ matrix.rust-target }}/release/${{ matrix.binary-name }}" \
+            "npm/vscode-ox-content/bin/${{ matrix.binary-name }}"
+          if [ "${{ matrix.binary-name }}" = "ox-content-lsp" ]; then
+            chmod +x npm/vscode-ox-content/bin/ox-content-lsp
+          fi
+          vp run vscode:build
+          cd npm/vscode-ox-content
+          vp exec -- pnpm dlx @vscode/vsce package \
+            --target "${{ matrix.vscode-target }}" \
+            --out "../../dist/vscode/vscode-ox-content-${{ matrix.vscode-target }}.vsix" \
+            --no-dependencies
+
+      - name: Upload VSIX artifact
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: vscode-vsix-${{ matrix.vscode-target }}
+          path: dist/vscode/*.vsix
+          if-no-files-found: error
+
+  publish-vscode-marketplace:
+    name: Publish VS Code Marketplace
+    runs-on: ubuntu-latest
+    needs: vscode-vsix
+    environment: vscode-marketplace
+    steps:
+      - uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10 # v6.0.3
+        with:
+          persist-credentials: false
+
+      - name: Setup Vite+
+        uses: voidzero-dev/setup-vp@2dec1e33f4ab2c6d5bce1b0c4607961bb1a3f7a1 # v1
+        with:
+          node-version-file: ".node-version"
+          cache: false
+          run-install: false
+
+      - name: Download VSIX artifacts
+        uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8.0.1
+        with:
+          pattern: vscode-vsix-*
+          path: dist/vscode
+          merge-multiple: true
+
+      - name: Publish with vsce
+        env:
+          VSCE_PAT: ${{ secrets.VSCE_PAT }}
+          PUBLISH_FROM_DISPATCH: ${{ inputs.publish }}
+        run: |
+          set -euo pipefail
+          if [ "${GITHUB_EVENT_NAME}" = "workflow_dispatch" ] \
+            && [ "${PUBLISH_FROM_DISPATCH}" != "true" ]; then
+            echo "Packaging-only dispatch; skipping VS Code Marketplace publish."
+            exit 0
+          fi
+          if [ -z "${VSCE_PAT:-}" ]; then
+            echo "::warning::VSCE_PAT is not configured; skipping Marketplace publish."
+            exit 0
+          fi
+          for vsix in dist/vscode/*.vsix; do
+            vp exec -- pnpm dlx @vscode/vsce publish --packagePath "$vsix"
+          done
+
+  publish-open-vsx:
+    name: Publish Open VSX
+    runs-on: ubuntu-latest
+    needs: vscode-vsix
+    environment: open-vsx
+    steps:
+      - uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10 # v6.0.3
+        with:
+          persist-credentials: false
+
+      - name: Setup Vite+
+        uses: voidzero-dev/setup-vp@2dec1e33f4ab2c6d5bce1b0c4607961bb1a3f7a1 # v1
+        with:
+          node-version-file: ".node-version"
+          cache: false
+          run-install: false
+
+      - name: Download VSIX artifacts
+        uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8.0.1
+        with:
+          pattern: vscode-vsix-*
+          path: dist/vscode
+          merge-multiple: true
+
+      - name: Publish with ovsx
+        env:
+          OVSX_PAT: ${{ secrets.OVSX_PAT }}
+          PUBLISH_FROM_DISPATCH: ${{ inputs.publish }}
+        run: |
+          set -euo pipefail
+          if [ "${GITHUB_EVENT_NAME}" = "workflow_dispatch" ] \
+            && [ "${PUBLISH_FROM_DISPATCH}" != "true" ]; then
+            echo "Packaging-only dispatch; skipping Open VSX publish."
+            exit 0
+          fi
+          if [ -z "${OVSX_PAT:-}" ]; then
+            echo "::warning::OVSX_PAT is not configured; skipping Open VSX publish."
+            exit 0
+          fi
+          for vsix in dist/vscode/*.vsix; do
+            vp exec -- pnpm dlx ovsx publish "$vsix" -p "$OVSX_PAT"
+          done
+
+  zed-extension:
+    name: Validate Zed extension
+    runs-on: blacksmith-32vcpu-ubuntu-2404
+    steps:
+      - uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10 # v6.0.3
+        with:
+          persist-credentials: false
+
+      - name: Setup Rust
+        uses: dtolnay/rust-toolchain@29eef336d9b2848a0b548edc03f92a220660cdb8 # stable
+        with:
+          targets: wasm32-unknown-unknown
+
+      - name: Build Zed extension WASM
+        run: cargo build --manifest-path editors/zed/Cargo.toml --target wasm32-unknown-unknown
+
+      - name: Package Zed extension source
+        run: |
+          set -euo pipefail
+          version="${{ inputs.version }}"
+          if [ -z "$version" ]; then
+            version="${GITHUB_REF_NAME#v}"
+          fi
+          if [ "$version" = "$GITHUB_REF_NAME" ]; then
+            version=$(sed -n 's/^version = "\(.*\)"/\1/p' editors/zed/extension.toml)
+          fi
+          mkdir -p dist/zed
+          tar -czf "dist/zed/ox-content-zed-${version}.tar.gz" \
+            -C editors/zed extension.toml Cargo.toml README.md LICENSE src
+
+      - name: Upload Zed artifact
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: zed-extension-source
+          path: dist/zed/*.tar.gz
+          if-no-files-found: error
+
+  open-zed-registry-pr:
+    name: Open Zed registry PR
+    runs-on: ubuntu-latest
+    needs: zed-extension
+    steps:
+      - name: Open registry pull request
+        env:
+          GH_TOKEN: ${{ secrets.ZED_EXTENSIONS_PAT }}
+          VERSION_INPUT: ${{ inputs.version }}
+        run: |
+          set -euo pipefail
+          if [ -z "${GH_TOKEN:-}" ]; then
+            echo "::warning::ZED_EXTENSIONS_PAT is not configured; skipping Zed registry PR."
+            exit 0
+          fi
+          gh auth setup-git
+          version="$VERSION_INPUT"
+          if [ -z "$version" ]; then
+            version="${GITHUB_REF_NAME#v}"
+          fi
+          if [ -z "$version" ] || [ "$version" = "$GITHUB_REF_NAME" ]; then
+            echo "::error::A version is required for manual Zed registry PR dispatch."
+            exit 1
+          fi
+          branch="ox-content-${version}"
+          gh repo clone zed-industries/extensions zed-extensions
+          cd zed-extensions
+          git switch -c "$branch"
+          if [ -d extensions/ox-content ]; then
+            git submodule update --init extensions/ox-content
+            git -C extensions/ox-content fetch origin
+            git -C extensions/ox-content checkout -B main origin/main
+          else
+            git submodule add https://github.com/ubugeeei-prod/ox-content.git extensions/ox-content
+          fi
+          perl -0pi -e \
+            's/\[ox-content\]\n(?:[^\[]*\n)*/[ox-content]\nsubmodule = "extensions\/ox-content"\npath = "editors\/zed"\nversion = "'$version'"\n\n/s' \
+            extensions.toml
+          if ! grep -q '^\[ox-content\]' extensions.toml; then
+            {
+              printf '\n[ox-content]\n'
+              printf 'submodule = "extensions/ox-content"\n'
+              printf 'path = "editors/zed"\n'
+              printf 'version = "%s"\n' "$version"
+            } >> extensions.toml
+          fi
+          corepack enable
+          pnpm install --frozen-lockfile
+          pnpm sort-extensions
+          git add .gitmodules extensions.toml extensions/ox-content
+          git -c user.name="ox-content release" \
+            -c user.email="actions@github.com" \
+            commit -m "ox-content ${version}"
+          git push --set-upstream origin "$branch"
+          gh pr create \
+            --repo zed-industries/extensions \
+            --title "ox-content ${version}" \
+            --body "Update ox-content to ${version}."

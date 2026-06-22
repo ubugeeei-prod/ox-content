@@ -2,16 +2,20 @@
 
 **[Source](https://github.com/ubugeeei-prod/ox-content/blob/main/npm/vite-plugin-ox-content/src/og-image/renderer.ts)**
 
-> 2 documented symbols. Read the signatures first, then expand each item for parameters, return types, and examples.
+> 3 documented symbols. Read the signatures first, then expand each item for parameters, return types, and examples.
 
 <div class="ox-api-stats" aria-label="API reference summary">
 <span class="ox-api-stat">
-  <strong>2</strong>
+  <strong>3</strong>
   <span>symbols</span>
 </span>
 <span class="ox-api-stat">
   <strong>2</strong>
   <span>functions</span>
+</span>
+<span class="ox-api-stat">
+  <strong>1</strong>
+  <span>modules</span>
 </span>
 <span class="ox-api-stat">
   <strong>9</strong>
@@ -29,6 +33,16 @@
 <button type="button" class="ox-api-controls__button" data-ox-api-toggle="expand">Open all</button>
 <button type="button" class="ox-api-controls__button" data-ox-api-toggle="collapse">Close all</button>
 </div>
+
+<details id="renderer" class="ox-api-entry">
+  <summary><span class="ox-api-entry__kind">module</span><span class="ox-api-entry__summary-main"><code class="ox-api-entry__name">renderer</code><span class="ox-api-entry__description">HTML → PNG renderer using Chromium screenshots via Playwright.</span></span></summary>
+  <div class="ox-api-entry__body">
+<div class="ox-api-entry__prose">
+<p>HTML → PNG renderer using Chromium screenshots via Playwright.</p>
+</div>
+<p class="ox-api-entry__source"><a class="ox-api-entry__source-link" href="https://github.com/ubugeeei-prod/ox-content/blob/main/npm/vite-plugin-ox-content/src/og-image/renderer.ts#L1-L3" target="_blank" rel="noopener noreferrer">View source<span class="ox-api-entry__source-icon" aria-hidden="true"></span></a></p>
+  </div>
+</details>
 
 <details id="renderhtmltopng" class="ox-api-entry">
   <summary><span class="ox-api-entry__kind">fn</span><span class="ox-api-entry__summary-main"><code class="ox-api-entry__signature ox-api-entry__signature--highlighted language-typescript">renderHtmlToPng(page: Page, html: string, width: number, height: number, publicDir?: string): Promise&lt;Buffer&gt;</code><span class="ox-api-entry__description">Renders an HTML string to a PNG buffer using Chromium.</span><span class="ox-api-entry__meta"><span class="ox-api-badge">5 params</span><span class="ox-api-badge">returns Promise&lt;Buffer&gt;</span></span></span></summary>
@@ -144,3 +158,4 @@
 </div>
   </div>
 </details>
+

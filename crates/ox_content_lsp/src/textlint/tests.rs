@@ -73,6 +73,19 @@ fn missing_rule_id_is_tolerated() {
 }
 
 #[test]
+fn parses_fix_payload_into_diagnostic_data() {
+    let source = "Javascript と日本語\n";
+    let payload = r#"[{"filePath":"d","messages":[{"ruleId":"prh","message":"use JavaScript","line":1,"column":1,"severity":1,"fix":{"range":[0,10],"text":"JavaScript"}}]}]"#;
+    let diagnostics = parse_diagnostics_with_source(payload, source);
+    assert_eq!(diagnostics.len(), 1);
+    let edit = fix_edit_from_diagnostic(&diagnostics[0]).expect("diagnostic should carry a fix");
+    assert_eq!(edit.new_text, "JavaScript");
+    assert_eq!(edit.range.start.line, 0);
+    assert_eq!(edit.range.start.character, 0);
+    assert_eq!(edit.range.end.character, 10);
+}
+
+#[test]
 fn config_is_inactive_by_default() {
     let config = TextlintConfig::default();
     assert!(!config.is_active());

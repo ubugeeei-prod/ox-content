@@ -114,6 +114,22 @@ impl Backend {
         self.client.publish_diagnostics(uri.clone(), diagnostics, None).await;
     }
 
+    pub(super) async fn spacing_formatting_edits(
+        &self,
+        uri: &Url,
+    ) -> Option<Vec<tower_lsp::lsp_types::TextEdit>> {
+        let path = uri.to_file_path().ok()?;
+        if !is_markdown_path(&path) {
+            return None;
+        }
+        let document = self.state.document(uri).await?;
+        let config = self.resolved_config().await;
+        let frontmatter = frontmatter::parse_frontmatter(&document);
+        let edits =
+            crate::spacing::formatting_edits(&document, frontmatter.block.as_ref(), config.spacing);
+        (!edits.is_empty()).then_some(edits)
+    }
+
     async fn diagnostics(
         &self,
         uri: &Url,
@@ -131,6 +147,11 @@ impl Backend {
         if is_mdc {
             diagnostics.extend(diagnostics::mdc_diagnostics(document, frontmatter.block.as_ref()));
         }
+        diagnostics.extend(crate::spacing::diagnostics(
+            document,
+            frontmatter.block.as_ref(),
+            config.spacing,
+        ));
         // Link checker runs on every Markdown/MDC document. It only
         // consults the local filesystem, so it stays cheap enough to
         // run on every keystroke. The optional workspace root is used
@@ -222,7 +243,7 @@ impl Backend {
         config: &ResolvedConfig,
     ) -> std::result::Result<Option<FrontmatterSchema>, String> {
         let Some(path) = &config.frontmatter_schema else {
-            return Ok(None);
+            return Ok(Some(frontmatter::builtin_schema()));
         };
         if !path.exists() {
             return Err(format!(

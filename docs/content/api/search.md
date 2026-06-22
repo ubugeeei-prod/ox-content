@@ -2,16 +2,20 @@
 
 **[Source](https://github.com/ubugeeei-prod/ox-content/blob/main/npm/vite-plugin-ox-content/src/search.ts)**
 
-> 7 documented symbols. Read the signatures first, then expand each item for parameters, return types, and examples.
+> 8 documented symbols. Read the signatures first, then expand each item for parameters, return types, and examples.
 
 <div class="ox-api-stats" aria-label="API reference summary">
 <span class="ox-api-stat">
-  <strong>7</strong>
+  <strong>8</strong>
   <span>symbols</span>
 </span>
 <span class="ox-api-stat">
   <strong>7</strong>
   <span>functions</span>
+</span>
+<span class="ox-api-stat">
+  <strong>1</strong>
+  <span>modules</span>
 </span>
 <span class="ox-api-stat">
   <strong>12</strong>
@@ -61,7 +65,7 @@
 <li class="ox-api-entry__param">
   <div class="ox-api-entry__param-heading">
     <code class="ox-api-entry__param-name">extensions</code>
-    <code class="ox-api-entry__param-type">unknown</code>
+    <code class="ox-api-entry__param-type">readonly string[]</code>
   </div>
   <p class="ox-api-entry__param-description">optional · default: DEFAULT<em>MARKDOWN</em>EXTENSIONS</p>
 </li>
@@ -94,7 +98,7 @@
 <li class="ox-api-entry__param">
   <div class="ox-api-entry__param-heading">
     <code class="ox-api-entry__param-name">options</code>
-    <code class="ox-api-entry__param-type">ResolvedSearchOptions</code>
+    <code class="ox-api-entry__param-type"><a href="./types.md#resolvedsearchoptions">ResolvedSearchOptions</a></code>
   </div>
   
 </li>
@@ -135,7 +139,7 @@
 <li class="ox-api-entry__param">
   <div class="ox-api-entry__param-heading">
     <code class="ox-api-entry__param-name">doc</code>
-    <code class="ox-api-entry__param-type">Pick&lt;SearchDocument, &quot;id&quot; | &quot;url&quot;&gt;</code>
+    <code class="ox-api-entry__param-type">Pick&lt;<a href="./types.md#searchdocument">SearchDocument</a>, &quot;id&quot; | &quot;url&quot;&gt;</code>
   </div>
   
 </li>
@@ -168,7 +172,7 @@
 <li class="ox-api-entry__param">
   <div class="ox-api-entry__param-heading">
     <code class="ox-api-entry__param-name">doc</code>
-    <code class="ox-api-entry__param-type">Pick&lt;SearchDocument, &quot;id&quot; | &quot;url&quot;&gt;</code>
+    <code class="ox-api-entry__param-type">Pick&lt;<a href="./types.md#searchdocument">SearchDocument</a>, &quot;id&quot; | &quot;url&quot;&gt;</code>
   </div>
   
 </li>
@@ -217,7 +221,7 @@
 <div class="ox-api-entry__section ox-api-entry__section--returns">
 <h4>Returns</h4>
 <div class="ox-api-entry__return">
-  <code class="ox-api-entry__return-type">ScopedSearchQuery</code>
+  <code class="ox-api-entry__return-type"><a href="./types.md#scopedsearchquery">ScopedSearchQuery</a></code>
   
 </div>
 </div>
@@ -241,7 +245,7 @@
 <li class="ox-api-entry__param">
   <div class="ox-api-entry__param-heading">
     <code class="ox-api-entry__param-name">options</code>
-    <code class="ox-api-entry__param-type">SearchOptions | boolean | undefined</code>
+    <code class="ox-api-entry__param-type"><a href="./types.md#searchoptions">SearchOptions</a> | boolean | undefined</code>
   </div>
   
 </li>
@@ -250,10 +254,21 @@
 <div class="ox-api-entry__section ox-api-entry__section--returns">
 <h4>Returns</h4>
 <div class="ox-api-entry__return">
-  <code class="ox-api-entry__return-type">ResolvedSearchOptions</code>
+  <code class="ox-api-entry__return-type"><a href="./types.md#resolvedsearchoptions">ResolvedSearchOptions</a></code>
   
 </div>
 </div>
+  </div>
+</details>
+
+<details id="search" class="ox-api-entry">
+  <summary><span class="ox-api-entry__kind">module</span><span class="ox-api-entry__summary-main"><code class="ox-api-entry__name">search</code><span class="ox-api-entry__description">Full-text search functionality for Ox Content. Generates search index at build time and provides client-side search.</span></span></summary>
+  <div class="ox-api-entry__body">
+<div class="ox-api-entry__prose">
+<p>Full-text search functionality for Ox Content.</p>
+<p>Generates search index at build time and provides client-side search.</p>
+</div>
+<p class="ox-api-entry__source"><a class="ox-api-entry__source-link" href="https://github.com/ubugeeei-prod/ox-content/blob/main/npm/vite-plugin-ox-content/src/search.ts#L1-L5" target="_blank" rel="noopener noreferrer">View source<span class="ox-api-entry__source-icon" aria-hidden="true"></span></a></p>
   </div>
 </details>
 
@@ -296,3 +311,4 @@
 </div>
   </div>
 </details>
+

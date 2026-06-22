@@ -12,6 +12,7 @@
 //! - document links for Markdown links and images
 //! - document highlights for matching link/image targets
 //! - smart selection ranges for expand-selection
+//! - half-width/full-width spacing diagnostics and fixes
 
 mod backend;
 mod config;
@@ -23,6 +24,7 @@ mod frontmatter;
 mod i18n;
 mod preview;
 mod selection_range;
+mod spacing;
 mod state;
 mod textlint;
 

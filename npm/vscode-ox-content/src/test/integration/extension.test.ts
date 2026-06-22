@@ -45,6 +45,8 @@ const EXPECTED_CONFIG_KEYS = [
   "oxContent.server.path",
   "oxContent.frontmatter.schema",
   "oxContent.preview.autoRefresh",
+  "oxContent.spacing.betweenHalfAndFullWidth",
+  "oxContent.spacing.autoFixOnSave",
 ];
 
 suite("vscode-ox-content extension surface", () => {

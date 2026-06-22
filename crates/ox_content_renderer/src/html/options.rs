@@ -79,7 +79,7 @@ pub struct HtmlRendererOptions {
     /// node that starts with one of [`Self::autolink_patterns`] is wrapped
     /// in an `<a>` tag. Auto-linking is suppressed inside an existing link.
     ///
-    /// Default: `false`.
+    /// Default: `true`.
     pub autolink_urls: bool,
 
     /// URL prefix patterns recognised by [`Self::autolink_urls`]. Defaults
@@ -115,7 +115,7 @@ impl HtmlRendererOptions {
             code_annotation_syntax: CodeAnnotationSyntax::Attribute,
             code_annotation_default_line_numbers: false,
             toc_max_depth: 3,
-            autolink_urls: false,
+            autolink_urls: true,
             autolink_patterns: Vec::from([String::from("http://"), String::from("https://")]),
             autolink_target_blank: true,
         }

@@ -1,18 +1,5 @@
 #!/usr/bin/env -S node --experimental-strip-types
-/**
- * Release script for ox-content
- *
- * Usage:
- *   bun scripts/release.ts [patch|minor|major|x.y.z]
- *
- * This script:
- *   1. Updates all package.json versions
- *   2. Updates Rust dependency versions in docs
- *   3. Verifies crates.io release targets
- *   4. Generates CHANGELOG.md
- *   5. Creates a git commit and tag
- *   6. Pushes to remote
- */
+// Usage: bun scripts/release.ts [patch|minor|major|x.y.z]
 
 import { execSync } from "child_process";
 import * as fs from "fs";
@@ -31,6 +18,7 @@ const NPM_PACKAGES = [
   "npm/vite-plugin-ox-content-react",
   "npm/vite-plugin-ox-content-svelte",
   "npm/vite-plugin-ox-content-vue",
+  "npm/vscode-ox-content",
 ];
 
 const CARGO_PUBLISH_PACKAGES = [
@@ -50,6 +38,8 @@ const CARGO_PUBLISH_PACKAGES = [
 const CARGO_TOML = "Cargo.toml";
 const PUBLISH_WORKFLOW = ".github/workflows/publish.yml";
 const RUST_DOC_FILES = ["docs/content/getting-started.md"];
+const ZED_EXTENSION_TOML = "editors/zed/extension.toml";
+const ZED_CARGO_TOML = "editors/zed/Cargo.toml";
 
 function exec(cmd: string, options: { cwd?: string; stdio?: "inherit" | "pipe" } = {}): string {
   console.log(`$ ${cmd}`);
@@ -95,6 +85,19 @@ function setCargoVersion(version: string): void {
   content = content.replace(/(ox_content_\w+\s*=\s*\{\s*version\s*=\s*)"[^"]+"/g, `$1"${version}"`);
   fs.writeFileSync(fullPath, content, "utf-8");
   console.log(`  Updated Cargo.toml workspace version to ${version}`);
+}
+
+function setZedVersion(version: string): void {
+  const extensionTomlPath = path.join(ROOT, ZED_EXTENSION_TOML);
+  let extensionToml = fs.readFileSync(extensionTomlPath, "utf-8");
+  extensionToml = extensionToml.replace(/^version = ".*"$/m, `version = "${version}"`);
+  fs.writeFileSync(extensionTomlPath, extensionToml, "utf-8");
+
+  const cargoTomlPath = path.join(ROOT, ZED_CARGO_TOML);
+  let cargoToml = fs.readFileSync(cargoTomlPath, "utf-8");
+  cargoToml = cargoToml.replace(/^version = ".*"$/m, `version = "${version}"`);
+  fs.writeFileSync(cargoTomlPath, cargoToml, "utf-8");
+  console.log(`  Updated Zed extension version to ${version}`);
 }
 
 function updateRustDocsVersion(version: string): void {
@@ -270,14 +273,12 @@ async function main(): Promise<void> {
     process.exit(1);
   }
 
-  // Check for uncommitted changes
   const status = exec("git status --porcelain");
   if (status.trim()) {
     console.error("Error: Working directory is not clean. Commit or stash changes first.");
     process.exit(1);
   }
 
-  // Determine new version
   const currentPkg = getPackageJson(NPM_PACKAGES[0]);
   const currentVersion = currentPkg.version || "0.0.0";
   let newVersion: string;
@@ -296,24 +297,21 @@ async function main(): Promise<void> {
 
   console.log(`\nReleasing v${newVersion} (from ${currentVersion})\n`);
 
-  // Update Cargo.toml workspace version
   console.log("Updating Cargo.toml version...");
   setCargoVersion(newVersion);
+  setZedVersion(newVersion);
 
-  // Update all package.json versions
   console.log("Updating package versions...");
   for (const pkg of NPM_PACKAGES) {
     setPackageVersion(pkg, newVersion);
   }
 
-  // Update Rust dependency versions in docs
   console.log("Updating Rust docs versions...");
   updateRustDocsVersion(newVersion);
 
   console.log("Verifying crates.io release targets...");
   verifyCargoPublishPackages();
 
-  // Generate changelog
   console.log("\nGenerating changelog...");
   const latestTag = getLatestTag();
   const commits = getCommitsSinceTag(latestTag);
@@ -321,7 +319,6 @@ async function main(): Promise<void> {
   const changelogContent = generateChangelog(newVersion, categorized);
   updateChangelogFile(changelogContent);
 
-  // Git operations
   console.log("\nCreating git commit and tag...");
   exec("git add -A");
   exec(`git commit -m "chore(release): v${newVersion}"`);

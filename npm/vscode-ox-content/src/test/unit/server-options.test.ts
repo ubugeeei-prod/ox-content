@@ -87,6 +87,7 @@ describe("buildInitializationOptions", () => {
   it("returns an empty object when nothing is configured", () => {
     const options = buildInitializationOptions({
       textlintEnabled: false,
+      spacingAutoFixOnSave: false,
       resolvePath,
     });
     expect(options).toEqual({});
@@ -97,6 +98,7 @@ describe("buildInitializationOptions", () => {
       schema: "schema.json",
       mdcComponents: "components.json",
       textlintEnabled: false,
+      spacingAutoFixOnSave: false,
       resolvePath,
     });
     expect(options).toEqual({
@@ -109,6 +111,7 @@ describe("buildInitializationOptions", () => {
     const disabled = buildInitializationOptions({
       textlintEnabled: false,
       textlintCommand: "pnpm exec textlint",
+      spacingAutoFixOnSave: false,
       resolvePath,
     });
     // The command is still forwarded so a user can pre-seed it, but the
@@ -118,6 +121,7 @@ describe("buildInitializationOptions", () => {
 
     const enabled = buildInitializationOptions({
       textlintEnabled: true,
+      spacingAutoFixOnSave: false,
       resolvePath,
     });
     expect(enabled.textlintEnabled).toBe(true);
@@ -129,8 +133,23 @@ describe("buildInitializationOptions", () => {
       textlintEnabled: false,
       textlintCommand: "",
       mdcComponents: "",
+      spaceBetweenHalfAndFullWidth: "",
+      spacingAutoFixOnSave: false,
       resolvePath,
     });
     expect(options).toEqual({});
+  });
+
+  it("forwards spacing options", () => {
+    const options = buildInitializationOptions({
+      textlintEnabled: false,
+      spaceBetweenHalfAndFullWidth: "require",
+      spacingAutoFixOnSave: true,
+      resolvePath,
+    });
+    expect(options).toEqual({
+      spaceBetweenHalfAndFullWidth: "require",
+      spacingAutoFixOnSave: true,
+    });
   });
 });

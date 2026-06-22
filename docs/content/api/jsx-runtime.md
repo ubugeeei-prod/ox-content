@@ -2,11 +2,11 @@
 
 **[Source](https://github.com/ubugeeei-prod/ox-content/blob/main/npm/vite-plugin-ox-content/src/jsx-runtime.ts)**
 
-> 16 documented symbols. Read the signatures first, then expand each item for parameters, return types, and examples.
+> 17 documented symbols. Read the signatures first, then expand each item for parameters, return types, and examples.
 
 <div class="ox-api-stats" aria-label="API reference summary">
 <span class="ox-api-stat">
-  <strong>16</strong>
+  <strong>17</strong>
   <span>symbols</span>
 </span>
 <span class="ox-api-stat">
@@ -26,15 +26,23 @@
   <span>variables</span>
 </span>
 <span class="ox-api-stat">
-  <strong>18</strong>
+  <strong>1</strong>
+  <span>modules</span>
+</span>
+<span class="ox-api-stat">
+  <strong>19</strong>
   <span>parameters</span>
+</span>
+<span class="ox-api-stat">
+  <strong>3</strong>
+  <span>members</span>
 </span>
 <span class="ox-api-stat">
   <strong>11</strong>
   <span>returns</span>
 </span>
 <span class="ox-api-stat">
-  <strong>4</strong>
+  <strong>5</strong>
   <span>examples</span>
 </span>
 </div>
@@ -70,7 +78,7 @@
 <li class="ox-api-entry__param">
   <div class="ox-api-entry__param-heading">
     <code class="ox-api-entry__param-name">render</code>
-    <code class="ox-api-entry__param-type">(item: T, index: number) =&gt; JSXNode</code>
+    <code class="ox-api-entry__param-type">(item: T, <a href="./index-module.md#index">index</a>: number) =&gt; <a href="#jsxnode">JSXNode</a></code>
   </div>
   
 </li>
@@ -79,7 +87,7 @@
 <div class="ox-api-entry__section ox-api-entry__section--returns">
 <h4>Returns</h4>
 <div class="ox-api-entry__return">
-  <code class="ox-api-entry__return-type">JSXNode</code>
+  <code class="ox-api-entry__return-type"><a href="#jsxnode">JSXNode</a></code>
   
 </div>
 </div>
@@ -127,7 +135,7 @@
 </details>
 
 <details id="fragment" class="ox-api-entry">
-  <summary><span class="ox-api-entry__kind">fn</span><span class="ox-api-entry__summary-main"><code class="ox-api-entry__signature ox-api-entry__signature--highlighted language-typescript">Fragment({ children }: { children?: JSXChild }): JSXNode</code><span class="ox-api-entry__description">Fragment component - renders children without a wrapper element.</span><span class="ox-api-entry__meta"><span class="ox-api-badge">1 param</span><span class="ox-api-badge">returns JSXNode</span></span></span></summary>
+  <summary><span class="ox-api-entry__kind">fn</span><span class="ox-api-entry__summary-main"><code class="ox-api-entry__signature ox-api-entry__signature--highlighted language-typescript">Fragment({ children }: { children?: JSXChild }): JSXNode</code><span class="ox-api-entry__description">Fragment component - renders children without a wrapper element.</span><span class="ox-api-entry__meta"><span class="ox-api-badge">2 params</span><span class="ox-api-badge">returns JSXNode</span></span></span></summary>
   <div class="ox-api-entry__body">
 <div class="ox-api-entry__prose">
 <p>Fragment component - renders children without a wrapper element.</p>
@@ -143,16 +151,23 @@
 <li class="ox-api-entry__param">
   <div class="ox-api-entry__param-heading">
     <code class="ox-api-entry__param-name">param</code>
-    <code class="ox-api-entry__param-type">{ ... }</code>
+    <code class="ox-api-entry__param-type">{ children?: <a href="#jsxchild">JSXChild</a> }</code>
   </div>
   
+</li>
+<li class="ox-api-entry__param">
+  <div class="ox-api-entry__param-heading">
+    <code class="ox-api-entry__param-name">param.children?</code>
+    <code class="ox-api-entry__param-type"><a href="#jsxchild">JSXChild</a></code>
+  </div>
+  <p class="ox-api-entry__param-description">optional</p>
 </li>
 </ul>
 </div>
 <div class="ox-api-entry__section ox-api-entry__section--returns">
 <h4>Returns</h4>
 <div class="ox-api-entry__return">
-  <code class="ox-api-entry__return-type">JSXNode</code>
+  <code class="ox-api-entry__return-type"><a href="#jsxnode">JSXNode</a></code>
   
 </div>
 </div>
@@ -176,14 +191,14 @@
 <li class="ox-api-entry__param">
   <div class="ox-api-entry__param-heading">
     <code class="ox-api-entry__param-name">type</code>
-    <code class="ox-api-entry__param-type">JSXElementType</code>
+    <code class="ox-api-entry__param-type"><a href="#jsxelementtype">JSXElementType</a></code>
   </div>
   
 </li>
 <li class="ox-api-entry__param">
   <div class="ox-api-entry__param-heading">
     <code class="ox-api-entry__param-name">props</code>
-    <code class="ox-api-entry__param-type">JSXProps</code>
+    <code class="ox-api-entry__param-type"><a href="#jsxprops">JSXProps</a></code>
   </div>
   
 </li>
@@ -199,8 +214,41 @@
 <div class="ox-api-entry__section ox-api-entry__section--returns">
 <h4>Returns</h4>
 <div class="ox-api-entry__return">
-  <code class="ox-api-entry__return-type">JSXNode</code>
+  <code class="ox-api-entry__return-type"><a href="#jsxnode">JSXNode</a></code>
   
+</div>
+</div>
+  </div>
+</details>
+
+<details id="jsx-runtime" class="ox-api-entry">
+  <summary><span class="ox-api-entry__kind">module</span><span class="ox-api-entry__summary-main"><code class="ox-api-entry__name">jsx-runtime</code><span class="ox-api-entry__description">Custom JSX Runtime for Static HTML Generation This module provides a JSX runtime that outputs static HTML strings. No R…</span><span class="ox-api-entry__meta"><span class="ox-api-badge">1 example</span></span></span></summary>
+  <div class="ox-api-entry__body">
+<div class="ox-api-entry__prose">
+<p>Custom JSX Runtime for Static HTML Generation</p>
+<p>This module provides a JSX runtime that outputs static HTML strings. No React, no hydration, no client-side JavaScript - just pure HTML.</p>
+</div>
+<p class="ox-api-entry__source"><a class="ox-api-entry__source-link" href="https://github.com/ubugeeei-prod/ox-content/blob/main/npm/vite-plugin-ox-content/src/jsx-runtime.ts#L1-L26" target="_blank" rel="noopener noreferrer">View source<span class="ox-api-entry__source-icon" aria-hidden="true"></span></a></p>
+<div class="ox-api-entry__section ox-api-entry__section--examples">
+<h4>Examples</h4>
+<div class="ox-api-entry__example">
+<div class="ox-api-entry__example-heading">Example 1</div>
+<pre><code class="language-tsx">// tsconfig.json or vite.config.ts
+{
+  &quot;compilerOptions&quot;: {
+    &quot;jsx&quot;: &quot;react-jsx&quot;,
+    &quot;jsxImportSource&quot;: &quot;@ox-content/vite-plugin&quot;
+  }
+}
+
+// MyComponent.tsx
+export function Hero({ title }: { title: string }) {
+  return (
+    &lt;section class=&quot;hero&quot;&gt;
+      &lt;h1&gt;{title}&lt;/h1&gt;
+    &lt;/section&gt;
+  );
+}</code></pre>
 </div>
 </div>
   </div>
@@ -235,7 +283,7 @@
 </details>
 
 <details id="jsxnode" class="ox-api-entry">
-  <summary><span class="ox-api-entry__kind">interface</span><span class="ox-api-entry__summary-main"><code class="ox-api-entry__signature ox-api-entry__signature--highlighted language-typescript">JSXNode</code><span class="ox-api-entry__description">JSX node - the result of JSX expressions.</span></span></summary>
+  <summary><span class="ox-api-entry__kind">interface</span><span class="ox-api-entry__summary-main"><code class="ox-api-entry__signature ox-api-entry__signature--highlighted language-typescript">JSXNode</code><span class="ox-api-entry__description">JSX node - the result of JSX expressions.</span><span class="ox-api-entry__meta"><span class="ox-api-badge">1 member</span></span></span></summary>
   <div class="ox-api-entry__body">
 <div class="ox-api-entry__prose">
 <p>JSX node - the result of JSX expressions.</p>
@@ -245,11 +293,27 @@
 <pre><code class="language-typescript">export interface JSXNode</code></pre>
 </div>
 <p class="ox-api-entry__source"><a class="ox-api-entry__source-link" href="https://github.com/ubugeeei-prod/ox-content/blob/main/npm/vite-plugin-ox-content/src/jsx-runtime.ts#L147-L149" target="_blank" rel="noopener noreferrer">View source<span class="ox-api-entry__source-icon" aria-hidden="true"></span></a></p>
+<div class="ox-api-entry__section ox-api-entry__section--members">
+<h4>Members</h4>
+<div class="ox-api-entry__member-group">
+<h5>Properties</h5>
+<table class="ox-api-entry__members-table">
+<thead><tr><th>Name</th><th>Type</th><th>Description</th></tr></thead>
+<tbody>
+<tr id="jsxnode-__html">
+  <td><code>__html</code></td>
+  <td><code class="ox-api-entry__member-type language-typescript">string</code></td>
+  <td></td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
   </div>
 </details>
 
 <details id="jsxprops" class="ox-api-entry">
-  <summary><span class="ox-api-entry__kind">interface</span><span class="ox-api-entry__summary-main"><code class="ox-api-entry__signature ox-api-entry__signature--highlighted language-typescript">JSXProps</code><span class="ox-api-entry__description">Props with children.</span></span></summary>
+  <summary><span class="ox-api-entry__kind">interface</span><span class="ox-api-entry__summary-main"><code class="ox-api-entry__signature ox-api-entry__signature--highlighted language-typescript">JSXProps</code><span class="ox-api-entry__description">Props with children.</span><span class="ox-api-entry__meta"><span class="ox-api-badge">2 members</span></span></span></summary>
   <div class="ox-api-entry__body">
 <div class="ox-api-entry__prose">
 <p>Props with children.</p>
@@ -259,6 +323,29 @@
 <pre><code class="language-typescript">export interface JSXProps</code></pre>
 </div>
 <p class="ox-api-entry__source"><a class="ox-api-entry__source-link" href="https://github.com/ubugeeei-prod/ox-content/blob/main/npm/vite-plugin-ox-content/src/jsx-runtime.ts#L154-L157" target="_blank" rel="noopener noreferrer">View source<span class="ox-api-entry__source-icon" aria-hidden="true"></span></a></p>
+<div class="ox-api-entry__section ox-api-entry__section--members">
+<h4>Members</h4>
+<div class="ox-api-entry__member-group ox-api-entry__member-group--indexable">
+<h5>Indexable</h5>
+<div class="ox-api-entry__member-details">
+<section class="ox-api-entry__member-detail ox-api-entry__member-detail--indexable">
+<pre><code class="language-ts">[key: string]: unknown</code></pre></section>
+</div>
+</div>
+<div class="ox-api-entry__member-group">
+<h5>Properties</h5>
+<table class="ox-api-entry__members-table">
+<thead><tr><th>Name</th><th>Type</th><th>Description</th></tr></thead>
+<tbody>
+<tr id="jsxprops-children">
+  <td><code>children</code><span class="ox-api-badge">optional</span></td>
+  <td><code class="ox-api-entry__member-type language-typescript"><a href="#jsxchild">JSXChild</a></code></td>
+  <td></td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
   </div>
 </details>
 
@@ -279,14 +366,14 @@
 <li class="ox-api-entry__param">
   <div class="ox-api-entry__param-heading">
     <code class="ox-api-entry__param-name">type</code>
-    <code class="ox-api-entry__param-type">JSXElementType</code>
+    <code class="ox-api-entry__param-type"><a href="#jsxelementtype">JSXElementType</a></code>
   </div>
   
 </li>
 <li class="ox-api-entry__param">
   <div class="ox-api-entry__param-heading">
     <code class="ox-api-entry__param-name">props</code>
-    <code class="ox-api-entry__param-type">JSXProps</code>
+    <code class="ox-api-entry__param-type"><a href="#jsxprops">JSXProps</a></code>
   </div>
   
 </li>
@@ -302,7 +389,7 @@
 <div class="ox-api-entry__section ox-api-entry__section--returns">
 <h4>Returns</h4>
 <div class="ox-api-entry__return">
-  <code class="ox-api-entry__return-type">JSXNode</code>
+  <code class="ox-api-entry__return-type"><a href="#jsxnode">JSXNode</a></code>
   
 </div>
 </div>
@@ -335,7 +422,7 @@
 <div class="ox-api-entry__section ox-api-entry__section--returns">
 <h4>Returns</h4>
 <div class="ox-api-entry__return">
-  <code class="ox-api-entry__return-type">JSXNode</code>
+  <code class="ox-api-entry__return-type"><a href="#jsxnode">JSXNode</a></code>
   
 </div>
 </div>
@@ -406,7 +493,7 @@
 <li class="ox-api-entry__param">
   <div class="ox-api-entry__param-heading">
     <code class="ox-api-entry__param-name">children</code>
-    <code class="ox-api-entry__param-type">JSXChild</code>
+    <code class="ox-api-entry__param-type"><a href="#jsxchild">JSXChild</a></code>
   </div>
   
 </li>
@@ -439,7 +526,7 @@
 <li class="ox-api-entry__param">
   <div class="ox-api-entry__param-heading">
     <code class="ox-api-entry__param-name">node</code>
-    <code class="ox-api-entry__param-type">JSXNode</code>
+    <code class="ox-api-entry__param-type"><a href="#jsxnode">JSXNode</a></code>
   </div>
   
 </li>
@@ -529,13 +616,12 @@
 
 // MyComponent.tsx
 export function Hero({ title }: { title: string }) {
-return (
-&lt;section class=&quot;hero&quot;&gt;
-&lt;h1&gt;{title}&lt;/h1&gt;
-&lt;/section&gt;
-);
+  return (
+    &lt;section class=&quot;hero&quot;&gt;
+      &lt;h1&gt;{title}&lt;/h1&gt;
+    &lt;/section&gt;
+  );
 }</code></pre>
-
 </div>
 </div>
   </div>
@@ -565,7 +651,7 @@ return (
 <li class="ox-api-entry__param">
   <div class="ox-api-entry__param-heading">
     <code class="ox-api-entry__param-name">content</code>
-    <code class="ox-api-entry__param-type">JSXNode</code>
+    <code class="ox-api-entry__param-type"><a href="#jsxnode">JSXNode</a></code>
   </div>
   
 </li>
@@ -574,7 +660,7 @@ return (
 <div class="ox-api-entry__section ox-api-entry__section--returns">
 <h4>Returns</h4>
 <div class="ox-api-entry__return">
-  <code class="ox-api-entry__return-type">JSXNode</code>
+  <code class="ox-api-entry__return-type"><a href="#jsxnode">JSXNode</a></code>
   
 </div>
 </div>
@@ -587,3 +673,4 @@ return (
 </div>
   </div>
 </details>
+

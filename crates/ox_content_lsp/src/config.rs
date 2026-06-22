@@ -4,6 +4,8 @@ use std::path::{Path, PathBuf};
 
 use serde::Deserialize;
 
+use crate::spacing::{SpaceBetweenHalfAndFullWidth, SpacingConfig};
+
 const DEFAULT_CONFIG_NAMES: &[&str] = &[".ox-content.json", "ox-content.json"];
 
 #[derive(Clone, Debug, Default, Deserialize)]
@@ -25,6 +27,12 @@ pub struct InitializationOptions {
     /// attributes. See `ox_content_mdc_checker::Registry`.
     #[serde(rename = "mdcComponents")]
     pub mdc_components: Option<String>,
+    /// Built-in spacing rule for boundaries such as `Rustと日本語`.
+    #[serde(rename = "spaceBetweenHalfAndFullWidth")]
+    pub space_between_half_and_full_width: Option<SpaceBetweenHalfAndFullWidth>,
+    /// Whether `willSaveWaitUntil` should return built-in spacing fixes.
+    #[serde(rename = "spacingAutoFixOnSave", default)]
+    pub spacing_auto_fix_on_save: bool,
 }
 
 #[derive(Clone, Debug, Default, Deserialize)]
@@ -33,6 +41,7 @@ struct WorkspaceConfigFile {
     frontmatter: FrontmatterConfigFile,
     textlint: TextlintConfigFile,
     mdc: MdcConfigFile,
+    spacing: SpacingConfigFile,
 }
 
 #[derive(Clone, Debug, Default, Deserialize)]
@@ -54,11 +63,21 @@ struct MdcConfigFile {
     components: Option<String>,
 }
 
+#[derive(Clone, Debug, Default, Deserialize)]
+#[serde(default)]
+struct SpacingConfigFile {
+    #[serde(rename = "betweenHalfAndFullWidth")]
+    between_half_and_full_width: Option<SpaceBetweenHalfAndFullWidth>,
+    #[serde(rename = "autoFixOnSave")]
+    auto_fix_on_save: Option<bool>,
+}
+
 #[derive(Clone, Debug, Default)]
 pub struct ResolvedConfig {
     pub frontmatter_schema: Option<PathBuf>,
     pub textlint: crate::textlint::TextlintConfig,
     pub mdc_components: Option<PathBuf>,
+    pub spacing: SpacingConfig,
 }
 
 impl ResolvedConfig {
@@ -122,6 +141,29 @@ impl ResolvedConfig {
                     .map(|value| resolve_path(root.as_deref(), &value))
             });
 
+        let between_half_and_full_width = init
+            .space_between_half_and_full_width
+            .or_else(|| {
+                workspace_file
+                    .as_ref()
+                    .and_then(|(_, config)| config.spacing.between_half_and_full_width)
+            })
+            .or_else(|| {
+                env::var("OX_CONTENT_SPACE_BETWEEN_HALF_AND_FULL_WIDTH")
+                    .ok()
+                    .and_then(|value| SpaceBetweenHalfAndFullWidth::parse(&value))
+            })
+            .unwrap_or_default();
+        let spacing_auto_fix_on_save = if init.spacing_auto_fix_on_save {
+            true
+        } else if let Some((_, config)) = workspace_file.as_ref() {
+            config.spacing.auto_fix_on_save.unwrap_or(false)
+        } else {
+            env::var("OX_CONTENT_SPACING_AUTO_FIX_ON_SAVE")
+                .ok()
+                .is_some_and(|value| matches!(value.as_str(), "1" | "true" | "yes"))
+        };
+
         Self {
             frontmatter_schema,
             textlint: crate::textlint::TextlintConfig {
@@ -129,6 +171,10 @@ impl ResolvedConfig {
                 command: textlint_command,
             },
             mdc_components,
+            spacing: SpacingConfig {
+                between_half_and_full_width,
+                auto_fix_on_save: spacing_auto_fix_on_save,
+            },
         }
     }
 }

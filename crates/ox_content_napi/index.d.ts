@@ -1576,7 +1576,7 @@ export interface JsTransformOptions {
    * text occurrence starting with a registered pattern (default `http://`
    * and `https://`) in an `<a>` tag.
    *
-   * Default: `false`.
+   * Default: `true`.
    */
   autolinkUrls?: boolean
   /**

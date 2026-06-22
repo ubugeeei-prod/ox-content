@@ -12,17 +12,22 @@ Features:
   the document with the LSP, and the panel reloads on every
   `oxContent/previewDidChange` notification (no client-side polling)
 - `.mdc` files associated with Markdown and component tag diagnostics
-- optional textlint diagnostics on save
+- built-in `meta` frontmatter completion and diagnostics
+- i18n inlay previews plus document links to translation dictionaries
+- optional textlint diagnostics on save, including quick fixes when textlint reports a fix
+- half-width/full-width spacing diagnostics, quick fixes, and opt-in save-time fixes
 
 ## Configuration
 
-| Setting                         | Type    | Description                                                                                                                   |
-| ------------------------------- | ------- | ----------------------------------------------------------------------------------------------------------------------------- |
-| `oxContent.server.path`         | string  | Absolute or workspace-relative path to `ox-content-lsp`. Empty falls back to `target/debug` → `target/release` → `cargo run`. |
-| `oxContent.frontmatter.schema`  | string  | Path to a frontmatter schema (Markdown + `.mdc`).                                                                             |
-| `oxContent.preview.autoRefresh` | boolean | Re-render the preview as you type (default `true`).                                                                           |
-| `oxContent.textlint.enabled`    | boolean | Run textlint through the LSP on save (default `false`).                                                                       |
-| `oxContent.textlint.command`    | string  | Optional textlint command. Empty falls back to `npx textlint`; common value: `pnpm exec textlint`.                            |
+| Setting                                     | Type    | Description                                                                                                                   |
+| ------------------------------------------- | ------- | ----------------------------------------------------------------------------------------------------------------------------- |
+| `oxContent.server.path`                     | string  | Absolute or workspace-relative path to `ox-content-lsp`. Empty falls back to `target/debug` → `target/release` → `cargo run`. |
+| `oxContent.frontmatter.schema`              | string  | Path to a frontmatter schema (Markdown + `.mdc`). Empty uses the built-in Ox Content schema for common fields and `meta`.     |
+| `oxContent.preview.autoRefresh`             | boolean | Re-render the preview as you type (default `true`).                                                                           |
+| `oxContent.textlint.enabled`                | boolean | Run textlint through the LSP on save (default `false`).                                                                       |
+| `oxContent.textlint.command`                | string  | Optional textlint command. Empty falls back to `npx textlint`; common value: `pnpm exec textlint`.                            |
+| `oxContent.spacing.betweenHalfAndFullWidth` | string  | `forbid` (default), `require`, or `off` for spaces between half-width ASCII and full-width CJK text.                          |
+| `oxContent.spacing.autoFixOnSave`           | boolean | Opt-in save-time spacing fixes via `willSaveWaitUntil`, including VS Code auto save (default `false`).                        |
 
 The environment variable `OX_CONTENT_LSP_PATH` is honored as an override
 between `oxContent.server.path` and the local-binary probe. CI and the
@@ -37,6 +42,28 @@ diagnostics with `source: "textlint"`.
 
 The command override is passed to the server as-is before the standard
 `--format json --stdin --stdin-filename <path>` arguments are appended.
+When textlint returns a JSON `fix`, the extension exposes it as a normal
+quick fix.
+
+## Spacing
+
+The built-in spacing rule defaults to `forbid`, so `Rust と TypeScript`
+is diagnosed and the quick fix removes the spaces. Set
+`oxContent.spacing.betweenHalfAndFullWidth: "require"` to enforce the
+opposite style and insert spaces for `RustとTypeScript`.
+
+Save-time fixes are intentionally opt-in:
+
+```json
+{
+  "oxContent.spacing.autoFixOnSave": true
+}
+```
+
+## Publishing
+
+Marketplace, Open VSX, and Zed release setup is documented in
+[PUBLISHING.md](./PUBLISHING.md).
 
 ## Preview HMR
 
