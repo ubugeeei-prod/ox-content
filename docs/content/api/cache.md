@@ -2,16 +2,20 @@
 
 **[Source](https://github.com/ubugeeei-prod/ox-content/blob/main/npm/vite-plugin-ox-content/src/og-image/cache.ts)**
 
-> 3 documented symbols. Read the signatures first, then expand each item for parameters, return types, and examples.
+> 4 documented symbols. Read the signatures first, then expand each item for parameters, return types, and examples.
 
 <div class="ox-api-stats" aria-label="API reference summary">
 <span class="ox-api-stat">
-  <strong>3</strong>
+  <strong>4</strong>
   <span>symbols</span>
 </span>
 <span class="ox-api-stat">
   <strong>3</strong>
   <span>functions</span>
+</span>
+<span class="ox-api-stat">
+  <strong>1</strong>
+  <span>modules</span>
 </span>
 <span class="ox-api-stat">
   <strong>9</strong>
@@ -29,6 +33,17 @@
 <button type="button" class="ox-api-controls__button" data-ox-api-toggle="expand">Open all</button>
 <button type="button" class="ox-api-controls__button" data-ox-api-toggle="collapse">Close all</button>
 </div>
+
+<details id="cache" class="ox-api-entry">
+  <summary><span class="ox-api-entry__kind">module</span><span class="ox-api-entry__summary-main"><code class="ox-api-entry__name">cache</code><span class="ox-api-entry__description">Content-hash based caching for OG images. Uses SHA256 of (template source + props + options) to determine if a re-rende…</span></span></summary>
+  <div class="ox-api-entry__body">
+<div class="ox-api-entry__prose">
+<p>Content-hash based caching for OG images.</p>
+<p>Uses SHA256 of (template source + props + options) to determine if a re-render is needed. Cache dir: .cache/og-images</p>
+</div>
+<p class="ox-api-entry__source"><a class="ox-api-entry__source-link" href="https://github.com/ubugeeei-prod/ox-content/blob/main/npm/vite-plugin-ox-content/src/og-image/cache.ts#L1-L6" target="_blank" rel="noopener noreferrer">View source<span class="ox-api-entry__source-icon" aria-hidden="true"></span></a></p>
+  </div>
+</details>
 
 <details id="computecachekey" class="ox-api-entry">
   <summary><span class="ox-api-entry__kind">fn</span><span class="ox-api-entry__summary-main"><code class="ox-api-entry__signature ox-api-entry__signature--highlighted language-typescript">computeCacheKey(templateSource: string, props: Record&lt;string, unknown&gt;, width: number, height: number): string</code><span class="ox-api-entry__description">Computes a cache key from template + props + options.</span><span class="ox-api-entry__meta"><span class="ox-api-badge">4 params</span><span class="ox-api-badge">returns string</span></span></span></summary>
@@ -170,3 +185,4 @@
 </div>
   </div>
 </details>
+

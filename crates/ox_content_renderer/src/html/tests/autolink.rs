@@ -3,10 +3,22 @@ use ox_content_allocator::Allocator;
 use ox_content_parser::Parser;
 
 #[test]
-fn test_autolink_disabled_by_default() {
+fn test_autolink_enabled_by_default() {
     let allocator = Allocator::new();
     let doc = Parser::new(&allocator, "see http://example.com here").parse().unwrap();
     let mut renderer = HtmlRenderer::new();
+    let html = renderer.render(&doc);
+    insta::assert_snapshot!(html);
+}
+
+#[test]
+fn test_autolink_can_be_disabled() {
+    let allocator = Allocator::new();
+    let doc = Parser::new(&allocator, "see http://example.com here").parse().unwrap();
+    let mut renderer = HtmlRenderer::with_options(HtmlRendererOptions {
+        autolink_urls: false,
+        ..Default::default()
+    });
     let html = renderer.render(&doc);
     insta::assert_snapshot!(html);
 }

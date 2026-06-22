@@ -2,11 +2,11 @@
 
 **[Source](https://github.com/ubugeeei-prod/ox-content/blob/main/npm/vite-plugin-ox-content/src/dev-server.ts)**
 
-> 12 documented symbols. Read the signatures first, then expand each item for parameters, return types, and examples.
+> 13 documented symbols. Read the signatures first, then expand each item for parameters, return types, and examples.
 
 <div class="ox-api-stats" aria-label="API reference summary">
 <span class="ox-api-stat">
-  <strong>12</strong>
+  <strong>13</strong>
   <span>symbols</span>
 </span>
 <span class="ox-api-stat">
@@ -22,8 +22,16 @@
   <span>variables</span>
 </span>
 <span class="ox-api-stat">
+  <strong>1</strong>
+  <span>modules</span>
+</span>
+<span class="ox-api-stat">
   <strong>19</strong>
   <span>parameters</span>
+</span>
+<span class="ox-api-stat">
+  <strong>3</strong>
+  <span>members</span>
 </span>
 <span class="ox-api-stat">
   <strong>9</strong>
@@ -52,7 +60,7 @@
 <div class="ox-api-entry__section ox-api-entry__section--returns">
 <h4>Returns</h4>
 <div class="ox-api-entry__return">
-  <code class="ox-api-entry__return-type">DevServerCache</code>
+  <code class="ox-api-entry__return-type"><a href="#devservercache">DevServerCache</a></code>
   
 </div>
 </div>
@@ -76,7 +84,7 @@
 <li class="ox-api-entry__param">
   <div class="ox-api-entry__param-heading">
     <code class="ox-api-entry__param-name">options</code>
-    <code class="ox-api-entry__param-type">ResolvedOptions</code>
+    <code class="ox-api-entry__param-type"><a href="./types.md#resolvedoptions">ResolvedOptions</a></code>
   </div>
   
 </li>
@@ -90,7 +98,7 @@
 <li class="ox-api-entry__param">
   <div class="ox-api-entry__param-heading">
     <code class="ox-api-entry__param-name">cache</code>
-    <code class="ox-api-entry__param-type">DevServerCache</code>
+    <code class="ox-api-entry__param-type"><a href="#devservercache">DevServerCache</a></code>
   </div>
   
 </li>
@@ -106,8 +114,19 @@
   </div>
 </details>
 
+<details id="dev-server" class="ox-api-entry">
+  <summary><span class="ox-api-entry__kind">module</span><span class="ox-api-entry__summary-main"><code class="ox-api-entry__name">dev-server</code><span class="ox-api-entry__description">Dev server middleware for ox-content SSG. Serves fully-rendered HTML pages (with navigation, theme, etc.) during vite d…</span></span></summary>
+  <div class="ox-api-entry__body">
+<div class="ox-api-entry__prose">
+<p>Dev server middleware for ox-content SSG.</p>
+<p>Serves fully-rendered HTML pages (with navigation, theme, etc.) during <code>vite dev</code>, matching the SSG build output.</p>
+</div>
+<p class="ox-api-entry__source"><a class="ox-api-entry__source-link" href="https://github.com/ubugeeei-prod/ox-content/blob/main/npm/vite-plugin-ox-content/src/dev-server.ts#L1-L6" target="_blank" rel="noopener noreferrer">View source<span class="ox-api-entry__source-icon" aria-hidden="true"></span></a></p>
+  </div>
+</details>
+
 <details id="devservercache" class="ox-api-entry">
-  <summary><span class="ox-api-entry__kind">interface</span><span class="ox-api-entry__summary-main"><code class="ox-api-entry__signature ox-api-entry__signature--highlighted language-typescript">DevServerCache</code><span class="ox-api-entry__description">Dev server state for caching.</span></span></summary>
+  <summary><span class="ox-api-entry__kind">interface</span><span class="ox-api-entry__summary-main"><code class="ox-api-entry__signature ox-api-entry__signature--highlighted language-typescript">DevServerCache</code><span class="ox-api-entry__description">Dev server state for caching.</span><span class="ox-api-entry__meta"><span class="ox-api-badge">3 members</span></span></span></summary>
   <div class="ox-api-entry__body">
 <div class="ox-api-entry__prose">
 <p>Dev server state for caching.</p>
@@ -117,6 +136,32 @@
 <pre><code class="language-typescript">interface DevServerCache</code></pre>
 </div>
 <p class="ox-api-entry__source"><a class="ox-api-entry__source-link" href="https://github.com/ubugeeei-prod/ox-content/blob/main/npm/vite-plugin-ox-content/src/dev-server.ts#L211-L218" target="_blank" rel="noopener noreferrer">View source<span class="ox-api-entry__source-icon" aria-hidden="true"></span></a></p>
+<div class="ox-api-entry__section ox-api-entry__section--members">
+<h4>Members</h4>
+<div class="ox-api-entry__member-group">
+<h5>Properties</h5>
+<table class="ox-api-entry__members-table">
+<thead><tr><th>Name</th><th>Type</th><th>Description</th></tr></thead>
+<tbody>
+<tr id="devservercache-navgroups">
+  <td><code>navGroups</code></td>
+  <td><code class="ox-api-entry__member-type language-typescript"><a href="./page-context.md#navgroup">NavGroup</a>[] | null</code></td>
+  <td><div class="ox-api-entry__member-description">Cached navigation groups. Invalidated on file add/unlink.</div></td>
+</tr>
+<tr id="devservercache-pages">
+  <td><code>pages</code></td>
+  <td><code class="ox-api-entry__member-type language-typescript">Map&lt;string, string&gt;</code></td>
+  <td><div class="ox-api-entry__member-description">Cached rendered HTML keyed by absolute file path.</div></td>
+</tr>
+<tr id="devservercache-sitename">
+  <td><code>siteName</code></td>
+  <td><code class="ox-api-entry__member-type language-typescript">string | null</code></td>
+  <td><div class="ox-api-entry__member-description">Cached site name. Computed once.</div></td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
   </div>
 </details>
 
@@ -170,7 +215,7 @@
 <li class="ox-api-entry__param">
   <div class="ox-api-entry__param-heading">
     <code class="ox-api-entry__param-name">cache</code>
-    <code class="ox-api-entry__param-type">DevServerCache</code>
+    <code class="ox-api-entry__param-type"><a href="#devservercache">DevServerCache</a></code>
   </div>
   
 </li>
@@ -203,7 +248,7 @@
 <li class="ox-api-entry__param">
   <div class="ox-api-entry__param-heading">
     <code class="ox-api-entry__param-name">cache</code>
-    <code class="ox-api-entry__param-type">DevServerCache</code>
+    <code class="ox-api-entry__param-type"><a href="#devservercache">DevServerCache</a></code>
   </div>
   
 </li>
@@ -250,14 +295,14 @@
 <li class="ox-api-entry__param">
   <div class="ox-api-entry__param-heading">
     <code class="ox-api-entry__param-name">options</code>
-    <code class="ox-api-entry__param-type">ResolvedOptions</code>
+    <code class="ox-api-entry__param-type"><a href="./types.md#resolvedoptions">ResolvedOptions</a></code>
   </div>
   
 </li>
 <li class="ox-api-entry__param">
   <div class="ox-api-entry__param-heading">
     <code class="ox-api-entry__param-name">navGroups</code>
-    <code class="ox-api-entry__param-type">NavGroup[]</code>
+    <code class="ox-api-entry__param-type"><a href="./page-context.md#navgroup">NavGroup</a>[]</code>
   </div>
   
 </li>
@@ -325,7 +370,7 @@
 <li class="ox-api-entry__param">
   <div class="ox-api-entry__param-heading">
     <code class="ox-api-entry__param-name">extensions</code>
-    <code class="ox-api-entry__param-type">unknown</code>
+    <code class="ox-api-entry__param-type">readonly string[]</code>
   </div>
   
 </li>
@@ -358,7 +403,7 @@
 <li class="ox-api-entry__param">
   <div class="ox-api-entry__param-heading">
     <code class="ox-api-entry__param-name">options</code>
-    <code class="ox-api-entry__param-type">ResolvedOptions</code>
+    <code class="ox-api-entry__param-type"><a href="./types.md#resolvedoptions">ResolvedOptions</a></code>
   </div>
   
 </li>
@@ -464,3 +509,4 @@
 <p class="ox-api-entry__source"><a class="ox-api-entry__source-link" href="https://github.com/ubugeeei-prod/ox-content/blob/main/npm/vite-plugin-ox-content/src/dev-server.ts#L59" target="_blank" rel="noopener noreferrer">View source<span class="ox-api-entry__source-icon" aria-hidden="true"></span></a></p>
   </div>
 </details>
+

@@ -1,5 +1,68 @@
 # Changelog
 
+## [2.73.0] - 2026-06-22
+
+### Features
+
+- add framework markdown render utilities
+- wire textlint editor integration (#426)
+
+### Bug Fixes
+
+- generate valid docs nav TypeScript (#436)
+
+### Refactoring
+
+- move framework codegen behind feature flag (#438)
+- split napi logic into core crates (#435)
+- split final oversized rust files
+- split wasm modules
+- split link checker modules
+- split search query tests
+- split remaining napi modules (#421)
+- split parser modules
+- split i18n modules
+- split napi transform helpers
+- split napi lint sanitize modules
+- split profile cli modules
+- split profiler modules
+- split renderer tests
+- split ssg html rendering
+- split docs export graph
+- split docs markdown pure renderer
+- split docs markdown html renderer
+- split docs markdown pages
+- split docs extractor visitor
+- split napi lint helpers
+- split napi emoji lookup
+- split napi mdast raw serialization
+- split napi transform bindings
+- split napi docs bindings
+- split napi pm helpers
+- split napi feature helpers
+- split docs graph export helpers
+- split docs graph entrypoint helpers
+- split docs graph resolver
+- split docs pure member rendering
+- split docs html member rendering
+- split docs markdown linking helpers
+- split docs extractor driver helpers
+- split docs markdown metadata helpers
+- split docs markdown core helpers
+- split docs markdown renderers
+- split docs extractor and markdown tests
+- split docs data nav normalize modules
+- split docs graph tests
+- split docs public models
+- split ssg route and asset helpers (#386)
+- split napi feature helpers (#385)
+- split ssg html modules (#384)
+- split docs crate helpers (#383)
+- split extractor tag helpers
+- split markdown ordering helpers (#381)
+- split docs Rust modules (#379)
+- split GitHub embed plugin (#378)
+
 ## [2.72.0] - 2026-06-21
 
 ### Features

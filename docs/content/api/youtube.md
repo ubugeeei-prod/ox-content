@@ -2,16 +2,20 @@
 
 **[Source](https://github.com/ubugeeei-prod/ox-content/blob/main/npm/vite-plugin-ox-content/src/plugins/youtube.ts)**
 
-> 2 documented symbols. Read the signatures first, then expand each item for parameters, return types, and examples.
+> 3 documented symbols. Read the signatures first, then expand each item for parameters, return types, and examples.
 
 <div class="ox-api-stats" aria-label="API reference summary">
 <span class="ox-api-stat">
-  <strong>2</strong>
+  <strong>3</strong>
   <span>symbols</span>
 </span>
 <span class="ox-api-stat">
   <strong>2</strong>
   <span>functions</span>
+</span>
+<span class="ox-api-stat">
+  <strong>1</strong>
+  <span>modules</span>
 </span>
 <span class="ox-api-stat">
   <strong>3</strong>
@@ -40,7 +44,7 @@
 <h4>Signature</h4>
 <pre><code class="language-typescript">export function extractVideoId(input: string): string | null</code></pre>
 </div>
-<p class="ox-api-entry__source"><a class="ox-api-entry__source-link" href="https://github.com/ubugeeei-prod/ox-content/blob/main/npm/vite-plugin-ox-content/src/plugins/youtube.ts#L29-L47" target="_blank" rel="noopener noreferrer">View source<span class="ox-api-entry__source-icon" aria-hidden="true"></span></a></p>
+<p class="ox-api-entry__source"><a class="ox-api-entry__source-link" href="https://github.com/ubugeeei-prod/ox-content/blob/main/npm/vite-plugin-ox-content/src/plugins/youtube.ts#L44-L62" target="_blank" rel="noopener noreferrer">View source<span class="ox-api-entry__source-icon" aria-hidden="true"></span></a></p>
 <div class="ox-api-entry__section ox-api-entry__section--params">
 <h4>Parameters</h4>
 <ul class="ox-api-entry__params">
@@ -73,7 +77,7 @@
 <h4>Signature</h4>
 <pre><code class="language-typescript">export async function transformYouTube(html: string, options?: YouTubeOptions): Promise&lt;string&gt;</code></pre>
 </div>
-<p class="ox-api-entry__source"><a class="ox-api-entry__source-link" href="https://github.com/ubugeeei-prod/ox-content/blob/main/npm/vite-plugin-ox-content/src/plugins/youtube.ts#L52-L63" target="_blank" rel="noopener noreferrer">View source<span class="ox-api-entry__source-icon" aria-hidden="true"></span></a></p>
+<p class="ox-api-entry__source"><a class="ox-api-entry__source-link" href="https://github.com/ubugeeei-prod/ox-content/blob/main/npm/vite-plugin-ox-content/src/plugins/youtube.ts#L67-L78" target="_blank" rel="noopener noreferrer">View source<span class="ox-api-entry__source-icon" aria-hidden="true"></span></a></p>
 <div class="ox-api-entry__section ox-api-entry__section--params">
 <h4>Parameters</h4>
 <ul class="ox-api-entry__params">
@@ -102,3 +106,20 @@
 </div>
   </div>
 </details>
+
+<details id="youtube" class="ox-api-entry">
+  <summary><span class="ox-api-entry__kind">module</span><span class="ox-api-entry__summary-main"><code class="ox-api-entry__name">youtube</code><span class="ox-api-entry__description">YouTube Plugin - Privacy-enhanced iframe embedding Transforms &lt;YouTube&gt; components into responsive iframe embeds using…</span></span></summary>
+  <div class="ox-api-entry__body">
+<div class="ox-api-entry__prose">
+<p>YouTube Plugin - Privacy-enhanced iframe embedding</p>
+<p>Transforms &lt;YouTube&gt; components into responsive iframe embeds using youtube-nocookie.com for enhanced privacy.</p>
+<p>The HTML rewrite is performed in Rust (<code>transformYoutubeEmbeds</code> in</p>
+</div>
+<p class="ox-api-entry__source"><a class="ox-api-entry__source-link" href="https://github.com/ubugeeei-prod/ox-content/blob/main/npm/vite-plugin-ox-content/src/plugins/youtube.ts#L1-L11" target="_blank" rel="noopener noreferrer">View source<span class="ox-api-entry__source-icon" aria-hidden="true"></span></a></p>
+<div class="ox-api-entry__section ox-api-entry__section--tags">
+<h4>Tags</h4>
+<ul class="ox-api-entry__tags"><li><span class="ox-api-entry__tag-name">@ox-content</span><span class="ox-api-entry__tag-value">/napi), replacing the previous rehype parse/stringify<br>round-trip. This module keeps the public TS surface and a cheap marker<br>check so pages without a <code>&lt;youtube&gt;</code> element never cross the NAPI boundary.</span></li></ul>
+</div>
+  </div>
+</details>
+

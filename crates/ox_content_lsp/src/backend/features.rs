@@ -237,6 +237,35 @@ impl Backend {
         let Ok(path) = uri.to_file_path() else {
             return None;
         };
+        if i18n::is_i18n_source_path(&path) {
+            let path_str = path.to_string_lossy().to_string();
+            let usages = self.i18n_state.get_file_key_usages(&path_str).await;
+            let mut links = Vec::new();
+            for usage in usages {
+                let Some(target) = self.i18n_state.find_key_definition(&usage.key).await else {
+                    continue;
+                };
+                let Some(target) = Url::from_file_path(target).ok() else {
+                    continue;
+                };
+                links.push(DocumentLink {
+                    range: Range {
+                        start: Position {
+                            line: usage.line.saturating_sub(1),
+                            character: usage.column.saturating_sub(1),
+                        },
+                        end: Position {
+                            line: usage.line.saturating_sub(1),
+                            character: usage.end_column.saturating_sub(1),
+                        },
+                    },
+                    target: Some(target),
+                    tooltip: Some("Open translation dictionary".to_string()),
+                    data: None,
+                });
+            }
+            return (!links.is_empty()).then_some(links);
+        }
         if !is_markdown_path(&path) {
             return None;
         }

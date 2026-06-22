@@ -26,6 +26,8 @@ pub fn completion_items(
     let prefix = &line[..cursor_in_line];
     let colon_index = line.find(':');
 
+    let schema = schema_for_position(document, position, block, schema).unwrap_or(schema);
+
     if colon_index.is_none() || cursor_in_line <= colon_index.unwrap_or(0) {
         return Some(property_items(document, position, block, schema));
     }
@@ -74,8 +76,7 @@ fn property_items(
     block: &FrontmatterBlock,
     schema: &FrontmatterSchema,
 ) -> Vec<CompletionItem> {
-    let existing: FxHashSet<&str> =
-        block.top_level_keys.iter().map(|key| key.name.as_str()).collect();
+    let existing = sibling_keys(document, position, block);
     let replace = document.word_range_at(position, |ch| {
         ch.is_ascii_alphanumeric() || ch == '-' || ch == '_' || ch == '"'
     });
@@ -109,6 +110,78 @@ fn property_items(
             ..Default::default()
         })
         .collect()
+}
+
+fn schema_for_position<'a>(
+    document: &TextDocumentState,
+    position: Position,
+    block: &FrontmatterBlock,
+    schema: &'a FrontmatterSchema,
+) -> Option<&'a FrontmatterSchema> {
+    let current_line =
+        crate::frontmatter::utils::strip_line_breaks(document.line_text(position.line));
+    let current_indent = leading_indent(current_line);
+    let mut stack: Vec<(usize, String)> = Vec::new();
+
+    for line_index in block.content_range.start.line..position.line {
+        let line = crate::frontmatter::utils::strip_line_breaks(document.line_text(line_index));
+        if line.trim().is_empty() || line.trim_start().starts_with('#') {
+            continue;
+        }
+        let indent = leading_indent(line);
+        let Some(key) = key_before_colon(line) else {
+            continue;
+        };
+        while stack.last().is_some_and(|(existing_indent, _)| *existing_indent >= indent) {
+            stack.pop();
+        }
+        stack.push((indent, key.to_string()));
+    }
+
+    while stack.last().is_some_and(|(existing_indent, _)| *existing_indent >= current_indent) {
+        stack.pop();
+    }
+
+    let mut current = schema;
+    for (_, key) in stack {
+        current = current.property(&key)?;
+    }
+    Some(current)
+}
+
+fn sibling_keys(
+    document: &TextDocumentState,
+    position: Position,
+    block: &FrontmatterBlock,
+) -> FxHashSet<String> {
+    let current_line =
+        crate::frontmatter::utils::strip_line_breaks(document.line_text(position.line));
+    let current_indent = leading_indent(current_line);
+    let mut keys = FxHashSet::default();
+
+    for line_index in block.content_range.start.line..=block.content_range.end.line {
+        if line_index == position.line {
+            continue;
+        }
+        let line = crate::frontmatter::utils::strip_line_breaks(document.line_text(line_index));
+        if leading_indent(line) == current_indent {
+            if let Some(key) = key_before_colon(line) {
+                keys.insert(key.to_string());
+            }
+        }
+    }
+    keys
+}
+
+fn leading_indent(line: &str) -> usize {
+    line.chars().take_while(|ch| *ch == ' ' || *ch == '\t').count()
+}
+
+fn key_before_colon(line: &str) -> Option<&str> {
+    let trimmed = line.trim_start();
+    let colon = trimmed.find(':')?;
+    let key = trimmed[..colon].trim().trim_matches('"').trim_matches('\'');
+    (!key.is_empty()).then_some(key)
 }
 
 fn value_items(

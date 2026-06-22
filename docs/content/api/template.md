@@ -2,16 +2,20 @@
 
 **[Source](https://github.com/ubugeeei-prod/ox-content/blob/main/npm/vite-plugin-ox-content/src/og-image/template.ts)**
 
-> 2 documented symbols. Read the signatures first, then expand each item for parameters, return types, and examples.
+> 3 documented symbols. Read the signatures first, then expand each item for parameters, return types, and examples.
 
 <div class="ox-api-stats" aria-label="API reference summary">
 <span class="ox-api-stat">
-  <strong>2</strong>
+  <strong>3</strong>
   <span>symbols</span>
 </span>
 <span class="ox-api-stat">
   <strong>2</strong>
   <span>functions</span>
+</span>
+<span class="ox-api-stat">
+  <strong>1</strong>
+  <span>modules</span>
 </span>
 <span class="ox-api-stat">
   <strong>1</strong>
@@ -77,9 +81,21 @@
 <div class="ox-api-entry__section ox-api-entry__section--returns">
 <h4>Returns</h4>
 <div class="ox-api-entry__return">
-  <code class="ox-api-entry__return-type">OgImageTemplateFn</code>
+  <code class="ox-api-entry__return-type"><a href="./types.md#ogimagetemplatefn">OgImageTemplateFn</a></code>
   
 </div>
 </div>
   </div>
 </details>
+
+<details id="template" class="ox-api-entry">
+  <summary><span class="ox-api-entry__kind">module</span><span class="ox-api-entry__summary-main"><code class="ox-api-entry__name">template</code><span class="ox-api-entry__description">Default OG image template. Uses inline HTML/CSS for a flat, low-color brand card with title, description, siteName, and…</span></span></summary>
+  <div class="ox-api-entry__body">
+<div class="ox-api-entry__prose">
+<p>Default OG image template.</p>
+<p>Uses inline HTML/CSS for a flat, low-color brand card with title, description, siteName, and tags. No external dependencies required.</p>
+</div>
+<p class="ox-api-entry__source"><a class="ox-api-entry__source-link" href="https://github.com/ubugeeei-prod/ox-content/blob/main/npm/vite-plugin-ox-content/src/og-image/template.ts#L1-L6" target="_blank" rel="noopener noreferrer">View source<span class="ox-api-entry__source-icon" aria-hidden="true"></span></a></p>
+  </div>
+</details>
+

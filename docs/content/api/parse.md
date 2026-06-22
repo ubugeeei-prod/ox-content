@@ -2,16 +2,20 @@
 
 **[Source](https://github.com/ubugeeei-prod/ox-content/blob/main/npm/vite-plugin-ox-content/src/island/parse.ts)**
 
-> 10 documented symbols. Read the signatures first, then expand each item for parameters, return types, and examples.
+> 11 documented symbols. Read the signatures first, then expand each item for parameters, return types, and examples.
 
 <div class="ox-api-stats" aria-label="API reference summary">
 <span class="ox-api-stat">
-  <strong>10</strong>
+  <strong>11</strong>
   <span>symbols</span>
 </span>
 <span class="ox-api-stat">
   <strong>10</strong>
   <span>functions</span>
+</span>
+<span class="ox-api-stat">
+  <strong>1</strong>
+  <span>modules</span>
 </span>
 <span class="ox-api-stat">
   <strong>10</strong>
@@ -80,7 +84,7 @@
 <li class="ox-api-entry__param">
   <div class="ox-api-entry__param-heading">
     <code class="ox-api-entry__param-name">children</code>
-    <code class="ox-api-entry__param-type">unknown</code>
+    <code class="ox-api-entry__param-type">Element[&quot;children&quot;]</code>
   </div>
   
 </li>
@@ -235,6 +239,17 @@
   </div>
 </details>
 
+<details id="parse" class="ox-api-entry">
+  <summary><span class="ox-api-entry__kind">module</span><span class="ox-api-entry__summary-main"><code class="ox-api-entry__name">parse</code><span class="ox-api-entry__description">Island Parser Detects &lt;Island&gt; components in HTML and transforms them into hydration-ready elements with data attribute…</span></span></summary>
+  <div class="ox-api-entry__body">
+<div class="ox-api-entry__prose">
+<p>Island Parser</p>
+<p>Detects &lt;Island&gt; components in HTML and transforms them into hydration-ready elements with data attributes.</p>
+</div>
+<p class="ox-api-entry__source"><a class="ox-api-entry__source-link" href="https://github.com/ubugeeei-prod/ox-content/blob/main/npm/vite-plugin-ox-content/src/island/parse.ts#L1-L6" target="_blank" rel="noopener noreferrer">View source<span class="ox-api-entry__source-icon" aria-hidden="true"></span></a></p>
+  </div>
+</details>
+
 <details id="parseprops" class="ox-api-entry">
   <summary><span class="ox-api-entry__kind">fn</span><span class="ox-api-entry__summary-main"><code class="ox-api-entry__signature ox-api-entry__signature--highlighted language-typescript">parseProps(el: Element): Record&lt;string, unknown&gt;</code><span class="ox-api-entry__description">Parse JSX-style props from attributes.</span><span class="ox-api-entry__meta"><span class="ox-api-badge">1 param</span><span class="ox-api-badge">returns Record&lt;string, unknown&gt;</span></span></span></summary>
   <div class="ox-api-entry__body">
@@ -359,3 +374,4 @@
 </div>
   </div>
 </details>
+

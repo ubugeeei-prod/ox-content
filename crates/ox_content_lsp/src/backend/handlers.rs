@@ -5,8 +5,9 @@ use tower_lsp::LanguageServer;
 use crate::document::is_markdown_path;
 
 use super::commands::{
-    insert_actions, COMMAND_INSERT_CALLOUT, COMMAND_INSERT_CODE_FENCE, COMMAND_INSERT_TABLE,
-    COMMAND_PREVIEW_HTML, COMMAND_PREVIEW_SUBSCRIBE, COMMAND_PREVIEW_UNSUBSCRIBE,
+    insert_actions, quickfix_actions, COMMAND_INSERT_CALLOUT, COMMAND_INSERT_CODE_FENCE,
+    COMMAND_INSERT_TABLE, COMMAND_PREVIEW_HTML, COMMAND_PREVIEW_SUBSCRIBE,
+    COMMAND_PREVIEW_UNSUBSCRIBE,
 };
 use super::Backend;
 
@@ -22,6 +23,7 @@ impl LanguageServer for Backend {
                     TextDocumentSyncOptions {
                         open_close: Some(true),
                         change: Some(TextDocumentSyncKind::FULL),
+                        will_save_wait_until: Some(true),
                         save: Some(TextDocumentSyncSaveOptions::Supported(true)),
                         ..Default::default()
                     },
@@ -60,6 +62,7 @@ impl LanguageServer for Backend {
                     resolve_provider: Some(false),
                     work_done_progress_options: WorkDoneProgressOptions::default(),
                 }),
+                document_formatting_provider: Some(OneOf::Left(true)),
                 selection_range_provider: Some(SelectionRangeProviderCapability::Simple(true)),
                 document_highlight_provider: Some(OneOf::Left(true)),
                 code_action_provider: Some(CodeActionProviderCapability::Simple(true)),
@@ -111,6 +114,17 @@ impl LanguageServer for Backend {
         // helper inside `Backend` short-circuits when the user has
         // not opted in via `oxContent.textlintEnabled`.
         self.run_textlint_for(&params.text_document.uri).await;
+    }
+
+    async fn will_save_wait_until(
+        &self,
+        params: WillSaveTextDocumentParams,
+    ) -> Result<Option<Vec<TextEdit>>> {
+        let config = self.resolved_config().await;
+        if !config.spacing.auto_fix_on_save {
+            return Ok(None);
+        }
+        Ok(self.spacing_formatting_edits(&params.text_document.uri).await)
     }
 
     async fn completion(&self, params: CompletionParams) -> Result<Option<CompletionResponse>> {
@@ -186,7 +200,13 @@ impl LanguageServer for Backend {
         {
             return Ok(None);
         }
-        Ok(Some(insert_actions(&params.text_document.uri, params.range.start)))
+        let mut actions = insert_actions(&params.text_document.uri, params.range.start);
+        actions.extend(quickfix_actions(&params.text_document.uri, &params.context.diagnostics));
+        Ok((!actions.is_empty()).then_some(actions))
+    }
+
+    async fn formatting(&self, params: DocumentFormattingParams) -> Result<Option<Vec<TextEdit>>> {
+        Ok(self.spacing_formatting_edits(&params.text_document.uri).await)
     }
 
     async fn execute_command(

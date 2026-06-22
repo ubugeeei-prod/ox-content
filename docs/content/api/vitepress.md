@@ -56,7 +56,7 @@
 <div class="ox-api-entry__section ox-api-entry__section--returns">
 <h4>Returns</h4>
 <div class="ox-api-entry__return">
-  <code class="ox-api-entry__return-type">SsgNavigationGroup[]</code>
+  <code class="ox-api-entry__return-type"><a href="./types.md#ssgnavigationgroup">SsgNavigationGroup</a>[]</code>
   
 </div>
 </div>
@@ -89,7 +89,7 @@
 <div class="ox-api-entry__section ox-api-entry__section--returns">
 <h4>Returns</h4>
 <div class="ox-api-entry__return">
-  <code class="ox-api-entry__return-type">SsgNavigationGroup[]</code>
+  <code class="ox-api-entry__return-type"><a href="./types.md#ssgnavigationgroup">SsgNavigationGroup</a>[]</code>
   
 </div>
 </div>
@@ -120,7 +120,7 @@
 <li class="ox-api-entry__param">
   <div class="ox-api-entry__param-heading">
     <code class="ox-api-entry__param-name">overrides</code>
-    <code class="ox-api-entry__param-type">OxContentOptions</code>
+    <code class="ox-api-entry__param-type"><a href="./types.md#oxcontentoptions">OxContentOptions</a></code>
   </div>
   <p class="ox-api-entry__param-description">optional · default: {}</p>
 </li>
@@ -129,7 +129,7 @@
 <div class="ox-api-entry__section ox-api-entry__section--returns">
 <h4>Returns</h4>
 <div class="ox-api-entry__return">
-  <code class="ox-api-entry__return-type">OxContentOptions</code>
+  <code class="ox-api-entry__return-type"><a href="./types.md#oxcontentoptions">OxContentOptions</a></code>
   
 </div>
 </div>
@@ -161,7 +161,7 @@
 <li class="ox-api-entry__param">
   <div class="ox-api-entry__param-heading">
     <code class="ox-api-entry__param-name">overrides</code>
-    <code class="ox-api-entry__param-type">OxContentOptions</code>
+    <code class="ox-api-entry__param-type"><a href="./types.md#oxcontentoptions">OxContentOptions</a></code>
   </div>
   <p class="ox-api-entry__param-description">optional · default: {}</p>
 </li>
@@ -216,3 +216,4 @@
 </div>
   </div>
 </details>
+

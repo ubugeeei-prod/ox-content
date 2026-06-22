@@ -21,8 +21,10 @@
 use std::path::Path;
 
 use compact_str::CompactString;
-use serde::Deserialize;
-use tower_lsp::lsp_types::{Diagnostic, DiagnosticSeverity, Position, Range};
+use serde::{Deserialize, Serialize};
+use tower_lsp::lsp_types::{Diagnostic, DiagnosticSeverity, Position, Range, TextEdit};
+
+const FIX_DATA_KIND: &str = "textlint-fix";
 
 /// User-facing configuration. Defaults are picked so the integration
 /// is a no-op unless the user opts in (textlint is heavy and noisy
@@ -71,38 +73,85 @@ struct TextlintMessage {
     /// to Information (textlint sometimes emits 0 for fix-only entries).
     #[serde(default)]
     severity: u32,
+    #[serde(default)]
+    fix: Option<TextlintFix>,
+}
+
+#[derive(Debug, Deserialize)]
+struct TextlintFix {
+    range: [usize; 2],
+    text: String,
+}
+
+#[derive(Debug, Deserialize, Serialize)]
+#[serde(rename_all = "camelCase")]
+struct TextlintFixData {
+    kind: String,
+    new_text: String,
 }
 
 /// Parse a textlint `--format json` payload into LSP diagnostics.
 /// Returns an empty list when the payload is empty / malformed —
 /// the LSP caller surfaces a log-level warning separately rather
 /// than blocking the publish path.
+#[cfg(test)]
 pub fn parse_diagnostics(payload: &str) -> Vec<Diagnostic> {
+    parse_diagnostics_inner(payload, None)
+}
+
+pub fn parse_diagnostics_with_source(payload: &str, source: &str) -> Vec<Diagnostic> {
+    parse_diagnostics_inner(payload, Some(source))
+}
+
+pub fn fix_edit_from_diagnostic(diagnostic: &Diagnostic) -> Option<TextEdit> {
+    if diagnostic.source.as_deref() != Some("textlint") {
+        return None;
+    }
+    let data = serde_json::from_value::<TextlintFixData>(diagnostic.data.clone()?).ok()?;
+    (data.kind == FIX_DATA_KIND)
+        .then_some(TextEdit { range: diagnostic.range, new_text: data.new_text })
+}
+
+fn parse_diagnostics_inner(payload: &str, source: Option<&str>) -> Vec<Diagnostic> {
     let Ok(files) = serde_json::from_str::<Vec<TextlintFileResult>>(payload) else {
         return Vec::new();
     };
     let mut diagnostics = Vec::new();
     for file in files {
         for message in file.messages {
-            diagnostics.push(message_to_diagnostic(message));
+            diagnostics.push(message_to_diagnostic(message, source));
         }
     }
     diagnostics
 }
 
-fn message_to_diagnostic(message: TextlintMessage) -> Diagnostic {
+fn message_to_diagnostic(message: TextlintMessage, source: Option<&str>) -> Diagnostic {
     // textlint reports 1-indexed coordinates; the LSP wants
     // 0-indexed. Clamp at 0 so an over-zealous saturating sub never
     // produces a negative number.
     let line = message.line.saturating_sub(1);
     let column = message.column.saturating_sub(1);
     let position = Position { line, character: column };
+    let fix = message.fix.and_then(|fix| {
+        let source = source?;
+        let start = byte_offset_from_utf16(source, fix.range[0]);
+        let end = byte_offset_from_utf16(source, fix.range[1]).max(start);
+        let doc = crate::document::TextDocumentState::new(source.to_string());
+        Some((
+            Range { start: doc.offset_to_position(start), end: doc.offset_to_position(end) },
+            fix.text,
+        ))
+    });
+    let range = fix.as_ref().map_or(Range { start: position, end: position }, |(range, _)| *range);
     Diagnostic {
-        range: Range { start: position, end: position },
+        range,
         severity: Some(severity_from_textlint(message.severity)),
         source: Some("textlint".to_string()),
         code: message.rule_id.map(tower_lsp::lsp_types::NumberOrString::String),
         message: message.message,
+        data: fix.and_then(|(_, new_text)| {
+            serde_json::to_value(TextlintFixData { kind: FIX_DATA_KIND.to_string(), new_text }).ok()
+        }),
         ..Default::default()
     }
 }
@@ -159,7 +208,18 @@ pub async fn run(source: &str, file_path: &Path, config: &TextlintConfig) -> Vec
     // textlint exits 1 when there are problems; we still want to
     // parse stdout in that case.
     let stdout = String::from_utf8_lossy(&output.stdout);
-    parse_diagnostics(&stdout)
+    parse_diagnostics_with_source(&stdout, source)
+}
+
+fn byte_offset_from_utf16(source: &str, utf16_index: usize) -> usize {
+    let mut units = 0usize;
+    for (offset, ch) in source.char_indices() {
+        if units >= utf16_index {
+            return offset;
+        }
+        units += ch.len_utf16();
+    }
+    source.len()
 }
 
 /// Pure helpers — split a shell-style command line on whitespace,

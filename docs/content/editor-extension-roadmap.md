@@ -39,12 +39,13 @@ must not depend on a later one in the list.
 | 4   | Vue / React props completion + jump + typecheck | crate scaffold           | planned                      | planned                  | planned                     | scaffold landed  |
 | 5   | Asset path completion + diagnostics             | completion provider      | via link checker             | completion + diagnostics | completion + diagnostics    | shipped          |
 | 6   | Dead link checker                               | diagnostics              | `ox-content-link-check`      | diagnostics              | diagnostics                 | local: shipped   |
-| 7   | textlint integration                            | on-save diagnostics      | via configured command       | enabled per setting      | enabled per setting         | shipped (opt-in) |
-| 8   | Frontmatter schema completion + diagnostics     | present                  | none (validated through LSP) | present                  | present                     | needs CLI        |
+| 7   | textlint integration                            | diagnostics + quickfix   | via configured command       | enabled per setting      | enabled per setting         | shipped (opt-in) |
+| 8   | Frontmatter schema completion + diagnostics     | present                  | none (validated through LSP) | present                  | present                     | built-in meta    |
 | 9   | Document structure (outline + folding)          | symbols + folding ranges | none (unit-tested headless)  | outline + folding        | outline + folding           | shipped          |
 | 10  | Document links (Markdown links + images)        | document link provider   | none (unit-tested headless)  | clickable links          | clickable links             | shipped          |
 | 11  | Selection ranges (expand selection)             | selection range provider | none (unit-tested headless)  | expand/shrink selection  | expand/shrink selection     | shipped          |
 | 12  | Document highlights (matching link targets)     | document highlight prov. | none (unit-tested headless)  | highlight same-target    | highlight same-target       | shipped          |
+| 13  | Half/full-width spacing                         | diagnostics + formatting | none (validated through LSP) | quickfix + save fix      | quickfix + formatting       | shipped          |
 
 ## PR Sequence
 
@@ -213,9 +214,10 @@ Split into three sequential PRs:
   missing-binary subprocess paths.
 - ✅ Protocol coverage pins the `textDocument/didSave` path that
   publishes textlint diagnostics through LSP.
-- Pending follow-ups: code actions for textlint `--fix` suggestions,
-  dedicated `ox-content-textlint` CLI (currently the user runs
-  textlint directly), debounce / cancellation between rapid saves.
+- ✅ Code actions for textlint JSON `fix` suggestions are exposed as LSP
+  quick fixes.
+- Pending follow-ups: dedicated `ox-content-textlint` CLI (currently the user
+  runs textlint directly), debounce / cancellation between rapid saves.
 
 ### 8. `feat(nvim): polish, parity, and busted suite`
 
@@ -228,20 +230,21 @@ Split into three sequential PRs:
   `neovim-test` running `nvim --headless -c "PlenaryBustedDirectory ..."`.
 - Refresh the README with the new command surface.
 
-### 9. `chore(release): VS Code Marketplace and OpenVSX publish workflow`
+### 9. `chore(release): editor extension publish workflow`
 
 Final shipping PR. Does not change runtime behavior.
 
-- New workflow `.github/workflows/publish-vscode.yml` triggered by tags of
-  the form `vscode-v*`. Downloads pre-built `ox-content-lsp` artifacts from
-  the `publish.yml` job for `linux-x64`, `linux-arm64`, `darwin-x64`,
-  `darwin-arm64`, and `win32-x64`. Bundles each into a platform-specific
-  VSIX and publishes via `vsce publish --packagePath` and
-  `ovsx publish --packagePath` with provenance.
+- ✅ New workflow `.github/workflows/publish-editors.yml` triggered by `v*`
+  tags and manual dispatch. It builds platform-specific VSIX files with bundled
+  `ox-content-lsp` binaries for `linux-x64`, `darwin-x64`, `darwin-arm64`, and
+  `win32-x64`, then publishes via `vsce` and `ovsx` when `VSCE_PAT` /
+  `OVSX_PAT` are configured.
+- ✅ The same workflow validates the Zed extension WASM build and can open a
+  `zed-industries/extensions` registry PR when `ZED_EXTENSIONS_PAT` is
+  configured.
 - Document the operational setup in
-  `npm/vscode-ox-content/PUBLISHING.md`: publisher creation,
-  `VSCE_PAT` and `OVSX_PAT` secrets, icon and README requirements,
-  versioning policy, and how to issue a manual hotfix.
+  `npm/vscode-ox-content/PUBLISHING.md`: publisher creation, `VSCE_PAT`,
+  `OVSX_PAT`, `ZED_EXTENSIONS_PAT`, versioning policy, and manual dry runs.
 
 ## Out of Scope
 

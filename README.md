@@ -185,14 +185,15 @@ You can wire it into:
 Supported features include:
 
 - fast Markdown snippet completion
-- frontmatter schema completion and diagnostics
-- i18n key completion, hover, go-to-definition, diagnostics, and inlay hints for JS/TS
+- frontmatter schema completion and diagnostics, including built-in `meta` fields
+- i18n key completion, hover, go-to-definition, diagnostics, inlay hints, and dictionary links for JS/TS
 - table / code fence / callout insertion commands
 - preview HTML generation for editor UIs (with LSP-pushed HMR)
 - `.mdc` authoring support with component tag diagnostics
 - asset path completion inside `[…](`, `![…](`, and HTML `src=`/`href=` attributes
 - dead link diagnostics powered by `ox_content_link_checker`
-- opt-in [textlint](https://textlint.github.io) integration: on-save diagnostics under `source: "textlint"`
+- opt-in [textlint](https://textlint.github.io) integration: on-save diagnostics and quick fixes under `source: "textlint"`
+- half-width/full-width spacing diagnostics, quick fixes, and opt-in save-time fixes
 - MDC component name and attribute completion when a project provides a component registry
 
 For CI or editor-independent checks, run:

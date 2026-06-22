@@ -1,6 +1,6 @@
 {
   "name": "vscode-ox-content",
-  "version": "0.1.0",
+  "version": "2.73.0",
   "private": true,
   "description": "VS Code extension for Ox Content authoring and i18n workflows",
   "categories": [
@@ -8,12 +8,22 @@
     "Programming Languages",
     "Snippets"
   ],
+  "homepage": "https://github.com/ubugeeei-prod/ox-content/tree/main/npm/vscode-ox-content",
   "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/ubugeeei-prod/ox-content.git",
+    "directory": "npm/vscode-ox-content"
+  },
   "publisher": "ubugeeei",
   "files": [
-    "dist",
+    "bin",
+    "dist/*.js",
+    "dist/internal/*.js",
     "snippets",
-    "README.md"
+    "README.md",
+    "PUBLISHING.md",
+    "LICENSE"
   ],
   "main": "./dist/extension.js",
   "scripts": {
@@ -89,6 +99,21 @@
           "type": "string",
           "default": "",
           "markdownDescription": "Optional absolute or workspace-relative path to the MDC component registry JSON file. The registry powers component name and attribute completion inside `.md` / `.mdc` files."
+        },
+        "oxContent.spacing.betweenHalfAndFullWidth": {
+          "type": "string",
+          "enum": [
+            "forbid",
+            "require",
+            "off"
+          ],
+          "default": "forbid",
+          "markdownDescription": "Controls spaces between half-width ASCII text and full-width CJK text in Markdown / `.mdc` files. `forbid` reports existing spaces and fixes by removing them. `require` reports missing spaces and fixes by inserting one. `off` disables the built-in rule."
+        },
+        "oxContent.spacing.autoFixOnSave": {
+          "type": "boolean",
+          "default": false,
+          "markdownDescription": "Opt-in save-time formatting for built-in Ox Content spacing fixes. When true, the language server returns spacing edits from `textDocument/willSaveWaitUntil`, including VS Code auto save."
         }
       }
     },
@@ -118,6 +143,6 @@
     "onLanguage:yaml"
   ],
   "engines": {
-    "vscode": "^1.90.0"
+    "vscode": "^1.120.0"
   }
 }

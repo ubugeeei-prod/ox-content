@@ -38,6 +38,11 @@ export function resolveInitializationOptions(
     textlintEnabled: getConfig().get<boolean>("textlint.enabled", false),
     textlintCommand: getConfig().get<string>("textlint.command", "").trim(),
     mdcComponents: getConfig().get<string>("mdc.components", "").trim(),
+    spaceBetweenHalfAndFullWidth: getConfig().get<string>(
+      "spacing.betweenHalfAndFullWidth",
+      "forbid",
+    ),
+    spacingAutoFixOnSave: getConfig().get<boolean>("spacing.autoFixOnSave", false),
     resolvePath: (value) => resolveFilePath(value, workspaceRoot),
   });
 }

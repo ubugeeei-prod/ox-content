@@ -50,7 +50,7 @@ pub struct WasmParserOptions {
 impl WasmParserOptions {
     /// Creates options with all Markdown extension flags disabled.
     ///
-    /// Defaults: `gfm = false`, `tocMaxDepth = 3`, `autolinkUrls = false`,
+    /// Defaults: `gfm = false`, `tocMaxDepth = 3`, `autolinkUrls = true`,
     /// `autolinkPatterns = ["http://", "https://"]`, and
     /// `autolinkTargetBlank = true`.
     #[wasm_bindgen(constructor)]
@@ -63,7 +63,7 @@ impl WasmParserOptions {
             strikethrough: false,
             autolinks: false,
             toc_max_depth: 3,
-            autolink_urls: false,
+            autolink_urls: true,
             autolink_patterns: vec!["http://".to_string(), "https://".to_string()],
             autolink_target_blank: true,
         }
@@ -71,7 +71,7 @@ impl WasmParserOptions {
 
     /// Enables the GFM convenience profile.
     ///
-    /// Default: `false`.
+    /// Default: `true`.
     #[wasm_bindgen(setter)]
     pub fn set_gfm(&mut self, value: bool) {
         self.gfm = value;

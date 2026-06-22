@@ -2,16 +2,20 @@
 
 **[Source](https://github.com/ubugeeei-prod/ox-content/blob/main/npm/vite-plugin-ox-content/src/plugins/tabs.ts)**
 
-> 5 documented symbols. Read the signatures first, then expand each item for parameters, return types, and examples.
+> 6 documented symbols. Read the signatures first, then expand each item for parameters, return types, and examples.
 
 <div class="ox-api-stats" aria-label="API reference summary">
 <span class="ox-api-stat">
-  <strong>5</strong>
+  <strong>6</strong>
   <span>symbols</span>
 </span>
 <span class="ox-api-stat">
   <strong>5</strong>
   <span>functions</span>
+</span>
+<span class="ox-api-stat">
+  <strong>1</strong>
+  <span>modules</span>
 </span>
 <span class="ox-api-stat">
   <strong>3</strong>
@@ -138,6 +142,22 @@
   </div>
 </details>
 
+<details id="tabs" class="ox-api-entry">
+  <summary><span class="ox-api-entry__kind">module</span><span class="ox-api-entry__summary-main"><code class="ox-api-entry__name">tabs</code><span class="ox-api-entry__description">Tabs Plugin - Pure CSS implementation Transforms &lt;Tabs&gt;/&lt;Tab&gt; components into accessible HTML with CSS :has() based tab…</span></span></summary>
+  <div class="ox-api-entry__body">
+<div class="ox-api-entry__prose">
+<p>Tabs Plugin - Pure CSS implementation</p>
+<p>Transforms &lt;Tabs&gt;/&lt;Tab&gt; components into accessible HTML with CSS :has() based tab switching (no JavaScript required).</p>
+<p>The HTML rewrite is performed in Rust (<code>transformTabsEmbeds</code> in</p>
+</div>
+<p class="ox-api-entry__source"><a class="ox-api-entry__source-link" href="https://github.com/ubugeeei-prod/ox-content/blob/main/npm/vite-plugin-ox-content/src/plugins/tabs.ts#L1-L12" target="_blank" rel="noopener noreferrer">View source<span class="ox-api-entry__source-icon" aria-hidden="true"></span></a></p>
+<div class="ox-api-entry__section ox-api-entry__section--tags">
+<h4>Tags</h4>
+<ul class="ox-api-entry__tags"><li><span class="ox-api-entry__tag-name">@ox-content</span><span class="ox-api-entry__tag-value">/napi), replacing the previous rehype parse/stringify round-trip.<br>The per-build group counter (consumed by <code>generateTabsCSS</code>) stays here and is<br>advanced by the number of groups the Rust transform reports, so CSS<br>generation still covers exactly the groups that were emitted.</span></li></ul>
+</div>
+  </div>
+</details>
+
 <details id="transformtabs" class="ox-api-entry">
   <summary><span class="ox-api-entry__kind">fn</span><span class="ox-api-entry__summary-main"><code class="ox-api-entry__signature ox-api-entry__signature--highlighted language-typescript">transformTabs(html: string): Promise&lt;string&gt;</code><span class="ox-api-entry__description">Transform Tabs components in HTML.</span><span class="ox-api-entry__meta"><span class="ox-api-badge">1 param</span><span class="ox-api-badge">returns Promise&lt;string&gt;</span></span></span></summary>
   <div class="ox-api-entry__body">
@@ -170,3 +190,4 @@
 </div>
   </div>
 </details>
+
