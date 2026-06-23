@@ -26,7 +26,18 @@ jobs:
         with:
           persist-credentials: false
 
+      - name: Set up Rust
+        uses: dtolnay/rust-toolchain@29eef336d9b2848a0b548edc03f92a220660cdb8 # stable
+
+      - name: Install zizmor
+        run: cargo install zizmor --version 1.26.1 --locked
+
       - name: Run zizmor
-        uses: zizmorcore/zizmor-action@5f14fd08f7cf1cb1609c1e344975f152c7ee938d # v0.5.6
+        run: zizmor --no-exit-codes --format sarif .github/workflows/ > zizmor.sarif
+        env:
+          GH_TOKEN: ${{ github.token }}
+
+      - name: Upload SARIF
+        uses: github/codeql-action/upload-sarif@411bbbe57033eedfc1a82d68c01345aa96c737d7 # v4
         with:
-          inputs: .github/workflows/
+          sarif_file: zizmor.sarif
