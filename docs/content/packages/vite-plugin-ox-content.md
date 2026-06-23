@@ -435,8 +435,9 @@ const apiResults = await search("@api transform", { limit: 5 });
 
 Collections expose Markdown frontmatter and route metadata through `virtual:ox-content/collections`.
 They are built only when that virtual module is imported. The default payload is metadata-only:
-Ox Content strips frontmatter with the Rust `prepareSource` path and avoids rendering every Markdown
-file into HTML.
+Ox Content uses a native Rust manifest builder for directory walking, source pattern filtering,
+frontmatter parsing, route path generation, and title extraction, so large Markdown trees avoid
+per-file JavaScript/NAPI round trips and do not render every Markdown file into HTML.
 
 ```ts
 // vite.config.ts
@@ -475,11 +476,14 @@ const page = await queryCollection("docs").path("/docs/getting-started").first()
 
 `include` is intentionally explicit for large sites:
 
-| Field  | Cost                                                  |
-| ------ | ----------------------------------------------------- |
-| `body` | Embeds stripped raw Markdown into the virtual module. |
-| `html` | Runs the full Markdown transform and embeds HTML.     |
-| `toc`  | Runs the full Markdown transform and embeds the TOC.  |
+| Field  | Cost                                                   |
+| ------ | ------------------------------------------------------ |
+| `body` | Embeds stripped raw Markdown into the virtual module.  |
+| `html` | Runs the native Markdown transform and embeds HTML.    |
+| `toc`  | Runs the native Markdown transform and embeds the TOC. |
+
+For full page-level JavaScript post-processing such as syntax highlighting or Mermaid rendering,
+import the Markdown module directly. Collection `html` is optimized for query payloads.
 
 Disable collections entirely with `collections: false`.
 

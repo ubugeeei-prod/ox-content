@@ -125,6 +125,7 @@ module.exports.collectDocsSourceFiles = binding.collectDocsSourceFiles;
 module.exports.generateDocsDataJson = binding.generateDocsDataJson;
 module.exports.generateDocsMarkdown = binding.generateDocsMarkdown;
 module.exports.writeGeneratedDocs = binding.writeGeneratedDocs;
+module.exports.buildCollectionManifest = binding.buildCollectionManifest;
 module.exports.mergeHighlightedCodeBlocks = binding.mergeHighlightedCodeBlocks;
 module.exports.generateOgImageSvg = binding.generateOgImageSvg;
 module.exports.buildSearchIndex = binding.buildSearchIndex;

@@ -3,6 +3,7 @@
 //! This crate provides NAPI bindings for using Ox Content from Node.js,
 //! including raw-buffer AST transfer for JavaScript interoperability.
 
+mod collection_bindings;
 mod docs_bindings;
 mod docs_graph_types;
 mod docs_markdown_types;
@@ -22,6 +23,7 @@ mod ssg_page_types;
 mod ssg_theme_types;
 mod transform_bindings;
 
+pub use collection_bindings::*;
 pub use docs_bindings::{
     build_export_graph_napi, collect_docs_source_files, extract_docs_from_directories_napi,
     extract_docs_from_entry_points_napi, extract_file_doc_entries, extract_file_docs,

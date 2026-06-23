@@ -38,6 +38,15 @@ export declare class IncrementalMarkdownRenderer {
   get pendingMarkdown(): string
 }
 
+/**
+ * Builds a Markdown collection manifest directly from files on the Rust side.
+ *
+ * File discovery, pattern filtering, frontmatter preparation, route metadata,
+ * and optional raw Rust Markdown transforms happen in one native call to avoid
+ * per-file JS/NAPI round trips on large content directories.
+ */
+export declare function buildCollectionManifest(options: JsBuildCollectionManifestOptions): string
+
 /** Builds the public API export graph from entry points. */
 export declare function buildExportGraph(entryPoints: Array<JsEntryPointSpec>, options?: JsGraphOptions | undefined | null): JsExportGraph
 
@@ -284,6 +293,19 @@ export interface JsAttrsOptions {
   enabled?: boolean
 }
 
+export interface JsBuildCollectionManifestOptions {
+  /** Source directory containing Markdown files. */
+  srcDir: string
+  /** Markdown extensions to collect. */
+  extensions: Array<string>
+  /** Parse YAML frontmatter before building entries. */
+  frontmatter?: boolean
+  /** Collection definitions. */
+  collections: Array<JsCollectionDefinition>
+  /** Rust Markdown transform options used only when a collection includes `html` or `toc`. */
+  transformOptions?: JsTransformOptions
+}
+
 /** Extracted fenced code block. */
 export interface JsCodeBlock {
   language: string
@@ -347,6 +369,15 @@ export interface JsCodeImportOptions {
    * Default: project root from the JavaScript caller.
    */
   rootDir?: string
+}
+
+export interface JsCollectionDefinition {
+  /** Collection name. */
+  name: string
+  /** Glob-like source patterns relative to `srcDir`. */
+  source: Array<string>
+  /** Extra payload fields: `body`, `html`, and/or `toc`. */
+  include: Array<string>
 }
 
 /** Normalized documentation entry used by generated API docs. */

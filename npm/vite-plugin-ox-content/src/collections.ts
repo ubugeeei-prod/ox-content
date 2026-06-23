@@ -1,35 +1,57 @@
-import * as fs from "node:fs/promises";
 import * as path from "node:path";
-import { glob } from "glob";
 import { generateCollectionsModule } from "./collections-runtime";
-import { isMarkdownFilePath, stripMarkdownExtension } from "./markdown";
 import { importNapiModule } from "./napi";
-import { transformMarkdown } from "./transform";
 import type {
-  CollectionEntry,
   CollectionManifest,
   CollectionOptions,
   CollectionsOptions,
-  ResolvedCollectionOptions,
   ResolvedCollectionsOptions,
   ResolvedOptions,
 } from "./types";
 
 const DEFAULT_COLLECTION_NAME = "content";
 const DEFAULT_COLLECTION_SOURCE = "**/*";
-const DEFAULT_CONCURRENCY = 32;
-const GLOB_IGNORE = ["**/node_modules/**", "**/.*/**", "**/.*"];
 
-type PreparedSource = {
-  content: string;
-  frontmatter: Record<string, unknown>;
+type NativeCollectionDefinition = {
+  name: string;
+  source: string[];
+  include: string[];
 };
 
-type PrepareSourceNapi = {
-  prepareSource: (
-    source: string,
-    options?: { frontmatter?: boolean },
-  ) => { content: string; frontmatter: Record<string, unknown> };
+type NativeTransformOptions = {
+  gfm?: boolean;
+  footnotes?: boolean;
+  taskLists?: boolean;
+  tables?: boolean;
+  strikethrough?: boolean;
+  frontmatter?: boolean;
+  tocMaxDepth?: number;
+  codeAnnotations?: boolean;
+  codeAnnotationMetaKey?: string;
+  codeAnnotationSyntax?: string;
+  codeAnnotationDefaultLineNumbers?: boolean;
+  wikiLinks?: { enabled?: boolean; baseUrl?: string };
+  emojiShortcodes?: { enabled?: boolean; custom?: Record<string, string> };
+  attributes?: { enabled?: boolean };
+  cjkEmphasis?: boolean;
+  codeImports?: { enabled?: boolean; rootDir?: string };
+  editThisPage?: {
+    enabled?: boolean;
+    repoUrl?: string;
+    branch?: string;
+    rootDir?: string;
+    label?: string;
+  };
+};
+
+type BuildCollectionManifestNapi = {
+  buildCollectionManifest: (options: {
+    srcDir: string;
+    extensions: string[];
+    frontmatter?: boolean;
+    collections: NativeCollectionDefinition[];
+    transformOptions?: NativeTransformOptions;
+  }) => string;
 };
 
 export function defineCollection<T extends CollectionOptions>(collection: T): T {
@@ -48,7 +70,7 @@ export function resolveCollectionsOptions(
   }
 
   const source = options === true || options === undefined ? defaultCollections() : options;
-  const collections: Record<string, ResolvedCollectionOptions> = {};
+  const collections: ResolvedCollectionsOptions["collections"] = {};
 
   for (const [name, value] of Object.entries(source)) {
     const collection = normalizeCollectionOptions(value);
@@ -66,41 +88,24 @@ export async function buildCollectionManifest(
   root: string,
   options: ResolvedOptions,
 ): Promise<CollectionManifest> {
-  const collections: CollectionManifest["collections"] = {};
   if (!options.collections.enabled) {
-    return { collections };
+    return { collections: {} };
   }
 
-  const srcDir = path.resolve(root, options.srcDir);
-  const collectionFiles = await Promise.all(
-    Object.values(options.collections.collections).map(async (collection) => ({
-      collection,
-      files: await collectCollectionFiles(srcDir, collection, options.extensions),
+  const napi = (await importNapiModule()) as unknown as BuildCollectionManifestNapi;
+  const manifestJson = napi.buildCollectionManifest({
+    srcDir: path.resolve(root, options.srcDir),
+    extensions: [...options.extensions],
+    frontmatter: options.frontmatter,
+    collections: Object.values(options.collections.collections).map((collection) => ({
+      name: collection.name,
+      source: collection.source,
+      include: collection.include,
     })),
-  );
-  const hasFiles = collectionFiles.some(({ files }) => files.length > 0);
-  if (!hasFiles) {
-    for (const { collection } of collectionFiles) {
-      collections[collection.name] = [];
-    }
-    return { collections };
-  }
+    transformOptions: createNativeTransformOptions(options),
+  });
 
-  const napi = (await importNapiModule()) as PrepareSourceNapi;
-  const preparedCache = new Map<string, Promise<PreparedSource>>();
-  const transformCache = new Map<string, ReturnType<typeof transformMarkdown>>();
-
-  for (const { collection, files } of collectionFiles) {
-    collections[collection.name] = await mapLimit(files, DEFAULT_CONCURRENCY, (filePath) => {
-      return createCollectionEntry(filePath, srcDir, collection, options, {
-        preparedCache,
-        transformCache,
-        napi,
-      });
-    });
-  }
-
-  return { collections };
+  return parseCollectionManifest(manifestJson);
 }
 
 export async function generateCollectionsVirtualModule(
@@ -108,113 +113,6 @@ export async function generateCollectionsVirtualModule(
   options: ResolvedOptions,
 ): Promise<string> {
   return generateCollectionsModule(await buildCollectionManifest(root, options));
-}
-
-async function collectCollectionFiles(
-  srcDir: string,
-  collection: ResolvedCollectionOptions,
-  extensions: readonly string[],
-): Promise<string[]> {
-  try {
-    const files = await glob(collection.source, {
-      absolute: true,
-      cwd: srcDir,
-      ignore: GLOB_IGNORE,
-      nodir: true,
-      windowsPathsNoEscape: true,
-    });
-    return files
-      .filter((file) => isMarkdownFilePath(file, extensions))
-      .sort((left, right) =>
-        left.localeCompare(right, undefined, { numeric: true, sensitivity: "base" }),
-      );
-  } catch {
-    return [];
-  }
-}
-
-async function createCollectionEntry(
-  filePath: string,
-  srcDir: string,
-  collection: ResolvedCollectionOptions,
-  options: ResolvedOptions,
-  caches: {
-    preparedCache: Map<string, Promise<PreparedSource>>;
-    transformCache: Map<string, ReturnType<typeof transformMarkdown>>;
-    napi: PrepareSourceNapi;
-  },
-): Promise<CollectionEntry> {
-  const relativePath = normalizePathSeparators(path.relative(srcDir, filePath));
-  const prepared = await getPreparedSource(filePath, options, caches.napi, caches.preparedCache);
-  const routePath = getCollectionPath(relativePath, options.extensions);
-  const stem = routePath === "/" ? "" : routePath.slice(1);
-  const include = new Set(collection.include);
-  const frontmatter = prepared.frontmatter;
-  const transformed =
-    include.has("html") || include.has("toc")
-      ? await getTransformedSource(filePath, options, caches.transformCache)
-      : undefined;
-
-  const title =
-    stringValue(frontmatter.title) ??
-    transformed?.toc.find((entry) => entry.depth === 1)?.text ??
-    extractFirstHeading(prepared.content) ??
-    formatTitleFromPath(stem || "index");
-  const description = stringValue(frontmatter.description);
-  const entry: CollectionEntry = {
-    ...frontmatter,
-    id: stem,
-    collection: collection.name,
-    path: routePath,
-    stem,
-    source: relativePath,
-    extension: path.extname(relativePath),
-    title,
-    description,
-    frontmatter,
-  };
-
-  if (include.has("body")) {
-    entry.body = prepared.content;
-  }
-  if (include.has("html") && transformed) {
-    entry.html = transformed.html;
-  }
-  if (include.has("toc") && transformed) {
-    entry.toc = transformed.toc;
-  }
-
-  return entry;
-}
-
-async function getPreparedSource(
-  filePath: string,
-  options: ResolvedOptions,
-  napi: PrepareSourceNapi,
-  cache: Map<string, Promise<PreparedSource>>,
-): Promise<PreparedSource> {
-  const cached = cache.get(filePath);
-  if (cached) return cached;
-  const promise = (async () => {
-    const source = await fs.readFile(filePath, "utf-8");
-    return napi.prepareSource(source, { frontmatter: options.frontmatter });
-  })();
-  cache.set(filePath, promise);
-  return promise;
-}
-
-function getTransformedSource(
-  filePath: string,
-  options: ResolvedOptions,
-  cache: Map<string, ReturnType<typeof transformMarkdown>>,
-): ReturnType<typeof transformMarkdown> {
-  const cached = cache.get(filePath);
-  if (cached) return cached;
-  const promise = fs
-    .readFile(filePath, "utf-8")
-    .then((source) => transformMarkdown(source, filePath, options));
-  cache.set(filePath, promise);
-  return promise;
 }
 
 function normalizeCollectionOptions(
@@ -231,42 +129,57 @@ function normalizeSourcePatterns(source: CollectionOptions["source"]): string[] 
   return values.map((value) => value || DEFAULT_COLLECTION_SOURCE);
 }
 
-function getCollectionPath(relativePath: string, extensions: readonly string[]): string {
-  const stem = stripMarkdownExtension(relativePath, extensions);
-  const segments = normalizePathSeparators(stem)
-    .split("/")
-    .filter(Boolean)
-    .map((segment) => segment.replace(/^\d+\./, ""));
-
-  if (segments.at(-1) === "index") {
-    segments.pop();
+function parseCollectionManifest(json: string): CollectionManifest {
+  const value = JSON.parse(json) as unknown;
+  if (!value || typeof value !== "object" || !("collections" in value)) {
+    throw new Error("[ox-content] Native collection manifest returned an invalid payload.");
   }
-
-  return segments.length ? `/${segments.join("/")}` : "/";
+  return value as CollectionManifest;
 }
 
-function extractFirstHeading(content: string): string | undefined {
-  for (const line of content.split(/\r?\n/)) {
-    const match = /^(#{1,6})\s+(.+?)\s*#*\s*$/.exec(line);
-    if (match) return match[2].trim();
-  }
-  return undefined;
-}
-
-function formatTitleFromPath(stem: string): string {
-  const last = stem.split("/").filter(Boolean).at(-1) ?? stem;
-  return last
-    .replace(/[-_]+/g, " ")
-    .replace(/\b\w/g, (char) => char.toUpperCase())
-    .trim();
-}
-
-function normalizePathSeparators(value: string): string {
-  return value.replaceAll(path.sep, "/");
-}
-
-function stringValue(value: unknown): string | undefined {
-  return typeof value === "string" ? value : undefined;
+function createNativeTransformOptions(options: ResolvedOptions): NativeTransformOptions {
+  return {
+    gfm: options.gfm,
+    footnotes: options.footnotes,
+    taskLists: options.taskLists,
+    tables: options.tables,
+    strikethrough: options.strikethrough,
+    frontmatter: options.frontmatter,
+    tocMaxDepth: options.tocMaxDepth,
+    codeAnnotations: options.codeAnnotations?.enabled ?? false,
+    codeAnnotationMetaKey: options.codeAnnotations?.metaKey ?? "annotate",
+    codeAnnotationSyntax: options.codeAnnotations?.notation ?? "attribute",
+    codeAnnotationDefaultLineNumbers: options.codeAnnotations?.defaultLineNumbers ?? false,
+    wikiLinks: options.wikiLinks?.enabled
+      ? {
+          enabled: true,
+          baseUrl: options.wikiLinks.baseUrl,
+        }
+      : undefined,
+    emojiShortcodes: options.emojiShortcodes?.enabled
+      ? {
+          enabled: true,
+          custom: options.emojiShortcodes.custom,
+        }
+      : undefined,
+    attributes: options.attrs?.enabled ? { enabled: true } : undefined,
+    cjkEmphasis: options.cjkEmphasis ?? false,
+    codeImports: options.codeImports?.enabled
+      ? {
+          enabled: true,
+          rootDir: options.codeImports.rootDir,
+        }
+      : undefined,
+    editThisPage: options.editThisPage?.enabled
+      ? {
+          enabled: true,
+          repoUrl: options.editThisPage.repoUrl,
+          branch: options.editThisPage.branch,
+          rootDir: options.editThisPage.rootDir,
+          label: options.editThisPage.label,
+        }
+      : undefined,
+  };
 }
 
 function defaultCollections(): CollectionsOptions {
@@ -275,23 +188,4 @@ function defaultCollections(): CollectionsOptions {
       source: DEFAULT_COLLECTION_SOURCE,
     },
   };
-}
-
-async function mapLimit<T, U>(
-  values: readonly T[],
-  concurrency: number,
-  mapper: (value: T) => Promise<U>,
-): Promise<U[]> {
-  const results = new Array<U>(values.length);
-  let cursor = 0;
-
-  async function worker(): Promise<void> {
-    while (cursor < values.length) {
-      const index = cursor++;
-      results[index] = await mapper(values[index]);
-    }
-  }
-
-  await Promise.all(Array.from({ length: Math.min(concurrency, values.length) }, worker));
-  return results;
 }

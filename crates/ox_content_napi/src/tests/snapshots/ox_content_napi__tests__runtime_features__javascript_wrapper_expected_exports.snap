@@ -2,6 +2,7 @@
 source: crates/ox_content_napi/src/tests/runtime_features.rs
 expression: "expected_exports.join(\"\\n\")"
 ---
+buildCollectionManifest
 buildSearchIndex
 buildSearchIndexFromDirectory
 buildSsgNavItems

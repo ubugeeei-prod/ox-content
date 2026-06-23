@@ -20,6 +20,7 @@ fn javascript_wrapper_and_declarations_cover_expected_exports() {
     let index_js = fs::read_to_string(manifest_dir.join("index.js")).unwrap();
     let declarations = fs::read_to_string(manifest_dir.join("index.d.ts")).unwrap();
     let expected_exports = [
+        "buildCollectionManifest",
         "buildSearchIndex",
         "buildSearchIndexFromDirectory",
         "buildSsgNavItems",
@@ -134,6 +135,64 @@ fn builds_search_index_from_directory() {
     assert_eq!(index.documents[0].title, "Native Search");
     assert_eq!(index.documents[0].url, "/docs/guide/intro");
     insta::assert_snapshot!(index.documents[0].body);
+
+    let _ = fs::remove_dir_all(root);
+}
+
+#[test]
+fn builds_collection_manifest_from_directory() {
+    let root =
+        std::env::temp_dir().join(format!("ox-content-napi-collections-{}", std::process::id()));
+    let content_dir = root.join("content");
+    let _ = fs::remove_dir_all(&root);
+    fs::create_dir_all(content_dir.join("blog")).unwrap();
+    fs::create_dir_all(content_dir.join("docs/1.guide")).unwrap();
+    fs::write(
+        content_dir.join("blog/1.first.md"),
+        "---\ntitle: First Post\ndraft: false\n---\n# First Post\n\nBody",
+    )
+    .unwrap();
+    fs::write(
+        content_dir.join("docs/1.guide/2.install.md"),
+        "---\ntitle: Install\ndescription: Setup guide\n---\n# Install",
+    )
+    .unwrap();
+
+    let manifest_json = crate::build_collection_manifest(crate::JsBuildCollectionManifestOptions {
+        src_dir: content_dir.to_string_lossy().into_owned(),
+        extensions: vec![".md".to_string(), ".markdown".to_string(), ".mdx".to_string()],
+        frontmatter: Some(true),
+        collections: vec![
+            crate::JsCollectionDefinition {
+                name: "blog".to_string(),
+                source: vec!["blog/**/*.md".to_string()],
+                include: vec!["body".to_string(), "html".to_string(), "toc".to_string()],
+            },
+            crate::JsCollectionDefinition {
+                name: "docs".to_string(),
+                source: vec!["docs/**/*.md".to_string()],
+                include: Vec::new(),
+            },
+        ],
+        transform_options: Some(crate::JsTransformOptions {
+            gfm: Some(true),
+            frontmatter: Some(true),
+            ..Default::default()
+        }),
+    })
+    .unwrap();
+    let manifest: serde_json::Value = serde_json::from_str(&manifest_json).unwrap();
+    let blog = &manifest["collections"]["blog"][0];
+    let docs = &manifest["collections"]["docs"][0];
+
+    assert_eq!(blog["path"], "/blog/first");
+    assert_eq!(blog["title"], "First Post");
+    assert!(blog["body"].as_str().unwrap().contains("# First Post"));
+    assert!(blog["html"].as_str().unwrap().contains("<h1"));
+    assert_eq!(blog["toc"][0]["text"], "First Post");
+    assert_eq!(docs["path"], "/docs/guide/install");
+    assert_eq!(docs["source"], "docs/1.guide/2.install.md");
+    assert_eq!(docs["description"], "Setup guide");
 
     let _ = fs::remove_dir_all(root);
 }

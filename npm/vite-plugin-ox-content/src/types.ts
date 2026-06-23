@@ -584,9 +584,9 @@ export interface OxContentOptions {
    * Markdown collection query options.
    *
    * Collections are exposed through `virtual:ox-content/collections`. The
-   * default collection is metadata-only and reads Markdown frontmatter without
-   * rendering every document; add `include` fields only for routes that need
-   * raw or rendered content in the query payload.
+   * default collection is metadata-only and is built by the native Rust
+   * manifest builder without rendering every document; add `include` fields
+   * only for routes that need raw or rendered content in the query payload.
    *
    * @default content collection for all Markdown files
    */
@@ -1924,7 +1924,7 @@ export interface NavItem {
  *
  * Keep this list small for large sites. By default collection entries contain
  * only route metadata and frontmatter. `body`, `html`, and `toc` increase the
- * virtual module size and may require a full Markdown transform.
+ * virtual module size, and `html`/`toc` require a native Markdown transform.
  */
 export type CollectionIncludeField = "body" | "html" | "toc";
 
@@ -1946,8 +1946,8 @@ export interface CollectionOptions {
    * Optional fields to include in each entry.
    *
    * The default is metadata-only for performance. Use `body` for stripped raw
-   * Markdown, `html` for rendered HTML, and `toc` for the parsed table of
-   * contents.
+   * Markdown, `html` for native rendered HTML, and `toc` for the parsed table
+   * of contents.
    *
    * @default []
    */
