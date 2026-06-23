@@ -86,6 +86,7 @@ export default defineConfig(({ mode }) => {
                     link: "/examples/unplugin-markdown-it-token-bridge.md",
                   },
                   { text: "Development Setup", link: "/development-setup.md" },
+                  { text: "Release Operations", link: "/release.md" },
                   { text: "Docs Deployment", link: "/deployment.md" },
                   {
                     text: "Editor Extension Roadmap",
