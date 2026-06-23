@@ -29,6 +29,7 @@ const CARGO_PUBLISH_PACKAGES = [
   "ox_content_renderer",
   "ox_content_incremental",
   "ox_content_og_image",
+  "ox_content_transform",
   "ox_content_search",
   "ox_content_ssg",
   "ox_content_docs",

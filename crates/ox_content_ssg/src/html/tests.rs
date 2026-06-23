@@ -21,3 +21,8 @@ fn snapshot_text(value: &str) -> String {
 
 mod rendering;
 mod theme;
+
+#[test]
+fn search_keydown_ignores_ime_composition() {
+    assert!(super::SSG_JS.contains("if (e.isComposing || e.keyCode === 229) return;"));
+}
