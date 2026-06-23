@@ -400,6 +400,8 @@ jobs:
           sleep 30
           publish_crate ox_content_renderer
           sleep 30
+          publish_crate ox_content_mdast
+          sleep 30
           publish_crate ox_content_incremental
           sleep 30
           publish_crate ox_content_og_image
