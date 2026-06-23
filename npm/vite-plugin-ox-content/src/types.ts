@@ -581,6 +581,18 @@ export interface OxContentOptions {
   search?: SearchOptions | boolean;
 
   /**
+   * Markdown collection query options.
+   *
+   * Collections are exposed through `virtual:ox-content/collections`. The
+   * default collection is metadata-only and reads Markdown frontmatter without
+   * rendering every document; add `include` fields only for routes that need
+   * raw or rendered content in the query payload.
+   *
+   * @default content collection for all Markdown files
+   */
+  collections?: CollectionsOptions | boolean;
+
+  /**
    * Enable OG Viewer dev tool.
    * Accessible at /__og-viewer during development.
    * @default true
@@ -639,6 +651,7 @@ export interface ResolvedOptions {
   transformers: MarkdownTransformer[];
   docs: ResolvedDocsOptions | false;
   search: ResolvedSearchOptions;
+  collections: ResolvedCollectionsOptions;
   ogViewer: boolean;
   embeds: ResolvedBuiltinEmbedOptions;
   i18n: ResolvedI18nOptions | false;
@@ -1900,6 +1913,126 @@ export interface NavItem {
    * Child navigation items (optional).
    */
   children?: NavItem[];
+}
+
+// ============================================
+// Collection Types
+// ============================================
+
+/**
+ * Extra payload fields embedded into collection entries.
+ *
+ * Keep this list small for large sites. By default collection entries contain
+ * only route metadata and frontmatter. `body`, `html`, and `toc` increase the
+ * virtual module size and may require a full Markdown transform.
+ */
+export type CollectionIncludeField = "body" | "html" | "toc";
+
+/**
+ * Collection source configuration.
+ */
+export interface CollectionOptions {
+  /**
+   * Glob pattern(s) resolved from `srcDir`.
+   *
+   * Patterns are filtered by the configured Markdown extensions. Numeric route
+   * prefixes such as `1.guide/2.install.md` are stripped from generated `path`.
+   *
+   * @default all Markdown files
+   */
+  source?: string | readonly string[];
+
+  /**
+   * Optional fields to include in each entry.
+   *
+   * The default is metadata-only for performance. Use `body` for stripped raw
+   * Markdown, `html` for rendered HTML, and `toc` for the parsed table of
+   * contents.
+   *
+   * @default []
+   */
+  include?: readonly CollectionIncludeField[];
+}
+
+/**
+ * Top-level collection definitions.
+ */
+export type CollectionsOptions = Record<string, CollectionOptions | string | readonly string[]>;
+
+/**
+ * Resolved collection definition.
+ */
+export interface ResolvedCollectionOptions {
+  name: string;
+  source: string[];
+  include: CollectionIncludeField[];
+}
+
+/**
+ * Resolved collection options.
+ */
+export interface ResolvedCollectionsOptions {
+  enabled: boolean;
+  collections: Record<string, ResolvedCollectionOptions>;
+}
+
+/**
+ * Queryable Markdown collection entry.
+ */
+export interface CollectionEntry {
+  [key: string]: unknown;
+  id: string;
+  collection: string;
+  path: string;
+  stem: string;
+  source: string;
+  extension: string;
+  title: string;
+  description?: string;
+  frontmatter: Record<string, unknown>;
+  body?: string;
+  html?: string;
+  toc?: TocEntry[];
+}
+
+/**
+ * Generated collection manifest.
+ */
+export interface CollectionManifest {
+  collections: Record<string, CollectionEntry[]>;
+}
+
+export type CollectionQueryOperator =
+  | "="
+  | "=="
+  | "!="
+  | "<>"
+  | ">"
+  | ">="
+  | "<"
+  | "<="
+  | "IN"
+  | "NOT IN"
+  | "BETWEEN"
+  | "NOT BETWEEN"
+  | "IS NULL"
+  | "IS NOT NULL"
+  | "LIKE"
+  | "NOT LIKE";
+
+export interface CollectionQueryBuilder<T extends CollectionEntry = CollectionEntry> {
+  path(path: string): CollectionQueryBuilder<T>;
+  select<K extends keyof T>(...fields: K[]): CollectionQueryBuilder<Pick<T, K> & CollectionEntry>;
+  where(field: keyof T | string, operator: CollectionQueryOperator, value?: unknown): this;
+  where(field: keyof T | string, value: unknown): this;
+  andWhere(factory: (query: CollectionQueryBuilder<T>) => void): this;
+  orWhere(factory: (query: CollectionQueryBuilder<T>) => void): this;
+  order(field: keyof T | string, direction?: "ASC" | "DESC"): this;
+  limit(limit: number): this;
+  skip(skip: number): this;
+  all(): Promise<T[]>;
+  first(): Promise<T | null>;
+  count(): Promise<number>;
 }
 
 // ============================================

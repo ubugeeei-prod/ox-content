@@ -245,6 +245,7 @@ function createResolvedOptions(overrides: Partial<ResolvedOptions> = {}): Resolv
       placeholder: "Search documentation...",
       hotkey: "/",
     },
+    collections: { enabled: false, collections: {} },
     ogViewer: false,
     embeds: {
       github: {},

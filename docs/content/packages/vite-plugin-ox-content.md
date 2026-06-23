@@ -428,6 +428,61 @@ const apiResults = await search("@api transform", { limit: 5 });
 // - snippet: text snippet with context
 ```
 
+### collections
+
+- Type: `CollectionsOptions | boolean`
+- Default: `{ content: { source: "**/*" } }`
+
+Collections expose Markdown frontmatter and route metadata through `virtual:ox-content/collections`.
+They are built only when that virtual module is imported. The default payload is metadata-only:
+Ox Content strips frontmatter with the Rust `prepareSource` path and avoids rendering every Markdown
+file into HTML.
+
+```ts
+// vite.config.ts
+import { defineConfig } from "vite";
+import { defineCollection, oxContent } from "@ox-content/vite-plugin";
+
+export default defineConfig({
+  plugins: [
+    oxContent({
+      srcDir: "content",
+      collections: {
+        blog: defineCollection({
+          source: "blog/**/*.md",
+        }),
+        docs: defineCollection({
+          source: "docs/**/*.md",
+          include: ["body"],
+        }),
+      },
+    }),
+  ],
+});
+```
+
+```ts
+import { queryCollection } from "virtual:ox-content/collections";
+
+const posts = await queryCollection("blog")
+  .where("draft", "=", false)
+  .order("date", "DESC")
+  .select("title", "path", "description")
+  .all();
+
+const page = await queryCollection("docs").path("/docs/getting-started").first();
+```
+
+`include` is intentionally explicit for large sites:
+
+| Field  | Cost                                                  |
+| ------ | ----------------------------------------------------- |
+| `body` | Embeds stripped raw Markdown into the virtual module. |
+| `html` | Runs the full Markdown transform and embeds HTML.     |
+| `toc`  | Runs the full Markdown transform and embeds the TOC.  |
+
+Disable collections entirely with `collections: false`.
+
 ## Environment API
 
 The plugin creates a `markdown` environment using Vite's Environment API for SSG-focused rendering.
@@ -452,15 +507,19 @@ The plugin provides virtual modules:
 - `virtual:ox-content/config` - Resolved plugin configuration
 - `virtual:ox-content/runtime` - Runtime utilities
 - `virtual:ox-content/search` - Search functionality
+- `virtual:ox-content/collections` - Collection query helpers
 
 ```ts
 import config from "virtual:ox-content/config";
 import { useMarkdown, withBase, withoutBase } from "virtual:ox-content/runtime";
 import { search, searchOptions } from "virtual:ox-content/search";
+import { queryCollection } from "virtual:ox-content/collections";
 
 const assetUrl = withBase("/og.png");
 const routePath = withoutBase("/docs/guide");
 
 // Use the search function
 const results = await search("query", { limit: 10 });
+
+const page = await queryCollection("content").path("/guide").first();
 ```

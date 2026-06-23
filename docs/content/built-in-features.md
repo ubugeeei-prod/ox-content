@@ -23,6 +23,7 @@ enabled explicitly.
 | Static site      | `ssg`                                                                 | `{ enabled }` | Generates static HTML pages during build.           |
 | API docs         | `docs`                                                                | `{ enabled }` | Generates package API docs unless set to `false`.   |
 | Search           | `search`                                                              | `{ enabled }` | Builds a static BM25 index for client-side search.  |
+| Collections      | `collections`                                                         | `{ content }` | Lazy metadata query manifest for Markdown files.    |
 | Syntax highlight | `highlight`                                                           | `false`       | Opt in when the site needs highlighted code blocks. |
 | OG images        | `ogImage`                                                             | `false`       | Opt in because image rendering adds build work.     |
 | Extra syntax     | `wikiLinks`, `emojiShortcodes`, `attrs`, `codeImports`, `cjkEmphasis` | `false`       | Non-standard authoring features are opt-in.         |
