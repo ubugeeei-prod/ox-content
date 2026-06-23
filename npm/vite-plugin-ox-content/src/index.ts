@@ -7,6 +7,7 @@
 
 import * as path from "path";
 import type { Plugin, ViteDevServer, ResolvedConfig } from "vite";
+import "./virtual";
 import { createMarkdownEnvironment } from "./environment";
 import { transformMarkdown } from "./transform";
 import { extractDocs, generateMarkdown, writeDocs, resolveDocsOptions } from "./docs";
@@ -27,6 +28,7 @@ import {
 import { createOgViewerPlugin } from "./og-viewer";
 import { resolveI18nOptions, createI18nPlugin } from "./i18n";
 import { isMarkdownFilePath, normalizeMarkdownExtensions } from "./markdown";
+import { generateCollectionsVirtualModule, resolveCollectionsOptions } from "./collections";
 import type { BuiltinPmOptions, OxContentOptions, ResolvedOptions } from "./types";
 
 export type { OxContentOptions } from "./types";
@@ -66,6 +68,15 @@ export type {
   ResolvedSearchOptions,
   SearchDocument,
   SearchResult,
+  CollectionEntry,
+  CollectionOptions,
+  CollectionsOptions,
+  ResolvedCollectionOptions,
+  ResolvedCollectionsOptions,
+  CollectionIncludeField,
+  CollectionManifest,
+  CollectionQueryBuilder,
+  CollectionQueryOperator,
   // Entry page types
   HeroAction,
   HeroImage,
@@ -115,6 +126,7 @@ export function oxContent(options: OxContentOptions = {}): Plugin[] {
     createEnvironmentPlugin(resolvedOptions),
     createDocsPlugin(resolvedOptions, getRoot),
     createSsgPlugin(resolvedOptions, getRoot, ssgDevCache),
+    createCollectionsPlugin(resolvedOptions, getRoot),
     createSearchPlugin(resolvedOptions, getRoot),
   ];
 
@@ -166,7 +178,7 @@ function createMainPlugin(
     },
 
     resolveId(id) {
-      if (id.startsWith("virtual:ox-content/")) {
+      if (id === "virtual:ox-content/config" || id === "virtual:ox-content/runtime") {
         return "\0" + id;
       }
 
@@ -178,7 +190,7 @@ function createMainPlugin(
     },
 
     async load(id) {
-      if (id.startsWith("\0virtual:ox-content/")) {
+      if (id === "\0virtual:ox-content/config" || id === "\0virtual:ox-content/runtime") {
         const virtualPath = id.slice("\0virtual:ox-content/".length);
         return generateVirtualModule(virtualPath, resolvedOptions);
       }
@@ -211,6 +223,50 @@ function createMainPlugin(
 
       const modules = server.moduleGraph.getModulesByFile(file);
       return modules ? Array.from(modules) : [];
+    },
+  };
+}
+
+function createCollectionsPlugin(resolvedOptions: ResolvedOptions, getRoot: () => string): Plugin {
+  const moduleId = "\0virtual:ox-content/collections";
+  let moduleCode: Promise<string> | undefined;
+
+  const invalidate = (devServer: ViteDevServer) => {
+    moduleCode = undefined;
+    const mod = devServer.moduleGraph.getModuleById(moduleId);
+    if (mod) {
+      devServer.moduleGraph.invalidateModule(mod);
+      devServer.ws.send({ type: "full-reload" });
+    }
+  };
+
+  return {
+    name: "ox-content:collections",
+
+    resolveId(id) {
+      return id === "virtual:ox-content/collections" ? moduleId : null;
+    },
+
+    async load(id) {
+      if (id !== moduleId) {
+        return null;
+      }
+      moduleCode ??= generateCollectionsVirtualModule(getRoot(), resolvedOptions);
+      return moduleCode;
+    },
+
+    configureServer(devServer) {
+      if (!resolvedOptions.collections.enabled) {
+        return;
+      }
+
+      const srcDir = path.resolve(getRoot(), resolvedOptions.srcDir);
+      devServer.watcher.add(srcDir);
+      devServer.watcher.on("all", (_event, file) => {
+        if (file.startsWith(srcDir) && isMarkdownFilePath(file, resolvedOptions.extensions)) {
+          invalidate(devServer);
+        }
+      });
     },
   };
 }
@@ -460,6 +516,7 @@ function resolveOptions(options: OxContentOptions): ResolvedOptions {
     transformers: options.transformers ?? [],
     docs: resolveDocsOptions(options.docs),
     search: resolveSearchOptions(options.search),
+    collections: resolveCollectionsOptions(options.collections),
     ogViewer: options.ogViewer ?? true,
     embeds: resolveBuiltinEmbedOptions(options.embeds),
     i18n: resolveI18nOptions(options.i18n),
@@ -793,6 +850,13 @@ export type {
 } from "./lint-files";
 export { buildSsg, resolveSsgOptions, DEFAULT_HTML_TEMPLATE } from "./ssg";
 export { resolveSearchOptions, buildSearchIndex, writeSearchIndex } from "./search";
+export {
+  buildCollectionManifest,
+  defineCollection,
+  defineCollections,
+  generateCollectionsVirtualModule,
+  resolveCollectionsOptions,
+} from "./collections";
 export {
   DEFAULT_MARKDOWN_EXTENSIONS,
   normalizeMarkdownExtensions,

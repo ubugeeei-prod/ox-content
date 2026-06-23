@@ -162,6 +162,7 @@ export function createDocsResolvedOptions(
       placeholder: "Search documentation...",
       hotkey: "/",
     },
+    collections: { enabled: false, collections: {} },
     ogViewer: false,
     embeds: {
       github: {},

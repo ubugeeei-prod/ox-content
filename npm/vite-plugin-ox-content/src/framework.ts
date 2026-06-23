@@ -87,6 +87,7 @@ export function createFrameworkMarkdownOptions(options: FrameworkMarkdownOptions
       placeholder: "Search...",
       hotkey: "k",
     },
+    collections: { enabled: false, collections: {} },
     embeds: {
       github: options.embeds?.github ?? {},
       openGraph: options.embeds?.openGraph ?? {},
