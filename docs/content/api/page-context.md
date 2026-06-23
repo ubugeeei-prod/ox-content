@@ -329,19 +329,20 @@
 import { usePageProps, PageProps } from &#39;@ox-content/vite-plugin&#39;;
 
 export function Layout({ children }: { children: JSX.Element }) {
-  const page = usePageProps&lt;MyPageProps&gt;();
-  return (
-    &lt;html&gt;
-      &lt;head&gt;
-        &lt;title&gt;{page.title}&lt;/title&gt;
-      &lt;/head&gt;
-      &lt;body&gt;
-        &lt;header&gt;{page.title}&lt;/header&gt;
-        &lt;main&gt;{children}&lt;/main&gt;
-      &lt;/body&gt;
-    &lt;/html&gt;
-  );
+const page = usePageProps&lt;MyPageProps&gt;();
+return (
+&lt;html&gt;
+&lt;head&gt;
+&lt;title&gt;{page.title}&lt;/title&gt;
+&lt;/head&gt;
+&lt;body&gt;
+&lt;header&gt;{page.title}&lt;/header&gt;
+&lt;main&gt;{children}&lt;/main&gt;
+&lt;/body&gt;
+&lt;/html&gt;
+);
 }</code></pre>
+
 </div>
 </div>
   </div>
@@ -645,4 +646,3 @@ export function Layout({ children }: { children: JSX.Element }) {
 </div>
   </div>
 </details>
-

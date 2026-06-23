@@ -1401,9 +1401,7 @@
             "type": "JSXNode",
             "description": ""
           },
-          "examples": [
-            "```tsx\n<div>{raw('<strong>Bold</strong>')}</div>\n```"
-          ],
+          "examples": ["```tsx\n<div>{raw('<strong>Bold</strong>')}</div>\n```"],
           "file": "npm/vite-plugin-ox-content/src/jsx-runtime.ts",
           "line": 262,
           "endLine": 264,
@@ -1429,9 +1427,7 @@
             "type": "JSXNode",
             "description": ""
           },
-          "examples": [
-            "```tsx\n{when(isLoggedIn, <UserMenu />)}\n```"
-          ],
+          "examples": ["```tsx\n{when(isLoggedIn, <UserMenu />)}\n```"],
           "file": "npm/vite-plugin-ox-content/src/jsx-runtime.ts",
           "line": 274,
           "endLine": 276,
@@ -1457,9 +1453,7 @@
             "type": "JSXNode",
             "description": ""
           },
-          "examples": [
-            "```tsx\n{each(items, (item) => <li>{item.name}</li>)}\n```"
-          ],
+          "examples": ["```tsx\n{each(items, (item) => <li>{item.name}</li>)}\n```"],
           "file": "npm/vite-plugin-ox-content/src/jsx-runtime.ts",
           "line": 286,
           "endLine": 289,
