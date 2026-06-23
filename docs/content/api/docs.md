@@ -77,18 +77,19 @@
 <pre><code class="language-typescript">import { extractDocs, generateMarkdown, writeDocs } from &#39;./docs&#39;;
 
 const docsOptions = {
-  enabled: true,
-  src: [&#39;./src&#39;],
-  out: &#39;./docs/api&#39;,
-  include: [&#39;**\/*.ts&#39;],
-  exclude: [&#39;**\/*.test.ts&#39;],
-  groupBy: &#39;file&#39;,
-  githubUrl: &#39;https://github.com/user/project&#39;,
+enabled: true,
+src: [&#39;./src&#39;],
+out: &#39;./docs/api&#39;,
+include: [&#39;**\/*.ts&#39;],
+exclude: [&#39;**\/*.test.ts&#39;],
+groupBy: &#39;file&#39;,
+githubUrl: &#39;https://github.com/user/project&#39;,
 };
 
 const extracted = await extractDocs([&#39;./src&#39;], docsOptions);
 const markdown = generateMarkdown(extracted, docsOptions);
 await writeDocs(markdown, &#39;./docs/api&#39;, extracted, docsOptions);</code></pre>
+
 </div>
 </div>
   </div>
@@ -175,15 +176,16 @@ await writeDocs(markdown, &#39;./docs/api&#39;, extracted, docsOptions);</code><
 
 // Returns:
 // [
-//   {
-//     file: &#39;/path/to/transform.ts&#39;,
-//     entries: [
-//       { name: &#39;transformMarkdown&#39;, kind: &#39;function&#39;, ... },
-//       { name: &#39;loadNapiBindings&#39;, kind: &#39;function&#39;, ... },
-//     ]
-//   },
-//   ...
+// {
+// file: &#39;/path/to/transform.ts&#39;,
+// entries: [
+// { name: &#39;transformMarkdown&#39;, kind: &#39;function&#39;, ... },
+// { name: &#39;loadNapiBindings&#39;, kind: &#39;function&#39;, ... },
+// ]
+// },
+// ...
 // ]</code></pre>
+
 </div>
 </div>
   </div>
@@ -315,4 +317,3 @@ await writeDocs(markdown, &#39;./docs/api&#39;, extracted, docsOptions);</code><
 </div>
   </div>
 </details>
-

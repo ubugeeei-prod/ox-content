@@ -68,7 +68,7 @@ jobs:
       - name: Regenerate benchmark docs
         run: vp run bench:docs
         env:
-          OX_CONTENT_BENCHMARK_RUNS: ${{ github.event_name == 'workflow_dispatch' && inputs.runs || '7' }}
+          OX_CONTENT_BENCHMARK_RUNS: ${{ github.event.inputs.runs || '7' }}
 
       - name: Create pull request
         uses: peter-evans/create-pull-request@5f6978faf089d4d20b00c7766989d076bb2fc7f1 # v8.1.1
@@ -81,7 +81,7 @@ jobs:
             Automated refresh of the Markdown benchmark tables and charts from the
             Benchmark docs workflow (`blacksmith-32vcpu-ubuntu-2404` runner, Bun 1.3.14
             so the `Bun.markdown.html` row is included, median of
-            ${{ github.event_name == 'workflow_dispatch' && inputs.runs || '7' }} runs).
+            ${{ github.event.inputs.runs || '7' }} runs).
 
             Updated:
             - `README.md` and `docs/content/performance.md` benchmark tables
