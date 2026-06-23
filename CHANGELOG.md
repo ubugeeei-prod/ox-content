@@ -1,5 +1,218 @@
 # Changelog
 
+## [2.74.0] - 2026-06-23
+
+### Features
+
+- add framework markdown render utilities
+- wire textlint editor integration (#426)
+- support jsdoc throws tags (#374)
+- persist sticky sidebar state (#371)
+- support flattened single entry roots (#361)
+- opt-in incremental markdown parsing/rendering (#357)
+- render jsdoc member default values (#356)
+- add document highlights for matching link targets (#355)
+- add smart selection ranges (expand selection) (#350)
+- add document links for Markdown links and images (#344)
+- add folding ranges for headings, code blocks, and frontmatter (#343)
+- support NAPI docs options (#339)
+- add renderGeneratedBy option (#335)
+- add JS/TS docs-generator profiling mode (#309)
+- add sort, sortEntryPoints, and kindSortOrder organization options (#307)
+- add groupOrder option to control typedoc section and nav group order (#299)
+- add renderStats option to omit generated markdown stats summaries (#298)
+- add Markdown display formats (#284)
+- add vitest docs test harness (#271)
+- add opt-in type parameter docs (#272)
+- add opt-in content transforms (#265)
+- add pure markdown render mode via renderStyle option (#261)
+- package-manager install tabs with opt-in synced groups (#257)
+- complete typedoc path strategy support (#214)
+- autolink bare URLs in text (#205)
+- scaffold crate (#196)
+- preview HMR push channel (#192)
+- on-save LSP sidecar with opt-in command override (#197)
+- component name + attribute completion via registry (#195)
+- new crate, LSP diagnostics, CLI (#193)
+- asset path completion inside link/image openers (#194)
+- support clean URLs in generated Markdown links (#187)
+
+### Bug Fixes
+
+- prevent last mobile menu item from being hidden behind the footer (#440)
+- restore main workflow checks (#446)
+- generate valid docs nav TypeScript (#436)
+- use crates.io environment for publishing (#373)
+- lower linux x64 binding glibc baseline (#369)
+- detect helper-based cargo publish targets (#362)
+- preserve napi declaration docs (#359)
+- allow media embeds through sanitizer (#342)
+- render nested HTML member formats (#338)
+- avoid duplicate property returns (#337)
+- strip JSDoc from type alias signatures (#336)
+- omit empty type parameter descriptions (#334)
+- resolve intersection callable aliases (#333)
+- merge destructured param docs (#332)
+- suppress property returns sections (#331)
+- render member type parameters (#330)
+- expand object literal params (#329)
+- avoid escaping return union pipes (#328)
+- preserve function type alias metadata (#326)
+- preserve function-valued property types (#325)
+- render TypeScript index signatures (#324)
+- render class method details (#323)
+- render return type literal members (#322)
+- collapse multiline type params (#321)
+- do not double-wrap mixed markdown @example bodies in a code fence (#320)
+- use entry source path for typedoc module index source link (#308)
+- never link TypeScript primitive types in annotations (#306)
+- link known symbols inside rendered type annotations (#305)
+- drop redundant Kind column from named member tables (#304)
+- sort class/interface/type members alphabetically to match typedoc (#303)
+- sort and dedupe typedoc nav leaf entries to match markdown order (#302)
+- bring html render style to feature parity with markdown (#300)
+- render all overload call signatures on typedoc symbol pages (#297)
+- render @since and @version as a Since section in markdown output (#296)
+- include declaration kind in typedoc symbol page H1 titles (#294)
+- render @experimental and @deprecated as GitHub alerts in markdown output (#293)
+- render module-level examples (#292)
+- preserve typedoc module names (#283)
+- format module index references as typedoc-style heading entries (#282)
+- render typedoc module index members as compact tables instead of bullet lists (#281)
+- emit one canonical typedoc page per symbol for cross-entrypoint re-exports (#280)
+- render pure markdown sections as sequential headings instead of bold paragraphs (#275)
+- extract module description without @module and across split header comments (#274)
+- drop source links for external dependency symbols (#270)
+- carry module-level @module description through to generated output (#268)
+- deploy docs from void root
+- restore Bun.markdown row in PR benchmark (#258)
+- remove needless raw string hashes in tabs tests
+- support typedoc markdown paths (#209)
+- render JSDoc inline links (#204)
+- document local entrypoint exports (#199)
+- extract external re-export docs (#198)
+
+### Performance
+
+- append Markdown table cells directly instead of per-cell Strings (#319)
+- extract docs during the export-graph walk to avoid a second parse (#318)
+- reduce TypeDoc render allocations (symbol map + list rows) (#317)
+- skip raw JSDoc text and param formatting on normalize paths (#316)
+- reuse the OXC arena allocator across files (#314)
+- borrow instead of allocate in doc-text/link processing (#315)
+- reduce markdown renderer allocations (#295)
+- fast-path block dispatch (#290)
+- fast-path simple list items (#289)
+- optimize Rust hot paths and release profiles (#287)
+- optimize html block parsing (#286)
+- optimize docs markdown rendering (#285)
+- debug-build NAPI smoke and cache rendering browsers (#263)
+- lazily bucket members and drop format! in pure markdown renderer (#262)
+- search runtime (#241)
+- borrow frontmatter content and move the autolink patterns (#235)
+- resolve spellcheck issue lines via binary search (#236)
+- gate text autolinking on the cached autolink_index (#234)
+- drop redundant allocations in slugify and the YouTube embed (#233)
+- cut per-symbol allocations on the generation path (#232)
+- tighten leaf/list/fenced block scans (#231)
+- SIMD-accelerate inline scanning with memchr (#230)
+- hoist per-page constant work out of the page loop (#227)
+- memoize per-doc scopes and the prefix-scan vocabulary (#228)
+- build the autolink first-byte index once per render (#225)
+- cache sort keys and bucket members lazily (#226)
+- skip redundant block dispatch on a paragraph's first line (#222)
+- SIMD-accelerate the static embed transforms (#224)
+- port the tabs embed transform to Rust (#221)
+- port the YouTube embed transform to Rust (#220)
+- skip no-op rehype round-trips and redundant per-page work (#218)
+- skip non-URL text in autolink scan via memchr (#217)
+- optimize release profile (#202)
+- add Allocator::for_source_len, use it across LSP + NAPI (#190)
+- fast-path text in inline dispatch, pre-size heading scratch (#188)
+- reuse parsed list lines (#184)
+- scan safe urls in chunks (#183)
+- write numeric attrs without strings (#182)
+- avoid unused link url allocations (#181)
+- write duplicate toc id suffixes in place (#180)
+- avoid duplicate toc slug clones (#179)
+- avoid inline toc entry clones (#178)
+- avoid temporary table row allocations (#177)
+- write heading id directly to output, skip callout alloc (#173) (#174)
+
+### Refactoring
+
+- move framework codegen behind feature flag (#438)
+- split napi logic into core crates (#435)
+- split final oversized rust files
+- split wasm modules
+- split link checker modules
+- split search query tests
+- split remaining napi modules (#421)
+- split parser modules
+- split i18n modules
+- split napi transform helpers
+- split napi lint sanitize modules
+- split profile cli modules
+- split profiler modules
+- split renderer tests
+- split ssg html rendering
+- split docs export graph
+- split docs markdown pure renderer
+- split docs markdown html renderer
+- split docs markdown pages
+- split docs extractor visitor
+- split napi lint helpers
+- split napi emoji lookup
+- split napi mdast raw serialization
+- split napi transform bindings
+- split napi docs bindings
+- split napi pm helpers
+- split napi feature helpers
+- split docs graph export helpers
+- split docs graph entrypoint helpers
+- split docs graph resolver
+- split docs pure member rendering
+- split docs html member rendering
+- split docs markdown linking helpers
+- split docs extractor driver helpers
+- split docs markdown metadata helpers
+- split docs markdown core helpers
+- split docs markdown renderers
+- split docs extractor and markdown tests
+- split docs data nav normalize modules
+- split docs graph tests
+- split docs public models
+- split ssg route and asset helpers (#386)
+- split napi feature helpers (#385)
+- split ssg html modules (#384)
+- split docs crate helpers (#383)
+- split extractor tag helpers
+- split markdown ordering helpers (#381)
+- split docs Rust modules (#379)
+- split GitHub embed plugin (#378)
+- use compact strings for small state (#377)
+- prefer fx hash collections (#376)
+- add defaults for docs fixtures (#375)
+- split large binding and markdown test modules (#358)
+- split html renderer modules (#266)
+- split long implementations (#203)
+- move VitePress frontmatter normalization to Rust (#186)
+- move docs generation output into rust (#185)
+
+### Documentation
+
+- add kazupon credits summary (#367)
+- add builtin examples and framework tests (#360)
+- document optimization hot paths (#291)
+- expand built-in feature and Void deploy guides (#269)
+- format generated API reference
+- refresh generated API reference
+- add an MDX & Components guide (#240)
+- add JSDoc API-docs and i18n guides (#239)
+- document dark mode, embed slots, social icons, custom CSS (#238)
+- update benchmarks
+- add editor extension roadmap (#189)
+
 ## [2.73.0] - 2026-06-22
 
 ### Features
