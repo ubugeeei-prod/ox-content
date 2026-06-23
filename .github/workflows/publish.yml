@@ -404,6 +404,8 @@ jobs:
           sleep 30
           publish_crate ox_content_og_image
           sleep 30
+          publish_crate ox_content_transform
+          sleep 30
           publish_crate ox_content_search
           sleep 30
           publish_crate ox_content_ssg
