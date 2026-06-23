@@ -1,5 +1,17 @@
 # Changelog
 
+## [2.75.0] - 2026-06-23
+
+### Features
+
+- add markdown collection queries (#450)
+
+### Bug Fixes
+
+- handle IME search and crate publish order (#447)
+- prevent last mobile menu item from being hidden behind the footer (#440)
+- restore main workflow checks (#446)
+
 ## [2.74.0] - 2026-06-23
 
 ### Features

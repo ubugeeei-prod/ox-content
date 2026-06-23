@@ -1,6 +1,6 @@
 {
   "name": "@ox-content/islands",
-  "version": "2.74.0",
+  "version": "2.75.0",
   "description": "Framework-agnostic Island Architecture for ox-content",
   "keywords": [
     "framework-agnostic",
