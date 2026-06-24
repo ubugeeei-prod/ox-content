@@ -1,5 +1,16 @@
 # Changelog
 
+## [2.75.1] - 2026-06-24
+
+### Bug Fixes
+
+- unwrap default export of ESM-only rehype plugins in CJS build (#452)
+
+### Documentation
+
+- update collection API reference
+- document release operations
+
 ## [2.75.0] - 2026-06-23
 
 ### Features
