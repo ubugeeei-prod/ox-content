@@ -1,7 +1,8 @@
 import type { Element, Root } from "hast";
-import rehypeParse from "rehype-parse";
-import rehypeStringify from "rehype-stringify";
+import rehypeParsePlugin from "rehype-parse";
+import rehypeStringifyPlugin from "rehype-stringify";
 import { unified } from "unified";
+import { interopDefault } from "../../interop";
 import { prefetchGitHubRepos, prefetchGitHubSources } from "./api";
 import {
   attributesFromElement,
@@ -19,6 +20,10 @@ import {
   type GitHubRepoData,
   type GitHubSourceData,
 } from "./types";
+
+// ESM-only plugins are double-wrapped by the CommonJS interop; unwrap. See #452.
+const rehypeParse = interopDefault(rehypeParsePlugin);
+const rehypeStringify = interopDefault(rehypeStringifyPlugin);
 
 /**
  * Rehype plugin to transform GitHub components.

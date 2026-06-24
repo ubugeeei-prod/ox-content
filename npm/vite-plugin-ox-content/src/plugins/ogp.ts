@@ -6,9 +6,14 @@
  */
 
 import { unified } from "unified";
-import rehypeParse from "rehype-parse";
-import rehypeStringify from "rehype-stringify";
+import rehypeParsePlugin from "rehype-parse";
+import rehypeStringifyPlugin from "rehype-stringify";
 import type { Root, Element } from "hast";
+import { interopDefault } from "../interop";
+
+// ESM-only plugins are double-wrapped by the CommonJS interop; unwrap. See #452.
+const rehypeParse = interopDefault(rehypeParsePlugin);
+const rehypeStringify = interopDefault(rehypeStringifyPlugin);
 
 export interface OgpData {
   url: string;
