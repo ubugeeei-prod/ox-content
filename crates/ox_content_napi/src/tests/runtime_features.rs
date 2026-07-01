@@ -33,8 +33,10 @@ fn javascript_wrapper_and_declarations_cover_expected_exports() {
         "collectSsgMarkdownFiles",
         "escapeSvelteMarkup",
         "externalizeSsgAssets",
+        "extractCodeBlocks",
         "extractDocsFromDirectories",
         "extractDocsFromEntryPoints",
+        "extractDocsTests",
         "extractFileDocEntries",
         "extractFileDocs",
         "extractSearchContent",
@@ -58,6 +60,7 @@ fn javascript_wrapper_and_declarations_cover_expected_exports() {
         "getSsgOutputPath",
         "getSsgPageLocale",
         "getSsgUrlPath",
+        "lintCodeBlocks",
         "lintMarkdown",
         "lintMarkdownDocuments",
         "loadDictionaries",
@@ -77,20 +80,60 @@ fn javascript_wrapper_and_declarations_cover_expected_exports() {
         "renderFrameworkComponentCode",
         "resolveSsgNavigationGroups",
         "resolveSsgRoutePaths",
+        "sanitizeHtml",
         "searchIndex",
         "transform",
         "transformAsync",
+        "transformMediaEmbeds",
         "transformMdastRaw",
+        "transformPmEmbeds",
+        "transformTabsEmbeds",
         "transformMermaid",
+        "transformYoutubeEmbeds",
         "validateMf2",
         "version",
         "writeGeneratedDocs",
         "writeSearchIndex",
     ];
+    let explicit_wrapper_exports = explicit_wrapper_exports(&index_js);
+    let missing_wrapper_exports: Vec<_> = declared_function_exports(&declarations)
+        .into_iter()
+        .filter(|name| !explicit_wrapper_exports.contains(name))
+        .collect();
+
+    assert!(
+        missing_wrapper_exports.is_empty(),
+        "index.js is missing explicit ESM wrapper exports for declared functions: {}",
+        missing_wrapper_exports.join(", ")
+    );
 
     insta::assert_snapshot!("javascript_wrapper_expected_exports", expected_exports.join("\n"));
     insta::assert_snapshot!("javascript_wrapper_index_js", index_js);
     insta::assert_snapshot!("javascript_wrapper_declarations", declarations);
+}
+
+fn explicit_wrapper_exports(index_js: &str) -> Vec<&str> {
+    index_js
+        .lines()
+        .filter_map(|line| {
+            line.trim()
+                .strip_prefix("module.exports.")
+                .and_then(|rest| rest.split_once(" = "))
+                .map(|(name, _)| name)
+        })
+        .collect()
+}
+
+fn declared_function_exports(declarations: &str) -> Vec<&str> {
+    declarations
+        .lines()
+        .filter_map(|line| {
+            line.trim()
+                .strip_prefix("export declare function ")
+                .and_then(|rest| rest.split_once('('))
+                .map(|(name, _)| name)
+        })
+        .collect()
 }
 
 #[test]

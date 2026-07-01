@@ -15,8 +15,10 @@ collectSearchMarkdownFiles
 collectSsgMarkdownFiles
 escapeSvelteMarkup
 externalizeSsgAssets
+extractCodeBlocks
 extractDocsFromDirectories
 extractDocsFromEntryPoints
+extractDocsTests
 extractFileDocEntries
 extractFileDocs
 extractSearchContent
@@ -40,6 +42,7 @@ getSsgHref
 getSsgOutputPath
 getSsgPageLocale
 getSsgUrlPath
+lintCodeBlocks
 lintMarkdown
 lintMarkdownDocuments
 loadDictionaries
@@ -59,11 +62,16 @@ render
 renderFrameworkComponentCode
 resolveSsgNavigationGroups
 resolveSsgRoutePaths
+sanitizeHtml
 searchIndex
 transform
 transformAsync
+transformMediaEmbeds
 transformMdastRaw
+transformPmEmbeds
+transformTabsEmbeds
 transformMermaid
+transformYoutubeEmbeds
 validateMf2
 version
 writeGeneratedDocs
