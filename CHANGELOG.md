@@ -1,5 +1,23 @@
 # Changelog
 
+## [2.76.0] - 2026-07-01
+
+### Features
+
+- add markdown collection queries (#450)
+
+### Bug Fixes
+
+- export declared wrapper functions (#458)
+- unwrap default export of ESM-only rehype plugins in CJS build (#452)
+- publish mdast before dependent crates
+- handle IME search and crate publish order (#447)
+
+### Documentation
+
+- update collection API reference
+- document release operations
+
 ## [2.75.1] - 2026-06-24
 
 ### Bug Fixes
