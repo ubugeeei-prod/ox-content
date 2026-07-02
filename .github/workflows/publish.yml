@@ -57,9 +57,10 @@ jobs:
 
       - name: Install zig (Linux ARM64)
         if: matrix.target == 'aarch64-unknown-linux-gnu'
-        uses: goto-bus-stop/setup-zig@abea47f85e598557f500fa1fd2ab7464fcb39406 # v2.2.1
-        with:
-          version: 0.13.0
+        run: |
+          curl --retry 5 --retry-delay 5 --retry-all-errors -fsSL https://ziglang.org/download/0.13.0/zig-linux-x86_64-0.13.0.tar.xz -o zig.tar.xz
+          tar -xf zig.tar.xz
+          echo "$PWD/zig-linux-x86_64-0.13.0" >> "$GITHUB_PATH"
 
       - name: Install cargo-zigbuild (Linux ARM64)
         if: matrix.target == 'aarch64-unknown-linux-gnu'
@@ -394,13 +395,13 @@ jobs:
           sleep 30
           publish_crate ox_content_ast
           sleep 30
+          publish_crate ox_content_mdast
+          sleep 30
           publish_crate ox_content_profiler
           sleep 30
           publish_crate ox_content_parser --config 'patch.crates-io.ox_content_renderer.path="crates/ox_content_renderer"'
           sleep 30
           publish_crate ox_content_renderer
-          sleep 30
-          publish_crate ox_content_mdast
           sleep 30
           publish_crate ox_content_incremental
           sleep 30
