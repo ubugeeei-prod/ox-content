@@ -127,7 +127,9 @@ function checkNapiPackage(packageDir, pkg, files) {
     "x86_64-apple-darwin",
     "aarch64-apple-darwin",
     "x86_64-unknown-linux-gnu",
+    "x86_64-unknown-linux-musl",
     "aarch64-unknown-linux-gnu",
+    "aarch64-unknown-linux-musl",
     "x86_64-pc-windows-msvc",
   ]) {
     if (!targets.has(target)) {
@@ -140,7 +142,9 @@ function checkNapiPackage(packageDir, pkg, files) {
     "@ox-content/binding-darwin-arm64",
     "@ox-content/binding-darwin-x64",
     "@ox-content/binding-linux-x64-gnu",
+    "@ox-content/binding-linux-x64-musl",
     "@ox-content/binding-linux-arm64-gnu",
+    "@ox-content/binding-linux-arm64-musl",
     "@ox-content/binding-win32-x64-msvc",
   ]) {
     if (!wrapper.includes(bindingPackage)) {
