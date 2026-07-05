@@ -1,4 +1,5 @@
-const { existsSync } = require("fs");
+const { execSync } = require("child_process");
+const { existsSync, readFileSync } = require("fs");
 const path = require("path");
 
 function getErrorCode(error) {
@@ -18,6 +19,60 @@ function formatLoadError(target, error) {
   const code = getErrorCode(error);
   const suffix = code ? ` [${code}]` : "";
   return `  - ${target}${suffix}: ${getErrorMessage(error)}`;
+}
+
+function isFileMusl(file) {
+  return file.includes("libc.musl-") || file.includes("ld-musl-");
+}
+
+function isMuslFromFilesystem() {
+  try {
+    return readFileSync("/usr/bin/ldd", "utf8").includes("musl");
+  } catch {
+    return null;
+  }
+}
+
+function isMuslFromReport() {
+  if (typeof process.report?.getReport !== "function") {
+    return null;
+  }
+
+  const report = process.report.getReport();
+  if (report.header?.glibcVersionRuntime) {
+    return false;
+  }
+  if (Array.isArray(report.sharedObjects)) {
+    return report.sharedObjects.some(isFileMusl);
+  }
+
+  return false;
+}
+
+function isMuslFromChildProcess() {
+  try {
+    return execSync("ldd --version", { encoding: "utf8" }).includes("musl");
+  } catch {
+    return false;
+  }
+}
+
+function isMusl() {
+  if (process.platform !== "linux") {
+    return false;
+  }
+
+  const filesystemResult = isMuslFromFilesystem();
+  if (filesystemResult !== null) {
+    return filesystemResult;
+  }
+
+  const reportResult = isMuslFromReport();
+  if (reportResult !== null) {
+    return reportResult;
+  }
+
+  return isMuslFromChildProcess();
 }
 
 function loadBinding() {
@@ -43,7 +98,9 @@ function loadBinding() {
     "darwin-arm64": "ox-content.darwin-arm64.node",
     "darwin-x64": "ox-content.darwin-x64.node",
     "linux-x64-gnu": "ox-content.linux-x64-gnu.node",
+    "linux-x64-musl": "ox-content.linux-x64-musl.node",
     "linux-arm64-gnu": "ox-content.linux-arm64-gnu.node",
+    "linux-arm64-musl": "ox-content.linux-arm64-musl.node",
     "win32-x64-msvc": "ox-content.win32-x64-msvc.node",
   };
 
@@ -51,7 +108,7 @@ function loadBinding() {
   if (platform === "darwin") {
     key = `darwin-${arch}`;
   } else if (platform === "linux") {
-    key = `linux-${arch}-gnu`;
+    key = `linux-${arch}-${isMusl() ? "musl" : "gnu"}`;
   } else if (platform === "win32") {
     key = `win32-${arch}-msvc`;
   }
@@ -69,7 +126,9 @@ function loadBinding() {
     "darwin-arm64": "@ox-content/binding-darwin-arm64",
     "darwin-x64": "@ox-content/binding-darwin-x64",
     "linux-x64-gnu": "@ox-content/binding-linux-x64-gnu",
+    "linux-x64-musl": "@ox-content/binding-linux-x64-musl",
     "linux-arm64-gnu": "@ox-content/binding-linux-arm64-gnu",
+    "linux-arm64-musl": "@ox-content/binding-linux-arm64-musl",
     "win32-x64-msvc": "@ox-content/binding-win32-x64-msvc",
   };
 

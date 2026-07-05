@@ -30,6 +30,7 @@ permissions:
 
 env:
   CARGO_TERM_COLOR: always
+  LINUX_GLIBC_VERSION: "2.17"
   STICKY_CACHE_SCOPE: ${{ github.event_name == 'pull_request' && format('pr-{0}', github.event.pull_request.number) || github.ref_name }}
 
 jobs:
@@ -50,9 +51,15 @@ jobs:
           - os: ubuntu-22.04
             target: x86_64-unknown-linux-gnu
             platform: linux-x64-gnu
+          - os: ubuntu-22.04
+            target: x86_64-unknown-linux-musl
+            platform: linux-x64-musl
           - os: blacksmith-32vcpu-ubuntu-2404
             target: aarch64-unknown-linux-gnu
             platform: linux-arm64-gnu
+          - os: blacksmith-32vcpu-ubuntu-2404
+            target: aarch64-unknown-linux-musl
+            platform: linux-arm64-musl
           - os: windows-latest
             target: x86_64-pc-windows-msvc
             platform: win32-x64-msvc
@@ -91,20 +98,71 @@ jobs:
           # Only save cache on main pushes to prevent PR runs from poisoning the cache used by release builds.
           save-if: ${{ github.event_name == 'push' && github.ref == 'refs/heads/main' }}
 
-      - name: Install zig (Linux ARM64)
-        if: matrix.target == 'aarch64-unknown-linux-gnu'
+      - name: Install zig (Linux)
+        if: contains(matrix.target, 'unknown-linux')
         run: |
           curl -fsSL https://ziglang.org/download/0.13.0/zig-linux-x86_64-0.13.0.tar.xz -o zig.tar.xz
           tar -xf zig.tar.xz
           echo "$PWD/zig-linux-x86_64-0.13.0" >> "$GITHUB_PATH"
 
-      - name: Install cargo-zigbuild (Linux ARM64)
-        if: matrix.target == 'aarch64-unknown-linux-gnu'
+      - name: Install cargo-zigbuild (Linux)
+        if: contains(matrix.target, 'unknown-linux')
         run: cargo install cargo-zigbuild
 
-      - name: Build NAPI
+      - name: Build NAPI (Linux)
+        if: contains(matrix.target, 'unknown-linux')
         working-directory: crates/ox_content_napi
-        run: vp exec -- napi build --release --target ${{ matrix.target }} ${{ matrix.target == 'aarch64-unknown-linux-gnu' && '--cross-compile' || '' }}
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          build_target="${{ matrix.target }}"
+          if [[ "${{ matrix.target }}" == *-unknown-linux-gnu ]]; then
+            build_target="${build_target}.${LINUX_GLIBC_VERSION}"
+          else
+            export RUSTFLAGS="${RUSTFLAGS:-} -C target-feature=-crt-static"
+          fi
+
+          cargo zigbuild --release --target "$build_target"
+
+          src="../../target/${{ matrix.target }}/release/libox_content_napi.so"
+          if [[ ! -f "$src" ]]; then
+            src="../../target/${build_target}/release/libox_content_napi.so"
+          fi
+          cp "$src" "ox-content.${{ matrix.platform }}.node"
+
+      - name: Verify Linux native dependencies
+        if: contains(matrix.target, 'unknown-linux')
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          node_file="crates/ox_content_napi/ox-content.${{ matrix.platform }}.node"
+
+          if [[ "${{ matrix.target }}" == *-unknown-linux-gnu ]]; then
+            max_glibc="$(
+              readelf --version-info "$node_file" |
+                sed -n 's/.*Name: GLIBC_\([0-9.]*\).*/\1/p' |
+                sort -V |
+                tail -1
+            )"
+            echo "max GLIBC version: ${max_glibc:-none}"
+            if [[ -n "$max_glibc" ]] &&
+              [[ "$(printf '%s\n' "$LINUX_GLIBC_VERSION" "$max_glibc" | sort -V | tail -1)" != "$LINUX_GLIBC_VERSION" ]]; then
+              echo "::error::${node_file} requires GLIBC_${max_glibc}, expected <= GLIBC_${LINUX_GLIBC_VERSION}"
+              exit 1
+            fi
+          else
+            if readelf --version-info "$node_file" | grep -q 'GLIBC_'; then
+              echo "::error::${node_file} unexpectedly references GLIBC symbols"
+              exit 1
+            fi
+          fi
+
+      - name: Build NAPI
+        if: ${{ !contains(matrix.target, 'unknown-linux') }}
+        working-directory: crates/ox_content_napi
+        run: vp exec -- napi build --release --target ${{ matrix.target }}
 
       - name: Upload artifact
         uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
@@ -173,7 +231,9 @@ jobs:
             ["x86_64-apple-darwin"]="darwin-x64"
             ["aarch64-apple-darwin"]="darwin-arm64"
             ["x86_64-unknown-linux-gnu"]="linux-x64-gnu"
+            ["x86_64-unknown-linux-musl"]="linux-x64-musl"
             ["aarch64-unknown-linux-gnu"]="linux-arm64-gnu"
+            ["aarch64-unknown-linux-musl"]="linux-arm64-musl"
             ["x86_64-pc-windows-msvc"]="win32-x64-msvc"
           )
           for dir in artifacts/napi-*; do
@@ -226,7 +286,9 @@ jobs:
             ./binding-packages/darwin-x64 \
             ./binding-packages/darwin-arm64 \
             ./binding-packages/linux-x64-gnu \
+            ./binding-packages/linux-x64-musl \
             ./binding-packages/linux-arm64-gnu \
+            ./binding-packages/linux-arm64-musl \
             ./binding-packages/win32-x64-msvc \
             ./npm/ox-content-islands \
             ./npm/unplugin-ox-content \
