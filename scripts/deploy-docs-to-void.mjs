@@ -49,7 +49,7 @@ const run = (command, args, options = {}) => {
   }
 };
 
-const voidArgs = ["void@0.9.0", "deploy"];
+const voidArgs = ["void@0.10.8", "deploy"];
 
 if (!hasOption(extraArgs, "--project")) {
   voidArgs.push("--project", defaultProject);
