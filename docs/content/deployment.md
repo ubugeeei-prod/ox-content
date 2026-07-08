@@ -48,9 +48,9 @@ that override still uses the GitHub Pages base configured in `docs/vite.config.t
 ## GitHub Actions OIDC
 
 The tokenless deploy workflow lives at `.github/workflows/void-deploy.yml`.
-It grants `id-token: write` and runs `vp run deploy#docs`, which lets
-`void deploy` exchange GitHub OIDC for a short-lived Void deploy token at run
-time.
+It grants `id-token: write` and runs `scripts/deploy-docs-to-void.mjs`
+directly from the GitHub Actions shell step, which lets `void deploy` exchange
+GitHub OIDC for a short-lived Void deploy token at run time.
 
 The repository must be connected to the Void project once:
 
