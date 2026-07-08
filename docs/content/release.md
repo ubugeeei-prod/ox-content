@@ -103,5 +103,5 @@ vp run deploy#docs
 ```
 
 The task builds the local workspace, builds docs with the Void base path, and
-then runs `vpx void@0.9.0 deploy`. Use `VOID_PROJECT` or forwarded Void CLI
+then runs `vpx void@0.10.8 deploy`. Use `VOID_PROJECT` or forwarded Void CLI
 flags for preview deployments.

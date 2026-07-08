@@ -1,0 +1,60 @@
+name: Deploy docs to Void
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+# Latest push wins for the Void deployment. The GitHub Pages workflow remains
+# separate in deploy.yml.
+concurrency:
+  group: void-deploy-${{ github.repository }}-${{ github.ref }}
+  cancel-in-progress: true
+
+# id-token: write lets `void deploy` exchange GitHub OIDC for a short-lived
+# project-scoped deploy token. No long-lived VOID_TOKEN secret is required.
+permissions:
+  id-token: write
+  contents: read
+
+env:
+  STICKY_CACHE_SCOPE: ${{ github.ref_name }}
+  VOID_API_URL: ${{ vars.VOID_API_URL || 'https://api.void.cloud' }}
+  VOID_PROJECT: ${{ vars.VOID_PROJECT || 'ox-content' }}
+  OX_CONTENT_DOCS_BASE: /
+  OX_CONTENT_DOCS_SITE_URL: https://ox-content.void.app
+
+jobs:
+  deploy:
+    if: github.ref == 'refs/heads/main'
+    runs-on: blacksmith-32vcpu-ubuntu-2404
+    steps:
+      - uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
+        with:
+          persist-credentials: false
+
+      - name: Install Rust
+        uses: dtolnay/rust-toolchain@4be7066ada62dd38de10e7b70166bc74ed198c30 # stable
+
+      - name: Setup Vite+
+        uses: voidzero-dev/setup-vp@10c4be84517f21333b81092e67a344be1b09a202 # v1.15.0
+        with:
+          node-version-file: ".node-version"
+          cache: true
+          run-install: true
+
+      - name: Mount sticky cache
+        uses: ./.github/actions/mount-sticky-cache
+        with:
+          key-prefix: ${{ github.repository }}-void-deploy-${{ github.job }}-${{ env.STICKY_CACHE_SCOPE }}
+          cargo: "true"
+          target: target
+          browsers: "true"
+
+      - name: Install browsers for docs rendering
+        run: |
+          vp exec --filter @ox-content/vite-plugin -- playwright install --with-deps chromium
+          vp exec --filter @ox-content/vite-plugin -- puppeteer browsers install chrome-headless-shell
+
+      - name: Deploy docs to Void
+        run: vp run deploy#docs
