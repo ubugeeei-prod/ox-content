@@ -57,4 +57,4 @@ jobs:
           vp exec --filter @ox-content/vite-plugin -- puppeteer browsers install chrome-headless-shell
 
       - name: Deploy docs to Void
-        run: vp run deploy#docs
+        run: node scripts/deploy-docs-to-void.mjs
