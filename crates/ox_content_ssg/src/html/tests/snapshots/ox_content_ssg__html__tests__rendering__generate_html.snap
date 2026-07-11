@@ -1045,6 +1045,11 @@ a:hover {
   color: var(--octc-color-text-muted);
 }
 .content .ox-api-entry__section > :not(h4) {
+  /* The section grid is [6.5rem label | content]. Pin every content child to
+     the content column: with more than one (a Members section renders one
+     group per kind), auto-placement drops the second child into the narrow
+     label column. */
+  grid-column: 2;
   min-width: 0;
 }
 .content .ox-api-entry__source {
