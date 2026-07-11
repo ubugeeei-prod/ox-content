@@ -461,6 +461,49 @@ function createSearchPlugin(resolvedOptions: ResolvedOptions, getRoot: () => str
       }
     },
 
+    configureServer(devServer) {
+      const searchOptions = resolvedOptions.search;
+      if (!searchOptions.enabled) {
+        return;
+      }
+
+      // The index is only written to disk by the static build (closeBundle);
+      // without a dev handler the client's fetch falls through to the html
+      // fallback and search reports the index unavailable. Serve it from
+      // memory, rebuilt lazily after a Markdown change.
+      const srcDir = path.resolve(getRoot(), resolvedOptions.srcDir);
+      let stale = false;
+      devServer.watcher.on("all", (event, file) => {
+        if (event !== "add" && event !== "change" && event !== "unlink") {
+          return;
+        }
+        if (file.startsWith(srcDir) && isMarkdownFilePath(file, resolvedOptions.extensions)) {
+          stale = true;
+        }
+      });
+
+      const indexPath = resolvedOptions.base + "search-index.json";
+      devServer.middlewares.use(async (req, res, next) => {
+        if (req.url?.split("?")[0] !== indexPath) {
+          return next();
+        }
+        try {
+          if (stale || !searchIndexJson) {
+            searchIndexJson = await buildSearchIndex(
+              srcDir,
+              resolvedOptions.base,
+              resolvedOptions.extensions,
+            );
+            stale = false;
+          }
+          res.setHeader("Content-Type", "application/json; charset=utf-8");
+          res.end(searchIndexJson);
+        } catch (err) {
+          next(err);
+        }
+      });
+    },
+
     async closeBundle() {
       const searchOptions = resolvedOptions.search;
       if (!searchOptions.enabled || !searchIndexJson) {
