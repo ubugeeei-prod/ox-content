@@ -132,6 +132,9 @@ impl HtmlRenderer {
             let base = &self.options.base_url;
             if path_without_slash.is_empty() || path_without_slash == "index" {
                 join2(base, "index.html")
+            } else if let Some(dir) = path_without_slash.strip_suffix("/index") {
+                // /lib/index.md names the lib/ directory page
+                join3(base, dir, "/index.html")
             } else {
                 join3(base, path_without_slash, "/index.html")
             }
@@ -141,6 +144,13 @@ impl HtmlRenderer {
             if name == "index" {
                 // ./index.md -> ./index.html (stay in same directory)
                 "./index.html".to_string()
+            } else if let Some(dir) = name.strip_suffix("/index") {
+                // ./lib/index.md names the lib/ directory page
+                if source_is_index {
+                    join3("./", dir, "/index.html")
+                } else {
+                    join3("../", dir, "/index.html")
+                }
             } else if source_is_index {
                 // Source is index.md, so we're at directory level
                 // ./types.md -> ./types/index.html
