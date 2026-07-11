@@ -72,7 +72,13 @@ impl HtmlRenderer {
                             continue;
                         };
                         let value = &html[value_start..value_end];
-                        if let Some(rewritten) = self.apply_base_to_root_absolute_url(value) {
+                        // Raw anchors link pages the same way Markdown links
+                        // do; convert .md targets first, then fall back to
+                        // rebasing root-absolute URLs.
+                        let rewritten = self
+                            .convert_md_url(value)
+                            .or_else(|| self.apply_base_to_root_absolute_url(value));
+                        if let Some(rewritten) = rewritten {
                             output.push_str(&html[i..value_start]);
                             output.push_str(&rewritten);
                             i = value_end;

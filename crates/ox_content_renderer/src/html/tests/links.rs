@@ -127,3 +127,24 @@ fn test_convert_md_link_to_sibling_dir_index_from_non_index() {
     let html = renderer.render(&doc);
     insta::assert_snapshot!(html);
 }
+
+#[test]
+fn test_convert_md_href_inside_raw_html_anchor() {
+    // The docs generator emits raw <a href="X.md"> anchors alongside Markdown
+    // links; both must be converted or the raw ones 404 in the output tree.
+    let allocator = Allocator::new();
+    let doc = Parser::new(
+        &allocator,
+        "<a class=\"x\" href=\"../type-aliases/CounterOptions.md\">CounterOptions</a>",
+    )
+    .parse()
+    .unwrap();
+    let mut renderer = HtmlRenderer::with_options(HtmlRendererOptions {
+        convert_md_links: true,
+        base_url: "/".to_string(),
+        source_path: "lib/functions/createCounter.md".to_string(),
+        ..Default::default()
+    });
+    let html = renderer.render(&doc);
+    insta::assert_snapshot!(html);
+}

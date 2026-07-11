@@ -1,0 +1,6 @@
+---
+source: crates/ox_content_renderer/src/html/tests/links.rs
+assertion_line: 149
+expression: html
+---
+<p><a class="x" href="../../type-aliases/CounterOptions/index.html">CounterOptions</a></p>
