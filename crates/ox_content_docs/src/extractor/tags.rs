@@ -18,6 +18,20 @@ impl<'a> DocVisitor<'a> {
             || (!self.include_internal && Self::has_internal_tag(tags))
     }
 
+    /// Folds a TypeScript `private` accessibility modifier into the tag list,
+    /// so class members declared `private` flow through the same visibility
+    /// filtering (and `private` output flag) as members tagged `@private`.
+    pub(super) fn apply_ts_private_accessibility(
+        accessibility: Option<oxc_ast::ast::TSAccessibility>,
+        tags: &mut Vec<DocTag>,
+    ) {
+        if matches!(accessibility, Some(oxc_ast::ast::TSAccessibility::Private))
+            && !Self::has_private_tag(tags)
+        {
+            tags.push(DocTag::new("private".to_string(), String::new()));
+        }
+    }
+
     fn split_leading_jsdoc_type(value: &str) -> (Option<String>, &str) {
         let value = value.trim_start();
         let Some(rest) = value.strip_prefix('{') else {

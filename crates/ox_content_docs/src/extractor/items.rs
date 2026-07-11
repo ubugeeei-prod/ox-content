@@ -74,11 +74,12 @@ impl<'a> DocVisitor<'a> {
                         oxc_ast::ast::MethodDefinitionKind::Method => DocItemKind::Method,
                     };
 
-                    let (method_jsdoc, method_doc, method_tags) = self
+                    let (method_jsdoc, method_doc, mut method_tags) = self
                         .extract_jsdoc(method.span.start)
                         .map_or((None, None, Vec::new()), |(jsdoc, doc, tags)| {
                             (Some(jsdoc), (!doc.is_empty()).then_some(doc), tags)
                         });
+                    Self::apply_ts_private_accessibility(method.accessibility, &mut method_tags);
                     if self.should_skip_by_visibility(&method_tags) {
                         continue;
                     }
@@ -129,11 +130,12 @@ impl<'a> DocVisitor<'a> {
                         _ => continue,
                     };
 
-                    let (prop_jsdoc, prop_doc, prop_tags) = self
+                    let (prop_jsdoc, prop_doc, mut prop_tags) = self
                         .extract_jsdoc(prop.span.start)
                         .map_or((None, None, Vec::new()), |(jsdoc, doc, tags)| {
                             (Some(jsdoc), (!doc.is_empty()).then_some(doc), tags)
                         });
+                    Self::apply_ts_private_accessibility(prop.accessibility, &mut prop_tags);
                     if self.should_skip_by_visibility(&prop_tags) {
                         continue;
                     }
