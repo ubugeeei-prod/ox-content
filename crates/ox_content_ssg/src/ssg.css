@@ -1180,9 +1180,9 @@ a:hover {
 .content .ox-api-entry__param-type {
   font-family: var(--octc-font-mono);
   font-size: 0.78rem;
-  color: var(--octc-color-code-text);
-  background: color-mix(in srgb, var(--octc-color-code-bg) 96%, #243556);
-  border: 1px solid color-mix(in srgb, var(--octc-color-code-bg) 82%, var(--octc-color-border));
+  color: var(--octc-color-text-muted);
+  background: color-mix(in srgb, var(--octc-color-bg-alt) 60%, transparent);
+  border: 1px solid color-mix(in srgb, var(--octc-color-border) 82%, transparent);
   padding: 0.26rem 0.42rem;
   border-radius: 4px;
 }
