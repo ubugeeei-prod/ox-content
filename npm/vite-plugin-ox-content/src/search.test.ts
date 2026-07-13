@@ -103,11 +103,7 @@ describe("search dev server", () => {
   it("serves the search index from the dev server", async () => {
     const srcDir = await fs.mkdtemp(path.join(os.tmpdir(), "ox-content-search-dev-"));
     tempDirs.push(srcDir);
-    await fs.writeFile(
-      path.join(srcDir, "intro.md"),
-      "# Intro\n\nSearchable body.\n",
-      "utf-8",
-    );
+    await fs.writeFile(path.join(srcDir, "intro.md"), "# Intro\n\nSearchable body.\n", "utf-8");
 
     const plugins = oxContent({ srcDir, search: true });
     const search = plugins.find((plugin) => plugin.name === "ox-content:search");
