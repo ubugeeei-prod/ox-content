@@ -126,6 +126,7 @@ export default defineConfig({
       "test:ts": noopTask([
         "test:ts-unit",
         "test:framework-integrations",
+        "test:playground",
         "test:vscode-unit",
         "test:vrt",
       ]),
@@ -155,6 +156,7 @@ export default defineConfig({
       "test:framework-vue": task("vp exec --filter @ox-content/vite-plugin-vue -- vp test src", {
         dependsOn: ["build:vite-plugin"],
       }),
+      "test:playground": task("vp run --filter ox-content-playground test"),
       "test:vscode-unit": task("vp exec --filter vscode-ox-content -- vp test src/test/unit"),
       "test:vscode": uncachedTask("node scripts/run-vscode-tests.mjs", {
         dependsOn: ["build:lsp", "vscode:build"],
