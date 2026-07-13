@@ -2,6 +2,7 @@ import { afterEach, describe, expect, it } from "vite-plus/test";
 import * as fs from "node:fs/promises";
 import * as os from "node:os";
 import * as path from "node:path";
+import { oxContent } from "./index";
 import {
   buildSearchIndex,
   generateSearchModule,
@@ -95,5 +96,75 @@ describe("writeSearchIndex", () => {
     expect(await fs.readFile(path.join(outDir, "search-index.json"), "utf-8")).toBe(
       '{"doc_count":0}',
     );
+  });
+});
+
+describe("search dev server", () => {
+  it("serves the search index from the dev server", async () => {
+    const srcDir = await fs.mkdtemp(path.join(os.tmpdir(), "ox-content-search-dev-"));
+    tempDirs.push(srcDir);
+    await fs.writeFile(path.join(srcDir, "intro.md"), "# Intro\n\nSearchable body.\n", "utf-8");
+
+    const plugins = oxContent({ srcDir, search: true });
+    const search = plugins.find((plugin) => plugin.name === "ox-content:search");
+    expect(search).toBeDefined();
+
+    const middlewares: Array<
+      (req: unknown, res: unknown, next: (err?: unknown) => void) => Promise<void> | void
+    > = [];
+    let watchAll: ((event: string, file: string) => void) | undefined;
+    const devServer = {
+      middlewares: { use: (handler: (typeof middlewares)[number]) => middlewares.push(handler) },
+      watcher: {
+        on: (event: string, handler: (event: string, file: string) => void) => {
+          expect(event).toBe("all");
+          watchAll = handler;
+        },
+      },
+    };
+    (search?.configureServer as (server: unknown) => void)(devServer);
+    expect(middlewares).toHaveLength(1);
+
+    const request = async (url: string) => {
+      const headers: Record<string, string> = {};
+      let body: string | undefined;
+      let fellThrough = false;
+      await middlewares[0](
+        { url },
+        {
+          setHeader: (name: string, value: string) => {
+            headers[name.toLowerCase()] = value;
+          },
+          end: (chunk: string) => {
+            body = chunk;
+          },
+        },
+        () => {
+          fellThrough = true;
+        },
+      );
+      return { headers, body, fellThrough };
+    };
+
+    const miss = await request("/other.json");
+    expect(miss.fellThrough).toBe(true);
+
+    const hit = await request("/search-index.json");
+    expect(hit.fellThrough).toBe(false);
+    expect(hit.headers["content-type"]).toContain("application/json");
+    const index = JSON.parse(hit.body ?? "") as { documents: Array<{ body: string; id: string }> };
+    expect(index.documents.some((doc) => doc.id === "intro")).toBe(true);
+
+    await fs.writeFile(path.join(srcDir, "intro.md"), "# Intro\n\nUpdated body.\n", "utf-8");
+    watchAll?.("change", path.join(`${srcDir}-legacy`, "intro.md"));
+    const siblingChange = await request("/search-index.json");
+    expect(siblingChange.body).toBe(hit.body);
+
+    watchAll?.("change", path.join(srcDir, "intro.md"));
+    const changed = await request("/search-index.json");
+    const changedIndex = JSON.parse(changed.body ?? "") as {
+      documents: Array<{ body: string; id: string }>;
+    };
+    expect(changedIndex.documents.some((doc) => doc.body.includes("Updated body"))).toBe(true);
   });
 });

@@ -72,7 +72,11 @@ impl HtmlRenderer {
                             continue;
                         };
                         let value = &html[value_start..value_end];
-                        if let Some(rewritten) = self.apply_base_to_root_absolute_url(value) {
+                        // Raw anchors link pages the same way Markdown links
+                        // do; convert .md targets first, then fall back to
+                        // rebasing root-absolute URLs.
+                        let rewritten = self.convert_markdown_url(value);
+                        if let Some(rewritten) = rewritten {
                             output.push_str(&html[i..value_start]);
                             output.push_str(&rewritten);
                             i = value_end;
@@ -132,6 +136,9 @@ impl HtmlRenderer {
             let base = &self.options.base_url;
             if path_without_slash.is_empty() || path_without_slash == "index" {
                 join2(base, "index.html")
+            } else if let Some(dir) = path_without_slash.strip_suffix("/index") {
+                // /lib/index.md names the lib/ directory page
+                join3(base, dir, "/index.html")
             } else {
                 join3(base, path_without_slash, "/index.html")
             }
@@ -141,6 +148,13 @@ impl HtmlRenderer {
             if name == "index" {
                 // ./index.md -> ./index.html (stay in same directory)
                 "./index.html".to_string()
+            } else if let Some(dir) = name.strip_suffix("/index") {
+                // ./lib/index.md names the lib/ directory page
+                if source_is_index {
+                    join3("./", dir, "/index.html")
+                } else {
+                    join3("../", dir, "/index.html")
+                }
             } else if source_is_index {
                 // Source is index.md, so we're at directory level
                 // ./types.md -> ./types/index.html
@@ -157,8 +171,9 @@ impl HtmlRenderer {
             if source_is_index {
                 // Source is index.md at directory level
                 // ../types.md -> ../types/index.html
-                if rest == "index" || rest.ends_with("/index") {
-                    let dir = rest.trim_end_matches("/index").trim_end_matches("index");
+                if let Some(dir) =
+                    rest.strip_suffix("/index").or_else(|| (rest == "index").then_some(""))
+                {
                     if dir.is_empty() {
                         "../index.html".to_string()
                     } else {
@@ -170,8 +185,9 @@ impl HtmlRenderer {
             } else {
                 // Source is not index.md, need extra ../
                 // ../types.md -> ../../types/index.html
-                if rest == "index" || rest.ends_with("/index") {
-                    let dir = rest.trim_end_matches("/index").trim_end_matches("index");
+                if let Some(dir) =
+                    rest.strip_suffix("/index").or_else(|| (rest == "index").then_some(""))
+                {
                     if dir.is_empty() {
                         "../../index.html".to_string()
                     } else {
@@ -183,8 +199,10 @@ impl HtmlRenderer {
             }
         } else {
             // Plain relative path: types.md
-            if path_without_ext == "index" || path_without_ext.ends_with("/index") {
-                let dir = path_without_ext.trim_end_matches("/index").trim_end_matches("index");
+            if let Some(dir) = path_without_ext
+                .strip_suffix("/index")
+                .or_else(|| (path_without_ext == "index").then_some(""))
+            {
                 if dir.is_empty() {
                     "./index.html".to_string()
                 } else if source_is_index {

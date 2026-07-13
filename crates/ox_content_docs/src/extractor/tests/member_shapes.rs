@@ -142,3 +142,32 @@ export class DefaultTranslation implements TranslationAdapter {
         Some("export class DefaultTranslation implements TranslationAdapter")
     );
 }
+
+#[test]
+fn ts_private_class_members_are_filtered_like_private_tags() {
+    let source = r"
+/** A counter. */
+export class Counter {
+    private count: number = 0;
+    /** Documented, still private. */
+    private readonly step: number = 1;
+    private bump(): void {}
+    /** Public API. */
+    increment(): number { return 0; }
+}
+";
+
+    let public_only =
+        DocExtractor::new().extract_source(source, "counter.ts", SourceType::ts()).unwrap();
+    let counter = public_only.iter().find(|item| item.name == "Counter").unwrap();
+    let names: Vec<&str> = counter.children.iter().map(|child| child.name.as_str()).collect();
+    assert_eq!(names, vec!["increment"]);
+
+    let with_private = DocExtractor::with_visibility(true, false)
+        .extract_source(source, "counter.ts", SourceType::ts())
+        .unwrap();
+    let counter = with_private.iter().find(|item| item.name == "Counter").unwrap();
+    assert_eq!(counter.children.len(), 4);
+    let count = counter.children.iter().find(|child| child.name == "count").unwrap();
+    assert!(count.tags.iter().any(|tag| tag.tag == "private"));
+}

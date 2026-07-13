@@ -1,5 +1,6 @@
 ---
 source: crates/ox_content_ssg/src/html/tests/rendering.rs
+assertion_line: 42
 expression: "super::snapshot_text(&html)"
 ---
 <!DOCTYPE html>
@@ -1044,6 +1045,11 @@ a:hover {
   color: var(--octc-color-text-muted);
 }
 .content .ox-api-entry__section > :not(h4) {
+  /* The section grid is [6.5rem label | content]. Pin every content child to
+     the content column: with more than one (a Members section renders one
+     group per kind), auto-placement drops the second child into the narrow
+     label column. */
+  grid-column: 2;
   min-width: 0;
 }
 .content .ox-api-entry__source {
@@ -1202,9 +1208,9 @@ a:hover {
 .content .ox-api-entry__param-type {
   font-family: var(--octc-font-mono);
   font-size: 0.78rem;
-  color: var(--octc-color-code-text);
-  background: color-mix(in srgb, var(--octc-color-code-bg) 96%, #243556);
-  border: 1px solid color-mix(in srgb, var(--octc-color-code-bg) 82%, var(--octc-color-border));
+  color: var(--octc-color-text-muted);
+  background: color-mix(in srgb, var(--octc-color-bg-alt) 60%, transparent);
+  border: 1px solid color-mix(in srgb, var(--octc-color-border) 82%, transparent);
   padding: 0.26rem 0.42rem;
   border-radius: 4px;
 }
@@ -1217,6 +1223,96 @@ a:hover {
 }
 .content .ox-api-entry__return {
   margin: 0;
+}
+.content .ox-api-badge {
+  display: inline-block;
+  padding: 0.06rem 0.46rem;
+  font-size: 0.7rem;
+  font-weight: 600;
+  line-height: 1.5;
+  color: var(--octc-color-text-muted);
+  background: color-mix(in srgb, var(--octc-color-bg-alt) 84%, transparent);
+  border: 1px solid color-mix(in srgb, var(--octc-color-border) 82%, transparent);
+  border-radius: 999px;
+  vertical-align: middle;
+}
+.content .ox-api-badge:not(:first-child) {
+  margin-left: 0.4rem;
+}
+.content .ox-api-badge--warning {
+  color: var(--octc-color-code-line-warning-border);
+  background: var(--octc-color-code-line-warning);
+  border-color: color-mix(in srgb, var(--octc-color-code-line-warning-border) 45%, transparent);
+}
+.content .ox-api-entry__meta {
+  display: inline-flex;
+  flex-wrap: wrap;
+  gap: 0.4rem;
+}
+.content .ox-api-entry__meta .ox-api-badge {
+  margin-left: 0;
+}
+.content .ox-api-entry__member-group {
+  margin-top: 1rem;
+}
+.content .ox-api-entry__member-group > h5 {
+  margin: 0 0 0.5rem;
+  font-size: 0.78rem;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--octc-color-text-muted);
+}
+.content .ox-api-entry__members-table {
+  margin: 0;
+}
+.content .ox-api-entry__members-table th,
+.content .ox-api-entry__members-table td {
+  padding: 0.5rem 0.75rem;
+  vertical-align: top;
+}
+.content .ox-api-entry__member-type {
+  font-size: 0.8rem;
+}
+.content .ox-api-entry__member-detail {
+  padding: 0.9rem 0;
+  border-top: 1px solid color-mix(in srgb, var(--octc-color-border) 70%, transparent);
+}
+.content .ox-api-entry__member-detail:last-child {
+  padding-bottom: 0;
+}
+.content .ox-api-entry__member-detail > h5 {
+  margin: 0 0 0.5rem;
+  font-family: var(--octc-font-mono);
+  font-size: 0.95rem;
+  font-weight: 600;
+}
+.content .ox-api-entry__member-meta {
+  margin: 0 0 0.4rem;
+}
+.content .ox-api-entry__member-detail-section {
+  margin-top: 0.6rem;
+}
+.content .ox-api-entry__member-detail-section h6 {
+  margin: 0 0 0.3rem;
+  font-size: 0.7rem;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--octc-color-text-muted);
+}
+.content .ox-api-entry__member-params {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.35rem;
+}
+.content .ox-api-entry__member-description {
+  font-size: 0.88rem;
+  line-height: 1.6;
+  color: color-mix(in srgb, var(--octc-color-text) 78%, var(--octc-color-text-muted));
 }
 .toc {
   display: none;

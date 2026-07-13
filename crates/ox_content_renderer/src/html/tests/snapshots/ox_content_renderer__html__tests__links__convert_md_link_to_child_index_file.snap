@@ -1,0 +1,6 @@
+---
+source: crates/ox_content_renderer/src/html/tests/links.rs
+assertion_line: 112
+expression: html
+---
+<p><a href="./lib/index.html">Lib</a> <a href="/lib/index.html">Abs</a></p>
