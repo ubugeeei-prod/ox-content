@@ -24,9 +24,9 @@ const NPM_PACKAGES = [
 const CARGO_PUBLISH_PACKAGES = [
   "ox_content_allocator",
   "ox_content_ast",
-  "ox_content_mdast",
   "ox_content_profiler",
   "ox_content_parser",
+  "ox_content_mdast",
   "ox_content_renderer",
   "ox_content_incremental",
   "ox_content_og_image",

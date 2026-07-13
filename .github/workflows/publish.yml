@@ -460,11 +460,11 @@ jobs:
           sleep 30
           publish_crate ox_content_ast
           sleep 30
-          publish_crate ox_content_mdast
-          sleep 30
           publish_crate ox_content_profiler
           sleep 30
           publish_crate ox_content_parser --config 'patch.crates-io.ox_content_renderer.path="crates/ox_content_renderer"'
+          sleep 30
+          publish_crate ox_content_mdast
           sleep 30
           publish_crate ox_content_renderer
           sleep 30
