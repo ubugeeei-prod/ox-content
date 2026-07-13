@@ -1,5 +1,13 @@
 # Changelog
 
+## [2.77.0] - 2026-07-13
+
+### Bug Fixes
+
+- repair API docs and playground assets
+- support older glibc and musl napi builds (#460)
+- harden publish workflow
+
 ## [2.76.0] - 2026-07-01
 
 ### Features
