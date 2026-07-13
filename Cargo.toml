@@ -94,7 +94,7 @@ ox_content_mermaid = { version = "2.76.0", path = "crates/ox_content_mermaid" }
 ox_content_link_checker = { version = "2.76.0", path = "crates/ox_content_link_checker" }
 ox_content_component_resolver = { version = "2.76.0", path = "crates/ox_content_component_resolver" }
 ox_content_profiler = { version = "2.76.0", path = "crates/ox_content_profiler" }
-ox_jsdoc = "0.0.16"
+ox_jsdoc = "0.0.19"
 
 # Memory allocation
 bumpalo = "3.16"
@@ -114,7 +114,7 @@ memchr = "2.7"
 
 # Hashing
 rustc-hash = "2"
-phf = { version = "0.13", features = ["macros"] }
+phf = { version = "0.14", features = ["macros"] }
 
 # Serialization
 serde = { version = "1.0", features = ["derive"] }
@@ -136,12 +136,12 @@ thiserror = "2"
 miette = { version = "7", features = ["fancy"] }
 
 # OXC parser
-oxc_allocator = "0.132"
-oxc_parser = "0.132"
-oxc_ast = "0.132"
-oxc_ast_visit = "0.132"
-oxc_span = "0.132"
-oxc_resolver = "4.2.0"
+oxc_allocator = "0.139"
+oxc_parser = "0.139"
+oxc_ast = "0.139"
+oxc_ast_visit = "0.139"
+oxc_span = "0.139"
+oxc_resolver = "11.24.2"
 
 # Testing
 criterion = "0.8"
