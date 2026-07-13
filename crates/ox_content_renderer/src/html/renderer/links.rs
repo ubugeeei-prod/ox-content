@@ -75,9 +75,7 @@ impl HtmlRenderer {
                         // Raw anchors link pages the same way Markdown links
                         // do; convert .md targets first, then fall back to
                         // rebasing root-absolute URLs.
-                        let rewritten = self
-                            .convert_md_url(value)
-                            .or_else(|| self.apply_base_to_root_absolute_url(value));
+                        let rewritten = self.convert_markdown_url(value);
                         if let Some(rewritten) = rewritten {
                             output.push_str(&html[i..value_start]);
                             output.push_str(&rewritten);
@@ -173,8 +171,9 @@ impl HtmlRenderer {
             if source_is_index {
                 // Source is index.md at directory level
                 // ../types.md -> ../types/index.html
-                if rest == "index" || rest.ends_with("/index") {
-                    let dir = rest.trim_end_matches("/index").trim_end_matches("index");
+                if let Some(dir) =
+                    rest.strip_suffix("/index").or_else(|| (rest == "index").then_some(""))
+                {
                     if dir.is_empty() {
                         "../index.html".to_string()
                     } else {
@@ -186,8 +185,9 @@ impl HtmlRenderer {
             } else {
                 // Source is not index.md, need extra ../
                 // ../types.md -> ../../types/index.html
-                if rest == "index" || rest.ends_with("/index") {
-                    let dir = rest.trim_end_matches("/index").trim_end_matches("index");
+                if let Some(dir) =
+                    rest.strip_suffix("/index").or_else(|| (rest == "index").then_some(""))
+                {
                     if dir.is_empty() {
                         "../../index.html".to_string()
                     } else {
@@ -199,8 +199,10 @@ impl HtmlRenderer {
             }
         } else {
             // Plain relative path: types.md
-            if path_without_ext == "index" || path_without_ext.ends_with("/index") {
-                let dir = path_without_ext.trim_end_matches("/index").trim_end_matches("index");
+            if let Some(dir) = path_without_ext
+                .strip_suffix("/index")
+                .or_else(|| (path_without_ext == "index").then_some(""))
+            {
                 if dir.is_empty() {
                     "./index.html".to_string()
                 } else if source_is_index {

@@ -112,9 +112,15 @@ describe("search dev server", () => {
     const middlewares: Array<
       (req: unknown, res: unknown, next: (err?: unknown) => void) => Promise<void> | void
     > = [];
+    let watchAll: ((event: string, file: string) => void) | undefined;
     const devServer = {
       middlewares: { use: (handler: (typeof middlewares)[number]) => middlewares.push(handler) },
-      watcher: { on: () => {} },
+      watcher: {
+        on: (event: string, handler: (event: string, file: string) => void) => {
+          expect(event).toBe("all");
+          watchAll = handler;
+        },
+      },
     };
     (search?.configureServer as (server: unknown) => void)(devServer);
     expect(middlewares).toHaveLength(1);
@@ -146,7 +152,19 @@ describe("search dev server", () => {
     const hit = await request("/search-index.json");
     expect(hit.fellThrough).toBe(false);
     expect(hit.headers["content-type"]).toContain("application/json");
-    const index = JSON.parse(hit.body ?? "") as { documents: Array<{ id: string }> };
+    const index = JSON.parse(hit.body ?? "") as { documents: Array<{ body: string; id: string }> };
     expect(index.documents.some((doc) => doc.id === "intro")).toBe(true);
+
+    await fs.writeFile(path.join(srcDir, "intro.md"), "# Intro\n\nUpdated body.\n", "utf-8");
+    watchAll?.("change", path.join(`${srcDir}-legacy`, "intro.md"));
+    const siblingChange = await request("/search-index.json");
+    expect(siblingChange.body).toBe(hit.body);
+
+    watchAll?.("change", path.join(srcDir, "intro.md"));
+    const changed = await request("/search-index.json");
+    const changedIndex = JSON.parse(changed.body ?? "") as {
+      documents: Array<{ body: string; id: string }>;
+    };
+    expect(changedIndex.documents.some((doc) => doc.body.includes("Updated body"))).toBe(true);
   });
 });

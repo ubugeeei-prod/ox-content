@@ -477,7 +477,10 @@ function createSearchPlugin(resolvedOptions: ResolvedOptions, getRoot: () => str
         if (event !== "add" && event !== "change" && event !== "unlink") {
           return;
         }
-        if (file.startsWith(srcDir) && isMarkdownFilePath(file, resolvedOptions.extensions)) {
+        const relative = path.relative(srcDir, file);
+        const isInsideSrcDir =
+          relative !== ".." && !relative.startsWith(`..${path.sep}`) && !path.isAbsolute(relative);
+        if (isInsideSrcDir && isMarkdownFilePath(file, resolvedOptions.extensions)) {
           stale = true;
         }
       });
