@@ -141,7 +141,7 @@ jobs:
             exit 0
           fi
           for vsix in dist/vscode/*.vsix; do
-            vp exec -- pnpm dlx @vscode/vsce publish --packagePath "$vsix"
+            vp exec -- pnpm dlx @vscode/vsce publish --skip-duplicate --packagePath "$vsix"
           done
 
   publish-open-vsx:
