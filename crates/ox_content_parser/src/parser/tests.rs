@@ -23,7 +23,7 @@ fn test_parse_image() {
                     assert_eq!(img.alt, "Alt text");
                     assert_eq!(img.url, "/path/to/image.png");
                 }
-                _ => panic!("expected image, got {:?}", &p.children[0]),
+                _ => panic!("expected image, got {:?}", p.children[0]),
             }
         }
         _ => panic!("expected paragraph"),
@@ -59,7 +59,7 @@ fn indented_heading_like_text_does_not_loop() {
     assert!(
         matches!(&doc.children[0], Node::Paragraph(_)),
         "expected leading-indented `#` to parse as paragraph text, got {:?}",
-        &doc.children[0]
+        doc.children[0]
     );
 }
 
@@ -168,7 +168,7 @@ fn test_parse_table() {
         Node::Table(t) => {
             assert_eq!(t.children.len(), 2); // header + 1 body row
         }
-        _ => panic!("expected table, got {:?}", &doc.children[0]),
+        _ => panic!("expected table, got {:?}", doc.children[0]),
     }
 }
 
@@ -184,7 +184,7 @@ fn test_parse_unordered_list() {
             assert!(!list.ordered);
             assert_eq!(list.children.len(), 3);
         }
-        _ => panic!("expected list, got {:?}", &doc.children[0]),
+        _ => panic!("expected list, got {:?}", doc.children[0]),
     }
 }
 
@@ -200,7 +200,7 @@ fn test_parse_ordered_list() {
             assert!(list.ordered);
             assert_eq!(list.children.len(), 3);
         }
-        _ => panic!("expected list, got {:?}", &doc.children[0]),
+        _ => panic!("expected list, got {:?}", doc.children[0]),
     }
 }
 
@@ -214,7 +214,7 @@ fn test_parse_block_quote() {
             assert_eq!(bq.children.len(), 1);
             assert!(matches!(&bq.children[0], Node::Paragraph(_)));
         }
-        _ => panic!("expected block quote, got {:?}", &doc.children[0]),
+        _ => panic!("expected block quote, got {:?}", doc.children[0]),
     }
 }
 
@@ -227,7 +227,7 @@ fn test_parse_block_quote_multiline() {
         Node::BlockQuote(bq) => {
             assert_eq!(bq.children.len(), 1);
         }
-        _ => panic!("expected block quote, got {:?}", &doc.children[0]),
+        _ => panic!("expected block quote, got {:?}", doc.children[0]),
     }
 }
 
@@ -241,6 +241,6 @@ fn test_parse_nested_block_quote() {
             assert_eq!(bq.children.len(), 1);
             assert!(matches!(&bq.children[0], Node::BlockQuote(_)));
         }
-        _ => panic!("expected block quote, got {:?}", &doc.children[0]),
+        _ => panic!("expected block quote, got {:?}", doc.children[0]),
     }
 }
