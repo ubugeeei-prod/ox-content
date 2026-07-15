@@ -1,6 +1,6 @@
 {
   "name": "@ox-content/unplugin",
-  "version": "2.77.0",
+  "version": "2.78.0",
   "description": "Universal plugin for Ox Content - Markdown processing for webpack, rollup, esbuild, vite, and more",
   "keywords": [
     "esbuild",

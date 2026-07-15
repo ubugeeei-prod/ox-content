@@ -1,5 +1,19 @@
 # Changelog
 
+## [2.78.0] - 2026-07-15
+
+### Features
+
+- fetch static tweet content (#479)
+
+### Bug Fixes
+
+- forward autolinks option (#478)
+- preserve escaped table pipes (#476)
+- derive code block gradient color (#477)
+- make editor publishing idempotent
+- authenticate npm release jobs
+
 ## [2.77.0] - 2026-07-13
 
 ### Bug Fixes
