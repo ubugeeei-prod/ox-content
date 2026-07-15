@@ -15,6 +15,7 @@ fn convert_theme_colors(colors: Option<JsThemeColors>) -> Option<ox_content_ssg:
         text_muted: c.text_muted,
         border: c.border,
         code_background: c.code_background,
+        code_background_top: c.code_background_top,
         code_text: c.code_text,
     })
 }

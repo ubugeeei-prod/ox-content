@@ -31,6 +31,9 @@ pub(super) fn generate_theme_css(theme: &ThemeConfig) -> String {
         if let Some(ref v) = colors.code_background {
             vars.push(format!("--octc-color-code-bg: {v};"));
         }
+        if let Some(v) = colors.code_background_top.as_ref().or(colors.code_background.as_ref()) {
+            vars.push(format!("--octc-color-code-bg-top: {v};"));
+        }
         if let Some(ref v) = colors.code_text {
             vars.push(format!("--octc-color-code-text: {v};"));
         }
@@ -67,6 +70,9 @@ pub(super) fn generate_theme_css(theme: &ThemeConfig) -> String {
         }
         if let Some(ref v) = colors.code_background {
             vars.push(format!("--octc-color-code-bg: {v};"));
+        }
+        if let Some(v) = colors.code_background_top.as_ref().or(colors.code_background.as_ref()) {
+            vars.push(format!("--octc-color-code-bg-top: {v};"));
         }
         if let Some(ref v) = colors.code_text {
             vars.push(format!("--octc-color-code-text: {v};"));

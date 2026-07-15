@@ -1409,6 +1409,8 @@ export interface JsThemeColors {
   border?: string
   /** Code block background color. */
   codeBackground?: string
+  /** Code block gradient color at the top. */
+  codeBackgroundTop?: string
   /** Code block text color. */
   codeText?: string
 }

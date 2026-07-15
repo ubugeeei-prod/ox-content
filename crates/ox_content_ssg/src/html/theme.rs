@@ -19,6 +19,8 @@ pub struct ThemeColors {
     pub border: Option<String>,
     /// Code block background color.
     pub code_background: Option<String>,
+    /// Code block gradient color at the top.
+    pub code_background_top: Option<String>,
     /// Code block text color.
     pub code_text: Option<String>,
 }

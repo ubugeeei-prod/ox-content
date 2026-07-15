@@ -103,17 +103,18 @@ theme config (below) or override them directly from [custom CSS](#custom-css-and
 
 ### Colors
 
-| Option                  | CSS Variable                 | Description                                   |
-| ----------------------- | ---------------------------- | --------------------------------------------- |
-| `colors.primary`        | `--octc-color-primary`       | Primary accent color for links, active states |
-| `colors.primaryHover`   | `--octc-color-primary-hover` | Primary color on hover                        |
-| `colors.background`     | `--octc-color-bg`            | Main background color                         |
-| `colors.backgroundAlt`  | `--octc-color-bg-alt`        | Alternative background (sidebar, code blocks) |
-| `colors.text`           | `--octc-color-text`          | Main text color                               |
-| `colors.textMuted`      | `--octc-color-text-muted`    | Muted/secondary text color                    |
-| `colors.border`         | `--octc-color-border`        | Border color                                  |
-| `colors.codeBackground` | `--octc-color-code-bg`       | Code block background                         |
-| `colors.codeText`       | `--octc-color-code-text`     | Code block text color                         |
+| Option                     | CSS Variable                 | Description                                                    |
+| -------------------------- | ---------------------------- | -------------------------------------------------------------- |
+| `colors.primary`           | `--octc-color-primary`       | Primary accent color for links, active states                  |
+| `colors.primaryHover`      | `--octc-color-primary-hover` | Primary color on hover                                         |
+| `colors.background`        | `--octc-color-bg`            | Main background color                                          |
+| `colors.backgroundAlt`     | `--octc-color-bg-alt`        | Alternative background (sidebar, code blocks)                  |
+| `colors.text`              | `--octc-color-text`          | Main text color                                                |
+| `colors.textMuted`         | `--octc-color-text-muted`    | Muted/secondary text color                                     |
+| `colors.border`            | `--octc-color-border`        | Border color                                                   |
+| `colors.codeBackground`    | `--octc-color-code-bg`       | Code block background                                          |
+| `colors.codeBackgroundTop` | `--octc-color-code-bg-top`   | Code block gradient top; follows `codeBackground` when omitted |
+| `colors.codeText`          | `--octc-color-code-text`     | Code block text color                                          |
 
 ### Layout
 

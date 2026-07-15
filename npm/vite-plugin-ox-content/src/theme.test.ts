@@ -85,6 +85,24 @@ describe("theme", () => {
       expect(resolved.entryPage.mode).toBe("subtle");
     });
 
+    it("should derive the code gradient top from a customized background", () => {
+      const resolved = resolveTheme({
+        extends: defaultTheme,
+        colors: { codeBackground: "#f6f8fa", codeText: "#1f2328" },
+      });
+
+      expect(resolved.colors.codeBackgroundTop).toBe("#f6f8fa");
+      expect(themeToNapi(resolved).colors?.codeBackgroundTop).toBe("#f6f8fa");
+    });
+
+    it("should preserve an explicit code gradient top", () => {
+      const resolved = resolveTheme({
+        colors: { codeBackground: "#f6f8fa", codeBackgroundTop: "#ffffff" },
+      });
+
+      expect(resolved.colors.codeBackgroundTop).toBe("#ffffff");
+    });
+
     it("should resolve nested extends", () => {
       const baseTheme: ThemeConfig = {
         name: "base",
