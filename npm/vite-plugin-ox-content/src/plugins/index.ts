@@ -7,6 +7,7 @@
 
 import type { GitHubOptions } from "./github";
 import type { MediaEmbedOptions } from "./media";
+import type { TwitterEmbedOptions } from "./twitter";
 import type { OgpOptions } from "./ogp";
 import type { PmOptions } from "./pm";
 
@@ -22,6 +23,12 @@ export { transformPm, type PmOptions } from "./pm";
 
 export { transformYouTube, extractVideoId, type YouTubeOptions } from "./youtube";
 export { transformMediaEmbeds, type MediaEmbedOptions } from "./media";
+export {
+  createSyndicationToken,
+  parseTweetReference,
+  type TweetData,
+  type TwitterEmbedOptions,
+} from "./twitter";
 
 export {
   transformGitHub,
@@ -71,7 +78,7 @@ export interface TransformAllOptions {
   githubToken?: string;
   spotify?: boolean;
   stackBlitz?: boolean;
-  twitter?: boolean;
+  twitter?: boolean | TwitterEmbedOptions;
   bluesky?: boolean;
   webContainer?: boolean;
 }
@@ -167,7 +174,7 @@ export async function transformBuiltinEmbeds(
     pm?: PmOptions | false;
     spotify?: boolean;
     stackBlitz?: boolean;
-    twitter?: boolean;
+    twitter?: boolean | TwitterEmbedOptions;
     bluesky?: boolean;
     webContainer?: boolean;
   },

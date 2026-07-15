@@ -30,8 +30,10 @@ import { resolveI18nOptions, createI18nPlugin } from "./i18n";
 import { isMarkdownFilePath, normalizeMarkdownExtensions } from "./markdown";
 import { generateCollectionsVirtualModule, resolveCollectionsOptions } from "./collections";
 import type { BuiltinPmOptions, OxContentOptions, ResolvedOptions } from "./types";
+import type { TwitterEmbedOptions } from "./plugins";
 
 export type { OxContentOptions } from "./types";
+export type { TwitterEmbedOptions } from "./plugins";
 export type { LanguageRegistration, ThemeRegistration } from "shiki";
 export type {
   CodeAnnotationSyntax,
@@ -592,7 +594,7 @@ export function resolveBuiltinEmbedOptions(
     pm: resolvePmOptions(options?.pm),
     spotify: options?.spotify === true,
     stackBlitz: options?.stackBlitz === true,
-    twitter: options?.twitter === true,
+    twitter: resolveTwitterEmbedOptions(options?.twitter),
     bluesky: options?.bluesky === true,
     webContainer: options?.webContainer === true,
   };
@@ -601,6 +603,14 @@ export function resolveBuiltinEmbedOptions(
 function resolveSingleEmbedOptions<T extends object>(options: boolean | T | undefined): T | false {
   if (options === false) return false;
   if (options === true || options === undefined) return {} as T;
+  return options;
+}
+
+function resolveTwitterEmbedOptions(
+  options: boolean | TwitterEmbedOptions | undefined,
+): TwitterEmbedOptions | false {
+  if (options === false || options === undefined) return false;
+  if (options === true) return {};
   return options;
 }
 

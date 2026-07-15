@@ -4,7 +4,7 @@
 
 import type { LanguageRegistration, ThemeRegistration } from "shiki";
 import type { ThemeConfig, ResolvedThemeConfig } from "./theme";
-import type { GitHubOptions, OgpOptions } from "./plugins";
+import type { GitHubOptions, OgpOptions, TwitterEmbedOptions } from "./plugins";
 
 // =============================================================================
 // Entry Page Types (VitePress-like)
@@ -707,9 +707,11 @@ export interface BuiltinEmbedOptions {
 
   /**
    * Render `<Tweet>` / `<XPost>` as static privacy-conscious cards.
+   * Pass `{ fetch: true }` to fetch the post body, author, and self-hosted
+   * media at build time. Fetch failures fall back to the link-only card.
    * @default false
    */
-  twitter?: boolean;
+  twitter?: boolean | TwitterEmbedOptions;
 
   /**
    * Render `<Bluesky>` as static cards.
@@ -744,7 +746,7 @@ export interface ResolvedBuiltinEmbedOptions {
   pm: BuiltinPmOptions | false;
   spotify: boolean;
   stackBlitz: boolean;
-  twitter: boolean;
+  twitter: TwitterEmbedOptions | false;
   bluesky: boolean;
   webContainer: boolean;
 }
