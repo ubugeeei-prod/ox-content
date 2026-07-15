@@ -163,7 +163,9 @@ jobs:
           run-install: true
 
       - name: Setup npm registry
-        run: npm config set registry https://registry.npmjs.org
+        run: |
+          npm config set registry https://registry.npmjs.org
+          npm config set //registry.npmjs.org/:_authToken "$NODE_AUTH_TOKEN"
 
       - name: Install npm 11+ (required for OIDC trusted publishing)
         run: npm install -g npm@11
@@ -283,7 +285,9 @@ jobs:
           run-install: true
 
       - name: Setup npm registry
-        run: npm config set registry https://registry.npmjs.org
+        run: |
+          npm config set registry https://registry.npmjs.org
+          npm config set //registry.npmjs.org/:_authToken "$NODE_AUTH_TOKEN"
 
       - name: Install npm 11+ (required for OIDC trusted publishing)
         run: npm install -g npm@11
