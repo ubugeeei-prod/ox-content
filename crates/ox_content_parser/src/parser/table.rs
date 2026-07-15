@@ -123,10 +123,43 @@ impl<'a> Parser<'a> {
     pub(super) fn parse_table_row(&self, line: &'a str) -> ParseResult<TableRow<'a>> {
         let mut cells: Vec<'a, TableCell<'a>> = self.allocator.new_vec();
         for cell_content in Self::table_row_cells(line) {
+            let cell_content = self.unescape_table_pipes(cell_content);
             let cell_children = self.parse_inline(cell_content, 0)?;
             cells.push(TableCell { children: cell_children, span: Span::new(0, 0) });
         }
         Ok(TableRow { children: cells, span: Span::new(0, 0) })
+    }
+
+    /// Removes the table-level escape from pipes before inline parsing.
+    ///
+    /// GFM treats `\|` as a literal pipe even inside code spans. Normal inline
+    /// parsing already handles the escape in prose, but code spans preserve
+    /// backslashes, so the table parser must consume it first.
+    fn unescape_table_pipes(&self, content: &'a str) -> &'a str {
+        let bytes = content.as_bytes();
+        if !bytes
+            .iter()
+            .enumerate()
+            .any(|(index, &byte)| byte == b'|' && is_escaped_table_pipe(bytes, index))
+        {
+            return content;
+        }
+
+        let mut unescaped =
+            ox_content_allocator::String::with_capacity_in(content.len(), self.allocator.bump());
+        let mut copied_through = 0;
+        let mut search_start = 0;
+        while let Some(relative) = memchr(b'|', &bytes[search_start..]) {
+            let pipe = search_start + relative;
+            if is_escaped_table_pipe(bytes, pipe) {
+                unescaped.push_str(&content[copied_through..pipe - 1]);
+                unescaped.push('|');
+                copied_through = pipe + 1;
+            }
+            search_start = pipe + 1;
+        }
+        unescaped.push_str(&content[copied_through..]);
+        unescaped.into_bump_str()
     }
 
     /// Iterates table row cells from a line.
@@ -136,7 +169,39 @@ impl<'a> Parser<'a> {
     pub(super) fn table_row_cells(line: &'a str) -> impl Iterator<Item = &'a str> {
         let trimmed = line.trim();
         let trimmed = trimmed.strip_prefix('|').unwrap_or(trimmed);
-        let trimmed = trimmed.strip_suffix('|').unwrap_or(trimmed);
-        trimmed.split('|').map(str::trim)
+        let trimmed = if trimmed.ends_with('|')
+            && !is_escaped_table_pipe(trimmed.as_bytes(), trimmed.len() - 1)
+        {
+            &trimmed[..trimmed.len() - 1]
+        } else {
+            trimmed
+        };
+        let bytes = trimmed.as_bytes();
+        let mut cell_start = 0;
+
+        std::iter::from_fn(move || {
+            if cell_start > bytes.len() {
+                return None;
+            }
+
+            let mut search_start = cell_start;
+            while let Some(relative) = memchr(b'|', &bytes[search_start..]) {
+                let pipe = search_start + relative;
+                if !is_escaped_table_pipe(bytes, pipe) {
+                    let cell = trimmed[cell_start..pipe].trim();
+                    cell_start = pipe + 1;
+                    return Some(cell);
+                }
+                search_start = pipe + 1;
+            }
+
+            let cell = trimmed[cell_start..].trim();
+            cell_start = bytes.len() + 1;
+            Some(cell)
+        })
     }
+}
+
+fn is_escaped_table_pipe(bytes: &[u8], pipe: usize) -> bool {
+    bytes[..pipe].iter().rev().take_while(|&&byte| byte == b'\\').count() % 2 == 1
 }

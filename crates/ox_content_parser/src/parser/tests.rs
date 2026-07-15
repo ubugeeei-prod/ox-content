@@ -173,6 +173,24 @@ fn test_parse_table() {
 }
 
 #[test]
+fn test_parse_table_preserves_escaped_pipes() {
+    let allocator = Allocator::new();
+    let table_md = "| Description |\n| --- |\n| Disallow filters (the `\\|` pipe) |";
+    let parser = Parser::with_options(&allocator, table_md, ParserOptions::gfm());
+    let doc = parser.parse().unwrap();
+
+    let Node::Table(table) = &doc.children[0] else {
+        panic!("expected table, got {:?}", doc.children[0]);
+    };
+    assert_eq!(table.children[1].children.len(), 1);
+    let inline_code = table.children[1].children[0].children.iter().find_map(|node| match node {
+        Node::InlineCode(code) => Some(code.value),
+        _ => None,
+    });
+    assert_eq!(inline_code, Some("|"));
+}
+
+#[test]
 fn test_parse_unordered_list() {
     let allocator = Allocator::new();
     let list_md = "- Item 1\n- Item 2\n- Item 3";
