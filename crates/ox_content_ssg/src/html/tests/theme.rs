@@ -101,6 +101,20 @@ fn test_generate_theme_css() {
 }
 
 #[test]
+fn test_code_background_also_updates_gradient_top() {
+    let css = generate_theme_css(&ThemeConfig {
+        colors: Some(ThemeColors {
+            code_background: Some("#f6f8fa".to_string()),
+            ..Default::default()
+        }),
+        ..Default::default()
+    });
+
+    assert!(css.contains("--octc-color-code-bg: #f6f8fa;"));
+    assert!(css.contains("--octc-color-code-bg-top: #f6f8fa;"));
+}
+
+#[test]
 fn test_generate_footer_html() {
     let theme = ThemeConfig {
         footer: Some(ThemeFooter {

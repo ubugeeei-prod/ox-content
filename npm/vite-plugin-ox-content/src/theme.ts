@@ -24,6 +24,8 @@ export interface ThemeColors {
   border?: string;
   /** Code block background color */
   codeBackground?: string;
+  /** Code block gradient color at the top; defaults to `codeBackground` when customized */
+  codeBackgroundTop?: string;
   /** Code block text color */
   codeText?: string;
 }
@@ -208,6 +210,7 @@ export const defaultTheme: ThemeConfig = {
     textMuted: "#4f607b",
     border: "#d2dbea",
     codeBackground: "#101a31",
+    codeBackgroundTop: "#18264a",
     codeText: "#edf3ff",
   },
   darkColors: {
@@ -219,6 +222,7 @@ export const defaultTheme: ThemeConfig = {
     textMuted: "#8ea0bf",
     border: "#223252",
     codeBackground: "#0a1020",
+    codeBackgroundTop: "#0a1020",
     codeText: "#e7f0ff",
   },
   fonts: {
@@ -351,7 +355,7 @@ export function resolveTheme(config?: ThemeConfig): ResolvedThemeConfig {
   }
 
   // Merge all themes in the chain
-  const merged = mergeThemes(...chain);
+  const merged = mergeThemes(...chain.map(withDerivedCodeBackgroundTop));
 
   // Return resolved config with all required fields
   return {
@@ -368,6 +372,21 @@ export function resolveTheme(config?: ThemeConfig): ResolvedThemeConfig {
     embed: merged.embed ?? {},
     css: merged.css ?? "",
     js: merged.js ?? "",
+  };
+}
+
+function withDerivedCodeBackgroundTop(theme: ThemeConfig): ThemeConfig {
+  const derive = (colors: ThemeColors | undefined): ThemeColors | undefined => {
+    if (colors?.codeBackground !== undefined && colors.codeBackgroundTop === undefined) {
+      return { ...colors, codeBackgroundTop: colors.codeBackground };
+    }
+    return colors;
+  };
+
+  return {
+    ...theme,
+    colors: derive(theme.colors),
+    darkColors: derive(theme.darkColors),
   };
 }
 
@@ -388,6 +407,7 @@ export function themeToNapi(theme: ResolvedThemeConfig): NapiThemeConfig {
           textMuted: theme.colors.textMuted,
           border: theme.colors.border,
           codeBackground: theme.colors.codeBackground,
+          codeBackgroundTop: theme.colors.codeBackgroundTop,
           codeText: theme.colors.codeText,
         }
       : undefined,
@@ -401,6 +421,7 @@ export function themeToNapi(theme: ResolvedThemeConfig): NapiThemeConfig {
           textMuted: theme.darkColors.textMuted,
           border: theme.darkColors.border,
           codeBackground: theme.darkColors.codeBackground,
+          codeBackgroundTop: theme.darkColors.codeBackgroundTop,
           codeText: theme.darkColors.codeText,
         }
       : undefined,
@@ -474,6 +495,7 @@ export interface NapiThemeColors {
   textMuted?: string;
   border?: string;
   codeBackground?: string;
+  codeBackgroundTop?: string;
   codeText?: string;
 }
 
