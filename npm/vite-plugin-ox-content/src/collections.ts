@@ -24,6 +24,8 @@ type NativeTransformOptions = {
   taskLists?: boolean;
   tables?: boolean;
   strikethrough?: boolean;
+  autolinks?: boolean;
+  autolinkUrls?: boolean;
   frontmatter?: boolean;
   tocMaxDepth?: number;
   codeAnnotations?: boolean;
@@ -144,6 +146,8 @@ function createNativeTransformOptions(options: ResolvedOptions): NativeTransform
     taskLists: options.taskLists,
     tables: options.tables,
     strikethrough: options.strikethrough,
+    autolinks: options.autolinks,
+    autolinkUrls: options.autolinks,
     frontmatter: options.frontmatter,
     tocMaxDepth: options.tocMaxDepth,
     codeAnnotations: options.codeAnnotations?.enabled ?? false,

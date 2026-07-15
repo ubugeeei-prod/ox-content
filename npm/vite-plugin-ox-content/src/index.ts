@@ -539,6 +539,7 @@ function resolveOptions(options: OxContentOptions): ResolvedOptions {
     tables: options.tables ?? true,
     taskLists: options.taskLists ?? true,
     strikethrough: options.strikethrough ?? true,
+    autolinks: options.autolinks ?? options.gfm ?? true,
     highlight: options.highlight ?? false,
     highlightTheme: options.highlightTheme ?? "github-dark",
     highlightLangs: options.highlightLangs ?? [],

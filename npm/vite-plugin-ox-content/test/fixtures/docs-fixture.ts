@@ -111,6 +111,7 @@ export function createDocsResolvedOptions(
     tables: true,
     taskLists: true,
     strikethrough: true,
+    autolinks: true,
     highlight: true,
     highlightTheme: "vitesse-dark",
     highlightLangs: [],

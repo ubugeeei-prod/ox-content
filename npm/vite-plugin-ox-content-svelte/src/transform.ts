@@ -94,6 +94,7 @@ export async function transformMarkdownWithSvelte(
     tables: true,
     taskLists: true,
     strikethrough: true,
+    autolinks: options.autolinks,
     highlight: false,
     highlightTheme: "github-dark",
     highlightLangs: [],

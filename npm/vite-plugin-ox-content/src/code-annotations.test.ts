@@ -130,6 +130,7 @@ function createResolvedOptions(overrides: Partial<ResolvedOptions> = {}): Resolv
     tables: true,
     taskLists: true,
     strikethrough: true,
+    autolinks: true,
     highlight: true,
     highlightTheme: "github-dark",
     highlightLangs: [],

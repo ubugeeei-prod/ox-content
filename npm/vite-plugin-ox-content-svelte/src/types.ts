@@ -192,6 +192,7 @@ export interface ResolvedSvelteOptions {
   base: string;
   extensions: string[];
   gfm: boolean;
+  autolinks: boolean;
   frontmatter: boolean;
   toc: boolean;
   tocMaxDepth: number;

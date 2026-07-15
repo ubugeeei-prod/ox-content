@@ -15,23 +15,23 @@ enabled explicitly.
 
 ## Default vs Opt-in
 
-| Area             | Option                                                                | Default       | Notes                                               |
-| ---------------- | --------------------------------------------------------------------- | ------------- | --------------------------------------------------- |
-| Markdown base    | `gfm`, `footnotes`, `tables`, `taskLists`, `strikethrough`            | `true`        | Common GitHub-flavored Markdown behavior.           |
-| Page metadata    | `frontmatter`                                                         | `true`        | Parses YAML frontmatter before rendering.           |
-| Navigation       | `toc`, `tocMaxDepth`                                                  | `true`, `3`   | Builds a page table of contents from headings.      |
-| Static site      | `ssg`                                                                 | `{ enabled }` | Generates static HTML pages during build.           |
-| API docs         | `docs`                                                                | `{ enabled }` | Generates package API docs unless set to `false`.   |
-| Search           | `search`                                                              | `{ enabled }` | Builds a static BM25 index for client-side search.  |
-| Collections      | `collections`                                                         | `{ content }` | Rust-native lazy query manifest for Markdown files. |
-| Syntax highlight | `highlight`                                                           | `false`       | Opt in when the site needs highlighted code blocks. |
-| OG images        | `ogImage`                                                             | `false`       | Opt in because image rendering adds build work.     |
-| Extra syntax     | `wikiLinks`, `emojiShortcodes`, `attrs`, `codeImports`, `cjkEmphasis` | `false`       | Non-standard authoring features are opt-in.         |
-| HTML safety      | `sanitize`                                                            | `false`       | Opt in when rendering untrusted or mixed HTML.      |
-| Editing links    | `editThisPage`                                                        | `false`       | Opt in with a repository URL.                       |
-| Code checks      | `codeAnnotations`, `codeBlockLint`, `codeBlockTypecheck`, `docsTests` | `false`       | Opt in per documentation workflow.                  |
-| Diagrams         | `mermaid`                                                             | `false`       | Opt in for diagram rendering.                       |
-| Custom pipeline  | `transformers`                                                        | `[]`          | Add project-specific Markdown AST transforms.       |
+| Area             | Option                                                                  | Default       | Notes                                               |
+| ---------------- | ----------------------------------------------------------------------- | ------------- | --------------------------------------------------- |
+| Markdown base    | `gfm`, `footnotes`, `tables`, `taskLists`, `strikethrough`, `autolinks` | `true`        | Common GitHub-flavored Markdown behavior.           |
+| Page metadata    | `frontmatter`                                                           | `true`        | Parses YAML frontmatter before rendering.           |
+| Navigation       | `toc`, `tocMaxDepth`                                                    | `true`, `3`   | Builds a page table of contents from headings.      |
+| Static site      | `ssg`                                                                   | `{ enabled }` | Generates static HTML pages during build.           |
+| API docs         | `docs`                                                                  | `{ enabled }` | Generates package API docs unless set to `false`.   |
+| Search           | `search`                                                                | `{ enabled }` | Builds a static BM25 index for client-side search.  |
+| Collections      | `collections`                                                           | `{ content }` | Rust-native lazy query manifest for Markdown files. |
+| Syntax highlight | `highlight`                                                             | `false`       | Opt in when the site needs highlighted code blocks. |
+| OG images        | `ogImage`                                                               | `false`       | Opt in because image rendering adds build work.     |
+| Extra syntax     | `wikiLinks`, `emojiShortcodes`, `attrs`, `codeImports`, `cjkEmphasis`   | `false`       | Non-standard authoring features are opt-in.         |
+| HTML safety      | `sanitize`                                                              | `false`       | Opt in when rendering untrusted or mixed HTML.      |
+| Editing links    | `editThisPage`                                                          | `false`       | Opt in with a repository URL.                       |
+| Code checks      | `codeAnnotations`, `codeBlockLint`, `codeBlockTypecheck`, `docsTests`   | `false`       | Opt in per documentation workflow.                  |
+| Diagrams         | `mermaid`                                                               | `false`       | Opt in for diagram rendering.                       |
+| Custom pipeline  | `transformers`                                                          | `[]`          | Add project-specific Markdown AST transforms.       |
 
 Use explicit options when a site needs non-standard behavior:
 
