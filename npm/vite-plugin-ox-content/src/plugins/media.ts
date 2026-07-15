@@ -1,4 +1,6 @@
 import { importNapiModule } from "../napi";
+import { transformFetchedTweets } from "./twitter";
+import type { TwitterEmbedOptions } from "./twitter";
 
 export interface MediaEmbedOptions {
   /**
@@ -14,10 +16,11 @@ export interface MediaEmbedOptions {
   stackBlitz?: boolean;
 
   /**
-   * Render `<Tweet>` / `<XPost>` static cards.
+   * Render `<Tweet>` / `<XPost>` static cards. Pass `{ fetch: true }` to
+   * resolve the post content and self-host its media at build time.
    * @default false
    */
-  twitter?: boolean;
+  twitter?: boolean | TwitterEmbedOptions;
 
   /**
    * Render `<Bluesky>` static cards.
@@ -40,11 +43,17 @@ export async function transformMediaEmbeds(
     return html;
   }
 
+  let result = html;
+  if (typeof options.twitter === "object") {
+    result = await transformFetchedTweets(result, options.twitter);
+  }
+  if (!hasMediaMarker(result)) return result;
+
   const mod = await importNapiModule();
-  return mod.transformMediaEmbeds(html, {
+  return mod.transformMediaEmbeds(result, {
     spotify: options.spotify,
     stackBlitz: options.stackBlitz,
-    twitter: options.twitter,
+    twitter: Boolean(options.twitter),
     bluesky: options.bluesky,
     webContainer: options.webContainer,
   });

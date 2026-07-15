@@ -49,7 +49,7 @@ export default defineConfig({
       },
       embeds: {
         pm: { sync: true },
-        twitter: true,
+        twitter: { fetch: true },
         bluesky: true,
       },
     }),
