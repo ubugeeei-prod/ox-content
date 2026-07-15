@@ -221,6 +221,7 @@ function resolveReactOptions(
     base: options.base ?? "/",
     extensions: normalizeMarkdownExtensions(options.extensions),
     gfm: options.gfm ?? true,
+    autolinks: options.autolinks ?? options.gfm ?? true,
     frontmatter: options.frontmatter ?? true,
     toc: options.toc ?? true,
     tocMaxDepth: options.tocMaxDepth ?? 3,

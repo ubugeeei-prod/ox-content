@@ -382,6 +382,12 @@ export interface OxContentOptions {
   strikethrough?: boolean;
 
   /**
+   * Enable GFM autolinks and linkify bare URLs.
+   * @default true
+   */
+  autolinks?: boolean;
+
+  /**
    * Enable syntax highlighting for code blocks.
    * @default false
    */
@@ -628,6 +634,7 @@ export interface ResolvedOptions {
   tables: boolean;
   taskLists: boolean;
   strikethrough: boolean;
+  autolinks: boolean;
   highlight: boolean;
   highlightTheme: string | ThemeRegistration;
   highlightLangs: LanguageRegistration[];

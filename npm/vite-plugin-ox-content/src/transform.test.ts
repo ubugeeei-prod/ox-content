@@ -132,6 +132,23 @@ describe("transformMarkdown", () => {
     expect(result.html).toMatchSnapshot();
   });
 
+  it("forwards the autolinks option to bare URL rendering", async () => {
+    const markdown = "See https://example.com/foo here.";
+    const enabled = await transformMarkdown(
+      markdown,
+      "docs/autolinks.md",
+      createResolvedOptions({ autolinks: true }),
+    );
+    const disabled = await transformMarkdown(
+      markdown,
+      "docs/autolinks.md",
+      createResolvedOptions({ autolinks: false }),
+    );
+
+    expect(enabled.html).toContain('<a href="https://example.com/foo"');
+    expect(disabled.html).toBe("<p>See https://example.com/foo here.</p>\n");
+  });
+
   it("preserves safe raw media tags when sanitizing", async () => {
     const result = await transformMarkdown(
       [
@@ -194,6 +211,7 @@ function createResolvedOptions(overrides: Partial<ResolvedOptions> = {}): Resolv
     tables: true,
     taskLists: true,
     strikethrough: true,
+    autolinks: true,
     highlight: false,
     highlightTheme: "github-dark",
     highlightLangs: [],

@@ -65,6 +65,7 @@ export function createFrameworkMarkdownOptions(options: FrameworkMarkdownOptions
     tables: true,
     taskLists: true,
     strikethrough: true,
+    autolinks: options.gfm,
     highlight: false,
     highlightTheme: "github-dark",
     highlightLangs: [],

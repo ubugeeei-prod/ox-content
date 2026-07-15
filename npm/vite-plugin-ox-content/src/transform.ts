@@ -179,6 +179,12 @@ interface JsTransformOptions {
   autolinks?: boolean;
 
   /**
+   * Linkify bare URLs while rendering.
+   * @default true
+   */
+  autolinkUrls?: boolean;
+
+  /**
    * Parse YAML frontmatter before transforming.
    * @default true
    */
@@ -485,6 +491,8 @@ export async function transformMarkdown(
     taskLists: options.taskLists,
     tables: options.tables,
     strikethrough: options.strikethrough,
+    autolinks: options.autolinks,
+    autolinkUrls: options.autolinks,
     frontmatter: options.frontmatter,
     tocMaxDepth: options.tocMaxDepth,
     convertMdLinks: ssgOptions?.convertMdLinks,
