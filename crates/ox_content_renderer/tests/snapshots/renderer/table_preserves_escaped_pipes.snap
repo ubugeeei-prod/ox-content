@@ -1,0 +1,19 @@
+---
+source: crates/ox_content_renderer/tests/support/snapshot.rs
+description: "| f\\|oo |\n| ------ |\n| b `\\|` az |\n| b **\\|** im |\n"
+---
+<table>
+<thead>
+<tr>
+<th>f|oo</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>b <code>|</code> az</td>
+</tr>
+<tr>
+<td>b <strong>|</strong> im</td>
+</tr>
+</tbody>
+</table>
