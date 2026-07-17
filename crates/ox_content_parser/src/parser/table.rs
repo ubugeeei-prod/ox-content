@@ -40,17 +40,16 @@ impl<'a> Parser<'a> {
             return false;
         }
 
-        // Check delimiter row pattern: |---|---|
-        let is_delimiter = second_line.split('|').filter(|s| !s.is_empty()).all(|cell| {
-            let trimmed = cell.trim();
-            if trimmed.is_empty() {
-                return true;
+        let header_cells = Self::table_row_cells(first_line).count();
+        let mut delimiter_cells = 0;
+        for cell in Self::table_row_cells(second_line) {
+            if delimiter_alignment(cell).is_none() {
+                return false;
             }
-            // Allow :---:, :---, ---:, ---
-            trimmed.chars().all(|c| c == '-' || c == ':')
-        });
+            delimiter_cells += 1;
+        }
 
-        is_delimiter
+        header_cells > 0 && header_cells == delimiter_cells
     }
 
     pub(super) fn parse_table(&mut self, start: usize) -> ParseResult<Option<Node<'a>>> {
@@ -62,25 +61,19 @@ impl<'a> Parser<'a> {
 
         // Parse delimiter row to get alignment
         let delimiter_line = self.consume_line();
-        for cell in delimiter_line.split('|').filter(|s| !s.trim().is_empty()) {
-            let cell = cell.trim();
-            let starts_colon = cell.starts_with(':');
-            let ends_colon = cell.ends_with(':');
-            let alignment = match (starts_colon, ends_colon) {
-                (true, true) => AlignKind::Center,
-                (true, false) => AlignKind::Left,
-                (false, true) => AlignKind::Right,
-                (false, false) => AlignKind::None,
-            };
-            align.push(alignment);
+        for cell in Self::table_row_cells(delimiter_line) {
+            if let Some(alignment) = delimiter_alignment(cell) {
+                align.push(alignment);
+            }
         }
+        let column_count = align.len();
 
         // Build the table AST directly instead of first collecting row slices
         // into short-lived heap Vecs. Each consumed source line is parsed into
         // arena-backed cells immediately, which keeps the table path linear in
         // the input and avoids throwaway row containers.
         let mut children: Vec<'a, TableRow<'a>> = self.allocator.new_vec();
-        children.push(self.parse_table_row(header_line)?);
+        children.push(self.parse_table_row(header_line, column_count)?);
 
         // Parse body rows
         loop {
@@ -88,26 +81,16 @@ impl<'a> Parser<'a> {
                 break;
             }
 
-            let line_start = self.position;
-            self.skip_whitespace();
-
-            // Check for blank line or non-table line
-            if self.peek() == Some('\n') || self.is_at_end() {
-                self.position = line_start;
+            // A blank line or another block-level construct terminates the
+            // table. Ordinary lines remain data rows even without a pipe.
+            if self.first_non_whitespace_in_line(self.position).is_none()
+                || self.line_starts_block()
+            {
                 break;
             }
 
-            // Check if line contains | (table continuation)
-            let remaining = self.remaining();
-            let line = remaining.lines().next().unwrap_or("");
-            if !line.contains('|') {
-                self.position = line_start;
-                break;
-            }
-
-            self.position = line_start;
             let row_line = self.consume_line();
-            children.push(self.parse_table_row(row_line)?);
+            children.push(self.parse_table_row(row_line, column_count)?);
         }
 
         let span = Span::new(start as u32, self.position as u32);
@@ -120,12 +103,19 @@ impl<'a> Parser<'a> {
     /// The row iterator yields borrowed cell slices from the original line.
     /// Inline parsing then writes cell children into the parser arena, so no
     /// intermediate `Vec<&str>` or owned cell text is needed.
-    pub(super) fn parse_table_row(&self, line: &'a str) -> ParseResult<TableRow<'a>> {
+    pub(super) fn parse_table_row(
+        &self,
+        line: &'a str,
+        column_count: usize,
+    ) -> ParseResult<TableRow<'a>> {
         let mut cells: Vec<'a, TableCell<'a>> = self.allocator.new_vec();
-        for cell_content in Self::table_row_cells(line) {
+        for cell_content in Self::table_row_cells(line).take(column_count) {
             let cell_content = self.unescape_table_pipes(cell_content);
             let cell_children = self.parse_inline(cell_content, 0)?;
             cells.push(TableCell { children: cell_children, span: Span::new(0, 0) });
+        }
+        while cells.len() < column_count {
+            cells.push(TableCell { children: self.allocator.new_vec(), span: Span::new(0, 0) });
         }
         Ok(TableRow { children: cells, span: Span::new(0, 0) })
     }
@@ -204,4 +194,23 @@ impl<'a> Parser<'a> {
 
 fn is_escaped_table_pipe(bytes: &[u8], pipe: usize) -> bool {
     bytes[..pipe].iter().rev().take_while(|&&byte| byte == b'\\').count() % 2 == 1
+}
+
+fn delimiter_alignment(cell: &str) -> Option<AlignKind> {
+    let trimmed = cell.trim();
+    let left = trimmed.starts_with(':');
+    let right = trimmed.ends_with(':');
+    let hyphens = trimmed.strip_prefix(':').unwrap_or(trimmed);
+    let hyphens = hyphens.strip_suffix(':').unwrap_or(hyphens);
+
+    if hyphens.is_empty() || !hyphens.bytes().all(|byte| byte == b'-') {
+        return None;
+    }
+
+    Some(match (left, right) {
+        (true, true) => AlignKind::Center,
+        (true, false) => AlignKind::Left,
+        (false, true) => AlignKind::Right,
+        (false, false) => AlignKind::None,
+    })
 }

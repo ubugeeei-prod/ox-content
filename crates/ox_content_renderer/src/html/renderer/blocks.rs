@@ -197,7 +197,7 @@ impl HtmlRenderer {
                 self.write("</thead>\n");
             }
         }
-        if !table.children.is_empty() {
+        if table.children.len() > 1 {
             self.write("</tbody>\n");
         }
         self.write("</table>\n");

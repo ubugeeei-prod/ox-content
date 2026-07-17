@@ -1,0 +1,18 @@
+---
+source: crates/ox_content_renderer/tests/support/snapshot.rs
+description: "| abc | def |\n| --- | --- |\nplain\n"
+---
+<table>
+<thead>
+<tr>
+<th>abc</th>
+<th>def</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>plain</td>
+<td></td>
+</tr>
+</tbody>
+</table>

@@ -25,6 +25,56 @@ fn html_table_with_inline_formatting() {
     );
 }
 
+#[test]
+fn html_table_preserves_escaped_pipes() {
+    check(
+        "table_preserves_escaped_pipes",
+        "| f\\|oo |\n| ------ |\n| b `\\|` az |\n| b **\\|** im |\n",
+        ParserOptions::gfm(),
+        HtmlRendererOptions::default(),
+    );
+}
+
+#[test]
+fn html_table_body_width_matches_header() {
+    check(
+        "table_body_width_matches_header",
+        "| abc | def |\n| --- | --- |\n| bar |\n| bar | baz | boo |\n",
+        ParserOptions::gfm(),
+        HtmlRendererOptions::default(),
+    );
+}
+
+#[test]
+fn html_table_without_body_omits_tbody() {
+    check(
+        "table_without_body",
+        "| abc | def |\n| --- | --- |\n",
+        ParserOptions::gfm(),
+        HtmlRendererOptions::default(),
+    );
+}
+
+#[test]
+fn html_table_accepts_pipe_less_body_row() {
+    check(
+        "table_accepts_pipe_less_body_row",
+        "| abc | def |\n| --- | --- |\nplain\n",
+        ParserOptions::gfm(),
+        HtmlRendererOptions::default(),
+    );
+}
+
+#[test]
+fn html_table_stops_before_block_with_pipe() {
+    check(
+        "table_stops_before_block_with_pipe",
+        "| abc | def |\n| --- | --- |\n> quote | value\n",
+        ParserOptions::gfm(),
+        HtmlRendererOptions::default(),
+    );
+}
+
 // --- HTML block behaviors ---
 
 #[test]
