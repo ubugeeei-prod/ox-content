@@ -1,5 +1,12 @@
 # Changelog
 
+## [2.78.1] - 2026-07-17
+
+### Bug Fixes
+
+- align table rendering with GFM (#482)
+- configure npm release authentication (#481)
+
 ## [2.78.0] - 2026-07-15
 
 ### Features
