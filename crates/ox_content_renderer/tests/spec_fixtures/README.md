@@ -6,10 +6,12 @@
   licensed under [CC-BY-SA 4.0](https://creativecommons.org/licenses/by-sa/4.0/).
   It is used here only as test data for the conformance suite in
   `tests/spec_commonmark.rs`.
-- `gfm-extensions-spec.txt` holds the extension examples (tables, task
-  list items, strikethrough, autolinks) extracted from the GitHub
-  Flavored Markdown spec (0.29-gfm, also CC-BY-SA 4.0), driven by
-  `tests/spec_gfm.rs`.
+- `gfm-extensions-spec.txt` holds every `(extension)` section of the
+  GitHub Flavored Markdown spec (0.29-gfm, also CC-BY-SA 4.0) verbatim —
+  tables, task list items, strikethrough, autolinks, and disallowed raw
+  HTML — driven by `tests/spec_gfm.rs`. The disallowed-raw-HTML section
+  needs the opt-in `disallow_raw_html` renderer option, which the suite
+  enables for that section only.
 - `commonmark-known-failures.txt` and `gfm-known-failures.txt` track the
   examples that do not render per their spec. The conformance tests fail
   when an entry starts passing (remove the line) or when a conforming

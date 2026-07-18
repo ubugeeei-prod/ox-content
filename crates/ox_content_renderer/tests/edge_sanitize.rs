@@ -93,3 +93,46 @@ fn inline_raw_html_is_escaped_when_sanitize_is_enabled() {
 
     assert_eq!(html, "<p>&lt;span&gt;ok&lt;/span&gt;</p>\n");
 }
+
+#[test]
+fn disallow_raw_html_filters_only_the_gfm_tag_list() {
+    let html = render(
+        "<strong> <title> <style> <em>\n",
+        ParserOptions::gfm(),
+        HtmlRendererOptions { disallow_raw_html: true, ..Default::default() },
+    );
+
+    // Only the leading `<` of a disallowed tag is escaped; `<strong>` and
+    // `<em>` pass through untouched.
+    assert_eq!(html, "<p><strong> &lt;title> &lt;style> <em></p>\n");
+}
+
+#[test]
+fn disallow_raw_html_is_off_by_default() {
+    let html = render("<strong> <title>\n", ParserOptions::gfm(), HtmlRendererOptions::default());
+
+    assert_eq!(html, "<p><strong> <title></p>\n");
+}
+
+#[test]
+fn disallow_raw_html_filters_closing_tags_and_html_blocks() {
+    let html = render(
+        "<blockquote>\n  <xmp> is disallowed.  <XMP> is also disallowed.\n</blockquote>\n",
+        ParserOptions::gfm(),
+        HtmlRendererOptions { disallow_raw_html: true, ..Default::default() },
+    );
+
+    assert!(html.contains("&lt;xmp> is disallowed.  &lt;XMP> is also disallowed."), "{html}");
+    assert!(html.contains("<blockquote>"), "{html}");
+}
+
+#[test]
+fn disallow_raw_html_leaves_similar_tag_names_alone() {
+    let html = render(
+        "<titlebar> and <scripted>\n",
+        ParserOptions::gfm(),
+        HtmlRendererOptions { disallow_raw_html: true, ..Default::default() },
+    );
+
+    assert_eq!(html, "<p><titlebar> and <scripted></p>\n");
+}

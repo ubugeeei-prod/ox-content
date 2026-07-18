@@ -13,6 +13,7 @@ mod heading;
 mod html_attr;
 mod options;
 mod renderer;
+mod tagfilter;
 mod toc;
 
 #[cfg(test)]
