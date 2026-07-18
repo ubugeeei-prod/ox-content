@@ -79,7 +79,7 @@ export function getDefaultTemplate(): OgImageTemplateFn {
     const rawBrand = siteName?.trim() ? siteName : "Ox Content";
     const isBrandCard = normalizeBrandValue(title) === normalizeBrandValue(rawBrand);
 
-    const heroTitle = isBrandCard ? "cargo doc for JavaScript" : title;
+    const heroTitle = isBrandCard ? "High-performance Markdown toolkit" : title;
     const heroDescription = isBrandCard
       ? "Rust-powered docs and high-performance Markdown tooling."
       : description && description.trim().length > 0
