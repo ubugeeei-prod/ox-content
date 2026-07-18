@@ -19,10 +19,10 @@ use super::Parser;
 
 mod scan;
 
-use scan::{
-    closes_paragraph_context, fence_open, is_fence_close, line_end_if_blank_after, next_blank_line,
-    skip_ws_one_newline, strip_quote_markers,
-};
+use scan::{line_end_if_blank_after, next_blank_line, skip_ws_one_newline, strip_quote_markers};
+// The block quote collector shares the fence and paragraph-context
+// helpers for its lazy-continuation tracking.
+pub(super) use scan::{closes_paragraph_context, fence_open, is_fence_close};
 
 #[derive(Debug)]
 pub(super) struct ReferenceDef<'a> {
