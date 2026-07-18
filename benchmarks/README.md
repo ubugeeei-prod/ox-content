@@ -21,7 +21,7 @@ PATH, skipped otherwise):
   directly by path dependency: a full arena parse producing the AST, and
   parse + HTML render with the same defaults as the `@ox-content/napi`
   `parseAndRender` row. No napi boundary, no mdast serialization — the gap
-  between this row and the `@ox-content/napi` rows *is* the JS hand-off
+  between this row and the `@ox-content/napi` rows _is_ the JS hand-off
   cost. Because the crate is built from the benchmarked checkout, base and
   head runs each measure their own core. Note the comparison asymmetry:
   this row builds a full AST while the pulldown rows only drain a
