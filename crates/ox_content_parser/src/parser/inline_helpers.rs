@@ -19,22 +19,67 @@ impl<'a> Parser<'a> {
         let text_start = *pos;
         *pos = Self::scan_balanced(bytes, *pos, b'[', b']');
 
-        if *pos < content.len()
-            && bytes[*pos] == b']'
-            && *pos + 1 < content.len()
-            && bytes[*pos + 1] == b'('
-        {
-            if let Some(target) = self.parse_link_target(content, *pos + 1) {
-                let link_text = &content[text_start..*pos];
-                let children_nodes = self.parse_inline(link_text, offset + text_start)?;
-                children.push(Node::Link(Link {
-                    url: target.url,
-                    title: target.title,
-                    children: children_nodes,
-                    span: Span::new((offset + link_start) as u32, (offset + target.end) as u32),
-                }));
-                *pos = target.end;
-                return Ok(());
+        if *pos < content.len() && bytes[*pos] == b']' {
+            let close = *pos;
+            let link_text = &content[text_start..close];
+
+            // Inline form: [text](dest "title")
+            if bytes.get(close + 1) == Some(&b'(') {
+                if let Some(target) = self.parse_link_target(content, close + 1) {
+                    let children_nodes = self.parse_inline(link_text, offset + text_start)?;
+                    children.push(Node::Link(Link {
+                        url: target.url,
+                        title: target.title,
+                        children: children_nodes,
+                        span: Span::new((offset + link_start) as u32, (offset + target.end) as u32),
+                    }));
+                    *pos = target.end;
+                    return Ok(());
+                }
+            }
+
+            // Full [text][label] and collapsed [text][] reference forms.
+            let mut well_formed_reference = false;
+            if bytes.get(close + 1) == Some(&b'[') {
+                let label_start = close + 2;
+                let label_end = Self::scan_balanced(bytes, label_start, b'[', b']');
+                if label_end < content.len() && bytes[label_end] == b']' {
+                    well_formed_reference = true;
+                    let raw_label = &content[label_start..label_end];
+                    let key = if raw_label.trim().is_empty() { link_text } else { raw_label };
+                    if let Some(reference) = self.lookup_reference(key) {
+                        let (url, title) = (reference.url, reference.title);
+                        let children_nodes = self.parse_inline(link_text, offset + text_start)?;
+                        children.push(Node::Link(Link {
+                            url,
+                            title,
+                            children: children_nodes,
+                            span: Span::new(
+                                (offset + link_start) as u32,
+                                (offset + label_end + 1) as u32,
+                            ),
+                        }));
+                        *pos = label_end + 1;
+                        return Ok(());
+                    }
+                }
+            }
+
+            // Shortcut form: [label]. Suppressed when an explicit (but
+            // unknown) [label] followed, which must stay literal.
+            if !well_formed_reference {
+                if let Some(reference) = self.lookup_reference(link_text) {
+                    let (url, title) = (reference.url, reference.title);
+                    let children_nodes = self.parse_inline(link_text, offset + text_start)?;
+                    children.push(Node::Link(Link {
+                        url,
+                        title,
+                        children: children_nodes,
+                        span: Span::new((offset + link_start) as u32, (offset + close + 1) as u32),
+                    }));
+                    *pos = close + 1;
+                    return Ok(());
+                }
             }
         }
 
@@ -64,21 +109,61 @@ impl<'a> Parser<'a> {
         let alt_start = *pos;
         *pos = Self::scan_balanced(bytes, *pos, b'[', b']');
 
-        if *pos < content.len()
-            && bytes[*pos] == b']'
-            && *pos + 1 < content.len()
-            && bytes[*pos + 1] == b'('
-        {
-            if let Some(target) = self.parse_link_target(content, *pos + 1) {
-                let alt = &content[alt_start..*pos];
-                children.push(Node::Image(Image {
-                    url: target.url,
-                    alt,
-                    title: target.title,
-                    span: Span::new((offset + image_start) as u32, (offset + target.end) as u32),
-                }));
-                *pos = target.end;
-                return;
+        if *pos < content.len() && bytes[*pos] == b']' {
+            let close = *pos;
+            let alt = &content[alt_start..close];
+
+            if bytes.get(close + 1) == Some(&b'(') {
+                if let Some(target) = self.parse_link_target(content, close + 1) {
+                    children.push(Node::Image(Image {
+                        url: target.url,
+                        alt,
+                        title: target.title,
+                        span: Span::new(
+                            (offset + image_start) as u32,
+                            (offset + target.end) as u32,
+                        ),
+                    }));
+                    *pos = target.end;
+                    return;
+                }
+            }
+
+            let mut well_formed_reference = false;
+            if bytes.get(close + 1) == Some(&b'[') {
+                let label_start = close + 2;
+                let label_end = Self::scan_balanced(bytes, label_start, b'[', b']');
+                if label_end < content.len() && bytes[label_end] == b']' {
+                    well_formed_reference = true;
+                    let raw_label = &content[label_start..label_end];
+                    let key = if raw_label.trim().is_empty() { alt } else { raw_label };
+                    if let Some(reference) = self.lookup_reference(key) {
+                        children.push(Node::Image(Image {
+                            url: reference.url,
+                            alt,
+                            title: reference.title,
+                            span: Span::new(
+                                (offset + image_start) as u32,
+                                (offset + label_end + 1) as u32,
+                            ),
+                        }));
+                        *pos = label_end + 1;
+                        return;
+                    }
+                }
+            }
+
+            if !well_formed_reference {
+                if let Some(reference) = self.lookup_reference(alt) {
+                    children.push(Node::Image(Image {
+                        url: reference.url,
+                        alt,
+                        title: reference.title,
+                        span: Span::new((offset + image_start) as u32, (offset + close + 1) as u32),
+                    }));
+                    *pos = close + 1;
+                    return;
+                }
             }
         }
 

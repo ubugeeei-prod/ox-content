@@ -64,7 +64,7 @@ impl<'a> Parser<'a> {
 
         // Recursively parse the inner content from the same arena — no copy.
         let inner_str = inner.into_bump_str();
-        let sub_parser = Parser::with_options(self.allocator, inner_str, self.options.clone());
+        let sub_parser = self.sub_parser(inner_str);
         let sub_doc = sub_parser.parse()?;
 
         self.nesting_depth -= 1;

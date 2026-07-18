@@ -33,7 +33,7 @@ impl<'a> Parser<'a> {
         // A title needs whitespace between it and the destination.
         if i > after_dest {
             if let Some((raw_title, after_title)) = parse_title(content, i) {
-                title = Some(self.unescape_component(raw_title));
+                title = Some(self.unescape_link_component(raw_title));
                 i = skip_ws(bytes, after_title);
             }
         }
@@ -41,14 +41,14 @@ impl<'a> Parser<'a> {
         if bytes.get(i) != Some(&b')') {
             return None;
         }
-        Some(LinkTarget { url: self.unescape_component(raw_url), title, end: i + 1 })
+        Some(LinkTarget { url: self.unescape_link_component(raw_url), title, end: i + 1 })
     }
 
     /// Removes backslashes that escape ASCII punctuation and decodes
     /// entity/numeric character references (both apply inside link
     /// destinations and titles). Returns the input slice untouched when
     /// nothing decodes; otherwise the copy is allocated in the arena.
-    fn unescape_component(&self, raw: &'a str) -> &'a str {
+    pub(in crate::parser) fn unescape_link_component(&self, raw: &'a str) -> &'a str {
         let bytes = raw.as_bytes();
         let mut i = 0;
         let mut start = 0;
@@ -93,7 +93,7 @@ impl<'a> Parser<'a> {
 /// Parses a destination at `i`: either `<...>` (may contain spaces, no
 /// newlines or unescaped angle brackets) or a bare run without whitespace
 /// or control characters and with balanced unescaped parentheses.
-fn parse_destination(content: &str, i: usize) -> Option<(&str, usize)> {
+pub(in crate::parser) fn parse_destination(content: &str, i: usize) -> Option<(&str, usize)> {
     let bytes = content.as_bytes();
     if bytes.get(i) == Some(&b'<') {
         let mut j = i + 1;
@@ -132,7 +132,7 @@ fn parse_destination(content: &str, i: usize) -> Option<(&str, usize)> {
 }
 
 /// Parses a `"..."`, `'...'`, or `(...)` title starting at `i`.
-fn parse_title(content: &str, i: usize) -> Option<(&str, usize)> {
+pub(in crate::parser) fn parse_title(content: &str, i: usize) -> Option<(&str, usize)> {
     let bytes = content.as_bytes();
     let (closer, nested_open) = match bytes.get(i)? {
         b'"' => (b'"', None),
