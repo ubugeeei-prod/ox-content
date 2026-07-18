@@ -16,5 +16,8 @@ fn main() {
     let mut renderer = ox_content_renderer::HtmlRenderer::with_options(
         ox_content_renderer::HtmlRendererOptions::new(),
     );
-    print!("{}", renderer.render(&doc));
+    #[allow(clippy::print_stdout)]
+    {
+        print!("{}", renderer.render(&doc));
+    }
 }
