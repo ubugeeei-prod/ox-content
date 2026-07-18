@@ -9,7 +9,6 @@ core 6 Tabs
 core 7 Tabs
 core 8 Tabs
 core 9 Tabs
-core 13 Backslash-escapes
 core 14 Backslash-escapes
 core 17 Backslash-escapes
 core 18 Backslash-escapes
@@ -401,7 +400,6 @@ gfm 6 Tabs
 gfm 7 Tabs
 gfm 8 Tabs
 gfm 9 Tabs
-gfm 13 Backslash-escapes
 gfm 14 Backslash-escapes
 gfm 17 Backslash-escapes
 gfm 18 Backslash-escapes
