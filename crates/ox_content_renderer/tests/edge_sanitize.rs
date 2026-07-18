@@ -38,12 +38,27 @@ fn unsafe_link_urls_are_neutralized_when_sanitize_is_enabled() {
 #[test]
 fn obfuscated_unsafe_link_schemes_are_neutralized() {
     let html = render(
-        "[run](  JaVa ScRiPt:alert(1))",
+        "[run](JaVaScRiPt:alert(1))",
         ParserOptions::default(),
         HtmlRendererOptions { sanitize: true, ..Default::default() },
     );
 
     assert_eq!(html, "<p><a href=\"#\">run</a></p>\n");
+}
+
+#[test]
+fn whitespace_destinations_do_not_become_links_at_all() {
+    // Per CommonMark, whitespace in a bare destination means the bracketed
+    // run is not a link. The former scheme obfuscation via embedded spaces
+    // now yields plain text — there is no href left to sanitize.
+    let html = render(
+        "[run](  JaVa ScRiPt:alert(1))",
+        ParserOptions::default(),
+        HtmlRendererOptions { sanitize: true, ..Default::default() },
+    );
+
+    assert!(!html.contains("<a"), "no anchor should be emitted: {html}");
+    assert_eq!(html, "<p>[run](  JaVa ScRiPt:alert(1))</p>\n");
 }
 
 #[test]

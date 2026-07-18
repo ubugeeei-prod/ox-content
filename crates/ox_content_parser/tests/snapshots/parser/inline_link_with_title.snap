@@ -1,11 +1,10 @@
 ---
 source: crates/ox_content_parser/tests/snapshot_parse.rs
-assertion_line: 32
 description: "See [home](https://example.com \"Example Home\").\n"
 ---
 Document [0..48]
   Paragraph [0..48]
     Text "See " [0..4]
-    Link url="https://example.com \"Example Home\"" title=None [4..46]
+    Link url="https://example.com" title=Some("Example Home") [4..46]
       Text "home" [5..9]
     Text "." [46..47]

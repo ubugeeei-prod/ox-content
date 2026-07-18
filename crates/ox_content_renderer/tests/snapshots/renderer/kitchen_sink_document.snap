@@ -1,6 +1,5 @@
 ---
-source: crates/ox_content_renderer/tests/snapshot_render.rs
-assertion_line: 29
+source: crates/ox_content_renderer/tests/support/snapshot.rs
 description: "# Project\n\nAn intro with **bold**, *it*, `code`, ~~old~~, [link](https://example.com), and a hard\\\nbreak.\n\n## Install\n\n```bash\nnpm install ox-content\n```\n\n## Steps\n\n1. one\n2. two\n   - nested\n3. three\n\n> Quoted tip.\n\n| col | val |\n| :-- | --: |\n| a   | 1   |\n| b   | 2   |\n\n![diagram](./img.png \"Title\")\n"
 ---
 <h1 id="project">Project</h1>
@@ -43,4 +42,4 @@ break.</p>
 </tr>
 </tbody>
 </table>
-<p><img src="./img.png%20%22Title%22" alt="diagram"></p>
+<p><img src="./img.png" alt="diagram" title="Title"></p>
