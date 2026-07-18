@@ -2,12 +2,16 @@ use super::*;
 use ox_content_ast::Node;
 
 #[test]
-fn ascii_contains_closing_tag_matches_case_insensitively() {
-    assert!(super::html::ascii_contains_closing_tag("end </SCRIPT> tail", b"script"));
-    assert!(super::html::ascii_contains_closing_tag("</style ", b"style"));
-    assert!(!super::html::ascii_contains_closing_tag("<scriptsource>", b"script"));
-    assert!(!super::html::ascii_contains_closing_tag("", b"pre"));
-    assert!(!super::html::ascii_contains_closing_tag("</pr", b"pre"));
+fn find_closing_tag_matches_case_insensitively() {
+    assert_eq!(super::html::find_closing_tag(b"end </SCRIPT> tail", 0, b"script"), Some(4));
+    assert_eq!(super::html::find_closing_tag(b"</style ", 0, b"style"), Some(0));
+    assert_eq!(super::html::find_closing_tag(b"<scriptsource>", 0, b"script"), None);
+    assert_eq!(super::html::find_closing_tag(b"", 0, b"pre"), None);
+    assert_eq!(super::html::find_closing_tag(b"</pr", 0, b"pre"), None);
+    // Search starts at `from`, skipping earlier occurrences.
+    assert_eq!(super::html::find_closing_tag(b"</pre> </pre>", 1, b"pre"), Some(7));
+    // A closing tag split across a newline never matches.
+    assert_eq!(super::html::find_closing_tag(b"</scr\nipt>", 0, b"script"), None);
 }
 
 #[test]
