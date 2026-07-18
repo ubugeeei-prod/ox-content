@@ -28,7 +28,6 @@ exports[`docs generation snapshots > keeps generated accordion blocks as HTML th
   <span>examples</span>
 </span>
 </div>
-
 <h2 id="reference">Reference</h2>
 <details id="capitalize" class="ox-api-entry">
   <summary><span class="ox-api-entry__kind">fn</span><span class="ox-api-entry__summary-main"><code class="ox-api-entry__signature ox-api-entry__signature--highlighted language-typescript shiki-inline" data-language="typescript"><span class="line"><span style="color:#80A665">capitalize</span><span style="color:#666666">(</span><span style="color:#BD976A">value</span><span style="color:#DBD7CAEE">: </span><span style="color:#BD976A">string</span><span style="color:#666666">)</span><span style="color:#DBD7CAEE">: </span><span style="color:#BD976A">string</span></span></code><span class="ox-api-entry__description">Capitalizes user-facing labels before they are passed to RoundMode-aware format…</span><span class="ox-api-entry__meta"><span class="ox-api-badge">1 param</span><span class="ox-api-badge">returns string</span><span class="ox-api-badge">1 example</span><span class="ox-api-badge">since 1.4.0</span></span></span></summary>
@@ -71,7 +70,6 @@ exports[`docs generation snapshots > keeps generated accordion blocks as HTML th
 </div>
   </div>
 </details>
-
 "
 `;
 
