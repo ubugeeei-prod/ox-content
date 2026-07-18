@@ -65,7 +65,9 @@ jobs:
         # every workflow that referenced it died with a startup_failure before
         # any job ran. Install the same pinned Bun through npm (Node is set up
         # by the preceding Setup Vite+ step) instead of widening the policy.
-        run: npm install --global bun@1.3.14
+        # Bun is a one-off global CLI tool pinned to an exact version, so there
+        # is no project lockfile to install it from.
+        run: npm install --global bun@1.3.14 # zizmor: ignore[adhoc-packages]
 
       - name: Regenerate benchmark docs
         run: vp run bench:docs
