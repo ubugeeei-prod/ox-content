@@ -46,3 +46,31 @@ fn serializes_code_breaks_and_ordered_list_start() {
     assert_eq!(json["children"][2]["lang"], "ts");
     assert_eq!(json["children"][2]["meta"], "meta=1");
 }
+
+#[test]
+fn escapes_json_string_bytes_across_chunk_boundaries() {
+    // 8-byte-aligned safe prefix, then every escape class: structural,
+    // shorthand control, and \u-encoded control — all must round-trip.
+    let source = "```\nabcdefgh\"quote\\back\ttab\rcr\x08bs\x0cff\x01ctl and 日本語テキスト\n```";
+    let json = parse_json(source, ParserOptions::default());
+    assert_eq!(
+        json["children"][0]["value"],
+        "abcdefgh\"quote\\back\ttab\rcr\x08bs\x0cff\x01ctl and 日本語テキスト\n"
+    );
+}
+
+#[test]
+fn long_escape_free_value_is_preserved_verbatim() {
+    let body = "safe prose with no escapes at all ".repeat(40);
+    let source = format!("```\n{body}\n```");
+    let json = parse_json(&source, ParserOptions::default());
+    assert_eq!(json["children"][0]["value"], format!("{body}\n"));
+}
+
+#[test]
+fn serializes_large_ordered_list_start() {
+    // CommonMark caps ordered-list markers at nine digits.
+    let json = parse_json("123456789. item", ParserOptions::default());
+    assert_eq!(json["children"][0]["type"], "list");
+    assert_eq!(json["children"][0]["start"], 123456789u32);
+}
