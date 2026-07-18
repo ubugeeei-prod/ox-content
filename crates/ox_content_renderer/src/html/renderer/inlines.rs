@@ -50,6 +50,7 @@ impl HtmlRenderer {
     }
 
     pub(in crate::html::renderer) fn render_link(&mut self, link: &Link<'_>) {
+        crate::profile_span!("renderer::visit_link");
         self.write("<a href=\"");
         let converted_url =
             if self.options.convert_md_links { self.convert_markdown_url(link.url) } else { None };

@@ -16,6 +16,8 @@ use ox_content_ast::{Definition, Node, Span};
 use rustc_hash::FxHashMap;
 
 use super::Parser;
+#[allow(unused_imports)]
+use crate::profile_span;
 
 mod scan;
 
@@ -288,6 +290,7 @@ impl<'a> Parser<'a> {
 impl<'a> Parser<'a> {
     /// Builds the shared reference map for a root parser.
     pub(super) fn build_definitions(&self) -> Rc<ReferenceMap<'a>> {
+        profile_span!("parser::build_definitions");
         // Cheap bail: no `[` anywhere means no definitions.
         if !self.source.contains('[') {
             return Rc::new(ReferenceMap::default());

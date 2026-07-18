@@ -11,6 +11,8 @@ use ox_content_allocator::Vec;
 use ox_content_ast::{Node, Span};
 
 use crate::parser::Parser;
+#[allow(unused_imports)]
+use crate::profile_span;
 
 pub(in crate::parser) struct Delimiter {
     /// Index of the run's text node in the children vec.
@@ -68,6 +70,7 @@ impl<'a> Parser<'a> {
         children: &mut Vec<'a, Node<'a>>,
         delimiters: &mut Vec<'a, Delimiter>,
     ) {
+        profile_span!("parser::process_emphasis");
         let mut closer_idx = 0;
         while closer_idx < delimiters.len() {
             if !delimiters[closer_idx].can_close || delimiters[closer_idx].remaining == 0 {

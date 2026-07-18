@@ -10,11 +10,14 @@ use ox_content_ast::{CodeBlock, Node, Span};
 
 use super::Parser;
 use crate::error::ParseResult;
+#[allow(unused_imports)]
+use crate::profile_span;
 
 impl<'a> Parser<'a> {
     /// Parses an indented code block starting at `start` (the beginning of
     /// a non-blank line whose indentation is at least four columns).
     pub(super) fn parse_indented_code(&mut self, start: usize) -> ParseResult<Option<Node<'a>>> {
+        profile_span!("parser::parse_indented_code");
         let mut value = self.allocator.new_string();
         let mut pos = start;
         let mut end = start;
