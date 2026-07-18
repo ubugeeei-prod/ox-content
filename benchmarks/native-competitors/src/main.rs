@@ -161,6 +161,29 @@ fn render_pulldown_html(input: &str) -> String {
     out
 }
 
+/// ox-content's own core, called directly (no napi boundary, no mdast
+/// serialization): a full arena parse producing the AST. This is a heavier
+/// job than the event-draining rows above — pulldown streams events without
+/// materializing a tree — which is exactly the difference the row exists to
+/// show next to `@ox-content/napi`.
+fn ox_content_parse(input: &str) {
+    let allocator = ox_content_allocator::Allocator::for_source_len(input.len());
+    let parser = ox_content_parser::Parser::new(&allocator, input);
+    let document = parser.parse().expect("benchmark sample must parse");
+    black_box(document.children.len());
+}
+
+/// ox-content parse + HTML render with the same defaults the
+/// `@ox-content/napi` `parseAndRender` row uses (default parser options,
+/// `HtmlRenderer::new()`), minus the napi string hand-off.
+fn ox_content_render_html(input: &str) -> usize {
+    let allocator = ox_content_allocator::Allocator::for_source_len(input.len());
+    let parser = ox_content_parser::Parser::new(&allocator, input);
+    let document = parser.parse().expect("benchmark sample must parse");
+    let mut renderer = ox_content_renderer::HtmlRenderer::new();
+    renderer.render(&document).len()
+}
+
 fn run_benchmarks(sizes: &[(&'static str, usize, u32)], runs: u32) -> SuiteResults {
     let mut parse = Vec::new();
     let mut render = Vec::new();
@@ -170,6 +193,13 @@ fn run_benchmarks(sizes: &[(&'static str, usize, u32)], runs: u32) -> SuiteResul
         parse.push((
             size_name,
             vec![
+                bench(
+                    "ox-content (native)",
+                    || ox_content_parse(&content),
+                    iterations,
+                    runs,
+                    bytes,
+                ),
                 bench(
                     "xai-grok-markdown-core (Grok Build)",
                     || drain_grok_events(&content),
@@ -188,15 +218,26 @@ fn run_benchmarks(sizes: &[(&'static str, usize, u32)], runs: u32) -> SuiteResul
         ));
         render.push((
             size_name,
-            vec![bench(
-                "pulldown-cmark + push_html",
-                || {
-                    black_box(render_pulldown_html(&content));
-                },
-                iterations,
-                runs,
-                bytes,
-            )],
+            vec![
+                bench(
+                    "ox-content (native)",
+                    || {
+                        black_box(ox_content_render_html(&content));
+                    },
+                    iterations,
+                    runs,
+                    bytes,
+                ),
+                bench(
+                    "pulldown-cmark + push_html",
+                    || {
+                        black_box(render_pulldown_html(&content));
+                    },
+                    iterations,
+                    runs,
+                    bytes,
+                ),
+            ],
         ));
     }
     SuiteResults { parse, render }
@@ -226,6 +267,21 @@ mod tests {
     }
 
     #[test]
+    fn ox_content_native_render_matches_sample_expectations() {
+        let allocator = ox_content_allocator::Allocator::for_source_len(SAMPLE_MARKDOWN.len());
+        let parser = ox_content_parser::Parser::new(&allocator, SAMPLE_MARKDOWN);
+        let document = parser.parse().expect("sample must parse");
+        let mut renderer = ox_content_renderer::HtmlRenderer::new();
+        let html = renderer.render(&document);
+        assert!(html.contains("<h1"));
+        // Default parser options (matching the @ox-content/napi rows, which
+        // also pass no options) leave the GFM table extension off — unlike
+        // the pulldown rows, whose Grok option set enables tables. The row
+        // comparison note in benchmarks/README.md documents this.
+        assert!(!html.contains("<table"));
+    }
+
+    #[test]
     fn push_html_renders_sample_non_empty() {
         let rendered = render_pulldown_html(SAMPLE_MARKDOWN);
         assert!(!rendered.is_empty());
@@ -247,10 +303,14 @@ mod tests {
         let parse_names: Vec<_> = parse_rows.iter().map(|row| row["name"].as_str()).collect();
         assert_eq!(
             parse_names,
-            [Some("xai-grok-markdown-core (Grok Build)"), Some("pulldown-cmark")]
+            [
+                Some("ox-content (native)"),
+                Some("xai-grok-markdown-core (Grok Build)"),
+                Some("pulldown-cmark")
+            ]
         );
         let render_names: Vec<_> = render_rows.iter().map(|row| row["name"].as_str()).collect();
-        assert_eq!(render_names, [Some("pulldown-cmark + push_html")]);
+        assert_eq!(render_names, [Some("ox-content (native)"), Some("pulldown-cmark + push_html")]);
 
         for row in parse_rows.iter().chain(render_rows) {
             for field in ["opsPerSec", "avgMs", "throughputMBs"] {
