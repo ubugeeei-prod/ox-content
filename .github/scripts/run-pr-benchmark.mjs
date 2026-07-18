@@ -12,6 +12,9 @@ for (const file of [
   "benchmarks/bundle-size/parse-benchmark.mjs",
   "benchmarks/bundle-size/parse-benchmark-bun.mjs",
   "benchmarks/bundle-size/measure.mjs",
+  "benchmarks/native-competitors/Cargo.toml",
+  "benchmarks/native-competitors/Cargo.lock",
+  "benchmarks/native-competitors/src/main.rs",
 ]) {
   const from = join(sourceRoot, file);
   const to = join(checkoutRoot, file);

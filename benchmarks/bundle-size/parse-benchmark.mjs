@@ -7,11 +7,30 @@ import { spawnSync } from "node:child_process";
 import { writeFileSync } from "node:fs";
 import { cpus, totalmem } from "node:os";
 import { performance } from "node:perf_hooks";
-import { dirname, join } from "node:path";
+import { dirname, join, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const BUN_BENCHMARK_SCRIPT = join(__dirname, "parse-benchmark-bun.mjs");
+// Resolved relative to this script (not process.cwd()) so the CI flow that
+// copies benchmark scripts into the base checkout keeps working.
+const NATIVE_COMPETITORS_DIR = join(__dirname, "..", "native-competitors");
+const NATIVE_COMPETITORS_MANIFEST = join(NATIVE_COMPETITORS_DIR, "Cargo.toml");
+// cargo honors CARGO_TARGET_DIR over the manifest-relative default target/
+// directory. The CI benchmark job sets it (to share the sticky cache), so the
+// binary must be resolved from wherever cargo will actually put it. A relative
+// CARGO_TARGET_DIR is resolved against this script's directory, which is also
+// the cwd the cargo subprocesses run under.
+const NATIVE_COMPETITORS_TARGET_DIR = process.env.CARGO_TARGET_DIR
+  ? resolve(__dirname, process.env.CARGO_TARGET_DIR)
+  : join(NATIVE_COMPETITORS_DIR, "target");
+const NATIVE_COMPETITORS_BINARY = join(
+  NATIVE_COMPETITORS_TARGET_DIR,
+  "release",
+  process.platform === "win32"
+    ? "ox-content-native-competitors.exe"
+    : "ox-content-native-competitors",
+);
 const options = parseOptions(process.argv.slice(2));
 
 /**
@@ -359,6 +378,59 @@ function loadBunMarkdownBenchmarks() {
   }
 }
 
+/**
+ * Native Rust competitor rows (Grok Build's markdown stack and plain
+ * pulldown-cmark), injected via subprocess the same way as Bun.markdown:
+ * build the standalone cargo crate in `benchmarks/native-competitors/`, run
+ * its binary under the shared benchmark protocol, and parse the JSON rows it
+ * prints. Unlike the Bun helper it emits an ARRAY of rows per size, since it
+ * measures multiple competitors. Any failure (no cargo, build error, bad
+ * output) skips the rows instead of failing the benchmark.
+ */
+function loadNativeCompetitorBenchmarks() {
+  const version = spawnSync("cargo", ["--version"], {
+    cwd: __dirname,
+    encoding: "utf8",
+  });
+
+  if (version.status !== 0) {
+    return null;
+  }
+
+  const build = spawnSync(
+    "cargo",
+    ["build", "--release", "--quiet", "--manifest-path", NATIVE_COMPETITORS_MANIFEST],
+    {
+      cwd: __dirname,
+      encoding: "utf8",
+    },
+  );
+
+  if (build.status !== 0) {
+    const details = (build.stderr ?? "").trim() || (build.stdout ?? "").trim();
+    console.warn(`Failed to build native competitor benchmarks: ${details}`);
+    return null;
+  }
+
+  const run = spawnSync(NATIVE_COMPETITORS_BINARY, ["--runs", String(options.runs)], {
+    cwd: __dirname,
+    encoding: "utf8",
+  });
+
+  if (run.status !== 0) {
+    const details = (run.stderr ?? "").trim() || (run.stdout ?? "").trim();
+    console.warn(`Failed to run native competitor benchmarks: ${details}`);
+    return null;
+  }
+
+  try {
+    return JSON.parse(run.stdout);
+  } catch (error) {
+    console.warn(`Failed to parse native competitor benchmark output: ${String(error)}`);
+    return null;
+  }
+}
+
 async function runBenchmarks() {
   console.log("Parse/Render Speed Benchmark");
   console.log("============================\n");
@@ -436,6 +508,13 @@ async function runBenchmarks() {
     console.log(`Using Bun.markdown (Bun ${bunMarkdown.version})\n`);
   } else {
     console.log("bun not available, skipping Bun.markdown comparisons\n");
+  }
+
+  const nativeCompetitors = loadNativeCompetitorBenchmarks();
+  if (nativeCompetitors) {
+    console.log("Using native Rust competitors (pulldown-cmark, Grok Build markdown)\n");
+  } else {
+    console.log("native competitors not available, skipping\n");
   }
 
   const md = new MarkdownIt();
@@ -533,6 +612,10 @@ async function runBenchmarks() {
         parseResults.push({ name: parser.name, error: true });
       }
     }
+    const nativeParseRows = nativeCompetitors?.parse?.[sizeName];
+    if (Array.isArray(nativeParseRows)) {
+      parseResults.push(...nativeParseRows);
+    }
     parseResults.sort((a, b) => (b.opsPerSec || 0) - (a.opsPerSec || 0));
     suites.parseOnly = parseResults;
     printTable("Parse Only", parseResults);
@@ -549,6 +632,10 @@ async function runBenchmarks() {
     }
     if (bunMarkdown?.render?.[sizeName]) {
       renderResults.push(bunMarkdown.render[sizeName]);
+    }
+    const nativeRenderRows = nativeCompetitors?.render?.[sizeName];
+    if (Array.isArray(nativeRenderRows)) {
+      renderResults.push(...nativeRenderRows);
     }
     renderResults.sort((a, b) => (b.opsPerSec || 0) - (a.opsPerSec || 0));
     suites.parseAndRender = renderResults;
