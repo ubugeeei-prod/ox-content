@@ -1,5 +1,5 @@
 use memchr::memchr;
-use ox_content_ast::{Node, Paragraph, Span};
+use ox_content_ast::{Heading, Node, Paragraph, Span};
 
 use super::Parser;
 use crate::error::{ParseError, ParseResult};
@@ -134,6 +134,26 @@ impl<'a> Parser<'a> {
                 break;
             }
 
+            // Setext heading underline: while a paragraph is open this
+            // takes precedence over every block start (`Foo\n---` is an
+            // h2, not a paragraph followed by a thematic break), so it
+            // must be checked before `line_starts_block`.
+            if let Some(depth) = self.setext_underline_depth(line_start, cursor) {
+                let heading_end = if let Some(off) = memchr(b'\n', &bytes[line_start..]) {
+                    line_start + off + 1
+                } else {
+                    self.source.len()
+                };
+                self.position = heading_end;
+                let content = self.source[start..content_end].trim();
+                let children = self.parse_inline(content, start)?;
+                return Ok(Some(Node::Heading(Heading {
+                    depth,
+                    children,
+                    span: Span::new(start as u32, heading_end as u32),
+                })));
+            }
+
             // Check for block-level element that would end paragraph.
             if self.line_starts_block() {
                 break;
@@ -159,5 +179,37 @@ impl<'a> Parser<'a> {
         let children = self.parse_inline(content, start)?;
 
         Ok(Some(Node::Paragraph(Paragraph { children, span })))
+    }
+
+    /// Returns the setext heading depth (1 for `=`, 2 for `-`) when the
+    /// line starting at `line_start` is a setext underline: at most three
+    /// leading spaces, a run of a single marker character, and nothing but
+    /// trailing whitespace. `first_non_ws` is the position of the line's
+    /// first non-space/tab byte (already computed by the paragraph loop).
+    fn setext_underline_depth(&self, line_start: usize, first_non_ws: usize) -> Option<u8> {
+        let bytes = self.source.as_bytes();
+        // A tab in the indent always reaches column 4+, so spaces only.
+        if first_non_ws - line_start > 3
+            || bytes[line_start..first_non_ws].iter().any(|&byte| byte != b' ')
+        {
+            return None;
+        }
+        let marker = bytes[first_non_ws];
+        let depth = match marker {
+            b'=' => 1,
+            b'-' => 2,
+            _ => return None,
+        };
+        let mut i = first_non_ws;
+        while i < bytes.len() && bytes[i] == marker {
+            i += 1;
+        }
+        while i < bytes.len() && matches!(bytes[i], b' ' | b'\t' | b'\r') {
+            i += 1;
+        }
+        if i < bytes.len() && bytes[i] != b'\n' {
+            return None;
+        }
+        Some(depth)
     }
 }
