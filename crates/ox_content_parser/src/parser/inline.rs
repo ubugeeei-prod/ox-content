@@ -88,7 +88,7 @@ impl<'a> Parser<'a> {
                 self.parse_strikethrough(content, offset, children, pos)?;
             }
             b'*' | b'_' => self.parse_delimited(content, offset, children, pos)?,
-            b'`' => Self::parse_inline_code(content, offset, children, pos),
+            b'`' => self.parse_inline_code(content, offset, children, pos),
             b'[' => self.parse_link(content, offset, children, pos)?,
             b'!' => self.parse_image(content, offset, children, pos),
             _ => {
@@ -239,34 +239,64 @@ impl<'a> Parser<'a> {
     }
 
     fn parse_inline_code(
+        &self,
         content: &'a str,
         offset: usize,
         children: &mut Vec<'a, Node<'a>>,
         pos: &mut usize,
     ) {
-        *pos += 1;
-        let code_start = *pos;
         let bytes = content.as_bytes();
-        // Jump to the closing backtick via SIMD memchr instead of a per-byte loop.
-        *pos = match memchr(b'`', &bytes[code_start..]) {
-            Some(off) => code_start + off,
-            None => content.len(),
+        let open_len = Self::marker_run_len(bytes, *pos, b'`');
+        let code_start = *pos + open_len;
+
+        // The closer is the next backtick run of exactly the opener's
+        // length (CommonMark "Code spans"). memchr jumps between runs.
+        let mut cursor = code_start;
+        while cursor < bytes.len() {
+            let Some(off) = memchr(b'`', &bytes[cursor..]) else {
+                break;
+            };
+            cursor += off;
+            let run = Self::marker_run_len(bytes, cursor, b'`');
+            if run == open_len {
+                let span = Span::new((offset + *pos) as u32, (offset + cursor + run) as u32);
+                children.push(Node::InlineCode(ox_content_ast::InlineCode {
+                    value: self.normalize_code_span(&content[code_start..cursor]),
+                    span,
+                }));
+                *pos = cursor + run;
+                return;
+            }
+            cursor += run;
+        }
+
+        // No closer: the opening run is literal text.
+        Self::push_text(children, &content[*pos..code_start], offset + *pos, offset + code_start);
+        *pos = code_start;
+    }
+
+    /// Applies the code span content rules: line endings become spaces,
+    /// and one leading plus one trailing space is dropped when the content
+    /// starts and ends with a space without being all spaces.
+    fn normalize_code_span(&self, raw: &'a str) -> &'a str {
+        let value: &'a str = if raw.contains('\n') {
+            let mut converted = self.allocator.new_string();
+            for ch in raw.chars() {
+                converted.push(if ch == '\n' { ' ' } else { ch });
+            }
+            converted.into_bump_str()
+        } else {
+            raw
         };
 
-        if *pos < content.len() {
-            let span = Span::new((offset + code_start - 1) as u32, (offset + *pos + 1) as u32);
-            children.push(Node::InlineCode(ox_content_ast::InlineCode {
-                value: &content[code_start..*pos],
-                span,
-            }));
-            *pos += 1;
+        let stripped = value.starts_with(' ')
+            && value.ends_with(' ')
+            && value.len() >= 2
+            && value.bytes().any(|byte| byte != b' ');
+        if stripped {
+            &value[1..value.len() - 1]
         } else {
-            Self::push_text(
-                children,
-                &content[code_start - 1..],
-                offset + code_start - 1,
-                offset + content.len(),
-            );
+            value
         }
     }
 }
