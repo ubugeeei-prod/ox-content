@@ -1,5 +1,24 @@
 # Changelog
 
+## [2.81.0] - 2026-07-18
+
+### Features
+
+- add native competitor rows (pulldown-cmark, Grok Build markdown) (#513)
+- span the parser pre-passes and inline post-passes (#511)
+
+### Performance
+
+- reject autolink candidates on the second byte before prefix checks (#520)
+- pre-size the arena from the source length (#519)
+- skip the pre-pass line scan when the source has no "]:" (#517)
+- close HTML blocks with whole-block searches instead of per-line scans (#515)
+- fuse the reference and footnote pre-passes behind first-byte dispatch (#512)
+
+### Refactoring
+
+- split native-competitors main.rs under file line limit (#514)
+
 ## [2.80.0] - 2026-07-18
 
 ### Features
