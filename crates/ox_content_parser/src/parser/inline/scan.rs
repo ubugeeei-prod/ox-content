@@ -15,6 +15,7 @@ static INLINE_SPECIAL: [u8; 256] = {
     t[b'~' as usize] = 1;
     t[b'\\' as usize] = 1;
     t[b'<' as usize] = 1;
+    t[b'\n' as usize] = 1;
     t
 };
 

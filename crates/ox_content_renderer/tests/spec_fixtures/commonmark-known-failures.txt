@@ -71,7 +71,6 @@ core 215 Link-reference-definitions
 core 216 Link-reference-definitions
 core 217 Link-reference-definitions
 core 218 Link-reference-definitions
-core 226 Paragraphs
 core 232 Block-quotes
 core 233 Block-quotes
 core 235 Block-quotes
@@ -314,10 +313,6 @@ core 626 Raw-HTML
 core 627 Raw-HTML
 core 628 Raw-HTML
 core 629 Raw-HTML
-core 633 Hard-line-breaks
-core 635 Hard-line-breaks
-core 636 Hard-line-breaks
-core 638 Hard-line-breaks
 gfm 5 Tabs
 gfm 6 Tabs
 gfm 7 Tabs
@@ -388,7 +383,6 @@ gfm 215 Link-reference-definitions
 gfm 216 Link-reference-definitions
 gfm 217 Link-reference-definitions
 gfm 218 Link-reference-definitions
-gfm 226 Paragraphs
 gfm 232 Block-quotes
 gfm 233 Block-quotes
 gfm 235 Block-quotes
@@ -631,7 +625,3 @@ gfm 626 Raw-HTML
 gfm 627 Raw-HTML
 gfm 628 Raw-HTML
 gfm 629 Raw-HTML
-gfm 633 Hard-line-breaks
-gfm 635 Hard-line-breaks
-gfm 636 Hard-line-breaks
-gfm 638 Hard-line-breaks
