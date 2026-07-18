@@ -11,6 +11,30 @@ Two flavors of performance measurement live in this tree:
   in-process measurements that avoid NAPI overhead. Trigger via
   `cargo bench -p ox_content_parser`.
 
+## Native Rust competitor rows
+
+The JS sweep also injects rows from a standalone cargo crate in
+`native-competitors/` (built and run as a subprocess when `cargo` is on the
+PATH, skipped otherwise):
+
+- **`xai-grok-markdown-core (Grok Build)`** (parse) — drains
+  `offset_events()`, the exact parse path of the markdown stack xAI
+  open-sourced with [Grok Build](https://github.com/xai-org/grok-build)
+  (Apache-2.0, pinned to rev `98c3b2438aa922fbbe6178a5c0a4c48f85edc8ce`): a
+  lean wrapper around pulldown-cmark with Grok's option set and single-tilde
+  strikethrough demoted.
+- **`pulldown-cmark`** (parse) — plain pulldown-cmark event draining under the
+  same option set, isolating the wrapper's overhead.
+- **`pulldown-cmark + push_html`** (render) — parse plus
+  `pulldown_cmark::html::push_html` into a fresh output string.
+
+Caveat: xai-grok-markdown's own output target is terminal rendering, not
+HTML, so its HTML-comparable surface is the parse side (`offset_events`);
+pulldown-cmark's `push_html` stands in for the render side of that stack.
+The runner mirrors the JS harness protocol byte-for-byte (same sample
+document, sizes, warmup, iteration counts, and `--runs` median selection),
+which its unit tests pin against `parse-benchmark-bun.mjs`.
+
 ## OSS Markdown corpus (real-world inputs)
 
 The Rust `corpus` benchmark target measures parse and parse+render against
