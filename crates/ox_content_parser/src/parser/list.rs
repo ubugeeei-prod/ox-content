@@ -45,6 +45,11 @@ impl<'a> Parser<'a> {
                 break;
             }
             let line = self.line_at(line_start);
+            // A thematic break takes precedence over a sibling marker
+            // (`* * *` between items splits the list around an <hr>).
+            if Self::try_parse_thematic_break_line(line) {
+                break;
+            }
             let Some(item) = self.parse_list_item_line_from_line(line_start, line) else {
                 break;
             };

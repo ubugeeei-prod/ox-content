@@ -97,6 +97,8 @@ impl<'a> Parser<'a> {
         } else {
             (Some(info), None)
         };
+        // Backslash escapes and entity references apply in info strings.
+        let lang = lang.map(|lang| self.unescape_link_component(lang));
 
         // Skip newline after info string
         if self.peek() == Some('\n') {

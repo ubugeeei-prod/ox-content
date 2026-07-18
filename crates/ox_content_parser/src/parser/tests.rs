@@ -45,20 +45,21 @@ fn test_parse_heading() {
 }
 
 #[test]
-fn indented_heading_like_text_does_not_loop() {
+fn indented_heading_parses_and_does_not_loop() {
     // Regression: `line_starts_block` once tested ATX headings against
     // the trimmed bytes while `parse_block` tested at the un-trimmed
     // position, so " # heading" caused `parse_paragraph` to break
     // immediately ("looks like a heading") and `parse_block` to return
     // `Ok(None)` without advancing — spinning the outer loop forever.
-    // The fix is for `line_starts_block` and `parse_block` to share the same
-    // untrimmed-line-start heading check.
+    // Both dispatchers now share the same indented-heading rule
+    // (CommonMark allows up to three spaces), so this parses as a
+    // heading and, crucially, the parse still terminates.
     let allocator = Allocator::new();
     let doc = Parser::new(&allocator, " # heading\n").parse().unwrap();
     assert_eq!(doc.children.len(), 1);
     assert!(
-        matches!(&doc.children[0], Node::Paragraph(_)),
-        "expected leading-indented `#` to parse as paragraph text, got {:?}",
+        matches!(&doc.children[0], Node::Heading(heading) if heading.depth == 1),
+        "expected a depth-1 heading for ` # heading`, got {:?}",
         doc.children[0]
     );
 }

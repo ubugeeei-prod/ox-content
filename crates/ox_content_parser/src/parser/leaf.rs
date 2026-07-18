@@ -9,13 +9,15 @@ use crate::profile_span;
 impl<'a> Parser<'a> {
     /// Cheap recognizer for ATX heading starts used by block dispatch.
     ///
-    /// The caller has already found the first non-whitespace byte. Requiring
-    /// `line_start == trimmed_start` preserves the current rule that headings
-    /// are not indented, while `is_atx_heading_prefix` validates the marker
-    /// with byte checks and without allocating a trimmed line.
+    /// The caller has already found the first non-whitespace byte. Up to
+    /// three spaces of indentation are allowed (a tab would reach column
+    /// four), and `is_atx_heading_prefix` validates the marker with byte
+    /// checks and without allocating a trimmed line.
     pub(super) fn try_parse_heading_start(&self, line_start: usize, trimmed_start: usize) -> bool {
-        line_start == trimmed_start
-            && is_atx_heading_prefix(&self.source.as_bytes()[trimmed_start..])
+        let bytes = self.source.as_bytes();
+        trimmed_start - line_start <= 3
+            && bytes[line_start..trimmed_start].iter().all(|&byte| byte == b' ')
+            && is_atx_heading_prefix(&bytes[trimmed_start..])
     }
 
     pub(super) fn try_parse_thematic_break_line(line: &str) -> bool {
@@ -49,10 +51,20 @@ impl<'a> Parser<'a> {
             return false;
         }
 
-        let trimmed = trimmed.as_bytes();
-        trimmed.len() >= 3
-            && ((trimmed[0] == b'`' && trimmed[1] == b'`' && trimmed[2] == b'`')
-                || (trimmed[0] == b'~' && trimmed[1] == b'~' && trimmed[2] == b'~'))
+        let bytes = trimmed.as_bytes();
+        if bytes.len() < 3 {
+            return false;
+        }
+        if bytes[0] == b'~' && bytes[1] == b'~' && bytes[2] == b'~' {
+            return true;
+        }
+        if !(bytes[0] == b'`' && bytes[1] == b'`' && bytes[2] == b'`') {
+            return false;
+        }
+        // A backtick fence's info string may not contain backticks
+        // (otherwise ``` x ``` is an inline code span, not a fence).
+        let fence_len = bytes.iter().take_while(|&&byte| byte == b'`').count();
+        !trimmed[fence_len..].contains('`')
     }
 
     pub(super) fn indentation_columns(line: &str) -> usize {
@@ -71,6 +83,9 @@ impl<'a> Parser<'a> {
     pub(super) fn parse_heading(&mut self, start: usize) -> ParseResult<Option<Node<'a>>> {
         profile_span!("parser::parse_heading");
         let bytes = self.source.as_bytes();
+        // Step over the (already validated, at most three columns of)
+        // indentation before counting hashes.
+        self.skip_whitespace();
         let mut depth = 0u8;
         // `#` is ASCII, so count the leading run with direct byte compares
         // instead of routing each through `peek()`/`advance()`.
@@ -88,9 +103,20 @@ impl<'a> Parser<'a> {
             .map_or(self.source.len(), |off| content_start + off);
         self.position = content_end;
 
-        // Skip trailing hashes and whitespace
-        let content = self.source[content_start..content_end].trim_end();
-        let content = content.trim_end_matches('#').trim_end();
+        // A closing hash sequence only counts when preceded by a space or
+        // tab (or when the heading is nothing but hashes); an escaped
+        // leading hash keeps the whole run literal.
+        let line = self.source[content_start..content_end].trim_end_matches([' ', '\t']);
+        let without_hashes = line.trim_end_matches('#');
+        let content = if without_hashes.len() == line.len() {
+            line
+        } else if without_hashes.is_empty() {
+            ""
+        } else if without_hashes.ends_with([' ', '\t']) {
+            without_hashes.trim_end_matches([' ', '\t'])
+        } else {
+            line
+        };
 
         // Consume newline
         if self.peek() == Some('\n') {
