@@ -4,6 +4,12 @@ import { readFileSync, writeFileSync } from "node:fs";
 
 const COMMENT_MARKER = "<!-- ox-content-benchmark-report -->";
 const TARGET_NAMES = new Set(["@ox-content/napi", "@ox-content/napi (async)"]);
+// Async rows stay in the comparison tables but do not gate the check:
+// worker-scheduling variance on shared runners swung them -12%/-15% on PRs
+// that never touched the async path (2 of the first 6 runs after the
+// workflow revival), while a real async regression necessarily shows on
+// the sync rows the gate keeps.
+const GATE_EXEMPT_TARGET_NAMES = new Set(["@ox-content/napi (async)"]);
 const COMMENT_SIZE_NAMES = new Set(["large"]);
 const NOISE_THRESHOLD_PERCENT = 5;
 const RUNTIME_REGRESSION_THRESHOLD_PERCENT = -10;
@@ -234,7 +240,7 @@ function buildComment({ basePath, headPath, baseBundlePath, headBundlePath, base
   lines.push(
     "### Regression Gate",
     "",
-    `Runtime regressions fail when head throughput is more than ${Math.abs(RUNTIME_REGRESSION_THRESHOLD_PERCENT)}% slower than base. Bundle regressions fail when gzipped size grows by more than ${BUNDLE_REGRESSION_THRESHOLD_PERCENT}%. Maintainers can intentionally override by applying the \`benchmark-regression-accepted\` PR label, which sets \`${BENCHMARK_OVERRIDE_ENV}=1\`.`,
+    `Runtime regressions fail when head throughput is more than ${Math.abs(RUNTIME_REGRESSION_THRESHOLD_PERCENT)}% slower than base (async rows are informational only; their worker-scheduling variance exceeds the threshold on quiet PRs). Bundle regressions fail when gzipped size grows by more than ${BUNDLE_REGRESSION_THRESHOLD_PERCENT}%. Maintainers can intentionally override by applying the \`benchmark-regression-accepted\` PR label, which sets \`${BENCHMARK_OVERRIDE_ENV}=1\`.`,
     "",
   );
 
@@ -491,6 +497,9 @@ function collectRegressions(runtimeRows, bundleRows) {
   const regressions = [];
 
   for (const row of runtimeRows) {
+    if (GATE_EXEMPT_TARGET_NAMES.has(row.targetName)) {
+      continue;
+    }
     if (
       Number.isFinite(row.deltaPercent) &&
       row.deltaPercent < RUNTIME_REGRESSION_THRESHOLD_PERCENT
