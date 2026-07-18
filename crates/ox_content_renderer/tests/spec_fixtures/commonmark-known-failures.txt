@@ -1,3 +1,6 @@
 # CommonMark 0.31.2 examples that ox-content does not render per spec yet.
 # Format: <mode> <example-number> <section>
 # Regenerate: UPDATE_SPEC_BASELINE=1 cargo test -p ox_content_renderer --test spec_commonmark
+gfm 608 Autolinks
+gfm 611 Autolinks
+gfm 612 Autolinks

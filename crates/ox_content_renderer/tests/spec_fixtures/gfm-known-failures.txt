@@ -1,0 +1,3 @@
+# GFM extension examples that ox-content does not render per spec yet.
+# Format: <example-number>
+# Regenerate: UPDATE_SPEC_BASELINE=1 cargo test -p ox_content_renderer --test spec_gfm

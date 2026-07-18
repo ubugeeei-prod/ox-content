@@ -6,11 +6,22 @@
   licensed under [CC-BY-SA 4.0](https://creativecommons.org/licenses/by-sa/4.0/).
   It is used here only as test data for the conformance suite in
   `tests/spec_commonmark.rs`.
-- `commonmark-known-failures.txt` tracks the spec examples ox-content does
-  not render per spec yet. The conformance test fails when an entry starts
-  passing (remove the line) or when a conforming example regresses.
-  Regenerate with:
+- `gfm-extensions-spec.txt` holds the extension examples (tables, task
+  list items, strikethrough, autolinks) extracted from the GitHub
+  Flavored Markdown spec (0.29-gfm, also CC-BY-SA 4.0), driven by
+  `tests/spec_gfm.rs`.
+- `commonmark-known-failures.txt` and `gfm-known-failures.txt` track the
+  examples that do not render per their spec. The conformance tests fail
+  when an entry starts passing (remove the line) or when a conforming
+  example regresses. Regenerate with:
 
   ```sh
   UPDATE_SPEC_BASELINE=1 cargo test -p ox_content_renderer --test spec_commonmark
+  UPDATE_SPEC_BASELINE=1 cargo test -p ox_content_renderer --test spec_gfm
   ```
+
+  The remaining `gfm <n> Autolinks` entries in the CommonMark baseline
+  are not defects: with the GFM profile enabled, the autolink extension
+  deliberately linkifies bare URLs/emails that plain CommonMark keeps as
+  text (spec examples 608/611/612). Core mode matches CommonMark on all
+  652 examples.
