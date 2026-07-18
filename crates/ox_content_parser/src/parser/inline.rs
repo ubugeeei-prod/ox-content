@@ -15,6 +15,7 @@ mod scan;
 
 use self::scan::next_inline_special;
 
+pub(in crate::parser) use self::autolink::autolink_end;
 pub(in crate::parser) use self::link_target::{
     parse_destination as parse_link_destination, parse_title as parse_link_title,
 };

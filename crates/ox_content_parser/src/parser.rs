@@ -109,6 +109,12 @@ pub struct Parser<'a> {
     /// pre-pass, shared with sub-parsers (block quote and list item
     /// contents) so references resolve document-wide.
     definitions: std::rc::Rc<reference::ReferenceMap<'a>>,
+
+    /// Byte offsets (in `source`) of lines that entered this sub-source
+    /// via lazy continuation. Such lines are paragraph text by
+    /// construction and must not be reinterpreted as setext underlines
+    /// during the re-parse.
+    lazy_lines: std::rc::Rc<rustc_hash::FxHashSet<u32>>,
 }
 
 impl<'a> Parser<'a> {
@@ -128,6 +134,7 @@ impl<'a> Parser<'a> {
             position: 0,
             nesting_depth: 0,
             definitions: std::rc::Rc::new(reference::ReferenceMap::default()),
+            lazy_lines: std::rc::Rc::default(),
         };
         parser.definitions = parser.build_definitions();
         parser
@@ -136,7 +143,13 @@ impl<'a> Parser<'a> {
     /// Creates a parser for re-parsing a stripped sub-source (block quote
     /// or list item content) that shares this parser's reference
     /// definitions instead of re-collecting them.
-    pub(crate) fn sub_parser(&self, source: &'a str) -> Parser<'a> {
+    /// Sub-parser that also knows which of its lines were added by lazy
+    /// continuation (offsets into `source`).
+    pub(crate) fn sub_parser_with_lazy_lines(
+        &self,
+        source: &'a str,
+        lazy_lines: rustc_hash::FxHashSet<u32>,
+    ) -> Parser<'a> {
         Self {
             allocator: self.allocator,
             source,
@@ -144,6 +157,7 @@ impl<'a> Parser<'a> {
             position: 0,
             nesting_depth: 0,
             definitions: std::rc::Rc::clone(&self.definitions),
+            lazy_lines: std::rc::Rc::new(lazy_lines),
         }
     }
 

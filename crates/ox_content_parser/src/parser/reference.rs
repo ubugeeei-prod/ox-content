@@ -55,7 +55,13 @@ impl<'a> Parser<'a> {
                     pending_space = false;
                 }
                 for lowered in ch.to_lowercase() {
-                    out.push(lowered);
+                    // Case folding (not just lowercasing): the sharp s
+                    // folds to "ss", so [SS] and [ẞ] label-match.
+                    if lowered == 'ß' {
+                        out.push_str("ss");
+                    } else {
+                        out.push(lowered);
+                    }
                 }
             }
         }

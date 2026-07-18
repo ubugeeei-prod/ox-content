@@ -43,6 +43,19 @@ impl<'a> Parser<'a> {
     /// a block stay on the old path so cases such as `- # heading`, nested
     /// lists, fenced code, thematic breaks, and HTML blocks keep their AST.
     pub(super) fn can_inline_parse_list_item(content: &str) -> bool {
+        // Leading indentation of four or more columns means the item
+        // starts with indented code — that needs the block sub-parser.
+        let mut columns = 0usize;
+        for byte in content.bytes() {
+            match byte {
+                b' ' => columns += 1,
+                b'\t' => columns = (columns / 4 + 1) * 4,
+                _ => break,
+            }
+        }
+        if columns >= 4 {
+            return false;
+        }
         let Some(&first) = content.trim_start().as_bytes().first() else {
             return true;
         };

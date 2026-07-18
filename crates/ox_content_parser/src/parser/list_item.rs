@@ -134,11 +134,42 @@ impl<'a> Parser<'a> {
             Some(_) => return None,
         };
 
+        let marker_indent = line.len() - trimmed.len();
+        let ws_run = after_marker.iter().take_while(|&&byte| matches!(byte, b' ' | b'\t')).count();
+        if after_marker[..ws_run].contains(&b'\t') {
+            // Tabs after the marker expand from the marker's original
+            // column; everything beyond the single separator column
+            // becomes content spaces so alignment survives the item
+            // re-parse (`-\t\tfoo` is an item holding two-space-indented
+            // code).
+            let marker_end_col = marker_indent + marker_width;
+            let mut end_col = marker_end_col;
+            for &byte in &after_marker[..ws_run] {
+                end_col = if byte == b'\t' { (end_col / 4 + 1) * 4 } else { end_col + 1 };
+            }
+            let extra_columns = end_col.saturating_sub(marker_end_col + 1);
+            let rest = &trimmed[marker_width + ws_run..];
+            let mut expanded = self.allocator.new_string();
+            for _ in 0..extra_columns {
+                expanded.push(' ');
+            }
+            expanded.push_str(rest);
+            let content: &'a str = expanded.into_bump_str();
+            return Some(ParsedListItem {
+                ordered,
+                marker,
+                start,
+                content,
+                content_offset: trimmed_offset + marker_width + 1,
+                content_indent: marker_end_col + 1,
+                checked: None,
+            });
+        }
+
         let mut content = &trimmed[marker_width + content_skip..];
         let mut content_offset = trimmed_offset + marker_width + content_skip;
         // Continuation indent counts the marker's own indent plus the
         // marker and its separating spaces; empty items count one column.
-        let marker_indent = trimmed_offset - line_start;
         let content_indent = marker_indent
             + marker_width
             + if content.trim().is_empty() { 1 } else { content_skip.max(1) };

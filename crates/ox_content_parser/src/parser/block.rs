@@ -209,6 +209,11 @@ impl<'a> Parser<'a> {
     /// trailing whitespace. `first_non_ws` is the position of the line's
     /// first non-space/tab byte (already computed by the paragraph loop).
     fn setext_underline_depth(&self, line_start: usize, first_non_ws: usize) -> Option<u8> {
+        // A lazily-continued line is paragraph text by construction and
+        // can never underline the paragraph it continues.
+        if self.lazy_lines.contains(&(line_start as u32)) {
+            return None;
+        }
         let bytes = self.source.as_bytes();
         // A tab in the indent always reaches column 4+, so spaces only.
         if first_non_ws - line_start > 3
