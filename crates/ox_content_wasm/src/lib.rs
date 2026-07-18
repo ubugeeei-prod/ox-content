@@ -171,7 +171,10 @@ impl From<&WasmParserOptions> for ParserOptions {
 #[wasm_bindgen(js_name = parseAndRender)]
 pub fn parse_and_render(source: &str, options: Option<WasmParserOptions>) -> JsValue {
     let opts = options.unwrap_or_default();
-    let allocator = Allocator::new();
+    // Pre-size the arena from the source length (same policy as the NAPI
+    // binding) so the parse+render fits one bump chunk instead of growing
+    // through repeated chunk doublings.
+    let allocator = Allocator::for_source_len(source.len());
     let parser_options = ParserOptions::from(&opts);
     let parser = Parser::with_options(&allocator, source, parser_options);
 
@@ -212,7 +215,7 @@ pub fn transform(source: &str, options: Option<WasmParserOptions>) -> JsValue {
     let (content, frontmatter) = parse_frontmatter(source);
 
     // Parse markdown
-    let allocator = Allocator::new();
+    let allocator = Allocator::for_source_len(content.len());
     let parser_options = ParserOptions::from(&opts);
     let parser = Parser::with_options(&allocator, &content, parser_options);
 
