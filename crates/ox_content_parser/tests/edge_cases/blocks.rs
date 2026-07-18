@@ -118,3 +118,41 @@ fn blockquote_supports_multiple_paragraphs_when_blank_quote_line_is_used() {
         other => panic!("expected blockquote, got {other:?}"),
     }
 }
+
+#[test]
+fn whitespace_only_document_without_trailing_newline_terminates() {
+    // Regression: a document holding only spaces/tabs and no final
+    // newline left the block loop parked on whitespace that no block
+    // parser consumed, spinning forever. Every variant must parse to an
+    // empty document.
+    for source in ["  ", "\t", "  \t", "   \t", "    \t", " \t \t"] {
+        let allocator = Allocator::new();
+        let doc = parse_with_options(&allocator, source, ParserOptions::default());
+        assert!(doc.children.is_empty(), "expected no blocks for {source:?}");
+    }
+}
+
+#[test]
+fn trailing_whitespace_line_does_not_swallow_preceding_content() {
+    let allocator = Allocator::new();
+    let doc = parse_with_options(&allocator, "text\n  ", ParserOptions::default());
+
+    assert_eq!(doc.children.len(), 1);
+    assert_eq!(first_text_in_nodes(&doc.children), Some("text"));
+}
+
+#[test]
+fn indented_content_at_end_of_input_still_parses() {
+    // The blank-line skipper must only consume a trailing whitespace run
+    // when nothing follows it; indentation before real content is
+    // meaningful.
+    let allocator = Allocator::new();
+    let doc = parse_with_options(&allocator, "    code", ParserOptions::default());
+
+    assert_eq!(doc.children.len(), 1);
+    assert!(
+        matches!(&doc.children[0], Node::CodeBlock(_)),
+        "expected indented code, got {:?}",
+        doc.children[0]
+    );
+}

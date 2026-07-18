@@ -54,7 +54,18 @@ impl<'a> Parser<'a> {
             }
             if pos < bytes.len() && bytes[pos] == b'\n' {
                 pos += 1;
+            } else if pos >= bytes.len() {
+                // Spaces/tabs running to end of input with no newline are
+                // a blank final line: consume them. Rewinding instead
+                // would park the position on whitespace that no block
+                // parser consumes, and the block loop — which runs until
+                // `is_at_end` — would spin forever.
+                self.position = pos;
+                return;
             } else {
+                // Content follows the indentation; rewind so the caller
+                // still sees the leading whitespace (indented code and
+                // list markers depend on it).
                 self.position = line_start;
                 return;
             }

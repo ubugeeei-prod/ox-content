@@ -26,6 +26,11 @@ impl<'a> Parser<'a> {
         let start = self.position;
         let bytes = self.source.as_bytes();
         let Some(trimmed_start) = self.first_non_whitespace_in_line(start) else {
+            // Nothing but whitespace remains on this line. `skip_blank_lines`
+            // normally consumes it, so reaching here means the line ends at
+            // EOF; advance past it regardless so the caller's
+            // `while !is_at_end` loop always makes progress.
+            self.position = self.source.len();
             return Ok(None);
         };
 
