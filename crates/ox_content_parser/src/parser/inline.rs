@@ -14,7 +14,9 @@ mod scan;
 
 use self::scan::next_inline_special;
 
-pub(in crate::parser) use self::link_target::{parse_destination as parse_link_destination, parse_title as parse_link_title};
+pub(in crate::parser) use self::link_target::{
+    parse_destination as parse_link_destination, parse_title as parse_link_title,
+};
 
 impl<'a> Parser<'a> {
     pub(super) fn parse_inline(

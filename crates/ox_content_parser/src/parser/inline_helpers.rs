@@ -31,10 +31,7 @@ impl<'a> Parser<'a> {
                         url: target.url,
                         title: target.title,
                         children: children_nodes,
-                        span: Span::new(
-                            (offset + link_start) as u32,
-                            (offset + target.end) as u32,
-                        ),
+                        span: Span::new((offset + link_start) as u32, (offset + target.end) as u32),
                     }));
                     *pos = target.end;
                     return Ok(());
@@ -162,10 +159,7 @@ impl<'a> Parser<'a> {
                         url: reference.url,
                         alt,
                         title: reference.title,
-                        span: Span::new(
-                            (offset + image_start) as u32,
-                            (offset + close + 1) as u32,
-                        ),
+                        span: Span::new((offset + image_start) as u32, (offset + close + 1) as u32),
                     }));
                     *pos = close + 1;
                     return;

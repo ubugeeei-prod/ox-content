@@ -221,9 +221,8 @@ impl<'a> Parser<'a> {
                 let (chunk, line_starts) = self.join_stripped_chunk(pos);
                 let mut offset = 0;
                 while let Some(parsed) = self.parse_reference_definition(&chunk[offset..]) {
-                    map.entry(Self::normalize_reference_label(parsed.label)).or_insert(
-                        ReferenceDef { url: parsed.url, title: parsed.title },
-                    );
+                    map.entry(Self::normalize_reference_label(parsed.label))
+                        .or_insert(ReferenceDef { url: parsed.url, title: parsed.title });
                     offset += parsed.consumed;
                 }
                 // Skip the source lines the parsed prefix covered so fence
@@ -246,7 +245,10 @@ impl<'a> Parser<'a> {
     /// Joins the block-quote-stripped lines of the paragraph chunk that
     /// starts at `pos` (stopping at a blank line), returning the joined
     /// text and each line's start offset in the original source.
-    fn join_stripped_chunk(&self, mut pos: usize) -> (&'a str, ox_content_allocator::Vec<'a, usize>) {
+    fn join_stripped_chunk(
+        &self,
+        mut pos: usize,
+    ) -> (&'a str, ox_content_allocator::Vec<'a, usize>) {
         let bytes = self.source.as_bytes();
         let mut joined = self.allocator.new_string();
         let mut line_starts = self.allocator.new_vec();
