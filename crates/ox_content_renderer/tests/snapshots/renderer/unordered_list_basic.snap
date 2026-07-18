@@ -1,13 +1,9 @@
 ---
-source: crates/ox_content_renderer/tests/snapshot_render.rs
-assertion_line: 29
+source: crates/ox_content_renderer/tests/support/snapshot.rs
 description: "- a\n- b\n- c\n"
 ---
 <ul>
-<li><p>a</p>
-</li>
-<li><p>b</p>
-</li>
-<li><p>c</p>
-</li>
+<li>a</li>
+<li>b</li>
+<li>c</li>
 </ul>

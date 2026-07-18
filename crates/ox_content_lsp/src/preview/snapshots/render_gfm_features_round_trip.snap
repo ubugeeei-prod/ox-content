@@ -1,6 +1,5 @@
 ---
 source: crates/ox_content_lsp/src/preview/render.rs
-assertion_line: 48
 ---
 title: Features
 ---
@@ -88,10 +87,8 @@ title: Features
   <body>
     <main><h1 id="features">Features</h1>
 <ul>
-<li><input type="checkbox" checked disabled> <p>task done</p>
-</li>
-<li><input type="checkbox" disabled> <p>task pending</p>
-</li>
+<li><input type="checkbox" checked disabled> task done</li>
+<li><input type="checkbox" disabled> task pending</li>
 </ul>
 <table>
 <thead>

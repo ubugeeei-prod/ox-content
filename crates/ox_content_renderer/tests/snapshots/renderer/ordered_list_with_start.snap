@@ -1,11 +1,8 @@
 ---
-source: crates/ox_content_renderer/tests/snapshot_render.rs
-assertion_line: 29
+source: crates/ox_content_renderer/tests/support/snapshot.rs
 description: "3. third\n4. fourth\n"
 ---
 <ol start="3">
-<li><p>third</p>
-</li>
-<li><p>fourth</p>
-</li>
+<li>third</li>
+<li>fourth</li>
 </ol>

@@ -64,7 +64,7 @@ fn inline_raw_html_renders_without_extra_newline() {
         HtmlRendererOptions::default(),
     );
 
-    assert_eq!(html, "<ul>\n<li><p><input type=\"checkbox\"> task</p>\n</li>\n</ul>\n");
+    assert_eq!(html, "<ul>\n<li><input type=\"checkbox\"> task</li>\n</ul>\n");
 }
 
 #[test]

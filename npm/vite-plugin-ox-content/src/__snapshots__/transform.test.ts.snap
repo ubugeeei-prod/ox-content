@@ -33,12 +33,10 @@ Fallback
 
 exports[`transformMarkdown > preserves wrapped continuation lines inside list items 1`] = `
 "<ul>
-<li><p><a href="https://www.blacksmith.sh/" target="_blank" rel="noopener noreferrer">Blacksmith</a> for sponsoring CI and
-Testbox infrastructure across projects.</p>
-</li>
-<li><p><a href="https://eng.mates.education/" target="_blank" rel="noopener noreferrer">Mates Inc.</a> for supporting OSS and
-adopting Vize in production.</p>
-</li>
+<li><a href="https://www.blacksmith.sh/" target="_blank" rel="noopener noreferrer">Blacksmith</a> for sponsoring CI and
+Testbox infrastructure across projects.</li>
+<li><a href="https://eng.mates.education/" target="_blank" rel="noopener noreferrer">Mates Inc.</a> for supporting OSS and
+adopting Vize in production.</li>
 </ul>
 "
 `;
