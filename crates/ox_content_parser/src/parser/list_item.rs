@@ -161,6 +161,36 @@ impl<'a> Parser<'a> {
         })
     }
 
+    /// Pushes `line` minus its first `columns` columns onto `out`,
+    /// expanding the whole leading whitespace run to spaces so tab stops
+    /// keep their original alignment through item/quote re-parsing.
+    pub(super) fn push_line_without_indent(
+        out: &mut ox_content_allocator::String<'a>,
+        line: &str,
+        columns: usize,
+    ) {
+        let bytes = line.as_bytes();
+        let mut col = 0usize;
+        let mut i = 0usize;
+        while i < bytes.len() {
+            match bytes[i] {
+                b' ' => {
+                    col += 1;
+                    i += 1;
+                }
+                b'\t' => {
+                    col = (col / 4 + 1) * 4;
+                    i += 1;
+                }
+                _ => break,
+            }
+        }
+        for _ in columns..col {
+            out.push(' ');
+        }
+        out.push_str(&line[i..]);
+    }
+
     pub(super) fn strip_indent_columns(line: &str, columns: usize) -> &str {
         let mut consumed = 0;
         let mut byte_index = 0;

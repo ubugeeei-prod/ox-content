@@ -1,10 +1,7 @@
 # CommonMark 0.31.2 examples that ox-content does not render per spec yet.
 # Format: <mode> <example-number> <section>
 # Regenerate: UPDATE_SPEC_BASELINE=1 cargo test -p ox_content_renderer --test spec_commonmark
-core 5 Tabs
-core 6 Tabs
 core 7 Tabs
-core 9 Tabs
 core 93 Setext-headings
 core 147 Fenced-code-blocks
 core 148 HTML-blocks
@@ -28,10 +25,7 @@ core 573 Images
 core 576 Images
 core 585 Images
 core 589 Images
-gfm 5 Tabs
-gfm 6 Tabs
 gfm 7 Tabs
-gfm 9 Tabs
 gfm 93 Setext-headings
 gfm 147 Fenced-code-blocks
 gfm 148 HTML-blocks

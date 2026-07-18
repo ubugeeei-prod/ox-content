@@ -55,12 +55,39 @@ impl<'a> Parser<'a> {
             let trimmed = &line[trimmed_offset..];
 
             if let Some(after_gt) = trimmed.strip_prefix('>') {
-                // Strip the optional single space after `>`
-                let stripped = after_gt.strip_prefix(' ').unwrap_or(after_gt);
-                inner.push_str(stripped);
+                // The marker consumes `>` plus one column of following
+                // whitespace. Expanding the rest of that whitespace run to
+                // spaces (with original column arithmetic) keeps tab stops
+                // aligned through the re-parse: `>\t\tfoo` becomes six
+                // spaces + foo, i.e. indented code with two extra columns.
+                let mut column = 0usize;
+                for &byte in &line.as_bytes()[..trimmed_offset] {
+                    column = if byte == b'\t' { (column / 4 + 1) * 4 } else { column + 1 };
+                }
+                let after_marker_column = column + 1;
+                let ws_bytes = after_gt.as_bytes();
+                let mut ws_len = 0usize;
+                let mut ws_end_column = after_marker_column;
+                while ws_len < ws_bytes.len() && matches!(ws_bytes[ws_len], b' ' | b'\t') {
+                    ws_end_column = if ws_bytes[ws_len] == b'\t' {
+                        (ws_end_column / 4 + 1) * 4
+                    } else {
+                        ws_end_column + 1
+                    };
+                    ws_len += 1;
+                }
+                let indent_columns = if ws_len > 0 {
+                    ws_end_column.saturating_sub(after_marker_column + 1)
+                } else {
+                    0
+                };
+                for _ in 0..indent_columns {
+                    inner.push(' ');
+                }
+                let stripped_trimmed = &after_gt[ws_len..];
+                inner.push_str(stripped_trimmed);
                 inner.push('\n');
 
-                let stripped_trimmed = stripped.trim_start_matches([' ', '\t']);
                 match fence {
                     Some((fence_byte, fence_len)) => {
                         if is_fence_close(stripped_trimmed, fence_byte, fence_len) {
@@ -74,8 +101,8 @@ impl<'a> Parser<'a> {
                 // and heading/thematic lines close it too. Deeper markers
                 // (nested quotes, list items) keep a paragraph open.
                 paragraph_open = fence.is_none()
-                    && !stripped.trim().is_empty()
-                    && Self::indentation_columns(stripped) < 4
+                    && !stripped_trimmed.trim().is_empty()
+                    && indent_columns < 4
                     && !stripped_trimmed.starts_with('#')
                     && !closes_paragraph_context(stripped_trimmed);
 
