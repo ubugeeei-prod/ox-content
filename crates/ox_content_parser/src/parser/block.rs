@@ -101,6 +101,14 @@ impl<'a> Parser<'a> {
             return self.parse_table(start);
         }
 
+        // Link reference definitions look like paragraphs but are
+        // consumed as their own (non-rendered) nodes.
+        if bytes[trimmed_start] == b'[' {
+            if let Some(node) = self.try_parse_definition_node() {
+                return Ok(Some(node));
+            }
+        }
+
         // Default: parse as paragraph
         self.parse_paragraph(start)
     }

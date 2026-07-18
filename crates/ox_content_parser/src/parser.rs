@@ -20,6 +20,7 @@ mod inline_html;
 mod leaf;
 mod list;
 mod list_item;
+mod reference;
 mod spans;
 mod table;
 
@@ -103,19 +104,47 @@ pub struct Parser<'a> {
 
     /// Current nesting depth.
     nesting_depth: usize,
+
+    /// Link reference definitions collected by the root parser's
+    /// pre-pass, shared with sub-parsers (block quote and list item
+    /// contents) so references resolve document-wide.
+    definitions: std::rc::Rc<reference::ReferenceMap<'a>>,
 }
 
 impl<'a> Parser<'a> {
     /// Creates a new parser with default options.
     #[must_use]
     pub fn new(allocator: &'a Allocator, source: &'a str) -> Self {
-        Self { allocator, source, options: ParserOptions::default(), position: 0, nesting_depth: 0 }
+        Self::with_options(allocator, source, ParserOptions::default())
     }
 
     /// Creates a new parser with the specified options.
     #[must_use]
     pub fn with_options(allocator: &'a Allocator, source: &'a str, options: ParserOptions) -> Self {
-        Self { allocator, source, options, position: 0, nesting_depth: 0 }
+        let mut parser = Self {
+            allocator,
+            source,
+            options,
+            position: 0,
+            nesting_depth: 0,
+            definitions: std::rc::Rc::new(reference::ReferenceMap::default()),
+        };
+        parser.definitions = parser.build_definitions();
+        parser
+    }
+
+    /// Creates a parser for re-parsing a stripped sub-source (block quote
+    /// or list item content) that shares this parser's reference
+    /// definitions instead of re-collecting them.
+    pub(crate) fn sub_parser(&self, source: &'a str) -> Parser<'a> {
+        Self {
+            allocator: self.allocator,
+            source,
+            options: self.options.clone(),
+            position: 0,
+            nesting_depth: 0,
+            definitions: std::rc::Rc::clone(&self.definitions),
+        }
     }
 
     /// Parses the source into a document AST.

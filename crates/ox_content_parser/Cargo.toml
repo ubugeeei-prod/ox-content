@@ -21,6 +21,7 @@ thiserror = { workspace = true }
 logos = { workspace = true }
 memchr = { workspace = true }
 rustc-hash = { workspace = true }
+compact_str = { workspace = true }
 ox_content_profiler = { workspace = true, optional = true }
 
 [features]

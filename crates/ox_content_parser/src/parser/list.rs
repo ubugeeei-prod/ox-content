@@ -192,8 +192,7 @@ impl<'a> Parser<'a> {
                 let item_source = item_source
                     .unwrap_or_else(|| self.init_list_item_source(item.content, consumed_newline))
                     .into_bump_str();
-                let sub_parser =
-                    Parser::with_options(self.allocator, item_source, self.options.clone());
+                let sub_parser = self.sub_parser(item_source);
                 let sub_doc = sub_parser.parse()?;
                 let mut item_children = sub_doc.children;
                 for child in &mut item_children {
