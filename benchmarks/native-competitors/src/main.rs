@@ -6,7 +6,7 @@
 //! `--runs N` with median selection by ops/sec. Emits a single line of JSON on
 //! stdout, `{"parse": {<size>: [row, ...]}, "render": {<size>: [row, ...]}}`,
 //! where each row is `{"name", "opsPerSec", "avgMs", "throughputMBs",
-//! "samples": [...]}` — the same row shape the JS tables consume.
+//! "samples": [...]}`, the same row shape the JS tables consume.
 
 // This standalone binary sits outside the root cargo workspace, but clippy
 // still discovers the repository clippy.toml. Its disallowed std types,
@@ -16,11 +16,16 @@
 // out wholesale here.
 #![allow(clippy::disallowed_macros, clippy::disallowed_methods, clippy::disallowed_types)]
 
-use pulldown_cmark::{html, Parser};
-use std::fmt::Write as _;
+mod bench;
+mod json;
+
 use std::hint::black_box;
 use std::process::ExitCode;
-use std::time::Instant;
+
+use pulldown_cmark::{html, Parser};
+
+use crate::bench::bench;
+use crate::json::{render_json, SuiteResults};
 
 /// Byte-for-byte copy of `sampleMarkdown` in `parse-benchmark-bun.mjs`,
 /// including the leading and trailing newline. The JS harness derives
@@ -66,30 +71,6 @@ Final paragraph with `inline code` and more text.
 /// `"\n\n"`) and the per-size iteration counts (100/50/20/5).
 const SIZES: [(&str, usize, u32); 4] =
     [("small", 1, 100), ("medium", 10, 50), ("large", 100, 20), ("huge", 2150, 5)];
-
-/// Untimed calls before each timed loop, matching the JS harness.
-const WARMUP_CALLS: u32 = 5;
-
-/// One timed measurement, in the exact field units the JS harness reports.
-#[derive(Clone, Copy)]
-struct Measurement {
-    ops_per_sec: f64,
-    avg_ms: f64,
-    throughput_mbs: f64,
-}
-
-/// One output row: the median measurement plus every per-run sample.
-struct Row {
-    name: &'static str,
-    median: Measurement,
-    samples: Vec<Measurement>,
-}
-
-/// Per-suite results as `(size name, rows)` in harness size order.
-struct SuiteResults {
-    parse: Vec<(&'static str, Vec<Row>)>,
-    render: Vec<(&'static str, Vec<Row>)>,
-}
 
 enum CliAction {
     Run { runs: u32 },
@@ -221,114 +202,6 @@ fn run_benchmarks(sizes: &[(&'static str, usize, u32)], runs: u32) -> SuiteResul
     SuiteResults { parse, render }
 }
 
-fn bench(
-    name: &'static str,
-    mut op: impl FnMut(),
-    iterations: u32,
-    runs: u32,
-    input_bytes: usize,
-) -> Row {
-    let samples: Vec<Measurement> =
-        (0..runs).map(|_| measure_once(&mut op, iterations, input_bytes)).collect();
-    Row { name, median: median_by_ops(&samples), samples }
-}
-
-fn measure_once(op: &mut dyn FnMut(), iterations: u32, input_bytes: usize) -> Measurement {
-    for _ in 0..WARMUP_CALLS {
-        op();
-    }
-    let start = Instant::now();
-    for _ in 0..iterations {
-        op();
-    }
-    let elapsed_ms = start.elapsed().as_secs_f64() * 1000.0;
-    let avg_ms = elapsed_ms / f64::from(iterations);
-    let ops_per_sec = 1000.0 / avg_ms;
-    Measurement {
-        ops_per_sec,
-        avg_ms,
-        throughput_mbs: (input_bytes as f64 / 1024.0 / 1024.0) * ops_per_sec,
-    }
-}
-
-/// Median by ops/sec with the JS harness' index choice —
-/// `sorted[Math.floor(sorted.length / 2)]`, the upper middle for even counts.
-fn median_by_ops(samples: &[Measurement]) -> Measurement {
-    let mut sorted: Vec<Measurement> = samples.to_vec();
-    sorted.sort_by(|a, b| a.ops_per_sec.total_cmp(&b.ops_per_sec));
-    sorted[sorted.len() / 2]
-}
-
-fn render_json(results: &SuiteResults) -> String {
-    let mut out = String::new();
-    out.push('{');
-    for (suite_index, (suite_name, sizes)) in
-        [("parse", &results.parse), ("render", &results.render)].into_iter().enumerate()
-    {
-        if suite_index > 0 {
-            out.push(',');
-        }
-        let _ = write!(out, "\"{suite_name}\":{{");
-        for (size_index, (size_name, rows)) in sizes.iter().enumerate() {
-            if size_index > 0 {
-                out.push(',');
-            }
-            let _ = write!(out, "\"{size_name}\":[");
-            for (row_index, row) in rows.iter().enumerate() {
-                if row_index > 0 {
-                    out.push(',');
-                }
-                push_json_row(&mut out, row);
-            }
-            out.push(']');
-        }
-        out.push('}');
-    }
-    out.push('}');
-    out
-}
-
-fn push_json_row(out: &mut String, row: &Row) {
-    // Row names are fixed ASCII constants without `"` or `\`, so they embed
-    // into JSON without an escaping pass.
-    debug_assert!(!row.name.contains(['"', '\\']));
-    out.push_str("{\"name\":\"");
-    out.push_str(row.name);
-    out.push_str("\",");
-    push_json_measurement_fields(out, &row.median);
-    out.push_str(",\"samples\":[");
-    for (index, sample) in row.samples.iter().enumerate() {
-        if index > 0 {
-            out.push(',');
-        }
-        out.push('{');
-        push_json_measurement_fields(out, sample);
-        out.push('}');
-    }
-    out.push_str("]}");
-}
-
-fn push_json_measurement_fields(out: &mut String, measurement: &Measurement) {
-    out.push_str("\"opsPerSec\":");
-    push_json_number(out, measurement.ops_per_sec);
-    out.push_str(",\"avgMs\":");
-    push_json_number(out, measurement.avg_ms);
-    out.push_str(",\"throughputMBs\":");
-    push_json_number(out, measurement.throughput_mbs);
-}
-
-fn push_json_number(out: &mut String, value: f64) {
-    // Rust's shortest-roundtrip float formatting is a valid JSON number for
-    // finite values (never scientific notation, no NaN/inf spellings). The
-    // non-finite arm is unreachable for real measurements but keeps the
-    // output parseable no matter what.
-    if value.is_finite() {
-        let _ = write!(out, "{value}");
-    } else {
-        out.push('0');
-    }
-}
-
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -390,18 +263,6 @@ mod tests {
                 assert!(sample["opsPerSec"].as_f64().is_some());
             }
         }
-    }
-
-    #[test]
-    fn median_matches_js_harness_selection() {
-        let measurement =
-            |ops: f64| Measurement { ops_per_sec: ops, avg_ms: 0.0, throughput_mbs: 0.0 };
-        // Even count: sorted ops are [1, 2, 3, 4]; Math.floor(4 / 2) = index 2.
-        let even = [measurement(4.0), measurement(1.0), measurement(3.0), measurement(2.0)];
-        assert_eq!(median_by_ops(&even).ops_per_sec, 3.0);
-        // Odd count: sorted ops are [1, 2, 3]; Math.floor(3 / 2) = index 1.
-        let odd = [measurement(3.0), measurement(1.0), measurement(2.0)];
-        assert_eq!(median_by_ops(&odd).ops_per_sec, 2.0);
     }
 
     #[test]
