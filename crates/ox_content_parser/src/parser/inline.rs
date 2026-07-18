@@ -59,10 +59,20 @@ impl<'a> Parser<'a> {
                 *pos += 2;
             }
             b'<' => Self::parse_inline_html_or_text(content, offset, children, pos),
-            b'\\' if *pos + 1 < content.len() => {
+            b'\\' if *pos + 1 < content.len() && bytes[*pos + 1].is_ascii_punctuation() => {
+                // A backslash escapes only ASCII punctuation (CommonMark
+                // "Backslash escapes"). The escaped character is emitted as
+                // literal text so it can't open any inline construct.
                 *pos += 1;
                 let span_start = offset + *pos - 1;
                 Self::push_text(children, &content[*pos..*pos + 1], span_start, offset + *pos + 1);
+                *pos += 1;
+            }
+            b'\\' => {
+                // Backslash before anything else (letters, digits, spaces,
+                // multibyte characters, or end of input) is a literal
+                // backslash; the following character is parsed normally.
+                Self::push_text(children, "\\", offset + *pos, offset + *pos + 1);
                 *pos += 1;
             }
             b'~' if self.options.strikethrough

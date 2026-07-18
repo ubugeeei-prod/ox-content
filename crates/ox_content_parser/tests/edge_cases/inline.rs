@@ -113,6 +113,28 @@ fn escaped_marker_remains_literal_text() {
 }
 
 #[test]
+fn backslash_before_non_punctuation_stays_literal() {
+    let allocator = Allocator::new();
+    // CommonMark example 13: only ASCII punctuation is escapable; before
+    // anything else (including multibyte characters, which used to panic
+    // on a byte-index slice) the backslash is literal text.
+    let doc = parse_with_options(&allocator, "\\\t\\A\\a\\ \\3\\φ\\«", ParserOptions::default());
+
+    match &doc.children[0] {
+        Node::Paragraph(paragraph) => {
+            let text = paragraph
+                .children
+                .iter()
+                .filter_map(first_text)
+                .collect::<std::vec::Vec<_>>()
+                .join("");
+            assert_eq!(text, "\\\t\\A\\a\\ \\3\\φ\\«");
+        }
+        other => panic!("expected paragraph, got {other:?}"),
+    }
+}
+
+#[test]
 fn unmatched_strikethrough_remains_text() {
     let allocator = Allocator::new();
     let doc = parse_with_options(&allocator, "~~open", ParserOptions::gfm());
