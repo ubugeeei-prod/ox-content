@@ -123,7 +123,7 @@ impl<'a> Parser<'a> {
             }
             b'`' => self.parse_inline_code(content, offset, children, pos),
             b'[' => self.parse_link(content, offset, children, pos)?,
-            b'!' => self.parse_image(content, offset, children, pos),
+            b'!' => self.parse_image(content, offset, children, pos)?,
             _ => {
                 Self::push_text(
                     children,
