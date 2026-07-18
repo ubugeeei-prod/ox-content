@@ -1,4 +1,4 @@
-use memchr::memchr3;
+use memchr::{memchr, memchr3};
 use ox_content_allocator::Vec;
 use ox_content_ast::{Image, Link, Node, Span, Text};
 
@@ -22,9 +22,16 @@ impl<'a> Parser<'a> {
         if *pos < content.len() && bytes[*pos] == b']' {
             let close = *pos;
             let link_text = &content[text_start..close];
+            // Links may not contain other links; when the bracket text
+            // parses to one, the outer bracket stays literal and the
+            // inner (re-parsed after the fallback) wins.
+            let inner_has_link = memchr::memchr(b'[', link_text.as_bytes()).is_some_and(|_| {
+                self.parse_inline(link_text, offset + text_start)
+                    .is_ok_and(|nodes| contains_link(&nodes))
+            });
 
             // Inline form: [text](dest "title")
-            if bytes.get(close + 1) == Some(&b'(') {
+            if !inner_has_link && bytes.get(close + 1) == Some(&b'(') {
                 if let Some(target) = self.parse_link_target(content, close + 1) {
                     let children_nodes = self.parse_inline(link_text, offset + text_start)?;
                     children.push(Node::Link(Link {
@@ -40,7 +47,7 @@ impl<'a> Parser<'a> {
 
             // Full [text][label] and collapsed [text][] reference forms.
             let mut well_formed_reference = false;
-            if bytes.get(close + 1) == Some(&b'[') {
+            if !inner_has_link && bytes.get(close + 1) == Some(&b'[') {
                 let label_start = close + 2;
                 let label_end = Self::scan_balanced(bytes, label_start, b'[', b']');
                 if label_end < content.len() && bytes[label_end] == b']' {
@@ -67,7 +74,7 @@ impl<'a> Parser<'a> {
 
             // Shortcut form: [label]. Suppressed when an explicit (but
             // unknown) [label] followed, which must stay literal.
-            if !well_formed_reference {
+            if !inner_has_link && !well_formed_reference {
                 if let Some(reference) = self.lookup_reference(link_text) {
                     let (url, title) = (reference.url, reference.title);
                     let children_nodes = self.parse_inline(link_text, offset + text_start)?;
@@ -96,12 +103,12 @@ impl<'a> Parser<'a> {
         offset: usize,
         children: &mut Vec<'a, Node<'a>>,
         pos: &mut usize,
-    ) {
+    ) -> ParseResult<()> {
         let bytes = content.as_bytes();
         if *pos + 1 >= content.len() || bytes[*pos + 1] != b'[' {
             Self::push_text(children, "!", offset + *pos, offset + *pos + 1);
             *pos += 1;
-            return;
+            return Ok(());
         }
 
         let image_start = *pos;
@@ -111,7 +118,7 @@ impl<'a> Parser<'a> {
 
         if *pos < content.len() && bytes[*pos] == b']' {
             let close = *pos;
-            let alt = &content[alt_start..close];
+            let alt = self.flatten_image_alt(&content[alt_start..close], offset + alt_start)?;
 
             if bytes.get(close + 1) == Some(&b'(') {
                 if let Some(target) = self.parse_link_target(content, close + 1) {
@@ -125,7 +132,7 @@ impl<'a> Parser<'a> {
                         ),
                     }));
                     *pos = target.end;
-                    return;
+                    return Ok(());
                 }
             }
 
@@ -148,7 +155,7 @@ impl<'a> Parser<'a> {
                             ),
                         }));
                         *pos = label_end + 1;
-                        return;
+                        return Ok(());
                     }
                 }
             }
@@ -162,7 +169,7 @@ impl<'a> Parser<'a> {
                         span: Span::new((offset + image_start) as u32, (offset + close + 1) as u32),
                     }));
                     *pos = close + 1;
-                    return;
+                    return Ok(());
                 }
             }
         }
@@ -171,6 +178,23 @@ impl<'a> Parser<'a> {
         // the bracketed run is re-parsed for other inline markup.
         Self::push_text(children, "![", offset + image_start, offset + image_start + 2);
         *pos = image_start + 2;
+        Ok(())
+    }
+
+    /// Builds an image's `alt` attribute: the bracket text parsed as
+    /// inlines and flattened to plain text (links contribute their text,
+    /// code its literal content). Plain text stays zero-copy.
+    fn flatten_image_alt(&self, raw: &'a str, offset: usize) -> ParseResult<&'a str> {
+        if memchr3(b'[', b'*', b'_', raw.as_bytes()).is_none()
+            && memchr3(b'`', b'\\', b'&', raw.as_bytes()).is_none()
+            && memchr(b'<', raw.as_bytes()).is_none()
+        {
+            return Ok(raw);
+        }
+        let nodes = self.parse_inline(raw, offset)?;
+        let mut out = self.allocator.new_string();
+        flatten_inline_text(&nodes, &mut out);
+        Ok(out.into_bump_str())
     }
 
     pub(super) fn push_text(
@@ -227,5 +251,33 @@ impl<'a> Parser<'a> {
             cursor += 1;
         }
         cursor
+    }
+}
+
+/// Does any node in the tree contain a link?
+fn contains_link(nodes: &[Node<'_>]) -> bool {
+    nodes.iter().any(|node| match node {
+        Node::Link(_) => true,
+        Node::Emphasis(n) => contains_link(&n.children),
+        Node::Strong(n) => contains_link(&n.children),
+        Node::Delete(n) => contains_link(&n.children),
+        _ => false,
+    })
+}
+
+/// Flattens inline nodes to their plain-text content (image `alt` rules).
+fn flatten_inline_text(nodes: &[Node<'_>], out: &mut ox_content_allocator::String<'_>) {
+    for node in nodes {
+        match node {
+            Node::Text(n) => out.push_str(n.value),
+            Node::InlineCode(n) => out.push_str(n.value),
+            Node::Emphasis(n) => flatten_inline_text(&n.children, out),
+            Node::Strong(n) => flatten_inline_text(&n.children, out),
+            Node::Delete(n) => flatten_inline_text(&n.children, out),
+            Node::Link(n) => flatten_inline_text(&n.children, out),
+            Node::Image(n) => out.push_str(n.alt),
+            Node::Break(_) => out.push('\n'),
+            _ => {}
+        }
     }
 }
