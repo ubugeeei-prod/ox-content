@@ -1,5 +1,37 @@
 # Changelog
 
+## [2.80.0] - 2026-07-18
+
+### Features
+
+- implement GFM footnotes (#507)
+- implement the GFM tagfilter extension (#506)
+- GFM autolink extension and extension spec suite (#505)
+- complete HTML block start conditions (#500)
+- lazy continuation for block quotes (#499)
+- support link reference definitions (#494)
+- decode entity and numeric character references (#493)
+- support CommonMark autolinks (#492)
+- support indented code blocks (#488)
+- support setext headings (#487)
+
+### Bug Fixes
+
+- stop hanging on whitespace-only input (#509)
+- reach full CommonMark 0.31.2 conformance (#504)
+- list looseness, marker indent limits, deep laziness (#503)
+- preserve tab stops when stripping list and quote markers (#502)
+- enforce the spec grammar for inline raw HTML (#501)
+- forbid nested links and flatten image alt text (#498)
+- ATX heading details, fence info rules, hr precedence (#497)
+- align list item structure with CommonMark (#496)
+- implement emphasis via the CommonMark delimiter stack (#495)
+- parse code spans with multi-backtick delimiters (#491)
+- render tight lists without paragraph wrappers (#490)
+- handle hard and soft line break whitespace (#489)
+- parse inline link destinations and titles per spec (#486)
+- stop panicking on backslash before multibyte chars (#485)
+
 ## [2.79.0] - 2026-07-17
 
 ## [2.78.1] - 2026-07-17
