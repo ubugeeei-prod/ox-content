@@ -145,3 +145,61 @@ fn test_autolink_escapes_query_string_safely() {
     let html = renderer.render(&doc);
     insta::assert_snapshot!(html);
 }
+
+#[test]
+fn test_autolink_prose_full_of_candidate_first_bytes_stays_plain() {
+    let allocator = Allocator::new();
+    // Every `h` here hits the first-byte index; the second-byte filter
+    // must reject them all without producing links (and without panicking
+    // when the candidate is the last byte of the text).
+    let doc =
+        Parser::new(&allocator, "the theory holds hereabouts, hush; ends with h").parse().unwrap();
+    let mut renderer = HtmlRenderer::with_options(HtmlRendererOptions {
+        autolink_urls: true,
+        ..Default::default()
+    });
+    let html = renderer.render(&doc);
+    assert!(!html.contains("<a "), "unexpected link in: {html}");
+}
+
+#[test]
+fn test_autolink_uppercase_prefix_still_matches_through_filter() {
+    let allocator = Allocator::new();
+    let doc = Parser::new(&allocator, "loud HTTPS://CAPS.test here").parse().unwrap();
+    let mut renderer = HtmlRenderer::with_options(HtmlRendererOptions {
+        autolink_urls: true,
+        ..Default::default()
+    });
+    let html = renderer.render(&doc);
+    assert_eq!(html.matches("<a ").count(), 1, "missing uppercase autolink in: {html}");
+}
+
+#[test]
+fn test_autolink_conflicting_second_bytes_disable_the_filter() {
+    let allocator = Allocator::new();
+    // Two patterns share the first byte but disagree on the second; the
+    // filter must fall back to full prefix checks so both still match.
+    let doc = Parser::new(&allocator, "a http://one.test b hxxp://two.test c").parse().unwrap();
+    let mut renderer = HtmlRenderer::with_options(HtmlRendererOptions {
+        autolink_urls: true,
+        autolink_patterns: vec!["http://".to_string(), "hxxp://".to_string()],
+        ..Default::default()
+    });
+    let html = renderer.render(&doc);
+    assert_eq!(html.matches("<a ").count(), 2, "expected both schemes in: {html}");
+}
+
+#[test]
+fn test_autolink_single_byte_pattern_bypasses_the_filter() {
+    let allocator = Allocator::new();
+    // A one-byte pattern has no second byte to filter on; candidates must
+    // go straight to the prefix check.
+    let doc = Parser::new(&allocator, "go htail now").parse().unwrap();
+    let mut renderer = HtmlRenderer::with_options(HtmlRendererOptions {
+        autolink_urls: true,
+        autolink_patterns: vec!["h".to_string()],
+        ..Default::default()
+    });
+    let html = renderer.render(&doc);
+    assert_eq!(html.matches("<a ").count(), 1, "single-byte pattern should link in: {html}");
+}

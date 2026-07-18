@@ -18,7 +18,17 @@ pub(super) struct FirstByteIndex {
     needles: [u8; 3],
     needle_len: usize,
     overflow: bool,
+    /// Per-first-byte second-byte filter: `second[b]` holds the lowercased
+    /// byte every pattern starting with `b` continues with, or `ANY_SECOND`
+    /// when patterns disagree (or the pattern is a single byte). Prose hits
+    /// on a frequent first byte — `h` matches "the", "here", … — are
+    /// rejected with one comparison instead of full prefix checks.
+    second: [u8; 256],
 }
+
+/// Sentinel in `FirstByteIndex::second`: no single second byte filters
+/// candidates starting with this first byte.
+const ANY_SECOND: u8 = 0xFF;
 
 impl FirstByteIndex {
     /// Builds a compact candidate-start index for the configured patterns.
@@ -33,11 +43,22 @@ impl FirstByteIndex {
         let mut needles = [0u8; 3];
         let mut needle_len = 0usize;
         let mut overflow = false;
+        let mut second = [0u8; 256];
         for pat in patterns {
             let Some(&first) = pat.as_bytes().first() else {
                 continue;
             };
+            // 0 = unset, ANY_SECOND = conflicting/absent, else the required
+            // lowercased second byte. The default patterns (`http://`,
+            // `https://`) agree on `t`, so `h` candidates filter on it.
+            let pat_second = pat.as_bytes().get(1).map_or(ANY_SECOND, u8::to_ascii_lowercase);
             for cand in [first.to_ascii_lowercase(), first.to_ascii_uppercase()] {
+                let entry = &mut second[cand as usize];
+                *entry = match *entry {
+                    0 => pat_second,
+                    prev if prev == pat_second => prev,
+                    _ => ANY_SECOND,
+                };
                 if table[cand as usize] {
                     continue;
                 }
@@ -52,7 +73,22 @@ impl FirstByteIndex {
         if needle_len > needles.len() {
             overflow = true;
         }
-        Self { table, needles, needle_len, overflow }
+        Self { table, needles, needle_len, overflow, second }
+    }
+
+    /// True when the byte after a first-byte hit rules the candidate out
+    /// without running any full prefix comparison.
+    #[inline]
+    fn rejects_second(&self, first: u8, after: Option<&u8>) -> bool {
+        let expected = self.second[first as usize];
+        if expected == ANY_SECOND {
+            return false;
+        }
+        match after {
+            Some(&byte) => byte.to_ascii_lowercase() != expected,
+            // Pattern needs a second byte but the text ends here.
+            None => true,
+        }
     }
 
     /// Byte offset of the next possible pattern start within `hay`, or `None`.
@@ -97,6 +133,12 @@ pub(super) fn find_autolink_match(
     while base < bytes.len() {
         let rel = index.next(&bytes[base..])?;
         let i = base + rel;
+        // One-byte look-ahead: most prose hits on a frequent candidate byte
+        // ("the", "words"…) die here before any prefix comparison.
+        if index.rejects_second(bytes[i], bytes.get(i + 1)) {
+            base = i + 1;
+            continue;
+        }
         // Word boundary: the previous byte must not be ASCII alphanumeric.
         let is_boundary = i == 0 || !bytes[i - 1].is_ascii_alphanumeric();
         if is_boundary {
