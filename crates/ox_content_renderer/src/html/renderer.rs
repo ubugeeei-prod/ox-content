@@ -33,6 +33,10 @@ pub struct HtmlRenderer {
     options: HtmlRendererOptions,
     output: String,
     heading_id_counts: FxHashMap<String, usize>,
+    /// How many times each footnote identifier has been referenced so
+    /// far in this render, so repeated references can be given unique
+    /// `fnref-` ids. Cleared per `render()` like the heading id map.
+    footnote_ref_counts: FxHashMap<String, usize>,
     toc_entries: Vec<InlineTocEntry>,
     /// Whether the document being rendered contains at least one
     /// `[[toc]]` directive paragraph. Cached at `render()` entry so each
@@ -81,6 +85,7 @@ impl HtmlRenderer {
             options,
             output: String::new(),
             heading_id_counts: FxHashMap::default(),
+            footnote_ref_counts: FxHashMap::default(),
             toc_entries: Vec::new(),
             document_has_toc_marker: false,
             // Pre-size the heading scratch buffers: a typical heading text
@@ -115,6 +120,7 @@ impl HtmlRenderer {
         }
         self.heading_id_counts.clear();
         self.heading_id_counts.reserve(document_scan.heading_count);
+        self.footnote_ref_counts.clear();
         // Build the autolink first-byte index once per render. It depends only
         // on the immutable pattern list, not on the text node being rendered,
         // so reusing it avoids rebuilding a 256-byte table on every inline
