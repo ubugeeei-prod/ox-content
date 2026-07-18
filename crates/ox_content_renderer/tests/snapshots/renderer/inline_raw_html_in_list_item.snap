@@ -1,9 +1,7 @@
 ---
-source: crates/ox_content_renderer/tests/snapshot_render.rs
-assertion_line: 29
+source: crates/ox_content_renderer/tests/support/snapshot.rs
 description: "- <input type=\"checkbox\"> task\n"
 ---
 <ul>
-<li><p><input type="checkbox"> task</p>
-</li>
+<li><input type="checkbox"> task</li>
 </ul>

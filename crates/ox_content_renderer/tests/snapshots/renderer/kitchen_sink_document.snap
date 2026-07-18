@@ -10,16 +10,13 @@ break.</p>
 </code></pre>
 <h2 id="steps">Steps</h2>
 <ol>
-<li><p>one</p>
-</li>
-<li><p>two</p>
+<li>one</li>
+<li>two
 <ul>
-<li><p>nested</p>
-</li>
+<li>nested</li>
 </ul>
 </li>
-<li><p>three</p>
-</li>
+<li>three</li>
 </ol>
 <blockquote>
 <p>Quoted tip.</p>

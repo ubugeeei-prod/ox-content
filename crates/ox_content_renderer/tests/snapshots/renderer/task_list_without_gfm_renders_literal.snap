@@ -1,9 +1,7 @@
 ---
-source: crates/ox_content_renderer/tests/snapshot_render.rs
-assertion_line: 29
+source: crates/ox_content_renderer/tests/support/snapshot.rs
 description: "- [x] done\n"
 ---
 <ul>
-<li><p>[x] done</p>
-</li>
+<li>[x] done</li>
 </ul>

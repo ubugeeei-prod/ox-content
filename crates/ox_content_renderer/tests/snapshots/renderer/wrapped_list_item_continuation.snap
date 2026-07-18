@@ -1,12 +1,10 @@
 ---
-source: crates/ox_content_renderer/tests/snapshot_render.rs
+source: crates/ox_content_renderer/tests/support/snapshot.rs
 description: "- [Blacksmith](https://www.blacksmith.sh/) for sponsoring CI and\n  Testbox infrastructure across projects.\n- [Mates Inc.](https://eng.mates.education/) for supporting OSS and\n  adopting Vize in production.\n"
 ---
 <ul>
-<li><p><a href="https://www.blacksmith.sh/" target="_blank" rel="noopener noreferrer">Blacksmith</a> for sponsoring CI and
-Testbox infrastructure across projects.</p>
-</li>
-<li><p><a href="https://eng.mates.education/" target="_blank" rel="noopener noreferrer">Mates Inc.</a> for supporting OSS and
-adopting Vize in production.</p>
-</li>
+<li><a href="https://www.blacksmith.sh/" target="_blank" rel="noopener noreferrer">Blacksmith</a> for sponsoring CI and
+Testbox infrastructure across projects.</li>
+<li><a href="https://eng.mates.education/" target="_blank" rel="noopener noreferrer">Mates Inc.</a> for supporting OSS and
+adopting Vize in production.</li>
 </ul>

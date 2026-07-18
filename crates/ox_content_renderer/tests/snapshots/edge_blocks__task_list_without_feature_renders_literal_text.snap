@@ -3,6 +3,5 @@ source: crates/ox_content_renderer/tests/edge_blocks.rs
 expression: html
 ---
 <ul>
-<li><p>[x] done</p>
-</li>
+<li>[x] done</li>
 </ul>

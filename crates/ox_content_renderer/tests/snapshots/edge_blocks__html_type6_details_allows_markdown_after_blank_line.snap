@@ -8,8 +8,7 @@ expression: html
 
 <p><strong>bold should be markdown</strong></p>
 <ul>
-<li><p>list</p>
-</li>
+<li>list</li>
 </ul>
 <pre><code class="language-js">console.log(&quot;code&quot;);
 </code></pre>

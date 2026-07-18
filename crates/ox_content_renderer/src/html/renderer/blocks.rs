@@ -100,8 +100,12 @@ impl HtmlRenderer {
             self.write("<ul>\n");
         }
 
+        // A tight list renders item paragraphs without <p> wrappers
+        // (CommonMark "Lists": loose lists are the ones whose items are
+        // separated by blank lines or contain multiple blocks).
+        let tight = !list.spread;
         for child in &list.children {
-            self.render_list_item(child);
+            self.render_list_item_with_tightness(child, tight);
         }
 
         if list.ordered {
@@ -112,6 +116,14 @@ impl HtmlRenderer {
     }
 
     pub(in crate::html::renderer) fn render_list_item(&mut self, list_item: &ListItem<'_>) {
+        self.render_list_item_with_tightness(list_item, false);
+    }
+
+    pub(in crate::html::renderer) fn render_list_item_with_tightness(
+        &mut self,
+        list_item: &ListItem<'_>,
+        tight: bool,
+    ) {
         self.write("<li>");
 
         if let Some(checked) = list_item.checked {
@@ -123,6 +135,19 @@ impl HtmlRenderer {
         }
 
         for child in &list_item.children {
+            if tight {
+                if let ox_content_ast::Node::Paragraph(paragraph) = child {
+                    for inline in &paragraph.children {
+                        self.visit_inline_node(inline);
+                    }
+                    continue;
+                }
+                // Keep nested blocks on their own lines even when the
+                // preceding paragraph was rendered inline.
+                if !self.output.is_empty() && !self.output.ends_with('\n') {
+                    self.write("\n");
+                }
+            }
             self.render_node(child);
         }
 
