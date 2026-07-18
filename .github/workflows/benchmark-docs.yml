@@ -2,9 +2,16 @@ name: Benchmark docs
 
 # Regenerate the Markdown benchmark tables (README.md, docs/content/performance.md)
 # and the SVG charts (docs/public/benchmark-*.svg) from a clean CI environment,
-# then open a pull request with the refreshed numbers. Running on a consistent
+# and export the refreshed files as a patch artifact. Running on a consistent
 # runner keeps the committed numbers comparable across refreshes — local
 # machines vary too much to be the source of truth.
+#
+# The refresh used to open a pull request directly, but this repository's
+# Actions policy neither allowlists peter-evans/create-pull-request nor lets
+# workflows create pull requests (can_approve_pull_request_reviews is off).
+# A maintainer downloads the artifact and applies it:
+#   gh run download <run-id> -n benchmark-docs-refresh
+#   git apply benchmark-docs-refresh.patch
 
 on:
   workflow_dispatch:
@@ -33,8 +40,7 @@ jobs:
     # by benchmark.yml so committed numbers track the PR-benchmark environment.
     runs-on: blacksmith-32vcpu-ubuntu-2404
     permissions:
-      contents: write
-      pull-requests: write
+      contents: read
     steps:
       - uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
         with:
@@ -72,30 +78,18 @@ jobs:
         env:
           OX_CONTENT_BENCHMARK_RUNS: ${{ github.event.inputs.runs || '7' }}
 
-      - name: Create pull request
-        uses: peter-evans/create-pull-request@5f6978faf089d4d20b00c7766989d076bb2fc7f1 # v8.1.1
+      - name: Export refreshed docs as a patch
+        run: |
+          git add README.md docs/content/performance.md \
+            docs/public/benchmark-parse.svg docs/public/benchmark-render.svg \
+            docs/public/benchmark-parse-huge.svg docs/public/benchmark-render-huge.svg
+          git diff --cached --stat
+          git diff --cached --binary > "$RUNNER_TEMP/benchmark-docs-refresh.patch"
+
+      - name: Upload patch artifact
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
         with:
-          commit-message: "docs: refresh benchmark numbers"
-          branch: ci/benchmark-docs-refresh
-          delete-branch: true
-          title: "docs: refresh benchmark numbers"
-          body: |
-            Automated refresh of the Markdown benchmark tables and charts from the
-            Benchmark docs workflow (`blacksmith-32vcpu-ubuntu-2404` runner, Bun 1.3.14
-            so the `Bun.markdown.html` row is included, median of
-            ${{ github.event.inputs.runs || '7' }} runs).
-
-            Updated:
-            - `README.md` and `docs/content/performance.md` benchmark tables
-            - `docs/public/benchmark-*.svg` charts
-
-            Numbers track the runner; the relative ordering between engines is the
-            stable signal. Review the deltas before merging.
-          labels: documentation
-          add-paths: |
-            README.md
-            docs/content/performance.md
-            docs/public/benchmark-parse.svg
-            docs/public/benchmark-render.svg
-            docs/public/benchmark-parse-huge.svg
-            docs/public/benchmark-render-huge.svg
+          name: benchmark-docs-refresh
+          path: ${{ runner.temp }}/benchmark-docs-refresh.patch
+          if-no-files-found: error
+          retention-days: 14
