@@ -1,6 +1,7 @@
 use memchr::memchr;
 use ox_content_ast::{BlockQuote, Node, Span};
 
+use super::reference::{closes_paragraph_context, fence_open, is_fence_close};
 use super::Parser;
 use crate::error::ParseResult;
 #[allow(unused_imports)]
@@ -25,6 +26,11 @@ impl<'a> Parser<'a> {
         // bytes that can't be reclaimed until reset.
         let bytes = self.source.as_bytes();
         let mut inner = ox_content_allocator::String::with_capacity_in(128, self.allocator.bump());
+        // Lazy continuation applies only while the quote's last block is
+        // an open paragraph: track blank lines and fenced code regions of
+        // the stripped content to know when that is the case.
+        let mut fence: Option<(u8, usize)> = None;
+        let mut paragraph_open = false;
 
         loop {
             if self.position >= bytes.len() {
@@ -54,7 +60,36 @@ impl<'a> Parser<'a> {
                 inner.push_str(stripped);
                 inner.push('\n');
 
+                let stripped_trimmed = stripped.trim_start_matches([' ', '\t']);
+                match fence {
+                    Some((fence_byte, fence_len)) => {
+                        if is_fence_close(stripped_trimmed, fence_byte, fence_len) {
+                            fence = None;
+                        }
+                    }
+                    None => fence = fence_open(stripped_trimmed),
+                }
+                // Lazy continuation only ever extends an open paragraph:
+                // blank lines close it, indented code is not a paragraph,
+                // and heading/thematic lines close it too. Deeper markers
+                // (nested quotes, list items) keep a paragraph open.
+                paragraph_open = fence.is_none()
+                    && !stripped.trim().is_empty()
+                    && Self::indentation_columns(stripped) < 4
+                    && !stripped_trimmed.starts_with('#')
+                    && !closes_paragraph_context(stripped_trimmed);
+
                 // Advance past this line (and the trailing newline if any).
+                self.position = if line_end < bytes.len() { line_end + 1 } else { line_end };
+            } else if fence.is_none()
+                && paragraph_open
+                && !Self::quote_lazy_blocked(trimmed)
+                && !self.line_starts_block()
+            {
+                // Lazy continuation: the line joins the quote's open
+                // paragraph as if the `>` marker were present.
+                inner.push_str(trimmed);
+                inner.push('\n');
                 self.position = if line_end < bytes.len() { line_end + 1 } else { line_end };
             } else {
                 // Line doesn't start with `>`, block quote ends
@@ -71,5 +106,22 @@ impl<'a> Parser<'a> {
 
         let span = Span::new(start as u32, self.position as u32);
         Ok(Some(Node::BlockQuote(BlockQuote { children: sub_doc.children, span })))
+    }
+
+    /// Lines that must not lazily continue a block quote paragraph even
+    /// though they cannot interrupt a paragraph either: a setext
+    /// underline lookalike would otherwise turn the lazy paragraph into
+    /// a heading during re-parse, and a bare list marker opens an (empty)
+    /// list block when the quote marker is imagined present.
+    fn quote_lazy_blocked(trimmed: &str) -> bool {
+        let line = trimmed.trim_end();
+        if !line.is_empty() && line.bytes().all(|byte| byte == b'=') {
+            return true;
+        }
+        Self::try_parse_list_line(line) && {
+            let after_digits = line.trim_start_matches(|ch: char| ch.is_ascii_digit());
+            let after_marker = after_digits.trim_start_matches(['-', '*', '+', '.', ')']);
+            after_marker.trim().is_empty()
+        }
     }
 }

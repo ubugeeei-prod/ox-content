@@ -69,7 +69,7 @@ pub(super) fn strip_quote_markers(mut line: &str) -> &str {
 /// Lines that close an open paragraph without themselves opening one:
 /// ATX headings and setext/thematic marker runs. Everything else that is
 /// non-blank keeps (or opens) paragraph-like context for the pre-pass.
-pub(super) fn closes_paragraph_context(trimmed: &str) -> bool {
+pub(in crate::parser) fn closes_paragraph_context(trimmed: &str) -> bool {
     if trimmed.starts_with('#') {
         return true;
     }
@@ -80,7 +80,7 @@ pub(super) fn closes_paragraph_context(trimmed: &str) -> bool {
             || bytes.iter().all(|&byte| byte == b'*' || byte == b' '))
 }
 
-pub(super) fn fence_open(trimmed: &str) -> Option<(u8, usize)> {
+pub(in crate::parser) fn fence_open(trimmed: &str) -> Option<(u8, usize)> {
     let bytes = trimmed.as_bytes();
     let first = *bytes.first()?;
     if first != b'`' && first != b'~' {
@@ -97,7 +97,7 @@ pub(super) fn fence_open(trimmed: &str) -> Option<(u8, usize)> {
     Some((first, len))
 }
 
-pub(super) fn is_fence_close(trimmed: &str, fence_byte: u8, fence_len: usize) -> bool {
+pub(in crate::parser) fn is_fence_close(trimmed: &str, fence_byte: u8, fence_len: usize) -> bool {
     let bytes = trimmed.as_bytes();
     let len = bytes.iter().take_while(|&&byte| byte == fence_byte).count();
     len >= fence_len && trimmed[len..].trim().is_empty()
