@@ -13,6 +13,7 @@ mod block_quote;
 mod cursor;
 mod fenced_code;
 mod html;
+mod indented_code;
 mod inline;
 mod inline_helpers;
 mod inline_html;

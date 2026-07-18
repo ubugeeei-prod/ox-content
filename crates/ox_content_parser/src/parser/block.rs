@@ -29,6 +29,14 @@ impl<'a> Parser<'a> {
             return Ok(None);
         };
 
+        // Four columns of indentation start an indented code block; no
+        // other block construct can begin on such a line. (This runs at
+        // block level only — an indented line after an open paragraph is
+        // lazy continuation, handled by `parse_paragraph`.)
+        if self.line_indent_width(start, trimmed_start) >= 4 {
+            return self.parse_indented_code(start);
+        }
+
         // Fast block dispatch.
         //
         // Most documentation lines are plain paragraph text. The old shape

@@ -1,10 +1,6 @@
 ---
 source: crates/ox_content_parser/tests/snapshot_parse.rs
-assertion_line: 32
 description: "    line a\n\n    line b\n    line c\n"
 ---
 Document [0..34]
-  Paragraph [0..11]
-    Text "line a" [0..6]
-  Paragraph [12..34]
-    Text "line b\n    line c" [12..29]
+  CodeBlock lang=None meta=None value="line a\n\nline b\nline c\n" [0..34]
