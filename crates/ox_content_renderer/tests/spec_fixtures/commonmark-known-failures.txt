@@ -6,7 +6,6 @@ core 6 Tabs
 core 7 Tabs
 core 9 Tabs
 core 14 Backslash-escapes
-core 20 Backslash-escapes
 core 21 Backslash-escapes
 core 23 Backslash-escapes
 core 24 Backslash-escapes
@@ -100,7 +99,6 @@ core 318 Lists
 core 319 Lists
 core 341 Code-spans
 core 342 Code-spans
-core 346 Code-spans
 core 347 Code-spans
 core 351 Emphasis-and-strong-emphasis
 core 352 Emphasis-and-strong-emphasis
@@ -254,17 +252,6 @@ core 589 Images
 core 591 Images
 core 592 Images
 core 593 Images
-core 594 Autolinks
-core 595 Autolinks
-core 596 Autolinks
-core 597 Autolinks
-core 598 Autolinks
-core 599 Autolinks
-core 600 Autolinks
-core 601 Autolinks
-core 603 Autolinks
-core 604 Autolinks
-core 605 Autolinks
 core 615 Raw-HTML
 core 616 Raw-HTML
 core 619 Raw-HTML
@@ -278,7 +265,6 @@ gfm 6 Tabs
 gfm 7 Tabs
 gfm 9 Tabs
 gfm 14 Backslash-escapes
-gfm 20 Backslash-escapes
 gfm 21 Backslash-escapes
 gfm 23 Backslash-escapes
 gfm 24 Backslash-escapes
@@ -372,7 +358,6 @@ gfm 318 Lists
 gfm 319 Lists
 gfm 341 Code-spans
 gfm 342 Code-spans
-gfm 346 Code-spans
 gfm 347 Code-spans
 gfm 351 Emphasis-and-strong-emphasis
 gfm 352 Emphasis-and-strong-emphasis
@@ -526,17 +511,6 @@ gfm 589 Images
 gfm 591 Images
 gfm 592 Images
 gfm 593 Images
-gfm 594 Autolinks
-gfm 595 Autolinks
-gfm 596 Autolinks
-gfm 597 Autolinks
-gfm 598 Autolinks
-gfm 599 Autolinks
-gfm 600 Autolinks
-gfm 601 Autolinks
-gfm 603 Autolinks
-gfm 604 Autolinks
-gfm 605 Autolinks
 gfm 615 Raw-HTML
 gfm 616 Raw-HTML
 gfm 619 Raw-HTML
