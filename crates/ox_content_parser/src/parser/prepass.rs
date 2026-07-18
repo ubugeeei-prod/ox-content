@@ -31,9 +31,16 @@ impl<'a> Parser<'a> {
     /// with sub-parsers.
     pub(super) fn build_prepass(&self) -> (Rc<ReferenceMap<'a>>, Rc<FootnoteLabels>) {
         profile_span!("parser::build_prepass");
-        // Cheap bail: a definition and a footnote label both start with
-        // `[`, so a source without one has neither.
-        if !self.source.contains('[') {
+        // Cheap bails. Both collectors need a `[` somewhere, and both a
+        // literal `]:`: a reference definition's label must be closed by
+        // `]` immediately followed by `:` (`[label]:`), and a footnote
+        // opener requires the same (`[^label]:`). A `]` and `:` split
+        // across a line break never parses as a definition, so absence of
+        // the contiguous needle proves the scan would collect nothing.
+        // Typical link-only documents skip the whole line scan here.
+        if !self.source.contains('[')
+            || memchr::memmem::find(self.source.as_bytes(), b"]:").is_none()
+        {
             return (Rc::new(ReferenceMap::default()), Rc::new(FootnoteLabels::default()));
         }
         let collect_footnotes = self.options.footnotes && self.source.contains("[^");

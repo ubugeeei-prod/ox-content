@@ -205,3 +205,29 @@ fn footnote_definition_directly_after_multiline_definition_resolves() {
 fn multiline_definition_with_title_resolves() {
     assert!(resolves_reference("[a]: /url\n\"title\"\n\n[a]"));
 }
+
+#[test]
+fn bracket_and_colon_split_across_lines_is_not_a_definition() {
+    // `]` at end of one line and `:` starting the next never form a
+    // definition (the joined chunk carries the newline between them), so
+    // the pre-pass may skip sources without a contiguous "]:".
+    assert!(!resolves_reference("[a]\n: /url\n\n[a]"));
+}
+
+#[test]
+fn escaped_bracket_does_not_end_a_label() {
+    // `\]` stays inside the label; the definition's real close is the
+    // unescaped `]:` later, which the needle gate must also see.
+    assert!(resolves_reference("[a\\]b]: /url\n\n[a\\]b]"));
+}
+
+#[test]
+fn link_only_document_resolves_nothing_and_parses_fine() {
+    let allocator = Allocator::new();
+    let doc = parse_with_options(
+        &allocator,
+        "Here's a [link](https://example.com) and [another](/x).",
+        ParserOptions::default(),
+    );
+    assert!(contains_link(&doc.children));
+}
