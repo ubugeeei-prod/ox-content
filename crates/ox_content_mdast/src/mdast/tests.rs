@@ -72,5 +72,5 @@ fn serializes_large_ordered_list_start() {
     // CommonMark caps ordered-list markers at nine digits.
     let json = parse_json("123456789. item", ParserOptions::default());
     assert_eq!(json["children"][0]["type"], "list");
-    assert_eq!(json["children"][0]["start"], 123456789u32);
+    assert_eq!(json["children"][0]["start"], 123_456_789_u32);
 }
