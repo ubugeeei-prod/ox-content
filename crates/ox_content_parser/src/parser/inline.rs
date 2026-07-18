@@ -8,6 +8,7 @@ use crate::error::ParseResult;
 use crate::profile_span;
 
 mod autolink;
+mod emphasis;
 mod entity;
 mod link_target;
 mod scan;
@@ -26,6 +27,7 @@ impl<'a> Parser<'a> {
     ) -> ParseResult<Vec<'a, Node<'a>>> {
         profile_span!("parser::parse_inline");
         let mut children = self.allocator.new_vec();
+        let mut delimiters = self.allocator.new_vec();
         let mut pos = 0;
         let bytes = content.as_bytes();
 
@@ -45,9 +47,12 @@ impl<'a> Parser<'a> {
                 break;
             }
 
-            self.parse_inline_special(content, offset, &mut children, &mut pos)?;
+            self.parse_inline_special(content, offset, &mut children, &mut delimiters, &mut pos)?;
         }
 
+        if !delimiters.is_empty() {
+            self.process_emphasis(&mut children, &mut delimiters);
+        }
         Ok(children)
     }
 
@@ -56,6 +61,7 @@ impl<'a> Parser<'a> {
         content: &'a str,
         offset: usize,
         children: &mut Vec<'a, Node<'a>>,
+        delimiters: &mut Vec<'a, emphasis::Delimiter>,
         pos: &mut usize,
     ) -> ParseResult<()> {
         let bytes = content.as_bytes();
@@ -112,7 +118,9 @@ impl<'a> Parser<'a> {
             {
                 self.parse_strikethrough(content, offset, children, pos)?;
             }
-            b'*' | b'_' => self.parse_delimited(content, offset, children, pos)?,
+            b'*' | b'_' => {
+                Self::push_delimiter_run(content, offset, children, delimiters, pos);
+            }
             b'`' => self.parse_inline_code(content, offset, children, pos),
             b'[' => self.parse_link(content, offset, children, pos)?,
             b'!' => self.parse_image(content, offset, children, pos),
@@ -226,44 +234,6 @@ impl<'a> Parser<'a> {
 
         Self::push_text(children, &content[*pos..*pos + 2], offset + *pos, offset + *pos + 2);
         *pos += 2;
-        Ok(())
-    }
-
-    fn parse_delimited(
-        &self,
-        content: &'a str,
-        offset: usize,
-        children: &mut Vec<'a, Node<'a>>,
-        pos: &mut usize,
-    ) -> ParseResult<()> {
-        let bytes = content.as_bytes();
-        let marker = bytes[*pos];
-        let count = Self::marker_run_len(bytes, *pos, marker);
-        let inner_start = *pos + count;
-
-        if let Some(inner_end) = Self::find_marker_run(bytes, inner_start, marker, count) {
-            let inner_children =
-                self.parse_inline(&content[inner_start..inner_end], offset + inner_start)?;
-            let span = Span::new((offset + *pos) as u32, (offset + inner_end + count) as u32);
-            if count >= 2 {
-                children
-                    .push(Node::Strong(ox_content_ast::Strong { children: inner_children, span }));
-            } else {
-                children.push(Node::Emphasis(ox_content_ast::Emphasis {
-                    children: inner_children,
-                    span,
-                }));
-            }
-            *pos = inner_end + count;
-        } else {
-            Self::push_text(
-                children,
-                &content[*pos..*pos + count],
-                offset + *pos,
-                offset + *pos + count,
-            );
-            *pos += count;
-        }
         Ok(())
     }
 
