@@ -1,6 +1,5 @@
 ---
 source: crates/ox_content_parser/tests/snapshot_parse.rs
-assertion_line: 32
 description: "- tight a\n- tight b\n\n- loose a\n\n- loose b\n"
 ---
 Document [0..42]
@@ -8,10 +7,10 @@ Document [0..42]
     ListItem spread=false checked=- [0..10]
       Paragraph [2..10]
         Text "tight a" [2..9]
-    ListItem spread=true checked=- [10..20]
+    ListItem spread=false checked=- [10..20]
       Paragraph [12..20]
         Text "tight b" [12..19]
-    ListItem spread=true checked=- [21..31]
+    ListItem spread=false checked=- [21..31]
       Paragraph [23..31]
         Text "loose a" [23..30]
     ListItem spread=false checked=- [32..42]

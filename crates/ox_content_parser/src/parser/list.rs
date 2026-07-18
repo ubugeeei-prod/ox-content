@@ -39,9 +39,10 @@ impl<'a> Parser<'a> {
             }
             self.position = line_start;
 
-            // A sibling marker may sit anywhere between the baseline and
-            // the previous content column; less indent ends the list.
-            if self.calc_indentation(line_start) < baseline_indent {
+            // A sibling marker may sit between the baseline and three
+            // columns past it; anything else at this level ends the list.
+            let sibling_indent = self.calc_indentation(line_start);
+            if sibling_indent < baseline_indent || sibling_indent > baseline_indent + 3 {
                 break;
             }
             let line = self.line_at(line_start);
@@ -65,10 +66,10 @@ impl<'a> Parser<'a> {
                 self.advance();
             }
 
-            let (item_spread, item_end, item_source) =
+            let (gap_spread, item_end, item_source) =
                 self.consume_item_continuation(&item, baseline_indent, consumed_newline);
-            list_spread |= item_spread;
 
+            let mut content_spread = false;
             let item_children = if item_source.is_none()
                 && Self::can_inline_parse_list_item(item.content)
             {
@@ -79,16 +80,21 @@ impl<'a> Parser<'a> {
                     .into_bump_str();
                 let sub_parser = self.sub_parser(item_source);
                 let sub_doc = sub_parser.parse()?;
+                // The item directly contains blank-separated blocks iff a
+                // gap between consecutive top-level children spans a line
+                // break (spans are still in item-source coordinates).
+                content_spread = item_content_has_blank_gap(item_source, &sub_doc.children);
                 let mut item_children = sub_doc.children;
                 for child in &mut item_children {
                     Self::offset_node_spans(child, item.content_offset as u32);
                 }
                 item_children
             };
+            list_spread |= gap_spread || content_spread;
 
             let list_item = ListItem {
                 checked: item.checked,
-                spread: item_spread,
+                spread: content_spread,
                 children: item_children,
                 span: Span::new(line_start as u32, item_end as u32),
             };
@@ -120,7 +126,10 @@ impl<'a> Parser<'a> {
         let item_is_empty = item.content.trim().is_empty();
         let mut item_source = None;
         let mut item_end = self.position;
-        let mut item_spread = false;
+        let mut gap_spread = false;
+        // Lazy paragraph continuation is only valid while the item's last
+        // consumed line kept a paragraph open (not right after blanks).
+        let mut after_blank = false;
 
         loop {
             if self.is_at_end() {
@@ -132,12 +141,6 @@ impl<'a> Parser<'a> {
             let continuation_next = self.next_line_start(continuation_start);
 
             if continuation_line.trim().is_empty() {
-                // An item with no content yet cannot continue past a
-                // blank line at all.
-                if item_is_empty && item_source.is_none() {
-                    break;
-                }
-
                 let mut lookahead = continuation_next;
                 let mut blank_count = 1;
                 while lookahead < self.source.len() {
@@ -154,7 +157,9 @@ impl<'a> Parser<'a> {
                 }
 
                 let next_indent = self.calc_indentation(lookahead);
-                if next_indent >= content_indent {
+                // An item with no content yet cannot continue past a
+                // blank line, but its list may (`* a\n*\n\n* c`).
+                if next_indent >= content_indent && !(item_is_empty && item_source.is_none()) {
                     // Interior blank line(s): the item continues below.
                     if item_source.is_none() {
                         item_source =
@@ -165,19 +170,20 @@ impl<'a> Parser<'a> {
                         item_source.push('\n');
                     }
                     self.position = lookahead;
-                    item_spread = true;
                     item_end = self.position;
+                    after_blank = true;
                     continue;
                 }
 
                 if next_indent >= baseline_indent
+                    && next_indent <= baseline_indent + 3
                     && self.parse_list_item_line(lookahead).as_ref().is_some_and(|next| {
                         next.ordered == item.ordered && next.marker == item.marker
                     })
                 {
                     // Blank line between siblings: the list is loose.
                     self.position = lookahead;
-                    item_spread = true;
+                    gap_spread = true;
                     break;
                 }
 
@@ -195,22 +201,24 @@ impl<'a> Parser<'a> {
                 item_source.push('\n');
                 self.position = continuation_next;
                 item_end = self.position;
+                after_blank = false;
                 continue;
             }
 
-            if current_indent < baseline_indent {
-                break;
-            }
-
-            // Any list marker here ends this item (sibling or new list).
-            if self.parse_list_item_line_from_line(continuation_start, continuation_line).is_some()
+            // A list marker (indented at most three columns past the
+            // baseline — deeper "markers" are just text) ends this item.
+            if current_indent <= baseline_indent + 3
+                && self
+                    .parse_list_item_line_from_line(continuation_start, continuation_line)
+                    .is_some()
             {
                 break;
             }
 
             // A block start interrupts the item; anything else lazily
-            // continues the item's trailing paragraph.
-            if item_is_empty || self.line_starts_block() {
+            // continues the item's trailing paragraph regardless of its
+            // indentation (CommonMark laziness).
+            if item_is_empty || after_blank || self.line_starts_block() {
                 break;
             }
             if item_source.is_none() {
@@ -223,6 +231,33 @@ impl<'a> Parser<'a> {
             item_end = self.position;
         }
 
-        (item_spread, item_end, item_source)
+        (gap_spread, item_end, item_source)
+    }
+}
+
+/// Whether a gap between consecutive top-level children of an item's
+/// sub-parsed source spans a line break — the spec's "directly contain
+/// two block-level elements with a blank line between them".
+fn item_content_has_blank_gap(source: &str, children: &[Node<'_>]) -> bool {
+    children.windows(2).any(|pair| {
+        let gap_start = block_span(&pair[0]).end as usize;
+        let gap_end = block_span(&pair[1]).start as usize;
+        source.get(gap_start..gap_end).is_some_and(|gap| gap.contains('\n'))
+    })
+}
+
+fn block_span(node: &Node<'_>) -> Span {
+    match node {
+        Node::Paragraph(n) => n.span,
+        Node::Heading(n) => n.span,
+        Node::ThematicBreak(n) => n.span,
+        Node::BlockQuote(n) => n.span,
+        Node::List(n) => n.span,
+        Node::CodeBlock(n) => n.span,
+        Node::Html(n) => n.span,
+        Node::Table(n) => n.span,
+        Node::Definition(n) => n.span,
+        Node::FootnoteDefinition(n) => n.span,
+        _ => Span::new(0, 0),
     }
 }
