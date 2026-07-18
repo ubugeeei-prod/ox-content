@@ -183,8 +183,9 @@ impl HtmlRenderer {
     /// existing scratch slug is written directly and the numeric suffix is
     /// formatted into `self.output`.
     pub(in crate::html::renderer) fn write_heading_id(&mut self, heading: &Heading<'_>) {
-        crate::profile_span!("renderer::write_heading_id");
         use std::fmt::Write as _;
+
+        crate::profile_span!("renderer::write_heading_id");
 
         self.heading_text_scratch.clear();
         collect_heading_text_into(&heading.children, &mut self.heading_text_scratch);
