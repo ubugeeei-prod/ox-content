@@ -7,6 +7,7 @@ use crate::error::ParseResult;
 #[allow(unused_imports)]
 use crate::profile_span;
 
+mod link_target;
 mod scan;
 
 use self::scan::next_inline_special;
@@ -84,7 +85,7 @@ impl<'a> Parser<'a> {
             b'*' | b'_' => self.parse_delimited(content, offset, children, pos)?,
             b'`' => Self::parse_inline_code(content, offset, children, pos),
             b'[' => self.parse_link(content, offset, children, pos)?,
-            b'!' => Self::parse_image(content, offset, children, pos),
+            b'!' => self.parse_image(content, offset, children, pos),
             _ => {
                 Self::push_text(
                     children,

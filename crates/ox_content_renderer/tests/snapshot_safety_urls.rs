@@ -39,7 +39,10 @@ fn html_sanitize_neutralizes_javascript_link() {
 fn html_sanitize_neutralizes_obfuscated_javascript_link() {
     check(
         "sanitize_neutralizes_obfuscated_javascript_link",
-        "[run](  JaVa ScRiPt:alert(1))\n",
+        // Whitespace inside a bare destination stops this from parsing as
+        // a link at all (see edge_sanitize.rs), so case mixing is the
+        // obfuscation that still reaches the URL sanitizer.
+        "[run](JaVaScRiPt:alert(1))\n",
         ParserOptions::default(),
         HtmlRendererOptions { sanitize: true, ..HtmlRendererOptions::default() },
     );

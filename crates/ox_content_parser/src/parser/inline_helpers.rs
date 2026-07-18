@@ -1,4 +1,4 @@
-use memchr::{memchr, memchr2};
+use memchr::{memchr, memchr3};
 use ox_content_allocator::Vec;
 use ox_content_ast::{Image, Link, Node, Span, Text};
 
@@ -24,37 +24,29 @@ impl<'a> Parser<'a> {
             && *pos + 1 < content.len()
             && bytes[*pos + 1] == b'('
         {
-            let link_text = &content[text_start..*pos];
-            *pos += 2;
-            let url_start = *pos;
-            *pos = Self::scan_balanced(bytes, *pos, b'(', b')');
-
-            if *pos < content.len() && bytes[*pos] == b')' {
-                let url = &content[url_start..*pos];
-                *pos += 1;
+            if let Some(target) = self.parse_link_target(content, *pos + 1) {
+                let link_text = &content[text_start..*pos];
                 let children_nodes = self.parse_inline(link_text, offset + text_start)?;
                 children.push(Node::Link(Link {
-                    url,
-                    title: None,
+                    url: target.url,
+                    title: target.title,
                     children: children_nodes,
-                    span: Span::new((offset + link_start) as u32, (offset + *pos) as u32),
+                    span: Span::new((offset + link_start) as u32, (offset + target.end) as u32),
                 }));
-            } else {
-                Self::push_text(
-                    children,
-                    &content[link_start..*pos],
-                    offset + link_start,
-                    offset + *pos,
-                );
+                *pos = target.end;
+                return Ok(());
             }
-        } else {
-            Self::push_text(children, "[", offset + link_start, offset + link_start + 1);
-            *pos = link_start + 1;
         }
+
+        // No valid inline link here: the bracket is literal text and the
+        // rest of the bracketed run is re-parsed for other inline markup.
+        Self::push_text(children, "[", offset + link_start, offset + link_start + 1);
+        *pos = link_start + 1;
         Ok(())
     }
 
     pub(super) fn parse_image(
+        &self,
         content: &'a str,
         offset: usize,
         children: &mut Vec<'a, Node<'a>>,
@@ -77,32 +69,23 @@ impl<'a> Parser<'a> {
             && *pos + 1 < content.len()
             && bytes[*pos + 1] == b'('
         {
-            let alt = &content[alt_start..*pos];
-            *pos += 2;
-            let url_start = *pos;
-            *pos = Self::scan_balanced(bytes, *pos, b'(', b')');
-
-            if *pos < content.len() && bytes[*pos] == b')' {
-                let url = &content[url_start..*pos];
-                *pos += 1;
+            if let Some(target) = self.parse_link_target(content, *pos + 1) {
+                let alt = &content[alt_start..*pos];
                 children.push(Node::Image(Image {
-                    url,
+                    url: target.url,
                     alt,
-                    title: None,
-                    span: Span::new((offset + image_start) as u32, (offset + *pos) as u32),
+                    title: target.title,
+                    span: Span::new((offset + image_start) as u32, (offset + target.end) as u32),
                 }));
-            } else {
-                Self::push_text(
-                    children,
-                    &content[image_start..*pos],
-                    offset + image_start,
-                    offset + *pos,
-                );
+                *pos = target.end;
+                return;
             }
-        } else {
-            Self::push_text(children, "![", offset + image_start, offset + image_start + 2);
-            *pos = image_start + 2;
         }
+
+        // No valid inline image here: `![` is literal text and the rest of
+        // the bracketed run is re-parsed for other inline markup.
+        Self::push_text(children, "![", offset + image_start, offset + image_start + 2);
+        *pos = image_start + 2;
     }
 
     pub(super) fn push_text(
@@ -150,19 +133,28 @@ impl<'a> Parser<'a> {
 
     /// Scans a balanced delimiter region and returns the matching close byte.
     ///
-    /// Link labels and destinations only care about nested `open`/`close`
-    /// delimiters; every other byte is inert. `memchr2` moves directly to the
-    /// next byte that can affect depth, which keeps deeply textual labels from
-    /// paying a branch for each character.
+    /// Link labels only care about nested `open`/`close` delimiters and
+    /// backslash escapes; every other byte is inert. `memchr3` moves directly
+    /// to the next byte that can affect the scan, which keeps deeply textual
+    /// labels from paying a branch for each character.
     fn scan_balanced(bytes: &[u8], mut cursor: usize, open: u8, close: u8) -> usize {
         let mut depth = 1;
         while cursor < bytes.len() {
-            // Only `open`/`close` change depth, so jump straight to the next one
-            // via memchr2; the skipped bytes were a no-op in the original loop.
-            let Some(off) = memchr2(open, close, &bytes[cursor..]) else {
+            // Only `open`/`close` change depth and `\` can hide one of them,
+            // so jump straight to the next such byte; the skipped bytes were
+            // a no-op in the original loop.
+            let Some(off) = memchr3(open, close, b'\\', &bytes[cursor..]) else {
                 return bytes.len();
             };
             cursor += off;
+            if bytes[cursor] == b'\\' {
+                // An escaped ASCII punctuation byte (which covers both
+                // delimiters) is inert for bracket matching.
+                let escapes_next =
+                    cursor + 1 < bytes.len() && bytes[cursor + 1].is_ascii_punctuation();
+                cursor += if escapes_next { 2 } else { 1 };
+                continue;
+            }
             if bytes[cursor] == open {
                 depth += 1;
             } else {
