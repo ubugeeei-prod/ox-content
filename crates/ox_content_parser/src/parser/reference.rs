@@ -9,22 +9,18 @@
 //! happens later during regular block parsing via
 //! [`Parser::try_parse_definition_node`].
 
-use std::rc::Rc;
-
 use compact_str::CompactString;
 use ox_content_ast::{Definition, Node, Span};
 use rustc_hash::FxHashMap;
 
 use super::Parser;
-#[allow(unused_imports)]
-use crate::profile_span;
 
 mod scan;
 
-use scan::{line_end_if_blank_after, next_blank_line, skip_ws_one_newline, strip_quote_markers};
-// The block quote collector shares the fence and paragraph-context
-// helpers for its lazy-continuation tracking.
-pub(super) use scan::{closes_paragraph_context, fence_open, is_fence_close};
+use scan::{line_end_if_blank_after, next_blank_line, skip_ws_one_newline};
+// The block quote collector and the fused pre-pass share the fence,
+// paragraph-context, and quote-strip helpers.
+pub(super) use scan::{closes_paragraph_context, fence_open, is_fence_close, strip_quote_markers};
 
 #[derive(Debug)]
 pub(super) struct ReferenceDef<'a> {
@@ -189,77 +185,11 @@ impl<'a> Parser<'a> {
         }))
     }
 
-    /// Collection pre-pass over the whole source. Tracks fenced code
-    /// regions and strips block quote markers so definitions inside block
-    /// quotes are found; definition-shaped text inside fenced or indented
-    /// code is skipped.
-    pub(super) fn collect_reference_definitions(&self) -> ReferenceMap<'a> {
-        let mut map = ReferenceMap::default();
-        let bytes = self.source.as_bytes();
-        let mut pos = 0;
-        let mut fence: Option<(u8, usize)> = None;
-        // A definition can only start where a paragraph could start; a
-        // bracket line directly under a paragraph (or lazy list/HTML
-        // continuation) is continuation text, not a definition.
-        let mut paragraph_open = false;
-
-        while pos < bytes.len() {
-            let line_end = memchr::memchr(b'\n', &bytes[pos..]).map_or(bytes.len(), |o| pos + o);
-            let line = &self.source[pos..line_end];
-            let stripped = strip_quote_markers(line);
-            let trimmed = stripped.trim_start_matches([' ', '\t']);
-            let indent = stripped.len() - trimmed.len();
-
-            if let Some((fence_byte, fence_len)) = fence {
-                if is_fence_close(trimmed, fence_byte, fence_len) {
-                    fence = None;
-                }
-                pos = line_end + 1;
-                continue;
-            }
-            if let Some(open) = fence_open(trimmed) {
-                fence = Some(open);
-                paragraph_open = false;
-                pos = line_end + 1;
-                continue;
-            }
-            if trimmed.is_empty() {
-                paragraph_open = false;
-                pos = line_end + 1;
-                continue;
-            }
-
-            if !paragraph_open && indent <= 3 && trimmed.starts_with('[') {
-                // Candidate: join the stripped lines of this paragraph
-                // chunk and parse as many definitions as it holds.
-                let (chunk, line_starts) = self.join_stripped_chunk(pos);
-                let mut offset = 0;
-                while let Some(parsed) = self.parse_reference_definition(&chunk[offset..]) {
-                    map.entry(Self::normalize_reference_label(parsed.label))
-                        .or_insert(ReferenceDef { url: parsed.url, title: parsed.title });
-                    offset += parsed.consumed;
-                }
-                // Skip the source lines the parsed prefix covered so fence
-                // tracking stays aligned (definition text can't open
-                // fences). A leftover suffix starts a paragraph.
-                let consumed_lines = chunk[..offset].matches('\n').count();
-                if consumed_lines > 0 {
-                    pos = line_starts.get(consumed_lines).copied().unwrap_or(bytes.len());
-                    continue;
-                }
-            }
-
-            paragraph_open = !closes_paragraph_context(trimmed);
-            pos = line_end + 1;
-        }
-
-        map
-    }
-
     /// Joins the block-quote-stripped lines of the paragraph chunk that
     /// starts at `pos` (stopping at a blank line), returning the joined
-    /// text and each line's start offset in the original source.
-    fn join_stripped_chunk(
+    /// text and each line's start offset in the original source. Used by
+    /// the fused pre-pass when it finds a definition candidate line.
+    pub(super) fn join_stripped_chunk(
         &self,
         mut pos: usize,
     ) -> (&'a str, ox_content_allocator::Vec<'a, usize>) {
@@ -284,17 +214,5 @@ impl<'a> Parser<'a> {
 
     fn unescape_reference_component(&self, raw: &'a str) -> &'a str {
         self.unescape_link_component(raw)
-    }
-}
-
-impl<'a> Parser<'a> {
-    /// Builds the shared reference map for a root parser.
-    pub(super) fn build_definitions(&self) -> Rc<ReferenceMap<'a>> {
-        profile_span!("parser::build_definitions");
-        // Cheap bail: no `[` anywhere means no definitions.
-        if !self.source.contains('[') {
-            return Rc::new(ReferenceMap::default());
-        }
-        Rc::new(self.collect_reference_definitions())
     }
 }

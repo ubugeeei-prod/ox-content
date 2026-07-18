@@ -12,16 +12,12 @@
 //! and shares it with sub-parsers, mirroring how link reference
 //! definitions work.
 
-use std::rc::Rc;
-
 use compact_str::CompactString;
 use ox_content_ast::{FootnoteDefinition, Node, Span};
 use rustc_hash::FxHashSet;
 
 use super::Parser;
 use crate::error::ParseResult;
-#[allow(unused_imports)]
-use crate::profile_span;
 
 pub(super) type FootnoteLabels = FxHashSet<CompactString>;
 
@@ -222,40 +218,5 @@ impl<'a> Parser<'a> {
         }));
         *pos = end + 1;
         true
-    }
-
-    /// Collects every footnote label in the source so inline references
-    /// resolve regardless of definition order.
-    pub(super) fn build_footnote_labels(&self) -> Rc<FootnoteLabels> {
-        profile_span!("parser::build_footnote_labels");
-        if !self.options.footnotes || !self.source.contains("[^") {
-            return Rc::new(FootnoteLabels::default());
-        }
-
-        let mut labels = FootnoteLabels::default();
-        let bytes = self.source.as_bytes();
-        let mut pos = 0;
-        let mut fence: Option<(u8, usize)> = None;
-
-        while pos < bytes.len() {
-            let line_end = memchr::memchr(b'\n', &bytes[pos..]).map_or(bytes.len(), |o| pos + o);
-            let line = &self.source[pos..line_end];
-            let trimmed = line.trim_start_matches([' ', '\t']);
-
-            // Definition-shaped text inside fenced code is not a definition.
-            if let Some((fence_byte, fence_len)) = fence {
-                if super::reference::is_fence_close(trimmed, fence_byte, fence_len) {
-                    fence = None;
-                }
-            } else if let Some(open) = super::reference::fence_open(trimmed) {
-                fence = Some(open);
-            } else if let Some((label, _)) = parse_footnote_opener(line) {
-                labels.insert(normalize_footnote_label(label));
-            }
-
-            pos = line_end + 1;
-        }
-
-        Rc::new(labels)
     }
 }

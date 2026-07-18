@@ -21,6 +21,7 @@ mod inline_html;
 mod leaf;
 mod list;
 mod list_item;
+mod prepass;
 mod reference;
 mod spans;
 mod table;
@@ -143,10 +144,11 @@ impl<'a> Parser<'a> {
             footnote_labels: std::rc::Rc::default(),
             lazy_lines: std::rc::Rc::default(),
         };
-        // Footnote labels first: the reference collector consults them to
-        // leave `[^label]:` blocks to the footnote parser.
-        parser.footnote_labels = parser.build_footnote_labels();
-        parser.definitions = parser.build_definitions();
+        // A single fused pre-pass collects both the reference definitions
+        // and the footnote labels (see `prepass.rs`).
+        let (definitions, footnote_labels) = parser.build_prepass();
+        parser.definitions = definitions;
+        parser.footnote_labels = footnote_labels;
         parser
     }
 
