@@ -10,6 +10,9 @@ use super::super::Parser;
 pub(in crate::parser) enum HtmlBlockStart {
     /// An HTML comment block beginning with `<!--`.
     Comment,
+    /// A processing instruction, declaration, or CDATA block: consumes
+    /// lines until one contains the given terminator.
+    Terminated(&'static str),
     /// A type-1 raw HTML block whose closing tag can appear after blank lines.
     Type1(Type1HtmlBlockTag),
     /// A regular supported HTML block that ends before the next blank line.
@@ -51,9 +54,31 @@ impl<'a> Parser<'a> {
         if trimmed.starts_with("<!--") {
             return Some(HtmlBlockStart::Comment);
         }
+        if trimmed.starts_with("<?") {
+            return Some(HtmlBlockStart::Terminated("?>"));
+        }
+        if trimmed.starts_with("<![CDATA[") {
+            return Some(HtmlBlockStart::Terminated("]]>"));
+        }
+        if trimmed.starts_with("<!")
+            && trimmed.as_bytes().get(2).is_some_and(u8::is_ascii_alphabetic)
+        {
+            return Some(HtmlBlockStart::Terminated(">"));
+        }
 
         let tag_name = Self::parse_html_block_tag_name_from_trimmed(trimmed)?;
         Self::html_block_start_for_tag(tag_name)
+    }
+
+    /// Type-7 HTML block: a line holding one complete open or closing tag
+    /// (validated by the inline tag scanner) followed only by whitespace.
+    /// This kind never interrupts a paragraph, so only `parse_block` uses
+    /// it — never `line_starts_block`.
+    pub(in crate::parser) fn is_html_block_type7_line(trimmed: &'a str) -> bool {
+        let Some((_, end)) = Self::parse_inline_html(trimmed, 0, 0) else {
+            return false;
+        };
+        trimmed[end..].trim().is_empty()
     }
 
     /// Returns the raw tag name from a line already known to begin with `<`.
@@ -97,61 +122,46 @@ impl<'a> Parser<'a> {
     /// every `<...>` opener. Length bucketing keeps this allocation-free and
     /// trims comparisons on generated API docs with many HTML blocks.
     fn html_block_start_for_tag(tag_name: &str) -> Option<HtmlBlockStart> {
-        let other = HtmlBlockStart::Other;
         match tag_name.len() {
-            1 if tag_name.eq_ignore_ascii_case("p") => Some(other),
-            2 if tag_name.eq_ignore_ascii_case("ol")
-                || tag_name.eq_ignore_ascii_case("td")
-                || tag_name.eq_ignore_ascii_case("th")
-                || tag_name.eq_ignore_ascii_case("tr")
-                || tag_name.eq_ignore_ascii_case("ul") =>
-            {
-                Some(other)
-            }
             3 if tag_name.eq_ignore_ascii_case("pre") => {
-                Some(HtmlBlockStart::Type1(Type1HtmlBlockTag::Pre))
+                return Some(HtmlBlockStart::Type1(Type1HtmlBlockTag::Pre));
             }
-            3 if tag_name.eq_ignore_ascii_case("div") || tag_name.eq_ignore_ascii_case("nav") => {
-                Some(other)
-            }
-            4 if tag_name.eq_ignore_ascii_case("main") => Some(other),
             5 if tag_name.eq_ignore_ascii_case("style") => {
-                Some(HtmlBlockStart::Type1(Type1HtmlBlockTag::Style))
-            }
-            5 if tag_name.eq_ignore_ascii_case("aside")
-                || tag_name.eq_ignore_ascii_case("table")
-                || tag_name.eq_ignore_ascii_case("tbody")
-                || tag_name.eq_ignore_ascii_case("tfoot")
-                || tag_name.eq_ignore_ascii_case("thead") =>
-            {
-                Some(other)
+                return Some(HtmlBlockStart::Type1(Type1HtmlBlockTag::Style));
             }
             6 if tag_name.eq_ignore_ascii_case("script") => {
-                Some(HtmlBlockStart::Type1(Type1HtmlBlockTag::Script))
-            }
-            6 if tag_name.eq_ignore_ascii_case("dialog")
-                || tag_name.eq_ignore_ascii_case("figure")
-                || tag_name.eq_ignore_ascii_case("footer")
-                || tag_name.eq_ignore_ascii_case("header") =>
-            {
-                Some(other)
-            }
-            7 if tag_name.eq_ignore_ascii_case("article")
-                || tag_name.eq_ignore_ascii_case("details")
-                || tag_name.eq_ignore_ascii_case("section")
-                || tag_name.eq_ignore_ascii_case("summary") =>
-            {
-                Some(other)
+                return Some(HtmlBlockStart::Type1(Type1HtmlBlockTag::Script));
             }
             8 if tag_name.eq_ignore_ascii_case("textarea") => {
-                Some(HtmlBlockStart::Type1(Type1HtmlBlockTag::Textarea))
+                return Some(HtmlBlockStart::Type1(Type1HtmlBlockTag::Textarea));
             }
-            10 if tag_name.eq_ignore_ascii_case("blockquote")
-                || tag_name.eq_ignore_ascii_case("figcaption") =>
-            {
-                Some(other)
-            }
-            _ => None,
+            _ => {}
         }
+        // The CommonMark type-6 tag list (spec 4.6), length-bucketed to
+        // keep classification allocation-free.
+        let known: &[&str] = match tag_name.len() {
+            1 => &["p"],
+            2 => &[
+                "dd", "dl", "dt", "h1", "h2", "h3", "h4", "h5", "h6", "hr", "li", "ol", "td", "th",
+                "tr", "ul",
+            ],
+            3 => &["col", "dir", "div", "nav"],
+            4 => &["base", "body", "form", "head", "html", "link", "main", "menu"],
+            5 => &["aside", "frame", "param", "table", "tbody", "tfoot", "thead", "title", "track"],
+            6 => &[
+                "center", "dialog", "figure", "footer", "header", "iframe", "legend", "option",
+                "search",
+            ],
+            7 => &["address", "article", "caption", "details", "section", "summary"],
+            8 => &[
+                "basefont", "colgroup", "fieldset", "frameset", "menuitem", "noframes", "optgroup",
+            ],
+            10 => &["blockquote", "figcaption"],
+            _ => &[],
+        };
+        known
+            .iter()
+            .any(|name| tag_name.eq_ignore_ascii_case(name))
+            .then_some(HtmlBlockStart::Other)
     }
 }

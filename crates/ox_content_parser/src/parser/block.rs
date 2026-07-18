@@ -81,6 +81,12 @@ impl<'a> Parser<'a> {
                 if let Some(html_start) = Self::parse_html_block_start(trimmed) {
                     return self.parse_html_block(start, html_start);
                 }
+                // Type-7 blocks (a lone complete tag) start blocks but can
+                // never interrupt a paragraph, so only this dispatcher —
+                // not line_starts_block — recognizes them.
+                if Self::is_html_block_type7_line(trimmed) {
+                    return self.parse_html_block(start, super::html::HtmlBlockStart::Other);
+                }
             }
             b'+' | b'0'..=b'9' => {
                 let line = self.line_at(start);

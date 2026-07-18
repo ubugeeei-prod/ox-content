@@ -33,6 +33,12 @@ impl<'a> Parser<'a> {
                     break;
                 }
             },
+            HtmlBlockStart::Terminated(terminator) => loop {
+                let consumed = self.consume_line();
+                if consumed.contains(terminator) || self.is_at_end() {
+                    break;
+                }
+            },
             HtmlBlockStart::Type1(tag) => {
                 // Type 1 blocks (`<pre>`, `<script>`, `<style>`, `<textarea>`)
                 // close on the first line containing `</tag`. The block tag

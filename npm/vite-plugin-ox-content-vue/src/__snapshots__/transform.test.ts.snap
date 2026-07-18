@@ -94,7 +94,7 @@ import { h, ref, defineComponent } from 'vue';
 
 export const frontmatter = {};
 
-const rawHtml = "<h1 id=\\"plain\\">Plain</h1>\\n<p><Unknown /></p>\\n";
+const rawHtml = "<h1 id=\\"plain\\">Plain</h1>\\n<Unknown />\\n";
 
 export default defineComponent({
   name: 'MarkdownContent',
