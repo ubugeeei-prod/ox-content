@@ -67,7 +67,13 @@ impl<'a> Parser<'a> {
         }
 
         let tag_name = Self::parse_html_block_tag_name_from_trimmed(trimmed)?;
-        Self::html_block_start_for_tag(tag_name)
+        let closing = trimmed.as_bytes().get(1) == Some(&b'/');
+        match Self::html_block_start_for_tag(tag_name) {
+            // Type 1 starts only on open tags; a lone `</pre>` is a
+            // type-7 candidate that must not interrupt paragraphs.
+            Some(HtmlBlockStart::Type1(_)) if closing => None,
+            other => other,
+        }
     }
 
     /// Type-7 HTML block: a line holding one complete open or closing tag

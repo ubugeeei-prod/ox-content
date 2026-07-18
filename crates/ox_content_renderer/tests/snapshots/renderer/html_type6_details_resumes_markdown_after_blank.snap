@@ -3,9 +3,7 @@ source: crates/ox_content_renderer/tests/support/snapshot.rs
 description: "<details>\n\n<summary>Click</summary>\n\n**bold**\n\n- list\n\n```js\nconsole.log(\"x\");\n```\n\n</details>\n"
 ---
 <details>
-
 <summary>Click</summary>
-
 <p><strong>bold</strong></p>
 <ul>
 <li>list</li>

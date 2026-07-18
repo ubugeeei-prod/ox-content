@@ -31,6 +31,7 @@ impl<'a> Parser<'a> {
         // the stripped content to know when that is the case.
         let mut fence: Option<(u8, usize)> = None;
         let mut paragraph_open = false;
+        let mut lazy_lines = rustc_hash::FxHashSet::default();
 
         loop {
             if self.position >= bytes.len() {
@@ -114,8 +115,12 @@ impl<'a> Parser<'a> {
                 && !self.line_starts_block()
             {
                 // Lazy continuation: the line joins the quote's open
-                // paragraph as if the `>` marker were present.
-                inner.push_str(trimmed);
+                // paragraph as if the `>` marker were present. Keeping the
+                // original indentation means the re-parse still sees it as
+                // paragraph continuation (an indented `- x` stays text),
+                // and recording the offset stops setext reinterpretation.
+                lazy_lines.insert(inner.len() as u32);
+                inner.push_str(line);
                 inner.push('\n');
                 self.position = if line_end < bytes.len() { line_end + 1 } else { line_end };
             } else {
@@ -126,7 +131,7 @@ impl<'a> Parser<'a> {
 
         // Recursively parse the inner content from the same arena — no copy.
         let inner_str = inner.into_bump_str();
-        let sub_parser = self.sub_parser(inner_str);
+        let sub_parser = self.sub_parser_with_lazy_lines(inner_str, lazy_lines);
         let sub_doc = sub_parser.parse()?;
 
         self.nesting_depth -= 1;
@@ -136,15 +141,10 @@ impl<'a> Parser<'a> {
     }
 
     /// Lines that must not lazily continue a block quote paragraph even
-    /// though they cannot interrupt a paragraph either: a setext
-    /// underline lookalike would otherwise turn the lazy paragraph into
-    /// a heading during re-parse, and a bare list marker opens an (empty)
-    /// list block when the quote marker is imagined present.
+    /// though they cannot interrupt one: a bare list marker opens an
+    /// (empty) list block when the quote marker is imagined present.
     fn quote_lazy_blocked(trimmed: &str) -> bool {
         let line = trimmed.trim_end();
-        if !line.is_empty() && line.bytes().all(|byte| byte == b'=') {
-            return true;
-        }
         Self::try_parse_list_line(line) && {
             let after_digits = line.trim_start_matches(|ch: char| ch.is_ascii_digit());
             let after_marker = after_digits.trim_start_matches(['-', '*', '+', '.', ')']);

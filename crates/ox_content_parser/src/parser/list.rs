@@ -66,8 +66,13 @@ impl<'a> Parser<'a> {
                 self.advance();
             }
 
-            let (gap_spread, item_end, item_source) =
-                self.consume_item_continuation(&item, baseline_indent, consumed_newline);
+            let mut lazy_lines = rustc_hash::FxHashSet::default();
+            let (gap_spread, item_end, item_source) = self.consume_item_continuation(
+                &item,
+                baseline_indent,
+                consumed_newline,
+                &mut lazy_lines,
+            );
 
             let mut content_spread = false;
             let item_children = if item_source.is_none()
@@ -78,7 +83,7 @@ impl<'a> Parser<'a> {
                 let item_source = item_source
                     .unwrap_or_else(|| self.init_list_item_source(item.content, consumed_newline))
                     .into_bump_str();
-                let sub_parser = self.sub_parser(item_source);
+                let sub_parser = self.sub_parser_with_lazy_lines(item_source, lazy_lines);
                 let sub_doc = sub_parser.parse()?;
                 // The item directly contains blank-separated blocks iff a
                 // gap between consecutive top-level children spans a line
@@ -121,6 +126,7 @@ impl<'a> Parser<'a> {
         item: &ParsedListItem<'a>,
         baseline_indent: usize,
         consumed_newline: bool,
+        lazy_lines: &mut rustc_hash::FxHashSet<u32>,
     ) -> (bool, usize, Option<ox_content_allocator::String<'a>>) {
         let content_indent = item.content_indent;
         let item_is_empty = item.content.trim().is_empty();
@@ -225,7 +231,12 @@ impl<'a> Parser<'a> {
                 item_source = Some(self.init_list_item_source(item.content, consumed_newline));
             }
             let source = item_source.as_mut().expect("item source initialized");
-            Self::push_line_without_indent(source, continuation_line, content_indent);
+            // Keep the lazy line's own indentation: the sub-parse then
+            // treats it as paragraph continuation even when it looks like
+            // an (over-indented) marker, e.g. `- e` five columns deep.
+            // Recording the offset stops setext reinterpretation.
+            lazy_lines.insert(source.len() as u32);
+            source.push_str(continuation_line);
             source.push('\n');
             self.position = continuation_next;
             item_end = self.position;

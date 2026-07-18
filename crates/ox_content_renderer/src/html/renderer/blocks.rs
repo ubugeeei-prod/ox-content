@@ -205,7 +205,11 @@ impl HtmlRenderer {
 
     pub(in crate::html::renderer) fn render_html(&mut self, html: &Html<'_>) {
         self.write_html_value(html.value);
-        self.write("\n");
+        // Block-level HTML values captured from full source lines already
+        // end with their newline; don't double it.
+        if !self.output.ends_with('\n') {
+            self.write("\n");
+        }
     }
 
     pub(in crate::html::renderer) fn render_table(&mut self, table: &Table<'_>) {

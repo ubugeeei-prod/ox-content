@@ -40,13 +40,20 @@ impl<'a> Parser<'a> {
             let count = cursor - fence_start;
 
             if count >= fence_len {
-                // Found the closing fence. Body ends at `line_start`;
-                // fence line ends at the next `\n` (inclusive) or EOF.
-                let after_fence = match memchr(b'\n', &bytes[cursor..]) {
-                    Some(off) => cursor + off + 1,
+                // A closing fence carries nothing but trailing whitespace
+                // (``` aaa is content, not a closer).
+                let line_end = match memchr(b'\n', &bytes[cursor..]) {
+                    Some(off) => cursor + off,
                     None => bytes.len(),
                 };
-                return (line_start, after_fence);
+                let only_ws =
+                    bytes[cursor..line_end].iter().all(|byte| matches!(byte, b' ' | b'\t' | b'\r'));
+                if only_ws {
+                    // Body ends at `line_start`; the fence line ends at
+                    // the next newline (inclusive) or EOF.
+                    let after_fence = if line_end < bytes.len() { line_end + 1 } else { line_end };
+                    return (line_start, after_fence);
+                }
             }
 
             // Not a closing fence — move to the next line.

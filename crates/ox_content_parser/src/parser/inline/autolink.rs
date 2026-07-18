@@ -8,6 +8,23 @@ use ox_content_ast::{Link, Node, Span};
 
 use crate::parser::Parser;
 
+/// Validation-only scan: returns the index just past `>` when an
+/// autolink starts at `pos`, without building nodes.
+pub(in crate::parser) fn autolink_end(content: &str, pos: usize) -> Option<usize> {
+    let bytes = content.as_bytes();
+    let inner_start = pos + 1;
+    let close = memchr(b'>', bytes.get(inner_start..)?)? + inner_start;
+    let inner = &content[inner_start..close];
+    if inner.is_empty()
+        || inner
+            .bytes()
+            .any(|byte| byte == b'<' || byte.is_ascii_whitespace() || byte.is_ascii_control())
+    {
+        return None;
+    }
+    (is_absolute_uri(inner) || is_email_address(inner)).then_some(close + 1)
+}
+
 impl<'a> Parser<'a> {
     /// Tries to parse an autolink at `pos` (which points at `<`).
     /// Returns the link node and the position just past the closing `>`.
