@@ -1,9 +1,7 @@
 ---
 source: crates/ox_content_parser/tests/snapshot_parse.rs
-assertion_line: 32
 description: "~~open\n"
 ---
 Document [0..7]
   Paragraph [0..7]
-    Text "~~" [0..2]
-    Text "open" [2..6]
+    Text "~~open" [0..6]

@@ -10,6 +10,7 @@ use crate::profile_span;
 mod autolink;
 mod emphasis;
 mod entity;
+mod gfm_autolink;
 mod link_target;
 mod scan;
 
@@ -53,6 +54,9 @@ impl<'a> Parser<'a> {
 
         if !delimiters.is_empty() {
             self.process_emphasis(&mut children, &mut delimiters);
+        }
+        if self.options.autolinks {
+            self.apply_gfm_autolinks(&mut children);
         }
         Ok(children)
     }

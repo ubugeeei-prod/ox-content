@@ -1,13 +1,9 @@
 ---
 source: crates/ox_content_parser/tests/snapshot_parse.rs
-assertion_line: 32
 description: "See[^1].\n\n[^1]: The footnote body.\n"
 ---
 Document [0..35]
   Paragraph [0..9]
-    Text "See" [0..3]
-    Text "[" [3..4]
-    Text "^1]." [4..8]
+    Text "See[^1]." [0..8]
   Paragraph [10..35]
-    Text "[" [10..11]
-    Text "^1]: The footnote body." [11..34]
+    Text "[^1]: The footnote body." [10..34]

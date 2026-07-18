@@ -142,7 +142,9 @@ fn unmatched_strikethrough_remains_text() {
     match &doc.children[0] {
         Node::Paragraph(paragraph) => {
             assert!(matches!(&paragraph.children[0], Node::Text(_)));
-            assert_eq!(first_text(&paragraph.children[0]), Some("~~"));
+            // GFM post-processing coalesces adjacent text nodes, so the
+            // unmatched marker merges with the following prose.
+            assert_eq!(first_text(&paragraph.children[0]), Some("~~open"));
         }
         other => panic!("expected paragraph, got {other:?}"),
     }
