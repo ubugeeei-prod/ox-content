@@ -16,19 +16,34 @@ impl HtmlRenderer {
         mut skip_chars: usize,
     ) -> String {
         let mut renderer = HtmlRenderer::with_options(self.options.clone());
+        // Whitespace-only text between the marker and the body (the parser
+        // may emit the separating newline as its own Text node) is part of
+        // the marker line, not body content.
+        let mut before_body = true;
 
         for child in &paragraph.children {
             match child {
-                Node::Text(text) if skip_chars > 0 => {
-                    if skip_chars >= text.value.len() {
-                        skip_chars -= text.value.len();
+                Node::Text(text) if skip_chars > 0 || before_body => {
+                    let mut value = text.value;
+                    if skip_chars > 0 {
+                        if skip_chars >= value.len() {
+                            skip_chars -= value.len();
+                            continue;
+                        }
+                        value = &value[skip_chars..];
+                        skip_chars = 0;
+                    }
+                    value = value.trim_start();
+                    if value.is_empty() {
                         continue;
                     }
-
-                    renderer.write_escaped(&text.value[skip_chars..]);
-                    skip_chars = 0;
+                    before_body = false;
+                    renderer.write_escaped(value);
                 }
-                _ => renderer.render_node(child),
+                _ => {
+                    before_body = false;
+                    renderer.render_node(child);
+                }
             }
         }
 

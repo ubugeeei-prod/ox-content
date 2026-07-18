@@ -23,9 +23,9 @@ exports[`transformMarkdown > keeps package-manager tabs disabled unless opted in
 
 exports[`transformMarkdown > preserves safe raw media tags when sanitizing 1`] = `
 "<p><video controls muted playsinline poster="/poster.jpg">
-  <source src="/demo.webm" type="video/webm">
-  <track src="/captions.vtt" kind="captions" srclang="en" label="English" default>
-  Fallback
+<source src="/demo.webm" type="video/webm">
+<track src="/captions.vtt" kind="captions" srclang="en" label="English" default>
+Fallback
 </video>
 <picture><source media="(min-width: 800px)" srcset="/hero-large.jpg 2x, /hero.jpg 1x"><img src="/hero.jpg" alt="Hero"></picture></p>
 "

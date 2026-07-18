@@ -58,7 +58,12 @@ impl<'a> Parser<'a> {
                 let span = Span::new((offset + *pos) as u32, (offset + *pos + 2) as u32);
                 children.push(Node::Break(ox_content_ast::Break { span }));
                 *pos += 2;
+                // Leading whitespace of the next line is not content.
+                while *pos < content.len() && matches!(bytes[*pos], b' ' | b'\t') {
+                    *pos += 1;
+                }
             }
+            b'\n' => Self::parse_line_break(content, offset, children, pos),
             b'<' => Self::parse_inline_html_or_text(content, offset, children, pos),
             b'\\' if *pos + 1 < content.len() && bytes[*pos + 1].is_ascii_punctuation() => {
                 // A backslash escapes only ASCII punctuation (CommonMark
@@ -97,6 +102,51 @@ impl<'a> Parser<'a> {
             }
         }
         Ok(())
+    }
+
+    /// Handles a newline inside inline content. Two or more trailing
+    /// spaces on the previous line make a hard break; otherwise the
+    /// newline is a soft break. Either way the spaces around the break —
+    /// trailing on the previous line, leading on the next — are stripped
+    /// (CommonMark "Hard line breaks" / "Soft line breaks").
+    fn parse_line_break(
+        content: &'a str,
+        offset: usize,
+        children: &mut Vec<'a, Node<'a>>,
+        pos: &mut usize,
+    ) {
+        let bytes = content.as_bytes();
+        let mut hard = false;
+        let mut trim_to = None;
+        if let Some(Node::Text(text)) = children.last() {
+            let trimmed_len = text.value.trim_end_matches(' ').len();
+            if trimmed_len < text.value.len() {
+                hard = text.value.len() - trimmed_len >= 2;
+                trim_to = Some(trimmed_len);
+            }
+        }
+        if let Some(new_len) = trim_to {
+            if new_len == 0 {
+                children.pop();
+            } else if let Some(Node::Text(text)) = children.last_mut() {
+                let removed = (text.value.len() - new_len) as u32;
+                text.value = &text.value[..new_len];
+                text.span = Span::new(text.span.start, text.span.end - removed);
+            }
+        }
+
+        let newline_pos = *pos;
+        *pos += 1;
+        while *pos < content.len() && matches!(bytes[*pos], b' ' | b'\t') {
+            *pos += 1;
+        }
+
+        let span = Span::new((offset + newline_pos) as u32, (offset + newline_pos + 1) as u32);
+        if hard {
+            children.push(Node::Break(ox_content_ast::Break { span }));
+        } else {
+            Self::push_text(children, "\n", offset + newline_pos, offset + newline_pos + 1);
+        }
     }
 
     fn parse_inline_html_or_text(
