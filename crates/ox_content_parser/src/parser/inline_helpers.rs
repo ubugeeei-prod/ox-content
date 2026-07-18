@@ -15,6 +15,17 @@ impl<'a> Parser<'a> {
     ) -> ParseResult<()> {
         let bytes = content.as_bytes();
         let link_start = *pos;
+
+        // `[^label]` is a footnote reference when the extension is on and
+        // a definition exists; otherwise it falls through to normal link
+        // handling and may still be a link label.
+        if self.options.footnotes
+            && bytes.get(*pos + 1) == Some(&b'^')
+            && self.try_parse_footnote_reference(content, offset, children, pos)
+        {
+            return Ok(());
+        }
+
         *pos += 1;
         let text_start = *pos;
         *pos = Self::scan_balanced(content, *pos, b'[', b']');

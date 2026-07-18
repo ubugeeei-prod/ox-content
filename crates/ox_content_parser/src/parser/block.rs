@@ -107,6 +107,16 @@ impl<'a> Parser<'a> {
             return self.parse_table(start);
         }
 
+        // Footnote definitions share the `[label]:` shape with link
+        // reference definitions, so they get first refusal when the
+        // extension is on; otherwise `[^1]: text` would be swallowed as a
+        // link reference with label `^1`.
+        if bytes[trimmed_start] == b'[' && self.at_footnote_definition(start) {
+            if let Some(node) = self.try_parse_footnote_definition_node()? {
+                return Ok(Some(node));
+            }
+        }
+
         // Link reference definitions look like paragraphs but are
         // consumed as their own (non-rendered) nodes.
         if bytes[trimmed_start] == b'[' {

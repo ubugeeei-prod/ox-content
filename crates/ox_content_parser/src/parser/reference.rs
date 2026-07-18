@@ -104,6 +104,12 @@ impl<'a> Parser<'a> {
         if label.trim().is_empty() {
             return None;
         }
+        // With footnotes enabled, `[^label]:` belongs to the footnote
+        // parser; treating it as a link reference here would turn every
+        // `[^label]` in the document into a link.
+        if self.options.footnotes && label.starts_with('^') {
+            return None;
+        }
         if bytes.get(j + 1) != Some(&b':') {
             return None;
         }

@@ -4,6 +4,9 @@ description: "See[^1].\n\n[^1]: The footnote body.\n"
 ---
 Document [0..35]
   Paragraph [0..9]
-    Text "See[^1]." [0..8]
-  Paragraph [10..35]
-    Text "[^1]: The footnote body." [10..34]
+    Text "See" [0..3]
+    FootnoteReference identifier="1" label=Some("1") [3..7]
+    Text "." [7..8]
+  FootnoteDefinition identifier="1" label=Some("1") [10..35]
+    Paragraph [15..34]
+      Text "The footnote body." [15..33]
