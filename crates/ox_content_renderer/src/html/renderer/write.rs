@@ -185,6 +185,8 @@ impl HtmlRenderer {
     pub(in crate::html::renderer) fn write_heading_id(&mut self, heading: &Heading<'_>) {
         use std::fmt::Write as _;
 
+        crate::profile_span!("renderer::write_heading_id");
+
         self.heading_text_scratch.clear();
         collect_heading_text_into(&heading.children, &mut self.heading_text_scratch);
         self.heading_slug_scratch.clear();

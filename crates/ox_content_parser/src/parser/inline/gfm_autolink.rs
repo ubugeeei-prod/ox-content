@@ -11,6 +11,8 @@ use ox_content_allocator::Vec;
 use ox_content_ast::{Link, Node, Span, Text};
 
 use crate::parser::Parser;
+#[allow(unused_imports)]
+use crate::profile_span;
 
 struct Candidate {
     start: usize,
@@ -20,6 +22,7 @@ struct Candidate {
 
 impl<'a> Parser<'a> {
     pub(in crate::parser) fn apply_gfm_autolinks(&self, children: &mut Vec<'a, Node<'a>>) {
+        profile_span!("parser::apply_gfm_autolinks");
         // Entity, escape, and unpaired-delimiter handling fragment plain
         // prose into adjacent text nodes; autolinks must see the joined
         // run (`...?q=x&hl=en` is one URL despite the `&` split).

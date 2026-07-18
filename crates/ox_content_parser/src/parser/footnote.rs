@@ -20,6 +20,8 @@ use rustc_hash::FxHashSet;
 
 use super::Parser;
 use crate::error::ParseResult;
+#[allow(unused_imports)]
+use crate::profile_span;
 
 pub(super) type FootnoteLabels = FxHashSet<CompactString>;
 
@@ -225,6 +227,7 @@ impl<'a> Parser<'a> {
     /// Collects every footnote label in the source so inline references
     /// resolve regardless of definition order.
     pub(super) fn build_footnote_labels(&self) -> Rc<FootnoteLabels> {
+        profile_span!("parser::build_footnote_labels");
         if !self.options.footnotes || !self.source.contains("[^") {
             return Rc::new(FootnoteLabels::default());
         }
