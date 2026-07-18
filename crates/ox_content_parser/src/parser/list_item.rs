@@ -2,38 +2,60 @@ use super::Parser;
 
 pub(super) struct ParsedListItem<'a> {
     pub(super) ordered: bool,
+    /// Marker byte identifying the list flavor: the bullet (`-`, `*`,
+    /// `+`) for unordered items, the delimiter (`.`, `)`) for ordered
+    /// ones. Lists only continue across items with the same marker.
+    pub(super) marker: u8,
     pub(super) start: Option<u32>,
     pub(super) content: &'a str,
     pub(super) content_offset: usize,
+    /// Column (relative to the marker line's start) where continuation
+    /// lines must be indented to belong to this item: marker indent +
+    /// marker width + following spaces (one column when the item is
+    /// empty or starts with indented code).
+    pub(super) content_indent: usize,
     pub(super) checked: Option<bool>,
 }
 
 impl<'a> Parser<'a> {
-    pub(super) fn try_parse_list(&self) -> bool {
-        Self::try_parse_list_line(self.current_line().trim_start())
-    }
-
-    /// Line-cached variant of [`Self::try_parse_list`]. Callers that
+    /// Checks whether a trimmed line opens a list item. Callers that
     /// already produced the trimmed line via `parse_block` /
     /// `line_starts_block` reuse that slice instead of re-scanning the
     /// source for a newline and re-running `trim_start`.
     pub(super) fn try_parse_list_line(trimmed: &str) -> bool {
-        let trimmed = trimmed.as_bytes();
+        let bytes = trimmed.as_bytes();
 
-        // Unordered list: starts with -, *, or + followed by space.
-        if trimmed.len() >= 2 && matches!(trimmed[0], b'-' | b'*' | b'+') && trimmed[1] == b' ' {
-            return true;
+        // Unordered: bullet followed by space/tab or end of line.
+        if matches!(bytes.first(), Some(b'-' | b'*' | b'+')) {
+            return matches!(bytes.get(1), None | Some(b' ' | b'\t'));
         }
 
-        // Ordered list: digit(s) followed by `.` or `)` and a space.
+        // Ordered: up to nine digits, `.` or `)`, then space/tab or EOL.
         let mut i = 0;
-        while i < trimmed.len() && trimmed[i].is_ascii_digit() {
+        while i < bytes.len() && bytes[i].is_ascii_digit() {
+            i += 1;
+        }
+        (1..=9).contains(&i)
+            && matches!(bytes.get(i), Some(b'.' | b')'))
+            && matches!(bytes.get(i + 1), None | Some(b' ' | b'\t'))
+    }
+
+    /// Variant for paragraph interruption: only non-empty items can
+    /// interrupt a paragraph, and ordered ones only when numbered 1.
+    pub(super) fn try_parse_list_interrupt(trimmed: &str) -> bool {
+        let bytes = trimmed.as_bytes();
+        if matches!(bytes.first(), Some(b'-' | b'*' | b'+')) {
+            return matches!(bytes.get(1), Some(b' ' | b'\t')) && !trimmed[1..].trim().is_empty();
+        }
+        let mut i = 0;
+        while i < bytes.len() && bytes[i].is_ascii_digit() {
             i += 1;
         }
         i > 0
-            && i + 1 < trimmed.len()
-            && matches!(trimmed[i], b'.' | b')')
-            && trimmed[i + 1] == b' '
+            && trimmed[..i] == *"1"
+            && matches!(bytes.get(i), Some(b'.' | b')'))
+            && matches!(bytes.get(i + 1), Some(b' ' | b'\t'))
+            && !trimmed[i + 1..].trim().is_empty()
     }
 
     /// Calculates the indentation level (number of spaces) of the current line.
@@ -81,48 +103,61 @@ impl<'a> Parser<'a> {
     ) -> Option<ParsedListItem<'a>> {
         let trimmed = line.trim_start();
         let trimmed_offset = line_start + (line.len() - trimmed.len());
-
-        if trimmed.starts_with("- ") || trimmed.starts_with("* ") || trimmed.starts_with("+ ") {
-            let mut content = &trimmed[2..];
-            let mut content_offset = trimmed_offset + 2;
-            let mut checked = None;
-
-            if let Some((done, consumed)) = self.parse_task_list_prefix(content) {
-                checked = Some(done);
-                content = &content[consumed..];
-                content_offset += consumed;
-            }
-
-            return Some(ParsedListItem {
-                ordered: false,
-                start: None,
-                content,
-                content_offset,
-                checked,
-            });
-        }
-
         let bytes = trimmed.as_bytes();
-        let mut marker_end = 0;
-        while marker_end < bytes.len() && bytes[marker_end].is_ascii_digit() {
-            marker_end += 1;
-        }
 
-        if marker_end == 0 || marker_end + 1 >= bytes.len() {
-            return None;
-        }
+        let (ordered, marker, marker_width, start) =
+            if matches!(bytes.first(), Some(b'-' | b'*' | b'+')) {
+                (false, bytes[0], 1, None)
+            } else {
+                let mut digits = 0;
+                while digits < bytes.len() && bytes[digits].is_ascii_digit() {
+                    digits += 1;
+                }
+                if !(1..=9).contains(&digits) || !matches!(bytes.get(digits), Some(b'.' | b')')) {
+                    return None;
+                }
+                (true, bytes[digits], digits + 1, trimmed[..digits].parse().ok())
+            };
 
-        let marker = bytes[marker_end];
-        if !matches!(marker, b'.' | b')') || bytes[marker_end + 1] != b' ' {
-            return None;
+        // Content begins after 1–4 spaces (or a tab). More than four
+        // spaces means the item starts with indented code: content is
+        // taken to start one column after the marker, keeping the extra
+        // spaces. A bare marker at end of line is an empty item.
+        let after_marker = &bytes[marker_width..];
+        let spaces = after_marker.iter().take_while(|&&byte| byte == b' ').count();
+        let content_skip = match after_marker.first() {
+            None => 0,
+            Some(b'\t') => 1,
+            Some(b' ') if spaces <= 4 && spaces < after_marker.len() => spaces,
+            Some(b' ') if spaces >= after_marker.len() => spaces, // marker + trailing blanks
+            Some(b' ') => 1,
+            Some(_) => return None,
+        };
+
+        let mut content = &trimmed[marker_width + content_skip..];
+        let mut content_offset = trimmed_offset + marker_width + content_skip;
+        // Continuation indent counts the marker's own indent plus the
+        // marker and its separating spaces; empty items count one column.
+        let marker_indent = trimmed_offset - line_start;
+        let content_indent = marker_indent
+            + marker_width
+            + if content.trim().is_empty() { 1 } else { content_skip.max(1) };
+        let mut checked = None;
+
+        if let Some((done, consumed)) = self.parse_task_list_prefix(content) {
+            checked = Some(done);
+            content = &content[consumed..];
+            content_offset += consumed;
         }
 
         Some(ParsedListItem {
-            ordered: true,
-            start: trimmed[..marker_end].parse().ok(),
-            content: &trimmed[marker_end + 2..],
-            content_offset: trimmed_offset + marker_end + 2,
-            checked: None,
+            ordered,
+            marker,
+            start,
+            content,
+            content_offset,
+            content_indent,
+            checked,
         })
     }
 

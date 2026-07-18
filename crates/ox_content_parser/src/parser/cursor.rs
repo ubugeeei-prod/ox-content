@@ -7,11 +7,6 @@ impl<'a> Parser<'a> {
         self.position >= self.source.len()
     }
 
-    /// Returns the remaining source.
-    pub(super) fn remaining(&self) -> &'a str {
-        &self.source[self.position..]
-    }
-
     /// Peeks at the current character.
     #[inline]
     pub(super) fn peek(&self) -> Option<char> {
@@ -66,13 +61,6 @@ impl<'a> Parser<'a> {
         }
     }
 
-    pub(super) fn current_line(&self) -> &'a str {
-        let bytes = self.source.as_bytes();
-        let end = memchr(b'\n', &bytes[self.position..])
-            .map_or(self.source.len(), |off| self.position + off);
-        &self.source[self.position..end]
-    }
-
     /// Returns true when the current line begins a block-level construct.
     ///
     /// This is the paragraph-continuation counterpart of `parse_block`'s
@@ -99,7 +87,7 @@ impl<'a> Parser<'a> {
             b'-' | b'*' => {
                 let line = self.line_at(line_start);
                 let trimmed = &line[trimmed_start - line_start..];
-                Self::try_parse_thematic_break_line(line) || Self::try_parse_list_line(trimmed)
+                Self::try_parse_thematic_break_line(line) || Self::try_parse_list_interrupt(trimmed)
             }
             b'_' => Self::try_parse_thematic_break_line(self.line_at(line_start)),
             b'>' => true,
@@ -114,7 +102,7 @@ impl<'a> Parser<'a> {
             }
             b'+' | b'0'..=b'9' => {
                 let line = self.line_at(line_start);
-                Self::try_parse_list_line(&line[trimmed_start - line_start..])
+                Self::try_parse_list_interrupt(&line[trimmed_start - line_start..])
             }
             _ => false,
         };
