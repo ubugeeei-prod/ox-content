@@ -88,6 +88,12 @@ impl<'a> Parser<'a> {
             return false;
         };
 
+        // A line indented four or more columns cannot start any block, so
+        // it can never interrupt a paragraph either (lazy continuation).
+        if self.line_indent_width(line_start, trimmed_start) >= 4 {
+            return false;
+        }
+
         let starts_block = match bytes[trimmed_start] {
             b'#' => self.try_parse_heading_start(line_start, trimmed_start),
             b'-' | b'*' => {
