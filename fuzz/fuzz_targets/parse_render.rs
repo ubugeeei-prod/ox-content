@@ -46,6 +46,9 @@ fn derive_options(data: &[u8]) -> (ParserOptions, HtmlRendererOptions, &[u8]) {
     if renderer & 0b1000 != 0 {
         renderer_options.highlight = true;
     }
+    if renderer & 0b0001_0000 != 0 {
+        renderer_options.disallow_raw_html = true;
+    }
 
     (parser_options, renderer_options, rest)
 }
