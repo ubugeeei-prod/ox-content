@@ -191,8 +191,7 @@ impl<'a> Parser<'a> {
                     item_source = Some(self.init_list_item_source(item.content, consumed_newline));
                 }
                 let item_source = item_source.as_mut().expect("item source initialized");
-                let stripped = Self::strip_indent_columns(continuation_line, content_indent);
-                item_source.push_str(stripped);
+                Self::push_line_without_indent(item_source, continuation_line, content_indent);
                 item_source.push('\n');
                 self.position = continuation_next;
                 item_end = self.position;
@@ -218,7 +217,7 @@ impl<'a> Parser<'a> {
                 item_source = Some(self.init_list_item_source(item.content, consumed_newline));
             }
             let source = item_source.as_mut().expect("item source initialized");
-            source.push_str(Self::strip_indent_columns(continuation_line, content_indent));
+            Self::push_line_without_indent(source, continuation_line, content_indent);
             source.push('\n');
             self.position = continuation_next;
             item_end = self.position;
