@@ -1,4 +1,4 @@
-use memchr::{memchr, memchr3};
+use memchr::memchr3;
 use ox_content_allocator::Vec;
 use ox_content_ast::{Image, Link, Node, Span, Text};
 
@@ -188,32 +188,6 @@ impl<'a> Parser<'a> {
             count += 1;
         }
         count
-    }
-
-    /// Finds the next emphasis/strong delimiter run of at least `min_count`.
-    ///
-    /// Only occurrences of `marker` can change the result. Using `memchr` to
-    /// jump between marker runs preserves the delimiter positions visited by
-    /// the old byte-by-byte loop while making long non-marker spans cheap.
-    pub(super) fn find_marker_run(
-        bytes: &[u8],
-        mut cursor: usize,
-        marker: u8,
-        min_count: usize,
-    ) -> Option<usize> {
-        while cursor < bytes.len() {
-            // Skip directly to the next marker byte instead of inspecting every
-            // intervening byte; the original `else { cursor += 1 }` arm was a
-            // pure no-op skip, so the marker positions visited are identical.
-            let off = memchr(marker, &bytes[cursor..])?;
-            cursor += off;
-            let count = Self::marker_run_len(bytes, cursor, marker);
-            if count >= min_count {
-                return Some(cursor);
-            }
-            cursor += count;
-        }
-        None
     }
 
     /// Scans a balanced delimiter region and returns the matching close byte.
