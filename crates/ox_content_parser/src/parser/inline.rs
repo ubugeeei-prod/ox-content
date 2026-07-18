@@ -8,6 +8,7 @@ use crate::error::ParseResult;
 use crate::profile_span;
 
 mod autolink;
+mod entity;
 mod link_target;
 mod scan;
 
@@ -65,6 +66,25 @@ impl<'a> Parser<'a> {
                 }
             }
             b'\n' => Self::parse_line_break(content, offset, children, pos),
+            b'&' => {
+                // Entity / numeric character references decode to literal
+                // text (the result can never open or close markup).
+                if let Some((value, len)) = entity::scan_entity(&content[*pos..]) {
+                    let end = *pos + len;
+                    let text: &'a str = match value {
+                        entity::EntityValue::Named(expansion) => expansion,
+                        entity::EntityValue::Char(ch) => {
+                            let mut buf = [0u8; 4];
+                            self.allocator.alloc_str(ch.encode_utf8(&mut buf))
+                        }
+                    };
+                    Self::push_text(children, text, offset + *pos, offset + end);
+                    *pos = end;
+                } else {
+                    Self::push_text(children, "&", offset + *pos, offset + *pos + 1);
+                    *pos += 1;
+                }
+            }
             b'<' => self.parse_inline_html_or_text(content, offset, children, pos),
             b'\\' if *pos + 1 < content.len() && bytes[*pos + 1].is_ascii_punctuation() => {
                 // A backslash escapes only ASCII punctuation (CommonMark
