@@ -3,7 +3,7 @@ layout: entry
 title: Ox Content
 description: Rust-powered document generator and high-performance Markdown toolkit for JavaScript, with framework-agnostic pipelines, OG image support, and zero-JavaScript-first MPA output.
 hero:
-  text: cargo doc for JavaScript
+  text: High-performance Markdown toolkit
   tagline: A framework-agnostic document generator and high-performance Markdown toolkit for the Vite era, with OG images, theming, search, Rust speed, and zero-JavaScript-first MPA output.
   notice:
     title: Unofficial project notice
@@ -30,7 +30,7 @@ hero:
       link: https://github.com/sponsors/ubugeeei
 features:
   - icon: "mdi:file-document-outline"
-    title: cargo doc for JavaScript
+    title: API Docs from JSDoc
     details: "Generate docs for JavaScript and TypeScript projects with a docs.rs-like bias, plus first-class Markdown pages."
     link: getting-started.md
   - icon: "mdi:layers-triple"

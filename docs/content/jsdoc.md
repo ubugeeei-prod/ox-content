@@ -1,12 +1,12 @@
 ---
 title: API Docs from JSDoc
-description: Generate API documentation from JSDoc and TypeScript types, like cargo doc for JavaScript.
+description: Generate API documentation from JSDoc and TypeScript types.
 ---
 
 # API Docs from JSDoc
 
 Ox Content can generate API documentation directly from your JSDoc comments and
-TypeScript types — "cargo doc for JavaScript". Source files are parsed with the
+TypeScript types. Source files are parsed with the
 [OXC](https://oxc.rs) parser, so extraction is fast and understands real
 TypeScript (generics, overloads, interfaces, enums) without a separate
 type-checker pass.

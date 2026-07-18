@@ -7,8 +7,8 @@
 </p>
 
 <p align="center">
-  <strong>cargo doc for JavaScript</strong><br>
-  Rust-powered document generator and high-performance Markdown toolkit
+  <strong>High-performance Markdown toolkit</strong><br>
+  Rust-powered Markdown engine, documentation generator, and content tooling for the JavaScript ecosystem
 </p>
 
 <p align="center">
