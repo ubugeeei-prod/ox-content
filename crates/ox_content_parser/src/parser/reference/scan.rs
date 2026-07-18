@@ -48,7 +48,7 @@ pub(super) fn next_blank_line(bytes: &[u8], mut pos: usize) -> usize {
 
 /// Strips leading `>` block quote markers (each with up to three spaces of
 /// indent and one optional following space).
-pub(super) fn strip_quote_markers(mut line: &str) -> &str {
+pub(in crate::parser) fn strip_quote_markers(mut line: &str) -> &str {
     loop {
         let bytes = line.as_bytes();
         let mut i = 0;

@@ -10,6 +10,8 @@ mod html;
 mod inline;
 #[path = "edge_cases/lists.rs"]
 mod lists;
+#[path = "edge_cases/prepass.rs"]
+mod prepass;
 #[path = "edge_cases/tables.rs"]
 mod tables;
 
