@@ -7,6 +7,7 @@ use crate::error::ParseResult;
 #[allow(unused_imports)]
 use crate::profile_span;
 
+mod autolink;
 mod link_target;
 mod scan;
 
@@ -64,7 +65,7 @@ impl<'a> Parser<'a> {
                 }
             }
             b'\n' => Self::parse_line_break(content, offset, children, pos),
-            b'<' => Self::parse_inline_html_or_text(content, offset, children, pos),
+            b'<' => self.parse_inline_html_or_text(content, offset, children, pos),
             b'\\' if *pos + 1 < content.len() && bytes[*pos + 1].is_ascii_punctuation() => {
                 // A backslash escapes only ASCII punctuation (CommonMark
                 // "Backslash escapes"). The escaped character is emitted as
@@ -150,12 +151,16 @@ impl<'a> Parser<'a> {
     }
 
     fn parse_inline_html_or_text(
+        &self,
         content: &'a str,
         offset: usize,
         children: &mut Vec<'a, Node<'a>>,
         pos: &mut usize,
     ) {
-        if let Some((html, end)) = Self::parse_inline_html(content, *pos, offset) {
+        if let Some((link, end)) = self.parse_autolink(content, *pos, offset) {
+            children.push(link);
+            *pos = end;
+        } else if let Some((html, end)) = Self::parse_inline_html(content, *pos, offset) {
             children.push(Node::Html(html));
             *pos = end;
         } else {
