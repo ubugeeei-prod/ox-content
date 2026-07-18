@@ -28,10 +28,13 @@ use spec_txt::{parse_spec, SpecExample};
 const SPEC: &str = include_str!("spec_fixtures/gfm-extensions-spec.txt");
 const BASELINE: &str = include_str!("spec_fixtures/gfm-known-failures.txt");
 
-fn render(markdown: &str) -> String {
+fn render(markdown: &str, section: &str) -> String {
     let allocator = Allocator::new();
     let mut renderer_options = HtmlRendererOptions::new();
     renderer_options.autolink_urls = false;
+    // The tagfilter extension is opt-in on the renderer (raw HTML normally
+    // passes through), so enable it for the section that specifies it.
+    renderer_options.disallow_raw_html = section.starts_with("Disallowed Raw HTML");
     let parser = Parser::with_options(&allocator, markdown, ParserOptions::gfm());
     let parsed = parser.parse();
     let rendered = match parsed {
@@ -45,7 +48,7 @@ fn failures(examples: &[SpecExample]) -> Vec<(usize, String)> {
     examples
         .iter()
         .filter_map(|example| {
-            let actual = render(&example.markdown);
+            let actual = render(&example.markdown, &example.section);
             (normalize_html(&actual) != normalize_html(&example.html)).then(|| {
                 let mut detail = String::new();
                 let _ = writeln!(detail, "=== example {} ({})", example.number, example.section);
@@ -75,7 +78,7 @@ fn baseline_numbers() -> Vec<usize> {
 #[test]
 fn gfm_extension_conformance() {
     let examples = parse_spec(SPEC);
-    assert_eq!(examples.len(), 23, "expected the vendored GFM extension examples");
+    assert_eq!(examples.len(), 24, "expected the vendored GFM extension examples");
 
     let failing = failures(&examples);
 

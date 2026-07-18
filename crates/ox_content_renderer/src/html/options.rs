@@ -34,6 +34,18 @@ pub struct HtmlRendererOptions {
     /// Default: `false`.
     pub sanitize: bool,
 
+    /// Apply the GFM `tagfilter` extension ("Disallowed Raw HTML"):
+    /// neutralize `<title>`, `<textarea>`, `<style>`, `<xmp>`, `<iframe>`,
+    /// `<noembed>`, `<noframes>`, `<script>`, and `<plaintext>` by escaping
+    /// their leading `<`, leaving all other raw HTML untouched.
+    ///
+    /// Unlike [`Self::sanitize`], which escapes every raw HTML node, this
+    /// keeps ordinary markup working. It is off by default because raw HTML
+    /// passthrough is standard Markdown behaviour that embeds rely on.
+    ///
+    /// Default: `false`.
+    pub disallow_raw_html: bool,
+
     /// Convert `.md` links to `.html` links for SSG output.
     ///
     /// Default: `false`.
@@ -107,6 +119,7 @@ impl HtmlRendererOptions {
             hard_break: "<br>\n".to_string(),
             highlight: false,
             sanitize: false,
+            disallow_raw_html: false,
             convert_md_links: false,
             base_url: "/".to_string(),
             source_path: String::new(),

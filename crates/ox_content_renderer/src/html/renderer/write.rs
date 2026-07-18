@@ -127,9 +127,20 @@ impl HtmlRenderer {
     pub(in crate::html::renderer) fn write_html_value(&mut self, value: &str) {
         if self.options.sanitize {
             self.write_escaped(value);
-        } else if self.options.convert_md_links {
-            let rewritten = self.rewrite_html_root_urls(value);
-            self.write(&rewritten);
+            return;
+        }
+
+        // URL rewriting produces an owned string; the tag filter then runs
+        // over whichever form we ended up with so both paths get filtered.
+        let rewritten = if self.options.convert_md_links {
+            Some(self.rewrite_html_root_urls(value))
+        } else {
+            None
+        };
+        let value = rewritten.as_deref().unwrap_or(value);
+
+        if self.options.disallow_raw_html && crate::html::tagfilter::needs_filtering(value) {
+            crate::html::tagfilter::write_filtered_into(&mut self.output, value);
         } else {
             self.write(value);
         }
