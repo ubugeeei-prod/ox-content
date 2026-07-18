@@ -44,22 +44,40 @@ impl<'a> Parser<'a> {
         Some(LinkTarget { url: self.unescape_component(raw_url), title, end: i + 1 })
     }
 
-    /// Removes backslashes that escape ASCII punctuation. Returns the input
-    /// slice untouched when no escape applies; otherwise the unescaped copy
-    /// is allocated in the arena.
+    /// Removes backslashes that escape ASCII punctuation and decodes
+    /// entity/numeric character references (both apply inside link
+    /// destinations and titles). Returns the input slice untouched when
+    /// nothing decodes; otherwise the copy is allocated in the arena.
     fn unescape_component(&self, raw: &'a str) -> &'a str {
         let bytes = raw.as_bytes();
         let mut i = 0;
         let mut start = 0;
         let mut out: Option<ox_content_allocator::String<'a>> = None;
         while i < bytes.len() {
-            if bytes[i] == b'\\' && i + 1 < bytes.len() && bytes[i + 1].is_ascii_punctuation() {
-                let out = out.get_or_insert_with(|| self.allocator.new_string());
-                out.push_str(&raw[start..i]);
-                start = i + 1;
-                i += 2;
-            } else {
-                i += 1;
+            match bytes[i] {
+                b'\\' if i + 1 < bytes.len() && bytes[i + 1].is_ascii_punctuation() => {
+                    let out = out.get_or_insert_with(|| self.allocator.new_string());
+                    out.push_str(&raw[start..i]);
+                    start = i + 1;
+                    i += 2;
+                }
+                b'&' => {
+                    if let Some((value, len)) = super::entity::scan_entity(&raw[i..]) {
+                        let out = out.get_or_insert_with(|| self.allocator.new_string());
+                        out.push_str(&raw[start..i]);
+                        match value {
+                            super::entity::EntityValue::Named(expansion) => {
+                                out.push_str(expansion);
+                            }
+                            super::entity::EntityValue::Char(ch) => out.push(ch),
+                        }
+                        i += len;
+                        start = i;
+                    } else {
+                        i += 1;
+                    }
+                }
+                _ => i += 1,
             }
         }
         match out {
