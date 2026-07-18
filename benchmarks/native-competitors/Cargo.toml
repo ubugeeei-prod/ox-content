@@ -20,6 +20,12 @@ pulldown-cmark = { version = "0.13.4", default-features = false, features = ["ht
 # wrapper whose only dependency is pulldown-cmark. Pinned by rev so competitor
 # numbers stay reproducible.
 xai-grok-markdown-core = { git = "https://github.com/xai-org/grok-build", rev = "98c3b2438aa922fbbe6178a5c0a4c48f85edc8ce" }
+# The engine under test, referenced by path so the base and head benchmark
+# checkouts each measure their own core. These rows show the boundary-free
+# engine next to the @ox-content/napi rows the JS harness measures.
+ox_content_allocator = { path = "../../crates/ox_content_allocator" }
+ox_content_parser = { path = "../../crates/ox_content_parser" }
+ox_content_renderer = { path = "../../crates/ox_content_renderer" }
 
 [dev-dependencies]
 # Test-only: proves the hand-rolled JSON output parses and has the row shape

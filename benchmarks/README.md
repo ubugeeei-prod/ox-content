@@ -17,6 +17,17 @@ The JS sweep also injects rows from a standalone cargo crate in
 `native-competitors/` (built and run as a subprocess when `cargo` is on the
 PATH, skipped otherwise):
 
+- **`ox-content (native)`** (parse and render) — the engine itself, called
+  directly by path dependency: a full arena parse producing the AST, and
+  parse + HTML render with the same defaults as the `@ox-content/napi`
+  `parseAndRender` row. No napi boundary, no mdast serialization — the gap
+  between this row and the `@ox-content/napi` rows _is_ the JS hand-off
+  cost. Because the crate is built from the benchmarked checkout, base and
+  head runs each measure their own core. Note the comparison asymmetry:
+  this row builds a full AST while the pulldown rows only drain a
+  streaming event iterator, and (like the napi rows) it parses with
+  default options, so GFM tables stay off while the Grok option set
+  enables them.
 - **`xai-grok-markdown-core (Grok Build)`** (parse) — drains
   `offset_events()`, the exact parse path of the markdown stack xAI
   open-sourced with [Grok Build](https://github.com/xai-org/grok-build)
