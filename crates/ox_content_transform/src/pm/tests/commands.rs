@@ -1,4 +1,4 @@
-use super::*;
+use super::{all, vp};
 
 #[test]
 fn install_no_args() {
@@ -113,4 +113,16 @@ fn passthrough_lifecycle_scripts() {
     assert_eq!(pnpm, "pnpm test");
     assert_eq!(yarn, "yarn test");
     assert_eq!(bun, "bun test");
+}
+
+#[test]
+fn vp_conversions() {
+    assert_eq!(vp("npm install"), "vp install");
+    assert_eq!(vp("npm install vite"), "vp install vite");
+    assert_eq!(vp("npm install -D vite"), "vp install -D vite");
+    assert_eq!(vp("npm install -g typescript"), "vp install -g typescript");
+    assert_eq!(vp("npm uninstall vite"), "vp uninstall vite");
+    assert_eq!(vp("npm run build"), "vp run build");
+    assert_eq!(vp("npx vite"), "vp exec -- vite");
+    assert_eq!(vp("npm test"), "vp test");
 }
