@@ -21,11 +21,10 @@ export default {
 };
 ```
 
-```md
-<<< @/src/example.ts
-<<< @/src/example.ts{1-12}
-<<< @/src/example.ts{demo}
-```
+Each import is a `<<<` reference on its own line: `<<< @/src/example.ts`
+imports the whole file, `<<< @/src/example.ts{1-12}` imports a line range, and
+`<<< @/src/example.ts{demo}` imports a named region. Named regions match
+comments containing `#region name` and `#endregion name`.
 
-Line selectors use `1-12`. Named regions match comments containing `#region
-name` and `#endregion name`.
+See [Code Blocks](../built-in/code-blocks.md#code-imports) for live rendered
+examples.

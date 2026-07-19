@@ -65,7 +65,20 @@ export default defineConfig(({ mode }) => {
                 text: "Guide",
                 items: [
                   { text: "Getting Started", link: "/getting-started.md" },
-                  { text: "Built-in Features", link: "/built-in-features.md" },
+                  {
+                    text: "Built-in Features",
+                    link: "/built-in-features.md",
+                    items: [
+                      { text: "Markdown Baseline", link: "/built-in/markdown.md" },
+                      { text: "Syntax Extensions", link: "/built-in/syntax-extensions.md" },
+                      { text: "Code Blocks", link: "/built-in/code-blocks.md" },
+                      { text: "Embeds", link: "/built-in/embeds.md" },
+                      { text: "Mermaid Diagrams", link: "/built-in/mermaid.md" },
+                      { text: "Search", link: "/built-in/search.md" },
+                      { text: "Quality Checks", link: "/built-in/quality-checks.md" },
+                      { text: "Site Generation", link: "/built-in/site-generation.md" },
+                    ],
+                  },
                   { text: "Theming", link: "/theming.md" },
                   { text: "MDX & Components", link: "/mdx.md" },
                   { text: "API Docs from JSDoc", link: "/jsdoc.md" },
@@ -127,8 +140,18 @@ export default defineConfig(({ mode }) => {
         codeAnnotations: {
           notation: "both",
         },
+
+        // Opt-in authoring features used by the Built-in Features guides,
+        // so those pages can render live examples inline.
+        // (wikiLinks and attrs stay off: both also rewrite `[[...]]` / `{...}`
+        // inside raw HTML <code> emitted by the generated API reference.)
+        emojiShortcodes: true,
+        cjkEmphasis: true,
+        codeImports: true,
         embeds: {
           pm: true,
+          twitter: true,
+          bluesky: true,
         },
 
         // Mermaid diagrams (native mmdc via NAPI)

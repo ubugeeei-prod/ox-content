@@ -219,8 +219,8 @@ Generate table of contents.
 
 Built-in static embeds are rendered at transform time, with no client-side JavaScript.
 Non-standard embeds are opt-in.
-See [Built-in Features](../built-in-features.md#built-in-embeds) for the full
-default table.
+See [Embeds](../built-in/embeds.md) for the full
+default table and rendered examples.
 
 ```md
 <GitHub repo="ubugeeei-prod/ox-content" />
