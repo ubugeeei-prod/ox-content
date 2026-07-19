@@ -9,14 +9,14 @@ Beyond per-page Markdown transforms, the plugin ships the build-level features
 a documentation site needs: static HTML generation, per-page Open Graph
 images, content collections, and generated API docs.
 
-| Option         | Default            | Purpose                                      |
-| -------------- | ------------------ | -------------------------------------------- |
-| `ssg`          | `{ enabled: true }` | Generate static HTML pages during build.    |
-| `ogImage`      | `false`            | Generate per-page Open Graph images.         |
-| `editThisPage` | `false`            | Append "Edit this page" links.               |
-| `collections`  | `content` collection | Query Markdown files from client code.     |
-| `docs`         | `{ enabled: true }` | Generate API docs from JSDoc/TSDoc.         |
-| `transformers` | `[]`               | Custom Markdown AST transforms.              |
+| Option         | Default              | Purpose                                  |
+| -------------- | -------------------- | ---------------------------------------- |
+| `ssg`          | `{ enabled: true }`  | Generate static HTML pages during build. |
+| `ogImage`      | `false`              | Generate per-page Open Graph images.     |
+| `editThisPage` | `false`              | Append "Edit this page" links.           |
+| `collections`  | `content` collection | Query Markdown files from client code.   |
+| `docs`         | `{ enabled: true }`  | Generate API docs from JSDoc/TSDoc.      |
+| `transformers` | `[]`                 | Custom Markdown AST transforms.          |
 
 ## Static Site Generation
 
@@ -52,18 +52,18 @@ export default defineConfig({
 });
 ```
 
-| Option            | Default        | Purpose                                         |
-| ----------------- | -------------- | ----------------------------------------------- |
-| `enabled`         | `true`         | Set `ssg: false` to keep only `.md` modules.    |
-| `extension`       | `".html"`      | Generated page extension.                       |
-| `clean`           | `false`        | Remove generated output before writing.         |
-| `bare`            | `false`        | Emit unthemed HTML without navigation.          |
-| `siteName`        | —              | Suffix for `<title>` and OG site name.          |
-| `siteUrl`         | —              | Origin used for absolute OG URLs.               |
-| `ogImage`         | —              | Static fallback OG image URL.                   |
-| `generateOgImage` | `false`        | Per-page OG images (see below).                 |
-| `lastUpdated`     | `false`        | Show the git last-commit time per page.         |
-| `theme`           | `defaultTheme` | Theme configuration via `defineTheme()`.        |
+| Option            | Default        | Purpose                                              |
+| ----------------- | -------------- | ---------------------------------------------------- |
+| `enabled`         | `true`         | Set `ssg: false` to keep only `.md` modules.         |
+| `extension`       | `".html"`      | Generated page extension.                            |
+| `clean`           | `false`        | Remove generated output before writing.              |
+| `bare`            | `false`        | Emit unthemed HTML without navigation.               |
+| `siteName`        | —              | Suffix for `<title>` and OG site name.               |
+| `siteUrl`         | —              | Origin used for absolute OG URLs.                    |
+| `ogImage`         | —              | Static fallback OG image URL.                        |
+| `generateOgImage` | `false`        | Per-page OG images (see below).                      |
+| `lastUpdated`     | `false`        | Show the git last-commit time per page.              |
+| `theme`           | `defaultTheme` | Theme configuration via `defineTheme()`.             |
 | `navigation`      | derived        | Explicit navigation groups instead of the file tree. |
 
 Theming — colors, fonts, header, footer, sidebar, custom CSS — is a topic of
@@ -88,13 +88,13 @@ generated image looks like this:
 
 ![Generated Open Graph image for this page](/screenshots/og-image-example.png)
 
-| `ogImageOptions`  | Default    | Purpose                                        |
-| ----------------- | ---------- | ---------------------------------------------- |
-| `template`        | built-in   | Custom template: `.ts`, `.vue`, `.svelte`, or `.tsx`. |
-| `width`           | `1200`     | Image width in pixels.                         |
-| `height`          | `630`      | Image height in pixels.                        |
-| `cache`           | `true`     | Skip re-rendering unchanged pages.             |
-| `concurrency`     | `1`        | Parallel image renders.                        |
+| `ogImageOptions` | Default  | Purpose                                               |
+| ---------------- | -------- | ----------------------------------------------------- |
+| `template`       | built-in | Custom template: `.ts`, `.vue`, `.svelte`, or `.tsx`. |
+| `width`          | `1200`   | Image width in pixels.                                |
+| `height`         | `630`    | Image height in pixels.                               |
+| `cache`          | `true`   | Skip re-rendering unchanged pages.                    |
+| `concurrency`    | `1`      | Parallel image renders.                               |
 
 During dev, `/__og-viewer` previews every page's Open Graph metadata and
 image (the `ogViewer` option, on by default):
@@ -124,8 +124,12 @@ The rendered link points at the file that produced the page:
 
 ```html
 <p class="ox-edit-this-page">
-  <a href="https://github.com/ubugeeei-prod/ox-content/edit/main/docs/content/example.md"
-     target="_blank" rel="noopener noreferrer">Edit this page</a>
+  <a
+    href="https://github.com/ubugeeei-prod/ox-content/edit/main/docs/content/example.md"
+    target="_blank"
+    rel="noopener noreferrer"
+    >Edit this page</a
+  >
 </p>
 ```
 

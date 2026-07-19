@@ -10,13 +10,13 @@ highlighting, annotation syntax for highlighting and diff markers, and
 importing snippets from real source files. This site enables all three, so
 every example below is rendered live.
 
-| Option            | Type                                  | Default         |
-| ----------------- | ------------------------------------- | --------------- |
-| `highlight`       | `boolean`                             | `false`         |
-| `highlightTheme`  | `string` / `ThemeRegistration`        | `"github-dark"` |
-| `highlightLangs`  | `LanguageRegistration[]`              | `[]`            |
-| `codeAnnotations` | `boolean` / `CodeAnnotationsOptions`  | `false`         |
-| `codeImports`     | `boolean` / `CodeImportOptions`       | `false`         |
+| Option            | Type                                 | Default         |
+| ----------------- | ------------------------------------ | --------------- |
+| `highlight`       | `boolean`                            | `false`         |
+| `highlightTheme`  | `string` / `ThemeRegistration`       | `"github-dark"` |
+| `highlightLangs`  | `LanguageRegistration[]`             | `[]`            |
+| `codeAnnotations` | `boolean` / `CodeAnnotationsOptions` | `false`         |
+| `codeImports`     | `boolean` / `CodeImportOptions`      | `false`         |
 
 ## Syntax Highlighting
 

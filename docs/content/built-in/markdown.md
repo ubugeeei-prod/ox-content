@@ -9,17 +9,17 @@ Common GitHub-flavored Markdown behavior is enabled by default. You do not need
 any configuration for the features on this page — every rendered example below
 is produced by this documentation site itself with the default settings.
 
-| Option          | Type      | Default          | Purpose                                     |
-| --------------- | --------- | ---------------- | ------------------------------------------- |
-| `gfm`           | `boolean` | `true`           | GitHub Flavored Markdown extensions.        |
-| `tables`        | `boolean` | `true`           | GFM tables.                                 |
-| `taskLists`     | `boolean` | `true`           | `- [ ]` / `- [x]` checkboxes.               |
-| `strikethrough` | `boolean` | `true`           | `~~text~~`.                                 |
-| `autolinks`     | `boolean` | inherits `gfm`   | Turn bare URLs into links.                  |
-| `footnotes`     | `boolean` | `true`           | `[^1]` references and definitions.          |
-| `frontmatter`   | `boolean` | `true`           | Parse YAML frontmatter before rendering.    |
-| `toc`           | `boolean` | `true`           | Build a table of contents from headings.    |
-| `tocMaxDepth`   | `number`  | `3`              | Deepest heading level included in the TOC.  |
+| Option          | Type      | Default        | Purpose                                    |
+| --------------- | --------- | -------------- | ------------------------------------------ |
+| `gfm`           | `boolean` | `true`         | GitHub Flavored Markdown extensions.       |
+| `tables`        | `boolean` | `true`         | GFM tables.                                |
+| `taskLists`     | `boolean` | `true`         | `- [ ]` / `- [x]` checkboxes.              |
+| `strikethrough` | `boolean` | `true`         | `~~text~~`.                                |
+| `autolinks`     | `boolean` | inherits `gfm` | Turn bare URLs into links.                 |
+| `footnotes`     | `boolean` | `true`         | `[^1]` references and definitions.         |
+| `frontmatter`   | `boolean` | `true`         | Parse YAML frontmatter before rendering.   |
+| `toc`           | `boolean` | `true`         | Build a table of contents from headings.   |
+| `tocMaxDepth`   | `number`  | `3`            | Deepest heading level included in the TOC. |
 
 Turn any of them off explicitly when a site needs stricter CommonMark behavior:
 

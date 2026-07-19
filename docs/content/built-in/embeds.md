@@ -9,16 +9,16 @@ Embeds are HTML-like tags in Markdown that expand into static HTML at
 transform time. Two are enabled by default because they produce plain static
 markup; everything else is opt-in.
 
-| Embed                | Option              | Default | Authoring form                     |
-| -------------------- | ------------------- | ------- | ---------------------------------- |
-| GitHub card          | `embeds.github`     | `true`  | `<GitHub repo="owner/name" />`     |
-| Open Graph link card | `embeds.openGraph`  | `true`  | `<OgCard url="https://..." />`     |
-| Package manager tabs | `embeds.pm`         | `false` | `<pm>npm install pkg</pm>`         |
-| Twitter/X            | `embeds.twitter`    | `false` | `<Tweet />` or `<XPost />`         |
-| Bluesky              | `embeds.bluesky`    | `false` | `<Bluesky />`                      |
-| Spotify              | `embeds.spotify`    | `false` | `<Spotify url="https://..." />`    |
-| StackBlitz           | `embeds.stackBlitz` | `false` | `<StackBlitz url="https://..." />` |
-| WebContainer         | `embeds.webContainer` | `false` | `<WebContainer />`               |
+| Embed                | Option                | Default | Authoring form                     |
+| -------------------- | --------------------- | ------- | ---------------------------------- |
+| GitHub card          | `embeds.github`       | `true`  | `<GitHub repo="owner/name" />`     |
+| Open Graph link card | `embeds.openGraph`    | `true`  | `<OgCard url="https://..." />`     |
+| Package manager tabs | `embeds.pm`           | `false` | `<pm>npm install pkg</pm>`         |
+| Twitter/X            | `embeds.twitter`      | `false` | `<Tweet />` or `<XPost />`         |
+| Bluesky              | `embeds.bluesky`      | `false` | `<Bluesky />`                      |
+| Spotify              | `embeds.spotify`      | `false` | `<Spotify url="https://..." />`    |
+| StackBlitz           | `embeds.stackBlitz`   | `false` | `<StackBlitz url="https://..." />` |
+| WebContainer         | `embeds.webContainer` | `false` | `<WebContainer />`                 |
 
 Tabs and YouTube embeds are not part of the `embeds` option: they are always
 processed in SSG builds and dev preview, with no configuration needed. They are
@@ -74,13 +74,13 @@ line anchors:
 <GitHub permalink="https://github.com/owner/repo/blob/abc123/src/index.ts#L2-L8"></GitHub>
 ```
 
-| Option           | Default  | Purpose                                            |
-| ---------------- | -------- | -------------------------------------------------- |
-| `token`          | `""`     | GitHub API token for rate limits and private repos. |
-| `cache`          | `true`   | Cache API responses in memory.                     |
-| `cacheTTL`       | `3600000` | Cache lifetime in milliseconds.                   |
-| `maxSourceBytes` | `200000` | Skip files larger than this.                       |
-| `maxSourceLines` | `120`    | Max inline lines when no range is given.           |
+| Option           | Default   | Purpose                                             |
+| ---------------- | --------- | --------------------------------------------------- |
+| `token`          | `""`      | GitHub API token for rate limits and private repos. |
+| `cache`          | `true`    | Cache API responses in memory.                      |
+| `cacheTTL`       | `3600000` | Cache lifetime in milliseconds.                     |
+| `maxSourceBytes` | `200000`  | Skip files larger than this.                        |
+| `maxSourceLines` | `120`     | Max inline lines when no range is given.            |
 
 `process.env.GITHUB_TOKEN` is picked up automatically when no explicit `token`
 is configured. If a repository or file cannot be fetched during the build —
@@ -98,11 +98,11 @@ renders a static link card:
 
 <OgCard url="https://vite.dev"></OgCard>
 
-| Option      | Default                     | Purpose                          |
-| ----------- | --------------------------- | -------------------------------- |
-| `timeout`   | `10000`                     | Fetch timeout in milliseconds.   |
-| `cache`     | `true`                      | Cache fetched metadata.          |
-| `cacheTTL`  | `3600000`                   | Cache lifetime in milliseconds.  |
+| Option      | Default                      | Purpose                         |
+| ----------- | ---------------------------- | ------------------------------- |
+| `timeout`   | `10000`                      | Fetch timeout in milliseconds.  |
+| `cache`     | `true`                       | Cache fetched metadata.         |
+| `cacheTTL`  | `3600000`                    | Cache lifetime in milliseconds. |
 | `userAgent` | `ox-content-ogp-bot/1.0 ...` | User agent sent to the target.  |
 
 Unreachable pages fall back to a plain link card. Requests to localhost,
@@ -201,15 +201,15 @@ oxContent({
 });
 ```
 
-| Option            | Default                     | Purpose                                      |
-| ----------------- | --------------------------- | -------------------------------------------- |
-| `fetch`           | `false`                     | Fetch post content at build time.            |
-| `lang`            | `"en"`                      | Syndication language and displayed date.     |
-| `timeout`         | `10000`                     | Metadata request timeout in milliseconds.    |
-| `cache`           | `true`                      | In-memory and persistent JSON caches.        |
-| `cacheDir`        | `.cache/ox-content/twitter` | Persistent metadata cache directory.         |
-| `mediaOutputDir`  | `public/ox-content/twitter` | Local directory for avatars and photos.      |
-| `mediaPublicPath` | `/ox-content/twitter`       | URL prefix emitted for downloaded media.     |
+| Option            | Default                     | Purpose                                   |
+| ----------------- | --------------------------- | ----------------------------------------- |
+| `fetch`           | `false`                     | Fetch post content at build time.         |
+| `lang`            | `"en"`                      | Syndication language and displayed date.  |
+| `timeout`         | `10000`                     | Metadata request timeout in milliseconds. |
+| `cache`           | `true`                      | In-memory and persistent JSON caches.     |
+| `cacheDir`        | `.cache/ox-content/twitter` | Persistent metadata cache directory.      |
+| `mediaOutputDir`  | `public/ox-content/twitter` | Local directory for avatars and photos.   |
+| `mediaPublicPath` | `/ox-content/twitter`       | URL prefix emitted for downloaded media.  |
 
 Downloaded media is served from your site, so a strict `img-src 'self'` CSP
 keeps working. Deleted or private posts fall back to the link-only card

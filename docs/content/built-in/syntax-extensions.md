@@ -8,12 +8,12 @@ description: Opt-in authoring syntax - emoji shortcodes, wiki links, attribute s
 Non-standard Markdown syntax is opt-in, so ordinary documents render the same
 everywhere until a site explicitly enables an extension.
 
-| Option            | Type                                 | Default |
-| ----------------- | ------------------------------------ | ------- |
-| `emojiShortcodes` | `boolean` / `EmojiShortcodeOptions`  | `false` |
-| `wikiLinks`       | `boolean` / `WikiLinkOptions`        | `false` |
-| `attrs`           | `boolean` / `AttrsOptions`           | `false` |
-| `cjkEmphasis`     | `boolean`                            | `false` |
+| Option            | Type                                | Default |
+| ----------------- | ----------------------------------- | ------- |
+| `emojiShortcodes` | `boolean` / `EmojiShortcodeOptions` | `false` |
+| `wikiLinks`       | `boolean` / `WikiLinkOptions`       | `false` |
+| `attrs`           | `boolean` / `AttrsOptions`          | `false` |
+| `cjkEmphasis`     | `boolean`                           | `false` |
 
 ## Emoji Shortcodes
 
@@ -91,8 +91,10 @@ See [[getting-started|Getting started]] and [[api/transform#options]].
 the transform emits:
 
 ```html
-<p>See <a href="/docs/getting-started">Getting started</a> and
-<a href="/docs/api/transform#options">api/transform#options</a>.</p>
+<p>
+  See <a href="/docs/getting-started">Getting started</a> and
+  <a href="/docs/api/transform#options">api/transform#options</a>.
+</p>
 ```
 
 `[[target]]` uses the target as the label, `[[target|label]]` overrides it, and

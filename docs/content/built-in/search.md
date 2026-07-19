@@ -64,7 +64,7 @@ for (const result of results) {
   BM25. `options.limit` and `options.prefix` override the configured defaults
   per call.
 - `searchOptions` exposes the resolved `{ enabled, limit, prefix, placeholder,
-  hotkey }` so a custom UI can honor the site configuration.
+hotkey }` so a custom UI can honor the site configuration.
 - Scoped queries like `@api transform` restrict results to a section of the
   site.
 

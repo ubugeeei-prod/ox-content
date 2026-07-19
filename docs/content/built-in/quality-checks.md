@@ -41,12 +41,12 @@ export default {
 };
 ```
 
-| Option            | Default     | Purpose                                        |
-| ----------------- | ----------- | ---------------------------------------------- |
-| `languages`       | all         | Restrict which fence languages are linted.     |
-| `requireLanguage` | `false`     | Report fences without a language identifier.   |
-| `trailingSpaces`  | `true`      | Report trailing whitespace inside fences.      |
-| `mode`            | `"warn"`    | `"warn"` logs; `"error"` fails the transform.  |
+| Option            | Default  | Purpose                                       |
+| ----------------- | -------- | --------------------------------------------- |
+| `languages`       | all      | Restrict which fence languages are linted.    |
+| `requireLanguage` | `false`  | Report fences without a language identifier.  |
+| `trailingSpaces`  | `true`   | Report trailing whitespace inside fences.     |
+| `mode`            | `"warn"` | `"warn"` logs; `"error"` fails the transform. |
 
 Given a page with an unlabeled fence and a trailing space, the transform
 reports:
@@ -77,12 +77,12 @@ oxContent({
 });
 ```
 
-| Option        | Default        | Purpose                                          |
-| ------------- | -------------- | ------------------------------------------------ |
-| `languages`   | `["ts", "tsx"]` | Fence languages sent to the compiler.           |
-| `requireMeta` | `true`         | Only check fences tagged `typecheck`/`twoslash`. |
-| `tsgoCommand` | `"tsgo"`       | Compiler binary to invoke.                       |
-| `mode`        | `"warn"`       | `"warn"` logs; `"error"` fails the build.        |
+| Option        | Default         | Purpose                                          |
+| ------------- | --------------- | ------------------------------------------------ |
+| `languages`   | `["ts", "tsx"]` | Fence languages sent to the compiler.            |
+| `requireMeta` | `true`          | Only check fences tagged `typecheck`/`twoslash`. |
+| `tsgoCommand` | `"tsgo"`        | Compiler binary to invoke.                       |
+| `mode`        | `"warn"`        | `"warn"` logs; `"error"` fails the build.        |
 
 With the default `requireMeta: true`, authors opt in per fence, so
 intentionally incomplete snippets stay possible:
@@ -151,8 +151,13 @@ oxContent({
 Given this input:
 
 ```html
-<p onclick="alert(1)">Hello <script>alert(2)</script>
-  <a href="javascript:alert(3)">link</a></p>
+<p onclick="alert(1)">
+  Hello
+  <script>
+    alert(2);
+  </script>
+  <a href="javascript:alert(3)">link</a>
+</p>
 ```
 
 the sanitizer emits:
