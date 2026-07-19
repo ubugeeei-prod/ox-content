@@ -58,6 +58,22 @@ export {
 
 export { transformMermaidStatic, mermaidClientScript, type MermaidOptions } from "./mermaid";
 
+const SELF_CLOSING_EMBED_TAG =
+  /<(GitHub|OgCard|Tweet|XPost|Bluesky|Spotify|StackBlitz|WebContainer|YouTube)((?:[^>"']|"[^"]*"|'[^']*')*?)\s*\/>/gi;
+
+/**
+ * Custom embed tags are not HTML void elements, so a self-closing authoring
+ * form like `<GitHub ... />` reaches the HTML re-parsers (Shiki highlighting,
+ * embed transforms) as an unclosed element that swallows the rest of the
+ * document. Normalize to an explicit open/close pair before any rehype pass
+ * runs.
+ */
+export function normalizeSelfClosingEmbeds(html: string): string {
+  return html.replace(SELF_CLOSING_EMBED_TAG, (_match, tag: string, attrs: string) => {
+    return `<${tag}${attrs}></${tag}>`;
+  });
+}
+
 /**
  * Transform all plugin components in HTML.
  * Call this during SSG build to process all plugins at once.
@@ -106,7 +122,7 @@ export async function transformAllPlugins(
     webContainer = false,
   } = options;
 
-  let result = html;
+  let result = normalizeSelfClosingEmbeds(html);
   const ogpOptions = openGraph ?? ogp ?? true;
 
   // Order matters: process in dependency order
@@ -179,7 +195,7 @@ export async function transformBuiltinEmbeds(
     webContainer?: boolean;
   },
 ): Promise<string> {
-  let result = html;
+  let result = normalizeSelfClosingEmbeds(html);
 
   if (options.github) {
     const { transformGitHub } = await import("./github");

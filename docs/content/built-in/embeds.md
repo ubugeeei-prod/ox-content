@@ -54,24 +54,24 @@ third-party widget script.
 A repository card:
 
 ```md
-<GitHub repo="ubugeeei-prod/ox-content"></GitHub>
+<GitHub repo="ubugeeei-prod/ox-content" />
 ```
 
-<GitHub repo="ubugeeei-prod/ox-content"></GitHub>
+<GitHub repo="ubugeeei-prod/ox-content" />
 
 A source snippet pinned to a ref and line range:
 
 ```md
-<GitHub repo="ubugeeei-prod/ox-content" path="README.md" ref="main" loc="1-10"></GitHub>
+<GitHub repo="ubugeeei-prod/ox-content" path="README.md" ref="main" loc="1-10" />
 ```
 
-<GitHub repo="ubugeeei-prod/ox-content" path="README.md" ref="main" loc="1-10"></GitHub>
+<GitHub repo="ubugeeei-prod/ox-content" path="README.md" ref="main" loc="1-10" />
 
 A permalink form is also supported — paste a GitHub blob URL with `#L2-L8`
 line anchors:
 
 ```md
-<GitHub permalink="https://github.com/owner/repo/blob/abc123/src/index.ts#L2-L8"></GitHub>
+<GitHub permalink="https://github.com/owner/repo/blob/abc123/src/index.ts#L2-L8" />
 ```
 
 | Option           | Default   | Purpose                                             |
@@ -93,10 +93,10 @@ card instead of failing the build.
 renders a static link card:
 
 ```md
-<OgCard url="https://vite.dev"></OgCard>
+<OgCard url="https://vite.dev" />
 ```
 
-<OgCard url="https://vite.dev"></OgCard>
+<OgCard url="https://vite.dev" />
 
 | Option      | Default                      | Purpose                         |
 | ----------- | ---------------------------- | ------------------------------- |
@@ -165,10 +165,10 @@ uses privacy-enhanced mode (`youtube-nocookie.com`) and lazy loading by
 default:
 
 ```md
-<youtube id="aqz-KE-bpKQ" title="Big Buck Bunny"></youtube>
+<youtube id="aqz-KE-bpKQ" title="Big Buck Bunny" />
 ```
 
-<youtube id="aqz-KE-bpKQ" title="Big Buck Bunny"></youtube>
+<youtube id="aqz-KE-bpKQ" title="Big Buck Bunny" />
 
 `id`, `url`, and `href` attributes are accepted; `youtu.be`, `watch?v=`,
 `shorts`, and `embed` URL shapes are all recognized.
@@ -180,10 +180,10 @@ widget script. With `twitter: true`, the embed is a privacy-conscious link
 card:
 
 ```md
-<XPost url="https://x.com/jack/status/20"></XPost>
+<XPost url="https://x.com/jack/status/20" />
 ```
 
-<XPost url="https://x.com/jack/status/20"></XPost>
+<XPost url="https://x.com/jack/status/20" />
 
 Use the object form to fetch the post body, author, avatar, and photos at
 build time and serve them from your own origin:

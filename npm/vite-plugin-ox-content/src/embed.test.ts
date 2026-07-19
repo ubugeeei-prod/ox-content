@@ -114,6 +114,20 @@ describe("builtin embed input hardening", () => {
     expect(html).toMatchSnapshot();
   });
 
+  it("does not let self-closing embed tags swallow trailing content", async () => {
+    const html = await transformBuiltinEmbeds(
+      '<GitHub repo="../secret" />\n<p>after github</p>\n<OgCard url="javascript:alert(1)" />\n<p>after ogp</p>',
+      {
+        github: {},
+        openGraph: {},
+      },
+    );
+
+    expect(html).toContain("after github");
+    expect(html).toContain("after ogp");
+    expect(html).toMatchSnapshot();
+  });
+
   it("can disable builtin embeds", async () => {
     const input = '<GitHub repo="../secret"></GitHub><OgCard url="javascript:alert(1)"></OgCard>';
     await expect(
