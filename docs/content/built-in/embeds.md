@@ -238,12 +238,14 @@ shown in the card, so no network request is needed at all:
 playlists, episodes, shows, and artists:
 
 ```md
-<Spotify url="https://open.spotify.com/track/4uLU6hMCjMI75M1A2tKUQC"></Spotify>
+<Spotify url="https://open.spotify.com/track/4uLU6hMCjMI75M1A2tKUQC" />
 ```
 
-The output is an `<iframe>` pointing at `open.spotify.com/embed/...`. It is
-opt-in — and not enabled on this site — because the player loads third-party
-resources in the reader's browser.
+<Spotify url="https://open.spotify.com/track/4uLU6hMCjMI75M1A2tKUQC" />
+
+The output is an `<iframe>` pointing at `open.spotify.com/embed/...` with lazy
+loading. Unlike the static cards above it is a real third-party player, which
+is why it stays opt-in.
 
 ## StackBlitz
 

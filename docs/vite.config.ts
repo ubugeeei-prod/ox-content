@@ -154,6 +154,7 @@ export default defineConfig(({ mode }) => {
           twitter: { fetch: true },
           bluesky: true,
           webContainer: true,
+          spotify: true,
         },
 
         // Mermaid diagrams (native mmdc via NAPI)
