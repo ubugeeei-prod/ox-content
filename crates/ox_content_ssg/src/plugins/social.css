@@ -1,0 +1,185 @@
+/* ox-content Social Embeds - Twitter/X, Bluesky, WebContainer, media iframes */
+
+/* Static link cards (<Tweet>/<XPost>/<Bluesky> without build-time fetch) */
+.ox-tweet,
+.ox-bluesky {
+  display: block;
+  margin: 1.5rem 0;
+  border-top: 1px solid color-mix(in srgb, var(--octc-color-border) 74%, transparent);
+  border-bottom: 1px solid color-mix(in srgb, var(--octc-color-border) 74%, transparent);
+}
+
+.ox-tweet > a,
+.ox-bluesky > a {
+  display: block;
+  padding: 1rem 0;
+  text-decoration: none;
+  color: var(--octc-color-text);
+}
+
+.ox-tweet > a:hover,
+.ox-bluesky > a:hover {
+  text-decoration: none;
+}
+
+.ox-tweet > a > span,
+.ox-bluesky > a > span {
+  display: block;
+  font-size: 0.6875rem;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--octc-color-text-muted);
+  margin-bottom: 0.375rem;
+}
+
+.ox-tweet > a > strong,
+.ox-bluesky > a > strong {
+  display: block;
+  font-weight: 600;
+  font-size: 0.9375rem;
+  color: var(--octc-color-primary);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.ox-tweet > a:hover > strong,
+.ox-bluesky > a:hover > strong {
+  text-decoration: underline;
+}
+
+.ox-tweet > a > p,
+.ox-bluesky > a > p {
+  margin: 0.5rem 0 0;
+  font-size: 0.875rem;
+  line-height: 1.5;
+  color: var(--octc-color-text-muted);
+}
+
+/* Fetched tweet cards (<Tweet> with `twitter: { fetch: true }`) */
+.ox-tweet--fetched > a {
+  padding: 1rem 0;
+}
+
+.ox-tweet__header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem;
+  margin-bottom: 0.625rem;
+}
+
+.ox-tweet__profile {
+  display: flex;
+  align-items: center;
+  gap: 0.625rem;
+  min-width: 0;
+}
+
+.ox-tweet__avatar {
+  width: 40px;
+  height: 40px;
+  border-radius: 9999px;
+  background: var(--octc-color-bg-alt);
+}
+
+.ox-tweet__author-name {
+  display: block;
+  font-weight: 600;
+  font-size: 0.9375rem;
+  color: var(--octc-color-text);
+}
+
+.ox-tweet__author-handle {
+  display: block;
+  font-size: 0.8125rem;
+  color: var(--octc-color-text-muted);
+}
+
+.ox-tweet__body {
+  margin: 0 0 0.625rem;
+  font-size: 0.9375rem;
+  line-height: 1.55;
+  color: var(--octc-color-text);
+  white-space: pre-wrap;
+}
+
+.ox-tweet__media {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+  gap: 0.5rem;
+  margin-bottom: 0.625rem;
+}
+
+.ox-tweet__media-item {
+  width: 100%;
+  height: auto;
+  border-radius: 8px;
+  border: 1px solid color-mix(in srgb, var(--octc-color-border) 74%, transparent);
+  background: var(--octc-color-bg-alt);
+}
+
+.ox-tweet__footer {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 0.75rem;
+  color: var(--octc-color-text-muted);
+}
+
+.ox-tweet__permalink {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* WebContainer lazy placeholder */
+.ox-webcontainer {
+  margin: 1.5rem 0;
+  border: 1px solid color-mix(in srgb, var(--octc-color-border) 74%, transparent);
+  border-radius: 8px;
+  overflow: hidden;
+}
+
+.ox-webcontainer__header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  padding: 0.625rem 1rem;
+  border-bottom: 1px solid color-mix(in srgb, var(--octc-color-border) 74%, transparent);
+  background: var(--octc-color-bg-alt);
+}
+
+.ox-webcontainer__header strong {
+  font-size: 0.875rem;
+  color: var(--octc-color-text);
+}
+
+.ox-webcontainer__header span {
+  font-size: 0.75rem;
+  color: var(--octc-color-text-muted);
+  white-space: nowrap;
+}
+
+.ox-webcontainer pre {
+  margin: 0;
+  border: 0;
+  border-radius: 0;
+}
+
+/* Media iframes */
+.ox-spotify,
+.ox-stackblitz {
+  display: block;
+  width: 100%;
+  margin: 1.5rem 0;
+  border: 0;
+  border-radius: 12px;
+}
+
+.ox-stackblitz {
+  border: 1px solid color-mix(in srgb, var(--octc-color-border) 74%, transparent);
+  border-radius: 8px;
+}
