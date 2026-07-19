@@ -112,7 +112,7 @@ cannot probe the network the build runs in.
 ## Package Manager Tabs
 
 `embeds.pm` expands one npm-style command into an accessible tab group for
-npm, pnpm, yarn, and bun:
+npm, pnpm, yarn, bun, and vp (Vite+):
 
 ```ts
 oxContent({
@@ -129,10 +129,11 @@ oxContent({
 <pm>npm install -D @ox-content/vite-plugin</pm>
 
 The command is converted natively in Rust — `npm install -D` becomes
-`pnpm add -D`, `yarn add -D`, and `bun add -D`. The tabs work without
-client-side JavaScript; selection uses CSS `:has()`. Opt in to
-`pm: { sync: true }` to synchronize the selected package manager across every
-block on the page via `localStorage`. See
+`pnpm add -D`, `yarn add -D`, `bun add -D`, and `vp install -D`, while
+`npx <bin>` becomes `vp exec -- <bin>`. The tabs work without client-side
+JavaScript; selection uses CSS `:has()`. Opt in to `pm: { sync: true }` to
+synchronize the selected package manager across every block on the page via
+`localStorage`. See
 [Package Manager Tabs](../examples/package-manager-tabs.md) for the full
 conversion table.
 
@@ -257,7 +258,8 @@ with `embed=1` appended:
 
 `embeds.webContainer` emits a lazy placeholder carrying the project source and
 cross-origin isolation metadata, for sites that boot
-[WebContainers](https://webcontainers.io/) on interaction:
+[WebContainers](https://webcontainers.io/) on interaction. The placeholder
+itself is fully static:
 
 ```md
 <WebContainer entry="index.html" title="Demo">
@@ -265,6 +267,11 @@ cross-origin isolation metadata, for sites that boot
   npm run dev
 </WebContainer>
 ```
+
+<WebContainer entry="index.html" title="Demo">
+  npm install
+  npm run dev
+</WebContainer>
 
 See [WebContainer Embed](../examples/webcontainer-embed.md) for the isolation
 requirements.

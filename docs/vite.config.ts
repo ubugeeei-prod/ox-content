@@ -75,6 +75,7 @@ export default defineConfig(({ mode }) => {
                       { text: "Embeds", link: "/built-in/embeds.md" },
                       { text: "Mermaid Diagrams", link: "/built-in/mermaid.md" },
                       { text: "Search", link: "/built-in/search.md" },
+                      { text: "Collections", link: "/built-in/collections.md" },
                       { text: "Quality Checks", link: "/built-in/quality-checks.md" },
                       { text: "Site Generation", link: "/built-in/site-generation.md" },
                     ],
@@ -150,8 +151,9 @@ export default defineConfig(({ mode }) => {
         codeImports: true,
         embeds: {
           pm: true,
-          twitter: true,
+          twitter: { fetch: true },
           bluesky: true,
+          webContainer: true,
         },
 
         // Mermaid diagrams (native mmdc via NAPI)
