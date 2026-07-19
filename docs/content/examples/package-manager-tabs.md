@@ -5,11 +5,11 @@ description: Author one npm command and render it as npm/pnpm/yarn/bun install t
 
 # Package Manager Tabs
 
-Ox Content can expand a single `<pm>` block into an accessible tab group with one
-tab per package manager — **npm, pnpm, yarn, and bun**, in that order. You write
-the command once using npm syntax and the renderer converts it to each package
-manager's equivalent natively (in Rust, with no client-side JavaScript required
-for the tabs themselves).
+Ox Content can expand a single `<pm>` block into an accessible tab group with
+one tab per package manager — **npm, pnpm, yarn, bun, and vp (Vite+)**, in
+that order. You write the command once using npm syntax and the renderer
+converts it to each package manager's equivalent natively (in Rust, with no
+client-side JavaScript required for the tabs themselves).
 
 ## Authoring package-manager tabs
 
@@ -48,16 +48,16 @@ body is a code block with the command converted for that package manager.
 
 The command is written using npm syntax and converted to the others:
 
-| npm                    | pnpm             | yarn              | bun             |
-| ---------------------- | ---------------- | ----------------- | --------------- |
-| `npm install`          | `pnpm install`   | `yarn`            | `bun install`   |
-| `npm install <pkg>`    | `pnpm add <pkg>` | `yarn add <pkg>`  | `bun add <pkg>` |
-| `npm i <pkg>`          | `pnpm add <pkg>` | `yarn add <pkg>`  | `bun add <pkg>` |
-| `npm install -D <pkg>` | `pnpm add -D`    | `yarn add -D`     | `bun add -D`    |
-| `npm install -g <pkg>` | `pnpm add -g`    | `yarn global add` | `bun add -g`    |
-| `npm uninstall <pkg>`  | `pnpm remove`    | `yarn remove`     | `bun remove`    |
-| `npm run <script>`     | `pnpm run`       | `yarn <script>`   | `bun run`       |
-| `npx <bin>`            | `pnpm dlx <bin>` | `yarn dlx <bin>`  | `bunx <bin>`    |
+| npm                    | pnpm             | yarn              | bun             | vp                 |
+| ---------------------- | ---------------- | ----------------- | --------------- | ------------------ |
+| `npm install`          | `pnpm install`   | `yarn`            | `bun install`   | `vp install`       |
+| `npm install <pkg>`    | `pnpm add <pkg>` | `yarn add <pkg>`  | `bun add <pkg>` | `vp install <pkg>` |
+| `npm i <pkg>`          | `pnpm add <pkg>` | `yarn add <pkg>`  | `bun add <pkg>` | `vp install <pkg>` |
+| `npm install -D <pkg>` | `pnpm add -D`    | `yarn add -D`     | `bun add -D`    | `vp install -D`    |
+| `npm install -g <pkg>` | `pnpm add -g`    | `yarn global add` | `bun add -g`    | `vp install -g`    |
+| `npm uninstall <pkg>`  | `pnpm remove`    | `yarn remove`     | `bun remove`    | `vp uninstall`     |
+| `npm run <script>`     | `pnpm run`       | `yarn <script>`   | `bun run`       | `vp run`           |
+| `npx <bin>`            | `pnpm dlx <bin>` | `yarn dlx <bin>`  | `bunx <bin>`    | `vp exec -- <bin>` |
 
 Package versions, scopes (`@scope/pkg`), additional flags, and multiple packages
 are preserved. Both `-D`/`--save-dev` and `-g`/`--global` are recognized.

@@ -54,24 +54,24 @@ third-party widget script.
 A repository card:
 
 ```md
-<GitHub repo="ubugeeei-prod/ox-content"></GitHub>
+<GitHub repo="ubugeeei-prod/ox-content" />
 ```
 
-<GitHub repo="ubugeeei-prod/ox-content"></GitHub>
+<GitHub repo="ubugeeei-prod/ox-content" />
 
 A source snippet pinned to a ref and line range:
 
 ```md
-<GitHub repo="ubugeeei-prod/ox-content" path="README.md" ref="main" loc="1-10"></GitHub>
+<GitHub repo="ubugeeei-prod/ox-content" path="README.md" ref="main" loc="1-10" />
 ```
 
-<GitHub repo="ubugeeei-prod/ox-content" path="README.md" ref="main" loc="1-10"></GitHub>
+<GitHub repo="ubugeeei-prod/ox-content" path="README.md" ref="main" loc="1-10" />
 
 A permalink form is also supported — paste a GitHub blob URL with `#L2-L8`
 line anchors:
 
 ```md
-<GitHub permalink="https://github.com/owner/repo/blob/abc123/src/index.ts#L2-L8"></GitHub>
+<GitHub permalink="https://github.com/owner/repo/blob/abc123/src/index.ts#L2-L8" />
 ```
 
 | Option           | Default   | Purpose                                             |
@@ -93,10 +93,10 @@ card instead of failing the build.
 renders a static link card:
 
 ```md
-<OgCard url="https://vite.dev"></OgCard>
+<OgCard url="https://vite.dev" />
 ```
 
-<OgCard url="https://vite.dev"></OgCard>
+<OgCard url="https://vite.dev" />
 
 | Option      | Default                      | Purpose                         |
 | ----------- | ---------------------------- | ------------------------------- |
@@ -112,7 +112,7 @@ cannot probe the network the build runs in.
 ## Package Manager Tabs
 
 `embeds.pm` expands one npm-style command into an accessible tab group for
-npm, pnpm, yarn, and bun:
+npm, pnpm, yarn, bun, and vp (Vite+):
 
 ```ts
 oxContent({
@@ -129,10 +129,11 @@ oxContent({
 <pm>npm install -D @ox-content/vite-plugin</pm>
 
 The command is converted natively in Rust — `npm install -D` becomes
-`pnpm add -D`, `yarn add -D`, and `bun add -D`. The tabs work without
-client-side JavaScript; selection uses CSS `:has()`. Opt in to
-`pm: { sync: true }` to synchronize the selected package manager across every
-block on the page via `localStorage`. See
+`pnpm add -D`, `yarn add -D`, `bun add -D`, and `vp install -D`, while
+`npx <bin>` becomes `vp exec -- <bin>`. The tabs work without client-side
+JavaScript; selection uses CSS `:has()`. Opt in to `pm: { sync: true }` to
+synchronize the selected package manager across every block on the page via
+`localStorage`. See
 [Package Manager Tabs](../examples/package-manager-tabs.md) for the full
 conversion table.
 
@@ -165,10 +166,10 @@ uses privacy-enhanced mode (`youtube-nocookie.com`) and lazy loading by
 default:
 
 ```md
-<youtube id="aqz-KE-bpKQ" title="Big Buck Bunny"></youtube>
+<youtube id="aqz-KE-bpKQ" title="Big Buck Bunny" />
 ```
 
-<youtube id="aqz-KE-bpKQ" title="Big Buck Bunny"></youtube>
+<youtube id="aqz-KE-bpKQ" title="Big Buck Bunny" />
 
 `id`, `url`, and `href` attributes are accepted; `youtu.be`, `watch?v=`,
 `shorts`, and `embed` URL shapes are all recognized.
@@ -180,10 +181,10 @@ widget script. With `twitter: true`, the embed is a privacy-conscious link
 card:
 
 ```md
-<XPost url="https://x.com/jack/status/20"></XPost>
+<XPost url="https://x.com/jack/status/20" />
 ```
 
-<XPost url="https://x.com/jack/status/20"></XPost>
+<XPost url="https://x.com/jack/status/20" />
 
 Use the object form to fetch the post body, author, avatar, and photos at
 build time and serve them from your own origin:
@@ -237,12 +238,14 @@ shown in the card, so no network request is needed at all:
 playlists, episodes, shows, and artists:
 
 ```md
-<Spotify url="https://open.spotify.com/track/4uLU6hMCjMI75M1A2tKUQC"></Spotify>
+<Spotify url="https://open.spotify.com/track/4uLU6hMCjMI75M1A2tKUQC" />
 ```
 
-The output is an `<iframe>` pointing at `open.spotify.com/embed/...`. It is
-opt-in — and not enabled on this site — because the player loads third-party
-resources in the reader's browser.
+<Spotify url="https://open.spotify.com/track/4uLU6hMCjMI75M1A2tKUQC" />
+
+The output is an `<iframe>` pointing at `open.spotify.com/embed/...` with lazy
+loading. Unlike the static cards above it is a real third-party player, which
+is why it stays opt-in.
 
 ## StackBlitz
 
@@ -257,7 +260,8 @@ with `embed=1` appended:
 
 `embeds.webContainer` emits a lazy placeholder carrying the project source and
 cross-origin isolation metadata, for sites that boot
-[WebContainers](https://webcontainers.io/) on interaction:
+[WebContainers](https://webcontainers.io/) on interaction. The placeholder
+itself is fully static:
 
 ```md
 <WebContainer entry="index.html" title="Demo">
@@ -265,6 +269,11 @@ cross-origin isolation metadata, for sites that boot
   npm run dev
 </WebContainer>
 ```
+
+<WebContainer entry="index.html" title="Demo">
+  npm install
+  npm run dev
+</WebContainer>
 
 See [WebContainer Embed](../examples/webcontainer-embed.md) for the isolation
 requirements.

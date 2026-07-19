@@ -146,34 +146,15 @@ useful for blog indexes, changelogs, or "related pages" lists. A default
 import { queryCollection } from "virtual:ox-content/collections";
 
 const guides = await queryCollection("content")
-  .path("/guide")
-  .order("date", "DESC")
+  .where("path", "LIKE", "/guide/%")
+  .order("title", "ASC")
   .limit(10)
   .all();
 ```
 
-Define explicit collections when different content types need different
-shapes:
-
-```ts
-import { oxContent, defineCollections } from "@ox-content/vite-plugin";
-
-oxContent({
-  collections: defineCollections({
-    blog: {
-      source: "blog/**/*.md",
-      // Opt into heavier fields per collection:
-      // "body" = raw Markdown, "html" = rendered HTML, "toc" = parsed TOC.
-      include: ["html", "toc"],
-    },
-    changelog: "changelog/*.md",
-  }),
-});
-```
-
-By default only metadata (path, title, frontmatter) is in the manifest;
-`include` adds `body`, `html`, or `toc` per collection. Queries run against a
-Rust-generated manifest, so filtering and ordering do not load page bodies.
+The full query builder — operators, grouped conditions, dot-path access to
+frontmatter, `select`/`order`/`limit` — is documented on its own page: see
+[Collections](./collections.md).
 
 ## API Docs
 

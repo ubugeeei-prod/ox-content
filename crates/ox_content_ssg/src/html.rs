@@ -157,6 +157,9 @@ const GITHUB_CSS: &str = include_str!("plugins/github.css");
 /// CSS styles for OGP plugin.
 const OGP_CSS: &str = include_str!("plugins/ogp.css");
 
+/// CSS styles for social embeds (Twitter/X, Bluesky, WebContainer, media iframes).
+const SOCIAL_CSS: &str = include_str!("plugins/social.css");
+
 /// CSS styles for Mermaid plugin.
 const MERMAID_CSS: &str = include_str!("plugins/mermaid.css");
 

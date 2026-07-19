@@ -10,5 +10,9 @@ fn all(command: &str) -> (String, String, String, String) {
     )
 }
 
+fn vp(command: &str) -> String {
+    convert_command(command, "vp")
+}
+
 mod commands;
 mod transform;

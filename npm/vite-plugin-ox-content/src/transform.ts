@@ -35,7 +35,7 @@ import type { ResolvedOptions, TransformResult, TocEntry } from "./types";
 import { highlightCode } from "./highlight";
 import { importNapiModule } from "./napi";
 import { transformMermaidStatic } from "./plugins/mermaid";
-import { transformBuiltinEmbeds } from "./plugins";
+import { normalizeSelfClosingEmbeds, transformBuiltinEmbeds } from "./plugins";
 import { protectMermaidSvgs, restoreMermaidSvgs } from "./plugins/mermaid-protect";
 import { typecheckCodeBlocks } from "./code-blocks";
 
@@ -540,7 +540,9 @@ export async function transformMarkdown(
     console.warn("[ox-content] Transform warnings:", result.errors);
   }
 
-  let html = result.html;
+  // Normalize before the first rehype pass (highlighting), which would
+  // otherwise reparse a self-closing embed tag as an unclosed element.
+  let html = normalizeSelfClosingEmbeds(result.html);
   const frontmatter = parseFrontmatterJson(result.frontmatter);
 
   const toc = options.toc ? result.toc.map(normalizeTocEntry) : [];

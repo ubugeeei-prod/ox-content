@@ -11,7 +11,7 @@ use super::utils::{
 };
 use super::{
     BarePageTemplate, NavGroup, PageData, PageTemplate, SsgConfig, ENTRY_CSS, GITHUB_CSS,
-    ISLAND_CSS, MERMAID_CSS, OGP_CSS, SSG_CSS, SSG_JS, TABS_CSS, TABS_JS, YOUTUBE_CSS,
+    ISLAND_CSS, MERMAID_CSS, OGP_CSS, SOCIAL_CSS, SSG_CSS, SSG_JS, TABS_CSS, TABS_JS, YOUTUBE_CSS,
 };
 
 /// Generates a complete HTML page for SSG.
@@ -58,6 +58,12 @@ pub fn generate_html(page_data: &PageData, nav_groups: &[NavGroup], config: &Ssg
     }
     if page_content_contains_any(&page_data.content, &["ox-ogp-card", "ox-ogp-simple"]) {
         css_sections.push(wrap_css_section("plugin-ogp", OGP_CSS));
+    }
+    if page_content_contains_any(
+        &page_data.content,
+        &["ox-tweet", "ox-bluesky", "ox-webcontainer", "ox-spotify", "ox-stackblitz"],
+    ) {
+        css_sections.push(wrap_css_section("plugin-social", SOCIAL_CSS));
     }
     if page_content_contains_any(&page_data.content, &["ox-mermaid"]) {
         css_sections.push(wrap_css_section("plugin-mermaid", MERMAID_CSS));

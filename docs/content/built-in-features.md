@@ -27,6 +27,7 @@ inline**.
 | [Embeds](./built-in/embeds.md)                       | GitHub cards, OG cards, package-manager tabs, tabs, YouTube, social cards |
 | [Mermaid Diagrams](./built-in/mermaid.md)            | Diagram fences rendered to static SVG                                     |
 | [Search](./built-in/search.md)                       | The static BM25 index and client search API                               |
+| [Collections](./built-in/collections.md)             | Query Markdown files with a SQL-like builder                              |
 | [Quality Checks](./built-in/quality-checks.md)       | Code block lint, type checking, docs tests, HTML sanitizer                |
 | [Site Generation](./built-in/site-generation.md)     | SSG, OG images, edit links, collections, API docs, transformers           |
 
@@ -40,7 +41,7 @@ inline**.
 | Static site      | `ssg`                                                                                                         | `{ enabled }`        | [Site Generation](./built-in/site-generation.md)     |
 | API docs         | `docs`                                                                                                        | `{ enabled }`        | [Site Generation](./built-in/site-generation.md)     |
 | Search           | `search`                                                                                                      | `{ enabled }`        | [Search](./built-in/search.md)                       |
-| Collections      | `collections`                                                                                                 | `content` collection | [Site Generation](./built-in/site-generation.md)     |
+| Collections      | `collections`                                                                                                 | `content` collection | [Collections](./built-in/collections.md)             |
 | Static embeds    | `embeds.github`, `embeds.openGraph`                                                                           | `true`               | [Embeds](./built-in/embeds.md)                       |
 | Opt-in embeds    | `embeds.pm`, `embeds.twitter`, `embeds.bluesky`, `embeds.spotify`, `embeds.stackBlitz`, `embeds.webContainer` | `false`              | [Embeds](./built-in/embeds.md)                       |
 | Syntax highlight | `highlight`                                                                                                   | `false`              | [Code Blocks](./built-in/code-blocks.md)             |

@@ -1,6 +1,7 @@
 /// Convert an npm-style command to the equivalent for `target` (one of
-/// `npm`/`pnpm`/`yarn`/`bun`). `npm` returns the command unchanged. Unknown
-/// shapes fall back to a best-effort binary swap so nothing silently breaks.
+/// `npm`/`pnpm`/`yarn`/`bun`/`vp`). `npm` returns the command unchanged.
+/// Unknown shapes fall back to a best-effort binary swap so nothing silently
+/// breaks.
 pub(super) fn convert_command(command: &str, target: &str) -> String {
     if target == "npm" {
         return command.to_string();
@@ -18,6 +19,7 @@ pub(super) fn convert_command(command: &str, target: &str) -> String {
             "pnpm" => join("pnpm dlx", rest),
             "yarn" => join("yarn dlx", rest),
             "bun" => join("bunx", rest),
+            "vp" => join("vp exec --", rest),
             _ => command.to_string(),
         };
     }
@@ -74,6 +76,7 @@ fn convert_add(args: &[&str], target: &str) -> String {
             "pnpm" => with_rest("pnpm install", &scope.rest),
             "yarn" => with_rest("yarn", &scope.rest),
             "bun" => with_rest("bun install", &scope.rest),
+            "vp" => with_rest("vp install", &scope.rest),
             _ => with_rest("npm install", &scope.rest),
         };
     }
@@ -111,6 +114,16 @@ fn convert_add(args: &[&str], target: &str) -> String {
             }
             with_rest(&base, &scope.rest)
         }
+        "vp" => {
+            let mut base = String::from("vp install");
+            if scope.dev {
+                base.push_str(" -D");
+            }
+            if scope.global {
+                base.push_str(" -g");
+            }
+            with_rest(&base, &scope.rest)
+        }
         _ => with_rest("npm install", args),
     }
 }
@@ -125,6 +138,9 @@ fn convert_remove(args: &[&str], target: &str) -> String {
             with_rest(if scope.global { "yarn global remove" } else { "yarn remove" }, &scope.rest)
         }
         "bun" => with_rest(if scope.global { "bun remove -g" } else { "bun remove" }, &scope.rest),
+        "vp" => {
+            with_rest(if scope.global { "vp uninstall -g" } else { "vp uninstall" }, &scope.rest)
+        }
         _ => with_rest("npm uninstall", args),
     }
 }
@@ -134,6 +150,7 @@ fn convert_run(args: &[&str], target: &str) -> String {
         "pnpm" => with_rest("pnpm run", args),
         "yarn" => with_rest("yarn", args),
         "bun" => with_rest("bun run", args),
+        "vp" => with_rest("vp run", args),
         _ => with_rest("npm run", args),
     }
 }
