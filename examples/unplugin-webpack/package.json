@@ -12,9 +12,9 @@
     "markdown-it-emoji": "^3.0.0"
   },
   "devDependencies": {
-    "ts-loader": "^9.6.0",
+    "ts-loader": "^9.6.2",
     "typescript": "catalog:",
-    "webpack": "^5.107.2",
-    "webpack-cli": "^7.0.3"
+    "webpack": "^5.108.4",
+    "webpack-cli": "^7.2.1"
   }
 }
