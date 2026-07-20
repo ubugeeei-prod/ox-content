@@ -9,22 +9,22 @@ packages:
   - benchmarks/bundle-size/apps/*
 
 catalog:
-  "@sveltejs/vite-plugin-svelte": ^7.1.2
-  "@types/node": ^25.8.0
-  "@types/react": ^19.2.14
+  "@sveltejs/vite-plugin-svelte": ^7.2.0
+  "@types/node": ^26.1.1
+  "@types/react": ^19.2.17
   "@types/react-dom": ^19.0.0
-  "@vitejs/plugin-react": ^6.0.2
-  "@vitejs/plugin-vue": ^6.0.0
-  "@typescript/native-preview": ^7.0.0-dev.20260518.1
-  esbuild: ^0.27.4
+  "@vitejs/plugin-react": ^6.0.3
+  "@vitejs/plugin-vue": ^6.0.8
+  "@typescript/native-preview": ^7.0.0-dev.20260707.2
+  esbuild: ^0.28.1
   react: ^19.0.0
   react-dom: ^19.0.0
-  svelte: ^5.55.7
-  typescript: ^6.0.3
+  svelte: ^5.56.6
+  typescript: ^7.0.2
   vite: npm:@voidzero-dev/vite-plus-core@0.1.21
   vitest: npm:@voidzero-dev/vite-plus-test@0.1.21
-  vue: ^3.5.34
-  vite-plus: 0.1.21
+  vue: ^3.5.40
+  vite-plus: 0.2.5
 
 onlyBuiltDependencies:
   - esbuild
