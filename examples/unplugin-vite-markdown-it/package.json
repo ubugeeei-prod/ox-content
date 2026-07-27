@@ -9,7 +9,7 @@
   },
   "dependencies": {
     "@ox-content/unplugin": "workspace:*",
-    "markdown-it-emoji": "^3.0.0"
+    "markdown-it-emoji": "^3.1.0"
   },
   "devDependencies": {
     "vite": "catalog:",
