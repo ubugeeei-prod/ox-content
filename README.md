@@ -290,7 +290,7 @@ Run the benchmark with:
 node benchmarks/bundle-size/parse-benchmark.mjs
 ```
 
-The script compares against `satteri`, `@mizchi/markdown`, `md4w (md4c)`, and `md4x (napi)` by default, and includes `Bun.markdown.html` automatically when `bun` is installed.
+The script compares against `@tanstack/markdown`, `markdown-it-ts`, `satteri`, `@mizchi/markdown`, `md4w (md4c)`, and `md4x (napi)` by default, and includes `Bun.markdown.html` automatically when `bun` is installed.
 
 ## Development
 

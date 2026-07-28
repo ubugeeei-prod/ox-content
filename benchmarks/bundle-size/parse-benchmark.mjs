@@ -480,6 +480,32 @@ async function runBenchmarks() {
     console.log("@mizchi/markdown not available, skipping mizchi comparisons\n");
   }
 
+  // TanStack Markdown exposes separate parser and HTML renderer entry points.
+  // Load them defensively because PR CI copies this head benchmark script into
+  // the base checkout, where the dependency may not exist yet.
+  let tanstackMarkdown = null;
+  try {
+    const [{ parseMarkdown }, { renderHtml }] = await Promise.all([
+      import("@tanstack/markdown/parser"),
+      import("@tanstack/markdown/html"),
+    ]);
+    tanstackMarkdown = { parseMarkdown, renderHtml };
+    console.log("Using @tanstack/markdown\n");
+  } catch {
+    console.log("@tanstack/markdown not available, skipping TanStack Markdown comparisons\n");
+  }
+
+  // markdown-it-ts is a TypeScript rewrite with the familiar markdown-it
+  // parse/render API. Keep the import optional for the copied base script in
+  // PR benchmark runs, just like the other newly added comparison targets.
+  let MarkdownItTs = null;
+  try {
+    MarkdownItTs = (await import("markdown-it-ts")).default;
+    console.log("Using markdown-it-ts\n");
+  } catch {
+    console.log("markdown-it-ts not available, skipping markdown-it-ts comparisons\n");
+  }
+
   // @astrojs/markdown-remark is the Markdown renderer Astro uses internally
   // (remark/rehype under the hood). Its processor renders asynchronously, so
   // it only joins the async render comparison. Loaded defensively like the
@@ -518,6 +544,7 @@ async function runBenchmarks() {
   }
 
   const md = new MarkdownIt();
+  const mdTs = MarkdownItTs ? MarkdownItTs() : null;
   const remarkParseProcessor = unified().use(remarkParse);
   const remarkFullProcessor = unified().use(remarkParse).use(remarkHtml);
 
@@ -545,6 +572,20 @@ async function runBenchmarks() {
 
   if (mizchi) {
     parsers.push({ name: "@mizchi/markdown", fn: (input) => mizchi.parse(input) });
+  }
+
+  if (tanstackMarkdown) {
+    parsers.push({
+      name: "@tanstack/markdown",
+      fn: (input) => tanstackMarkdown.parseMarkdown(input),
+    });
+  }
+
+  if (mdTs) {
+    parsers.push({
+      name: "markdown-it-ts",
+      fn: (input) => mdTs.parse(input, {}),
+    });
   }
 
   // Define renderers (parse + render)
@@ -575,6 +616,20 @@ async function runBenchmarks() {
 
   if (mizchi) {
     renderers.push({ name: "@mizchi/markdown", fn: (input) => mizchi.toHtml(input) });
+  }
+
+  if (tanstackMarkdown) {
+    renderers.push({
+      name: "@tanstack/markdown",
+      fn: (input) => tanstackMarkdown.renderHtml(input),
+    });
+  }
+
+  if (mdTs) {
+    renderers.push({
+      name: "markdown-it-ts",
+      fn: (input) => mdTs.render(input),
+    });
   }
 
   // Define async renderers

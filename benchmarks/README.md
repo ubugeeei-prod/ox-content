@@ -3,9 +3,9 @@
 Two flavors of performance measurement live in this tree:
 
 - **JS comparison sweep** in `bundle-size/` — runs Ox Content alongside
-  `markdown-it`, `marked`, `md4w`, `md4x`, and friends to compare ops/sec
-  and throughput at small / medium / large input sizes. Trigger via
-  `node benchmarks/bundle-size/parse-benchmark.mjs` (see
+  `@tanstack/markdown`, `markdown-it-ts`, `markdown-it`, `marked`, `md4w`,
+  `md4x`, and friends to compare ops/sec and throughput at small / medium /
+  large input sizes. Trigger via `node benchmarks/bundle-size/parse-benchmark.mjs` (see
   [`bundle-size/README` flow in the top-level README](../README.md#performance)).
 - **Rust criterion suites** under `crates/ox_content_parser/benches/` —
   in-process measurements that avoid NAPI overhead. Trigger via
