@@ -136,6 +136,51 @@
         "id": "GHSA-2pvr-wf23-7pc7",
         "reason": "Benchmark/example Astro dependency; not shipped in published packages.",
         "expires": "2026-08-31"
+      },
+      {
+        "id": "GHSA-2p49-hgcm-8545",
+        "reason": "Benchmark Astro dependency; not shipped in published packages.",
+        "expires": "2026-08-31"
+      },
+      {
+        "id": "GHSA-3jxr-9vmj-r5cp",
+        "reason": "Glob and VS Code test tooling dependency; not shipped in published packages.",
+        "expires": "2026-08-31"
+      },
+      {
+        "id": "GHSA-4c8g-83qw-93j6",
+        "reason": "Webpack example dependency; not shipped in published packages.",
+        "expires": "2026-08-31"
+      },
+      {
+        "id": "GHSA-52cp-r559-cp3m",
+        "reason": "Benchmark and N-API CLI tooling dependency; not shipped in package runtime.",
+        "expires": "2026-08-31"
+      },
+      {
+        "id": "GHSA-f88m-g3jw-g9cj",
+        "reason": "Benchmark Astro dependency; not shipped in published packages.",
+        "expires": "2026-08-31"
+      },
+      {
+        "id": "GHSA-mh99-v99m-4gvg",
+        "reason": "Glob and VS Code test tooling dependency; not shipped in published packages.",
+        "expires": "2026-08-31"
+      },
+      {
+        "id": "GHSA-r28c-9q8g-f849",
+        "reason": "Vite dev/build tooling dependency; untrusted CSS is not processed.",
+        "expires": "2026-08-31"
+      },
+      {
+        "id": "GHSA-v245-v573-v5vm",
+        "reason": "Benchmark-only markdown-it dependency; not shipped in published packages.",
+        "expires": "2026-08-31"
+      },
+      {
+        "id": "GHSA-v2hh-gcrm-f6hx",
+        "reason": "Webpack example dependency; not shipped in published packages.",
+        "expires": "2026-08-31"
       }
     ]
   },
