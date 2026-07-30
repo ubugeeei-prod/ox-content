@@ -118,9 +118,11 @@ comparison by ~1.5x on parse-only and ~1.1x on parse+render. The JavaScript-faci
 `@ox-content/napi` row is 4.9–5.7x faster than the two TypeScript renderers on
 parse-only and 6.7–10.6x faster on parse+render. At ~1 MB those N-API leads grow
 to 7.3–8.3x and 10.7–11.4x respectively, while the native pipeline sustains
-223–320 MB/s. The incremental CST parser (`@mizchi/markdown`, tuned for
-real-time editing rather than bulk parsing) and the `unified`/`remark` and
-`micromark` pipelines fall to ~1 op/sec.
+223–320 MB/s. At that size the incremental CST parser (`@mizchi/markdown`, tuned
+for real-time editing rather than bulk parsing) falls to ~1 op/sec on parse-only
+while recovering to ~12 ops/sec on parse+render, whereas the `unified`/`remark`
+pipeline stays at ~1 op/sec in both tables and `micromark` measures ~1 op/sec on
+parse+render.
 
 The runtime sweep covers more than the tables above. The harness also runs small
 and medium Markdown inputs, an async parse+render target for the N-API package
