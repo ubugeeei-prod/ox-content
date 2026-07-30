@@ -12,9 +12,6 @@ concurrency:
   group: pages
   cancel-in-progress: false
 
-env:
-  STICKY_CACHE_SCOPE: ${{ github.ref_name }}
-
 jobs:
   build:
     runs-on: blacksmith-32vcpu-ubuntu-2404
@@ -36,7 +33,7 @@ jobs:
       - name: Mount sticky cache
         uses: ./.github/actions/mount-sticky-cache
         with:
-          key-prefix: ${{ github.repository }}-deploy-${{ github.job }}-${{ env.STICKY_CACHE_SCOPE }}
+          key-prefix: ${{ github.repository }}-deploy-${{ github.job }}
           cargo: "true"
           target: target
           browsers: "true"

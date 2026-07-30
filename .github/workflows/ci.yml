@@ -15,7 +15,6 @@ concurrency:
 
 env:
   CARGO_TERM_COLOR: always
-  STICKY_CACHE_SCOPE: ${{ github.event_name == 'pull_request' && format('pr-{0}', github.event.pull_request.number) || github.ref_name }}
 
 jobs:
   rustfmt:
@@ -50,7 +49,7 @@ jobs:
       - name: Mount sticky cache
         uses: ./.github/actions/mount-sticky-cache
         with:
-          key-prefix: ${{ github.repository }}-ci-${{ github.job }}-${{ env.STICKY_CACHE_SCOPE }}
+          key-prefix: ${{ github.repository }}-ci-${{ github.job }}
           cargo: "true"
           target: target
 
@@ -96,7 +95,7 @@ jobs:
       - name: Mount sticky cache
         uses: ./.github/actions/mount-sticky-cache
         with:
-          key-prefix: ${{ github.repository }}-ci-${{ github.job }}-${{ env.STICKY_CACHE_SCOPE }}
+          key-prefix: ${{ github.repository }}-ci-${{ github.job }}
           cargo: "true"
           target: target
 
@@ -127,7 +126,7 @@ jobs:
       - name: Mount sticky cache
         uses: ./.github/actions/mount-sticky-cache
         with:
-          key-prefix: ${{ github.repository }}-ci-${{ github.job }}-${{ env.STICKY_CACHE_SCOPE }}
+          key-prefix: ${{ github.repository }}-ci-${{ github.job }}
           cargo: "true"
           target: target
 
@@ -182,7 +181,7 @@ jobs:
       - name: Mount sticky cache
         uses: ./.github/actions/mount-sticky-cache
         with:
-          key-prefix: ${{ github.repository }}-ci-${{ github.job }}-${{ env.STICKY_CACHE_SCOPE }}
+          key-prefix: ${{ github.repository }}-ci-${{ github.job }}
           cargo: "true"
 
       - name: Install Cargo audit tools
@@ -221,7 +220,7 @@ jobs:
       - name: Mount sticky cache
         uses: ./.github/actions/mount-sticky-cache
         with:
-          key-prefix: ${{ github.repository }}-ci-${{ github.job }}-${{ env.STICKY_CACHE_SCOPE }}
+          key-prefix: ${{ github.repository }}-ci-${{ github.job }}
           cargo: "true"
           target: target
 
@@ -263,7 +262,7 @@ jobs:
         if: startsWith(matrix.os, 'blacksmith-')
         uses: ./.github/actions/mount-sticky-cache
         with:
-          key-prefix: ${{ github.repository }}-ci-${{ github.job }}-${{ matrix.os }}-${{ env.STICKY_CACHE_SCOPE }}
+          key-prefix: ${{ github.repository }}-ci-${{ github.job }}-${{ matrix.os }}
           cargo: "true"
           target: target
 
@@ -316,7 +315,7 @@ jobs:
       - name: Mount sticky cache
         uses: ./.github/actions/mount-sticky-cache
         with:
-          key-prefix: ${{ github.repository }}-ci-${{ github.job }}-${{ env.STICKY_CACHE_SCOPE }}
+          key-prefix: ${{ github.repository }}-ci-${{ github.job }}
           cargo: "true"
           target: target
           browsers: "true"

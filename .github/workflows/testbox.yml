@@ -18,7 +18,6 @@ permissions:
 
 env:
   CARGO_TERM_COLOR: always
-  STICKY_CACHE_SCOPE: ${{ github.ref_name }}
   # begin-testbox / run-testbox are JavaScript actions that require Node 24.
   FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: "true"
 
@@ -61,7 +60,7 @@ jobs:
       - name: Mount sticky cache
         uses: ./.github/actions/mount-sticky-cache
         with:
-          key-prefix: ${{ github.repository }}-testbox-${{ github.job }}-${{ env.STICKY_CACHE_SCOPE }}
+          key-prefix: ${{ github.repository }}-testbox-${{ github.job }}
           cargo: "true"
           target: target
           browsers: "true"

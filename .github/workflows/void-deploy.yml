@@ -18,7 +18,6 @@ permissions:
   contents: read
 
 env:
-  STICKY_CACHE_SCOPE: ${{ github.ref_name }}
   VOID_API_URL: ${{ vars.VOID_API_URL || 'https://api.void.cloud' }}
   VOID_PROJECT: ${{ vars.VOID_PROJECT || 'ox-content' }}
   OX_CONTENT_DOCS_BASE: /
@@ -46,7 +45,7 @@ jobs:
       - name: Mount sticky cache
         uses: ./.github/actions/mount-sticky-cache
         with:
-          key-prefix: ${{ github.repository }}-void-deploy-${{ github.job }}-${{ env.STICKY_CACHE_SCOPE }}
+          key-prefix: ${{ github.repository }}-void-deploy-${{ github.job }}
           cargo: "true"
           target: target
           browsers: "true"

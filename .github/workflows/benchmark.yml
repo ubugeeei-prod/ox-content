@@ -15,7 +15,6 @@ env:
   CARGO_TERM_COLOR: always
   OX_CONTENT_BENCHMARK_RUNNER: blacksmith-32vcpu-ubuntu-2404
   OX_CONTENT_BENCHMARK_RUNS: "5"
-  STICKY_CACHE_SCOPE: ${{ github.event_name == 'pull_request' && format('pr-{0}', github.event.pull_request.number) || github.ref_name }}
 
 jobs:
   benchmark:
@@ -71,7 +70,7 @@ jobs:
       - name: Mount sticky cache
         uses: ./.github/actions/mount-sticky-cache
         with:
-          key-prefix: ${{ github.repository }}-benchmark-${{ github.job }}-${{ env.STICKY_CACHE_SCOPE }}
+          key-prefix: ${{ github.repository }}-benchmark-${{ github.job }}
           cargo: "true"
           target: /tmp/ox-content-cargo-target
 

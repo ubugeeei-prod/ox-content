@@ -31,7 +31,6 @@ permissions:
 env:
   CARGO_TERM_COLOR: always
   LINUX_GLIBC_VERSION: "2.17"
-  STICKY_CACHE_SCOPE: ${{ github.event_name == 'pull_request' && format('pr-{0}', github.event.pull_request.number) || github.ref_name }}
 
 jobs:
   build-napi:
@@ -85,7 +84,7 @@ jobs:
         if: startsWith(matrix.os, 'blacksmith-')
         uses: ./.github/actions/mount-sticky-cache
         with:
-          key-prefix: ${{ github.repository }}-nightly-${{ github.job }}-${{ matrix.target }}-${{ env.STICKY_CACHE_SCOPE }}
+          key-prefix: ${{ github.repository }}-nightly-${{ github.job }}-${{ matrix.target }}
           cargo: "true"
           target: target
 
@@ -270,7 +269,7 @@ jobs:
       - name: Mount sticky cache
         uses: ./.github/actions/mount-sticky-cache
         with:
-          key-prefix: ${{ github.repository }}-nightly-${{ github.job }}-${{ env.STICKY_CACHE_SCOPE }}
+          key-prefix: ${{ github.repository }}-nightly-${{ github.job }}
           cargo: "true"
           target: target
 

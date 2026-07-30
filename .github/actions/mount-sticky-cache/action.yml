@@ -3,7 +3,7 @@ description: Mount Blacksmith sticky disks for large CI caches.
 
 inputs:
   key-prefix:
-    description: Prefix shared by all sticky disk keys mounted by this action.
+    description: Stable namespace for job-specific sticky disks.
     required: true
   cargo:
     description: Mount Cargo registry and git caches.
@@ -22,33 +22,33 @@ runs:
       if: inputs.cargo == 'true'
       uses: ./.github/actions/stickydisk
       with:
-        key: ${{ inputs.key-prefix }}-cargo-registry
+        key: ${{ github.repository }}-cargo-registry-${{ runner.os }}-${{ runner.arch }}
         path: ~/.cargo/registry
 
     - name: Mount Cargo git
       if: inputs.cargo == 'true'
       uses: ./.github/actions/stickydisk
       with:
-        key: ${{ inputs.key-prefix }}-cargo-git
+        key: ${{ github.repository }}-cargo-git-${{ runner.os }}-${{ runner.arch }}
         path: ~/.cargo/git
 
     - name: Mount Cargo target
       if: inputs.target != ''
       uses: ./.github/actions/stickydisk
       with:
-        key: ${{ inputs.key-prefix }}-cargo-target
+        key: ${{ inputs.key-prefix }}-cargo-target-${{ runner.os }}-${{ runner.arch }}
         path: ${{ inputs.target }}
 
     - name: Mount Playwright browsers
       if: inputs.browsers == 'true'
       uses: ./.github/actions/stickydisk
       with:
-        key: ${{ inputs.key-prefix }}-playwright-browsers
+        key: ${{ inputs.key-prefix }}-playwright-browsers-${{ runner.os }}-${{ runner.arch }}
         path: ~/.cache/ms-playwright
 
     - name: Mount Puppeteer browsers
       if: inputs.browsers == 'true'
       uses: ./.github/actions/stickydisk
       with:
-        key: ${{ inputs.key-prefix }}-puppeteer-browsers
+        key: ${{ inputs.key-prefix }}-puppeteer-browsers-${{ runner.os }}-${{ runner.arch }}
         path: ~/.cache/puppeteer
