@@ -81,9 +81,9 @@ impl GraphBuilder {
             profile_span!("docs::graph_oxc_parse");
             Parser::new(&allocator, source, source_type).parse()
         };
-        if !ret.errors.is_empty() {
+        if !ret.diagnostics.is_empty() {
             let message = ret
-                .errors
+                .diagnostics
                 .iter()
                 .map(std::string::ToString::to_string)
                 .collect::<Vec<_>>()

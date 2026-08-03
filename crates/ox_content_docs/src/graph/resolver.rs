@@ -1,6 +1,8 @@
 use std::path::{Path, PathBuf};
 
-use oxc_resolver::{ResolveOptions, Resolver, TsconfigOptions, TsconfigReferences};
+use oxc_resolver::{
+    ResolveOptions, Resolver, TsconfigDiscovery, TsconfigOptions, TsconfigReferences,
+};
 use rustc_hash::FxHashMap;
 
 use super::util::{absolutize, external_package_name, is_local_specifier, normalize_existing_path};
@@ -79,10 +81,10 @@ impl ModuleResolver {
         };
 
         if let Some(tsconfig) = &options.tsconfig {
-            resolve_options.tsconfig = Some(TsconfigOptions {
+            resolve_options.tsconfig = Some(TsconfigDiscovery::Manual(TsconfigOptions {
                 config_file: absolutize(root, tsconfig),
                 references: TsconfigReferences::Auto,
-            });
+            }));
         }
 
         let external_sources = options

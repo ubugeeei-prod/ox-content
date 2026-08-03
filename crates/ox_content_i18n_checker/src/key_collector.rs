@@ -58,9 +58,9 @@ impl KeyCollector {
         let allocator = Allocator::default();
         let ret = Parser::new(&allocator, source, source_type).parse();
 
-        if !ret.errors.is_empty() {
+        if !ret.diagnostics.is_empty() {
             let msg = ret
-                .errors
+                .diagnostics
                 .iter()
                 .map(std::string::ToString::to_string)
                 .collect::<Vec<_>>()

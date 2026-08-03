@@ -115,7 +115,7 @@ pub enum Error {
     TsgoMissing(PathBuf),
 
     #[error("tsgo I/O error: {0}")]
-    Tsgo(#[from] corsa_client::TsgoError),
+    Tsgo(#[from] corsa_client::CorsaError),
 
     #[error("invalid component path {path}: {reason}", path = .path.display())]
     InvalidComponentPath { path: PathBuf, reason: String },
