@@ -87,12 +87,12 @@
     "remark-frontmatter": "^5.0.0",
     "remark-gfm": "^4.0.1",
     "remark-math": "^6.0.0",
-    "remark-smartypants": "^3.0.2",
+    "remark-smartypants": "^3.0.3",
     "remark-toc": "^9.0.0",
-    "rollup": "^4.61.1",
+    "rollup": "^4.62.3",
     "typescript": "catalog:",
     "vite": "catalog:",
     "vite-plus": "catalog:",
-    "webpack": "^5.107.2"
+    "webpack": "^5.109.2"
   }
 }
