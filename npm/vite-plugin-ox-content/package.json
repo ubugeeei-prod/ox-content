@@ -63,7 +63,7 @@
     "@ox-content/napi": "workspace:*",
     "cspell-lib": "^10.0.0",
     "glob": "^13.0.6",
-    "playwright": "^1.60.0",
+    "playwright": "^1.62.1",
     "puppeteer": "^25.0.3",
     "rehype-parse": "^9.0.1",
     "rehype-stringify": "^10.0.1",

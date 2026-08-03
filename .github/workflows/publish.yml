@@ -176,9 +176,16 @@ jobs:
           pattern: napi-*
           path: crates/ox_content_napi/artifacts
 
+      # napi-cli 3.8 rejects managed paths that escape the boundary it discovers
+      # from its cwd, so point --cwd at the workspace root and keep every path
+      # relative to it. `binding-packages` then resolves inside the pnpm
+      # workspace instead of escaping the crate directory.
       - name: Create npm sub-package directories
         working-directory: crates/ox_content_napi
-        run: vp exec -- napi create-npm-dirs --npm-dir ../../binding-packages
+        run: >-
+          vp exec -- napi create-npm-dirs --cwd ../..
+          --package-json-path crates/ox_content_napi/package.json
+          --npm-dir binding-packages
 
       - name: Move artifacts to sub-packages
         working-directory: crates/ox_content_napi
@@ -227,7 +234,10 @@ jobs:
 
       - name: Update optionalDependencies
         working-directory: crates/ox_content_napi
-        run: vp exec -- napi pre-publish -t npm --npm-dir ../../binding-packages --no-gh-release --skip-optional-publish
+        run: >-
+          vp exec -- napi pre-publish -t npm --cwd ../..
+          --package-json-path crates/ox_content_napi/package.json
+          --npm-dir binding-packages --no-gh-release --skip-optional-publish
 
       - name: Publish binding sub-packages
         run: |

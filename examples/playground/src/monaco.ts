@@ -1,12 +1,15 @@
-import "monaco-editor/min/vs/editor/editor.main.css";
+// monaco-editor 0.56 ships an `exports` map that only exposes the ESM tree
+// (`monaco-editor/<path>` -> `esm/vs/<path>.js`), so the legacy `min/` and
+// `esm/vs/` deep paths no longer resolve. The ESM entry point imports its own
+// stylesheets and registers every language definition, so the separate
+// `editor.main.css` and markdown contribution imports are gone.
 import * as monaco from "monaco-editor";
-import "monaco-editor/esm/vs/basic-languages/markdown/markdown.contribution";
 
-import editorWorker from "monaco-editor/esm/vs/editor/editor.worker?worker";
-import cssWorker from "monaco-editor/esm/vs/language/css/css.worker?worker";
-import htmlWorker from "monaco-editor/esm/vs/language/html/html.worker?worker";
-import jsonWorker from "monaco-editor/esm/vs/language/json/json.worker?worker";
-import tsWorker from "monaco-editor/esm/vs/language/typescript/ts.worker?worker";
+import editorWorker from "monaco-editor/editor/editor.worker?worker";
+import cssWorker from "monaco-editor/language/css/css.worker?worker";
+import htmlWorker from "monaco-editor/language/html/html.worker?worker";
+import jsonWorker from "monaco-editor/language/json/json.worker?worker";
+import tsWorker from "monaco-editor/language/typescript/ts.worker?worker";
 
 type MonacoEnvironmentWindow = typeof globalThis & {
   MonacoEnvironment?: {
