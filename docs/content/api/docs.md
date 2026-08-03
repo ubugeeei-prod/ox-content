@@ -80,7 +80,7 @@ const docsOptions = {
 enabled: true,
 src: [&#39;./src&#39;],
 out: &#39;./docs/api&#39;,
-include: [&#39;**\/*.ts&#39;],
+include: [&#39;**\/\*.ts&#39;],
 exclude: [&#39;**\/*.test.ts&#39;],
 groupBy: &#39;file&#39;,
 githubUrl: &#39;https://github.com/user/project&#39;,
@@ -210,14 +210,14 @@ await writeDocs(markdown, &#39;./docs/api&#39;, extracted, docsOptions);</code><
     <code class="ox-api-entry__param-name">docs</code>
     <code class="ox-api-entry__param-type"><a href="./types.md#extracteddocs">ExtractedDocs</a>[]</code>
   </div>
-  
+
 </li>
 <li class="ox-api-entry__param">
   <div class="ox-api-entry__param-heading">
     <code class="ox-api-entry__param-name">options</code>
     <code class="ox-api-entry__param-type"><a href="./types.md#resolveddocsoptions">ResolvedDocsOptions</a></code>
   </div>
-  
+
 </li>
 </ul>
 </div>
@@ -225,7 +225,7 @@ await writeDocs(markdown, &#39;./docs/api&#39;, extracted, docsOptions);</code><
 <h4>Returns</h4>
 <div class="ox-api-entry__return">
   <code class="ox-api-entry__return-type">Record&lt;string, string&gt;</code>
-  
+
 </div>
 </div>
   </div>
@@ -250,7 +250,7 @@ await writeDocs(markdown, &#39;./docs/api&#39;, extracted, docsOptions);</code><
     <code class="ox-api-entry__param-name">options</code>
     <code class="ox-api-entry__param-type">false</code>
   </div>
-  
+
 </li>
 </ul>
 </div>
@@ -258,7 +258,7 @@ await writeDocs(markdown, &#39;./docs/api&#39;, extracted, docsOptions);</code><
 <h4>Returns</h4>
 <div class="ox-api-entry__return">
   <code class="ox-api-entry__return-type">false</code>
-  
+
 </div>
 </div>
   </div>
@@ -283,14 +283,14 @@ await writeDocs(markdown, &#39;./docs/api&#39;, extracted, docsOptions);</code><
     <code class="ox-api-entry__param-name">docs</code>
     <code class="ox-api-entry__param-type">Record&lt;string, string&gt;</code>
   </div>
-  
+
 </li>
 <li class="ox-api-entry__param">
   <div class="ox-api-entry__param-heading">
     <code class="ox-api-entry__param-name">outDir</code>
     <code class="ox-api-entry__param-type">string</code>
   </div>
-  
+
 </li>
 <li class="ox-api-entry__param">
   <div class="ox-api-entry__param-heading">
@@ -312,7 +312,7 @@ await writeDocs(markdown, &#39;./docs/api&#39;, extracted, docsOptions);</code><
 <h4>Returns</h4>
 <div class="ox-api-entry__return">
   <code class="ox-api-entry__return-type">Promise&lt;void&gt;</code>
-  
+
 </div>
 </div>
   </div>

@@ -69,28 +69,28 @@
     <code class="ox-api-entry__param-name">markdownFiles</code>
     <code class="ox-api-entry__param-type">string[]</code>
   </div>
-  
+
 </li>
 <li class="ox-api-entry__param">
   <div class="ox-api-entry__param-heading">
     <code class="ox-api-entry__param-name">srcDir</code>
     <code class="ox-api-entry__param-type">string</code>
   </div>
-  
+
 </li>
 <li class="ox-api-entry__param">
   <div class="ox-api-entry__param-heading">
     <code class="ox-api-entry__param-name">base</code>
     <code class="ox-api-entry__param-type">string</code>
   </div>
-  
+
 </li>
 <li class="ox-api-entry__param">
   <div class="ox-api-entry__param-heading">
     <code class="ox-api-entry__param-name">extension</code>
     <code class="ox-api-entry__param-type">string</code>
   </div>
-  
+
 </li>
 </ul>
 </div>
@@ -98,7 +98,7 @@
 <h4>Returns</h4>
 <div class="ox-api-entry__return">
   <code class="ox-api-entry__return-type"><a href="#navgroup">NavGroup</a>[]</code>
-  
+
 </div>
 </div>
   </div>
@@ -123,14 +123,14 @@
     <code class="ox-api-entry__param-name">options</code>
     <code class="ox-api-entry__param-type"><a href="./types.md#resolvedoptions">ResolvedOptions</a></code>
   </div>
-  
+
 </li>
 <li class="ox-api-entry__param">
   <div class="ox-api-entry__param-heading">
     <code class="ox-api-entry__param-name">root</code>
     <code class="ox-api-entry__param-type">string</code>
   </div>
-  
+
 </li>
 </ul>
 </div>
@@ -138,7 +138,7 @@
 <h4>Returns</h4>
 <div class="ox-api-entry__return">
   <code class="ox-api-entry__return-type">Promise&lt;{ files: string[]; errors: string[] }&gt;</code>
-  
+
 </div>
 </div>
   </div>
@@ -163,21 +163,21 @@
     <code class="ox-api-entry__param-name">sidebar</code>
     <code class="ox-api-entry__param-type">SidebarItem[]</code>
   </div>
-  
+
 </li>
 <li class="ox-api-entry__param">
   <div class="ox-api-entry__param-heading">
     <code class="ox-api-entry__param-name">base</code>
     <code class="ox-api-entry__param-type">string</code>
   </div>
-  
+
 </li>
 <li class="ox-api-entry__param">
   <div class="ox-api-entry__param-heading">
     <code class="ox-api-entry__param-name">extension</code>
     <code class="ox-api-entry__param-type">string</code>
   </div>
-  
+
 </li>
 </ul>
 </div>
@@ -185,7 +185,7 @@
 <h4>Returns</h4>
 <div class="ox-api-entry__return">
   <code class="ox-api-entry__return-type"><a href="#navgroup">NavGroup</a>[]</code>
-  
+
 </div>
 </div>
   </div>
@@ -210,7 +210,7 @@
     <code class="ox-api-entry__param-name">srcDir</code>
     <code class="ox-api-entry__param-type">string</code>
   </div>
-  
+
 </li>
 <li class="ox-api-entry__param">
   <div class="ox-api-entry__param-heading">
@@ -225,7 +225,7 @@
 <h4>Returns</h4>
 <div class="ox-api-entry__return">
   <code class="ox-api-entry__return-type">Promise&lt;string[]&gt;</code>
-  
+
 </div>
 </div>
   </div>
@@ -264,14 +264,14 @@
     <code class="ox-api-entry__param-name">content</code>
     <code class="ox-api-entry__param-type">string</code>
   </div>
-  
+
 </li>
 <li class="ox-api-entry__param">
   <div class="ox-api-entry__param-heading">
     <code class="ox-api-entry__param-name">frontmatter</code>
     <code class="ox-api-entry__param-type">Record&lt;string, unknown&gt;</code>
   </div>
-  
+
 </li>
 </ul>
 </div>
@@ -279,7 +279,7 @@
 <h4>Returns</h4>
 <div class="ox-api-entry__return">
   <code class="ox-api-entry__return-type">string</code>
-  
+
 </div>
 </div>
   </div>
@@ -304,7 +304,7 @@
     <code class="ox-api-entry__param-name">name</code>
     <code class="ox-api-entry__param-type">string</code>
   </div>
-  
+
 </li>
 </ul>
 </div>
@@ -312,7 +312,7 @@
 <h4>Returns</h4>
 <div class="ox-api-entry__return">
   <code class="ox-api-entry__return-type">string</code>
-  
+
 </div>
 </div>
   </div>
@@ -337,14 +337,14 @@
     <code class="ox-api-entry__param-name">content</code>
     <code class="ox-api-entry__param-type">string</code>
   </div>
-  
+
 </li>
 <li class="ox-api-entry__param">
   <div class="ox-api-entry__param-heading">
     <code class="ox-api-entry__param-name">title</code>
     <code class="ox-api-entry__param-type">string</code>
   </div>
-  
+
 </li>
 </ul>
 </div>
@@ -352,7 +352,7 @@
 <h4>Returns</h4>
 <div class="ox-api-entry__return">
   <code class="ox-api-entry__return-type">string</code>
-  
+
 </div>
 </div>
   </div>
@@ -377,28 +377,28 @@
     <code class="ox-api-entry__param-name">pageData</code>
     <code class="ox-api-entry__param-type"><a href="#ssgpagedata">SsgPageData</a></code>
   </div>
-  
+
 </li>
 <li class="ox-api-entry__param">
   <div class="ox-api-entry__param-heading">
     <code class="ox-api-entry__param-name">navGroups</code>
     <code class="ox-api-entry__param-type"><a href="#navgroup">NavGroup</a>[]</code>
   </div>
-  
+
 </li>
 <li class="ox-api-entry__param">
   <div class="ox-api-entry__param-heading">
     <code class="ox-api-entry__param-name">siteName</code>
     <code class="ox-api-entry__param-type">string</code>
   </div>
-  
+
 </li>
 <li class="ox-api-entry__param">
   <div class="ox-api-entry__param-heading">
     <code class="ox-api-entry__param-name">base</code>
     <code class="ox-api-entry__param-type">string</code>
   </div>
-  
+
 </li>
 <li class="ox-api-entry__param">
   <div class="ox-api-entry__param-heading">
@@ -434,7 +434,7 @@
 <h4>Returns</h4>
 <div class="ox-api-entry__return">
   <code class="ox-api-entry__return-type">Promise&lt;string&gt;</code>
-  
+
 </div>
 </div>
   </div>
@@ -459,28 +459,28 @@
     <code class="ox-api-entry__param-name">inputPath</code>
     <code class="ox-api-entry__param-type">string</code>
   </div>
-  
+
 </li>
 <li class="ox-api-entry__param">
   <div class="ox-api-entry__param-heading">
     <code class="ox-api-entry__param-name">srcDir</code>
     <code class="ox-api-entry__param-type">string</code>
   </div>
-  
+
 </li>
 <li class="ox-api-entry__param">
   <div class="ox-api-entry__param-heading">
     <code class="ox-api-entry__param-name">base</code>
     <code class="ox-api-entry__param-type">string</code>
   </div>
-  
+
 </li>
 <li class="ox-api-entry__param">
   <div class="ox-api-entry__param-heading">
     <code class="ox-api-entry__param-name">extension</code>
     <code class="ox-api-entry__param-type">string</code>
   </div>
-  
+
 </li>
 </ul>
 </div>
@@ -488,7 +488,7 @@
 <h4>Returns</h4>
 <div class="ox-api-entry__return">
   <code class="ox-api-entry__return-type">string</code>
-  
+
 </div>
 </div>
   </div>
@@ -513,28 +513,28 @@
     <code class="ox-api-entry__param-name">inputPath</code>
     <code class="ox-api-entry__param-type">string</code>
   </div>
-  
+
 </li>
 <li class="ox-api-entry__param">
   <div class="ox-api-entry__param-heading">
     <code class="ox-api-entry__param-name">srcDir</code>
     <code class="ox-api-entry__param-type">string</code>
   </div>
-  
+
 </li>
 <li class="ox-api-entry__param">
   <div class="ox-api-entry__param-heading">
     <code class="ox-api-entry__param-name">outDir</code>
     <code class="ox-api-entry__param-type">string</code>
   </div>
-  
+
 </li>
 <li class="ox-api-entry__param">
   <div class="ox-api-entry__param-heading">
     <code class="ox-api-entry__param-name">extension</code>
     <code class="ox-api-entry__param-type">string</code>
   </div>
-  
+
 </li>
 </ul>
 </div>
@@ -542,7 +542,7 @@
 <h4>Returns</h4>
 <div class="ox-api-entry__return">
   <code class="ox-api-entry__return-type">string</code>
-  
+
 </div>
 </div>
   </div>
@@ -567,14 +567,14 @@
     <code class="ox-api-entry__param-name">inputPath</code>
     <code class="ox-api-entry__param-type">string</code>
   </div>
-  
+
 </li>
 <li class="ox-api-entry__param">
   <div class="ox-api-entry__param-heading">
     <code class="ox-api-entry__param-name">srcDir</code>
     <code class="ox-api-entry__param-type">string</code>
   </div>
-  
+
 </li>
 </ul>
 </div>
@@ -582,7 +582,7 @@
 <h4>Returns</h4>
 <div class="ox-api-entry__return">
   <code class="ox-api-entry__return-type">string</code>
-  
+
 </div>
 </div>
   </div>
@@ -680,21 +680,21 @@
     <code class="ox-api-entry__param-name">navigation</code>
     <code class="ox-api-entry__param-type"><a href="./types.md#ssgnavigationgroup">SsgNavigationGroup</a>[] | undefined</code>
   </div>
-  
+
 </li>
 <li class="ox-api-entry__param">
   <div class="ox-api-entry__param-heading">
     <code class="ox-api-entry__param-name">base</code>
     <code class="ox-api-entry__param-type">string</code>
   </div>
-  
+
 </li>
 <li class="ox-api-entry__param">
   <div class="ox-api-entry__param-heading">
     <code class="ox-api-entry__param-name">extension</code>
     <code class="ox-api-entry__param-type">string</code>
   </div>
-  
+
 </li>
 </ul>
 </div>
@@ -702,7 +702,7 @@
 <h4>Returns</h4>
 <div class="ox-api-entry__return">
   <code class="ox-api-entry__return-type"><a href="#navgroup">NavGroup</a>[] | undefined</code>
-  
+
 </div>
 </div>
   </div>
@@ -727,7 +727,7 @@
     <code class="ox-api-entry__param-name">ssg</code>
     <code class="ox-api-entry__param-type"><a href="./types.md#ssgoptions">SsgOptions</a> | boolean | undefined</code>
   </div>
-  
+
 </li>
 </ul>
 </div>
@@ -735,7 +735,7 @@
 <h4>Returns</h4>
 <div class="ox-api-entry__return">
   <code class="ox-api-entry__return-type"><a href="./types.md#resolvedssgoptions">ResolvedSsgOptions</a></code>
-  
+
 </div>
 </div>
   </div>
@@ -1029,7 +1029,7 @@
     <code class="ox-api-entry__param-name">entry</code>
     <code class="ox-api-entry__param-type"><a href="./types.md#tocentry">TocEntry</a></code>
   </div>
-  
+
 </li>
 </ul>
 </div>
@@ -1037,7 +1037,7 @@
 <h4>Returns</h4>
 <div class="ox-api-entry__return">
   <code class="ox-api-entry__return-type"><a href="./types.md#tocentry">TocEntry</a></code>
-  
+
 </div>
 </div>
   </div>

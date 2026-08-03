@@ -162,7 +162,7 @@
     <code class="ox-api-entry__param-name">html</code>
     <code class="ox-api-entry__param-type">string</code>
   </div>
-  
+
 </li>
 <li class="ox-api-entry__param">
   <div class="ox-api-entry__param-heading">
@@ -177,7 +177,7 @@
 <h4>Returns</h4>
 <div class="ox-api-entry__return">
   <code class="ox-api-entry__return-type">Promise&lt;string&gt;</code>
-  
+
 </div>
 </div>
   </div>
@@ -211,28 +211,28 @@
     <code class="ox-api-entry__param-name">html</code>
     <code class="ox-api-entry__param-type">string</code>
   </div>
-  
+
 </li>
 <li class="ox-api-entry__param">
   <div class="ox-api-entry__param-heading">
     <code class="ox-api-entry__param-name">options</code>
     <code class="ox-api-entry__param-type">{ github: GitHubOptions | false; openGraph: OgpOptions | false; <a href="./pm.md#pm">pm</a>?: <a href="./pm.md#pmoptions">PmOptions</a> | false; spotify?: boolean; stackBlitz?: boolean; twitter?: boolean; bluesky?: boolean; webContainer?: boolean }</code>
   </div>
-  
+
 </li>
 <li class="ox-api-entry__param">
   <div class="ox-api-entry__param-heading">
     <code class="ox-api-entry__param-name">options.github</code>
     <code class="ox-api-entry__param-type">GitHubOptions | false</code>
   </div>
-  
+
 </li>
 <li class="ox-api-entry__param">
   <div class="ox-api-entry__param-heading">
     <code class="ox-api-entry__param-name">options.openGraph</code>
     <code class="ox-api-entry__param-type">OgpOptions | false</code>
   </div>
-  
+
 </li>
 <li class="ox-api-entry__param">
   <div class="ox-api-entry__param-heading">
@@ -282,7 +282,7 @@
 <h4>Returns</h4>
 <div class="ox-api-entry__return">
   <code class="ox-api-entry__return-type">Promise&lt;string&gt;</code>
-  
+
 </div>
 </div>
   </div>

@@ -124,28 +124,28 @@
     <code class="ox-api-entry__param-name">bodyHtml</code>
     <code class="ox-api-entry__param-type">string</code>
   </div>
-  
+
 </li>
 <li class="ox-api-entry__param">
   <div class="ox-api-entry__param-heading">
     <code class="ox-api-entry__param-name">width</code>
     <code class="ox-api-entry__param-type">number</code>
   </div>
-  
+
 </li>
 <li class="ox-api-entry__param">
   <div class="ox-api-entry__param-heading">
     <code class="ox-api-entry__param-name">height</code>
     <code class="ox-api-entry__param-type">number</code>
   </div>
-  
+
 </li>
 <li class="ox-api-entry__param">
   <div class="ox-api-entry__param-heading">
     <code class="ox-api-entry__param-name">useBaseUrl</code>
     <code class="ox-api-entry__param-type">boolean</code>
   </div>
-  
+
 </li>
 </ul>
 </div>
@@ -153,7 +153,7 @@
 <h4>Returns</h4>
 <div class="ox-api-entry__return">
   <code class="ox-api-entry__return-type">string</code>
-  
+
 </div>
 </div>
   </div>

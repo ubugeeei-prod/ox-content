@@ -21,8 +21,8 @@ catalog:
   react-dom: ^19.0.0
   svelte: ^5.56.8
   typescript: ^7.0.2
-  vite: npm:@voidzero-dev/vite-plus-core@0.1.21
-  vitest: npm:@voidzero-dev/vite-plus-test@0.1.21
+  vite: npm:@voidzero-dev/vite-plus-core@0.2.6
+  vitest: 4.1.10
   vue: ^3.5.40
   vite-plus: 0.2.6
 
@@ -31,7 +31,7 @@ onlyBuiltDependencies:
   - sharp
   - puppeteer
 packageExtensions:
-  "@voidzero-dev/vite-plus-core@0.1.21":
+  "@voidzero-dev/vite-plus-core@0.2.6":
     dependencies:
       picomatch: ^4.0.4
 overrides:
