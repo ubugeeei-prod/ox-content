@@ -39,9 +39,9 @@ Two decisions make the comparison fair, and both are load-bearing:
   spelling, attribute order, `<br />` vs `<br>`, and the slug `id` ox-content
   adds to headings all differ without changing how a document renders.
   ox-content scores 82.5% byte-exact and 100% normalized for exactly that
-  reason, and `pulldown-cmark` — the reference implementation — scores 100%
-  under the normalizer too, which is the check that it is not tuned to one
-  engine.
+  reason, and `pulldown-cmark` — an independent Rust implementation, unrelated
+  to ox-content — scores 100% under the normalizer too, which is the check that
+  it is not tuned to one engine.
 
 The sweep needs `cargo` because the normalizer lives in the native binary; `bun`
 is optional and adds the `Bun.markdown.html` row.

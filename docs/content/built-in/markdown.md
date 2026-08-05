@@ -25,7 +25,9 @@ Every option above is an extension on top of CommonMark, and each is opt-out.
 The parser underneath targets full conformance: it renders all 652
 [CommonMark 0.31.2](https://spec.commonmark.org/0.31.2/) spec examples correctly
 in its core profile, checked on every CI run. A document that uses none of the
-extensions renders exactly as the specification requires. See
+extensions conforms to the specification under the conformance suite's HTML
+normalization rule; the markup is not byte-identical, because ox-content adds
+slug `id` attributes to headings. See
 [CommonMark Conformance](../performance.md#commonmark-conformance) for the
 per-profile numbers.
 

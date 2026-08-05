@@ -221,7 +221,16 @@ async function main() {
   ]);
 
   const bun = loadBunRenderings();
-  if (bun) rendered.push([bun.name, bun.rendered]);
+  if (bun) {
+    // Scoring compares by index and divides by `examples.length`, so a short or
+    // shifted helper payload would publish a wrong percentage instead of failing.
+    if (!Array.isArray(bun.rendered) || bun.rendered.length !== examples.length) {
+      throw new Error(
+        `Bun helper returned ${Array.isArray(bun.rendered) ? bun.rendered.length : "no"} renderings for ${examples.length} examples`,
+      );
+    }
+    rendered.push([bun.name, bun.rendered]);
+  }
 
   const results = rendered.map(([name, htmls]) => {
     const actual = normalizeBatch(htmls);

@@ -165,7 +165,9 @@ specification on every CI run, not only when the benchmark tables are refreshed:
 
 Extensions beyond CommonMark — GFM tables, task lists, strikethrough, footnotes,
 and the built-in embeds — are opt-out rather than opt-in, so a document that uses
-none of them renders exactly as the specification requires.
+none of them conforms to the specification under the normalization rule described
+below (ox-content adds slug `id` attributes to headings, so the HTML is not
+byte-identical to the spec's).
 [Markdown Baseline](./built-in/markdown.md) lists each toggle.
 
 ### Reading the CommonMark Column
@@ -190,9 +192,9 @@ Two choices make that comparison fair, and both matter when reading the numbers:
   spelling: ox-content scores 82.5% under byte-exact comparison purely because
   it adds slug `id` attributes to headings.
 
-The comparison is symmetric — `pulldown-cmark`, the reference Rust
-implementation, also scores 100% — so the normalizer is not tuned to any one
-engine.
+The comparison is symmetric — `pulldown-cmark`, an independent Rust
+implementation unrelated to ox-content, also scores 100% — so the normalizer is
+not tuned to any one engine.
 
 Two rows are the same engine at different layers. `ox-content (native)` is the
 core profile at 100%; `@ox-content/napi` scores 99.5% because its defaults enable

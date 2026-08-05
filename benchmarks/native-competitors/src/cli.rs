@@ -12,21 +12,36 @@ pub enum CliAction {
     Help,
 }
 
+impl CliAction {
+    fn flag_name(&self) -> &'static str {
+        match self {
+            CliAction::Run { .. } => "--runs",
+            CliAction::Conformance { .. } => "--conformance",
+            CliAction::Normalize => "--normalize",
+            CliAction::Help => "--help",
+        }
+    }
+}
+
+/// Parses the whole argument list before picking an action, so a typo after a
+/// mode flag (`--conformance spec.txt --unknown`) is reported instead of
+/// silently running that mode.
 pub fn parse_args(args: &[String]) -> Result<CliAction, String> {
     let mut runs = 1u32;
+    let mut action: Option<CliAction> = None;
     let mut index = 0;
     while index < args.len() {
         let arg = &args[index];
         if arg == "--normalize" {
-            return Ok(CliAction::Normalize);
+            select_action(&mut action, CliAction::Normalize)?;
         } else if arg == "--conformance" {
             index += 1;
             let value = args
                 .get(index)
                 .ok_or_else(|| "--conformance requires a spec.txt path".to_string())?;
-            return Ok(CliAction::Conformance { spec_path: value.clone() });
+            select_action(&mut action, CliAction::Conformance { spec_path: value.clone() })?;
         } else if let Some(value) = arg.strip_prefix("--conformance=") {
-            return Ok(CliAction::Conformance { spec_path: value.to_string() });
+            select_action(&mut action, CliAction::Conformance { spec_path: value.to_string() })?;
         } else if arg == "--runs" {
             index += 1;
             let value =
@@ -35,13 +50,27 @@ pub fn parse_args(args: &[String]) -> Result<CliAction, String> {
         } else if let Some(value) = arg.strip_prefix("--runs=") {
             runs = parse_positive_integer(value)?;
         } else if arg == "--help" || arg == "-h" {
-            return Ok(CliAction::Help);
+            select_action(&mut action, CliAction::Help)?;
         } else {
             return Err(format!("Unknown argument: {arg}"));
         }
         index += 1;
     }
-    Ok(CliAction::Run { runs })
+    Ok(action.unwrap_or(CliAction::Run { runs }))
+}
+
+/// Records a mode flag, rejecting a second one: the modes read different inputs
+/// and write different output formats, so combining them has no meaning.
+fn select_action(slot: &mut Option<CliAction>, action: CliAction) -> Result<(), String> {
+    match slot {
+        Some(existing) => {
+            Err(format!("{} cannot be combined with {}", existing.flag_name(), action.flag_name()))
+        }
+        None => {
+            *slot = Some(action);
+            Ok(())
+        }
+    }
 }
 
 /// Positive-integer parsing with the JS harness' strictness: the canonical
