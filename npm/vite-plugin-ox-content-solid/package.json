@@ -54,6 +54,7 @@
   },
   "peerDependencies": {
     "solid-js": "catalog:",
-    "vite": "catalog:"
+    "vite": "catalog:",
+    "vite-plugin-solid": "catalog:"
   }
 }

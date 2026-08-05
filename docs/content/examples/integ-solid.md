@@ -5,9 +5,9 @@ Demonstrates embedding Solid components in Markdown.
 ## Setup
 
 ```bash
-cd examples/integ-solid
-npm install
-npm run dev
+# The example depends on workspace packages, so install from the repository root
+corepack pnpm install
+corepack pnpm --filter ./examples/integ-solid dev
 ```
 
 ## Configuration
@@ -97,7 +97,7 @@ export default function Alert(props: {
 
 ## File Structure
 
-```
+```text
 integ-solid/
 ├── docs/
 │   └── index.md

@@ -27,6 +27,7 @@ Components work seamlessly!
 
 ```ts
 // vite.config.ts
+import { defineConfig } from "vite-plus";
 import solid from "vite-plugin-solid";
 import { oxContentSolid } from "@ox-content/vite-plugin-solid";
 

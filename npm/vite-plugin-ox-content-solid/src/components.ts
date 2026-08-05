@@ -42,7 +42,10 @@ async function globFiles(pattern: string, root: string): Promise<string[]> {
 
   const parts = pattern.split("*");
   const baseDir = path.resolve(root, parts[0]);
-  const ext = parts[1] || "";
+  // The suffix to match lives after the last `*`, so patterns that contain more
+  // than one wildcard (`**/*.tsx`) still filter on the file extension instead of
+  // matching every file under `baseDir`.
+  const ext = parts[parts.length - 1] || "";
 
   if (!fs.existsSync(baseDir)) {
     return files;

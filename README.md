@@ -140,8 +140,8 @@ npm install @ox-content/vite-plugin-react
 # Svelte
 npm install @ox-content/vite-plugin-svelte
 
-# Solid
-npm install @ox-content/vite-plugin-solid
+# Solid (vite-plugin-solid compiles the generated JSX, so it is required)
+npm install @ox-content/vite-plugin-solid solid-js vite-plugin-solid
 ```
 
 ### i18n Static Checker (CLI)

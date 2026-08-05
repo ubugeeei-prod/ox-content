@@ -62,6 +62,20 @@ describe("transformMarkdownWithSolid", () => {
     expect(result.code).not.toContain("createElement");
   });
 
+  it("keeps the frontmatter block in the document when frontmatter parsing is off", async () => {
+    const source = ["---", "title: Solid Guide", "---", "# Solid Guide"].join("\n");
+
+    const result = await transformMarkdownWithSolid(
+      source,
+      "/repo/docs/no-frontmatter.md",
+      createOptions({ frontmatter: false }),
+    );
+
+    expect(result.frontmatter).toEqual({});
+    expect(result.code).toContain("export const frontmatter = {};");
+    expect(result.code).toContain("title: Solid Guide");
+  });
+
   it("mounts islands through solid-js/web render", async () => {
     const result = await transformMarkdownWithSolid(
       '<Alert tone="info">Body</Alert>',
