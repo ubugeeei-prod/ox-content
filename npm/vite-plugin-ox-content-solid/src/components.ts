@@ -31,49 +31,99 @@ export async function resolveComponentsGlob(
 
 async function globFiles(pattern: string, root: string): Promise<string[]> {
   const files: string[] = [];
+  const normalized = pattern.replace(/\\/g, "/").replace(/^\.\//, "");
 
-  if (!pattern.includes("*")) {
-    const fullPath = path.resolve(root, pattern);
+  if (!normalized.includes("*")) {
+    const fullPath = path.resolve(root, normalized);
     if (fs.existsSync(fullPath)) {
       files.push(fullPath);
     }
     return files;
   }
 
-  const parts = pattern.split("*");
-  const baseDir = path.resolve(root, parts[0]);
-  // The suffix to match lives after the last `*`, so patterns that contain more
-  // than one wildcard (`**/*.tsx`) still filter on the file extension instead of
-  // matching every file under `baseDir`.
-  const ext = parts[parts.length - 1] || "";
-
+  // Walk from the deepest wildcard-free prefix, then keep only the paths the
+  // whole pattern matches. Deriving the base directory alone is not enough:
+  // `src/components/**/*.tsx` must not collect the non-component files below
+  // `src/components`, and the generated module would fail to import them.
+  const baseDir = path.resolve(root, staticPrefix(normalized));
   if (!fs.existsSync(baseDir)) {
     return files;
   }
 
-  if (pattern.includes("**")) {
-    await walkDir(baseDir, files, ext);
+  const candidates: string[] = [];
+  if (normalized.includes("**")) {
+    await walkDir(baseDir, candidates);
   } else {
     const entries = await fs.promises.readdir(baseDir, { withFileTypes: true });
     for (const entry of entries) {
-      if (entry.isFile() && entry.name.endsWith(ext)) {
-        files.push(path.join(baseDir, entry.name));
+      if (entry.isFile()) {
+        candidates.push(path.join(baseDir, entry.name));
       }
+    }
+  }
+
+  const matcher = globToRegExp(normalized);
+  for (const candidate of candidates) {
+    if (matcher.test(path.relative(root, candidate).replace(/\\/g, "/"))) {
+      files.push(candidate);
     }
   }
 
   return files;
 }
 
-async function walkDir(dir: string, files: string[], ext: string): Promise<void> {
+/** Leading path segments of a pattern that contain no wildcard. */
+function staticPrefix(pattern: string): string {
+  const segments: string[] = [];
+  for (const segment of pattern.split("/")) {
+    if (segment.includes("*") || segment.includes("?")) break;
+    segments.push(segment);
+  }
+  return segments.join("/");
+}
+
+/**
+ * Translates a glob into an anchored `RegExp`: `**` crosses directory
+ * boundaries, `*` and `?` stay within one segment.
+ */
+function globToRegExp(pattern: string): RegExp {
+  let source = "";
+  let index = 0;
+
+  while (index < pattern.length) {
+    const char = pattern[index];
+    if (char === "*") {
+      if (pattern[index + 1] === "*") {
+        index += 2;
+        if (pattern[index] === "/") {
+          index += 1;
+          source += "(?:[^/]+/)*";
+        } else {
+          source += ".*";
+        }
+        continue;
+      }
+      source += "[^/]*";
+    } else if (char === "?") {
+      source += "[^/]";
+    } else {
+      source += char.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+    }
+    index += 1;
+  }
+
+  return new RegExp(`^${source}$`);
+}
+
+async function walkDir(dir: string, files: string[]): Promise<void> {
   const entries = await fs.promises.readdir(dir, { withFileTypes: true });
 
   for (const entry of entries) {
     const fullPath = path.join(dir, entry.name);
 
     if (entry.isDirectory()) {
-      await walkDir(fullPath, files, ext);
-    } else if (entry.isFile() && entry.name.endsWith(ext)) {
+      await walkDir(fullPath, files);
+    } else if (entry.isFile()) {
       files.push(fullPath);
     }
   }

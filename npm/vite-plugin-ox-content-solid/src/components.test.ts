@@ -1,36 +1,45 @@
-import * as fs from "node:fs";
+import * as fs from "node:fs/promises";
 import * as os from "node:os";
 import * as path from "node:path";
-import { afterAll, beforeAll, describe, expect, it } from "vite-plus/test";
+import { afterEach, beforeEach, describe, expect, it } from "vite-plus/test";
 import { resolveComponentsGlob } from "./components";
 
 describe("resolveComponentsGlob", () => {
-  let root = "";
+  let root: string;
 
-  beforeAll(async () => {
-    root = await fs.promises.mkdtemp(path.join(os.tmpdir(), "ox-content-solid-glob-"));
-    await fs.promises.mkdir(path.join(root, "src/components/nested"), { recursive: true });
-    await fs.promises.writeFile(path.join(root, "src/components/alert.tsx"), "");
-    await fs.promises.writeFile(path.join(root, "src/components/nested/info-box.tsx"), "");
-    await fs.promises.writeFile(path.join(root, "src/components/notes.md"), "");
+  beforeEach(async () => {
+    root = await fs.mkdtemp(path.join(os.tmpdir(), "ox-solid-components-"));
+    await write("src/components/Alert.tsx", "export default () => null;");
+    await write("src/components/nested/Counter.tsx", "export default () => null;");
+    await write("src/components/styles.css", ".a {}");
+    await write("src/components/nested/notes.md", "# notes");
   });
 
-  afterAll(async () => {
-    await fs.promises.rm(root, { recursive: true, force: true });
+  afterEach(async () => {
+    await fs.rm(root, { recursive: true, force: true });
   });
 
-  it("matches files in a single directory", async () => {
-    expect(await resolveComponentsGlob("./src/components/*.tsx", root)).toEqual({
-      Alert: "./src/components/alert.tsx",
+  it("matches one directory level for a segment wildcard", async () => {
+    expect(await resolveComponentsGlob("src/components/*.tsx", root)).toEqual({
+      Alert: "./src/components/Alert.tsx",
     });
   });
 
-  it("keeps the extension filter for recursive patterns", async () => {
-    // `**/*.tsx` splits into more than two segments, so the suffix has to be
-    // read from the last one; otherwise every file (including notes.md) matches.
-    expect(await resolveComponentsGlob("./src/**/*.tsx", root)).toEqual({
-      Alert: "./src/components/alert.tsx",
-      InfoBox: "./src/components/nested/info-box.tsx",
+  it("matches nested directories for a recursive wildcard, ignoring other extensions", async () => {
+    expect(await resolveComponentsGlob("src/components/**/*.tsx", root)).toEqual({
+      Alert: "./src/components/Alert.tsx",
+      Counter: "./src/components/nested/Counter.tsx",
     });
   });
+
+  it("returns an explicit map unchanged", async () => {
+    const map = { Alert: "./src/components/Alert.tsx" };
+    expect(await resolveComponentsGlob(map, root)).toBe(map);
+  });
+
+  async function write(relativePath: string, contents: string): Promise<void> {
+    const fullPath = path.join(root, relativePath);
+    await fs.mkdir(path.dirname(fullPath), { recursive: true });
+    await fs.writeFile(fullPath, contents);
+  }
 });

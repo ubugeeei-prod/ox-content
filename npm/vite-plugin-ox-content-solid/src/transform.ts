@@ -8,9 +8,11 @@ export async function transformMarkdownWithSolid(
   id: string,
   options: ResolvedSolidOptions,
 ): Promise<SolidTransformResult> {
+  // `frontmatter: false` means the body is taken verbatim, so a leading `---`
+  // block stays in the rendered document instead of becoming module exports.
   const { content: markdownContent, frontmatter } = options.frontmatter
     ? extractFrontmatter(code)
-    : { content: code, frontmatter: {} as Record<string, unknown> };
+    : { content: code, frontmatter: {} };
   const scanned = scanComponents(markdownContent, options.components);
 
   const transformed = await baseTransformMarkdown(scanned.content, id, createBaseOptions(options));
@@ -37,9 +39,8 @@ export async function transformMarkdownWithSolid(
  *
  * The site-level features (SSG, search, OG images, highlighting) are turned off
  * here: this path only produces the HTML that gets embedded in a Solid module,
- * and the host app owns everything around it. Frontmatter is handled by this
- * plugin (or left untouched when `frontmatter: false`), so the core parser never
- * needs to look at it.
+ * and the host app owns everything around it. Frontmatter is stripped before
+ * this point, so the core parser sees a body-only document.
  */
 function createBaseOptions(
   options: ResolvedSolidOptions,

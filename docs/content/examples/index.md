@@ -64,6 +64,8 @@ export default defineConfig({
 Embed Solid components in Markdown using `@ox-content/vite-plugin-solid`.
 
 ```ts
+import { defineConfig } from "vite";
+import solid from "vite-plugin-solid";
 import { oxContentSolid } from "@ox-content/vite-plugin-solid";
 
 export default defineConfig({

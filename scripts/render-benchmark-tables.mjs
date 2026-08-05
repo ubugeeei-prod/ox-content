@@ -124,17 +124,23 @@ function renderTable(rows, conformance) {
   const valid = rows.filter((r) => !r.error && r.opsPerSec > 0);
   valid.sort((a, b) => b.opsPerSec - a.opsPerSec);
 
-  const headers = ["Library", "ops/sec", "avg time", "throughput", "CommonMark"];
+  // Without conformance results the column would be a header over dashes, and
+  // `buildBlock` omits the paragraph that explains it, so drop it entirely.
+  const headers = ["Library", "ops/sec", "avg time", "throughput"];
+  if (conformance) headers.push("CommonMark");
   // Library is left-aligned; the numeric columns are right-aligned.
-  const alignRight = [false, true, true, true, true];
+  const alignRight = headers.map((_, col) => col > 0);
 
-  const cells = valid.map((row) => [
-    `\`${row.name}\``,
-    formatOps(row.opsPerSec),
-    formatAvgMs(row.avgMs),
-    formatThroughput(row.throughputMBs),
-    formatConformance(conformance, row.name),
-  ]);
+  const cells = valid.map((row) => {
+    const cols = [
+      `\`${row.name}\``,
+      formatOps(row.opsPerSec),
+      formatAvgMs(row.avgMs),
+      formatThroughput(row.throughputMBs),
+    ];
+    if (conformance) cols.push(formatConformance(conformance, row.name));
+    return cols;
+  });
 
   // Column width = widest cell or header, with a floor of 3 so the alignment
   // marker (`:--` / `--:`) always fits.
