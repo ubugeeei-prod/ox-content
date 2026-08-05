@@ -32,6 +32,23 @@ describe("resolveComponentsGlob", () => {
     });
   });
 
+  it("matches a wildcard directory segment without descending further", async () => {
+    await write("src/components/nested/deep/Deep.tsx", "export default () => null;");
+
+    expect(await resolveComponentsGlob("src/components/*/Counter.tsx", root)).toEqual({
+      Counter: "./src/components/nested/Counter.tsx",
+    });
+  });
+
+  it("matches a single-character wildcard in the file name", async () => {
+    await write("src/components/Tab1.tsx", "export default () => null;");
+    await write("src/components/Tab12.tsx", "export default () => null;");
+
+    expect(await resolveComponentsGlob("src/components/Tab?.tsx", root)).toEqual({
+      Tab1: "./src/components/Tab1.tsx",
+    });
+  });
+
   it("returns an explicit map unchanged", async () => {
     const map = { Alert: "./src/components/Alert.tsx" };
     expect(await resolveComponentsGlob(map, root)).toBe(map);

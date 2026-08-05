@@ -33,7 +33,7 @@ async function globFiles(pattern: string, root: string): Promise<string[]> {
   const files: string[] = [];
   const normalized = pattern.replace(/\\/g, "/").replace(/^\.\//, "");
 
-  if (!normalized.includes("*")) {
+  if (!hasWildcard(normalized)) {
     const fullPath = path.resolve(root, normalized);
     if (fs.existsSync(fullPath)) {
       files.push(fullPath);
@@ -50,8 +50,15 @@ async function globFiles(pattern: string, root: string): Promise<string[]> {
     return files;
   }
 
+  // Only a pattern whose wildcards are confined to the file name can stay
+  // shallow. A wildcard in a directory segment (`src/*/Button.tsx`) puts its
+  // matches below `baseDir`, and `**` crosses directory boundaries even inside
+  // the last segment, so both need the recursive walk.
+  const segments = normalized.split("/");
+  const crossesDirectories = normalized.includes("**") || segments.slice(0, -1).some(hasWildcard);
+
   const candidates: string[] = [];
-  if (normalized.includes("**")) {
+  if (crossesDirectories) {
     await walkDir(baseDir, candidates);
   } else {
     const entries = await fs.promises.readdir(baseDir, { withFileTypes: true });
@@ -72,11 +79,16 @@ async function globFiles(pattern: string, root: string): Promise<string[]> {
   return files;
 }
 
+/** Whether a pattern (or one segment of it) contains a wildcard `globToRegExp` expands. */
+function hasWildcard(pattern: string): boolean {
+  return pattern.includes("*") || pattern.includes("?");
+}
+
 /** Leading path segments of a pattern that contain no wildcard. */
 function staticPrefix(pattern: string): string {
   const segments: string[] = [];
   for (const segment of pattern.split("/")) {
-    if (segment.includes("*") || segment.includes("?")) break;
+    if (hasWildcard(segment)) break;
     segments.push(segment);
   }
   return segments.join("/");
