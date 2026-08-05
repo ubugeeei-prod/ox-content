@@ -257,3 +257,69 @@ fn rejects_svelte_render_function_mode() {
 fn escapes_svelte_expression_delimiters() {
     assert_eq!(escape_svelte_markup("<p>{count} and }</p>"), "<p>&#123;count&#125; and &#125;</p>");
 }
+
+#[test]
+fn renders_solid_hyperscript_code() {
+    let code = render_framework_component_code(
+        r#"<label className="field" htmlFor="name"><span>Name</span><input disabled type="text"></label>"#,
+        FrameworkCodegenTarget::Solid,
+        &[],
+    );
+
+    insta::assert_snapshot!(code);
+}
+
+#[test]
+fn renders_solid_children_variadically() {
+    // Unlike Vue's single-array child slot, `solid-js/h` takes children the way
+    // React's `createElement` does.
+    let single = render_framework_component_code(
+        "<p><span>one</span></p>",
+        FrameworkCodegenTarget::Solid,
+        &[],
+    );
+    let many = render_framework_component_code(
+        "<p><span>one</span><span>two</span></p>",
+        FrameworkCodegenTarget::Solid,
+        &[],
+    );
+
+    insta::assert_snapshot!(format!("single:\n{single}\n\nmany:\n{many}"));
+}
+
+#[test]
+fn renders_solid_component_modes() {
+    let component = render_framework_code(
+        "<p>Hello</p>",
+        FrameworkCodegenTarget::Solid,
+        FrameworkCodegenMode::Component,
+        &[],
+    )
+    .unwrap();
+    let render_function = render_framework_code(
+        "<p>Hello</p>",
+        FrameworkCodegenTarget::Solid,
+        FrameworkCodegenMode::RenderFunction,
+        &[],
+    )
+    .unwrap();
+    let inner_html = render_framework_code(
+        "<p>Hello</p>",
+        FrameworkCodegenTarget::Solid,
+        FrameworkCodegenMode::InnerHtml,
+        &[],
+    )
+    .unwrap();
+
+    insta::assert_snapshot!(format!(
+        "component:\n{component}\n\nrender_function:\n{render_function}\n\ninner_html:\n{inner_html}"
+    ));
+}
+
+#[test]
+fn parses_solid_target_aliases() {
+    for alias in ["solid", "solid-js", "solidjs"] {
+        assert_eq!(alias.parse::<FrameworkCodegenTarget>().unwrap(), FrameworkCodegenTarget::Solid);
+    }
+    assert_eq!(FrameworkCodegenTarget::Solid.as_str(), "solid");
+}

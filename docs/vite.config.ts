@@ -122,6 +122,10 @@ export default defineConfig(({ mode }) => {
                     text: "Svelte Integration",
                     link: "/packages/vite-plugin-ox-content-svelte.md",
                   },
+                  {
+                    text: "Solid Integration",
+                    link: "/packages/vite-plugin-ox-content-solid.md",
+                  },
                   { text: "i18n Package", link: "/packages/i18n.md" },
                 ],
               },

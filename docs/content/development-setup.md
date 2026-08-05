@@ -111,6 +111,7 @@ ox-content/
 │   ├── vite-plugin-ox-content-vue/   # @ox-content/vite-plugin-vue
 │   ├── vite-plugin-ox-content-react/ # @ox-content/vite-plugin-react
 │   ├── vite-plugin-ox-content-svelte/# @ox-content/vite-plugin-svelte
+│   ├── vite-plugin-ox-content-solid/ # @ox-content/vite-plugin-solid
 │   ├── unplugin-ox-content/          # @ox-content/unplugin
 │   └── vscode-ox-content/            # VS Code extension
 ├── editors/                # Editor integrations

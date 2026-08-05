@@ -16,6 +16,7 @@ const NPM_PACKAGES = [
   "npm/unplugin-ox-content",
   "npm/vite-plugin-ox-content",
   "npm/vite-plugin-ox-content-react",
+  "npm/vite-plugin-ox-content-solid",
   "npm/vite-plugin-ox-content-svelte",
   "npm/vite-plugin-ox-content-vue",
   "npm/vscode-ox-content",

@@ -1,6 +1,6 @@
 use super::{
     parser::{HtmlElement, HtmlNode},
-    react, shared, vue, FrameworkCodegenTarget, FrameworkComponentIsland,
+    react, shared, solid, vue, FrameworkCodegenTarget, FrameworkComponentIsland,
 };
 use smallvec::SmallVec;
 
@@ -17,6 +17,7 @@ impl FrameworkCodegen<'_> {
 
         match self.target {
             FrameworkCodegenTarget::React => react::render_root(&children),
+            FrameworkCodegenTarget::Solid => solid::render_root(&children),
             FrameworkCodegenTarget::Svelte => {
                 unreachable!("svelte component output does not use the VDOM renderer")
             }
@@ -51,6 +52,7 @@ impl FrameworkCodegen<'_> {
 
         match self.target {
             FrameworkCodegenTarget::React => react::render_element(element, &children),
+            FrameworkCodegenTarget::Solid => solid::render_element(element, &children),
             FrameworkCodegenTarget::Svelte => {
                 unreachable!("svelte component output does not use the VDOM renderer")
             }
@@ -61,6 +63,7 @@ impl FrameworkCodegen<'_> {
     fn render_island(&self, island: &FrameworkComponentIsland) -> String {
         match self.target {
             FrameworkCodegenTarget::React => react::render_island(island),
+            FrameworkCodegenTarget::Solid => solid::render_island(island),
             FrameworkCodegenTarget::Svelte => {
                 unreachable!("svelte component output does not use the VDOM renderer")
             }

@@ -138,11 +138,18 @@ export default defineConfig({
       }),
       "test:framework-integrations": noopTask([
         "test:framework-react",
+        "test:framework-solid",
         "test:framework-svelte",
         "test:framework-vue",
       ]),
       "test:framework-react": task(
         "vp exec --filter @ox-content/vite-plugin-react -- vp test src",
+        {
+          dependsOn: ["build:vite-plugin"],
+        },
+      ),
+      "test:framework-solid": task(
+        "vp exec --filter @ox-content/vite-plugin-solid -- vp test src",
         {
           dependsOn: ["build:vite-plugin"],
         },
@@ -234,6 +241,7 @@ export default defineConfig({
       playground: uncachedTask("vp run --filter ./examples/playground dev"),
       "integ-vue": uncachedTask("vp run --filter ./examples/integ-vue dev"),
       "integ-react": uncachedTask("vp run --filter ./examples/integ-react dev"),
+      "integ-solid": uncachedTask("vp run --filter ./examples/integ-solid dev"),
       "integ-svelte": uncachedTask("vp run --filter ./examples/integ-svelte dev"),
       "ssg-vite": uncachedTask("vp run --filter ./examples/ssg-vite dev"),
       "plugin-markdown-it": uncachedTask("vp run --filter ./examples/plugin-markdown-it start"),

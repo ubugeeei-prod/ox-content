@@ -1837,7 +1837,7 @@ export declare function render(astJson: string): RenderResult
 /**
  * Renders already-produced Markdown HTML into framework-native component code.
  *
- * The `target` argument accepts `"react"`, `"vue"`, and `"svelte"`.
+ * The `target` argument accepts `"react"`, `"solid"`, `"vue"`, and `"svelte"`.
  * `mode` defaults to `"expression"` for backward compatibility.
  */
 export declare function renderFrameworkComponentCode(html: string, target: string, islands?: Array<JsFrameworkComponentIsland> | undefined | null, mode?: string | undefined | null): string

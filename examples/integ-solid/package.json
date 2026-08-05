@@ -1,0 +1,21 @@
+{
+  "name": "ox-content-integ-solid-example",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "vp dev",
+    "build": "vp build",
+    "preview": "vp preview"
+  },
+  "dependencies": {
+    "@ox-content/islands": "workspace:*",
+    "solid-js": "catalog:"
+  },
+  "devDependencies": {
+    "@ox-content/vite-plugin-solid": "workspace:*",
+    "vite": "catalog:",
+    "vite-plugin-solid": "catalog:",
+    "vite-plus": "catalog:"
+  }
+}

@@ -43,9 +43,14 @@ export default defineConfig({
 });
 ```
 
-Vue and Svelte work the same way via `@ox-content/vite-plugin-vue`
-(`oxContentVue`) and `@ox-content/vite-plugin-svelte` (`oxContentSvelte`). When
-`components` is a glob, the component name is the PascalCased file name.
+Vue, Svelte, and Solid work the same way via `@ox-content/vite-plugin-vue`
+(`oxContentVue`), `@ox-content/vite-plugin-svelte` (`oxContentSvelte`), and
+`@ox-content/vite-plugin-solid` (`oxContentSolid`). When `components` is a glob,
+the component name is the PascalCased file name.
+
+The Solid integration additionally has to run before `vite-plugin-solid`, which
+must be given the Markdown extensions — see
+[its reference page](./packages/vite-plugin-ox-content-solid.md#plugin-order-and-extensions).
 
 ## Authoring components in Markdown
 
@@ -128,3 +133,4 @@ See [Theming](./theming.md) for using it to build a custom layout.
 - [React Integration](./packages/vite-plugin-ox-content-react.md)
 - [Vue Integration](./packages/vite-plugin-ox-content-vue.md)
 - [Svelte Integration](./packages/vite-plugin-ox-content-svelte.md)
+- [Solid Integration](./packages/vite-plugin-ox-content-solid.md)

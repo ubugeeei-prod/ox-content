@@ -1,0 +1,28 @@
+---
+source: crates/ox_content_renderer/src/frameworks/tests.rs
+expression: "format!(\"component:\\n{component}\\n\\nrender_function:\\n{render_function}\\n\\ninner_html:\\n{inner_html}\")"
+---
+component:
+import h from 'solid-js/h';
+
+export default function MarkdownContent() {
+  return h('div', { class: 'ox-content' }, h("p", null, "Hello"));
+}
+
+
+render_function:
+import h from 'solid-js/h';
+
+export function renderMarkdownContent() {
+  return h('div', { class: 'ox-content' }, h("p", null, "Hello"));
+}
+
+
+inner_html:
+import h from 'solid-js/h';
+
+const rawHtml = "\x3Cp>Hello\x3C/p>";
+
+export default function MarkdownContent() {
+  return h('div', { class: 'ox-content', innerHTML: rawHtml });
+}

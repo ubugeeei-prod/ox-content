@@ -36,7 +36,7 @@ fn props_to_map(value: serde_json::Value) -> FxHashMap<String, serde_json::Value
 
 /// Renders already-produced Markdown HTML into framework-native component code.
 ///
-/// The `target` argument accepts `"react"`, `"vue"`, and `"svelte"`.
+/// The `target` argument accepts `"react"`, `"solid"`, `"vue"`, and `"svelte"`.
 /// `mode` defaults to `"expression"` for backward compatibility.
 #[napi(js_name = "renderFrameworkComponentCode")]
 pub fn render_framework_component_code(

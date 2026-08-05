@@ -95,6 +95,9 @@ vp install @ox-content/vite-plugin-react react react-dom @vitejs/plugin-react
 
 # Svelte
 vp install @ox-content/vite-plugin-svelte svelte @sveltejs/vite-plugin-svelte
+
+# Solid
+vp install @ox-content/vite-plugin-solid solid-js vite-plugin-solid
 ```
 
 Read more:
@@ -104,6 +107,7 @@ Read more:
 - [Vue integration](./packages/vite-plugin-ox-content-vue.md)
 - [React integration](./packages/vite-plugin-ox-content-react.md)
 - [Svelte integration](./packages/vite-plugin-ox-content-svelte.md)
+- [Solid integration](./packages/vite-plugin-ox-content-solid.md)
 - [Theming](./theming.md)
 - [Source docs example](./examples/gen-source-docs.md)
 

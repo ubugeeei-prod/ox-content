@@ -1,0 +1,143 @@
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+body {
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  background: #0f0f0f;
+  color: #e5e5e5;
+  min-height: 100vh;
+}
+
+.app {
+  max-width: 900px;
+  margin: 0 auto;
+  padding: 2rem;
+}
+
+header {
+  text-align: center;
+  margin-bottom: 3rem;
+  padding-bottom: 2rem;
+  border-bottom: 1px solid #333;
+}
+
+header h1 {
+  color: #ff6b35;
+  font-size: 2.5rem;
+  margin-bottom: 0.5rem;
+}
+
+header p {
+  color: #888;
+  font-size: 1.1rem;
+}
+
+main {
+  line-height: 1.8;
+}
+
+main h1,
+main h2,
+main h3 {
+  color: #ff6b35;
+  margin: 2rem 0 1rem;
+}
+
+main h1 {
+  font-size: 2rem;
+}
+main h2 {
+  font-size: 1.5rem;
+}
+main h3 {
+  font-size: 1.25rem;
+}
+
+main p {
+  margin: 1rem 0;
+}
+
+main code {
+  background: #1a1a1a;
+  padding: 0.2rem 0.4rem;
+  border-radius: 4px;
+  font-family: "Fira Code", monospace;
+}
+
+main pre {
+  background: #1a1a1a;
+  padding: 1rem;
+  border-radius: 8px;
+  overflow-x: auto;
+  margin: 1rem 0;
+}
+
+main pre code {
+  background: transparent;
+  padding: 0;
+}
+
+main ul,
+main ol {
+  margin: 1rem 0;
+  padding-left: 2rem;
+}
+
+main li {
+  margin: 0.5rem 0;
+}
+
+.counter {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.5rem;
+  border: 1px solid #333;
+  border-radius: 0.5rem;
+  background: #1a1a1a;
+}
+
+.counter .count {
+  min-width: 2rem;
+  text-align: center;
+  font-weight: 600;
+  color: #fff;
+}
+
+.counter button {
+  padding: 0.25rem 0.75rem;
+  border: none;
+  border-radius: 0.25rem;
+  background: #ff6b35;
+  color: white;
+  cursor: pointer;
+}
+
+.counter button:hover {
+  background: #e85d2c;
+}
+
+.alert {
+  margin: 1rem 0;
+  padding: 1rem;
+  border-radius: 8px;
+  border-left: 4px solid #ff6b35;
+  background: #1a1a1a;
+}
+
+.alert-success {
+  border-left-color: #3fb950;
+}
+
+.alert-warning {
+  border-left-color: #d29922;
+}
+
+.alert-title {
+  display: block;
+  margin-bottom: 0.25rem;
+  color: #fff;
+}

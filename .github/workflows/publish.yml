@@ -398,6 +398,18 @@ jobs:
           TARBALL=$(vp exec -- pnpm pack --pack-destination /tmp | tail -1)
           npm publish "$TARBALL" --provenance --access public --tag "$NPM_TAG"
 
+      - name: Publish @ox-content/vite-plugin-solid
+        working-directory: npm/vite-plugin-ox-content-solid
+        run: |
+          PKG_NAME=$(node -p "require('./package.json').name")
+          PKG_VERSION=$(node -p "require('./package.json').version")
+          if npm view "${PKG_NAME}@${PKG_VERSION}" version >/dev/null 2>&1; then
+            echo "Skipping ${PKG_NAME}@${PKG_VERSION} (already published)"
+            exit 0
+          fi
+          TARBALL=$(vp exec -- pnpm pack --pack-destination /tmp | tail -1)
+          npm publish "$TARBALL" --provenance --access public --tag "$NPM_TAG"
+
       - name: Publish @ox-content/vite-plugin-svelte
         working-directory: npm/vite-plugin-ox-content-svelte
         run: |

@@ -30,6 +30,7 @@ pub struct FrameworkComponentIsland {
 #[derive(Clone, Copy, Debug, Eq, PartialEq)]
 pub enum FrameworkCodegenTarget {
     React,
+    Solid,
     Svelte,
     Vue,
 }
@@ -38,6 +39,7 @@ impl FrameworkCodegenTarget {
     pub fn as_str(self) -> &'static str {
         match self {
             Self::React => "react",
+            Self::Solid => "solid",
             Self::Svelte => "svelte",
             Self::Vue => "vue",
         }
@@ -56,6 +58,7 @@ impl FromStr for FrameworkCodegenTarget {
     fn from_str(value: &str) -> Result<Self, Self::Err> {
         match value {
             "react" => Ok(Self::React),
+            "solid" | "solid-js" | "solidjs" => Ok(Self::Solid),
             "svelte" => Ok(Self::Svelte),
             "vue" => Ok(Self::Vue),
             _ => Err(FrameworkCodegenError::UnsupportedTarget { target: String::from(value) }),
@@ -179,9 +182,9 @@ fn render_framework_expression(
     islands: &[FrameworkComponentIsland],
 ) -> Result<String, FrameworkCodegenError> {
     match target {
-        FrameworkCodegenTarget::React | FrameworkCodegenTarget::Vue => {
-            Ok(render_framework_component_code(html, target, islands))
-        }
+        FrameworkCodegenTarget::React
+        | FrameworkCodegenTarget::Solid
+        | FrameworkCodegenTarget::Vue => Ok(render_framework_component_code(html, target, islands)),
         FrameworkCodegenTarget::Svelte => Err(FrameworkCodegenError::UnsupportedModeForTarget {
             mode: FrameworkCodegenMode::Expression,
             target,
@@ -195,6 +198,7 @@ fn render_framework_render_function(
 ) -> Result<String, FrameworkCodegenError> {
     match target {
         FrameworkCodegenTarget::React => Ok(react::render_function_module(expression)),
+        FrameworkCodegenTarget::Solid => Ok(solid::render_function_module(expression)),
         FrameworkCodegenTarget::Vue => Ok(vue::render_function_module(expression)),
         FrameworkCodegenTarget::Svelte => Err(FrameworkCodegenError::UnsupportedModeForTarget {
             mode: FrameworkCodegenMode::RenderFunction,
@@ -213,6 +217,10 @@ fn render_framework_component(
             let expression = render_framework_component_code(html, target, islands);
             Ok(react::component_module(&expression))
         }
+        FrameworkCodegenTarget::Solid => {
+            let expression = render_framework_component_code(html, target, islands);
+            Ok(solid::component_module(&expression))
+        }
         FrameworkCodegenTarget::Vue => {
             let expression = render_framework_component_code(html, target, islands);
             Ok(vue::component_module(&expression))
@@ -224,6 +232,7 @@ fn render_framework_component(
 fn render_inner_html_component(html: &str, target: FrameworkCodegenTarget) -> String {
     match target {
         FrameworkCodegenTarget::React => react::inner_html_component_module(html),
+        FrameworkCodegenTarget::Solid => solid::inner_html_component_module(html),
         FrameworkCodegenTarget::Svelte => svelte::inner_html_component_module(html),
         FrameworkCodegenTarget::Vue => vue::inner_html_component_module(html),
     }

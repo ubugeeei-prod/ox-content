@@ -76,6 +76,7 @@ lowest layer used by the docs site, package APIs, authoring tools, and checks.
 | `@ox-content/vite-plugin-vue`    | Vue component islands in Markdown                                                  | Base Vite plugin plus Vue runtime                |
 | `@ox-content/vite-plugin-react`  | React component islands in Markdown                                                | Base Vite plugin plus React runtime              |
 | `@ox-content/vite-plugin-svelte` | Svelte component islands in Markdown                                               | Base Vite plugin plus Svelte runtime             |
+| `@ox-content/vite-plugin-solid`  | Solid component islands in Markdown                                                | Base Vite plugin plus Solid runtime              |
 | `@ox-content/unplugin`           | Non-Vite bundlers such as Rollup, webpack, or esbuild                              | Universal plugin wrapper                         |
 | Editor integrations              | Completion, diagnostics, snippets, preview, i18n authoring                         | `ox-content-lsp` plus editor adapters            |
 
@@ -183,6 +184,7 @@ system while still publishing individual crates.
 | `@ox-content/vite-plugin-vue`    | Vue island runtime and transform integration                                     |
 | `@ox-content/vite-plugin-react`  | React island runtime and transform integration                                   |
 | `@ox-content/vite-plugin-svelte` | Svelte island runtime and transform integration                                  |
+| `@ox-content/vite-plugin-solid`  | Solid island runtime and transform integration                                   |
 | `@ox-content/islands`            | Framework-agnostic island registration and hydration primitives                  |
 | `@ox-content/unplugin`           | Universal bundler plugin wrapper                                                 |
 | `vscode-ox-content`              | VS Code extension that talks to the local LSP server                             |

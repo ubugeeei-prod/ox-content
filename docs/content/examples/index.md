@@ -59,6 +59,25 @@ export default defineConfig({
 });
 ```
 
+### [Solid Integration](./integ-solid.md)
+
+Embed Solid components in Markdown using `@ox-content/vite-plugin-solid`.
+
+```ts
+import { oxContentSolid } from "@ox-content/vite-plugin-solid";
+
+export default defineConfig({
+  plugins: [
+    oxContentSolid({
+      components: "./src/components/*.tsx",
+    }),
+    // Solid's JSX is compile-time only, so this plugin runs after
+    // oxContentSolid() and needs the Markdown extensions.
+    solid({ extensions: [".md", ".markdown", ".mdx"] }),
+  ],
+});
+```
+
 ## Plugin Examples
 
 ### [Code Annotations](./code-annotations.md)

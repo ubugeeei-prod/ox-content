@@ -15,6 +15,7 @@ This directory contains runnable projects and small source examples.
 | [integ-vue](./integ-vue)       | Vue 3 + Vite    | Vue component islands in Markdown    |
 | [integ-react](./integ-react)   | React + Vite    | React component islands in Markdown  |
 | [integ-svelte](./integ-svelte) | Svelte 5 + Vite | Svelte component islands in Markdown |
+| [integ-solid](./integ-solid)   | Solid + Vite    | Solid component islands in Markdown  |
 
 ## Site and Tooling
 
