@@ -28,6 +28,7 @@ impl CliAction {
 /// silently running that mode.
 pub fn parse_args(args: &[String]) -> Result<CliAction, String> {
     let mut runs = 1u32;
+    let mut runs_requested = false;
     let mut action: Option<CliAction> = None;
     let mut index = 0;
     while index < args.len() {
@@ -47,8 +48,10 @@ pub fn parse_args(args: &[String]) -> Result<CliAction, String> {
             let value =
                 args.get(index).ok_or_else(|| "--runs requires a positive integer".to_string())?;
             runs = parse_positive_integer(value)?;
+            runs_requested = true;
         } else if let Some(value) = arg.strip_prefix("--runs=") {
             runs = parse_positive_integer(value)?;
+            runs_requested = true;
         } else if arg == "--help" || arg == "-h" {
             select_action(&mut action, CliAction::Help)?;
         } else {
@@ -56,7 +59,17 @@ pub fn parse_args(args: &[String]) -> Result<CliAction, String> {
         }
         index += 1;
     }
-    Ok(action.unwrap_or(CliAction::Run { runs }))
+    match action {
+        // `--runs` only means something for the benchmark rows: the other modes
+        // read a fixture or stdin once, so accepting it would silently ignore a
+        // requested repeat count. Checked after the whole list is parsed, so the
+        // rejection is independent of flag order.
+        Some(action @ (CliAction::Conformance { .. } | CliAction::Normalize)) if runs_requested => {
+            Err(format!("--runs cannot be combined with {}", action.flag_name()))
+        }
+        Some(action) => Ok(action),
+        None => Ok(CliAction::Run { runs }),
+    }
 }
 
 /// Records a mode flag, rejecting a second one: the modes read different inputs
@@ -92,4 +105,41 @@ Options:
   --normalize    Normalize length-prefixed HTML records on stdin (used by the JS sweep)
   -h, --help     Show this help message"
     );
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    fn parse(args: &[&str]) -> Result<CliAction, String> {
+        parse_args(&args.iter().map(|arg| (*arg).to_string()).collect::<Vec<_>>())
+    }
+
+    #[test]
+    fn runs_is_rejected_with_conformance_in_either_order() {
+        let expected = Some("--runs cannot be combined with --conformance".to_string());
+        assert_eq!(parse(&["--conformance", "spec.txt", "--runs", "5"]).err(), expected);
+        assert_eq!(parse(&["--runs", "5", "--conformance", "spec.txt"]).err(), expected);
+        assert_eq!(parse(&["--conformance=spec.txt", "--runs=5"]).err(), expected);
+        assert_eq!(parse(&["--runs=5", "--conformance=spec.txt"]).err(), expected);
+    }
+
+    #[test]
+    fn runs_is_rejected_with_normalize_in_either_order() {
+        let expected = Some("--runs cannot be combined with --normalize".to_string());
+        assert_eq!(parse(&["--normalize", "--runs", "5"]).err(), expected);
+        assert_eq!(parse(&["--runs", "5", "--normalize"]).err(), expected);
+        assert_eq!(parse(&["--runs=5", "--normalize"]).err(), expected);
+    }
+
+    #[test]
+    fn mode_flags_still_parse_without_runs() {
+        assert!(matches!(parse(&["--normalize"]), Ok(CliAction::Normalize)));
+        assert!(matches!(
+            parse(&["--conformance", "spec.txt"]),
+            Ok(CliAction::Conformance { spec_path }) if spec_path == "spec.txt"
+        ));
+        assert!(matches!(parse(&["--runs", "5"]), Ok(CliAction::Run { runs: 5 })));
+        assert!(matches!(parse(&[]), Ok(CliAction::Run { runs: 1 })));
+    }
 }
