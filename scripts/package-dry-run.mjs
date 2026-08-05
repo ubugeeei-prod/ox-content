@@ -12,6 +12,7 @@ const packages = [
   "npm/unplugin-ox-content",
   "npm/vite-plugin-ox-content-vue",
   "npm/vite-plugin-ox-content-react",
+  "npm/vite-plugin-ox-content-solid",
   "npm/vite-plugin-ox-content-svelte",
 ];
 const packDir = mkdtempSync(join(tmpdir(), "ox-content-pack-"));
