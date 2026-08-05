@@ -138,10 +138,10 @@ belong in code spans or fences.
 
 ## CJK Emphasis
 
-The native parser already recognizes `**emphasis**` adjacent to CJK characters
-without requiring ASCII spaces — a case where many CommonMark parsers need
-manual workarounds. The `cjkEmphasis` option keeps that behavior explicit in
-the public API for compatibility contracts:
+The native parser recognizes `**emphasis**` adjacent to CJK characters without
+requiring ASCII spaces. The `cjkEmphasis` option keeps that behavior explicit in
+the public API for compatibility contracts; it does not change parsing, because
+CommonMark's delimiter rules already allow this case:
 
 ```ts
 oxContent({
@@ -150,12 +150,18 @@ oxContent({
 ```
 
 ```md
-これは**重要**です。句読点の前でも*強調*できます。
+これは**重要**です。次の文でも*強調*できます。
 ```
 
 Rendered:
 
-これは**重要**です。句読点の前でも*強調*できます。
+これは**重要**です。次の文でも*強調*できます。
+
+What CommonMark does **not** allow is `**` placed immediately inside CJK
+punctuation — `A**強調。**B` stays literal text. That follows from the
+specification's left/right-flanking delimiter rules, so it behaves the same in
+every spec-conformant engine, Ox Content included. See
+[CJK Emphasis](../examples/cjk-emphasis.md) for the full boundary.
 
 ## Related
 

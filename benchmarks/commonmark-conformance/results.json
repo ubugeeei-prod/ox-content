@@ -1,0 +1,70 @@
+{
+  "spec": {
+    "name": "CommonMark",
+    "version": "0.31.2",
+    "examples": 652
+  },
+  "comparison": "normalized",
+  "engines": {
+    "Bun.markdown.html": {
+      "passed": 652,
+      "total": 652
+    },
+    "markdown-it": {
+      "passed": 652,
+      "total": 652
+    },
+    "markdown-it-ts": {
+      "passed": 652,
+      "total": 652
+    },
+    "micromark": {
+      "passed": 652,
+      "total": 652
+    },
+    "ox-content (native)": {
+      "passed": 652,
+      "total": 652
+    },
+    "pulldown-cmark": {
+      "passed": 652,
+      "total": 652
+    },
+    "xai-grok-markdown-core (Grok Build)": {
+      "passed": 652,
+      "total": 652
+    },
+    "remark": {
+      "passed": 651,
+      "total": 652
+    },
+    "@ox-content/napi": {
+      "passed": 649,
+      "total": 652
+    },
+    "satteri": {
+      "passed": 645,
+      "total": 652
+    },
+    "marked": {
+      "passed": 609,
+      "total": 652
+    },
+    "md4x (napi)": {
+      "passed": 603,
+      "total": 652
+    },
+    "md4w (md4c)": {
+      "passed": 598,
+      "total": 652
+    },
+    "@mizchi/markdown": {
+      "passed": 299,
+      "total": 652
+    },
+    "@tanstack/markdown": {
+      "passed": 299,
+      "total": 652
+    }
+  }
+}

@@ -1648,8 +1648,12 @@ export interface JsTransformOptions {
    */
   attributes?: JsAttrsOptions
   /**
-   * Opt-in CJK emphasis compatibility flag. The parser is already CJK-friendly;
-   * this keeps the feature explicit in the public API.
+   * Opt-in CJK emphasis compatibility flag, accepted for parity with
+   * configurations that set it. It does not change parsing: emphasis between
+   * CJK characters (`これは**重要**です`) already works because CommonMark's
+   * delimiter rules allow it, and emphasis immediately inside CJK
+   * punctuation (`A**強調。**B`) stays literal either way, matching every
+   * spec-conformant engine.
    *
    * Default: `false`.
    */

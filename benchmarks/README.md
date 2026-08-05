@@ -1,6 +1,7 @@
 # Benchmarks
 
-Two flavors of performance measurement live in this tree:
+Two flavors of performance measurement live in this tree, plus a correctness
+sweep that the published tables depend on:
 
 - **JS comparison sweep** in `bundle-size/` — runs Ox Content alongside
   `@tanstack/markdown`, `markdown-it-ts`, `markdown-it`, `marked`, `md4w`,
@@ -10,6 +11,46 @@ Two flavors of performance measurement live in this tree:
 - **Rust criterion suites** under `crates/ox_content_parser/benches/` —
   in-process measurements that avoid NAPI overhead. Trigger via
   `cargo bench -p ox_content_parser`.
+- **CommonMark conformance sweep** in `commonmark-conformance/` — scores every
+  engine in the speed tables against the vendored CommonMark 0.31.2 spec, so a
+  faster engine that skips spec behavior is visible as such. Trigger via
+  `node benchmarks/commonmark-conformance/run.mjs`.
+
+## CommonMark conformance sweep
+
+`commonmark-conformance/run.mjs` renders all 652 spec examples with every engine
+the speed tables list and writes `results.json`, which
+`scripts/render-benchmark-tables.mjs` reads to fill the `CommonMark` column in
+`README.md` and `docs/content/performance.md`.
+
+Two decisions make the comparison fair, and both are load-bearing:
+
+- **Configuration.** Each engine runs in the most spec-faithful mode it exposes,
+  not in its benchmark defaults: `markdown-it` and `markdown-it-ts` use their
+  `commonmark` presets, `micromark` and `remark-html` are told to pass raw HTML
+  through, and `md4w` runs with `parseFlags: 0`. Otherwise the column would
+  measure a default preset rather than the engine. Engines with no such mode
+  (`marked`, `md4x`, `@tanstack/markdown`, `@mizchi/markdown`) are scored as
+  they ship, which each entry notes.
+- **Comparison.** Both sides pass through `normalize_html`, the normalizer the
+  in-repo conformance suite uses, reached through the native binary's
+  `--normalize` filter so JS and native engines are judged identically. A
+  byte-exact comparison would rank engines by markup spelling instead: entity
+  spelling, attribute order, `<br />` vs `<br>`, and the slug `id` ox-content
+  adds to headings all differ without changing how a document renders.
+  ox-content scores 82.5% byte-exact and 100% normalized for exactly that
+  reason, and `pulldown-cmark` — the reference implementation — scores 100%
+  under the normalizer too, which is the check that it is not tuned to one
+  engine.
+
+The sweep needs `cargo` because the normalizer lives in the native binary; `bun`
+is optional and adds the `Bun.markdown.html` row.
+
+Regenerate with:
+
+```bash
+node benchmarks/commonmark-conformance/run.mjs --json benchmarks/commonmark-conformance/results.json
+```
 
 ## Native Rust competitor rows
 

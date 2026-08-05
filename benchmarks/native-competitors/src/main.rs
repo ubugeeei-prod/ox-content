@@ -17,6 +17,8 @@
 #![allow(clippy::disallowed_macros, clippy::disallowed_methods, clippy::disallowed_types)]
 
 mod bench;
+mod cli;
+mod conformance;
 mod json;
 
 use std::hint::black_box;
@@ -25,6 +27,7 @@ use std::process::ExitCode;
 use pulldown_cmark::{html, Parser};
 
 use crate::bench::bench;
+use crate::cli::{parse_args, print_usage, CliAction};
 use crate::json::{render_json, SuiteResults};
 
 /// Byte-for-byte copy of `sampleMarkdown` in `parse-benchmark-bun.mjs`,
@@ -72,11 +75,6 @@ Final paragraph with `inline code` and more text.
 const SIZES: [(&str, usize, u32); 4] =
     [("small", 1, 100), ("medium", 10, 50), ("large", 100, 20), ("huge", 2150, 5)];
 
-enum CliAction {
-    Run { runs: u32 },
-    Help,
-}
-
 fn main() -> ExitCode {
     let args: Vec<String> = std::env::args().skip(1).collect();
     match parse_args(&args) {
@@ -89,52 +87,28 @@ fn main() -> ExitCode {
             println!("{}", render_json(&results));
             ExitCode::SUCCESS
         }
+        Ok(CliAction::Normalize) => match conformance::normalize_filter() {
+            Ok(()) => ExitCode::SUCCESS,
+            Err(message) => {
+                eprintln!("{message}");
+                ExitCode::FAILURE
+            }
+        },
+        Ok(CliAction::Conformance { spec_path }) => match conformance::run(&spec_path) {
+            Ok(json) => {
+                println!("{json}");
+                ExitCode::SUCCESS
+            }
+            Err(message) => {
+                eprintln!("{message}");
+                ExitCode::FAILURE
+            }
+        },
         Err(message) => {
             eprintln!("{message}");
             ExitCode::FAILURE
         }
     }
-}
-
-fn parse_args(args: &[String]) -> Result<CliAction, String> {
-    let mut runs = 1u32;
-    let mut index = 0;
-    while index < args.len() {
-        let arg = &args[index];
-        if arg == "--runs" {
-            index += 1;
-            let value =
-                args.get(index).ok_or_else(|| "--runs requires a positive integer".to_string())?;
-            runs = parse_positive_integer(value)?;
-        } else if let Some(value) = arg.strip_prefix("--runs=") {
-            runs = parse_positive_integer(value)?;
-        } else if arg == "--help" || arg == "-h" {
-            return Ok(CliAction::Help);
-        } else {
-            return Err(format!("Unknown argument: {arg}"));
-        }
-        index += 1;
-    }
-    Ok(CliAction::Run { runs })
-}
-
-/// Positive-integer parsing with the JS harness' strictness: the canonical
-/// re-rendering must equal the input, so `+5`, `05`, or `5x` are rejected.
-fn parse_positive_integer(value: &str) -> Result<u32, String> {
-    match value.parse::<u32>() {
-        Ok(parsed) if parsed >= 1 && parsed.to_string() == value => Ok(parsed),
-        _ => Err(format!("--runs requires a positive integer, got `{value}`")),
-    }
-}
-
-fn print_usage() {
-    println!(
-        "Usage: ox-content-native-competitors [--runs <count>]
-
-Options:
-  --runs <count> Use the median result from repeated runs
-  -h, --help     Show this help message"
-    );
 }
 
 /// Drain Grok Build's exact parse path: `offset_events` (pulldown-cmark with

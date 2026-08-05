@@ -70,6 +70,9 @@ const benchmarkDocsCommand = [
   "set -eu",
   'bench_json="${RUNNER_TEMP:-/tmp}/ox-bench-result.json"',
   'node benchmarks/bundle-size/parse-benchmark.mjs --runs "${OX_CONTENT_BENCHMARK_RUNS:-7}" --json "$bench_json"',
+  // Refresh the CommonMark column alongside the speed numbers: a sweep that
+  // adds or drops an engine must not leave the two halves of a row disagreeing.
+  "node benchmarks/commonmark-conformance/run.mjs --json benchmarks/commonmark-conformance/results.json",
   'node scripts/render-benchmark-tables.mjs "$bench_json"',
   'node scripts/render-benchmark-charts.mjs "$bench_json" --size large',
   'node scripts/render-benchmark-charts.mjs "$bench_json" --size huge',
@@ -204,6 +207,10 @@ export default defineConfig({
       bench: noopTask(["bench:rust", "bench:parse", "bench:bundle"], { cache: false }),
       "bench:rust": uncachedTask("cargo bench --workspace"),
       "bench:parse": uncachedTask("vp run --filter ./benchmarks/bundle-size benchmark:parse"),
+      "bench:conformance": uncachedTask(
+        "vp run --filter ./benchmarks/commonmark-conformance conformance",
+        { dependsOn: ["build:napi"] },
+      ),
       "bench:bundle": uncachedTask("vp run --filter ./benchmarks/bundle-size benchmark"),
       "bench:docs": uncachedTask(benchmarkDocsCommand, {
         dependsOn: ["build:npm"],

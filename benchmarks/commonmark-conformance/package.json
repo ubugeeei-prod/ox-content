@@ -1,0 +1,24 @@
+{
+  "name": "ox-content-commonmark-conformance",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "conformance": "node run.mjs --json results.json"
+  },
+  "dependencies": {
+    "@mizchi/markdown": "^0.6.2",
+    "@ox-content/napi": "workspace:*",
+    "@tanstack/markdown": "^0.0.12",
+    "markdown-it": "^14.2.0",
+    "markdown-it-ts": "^1.0.5",
+    "marked": "^18.0.3",
+    "md4w": "^0.2.7",
+    "md4x": "^0.0.25",
+    "micromark": "^4.0.1",
+    "remark-html": "^16.0.1",
+    "remark-parse": "^11.0.0",
+    "satteri": "^0.6.3",
+    "unified": "^11.0.5"
+  }
+}

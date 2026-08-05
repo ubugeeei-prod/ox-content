@@ -205,6 +205,48 @@ importers:
         specifier: ^3.5.34
         version: 3.5.34(typescript@6.0.3)
 
+  benchmarks/commonmark-conformance:
+    dependencies:
+      '@mizchi/markdown':
+        specifier: ^0.6.2
+        version: 0.6.2
+      '@ox-content/napi':
+        specifier: workspace:*
+        version: link:../../crates/ox_content_napi
+      '@tanstack/markdown':
+        specifier: ^0.0.12
+        version: 0.0.12(react@19.2.6)
+      markdown-it:
+        specifier: ^14.2.0
+        version: 14.2.0
+      markdown-it-ts:
+        specifier: ^1.0.5
+        version: 1.0.5
+      marked:
+        specifier: ^18.0.3
+        version: 18.0.4
+      md4w:
+        specifier: ^0.2.7
+        version: 0.2.7
+      md4x:
+        specifier: ^0.0.25
+        version: 0.0.25
+      micromark:
+        specifier: ^4.0.1
+        version: 4.0.2
+      remark-html:
+        specifier: ^16.0.1
+        version: 16.0.1
+      remark-parse:
+        specifier: ^11.0.0
+        version: 11.0.0
+      satteri:
+        specifier: ^0.6.3
+        version: 0.6.3
+      unified:
+        specifier: ^11.0.5
+        version: 11.0.5
+
   crates/ox_content_napi:
     devDependencies:
       '@napi-rs/cli':
