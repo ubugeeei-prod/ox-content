@@ -52,8 +52,10 @@ export default {
 | `中文**加粗，**测试`   | literal text | **加粗，**               |
 | `a**bold.**c`          | literal text | literal text (unchanged) |
 
-Only the fullwidth and CJK-specific punctuation blocks are reclassified —
-`U+3000`–`U+303F`, the vertical and compatibility forms, and fullwidth ASCII.
+Only the fullwidth and CJK-specific punctuation blocks are reclassified:
+`U+3000`–`U+303F`, the vertical and compatibility forms (`U+FE10`–`U+FE19`,
+`U+FE30`–`U+FE4F`), the small form variants (`U+FE50`–`U+FE6F`), and fullwidth
+ASCII (`U+FF01`–`U+FF65`, skipping the fullwidth digits and letters).
 Halfwidth ASCII punctuation is written the same way in every script, so
 enabling the option never changes how a Latin document parses.
 
