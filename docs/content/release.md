@@ -45,6 +45,50 @@ The release script verifies that every crate listed in
 order still matters because crates.io must see each dependency before Cargo can
 package a dependent crate.
 
+## npm Authentication
+
+The npm jobs publish through GitHub Actions Trusted Publishing. There is no npm
+token in the repository's secrets: `id-token: write` lets the job mint an OIDC
+token, npm exchanges it for a short-lived publish credential, and provenance is
+attested automatically on that path.
+
+Each package carries its own trusted publisher entry on npmjs.com, naming this
+repository, `.github/workflows/publish.yml`, and the `npm` environment. All
+three are part of the identity, so renaming the workflow file or the environment
+breaks publishing until every entry is updated to match.
+
+Entries are needed for the workspace packages (`@ox-content/napi`,
+`@ox-content/islands`, `@ox-content/vite-plugin`, `@ox-content/unplugin`, the
+four `@ox-content/vite-plugin-{vue,react,svelte,solid}` integrations, and
+`@ox-content/wasm`) and for each `@ox-content/napi-*` platform binding package
+the N-API build publishes.
+
+## First-Time npm Publishing
+
+Trusted publishing cannot create a package that does not exist yet: the
+publisher entry is configured on the package's settings page, so the package has
+to be there first. Same shape as the crates.io restriction below.
+
+A release that introduces a new npm package therefore needs one manual publish
+by a maintainer with local npm credentials, before the tag is pushed:
+
+```bash
+corepack pnpm --filter @ox-content/vite-plugin-new build
+cd npm/vite-plugin-ox-content-new
+corepack pnpm pack --pack-destination /tmp
+npm publish /tmp/ox-content-vite-plugin-new-<version>.tgz --access public --provenance=false
+```
+
+Bump every workspace package to the release version before packing, or the
+tarball will pin its `@ox-content/*` dependencies to the previous one.
+`--provenance=false` is required because provenance generation needs CI; the
+package's `publishConfig` turns it on, and subsequent versions get it from the
+workflow.
+
+Then add the trusted publisher entry on npmjs.com and push the tag. The publish
+steps skip versions that already exist, so the bootstrap publish is not
+republished.
+
 ## First-Time Crate Publishing
 
 The crates.io job uses GitHub Actions Trusted Publishing. Trusted Publishing can
