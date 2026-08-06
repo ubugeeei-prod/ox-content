@@ -121,12 +121,21 @@ pub struct JsTransformOptions {
     /// Default: disabled.
     pub attributes: Option<JsAttrsOptions>,
 
-    /// Opt-in CJK emphasis compatibility flag, accepted for parity with
-    /// configurations that set it. It does not change parsing: emphasis between
-    /// CJK characters (`これは**重要**です`) already works because CommonMark's
-    /// delimiter rules allow it, and emphasis immediately inside CJK
-    /// punctuation (`A**強調。**B`) stays literal either way, matching every
-    /// spec-conformant engine.
+    /// Recognize emphasis whose delimiters sit against East Asian punctuation.
+    ///
+    /// CommonMark's flanking rules let punctuation on the outside of a `*`/`_`
+    /// run block it, and they read Unicode punctuation as a whole — so
+    /// `A**強調。**B` stays literal text. CJK sets punctuation directly against
+    /// the words it follows, which is why this bites there and rarely in Latin
+    /// text. Enabling this classifies East Asian punctuation as an ordinary
+    /// character for that decision only; halfwidth ASCII punctuation is
+    /// untouched, so Latin documents parse identically.
+    ///
+    /// Emphasis merely adjacent to CJK *characters* (`これは**重要**です`)
+    /// needs no option — CommonMark already allows it.
+    ///
+    /// Off by default because it is a deliberate deviation from the
+    /// specification.
     ///
     /// Default: `false`.
     pub cjk_emphasis: Option<bool>,

@@ -138,16 +138,8 @@ belong in code spans or fences.
 
 ## CJK Emphasis
 
-The native parser recognizes `**emphasis**` adjacent to CJK characters without
-requiring ASCII spaces. The `cjkEmphasis` option keeps that behavior explicit in
-the public API for compatibility contracts; it does not change parsing, because
-CommonMark's delimiter rules already allow this case:
-
-```ts
-oxContent({
-  cjkEmphasis: true,
-});
-```
+Emphasis adjacent to CJK characters needs no configuration — CommonMark's
+delimiter rules already allow it, and no ASCII spaces are required:
 
 ```md
 これは**重要**です。次の文でも*強調*できます。
@@ -157,11 +149,33 @@ Rendered:
 
 これは**重要**です。次の文でも*強調*できます。
 
-What CommonMark does **not** allow is `**` placed immediately inside CJK
-punctuation — `A**強調。**B` stays literal text. That follows from the
-specification's left/right-flanking delimiter rules, so it behaves the same in
-every spec-conformant engine, Ox Content included. See
-[CJK Emphasis](../examples/cjk-emphasis.md) for the full boundary.
+What plain CommonMark rejects is a delimiter run sitting directly against
+punctuation on its outer side. Its flanking rules read Unicode punctuation as a
+whole, so East Asian punctuation blocks a run just like ASCII punctuation does,
+and `A**強調。**B` stays literal text. Latin prose rarely hits this because a
+space usually separates the two; CJK sets punctuation against the preceding
+word, so it comes up constantly.
+
+`cjkEmphasis` classifies East Asian punctuation as an ordinary character for
+that decision only:
+
+```ts
+oxContent({
+  cjkEmphasis: true,
+});
+```
+
+```md
+A**強調。**B
+```
+
+renders as `A<strong>強調。</strong>B` with the option on, and as literal text
+with it off. Halfwidth ASCII punctuation is deliberately untouched, so a Latin
+document parses identically either way.
+
+This is a deliberate deviation from the specification, which is why it is
+opt-in. See [CJK Emphasis](../examples/cjk-emphasis.md) for the exact boundary
+and the reclassified character ranges.
 
 ## Related
 

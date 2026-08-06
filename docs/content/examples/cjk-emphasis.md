@@ -1,12 +1,37 @@
 ---
 title: CJK Emphasis
-description: Recognize emphasis adjacent to CJK text.
+description: Recognize emphasis adjacent to CJK text and CJK punctuation.
 ---
 
 # CJK Emphasis
 
-The native parser recognizes emphasis next to CJK characters without requiring
-ASCII spaces.
+Emphasis between CJK characters works out of the box — CommonMark's delimiter
+rules already allow it, and no ASCII spaces are needed:
+
+```md
+これは**重要**です。
+これは*強調*です。
+```
+
+## Emphasis Against CJK Punctuation
+
+What plain CommonMark rejects is a `*`/`_` run sitting directly against
+punctuation on its outer side. Its flanking rules read Unicode punctuation as a
+whole, so East Asian punctuation blocks a run the same way ASCII punctuation
+does:
+
+```md
+A**強調。**B
+中文**加粗，**测试
+```
+
+Both render as literal text in any spec-conformant engine. Latin prose rarely
+runs into it because a space usually separates the punctuation from the
+delimiter, but CJK sets punctuation directly against the words it follows, so it
+comes up constantly.
+
+`cjkEmphasis` classifies East Asian punctuation as an ordinary character for
+that decision, which lets those runs pair:
 
 ```ts
 import { oxContent } from "@ox-content/vite-plugin";
@@ -20,37 +45,23 @@ export default {
 };
 ```
 
-```md
-これは**重要**です。
-これは*強調*です。
-```
+| Source                 | Default      | `cjkEmphasis: true`      |
+| ---------------------- | ------------ | ------------------------ |
+| `これは**重要**です。` | **重要**     | **重要**                 |
+| `A**強調。**B`         | literal text | **強調。**               |
+| `中文**加粗，**测试`   | literal text | **加粗，**               |
+| `a**bold.**c`          | literal text | literal text (unchanged) |
 
-The option is explicit for compatibility, while the parser keeps the fast common
-inline path. It does not change parsing: the cases above are handled with or
-without it, because CommonMark's delimiter rules already allow emphasis between
-CJK characters.
+Only the fullwidth and CJK-specific punctuation blocks are reclassified —
+`U+3000`–`U+303F`, the vertical and compatibility forms, and fullwidth ASCII.
+Halfwidth ASCII punctuation is written the same way in every script, so
+enabling the option never changes how a Latin document parses.
 
-## What Is Not Covered
+The option relaxes the punctuation rule only. Whitespace still blocks a run, so
+`A** 強調。 **B` stays literal either way.
 
-CommonMark does not recognize `**` placed immediately **inside CJK
-punctuation**:
+## Conformance
 
-```md
-A**強調。**B
-A**、強調**B
-```
-
-Both render as literal text rather than bold. This is a property of the
-specification's left/right-flanking delimiter rules, so it affects every
-spec-conformant engine — `markdown-it` in `commonmark` mode, `micromark`,
-`pulldown-cmark`, and Ox Content all behave the same way here.
-
-Ox Content does not currently deviate from the specification for this case. If
-you need it, keep the punctuation outside the emphasis:
-
-```md
-A**強調**。B
-```
-
-See [CommonMark Conformance](../performance.md#commonmark-conformance) for where
-Ox Content does and does not follow the specification.
+This is a deliberate deviation from the specification, which is why it is
+opt-in: with the option off the parser renders every CommonMark 0.31.2 example
+per spec. See [CommonMark Conformance](../performance.md#commonmark-conformance).

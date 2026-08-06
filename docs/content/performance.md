@@ -211,14 +211,17 @@ node benchmarks/commonmark-conformance/run.mjs --json benchmarks/commonmark-conf
 
 CommonMark's emphasis rules do not recognize `**` placed immediately inside CJK
 punctuation, so `A**強調。**B` renders as literal text rather than bold. This
-affects every spec-conformant engine, Ox Content included — it is a property of
-the specification's left/right-flanking delimiter rules, not an implementation
-gap.
+affects every spec-conformant engine — it is a property of the specification's
+left/right-flanking delimiter rules, not an implementation gap. Emphasis that
+merely sits next to CJK _characters_ — `これは**重要**です。` — is allowed by
+the specification and works everywhere.
 
-Ox Content does not currently deviate from the specification here. Emphasis that
-merely sits next to CJK _characters_ — `これは**重要**です。` — works in Ox
-Content and in CommonMark generally; only the punctuation-adjacent form is
-affected.
+Ox Content ships an opt-in deviation for it. `cjkEmphasis` classifies East Asian
+punctuation as an ordinary character when deciding whether a delimiter run may
+open or close, which lets those runs pair; halfwidth ASCII punctuation is left
+alone, so Latin documents parse identically. It is off by default, which is what
+keeps the 652/652 figure above true of the shipped default. See
+[CJK Emphasis](./examples/cjk-emphasis.md).
 
 ## Bundle Size
 

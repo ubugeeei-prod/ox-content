@@ -68,6 +68,24 @@ pub struct ParserOptions {
     /// Default: `false`; [`ParserOptions::gfm`] sets this to `true`.
     pub autolinks: bool,
 
+    /// Recognize emphasis whose delimiters sit against East Asian punctuation.
+    ///
+    /// CommonMark decides whether a `*`/`_` run may open or close from the
+    /// characters on either side, and punctuation on the outside blocks the
+    /// run. The rule reads Unicode punctuation as a whole, so East Asian
+    /// punctuation blocks it too — and because CJK text sets punctuation
+    /// directly against the words it follows, `A**強調。**B` leaves the
+    /// delimiters as literal text. Latin text rarely hits this, since a space
+    /// usually separates the punctuation from the delimiter.
+    ///
+    /// With this enabled, East Asian punctuation is classified as an ordinary
+    /// character for flanking purposes only, which lets those runs pair. It is
+    /// off by default because it is a deliberate deviation: the parser renders
+    /// every CommonMark 0.31.2 example per spec with it off.
+    ///
+    /// Default: `false`.
+    pub cjk_emphasis: bool,
+
     /// Maximum nesting depth for block elements.
     ///
     /// Default: `0`; [`ParserOptions::gfm`] sets this to `100`.
@@ -85,6 +103,8 @@ impl ParserOptions {
             tables: true,
             strikethrough: true,
             autolinks: true,
+            // Not part of GFM: GitHub renders these runs per CommonMark too.
+            cjk_emphasis: false,
             max_nesting_depth: 100,
         }
     }

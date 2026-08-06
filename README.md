@@ -319,7 +319,7 @@ Where the two Ox Content rows in the tables differ: `ox-content (native)` is the
 
 Extensions beyond CommonMark — GFM tables, task lists, strikethrough, footnotes, and the built-in embeds — are opt-out rather than opt-in, so a document that uses none of them renders exactly as the specification requires. [Markdown Baseline](https://ubugeeei-prod.github.io/ox-content/built-in/markdown/) lists each toggle.
 
-Ox Content does **not** extend CommonMark's emphasis rules for CJK text: `**` immediately inside CJK punctuation (`A**強調。**B`) is left as literal text, matching CommonMark and every other spec-conformant engine.
+One deliberate deviation is available opt-in. CommonMark's flanking rules leave `**` immediately inside CJK punctuation (`A**強調。**B`) as literal text, which bites CJK prose constantly because punctuation is set directly against the preceding word. Enabling [`cjkEmphasis`](https://ubugeeei-prod.github.io/ox-content/examples/cjk-emphasis/) makes those runs pair; halfwidth ASCII punctuation is untouched, so Latin documents parse identically. It is off by default so the shipped default stays spec-conformant.
 
 ## Development
 

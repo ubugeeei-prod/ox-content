@@ -124,7 +124,7 @@ impl<'a> Parser<'a> {
                 self.parse_strikethrough(content, offset, children, pos)?;
             }
             b'*' | b'_' => {
-                Self::push_delimiter_run(content, offset, children, delimiters, pos);
+                self.push_delimiter_run(content, offset, children, delimiters, pos);
             }
             b'`' => self.parse_inline_code(content, offset, children, pos),
             b'[' => self.parse_link(content, offset, children, pos)?,

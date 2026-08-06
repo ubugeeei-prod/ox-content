@@ -162,3 +162,81 @@ fn hard_break_creates_break_node() {
         other => panic!("expected paragraph, got {other:?}"),
     }
 }
+
+/// Whether the paragraph's first inline is a `Strong` node.
+fn parses_as_strong(source: &str, cjk_emphasis: bool) -> bool {
+    let allocator = Allocator::new();
+    let options = ParserOptions { cjk_emphasis, ..ParserOptions::default() };
+    let doc = parse_with_options(&allocator, source, options);
+    match &doc.children[0] {
+        Node::Paragraph(paragraph) => {
+            paragraph.children.iter().any(|node| matches!(node, Node::Strong(_)))
+        }
+        other => panic!("expected paragraph, got {other:?}"),
+    }
+}
+
+#[test]
+fn cjk_emphasis_off_leaves_punctuation_adjacent_runs_literal() {
+    // CommonMark's flanking rules reject these, and the default profile follows
+    // the spec: the conformance suite depends on it.
+    for source in [
+        "A**強調。**B",
+        "A**。強調**B",
+        "A**強調、**B",
+        "A**強調！**B",
+        "A**強調）**B",
+        "中文**加粗，**测试",
+    ] {
+        assert!(!parses_as_strong(source, false), "{source} must stay literal by default");
+    }
+}
+
+#[test]
+fn cjk_emphasis_on_pairs_punctuation_adjacent_runs() {
+    for source in [
+        "A**強調。**B",
+        "A**。強調**B",
+        "A**強調、**B",
+        "A**強調！**B",
+        "A**強調）**B",
+        "中文**加粗，**测试",
+    ] {
+        assert!(parses_as_strong(source, true), "{source} must render as strong when enabled");
+    }
+}
+
+#[test]
+fn cjk_emphasis_leaves_ascii_punctuation_alone() {
+    // Only fullwidth and CJK-specific punctuation is reclassified. Halfwidth
+    // ASCII is written the same way in every script, so enabling the option
+    // must not change how a Latin document parses.
+    for source in ["a**bold.**c", "a**.bold**c", "a**bold!**c"] {
+        assert_eq!(
+            parses_as_strong(source, false),
+            parses_as_strong(source, true),
+            "{source} must parse the same either way"
+        );
+    }
+}
+
+#[test]
+fn cjk_emphasis_keeps_working_for_cases_commonmark_already_accepts() {
+    // Emphasis between CJK *characters* needs no help from the option; it must
+    // keep working with the option in either state.
+    for source in ["これは**重要**です。", "「**強調**」というもの", "（**注**）です"]
+    {
+        assert!(parses_as_strong(source, false), "{source} works per CommonMark");
+        assert!(parses_as_strong(source, true), "{source} must keep working when enabled");
+    }
+}
+
+#[test]
+fn cjk_emphasis_does_not_pair_across_whitespace() {
+    // The option relaxes punctuation, not the whitespace rule: a run with
+    // whitespace on its inner side still cannot open or close.
+    assert!(!parses_as_strong("A** 強調。 **B", true));
+    // Ideographic space is whitespace, and the flanking rules test that before
+    // punctuation, so it is unaffected by the reclassification.
+    assert!(!parses_as_strong("A**\u{3000}強調\u{3000}**B", true));
+}
