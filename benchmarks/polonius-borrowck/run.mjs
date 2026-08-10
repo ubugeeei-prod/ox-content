@@ -25,9 +25,9 @@
  *     Per-crate minimum across repetitions, which is robust to scheduler noise.
  *
  * Each config gets its own `CARGO_TARGET_DIR` so alternating `RUSTFLAGS` does
- * not invalidate dependency fingerprints, and `clean` runs alternate in ABBA
- * order to cancel thermal drift. `CARGO_INCREMENTAL=0` keeps cargo from
- * replaying cached output instead of recompiling.
+ * not invalidate dependency fingerprints, and both phases alternate config
+ * order per repetition (ABBA) to cancel thermal drift. `CARGO_INCREMENTAL=0`
+ * keeps cargo from replaying cached output instead of recompiling.
  *
  * Usage:
  *   node benchmarks/polonius-borrowck/run.mjs
@@ -170,7 +170,8 @@ try {
     })
     .map((entry) => ({ ...entry, target: entry.path.endsWith("lib.rs") ? "--lib" : "--bins" }));
   for (let rep = 1; rep <= iterations; rep += 1) {
-    for (const config of CONFIGS) {
+    const order = rep % 2 === 1 ? CONFIGS : [...CONFIGS].reverse();
+    for (const config of order) {
       const best = borrowck.get(config.name);
       for (const { crate, file, target } of crateRoots) {
         const now = new Date();
