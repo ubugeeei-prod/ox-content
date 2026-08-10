@@ -286,6 +286,26 @@
         "name": "@bruits/satteri-wasm32-wasi",
         "license": "Unknown",
         "reason": "Optional native binary of satteri (MIT), a benchmark-only Markdown engine comparison target; platform package omits its own license field."
+      },
+      {
+        "name": "@yuku-codegen/binding-linux-x64-gnu",
+        "license": "Unknown",
+        "reason": "Optional native binary of yuku-codegen (MIT), a Vite+ build toolchain dependency; platform package omits its own license field."
+      },
+      {
+        "name": "@yuku-codegen/binding-linux-x64-musl",
+        "license": "Unknown",
+        "reason": "Optional native binary of yuku-codegen (MIT), a Vite+ build toolchain dependency; platform package omits its own license field."
+      },
+      {
+        "name": "@yuku-parser/binding-linux-x64-gnu",
+        "license": "Unknown",
+        "reason": "Optional native binary of yuku-parser (MIT), a Vite+ build toolchain dependency; platform package omits its own license field."
+      },
+      {
+        "name": "@yuku-parser/binding-linux-x64-musl",
+        "license": "Unknown",
+        "reason": "Optional native binary of yuku-parser (MIT), a Vite+ build toolchain dependency; platform package omits its own license field."
       }
     ]
   }

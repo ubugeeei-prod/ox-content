@@ -100,7 +100,7 @@ const png = await session.renderPage(html, 1200, 630);</code></pre>
 <h4>Returns</h4>
 <div class="ox-api-entry__return">
   <code class="ox-api-entry__return-type">Promise&lt;<a href="#ogbrowsersession">OgBrowserSession</a> | null&gt;</code>
-  
+
 </div>
 </div>
   </div>
