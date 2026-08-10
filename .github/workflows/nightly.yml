@@ -69,7 +69,7 @@ jobs:
           persist-credentials: false
 
       - name: Setup Vite+
-        uses: voidzero-dev/setup-vp@250f29ce396baf5e8f24498e17c0dfdebabc26eb # v1.15.0
+        uses: voidzero-dev/setup-vp@313600b80b104eadebb9111787d37a2e83e014ca # v1.17.0
         with:
           node-version-file: ".node-version"
           cache: true
@@ -91,7 +91,7 @@ jobs:
       - name: Cache cargo build
         if: ${{ !startsWith(matrix.os, 'blacksmith-') }}
         # zizmor: ignore[cache-poisoning] save-if restricts writes to main pushes, so PR runs cannot poison release builds.
-        uses: Swatinem/rust-cache@e18b497796c12c097a38f9edb9d0641fb99eee32 # v2.9.1
+        uses: Swatinem/rust-cache@6323deb102c322ba6fcbdcafc7e3dddab59af2b6 # v2.9.1
         with:
           shared-key: nightly-${{ matrix.target }}
           # Only save cache on main pushes to prevent PR runs from poisoning the cache used by release builds.
@@ -197,7 +197,7 @@ jobs:
           persist-credentials: false
 
       - name: Setup Vite+
-        uses: voidzero-dev/setup-vp@250f29ce396baf5e8f24498e17c0dfdebabc26eb # v1.15.0
+        uses: voidzero-dev/setup-vp@313600b80b104eadebb9111787d37a2e83e014ca # v1.17.0
         with:
           node-version-file: ".node-version"
           cache: true
