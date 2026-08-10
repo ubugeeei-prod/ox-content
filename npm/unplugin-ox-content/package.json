@@ -89,7 +89,7 @@
     "remark-math": "^6.0.0",
     "remark-smartypants": "^3.0.3",
     "remark-toc": "^9.0.0",
-    "rollup": "^4.62.3",
+    "rollup": "^4.62.4",
     "typescript": "catalog:",
     "vite": "catalog:",
     "vite-plus": "catalog:",
