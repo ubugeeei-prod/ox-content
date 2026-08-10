@@ -1,7 +1,7 @@
 # Benchmarks
 
 Two flavors of performance measurement live in this tree, plus a correctness
-sweep that the published tables depend on:
+sweep that the published tables depend on and a one-off compiler experiment:
 
 - **JS comparison sweep** in `bundle-size/` — runs Ox Content alongside
   `@tanstack/markdown`, `markdown-it-ts`, `markdown-it`, `marked`, `md4w`,
@@ -15,6 +15,11 @@ sweep that the published tables depend on:
   engine in the speed tables against the vendored CommonMark 0.31.2 spec, so a
   faster engine that skips spec behavior is visible as such. Trigger via
   `node benchmarks/commonmark-conformance/run.mjs`.
+- **Polonius borrow-checker comparison** in `polonius-borrowck/` — measures what
+  the next-generation borrow checker costs this workspace to compile, and lists
+  the borrow-checker workarounds it would let us delete once it stabilizes. This
+  one measures the compiler, not Ox Content, so it feeds no published table.
+  Trigger via `node benchmarks/polonius-borrowck/run.mjs`.
 
 ## CommonMark conformance sweep
 
