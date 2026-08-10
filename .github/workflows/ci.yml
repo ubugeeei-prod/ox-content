@@ -326,4 +326,4 @@ jobs:
           vp exec --filter @ox-content/vite-plugin -- puppeteer browsers install chrome-headless-shell
 
       - name: Build
-        run: vp build
+        run: vp run build
