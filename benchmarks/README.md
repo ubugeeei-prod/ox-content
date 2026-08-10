@@ -19,7 +19,8 @@ sweep that the published tables depend on and a one-off compiler experiment:
   the next-generation borrow checker costs this workspace to compile, and lists
   the borrow-checker workarounds it would let us delete once it stabilizes. This
   one measures the compiler, not Ox Content, so it feeds no published table.
-  Trigger via `node benchmarks/polonius-borrowck/run.mjs`.
+  Trigger via
+  `node benchmarks/polonius-borrowck/run.mjs --toolchain nightly-2026-08-09`.
 
 ## CommonMark conformance sweep
 

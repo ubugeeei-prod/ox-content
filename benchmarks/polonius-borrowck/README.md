@@ -2,15 +2,19 @@
 
 [Polonius Alpha][blog] is the next iteration of the borrow checker. It became
 the default on nightly in `nightly-2026-08-06`, and stabilization is planned
-before the end of 2026 — so it will arrive on stable whether or not this
-workspace is ready for it. This directory answers two questions ahead of time:
-what it costs to compile, and what it lets us delete.
+before the end of 2026, so it is expected to arrive on stable whether or not
+this workspace is ready for it. This directory answers two questions ahead of
+time: what it costs to compile, and what it lets us delete.
 
 Run it with:
 
 ```bash
-node benchmarks/polonius-borrowck/run.mjs --iterations 4 --json results.json
+node benchmarks/polonius-borrowck/run.mjs \
+  --toolchain nightly-2026-08-09 --iterations 4 --json results.json
 ```
+
+`--toolchain` pins the compiler the results below were collected with; it
+defaults to `nightly`, which measures whatever nightly is current instead.
 
 The harness needs a nightly toolchain and a POSIX `/usr/bin/time`. It never
 mutates the workspace beyond touching crate roots to force a re-check, and it
@@ -29,8 +33,10 @@ Two phases, because they answer different questions:
 - **`clean`** — a full `cargo check --workspace` from an empty target directory,
   dependencies included. This is the number a developer feels.
 - **`borrowck`** — each of the 26 workspace crates re-checked on its own with
-  `-Ztime-passes`, reporting the `MIR_borrow_checking` pass in isolation. If a
-  borrow-checker change shows up anywhere, it shows up here.
+  `-Ztime-passes`, reporting the `MIR_borrow_checking` pass in isolation. One
+  target per crate (its lib, or its bins when it has no lib), so this is where a
+  borrow-checker change has to show up for library and binary code; examples,
+  tests, and benches are not checked.
 
 Two measurement details are load-bearing, and both were mistakes first:
 
@@ -75,9 +81,12 @@ That 8% lands on a pass that is a small fraction of a compile. In absolute terms
 it is 0.12 s spread across the whole workspace, which is why it does not survive
 into the `clean` numbers: at workspace scale the difference sits inside the
 run-to-run spread, and repeated rounds put it between +0.7% and +2.4% CPU with
-wall clock unable to distinguish the two at all. This is comfortably inside the
-"relatively few and minimal" regressions the release announcement describes, and
-nowhere near the 2–3× worst case it reports for borrow-heavy crates.
+wall clock unable to distinguish the two at all. The "relatively few and
+minimal" regressions the release announcement describes are a statement about
+magnitude, and by that measure these qualify: the regression is broad here (21
+of 26 crates), but every crate moves by a fraction of a second, the workspace
+total is unchanged, and nothing comes near the 2–3× worst case the announcement
+reports for borrow-heavy crates.
 
 **Nothing in the workspace fails to compile under Polonius Alpha**, with no new
 warnings — checked across all 26 crates.

@@ -18,8 +18,9 @@
  *     so it can only show that the effect is small, not how large it is.
  *
  *   - `borrowck`: each workspace crate re-checked on its own with
- *     `-Ztime-passes`, reporting the `MIR_borrow_checking` pass alone. This is
- *     where a borrow-checker change has to show up if it shows up anywhere, and
+ *     `-Ztime-passes`, reporting the `MIR_borrow_checking` pass alone. One
+ *     target per crate (lib, or bins when there is no lib), so this is where a
+ *     borrow-checker change has to show up for library and binary code, and
  *     isolating it keeps the signal from drowning in dependency compile time.
  *     Per-crate minimum across repetitions, which is robust to scheduler noise.
  *
@@ -54,6 +55,11 @@ const argValue = (flag) => {
 const iterations = Number(argValue("--iterations") ?? 4);
 const toolchain = argValue("--toolchain") ?? "nightly";
 const jsonPath = argValue("--json");
+
+if (!Number.isSafeInteger(iterations) || iterations < 1) {
+  console.error("--iterations must be a positive integer");
+  process.exit(1);
+}
 
 const targetDirs = new Map(
   CONFIGS.map((config) => [config.name, mkdtempSync(join(tmpdir(), `polonius-${config.name}-`))]),
@@ -101,10 +107,17 @@ function cargo(cargoArgs, { rustflags, targetDir }) {
  */
 function passTotal(stderr, pass) {
   let total = 0;
+  let found = false;
   for (const line of stderr.split("\n")) {
     const timed = /^time:\s+([0-9.]+);.*\t(\S+)$/.exec(line.trimEnd());
-    if (timed && timed[2] === pass) total += Number(timed[1]);
+    if (timed && timed[2] === pass) {
+      found = true;
+      total += Number(timed[1]);
+    }
   }
+  // A missing pass means the crate was replayed from cache or `-Ztime-passes`
+  // changed shape; either way a silent 0 would be recorded as a real timing.
+  if (!found) throw new Error(`no ${pass} timing in the run output`);
   return total;
 }
 
