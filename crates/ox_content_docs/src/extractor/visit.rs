@@ -10,11 +10,13 @@ use super::{DocItem, DocItemKind, DocVisitor};
 impl<'a> Visit<'a> for DocVisitor<'a> {
     fn visit_statement(&mut self, stmt: &Statement<'a>) {
         match stmt {
-            Statement::ExportNamedDeclaration(export) => {
-                if let Some(ref decl) = export.declaration {
-                    self.visit_declaration_as_exported(decl, export.span.start);
-                }
+            // `export const foo = 1;`
+            Statement::ExportDeclaration(export) => {
+                self.visit_declaration_as_exported(&export.declaration, export.span.start);
             }
+            // `export { foo };` and `export { foo } from './bar.js';` carry no
+            // declaration to document.
+            Statement::ExportNamedDeclaration(_) | Statement::ExportFromDeclaration(_) => {}
             Statement::ExportDefaultDeclaration(export) => {
                 self.has_default_export = true;
                 match &export.declaration {

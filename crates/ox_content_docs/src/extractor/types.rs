@@ -185,10 +185,7 @@ impl<'a> DocVisitor<'a> {
                 out.into_string()
             }
             TSSignature::TSIndexSignature(index_signature) => {
-                let Some(parameter) = index_signature.parameters.first() else {
-                    return self.format_span(index_signature.span.start, index_signature.span.end);
-                };
-                let (name, _, _) = self.format_index_signature_name(parameter);
+                let (name, _, _) = self.format_index_signature_name(&index_signature.parameter);
                 let value_type =
                     self.format_ts_type(&index_signature.type_annotation.type_annotation);
                 Self::format_index_signature(index_signature, &name, &value_type)

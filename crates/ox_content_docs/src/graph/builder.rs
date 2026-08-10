@@ -104,38 +104,39 @@ impl GraphBuilder {
         let imports = collect_import_bindings(&ret.program.body);
         for statement in &ret.program.body {
             match statement {
+                // `export const foo = 1;`
+                Statement::ExportDeclaration(export) => {
+                    append_declaration_exports(&mut exports, path, &export.declaration);
+                }
+                // `export { foo };`
                 Statement::ExportNamedDeclaration(export) => {
-                    if let Some(declaration) = &export.declaration {
-                        append_declaration_exports(&mut exports, path, declaration);
-                    }
-
-                    if let Some(source) = &export.source {
-                        let specifier = source.value.to_string();
-                        let kind = export_kind(export.export_kind);
-                        if let Some(resolved) = self.resolver.resolve_specifier(path, &specifier)? {
-                            self.append_reexports_from_resolved_module(
-                                &mut exports,
-                                &resolved,
-                                &export.specifiers,
-                                kind,
-                            )?;
-                        } else {
-                            append_external_reexports(
-                                &mut exports,
-                                &specifier,
-                                None,
-                                &export.specifiers,
-                                kind,
-                            );
-                        }
-                    } else {
-                        self.append_local_specifier_exports(
+                    self.append_local_specifier_exports(
+                        &mut exports,
+                        path,
+                        &imports,
+                        &export.specifiers,
+                        export_kind(export.export_kind),
+                    )?;
+                }
+                // `export { foo } from './bar.js';`
+                Statement::ExportFromDeclaration(export) => {
+                    let specifier = export.source.value.to_string();
+                    let kind = export_kind(export.export_kind);
+                    if let Some(resolved) = self.resolver.resolve_specifier(path, &specifier)? {
+                        self.append_reexports_from_resolved_module(
                             &mut exports,
-                            path,
-                            &imports,
+                            &resolved,
                             &export.specifiers,
-                            export_kind(export.export_kind),
+                            kind,
                         )?;
+                    } else {
+                        append_external_reexports(
+                            &mut exports,
+                            &specifier,
+                            None,
+                            &export.specifiers,
+                            kind,
+                        );
                     }
                 }
                 Statement::ExportAllDeclaration(export) => {

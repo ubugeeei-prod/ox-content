@@ -170,8 +170,8 @@ impl<'a> DocVisitor<'a> {
         &self,
         index_signature: &TSIndexSignature<'a>,
     ) -> Option<DocItem> {
-        let parameter = index_signature.parameters.first()?;
-        let (name, param_name, param_type) = self.format_index_signature_name(parameter);
+        let (name, param_name, param_type) =
+            self.format_index_signature_name(&index_signature.parameter);
         let value_type = self.format_ts_type(&index_signature.type_annotation.type_annotation);
         let signature = Self::format_index_signature(index_signature, &name, &value_type);
 
