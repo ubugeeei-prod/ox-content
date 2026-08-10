@@ -328,8 +328,8 @@ nix develop           # Enter the pinned dev shell
 vp install             # Install JS dependencies through Vite+
 vp fmt                 # Format Rust and JS/TS sources
 vp check               # Check Rust and JS/TS sources
-vp dev                 # Start the docs and playground dev servers
-vp build               # Build Rust, npm packages, docs, and playground
+vp run dev             # Start the docs and playground dev servers
+vp run build           # Build Rust, npm packages, docs, and playground
 ```
 
 The dev shell is pinned in `flake.nix`, the workspace task graph lives in `vite.config.ts`, and `.node-version` is kept for CI / non-Nix Node setup.

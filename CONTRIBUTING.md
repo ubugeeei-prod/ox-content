@@ -20,8 +20,8 @@ Run commands from the repository root:
 ```bash
 vp fmt        # Format Rust and JS/TS sources
 vp check      # Check Rust and JS/TS sources
-vp dev        # Start the docs and playground dev servers
-vp build      # Build Rust, npm packages, docs, and playground
+vp run dev    # Start the docs and playground dev servers
+vp run build  # Build Rust, npm packages, docs, and playground
 ```
 
 Useful task-graph commands include:
