@@ -6,6 +6,8 @@
 //! interfere with emphasis pairing, and recurses into emphasis-like
 //! containers while never descending into existing links.
 
+use std::sync::LazyLock;
+
 use memchr::memmem;
 use ox_content_allocator::Vec;
 use ox_content_ast::{Link, Node, Span, Text};
@@ -119,33 +121,54 @@ impl<'a> Parser<'a> {
     }
 }
 
+/// Searchers for the multi-byte autolink needles, built once for the process.
+///
+/// The one-shot `memmem::find` rebuilds its SIMD prefilter on every call, and
+/// this scan runs over every text node of every document — on short prose
+/// nodes that setup cost dominated the search itself.
+static URL_FINDERS: LazyLock<[memmem::Finder<'static>; 4]> =
+    LazyLock::new(|| ["www.", "http://", "https://", "ftp://"].map(memmem::Finder::new));
+
 /// Finds the earliest valid autolink candidate in `value`.
 fn find_candidate(value: &str) -> Option<Candidate> {
+    let bytes = value.as_bytes();
     let mut best: Option<Candidate> = None;
-    for (needle, _href, is_email) in [
-        ("www.", "http://", false),
-        ("http://", "", false),
-        ("https://", "", false),
-        ("ftp://", "", false),
-        ("@", "mailto:", true),
-    ] {
+
+    // `www.` is the only needle that contains neither `:` nor `@`, so one
+    // `memchr2` decides whether the three scheme scans and the email scan can
+    // match at all. Ordinary prose — nearly every text node in a document —
+    // answers no and skips four scans.
+    let has_scheme_or_email = memchr::memchr2(b':', b'@', bytes).is_some();
+
+    for finder in URL_FINDERS.iter().take(if has_scheme_or_email { 4 } else { 1 }) {
+        let needle_len = finder.needle().len();
         let mut from = 0;
-        while let Some(offset) = memmem::find(&value.as_bytes()[from..], needle.as_bytes()) {
+        while let Some(offset) = finder.find(&bytes[from..]) {
             let at = from + offset;
-            let candidate = if is_email {
-                validate_email(value, at)
-            } else {
-                validate_url(value, at, needle.len())
-            };
-            if let Some(candidate) = candidate {
+            if let Some(candidate) = validate_url(value, at, needle_len) {
                 if best.as_ref().is_none_or(|current| candidate.start < current.start) {
                     best = Some(candidate);
                 }
                 break;
             }
-            from = at + needle.len();
+            from = at + needle_len;
         }
     }
+
+    if has_scheme_or_email {
+        let mut from = 0;
+        while let Some(offset) = memchr::memchr(b'@', &bytes[from..]) {
+            let at = from + offset;
+            if let Some(candidate) = validate_email(value, at) {
+                if best.as_ref().is_none_or(|current| candidate.start < current.start) {
+                    best = Some(candidate);
+                }
+                break;
+            }
+            from = at + 1;
+        }
+    }
+
     best
 }
 
