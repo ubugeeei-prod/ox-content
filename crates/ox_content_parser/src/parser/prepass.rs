@@ -17,6 +17,7 @@
 use std::rc::Rc;
 
 use super::footnote::{normalize_footnote_label, parse_footnote_opener, FootnoteLabels};
+use super::line_scan::{line_end as scan_line_end, next_line_start};
 use super::reference::{
     closes_paragraph_context, fence_open, is_fence_close, strip_quote_markers, ReferenceDef,
     ReferenceMap,
@@ -99,7 +100,7 @@ impl<'a> Parser<'a> {
                 continue;
             }
 
-            let line_end = memchr::memchr(b'\n', &bytes[pos..]).map_or(bytes.len(), |o| pos + o);
+            let line_end = scan_line_end(bytes, pos);
             let line = &self.source[pos..line_end];
 
             // Footnote side first: the reference side `continue`s out of
@@ -153,8 +154,7 @@ impl<'a> Parser<'a> {
                     if collect_footnotes {
                         let mut foot_pos = line_end + 1;
                         while foot_pos < next_pos {
-                            let foot_line_end = memchr::memchr(b'\n', &bytes[foot_pos..])
-                                .map_or(bytes.len(), |o| foot_pos + o);
+                            let foot_line_end = scan_line_end(bytes, foot_pos);
                             footnote_scan_line(
                                 &self.source[foot_pos..foot_line_end],
                                 bytes[foot_pos],
@@ -203,10 +203,4 @@ fn footnote_scan_line(
             labels.insert(normalize_footnote_label(label));
         }
     }
-}
-
-/// Byte offset of the next line's start (just past the newline, or EOF).
-#[inline]
-fn next_line_start(bytes: &[u8], pos: usize) -> usize {
-    memchr::memchr(b'\n', &bytes[pos..]).map_or(bytes.len(), |off| pos + off + 1)
 }

@@ -19,6 +19,7 @@ mod inline;
 mod inline_helpers;
 mod inline_html;
 mod leaf;
+mod line_scan;
 mod list;
 mod list_item;
 mod prepass;
