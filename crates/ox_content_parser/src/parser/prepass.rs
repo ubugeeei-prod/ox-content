@@ -29,7 +29,13 @@ impl<'a> Parser<'a> {
     /// Runs the fused pre-pass for a root parser. Returns the
     /// document-wide reference map and footnote label set that are shared
     /// with sub-parsers.
-    pub(super) fn build_prepass(&self) -> (Rc<ReferenceMap<'a>>, Rc<FootnoteLabels>) {
+    ///
+    /// Either collection comes back as `None` when it stayed empty, so the
+    /// common document — no link reference definitions, no footnotes — never
+    /// allocates an `Rc` for a map nothing will read.
+    pub(super) fn build_prepass(
+        &self,
+    ) -> (Option<Rc<ReferenceMap<'a>>>, Option<Rc<FootnoteLabels>>) {
         profile_span!("parser::build_prepass");
         // Cheap bails. Both collectors need a `[` somewhere, and both a
         // literal `]:`: a reference definition's label must be closed by
@@ -41,7 +47,7 @@ impl<'a> Parser<'a> {
         if !self.source.contains('[')
             || memchr::memmem::find(self.source.as_bytes(), b"]:").is_none()
         {
-            return (Rc::new(ReferenceMap::default()), Rc::new(FootnoteLabels::default()));
+            return (None, None);
         }
         let collect_footnotes = self.options.footnotes && self.source.contains("[^");
 
@@ -166,7 +172,10 @@ impl<'a> Parser<'a> {
             pos = line_end + 1;
         }
 
-        (Rc::new(definitions), Rc::new(labels))
+        (
+            (!definitions.is_empty()).then(|| Rc::new(definitions)),
+            (!labels.is_empty()).then(|| Rc::new(labels)),
+        )
     }
 }
 

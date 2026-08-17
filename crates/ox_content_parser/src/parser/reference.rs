@@ -67,10 +67,11 @@ impl<'a> Parser<'a> {
     }
 
     pub(super) fn lookup_reference(&self, raw_label: &str) -> Option<&ReferenceDef<'a>> {
-        if self.definitions.is_empty() {
+        let definitions = self.definitions.as_ref()?;
+        if definitions.is_empty() {
             return None;
         }
-        self.definitions.get(&Self::normalize_reference_label(raw_label))
+        definitions.get(&Self::normalize_reference_label(raw_label))
     }
 
     /// Parses a single definition at the start of `text`. `text` must not

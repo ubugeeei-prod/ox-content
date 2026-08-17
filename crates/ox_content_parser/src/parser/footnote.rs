@@ -175,8 +175,9 @@ impl<'a> Parser<'a> {
 
     /// Whether a definition exists for `label` (already normalized-able).
     pub(super) fn has_footnote_label(&self, label: &str) -> bool {
-        !self.footnote_labels.is_empty()
-            && self.footnote_labels.contains(&normalize_footnote_label(label))
+        self.footnote_labels
+            .as_ref()
+            .is_some_and(|labels| labels.contains(&normalize_footnote_label(label)))
     }
 
     /// Emits a [`FootnoteReference`] for `[^label]` at `pos`. Returns

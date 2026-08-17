@@ -130,18 +130,24 @@ pub struct Parser<'a> {
     /// Link reference definitions collected by the root parser's
     /// pre-pass, shared with sub-parsers (block quote and list item
     /// contents) so references resolve document-wide.
-    definitions: std::rc::Rc<reference::ReferenceMap<'a>>,
+    ///
+    /// `None` and an empty map mean the same thing to every reader; the
+    /// distinction exists so that documents without definitions — the
+    /// overwhelming majority, and the ones where per-call cost is most
+    /// visible — never pay for the `Rc` allocation at all. The same applies
+    /// to the two collections below.
+    definitions: Option<std::rc::Rc<reference::ReferenceMap<'a>>>,
 
     /// Footnote labels defined anywhere in the document, collected by the
     /// same kind of pre-pass as `definitions` so an inline `[^x]` can tell
     /// whether a definition exists before reaching it.
-    footnote_labels: std::rc::Rc<footnote::FootnoteLabels>,
+    footnote_labels: Option<std::rc::Rc<footnote::FootnoteLabels>>,
 
     /// Byte offsets (in `source`) of lines that entered this sub-source
     /// via lazy continuation. Such lines are paragraph text by
     /// construction and must not be reinterpreted as setext underlines
     /// during the re-parse.
-    lazy_lines: std::rc::Rc<rustc_hash::FxHashSet<u32>>,
+    lazy_lines: Option<std::rc::Rc<rustc_hash::FxHashSet<u32>>>,
 }
 
 impl<'a> Parser<'a> {
@@ -160,9 +166,9 @@ impl<'a> Parser<'a> {
             options,
             position: 0,
             nesting_depth: 0,
-            definitions: std::rc::Rc::new(reference::ReferenceMap::default()),
-            footnote_labels: std::rc::Rc::default(),
-            lazy_lines: std::rc::Rc::default(),
+            definitions: None,
+            footnote_labels: None,
+            lazy_lines: None,
         };
         // A single fused pre-pass collects both the reference definitions
         // and the footnote labels (see `prepass.rs`).
@@ -188,9 +194,11 @@ impl<'a> Parser<'a> {
             options: self.options.clone(),
             position: 0,
             nesting_depth: 0,
-            definitions: std::rc::Rc::clone(&self.definitions),
-            footnote_labels: std::rc::Rc::clone(&self.footnote_labels),
-            lazy_lines: std::rc::Rc::new(lazy_lines),
+            definitions: self.definitions.clone(),
+            footnote_labels: self.footnote_labels.clone(),
+            // Most sub-sources are entered without any lazy continuation
+            // line, and every block quote and list item builds one of these.
+            lazy_lines: (!lazy_lines.is_empty()).then(|| std::rc::Rc::new(lazy_lines)),
         }
     }
 

@@ -226,7 +226,11 @@ impl<'a> Parser<'a> {
     fn setext_underline_depth(&self, line_start: usize, first_non_ws: usize) -> Option<u8> {
         // A lazily-continued line is paragraph text by construction and
         // can never underline the paragraph it continues.
-        if self.lazy_lines.contains(&(line_start as u32)) {
+        if self
+            .lazy_lines
+            .as_ref()
+            .is_some_and(|lazy_lines| lazy_lines.contains(&(line_start as u32)))
+        {
             return None;
         }
         let bytes = self.source.as_bytes();
