@@ -42,6 +42,25 @@ impl<'a> Parser<'a> {
             // has been reached.
             pos = next_inline_special(bytes, pos);
 
+            // Fold soft line breaks into the running text node. A newline
+            // with non-whitespace on both sides is a soft break with nothing
+            // to strip, so its rendered form is the literal `\n` already
+            // inside the source run — emitting `"line"`, `"\n"`, `"next"` as
+            // three nodes only slowed every later pass. This is also the
+            // shape remark produces (mdast has no softbreak node; line
+            // endings live inside `text` values). Prose is dominated by this
+            // case; a newline touching spaces or tabs still takes
+            // `parse_line_break` below for hard-break detection and
+            // whitespace stripping.
+            while pos > start
+                && pos + 1 < content.len()
+                && bytes[pos] == b'\n'
+                && !matches!(bytes[pos - 1], b' ' | b'\t')
+                && !matches!(bytes[pos + 1], b' ' | b'\t' | b'\n')
+            {
+                pos = next_inline_special(bytes, pos + 1);
+            }
+
             if pos > start {
                 Self::push_text(&mut children, &content[start..pos], offset + start, offset + pos);
             }
