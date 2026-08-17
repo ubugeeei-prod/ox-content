@@ -1,4 +1,4 @@
-use memchr::memchr;
+use memchr::{memchr, memchr2};
 use ox_content_ast::{Heading, Node, Paragraph, Span};
 
 use super::Parser;
@@ -105,11 +105,22 @@ impl<'a> Parser<'a> {
 
         // Table recognition is the one feature that cannot be decided from
         // the first byte because table headers usually look like ordinary
-        // paragraph text. Guard the expensive two-line delimiter check with a
-        // same-line `|` probe so non-table prose does one memchr2 scan and
-        // then falls through to paragraph parsing.
-        if self.options.tables && self.line_contains_byte(start, b'|') && self.try_parse_table() {
-            return self.parse_table(start);
+        // paragraph text. Guard the expensive two-line delimiter check with
+        // a same-line `|` probe so non-table prose does one memchr2 scan and
+        // then falls through to paragraph parsing — carrying the line end
+        // that scan reached, which is the first thing `parse_paragraph`
+        // needs.
+        let mut first_line_end = None;
+        if self.options.tables {
+            match memchr2(b'|', b'\n', &bytes[start..]) {
+                Some(off) if bytes[start + off] == b'|' => {
+                    if self.try_parse_table() {
+                        return self.parse_table(start);
+                    }
+                }
+                Some(off) => first_line_end = Some(start + off + 1),
+                None => first_line_end = Some(self.source.len()),
+            }
         }
 
         // Footnote definitions share the `[label]:` shape with link
@@ -131,10 +142,14 @@ impl<'a> Parser<'a> {
         }
 
         // Default: parse as paragraph
-        self.parse_paragraph(start)
+        self.parse_paragraph(start, first_line_end)
     }
 
-    pub(super) fn parse_paragraph(&mut self, start: usize) -> ParseResult<Option<Node<'a>>> {
+    pub(super) fn parse_paragraph(
+        &mut self,
+        start: usize,
+        first_line_end: Option<usize>,
+    ) -> ParseResult<Option<Node<'a>>> {
         profile_span!("parser::parse_paragraph");
         let bytes = self.source.as_bytes();
 
@@ -147,10 +162,9 @@ impl<'a> Parser<'a> {
         // `memchr`). This also removes the infinite-loop hazard the two
         // dispatchers guard against: by always advancing past line one we can
         // never return `Ok(None)` without progress on a non-blank line.
-        let mut content_end = if let Some(off) = memchr(b'\n', &bytes[start..]) {
-            start + off + 1
-        } else {
-            self.source.len()
+        let mut content_end = match first_line_end {
+            Some(end) => end,
+            None => memchr(b'\n', &bytes[start..]).map_or(self.source.len(), |off| start + off + 1),
         };
         self.position = content_end;
 
@@ -191,16 +205,19 @@ impl<'a> Parser<'a> {
                 })));
             }
 
-            // Check for block-level element that would end paragraph.
-            if self.line_starts_block() {
+            // Check for block-level element that would end paragraph. The
+            // probe's table scan usually reaches the newline, in which case
+            // consuming the line costs no further scanning.
+            let probe = self.probe_line(line_start, cursor);
+            if probe.starts_block {
                 break;
             }
 
-            // Consume one line via memchr.
-            content_end = if let Some(off) = memchr(b'\n', &bytes[line_start..]) {
-                line_start + off + 1
-            } else {
-                self.source.len()
+            content_end = match probe.line_end {
+                Some(line_end) if line_end < bytes.len() => line_end + 1,
+                Some(_) => self.source.len(),
+                None => memchr(b'\n', &bytes[line_start..])
+                    .map_or(self.source.len(), |off| line_start + off + 1),
             };
             self.position = content_end;
         }
@@ -225,6 +242,22 @@ impl<'a> Parser<'a> {
     /// first non-space/tab byte (already computed by the paragraph loop).
     fn setext_underline_depth(&self, line_start: usize, first_non_ws: usize) -> Option<u8> {
         profile_span_detail!("parser::setext_probe");
+        let bytes = self.source.as_bytes();
+        // The marker byte rejects on the first load for essentially every
+        // paragraph line, so it goes ahead of the indent walk and the lazy
+        // set lookup rather than after them.
+        let marker = bytes[first_non_ws];
+        let depth = match marker {
+            b'=' => 1,
+            b'-' => 2,
+            _ => return None,
+        };
+        // A tab in the indent always reaches column 4+, so spaces only.
+        if first_non_ws - line_start > 3
+            || bytes[line_start..first_non_ws].iter().any(|&byte| byte != b' ')
+        {
+            return None;
+        }
         // A lazily-continued line is paragraph text by construction and
         // can never underline the paragraph it continues.
         if self
@@ -234,19 +267,6 @@ impl<'a> Parser<'a> {
         {
             return None;
         }
-        let bytes = self.source.as_bytes();
-        // A tab in the indent always reaches column 4+, so spaces only.
-        if first_non_ws - line_start > 3
-            || bytes[line_start..first_non_ws].iter().any(|&byte| byte != b' ')
-        {
-            return None;
-        }
-        let marker = bytes[first_non_ws];
-        let depth = match marker {
-            b'=' => 1,
-            b'-' => 2,
-            _ => return None,
-        };
         let mut i = first_non_ws;
         while i < bytes.len() && bytes[i] == marker {
             i += 1;

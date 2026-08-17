@@ -4,6 +4,16 @@ use super::Parser;
 #[allow(unused_imports)]
 use crate::profile_span_detail;
 
+/// What [`Parser::probe_line`] learned about the current line.
+pub(super) struct BlockProbe {
+    /// Whether the line begins a block-level construct.
+    pub starts_block: bool,
+    /// Offset of the line's newline, or `source.len()` for an unterminated
+    /// final line — but only when the table scan ran all the way to it.
+    /// `None` means the caller has to find the line end itself.
+    pub line_end: Option<usize>,
+}
+
 impl<'a> Parser<'a> {
     pub(super) fn is_at_end(&self) -> bool {
         self.position >= self.source.len()
@@ -83,17 +93,31 @@ impl<'a> Parser<'a> {
     /// byte-dispatch table aligned with `parse_block` preserves Markdown
     /// behavior while avoiding repeated full-line scans on ordinary prose.
     pub(super) fn line_starts_block(&self) -> bool {
-        profile_span_detail!("parser::line_starts_block");
         let line_start = self.position;
-        let bytes = self.source.as_bytes();
         let Some(trimmed_start) = self.first_non_whitespace_in_line(line_start) else {
             return false;
         };
+        self.probe_line(line_start, trimmed_start).starts_block
+    }
+
+    /// [`Self::line_starts_block`] for a caller that has already found the
+    /// line's first non-whitespace byte, and that also wants to know where
+    /// the line ends.
+    ///
+    /// The table check scans the line with `memchr2(b'|', b'\n')`. When it
+    /// comes back with the newline — the answer for ordinary prose — it has
+    /// incidentally answered "where does this line end", which is the very
+    /// next thing paragraph parsing asks. Returning that offset lets the
+    /// paragraph loop consume the line without a second scan over the same
+    /// bytes.
+    pub(super) fn probe_line(&self, line_start: usize, trimmed_start: usize) -> BlockProbe {
+        profile_span_detail!("parser::line_starts_block");
+        let bytes = self.source.as_bytes();
 
         // A line indented four or more columns cannot start any block, so
         // it can never interrupt a paragraph either (lazy continuation).
         if self.line_indent_width(line_start, trimmed_start) >= 4 {
-            return false;
+            return BlockProbe { starts_block: false, line_end: None };
         }
 
         let starts_block = match bytes[trimmed_start] {
@@ -121,10 +145,19 @@ impl<'a> Parser<'a> {
             _ => false,
         };
 
-        starts_block
-            || (self.options.tables
-                && self.line_contains_byte(line_start, b'|')
-                && self.try_parse_table())
+        if starts_block {
+            return BlockProbe { starts_block: true, line_end: None };
+        }
+        if !self.options.tables {
+            return BlockProbe { starts_block: false, line_end: None };
+        }
+        match memchr2(b'|', b'\n', &bytes[line_start..]) {
+            Some(off) if bytes[line_start + off] == b'|' => {
+                BlockProbe { starts_block: self.try_parse_table(), line_end: None }
+            }
+            Some(off) => BlockProbe { starts_block: false, line_end: Some(line_start + off) },
+            None => BlockProbe { starts_block: false, line_end: Some(self.source.len()) },
+        }
     }
 
     pub(super) fn line_at(&self, line_start: usize) -> &'a str {
@@ -174,19 +207,5 @@ impl<'a> Parser<'a> {
         }
 
         None
-    }
-
-    /// Checks whether `needle` appears before the end of the current line.
-    ///
-    /// `memchr2` searches for either `needle` or `\n` in one pass. This is
-    /// used as a guard for rare syntax families such as tables: the common
-    /// no-marker case stops at the newline and avoids constructing the line
-    /// slice or running the full parser for that feature.
-    pub(super) fn line_contains_byte(&self, line_start: usize, needle: u8) -> bool {
-        let bytes = self.source.as_bytes();
-        match memchr2(needle, b'\n', &bytes[line_start..]) {
-            Some(off) => bytes[line_start + off] == needle,
-            None => false,
-        }
     }
 }
