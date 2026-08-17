@@ -6,6 +6,7 @@
 
 use std::fmt::{Display, Write as _};
 
+use compact_str::CompactString;
 use ox_content_ast::{Heading, Node};
 
 use super::super::autolink::find_autolink_match;
@@ -220,7 +221,9 @@ impl HtmlRenderer {
         }
 
         self.output.push_str(&self.heading_slug_scratch);
-        let key = self.heading_slug_scratch.clone();
+        // `CompactString::from(&str)` stores slugs up to 24 bytes inline, so
+        // the common heading pays no allocation for its map key at all.
+        let key = CompactString::from(self.heading_slug_scratch.as_str());
         self.heading_id_counts.insert(key, 1);
     }
 }

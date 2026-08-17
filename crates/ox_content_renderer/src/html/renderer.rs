@@ -14,6 +14,7 @@ mod links;
 mod visit;
 mod write;
 
+use compact_str::CompactString;
 use ox_content_ast::{Document, Node};
 use rustc_hash::FxHashMap;
 
@@ -32,7 +33,12 @@ use crate::render::{RenderResult, Renderer};
 pub struct HtmlRenderer {
     options: HtmlRendererOptions,
     output: String,
-    heading_id_counts: FxHashMap<String, usize>,
+    /// Keyed by `CompactString` rather than `String`: heading slugs are
+    /// short (median 22 bytes on the bundled corpora), so the majority sit
+    /// inside `CompactString`'s 24-byte inline capacity and cost no heap
+    /// allocation at all. This map is the renderer's single largest
+    /// allocation source — one insert per unique heading.
+    heading_id_counts: FxHashMap<CompactString, usize>,
     /// How many times each footnote identifier has been referenced so
     /// far in this render, so repeated references can be given unique
     /// `fnref-` ids. Cleared per `render()` like the heading id map.
@@ -52,9 +58,9 @@ pub struct HtmlRenderer {
     /// `String` allocation per heading — `slugify_heading` previously
     /// allocated one `text` String per call.
     heading_text_scratch: String,
-    /// Reusable scratch buffer for the slugified id. The final id String
-    /// that ends up in `heading_id_counts` is cloned out of here on
-    /// vacant inserts; the buffer itself stays around across renders.
+    /// Reusable scratch buffer for the slugified id. The final id that
+    /// ends up in `heading_id_counts` is copied out of here on vacant
+    /// inserts; the buffer itself stays around across renders.
     heading_slug_scratch: String,
     /// Suppresses URL auto-linking while we're already inside an `<a>` so
     /// the builtin can't nest anchors. Tracked manually rather than via
