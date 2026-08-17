@@ -34,4 +34,20 @@ js-sys = "0.3"
 wasm-bindgen-test = "0.3"
 
 [package.metadata.wasm-pack.profile.release]
-wasm-opt = false
+# Size pass over the published module: 363 KB -> 336 KB (-7%). wasm-opt used
+# to be disabled because wasm-pack's bundled binaryen (v117) rejects the
+# module during input validation — current rustc emits post-MVP features
+# (tail calls among them) that binaryen only accepts when told so
+# explicitly. The --enable-* list below is exactly that told-so set; a bare
+# ["-Oz"] fails with "error validating input", so keep the flags in sync if
+# a toolchain bump starts emitting another feature.
+wasm-opt = [
+  "-Oz",
+  "--enable-tail-call",
+  "--enable-bulk-memory",
+  "--enable-nontrapping-float-to-int",
+  "--enable-sign-ext",
+  "--enable-mutable-globals",
+  "--enable-reference-types",
+  "--enable-multivalue",
+]
