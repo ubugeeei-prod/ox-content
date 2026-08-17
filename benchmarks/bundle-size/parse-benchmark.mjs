@@ -186,10 +186,7 @@ function readOptionValue(args, index, optionName) {
  * @returns {number}
  */
 function readPositiveIntegerOption(args, index, optionName) {
-  return parsePositiveInteger(
-    readOptionValue(args, index, optionName),
-    optionName,
-  );
+  return parsePositiveInteger(readOptionValue(args, index, optionName), optionName);
 }
 
 /**
@@ -212,10 +209,7 @@ function readInlineOptionValue(arg, optionName) {
  * @returns {number}
  */
 function readPositiveIntegerInlineOption(arg, optionName) {
-  return parsePositiveInteger(
-    readInlineOptionValue(arg, optionName),
-    optionName,
-  );
+  return parsePositiveInteger(readInlineOptionValue(arg, optionName), optionName);
 }
 
 function parsePositiveInteger(value, optionName) {
@@ -334,9 +328,7 @@ function printTable(title, results) {
     const name = result.name.padEnd(nameWidth);
     const opsPerSec = result.opsPerSec.toFixed(0).padStart(opsWidth);
     const avgMs = (result.avgMs.toFixed(2) + "ms").padStart(avgWidth);
-    const throughput = (result.throughputMBs.toFixed(2) + " MB/s").padStart(
-      throughputWidth,
-    );
+    const throughput = (result.throughputMBs.toFixed(2) + " MB/s").padStart(throughputWidth);
     const ratio = (fastest / result.opsPerSec).toFixed(2) + "x";
     console.log(
       `| ${name} | ${opsPerSec} | ${avgMs} | ${throughput} | ${ratio.padStart(ratioWidth)} |`,
@@ -354,14 +346,10 @@ function loadBunMarkdownBenchmarks() {
     return null;
   }
 
-  const run = spawnSync(
-    "bun",
-    [BUN_BENCHMARK_SCRIPT, "--runs", String(options.runs)],
-    {
-      cwd: __dirname,
-      encoding: "utf8",
-    },
-  );
+  const run = spawnSync("bun", [BUN_BENCHMARK_SCRIPT, "--runs", String(options.runs)], {
+    cwd: __dirname,
+    encoding: "utf8",
+  });
 
   if (run.status !== 0) {
     const details = run.stderr.trim() || run.stdout.trim();
@@ -411,13 +399,7 @@ function loadNativeCompetitorBenchmarks() {
 
   const build = spawnSync(
     "cargo",
-    [
-      "build",
-      "--release",
-      "--quiet",
-      "--manifest-path",
-      NATIVE_COMPETITORS_MANIFEST,
-    ],
+    ["build", "--release", "--quiet", "--manifest-path", NATIVE_COMPETITORS_MANIFEST],
     {
       cwd: __dirname,
       encoding: "utf8",
@@ -430,14 +412,10 @@ function loadNativeCompetitorBenchmarks() {
     return null;
   }
 
-  const run = spawnSync(
-    NATIVE_COMPETITORS_BINARY,
-    ["--runs", String(options.runs)],
-    {
-      cwd: __dirname,
-      encoding: "utf8",
-    },
-  );
+  const run = spawnSync(NATIVE_COMPETITORS_BINARY, ["--runs", String(options.runs)], {
+    cwd: __dirname,
+    encoding: "utf8",
+  });
 
   if (run.status !== 0) {
     const details = (run.stderr ?? "").trim() || (run.stdout ?? "").trim();
@@ -448,9 +426,7 @@ function loadNativeCompetitorBenchmarks() {
   try {
     return JSON.parse(run.stdout);
   } catch (error) {
-    console.warn(
-      `Failed to parse native competitor benchmark output: ${String(error)}`,
-    );
+    console.warn(`Failed to parse native competitor benchmark output: ${String(error)}`);
     return null;
   }
 }
@@ -475,8 +451,7 @@ async function runBenchmarks() {
   const { Lexer: MarkedLexer } = await import("marked");
   const MarkdownIt = (await import("markdown-it")).default;
   const { init: initMd4w, mdToHtml, mdToJSON } = await import("md4w");
-  const { parseAST: md4xParseAST, renderToHtml: md4xRenderToHtml } =
-    await import("md4x/napi");
+  const { parseAST: md4xParseAST, renderToHtml: md4xRenderToHtml } = await import("md4x/napi");
   const { micromark } = await import("micromark");
   const { unified } = await import("unified");
   const remarkParse = (await import("remark-parse")).default;
@@ -510,10 +485,7 @@ async function runBenchmarks() {
 
   let oxWasmRender = null;
   try {
-    const pkgDir = new URL(
-      "../../crates/ox_content_wasm/pkg/",
-      import.meta.url,
-    );
+    const pkgDir = new URL("../../crates/ox_content_wasm/pkg/", import.meta.url);
     const oxWasm = await import(new URL("ox_content_wasm.js", pkgDir).href);
     const wasmBytes = readFileSync(new URL("ox_content_wasm_bg.wasm", pkgDir));
     await oxWasm.default({ module_or_path: wasmBytes });
@@ -527,9 +499,7 @@ async function runBenchmarks() {
     console.log("Using @ox-content/wasm (crates/ox_content_wasm/pkg)\n");
   } catch {
     oxWasmRender = null;
-    console.log(
-      "@ox-content/wasm pkg not built (vp run build:wasm), skipping\n",
-    );
+    console.log("@ox-content/wasm pkg not built (vp run build:wasm), skipping\n");
   }
 
   // @mizchi/markdown (markdown.mbt) is a MoonBit-authored Markdown compiler
@@ -540,9 +510,7 @@ async function runBenchmarks() {
     mizchi = await import("@mizchi/markdown");
     console.log("Using @mizchi/markdown\n");
   } catch {
-    console.log(
-      "@mizchi/markdown not available, skipping mizchi comparisons\n",
-    );
+    console.log("@mizchi/markdown not available, skipping mizchi comparisons\n");
   }
 
   // TanStack Markdown exposes separate parser and HTML renderer entry points.
@@ -557,9 +525,7 @@ async function runBenchmarks() {
     tanstackMarkdown = { parseMarkdown, renderHtml };
     console.log("Using @tanstack/markdown\n");
   } catch {
-    console.log(
-      "@tanstack/markdown not available, skipping TanStack Markdown comparisons\n",
-    );
+    console.log("@tanstack/markdown not available, skipping TanStack Markdown comparisons\n");
   }
 
   // markdown-it-ts is a TypeScript rewrite with the familiar markdown-it
@@ -570,9 +536,7 @@ async function runBenchmarks() {
     MarkdownItTs = (await import("markdown-it-ts")).default;
     console.log("Using markdown-it-ts\n");
   } catch {
-    console.log(
-      "markdown-it-ts not available, skipping markdown-it-ts comparisons\n",
-    );
+    console.log("markdown-it-ts not available, skipping markdown-it-ts comparisons\n");
   }
 
   // @astrojs/markdown-remark is the Markdown renderer Astro uses internally
@@ -581,14 +545,11 @@ async function runBenchmarks() {
   // others so an older checkout without the dependency skips it.
   let astroProcessor = null;
   try {
-    const { createMarkdownProcessor } =
-      await import("@astrojs/markdown-remark");
+    const { createMarkdownProcessor } = await import("@astrojs/markdown-remark");
     astroProcessor = await createMarkdownProcessor({});
     console.log("Using @astrojs/markdown-remark (Astro)\n");
   } catch {
-    console.log(
-      "@astrojs/markdown-remark not available, skipping Astro comparisons\n",
-    );
+    console.log("@astrojs/markdown-remark not available, skipping Astro comparisons\n");
   }
 
   // Try to import NAPI
@@ -610,9 +571,7 @@ async function runBenchmarks() {
 
   const nativeCompetitors = loadNativeCompetitorBenchmarks();
   if (nativeCompetitors) {
-    console.log(
-      "Using native Rust competitors (pulldown-cmark, Grok Build markdown)\n",
-    );
+    console.log("Using native Rust competitors (pulldown-cmark, Grok Build markdown)\n");
   } else {
     console.log("native competitors not available, skipping\n");
   }
@@ -758,26 +717,14 @@ async function runBenchmarks() {
     console.log(`\n## ${sizeName.toUpperCase()} (${sizeKB} KB)`);
 
     const iterations =
-      sizeName === "huge"
-        ? 5
-        : sizeName === "large"
-          ? 20
-          : sizeName === "medium"
-            ? 50
-            : 100;
+      sizeName === "huge" ? 5 : sizeName === "large" ? 20 : sizeName === "medium" ? 50 : 100;
     const suites = {};
 
     // Parse only benchmark
     const parseResults = [];
     for (const parser of parsers) {
       try {
-        const result = benchmark(
-          parser.name,
-          parser.fn,
-          content,
-          iterations,
-          options.runs,
-        );
+        const result = benchmark(parser.name, parser.fn, content, iterations, options.runs);
         parseResults.push(result);
       } catch {
         parseResults.push({ name: parser.name, error: true });
@@ -795,13 +742,7 @@ async function runBenchmarks() {
     const renderResults = [];
     for (const renderer of renderers) {
       try {
-        const result = benchmark(
-          renderer.name,
-          renderer.fn,
-          content,
-          iterations,
-          options.runs,
-        );
+        const result = benchmark(renderer.name, renderer.fn, content, iterations, options.runs);
         renderResults.push(result);
       } catch {
         renderResults.push({ name: renderer.name, error: true });
@@ -820,19 +761,11 @@ async function runBenchmarks() {
 
     // Async benchmark (only for the large and ~1 MB cases, where offloading
     // to a worker thread can actually pay for its overhead)
-    if (
-      asyncRenderers.length > 0 &&
-      (sizeName === "large" || sizeName === "huge")
-    ) {
+    if (asyncRenderers.length > 0 && (sizeName === "large" || sizeName === "huge")) {
       const asyncResults = [];
       for (const renderer of asyncRenderers) {
         try {
-          const result = await benchmarkAsync(
-            renderer.name,
-            renderer.fn,
-            content,
-            iterations,
-          );
+          const result = await benchmarkAsync(renderer.name, renderer.fn, content, iterations);
           asyncResults.push(result);
         } catch {
           asyncResults.push({ name: renderer.name, error: true });

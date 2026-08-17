@@ -28,15 +28,9 @@ async function optional(name, load) {
 export async function collectJsRenderers() {
   const renderers = [];
 
-  const napi = await optional(
-    "@ox-content/napi",
-    () => import("@ox-content/napi"),
-  );
+  const napi = await optional("@ox-content/napi", () => import("@ox-content/napi"));
   if (napi) {
-    renderers.push([
-      "@ox-content/napi",
-      (input) => napi.parseAndRender(input).html,
-    ]);
+    renderers.push(["@ox-content/napi", (input) => napi.parseAndRender(input).html]);
   }
 
   // marked exposes no CommonMark preset; scored as it ships.
@@ -48,17 +42,13 @@ export async function collectJsRenderers() {
   const md4w = await optional("md4w", () => import("md4w"));
   if (md4w) {
     await md4w.init();
-    renderers.push([
-      "md4w (md4c)",
-      (input) => md4w.mdToHtml(input, { parseFlags: 0 }),
-    ]);
+    renderers.push(["md4w (md4c)", (input) => md4w.mdToHtml(input, { parseFlags: 0 })]);
   }
 
   // md4x wraps the same engine but exposes no flag to turn its GFM extensions
   // off, so it is scored with them on.
   const md4x = await optional("md4x", () => import("md4x/napi"));
-  if (md4x)
-    renderers.push(["md4x (napi)", (input) => md4x.renderToHtml(input)]);
+  if (md4x) renderers.push(["md4x (napi)", (input) => md4x.renderToHtml(input)]);
 
   // Same engine again through its wasm build, so the two runtimes' scores
   // can be compared directly (and against @ox-content/wasm below).
@@ -67,18 +57,14 @@ export async function collectJsRenderers() {
     await mod.init();
     return mod;
   });
-  if (md4xWasm)
-    renderers.push(["md4x (wasm)", (input) => md4xWasm.renderToHtml(input)]);
+  if (md4xWasm) renderers.push(["md4x (wasm)", (input) => md4xWasm.renderToHtml(input)]);
 
   // Our wasm-pack output is generated (`vp run build:wasm`), not checked in;
   // score it when the pkg exists so the wasm runtime gets conformance
   // coverage too.
   const oxWasm = await optional("@ox-content/wasm", async () => {
     const { readFileSync } = await import("node:fs");
-    const pkgDir = new URL(
-      "../../crates/ox_content_wasm/pkg/",
-      import.meta.url,
-    );
+    const pkgDir = new URL("../../crates/ox_content_wasm/pkg/", import.meta.url);
     const mod = await import(new URL("ox_content_wasm.js", pkgDir).href);
     await mod.default({
       module_or_path: readFileSync(new URL("ox_content_wasm_bg.wasm", pkgDir)),
@@ -135,21 +121,15 @@ export async function collectJsRenderers() {
     const remarkHtml = (await import("remark-html")).default;
     return unified().use(remarkParse).use(remarkHtml, { sanitize: false });
   });
-  if (remark)
-    renderers.push(["remark", (input) => String(remark.processSync(input))]);
+  if (remark) renderers.push(["remark", (input) => String(remark.processSync(input))]);
 
   // satteri returns `{ html, frontmatter }` rather than a string.
   const satteri = await optional("satteri", () => import("satteri"));
-  if (satteri)
-    renderers.push(["satteri", (input) => satteri.markdownToHtml(input).html]);
+  if (satteri) renderers.push(["satteri", (input) => satteri.markdownToHtml(input).html]);
 
   // @mizchi/markdown exposes no CommonMark mode; scored as it ships.
-  const mizchi = await optional(
-    "@mizchi/markdown",
-    () => import("@mizchi/markdown"),
-  );
-  if (mizchi)
-    renderers.push(["@mizchi/markdown", (input) => mizchi.toHtml(input)]);
+  const mizchi = await optional("@mizchi/markdown", () => import("@mizchi/markdown"));
+  if (mizchi) renderers.push(["@mizchi/markdown", (input) => mizchi.toHtml(input)]);
 
   // @tanstack/markdown exposes no CommonMark mode; scored as it ships.
   const tanstack = await optional("@tanstack/markdown", async () => {
