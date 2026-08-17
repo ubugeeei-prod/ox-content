@@ -24,6 +24,14 @@ pub(super) struct FirstByteIndex {
     /// on a frequent first byte — `h` matches "the", "here", … — are
     /// rejected with one comparison instead of full prefix checks.
     second: [u8; 256],
+    /// A byte every pattern contains, when one exists. Since a match always
+    /// begins with a full pattern verbatim (prefix compare is
+    /// case-insensitive, so only caseless bytes qualify), a text node
+    /// without this byte cannot contain a match at all — one `memchr` proves
+    /// it. The default patterns (`http://`, `https://`) gate on `:`, which
+    /// is far rarer in prose than their first byte `h`; most text nodes
+    /// skip the candidate walk entirely.
+    gate: Option<u8>,
 }
 
 /// Sentinel in `FirstByteIndex::second`: no single second byte filters
@@ -73,7 +81,29 @@ impl FirstByteIndex {
         if needle_len > needles.len() {
             overflow = true;
         }
-        Self { table, needles, needle_len, overflow, second }
+
+        // Pick the gate byte: preferred candidates first (roughly ordered by
+        // rarity in prose), then any other caseless byte the first pattern
+        // holds. Alphabetic bytes never qualify — the prefix compare is
+        // case-insensitive, so a letter's presence proves nothing about the
+        // other case.
+        let gate_candidates = patterns.first().map_or(&[][..], |pat| pat.as_bytes());
+        let qualifies = |byte: u8| {
+            !byte.is_ascii_alphabetic() && patterns.iter().all(|pat| pat.as_bytes().contains(&byte))
+        };
+        let gate = [b':', b'/', b'@', b'.']
+            .into_iter()
+            .find(|&byte| qualifies(byte))
+            .or_else(|| gate_candidates.iter().copied().find(|&byte| qualifies(byte)));
+
+        Self { table, needles, needle_len, overflow, second, gate }
+    }
+
+    /// The byte that must appear in a haystack for any pattern to match, if
+    /// the pattern set has one. See the field docs.
+    #[inline]
+    pub(super) fn gate_byte(&self) -> Option<u8> {
+        self.gate
     }
 
     /// True when the byte after a first-byte hit rules the candidate out
