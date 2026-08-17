@@ -91,8 +91,9 @@ impl FirstByteIndex {
         let qualifies = |byte: u8| {
             !byte.is_ascii_alphabetic() && patterns.iter().all(|pat| pat.as_bytes().contains(&byte))
         };
-        let gate = [b':', b'/', b'@', b'.']
-            .into_iter()
+        let gate = b":/@."
+            .iter()
+            .copied()
             .find(|&byte| qualifies(byte))
             .or_else(|| gate_candidates.iter().copied().find(|&byte| qualifies(byte)));
 
