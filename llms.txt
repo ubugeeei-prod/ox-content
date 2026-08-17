@@ -1,0 +1,8 @@
+# ox-content
+
+> A framework agnostic fastest and beautiful documentation & markdown tooling
+
+## Pages
+
+- [Repository](https://github.com/ubugeeei-prod/ox-content)
+- [Homepage/Docs](https://ox-content.void.app)
