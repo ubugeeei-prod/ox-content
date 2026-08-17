@@ -35,11 +35,14 @@ pub struct TransformResult {
 #[derive(Default)]
 pub struct WasmParserOptions {
     gfm: bool,
-    footnotes: bool,
-    task_lists: bool,
-    tables: bool,
-    strikethrough: bool,
-    autolinks: bool,
+    // The extension flags are tri-state: `None` means "not set from JS",
+    // which lets the `gfm` profile supply its own defaults instead of the
+    // field defaults silently overwriting them (see the `From` impl).
+    footnotes: Option<bool>,
+    task_lists: Option<bool>,
+    tables: Option<bool>,
+    strikethrough: Option<bool>,
+    autolinks: Option<bool>,
     toc_max_depth: u8,
     autolink_urls: bool,
     autolink_patterns: Vec<String>,
@@ -57,11 +60,11 @@ impl WasmParserOptions {
     pub fn new() -> Self {
         Self {
             gfm: false,
-            footnotes: false,
-            task_lists: false,
-            tables: false,
-            strikethrough: false,
-            autolinks: false,
+            footnotes: None,
+            task_lists: None,
+            tables: None,
+            strikethrough: None,
+            autolinks: None,
             toc_max_depth: 3,
             autolink_urls: true,
             autolink_patterns: vec!["http://".to_string(), "https://".to_string()],
@@ -79,42 +82,42 @@ impl WasmParserOptions {
 
     /// Enables footnote references and definitions.
     ///
-    /// Default: `false`.
+    /// Default: unset — follows the `gfm` profile (`false` without it).
     #[wasm_bindgen(setter)]
     pub fn set_footnotes(&mut self, value: bool) {
-        self.footnotes = value;
+        self.footnotes = Some(value);
     }
 
     /// Enables GFM task-list item markers such as `- [x]`.
     ///
-    /// Default: `false`.
+    /// Default: unset — follows the `gfm` profile (`false` without it).
     #[wasm_bindgen(setter = taskLists)]
     pub fn set_task_lists(&mut self, value: bool) {
-        self.task_lists = value;
+        self.task_lists = Some(value);
     }
 
     /// Enables GFM pipe tables.
     ///
-    /// Default: `false`.
+    /// Default: unset — follows the `gfm` profile (`false` without it).
     #[wasm_bindgen(setter)]
     pub fn set_tables(&mut self, value: bool) {
-        self.tables = value;
+        self.tables = Some(value);
     }
 
     /// Enables GFM strikethrough spans.
     ///
-    /// Default: `false`.
+    /// Default: unset — follows the `gfm` profile (`false` without it).
     #[wasm_bindgen(setter)]
     pub fn set_strikethrough(&mut self, value: bool) {
-        self.strikethrough = value;
+        self.strikethrough = Some(value);
     }
 
     /// Enables GFM autolinks in the parser.
     ///
-    /// Default: `false`.
+    /// Default: unset — follows the `gfm` profile (`false` without it).
     #[wasm_bindgen(setter)]
     pub fn set_autolinks(&mut self, value: bool) {
-        self.autolinks = value;
+        self.autolinks = Some(value);
     }
 
     /// Sets the maximum heading depth included in inline TOCs.
@@ -157,11 +160,25 @@ impl From<&WasmParserOptions> for ParserOptions {
     fn from(opts: &WasmParserOptions) -> Self {
         let mut options = if opts.gfm { ParserOptions::gfm() } else { ParserOptions::default() };
 
-        options.footnotes = opts.footnotes;
-        options.task_lists = opts.task_lists;
-        options.tables = opts.tables;
-        options.strikethrough = opts.strikethrough;
-        options.autolinks = opts.autolinks;
+        // Only apply flags JS actually set. Overwriting unconditionally
+        // meant `gfm = true` had its sub-features (tables, strikethrough,
+        // autolinks, footnotes, task lists) immediately reset to the field
+        // defaults, disabling the profile it had just enabled.
+        if let Some(footnotes) = opts.footnotes {
+            options.footnotes = footnotes;
+        }
+        if let Some(task_lists) = opts.task_lists {
+            options.task_lists = task_lists;
+        }
+        if let Some(tables) = opts.tables {
+            options.tables = tables;
+        }
+        if let Some(strikethrough) = opts.strikethrough {
+            options.strikethrough = strikethrough;
+        }
+        if let Some(autolinks) = opts.autolinks {
+            options.autolinks = autolinks;
+        }
 
         options
     }
