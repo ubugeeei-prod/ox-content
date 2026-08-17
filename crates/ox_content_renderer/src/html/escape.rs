@@ -249,8 +249,7 @@ mod tests {
         // xorshift over the printable-plus-needles range; deterministic so a
         // failure is reproducible.
         let mut state = 0x2545_F491_4F6C_DD1Du64;
-        let alphabet: Vec<u8> =
-            (0x20u8..0x7f).chain(*b"&<>\"' ").collect();
+        let alphabet: Vec<u8> = (0x20u8..0x7f).chain(*b"&<>\"' ").collect();
         for len in 0..200 {
             let mut s = String::with_capacity(len);
             for _ in 0..len {
