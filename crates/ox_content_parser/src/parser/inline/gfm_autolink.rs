@@ -6,24 +6,43 @@
 //! interfere with emphasis pairing, and recurses into emphasis-like
 //! containers while never descending into existing links.
 
-use std::sync::LazyLock;
-
-use memchr::memmem;
 use ox_content_allocator::Vec;
 use ox_content_ast::{Link, Node, Span, Text};
+
+mod scan;
+
+use self::scan::find_candidate;
+pub(super) use self::scan::may_contain_autolink;
 
 use crate::parser::Parser;
 #[allow(unused_imports)]
 use crate::{profile_span, profile_span_detail};
 
-struct Candidate {
-    start: usize,
-    end: usize,
-    href_prefix: &'static str,
+pub(super) struct Candidate {
+    pub(super) start: usize,
+    pub(super) end: usize,
+    pub(super) href_prefix: &'static str,
+}
+
+/// What the block-level pre-flight proved about a block's raw content, so
+/// the per-node scan does not re-derive it.
+///
+/// `www.` is the only needle with no `:` and no `@` in it, which makes it
+/// the only reason a node has to pay for a substring search when the cheap
+/// `memchr2` comes back empty. Whether a block can hold one is a property
+/// of its raw source, so [`may_contain_autolink`] answers it once for the
+/// whole block instead of once per text node.
+#[derive(Clone, Copy)]
+pub(in crate::parser::inline) struct AutolinkScan {
+    pub(super) may_have_www: bool,
 }
 
 impl<'a> Parser<'a> {
-    pub(in crate::parser) fn apply_gfm_autolinks(&self, children: &mut Vec<'a, Node<'a>>) {
+    pub(in crate::parser::inline) fn apply_gfm_autolinks(
+        &self,
+        children: &mut Vec<'a, Node<'a>>,
+        scan: AutolinkScan,
+    ) {
         profile_span!("parser::apply_gfm_autolinks");
         // Entity, escape, and unpaired-delimiter handling fragment plain
         // prose into adjacent text nodes; autolinks must see the joined
@@ -32,12 +51,12 @@ impl<'a> Parser<'a> {
         let mut i = 0;
         while i < children.len() {
             match &mut children[i] {
-                Node::Emphasis(node) => self.apply_gfm_autolinks(&mut node.children),
-                Node::Strong(node) => self.apply_gfm_autolinks(&mut node.children),
-                Node::Delete(node) => self.apply_gfm_autolinks(&mut node.children),
+                Node::Emphasis(node) => self.apply_gfm_autolinks(&mut node.children, scan),
+                Node::Strong(node) => self.apply_gfm_autolinks(&mut node.children, scan),
+                Node::Delete(node) => self.apply_gfm_autolinks(&mut node.children, scan),
                 Node::Text(text) => {
                     let value = text.value;
-                    if let Some(candidate) = find_candidate(value) {
+                    if let Some(candidate) = find_candidate(value, scan) {
                         let span_start = text.span.start;
                         let link_value = &value[candidate.start..candidate.end];
                         let url: &'a str = if candidate.href_prefix.is_empty() {
@@ -120,190 +139,4 @@ impl<'a> Parser<'a> {
             i += 1;
         }
     }
-}
-
-/// Searchers for the multi-byte autolink needles, built once for the process.
-///
-/// The one-shot `memmem::find` rebuilds its SIMD prefilter on every call, and
-/// this scan runs over every text node of every document — on short prose
-/// nodes that setup cost dominated the search itself.
-static URL_FINDERS: LazyLock<[memmem::Finder<'static>; 4]> =
-    LazyLock::new(|| ["www.", "http://", "https://", "ftp://"].map(memmem::Finder::new));
-
-/// Cheap pre-flight over a block's raw inline content: can the autolink
-/// pass possibly rewrite anything here?
-///
-/// Every candidate needs a `:` (scheme), `@` (email), or `www.` — and those
-/// needle bytes are never inline-special, so if they appear in the parsed
-/// text nodes they appear verbatim in `content` too. The one indirection is
-/// entities: `&colon;`/`&commat;` decode into candidate bytes that the raw
-/// source spells with `&`, so `&` also keeps the pass on. Ordinary prose —
-/// almost every block in a document — fails all four probes and skips the
-/// node-tree walk (and its text-coalescing rewrites) entirely.
-pub(super) fn may_contain_autolink(content: &str) -> bool {
-    let bytes = content.as_bytes();
-    memchr::memchr3(b':', b'@', b'&', bytes).is_some() || URL_FINDERS[0].find(bytes).is_some()
-}
-
-/// Finds the earliest valid autolink candidate in `value`.
-fn find_candidate(value: &str) -> Option<Candidate> {
-    profile_span_detail!("parser::gfm_autolink_scan");
-    let bytes = value.as_bytes();
-    let mut best: Option<Candidate> = None;
-
-    // `www.` is the only needle that contains neither `:` nor `@`, so one
-    // `memchr2` decides whether the three scheme scans and the email scan can
-    // match at all. Ordinary prose — nearly every text node in a document —
-    // answers no and skips four scans.
-    let has_scheme_or_email = memchr::memchr2(b':', b'@', bytes).is_some();
-
-    for finder in URL_FINDERS.iter().take(if has_scheme_or_email { 4 } else { 1 }) {
-        let needle_len = finder.needle().len();
-        let mut from = 0;
-        while let Some(offset) = finder.find(&bytes[from..]) {
-            let at = from + offset;
-            if let Some(candidate) = validate_url(value, at, needle_len) {
-                if best.as_ref().is_none_or(|current| candidate.start < current.start) {
-                    best = Some(candidate);
-                }
-                break;
-            }
-            from = at + needle_len;
-        }
-    }
-
-    if has_scheme_or_email {
-        let mut from = 0;
-        while let Some(offset) = memchr::memchr(b'@', &bytes[from..]) {
-            let at = from + offset;
-            if let Some(candidate) = validate_email(value, at) {
-                if best.as_ref().is_none_or(|current| candidate.start < current.start) {
-                    best = Some(candidate);
-                }
-                break;
-            }
-            from = at + 1;
-        }
-    }
-
-    best
-}
-
-/// Start-of-text, whitespace, or `*`, `_`, `~`, `(` may precede an
-/// autolink.
-fn valid_boundary(value: &str, start: usize) -> bool {
-    value[..start]
-        .chars()
-        .next_back()
-        .is_none_or(|ch| ch.is_whitespace() || matches!(ch, '*' | '_' | '~' | '('))
-}
-
-fn validate_url(value: &str, start: usize, prefix_len: usize) -> Option<Candidate> {
-    if !valid_boundary(value, start) {
-        return None;
-    }
-    let bytes = value.as_bytes();
-    // Validate the domain: alphanumerics, `-`, `_`, `.`; at least one
-    // dot; no underscore in the last two segments.
-    let domain_start = start + prefix_len;
-    let mut domain_end = domain_start;
-    while domain_end < bytes.len()
-        && (bytes[domain_end].is_ascii_alphanumeric()
-            || matches!(bytes[domain_end], b'-' | b'_' | b'.'))
-    {
-        domain_end += 1;
-    }
-    // Trailing dots belong to the surrounding sentence, not the domain.
-    let domain = value[domain_start..domain_end].trim_end_matches('.');
-    if domain.split('.').count() < 2
-        || domain.rsplit('.').take(2).any(|segment| segment.is_empty() || segment.contains('_'))
-    {
-        return None;
-    }
-
-    // The link runs to whitespace or `<`, then trailing punctuation is
-    // trimmed (unbalanced `)` and entity-like `&x;` suffixes included).
-    let mut end = domain_end;
-    while end < bytes.len() && !bytes[end].is_ascii_whitespace() && bytes[end] != b'<' {
-        end += 1;
-    }
-    let end = trim_trailing_punctuation(value, start, end);
-    (end > domain_start).then_some(Candidate {
-        start,
-        end,
-        href_prefix: if prefix_len == 4 { "http://" } else { "" },
-    })
-}
-
-fn trim_trailing_punctuation(value: &str, start: usize, mut end: usize) -> usize {
-    let bytes = value.as_bytes();
-    loop {
-        if end <= start {
-            return end;
-        }
-        match bytes[end - 1] {
-            b'?' | b'!' | b'.' | b',' | b':' | b'*' | b'_' | b'~' | b'\'' | b'"' => end -= 1,
-            b')' => {
-                let opens = value[start..end].bytes().filter(|&b| b == b'(').count();
-                let closes = value[start..end].bytes().filter(|&b| b == b')').count();
-                if closes > opens {
-                    end -= 1;
-                } else {
-                    return end;
-                }
-            }
-            b';' => {
-                // Strip an entity-like `&name;` suffix entirely.
-                let entity_start = value[start..end - 1].rfind('&').map(|found| start + found);
-                match entity_start {
-                    Some(amp)
-                        if value[amp + 1..end - 1]
-                            .bytes()
-                            .all(|byte| byte.is_ascii_alphanumeric())
-                            && amp + 1 < end - 1 =>
-                    {
-                        end = amp;
-                    }
-                    _ => end -= 1,
-                }
-            }
-            _ => return end,
-        }
-    }
-}
-
-fn validate_email(value: &str, at: usize) -> Option<Candidate> {
-    let bytes = value.as_bytes();
-    // Local part: alphanumerics plus `.`, `-`, `_`, `+`.
-    let mut start = at;
-    while start > 0 {
-        let byte = bytes[start - 1];
-        if byte.is_ascii_alphanumeric() || matches!(byte, b'.' | b'-' | b'_' | b'+') {
-            start -= 1;
-        } else {
-            break;
-        }
-    }
-    if start == at || !valid_boundary(value, start) {
-        return None;
-    }
-
-    // Domain: alphanumerics plus `.`, `-`, `_`, with at least one dot;
-    // trailing dots are trimmed; a trailing `-` or `_` invalidates.
-    let mut end = at + 1;
-    while end < bytes.len()
-        && (bytes[end].is_ascii_alphanumeric() || matches!(bytes[end], b'.' | b'-' | b'_'))
-    {
-        end += 1;
-    }
-    while end > at + 1 && bytes[end - 1] == b'.' {
-        end -= 1;
-    }
-    if end <= at + 1 || matches!(bytes[end - 1], b'-' | b'_') {
-        return None;
-    }
-    if !value[at + 1..end].contains('.') {
-        return None;
-    }
-    Some(Candidate { start, end, href_prefix: "mailto:" })
 }

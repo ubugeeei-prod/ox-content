@@ -27,19 +27,20 @@ impl<'a> Parser<'a> {
     /// post-passes on the result — today, the GFM autolink rewrite.
     ///
     /// Nested inline contexts (link text, image alt, strikethrough
-    /// interiors) call [`Self::parse_inline`] directly instead: the
-    /// autolink pass itself recurses through emphasis-like containers, so
-    /// running it per nested sequence both re-scanned the same nodes and —
-    /// for link text, which GFM excludes from autolinking — manufactured
-    /// nested `<a>` elements.
+    /// interiors) call [`Self::parse_inline`] directly instead: the autolink
+    /// pass itself recurses through emphasis-like containers, so running it
+    /// per nested sequence both re-scanned the same nodes and — for link
+    /// text, which GFM excludes from autolinking — made nested `<a>`s.
     pub(super) fn parse_inline_block(
         &self,
         content: &'a str,
         offset: usize,
     ) -> ParseResult<Vec<'a, Node<'a>>> {
         let mut children = self.parse_inline(content, offset)?;
-        if self.options.autolinks && gfm_autolink::may_contain_autolink(content) {
-            self.apply_gfm_autolinks(&mut children);
+        let scan =
+            self.options.autolinks.then(|| gfm_autolink::may_contain_autolink(content)).flatten();
+        if let Some(scan) = scan {
+            self.apply_gfm_autolinks(&mut children, scan);
         }
         Ok(children)
     }
