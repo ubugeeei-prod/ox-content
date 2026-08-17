@@ -42,6 +42,10 @@
       "passed": 649,
       "total": 652
     },
+    "md4x (napi)": {
+      "passed": 649,
+      "total": 652
+    },
     "satteri": {
       "passed": 645,
       "total": 652
@@ -50,19 +54,15 @@
       "passed": 609,
       "total": 652
     },
-    "md4x (napi)": {
-      "passed": 603,
-      "total": 652
-    },
     "md4w (md4c)": {
       "passed": 598,
       "total": 652
     },
-    "@mizchi/markdown": {
-      "passed": 299,
+    "@tanstack/markdown": {
+      "passed": 309,
       "total": 652
     },
-    "@tanstack/markdown": {
+    "@mizchi/markdown": {
       "passed": 299,
       "total": 652
     }
