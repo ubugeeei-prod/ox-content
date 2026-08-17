@@ -6,6 +6,8 @@
 //! unescaped into the arena so the AST keeps borrowing from parser memory.
 
 use crate::parser::Parser;
+#[allow(unused_imports)]
+use crate::profile_span_detail;
 
 pub(in crate::parser) struct LinkTarget<'a> {
     pub url: &'a str,
@@ -23,6 +25,7 @@ impl<'a> Parser<'a> {
         content: &'a str,
         open: usize,
     ) -> Option<LinkTarget<'a>> {
+        profile_span_detail!("parser::link_target");
         let bytes = content.as_bytes();
         let mut i = skip_ws(bytes, open + 1);
 

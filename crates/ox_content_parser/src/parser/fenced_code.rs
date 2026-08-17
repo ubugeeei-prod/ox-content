@@ -4,7 +4,7 @@ use ox_content_ast::{Node, Span};
 use super::Parser;
 use crate::error::{ParseError, ParseResult};
 #[allow(unused_imports)]
-use crate::profile_span;
+use crate::{profile_span, profile_span_detail};
 
 impl<'a> Parser<'a> {
     /// Finds the body end and cursor position after a closing fence.
@@ -20,6 +20,7 @@ impl<'a> Parser<'a> {
         fence_len: usize,
         body_start: usize,
     ) -> (usize, usize) {
+        profile_span_detail!("parser::fenced_close_scan");
         let bytes = self.source.as_bytes();
         let fence_byte = fence_char as u8;
         let mut line_start = body_start;

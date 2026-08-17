@@ -14,6 +14,8 @@ use ox_content_ast::{Definition, Node, Span};
 use rustc_hash::FxHashMap;
 
 use super::Parser;
+#[allow(unused_imports)]
+use crate::{profile_span, profile_span_detail};
 
 mod scan;
 
@@ -77,6 +79,7 @@ impl<'a> Parser<'a> {
     /// Parses a single definition at the start of `text`. `text` must not
     /// span a blank line (callers cut at paragraph boundaries).
     pub(super) fn parse_reference_definition(&self, text: &'a str) -> Option<ParsedDefinition<'a>> {
+        profile_span_detail!("parser::reference_definition_scan");
         let bytes = text.as_bytes();
         let mut i = 0;
         while i < bytes.len() && bytes[i] == b' ' {
@@ -166,6 +169,7 @@ impl<'a> Parser<'a> {
     /// AST node. Returns `None` when the position does not start a
     /// definition (the caller falls through to paragraph parsing).
     pub(super) fn try_parse_definition_node(&mut self) -> Option<Node<'a>> {
+        profile_span!("parser::parse_reference_def");
         let start = self.position;
         // Definitions cannot contain blank lines; cut the candidate region
         // at the next one so the destination/title scanners stay in

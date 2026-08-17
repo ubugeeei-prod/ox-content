@@ -54,6 +54,9 @@ static GLOBAL: CountingAllocator = CountingAllocator::new();
 fn run(cli: &Cli) -> std::io::Result<()> {
     CountingAllocator::enable();
     scope::enable();
+    if cli.detail {
+        scope::enable_detail();
+    }
 
     match &cli.cmd {
         Cmd::DocsExtract { dir } => docs::run(cli, dir, docs::DocsPhase::Extract),

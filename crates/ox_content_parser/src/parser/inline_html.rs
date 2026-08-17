@@ -10,6 +10,8 @@
 use ox_content_ast::{Html, Span};
 
 use super::Parser;
+#[allow(unused_imports)]
+use crate::profile_span_detail;
 
 impl<'a> Parser<'a> {
     pub(super) fn parse_inline_html(
@@ -17,6 +19,7 @@ impl<'a> Parser<'a> {
         pos: usize,
         offset: usize,
     ) -> Option<(Html<'a>, usize)> {
+        profile_span_detail!("parser::inline_html");
         let rest = &content[pos..];
         let bytes = content.as_bytes();
 

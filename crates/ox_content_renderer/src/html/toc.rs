@@ -33,6 +33,7 @@ pub(super) fn collect_inline_toc_entries(
     max_depth: u8,
     entries: &mut Vec<InlineTocEntry>,
 ) {
+    crate::profile_span!("renderer::collect_toc");
     let mut counts = FxHashMap::default();
 
     for node in &document.children {
@@ -46,6 +47,7 @@ pub(super) fn collect_inline_toc_entries(
 /// to exactly `[[toc]]`, which is also the only form `visit_paragraph` will
 /// render as a TOC.
 pub(super) fn scan_document_for_render(document: &Document<'_>) -> DocumentRenderScan {
+    crate::profile_span!("renderer::document_scan");
     let mut scan = DocumentRenderScan { has_toc_marker: false, heading_count: 0 };
     for node in &document.children {
         scan_node_for_render(node, &mut scan);

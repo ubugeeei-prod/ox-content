@@ -1,3 +1,5 @@
+use std::time::Duration;
+
 use super::format::{
     fmt_bytes, fmt_bytes_f, fmt_duration, push_fmt, truncate, write_kv_dur, write_kv_str,
     write_kv_u64,
@@ -49,20 +51,25 @@ impl Report {
         ));
 
         if !self.spans.is_empty() {
+            let overhead_ns = self.config.span_overhead_ns;
             out.push_str("\n Spans (sorted by total inclusive time)\n");
             push_fmt(
                 &mut out,
                 format_args!(
-                    "   {:<32} {:>8} {:>12} {:>12} {:>6}   {:>10} {:>10}\n",
+                    "   {:<32} {:>8} {:>12} {:>12} {:>6}   {:>10} {:>10}",
                     "name", "hits", "self", "inclusive", "share", "allocs", "bytes",
                 ),
             );
+            if overhead_ns > 0.0 {
+                push_fmt(&mut out, format_args!(" {:>10}", "~ovh"));
+            }
+            out.push('\n');
             push_fmt(&mut out, format_args!("   {}\n", "·".repeat(74)));
             for span in self.spans.iter().take(self.config.max_span_rows) {
                 push_fmt(
                     &mut out,
                     format_args!(
-                        "   {:<32} {:>8} {:>12} {:>12} {:>5.1}%   {:>10} {:>10}\n",
+                        "   {:<32} {:>8} {:>12} {:>12} {:>5.1}%   {:>10} {:>10}",
                         truncate(span.name, 32),
                         span.hits,
                         fmt_duration(span.total_self),
@@ -72,6 +79,11 @@ impl Report {
                         fmt_bytes(span.total_bytes),
                     ),
                 );
+                if overhead_ns > 0.0 {
+                    let est = Duration::from_nanos((span.hits as f64 * overhead_ns) as u64);
+                    push_fmt(&mut out, format_args!(" {:>10}", fmt_duration(est)));
+                }
+                out.push('\n');
             }
             if self.spans.len() > self.config.max_span_rows {
                 push_fmt(
@@ -79,6 +91,15 @@ impl Report {
                     format_args!(
                         "   …and {} more spans\n",
                         self.spans.len() - self.config.max_span_rows
+                    ),
+                );
+            }
+            if overhead_ns > 0.0 {
+                push_fmt(
+                    &mut out,
+                    format_args!(
+                        "   (~ovh = hits × {overhead_ns:.0}ns guard cost; self/inclusive of a \
+                         span include the guard cost of its children)\n"
                     ),
                 );
             }
@@ -146,6 +167,12 @@ impl Report {
         );
         s.push('}');
         s.push(',');
+        if self.config.span_overhead_ns > 0.0 {
+            push_fmt(
+                &mut s,
+                format_args!("\"span_overhead_ns\":{:.1},", self.config.span_overhead_ns),
+            );
+        }
         s.push_str("\"spans\":[");
         for (i, span) in self.spans.iter().enumerate() {
             if i > 0 {

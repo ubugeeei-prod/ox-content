@@ -5,7 +5,7 @@ use ox_content_ast::{Node, Span};
 use super::Parser;
 use crate::error::ParseResult;
 #[allow(unused_imports)]
-use crate::profile_span;
+use crate::{profile_span, profile_span_detail};
 
 mod autolink;
 mod emphasis;
@@ -82,6 +82,7 @@ impl<'a> Parser<'a> {
             }
             b'\n' => Self::parse_line_break(content, offset, children, pos),
             b'&' => {
+                profile_span_detail!("parser::inline_entity");
                 // Entity / numeric character references decode to literal
                 // text (the result can never open or close markup).
                 if let Some((value, len)) = entity::scan_entity(&content[*pos..]) {
@@ -153,6 +154,7 @@ impl<'a> Parser<'a> {
         children: &mut Vec<'a, Node<'a>>,
         pos: &mut usize,
     ) {
+        profile_span_detail!("parser::inline_line_break");
         let bytes = content.as_bytes();
         let mut hard = false;
         let mut trim_to = None;
@@ -213,6 +215,7 @@ impl<'a> Parser<'a> {
         children: &mut Vec<'a, Node<'a>>,
         pos: &mut usize,
     ) -> ParseResult<()> {
+        profile_span_detail!("parser::inline_strikethrough");
         let bytes = content.as_bytes();
         let inner_start = *pos + 2;
         let mut inner_end = inner_start;
@@ -249,6 +252,7 @@ impl<'a> Parser<'a> {
         children: &mut Vec<'a, Node<'a>>,
         pos: &mut usize,
     ) {
+        profile_span_detail!("parser::inline_code_span");
         let bytes = content.as_bytes();
         let open_len = Self::marker_run_len(bytes, *pos, b'`');
         let code_start = *pos + open_len;

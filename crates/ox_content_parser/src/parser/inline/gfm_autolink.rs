@@ -14,7 +14,7 @@ use ox_content_ast::{Link, Node, Span, Text};
 
 use crate::parser::Parser;
 #[allow(unused_imports)]
-use crate::profile_span;
+use crate::{profile_span, profile_span_detail};
 
 struct Candidate {
     start: usize,
@@ -92,6 +92,7 @@ impl<'a> Parser<'a> {
 
 impl<'a> Parser<'a> {
     fn coalesce_adjacent_text(&self, children: &mut Vec<'a, Node<'a>>) {
+        profile_span_detail!("parser::coalesce_text");
         let mut i = 0;
         while i + 1 < children.len() {
             if !matches!(children[i], Node::Text(_)) || !matches!(children[i + 1], Node::Text(_)) {
@@ -131,6 +132,7 @@ static URL_FINDERS: LazyLock<[memmem::Finder<'static>; 4]> =
 
 /// Finds the earliest valid autolink candidate in `value`.
 fn find_candidate(value: &str) -> Option<Candidate> {
+    profile_span_detail!("parser::gfm_autolink_scan");
     let bytes = value.as_bytes();
     let mut best: Option<Candidate> = None;
 

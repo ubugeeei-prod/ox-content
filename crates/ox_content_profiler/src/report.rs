@@ -24,11 +24,16 @@ pub struct ReportConfig {
     pub warmup: usize,
     /// Maximum number of span rows to print in the table view.
     pub max_span_rows: usize,
+    /// Estimated cost of one enabled span guard pair in nanoseconds, as
+    /// measured by [`crate::scope::calibrate_overhead_ns`]. When non-zero the
+    /// table view adds a per-row `~ovh` column (`hits × cost`) so
+    /// high-hit-count micro-spans can be read net of the measurement itself.
+    pub span_overhead_ns: f64,
 }
 
 impl Default for ReportConfig {
     fn default() -> Self {
-        Self { input_bytes: None, warmup: 0, max_span_rows: 32 }
+        Self { input_bytes: None, warmup: 0, max_span_rows: 32, span_overhead_ns: 0.0 }
     }
 }
 

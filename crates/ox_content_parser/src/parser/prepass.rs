@@ -23,7 +23,7 @@ use super::reference::{
 };
 use super::Parser;
 #[allow(unused_imports)]
-use crate::profile_span;
+use crate::{profile_span, profile_span_detail};
 
 impl<'a> Parser<'a> {
     /// Runs the fused pre-pass for a root parser. Returns the
@@ -60,6 +60,7 @@ impl<'a> Parser<'a> {
         let mut paragraph_open = false;
 
         while pos < bytes.len() {
+            profile_span_detail!("parser::prepass_line");
             let first = bytes[pos];
 
             // Blank line: closes any open paragraph and is invisible to

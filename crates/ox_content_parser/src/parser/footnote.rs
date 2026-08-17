@@ -18,6 +18,8 @@ use rustc_hash::FxHashSet;
 
 use super::Parser;
 use crate::error::ParseResult;
+#[allow(unused_imports)]
+use crate::{profile_span, profile_span_detail};
 
 pub(super) type FootnoteLabels = FxHashSet<CompactString>;
 
@@ -140,6 +142,7 @@ impl<'a> Parser<'a> {
 
     /// Consumes a footnote definition block, emitting its node.
     pub(super) fn try_parse_footnote_definition_node(&mut self) -> ParseResult<Option<Node<'a>>> {
+        profile_span!("parser::parse_footnote_def");
         let start = self.position;
         let Some((label, after_colon)) = parse_footnote_opener(&self.source[start..]) else {
             return Ok(None);
@@ -190,6 +193,7 @@ impl<'a> Parser<'a> {
         children: &mut ox_content_allocator::Vec<'a, Node<'a>>,
         pos: &mut usize,
     ) -> bool {
+        profile_span_detail!("parser::inline_footnote_ref");
         let bytes = content.as_bytes();
         let label_start = *pos + 2;
         let mut end = label_start;

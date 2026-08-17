@@ -172,6 +172,7 @@ impl HtmlRenderer {
 
     #[inline]
     pub(in crate::html::renderer) fn render_node(&mut self, node: &Node<'_>) {
+        crate::profile_span_detail!("renderer::render_node");
         match node {
             Node::Paragraph(node) => self.render_paragraph(node),
             Node::Heading(node) => self.render_heading(node),
@@ -198,6 +199,8 @@ impl HtmlRenderer {
 
     pub(in crate::html::renderer) fn render_inline_toc(&mut self) {
         use std::fmt::Write as _;
+
+        crate::profile_span!("renderer::render_inline_toc");
 
         if self.toc_entries.is_empty() {
             return;

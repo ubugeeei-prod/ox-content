@@ -39,7 +39,22 @@ macro_rules! profile_span {
     ($name:literal) => {};
 }
 
-pub(crate) use profile_span;
+/// Micro-span variant of `profile_span!` for per-node hot paths; records
+/// only when the profiler's detail gate is open. See the parser's
+/// `profile_span_detail` for the rationale.
+#[cfg(feature = "profile")]
+macro_rules! profile_span_detail {
+    ($name:literal) => {
+        let __ox_profile_guard = ::ox_content_profiler::ScopeGuard::enter_detail($name);
+    };
+}
+
+#[cfg(not(feature = "profile"))]
+macro_rules! profile_span_detail {
+    ($name:literal) => {};
+}
+
+pub(crate) use {profile_span, profile_span_detail};
 
 #[cfg(feature = "frameworks")]
 pub mod frameworks;

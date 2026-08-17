@@ -5,7 +5,7 @@ use super::list_item::ParsedListItem;
 use super::Parser;
 use crate::error::ParseResult;
 #[allow(unused_imports)]
-use crate::profile_span;
+use crate::{profile_span, profile_span_detail};
 
 mod item_source;
 
@@ -128,6 +128,7 @@ impl<'a> Parser<'a> {
         consumed_newline: bool,
         lazy_lines: &mut rustc_hash::FxHashSet<u32>,
     ) -> (bool, usize, Option<ox_content_allocator::String<'a>>) {
+        profile_span_detail!("parser::list_item_continuation");
         let content_indent = item.content_indent;
         let item_is_empty = item.content.trim().is_empty();
         let mut item_source = None;

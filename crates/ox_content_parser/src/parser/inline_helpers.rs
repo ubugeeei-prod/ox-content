@@ -4,6 +4,8 @@ use ox_content_ast::{Image, Link, Node, Span, Text};
 
 use super::Parser;
 use crate::error::ParseResult;
+#[allow(unused_imports)]
+use crate::profile_span_detail;
 
 impl<'a> Parser<'a> {
     pub(super) fn parse_link(
@@ -13,6 +15,7 @@ impl<'a> Parser<'a> {
         children: &mut Vec<'a, Node<'a>>,
         pos: &mut usize,
     ) -> ParseResult<()> {
+        profile_span_detail!("parser::inline_link");
         let bytes = content.as_bytes();
         let link_start = *pos;
 
@@ -115,6 +118,7 @@ impl<'a> Parser<'a> {
         children: &mut Vec<'a, Node<'a>>,
         pos: &mut usize,
     ) -> ParseResult<()> {
+        profile_span_detail!("parser::inline_image");
         let bytes = content.as_bytes();
         if *pos + 1 >= content.len() || bytes[*pos + 1] != b'[' {
             Self::push_text(children, "!", offset + *pos, offset + *pos + 1);
@@ -215,6 +219,7 @@ impl<'a> Parser<'a> {
         start: usize,
         end: usize,
     ) {
+        profile_span_detail!("parser::push_text");
         children.push(Node::Text(Text { value, span: Span::new(start as u32, end as u32) }));
     }
 

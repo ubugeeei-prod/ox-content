@@ -58,7 +58,15 @@ pub fn run(cli: &Cli) -> std::io::Result<()> {
     let bytes = source.len() as u64;
 
     let total_iters = cli.warmup + cli.iters;
-    let config = ReportConfig { input_bytes: Some(bytes), warmup: cli.warmup, max_span_rows: 24 };
+    // Detail runs surface several dozen micro-spans; give them room and
+    // stamp the report with the measured guard cost so the `~ovh` column
+    // can show how much of each row is the measurement itself.
+    let config = ReportConfig {
+        input_bytes: Some(bytes),
+        warmup: cli.warmup,
+        max_span_rows: if cli.detail { 96 } else { 24 },
+        span_overhead_ns: ox_content_profiler::scope::calibrate_overhead_ns(),
+    };
 
     let label_prefix = match phase {
         MarkdownPhase::Parse => "parse",

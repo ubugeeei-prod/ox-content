@@ -4,7 +4,7 @@ use ox_content_ast::{Heading, Node, Paragraph, Span};
 use super::Parser;
 use crate::error::{ParseError, ParseResult};
 #[allow(unused_imports)]
-use crate::profile_span;
+use crate::{profile_span, profile_span_detail};
 
 impl<'a> Parser<'a> {
     pub(super) fn parse_block(&mut self) -> ParseResult<Option<Node<'a>>> {
@@ -224,6 +224,7 @@ impl<'a> Parser<'a> {
     /// trailing whitespace. `first_non_ws` is the position of the line's
     /// first non-space/tab byte (already computed by the paragraph loop).
     fn setext_underline_depth(&self, line_start: usize, first_non_ws: usize) -> Option<u8> {
+        profile_span_detail!("parser::setext_probe");
         // A lazily-continued line is paragraph text by construction and
         // can never underline the paragraph it continues.
         if self

@@ -13,7 +13,7 @@ use super::HtmlRenderer;
 
 impl HtmlRenderer {
     pub(in crate::html::renderer) fn render_text(&mut self, text: &Text<'_>) {
-        crate::profile_span!("renderer::visit_text");
+        crate::profile_span_detail!("renderer::visit_text");
         // See the matching gate in `visit_inline_node`: the cached
         // `autolink_index` already encodes `autolink_urls && !patterns.is_empty()`.
         if self.autolink_index.is_some() && !self.in_link {
@@ -24,6 +24,7 @@ impl HtmlRenderer {
     }
 
     pub(in crate::html::renderer) fn render_emphasis(&mut self, emphasis: &Emphasis<'_>) {
+        crate::profile_span_detail!("renderer::visit_emphasis");
         self.write("<em>");
         for child in &emphasis.children {
             self.visit_inline_node(child);
@@ -32,6 +33,7 @@ impl HtmlRenderer {
     }
 
     pub(in crate::html::renderer) fn render_strong(&mut self, strong: &Strong<'_>) {
+        crate::profile_span_detail!("renderer::visit_strong");
         self.write("<strong>");
         for child in &strong.children {
             self.visit_inline_node(child);
@@ -40,12 +42,14 @@ impl HtmlRenderer {
     }
 
     pub(in crate::html::renderer) fn render_inline_code(&mut self, inline_code: &InlineCode<'_>) {
+        crate::profile_span_detail!("renderer::visit_inline_code");
         self.write("<code>");
         self.write_escaped(inline_code.value);
         self.write("</code>");
     }
 
     pub(in crate::html::renderer) fn render_break(&mut self, _break_node: &Break) {
+        crate::profile_span_detail!("renderer::visit_break");
         self.output.push_str(self.options.hard_break.as_str());
     }
 
@@ -79,6 +83,7 @@ impl HtmlRenderer {
     }
 
     pub(in crate::html::renderer) fn render_image(&mut self, image: &Image<'_>) {
+        crate::profile_span_detail!("renderer::visit_image");
         self.write("<img src=\"");
         let converted_url =
             if self.options.convert_md_links { self.convert_markdown_url(image.url) } else { None };
@@ -100,6 +105,7 @@ impl HtmlRenderer {
     }
 
     pub(in crate::html::renderer) fn render_delete(&mut self, delete: &Delete<'_>) {
+        crate::profile_span_detail!("renderer::visit_delete");
         self.write("<del>");
         for child in &delete.children {
             self.visit_inline_node(child);
@@ -111,6 +117,7 @@ impl HtmlRenderer {
         &mut self,
         footnote_ref: &FootnoteReference<'_>,
     ) {
+        crate::profile_span_detail!("renderer::visit_footnote_ref");
         // A footnote may be referenced repeatedly, so each occurrence
         // needs its own id: the first keeps `fnref-<id>` (which the
         // definition's back-link targets) and later ones get a `-N`
@@ -140,6 +147,7 @@ impl HtmlRenderer {
         &mut self,
         footnote_def: &FootnoteDefinition<'_>,
     ) {
+        crate::profile_span!("renderer::visit_footnote_def");
         self.write("<div id=\"fn-");
         self.write_escaped(footnote_def.identifier);
         self.write("\" class=\"footnote\">\n");

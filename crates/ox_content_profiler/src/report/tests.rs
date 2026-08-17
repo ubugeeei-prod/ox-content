@@ -22,7 +22,12 @@ fn mock_iter(elapsed_us: u64, allocs: u64, bytes: u64) -> IterationRecord {
 #[test]
 fn timing_percentiles_make_sense() {
     let iters = (1..=10).map(|i| mock_iter(i * 100, 1, 100)).collect::<Vec<_>>();
-    let cfg = ReportConfig { input_bytes: Some(1024 * 1024), warmup: 0, max_span_rows: 8 };
+    let cfg = ReportConfig {
+        input_bytes: Some(1024 * 1024),
+        warmup: 0,
+        max_span_rows: 8,
+        span_overhead_ns: 0.0,
+    };
     let report = Report::from_iterations("x".into(), iters, cfg);
     assert_eq!(report.timing.samples, 10);
     assert!(report.timing.min <= report.timing.p50);
@@ -34,7 +39,8 @@ fn timing_percentiles_make_sense() {
 fn warmup_skips_iterations() {
     let mut iters = vec![mock_iter(10_000, 0, 0)];
     iters.extend((0..5).map(|_| mock_iter(100, 0, 0)));
-    let cfg = ReportConfig { input_bytes: None, warmup: 1, max_span_rows: 8 };
+    let cfg =
+        ReportConfig { input_bytes: None, warmup: 1, max_span_rows: 8, span_overhead_ns: 0.0 };
     let report = Report::from_iterations("x".into(), iters, cfg);
     assert_eq!(report.timing.samples, 5);
     // Without the warmup iteration the median should be near 100µs.

@@ -5,7 +5,7 @@ use ox_content_ast::{AlignKind, Node, Span, Table, TableCell, TableRow};
 use super::Parser;
 use crate::error::ParseResult;
 #[allow(unused_imports)]
-use crate::profile_span;
+use crate::{profile_span, profile_span_detail};
 
 impl<'a> Parser<'a> {
     /// Returns true when the next two lines look like a GFM table header.
@@ -15,6 +15,7 @@ impl<'a> Parser<'a> {
     /// lines directly with `memchr` and inspect slices in place instead of
     /// collecting `lines().take(2)` into a temporary `Vec`.
     pub(super) fn try_parse_table(&self) -> bool {
+        profile_span_detail!("parser::table_probe");
         let bytes = self.source.as_bytes();
         let p0 = self.position;
         let nl0 = match memchr(b'\n', &bytes[p0..]) {
@@ -108,6 +109,7 @@ impl<'a> Parser<'a> {
         line: &'a str,
         column_count: usize,
     ) -> ParseResult<TableRow<'a>> {
+        profile_span_detail!("parser::table_row");
         let mut cells: Vec<'a, TableCell<'a>> = self.allocator.new_vec();
         for cell_content in Self::table_row_cells(line).take(column_count) {
             let cell_content = self.unescape_table_pipes(cell_content);

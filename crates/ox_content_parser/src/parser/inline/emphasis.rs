@@ -12,7 +12,7 @@ use ox_content_ast::{Node, Span};
 
 use crate::parser::Parser;
 #[allow(unused_imports)]
-use crate::profile_span;
+use crate::{profile_span, profile_span_detail};
 
 pub(in crate::parser) struct Delimiter {
     /// Index of the run's text node in the children vec.
@@ -37,6 +37,7 @@ impl<'a> Parser<'a> {
         delimiters: &mut Vec<'a, Delimiter>,
         pos: &mut usize,
     ) {
+        profile_span_detail!("parser::inline_delimiter_run");
         let bytes = content.as_bytes();
         let marker = bytes[*pos];
         let run_len = Self::marker_run_len(bytes, *pos, marker);

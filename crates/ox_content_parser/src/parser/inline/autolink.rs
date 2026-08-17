@@ -7,6 +7,8 @@ use memchr::memchr;
 use ox_content_ast::{Link, Node, Span};
 
 use crate::parser::Parser;
+#[allow(unused_imports)]
+use crate::profile_span_detail;
 
 /// Validation-only scan: returns the index just past `>` when an
 /// autolink starts at `pos`, without building nodes.
@@ -34,6 +36,7 @@ impl<'a> Parser<'a> {
         pos: usize,
         offset: usize,
     ) -> Option<(Node<'a>, usize)> {
+        profile_span_detail!("parser::inline_autolink");
         let bytes = content.as_bytes();
         let inner_start = pos + 1;
         let close = memchr(b'>', bytes.get(inner_start..)?)? + inner_start;

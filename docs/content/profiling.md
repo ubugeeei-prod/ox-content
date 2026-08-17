@@ -60,10 +60,34 @@ cargo run --release -p ox_content_profile_cli -- render path/to/file.md
 
 # Machine-readable output for diffing in CI
 cargo run --release -p ox_content_profile_cli -- pipeline --json path/to/file.md
+
+# Everything, everywhere: per-node inline handlers, per-line scans,
+# escape passes. See "Detail tracing" below for how to read it honestly.
+cargo run --release -p ox_content_profile_cli -- pipeline --gfm --detail path/to/file.md
 ```
 
 Always build `--release`: the macro-expanded `profile_span!` guards are
 cheap, but in a debug build they dominate the actual work.
+
+### Detail tracing (`--detail`)
+
+Spans come in two tiers. The default tier instruments phase-level entry
+points (`parse_block`, `parse_inline`, `visit_heading`, …) whose bodies do
+enough work that the guard cost disappears in the noise. The second tier —
+`profile_span_detail!` — sits on per-node and per-line hot paths: the
+inline special-byte scan, every emphasis delimiter run, each HTML escape
+pass, each table cell. Those guards only record when `--detail` is passed,
+so a default run keeps its phase-level numbers undistorted.
+
+Detail numbers need honest reading: at ~tens of nanoseconds per guard, a
+span hit millions of times is partly measuring the measurement. The CLI
+calibrates the per-hit guard cost at startup and the table prints it as
+the `~ovh` column (`hits × guard cost`) plus a footnote with the measured
+cost. Subtract `~ovh` from `self` mentally — a row whose self time is
+mostly `~ovh` is cheap, no matter how high it sorts. Note the parent
+spans' `self`/`inclusive` also absorb their children's guard cost, so
+compare like against like: detail runs against detail runs, default runs
+against default runs.
 
 ### Profiling the JS/TS docs generator
 

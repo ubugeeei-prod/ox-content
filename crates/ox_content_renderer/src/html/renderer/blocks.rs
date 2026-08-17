@@ -62,6 +62,7 @@ impl HtmlRenderer {
         &mut self,
         _thematic_break: &ThematicBreak,
     ) {
+        crate::profile_span_detail!("renderer::visit_thematic_break");
         if self.options.xhtml {
             self.write("<hr />\n");
         } else {
@@ -124,6 +125,7 @@ impl HtmlRenderer {
         list_item: &ListItem<'_>,
         tight: bool,
     ) {
+        crate::profile_span_detail!("renderer::visit_list_item");
         self.write("<li>");
 
         if let Some(checked) = list_item.checked {
@@ -204,6 +206,7 @@ impl HtmlRenderer {
     }
 
     pub(in crate::html::renderer) fn render_html(&mut self, html: &Html<'_>) {
+        crate::profile_span!("renderer::visit_html_block");
         self.write_html_value(html.value);
         // Block-level HTML values captured from full source lines already
         // end with their newline; don't double it.
@@ -237,6 +240,7 @@ impl HtmlRenderer {
         is_header: bool,
         align: &ox_content_allocator::Vec<'_, ox_content_ast::AlignKind>,
     ) {
+        crate::profile_span_detail!("renderer::table_row");
         self.write("<tr>\n");
         let tag = if is_header { "th" } else { "td" };
         for (idx, cell) in row.children.iter().enumerate() {
@@ -258,6 +262,7 @@ impl HtmlRenderer {
     }
 
     pub(in crate::html::renderer) fn visit_table_cell(&mut self, cell: &TableCell<'_>) {
+        crate::profile_span_detail!("renderer::table_cell");
         for child in &cell.children {
             self.visit_inline_node(child);
         }

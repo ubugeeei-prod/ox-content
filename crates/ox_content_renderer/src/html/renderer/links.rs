@@ -38,6 +38,7 @@ impl HtmlRenderer {
     }
 
     pub(in crate::html::renderer) fn rewrite_html_root_urls(&self, html: &str) -> String {
+        crate::profile_span!("renderer::rewrite_html_urls");
         let mut output = String::with_capacity(html.len());
         let bytes = html.as_bytes();
         let mut i = 0;
@@ -103,6 +104,7 @@ impl HtmlRenderer {
 
     /// Converts a Markdown URL to an `.html` URL for SSG output.
     pub(in crate::html::renderer) fn convert_md_url(&self, url: &str) -> Option<String> {
+        crate::profile_span_detail!("renderer::convert_md_url");
         // Split URL into path and fragment
         let (path, fragment) = match url.split_once('#') {
             Some((p, f)) => (p, Some(f)),

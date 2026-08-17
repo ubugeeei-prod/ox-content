@@ -23,6 +23,15 @@ use crate::alloc::{AllocCounter, AllocDelta};
 
 static ENABLED: AtomicBool = AtomicBool::new(false);
 
+/// Second gate for micro-spans ("detail" tracing).
+///
+/// Phase-level spans keep the default profile readable and cheap; detail
+/// spans sit on per-node / per-line hot paths where the guard's own cost is
+/// comparable to the work being measured. They only record when BOTH gates
+/// are open, so a default run keeps its phase-level numbers undistorted and
+/// an explicit `--detail` run trades accuracy for the full trace.
+static DETAIL: AtomicBool = AtomicBool::new(false);
+
 /// Globally enable span recording. Spans entered while disabled are no-ops.
 pub fn enable() {
     ENABLED.store(true, Ordering::Release);
@@ -38,6 +47,22 @@ pub fn disable() {
 #[must_use]
 pub fn is_enabled() -> bool {
     ENABLED.load(Ordering::Acquire)
+}
+
+/// Enable detail (micro) spans. Has no effect unless [`enable`] is also on.
+pub fn enable_detail() {
+    DETAIL.store(true, Ordering::Release);
+}
+
+/// Disable detail (micro) spans; phase-level spans keep recording.
+pub fn disable_detail() {
+    DETAIL.store(false, Ordering::Release);
+}
+
+/// Whether detail spans are currently recording (both gates open).
+#[must_use]
+pub fn is_detail_enabled() -> bool {
+    is_enabled() && DETAIL.load(Ordering::Acquire)
 }
 
 thread_local! {
@@ -95,6 +120,16 @@ impl ScopeGuard {
             });
         });
         Self { active: true }
+    }
+
+    /// Push a detail (micro) span frame. No-op unless both the span
+    /// subsystem and the detail gate are enabled — see [`enable_detail`].
+    #[inline]
+    pub fn enter_detail(name: &'static str) -> Self {
+        if !is_detail_enabled() {
+            return Self { active: false };
+        }
+        Self::enter(name)
     }
 
     /// Whether this guard is recording. False if the subsystem was disabled
@@ -203,6 +238,43 @@ pub fn reset_thread_spans() {
 pub fn span<R>(name: &'static str, f: impl FnOnce() -> R) -> R {
     let _guard = ScopeGuard::enter(name);
     f()
+}
+
+/// Estimates the per-hit cost of one enabled `enter`/`drop` guard pair, in
+/// nanoseconds.
+///
+/// With detail tracing on, guard cost is comparable to the work inside the
+/// hottest micro-spans, so reports need a yardstick to stay honest: the
+/// table renderer multiplies this by each row's hit count to show how much
+/// of the measured time is the measurement itself.
+///
+/// Requires the span subsystem to be [`enable`]d (returns 0.0 otherwise so
+/// callers can pass the result straight into a report config). Runs a few
+/// thousand guard pairs and takes the fastest batch to approximate the
+/// steady-state cost; the calibration records are drained afterwards so
+/// they never leak into a real measurement window.
+#[must_use]
+pub fn calibrate_overhead_ns() -> f64 {
+    const BATCH: u32 = 1024;
+    const ROUNDS: usize = 8;
+    if !is_enabled() {
+        return 0.0;
+    }
+    let mut best = Duration::MAX;
+    for _ in 0..ROUNDS {
+        let start = Instant::now();
+        for _ in 0..BATCH {
+            let _guard = ScopeGuard::enter("__ox_profiler_calibration");
+        }
+        let elapsed = start.elapsed();
+        if elapsed < best {
+            best = elapsed;
+        }
+    }
+    // Drop the calibration span's records so they don't pollute the first
+    // real iteration.
+    let _ = take_thread_spans();
+    best.as_nanos() as f64 / f64::from(BATCH)
 }
 
 /// Registry view used by the report. Owns no state itself; constructed on

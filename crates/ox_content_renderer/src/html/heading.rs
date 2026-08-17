@@ -13,6 +13,7 @@ pub(super) fn collect_heading_text(nodes: &[Node<'_>]) -> String {
 }
 
 pub(super) fn collect_heading_text_into(nodes: &[Node<'_>], text: &mut String) {
+    crate::profile_span_detail!("renderer::collect_heading_text");
     for node in nodes {
         collect_node_text(node, text);
     }
@@ -60,6 +61,7 @@ pub(super) fn slugify_heading(text: &str) -> String {
 /// heading while still leaving ownership decisions, such as cloning the final
 /// unique id into a hash map, with the caller.
 pub(super) fn slugify_heading_into(text: &str, out: &mut String) {
+    crate::profile_span_detail!("renderer::slugify");
     // Single-pass slugify. The hot path is the all-ASCII byte loop: no UTF-8
     // decode and no `char::to_lowercase` iterator allocation per character.
     // We switch to the Unicode-aware char iterator only for contiguous

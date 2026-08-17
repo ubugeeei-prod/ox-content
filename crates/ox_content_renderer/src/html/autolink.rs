@@ -128,6 +128,7 @@ pub(super) fn find_autolink_match(
     patterns: &[String],
     index: &FirstByteIndex,
 ) -> Option<(usize, usize)> {
+    crate::profile_span_detail!("renderer::autolink_scan");
     let bytes = s.as_bytes();
     let mut base = from;
     while base < bytes.len() {

@@ -28,6 +28,7 @@ impl HtmlRenderer {
         &self,
         code_block: &CodeBlock<'_>,
     ) -> CodeBlockRenderState {
+        crate::profile_span!("renderer::code_block_state");
         let info = normalize_code_block_info(code_block.lang, code_block.meta);
         let syntax = self.options.code_annotation_syntax;
         let mut lines = if self.options.code_annotations && syntax.includes_vitepress() {
@@ -110,6 +111,7 @@ impl HtmlRenderer {
     /// keeps the common case stack-backed while still preserving de-duplication
     /// when multiple annotations imply the same class.
     pub(in crate::html::renderer) fn write_code_lines(&mut self, state: &CodeBlockRenderState) {
+        crate::profile_span!("renderer::write_code_lines");
         let has_focus = state.has_focus();
 
         for (index, line) in state.lines.iter().enumerate() {

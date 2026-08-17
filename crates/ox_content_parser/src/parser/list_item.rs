@@ -1,4 +1,6 @@
 use super::Parser;
+#[allow(unused_imports)]
+use crate::profile_span_detail;
 
 pub(super) struct ParsedListItem<'a> {
     pub(super) ordered: bool,
@@ -101,6 +103,7 @@ impl<'a> Parser<'a> {
         line_start: usize,
         line: &'a str,
     ) -> Option<ParsedListItem<'a>> {
+        profile_span_detail!("parser::list_item_line");
         let trimmed = line.trim_start();
         let trimmed_offset = line_start + (line.len() - trimmed.len());
         let bytes = trimmed.as_bytes();

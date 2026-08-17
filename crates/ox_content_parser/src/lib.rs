@@ -41,7 +41,26 @@ macro_rules! profile_span {
     ($name:literal) => {};
 }
 
-pub(crate) use profile_span;
+/// Micro-span variant of [`profile_span!`] for per-node / per-line hot
+/// paths, where the guard itself costs as much as the work it measures.
+///
+/// Records only when the profiler's detail gate is open on top of the
+/// regular enable gate (`ox_content_profiler::scope::enable_detail`), so
+/// default profiling runs keep phase-level accuracy and `--detail` runs
+/// trade it for the full trace.
+#[cfg(feature = "profile")]
+macro_rules! profile_span_detail {
+    ($name:literal) => {
+        let __ox_profile_guard = ::ox_content_profiler::ScopeGuard::enter_detail($name);
+    };
+}
+
+#[cfg(not(feature = "profile"))]
+macro_rules! profile_span_detail {
+    ($name:literal) => {};
+}
+
+pub(crate) use {profile_span, profile_span_detail};
 
 mod error;
 mod lexer;

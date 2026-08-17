@@ -23,6 +23,13 @@ pub struct Cli {
     /// Use GFM-enabled parser options for the run.
     #[arg(long, global = true)]
     pub gfm: bool,
+
+    /// Also record detail (micro) spans: per-node inline handlers, per-line
+    /// scans, escape passes. These sit on paths hot enough that the span
+    /// guard itself distorts the numbers — the report's `~ovh` column shows
+    /// the estimated measurement cost per row so they stay interpretable.
+    #[arg(long, global = true)]
+    pub detail: bool,
 }
 
 #[derive(Subcommand, Debug)]

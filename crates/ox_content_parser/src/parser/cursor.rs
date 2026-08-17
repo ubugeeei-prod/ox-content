@@ -1,6 +1,8 @@
 use memchr::{memchr, memchr2};
 
 use super::Parser;
+#[allow(unused_imports)]
+use crate::profile_span_detail;
 
 impl<'a> Parser<'a> {
     pub(super) fn is_at_end(&self) -> bool {
@@ -81,6 +83,7 @@ impl<'a> Parser<'a> {
     /// byte-dispatch table aligned with `parse_block` preserves Markdown
     /// behavior while avoiding repeated full-line scans on ordinary prose.
     pub(super) fn line_starts_block(&self) -> bool {
+        profile_span_detail!("parser::line_starts_block");
         let line_start = self.position;
         let bytes = self.source.as_bytes();
         let Some(trimmed_start) = self.first_non_whitespace_in_line(line_start) else {

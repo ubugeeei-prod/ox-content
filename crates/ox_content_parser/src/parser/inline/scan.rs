@@ -1,3 +1,6 @@
+#[allow(unused_imports)]
+use crate::profile_span_detail;
+
 /// Lookup table: `INLINE_SPECIAL[b] == 1` iff the byte can begin an inline
 /// construct handled by `parse_inline_special`.
 ///
@@ -22,6 +25,7 @@ static INLINE_SPECIAL: [u8; 256] = {
 
 #[inline]
 pub(super) fn next_inline_special(bytes: &[u8], from: usize) -> usize {
+    profile_span_detail!("parser::inline_scan");
     // Skip eight bytes at a time while the OR of their marker flags is zero.
     // This is not a semantic parser: it only proves that none of those bytes
     // can start inline syntax, so returning the first flagged byte preserves

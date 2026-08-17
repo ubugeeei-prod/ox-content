@@ -77,7 +77,12 @@ pub fn run(cli: &Cli, dir: &Path, phase: DocsPhase) -> std::io::Result<()> {
         files.iter().filter_map(|file| std::fs::metadata(file).ok()).map(|meta| meta.len()).sum();
 
     let total_iters = cli.warmup + cli.iters;
-    let config = ReportConfig { input_bytes: Some(bytes), warmup: cli.warmup, max_span_rows: 32 };
+    let config = ReportConfig {
+        input_bytes: Some(bytes),
+        warmup: cli.warmup,
+        max_span_rows: if cli.detail { 96 } else { 32 },
+        span_overhead_ns: ox_content_profiler::scope::calibrate_overhead_ns(),
+    };
 
     let label_prefix = match phase {
         DocsPhase::Extract => "docs-extract",
@@ -163,7 +168,12 @@ pub fn run_entrypoints(cli: &Cli, entries: &[PathBuf]) -> std::io::Result<()> {
     };
 
     let total_iters = cli.warmup + cli.iters;
-    let config = ReportConfig { input_bytes: None, warmup: cli.warmup, max_span_rows: 32 };
+    let config = ReportConfig {
+        input_bytes: None,
+        warmup: cli.warmup,
+        max_span_rows: if cli.detail { 96 } else { 32 },
+        span_overhead_ns: ox_content_profiler::scope::calibrate_overhead_ns(),
+    };
     let mut recorder = Recorder::new(label).with_config(config);
 
     for _ in 0..total_iters {

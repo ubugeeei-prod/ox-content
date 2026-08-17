@@ -51,6 +51,7 @@ static URL_ESCAPE_FLAG: [u8; 256] = {
 
 #[inline]
 pub(super) fn write_escaped_into(out: &mut String, s: &str) {
+    crate::profile_span_detail!("renderer::escape_text");
     // The invariant for this routine is: bytes in `s[start..i]` have not yet
     // been copied, and every byte before `start` has already been emitted in
     // escaped form. Safe runs are copied with one `push_str`; only bytes that
@@ -119,6 +120,7 @@ pub(super) fn write_escaped_into(out: &mut String, s: &str) {
 }
 
 pub(super) fn write_url_escaped_into(out: &mut String, s: &str) {
+    crate::profile_span_detail!("renderer::escape_url");
     // Same chunked scanner as `write_escaped_into`, but with URL attribute
     // semantics. Ampersand remains HTML-escaped because the result is written
     // inside an HTML attribute, while spaces and tag delimiters are percent

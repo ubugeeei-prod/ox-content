@@ -23,7 +23,9 @@ impl HtmlRenderer {
     }
 
     pub(in crate::html::renderer) fn write_escaped(&mut self, s: &str) {
-        crate::profile_span!("renderer::write_escaped");
+        // Escape timing lives in `write_escaped_into` (detail span
+        // `renderer::escape_text`) so the fast paths that bypass this
+        // wrapper are measured too.
         write_escaped_into(&mut self.output, s);
     }
 
@@ -36,7 +38,7 @@ impl HtmlRenderer {
     /// once for visible text. If the index is absent, we fail open by emitting
     /// escaped text rather than rebuilding the index here.
     pub(in crate::html::renderer) fn write_text_with_autolinks(&mut self, s: &str) {
-        crate::profile_span!("renderer::write_text_with_autolinks");
+        crate::profile_span_detail!("renderer::write_text_with_autolinks");
         let bytes = s.as_bytes();
         // Reuse the per-render first-byte index (see `autolink_index`). If it's
         // absent the caller's gating slipped — fall back to emitting the text
@@ -125,6 +127,7 @@ impl HtmlRenderer {
     }
 
     pub(in crate::html::renderer) fn write_html_value(&mut self, value: &str) {
+        crate::profile_span_detail!("renderer::write_html_value");
         if self.options.sanitize {
             self.write_escaped(value);
             return;
@@ -153,6 +156,7 @@ impl HtmlRenderer {
         // write here skips the trait's 20-arm `walk_node` match and the
         // `visit_text` wrapper, both of which are the only thing
         // `visit_text` would do anyway (escape into `self.output`).
+        crate::profile_span_detail!("renderer::visit_inline");
         match node {
             Node::Text(text) => {
                 // The autolink builtin lives on this hot path too: when

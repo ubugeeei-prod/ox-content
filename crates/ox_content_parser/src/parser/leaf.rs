@@ -137,6 +137,7 @@ impl<'a> Parser<'a> {
 
     /// Parses a thematic break.
     pub(super) fn parse_thematic_break(&mut self, start: usize) -> ParseResult<Option<Node<'a>>> {
+        profile_span!("parser::parse_thematic_break");
         // Skip to (and past) the end of the current line. `consume_line`
         // advances to `line_end + 1`, or to EOF when there's no newline —
         // exactly the two positions the old peek/advance loop produced.
