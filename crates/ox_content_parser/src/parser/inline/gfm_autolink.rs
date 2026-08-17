@@ -129,6 +129,21 @@ impl<'a> Parser<'a> {
 static URL_FINDERS: LazyLock<[memmem::Finder<'static>; 4]> =
     LazyLock::new(|| ["www.", "http://", "https://", "ftp://"].map(memmem::Finder::new));
 
+/// Cheap pre-flight over a block's raw inline content: can the autolink
+/// pass possibly rewrite anything here?
+///
+/// Every candidate needs a `:` (scheme), `@` (email), or `www.` — and those
+/// needle bytes are never inline-special, so if they appear in the parsed
+/// text nodes they appear verbatim in `content` too. The one indirection is
+/// entities: `&colon;`/`&commat;` decode into candidate bytes that the raw
+/// source spells with `&`, so `&` also keeps the pass on. Ordinary prose —
+/// almost every block in a document — fails all four probes and skips the
+/// node-tree walk (and its text-coalescing rewrites) entirely.
+pub(super) fn may_contain_autolink(content: &str) -> bool {
+    let bytes = content.as_bytes();
+    memchr::memchr3(b':', b'@', b'&', bytes).is_some() || URL_FINDERS[0].find(bytes).is_some()
+}
+
 /// Finds the earliest valid autolink candidate in `value`.
 fn find_candidate(value: &str) -> Option<Candidate> {
     let bytes = value.as_bytes();

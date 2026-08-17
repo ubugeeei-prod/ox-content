@@ -135,16 +135,67 @@ fn backslash_before_non_punctuation_stays_literal() {
 }
 
 #[test]
+fn gfm_autolink_does_not_fire_inside_link_text() {
+    let allocator = Allocator::new();
+    let doc = parse_with_options(
+        &allocator,
+        "[visit www.example.com](https://real.example)",
+        ParserOptions::gfm(),
+    );
+
+    match &doc.children[0] {
+        Node::Paragraph(paragraph) => match &paragraph.children[0] {
+            Node::Link(link) => {
+                assert_eq!(link.url, "https://real.example");
+                // GFM excludes link text from the autolink extension; a
+                // nested Link here would render as invalid nested <a> tags.
+                assert!(
+                    link.children.iter().all(|child| matches!(child, Node::Text(_))),
+                    "link text must stay plain text, got {:?}",
+                    link.children
+                );
+            }
+            other => panic!("expected link, got {other:?}"),
+        },
+        other => panic!("expected paragraph, got {other:?}"),
+    }
+}
+
+#[test]
+fn gfm_autolink_still_fires_inside_strikethrough() {
+    let allocator = Allocator::new();
+    let doc = parse_with_options(&allocator, "~~see www.example.com~~", ParserOptions::gfm());
+
+    match &doc.children[0] {
+        Node::Paragraph(paragraph) => match &paragraph.children[0] {
+            Node::Delete(delete) => {
+                let link_count =
+                    delete.children.iter().filter(|child| matches!(child, Node::Link(_))).count();
+                // The root-level pass recurses into emphasis-like
+                // containers, so the bare URL still links exactly once.
+                assert_eq!(link_count, 1, "expected one autolink, got {:?}", delete.children);
+            }
+            other => panic!("expected strikethrough, got {other:?}"),
+        },
+        other => panic!("expected paragraph, got {other:?}"),
+    }
+}
+
+#[test]
 fn unmatched_strikethrough_remains_text() {
     let allocator = Allocator::new();
     let doc = parse_with_options(&allocator, "~~open", ParserOptions::gfm());
 
     match &doc.children[0] {
         Node::Paragraph(paragraph) => {
+            // The unmatched marker stays literal text. It remains a separate
+            // node from the following prose: the GFM autolink post-pass is
+            // the only thing that coalesces adjacent text nodes, and it only
+            // runs when the block contains a candidate byte (`:`, `@`, `&`,
+            // or `www.`) — plain prose keeps the parser's raw segmentation.
             assert!(matches!(&paragraph.children[0], Node::Text(_)));
-            // GFM post-processing coalesces adjacent text nodes, so the
-            // unmatched marker merges with the following prose.
-            assert_eq!(first_text(&paragraph.children[0]), Some("~~open"));
+            assert_eq!(first_text(&paragraph.children[0]), Some("~~"));
+            assert_eq!(first_text(&paragraph.children[1]), Some("open"));
         }
         other => panic!("expected paragraph, got {other:?}"),
     }

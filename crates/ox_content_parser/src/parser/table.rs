@@ -111,7 +111,7 @@ impl<'a> Parser<'a> {
         let mut cells: Vec<'a, TableCell<'a>> = self.allocator.new_vec();
         for cell_content in Self::table_row_cells(line).take(column_count) {
             let cell_content = self.unescape_table_pipes(cell_content);
-            let cell_children = self.parse_inline(cell_content, 0)?;
+            let cell_children = self.parse_inline_block(cell_content, 0)?;
             cells.push(TableCell { children: cell_children, span: Span::new(0, 0) });
         }
         while cells.len() < column_count {

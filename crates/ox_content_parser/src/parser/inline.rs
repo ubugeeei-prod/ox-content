@@ -22,6 +22,28 @@ pub(in crate::parser) use self::link_target::{
 };
 
 impl<'a> Parser<'a> {
+    /// Parses the inline content of a block-level construct (paragraph,
+    /// heading, table cell, list item paragraph) and runs the block-scoped
+    /// post-passes on the result — today, the GFM autolink rewrite.
+    ///
+    /// Nested inline contexts (link text, image alt, strikethrough
+    /// interiors) call [`Self::parse_inline`] directly instead: the
+    /// autolink pass itself recurses through emphasis-like containers, so
+    /// running it per nested sequence both re-scanned the same nodes and —
+    /// for link text, which GFM excludes from autolinking — manufactured
+    /// nested `<a>` elements.
+    pub(super) fn parse_inline_block(
+        &self,
+        content: &'a str,
+        offset: usize,
+    ) -> ParseResult<Vec<'a, Node<'a>>> {
+        let mut children = self.parse_inline(content, offset)?;
+        if self.options.autolinks && gfm_autolink::may_contain_autolink(content) {
+            self.apply_gfm_autolinks(&mut children);
+        }
+        Ok(children)
+    }
+
     pub(super) fn parse_inline(
         &self,
         content: &'a str,
@@ -54,9 +76,6 @@ impl<'a> Parser<'a> {
 
         if !delimiters.is_empty() {
             self.process_emphasis(&mut children, &mut delimiters);
-        }
-        if self.options.autolinks {
-            self.apply_gfm_autolinks(&mut children);
         }
         Ok(children)
     }

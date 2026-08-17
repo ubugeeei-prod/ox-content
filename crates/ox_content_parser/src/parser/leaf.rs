@@ -127,7 +127,7 @@ impl<'a> Parser<'a> {
 
         // Parse inline content
         let children = if !content.is_empty() {
-            self.parse_inline(content, content_start)?
+            self.parse_inline_block(content, content_start)?
         } else {
             self.allocator.new_vec()
         };
