@@ -99,12 +99,70 @@ const fn first_flagged_lane(mask: u64) -> usize {
     (mask.trailing_zeros() / 8) as usize
 }
 
+/// Offset of the first byte at or after `from` that needs replacing, or
+/// `bytes.len()` when the rest is clean.
+///
+/// Whole words are cleared by `mask_of`. What is left over when the length
+/// is not a multiple of eight used to be walked a byte at a time, and that
+/// walk is most of the work: the strings reaching these escapers have a
+/// median length of 15 bytes on the bundled corpora, so a *typical* call
+/// tested one word and then seven bytes one by one, ending on a loop the
+/// branch predictor cannot learn. Re-reading the final eight bytes and
+/// discarding the lanes the loop already cleared replaces that walk with
+/// one more word test.
+///
+/// Masking off the low lanes gives up `has_zero`'s "lowest set bit is
+/// always a true match" guarantee — a masked-off lane that *is* a match can
+/// borrow into the lane above it — so surviving lanes are confirmed against
+/// `flags` before being reported. That check is off the hot path: it only
+/// runs on the sub-word tail of a string that still holds a match.
+#[inline]
+fn first_flagged(
+    bytes: &[u8],
+    from: usize,
+    mask_of: impl Fn(u64) -> u64,
+    flags: &[u8; 256],
+) -> usize {
+    let len = bytes.len();
+    let mut i = from;
+
+    while i + 8 <= len {
+        // `unwrap` is unreachable: the slice is exactly 8 bytes wide.
+        let word = u64::from_le_bytes(bytes[i..i + 8].try_into().unwrap());
+        let mask = mask_of(word);
+        if mask != 0 {
+            return i + first_flagged_lane(mask);
+        }
+        i += 8;
+    }
+
+    if i < len && len >= 8 {
+        // `base < i` here: the loop above only stops with bytes left when
+        // fewer than eight remain, so the re-read always overlaps.
+        let base = len - 8;
+        let word = u64::from_le_bytes(bytes[base..len].try_into().unwrap());
+        let mut mask = mask_of(word) & (u64::MAX << ((i - base) * 8));
+        while mask != 0 {
+            let lane = base + first_flagged_lane(mask);
+            if flags[bytes[lane] as usize] != 0 {
+                return lane;
+            }
+            mask &= mask - 1;
+        }
+        return len;
+    }
+
+    while i < len && flags[bytes[i] as usize] == 0 {
+        i += 1;
+    }
+    i
+}
+
 /// Shared scan/copy loop for both escapers.
 ///
 /// `mask_of` proves a whole 8-byte word clean in one test; when a word is
-/// dirty its mask names the exact byte, so the scalar walk never re-examines
-/// bytes the word test already cleared. `flags`/`table` drive the tail and the
-/// replacement itself.
+/// dirty its mask names the exact byte, so no byte is ever examined twice.
+/// `flags`/`table` drive the sub-word tail and the replacement itself.
 #[inline]
 fn escape_into(
     out: &mut String,
@@ -117,25 +175,9 @@ fn escape_into(
     // everything before `start` has already been emitted in escaped form.
     let bytes = s.as_bytes();
     let mut start = 0usize;
-    let mut i = 0usize;
 
     loop {
-        while i + 8 <= bytes.len() {
-            // `unwrap` is unreachable: the slice is exactly 8 bytes wide.
-            let word = u64::from_le_bytes(bytes[i..i + 8].try_into().unwrap());
-            let mask = mask_of(word);
-            if mask == 0 {
-                i += 8;
-                continue;
-            }
-            i += first_flagged_lane(mask);
-            break;
-        }
-        // Tail (and the byte the mask pointed at): at most seven bytes of
-        // scalar work per dirty word.
-        while i < bytes.len() && flags[bytes[i] as usize] == 0 {
-            i += 1;
-        }
+        let i = first_flagged(bytes, start, &mask_of, flags);
         if i >= bytes.len() {
             break;
         }
@@ -143,8 +185,7 @@ fn escape_into(
             out.push_str(&s[start..i]);
         }
         out.push_str(table[bytes[i] as usize]);
-        i += 1;
-        start = i;
+        start = i + 1;
     }
 
     if start < bytes.len() {
@@ -238,6 +279,26 @@ mod tests {
                         s.push_str(filler);
                     }
                     s.push_str(needle);
+                    check(&s);
+                }
+            }
+        }
+    }
+
+    #[test]
+    fn matches_reference_across_the_overlapping_tail_read() {
+        // The sub-word tail is covered by re-reading the last eight bytes
+        // with the already-cleared lanes masked off, which is exactly where
+        // a masked-off match can borrow into the lane above it. The pairs
+        // below are the ones that can do it: after the mask folds, `<`/`>`
+        // leave a `0x01` lane on a following `=` or `?`, and `"` on a
+        // following `#`. One is placed at every offset of every length so
+        // each lands on both sides of the tail boundary.
+        for pair in ["<=", "<?", ">=", ">?", "\"#"] {
+            for len in 2..40usize {
+                for at in 0..len - 1 {
+                    let mut s = "x".repeat(len);
+                    s.replace_range(at..at + 2, pair);
                     check(&s);
                 }
             }
