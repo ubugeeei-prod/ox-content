@@ -103,6 +103,26 @@ impl HtmlRenderer {
     /// Renders a document to HTML string.
     #[must_use]
     pub fn render(&mut self, document: &Document<'_>) -> String {
+        self.render_into_output(document);
+        std::mem::take(&mut self.output)
+    }
+
+    /// Renders a document and returns a borrow of the renderer's own output
+    /// buffer instead of handing the buffer away.
+    ///
+    /// [`Self::render`] moves the buffer out, so a reused renderer starts the
+    /// next document from zero capacity and pays for the growth again. Callers
+    /// that copy the HTML somewhere else anyway (the NAPI boundary copies it
+    /// into a JavaScript string) should prefer this: the buffer stays warm and
+    /// steady-state rendering stops allocating for output entirely. The borrow
+    /// lasts until the next render call.
+    #[must_use]
+    pub fn render_borrowed(&mut self, document: &Document<'_>) -> &str {
+        self.render_into_output(document);
+        &self.output
+    }
+
+    fn render_into_output(&mut self, document: &Document<'_>) {
         crate::profile_span!("renderer::render");
         self.output.clear();
         // Renderer setup is intentionally split into a cheap structural scan
@@ -142,7 +162,6 @@ impl HtmlRenderer {
             self.output.reserve(estimated_len - self.output.capacity());
         }
         self.render_document(document);
-        std::mem::take(&mut self.output)
     }
 
     pub(in crate::html::renderer) fn render_document(&mut self, document: &Document<'_>) {

@@ -33,7 +33,7 @@ impl Allocator {
 
     /// Creates a new allocator pre-sized for parsing a Markdown source of
     /// the given length. The capacity is a heuristic (`source_len * 8`
-    /// bytes, with a 4 KB floor) that covers the typical AST footprint
+    /// bytes, with a 16 KB floor) that covers the typical AST footprint
     /// for real-world Markdown without growing through bumpalo's
     /// chunk-doubling path — on a fresh [`Self::new`], that path accounts
     /// for ~10 global allocations on a 64 KB document.
@@ -43,15 +43,36 @@ impl Allocator {
     /// arena chunk for the whole parse + render pipeline.
     #[must_use]
     pub fn for_source_len(source_len: usize) -> Self {
+        Self::with_capacity(Self::capacity_for_source_len(source_len))
+    }
+
+    /// Returns the arena capacity [`Self::for_source_len`] would pick for a
+    /// source of `source_len` bytes.
+    ///
+    /// Exposed for callers that reuse one arena across documents and need to
+    /// decide whether the retained chunk is still big enough for the next one.
+    #[must_use]
+    pub const fn capacity_for_source_len(source_len: usize) -> usize {
         // The 8× factor is empirical: across the bundled corpora
         // (rust-book / vite / vue / typescript-handbook) the AST + render
         // output combined comes in between 5× and 7× of the source
         // length. 8× errs slightly on the over-allocation side so the
         // first chunk almost always suffices.
         const BYTES_PER_INPUT_BYTE: usize = 8;
-        const MIN_CAPACITY: usize = 4 * 1024;
-        let capacity = source_len.saturating_mul(BYTES_PER_INPUT_BYTE).max(MIN_CAPACITY);
-        Self::with_capacity(capacity)
+        // Small documents break the ratio: a 500-byte document still builds a
+        // full block/inline tree, whose fixed per-node overhead lands nowhere
+        // near 8× the source. Measured against the md4x bench fixture (494
+        // bytes) the parse needs ~16 KB, so a 4 KB floor bought two extra
+        // chunk-growth allocations on precisely the small inputs where
+        // per-call cost dominates. 16 KB is one page-cluster of slack and
+        // covers everything under ~2 KB of Markdown in a single chunk.
+        const MIN_CAPACITY: usize = 16 * 1024;
+        let capacity = source_len.saturating_mul(BYTES_PER_INPUT_BYTE);
+        if capacity < MIN_CAPACITY {
+            MIN_CAPACITY
+        } else {
+            capacity
+        }
     }
 
     /// Returns the underlying bump allocator.

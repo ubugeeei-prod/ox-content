@@ -3,11 +3,11 @@ use std::collections::HashMap;
 use napi::bindgen_prelude::*;
 use napi::Task;
 use napi_derive::napi;
-use ox_content_mdast::{mdast, mdast_raw, transfer::TransferPayloadKind};
-use ox_content_parser::{Parser, ParserOptions};
-use ox_content_renderer::HtmlRenderer;
+use ox_content_mdast::transfer::TransferPayloadKind;
+use ox_content_parser::ParserOptions;
 
-use crate::create_allocator_for_source;
+use crate::parser_options::JsParserOptions;
+use crate::render_scratch;
 
 /// Parse result containing the AST as JSON.
 #[napi(object)]
@@ -102,90 +102,16 @@ pub struct JsSourceOptions {
     pub frontmatter: Option<bool>,
 }
 
-/// Parser options for JavaScript.
-///
-/// When `gfm` is `true`, omitted extension flags inherit the GFM profile.
-#[napi(object)]
-#[derive(Default, Clone)]
-pub struct JsParserOptions {
-    /// Enable the GFM convenience profile.
-    ///
-    /// Default: `false`.
-    pub gfm: Option<bool>,
-
-    /// Enable footnote references and definitions.
-    ///
-    /// Default: `false`, or `true` when `gfm` is `true`.
-    pub footnotes: Option<bool>,
-
-    /// Enable GFM task-list item markers.
-    ///
-    /// Default: `false`, or `true` when `gfm` is `true`.
-    pub task_lists: Option<bool>,
-
-    /// Enable GFM pipe tables.
-    ///
-    /// Default: `false`, or `true` when `gfm` is `true`.
-    pub tables: Option<bool>,
-
-    /// Enable GFM strikethrough spans.
-    ///
-    /// Default: `false`, or `true` when `gfm` is `true`.
-    pub strikethrough: Option<bool>,
-
-    /// Enable GFM autolinks.
-    ///
-    /// Default: `false`, or `true` when `gfm` is `true`.
-    pub autolinks: Option<bool>,
-}
-
-impl From<JsParserOptions> for ParserOptions {
-    fn from(opts: JsParserOptions) -> Self {
-        let mut options =
-            if opts.gfm.unwrap_or(false) { ParserOptions::gfm() } else { ParserOptions::default() };
-
-        if let Some(v) = opts.footnotes {
-            options.footnotes = v;
-        }
-        if let Some(v) = opts.task_lists {
-            options.task_lists = v;
-        }
-        if let Some(v) = opts.tables {
-            options.tables = v;
-        }
-        if let Some(v) = opts.strikethrough {
-            options.strikethrough = v;
-        }
-        if let Some(v) = opts.autolinks {
-            options.autolinks = v;
-        }
-
-        options
-    }
-}
-
-fn transfer_buffer_to_uint8(
-    buffer: ox_content_mdast::transfer::Result<Vec<u8>>,
-) -> Result<Uint8Array> {
-    buffer.map(Uint8Array::new).map_err(|error| Error::from_reason(error.to_string()))
-}
-
 /// Parses Markdown source into an AST.
 ///
 /// Returns the AST as a JSON string for compatibility-oriented JavaScript consumers.
 #[napi]
 pub fn parse(source: String, options: Option<JsParserOptions>) -> ParseResult {
-    let allocator = create_allocator_for_source(&source);
     let parser_options = options.map(ParserOptions::from).unwrap_or_default();
-    let parser = Parser::with_options(&allocator, &source, parser_options);
 
-    let result = parser.parse();
-    match result {
-        Ok(doc) => {
-            let ast = mdast::to_mdast_json(&doc);
-            ParseResult { ast, errors: vec![] }
-        }
-        Err(e) => ParseResult { ast: String::new(), errors: vec![e.to_string()] },
+    match render_scratch::parse_to_mdast_json(&source, parser_options) {
+        Ok(ast) => ParseResult { ast, errors: vec![] },
+        Err(error) => ParseResult { ast: String::new(), errors: vec![error] },
     }
 }
 
@@ -212,14 +138,12 @@ pub fn parse_transfer_raw(
     match payload_kind {
         TransferPayloadKind::Mdast => {
             // Raw mdast transfer serializes immediately after parsing, so it
-            // has the same arena shape as `parse`/`parseAndRender`; pre-sizing
-            // keeps large transfer requests from paying bumpalo chunk growth.
-            let allocator = create_allocator_for_source(&source);
+            // has the same arena shape as `parse`/`parseAndRender` and shares
+            // the same reused arena.
             let parser_options = options.map(ParserOptions::from).unwrap_or_default();
-            let parser = Parser::with_options(&allocator, &source, parser_options);
-            let document =
-                parser.parse().map_err(|error| napi::Error::from_reason(error.to_string()))?;
-            transfer_buffer_to_uint8(mdast_raw::to_mdast_raw(&document))
+            render_scratch::parse_to_mdast_raw(&source, parser_options)
+                .map(Uint8Array::new)
+                .map_err(napi::Error::from_reason)
         }
         TransferPayloadKind::MarkdownItTokens => Err(napi::Error::from_reason(
             "markdown-it token transfer is not implemented yet; mdast is the current baseline",
@@ -233,18 +157,11 @@ pub fn parse_transfer_raw(
 /// Parses Markdown and renders to HTML.
 #[napi]
 pub fn parse_and_render(source: String, options: Option<JsParserOptions>) -> RenderResult {
-    let allocator = create_allocator_for_source(&source);
     let parser_options = options.map(ParserOptions::from).unwrap_or_default();
-    let parser = Parser::with_options(&allocator, &source, parser_options);
 
-    let result = parser.parse();
-    match result {
-        Ok(doc) => {
-            let mut renderer = HtmlRenderer::new();
-            let html = renderer.render(&doc);
-            RenderResult { html, errors: vec![] }
-        }
-        Err(e) => RenderResult { html: String::new(), errors: vec![e.to_string()] },
+    match render_scratch::parse_and_render_html(&source, parser_options) {
+        Ok(html) => RenderResult { html, errors: vec![] },
+        Err(error) => RenderResult { html: String::new(), errors: vec![error] },
     }
 }
 
@@ -280,16 +197,10 @@ impl Task for ParseAndRenderTask {
     type JsValue = RenderResult;
 
     fn compute(&mut self) -> Result<Self::Output> {
-        let allocator = create_allocator_for_source(&self.source);
-        let parser = Parser::with_options(&allocator, &self.source, self.options.clone());
-
-        let result = match parser.parse() {
-            Ok(doc) => {
-                let mut renderer = HtmlRenderer::new();
-                let html = renderer.render(&doc);
-                RenderResult { html, errors: vec![] }
-            }
-            Err(e) => RenderResult { html: String::new(), errors: vec![e.to_string()] },
+        let result = match render_scratch::parse_and_render_html(&self.source, self.options.clone())
+        {
+            Ok(html) => RenderResult { html, errors: vec![] },
+            Err(error) => RenderResult { html: String::new(), errors: vec![error] },
         };
         Ok(result)
     }

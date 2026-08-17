@@ -51,4 +51,5 @@ mod docs_markdown_types_and_modules;
 mod docs_nav_output;
 mod entry_points;
 mod frontmatter;
+mod render_scratch;
 mod runtime_features;
