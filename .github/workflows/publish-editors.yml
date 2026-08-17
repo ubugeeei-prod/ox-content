@@ -129,20 +129,7 @@ jobs:
         env:
           VSCE_PAT: ${{ secrets.VSCE_PAT }}
           PUBLISH_FROM_DISPATCH: ${{ inputs.publish }}
-        run: |
-          set -euo pipefail
-          if [ "${GITHUB_EVENT_NAME}" = "workflow_dispatch" ] \
-            && [ "${PUBLISH_FROM_DISPATCH}" != "true" ]; then
-            echo "Packaging-only dispatch; skipping VS Code Marketplace publish."
-            exit 0
-          fi
-          if [ -z "${VSCE_PAT:-}" ]; then
-            echo "::warning::VSCE_PAT is not configured; skipping Marketplace publish."
-            exit 0
-          fi
-          for vsix in dist/vscode/*.vsix; do
-            vp exec -- pnpm dlx @vscode/vsce publish --skip-duplicate --packagePath "$vsix"
-          done
+        run: node scripts/publish-editor-extensions.ts vscode-marketplace
 
   publish-open-vsx:
     name: Publish Open VSX
@@ -172,20 +159,7 @@ jobs:
         env:
           OVSX_PAT: ${{ secrets.OVSX_PAT }}
           PUBLISH_FROM_DISPATCH: ${{ inputs.publish }}
-        run: |
-          set -euo pipefail
-          if [ "${GITHUB_EVENT_NAME}" = "workflow_dispatch" ] \
-            && [ "${PUBLISH_FROM_DISPATCH}" != "true" ]; then
-            echo "Packaging-only dispatch; skipping Open VSX publish."
-            exit 0
-          fi
-          if [ -z "${OVSX_PAT:-}" ]; then
-            echo "::warning::OVSX_PAT is not configured; skipping Open VSX publish."
-            exit 0
-          fi
-          for vsix in dist/vscode/*.vsix; do
-            vp exec -- pnpm dlx ovsx publish "$vsix" -p "$OVSX_PAT"
-          done
+        run: node scripts/publish-editor-extensions.ts open-vsx
 
   zed-extension:
     name: Validate Zed extension
