@@ -1,0 +1,78 @@
+/* Shared hero corrections for every skin.
+ *
+ * The base theme paints the hero as its own tinted panel and closes it with a
+ * border. The moment a skin adds any colour of its own, that reads as a stray
+ * rectangle pasted onto the page rather than as the first screen of the site.
+ *
+ * Skins instead let the page colour run straight through, size the hero to a
+ * deliberate full screen (capped so it does not become a void on tall
+ * monitors), and fade their own decoration out before the bottom edge so the
+ * section ends without a seam.
+ */
+
+/* The base theme nests the hero inside a 920px column, so it can never reach
+ * the viewport edges. Release the column for the entry page and re-apply a
+ * readable measure to the parts that actually need one, leaving the hero to run
+ * full bleed as a first screen should. */
+.entry-page .main {
+  padding-inline: 0;
+}
+
+/* The last of the header. Even with no fill, no edge and no blur, the bar still
+ * reserves its own height at the top of the page — so the hero began below an
+ * empty strip, and that strip reads as a header just as plainly as a coloured
+ * one would.
+ *
+ * On the entry page the hero starts at the very top of the viewport and the
+ * wordmark floats over it. The header's height is added back as padding inside
+ * the hero, so nothing collides and the first view is one unbroken image. */
+.entry-page .layout {
+  padding-top: 0;
+}
+
+.entry-content {
+  max-width: none;
+  padding-inline: 0;
+}
+
+.entry-content > .content,
+.features {
+  max-width: var(--octc-max-content-width);
+  margin-inline: auto;
+  padding-inline: clamp(1.25rem, 4vw, 2rem);
+}
+
+.hero {
+  padding-inline: clamp(1.5rem, 6vw, 4rem);
+  background-color: transparent;
+  border-bottom: 0;
+  min-height: min(100vh, 56rem);
+  padding-block:
+    calc(var(--octc-header-height) + clamp(3rem, 11vh, 7rem))
+    clamp(3.5rem, 11vh, 7rem);
+}
+
+/* A skin's decorative background-image is painted on `.hero` itself, so the
+ * softening layer has to be a separate box. `z-index: 0` keeps it above the
+ * background and below `.hero-content`, which the base theme already raises. */
+.hero::after {
+  content: "";
+  position: absolute;
+  inset: auto 0 0 0;
+  height: clamp(6rem, 22vh, 14rem);
+  z-index: 0;
+  pointer-events: none;
+  background: linear-gradient(to bottom, transparent, var(--octc-color-bg));
+}
+
+.hero-content,
+.hero-notice,
+.hero-image {
+  position: relative;
+  z-index: 1;
+}
+
+/* The band below the hero should not restate the boundary either. */
+.features {
+  border-top: 0;
+}

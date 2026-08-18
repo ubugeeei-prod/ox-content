@@ -1,0 +1,152 @@
+/* Kiosk — platform signage. Information density is the point: everything is a
+ * band, a row or an arrow, sized so it reads at a glance rather than at a
+ * comfortable reading distance.
+ *
+ * Structural move: the sidebar becomes a departure board — a dark panel of
+ * fixed-height striped rows with its own inverted palette, regardless of whether
+ * the page around it is light or dark.
+ */
+
+:root {
+  /* The board is always the far side of the palette from the page, so its ink is
+   * simply the page colour — that pair is the scheme's own strongest contrast. */
+  --octc-ki-board: color-mix(in srgb, var(--octc-color-text) 92%, var(--octc-color-bg));
+  --octc-ki-board-ink: var(--octc-color-bg);
+  /* The highlight band has to sit on the board, so the accent is pulled toward
+   * the page colour: that moves it away from the board in either mode, where
+   * using the raw accent would land dark-on-dark in light mode. */
+  /* The highlight has to sit on the board, and the board is the far side of the
+   * palette from the page. So the band is the page colour itself, tinted by the
+   * accent only enough to read as colour — that keeps the pair at the scheme's
+   * own maximum contrast in both modes instead of depending on where an accent
+   * happens to fall. */
+  --octc-ki-highlight: color-mix(in srgb, var(--octc-color-bg) 82%, var(--octc-accent-warm, var(--octc-color-primary)));
+  --octc-ki-row: 2.35rem;
+  /* The board is the identity here, so it does not dissolve over the hero. */
+  --octc-header-scroll: none;
+}
+
+.header, .sidebar, .toc, .nav-link, .content pre, .feature-card,
+.hero-action, .search-button, .theme-toggle, .social-link, .search-modal {
+  border-radius: 0 !important;
+}
+
+.header {
+  background: var(--octc-ki-board) !important;
+  border-bottom: 4px solid var(--octc-ki-highlight);
+}
+.header-title,
+.header .search-button,
+.header .search-button span,
+.header .search-button kbd,
+.header .theme-toggle,
+.header .social-link {
+  color: var(--octc-ki-board-ink);
+}
+.header-title { font-weight: 800; letter-spacing: -0.02em; text-transform: uppercase; }
+.header .search-button, .header .theme-toggle, .header .social-link {
+  border: 1px solid color-mix(in srgb, var(--octc-ki-board-ink) 40%, transparent);
+  background: transparent;
+}
+.header .search-button kbd { border-color: color-mix(in srgb, var(--octc-ki-board-ink) 35%, transparent); }
+.menu-toggle { color: var(--octc-ki-board-ink); }
+
+/* The board. Fixed row height and hard stripes, read top to bottom. */
+.sidebar {
+  --octc-skin-sidebar-bg: var(--octc-ki-board);
+  background: var(--octc-ki-board);
+  border-right: 0;
+  padding: 0;
+}
+/* Everything on the board takes the inverted ink — except the highlight band,
+ * which is a light band and keeps board-coloured type of its own. */
+.sidebar,
+.sidebar a:not(.nav-link),
+.sidebar .nav-link:not(.active) {
+  color: var(--octc-ki-board-ink);
+}
+.nav-title, .toc-title {
+  background: var(--octc-ki-highlight);
+  color: var(--octc-ki-board);
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.12em;
+  font-size: 0.66rem;
+  padding: 0.4rem 0.75rem;
+  margin: 0;
+}
+.nav-list { margin: 0; }
+.nav-link {
+  color: var(--octc-ki-board-ink);
+  height: var(--octc-ki-row);
+  display: flex;
+  align-items: center;
+  padding-inline: 0.75rem;
+  font-weight: 600;
+  font-size: 0.82rem;
+  letter-spacing: 0.01em;
+  border-bottom: 1px solid color-mix(in srgb, var(--octc-ki-board-ink) 12%, transparent);
+}
+.nav-item:nth-child(even) .nav-link:not(.active) {
+  background: color-mix(in srgb, var(--octc-ki-board-ink) 6%, transparent);
+}
+.nav-link::after {
+  content: "→";
+  margin-left: auto;
+  opacity: 0;
+  transform: translateX(-0.4rem);
+  transition: opacity var(--octc-motion-fast) var(--octc-motion-ease),
+    transform var(--octc-motion-fast) var(--octc-motion-ease);
+}
+.nav-link:hover {
+  --octc-skin-nav-hover-bg: color-mix(in srgb, var(--octc-ki-board-ink) 14%, transparent);
+  background: color-mix(in srgb, var(--octc-ki-board-ink) 14%, transparent);
+  color: var(--octc-ki-board-ink);
+}
+.nav-link:hover::after { opacity: 0.8; transform: translateX(0); }
+.nav-link.active {
+  background: var(--octc-ki-highlight);
+  color: var(--octc-ki-board);
+  font-weight: 800;
+}
+.nav-link.active::after { opacity: 1; transform: translateX(0); }
+
+.toc { border-left: 4px solid var(--octc-ki-highlight); }
+.toc-title { display: inline-block; }
+.toc-link { font-weight: 600; font-size: 0.78rem; }
+
+.content h1, .content h2, .content h3 {
+  text-transform: uppercase;
+  font-weight: 800;
+  letter-spacing: -0.015em;
+}
+.content h2 {
+  background: var(--octc-ki-board);
+  color: var(--octc-ki-board-ink);
+  border-radius: 0;
+  padding: 0.4rem 0.7rem;
+  border: 0;
+  font-size: 1.1rem;
+  letter-spacing: 0.06em;
+}
+.content a { font-weight: 700; text-decoration-thickness: 2px; }
+.content th {
+  background: var(--octc-ki-board);
+  color: var(--octc-ki-board-ink);
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  font-size: 0.72rem;
+}
+.content table, .content th, .content td { border: 1px solid color-mix(in srgb, var(--octc-color-text) 24%, transparent); }
+.content blockquote {
+  border: 0;
+  border-left: 6px solid var(--octc-accent-warm-ink, var(--octc-color-primary));
+  background: color-mix(in srgb, var(--octc-accent-warm, var(--octc-color-primary)) 10%, transparent);
+}
+.content hr { height: 4px; border: 0; background: var(--octc-accent-warm-ink, var(--octc-color-primary)); }
+
+.hero-name { text-transform: uppercase; font-weight: 800; letter-spacing: -0.04em; }
+.hero-text, .hero-tagline { text-transform: uppercase; letter-spacing: 0.06em; font-weight: 600; }
+.hero-action { font-weight: 800; text-transform: uppercase; letter-spacing: 0.08em; }
+.features .feature-card { border: 1px solid color-mix(in srgb, var(--octc-color-text) 24%, transparent); padding: 1.1rem; }
+.feature-title { text-transform: uppercase; font-weight: 800; }

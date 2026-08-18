@@ -1,5 +1,6 @@
 import { importNapiModuleSync } from "./napi";
 import type { ResolvedOptions, TocEntry } from "./types";
+import { CSS_VARIABLES_THEME } from "./shiki-theme";
 
 export type FrameworkRenderTarget = "html" | "native";
 export type FrameworkCodegenTarget = "react" | "vue" | "svelte";
@@ -67,7 +68,7 @@ export function createFrameworkMarkdownOptions(options: FrameworkMarkdownOptions
     strikethrough: true,
     autolinks: options.gfm,
     highlight: false,
-    highlightTheme: "github-dark",
+    highlightTheme: CSS_VARIABLES_THEME,
     highlightLangs: [],
     mermaid: false,
     ogImage: false,

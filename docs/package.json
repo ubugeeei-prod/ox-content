@@ -4,9 +4,10 @@
   "private": true,
   "type": "module",
   "scripts": {
-    "dev": "vp dev",
-    "build": "vp build",
-    "preview": "vp preview"
+    "dev": "node ../scripts/theme-gallery.mjs && vp dev",
+    "build": "node ../scripts/theme-gallery.mjs && vp build",
+    "preview": "vp preview",
+    "gallery": "node ../scripts/theme-gallery.mjs"
   },
   "devDependencies": {
     "@ox-content/vite-plugin": "workspace:*",

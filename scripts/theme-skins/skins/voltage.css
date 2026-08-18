@@ -1,0 +1,170 @@
+/* Voltage — energy as a design language: type large enough to be graphic rather
+ * than typographic, and edges that read as charged rather than drawn.
+ *
+ * The gradient is deliberately confined to structure — rules, borders, the hero
+ * title — and never touches body copy, so the page stays a document. Every stop
+ * is pulled toward the ink colour so the charge survives a light palette. */
+
+:root {
+  --octc-vo-a: var(--octc-accent-warm, var(--octc-color-primary));
+  --octc-vo-b: var(--octc-accent-b, var(--octc-color-primary));
+  --octc-vo-c: var(--octc-accent-a, var(--octc-color-primary));
+  --octc-vo-arc: linear-gradient(
+    100deg,
+    var(--octc-vo-a) 0%,
+    var(--octc-vo-b) 46%,
+    var(--octc-vo-c) 100%
+  );
+  /* Ink ramp: the same arc built from the AA-tightened accents, for anything
+   * that carries type rather than merely decorates. */
+  --octc-vo-ink: linear-gradient(
+    100deg,
+    var(--octc-accent-warm-ink, var(--octc-color-primary)) 0%,
+    var(--octc-accent-b-ink, var(--octc-color-primary)) 46%,
+    var(--octc-accent-a-ink, var(--octc-color-primary)) 100%
+  );
+  --octc-vo-radius: 16px;
+}
+
+.header, .sidebar, .toc, .search-modal, .content pre, .content blockquote,
+.feature-card, .hero-action, .hero-notice, .social-link, .search-button,
+.theme-toggle, .content img, .content table {
+  border-radius: var(--octc-vo-radius);
+}
+
+.header {
+  border-radius: 0;
+  background: color-mix(in srgb, var(--octc-color-bg) 86%, transparent);
+  backdrop-filter: blur(18px) saturate(150%);
+  -webkit-backdrop-filter: blur(18px) saturate(150%);
+  border-bottom: 1px solid color-mix(in srgb, var(--octc-color-border) 55%, transparent);
+}
+.header-title { font-weight: 800; letter-spacing: -0.03em; font-size: 1.1rem; }
+
+.sidebar {
+  border-radius: 0;
+  border-right: 1px solid color-mix(in srgb, var(--octc-color-border) 45%, transparent);
+  --octc-skin-sidebar-bg: transparent;
+  background: transparent;
+}
+.toc { border-left: 1px solid color-mix(in srgb, var(--octc-color-border) 45%, transparent); }
+.nav-title, .toc-title {
+  font-weight: 700; text-transform: uppercase;
+  letter-spacing: 0.14em; font-size: 0.66rem;
+}
+
+.nav-link, .toc-link { border-radius: 10px; font-weight: 500; }
+.nav-link:hover, .toc-link:hover {
+  --octc-skin-nav-hover-bg: color-mix(in srgb, var(--octc-vo-b) 12%, transparent);
+  background: color-mix(in srgb, var(--octc-vo-b) 12%, transparent);
+}
+/* The current item is marked by charge, not by a bar bolted to its left edge:
+ * the row picks up the accent in its type and a faint field around it. */
+.nav-link.active {
+  background: color-mix(in srgb, var(--octc-vo-b) 13%, transparent);
+  color: var(--octc-accent-b-ink, var(--octc-color-primary));
+  font-weight: 700;
+}
+
+/* Charged edge: the gradient lives in the border box while the panel keeps a
+ * flat fill, so the outline glows without washing out the content. */
+.hero-action, .feature-card, .search-button, .theme-toggle, .social-link {
+  border: 1px solid transparent;
+  background:
+    linear-gradient(var(--octc-color-bg), var(--octc-color-bg)) padding-box,
+    var(--octc-vo-arc) border-box;
+}
+.search-button:hover, .theme-toggle:hover, .social-link:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 0 0 1px color-mix(in srgb, var(--octc-vo-b) 32%, transparent);
+}
+
+.content h1, .content h2, .content h3 { font-weight: 800; letter-spacing: -0.032em; }
+.content h1 { font-size: clamp(2.4rem, 5.4vw, 3.4rem); line-height: 1.04; }
+.content h2 {
+  border-bottom: 0;
+  padding-bottom: 0.55rem;
+  position: relative;
+}
+.content h2::after {
+  content: "";
+  position: absolute;
+  inset: auto 0 0 0;
+  height: 2px;
+  border-radius: 2px;
+  background: var(--octc-vo-arc);
+  opacity: 0.75;
+}
+.content a {
+  font-weight: 600;
+  text-decoration-thickness: 2px;
+  text-underline-offset: 3px;
+  text-decoration-color: color-mix(in srgb, var(--octc-vo-b) 60%, transparent);
+}
+.content a:hover { text-decoration-color: var(--octc-vo-b); }
+
+.content pre {
+  border: 1px solid transparent;
+  background:
+    linear-gradient(180deg, var(--octc-color-code-bg-top), var(--octc-color-code-bg)) padding-box,
+    var(--octc-vo-arc) border-box !important;
+}
+.content :not(pre) > code {
+  border-radius: 7px;
+  background: color-mix(in srgb, var(--octc-vo-b) 13%, transparent);
+  padding: 0.12em 0.42em;
+  font-weight: 500;
+}
+.content blockquote {
+  border: 0;
+  border-left: 3px solid transparent;
+  border-image: var(--octc-vo-arc) 1;
+  background: color-mix(in srgb, var(--octc-vo-b) 7%, var(--octc-color-bg-alt));
+}
+.content table { border: 1px solid color-mix(in srgb, var(--octc-color-border) 62%, transparent); }
+.content th, .content td {
+  border: 1px solid color-mix(in srgb, var(--octc-color-border) 26%, transparent);
+}
+.content thead th { border-bottom: 2px solid color-mix(in srgb, var(--octc-vo-b) 45%, transparent); }
+.content hr { border: 0; height: 2px; border-radius: 2px; background: var(--octc-vo-arc); }
+
+/* Display type: sized to be graphic rather than typographic. The gradient is
+ * the point of this skin, so it stays — but only here, and only on the
+ * contrast-safe ink ramp. */
+.hero-name {
+  font-weight: 850;
+  letter-spacing: -0.055em;
+  line-height: 0.88;
+  font-size: clamp(3.4rem, 12vw, 8rem);
+}
+@supports (background-clip: text) or (-webkit-background-clip: text) {
+  .hero-name {
+    background: var(--octc-vo-ink);
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+  }
+}
+.hero-text { font-weight: 700; font-size: clamp(1.1rem, 2.4vw, 1.5rem); letter-spacing: -0.015em; }
+.hero-tagline { max-width: 54ch; margin-inline: auto; }
+
+.hero-action { font-weight: 700; letter-spacing: -0.01em; padding-inline: 1.9rem; }
+/* Declared as variables so the shared contrast guard keeps ownership of the
+ * fill/ink pair and they can never drift apart. */
+.hero-action-brand {
+  --octc-brand-fill: var(--octc-vo-ink);
+  --octc-brand-fill-hover: var(--octc-vo-ink);
+  --octc-brand-edge: transparent;
+  --octc-brand-edge-hover: transparent;
+  --octc-brand-ink: var(--octc-color-bg);
+}
+.hero-action:hover { transform: translateY(-2px); }
+
+.features .feature-card { padding: 1.4rem; }
+.features .feature-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 0 0 1px color-mix(in srgb, var(--octc-vo-b) 26%, transparent);
+}
+.feature-title { font-weight: 750; letter-spacing: -0.018em; }
+
+:focus-visible { outline: 2px solid var(--octc-vo-b); outline-offset: 3px; }

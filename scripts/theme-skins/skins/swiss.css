@@ -1,0 +1,131 @@
+/* Swiss — International Typographic Style. A hard grid, hairline rules, and
+ * movement that only ever travels along an axis. */
+
+:root {
+  --octc-sw-rule: color-mix(in srgb, var(--octc-color-text) 88%, transparent);
+  --octc-sw-hair: 1px;
+}
+
+.header, .sidebar, .toc, .search-modal, .nav-link, .content pre,
+.content blockquote, .feature-card, .hero-action, .social-link,
+.search-button, .theme-toggle {
+  border-radius: 0 !important;
+}
+
+.header {
+  border-bottom: 2px solid var(--octc-sw-rule);
+  background: var(--octc-color-bg);
+}
+.header-title {
+  font-weight: 700; letter-spacing: -0.02em; font-size: 1.05rem;
+}
+.sidebar {
+  border-right: var(--octc-sw-hair) solid var(--octc-sw-rule);
+  --octc-skin-sidebar-bg: var(--octc-color-bg);
+  background: var(--octc-color-bg);
+  padding-top: 1.75rem;
+}
+.toc { border-left: var(--octc-sw-hair) solid var(--octc-sw-rule); padding-top: 2.25rem; }
+
+.nav-title, .toc-title {
+  font-weight: 700;
+  font-size: 0.68rem;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  border-top: 2px solid var(--octc-sw-rule);
+  padding-top: 0.5rem;
+  margin-top: 1.25rem;
+}
+.nav-link {
+  padding-left: 0;
+  border-bottom: var(--octc-sw-hair) solid color-mix(in srgb, var(--octc-sw-rule) 18%, transparent);
+}
+.nav-link:hover { background: transparent; padding-left: 0.6rem; }
+.nav-link.active {
+  background: transparent;
+  color: var(--octc-color-primary);
+  font-weight: 700;
+  padding-left: 0.6rem;
+  box-shadow: inset 3px 0 0 0 var(--octc-color-primary);
+}
+
+.search-button, .theme-toggle, .social-link {
+  border: var(--octc-sw-hair) solid var(--octc-sw-rule);
+  background: transparent;
+}
+.search-button:hover, .theme-toggle:hover, .social-link:hover {
+  background: var(--octc-sw-rule);
+  color: var(--octc-color-bg);
+}
+.search-modal { border: 2px solid var(--octc-sw-rule); box-shadow: none; }
+
+.content h1, .content h2, .content h3 { font-weight: 700; letter-spacing: -0.025em; }
+.content h1 { font-size: clamp(2.2rem, 5vw, 3.1rem); line-height: 1.04; }
+.content h2 {
+  border-bottom: 2px solid var(--octc-sw-rule);
+  padding-bottom: 0.4rem;
+  text-transform: none;
+}
+.content h3 {
+  border-top: var(--octc-sw-hair) solid color-mix(in srgb, var(--octc-sw-rule) 30%, transparent);
+  padding-top: 0.6rem;
+}
+.content p { max-width: 68ch; }
+.content a {
+  text-decoration: underline;
+  text-decoration-thickness: var(--octc-sw-hair);
+  text-underline-offset: 4px;
+}
+.content a:hover { text-decoration-thickness: 2px; }
+.content pre {
+  border: var(--octc-sw-hair) solid var(--octc-sw-rule);
+  background: var(--octc-color-code-bg) !important;
+}
+.content blockquote {
+  border: 0;
+  border-left: 2px solid var(--octc-sw-rule);
+  background: transparent;
+  padding-left: 1.25rem;
+  font-style: normal;
+}
+.content table { border-top: 2px solid var(--octc-sw-rule); }
+.content th {
+  border-bottom: 2px solid var(--octc-sw-rule);
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  font-size: 0.72rem;
+}
+.content td {
+  border-bottom: var(--octc-sw-hair) solid color-mix(in srgb, var(--octc-sw-rule) 22%, transparent);
+}
+.content hr { height: 2px; background: var(--octc-sw-rule); border: 0; }
+
+.hero { border-bottom: 2px solid var(--octc-sw-rule); text-align: left; align-items: flex-start; }
+.hero-content { margin: 0; text-align: left; }
+.hero-name {
+  font-weight: 700;
+  letter-spacing: -0.055em;
+  line-height: 0.9;
+  font-size: clamp(3rem, 11vw, 7rem);
+}
+.hero-text { font-weight: 400; max-width: 42ch; }
+.hero-tagline { font-weight: 400; max-width: 52ch; }
+.hero-actions { justify-content: flex-start; }
+.hero-action {
+  border: var(--octc-sw-hair) solid var(--octc-sw-rule);
+  font-weight: 500;
+  letter-spacing: 0.02em;
+}
+.hero-action:hover { transform: translateX(6px); }
+
+.features .feature-card {
+  border: 0;
+  border-top: 2px solid var(--octc-sw-rule);
+  padding: 1.5rem 0 1.25rem;
+  align-items: start;
+}
+.features .feature-card:hover { transform: translateX(8px); background: transparent; }
+.feature-title { font-weight: 700; letter-spacing: -0.015em; }
+
+:focus-visible { outline: 2px solid var(--octc-color-primary); outline-offset: 3px; }

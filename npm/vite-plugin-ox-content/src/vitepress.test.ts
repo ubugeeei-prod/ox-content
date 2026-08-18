@@ -102,14 +102,18 @@ describe("vitepress migration helpers", () => {
         items: [{ title: "Intro", path: "/intro" }],
       },
     ]);
-    expect(ssg.theme?.header?.logo).toBe("/logo.svg");
-    const socialLinks = ssg.theme?.socialLinks;
+    const theme = ssg.theme;
+    if (!theme || Array.isArray(theme)) {
+      throw new Error("Expected a single migrated theme");
+    }
+    expect(theme.header?.logo).toBe("/logo.svg");
+    const socialLinks = theme.socialLinks;
     if (!socialLinks || Array.isArray(socialLinks)) {
       throw new Error("Expected migrated social links");
     }
     expect(socialLinks.github).toBe("https://github.com/ubugeeei-prod/ox-content");
-    expect(ssg.theme?.footer?.copyright).toBe("2026");
-    expect(ssg.theme?.footer?.message).toBe("Migrated from VitePress");
+    expect(theme.footer?.copyright).toBe("2026");
+    expect(theme.footer?.message).toBe("Migrated from VitePress");
   });
 
   it("generates an editable ox-content options module", () => {

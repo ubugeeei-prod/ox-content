@@ -1,0 +1,143 @@
+/* Manuscript — a codex page. The measure is deliberately narrow and the page is
+ * set asymmetrically, because a book's inner and outer margins were never equal.
+ *
+ * Structural move: the table of contents stops being a fixed rail on the right
+ * and becomes marginalia sitting in the outer margin, which is why the margin is
+ * that wide in the first place.
+ */
+
+.layout { padding-top: var(--octc-header-height); }
+
+.header {
+  background: transparent;
+  border-bottom: 1px solid color-mix(in srgb, var(--octc-color-border) 60%, transparent);
+}
+.header-title { font-variant-caps: small-caps; letter-spacing: 0.09em; font-weight: 600; }
+
+/* The index sits in the gutter: no panel, no fill, just a ruled edge. */
+.sidebar {
+  --octc-skin-sidebar-bg: transparent;
+  background: transparent;
+  border-right: 1px solid color-mix(in srgb, var(--octc-color-border) 45%, transparent);
+  padding-top: 2.5rem;
+}
+.nav-title, .toc-title {
+  font-variant-caps: small-caps;
+  letter-spacing: 0.12em;
+  font-size: 0.86rem;
+  color: var(--octc-accent-b-ink, var(--octc-color-primary));
+  border: 0;
+}
+.nav-link { padding-block: 0.3rem; }
+.nav-link::before { content: "· "; opacity: 0.45; }
+.nav-link:hover { background: transparent; font-style: italic; }
+.nav-link.active {
+  background: transparent;
+  font-weight: 600;
+  color: var(--octc-accent-b-ink, var(--octc-color-primary));
+}
+
+/* Marginalia. The notes column is annotation, not navigation, so it loses its
+ * fixed position, its border and its scrollbar, and simply hangs beside the
+ * text at the top of the page. */
+.toc {
+  position: absolute;
+  top: calc(var(--octc-header-height) + 3.5rem);
+  right: 1.25rem;
+  bottom: auto;
+  width: 11rem;
+  border-left: 0;
+  padding: 0;
+  overflow: visible;
+  font-size: 0.78rem;
+  line-height: 1.45;
+  opacity: 0.72;
+}
+.toc-title { font-size: 0.72rem; margin-bottom: 0.4rem; }
+.toc-link { padding: 0.1rem 0; font-style: italic; }
+.toc-link:hover { text-decoration: underline; }
+
+/* No reserved gutter: the notes hang in the margin the centred column
+ * already leaves. */
+.main--with-toc { padding-right: 2rem; }
+
+.content {
+  max-width: 34rem;
+  /* Centred in the space left between the index and the marginalia gutter, not
+   * pushed against the gutter. */
+  margin-inline: auto;
+  padding-left: clamp(0.5rem, 2vw, 1.5rem);
+  font-size: 1.05rem;
+  line-height: 1.85;
+  text-align: justify;
+  hyphens: auto;
+}
+
+/* Rubrication: the historical use of red for the opening of a section. */
+.content h1, .content h2, .content h3 {
+  font-variant-caps: small-caps;
+  letter-spacing: 0.05em;
+  font-weight: 600;
+  color: var(--octc-accent-b-ink, var(--octc-color-primary));
+  border: 0;
+  text-align: left;
+}
+.content h1 { font-size: 2.1rem; text-align: center; margin-bottom: 1.6rem; }
+.content h2 { font-size: 1.35rem; }
+
+.content > h1 + p::first-letter,
+.content > h2 + p::first-letter {
+  float: left;
+  font-size: 3.2em;
+  line-height: 0.78;
+  padding: 0.08em 0.1em 0 0;
+  font-weight: 600;
+  color: var(--octc-accent-b-ink, var(--octc-color-primary));
+}
+
+.content p + p { text-indent: 1.4em; }
+.content a { text-decoration: none; border-bottom: 1px solid currentColor; }
+.content blockquote {
+  border: 0;
+  background: transparent;
+  font-style: italic;
+  padding-inline: 2rem;
+  text-align: left;
+}
+.content pre {
+  border: 1px solid color-mix(in srgb, var(--octc-color-border) 55%, transparent);
+  border-radius: 0;
+  text-align: left;
+}
+.content hr {
+  border: 0;
+  height: auto;
+  text-align: center;
+  background: none;
+}
+/* A fleuron instead of a rule, which is what a manuscript would have used. */
+.content hr::before {
+  content: "❧";
+  display: block;
+  font-size: 1.3rem;
+  color: var(--octc-accent-b-ink, var(--octc-color-primary));
+  opacity: 0.7;
+}
+
+.hero { text-align: center; }
+.hero-name { font-variant-caps: small-caps; letter-spacing: 0.02em; font-weight: 600; }
+.hero-text, .hero-tagline { font-style: italic; }
+.hero-action {
+  border: 1px solid var(--octc-color-border);
+  border-radius: 0;
+  font-variant-caps: small-caps;
+  letter-spacing: 0.08em;
+}
+.features .feature-card { border: 0; border-top: 1px solid color-mix(in srgb, var(--octc-color-border) 55%, transparent); }
+.feature-title { font-variant-caps: small-caps; letter-spacing: 0.06em; }
+
+@media (max-width: 1100px) {
+  .toc { display: none; }
+  .main--with-toc { padding-right: 2rem; }
+  .content { padding-left: 0; }
+}

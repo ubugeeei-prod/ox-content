@@ -1,0 +1,169 @@
+/* Shared detailing for every skin — the small decisions that separate a themed
+ * page from a designed one. All of it is typographic or optical, so it composes
+ * with any skin's surface treatment and any scheme's palette.
+ */
+
+/* --- The header should not announce itself -------------------------------- */
+
+/* A bar with its own fill and a rule under it reads as chrome bolted to the top
+ * of the page. The header instead has no colour of its own at any point: it
+ * simply blurs whatever scrolls beneath it, so the page keeps one continuous
+ * surface and the bar is only ever implied by the softening behind the type.
+ *
+ * The blur is on by default, because without scroll-timeline support a fully
+ * transparent bar would let text slide under it unreadably. Where the timeline
+ * is available the blur starts at zero and comes up as the page moves, so at
+ * rest there is no header at all. */
+.header {
+  background: transparent;
+  border-bottom: 0;
+  box-shadow: none;
+}
+
+/* At rest the header carries nothing at all — no fill, no edge, no blur. The
+ * first view has to be one unbroken image, and a frosted band across the top of
+ * the hero is exactly the seam this treatment exists to remove.
+ *
+ * An article page is different: its text begins immediately under the bar, so
+ * without a scroll timeline it needs the blur from the start or the copy slides
+ * under unreadably. The entry page never needs that fallback, because at scroll
+ * zero there is nothing beneath the header but the hero. */
+body:not(.entry-page) .header {
+  backdrop-filter: blur(14px) saturate(150%);
+  -webkit-backdrop-filter: blur(14px) saturate(150%);
+}
+
+/* Where the timeline exists, every page starts clear and settles as it moves. */
+@supports (animation-timeline: scroll()) {
+  .header {
+    animation: var(--octc-header-scroll, octc-header-settle) linear both;
+    animation-timeline: scroll(root block);
+    animation-range: 0 7rem;
+  }
+}
+
+@keyframes octc-header-settle {
+  from {
+    backdrop-filter: blur(0px) saturate(100%);
+    -webkit-backdrop-filter: blur(0px) saturate(100%);
+  }
+  to {
+    backdrop-filter: blur(14px) saturate(150%);
+    -webkit-backdrop-filter: blur(14px) saturate(150%);
+  }
+}
+
+/* The same on an article page. Even a transparent bar leaves an empty strip
+ * across the top while the sidebar and contents rail start beneath it, and that
+ * strip reads as a header as plainly as a coloured one would.
+ *
+ * The rails start at the top of the viewport instead and carry the header's
+ * height as their own padding, so the page surface runs unbroken behind the
+ * wordmark. Body copy keeps its offset — it is the one thing that would
+ * actually collide. */
+.sidebar,
+.toc {
+  top: 0;
+  padding-top: calc(var(--octc-header-height) + 1rem);
+}
+
+/* The wordmark carries the identity, so the surrounding controls step back
+ * until they are wanted. */
+.header-actions .social-link,
+.header-actions .theme-toggle {
+  opacity: 0.62;
+  transition: opacity var(--octc-motion-fast) var(--octc-motion-ease);
+}
+
+.header:hover .social-link,
+.header:hover .theme-toggle,
+.header-actions :focus-visible {
+  opacity: 1;
+}
+
+/* --- Typographic detail --------------------------------------------------- */
+
+/* A two-line heading should break where the meaning does, not where the box
+ * runs out; body copy should avoid leaving a single word on the last line. */
+.content h1,
+.content h2,
+.content h3,
+.hero-name,
+.hero-text,
+.feature-title {
+  text-wrap: balance;
+}
+
+.content p,
+.content li,
+.hero-tagline,
+.feature-details {
+  text-wrap: pretty;
+}
+
+/* Quotes and hyphens hang into the margin so the text block keeps a straight
+ * optical edge rather than a mathematically straight one. */
+.content {
+  hanging-punctuation: first last;
+}
+
+/* Digits in a table should line up in columns. */
+.content table {
+  font-variant-numeric: tabular-nums;
+}
+
+/* Underlines that clear descenders, and that grow rather than blink on. */
+.content a {
+  text-underline-offset: 0.18em;
+  text-decoration-skip-ink: auto;
+}
+
+.content h1 a,
+.content h2 a,
+.content h3 a {
+  text-decoration: none;
+}
+
+/* --- Optical detail ------------------------------------------------------- */
+
+/* Selection picks up the accent instead of the browser's blue. */
+::selection {
+  background: color-mix(in srgb, var(--octc-color-primary) 28%, transparent);
+  color: var(--octc-color-text);
+}
+
+/* Scrollbars in the scheme's own colours, thin enough to read as a rail. */
+.sidebar,
+.toc,
+.content pre,
+.search-results {
+  scrollbar-width: thin;
+  scrollbar-color: color-mix(in srgb, var(--octc-color-text) 22%, transparent) transparent;
+}
+
+/* Long code lines get a soft edge so a horizontal scroll is discoverable. */
+.content pre {
+  scroll-padding-inline: 1rem;
+}
+
+/* Images and embeds should never be the widest thing on a small screen. */
+.content img,
+.content video,
+.content iframe {
+  max-width: 100%;
+  height: auto;
+}
+
+/* Sub-pixel rendering on light-on-dark type is heavier than the reverse;
+ * smoothing evens the two out so a scheme's weight reads the same in both. */
+[data-theme="dark"] body {
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) body {
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
+}

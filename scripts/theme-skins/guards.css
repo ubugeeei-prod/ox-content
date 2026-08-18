@@ -1,0 +1,100 @@
+/* Contrast guards, concatenated after each skin's own stylesheet.
+ *
+ * A skin restyles surfaces; the base theme sets some foregrounds against the
+ * surfaces it expected. Where those two assumptions can drift apart, the pair
+ * is re-established here from palette variables so both halves always move
+ * together. A skin that wants a different treatment sets the variable rather
+ * than the property, which keeps the safe default in place.
+ */
+
+/* The base theme hardcodes `color: #ffffff` on the primary call to action and
+ * relies on its own dark primary fill. Every skin legitimately restyles that
+ * fill — glass tint, gradient border-box, flat paper — which strands white type
+ * on a near-white button. Both halves now come from the palette. */
+.hero-action-brand,
+.hero-action-brand:hover,
+.hero-action-brand:focus-visible {
+  background: var(--octc-brand-fill, var(--octc-color-primary));
+  border-color: var(--octc-brand-edge, var(--octc-color-primary));
+  color: var(--octc-brand-ink, var(--octc-color-bg));
+}
+
+.hero-action-brand:hover {
+  background: var(--octc-brand-fill-hover, var(--octc-color-primary-hover));
+  border-color: var(--octc-brand-edge-hover, var(--octc-color-primary-hover));
+}
+
+/* The secondary action reads as chrome, so it keeps body ink rather than
+ * inheriting whatever a skin gave the shared `.hero-action` rule. */
+.hero-action-alt,
+.hero-action-alt:hover {
+  color: var(--octc-color-text);
+}
+
+/* --- Out-ranking the base theme's dark-mode overrides ---------------------- */
+
+/* `ssg.css` restyles two surfaces under `[data-theme="dark"] …`, which is a
+ * higher specificity than a skin's own single-class rule. Source order cannot
+ * save the skin, so a skin that repaints either surface silently loses its
+ * treatment in dark mode only — the hardest kind of bug to notice, since light
+ * mode looks correct.
+ *
+ * Skins state intent through these variables instead, and the guard applies
+ * them from a selector the base cannot outrank. The defaults reproduce the
+ * base's own light-mode treatment, so a skin that opts out is unaffected and
+ * simply renders the same way in both modes. */
+:root:root .sidebar {
+  background: var(
+    --octc-skin-sidebar-bg,
+    color-mix(in srgb, var(--octc-color-bg-alt) 16%, var(--octc-color-bg))
+  );
+}
+
+:root:root .nav-link:not(.active):hover {
+  background: var(
+    --octc-skin-nav-hover-bg,
+    color-mix(in srgb, var(--octc-color-bg-alt) 58%, transparent)
+  );
+}
+
+/* --- No rule under the header --------------------------------------------- */
+
+/* A hairline under the header draws exactly the line the design was trying not
+ * to have: it turns a floating bar back into a docked one. The blur already
+ * says where the bar is, and where a skin wants a stronger edge it has its own
+ * pseudo-element for it.
+ *
+ * This sits in the guard layer rather than with the other header rules because
+ * skins are concatenated after those, and several set a border of their own. */
+.header {
+  border-bottom: 0;
+}
+
+/* Nor a fill. Almost every skin reached for one out of habit, which puts the
+ * bar back on the page as a distinct band — the exact thing the blur-only
+ * treatment exists to avoid. The page colour runs straight through, and the
+ * only thing marking the header is the softening behind its type.
+ *
+ * A skin whose header genuinely is the design — signage, where the board is the
+ * whole idea — states it with `!important` and keeps it. */
+.header {
+  background-color: transparent;
+  background-image: none;
+  /* A drop shadow under the bar is the same statement as a rule under it: it
+   * separates the header from the page. Elevation belongs to things that
+   * actually float above content, and the header is not one of them. */
+  box-shadow: none;
+}
+
+/* --- No elevation on code -------------------------------------------------- */
+
+/* A drop shadow under a code block reads as a card floating over the article,
+ * which is the opposite of what a listing is: it is part of the text, not a
+ * widget laid on top of it. Skins that want the block to read as a distinct
+ * surface have its own fill and border to do that with.
+ *
+ * Inset shadows survive — those describe the block's own depth rather than
+ * lifting it off the page. */
+.content pre {
+  box-shadow: none;
+}

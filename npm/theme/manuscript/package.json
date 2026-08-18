@@ -1,0 +1,63 @@
+{
+  "name": "@ox-content/theme-manuscript",
+  "version": "2.84.0",
+  "description": "A codex page — narrow measure, rubricated heads, and a table of contents that becomes marginalia — an Ox Content skin that composes with any @ox-content/theme-color-* scheme",
+  "keywords": [
+    "ox-content",
+    "theme",
+    "skin",
+    "ssg",
+    "markdown",
+    "documentation",
+    "manuscript",
+    "codex",
+    "marginalia",
+    "rubrication",
+    "book"
+  ],
+  "license": "MIT",
+  "author": "ubugeeei",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/ubugeeei-prod/ox-content.git",
+    "directory": "npm/theme/manuscript"
+  },
+  "files": [
+    "dist"
+  ],
+  "type": "module",
+  "main": "./dist/index.cjs",
+  "types": "./dist/index.d.mts",
+  "exports": {
+    ".": {
+      "import": "./dist/index.mjs",
+      "require": "./dist/index.cjs",
+      "types": "./dist/index.d.mts"
+    }
+  },
+  "sideEffects": false,
+  "publishConfig": {
+    "access": "public",
+    "provenance": true
+  },
+  "scripts": {
+    "build": "vp pack",
+    "dev": "vp pack --watch",
+    "typecheck": "tsgo --noEmit"
+  },
+  "devDependencies": {
+    "@ox-content/vite-plugin": "workspace:*",
+    "@types/node": "catalog:",
+    "@typescript/native-preview": "catalog:",
+    "typescript": "catalog:",
+    "vite-plus": "catalog:"
+  },
+  "peerDependencies": {
+    "@ox-content/vite-plugin": ">=2.84.0"
+  },
+  "peerDependenciesMeta": {
+    "@ox-content/vite-plugin": {
+      "optional": true
+    }
+  }
+}

@@ -1,0 +1,141 @@
+/* Brutalist — raw structure and oversized type. Nothing eases in gently: the
+ * offsets slam, and every panel admits it is a rectangle. */
+
+:root {
+  --octc-bru-ink: var(--octc-color-text);
+  --octc-bru-border: 3px;
+  --octc-bru-shadow: 8px 8px 0 0 var(--octc-bru-ink);
+}
+
+.header, .sidebar, .toc, .search-modal, .nav-link, .content pre,
+.content blockquote, .feature-card, .hero-action, .social-link,
+.search-button, .theme-toggle, .content img, .hero-notice {
+  border-radius: 0 !important;
+}
+
+.header {
+  border-bottom: var(--octc-bru-border) solid var(--octc-bru-ink);
+  background: var(--octc-color-bg);
+}
+.header-title {
+  font-weight: 900;
+  font-size: 1.15rem;
+  letter-spacing: -0.03em;
+  text-transform: uppercase;
+}
+.sidebar {
+  border-right: var(--octc-bru-border) solid var(--octc-bru-ink);
+  --octc-skin-sidebar-bg: var(--octc-color-bg);
+  background: var(--octc-color-bg);
+}
+.toc { border-left: var(--octc-bru-border) solid var(--octc-bru-ink); }
+.nav-title, .toc-title {
+  font-weight: 900; text-transform: uppercase;
+  letter-spacing: 0.06em; font-size: 0.72rem;
+  border-bottom: 2px solid var(--octc-bru-ink);
+  padding-bottom: 0.3rem;
+}
+.nav-link { font-weight: 600; border-left: 3px solid transparent; }
+.nav-link:hover {
+  --octc-skin-nav-hover-bg: var(--octc-bru-ink);
+  background: var(--octc-bru-ink);
+  color: var(--octc-color-bg);
+  transform: translateX(4px);
+}
+.nav-link.active {
+  background: var(--octc-color-primary);
+  color: var(--octc-color-bg);
+  border-left-color: var(--octc-bru-ink);
+  font-weight: 800;
+}
+
+.search-button, .theme-toggle, .social-link {
+  border: var(--octc-bru-border) solid var(--octc-bru-ink);
+  background: var(--octc-color-bg);
+  font-weight: 700;
+}
+.search-button:hover, .theme-toggle:hover, .social-link:hover {
+  background: var(--octc-color-primary);
+  color: var(--octc-color-bg);
+  transform: translate(-2px, -2px);
+  box-shadow: 4px 4px 0 0 var(--octc-bru-ink);
+}
+.search-modal {
+  border: var(--octc-bru-border) solid var(--octc-bru-ink);
+  box-shadow: 12px 12px 0 0 var(--octc-bru-ink);
+}
+
+.content h1, .content h2 {
+  font-weight: 900;
+  letter-spacing: -0.035em;
+  text-transform: uppercase;
+  line-height: 1.02;
+}
+.content h1 { font-size: clamp(2.4rem, 6vw, 3.6rem); }
+.content h2 {
+  border-bottom: var(--octc-bru-border) solid var(--octc-bru-ink);
+  padding-bottom: 0.35rem;
+}
+.content a {
+  font-weight: 700;
+  text-decoration: underline;
+  text-decoration-thickness: 3px;
+  text-underline-offset: 2px;
+}
+.content a:hover {
+  background: var(--octc-color-primary);
+  color: var(--octc-color-bg);
+  text-decoration: none;
+}
+.content pre {
+  border: var(--octc-bru-border) solid var(--octc-bru-ink);
+  box-shadow: var(--octc-bru-shadow);
+  background: var(--octc-color-code-bg) !important;
+}
+.content blockquote {
+  border: var(--octc-bru-border) solid var(--octc-bru-ink);
+  border-left-width: 12px;
+  font-weight: 600;
+}
+.content table { border: 3px solid var(--octc-bru-ink); }
+.content th, .content td {
+  border: 1px solid color-mix(in srgb, var(--octc-bru-ink) 30%, transparent);
+}
+.content thead th { border-bottom: 3px solid var(--octc-bru-ink); }
+.content th { font-weight: 900; text-transform: uppercase; }
+.content hr { height: var(--octc-bru-border); background: var(--octc-bru-ink); border: 0; }
+.content img { border: var(--octc-bru-border) solid var(--octc-bru-ink); }
+
+.hero { border-bottom: var(--octc-bru-border) solid var(--octc-bru-ink); }
+.hero-name {
+  font-weight: 900;
+  letter-spacing: -0.05em;
+  line-height: 0.86;
+  text-transform: uppercase;
+  font-size: clamp(3.5rem, 13vw, 8rem);
+}
+.hero-text, .hero-tagline { font-weight: 700; text-transform: uppercase; }
+.hero-action {
+  border: var(--octc-bru-border) solid var(--octc-bru-ink);
+  box-shadow: var(--octc-bru-shadow);
+  font-weight: 900;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+.hero-action:hover { transform: translate(8px, 8px); box-shadow: none; }
+.hero-notice { border: var(--octc-bru-border) solid var(--octc-bru-ink); }
+
+.features .feature-card {
+  border: var(--octc-bru-border) solid var(--octc-bru-ink);
+  padding: 1.35rem;
+  background: var(--octc-color-bg);
+}
+.features .feature-card:hover {
+  background: var(--octc-color-primary);
+  color: var(--octc-color-bg);
+  transform: translate(-4px, -4px);
+  box-shadow: var(--octc-bru-shadow);
+}
+.feature-title { font-weight: 900; text-transform: uppercase; letter-spacing: -0.01em; }
+
+:focus-visible { outline: 4px solid var(--octc-color-primary); outline-offset: 2px; }

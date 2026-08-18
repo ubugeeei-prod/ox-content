@@ -194,3 +194,104 @@ describe("theme", () => {
     });
   });
 });
+
+describe("theme composition", () => {
+  const skin: ThemeConfig = {
+    name: "skin",
+    fonts: { sans: "SkinSans" },
+    tokens: { "surface-glass": "#eee" },
+    css: ".header { border-radius: 0; }",
+  };
+  const colorScheme: ThemeConfig = {
+    name: "color",
+    colors: { primary: "#111111" },
+    darkColors: { primary: "#eeeeee" },
+    tokens: { "brand-violet": "#7aa2f7" },
+    darkTokens: { "brand-violet": "#bb9af7" },
+  };
+
+  it("concatenates css across layers instead of overwriting", () => {
+    const merged = mergeThemes(
+      { css: ".a { color: red; }" },
+      { css: ".b { color: blue; }" },
+      { css: ".c { color: green; }" },
+    );
+
+    expect(merged.css).toBe(".a { color: red; }\n.b { color: blue; }\n.c { color: green; }");
+  });
+
+  it("concatenates js across layers", () => {
+    const merged = mergeThemes({ js: "a();" }, { js: "b();" });
+
+    expect(merged.js).toBe("a();\nb();");
+  });
+
+  it("does not repeat a layer reached twice", () => {
+    const merged = mergeThemes(skin, { extends: skin, css: skin.css });
+
+    expect(merged.css).toBe(".header { border-radius: 0; }");
+  });
+
+  it("resolves an array of layers left to right", () => {
+    const resolved = resolveTheme([skin, colorScheme]);
+
+    expect(resolved.fonts.sans).toBe("SkinSans");
+    expect(resolved.colors.primary).toBe("#111111");
+    expect(resolved.darkColors.primary).toBe("#eeeeee");
+    expect(resolved.css).toContain(".header { border-radius: 0; }");
+  });
+
+  it("merges tokens key-by-key with the last layer winning", () => {
+    const resolved = resolveTheme([
+      skin,
+      colorScheme,
+      { tokens: { "surface-glass": "#fafafa" } },
+    ]);
+
+    expect(resolved.tokens).toEqual({
+      "surface-glass": "#fafafa",
+      "brand-violet": "#7aa2f7",
+    });
+    expect(resolved.darkTokens).toEqual({ "brand-violet": "#bb9af7" });
+  });
+
+  it("keeps later layer overrides for plain fields", () => {
+    const resolved = resolveTheme([skin, colorScheme, { fonts: { sans: "OverrideSans" } }]);
+
+    expect(resolved.fonts.sans).toBe("OverrideSans");
+  });
+
+  it("still applies the default theme underneath an array", () => {
+    const resolved = resolveTheme([{ colors: { primary: "#abcdef" } }]);
+
+    expect(resolved.colors.primary).toBe("#abcdef");
+    expect(resolved.colors.background).toBe(defaultTheme.colors?.background);
+  });
+
+  it("falls back to the default theme for an empty array", () => {
+    expect(resolveTheme([])).toEqual(resolveTheme(defaultTheme));
+  });
+
+  it("does not hang on a cyclic extends chain", () => {
+    const cyclic: ThemeConfig = { name: "cyclic", colors: { primary: "#0f0f0f" } };
+    cyclic.extends = cyclic;
+
+    expect(resolveTheme(cyclic).colors.primary).toBe("#0f0f0f");
+  });
+
+  it("emits token css before the theme's own css", () => {
+    const napi = themeToNapi(resolveTheme([skin, colorScheme]));
+    const css = napi.css ?? "";
+
+    expect(css).toContain("--octc-brand-violet: #7aa2f7;");
+    expect(css).toContain('[data-theme="dark"]');
+    expect(css).toContain('@media (prefers-color-scheme: dark)');
+    expect(css.indexOf("--octc-surface-glass")).toBeLessThan(css.indexOf(".header"));
+  });
+
+  it("rejects a token name that would break out of the declaration block", () => {
+    expect(() => themeToNapi(resolveTheme({ tokens: { "bad: red; }": "x" } }))).toThrow(
+      /Invalid theme token name/,
+    );
+  });
+});

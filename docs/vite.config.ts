@@ -81,6 +81,7 @@ export default defineConfig(({ mode }) => {
                     ],
                   },
                   { text: "Theming", link: "/theming.md" },
+                  { text: "Theme Presets", link: "/theme-presets.md" },
                   { text: "MDX & Components", link: "/mdx.md" },
                   { text: "API Docs from JSDoc", link: "/jsdoc.md" },
                   { text: "Internationalization", link: "/i18n.md" },

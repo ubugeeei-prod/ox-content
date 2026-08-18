@@ -1,0 +1,251 @@
+/* Analog Film — the tonal response, not the sprocket holes.
+ *
+ * Two attempts at this skin missed for the same reason. The first dusted grain
+ * over the page; the second drew perforations down the sides of the article.
+ * Both were costume: a filmstrip *shape* stuck onto a document.
+ *
+ * What actually makes an image read as film is how it handles tone, and it is
+ * the opposite of how a screen handles it:
+ *
+ *   - blacks are LIFTED. Film has base fog; it never reaches zero. A screen's
+ *     pure black is the most obvious tell that something is digital.
+ *   - highlights ROLL OFF instead of clipping, and bloom into their neighbours
+ *     — halation, light scattering back off the film base.
+ *   - grain is fine and lives in the midtones rather than smeared over all of it.
+ *   - the frame falls off toward its corners.
+ *
+ * So this skin works on the page's tone curve. The only literal film object left
+ * is the one that is genuinely an image: a picture gets a rebate border and a
+ * frame number, because that is what a contact sheet looks like.
+ */
+
+:root {
+  /* Base fog: how far the darkest tone is lifted off true black. */
+  --octc-af-fog: color-mix(in srgb, var(--octc-color-bg) 92%, var(--octc-accent-warm, var(--octc-color-primary)));
+  --octc-af-shoulder: color-mix(in srgb, var(--octc-color-text) 88%, var(--octc-color-bg));
+  --octc-af-halation: color-mix(in srgb, var(--octc-accent-warm, var(--octc-color-primary)) 55%, transparent);
+  --octc-af-rebate: color-mix(in srgb, var(--octc-color-text) 90%, var(--octc-color-bg));
+  --octc-af-rebate-ink: color-mix(in srgb, var(--octc-color-bg) 86%, var(--octc-color-text));
+  --octc-af-r: 2px;
+  --octc-af-grain: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Cfilter id='g'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='1.4' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='64' height='64' filter='url(%23g)' opacity='0.32'/%3E%3C/svg%3E");
+}
+
+/* --- The tone curve ------------------------------------------------------- */
+
+/* Lifted blacks. In dark mode this one declaration is most of the skin: the
+ * page stops sitting at the bottom of the range and picks up base fog. */
+body {
+  background-color: var(--octc-af-fog);
+}
+
+/* Text stops at the shoulder rather than running to the end of the scale, so
+ * the page carries film's compressed contrast instead of a screen's full swing. */
+.content,
+.content p,
+.content li {
+  color: var(--octc-af-shoulder);
+}
+
+/* Grain, as one composited pass over the document rather than a texture on
+ * every panel. */
+body::after {
+  content: "";
+  position: fixed;
+  inset: 0;
+  z-index: 9999;
+  pointer-events: none;
+  background-image: var(--octc-af-grain);
+  background-size: 116px 116px;
+  opacity: 0.42;
+  mix-blend-mode: overlay;
+}
+
+/* Corner falloff — a lens is dimmer at its edges than at its centre. */
+body::before {
+  content: "";
+  position: fixed;
+  inset: 0;
+  z-index: 9998;
+  pointer-events: none;
+  background: radial-gradient(
+    120% 90% at 50% 42%,
+    transparent 52%,
+    color-mix(in srgb, var(--octc-color-text) 13%, transparent) 100%
+  );
+}
+
+/* --- Type ----------------------------------------------------------------- */
+
+/* Title-card lettering: wide, small and set in caps, the way a card is shot
+ * rather than the way a page is typeset. */
+.header-title,
+.content h1,
+.content h2,
+.content h3,
+.hero-name,
+.nav-title,
+.toc-title,
+.feature-title {
+  text-transform: uppercase;
+  letter-spacing: 0.12em;
+  font-weight: 500;
+}
+
+.content h1 {
+  letter-spacing: 0.06em;
+  text-shadow: 0 0 38px var(--octc-af-halation);
+}
+.content h2 {
+  font-size: 1.05rem;
+  border-bottom: 1px solid color-mix(in srgb, var(--octc-color-text) 22%, transparent);
+  padding-bottom: 0.45rem;
+}
+.content h3 { font-size: 0.88rem; letter-spacing: 0.16em; }
+.nav-title, .toc-title { font-size: 0.62rem; letter-spacing: 0.22em; }
+.header-title { font-size: 0.9rem; letter-spacing: 0.18em; }
+
+/* --- Chrome --------------------------------------------------------------- */
+
+/* Nothing here gets a fill. Fills are what make a page look assembled from
+ * panels, and a frame is one continuous exposure. */
+.sidebar {
+  --octc-skin-sidebar-bg: transparent;
+  background: transparent;
+  border-right: 1px solid color-mix(in srgb, var(--octc-color-text) 14%, transparent);
+}
+.toc { border-left: 1px solid color-mix(in srgb, var(--octc-color-text) 14%, transparent); }
+
+.nav-link, .toc-link {
+  border-radius: var(--octc-af-r);
+  font-variant-numeric: tabular-nums;
+  letter-spacing: 0.02em;
+}
+.nav-link:not(.active):hover {
+  --octc-skin-nav-hover-bg: color-mix(in srgb, var(--octc-color-primary) 9%, transparent);
+  background: var(--octc-skin-nav-hover-bg);
+}
+/* The selected frame is the one that is properly exposed; the rest sit back. */
+.nav-link:not(.active) { opacity: 0.74; }
+.nav-link.active {
+  background: transparent;
+  opacity: 1;
+  font-weight: 600;
+  color: var(--octc-color-primary);
+  box-shadow: inset 2px 0 0 0 var(--octc-color-primary);
+}
+
+.search-button, .theme-toggle, .social-link, .hero-action {
+  border-radius: var(--octc-af-r);
+  border: 1px solid color-mix(in srgb, var(--octc-color-text) 24%, transparent);
+  background: transparent;
+}
+.search-button:hover, .theme-toggle:hover, .social-link:hover {
+  border-color: var(--octc-color-primary);
+  box-shadow: 0 0 18px -8px var(--octc-af-halation);
+}
+
+/* --- Content -------------------------------------------------------------- */
+
+.content a { text-underline-offset: 3px; }
+.content pre {
+  border-radius: var(--octc-af-r);
+  border: 1px solid color-mix(in srgb, var(--octc-color-code-frame-border) 85%, transparent);
+  /* Highlights bloom outward off a bright panel. */
+  box-shadow: 0 0 40px -18px var(--octc-af-halation);
+}
+.content blockquote {
+  border: 0;
+  border-left: 3px solid var(--octc-color-primary);
+  border-radius: 0 var(--octc-af-r) var(--octc-af-r) 0;
+  background: color-mix(in srgb, var(--octc-color-bg-alt) 60%, transparent);
+  font-style: italic;
+}
+.content table { border: 1px solid color-mix(in srgb, var(--octc-color-text) 22%, transparent); }
+.content th, .content td { border: 1px solid color-mix(in srgb, var(--octc-color-text) 10%, transparent); }
+.content th {
+  background: transparent;
+  border-bottom: 1px solid color-mix(in srgb, var(--octc-color-text) 30%, transparent);
+  letter-spacing: 0.14em;
+  font-size: 0.68rem;
+  text-transform: uppercase;
+  font-weight: 500;
+}
+.content hr {
+  height: 1px;
+  border: 0;
+  background: color-mix(in srgb, var(--octc-color-text) 30%,
+    transparent
+  );
+}
+
+/* --- The one literal object ----------------------------------------------- */
+
+/* A picture on the page really is a frame, so it gets the rebate as its border
+ * and a frame number stamped in the wide bottom edge — which is what a contact
+ * sheet is. Nothing else in the document pretends to be film stock. */
+.content { counter-reset: octc-frame; }
+.content p:has(> img),
+.content figure {
+  position: relative;
+  counter-increment: octc-frame;
+}
+
+.content img {
+  border: 10px solid var(--octc-af-rebate);
+  border-bottom-width: 22px;
+  border-radius: var(--octc-af-r);
+  box-shadow: 0 0 46px -20px var(--octc-af-halation);
+}
+
+.content p:has(> img)::after,
+.content figure::after {
+  content: counter(octc-frame, decimal-leading-zero) "A";
+  position: absolute;
+  right: 1.1rem;
+  bottom: 0.5rem;
+  font-family: var(--octc-font-mono);
+  font-size: 0.62rem;
+  letter-spacing: 0.14em;
+  color: var(--octc-af-rebate-ink);
+}
+
+/* --- Entry page ----------------------------------------------------------- */
+
+.hero {
+  background-image: radial-gradient(76% 56% at 50% 8%, var(--octc-af-halation), transparent 68%);
+}
+
+/* Gate weave: stock never sits perfectly still in the gate. Sub-pixel, slow, and
+ * only on the hero — anywhere else it would just make text harder to read. */
+@media (prefers-reduced-motion: no-preference) {
+  .hero-content { animation: octc-af-weave 18s ease-in-out infinite alternate; }
+}
+@keyframes octc-af-weave {
+  0% { transform: translate3d(-0.4px, 0.25px, 0); }
+  50% { transform: translate3d(0.35px, -0.3px, 0); }
+  100% { transform: translate3d(-0.15px, 0.4px, 0); }
+}
+
+.hero-name { letter-spacing: 0.04em; }
+.hero-text, .hero-tagline {
+  text-transform: uppercase;
+  letter-spacing: 0.16em;
+  font-size: 0.86rem;
+  font-weight: 500;
+}
+.hero-action { letter-spacing: 0.16em; text-transform: uppercase; font-weight: 500; }
+.hero-action:hover { box-shadow: 0 0 26px -8px var(--octc-af-halation); transform: translateY(-2px); }
+
+/* Contact-sheet cells: divided by exposure, not by boxes. */
+.features .feature-card {
+  border: 0;
+  border-top: 1px solid color-mix(in srgb, var(--octc-color-text) 16%, transparent);
+  border-radius: 0;
+  padding: 1.2rem 0.25rem;
+  background: transparent;
+}
+.features .feature-card:hover {
+  background: color-mix(in srgb, var(--octc-color-primary) 5%, transparent);
+  box-shadow: 0 0 34px -20px var(--octc-af-halation);
+}
+.feature-title { font-size: 0.9rem; }

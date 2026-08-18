@@ -254,9 +254,16 @@ export interface SsgOptions {
    * Use `defineTheme()` to build this object so custom theme modules and the
    * default theme extension points keep their expected shape.
    *
+   * An array composes layers left to right, which is how a skin package and a
+   * color package are combined:
+   *
+   * ```ts
+   * theme: [pixelSkin, tokyoNight, { footer: { copyright: "2026" } }]
+   * ```
+   *
    * @default defaultTheme
    */
-  theme?: ThemeConfig;
+  theme?: ThemeConfig | ThemeConfig[];
 
   /**
    * Sidebar navigation override.
@@ -395,7 +402,14 @@ export interface OxContentOptions {
 
   /**
    * Syntax highlighting theme.
-   * @default 'github-dark'
+   *
+   * Defaults to `'css-variables'`, which renders token colors as `--octc-shiki-*`
+   * custom properties so highlighting follows the active color scheme in both
+   * light and dark from one build. Without a `@ox-content/theme-color-*`
+   * package installed the properties fall back to GitHub Dark. Pass any bundled
+   * Shiki theme name to opt out and bake fixed colors in instead.
+   *
+   * @default 'css-variables'
    */
   highlightTheme?: string | ThemeRegistration;
 

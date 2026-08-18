@@ -14,6 +14,7 @@ import {
   type ThemeRegistration,
 } from "shiki";
 import { interopDefault } from "./interop";
+import { CSS_VARIABLES_THEME, resolveHighlightTheme } from "./shiki-theme";
 
 // ESM-only plugins are double-wrapped by the CommonJS interop; unwrap. See #452.
 const rehypeParse = interopDefault(rehypeParsePlugin);
@@ -73,10 +74,14 @@ async function getHighlighter(
   return highlighterPromise;
 }
 
-function normalizeThemeInput(theme: string | ThemeRegistration): {
+function normalizeThemeInput(input: string | ThemeRegistration): {
   themeInput: string | ThemeRegistration;
   themeName: string;
 } {
+  // `"css-variables"` is an alias rather than a bundled Shiki theme, so expand
+  // it here — every caller funnels through this function.
+  const theme = resolveHighlightTheme(input);
+
   if (typeof theme === "string") {
     return {
       themeInput: theme,
@@ -248,7 +253,7 @@ function normalizeClassName(className: unknown): string[] {
  */
 export async function highlightCode(
   html: string,
-  theme: string | ThemeRegistration = "github-dark",
+  theme: string | ThemeRegistration = CSS_VARIABLES_THEME,
   langs: LanguageRegistration[] = [],
 ): Promise<string> {
   const result = await unified()

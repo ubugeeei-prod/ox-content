@@ -1,0 +1,62 @@
+{
+  "name": "@ox-content/theme-blur-glass",
+  "version": "2.84.0",
+  "description": "Frosted backdrop-blur layers that resolve out of a soft haze — an Ox Content skin that composes with any @ox-content/theme-color-* scheme",
+  "keywords": [
+    "ox-content",
+    "theme",
+    "skin",
+    "ssg",
+    "markdown",
+    "documentation",
+    "glass",
+    "glassmorphism",
+    "frosted",
+    "blur"
+  ],
+  "license": "MIT",
+  "author": "ubugeeei",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/ubugeeei-prod/ox-content.git",
+    "directory": "npm/theme/blur-glass"
+  },
+  "files": [
+    "dist"
+  ],
+  "type": "module",
+  "main": "./dist/index.cjs",
+  "types": "./dist/index.d.mts",
+  "exports": {
+    ".": {
+      "import": "./dist/index.mjs",
+      "require": "./dist/index.cjs",
+      "types": "./dist/index.d.mts"
+    }
+  },
+  "sideEffects": false,
+  "publishConfig": {
+    "access": "public",
+    "provenance": true
+  },
+  "scripts": {
+    "build": "vp pack",
+    "dev": "vp pack --watch",
+    "typecheck": "tsgo --noEmit"
+  },
+  "devDependencies": {
+    "@ox-content/vite-plugin": "workspace:*",
+    "@types/node": "catalog:",
+    "@typescript/native-preview": "catalog:",
+    "typescript": "catalog:",
+    "vite-plus": "catalog:"
+  },
+  "peerDependencies": {
+    "@ox-content/vite-plugin": ">=2.84.0"
+  },
+  "peerDependenciesMeta": {
+    "@ox-content/vite-plugin": {
+      "optional": true
+    }
+  }
+}

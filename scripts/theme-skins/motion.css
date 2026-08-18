@@ -1,0 +1,170 @@
+/* Shared motion layer for every @ox-content/theme-* skin.
+ *
+ * Each skin sets its own --octc-motion-* values, so the choreography below
+ * reads differently per preset while staying one family. Three hard rules:
+ *
+ *   1. Zero JavaScript. Cross-document view transitions and scroll-driven
+ *      animations are both declarative, so an SSG page stays a static file.
+ *   2. Everything degrades. Effects sit behind @supports, and the un-animated
+ *      state is always the finished, readable state — never a hidden one.
+ *   3. prefers-reduced-motion turns all of it off.
+ */
+
+@property --octc-sweep {
+  syntax: "<percentage>";
+  inherits: false;
+  initial-value: 0%;
+}
+
+@property --octc-spin {
+  syntax: "<angle>";
+  inherits: false;
+  initial-value: 0deg;
+}
+
+/* --- Cross-document page transitions ------------------------------------ */
+
+@view-transition {
+  navigation: auto;
+}
+
+/* Chrome holds the chrome still while the article swaps, which is what makes
+ * multi-page docs feel like an app without shipping a router. */
+.header {
+  view-transition-name: octc-header;
+}
+.sidebar {
+  view-transition-name: octc-sidebar;
+}
+.main {
+  view-transition-name: octc-main;
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  ::view-transition-old(octc-main) {
+    animation: octc-swap-out var(--octc-motion-base) var(--octc-motion-ease) both;
+  }
+  ::view-transition-new(octc-main) {
+    animation: octc-swap-in var(--octc-motion-base) var(--octc-motion-ease) both;
+  }
+}
+
+@keyframes octc-swap-out {
+  to {
+    opacity: 0;
+    transform: translateY(-0.5rem);
+  }
+}
+
+@keyframes octc-swap-in {
+  from {
+    opacity: 0;
+    transform: translateY(0.75rem);
+  }
+}
+
+/* --- Scroll-driven reveals ---------------------------------------------- */
+
+@supports (animation-timeline: view()) {
+  @media (prefers-reduced-motion: no-preference) {
+    /* Deliberately narrow. Revealing every paragraph, table and image turns
+     * reading into a slideshow; the landing grid and section headings are
+     * enough to give the page a sense of arrival. */
+    .content > h2,
+    .feature-card {
+      animation: octc-rise linear both;
+      animation-timeline: view();
+      animation-range: entry 0% entry 55%;
+    }
+
+    /* Cards stagger by column so a grid resolves diagonally rather than in a
+     * single flat wave. */
+    .features-grid > :nth-child(2n) {
+      animation-range: entry 3% entry 58%;
+    }
+    .features-grid > :nth-child(3n) {
+      animation-range: entry 6% entry 62%;
+    }
+
+    .hero-name,
+    .hero-text,
+    .hero-tagline,
+    .hero-actions {
+      animation: octc-hero-in var(--octc-motion-slow) var(--octc-motion-spring) both;
+    }
+    .hero-text {
+      animation-delay: 90ms;
+    }
+    .hero-tagline {
+      animation-delay: 160ms;
+    }
+    .hero-actions {
+      animation-delay: 240ms;
+    }
+  }
+}
+
+@keyframes octc-rise {
+  from {
+    opacity: 0;
+    transform: translateY(var(--octc-motion-rise, 0.6rem));
+  }
+}
+
+@keyframes octc-hero-in {
+  from {
+    opacity: 0;
+    transform: translateY(var(--octc-motion-rise, 0.6rem)) scale(0.994);
+  }
+}
+
+/* --- Interaction --------------------------------------------------------- */
+
+.nav-link,
+.toc-link,
+.feature-card,
+.hero-action,
+.social-link,
+.search-button,
+.theme-toggle,
+.content a {
+  transition:
+    color var(--octc-motion-fast) var(--octc-motion-ease),
+    background-color var(--octc-motion-fast) var(--octc-motion-ease),
+    border-color var(--octc-motion-fast) var(--octc-motion-ease),
+    box-shadow var(--octc-motion-base) var(--octc-motion-ease),
+    transform var(--octc-motion-base) var(--octc-motion-spring);
+}
+
+/* The search dialog animates in from nothing on first paint instead of
+ * popping, using @starting-style rather than a JS-driven class. */
+.search-modal-overlay {
+  transition:
+    opacity var(--octc-motion-base) var(--octc-motion-ease),
+    display var(--octc-motion-base) allow-discrete;
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .search-modal {
+    transition: transform var(--octc-motion-base) var(--octc-motion-spring);
+  }
+
+  @starting-style {
+    .search-modal {
+      transform: translateY(-0.75rem) scale(0.97);
+    }
+  }
+}
+
+/* --- Opt out -------------------------------------------------------------- */
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 1ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 1ms !important;
+    scroll-behavior: auto !important;
+  }
+}

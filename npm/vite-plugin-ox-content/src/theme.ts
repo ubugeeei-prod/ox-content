@@ -4,6 +4,10 @@
  * Provides VitePress-like theming with default theme + customization.
  */
 
+import { tokensToCss, type ThemeTokens } from "./theme-tokens";
+
+export type { ThemeTokens } from "./theme-tokens";
+
 /**
  * Theme color configuration.
  */
@@ -170,9 +174,20 @@ export interface ThemeConfig {
   sidebar?: SidebarItem[];
   /** Embedded HTML content at specific positions */
   embed?: ThemeEmbed;
-  /** Additional custom CSS */
+  /**
+   * Extra `--octc-*` custom properties for light mode, keyed without the
+   * prefix. Merged key-by-key across composed layers, so a later layer can
+   * restyle one token without redeclaring the rest.
+   */
+  tokens?: ThemeTokens;
+  /** Extra `--octc-*` custom properties for dark mode. */
+  darkTokens?: ThemeTokens;
+  /**
+   * Additional custom CSS. Composed layers **concatenate** this rather than
+   * overwrite, so stacking a skin and a color scheme keeps both stylesheets.
+   */
   css?: string;
-  /** Additional custom JavaScript */
+  /** Additional custom JavaScript. Concatenated across composed layers. */
   js?: string;
 }
 
@@ -191,6 +206,8 @@ export interface ResolvedThemeConfig {
   socialLinks: SocialLinks;
   sidebar: SidebarItem[];
   embed: ThemeEmbed;
+  tokens: ThemeTokens;
+  darkTokens: ThemeTokens;
   css: string;
   js: string;
 }
@@ -251,6 +268,8 @@ export const defaultTheme: ThemeConfig = {
   },
   socialLinks: {},
   embed: {},
+  tokens: {},
+  darkTokens: {},
   css: "",
   js: "",
 };
@@ -310,46 +329,72 @@ export function defineTheme(config: ThemeConfig): ThemeConfig {
  * Merges multiple theme configurations.
  * Later themes override earlier ones.
  *
+ * Object fields (`colors`, `tokens`, `layout`, …) merge key-by-key, but `css`
+ * and `js` **concatenate** in layer order — overwriting them would throw away
+ * one half of a `[skin, colorScheme]` stack. Identical fragments are joined
+ * once, so a layer reached through both an array and an `extends` chain does
+ * not emit its stylesheet twice.
+ *
  * @example
  * ```ts
- * const merged = mergeThemes(defaultTheme, customTheme, overrides);
+ * const merged = mergeThemes(defaultTheme, pixelSkin, tokyoNight, overrides);
  * ```
  */
-export function mergeThemes(...themes: ThemeConfig[]): ThemeConfig {
-  if (themes.length === 0) {
+export function mergeThemes(...themes: (ThemeConfig | ThemeConfig[])[]): ThemeConfig {
+  const layers = themes.flat();
+  if (layers.length === 0) {
     return { ...defaultTheme };
   }
 
   let result: ThemeConfig = {};
 
-  for (const theme of themes) {
+  for (const theme of layers) {
+    const { css, js, ...rest } = theme;
     result = deepMerge(
       result as Record<string, unknown>,
-      theme as Record<string, unknown>,
+      rest as Record<string, unknown>,
     ) as ThemeConfig;
+
+    const mergedCss = appendSource(result.css, css);
+    if (mergedCss) {
+      result.css = mergedCss;
+    }
+    const mergedJs = appendSource(result.js, js);
+    if (mergedJs) {
+      result.js = mergedJs;
+    }
   }
 
   return result;
 }
 
+function appendSource(existing: string | undefined, addition: string | undefined): string {
+  const next = addition?.trim() ?? "";
+  const current = existing ?? "";
+  if (!next || current.includes(next)) {
+    return current;
+  }
+  return current ? `${current}\n${next}` : next;
+}
+
 /**
  * Resolves a theme configuration by merging with its extends chain and defaults.
+ *
+ * An array composes independent layers left to right, which is how a skin
+ * package and a color package are stacked:
+ *
+ * ```ts
+ * resolveTheme([pixelSkin, tokyoNight, { footer: { copyright: "2026" } }]);
+ * ```
  */
-export function resolveTheme(config?: ThemeConfig): ResolvedThemeConfig {
-  if (!config) {
-    return resolveTheme(defaultTheme);
-  }
-
-  // Build the extends chain
-  const chain: ThemeConfig[] = [];
-  let current: ThemeConfig | undefined = config;
-
-  while (current) {
-    chain.unshift(current);
-    current = current.extends;
-  }
+export function resolveTheme(config?: ThemeConfig | ThemeConfig[]): ResolvedThemeConfig {
+  const layers = config === undefined ? [defaultTheme] : Array.isArray(config) ? config : [config];
+  const chain = layers.flatMap(expandExtendsChain);
 
   // Always start with default theme
+  if (chain.length === 0) {
+    chain.push(defaultTheme);
+  }
   if (chain[0] !== defaultTheme && chain[0]?.name !== "default") {
     chain.unshift(defaultTheme);
   }
@@ -370,9 +415,31 @@ export function resolveTheme(config?: ThemeConfig): ResolvedThemeConfig {
     socialLinks: merged.socialLinks ?? defaultTheme.socialLinks!,
     sidebar: merged.sidebar ?? [],
     embed: merged.embed ?? {},
+    tokens: merged.tokens ?? {},
+    darkTokens: merged.darkTokens ?? {},
     css: merged.css ?? "",
     js: merged.js ?? "",
   };
+}
+
+/**
+ * Flattens one layer's `extends` chain into base-first order.
+ *
+ * The `seen` guard keeps a theme that accidentally extends itself (or forms a
+ * cycle through two packages) from hanging the build.
+ */
+function expandExtendsChain(config: ThemeConfig): ThemeConfig[] {
+  const chain: ThemeConfig[] = [];
+  const seen = new Set<ThemeConfig>();
+  let current: ThemeConfig | undefined = config;
+
+  while (current && !seen.has(current)) {
+    seen.add(current);
+    chain.unshift(current);
+    current = current.extends;
+  }
+
+  return chain;
 }
 
 function withDerivedCodeBackgroundTop(theme: ThemeConfig): ThemeConfig {
@@ -463,9 +530,21 @@ export function themeToNapi(theme: ResolvedThemeConfig): NapiThemeConfig {
         : undefined,
     socialLinks,
     embed: Object.keys(theme.embed).length > 0 ? theme.embed : undefined,
-    css: theme.css || undefined,
+    css: themeCss(theme) || undefined,
     js: theme.js || undefined,
   };
+}
+
+/**
+ * Token blocks come first so a theme's own `css` stays the final word, and both
+ * land after the typed color variables the Rust renderer emits.
+ */
+function themeCss(theme: ResolvedThemeConfig): string {
+  const tokenCss = tokensToCss(theme.tokens, theme.darkTokens);
+  if (!tokenCss) {
+    return theme.css;
+  }
+  return theme.css ? `${tokenCss}\n${theme.css}` : tokenCss;
 }
 
 function socialLinksToNapi(links: SocialLinks): NapiSocialLinks | undefined {

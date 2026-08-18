@@ -1,0 +1,169 @@
+/* Paper — a sheet on a desk.
+ *
+ * The first version of this skin treated paper as a texture painted over the
+ * page, which is exactly why it did not read as paper: what makes a sheet a
+ * sheet is its edge. So the structural move is that the article becomes a
+ * physical object — a warmer, lighter plane, inset from the surface it rests on,
+ * with a shadow under it and a deckled bottom edge where it was torn.
+ *
+ * It still names no hue. The warmth comes from mixing the scheme's own warm
+ * accent into its own background, so a cool scheme gets cool stock and a warm
+ * scheme gets warm stock — but both read as paper rather than as a screen.
+ */
+
+:root {
+  /* The desk: a shade off the page colour, so the sheet has something to sit on. */
+  --octc-pa-desk: var(--octc-pa-stock);
+  /* The stock: lifted off the desk and warmed by the scheme's own warm accent. */
+  --octc-pa-stock: color-mix(
+    in srgb,
+    color-mix(in srgb, var(--octc-color-bg) 97%, var(--octc-accent-warm, var(--octc-color-primary))) 100%,
+    #ffffff 6%
+  );
+  --octc-pa-press: rgba(0, 0, 0, 0.3);
+  --octc-pa-relief: rgba(255, 255, 255, 0.85);
+  --octc-pa-cast: rgba(0, 0, 0, 0.13);
+  /* Fibre, at a size and strength that is actually visible on a real screen. */
+  --octc-pa-fiber: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 90 90'%3E%3Cfilter id='p'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' seed='3'/%3E%3C/filter%3E%3Crect width='90' height='90' filter='url(%23p)' opacity='0.24'/%3E%3C/svg%3E");
+}
+
+[data-theme="dark"] {
+  --octc-pa-desk: var(--octc-pa-stock);
+  --octc-pa-stock: color-mix(in srgb, var(--octc-color-bg) 92%, var(--octc-accent-warm, var(--octc-color-primary)));
+  --octc-pa-press: rgba(0, 0, 0, 0.72);
+  --octc-pa-relief: rgba(255, 255, 255, 0.07);
+  --octc-pa-cast: rgba(0, 0, 0, 0.5);
+}
+
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --octc-pa-desk: var(--octc-pa-stock);
+    --octc-pa-stock: color-mix(in srgb, var(--octc-color-bg) 92%, var(--octc-accent-warm, var(--octc-color-primary)));
+    --octc-pa-press: rgba(0, 0, 0, 0.72);
+    --octc-pa-relief: rgba(255, 255, 255, 0.07);
+    --octc-pa-cast: rgba(0, 0, 0, 0.5);
+  }
+}
+
+/* --- The desk ------------------------------------------------------------ */
+
+body {
+  background-color: var(--octc-pa-stock);
+  background-image: var(--octc-pa-fiber);
+  background-size: 88px 88px;
+  background-blend-mode: multiply;
+}
+
+.header {
+  background: var(--octc-pa-desk);
+  box-shadow: none;
+}
+.header-title { font-weight: 600; letter-spacing: 0.005em; }
+
+.sidebar {
+  --octc-skin-sidebar-bg: transparent;
+  background: transparent;
+  border-right: 1px solid color-mix(in srgb, var(--octc-color-border) 45%, transparent);
+}
+.toc { border-left: 1px solid color-mix(in srgb, var(--octc-color-border) 45%, transparent); }
+.nav-title, .toc-title { font-variant-caps: small-caps; letter-spacing: 0.1em; font-size: 0.82rem; }
+.nav-link, .toc-link { border-radius: 3px; }
+.nav-link:hover { background: color-mix(in srgb, var(--octc-color-primary) 8%, transparent); }
+.nav-link.active {
+  background: var(--octc-pa-stock);
+  box-shadow: inset 0 1px 2px 0 var(--octc-pa-press), 0 1px 0 0 var(--octc-pa-relief);
+  font-weight: 600;
+}
+
+/* --- The sheet ------------------------------------------------------------ */
+
+/* The stock is the page, so the fibre lives on the page. Painting it on the
+ * article as well put a visible wash behind the text. */
+
+/* --- Letterpress ---------------------------------------------------------- */
+
+/* Relief below the glyph, impression above it. Only on type large enough to
+ * carry it — at body size this is noise, not detail. */
+.content h1,
+.content h2,
+.content h3,
+.hero-name,
+.header-title {
+  text-shadow: 0 1px 0 var(--octc-pa-relief), 0 -1px 1px var(--octc-pa-press);
+}
+
+.content { line-height: 1.78; }
+.content h1, .content h2 { font-weight: 600; letter-spacing: -0.012em; }
+.content h2 { border-bottom: 1px solid color-mix(in srgb, var(--octc-color-border) 70%, transparent); }
+.content h3 { font-style: italic; font-weight: 600; }
+.content a { text-underline-offset: 0.18em; text-decoration-thickness: 1px; }
+
+/* Inline code and quotes are pressed into the stock, not laid on top of it. */
+.content :not(pre) > code {
+  border: 1px solid color-mix(in srgb, var(--octc-color-border) 55%, transparent);
+  box-shadow: inset 0 1px 2px 0 var(--octc-pa-press);
+  border-radius: 3px;
+  padding: 0.08em 0.34em;
+}
+.content blockquote {
+  border: 0;
+  border-left: 3px solid color-mix(in srgb, var(--octc-color-primary) 70%, transparent);
+  border-radius: 0 2px 2px 0;
+  background: color-mix(in srgb, var(--octc-pa-stock) 88%, var(--octc-color-text));
+  box-shadow: inset 0 1px 3px 0 var(--octc-pa-press);
+  font-style: italic;
+}
+.content pre {
+  box-shadow: inset 0 2px 6px 0 rgba(0, 0, 0, 0.3) !important;
+  border-radius: 2px;
+  border: 1px solid var(--octc-color-code-frame-border);
+}
+.content table { border: 1px solid color-mix(in srgb, var(--octc-color-border) 70%, transparent); }
+.content th, .content td { border: 1px solid color-mix(in srgb, var(--octc-color-border) 30%, transparent); }
+.content th { background: color-mix(in srgb, var(--octc-pa-stock) 92%, var(--octc-color-text)); }
+.content hr {
+  height: 1px;
+  border: 0;
+  background: color-mix(in srgb, var(--octc-color-border) 75%, transparent);
+  box-shadow: 0 1px 0 0 var(--octc-pa-relief);
+}
+/* A photograph on a page is a print, so it gets a border and a shadow. */
+.content img {
+  border: 8px solid color-mix(in srgb, var(--octc-color-bg-alt) 70%, var(--octc-color-bg));
+  border-radius: 1px;
+}
+
+/* --- Entry page ----------------------------------------------------------- */
+
+.hero { background-color: transparent; }
+.hero-name { font-weight: 600; letter-spacing: -0.028em; }
+
+.features .feature-card {
+  border: 0;
+  border-top: 1px solid color-mix(in srgb, var(--octc-color-border) 60%, transparent);
+  border-radius: 0;
+  padding: 1.25rem 0.25rem;
+  background: transparent;
+}
+
+.hero-action, .search-button, .theme-toggle, .social-link {
+  border-radius: 3px;
+  background: var(--octc-pa-stock);
+  border: 1px solid color-mix(in srgb, var(--octc-color-border) 60%, transparent);
+}
+.hero-action:active, .search-button:active, .theme-toggle:active, .social-link:active {
+  box-shadow: inset 0 2px 4px 0 var(--octc-pa-press);
+  transform: translateY(1px);
+}
+.hero-action:hover, .search-button:hover, .theme-toggle:hover, .social-link:hover {
+  transform: translateY(-1px);
+}
+
+.search-modal {
+  background-color: var(--octc-pa-stock);
+  background-image: var(--octc-pa-fiber);
+  background-size: 88px 88px;
+  border-radius: 2px;
+}
+
+:focus-visible { outline: 2px solid var(--octc-color-primary); outline-offset: 3px; }

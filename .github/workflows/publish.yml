@@ -438,6 +438,24 @@ jobs:
           TARBALL=$(vp exec -- pnpm pack --pack-destination /tmp | tail -1)
           npm publish "$TARBALL" --provenance --access public --tag "$NPM_TAG"
 
+      # Theme presets are many small, uniform packages, so they publish from a
+      # loop rather than ~40 near-identical steps. Same skip-if-published guard
+      # as every step above; a single failure still fails the job.
+      - name: Publish theme presets
+        run: |
+          shopt -s nullglob
+          for dir in npm/theme/* npm/theme-color/*; do
+            [ -f "$dir/package.json" ] || continue
+            PKG_NAME=$(node -p "require('./$dir/package.json').name")
+            PKG_VERSION=$(node -p "require('./$dir/package.json').version")
+            if npm view "${PKG_NAME}@${PKG_VERSION}" version >/dev/null 2>&1; then
+              echo "Skipping ${PKG_NAME}@${PKG_VERSION} (already published)"
+              continue
+            fi
+            TARBALL=$(cd "$dir" && vp exec -- pnpm pack --pack-destination /tmp | tail -1)
+            npm publish "$TARBALL" --provenance --access public --tag "$NPM_TAG"
+          done
+
       - name: Publish @ox-content/wasm
         working-directory: crates/ox_content_wasm/pkg
         run: |

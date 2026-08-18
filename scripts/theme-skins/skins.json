@@ -1,0 +1,744 @@
+{
+  "$comment": "Manifest for every @ox-content/theme-* skin. The stylesheet lives in skins/<id>.css and is concatenated after motion.css. Run `node scripts/theme-skins/generate.mjs` after editing.",
+  "fontStacks": {
+    "system": "ui-sans-serif, system-ui, -apple-system, \"Segoe UI Variable\", \"Segoe UI\", Roboto, \"Helvetica Neue\", sans-serif",
+    "grotesque": "\"Helvetica Neue\", Helvetica, Inter, \"Segoe UI\", Arial, sans-serif",
+    "condensed": "\"Arial Narrow\", \"Helvetica Neue Condensed\", \"Roboto Condensed\", \"Segoe UI\", sans-serif",
+    "serif": "ui-serif, \"Iowan Old Style\", \"Hoefler Text\", Georgia, \"Times New Roman\", serif",
+    "slab": "\"Rockwell\", \"Roboto Slab\", \"Bookman Old Style\", Georgia, serif",
+    "mono": "ui-monospace, SFMono-Regular, \"SF Mono\", Menlo, \"Cascadia Mono\", Consolas, monospace",
+    "rounded": "\"SF Pro Rounded\", ui-rounded, \"Hiragino Maru Gothic ProN\", \"Varela Round\", system-ui, sans-serif",
+    "pixel": "\"Silkscreen\", \"DotGothic16\", ui-monospace, SFMono-Regular, Menlo, monospace",
+    "pixelBody": "\"DotGothic16\", \"Silkscreen\", ui-monospace, SFMono-Regular, Menlo, monospace",
+    "humanist": "\"Optima\", \"Gill Sans\", \"Gill Sans MT\", \"Segoe UI\", ui-sans-serif, sans-serif"
+  },
+  "skins": [
+    {
+      "id": "pixel",
+      "title": "Pixel",
+      "description": "Chunky 8-bit surfaces, hard offset shadows and stepped motion",
+      "keywords": [
+        "8bit",
+        "pixel-art",
+        "retro-gaming",
+        "arcade"
+      ],
+      "sans": "pixelBody",
+      "mono": "pixel",
+      "layout": {
+        "sidebarWidth": "252px",
+        "headerHeight": "58px",
+        "maxContentWidth": "920px"
+      },
+      "motion": {
+        "fast": "128ms",
+        "base": "238ms",
+        "slow": "486ms",
+        "ease": "steps(4, end)",
+        "spring": "steps(5, end)",
+        "rise": "0.38rem"
+      },
+      "embedHead": "<link rel=\"preconnect\" href=\"https://fonts.googleapis.com\"><link rel=\"preconnect\" href=\"https://fonts.gstatic.com\" crossorigin><link rel=\"stylesheet\" href=\"https://fonts.googleapis.com/css2?family=Silkscreen:wght@400;700&amp;family=DotGothic16&amp;display=swap\">"
+    },
+    {
+      "id": "liquid-glass",
+      "title": "Liquid Glass",
+      "description": "Refractive glass panels with specular edges and a light sweep on hover",
+      "keywords": [
+        "glass",
+        "glassmorphism",
+        "liquid",
+        "refraction"
+      ],
+      "sans": "system",
+      "mono": "mono",
+      "layout": {
+        "sidebarWidth": "268px",
+        "headerHeight": "66px",
+        "maxContentWidth": "940px"
+      },
+      "motion": {
+        "fast": "220ms",
+        "base": "420ms",
+        "slow": "1000ms",
+        "ease": "cubic-bezier(0.22, 1, 0.36, 1)",
+        "spring": "cubic-bezier(0.34, 1.56, 0.64, 1)",
+        "rise": "0.75rem"
+      }
+    },
+    {
+      "id": "blur-glass",
+      "title": "Blur Glass",
+      "description": "Frosted backdrop-blur layers that resolve out of a soft haze",
+      "keywords": [
+        "glass",
+        "glassmorphism",
+        "frosted",
+        "blur"
+      ],
+      "sans": "system",
+      "mono": "mono",
+      "layout": {
+        "sidebarWidth": "268px",
+        "headerHeight": "64px",
+        "maxContentWidth": "940px"
+      },
+      "motion": {
+        "fast": "220ms",
+        "base": "420ms",
+        "slow": "1000ms",
+        "ease": "cubic-bezier(0.16, 1, 0.3, 1)",
+        "spring": "cubic-bezier(0.16, 1, 0.3, 1)",
+        "rise": "0.62rem"
+      }
+    },
+    {
+      "id": "analog-film",
+      "title": "Analog Film",
+      "description": "Grain, halation and sprocket rails with a gentle gate weave",
+      "keywords": [
+        "film",
+        "grain",
+        "analog",
+        "photography",
+        "halation"
+      ],
+      "sans": "condensed",
+      "mono": "mono",
+      "layout": {
+        "sidebarWidth": "262px",
+        "headerHeight": "64px",
+        "maxContentWidth": "900px"
+      },
+      "motion": {
+        "fast": "220ms",
+        "base": "420ms",
+        "slow": "945ms",
+        "ease": "cubic-bezier(0.4, 0, 0.2, 1)",
+        "spring": "cubic-bezier(0.3, 1.3, 0.6, 1)",
+        "rise": "0.5rem"
+      }
+    },
+    {
+      "id": "fluid",
+      "title": "Fluid",
+      "description": "Organic blob gradients that drift and morph behind the content",
+      "keywords": [
+        "fluid",
+        "organic",
+        "gradient",
+        "mesh",
+        "blob"
+      ],
+      "sans": "rounded",
+      "mono": "mono",
+      "layout": {
+        "sidebarWidth": "270px",
+        "headerHeight": "68px",
+        "maxContentWidth": "920px"
+      },
+      "motion": {
+        "fast": "220ms",
+        "base": "420ms",
+        "slow": "1000ms",
+        "ease": "cubic-bezier(0.65, 0, 0.35, 1)",
+        "spring": "cubic-bezier(0.34, 1.56, 0.64, 1)",
+        "rise": "0.88rem"
+      }
+    },
+    {
+      "id": "fabric",
+      "title": "Fabric",
+      "description": "Woven texture, stitched seams and soft cloth-fold reveals",
+      "keywords": [
+        "fabric",
+        "textile",
+        "woven",
+        "stitch",
+        "craft"
+      ],
+      "sans": "system",
+      "mono": "mono",
+      "layout": {
+        "sidebarWidth": "264px",
+        "headerHeight": "64px",
+        "maxContentWidth": "900px"
+      },
+      "motion": {
+        "fast": "220ms",
+        "base": "420ms",
+        "slow": "1000ms",
+        "ease": "cubic-bezier(0.33, 1, 0.68, 1)",
+        "spring": "cubic-bezier(0.34, 1.4, 0.64, 1)",
+        "rise": "0.62rem"
+      }
+    },
+    {
+      "id": "leather",
+      "title": "Leather",
+      "description": "Embossed grain and saddle stitching that presses in when touched",
+      "keywords": [
+        "leather",
+        "skeuomorphic",
+        "stitched",
+        "emboss",
+        "craft"
+      ],
+      "sans": "serif",
+      "mono": "mono",
+      "layout": {
+        "sidebarWidth": "266px",
+        "headerHeight": "68px",
+        "maxContentWidth": "880px"
+      },
+      "motion": {
+        "fast": "220ms",
+        "base": "420ms",
+        "slow": "864ms",
+        "ease": "cubic-bezier(0.36, 0.66, 0.04, 1)",
+        "spring": "cubic-bezier(0.36, 0.66, 0.04, 1)",
+        "rise": "0.45rem"
+      }
+    },
+    {
+      "id": "brutalist",
+      "title": "Brutalist",
+      "description": "Raw structure, oversized type and shadows that slam into place",
+      "keywords": [
+        "brutalism",
+        "neubrutalism",
+        "raw",
+        "bold",
+        "poster"
+      ],
+      "sans": "grotesque",
+      "mono": "mono",
+      "layout": {
+        "sidebarWidth": "256px",
+        "headerHeight": "72px",
+        "maxContentWidth": "980px"
+      },
+      "motion": {
+        "fast": "112ms",
+        "base": "204ms",
+        "slow": "351ms",
+        "ease": "cubic-bezier(0.9, 0, 0.1, 1)",
+        "spring": "cubic-bezier(0.9, 0, 0.1, 1)",
+        "rise": "0.3rem"
+      }
+    },
+    {
+      "id": "terminal",
+      "title": "Terminal",
+      "description": "CRT phosphor with scanlines, a blinking block caret and prompt gutters",
+      "keywords": [
+        "terminal",
+        "crt",
+        "console",
+        "tui",
+        "hacker"
+      ],
+      "sans": "mono",
+      "mono": "mono",
+      "layout": {
+        "sidebarWidth": "248px",
+        "headerHeight": "56px",
+        "maxContentWidth": "880px"
+      },
+      "motion": {
+        "fast": "96ms",
+        "base": "204ms",
+        "slow": "405ms",
+        "ease": "steps(6, end)",
+        "spring": "linear",
+        "rise": "0.25rem"
+      }
+    },
+    {
+      "id": "blueprint",
+      "title": "Blueprint",
+      "description": "Technical drawing grid with dashed callouts and strokes that draw themselves",
+      "keywords": [
+        "blueprint",
+        "technical",
+        "drafting",
+        "grid",
+        "schematic"
+      ],
+      "sans": "condensed",
+      "mono": "mono",
+      "layout": {
+        "sidebarWidth": "260px",
+        "headerHeight": "60px",
+        "maxContentWidth": "920px"
+      },
+      "motion": {
+        "fast": "192ms",
+        "base": "408ms",
+        "slow": "837ms",
+        "ease": "cubic-bezier(0.25, 0.8, 0.25, 1)",
+        "spring": "cubic-bezier(0.25, 0.8, 0.25, 1)",
+        "rise": "0.42rem"
+      }
+    },
+    {
+      "id": "risograph",
+      "title": "Risograph",
+      "description": "Misregistered duotone print where the ink channels separate on hover",
+      "keywords": [
+        "risograph",
+        "print",
+        "duotone",
+        "zine",
+        "halftone"
+      ],
+      "sans": "grotesque",
+      "mono": "mono",
+      "layout": {
+        "sidebarWidth": "258px",
+        "headerHeight": "62px",
+        "maxContentWidth": "900px"
+      },
+      "motion": {
+        "fast": "176ms",
+        "base": "391ms",
+        "slow": "756ms",
+        "ease": "cubic-bezier(0.2, 0.9, 0.3, 1)",
+        "spring": "cubic-bezier(0.34, 1.5, 0.64, 1)",
+        "rise": "0.5rem"
+      }
+    },
+    {
+      "id": "swiss",
+      "title": "Swiss",
+      "description": "International Typographic Style — a hard grid, rules, and precise slides",
+      "keywords": [
+        "swiss",
+        "typography",
+        "grid",
+        "minimal",
+        "international"
+      ],
+      "sans": "grotesque",
+      "mono": "mono",
+      "layout": {
+        "sidebarWidth": "244px",
+        "headerHeight": "60px",
+        "maxContentWidth": "860px"
+      },
+      "motion": {
+        "fast": "208ms",
+        "base": "420ms",
+        "slow": "810ms",
+        "ease": "cubic-bezier(0.2, 0, 0, 1)",
+        "spring": "cubic-bezier(0.2, 0, 0, 1)",
+        "rise": "0.35rem"
+      }
+    },
+    {
+      "id": "neon",
+      "title": "Neon",
+      "description": "Sunset-grid glow with humming tube outlines and a scanline sweep",
+      "keywords": [
+        "neon",
+        "synthwave",
+        "glow",
+        "retrowave",
+        "cyberpunk"
+      ],
+      "sans": "system",
+      "mono": "mono",
+      "layout": {
+        "sidebarWidth": "264px",
+        "headerHeight": "66px",
+        "maxContentWidth": "920px"
+      },
+      "motion": {
+        "fast": "220ms",
+        "base": "420ms",
+        "slow": "1000ms",
+        "ease": "cubic-bezier(0.22, 1, 0.36, 1)",
+        "spring": "cubic-bezier(0.34, 1.56, 0.64, 1)",
+        "rise": "0.75rem"
+      }
+    },
+    {
+      "id": "clay",
+      "title": "Clay",
+      "description": "Soft extruded clay that squishes under the pointer",
+      "keywords": [
+        "claymorphism",
+        "soft",
+        "3d",
+        "playful",
+        "neumorphism"
+      ],
+      "sans": "rounded",
+      "mono": "mono",
+      "layout": {
+        "sidebarWidth": "272px",
+        "headerHeight": "70px",
+        "maxContentWidth": "900px"
+      },
+      "motion": {
+        "fast": "220ms",
+        "base": "420ms",
+        "slow": "1000ms",
+        "ease": "cubic-bezier(0.34, 1.56, 0.64, 1)",
+        "spring": "cubic-bezier(0.34, 1.8, 0.64, 1)",
+        "rise": "0.75rem"
+      }
+    },
+    {
+      "id": "editorial",
+      "title": "Editorial",
+      "description": "Magazine typography with drop caps, hairline rules and column reveals",
+      "keywords": [
+        "editorial",
+        "magazine",
+        "newspaper",
+        "print",
+        "typography"
+      ],
+      "sans": "serif",
+      "mono": "mono",
+      "layout": {
+        "sidebarWidth": "250px",
+        "headerHeight": "72px",
+        "maxContentWidth": "780px"
+      },
+      "motion": {
+        "fast": "220ms",
+        "base": "420ms",
+        "slow": "945ms",
+        "ease": "cubic-bezier(0.33, 1, 0.68, 1)",
+        "spring": "cubic-bezier(0.33, 1, 0.68, 1)",
+        "rise": "0.5rem"
+      }
+    },
+    {
+      "id": "aurora",
+      "title": "Aurora",
+      "description": "Slow conic light curtains drifting behind translucent panels",
+      "keywords": [
+        "aurora",
+        "gradient",
+        "mesh",
+        "ambient",
+        "northern-lights"
+      ],
+      "sans": "system",
+      "mono": "mono",
+      "layout": {
+        "sidebarWidth": "268px",
+        "headerHeight": "66px",
+        "maxContentWidth": "940px"
+      },
+      "motion": {
+        "fast": "220ms",
+        "base": "420ms",
+        "slow": "1000ms",
+        "ease": "cubic-bezier(0.16, 1, 0.3, 1)",
+        "spring": "cubic-bezier(0.34, 1.4, 0.64, 1)",
+        "rise": "0.88rem"
+      }
+    },
+    {
+      "id": "holo",
+      "title": "Holo",
+      "description": "Iridescent foil that shifts hue as panels tilt and slide",
+      "keywords": [
+        "holographic",
+        "iridescent",
+        "foil",
+        "chrome",
+        "prism"
+      ],
+      "sans": "system",
+      "mono": "mono",
+      "layout": {
+        "sidebarWidth": "266px",
+        "headerHeight": "66px",
+        "maxContentWidth": "920px"
+      },
+      "motion": {
+        "fast": "220ms",
+        "base": "420ms",
+        "slow": "1000ms",
+        "ease": "cubic-bezier(0.22, 1, 0.36, 1)",
+        "spring": "cubic-bezier(0.34, 1.56, 0.64, 1)",
+        "rise": "0.7rem"
+      }
+    },
+    {
+      "id": "paper",
+      "title": "Paper",
+      "description": "Letterpress impressions on soft stock with a deckled page edge",
+      "keywords": [
+        "paper",
+        "letterpress",
+        "print",
+        "stationery",
+        "tactile"
+      ],
+      "sans": "serif",
+      "mono": "mono",
+      "layout": {
+        "sidebarWidth": "258px",
+        "headerHeight": "66px",
+        "maxContentWidth": "820px"
+      },
+      "motion": {
+        "fast": "220ms",
+        "base": "420ms",
+        "slow": "918ms",
+        "ease": "cubic-bezier(0.33, 1, 0.68, 1)",
+        "spring": "cubic-bezier(0.34, 1.3, 0.64, 1)",
+        "rise": "0.45rem"
+      }
+    },
+    {
+      "id": "voltage",
+      "title": "Voltage",
+      "description": "Oversized display type with charged gradient edges and a live electric field",
+      "keywords": [
+        "gradient",
+        "electric",
+        "bold",
+        "display",
+        "energy"
+      ],
+      "sans": "system",
+      "mono": "mono",
+      "layout": {
+        "sidebarWidth": "262px",
+        "headerHeight": "66px",
+        "maxContentWidth": "960px"
+      },
+      "motion": {
+        "fast": "180ms",
+        "base": "360ms",
+        "slow": "900ms",
+        "ease": "cubic-bezier(0.2, 0.9, 0.2, 1)",
+        "spring": "cubic-bezier(0.34, 1.5, 0.64, 1)",
+        "rise": "0.7rem"
+      }
+    },
+    {
+      "id": "manuscript",
+      "title": "Manuscript",
+      "description": "A codex page — narrow measure, rubricated heads, and a table of contents that becomes marginalia",
+      "keywords": [
+        "manuscript",
+        "codex",
+        "marginalia",
+        "rubrication",
+        "book"
+      ],
+      "sans": "serif",
+      "mono": "mono",
+      "layout": {
+        "sidebarWidth": "238px",
+        "headerHeight": "62px",
+        "maxContentWidth": "720px"
+      },
+      "motion": {
+        "fast": "200ms",
+        "base": "400ms",
+        "slow": "860ms",
+        "ease": "cubic-bezier(0.33,1,0.68,1)",
+        "spring": "cubic-bezier(0.33,1,0.68,1)",
+        "rise": "0.5rem"
+      }
+    },
+    {
+      "id": "ledger",
+      "title": "Ledger",
+      "description": "A bound accounting book — text set on real ruled lines, tabular figures throughout",
+      "keywords": [
+        "ledger",
+        "accounting",
+        "ruled",
+        "tabular",
+        "baseline-grid"
+      ],
+      "sans": "humanist",
+      "mono": "mono",
+      "layout": {
+        "sidebarWidth": "252px",
+        "headerHeight": "60px",
+        "maxContentWidth": "880px"
+      },
+      "motion": {
+        "fast": "160ms",
+        "base": "300ms",
+        "slow": "640ms",
+        "ease": "cubic-bezier(0.2,0,0,1)",
+        "spring": "cubic-bezier(0.2,0,0,1)",
+        "rise": "0.4rem"
+      }
+    },
+    {
+      "id": "kiosk",
+      "title": "Kiosk",
+      "description": "Platform signage — a departure-board sidebar, banded heads and arrows",
+      "keywords": [
+        "signage",
+        "wayfinding",
+        "transit",
+        "dense",
+        "board"
+      ],
+      "sans": "grotesque",
+      "mono": "mono",
+      "layout": {
+        "sidebarWidth": "248px",
+        "headerHeight": "64px",
+        "maxContentWidth": "920px"
+      },
+      "motion": {
+        "fast": "120ms",
+        "base": "220ms",
+        "slow": "460ms",
+        "ease": "cubic-bezier(0.3,0,0,1)",
+        "spring": "cubic-bezier(0.3,0,0,1)",
+        "rise": "0.4rem"
+      }
+    },
+    {
+      "id": "atlas",
+      "title": "Atlas",
+      "description": "A survey sheet — contour bands, a keyed legend sidebar and registration marks",
+      "keywords": [
+        "cartography",
+        "map",
+        "contour",
+        "survey",
+        "hairline"
+      ],
+      "sans": "humanist",
+      "mono": "mono",
+      "layout": {
+        "sidebarWidth": "250px",
+        "headerHeight": "60px",
+        "maxContentWidth": "860px"
+      },
+      "motion": {
+        "fast": "200ms",
+        "base": "380ms",
+        "slow": "820ms",
+        "ease": "cubic-bezier(0.25,0.8,0.25,1)",
+        "spring": "cubic-bezier(0.25,0.8,0.25,1)",
+        "rise": "0.4rem"
+      }
+    },
+    {
+      "id": "receipt",
+      "title": "Receipt",
+      "description": "A thermal roll — one narrow centred column, dotted leaders and a torn edge",
+      "keywords": [
+        "receipt",
+        "thermal",
+        "print",
+        "monospace",
+        "narrow"
+      ],
+      "sans": "mono",
+      "mono": "mono",
+      "layout": {
+        "sidebarWidth": "0px",
+        "headerHeight": "0px",
+        "maxContentWidth": "620px"
+      },
+      "motion": {
+        "fast": "120ms",
+        "base": "220ms",
+        "slow": "440ms",
+        "ease": "steps(8, end)",
+        "spring": "linear",
+        "rise": "0.3rem"
+      }
+    },
+    {
+      "id": "bauhaus",
+      "title": "Bauhaus",
+      "description": "Circle, square, triangle and a diagonal that refuses the grid",
+      "keywords": [
+        "bauhaus",
+        "geometric",
+        "primary",
+        "modernist",
+        "shapes"
+      ],
+      "sans": "grotesque",
+      "mono": "mono",
+      "layout": {
+        "sidebarWidth": "256px",
+        "headerHeight": "64px",
+        "maxContentWidth": "900px"
+      },
+      "motion": {
+        "fast": "140ms",
+        "base": "260ms",
+        "slow": "560ms",
+        "ease": "cubic-bezier(0.65,0,0.35,1)",
+        "spring": "cubic-bezier(0.34,1.5,0.64,1)",
+        "rise": "0.5rem"
+      }
+    },
+    {
+      "id": "zine",
+      "title": "Zine",
+      "description": "Photocopied and taped together — nothing square to the page",
+      "keywords": [
+        "zine",
+        "punk",
+        "photocopy",
+        "collage",
+        "diy"
+      ],
+      "sans": "grotesque",
+      "mono": "mono",
+      "layout": {
+        "sidebarWidth": "250px",
+        "headerHeight": "62px",
+        "maxContentWidth": "880px"
+      },
+      "motion": {
+        "fast": "90ms",
+        "base": "170ms",
+        "slow": "380ms",
+        "ease": "cubic-bezier(0.9,0,0.1,1)",
+        "spring": "cubic-bezier(0.34,1.6,0.64,1)",
+        "rise": "0.4rem"
+      }
+    },
+    {
+      "id": "noir",
+      "title": "Noir",
+      "description": "One hard key light and a steep falloff — shapes picked out of the dark",
+      "keywords": [
+        "noir",
+        "chiaroscuro",
+        "cinematic",
+        "dramatic",
+        "shadow"
+      ],
+      "sans": "serif",
+      "mono": "mono",
+      "layout": {
+        "sidebarWidth": "252px",
+        "headerHeight": "66px",
+        "maxContentWidth": "840px"
+      },
+      "motion": {
+        "fast": "200ms",
+        "base": "420ms",
+        "slow": "900ms",
+        "ease": "cubic-bezier(0.33,1,0.68,1)",
+        "spring": "cubic-bezier(0.33,1,0.68,1)",
+        "rise": "0.5rem"
+      }
+    }
+  ]
+}

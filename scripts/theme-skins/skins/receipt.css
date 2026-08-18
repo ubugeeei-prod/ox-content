@@ -1,0 +1,157 @@
+/* Receipt — thermal roll. One narrow column, centred, printed in a single pass.
+ *
+ * Structural move: there is no side chrome at all. The sidebar unpins itself and
+ * stacks above the content as a printed index, so the page reads as one
+ * continuous strip — which is what a receipt is.
+ */
+
+:root {
+  --octc-rc-width: 38rem;
+  --octc-rc-ink: color-mix(in srgb, var(--octc-color-text) 88%, var(--octc-color-bg));
+  --octc-rc-tear: color-mix(in srgb, var(--octc-color-text) 40%, transparent);
+}
+
+.layout {
+  display: block;
+  max-width: var(--octc-rc-width);
+  margin-inline: auto;
+  padding-inline: 1rem;
+}
+
+.header {
+  position: static;
+  height: auto;
+  max-width: var(--octc-rc-width);
+  margin-inline: auto;
+  padding: 1.1rem 1rem 0.8rem;
+  background: transparent;
+  border-bottom: 1px dashed var(--octc-rc-tear);
+  flex-direction: column;
+  gap: 0.6rem;
+}
+.header-title {
+  text-transform: uppercase;
+  letter-spacing: 0.34em;
+  font-weight: 700;
+  font-size: 0.95rem;
+  text-align: center;
+}
+.header-actions { justify-content: center; }
+.menu-toggle { display: none; }
+
+/* The index prints inline, above the body, rather than living beside it. */
+.sidebar {
+  position: static;
+  width: auto;
+  border: 0;
+  --octc-skin-sidebar-bg: transparent;
+  background: transparent;
+  padding: 0.8rem 0 0;
+  overflow: visible;
+}
+.nav-title, .toc-title {
+  text-transform: uppercase;
+  letter-spacing: 0.22em;
+  font-size: 0.62rem;
+  text-align: center;
+  border-bottom: 1px dashed var(--octc-rc-tear);
+  padding-bottom: 0.3rem;
+}
+/* Leader dots, the way a printed line item connects label to value. */
+.nav-link {
+  display: flex;
+  align-items: baseline;
+  gap: 0.4rem;
+  border-radius: 0;
+  padding: 0.22rem 0;
+  font-size: 0.8rem;
+}
+.nav-link::after {
+  content: "";
+  flex: 1;
+  border-bottom: 1px dotted var(--octc-rc-tear);
+  transform: translateY(-0.22em);
+}
+.nav-link:hover { background: transparent; font-weight: 700; }
+.nav-link.active { background: transparent; font-weight: 700; text-decoration: underline; }
+
+.toc { display: none; }
+
+.main, .main--with-toc {
+  margin: 0;
+  padding: 0.8rem 0 3rem;
+  max-width: none;
+}
+.content {
+  max-width: none;
+  font-size: 0.88rem;
+  line-height: 1.6;
+  color: var(--octc-rc-ink);
+}
+.content h1, .content h2, .content h3 {
+  text-transform: uppercase;
+  text-align: center;
+  letter-spacing: 0.16em;
+  font-weight: 700;
+  border: 0;
+  border-top: 1px dashed var(--octc-rc-tear);
+  border-bottom: 1px dashed var(--octc-rc-tear);
+  padding-block: 0.35rem;
+}
+.content h1 { font-size: 1.05rem; }
+.content h2 { font-size: 0.92rem; }
+.content h3 { font-size: 0.82rem; border-top: 0; }
+.content a { text-decoration: underline; }
+.content pre {
+  border-radius: 0;
+  border: 0;
+  border-top: 1px dashed var(--octc-rc-tear);
+  border-bottom: 1px dashed var(--octc-rc-tear);
+  font-size: 0.74rem;
+  padding-inline: 0;
+  /* Long lines wrap rather than scroll. On a strip this narrow a horizontal
+   * scrollbar is a trap: it is easy to miss, and the code runs off the paper
+   * either way. A thermal printer wraps too. */
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+  max-width: 100%;
+}
+.content pre code {
+  white-space: inherit;
+  overflow-wrap: inherit;
+}
+.content blockquote { border: 0; background: transparent; border-radius: 0; text-align: center; font-style: italic; }
+.content table, .content th, .content td { border: 0; }
+.content th { border-bottom: 1px dashed var(--octc-rc-tear); background: transparent; text-transform: uppercase; letter-spacing: 0.08em; font-size: 0.68rem; }
+.content td { border-bottom: 1px dotted var(--octc-rc-tear); }
+.content td:not(:first-child) { text-align: right; font-variant-numeric: tabular-nums; }
+.content hr { height: 0; border: 0; border-top: 1px dashed var(--octc-rc-tear); background: none; }
+
+/* The torn edge: a zigzag cut, not a straight rule. */
+.hero { border-bottom: 0; position: relative; min-height: auto; padding-block: 3rem 3.5rem; }
+.hero::after {
+  height: 10px;
+  background: linear-gradient(-45deg, var(--octc-color-bg) 6px, transparent 0) 0 6px / 12px 12px repeat-x,
+    linear-gradient(45deg, var(--octc-color-bg) 6px, transparent 0) 0 6px / 12px 12px repeat-x;
+}
+.hero-name { font-size: clamp(1.6rem, 7vw, 2.4rem); text-transform: uppercase; letter-spacing: 0.18em; font-weight: 700; }
+.hero-text, .hero-tagline { text-transform: uppercase; letter-spacing: 0.1em; font-size: 0.78rem; }
+.hero-actions { flex-direction: column; align-items: stretch; }
+.hero-action {
+  border-radius: 0;
+  border: 1px dashed var(--octc-rc-tear);
+  text-transform: uppercase;
+  letter-spacing: 0.16em;
+  font-size: 0.76rem;
+  min-width: 0;
+}
+.features { max-width: none; }
+.features-grid { grid-template-columns: 1fr; }
+.features .feature-card {
+  border: 0;
+  border-bottom: 1px dashed var(--octc-rc-tear);
+  border-radius: 0;
+  padding: 0.8rem 0;
+}
+.feature-title { text-transform: uppercase; letter-spacing: 0.1em; font-size: 0.8rem; }
+.mobile-footer { display: none; }

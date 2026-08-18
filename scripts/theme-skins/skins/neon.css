@@ -1,0 +1,158 @@
+/* Neon — tube lighting. Borders hum, the hero sits on a perspective sunset grid,
+ * and a scanline sweeps the header on a slow loop. */
+
+:root {
+  --octc-ne-a: var(--octc-accent-b, var(--octc-color-primary));
+  --octc-ne-b: var(--octc-accent-c, var(--octc-color-primary));
+  --octc-ne-a-ink: var(--octc-accent-b-ink, var(--octc-color-primary));
+  --octc-ne-glow: 0 0 6px color-mix(in srgb, var(--octc-ne-a) 70%, transparent),
+    0 0 22px color-mix(in srgb, var(--octc-ne-a) 40%, transparent);
+  --octc-ne-radius: 10px;
+}
+
+.header, .sidebar, .toc, .search-modal, .content pre, .content blockquote,
+.feature-card, .hero-action, .hero-notice, .social-link, .search-button,
+.theme-toggle {
+  border-radius: var(--octc-ne-radius);
+}
+
+.header {
+  border-radius: 0;
+  position: fixed;
+  background: color-mix(in srgb, var(--octc-color-bg) 88%, transparent);
+  backdrop-filter: blur(14px);
+  border-bottom: 1px solid color-mix(in srgb, var(--octc-ne-a) 45%, transparent);
+  box-shadow: 0 0 24px -4px color-mix(in srgb, var(--octc-ne-a) 40%, transparent);
+  overflow: hidden;
+}
+/* A single hairline sweeps the bar left to right — the only always-on motion. */
+.header::after {
+  content: "";
+  position: absolute;
+  inset: auto 0 0 0;
+  height: 1px;
+  background: linear-gradient(90deg, transparent, var(--octc-ne-b), transparent);
+  animation: octc-ne-sweep 14s var(--octc-motion-ease) infinite;
+}
+@keyframes octc-ne-sweep {
+  from { transform: translateX(-100%); }
+  to { transform: translateX(100%); }
+}
+
+.header-title {
+  font-weight: 700;
+  letter-spacing: 0.02em;
+  text-shadow: var(--octc-ne-glow);
+}
+.sidebar {
+  border-radius: 0;
+  --octc-skin-sidebar-bg: color-mix(in srgb, var(--octc-color-bg) 92%, transparent);
+  background: color-mix(in srgb, var(--octc-color-bg) 92%, transparent);
+  border-right: 1px solid color-mix(in srgb, var(--octc-ne-a) 28%, transparent);
+}
+.toc { border-left: 1px solid color-mix(in srgb, var(--octc-ne-a) 28%, transparent); }
+.nav-title, .toc-title {
+  color: var(--octc-ne-a-ink);
+  text-transform: uppercase;
+  letter-spacing: 0.16em;
+  font-size: 0.68rem;
+  text-shadow: 0 0 10px color-mix(in srgb, var(--octc-ne-a) 55%, transparent);
+}
+
+.nav-link, .toc-link { border: 1px solid transparent; border-radius: 8px; }
+.nav-link:hover, .toc-link:hover {
+  border-color: color-mix(in srgb, var(--octc-ne-a) 40%, transparent);
+  --octc-skin-nav-hover-bg: color-mix(in srgb, var(--octc-ne-a) 10%, transparent);
+  background: color-mix(in srgb, var(--octc-ne-a) 10%, transparent);
+  text-shadow: 0 0 8px color-mix(in srgb, var(--octc-ne-a) 55%, transparent);
+}
+.nav-link.active {
+  border-color: var(--octc-ne-a);
+  background: color-mix(in srgb, var(--octc-ne-a) 18%, transparent);
+  box-shadow: inset 0 0 18px -6px var(--octc-ne-a), 0 0 14px -4px var(--octc-ne-a);
+  font-weight: 600;
+}
+
+.search-button, .theme-toggle, .social-link {
+  border: 1px solid color-mix(in srgb, var(--octc-ne-a) 45%, transparent);
+  background: transparent;
+}
+.search-button:hover, .theme-toggle:hover, .social-link:hover {
+  border-color: var(--octc-ne-a);
+  box-shadow: var(--octc-ne-glow);
+  transform: translateY(-1px);
+}
+.search-modal {
+  border: 1px solid var(--octc-ne-a);
+  box-shadow: 0 0 60px -10px color-mix(in srgb, var(--octc-ne-a) 60%, transparent);
+}
+
+.content h2 {
+  border-bottom: 1px solid color-mix(in srgb, var(--octc-ne-a) 35%, transparent);
+}
+.content a { text-decoration-color: var(--octc-ne-b); text-underline-offset: 3px; }
+.content a:hover { text-shadow: 0 0 10px color-mix(in srgb, var(--octc-ne-b) 60%, transparent); }
+.content pre {
+  border: 1px solid color-mix(in srgb, var(--octc-ne-a) 32%, transparent);
+  box-shadow: 0 0 40px -18px color-mix(in srgb, var(--octc-ne-a) 60%, transparent);
+}
+.content :not(pre) > code {
+  border-radius: 5px;
+  background: color-mix(in srgb, var(--octc-ne-a) 14%, transparent);
+  padding: 0.1em 0.36em;
+}
+.content blockquote {
+  border: 1px solid color-mix(in srgb, var(--octc-ne-b) 40%, transparent);
+  border-left: 3px solid var(--octc-ne-b);
+  background: color-mix(in srgb, var(--octc-ne-b) 8%, transparent);
+  box-shadow: inset 0 0 30px -14px var(--octc-ne-b);
+}
+.content table { border: 1px solid color-mix(in srgb, var(--octc-ne-a) 30%, transparent); }
+.content th, .content td {
+  border: 1px solid color-mix(in srgb, var(--octc-ne-a) 13%, transparent);
+}
+.content hr {
+  border: 0; height: 1px;
+  background: var(--octc-ne-a);
+}
+
+/* The sunset grid: a perspective-tilted plane pinned to the bottom of the hero. */
+.hero { position: relative; overflow: hidden; }
+.hero::before {
+  content: "";
+  position: absolute;
+  inset: 55% -50% -30% -50%;
+  background-image:
+    linear-gradient(color-mix(in srgb, var(--octc-ne-a) 42%, transparent) 1px, transparent 1px),
+    linear-gradient(90deg, color-mix(in srgb, var(--octc-ne-a) 42%, transparent) 1px, transparent 1px);
+  background-size: 56px 56px;
+  transform: perspective(320px) rotateX(68deg);
+  transform-origin: top center;
+  mask-image: linear-gradient(transparent, #000 40%);
+  pointer-events: none;
+}
+.hero-content { position: relative; z-index: 1; }
+.hero-name { letter-spacing: -0.03em; }
+.hero-action {
+  border: 1px solid var(--octc-ne-a);
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  box-shadow: inset 0 0 20px -10px var(--octc-ne-a);
+}
+.hero-action:hover {
+  box-shadow: var(--octc-ne-glow), inset 0 0 24px -8px var(--octc-ne-a);
+  transform: translateY(-2px);
+}
+
+.features .feature-card {
+  border: 1px solid color-mix(in srgb, var(--octc-ne-a) 24%, transparent);
+  padding: 1.25rem;
+  background: color-mix(in srgb, var(--octc-color-bg-alt) 40%, transparent);
+}
+.features .feature-card:hover {
+  border-color: var(--octc-ne-a);
+  box-shadow: 0 0 34px -12px color-mix(in srgb, var(--octc-ne-a) 70%, transparent);
+  transform: translateY(-4px);
+}
+
+:focus-visible { outline: 2px solid var(--octc-ne-b); outline-offset: 3px; }

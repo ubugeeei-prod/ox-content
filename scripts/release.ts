@@ -20,6 +20,10 @@ const NPM_PACKAGES = [
   "npm/vite-plugin-ox-content-svelte",
   "npm/vite-plugin-ox-content-vue",
   "npm/vscode-ox-content",
+  // Theme presets are generated, so enumerate them rather than keep ~70 paths.
+  ...["theme", "theme-color"].flatMap((g) =>
+    fs.readdirSync(path.join(ROOT, "npm", g)).map((n) => `npm/${g}/${n}`),
+  ),
 ];
 
 const CARGO_PUBLISH_PACKAGES = [

@@ -1,0 +1,140 @@
+/* Aurora — slow conic light curtains behind translucent panels. The only moving
+ * parts are two long-period rotations, so the page stays calm. */
+
+:root {
+  --octc-au-radius: 16px;
+  --octc-au-veil: color-mix(in srgb, var(--octc-color-bg) 72%, transparent);
+  --octc-au-1: var(--octc-accent-a, var(--octc-color-primary));
+  --octc-au-2: var(--octc-accent-c, var(--octc-color-primary));
+  --octc-au-3: var(--octc-accent-b, var(--octc-color-primary));
+}
+
+.header, .sidebar, .toc, .search-modal, .content pre, .content blockquote,
+.feature-card, .hero-action, .hero-notice, .social-link, .search-button,
+.theme-toggle, .content img {
+  border-radius: var(--octc-au-radius);
+}
+
+/* A fixed curtain behind everything: three hues on a very slow conic spin,
+ * heavily blurred and masked toward the top of the viewport. */
+body::before {
+  content: "";
+  position: fixed;
+  inset: -30vh -30vw auto -30vw;
+  height: 130vh;
+  z-index: -1;
+  pointer-events: none;
+  opacity: 0.5;
+  filter: blur(90px) saturate(140%);
+  background: conic-gradient(
+    from var(--octc-spin) at 50% 30%,
+    var(--octc-au-1), var(--octc-au-2), var(--octc-au-3), var(--octc-au-1)
+  );
+  mask-image: linear-gradient(#000 0%, transparent 72%);
+}
+@media (prefers-reduced-motion: no-preference) {
+  body::before { animation: octc-au-spin 90s linear infinite; }
+}
+@keyframes octc-au-spin { to { --octc-spin: 360deg; } }
+
+.header {
+  border-radius: 0;
+  background: var(--octc-au-veil);
+  backdrop-filter: blur(22px) saturate(150%);
+  -webkit-backdrop-filter: blur(22px) saturate(150%);
+  border-bottom: 1px solid color-mix(in srgb, var(--octc-color-border) 38%, transparent);
+}
+.sidebar {
+  border-radius: 0;
+  --octc-skin-sidebar-bg: var(--octc-au-veil);
+  background: var(--octc-au-veil);
+  backdrop-filter: blur(18px);
+  -webkit-backdrop-filter: blur(18px);
+  border-right: 1px solid color-mix(in srgb, var(--octc-color-border) 34%, transparent);
+}
+.toc { border-left: 1px solid color-mix(in srgb, var(--octc-color-border) 34%, transparent); }
+
+.nav-link, .toc-link { border-radius: 10px; }
+.nav-link:hover, .toc-link:hover {
+  --octc-skin-nav-hover-bg: color-mix(in srgb, var(--octc-au-2) 14%, transparent);
+  background: color-mix(in srgb, var(--octc-au-2) 14%, transparent);
+  transform: translateX(3px);
+}
+.nav-link.active {
+  background: linear-gradient(
+    90deg,
+    color-mix(in srgb, var(--octc-au-1) 26%, transparent),
+    color-mix(in srgb, var(--octc-au-2) 12%, transparent)
+  );
+  font-weight: 600;
+}
+
+.search-button, .theme-toggle, .social-link {
+  background: var(--octc-au-veil);
+  backdrop-filter: blur(14px);
+  border: 1px solid color-mix(in srgb, var(--octc-color-border) 40%, transparent);
+}
+.search-button:hover, .theme-toggle:hover, .social-link:hover {
+  transform: translateY(-2px);
+  border-color: color-mix(in srgb, var(--octc-au-2) 50%, transparent);
+}
+.search-modal {
+  background: color-mix(in srgb, var(--octc-color-bg) 86%, transparent);
+  backdrop-filter: blur(34px) saturate(160%);
+  border: 1px solid color-mix(in srgb, var(--octc-color-border) 40%, transparent);
+}
+
+.content h2 {
+  border-bottom: 1px solid color-mix(in srgb, var(--octc-color-border) 40%, transparent);
+}
+.content pre {
+  border: 1px solid color-mix(in srgb, var(--octc-color-border) 40%, transparent);
+  box-shadow: 0 18px 44px -26px rgba(0, 0, 0, 0.5);
+}
+.content :not(pre) > code {
+  border-radius: 6px;
+  background: color-mix(in srgb, var(--octc-au-2) 14%, transparent);
+  padding: 0.1em 0.4em;
+}
+.content blockquote {
+  border: 0;
+  background: linear-gradient(
+    120deg,
+    color-mix(in srgb, var(--octc-au-1) 14%, transparent),
+    color-mix(in srgb, var(--octc-au-3) 10%, transparent)
+  );
+  box-shadow: inset 3px 0 0 0 var(--octc-au-2);
+}
+.content table { border-radius: 12px; overflow: hidden; }
+.content hr {
+  border: 0; height: 2px;
+  background: var(--octc-au-2), var(--octc-au-3);
+}
+
+.hero { background: transparent; }
+.hero-name { letter-spacing: -0.035em; }
+.hero-action {
+  background: var(--octc-au-veil);
+  backdrop-filter: blur(16px);
+  border: 1px solid color-mix(in srgb, var(--octc-au-2) 40%, transparent);
+  font-weight: 620;
+}
+.hero-action:hover {
+  transform: translateY(-3px);
+  border-color: var(--octc-au-2);
+  box-shadow: 0 20px 44px -22px color-mix(in srgb, var(--octc-au-2) 70%, transparent);
+}
+
+.features .feature-card {
+  background: var(--octc-au-veil);
+  backdrop-filter: blur(14px);
+  border: 1px solid color-mix(in srgb, var(--octc-color-border) 36%, transparent);
+  padding: 1.3rem;
+}
+.features .feature-card:hover {
+  transform: translateY(-4px);
+  border-color: color-mix(in srgb, var(--octc-au-2) 50%, transparent);
+  box-shadow: 0 24px 54px -26px color-mix(in srgb, var(--octc-au-1) 60%, transparent);
+}
+
+:focus-visible { outline: 2px solid var(--octc-au-2); outline-offset: 3px; }
