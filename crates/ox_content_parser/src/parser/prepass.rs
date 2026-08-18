@@ -15,6 +15,9 @@
 //! definition chunk the reference side skips over.
 
 use std::rc::Rc;
+use std::sync::LazyLock;
+
+use memchr::{memmem, memrchr};
 
 use super::footnote::{normalize_footnote_label, parse_footnote_opener, FootnoteLabels};
 use super::line_scan::{line_end as scan_line_end, next_line_start};
@@ -25,6 +28,29 @@ use super::reference::{
 use super::Parser;
 #[allow(unused_imports)]
 use crate::{profile_span, profile_span_detail};
+
+/// Three-byte fence-run searchers, built once for the process.
+///
+/// A closing fence line holds at least three of its fence byte in a row, so
+/// the needle is a necessary condition for one — enough to skip straight to
+/// the first line that could possibly close an open fence. The one-shot
+/// `memmem::find` would rebuild its SIMD prefilter for every fence in the
+/// document.
+static BACKTICK_RUN: LazyLock<memmem::Finder<'static>> =
+    LazyLock::new(|| memmem::Finder::new("```"));
+static TILDE_RUN: LazyLock<memmem::Finder<'static>> = LazyLock::new(|| memmem::Finder::new("~~~"));
+
+/// Start of the first line at or after `from` holding a run of three
+/// `fence_byte`s, or `None` when the rest of the source holds none.
+fn next_fence_run_line(bytes: &[u8], from: usize, fence_byte: u8) -> Option<usize> {
+    // `from` is one past a newline, which is one past the end when the last
+    // line of the document is unterminated.
+    let from = from.min(bytes.len());
+    let finder = if fence_byte == b'`' { &*BACKTICK_RUN } else { &*TILDE_RUN };
+    let at = from + finder.find(&bytes[from..])?;
+    // `from` is a line start, so the match's line starts at or after it.
+    Some(memrchr(b'\n', &bytes[from..at]).map_or(from, |off| from + off + 1))
+}
 
 impl<'a> Parser<'a> {
     /// Runs the fused pre-pass for a root parser. Returns the
@@ -115,8 +141,31 @@ impl<'a> Parser<'a> {
             if let Some((fence_byte, fence_len)) = def_fence {
                 if is_fence_close(trimmed, fence_byte, fence_len) {
                     def_fence = None;
+                    pos = line_end + 1;
+                    continue;
                 }
-                pos = line_end + 1;
+                // Nothing inside a fence is collected and `paragraph_open`
+                // is frozen while one is open, so the only line left worth
+                // stopping on is the one that closes it — and that needs
+                // three fence bytes in a row. Skip straight to it instead of
+                // walking the block's contents line by line.
+                //
+                // The footnote collector is the exception: it tracks its own
+                // fence on the raw line and looks for `[^` openers, so when
+                // it is running every line still has to be visited. Only
+                // 1-2 files in 100 across the bundled corpora contain a
+                // `[^` at all, so the skip still applies to almost every
+                // real document.
+                if collect_footnotes {
+                    pos = line_end + 1;
+                    continue;
+                }
+                match next_fence_run_line(bytes, line_end + 1, fence_byte) {
+                    Some(next) => pos = next,
+                    // An unterminated fence swallows the rest of the
+                    // document, so there is nothing left to collect.
+                    None => break,
+                }
                 continue;
             }
             if let Some(open) = fence_open(trimmed) {
