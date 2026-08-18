@@ -84,9 +84,10 @@ impl<'a> Parser<'a> {
 
             // A blank line or another block-level construct terminates the
             // table. Ordinary lines remain data rows even without a pipe.
-            if self.first_non_whitespace_in_line(self.position).is_none()
-                || self.line_starts_block()
-            {
+            let Some(trimmed_start) = self.first_non_whitespace_in_line(self.position) else {
+                break;
+            };
+            if self.probe_line_without_table(self.position, trimmed_start).starts_block {
                 break;
             }
 

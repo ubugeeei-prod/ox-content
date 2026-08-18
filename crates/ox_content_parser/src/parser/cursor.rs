@@ -111,6 +111,30 @@ impl<'a> Parser<'a> {
     /// paragraph loop consume the line without a second scan over the same
     /// bytes.
     pub(super) fn probe_line(&self, line_start: usize, trimmed_start: usize) -> BlockProbe {
+        self.probe_line_inner(line_start, trimmed_start, self.options.tables)
+    }
+
+    /// [`Self::probe_line`] without the table check.
+    ///
+    /// A table's own body rows are the one place the check is pure waste:
+    /// consecutive rows always belong to the same table, yet every one of
+    /// them re-ran the two-line header/delimiter probe — peeking both lines,
+    /// counting the header's cells, and validating a delimiter row that is
+    /// really the next data row — only to answer "no".
+    pub(super) fn probe_line_without_table(
+        &self,
+        line_start: usize,
+        trimmed_start: usize,
+    ) -> BlockProbe {
+        self.probe_line_inner(line_start, trimmed_start, false)
+    }
+
+    fn probe_line_inner(
+        &self,
+        line_start: usize,
+        trimmed_start: usize,
+        check_tables: bool,
+    ) -> BlockProbe {
         profile_span_detail!("parser::line_starts_block");
         let bytes = self.source.as_bytes();
 
@@ -148,7 +172,7 @@ impl<'a> Parser<'a> {
         if starts_block {
             return BlockProbe { starts_block: true, line_end: None };
         }
-        if !self.options.tables {
+        if !check_tables {
             return BlockProbe { starts_block: false, line_end: None };
         }
         match memchr2(b'|', b'\n', &bytes[line_start..]) {
