@@ -8,6 +8,7 @@ use crate::error::ParseResult;
 use crate::{profile_span, profile_span_detail};
 
 mod autolink;
+mod code_span;
 mod emphasis;
 mod entity;
 mod gfm_autolink;
@@ -283,68 +284,5 @@ impl<'a> Parser<'a> {
         Self::push_text(children, &content[*pos..*pos + 2], offset + *pos, offset + *pos + 2);
         *pos += 2;
         Ok(())
-    }
-
-    fn parse_inline_code(
-        &self,
-        content: &'a str,
-        offset: usize,
-        children: &mut Vec<'a, Node<'a>>,
-        pos: &mut usize,
-    ) {
-        profile_span_detail!("parser::inline_code_span");
-        let bytes = content.as_bytes();
-        let open_len = Self::marker_run_len(bytes, *pos, b'`');
-        let code_start = *pos + open_len;
-
-        // The closer is the next backtick run of exactly the opener's
-        // length (CommonMark "Code spans"). memchr jumps between runs.
-        let mut cursor = code_start;
-        while cursor < bytes.len() {
-            let Some(off) = memchr(b'`', &bytes[cursor..]) else {
-                break;
-            };
-            cursor += off;
-            let run = Self::marker_run_len(bytes, cursor, b'`');
-            if run == open_len {
-                let span = Span::new((offset + *pos) as u32, (offset + cursor + run) as u32);
-                children.push(Node::InlineCode(ox_content_ast::InlineCode {
-                    value: self.normalize_code_span(&content[code_start..cursor]),
-                    span,
-                }));
-                *pos = cursor + run;
-                return;
-            }
-            cursor += run;
-        }
-
-        // No closer: the opening run is literal text.
-        Self::push_text(children, &content[*pos..code_start], offset + *pos, offset + code_start);
-        *pos = code_start;
-    }
-
-    /// Applies the code span content rules: line endings become spaces,
-    /// and one leading plus one trailing space is dropped when the content
-    /// starts and ends with a space without being all spaces.
-    fn normalize_code_span(&self, raw: &'a str) -> &'a str {
-        let value: &'a str = if raw.contains('\n') {
-            let mut converted = self.allocator.new_string();
-            for ch in raw.chars() {
-                converted.push(if ch == '\n' { ' ' } else { ch });
-            }
-            converted.into_bump_str()
-        } else {
-            raw
-        };
-
-        let stripped = value.starts_with(' ')
-            && value.ends_with(' ')
-            && value.len() >= 2
-            && value.bytes().any(|byte| byte != b' ');
-        if stripped {
-            &value[1..value.len() - 1]
-        } else {
-            value
-        }
     }
 }
