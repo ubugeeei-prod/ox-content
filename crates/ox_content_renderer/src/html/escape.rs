@@ -49,6 +49,10 @@ static URL_ESCAPE_FLAG: [u8; 256] = {
     t
 };
 
+mod nibble;
+
+use nibble::{first_flagged_simd, NibbleTables, ESCAPE_NIBBLES, URL_ESCAPE_NIBBLES};
+
 const ONES: u64 = 0x0101_0101_0101_0101;
 const HIGH: u64 = 0x8080_8080_8080_8080;
 
@@ -122,7 +126,11 @@ fn first_flagged(
     from: usize,
     mask_of: impl Fn(u64) -> u64,
     flags: &[u8; 256],
+    tables: &NibbleTables,
 ) -> usize {
+    if let Some(found) = first_flagged_simd(bytes, from, tables) {
+        return found;
+    }
     let len = bytes.len();
     let mut i = from;
 
@@ -170,6 +178,7 @@ fn escape_into(
     mask_of: impl Fn(u64) -> u64,
     flags: &[u8; 256],
     table: &[&'static str; 256],
+    tables: &NibbleTables,
 ) {
     // The invariant: bytes in `s[start..i]` have not been copied yet, and
     // everything before `start` has already been emitted in escaped form.
@@ -177,7 +186,7 @@ fn escape_into(
     let mut start = 0usize;
 
     loop {
-        let i = first_flagged(bytes, start, &mask_of, flags);
+        let i = first_flagged(bytes, start, &mask_of, flags, tables);
         if i >= bytes.len() {
             break;
         }
@@ -199,7 +208,7 @@ pub(super) fn write_escaped_into(out: &mut String, s: &str) {
     // `reserve(s.len())` covers the no-escape case exactly and reduces growth
     // even when replacements make the final output longer.
     out.reserve(s.len());
-    escape_into(out, s, escape_mask, &ESCAPE_FLAG, &ESCAPE_TABLE);
+    escape_into(out, s, escape_mask, &ESCAPE_FLAG, &ESCAPE_TABLE, &ESCAPE_NIBBLES);
 }
 
 pub(super) fn write_url_escaped_into(out: &mut String, s: &str) {
@@ -208,125 +217,8 @@ pub(super) fn write_url_escaped_into(out: &mut String, s: &str) {
     // Ampersand stays HTML-escaped because the result is written inside an
     // HTML attribute, while spaces and tag delimiters are percent encoded to
     // keep the URL value itself stable.
-    escape_into(out, s, url_escape_mask, &URL_ESCAPE_FLAG, &URL_ESCAPE_TABLE);
+    escape_into(out, s, url_escape_mask, &URL_ESCAPE_FLAG, &URL_ESCAPE_TABLE, &URL_ESCAPE_NIBBLES);
 }
 
 #[cfg(test)]
-mod tests {
-    use super::*;
-
-    /// Straightforward byte-at-a-time escaper the SWAR scanner must match.
-    ///
-    /// Every escaped byte is ASCII, so copying the rest through verbatim at
-    /// the byte level keeps multi-byte sequences intact.
-    fn reference(s: &str, flags: &[u8; 256], table: &[&'static str; 256]) -> String {
-        let mut out: Vec<u8> = Vec::new();
-        for byte in s.bytes() {
-            if flags[byte as usize] != 0 {
-                out.extend_from_slice(table[byte as usize].as_bytes());
-            } else {
-                out.push(byte);
-            }
-        }
-        String::from_utf8(out).expect("escaping only rewrites ASCII bytes")
-    }
-
-    fn check(s: &str) {
-        let mut text = String::new();
-        write_escaped_into(&mut text, s);
-        assert_eq!(text, reference(s, &ESCAPE_FLAG, &ESCAPE_TABLE), "text escape: {s:?}");
-
-        let mut url = String::new();
-        write_url_escaped_into(&mut url, s);
-        assert_eq!(url, reference(s, &URL_ESCAPE_FLAG, &URL_ESCAPE_TABLE), "url escape: {s:?}");
-    }
-
-    #[test]
-    fn matches_reference_on_fixtures() {
-        for case in [
-            "",
-            "a",
-            "&",
-            "<>",
-            "plain ascii text with no escapes at all",
-            "&<>\"'",
-            "a&b<c>d\"e'f",
-            "exactly-8b",
-            "seven77",
-            "&&&&&&&&&&&&&&&&",
-            "trailing escape &",
-            "& leading escape",
-            // The folded masks admit no extra bytes, but these neighbours are
-            // the ones a sloppy fold would leak: 0x21 0x23 0x25 0x3D 0x3F.
-            "!#%=?",
-            "!#%=? &<>\"' !#%=?",
-        ] {
-            check(case);
-        }
-    }
-
-    #[test]
-    fn matches_reference_on_borrow_propagation_shapes() {
-        // `has_zero` can flag a 0x01 lane that borrowed from a real match
-        // below it. These interleavings put such bytes directly after a match
-        // inside the same word, which is where a wrong lane index would show.
-        for filler in ["!", "#", "%", "=", "?", "\x01", "\x00"] {
-            for needle in ["&", "<", ">", "\"", "'", " "] {
-                for lead in 0..9 {
-                    let mut s = "x".repeat(lead);
-                    s.push_str(needle);
-                    for _ in 0..8 {
-                        s.push_str(filler);
-                    }
-                    s.push_str(needle);
-                    check(&s);
-                }
-            }
-        }
-    }
-
-    #[test]
-    fn matches_reference_across_the_overlapping_tail_read() {
-        // The sub-word tail is covered by re-reading the last eight bytes
-        // with the already-cleared lanes masked off, which is exactly where
-        // a masked-off match can borrow into the lane above it. The pairs
-        // below are the ones that can do it: after the mask folds, `<`/`>`
-        // leave a `0x01` lane on a following `=` or `?`, and `"` on a
-        // following `#`. One is placed at every offset of every length so
-        // each lands on both sides of the tail boundary.
-        for pair in ["<=", "<?", ">=", ">?", "\"#"] {
-            for len in 2..40usize {
-                for at in 0..len - 1 {
-                    let mut s = "x".repeat(len);
-                    s.replace_range(at..at + 2, pair);
-                    check(&s);
-                }
-            }
-        }
-    }
-
-    #[test]
-    fn matches_reference_on_pseudorandom_bytes() {
-        // xorshift over the printable-plus-needles range; deterministic so a
-        // failure is reproducible.
-        let mut state = 0x2545_F491_4F6C_DD1Du64;
-        let alphabet: Vec<u8> = (0x20u8..0x7f).chain(*b"&<>\"' ").collect();
-        for len in 0..200 {
-            let mut s = String::with_capacity(len);
-            for _ in 0..len {
-                state ^= state << 13;
-                state ^= state >> 7;
-                state ^= state << 17;
-                s.push(alphabet[(state % alphabet.len() as u64) as usize] as char);
-            }
-            check(&s);
-        }
-    }
-
-    #[test]
-    fn matches_reference_on_multibyte_utf8() {
-        check("日本語のテキスト");
-        check("emoji 🎉 and <tags> mixed");
-        check("café & naïve — \"quoted\"");
-    }
-}
+mod tests;
