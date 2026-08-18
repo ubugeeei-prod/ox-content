@@ -32,6 +32,14 @@ pub(super) struct FirstByteIndex {
     /// is far rarer in prose than their first byte `h`; most text nodes
     /// skip the candidate walk entirely.
     gate: Option<u8>,
+    /// Bytes that must follow `gate` for a match to be possible, when every
+    /// pattern agrees on them. The gate byte alone is a weak filter: `:` is
+    /// everywhere in prose (`Note:`, `1:1`, `Listing 3-2:`) and each hit used
+    /// to drag the node through the full candidate walk. The default
+    /// patterns both continue `//` after their `:`, so requiring `://`
+    /// rejects all of those with a two-byte compare.
+    gate_tail: [u8; 2],
+    gate_tail_len: usize,
 }
 
 /// Sentinel in `FirstByteIndex::second`: no single second byte filters
@@ -97,14 +105,63 @@ impl FirstByteIndex {
             .find(|&byte| qualifies(byte))
             .or_else(|| gate_candidates.iter().copied().find(|&byte| qualifies(byte)));
 
-        Self { table, needles, needle_len, overflow, second, gate }
+        // Extend the gate with the bytes that follow it in every pattern.
+        // Only caseless bytes qualify, for the same reason the gate byte
+        // itself must be caseless: the prefix compare is case-insensitive,
+        // so a letter's presence proves nothing about the other case.
+        let mut gate_tail = [0u8; 2];
+        let mut gate_tail_len = 0usize;
+        if let Some(gate_byte) = gate {
+            if let Some(first) = patterns.first() {
+                let first = first.as_bytes();
+                if let Some(at) = memchr::memchr(gate_byte, first) {
+                    let mut len = 0usize;
+                    while len < gate_tail.len()
+                        && at + 1 + len < first.len()
+                        && !first[at + 1 + len].is_ascii_alphabetic()
+                    {
+                        len += 1;
+                    }
+                    // Shrink until every pattern holds the whole needle; a
+                    // pattern set that disagrees falls back to the bare byte.
+                    while len > 0 {
+                        let needle = &first[at..=at + len];
+                        if patterns
+                            .iter()
+                            .all(|pat| memchr::memmem::find(pat.as_bytes(), needle).is_some())
+                        {
+                            gate_tail[..len].copy_from_slice(&first[at + 1..=at + len]);
+                            gate_tail_len = len;
+                            break;
+                        }
+                        len -= 1;
+                    }
+                }
+            }
+        }
+
+        Self { table, needles, needle_len, overflow, second, gate, gate_tail, gate_tail_len }
     }
 
-    /// The byte that must appear in a haystack for any pattern to match, if
-    /// the pattern set has one. See the field docs.
-    #[inline]
-    pub(super) fn gate_byte(&self) -> Option<u8> {
-        self.gate
+    /// Whether `haystack` can hold a pattern match at all.
+    ///
+    /// One `memchr` for the gate byte, then a compare against the bytes that
+    /// must follow it. With no gate byte configured this is vacuously true,
+    /// and with no tail it degrades to exactly the old single-byte probe.
+    pub(super) fn may_match(&self, haystack: &[u8]) -> bool {
+        let Some(gate) = self.gate else {
+            return true;
+        };
+        let tail = &self.gate_tail[..self.gate_tail_len];
+        let mut from = 0;
+        while let Some(off) = memchr::memchr(gate, &haystack[from..]) {
+            let at = from + off;
+            if haystack[at + 1..].starts_with(tail) {
+                return true;
+            }
+            from = at + 1;
+        }
+        false
     }
 
     /// True when the byte after a first-byte hit rules the candidate out

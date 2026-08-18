@@ -48,15 +48,14 @@ impl HtmlRenderer {
             write_escaped_into(&mut self.output, s);
             return;
         };
-        // A match must contain the index's gate byte (`:` for the default
-        // `http://`/`https://` patterns), so one memchr over the node proves
-        // "nothing can match here" for almost every prose node — skipping
-        // the candidate walk with its per-first-byte boundary checks.
-        if let Some(gate) = index.gate_byte() {
-            if memchr::memchr(gate, bytes).is_none() {
-                write_escaped_into(&mut self.output, s);
-                return;
-            }
+        // A match must contain the index's gate needle (`://` for the
+        // default `http://`/`https://` patterns), so one memchr plus a short
+        // compare proves "nothing can match here" for almost every prose
+        // node — skipping the candidate walk with its per-first-byte
+        // boundary checks.
+        if !index.may_match(bytes) {
+            write_escaped_into(&mut self.output, s);
+            return;
         }
         // Borrow the relevant fields disjointly so the URL scan (which only
         // reads `options`/`autolink_index`) and the output writes can coexist.
