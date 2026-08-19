@@ -15,13 +15,13 @@ import { css } from "./skin";
 export const kiosk: ThemeConfig = {
   name: "kiosk",
   fonts: {
-    sans: "\"Helvetica Neue\", Helvetica, Inter, \"Segoe UI\", Arial, sans-serif",
-    mono: "ui-monospace, SFMono-Regular, \"SF Mono\", Menlo, \"Cascadia Mono\", Consolas, monospace",
+    sans: '"Helvetica Neue", Helvetica, Inter, "Segoe UI", Arial, sans-serif',
+    mono: 'ui-monospace, SFMono-Regular, "SF Mono", Menlo, "Cascadia Mono", Consolas, monospace',
   },
   layout: {
-    "sidebarWidth": "248px",
-    "headerHeight": "64px",
-    "maxContentWidth": "920px",
+    sidebarWidth: "248px",
+    headerHeight: "64px",
+    maxContentWidth: "920px",
   },
   entryPage: { mode: "default" },
   tokens: {

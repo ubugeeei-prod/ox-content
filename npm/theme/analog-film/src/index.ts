@@ -15,13 +15,13 @@ import { css } from "./skin";
 export const analogFilm: ThemeConfig = {
   name: "analog-film",
   fonts: {
-    sans: "\"Arial Narrow\", \"Helvetica Neue Condensed\", \"Roboto Condensed\", \"Segoe UI\", sans-serif",
-    mono: "ui-monospace, SFMono-Regular, \"SF Mono\", Menlo, \"Cascadia Mono\", Consolas, monospace",
+    sans: '"Arial Narrow", "Helvetica Neue Condensed", "Roboto Condensed", "Segoe UI", sans-serif',
+    mono: 'ui-monospace, SFMono-Regular, "SF Mono", Menlo, "Cascadia Mono", Consolas, monospace',
   },
   layout: {
-    "sidebarWidth": "262px",
-    "headerHeight": "64px",
-    "maxContentWidth": "900px",
+    sidebarWidth: "262px",
+    headerHeight: "64px",
+    maxContentWidth: "900px",
   },
   entryPage: { mode: "default" },
   tokens: {

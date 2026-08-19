@@ -15,13 +15,13 @@ import { css } from "./skin";
 export const ledger: ThemeConfig = {
   name: "ledger",
   fonts: {
-    sans: "\"Optima\", \"Gill Sans\", \"Gill Sans MT\", \"Segoe UI\", ui-sans-serif, sans-serif",
-    mono: "ui-monospace, SFMono-Regular, \"SF Mono\", Menlo, \"Cascadia Mono\", Consolas, monospace",
+    sans: '"Optima", "Gill Sans", "Gill Sans MT", "Segoe UI", ui-sans-serif, sans-serif',
+    mono: 'ui-monospace, SFMono-Regular, "SF Mono", Menlo, "Cascadia Mono", Consolas, monospace',
   },
   layout: {
-    "sidebarWidth": "252px",
-    "headerHeight": "60px",
-    "maxContentWidth": "880px",
+    sidebarWidth: "252px",
+    headerHeight: "60px",
+    maxContentWidth: "880px",
   },
   entryPage: { mode: "default" },
   tokens: {

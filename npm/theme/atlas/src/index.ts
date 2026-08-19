@@ -15,13 +15,13 @@ import { css } from "./skin";
 export const atlas: ThemeConfig = {
   name: "atlas",
   fonts: {
-    sans: "\"Optima\", \"Gill Sans\", \"Gill Sans MT\", \"Segoe UI\", ui-sans-serif, sans-serif",
-    mono: "ui-monospace, SFMono-Regular, \"SF Mono\", Menlo, \"Cascadia Mono\", Consolas, monospace",
+    sans: '"Optima", "Gill Sans", "Gill Sans MT", "Segoe UI", ui-sans-serif, sans-serif',
+    mono: 'ui-monospace, SFMono-Regular, "SF Mono", Menlo, "Cascadia Mono", Consolas, monospace',
   },
   layout: {
-    "sidebarWidth": "250px",
-    "headerHeight": "60px",
-    "maxContentWidth": "860px",
+    sidebarWidth: "250px",
+    headerHeight: "60px",
+    maxContentWidth: "860px",
   },
   entryPage: { mode: "default" },
   tokens: {

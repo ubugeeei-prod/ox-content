@@ -15,13 +15,13 @@ import { css } from "./skin";
 export const clay: ThemeConfig = {
   name: "clay",
   fonts: {
-    sans: "\"SF Pro Rounded\", ui-rounded, \"Hiragino Maru Gothic ProN\", \"Varela Round\", system-ui, sans-serif",
-    mono: "ui-monospace, SFMono-Regular, \"SF Mono\", Menlo, \"Cascadia Mono\", Consolas, monospace",
+    sans: '"SF Pro Rounded", ui-rounded, "Hiragino Maru Gothic ProN", "Varela Round", system-ui, sans-serif',
+    mono: 'ui-monospace, SFMono-Regular, "SF Mono", Menlo, "Cascadia Mono", Consolas, monospace',
   },
   layout: {
-    "sidebarWidth": "272px",
-    "headerHeight": "70px",
-    "maxContentWidth": "900px",
+    sidebarWidth: "272px",
+    headerHeight: "70px",
+    maxContentWidth: "900px",
   },
   entryPage: { mode: "default" },
   tokens: {

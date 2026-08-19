@@ -17,12 +17,7 @@
       "id": "pixel",
       "title": "Pixel",
       "description": "Chunky 8-bit surfaces, hard offset shadows and stepped motion",
-      "keywords": [
-        "8bit",
-        "pixel-art",
-        "retro-gaming",
-        "arcade"
-      ],
+      "keywords": ["8bit", "pixel-art", "retro-gaming", "arcade"],
       "sans": "pixelBody",
       "mono": "pixel",
       "layout": {
@@ -44,12 +39,7 @@
       "id": "liquid-glass",
       "title": "Liquid Glass",
       "description": "Refractive glass panels with specular edges and a light sweep on hover",
-      "keywords": [
-        "glass",
-        "glassmorphism",
-        "liquid",
-        "refraction"
-      ],
+      "keywords": ["glass", "glassmorphism", "liquid", "refraction"],
       "sans": "system",
       "mono": "mono",
       "layout": {
@@ -70,12 +60,7 @@
       "id": "blur-glass",
       "title": "Blur Glass",
       "description": "Frosted backdrop-blur layers that resolve out of a soft haze",
-      "keywords": [
-        "glass",
-        "glassmorphism",
-        "frosted",
-        "blur"
-      ],
+      "keywords": ["glass", "glassmorphism", "frosted", "blur"],
       "sans": "system",
       "mono": "mono",
       "layout": {
@@ -96,13 +81,7 @@
       "id": "analog-film",
       "title": "Analog Film",
       "description": "Grain, halation and sprocket rails with a gentle gate weave",
-      "keywords": [
-        "film",
-        "grain",
-        "analog",
-        "photography",
-        "halation"
-      ],
+      "keywords": ["film", "grain", "analog", "photography", "halation"],
       "sans": "condensed",
       "mono": "mono",
       "layout": {
@@ -123,13 +102,7 @@
       "id": "fluid",
       "title": "Fluid",
       "description": "Organic blob gradients that drift and morph behind the content",
-      "keywords": [
-        "fluid",
-        "organic",
-        "gradient",
-        "mesh",
-        "blob"
-      ],
+      "keywords": ["fluid", "organic", "gradient", "mesh", "blob"],
       "sans": "rounded",
       "mono": "mono",
       "layout": {
@@ -150,13 +123,7 @@
       "id": "fabric",
       "title": "Fabric",
       "description": "Woven texture, stitched seams and soft cloth-fold reveals",
-      "keywords": [
-        "fabric",
-        "textile",
-        "woven",
-        "stitch",
-        "craft"
-      ],
+      "keywords": ["fabric", "textile", "woven", "stitch", "craft"],
       "sans": "system",
       "mono": "mono",
       "layout": {
@@ -177,13 +144,7 @@
       "id": "leather",
       "title": "Leather",
       "description": "Embossed grain and saddle stitching that presses in when touched",
-      "keywords": [
-        "leather",
-        "skeuomorphic",
-        "stitched",
-        "emboss",
-        "craft"
-      ],
+      "keywords": ["leather", "skeuomorphic", "stitched", "emboss", "craft"],
       "sans": "serif",
       "mono": "mono",
       "layout": {
@@ -204,13 +165,7 @@
       "id": "brutalist",
       "title": "Brutalist",
       "description": "Raw structure, oversized type and shadows that slam into place",
-      "keywords": [
-        "brutalism",
-        "neubrutalism",
-        "raw",
-        "bold",
-        "poster"
-      ],
+      "keywords": ["brutalism", "neubrutalism", "raw", "bold", "poster"],
       "sans": "grotesque",
       "mono": "mono",
       "layout": {
@@ -231,13 +186,7 @@
       "id": "terminal",
       "title": "Terminal",
       "description": "CRT phosphor with scanlines, a blinking block caret and prompt gutters",
-      "keywords": [
-        "terminal",
-        "crt",
-        "console",
-        "tui",
-        "hacker"
-      ],
+      "keywords": ["terminal", "crt", "console", "tui", "hacker"],
       "sans": "mono",
       "mono": "mono",
       "layout": {
@@ -258,13 +207,7 @@
       "id": "blueprint",
       "title": "Blueprint",
       "description": "Technical drawing grid with dashed callouts and strokes that draw themselves",
-      "keywords": [
-        "blueprint",
-        "technical",
-        "drafting",
-        "grid",
-        "schematic"
-      ],
+      "keywords": ["blueprint", "technical", "drafting", "grid", "schematic"],
       "sans": "condensed",
       "mono": "mono",
       "layout": {
@@ -285,13 +228,7 @@
       "id": "risograph",
       "title": "Risograph",
       "description": "Misregistered duotone print where the ink channels separate on hover",
-      "keywords": [
-        "risograph",
-        "print",
-        "duotone",
-        "zine",
-        "halftone"
-      ],
+      "keywords": ["risograph", "print", "duotone", "zine", "halftone"],
       "sans": "grotesque",
       "mono": "mono",
       "layout": {
@@ -312,13 +249,7 @@
       "id": "swiss",
       "title": "Swiss",
       "description": "International Typographic Style — a hard grid, rules, and precise slides",
-      "keywords": [
-        "swiss",
-        "typography",
-        "grid",
-        "minimal",
-        "international"
-      ],
+      "keywords": ["swiss", "typography", "grid", "minimal", "international"],
       "sans": "grotesque",
       "mono": "mono",
       "layout": {
@@ -339,13 +270,7 @@
       "id": "neon",
       "title": "Neon",
       "description": "Sunset-grid glow with humming tube outlines and a scanline sweep",
-      "keywords": [
-        "neon",
-        "synthwave",
-        "glow",
-        "retrowave",
-        "cyberpunk"
-      ],
+      "keywords": ["neon", "synthwave", "glow", "retrowave", "cyberpunk"],
       "sans": "system",
       "mono": "mono",
       "layout": {
@@ -366,13 +291,7 @@
       "id": "clay",
       "title": "Clay",
       "description": "Soft extruded clay that squishes under the pointer",
-      "keywords": [
-        "claymorphism",
-        "soft",
-        "3d",
-        "playful",
-        "neumorphism"
-      ],
+      "keywords": ["claymorphism", "soft", "3d", "playful", "neumorphism"],
       "sans": "rounded",
       "mono": "mono",
       "layout": {
@@ -393,13 +312,7 @@
       "id": "editorial",
       "title": "Editorial",
       "description": "Magazine typography with drop caps, hairline rules and column reveals",
-      "keywords": [
-        "editorial",
-        "magazine",
-        "newspaper",
-        "print",
-        "typography"
-      ],
+      "keywords": ["editorial", "magazine", "newspaper", "print", "typography"],
       "sans": "serif",
       "mono": "mono",
       "layout": {
@@ -420,13 +333,7 @@
       "id": "aurora",
       "title": "Aurora",
       "description": "Slow conic light curtains drifting behind translucent panels",
-      "keywords": [
-        "aurora",
-        "gradient",
-        "mesh",
-        "ambient",
-        "northern-lights"
-      ],
+      "keywords": ["aurora", "gradient", "mesh", "ambient", "northern-lights"],
       "sans": "system",
       "mono": "mono",
       "layout": {
@@ -447,13 +354,7 @@
       "id": "holo",
       "title": "Holo",
       "description": "Iridescent foil that shifts hue as panels tilt and slide",
-      "keywords": [
-        "holographic",
-        "iridescent",
-        "foil",
-        "chrome",
-        "prism"
-      ],
+      "keywords": ["holographic", "iridescent", "foil", "chrome", "prism"],
       "sans": "system",
       "mono": "mono",
       "layout": {
@@ -474,13 +375,7 @@
       "id": "paper",
       "title": "Paper",
       "description": "Letterpress impressions on soft stock with a deckled page edge",
-      "keywords": [
-        "paper",
-        "letterpress",
-        "print",
-        "stationery",
-        "tactile"
-      ],
+      "keywords": ["paper", "letterpress", "print", "stationery", "tactile"],
       "sans": "serif",
       "mono": "mono",
       "layout": {
@@ -501,13 +396,7 @@
       "id": "voltage",
       "title": "Voltage",
       "description": "Oversized display type with charged gradient edges and a live electric field",
-      "keywords": [
-        "gradient",
-        "electric",
-        "bold",
-        "display",
-        "energy"
-      ],
+      "keywords": ["gradient", "electric", "bold", "display", "energy"],
       "sans": "system",
       "mono": "mono",
       "layout": {
@@ -528,13 +417,7 @@
       "id": "manuscript",
       "title": "Manuscript",
       "description": "A codex page — narrow measure, rubricated heads, and a table of contents that becomes marginalia",
-      "keywords": [
-        "manuscript",
-        "codex",
-        "marginalia",
-        "rubrication",
-        "book"
-      ],
+      "keywords": ["manuscript", "codex", "marginalia", "rubrication", "book"],
       "sans": "serif",
       "mono": "mono",
       "layout": {
@@ -555,13 +438,7 @@
       "id": "ledger",
       "title": "Ledger",
       "description": "A bound accounting book — text set on real ruled lines, tabular figures throughout",
-      "keywords": [
-        "ledger",
-        "accounting",
-        "ruled",
-        "tabular",
-        "baseline-grid"
-      ],
+      "keywords": ["ledger", "accounting", "ruled", "tabular", "baseline-grid"],
       "sans": "humanist",
       "mono": "mono",
       "layout": {
@@ -582,13 +459,7 @@
       "id": "kiosk",
       "title": "Kiosk",
       "description": "Platform signage — a departure-board sidebar, banded heads and arrows",
-      "keywords": [
-        "signage",
-        "wayfinding",
-        "transit",
-        "dense",
-        "board"
-      ],
+      "keywords": ["signage", "wayfinding", "transit", "dense", "board"],
       "sans": "grotesque",
       "mono": "mono",
       "layout": {
@@ -609,13 +480,7 @@
       "id": "atlas",
       "title": "Atlas",
       "description": "A survey sheet — contour bands, a keyed legend sidebar and registration marks",
-      "keywords": [
-        "cartography",
-        "map",
-        "contour",
-        "survey",
-        "hairline"
-      ],
+      "keywords": ["cartography", "map", "contour", "survey", "hairline"],
       "sans": "humanist",
       "mono": "mono",
       "layout": {
@@ -636,13 +501,7 @@
       "id": "receipt",
       "title": "Receipt",
       "description": "A thermal roll — one narrow centred column, dotted leaders and a torn edge",
-      "keywords": [
-        "receipt",
-        "thermal",
-        "print",
-        "monospace",
-        "narrow"
-      ],
+      "keywords": ["receipt", "thermal", "print", "monospace", "narrow"],
       "sans": "mono",
       "mono": "mono",
       "layout": {
@@ -663,13 +522,7 @@
       "id": "bauhaus",
       "title": "Bauhaus",
       "description": "Circle, square, triangle and a diagonal that refuses the grid",
-      "keywords": [
-        "bauhaus",
-        "geometric",
-        "primary",
-        "modernist",
-        "shapes"
-      ],
+      "keywords": ["bauhaus", "geometric", "primary", "modernist", "shapes"],
       "sans": "grotesque",
       "mono": "mono",
       "layout": {
@@ -690,13 +543,7 @@
       "id": "zine",
       "title": "Zine",
       "description": "Photocopied and taped together — nothing square to the page",
-      "keywords": [
-        "zine",
-        "punk",
-        "photocopy",
-        "collage",
-        "diy"
-      ],
+      "keywords": ["zine", "punk", "photocopy", "collage", "diy"],
       "sans": "grotesque",
       "mono": "mono",
       "layout": {
@@ -717,13 +564,7 @@
       "id": "noir",
       "title": "Noir",
       "description": "One hard key light and a steep falloff — shapes picked out of the dark",
-      "keywords": [
-        "noir",
-        "chiaroscuro",
-        "cinematic",
-        "dramatic",
-        "shadow"
-      ],
+      "keywords": ["noir", "chiaroscuro", "cinematic", "dramatic", "shadow"],
       "sans": "serif",
       "mono": "mono",
       "layout": {

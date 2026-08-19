@@ -15,13 +15,13 @@ import { css } from "./skin";
 export const holo: ThemeConfig = {
   name: "holo",
   fonts: {
-    sans: "ui-sans-serif, system-ui, -apple-system, \"Segoe UI Variable\", \"Segoe UI\", Roboto, \"Helvetica Neue\", sans-serif",
-    mono: "ui-monospace, SFMono-Regular, \"SF Mono\", Menlo, \"Cascadia Mono\", Consolas, monospace",
+    sans: 'ui-sans-serif, system-ui, -apple-system, "Segoe UI Variable", "Segoe UI", Roboto, "Helvetica Neue", sans-serif',
+    mono: 'ui-monospace, SFMono-Regular, "SF Mono", Menlo, "Cascadia Mono", Consolas, monospace',
   },
   layout: {
-    "sidebarWidth": "266px",
-    "headerHeight": "66px",
-    "maxContentWidth": "920px",
+    sidebarWidth: "266px",
+    headerHeight: "66px",
+    maxContentWidth: "920px",
   },
   entryPage: { mode: "default" },
   tokens: {

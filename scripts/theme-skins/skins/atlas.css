@@ -9,16 +9,32 @@
 
 :root {
   --octc-at-hair: color-mix(in srgb, var(--octc-color-text) 26%, transparent);
-  --octc-at-contour: color-mix(in srgb, var(--octc-accent-cool, var(--octc-color-primary)) 13%, transparent);
-  --octc-at-water: color-mix(in srgb, var(--octc-accent-c, var(--octc-color-primary)) 8%, transparent);
+  --octc-at-contour: color-mix(
+    in srgb,
+    var(--octc-accent-cool, var(--octc-color-primary)) 13%,
+    transparent
+  );
+  --octc-at-water: color-mix(
+    in srgb,
+    var(--octc-accent-c, var(--octc-color-primary)) 8%,
+    transparent
+  );
 }
 
 /* Contour bands: concentric ellipses at two scales, which is enough to read as
  * terrain without becoming a pattern. */
 body {
   background-image:
-    repeating-radial-gradient(ellipse 70% 46% at 22% 18%, transparent 0 26px, var(--octc-at-contour) 26px 27px),
-    repeating-radial-gradient(ellipse 58% 62% at 84% 74%, transparent 0 32px, var(--octc-at-contour) 32px 33px),
+    repeating-radial-gradient(
+      ellipse 70% 46% at 22% 18%,
+      transparent 0 26px,
+      var(--octc-at-contour) 26px 27px
+    ),
+    repeating-radial-gradient(
+      ellipse 58% 62% at 84% 74%,
+      transparent 0 32px,
+      var(--octc-at-contour) 32px 33px
+    ),
     radial-gradient(ellipse 40% 30% at 60% 8%, var(--octc-at-water), transparent 70%);
 }
 
@@ -39,7 +55,8 @@ body {
   background: transparent;
   border-right: 1px solid var(--octc-at-hair);
 }
-.nav-title, .toc-title {
+.nav-title,
+.toc-title {
   text-transform: uppercase;
   letter-spacing: 0.2em;
   font-size: 0.62rem;
@@ -63,18 +80,39 @@ body {
   background: var(--octc-at-hair);
   transform: translateY(-0.25em);
 }
-.nav-link:hover { background: transparent; letter-spacing: 0.015em; }
-.nav-link:hover::before { background: var(--octc-color-primary); width: 1.1rem; }
-.nav-link.active { background: transparent; font-weight: 600; color: var(--octc-color-primary); }
-.nav-link.active::before { background: var(--octc-color-primary); width: 1.1rem; height: 3px; }
+.nav-link:hover {
+  background: transparent;
+  letter-spacing: 0.015em;
+}
+.nav-link:hover::before {
+  background: var(--octc-color-primary);
+  width: 1.1rem;
+}
+.nav-link.active {
+  background: transparent;
+  font-weight: 600;
+  color: var(--octc-color-primary);
+}
+.nav-link.active::before {
+  background: var(--octc-color-primary);
+  width: 1.1rem;
+  height: 3px;
+}
 
-.toc { border-left: 1px solid var(--octc-at-hair); }
-.toc-link { font-size: 0.78rem; }
+.toc {
+  border-left: 1px solid var(--octc-at-hair);
+}
+.toc-link {
+  font-size: 0.78rem;
+}
 
 /* Registration marks: corner ticks rather than a box, the way a plate is
  * aligned on a press. */
-.content { position: relative; }
-.content::before, .content::after {
+.content {
+  position: relative;
+}
+.content::before,
+.content::after {
   content: "";
   position: absolute;
   width: 12px;
@@ -82,19 +120,43 @@ body {
   pointer-events: none;
   opacity: 0.5;
 }
-.content::before { top: -6px; left: -10px; border-top: 1px solid var(--octc-color-primary); border-left: 1px solid var(--octc-color-primary); }
-.content::after { bottom: -6px; right: -10px; border-bottom: 1px solid var(--octc-color-primary); border-right: 1px solid var(--octc-color-primary); }
+.content::before {
+  top: -6px;
+  left: -10px;
+  border-top: 1px solid var(--octc-color-primary);
+  border-left: 1px solid var(--octc-color-primary);
+}
+.content::after {
+  bottom: -6px;
+  right: -10px;
+  border-bottom: 1px solid var(--octc-color-primary);
+  border-right: 1px solid var(--octc-color-primary);
+}
 
-.content h1, .content h2, .content h3 { font-weight: 500; letter-spacing: 0.04em; }
+.content h1,
+.content h2,
+.content h3 {
+  font-weight: 500;
+  letter-spacing: 0.04em;
+}
 .content h2 {
   border-bottom: 1px solid var(--octc-at-hair);
   text-transform: uppercase;
   font-size: 1.05rem;
   letter-spacing: 0.12em;
 }
-.content h3 { text-transform: uppercase; font-size: 0.88rem; letter-spacing: 0.14em; }
-.content a { text-decoration: none; border-bottom: 1px dotted currentColor; }
-.content a:hover { border-bottom-style: solid; }
+.content h3 {
+  text-transform: uppercase;
+  font-size: 0.88rem;
+  letter-spacing: 0.14em;
+}
+.content a {
+  text-decoration: none;
+  border-bottom: 1px dotted currentColor;
+}
+.content a:hover {
+  border-bottom-style: solid;
+}
 .content pre {
   border-radius: 0;
   border: 1px solid var(--octc-at-hair);
@@ -106,13 +168,51 @@ body {
   border-radius: 0;
   font-size: 0.94rem;
 }
-.content table, .content th, .content td { border: 1px solid var(--octc-at-hair); }
-.content th { background: transparent; text-transform: uppercase; letter-spacing: 0.1em; font-size: 0.68rem; font-weight: 500; }
-.content hr { height: 1px; border: 0; background: var(--octc-at-hair); }
+.content table,
+.content th,
+.content td {
+  border: 1px solid var(--octc-at-hair);
+}
+.content th {
+  background: transparent;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  font-size: 0.68rem;
+  font-weight: 500;
+}
+.content hr {
+  height: 1px;
+  border: 0;
+  background: var(--octc-at-hair);
+}
 
-.hero-name { font-weight: 500; letter-spacing: 0.02em; text-transform: uppercase; }
-.hero-text, .hero-tagline { letter-spacing: 0.08em; }
-.hero-action { border-radius: 0; border: 1px solid var(--octc-at-hair); letter-spacing: 0.1em; text-transform: uppercase; font-weight: 500; }
-.hero-action:hover { border-color: var(--octc-color-primary); }
-.features .feature-card { border: 0; border-top: 1px solid var(--octc-at-hair); border-radius: 0; }
-.feature-title { text-transform: uppercase; letter-spacing: 0.1em; font-weight: 500; font-size: 0.92rem; }
+.hero-name {
+  font-weight: 500;
+  letter-spacing: 0.02em;
+  text-transform: uppercase;
+}
+.hero-text,
+.hero-tagline {
+  letter-spacing: 0.08em;
+}
+.hero-action {
+  border-radius: 0;
+  border: 1px solid var(--octc-at-hair);
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  font-weight: 500;
+}
+.hero-action:hover {
+  border-color: var(--octc-color-primary);
+}
+.features .feature-card {
+  border: 0;
+  border-top: 1px solid var(--octc-at-hair);
+  border-radius: 0;
+}
+.feature-title {
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  font-weight: 500;
+  font-size: 0.92rem;
+}

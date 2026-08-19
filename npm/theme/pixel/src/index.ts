@@ -15,16 +15,18 @@ import { css } from "./skin";
 export const pixel: ThemeConfig = {
   name: "pixel",
   fonts: {
-    sans: "\"DotGothic16\", \"Silkscreen\", ui-monospace, SFMono-Regular, Menlo, monospace",
-    mono: "\"Silkscreen\", \"DotGothic16\", ui-monospace, SFMono-Regular, Menlo, monospace",
+    sans: '"DotGothic16", "Silkscreen", ui-monospace, SFMono-Regular, Menlo, monospace',
+    mono: '"Silkscreen", "DotGothic16", ui-monospace, SFMono-Regular, Menlo, monospace',
   },
   layout: {
-    "sidebarWidth": "252px",
-    "headerHeight": "58px",
-    "maxContentWidth": "920px",
+    sidebarWidth: "252px",
+    headerHeight: "58px",
+    maxContentWidth: "920px",
   },
   entryPage: { mode: "default" },
-  embed: { head: "<link rel=\"preconnect\" href=\"https://fonts.googleapis.com\"><link rel=\"preconnect\" href=\"https://fonts.gstatic.com\" crossorigin><link rel=\"stylesheet\" href=\"https://fonts.googleapis.com/css2?family=Silkscreen:wght@400;700&amp;family=DotGothic16&amp;display=swap\">" },
+  embed: {
+    head: '<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Silkscreen:wght@400;700&amp;family=DotGothic16&amp;display=swap">',
+  },
   tokens: {
     "motion-fast": "128ms",
     "motion-base": "238ms",

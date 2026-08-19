@@ -15,13 +15,13 @@ import { css } from "./skin";
 export const terminal: ThemeConfig = {
   name: "terminal",
   fonts: {
-    sans: "ui-monospace, SFMono-Regular, \"SF Mono\", Menlo, \"Cascadia Mono\", Consolas, monospace",
-    mono: "ui-monospace, SFMono-Regular, \"SF Mono\", Menlo, \"Cascadia Mono\", Consolas, monospace",
+    sans: 'ui-monospace, SFMono-Regular, "SF Mono", Menlo, "Cascadia Mono", Consolas, monospace',
+    mono: 'ui-monospace, SFMono-Regular, "SF Mono", Menlo, "Cascadia Mono", Consolas, monospace',
   },
   layout: {
-    "sidebarWidth": "248px",
-    "headerHeight": "56px",
-    "maxContentWidth": "880px",
+    sidebarWidth: "248px",
+    headerHeight: "56px",
+    maxContentWidth: "880px",
   },
   entryPage: { mode: "default" },
   tokens: {

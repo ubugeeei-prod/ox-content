@@ -15,13 +15,13 @@ import { css } from "./skin";
 export const noir: ThemeConfig = {
   name: "noir",
   fonts: {
-    sans: "ui-serif, \"Iowan Old Style\", \"Hoefler Text\", Georgia, \"Times New Roman\", serif",
-    mono: "ui-monospace, SFMono-Regular, \"SF Mono\", Menlo, \"Cascadia Mono\", Consolas, monospace",
+    sans: 'ui-serif, "Iowan Old Style", "Hoefler Text", Georgia, "Times New Roman", serif',
+    mono: 'ui-monospace, SFMono-Regular, "SF Mono", Menlo, "Cascadia Mono", Consolas, monospace',
   },
   layout: {
-    "sidebarWidth": "252px",
-    "headerHeight": "66px",
-    "maxContentWidth": "840px",
+    sidebarWidth: "252px",
+    headerHeight: "66px",
+    maxContentWidth: "840px",
   },
   entryPage: { mode: "default" },
   tokens: {

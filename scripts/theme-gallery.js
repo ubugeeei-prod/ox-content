@@ -84,7 +84,12 @@
   const frame = el("iframe", { title: "Theme preview", loading: "lazy" });
   const meta = el("p", { className: "meta" });
   const stage = el("div", { className: "stage" }, [
-    el("div", { className: "controls" }, [pageSeg, modeSeg, el("span", { className: "spacer" }), recipe]),
+    el("div", { className: "controls" }, [
+      pageSeg,
+      modeSeg,
+      el("span", { className: "spacer" }),
+      recipe,
+    ]),
     el("div", { className: "frame-wrap" }, [frame]),
   ]);
   stage.append(meta);
@@ -136,7 +141,10 @@ ${skin.head || ""}<style>${DATA.base}</style><style>${scheme.css}</style><style>
       node.setAttribute("aria-pressed", String(node.textContent.toLowerCase() === state.mode)),
     );
     [...pageSeg.children].forEach((node, index) =>
-      node.setAttribute("aria-pressed", String((index === 0 ? "landing" : "article") === state.page)),
+      node.setAttribute(
+        "aria-pressed",
+        String((index === 0 ? "landing" : "article") === state.page),
+      ),
     );
 
     const camel = (id) => id.replace(/-([a-z0-9])/g, (_, c) => c.toUpperCase());

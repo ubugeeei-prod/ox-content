@@ -15,13 +15,13 @@ import { css } from "./skin";
 export const neon: ThemeConfig = {
   name: "neon",
   fonts: {
-    sans: "ui-sans-serif, system-ui, -apple-system, \"Segoe UI Variable\", \"Segoe UI\", Roboto, \"Helvetica Neue\", sans-serif",
-    mono: "ui-monospace, SFMono-Regular, \"SF Mono\", Menlo, \"Cascadia Mono\", Consolas, monospace",
+    sans: 'ui-sans-serif, system-ui, -apple-system, "Segoe UI Variable", "Segoe UI", Roboto, "Helvetica Neue", sans-serif',
+    mono: 'ui-monospace, SFMono-Regular, "SF Mono", Menlo, "Cascadia Mono", Consolas, monospace',
   },
   layout: {
-    "sidebarWidth": "264px",
-    "headerHeight": "66px",
-    "maxContentWidth": "920px",
+    sidebarWidth: "264px",
+    headerHeight: "66px",
+    maxContentWidth: "920px",
   },
   entryPage: { mode: "default" },
   tokens: {

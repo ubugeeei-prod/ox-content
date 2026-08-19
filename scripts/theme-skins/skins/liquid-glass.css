@@ -25,9 +25,21 @@
    * something behind it with structure for the rim to bend. Fixed, so content
    * moves across it and the material changes as you scroll. */
   --octc-lg-wallpaper:
-    radial-gradient(48% 38% at 12% 8%, color-mix(in srgb, var(--octc-accent-a, var(--octc-color-primary)) 46%, transparent), transparent 72%),
-    radial-gradient(42% 36% at 88% 16%, color-mix(in srgb, var(--octc-accent-c, var(--octc-color-primary)) 40%, transparent), transparent 74%),
-    radial-gradient(54% 44% at 68% 88%, color-mix(in srgb, var(--octc-accent-b, var(--octc-color-primary)) 34%, transparent), transparent 76%);
+    radial-gradient(
+      48% 38% at 12% 8%,
+      color-mix(in srgb, var(--octc-accent-a, var(--octc-color-primary)) 46%, transparent),
+      transparent 72%
+    ),
+    radial-gradient(
+      42% 36% at 88% 16%,
+      color-mix(in srgb, var(--octc-accent-c, var(--octc-color-primary)) 40%, transparent),
+      transparent 74%
+    ),
+    radial-gradient(
+      54% 44% at 68% 88%,
+      color-mix(in srgb, var(--octc-accent-b, var(--octc-color-primary)) 34%, transparent),
+      transparent 76%
+    );
   --octc-lg-rim: 12px;
   /* Toward bg-alt, not bg: on a white page a pane tinted with white is
    * invisible, and every surface collapses into one blown-out field. */
@@ -172,7 +184,9 @@ body {
   border-radius: var(--octc-lg-r);
 }
 
-.search-modal { border-radius: calc(var(--octc-lg-r) + 6px); }
+.search-modal {
+  border-radius: calc(var(--octc-lg-r) + 6px);
+}
 
 /* The header floats as its own capsule rather than spanning as a bar — the
  * material is meant to sit above the content, not be part of the frame. */
@@ -187,11 +201,22 @@ body {
   padding-inline: 1rem;
   height: calc(var(--octc-header-height) - 0.7rem);
 }
-.layout { padding-top: calc(var(--octc-header-height) + 0.7rem); }
-.header-title { font-weight: 620; letter-spacing: -0.015em; }
+.layout {
+  padding-top: calc(var(--octc-header-height) + 0.7rem);
+}
+.header-title {
+  font-weight: 620;
+  letter-spacing: -0.015em;
+}
 
-.search-button, .theme-toggle, .social-link { --octc-lg-rim: 7px; }
-.nav-link.active { --octc-lg-rim: 8px; }
+.search-button,
+.theme-toggle,
+.social-link {
+  --octc-lg-rim: 7px;
+}
+.nav-link.active {
+  --octc-lg-rim: 8px;
+}
 
 /* --- Chrome that stays quiet ---------------------------------------------- */
 
@@ -215,21 +240,29 @@ body {
   -webkit-backdrop-filter: blur(20px) saturate(180%);
   box-shadow: 0 10px 30px -14px var(--octc-lg-underlight);
 }
-.toc { border-left: 0; }
-.nav-title, .toc-title {
+.toc {
+  border-left: 0;
+}
+.nav-title,
+.toc-title {
   font-size: 0.7rem;
   letter-spacing: 0.11em;
   text-transform: uppercase;
   opacity: 0.62;
 }
-.nav-link:not(.active):hover, .toc-link:hover {
+.nav-link:not(.active):hover,
+.toc-link:hover {
   background: color-mix(in srgb, var(--octc-color-primary) 10%, transparent);
 }
-.nav-link.active { font-weight: 620; }
+.nav-link.active {
+  font-weight: 620;
+}
 
 /* --- Content -------------------------------------------------------------- */
 
-.content h2 { border-bottom: 1px solid color-mix(in srgb, var(--octc-color-border) 32%, transparent); }
+.content h2 {
+  border-bottom: 1px solid color-mix(in srgb, var(--octc-color-border) 32%, transparent);
+}
 .content :not(pre) > code {
   border-radius: 8px;
   background: color-mix(in srgb, var(--octc-color-primary) 11%, transparent);
@@ -239,9 +272,16 @@ body {
   border: 0;
   box-shadow: 0 14px 36px -20px var(--octc-lg-underlight);
 }
-.content blockquote { --octc-lg-rim: 10px; }
-.content table { overflow: hidden; }
-.content th, .content td { border-color: color-mix(in srgb, var(--octc-color-border) 26%, transparent); }
+.content blockquote {
+  --octc-lg-rim: 10px;
+}
+.content table {
+  overflow: hidden;
+}
+.content th,
+.content td {
+  border-color: color-mix(in srgb, var(--octc-color-border) 26%, transparent);
+}
 .content hr {
   height: 1px;
   border: 0;
@@ -256,9 +296,21 @@ body {
  * it renders as nothing at all, which is exactly how this skin used to look. */
 .hero {
   background-image:
-    radial-gradient(46% 40% at 16% 12%, color-mix(in srgb, var(--octc-accent-a, var(--octc-color-primary)) 62%, transparent), transparent 70%),
-    radial-gradient(42% 38% at 84% 22%, color-mix(in srgb, var(--octc-accent-c, var(--octc-color-primary)) 54%, transparent), transparent 72%),
-    radial-gradient(52% 44% at 58% 92%, color-mix(in srgb, var(--octc-accent-b, var(--octc-color-primary)) 46%, transparent), transparent 74%);
+    radial-gradient(
+      46% 40% at 16% 12%,
+      color-mix(in srgb, var(--octc-accent-a, var(--octc-color-primary)) 62%, transparent),
+      transparent 70%
+    ),
+    radial-gradient(
+      42% 38% at 84% 22%,
+      color-mix(in srgb, var(--octc-accent-c, var(--octc-color-primary)) 54%, transparent),
+      transparent 72%
+    ),
+    radial-gradient(
+      52% 44% at 58% 92%,
+      color-mix(in srgb, var(--octc-accent-b, var(--octc-color-primary)) 46%, transparent),
+      transparent 74%
+    );
   /* The base hero carries a repeating noise tile, and these layers inherit its
    * size and repeat unless told otherwise — which turns one soft field into a
    * polka-dot grid. */
@@ -266,8 +318,15 @@ body {
   background-repeat: no-repeat;
   background-attachment: fixed;
 }
-.hero-name { letter-spacing: -0.035em; font-weight: 660; }
-.hero-action { --octc-lg-rim: 9px; font-weight: 620; padding-inline: 2rem; }
+.hero-name {
+  letter-spacing: -0.035em;
+  font-weight: 660;
+}
+.hero-action {
+  --octc-lg-rim: 9px;
+  font-weight: 620;
+  padding-inline: 2rem;
+}
 
 /* Interaction is a lift and a widening rim — the lens deepening — rather than a
  * sweep of light across the face. */
@@ -287,21 +346,45 @@ body {
   transform: translateY(0) scale(0.985);
 }
 
-.features .feature-card { padding: 1.4rem; }
+.features .feature-card {
+  padding: 1.4rem;
+}
 
-:focus-visible { outline: 2px solid var(--octc-color-primary); outline-offset: 4px; border-radius: 999px; }
+:focus-visible {
+  outline: 2px solid var(--octc-color-primary);
+  outline-offset: 4px;
+  border-radius: 999px;
+}
 
 /* The rim trick needs mask compositing; without it the ring would fill the whole
  * shape and wash the panel out, so fall back to a plain hairline edge. */
 @supports not ((mask-composite: exclude) or (-webkit-mask-composite: xor)) {
-  .header::before, .search-modal::before, .feature-card::before, .hero-action::before,
-  .search-button::before, .theme-toggle::before, .social-link::before, .nav-link.active::before,
-  .header::after, .search-modal::after, .feature-card::after, .hero-action::after,
-  .search-button::after, .theme-toggle::after, .social-link::after, .nav-link.active::after {
+  .header::before,
+  .search-modal::before,
+  .feature-card::before,
+  .hero-action::before,
+  .search-button::before,
+  .theme-toggle::before,
+  .social-link::before,
+  .nav-link.active::before,
+  .header::after,
+  .search-modal::after,
+  .feature-card::after,
+  .hero-action::after,
+  .search-button::after,
+  .theme-toggle::after,
+  .social-link::after,
+  .nav-link.active::after {
     display: none;
   }
-  .header, .search-modal, .feature-card, .hero-action, .search-button,
-  .theme-toggle, .social-link, .nav-link.active {
+  .header,
+  .search-modal,
+  .feature-card,
+  .hero-action,
+  .search-button,
+  .theme-toggle,
+  .social-link,
+  .nav-link.active {
     border: 1px solid color-mix(in srgb, var(--octc-color-border) 45%, transparent);
   }
 }

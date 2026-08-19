@@ -6,13 +6,19 @@
  * that wide in the first place.
  */
 
-.layout { padding-top: var(--octc-header-height); }
+.layout {
+  padding-top: var(--octc-header-height);
+}
 
 .header {
   background: transparent;
   border-bottom: 1px solid color-mix(in srgb, var(--octc-color-border) 60%, transparent);
 }
-.header-title { font-variant-caps: small-caps; letter-spacing: 0.09em; font-weight: 600; }
+.header-title {
+  font-variant-caps: small-caps;
+  letter-spacing: 0.09em;
+  font-weight: 600;
+}
 
 /* The index sits in the gutter: no panel, no fill, just a ruled edge. */
 .sidebar {
@@ -21,16 +27,25 @@
   border-right: 1px solid color-mix(in srgb, var(--octc-color-border) 45%, transparent);
   padding-top: 2.5rem;
 }
-.nav-title, .toc-title {
+.nav-title,
+.toc-title {
   font-variant-caps: small-caps;
   letter-spacing: 0.12em;
   font-size: 0.86rem;
   color: var(--octc-accent-b-ink, var(--octc-color-primary));
   border: 0;
 }
-.nav-link { padding-block: 0.3rem; }
-.nav-link::before { content: "· "; opacity: 0.45; }
-.nav-link:hover { background: transparent; font-style: italic; }
+.nav-link {
+  padding-block: 0.3rem;
+}
+.nav-link::before {
+  content: "· ";
+  opacity: 0.45;
+}
+.nav-link:hover {
+  background: transparent;
+  font-style: italic;
+}
 .nav-link.active {
   background: transparent;
   font-weight: 600;
@@ -53,13 +68,23 @@
   line-height: 1.45;
   opacity: 0.72;
 }
-.toc-title { font-size: 0.72rem; margin-bottom: 0.4rem; }
-.toc-link { padding: 0.1rem 0; font-style: italic; }
-.toc-link:hover { text-decoration: underline; }
+.toc-title {
+  font-size: 0.72rem;
+  margin-bottom: 0.4rem;
+}
+.toc-link {
+  padding: 0.1rem 0;
+  font-style: italic;
+}
+.toc-link:hover {
+  text-decoration: underline;
+}
 
 /* No reserved gutter: the notes hang in the margin the centred column
  * already leaves. */
-.main--with-toc { padding-right: 2rem; }
+.main--with-toc {
+  padding-right: 2rem;
+}
 
 .content {
   max-width: 34rem;
@@ -74,7 +99,9 @@
 }
 
 /* Rubrication: the historical use of red for the opening of a section. */
-.content h1, .content h2, .content h3 {
+.content h1,
+.content h2,
+.content h3 {
   font-variant-caps: small-caps;
   letter-spacing: 0.05em;
   font-weight: 600;
@@ -82,8 +109,14 @@
   border: 0;
   text-align: left;
 }
-.content h1 { font-size: 2.1rem; text-align: center; margin-bottom: 1.6rem; }
-.content h2 { font-size: 1.35rem; }
+.content h1 {
+  font-size: 2.1rem;
+  text-align: center;
+  margin-bottom: 1.6rem;
+}
+.content h2 {
+  font-size: 1.35rem;
+}
 
 .content > h1 + p::first-letter,
 .content > h2 + p::first-letter {
@@ -95,8 +128,13 @@
   color: var(--octc-accent-b-ink, var(--octc-color-primary));
 }
 
-.content p + p { text-indent: 1.4em; }
-.content a { text-decoration: none; border-bottom: 1px solid currentColor; }
+.content p + p {
+  text-indent: 1.4em;
+}
+.content a {
+  text-decoration: none;
+  border-bottom: 1px solid currentColor;
+}
 .content blockquote {
   border: 0;
   background: transparent;
@@ -124,20 +162,41 @@
   opacity: 0.7;
 }
 
-.hero { text-align: center; }
-.hero-name { font-variant-caps: small-caps; letter-spacing: 0.02em; font-weight: 600; }
-.hero-text, .hero-tagline { font-style: italic; }
+.hero {
+  text-align: center;
+}
+.hero-name {
+  font-variant-caps: small-caps;
+  letter-spacing: 0.02em;
+  font-weight: 600;
+}
+.hero-text,
+.hero-tagline {
+  font-style: italic;
+}
 .hero-action {
   border: 1px solid var(--octc-color-border);
   border-radius: 0;
   font-variant-caps: small-caps;
   letter-spacing: 0.08em;
 }
-.features .feature-card { border: 0; border-top: 1px solid color-mix(in srgb, var(--octc-color-border) 55%, transparent); }
-.feature-title { font-variant-caps: small-caps; letter-spacing: 0.06em; }
+.features .feature-card {
+  border: 0;
+  border-top: 1px solid color-mix(in srgb, var(--octc-color-border) 55%, transparent);
+}
+.feature-title {
+  font-variant-caps: small-caps;
+  letter-spacing: 0.06em;
+}
 
 @media (max-width: 1100px) {
-  .toc { display: none; }
-  .main--with-toc { padding-right: 2rem; }
-  .content { padding-left: 0; }
+  .toc {
+    display: none;
+  }
+  .main--with-toc {
+    padding-right: 2rem;
+  }
+  .content {
+    padding-left: 0;
+  }
 }

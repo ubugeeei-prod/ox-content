@@ -1,8 +1,0 @@
-# The oxc dependencies declare `rust-version = "1.95.0"`, so cargo refuses to
-# build on anything older before it compiles a single crate. Without this file
-# that requirement is implicit, and any contributor whose rustup default is
-# older than 1.95 hits a wall on `cargo build` with no indication of what to
-# install. Pinning states the requirement where rustup will act on it.
-[toolchain]
-channel = "1.97.1"
-components = ["rustfmt", "clippy"]

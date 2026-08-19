@@ -15,13 +15,13 @@ import { css } from "./skin";
 export const leather: ThemeConfig = {
   name: "leather",
   fonts: {
-    sans: "ui-serif, \"Iowan Old Style\", \"Hoefler Text\", Georgia, \"Times New Roman\", serif",
-    mono: "ui-monospace, SFMono-Regular, \"SF Mono\", Menlo, \"Cascadia Mono\", Consolas, monospace",
+    sans: 'ui-serif, "Iowan Old Style", "Hoefler Text", Georgia, "Times New Roman", serif',
+    mono: 'ui-monospace, SFMono-Regular, "SF Mono", Menlo, "Cascadia Mono", Consolas, monospace',
   },
   layout: {
-    "sidebarWidth": "266px",
-    "headerHeight": "68px",
-    "maxContentWidth": "880px",
+    sidebarWidth: "266px",
+    headerHeight: "68px",
+    maxContentWidth: "880px",
   },
   entryPage: { mode: "default" },
   tokens: {

@@ -47,9 +47,7 @@
   background-color: transparent;
   border-bottom: 0;
   min-height: min(100vh, 56rem);
-  padding-block:
-    calc(var(--octc-header-height) + clamp(3rem, 11vh, 7rem))
-    clamp(3.5rem, 11vh, 7rem);
+  padding-block: calc(var(--octc-header-height) + clamp(3rem, 11vh, 7rem)) clamp(3.5rem, 11vh, 7rem);
 }
 
 /* A skin's decorative background-image is painted on `.hero` itself, so the

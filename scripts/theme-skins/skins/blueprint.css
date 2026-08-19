@@ -7,9 +7,18 @@
   --octc-bp-cell: 40px;
 }
 
-.header, .sidebar, .toc, .search-modal, .nav-link, .content pre,
-.content blockquote, .feature-card, .hero-action, .social-link,
-.search-button, .theme-toggle {
+.header,
+.sidebar,
+.toc,
+.search-modal,
+.nav-link,
+.content pre,
+.content blockquote,
+.feature-card,
+.hero-action,
+.social-link,
+.search-button,
+.theme-toggle {
   border-radius: 0 !important;
 }
 
@@ -17,12 +26,20 @@ body {
   background-image:
     linear-gradient(var(--octc-bp-line) 1px, transparent 1px),
     linear-gradient(90deg, var(--octc-bp-line) 1px, transparent 1px),
-    linear-gradient(color-mix(in srgb, var(--octc-color-primary) 8%, transparent) 1px, transparent 1px),
-    linear-gradient(90deg, color-mix(in srgb, var(--octc-color-primary) 8%, transparent) 1px, transparent 1px);
+    linear-gradient(
+      color-mix(in srgb, var(--octc-color-primary) 8%, transparent) 1px,
+      transparent 1px
+    ),
+    linear-gradient(
+      90deg,
+      color-mix(in srgb, var(--octc-color-primary) 8%, transparent) 1px,
+      transparent 1px
+    );
   background-size:
     var(--octc-bp-cell) var(--octc-bp-cell),
     var(--octc-bp-cell) var(--octc-bp-cell),
-    8px 8px, 8px 8px;
+    8px 8px,
+    8px 8px;
 }
 
 .header {
@@ -30,15 +47,24 @@ body {
   background: color-mix(in srgb, var(--octc-color-bg) 88%, transparent);
   backdrop-filter: blur(3px);
 }
-.header-title { letter-spacing: 0.08em; text-transform: uppercase; font-weight: 600; }
+.header-title {
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  font-weight: 600;
+}
 .sidebar {
   border-right: 1px solid var(--octc-bp-line-strong);
   --octc-skin-sidebar-bg: color-mix(in srgb, var(--octc-color-bg) 82%, transparent);
   background: color-mix(in srgb, var(--octc-color-bg) 82%, transparent);
 }
-.toc { border-left: 1px solid var(--octc-bp-line-strong); }
-.nav-title, .toc-title {
-  text-transform: uppercase; letter-spacing: 0.18em; font-size: 0.66rem;
+.toc {
+  border-left: 1px solid var(--octc-bp-line-strong);
+}
+.nav-title,
+.toc-title {
+  text-transform: uppercase;
+  letter-spacing: 0.18em;
+  font-size: 0.66rem;
   color: var(--octc-color-primary);
 }
 
@@ -58,20 +84,31 @@ body {
   padding-left: 0.9rem;
 }
 
-.search-button, .theme-toggle, .social-link {
+.search-button,
+.theme-toggle,
+.social-link {
   border: 1px dashed var(--octc-bp-line-strong);
   background: transparent;
 }
-.search-button:hover, .theme-toggle:hover, .social-link:hover {
+.search-button:hover,
+.theme-toggle:hover,
+.social-link:hover {
   border-style: solid;
   border-color: var(--octc-color-primary);
 }
 .search-modal {
   border: 1px solid var(--octc-color-primary);
-  box-shadow: 0 0 0 1px var(--octc-bp-line), 0 30px 70px rgba(0, 0, 0, 0.22);
+  box-shadow:
+    0 0 0 1px var(--octc-bp-line),
+    0 30px 70px rgba(0, 0, 0, 0.22);
 }
 
-.content h1, .content h2, .content h3 { letter-spacing: 0.01em; font-weight: 600; }
+.content h1,
+.content h2,
+.content h3 {
+  letter-spacing: 0.01em;
+  font-weight: 600;
+}
 /* Section headings get a measured leader line that grows as the page settles. */
 .content h2 {
   border-bottom: 1px dashed var(--octc-bp-line-strong);
@@ -88,10 +125,19 @@ body {
   transform-origin: left;
   animation: octc-bp-draw var(--octc-motion-slow) var(--octc-motion-ease) both;
 }
-@keyframes octc-bp-draw { from { transform: scaleX(0) } }
+@keyframes octc-bp-draw {
+  from {
+    transform: scaleX(0);
+  }
+}
 
-.content a { text-decoration: underline dashed; text-underline-offset: 4px; }
-.content a:hover { text-decoration-style: solid; }
+.content a {
+  text-decoration: underline dashed;
+  text-underline-offset: 4px;
+}
+.content a:hover {
+  text-decoration-style: solid;
+}
 .content pre {
   border: 1px solid var(--octc-bp-line-strong);
   box-shadow: 3px 3px 0 0 var(--octc-bp-line);
@@ -106,26 +152,55 @@ body {
   border-left-style: solid;
   background: color-mix(in srgb, var(--octc-color-primary) 6%, transparent);
 }
-.content table { border: 1px solid var(--octc-bp-line-strong); }
-.content th, .content td { border: 1px solid var(--octc-bp-line); }
+.content table {
+  border: 1px solid var(--octc-bp-line-strong);
+}
+.content th,
+.content td {
+  border: 1px solid var(--octc-bp-line);
+}
 .content th {
-  text-transform: uppercase; letter-spacing: 0.1em; font-size: 0.7rem;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  font-size: 0.7rem;
   background: color-mix(in srgb, var(--octc-color-primary) 8%, transparent);
 }
 .content hr {
-  border: 0; height: 1px;
+  border: 0;
+  height: 1px;
   background: repeating-linear-gradient(
-    90deg, var(--octc-bp-line-strong) 0 10px, transparent 10px 16px
+    90deg,
+    var(--octc-bp-line-strong) 0 10px,
+    transparent 10px 16px
   );
 }
-.content img { border: 1px solid var(--octc-bp-line-strong); padding: 4px; }
+.content img {
+  border: 1px solid var(--octc-bp-line-strong);
+  padding: 4px;
+}
 
-.hero { border-bottom: 1px solid var(--octc-bp-line-strong); }
-.hero-name { font-weight: 600; letter-spacing: -0.02em; }
-.hero-text, .hero-tagline { letter-spacing: 0.04em; }
-.hero-action { border: 1px solid var(--octc-color-primary); letter-spacing: 0.06em; }
-.hero-action:hover { box-shadow: 4px 4px 0 0 var(--octc-bp-line); transform: translate(-1px, -1px); }
-.hero-notice { border: 1px dashed var(--octc-color-primary); }
+.hero {
+  border-bottom: 1px solid var(--octc-bp-line-strong);
+}
+.hero-name {
+  font-weight: 600;
+  letter-spacing: -0.02em;
+}
+.hero-text,
+.hero-tagline {
+  letter-spacing: 0.04em;
+}
+.hero-action {
+  border: 1px solid var(--octc-color-primary);
+  letter-spacing: 0.06em;
+}
+.hero-action:hover {
+  box-shadow: 4px 4px 0 0 var(--octc-bp-line);
+  transform: translate(-1px, -1px);
+}
+.hero-notice {
+  border: 1px dashed var(--octc-color-primary);
+}
 
 .features .feature-card {
   border: 1px dashed var(--octc-bp-line-strong);
@@ -139,4 +214,7 @@ body {
   transform: translate(-2px, -2px);
 }
 
-:focus-visible { outline: 1px solid var(--octc-color-primary); outline-offset: 3px; }
+:focus-visible {
+  outline: 1px solid var(--octc-color-primary);
+  outline-offset: 3px;
+}

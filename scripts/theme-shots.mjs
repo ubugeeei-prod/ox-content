@@ -27,33 +27,33 @@ const OUT = process.argv[3] ?? join(ROOT, "docs", "public", "screenshots", "them
 // fairer as a comparison and useless as a portrait: a noir page lit like a
 // bright office is not noir, and Liquid Glass over a flat page is not glass.
 const PAIRING = {
-  pixel: ["Commander", "dark"],           // CGA, the palette these pixels came from
-  "liquid-glass": ["Arctic", "light"],    // cold, so the rim lensing has hue to bend
-  "blur-glass": ["Iceberg", "light"],     // frost wants a cold page behind it
-  "analog-film": ["Melange", "dark"],     // muted earth, where lifted blacks read
-  fluid: ["Rosé Pine", "dark"],           // the dye field needs saturated accents
-  fabric: ["Moss", "light"],              // natural fibre, natural dye
-  leather: ["Cacao", "dark"],             // tanned hide
-  brutalist: ["Mono", "light"],           // nothing to hide behind
-  terminal: ["Retro", "dark"],            // amber phosphor
-  blueprint: ["Ink", "light"],            // draughtsman's navy
-  risograph: ["Horizon", "light"],        // two vivid drums
-  swiss: ["Graphite", "light"],           // neutral ground, one accent
-  neon: ["Synthwave", "dark"],            // the tubes it was drawn for
-  clay: ["Catppuccin", "light"],          // soft pastel solids
-  editorial: ["Flexoki", "light"],        // ink on paper
-  aurora: ["Nord", "dark"],               // the latitude it is named after
-  holo: ["Plum", "dark"],                 // foil needs a dark ground to shift on
-  paper: ["Sepia", "light"],              // warm stock
-  voltage: ["Voltage", "dark"],           // its own charge
-  manuscript: ["Sand", "light"],          // parchment
-  ledger: ["Solarized", "light"],         // the cream of a bound book
-  kiosk: ["Stage", "dark"],               // poster contrast
-  atlas: ["Everforest", "light"],         // map greens
-  receipt: ["Porcelain", "light"],        // thermal paper
-  bauhaus: ["Slate", "light"],            // neutral ground, primary energy
-  zine: ["High Contrast", "light"],       // a photocopier has two tones
-  noir: ["Kanagawa", "dark"],             // ink wash
+  pixel: ["Commander", "dark"], // CGA, the palette these pixels came from
+  "liquid-glass": ["Arctic", "light"], // cold, so the rim lensing has hue to bend
+  "blur-glass": ["Iceberg", "light"], // frost wants a cold page behind it
+  "analog-film": ["Melange", "dark"], // muted earth, where lifted blacks read
+  fluid: ["Rosé Pine", "dark"], // the dye field needs saturated accents
+  fabric: ["Moss", "light"], // natural fibre, natural dye
+  leather: ["Cacao", "dark"], // tanned hide
+  brutalist: ["Mono", "light"], // nothing to hide behind
+  terminal: ["Retro", "dark"], // amber phosphor
+  blueprint: ["Ink", "light"], // draughtsman's navy
+  risograph: ["Horizon", "light"], // two vivid drums
+  swiss: ["Graphite", "light"], // neutral ground, one accent
+  neon: ["Synthwave", "dark"], // the tubes it was drawn for
+  clay: ["Catppuccin", "light"], // soft pastel solids
+  editorial: ["Flexoki", "light"], // ink on paper
+  aurora: ["Nord", "dark"], // the latitude it is named after
+  holo: ["Plum", "dark"], // foil needs a dark ground to shift on
+  paper: ["Sepia", "light"], // warm stock
+  voltage: ["Voltage", "dark"], // its own charge
+  manuscript: ["Sand", "light"], // parchment
+  ledger: ["Solarized", "light"], // the cream of a bound book
+  kiosk: ["Stage", "dark"], // poster contrast
+  atlas: ["Everforest", "light"], // map greens
+  receipt: ["Porcelain", "light"], // thermal paper
+  bauhaus: ["Slate", "light"], // neutral ground, primary energy
+  zine: ["High Contrast", "light"], // a photocopier has two tones
+  noir: ["Kanagawa", "dark"], // ink wash
 };
 
 rmSync(OUT, { recursive: true, force: true });
@@ -97,7 +97,7 @@ for (const skin of skins) {
   await page.waitForTimeout(900);
 
   const frame = await page.locator(".stage iframe");
-    // JPEG, because these are committed and a full-bleed gradient costs several
+  // JPEG, because these are committed and a full-bleed gradient costs several
   // hundred kilobytes as PNG for no gain at review size. The gallery is the
   // authoritative view; this set is a contact sheet for a pull request.
   await frame.screenshot({ path: join(OUT, `${skin.id}.jpg`), type: "jpeg", quality: 88 });

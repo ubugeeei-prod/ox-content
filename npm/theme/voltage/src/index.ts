@@ -16,13 +16,13 @@ import { js } from "./gl";
 export const voltage: ThemeConfig = {
   name: "voltage",
   fonts: {
-    sans: "ui-sans-serif, system-ui, -apple-system, \"Segoe UI Variable\", \"Segoe UI\", Roboto, \"Helvetica Neue\", sans-serif",
-    mono: "ui-monospace, SFMono-Regular, \"SF Mono\", Menlo, \"Cascadia Mono\", Consolas, monospace",
+    sans: 'ui-sans-serif, system-ui, -apple-system, "Segoe UI Variable", "Segoe UI", Roboto, "Helvetica Neue", sans-serif',
+    mono: 'ui-monospace, SFMono-Regular, "SF Mono", Menlo, "Cascadia Mono", Consolas, monospace',
   },
   layout: {
-    "sidebarWidth": "262px",
-    "headerHeight": "66px",
-    "maxContentWidth": "960px",
+    sidebarWidth: "262px",
+    headerHeight: "66px",
+    maxContentWidth: "960px",
   },
   entryPage: { mode: "default" },
   tokens: {

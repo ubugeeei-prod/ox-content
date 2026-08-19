@@ -10,13 +10,25 @@
   --octc-fb-stitch: color-mix(in srgb, var(--octc-color-primary) 55%, var(--octc-color-border));
 }
 
-.header, .sidebar, .toc, .search-modal, .content pre, .content blockquote,
-.feature-card, .hero-action, .hero-notice, .social-link, .search-button,
-.theme-toggle, .content img {
+.header,
+.sidebar,
+.toc,
+.search-modal,
+.content pre,
+.content blockquote,
+.feature-card,
+.hero-action,
+.hero-notice,
+.social-link,
+.search-button,
+.theme-toggle,
+.content img {
   border-radius: var(--octc-fb-radius);
 }
 
-body { background-image: var(--octc-fb-weave); }
+body {
+  background-image: var(--octc-fb-weave);
+}
 
 .header {
   border-radius: 0;
@@ -31,11 +43,22 @@ body { background-image: var(--octc-fb-weave); }
   background: color-mix(in srgb, var(--octc-color-bg-alt) 24%, var(--octc-color-bg));
   border-right: 2px dashed var(--octc-fb-stitch);
 }
-.toc { border-left: 2px dashed var(--octc-fb-stitch); }
-.nav-title, .toc-title { letter-spacing: 0.12em; text-transform: uppercase; font-size: 0.68rem; }
+.toc {
+  border-left: 2px dashed var(--octc-fb-stitch);
+}
+.nav-title,
+.toc-title {
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  font-size: 0.68rem;
+}
 
-.nav-link, .toc-link { border-radius: 8px; }
-.nav-link:hover, .toc-link:hover {
+.nav-link,
+.toc-link {
+  border-radius: 8px;
+}
+.nav-link:hover,
+.toc-link:hover {
   --octc-skin-nav-hover-bg: color-mix(in srgb, var(--octc-color-primary) 10%, transparent);
   background: color-mix(in srgb, var(--octc-color-primary) 10%, transparent);
   box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--octc-fb-stitch) 45%, transparent);
@@ -47,16 +70,25 @@ body { background-image: var(--octc-fb-weave); }
   font-weight: 600;
 }
 
-.search-button, .theme-toggle, .social-link, .hero-action, .feature-card {
+.search-button,
+.theme-toggle,
+.social-link,
+.hero-action,
+.feature-card {
   border: 1px solid color-mix(in srgb, var(--octc-color-border) 80%, transparent);
   /* Inner dashed hairline reads as topstitching just inside the seam. */
-  box-shadow: inset 0 0 0 1px transparent, 0 2px 6px -3px rgba(0, 0, 0, 0.28);
+  box-shadow:
+    inset 0 0 0 1px transparent,
+    0 2px 6px -3px rgba(0, 0, 0, 0.28);
   background-image: var(--octc-fb-weave);
   background-color: color-mix(in srgb, var(--octc-color-bg) 96%, var(--octc-color-bg-alt));
   position: relative;
 }
-.search-button::before, .theme-toggle::before, .social-link::before,
-.hero-action::before, .feature-card::before {
+.search-button::before,
+.theme-toggle::before,
+.social-link::before,
+.hero-action::before,
+.feature-card::before {
   content: "";
   position: absolute;
   inset: 4px;
@@ -66,21 +98,42 @@ body { background-image: var(--octc-fb-weave); }
   opacity: 0;
   transition: opacity var(--octc-motion-base) var(--octc-motion-ease);
 }
-.search-button:hover::before, .theme-toggle:hover::before, .social-link:hover::before,
-.hero-action:hover::before, .feature-card:hover::before { opacity: 1; }
+.search-button:hover::before,
+.theme-toggle:hover::before,
+.social-link:hover::before,
+.hero-action:hover::before,
+.feature-card:hover::before {
+  opacity: 1;
+}
 
-.search-button:hover, .theme-toggle:hover, .social-link:hover { transform: translateY(-2px); }
+.search-button:hover,
+.theme-toggle:hover,
+.social-link:hover {
+  transform: translateY(-2px);
+}
 .search-modal {
   border: 2px dashed var(--octc-fb-stitch);
   background-image: var(--octc-fb-weave);
   background-color: var(--octc-color-bg);
 }
 
-.content h2 { border-bottom: 2px dashed var(--octc-fb-stitch); }
-.content a { text-decoration-style: dotted; text-underline-offset: 3px; }
-.content a:hover { text-decoration-style: solid; }
-.content pre { border: 1px solid var(--octc-color-code-frame-border); }
-.content :not(pre) > code { border-radius: 5px; padding: 0.1em 0.36em; }
+.content h2 {
+  border-bottom: 2px dashed var(--octc-fb-stitch);
+}
+.content a {
+  text-decoration-style: dotted;
+  text-underline-offset: 3px;
+}
+.content a:hover {
+  text-decoration-style: solid;
+}
+.content pre {
+  border: 1px solid var(--octc-color-code-frame-border);
+}
+.content :not(pre) > code {
+  border-radius: 5px;
+  padding: 0.1em 0.36em;
+}
 .content blockquote {
   border: 2px dashed var(--octc-fb-stitch);
   border-left-width: 5px;
@@ -88,28 +141,47 @@ body { background-image: var(--octc-fb-weave); }
   background-image: var(--octc-fb-weave);
   background-color: color-mix(in srgb, var(--octc-color-bg-alt) 88%, var(--octc-color-primary) 12%);
 }
-.content table { border: 1px dashed color-mix(in srgb, var(--octc-fb-stitch) 62%, transparent); }
-.content th, .content td {
+.content table {
+  border: 1px dashed color-mix(in srgb, var(--octc-fb-stitch) 62%, transparent);
+}
+.content th,
+.content td {
   border: 1px dashed color-mix(in srgb, var(--octc-fb-stitch) 28%, transparent);
 }
 .content hr {
-  border: 0; height: 0; border-top: 2px dashed var(--octc-fb-stitch);
+  border: 0;
+  height: 0;
+  border-top: 2px dashed var(--octc-fb-stitch);
 }
-.content img { border: 6px solid color-mix(in srgb, var(--octc-color-bg-alt) 70%, var(--octc-color-bg)); }
+.content img {
+  border: 6px solid color-mix(in srgb, var(--octc-color-bg-alt) 70%, var(--octc-color-bg));
+}
 
 .hero {
   background-image: var(--octc-fb-weave);
   background-color: color-mix(in srgb, var(--octc-color-bg) 88%, var(--octc-color-bg-alt));
   border-bottom: 2px dashed var(--octc-fb-stitch);
 }
-.hero-name { letter-spacing: -0.025em; }
-.hero-action { font-weight: 620; }
-.hero-action:hover { transform: translateY(-3px); box-shadow: 0 10px 22px -12px rgba(0, 0, 0, 0.4); }
+.hero-name {
+  letter-spacing: -0.025em;
+}
+.hero-action {
+  font-weight: 620;
+}
+.hero-action:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 10px 22px -12px rgba(0, 0, 0, 0.4);
+}
 
-.features .feature-card { padding: 1.3rem; }
+.features .feature-card {
+  padding: 1.3rem;
+}
 .features .feature-card:hover {
   transform: translateY(-4px) rotate(-0.35deg);
   box-shadow: 0 16px 34px -18px rgba(0, 0, 0, 0.35);
 }
 
-:focus-visible { outline: 2px dashed var(--octc-color-primary); outline-offset: 3px; }
+:focus-visible {
+  outline: 2px dashed var(--octc-color-primary);
+  outline-offset: 3px;
+}

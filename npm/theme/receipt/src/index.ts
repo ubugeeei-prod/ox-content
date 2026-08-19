@@ -15,13 +15,13 @@ import { css } from "./skin";
 export const receipt: ThemeConfig = {
   name: "receipt",
   fonts: {
-    sans: "ui-monospace, SFMono-Regular, \"SF Mono\", Menlo, \"Cascadia Mono\", Consolas, monospace",
-    mono: "ui-monospace, SFMono-Regular, \"SF Mono\", Menlo, \"Cascadia Mono\", Consolas, monospace",
+    sans: 'ui-monospace, SFMono-Regular, "SF Mono", Menlo, "Cascadia Mono", Consolas, monospace',
+    mono: 'ui-monospace, SFMono-Regular, "SF Mono", Menlo, "Cascadia Mono", Consolas, monospace',
   },
   layout: {
-    "sidebarWidth": "0px",
-    "headerHeight": "0px",
-    "maxContentWidth": "620px",
+    sidebarWidth: "0px",
+    headerHeight: "0px",
+    maxContentWidth: "620px",
   },
   entryPage: { mode: "default" },
   tokens: {

@@ -24,7 +24,10 @@ function luminance(hex) {
   return 0.2126 * r + 0.7152 * g + 0.0722 * b;
 }
 
-const toHex = (n) => Math.round(Math.max(0, Math.min(255, n))).toString(16).padStart(2, "0");
+const toHex = (n) =>
+  Math.round(Math.max(0, Math.min(255, n)))
+    .toString(16)
+    .padStart(2, "0");
 
 function contrast(a, b) {
   const [x, y] = [luminance(a), luminance(b)].sort((p, q) => q - p);

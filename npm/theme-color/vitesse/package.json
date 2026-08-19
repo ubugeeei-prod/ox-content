@@ -3,13 +3,13 @@
   "version": "2.84.0",
   "description": "Anthony Fu's Vitesse light and dark — an Ox Content color scheme that composes with any @ox-content/theme-* skin",
   "keywords": [
-    "ox-content",
-    "theme",
     "color-scheme",
+    "documentation",
+    "markdown",
+    "ox-content",
     "palette",
     "ssg",
-    "markdown",
-    "documentation",
+    "theme",
     "vitesse"
   ],
   "license": "MIT",
@@ -23,6 +23,7 @@
     "dist"
   ],
   "type": "module",
+  "sideEffects": false,
   "main": "./dist/index.cjs",
   "types": "./dist/index.d.mts",
   "exports": {
@@ -32,7 +33,6 @@
       "types": "./dist/index.d.mts"
     }
   },
-  "sideEffects": false,
   "publishConfig": {
     "access": "public",
     "provenance": true

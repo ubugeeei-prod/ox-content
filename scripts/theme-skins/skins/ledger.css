@@ -8,28 +8,43 @@
  */
 
 :root {
-  --octc-lg-rule: color-mix(in srgb, var(--octc-accent-cool, var(--octc-color-primary)) 22%, transparent);
-  --octc-lg-margin-rule: color-mix(in srgb, var(--octc-accent-coral, var(--octc-color-primary)) 45%, transparent);
+  --octc-lg-rule: color-mix(
+    in srgb,
+    var(--octc-accent-cool, var(--octc-color-primary)) 22%,
+    transparent
+  );
+  --octc-lg-margin-rule: color-mix(
+    in srgb,
+    var(--octc-accent-coral, var(--octc-color-primary)) 45%,
+    transparent
+  );
   --octc-lg-line: 1.8rem;
 }
 
-.content { line-height: var(--octc-lg-line); }
+.content {
+  line-height: var(--octc-lg-line);
+}
 
 /* The ruled sheet. Background-attachment keeps rules aligned to the column, and
  * the left rule is the margin line every ledger page carries. */
 .main {
-  background-image:
-    repeating-linear-gradient(
-      to bottom,
-      transparent 0,
-      transparent calc(var(--octc-lg-line) - 1px),
-      var(--octc-lg-rule) calc(var(--octc-lg-line) - 1px),
-      var(--octc-lg-rule) var(--octc-lg-line)
-    );
+  background-image: repeating-linear-gradient(
+    to bottom,
+    transparent 0,
+    transparent calc(var(--octc-lg-line) - 1px),
+    var(--octc-lg-rule) calc(var(--octc-lg-line) - 1px),
+    var(--octc-lg-rule) var(--octc-lg-line)
+  );
   background-position: 0 calc(var(--octc-lg-line) * -0.25);
 }
 
-.content, .content table, .content th, .content td, .content pre, .header, .sidebar {
+.content,
+.content table,
+.content th,
+.content td,
+.content pre,
+.header,
+.sidebar {
   font-variant-numeric: tabular-nums lining-nums;
 }
 
@@ -37,7 +52,10 @@
   border-bottom: 2px solid color-mix(in srgb, var(--octc-color-text) 70%, transparent);
   background: var(--octc-color-bg);
 }
-.header-title { font-weight: 600; letter-spacing: 0.02em; }
+.header-title {
+  font-weight: 600;
+  letter-spacing: 0.02em;
+}
 
 .sidebar {
   --octc-skin-sidebar-bg: transparent;
@@ -45,8 +63,11 @@
   border-right: 2px solid var(--octc-lg-margin-rule);
   padding-top: 0;
 }
-.nav-title, .toc-title {
-  font-size: 0.7rem; text-transform: uppercase; letter-spacing: 0.14em;
+.nav-title,
+.toc-title {
+  font-size: 0.7rem;
+  text-transform: uppercase;
+  letter-spacing: 0.14em;
   border-bottom: 1px solid var(--octc-lg-rule);
   padding-bottom: 0.25rem;
 }
@@ -56,26 +77,49 @@
   border-bottom: 1px solid var(--octc-lg-rule);
   padding-block: 0.4rem;
 }
-.nav-link:hover { background: color-mix(in srgb, var(--octc-accent-warm, var(--octc-color-primary)) 14%, transparent); }
+.nav-link:hover {
+  background: color-mix(
+    in srgb,
+    var(--octc-accent-warm, var(--octc-color-primary)) 14%,
+    transparent
+  );
+}
 .nav-link.active {
-  background: color-mix(in srgb, var(--octc-accent-warm, var(--octc-color-primary)) 22%, transparent);
+  background: color-mix(
+    in srgb,
+    var(--octc-accent-warm, var(--octc-color-primary)) 22%,
+    transparent
+  );
   font-weight: 600;
 }
 
-.toc { border-left: 2px solid var(--octc-lg-margin-rule); }
-.toc-link { border-bottom: 1px solid var(--octc-lg-rule); border-radius: 0; }
+.toc {
+  border-left: 2px solid var(--octc-lg-margin-rule);
+}
+.toc-link {
+  border-bottom: 1px solid var(--octc-lg-rule);
+  border-radius: 0;
+}
 
-.content h1, .content h2, .content h3 {
+.content h1,
+.content h2,
+.content h3 {
   font-weight: 600;
   letter-spacing: 0.01em;
   border-bottom: 2px solid color-mix(in srgb, var(--octc-color-text) 55%, transparent);
   padding-bottom: 0.2rem;
 }
-.content a { text-decoration: underline; text-underline-offset: 0.2em; }
+.content a {
+  text-decoration: underline;
+  text-underline-offset: 0.2em;
+}
 
 /* The table is this skin's native element: no rounding, real rules, and a
  * double rule under the head the way a ledger closes a column. */
-.content table { border: 0; border-top: 2px solid color-mix(in srgb, var(--octc-color-text) 60%, transparent); }
+.content table {
+  border: 0;
+  border-top: 2px solid color-mix(in srgb, var(--octc-color-text) 60%, transparent);
+}
 .content th {
   border: 0;
   border-bottom: 3px double color-mix(in srgb, var(--octc-color-text) 60%, transparent);
@@ -84,9 +128,20 @@
   letter-spacing: 0.1em;
   font-size: 0.72rem;
 }
-.content td { border: 0; border-bottom: 1px solid var(--octc-lg-rule); }
-.content tbody tr:nth-child(even) { background: color-mix(in srgb, var(--octc-accent-cool, var(--octc-color-primary)) 6%, transparent); }
-.content td:not(:first-child) { text-align: right; }
+.content td {
+  border: 0;
+  border-bottom: 1px solid var(--octc-lg-rule);
+}
+.content tbody tr:nth-child(even) {
+  background: color-mix(
+    in srgb,
+    var(--octc-accent-cool, var(--octc-color-primary)) 6%,
+    transparent
+  );
+}
+.content td:not(:first-child) {
+  text-align: right;
+}
 
 .content pre {
   border-radius: 0;
@@ -98,11 +153,24 @@
   background: transparent;
   border-radius: 0;
 }
-.content hr { height: 3px; border: 0; border-top: 3px double color-mix(in srgb, var(--octc-color-text) 55%, transparent); background: none; }
+.content hr {
+  height: 3px;
+  border: 0;
+  border-top: 3px double color-mix(in srgb, var(--octc-color-text) 55%, transparent);
+  background: none;
+}
 
-.hero { background-image: none; }
-.hero-name { font-weight: 600; letter-spacing: -0.01em; }
-.hero-action { border-radius: 0; border: 2px solid color-mix(in srgb, var(--octc-color-text) 60%, transparent); }
+.hero {
+  background-image: none;
+}
+.hero-name {
+  font-weight: 600;
+  letter-spacing: -0.01em;
+}
+.hero-action {
+  border-radius: 0;
+  border: 2px solid color-mix(in srgb, var(--octc-color-text) 60%, transparent);
+}
 .features .feature-card {
   border: 0;
   border-bottom: 1px solid var(--octc-lg-rule);

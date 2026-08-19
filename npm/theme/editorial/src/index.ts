@@ -15,13 +15,13 @@ import { css } from "./skin";
 export const editorial: ThemeConfig = {
   name: "editorial",
   fonts: {
-    sans: "ui-serif, \"Iowan Old Style\", \"Hoefler Text\", Georgia, \"Times New Roman\", serif",
-    mono: "ui-monospace, SFMono-Regular, \"SF Mono\", Menlo, \"Cascadia Mono\", Consolas, monospace",
+    sans: 'ui-serif, "Iowan Old Style", "Hoefler Text", Georgia, "Times New Roman", serif',
+    mono: 'ui-monospace, SFMono-Regular, "SF Mono", Menlo, "Cascadia Mono", Consolas, monospace',
   },
   layout: {
-    "sidebarWidth": "250px",
-    "headerHeight": "72px",
-    "maxContentWidth": "780px",
+    sidebarWidth: "250px",
+    headerHeight: "72px",
+    maxContentWidth: "780px",
   },
   entryPage: { mode: "default" },
   tokens: {

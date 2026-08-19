@@ -16,13 +16,13 @@ import { js } from "./gl";
 export const fabric: ThemeConfig = {
   name: "fabric",
   fonts: {
-    sans: "ui-sans-serif, system-ui, -apple-system, \"Segoe UI Variable\", \"Segoe UI\", Roboto, \"Helvetica Neue\", sans-serif",
-    mono: "ui-monospace, SFMono-Regular, \"SF Mono\", Menlo, \"Cascadia Mono\", Consolas, monospace",
+    sans: 'ui-sans-serif, system-ui, -apple-system, "Segoe UI Variable", "Segoe UI", Roboto, "Helvetica Neue", sans-serif',
+    mono: 'ui-monospace, SFMono-Regular, "SF Mono", Menlo, "Cascadia Mono", Consolas, monospace',
   },
   layout: {
-    "sidebarWidth": "264px",
-    "headerHeight": "64px",
-    "maxContentWidth": "900px",
+    sidebarWidth: "264px",
+    headerHeight: "64px",
+    maxContentWidth: "900px",
   },
   entryPage: { mode: "default" },
   tokens: {

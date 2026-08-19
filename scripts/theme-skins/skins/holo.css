@@ -22,12 +22,21 @@
     var(--octc-accent-warm-ink, var(--octc-color-primary)) 74%,
     var(--octc-accent-a-ink, var(--octc-color-primary)) 100%
   );
-
 }
 
-.header, .sidebar, .toc, .search-modal, .content pre, .content blockquote,
-.feature-card, .hero-action, .hero-notice, .social-link, .search-button,
-.theme-toggle, .content img {
+.header,
+.sidebar,
+.toc,
+.search-modal,
+.content pre,
+.content blockquote,
+.feature-card,
+.hero-action,
+.hero-notice,
+.social-link,
+.search-button,
+.theme-toggle,
+.content img {
   border-radius: var(--octc-ho-radius);
 }
 
@@ -38,7 +47,9 @@
 .header {
   border-radius: 0;
 }
-.header-title { font-weight: 700; }
+.header-title {
+  font-weight: 700;
+}
 .sidebar {
   border-radius: 0;
   --octc-skin-sidebar-bg: var(--octc-ho-tint);
@@ -46,11 +57,21 @@
   backdrop-filter: blur(14px);
   border-right: 1px solid color-mix(in srgb, var(--octc-color-border) 40%, transparent);
 }
-.toc { border-left: 1px solid color-mix(in srgb, var(--octc-color-border) 40%, transparent); }
+.toc {
+  border-left: 1px solid color-mix(in srgb, var(--octc-color-border) 40%, transparent);
+}
 
-.nav-link, .toc-link { border-radius: 9px; }
-.nav-link:hover, .toc-link:hover {
-  --octc-skin-nav-hover-bg: color-mix(in srgb, var(--octc-accent-c, var(--octc-color-primary)) 14%, transparent);
+.nav-link,
+.toc-link {
+  border-radius: 9px;
+}
+.nav-link:hover,
+.toc-link:hover {
+  --octc-skin-nav-hover-bg: color-mix(
+    in srgb,
+    var(--octc-accent-c, var(--octc-color-primary)) 14%,
+    transparent
+  );
   background: color-mix(in srgb, var(--octc-accent-c, var(--octc-color-primary)) 14%, transparent);
   transform: translateX(3px);
 }
@@ -63,24 +84,38 @@
 
 /* The sheen: a foil layer parked behind the panel that slides its gradient
  * position across on hover. background-position is cheap to animate. */
-.search-button, .theme-toggle, .social-link, .hero-action, .feature-card {
+.search-button,
+.theme-toggle,
+.social-link,
+.hero-action,
+.feature-card {
   position: relative;
   border: 1px solid color-mix(in srgb, var(--octc-color-border) 45%, transparent);
   background:
     linear-gradient(var(--octc-ho-tint), var(--octc-ho-tint)) padding-box,
     var(--octc-ho-foil) border-box;
-  background-size: 100% 100%, 300% 100%;
-  background-position: 0 0, 0% 0;
+  background-size:
+    100% 100%,
+    300% 100%;
+  background-position:
+    0 0,
+    0% 0;
   transition:
     background-position var(--octc-motion-slow) var(--octc-motion-ease),
     transform var(--octc-motion-base) var(--octc-motion-spring),
     box-shadow var(--octc-motion-base) var(--octc-motion-ease);
 }
-.search-button:hover, .theme-toggle:hover, .social-link:hover,
-.hero-action:hover, .feature-card:hover {
-  background-position: 0 0, 100% 0;
+.search-button:hover,
+.theme-toggle:hover,
+.social-link:hover,
+.hero-action:hover,
+.feature-card:hover {
+  background-position:
+    0 0,
+    100% 0;
   transform: translateY(-3px);
-  box-shadow: 0 18px 40px -20px color-mix(in srgb, var(--octc-accent-b, var(--octc-color-primary)) 60%, transparent);
+  box-shadow: 0 18px 40px -20px
+    color-mix(in srgb, var(--octc-accent-b, var(--octc-color-primary)) 60%, transparent);
 }
 
 .search-modal {
@@ -94,7 +129,9 @@
   border-bottom: 2px solid transparent;
   border-image: var(--octc-ho-foil) 1;
 }
-.content a { text-decoration-color: var(--octc-accent-b, var(--octc-color-primary)); }
+.content a {
+  text-decoration-color: var(--octc-accent-b, var(--octc-color-primary));
+}
 .content pre {
   border: 1px solid transparent;
   background:
@@ -112,20 +149,47 @@
   border-image: var(--octc-ho-foil) 1;
   background: color-mix(in srgb, var(--octc-color-bg-alt) 70%, transparent);
 }
-.content table { border-radius: 12px; overflow: hidden; }
-.content hr { border: 0; height: 2px; background: var(--octc-ho-foil); }
+.content table {
+  border-radius: 12px;
+  overflow: hidden;
+}
+.content hr {
+  border: 0;
+  height: 2px;
+  background: var(--octc-ho-foil);
+}
 
 .hero {
   background-image:
-    radial-gradient(60% 48% at 20% 6%, color-mix(in srgb, var(--octc-accent-a, var(--octc-color-primary)) 26%, transparent), transparent 70%),
-    radial-gradient(52% 46% at 82% 26%, color-mix(in srgb, var(--octc-accent-c, var(--octc-color-primary)) 24%, transparent), transparent 72%),
-    radial-gradient(58% 44% at 52% 96%, color-mix(in srgb, var(--octc-accent-b, var(--octc-color-primary)) 20%, transparent), transparent 74%);
+    radial-gradient(
+      60% 48% at 20% 6%,
+      color-mix(in srgb, var(--octc-accent-a, var(--octc-color-primary)) 26%, transparent),
+      transparent 70%
+    ),
+    radial-gradient(
+      52% 46% at 82% 26%,
+      color-mix(in srgb, var(--octc-accent-c, var(--octc-color-primary)) 24%, transparent),
+      transparent 72%
+    ),
+    radial-gradient(
+      58% 44% at 52% 96%,
+      color-mix(in srgb, var(--octc-accent-b, var(--octc-color-primary)) 20%, transparent),
+      transparent 74%
+    );
 }
-.hero-name { letter-spacing: -0.035em; }
-.hero-action { font-weight: 660; }
+.hero-name {
+  letter-spacing: -0.035em;
+}
+.hero-action {
+  font-weight: 660;
+}
 
-.features .feature-card { padding: 1.35rem; }
-.feature-title { font-weight: 650; }
+.features .feature-card {
+  padding: 1.35rem;
+}
+.feature-title {
+  font-weight: 650;
+}
 
 :focus-visible {
   outline: 2px solid var(--octc-accent-b, var(--octc-color-primary));

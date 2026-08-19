@@ -8,9 +8,19 @@
   --octc-bg-hair: color-mix(in srgb, var(--octc-color-border) 42%, transparent);
 }
 
-.header, .sidebar, .toc, .search-modal, .content pre, .content blockquote,
-.feature-card, .hero-action, .hero-notice, .social-link, .search-button,
-.theme-toggle, .content img {
+.header,
+.sidebar,
+.toc,
+.search-modal,
+.content pre,
+.content blockquote,
+.feature-card,
+.hero-action,
+.hero-notice,
+.social-link,
+.search-button,
+.theme-toggle,
+.content img {
   border-radius: var(--octc-bg-radius);
 }
 
@@ -35,8 +45,12 @@
   border-left: 1px solid var(--octc-bg-hair);
 }
 
-.nav-link, .toc-link { border-radius: 9px; }
-.nav-link:hover, .toc-link:hover {
+.nav-link,
+.toc-link {
+  border-radius: 9px;
+}
+.nav-link:hover,
+.toc-link:hover {
   --octc-skin-nav-hover-bg: var(--octc-bg-frost-strong);
   background: var(--octc-bg-frost-strong);
   backdrop-filter: blur(8px);
@@ -48,13 +62,18 @@
   font-weight: 600;
 }
 
-.search-button, .theme-toggle, .social-link, .mobile-footer-btn {
+.search-button,
+.theme-toggle,
+.social-link,
+.mobile-footer-btn {
   background: var(--octc-bg-frost);
   backdrop-filter: blur(14px);
   -webkit-backdrop-filter: blur(14px);
   border: 1px solid var(--octc-bg-hair);
 }
-.search-button:hover, .theme-toggle:hover, .social-link:hover {
+.search-button:hover,
+.theme-toggle:hover,
+.social-link:hover {
   background: var(--octc-bg-frost-strong);
   border-color: color-mix(in srgb, var(--octc-color-primary) 40%, transparent);
   transform: translateY(-1px);
@@ -66,9 +85,13 @@
   border: 1px solid var(--octc-bg-hair);
   box-shadow: 0 30px 80px -30px rgba(0, 0, 0, 0.5);
 }
-.search-modal-overlay { backdrop-filter: blur(4px); }
+.search-modal-overlay {
+  backdrop-filter: blur(4px);
+}
 
-.content h2 { border-bottom: 1px solid var(--octc-bg-hair); }
+.content h2 {
+  border-bottom: 1px solid var(--octc-bg-hair);
+}
 .content pre {
   border: 1px solid var(--octc-bg-hair);
   box-shadow: 0 18px 44px -24px rgba(0, 0, 0, 0.5);
@@ -85,22 +108,33 @@
   border: 1px solid var(--octc-bg-hair);
   border-left: 3px solid var(--octc-color-primary);
 }
-.content table { border-radius: 12px; overflow: hidden; }
+.content table {
+  border-radius: 12px;
+  overflow: hidden;
+}
 
 .hero {
   /* Frost needs something behind it, but one flat plane is enough — a colour
    * wash would be decorating the effect rather than being it. */
   background-color: color-mix(in srgb, var(--octc-color-bg-alt) 55%, var(--octc-color-bg));
 }
-.hero-name { letter-spacing: -0.032em; }
+.hero-name {
+  letter-spacing: -0.032em;
+}
 .hero-action {
   background: var(--octc-bg-frost-strong);
   backdrop-filter: blur(16px);
   border: 1px solid var(--octc-bg-hair);
   font-weight: 620;
 }
-.hero-action:hover { transform: translateY(-3px); box-shadow: 0 18px 40px -18px rgba(0, 0, 0, 0.42); }
-.hero-notice { background: var(--octc-bg-frost); backdrop-filter: blur(14px); }
+.hero-action:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 18px 40px -18px rgba(0, 0, 0, 0.42);
+}
+.hero-notice {
+  background: var(--octc-bg-frost);
+  backdrop-filter: blur(14px);
+}
 
 .features .feature-card {
   background: var(--octc-bg-frost);
@@ -118,13 +152,23 @@
 /* Scroll reveals de-focus as well as rise, so blocks literally come into focus. */
 @supports (animation-timeline: view()) {
   @media (prefers-reduced-motion: no-preference) {
-    .content > h2, .content > pre, .content > blockquote, .feature-card {
+    .content > h2,
+    .content > pre,
+    .content > blockquote,
+    .feature-card {
       animation-name: octc-bg-focus;
     }
   }
 }
 @keyframes octc-bg-focus {
-  from { opacity: 0; filter: blur(10px); transform: translateY(var(--octc-motion-rise)); }
+  from {
+    opacity: 0;
+    filter: blur(10px);
+    transform: translateY(var(--octc-motion-rise));
+  }
 }
 
-:focus-visible { outline: 2px solid var(--octc-color-primary); outline-offset: 3px; }
+:focus-visible {
+  outline: 2px solid var(--octc-color-primary);
+  outline-offset: 3px;
+}

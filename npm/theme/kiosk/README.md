@@ -43,11 +43,7 @@ behind `@supports` and is switched off under `prefers-reduced-motion: reduce`.
 Retune the choreography without touching the stylesheet:
 
 ```ts
-theme: [
-  kiosk,
-  tokyoNight,
-  { tokens: { "motion-base": "200ms", "motion-ease": "linear" } },
-];
+theme: [kiosk, tokyoNight, { tokens: { "motion-base": "200ms", "motion-ease": "linear" } }];
 ```
 
 ## License

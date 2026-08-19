@@ -77,56 +77,56 @@ a skin with no scheme reshapes the default palette.
 Each skin is roughly 6–7 kB of CSS with **zero JavaScript** and no runtime
 dependencies.
 
-| Package | Name | Description |
-| ------- | ---- | ----------- |
-| [`@ox-content/theme-pixel`](https://npmjs.com/package/@ox-content/theme-pixel) | Pixel | Chunky 8-bit surfaces, hard offset shadows and stepped motion |
-| [`@ox-content/theme-liquid-glass`](https://npmjs.com/package/@ox-content/theme-liquid-glass) | Liquid Glass | Refractive glass panels with specular edges and a light sweep on hover |
-| [`@ox-content/theme-blur-glass`](https://npmjs.com/package/@ox-content/theme-blur-glass) | Blur Glass | Frosted backdrop-blur layers that resolve out of a soft haze |
-| [`@ox-content/theme-analog-film`](https://npmjs.com/package/@ox-content/theme-analog-film) | Analog Film | Grain, halation and sprocket rails with a gentle gate weave |
-| [`@ox-content/theme-fluid`](https://npmjs.com/package/@ox-content/theme-fluid) | Fluid | Organic blob gradients that drift and morph behind the content |
-| [`@ox-content/theme-fabric`](https://npmjs.com/package/@ox-content/theme-fabric) | Fabric | Woven texture, stitched seams and soft cloth-fold reveals |
-| [`@ox-content/theme-leather`](https://npmjs.com/package/@ox-content/theme-leather) | Leather | Embossed grain and saddle stitching that presses in when touched |
-| [`@ox-content/theme-brutalist`](https://npmjs.com/package/@ox-content/theme-brutalist) | Brutalist | Raw structure, oversized type and shadows that slam into place |
-| [`@ox-content/theme-terminal`](https://npmjs.com/package/@ox-content/theme-terminal) | Terminal | CRT phosphor with scanlines, a blinking block caret and prompt gutters |
-| [`@ox-content/theme-blueprint`](https://npmjs.com/package/@ox-content/theme-blueprint) | Blueprint | Technical drawing grid with dashed callouts and strokes that draw themselves |
-| [`@ox-content/theme-risograph`](https://npmjs.com/package/@ox-content/theme-risograph) | Risograph | Misregistered duotone print where the ink channels separate on hover |
-| [`@ox-content/theme-swiss`](https://npmjs.com/package/@ox-content/theme-swiss) | Swiss | International Typographic Style — a hard grid, rules, and precise slides |
-| [`@ox-content/theme-neon`](https://npmjs.com/package/@ox-content/theme-neon) | Neon | Sunset-grid glow with humming tube outlines and a scanline sweep |
-| [`@ox-content/theme-clay`](https://npmjs.com/package/@ox-content/theme-clay) | Clay | Soft extruded clay that squishes under the pointer |
-| [`@ox-content/theme-editorial`](https://npmjs.com/package/@ox-content/theme-editorial) | Editorial | Magazine typography with drop caps, hairline rules and column reveals |
-| [`@ox-content/theme-aurora`](https://npmjs.com/package/@ox-content/theme-aurora) | Aurora | Slow conic light curtains drifting behind translucent panels |
-| [`@ox-content/theme-holo`](https://npmjs.com/package/@ox-content/theme-holo) | Holo | Iridescent foil that shifts hue as panels tilt and slide |
-| [`@ox-content/theme-paper`](https://npmjs.com/package/@ox-content/theme-paper) | Paper | Letterpress impressions on soft stock with a deckled page edge |
+| Package                                                                                      | Name         | Description                                                                  |
+| -------------------------------------------------------------------------------------------- | ------------ | ---------------------------------------------------------------------------- |
+| [`@ox-content/theme-pixel`](https://npmjs.com/package/@ox-content/theme-pixel)               | Pixel        | Chunky 8-bit surfaces, hard offset shadows and stepped motion                |
+| [`@ox-content/theme-liquid-glass`](https://npmjs.com/package/@ox-content/theme-liquid-glass) | Liquid Glass | Refractive glass panels with specular edges and a light sweep on hover       |
+| [`@ox-content/theme-blur-glass`](https://npmjs.com/package/@ox-content/theme-blur-glass)     | Blur Glass   | Frosted backdrop-blur layers that resolve out of a soft haze                 |
+| [`@ox-content/theme-analog-film`](https://npmjs.com/package/@ox-content/theme-analog-film)   | Analog Film  | Grain, halation and sprocket rails with a gentle gate weave                  |
+| [`@ox-content/theme-fluid`](https://npmjs.com/package/@ox-content/theme-fluid)               | Fluid        | Organic blob gradients that drift and morph behind the content               |
+| [`@ox-content/theme-fabric`](https://npmjs.com/package/@ox-content/theme-fabric)             | Fabric       | Woven texture, stitched seams and soft cloth-fold reveals                    |
+| [`@ox-content/theme-leather`](https://npmjs.com/package/@ox-content/theme-leather)           | Leather      | Embossed grain and saddle stitching that presses in when touched             |
+| [`@ox-content/theme-brutalist`](https://npmjs.com/package/@ox-content/theme-brutalist)       | Brutalist    | Raw structure, oversized type and shadows that slam into place               |
+| [`@ox-content/theme-terminal`](https://npmjs.com/package/@ox-content/theme-terminal)         | Terminal     | CRT phosphor with scanlines, a blinking block caret and prompt gutters       |
+| [`@ox-content/theme-blueprint`](https://npmjs.com/package/@ox-content/theme-blueprint)       | Blueprint    | Technical drawing grid with dashed callouts and strokes that draw themselves |
+| [`@ox-content/theme-risograph`](https://npmjs.com/package/@ox-content/theme-risograph)       | Risograph    | Misregistered duotone print where the ink channels separate on hover         |
+| [`@ox-content/theme-swiss`](https://npmjs.com/package/@ox-content/theme-swiss)               | Swiss        | International Typographic Style — a hard grid, rules, and precise slides     |
+| [`@ox-content/theme-neon`](https://npmjs.com/package/@ox-content/theme-neon)                 | Neon         | Sunset-grid glow with humming tube outlines and a scanline sweep             |
+| [`@ox-content/theme-clay`](https://npmjs.com/package/@ox-content/theme-clay)                 | Clay         | Soft extruded clay that squishes under the pointer                           |
+| [`@ox-content/theme-editorial`](https://npmjs.com/package/@ox-content/theme-editorial)       | Editorial    | Magazine typography with drop caps, hairline rules and column reveals        |
+| [`@ox-content/theme-aurora`](https://npmjs.com/package/@ox-content/theme-aurora)             | Aurora       | Slow conic light curtains drifting behind translucent panels                 |
+| [`@ox-content/theme-holo`](https://npmjs.com/package/@ox-content/theme-holo)                 | Holo         | Iridescent foil that shifts hue as panels tilt and slide                     |
+| [`@ox-content/theme-paper`](https://npmjs.com/package/@ox-content/theme-paper)               | Paper        | Letterpress impressions on soft stock with a deckled page edge               |
 
 ## Color schemes
 
 Every scheme ships a matched light **and** dark palette; the built-in header
 toggle switches between them with no extra configuration.
 
-| Package | Name | Description |
-| ------- | ---- | ----------- |
-| [`@ox-content/theme-color-github`](https://npmjs.com/package/@ox-content/theme-color-github) | GitHub | GitHub Light and GitHub Dark |
-| [`@ox-content/theme-color-tokyo-night`](https://npmjs.com/package/@ox-content/theme-color-tokyo-night) | Tokyo Night | Tokyo Night Day and Tokyo Night Storm |
-| [`@ox-content/theme-color-mono`](https://npmjs.com/package/@ox-content/theme-color-mono) | Mono | Pure monochrome, zero hue |
-| [`@ox-content/theme-color-dracula`](https://npmjs.com/package/@ox-content/theme-color-dracula) | Dracula | Dracula with the Alucard light counterpart |
-| [`@ox-content/theme-color-one-dark`](https://npmjs.com/package/@ox-content/theme-color-one-dark) | One Dark | Atom One Light and One Dark |
-| [`@ox-content/theme-color-retro`](https://npmjs.com/package/@ox-content/theme-color-retro) | Retro | Warm amber phosphor terminal |
-| [`@ox-content/theme-color-snow`](https://npmjs.com/package/@ox-content/theme-color-snow) | Snow | Crisp snow white over deep slate |
-| [`@ox-content/theme-color-catppuccin`](https://npmjs.com/package/@ox-content/theme-color-catppuccin) | Catppuccin | Catppuccin Latte and Mocha |
-| [`@ox-content/theme-color-nord`](https://npmjs.com/package/@ox-content/theme-color-nord) | Nord | Nord Snow Storm and Polar Night |
-| [`@ox-content/theme-color-gruvbox`](https://npmjs.com/package/@ox-content/theme-color-gruvbox) | Gruvbox | Gruvbox light and dark, medium contrast |
-| [`@ox-content/theme-color-rose-pine`](https://npmjs.com/package/@ox-content/theme-color-rose-pine) | Rosé Pine | Rosé Pine Dawn and Rosé Pine |
-| [`@ox-content/theme-color-solarized`](https://npmjs.com/package/@ox-content/theme-color-solarized) | Solarized | Ethan Schoonover's Solarized Light and Dark |
-| [`@ox-content/theme-color-everforest`](https://npmjs.com/package/@ox-content/theme-color-everforest) | Everforest | Everforest light and dark, medium contrast |
-| [`@ox-content/theme-color-ayu`](https://npmjs.com/package/@ox-content/theme-color-ayu) | Ayu | Ayu Light and Ayu Mirage |
-| [`@ox-content/theme-color-vitesse`](https://npmjs.com/package/@ox-content/theme-color-vitesse) | Vitesse | Anthony Fu's Vitesse light and dark |
-| [`@ox-content/theme-color-night-owl`](https://npmjs.com/package/@ox-content/theme-color-night-owl) | Night Owl | Sarah Drasner's Light Owl and Night Owl |
-| [`@ox-content/theme-color-monokai`](https://npmjs.com/package/@ox-content/theme-color-monokai) | Monokai | Monokai Pro with a light companion |
-| [`@ox-content/theme-color-kanagawa`](https://npmjs.com/package/@ox-content/theme-color-kanagawa) | Kanagawa | Kanagawa Lotus and Wave |
-| [`@ox-content/theme-color-poimandres`](https://npmjs.com/package/@ox-content/theme-color-poimandres) | Poimandres | Poimandres, cool teal on deep navy |
-| [`@ox-content/theme-color-sepia`](https://npmjs.com/package/@ox-content/theme-color-sepia) | Sepia | Low-glare sepia tuned for long reading sessions |
+| Package                                                                                                    | Name          | Description                                         |
+| ---------------------------------------------------------------------------------------------------------- | ------------- | --------------------------------------------------- |
+| [`@ox-content/theme-color-github`](https://npmjs.com/package/@ox-content/theme-color-github)               | GitHub        | GitHub Light and GitHub Dark                        |
+| [`@ox-content/theme-color-tokyo-night`](https://npmjs.com/package/@ox-content/theme-color-tokyo-night)     | Tokyo Night   | Tokyo Night Day and Tokyo Night Storm               |
+| [`@ox-content/theme-color-mono`](https://npmjs.com/package/@ox-content/theme-color-mono)                   | Mono          | Pure monochrome, zero hue                           |
+| [`@ox-content/theme-color-dracula`](https://npmjs.com/package/@ox-content/theme-color-dracula)             | Dracula       | Dracula with the Alucard light counterpart          |
+| [`@ox-content/theme-color-one-dark`](https://npmjs.com/package/@ox-content/theme-color-one-dark)           | One Dark      | Atom One Light and One Dark                         |
+| [`@ox-content/theme-color-retro`](https://npmjs.com/package/@ox-content/theme-color-retro)                 | Retro         | Warm amber phosphor terminal                        |
+| [`@ox-content/theme-color-snow`](https://npmjs.com/package/@ox-content/theme-color-snow)                   | Snow          | Crisp snow white over deep slate                    |
+| [`@ox-content/theme-color-catppuccin`](https://npmjs.com/package/@ox-content/theme-color-catppuccin)       | Catppuccin    | Catppuccin Latte and Mocha                          |
+| [`@ox-content/theme-color-nord`](https://npmjs.com/package/@ox-content/theme-color-nord)                   | Nord          | Nord Snow Storm and Polar Night                     |
+| [`@ox-content/theme-color-gruvbox`](https://npmjs.com/package/@ox-content/theme-color-gruvbox)             | Gruvbox       | Gruvbox light and dark, medium contrast             |
+| [`@ox-content/theme-color-rose-pine`](https://npmjs.com/package/@ox-content/theme-color-rose-pine)         | Rosé Pine     | Rosé Pine Dawn and Rosé Pine                        |
+| [`@ox-content/theme-color-solarized`](https://npmjs.com/package/@ox-content/theme-color-solarized)         | Solarized     | Ethan Schoonover's Solarized Light and Dark         |
+| [`@ox-content/theme-color-everforest`](https://npmjs.com/package/@ox-content/theme-color-everforest)       | Everforest    | Everforest light and dark, medium contrast          |
+| [`@ox-content/theme-color-ayu`](https://npmjs.com/package/@ox-content/theme-color-ayu)                     | Ayu           | Ayu Light and Ayu Mirage                            |
+| [`@ox-content/theme-color-vitesse`](https://npmjs.com/package/@ox-content/theme-color-vitesse)             | Vitesse       | Anthony Fu's Vitesse light and dark                 |
+| [`@ox-content/theme-color-night-owl`](https://npmjs.com/package/@ox-content/theme-color-night-owl)         | Night Owl     | Sarah Drasner's Light Owl and Night Owl             |
+| [`@ox-content/theme-color-monokai`](https://npmjs.com/package/@ox-content/theme-color-monokai)             | Monokai       | Monokai Pro with a light companion                  |
+| [`@ox-content/theme-color-kanagawa`](https://npmjs.com/package/@ox-content/theme-color-kanagawa)           | Kanagawa      | Kanagawa Lotus and Wave                             |
+| [`@ox-content/theme-color-poimandres`](https://npmjs.com/package/@ox-content/theme-color-poimandres)       | Poimandres    | Poimandres, cool teal on deep navy                  |
+| [`@ox-content/theme-color-sepia`](https://npmjs.com/package/@ox-content/theme-color-sepia)                 | Sepia         | Low-glare sepia tuned for long reading sessions     |
 | [`@ox-content/theme-color-high-contrast`](https://npmjs.com/package/@ox-content/theme-color-high-contrast) | High Contrast | Maximum-contrast scheme aimed at WCAG AAA body text |
-| [`@ox-content/theme-color-synthwave`](https://npmjs.com/package/@ox-content/theme-color-synthwave) | Synthwave | Sunset-grid synthwave with hot magenta accents |
+| [`@ox-content/theme-color-synthwave`](https://npmjs.com/package/@ox-content/theme-color-synthwave)         | Synthwave     | Sunset-grid synthwave with hot magenta accents      |
 
 ## Syntax highlighting
 
@@ -174,32 +174,28 @@ one. All of it is disabled under `prefers-reduced-motion: reduce`.
 Retune the choreography without touching CSS. Every skin exposes its timing as
 tokens:
 
-| Token | Purpose |
-| ----- | ------- |
-| `--octc-motion-fast` | Color and background transitions |
-| `--octc-motion-base` | Elevation, transform, page swap |
-| `--octc-motion-slow` | Hero entrance, specular sweeps |
-| `--octc-motion-ease` | The skin's signature easing curve |
+| Token                  | Purpose                               |
+| ---------------------- | ------------------------------------- |
+| `--octc-motion-fast`   | Color and background transitions      |
+| `--octc-motion-base`   | Elevation, transform, page swap       |
+| `--octc-motion-slow`   | Hero entrance, specular sweeps        |
+| `--octc-motion-ease`   | The skin's signature easing curve     |
 | `--octc-motion-spring` | Overshoot curve for lifts and presses |
-| `--octc-motion-rise` | Distance a revealed block travels |
+| `--octc-motion-rise`   | Distance a revealed block travels     |
 
 ```ts
-theme: [
-  liquidGlass,
-  tokyoNight,
-  { tokens: { "motion-base": "200ms", "motion-ease": "linear" } },
-];
+theme: [liquidGlass, tokyoNight, { tokens: { "motion-base": "200ms", "motion-ease": "linear" } }];
 ```
 
 ## Live backdrops
 
 Three skins render their hero backdrop on the GPU instead of faking it in CSS:
 
-| Skin | What it renders |
-| ---- | --------------- |
+| Skin           | What it renders                                                                                                                  |
+| -------------- | -------------------------------------------------------------------------------------------------------------------------------- |
 | `liquid-glass` | True refraction — a domain-warped height field becomes a normal map that bends the lookup into the backdrop, with a Fresnel edge |
-| `fluid` | Dye advected through a curl-noise velocity field, which is divergence-free and so reads as an incompressible liquid |
-| `fabric` | A woven height field lit by a drifting key light, so threads catch the light along their own direction |
+| `fluid`        | Dye advected through a curl-noise velocity field, which is divergence-free and so reads as an incompressible liquid              |
+| `fabric`       | A woven height field lit by a drifting key light, so threads catch the light along their own direction                           |
 
 All three are hand-written WebGL2 with **no dependencies** — no Three.js, no
 bundle, nothing to install. They ship inside the theme's own `js`, which the SSG

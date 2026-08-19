@@ -15,13 +15,13 @@ import { css } from "./skin";
 export const brutalist: ThemeConfig = {
   name: "brutalist",
   fonts: {
-    sans: "\"Helvetica Neue\", Helvetica, Inter, \"Segoe UI\", Arial, sans-serif",
-    mono: "ui-monospace, SFMono-Regular, \"SF Mono\", Menlo, \"Cascadia Mono\", Consolas, monospace",
+    sans: '"Helvetica Neue", Helvetica, Inter, "Segoe UI", Arial, sans-serif',
+    mono: 'ui-monospace, SFMono-Regular, "SF Mono", Menlo, "Cascadia Mono", Consolas, monospace',
   },
   layout: {
-    "sidebarWidth": "256px",
-    "headerHeight": "72px",
-    "maxContentWidth": "980px",
+    sidebarWidth: "256px",
+    headerHeight: "72px",
+    maxContentWidth: "980px",
   },
   entryPage: { mode: "default" },
   tokens: {

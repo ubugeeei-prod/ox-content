@@ -15,13 +15,13 @@ import { css } from "./skin";
 export const blueprint: ThemeConfig = {
   name: "blueprint",
   fonts: {
-    sans: "\"Arial Narrow\", \"Helvetica Neue Condensed\", \"Roboto Condensed\", \"Segoe UI\", sans-serif",
-    mono: "ui-monospace, SFMono-Regular, \"SF Mono\", Menlo, \"Cascadia Mono\", Consolas, monospace",
+    sans: '"Arial Narrow", "Helvetica Neue Condensed", "Roboto Condensed", "Segoe UI", sans-serif',
+    mono: 'ui-monospace, SFMono-Regular, "SF Mono", Menlo, "Cascadia Mono", Consolas, monospace',
   },
   layout: {
-    "sidebarWidth": "260px",
-    "headerHeight": "60px",
-    "maxContentWidth": "920px",
+    sidebarWidth: "260px",
+    headerHeight: "60px",
+    maxContentWidth: "920px",
   },
   entryPage: { mode: "default" },
   tokens: {

@@ -22,7 +22,9 @@ const SSG_CSS = readFileSync(join(ROOT, "crates/ox_content_ssg/src/ssg.css"), "u
 const ENTRY_CSS = readFileSync(join(ROOT, "crates/ox_content_ssg/src/entry.css"), "utf-8");
 
 const skinsManifest = JSON.parse(readFileSync(join(HERE, "theme-skins/skins.json"), "utf-8"));
-const palettes = JSON.parse(readFileSync(join(HERE, "theme-colors/palettes.json"), "utf-8")).palettes;
+const palettes = JSON.parse(
+  readFileSync(join(HERE, "theme-colors/palettes.json"), "utf-8"),
+).palettes;
 
 const camel = (id) => id.replace(/-([a-z0-9])/g, (_, c) => c.toUpperCase());
 
@@ -100,12 +102,13 @@ const NAV = [
 ];
 
 const navHtml = NAV.map(
-  ([title, items], gi) => `<div class="nav-section"><div class="nav-title">${title}</div><ul class="nav-list">${items
-    .map(
-      (t, i) =>
-        `<li class="nav-item"><a class="nav-link${gi === 1 && i === 1 ? " active" : ""}" href="#">${t}</a></li>`,
-    )
-    .join("")}</ul></div>`,
+  ([title, items], gi) =>
+    `<div class="nav-section"><div class="nav-title">${title}</div><ul class="nav-list">${items
+      .map(
+        (t, i) =>
+          `<li class="nav-item"><a class="nav-link${gi === 1 && i === 1 ? " active" : ""}" href="#">${t}</a></li>`,
+      )
+      .join("")}</ul></div>`,
 ).join("");
 
 const FEATURES = [

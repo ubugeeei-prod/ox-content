@@ -15,13 +15,13 @@ import { css } from "./skin";
 export const manuscript: ThemeConfig = {
   name: "manuscript",
   fonts: {
-    sans: "ui-serif, \"Iowan Old Style\", \"Hoefler Text\", Georgia, \"Times New Roman\", serif",
-    mono: "ui-monospace, SFMono-Regular, \"SF Mono\", Menlo, \"Cascadia Mono\", Consolas, monospace",
+    sans: 'ui-serif, "Iowan Old Style", "Hoefler Text", Georgia, "Times New Roman", serif',
+    mono: 'ui-monospace, SFMono-Regular, "SF Mono", Menlo, "Cascadia Mono", Consolas, monospace',
   },
   layout: {
-    "sidebarWidth": "238px",
-    "headerHeight": "62px",
-    "maxContentWidth": "720px",
+    sidebarWidth: "238px",
+    headerHeight: "62px",
+    maxContentWidth: "720px",
   },
   entryPage: { mode: "default" },
   tokens: {

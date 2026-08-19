@@ -16,13 +16,13 @@ import { js } from "./gl";
 export const fluid: ThemeConfig = {
   name: "fluid",
   fonts: {
-    sans: "\"SF Pro Rounded\", ui-rounded, \"Hiragino Maru Gothic ProN\", \"Varela Round\", system-ui, sans-serif",
-    mono: "ui-monospace, SFMono-Regular, \"SF Mono\", Menlo, \"Cascadia Mono\", Consolas, monospace",
+    sans: '"SF Pro Rounded", ui-rounded, "Hiragino Maru Gothic ProN", "Varela Round", system-ui, sans-serif',
+    mono: 'ui-monospace, SFMono-Regular, "SF Mono", Menlo, "Cascadia Mono", Consolas, monospace',
   },
   layout: {
-    "sidebarWidth": "270px",
-    "headerHeight": "68px",
-    "maxContentWidth": "920px",
+    sidebarWidth: "270px",
+    headerHeight: "68px",
+    maxContentWidth: "920px",
   },
   entryPage: { mode: "default" },
   tokens: {

@@ -15,13 +15,13 @@ import { css } from "./skin";
 export const risograph: ThemeConfig = {
   name: "risograph",
   fonts: {
-    sans: "\"Helvetica Neue\", Helvetica, Inter, \"Segoe UI\", Arial, sans-serif",
-    mono: "ui-monospace, SFMono-Regular, \"SF Mono\", Menlo, \"Cascadia Mono\", Consolas, monospace",
+    sans: '"Helvetica Neue", Helvetica, Inter, "Segoe UI", Arial, sans-serif',
+    mono: 'ui-monospace, SFMono-Regular, "SF Mono", Menlo, "Cascadia Mono", Consolas, monospace',
   },
   layout: {
-    "sidebarWidth": "258px",
-    "headerHeight": "62px",
-    "maxContentWidth": "900px",
+    sidebarWidth: "258px",
+    headerHeight: "62px",
+    maxContentWidth: "900px",
   },
   entryPage: { mode: "default" },
   tokens: {
