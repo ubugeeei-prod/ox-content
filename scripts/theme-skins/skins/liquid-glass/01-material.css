@@ -43,7 +43,10 @@
   --octc-lg-rim: 12px;
   /* Toward bg-alt, not bg: on a white page a pane tinted with white is
    * invisible, and every surface collapses into one blown-out field. */
-  --octc-lg-tint: color-mix(in srgb, var(--octc-color-bg-alt) 62%, transparent);
+  /* Thin. The material's job is to let content through and bend it at the rim;
+   * a heavy fill turns it into frosted plastic, which is the whole difference
+   * between this and glassmorphism. */
+  --octc-lg-tint: color-mix(in srgb, var(--octc-color-bg-alt) 26%, transparent);
   --octc-lg-rim-filter: blur(3px) brightness(0.96) saturate(1.9);
   --octc-lg-spec-hi: rgba(255, 255, 255, 0.5);
   --octc-lg-spec-lo: rgba(255, 255, 255, 0.24);
@@ -51,7 +54,7 @@
 }
 
 [data-theme="dark"] {
-  --octc-lg-tint: color-mix(in srgb, var(--octc-color-bg) 42%, transparent);
+  --octc-lg-tint: color-mix(in srgb, var(--octc-color-bg) 24%, transparent);
   /* In the dark the rim does brighten — there the backdrop is below it. */
   --octc-lg-rim-filter: blur(3px) brightness(1.22) saturate(2.1);
   --octc-lg-spec-hi: rgba(255, 255, 255, 0.34);
@@ -61,7 +64,7 @@
 
 @media (prefers-color-scheme: dark) {
   :root:not([data-theme="light"]) {
-    --octc-lg-tint: color-mix(in srgb, var(--octc-color-bg) 42%, transparent);
+    --octc-lg-tint: color-mix(in srgb, var(--octc-color-bg) 24%, transparent);
     --octc-lg-rim-filter: blur(3px) brightness(1.22) saturate(2.1);
     --octc-lg-spec-hi: rgba(255, 255, 255, 0.34);
     --octc-lg-spec-lo: rgba(255, 255, 255, 0.08);
@@ -91,8 +94,8 @@ body {
   isolation: isolate;
   border: 0;
   background: var(--octc-lg-tint);
-  backdrop-filter: blur(20px) saturate(180%);
-  -webkit-backdrop-filter: blur(20px) saturate(180%);
+  backdrop-filter: blur(12px) saturate(200%);
+  -webkit-backdrop-filter: blur(12px) saturate(200%);
   box-shadow: 0 10px 30px -14px var(--octc-lg-underlight);
 }
 

@@ -109,6 +109,11 @@
       });
     }`;
 
+  // Assembled rather than written literally: a formatter will happily strip the
+  // backslash out of `<\/script>`, and the resulting literal tag closes the
+  // script this template lives in.
+  const END = "</" + "script>";
+
   function srcdoc(skin, scheme) {
     // The preview runs in its own document so the base stylesheet's `body`,
     // `:root` and fixed-position rules behave exactly as on a built page.
@@ -116,7 +121,7 @@
 <meta name="viewport" content="width=device-width,initial-scale=1">
 ${skin.head || ""}<style>${DATA.base}</style><style>${scheme.css}</style><style>${skin.css}</style>
 <style>.layout{padding-top:var(--octc-header-height)}.hero{min-height:calc(100vh - var(--octc-header-height))}</style>
-</head><body class="${state.page === "landing" ? "entry-page" : ""}">${DATA[state.page]}<script>${TOGGLE_SCRIPT}</script>${skin.js ? `<script>${skin.js}</script>` : ""}</body></html>`;
+</head><body class="${state.page === "landing" ? "entry-page" : ""}">${DATA[state.page]}<script>${TOGGLE_SCRIPT}${END}${skin.js ? `<script>${skin.js}${END}` : ""}</body></html>`;
   }
 
   window.addEventListener("message", (event) => {

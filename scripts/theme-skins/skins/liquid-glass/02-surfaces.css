@@ -30,18 +30,21 @@
   border-radius: calc(var(--octc-lg-r) + 6px);
 }
 
-/* The header floats as its own capsule rather than spanning as a bar — the
- * material is meant to sit above the content, not be part of the frame. */
+/* iOS floats a compact bar over the content rather than spanning the frame with
+ * one. A full-width pane is a page header wearing a blur; a short capsule the
+ * article passes beneath is the material doing its job. */
 .header {
-  --octc-lg-rim: 10px;
-  top: 0.7rem;
+  --octc-lg-rim: 8px;
+  top: 0.85rem;
   left: 50%;
   right: auto;
   transform: translateX(-50%);
-  width: min(calc(100% - 1.4rem), 1180px);
+  width: max-content;
+  max-width: calc(100% - 1.6rem);
+  gap: 1.25rem;
   border-radius: 999px;
-  padding-inline: 1rem;
-  height: calc(var(--octc-header-height) - 0.7rem);
+  padding-inline: 1.15rem;
+  height: calc(var(--octc-header-height) - 1.4rem);
 }
 .layout {
   padding-top: calc(var(--octc-header-height) + 0.7rem);

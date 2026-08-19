@@ -96,11 +96,26 @@ for (const skin of skins) {
   // need a moment of animation before they have drawn anything.
   await page.waitForTimeout(900);
 
+  // Clip to the hero's own bottom edge. Shooting the whole frame leaves a sliver
+  // of the next section along the bottom, which reads as a cropping accident
+  // rather than a composition.
+  const box = await page.locator(".stage iframe").boundingBox();
+  const heroHeight = await page.evaluate(() => {
+    const d = document.querySelector(".stage iframe").contentDocument;
+    const hero = d && d.querySelector(".hero");
+    return hero ? hero.getBoundingClientRect().height : null;
+  });
+  const clip = {
+    x: box.x,
+    y: box.y,
+    width: box.width,
+    height: Math.min(box.height, heroHeight ?? box.height),
+  };
   const frame = await page.locator(".stage iframe");
   // JPEG, because these are committed and a full-bleed gradient costs several
   // hundred kilobytes as PNG for no gain at review size. The gallery is the
   // authoritative view; this set is a contact sheet for a pull request.
-  await frame.screenshot({ path: join(OUT, `${skin.id}.jpg`), type: "jpeg", quality: 88 });
+  await page.screenshot({ path: join(OUT, `${skin.id}.jpg`), type: "jpeg", quality: 88, clip });
   console.log(`  ${skin.id.padEnd(14)} ${scheme} ${mode}`);
 }
 
