@@ -76,12 +76,18 @@ function skinCss(skin) {
     .replace(/\\\\/g, "\\");
 }
 
-/** Reads a skin's generated WebGL backdrop, if it has one. */
+/**
+ * Builds a skin's WebGL backdrop from the same sources the package generator
+ * uses, rather than scraping it back out of the generated module. Parsing a
+ * emitted TypeScript file by string offsets broke the moment the formatter
+ * rewrapped it, and there is no reason to read the output when the input is
+ * right here.
+ */
 function skinJs(id) {
-  const path = join(ROOT, "npm", "theme", id, "src", "gl.ts");
+  const path = join(HERE, "theme-skins", "js", `${id}.js`);
   if (!existsSync(path)) return "";
-  const mod = readFileSync(path, "utf-8");
-  return JSON.parse(mod.slice(mod.indexOf("export const js = ") + 18, mod.lastIndexOf(";")));
+  const runtime = readFileSync(join(HERE, "theme-skins", "js", "runtime.js"), "utf-8");
+  return `(()=>{try{\n${runtime}\n${readFileSync(path, "utf-8")}\n}catch(e){console.warn("[ox-content] theme backdrop disabled:",e)}})();`;
 }
 
 function skinVars(skin) {

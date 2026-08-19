@@ -7,7 +7,8 @@
 //
 // Usage: node scripts/theme-skins/generate.mjs
 
-import { existsSync, mkdirSync, readFileSync, writeFileSync } from "node:fs";
+import { existsSync, mkdirSync, readFileSync, readdirSync, statSync, writeFileSync } from "node:fs";
+import { execFileSync } from "node:child_process";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
 
@@ -62,6 +63,24 @@ function skinJs(skin) {
   // they are reported. Swallowing them silently is how a backdrop that mounted
   // and never drew went unnoticed.
   return `(()=>{try{\n${GL_RUNTIME}\n${readFileSync(path, "utf-8")}\n}catch(e){console.warn("[ox-content] theme backdrop disabled:",e)}})();`;
+}
+
+/**
+ * A skin is either `skins/<id>.css` or a `skins/<id>/` directory of parts read
+ * in filename order. The directory form exists so a skin with a genuinely large
+ * idea can be split along its own seams rather than squeezed under the
+ * repository's per-file line limit.
+ */
+function readSkinCss(id) {
+  const dir = join(HERE, "skins", id);
+  if (existsSync(dir) && statSync(dir).isDirectory()) {
+    return readdirSync(dir)
+      .filter((f) => f.endsWith(".css"))
+      .sort()
+      .map((f) => readFileSync(join(dir, f), "utf-8"))
+      .join("\n");
+  }
+  return readFileSync(join(HERE, "skins", `${id}.css`), "utf-8");
 }
 
 function glTs(skin, js) {
@@ -282,7 +301,7 @@ let total = 0;
 for (const skin of manifest.skins) {
   const exportName = camel(skin.id);
   const dir = join(ROOT, "npm", "theme", skin.id);
-  const own = readFileSync(join(HERE, "skins", `${skin.id}.css`), "utf-8");
+  const own = readSkinCss(skin.id);
   const css = minify(`${MOTION_CSS}\n${HERO_CSS}\n${DETAIL_CSS}\n${own}\n${GUARD_CSS}`);
   const bytes = `${(css.length / 1024).toFixed(1)} kB`;
   total += css.length;
@@ -307,6 +326,15 @@ for (const skin of manifest.skins) {
   writeFileSync(join(dir, "vite.config.ts"), VITE_CONFIG);
   writeFileSync(join(dir, "README.md"), readme(skin, exportName, bytes));
   console.log(`  ${skin.id.padEnd(14)} ${bytes.padStart(8)}`);
+}
+
+// The repository formats its sources, and generated files are sources too.
+// Formatting here rather than leaving it to the caller means a regeneration can
+// never land unformatted — which is how this broke CI once already.
+try {
+  execFileSync("npx", ["vp", "fmt"], { cwd: ROOT, stdio: "ignore" });
+} catch {
+  console.warn("  (could not run `vp fmt` — format the output before committing)");
 }
 
 console.log(

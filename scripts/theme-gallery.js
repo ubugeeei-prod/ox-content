@@ -116,7 +116,7 @@
 <meta name="viewport" content="width=device-width,initial-scale=1">
 ${skin.head || ""}<style>${DATA.base}</style><style>${scheme.css}</style><style>${skin.css}</style>
 <style>.layout{padding-top:var(--octc-header-height)}.hero{min-height:calc(100vh - var(--octc-header-height))}</style>
-</head><body class="${state.page === "landing" ? "entry-page" : ""}">${DATA[state.page]}<script>${TOGGLE_SCRIPT}<\/script>${skin.js ? `<script>${skin.js}<\/script>` : ""}</body></html>`;
+</head><body class="${state.page === "landing" ? "entry-page" : ""}">${DATA[state.page]}<script>${TOGGLE_SCRIPT}</script>${skin.js ? `<script>${skin.js}</script>` : ""}</body></html>`;
   }
 
   window.addEventListener("message", (event) => {

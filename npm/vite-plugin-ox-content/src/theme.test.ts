@@ -242,11 +242,7 @@ describe("theme composition", () => {
   });
 
   it("merges tokens key-by-key with the last layer winning", () => {
-    const resolved = resolveTheme([
-      skin,
-      colorScheme,
-      { tokens: { "surface-glass": "#fafafa" } },
-    ]);
+    const resolved = resolveTheme([skin, colorScheme, { tokens: { "surface-glass": "#fafafa" } }]);
 
     expect(resolved.tokens).toEqual({
       "surface-glass": "#fafafa",
@@ -285,7 +281,7 @@ describe("theme composition", () => {
 
     expect(css).toContain("--octc-brand-violet: #7aa2f7;");
     expect(css).toContain('[data-theme="dark"]');
-    expect(css).toContain('@media (prefers-color-scheme: dark)');
+    expect(css).toContain("@media (prefers-color-scheme: dark)");
     expect(css.indexOf("--octc-surface-glass")).toBeLessThan(css.indexOf(".header"));
   });
 

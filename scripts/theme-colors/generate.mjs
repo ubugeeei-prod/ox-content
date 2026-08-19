@@ -8,6 +8,7 @@
 // Usage: node scripts/theme-colors/generate.mjs
 
 import { mkdirSync, readFileSync, writeFileSync } from "node:fs";
+import { execFileSync } from "node:child_process";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
 
@@ -224,6 +225,15 @@ for (const p of palettes) {
   writeFileSync(join(dir, "tsconfig.json"), JSON.stringify(TSCONFIG, null, 2) + "\n");
   writeFileSync(join(dir, "vite.config.ts"), VITE_CONFIG);
   writeFileSync(join(dir, "README.md"), readme(p, exportName));
+}
+
+// The repository formats its sources, and generated files are sources too.
+// Formatting here rather than leaving it to the caller means a regeneration can
+// never land unformatted — which is how this broke CI once already.
+try {
+  execFileSync("npx", ["vp", "fmt"], { cwd: ROOT, stdio: "ignore" });
+} catch {
+  console.warn("  (could not run `vp fmt` — format the output before committing)");
 }
 
 console.log(`Generated ${palettes.length} color packages into npm/theme-color-*`);
