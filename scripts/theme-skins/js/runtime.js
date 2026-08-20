@@ -1,5 +1,10 @@
 // Shared WebGL2 runtime for the skins that render a live hero backdrop.
 //
+// Liquid Glass deliberately has none. A caustic field behind the page makes the
+// *page* the glass, and the material belongs to the controls sitting on it —
+// the refraction there is geometric, done with an SVG displacement map on the
+// backdrop filter rather than painted underneath.
+//
 // The SSG concatenates a theme's `js` into one classic inline <script>, so this
 // cannot import anything — hence a hand-rolled runtime rather than a library.
 // It is strictly progressive enhancement: the CSS backdrop is the real design,

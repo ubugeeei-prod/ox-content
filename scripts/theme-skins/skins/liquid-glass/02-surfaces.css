@@ -135,34 +135,27 @@
 
 /* --- Entry page ----------------------------------------------------------- */
 
-/* The first view is the one place the material has to prove itself, and the
- * hero paints its own texture over whatever `body` carries. So the wallpaper is
- * restated here, at a strength that actually reads: glass with nothing behind
- * it renders as nothing at all, which is exactly how this skin used to look. */
+/* The page is content, not a pane. Earlier versions made the hero itself a
+ * sheet of glass, which is backwards: the material belongs to the controls
+ * sitting on the page, and the page is simply what they refract. A restrained
+ * ground gives the rim something to bend without becoming the subject. */
 .hero {
   background-image:
     radial-gradient(
-      46% 40% at 16% 12%,
-      color-mix(in srgb, var(--octc-accent-a, var(--octc-color-primary)) 62%, transparent),
-      transparent 70%
-    ),
-    radial-gradient(
-      42% 38% at 84% 22%,
-      color-mix(in srgb, var(--octc-accent-c, var(--octc-color-primary)) 54%, transparent),
+      40% 34% at 22% 16%,
+      color-mix(in srgb, var(--octc-accent-a, var(--octc-color-primary)) 30%, transparent),
       transparent 72%
     ),
     radial-gradient(
-      52% 44% at 58% 92%,
-      color-mix(in srgb, var(--octc-accent-b, var(--octc-color-primary)) 46%, transparent),
+      36% 32% at 80% 76%,
+      color-mix(in srgb, var(--octc-accent-c, var(--octc-color-primary)) 24%, transparent),
       transparent 74%
     );
-  /* The base hero carries a repeating noise tile, and these layers inherit its
-   * size and repeat unless told otherwise — which turns one soft field into a
-   * polka-dot grid. */
   background-size: cover;
   background-repeat: no-repeat;
   background-attachment: fixed;
 }
+
 .hero-name {
   letter-spacing: -0.035em;
   font-weight: 660;

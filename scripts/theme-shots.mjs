@@ -29,30 +29,30 @@ const OUT = process.argv[3] ?? join(ROOT, "docs", "public", "screenshots", "them
 const PAIRING = {
   pixel: ["Commander", "dark"], // CGA, the palette these pixels came from
   "liquid-glass": ["Arctic", "light"], // cold, so the rim lensing has hue to bend
-  "blur-glass": ["Iceberg", "light"], // frost wants a cold page behind it
+  "blur-glass": ["Poimandres", "dark"], // frost is invisible without something saturated behind it
   "analog-film": ["Melange", "dark"], // muted earth, where lifted blacks read
   fluid: ["Rosé Pine", "dark"], // the dye field needs saturated accents
-  fabric: ["Moss", "light"], // natural fibre, natural dye
+  fabric: ["Moss", "dark"], // deep dye; cloth on a pale ground is a swatch, not a bolt
   leather: ["Cacao", "dark"], // tanned hide
   brutalist: ["Mono", "light"], // nothing to hide behind
   terminal: ["Retro", "dark"], // amber phosphor
-  blueprint: ["Ink", "light"], // draughtsman's navy
+  blueprint: ["Ink", "dark"], // a blueprint is white lines on blue, not navy on white
   risograph: ["Horizon", "light"], // two vivid drums
-  swiss: ["Graphite", "light"], // neutral ground, one accent
+  swiss: ["Coral", "light"], // the School was never grey-on-grey; it committed to one hue
   neon: ["Synthwave", "dark"], // the tubes it was drawn for
-  clay: ["Catppuccin", "light"], // soft pastel solids
-  editorial: ["Flexoki", "light"], // ink on paper
+  clay: ["Catppuccin", "dark"], // extruded solids need saturation to read as volume
+  editorial: ["Monokai", "light"], // a magazine has a spot colour
   aurora: ["Nord", "dark"], // the latitude it is named after
   holo: ["Plum", "dark"], // foil needs a dark ground to shift on
   paper: ["Sepia", "light"], // warm stock
   voltage: ["Voltage", "dark"], // its own charge
-  manuscript: ["Sand", "light"], // parchment
+  manuscript: ["Kanagawa", "light"], // Lotus — real paper tones rather than generic beige
   ledger: ["Solarized", "light"], // the cream of a bound book
   kiosk: ["Stage", "dark"], // poster contrast
-  atlas: ["Everforest", "light"], // map greens
-  receipt: ["Porcelain", "light"], // thermal paper
+  atlas: ["Nord", "light"], // a chart, not a hiking map
+  receipt: ["Modus", "light"], // thermal paper is cold white and pure black
   bauhaus: ["Slate", "light"], // neutral ground, primary energy
-  zine: ["High Contrast", "light"], // a photocopier has two tones
+  zine: ["Stage", "light"], // a zine is loud; two greys is a memo
   noir: ["Kanagawa", "dark"], // ink wash
 };
 
