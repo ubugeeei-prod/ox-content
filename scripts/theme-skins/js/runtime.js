@@ -1,10 +1,5 @@
 // Shared WebGL2 runtime for the skins that render a live hero backdrop.
 //
-// Liquid Glass deliberately has none. A caustic field behind the page makes the
-// *page* the glass, and the material belongs to the controls sitting on it —
-// the refraction there is geometric, done with an SVG displacement map on the
-// backdrop filter rather than painted underneath.
-//
 // The SSG concatenates a theme's `js` into one classic inline <script>, so this
 // cannot import anything — hence a hand-rolled runtime rather than a library.
 // It is strictly progressive enhancement: the CSS backdrop is the real design,
@@ -61,6 +56,11 @@ function octcGL(fragmentSource, options) {
   const uRes = gl.getUniformLocation(program, "u_res");
   const uTime = gl.getUniformLocation(program, "u_time");
   const uColors = [0, 1, 2, 3].map((i) => gl.getUniformLocation(program, "u_c" + i));
+
+  // A skin that needs uniforms beyond the shared set (Liquid Glass feeds the
+  // rects of the panels it refracts) registers them here; the returned callback
+  // runs every frame before the draw, in canvas pixels.
+  const onFrame = opts.setup ? opts.setup(gl, program, host, canvas) : null;
 
   // Palette values are read through a probe element rather than parsed from the
   // custom property, because a scheme may define one as color-mix(), which only
@@ -119,6 +119,7 @@ function octcGL(fragmentSource, options) {
     if (!running) return;
     resize();
     gl.uniform1f(uTime, (now - start) / 1000);
+    if (onFrame) onFrame(now, width, height);
     gl.drawArrays(gl.TRIANGLES, 0, 3);
     frame = requestAnimationFrame(tick);
   }

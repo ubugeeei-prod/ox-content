@@ -35,6 +35,10 @@
  * article passes beneath is the material doing its job. */
 .header {
   --octc-lg-rim: 8px;
+  /* The material block above sets `position: relative` for its pseudo layers,
+   * which would drop the capsule into flow and push the hero (and the
+   * refraction canvas) below it. It floats. */
+  position: fixed;
   top: 0.85rem;
   left: 50%;
   right: auto;
@@ -46,7 +50,10 @@
   padding-inline: 1.15rem;
   height: calc(var(--octc-header-height) - 1.4rem);
 }
-.layout {
+/* Articles start below the floating capsule; the entry page must not, or the
+ * hero (and the refraction canvas inside it) stops short of the header and the
+ * capsule floats over a dead strip instead of over glass. */
+body:not(.entry-page) .layout {
   padding-top: calc(var(--octc-header-height) + 0.7rem);
 }
 .header-title {
@@ -164,6 +171,18 @@
   --octc-lg-rim: 9px;
   font-weight: 620;
   padding-inline: 2rem;
+}
+
+/* Even the primary action is glass: a solid fill reads as plastic sitting on
+ * the material instead of being made of it. Tint the lens with the brand color
+ * and let the refraction underneath carry the depth. */
+.hero-action-brand,
+.hero-action-brand:hover,
+.hero-action-brand:focus-visible {
+  --octc-brand-fill: color-mix(in srgb, var(--octc-color-primary) 52%, transparent);
+  --octc-brand-fill-hover: color-mix(in srgb, var(--octc-color-primary) 66%, transparent);
+  --octc-brand-edge: color-mix(in srgb, var(--octc-color-primary) 45%, transparent);
+  --octc-brand-edge-hover: color-mix(in srgb, var(--octc-color-primary) 60%, transparent);
 }
 
 /* Interaction is a lift and a widening rim — the lens deepening — rather than a

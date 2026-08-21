@@ -46,8 +46,8 @@
   /* Thin. The material's job is to let content through and bend it at the rim;
    * a heavy fill turns it into frosted plastic, which is the whole difference
    * between this and glassmorphism. */
-  --octc-lg-tint: color-mix(in srgb, var(--octc-color-bg-alt) 26%, transparent);
-  --octc-lg-rim-filter: blur(1px) saturate(1.35);
+  --octc-lg-tint: color-mix(in srgb, var(--octc-color-bg-alt) 22%, transparent);
+  --octc-lg-rim-filter: blur(0.5px) saturate(1.6) brightness(1.06);
   --octc-lg-spec-hi: rgba(255, 255, 255, 0.5);
   --octc-lg-spec-lo: rgba(255, 255, 255, 0.24);
   --octc-lg-underlight: rgba(0, 0, 0, 0.16);
@@ -56,7 +56,7 @@
 [data-theme="dark"] {
   --octc-lg-tint: color-mix(in srgb, var(--octc-color-bg) 24%, transparent);
   /* In the dark the rim does brighten — there the backdrop is below it. */
-  --octc-lg-rim-filter: blur(1px) saturate(1.5);
+  --octc-lg-rim-filter: blur(0.5px) saturate(1.75) brightness(1.12);
   --octc-lg-spec-hi: rgba(255, 255, 255, 0.34);
   --octc-lg-spec-lo: rgba(255, 255, 255, 0.08);
   --octc-lg-underlight: rgba(0, 0, 0, 0.5);
@@ -65,7 +65,7 @@
 @media (prefers-color-scheme: dark) {
   :root:not([data-theme="light"]) {
     --octc-lg-tint: color-mix(in srgb, var(--octc-color-bg) 24%, transparent);
-    --octc-lg-rim-filter: blur(1px) saturate(1.5);
+    --octc-lg-rim-filter: blur(0.5px) saturate(1.75) brightness(1.12);
     --octc-lg-spec-hi: rgba(255, 255, 255, 0.34);
     --octc-lg-spec-lo: rgba(255, 255, 255, 0.08);
     --octc-lg-underlight: rgba(0, 0, 0, 0.5);
@@ -80,6 +80,11 @@ body {
 
 /* --- The material --------------------------------------------------------- */
 
+/* No `url(#...)` reference filter here: Safari never runs it and Chromium's
+ * backdrop path is unreliable with one, which left the material with no glass
+ * at all. The real refraction is painted by the skin's WebGL backdrop under
+ * these panels; the CSS keeps only a thin tint and a faint blur so the shader
+ * shows through, and stays the whole design where the canvas never mounts. */
 .header,
 .search-modal,
 .feature-card,
@@ -94,8 +99,8 @@ body {
   isolation: isolate;
   border: 0;
   background: var(--octc-lg-tint);
-  backdrop-filter: url(#octc-lg-lens) blur(7px) saturate(190%);
-  -webkit-backdrop-filter: url(#octc-lg-lens) blur(7px) saturate(190%);
+  backdrop-filter: blur(2.5px) saturate(170%);
+  -webkit-backdrop-filter: blur(2.5px) saturate(170%);
   box-shadow: 0 10px 30px -14px var(--octc-lg-underlight);
 }
 
