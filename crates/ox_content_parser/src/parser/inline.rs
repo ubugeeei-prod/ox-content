@@ -52,11 +52,28 @@ impl<'a> Parser<'a> {
         offset: usize,
     ) -> ParseResult<Vec<'a, Node<'a>>> {
         profile_span!("parser::parse_inline");
+        let bytes = content.as_bytes();
+        let first_special = next_inline_special(bytes, 0);
+
+        // Plain text is both the most common inline shape and exactly one AST
+        // node. Reserving the general four-node floor here wasted three
+        // full Node slots for every prose block and plain table cell. The
+        // scan is required by the normal loop anyway, so use its no-marker
+        // result to build the exact one-slot representation and return.
+        if first_special == content.len() {
+            if content.is_empty() {
+                return Ok(self.allocator.new_vec());
+            }
+            let mut children = self.allocator.new_vec_with_capacity(1);
+            Self::push_text(&mut children, content, offset, offset + content.len());
+            return Ok(children);
+        }
+
         let mut children =
             self.allocator.new_vec_with_capacity(Self::inline_children_capacity(content.len()));
         let mut delimiters = self.allocator.new_vec();
         let mut pos = 0;
-        let bytes = content.as_bytes();
+        let mut first_scan = Some(first_special);
 
         while pos < content.len() {
             let start = pos;
@@ -65,7 +82,7 @@ impl<'a> Parser<'a> {
             // one Text node. This keeps the parser on bulk byte scans for
             // prose and only enters the slower match when a real marker byte
             // has been reached.
-            pos = next_inline_special(bytes, pos);
+            pos = first_scan.take().unwrap_or_else(|| next_inline_special(bytes, pos));
 
             // Fold soft line breaks into the running text node. A newline
             // with non-whitespace on both sides is a soft break with nothing

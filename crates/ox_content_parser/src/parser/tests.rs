@@ -77,6 +77,21 @@ fn test_parse_paragraph() {
 }
 
 #[test]
+fn plain_text_paragraph_reserves_one_inline_node() {
+    let allocator = Allocator::new();
+    let doc = Parser::new(&allocator, "One plain text node").parse().unwrap();
+    let Node::Paragraph(paragraph) = &doc.children[0] else {
+        panic!("expected paragraph");
+    };
+
+    assert_eq!(paragraph.children.len(), 1);
+    assert_eq!(paragraph.children.capacity(), 1);
+    assert!(
+        matches!(&paragraph.children[0], Node::Text(text) if text.value == "One plain text node")
+    );
+}
+
+#[test]
 fn test_parse_thematic_break() {
     let allocator = Allocator::new();
     let doc = Parser::new(&allocator, "---").parse().unwrap();
