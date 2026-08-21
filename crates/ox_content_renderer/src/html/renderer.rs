@@ -20,7 +20,7 @@ use rustc_hash::FxHashMap;
 
 use super::autolink::FirstByteIndex;
 use super::escape::{write_escaped_into, write_url_escaped_into};
-use super::options::HtmlRendererOptions;
+use super::options::{HtmlRendererOptions, RendererOptions};
 use super::toc::{collect_inline_toc_entries, scan_document_for_render, InlineTocEntry};
 use crate::render::{RenderResult, Renderer};
 
@@ -31,7 +31,7 @@ use crate::render::{RenderResult, Renderer};
 /// set of hot-path allocations while keeping the public API as simple as
 /// [`HtmlRenderer::render`].
 pub struct HtmlRenderer {
-    options: HtmlRendererOptions,
+    options: RendererOptions,
     output: String,
     /// Keyed by `CompactString` rather than `String`: heading slugs are
     /// short (median 22 bytes on the bundled corpora), so the majority sit
@@ -81,12 +81,16 @@ impl HtmlRenderer {
     /// Creates a new HTML renderer with default options.
     #[must_use]
     pub fn new() -> Self {
-        Self::with_options(HtmlRendererOptions::new())
+        Self::with_renderer_options(RendererOptions::defaults())
     }
 
     /// Creates a new HTML renderer with the specified options.
     #[must_use]
     pub fn with_options(options: HtmlRendererOptions) -> Self {
+        Self::with_renderer_options(options.into())
+    }
+
+    fn with_renderer_options(options: RendererOptions) -> Self {
         Self {
             options,
             output: String::new(),
@@ -151,12 +155,12 @@ impl HtmlRenderer {
         // on the immutable pattern list, not on the text node being rendered,
         // so reusing it avoids rebuilding a 256-byte table on every inline
         // text visit.
-        self.autolink_index =
-            if self.options.autolink_urls && !self.options.autolink_patterns.is_empty() {
-                Some(FirstByteIndex::from_patterns(&self.options.autolink_patterns))
-            } else {
-                None
-            };
+        let autolink_patterns = self.options.autolink_patterns();
+        self.autolink_index = if self.options.autolink_urls && !autolink_patterns.is_empty() {
+            Some(FirstByteIndex::from_patterns(autolink_patterns))
+        } else {
+            None
+        };
         // HTML output is typically 2×–3× the markdown source (every
         // `**bold**` becomes `<strong>...</strong>` etc.) so the prior
         // 1.5× estimate kept undersizing the buffer and forcing 1–2

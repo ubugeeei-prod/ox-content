@@ -59,7 +59,7 @@ impl HtmlRenderer {
         }
         // Borrow the relevant fields disjointly so the URL scan (which only
         // reads `options`/`autolink_index`) and the output writes can coexist.
-        let patterns = &self.options.autolink_patterns;
+        let patterns = self.options.autolink_patterns();
         let target_blank = self.options.autolink_target_blank;
         let out = &mut self.output;
         let mut cursor = 0usize;

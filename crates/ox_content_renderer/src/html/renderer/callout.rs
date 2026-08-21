@@ -11,11 +11,18 @@ use super::HtmlRenderer;
 
 impl HtmlRenderer {
     fn render_paragraph_with_skipped_text_prefix<'a>(
-        &self,
+        &mut self,
         paragraph: &Paragraph<'a>,
         mut skip_chars: usize,
-    ) -> String {
-        let mut renderer = HtmlRenderer::with_options(self.options.clone());
+    ) {
+        let paragraph_start = self.output.len();
+        self.write("<p>");
+        let body_start = self.output.len();
+
+        // The former temporary renderer had no initialized autolink index,
+        // so callout body text was escaped without bare-URL rewriting. Keep
+        // that observable behavior while writing into the existing buffer.
+        let autolink_index = self.autolink_index.take();
         // Whitespace-only text between the marker and the body (the parser
         // may emit the separating newline as its own Text node) is part of
         // the marker line, not body content.
@@ -38,16 +45,21 @@ impl HtmlRenderer {
                         continue;
                     }
                     before_body = false;
-                    renderer.write_escaped(value);
+                    self.write_escaped(value);
                 }
                 _ => {
                     before_body = false;
-                    renderer.render_node(child);
+                    self.render_node(child);
                 }
             }
         }
+        self.autolink_index = autolink_index;
 
-        renderer.output
+        if self.output[body_start..].trim().is_empty() {
+            self.output.truncate(paragraph_start);
+        } else {
+            self.write("</p>\n");
+        }
     }
 
     fn detect_callout<'a>(paragraph: &Paragraph<'a>) -> Option<(CalloutKind, usize)> {
@@ -56,33 +68,55 @@ impl HtmlRenderer {
         // allocated a `String prefix` and pushed Text values into it
         // before checking — pure waste for the overwhelmingly common
         // case of a regular block quote.
-        let mut iter = paragraph.children.iter();
-        let Node::Text(first_text) = iter.next()? else {
+        let Node::Text(first_text) = paragraph.children.first()? else {
             return None;
         };
         if first_text.value.as_bytes().first() != Some(&b'[') {
             return None;
         }
 
-        // The first Text node almost always contains the entire marker
-        // (parsers don't split `[!NOTE]` across multiple Text nodes
-        // unless inline markup interleaves). Try in-place first, and
-        // only fall back to the concatenating slow path if the marker
-        // straddles nodes.
+        // Keep the overwhelmingly common contiguous case to one slice scan.
         if let Some((kind, remainder)) = CalloutKind::parse_marker(first_text.value) {
             let consumed = first_text.value.len().saturating_sub(remainder.len());
             return Some((kind, consumed));
         }
 
-        let mut prefix = String::from(first_text.value);
-        for child in iter {
+        // Failed link parsing can split `[!NOTE]` into adjacent Text nodes.
+        // Walk those nodes as one logical marker without concatenating them.
+        // `IMPORTANT` is the longest accepted name, so every candidate that
+        // could succeed fits in this stack buffer.
+        let mut name = [0u8; 9];
+        let mut name_len = 0usize;
+        let mut consumed = 0usize;
+        let mut state = 0u8;
+        let mut trailing_name_whitespace = false;
+
+        for child in &paragraph.children {
             let Node::Text(text) = child else {
                 return None;
             };
-            prefix.push_str(text.value);
-            if let Some((kind, remainder)) = CalloutKind::parse_marker(&prefix) {
-                let consumed = prefix.len().saturating_sub(remainder.len());
-                return Some((kind, consumed));
+
+            for ch in text.value.chars() {
+                consumed += ch.len_utf8();
+                match state {
+                    0 if ch == '[' => state = 1,
+                    1 if ch == '!' => state = 2,
+                    0 | 1 => return None,
+                    _ if ch == ']' => {
+                        let name = std::str::from_utf8(&name[..name_len]).ok()?;
+                        return Some((CalloutKind::from_name(name)?, consumed));
+                    }
+                    _ if ch.is_whitespace() => {
+                        trailing_name_whitespace |= name_len != 0;
+                    }
+                    _ => {
+                        if trailing_name_whitespace || !ch.is_ascii() || name_len == name.len() {
+                            return None;
+                        }
+                        name[name_len] = ch as u8;
+                        name_len += 1;
+                    }
+                }
             }
         }
 
@@ -107,13 +141,7 @@ impl HtmlRenderer {
         self.write(kind.label());
         self.write("</p>\n");
 
-        let paragraph_body =
-            self.render_paragraph_with_skipped_text_prefix(first_paragraph, consumed_chars);
-        if !paragraph_body.trim().is_empty() {
-            self.write("<p>");
-            self.write(&paragraph_body);
-            self.write("</p>\n");
-        }
+        self.render_paragraph_with_skipped_text_prefix(first_paragraph, consumed_chars);
 
         for child in block_quote.children.iter().skip(1) {
             self.render_node(child);

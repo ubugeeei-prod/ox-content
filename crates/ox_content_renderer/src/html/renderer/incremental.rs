@@ -60,12 +60,12 @@ impl HtmlRenderer {
             collect_inline_toc_entries(document, self.options.toc_max_depth, &mut self.toc_entries);
         }
         self.heading_id_counts.reserve(document_scan.heading_count);
-        self.autolink_index =
-            if self.options.autolink_urls && !self.options.autolink_patterns.is_empty() {
-                Some(FirstByteIndex::from_patterns(&self.options.autolink_patterns))
-            } else {
-                None
-            };
+        let autolink_patterns = self.options.autolink_patterns();
+        self.autolink_index = if self.options.autolink_urls && !autolink_patterns.is_empty() {
+            Some(FirstByteIndex::from_patterns(autolink_patterns))
+        } else {
+            None
+        };
         self.in_link = false;
         let estimated_len = (document.span.len() as usize).saturating_mul(2);
         if self.output.capacity() < estimated_len {

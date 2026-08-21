@@ -50,7 +50,7 @@ impl HtmlRenderer {
 
     pub(in crate::html::renderer) fn render_break(&mut self, _break_node: &Break) {
         crate::profile_span_detail!("renderer::visit_break");
-        self.output.push_str(self.options.hard_break.as_str());
+        self.output.push_str(self.options.hard_break());
     }
 
     pub(in crate::html::renderer) fn render_link(&mut self, link: &Link<'_>) {

@@ -14,6 +14,22 @@ pub(super) enum CalloutKind {
 }
 
 impl CalloutKind {
+    pub(super) fn from_name(name: &str) -> Option<Self> {
+        if name.eq_ignore_ascii_case("NOTE") {
+            Some(Self::Note)
+        } else if name.eq_ignore_ascii_case("TIP") {
+            Some(Self::Tip)
+        } else if name.eq_ignore_ascii_case("IMPORTANT") {
+            Some(Self::Important)
+        } else if name.eq_ignore_ascii_case("WARNING") {
+            Some(Self::Warning)
+        } else if name.eq_ignore_ascii_case("CAUTION") {
+            Some(Self::Caution)
+        } else {
+            None
+        }
+    }
+
     pub(super) fn parse_marker(value: &str) -> Option<(Self, &str)> {
         let marker = value.strip_prefix("[!")?;
         let end = marker.find(']')?;
@@ -22,19 +38,7 @@ impl CalloutKind {
         // text run that reached this branch. `eq_ignore_ascii_case`
         // compares the trimmed slice in place against each known label.
         let name = marker[..end].trim();
-        let kind = if name.eq_ignore_ascii_case("NOTE") {
-            Self::Note
-        } else if name.eq_ignore_ascii_case("TIP") {
-            Self::Tip
-        } else if name.eq_ignore_ascii_case("IMPORTANT") {
-            Self::Important
-        } else if name.eq_ignore_ascii_case("WARNING") {
-            Self::Warning
-        } else if name.eq_ignore_ascii_case("CAUTION") {
-            Self::Caution
-        } else {
-            return None;
-        };
+        let kind = Self::from_name(name)?;
 
         Some((kind, marker[end + 1..].trim_start_matches(char::is_whitespace)))
     }

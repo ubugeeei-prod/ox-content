@@ -58,7 +58,7 @@ impl HtmlRenderer {
             if syntax.includes_attribute() {
                 let annotations = parse_code_annotations(
                     info.meta.as_str(),
-                    &self.options.code_annotation_meta_key,
+                    self.options.code_annotation_meta_key(),
                 );
                 apply_btree_annotations(&mut lines, &annotations);
             }

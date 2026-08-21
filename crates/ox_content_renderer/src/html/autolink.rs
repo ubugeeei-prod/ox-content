@@ -4,6 +4,8 @@
 //! first indexes possible leading bytes so most prose is skipped without repeated
 //! prefix checks, then validates word boundaries and trims punctuation around matches.
 
+use super::options::AutolinkPatterns;
+
 /// Case-insensitive index over the first byte of every registered autolink
 /// pattern, used to skip the long runs of text that can't begin a URL.
 ///
@@ -54,13 +56,21 @@ impl FirstByteIndex {
     /// lowercasing the whole text node. One to three distinct bytes are stored
     /// in `needles` for `memchr`, `memchr2`, or `memchr3`; larger custom
     /// pattern sets keep correctness by falling back to the table scan.
-    pub(super) fn from_patterns(patterns: &[String]) -> Self {
+    pub(super) fn from_patterns(patterns: AutolinkPatterns<'_>) -> Self {
+        match patterns {
+            AutolinkPatterns::Defaults(patterns) => Self::from_pattern_slice(patterns),
+            AutolinkPatterns::Custom(patterns) => Self::from_pattern_slice(patterns),
+        }
+    }
+
+    fn from_pattern_slice<P: AsRef<str>>(patterns: &[P]) -> Self {
         let mut table = [false; 256];
         let mut needles = [0u8; 3];
         let mut needle_len = 0usize;
         let mut overflow = false;
         let mut second = [0u8; 256];
         for pat in patterns {
+            let pat = pat.as_ref();
             let Some(&first) = pat.as_bytes().first() else {
                 continue;
             };
@@ -95,9 +105,10 @@ impl FirstByteIndex {
         // holds. Alphabetic bytes never qualify — the prefix compare is
         // case-insensitive, so a letter's presence proves nothing about the
         // other case.
-        let gate_candidates = patterns.first().map_or(&[][..], |pat| pat.as_bytes());
+        let gate_candidates = patterns.first().map_or(&[][..], |pat| pat.as_ref().as_bytes());
         let qualifies = |byte: u8| {
-            !byte.is_ascii_alphabetic() && patterns.iter().all(|pat| pat.as_bytes().contains(&byte))
+            !byte.is_ascii_alphabetic()
+                && patterns.iter().all(|pat| pat.as_ref().as_bytes().contains(&byte))
         };
         let gate = b":/@."
             .iter()
@@ -113,7 +124,7 @@ impl FirstByteIndex {
         let mut gate_tail_len = 0usize;
         if let Some(gate_byte) = gate {
             if let Some(first) = patterns.first() {
-                let first = first.as_bytes();
+                let first = first.as_ref().as_bytes();
                 if let Some(at) = memchr::memchr(gate_byte, first) {
                     let mut len = 0usize;
                     while len < gate_tail.len()
@@ -126,10 +137,9 @@ impl FirstByteIndex {
                     // pattern set that disagrees falls back to the bare byte.
                     while len > 0 {
                         let needle = &first[at..=at + len];
-                        if patterns
-                            .iter()
-                            .all(|pat| memchr::memmem::find(pat.as_bytes(), needle).is_some())
-                        {
+                        if patterns.iter().all(|pat| {
+                            memchr::memmem::find(pat.as_ref().as_bytes(), needle).is_some()
+                        }) {
                             gate_tail[..len].copy_from_slice(&first[at + 1..=at + len]);
                             gate_tail_len = len;
                             break;
@@ -213,7 +223,19 @@ impl FirstByteIndex {
 pub(super) fn find_autolink_match(
     s: &str,
     from: usize,
-    patterns: &[String],
+    patterns: AutolinkPatterns<'_>,
+    index: &FirstByteIndex,
+) -> Option<(usize, usize)> {
+    match patterns {
+        AutolinkPatterns::Defaults(patterns) => find_autolink_match_in(s, from, patterns, index),
+        AutolinkPatterns::Custom(patterns) => find_autolink_match_in(s, from, patterns, index),
+    }
+}
+
+fn find_autolink_match_in<P: AsRef<str>>(
+    s: &str,
+    from: usize,
+    patterns: &[P],
     index: &FirstByteIndex,
 ) -> Option<(usize, usize)> {
     crate::profile_span_detail!("renderer::autolink_scan");
@@ -232,6 +254,7 @@ pub(super) fn find_autolink_match(
         let is_boundary = i == 0 || !bytes[i - 1].is_ascii_alphanumeric();
         if is_boundary {
             for pat in patterns {
+                let pat = pat.as_ref();
                 let pat_bytes = pat.as_bytes();
                 if pat_bytes.is_empty() {
                     continue;

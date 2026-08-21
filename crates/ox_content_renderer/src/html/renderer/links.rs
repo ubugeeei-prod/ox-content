@@ -26,7 +26,7 @@ impl HtmlRenderer {
 
         let suffix_start = url.find(&['?', '#'][..]).unwrap_or(url.len());
         let (path, suffix) = url.split_at(suffix_start);
-        let base = self.options.base_url.trim_end_matches('/');
+        let base = self.options.base_url().trim_end_matches('/');
 
         if base.is_empty() {
             None
@@ -135,7 +135,7 @@ impl HtmlRenderer {
         let converted = if path.starts_with('/') {
             // Absolute path: /getting-started.md -> {base}getting-started/index.html
             let path_without_slash = &path_without_ext[1..];
-            let base = &self.options.base_url;
+            let base = self.options.base_url();
             if path_without_slash.is_empty() || path_without_slash == "index" {
                 join2(base, "index.html")
             } else if let Some(dir) = path_without_slash.strip_suffix("/index") {
@@ -232,10 +232,10 @@ impl HtmlRenderer {
 
     /// Checks if the source file is an index file (index.md).
     pub(in crate::html::renderer) fn is_source_index(&self) -> bool {
-        if self.options.source_path.is_empty() {
+        if self.options.source_path().is_empty() {
             return false;
         }
-        let source = std::path::Path::new(&self.options.source_path);
+        let source = std::path::Path::new(self.options.source_path());
         source.file_stem().is_some_and(|stem| stem.eq_ignore_ascii_case("index"))
     }
 }
