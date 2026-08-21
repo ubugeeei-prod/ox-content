@@ -196,8 +196,7 @@ impl LanguageServer for Backend {
     }
 
     async fn code_action(&self, params: CodeActionParams) -> Result<Option<CodeActionResponse>> {
-        if params.text_document.uri.to_file_path().ok().is_some_and(|path| !is_markdown_path(&path))
-        {
+        if params.text_document.uri.to_file_path().is_ok_and(|path| !is_markdown_path(&path)) {
             return Ok(None);
         }
         let mut actions = insert_actions(&params.text_document.uri, params.range.start);
