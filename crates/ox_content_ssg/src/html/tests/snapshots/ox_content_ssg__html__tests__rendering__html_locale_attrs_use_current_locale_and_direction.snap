@@ -1,6 +1,5 @@
 ---
 source: crates/ox_content_ssg/src/html/tests/rendering.rs
-assertion_line: 140
 expression: "super::snapshot_text(&html)"
 ---
 <!DOCTYPE html>
@@ -627,17 +626,27 @@ a:hover {
   line-height: 1.08;
   letter-spacing: -0.045em;
 }
+/* Vertical rhythm: body blocks (p, lists) sit 1rem apart, framed blocks (pre,
+ * tables, quotes, figures) 1.25rem, and headings clear more above than below —
+ * a section break should read bigger than a paragraph break, and the gap under
+ * a heading smaller than the gap over it. */
+.content > :first-child {
+  margin-top: 0;
+}
 .content h2 {
   font-size: 1.5rem;
-  margin-top: 2.5rem;
-  margin-bottom: 1rem;
-  padding-bottom: 0.5rem;
+  margin-top: 2.75rem;
+  margin-bottom: 0.85rem;
+  padding-bottom: 0.4rem;
   border-bottom: 1px solid color-mix(in srgb, var(--octc-color-border) 78%, transparent);
 }
 .content h3 {
   font-size: 1.25rem;
   margin-top: 2rem;
-  margin-bottom: 0.75rem;
+  margin-bottom: 0.6rem;
+}
+.content h2 + h3 {
+  margin-top: 1.25rem;
 }
 .content h4 {
   font-size: 1rem;
@@ -653,12 +662,16 @@ a:hover {
   padding-left: 1.5rem;
 }
 .content li {
-  margin: 0.375rem 0;
+  margin: 0.3rem 0;
+}
+.content li > ul,
+.content li > ol {
+  margin: 0.3rem 0;
 }
 .content blockquote {
   border-left: 4px solid var(--octc-color-primary);
   padding: 0.875rem 1rem 0.875rem 1.125rem;
-  margin: 1rem 0;
+  margin: 1.25rem 0;
   background: color-mix(in srgb, var(--octc-color-bg-alt) 90%, var(--octc-color-primary) 10%);
   border-radius: 0 4px 4px 0;
 }
@@ -718,7 +731,7 @@ a:hover {
   border-radius: 4px;
   border: 1px solid var(--octc-color-code-frame-border);
   overflow-x: auto;
-  margin: 1.5rem 0;
+  margin: 1.25rem 0;
   line-height: 1.5;
 }
 .content pre code {
@@ -802,7 +815,7 @@ a:hover {
 .content table {
   width: 100%;
   border-collapse: collapse;
-  margin: 1.5rem 0;
+  margin: 1.25rem 0;
   font-size: 0.875rem;
 }
 .content th,
