@@ -17,7 +17,7 @@
 use std::rc::Rc;
 use std::sync::LazyLock;
 
-use memchr::{memmem, memrchr};
+use memchr::{memchr, memmem, memrchr};
 
 use super::footnote::{normalize_footnote_label, parse_footnote_opener, FootnoteLabels};
 use super::line_scan::{line_end as scan_line_end, next_line_start};
@@ -52,6 +52,53 @@ fn next_fence_run_line(bytes: &[u8], from: usize, fence_byte: u8) -> Option<usiz
     Some(memrchr(b'\n', &bytes[from..at]).map_or(from, |off| from + off + 1))
 }
 
+/// Whether the source contains the minimum shape of a definition opener.
+///
+/// A bare `]:` anywhere is not enough: ordinary prose can mention the token
+/// and force the much more expensive structural pre-pass. The opening `[` of
+/// either a reference or footnote definition must begin a block line after
+/// quote markers and at most three spaces. Reference labels are capped at
+/// 1,000 bytes; footnote labels are line-bounded but have no length cap. This
+/// scanner only proves that necessary shape exists; the full pre-pass remains
+/// responsible for validating syntax and block context.
+fn has_definition_candidate(source: &str, footnotes: bool) -> bool {
+    let bytes = source.as_bytes();
+    let Some(mut open) = memchr(b'[', bytes) else {
+        return false;
+    };
+    if memmem::find(bytes, b"]:").is_none() {
+        return false;
+    }
+
+    let mut line_start = memrchr(b'\n', &bytes[..open]).map_or(0, |off| off + 1);
+    loop {
+        let prefix = strip_quote_markers(&source[line_start..open]);
+        if prefix.len() <= 3 && prefix.as_bytes().iter().all(|&byte| byte == b' ') {
+            let candidate_end = if footnotes && bytes.get(open + 1) == Some(&b'^') {
+                // Footnote labels cannot span lines, but unlike reference
+                // labels their parser deliberately has no length cap.
+                memchr(b'\n', &bytes[open + 2..]).map_or(bytes.len(), |off| open + 2 + off)
+            } else {
+                // label_start..=closing bracket spans at most 1,001 bytes,
+                // with one final byte needed for the colon after it.
+                open.saturating_add(1003).min(bytes.len())
+            };
+            if memmem::find(&bytes[open + 1..candidate_end], b"]:").is_some() {
+                return true;
+            }
+        }
+
+        let search_start = open + 1;
+        let Some(next) = memchr(b'[', &bytes[search_start..]) else {
+            return false;
+        };
+        open = search_start + next;
+        if let Some(newline) = memrchr(b'\n', &bytes[search_start..open]) {
+            line_start = search_start + newline + 1;
+        }
+    }
+}
+
 impl<'a> Parser<'a> {
     /// Runs the fused pre-pass for a root parser. Returns the
     /// document-wide reference map and footnote label set that are shared
@@ -64,16 +111,10 @@ impl<'a> Parser<'a> {
         &self,
     ) -> (Option<Rc<ReferenceMap<'a>>>, Option<Rc<FootnoteLabels>>) {
         profile_span!("parser::build_prepass");
-        // Cheap bails. Both collectors need a `[` somewhere, and both a
-        // literal `]:`: a reference definition's label must be closed by
-        // `]` immediately followed by `:` (`[label]:`), and a footnote
-        // opener requires the same (`[^label]:`). A `]` and `:` split
-        // across a line break never parses as a definition, so absence of
-        // the contiguous needle proves the scan would collect nothing.
-        // Typical link-only documents skip the whole line scan here.
-        if !self.source.contains('[')
-            || memchr::memmem::find(self.source.as_bytes(), b"]:").is_none()
-        {
+        // Cheap bail: both collectors need a bounded `[...]:` opener at a
+        // valid block-line prefix. Full syntax and context validation still
+        // happens below, but ordinary prose decoys skip the structural scan.
+        if !has_definition_candidate(self.source, self.options.footnotes) {
             return (None, None);
         }
         let collect_footnotes = self.options.footnotes && self.source.contains("[^");
@@ -251,5 +292,52 @@ fn footnote_scan_line(
         if let Some((label, _)) = parse_footnote_opener(line) {
             labels.insert(normalize_footnote_label(label));
         }
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::has_definition_candidate;
+
+    #[test]
+    fn definition_candidate_rejects_inline_prose_decoys() {
+        let source = "Earlier [link](https://example.com).\n- Skip the scan when no `]:` exists.";
+        assert!(!has_definition_candidate(source, false));
+        assert!(!has_definition_candidate("    [indented]: /code", false));
+    }
+
+    #[test]
+    fn definition_candidate_accepts_valid_block_prefixes() {
+        for source in [
+            "[plain]: /url",
+            "   [indented]: /url",
+            "> [quoted]: /url",
+            "> > [nested]: /url",
+            "[multi\nline]: /url",
+            "[^footnote]: body",
+        ] {
+            assert!(has_definition_candidate(source, true), "missed {source:?}");
+        }
+    }
+
+    #[test]
+    fn definition_candidate_keeps_the_label_length_boundary() {
+        fn definition_with_label_len(prefix: &str, len: usize) -> compact_str::CompactString {
+            let mut source = compact_str::CompactString::with_capacity(prefix.len() + len + 7);
+            source.push_str(prefix);
+            source.extend(std::iter::repeat_n('a', len));
+            source.push_str("]: /url");
+            source
+        }
+
+        let max_label = definition_with_label_len("[", 1000);
+        let too_long = definition_with_label_len("[", 1001);
+
+        assert!(has_definition_candidate(&max_label, false));
+        assert!(!has_definition_candidate(&too_long, false));
+
+        let long_footnote = definition_with_label_len("[^", 1001);
+        assert!(has_definition_candidate(&long_footnote, true));
+        assert!(!has_definition_candidate(&long_footnote, false));
     }
 }

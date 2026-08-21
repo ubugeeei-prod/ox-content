@@ -177,6 +177,20 @@ fn indented_footnote_definition_up_to_three_spaces_resolves() {
     assert!(resolves_footnote("   [^n]: note\n\n[^n]"));
 }
 
+#[test]
+fn footnote_label_over_reference_limit_resolves() {
+    let mut label = compact_str::CompactString::with_capacity(1001);
+    label.extend(std::iter::repeat_n('a', 1001));
+    let mut source = compact_str::CompactString::with_capacity(2024);
+    source.push_str("[^");
+    source.push_str(&label);
+    source.push_str("]\n\n[^");
+    source.push_str(&label);
+    source.push_str("]: note");
+
+    assert!(resolves_footnote(&source));
+}
+
 // The two collectors deliberately classify fences differently: the
 // reference side tracks fences on the quote-stripped line, the footnote
 // side on the raw line. A quoted fence line therefore opens a fence for
@@ -204,6 +218,11 @@ fn footnote_definition_directly_after_multiline_definition_resolves() {
 #[test]
 fn multiline_definition_with_title_resolves() {
     assert!(resolves_reference("[a]: /url\n\"title\"\n\n[a]"));
+}
+
+#[test]
+fn multiline_reference_label_resolves() {
+    assert!(resolves_reference("[multi\nline]: /url\n\n[multi line]"));
 }
 
 #[test]

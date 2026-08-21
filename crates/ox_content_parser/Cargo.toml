@@ -44,3 +44,7 @@ harness = false
 [[bench]]
 name = "corpus"
 harness = false
+
+[[bench]]
+name = "prepass"
+harness = false
