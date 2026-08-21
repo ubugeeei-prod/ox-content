@@ -212,14 +212,21 @@ impl<'a> Parser<'a> {
 
             // A list marker (indented at most three columns past the
             // baseline — deeper "markers" are just text) ends this item.
-            if current_indent >= baseline_indent
-                && current_indent <= baseline_indent + 3
-                && !Self::try_parse_thematic_break_line(continuation_line)
-            {
+            if current_indent >= baseline_indent && current_indent <= baseline_indent + 3 {
                 if let Some(sibling) =
                     self.parse_list_item_line_from_line(continuation_start, continuation_line)
                 {
-                    next_item = Some(sibling);
+                    // A thematic break can overlap list syntax only when an
+                    // unordered item's content starts with the same `-` or
+                    // `*` marker. All ordinary item text skips the full-line
+                    // marker scan that previously ran before every sibling.
+                    let could_be_thematic = !sibling.ordered
+                        && matches!(sibling.marker, b'-' | b'*')
+                        && sibling.content.as_bytes().first() == Some(&sibling.marker);
+                    if !could_be_thematic || !Self::try_parse_thematic_break_line(continuation_line)
+                    {
+                        next_item = Some(sibling);
+                    }
                     break;
                 }
             }
