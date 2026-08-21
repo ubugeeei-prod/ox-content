@@ -258,7 +258,7 @@ Three skins render their hero backdrop on the GPU instead of faking it in CSS:
 
 | Skin           | What it renders                                                                                                                  |
 | -------------- | -------------------------------------------------------------------------------------------------------------------------------- |
-| `liquid-glass` | True refraction — a domain-warped height field becomes a normal map that bends the lookup into the backdrop, with a Fresnel edge |
+| `liquid-glass` | True refraction — a rounded-rect SDF per panel bends a procedural wallpaper toward each panel centre along a spherical-bevel profile, with a chromatic split at the rim |
 | `fluid`        | Dye advected through a curl-noise velocity field, which is divergence-free and so reads as an incompressible liquid              |
 | `fabric`       | A woven height field lit by a drifting key light, so threads catch the light along their own direction                           |
 
