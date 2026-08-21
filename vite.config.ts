@@ -108,7 +108,10 @@ export default defineConfig({
       "build:napi": task("vp run --filter ./crates/ox_content_napi build", {
         dependsOn: ["build:rust"],
       }),
-      "build:npm": task("vp run --filter './npm/*' build", {
+      // `./npm/**` (not `./npm/*`): the theme presets live one level deeper at
+      // npm/theme/* and npm/theme-color/*, and publish.yml packs them straight
+      // from this task's output — a single-star filter would ship them dist-less.
+      "build:npm": task("vp run --filter './npm/**' build", {
         dependsOn: ["build:napi"],
       }),
       "build:docs": task("vp run --filter ./docs build", {
