@@ -52,7 +52,7 @@ impl Backend {
     }
 
     pub(super) async fn open_document(&self, uri: &Url, text: String) {
-        if uri.to_file_path().ok().is_some_and(|path| i18n::is_i18n_source_path(&path)) {
+        if uri.to_file_path().is_ok_and(|path| i18n::is_i18n_source_path(&path)) {
             self.i18n_state.add_open_uri(uri.clone()).await;
         }
         self.on_change(uri, text).await;

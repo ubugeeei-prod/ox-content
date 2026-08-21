@@ -115,8 +115,7 @@ impl ResolvedConfig {
             config.textlint.enabled.unwrap_or(false)
         } else {
             env::var("OX_CONTENT_TEXTLINT_ENABLED")
-                .ok()
-                .is_some_and(|value| matches!(value.as_str(), "1" | "true" | "yes"))
+                .is_ok_and(|value| matches!(value.as_str(), "1" | "true" | "yes"))
         };
         let textlint_command = init
             .textlint_command
@@ -160,8 +159,7 @@ impl ResolvedConfig {
             config.spacing.auto_fix_on_save.unwrap_or(false)
         } else {
             env::var("OX_CONTENT_SPACING_AUTO_FIX_ON_SAVE")
-                .ok()
-                .is_some_and(|value| matches!(value.as_str(), "1" | "true" | "yes"))
+                .is_ok_and(|value| matches!(value.as_str(), "1" | "true" | "yes"))
         };
 
         Self {

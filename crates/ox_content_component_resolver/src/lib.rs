@@ -136,7 +136,11 @@ impl Resolver {
     /// The scaffold returns `Ok(Self)` without actually spawning the
     /// process so the rest of the workspace can integrate the public
     /// types ahead of the real implementation landing.
-    #[allow(clippy::unused_async)] // The follow-up PR replaces the body with real async work.
+    #[allow(clippy::unused_async)]
+    // The follow-up PR replaces the body with real async work.
+    // Same story for the 1.98 split-off lint; unknown_lints keeps older local
+    // toolchains (which predate it) from tripping over the name.
+    #[allow(unknown_lints, clippy::unused_async_trait_impl)]
     pub async fn spawn(config: ResolverConfig) -> Result<Self, Error> {
         if !config.tsgo_path.exists() {
             return Err(Error::TsgoMissing(config.tsgo_path));
@@ -155,7 +159,11 @@ impl Resolver {
     ///    React.FC `<Props>`)
     /// 4. enumerate prop members, looking up their type strings,
     ///    optionality, JSDoc, and declaration locations
-    #[allow(clippy::unused_async)] // The follow-up PR replaces the body with real async work.
+    #[allow(clippy::unused_async)]
+    // The follow-up PR replaces the body with real async work.
+    // Same story for the 1.98 split-off lint; unknown_lints keeps older local
+    // toolchains (which predate it) from tripping over the name.
+    #[allow(unknown_lints, clippy::unused_async_trait_impl)]
     pub async fn resolve_component_props(
         &self,
         component_file: &Path,
