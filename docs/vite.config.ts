@@ -1,3 +1,5 @@
+import { spawnSync } from "node:child_process";
+import { fileURLToPath } from "node:url";
 import { defineConfig } from "vite-plus";
 import { oxContent, defineTheme, defaultTheme } from "@ox-content/vite-plugin";
 import { oxContentHighlightTheme } from "./ox-content-highlight-theme";
@@ -19,6 +21,19 @@ export default defineConfig(({ mode }) => {
     base,
 
     plugins: [
+      // The gallery lives in public/ but is generated and gitignored, so a
+      // fresh checkout (CI included) doesn't have it — without this step the
+      // deployed site 404s /theme-gallery.html.
+      {
+        name: "ox-content-docs:theme-gallery",
+        buildStart() {
+          const script = fileURLToPath(new URL("../scripts/theme-gallery.mjs", import.meta.url));
+          const result = spawnSync("node", [script], { stdio: "inherit" });
+          if (result.status !== 0) {
+            throw new Error("scripts/theme-gallery.mjs failed");
+          }
+        },
+      },
       oxContent({
         srcDir: "content",
         outDir: "dist/docs",
