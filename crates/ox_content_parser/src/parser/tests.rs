@@ -212,6 +212,45 @@ fn test_parse_unordered_list() {
 }
 
 #[test]
+fn multi_item_list_skips_the_two_slot_growth_step() {
+    let single_allocator = Allocator::new();
+    let single = Parser::new(&single_allocator, "- one").parse().unwrap();
+    let Node::List(single_list) = &single.children[0] else {
+        panic!("expected single-item list");
+    };
+    assert_eq!(single_list.children.capacity(), 1);
+
+    let pair_allocator = Allocator::new();
+    let pair = Parser::new(&pair_allocator, "- one\n- two").parse().unwrap();
+    let Node::List(pair_list) = &pair.children[0] else {
+        panic!("expected two-item list");
+    };
+    assert_eq!(pair_list.children.capacity(), 4);
+}
+
+#[test]
+fn outdented_marker_starts_a_new_list() {
+    let allocator = Allocator::new();
+    let doc = Parser::new(&allocator, "  - indented\n- outdented").parse().unwrap();
+
+    assert_eq!(doc.children.len(), 2);
+    assert!(doc
+        .children
+        .iter()
+        .all(|node| { matches!(node, Node::List(list) if list.children.len() == 1) }));
+}
+
+#[test]
+fn thematic_break_after_list_stays_a_block_boundary() {
+    let allocator = Allocator::new();
+    let doc = Parser::new(&allocator, "- item\n* * *").parse().unwrap();
+
+    assert_eq!(doc.children.len(), 2);
+    assert!(matches!(&doc.children[0], Node::List(list) if list.children.len() == 1));
+    assert!(matches!(&doc.children[1], Node::ThematicBreak(_)));
+}
+
+#[test]
 fn test_parse_ordered_list() {
     let allocator = Allocator::new();
     let list_md = "1. First\n2. Second\n3. Third";

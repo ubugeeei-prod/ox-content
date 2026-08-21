@@ -22,42 +22,14 @@ impl<'a> Parser<'a> {
         let ordered = first_item.ordered;
         let marker = first_item.marker;
         let list_start = first_item.start;
+        let mut item = first_item;
 
         let mut children: Vec<'a, ListItem<'a>> = self.allocator.new_vec();
         let mut list_spread = false;
 
         loop {
-            if self.is_at_end() {
-                break;
-            }
-
             let line_start = self.position;
-            self.skip_whitespace();
-            if self.peek() == Some('\n') || self.is_at_end() {
-                self.position = line_start; // Backtrack to handle end of block
-                break;
-            }
-            self.position = line_start;
-
-            // A sibling marker may sit between the baseline and three
-            // columns past it; anything else at this level ends the list.
-            let sibling_indent = self.calc_indentation(line_start);
-            if sibling_indent < baseline_indent || sibling_indent > baseline_indent + 3 {
-                break;
-            }
             let line = self.line_at(line_start);
-            // A thematic break takes precedence over a sibling marker
-            // (`* * *` between items splits the list around an <hr>).
-            if Self::try_parse_thematic_break_line(line) {
-                break;
-            }
-            let Some(item) = self.parse_list_item_line_from_line(line_start, line) else {
-                break;
-            };
-            if item.ordered != ordered || item.marker != marker {
-                // A different marker starts a new list at the block level.
-                break;
-            }
 
             // Consume the marker line.
             self.position += line.len();
@@ -67,12 +39,16 @@ impl<'a> Parser<'a> {
             }
 
             let mut lazy_lines = rustc_hash::FxHashSet::default();
-            let (gap_spread, item_end, item_source) = self.consume_item_continuation(
-                &item,
-                baseline_indent,
-                consumed_newline,
-                &mut lazy_lines,
-            );
+            let (gap_spread, item_end, item_source, next_item) = if self.is_at_end() {
+                (false, self.position, None, None)
+            } else {
+                self.consume_item_continuation(
+                    &item,
+                    baseline_indent,
+                    consumed_newline,
+                    &mut lazy_lines,
+                )
+            };
 
             let mut content_spread = false;
             let item_children = if item_source.is_none()
@@ -103,7 +79,23 @@ impl<'a> Parser<'a> {
                 children: item_children,
                 span: Span::new(line_start as u32, item_end as u32),
             };
+            // The first push keeps one-item lists at bumpalo's exact minimum.
+            // Once a second sibling is known to exist, skip the otherwise
+            // inevitable two-slot allocation and its copy; four slots cover
+            // the common short list without penalizing the single-item case.
+            if children.len() == 1 {
+                children.reserve(3);
+            }
             children.push(list_item);
+
+            let Some(next_item) = next_item else {
+                break;
+            };
+            if next_item.ordered != ordered || next_item.marker != marker {
+                // A different marker starts a new list at the block level.
+                break;
+            }
+            item = next_item;
         }
 
         let span = Span::new(start as u32, self.position as u32);
@@ -120,20 +112,22 @@ impl<'a> Parser<'a> {
     /// (paragraphs, nested blocks — the item sub-parser sorts them out),
     /// interior blank lines, and lazy paragraph continuation. Returns
     /// whether the item/list turned loose, the item end position, and the
-    /// dedented source when block re-parsing is needed.
+    /// dedented source when block re-parsing is needed. A parsed sibling is
+    /// carried back to the caller so its marker is not scanned twice.
     fn consume_item_continuation(
         &mut self,
         item: &ParsedListItem<'a>,
         baseline_indent: usize,
         consumed_newline: bool,
         lazy_lines: &mut rustc_hash::FxHashSet<u32>,
-    ) -> (bool, usize, Option<ox_content_allocator::String<'a>>) {
+    ) -> (bool, usize, Option<ox_content_allocator::String<'a>>, Option<ParsedListItem<'a>>) {
         profile_span_detail!("parser::list_item_continuation");
         let content_indent = item.content_indent;
         let item_is_empty = item.content.trim().is_empty();
         let mut item_source = None;
         let mut item_end = self.position;
         let mut gap_spread = false;
+        let mut next_item = None;
         // Lazy paragraph continuation is only valid while the item's last
         // consumed line kept a paragraph open (not right after blanks).
         let mut after_blank = false;
@@ -182,16 +176,17 @@ impl<'a> Parser<'a> {
                     continue;
                 }
 
-                if next_indent >= baseline_indent
-                    && next_indent <= baseline_indent + 3
-                    && self.parse_list_item_line(lookahead).as_ref().is_some_and(|next| {
-                        next.ordered == item.ordered && next.marker == item.marker
-                    })
-                {
-                    // Blank line between siblings: the list is loose.
-                    self.position = lookahead;
-                    gap_spread = true;
-                    break;
+                if next_indent >= baseline_indent && next_indent <= baseline_indent + 3 {
+                    if let Some(sibling) = self
+                        .parse_list_item_line(lookahead)
+                        .filter(|next| next.ordered == item.ordered && next.marker == item.marker)
+                    {
+                        // Blank line between siblings: the list is loose.
+                        self.position = lookahead;
+                        gap_spread = true;
+                        next_item = Some(sibling);
+                        break;
+                    }
                 }
 
                 break;
@@ -214,12 +209,16 @@ impl<'a> Parser<'a> {
 
             // A list marker (indented at most three columns past the
             // baseline — deeper "markers" are just text) ends this item.
-            if current_indent <= baseline_indent + 3
-                && self
-                    .parse_list_item_line_from_line(continuation_start, continuation_line)
-                    .is_some()
+            if current_indent >= baseline_indent
+                && current_indent <= baseline_indent + 3
+                && !Self::try_parse_thematic_break_line(continuation_line)
             {
-                break;
+                if let Some(sibling) =
+                    self.parse_list_item_line_from_line(continuation_start, continuation_line)
+                {
+                    next_item = Some(sibling);
+                    break;
+                }
             }
 
             // A block start interrupts the item; anything else lazily
@@ -243,7 +242,7 @@ impl<'a> Parser<'a> {
             item_end = self.position;
         }
 
-        (gap_spread, item_end, item_source)
+        (gap_spread, item_end, item_source, next_item)
     }
 }
 

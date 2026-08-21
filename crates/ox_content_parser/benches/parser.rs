@@ -132,6 +132,40 @@ Vestibulum erat wisi, condimentum sed, commodo vitae, ornare sit amet, wisi. Aen
 This document serves as a comprehensive test case for the markdown parser, covering various markdown features and edge cases.
 "#;
 
+const LONG_LIST: &str = r"- item 01
+- item 02
+- item 03
+- item 04
+- item 05
+- item 06
+- item 07
+- item 08
+- item 09
+- item 10
+- item 11
+- item 12
+- item 13
+- item 14
+- item 15
+- item 16
+- item 17
+- item 18
+- item 19
+- item 20
+- item 21
+- item 22
+- item 23
+- item 24
+- item 25
+- item 26
+- item 27
+- item 28
+- item 29
+- item 30
+- item 31
+- item 32
+";
+
 fn bench_parse_simple(c: &mut Criterion) {
     let mut group = c.benchmark_group("parse_simple");
     group.throughput(Throughput::Bytes(SIMPLE_MD.len() as u64));
@@ -162,5 +196,23 @@ fn bench_parse_large(c: &mut Criterion) {
     group.finish();
 }
 
-criterion_group!(benches, bench_parse_simple, bench_parse_large);
+fn bench_parse_lists(c: &mut Criterion) {
+    let single_item = "- one\n";
+    let mut group = c.benchmark_group("parse_lists");
+
+    for (name, source) in [("single_item", single_item), ("long_list", LONG_LIST)] {
+        group.throughput(Throughput::Bytes(source.len() as u64));
+        group.bench_with_input(name, source, |b, source| {
+            b.iter(|| {
+                let allocator = Allocator::new();
+                let parser = Parser::new(&allocator, black_box(source));
+                let _ = parser.parse();
+            });
+        });
+    }
+
+    group.finish();
+}
+
+criterion_group!(benches, bench_parse_simple, bench_parse_large, bench_parse_lists);
 criterion_main!(benches);
