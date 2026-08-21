@@ -10,15 +10,17 @@ use crate::{profile_span, profile_span_detail};
 mod item_source;
 
 impl<'a> Parser<'a> {
-    pub(super) fn parse_list(&mut self, start: usize) -> ParseResult<Option<Node<'a>>> {
+    pub(super) fn parse_list(
+        &mut self,
+        start: usize,
+        baseline_indent: usize,
+        first_item: ParsedListItem<'a>,
+        first_line_len: usize,
+    ) -> ParseResult<Option<Node<'a>>> {
         profile_span!("parser::parse_list");
-        let baseline_indent = self.calc_indentation(start);
 
-        // Determine list type from the first line (already verified by try_parse_list)
-        let first_line_start = self.position;
-        let Some(first_item) = self.parse_list_item_line(first_line_start) else {
-            return Ok(None);
-        };
+        // Block dispatch has already parsed the first marker to distinguish a
+        // real list from marker-shaped paragraph text. Reuse that result.
         let ordered = first_item.ordered;
         let marker = first_item.marker;
         let list_start = first_item.start;
@@ -26,13 +28,14 @@ impl<'a> Parser<'a> {
 
         let mut children: Vec<'a, ListItem<'a>> = self.allocator.new_vec();
         let mut list_spread = false;
+        let mut first_line_len = Some(first_line_len);
 
         loop {
             let line_start = self.position;
-            let line = self.line_at(line_start);
+            let line_len = first_line_len.take().unwrap_or_else(|| self.line_at(line_start).len());
 
             // Consume the marker line.
-            self.position += line.len();
+            self.position += line_len;
             let consumed_newline = self.peek() == Some('\n');
             if consumed_newline {
                 self.advance();

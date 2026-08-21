@@ -38,7 +38,8 @@ impl<'a> Parser<'a> {
         // other block construct can begin on such a line. (This runs at
         // block level only — an indented line after an open paragraph is
         // lazy continuation, handled by `parse_paragraph`.)
-        if self.line_indent_width(start, trimmed_start) >= 4 {
+        let line_indent = self.line_indent_width(start, trimmed_start);
+        if line_indent >= 4 {
             return self.parse_indented_code(start);
         }
 
@@ -65,8 +66,10 @@ impl<'a> Parser<'a> {
                 if Self::try_parse_thematic_break_line(line) {
                     return self.parse_thematic_break(start);
                 }
-                if Self::try_parse_list_line(trimmed) {
-                    return self.parse_list(start);
+                if let Some(first_item) =
+                    self.parse_list_item_line_from_trimmed(start, line, trimmed)
+                {
+                    return self.parse_list(start, line_indent, first_item, line.len());
                 }
             }
             b'_' if Self::try_parse_thematic_break_line(self.line_at(start)) => {
@@ -96,8 +99,10 @@ impl<'a> Parser<'a> {
             b'+' | b'0'..=b'9' => {
                 let line = self.line_at(start);
                 let trimmed = &line[trimmed_start - start..];
-                if Self::try_parse_list_line(trimmed) {
-                    return self.parse_list(start);
+                if let Some(first_item) =
+                    self.parse_list_item_line_from_trimmed(start, line, trimmed)
+                {
+                    return self.parse_list(start, line_indent, first_item, line.len());
                 }
             }
             _ => {}

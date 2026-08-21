@@ -103,8 +103,17 @@ impl<'a> Parser<'a> {
         line_start: usize,
         line: &'a str,
     ) -> Option<ParsedListItem<'a>> {
-        profile_span_detail!("parser::list_item_line");
         let trimmed = line.trim_start();
+        self.parse_list_item_line_from_trimmed(line_start, line, trimmed)
+    }
+
+    pub(super) fn parse_list_item_line_from_trimmed(
+        &self,
+        line_start: usize,
+        line: &'a str,
+        trimmed: &'a str,
+    ) -> Option<ParsedListItem<'a>> {
+        profile_span_detail!("parser::list_item_line");
         let trimmed_offset = line_start + (line.len() - trimmed.len());
         let bytes = trimmed.as_bytes();
 
