@@ -1,0 +1,10 @@
+---
+source: crates/ox_content_renderer/tests/edge_links.rs
+expression: html
+---
+<p><a href="https://ex.com/docs/guide.md" target="_blank" rel="noopener noreferrer">abs</a></p>
+<p><a href="//cdn.example/docs/x.md">proto</a></p>
+<p><a href="mailto:a@b.com/x.md">mail</a></p>
+<p><a href="https://ex.com/docs/GUIDE.MD" target="_blank" rel="noopener noreferrer">upper</a></p>
+<p><img src="https://ex.com/d/g.md" alt="alt"></p>
+<p><a href="https://ex.com/docs/guide.md">raw</a></p>

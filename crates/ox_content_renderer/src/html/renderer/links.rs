@@ -105,27 +105,29 @@ impl HtmlRenderer {
     /// Converts a Markdown URL to an `.html` URL for SSG output.
     pub(in crate::html::renderer) fn convert_md_url(&self, url: &str) -> Option<String> {
         crate::profile_span_detail!("renderer::convert_md_url");
-        // Split URL into path and fragment
-        let (path, fragment) = match url.split_once('#') {
-            Some((p, f)) => (p, Some(f)),
-            None => (url, None),
-        };
+        // A URL is not a filesystem path. Split the query and fragment off
+        // before looking at the extension so `./guide.md?plain=1` is still
+        // recognized as Markdown, and so whatever follows the path is carried
+        // through the rewrite untouched.
+        let suffix_start = url.find(['?', '#']).unwrap_or(url.len());
+        let (path, suffix) = url.split_at(suffix_start);
 
-        let markdown_extension =
-            std::path::Path::new(path).extension().and_then(|ext| ext.to_str()).filter(|ext| {
-                ext.eq_ignore_ascii_case("md")
-                    || ext.eq_ignore_ascii_case("mdx")
-                    || ext.eq_ignore_ascii_case("markdown")
-            });
-
-        let markdown_extension = markdown_extension?;
+        let markdown_extension_len = markdown_extension_len(path)?;
 
         if !self.options.convert_md_links {
             return None;
         }
 
+        // Another origin's `.md` is not a page this build generates, so there
+        // is no `index.html` route to point it at. Leaving it alone also keeps
+        // it recognizable as external further down `render_link`, which is
+        // what adds `target="_blank" rel="noopener noreferrer"`.
+        if is_non_local_url(path) {
+            return None;
+        }
+
         // Remove the Markdown extension, including the leading dot.
-        let path_without_ext = &path[..path.len() - markdown_extension.len() - 1];
+        let path_without_ext = &path[..path.len() - markdown_extension_len - 1];
 
         // Check if the source file is an index file
         // index.md stays at the directory level, so relative paths work differently
@@ -223,11 +225,8 @@ impl HtmlRenderer {
             }
         };
 
-        // Reattach fragment if present
-        Some(match fragment {
-            Some(f) => append_fragment(converted, f),
-            None => converted,
-        })
+        // Reattach the query and/or fragment if there was one.
+        Some(if suffix.is_empty() { converted } else { append_suffix(converted, suffix) })
     }
 
     /// Checks if the source file is an index file (index.md).
@@ -255,9 +254,63 @@ fn join3(a: &str, b: &str, c: &str) -> String {
     out
 }
 
-fn append_fragment(mut converted: String, fragment: &str) -> String {
-    converted.reserve(1 + fragment.len());
-    converted.push('#');
-    converted.push_str(fragment);
+fn append_suffix(mut converted: String, suffix: &str) -> String {
+    converted.reserve(suffix.len());
+    converted.push_str(suffix);
     converted
+}
+
+/// Returns the length of the trailing Markdown extension of `path`, if it has
+/// one.
+///
+/// This deliberately does not go through `std::path::Path`: a URL only ever
+/// separates segments with `/`, and on Windows `Path` would also split on `\`
+/// and read a drive letter, so the same href would convert differently
+/// depending on the build host.
+fn markdown_extension_len(path: &str) -> Option<usize> {
+    let file_name = match path.rfind('/') {
+        Some(slash) => &path[slash + 1..],
+        None => path,
+    };
+    let dot = file_name.rfind('.')?;
+    // A leading dot names a hidden file rather than an extension, matching
+    // what `Path::extension` reports for `.md`.
+    if dot == 0 {
+        return None;
+    }
+
+    let extension = &file_name[dot + 1..];
+    (extension.eq_ignore_ascii_case("md")
+        || extension.eq_ignore_ascii_case("mdx")
+        || extension.eq_ignore_ascii_case("markdown"))
+    .then_some(extension.len())
+}
+
+/// Reports whether `path` addresses another origin, either through a URI
+/// scheme (`https:`, `mailto:`) or as a protocol-relative URL (`//cdn.test`).
+///
+/// `path` must already have had its query and fragment removed, so a `:` or
+/// `//` appearing only in those parts cannot be mistaken for a scheme.
+fn is_non_local_url(path: &str) -> bool {
+    if path.starts_with("//") {
+        return true;
+    }
+
+    let mut chars = path.chars();
+    let Some(first) = chars.next() else {
+        return false;
+    };
+    if !first.is_ascii_alphabetic() {
+        return false;
+    }
+
+    for ch in chars {
+        if ch == ':' {
+            return true;
+        }
+        if !(ch.is_ascii_alphanumeric() || matches!(ch, '+' | '.' | '-')) {
+            return false;
+        }
+    }
+    false
 }
