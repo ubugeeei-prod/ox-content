@@ -25,6 +25,11 @@ describe("resolveSsgOptions", () => {
     expect(resolveSsgOptions({ lastUpdated: true }).lastUpdated).toBe(true);
   });
 
+  it("carries a theme component through", () => {
+    const component = () => ({ __html: "<html></html>" });
+    expect(resolveSsgOptions({ render: component }).render).toBe(component);
+  });
+
   it("carries the bare-mode shell options through", () => {
     const resolved = resolveSsgOptions({
       bare: true,

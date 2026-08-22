@@ -10,6 +10,7 @@ import {
   setRenderContext,
   clearRenderContext,
   generateFrontmatterTypes,
+  usePageProps,
   type RenderContext,
   type PageProps,
   type SiteConfig,
@@ -271,8 +272,10 @@ export function createTheme(config: {
   const { layouts, defaultLayout = "default" } = config;
 
   return function ThemeWithLayouts({ children }: ThemeProps): JSXNode {
-    // eslint-disable-next-line @typescript-eslint/no-require-imports
-    const { usePageProps } = require("./page-context");
+    // `page-context` is already imported statically above, so there is no
+    // cycle to dodge here. The lazy `require` this replaces threw
+    // "Cannot find module" outright once the package shipped as ESM, which
+    // is what made `createTheme` unusable.
     const page = usePageProps();
 
     // Get layout from frontmatter or use default

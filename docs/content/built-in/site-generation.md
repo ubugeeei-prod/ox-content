@@ -58,6 +58,7 @@ export default defineConfig({
 | `extension`       | `".html"`      | Generated page extension.                            |
 | `clean`           | `false`        | Remove generated output before writing.              |
 | `bare`            | `false`        | Emit unthemed HTML without navigation.               |
+| `render`          | —              | JSX component that owns the whole document.          |
 | `lang`            | `"en"`         | `lang` attribute on `<html>` (bare mode).            |
 | `head`            | —              | Raw markup appended to `<head>` (bare mode).         |
 | `bodyStart`       | —              | Raw markup after `<body>` (bare mode).               |
@@ -72,6 +73,42 @@ export default defineConfig({
 
 Theming — colors, fonts, header, footer, sidebar, custom CSS — is a topic of
 its own: see [Theming](../theming.md).
+
+## Custom Theme Component
+
+`ssg.render` hands the whole document to a JSX component. The component owns
+everything from `<html>` down, so `theme`, `bare` and the head metadata options
+do not apply — nothing is injected that you did not write.
+
+```tsx
+import { createTheme, usePageProps, useSiteConfig } from "@ox-content/vite-plugin";
+
+function DefaultLayout({ children }) {
+  const page = usePageProps();
+  const site = useSiteConfig();
+  return (
+    <html lang="ja">
+      <head>
+        <title>{`${page.title} | ${site.name}`}</title>
+        <link rel="stylesheet" href="/assets/site.css" />
+      </head>
+      <body>{children}</body>
+    </html>
+  );
+}
+
+oxContent({
+  ssg: { render: createTheme({ layouts: { default: DefaultLayout } }) },
+});
+```
+
+`createTheme()` picks the layout named by each page's `layout` frontmatter,
+falling back to `default`. Inside a layout, `usePageProps()` gives the current
+page and `useSiteConfig()` gives the site-wide config including navigation and
+every other page.
+
+This uses the built-in JSX runtime, so configure `jsxImportSource` as described
+in [MDX and JSX](../mdx.md#static-jsx-in-themes).
 
 ## Bare Mode
 

@@ -26,6 +26,8 @@ import type {
 import { resolveTheme, themeToNapi } from "./theme";
 import type { ResolvedThemeConfig, SidebarItem } from "./theme";
 import { normalizeVitePressFrontmatter } from "./vitepress";
+import { renderPage } from "./theme-renderer";
+import type { PageData as ThemePageData } from "./theme-renderer";
 
 /**
  * Navigation item for SSG.
@@ -111,6 +113,7 @@ export function resolveSsgOptions(ssg: SsgOptions | boolean | undefined): Resolv
     extension: ssg.extension ?? ".html",
     clean: ssg.clean ?? false,
     bare: ssg.bare ?? false,
+    render: ssg.render,
     lang: ssg.lang,
     head: ssg.head,
     bodyStart: ssg.bodyStart,
@@ -866,7 +869,7 @@ async function generateHtmlPages(
       generatedPages.push({
         inputPath: pageResult.inputPath,
         outputPath: pageResult.routePaths.outputPath,
-        html: await renderSsgPage(context, pageResult, collected.ogImageUrlMap),
+        html: await renderSsgPage(context, pageResult, collected, pageResults),
       });
     } catch (err) {
       const errorMessage = err instanceof Error ? err.message : String(err);
@@ -880,12 +883,26 @@ async function generateHtmlPages(
 async function renderSsgPage(
   context: BuildSsgContext,
   pageResult: PageProcessResult,
-  ogImageUrlMap: Map<string, string>,
+  collected: CollectedPageResults,
+  allPageResults: PageProcessResult[],
 ): Promise<string> {
+  const { ogImageUrlMap } = collected;
   const pageOgImage =
     context.shouldGenerateOgImages && ogImageUrlMap.has(pageResult.inputPath)
       ? ogImageUrlMap.get(pageResult.inputPath)
       : context.ssgOptions.ogImage;
+
+  // A theme component owns the whole document, so it comes before both the
+  // bare shell and the built-in renderer.
+  if (context.ssgOptions.render) {
+    return renderPage(toThemePageData(pageResult), {
+      theme: context.ssgOptions.render,
+      siteName: context.siteName,
+      base: context.base,
+      nav: context.navItems,
+      pages: allPageResults.map(toThemePageData),
+    });
+  }
 
   if (context.ssgOptions.bare) {
     return generateBarePage({
@@ -916,6 +933,22 @@ async function renderSsgPage(
     getPageLocale(pageData.path, context.options.i18n),
     context.options.i18n ? context.options.i18n.locales : undefined,
   );
+}
+
+/** Maps an internal page result onto the theme renderer's page shape. */
+function toThemePageData(pageResult: PageProcessResult): ThemePageData {
+  return {
+    title: pageResult.title,
+    description: pageResult.description,
+    html: pageResult.transformedHtml,
+    toc: pageResult.toc,
+    lastUpdated: pageResult.lastUpdated,
+    path: pageResult.inputPath,
+    url: pageResult.routePaths.href,
+    frontmatter: pageResult.frontmatter,
+    layout:
+      typeof pageResult.frontmatter.layout === "string" ? pageResult.frontmatter.layout : undefined,
+  };
 }
 
 /**
