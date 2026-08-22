@@ -257,12 +257,14 @@ fn outdented_marker_starts_a_new_list() {
 
 #[test]
 fn thematic_break_after_list_stays_a_block_boundary() {
-    let allocator = Allocator::new();
-    let doc = Parser::new(&allocator, "- item\n* * *").parse().unwrap();
+    for source in ["- item\n* * *", "- item\n- - -", "* item\n*  *  *"] {
+        let allocator = Allocator::new();
+        let doc = Parser::new(&allocator, source).parse().unwrap();
 
-    assert_eq!(doc.children.len(), 2);
-    assert!(matches!(&doc.children[0], Node::List(list) if list.children.len() == 1));
-    assert!(matches!(&doc.children[1], Node::ThematicBreak(_)));
+        assert_eq!(doc.children.len(), 2, "source: {source:?}");
+        assert!(matches!(&doc.children[0], Node::List(list) if list.children.len() == 1));
+        assert!(matches!(&doc.children[1], Node::ThematicBreak(_)));
+    }
 }
 
 #[test]
