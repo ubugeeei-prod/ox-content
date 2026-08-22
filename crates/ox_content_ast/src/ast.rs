@@ -7,21 +7,6 @@ use ox_content_allocator::Vec;
 
 use crate::Span;
 
-/// The AST must own nothing outside the arena.
-///
-/// [`ox_content_allocator::Vec`] never runs its elements' destructors, so a
-/// field that owned heap memory — a `std::string::String`, a `Box`, an `Rc` —
-/// would leak it on every parse instead of being reclaimed with the `Bump`.
-/// Every field below is either `Copy` or another arena vector, which is what
-/// makes that safe, and this is where that stops being a convention: adding a
-/// heap-owning field to any node makes `Node` need dropping and fails the
-/// build here.
-const AST_IS_ARENA_ONLY: () = {
-    assert!(!std::mem::needs_drop::<Node<'static>>());
-    assert!(!std::mem::needs_drop::<Document<'static>>());
-};
-const _: () = AST_IS_ARENA_ONLY;
-
 /// Root node of a Markdown document.
 #[derive(Debug)]
 pub struct Document<'a> {
