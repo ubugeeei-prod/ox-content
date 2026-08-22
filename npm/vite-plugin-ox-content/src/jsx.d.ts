@@ -4,13 +4,23 @@
  * These types enable TypeScript support for JSX in ox-content themes.
  */
 
-import type { JSXNode, JSXChild } from "./jsx-runtime";
+import type { JSXNode, JSXChild } from "./jsx-html";
 
 export namespace JSX {
   /**
    * The type returned by JSX expressions.
    */
   export type Element = JSXNode;
+
+  /**
+   * Attributes accepted on every component element, on top of its own props.
+   *
+   * Intrinsic elements do not go through this — they pick `key` up from
+   * `HTMLAttributes` instead, the same way React's types do it.
+   */
+  export interface IntrinsicAttributes {
+    key?: string | number;
+  }
 
   /**
    * Props for intrinsic elements (HTML tags).
@@ -196,6 +206,14 @@ export namespace JSX {
    * Base HTML attributes shared by all elements.
    */
   export interface HTMLAttributes {
+    /**
+     * List key. The automatic runtime hoists it out of the props object and
+     * passes it as `jsx(type, props, key)`, where static HTML generation
+     * ignores it — but it still has to type-check, or every `.map()` over a
+     * list of elements fails to compile.
+     */
+    key?: string | number;
+
     // Global attributes
     accessKey?: string;
     autoCapitalize?: string;
@@ -716,10 +734,12 @@ export namespace JSX {
 }
 
 type JsxRuntimeIntrinsicElements = import("./jsx.d.ts").JSX.IntrinsicElements;
+type JsxRuntimeIntrinsicAttributes = import("./jsx.d.ts").JSX.IntrinsicAttributes;
 
 declare global {
   namespace JSX {
-    type Element = import("./jsx-runtime").JSXNode;
+    type Element = import("./jsx-html").JSXNode;
     interface IntrinsicElements extends JsxRuntimeIntrinsicElements {}
+    interface IntrinsicAttributes extends JsxRuntimeIntrinsicAttributes {}
   }
 }

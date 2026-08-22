@@ -956,8 +956,8 @@ export type {
 export * from "./types";
 
 // JSX Runtime
-export { jsx, jsxs, Fragment, renderToString, raw, when, each } from "./jsx-runtime";
-export type { JSXNode, JSXChild, JSXProps, JSXElementType } from "./jsx-runtime";
+export { jsx, jsxs, Fragment, renderToString, raw, when, each } from "./jsx-html";
+export type { JSXNode, JSXChild, JSXProps, JSXElementType } from "./jsx-html";
 
 // Page Context
 export {

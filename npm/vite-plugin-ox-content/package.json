@@ -41,6 +41,16 @@
     "./vitepress-migrate": {
       "import": "./dist/vitepress-cli.mjs",
       "types": "./dist/vitepress-cli.d.mts"
+    },
+    "./jsx-runtime": {
+      "import": "./dist/jsx-runtime.mjs",
+      "require": "./dist/jsx-runtime.cjs",
+      "types": "./dist/jsx-runtime.d.mts"
+    },
+    "./jsx-dev-runtime": {
+      "import": "./dist/jsx-dev-runtime.mjs",
+      "require": "./dist/jsx-dev-runtime.cjs",
+      "types": "./dist/jsx-dev-runtime.d.mts"
     }
   },
   "publishConfig": {

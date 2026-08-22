@@ -126,6 +126,10 @@ client-side JavaScript. Configure it in `tsconfig.json`:
 }
 ```
 
+That resolves `@ox-content/vite-plugin/jsx-runtime`, and
+`@ox-content/vite-plugin/jsx-dev-runtime` when `jsx` is `react-jsxdev`. Both
+render to HTML strings; there is no React and no dev-only behavior to opt into.
+
 See [Theming](./theming.md) for using it to build a custom layout.
 
 ## See also

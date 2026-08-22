@@ -5,7 +5,7 @@
  * No client-side JavaScript is included by default.
  */
 
-import { renderToString, raw, type JSXNode } from "./jsx-runtime";
+import { renderToString, raw, type JSXNode } from "./jsx-html";
 import {
   setRenderContext,
   clearRenderContext,
