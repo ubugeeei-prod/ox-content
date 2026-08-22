@@ -104,6 +104,7 @@ fn the_visible_text_is_exactly_the_input() {
         ("int main(void) { return 1 & 2; }\n", "c"),
         ("template <typename T> T f(T a) { return a; }\n", "cpp"),
         ("key: \"a > b\"\nlist:\n  - 1\n", "yaml"),
+        ("# H\n\n*a* **b** `c` [d](http://e)\n", "md"),
         ("no trailing newline", "ts"),
         ("\n\n\n", "ts"),
         ("tabs\tand  spaces\n", "ts"),
@@ -122,6 +123,29 @@ fn every_advertised_language_actually_builds() {
             "{lang} is advertised but produced nothing",
         );
     }
+}
+
+#[test]
+fn markdown_highlights_block_and_inline_syntax() {
+    let html =
+        highlight_to_html("# Title\n\nSome *emphasis* and `code` and [link](http://x).\n", "md")
+            .expect("supported");
+
+    // Block grammar: the heading.
+    assert!(html.contains("--octc-shiki-token-function"), "heading: {html}");
+    // Inline grammar, reachable only through the injection.
+    assert!(html.contains("--octc-shiki-token-constant"), "emphasis: {html}");
+    assert!(html.contains("--octc-shiki-token-string"), "code span: {html}");
+    assert!(html.contains("--octc-shiki-token-link"), "link: {html}");
+}
+
+#[test]
+fn markdown_highlights_a_fenced_block_in_its_own_language() {
+    // The fence injection names the language the way the source spelled it,
+    // so resolving injections by canonical name only would leave this plain.
+    let html = highlight_to_html("```ts\nconst a = 1;\n```\n", "md").expect("supported");
+
+    assert!(html.contains("--octc-shiki-token-keyword"), "{html}");
 }
 
 #[test]

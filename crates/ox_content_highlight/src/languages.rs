@@ -78,6 +78,25 @@ fn cpp_highlights() -> String {
     format!("{}\n{}", tree_sitter_c::HIGHLIGHT_QUERY, tree_sitter_cpp::HIGHLIGHT_QUERY)
 }
 
+/// Markdown ships as a pair of grammars: a block one that leaves each run of
+/// prose as a single `inline` node, and a separate inline one for what is
+/// inside it. Injecting the second into the first is what gets emphasis, links
+/// and code spans highlighted; the block grammar alone sees only headings,
+/// fences and punctuation.
+///
+/// `injection.include-children` is load-bearing. Without it the injected layer
+/// is created — the language callback even fires — and then emits nothing at
+/// all, because the range handed to it has the content node's children carved
+/// out of it. It fails silently, as unhighlighted prose.
+fn markdown_block_injections() -> String {
+    format!(
+        "{}\n((inline) @injection.content \
+         (#set! injection.language \"markdown_inline\") \
+         (#set! injection.include-children))",
+        tree_sitter_md::INJECTION_QUERY_BLOCK,
+    )
+}
+
 fn typescript_locals() -> String {
     format!("{}\n{}", tree_sitter_javascript::LOCALS_QUERY, tree_sitter_typescript::LOCALS_QUERY)
 }
@@ -182,6 +201,23 @@ fn grammars() -> &'static [Grammar] {
             "",
         ),
         grammar!(
+            "markdown",
+            ["markdown", "md"],
+            tree_sitter_md::LANGUAGE,
+            tree_sitter_md::HIGHLIGHT_QUERY_BLOCK,
+            markdown_block_injections(),
+            "",
+        ),
+        // Reachable only as an injection target, never as a fence tag.
+        grammar!(
+            "markdown_inline",
+            [],
+            tree_sitter_md::INLINE_LANGUAGE,
+            tree_sitter_md::HIGHLIGHT_QUERY_INLINE,
+            tree_sitter_md::INJECTION_QUERY_INLINE,
+            "",
+        ),
+        grammar!(
             "bash",
             ["bash", "sh", "shell", "zsh", "shellscript"],
             tree_sitter_bash::LANGUAGE,
@@ -209,9 +245,16 @@ pub fn config_for(lang: &str) -> Option<&'static HighlightConfiguration> {
     configs()[index].get_or_init(grammars()[index].build).as_ref()
 }
 
-/// Resolves a grammar by the name tree-sitter reports for an injected region.
+/// Resolves a grammar for an injected region.
+///
+/// An injection names its language however the source spelled it — a fenced
+/// block inside Markdown says `ts`, not `typescript` — so this has to match
+/// aliases too. Matching only the canonical name leaves injected regions
+/// silently unhighlighted.
 pub fn config_by_name(name: &str) -> Option<&'static HighlightConfiguration> {
-    let index = grammars().iter().position(|grammar| grammar.name == name)?;
+    let index = grammars().iter().position(|grammar| {
+        grammar.name == name || grammar.aliases.iter().any(|alias| alias.eq_ignore_ascii_case(name))
+    })?;
     configs()[index].get_or_init(grammars()[index].build).as_ref()
 }
 

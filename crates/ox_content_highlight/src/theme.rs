@@ -32,6 +32,12 @@ pub const CAPTURE_NAMES: &[&str] = &[
     "punctuation.special",
     "string",
     "string.escape",
+    "text.emphasis",
+    "text.literal",
+    "text.reference",
+    "text.strong",
+    "text.title",
+    "text.uri",
     "string.special",
     "tag",
     "type",
@@ -58,6 +64,7 @@ const KEYWORD: Token = Token { name: "token-keyword", fallback: "#ff7b72" };
 const PARAMETER: Token = Token { name: "token-parameter", fallback: "#ffa657" };
 const PUNCTUATION: Token = Token { name: "token-punctuation", fallback: "#c9d1d9" };
 const STRING: Token = Token { name: "token-string", fallback: "#a5d6ff" };
+const LINK: Token = Token { name: "token-link", fallback: "#a5d6ff" };
 const STRING_EXPRESSION: Token = Token { name: "token-string-expression", fallback: "#a5d6ff" };
 
 /// The variable a capture paints with, or `None` to leave it at the
@@ -75,6 +82,12 @@ pub fn token_for(capture: &str) -> Option<Token> {
         "string" | "string.escape" | "string.special" => STRING,
         "embedded" => STRING_EXPRESSION,
         "attribute" | "property" | "tag" | "module" => CONSTANT,
+        // Markdown's grammars speak nvim-treesitter's capture vocabulary
+        // rather than the names every other grammar here uses.
+        "text.title" => FUNCTION,
+        "text.literal" => STRING,
+        "text.uri" | "text.reference" => LINK,
+        "text.emphasis" | "text.strong" => CONSTANT,
         _ => return None,
     })
 }
