@@ -102,12 +102,70 @@ fn declines_a_block_whose_code_holds_more_than_text_wrappers() {
 }
 
 #[test]
-fn reports_languages_it_declines_and_leaves_them_untouched() {
-    let block = "<pre><code class=\"language-vue\">x</code></pre>\n<p>after</p>";
-    let result = super::highlight_code_blocks(block, |lang| lang != "vue", |_, _| None);
+fn hands_an_unsupported_language_to_the_caller_instead_of_surrendering() {
+    // The block is well formed, so only it needs another highlighter — the
+    // rest of the page is still done here.
+    let html = "<pre><code class=\"language-vue\">x</code></pre>\n\
+                <pre><code class=\"language-ts\">y</code></pre>";
+    let result = super::highlight_code_blocks(
+        html,
+        |lang| lang != "vue",
+        |_, _| Some("<pre><code>done</code></pre>".to_string()),
+    );
 
-    assert_eq!(result.skipped, ["vue"]);
-    assert_eq!(result.html, block);
+    assert!(result.skipped.is_empty(), "a well-formed block must not surrender the page");
+    assert_eq!(result.pending.len(), 1);
+    assert_eq!(result.pending[0].language, "vue");
+    assert_eq!(result.pending[0].source, "x");
+    assert!(result.html.contains("done"), "the supported block is still highlighted");
+    assert!(result.html.contains("language-vue"), "the pending block is left in place");
+}
+
+#[test]
+fn splices_the_callers_highlighting_back_over_a_pending_block() {
+    let html = "<pre><code class=\"language-vue\">x</code></pre>";
+    let merged = super::apply_pending_highlights(
+        html,
+        &["<pre class=\"shiki\"><code><span>x</span></code></pre>".to_string()],
+        |lang| lang != "vue",
+    );
+
+    assert!(merged.contains("shiki"));
+    assert!(merged.contains("<span>x</span>"));
+    assert!(merged.contains("data-language=\"vue\""));
+}
+
+#[test]
+fn leaves_the_blocks_it_already_highlighted_out_of_the_second_pass() {
+    // The two scans are lined up by `supports` alone: the first pass highlights
+    // what it claims and lists the rest, and the second must walk to the same
+    // elements in the same order. Touching a claimed one would consume a
+    // replacement meant for a later block and shift every one after it.
+    let html = "<pre class=\"shiki\"><code class=\"language-ts\"><span>done</span></code></pre>\n\
+                <pre><code class=\"language-vue\">x</code></pre>";
+    let merged = super::apply_pending_highlights(
+        html,
+        &["<pre class=\"shiki\"><code><span>vue</span></code></pre>".to_string()],
+        |lang| lang != "vue",
+    );
+
+    assert!(merged.contains("<span>done</span>"), "the claimed block must be untouched");
+    assert_eq!(merged.matches("<span>done</span>").count(), 1);
+    assert!(merged.contains("<span>vue</span>"), "the pending block must be replaced");
+}
+
+#[test]
+fn gives_a_pending_block_its_language_even_when_nothing_could_highlight_it() {
+    // An empty replacement is "no grammar for this either". The tree walk
+    // reached the same state by leaving the element alone and merging the
+    // original metadata back over it, which is where `data-language` came
+    // from, so a block still picks that up.
+    let html = "<pre><code class=\"language-mermaid\">flowchart LR</code></pre>";
+    let merged = super::apply_pending_highlights(html, &[String::new()], |lang| lang != "mermaid");
+
+    assert!(merged.contains("<pre data-language=\"mermaid\">"));
+    assert!(merged.contains("flowchart LR"));
+    assert!(!merged.contains("shiki"));
 }
 
 #[test]
@@ -186,19 +244,20 @@ fn keeps_each_element_of_a_repeated_snippet_on_its_own_classes() {
 fn highlights_nothing_at_all_once_one_element_is_out_of_reach() {
     // The caller answers a non-empty `skipped` by running its own highlighter
     // over the whole page, which redoes every block. Anything highlighted here
-    // would be thrown away, so nothing is.
-    let html = "<pre><code class=\"language-ts\">a</code></pre>\n                <pre><code class=\"language-vue\">b</code></pre>";
+    // would be thrown away, so nothing is. Only markup this pass cannot read
+    // does that — an unsupported language comes back as pending instead.
+    let html = "<pre><code class=\"language-ts\">a</code></pre>\n                <pre><code class=\"language-ts\">b\n<p>c</p></code></pre>";
     let calls = std::cell::Cell::new(0);
     let result = super::highlight_code_blocks(
         html,
-        |lang| lang != "vue",
+        |_| true,
         |_, _| {
             calls.set(calls.get() + 1);
             Some("<pre>x</pre>".to_string())
         },
     );
 
-    assert_eq!(result.skipped, ["vue"]);
+    assert_eq!(result.skipped, ["ts"]);
     assert_eq!(result.html, html);
     assert_eq!(calls.get(), 0, "the claimable block must not be highlighted");
 }

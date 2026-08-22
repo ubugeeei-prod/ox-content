@@ -12,7 +12,8 @@
 
 use rustc_hash::FxHashMap;
 
-use super::scan::{collect_inline_code, collect_pre_blocks, find_tag_end};
+use super::scan::{collect_inline_code, collect_pre_blocks};
+use super::text::code_text;
 use super::{
     extract_code_block_metadata, merge_highlighted_code_block, merge_highlighted_inline_code,
 };
@@ -21,9 +22,23 @@ use super::{
 pub struct HighlightedDocument {
     /// The document with every handled block replaced.
     pub html: String,
-    /// Languages of blocks left untouched, so the caller can decide whether
-    /// another highlighter still needs to run over the result.
+    /// Languages of elements this pass could not read at all, which means the
+    /// caller's HTML-parser-based highlighter has to produce the whole page.
+    /// Non-empty leaves `html` untouched and `pending` empty.
     pub skipped: Vec<String>,
+    /// Well-formed elements whose language has no grammar here, in document
+    /// order. The caller highlights each one however it likes and hands the
+    /// results back to [`apply_pending_highlights`]; the elements are still
+    /// in `html`, unchanged.
+    pub pending: Vec<PendingBlock>,
+}
+
+/// An element left for the caller's highlighter.
+pub struct PendingBlock {
+    /// The `language-…` class the element carries.
+    pub language: String,
+    /// The element's source text, already unescaped.
+    pub source: String,
 }
 
 /// What kind of element a scanned region holds.
@@ -53,12 +68,15 @@ struct Claim {
 /// are carried over by the same merges the rehype path used, so annotated
 /// blocks and API signatures come out identical.
 ///
-/// The document is all-or-nothing on purpose. A caller that gets a non-empty
-/// `skipped` has to run its HTML-parser-based highlighter over the whole page
-/// anyway, and that pass redoes every block — so highlighting the claimable
-/// ones first would be work thrown away. Claims are therefore collected with a
-/// scan that costs no highlighting, and the moment one element is out of reach
-/// the original `html` is handed back untouched.
+/// An element whose language has no grammar here is *pending* rather than
+/// fatal: it is well formed, so the caller can highlight that one element on
+/// its own and splice the result back with [`apply_pending_highlights`],
+/// without an HTML parser ever seeing the page. Only an element this pass
+/// cannot read — markup where a text scan and a real parser would disagree —
+/// is `skipped`, and that does surrender the whole document, because the
+/// caller's pass will redo every element anyway and highlighting them first
+/// would be work thrown away. Claims are collected by a scan that costs no
+/// highlighting, so surrendering is cheap.
 pub fn highlight_code_blocks(
     html: &str,
     supports: impl Fn(&str) -> bool,
@@ -72,7 +90,11 @@ pub fn highlight_code_blocks(
         )
         .collect();
     if regions.is_empty() {
-        return HighlightedDocument { html: html.to_string(), skipped: Vec::new() };
+        return HighlightedDocument {
+            html: html.to_string(),
+            skipped: Vec::new(),
+            pending: Vec::new(),
+        };
     }
     // Both scanners walk the document in order and neither can overlap the
     // other, so ordering by start offset is enough to splice in one pass.
@@ -80,6 +102,7 @@ pub fn highlight_code_blocks(
 
     let mut claims = Vec::with_capacity(regions.len());
     let mut skipped = Vec::new();
+    let mut pending = Vec::new();
 
     for (start, end, region) in regions {
         let element = &html[start..end];
@@ -90,21 +113,20 @@ pub fn highlight_code_blocks(
             continue;
         };
 
-        if !supports(&language) {
-            skipped.push(language);
-            continue;
-        }
-
         let Some(source) = code_text(element) else {
             skipped.push(language);
             continue;
         };
 
-        claims.push(Claim { start, end, region, language, source });
+        if supports(&language) {
+            claims.push(Claim { start, end, region, language, source });
+        } else {
+            pending.push(PendingBlock { language, source });
+        }
     }
 
     if !skipped.is_empty() {
-        return HighlightedDocument { html: html.to_string(), skipped };
+        return HighlightedDocument { html: html.to_string(), skipped, pending: Vec::new() };
     }
 
     // A page repeats its short snippets heavily — `string` and `boolean` alone
@@ -131,6 +153,7 @@ pub fn highlight_code_blocks(
             return HighlightedDocument {
                 html: html.to_string(),
                 skipped: vec![claim.language.clone()],
+                pending: Vec::new(),
             };
         };
         slots.push(rendered.len());
@@ -165,11 +188,85 @@ pub fn highlight_code_blocks(
     // fallback; hand back the original and let the caller's pass produce the
     // page.
     if !skipped.is_empty() {
-        return HighlightedDocument { html: html.to_string(), skipped };
+        return HighlightedDocument { html: html.to_string(), skipped, pending: Vec::new() };
     }
 
     out.push_str(&html[cursor..]);
-    HighlightedDocument { html: out, skipped }
+    HighlightedDocument { html: out, skipped, pending }
+}
+
+/// Splices the caller's highlighting back over the elements
+/// [`highlight_code_blocks`] left pending.
+///
+/// `replacements` lines up with the `pending` list it returned: entry `i` is a
+/// full `<pre>` element for pending block `i`, or an empty string to leave
+/// that one as it is. `supports` must answer as it did then, since it is what
+/// tells the two scans apart — an element it claims was already highlighted
+/// and is not touched again.
+pub fn apply_pending_highlights(
+    html: &str,
+    replacements: &[String],
+    supports: impl Fn(&str) -> bool,
+) -> String {
+    if replacements.is_empty() {
+        return html.to_string();
+    }
+
+    let mut regions: Vec<(usize, usize, Region)> = collect_pre_blocks(html)
+        .into_iter()
+        .map(|(start, end)| (start, end, Region::Block))
+        .chain(
+            collect_inline_code(html).into_iter().map(|(start, end)| (start, end, Region::Inline)),
+        )
+        .collect();
+    regions.sort_by_key(|&(start, _, _)| start);
+
+    let mut out = String::with_capacity(html.len() * 2);
+    let mut cursor = 0;
+    let mut next = 0;
+
+    for (start, end, region) in regions {
+        if next >= replacements.len() {
+            break;
+        }
+        let element = &html[start..end];
+        let Some(language) = element_language(element, &region) else {
+            continue;
+        };
+        if supports(&language) || code_text(element).is_none() {
+            continue;
+        }
+
+        let replacement = replacements[next].as_str();
+        next += 1;
+
+        // An empty replacement means the caller's highlighter had no grammar
+        // for this block either. A block still picks up the `data-language`
+        // the merge writes — the tree walk reached the same state by leaving
+        // the element in place and merging the original metadata back over it
+        // — while an inline element is left exactly as it arrived, because
+        // that merge only ever ran over `<pre>` blocks.
+        let merged = match (&region, replacement.is_empty()) {
+            (Region::Block, true) => {
+                Some(merge_highlighted_code_block(element, element, Some(&language)))
+            }
+            (Region::Block, false) => {
+                Some(merge_highlighted_code_block(element, replacement, Some(&language)))
+            }
+            (Region::Inline, true) => None,
+            (Region::Inline, false) => merge_highlighted_inline_code(element, replacement),
+        };
+        let Some(merged) = merged else {
+            continue;
+        };
+
+        out.push_str(&html[cursor..start]);
+        out.push_str(&merged);
+        cursor = end;
+    }
+
+    out.push_str(&html[cursor..]);
+    out
 }
 
 /// The language to highlight the element as, if it should be highlighted.
@@ -190,118 +287,4 @@ fn element_language(element: &str, region: &Region) -> Option<String> {
             .find_map(|class_name| class_name.strip_prefix("language-"))
             .map(ToString::to_string),
     }
-}
-
-/// The source text of a `<code>` element.
-///
-/// The element is not always plain: a block carrying code annotations arrives
-/// wrapped in `<span class="line">`, and a member type arrives with an `<a>`
-/// around the type name it cross-references. The rehype pass read both through
-/// the DOM's text nodes — dropping the wrappers, and for a block re-applying
-/// the line metadata afterwards — so those are stripped here too rather than
-/// treated as a reason to decline the element. Declining sends the whole page
-/// back through the HTML round trip this exists to avoid.
-///
-/// Anything heavier than a `<span>` means the block is not what it claims to
-/// be. A JSDoc `@example` whose body was itself run through the Markdown
-/// renderer arrives with `<p>` and `<a>` nested inside `<code>`, which is not
-/// well-formed and which a text scan and a real HTML parser recover
-/// differently. Those are declined so the DOM path stays the authority on
-/// malformed input.
-fn code_text(element: &str) -> Option<String> {
-    let code_open = element.find("<code")?;
-    let content_start = element[code_open..].find('>')? + code_open + 1;
-    let content_end = element.rfind("</code>")?;
-    if content_end < content_start {
-        return None;
-    }
-
-    let content = &element[content_start..content_end];
-    if !content.contains('<') {
-        return Some(decode_entities(content));
-    }
-
-    let mut text = String::with_capacity(content.len());
-    let mut cursor = 0;
-    while let Some(relative) = content[cursor..].find('<') {
-        let open = cursor + relative;
-        text.push_str(&content[cursor..open]);
-        let Some(close) = find_tag_end(content, open) else {
-            // A `<` with no closing `>` is text the renderer failed to escape,
-            // not a tag; keep it rather than truncating the source.
-            text.push_str(&content[open..]);
-            return Some(decode_entities(&text));
-        };
-        if !is_text_wrapper(&content[open..close]) {
-            return None;
-        }
-        cursor = close;
-    }
-    text.push_str(&content[cursor..]);
-    Some(decode_entities(&text))
-}
-
-/// Elements that may wrap part of a code element's text.
-///
-/// `span` comes from code annotations; `a` is the type cross-reference the
-/// docs generator puts inside a member type. Both wrap text and nothing else,
-/// so dropping them recovers exactly the source the DOM walk read.
-const TEXT_WRAPPERS: [&str; 2] = ["span", "a"];
-
-/// Whether `tag` opens or closes one of [`TEXT_WRAPPERS`].
-fn is_text_wrapper(tag: &str) -> bool {
-    let name = tag.trim_start_matches('<').trim_start_matches('/');
-    let end = name.find(|c: char| !c.is_ascii_alphanumeric()).unwrap_or(name.len());
-    TEXT_WRAPPERS.iter().any(|wrapper| name[..end].eq_ignore_ascii_case(wrapper))
-}
-
-/// Reverses the renderer's escaping, plus the numeric forms other producers
-/// emit for the same five bytes.
-fn decode_entities(text: &str) -> String {
-    if !text.contains('&') {
-        return text.to_string();
-    }
-
-    let mut out = String::with_capacity(text.len());
-    let mut rest = text;
-    while let Some(at) = rest.find('&') {
-        out.push_str(&rest[..at]);
-        let tail = &rest[at..];
-        // Scan bytes, not a string slice: capping the search by byte length
-        // and then slicing would split a multi-byte character and panic. `;`
-        // is ASCII, so a byte search finds exactly the same positions.
-        let Some(semi) = tail.as_bytes()[..tail.len().min(12)].iter().position(|&b| b == b';')
-        else {
-            out.push('&');
-            rest = &tail[1..];
-            continue;
-        };
-        let entity = &tail[1..semi];
-        let decoded = match entity {
-            "amp" => Some('&'),
-            "lt" => Some('<'),
-            "gt" => Some('>'),
-            "quot" => Some('"'),
-            "apos" => Some('\''),
-            _ => numeric_entity(entity),
-        };
-        if let Some(ch) = decoded {
-            out.push(ch);
-            rest = &tail[semi + 1..];
-        } else {
-            out.push('&');
-            rest = &tail[1..];
-        }
-    }
-    out.push_str(rest);
-    out
-}
-
-fn numeric_entity(entity: &str) -> Option<char> {
-    let digits = entity.strip_prefix('#')?;
-    let code = match digits.strip_prefix(['x', 'X']) {
-        Some(hex) => u32::from_str_radix(hex, 16).ok()?,
-        None => digits.parse().ok()?,
-    };
-    char::from_u32(code)
 }

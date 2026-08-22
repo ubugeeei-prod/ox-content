@@ -35,6 +35,17 @@ export declare class IncrementalMarkdownRenderer {
 }
 
 /**
+ * Splices the caller's highlighting back over the blocks
+ * `highlightHtmlCodeBlocks` left pending.
+ *
+ * `replacements` lines up with the `pending` list it returned: entry `i` is a
+ * full `<pre>` element for pending block `i`, or an empty string to leave that
+ * block as it is. This keeps a page that needs one exotic grammar off the
+ * HTML round trip, instead of surrendering the whole document for it.
+ */
+export declare function applyPendingHighlights(html: string, replacements: Array<string>): string
+
+/**
  * Builds a Markdown collection manifest directly from files on the Rust side.
  *
  * File discovery, pattern filtering, frontmatter preparation, route metadata,
@@ -863,10 +874,17 @@ export interface JsHighlightedDocument {
   /** The document with each handled block replaced. */
   html: string
   /**
-   * Languages of blocks left untouched, so the caller knows whether another
-   * highlighter still has to run over the result.
+   * Languages of elements the native pass could not read, which means the
+   * caller's own highlighter has to produce the whole page. Non-empty
+   * leaves `html` untouched and `pending` empty.
    */
   skipped: Array<string>
+  /**
+   * Well-formed blocks whose language has no native grammar, in document
+   * order. Highlight each one and hand the results to
+   * `applyPendingHighlights`; they are still in `html`, unchanged.
+   */
+  pending: Array<JsPendingBlock>
 }
 
 /** Configuration for generated i18n runtime modules. */
@@ -1070,6 +1088,14 @@ export interface JsParserOptions {
    * Default: `false`, or `true` when `gfm` is `true`.
    */
   autolinks?: boolean
+}
+
+/** A block the native pass left for the caller's highlighter. */
+export interface JsPendingBlock {
+  /** The `language-…` class the block carries. */
+  language: string
+  /** The block's source text, already unescaped. */
+  source: string
 }
 
 /** Options for [`super::transform_pm_embeds`]. */

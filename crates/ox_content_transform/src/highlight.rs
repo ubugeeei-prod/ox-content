@@ -3,8 +3,11 @@ mod scan;
 mod tag;
 #[cfg(test)]
 mod tests;
+mod text;
 
-pub use blocks::{HighlightedDocument, highlight_code_blocks};
+pub use blocks::{
+    HighlightedDocument, PendingBlock, apply_pending_highlights, highlight_code_blocks,
+};
 
 use scan::{collect_pre_blocks, find_next_start_tag};
 use tag::ParsedAttribute;

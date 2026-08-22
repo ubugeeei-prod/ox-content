@@ -265,3 +265,40 @@ export async function highlightCode(
 
   return String(result);
 }
+
+/**
+ * Highlight the blocks the native pass left pending, in order.
+ *
+ * Entry `i` of the result is the `<pre>` for block `i`, or an empty string
+ * when Shiki has no grammar for it either — in which case the block is left
+ * exactly as it arrived, the same outcome the tree walk reached by keeping the
+ * original element.
+ *
+ * This is the whole point of the pending list: a page whose only unsupported
+ * block is a Mermaid diagram used to be handed to the tree walk in full, which
+ * re-highlighted every one of its other blocks and paid for a parse and a
+ * serialize of the page to do it.
+ */
+export async function highlightPendingBlocks(
+  blocks: readonly { language: string; source: string }[],
+  theme: string | ThemeRegistration = CSS_VARIABLES_THEME,
+  langs: LanguageRegistration[] = [],
+): Promise<string[]> {
+  if (blocks.length === 0) {
+    return [];
+  }
+
+  const { themeName } = normalizeThemeInput(theme);
+  const highlighter = await getHighlighter(theme, langs);
+
+  return blocks.map((block) => {
+    try {
+      return highlighter.codeToHtml(block.source, {
+        lang: block.language as never,
+        theme: themeName as BundledTheme,
+      });
+    } catch {
+      return "";
+    }
+  });
+}

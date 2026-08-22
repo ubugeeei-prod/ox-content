@@ -30,9 +30,23 @@ pub fn native_highlight_languages() -> Vec<String> {
 pub struct JsHighlightedDocument {
     /// The document with each handled block replaced.
     pub html: String,
-    /// Languages of blocks left untouched, so the caller knows whether another
-    /// highlighter still has to run over the result.
+    /// Languages of elements the native pass could not read, which means the
+    /// caller's own highlighter has to produce the whole page. Non-empty
+    /// leaves `html` untouched and `pending` empty.
     pub skipped: Vec<String>,
+    /// Well-formed blocks whose language has no native grammar, in document
+    /// order. Highlight each one and hand the results to
+    /// `applyPendingHighlights`; they are still in `html`, unchanged.
+    pub pending: Vec<JsPendingBlock>,
+}
+
+/// A block the native pass left for the caller's highlighter.
+#[napi(object)]
+pub struct JsPendingBlock {
+    /// The `language-…` class the block carries.
+    pub language: String,
+    /// The block's source text, already unescaped.
+    pub source: String,
 }
 
 /// Highlights every code block in a rendered document in one call.
@@ -47,5 +61,29 @@ pub fn highlight_html_code_blocks(html: String) -> JsHighlightedDocument {
         ox_content_highlight::supports,
         ox_content_highlight::highlight_to_html,
     );
-    JsHighlightedDocument { html: result.html, skipped: result.skipped }
+    JsHighlightedDocument {
+        html: result.html,
+        skipped: result.skipped,
+        pending: result
+            .pending
+            .into_iter()
+            .map(|block| JsPendingBlock { language: block.language, source: block.source })
+            .collect(),
+    }
+}
+
+/// Splices the caller's highlighting back over the blocks
+/// `highlightHtmlCodeBlocks` left pending.
+///
+/// `replacements` lines up with the `pending` list it returned: entry `i` is a
+/// full `<pre>` element for pending block `i`, or an empty string to leave that
+/// block as it is. This keeps a page that needs one exotic grammar off the
+/// HTML round trip, instead of surrendering the whole document for it.
+#[napi(js_name = "applyPendingHighlights")]
+pub fn apply_pending_highlights(html: String, replacements: Vec<String>) -> String {
+    ox_content_transform::highlight::apply_pending_highlights(
+        &html,
+        &replacements,
+        ox_content_highlight::supports,
+    )
 }

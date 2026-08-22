@@ -32,8 +32,8 @@
  */
 
 import type { ResolvedOptions, TransformResult, TocEntry } from "./types";
-import { highlightCode } from "./highlight";
-import { highlightDocumentNatively } from "./highlight-native";
+import { highlightCode, highlightPendingBlocks } from "./highlight";
+import { applyPendingHighlights, highlightDocumentNatively } from "./highlight-native";
 import { CSS_VARIABLES_THEME } from "./shiki-theme";
 import { importNapiModule } from "./napi";
 import { transformMermaidStatic } from "./plugins/mermaid";
@@ -561,17 +561,27 @@ export async function transformMarkdown(
   // Apply syntax highlighting if enabled
   if (options.highlight) {
     // The native pass handles the whole document without an HTML parser in
-    // the loop. Whatever it declines — a language it has no grammar for, or a
-    // block something else already rewrote — falls through to Shiki, which
-    // still needs the parse/serialize round trip.
+    // the loop. A block whose language it has no grammar for comes back as
+    // `pending`: Shiki highlights that block alone and the result is spliced
+    // straight back, so one Mermaid diagram no longer costs the page a parse
+    // and a serialize. Only markup the pass cannot read at all — where a text
+    // scan and a real HTML parser would disagree — surrenders the document to
+    // the tree walk.
     const nativeTheme =
       options.highlightTheme === undefined || options.highlightTheme === CSS_VARIABLES_THEME;
     const native = nativeTheme ? highlightDocumentNatively(html) : null;
-    if (native) {
-      html = native.html;
-    }
 
-    if (!native || native.skipped.length > 0) {
+    if (native && native.skipped.length === 0) {
+      html = native.html;
+      if (native.pending.length > 0) {
+        const replacements = await highlightPendingBlocks(
+          native.pending,
+          options.highlightTheme,
+          options.highlightLangs,
+        );
+        html = applyPendingHighlights(html, replacements);
+      }
+    } else {
       const originalHtml = html;
       const highlightedHtml = await highlightCode(
         html,

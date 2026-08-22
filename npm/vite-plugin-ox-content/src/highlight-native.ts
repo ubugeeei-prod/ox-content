@@ -122,12 +122,44 @@ export function languageOf(codeElement: Element): string | null {
  * over the documentation corpus, and re-parsing each highlighted block to
  * splice it back cost another 38 ms, against 14 ms of actual highlighting.
  */
-export function highlightDocumentNatively(
-  html: string,
-): { html: string; skipped: string[] } | null {
+export function highlightDocumentNatively(html: string): NativeDocument | null {
   try {
     return importNapiModuleSync().highlightHtmlCodeBlocks(html);
   } catch {
     return null;
+  }
+}
+
+/** A block the native pass left for another highlighter. */
+export interface PendingBlock {
+  language: string;
+  source: string;
+}
+
+/** What {@link highlightDocumentNatively} produced for a page. */
+export interface NativeDocument {
+  html: string;
+  /**
+   * Languages of elements the native pass could not read. Non-empty means the
+   * page has to be produced by the HTML-parser-based highlighter instead.
+   */
+  skipped: string[];
+  /** Well-formed blocks whose language has no native grammar, in order. */
+  pending: PendingBlock[];
+}
+
+/**
+ * Splices `replacements` back over the blocks the native pass left pending.
+ *
+ * Entry `i` is the highlighted `<pre>` for pending block `i`, or an empty
+ * string to leave that block alone. This keeps a page that needs one exotic
+ * grammar — a Vue SFC, a Mermaid diagram — off the HTML round trip, rather
+ * than surrendering the whole document for it.
+ */
+export function applyPendingHighlights(html: string, replacements: string[]): string {
+  try {
+    return importNapiModuleSync().applyPendingHighlights(html, replacements);
+  } catch {
+    return html;
   }
 }
