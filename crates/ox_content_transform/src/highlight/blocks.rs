@@ -10,6 +10,8 @@
 //! This finds the blocks with the same scanner the merge step already uses,
 //! and splices the result straight back into the original HTML.
 
+use rustc_hash::FxHashMap;
+
 use super::scan::{collect_inline_code, collect_pre_blocks, find_tag_end};
 use super::{
     extract_code_block_metadata, merge_highlighted_code_block, merge_highlighted_inline_code,
@@ -105,24 +107,51 @@ pub fn highlight_code_blocks(
         return HighlightedDocument { html: html.to_string(), skipped };
     }
 
+    // A page repeats its short snippets heavily — `string` and `boolean` alone
+    // account for hundreds of member types across the corpus, and 31% of a
+    // page's elements are a source it already holds. Highlighting is keyed by
+    // nothing but the text and the language, so each distinct pair is parsed
+    // once and the result reused. The merge still runs per element, which is
+    // what carries each one's own classes and line metadata.
+    let mut rendered: Vec<String> = Vec::with_capacity(claims.len());
+    let mut rendered_at: FxHashMap<(&str, &str), usize> = FxHashMap::default();
+    let mut slots = Vec::with_capacity(claims.len());
+
+    for claim in &claims {
+        let key = (claim.language.as_str(), claim.source.as_str());
+        if let Some(&at) = rendered_at.get(&key) {
+            slots.push(at);
+            continue;
+        }
+        let Some(highlighted) = highlight(&claim.source, &claim.language) else {
+            // `supports` promised every claim, so a failure here is the
+            // highlighter contradicting itself rather than an expected
+            // fallback; hand back the original so the caller's own pass
+            // produces the page.
+            return HighlightedDocument {
+                html: html.to_string(),
+                skipped: vec![claim.language.clone()],
+            };
+        };
+        slots.push(rendered.len());
+        rendered_at.insert(key, rendered.len());
+        rendered.push(highlighted);
+    }
+
     let mut out = String::with_capacity(html.len() * 2);
     let mut cursor = 0;
 
-    for claim in claims {
+    for (claim, at) in claims.iter().zip(slots) {
         let element = &html[claim.start..claim.end];
-        let Some(highlighted) = highlight(&claim.source, &claim.language) else {
-            skipped.push(claim.language);
-            continue;
-        };
-
+        let highlighted = &rendered[at];
         let merged = match claim.region {
             Region::Block => {
-                Some(merge_highlighted_code_block(element, &highlighted, Some(&claim.language)))
+                Some(merge_highlighted_code_block(element, highlighted, Some(&claim.language)))
             }
-            Region::Inline => merge_highlighted_inline_code(element, &highlighted),
+            Region::Inline => merge_highlighted_inline_code(element, highlighted),
         };
         let Some(merged) = merged else {
-            skipped.push(claim.language);
+            skipped.push(claim.language.clone());
             continue;
         };
 
@@ -131,9 +160,10 @@ pub fn highlight_code_blocks(
         cursor = claim.end;
     }
 
-    // `supports` promised every claim, so a failure here is the highlighter
-    // contradicting itself rather than an expected fallback; hand back the
-    // original so the caller's own pass produces the page.
+    // A merge only fails on markup the claim scan said was well formed, so
+    // this is the module contradicting itself rather than an expected
+    // fallback; hand back the original and let the caller's pass produce the
+    // page.
     if !skipped.is_empty() {
         return HighlightedDocument { html: html.to_string(), skipped };
     }

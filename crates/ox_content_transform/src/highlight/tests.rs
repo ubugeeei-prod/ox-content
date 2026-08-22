@@ -144,6 +144,45 @@ fn leaves_inline_code_without_a_language_alone_and_does_not_report_it() {
 }
 
 #[test]
+fn highlights_a_repeated_snippet_once_and_reuses_it() {
+    // API pages are mostly member types, and the same handful of type names
+    // recurs on every entry.
+    let html = "<p><code class=\"language-ts\">string</code> \
+                <code class=\"language-ts\">string</code> \
+                <code class=\"language-ts\">boolean</code></p>";
+    let calls = std::cell::Cell::new(0);
+    let result = super::highlight_code_blocks(
+        html,
+        |_| true,
+        |code, _| {
+            calls.set(calls.get() + 1);
+            Some(format!("<pre><code><span>{code}</span></code></pre>"))
+        },
+    );
+
+    assert!(result.skipped.is_empty());
+    assert_eq!(calls.get(), 2, "the repeated snippet must be highlighted once");
+    assert_eq!(result.html.matches("<span>string</span>").count(), 2);
+    assert_eq!(result.html.matches("<span>boolean</span>").count(), 1);
+}
+
+#[test]
+fn keeps_each_element_of_a_repeated_snippet_on_its_own_classes() {
+    // The highlight is shared but the merge is not: each element keeps the
+    // classes it arrived with.
+    let html = "<p><code class=\"first language-ts\">string</code> \
+                <code class=\"second language-ts\">string</code></p>";
+    let result = super::highlight_code_blocks(
+        html,
+        |_| true,
+        |_, _| Some("<pre><code><span>t</span></code></pre>".to_string()),
+    );
+
+    assert!(result.html.contains("class=\"first language-ts shiki-inline\""));
+    assert!(result.html.contains("class=\"second language-ts shiki-inline\""));
+}
+
+#[test]
 fn highlights_nothing_at_all_once_one_element_is_out_of_reach() {
     // The caller answers a non-empty `skipped` by running its own highlighter
     // over the whole page, which redoes every block. Anything highlighted here
