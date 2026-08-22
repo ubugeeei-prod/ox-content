@@ -1,0 +1,27 @@
+[package]
+name = "ox_content_highlight"
+version.workspace = true
+publish = false
+authors.workspace = true
+categories.workspace = true
+edition.workspace = true
+homepage.workspace = true
+keywords.workspace = true
+license.workspace = true
+repository.workspace = true
+rust-version.workspace = true
+description = "Tree-sitter syntax highlighting for Ox Content"
+
+[lints]
+workspace = true
+
+[dependencies]
+tree-sitter = "0.25"
+tree-sitter-highlight = "0.25"
+tree-sitter-bash = "0.25"
+tree-sitter-css = "0.23"
+tree-sitter-html = "0.23"
+tree-sitter-javascript = "0.23"
+tree-sitter-json = "0.24"
+tree-sitter-rust = "0.24"
+tree-sitter-typescript = "0.23"
