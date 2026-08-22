@@ -33,6 +33,8 @@
 
 import type { ResolvedOptions, TransformResult, TocEntry } from "./types";
 import { highlightCode } from "./highlight";
+import { highlightDocumentNatively } from "./highlight-native";
+import { CSS_VARIABLES_THEME } from "./shiki-theme";
 import { importNapiModule } from "./napi";
 import { transformMermaidStatic } from "./plugins/mermaid";
 import { normalizeSelfClosingEmbeds, transformBuiltinEmbeds } from "./plugins";
@@ -558,13 +560,26 @@ export async function transformMarkdown(
 
   // Apply syntax highlighting if enabled
   if (options.highlight) {
-    const originalHtml = html;
-    const highlightedHtml = await highlightCode(
-      html,
-      options.highlightTheme,
-      options.highlightLangs,
-    );
-    html = napi.mergeHighlightedCodeBlocks(originalHtml, highlightedHtml);
+    // The native pass handles the whole document without an HTML parser in
+    // the loop. Whatever it declines — a language it has no grammar for, or a
+    // block something else already rewrote — falls through to Shiki, which
+    // still needs the parse/serialize round trip.
+    const nativeTheme =
+      options.highlightTheme === undefined || options.highlightTheme === CSS_VARIABLES_THEME;
+    const native = nativeTheme ? highlightDocumentNatively(html) : null;
+    if (native) {
+      html = native.html;
+    }
+
+    if (!native || native.skipped.length > 0) {
+      const originalHtml = html;
+      const highlightedHtml = await highlightCode(
+        html,
+        options.highlightTheme,
+        options.highlightLangs,
+      );
+      html = napi.mergeHighlightedCodeBlocks(originalHtml, highlightedHtml);
+    }
   }
 
   // Render static built-in embeds while Mermaid SVG placeholders are protected.

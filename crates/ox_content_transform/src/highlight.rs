@@ -1,7 +1,10 @@
+mod blocks;
 mod scan;
 mod tag;
 #[cfg(test)]
 mod tests;
+
+pub use blocks::{HighlightedDocument, highlight_code_blocks};
 
 use scan::{collect_pre_blocks, find_next_start_tag};
 use tag::ParsedAttribute;
@@ -70,8 +73,24 @@ fn extract_code_block_metadata(original_block: &str) -> CodeBlockMetadata {
     }
 }
 
-fn merge_highlighted_code_block(original_block: &str, highlighted_block: &str) -> String {
+/// Splices `highlighted_block` in for `original_block`, keeping the original's
+/// classes, data attributes and per-line metadata.
+///
+/// `language` names the language the block was highlighted as, for callers
+/// that resolved a default the original markup does not carry. `None` keeps
+/// whatever `data-language` the highlighter itself emitted.
+fn merge_highlighted_code_block(
+    original_block: &str,
+    highlighted_block: &str,
+    language: Option<&str>,
+) -> String {
     let metadata = extract_code_block_metadata(original_block);
+    // The wrapper advertises the language the block was highlighted as, which
+    // for a bare fence is the caller's default. The inner `<code>` only ever
+    // advertises a language the original markup actually named, so a bare
+    // fence leaves it off exactly as the rehype pass did.
+    let pre_language = language.or(metadata.language.as_deref());
+    let code_language = metadata.language.as_deref();
     let mut merged = String::with_capacity(highlighted_block.len() + 64);
     let mut index = 0;
     let mut pre_updated = false;
@@ -86,7 +105,7 @@ fn merge_highlighted_code_block(original_block: &str, highlighted_block: &str) -
             "pre" if !pre_updated => {
                 tag.merge_class_names(&metadata.pre_classes);
                 tag.merge_data_attributes(&metadata.pre_data_attributes);
-                if let Some(language) = metadata.language.as_deref() {
+                if let Some(language) = pre_language {
                     tag.set_attribute("data-language", language);
                 }
                 merged.push_str(&tag.to_html());
@@ -97,7 +116,7 @@ fn merge_highlighted_code_block(original_block: &str, highlighted_block: &str) -
                     tag.set_class_names(&metadata.code_classes);
                 }
                 tag.merge_data_attributes(&metadata.code_data_attributes);
-                if let Some(language) = metadata.language.as_deref() {
+                if let Some(language) = code_language {
                     tag.set_attribute("data-language", language);
                 }
                 merged.push_str(&tag.to_html());
@@ -126,6 +145,63 @@ fn merge_highlighted_code_block(original_block: &str, highlighted_block: &str) -
     merged
 }
 
+/// The class list and inner markup of the `<code>` inside a highlighted block.
+struct HighlightedCode<'a> {
+    classes: Vec<String>,
+    inner: &'a str,
+}
+
+fn find_highlighted_code(block: &str) -> Option<HighlightedCode<'_>> {
+    let mut index = 0;
+
+    while let Some(tag_match) = find_next_start_tag(block, index) {
+        if tag_match.tag.name == "code" {
+            let inner_end = block.rfind("</code>")?;
+            if inner_end < tag_match.end {
+                return None;
+            }
+            return Some(HighlightedCode {
+                classes: tag_match.tag.class_names(),
+                inner: &block[tag_match.end..inner_end],
+            });
+        }
+        index = tag_match.end;
+    }
+
+    None
+}
+
+/// Rewrites a standalone `<code>` element around a highlighted body.
+///
+/// `highlighted_block` is a whole `<pre><code>…</code></pre>` from the
+/// highlighter, of which only the inner markup of its `<code>` is kept: the
+/// element being replaced is inline, so it must not gain a block wrapper. The
+/// original element keeps its own attributes and class order, with the
+/// highlighter's classes and the `shiki-inline` marker merged in after them,
+/// which is the same shape the rehype pass produced.
+fn merge_highlighted_inline_code(original_code: &str, highlighted_block: &str) -> Option<String> {
+    let highlighted = find_highlighted_code(highlighted_block)?;
+    let mut tag = find_next_start_tag(original_code, 0)?.tag;
+
+    tag.merge_class_names(&highlighted.classes);
+    tag.merge_class_names(std::slice::from_ref(&String::from("shiki-inline")));
+
+    let language = tag
+        .class_names()
+        .iter()
+        .find_map(|class_name| class_name.strip_prefix("language-"))
+        .map(ToString::to_string);
+    if let Some(language) = language {
+        tag.set_attribute("data-language", &language);
+    }
+
+    let mut merged = String::with_capacity(highlighted.inner.len() + 128);
+    merged.push_str(&tag.to_html());
+    merged.push_str(highlighted.inner);
+    merged.push_str("</code>");
+    Some(merged)
+}
+
 pub fn merge_highlighted_code_blocks(original_html: &str, highlighted_html: &str) -> String {
     let original_blocks = collect_pre_blocks(original_html);
     let highlighted_blocks = collect_pre_blocks(highlighted_html);
@@ -144,6 +220,7 @@ pub fn merge_highlighted_code_blocks(original_html: &str, highlighted_html: &str
             merged.push_str(&merge_highlighted_code_block(
                 &original_html[*original_start..*original_end],
                 &highlighted_html[*highlight_start..*highlight_end],
+                None,
             ));
         } else {
             merged.push_str(&highlighted_html[*highlight_start..*highlight_end]);

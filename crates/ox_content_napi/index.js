@@ -210,6 +210,7 @@ module.exports.normalizeVitePressFrontmatter = binding.normalizeVitePressFrontma
 module.exports.generateSsgHtml = binding.generateSsgHtml;
 module.exports.generateSsgBareHtml = binding.generateSsgBareHtml;
 module.exports.highlightCodeBlock = binding.highlightCodeBlock;
+module.exports.highlightHtmlCodeBlocks = binding.highlightHtmlCodeBlocks;
 module.exports.supportsHighlightLanguage = binding.supportsHighlightLanguage;
 module.exports.nativeHighlightLanguages = binding.nativeHighlightLanguages;
 module.exports.generateSsgBarePage = binding.generateSsgBarePage;

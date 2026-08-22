@@ -24,3 +24,28 @@ pub fn supports_highlight_language(lang: String) -> bool {
 pub fn native_highlight_languages() -> Vec<String> {
     ox_content_highlight::supported_languages().map(ToOwned::to_owned).collect()
 }
+
+/// Result of highlighting every code block in a rendered document.
+#[napi(object)]
+pub struct JsHighlightedDocument {
+    /// The document with each handled block replaced.
+    pub html: String,
+    /// Languages of blocks left untouched, so the caller knows whether another
+    /// highlighter still has to run over the result.
+    pub skipped: Vec<String>,
+}
+
+/// Highlights every code block in a rendered document in one call.
+///
+/// The alternative is walking the page through an HTML parser and serializer
+/// to find the blocks and splice results back, which on the documentation
+/// corpus costs an order of magnitude more than the highlighting itself.
+#[napi(js_name = "highlightHtmlCodeBlocks")]
+pub fn highlight_html_code_blocks(html: String) -> JsHighlightedDocument {
+    let result = ox_content_transform::highlight::highlight_code_blocks(
+        &html,
+        ox_content_highlight::supports,
+        ox_content_highlight::highlight_to_html,
+    );
+    JsHighlightedDocument { html: result.html, skipped: result.skipped }
+}

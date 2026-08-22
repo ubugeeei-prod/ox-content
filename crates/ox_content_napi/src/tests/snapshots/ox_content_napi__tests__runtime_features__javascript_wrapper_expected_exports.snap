@@ -37,6 +37,7 @@ generateSearchModuleFromOptions
 generateSsgBareHtml
 generateSsgBarePage
 highlightCodeBlock
+highlightHtmlCodeBlocks
 nativeHighlightLanguages
 supportsHighlightLanguage
 generateSsgHtml

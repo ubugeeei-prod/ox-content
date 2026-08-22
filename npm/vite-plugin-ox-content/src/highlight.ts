@@ -220,7 +220,14 @@ function rehypeShikiHighlight(options: {
               (c): c is Element => c.type === "element" && c.tagName === "code",
             );
 
-            if (codeElement) {
+            // A block the native pass already handled carries `shiki` on its
+            // `<pre>`. Re-running Shiki over it would read the highlighted
+            // text back out and overwrite the result with its own.
+            const alreadyHighlighted = normalizeClassName(child.properties?.className).includes(
+              "shiki",
+            );
+
+            if (codeElement && !alreadyHighlighted) {
               const highlightedPre = highlightBlockCode(codeElement);
               if (highlightedPre) {
                 node.children[i] = highlightedPre;

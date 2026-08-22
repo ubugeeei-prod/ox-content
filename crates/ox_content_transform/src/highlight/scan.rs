@@ -7,7 +7,7 @@ pub(super) struct TagMatch {
     pub(super) tag: ParsedStartTag,
 }
 
-fn find_tag_end(html: &str, start: usize) -> Option<usize> {
+pub(super) fn find_tag_end(html: &str, start: usize) -> Option<usize> {
     let bytes = html.as_bytes();
     let mut index = start;
     let mut quote: Option<u8> = None;
@@ -75,4 +75,37 @@ pub(super) fn collect_pre_blocks(html: &str) -> Vec<(usize, usize)> {
     }
 
     blocks
+}
+
+/// Spans of every standalone `<code>` element — one not wrapped in a `<pre>`.
+///
+/// Inline `<code class="language-…">` elements carry the API signatures the
+/// docs generator emits, and the highlighter treats them like any other
+/// snippet. Whole `<pre>` regions are stepped over rather than descended into,
+/// so a block's own `<code>` is never mistaken for one of these.
+pub(super) fn collect_inline_code(html: &str) -> Vec<(usize, usize)> {
+    let mut spans = Vec::new();
+    let mut index = 0;
+
+    while let Some(tag_match) = find_next_start_tag(html, index) {
+        match tag_match.tag.name.as_str() {
+            "pre" => {
+                let Some(relative_end) = html[tag_match.end..].find("</pre>") else {
+                    break;
+                };
+                index = tag_match.end + relative_end + "</pre>".len();
+            }
+            "code" => {
+                let Some(relative_end) = html[tag_match.end..].find("</code>") else {
+                    break;
+                };
+                let end = tag_match.end + relative_end + "</code>".len();
+                spans.push((tag_match.start, end));
+                index = end;
+            }
+            _ => index = tag_match.end,
+        }
+    }
+
+    spans
 }

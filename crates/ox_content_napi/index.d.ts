@@ -212,6 +212,15 @@ export declare function getSsgUrlPath(inputPath: string, srcDir: string): string
  */
 export declare function highlightCodeBlock(code: string, lang: string): string | null
 
+/**
+ * Highlights every code block in a rendered document in one call.
+ *
+ * The alternative is walking the page through an HTML parser and serializer
+ * to find the blocks and splice results back, which on the documentation
+ * corpus costs an order of magnitude more than the highlighting itself.
+ */
+export declare function highlightHtmlCodeBlocks(html: string): JsHighlightedDocument
+
 /** Result of i18n checking. */
 export interface I18NCheckResult {
   /** All diagnostics. */
@@ -847,6 +856,17 @@ export interface JsHeroNotice {
   title?: string
   /** Notice paragraphs. */
   body?: Array<string>
+}
+
+/** Result of highlighting every code block in a rendered document. */
+export interface JsHighlightedDocument {
+  /** The document with each handled block replaced. */
+  html: string
+  /**
+   * Languages of blocks left untouched, so the caller knows whether another
+   * highlighter still has to run over the result.
+   */
+  skipped: Array<string>
 }
 
 /** Configuration for generated i18n runtime modules. */

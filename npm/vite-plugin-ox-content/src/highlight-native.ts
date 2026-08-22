@@ -109,3 +109,25 @@ export function languageOf(codeElement: Element): string | null {
   );
   return className ? className.slice("language-".length) : null;
 }
+
+/**
+ * Highlights every code block in a rendered document in one native call.
+ *
+ * Returns the rewritten HTML and the languages it declined, so the caller
+ * knows whether Shiki still has to run over the result. Returns `null` when
+ * the native module is unavailable.
+ *
+ * This exists because the plumbing dwarfed the work: walking each page
+ * through an HTML parser and serializer to find `<pre>` elements cost 139 ms
+ * over the documentation corpus, and re-parsing each highlighted block to
+ * splice it back cost another 38 ms, against 14 ms of actual highlighting.
+ */
+export function highlightDocumentNatively(
+  html: string,
+): { html: string; skipped: string[] } | null {
+  try {
+    return importNapiModuleSync().highlightHtmlCodeBlocks(html);
+  } catch {
+    return null;
+  }
+}
