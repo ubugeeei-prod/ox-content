@@ -32,7 +32,8 @@
  */
 
 import type { ResolvedOptions, TransformResult, TocEntry } from "./types";
-import { highlightCode, highlightPendingBlocks } from "./highlight";
+import { highlightCode } from "./highlight";
+import { highlightPendingBlocks } from "./highlight-pending";
 import { applyPendingHighlights, highlightDocumentNatively } from "./highlight-native";
 import { CSS_VARIABLES_THEME } from "./shiki-theme";
 import { importNapiModule } from "./napi";
