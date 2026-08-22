@@ -213,6 +213,7 @@ module.exports.collectSearchMarkdownFiles = binding.collectSearchMarkdownFiles;
 module.exports.normalizeVitePressFrontmatter = binding.normalizeVitePressFrontmatter;
 module.exports.generateSsgHtml = binding.generateSsgHtml;
 module.exports.generateSsgBareHtml = binding.generateSsgBareHtml;
+module.exports.generateSsgBarePage = binding.generateSsgBarePage;
 module.exports.getGitLastUpdated = binding.getGitLastUpdated;
 module.exports.resolveSsgRoutePaths = binding.resolveSsgRoutePaths;
 module.exports.getSsgOutputPath = binding.getSsgOutputPath;

@@ -182,6 +182,9 @@ export declare function generateSearchModuleFromOptions(options: JsSearchRuntime
 /** Generates a bare SSG HTML page without navigation or styles. */
 export declare function generateSsgBareHtml(content: string, title: string): string
 
+/** Generates a bare SSG HTML page carrying head metadata and injected markup. */
+export declare function generateSsgBarePage(page: JsSsgBarePage): string
+
 /** Generates SSG HTML page with navigation and search. */
 export declare function generateSsgHtml(pageData: JsSsgPageData, navGroups: Array<JsSsgNavGroup>, config: JsSsgConfig): string
 
@@ -1252,6 +1255,37 @@ export interface JsSourceOrigin {
   line: number
   /** 1-based column number. */
   column: number
+}
+
+/**
+ * Head metadata and injected markup for a bare SSG page.
+ *
+ * Every field is optional. A value with none of them set renders the same
+ * document bare mode emitted before any of this existed.
+ */
+export interface JsSsgBarePage {
+  /** Page title. */
+  title: string
+  /** Rendered page body. */
+  content: string
+  /** `lang` attribute. Defaults to `en`. */
+  lang?: string
+  /** `dir` attribute. Omitted when absent. */
+  dir?: string
+  /** Page description for `description` and the OG/Twitter variants. */
+  description?: string
+  /** Absolute page URL for `<link rel="canonical">` and `og:url`. */
+  canonicalUrl?: string
+  /** Site name for `og:site_name`. */
+  siteName?: string
+  /** Image URL for `og:image` and `twitter:image`. */
+  ogImage?: string
+  /** Raw markup appended to `<head>`. */
+  head?: string
+  /** Raw markup inserted directly after `<body>`. */
+  bodyStart?: string
+  /** Raw markup inserted directly before `</body>`. */
+  bodyEnd?: string
 }
 
 /** SSG configuration. */

@@ -29,6 +29,36 @@ pub struct JsSsgNavGroup {
     pub sticky_collapsed: Option<bool>,
 }
 
+/// Head metadata and injected markup for a bare SSG page.
+///
+/// Every field is optional. A value with none of them set renders the same
+/// document bare mode emitted before any of this existed.
+#[napi(object)]
+pub struct JsSsgBarePage {
+    /// Page title.
+    pub title: String,
+    /// Rendered page body.
+    pub content: String,
+    /// `lang` attribute. Defaults to `en`.
+    pub lang: Option<String>,
+    /// `dir` attribute. Omitted when absent.
+    pub dir: Option<String>,
+    /// Page description for `description` and the OG/Twitter variants.
+    pub description: Option<String>,
+    /// Absolute page URL for `<link rel="canonical">` and `og:url`.
+    pub canonical_url: Option<String>,
+    /// Site name for `og:site_name`.
+    pub site_name: Option<String>,
+    /// Image URL for `og:image` and `twitter:image`.
+    pub og_image: Option<String>,
+    /// Raw markup appended to `<head>`.
+    pub head: Option<String>,
+    /// Raw markup inserted directly after `<body>`.
+    pub body_start: Option<String>,
+    /// Raw markup inserted directly before `</body>`.
+    pub body_end: Option<String>,
+}
+
 /// Resolved SSG output and public route paths.
 #[napi(object)]
 pub struct JsSsgRoutePaths {

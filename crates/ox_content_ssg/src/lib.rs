@@ -60,10 +60,10 @@ pub use assets::{
     ExternalizedAssets, GeneratedHtmlPage, SharedAsset, externalize_shared_page_assets,
 };
 pub use html::{
-    EntryPageConfig, FeatureConfig, HeroAction, HeroConfig, HeroImage, HeroNoticeConfig,
-    LocaleInfo, NavGroup, NavItem, PageData, SocialLink, SocialLinks, SsgConfig, ThemeColors,
-    ThemeConfig, ThemeEmbed, ThemeEntryPage, ThemeFonts, ThemeFooter, ThemeHeader, ThemeLayout,
-    TocEntry, generate_bare_html, generate_html,
+    BarePageData, EntryPageConfig, FeatureConfig, HeroAction, HeroConfig, HeroImage,
+    HeroNoticeConfig, LocaleInfo, NavGroup, NavItem, PageData, SocialLink, SocialLinks, SsgConfig,
+    ThemeColors, ThemeConfig, ThemeEmbed, ThemeEntryPage, ThemeFonts, ThemeFooter, ThemeHeader,
+    ThemeLayout, TocEntry, generate_bare_html, generate_bare_page, generate_html,
 };
 pub use routes::{
     ManualNavigationGroup, ManualNavigationItem, RoutePaths, SidebarItem, build_nav_items,

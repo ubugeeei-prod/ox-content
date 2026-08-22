@@ -1,0 +1,27 @@
+---
+source: crates/ox_content_ssg/src/html/tests/rendering.rs
+expression: "super::snapshot_text(&generate_bare_page(&data))"
+---
+<!DOCTYPE html>
+<html lang="ja" dir="ltr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Guide</title>
+  <meta name="description" content="How it works">
+  <meta property="og:description" content="How it works">
+  <meta name="twitter:description" content="How it works">
+  <link rel="canonical" href="https://example.com/guide/">
+  <meta property="og:url" content="https://example.com/guide/">
+  <meta property="og:site_name" content="Docs">
+  <meta property="og:type" content="website">
+  <meta property="og:title" content="Guide">
+  <meta property="og:image" content="https://example.com/guide/og-image.png">
+  <meta name="twitter:image" content="https://example.com/guide/og-image.png">
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:title" content="Guide">
+</head>
+<body>
+<p>body</p>
+</body>
+</html>

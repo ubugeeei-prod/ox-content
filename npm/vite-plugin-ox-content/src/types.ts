@@ -217,6 +217,43 @@ export interface SsgOptions {
   ogImage?: string;
 
   /**
+   * `lang` attribute for the generated `<html>` element.
+   *
+   * Bare mode uses this verbatim; themed pages derive it from `i18n` instead.
+   *
+   * @default "en"
+   */
+  lang?: string;
+
+  /**
+   * Raw markup appended to `<head>`.
+   *
+   * Bare mode only — themed pages own their head. Use it for the stylesheet
+   * your own build emits, or any tag the plugin does not generate.
+   *
+   * @default undefined
+   */
+  head?: string;
+
+  /**
+   * Raw markup inserted directly after `<body>`.
+   *
+   * Bare mode only. Use it for a site header that wraps the rendered page.
+   *
+   * @default undefined
+   */
+  bodyStart?: string;
+
+  /**
+   * Raw markup inserted directly before `</body>`.
+   *
+   * Bare mode only. Use it for a site footer, or scripts you inject yourself.
+   *
+   * @default undefined
+   */
+  bodyEnd?: string;
+
+  /**
    * Generate one Open Graph image per page.
    *
    * Generated images are written alongside the SSG output and referenced from
@@ -289,6 +326,10 @@ export interface ResolvedSsgOptions {
   extension: string;
   clean: boolean;
   bare: boolean;
+  lang?: string;
+  head?: string;
+  bodyStart?: string;
+  bodyEnd?: string;
   siteName?: string;
   ogImage?: string;
   generateOgImage: boolean;

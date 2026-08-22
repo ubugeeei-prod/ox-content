@@ -1,11 +1,42 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="{{ lang }}"{% if !dir.is_empty() %} dir="{{ dir }}"{% endif %}>
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>{{ title }}</title>
+{%- if has_metadata %}
+{%- if let Some(desc) = description %}
+  <meta name="description" content="{{ desc }}">
+  <meta property="og:description" content="{{ desc }}">
+  <meta name="twitter:description" content="{{ desc }}">
+{%- endif %}
+{%- if let Some(url) = canonical_url %}
+  <link rel="canonical" href="{{ url }}">
+  <meta property="og:url" content="{{ url }}">
+{%- endif %}
+{%- if let Some(name) = site_name %}
+  <meta property="og:site_name" content="{{ name }}">
+{%- endif %}
+  <meta property="og:type" content="website">
+  <meta property="og:title" content="{{ title }}">
+{%- if let Some(img) = og_image %}
+  <meta property="og:image" content="{{ img }}">
+  <meta name="twitter:image" content="{{ img }}">
+{%- endif %}
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:title" content="{{ title }}">
+{%- endif %}
+{%- if !head.is_empty() %}
+{{ head|safe }}
+{%- endif %}
 </head>
 <body>
+{%- if !body_start.is_empty() %}
+{{ body_start|safe }}
+{%- endif %}
 {{ content|safe }}
+{%- if !body_end.is_empty() %}
+{{ body_end|safe }}
+{%- endif %}
 </body>
 </html>

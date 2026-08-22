@@ -4,7 +4,7 @@ use std::process::Command;
 use napi_derive::napi;
 
 use crate::{
-    JsSsgConfig, JsSsgExternalizedAssets, JsSsgGeneratedHtmlPage, JsSsgNavGroup,
+    JsSsgBarePage, JsSsgConfig, JsSsgExternalizedAssets, JsSsgGeneratedHtmlPage, JsSsgNavGroup,
     JsSsgNavigationGroup, JsSsgPageData, JsSsgRoutePaths, JsSsgSidebarItem,
 };
 
@@ -216,6 +216,24 @@ pub fn generate_ssg_html(
 #[napi(js_name = "generateSsgBareHtml")]
 pub fn generate_ssg_bare_html(content: String, title: String) -> String {
     ox_content_ssg::generate_bare_html(&content, &title)
+}
+
+/// Generates a bare SSG HTML page carrying head metadata and injected markup.
+#[napi(js_name = "generateSsgBarePage")]
+pub fn generate_ssg_bare_page(page: JsSsgBarePage) -> String {
+    ox_content_ssg::generate_bare_page(&ox_content_ssg::BarePageData {
+        title: &page.title,
+        content: &page.content,
+        lang: page.lang.as_deref().unwrap_or_default(),
+        dir: page.dir.as_deref().unwrap_or_default(),
+        description: page.description.as_deref(),
+        canonical_url: page.canonical_url.as_deref(),
+        site_name: page.site_name.as_deref(),
+        og_image: page.og_image.as_deref(),
+        head: page.head.as_deref().unwrap_or_default(),
+        body_start: page.body_start.as_deref().unwrap_or_default(),
+        body_end: page.body_end.as_deref().unwrap_or_default(),
+    })
 }
 
 /// Extracts shared CSS and JavaScript assets from generated SSG pages.

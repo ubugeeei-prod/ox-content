@@ -1,0 +1,18 @@
+---
+source: crates/ox_content_ssg/src/html/tests/rendering.rs
+expression: "super::snapshot_text(&generate_bare_page(&data))"
+---
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Guide</title>
+<link rel="stylesheet" href="/assets/site.css">
+</head>
+<body>
+<header>site</header>
+<p>body</p>
+<footer>end</footer>
+</body>
+</html>

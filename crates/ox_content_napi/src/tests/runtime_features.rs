@@ -53,6 +53,7 @@ fn javascript_wrapper_and_declarations_cover_expected_exports() {
         "generateSearchModule",
         "generateSearchModuleFromOptions",
         "generateSsgBareHtml",
+        "generateSsgBarePage",
         "generateSsgHtml",
         "getGitLastUpdated",
         "getSearchDocumentScopes",

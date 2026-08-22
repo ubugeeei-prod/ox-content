@@ -53,6 +53,61 @@ fn test_generate_bare_html() {
 }
 
 #[test]
+fn test_generate_bare_page_without_metadata_matches_the_old_bare_output() {
+    // Bare mode is also the no-JS size baseline in the benchmark tables, so a
+    // page with nothing configured must not grow a single tag.
+    let data =
+        BarePageData { title: "Test Page", content: "<h1>Hello</h1>", ..BarePageData::default() };
+
+    assert_eq!(generate_bare_page(&data), generate_bare_html("<h1>Hello</h1>", "Test Page"));
+}
+
+#[test]
+fn test_generate_bare_page_emits_head_metadata() {
+    let data = BarePageData {
+        title: "Guide",
+        content: "<p>body</p>",
+        lang: "ja",
+        dir: "ltr",
+        description: Some("How it works"),
+        canonical_url: Some("https://example.com/guide/"),
+        site_name: Some("Docs"),
+        og_image: Some("https://example.com/guide/og-image.png"),
+        ..BarePageData::default()
+    };
+
+    insta::assert_snapshot!(super::snapshot_text(&generate_bare_page(&data)));
+}
+
+#[test]
+fn test_generate_bare_page_injects_consumer_markup() {
+    let data = BarePageData {
+        title: "Guide",
+        content: "<p>body</p>",
+        head: "<link rel=\"stylesheet\" href=\"/assets/site.css\">",
+        body_start: "<header>site</header>",
+        body_end: "<footer>end</footer>",
+        ..BarePageData::default()
+    };
+
+    insta::assert_snapshot!(super::snapshot_text(&generate_bare_page(&data)));
+}
+
+#[test]
+fn test_generate_bare_page_escapes_metadata_but_keeps_injected_markup_raw() {
+    let data = BarePageData {
+        title: "Guide",
+        content: "<p>body</p>",
+        description: Some("a \"quoted\" & <angled> value"),
+        site_name: Some("Docs & More"),
+        head: "<meta name=\"raw\" content=\"kept\">",
+        ..BarePageData::default()
+    };
+
+    insta::assert_snapshot!(super::snapshot_text(&generate_bare_page(&data)));
+}
+
+#[test]
 fn test_generate_bare_html_escapes_title_but_keeps_content_raw() {
     let html = generate_bare_html("<h1>Raw & ready</h1>", "<script>alert(1)</script>");
     insta::assert_snapshot!(super::snapshot_text(&html));

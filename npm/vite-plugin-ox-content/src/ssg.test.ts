@@ -5,6 +5,7 @@ import {
   buildThemeNavItems,
   formatTitle,
   generateBareHtmlPage,
+  generateBarePage,
   getHref,
   getOutputPath,
   getPageLocale,
@@ -22,6 +23,67 @@ describe("resolveSsgOptions", () => {
 
   it("enables git timestamps when requested", () => {
     expect(resolveSsgOptions({ lastUpdated: true }).lastUpdated).toBe(true);
+  });
+
+  it("carries the bare-mode shell options through", () => {
+    const resolved = resolveSsgOptions({
+      bare: true,
+      lang: "ja",
+      head: '<link rel="stylesheet" href="/site.css">',
+      bodyStart: "<header>site</header>",
+      bodyEnd: "<footer>end</footer>",
+    });
+
+    expect(resolved.lang).toBe("ja");
+    expect(resolved.head).toBe('<link rel="stylesheet" href="/site.css">');
+    expect(resolved.bodyStart).toBe("<header>site</header>");
+    expect(resolved.bodyEnd).toBe("<footer>end</footer>");
+  });
+});
+
+describe("generateBarePage", () => {
+  it("renders exactly the old bare output when nothing is configured", () => {
+    // Bare mode doubles as the no-JS size baseline in the benchmark tables,
+    // so an unconfigured page must not grow a single tag.
+    expect(generateBarePage({ title: "Test Page", content: "<h1>Hello</h1>" })).toBe(
+      generateBareHtmlPage("<h1>Hello</h1>", "Test Page"),
+    );
+  });
+
+  it("emits the head metadata the themed page already computes", () => {
+    const html = generateBarePage({
+      title: "Guide",
+      content: "<p>body</p>",
+      lang: "ja",
+      description: "How it works",
+      canonicalUrl: "https://example.com/guide/",
+      siteName: "Docs",
+      ogImage: "https://example.com/guide/og-image.png",
+    });
+
+    expect(html).toContain('<html lang="ja">');
+    expect(html).toContain('<meta name="description" content="How it works">');
+    expect(html).toContain('<link rel="canonical" href="https://example.com/guide/">');
+    expect(html).toContain('<meta property="og:url" content="https://example.com/guide/">');
+    expect(html).toContain('<meta property="og:site_name" content="Docs">');
+    expect(html).toContain(
+      '<meta property="og:image" content="https://example.com/guide/og-image.png">',
+    );
+    expect(html).toContain('<meta name="twitter:card" content="summary_large_image">');
+  });
+
+  it("injects consumer markup into head and around the body", () => {
+    const html = generateBarePage({
+      title: "Guide",
+      content: "<p>body</p>",
+      head: '<link rel="stylesheet" href="/assets/site.css">',
+      bodyStart: "<header>site</header>",
+      bodyEnd: "<footer>end</footer>",
+    });
+
+    expect(html).toContain('<link rel="stylesheet" href="/assets/site.css">');
+    expect(html.indexOf("<header>site</header>")).toBeLessThan(html.indexOf("<p>body</p>"));
+    expect(html.indexOf("<footer>end</footer>")).toBeGreaterThan(html.indexOf("<p>body</p>"));
   });
 });
 

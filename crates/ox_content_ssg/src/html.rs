@@ -16,7 +16,7 @@ pub use page::{
     EntryPageConfig, FeatureConfig, HeroAction, HeroConfig, HeroImage, HeroNoticeConfig,
     LocaleInfo, NavGroup, NavItem, PageData, SsgConfig, TocEntry,
 };
-pub use render::{generate_bare_html, generate_html};
+pub use render::{BarePageData, generate_bare_html, generate_bare_page, generate_html};
 pub use theme::{
     SocialLink, SocialLinks, ThemeColors, ThemeConfig, ThemeEmbed, ThemeEntryPage, ThemeFonts,
     ThemeFooter, ThemeHeader, ThemeLayout,
@@ -135,8 +135,18 @@ struct PageTemplate<'a> {
 #[derive(Template)]
 #[template(path = "bare_page.html")]
 struct BarePageTemplate<'a> {
+    lang: &'a str,
+    dir: &'a str,
     title: &'a str,
     content: &'a str,
+    has_metadata: bool,
+    description: Option<&'a str>,
+    canonical_url: Option<&'a str>,
+    site_name: Option<&'a str>,
+    og_image: Option<&'a str>,
+    head: &'a str,
+    body_start: &'a str,
+    body_end: &'a str,
 }
 
 /// CSS styles for SSG pages.

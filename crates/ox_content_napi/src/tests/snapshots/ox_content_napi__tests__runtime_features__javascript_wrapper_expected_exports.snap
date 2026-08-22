@@ -35,6 +35,7 @@ generateOgImageSvg
 generateSearchModule
 generateSearchModuleFromOptions
 generateSsgBareHtml
+generateSsgBarePage
 generateSsgHtml
 getGitLastUpdated
 getSearchDocumentScopes
