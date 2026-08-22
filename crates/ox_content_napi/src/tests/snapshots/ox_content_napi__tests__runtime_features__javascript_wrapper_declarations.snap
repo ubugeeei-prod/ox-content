@@ -206,6 +206,16 @@ export declare function getSsgPageLocale(urlPath: string, defaultLocale: string,
 /** Converts a markdown file path to a relative SSG URL path. */
 export declare function getSsgUrlPath(inputPath: string, srcDir: string): string
 
+/**
+ * Highlights one fenced code block, returning the full `<pre>` element.
+ *
+ * Returns `null` when no grammar claims `lang`, which is the caller's signal
+ * to fall back — either to another highlighter or to emitting the code
+ * unhighlighted. Callers that want to decide before paying for the call can
+ * ask [`supports_highlight_language`] instead.
+ */
+export declare function highlightCodeBlock(code: string, lang: string): string | null
+
 /** Result of i18n checking. */
 export interface I18NCheckResult {
   /** All diagnostics. */
@@ -1823,6 +1833,9 @@ export interface Mf2ValidateResult {
   astJson?: string
 }
 
+/** Every language name and alias the native highlighter answers to. */
+export declare function nativeHighlightLanguages(): Array<string>
+
 /** Normalizes VitePress-specific frontmatter into ox-content's entry-page shape. */
 export declare function normalizeVitePressFrontmatter(frontmatter: any): any
 
@@ -1917,6 +1930,9 @@ export declare function sanitizeHtml(html: string, options?: JsSanitizeOptions |
  * Returns an array of search results.
  */
 export declare function searchIndex(indexJson: string, query: string, options?: JsSearchOptions | undefined | null): Array<JsSearchResult>
+
+/** Whether a fenced code block tagged `lang` will be highlighted natively. */
+export declare function supportsHighlightLanguage(lang: string): boolean
 
 /** Table of contents entry. */
 export interface TocEntry {

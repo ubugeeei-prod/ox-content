@@ -27,6 +27,7 @@ ox_content_incremental = { workspace = true }
 ox_content_markdown_lint = { workspace = true }
 ox_content_mermaid = { workspace = true }
 ox_content_docs = { workspace = true }
+ox_content_highlight = { workspace = true }
 ox_content_og_image = { workspace = true }
 ox_content_search = { workspace = true }
 ox_content_ssg = { workspace = true }

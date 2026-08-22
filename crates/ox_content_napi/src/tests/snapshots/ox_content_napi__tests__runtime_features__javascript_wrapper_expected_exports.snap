@@ -36,6 +36,9 @@ generateSearchModule
 generateSearchModuleFromOptions
 generateSsgBareHtml
 generateSsgBarePage
+highlightCodeBlock
+nativeHighlightLanguages
+supportsHighlightLanguage
 generateSsgHtml
 getGitLastUpdated
 getSearchDocumentScopes

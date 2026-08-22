@@ -9,6 +9,7 @@ mod docs_graph_types;
 mod docs_markdown_types;
 mod docs_source_types;
 mod framework_codegen;
+mod highlight_bindings;
 mod i18n_bindings;
 mod incremental;
 mod incremental_result;
@@ -36,6 +37,7 @@ pub use docs_graph_types::*;
 pub use docs_markdown_types::*;
 pub use docs_source_types::*;
 pub use framework_codegen::*;
+pub use highlight_bindings::*;
 pub use i18n_bindings::*;
 pub use incremental::{IncrementalMarkdownParser, IncrementalMarkdownRenderer};
 pub use incremental_types::{
