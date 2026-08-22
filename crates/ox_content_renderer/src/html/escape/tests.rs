@@ -136,3 +136,34 @@ fn matches_reference_on_multibyte_utf8() {
     check("emoji 🎉 and <tags> mixed");
     check("café & naïve — \"quoted\"");
 }
+
+#[test]
+fn matches_reference_across_the_short_run_copy_boundaries() {
+    // `push_run` copies runs of 16 bytes or fewer with overlapping loads
+    // instead of `memmove`, switching strategy at 1, 4, 8 and 16 bytes. A
+    // run is the gap between two escapes, so bracketing a plain run of
+    // every length puts each of those boundaries through the mid-loop copy,
+    // the leading copy and the trailing copy in turn.
+    for len in 0..=40usize {
+        let run = "x".repeat(len);
+        check(&run);
+        check(&format!("&{run}"));
+        check(&format!("{run}&"));
+        check(&format!("&{run}&"));
+        check(&format!("<{run}>{run}\""));
+    }
+}
+
+#[test]
+fn short_run_copy_keeps_multibyte_sequences_intact() {
+    // The overlapping copy is byte-oriented, so anything that split a
+    // multi-byte sequence would surface as invalid UTF-8 rather than a
+    // wrong escape. Sweep lengths that straddle every branch boundary.
+    for filler in ["é", "→", "🙂", "日本語"] {
+        for count in 0..=12usize {
+            let run = filler.repeat(count);
+            check(&run);
+            check(&format!("&{run}<"));
+        }
+    }
+}

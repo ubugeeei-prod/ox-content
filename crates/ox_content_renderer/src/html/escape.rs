@@ -166,6 +166,51 @@ fn first_flagged(
     i
 }
 
+/// Appends `src` to `out`, copying short runs inline instead of handing them
+/// to `memmove`.
+///
+/// Half of the byte runs this module copies are under 16 bytes long — text
+/// nodes are short, and every escape replacement is 5 bytes or fewer. At that
+/// size libc's `memmove` spends most of its time picking a strategy, and
+/// `push_str` cannot avoid it: any length the compiler cannot see lowers to a
+/// `memcpy` call. Two overlapping loads and stores cover every run up to 16
+/// bytes with no length-dependent branching inside the copy.
+#[allow(unsafe_code)]
+#[inline]
+fn push_run(out: &mut String, src: &str) {
+    let len = src.len();
+    if len > 16 {
+        out.push_str(src);
+        return;
+    }
+    out.reserve(len);
+
+    // SAFETY: `reserve` above guarantees `len` spare bytes past the current
+    // length, and every write below lands inside `[0, len)` of that spare
+    // region, so `set_len` covers exactly the bytes written. `src` is a `&str`
+    // appended at the end of `out`, which is a char boundary, so the result
+    // stays valid UTF-8. The two pointers cannot overlap: `out` is borrowed
+    // uniquely, so no live `&str` can alias its buffer.
+    unsafe {
+        let vec = out.as_mut_vec();
+        let at = vec.len();
+        let dst = vec.as_mut_ptr().add(at);
+        let src = src.as_ptr();
+        if len >= 8 {
+            std::ptr::copy_nonoverlapping(src, dst, 8);
+            std::ptr::copy_nonoverlapping(src.add(len - 8), dst.add(len - 8), 8);
+        } else if len >= 4 {
+            std::ptr::copy_nonoverlapping(src, dst, 4);
+            std::ptr::copy_nonoverlapping(src.add(len - 4), dst.add(len - 4), 4);
+        } else if len > 0 {
+            *dst = *src;
+            *dst.add(len / 2) = *src.add(len / 2);
+            *dst.add(len - 1) = *src.add(len - 1);
+        }
+        vec.set_len(at + len);
+    }
+}
+
 /// Shared scan/copy loop for both escapers.
 ///
 /// `mask_of` proves a whole 8-byte word clean in one test; when a word is
@@ -191,14 +236,14 @@ fn escape_into(
             break;
         }
         if start < i {
-            out.push_str(&s[start..i]);
+            push_run(out, &s[start..i]);
         }
-        out.push_str(table[bytes[i] as usize]);
+        push_run(out, table[bytes[i] as usize]);
         start = i + 1;
     }
 
     if start < bytes.len() {
-        out.push_str(&s[start..]);
+        push_run(out, &s[start..]);
     }
 }
 
