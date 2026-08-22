@@ -135,7 +135,93 @@ impl Deref for Allocator {
 pub type Box<'a, T> = bumpalo::boxed::Box<'a, T>;
 
 /// A vector allocated in an arena.
-pub type Vec<'a, T> = bumpalo::collections::Vec<'a, T>;
+///
+/// Unlike [`bumpalo::collections::Vec`], this deliberately does **not** run its
+/// elements' destructors. Everything it holds lives in the same arena, so the
+/// `Bump` reclaims all of it at once; dropping the root of a parsed AST
+/// normally would still walk every node in the tree to run empty drop glue,
+/// which measured ~4% of a parse-and-render over the bundled corpora.
+///
+/// **Every element type must own nothing outside the arena.** Nothing here can
+/// enforce that generically — a `needs_drop::<T>()` assertion in a generic
+/// constructor is never forced — so each crate that stores a type in one of
+/// these asserts it concretely instead. See `ox_content_ast`'s
+/// `AST_IS_ARENA_ONLY` for the AST's.
+#[repr(transparent)]
+pub struct Vec<'a, T>(std::mem::ManuallyDrop<bumpalo::collections::Vec<'a, T>>);
+
+impl<'a, T> Vec<'a, T> {
+    /// Constructs a new, empty vector in `bump`.
+    pub fn new_in(bump: &'a Bump) -> Self {
+        Self(std::mem::ManuallyDrop::new(bumpalo::collections::Vec::new_in(bump)))
+    }
+
+    /// Constructs a new, empty vector in `bump` with room for `capacity`
+    /// elements.
+    pub fn with_capacity_in(capacity: usize, bump: &'a Bump) -> Self {
+        Self(std::mem::ManuallyDrop::new(bumpalo::collections::Vec::with_capacity_in(
+            capacity, bump,
+        )))
+    }
+
+    /// Returns the elements as an arena slice, consuming the vector.
+    pub fn into_bump_slice(self) -> &'a [T] {
+        std::mem::ManuallyDrop::into_inner(self.0).into_bump_slice()
+    }
+}
+
+impl<'a, T> std::ops::Deref for Vec<'a, T> {
+    type Target = bumpalo::collections::Vec<'a, T>;
+
+    fn deref(&self) -> &Self::Target {
+        &self.0
+    }
+}
+
+impl<T> std::ops::DerefMut for Vec<'_, T> {
+    fn deref_mut(&mut self) -> &mut Self::Target {
+        &mut self.0
+    }
+}
+
+impl<T: std::fmt::Debug> std::fmt::Debug for Vec<'_, T> {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        std::fmt::Debug::fmt(&**self, f)
+    }
+}
+
+impl<T: PartialEq> PartialEq for Vec<'_, T> {
+    fn eq(&self, other: &Self) -> bool {
+        **self == **other
+    }
+}
+
+impl<'a, T> IntoIterator for Vec<'a, T> {
+    type Item = T;
+    type IntoIter = bumpalo::collections::vec::IntoIter<'a, T>;
+
+    fn into_iter(self) -> Self::IntoIter {
+        std::mem::ManuallyDrop::into_inner(self.0).into_iter()
+    }
+}
+
+impl<'v, T> IntoIterator for &'v Vec<'_, T> {
+    type Item = &'v T;
+    type IntoIter = std::slice::Iter<'v, T>;
+
+    fn into_iter(self) -> Self::IntoIter {
+        self.iter()
+    }
+}
+
+impl<'v, T> IntoIterator for &'v mut Vec<'_, T> {
+    type Item = &'v mut T;
+    type IntoIter = std::slice::IterMut<'v, T>;
+
+    fn into_iter(self) -> Self::IntoIter {
+        self.iter_mut()
+    }
+}
 
 /// A string allocated in an arena.
 pub type String<'a> = bumpalo::collections::String<'a>;
