@@ -113,6 +113,11 @@ fn render_grok(markdown: &str) -> String {
 /// A panicking engine scores the example as a failure instead of aborting:
 /// refusing to parse an input the spec defines is a conformance result, not a
 /// harness error.
+/// ferromark compiles straight to HTML in one pass.
+fn render_ferromark(markdown: &str) -> String {
+    ferromark::to_html(markdown)
+}
+
 pub fn run(spec_path: &str) -> Result<String, String> {
     let text = std::fs::read_to_string(spec_path)
         .map_err(|error| format!("failed to read {spec_path}: {error}"))?;
@@ -121,8 +126,9 @@ pub fn run(spec_path: &str) -> Result<String, String> {
     let expected: Vec<String> =
         examples.iter().map(|example| normalize_html(&example.html)).collect();
 
-    let engines: [Engine; 3] = [
+    let engines: [Engine; 4] = [
         ("ox-content (native)", render_ox_content),
+        ("ferromark", render_ferromark),
         ("pulldown-cmark", render_pulldown),
         ("xai-grok-markdown-core (Grok Build)", render_grok),
     ];
@@ -224,7 +230,7 @@ mod tests {
         let value: serde_json::Value = serde_json::from_str(&json).expect("valid JSON");
         let results = value["results"].as_array().expect("results array");
 
-        assert_eq!(results.len(), 3);
+        assert_eq!(results.len(), 4);
         for result in results {
             let passed = result["passed"].as_u64().expect("passed count");
             let total = result["total"].as_u64().expect("total count");

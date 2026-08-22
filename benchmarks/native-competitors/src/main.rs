@@ -158,6 +158,14 @@ fn ox_content_render_html(input: &str) -> usize {
     renderer.render(&document).len()
 }
 
+/// ferromark compiles straight to HTML — its `parse` returns rendered HTML
+/// too, so it has no parse-only step to time and appears in the render rows
+/// only. Timing its `parse` against the other engines' parse rows would be
+/// comparing a full compile to a tree build.
+fn render_ferromark_html(input: &str) -> String {
+    ferromark::to_html(input)
+}
+
 fn run_benchmarks(sizes: &[(&'static str, usize, u32)], runs: u32) -> SuiteResults {
     let mut parse = Vec::new();
     let mut render = Vec::new();
@@ -197,6 +205,15 @@ fn run_benchmarks(sizes: &[(&'static str, usize, u32)], runs: u32) -> SuiteResul
                     "ox-content (native)",
                     || {
                         black_box(ox_content_render_html(&content));
+                    },
+                    iterations,
+                    runs,
+                    bytes,
+                ),
+                bench(
+                    "ferromark",
+                    || {
+                        black_box(render_ferromark_html(&content).len());
                     },
                     iterations,
                     runs,
@@ -284,7 +301,10 @@ mod tests {
             ]
         );
         let render_names: Vec<_> = render_rows.iter().map(|row| row["name"].as_str()).collect();
-        assert_eq!(render_names, [Some("ox-content (native)"), Some("pulldown-cmark + push_html")]);
+        assert_eq!(
+            render_names,
+            [Some("ox-content (native)"), Some("ferromark"), Some("pulldown-cmark + push_html")]
+        );
 
         for row in parse_rows.iter().chain(render_rows) {
             for field in ["opsPerSec", "avgMs", "throughputMBs"] {
