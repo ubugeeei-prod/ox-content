@@ -11,7 +11,9 @@ import {
   getUrlPath,
   resolveNavigationGroups,
   resolveSsgOptions,
+  shouldGenerateOgImages,
 } from "./ssg";
+import type { ResolvedOptions } from "./types";
 
 describe("resolveSsgOptions", () => {
   it("disables git timestamps by default", () => {
@@ -20,6 +22,46 @@ describe("resolveSsgOptions", () => {
 
   it("enables git timestamps when requested", () => {
     expect(resolveSsgOptions({ lastUpdated: true }).lastUpdated).toBe(true);
+  });
+});
+
+describe("shouldGenerateOgImages", () => {
+  const optionsWith = (
+    ogImage: boolean,
+    ssg: { bare: boolean; generateOgImage: boolean },
+  ): ResolvedOptions =>
+    ({
+      ogImage,
+      ssg: { ...resolveSsgOptions(true), ...ssg },
+    }) as unknown as ResolvedOptions;
+
+  it("stays off when neither switch is set", () => {
+    expect(
+      shouldGenerateOgImages(optionsWith(false, { bare: false, generateOgImage: false })),
+    ).toBe(false);
+  });
+
+  it("follows the top-level ogImage switch", () => {
+    expect(shouldGenerateOgImages(optionsWith(true, { bare: false, generateOgImage: false }))).toBe(
+      true,
+    );
+  });
+
+  it("follows ssg.generateOgImage", () => {
+    expect(shouldGenerateOgImages(optionsWith(false, { bare: false, generateOgImage: true }))).toBe(
+      true,
+    );
+  });
+
+  it("still generates images in bare mode", () => {
+    // Bare mode brings its own shell, which is exactly when per-page OG
+    // images are wanted; only the `<meta>` injection is the consumer's job.
+    expect(shouldGenerateOgImages(optionsWith(false, { bare: true, generateOgImage: true }))).toBe(
+      true,
+    );
+    expect(shouldGenerateOgImages(optionsWith(true, { bare: true, generateOgImage: false }))).toBe(
+      true,
+    );
   });
 });
 

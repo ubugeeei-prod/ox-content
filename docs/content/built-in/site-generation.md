@@ -96,6 +96,10 @@ generated image looks like this:
 | `cache`          | `true`   | Skip re-rendering unchanged pages.                    |
 | `concurrency`    | `1`      | Parallel image renders.                               |
 
+Under `bare`, the images are still generated, but nothing references them —
+bare output has no `<head>` for the `<meta>` tags, so inject them from your own
+shell. Each page's image lands next to its HTML, under the page's own route.
+
 During dev, `/__og-viewer` previews every page's Open Graph metadata and
 image (the `ogViewer` option, on by default):
 

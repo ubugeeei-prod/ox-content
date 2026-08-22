@@ -588,9 +588,22 @@ async function createBuildSsgContext(
     base,
     navItems,
     siteName: await resolveSiteName(root, ssgOptions),
-    shouldGenerateOgImages: (options.ogImage || ssgOptions.generateOgImage) && !ssgOptions.bare,
+    shouldGenerateOgImages: shouldGenerateOgImages(options),
     napi: ssgOptions.lastUpdated ? await importNapiModule() : undefined,
   };
+}
+
+/**
+ * Whether this build emits one Open Graph image per page.
+ *
+ * `ssg.bare` deliberately does not turn this off. Bare mode only drops the
+ * generated page shell, and bringing your own shell is exactly the case where
+ * per-page OG images are still wanted — the images are written to the output
+ * tree and the consumer injects the `<meta>` tags itself. Nothing in the bare
+ * HTML references them, because bare output has no `<head>` to put them in.
+ */
+export function shouldGenerateOgImages(options: ResolvedOptions): boolean {
+  return options.ogImage || options.ssg.generateOgImage;
 }
 
 async function resolveSiteName(root: string, ssgOptions: ResolvedSsgOptions): Promise<string> {

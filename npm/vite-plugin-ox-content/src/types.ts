@@ -223,6 +223,10 @@ export interface SsgOptions {
    * each page's metadata. Configure rendering details with the top-level
    * `ogImageOptions` option.
    *
+   * Under `bare`, the images are still written but nothing references them,
+   * because bare output has no `<head>` to put the `<meta>` tags in — inject
+   * them from your own shell.
+   *
    * @default false
    */
   generateOgImage?: boolean;
