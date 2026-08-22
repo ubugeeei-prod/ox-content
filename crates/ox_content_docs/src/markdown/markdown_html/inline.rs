@@ -97,9 +97,37 @@ pub(super) fn render_code_block_html(code: &str, language: &str) -> String {
     out.push_str("<pre><code class=\"language-");
     out.push_str(language);
     out.push_str("\">");
-    out.push_str(&code);
+    push_code_without_blank_lines(&mut out, &code);
     out.push_str("</code></pre>");
     out.into_string()
+}
+
+/// Appends `code`, writing any newline that would leave a blank source line as
+/// `&#10;` instead.
+///
+/// This block is emitted inside a `<div>`, which makes it part of a CommonMark
+/// HTML block, and one of those ends at the first blank line. Everything after
+/// that line is then parsed as Markdown — inside what is meant to be a code
+/// example — which silently drops the blank lines from every example that has
+/// one, and puts the rest of the block at the mercy of Markdown's own rules.
+/// Writing all but the last newline of a run as a character reference renders
+/// exactly the same line breaks while leaving the parser no blank line to end
+/// the block on.
+fn push_code_without_blank_lines(out: &mut StringBuilder, code: &str) {
+    let mut rest = code;
+
+    while let Some(at) = rest.find("\n\n") {
+        out.push_str(&rest[..at]);
+        let tail = &rest[at..];
+        let newlines = tail.len() - tail.trim_start_matches('\n').len();
+        for _ in 1..newlines {
+            out.push_str("&#10;");
+        }
+        out.push_char('\n');
+        rest = &tail[newlines..];
+    }
+
+    out.push_str(rest);
 }
 
 pub(super) fn render_highlighted_inline_code_html(

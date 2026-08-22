@@ -90,3 +90,27 @@ fn entries_without_file_omit_source_link() {
         // The external symbol emits no source link and leaks no path.
     }
 }
+
+#[test]
+fn html_example_keeps_a_blank_line_out_of_the_markdown_source() {
+    // A `<pre>` here sits inside a `<div>`, so it is part of a CommonMark HTML
+    // block — and one of those ends at the first blank line, after which the
+    // rest of the example is parsed as Markdown. Encoding the blank line keeps
+    // the block whole, and the reader still sees the break.
+    let mut entry = test_entry("ArgSchema", "interface", "/repo/src/a.ts", "Schema.");
+    entry.examples = vec!["const a = 1;\n\nconst b = 2;".to_string()];
+    let out = generate_markdown(&lifecycle_module(entry), &html_typedoc_options());
+    let page = out
+        .values()
+        .find(|page| page.contains("const a = 1;"))
+        .expect("a page carrying the example");
+
+    assert!(
+        page.contains("const a = 1;&#10;\nconst b = 2;"),
+        "the blank line must survive as a character reference, got:\n{page}",
+    );
+    assert!(
+        !page.contains("const a = 1;\n\n"),
+        "no blank line may be left inside the HTML block, got:\n{page}",
+    );
+}
