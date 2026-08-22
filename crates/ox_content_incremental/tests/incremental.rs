@@ -1,6 +1,6 @@
 use ox_content_incremental::{
-    complete_provisional_markdown, stable_prefix_len, IncrementalHtmlRenderer,
-    IncrementalRenderOptions,
+    IncrementalHtmlRenderer, IncrementalRenderOptions, complete_provisional_markdown,
+    stable_prefix_len,
 };
 use ox_content_parser::ParserOptions;
 

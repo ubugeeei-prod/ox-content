@@ -1,8 +1,9 @@
 use compact_str::CompactString;
 
 use super::{
+    FrameworkComponentIsland,
     parser::{HtmlAttribute, HtmlElement},
-    shared, FrameworkComponentIsland,
+    shared,
 };
 
 pub(super) fn render_root(children: &[String]) -> String {

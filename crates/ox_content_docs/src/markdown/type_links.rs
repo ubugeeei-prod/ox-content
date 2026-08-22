@@ -1,7 +1,7 @@
 use phf::phf_set;
 use rustc_hash::FxHashSet;
 
-use super::links::{format_symbol_href, resolve_symbol_location, MarkdownLinkContext};
+use super::links::{MarkdownLinkContext, format_symbol_href, resolve_symbol_location};
 
 /// A fragment of a tokenized TypeScript type annotation.
 pub(super) enum TypeFragment {

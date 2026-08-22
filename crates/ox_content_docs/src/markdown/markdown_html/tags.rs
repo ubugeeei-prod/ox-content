@@ -1,4 +1,4 @@
-use super::super::{is_structured_tag, MarkdownLinkContext};
+use super::super::{MarkdownLinkContext, is_structured_tag};
 use super::inline::{escape_html, render_doc_inline_html};
 use crate::model::ApiDocTag;
 use crate::string_builder::StringBuilder;

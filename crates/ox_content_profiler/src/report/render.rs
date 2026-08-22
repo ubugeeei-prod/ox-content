@@ -1,10 +1,10 @@
 use std::time::Duration;
 
+use super::Report;
 use super::format::{
     fmt_bytes, fmt_bytes_f, fmt_duration, push_fmt, truncate, write_kv_dur, write_kv_str,
     write_kv_u64,
 };
-use super::Report;
 
 impl Report {
     /// Render a human-readable, monospace-friendly table.

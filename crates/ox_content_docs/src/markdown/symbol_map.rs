@@ -6,7 +6,7 @@ use super::links::SymbolLocation;
 use super::options::{MarkdownDocsOptions, MarkdownPathStrategy};
 use super::paths::{entry_anchor, member_anchor, module_file_name};
 use super::typedoc::{plural_kind_file_name, typedoc_entry_file_name};
-use super::{member_symbol_name, CanonicalOwners};
+use super::{CanonicalOwners, member_symbol_name};
 use crate::model::ApiDocModule;
 #[allow(unused_imports)]
 use crate::profile_span;

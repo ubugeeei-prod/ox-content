@@ -1,6 +1,6 @@
 //! Document indexer using the Visitor pattern.
 
-use ox_content_ast::{walk_document, CodeBlock, Document, Heading, InlineCode, Node, Text, Visit};
+use ox_content_ast::{CodeBlock, Document, Heading, InlineCode, Node, Text, Visit, walk_document};
 
 use crate::index::SearchDocument;
 

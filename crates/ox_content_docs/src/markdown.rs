@@ -35,38 +35,38 @@ mod typedoc_pages;
 mod typedoc_sections;
 
 use category_pages::{generate_category_index, generate_category_markdown};
-use examples::{parse_example_block, render_module_examples_markdown, ExampleBlock};
+use examples::{ExampleBlock, parse_example_block, render_module_examples_markdown};
 use file_pages::{generate_file_markdown, generate_index};
 pub use group_order::{order_by_group_title, ordered_entry_kinds};
 use implementation::annotate_implementation_relationships;
 use labels::{format_count_label, format_kind_label, normalize_signature};
-use links::{process_doc_text, MarkdownLinkContext, SymbolLocation};
+use links::{MarkdownLinkContext, SymbolLocation, process_doc_text};
 pub use options::{
-    MarkdownDisplayFormat, MarkdownDocsOptions, MarkdownLinkStyle, MarkdownPathStrategy,
-    MarkdownRenderStyle, MarkdownSingleEntryRoot, DOC_KIND_ORDER,
+    DOC_KIND_ORDER, MarkdownDisplayFormat, MarkdownDocsOptions, MarkdownLinkStyle,
+    MarkdownPathStrategy, MarkdownRenderStyle, MarkdownSingleEntryRoot,
 };
 use paths::{
     capitalize_ascii, doc_page_href, doc_page_href_from, entry_anchor, file_name, file_stem,
     generate_source_href, generate_source_link, member_anchor, module_display_name,
     module_file_name, module_route_name,
 };
-use regex_cache::{cached_regex, RegexCache};
-use sort::sort_extracted_docs;
+use regex_cache::{RegexCache, cached_regex};
 #[allow(unused_imports)]
 pub use sort::SortStrategy;
+use sort::sort_extracted_docs;
 pub use sort::{compare_entries, kind_order_slice, parse_sort_strategies};
 use stats::{
-    doc_kind_plural, effective_index_format, effective_members_format, effective_parameters_format,
-    member_table_includes_kind, push_generated_by, push_stats, summarize_docs, summarize_entries,
-    summarize_module, EntryStats,
+    EntryStats, doc_kind_plural, effective_index_format, effective_members_format,
+    effective_parameters_format, member_table_includes_kind, push_generated_by, push_stats,
+    summarize_docs, summarize_entries, summarize_module,
 };
 use summary::{
     clean_summary_text, collapse_inline_whitespace, collapse_type_annotation_whitespace,
     markdown_index_summary, typedoc_index_summary,
 };
 use symbol_map::build_symbol_map;
-use tags::{get_entry_badges, is_structured_tag, is_throws_tag, rendered_throws, SINCE_TAGS};
-use type_links::{resolve_type_fragments, TypeFragment};
+use tags::{SINCE_TAGS, get_entry_badges, is_structured_tag, is_throws_tag, rendered_throws};
+use type_links::{TypeFragment, resolve_type_fragments};
 use typedoc::{
     anchor_href, plural_kind_file_name, plural_kind_title, push_typedoc_entry_page_title,
     sanitize_doc_path_segment, typedoc_entry_file_name, typedoc_entry_page_title_len,

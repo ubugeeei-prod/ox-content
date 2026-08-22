@@ -14,11 +14,7 @@ pub fn classify(target: &str) -> LinkKind {
             };
         }
     }
-    if target.contains('#') {
-        LinkKind::FileAnchor
-    } else {
-        LinkKind::File
-    }
+    if target.contains('#') { LinkKind::FileAnchor } else { LinkKind::File }
 }
 
 pub fn split_anchor(target: &str) -> (&str, Option<&str>) {

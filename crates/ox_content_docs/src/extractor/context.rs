@@ -3,7 +3,7 @@ use std::path::Path;
 use oxc_ast::ast::Comment;
 use rustc_hash::FxHashMap;
 
-use super::jsdoc::{parse_jsdoc_payload, ParsedJsdoc, MODULE_MARKER_TAGS};
+use super::jsdoc::{MODULE_MARKER_TAGS, ParsedJsdoc, parse_jsdoc_payload};
 use super::{DocItem, DocItemKind, DocTag, DocVisitor};
 
 impl<'a> DocVisitor<'a> {

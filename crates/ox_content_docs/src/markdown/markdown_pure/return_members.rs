@@ -3,7 +3,7 @@ use super::format::{inline, linked_type_span};
 use super::index_signatures::push_index_signature_detail_pure;
 use super::member_bits::{member_description, member_type};
 use crate::model::{ApiDocMember, ApiReturnDoc};
-use crate::string_builder::{join2, StringBuilder};
+use crate::string_builder::{StringBuilder, join2};
 
 /// Appends a `{heading} Returns` section for a return doc.
 pub(super) fn push_returns(

@@ -1,15 +1,14 @@
+use tower_lsp::LanguageServer;
 use tower_lsp::jsonrpc::Result;
 use tower_lsp::lsp_types::*;
-use tower_lsp::LanguageServer;
 
 use crate::document::is_markdown_path;
 
-use super::commands::{
-    insert_actions, quickfix_actions, COMMAND_INSERT_CALLOUT, COMMAND_INSERT_CODE_FENCE,
-    COMMAND_INSERT_TABLE, COMMAND_PREVIEW_HTML, COMMAND_PREVIEW_SUBSCRIBE,
-    COMMAND_PREVIEW_UNSUBSCRIBE,
-};
 use super::Backend;
+use super::commands::{
+    COMMAND_INSERT_CALLOUT, COMMAND_INSERT_CODE_FENCE, COMMAND_INSERT_TABLE, COMMAND_PREVIEW_HTML,
+    COMMAND_PREVIEW_SUBSCRIBE, COMMAND_PREVIEW_UNSUBSCRIBE, insert_actions, quickfix_actions,
+};
 
 #[tower_lsp::async_trait]
 impl LanguageServer for Backend {

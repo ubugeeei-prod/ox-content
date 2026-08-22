@@ -1,11 +1,11 @@
 use rustc_hash::FxHashSet;
 
+use super::{MarkdownDocsOptions, MarkdownLinkContext, MarkdownPathStrategy, member_anchor};
 use super::{
     escape_html, render_code_block_html, render_doc_inline_html, render_member_params_html,
     render_member_type_parameters_html, render_return_members_html, render_throws_list_html,
     render_type_inner_html,
 };
-use super::{member_anchor, MarkdownDocsOptions, MarkdownLinkContext, MarkdownPathStrategy};
 use crate::model::{ApiDocEntry, ApiDocMember, ApiReturnDoc};
 use crate::string_builder::StringBuilder;
 

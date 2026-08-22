@@ -3,9 +3,9 @@ use rustc_hash::FxHashSet;
 use crate::model::ApiDocEntry;
 
 use super::{
-    clean_summary_text, doc_page_href_from, process_doc_text, typedoc_entry_file_name,
-    typedoc_index_summary, typedoc_kind_singular, typedoc_kind_title, MarkdownDisplayFormat,
-    MarkdownLinkContext,
+    MarkdownDisplayFormat, MarkdownLinkContext, clean_summary_text, doc_page_href_from,
+    process_doc_text, typedoc_entry_file_name, typedoc_index_summary, typedoc_kind_singular,
+    typedoc_kind_title,
 };
 
 /// A renderable section of a TypeDoc module index, kept title-tagged so

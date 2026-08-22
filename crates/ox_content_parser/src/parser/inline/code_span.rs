@@ -82,10 +82,6 @@ impl<'a> Parser<'a> {
             && value.ends_with(' ')
             && value.len() >= 2
             && value.bytes().any(|byte| byte != b' ');
-        if stripped {
-            &value[1..value.len() - 1]
-        } else {
-            value
-        }
+        if stripped { &value[1..value.len() - 1] } else { value }
     }
 }

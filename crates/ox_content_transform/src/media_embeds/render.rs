@@ -1,4 +1,4 @@
-use super::html::{attr, ComponentElement};
+use super::html::{ComponentElement, attr};
 
 pub(super) fn render_spotify(element: &ComponentElement<'_>) -> Option<String> {
     let url = attr(element, "url")

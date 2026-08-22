@@ -1,4 +1,4 @@
-use serde_json::{json, Value};
+use serde_json::{Value, json};
 
 use super::super::generate_docs_data_json;
 use crate::model::{

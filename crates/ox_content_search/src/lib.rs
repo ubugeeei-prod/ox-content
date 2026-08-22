@@ -45,8 +45,8 @@ pub use markdown::{
 };
 pub use query::{SearchOptions, SearchResult};
 pub use runtime::{
-    generate_search_module, generate_search_module_with_options, SearchRuntimeOptions,
+    SearchRuntimeOptions, generate_search_module, generate_search_module_with_options,
 };
 pub use scope::{
-    get_search_document_scopes, matches_search_scopes, parse_scoped_search_query, ScopedSearchQuery,
+    ScopedSearchQuery, get_search_document_scopes, matches_search_scopes, parse_scoped_search_query,
 };

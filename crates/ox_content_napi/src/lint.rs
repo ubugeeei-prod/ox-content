@@ -1,8 +1,8 @@
 use napi_derive::napi;
 use ox_content_markdown_lint::{
-    lint_markdown as lint_markdown_core, lint_markdown_documents as lint_markdown_documents_core,
     MarkdownLintDiagnostic, MarkdownLintDictionaryOptions, MarkdownLintLanguageWords,
     MarkdownLintOptions, MarkdownLintResult, MarkdownLintRuleOptions,
+    lint_markdown as lint_markdown_core, lint_markdown_documents as lint_markdown_documents_core,
 };
 
 #[napi(object)]

@@ -1,7 +1,7 @@
 use std::io::{BufRead, BufReader, Read, Write};
 use std::process::{Child, ChildStdin, ChildStdout, Command, Stdio};
 
-use serde_json::{json, Value};
+use serde_json::{Value, json};
 
 /// A live `ox-content-lsp` process plus the minimal JSON-RPC plumbing
 /// needed to drive it.

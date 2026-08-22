@@ -80,7 +80,7 @@ fn entities() -> &'static FxHashMap<&'static str, &'static str> {
 
 #[cfg(test)]
 mod tests {
-    use super::{scan_entity, EntityValue};
+    use super::{EntityValue, scan_entity};
 
     #[test]
     fn scans_named_numeric_and_invalid_references() {

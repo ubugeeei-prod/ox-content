@@ -1,13 +1,13 @@
 use rustc_hash::FxHashMap;
 
 use super::super::{
-    clean_summary_text, doc_page_href, entry_anchor, file_stem, format_count_label,
-    process_doc_text, MarkdownDisplayFormat, MarkdownDocsOptions, MarkdownLinkContext,
+    MarkdownDisplayFormat, MarkdownDocsOptions, MarkdownLinkContext, clean_summary_text,
+    doc_page_href, entry_anchor, file_stem, format_count_label, process_doc_text,
 };
 use super::inline::{escape_html, render_inline_html};
 use super::overview::render_overview_html_item;
 use crate::model::{ApiDocModule, ApiDocTag};
-use crate::string_builder::{join3, StringBuilder};
+use crate::string_builder::{StringBuilder, join3};
 
 /// Renders module-level lifecycle tags (`@deprecated` / `@experimental`) as a badge
 /// row for the HTML module index (the markdown renderer uses GitHub alerts here).

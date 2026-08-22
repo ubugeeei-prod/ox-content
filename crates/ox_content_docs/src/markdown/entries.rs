@@ -4,9 +4,9 @@ use crate::model::ApiDocEntry;
 use crate::string_builder::StringBuilder;
 
 use super::{
+    MarkdownDocsOptions, MarkdownLinkContext, MarkdownRenderStyle, SymbolLocation,
     clean_summary_text, markdown_html, markdown_index_summary, markdown_pure, normalize_signature,
-    process_doc_text, MarkdownDocsOptions, MarkdownLinkContext, MarkdownRenderStyle,
-    SymbolLocation,
+    process_doc_text,
 };
 
 pub(super) fn member_symbol_name(entry_name: &str, member_name: &str) -> String {

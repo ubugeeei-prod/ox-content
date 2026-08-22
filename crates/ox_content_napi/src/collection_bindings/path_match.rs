@@ -130,9 +130,5 @@ fn compare_number_run(left: &[u8], right: &[u8], li: &mut usize, ri: &mut usize)
 fn trim_leading_zeroes(digits: &[u8]) -> &[u8] {
     let trimmed =
         digits.iter().position(|byte| *byte != b'0').map_or(&[][..], |index| &digits[index..]);
-    if trimmed.is_empty() {
-        b"0"
-    } else {
-        trimmed
-    }
+    if trimmed.is_empty() { b"0" } else { trimmed }
 }

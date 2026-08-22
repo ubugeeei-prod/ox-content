@@ -102,11 +102,13 @@ export interface ExternalThing {
     assert_eq!(modules[0].entries[0].name, "ExternalThing");
     assert_eq!(modules[0].entries[0].description, "External thing.");
     assert_eq!(modules[0].exports[0].source.kind, "external");
-    assert!(modules[0].exports[0]
-        .source
-        .module
-        .as_deref()
-        .is_some_and(|module| { module.ends_with("external-pkg/lib/index.d.ts") }));
+    assert!(
+        modules[0].exports[0]
+            .source
+            .module
+            .as_deref()
+            .is_some_and(|module| { module.ends_with("external-pkg/lib/index.d.ts") })
+    );
 
     let _ = fs::remove_dir_all(root);
 }

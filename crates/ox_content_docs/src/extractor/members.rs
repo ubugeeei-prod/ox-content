@@ -1,6 +1,6 @@
 use oxc_ast::ast::{TSIndexSignature, TSIndexSignatureName, TSSignature, TSType};
 
-use crate::string_builder::{join5, StringBuilder};
+use crate::string_builder::{StringBuilder, join5};
 
 use super::{DocItem, DocItemKind, DocVisitor, ParamDoc};
 

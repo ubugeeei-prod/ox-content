@@ -1,7 +1,7 @@
 use std::path::PathBuf;
 
 use ox_content_allocator::Allocator;
-use ox_content_link_checker::{check_source as link_check_source, CheckOptions, Severity};
+use ox_content_link_checker::{CheckOptions, Severity, check_source as link_check_source};
 use ox_content_parser::{ParseError, Parser, ParserOptions};
 use tower_lsp::lsp_types::{Diagnostic, DiagnosticSeverity, Url};
 

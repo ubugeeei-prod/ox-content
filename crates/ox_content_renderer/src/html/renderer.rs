@@ -21,7 +21,7 @@ use rustc_hash::FxHashMap;
 use super::autolink::FirstByteIndex;
 use super::escape::{write_escaped_into, write_url_escaped_into};
 use super::options::{HtmlRendererOptions, RendererOptions};
-use super::toc::{collect_inline_toc_entries, scan_document_for_render, InlineTocEntry};
+use super::toc::{InlineTocEntry, collect_inline_toc_entries, scan_document_for_render};
 use crate::render::{RenderResult, Renderer};
 
 /// Stateful HTML renderer for Markdown AST documents.

@@ -8,9 +8,9 @@ mod script;
 use serde::{Deserialize, Serialize};
 
 use blocks::{
-    find_first_tag_block, find_last_body_script_block, find_marked_block, BODY_CLOSE,
-    SCRIPT_BLOCK_END, SCRIPT_BLOCK_START, SCRIPT_CLOSE, SCRIPT_OPEN, STYLE_BLOCK_END,
-    STYLE_BLOCK_START, STYLE_CLOSE, STYLE_OPEN,
+    BODY_CLOSE, SCRIPT_BLOCK_END, SCRIPT_BLOCK_START, SCRIPT_CLOSE, SCRIPT_OPEN, STYLE_BLOCK_END,
+    STYLE_BLOCK_START, STYLE_CLOSE, STYLE_OPEN, find_first_tag_block, find_last_body_script_block,
+    find_marked_block,
 };
 use chunk::AssetCache;
 use css::build_style_replacement;

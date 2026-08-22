@@ -64,11 +64,7 @@ impl FrontmatterSchema {
     #[must_use]
     pub fn kind_label(&self) -> String {
         self.type_name.clone().unwrap_or_else(|| {
-            if self.properties.is_empty() {
-                "value".to_string()
-            } else {
-                "object".to_string()
-            }
+            if self.properties.is_empty() { "value".to_string() } else { "object".to_string() }
         })
     }
 }

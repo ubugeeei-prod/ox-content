@@ -64,9 +64,5 @@ fn render_social_icon(link: &SocialLink) -> String {
 fn validate_social_svg(svg: &str) -> Option<&str> {
     let trimmed = svg.trim();
     let lower = trimmed.to_ascii_lowercase();
-    if trimmed.starts_with("<svg") && !lower.contains("<script") {
-        Some(trimmed)
-    } else {
-        None
-    }
+    if trimmed.starts_with("<svg") && !lower.contains("<script") { Some(trimmed) } else { None }
 }

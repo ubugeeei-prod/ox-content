@@ -11,7 +11,7 @@ use std::fs;
 use std::hint::black_box;
 use std::path::{Path, PathBuf};
 
-use criterion::{criterion_group, criterion_main, Criterion, Throughput};
+use criterion::{Criterion, Throughput, criterion_group, criterion_main};
 use ox_content_allocator::Allocator;
 use ox_content_parser::{Parser, ParserOptions};
 use ox_content_renderer::HtmlRenderer;

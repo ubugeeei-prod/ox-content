@@ -10,8 +10,8 @@ use super::format::{
 };
 use super::to_mdast_raw;
 use crate::transfer::{
-    TransferPayloadKind, TRANSFER_HEADER_LEN, TRANSFER_MAGIC, TRANSFER_SECTION_RECORD_LEN,
-    TRANSFER_VERSION,
+    TRANSFER_HEADER_LEN, TRANSFER_MAGIC, TRANSFER_SECTION_RECORD_LEN, TRANSFER_VERSION,
+    TransferPayloadKind,
 };
 
 fn parse_to_raw_bytes(source: &str) -> Vec<u8> {

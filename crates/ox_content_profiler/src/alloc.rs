@@ -21,8 +21,8 @@ mod snapshot;
 mod tests;
 
 pub use counter::AllocCounter;
-use histogram::size_class_bucket;
 pub use histogram::SizeHistogram;
+use histogram::size_class_bucket;
 pub use snapshot::{AllocDelta, AllocSnapshot};
 
 const SIZE_CLASS_BUCKETS: usize = 32;

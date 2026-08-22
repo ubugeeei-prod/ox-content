@@ -5,11 +5,11 @@ use crate::model::ApiDocEntry;
 use crate::string_builder::StringBuilder;
 
 use super::{
-    anchor_href, doc_page_href, effective_index_format, entries::generate_entry_markdown,
-    entries::render_overview_line, entries::render_overview_table_row, entry_anchor, markdown_html,
-    plural_kind_file_name, plural_kind_title, push_generated_by, push_stats, summarize_entries,
     MarkdownDisplayFormat, MarkdownDocsOptions, MarkdownLinkContext, MarkdownRenderStyle,
-    SymbolLocation,
+    SymbolLocation, anchor_href, doc_page_href, effective_index_format,
+    entries::generate_entry_markdown, entries::render_overview_line,
+    entries::render_overview_table_row, entry_anchor, markdown_html, plural_kind_file_name,
+    plural_kind_title, push_generated_by, push_stats, summarize_entries,
 };
 
 pub(super) fn generate_category_markdown(

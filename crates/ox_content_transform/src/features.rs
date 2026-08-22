@@ -20,8 +20,8 @@ mod wiki;
 
 use attributes::transform_attribute_syntax;
 pub use code_blocks::{
-    extract_code_blocks, extract_docs_tests, lint_code_blocks, CodeBlockDiagnostic,
-    ExtractedCodeBlock,
+    CodeBlockDiagnostic, ExtractedCodeBlock, extract_code_blocks, extract_docs_tests,
+    lint_code_blocks,
 };
 use code_imports::ResolvedCodeImportOptions;
 use edit::append_edit_this_page;

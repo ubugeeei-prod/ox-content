@@ -7,6 +7,7 @@ use ox_content_incremental::{
 use ox_content_mdast::mdast;
 use ox_content_parser::ParserOptions;
 
+use crate::JsParserOptions;
 use crate::incremental_result::{
     incremental_parse_error_result, incremental_render_error_result, map_incremental_render_result,
     usize_to_u32,
@@ -15,7 +16,6 @@ use crate::incremental_types::{
     IncrementalMarkdownParseResult, IncrementalMarkdownRenderResult, JsIncrementalParseOptions,
     JsIncrementalRenderOptions,
 };
-use crate::JsParserOptions;
 
 /// Stateful Markdown parser for append-only streams.
 #[napi]

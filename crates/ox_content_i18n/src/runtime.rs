@@ -5,8 +5,8 @@ use std::path::Path;
 
 use serde::{Deserialize, Serialize};
 
-use crate::dictionary::DictionarySet;
 use crate::I18nResult;
+use crate::dictionary::DictionarySet;
 
 const RUNTIME_TEMPLATE: &str = include_str!("../templates/i18n-runtime.js");
 const DEFAULT_LOCALE_TOKEN: &str = "__OX_I18N_DEFAULT_LOCALE__";

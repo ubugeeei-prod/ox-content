@@ -1,8 +1,8 @@
 use memchr::memchr;
 use ox_content_ast::{BlockQuote, Node, Span};
 
-use super::reference::{closes_paragraph_context, fence_open, is_fence_close};
 use super::Parser;
+use super::reference::{closes_paragraph_context, fence_open, is_fence_close};
 use crate::error::ParseResult;
 #[allow(unused_imports)]
 use crate::profile_span;

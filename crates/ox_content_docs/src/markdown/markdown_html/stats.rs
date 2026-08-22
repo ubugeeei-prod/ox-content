@@ -1,4 +1,4 @@
-use super::super::{doc_kind_plural, EntryStats, DOC_KIND_ORDER};
+use super::super::{DOC_KIND_ORDER, EntryStats, doc_kind_plural};
 use crate::string_builder::StringBuilder;
 
 pub(in crate::markdown) fn render_details_controls_html(target_selector: &str) -> String {

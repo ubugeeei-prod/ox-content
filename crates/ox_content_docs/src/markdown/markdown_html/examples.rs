@@ -1,4 +1,4 @@
-use super::super::{parse_example_block, ExampleBlock};
+use super::super::{ExampleBlock, parse_example_block};
 use super::blocks::render_markdown_blocks_html;
 use super::inline::render_code_block_html;
 use crate::string_builder::StringBuilder;

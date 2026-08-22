@@ -29,11 +29,7 @@ impl<'a> Parser<'a> {
         let bytes = self.source.as_bytes();
         let pos = self.position;
         let &b = bytes.get(pos)?;
-        if b < 0x80 {
-            Some(b as char)
-        } else {
-            self.source[pos..].chars().next()
-        }
+        if b < 0x80 { Some(b as char) } else { self.source[pos..].chars().next() }
     }
 
     /// Advances by one character.

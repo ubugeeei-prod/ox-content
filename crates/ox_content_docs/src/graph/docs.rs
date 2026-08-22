@@ -6,7 +6,7 @@ use super::util::normalize_existing_path;
 use super::{DocsDiagnostic, DocsDiagnosticCode, GraphError, PublicExport};
 use crate::string_builder::StringBuilder;
 use crate::{
-    normalize_doc_items, ApiDocTag, DocExtractor, DocItem, NormalizedDocEntry, NormalizedDocKind,
+    ApiDocTag, DocExtractor, DocItem, NormalizedDocEntry, NormalizedDocKind, normalize_doc_items,
 };
 
 pub(super) struct EntrypointModuleMetadata {

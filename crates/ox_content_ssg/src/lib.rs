@@ -57,18 +57,18 @@ mod routes;
 mod vitepress;
 
 pub use assets::{
-    externalize_shared_page_assets, ExternalizedAssets, GeneratedHtmlPage, SharedAsset,
+    ExternalizedAssets, GeneratedHtmlPage, SharedAsset, externalize_shared_page_assets,
 };
 pub use html::{
-    generate_bare_html, generate_html, EntryPageConfig, FeatureConfig, HeroAction, HeroConfig,
-    HeroImage, HeroNoticeConfig, LocaleInfo, NavGroup, NavItem, PageData, SocialLink, SocialLinks,
-    SsgConfig, ThemeColors, ThemeConfig, ThemeEmbed, ThemeEntryPage, ThemeFonts, ThemeFooter,
-    ThemeHeader, ThemeLayout, TocEntry,
+    EntryPageConfig, FeatureConfig, HeroAction, HeroConfig, HeroImage, HeroNoticeConfig,
+    LocaleInfo, NavGroup, NavItem, PageData, SocialLink, SocialLinks, SsgConfig, ThemeColors,
+    ThemeConfig, ThemeEmbed, ThemeEntryPage, ThemeFonts, ThemeFooter, ThemeHeader, ThemeLayout,
+    TocEntry, generate_bare_html, generate_html,
 };
 pub use routes::{
-    build_nav_items, build_theme_nav_items, collect_markdown_files, extract_title, format_title,
-    get_href, get_og_image_path, get_og_image_url, get_output_path, get_page_locale, get_url_path,
-    resolve_navigation_groups, resolve_route_paths, ManualNavigationGroup, ManualNavigationItem,
-    RoutePaths, SidebarItem,
+    ManualNavigationGroup, ManualNavigationItem, RoutePaths, SidebarItem, build_nav_items,
+    build_theme_nav_items, collect_markdown_files, extract_title, format_title, get_href,
+    get_og_image_path, get_og_image_url, get_output_path, get_page_locale, get_url_path,
+    resolve_navigation_groups, resolve_route_paths,
 };
 pub use vitepress::normalize_vitepress_frontmatter;

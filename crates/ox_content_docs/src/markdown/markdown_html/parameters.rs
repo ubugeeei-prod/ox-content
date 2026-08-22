@@ -1,11 +1,11 @@
 use rustc_hash::FxHashSet;
 
 use super::super::{
-    effective_parameters_format, MarkdownDisplayFormat, MarkdownDocsOptions, MarkdownLinkContext,
+    MarkdownDisplayFormat, MarkdownDocsOptions, MarkdownLinkContext, effective_parameters_format,
 };
 use super::inline::{escape_html, render_doc_inline_html, render_type_inner_html};
 use crate::model::ApiParamDoc;
-use crate::string_builder::{join3, StringBuilder};
+use crate::string_builder::{StringBuilder, join3};
 
 pub(super) fn render_params_list_html(
     params: &[ApiParamDoc],

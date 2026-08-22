@@ -150,11 +150,7 @@ pub(in crate::html) fn normalize_code_block_language(lang: Option<&str>) -> Opti
     let (language, _) = split_code_block_language_token(raw_lang);
     let language = language.trim();
 
-    if language.is_empty() {
-        None
-    } else {
-        Some(language)
-    }
+    if language.is_empty() { None } else { Some(language) }
 }
 
 pub(in crate::html) fn apply_annotation_numbers(

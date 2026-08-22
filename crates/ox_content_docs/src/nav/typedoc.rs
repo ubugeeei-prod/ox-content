@@ -4,10 +4,10 @@ use super::paths::{
     nav_route_path, normalize_base_path, sanitize_doc_path_segment, typedoc_module_display_name,
     typedoc_module_route_name,
 };
-use super::{DocsNavItem, DEFAULT_BASE_PATH};
+use super::{DEFAULT_BASE_PATH, DocsNavItem};
 use crate::markdown::{
-    compare_entries, kind_order_slice, order_by_group_title, ordered_entry_kinds,
-    parse_sort_strategies, CanonicalOwners,
+    CanonicalOwners, compare_entries, kind_order_slice, order_by_group_title, ordered_entry_kinds,
+    parse_sort_strategies,
 };
 use crate::model::ApiDocModule;
 use crate::string_builder::{join3, join5};

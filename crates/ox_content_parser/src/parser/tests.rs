@@ -249,10 +249,11 @@ fn outdented_marker_starts_a_new_list() {
     let doc = Parser::new(&allocator, "  - indented\n- outdented").parse().unwrap();
 
     assert_eq!(doc.children.len(), 2);
-    assert!(doc
-        .children
-        .iter()
-        .all(|node| { matches!(node, Node::List(list) if list.children.len() == 1) }));
+    assert!(
+        doc.children
+            .iter()
+            .all(|node| { matches!(node, Node::List(list) if list.children.len() == 1) })
+    );
 }
 
 #[test]

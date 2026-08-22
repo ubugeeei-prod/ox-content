@@ -95,7 +95,7 @@ fn generate_docs_nav_metadata_from_docs_defaults_to_flat() {
 
 #[test]
 fn write_generated_docs_writes_typedoc_nested_files() {
-    use crate::{write_generated_docs, JsDocsOutputOptions};
+    use crate::{JsDocsOutputOptions, write_generated_docs};
 
     let unique =
         std::time::SystemTime::now().duration_since(std::time::UNIX_EPOCH).unwrap().as_nanos();
@@ -166,7 +166,7 @@ fn write_generated_docs_writes_typedoc_nested_files() {
 
 #[test]
 fn write_generated_docs_writes_flattened_single_entry_nav() {
-    use crate::{write_generated_docs, JsDocsOutputOptions};
+    use crate::{JsDocsOutputOptions, write_generated_docs};
 
     let unique =
         std::time::SystemTime::now().duration_since(std::time::UNIX_EPOCH).unwrap().as_nanos();

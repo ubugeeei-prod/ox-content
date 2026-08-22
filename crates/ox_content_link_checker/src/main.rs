@@ -16,7 +16,7 @@ use std::path::PathBuf;
 use std::process::ExitCode;
 
 use clap::{Parser, ValueEnum};
-use ox_content_link_checker::{check_source, CheckOptions, Diagnostic, Severity};
+use ox_content_link_checker::{CheckOptions, Diagnostic, Severity, check_source};
 
 #[derive(Parser)]
 #[command(
@@ -101,11 +101,7 @@ fn main() -> ExitCode {
         Format::Text => emit_text(&reports),
     }
 
-    if error_count + io_error_count > 0 {
-        ExitCode::from(1)
-    } else {
-        ExitCode::SUCCESS
-    }
+    if error_count + io_error_count > 0 { ExitCode::from(1) } else { ExitCode::SUCCESS }
 }
 
 #[allow(clippy::print_stdout)]

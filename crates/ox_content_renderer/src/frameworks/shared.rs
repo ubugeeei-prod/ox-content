@@ -2,7 +2,7 @@ use compact_str::CompactString;
 use rustc_hash::FxHashMap;
 use smallvec::SmallVec;
 
-use super::{parser::HtmlElement, FrameworkComponentIsland};
+use super::{FrameworkComponentIsland, parser::HtmlElement};
 
 pub(super) fn find_island<'a>(
     element: &HtmlElement,

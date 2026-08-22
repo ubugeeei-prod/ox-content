@@ -12,8 +12,8 @@
 
 use ox_content_allocator::Allocator;
 use ox_content_ast::{
-    walk_list_item, walk_node, walk_table_cell, walk_table_row, ListItem, Node, Span, TableCell,
-    TableRow, Visit,
+    ListItem, Node, Span, TableCell, TableRow, Visit, walk_list_item, walk_node, walk_table_cell,
+    walk_table_row,
 };
 use ox_content_parser::{Parser, ParserOptions};
 use tower_lsp::lsp_types::{Position, SelectionRange};

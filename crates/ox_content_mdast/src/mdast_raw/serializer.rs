@@ -3,12 +3,12 @@ use std::mem::size_of;
 use ox_content_allocator::Vec as ArenaVec;
 use ox_content_ast::{Document, ListItem, Node, TableCell, TableRow};
 
-use crate::transfer::{as_u32, TransferBufferBuilder, TransferPayloadKind};
+use crate::transfer::{TransferBufferBuilder, TransferPayloadKind, as_u32};
 
 use super::format::{
-    push_u32, write_node_record, RawNodeRecord, KIND_ROOT, MDAST_PAYLOAD_VERSION,
-    MDAST_SECTION_ALIGNS, MDAST_SECTION_CHILD_INDICES, MDAST_SECTION_NODES, MDAST_SECTION_STRINGS,
-    NODE_RECORD_LEN,
+    KIND_ROOT, MDAST_PAYLOAD_VERSION, MDAST_SECTION_ALIGNS, MDAST_SECTION_CHILD_INDICES,
+    MDAST_SECTION_NODES, MDAST_SECTION_STRINGS, NODE_RECORD_LEN, RawNodeRecord, push_u32,
+    write_node_record,
 };
 
 #[derive(Default)]

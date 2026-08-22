@@ -1,6 +1,6 @@
 use std::path::PathBuf;
 
-use super::{escape_html_attr, escape_html_text, ResolvedEditThisPageOptions};
+use super::{ResolvedEditThisPageOptions, escape_html_attr, escape_html_text};
 
 pub(super) fn append_edit_this_page(html: &str, options: &ResolvedEditThisPageOptions) -> String {
     let href = edit_this_page_href(options);

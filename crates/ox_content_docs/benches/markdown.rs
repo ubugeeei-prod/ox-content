@@ -2,10 +2,10 @@
 
 #![deny(clippy::disallowed_macros)]
 
-use criterion::{criterion_group, criterion_main, Criterion, Throughput};
+use criterion::{Criterion, Throughput, criterion_group, criterion_main};
 use ox_content_docs::{
-    generate_markdown, ApiDocEntry, ApiDocMember, ApiDocModule, ApiDocTag, ApiParamDoc,
-    ApiReturnDoc, ApiTypeParamDoc, MarkdownDocsOptions, MarkdownPathStrategy, MarkdownRenderStyle,
+    ApiDocEntry, ApiDocMember, ApiDocModule, ApiDocTag, ApiParamDoc, ApiReturnDoc, ApiTypeParamDoc,
+    MarkdownDocsOptions, MarkdownPathStrategy, MarkdownRenderStyle, generate_markdown,
 };
 use std::hint::black_box;
 

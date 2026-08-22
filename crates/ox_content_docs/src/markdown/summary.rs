@@ -1,7 +1,7 @@
 use std::borrow::Cow;
 use std::sync::OnceLock;
 
-use super::{cached_regex, process_doc_text, MarkdownLinkContext, RegexCache};
+use super::{MarkdownLinkContext, RegexCache, cached_regex, process_doc_text};
 
 pub(super) fn collapse_inline_whitespace(text: &str) -> Cow<'_, str> {
     let text = text.trim();
@@ -64,11 +64,7 @@ pub(super) fn collapse_type_annotation_whitespace(text: &str) -> Cow<'_, str> {
         out.push(ch);
     }
 
-    if out == text {
-        Cow::Borrowed(text)
-    } else {
-        Cow::Owned(out)
-    }
+    if out == text { Cow::Borrowed(text) } else { Cow::Owned(out) }
 }
 
 /// One-line summary for a module index table cell.

@@ -8,16 +8,15 @@
 use rustc_hash::FxHashSet;
 
 use super::{
-    clean_summary_text, effective_members_format, effective_parameters_format, entry_anchor,
-    format_kind_label, generate_source_href, is_structured_tag, member_anchor,
-    member_table_includes_kind, normalize_signature, process_doc_text, rendered_throws,
     MarkdownDisplayFormat, MarkdownDocsOptions, MarkdownLinkContext, MarkdownPathStrategy,
-    SINCE_TAGS,
+    SINCE_TAGS, clean_summary_text, effective_members_format, effective_parameters_format,
+    entry_anchor, format_kind_label, generate_source_href, is_structured_tag, member_anchor,
+    member_table_includes_kind, normalize_signature, process_doc_text, rendered_throws,
 };
 use crate::model::{
     ApiDocEntry, ApiDocMember, ApiDocTag, ApiParamDoc, ApiReturnDoc, ApiThrowsDoc, ApiTypeParamDoc,
 };
-use crate::string_builder::{join3, StringBuilder};
+use crate::string_builder::{StringBuilder, join3};
 
 mod blocks;
 mod entry_body;

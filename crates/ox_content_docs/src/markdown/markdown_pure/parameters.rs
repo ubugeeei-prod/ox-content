@@ -1,5 +1,5 @@
 use super::super::{
-    effective_parameters_format, MarkdownDisplayFormat, MarkdownDocsOptions, MarkdownLinkContext,
+    MarkdownDisplayFormat, MarkdownDocsOptions, MarkdownLinkContext, effective_parameters_format,
 };
 use super::format::{
     code_cell, code_span, inline, linked_type_cell, linked_type_span, push_table_cell,

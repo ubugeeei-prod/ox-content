@@ -17,7 +17,7 @@ mod parser;
 mod tests;
 
 use config::SanitizeConfig;
-use parser::{find_ci, is_attr_name, scan_tag_end, ParsedAttr, ParsedTag};
+use parser::{ParsedAttr, ParsedTag, find_ci, is_attr_name, scan_tag_end};
 
 fn sanitize_html_with_config(html: &str, config: &SanitizeConfig) -> String {
     if !html.contains('<') {

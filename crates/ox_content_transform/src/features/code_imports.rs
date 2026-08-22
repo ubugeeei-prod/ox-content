@@ -86,11 +86,7 @@ fn split_import_selector(value: &str) -> (&str, Option<&str>) {
     };
     let selector = value[open + 1..close].trim();
     let path = value[..open].trim_end();
-    if selector.is_empty() {
-        (path, None)
-    } else {
-        (path, Some(selector))
-    }
+    if selector.is_empty() { (path, None) } else { (path, Some(selector)) }
 }
 
 fn resolve_import_path(
@@ -143,11 +139,7 @@ fn parse_line_selector(selector: &str) -> Option<(usize, usize)> {
         });
     let start = start.parse::<usize>().ok()?;
     let end = end.parse::<usize>().ok()?;
-    if start == 0 || end < start {
-        None
-    } else {
-        Some((start, end))
-    }
+    if start == 0 || end < start { None } else { Some((start, end)) }
 }
 
 fn select_line_range(source: &str, start: usize, end: usize) -> Result<&str, String> {

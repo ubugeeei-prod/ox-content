@@ -7,15 +7,15 @@ use crate::profile_span;
 use crate::string_builder::join2;
 
 use super::{
-    markdown_html, markdown_pure, module_file_name,
+    MarkdownDocsOptions, MarkdownLinkContext, MarkdownRenderStyle, MarkdownSingleEntryRoot,
+    SymbolLocation, markdown_html, markdown_pure, module_file_name,
     owners::CanonicalOwners,
     push_typedoc_entry_page_title, typedoc_entry_file_name, typedoc_entry_page_title_len,
     typedoc_index::{
-        generate_typedoc_module_index, generate_typedoc_module_index_for_file,
-        generate_typedoc_root_index, TypedocModuleIndexPage,
+        TypedocModuleIndexPage, generate_typedoc_module_index,
+        generate_typedoc_module_index_for_file, generate_typedoc_root_index,
     },
-    typedoc_module_index_file_name, MarkdownDocsOptions, MarkdownLinkContext, MarkdownRenderStyle,
-    MarkdownSingleEntryRoot, SymbolLocation,
+    typedoc_module_index_file_name,
 };
 
 pub(super) fn generate_typedoc_markdown(
@@ -143,11 +143,7 @@ fn generate_typedoc_entry_page_grouped(
     let public: Vec<&ApiDocEntry> = {
         let signatures =
             entries.iter().copied().filter(|entry| !entry.has_body).collect::<Vec<_>>();
-        if signatures.is_empty() {
-            entries.to_vec()
-        } else {
-            signatures
-        }
+        if signatures.is_empty() { entries.to_vec() } else { signatures }
     };
 
     // A single public signature is just a normal symbol page (implementation

@@ -1,4 +1,4 @@
-use serde_json::{json, Map, Value};
+use serde_json::{Map, Value, json};
 
 pub(super) fn normalize_markdown_extensions(extensions: &[String]) -> Vec<String> {
     let source = if extensions.is_empty() {
@@ -35,11 +35,7 @@ pub(super) fn collection_path(relative_path: &str, extensions: &[String]) -> Str
         segments.pop();
     }
 
-    if segments.is_empty() {
-        "/".to_string()
-    } else {
-        format!("/{}", segments.join("/"))
-    }
+    if segments.is_empty() { "/".to_string() } else { format!("/{}", segments.join("/")) }
 }
 
 pub(super) fn string_field(frontmatter: &Map<String, Value>, key: &str) -> Option<String> {

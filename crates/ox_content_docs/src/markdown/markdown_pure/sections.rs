@@ -1,4 +1,4 @@
-use super::super::{is_structured_tag, parse_example_block, ExampleBlock, MarkdownLinkContext};
+use super::super::{ExampleBlock, MarkdownLinkContext, is_structured_tag, parse_example_block};
 use super::format::{inline, linked_type_span};
 use crate::model::{ApiDocEntry, ApiDocTag, ApiThrowsDoc};
 

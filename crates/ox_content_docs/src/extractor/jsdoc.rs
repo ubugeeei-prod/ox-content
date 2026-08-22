@@ -1,6 +1,6 @@
 use ox_jsdoc::parser::{
-    parse_batch_to_bytes as parse_jsdoc_batch_to_bytes, BatchItem as JsdocBatchItem,
-    ParseOptions as JsdocParseOptions,
+    BatchItem as JsdocBatchItem, ParseOptions as JsdocParseOptions,
+    parse_batch_to_bytes as parse_jsdoc_batch_to_bytes,
 };
 use oxc_ast::ast::Comment;
 use rustc_hash::{FxBuildHasher, FxHashMap, FxHashSet};

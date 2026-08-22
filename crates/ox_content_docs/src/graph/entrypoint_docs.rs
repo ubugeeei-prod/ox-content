@@ -12,7 +12,7 @@ use super::model::{DocsDiagnosticCode, EntrypointDocsModule, ExportSource};
 use super::options::{EntryPointDocsOptions, EntryPointSpec};
 #[allow(unused_imports)]
 use crate::profile_span;
-use crate::string_builder::{join2, StringBuilder};
+use crate::string_builder::{StringBuilder, join2};
 use crate::{DocExtractor, NormalizedDocEntry};
 
 /// Extracts normalized docs grouped by public entry points.

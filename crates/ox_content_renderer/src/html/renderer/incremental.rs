@@ -2,7 +2,7 @@ use ox_content_ast::Document;
 
 use super::HtmlRenderer;
 use crate::html::autolink::FirstByteIndex;
-use crate::html::toc::{collect_inline_toc_entries, scan_document_for_render, DocumentRenderScan};
+use crate::html::toc::{DocumentRenderScan, collect_inline_toc_entries, scan_document_for_render};
 
 impl HtmlRenderer {
     /// Renders a committed streaming fragment while preserving cross-fragment state.

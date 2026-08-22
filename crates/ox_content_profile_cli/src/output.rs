@@ -1,6 +1,6 @@
 use std::fmt::Write as _;
 
-use ox_content_profiler::{scope, CountingAllocator, Recorder};
+use ox_content_profiler::{CountingAllocator, Recorder, scope};
 
 use crate::args::Cli;
 

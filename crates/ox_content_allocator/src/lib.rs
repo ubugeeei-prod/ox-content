@@ -68,11 +68,7 @@ impl Allocator {
         // covers everything under ~2 KB of Markdown in a single chunk.
         const MIN_CAPACITY: usize = 16 * 1024;
         let capacity = source_len.saturating_mul(BYTES_PER_INPUT_BYTE);
-        if capacity < MIN_CAPACITY {
-            MIN_CAPACITY
-        } else {
-            capacity
-        }
+        if capacity < MIN_CAPACITY { MIN_CAPACITY } else { capacity }
     }
 
     /// Returns the underlying bump allocator.

@@ -23,7 +23,7 @@ use normalize::normalize_html;
 use ox_content_allocator::Allocator;
 use ox_content_parser::{Parser, ParserOptions};
 use ox_content_renderer::{HtmlRenderer, HtmlRendererOptions};
-use spec_txt::{parse_spec, SpecExample};
+use spec_txt::{SpecExample, parse_spec};
 
 const SPEC: &str = include_str!("spec_fixtures/gfm-extensions-spec.txt");
 const BASELINE: &str = include_str!("spec_fixtures/gfm-known-failures.txt");

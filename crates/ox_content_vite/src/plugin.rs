@@ -27,11 +27,7 @@ impl OxContentPlugin {
         let is_markdown = std::path::Path::new(path)
             .extension()
             .is_some_and(|ext| ext.eq_ignore_ascii_case("md"));
-        if path.starts_with(src_dir) && is_markdown {
-            Some(path.to_string())
-        } else {
-            None
-        }
+        if path.starts_with(src_dir) && is_markdown { Some(path.to_string()) } else { None }
     }
 
     /// Transforms a Markdown file.

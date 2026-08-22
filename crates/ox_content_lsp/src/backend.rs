@@ -6,11 +6,11 @@ mod handlers;
 mod mdc;
 mod snippets;
 
-use tower_lsp::lsp_types::{Diagnostic, Url};
 use tower_lsp::Client;
+use tower_lsp::lsp_types::{Diagnostic, Url};
 
 use crate::config::{InitializationOptions, ResolvedConfig};
-use crate::document::{is_markdown_path, TextDocumentState};
+use crate::document::{TextDocumentState, is_markdown_path};
 use crate::frontmatter::{self, FrontmatterSchema};
 use crate::i18n::{self, I18nState};
 use crate::state::LspState;

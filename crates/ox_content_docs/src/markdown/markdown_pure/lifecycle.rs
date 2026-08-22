@@ -27,11 +27,7 @@ pub(in crate::markdown) fn push_lifecycle_alerts(
             default
         } else {
             body_storage = inline(&tag.value, context);
-            if body_storage.is_empty() {
-                default
-            } else {
-                body_storage.as_str()
-            }
+            if body_storage.is_empty() { default } else { body_storage.as_str() }
         };
         out.push_str("> [!");
         out.push_str(kind);

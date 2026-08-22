@@ -1,4 +1,4 @@
-use super::attr_tokens::{write_attrs, ParsedAttrs};
+use super::attr_tokens::{ParsedAttrs, write_attrs};
 
 pub(super) fn transform_attribute_syntax(html: &str) -> Option<String> {
     let bytes = html.as_bytes();

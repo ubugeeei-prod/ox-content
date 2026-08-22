@@ -1,7 +1,7 @@
 use rustc_hash::FxHashSet;
 
 use super::super::{
-    effective_parameters_format, MarkdownDisplayFormat, MarkdownDocsOptions, MarkdownLinkContext,
+    MarkdownDisplayFormat, MarkdownDocsOptions, MarkdownLinkContext, effective_parameters_format,
 };
 use super::format::{inline, push_table_cell, type_param_name_cell, type_param_name_span};
 use crate::model::ApiTypeParamDoc;

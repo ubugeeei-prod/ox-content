@@ -12,20 +12,12 @@ pub(super) fn normalize_base_path(base_path: &str) -> String {
         return String::new();
     }
 
-    if base_path.starts_with('/') {
-        base_path.to_string()
-    } else {
-        join2("/", base_path)
-    }
+    if base_path.starts_with('/') { base_path.to_string() } else { join2("/", base_path) }
 }
 
 pub(super) fn nav_route_path(base_path: &str, file_name: &str) -> String {
     let file_name = file_name.strip_suffix("/index").unwrap_or(file_name);
-    if base_path.is_empty() {
-        join2("/", file_name)
-    } else {
-        join3(base_path, "/", file_name)
-    }
+    if base_path.is_empty() { join2("/", file_name) } else { join3(base_path, "/", file_name) }
 }
 
 pub(super) fn get_doc_display_name(file_path: &str) -> String {
@@ -52,11 +44,7 @@ pub(super) fn typedoc_module_display_name(doc: &ApiDocModule) -> String {
     }
 
     let display_name = file_stem(&doc.file);
-    if display_name.is_empty() {
-        doc.file.clone()
-    } else {
-        display_name
-    }
+    if display_name.is_empty() { doc.file.clone() } else { display_name }
 }
 
 pub(super) fn sanitize_doc_path_segment(value: &str) -> String {
@@ -67,11 +55,7 @@ pub(super) fn sanitize_doc_path_segment(value: &str) -> String {
             _ => ch,
         })
         .collect::<String>();
-    if sanitized.is_empty() {
-        "symbol".to_string()
-    } else {
-        sanitized
-    }
+    if sanitized.is_empty() { "symbol".to_string() } else { sanitized }
 }
 
 fn module_file_name(file_path: &str) -> String {

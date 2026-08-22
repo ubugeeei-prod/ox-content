@@ -1,7 +1,7 @@
 use oxc_ast::ast::{Function, TSType, TSTypeName};
 
-use super::model::{DocItem, DocTag, FunctionTypeMetadata};
 use super::DocVisitor;
+use super::model::{DocItem, DocTag, FunctionTypeMetadata};
 
 impl<'a> DocVisitor<'a> {
     fn extract_return_type_from_annotation(

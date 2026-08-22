@@ -1,9 +1,9 @@
 use regex::Regex;
 use std::sync::OnceLock;
 
-use super::super::{cached_regex, RegexCache};
+use super::super::{RegexCache, cached_regex};
 use super::inline::{render_code_block_html, render_inline_html};
-use crate::string_builder::{join3, StringBuilder};
+use crate::string_builder::{StringBuilder, join3};
 
 // The four block-start regexes are cached once and shared between the
 // value-returning helpers, which need captures, and `is_markdown_block_start`,

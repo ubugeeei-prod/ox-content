@@ -3,5 +3,5 @@ mod render;
 mod symbols;
 mod text;
 
-pub use render::{render_preview, PreviewPayload};
+pub use render::{PreviewPayload, render_preview};
 pub use symbols::document_symbols;

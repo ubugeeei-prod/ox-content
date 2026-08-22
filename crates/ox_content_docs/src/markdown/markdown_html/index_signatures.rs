@@ -1,9 +1,9 @@
 use rustc_hash::FxHashSet;
 
+use super::MarkdownLinkContext;
 use super::member_details::{
     render_member_detail_description_html, render_member_detail_throws_html,
 };
-use super::MarkdownLinkContext;
 use super::{escape_html, render_type_inner_html};
 use crate::model::ApiDocMember;
 use crate::string_builder::StringBuilder;

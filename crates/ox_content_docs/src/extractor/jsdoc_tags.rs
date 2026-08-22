@@ -2,7 +2,7 @@ use ox_jsdoc::decoder::nodes::comment_ast::{LazyJsdocTag, LazyJsdocTagBody};
 
 use crate::string_builder::{join2, join3, join5};
 
-use super::{model::DocTag, DocVisitor};
+use super::{DocVisitor, model::DocTag};
 
 impl<'a> DocVisitor<'a> {
     pub(super) fn convert_jsdoc_tag(tag: LazyJsdocTag<'_>, capture_value: bool) -> DocTag {

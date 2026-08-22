@@ -55,11 +55,7 @@ pub fn get_url_path(input_path: &str, src_dir: &str) -> String {
 
     if base_name == "index" || base_name.ends_with("/index") {
         let trimmed = trim_trailing_index(&base_name);
-        if trimmed.is_empty() {
-            "/".to_string()
-        } else {
-            trimmed
-        }
+        if trimmed.is_empty() { "/".to_string() } else { trimmed }
     } else {
         base_name
     }

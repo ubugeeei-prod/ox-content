@@ -1,8 +1,8 @@
 use rustc_hash::FxHashSet;
 
 use super::super::{
-    collapse_inline_whitespace, collapse_type_annotation_whitespace, process_doc_text,
-    resolve_type_fragments, MarkdownLinkContext, TypeFragment,
+    MarkdownLinkContext, TypeFragment, collapse_inline_whitespace,
+    collapse_type_annotation_whitespace, process_doc_text, resolve_type_fragments,
 };
 use crate::model::ApiTypeParamDoc;
 use crate::string_builder::StringBuilder;
@@ -14,11 +14,7 @@ pub(super) fn inline(text: &str, context: Option<&MarkdownLinkContext<'_>>) -> S
 
 /// Escapes a value for use inside a Markdown table cell.
 fn table_cell(text: &str) -> String {
-    if text.contains('|') {
-        text.replace('|', "\\|")
-    } else {
-        text.to_string()
-    }
+    if text.contains('|') { text.replace('|', "\\|") } else { text.to_string() }
 }
 
 /// Append a table-cell value directly to `out` (pipes escaped), avoiding the

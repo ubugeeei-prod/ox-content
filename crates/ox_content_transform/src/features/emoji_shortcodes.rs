@@ -1,4 +1,4 @@
-use super::{emoji, ResolvedEmojiShortcodeOptions};
+use super::{ResolvedEmojiShortcodeOptions, emoji};
 
 pub(super) fn replace_emoji_shortcodes(
     segment: &str,

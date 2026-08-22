@@ -1,10 +1,10 @@
 use super::super::{
-    clean_summary_text, format_kind_label, get_entry_badges, normalize_signature, process_doc_text,
-    MarkdownLinkContext,
+    MarkdownLinkContext, clean_summary_text, format_kind_label, get_entry_badges,
+    normalize_signature, process_doc_text,
 };
 use super::inline::{escape_html, render_highlighted_inline_code_html, render_inline_html};
 use crate::model::ApiDocEntry;
-use crate::string_builder::{join3, StringBuilder};
+use crate::string_builder::{StringBuilder, join3};
 
 pub(super) fn render_entry_badges_html(entry: &ApiDocEntry, class_name: &str) -> String {
     let badges = get_entry_badges(entry);

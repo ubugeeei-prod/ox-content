@@ -1,4 +1,4 @@
-use super::super::{effective_members_format, member_table_includes_kind, MarkdownDisplayFormat};
+use super::super::{MarkdownDisplayFormat, effective_members_format, member_table_includes_kind};
 use super::format::{linked_type_cell, linked_type_span, push_table_cell};
 use super::member_bits::{member_description, member_name_cell, member_name_span, member_type};
 use super::member_details::{is_callable_member, render_callable_member_details_pure};

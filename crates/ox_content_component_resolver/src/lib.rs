@@ -106,9 +106,7 @@ pub struct ResolvedComponent {
 
 #[derive(Debug, thiserror::Error)]
 pub enum Error {
-    #[error(
-        "ox-content-component-resolver is not yet implemented (PR #195 + #196 land in stages)"
-    )]
+    #[error("ox-content-component-resolver is not yet implemented (PR #195 + #196 land in stages)")]
     NotImplemented,
 
     #[error("tsgo binary not found at {}", .0.display())]

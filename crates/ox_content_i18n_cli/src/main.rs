@@ -1,5 +1,5 @@
 use clap::{Parser, Subcommand, ValueEnum};
-use ox_content_i18n_checker::diagnostic::{format_diagnostics, OutputFormat};
+use ox_content_i18n_checker::diagnostic::{OutputFormat, format_diagnostics};
 
 #[derive(Parser)]
 #[command(name = "ox-content-i18n", about = "i18n tools for Ox Content")]

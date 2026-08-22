@@ -2,8 +2,8 @@ use rustc_hash::FxHashSet;
 use std::sync::OnceLock;
 
 use super::super::{
-    cached_regex, collapse_type_annotation_whitespace, process_doc_text, resolve_type_fragments,
-    MarkdownLinkContext, RegexCache, TypeFragment,
+    MarkdownLinkContext, RegexCache, TypeFragment, cached_regex,
+    collapse_type_annotation_whitespace, process_doc_text, resolve_type_fragments,
 };
 use crate::string_builder::StringBuilder;
 
@@ -37,11 +37,7 @@ pub(super) fn render_doc_inline_html(
 }
 
 fn replace_line_breaks_html(html: String) -> String {
-    if html.contains('\n') {
-        html.replace('\n', "<br>")
-    } else {
-        html
-    }
+    if html.contains('\n') { html.replace('\n', "<br>") } else { html }
 }
 
 pub(super) fn render_inline_html(text: &str) -> String {

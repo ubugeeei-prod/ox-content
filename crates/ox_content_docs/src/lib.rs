@@ -46,30 +46,30 @@ pub use extractor::{
     DocExtractor, DocItem, DocItemKind, DocTag, ExtractError, ExtractResult, ParamDoc, TypeParamDoc,
 };
 pub use generator::{
-    collect_source_files, extract_docs_from_directories, DocsGenerator, ExtractedDocModule,
-    GenerateError, GenerateResult,
+    DocsGenerator, ExtractedDocModule, GenerateError, GenerateResult, collect_source_files,
+    extract_docs_from_directories,
 };
 pub use graph::{
-    build_export_graph, extract_docs_from_entry_points, DocsDiagnostic, DocsDiagnosticCode,
-    EntryPointDocsOptions, EntryPointSpec, EntrypointDocsModule, EntrypointModule, ExportGraph,
-    ExportKind, ExportSource, ExternalDocsOptions, ExternalPackageSource, GraphError, GraphOptions,
-    PublicExport, ResolvedModule,
+    DocsDiagnostic, DocsDiagnosticCode, EntryPointDocsOptions, EntryPointSpec,
+    EntrypointDocsModule, EntrypointModule, ExportGraph, ExportKind, ExportSource,
+    ExternalDocsOptions, ExternalPackageSource, GraphError, GraphOptions, PublicExport,
+    ResolvedModule, build_export_graph, extract_docs_from_entry_points,
 };
 pub use markdown::{
-    generate_markdown, MarkdownDisplayFormat, MarkdownDocsOptions, MarkdownLinkStyle,
-    MarkdownPathStrategy, MarkdownRenderStyle, MarkdownSingleEntryRoot,
+    MarkdownDisplayFormat, MarkdownDocsOptions, MarkdownLinkStyle, MarkdownPathStrategy,
+    MarkdownRenderStyle, MarkdownSingleEntryRoot, generate_markdown,
 };
 pub use model::{
     ApiDocEntry, ApiDocMember, ApiDocModule, ApiDocTag, ApiParamDoc, ApiReturnDoc, ApiThrowsDoc,
     ApiTypeParamDoc,
 };
 pub use nav::{
-    generate_nav_code, generate_nav_metadata, generate_nav_metadata_from_docs,
-    generate_nav_metadata_from_docs_with_options, DocsNavItem, DocsNavMetadataOptions,
+    DocsNavItem, DocsNavMetadataOptions, generate_nav_code, generate_nav_metadata,
+    generate_nav_metadata_from_docs, generate_nav_metadata_from_docs_with_options,
 };
 pub use normalize::{
-    normalize_doc_item, normalize_doc_items, NormalizedDocEntry, NormalizedDocKind,
-    NormalizedMember, NormalizedMemberKind, NormalizedParamDoc, NormalizedReturnDoc,
-    NormalizedThrowsDoc, NormalizedTypeParam,
+    NormalizedDocEntry, NormalizedDocKind, NormalizedMember, NormalizedMemberKind,
+    NormalizedParamDoc, NormalizedReturnDoc, NormalizedThrowsDoc, NormalizedTypeParam,
+    normalize_doc_item, normalize_doc_items,
 };
-pub use output::{write_docs_output, DocsOutputError, DocsOutputOptions, DocsOutputResult};
+pub use output::{DocsOutputError, DocsOutputOptions, DocsOutputResult, write_docs_output};

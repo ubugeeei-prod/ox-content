@@ -1,10 +1,10 @@
 use oxc_ast::ast::{Function, TSSignature, TSType, TSTypeLiteral};
 use oxc_span::GetSpan;
 
-use crate::string_builder::{join2, join3, StringBuilder};
+use crate::string_builder::{StringBuilder, join2, join3};
 
-use super::model::{DocTag, ParamDoc, ParsedParamTag};
 use super::DocVisitor;
+use super::model::{DocTag, ParamDoc, ParsedParamTag};
 
 impl<'a> DocVisitor<'a> {
     pub(super) fn extract_params_from_formals(

@@ -2,7 +2,7 @@ use std::path::PathBuf;
 
 use ox_content_allocator::Allocator;
 use ox_content_parser::{Parser, ParserOptions};
-use ox_content_profiler::{report::ReportConfig, Recorder};
+use ox_content_profiler::{Recorder, report::ReportConfig};
 use ox_content_renderer::{HtmlRenderer, HtmlRendererOptions};
 
 use crate::args::{Cli, Cmd};
@@ -23,11 +23,7 @@ fn load_input(file: Option<&PathBuf>) -> std::io::Result<(String, String)> {
 }
 
 fn parser_options(cli: &Cli) -> ParserOptions {
-    if cli.gfm {
-        ParserOptions::gfm()
-    } else {
-        ParserOptions::default()
-    }
+    if cli.gfm { ParserOptions::gfm() } else { ParserOptions::default() }
 }
 
 fn parse_error(err: impl std::fmt::Display) -> std::io::Error {

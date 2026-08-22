@@ -9,11 +9,11 @@ use serde::Serialize as _;
 use wasm_bindgen::prelude::*;
 
 use ox_content_parser::{Parser, ParserOptions};
-use scratch::{with_scratch, RendererKey};
+use scratch::{RendererKey, with_scratch};
 
 use frontmatter::parse_frontmatter;
-use toc::extract_toc;
 pub use toc::TocEntry;
+use toc::extract_toc;
 
 mod frontmatter;
 mod scratch;

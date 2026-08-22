@@ -1,5 +1,5 @@
-use super::model::{NormalizedParamDoc, NormalizedReturnDoc, NormalizedThrowsDoc};
 use super::UNKNOWN_TYPE;
+use super::model::{NormalizedParamDoc, NormalizedReturnDoc, NormalizedThrowsDoc};
 use crate::extractor::DocTag;
 
 pub(super) fn normalized_param_from_tag(tag: &DocTag) -> Option<NormalizedParamDoc> {

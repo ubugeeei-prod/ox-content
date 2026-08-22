@@ -46,7 +46,7 @@ use std::process::ExitCode;
 
 use args::{Cli, Cmd};
 use clap::Parser as _;
-use ox_content_profiler::{scope, CountingAllocator};
+use ox_content_profiler::{CountingAllocator, scope};
 
 #[global_allocator]
 static GLOBAL: CountingAllocator = CountingAllocator::new();

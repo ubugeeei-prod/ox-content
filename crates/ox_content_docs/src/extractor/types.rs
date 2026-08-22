@@ -1,7 +1,7 @@
 use oxc_ast::ast::{TSSignature, TSType, TSTypeLiteral, TSTypeName};
 use oxc_span::GetSpan;
 
-use crate::string_builder::{join2, join3, StringBuilder};
+use crate::string_builder::{StringBuilder, join2, join3};
 
 use super::DocVisitor;
 
@@ -130,11 +130,7 @@ impl<'a> DocVisitor<'a> {
             .filter(|member| !member.is_empty())
             .collect::<Vec<_>>();
 
-        if members.is_empty() {
-            "{}".to_string()
-        } else {
-            join3("{ ", &members.join("; "), " }")
-        }
+        if members.is_empty() { "{}".to_string() } else { join3("{ ", &members.join("; "), " }") }
     }
 
     fn format_type_literal_member(&self, member: &TSSignature<'a>) -> String {

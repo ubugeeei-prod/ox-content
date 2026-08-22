@@ -30,11 +30,7 @@ fn convert_entry_link(link: &str, base: &str) -> String {
     // Entry page is always index.md, so plain relative: getting-started.md -> {base}getting-started/index.html
     let converted = if stem == "index" || stem.ends_with("/index") {
         let dir = stem.trim_end_matches("/index").trim_end_matches("index");
-        if dir.is_empty() {
-            format!("{base}index.html")
-        } else {
-            format!("{base}{dir}/index.html")
-        }
+        if dir.is_empty() { format!("{base}index.html") } else { format!("{base}{dir}/index.html") }
     } else {
         format!("{base}{stem}/index.html")
     };

@@ -13,7 +13,7 @@
 use std::path::Path;
 
 use ox_content_allocator::Allocator;
-use ox_content_ast::{walk_link, Image, Link, Span, Visit};
+use ox_content_ast::{Image, Link, Span, Visit, walk_link};
 use ox_content_parser::{Parser, ParserOptions};
 use tower_lsp::lsp_types::{DocumentLink, Url};
 

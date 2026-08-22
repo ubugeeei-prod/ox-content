@@ -9,8 +9,9 @@
 use compact_str::CompactString;
 
 use super::{
+    FrameworkComponentIsland,
     parser::{HtmlAttribute, HtmlElement},
-    shared, FrameworkComponentIsland,
+    shared,
 };
 
 const IMPORT: &str = "import h from 'solid-js/h';\n\n";

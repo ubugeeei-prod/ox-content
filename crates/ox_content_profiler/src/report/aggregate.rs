@@ -37,11 +37,7 @@ pub(super) fn summarize_timing(
     // what the existing benchmark README reports.
     let throughput_mb_s = input_bytes.and_then(|bytes| {
         let secs = p50.as_secs_f64();
-        if secs > 0.0 {
-            Some((bytes as f64) / secs / (1024.0 * 1024.0))
-        } else {
-            None
-        }
+        if secs > 0.0 { Some((bytes as f64) / secs / (1024.0 * 1024.0)) } else { None }
     });
 
     TimingSummary { samples: n, min, p50, p95, p99, max, mean, throughput_mb_s }

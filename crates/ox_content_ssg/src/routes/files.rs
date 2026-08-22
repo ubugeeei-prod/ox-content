@@ -123,11 +123,7 @@ fn extract_h1_text(content: &str) -> Option<String> {
     let close = lower[text_start..].find("</h1>")? + text_start;
     let text = content[text_start..close].trim();
 
-    if text.is_empty() || text.contains('<') {
-        None
-    } else {
-        Some(text.to_string())
-    }
+    if text.is_empty() || text.contains('<') { None } else { Some(text.to_string()) }
 }
 
 #[cfg(test)]

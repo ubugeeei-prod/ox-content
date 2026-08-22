@@ -1,7 +1,7 @@
-use criterion::{criterion_group, criterion_main, BenchmarkId, Criterion, Throughput};
+use criterion::{BenchmarkId, Criterion, Throughput, criterion_group, criterion_main};
 use ox_content_allocator::Allocator;
 use ox_content_napi::{
-    parse, parse_mdast_raw, transform, transform_mdast_raw, JsParserOptions, JsTransformOptions,
+    JsParserOptions, JsTransformOptions, parse, parse_mdast_raw, transform, transform_mdast_raw,
 };
 use ox_content_parser::{Parser, ParserOptions};
 use std::hint::black_box;

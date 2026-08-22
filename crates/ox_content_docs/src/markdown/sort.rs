@@ -2,7 +2,7 @@ use std::cmp::Ordering;
 
 use crate::model::{ApiDocEntry, ApiDocMember, ApiDocModule, ApiReturnDoc};
 
-use super::{file_name, MarkdownDocsOptions, DOC_KIND_ORDER};
+use super::{DOC_KIND_ORDER, MarkdownDocsOptions, file_name};
 
 /// A TypeDoc-compatible sort strategy that maps onto ox-content's data model.
 /// Strategies whose required data is unavailable (`enum-value-*`, `documents-*`)

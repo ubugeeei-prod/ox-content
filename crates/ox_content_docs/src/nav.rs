@@ -11,7 +11,7 @@ use crate::markdown::{MarkdownPathStrategy, MarkdownSingleEntryRoot};
 use crate::model::ApiDocModule;
 #[allow(unused_imports)]
 use crate::profile_span;
-use crate::string_builder::{join3, StringBuilder};
+use crate::string_builder::{StringBuilder, join3};
 
 const DEFAULT_BASE_PATH: &str = "/api";
 const DEFAULT_EXPORT_NAME: &str = "apiNav";

@@ -1,4 +1,4 @@
-use super::{tokenize, Token};
+use super::{Token, tokenize};
 
 #[test]
 fn simple_text() {

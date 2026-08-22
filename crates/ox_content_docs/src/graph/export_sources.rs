@@ -3,7 +3,7 @@ use rustc_hash::FxHashSet;
 
 use super::resolver::{ExternalModuleRef, ResolvedModuleRef};
 use super::{ExportKind, ExportSource, GraphError, PublicExport};
-use crate::string_builder::{join4, StringBuilder};
+use crate::string_builder::{StringBuilder, join4};
 
 pub(super) fn reexport_module_export(
     mut export: PublicExport,

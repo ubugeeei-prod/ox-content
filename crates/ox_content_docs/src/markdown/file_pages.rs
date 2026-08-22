@@ -6,11 +6,11 @@ use crate::profile_span;
 use crate::string_builder::StringBuilder;
 
 use super::{
-    doc_page_href, effective_index_format, entries::generate_entry_markdown,
+    MarkdownDisplayFormat, MarkdownDocsOptions, MarkdownLinkContext, MarkdownRenderStyle,
+    SymbolLocation, doc_page_href, effective_index_format, entries::generate_entry_markdown,
     entries::render_overview_line, entries::render_overview_table_row, entry_anchor, file_name,
     file_stem, format_count_label, generate_source_link, markdown_html, push_generated_by,
-    push_stats, summarize_entries, MarkdownDisplayFormat, MarkdownDocsOptions, MarkdownLinkContext,
-    MarkdownRenderStyle, SymbolLocation,
+    push_stats, summarize_entries,
 };
 
 pub(super) fn generate_file_markdown(

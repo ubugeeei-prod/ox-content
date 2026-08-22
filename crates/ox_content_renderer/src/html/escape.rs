@@ -51,7 +51,7 @@ static URL_ESCAPE_FLAG: [u8; 256] = {
 
 mod nibble;
 
-use nibble::{first_flagged_simd, NibbleTables, ESCAPE_NIBBLES, URL_ESCAPE_NIBBLES};
+use nibble::{ESCAPE_NIBBLES, NibbleTables, URL_ESCAPE_NIBBLES, first_flagged_simd};
 
 const ONES: u64 = 0x0101_0101_0101_0101;
 const HIGH: u64 = 0x8080_8080_8080_8080;

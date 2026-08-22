@@ -1,7 +1,7 @@
 use std::fmt::Write;
 
 use super::commands::convert_command;
-use super::{PmOptions, PM_GROUP_KEY};
+use super::{PM_GROUP_KEY, PmOptions};
 
 /// The package managers we expand to, in display order.
 const PACKAGE_MANAGERS: [&str; 5] = ["npm", "pnpm", "yarn", "bun", "vp"];

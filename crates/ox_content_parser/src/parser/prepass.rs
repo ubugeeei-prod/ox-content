@@ -19,13 +19,13 @@ use std::sync::LazyLock;
 
 use memchr::{memchr, memmem, memrchr};
 
-use super::footnote::{normalize_footnote_label, parse_footnote_opener, FootnoteLabels};
+use super::Parser;
+use super::footnote::{FootnoteLabels, normalize_footnote_label, parse_footnote_opener};
 use super::line_scan::{line_end as scan_line_end, next_line_start};
 use super::reference::{
-    closes_paragraph_context, fence_open, is_fence_close, strip_quote_markers, ReferenceDef,
-    ReferenceMap,
+    ReferenceDef, ReferenceMap, closes_paragraph_context, fence_open, is_fence_close,
+    strip_quote_markers,
 };
-use super::Parser;
 #[allow(unused_imports)]
 use crate::{profile_span, profile_span_detail};
 

@@ -6,18 +6,17 @@ use crate::profile_span;
 use crate::string_builder::StringBuilder;
 
 use super::{
-    clean_summary_text, doc_page_href_from, effective_index_format, generate_source_link,
-    kind_order_slice, markdown_html, markdown_pure, module_display_name, module_route_name,
-    order_by_group_title, ordered_entry_kinds,
+    MarkdownDisplayFormat, MarkdownDocsOptions, MarkdownLinkContext, MarkdownRenderStyle,
+    SymbolLocation, clean_summary_text, doc_page_href_from, effective_index_format,
+    generate_source_link, kind_order_slice, markdown_html, markdown_pure, module_display_name,
+    module_route_name, order_by_group_title, ordered_entry_kinds,
     owners::CanonicalOwners,
     process_doc_text, push_generated_by, push_stats, render_module_examples_markdown,
     summarize_docs, summarize_module, typedoc_index_summary, typedoc_kind_title,
     typedoc_module_index_file_name,
     typedoc_sections::{
-        render_typedoc_kind_section, render_typedoc_references_section, IndexSection,
+        IndexSection, render_typedoc_kind_section, render_typedoc_references_section,
     },
-    MarkdownDisplayFormat, MarkdownDocsOptions, MarkdownLinkContext, MarkdownRenderStyle,
-    SymbolLocation,
 };
 
 pub(super) fn generate_typedoc_root_index(

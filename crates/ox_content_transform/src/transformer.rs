@@ -15,15 +15,15 @@ use ox_content_mdast::{
 use ox_content_parser::{ParseError, Parser, ParserOptions};
 use ox_content_renderer::{HtmlRenderer, HtmlRendererOptions};
 
-pub use frontmatter::{parse_frontmatter, PreparedMarkdownSource, SourceOrigin};
+pub use frontmatter::{PreparedMarkdownSource, SourceOrigin, parse_frontmatter};
 
 use frontmatter::{parse_frontmatter_with_origin, source_without_frontmatter};
 use options::{transform_options_to_parser_options, transform_options_to_renderer_options};
 use toc::extract_toc;
 
 use crate::{
-    features::{self, TransformFeatureOptions},
     SanitizeOptions, TransformOptions, TransformResult,
+    features::{self, TransformFeatureOptions},
 };
 
 const PREPARED_SOURCE_PAYLOAD_VERSION: u32 = 1;

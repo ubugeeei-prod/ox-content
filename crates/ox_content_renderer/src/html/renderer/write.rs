@@ -106,11 +106,7 @@ impl HtmlRenderer {
         let trimmed =
             url.trim_matches(|ch: char| ch.is_ascii_control() || ch.is_ascii_whitespace());
 
-        if Self::is_safe_url(trimmed) {
-            trimmed
-        } else {
-            fallback
-        }
+        if Self::is_safe_url(trimmed) { trimmed } else { fallback }
     }
 
     pub(in crate::html::renderer) fn is_safe_url(url: &str) -> bool {

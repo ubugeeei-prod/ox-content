@@ -1,4 +1,4 @@
-use super::super::{process_doc_text, rendered_throws, MarkdownLinkContext};
+use super::super::{MarkdownLinkContext, process_doc_text, rendered_throws};
 use super::{
     lifecycle::{push_lifecycle_alerts, render_since_section},
     member_groups::MemberGroupRenderContext,

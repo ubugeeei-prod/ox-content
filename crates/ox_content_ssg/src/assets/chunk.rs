@@ -104,11 +104,7 @@ fn sanitize_chunk_label(label: &str) -> String {
         }
     }
 
-    if output.is_empty() {
-        "asset".to_string()
-    } else {
-        output
-    }
+    if output.is_empty() { "asset".to_string() } else { output }
 }
 
 fn to_public_asset_path(base: &str, file_name: &str) -> String {

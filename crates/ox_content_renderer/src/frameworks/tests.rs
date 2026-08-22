@@ -2,8 +2,8 @@ use rustc_hash::FxHashMap;
 use serde_json::json;
 
 use super::{
-    escape_svelte_markup, render_framework_code, render_framework_component_code,
     FrameworkCodegenError, FrameworkCodegenMode, FrameworkCodegenTarget, FrameworkComponentIsland,
+    escape_svelte_markup, render_framework_code, render_framework_component_code,
 };
 
 #[test]

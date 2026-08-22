@@ -220,11 +220,7 @@ pub(super) fn collect_markdown_lint_state(
                 } else {
                     let values =
                         suggest_latin_words(&token.text, &dictionary.latin_suggestion_words);
-                    if values.is_empty() {
-                        None
-                    } else {
-                        Some(values)
-                    }
+                    if values.is_empty() { None } else { Some(values) }
                 };
 
                 diagnostics.push(create_diagnostic(

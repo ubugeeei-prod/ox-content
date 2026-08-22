@@ -2,12 +2,12 @@ use std::hint::black_box;
 use std::path::{Path, PathBuf};
 
 use ox_content_docs::{
+    ApiDocModule, EntryPointDocsOptions, EntryPointSpec, ExtractedDocModule, GraphOptions,
+    MarkdownDisplayFormat, MarkdownDocsOptions, MarkdownPathStrategy, MarkdownRenderStyle,
     collect_source_files, extract_docs_from_directories, extract_docs_from_entry_points,
-    generate_markdown, ApiDocModule, EntryPointDocsOptions, EntryPointSpec, ExtractedDocModule,
-    GraphOptions, MarkdownDisplayFormat, MarkdownDocsOptions, MarkdownPathStrategy,
-    MarkdownRenderStyle,
+    generate_markdown,
 };
-use ox_content_profiler::{report::ReportConfig, Recorder};
+use ox_content_profiler::{Recorder, report::ReportConfig};
 
 use crate::args::Cli;
 use crate::bridge::to_api_module;

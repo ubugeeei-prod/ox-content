@@ -6,7 +6,7 @@ use rustc_hash::FxHashMap;
 
 use super::options::MarkdownDocsOptions;
 use super::paths::doc_page_href_from;
-use super::regex_cache::{cached_regex, RegexCache};
+use super::regex_cache::{RegexCache, cached_regex};
 use crate::string_builder::{join2, join3, join5};
 
 #[derive(Debug, Clone)]

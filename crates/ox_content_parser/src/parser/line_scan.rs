@@ -55,11 +55,7 @@ pub(in crate::parser) fn line_end(bytes: &[u8], from: usize) -> usize {
 #[inline]
 pub(in crate::parser) fn next_line_start(bytes: &[u8], from: usize) -> usize {
     let end = line_end(bytes, from);
-    if end < bytes.len() {
-        end + 1
-    } else {
-        end
-    }
+    if end < bytes.len() { end + 1 } else { end }
 }
 
 #[cfg(test)]

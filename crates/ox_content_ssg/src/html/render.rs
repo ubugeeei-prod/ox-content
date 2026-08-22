@@ -1,7 +1,7 @@
 use askama::Template;
 
 use super::entry::generate_entry_html;
-use super::footer::{generate_footer_html, FOOTER_CSS};
+use super::footer::{FOOTER_CSS, generate_footer_html};
 use super::nav::generate_nav_html;
 use super::social::{generate_mobile_social_links_html, generate_social_links_html};
 use super::theme_css::generate_theme_css;
@@ -10,8 +10,8 @@ use super::utils::{
     wrap_css_section,
 };
 use super::{
-    BarePageTemplate, NavGroup, PageData, PageTemplate, SsgConfig, ENTRY_CSS, GITHUB_CSS,
-    ISLAND_CSS, MERMAID_CSS, OGP_CSS, SOCIAL_CSS, SSG_CSS, SSG_JS, TABS_CSS, TABS_JS, YOUTUBE_CSS,
+    BarePageTemplate, ENTRY_CSS, GITHUB_CSS, ISLAND_CSS, MERMAID_CSS, NavGroup, OGP_CSS, PageData,
+    PageTemplate, SOCIAL_CSS, SSG_CSS, SSG_JS, SsgConfig, TABS_CSS, TABS_JS, YOUTUBE_CSS,
 };
 
 /// Generates a complete HTML page for SSG.

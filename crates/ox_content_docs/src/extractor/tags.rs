@@ -1,8 +1,8 @@
 use oxc_ast::ast::BindingPattern;
 use oxc_span::GetSpan;
 
-use super::model::{DocTag, ParsedParamTag};
 use super::DocVisitor;
+use super::model::{DocTag, ParsedParamTag};
 
 impl<'a> DocVisitor<'a> {
     fn has_private_tag(tags: &[DocTag]) -> bool {

@@ -1,6 +1,6 @@
 use super::{
-    markdown_html, markdown_pure, MarkdownDisplayFormat, MarkdownDocsOptions, MarkdownRenderStyle,
-    DOC_KIND_ORDER,
+    DOC_KIND_ORDER, MarkdownDisplayFormat, MarkdownDocsOptions, MarkdownRenderStyle, markdown_html,
+    markdown_pure,
 };
 use crate::model::{ApiDocEntry, ApiDocModule};
 

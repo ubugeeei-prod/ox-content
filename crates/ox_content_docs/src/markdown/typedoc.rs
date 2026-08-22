@@ -2,7 +2,7 @@ use phf::phf_map;
 
 use super::{capitalize_ascii, entry_anchor};
 use crate::model::ApiDocEntry;
-use crate::string_builder::{join3, join5, StringBuilder};
+use crate::string_builder::{StringBuilder, join3, join5};
 
 static TYPEDOC_KIND_SEGMENT: phf::Map<&'static str, &'static str> = phf_map! {
     "function" => "functions",
@@ -103,11 +103,7 @@ pub(super) fn sanitize_doc_path_segment(value: &str) -> String {
             _ => ch,
         })
         .collect::<String>();
-    if sanitized.is_empty() {
-        "symbol".to_string()
-    } else {
-        sanitized
-    }
+    if sanitized.is_empty() { "symbol".to_string() } else { sanitized }
 }
 
 pub(super) fn plural_kind_file_name(kind: &str) -> String {

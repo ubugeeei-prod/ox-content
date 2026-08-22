@@ -1,5 +1,5 @@
 use super::commands::convert_command;
-use super::{transform_pm, PmOptions};
+use super::{PmOptions, transform_pm};
 
 fn all(command: &str) -> (String, String, String, String) {
     (

@@ -6,7 +6,7 @@ use oxc_allocator::Allocator;
 
 use crate::config::DocsConfig;
 use crate::extractor::{DocExtractor, DocItem, ExtractResult};
-use crate::normalize::{normalize_doc_items, NormalizedDocEntry};
+use crate::normalize::{NormalizedDocEntry, normalize_doc_items};
 
 use thiserror::Error;
 

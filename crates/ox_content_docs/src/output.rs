@@ -11,7 +11,7 @@ use crate::data::generate_docs_data_json;
 use crate::markdown::{MarkdownPathStrategy, MarkdownSingleEntryRoot};
 use crate::model::ApiDocModule;
 use crate::nav::{
-    generate_nav_code, generate_nav_metadata_from_docs_with_options, DocsNavMetadataOptions,
+    DocsNavMetadataOptions, generate_nav_code, generate_nav_metadata_from_docs_with_options,
 };
 #[allow(unused_imports)]
 use crate::profile_span;
@@ -266,7 +266,7 @@ mod tests {
 
     #[test]
     fn writes_typedoc_docs_with_consistent_nav_and_data() {
-        use crate::markdown::{generate_markdown, MarkdownDocsOptions};
+        use crate::markdown::{MarkdownDocsOptions, generate_markdown};
         use crate::model::{ApiDocEntry, ApiDocMember};
 
         let out_dir = temp_dir();

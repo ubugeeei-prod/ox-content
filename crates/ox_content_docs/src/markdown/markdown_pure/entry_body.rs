@@ -1,6 +1,6 @@
 use super::super::{
-    generate_source_href, process_doc_text, rendered_throws, MarkdownDocsOptions,
-    MarkdownLinkContext,
+    MarkdownDocsOptions, MarkdownLinkContext, generate_source_href, process_doc_text,
+    rendered_throws,
 };
 use super::lifecycle::{push_lifecycle_alerts, render_since_section};
 use super::member_groups::render_members_pure;

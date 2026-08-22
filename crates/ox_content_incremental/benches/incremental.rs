@@ -1,8 +1,8 @@
 use std::hint::black_box;
 
-use criterion::{criterion_group, criterion_main, Criterion};
+use criterion::{Criterion, criterion_group, criterion_main};
 use ox_content_incremental::{
-    stable_prefix_len, IncrementalHtmlRenderer, IncrementalRenderOptions,
+    IncrementalHtmlRenderer, IncrementalRenderOptions, stable_prefix_len,
 };
 use ox_content_parser::ParserOptions;
 

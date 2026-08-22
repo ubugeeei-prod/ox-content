@@ -9,10 +9,10 @@ use crate::preview;
 
 use ox_content_mdc_checker::Registry;
 
+use super::Backend;
 use super::assets::{completion_items as asset_completion_items, detect_context, line_prefix};
 use super::mdc::{completion_items as mdc_completion_items, detect_site as detect_mdc_site};
 use super::snippets::markdown_snippet_items;
-use super::Backend;
 
 impl Backend {
     pub(super) async fn completion_response(

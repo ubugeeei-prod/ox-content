@@ -3,9 +3,9 @@ mod render;
 #[cfg(test)]
 mod tests;
 
-use crate::{html_scan::find_ci, MediaEmbedsOptions};
+use crate::{MediaEmbedsOptions, html_scan::find_ci};
 
-use html::{find_component, ComponentElement};
+use html::{ComponentElement, find_component};
 use render::{
     render_bluesky, render_spotify, render_stackblitz, render_tweet, render_webcontainer,
 };

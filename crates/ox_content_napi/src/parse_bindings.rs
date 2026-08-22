@@ -1,7 +1,7 @@
 use std::collections::HashMap;
 
-use napi::bindgen_prelude::*;
 use napi::Task;
+use napi::bindgen_prelude::*;
 use napi_derive::napi;
 use ox_content_mdast::transfer::TransferPayloadKind;
 use ox_content_parser::ParserOptions;

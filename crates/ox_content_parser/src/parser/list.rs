@@ -1,8 +1,8 @@
 use ox_content_allocator::Vec;
 use ox_content_ast::{List, ListItem, Node, Span};
 
-use super::list_item::ParsedListItem;
 use super::Parser;
+use super::list_item::ParsedListItem;
 use crate::error::ParseResult;
 #[allow(unused_imports)]
 use crate::{profile_span, profile_span_detail};

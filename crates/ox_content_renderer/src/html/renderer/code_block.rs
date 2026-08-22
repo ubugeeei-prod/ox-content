@@ -9,10 +9,10 @@ use ox_content_ast::CodeBlock;
 use smallvec::SmallVec;
 
 use super::super::code_annotations::{
+    CodeAnnotationKind, CodeBlockRenderState, CodeLineRenderState, MetaTokenKind,
     apply_annotation_numbers, apply_btree_annotations, normalize_code_block_info,
     parse_code_annotations, parse_line_numbers, parse_vitepress_inline_annotations,
-    split_code_block_meta, CodeAnnotationKind, CodeBlockRenderState, CodeLineRenderState,
-    MetaTokenKind,
+    split_code_block_meta,
 };
 use super::HtmlRenderer;
 

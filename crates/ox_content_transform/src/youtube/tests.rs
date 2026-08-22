@@ -1,4 +1,4 @@
-use super::{transform_youtube, YouTubeEmbedOptions};
+use super::{YouTubeEmbedOptions, transform_youtube};
 
 fn opts() -> YouTubeEmbedOptions {
     YouTubeEmbedOptions::default()

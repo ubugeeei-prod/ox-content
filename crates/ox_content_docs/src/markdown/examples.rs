@@ -1,6 +1,6 @@
 use std::sync::OnceLock;
 
-use super::{cached_regex, RegexCache};
+use super::{RegexCache, cached_regex};
 
 pub(super) enum ExampleBlock<'a> {
     /// Pure code: a single fenced block (unwrapped, with its language) or a bare

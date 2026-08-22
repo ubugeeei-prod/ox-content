@@ -2,7 +2,7 @@ use oxc_ast::ast::{
     BindingPattern, Declaration, ExportDefaultDeclarationKind, Expression, Statement,
     VariableDeclaration,
 };
-use oxc_ast_visit::{walk, Visit};
+use oxc_ast_visit::{Visit, walk};
 use oxc_span::GetSpan;
 
 use super::{DocItem, DocItemKind, DocVisitor};

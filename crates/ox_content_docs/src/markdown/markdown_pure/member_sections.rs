@@ -1,8 +1,8 @@
 use rustc_hash::FxHashSet;
 
 use super::super::{
-    effective_parameters_format, is_throws_tag, rendered_throws, MarkdownDisplayFormat,
-    MarkdownDocsOptions, MarkdownLinkContext,
+    MarkdownDisplayFormat, MarkdownDocsOptions, MarkdownLinkContext, effective_parameters_format,
+    is_throws_tag, rendered_throws,
 };
 use super::format::{
     code_cell, code_span, inline, linked_type_cell, linked_type_span, push_table_cell,

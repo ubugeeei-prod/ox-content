@@ -32,11 +32,7 @@ pub(super) fn external_package_name(specifier: &str) -> String {
 }
 
 pub(super) fn absolutize(root: &Path, path: &Path) -> PathBuf {
-    if path.is_absolute() {
-        path.to_path_buf()
-    } else {
-        root.join(path)
-    }
+    if path.is_absolute() { path.to_path_buf() } else { root.join(path) }
 }
 
 pub(super) fn normalize_existing_path(path: &Path) -> PathBuf {
