@@ -144,6 +144,41 @@ export class DefaultTranslation implements TranslationAdapter {
 }
 
 #[test]
+fn extracts_class_extends_with_and_without_type_arguments() {
+    // `extends` on a class reads the superclass expression and its type
+    // arguments out of one optional heritage clause, so cover both the bare
+    // and the parameterized form.
+    let source = r"
+/** Base store. */
+export class BaseStore<T> {}
+
+/** Plain base. */
+export class PlainBase {}
+
+/** Typed subclass. */
+export class TypedStore extends BaseStore<string> {}
+
+/** Untyped subclass. */
+export class PlainStore extends PlainBase {}
+
+/** No superclass. */
+export class Standalone {}
+";
+
+    let extractor = DocExtractor::new();
+    let items = extractor.extract_source(source, "stores.ts", SourceType::ts()).unwrap();
+    let find = |name: &str| items.iter().find(|item| item.name == name).unwrap();
+
+    assert_eq!(find("TypedStore").extends, vec!["BaseStore<string>"]);
+    assert_eq!(find("PlainStore").extends, vec!["PlainBase"]);
+    assert!(find("Standalone").extends.is_empty());
+    assert_eq!(
+        find("TypedStore").signature.as_deref(),
+        Some("export class TypedStore extends BaseStore<string>")
+    );
+}
+
+#[test]
 fn ts_private_class_members_are_filtered_like_private_tags() {
     let source = r"
 /** A counter. */

@@ -109,11 +109,14 @@ impl<'a> DocVisitor<'a> {
     }
 
     pub(super) fn extract_class_extends(&self, class: &Class<'a>) -> Vec<String> {
-        let Some(super_class) = &class.super_class else {
+        // oxc 0.146 grouped the superclass expression and its type arguments
+        // into one optional `heritage` instead of two independent fields.
+        let Some(heritage) = &class.heritage else {
             return Vec::new();
         };
+        let super_class = &heritage.expression;
         let mut value = self.slice(super_class.span().start, super_class.span().end);
-        if let Some(type_params) = &class.super_type_arguments {
+        if let Some(type_params) = &heritage.type_arguments {
             value.push_str(&self.format_type_parameter_declaration(Some(type_params)));
         }
         Vec::from([value])
@@ -175,8 +178,8 @@ impl<'a> DocVisitor<'a> {
             .extends
             .iter()
             .map(|item| {
-                let mut value =
-                    self.slice(item.expression.span().start, item.expression.span().end);
+                // `TSInterfaceHeritage::expression` became `type_name` in oxc 0.146.
+                let mut value = self.slice(item.type_name.span().start, item.type_name.span().end);
                 if let Some(type_params) = &item.type_arguments {
                     value.push_str(&self.format_type_parameter_declaration(Some(type_params)));
                 }
