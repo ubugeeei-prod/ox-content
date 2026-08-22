@@ -102,6 +102,51 @@ async function resolveTemplate(
 }
 
 /**
+ * Matches this package and every subpath it exports.
+ *
+ * A template's natural runtime is whatever renders it, and for the
+ * framework-less kinds that is this package: `renderToString`, `raw`, `when`
+ * and `each` live at its root, and the JSX runtime under `./jsx-runtime`.
+ * Inlining them instead drags the entire plugin — chokidar, fsevents and all
+ * — into the template bundle, which is what made importing it fail outright.
+ */
+const OX_CONTENT_PACKAGE = /^@ox-content\/vite-plugin(\/.*)?$/;
+
+/**
+ * Whether `id` is a bare specifier, and so resolvable at runtime rather than
+ * something the template bundle has to inline.
+ *
+ * Template bundles are written to `<root>/.cache/og-images/` and imported
+ * from there, so Node resolves anything left external against the project's
+ * own `node_modules`. Relative and absolute imports still bundle, which is
+ * what a template actually needs — its own components travel with it.
+ */
+export function isBareSpecifier(id: string): boolean {
+  if (id.startsWith(".") || id.startsWith("/") || id.startsWith("\0")) {
+    return false;
+  }
+  // Windows drive letters and rolldown's virtual-module prefixes.
+  return !/^[a-zA-Z]:[\\/]/.test(id);
+}
+
+/**
+ * Rolldown input options for a `.ts` template bundle.
+ *
+ * A `.ts` template is the framework-less kind, so it has no single runtime to
+ * externalize the way the `.vue`, `.svelte` and `.tsx` paths do — anything
+ * from `node_modules` is better resolved at import time than inlined. Nothing
+ * on this path has a compiler plugin, so nothing here needed bundling to be
+ * loadable in the first place.
+ */
+export function tsTemplateBundleOptions(templatePath: string) {
+  return {
+    input: templatePath,
+    platform: "node" as const,
+    external: (id: string) => isBareSpecifier(id),
+  };
+}
+
+/**
  * Resolves a plain TypeScript template (existing behavior).
  */
 async function resolveTsTemplate(
@@ -116,10 +161,7 @@ async function resolveTsTemplate(
 
   const outfile = path.join(cacheDir, "_template.mjs");
 
-  const bundle = await rolldown({
-    input: templatePath,
-    platform: "node",
-  });
+  const bundle = await rolldown(tsTemplateBundleOptions(templatePath));
   await bundle.write({
     file: outfile,
     format: "esm",
@@ -162,7 +204,7 @@ async function resolveVueTemplate(
   const bundle = await rolldown({
     input: templatePath,
     platform: "node",
-    external: ["vue", "vue/server-renderer"],
+    external: ["vue", "vue/server-renderer", OX_CONTENT_PACKAGE],
     plugins,
   });
   await bundle.write({
@@ -312,7 +354,13 @@ async function resolveSvelteTemplate(
   const bundle = await rolldown({
     input: templatePath,
     platform: "node",
-    external: ["svelte", "svelte/server", "svelte/internal", "svelte/internal/server"],
+    external: [
+      "svelte",
+      "svelte/server",
+      "svelte/internal",
+      "svelte/internal/server",
+      OX_CONTENT_PACKAGE,
+    ],
     plugins: [createSvelteCompilerPlugin()],
   });
   await bundle.write({
@@ -397,6 +445,7 @@ async function resolveReactTemplate(
       "react/jsx-dev-runtime",
       "react-dom",
       "react-dom/server",
+      OX_CONTENT_PACKAGE,
     ],
     transform: {
       jsx: "react-jsx",
