@@ -164,10 +164,10 @@ fn sibling_keys(
             continue;
         }
         let line = crate::frontmatter::utils::strip_line_breaks(document.line_text(line_index));
-        if leading_indent(line) == current_indent {
-            if let Some(key) = key_before_colon(line) {
-                keys.insert(key.to_string());
-            }
+        if leading_indent(line) == current_indent
+            && let Some(key) = key_before_colon(line)
+        {
+            keys.insert(key.to_string());
         }
     }
     keys
@@ -229,19 +229,19 @@ fn enum_or_default_items(
         items.extend(["true", "false"].into_iter().enumerate().map(|(index, value)| {
             completion_value(value.to_string(), "boolean".to_string(), range, index)
         }));
-    } else if items.is_empty() {
-        if let Some(default) = &property.default {
-            items.push(CompletionItem {
-                label: display_value(default),
-                kind: Some(CompletionItemKind::VALUE),
-                detail: Some("default".to_string()),
-                insert_text: Some(display_value(default)),
-                text_edit: Some(tower_lsp::lsp_types::CompletionTextEdit::Edit(
-                    tower_lsp::lsp_types::TextEdit { range, new_text: display_value(default) },
-                )),
-                ..Default::default()
-            });
-        }
+    } else if items.is_empty()
+        && let Some(default) = &property.default
+    {
+        items.push(CompletionItem {
+            label: display_value(default),
+            kind: Some(CompletionItemKind::VALUE),
+            detail: Some("default".to_string()),
+            insert_text: Some(display_value(default)),
+            text_edit: Some(tower_lsp::lsp_types::CompletionTextEdit::Edit(
+                tower_lsp::lsp_types::TextEdit { range, new_text: display_value(default) },
+            )),
+            ..Default::default()
+        });
     }
 
     items

@@ -71,15 +71,15 @@ pub(super) fn collect_markdown_lint_state(
             continue;
         }
 
-        if let Some(fence_pattern) = FENCE_PATTERN.as_ref() {
-            if let Some(fence_match) = fence_pattern.find(line) {
-                let fence = &line[fence_match.start()..fence_match.end()];
-                in_fence = true;
-                fence_char = fence.chars().next().unwrap_or('\0');
-                fence_length = fence.chars().count();
-                masked_lines.push(create_skipped_line_mask(line));
-                continue;
-            }
+        if let Some(fence_pattern) = FENCE_PATTERN.as_ref()
+            && let Some(fence_match) = fence_pattern.find(line)
+        {
+            let fence = &line[fence_match.start()..fence_match.end()];
+            in_fence = true;
+            fence_char = fence.chars().next().unwrap_or('\0');
+            fence_length = fence.chars().count();
+            masked_lines.push(create_skipped_line_mask(line));
+            continue;
         }
 
         if normalized_options.rules.trailing_spaces {
@@ -189,20 +189,19 @@ pub(super) fn collect_markdown_lint_state(
                     continue;
                 }
 
-                if let Some(previous_token) = previous_comparable_token {
-                    if normalize_comparable_word(&previous_token.text)
+                if let Some(previous_token) = previous_comparable_token
+                    && normalize_comparable_word(&previous_token.text)
                         == normalize_comparable_word(&token.text)
-                    {
-                        diagnostics.push(create_diagnostic(
-                            "repeated-word",
-                            format!("Repeated word \"{}\" looks accidental.", token.text),
-                            line_number,
-                            token.start + 1,
-                            token.end + 1,
-                            Some(token.language.clone()),
-                            None,
-                        ));
-                    }
+                {
+                    diagnostics.push(create_diagnostic(
+                        "repeated-word",
+                        format!("Repeated word \"{}\" looks accidental.", token.text),
+                        line_number,
+                        token.start + 1,
+                        token.end + 1,
+                        Some(token.language.clone()),
+                        None,
+                    ));
                 }
 
                 previous_comparable_token = Some(token);

@@ -93,10 +93,10 @@ impl DocsGenerator {
 
             if path.is_dir() {
                 items.extend(self.extract_dir(allocator, &path)?);
-            } else if self.should_include(&path) {
-                if let Ok(file_items) = self.extractor.extract_file_with(allocator, &path) {
-                    items.extend(file_items);
-                }
+            } else if self.should_include(&path)
+                && let Ok(file_items) = self.extractor.extract_file_with(allocator, &path)
+            {
+                items.extend(file_items);
             }
         }
 

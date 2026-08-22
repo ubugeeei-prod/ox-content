@@ -29,7 +29,7 @@
         lib = pkgs.lib;
         nodejs = pkgs.nodejs_24;
         pnpm = pkgs.pnpm;
-        rustToolchain = pkgs.rust-bin.stable."1.92.0".default.override {
+        rustToolchain = pkgs.rust-bin.stable."1.98.0".default.override {
           extensions = [
             "clippy"
             "rust-src"

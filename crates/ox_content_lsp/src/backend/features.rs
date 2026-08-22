@@ -69,12 +69,12 @@ impl Backend {
         // snippet polluting `<Alert |` is just noise.
         let line_text = document.line_text(position.line);
         let prefix = line_prefix(line_text, position.character);
-        if let Some(site) = detect_mdc_site(prefix) {
-            if let Some(registry) = load_mdc_registry(&config) {
-                let items = mdc_completion_items(&site, &registry);
-                if !items.is_empty() {
-                    return Some(CompletionResponse::Array(items));
-                }
+        if let Some(site) = detect_mdc_site(prefix)
+            && let Some(registry) = load_mdc_registry(&config)
+        {
+            let items = mdc_completion_items(&site, &registry);
+            if !items.is_empty() {
+                return Some(CompletionResponse::Array(items));
             }
         }
 

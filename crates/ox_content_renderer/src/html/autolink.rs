@@ -122,30 +122,31 @@ impl FirstByteIndex {
         // so a letter's presence proves nothing about the other case.
         let mut gate_tail = [0u8; 2];
         let mut gate_tail_len = 0usize;
-        if let Some(gate_byte) = gate {
-            if let Some(first) = patterns.first() {
-                let first = first.as_ref().as_bytes();
-                if let Some(at) = memchr::memchr(gate_byte, first) {
-                    let mut len = 0usize;
-                    while len < gate_tail.len()
-                        && at + 1 + len < first.len()
-                        && !first[at + 1 + len].is_ascii_alphabetic()
+        if let Some(gate_byte) = gate
+            && let Some(first) = patterns.first()
+        {
+            let first = first.as_ref().as_bytes();
+            if let Some(at) = memchr::memchr(gate_byte, first) {
+                let mut len = 0usize;
+                while len < gate_tail.len()
+                    && at + 1 + len < first.len()
+                    && !first[at + 1 + len].is_ascii_alphabetic()
+                {
+                    len += 1;
+                }
+                // Shrink until every pattern holds the whole needle; a
+                // pattern set that disagrees falls back to the bare byte.
+                while len > 0 {
+                    let needle = &first[at..=at + len];
+                    if patterns
+                        .iter()
+                        .all(|pat| memchr::memmem::find(pat.as_ref().as_bytes(), needle).is_some())
                     {
-                        len += 1;
+                        gate_tail[..len].copy_from_slice(&first[at + 1..=at + len]);
+                        gate_tail_len = len;
+                        break;
                     }
-                    // Shrink until every pattern holds the whole needle; a
-                    // pattern set that disagrees falls back to the bare byte.
-                    while len > 0 {
-                        let needle = &first[at..=at + len];
-                        if patterns.iter().all(|pat| {
-                            memchr::memmem::find(pat.as_ref().as_bytes(), needle).is_some()
-                        }) {
-                            gate_tail[..len].copy_from_slice(&first[at + 1..=at + len]);
-                            gate_tail_len = len;
-                            break;
-                        }
-                        len -= 1;
-                    }
+                    len -= 1;
                 }
             }
         }

@@ -26,15 +26,15 @@ pub(super) fn parse_example_block(example: &str) -> ExampleBlock<'_> {
     static FENCE_RE: RegexCache = OnceLock::new();
 
     let trimmed = example.trim();
-    if let Some(fence_re) = cached_regex(&FENCE_RE, r"(?s)^```([\w-]+)?[^\n]*\n(.*?)\n?```$") {
-        if let Some(captures) = fence_re.captures(trimmed) {
-            let language = captures.get(1).map_or("ts", |value| value.as_str());
-            let code = captures.get(2).map_or("", |value| value.as_str());
-            // Only a single whole-body fence when the inner code has no further
-            // fence line; otherwise the body is multiple blocks → Markdown.
-            if !example_has_fence_line(code) {
-                return ExampleBlock::Code { code, language };
-            }
+    if let Some(fence_re) = cached_regex(&FENCE_RE, r"(?s)^```([\w-]+)?[^\n]*\n(.*?)\n?```$")
+        && let Some(captures) = fence_re.captures(trimmed)
+    {
+        let language = captures.get(1).map_or("ts", |value| value.as_str());
+        let code = captures.get(2).map_or("", |value| value.as_str());
+        // Only a single whole-body fence when the inner code has no further
+        // fence line; otherwise the body is multiple blocks → Markdown.
+        if !example_has_fence_line(code) {
+            return ExampleBlock::Code { code, language };
         }
     }
 

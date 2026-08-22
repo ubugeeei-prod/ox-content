@@ -16,12 +16,12 @@ pub fn extract_toc(doc: &Document, max_depth: u8) -> Vec<TocEntry> {
     let mut slug_counts = FxHashMap::default();
 
     for node in &doc.children {
-        if let Node::Heading(heading) = node {
-            if heading.depth <= max_depth {
-                let text = extract_heading_text(heading);
-                let slug = unique_slug(slugify(&text), &mut slug_counts);
-                entries.push(TocEntry { depth: heading.depth, text, slug });
-            }
+        if let Node::Heading(heading) = node
+            && heading.depth <= max_depth
+        {
+            let text = extract_heading_text(heading);
+            let slug = unique_slug(slugify(&text), &mut slug_counts);
+            entries.push(TocEntry { depth: heading.depth, text, slug });
         }
     }
 

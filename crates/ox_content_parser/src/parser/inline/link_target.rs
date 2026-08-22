@@ -34,11 +34,11 @@ impl<'a> Parser<'a> {
 
         let mut title = None;
         // A title needs whitespace between it and the destination.
-        if i > after_dest {
-            if let Some((raw_title, after_title)) = parse_title(content, i) {
-                title = Some(self.unescape_link_component(raw_title));
-                i = skip_ws(bytes, after_title);
-            }
+        if i > after_dest
+            && let Some((raw_title, after_title)) = parse_title(content, i)
+        {
+            title = Some(self.unescape_link_component(raw_title));
+            i = skip_ws(bytes, after_title);
         }
 
         if bytes.get(i) != Some(&b')') {

@@ -206,11 +206,11 @@ fn wrap_text_limited(text: &str, max_chars: usize, max_lines: usize) -> Vec<Stri
 
     if lines.len() > max_lines {
         lines.truncate(max_lines);
-        if let Some(last) = lines.last_mut() {
-            if last.len() > 3 {
-                last.truncate(last.len() - 3);
-                last.push_str("...");
-            }
+        if let Some(last) = lines.last_mut()
+            && last.len() > 3
+        {
+            last.truncate(last.len() - 3);
+            last.push_str("...");
         }
     }
 

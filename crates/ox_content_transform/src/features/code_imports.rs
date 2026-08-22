@@ -177,10 +177,10 @@ fn select_named_region<'a>(source: &'a str, name: &str) -> Result<&'a str, Strin
         let trimmed = line.trim();
         if region_start.is_none() && is_region_start(trimmed, name) {
             region_start = Some(cursor + line.len());
-        } else if let Some(start) = region_start {
-            if is_region_end(trimmed, name) {
-                return Ok(&source[start..cursor]);
-            }
+        } else if let Some(start) = region_start
+            && is_region_end(trimmed, name)
+        {
+            return Ok(&source[start..cursor]);
         }
         cursor += line.len();
     }

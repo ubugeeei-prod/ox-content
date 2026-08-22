@@ -94,10 +94,10 @@ impl Backend {
 impl LanguageServer for Backend {
     async fn initialize(&self, params: InitializeParams) -> Result<InitializeResult> {
         // Set workspace root
-        if let Some(root_uri) = params.root_uri {
-            if let Ok(root_path) = root_uri.to_file_path() {
-                self.state.set_root(root_path).await;
-            }
+        if let Some(root_uri) = params.root_uri
+            && let Ok(root_path) = root_uri.to_file_path()
+        {
+            self.state.set_root(root_path).await;
         }
 
         Ok(InitializeResult {

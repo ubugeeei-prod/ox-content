@@ -40,19 +40,19 @@ pub fn build_nav_items(
 
     let mut result = Vec::new();
     for key in DEFAULT_NAV_GROUP_ORDER {
-        if let Some(items) = groups.remove(*key) {
-            if !items.is_empty() {
-                result.push(NavGroup {
-                    title: if key.is_empty() {
-                        DEFAULT_ROOT_GROUP_TITLE.to_string()
-                    } else {
-                        format_title(key)
-                    },
-                    items: sort_nav_items(items),
-                    collapsed: None,
-                    sticky_collapsed: None,
-                });
-            }
+        if let Some(items) = groups.remove(*key)
+            && !items.is_empty()
+        {
+            result.push(NavGroup {
+                title: if key.is_empty() {
+                    DEFAULT_ROOT_GROUP_TITLE.to_string()
+                } else {
+                    format_title(key)
+                },
+                items: sort_nav_items(items),
+                collapsed: None,
+                sticky_collapsed: None,
+            });
         }
     }
 

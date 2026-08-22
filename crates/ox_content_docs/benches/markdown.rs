@@ -80,15 +80,15 @@ fn param(module: usize, entry: usize, index: usize) -> ApiParamDoc {
         name: option_name(index),
         type_annotation,
         description,
-        optional: index % 2 == 0,
-        default_value: (index % 2 == 0).then(|| default_value(index)),
+        optional: index.is_multiple_of(2),
+        default_value: index.is_multiple_of(2).then(|| default_value(index)),
     }
 }
 
 fn member(module: usize, entry: usize, index: usize) -> ApiDocMember {
-    let kind = if index % 5 == 0 {
+    let kind = if index.is_multiple_of(5) {
         "method"
-    } else if index % 7 == 0 {
+    } else if index.is_multiple_of(7) {
         "getter"
     } else {
         "property"
@@ -141,9 +141,9 @@ fn member(module: usize, entry: usize, index: usize) -> ApiDocMember {
         }),
         throws: Vec::new(),
         members: Vec::new(),
-        optional: index % 2 == 0,
-        readonly: index % 3 == 0,
-        r#static: index % 11 == 0,
+        optional: index.is_multiple_of(2),
+        readonly: index.is_multiple_of(3),
+        r#static: index.is_multiple_of(11),
         private: false,
         tags: Vec::new(),
         implementation_of: Vec::new(),

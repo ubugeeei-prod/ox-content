@@ -113,10 +113,10 @@ impl<'a> Parser<'a> {
         let tag_name = &after_slash[..tag_len];
         let next = after_slash.as_bytes().get(tag_len).copied();
 
-        if let Some(byte) = next {
-            if !matches!(byte, b' ' | b'\t' | b'>' | b'/') {
-                return None;
-            }
+        if let Some(byte) = next
+            && !matches!(byte, b' ' | b'\t' | b'>' | b'/')
+        {
+            return None;
         }
 
         Some(tag_name)

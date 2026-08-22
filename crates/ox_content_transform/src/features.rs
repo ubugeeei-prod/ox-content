@@ -102,32 +102,32 @@ pub fn preprocess_markdown<'a>(
     let mut current = Cow::Borrowed(source);
     let mut errors = Vec::new();
 
-    if let Some(code_imports) = &options.code_imports {
-        if current.contains("<<<") {
-            let replaced = code_imports::transform(&current, code_imports, &mut errors);
+    if let Some(code_imports) = &options.code_imports
+        && current.contains("<<<")
+    {
+        let replaced = code_imports::transform(&current, code_imports, &mut errors);
+        current = Cow::Owned(replaced);
+    }
+
+    if let Some(wiki_links) = &options.wiki_links
+        && current.contains("[[")
+    {
+        let replaced = transform_markdown_text_segments(&current, |segment, out| {
+            replace_wiki_links(segment, wiki_links, out);
+        });
+        if let Some(replaced) = replaced {
             current = Cow::Owned(replaced);
         }
     }
 
-    if let Some(wiki_links) = &options.wiki_links {
-        if current.contains("[[") {
-            let replaced = transform_markdown_text_segments(&current, |segment, out| {
-                replace_wiki_links(segment, wiki_links, out);
-            });
-            if let Some(replaced) = replaced {
-                current = Cow::Owned(replaced);
-            }
-        }
-    }
-
-    if let Some(emoji) = &options.emoji_shortcodes {
-        if current.contains(':') {
-            let replaced = transform_markdown_text_segments(&current, |segment, out| {
-                replace_emoji_shortcodes(segment, emoji, out);
-            });
-            if let Some(replaced) = replaced {
-                current = Cow::Owned(replaced);
-            }
+    if let Some(emoji) = &options.emoji_shortcodes
+        && current.contains(':')
+    {
+        let replaced = transform_markdown_text_segments(&current, |segment, out| {
+            replace_emoji_shortcodes(segment, emoji, out);
+        });
+        if let Some(replaced) = replaced {
+            current = Cow::Owned(replaced);
         }
     }
 

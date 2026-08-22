@@ -6,12 +6,12 @@ members = ["crates/*"]
 version = "2.88.0"
 authors = ["ubugeeei"]
 categories = ["development-tools"]
-edition = "2021"
+edition = "2024"
 homepage = "https://github.com/ubugeeei-prod/ox-content"
 keywords = ["markdown", "documentation", "parser", "vite"]
 license = "MIT"
 repository = "https://github.com/ubugeeei-prod/ox-content"
-rust-version = "1.83.0"
+rust-version = "1.95.0"
 
 [workspace.lints.rust]
 unsafe_code = "warn"

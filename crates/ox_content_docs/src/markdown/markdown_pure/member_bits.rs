@@ -95,14 +95,13 @@ pub(super) fn member_description(
             push_part(&mut description, &part.into_string());
         }
     }
-    if include_returns {
-        if let Some(returns) = &member.returns {
-            if !returns.description.is_empty() {
-                push_part(&mut description, "Returns:");
-                description.push(' ');
-                description.push_str(&inline(&returns.description, context));
-            }
-        }
+    if include_returns
+        && let Some(returns) = &member.returns
+        && !returns.description.is_empty()
+    {
+        push_part(&mut description, "Returns:");
+        description.push(' ');
+        description.push_str(&inline(&returns.description, context));
     }
     // `@since` / `@version` render inline (TypeDoc shows them in the cell); a
     // GitHub alert or section cannot live inside a table cell.

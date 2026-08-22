@@ -122,7 +122,7 @@ impl Registry {
         &'a self,
         component_name: &str,
         prefix: &'a str,
-    ) -> impl Iterator<Item = (&'a str, &'a Attribute)> + 'a {
+    ) -> impl Iterator<Item = (&'a str, &'a Attribute)> + use<'a> {
         self.components
             .get(component_name)
             .into_iter()

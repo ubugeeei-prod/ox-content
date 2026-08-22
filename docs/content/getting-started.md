@@ -26,7 +26,7 @@ Contributor setup and source builds live on a separate page: [Development Setup]
 | Vite Plugin         | Node.js `24+` and a Vite or Vite+ project                              |
 | N-API               | Node.js `24+`                                                          |
 | WebAssembly Package | A JS toolchain that can install npm packages and load `.wasm` from ESM |
-| Rust Crates         | Rust `1.83+`                                                           |
+| Rust Crates         | Rust `1.95+`                                                           |
 
 ## 1. Vite Plugin First
 

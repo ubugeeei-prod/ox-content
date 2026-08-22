@@ -20,10 +20,10 @@ pub(super) fn doc_page_href_from(
     target_file_name: &str,
     anchor: Option<&str>,
 ) -> String {
-    if target_file_name == current_file_name {
-        if let Some(anchor) = anchor.filter(|anchor| !anchor.is_empty()) {
-            return join2("#", anchor);
-        }
+    if target_file_name == current_file_name
+        && let Some(anchor) = anchor.filter(|anchor| !anchor.is_empty())
+    {
+        return join2("#", anchor);
     }
 
     let mut href = String::new();
@@ -157,10 +157,10 @@ fn normalize_doc_file_path(file_path: &str) -> String {
     let normalized = file_path.replace('\\', "/");
 
     for marker in ["npm/", "packages/", "crates/", "src/"] {
-        if let Some(index) = normalized.find(marker) {
-            if index == 0 || normalized.as_bytes().get(index - 1) == Some(&b'/') {
-                return normalized[index..].to_string();
-            }
+        if let Some(index) = normalized.find(marker)
+            && (index == 0 || normalized.as_bytes().get(index - 1) == Some(&b'/'))
+        {
+            return normalized[index..].to_string();
         }
     }
 

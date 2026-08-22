@@ -53,10 +53,8 @@ pub fn order_by_group_title<T>(
     let mut unspecified = Vec::new();
     for slot in &mut remaining {
         let is_tail = slot.as_ref().is_some_and(|(title, _)| tail.iter().any(|t| t == title));
-        if !is_tail {
-            if let Some(section) = slot.take() {
-                unspecified.push(section);
-            }
+        if !is_tail && let Some(section) = slot.take() {
+            unspecified.push(section);
         }
     }
     unspecified.sort_by(|a, b| a.0.cmp(&b.0));

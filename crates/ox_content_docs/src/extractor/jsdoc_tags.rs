@@ -58,11 +58,10 @@ impl<'a> DocVisitor<'a> {
     }
 
     fn format_jsdoc_tag_value(tag_name: &str, tag: &LazyJsdocTag<'_>) -> String {
-        if !matches!(tag_name, "param" | "arg" | "argument") {
-            if let Some(raw_body) = tag.raw_body().map(str::trim).filter(|value| !value.is_empty())
-            {
-                return raw_body.to_string();
-            }
+        if !matches!(tag_name, "param" | "arg" | "argument")
+            && let Some(raw_body) = tag.raw_body().map(str::trim).filter(|value| !value.is_empty())
+        {
+            return raw_body.to_string();
         }
 
         let mut parts = Vec::new();

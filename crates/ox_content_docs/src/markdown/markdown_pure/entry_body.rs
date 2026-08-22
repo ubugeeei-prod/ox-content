@@ -51,18 +51,14 @@ pub(in crate::markdown) fn render_entry_body_pure(
 
     // Entries with an empty `file` (e.g. symbols re-exported from an external
     // package) have no source in the consumer's repo, so emit no source link.
-    if let Some(github_url) = &options.github_url {
-        if !entry.file.is_empty() {
-            let href = generate_source_href(
-                &entry.file,
-                github_url,
-                Some(entry.line),
-                Some(entry.end_line),
-            );
-            out.push_str("[View source](");
-            out.push_str(&href);
-            out.push_str(")\n\n");
-        }
+    if let Some(github_url) = &options.github_url
+        && !entry.file.is_empty()
+    {
+        let href =
+            generate_source_href(&entry.file, github_url, Some(entry.line), Some(entry.end_line));
+        out.push_str("[View source](");
+        out.push_str(&href);
+        out.push_str(")\n\n");
     }
 
     push_type_parameters(&mut out, &entry.type_parameters, options, context, &heading);
@@ -137,18 +133,18 @@ pub(in crate::markdown) fn render_overload_body_pure(
             out.push_str("\n\n");
         }
         out.push_str(&render_since_section(&entry.tags, context, &sub));
-        if let Some(github_url) = &options.github_url {
-            if !entry.file.is_empty() {
-                let href = generate_source_href(
-                    &entry.file,
-                    github_url,
-                    Some(entry.line),
-                    Some(entry.end_line),
-                );
-                out.push_str("[View source](");
-                out.push_str(&href);
-                out.push_str(")\n\n");
-            }
+        if let Some(github_url) = &options.github_url
+            && !entry.file.is_empty()
+        {
+            let href = generate_source_href(
+                &entry.file,
+                github_url,
+                Some(entry.line),
+                Some(entry.end_line),
+            );
+            out.push_str("[View source](");
+            out.push_str(&href);
+            out.push_str(")\n\n");
         }
         push_type_parameters(&mut out, &entry.type_parameters, options, context, &sub);
         push_parameters(&mut out, &entry.params, options, context, &sub);

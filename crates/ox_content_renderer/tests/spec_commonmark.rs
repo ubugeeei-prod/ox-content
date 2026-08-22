@@ -59,11 +59,11 @@ fn render(markdown: &str, mode: &'static str) -> String {
         let allocator = Allocator::new();
         let parser = Parser::with_options(&allocator, &markdown, parser_options(mode));
         let parsed = parser.parse();
-        let rendered = match parsed {
+
+        match parsed {
             Ok(ref document) => HtmlRenderer::with_options(renderer_options()).render(document),
             Err(ref error) => format!("<!-- PARSE ERROR: {error:?} -->"),
-        };
-        rendered
+        }
     });
     result.unwrap_or_else(|panic| {
         let message = panic

@@ -15,32 +15,27 @@ pub(super) fn build_script_replacement(
     // search. Split it into its own deferred chunk and replace the placeholder
     // in the core runtime with that chunk URL. If the marker is absent, fall
     // back to one shared JS asset for the whole script block.
-    if let Some(search_chunk) = find_search_chunk(js_content) {
-        if js_content.contains(SEARCH_CHUNK_PLACEHOLDER) {
-            let search_content = search_chunk.content.trim();
-            if !search_content.is_empty() {
-                let search_public_path = js_chunks
-                    .get_or_create(AssetKind::Js, "search", search_content, out_dir, base)
-                    .public_path
-                    .clone();
-                let mut core_content = String::new();
-                core_content.push_str(&js_content[..search_chunk.start]);
-                core_content.push_str(&js_content[search_chunk.end..]);
-                let core_content = core_content
-                    .replace(SEARCH_CHUNK_PLACEHOLDER, &search_public_path)
-                    .trim()
-                    .to_string();
+    if let Some(search_chunk) = find_search_chunk(js_content)
+        && js_content.contains(SEARCH_CHUNK_PLACEHOLDER)
+    {
+        let search_content = search_chunk.content.trim();
+        if !search_content.is_empty() {
+            let search_public_path = js_chunks
+                .get_or_create(AssetKind::Js, "search", search_content, out_dir, base)
+                .public_path
+                .clone();
+            let mut core_content = String::new();
+            core_content.push_str(&js_content[..search_chunk.start]);
+            core_content.push_str(&js_content[search_chunk.end..]);
+            let core_content = core_content
+                .replace(SEARCH_CHUNK_PLACEHOLDER, &search_public_path)
+                .trim()
+                .to_string();
 
-                if !core_content.is_empty() {
-                    let core_chunk = js_chunks.get_or_create(
-                        AssetKind::Js,
-                        "core",
-                        &core_content,
-                        out_dir,
-                        base,
-                    );
-                    return format!("  <script defer src=\"{}\"></script>", core_chunk.public_path);
-                }
+            if !core_content.is_empty() {
+                let core_chunk =
+                    js_chunks.get_or_create(AssetKind::Js, "core", &core_content, out_dir, base);
+                return format!("  <script defer src=\"{}\"></script>", core_chunk.public_path);
             }
         }
     }

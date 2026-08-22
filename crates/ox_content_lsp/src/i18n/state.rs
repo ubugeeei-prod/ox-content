@@ -93,10 +93,10 @@ impl I18nState {
         let inner = self.inner.read().await;
         let mut translations = Vec::new();
         for locale in inner.dict_set.locales() {
-            if let Some(dict) = inner.dict_set.get(locale) {
-                if let Some(value) = dict.get(key) {
-                    translations.push((locale.to_string(), value.to_string()));
-                }
+            if let Some(dict) = inner.dict_set.get(locale)
+                && let Some(value) = dict.get(key)
+            {
+                translations.push((locale.to_string(), value.to_string()));
             }
         }
         translations
@@ -106,21 +106,17 @@ impl I18nState {
         let inner = self.inner.read().await;
         if let Some(locale) =
             inner.dict_set.default_locale().map(|locale| locale.as_str().to_string())
+            && let Some(dict) = inner.dict_set.get(&locale)
+            && let Some(value) = dict.get(key)
         {
-            if let Some(dict) = inner.dict_set.get(&locale) {
-                if let Some(value) = dict.get(key) {
-                    return Some(value.to_string());
-                }
-            }
+            return Some(value.to_string());
         }
 
-        let fallback = inner
+        inner
             .dict_set
             .locales()
             .find_map(|locale| inner.dict_set.get(locale).and_then(|dict| dict.get(key)))
-            .map(std::string::ToString::to_string);
-
-        fallback
+            .map(std::string::ToString::to_string)
     }
 
     pub async fn find_key_definition(&self, key: &str) -> Option<String> {

@@ -14,10 +14,10 @@ pub fn collect_markdown_files(src_dir: &str, extensions: &[String]) -> Vec<Strin
 
 /// Extracts a display title from frontmatter or a rendered `<h1>`.
 pub fn extract_title(content: &str, frontmatter_title: Option<&str>) -> String {
-    if let Some(title) = frontmatter_title {
-        if !title.is_empty() {
-            return title.to_string();
-        }
+    if let Some(title) = frontmatter_title
+        && !title.is_empty()
+    {
+        return title.to_string();
     }
 
     if let Some(title) = extract_h1_text(content) {

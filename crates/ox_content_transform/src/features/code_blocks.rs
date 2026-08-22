@@ -106,12 +106,11 @@ pub fn lint_code_blocks(
             });
         }
 
-        if let Some(languages) = &languages {
-            if !block.language.is_empty()
-                && !languages.contains(&block.language.to_ascii_lowercase())
-            {
-                continue;
-            }
+        if let Some(languages) = &languages
+            && !block.language.is_empty()
+            && !languages.contains(&block.language.to_ascii_lowercase())
+        {
+            continue;
         }
 
         if trailing_spaces {

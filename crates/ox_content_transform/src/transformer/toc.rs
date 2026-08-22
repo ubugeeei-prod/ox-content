@@ -9,15 +9,15 @@ pub(super) fn extract_toc(doc: &Document, max_depth: u8) -> Vec<TocEntry> {
     let mut slug_counts = FxHashMap::default();
 
     for node in &doc.children {
-        if let Node::Heading(heading) = node {
-            if heading.depth <= max_depth {
-                let text = extract_heading_text(heading);
-                let slug = unique_slug(slugify(&text), &mut slug_counts);
-                push_nested_toc_entry(
-                    &mut entries,
-                    TocEntry { depth: heading.depth, text, slug, children: Vec::new() },
-                );
-            }
+        if let Node::Heading(heading) = node
+            && heading.depth <= max_depth
+        {
+            let text = extract_heading_text(heading);
+            let slug = unique_slug(slugify(&text), &mut slug_counts);
+            push_nested_toc_entry(
+                &mut entries,
+                TocEntry { depth: heading.depth, text, slug, children: Vec::new() },
+            );
         }
     }
 
@@ -25,11 +25,11 @@ pub(super) fn extract_toc(doc: &Document, max_depth: u8) -> Vec<TocEntry> {
 }
 
 fn push_nested_toc_entry(entries: &mut Vec<TocEntry>, entry: TocEntry) {
-    if let Some(last) = entries.last_mut() {
-        if last.depth < entry.depth {
-            push_nested_toc_entry(&mut last.children, entry);
-            return;
-        }
+    if let Some(last) = entries.last_mut()
+        && last.depth < entry.depth
+    {
+        push_nested_toc_entry(&mut last.children, entry);
+        return;
     }
 
     entries.push(entry);

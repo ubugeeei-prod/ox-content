@@ -37,11 +37,11 @@ fn render(markdown: &str, section: &str) -> String {
     renderer_options.disallow_raw_html = section.starts_with("Disallowed Raw HTML");
     let parser = Parser::with_options(&allocator, markdown, ParserOptions::gfm());
     let parsed = parser.parse();
-    let rendered = match parsed {
+
+    match parsed {
         Ok(ref document) => HtmlRenderer::with_options(renderer_options).render(document),
         Err(ref error) => format!("<!-- PARSE ERROR: {error:?} -->"),
-    };
-    rendered
+    }
 }
 
 fn failures(examples: &[SpecExample]) -> Vec<(usize, String)> {

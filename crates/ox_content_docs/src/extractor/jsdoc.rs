@@ -37,21 +37,18 @@ pub(super) fn parse_jsdoc_payload(source: &str, comment: &Comment) -> ParsedJsdo
     let options = JsdocParseOptions { preserve_whitespace: true, ..JsdocParseOptions::default() };
     let result = parse_jsdoc_batch_to_bytes(&items, options);
 
-    if result.diagnostics.is_empty() {
-        if let Ok(source_file) =
+    if result.diagnostics.is_empty()
+        && let Ok(source_file) =
             ox_jsdoc::decoder::source_file::LazySourceFile::new(&result.binary_bytes)
-        {
-            if let Some(Some(root)) = source_file.asts().next() {
-                let doc = root
-                    .description_text(false)
-                    .map_or_else(String::new, |description| description.trim().to_string());
-                // Module-entry parse happens once per file, so always format the
-                // tag value (cheap, and the raw path may surface it).
-                let tags =
-                    root.tags().map(|tag| DocVisitor::convert_jsdoc_tag(tag, true)).collect();
-                return (raw, doc, tags);
-            }
-        }
+        && let Some(Some(root)) = source_file.asts().next()
+    {
+        let doc = root
+            .description_text(false)
+            .map_or_else(String::new, |description| description.trim().to_string());
+        // Module-entry parse happens once per file, so always format the
+        // tag value (cheap, and the raw path may surface it).
+        let tags = root.tags().map(|tag| DocVisitor::convert_jsdoc_tag(tag, true)).collect();
+        return (raw, doc, tags);
     }
 
     let (doc, tags) = DocVisitor::parse_jsdoc_fallback(&raw);

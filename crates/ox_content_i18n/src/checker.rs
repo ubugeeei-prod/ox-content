@@ -118,13 +118,12 @@ pub fn check_type_mismatch(dict_set: &DictionarySet) -> Vec<Diagnostic> {
         let mut locale_vars: Vec<(String, FxHashSet<String>)> = Vec::new();
 
         for locale in dict_set.locales() {
-            if let Some(dict) = dict_set.get(locale) {
-                if let Some(value) = dict.get(key) {
-                    if let Ok(msg) = mf2::parse(value) {
-                        let vars = mf2::validator::extract_variables(&msg);
-                        locale_vars.push((locale.to_string(), vars));
-                    }
-                }
+            if let Some(dict) = dict_set.get(locale)
+                && let Some(value) = dict.get(key)
+                && let Ok(msg) = mf2::parse(value)
+            {
+                let vars = mf2::validator::extract_variables(&msg);
+                locale_vars.push((locale.to_string(), vars));
             }
         }
 

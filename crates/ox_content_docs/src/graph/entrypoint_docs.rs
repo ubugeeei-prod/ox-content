@@ -129,21 +129,20 @@ pub fn extract_docs_from_entry_points(
             )?;
             if let Some(hidden_entry) =
                 all_module_entries.iter().find(|entry| entry.name == *original_name)
-            {
-                if let Some(reason) = filtered_visibility_reason(
+                && let Some(reason) = filtered_visibility_reason(
                     hidden_entry,
                     options.include_private,
                     options.include_internal,
-                ) {
-                    let suffix = join2(" was excluded from docs because it is marked ", reason);
-                    diagnostics.push(docs_diagnostic(
-                        DocsDiagnosticCode::FilteredByVisibility,
-                        &entrypoint.name,
-                        export,
-                        export_entrypoint_message(&export.name, &entrypoint.name, &suffix),
-                    ));
-                    continue;
-                }
+                )
+            {
+                let suffix = join2(" was excluded from docs because it is marked ", reason);
+                diagnostics.push(docs_diagnostic(
+                    DocsDiagnosticCode::FilteredByVisibility,
+                    &entrypoint.name,
+                    export,
+                    export_entrypoint_message(&export.name, &entrypoint.name, &suffix),
+                ));
+                continue;
             }
 
             diagnostics.push(docs_diagnostic(

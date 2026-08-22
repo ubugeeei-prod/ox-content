@@ -61,11 +61,11 @@ fn wiki_target_to_url(target: &str, base_url: &str) -> String {
         normalized.push('/');
     }
     let mut url = join_base_url(base_url, &normalized);
-    if let Some(anchor) = anchor {
-        if !anchor.is_empty() {
-            url.push('#');
-            slugify_anchor(anchor, &mut url);
-        }
+    if let Some(anchor) = anchor
+        && !anchor.is_empty()
+    {
+        url.push('#');
+        slugify_anchor(anchor, &mut url);
     }
     percent_encode_spaces(&url)
 }

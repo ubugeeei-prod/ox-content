@@ -106,18 +106,18 @@ fn collect_top_level_keys(
             .sum::<usize>();
         let candidate = trimmed.trim();
 
-        if !candidate.is_empty() && !candidate.starts_with('#') && indent == 0 {
-            if let Some(colon_index) = trimmed.find(':') {
-                let raw_key = trimmed[indent..colon_index].trim();
-                if !raw_key.is_empty() {
-                    let name = raw_key.trim_matches('"').trim_matches('\'').to_string();
-                    let start = content_start_offset + line_offset + indent;
-                    let end = content_start_offset + line_offset + colon_index;
-                    entries.push(TopLevelKey {
-                        name,
-                        key_range: document.range_from_offsets(start, end),
-                    });
-                }
+        if !candidate.is_empty()
+            && !candidate.starts_with('#')
+            && indent == 0
+            && let Some(colon_index) = trimmed.find(':')
+        {
+            let raw_key = trimmed[indent..colon_index].trim();
+            if !raw_key.is_empty() {
+                let name = raw_key.trim_matches('"').trim_matches('\'').to_string();
+                let start = content_start_offset + line_offset + indent;
+                let end = content_start_offset + line_offset + colon_index;
+                entries
+                    .push(TopLevelKey { name, key_range: document.range_from_offsets(start, end) });
             }
         }
 

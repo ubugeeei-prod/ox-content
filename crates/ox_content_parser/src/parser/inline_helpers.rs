@@ -45,18 +45,19 @@ impl<'a> Parser<'a> {
             });
 
             // Inline form: [text](dest "title")
-            if !inner_has_link && bytes.get(close + 1) == Some(&b'(') {
-                if let Some(target) = self.parse_link_target(content, close + 1) {
-                    let children_nodes = self.parse_inline(link_text, offset + text_start)?;
-                    children.push(Node::Link(Link {
-                        url: target.url,
-                        title: target.title,
-                        children: children_nodes,
-                        span: Span::new((offset + link_start) as u32, (offset + target.end) as u32),
-                    }));
-                    *pos = target.end;
-                    return Ok(());
-                }
+            if !inner_has_link
+                && bytes.get(close + 1) == Some(&b'(')
+                && let Some(target) = self.parse_link_target(content, close + 1)
+            {
+                let children_nodes = self.parse_inline(link_text, offset + text_start)?;
+                children.push(Node::Link(Link {
+                    url: target.url,
+                    title: target.title,
+                    children: children_nodes,
+                    span: Span::new((offset + link_start) as u32, (offset + target.end) as u32),
+                }));
+                *pos = target.end;
+                return Ok(());
             }
 
             // Full [text][label] and collapsed [text][] reference forms.
@@ -88,19 +89,20 @@ impl<'a> Parser<'a> {
 
             // Shortcut form: [label]. Suppressed when an explicit (but
             // unknown) [label] followed, which must stay literal.
-            if !inner_has_link && !well_formed_reference {
-                if let Some(reference) = self.lookup_reference(link_text) {
-                    let (url, title) = (reference.url, reference.title);
-                    let children_nodes = self.parse_inline(link_text, offset + text_start)?;
-                    children.push(Node::Link(Link {
-                        url,
-                        title,
-                        children: children_nodes,
-                        span: Span::new((offset + link_start) as u32, (offset + close + 1) as u32),
-                    }));
-                    *pos = close + 1;
-                    return Ok(());
-                }
+            if !inner_has_link
+                && !well_formed_reference
+                && let Some(reference) = self.lookup_reference(link_text)
+            {
+                let (url, title) = (reference.url, reference.title);
+                let children_nodes = self.parse_inline(link_text, offset + text_start)?;
+                children.push(Node::Link(Link {
+                    url,
+                    title,
+                    children: children_nodes,
+                    span: Span::new((offset + link_start) as u32, (offset + close + 1) as u32),
+                }));
+                *pos = close + 1;
+                return Ok(());
             }
         }
 
@@ -136,20 +138,17 @@ impl<'a> Parser<'a> {
             let raw_alt = &content[alt_start..close];
             let alt = self.flatten_image_alt(raw_alt, offset + alt_start)?;
 
-            if bytes.get(close + 1) == Some(&b'(') {
-                if let Some(target) = self.parse_link_target(content, close + 1) {
-                    children.push(Node::Image(Image {
-                        url: target.url,
-                        alt,
-                        title: target.title,
-                        span: Span::new(
-                            (offset + image_start) as u32,
-                            (offset + target.end) as u32,
-                        ),
-                    }));
-                    *pos = target.end;
-                    return Ok(());
-                }
+            if bytes.get(close + 1) == Some(&b'(')
+                && let Some(target) = self.parse_link_target(content, close + 1)
+            {
+                children.push(Node::Image(Image {
+                    url: target.url,
+                    alt,
+                    title: target.title,
+                    span: Span::new((offset + image_start) as u32, (offset + target.end) as u32),
+                }));
+                *pos = target.end;
+                return Ok(());
             }
 
             let mut well_formed_reference = false;
@@ -176,17 +175,15 @@ impl<'a> Parser<'a> {
                 }
             }
 
-            if !well_formed_reference {
-                if let Some(reference) = self.lookup_reference(raw_alt) {
-                    children.push(Node::Image(Image {
-                        url: reference.url,
-                        alt,
-                        title: reference.title,
-                        span: Span::new((offset + image_start) as u32, (offset + close + 1) as u32),
-                    }));
-                    *pos = close + 1;
-                    return Ok(());
-                }
+            if !well_formed_reference && let Some(reference) = self.lookup_reference(raw_alt) {
+                children.push(Node::Image(Image {
+                    url: reference.url,
+                    alt,
+                    title: reference.title,
+                    span: Span::new((offset + image_start) as u32, (offset + close + 1) as u32),
+                }));
+                *pos = close + 1;
+                return Ok(());
             }
         }
 

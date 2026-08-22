@@ -99,7 +99,10 @@ fn generate_docs_markdown_render_generated_by_option_toggles_attribution() {
     // the H1 when stats are also disabled.
     let without_generated_by =
         generate_docs_markdown(docs_markdown_module(), Some(options(Some(false))));
-    assert_string_map_snapshot("generate_docs_markdown_render_generated_by_option_toggles_attribution__without_generated_by", &without_generated_by);
+    assert_string_map_snapshot(
+        "generate_docs_markdown_render_generated_by_option_toggles_attribution__without_generated_by",
+        &without_generated_by,
+    );
     let root = without_generated_by.get("index.md").unwrap();
 
     assert!(root.starts_with("# API Documentation\n\n## Modules\n\n"));

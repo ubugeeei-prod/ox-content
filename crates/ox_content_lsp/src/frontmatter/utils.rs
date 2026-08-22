@@ -60,13 +60,7 @@ pub fn display_value(value: &Value) -> String {
 }
 
 pub fn effective_type(schema: &FrontmatterSchema) -> Option<&str> {
-    schema.type_name.as_deref().or({
-        if schema.properties.is_empty() {
-            None
-        } else {
-            Some("object")
-        }
-    })
+    schema.type_name.as_deref().or(if schema.properties.is_empty() { None } else { Some("object") })
 }
 
 pub fn matches_type(type_name: &str, value: &Value) -> bool {

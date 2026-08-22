@@ -34,12 +34,11 @@ pub(super) fn mask_markdown_line(line: &str) -> String {
     let line_chars = line.chars().collect::<Vec<_>>();
     let mut chars = line_chars.clone();
 
-    if let Some(list_prefix_pattern) = LIST_PREFIX_PATTERN.as_ref() {
-        if let Some(prefix_match) = list_prefix_pattern.find(line) {
-            let (start, end) =
-                byte_range_to_char_range(line, prefix_match.start(), prefix_match.end());
-            blank_range(&mut chars, start, end);
-        }
+    if let Some(list_prefix_pattern) = LIST_PREFIX_PATTERN.as_ref()
+        && let Some(prefix_match) = list_prefix_pattern.find(line)
+    {
+        let (start, end) = byte_range_to_char_range(line, prefix_match.start(), prefix_match.end());
+        blank_range(&mut chars, start, end);
     }
 
     if let Some(footnote_pattern) = FOOTNOTE_PATTERN.as_ref() {

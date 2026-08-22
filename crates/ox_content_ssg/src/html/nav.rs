@@ -10,10 +10,13 @@ pub(super) fn generate_nav_html(nav_groups: &[NavGroup], current_path: &str) -> 
             let open = if group.collapsed == Some(true) { "" } else { " open" };
             let state_key = format!("group:{group_index}:{}", group.title);
             let state_attr = nav_state_attr(group.sticky_collapsed, &state_key);
-            push_fmt(&mut html, format_args!(
-                "<details class=\"nav-section nav-section--collapsible\"{open}{state_attr}>\n  <summary class=\"nav-title nav-title--summary\">{}</summary>\n",
-                escape_html(&group.title)
-            ));
+            push_fmt(
+                &mut html,
+                format_args!(
+                    "<details class=\"nav-section nav-section--collapsible\"{open}{state_attr}>\n  <summary class=\"nav-title nav-title--summary\">{}</summary>\n",
+                    escape_html(&group.title)
+                ),
+            );
             render_nav_list(
                 &mut html,
                 &group.items,
@@ -63,18 +66,24 @@ fn render_nav_item(html: &mut String, item: &NavItem, current_path: &str, key_pa
     let title = escape_html(&item.title);
     let active_class = if item.path == current_path { " active" } else { "" };
     if item.children.is_empty() {
-        push_fmt(html, format_args!(
-            "    <li class=\"nav-item\"><a href=\"{href}\" class=\"nav-link{active_class}\">{title}</a></li>\n"
-        ));
+        push_fmt(
+            html,
+            format_args!(
+                "    <li class=\"nav-item\"><a href=\"{href}\" class=\"nav-link{active_class}\">{title}</a></li>\n"
+            ),
+        );
         return;
     }
 
     let open = if item.collapsed == Some(true) { "" } else { " open" };
     let state_key = format!("item:{key_path}:{}:{}", item.path, item.title);
     let state_attr = nav_state_attr(item.sticky_collapsed, &state_key);
-    push_fmt(html, format_args!(
-        "    <li class=\"nav-item nav-item--group\"><details class=\"nav-details\"{open}{state_attr}><summary class=\"nav-summary\"><a href=\"{href}\" class=\"nav-link nav-link--summary{active_class}\">{title}</a></summary>\n"
-    ));
+    push_fmt(
+        html,
+        format_args!(
+            "    <li class=\"nav-item nav-item--group\"><details class=\"nav-details\"{open}{state_attr}><summary class=\"nav-summary\"><a href=\"{href}\" class=\"nav-link nav-link--summary{active_class}\">{title}</a></summary>\n"
+        ),
+    );
     render_nav_list(html, &item.children, current_path, true, key_path);
     html.push_str("    </details></li>\n");
 }

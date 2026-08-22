@@ -64,12 +64,11 @@ impl LspState {
     /// Reloads dictionaries from disk.
     pub async fn reload_dictionaries(&self) {
         let mut inner = self.inner.write().await;
-        if let Some(ref dict_dir) = inner.dict_dir {
-            if dict_dir.exists() {
-                if let Ok(set) = dictionary::load_from_dir(dict_dir) {
-                    inner.dict_set = set;
-                }
-            }
+        if let Some(ref dict_dir) = inner.dict_dir
+            && dict_dir.exists()
+            && let Ok(set) = dictionary::load_from_dir(dict_dir)
+        {
+            inner.dict_set = set;
         }
     }
 
@@ -126,10 +125,10 @@ impl LspState {
         let inner = self.inner.read().await;
         let mut translations = Vec::new();
         for locale in inner.dict_set.locales() {
-            if let Some(dict) = inner.dict_set.get(locale) {
-                if let Some(value) = dict.get(key) {
-                    translations.push((locale.to_string(), value.to_string()));
-                }
+            if let Some(dict) = inner.dict_set.get(locale)
+                && let Some(value) = dict.get(key)
+            {
+                translations.push((locale.to_string(), value.to_string()));
             }
         }
         translations
@@ -141,18 +140,18 @@ impl LspState {
         let inner = self.inner.read().await;
         let default_locale = inner.dict_set.default_locale().map(|l| l.as_str().to_string());
 
-        if let Some(locale) = default_locale {
-            if let Some(dict) = inner.dict_set.get(&locale) {
-                return dict.get(key).map(String::from);
-            }
+        if let Some(locale) = default_locale
+            && let Some(dict) = inner.dict_set.get(&locale)
+        {
+            return dict.get(key).map(String::from);
         }
 
         // Try first available locale
         for locale in inner.dict_set.locales() {
-            if let Some(dict) = inner.dict_set.get(locale) {
-                if let Some(value) = dict.get(key) {
-                    return Some(value.to_string());
-                }
+            if let Some(dict) = inner.dict_set.get(locale)
+                && let Some(value) = dict.get(key)
+            {
+                return Some(value.to_string());
             }
         }
         None
@@ -166,20 +165,20 @@ impl LspState {
 
         // Find which locale/file contains this key
         for locale in inner.dict_set.locales() {
-            if let Some(dict) = inner.dict_set.get(locale) {
-                if dict.get(key).is_some() {
-                    // Key found — determine source file from namespace
-                    let namespace = key.split('.').next().unwrap_or(key);
-                    let json_path = dict_dir.join(locale).join(format!("{namespace}.json"));
+            if let Some(dict) = inner.dict_set.get(locale)
+                && dict.get(key).is_some()
+            {
+                // Key found — determine source file from namespace
+                let namespace = key.split('.').next().unwrap_or(key);
+                let json_path = dict_dir.join(locale).join(format!("{namespace}.json"));
 
-                    if json_path.exists() {
-                        return Some((json_path.to_string_lossy().to_string(), locale.to_string()));
-                    }
+                if json_path.exists() {
+                    return Some((json_path.to_string_lossy().to_string(), locale.to_string()));
+                }
 
-                    let yaml_path = dict_dir.join(locale).join(format!("{namespace}.yaml"));
-                    if yaml_path.exists() {
-                        return Some((yaml_path.to_string_lossy().to_string(), locale.to_string()));
-                    }
+                let yaml_path = dict_dir.join(locale).join(format!("{namespace}.yaml"));
+                if yaml_path.exists() {
+                    return Some((yaml_path.to_string_lossy().to_string(), locale.to_string()));
                 }
             }
         }

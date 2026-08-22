@@ -205,16 +205,15 @@ impl Parser {
     }
 
     fn try_parse_function_option(&mut self) -> I18nResult<Option<FunctionOption>> {
-        if self.pos + 1 < self.tokens.len() {
-            if let Token::Name(ref name) = self.tokens[self.pos].token {
-                if self.tokens[self.pos + 1].token == Token::Equals {
-                    let name = name.clone();
-                    self.advance();
-                    self.advance();
-                    let value = self.parse_option_value()?;
-                    return Ok(Some(FunctionOption { name, value }));
-                }
-            }
+        if self.pos + 1 < self.tokens.len()
+            && let Token::Name(ref name) = self.tokens[self.pos].token
+            && self.tokens[self.pos + 1].token == Token::Equals
+        {
+            let name = name.clone();
+            self.advance();
+            self.advance();
+            let value = self.parse_option_value()?;
+            return Ok(Some(FunctionOption { name, value }));
         }
         Ok(None)
     }

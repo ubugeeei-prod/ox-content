@@ -132,18 +132,19 @@ impl<'a> Parser<'a> {
         // reference definitions, so they get first refusal when the
         // extension is on; otherwise `[^1]: text` would be swallowed as a
         // link reference with label `^1`.
-        if bytes[trimmed_start] == b'[' && self.at_footnote_definition(start) {
-            if let Some(node) = self.try_parse_footnote_definition_node()? {
-                return Ok(Some(node));
-            }
+        if bytes[trimmed_start] == b'['
+            && self.at_footnote_definition(start)
+            && let Some(node) = self.try_parse_footnote_definition_node()?
+        {
+            return Ok(Some(node));
         }
 
         // Link reference definitions look like paragraphs but are
         // consumed as their own (non-rendered) nodes.
-        if bytes[trimmed_start] == b'[' {
-            if let Some(node) = self.try_parse_definition_node() {
-                return Ok(Some(node));
-            }
+        if bytes[trimmed_start] == b'['
+            && let Some(node) = self.try_parse_definition_node()
+        {
+            return Ok(Some(node));
         }
 
         // Default: parse as paragraph

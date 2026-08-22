@@ -176,8 +176,8 @@ fn find_opener(delimiters: &[Delimiter], closer_idx: usize) -> Option<usize> {
         // Rule of three: when one side can both open and close, sums
         // divisible by three only pair if both lengths are.
         let sum_of_three = (opener.can_close || closer.can_open)
-            && (opener.orig_len + closer.orig_len) % 3 == 0
-            && !(opener.orig_len % 3 == 0 && closer.orig_len % 3 == 0);
+            && (opener.orig_len + closer.orig_len).is_multiple_of(3)
+            && !(opener.orig_len.is_multiple_of(3) && closer.orig_len.is_multiple_of(3));
         if sum_of_three {
             continue;
         }

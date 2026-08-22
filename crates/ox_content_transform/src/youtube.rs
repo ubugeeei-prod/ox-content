@@ -62,10 +62,10 @@ pub fn extract_video_id(input: &str) -> Option<String> {
         return Some(input.to_string());
     }
     for pattern in URL_PATTERNS.iter() {
-        if let Some(captures) = pattern.captures(input) {
-            if let Some(id) = captures.get(1) {
-                return Some(id.as_str().to_string());
-            }
+        if let Some(captures) = pattern.captures(input)
+            && let Some(id) = captures.get(1)
+        {
+            return Some(id.as_str().to_string());
         }
     }
     None

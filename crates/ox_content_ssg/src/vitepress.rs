@@ -12,12 +12,12 @@ pub fn normalize_vitepress_frontmatter(frontmatter: Value) -> Value {
         next.insert("layout".to_string(), Value::String("entry".to_string()));
     }
 
-    if let Some(Value::Object(hero)) = next.get("hero") {
-        if let Some(image) = hero.get("image").and_then(normalize_hero_image) {
-            let mut next_hero = hero.clone();
-            next_hero.insert("image".to_string(), image);
-            next.insert("hero".to_string(), Value::Object(next_hero));
-        }
+    if let Some(Value::Object(hero)) = next.get("hero")
+        && let Some(image) = hero.get("image").and_then(normalize_hero_image)
+    {
+        let mut next_hero = hero.clone();
+        next_hero.insert("image".to_string(), image);
+        next.insert("hero".to_string(), Value::Object(next_hero));
     }
 
     Value::Object(next)

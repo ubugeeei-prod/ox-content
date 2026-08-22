@@ -77,10 +77,10 @@ pub fn check(config: &CheckConfig) -> Result<CheckResult, String> {
     let mut dict_set = dictionary::load_from_dir(dict_path)
         .map_err(|e| format!("failed to load dictionaries: {e}"))?;
 
-    if let Some(ref locale_str) = config.default_locale {
-        if let Ok(locale) = ox_content_i18n::Locale::new(locale_str) {
-            dict_set.set_default_locale(locale);
-        }
+    if let Some(ref locale_str) = config.default_locale
+        && let Ok(locale) = ox_content_i18n::Locale::new(locale_str)
+    {
+        dict_set.set_default_locale(locale);
     }
 
     // Collect keys from source files

@@ -141,17 +141,16 @@ impl<'a> Parser<'a> {
             }
         }
 
-        if ws_between {
-            if let Some((raw_title, after_title)) = super::inline::parse_link_title(text, k) {
-                if let Some(end) = line_end_if_blank_after(bytes, after_title) {
-                    return Some(ParsedDefinition {
-                        label,
-                        url: self.unescape_reference_component(raw_url),
-                        title: Some(self.unescape_reference_component(raw_title)),
-                        consumed: end,
-                    });
-                }
-            }
+        if ws_between
+            && let Some((raw_title, after_title)) = super::inline::parse_link_title(text, k)
+            && let Some(end) = line_end_if_blank_after(bytes, after_title)
+        {
+            return Some(ParsedDefinition {
+                label,
+                url: self.unescape_reference_component(raw_url),
+                title: Some(self.unescape_reference_component(raw_title)),
+                consumed: end,
+            });
         }
 
         // No (valid) title: the definition is still good if its

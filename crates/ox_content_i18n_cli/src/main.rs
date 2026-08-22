@@ -114,12 +114,10 @@ fn main() {
                             }
                         }
                     }
-                    if ast {
-                        if let Ok(json) = serde_json::to_string_pretty(&parsed_ast) {
-                            #[allow(clippy::print_stdout)]
-                            {
-                                println!("\nAST:\n{json}");
-                            }
+                    if ast && let Ok(json) = serde_json::to_string_pretty(&parsed_ast) {
+                        #[allow(clippy::print_stdout)]
+                        {
+                            println!("\nAST:\n{json}");
                         }
                     }
                 }

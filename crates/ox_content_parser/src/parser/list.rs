@@ -179,17 +179,17 @@ impl<'a> Parser<'a> {
                     continue;
                 }
 
-                if next_indent >= baseline_indent && next_indent <= baseline_indent + 3 {
-                    if let Some(sibling) = self
+                if next_indent >= baseline_indent
+                    && next_indent <= baseline_indent + 3
+                    && let Some(sibling) = self
                         .parse_list_item_line(lookahead)
                         .filter(|next| next.ordered == item.ordered && next.marker == item.marker)
-                    {
-                        // Blank line between siblings: the list is loose.
-                        self.position = lookahead;
-                        gap_spread = true;
-                        next_item = Some(sibling);
-                        break;
-                    }
+                {
+                    // Blank line between siblings: the list is loose.
+                    self.position = lookahead;
+                    gap_spread = true;
+                    next_item = Some(sibling);
+                    break;
                 }
 
                 break;
@@ -212,23 +212,22 @@ impl<'a> Parser<'a> {
 
             // A list marker (indented at most three columns past the
             // baseline — deeper "markers" are just text) ends this item.
-            if current_indent >= baseline_indent && current_indent <= baseline_indent + 3 {
-                if let Some(sibling) =
+            if current_indent >= baseline_indent
+                && current_indent <= baseline_indent + 3
+                && let Some(sibling) =
                     self.parse_list_item_line_from_line(continuation_start, continuation_line)
-                {
-                    // A thematic break can overlap list syntax only when an
-                    // unordered item's content starts with the same `-` or
-                    // `*` marker. All ordinary item text skips the full-line
-                    // marker scan that previously ran before every sibling.
-                    let could_be_thematic = !sibling.ordered
-                        && matches!(sibling.marker, b'-' | b'*')
-                        && sibling.content.as_bytes().first() == Some(&sibling.marker);
-                    if !could_be_thematic || !Self::try_parse_thematic_break_line(continuation_line)
-                    {
-                        next_item = Some(sibling);
-                    }
-                    break;
+            {
+                // A thematic break can overlap list syntax only when an
+                // unordered item's content starts with the same `-` or
+                // `*` marker. All ordinary item text skips the full-line
+                // marker scan that previously ran before every sibling.
+                let could_be_thematic = !sibling.ordered
+                    && matches!(sibling.marker, b'-' | b'*')
+                    && sibling.content.as_bytes().first() == Some(&sibling.marker);
+                if !could_be_thematic || !Self::try_parse_thematic_break_line(continuation_line) {
+                    next_item = Some(sibling);
                 }
+                break;
             }
 
             // A block start interrupts the item; anything else lazily

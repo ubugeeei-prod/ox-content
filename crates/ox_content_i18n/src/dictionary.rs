@@ -109,19 +109,18 @@ impl DictionarySet {
     #[must_use]
     pub fn translate(&self, locale: &str, key: &str) -> Option<&str> {
         // Try the requested locale
-        if let Some(dict) = self.dictionaries.get(locale) {
-            if let Some(value) = dict.get(key) {
-                return Some(value);
-            }
+        if let Some(dict) = self.dictionaries.get(locale)
+            && let Some(value) = dict.get(key)
+        {
+            return Some(value);
         }
 
         // Fall back to default locale
-        if let Some(default) = &self.default_locale {
-            if default.as_str() != locale {
-                if let Some(dict) = self.dictionaries.get(default.as_str()) {
-                    return dict.get(key);
-                }
-            }
+        if let Some(default) = &self.default_locale
+            && default.as_str() != locale
+            && let Some(dict) = self.dictionaries.get(default.as_str())
+        {
+            return dict.get(key);
         }
 
         None

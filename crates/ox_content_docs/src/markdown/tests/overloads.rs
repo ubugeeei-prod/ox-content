@@ -121,21 +121,21 @@ fn typedoc_overload_page_hoists_implementation_summary_and_since() {
 #[test]
 fn typedoc_single_public_overload_renders_inline() {
     let docs = overload_module(vec![
-            overload_entry(
-                "define",
-                "/repo/src/definition.ts",
-                "Define a command.",
-                "export function define<G>(definition: CommandDefinition<G>): CommandDefinitionResult<G>",
-                false,
-            ),
-            overload_entry(
-                "define",
-                "/repo/src/definition.ts",
-                "Define a command.",
-                "export function define(definition: any): any",
-                true,
-            ),
-        ]);
+        overload_entry(
+            "define",
+            "/repo/src/definition.ts",
+            "Define a command.",
+            "export function define<G>(definition: CommandDefinition<G>): CommandDefinitionResult<G>",
+            false,
+        ),
+        overload_entry(
+            "define",
+            "/repo/src/definition.ts",
+            "Define a command.",
+            "export function define(definition: any): any",
+            true,
+        ),
+    ]);
     let out = generate_markdown(&docs, &markdown_typedoc_options());
     assert_markdown_map_snapshot("typedoc_single_public_overload_renders_inline", &out);
 

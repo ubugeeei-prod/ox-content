@@ -89,14 +89,14 @@ pub(super) fn render_member_description_html(
         blocks.push(render_member_params_html(&member.params, options, context));
     }
 
-    if let Some(returns) = &member.returns {
-        if !returns.description.is_empty() {
-            blocks.push(join3(
-                "<div class=\"ox-api-entry__member-return\"><span>Returns</span> ",
-                &render_doc_inline_html(&returns.description, context),
-                "</div>",
-            ));
-        }
+    if let Some(returns) = &member.returns
+        && !returns.description.is_empty()
+    {
+        blocks.push(join3(
+            "<div class=\"ox-api-entry__member-return\"><span>Returns</span> ",
+            &render_doc_inline_html(&returns.description, context),
+            "</div>",
+        ));
     }
 
     let throws = super::rendered_throws(&member.throws, &member.tags);

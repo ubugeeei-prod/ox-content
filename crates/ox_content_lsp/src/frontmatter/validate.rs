@@ -26,17 +26,17 @@ fn validate_value(
     block: &FrontmatterBlock,
     diagnostics: &mut Vec<Diagnostic>,
 ) {
-    if let Some(type_name) = effective_type(schema) {
-        if !matches_type(type_name, value) {
-            diagnostics.push(Diagnostic {
-                range: range_for_path(block, path),
-                severity: Some(DiagnosticSeverity::ERROR),
-                source: Some("ox-content".to_string()),
-                message: format!("Expected `{type_name}` but found `{}`", value_kind(value)),
-                ..Default::default()
-            });
-            return;
-        }
+    if let Some(type_name) = effective_type(schema)
+        && !matches_type(type_name, value)
+    {
+        diagnostics.push(Diagnostic {
+            range: range_for_path(block, path),
+            severity: Some(DiagnosticSeverity::ERROR),
+            source: Some("ox-content".to_string()),
+            message: format!("Expected `{type_name}` but found `{}`", value_kind(value)),
+            ..Default::default()
+        });
+        return;
     }
 
     validate_enum(schema, value, path, block, diagnostics);

@@ -25,10 +25,10 @@ impl<'a> DocVisitor<'a> {
             .iter()
             .filter_map(|param| Self::binding_pattern_identifier_name(&param.pattern))
             .collect::<Vec<_>>();
-        if let Some(rest) = params.rest.as_ref() {
-            if let Some(name) = Self::binding_pattern_identifier_name(&rest.rest.argument) {
-                reserved_param_names.push(name);
-            }
+        if let Some(rest) = params.rest.as_ref()
+            && let Some(name) = Self::binding_pattern_identifier_name(&rest.rest.argument)
+        {
+            reserved_param_names.push(name);
         }
         let mut used_param_tag_indices = Vec::new();
 

@@ -106,10 +106,10 @@ impl CodeBlockRenderState {
 
         for line in &self.lines {
             for annotation in &line.annotations {
-                if let Some(class_name) = annotation.block_class_name() {
-                    if !classes.contains(&class_name) {
-                        classes.push(class_name);
-                    }
+                if let Some(class_name) = annotation.block_class_name()
+                    && !classes.contains(&class_name)
+                {
+                    classes.push(class_name);
                 }
             }
         }

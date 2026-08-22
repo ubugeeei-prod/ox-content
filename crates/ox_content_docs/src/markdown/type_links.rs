@@ -94,15 +94,16 @@ pub(super) fn resolve_type_fragments(
             }
             text_start = index;
 
-            if !skip.contains(ident) && !TS_INTRINSIC_TYPES.contains(ident) {
-                if let Some(location) = resolve_symbol_location(ident, context) {
-                    fragments.push(TypeFragment::Link {
-                        name: ident.to_string(),
-                        href: format_symbol_href(context, location),
-                    });
-                    has_link = true;
-                    continue;
-                }
+            if !skip.contains(ident)
+                && !TS_INTRINSIC_TYPES.contains(ident)
+                && let Some(location) = resolve_symbol_location(ident, context)
+            {
+                fragments.push(TypeFragment::Link {
+                    name: ident.to_string(),
+                    href: format_symbol_href(context, location),
+                });
+                has_link = true;
+                continue;
             }
             fragments.push(TypeFragment::Code(ident.to_string()));
             continue;
