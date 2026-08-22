@@ -72,6 +72,12 @@ fn javascript_highlights() -> String {
     )
 }
 
+/// C++ extends C the same way TypeScript extends JavaScript: its queries
+/// declare only the additions, so C's have to come first.
+fn cpp_highlights() -> String {
+    format!("{}\n{}", tree_sitter_c::HIGHLIGHT_QUERY, tree_sitter_cpp::HIGHLIGHT_QUERY)
+}
+
 fn typescript_locals() -> String {
     format!("{}\n{}", tree_sitter_javascript::LOCALS_QUERY, tree_sitter_typescript::LOCALS_QUERY)
 }
@@ -132,6 +138,47 @@ fn grammars() -> &'static [Grammar] {
             tree_sitter_html::LANGUAGE,
             tree_sitter_html::HIGHLIGHTS_QUERY,
             tree_sitter_html::INJECTIONS_QUERY,
+            "",
+        ),
+        grammar!(
+            "python",
+            ["python", "py"],
+            tree_sitter_python::LANGUAGE,
+            tree_sitter_python::HIGHLIGHTS_QUERY,
+            "",
+            "",
+        ),
+        grammar!(
+            "go",
+            ["go", "golang"],
+            tree_sitter_go::LANGUAGE,
+            tree_sitter_go::HIGHLIGHTS_QUERY,
+            "",
+            "",
+        ),
+        grammar!(
+            "java",
+            ["java"],
+            tree_sitter_java::LANGUAGE,
+            tree_sitter_java::HIGHLIGHTS_QUERY,
+            "",
+            "",
+        ),
+        grammar!("c", ["c", "h"], tree_sitter_c::LANGUAGE, tree_sitter_c::HIGHLIGHT_QUERY, "", "",),
+        grammar!(
+            "cpp",
+            ["cpp", "c++", "cc", "hpp", "cxx"],
+            tree_sitter_cpp::LANGUAGE,
+            cpp_highlights(),
+            "",
+            "",
+        ),
+        grammar!(
+            "yaml",
+            ["yaml", "yml"],
+            tree_sitter_yaml::LANGUAGE,
+            tree_sitter_yaml::HIGHLIGHTS_QUERY,
+            "",
             "",
         ),
         grammar!(
