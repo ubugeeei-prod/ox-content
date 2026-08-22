@@ -35,6 +35,9 @@ use tree_sitter_highlight::Highlighter;
 /// took for a language it had not loaded.
 #[must_use]
 pub fn highlight_to_html(code: &str, lang: &str) -> Option<String> {
+    if languages::is_plain(lang) {
+        return Some(render::render_plain(code));
+    }
     let config = languages::config_for(lang)?;
     let mut highlighter = Highlighter::new();
     // The closure is not redundant: passing `config_by_name` directly makes
@@ -52,5 +55,5 @@ pub fn highlight_to_html(code: &str, lang: &str) -> Option<String> {
 /// Whether a fenced code block tagged `lang` will be highlighted.
 #[must_use]
 pub fn supports(lang: &str) -> bool {
-    languages::config_for(lang).is_some()
+    languages::is_plain(lang) || languages::config_for(lang).is_some()
 }

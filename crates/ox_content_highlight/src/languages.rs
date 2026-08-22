@@ -215,7 +215,18 @@ pub fn config_by_name(name: &str) -> Option<&'static HighlightConfiguration> {
     configs()[index].get_or_init(grammars()[index].build).as_ref()
 }
 
+/// Names for "this block has no syntax", rendered without tokenizing.
+pub const PLAIN_LANGUAGES: &[&str] = &["text", "plaintext", "txt", "plain"];
+
+/// Whether `lang` names a block that should render without tokenizing.
+pub fn is_plain(lang: &str) -> bool {
+    PLAIN_LANGUAGES.iter().any(|name| name.eq_ignore_ascii_case(lang))
+}
+
 /// Every alias this crate answers to, for the caller's capability check.
 pub fn supported_languages() -> impl Iterator<Item = &'static str> {
-    grammars().iter().flat_map(|grammar| grammar.aliases.iter().copied())
+    grammars()
+        .iter()
+        .flat_map(|grammar| grammar.aliases.iter().copied())
+        .chain(PLAIN_LANGUAGES.iter().copied())
 }

@@ -87,6 +87,19 @@ impl Writer {
     }
 }
 
+/// Renders `code` with no tokenization, every line at the foreground color.
+///
+/// A `text` block has nothing to highlight, but it still has to come out in
+/// the same `<pre>` the other blocks do — the copy button, line numbers and
+/// annotation transforms all key off that markup. Handling it here rather than
+/// declining it is also what lets a page of prose and plain-text snippets
+/// avoid constructing the fallback highlighter at all.
+pub fn render_plain(code: &str) -> String {
+    let mut writer = Writer::new(code.len() * 2);
+    writer.push_run(code, None);
+    writer.finish()
+}
+
 /// Renders `code` given the events tree-sitter produced for it.
 ///
 /// `capture_name` resolves a highlight index back to the capture name the

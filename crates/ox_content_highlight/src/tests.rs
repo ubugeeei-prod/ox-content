@@ -125,6 +125,31 @@ fn every_advertised_language_actually_builds() {
 }
 
 #[test]
+fn plain_text_renders_without_tokenizing() {
+    // `text` is the third most common fence tag in the documentation corpus.
+    // Declining it would send those pages to the fallback highlighter purely
+    // to render prose, which is the cost this avoids.
+    for lang in ["text", "plaintext", "txt", "plain", "TEXT"] {
+        assert!(supports(lang), "{lang} should be supported");
+    }
+
+    let html = highlight_to_html("a < b\nline two\n", "text").expect("supported");
+    assert!(html.starts_with("<pre class=\"shiki css-variables\""), "{html}");
+    assert!(html.contains("&lt;"), "{html}");
+    // Nothing is tokenized, so no token variable may appear.
+    assert!(!html.contains("--octc-shiki-token-"), "{html}");
+    assert_eq!(html.matches("<span class=\"line\">").count(), 3, "{html}");
+}
+
+#[test]
+fn plain_text_keeps_the_input_verbatim() {
+    for code in ["a < b & c > d\n", "\ttabbed\n\n", "🎉 ünï\n", "no newline"] {
+        let html = highlight_to_html(code, "text").expect("supported");
+        assert_eq!(visible_text(&html), code);
+    }
+}
+
+#[test]
 fn empty_input_produces_a_well_formed_block() {
     let html = highlight_to_html("", "ts").expect("supported");
     assert_eq!(
