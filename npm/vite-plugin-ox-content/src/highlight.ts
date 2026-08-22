@@ -14,6 +14,12 @@ import {
   type ThemeRegistration,
 } from "shiki";
 import { interopDefault } from "./interop";
+import {
+  getTextContent,
+  highlightNatively,
+  normalizeClassName,
+  treeNeedsShiki,
+} from "./highlight-native";
 import { CSS_VARIABLES_THEME, resolveHighlightTheme } from "./shiki-theme";
 
 // ESM-only plugins are double-wrapped by the CommonJS interop; unwrap. See #452.
@@ -107,7 +113,16 @@ function rehypeShikiHighlight(options: {
 
   return async (tree: Root) => {
     const { themeName } = normalizeThemeInput(theme);
-    const highlighter = await getHighlighter(theme, langs);
+    // Deferred on purpose: a document whose languages the native engine all
+    // covers must never construct a Shiki highlighter, because doing so parses
+    // two dozen TextMate grammars up front.
+    // The native engine emits the `--octc-shiki-*` custom properties and
+    // nothing else, so an explicitly requested bundled theme — `github-dark`,
+    // `vitesse-dark` — still has to go through Shiki to get its baked colors.
+    const nativeThemeApplies = themeName === CSS_VARIABLES_THEME;
+    const highlighter = treeNeedsShiki(tree, nativeThemeApplies)
+      ? await getHighlighter(theme, langs)
+      : undefined;
 
     const highlightBlockCode = (codeElement: Element): Element | null => {
       let lang = "text";
@@ -121,10 +136,15 @@ function rehypeShikiHighlight(options: {
       const codeText = getTextContent(codeElement);
 
       try {
-        const highlighted = highlighter.codeToHtml(codeText, {
-          lang: lang as any,
-          theme: themeName as BundledTheme,
-        });
+        const highlighted =
+          (nativeThemeApplies ? highlightNatively(codeText, lang) : null) ??
+          highlighter?.codeToHtml(codeText, {
+            lang: lang as any,
+            theme: themeName as BundledTheme,
+          });
+        if (highlighted === undefined) {
+          return null;
+        }
 
         const parsed = unified().use(rehypeParse, { fragment: true }).parse(highlighted);
 
@@ -154,10 +174,15 @@ function rehypeShikiHighlight(options: {
       const codeText = getTextContent(codeElement);
 
       try {
-        const highlighted = highlighter.codeToHtml(codeText, {
-          lang: lang as any,
-          theme: themeName as BundledTheme,
-        });
+        const highlighted =
+          (nativeThemeApplies ? highlightNatively(codeText, lang) : null) ??
+          highlighter?.codeToHtml(codeText, {
+            lang: lang as any,
+            theme: themeName as BundledTheme,
+          });
+        if (highlighted === undefined) {
+          return null;
+        }
 
         const parsed = unified().use(rehypeParse, { fragment: true }).parse(highlighted);
 
@@ -215,37 +240,6 @@ function rehypeShikiHighlight(options: {
 
     await visit(tree);
   };
-}
-
-/**
- * Extract text content from a hast node.
- */
-function getTextContent(node: Element | Root): string {
-  let text = "";
-
-  if ("children" in node) {
-    for (const child of node.children) {
-      if (child.type === "text") {
-        text += child.value;
-      } else if (child.type === "element") {
-        text += getTextContent(child);
-      }
-    }
-  }
-
-  return text;
-}
-
-function normalizeClassName(className: unknown): string[] {
-  if (Array.isArray(className)) {
-    return className.filter((value): value is string => typeof value === "string");
-  }
-
-  if (typeof className === "string" && className) {
-    return className.split(/\s+/).filter(Boolean);
-  }
-
-  return [];
 }
 
 /**
