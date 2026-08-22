@@ -164,12 +164,13 @@ fn element_language(element: &str, region: &Region) -> Option<String> {
 
 /// The source text of a `<code>` element.
 ///
-/// The element is not always plain: a block carrying code annotations already
-/// holds `<span class="line">` wrappers when it reaches here. The rehype pass
-/// read those through the DOM's text nodes and re-applied the line metadata
-/// afterwards, so `<span>` wrappers are stripped rather than treated as a
-/// reason to decline the block — declining sends the whole page back through
-/// the HTML round trip this exists to avoid.
+/// The element is not always plain: a block carrying code annotations arrives
+/// wrapped in `<span class="line">`, and a member type arrives with an `<a>`
+/// around the type name it cross-references. The rehype pass read both through
+/// the DOM's text nodes — dropping the wrappers, and for a block re-applying
+/// the line metadata afterwards — so those are stripped here too rather than
+/// treated as a reason to decline the element. Declining sends the whole page
+/// back through the HTML round trip this exists to avoid.
 ///
 /// Anything heavier than a `<span>` means the block is not what it claims to
 /// be. A JSDoc `@example` whose body was itself run through the Markdown
@@ -201,7 +202,7 @@ fn code_text(element: &str) -> Option<String> {
             text.push_str(&content[open..]);
             return Some(decode_entities(&text));
         };
-        if !is_span_tag(&content[open..close]) {
+        if !is_text_wrapper(&content[open..close]) {
             return None;
         }
         cursor = close;
@@ -210,11 +211,18 @@ fn code_text(element: &str) -> Option<String> {
     Some(decode_entities(&text))
 }
 
-/// Whether `tag` opens or closes a `<span>`.
-fn is_span_tag(tag: &str) -> bool {
+/// Elements that may wrap part of a code element's text.
+///
+/// `span` comes from code annotations; `a` is the type cross-reference the
+/// docs generator puts inside a member type. Both wrap text and nothing else,
+/// so dropping them recovers exactly the source the DOM walk read.
+const TEXT_WRAPPERS: [&str; 2] = ["span", "a"];
+
+/// Whether `tag` opens or closes one of [`TEXT_WRAPPERS`].
+fn is_text_wrapper(tag: &str) -> bool {
     let name = tag.trim_start_matches('<').trim_start_matches('/');
     let end = name.find(|c: char| !c.is_ascii_alphanumeric()).unwrap_or(name.len());
-    name[..end].eq_ignore_ascii_case("span")
+    TEXT_WRAPPERS.iter().any(|wrapper| name[..end].eq_ignore_ascii_case(wrapper))
 }
 
 /// Reverses the renderer's escaping, plus the numeric forms other producers

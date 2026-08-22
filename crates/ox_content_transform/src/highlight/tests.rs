@@ -68,7 +68,27 @@ fn recovers_the_source_of_a_block_wrapped_in_annotation_spans() {
 }
 
 #[test]
-fn declines_a_block_whose_code_holds_more_than_spans() {
+fn recovers_the_source_of_a_member_type_that_cross_references_another() {
+    // The docs generator links a type name to its definition from inside the
+    // member type. The rehype pass read straight through the link, so the
+    // highlighted text must come out the same way.
+    let html =
+        "<p><code class=\"mt language-ts\"><a href=\"./x.html\">NavGroup</a>[] | null</code></p>";
+    let result = super::highlight_code_blocks(
+        html,
+        |_| true,
+        |code, _| {
+            assert_eq!(code, "NavGroup[] | null");
+            Some("<pre><code><span>t</span></code></pre>".to_string())
+        },
+    );
+
+    assert!(result.skipped.is_empty());
+    assert!(result.html.contains("shiki-inline"));
+}
+
+#[test]
+fn declines_a_block_whose_code_holds_more_than_text_wrappers() {
     // A JSDoc `@example` that was itself run through the Markdown renderer
     // arrives with block elements nested inside `<code>`. That is not
     // well-formed, and a text scan and a real HTML parser disagree about what
