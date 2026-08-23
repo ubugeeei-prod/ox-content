@@ -44,7 +44,7 @@
 <h4>Signature</h4>
 <pre><code class="language-typescript">export async function extractIslandInfo(html: string): Promise&lt;IslandInfo[]&gt;</code></pre>
 </div>
-<p class="ox-api-entry__source"><a class="ox-api-entry__source-link" href="https://github.com/ubugeeei-prod/ox-content/blob/main/npm/vite-plugin-ox-content/src/island/parse.ts#L229-L232" target="_blank" rel="noopener noreferrer">View source<span class="ox-api-entry__source-icon" aria-hidden="true"></span></a></p>
+<p class="ox-api-entry__source"><a class="ox-api-entry__source-link" href="https://github.com/ubugeeei-prod/ox-content/blob/main/npm/vite-plugin-ox-content/src/island/parse.ts#L234-L237" target="_blank" rel="noopener noreferrer">View source<span class="ox-api-entry__source-icon" aria-hidden="true"></span></a></p>
 <div class="ox-api-entry__section ox-api-entry__section--params">
 <h4>Parameters</h4>
 <ul class="ox-api-entry__params">
@@ -53,7 +53,7 @@
     <code class="ox-api-entry__param-name">html</code>
     <code class="ox-api-entry__param-type">string</code>
   </div>
-
+  
 </li>
 </ul>
 </div>
@@ -61,7 +61,7 @@
 <h4>Returns</h4>
 <div class="ox-api-entry__return">
   <code class="ox-api-entry__return-type">Promise&lt;IslandInfo[]&gt;</code>
-
+  
 </div>
 </div>
   </div>
@@ -77,7 +77,7 @@
 <h4>Signature</h4>
 <pre><code class="language-typescript">function findComponentElement(children: Element[&quot;children&quot;]): Element | null</code></pre>
 </div>
-<p class="ox-api-entry__source"><a class="ox-api-entry__source-link" href="https://github.com/ubugeeei-prod/ox-content/blob/main/npm/vite-plugin-ox-content/src/island/parse.ts#L82-L92" target="_blank" rel="noopener noreferrer">View source<span class="ox-api-entry__source-icon" aria-hidden="true"></span></a></p>
+<p class="ox-api-entry__source"><a class="ox-api-entry__source-link" href="https://github.com/ubugeeei-prod/ox-content/blob/main/npm/vite-plugin-ox-content/src/island/parse.ts#L87-L97" target="_blank" rel="noopener noreferrer">View source<span class="ox-api-entry__source-icon" aria-hidden="true"></span></a></p>
 <div class="ox-api-entry__section ox-api-entry__section--params">
 <h4>Parameters</h4>
 <ul class="ox-api-entry__params">
@@ -86,7 +86,7 @@
     <code class="ox-api-entry__param-name">children</code>
     <code class="ox-api-entry__param-type">Element[&quot;children&quot;]</code>
   </div>
-
+  
 </li>
 </ul>
 </div>
@@ -94,7 +94,7 @@
 <h4>Returns</h4>
 <div class="ox-api-entry__return">
   <code class="ox-api-entry__return-type">Element | null</code>
-
+  
 </div>
 </div>
   </div>
@@ -110,7 +110,7 @@
 <h4>Signature</h4>
 <pre><code class="language-typescript">export function generateHydrationScript(components: string[]): string</code></pre>
 </div>
-<p class="ox-api-entry__source"><a class="ox-api-entry__source-link" href="https://github.com/ubugeeei-prod/ox-content/blob/main/npm/vite-plugin-ox-content/src/island/parse.ts#L238-L269" target="_blank" rel="noopener noreferrer">View source<span class="ox-api-entry__source-icon" aria-hidden="true"></span></a></p>
+<p class="ox-api-entry__source"><a class="ox-api-entry__source-link" href="https://github.com/ubugeeei-prod/ox-content/blob/main/npm/vite-plugin-ox-content/src/island/parse.ts#L243-L274" target="_blank" rel="noopener noreferrer">View source<span class="ox-api-entry__source-icon" aria-hidden="true"></span></a></p>
 <div class="ox-api-entry__section ox-api-entry__section--params">
 <h4>Parameters</h4>
 <ul class="ox-api-entry__params">
@@ -119,7 +119,7 @@
     <code class="ox-api-entry__param-name">components</code>
     <code class="ox-api-entry__param-type">string[]</code>
   </div>
-
+  
 </li>
 </ul>
 </div>
@@ -127,7 +127,7 @@
 <h4>Returns</h4>
 <div class="ox-api-entry__return">
   <code class="ox-api-entry__return-type">string</code>
-
+  
 </div>
 </div>
   </div>
@@ -143,7 +143,7 @@
 <h4>Signature</h4>
 <pre><code class="language-typescript">function getAttribute(el: Element, name: string): string | undefined</code></pre>
 </div>
-<p class="ox-api-entry__source"><a class="ox-api-entry__source-link" href="https://github.com/ubugeeei-prod/ox-content/blob/main/npm/vite-plugin-ox-content/src/island/parse.ts#L30-L35" target="_blank" rel="noopener noreferrer">View source<span class="ox-api-entry__source-icon" aria-hidden="true"></span></a></p>
+<p class="ox-api-entry__source"><a class="ox-api-entry__source-link" href="https://github.com/ubugeeei-prod/ox-content/blob/main/npm/vite-plugin-ox-content/src/island/parse.ts#L35-L40" target="_blank" rel="noopener noreferrer">View source<span class="ox-api-entry__source-icon" aria-hidden="true"></span></a></p>
 <div class="ox-api-entry__section ox-api-entry__section--params">
 <h4>Parameters</h4>
 <ul class="ox-api-entry__params">
@@ -152,14 +152,14 @@
     <code class="ox-api-entry__param-name">el</code>
     <code class="ox-api-entry__param-type">Element</code>
   </div>
-
+  
 </li>
 <li class="ox-api-entry__param">
   <div class="ox-api-entry__param-heading">
     <code class="ox-api-entry__param-name">name</code>
     <code class="ox-api-entry__param-type">string</code>
   </div>
-
+  
 </li>
 </ul>
 </div>
@@ -167,7 +167,7 @@
 <h4>Returns</h4>
 <div class="ox-api-entry__return">
   <code class="ox-api-entry__return-type">string | undefined</code>
-
+  
 </div>
 </div>
   </div>
@@ -183,7 +183,7 @@
 <h4>Signature</h4>
 <pre><code class="language-typescript">function getComponentName(el: Element): string</code></pre>
 </div>
-<p class="ox-api-entry__source"><a class="ox-api-entry__source-link" href="https://github.com/ubugeeei-prod/ox-content/blob/main/npm/vite-plugin-ox-content/src/island/parse.ts#L97-L105" target="_blank" rel="noopener noreferrer">View source<span class="ox-api-entry__source-icon" aria-hidden="true"></span></a></p>
+<p class="ox-api-entry__source"><a class="ox-api-entry__source-link" href="https://github.com/ubugeeei-prod/ox-content/blob/main/npm/vite-plugin-ox-content/src/island/parse.ts#L102-L110" target="_blank" rel="noopener noreferrer">View source<span class="ox-api-entry__source-icon" aria-hidden="true"></span></a></p>
 <div class="ox-api-entry__section ox-api-entry__section--params">
 <h4>Parameters</h4>
 <ul class="ox-api-entry__params">
@@ -192,7 +192,7 @@
     <code class="ox-api-entry__param-name">el</code>
     <code class="ox-api-entry__param-type">Element</code>
   </div>
-
+  
 </li>
 </ul>
 </div>
@@ -200,7 +200,7 @@
 <h4>Returns</h4>
 <div class="ox-api-entry__return">
   <code class="ox-api-entry__return-type">string</code>
-
+  
 </div>
 </div>
   </div>
@@ -216,7 +216,7 @@
 <h4>Signature</h4>
 <pre><code class="language-typescript">export function hasIslands(html: string): boolean</code></pre>
 </div>
-<p class="ox-api-entry__source"><a class="ox-api-entry__source-link" href="https://github.com/ubugeeei-prod/ox-content/blob/main/npm/vite-plugin-ox-content/src/island/parse.ts#L221-L223" target="_blank" rel="noopener noreferrer">View source<span class="ox-api-entry__source-icon" aria-hidden="true"></span></a></p>
+<p class="ox-api-entry__source"><a class="ox-api-entry__source-link" href="https://github.com/ubugeeei-prod/ox-content/blob/main/npm/vite-plugin-ox-content/src/island/parse.ts#L226-L228" target="_blank" rel="noopener noreferrer">View source<span class="ox-api-entry__source-icon" aria-hidden="true"></span></a></p>
 <div class="ox-api-entry__section ox-api-entry__section--params">
 <h4>Parameters</h4>
 <ul class="ox-api-entry__params">
@@ -225,7 +225,7 @@
     <code class="ox-api-entry__param-name">html</code>
     <code class="ox-api-entry__param-type">string</code>
   </div>
-
+  
 </li>
 </ul>
 </div>
@@ -233,7 +233,7 @@
 <h4>Returns</h4>
 <div class="ox-api-entry__return">
   <code class="ox-api-entry__return-type">boolean</code>
-
+  
 </div>
 </div>
   </div>
@@ -260,7 +260,7 @@
 <h4>Signature</h4>
 <pre><code class="language-typescript">function parseProps(el: Element): Record&lt;string, unknown&gt;</code></pre>
 </div>
-<p class="ox-api-entry__source"><a class="ox-api-entry__source-link" href="https://github.com/ubugeeei-prod/ox-content/blob/main/npm/vite-plugin-ox-content/src/island/parse.ts#L40-L77" target="_blank" rel="noopener noreferrer">View source<span class="ox-api-entry__source-icon" aria-hidden="true"></span></a></p>
+<p class="ox-api-entry__source"><a class="ox-api-entry__source-link" href="https://github.com/ubugeeei-prod/ox-content/blob/main/npm/vite-plugin-ox-content/src/island/parse.ts#L45-L82" target="_blank" rel="noopener noreferrer">View source<span class="ox-api-entry__source-icon" aria-hidden="true"></span></a></p>
 <div class="ox-api-entry__section ox-api-entry__section--params">
 <h4>Parameters</h4>
 <ul class="ox-api-entry__params">
@@ -269,7 +269,7 @@
     <code class="ox-api-entry__param-name">el</code>
     <code class="ox-api-entry__param-type">Element</code>
   </div>
-
+  
 </li>
 </ul>
 </div>
@@ -277,7 +277,7 @@
 <h4>Returns</h4>
 <div class="ox-api-entry__return">
   <code class="ox-api-entry__return-type">Record&lt;string, unknown&gt;</code>
-
+  
 </div>
 </div>
   </div>
@@ -293,7 +293,7 @@
 <h4>Signature</h4>
 <pre><code class="language-typescript">function rehypeIslands(collectedIslands: IslandInfo[])</code></pre>
 </div>
-<p class="ox-api-entry__source"><a class="ox-api-entry__source-link" href="https://github.com/ubugeeei-prod/ox-content/blob/main/npm/vite-plugin-ox-content/src/island/parse.ts#L119-L180" target="_blank" rel="noopener noreferrer">View source<span class="ox-api-entry__source-icon" aria-hidden="true"></span></a></p>
+<p class="ox-api-entry__source"><a class="ox-api-entry__source-link" href="https://github.com/ubugeeei-prod/ox-content/blob/main/npm/vite-plugin-ox-content/src/island/parse.ts#L124-L185" target="_blank" rel="noopener noreferrer">View source<span class="ox-api-entry__source-icon" aria-hidden="true"></span></a></p>
 <div class="ox-api-entry__section ox-api-entry__section--params">
 <h4>Parameters</h4>
 <ul class="ox-api-entry__params">
@@ -302,7 +302,7 @@
     <code class="ox-api-entry__param-name">collectedIslands</code>
     <code class="ox-api-entry__param-type">IslandInfo[]</code>
   </div>
-
+  
 </li>
 </ul>
 </div>
@@ -319,12 +319,12 @@
 <h4>Signature</h4>
 <pre><code class="language-typescript">export function resetIslandCounter(): void</code></pre>
 </div>
-<p class="ox-api-entry__source"><a class="ox-api-entry__source-link" href="https://github.com/ubugeeei-prod/ox-content/blob/main/npm/vite-plugin-ox-content/src/island/parse.ts#L112-L114" target="_blank" rel="noopener noreferrer">View source<span class="ox-api-entry__source-icon" aria-hidden="true"></span></a></p>
+<p class="ox-api-entry__source"><a class="ox-api-entry__source-link" href="https://github.com/ubugeeei-prod/ox-content/blob/main/npm/vite-plugin-ox-content/src/island/parse.ts#L117-L119" target="_blank" rel="noopener noreferrer">View source<span class="ox-api-entry__source-icon" aria-hidden="true"></span></a></p>
 <div class="ox-api-entry__section ox-api-entry__section--returns">
 <h4>Returns</h4>
 <div class="ox-api-entry__return">
   <code class="ox-api-entry__return-type">void</code>
-
+  
 </div>
 </div>
   </div>
@@ -352,7 +352,7 @@
 <h4>Signature</h4>
 <pre><code class="language-typescript">export async function transformIslands(html: string): Promise&lt;ParseIslandsResult&gt;</code></pre>
 </div>
-<p class="ox-api-entry__source"><a class="ox-api-entry__source-link" href="https://github.com/ubugeeei-prod/ox-content/blob/main/npm/vite-plugin-ox-content/src/island/parse.ts#L203-L216" target="_blank" rel="noopener noreferrer">View source<span class="ox-api-entry__source-icon" aria-hidden="true"></span></a></p>
+<p class="ox-api-entry__source"><a class="ox-api-entry__source-link" href="https://github.com/ubugeeei-prod/ox-content/blob/main/npm/vite-plugin-ox-content/src/island/parse.ts#L208-L221" target="_blank" rel="noopener noreferrer">View source<span class="ox-api-entry__source-icon" aria-hidden="true"></span></a></p>
 <div class="ox-api-entry__section ox-api-entry__section--params">
 <h4>Parameters</h4>
 <ul class="ox-api-entry__params">
@@ -361,7 +361,7 @@
     <code class="ox-api-entry__param-name">html</code>
     <code class="ox-api-entry__param-type">string</code>
   </div>
-
+  
 </li>
 </ul>
 </div>
@@ -369,8 +369,9 @@
 <h4>Returns</h4>
 <div class="ox-api-entry__return">
   <code class="ox-api-entry__return-type">Promise&lt;ParseIslandsResult&gt;</code>
-
+  
 </div>
 </div>
   </div>
 </details>
+

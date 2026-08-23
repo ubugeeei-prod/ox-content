@@ -230,6 +230,9 @@ jobs:
       - name: Ensure generated NAPI declarations are fresh
         run: git diff --exit-code -- crates/ox_content_napi/index.d.ts
 
+      - name: Ensure generated API docs are fresh
+        run: node scripts/generate-api-docs.mjs --check
+
       - name: Pack and inspect publishable packages
         run: node scripts/package-dry-run.mjs
 

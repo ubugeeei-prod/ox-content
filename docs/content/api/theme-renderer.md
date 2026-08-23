@@ -63,7 +63,7 @@
   defaultLayout?: string;
 }): ThemeComponent</code></pre>
 </div>
-<p class="ox-api-entry__source"><a class="ox-api-entry__source-link" href="https://github.com/ubugeeei-prod/ox-content/blob/main/npm/vite-plugin-ox-content/src/theme-renderer.ts#L267-L291" target="_blank" rel="noopener noreferrer">View source<span class="ox-api-entry__source-icon" aria-hidden="true"></span></a></p>
+<p class="ox-api-entry__source"><a class="ox-api-entry__source-link" href="https://github.com/ubugeeei-prod/ox-content/blob/main/npm/vite-plugin-ox-content/src/theme-renderer.ts#L268-L294" target="_blank" rel="noopener noreferrer">View source<span class="ox-api-entry__source-icon" aria-hidden="true"></span></a></p>
 <div class="ox-api-entry__section ox-api-entry__section--params">
 <h4>Parameters</h4>
 <ul class="ox-api-entry__params">
@@ -72,14 +72,14 @@
     <code class="ox-api-entry__param-name">config</code>
     <code class="ox-api-entry__param-type">{ layouts: Record&lt;string, <a href="#themecomponent">ThemeComponent</a>&gt;; defaultLayout?: string }</code>
   </div>
-
+  
 </li>
 <li class="ox-api-entry__param">
   <div class="ox-api-entry__param-heading">
     <code class="ox-api-entry__param-name">config.layouts</code>
     <code class="ox-api-entry__param-type">Record&lt;string, <a href="#themecomponent">ThemeComponent</a>&gt;</code>
   </div>
-
+  
 </li>
 <li class="ox-api-entry__param">
   <div class="ox-api-entry__param-heading">
@@ -94,7 +94,7 @@
 <h4>Returns</h4>
 <div class="ox-api-entry__return">
   <code class="ox-api-entry__return-type"><a href="#themecomponent">ThemeComponent</a></code>
-
+  
 </div>
 </div>
 <div class="ox-api-entry__section ox-api-entry__section--examples">
@@ -105,12 +105,11 @@
 import { DefaultLayout } from &#39;./layouts/Default&#39;;
 import { EntryLayout } from &#39;./layouts/Entry&#39;;&#10;
 export default createTheme({
-layouts: {
-default: DefaultLayout,
-entry: EntryLayout,
-},
+  layouts: {
+    default: DefaultLayout,
+    entry: EntryLayout,
+  },
 });</code></pre>
-
 </div>
 </div>
   </div>
@@ -126,7 +125,7 @@ entry: EntryLayout,
 <h4>Signature</h4>
 <pre><code class="language-typescript">export function DefaultTheme({ children }: ThemeProps): JSXNode</code></pre>
 </div>
-<p class="ox-api-entry__source"><a class="ox-api-entry__source-link" href="https://github.com/ubugeeei-prod/ox-content/blob/main/npm/vite-plugin-ox-content/src/theme-renderer.ts#L195-L240" target="_blank" rel="noopener noreferrer">View source<span class="ox-api-entry__source-icon" aria-hidden="true"></span></a></p>
+<p class="ox-api-entry__source"><a class="ox-api-entry__source-link" href="https://github.com/ubugeeei-prod/ox-content/blob/main/npm/vite-plugin-ox-content/src/theme-renderer.ts#L196-L241" target="_blank" rel="noopener noreferrer">View source<span class="ox-api-entry__source-icon" aria-hidden="true"></span></a></p>
 <div class="ox-api-entry__section ox-api-entry__section--params">
 <h4>Parameters</h4>
 <ul class="ox-api-entry__params">
@@ -135,15 +134,15 @@ entry: EntryLayout,
     <code class="ox-api-entry__param-name">param</code>
     <code class="ox-api-entry__param-type"><a href="#themeprops">ThemeProps</a></code>
   </div>
-
+  
 </li>
 </ul>
 </div>
 <div class="ox-api-entry__section ox-api-entry__section--returns">
 <h4>Returns</h4>
 <div class="ox-api-entry__return">
-  <code class="ox-api-entry__return-type"><a href="./jsx-runtime.md#jsxnode">JSXNode</a></code>
-
+  <code class="ox-api-entry__return-type"><a href="./jsx-html.md#jsxnode">JSXNode</a></code>
+  
 </div>
 </div>
   </div>
@@ -159,7 +158,7 @@ entry: EntryLayout,
 <h4>Signature</h4>
 <pre><code class="language-typescript">export async function generateTypes(pages: PageData[], outDir: string): Promise&lt;void&gt;</code></pre>
 </div>
-<p class="ox-api-entry__source"><a class="ox-api-entry__source-link" href="https://github.com/ubugeeei-prod/ox-content/blob/main/npm/vite-plugin-ox-content/src/theme-renderer.ts#L178-L189" target="_blank" rel="noopener noreferrer">View source<span class="ox-api-entry__source-icon" aria-hidden="true"></span></a></p>
+<p class="ox-api-entry__source"><a class="ox-api-entry__source-link" href="https://github.com/ubugeeei-prod/ox-content/blob/main/npm/vite-plugin-ox-content/src/theme-renderer.ts#L179-L190" target="_blank" rel="noopener noreferrer">View source<span class="ox-api-entry__source-icon" aria-hidden="true"></span></a></p>
 <div class="ox-api-entry__section ox-api-entry__section--params">
 <h4>Parameters</h4>
 <ul class="ox-api-entry__params">
@@ -183,7 +182,7 @@ entry: EntryLayout,
 <h4>Returns</h4>
 <div class="ox-api-entry__return">
   <code class="ox-api-entry__return-type">Promise&lt;void&gt;</code>
-
+  
 </div>
 </div>
   </div>
@@ -199,7 +198,7 @@ entry: EntryLayout,
 <h4>Signature</h4>
 <pre><code class="language-typescript">export interface PageData</code></pre>
 </div>
-<p class="ox-api-entry__source"><a class="ox-api-entry__source-link" href="https://github.com/ubugeeei-prod/ox-content/blob/main/npm/vite-plugin-ox-content/src/theme-renderer.ts#L38-L57" target="_blank" rel="noopener noreferrer">View source<span class="ox-api-entry__source-icon" aria-hidden="true"></span></a></p>
+<p class="ox-api-entry__source"><a class="ox-api-entry__source-link" href="https://github.com/ubugeeei-prod/ox-content/blob/main/npm/vite-plugin-ox-content/src/theme-renderer.ts#L39-L58" target="_blank" rel="noopener noreferrer">View source<span class="ox-api-entry__source-icon" aria-hidden="true"></span></a></p>
 <div class="ox-api-entry__section ox-api-entry__section--members">
 <h4>Members</h4>
 <div class="ox-api-entry__member-group">
@@ -269,7 +268,7 @@ entry: EntryLayout,
 <h4>Signature</h4>
 <pre><code class="language-typescript">export async function renderAllPages(pages: PageData[], options: ThemeRenderOptions): Promise&lt;Map&lt;string, string&gt;&gt;</code></pre>
 </div>
-<p class="ox-api-entry__source"><a class="ox-api-entry__source-link" href="https://github.com/ubugeeei-prod/ox-content/blob/main/npm/vite-plugin-ox-content/src/theme-renderer.ts#L152-L170" target="_blank" rel="noopener noreferrer">View source<span class="ox-api-entry__source-icon" aria-hidden="true"></span></a></p>
+<p class="ox-api-entry__source"><a class="ox-api-entry__source-link" href="https://github.com/ubugeeei-prod/ox-content/blob/main/npm/vite-plugin-ox-content/src/theme-renderer.ts#L153-L171" target="_blank" rel="noopener noreferrer">View source<span class="ox-api-entry__source-icon" aria-hidden="true"></span></a></p>
 <div class="ox-api-entry__section ox-api-entry__section--params">
 <h4>Parameters</h4>
 <ul class="ox-api-entry__params">
@@ -309,7 +308,7 @@ entry: EntryLayout,
 <h4>Signature</h4>
 <pre><code class="language-typescript">export function renderPage(page: PageData, options: ThemeRenderOptions): string</code></pre>
 </div>
-<p class="ox-api-entry__source"><a class="ox-api-entry__source-link" href="https://github.com/ubugeeei-prod/ox-content/blob/main/npm/vite-plugin-ox-content/src/theme-renderer.ts#L84-L143" target="_blank" rel="noopener noreferrer">View source<span class="ox-api-entry__source-icon" aria-hidden="true"></span></a></p>
+<p class="ox-api-entry__source"><a class="ox-api-entry__source-link" href="https://github.com/ubugeeei-prod/ox-content/blob/main/npm/vite-plugin-ox-content/src/theme-renderer.ts#L85-L144" target="_blank" rel="noopener noreferrer">View source<span class="ox-api-entry__source-icon" aria-hidden="true"></span></a></p>
 <div class="ox-api-entry__section ox-api-entry__section--params">
 <h4>Parameters</h4>
 <ul class="ox-api-entry__params">
@@ -360,7 +359,7 @@ entry: EntryLayout,
 <h4>Signature</h4>
 <pre><code class="language-typescript">export type ThemeComponent = (props: ThemeProps) =&gt; JSXNode</code></pre>
 </div>
-<p class="ox-api-entry__source"><a class="ox-api-entry__source-link" href="https://github.com/ubugeeei-prod/ox-content/blob/main/npm/vite-plugin-ox-content/src/theme-renderer.ts#L25" target="_blank" rel="noopener noreferrer">View source<span class="ox-api-entry__source-icon" aria-hidden="true"></span></a></p>
+<p class="ox-api-entry__source"><a class="ox-api-entry__source-link" href="https://github.com/ubugeeei-prod/ox-content/blob/main/npm/vite-plugin-ox-content/src/theme-renderer.ts#L26" target="_blank" rel="noopener noreferrer">View source<span class="ox-api-entry__source-icon" aria-hidden="true"></span></a></p>
 <div class="ox-api-entry__section ox-api-entry__section--params">
 <h4>Parameters</h4>
 <ul class="ox-api-entry__params">
@@ -369,15 +368,15 @@ entry: EntryLayout,
     <code class="ox-api-entry__param-name">props</code>
     <code class="ox-api-entry__param-type"><a href="#themeprops">ThemeProps</a></code>
   </div>
-
+  
 </li>
 </ul>
 </div>
 <div class="ox-api-entry__section ox-api-entry__section--returns">
 <h4>Returns</h4>
 <div class="ox-api-entry__return">
-  <code class="ox-api-entry__return-type"><a href="./jsx-runtime.md#jsxnode">JSXNode</a></code>
-
+  <code class="ox-api-entry__return-type"><a href="./jsx-html.md#jsxnode">JSXNode</a></code>
+  
 </div>
 </div>
   </div>
@@ -393,7 +392,7 @@ entry: EntryLayout,
 <h4>Signature</h4>
 <pre><code class="language-typescript">export interface ThemeProps</code></pre>
 </div>
-<p class="ox-api-entry__source"><a class="ox-api-entry__source-link" href="https://github.com/ubugeeei-prod/ox-content/blob/main/npm/vite-plugin-ox-content/src/theme-renderer.ts#L30-L33" target="_blank" rel="noopener noreferrer">View source<span class="ox-api-entry__source-icon" aria-hidden="true"></span></a></p>
+<p class="ox-api-entry__source"><a class="ox-api-entry__source-link" href="https://github.com/ubugeeei-prod/ox-content/blob/main/npm/vite-plugin-ox-content/src/theme-renderer.ts#L31-L34" target="_blank" rel="noopener noreferrer">View source<span class="ox-api-entry__source-icon" aria-hidden="true"></span></a></p>
 <div class="ox-api-entry__section ox-api-entry__section--members">
 <h4>Members</h4>
 <div class="ox-api-entry__member-group">
@@ -403,7 +402,7 @@ entry: EntryLayout,
 <tbody>
 <tr id="themeprops-children">
   <td><code>children</code></td>
-  <td><code class="ox-api-entry__member-type language-typescript"><a href="./jsx-runtime.md#jsxnode">JSXNode</a></code></td>
+  <td><code class="ox-api-entry__member-type language-typescript"><a href="./jsx-html.md#jsxnode">JSXNode</a></code></td>
   <td><div class="ox-api-entry__member-description">Rendered page content as JSX</div></td>
 </tr>
 </tbody>
@@ -423,7 +422,7 @@ entry: EntryLayout,
 <h4>Signature</h4>
 <pre><code class="language-typescript">export interface ThemeRenderOptions</code></pre>
 </div>
-<p class="ox-api-entry__source"><a class="ox-api-entry__source-link" href="https://github.com/ubugeeei-prod/ox-content/blob/main/npm/vite-plugin-ox-content/src/theme-renderer.ts#L62-L75" target="_blank" rel="noopener noreferrer">View source<span class="ox-api-entry__source-icon" aria-hidden="true"></span></a></p>
+<p class="ox-api-entry__source"><a class="ox-api-entry__source-link" href="https://github.com/ubugeeei-prod/ox-content/blob/main/npm/vite-plugin-ox-content/src/theme-renderer.ts#L63-L76" target="_blank" rel="noopener noreferrer">View source<span class="ox-api-entry__source-icon" aria-hidden="true"></span></a></p>
 <div class="ox-api-entry__section ox-api-entry__section--members">
 <h4>Members</h4>
 <div class="ox-api-entry__member-group">
@@ -467,3 +466,4 @@ entry: EntryLayout,
 </div>
   </div>
 </details>
+

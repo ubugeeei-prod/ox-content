@@ -58,7 +58,7 @@
     <code class="ox-api-entry__param-name">filePath</code>
     <code class="ox-api-entry__param-type">string</code>
   </div>
-
+  
 </li>
 <li class="ox-api-entry__param">
   <div class="ox-api-entry__param-heading">
@@ -73,7 +73,7 @@
 <h4>Returns</h4>
 <div class="ox-api-entry__return">
   <code class="ox-api-entry__return-type">Promise&lt;<a href="#markdownlintfileresult">MarkdownLintFileResult</a>&gt;</code>
-
+  
 </div>
 </div>
   </div>
@@ -106,7 +106,7 @@
 <h4>Returns</h4>
 <div class="ox-api-entry__return">
   <code class="ox-api-entry__return-type">Promise&lt;<a href="#markdownlintfilesresult">MarkdownLintFilesResult</a>&gt;</code>
-
+  
 </div>
 </div>
   </div>
@@ -117,6 +117,10 @@
   <div class="ox-api-entry__body">
 <div class="ox-api-entry__prose">
 <p>A lint diagnostic annotated with file metadata.</p>
+</div>
+<div class="ox-api-entry__section ox-api-entry__section--heritage">
+<h4>Extends</h4>
+<ul class="ox-api-entry__heritage-list"><li><code><a href="./lint.md#markdownlintdiagnostic">MarkdownLintDiagnostic</a></code></li></ul>
 </div>
 <div class="ox-api-entry__section ox-api-entry__section--signature">
 <h4>Signature</h4>
@@ -153,6 +157,10 @@
 <div class="ox-api-entry__prose">
 <p>File-oriented Markdown lint options for end-user configuration.</p>
 <p>This extends the content-level lint options with project-level targeting, so consumers can decide which files should be checked and which paths should be ignored.</p>
+</div>
+<div class="ox-api-entry__section ox-api-entry__section--heritage">
+<h4>Extends</h4>
+<ul class="ox-api-entry__heritage-list"><li><code><a href="./lint.md#markdownlintoptions">MarkdownLintOptions</a></code></li></ul>
 </div>
 <div class="ox-api-entry__section ox-api-entry__section--signature">
 <h4>Signature</h4>
@@ -198,6 +206,10 @@
   <div class="ox-api-entry__body">
 <div class="ox-api-entry__prose">
 <p>Lint result for a single file.</p>
+</div>
+<div class="ox-api-entry__section ox-api-entry__section--heritage">
+<h4>Extends</h4>
+<ul class="ox-api-entry__heritage-list"><li><code><a href="./lint.md#markdownlintresult">MarkdownLintResult</a></code></li></ul>
 </div>
 <div class="ox-api-entry__section ox-api-entry__section--signature">
 <h4>Signature</h4>
@@ -307,7 +319,7 @@
     <code class="ox-api-entry__param-name">filePath</code>
     <code class="ox-api-entry__param-type">string</code>
   </div>
-
+  
 </li>
 <li class="ox-api-entry__param">
   <div class="ox-api-entry__param-heading">
@@ -322,8 +334,9 @@
 <h4>Returns</h4>
 <div class="ox-api-entry__return">
   <code class="ox-api-entry__return-type">boolean</code>
-
+  
 </div>
 </div>
   </div>
 </details>
+

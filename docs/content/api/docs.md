@@ -2,15 +2,15 @@
 
 **[Source](https://github.com/ubugeeei-prod/ox-content/blob/main/npm/vite-plugin-ox-content/src/docs.ts)**
 
-> 5 documented symbols. Read the signatures first, then expand each item for parameters, return types, and examples.
+> 6 documented symbols. Read the signatures first, then expand each item for parameters, return types, and examples.
 
 <div class="ox-api-stats" aria-label="API reference summary">
 <span class="ox-api-stat">
-  <strong>5</strong>
+  <strong>6</strong>
   <span>symbols</span>
 </span>
 <span class="ox-api-stat">
-  <strong>4</strong>
+  <strong>5</strong>
   <span>functions</span>
 </span>
 <span class="ox-api-stat">
@@ -18,11 +18,11 @@
   <span>modules</span>
 </span>
 <span class="ox-api-stat">
-  <strong>9</strong>
+  <strong>10</strong>
   <span>parameters</span>
 </span>
 <span class="ox-api-stat">
-  <strong>4</strong>
+  <strong>5</strong>
   <span>returns</span>
 </span>
 <span class="ox-api-stat">
@@ -76,18 +76,50 @@
 <div class="ox-api-entry__example-heading">Example 1</div>
 <pre><code class="language-typescript">import { extractDocs, generateMarkdown, writeDocs } from &#39;./docs&#39;;&#10;
 const docsOptions = {
-enabled: true,
-src: [&#39;./src&#39;],
-out: &#39;./docs/api&#39;,
-include: [&#39;**\/\*.ts&#39;],
-exclude: [&#39;**\/*.test.ts&#39;],
-groupBy: &#39;file&#39;,
-githubUrl: &#39;https://github.com/user/project&#39;,
+  enabled: true,
+  src: [&#39;./src&#39;],
+  out: &#39;./docs/api&#39;,
+  include: [&#39;**\/*.ts&#39;],
+  exclude: [&#39;**\/*.test.ts&#39;],
+  groupBy: &#39;file&#39;,
+  githubUrl: &#39;https://github.com/user/project&#39;,
 };&#10;
 const extracted = await extractDocs([&#39;./src&#39;], docsOptions);
 const markdown = generateMarkdown(extracted, docsOptions);
 await writeDocs(markdown, &#39;./docs/api&#39;, extracted, docsOptions);</code></pre>
+</div>
+</div>
+  </div>
+</details>
 
+<details id="existinggeneratedat" class="ox-api-entry">
+  <summary><span class="ox-api-entry__kind">fn</span><span class="ox-api-entry__summary-main"><code class="ox-api-entry__signature ox-api-entry__signature--highlighted language-typescript">existingGeneratedAt(outDir: string): string | undefined</code><span class="ox-api-entry__description">Keep docs.json&#39;s timestamp stable across regenerations of the same tree.</span><span class="ox-api-entry__meta"><span class="ox-api-badge">1 param</span><span class="ox-api-badge">returns string | undefined</span></span></span></summary>
+  <div class="ox-api-entry__body">
+<div class="ox-api-entry__prose">
+<p>Keep <code>docs.json</code>&#39;s timestamp stable across regenerations of the same tree.</p>
+</div>
+<div class="ox-api-entry__section ox-api-entry__section--signature">
+<h4>Signature</h4>
+<pre><code class="language-typescript">function existingGeneratedAt(outDir: string): string | undefined</code></pre>
+</div>
+<p class="ox-api-entry__source"><a class="ox-api-entry__source-link" href="https://github.com/ubugeeei-prod/ox-content/blob/main/npm/vite-plugin-ox-content/src/docs.ts#L296-L307" target="_blank" rel="noopener noreferrer">View source<span class="ox-api-entry__source-icon" aria-hidden="true"></span></a></p>
+<div class="ox-api-entry__section ox-api-entry__section--params">
+<h4>Parameters</h4>
+<ul class="ox-api-entry__params">
+<li class="ox-api-entry__param">
+  <div class="ox-api-entry__param-heading">
+    <code class="ox-api-entry__param-name">outDir</code>
+    <code class="ox-api-entry__param-type">string</code>
+  </div>
+  
+</li>
+</ul>
+</div>
+<div class="ox-api-entry__section ox-api-entry__section--returns">
+<h4>Returns</h4>
+<div class="ox-api-entry__return">
+  <code class="ox-api-entry__return-type">string | undefined</code>
+  
 </div>
 </div>
   </div>
@@ -125,7 +157,7 @@ await writeDocs(markdown, &#39;./docs/api&#39;, extracted, docsOptions);</code><
 <h4>Signature</h4>
 <pre><code class="language-typescript">export async function extractDocs(srcDirs: string[], options: ResolvedDocsOptions): Promise&lt;ExtractedDocs[]&gt;</code></pre>
 </div>
-<p class="ox-api-entry__source"><a class="ox-api-entry__source-link" href="https://github.com/ubugeeei-prod/ox-content/blob/main/npm/vite-plugin-ox-content/src/docs.ts#L139-L215" target="_blank" rel="noopener noreferrer">View source<span class="ox-api-entry__source-icon" aria-hidden="true"></span></a></p>
+<p class="ox-api-entry__source"><a class="ox-api-entry__source-link" href="https://github.com/ubugeeei-prod/ox-content/blob/main/npm/vite-plugin-ox-content/src/docs.ts#L141-L217" target="_blank" rel="noopener noreferrer">View source<span class="ox-api-entry__source-icon" aria-hidden="true"></span></a></p>
 <div class="ox-api-entry__section ox-api-entry__section--params">
 <h4>Parameters</h4>
 <ul class="ox-api-entry__params">
@@ -173,16 +205,15 @@ await writeDocs(markdown, &#39;./docs/api&#39;, extracted, docsOptions);</code><
 );&#10;
 // Returns:
 // [
-// {
-// file: &#39;/path/to/transform.ts&#39;,
-// entries: [
-// { name: &#39;transformMarkdown&#39;, kind: &#39;function&#39;, ... },
-// { name: &#39;loadNapiBindings&#39;, kind: &#39;function&#39;, ... },
-// ]
-// },
-// ...
+//   {
+//     file: &#39;/path/to/transform.ts&#39;,
+//     entries: [
+//       { name: &#39;transformMarkdown&#39;, kind: &#39;function&#39;, ... },
+//       { name: &#39;loadNapiBindings&#39;, kind: &#39;function&#39;, ... },
+//     ]
+//   },
+//   ...
 // ]</code></pre>
-
 </div>
 </div>
   </div>
@@ -198,7 +229,7 @@ await writeDocs(markdown, &#39;./docs/api&#39;, extracted, docsOptions);</code><
 <h4>Signature</h4>
 <pre><code class="language-typescript">export function generateMarkdown(docs: ExtractedDocs[], options: ResolvedDocsOptions): Record&lt;string, string&gt;</code></pre>
 </div>
-<p class="ox-api-entry__source"><a class="ox-api-entry__source-link" href="https://github.com/ubugeeei-prod/ox-content/blob/main/npm/vite-plugin-ox-content/src/docs.ts#L220-L255" target="_blank" rel="noopener noreferrer">View source<span class="ox-api-entry__source-icon" aria-hidden="true"></span></a></p>
+<p class="ox-api-entry__source"><a class="ox-api-entry__source-link" href="https://github.com/ubugeeei-prod/ox-content/blob/main/npm/vite-plugin-ox-content/src/docs.ts#L222-L257" target="_blank" rel="noopener noreferrer">View source<span class="ox-api-entry__source-icon" aria-hidden="true"></span></a></p>
 <div class="ox-api-entry__section ox-api-entry__section--params">
 <h4>Parameters</h4>
 <ul class="ox-api-entry__params">
@@ -207,14 +238,14 @@ await writeDocs(markdown, &#39;./docs/api&#39;, extracted, docsOptions);</code><
     <code class="ox-api-entry__param-name">docs</code>
     <code class="ox-api-entry__param-type"><a href="./types.md#extracteddocs">ExtractedDocs</a>[]</code>
   </div>
-
+  
 </li>
 <li class="ox-api-entry__param">
   <div class="ox-api-entry__param-heading">
     <code class="ox-api-entry__param-name">options</code>
     <code class="ox-api-entry__param-type"><a href="./types.md#resolveddocsoptions">ResolvedDocsOptions</a></code>
   </div>
-
+  
 </li>
 </ul>
 </div>
@@ -222,7 +253,7 @@ await writeDocs(markdown, &#39;./docs/api&#39;, extracted, docsOptions);</code><
 <h4>Returns</h4>
 <div class="ox-api-entry__return">
   <code class="ox-api-entry__return-type">Record&lt;string, string&gt;</code>
-
+  
 </div>
 </div>
   </div>
@@ -238,7 +269,7 @@ await writeDocs(markdown, &#39;./docs/api&#39;, extracted, docsOptions);</code><
 <h4>Signature</h4>
 <pre><code class="language-typescript">export function resolveDocsOptions(options: false): false</code></pre>
 </div>
-<p class="ox-api-entry__source"><a class="ox-api-entry__source-link" href="https://github.com/ubugeeei-prod/ox-content/blob/main/npm/vite-plugin-ox-content/src/docs.ts#L330" target="_blank" rel="noopener noreferrer">View source<span class="ox-api-entry__source-icon" aria-hidden="true"></span></a></p>
+<p class="ox-api-entry__source"><a class="ox-api-entry__source-link" href="https://github.com/ubugeeei-prod/ox-content/blob/main/npm/vite-plugin-ox-content/src/docs.ts#L346" target="_blank" rel="noopener noreferrer">View source<span class="ox-api-entry__source-icon" aria-hidden="true"></span></a></p>
 <div class="ox-api-entry__section ox-api-entry__section--params">
 <h4>Parameters</h4>
 <ul class="ox-api-entry__params">
@@ -247,7 +278,7 @@ await writeDocs(markdown, &#39;./docs/api&#39;, extracted, docsOptions);</code><
     <code class="ox-api-entry__param-name">options</code>
     <code class="ox-api-entry__param-type">false</code>
   </div>
-
+  
 </li>
 </ul>
 </div>
@@ -255,7 +286,7 @@ await writeDocs(markdown, &#39;./docs/api&#39;, extracted, docsOptions);</code><
 <h4>Returns</h4>
 <div class="ox-api-entry__return">
   <code class="ox-api-entry__return-type">false</code>
-
+  
 </div>
 </div>
   </div>
@@ -271,7 +302,7 @@ await writeDocs(markdown, &#39;./docs/api&#39;, extracted, docsOptions);</code><
 <h4>Signature</h4>
 <pre><code class="language-typescript">export async function writeDocs(docs: Record&lt;string, string&gt;, outDir: string, extractedDocs?: ExtractedDocs[], options?: ResolvedDocsOptions): Promise&lt;void&gt;</code></pre>
 </div>
-<p class="ox-api-entry__source"><a class="ox-api-entry__source-link" href="https://github.com/ubugeeei-prod/ox-content/blob/main/npm/vite-plugin-ox-content/src/docs.ts#L260-L291" target="_blank" rel="noopener noreferrer">View source<span class="ox-api-entry__source-icon" aria-hidden="true"></span></a></p>
+<p class="ox-api-entry__source"><a class="ox-api-entry__source-link" href="https://github.com/ubugeeei-prod/ox-content/blob/main/npm/vite-plugin-ox-content/src/docs.ts#L262-L293" target="_blank" rel="noopener noreferrer">View source<span class="ox-api-entry__source-icon" aria-hidden="true"></span></a></p>
 <div class="ox-api-entry__section ox-api-entry__section--params">
 <h4>Parameters</h4>
 <ul class="ox-api-entry__params">
@@ -280,14 +311,14 @@ await writeDocs(markdown, &#39;./docs/api&#39;, extracted, docsOptions);</code><
     <code class="ox-api-entry__param-name">docs</code>
     <code class="ox-api-entry__param-type">Record&lt;string, string&gt;</code>
   </div>
-
+  
 </li>
 <li class="ox-api-entry__param">
   <div class="ox-api-entry__param-heading">
     <code class="ox-api-entry__param-name">outDir</code>
     <code class="ox-api-entry__param-type">string</code>
   </div>
-
+  
 </li>
 <li class="ox-api-entry__param">
   <div class="ox-api-entry__param-heading">
@@ -309,8 +340,9 @@ await writeDocs(markdown, &#39;./docs/api&#39;, extracted, docsOptions);</code><
 <h4>Returns</h4>
 <div class="ox-api-entry__return">
   <code class="ox-api-entry__return-type">Promise&lt;void&gt;</code>
-
+  
 </div>
 </div>
   </div>
 </details>
+

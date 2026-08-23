@@ -2,15 +2,15 @@
 
 **[Source](https://github.com/ubugeeei-prod/ox-content/blob/main/npm/vite-plugin-ox-content/src/theme.ts)**
 
-> 29 documented symbols. Read the signatures first, then expand each item for parameters, return types, and examples.
+> 31 documented symbols. Read the signatures first, then expand each item for parameters, return types, and examples.
 
 <div class="ox-api-stats" aria-label="API reference summary">
 <span class="ox-api-stat">
-  <strong>29</strong>
+  <strong>31</strong>
   <span>symbols</span>
 </span>
 <span class="ox-api-stat">
-  <strong>5</strong>
+  <strong>7</strong>
   <span>functions</span>
 </span>
 <span class="ox-api-stat">
@@ -30,15 +30,15 @@
   <span>modules</span>
 </span>
 <span class="ox-api-stat">
-  <strong>6</strong>
+  <strong>8</strong>
   <span>parameters</span>
 </span>
 <span class="ox-api-stat">
-  <strong>112</strong>
+  <strong>118</strong>
   <span>members</span>
 </span>
 <span class="ox-api-stat">
-  <strong>5</strong>
+  <strong>7</strong>
   <span>returns</span>
 </span>
 <span class="ox-api-stat">
@@ -64,7 +64,7 @@
 <h4>Signature</h4>
 <pre><code class="language-typescript">function deepMerge&lt;T extends Record&lt;string, unknown&gt;&gt;(target: T, source: Partial&lt;T&gt;): T</code></pre>
 </div>
-<p class="ox-api-entry__source"><a class="ox-api-entry__source-link" href="https://github.com/ubugeeei-prod/ox-content/blob/main/npm/vite-plugin-ox-content/src/theme.ts#L257-L283" target="_blank" rel="noopener noreferrer">View source<span class="ox-api-entry__source-icon" aria-hidden="true"></span></a></p>
+<p class="ox-api-entry__source"><a class="ox-api-entry__source-link" href="https://github.com/ubugeeei-prod/ox-content/blob/main/npm/vite-plugin-ox-content/src/theme.ts#L280-L306" target="_blank" rel="noopener noreferrer">View source<span class="ox-api-entry__source-icon" aria-hidden="true"></span></a></p>
 <div class="ox-api-entry__section ox-api-entry__section--params">
 <h4>Parameters</h4>
 <ul class="ox-api-entry__params">
@@ -73,14 +73,14 @@
     <code class="ox-api-entry__param-name">target</code>
     <code class="ox-api-entry__param-type">T</code>
   </div>
-
+  
 </li>
 <li class="ox-api-entry__param">
   <div class="ox-api-entry__param-heading">
     <code class="ox-api-entry__param-name">source</code>
     <code class="ox-api-entry__param-type">Partial&lt;T&gt;</code>
   </div>
-
+  
 </li>
 </ul>
 </div>
@@ -88,7 +88,7 @@
 <h4>Returns</h4>
 <div class="ox-api-entry__return">
   <code class="ox-api-entry__return-type">T</code>
-
+  
 </div>
 </div>
   </div>
@@ -104,7 +104,7 @@
 <h4>Signature</h4>
 <pre><code class="language-typescript">export const defaultTheme: ThemeConfig</code></pre>
 </div>
-<p class="ox-api-entry__source"><a class="ox-api-entry__source-link" href="https://github.com/ubugeeei-prod/ox-content/blob/main/npm/vite-plugin-ox-content/src/theme.ts#L200-L252" target="_blank" rel="noopener noreferrer">View source<span class="ox-api-entry__source-icon" aria-hidden="true"></span></a></p>
+<p class="ox-api-entry__source"><a class="ox-api-entry__source-link" href="https://github.com/ubugeeei-prod/ox-content/blob/main/npm/vite-plugin-ox-content/src/theme.ts#L219-L275" target="_blank" rel="noopener noreferrer">View source<span class="ox-api-entry__source-icon" aria-hidden="true"></span></a></p>
   </div>
 </details>
 
@@ -118,7 +118,7 @@
 <h4>Signature</h4>
 <pre><code class="language-typescript">export function defineTheme(config: ThemeConfig): ThemeConfig</code></pre>
 </div>
-<p class="ox-api-entry__source"><a class="ox-api-entry__source-link" href="https://github.com/ubugeeei-prod/ox-content/blob/main/npm/vite-plugin-ox-content/src/theme.ts#L301-L303" target="_blank" rel="noopener noreferrer">View source<span class="ox-api-entry__source-icon" aria-hidden="true"></span></a></p>
+<p class="ox-api-entry__source"><a class="ox-api-entry__source-link" href="https://github.com/ubugeeei-prod/ox-content/blob/main/npm/vite-plugin-ox-content/src/theme.ts#L324-L326" target="_blank" rel="noopener noreferrer">View source<span class="ox-api-entry__source-icon" aria-hidden="true"></span></a></p>
 <div class="ox-api-entry__section ox-api-entry__section--params">
 <h4>Parameters</h4>
 <ul class="ox-api-entry__params">
@@ -127,7 +127,7 @@
     <code class="ox-api-entry__param-name">config</code>
     <code class="ox-api-entry__param-type"><a href="#themeconfig">ThemeConfig</a></code>
   </div>
-
+  
 </li>
 </ul>
 </div>
@@ -135,7 +135,7 @@
 <h4>Returns</h4>
 <div class="ox-api-entry__return">
   <code class="ox-api-entry__return-type"><a href="#themeconfig">ThemeConfig</a></code>
-
+  
 </div>
 </div>
 <div class="ox-api-entry__section ox-api-entry__section--examples">
@@ -156,6 +156,40 @@
   </div>
 </details>
 
+<details id="expandextendschain" class="ox-api-entry">
+  <summary><span class="ox-api-entry__kind">fn</span><span class="ox-api-entry__summary-main"><code class="ox-api-entry__signature ox-api-entry__signature--highlighted language-typescript">expandExtendsChain(config: ThemeConfig): ThemeConfig[]</code><span class="ox-api-entry__description">Flattens one layer&#39;s extends chain into base-first order. The seen guard keeps…</span><span class="ox-api-entry__meta"><span class="ox-api-badge">1 param</span><span class="ox-api-badge">returns ThemeConfig[]</span></span></span></summary>
+  <div class="ox-api-entry__body">
+<div class="ox-api-entry__prose">
+<p>Flattens one layer&#39;s <code>extends</code> chain into base-first order.</p>
+<p>The <code>seen</code> guard keeps a theme that accidentally extends itself (or forms a cycle through two packages) from hanging the build.</p>
+</div>
+<div class="ox-api-entry__section ox-api-entry__section--signature">
+<h4>Signature</h4>
+<pre><code class="language-typescript">function expandExtendsChain(config: ThemeConfig): ThemeConfig[]</code></pre>
+</div>
+<p class="ox-api-entry__source"><a class="ox-api-entry__source-link" href="https://github.com/ubugeeei-prod/ox-content/blob/main/npm/vite-plugin-ox-content/src/theme.ts#L431-L443" target="_blank" rel="noopener noreferrer">View source<span class="ox-api-entry__source-icon" aria-hidden="true"></span></a></p>
+<div class="ox-api-entry__section ox-api-entry__section--params">
+<h4>Parameters</h4>
+<ul class="ox-api-entry__params">
+<li class="ox-api-entry__param">
+  <div class="ox-api-entry__param-heading">
+    <code class="ox-api-entry__param-name">config</code>
+    <code class="ox-api-entry__param-type"><a href="#themeconfig">ThemeConfig</a></code>
+  </div>
+  
+</li>
+</ul>
+</div>
+<div class="ox-api-entry__section ox-api-entry__section--returns">
+<h4>Returns</h4>
+<div class="ox-api-entry__return">
+  <code class="ox-api-entry__return-type"><a href="#themeconfig">ThemeConfig</a>[]</code>
+  
+</div>
+</div>
+  </div>
+</details>
+
 <details id="legacysociallinks" class="ox-api-entry">
   <summary><span class="ox-api-entry__kind">interface</span><span class="ox-api-entry__summary-main"><code class="ox-api-entry__signature ox-api-entry__signature--highlighted language-typescript">LegacySocialLinks</code><span class="ox-api-entry__description">Legacy social links configuration.</span><span class="ox-api-entry__meta"><span class="ox-api-badge">3 members</span></span></span></summary>
   <div class="ox-api-entry__body">
@@ -166,7 +200,7 @@
 <h4>Signature</h4>
 <pre><code class="language-typescript">export interface LegacySocialLinks</code></pre>
 </div>
-<p class="ox-api-entry__source"><a class="ox-api-entry__source-link" href="https://github.com/ubugeeei-prod/ox-content/blob/main/npm/vite-plugin-ox-content/src/theme.ts#L100-L107" target="_blank" rel="noopener noreferrer">View source<span class="ox-api-entry__source-icon" aria-hidden="true"></span></a></p>
+<p class="ox-api-entry__source"><a class="ox-api-entry__source-link" href="https://github.com/ubugeeei-prod/ox-content/blob/main/npm/vite-plugin-ox-content/src/theme.ts#L106-L113" target="_blank" rel="noopener noreferrer">View source<span class="ox-api-entry__source-icon" aria-hidden="true"></span></a></p>
 <div class="ox-api-entry__section ox-api-entry__section--members">
 <h4>Members</h4>
 <div class="ox-api-entry__member-group">
@@ -197,25 +231,26 @@
 </details>
 
 <details id="mergethemes" class="ox-api-entry">
-  <summary><span class="ox-api-entry__kind">fn</span><span class="ox-api-entry__summary-main"><code class="ox-api-entry__signature ox-api-entry__signature--highlighted language-typescript">mergeThemes(...themes: ThemeConfig[]): ThemeConfig</code><span class="ox-api-entry__description">Merges multiple theme configurations. Later themes override earlier ones.</span><span class="ox-api-entry__meta"><span class="ox-api-badge">1 param</span><span class="ox-api-badge">returns ThemeConfig</span><span class="ox-api-badge">1 example</span></span></span></summary>
+  <summary><span class="ox-api-entry__kind">fn</span><span class="ox-api-entry__summary-main"><code class="ox-api-entry__signature ox-api-entry__signature--highlighted language-typescript">mergeThemes(...themes: (ThemeConfig | ThemeConfig[])[]): ThemeConfig</code><span class="ox-api-entry__description">Merges multiple theme configurations. Later themes override earlier ones. Objec…</span><span class="ox-api-entry__meta"><span class="ox-api-badge">1 param</span><span class="ox-api-badge">returns ThemeConfig</span><span class="ox-api-badge">1 example</span></span></span></summary>
   <div class="ox-api-entry__body">
 <div class="ox-api-entry__prose">
 <p>Merges multiple theme configurations. Later themes override earlier ones.</p>
+<p>Object fields (<code>colors</code>, <code>tokens</code>, <code>layout</code>, …) merge key-by-key, but <code>css</code> and <code>js</code> <strong>concatenate</strong> in layer order — overwriting them would throw away one half of a <code>[skin, colorScheme]</code> stack. Identical fragments are joined once, so a layer reached through both an array and an <code>extends</code> chain does not emit its stylesheet twice.</p>
 </div>
 <div class="ox-api-entry__section ox-api-entry__section--signature">
 <h4>Signature</h4>
-<pre><code class="language-typescript">export function mergeThemes(...themes: ThemeConfig[]): ThemeConfig</code></pre>
+<pre><code class="language-typescript">export function mergeThemes(...themes: (ThemeConfig | ThemeConfig[])[]): ThemeConfig</code></pre>
 </div>
-<p class="ox-api-entry__source"><a class="ox-api-entry__source-link" href="https://github.com/ubugeeei-prod/ox-content/blob/main/npm/vite-plugin-ox-content/src/theme.ts#L314-L329" target="_blank" rel="noopener noreferrer">View source<span class="ox-api-entry__source-icon" aria-hidden="true"></span></a></p>
+<p class="ox-api-entry__source"><a class="ox-api-entry__source-link" href="https://github.com/ubugeeei-prod/ox-content/blob/main/npm/vite-plugin-ox-content/src/theme.ts#L343-L369" target="_blank" rel="noopener noreferrer">View source<span class="ox-api-entry__source-icon" aria-hidden="true"></span></a></p>
 <div class="ox-api-entry__section ox-api-entry__section--params">
 <h4>Parameters</h4>
 <ul class="ox-api-entry__params">
 <li class="ox-api-entry__param">
   <div class="ox-api-entry__param-heading">
     <code class="ox-api-entry__param-name">themes</code>
-    <code class="ox-api-entry__param-type"><a href="#themeconfig">ThemeConfig</a>[]</code>
+    <code class="ox-api-entry__param-type">(<a href="#themeconfig">ThemeConfig</a> | <a href="#themeconfig">ThemeConfig</a>[])[]</code>
   </div>
-
+  
 </li>
 </ul>
 </div>
@@ -223,14 +258,14 @@
 <h4>Returns</h4>
 <div class="ox-api-entry__return">
   <code class="ox-api-entry__return-type"><a href="#themeconfig">ThemeConfig</a></code>
-
+  
 </div>
 </div>
 <div class="ox-api-entry__section ox-api-entry__section--examples">
 <h4>Examples</h4>
 <div class="ox-api-entry__example">
 <div class="ox-api-entry__example-heading">Example 1</div>
-<pre><code class="language-ts">const merged = mergeThemes(defaultTheme, customTheme, overrides);</code></pre>
+<pre><code class="language-ts">const merged = mergeThemes(defaultTheme, pixelSkin, tokyoNight, overrides);</code></pre>
 </div>
 </div>
   </div>
@@ -246,7 +281,7 @@
 <h4>Signature</h4>
 <pre><code class="language-typescript">export interface NapiSocialLinks</code></pre>
 </div>
-<p class="ox-api-entry__source"><a class="ox-api-entry__source-link" href="https://github.com/ubugeeei-prod/ox-content/blob/main/npm/vite-plugin-ox-content/src/theme.ts#L527-L532" target="_blank" rel="noopener noreferrer">View source<span class="ox-api-entry__source-icon" aria-hidden="true"></span></a></p>
+<p class="ox-api-entry__source"><a class="ox-api-entry__source-link" href="https://github.com/ubugeeei-prod/ox-content/blob/main/npm/vite-plugin-ox-content/src/theme.ts#L628-L633" target="_blank" rel="noopener noreferrer">View source<span class="ox-api-entry__source-icon" aria-hidden="true"></span></a></p>
 <div class="ox-api-entry__section ox-api-entry__section--members">
 <h4>Members</h4>
 <div class="ox-api-entry__member-group">
@@ -282,7 +317,7 @@
 </details>
 
 <details id="napithemecolors" class="ox-api-entry">
-  <summary><span class="ox-api-entry__kind">interface</span><span class="ox-api-entry__summary-main"><code class="ox-api-entry__signature ox-api-entry__signature--highlighted language-typescript">NapiThemeColors</code><span class="ox-api-entry__description">NAPI-compatible theme colors type.</span><span class="ox-api-entry__meta"><span class="ox-api-badge">9 members</span></span></span></summary>
+  <summary><span class="ox-api-entry__kind">interface</span><span class="ox-api-entry__summary-main"><code class="ox-api-entry__signature ox-api-entry__signature--highlighted language-typescript">NapiThemeColors</code><span class="ox-api-entry__description">NAPI-compatible theme colors type.</span><span class="ox-api-entry__meta"><span class="ox-api-badge">10 members</span></span></span></summary>
   <div class="ox-api-entry__body">
 <div class="ox-api-entry__prose">
 <p>NAPI-compatible theme colors type.</p>
@@ -291,7 +326,7 @@
 <h4>Signature</h4>
 <pre><code class="language-typescript">export interface NapiThemeColors</code></pre>
 </div>
-<p class="ox-api-entry__source"><a class="ox-api-entry__source-link" href="https://github.com/ubugeeei-prod/ox-content/blob/main/npm/vite-plugin-ox-content/src/theme.ts#L468-L478" target="_blank" rel="noopener noreferrer">View source<span class="ox-api-entry__source-icon" aria-hidden="true"></span></a></p>
+<p class="ox-api-entry__source"><a class="ox-api-entry__source-link" href="https://github.com/ubugeeei-prod/ox-content/blob/main/npm/vite-plugin-ox-content/src/theme.ts#L568-L579" target="_blank" rel="noopener noreferrer">View source<span class="ox-api-entry__source-icon" aria-hidden="true"></span></a></p>
 <div class="ox-api-entry__section ox-api-entry__section--members">
 <h4>Members</h4>
 <div class="ox-api-entry__member-group">
@@ -316,6 +351,11 @@
 </tr>
 <tr id="napithemecolors-codebackground">
   <td><code>codeBackground</code><span class="ox-api-badge">optional</span></td>
+  <td><code class="ox-api-entry__member-type language-typescript">string</code></td>
+  <td></td>
+</tr>
+<tr id="napithemecolors-codebackgroundtop">
+  <td><code>codeBackgroundTop</code><span class="ox-api-badge">optional</span></td>
   <td><code class="ox-api-entry__member-type language-typescript">string</code></td>
   <td></td>
 </tr>
@@ -361,7 +401,7 @@
 <h4>Signature</h4>
 <pre><code class="language-typescript">export interface NapiThemeConfig</code></pre>
 </div>
-<p class="ox-api-entry__source"><a class="ox-api-entry__source-link" href="https://github.com/ubugeeei-prod/ox-content/blob/main/npm/vite-plugin-ox-content/src/theme.ts#L559-L571" target="_blank" rel="noopener noreferrer">View source<span class="ox-api-entry__source-icon" aria-hidden="true"></span></a></p>
+<p class="ox-api-entry__source"><a class="ox-api-entry__source-link" href="https://github.com/ubugeeei-prod/ox-content/blob/main/npm/vite-plugin-ox-content/src/theme.ts#L660-L672" target="_blank" rel="noopener noreferrer">View source<span class="ox-api-entry__source-icon" aria-hidden="true"></span></a></p>
 <div class="ox-api-entry__section ox-api-entry__section--members">
 <h4>Members</h4>
 <div class="ox-api-entry__member-group">
@@ -441,7 +481,7 @@
 <h4>Signature</h4>
 <pre><code class="language-typescript">export interface NapiThemeEmbed</code></pre>
 </div>
-<p class="ox-api-entry__source"><a class="ox-api-entry__source-link" href="https://github.com/ubugeeei-prod/ox-content/blob/main/npm/vite-plugin-ox-content/src/theme.ts#L544-L554" target="_blank" rel="noopener noreferrer">View source<span class="ox-api-entry__source-icon" aria-hidden="true"></span></a></p>
+<p class="ox-api-entry__source"><a class="ox-api-entry__source-link" href="https://github.com/ubugeeei-prod/ox-content/blob/main/npm/vite-plugin-ox-content/src/theme.ts#L645-L655" target="_blank" rel="noopener noreferrer">View source<span class="ox-api-entry__source-icon" aria-hidden="true"></span></a></p>
 <div class="ox-api-entry__section ox-api-entry__section--members">
 <h4>Members</h4>
 <div class="ox-api-entry__member-group">
@@ -511,7 +551,7 @@
 <h4>Signature</h4>
 <pre><code class="language-typescript">export interface NapiThemeEntryPage</code></pre>
 </div>
-<p class="ox-api-entry__source"><a class="ox-api-entry__source-link" href="https://github.com/ubugeeei-prod/ox-content/blob/main/npm/vite-plugin-ox-content/src/theme.ts#L491-L493" target="_blank" rel="noopener noreferrer">View source<span class="ox-api-entry__source-icon" aria-hidden="true"></span></a></p>
+<p class="ox-api-entry__source"><a class="ox-api-entry__source-link" href="https://github.com/ubugeeei-prod/ox-content/blob/main/npm/vite-plugin-ox-content/src/theme.ts#L592-L594" target="_blank" rel="noopener noreferrer">View source<span class="ox-api-entry__source-icon" aria-hidden="true"></span></a></p>
 <div class="ox-api-entry__section ox-api-entry__section--members">
 <h4>Members</h4>
 <div class="ox-api-entry__member-group">
@@ -541,7 +581,7 @@
 <h4>Signature</h4>
 <pre><code class="language-typescript">export interface NapiThemeFonts</code></pre>
 </div>
-<p class="ox-api-entry__source"><a class="ox-api-entry__source-link" href="https://github.com/ubugeeei-prod/ox-content/blob/main/npm/vite-plugin-ox-content/src/theme.ts#L483-L486" target="_blank" rel="noopener noreferrer">View source<span class="ox-api-entry__source-icon" aria-hidden="true"></span></a></p>
+<p class="ox-api-entry__source"><a class="ox-api-entry__source-link" href="https://github.com/ubugeeei-prod/ox-content/blob/main/npm/vite-plugin-ox-content/src/theme.ts#L584-L587" target="_blank" rel="noopener noreferrer">View source<span class="ox-api-entry__source-icon" aria-hidden="true"></span></a></p>
 <div class="ox-api-entry__section ox-api-entry__section--members">
 <h4>Members</h4>
 <div class="ox-api-entry__member-group">
@@ -576,7 +616,7 @@
 <h4>Signature</h4>
 <pre><code class="language-typescript">export interface NapiThemeFooter</code></pre>
 </div>
-<p class="ox-api-entry__source"><a class="ox-api-entry__source-link" href="https://github.com/ubugeeei-prod/ox-content/blob/main/npm/vite-plugin-ox-content/src/theme.ts#L519-L522" target="_blank" rel="noopener noreferrer">View source<span class="ox-api-entry__source-icon" aria-hidden="true"></span></a></p>
+<p class="ox-api-entry__source"><a class="ox-api-entry__source-link" href="https://github.com/ubugeeei-prod/ox-content/blob/main/npm/vite-plugin-ox-content/src/theme.ts#L620-L623" target="_blank" rel="noopener noreferrer">View source<span class="ox-api-entry__source-icon" aria-hidden="true"></span></a></p>
 <div class="ox-api-entry__section ox-api-entry__section--members">
 <h4>Members</h4>
 <div class="ox-api-entry__member-group">
@@ -611,7 +651,7 @@
 <h4>Signature</h4>
 <pre><code class="language-typescript">export interface NapiThemeHeader</code></pre>
 </div>
-<p class="ox-api-entry__source"><a class="ox-api-entry__source-link" href="https://github.com/ubugeeei-prod/ox-content/blob/main/npm/vite-plugin-ox-content/src/theme.ts#L507-L514" target="_blank" rel="noopener noreferrer">View source<span class="ox-api-entry__source-icon" aria-hidden="true"></span></a></p>
+<p class="ox-api-entry__source"><a class="ox-api-entry__source-link" href="https://github.com/ubugeeei-prod/ox-content/blob/main/npm/vite-plugin-ox-content/src/theme.ts#L608-L615" target="_blank" rel="noopener noreferrer">View source<span class="ox-api-entry__source-icon" aria-hidden="true"></span></a></p>
 <div class="ox-api-entry__section ox-api-entry__section--members">
 <h4>Members</h4>
 <div class="ox-api-entry__member-group">
@@ -666,7 +706,7 @@
 <h4>Signature</h4>
 <pre><code class="language-typescript">export interface NapiThemeLayout</code></pre>
 </div>
-<p class="ox-api-entry__source"><a class="ox-api-entry__source-link" href="https://github.com/ubugeeei-prod/ox-content/blob/main/npm/vite-plugin-ox-content/src/theme.ts#L498-L502" target="_blank" rel="noopener noreferrer">View source<span class="ox-api-entry__source-icon" aria-hidden="true"></span></a></p>
+<p class="ox-api-entry__source"><a class="ox-api-entry__source-link" href="https://github.com/ubugeeei-prod/ox-content/blob/main/npm/vite-plugin-ox-content/src/theme.ts#L599-L603" target="_blank" rel="noopener noreferrer">View source<span class="ox-api-entry__source-icon" aria-hidden="true"></span></a></p>
 <div class="ox-api-entry__section ox-api-entry__section--members">
 <h4>Members</h4>
 <div class="ox-api-entry__member-group">
@@ -697,7 +737,7 @@
 </details>
 
 <details id="resolvedthemeconfig" class="ox-api-entry">
-  <summary><span class="ox-api-entry__kind">interface</span><span class="ox-api-entry__summary-main"><code class="ox-api-entry__signature ox-api-entry__signature--highlighted language-typescript">ResolvedThemeConfig</code><span class="ox-api-entry__description">Resolved theme configuration (after merging with defaults).</span><span class="ox-api-entry__meta"><span class="ox-api-badge">13 members</span></span></span></summary>
+  <summary><span class="ox-api-entry__kind">interface</span><span class="ox-api-entry__summary-main"><code class="ox-api-entry__signature ox-api-entry__signature--highlighted language-typescript">ResolvedThemeConfig</code><span class="ox-api-entry__description">Resolved theme configuration (after merging with defaults).</span><span class="ox-api-entry__meta"><span class="ox-api-badge">15 members</span></span></span></summary>
   <div class="ox-api-entry__body">
 <div class="ox-api-entry__prose">
 <p>Resolved theme configuration (after merging with defaults).</p>
@@ -706,7 +746,7 @@
 <h4>Signature</h4>
 <pre><code class="language-typescript">export interface ResolvedThemeConfig</code></pre>
 </div>
-<p class="ox-api-entry__source"><a class="ox-api-entry__source-link" href="https://github.com/ubugeeei-prod/ox-content/blob/main/npm/vite-plugin-ox-content/src/theme.ts#L180-L194" target="_blank" rel="noopener noreferrer">View source<span class="ox-api-entry__source-icon" aria-hidden="true"></span></a></p>
+<p class="ox-api-entry__source"><a class="ox-api-entry__source-link" href="https://github.com/ubugeeei-prod/ox-content/blob/main/npm/vite-plugin-ox-content/src/theme.ts#L197-L213" target="_blank" rel="noopener noreferrer">View source<span class="ox-api-entry__source-icon" aria-hidden="true"></span></a></p>
 <div class="ox-api-entry__section ox-api-entry__section--members">
 <h4>Members</h4>
 <div class="ox-api-entry__member-group">
@@ -727,6 +767,11 @@
 <tr id="resolvedthemeconfig-darkcolors">
   <td><code>darkColors</code></td>
   <td><code class="ox-api-entry__member-type language-typescript"><a href="#themecolors">ThemeColors</a></code></td>
+  <td></td>
+</tr>
+<tr id="resolvedthemeconfig-darktokens">
+  <td><code>darkTokens</code></td>
+  <td><code class="ox-api-entry__member-type language-typescript"><a href="./theme-tokens.md#themetokens">ThemeTokens</a></code></td>
   <td></td>
 </tr>
 <tr id="resolvedthemeconfig-embed">
@@ -779,6 +824,11 @@
   <td><code class="ox-api-entry__member-type language-typescript"><a href="#sociallinks">SocialLinks</a></code></td>
   <td></td>
 </tr>
+<tr id="resolvedthemeconfig-tokens">
+  <td><code>tokens</code></td>
+  <td><code class="ox-api-entry__member-type language-typescript"><a href="./theme-tokens.md#themetokens">ThemeTokens</a></code></td>
+  <td></td>
+</tr>
 </tbody>
 </table>
 </div>
@@ -787,23 +837,25 @@
 </details>
 
 <details id="resolvetheme" class="ox-api-entry">
-  <summary><span class="ox-api-entry__kind">fn</span><span class="ox-api-entry__summary-main"><code class="ox-api-entry__signature ox-api-entry__signature--highlighted language-typescript">resolveTheme(config?: ThemeConfig): ResolvedThemeConfig</code><span class="ox-api-entry__description">Resolves a theme configuration by merging with its extends chain and defaults.</span><span class="ox-api-entry__meta"><span class="ox-api-badge">1 param</span><span class="ox-api-badge">returns ResolvedThemeConfig</span></span></span></summary>
+  <summary><span class="ox-api-entry__kind">fn</span><span class="ox-api-entry__summary-main"><code class="ox-api-entry__signature ox-api-entry__signature--highlighted language-typescript">resolveTheme(config?: ThemeConfig | ThemeConfig[]): ResolvedThemeConfig</code><span class="ox-api-entry__description">Resolves a theme configuration by merging with its extends chain and defaults.…</span><span class="ox-api-entry__meta"><span class="ox-api-badge">1 param</span><span class="ox-api-badge">returns ResolvedThemeConfig</span></span></span></summary>
   <div class="ox-api-entry__body">
 <div class="ox-api-entry__prose">
 <p>Resolves a theme configuration by merging with its extends chain and defaults.</p>
+<p>An array composes independent layers left to right, which is how a skin package and a color package are stacked:</p>
+<pre><code class="language-ts">resolveTheme([pixelSkin, tokyoNight, { footer: { copyright: &quot;2026&quot; } }]);</code></pre>
 </div>
 <div class="ox-api-entry__section ox-api-entry__section--signature">
 <h4>Signature</h4>
-<pre><code class="language-typescript">export function resolveTheme(config?: ThemeConfig): ResolvedThemeConfig</code></pre>
+<pre><code class="language-typescript">export function resolveTheme(config?: ThemeConfig | ThemeConfig[]): ResolvedThemeConfig</code></pre>
 </div>
-<p class="ox-api-entry__source"><a class="ox-api-entry__source-link" href="https://github.com/ubugeeei-prod/ox-content/blob/main/npm/vite-plugin-ox-content/src/theme.ts#L334-L372" target="_blank" rel="noopener noreferrer">View source<span class="ox-api-entry__source-icon" aria-hidden="true"></span></a></p>
+<p class="ox-api-entry__source"><a class="ox-api-entry__source-link" href="https://github.com/ubugeeei-prod/ox-content/blob/main/npm/vite-plugin-ox-content/src/theme.ts#L390-L423" target="_blank" rel="noopener noreferrer">View source<span class="ox-api-entry__source-icon" aria-hidden="true"></span></a></p>
 <div class="ox-api-entry__section ox-api-entry__section--params">
 <h4>Parameters</h4>
 <ul class="ox-api-entry__params">
 <li class="ox-api-entry__param">
   <div class="ox-api-entry__param-heading">
     <code class="ox-api-entry__param-name">config</code>
-    <code class="ox-api-entry__param-type"><a href="#themeconfig">ThemeConfig</a></code>
+    <code class="ox-api-entry__param-type"><a href="#themeconfig">ThemeConfig</a> | <a href="#themeconfig">ThemeConfig</a>[]</code>
   </div>
   <p class="ox-api-entry__param-description">optional</p>
 </li>
@@ -813,7 +865,7 @@
 <h4>Returns</h4>
 <div class="ox-api-entry__return">
   <code class="ox-api-entry__return-type"><a href="#resolvedthemeconfig">ResolvedThemeConfig</a></code>
-
+  
 </div>
 </div>
   </div>
@@ -829,7 +881,7 @@
 <h4>Signature</h4>
 <pre><code class="language-typescript">export interface SocialLink</code></pre>
 </div>
-<p class="ox-api-entry__source"><a class="ox-api-entry__source-link" href="https://github.com/ubugeeei-prod/ox-content/blob/main/npm/vite-plugin-ox-content/src/theme.ts#L93-L97" target="_blank" rel="noopener noreferrer">View source<span class="ox-api-entry__source-icon" aria-hidden="true"></span></a></p>
+<p class="ox-api-entry__source"><a class="ox-api-entry__source-link" href="https://github.com/ubugeeei-prod/ox-content/blob/main/npm/vite-plugin-ox-content/src/theme.ts#L99-L103" target="_blank" rel="noopener noreferrer">View source<span class="ox-api-entry__source-icon" aria-hidden="true"></span></a></p>
 <div class="ox-api-entry__section ox-api-entry__section--members">
 <h4>Members</h4>
 <div class="ox-api-entry__member-group">
@@ -869,7 +921,7 @@
 <h4>Signature</h4>
 <pre><code class="language-typescript">export type SocialLinkIcon = string | { svg: string }</code></pre>
 </div>
-<p class="ox-api-entry__source"><a class="ox-api-entry__source-link" href="https://github.com/ubugeeei-prod/ox-content/blob/main/npm/vite-plugin-ox-content/src/theme.ts#L90" target="_blank" rel="noopener noreferrer">View source<span class="ox-api-entry__source-icon" aria-hidden="true"></span></a></p>
+<p class="ox-api-entry__source"><a class="ox-api-entry__source-link" href="https://github.com/ubugeeei-prod/ox-content/blob/main/npm/vite-plugin-ox-content/src/theme.ts#L96" target="_blank" rel="noopener noreferrer">View source<span class="ox-api-entry__source-icon" aria-hidden="true"></span></a></p>
   </div>
 </details>
 
@@ -883,7 +935,7 @@
 <h4>Signature</h4>
 <pre><code class="language-typescript">export type SocialLinks = LegacySocialLinks | SocialLink[]</code></pre>
 </div>
-<p class="ox-api-entry__source"><a class="ox-api-entry__source-link" href="https://github.com/ubugeeei-prod/ox-content/blob/main/npm/vite-plugin-ox-content/src/theme.ts#L110" target="_blank" rel="noopener noreferrer">View source<span class="ox-api-entry__source-icon" aria-hidden="true"></span></a></p>
+<p class="ox-api-entry__source"><a class="ox-api-entry__source-link" href="https://github.com/ubugeeei-prod/ox-content/blob/main/npm/vite-plugin-ox-content/src/theme.ts#L116" target="_blank" rel="noopener noreferrer">View source<span class="ox-api-entry__source-icon" aria-hidden="true"></span></a></p>
   </div>
 </details>
 
@@ -899,7 +951,7 @@
 </details>
 
 <details id="themecolors" class="ox-api-entry">
-  <summary><span class="ox-api-entry__kind">interface</span><span class="ox-api-entry__summary-main"><code class="ox-api-entry__signature ox-api-entry__signature--highlighted language-typescript">ThemeColors</code><span class="ox-api-entry__description">Theme color configuration.</span><span class="ox-api-entry__meta"><span class="ox-api-badge">9 members</span></span></span></summary>
+  <summary><span class="ox-api-entry__kind">interface</span><span class="ox-api-entry__summary-main"><code class="ox-api-entry__signature ox-api-entry__signature--highlighted language-typescript">ThemeColors</code><span class="ox-api-entry__description">Theme color configuration.</span><span class="ox-api-entry__meta"><span class="ox-api-badge">10 members</span></span></span></summary>
   <div class="ox-api-entry__body">
 <div class="ox-api-entry__prose">
 <p>Theme color configuration.</p>
@@ -908,7 +960,7 @@
 <h4>Signature</h4>
 <pre><code class="language-typescript">export interface ThemeColors</code></pre>
 </div>
-<p class="ox-api-entry__source"><a class="ox-api-entry__source-link" href="https://github.com/ubugeeei-prod/ox-content/blob/main/npm/vite-plugin-ox-content/src/theme.ts#L10-L29" target="_blank" rel="noopener noreferrer">View source<span class="ox-api-entry__source-icon" aria-hidden="true"></span></a></p>
+<p class="ox-api-entry__source"><a class="ox-api-entry__source-link" href="https://github.com/ubugeeei-prod/ox-content/blob/main/npm/vite-plugin-ox-content/src/theme.ts#L14-L35" target="_blank" rel="noopener noreferrer">View source<span class="ox-api-entry__source-icon" aria-hidden="true"></span></a></p>
 <div class="ox-api-entry__section ox-api-entry__section--members">
 <h4>Members</h4>
 <div class="ox-api-entry__member-group">
@@ -935,6 +987,11 @@
   <td><code>codeBackground</code><span class="ox-api-badge">optional</span></td>
   <td><code class="ox-api-entry__member-type language-typescript">string</code></td>
   <td><div class="ox-api-entry__member-description">Code block background color</div></td>
+</tr>
+<tr id="themecolors-codebackgroundtop">
+  <td><code>codeBackgroundTop</code><span class="ox-api-badge">optional</span></td>
+  <td><code class="ox-api-entry__member-type language-typescript">string</code></td>
+  <td><div class="ox-api-entry__member-description">Code block gradient color at the top; defaults to <code>codeBackground</code> when customized</div></td>
 </tr>
 <tr id="themecolors-codetext">
   <td><code>codeText</code><span class="ox-api-badge">optional</span></td>
@@ -969,7 +1026,7 @@
 </details>
 
 <details id="themeconfig" class="ox-api-entry">
-  <summary><span class="ox-api-entry__kind">interface</span><span class="ox-api-entry__summary-main"><code class="ox-api-entry__signature ox-api-entry__signature--highlighted language-typescript">ThemeConfig</code><span class="ox-api-entry__description">Complete theme configuration.</span><span class="ox-api-entry__meta"><span class="ox-api-badge">14 members</span></span></span></summary>
+  <summary><span class="ox-api-entry__kind">interface</span><span class="ox-api-entry__summary-main"><code class="ox-api-entry__signature ox-api-entry__signature--highlighted language-typescript">ThemeConfig</code><span class="ox-api-entry__description">Complete theme configuration.</span><span class="ox-api-entry__meta"><span class="ox-api-badge">16 members</span></span></span></summary>
   <div class="ox-api-entry__body">
 <div class="ox-api-entry__prose">
 <p>Complete theme configuration.</p>
@@ -978,7 +1035,7 @@
 <h4>Signature</h4>
 <pre><code class="language-typescript">export interface ThemeConfig</code></pre>
 </div>
-<p class="ox-api-entry__source"><a class="ox-api-entry__source-link" href="https://github.com/ubugeeei-prod/ox-content/blob/main/npm/vite-plugin-ox-content/src/theme.ts#L147-L175" target="_blank" rel="noopener noreferrer">View source<span class="ox-api-entry__source-icon" aria-hidden="true"></span></a></p>
+<p class="ox-api-entry__source"><a class="ox-api-entry__source-link" href="https://github.com/ubugeeei-prod/ox-content/blob/main/npm/vite-plugin-ox-content/src/theme.ts#L153-L192" target="_blank" rel="noopener noreferrer">View source<span class="ox-api-entry__source-icon" aria-hidden="true"></span></a></p>
 <div class="ox-api-entry__section ox-api-entry__section--members">
 <h4>Members</h4>
 <div class="ox-api-entry__member-group">
@@ -994,12 +1051,17 @@
 <tr id="themeconfig-css">
   <td><code>css</code><span class="ox-api-badge">optional</span></td>
   <td><code class="ox-api-entry__member-type language-typescript">string</code></td>
-  <td><div class="ox-api-entry__member-description">Additional custom CSS</div></td>
+  <td><div class="ox-api-entry__member-description">Additional custom CSS. Composed layers <strong>concatenate</strong> this rather than<br>overwrite, so stacking a skin and a color scheme keeps both stylesheets.</div></td>
 </tr>
 <tr id="themeconfig-darkcolors">
   <td><code>darkColors</code><span class="ox-api-badge">optional</span></td>
   <td><code class="ox-api-entry__member-type language-typescript"><a href="#themecolors">ThemeColors</a></code></td>
   <td><div class="ox-api-entry__member-description">Dark mode colors (maps to CSS variables)</div></td>
+</tr>
+<tr id="themeconfig-darktokens">
+  <td><code>darkTokens</code><span class="ox-api-badge">optional</span></td>
+  <td><code class="ox-api-entry__member-type language-typescript"><a href="./theme-tokens.md#themetokens">ThemeTokens</a></code></td>
+  <td><div class="ox-api-entry__member-description">Extra <code>--octc-*</code> custom properties for dark mode.</div></td>
 </tr>
 <tr id="themeconfig-embed">
   <td><code>embed</code><span class="ox-api-badge">optional</span></td>
@@ -1034,7 +1096,7 @@
 <tr id="themeconfig-js">
   <td><code>js</code><span class="ox-api-badge">optional</span></td>
   <td><code class="ox-api-entry__member-type language-typescript">string</code></td>
-  <td><div class="ox-api-entry__member-description">Additional custom JavaScript</div></td>
+  <td><div class="ox-api-entry__member-description">Additional custom JavaScript. Concatenated across composed layers.</div></td>
 </tr>
 <tr id="themeconfig-layout">
   <td><code>layout</code><span class="ox-api-badge">optional</span></td>
@@ -1056,8 +1118,46 @@
   <td><code class="ox-api-entry__member-type language-typescript"><a href="#sociallinks">SocialLinks</a></code></td>
   <td><div class="ox-api-entry__member-description">Social links configuration</div></td>
 </tr>
+<tr id="themeconfig-tokens">
+  <td><code>tokens</code><span class="ox-api-badge">optional</span></td>
+  <td><code class="ox-api-entry__member-type language-typescript"><a href="./theme-tokens.md#themetokens">ThemeTokens</a></code></td>
+  <td><div class="ox-api-entry__member-description">Extra <code>--octc-*</code> custom properties for light mode, keyed without the<br>prefix. Merged key-by-key across composed layers, so a later layer can<br>restyle one token without redeclaring the rest.</div></td>
+</tr>
 </tbody>
 </table>
+</div>
+</div>
+  </div>
+</details>
+
+<details id="themecss" class="ox-api-entry">
+  <summary><span class="ox-api-entry__kind">fn</span><span class="ox-api-entry__summary-main"><code class="ox-api-entry__signature ox-api-entry__signature--highlighted language-typescript">themeCss(theme: ResolvedThemeConfig): string</code><span class="ox-api-entry__description">Token blocks come first so a theme&#39;s own css stays the final word, and both lan…</span><span class="ox-api-entry__meta"><span class="ox-api-badge">1 param</span><span class="ox-api-badge">returns string</span></span></span></summary>
+  <div class="ox-api-entry__body">
+<div class="ox-api-entry__prose">
+<p>Token blocks come first so a theme&#39;s own <code>css</code> stays the final word, and both land after the typed color variables the Rust renderer emits.</p>
+</div>
+<div class="ox-api-entry__section ox-api-entry__section--signature">
+<h4>Signature</h4>
+<pre><code class="language-typescript">function themeCss(theme: ResolvedThemeConfig): string</code></pre>
+</div>
+<p class="ox-api-entry__source"><a class="ox-api-entry__source-link" href="https://github.com/ubugeeei-prod/ox-content/blob/main/npm/vite-plugin-ox-content/src/theme.ts#L542-L548" target="_blank" rel="noopener noreferrer">View source<span class="ox-api-entry__source-icon" aria-hidden="true"></span></a></p>
+<div class="ox-api-entry__section ox-api-entry__section--params">
+<h4>Parameters</h4>
+<ul class="ox-api-entry__params">
+<li class="ox-api-entry__param">
+  <div class="ox-api-entry__param-heading">
+    <code class="ox-api-entry__param-name">theme</code>
+    <code class="ox-api-entry__param-type"><a href="#resolvedthemeconfig">ResolvedThemeConfig</a></code>
+  </div>
+  
+</li>
+</ul>
+</div>
+<div class="ox-api-entry__section ox-api-entry__section--returns">
+<h4>Returns</h4>
+<div class="ox-api-entry__return">
+  <code class="ox-api-entry__return-type">string</code>
+  
 </div>
 </div>
   </div>
@@ -1073,7 +1173,7 @@
 <h4>Signature</h4>
 <pre><code class="language-typescript">export interface ThemeEmbed</code></pre>
 </div>
-<p class="ox-api-entry__source"><a class="ox-api-entry__source-link" href="https://github.com/ubugeeei-prod/ox-content/blob/main/npm/vite-plugin-ox-content/src/theme.ts#L115-L134" target="_blank" rel="noopener noreferrer">View source<span class="ox-api-entry__source-icon" aria-hidden="true"></span></a></p>
+<p class="ox-api-entry__source"><a class="ox-api-entry__source-link" href="https://github.com/ubugeeei-prod/ox-content/blob/main/npm/vite-plugin-ox-content/src/theme.ts#L121-L140" target="_blank" rel="noopener noreferrer">View source<span class="ox-api-entry__source-icon" aria-hidden="true"></span></a></p>
 <div class="ox-api-entry__section ox-api-entry__section--members">
 <h4>Members</h4>
 <div class="ox-api-entry__member-group">
@@ -1143,7 +1243,7 @@
 <h4>Signature</h4>
 <pre><code class="language-typescript">export interface ThemeEntryPage</code></pre>
 </div>
-<p class="ox-api-entry__source"><a class="ox-api-entry__source-link" href="https://github.com/ubugeeei-prod/ox-content/blob/main/npm/vite-plugin-ox-content/src/theme.ts#L56-L59" target="_blank" rel="noopener noreferrer">View source<span class="ox-api-entry__source-icon" aria-hidden="true"></span></a></p>
+<p class="ox-api-entry__source"><a class="ox-api-entry__source-link" href="https://github.com/ubugeeei-prod/ox-content/blob/main/npm/vite-plugin-ox-content/src/theme.ts#L62-L65" target="_blank" rel="noopener noreferrer">View source<span class="ox-api-entry__source-icon" aria-hidden="true"></span></a></p>
 <div class="ox-api-entry__section ox-api-entry__section--members">
 <h4>Members</h4>
 <div class="ox-api-entry__member-group">
@@ -1173,7 +1273,7 @@
 <h4>Signature</h4>
 <pre><code class="language-typescript">export interface ThemeFonts</code></pre>
 </div>
-<p class="ox-api-entry__source"><a class="ox-api-entry__source-link" href="https://github.com/ubugeeei-prod/ox-content/blob/main/npm/vite-plugin-ox-content/src/theme.ts#L46-L51" target="_blank" rel="noopener noreferrer">View source<span class="ox-api-entry__source-icon" aria-hidden="true"></span></a></p>
+<p class="ox-api-entry__source"><a class="ox-api-entry__source-link" href="https://github.com/ubugeeei-prod/ox-content/blob/main/npm/vite-plugin-ox-content/src/theme.ts#L52-L57" target="_blank" rel="noopener noreferrer">View source<span class="ox-api-entry__source-icon" aria-hidden="true"></span></a></p>
 <div class="ox-api-entry__section ox-api-entry__section--members">
 <h4>Members</h4>
 <div class="ox-api-entry__member-group">
@@ -1208,7 +1308,7 @@
 <h4>Signature</h4>
 <pre><code class="language-typescript">export interface ThemeFooter</code></pre>
 </div>
-<p class="ox-api-entry__source"><a class="ox-api-entry__source-link" href="https://github.com/ubugeeei-prod/ox-content/blob/main/npm/vite-plugin-ox-content/src/theme.ts#L82-L87" target="_blank" rel="noopener noreferrer">View source<span class="ox-api-entry__source-icon" aria-hidden="true"></span></a></p>
+<p class="ox-api-entry__source"><a class="ox-api-entry__source-link" href="https://github.com/ubugeeei-prod/ox-content/blob/main/npm/vite-plugin-ox-content/src/theme.ts#L88-L93" target="_blank" rel="noopener noreferrer">View source<span class="ox-api-entry__source-icon" aria-hidden="true"></span></a></p>
 <div class="ox-api-entry__section ox-api-entry__section--members">
 <h4>Members</h4>
 <div class="ox-api-entry__member-group">
@@ -1243,7 +1343,7 @@
 <h4>Signature</h4>
 <pre><code class="language-typescript">export interface ThemeHeader</code></pre>
 </div>
-<p class="ox-api-entry__source"><a class="ox-api-entry__source-link" href="https://github.com/ubugeeei-prod/ox-content/blob/main/npm/vite-plugin-ox-content/src/theme.ts#L64-L77" target="_blank" rel="noopener noreferrer">View source<span class="ox-api-entry__source-icon" aria-hidden="true"></span></a></p>
+<p class="ox-api-entry__source"><a class="ox-api-entry__source-link" href="https://github.com/ubugeeei-prod/ox-content/blob/main/npm/vite-plugin-ox-content/src/theme.ts#L70-L83" target="_blank" rel="noopener noreferrer">View source<span class="ox-api-entry__source-icon" aria-hidden="true"></span></a></p>
 <div class="ox-api-entry__section ox-api-entry__section--members">
 <h4>Members</h4>
 <div class="ox-api-entry__member-group">
@@ -1298,7 +1398,7 @@
 <h4>Signature</h4>
 <pre><code class="language-typescript">export interface ThemeLayout</code></pre>
 </div>
-<p class="ox-api-entry__source"><a class="ox-api-entry__source-link" href="https://github.com/ubugeeei-prod/ox-content/blob/main/npm/vite-plugin-ox-content/src/theme.ts#L34-L41" target="_blank" rel="noopener noreferrer">View source<span class="ox-api-entry__source-icon" aria-hidden="true"></span></a></p>
+<p class="ox-api-entry__source"><a class="ox-api-entry__source-link" href="https://github.com/ubugeeei-prod/ox-content/blob/main/npm/vite-plugin-ox-content/src/theme.ts#L40-L47" target="_blank" rel="noopener noreferrer">View source<span class="ox-api-entry__source-icon" aria-hidden="true"></span></a></p>
 <div class="ox-api-entry__section ox-api-entry__section--members">
 <h4>Members</h4>
 <div class="ox-api-entry__member-group">
@@ -1338,7 +1438,7 @@
 <h4>Signature</h4>
 <pre><code class="language-typescript">export function themeToNapi(theme: ResolvedThemeConfig): NapiThemeConfig</code></pre>
 </div>
-<p class="ox-api-entry__source"><a class="ox-api-entry__source-link" href="https://github.com/ubugeeei-prod/ox-content/blob/main/npm/vite-plugin-ox-content/src/theme.ts#L377-L448" target="_blank" rel="noopener noreferrer">View source<span class="ox-api-entry__source-icon" aria-hidden="true"></span></a></p>
+<p class="ox-api-entry__source"><a class="ox-api-entry__source-link" href="https://github.com/ubugeeei-prod/ox-content/blob/main/npm/vite-plugin-ox-content/src/theme.ts#L463-L536" target="_blank" rel="noopener noreferrer">View source<span class="ox-api-entry__source-icon" aria-hidden="true"></span></a></p>
 <div class="ox-api-entry__section ox-api-entry__section--params">
 <h4>Parameters</h4>
 <ul class="ox-api-entry__params">
@@ -1347,7 +1447,7 @@
     <code class="ox-api-entry__param-name">theme</code>
     <code class="ox-api-entry__param-type"><a href="#resolvedthemeconfig">ResolvedThemeConfig</a></code>
   </div>
-
+  
 </li>
 </ul>
 </div>
@@ -1355,8 +1455,9 @@
 <h4>Returns</h4>
 <div class="ox-api-entry__return">
   <code class="ox-api-entry__return-type"><a href="#napithemeconfig">NapiThemeConfig</a></code>
-
+  
 </div>
 </div>
   </div>
 </details>
+

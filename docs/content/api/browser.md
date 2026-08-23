@@ -55,6 +55,10 @@
 <div class="ox-api-entry__prose">
 <p>A browser session that can render HTML pages to PNG. Implements AsyncDisposable for automatic cleanup via <code>await using</code>.</p>
 </div>
+<div class="ox-api-entry__section ox-api-entry__section--heritage">
+<h4>Extends</h4>
+<ul class="ox-api-entry__heritage-list"><li><code>AsyncDisposable</code></li></ul>
+</div>
 <div class="ox-api-entry__section ox-api-entry__section--signature">
 <h4>Signature</h4>
 <pre><code class="language-typescript">export interface OgBrowserSession extends AsyncDisposable</code></pre>
@@ -100,8 +104,9 @@ const png = await session.renderPage(html, 1200, 630);</code></pre>
 <h4>Returns</h4>
 <div class="ox-api-entry__return">
   <code class="ox-api-entry__return-type">Promise&lt;<a href="#ogbrowsersession">OgBrowserSession</a> | null&gt;</code>
-
+  
 </div>
 </div>
   </div>
 </details>
+

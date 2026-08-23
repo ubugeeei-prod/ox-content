@@ -2,15 +2,15 @@
 
 **[Source](https://github.com/ubugeeei-prod/ox-content/blob/main/npm/vite-plugin-ox-content/src/plugins/index.ts)**
 
-> 4 documented symbols. Read the signatures first, then expand each item for parameters, return types, and examples.
+> 5 documented symbols. Read the signatures first, then expand each item for parameters, return types, and examples.
 
 <div class="ox-api-stats" aria-label="API reference summary">
 <span class="ox-api-stat">
-  <strong>4</strong>
+  <strong>5</strong>
   <span>symbols</span>
 </span>
 <span class="ox-api-stat">
-  <strong>2</strong>
+  <strong>3</strong>
   <span>functions</span>
 </span>
 <span class="ox-api-stat">
@@ -22,7 +22,7 @@
   <span>modules</span>
 </span>
 <span class="ox-api-stat">
-  <strong>12</strong>
+  <strong>13</strong>
   <span>parameters</span>
 </span>
 <span class="ox-api-stat">
@@ -30,7 +30,7 @@
   <span>members</span>
 </span>
 <span class="ox-api-stat">
-  <strong>2</strong>
+  <strong>3</strong>
   <span>returns</span>
 </span>
 </div>
@@ -53,6 +53,39 @@
   </div>
 </details>
 
+<details id="normalizeselfclosingembeds" class="ox-api-entry">
+  <summary><span class="ox-api-entry__kind">fn</span><span class="ox-api-entry__summary-main"><code class="ox-api-entry__signature ox-api-entry__signature--highlighted language-typescript">normalizeSelfClosingEmbeds(html: string): string</code><span class="ox-api-entry__description">Custom embed tags are not HTML void elements, so a self-closing authoring form…</span><span class="ox-api-entry__meta"><span class="ox-api-badge">1 param</span><span class="ox-api-badge">returns string</span></span></span></summary>
+  <div class="ox-api-entry__body">
+<div class="ox-api-entry__prose">
+<p>Custom embed tags are not HTML void elements, so a self-closing authoring form like <code>&lt;GitHub ... /&gt;</code> reaches the HTML re-parsers (Shiki highlighting, embed transforms) as an unclosed element that swallows the rest of the document. Normalize to an explicit open/close pair before any rehype pass runs.</p>
+</div>
+<div class="ox-api-entry__section ox-api-entry__section--signature">
+<h4>Signature</h4>
+<pre><code class="language-typescript">export function normalizeSelfClosingEmbeds(html: string): string</code></pre>
+</div>
+<p class="ox-api-entry__source"><a class="ox-api-entry__source-link" href="https://github.com/ubugeeei-prod/ox-content/blob/main/npm/vite-plugin-ox-content/src/plugins/index.ts#L71-L75" target="_blank" rel="noopener noreferrer">View source<span class="ox-api-entry__source-icon" aria-hidden="true"></span></a></p>
+<div class="ox-api-entry__section ox-api-entry__section--params">
+<h4>Parameters</h4>
+<ul class="ox-api-entry__params">
+<li class="ox-api-entry__param">
+  <div class="ox-api-entry__param-heading">
+    <code class="ox-api-entry__param-name">html</code>
+    <code class="ox-api-entry__param-type">string</code>
+  </div>
+  
+</li>
+</ul>
+</div>
+<div class="ox-api-entry__section ox-api-entry__section--returns">
+<h4>Returns</h4>
+<div class="ox-api-entry__return">
+  <code class="ox-api-entry__return-type">string</code>
+  
+</div>
+</div>
+  </div>
+</details>
+
 <details id="transformalloptions" class="ox-api-entry">
   <summary><span class="ox-api-entry__kind">interface</span><span class="ox-api-entry__summary-main"><code class="ox-api-entry__signature ox-api-entry__signature--highlighted language-typescript">TransformAllOptions</code><span class="ox-api-entry__description">Transform all plugin components in HTML. Call this during SSG build to process…</span><span class="ox-api-entry__meta"><span class="ox-api-badge">13 members</span></span></span></summary>
   <div class="ox-api-entry__body">
@@ -63,7 +96,7 @@
 <h4>Signature</h4>
 <pre><code class="language-typescript">export interface TransformAllOptions</code></pre>
 </div>
-<p class="ox-api-entry__source"><a class="ox-api-entry__source-link" href="https://github.com/ubugeeei-prod/ox-content/blob/main/npm/vite-plugin-ox-content/src/plugins/index.ts#L58-L77" target="_blank" rel="noopener noreferrer">View source<span class="ox-api-entry__source-icon" aria-hidden="true"></span></a></p>
+<p class="ox-api-entry__source"><a class="ox-api-entry__source-link" href="https://github.com/ubugeeei-prod/ox-content/blob/main/npm/vite-plugin-ox-content/src/plugins/index.ts#L81-L100" target="_blank" rel="noopener noreferrer">View source<span class="ox-api-entry__source-icon" aria-hidden="true"></span></a></p>
 <div class="ox-api-entry__section ox-api-entry__section--members">
 <h4>Members</h4>
 <div class="ox-api-entry__member-group">
@@ -123,7 +156,7 @@
 </tr>
 <tr id="transformalloptions-twitter">
   <td><code>twitter</code><span class="ox-api-badge">optional</span></td>
-  <td><code class="ox-api-entry__member-type language-typescript">boolean</code></td>
+  <td><code class="ox-api-entry__member-type language-typescript">boolean | TwitterEmbedOptions</code></td>
   <td></td>
 </tr>
 <tr id="transformalloptions-webcontainer">
@@ -153,7 +186,7 @@
 <h4>Signature</h4>
 <pre><code class="language-typescript">export async function transformAllPlugins(html: string, options: TransformAllOptions = {}): Promise&lt;string&gt;</code></pre>
 </div>
-<p class="ox-api-entry__source"><a class="ox-api-entry__source-link" href="https://github.com/ubugeeei-prod/ox-content/blob/main/npm/vite-plugin-ox-content/src/plugins/index.ts#L82-L157" target="_blank" rel="noopener noreferrer">View source<span class="ox-api-entry__source-icon" aria-hidden="true"></span></a></p>
+<p class="ox-api-entry__source"><a class="ox-api-entry__source-link" href="https://github.com/ubugeeei-prod/ox-content/blob/main/npm/vite-plugin-ox-content/src/plugins/index.ts#L105-L180" target="_blank" rel="noopener noreferrer">View source<span class="ox-api-entry__source-icon" aria-hidden="true"></span></a></p>
 <div class="ox-api-entry__section ox-api-entry__section--params">
 <h4>Parameters</h4>
 <ul class="ox-api-entry__params">
@@ -162,7 +195,7 @@
     <code class="ox-api-entry__param-name">html</code>
     <code class="ox-api-entry__param-type">string</code>
   </div>
-
+  
 </li>
 <li class="ox-api-entry__param">
   <div class="ox-api-entry__param-heading">
@@ -177,14 +210,14 @@
 <h4>Returns</h4>
 <div class="ox-api-entry__return">
   <code class="ox-api-entry__return-type">Promise&lt;string&gt;</code>
-
+  
 </div>
 </div>
   </div>
 </details>
 
 <details id="transformbuiltinembeds" class="ox-api-entry">
-  <summary><span class="ox-api-entry__kind">fn</span><span class="ox-api-entry__summary-main"><code class="ox-api-entry__signature ox-api-entry__signature--highlighted language-typescript">transformBuiltinEmbeds(html: string, options: { github: GitHubOptions | false; openGraph: OgpOptions | false; pm?: PmOptions | false; spotify?: boolean; stackBlitz?: boolean; twitter?: boolean; bluesky?: boolean; webContainer?: boolean; }): Promise&lt;string&gt;</code><span class="ox-api-entry__description">Transform built-in embed components in HTML content.</span><span class="ox-api-entry__meta"><span class="ox-api-badge">10 params</span><span class="ox-api-badge">returns Promise&lt;string&gt;</span></span></span></summary>
+  <summary><span class="ox-api-entry__kind">fn</span><span class="ox-api-entry__summary-main"><code class="ox-api-entry__signature ox-api-entry__signature--highlighted language-typescript">transformBuiltinEmbeds(html: string, options: { github: GitHubOptions | false; openGraph: OgpOptions | false; pm?: PmOptions | false; spotify?: boolean; stackBlitz?: boolean; twitter?: boolean | TwitterEmbedOptions; bluesky?: boolean; webContainer?: boolean; }): Promise&lt;string&gt;</code><span class="ox-api-entry__description">Transform built-in embed components in HTML content.</span><span class="ox-api-entry__meta"><span class="ox-api-badge">10 params</span><span class="ox-api-badge">returns Promise&lt;string&gt;</span></span></span></summary>
   <div class="ox-api-entry__body">
 <div class="ox-api-entry__prose">
 <p>Transform built-in embed components in HTML content.</p>
@@ -197,12 +230,12 @@
     pm?: PmOptions | false;
     spotify?: boolean;
     stackBlitz?: boolean;
-    twitter?: boolean;
+    twitter?: boolean | TwitterEmbedOptions;
     bluesky?: boolean;
     webContainer?: boolean;
   }): Promise&lt;string&gt;</code></pre>
 </div>
-<p class="ox-api-entry__source"><a class="ox-api-entry__source-link" href="https://github.com/ubugeeei-prod/ox-content/blob/main/npm/vite-plugin-ox-content/src/plugins/index.ts#L162-L208" target="_blank" rel="noopener noreferrer">View source<span class="ox-api-entry__source-icon" aria-hidden="true"></span></a></p>
+<p class="ox-api-entry__source"><a class="ox-api-entry__source-link" href="https://github.com/ubugeeei-prod/ox-content/blob/main/npm/vite-plugin-ox-content/src/plugins/index.ts#L185-L231" target="_blank" rel="noopener noreferrer">View source<span class="ox-api-entry__source-icon" aria-hidden="true"></span></a></p>
 <div class="ox-api-entry__section ox-api-entry__section--params">
 <h4>Parameters</h4>
 <ul class="ox-api-entry__params">
@@ -211,28 +244,28 @@
     <code class="ox-api-entry__param-name">html</code>
     <code class="ox-api-entry__param-type">string</code>
   </div>
-
+  
 </li>
 <li class="ox-api-entry__param">
   <div class="ox-api-entry__param-heading">
     <code class="ox-api-entry__param-name">options</code>
-    <code class="ox-api-entry__param-type">{ github: GitHubOptions | false; openGraph: OgpOptions | false; <a href="./pm.md#pm">pm</a>?: <a href="./pm.md#pmoptions">PmOptions</a> | false; spotify?: boolean; stackBlitz?: boolean; twitter?: boolean; bluesky?: boolean; webContainer?: boolean }</code>
+    <code class="ox-api-entry__param-type">{ github: GitHubOptions | false; openGraph: OgpOptions | false; <a href="./pm.md#pm">pm</a>?: <a href="./pm.md#pmoptions">PmOptions</a> | false; spotify?: boolean; stackBlitz?: boolean; twitter?: boolean | TwitterEmbedOptions; bluesky?: boolean; webContainer?: boolean }</code>
   </div>
-
+  
 </li>
 <li class="ox-api-entry__param">
   <div class="ox-api-entry__param-heading">
     <code class="ox-api-entry__param-name">options.github</code>
     <code class="ox-api-entry__param-type">GitHubOptions | false</code>
   </div>
-
+  
 </li>
 <li class="ox-api-entry__param">
   <div class="ox-api-entry__param-heading">
     <code class="ox-api-entry__param-name">options.openGraph</code>
     <code class="ox-api-entry__param-type">OgpOptions | false</code>
   </div>
-
+  
 </li>
 <li class="ox-api-entry__param">
   <div class="ox-api-entry__param-heading">
@@ -258,7 +291,7 @@
 <li class="ox-api-entry__param">
   <div class="ox-api-entry__param-heading">
     <code class="ox-api-entry__param-name">options.twitter?</code>
-    <code class="ox-api-entry__param-type">boolean</code>
+    <code class="ox-api-entry__param-type">boolean | TwitterEmbedOptions</code>
   </div>
   <p class="ox-api-entry__param-description">optional</p>
 </li>
@@ -282,8 +315,9 @@
 <h4>Returns</h4>
 <div class="ox-api-entry__return">
   <code class="ox-api-entry__return-type">Promise&lt;string&gt;</code>
-
+  
 </div>
 </div>
   </div>
 </details>
+

@@ -49,6 +49,8 @@
  * ```
  */
 
+import { readFileSync } from "node:fs";
+import * as path from "node:path";
 import type {
   ResolvedDocsOptions,
   ExtractedDocs,
@@ -278,7 +280,7 @@ export async function writeDocs(
     {
       generateNav: options?.generateNav ?? false,
       groupBy: options?.groupBy ?? "file",
-      generatedAt: new Date().toISOString(),
+      generatedAt: existingGeneratedAt(outDir) ?? new Date().toISOString(),
       basePath: options?.basePath,
       pathStrategy: options?.pathStrategy,
       groupOrder: options?.groupOrder,
@@ -288,6 +290,20 @@ export async function writeDocs(
       singleEntryRoot: options?.singleEntryRoot,
     },
   );
+}
+
+/** Keep `docs.json`'s timestamp stable across regenerations of the same tree. */
+function existingGeneratedAt(outDir: string): string | undefined {
+  try {
+    const parsed = JSON.parse(readFileSync(path.join(outDir, "docs.json"), "utf8")) as {
+      generatedAt?: unknown;
+    };
+    return typeof parsed.generatedAt === "string" && parsed.generatedAt.length > 0
+      ? parsed.generatedAt
+      : undefined;
+  } catch {
+    return undefined;
+  }
 }
 
 export function toRustDocsModules(docs: ExtractedDocs[]) {

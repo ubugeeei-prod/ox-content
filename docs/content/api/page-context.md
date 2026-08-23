@@ -184,7 +184,7 @@
     <code class="ox-api-entry__param-name">samples</code>
     <code class="ox-api-entry__param-type">Record&lt;string, unknown&gt;[]</code>
   </div>
-
+  
 </li>
 <li class="ox-api-entry__param">
   <div class="ox-api-entry__param-heading">
@@ -199,7 +199,7 @@
 <h4>Returns</h4>
 <div class="ox-api-entry__return">
   <code class="ox-api-entry__return-type">string</code>
-
+  
 </div>
 </div>
   </div>
@@ -224,7 +224,7 @@
     <code class="ox-api-entry__param-name">value</code>
     <code class="ox-api-entry__param-type">unknown</code>
   </div>
-
+  
 </li>
 </ul>
 </div>
@@ -232,7 +232,7 @@
 <h4>Returns</h4>
 <div class="ox-api-entry__return">
   <code class="ox-api-entry__return-type">string</code>
-
+  
 </div>
 </div>
   </div>
@@ -328,20 +328,19 @@
 <pre><code class="language-tsx">// theme/Layout.tsx
 import { usePageProps, PageProps } from &#39;@ox-content/vite-plugin&#39;;&#10;
 export function Layout({ children }: { children: JSX.Element }) {
-const page = usePageProps&lt;MyPageProps&gt;();
-return (
-&lt;html&gt;
-&lt;head&gt;
-&lt;title&gt;{page.title}&lt;/title&gt;
-&lt;/head&gt;
-&lt;body&gt;
-&lt;header&gt;{page.title}&lt;/header&gt;
-&lt;main&gt;{children}&lt;/main&gt;
-&lt;/body&gt;
-&lt;/html&gt;
-);
+  const page = usePageProps&lt;MyPageProps&gt;();
+  return (
+    &lt;html&gt;
+      &lt;head&gt;
+        &lt;title&gt;{page.title}&lt;/title&gt;
+      &lt;/head&gt;
+      &lt;body&gt;
+        &lt;header&gt;{page.title}&lt;/header&gt;
+        &lt;main&gt;{children}&lt;/main&gt;
+      &lt;/body&gt;
+    &lt;/html&gt;
+  );
 }</code></pre>
-
 </div>
 </div>
   </div>
@@ -476,7 +475,7 @@ return (
     <code class="ox-api-entry__param-name">path</code>
     <code class="ox-api-entry__param-type">string</code>
   </div>
-
+  
 </li>
 </ul>
 </div>
@@ -484,7 +483,7 @@ return (
 <h4>Returns</h4>
 <div class="ox-api-entry__return">
   <code class="ox-api-entry__return-type">boolean</code>
-
+  
 </div>
 </div>
 <div class="ox-api-entry__section ox-api-entry__section--examples">
@@ -515,7 +514,7 @@ return (
 <h4>Returns</h4>
 <div class="ox-api-entry__return">
   <code class="ox-api-entry__return-type"><a href="#navgroup">NavGroup</a>[]</code>
-
+  
 </div>
 </div>
 <div class="ox-api-entry__section ox-api-entry__section--examples">
@@ -564,6 +563,10 @@ return (
   <p class="ox-api-entry__return-description">The current page props</p>
 </div>
 </div>
+<div class="ox-api-entry__section ox-api-entry__section--throws">
+<h4>Throws</h4>
+<ul class="ox-api-entry__throws"><li><span class="ox-api-entry__throws-description">Error if called outside of a render context</span></li></ul>
+</div>
 <div class="ox-api-entry__section ox-api-entry__section--examples">
 <h4>Examples</h4>
 <div class="ox-api-entry__example">
@@ -596,6 +599,10 @@ return (
   <code class="ox-api-entry__return-type"><a href="#rendercontext">RenderContext</a>&lt;T&gt;</code>
   <p class="ox-api-entry__return-description">The complete render context</p>
 </div>
+</div>
+<div class="ox-api-entry__section ox-api-entry__section--throws">
+<h4>Throws</h4>
+<ul class="ox-api-entry__throws"><li><span class="ox-api-entry__throws-description">Error if called outside of a render context</span></li></ul>
 </div>
 <div class="ox-api-entry__section ox-api-entry__section--examples">
 <h4>Examples</h4>
@@ -633,6 +640,10 @@ return (
   <p class="ox-api-entry__return-description">The site configuration</p>
 </div>
 </div>
+<div class="ox-api-entry__section ox-api-entry__section--throws">
+<h4>Throws</h4>
+<ul class="ox-api-entry__throws"><li><span class="ox-api-entry__throws-description">Error if called outside of a render context</span></li></ul>
+</div>
 <div class="ox-api-entry__section ox-api-entry__section--examples">
 <h4>Examples</h4>
 <div class="ox-api-entry__example">
@@ -645,3 +656,4 @@ return (
 </div>
   </div>
 </details>
+

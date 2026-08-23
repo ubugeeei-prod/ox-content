@@ -64,7 +64,7 @@
 <h4>Returns</h4>
 <div class="ox-api-entry__return">
   <code class="ox-api-entry__return-type">ThemeRegistration</code>
-
+  
 </div>
 </div>
   </div>
@@ -89,7 +89,7 @@
     <code class="ox-api-entry__param-name">theme</code>
     <code class="ox-api-entry__param-type">string | ThemeRegistration</code>
   </div>
-
+  
 </li>
 </ul>
 </div>
@@ -97,7 +97,7 @@
 <h4>Returns</h4>
 <div class="ox-api-entry__return">
   <code class="ox-api-entry__return-type">string | ThemeRegistration</code>
-
+  
 </div>
 </div>
   </div>
@@ -130,3 +130,4 @@
 <p class="ox-api-entry__source"><a class="ox-api-entry__source-link" href="https://github.com/ubugeeei-prod/ox-content/blob/main/npm/vite-plugin-ox-content/src/shiki-theme.ts#L11" target="_blank" rel="noopener noreferrer">View source<span class="ox-api-entry__source-icon" aria-hidden="true"></span></a></p>
   </div>
 </details>
+

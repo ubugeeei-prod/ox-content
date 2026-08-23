@@ -44,7 +44,7 @@
 <h4>Signature</h4>
 <pre><code class="language-typescript">export async function collectOgpUrls(html: string): Promise&lt;string[]&gt;</code></pre>
 </div>
-<p class="ox-api-entry__source"><a class="ox-api-entry__source-link" href="https://github.com/ubugeeei-prod/ox-content/blob/main/npm/vite-plugin-ox-content/src/plugins/ogp.ts#L384-L396" target="_blank" rel="noopener noreferrer">View source<span class="ox-api-entry__source-icon" aria-hidden="true"></span></a></p>
+<p class="ox-api-entry__source"><a class="ox-api-entry__source-link" href="https://github.com/ubugeeei-prod/ox-content/blob/main/npm/vite-plugin-ox-content/src/plugins/ogp.ts#L389-L401" target="_blank" rel="noopener noreferrer">View source<span class="ox-api-entry__source-icon" aria-hidden="true"></span></a></p>
 <div class="ox-api-entry__section ox-api-entry__section--params">
 <h4>Parameters</h4>
 <ul class="ox-api-entry__params">
@@ -53,7 +53,7 @@
     <code class="ox-api-entry__param-name">html</code>
     <code class="ox-api-entry__param-type">string</code>
   </div>
-
+  
 </li>
 </ul>
 </div>
@@ -61,7 +61,7 @@
 <h4>Returns</h4>
 <div class="ox-api-entry__return">
   <code class="ox-api-entry__return-type">Promise&lt;string[]&gt;</code>
-
+  
 </div>
 </div>
   </div>
@@ -77,7 +77,7 @@
 <h4>Signature</h4>
 <pre><code class="language-typescript">function createFallbackCard(url: string): Element</code></pre>
 </div>
-<p class="ox-api-entry__source"><a class="ox-api-entry__source-link" href="https://github.com/ubugeeei-prod/ox-content/blob/main/npm/vite-plugin-ox-content/src/plugins/ogp.ts#L345-L379" target="_blank" rel="noopener noreferrer">View source<span class="ox-api-entry__source-icon" aria-hidden="true"></span></a></p>
+<p class="ox-api-entry__source"><a class="ox-api-entry__source-link" href="https://github.com/ubugeeei-prod/ox-content/blob/main/npm/vite-plugin-ox-content/src/plugins/ogp.ts#L350-L384" target="_blank" rel="noopener noreferrer">View source<span class="ox-api-entry__source-icon" aria-hidden="true"></span></a></p>
 <div class="ox-api-entry__section ox-api-entry__section--params">
 <h4>Parameters</h4>
 <ul class="ox-api-entry__params">
@@ -86,7 +86,7 @@
     <code class="ox-api-entry__param-name">url</code>
     <code class="ox-api-entry__param-type">string</code>
   </div>
-
+  
 </li>
 </ul>
 </div>
@@ -94,7 +94,7 @@
 <h4>Returns</h4>
 <div class="ox-api-entry__return">
   <code class="ox-api-entry__return-type">Element</code>
-
+  
 </div>
 </div>
   </div>
@@ -110,7 +110,7 @@
 <h4>Signature</h4>
 <pre><code class="language-typescript">function createOgpCard(data: OgpData): Element</code></pre>
 </div>
-<p class="ox-api-entry__source"><a class="ox-api-entry__source-link" href="https://github.com/ubugeeei-prod/ox-content/blob/main/npm/vite-plugin-ox-content/src/plugins/ogp.ts#L252-L340" target="_blank" rel="noopener noreferrer">View source<span class="ox-api-entry__source-icon" aria-hidden="true"></span></a></p>
+<p class="ox-api-entry__source"><a class="ox-api-entry__source-link" href="https://github.com/ubugeeei-prod/ox-content/blob/main/npm/vite-plugin-ox-content/src/plugins/ogp.ts#L257-L345" target="_blank" rel="noopener noreferrer">View source<span class="ox-api-entry__source-icon" aria-hidden="true"></span></a></p>
 <div class="ox-api-entry__section ox-api-entry__section--params">
 <h4>Parameters</h4>
 <ul class="ox-api-entry__params">
@@ -119,7 +119,7 @@
     <code class="ox-api-entry__param-name">data</code>
     <code class="ox-api-entry__param-type">OgpData</code>
   </div>
-
+  
 </li>
 </ul>
 </div>
@@ -127,7 +127,7 @@
 <h4>Returns</h4>
 <div class="ox-api-entry__return">
   <code class="ox-api-entry__return-type">Element</code>
-
+  
 </div>
 </div>
   </div>
@@ -143,7 +143,7 @@
 <h4>Signature</h4>
 <pre><code class="language-typescript">function extractDomain(url: string): string</code></pre>
 </div>
-<p class="ox-api-entry__source"><a class="ox-api-entry__source-link" href="https://github.com/ubugeeei-prod/ox-content/blob/main/npm/vite-plugin-ox-content/src/plugins/ogp.ts#L108-L115" target="_blank" rel="noopener noreferrer">View source<span class="ox-api-entry__source-icon" aria-hidden="true"></span></a></p>
+<p class="ox-api-entry__source"><a class="ox-api-entry__source-link" href="https://github.com/ubugeeei-prod/ox-content/blob/main/npm/vite-plugin-ox-content/src/plugins/ogp.ts#L113-L120" target="_blank" rel="noopener noreferrer">View source<span class="ox-api-entry__source-icon" aria-hidden="true"></span></a></p>
 <div class="ox-api-entry__section ox-api-entry__section--params">
 <h4>Parameters</h4>
 <ul class="ox-api-entry__params">
@@ -152,7 +152,7 @@
     <code class="ox-api-entry__param-name">url</code>
     <code class="ox-api-entry__param-type">string</code>
   </div>
-
+  
 </li>
 </ul>
 </div>
@@ -160,7 +160,7 @@
 <h4>Returns</h4>
 <div class="ox-api-entry__return">
   <code class="ox-api-entry__return-type">string</code>
-
+  
 </div>
 </div>
   </div>
@@ -176,7 +176,7 @@
 <h4>Signature</h4>
 <pre><code class="language-typescript">export async function fetchOgpData(url: string, options: Required&lt;OgpOptions&gt;): Promise&lt;OgpData | null&gt;</code></pre>
 </div>
-<p class="ox-api-entry__source"><a class="ox-api-entry__source-link" href="https://github.com/ubugeeei-prod/ox-content/blob/main/npm/vite-plugin-ox-content/src/plugins/ogp.ts#L195-L247" target="_blank" rel="noopener noreferrer">View source<span class="ox-api-entry__source-icon" aria-hidden="true"></span></a></p>
+<p class="ox-api-entry__source"><a class="ox-api-entry__source-link" href="https://github.com/ubugeeei-prod/ox-content/blob/main/npm/vite-plugin-ox-content/src/plugins/ogp.ts#L200-L252" target="_blank" rel="noopener noreferrer">View source<span class="ox-api-entry__source-icon" aria-hidden="true"></span></a></p>
 <div class="ox-api-entry__section ox-api-entry__section--params">
 <h4>Parameters</h4>
 <ul class="ox-api-entry__params">
@@ -185,14 +185,14 @@
     <code class="ox-api-entry__param-name">url</code>
     <code class="ox-api-entry__param-type">string</code>
   </div>
-
+  
 </li>
 <li class="ox-api-entry__param">
   <div class="ox-api-entry__param-heading">
     <code class="ox-api-entry__param-name">options</code>
     <code class="ox-api-entry__param-type">Required&lt;OgpOptions&gt;</code>
   </div>
-
+  
 </li>
 </ul>
 </div>
@@ -200,7 +200,7 @@
 <h4>Returns</h4>
 <div class="ox-api-entry__return">
   <code class="ox-api-entry__return-type">Promise&lt;OgpData | null&gt;</code>
-
+  
 </div>
 </div>
   </div>
@@ -216,7 +216,7 @@
 <h4>Signature</h4>
 <pre><code class="language-typescript">function getAttribute(el: Element, name: string): string | undefined</code></pre>
 </div>
-<p class="ox-api-entry__source"><a class="ox-api-entry__source-link" href="https://github.com/ubugeeei-prod/ox-content/blob/main/npm/vite-plugin-ox-content/src/plugins/ogp.ts#L98-L103" target="_blank" rel="noopener noreferrer">View source<span class="ox-api-entry__source-icon" aria-hidden="true"></span></a></p>
+<p class="ox-api-entry__source"><a class="ox-api-entry__source-link" href="https://github.com/ubugeeei-prod/ox-content/blob/main/npm/vite-plugin-ox-content/src/plugins/ogp.ts#L103-L108" target="_blank" rel="noopener noreferrer">View source<span class="ox-api-entry__source-icon" aria-hidden="true"></span></a></p>
 <div class="ox-api-entry__section ox-api-entry__section--params">
 <h4>Parameters</h4>
 <ul class="ox-api-entry__params">
@@ -225,14 +225,14 @@
     <code class="ox-api-entry__param-name">el</code>
     <code class="ox-api-entry__param-type">Element</code>
   </div>
-
+  
 </li>
 <li class="ox-api-entry__param">
   <div class="ox-api-entry__param-heading">
     <code class="ox-api-entry__param-name">name</code>
     <code class="ox-api-entry__param-type">string</code>
   </div>
-
+  
 </li>
 </ul>
 </div>
@@ -240,7 +240,7 @@
 <h4>Returns</h4>
 <div class="ox-api-entry__return">
   <code class="ox-api-entry__return-type">string | undefined</code>
-
+  
 </div>
 </div>
   </div>
@@ -256,7 +256,7 @@
 <h4>Signature</h4>
 <pre><code class="language-typescript">function getFaviconUrl(url: string): string</code></pre>
 </div>
-<p class="ox-api-entry__source"><a class="ox-api-entry__source-link" href="https://github.com/ubugeeei-prod/ox-content/blob/main/npm/vite-plugin-ox-content/src/plugins/ogp.ts#L120-L128" target="_blank" rel="noopener noreferrer">View source<span class="ox-api-entry__source-icon" aria-hidden="true"></span></a></p>
+<p class="ox-api-entry__source"><a class="ox-api-entry__source-link" href="https://github.com/ubugeeei-prod/ox-content/blob/main/npm/vite-plugin-ox-content/src/plugins/ogp.ts#L125-L133" target="_blank" rel="noopener noreferrer">View source<span class="ox-api-entry__source-icon" aria-hidden="true"></span></a></p>
 <div class="ox-api-entry__section ox-api-entry__section--params">
 <h4>Parameters</h4>
 <ul class="ox-api-entry__params">
@@ -265,7 +265,7 @@
     <code class="ox-api-entry__param-name">url</code>
     <code class="ox-api-entry__param-type">string</code>
   </div>
-
+  
 </li>
 </ul>
 </div>
@@ -273,7 +273,7 @@
 <h4>Returns</h4>
 <div class="ox-api-entry__return">
   <code class="ox-api-entry__return-type">string</code>
-
+  
 </div>
 </div>
   </div>
@@ -300,7 +300,7 @@
 <h4>Signature</h4>
 <pre><code class="language-typescript">function parseOgpFromHtml(html: string, url: string): OgpData</code></pre>
 </div>
-<p class="ox-api-entry__source"><a class="ox-api-entry__source-link" href="https://github.com/ubugeeei-prod/ox-content/blob/main/npm/vite-plugin-ox-content/src/plugins/ogp.ts#L133-L190" target="_blank" rel="noopener noreferrer">View source<span class="ox-api-entry__source-icon" aria-hidden="true"></span></a></p>
+<p class="ox-api-entry__source"><a class="ox-api-entry__source-link" href="https://github.com/ubugeeei-prod/ox-content/blob/main/npm/vite-plugin-ox-content/src/plugins/ogp.ts#L138-L195" target="_blank" rel="noopener noreferrer">View source<span class="ox-api-entry__source-icon" aria-hidden="true"></span></a></p>
 <div class="ox-api-entry__section ox-api-entry__section--params">
 <h4>Parameters</h4>
 <ul class="ox-api-entry__params">
@@ -309,14 +309,14 @@
     <code class="ox-api-entry__param-name">html</code>
     <code class="ox-api-entry__param-type">string</code>
   </div>
-
+  
 </li>
 <li class="ox-api-entry__param">
   <div class="ox-api-entry__param-heading">
     <code class="ox-api-entry__param-name">url</code>
     <code class="ox-api-entry__param-type">string</code>
   </div>
-
+  
 </li>
 </ul>
 </div>
@@ -324,7 +324,7 @@
 <h4>Returns</h4>
 <div class="ox-api-entry__return">
   <code class="ox-api-entry__return-type">OgpData</code>
-
+  
 </div>
 </div>
   </div>
@@ -340,7 +340,7 @@
 <h4>Signature</h4>
 <pre><code class="language-typescript">export async function prefetchOgpData(urls: string[], options?: OgpOptions): Promise&lt;Map&lt;string, OgpData | null&gt;&gt;</code></pre>
 </div>
-<p class="ox-api-entry__source"><a class="ox-api-entry__source-link" href="https://github.com/ubugeeei-prod/ox-content/blob/main/npm/vite-plugin-ox-content/src/plugins/ogp.ts#L401-L416" target="_blank" rel="noopener noreferrer">View source<span class="ox-api-entry__source-icon" aria-hidden="true"></span></a></p>
+<p class="ox-api-entry__source"><a class="ox-api-entry__source-link" href="https://github.com/ubugeeei-prod/ox-content/blob/main/npm/vite-plugin-ox-content/src/plugins/ogp.ts#L406-L421" target="_blank" rel="noopener noreferrer">View source<span class="ox-api-entry__source-icon" aria-hidden="true"></span></a></p>
 <div class="ox-api-entry__section ox-api-entry__section--params">
 <h4>Parameters</h4>
 <ul class="ox-api-entry__params">
@@ -349,7 +349,7 @@
     <code class="ox-api-entry__param-name">urls</code>
     <code class="ox-api-entry__param-type">string[]</code>
   </div>
-
+  
 </li>
 <li class="ox-api-entry__param">
   <div class="ox-api-entry__param-heading">
@@ -364,7 +364,7 @@
 <h4>Returns</h4>
 <div class="ox-api-entry__return">
   <code class="ox-api-entry__return-type">Promise&lt;Map&lt;string, OgpData | null&gt;&gt;</code>
-
+  
 </div>
 </div>
   </div>
@@ -380,7 +380,7 @@
 <h4>Signature</h4>
 <pre><code class="language-typescript">function rehypeOgp(ogpDataMap: Map&lt;string, OgpData | null&gt;)</code></pre>
 </div>
-<p class="ox-api-entry__source"><a class="ox-api-entry__source-link" href="https://github.com/ubugeeei-prod/ox-content/blob/main/npm/vite-plugin-ox-content/src/plugins/ogp.ts#L421-L448" target="_blank" rel="noopener noreferrer">View source<span class="ox-api-entry__source-icon" aria-hidden="true"></span></a></p>
+<p class="ox-api-entry__source"><a class="ox-api-entry__source-link" href="https://github.com/ubugeeei-prod/ox-content/blob/main/npm/vite-plugin-ox-content/src/plugins/ogp.ts#L426-L453" target="_blank" rel="noopener noreferrer">View source<span class="ox-api-entry__source-icon" aria-hidden="true"></span></a></p>
 <div class="ox-api-entry__section ox-api-entry__section--params">
 <h4>Parameters</h4>
 <ul class="ox-api-entry__params">
@@ -389,7 +389,7 @@
     <code class="ox-api-entry__param-name">ogpDataMap</code>
     <code class="ox-api-entry__param-type">Map&lt;string, OgpData | null&gt;</code>
   </div>
-
+  
 </li>
 </ul>
 </div>
@@ -406,7 +406,7 @@
 <h4>Signature</h4>
 <pre><code class="language-typescript">export async function transformOgp(html: string, ogpDataMap?: Map&lt;string, OgpData | null&gt;, options?: OgpOptions): Promise&lt;string&gt;</code></pre>
 </div>
-<p class="ox-api-entry__source"><a class="ox-api-entry__source-link" href="https://github.com/ubugeeei-prod/ox-content/blob/main/npm/vite-plugin-ox-content/src/plugins/ogp.ts#L453-L472" target="_blank" rel="noopener noreferrer">View source<span class="ox-api-entry__source-icon" aria-hidden="true"></span></a></p>
+<p class="ox-api-entry__source"><a class="ox-api-entry__source-link" href="https://github.com/ubugeeei-prod/ox-content/blob/main/npm/vite-plugin-ox-content/src/plugins/ogp.ts#L458-L477" target="_blank" rel="noopener noreferrer">View source<span class="ox-api-entry__source-icon" aria-hidden="true"></span></a></p>
 <div class="ox-api-entry__section ox-api-entry__section--params">
 <h4>Parameters</h4>
 <ul class="ox-api-entry__params">
@@ -415,7 +415,7 @@
     <code class="ox-api-entry__param-name">html</code>
     <code class="ox-api-entry__param-type">string</code>
   </div>
-
+  
 </li>
 <li class="ox-api-entry__param">
   <div class="ox-api-entry__param-heading">
@@ -437,8 +437,9 @@
 <h4>Returns</h4>
 <div class="ox-api-entry__return">
   <code class="ox-api-entry__return-type">Promise&lt;string&gt;</code>
-
+  
 </div>
 </div>
   </div>
 </details>
+

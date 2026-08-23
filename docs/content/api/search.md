@@ -53,14 +53,14 @@
     <code class="ox-api-entry__param-name">srcDir</code>
     <code class="ox-api-entry__param-type">string</code>
   </div>
-
+  
 </li>
 <li class="ox-api-entry__param">
   <div class="ox-api-entry__param-heading">
     <code class="ox-api-entry__param-name">base</code>
     <code class="ox-api-entry__param-type">string</code>
   </div>
-
+  
 </li>
 <li class="ox-api-entry__param">
   <div class="ox-api-entry__param-heading">
@@ -75,7 +75,7 @@
 <h4>Returns</h4>
 <div class="ox-api-entry__return">
   <code class="ox-api-entry__return-type">Promise&lt;string&gt;</code>
-
+  
 </div>
 </div>
   </div>
@@ -100,14 +100,14 @@
     <code class="ox-api-entry__param-name">options</code>
     <code class="ox-api-entry__param-type"><a href="./types.md#resolvedsearchoptions">ResolvedSearchOptions</a></code>
   </div>
-
+  
 </li>
 <li class="ox-api-entry__param">
   <div class="ox-api-entry__param-heading">
     <code class="ox-api-entry__param-name">indexPath</code>
     <code class="ox-api-entry__param-type">string</code>
   </div>
-
+  
 </li>
 </ul>
 </div>
@@ -115,7 +115,7 @@
 <h4>Returns</h4>
 <div class="ox-api-entry__return">
   <code class="ox-api-entry__return-type">string</code>
-
+  
 </div>
 </div>
   </div>
@@ -141,7 +141,7 @@
     <code class="ox-api-entry__param-name">doc</code>
     <code class="ox-api-entry__param-type">Pick&lt;<a href="./types.md#searchdocument">SearchDocument</a>, &quot;id&quot; | &quot;url&quot;&gt;</code>
   </div>
-
+  
 </li>
 </ul>
 </div>
@@ -149,7 +149,7 @@
 <h4>Returns</h4>
 <div class="ox-api-entry__return">
   <code class="ox-api-entry__return-type">string[]</code>
-
+  
 </div>
 </div>
   </div>
@@ -174,14 +174,14 @@
     <code class="ox-api-entry__param-name">doc</code>
     <code class="ox-api-entry__param-type">Pick&lt;<a href="./types.md#searchdocument">SearchDocument</a>, &quot;id&quot; | &quot;url&quot;&gt;</code>
   </div>
-
+  
 </li>
 <li class="ox-api-entry__param">
   <div class="ox-api-entry__param-heading">
     <code class="ox-api-entry__param-name">scopes</code>
     <code class="ox-api-entry__param-type">string[]</code>
   </div>
-
+  
 </li>
 </ul>
 </div>
@@ -189,7 +189,7 @@
 <h4>Returns</h4>
 <div class="ox-api-entry__return">
   <code class="ox-api-entry__return-type">boolean</code>
-
+  
 </div>
 </div>
   </div>
@@ -214,7 +214,7 @@
     <code class="ox-api-entry__param-name">query</code>
     <code class="ox-api-entry__param-type">string</code>
   </div>
-
+  
 </li>
 </ul>
 </div>
@@ -222,7 +222,7 @@
 <h4>Returns</h4>
 <div class="ox-api-entry__return">
   <code class="ox-api-entry__return-type"><a href="./types.md#scopedsearchquery">ScopedSearchQuery</a></code>
-
+  
 </div>
 </div>
   </div>
@@ -247,7 +247,7 @@
     <code class="ox-api-entry__param-name">options</code>
     <code class="ox-api-entry__param-type"><a href="./types.md#searchoptions">SearchOptions</a> | boolean | undefined</code>
   </div>
-
+  
 </li>
 </ul>
 </div>
@@ -255,7 +255,7 @@
 <h4>Returns</h4>
 <div class="ox-api-entry__return">
   <code class="ox-api-entry__return-type"><a href="./types.md#resolvedsearchoptions">ResolvedSearchOptions</a></code>
-
+  
 </div>
 </div>
   </div>
@@ -291,14 +291,14 @@
     <code class="ox-api-entry__param-name">indexJson</code>
     <code class="ox-api-entry__param-type">string</code>
   </div>
-
+  
 </li>
 <li class="ox-api-entry__param">
   <div class="ox-api-entry__param-heading">
     <code class="ox-api-entry__param-name">outDir</code>
     <code class="ox-api-entry__param-type">string</code>
   </div>
-
+  
 </li>
 </ul>
 </div>
@@ -306,8 +306,9 @@
 <h4>Returns</h4>
 <div class="ox-api-entry__return">
   <code class="ox-api-entry__return-type">Promise&lt;void&gt;</code>
-
+  
 </div>
 </div>
   </div>
 </details>
+

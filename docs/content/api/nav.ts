@@ -12,163 +12,191 @@ export interface NavItem {
 
 export const apiNav: NavItem[] = [
   {
-    title: "Api",
-    path: "/api/api",
+    "title": "Api",
+    "path": "/api/api"
   },
   {
-    title: "Attributes",
-    path: "/api/attributes",
+    "title": "Attributes",
+    "path": "/api/attributes"
   },
   {
-    title: "Browser",
-    path: "/api/browser",
+    "title": "Browser",
+    "path": "/api/browser"
   },
   {
-    title: "Cache",
-    path: "/api/cache",
+    "title": "Cache",
+    "path": "/api/cache"
   },
   {
-    title: "Dev Server",
-    path: "/api/dev-server",
+    "title": "Dev Server",
+    "path": "/api/dev-server"
   },
   {
-    title: "Docs",
-    path: "/api/docs",
+    "title": "Docs",
+    "path": "/api/docs"
   },
   {
-    title: "Environment",
-    path: "/api/environment",
+    "title": "Environment",
+    "path": "/api/environment"
   },
   {
-    title: "Fallback Card",
-    path: "/api/fallback-card",
+    "title": "Fallback Card",
+    "path": "/api/fallback-card"
   },
   {
-    title: "Highlight",
-    path: "/api/highlight",
+    "title": "Highlight",
+    "path": "/api/highlight"
   },
   {
-    title: "I18n",
-    path: "/api/i18n",
+    "title": "Highlight Native",
+    "path": "/api/highlight-native"
   },
   {
-    title: "Jsx Runtime",
-    path: "/api/jsx-runtime",
+    "title": "Highlight Pending",
+    "path": "/api/highlight-pending"
   },
   {
-    title: "Jsx.d",
-    path: "/api/jsx.d",
+    "title": "I18n",
+    "path": "/api/i18n"
   },
   {
-    title: "Lint",
-    path: "/api/lint",
+    "title": "Interop",
+    "path": "/api/interop"
   },
   {
-    title: "Lint Files",
-    path: "/api/lint-files",
+    "title": "Jsx Dev Runtime",
+    "path": "/api/jsx-dev-runtime"
   },
   {
-    title: "Mermaid",
-    path: "/api/mermaid",
+    "title": "Jsx Html",
+    "path": "/api/jsx-html"
   },
   {
-    title: "Mermaid Protect",
-    path: "/api/mermaid-protect",
+    "title": "Jsx Runtime",
+    "path": "/api/jsx-runtime"
   },
   {
-    title: "Og Viewer",
-    path: "/api/og-viewer",
+    "title": "Jsx.d",
+    "path": "/api/jsx.d"
   },
   {
-    title: "Ogp",
-    path: "/api/ogp",
+    "title": "Lint",
+    "path": "/api/lint"
   },
   {
-    title: "Optional Deps.d",
-    path: "/api/optional-deps.d",
+    "title": "Lint Files",
+    "path": "/api/lint-files"
   },
   {
-    title: "Overview",
-    path: "/api/index",
+    "title": "Mermaid",
+    "path": "/api/mermaid"
   },
   {
-    title: "Overview",
-    path: "/api/index",
+    "title": "Mermaid Protect",
+    "path": "/api/mermaid-protect"
   },
   {
-    title: "Overview",
-    path: "/api/index",
+    "title": "Og Viewer",
+    "path": "/api/og-viewer"
   },
   {
-    title: "Overview",
-    path: "/api/index",
+    "title": "Ogp",
+    "path": "/api/ogp"
   },
   {
-    title: "Page Context",
-    path: "/api/page-context",
+    "title": "Optional Deps.d",
+    "path": "/api/optional-deps.d"
   },
   {
-    title: "Parse",
-    path: "/api/parse",
+    "title": "Overview",
+    "path": "/api/index"
   },
   {
-    title: "Pm",
-    path: "/api/pm",
+    "title": "Overview",
+    "path": "/api/index"
   },
   {
-    title: "Renderer",
-    path: "/api/renderer",
+    "title": "Overview",
+    "path": "/api/index"
   },
   {
-    title: "Repo Card",
-    path: "/api/repo-card",
+    "title": "Overview",
+    "path": "/api/index"
   },
   {
-    title: "Search",
-    path: "/api/search",
+    "title": "Page Context",
+    "path": "/api/page-context"
   },
   {
-    title: "Ssg",
-    path: "/api/ssg",
+    "title": "Parse",
+    "path": "/api/parse"
   },
   {
-    title: "Tabs",
-    path: "/api/tabs",
+    "title": "Pm",
+    "path": "/api/pm"
   },
   {
-    title: "Template",
-    path: "/api/template",
+    "title": "Renderer",
+    "path": "/api/renderer"
   },
   {
-    title: "Theme",
-    path: "/api/theme",
+    "title": "Repo Card",
+    "path": "/api/repo-card"
   },
   {
-    title: "Theme Renderer",
-    path: "/api/theme-renderer",
+    "title": "Search",
+    "path": "/api/search"
   },
   {
-    title: "Transform",
-    path: "/api/transform",
+    "title": "Shiki Theme",
+    "path": "/api/shiki-theme"
   },
   {
-    title: "Transform",
-    path: "/api/transform",
+    "title": "Ssg",
+    "path": "/api/ssg"
   },
   {
-    title: "Types",
-    path: "/api/types",
+    "title": "Tabs",
+    "path": "/api/tabs"
   },
   {
-    title: "Types",
-    path: "/api/types",
+    "title": "Template",
+    "path": "/api/template"
   },
   {
-    title: "Vitepress",
-    path: "/api/vitepress",
+    "title": "Theme",
+    "path": "/api/theme"
   },
   {
-    title: "Youtube",
-    path: "/api/youtube",
+    "title": "Theme Renderer",
+    "path": "/api/theme-renderer"
   },
+  {
+    "title": "Theme Tokens",
+    "path": "/api/theme-tokens"
+  },
+  {
+    "title": "Transform",
+    "path": "/api/transform"
+  },
+  {
+    "title": "Transform",
+    "path": "/api/transform"
+  },
+  {
+    "title": "Types",
+    "path": "/api/types"
+  },
+  {
+    "title": "Types",
+    "path": "/api/types"
+  },
+  {
+    "title": "Vitepress",
+    "path": "/api/vitepress"
+  },
+  {
+    "title": "Youtube",
+    "path": "/api/youtube"
+  }
 ] as const;
