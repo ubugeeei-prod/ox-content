@@ -4,7 +4,19 @@
 //! first indexes possible leading bytes so most prose is skipped without repeated
 //! prefix checks, then validates word boundaries and trims punctuation around matches.
 
+use std::sync::LazyLock;
+
+use memchr::memmem;
+
 use super::options::AutolinkPatterns;
+
+/// Process-wide finder for the default autolink gate (`://`).
+///
+/// `http://` / `https://` both contain this caseless needle. The previous
+/// gate looped `memchr(':')` and compared `//` after each hit, which
+/// restarted on every `Note:` / `Listing 3-2:` colon that is not a URL.
+static COLON_SLASH_SLASH: LazyLock<memmem::Finder<'static>> =
+    LazyLock::new(|| memmem::Finder::new(b"://"));
 
 /// Case-insensitive index over the first byte of every registered autolink
 /// pattern, used to skip the long runs of text that can't begin a URL.
@@ -163,6 +175,12 @@ impl FirstByteIndex {
         let Some(gate) = self.gate else {
             return true;
         };
+        // Default patterns agree on `://`. One SIMD search rejects the
+        // colon-heavy prose that used to restart the candidate loop on
+        // every `:` that was not followed by `//`.
+        if gate == b':' && self.gate_tail_len == 2 && self.gate_tail == *b"//" {
+            return COLON_SLASH_SLASH.find(haystack).is_some();
+        }
         let tail = &self.gate_tail[..self.gate_tail_len];
         let mut from = 0;
         while let Some(off) = memchr::memchr(gate, &haystack[from..]) {

@@ -203,3 +203,15 @@ fn test_autolink_single_byte_pattern_bypasses_the_filter() {
     let html = renderer.render(&doc);
     assert_eq!(html.matches("<a ").count(), 1, "single-byte pattern should link in: {html}");
 }
+
+#[test]
+fn default_gate_requires_colon_slash_slash() {
+    use super::super::autolink::FirstByteIndex;
+    use super::super::options::AutolinkPatterns;
+
+    let index = FirstByteIndex::from_patterns(AutolinkPatterns::Defaults(&["http://", "https://"]));
+    assert!(!index.may_match(b"Note: Listing 3-2: foo"));
+    assert!(!index.may_match(b"no colons here"));
+    assert!(index.may_match(b"see http://example.com"));
+    assert!(index.may_match(b"://bare"));
+}
