@@ -1,11 +1,17 @@
 //! Newline scanning for the document pre-pass.
 //!
 //! The pre-pass walks every line of the document — blanks and one-word lines
-//! included — so it asks "where does this line end" tens of thousands of times
-//! against very short spans. At that length a `memchr` call spends most of its
-//! time on per-call setup rather than on scanning: measured on the bundled
-//! corpora, walking lines is ~90% of the pre-pass, and a SWAR
-//! (SIMD-within-a-register) word test beats `memchr` there by a third.
+//! included — so it asks "where does this line end" tens of thousands of times.
+//! At that access pattern a `memchr` call spends most of its time on per-call
+//! setup rather than on scanning: walking lines is ~90% of the pre-pass.
+//!
+//! Short tails and portable targets use a SWAR (SIMD-within-a-register) word
+//! test, which beats `memchr` by a third on the short-line case that dominated
+//! the original measurement. aarch64 additionally runs a 32-byte NEON scan on
+//! the rest: rust-book-style prose (median line ~57 bytes, nearly half of
+//! lines 64+) pays four to eight SWAR iterations per line, and those documents
+//! are exactly the ones that cannot bail out of the pre-pass because they
+//! hold link reference definitions.
 //!
 //! That advantage is specific to this access pattern. Block parsing walks the
 //! long prose lines of a paragraph, where `memchr`'s wider SIMD step overtakes
@@ -31,6 +37,70 @@ const fn has_zero(word: u64) -> u64 {
 /// `bytes.len()` when the last line is unterminated.
 #[inline]
 pub(in crate::parser) fn line_end(bytes: &[u8], from: usize) -> usize {
+    #[cfg(target_arch = "aarch64")]
+    {
+        // One NEON vector is the breakeven against SWAR. Shorter remainders
+        // stay on the word test so a 5-byte last line does not pay a 16-byte
+        // overlapping reload.
+        if bytes.len() - from >= 16 {
+            return line_end_neon(bytes, from);
+        }
+    }
+    line_end_swar(bytes, from)
+}
+
+#[cfg(target_arch = "aarch64")]
+#[allow(unsafe_code)]
+#[inline]
+fn line_end_neon(bytes: &[u8], from: usize) -> usize {
+    use std::arch::aarch64::*;
+    let end = bytes.len();
+    let mut i = from;
+    unsafe {
+        let nl = vdupq_n_u8(b'\n');
+        let classify = |v: uint8x16_t| {
+            let m = vceqq_u8(v, nl);
+            vget_lane_u64(vreinterpret_u64_u8(vshrn_n_u16(vreinterpretq_u16_u8(m), 4)), 0)
+        };
+        while i + 32 <= end {
+            let m0 = classify(vld1q_u8(bytes.as_ptr().add(i)));
+            if m0 != 0 {
+                return i + (m0.trailing_zeros() / 4) as usize;
+            }
+            let m1 = classify(vld1q_u8(bytes.as_ptr().add(i + 16)));
+            if m1 != 0 {
+                return i + 16 + (m1.trailing_zeros() / 4) as usize;
+            }
+            i += 32;
+        }
+        while i + 16 <= end {
+            let mask = classify(vld1q_u8(bytes.as_ptr().add(i)));
+            if mask != 0 {
+                return i + (mask.trailing_zeros() / 4) as usize;
+            }
+            i += 16;
+        }
+        if i < end && end >= 16 {
+            // Overlapping tail: re-read the last vector and drop the lanes
+            // the loops already cleared. `vceqq_u8` is exact per lane.
+            let base = end - 16;
+            let mask =
+                classify(vld1q_u8(bytes.as_ptr().add(base))) & (u64::MAX << ((i - base) * 4));
+            if mask != 0 {
+                return base + (mask.trailing_zeros() / 4) as usize;
+            }
+            return end;
+        }
+    }
+    while i < end && bytes[i] != b'\n' {
+        i += 1;
+    }
+    i
+}
+
+/// Portable eight-byte word scan used for short remainders and non-aarch64.
+#[inline]
+fn line_end_swar(bytes: &[u8], from: usize) -> usize {
     let end = bytes.len();
     let mut i = from;
 
@@ -109,6 +179,33 @@ mod tests {
                 let bytes = &buffer[..];
                 let expected = memchr::memchr(b'\n', bytes).unwrap_or(bytes.len());
                 assert_eq!(line_end(bytes, 0), expected, "filler {filler:#x}, newline at {lead}");
+            }
+        }
+    }
+
+    #[test]
+    fn matches_memchr_on_long_lines() {
+        // 32-byte NEON loop + overlapping 16-byte tail: newlines past the
+        // first vector, and unterminated 80-byte last lines.
+        for len in 16..96usize {
+            for newline_at in 0..len {
+                let mut buffer = [b'x'; 96];
+                buffer[newline_at] = b'\n';
+                let bytes = &buffer[..len];
+                for from in 0..=len {
+                    let expected =
+                        memchr::memchr(b'\n', &bytes[from..]).map_or(len, |off| from + off);
+                    assert_eq!(
+                        line_end(bytes, from),
+                        expected,
+                        "len {len}, newline at {newline_at}, from {from}"
+                    );
+                }
+            }
+            let unterminated = [b'x'; 96];
+            let bytes = &unterminated[..len];
+            for from in 0..=len {
+                assert_eq!(line_end(bytes, from), len, "unterminated len {len} from {from}");
             }
         }
     }
