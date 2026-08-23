@@ -2,7 +2,7 @@ use serde_json::Value;
 
 use super::super::generate_docs_data_json;
 use crate::model::{
-    ApiDocEntry, ApiDocMember, ApiDocModule, ApiParamDoc, ApiReturnDoc, ApiThrowsDoc,
+    ApiDocEntry, ApiDocMember, ApiDocModule, ApiDocTag, ApiParamDoc, ApiReturnDoc, ApiThrowsDoc,
     ApiTypeParamDoc,
 };
 
@@ -200,4 +200,42 @@ fn function_valued_property_metadata_serializes_to_json() {
     assert_eq!(member["throws"][0]["type"], "ParseError");
     assert_eq!(member["throws"][0]["description"], "When the raw value cannot be parsed.");
     assert_eq!(member["optional"], true);
+}
+
+#[test]
+fn member_tag_objects_serialize_in_tag_name_order() {
+    let docs = vec![ApiDocModule {
+        file: "/repo/src/options.ts".to_string(),
+        entries: vec![ApiDocEntry {
+            name: "Options".to_string(),
+            kind: "interface".to_string(),
+            file: "/repo/src/options.ts".to_string(),
+            members: vec![ApiDocMember {
+                name: "tocMaxDepth".to_string(),
+                kind: "property".to_string(),
+                tags: vec![
+                    ApiDocTag { tag: "min".to_string(), value: "1".to_string() },
+                    ApiDocTag { tag: "max".to_string(), value: "6".to_string() },
+                ],
+                line: 203,
+                end_line: 203,
+                ..ApiDocMember::default()
+            }],
+            ..ApiDocEntry::default()
+        }],
+        ..ApiDocModule::default()
+    }];
+
+    let json = generate_docs_data_json(&docs, "2026-05-31T00:00:00.000Z").unwrap();
+    let tags = json
+        .split_once("\"tags\": {")
+        .expect("tags object")
+        .1
+        .split_once('}')
+        .expect("tags close")
+        .0;
+    assert!(
+        tags.find("\"max\"").expect("max") < tags.find("\"min\"").expect("min"),
+        "tag keys should be sorted: {tags}"
+    );
 }

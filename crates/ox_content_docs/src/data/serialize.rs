@@ -1,7 +1,7 @@
 use serde_json::{Map, Value, json};
 
 use crate::model::{
-    ApiDocEntry, ApiDocMember, ApiDocModule, ApiParamDoc, ApiReturnDoc, ApiThrowsDoc,
+    ApiDocEntry, ApiDocMember, ApiDocModule, ApiDocTag, ApiParamDoc, ApiReturnDoc, ApiThrowsDoc,
     ApiTypeParamDoc,
 };
 
@@ -13,12 +13,7 @@ pub(super) fn module_to_json(module: &ApiDocModule) -> Value {
         value.insert("examples".to_string(), json!(module.examples));
     }
     if !module.tags.is_empty() {
-        value.insert(
-            "tags".to_string(),
-            Value::Object(
-                module.tags.iter().map(|tag| (tag.tag.clone(), json!(tag.value))).collect(),
-            ),
-        );
+        value.insert("tags".to_string(), tags_object(&module.tags));
     }
     value.insert(
         "entries".to_string(),
@@ -59,12 +54,7 @@ fn entry_to_json(entry: &ApiDocEntry) -> Value {
         value.insert("examples".to_string(), json!(entry.examples));
     }
     if !entry.tags.is_empty() {
-        value.insert(
-            "tags".to_string(),
-            Value::Object(
-                entry.tags.iter().map(|tag| (tag.tag.clone(), json!(tag.value))).collect(),
-            ),
-        );
+        value.insert("tags".to_string(), tags_object(&entry.tags));
     }
     if !entry.members.is_empty() {
         value.insert(
@@ -151,12 +141,7 @@ fn member_to_json(member: &ApiDocMember) -> Value {
         value.insert("private".to_string(), json!(true));
     }
     if !member.tags.is_empty() {
-        value.insert(
-            "tags".to_string(),
-            Value::Object(
-                member.tags.iter().map(|tag| (tag.tag.clone(), json!(tag.value))).collect(),
-            ),
-        );
+        value.insert("tags".to_string(), tags_object(&member.tags));
     }
     if !member.implementation_of.is_empty() {
         value.insert("implementationOf".to_string(), json!(member.implementation_of));
@@ -216,6 +201,13 @@ fn type_param_to_json(type_param: &ApiTypeParamDoc) -> Value {
         value.insert("description".to_string(), json!(type_param.description));
     }
     Value::Object(value)
+}
+
+/// Sort tag keys so `docs.json` stays stable across HashMap NAPI round-trips.
+fn tags_object(tags: &[ApiDocTag]) -> Value {
+    let mut ordered: Vec<_> = tags.iter().collect();
+    ordered.sort_unstable_by(|left, right| left.tag.cmp(&right.tag));
+    Value::Object(ordered.into_iter().map(|tag| (tag.tag.clone(), json!(tag.value))).collect())
 }
 
 fn normalize_doc_file_path(file_path: &str) -> String {

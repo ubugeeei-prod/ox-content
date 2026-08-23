@@ -75,12 +75,16 @@ fn convert_markdown_member(member: JsDocMember) -> ApiDocMember {
         readonly: member.readonly.unwrap_or(false),
         r#static: member.r#static.unwrap_or(false),
         private: member.private.unwrap_or(false),
-        tags: member
-            .tags
-            .unwrap_or_default()
-            .into_iter()
-            .map(|(tag, value)| ApiDocTag { tag, value })
-            .collect(),
+        tags: {
+            let mut tags: Vec<_> = member
+                .tags
+                .unwrap_or_default()
+                .into_iter()
+                .map(|(tag, value)| ApiDocTag { tag, value })
+                .collect();
+            tags.sort_unstable_by(|left, right| left.tag.cmp(&right.tag));
+            tags
+        },
         implementation_of: member.implementation_of.unwrap_or_default(),
         line: member.line,
         end_line: member.end_line,
