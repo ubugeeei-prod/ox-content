@@ -92,6 +92,34 @@ fn plain_text_paragraph_reserves_one_inline_node() {
 }
 
 #[test]
+fn document_children_capacity_tracks_source_density() {
+    assert_eq!(Parser::document_children_capacity(0), 4);
+    assert_eq!(Parser::document_children_capacity(39), 4);
+    assert_eq!(Parser::document_children_capacity(40), 4);
+    assert_eq!(Parser::document_children_capacity(80), 4);
+    assert_eq!(Parser::document_children_capacity(400), 10);
+
+    // ~44 bytes per paragraph matches the heuristic, so the root list
+    // should not grow past the reserve.
+    let allocator = Allocator::new();
+    let source = "The quick brown fox jumps over a lazy dog.\n\n".repeat(50);
+    let doc = Parser::new(&allocator, &source).parse().unwrap();
+    assert_eq!(doc.children.len(), 50);
+    let reserved = Parser::document_children_capacity(source.len());
+    assert!(
+        doc.children.capacity() >= 50,
+        "capacity {} should cover 50 blocks",
+        doc.children.capacity()
+    );
+    assert!(
+        doc.children.capacity() <= reserved,
+        "capacity {} should not grow past the {}-slot reserve",
+        doc.children.capacity(),
+        reserved
+    );
+}
+
+#[test]
 fn test_parse_thematic_break() {
     let allocator = Allocator::new();
     let doc = Parser::new(&allocator, "---").parse().unwrap();
