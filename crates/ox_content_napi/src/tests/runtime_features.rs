@@ -56,6 +56,7 @@ fn javascript_wrapper_and_declarations_cover_expected_exports() {
         "generateSsgBarePage",
         "highlightCodeBlock",
         "highlightHtmlCodeBlocks",
+        "highlightHtmlCodeBlocksAsync",
         "nativeHighlightLanguages",
         "supportsHighlightLanguage",
         "generateSsgHtml",

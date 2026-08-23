@@ -232,6 +232,17 @@ export declare function highlightCodeBlock(code: string, lang: string): string |
  */
 export declare function highlightHtmlCodeBlocks(html: string): JsHighlightedDocument
 
+/**
+ * Highlights a document off the main thread, so pages overlap.
+ *
+ * The synchronous binding holds the event loop for the whole pass, which
+ * makes a caller's concurrency worth nothing: `Promise.all` over the
+ * documentation corpus measures the same as awaiting the pages one at a
+ * time. Running the pass as a task lets a build that already asks for
+ * several pages at once actually get them at once.
+ */
+export declare function highlightHtmlCodeBlocksAsync(html: string): Promise<JsHighlightedDocument>
+
 /** Result of i18n checking. */
 export interface I18NCheckResult {
   /** All diagnostics. */

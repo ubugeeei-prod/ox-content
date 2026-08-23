@@ -570,7 +570,7 @@ export async function transformMarkdown(
     // the tree walk.
     const nativeTheme =
       options.highlightTheme === undefined || options.highlightTheme === CSS_VARIABLES_THEME;
-    const native = nativeTheme ? highlightDocumentNatively(html) : null;
+    const native = nativeTheme ? await highlightDocumentNatively(html) : null;
 
     if (native && native.skipped.length === 0) {
       html = native.html;

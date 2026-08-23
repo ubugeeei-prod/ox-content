@@ -1,5 +1,7 @@
 //! Bindings for the tree-sitter syntax highlighter.
 
+use napi::Task;
+use napi::bindgen_prelude::*;
 use napi_derive::napi;
 
 /// Highlights one fenced code block, returning the full `<pre>` element.
@@ -56,8 +58,12 @@ pub struct JsPendingBlock {
 /// corpus costs an order of magnitude more than the highlighting itself.
 #[napi(js_name = "highlightHtmlCodeBlocks")]
 pub fn highlight_html_code_blocks(html: String) -> JsHighlightedDocument {
+    highlight_document(&html)
+}
+
+fn highlight_document(html: &str) -> JsHighlightedDocument {
     let result = ox_content_transform::highlight::highlight_code_blocks(
-        &html,
+        html,
         ox_content_highlight::supports,
         ox_content_highlight::highlight_to_html,
     );
@@ -70,6 +76,36 @@ pub fn highlight_html_code_blocks(html: String) -> JsHighlightedDocument {
             .map(|block| JsPendingBlock { language: block.language, source: block.source })
             .collect(),
     }
+}
+
+/// Async task for `highlightHtmlCodeBlocksAsync`.
+pub struct HighlightHtmlCodeBlocksTask {
+    html: String,
+}
+
+impl Task for HighlightHtmlCodeBlocksTask {
+    type Output = JsHighlightedDocument;
+    type JsValue = JsHighlightedDocument;
+
+    fn compute(&mut self) -> Result<Self::Output> {
+        Ok(highlight_document(&self.html))
+    }
+
+    fn resolve(&mut self, _env: Env, output: Self::Output) -> Result<Self::JsValue> {
+        Ok(output)
+    }
+}
+
+/// Highlights a document off the main thread, so pages overlap.
+///
+/// The synchronous binding holds the event loop for the whole pass, which
+/// makes a caller's concurrency worth nothing: `Promise.all` over the
+/// documentation corpus measures the same as awaiting the pages one at a
+/// time. Running the pass as a task lets a build that already asks for
+/// several pages at once actually get them at once.
+#[napi(js_name = "highlightHtmlCodeBlocksAsync", ts_return_type = "Promise<JsHighlightedDocument>")]
+pub fn highlight_html_code_blocks_async(html: String) -> AsyncTask<HighlightHtmlCodeBlocksTask> {
+    AsyncTask::new(HighlightHtmlCodeBlocksTask { html })
 }
 
 /// Splices the caller's highlighting back over the blocks

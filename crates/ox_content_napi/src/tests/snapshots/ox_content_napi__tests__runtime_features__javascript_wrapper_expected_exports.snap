@@ -38,6 +38,7 @@ generateSsgBareHtml
 generateSsgBarePage
 highlightCodeBlock
 highlightHtmlCodeBlocks
+highlightHtmlCodeBlocksAsync
 nativeHighlightLanguages
 supportsHighlightLanguage
 generateSsgHtml

@@ -121,10 +121,15 @@ export function languageOf(codeElement: Element): string | null {
  * through an HTML parser and serializer to find `<pre>` elements cost 139 ms
  * over the documentation corpus, and re-parsing each highlighted block to
  * splice it back cost another 38 ms, against 14 ms of actual highlighting.
+ *
+ * It runs off the main thread. The synchronous binding held the event loop
+ * for the whole pass, so a build asking for several pages at once still got
+ * them one at a time — `Promise.all` over the corpus measured the same as
+ * awaiting each page in turn.
  */
-export function highlightDocumentNatively(html: string): NativeDocument | null {
+export async function highlightDocumentNatively(html: string): Promise<NativeDocument | null> {
   try {
-    return importNapiModuleSync().highlightHtmlCodeBlocks(html);
+    return await importNapiModuleSync().highlightHtmlCodeBlocksAsync(html);
   } catch {
     return null;
   }
