@@ -206,7 +206,9 @@ impl<'a> Parser<'a> {
     /// Parses the source into a document AST.
     pub fn parse(mut self) -> ParseResult<Document<'a>> {
         profile_span!("parser::parse");
-        let mut children = self.allocator.new_vec();
+        let mut children = self
+            .allocator
+            .new_vec_with_capacity(Self::document_children_capacity(self.source.len()));
 
         while !self.is_at_end() {
             if let Some(node) = self.parse_block()? {
@@ -216,5 +218,17 @@ impl<'a> Parser<'a> {
 
         let span = Span::new(0, self.source.len() as u32);
         Ok(Document { children, span })
+    }
+
+    /// Slots to reserve for the document's top-level block list.
+    ///
+    /// The published sample (and concatenations of it) lands a block every
+    /// ~40 bytes. Inline children already reserve from a similar density
+    /// heuristic; the root list used to grow from zero, which recopied the
+    /// whole array through the doubling ladder on every large parse. One
+    /// vector per document, so over-reserve is cheap compared to that copy.
+    fn document_children_capacity(source_len: usize) -> usize {
+        const BYTES_PER_BLOCK: usize = 40;
+        (source_len / BYTES_PER_BLOCK).max(4)
     }
 }
