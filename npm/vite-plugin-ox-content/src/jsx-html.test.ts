@@ -58,6 +58,27 @@ describe("jsx-html", () => {
       );
     });
 
+    it("maps React meta names to the HTML spellings browsers honor", () => {
+      expect(jsx("meta", { charSet: "UTF-8" }).__html).toBe('<meta charset="UTF-8" />');
+      expect(jsx("meta", { httpEquiv: "refresh", content: "0" }).__html).toBe(
+        '<meta http-equiv="refresh" content="0" />',
+      );
+      expect(jsx("meta", { charset: "UTF-8" }).__html).toBe('<meta charset="UTF-8" />');
+    });
+
+    it("emits class once when both class and className are passed", () => {
+      expect(jsx("div", { class: "x", className: "y" }).__html).toBe('<div class="y"></div>');
+    });
+
+    it("lowercases remaining HTML names and keeps viewBox's case", () => {
+      expect(jsx("input", { autoFocus: true, tabIndex: 0 }).__html).toBe(
+        '<input autofocus tabindex="0" />',
+      );
+      expect(jsx("svg", { viewBox: "0 0 1 1", strokeWidth: 2 }).__html).toBe(
+        '<svg viewBox="0 0 1 1" stroke-width="2"></svg>',
+      );
+    });
+
     it("kebab-cases data-* and aria-* attributes", () => {
       expect(jsx("div", { dataFooBar: "1", ariaLabel: "x" }).__html).toBe(
         '<div data-foo-bar="1" aria-label="x"></div>',

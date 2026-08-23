@@ -95,17 +95,40 @@ function escapeHtml(str: string): string {
 }
 
 /**
- * Converts a camelCase attribute name to kebab-case for HTML.
- * Special handling for data-* and aria-* attributes.
+ * React prop names whose HTML spelling is not the lowercased identifier.
+ */
+const ATTR_ALIASES: Record<string, string> = {
+  className: "class",
+  htmlFor: "for",
+  httpEquiv: "http-equiv",
+  acceptCharset: "accept-charset",
+};
+
+/** SVG attributes that stay camelCase in HTML (they are case-sensitive). */
+const SVG_CAMEL_CASE = new Set(["viewBox"]);
+
+/**
+ * Converts a JSX/React prop name to the HTML attribute the runtime emits.
+ *
+ * HTML attributes are case-insensitive and conventionally lowercase
+ * (`charSet` → `charset`, `tabIndex` → `tabindex`). A few React names are
+ * not a lowercase of themselves (`className`, `httpEquiv`), and SVG names
+ * like `viewBox` must keep their case.
  */
 function toHtmlAttr(name: string): string {
-  // className -> class
-  if (name === "className") return "class";
-  // htmlFor -> for
-  if (name === "htmlFor") return "for";
-  // Keep data-* and aria-* as-is
+  const aliased = ATTR_ALIASES[name];
+  if (aliased !== undefined) return aliased;
+  if (SVG_CAMEL_CASE.has(name)) return name;
   if (name.startsWith("data") || name.startsWith("aria")) {
     return name.replace(/([A-Z])/g, "-$1").toLowerCase();
+  }
+  if (/[A-Z]/.test(name)) {
+    // SVG presentation attributes are kebab-case; remaining HTML names are
+    // just the lowercased identifier (`charSet` → `charset`).
+    if (name.startsWith("stroke") || name === "clipPath") {
+      return name.replace(/([A-Z])/g, "-$1").toLowerCase();
+    }
+    return name.toLowerCase();
   }
   return name;
 }
@@ -213,10 +236,14 @@ export function jsx(type: JSXElementType, props: JSXProps, _key?: string): JSXNo
   const tag = type;
   let html = `<${tag}`;
 
-  // Render attributes
+  // Normalize React aliases first so `class` + `className` become one attribute
+  // (last write wins) instead of emitting `class` twice.
+  const attrs = new Map<string, unknown>();
   for (const [name, value] of Object.entries(restProps)) {
-    // Skip internal props
     if (name === "key" || name === "ref") continue;
+    attrs.set(toHtmlAttr(name), value);
+  }
+  for (const [name, value] of attrs) {
     html += renderAttr(name, value);
   }
 

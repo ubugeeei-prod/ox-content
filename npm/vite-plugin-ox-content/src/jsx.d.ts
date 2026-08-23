@@ -338,8 +338,10 @@ export namespace JSX {
   }
 
   export interface MetaHTMLAttributes extends HTMLAttributes {
+    charset?: string;
     charSet?: string;
     content?: string;
+    "http-equiv"?: string;
     httpEquiv?: string;
     name?: string;
     property?: string;
