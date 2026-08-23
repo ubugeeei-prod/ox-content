@@ -208,18 +208,22 @@ fn highlights_a_repeated_snippet_once_and_reuses_it() {
     let html = "<p><code class=\"language-ts\">string</code> \
                 <code class=\"language-ts\">string</code> \
                 <code class=\"language-ts\">boolean</code></p>";
-    let calls = std::cell::Cell::new(0);
+    let calls = std::sync::atomic::AtomicUsize::new(0);
     let result = super::highlight_code_blocks(
         html,
         |_| true,
         |code, _| {
-            calls.set(calls.get() + 1);
+            calls.fetch_add(1, std::sync::atomic::Ordering::Relaxed);
             Some(format!("<pre><code><span>{code}</span></code></pre>"))
         },
     );
 
     assert!(result.skipped.is_empty());
-    assert_eq!(calls.get(), 2, "the repeated snippet must be highlighted once");
+    assert_eq!(
+        calls.load(std::sync::atomic::Ordering::Relaxed),
+        2,
+        "the repeated snippet must be highlighted once"
+    );
     assert_eq!(result.html.matches("<span>string</span>").count(), 2);
     assert_eq!(result.html.matches("<span>boolean</span>").count(), 1);
 }
@@ -247,17 +251,80 @@ fn highlights_nothing_at_all_once_one_element_is_out_of_reach() {
     // would be thrown away, so nothing is. Only markup this pass cannot read
     // does that — an unsupported language comes back as pending instead.
     let html = "<pre><code class=\"language-ts\">a</code></pre>\n                <pre><code class=\"language-ts\">b\n<p>c</p></code></pre>";
-    let calls = std::cell::Cell::new(0);
+    let calls = std::sync::atomic::AtomicUsize::new(0);
     let result = super::highlight_code_blocks(
         html,
         |_| true,
         |_, _| {
-            calls.set(calls.get() + 1);
+            calls.fetch_add(1, std::sync::atomic::Ordering::Relaxed);
             Some("<pre>x</pre>".to_string())
         },
     );
 
     assert_eq!(result.skipped, ["ts"]);
     assert_eq!(result.html, html);
-    assert_eq!(calls.get(), 0, "the claimable block must not be highlighted");
+    assert_eq!(
+        calls.load(std::sync::atomic::Ordering::Relaxed),
+        0,
+        "the claimable block must not be highlighted"
+    );
+}
+
+#[test]
+fn names_the_language_of_the_snippet_the_highlighter_gave_up_on() {
+    // `supports` promised both languages, so a `None` here is the highlighter
+    // contradicting itself. The page goes back untouched for the caller to
+    // redo — and `skipped` names the language that actually failed, not
+    // whichever one happened to be claimed first.
+    let html = "<pre><code class=\"language-ts\">a</code></pre>\n\
+                <pre><code class=\"language-rs\">b</code></pre>";
+    let result = super::highlight_code_blocks(
+        html,
+        |_| true,
+        |_, language| {
+            (language != "rs").then(|| "<pre><code><span>t</span></code></pre>".to_string())
+        },
+    );
+
+    assert_eq!(result.skipped, ["rs"]);
+    assert_eq!(result.html, html);
+    assert!(result.pending.is_empty());
+}
+
+#[test]
+fn spreading_a_page_across_threads_keeps_each_result_on_its_own_element() {
+    // Enough distinct source to cross `PARALLEL_SOURCE_BYTES`, so this walks
+    // the threaded path. Every snippet highlights to a marker built from its
+    // own text, which the elements must carry back in the order they appeared:
+    // a page whose highlights landed on the wrong blocks is the failure that
+    // parallelising this could plausibly introduce.
+    let sources: Vec<String> =
+        (0..64).map(|i| format!("let v{i:03} = {};", "a".repeat(60))).collect();
+    assert!(
+        sources.iter().map(String::len).sum::<usize>() >= super::blocks::PARALLEL_SOURCE_BYTES,
+        "the fixture must be big enough to take the threaded path"
+    );
+
+    let mut html = String::new();
+    for source in &sources {
+        html.push_str("<pre><code class=\"language-ts\">");
+        html.push_str(source);
+        html.push_str("</code></pre>\n");
+    }
+
+    let result = super::highlight_code_blocks(
+        &html,
+        |_| true,
+        |code, _| Some(format!("<pre><code><span>{code}</span></code></pre>")),
+    );
+
+    assert!(result.skipped.is_empty());
+    let mut last = 0;
+    for source in &sources {
+        let marker = format!("<span>{source}</span>");
+        assert_eq!(result.html.matches(&marker).count(), 1, "{source} must appear once");
+        let at = result.html.find(&marker).expect("every snippet must reach the page");
+        assert!(at > last, "{source} landed out of order");
+        last = at;
+    }
 }

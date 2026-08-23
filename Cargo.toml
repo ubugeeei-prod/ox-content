@@ -112,6 +112,9 @@ regex = "1.11"
 unicode-normalization = "0.1"
 memchr = "2.7"
 
+# Parallelism
+rayon = "1.10"
+
 # Hashing
 rustc-hash = "2"
 phf = { version = "0.14", features = ["macros"] }

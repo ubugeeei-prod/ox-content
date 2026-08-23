@@ -10,6 +10,7 @@
 //! This finds the blocks with the same scanner the merge step already uses,
 //! and splices the result straight back into the original HTML.
 
+use rayon::prelude::*;
 use rustc_hash::FxHashMap;
 
 use super::scan::{collect_inline_code, collect_pre_blocks};
@@ -51,6 +52,16 @@ enum Region {
     Inline,
 }
 
+/// How much distinct source a page needs before its highlighting is spread
+/// across threads.
+///
+/// Counted in bytes rather than snippets because that is what the work is:
+/// a page of thirty one-word member types is a fraction of the parsing of one
+/// long code sample. Below this a page's whole highlight pass is shorter than
+/// the hand-off costs, which keeps small pages — and the tests — on a plain
+/// sequential walk.
+pub(super) const PARALLEL_SOURCE_BYTES: usize = 4096;
+
 /// An element this pass has claimed, with the text to highlight it from.
 struct Claim {
     start: usize,
@@ -80,7 +91,7 @@ struct Claim {
 pub fn highlight_code_blocks(
     html: &str,
     supports: impl Fn(&str) -> bool,
-    highlight: impl Fn(&str, &str) -> Option<String>,
+    highlight: impl Fn(&str, &str) -> Option<String> + Sync,
 ) -> HighlightedDocument {
     let mut regions: Vec<(usize, usize, Region)> = collect_pre_blocks(html)
         .into_iter()
@@ -135,31 +146,41 @@ pub fn highlight_code_blocks(
     // nothing but the text and the language, so each distinct pair is parsed
     // once and the result reused. The merge still runs per element, which is
     // what carries each one's own classes and line metadata.
-    let mut rendered: Vec<String> = Vec::with_capacity(claims.len());
-    let mut rendered_at: FxHashMap<(&str, &str), usize> = FxHashMap::default();
+    let mut work: Vec<(&str, &str)> = Vec::with_capacity(claims.len());
+    let mut work_at: FxHashMap<(&str, &str), usize> = FxHashMap::default();
     let mut slots = Vec::with_capacity(claims.len());
 
     for claim in &claims {
         let key = (claim.language.as_str(), claim.source.as_str());
-        if let Some(&at) = rendered_at.get(&key) {
-            slots.push(at);
-            continue;
-        }
-        let Some(highlighted) = highlight(&claim.source, &claim.language) else {
-            // `supports` promised every claim, so a failure here is the
-            // highlighter contradicting itself rather than an expected
-            // fallback; hand back the original so the caller's own pass
-            // produces the page.
-            return HighlightedDocument {
-                html: html.to_string(),
-                skipped: vec![claim.language.clone()],
-                pending: Vec::new(),
-            };
-        };
-        slots.push(rendered.len());
-        rendered_at.insert(key, rendered.len());
-        rendered.push(highlighted);
+        let at = *work_at.entry(key).or_insert_with(|| {
+            work.push(key);
+            work.len() - 1
+        });
+        slots.push(at);
     }
+
+    // Each snippet is parsed and walked on its own — nothing is shared between
+    // them but the grammar tables, which are immutable once built — so the
+    // distinct list is pure independent work. Below the threshold a page does
+    // not have enough of it to pay for handing work to other threads.
+    let bytes: usize = work.iter().map(|(_, source)| source.len()).sum();
+    let rendered: Vec<Option<String>> = if bytes >= PARALLEL_SOURCE_BYTES {
+        work.par_iter().map(|&(language, source)| highlight(source, language)).collect()
+    } else {
+        work.iter().map(|&(language, source)| highlight(source, language)).collect()
+    };
+
+    // `supports` promised every claim, so a failure here is the highlighter
+    // contradicting itself rather than an expected fallback; hand back the
+    // original so the caller's own pass produces the page.
+    if let Some(at) = rendered.iter().position(Option::is_none) {
+        return HighlightedDocument {
+            html: html.to_string(),
+            skipped: vec![work[at].0.to_string()],
+            pending: Vec::new(),
+        };
+    }
+    let rendered: Vec<String> = rendered.into_iter().flatten().collect();
 
     let mut out = String::with_capacity(html.len() * 2);
     let mut cursor = 0;
