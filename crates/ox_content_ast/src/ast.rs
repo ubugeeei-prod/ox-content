@@ -19,20 +19,20 @@ pub struct Document<'a> {
 /// A Markdown AST node.
 ///
 /// Large variants are interned in the arena behind a no-drop
-/// [`ox_content_allocator::Box`] so this enum stays paragraph-sized
-/// (~48 bytes). The common `Text` / `Emphasis` cells in inline arrays
-/// no longer carry `Definition`-sized holes.
+/// [`ox_content_allocator::Box`] so this enum stays text-sized
+/// (~32 bytes). The common `Text` cells in inline arrays no longer
+/// carry paragraph-sized holes.
 #[derive(Debug)]
 pub enum Node<'a> {
     // Block nodes
     /// Paragraph.
-    Paragraph(Paragraph<'a>),
+    Paragraph(Box<'a, Paragraph<'a>>),
     /// Heading (h1-h6).
     Heading(Box<'a, Heading<'a>>),
     /// Thematic break (horizontal rule).
     ThematicBreak(ThematicBreak),
     /// Block quote.
-    BlockQuote(BlockQuote<'a>),
+    BlockQuote(Box<'a, BlockQuote<'a>>),
     /// Ordered or unordered list.
     List(Box<'a, List<'a>>),
     /// List item.
@@ -48,9 +48,9 @@ pub enum Node<'a> {
     /// Plain text.
     Text(Text<'a>),
     /// Emphasis (italic).
-    Emphasis(Emphasis<'a>),
+    Emphasis(Box<'a, Emphasis<'a>>),
     /// Strong emphasis (bold).
-    Strong(Strong<'a>),
+    Strong(Box<'a, Strong<'a>>),
     /// Inline code.
     InlineCode(InlineCode<'a>),
     /// Line break.
@@ -60,7 +60,7 @@ pub enum Node<'a> {
     /// Image.
     Image(Box<'a, Image<'a>>),
     /// Strikethrough (GFM extension).
-    Delete(Delete<'a>),
+    Delete(Box<'a, Delete<'a>>),
     /// Footnote reference (GFM extension).
     FootnoteReference(Box<'a, FootnoteReference<'a>>),
 

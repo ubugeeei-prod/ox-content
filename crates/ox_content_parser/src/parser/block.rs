@@ -238,7 +238,7 @@ impl<'a> Parser<'a> {
         // Parse inline content
         let children = self.parse_inline_block(content, start)?;
 
-        Ok(Some(Node::Paragraph(Paragraph { children, span })))
+        Ok(Some(Node::Paragraph(self.allocator.boxed(Paragraph { children, span }))))
     }
 
     /// Returns the setext heading depth (1 for `=`, 2 for `-`) when the

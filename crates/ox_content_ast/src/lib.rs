@@ -31,11 +31,12 @@ pub use visit::*;
 const _AST_IS_ARENA_ONLY: () = {
     assert!(!std::mem::needs_drop::<Node<'static>>());
     assert!(!std::mem::needs_drop::<Document<'static>>());
-    // Boxed large variants keep `Node` at the size of a paragraph: bumpalo
-    // `Vec` is 32 bytes (ptr/len/cap + bump), plus `Span` is 8, plus the
-    // enum discriminant rounds the slot to 48. Text still wastes padding
-    // relative to its 24-byte payload, but the common inline arrays no
-    // longer carry Definition-sized holes (~80 bytes before intern).
-    assert!(std::mem::size_of::<Node<'static>>() <= 48);
+    // Boxed container variants keep `Node` at the size of Text/Html:
+    // `&str` + `Span` is 24 bytes, plus the enum discriminant rounds the
+    // slot to 32. Paragraph/Emphasis/etc. still exist, just behind a
+    // pointer, so the arrays that dominate a parse pack two cells per
+    // cache line instead of carrying 40-byte Vec+Span holes.
+    assert!(std::mem::size_of::<Node<'static>>() <= 32);
+    assert!(std::mem::size_of::<Paragraph<'static>>() > std::mem::size_of::<Node<'static>>());
     assert!(std::mem::size_of::<Definition<'static>>() > std::mem::size_of::<Node<'static>>());
 };

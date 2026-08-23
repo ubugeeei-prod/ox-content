@@ -111,9 +111,11 @@ impl<'a> Parser<'a> {
             );
             let span = inner_span(&inner, use_delims);
             let node = if use_delims == 2 {
-                Node::Strong(ox_content_ast::Strong { children: inner, span })
+                Node::Strong(self.allocator.boxed(ox_content_ast::Strong { children: inner, span }))
             } else {
-                Node::Emphasis(ox_content_ast::Emphasis { children: inner, span })
+                Node::Emphasis(
+                    self.allocator.boxed(ox_content_ast::Emphasis { children: inner, span }),
+                )
             };
             children.insert(opener_node + 1, node);
 

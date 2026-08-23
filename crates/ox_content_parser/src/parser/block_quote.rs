@@ -137,7 +137,9 @@ impl<'a> Parser<'a> {
         self.nesting_depth -= 1;
 
         let span = Span::new(start as u32, self.position as u32);
-        Ok(Some(Node::BlockQuote(BlockQuote { children: sub_doc.children, span })))
+        Ok(Some(Node::BlockQuote(
+            self.allocator.boxed(BlockQuote { children: sub_doc.children, span }),
+        )))
     }
 
     /// Lines that must not lazily continue a block quote paragraph even

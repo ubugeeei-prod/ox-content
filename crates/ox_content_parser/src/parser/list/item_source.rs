@@ -87,10 +87,10 @@ impl<'a> Parser<'a> {
         }
 
         let paragraph_children = self.parse_inline_block(inline, content_offset)?;
-        children.push(Node::Paragraph(Paragraph {
+        children.push(Node::Paragraph(self.allocator.boxed(Paragraph {
             children: paragraph_children,
             span: Span::new(content_offset as u32, item_end as u32),
-        }));
+        })));
         Ok(children)
     }
 }

@@ -290,8 +290,9 @@ impl<'a> Parser<'a> {
                 let inner_children =
                     self.parse_inline(&content[inner_start..inner_end], offset + inner_start)?;
                 let span = Span::new((offset + *pos) as u32, (offset + inner_end + 2) as u32);
-                children
-                    .push(Node::Delete(ox_content_ast::Delete { children: inner_children, span }));
+                children.push(Node::Delete(
+                    self.allocator.boxed(ox_content_ast::Delete { children: inner_children, span }),
+                ));
                 *pos = inner_end + 2;
                 return Ok(());
             }
