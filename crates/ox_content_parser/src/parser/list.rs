@@ -102,13 +102,13 @@ impl<'a> Parser<'a> {
         }
 
         let span = Span::new(start as u32, self.position as u32);
-        Ok(Some(Node::List(List {
+        Ok(Some(Node::List(self.allocator.boxed(List {
             ordered,
             start: list_start,
             spread: list_spread,
             children,
             span,
-        })))
+        }))))
     }
 
     /// Consumes one item's continuation lines: indented content

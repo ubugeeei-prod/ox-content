@@ -132,7 +132,11 @@ impl<'a> Parser<'a> {
             self.allocator.new_vec()
         };
 
-        Ok(Some(Node::Heading(ox_content_ast::Heading { depth, children, span })))
+        Ok(Some(Node::Heading(self.allocator.boxed(ox_content_ast::Heading {
+            depth,
+            children,
+            span,
+        }))))
     }
 
     /// Parses a thematic break.

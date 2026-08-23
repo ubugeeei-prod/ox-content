@@ -61,7 +61,10 @@ mod tests {
 
     use super::*;
 
-    fn first_heading<'a>(allocator: &'a Allocator, source: &'a str) -> Heading<'a> {
+    fn first_heading<'a>(
+        allocator: &'a Allocator,
+        source: &'a str,
+    ) -> ox_content_allocator::Box<'a, Heading<'a>> {
         let parser = Parser::with_options(allocator, source, ParserOptions::default());
         let mut doc = parser.parse().unwrap();
         let node = doc.children.pop().expect("at least one node");

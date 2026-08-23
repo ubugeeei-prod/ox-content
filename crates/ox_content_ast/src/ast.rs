@@ -3,7 +3,7 @@
 //! This module defines the AST structure based on mdast specification,
 //! adapted for arena-based allocation.
 
-use ox_content_allocator::Vec;
+use ox_content_allocator::{Box, Vec};
 
 use crate::Span;
 
@@ -17,27 +17,32 @@ pub struct Document<'a> {
 }
 
 /// A Markdown AST node.
+///
+/// Large variants are interned in the arena behind a no-drop
+/// [`ox_content_allocator::Box`] so this enum stays paragraph-sized
+/// (~48 bytes). The common `Text` / `Emphasis` cells in inline arrays
+/// no longer carry `Definition`-sized holes.
 #[derive(Debug)]
 pub enum Node<'a> {
     // Block nodes
     /// Paragraph.
     Paragraph(Paragraph<'a>),
     /// Heading (h1-h6).
-    Heading(Heading<'a>),
+    Heading(Box<'a, Heading<'a>>),
     /// Thematic break (horizontal rule).
     ThematicBreak(ThematicBreak),
     /// Block quote.
     BlockQuote(BlockQuote<'a>),
     /// Ordered or unordered list.
-    List(List<'a>),
+    List(Box<'a, List<'a>>),
     /// List item.
-    ListItem(ListItem<'a>),
+    ListItem(Box<'a, ListItem<'a>>),
     /// Fenced or indented code block.
-    CodeBlock(CodeBlock<'a>),
+    CodeBlock(Box<'a, CodeBlock<'a>>),
     /// HTML block.
     Html(Html<'a>),
     /// Table (GFM extension).
-    Table(Table<'a>),
+    Table(Box<'a, Table<'a>>),
 
     // Inline nodes
     /// Plain text.
@@ -51,19 +56,19 @@ pub enum Node<'a> {
     /// Line break.
     Break(Break),
     /// Link.
-    Link(Link<'a>),
+    Link(Box<'a, Link<'a>>),
     /// Image.
-    Image(Image<'a>),
+    Image(Box<'a, Image<'a>>),
     /// Strikethrough (GFM extension).
     Delete(Delete<'a>),
     /// Footnote reference (GFM extension).
-    FootnoteReference(FootnoteReference<'a>),
+    FootnoteReference(Box<'a, FootnoteReference<'a>>),
 
     // Definition nodes
     /// Link/image reference definition.
-    Definition(Definition<'a>),
+    Definition(Box<'a, Definition<'a>>),
     /// Footnote definition (GFM extension).
-    FootnoteDefinition(FootnoteDefinition<'a>),
+    FootnoteDefinition(Box<'a, FootnoteDefinition<'a>>),
 }
 
 // Block nodes

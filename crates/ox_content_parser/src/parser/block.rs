@@ -204,11 +204,11 @@ impl<'a> Parser<'a> {
                 self.position = heading_end;
                 let content = self.source[start..content_end].trim();
                 let children = self.parse_inline_block(content, start)?;
-                return Ok(Some(Node::Heading(Heading {
+                return Ok(Some(Node::Heading(self.allocator.boxed(Heading {
                     depth,
                     children,
                     span: Span::new(start as u32, heading_end as u32),
-                })));
+                }))));
             }
 
             // Check for block-level element that would end paragraph. The

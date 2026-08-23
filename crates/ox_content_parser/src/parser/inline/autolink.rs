@@ -71,7 +71,7 @@ impl<'a> Parser<'a> {
             children,
             span: Span::new((offset + pos) as u32, (offset + close + 1) as u32),
         };
-        Some((Node::Link(link), close + 1))
+        Some((Node::Link(self.allocator.boxed(link)), close + 1))
     }
 }
 

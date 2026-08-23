@@ -180,13 +180,13 @@ impl<'a> Parser<'a> {
             self.allocator.alloc_str(Self::normalize_reference_label(parsed.label).as_str());
         let end = start + parsed.consumed;
         self.position = end;
-        Some(Node::Definition(Definition {
+        Some(Node::Definition(self.allocator.boxed(Definition {
             identifier,
             label: Some(parsed.label),
             url: parsed.url,
             title: parsed.title,
             span: Span::new(start as u32, end as u32),
-        }))
+        })))
     }
 
     /// Joins the block-quote-stripped lines of the paragraph chunk that

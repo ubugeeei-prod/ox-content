@@ -168,12 +168,12 @@ impl<'a> Parser<'a> {
         let end = content_start + body_len;
         self.position = end;
 
-        Ok(Some(Node::FootnoteDefinition(FootnoteDefinition {
+        Ok(Some(Node::FootnoteDefinition(self.allocator.boxed(FootnoteDefinition {
             identifier,
             label: Some(label),
             children,
             span: Span::new(start as u32, end as u32),
-        })))
+        }))))
     }
 
     /// Whether a definition exists for `label` (already normalized-able).
@@ -216,11 +216,13 @@ impl<'a> Parser<'a> {
 
         let identifier =
             self.allocator.alloc_str(normalize_footnote_label(label).as_str()) as &'a str;
-        children.push(Node::FootnoteReference(ox_content_ast::FootnoteReference {
-            identifier,
-            label: Some(label),
-            span: Span::new((offset + *pos) as u32, (offset + end + 1) as u32),
-        }));
+        children.push(Node::FootnoteReference(self.allocator.boxed(
+            ox_content_ast::FootnoteReference {
+                identifier,
+                label: Some(label),
+                span: Span::new((offset + *pos) as u32, (offset + end + 1) as u32),
+            },
+        )));
         *pos = end + 1;
         true
     }

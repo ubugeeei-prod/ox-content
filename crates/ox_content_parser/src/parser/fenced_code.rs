@@ -195,6 +195,11 @@ impl<'a> Parser<'a> {
             value.into_bump_str()
         };
 
-        Ok(Some(Node::CodeBlock(ox_content_ast::CodeBlock { lang, meta, value, span })))
+        Ok(Some(Node::CodeBlock(self.allocator.boxed(ox_content_ast::CodeBlock {
+            lang,
+            meta,
+            value,
+            span,
+        }))))
     }
 }

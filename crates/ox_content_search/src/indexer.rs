@@ -201,11 +201,11 @@ mod tests {
         let mut heading_children = ox_content_allocator::Vec::new_in(&allocator);
         heading_children.push(Node::Text(Text { value: "Test Title", span: Span::new(0, 10) }));
 
-        children.push(Node::Heading(Heading {
+        children.push(Node::Heading(allocator.boxed(Heading {
             depth: 1,
             children: heading_children,
             span: Span::new(0, 12),
-        }));
+        })));
 
         let doc = Document { children, span: Span::new(0, 12) };
 

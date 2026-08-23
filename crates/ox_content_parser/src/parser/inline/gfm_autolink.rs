@@ -73,12 +73,12 @@ impl<'a> Parser<'a> {
                         );
                         let mut link_children = self.allocator.new_vec();
                         link_children.push(Node::Text(Text { value: link_value, span: link_span }));
-                        let link_node = Node::Link(Link {
+                        let link_node = Node::Link(self.allocator.boxed(Link {
                             url,
                             title: None,
                             children: link_children,
                             span: link_span,
-                        });
+                        }));
 
                         let after = &value[candidate.end..];
                         let after_node = (!after.is_empty()).then(|| {

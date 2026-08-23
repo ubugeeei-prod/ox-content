@@ -65,12 +65,12 @@ impl<'a> Parser<'a> {
 
         self.position = end;
         let span = Span::new(start as u32, end as u32);
-        Ok(Some(Node::CodeBlock(CodeBlock {
+        Ok(Some(Node::CodeBlock(self.allocator.boxed(CodeBlock {
             lang: None,
             meta: None,
             value: value.into_bump_str(),
             span,
-        })))
+        }))))
     }
 
     /// Returns the indentation width in columns of the current line, where

@@ -96,7 +96,7 @@ impl<'a> Parser<'a> {
         }
 
         let span = Span::new(start as u32, self.position as u32);
-        Ok(Some(Node::Table(Table { align, children, span })))
+        Ok(Some(Node::Table(self.allocator.boxed(Table { align, children, span }))))
     }
 
     /// Parses a table row into arena-backed AST cells without temporary heap

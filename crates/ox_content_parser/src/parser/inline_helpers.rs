@@ -50,12 +50,12 @@ impl<'a> Parser<'a> {
                 && let Some(target) = self.parse_link_target(content, close + 1)
             {
                 let children_nodes = self.parse_inline(link_text, offset + text_start)?;
-                children.push(Node::Link(Link {
+                children.push(Node::Link(self.allocator.boxed(Link {
                     url: target.url,
                     title: target.title,
                     children: children_nodes,
                     span: Span::new((offset + link_start) as u32, (offset + target.end) as u32),
-                }));
+                })));
                 *pos = target.end;
                 return Ok(());
             }
@@ -72,7 +72,7 @@ impl<'a> Parser<'a> {
                     if let Some(reference) = self.lookup_reference(key) {
                         let (url, title) = (reference.url, reference.title);
                         let children_nodes = self.parse_inline(link_text, offset + text_start)?;
-                        children.push(Node::Link(Link {
+                        children.push(Node::Link(self.allocator.boxed(Link {
                             url,
                             title,
                             children: children_nodes,
@@ -80,7 +80,7 @@ impl<'a> Parser<'a> {
                                 (offset + link_start) as u32,
                                 (offset + label_end + 1) as u32,
                             ),
-                        }));
+                        })));
                         *pos = label_end + 1;
                         return Ok(());
                     }
@@ -95,12 +95,12 @@ impl<'a> Parser<'a> {
             {
                 let (url, title) = (reference.url, reference.title);
                 let children_nodes = self.parse_inline(link_text, offset + text_start)?;
-                children.push(Node::Link(Link {
+                children.push(Node::Link(self.allocator.boxed(Link {
                     url,
                     title,
                     children: children_nodes,
                     span: Span::new((offset + link_start) as u32, (offset + close + 1) as u32),
-                }));
+                })));
                 *pos = close + 1;
                 return Ok(());
             }
@@ -141,12 +141,12 @@ impl<'a> Parser<'a> {
             if bytes.get(close + 1) == Some(&b'(')
                 && let Some(target) = self.parse_link_target(content, close + 1)
             {
-                children.push(Node::Image(Image {
+                children.push(Node::Image(self.allocator.boxed(Image {
                     url: target.url,
                     alt,
                     title: target.title,
                     span: Span::new((offset + image_start) as u32, (offset + target.end) as u32),
-                }));
+                })));
                 *pos = target.end;
                 return Ok(());
             }
@@ -160,7 +160,7 @@ impl<'a> Parser<'a> {
                     let raw_label = &content[label_start..label_end];
                     let key = if raw_label.trim().is_empty() { raw_alt } else { raw_label };
                     if let Some(reference) = self.lookup_reference(key) {
-                        children.push(Node::Image(Image {
+                        children.push(Node::Image(self.allocator.boxed(Image {
                             url: reference.url,
                             alt,
                             title: reference.title,
@@ -168,7 +168,7 @@ impl<'a> Parser<'a> {
                                 (offset + image_start) as u32,
                                 (offset + label_end + 1) as u32,
                             ),
-                        }));
+                        })));
                         *pos = label_end + 1;
                         return Ok(());
                     }
@@ -176,12 +176,12 @@ impl<'a> Parser<'a> {
             }
 
             if !well_formed_reference && let Some(reference) = self.lookup_reference(raw_alt) {
-                children.push(Node::Image(Image {
+                children.push(Node::Image(self.allocator.boxed(Image {
                     url: reference.url,
                     alt,
                     title: reference.title,
                     span: Span::new((offset + image_start) as u32, (offset + close + 1) as u32),
-                }));
+                })));
                 *pos = close + 1;
                 return Ok(());
             }

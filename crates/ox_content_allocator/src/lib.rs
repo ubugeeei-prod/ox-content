@@ -77,6 +77,14 @@ impl Allocator {
         &self.bump
     }
 
+    /// Allocates a value in the arena and returns a no-drop box to it.
+    ///
+    /// The box is a thin pointer: it does not run `T`'s destructor, for the
+    /// same reason [`Vec`] does not. `T` must own nothing outside the arena.
+    pub fn boxed<T>(&self, val: T) -> Box<'_, T> {
+        Box::new_in(val, &self.bump)
+    }
+
     /// Allocates a value in the arena and returns a reference to it.
     pub fn alloc<T>(&self, val: T) -> &mut T {
         self.bump.alloc(val)
@@ -128,7 +136,59 @@ impl Deref for Allocator {
 }
 
 /// A boxed value allocated in an arena.
-pub type Box<'a, T> = bumpalo::boxed::Box<'a, T>;
+///
+/// Unlike [`bumpalo::boxed::Box`], this does **not** run `T`'s destructor.
+/// The `Bump` reclaims the slot with everything else; a `Drop` impl here
+/// would make any AST node that stored one need dropping, which is the
+/// tree-walk [`Vec`] exists to avoid. `T` must own nothing outside the arena.
+#[repr(transparent)]
+pub struct Box<'a, T> {
+    ptr: std::ptr::NonNull<T>,
+    _lt: std::marker::PhantomData<&'a mut T>,
+}
+
+impl<'a, T> Box<'a, T> {
+    /// Allocates `value` in `bump` and returns a pointer to it.
+    pub fn new_in(value: T, bump: &'a Bump) -> Self {
+        Self { ptr: std::ptr::NonNull::from(bump.alloc(value)), _lt: std::marker::PhantomData }
+    }
+}
+
+impl<T> std::ops::Deref for Box<'_, T> {
+    type Target = T;
+
+    fn deref(&self) -> &T {
+        // SAFETY: `ptr` comes from `Bump::alloc` and lives for `'a`. The box
+        // never deallocates or runs `T`'s destructor; the arena owns the slot.
+        #[allow(unsafe_code)]
+        unsafe {
+            self.ptr.as_ref()
+        }
+    }
+}
+
+impl<T> std::ops::DerefMut for Box<'_, T> {
+    fn deref_mut(&mut self) -> &mut T {
+        // SAFETY: same provenance as [`Deref::deref`], and `&mut self` is the
+        // only live handle to this slot.
+        #[allow(unsafe_code)]
+        unsafe {
+            self.ptr.as_mut()
+        }
+    }
+}
+
+impl<T: std::fmt::Debug> std::fmt::Debug for Box<'_, T> {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        std::fmt::Debug::fmt(&**self, f)
+    }
+}
+
+impl<T: PartialEq> PartialEq for Box<'_, T> {
+    fn eq(&self, other: &Self) -> bool {
+        **self == **other
+    }
+}
 
 /// A vector allocated in an arena.
 ///
@@ -263,5 +323,13 @@ mod tests {
         s.push_str("hello");
         s.push_str(" world");
         assert_eq!(s.as_str(), "hello world");
+    }
+
+    #[test]
+    fn boxed_value_is_derefable_and_does_not_need_drop() {
+        let allocator = Allocator::new();
+        let boxed = allocator.boxed(7u32);
+        assert_eq!(*boxed, 7);
+        assert!(!std::mem::needs_drop::<Box<'static, u32>>());
     }
 }
