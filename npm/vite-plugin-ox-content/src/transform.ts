@@ -302,26 +302,26 @@ interface JsCodeBlockDiagnostic {
 }
 
 /**
- * Cached NAPI bindings instance.
- * Loaded on first use and reused for subsequent transformations.
+ * The NAPI load, cached as the promise rather than as its result.
+ *
+ * The load yields, and a caller arriving during that yield has to wait for it
+ * rather than read a result that is not there yet. Holding the promise is what
+ * makes every caller wait for the same load; holding an "already attempted"
+ * flag beside an unset result meant the first page to arrive loaded the module
+ * and every page behind it concluded there were no bindings at all.
+ *
  * @internal
  */
-let napiBindings: NapiBindings | null | undefined;
-
-/**
- * Flag to prevent repeated NAPI loading attempts.
- * Set to true after first load attempt (success or failure).
- * @internal
- */
-let napiLoadAttempted = false;
+let napiLoad: Promise<NapiBindings | null> | undefined;
 
 /**
  * Lazily loads and caches NAPI bindings.
  *
  * This function uses lazy loading to defer the import of NAPI bindings
  * until they're actually needed. The bindings are loaded only once and
- * cached for subsequent uses. If loading fails (e.g., bindings not built),
- * the failure is cached to avoid repeated load attempts.
+ * cached for subsequent uses, including by callers that ask for them while
+ * that first load is still in flight. If loading fails (e.g., bindings not
+ * built), the failure is cached to avoid repeated load attempts.
  *
  * ## Performance Considerations
  *
@@ -352,29 +352,20 @@ let napiLoadAttempted = false;
  *
  * @internal
  */
-async function loadNapiBindings(): Promise<NapiBindings | null> {
-  // Return cached result (success or failure)
-  if (napiLoadAttempted) {
-    return napiBindings ?? null;
-  }
-
-  // Mark attempt as made to prevent retry loops
-  napiLoadAttempted = true;
-
-  try {
-    // Dynamic import to handle cases where NAPI isn't built
-    const mod = await importNapiModule();
-    napiBindings = mod;
-    return mod;
-  } catch (error) {
+function loadNapiBindings(): Promise<NapiBindings | null> {
+  // Started once; everyone after that awaits the same load, including the
+  // callers that arrive while it is still in flight.
+  napiLoad ??= importNapiModule().catch((error: unknown) => {
     // NAPI not available (not built, missing dependencies, etc.)
-    // Log for debugging but don't throw - allow graceful degradation
+    // Log for debugging but don't throw - allow graceful degradation.
+    // The rejection is settled here, so the failure is cached too.
     if (process.env.DEBUG) {
       console.debug("[ox-content] NAPI bindings load failed:", error);
     }
-    napiBindings = null;
     return null;
-  }
+  });
+
+  return napiLoad;
 }
 
 /**
