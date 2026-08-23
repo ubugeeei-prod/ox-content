@@ -165,7 +165,7 @@ unsafe fn next_special_ssse3(bytes: &[u8], from: usize) -> usize {
             // the complement's lowest set bit is the first marker.
             // `movemask` fills only the low 16 bits, so the cast is exact
             // and the complement below stays inside them.
-            let clean = _mm_movemask_epi8(_mm_cmpeq_epi8(m, _mm_setzero_si128()));
+            let clean = _mm_movemask_epi8(_mm_cmpeq_epi8(m, _mm_setzero_si128())) as u32;
             !clean & 0xFFFF
         };
         while i + 32 <= end {
