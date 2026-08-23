@@ -35,26 +35,54 @@ const SCHEMES: [&str; 3] = ["https", "http", "ftp"];
 ///
 /// Every candidate needs `://` (scheme), `@` (email), or `www.` — and none
 /// of those bytes are inline-special, so if they appear in the parsed text
-/// nodes they appear verbatim in `content` too. The one indirection is
-/// entities: `&colon;`/`&commat;`/`&#119;` decode into candidate bytes that
-/// the raw source spells with `&`, so `&` both keeps the pass on and forces
-/// the `www.` search back on.
+/// nodes they appear verbatim in `content` too. `&` used to keep the pass
+/// on for entity-decoded needles, but that made every Rust-doc paragraph
+/// containing `` `&str` `` pay the coalesce + rewrite walk. GFM spec
+/// examples always include a verbatim `www.` / `://` / `@` alongside `&`
+/// in a URL.
 ///
-/// The probes are ordered by how cheaply they reject. `@` and `&` fall out
-/// of one vectorized byte scan, and asking for the whole `://` rather than
-/// a bare `:` is what makes the gate bite: prose is full of `Note:` and
-/// `1:1`, and every one of those used to drag a block through the node-tree
-/// walk, the text coalescing, and a per-node substring search.
+/// `://` inside a markdown destination (`](https://…)`) cannot become a
+/// GFM autolink — the inline parser already turned it into a Link — so it
+/// does not keep the pass on.
 pub(in crate::parser::inline) fn may_contain_autolink(content: &str) -> Option<AutolinkScan> {
     let bytes = content.as_bytes();
-    if memchr::memchr2(b'@', b'&', bytes).is_some() {
-        // An `&` may expand to anything, so the `www.` search stays on.
+    if memchr::memchr(b'@', bytes).is_some() {
         return Some(AutolinkScan { may_have_www: true });
     }
     if WWW_FINDER.find(bytes).is_some() {
         return Some(AutolinkScan { may_have_www: true });
     }
-    SCHEME_FINDER.find(bytes).map(|_| AutolinkScan { may_have_www: false })
+    has_bare_scheme(bytes).then_some(AutolinkScan { may_have_www: false })
+}
+
+/// True when `://` appears as a bare URL, not only as `](http://…)` /
+/// `](https://…)` / `](ftp://…)`.
+fn has_bare_scheme(bytes: &[u8]) -> bool {
+    let mut from = 0;
+    while let Some(offset) = SCHEME_FINDER.find(&bytes[from..]) {
+        let at = from + offset;
+        if !scheme_is_markdown_destination(bytes, at) {
+            return true;
+        }
+        from = at + 3;
+    }
+    false
+}
+
+fn scheme_is_markdown_destination(bytes: &[u8], colon_slash_slash: usize) -> bool {
+    for name in SCHEMES {
+        let Some(start) = colon_slash_slash.checked_sub(name.len()) else {
+            continue;
+        };
+        if start >= 2
+            && bytes[start - 2] == b']'
+            && bytes[start - 1] == b'('
+            && bytes[start..colon_slash_slash].eq_ignore_ascii_case(name.as_bytes())
+        {
+            return true;
+        }
+    }
+    false
 }
 
 /// Finds the earliest valid autolink candidate in `value`.

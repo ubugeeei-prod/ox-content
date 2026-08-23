@@ -182,6 +182,48 @@ fn gfm_autolink_still_fires_inside_strikethrough() {
 }
 
 #[test]
+fn gfm_autolink_does_not_link_ampersand_only_code_spans() {
+    let allocator = Allocator::new();
+    let doc = parse_with_options(&allocator, "see `&str` and `&mut T`", ParserOptions::gfm());
+
+    match &doc.children[0] {
+        Node::Paragraph(paragraph) => {
+            assert!(
+                paragraph
+                    .children
+                    .iter()
+                    .all(|child| matches!(child, Node::Text(_) | Node::InlineCode(_))),
+                "ampersand in code must not start an autolink pass rewrite, got {:?}",
+                paragraph.children
+            );
+        }
+        other => panic!("expected paragraph, got {other:?}"),
+    }
+}
+
+#[test]
+fn gfm_autolink_url_query_ampersand_still_links() {
+    let allocator = Allocator::new();
+    let doc = parse_with_options(
+        &allocator,
+        "www.google.com/search?q=commonmark&hl=en",
+        ParserOptions::gfm(),
+    );
+
+    match &doc.children[0] {
+        Node::Paragraph(paragraph) => {
+            let link = paragraph.children.iter().find_map(|child| match child {
+                Node::Link(link) => Some(link),
+                _ => None,
+            });
+            let link = link.expect("expected autolink");
+            assert!(link.url.contains("google.com/search"), "got {}", link.url);
+        }
+        other => panic!("expected paragraph, got {other:?}"),
+    }
+}
+
+#[test]
 fn unmatched_strikethrough_remains_text() {
     let allocator = Allocator::new();
     let doc = parse_with_options(&allocator, "~~open", ParserOptions::gfm());
