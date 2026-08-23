@@ -1,4 +1,5 @@
 mod blocks;
+mod links;
 mod scan;
 mod tag;
 #[cfg(test)]
@@ -198,9 +199,10 @@ fn merge_highlighted_inline_code(original_code: &str, highlighted_block: &str) -
         tag.set_attribute("data-language", &language);
     }
 
-    let mut merged = String::with_capacity(highlighted.inner.len() + 128);
+    let inner = links::reapply_links(original_code, highlighted.inner);
+    let mut merged = String::with_capacity(inner.len() + 128);
     merged.push_str(&tag.to_html());
-    merged.push_str(highlighted.inner);
+    merged.push_str(&inner);
     merged.push_str("</code>");
     Some(merged)
 }

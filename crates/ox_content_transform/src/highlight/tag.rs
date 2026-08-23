@@ -182,7 +182,7 @@ impl ParsedStartTag {
         }
     }
 
-    fn attribute_value(&self, name: &str) -> Option<&str> {
+    pub(super) fn attribute_value(&self, name: &str) -> Option<&str> {
         self.attributes.iter().find_map(|attribute| {
             if attribute.name == name { attribute.value.as_deref() } else { None }
         })
