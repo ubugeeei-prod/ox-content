@@ -165,8 +165,8 @@ unsafe fn next_special_ssse3(bytes: &[u8], from: usize) -> usize {
             // the complement's lowest set bit is the first marker.
             // `movemask` fills only the low 16 bits, so the cast is exact
             // and the complement below stays inside them.
-            let clean = _mm_movemask_epi8(_mm_cmpeq_epi8(m, _mm_setzero_si128())) as u32;
-            !clean & 0xFFFF
+            let clean = _mm_movemask_epi8(_mm_cmpeq_epi8(m, _mm_setzero_si128()));
+            u32::from_ne_bytes((!clean & 0xFFFF).to_ne_bytes())
         };
         while i + 32 <= end {
             let m0 = classify(_mm_loadu_si128(bytes.as_ptr().add(i).cast()));
@@ -224,7 +224,7 @@ unsafe fn next_special_avx2(bytes: &[u8], from: usize) -> usize {
             let hi = _mm256_shuffle_epi8(high, _mm256_and_si256(_mm256_srli_epi16(v, 4), nibble));
             let m = _mm256_and_si256(lo, hi);
             let clean = _mm256_movemask_epi8(_mm256_cmpeq_epi8(m, _mm256_setzero_si256()));
-            !clean as u32
+            u32::from_ne_bytes((!clean).to_ne_bytes())
         };
         while i + 32 <= end {
             let flagged = classify(_mm256_loadu_si256(bytes.as_ptr().add(i).cast()));
