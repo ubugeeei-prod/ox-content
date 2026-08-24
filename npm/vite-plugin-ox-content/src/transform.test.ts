@@ -125,7 +125,7 @@ describe("transformMarkdown", () => {
     expect(result.html).toContain("ox-container--tip ok");
     expect(result.html).not.toContain("onclick");
     expect(result.html).not.toContain("<img");
-    expect(result.html).toContain("&lt;img");
+    expect(result.html).toMatch(/(&lt;|&#x3C;|&#60;)img/);
   });
 
   it("keeps package-manager tabs disabled unless opted in", async () => {

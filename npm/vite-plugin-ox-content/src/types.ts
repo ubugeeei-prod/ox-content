@@ -835,14 +835,6 @@ export interface ResolvedBuiltinEmbedOptions {
 }
 
 /**
- * Options for expanding Obsidian-style wiki links.
- *
- * The transform accepts `[[target]]` and `[[target|label]]` syntax and rewrites
- * it to regular links before rendering. It is intentionally small: path
- * resolution is based on the configured base URL rather than a full backlink
- * graph.
- */
-/**
  * Options for opt-in `::: type` custom containers.
  */
 export interface ContainerOptions {
