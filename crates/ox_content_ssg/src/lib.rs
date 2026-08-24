@@ -55,6 +55,7 @@
 //! ```
 
 mod assets;
+mod feeds;
 mod html;
 mod routes;
 mod site_maps;
@@ -63,6 +64,7 @@ mod vitepress;
 pub use assets::{
     ExternalizedAssets, GeneratedHtmlPage, SharedAsset, externalize_shared_page_assets,
 };
+pub use feeds::{FeedItem, FeedsOptions, FeedsOutput, generate_feeds};
 pub use html::{
     BarePageData, EntryPageConfig, FeatureConfig, HeroAction, HeroConfig, HeroImage,
     HeroNoticeConfig, LocaleInfo, NavGroup, NavItem, PageData, PagerOverride, SocialLink,

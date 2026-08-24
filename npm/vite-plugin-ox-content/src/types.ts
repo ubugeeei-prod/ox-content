@@ -395,6 +395,60 @@ export interface ResolvedSiteMapsOptions {
 }
 
 /**
+ * Opt-in RSS / Atom / JSON feeds written during SSG.
+ */
+export interface FeedsOptions {
+  /**
+   * Write `feed.xml` (RSS 2.0).
+   * @default true
+   */
+  rss?: boolean;
+
+  /**
+   * Write `atom.xml`.
+   * @default true
+   */
+  atom?: boolean;
+
+  /**
+   * Write `feed.json` (JSON Feed 1.1).
+   * @default true
+   */
+  json?: boolean;
+
+  /**
+   * Maximum number of items, newest first.
+   * @default 20
+   */
+  limit?: number;
+
+  /**
+   * Collection whose pages are listed. Defaults to `content`.
+   * @default 'content'
+   */
+  collection?: string;
+
+  /**
+   * Frontmatter field used to sort items.
+   * @default 'date'
+   */
+  dateField?: string;
+}
+
+/**
+ * Resolved feed options.
+ */
+export interface ResolvedFeedsOptions {
+  enabled: boolean;
+  rss: boolean;
+  atom: boolean;
+  json: boolean;
+  limit: number;
+  collection: string;
+  dateField: string;
+}
+
+/**
  * Options for the core `oxContent()` Vite plugin.
  *
  * The top-level options describe where content lives, which Markdown features
@@ -469,6 +523,18 @@ export interface OxContentOptions {
    * @default false
    */
   siteMaps?: boolean | SiteMapsOptions;
+
+  /**
+   * Write RSS, Atom, and JSON Feed files next to generated HTML.
+   *
+   * Off by default. `true` writes `feed.xml`, `atom.xml`, and `feed.json`.
+   * An object enables the feature and overrides only the fields you set.
+   * Requires `ssg.siteUrl`. When that is missing the build continues and a
+   * warning is emitted instead of writing files.
+   *
+   * @default false
+   */
+  feeds?: boolean | FeedsOptions;
 
   /**
    * Enable GitHub Flavored Markdown extensions.
@@ -785,6 +851,7 @@ export interface ResolvedOptions {
   extensions: string[];
   ssg: ResolvedSsgOptions;
   siteMaps?: ResolvedSiteMapsOptions;
+  feeds?: ResolvedFeedsOptions;
   gfm: boolean;
   footnotes: boolean;
   tables: boolean;

@@ -13,6 +13,7 @@ import { transformMarkdown } from "./transform";
 import { extractDocs, generateMarkdown, writeDocs, resolveDocsOptions } from "./docs";
 import { buildSsg, resolveSsgOptions } from "./ssg";
 import { resolveSiteMapsOptions } from "./site-maps";
+import { resolveFeedsOptions } from "./feeds";
 import {
   resolveSearchOptions,
   buildSearchIndex,
@@ -79,6 +80,8 @@ export type {
   ResolvedSsgOptions,
   SiteMapsOptions,
   ResolvedSiteMapsOptions,
+  FeedsOptions,
+  ResolvedFeedsOptions,
   SearchOptions,
   ResolvedSearchOptions,
   SearchDocument,
@@ -550,6 +553,7 @@ function resolveOptions(options: OxContentOptions): ResolvedOptions {
     extensions: normalizeMarkdownExtensions(options.extensions),
     ssg: resolveSsgOptions(options.ssg),
     siteMaps: resolveSiteMapsOptions(options.siteMaps),
+    feeds: resolveFeedsOptions(options.feeds),
     gfm: options.gfm ?? true,
     footnotes: options.footnotes ?? true,
     tables: options.tables ?? true,
@@ -942,6 +946,7 @@ export type {
 } from "./lint-files";
 export { buildSsg, resolveSsgOptions, DEFAULT_HTML_TEMPLATE } from "./ssg";
 export { resolveSiteMapsOptions } from "./site-maps";
+export { resolveFeedsOptions } from "./feeds";
 export { resolveSearchOptions, buildSearchIndex, writeSearchIndex } from "./search";
 export {
   buildCollectionManifest,

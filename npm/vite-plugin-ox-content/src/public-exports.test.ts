@@ -32,6 +32,7 @@ describe("public export surface", () => {
       "resolveI18nOptions",
       "resolveOgImageOptions",
       "resolveSearchOptions",
+      "resolveFeedsOptions",
       "resolveSiteMapsOptions",
       "resolveSsgOptions",
       "runDocsTests",

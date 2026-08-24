@@ -44,6 +44,14 @@ export const apiNav: NavItem[] = [
     "path": "/api/fallback-card"
   },
   {
+    "title": "Feeds",
+    "path": "/api/feeds"
+  },
+  {
+    "title": "Feeds Dates",
+    "path": "/api/feeds-dates"
+  },
+  {
     "title": "Highlight",
     "path": "/api/highlight"
   },

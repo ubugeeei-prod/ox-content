@@ -45,6 +45,7 @@ export default defineConfig(({ mode }) => {
         // Crawl manifests. siteUrl is set above, so these files are safe to
         // write for the deployed docs site.
         siteMaps: true,
+        feeds: true,
 
         // SSG options with theme customization
         ssg: {
@@ -106,6 +107,7 @@ export default defineConfig(({ mode }) => {
                       { text: "Site Generation", link: "/built-in/site-generation.md" },
                       { text: "Previous / Next", link: "/built-in/pagination.md" },
                       { text: "Sitemap / robots / llms.txt", link: "/built-in/site-maps.md" },
+                      { text: "RSS / Atom / JSON feeds", link: "/built-in/feeds.md" },
                     ],
                   },
                   { text: "Theming", link: "/theming.md" },

@@ -29,6 +29,7 @@ import { normalizeVitePressFrontmatter } from "./vitepress";
 import { renderPage } from "./theme-renderer";
 import type { PageData as ThemePageData } from "./theme-renderer";
 import { writeSiteMapFiles } from "./site-maps";
+import { feedDateFromFrontmatter, writeFeedFiles } from "./feeds";
 
 /**
  * Navigation item for SSG.
@@ -1087,5 +1088,24 @@ async function writeGeneratedPages(
   if (siteMaps.warning) {
     errors.push(siteMaps.warning);
     console.warn(siteMaps.warning);
+  }
+
+  const feeds = await writeFeedFiles({
+    outDir: context.outDir,
+    siteUrl: context.ssgOptions.siteUrl,
+    base: context.base,
+    siteName: context.siteName,
+    options: context.options.feeds,
+    items: pageResults.map((page) => ({
+      title: page.title,
+      loc: canonicalPageUrl(context, page.routePaths.urlPath) ?? "",
+      description: page.description,
+      date: feedDateFromFrontmatter(page.frontmatter, context.options.feeds?.dateField ?? "date"),
+    })),
+  });
+  generatedFiles.push(...feeds.files);
+  if (feeds.warning) {
+    errors.push(feeds.warning);
+    console.warn(feeds.warning);
   }
 }
