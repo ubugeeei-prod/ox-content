@@ -113,13 +113,13 @@ unified エコシステムで、Ox Content を rehype プラグインとして�
 
 Ox Content のネイティブパーサーの上で、カスタム mdast プラグインと既存の remark/unified プラグインを動かします。互換境界とブリッジの性能メモも文書化しています。
 
-### [unplugin markdown-it トークンブリッジ](./unplugin-markdown-it-token-bridge.md)
+### [unplugin markdown-it トークンブリッジ](/examples/unplugin-markdown-it-token-bridge.md)
 
 まず `markdown-it` プラグインを動かし、その結果のトークンストリームを下流の unified プラグインから読みます。
 
 ## ジェネレーターの例
 
-### [ソースドキュメント生成](./gen-source-docs.md)
+### [ソースドキュメント生成](/examples/gen-source-docs.md)
 
 JSDoc/TSDoc コメントから API ドキュメントを自動生成します。
 
@@ -135,7 +135,7 @@ oxContent({
 
 ## OG 画像の例
 
-### [OG Viewer](./og-viewer.md)
+### [OG Viewer](/examples/og-viewer.md)
 
 すべてのページの Open Graph メタデータをプレビューする開発ツールです。開発中は `/__og-viewer` で使えます。
 
