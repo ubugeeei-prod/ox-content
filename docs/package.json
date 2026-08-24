@@ -10,6 +10,7 @@
     "gallery": "node ../scripts/theme-gallery.mjs"
   },
   "devDependencies": {
+    "@ox-content/code-play": "workspace:*",
     "@ox-content/vite-plugin": "workspace:*",
     "vite": "catalog:",
     "vite-plus": "catalog:"

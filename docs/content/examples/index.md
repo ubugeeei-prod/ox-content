@@ -157,6 +157,11 @@ oxContent({
 
 ## Other Examples
 
+### [Code Play](./code-play.md)
+
+On-demand sample execution through `@ox-content/code-play`, with stdio, config,
+provenance, and timing viewers.
+
 ### [Playground](./playground.md)
 
 Interactive web playground for testing Markdown parsing.

@@ -1,0 +1,169 @@
+export interface PlayFence {
+  language: string;
+  meta: string;
+  code: string;
+  raw: string;
+  start: number;
+  end: number;
+  typecheck: boolean;
+}
+
+export interface ParsedFence {
+  language: string;
+  meta: string;
+  code: string;
+  raw: string;
+  start: number;
+  end: number;
+  indent: string;
+  marker: string;
+}
+
+const FENCE_OPEN = /^( {0,3})(`{3,}|~{3,})([^\n]*)$/;
+
+export function parseTopLevelFences(source: string): ParsedFence[] {
+  const lines = source.split("\n");
+  const fences: ParsedFence[] = [];
+  let index = 0;
+  let offset = 0;
+
+  while (index < lines.length) {
+    const line = lines[index] ?? "";
+    const open = FENCE_OPEN.exec(line);
+    if (!open) {
+      offset += line.length + 1;
+      index += 1;
+      continue;
+    }
+
+    const indent = open[1] ?? "";
+    const marker = open[2] ?? "```";
+    const info = (open[3] ?? "").trim();
+    const [language = "", ...metaParts] = splitInfo(info);
+    const start = offset;
+    index += 1;
+    offset += line.length + 1;
+    const body: string[] = [];
+
+    while (index < lines.length) {
+      const candidate = lines[index] ?? "";
+      const close = new RegExp(`^ {0,3}${escapeRegExp(marker)}[ \t]*$`).exec(candidate);
+      if (close) {
+        const raw = `${line}\n${body.join("\n")}${body.length > 0 ? "\n" : ""}${candidate}`;
+        fences.push({
+          language,
+          meta: metaParts.join(" "),
+          code: body.join("\n"),
+          raw,
+          start,
+          end: start + raw.length,
+          indent,
+          marker,
+        });
+        offset += candidate.length + 1;
+        index += 1;
+        break;
+      }
+      body.push(candidate);
+      offset += candidate.length + 1;
+      index += 1;
+    }
+  }
+
+  return fences;
+}
+
+export function parsePlayFences(source: string): PlayFence[] {
+  return parseTopLevelFences(source)
+    .filter((fence) => hasToken(fence.meta, "play"))
+    .map((fence) => ({
+      language: fence.language,
+      meta: fence.meta,
+      code: fence.code,
+      raw: fence.raw,
+      start: fence.start,
+      end: fence.end,
+      typecheck: hasToken(fence.meta, "typecheck"),
+    }));
+}
+
+export function stripPlayMeta(meta: string): string {
+  return meta
+    .split(/\s+/)
+    .filter(
+      (token) => token && token !== "play" && token !== "typecheck" && !token.startsWith("play-"),
+    )
+    .join(" ");
+}
+
+export function rewritePlayFences(
+  source: string,
+  encode: (fence: PlayFence) => string | null,
+): string {
+  const fences = parsePlayFences(source);
+  if (fences.length === 0) {
+    return source;
+  }
+
+  let cursor = 0;
+  let output = "";
+  for (const fence of fences) {
+    output += source.slice(cursor, fence.start);
+    const encoded = encode(fence);
+    if (encoded === null) {
+      output += source.slice(fence.start, fence.end);
+    } else {
+      const cleanedMeta = stripPlayMeta(fence.meta);
+      const info = [fence.language, cleanedMeta].filter(Boolean).join(" ");
+      output += `<!--ox-code-play:${encoded}-->\n\`\`\`${info}\n${fence.code}\n\`\`\``;
+    }
+    cursor = fence.end;
+  }
+  output += source.slice(cursor);
+  return output;
+}
+
+export function parseCodePlayTags(source: string): PlayFence[] {
+  const tags: PlayFence[] = [];
+  const pattern = /<CodePlay\b([^>]*)>([\s\S]*?)<\/CodePlay>/gi;
+  for (const match of source.matchAll(pattern)) {
+    const attrs = match[1] ?? "";
+    const language = readAttr(attrs, "lang") ?? readAttr(attrs, "language") ?? "text";
+    tags.push({
+      language,
+      meta: "play",
+      code: stripIndent((match[2] ?? "").replace(/^\n/, "").replace(/\n$/, "")),
+      raw: match[0] ?? "",
+      start: match.index ?? 0,
+      end: (match.index ?? 0) + (match[0]?.length ?? 0),
+      typecheck: /\btypecheck\b/i.test(attrs),
+    });
+  }
+  return tags;
+}
+
+function splitInfo(info: string): string[] {
+  return info.trim().split(/\s+/).filter(Boolean);
+}
+
+function hasToken(meta: string, token: string): boolean {
+  return meta.split(/\s+/).includes(token);
+}
+
+function escapeRegExp(value: string): string {
+  return value.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+}
+
+function readAttr(attrs: string, name: string): string | undefined {
+  const match = new RegExp(`(?:^|\\s)${name}\\s*=\\s*"([^"]+)"`, "i").exec(attrs);
+  return match?.[1];
+}
+
+function stripIndent(value: string): string {
+  const lines = value.split("\n");
+  const indents = lines
+    .filter((line) => line.trim())
+    .map((line) => line.match(/^ */)?.[0].length ?? 0);
+  const indent = indents.length > 0 ? Math.min(...indents) : 0;
+  return lines.map((line) => line.slice(indent)).join("\n");
+}

@@ -13,6 +13,7 @@ const ROOT = path.resolve(__dirname, "..");
 const NPM_PACKAGES = [
   "crates/ox_content_napi",
   "npm/ox-content-islands",
+  "npm/ox-content-code-play",
   "npm/unplugin-ox-content",
   "npm/vite-plugin-ox-content",
   "npm/vite-plugin-ox-content-react",
