@@ -36,6 +36,7 @@ describe("public export surface", () => {
       "resolvePublishStateOptions",
       "resolveRedirectsOptions",
       "resolveFeedsOptions",
+      "resolveTeamOptions",
       "resolveSiteMapsOptions",
       "resolvePermalinksOptions",
       "resolveCascadeOptions",

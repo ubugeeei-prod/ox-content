@@ -259,4 +259,6 @@ pub struct JsSsgPageData {
     pub next: Option<JsPagerOverride>,
     /// Frontmatter `breadcrumbs: false` hides the trail on this page.
     pub breadcrumbs: Option<bool>,
+    /// Frontmatter `layout`. `team` renders member cards when the option is on.
+    pub layout: Option<String>,
 }

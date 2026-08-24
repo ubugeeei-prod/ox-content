@@ -1537,6 +1537,8 @@ export interface JsSsgConfig {
   localePaths?: Array<JsLocalePath>
   /** Opt-in skip link and print styles. Presence enables the feature. */
   a11y?: JsA11y
+  /** Opt-in team / members page. Omitted stays off. */
+  team?: JsTeamOptions
 }
 
 /** Result of SSG shared asset extraction. */
@@ -1615,6 +1617,8 @@ export interface JsSsgPageData {
   next?: JsPagerOverride
   /** Frontmatter `breadcrumbs: false` hides the trail on this page. */
   breadcrumbs?: boolean
+  /** Frontmatter `layout`. `team` renders member cards when the option is on. */
+  layout?: string
 }
 
 /** Resolved SSG output and public route paths. */
@@ -1669,6 +1673,34 @@ export interface JsTabsTransformResult {
    * this amount so generated CSS covers exactly the emitted groups.
    */
   groupCount: number
+}
+
+/** One link on a team member card. */
+export interface JsTeamLink {
+  /** Visible label. */
+  label: string
+  /** Destination URL. */
+  href: string
+}
+
+/** One person on the team page. */
+export interface JsTeamMember {
+  /** Display name. */
+  name: string
+  /** Optional role or title. */
+  role?: string
+  /** Avatar URL. */
+  avatar?: string
+  /** Optional profile or social links. */
+  links?: Array<JsTeamLink>
+}
+
+/** Opt-in team / members page. Presence of the object enables the feature. */
+export interface JsTeamOptions {
+  /** When false, `layout: team` is ignored. */
+  enabled?: boolean
+  /** Members rendered as static cards. */
+  members?: Array<JsTeamMember>
 }
 
 /** Theme colors for JavaScript. */

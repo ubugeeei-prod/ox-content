@@ -99,6 +99,10 @@ export type {
   ResolvedReaderChrome,
   NotFoundOptions,
   ResolvedNotFoundOptions,
+  TeamLink,
+  TeamMember,
+  TeamOptions,
+  ResolvedTeamOptions,
   SiteMapsOptions,
   ResolvedSiteMapsOptions,
   PublishStateOptions,
@@ -1025,6 +1029,7 @@ export {
 export { resolvePermalinksOptions, resolveCascadeOptions } from "./permalinks";
 export { resolveRedirectsOptions } from "./redirects";
 export { resolveFeedsOptions } from "./feeds";
+export { resolveTeamOptions } from "./team";
 export { resolveSearchOptions, buildSearchIndex, writeSearchIndex } from "./search";
 export {
   buildCollectionManifest,

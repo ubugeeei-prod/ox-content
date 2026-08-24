@@ -19,6 +19,7 @@ import type {
   ResolvedReaderChrome,
   ResolvedSsgOptions,
   A11yOptions,
+  ResolvedTeamOptions,
   ReaderChromeOptions,
   SsgOptions,
   SsgNavigationGroup,
@@ -47,6 +48,7 @@ import {
 } from "./not-found";
 import { buildCollectionManifest } from "./collections";
 import { writeFeedFiles } from "./feeds";
+import { resolveTeamOptions } from "./team";
 
 /**
  * Navigation item for SSG.
@@ -131,6 +133,7 @@ export function resolveSsgOptions(ssg: SsgOptions | boolean | undefined): Resolv
       localeSwitcher: false,
       a11y: false,
       notFound: resolveNotFoundOptions(undefined),
+      team: resolveTeamOptions(undefined),
     };
   }
 
@@ -148,6 +151,7 @@ export function resolveSsgOptions(ssg: SsgOptions | boolean | undefined): Resolv
       localeSwitcher: false,
       a11y: false,
       notFound: resolveNotFoundOptions(undefined),
+      team: resolveTeamOptions(undefined),
       theme: resolveTheme(undefined),
     };
   }
@@ -172,6 +176,7 @@ export function resolveSsgOptions(ssg: SsgOptions | boolean | undefined): Resolv
     localeSwitcher: resolveLocaleSwitcherOption(ssg.localeSwitcher),
     a11y: resolveA11yOption(ssg.a11y),
     notFound: resolveNotFoundOptions(ssg.notFound),
+    team: resolveTeamOptions(ssg.team),
     siteUrl: ssg.siteUrl,
     theme: resolveTheme(ssg.theme),
     navigation: ssg.navigation,
@@ -404,6 +409,7 @@ export async function generateHtmlPage(
   localeSwitcher = false,
   localePaths?: SsgLocalePath[],
   a11y: ResolvedA11y = false,
+  team: ResolvedTeamOptions = { enabled: false, members: [] },
 ): Promise<string> {
   const mod = await importNapiModule();
 
@@ -469,6 +475,8 @@ export async function generateHtmlPage(
       prev: pageData.prev,
       next: pageData.next,
       breadcrumbs: pageData.breadcrumbs,
+      layout:
+        typeof pageData.frontmatter.layout === "string" ? pageData.frontmatter.layout : undefined,
     },
     navGroupsForRust,
     {
@@ -486,10 +494,11 @@ export async function generateHtmlPage(
             externalLinks: readerChrome.externalLinks,
             backToTop: readerChrome.backToTop,
           }
-        : undefined,
+          : undefined,
       localeSwitcher: localeSwitcher || undefined,
       localePaths,
       a11y: a11y ? { skipLinkLabel: a11y.skipLinkLabel } : undefined,
+      team,
     },
   );
 }
@@ -1196,6 +1205,7 @@ async function renderSsgPage(
     context.ssgOptions.localeSwitcher,
     localePaths,
     context.ssgOptions.a11y,
+    context.ssgOptions.team ?? { enabled: false, members: [] },
   );
 }
 

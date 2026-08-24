@@ -197,6 +197,8 @@ pub struct JsSsgConfig {
     /// Opt-in skip link and print styles. Presence enables the feature.
     #[napi(js_name = "a11y")]
     pub a11y: Option<JsA11y>,
+    /// Opt-in team / members page. Omitted stays off.
+    pub team: Option<JsTeamOptions>,
 }
 
 /// Opt-in skip link and print styles. Presence of the object enables the feature.
@@ -205,6 +207,40 @@ pub struct JsSsgConfig {
 pub struct JsA11y {
     /// Override for the skip-link label. Empty / omitted uses "Skip to content".
     pub skip_link_label: Option<String>,
+}
+
+/// One link on a team member card.
+#[napi(object)]
+#[derive(Clone, Default)]
+pub struct JsTeamLink {
+    /// Visible label.
+    pub label: String,
+    /// Destination URL.
+    pub href: String,
+}
+
+/// One person on the team page.
+#[napi(object)]
+#[derive(Clone, Default)]
+pub struct JsTeamMember {
+    /// Display name.
+    pub name: String,
+    /// Optional role or title.
+    pub role: Option<String>,
+    /// Avatar URL.
+    pub avatar: Option<String>,
+    /// Optional profile or social links.
+    pub links: Option<Vec<JsTeamLink>>,
+}
+
+/// Opt-in team / members page. Presence of the object enables the feature.
+#[napi(object)]
+#[derive(Clone, Default)]
+pub struct JsTeamOptions {
+    /// When false, `layout: team` is ignored.
+    pub enabled: Option<bool>,
+    /// Members rendered as static cards.
+    pub members: Option<Vec<JsTeamMember>>,
 }
 
 /// Opt-in reader chrome flags. Presence of the object enables the feature.

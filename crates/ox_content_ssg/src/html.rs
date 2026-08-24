@@ -14,6 +14,7 @@ mod pagination;
 mod reader_chrome;
 mod render;
 mod social;
+mod team;
 mod theme;
 mod theme_css;
 mod utils;
@@ -22,6 +23,7 @@ pub use a11y::A11y;
 use breadcrumbs::BreadcrumbsView;
 use pagination::PagerView;
 pub use reader_chrome::ReaderChrome;
+pub use team::{TeamLink, TeamMember, TeamOptions, render_team_page};
 
 pub use page::{
     EntryPageConfig, FeatureConfig, HeroAction, HeroConfig, HeroImage, HeroNoticeConfig,

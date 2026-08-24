@@ -188,6 +188,10 @@ export const apiNav: NavItem[] = [
     "path": "/api/tabs"
   },
   {
+    "title": "Team",
+    "path": "/api/team"
+  },
+  {
     "title": "Template",
     "path": "/api/template"
   },

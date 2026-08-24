@@ -76,9 +76,9 @@ pub use feeds::{FeedFormat, FeedItem, FeedsOptions, FeedsOutput, generate_feeds}
 pub use html::{
     A11y, BarePageData, EntryPageConfig, FeatureConfig, HeroAction, HeroConfig, HeroImage,
     HeroNoticeConfig, LocaleInfo, LocalePath, NavGroup, NavItem, PageData, PagerOverride,
-    ReaderChrome, SocialLink, SocialLinks, SsgConfig, ThemeColors, ThemeConfig, ThemeEmbed,
-    ThemeEntryPage, ThemeFonts, ThemeFooter, ThemeHeader, ThemeLayout, TocEntry,
-    generate_bare_html, generate_bare_page, generate_html,
+    ReaderChrome, SocialLink, SocialLinks, SsgConfig, TeamLink, TeamMember, TeamOptions,
+    ThemeColors, ThemeConfig, ThemeEmbed, ThemeEntryPage, ThemeFonts, ThemeFooter, ThemeHeader,
+    ThemeLayout, TocEntry, generate_bare_html, generate_bare_page, generate_html, render_team_page,
 };
 pub use permalinks::{
     CascadeOptions, PermalinksOptions, ResolvedRoutePage, RoutePage, RouteResolveOutput,

@@ -9,6 +9,7 @@ use super::nav::generate_nav_html;
 use super::pagination::resolve_pager;
 use super::reader_chrome::{READER_CHROME_CSS, READER_CHROME_JS, apply_reader_chrome};
 use super::social::{generate_mobile_social_links_html, generate_social_links_html};
+use super::team::TEAM_CSS;
 use super::theme_css::generate_theme_css;
 use super::utils::{
     format_last_updated, generate_toc_html, html_locale_attrs, page_content_contains_any,
@@ -75,6 +76,9 @@ pub fn generate_html(page_data: &PageData, nav_groups: &[NavGroup], config: &Ssg
     }
     if page_content_contains_any(&page_data.content, &["data-ox-island", "ox-island"]) {
         css_sections.push(wrap_css_section("plugin-island", ISLAND_CSS));
+    }
+    if page_content_contains_any(&page_data.content, &["ox-team"]) {
+        css_sections.push(wrap_css_section("team", TEAM_CSS));
     }
     if has_footer {
         css_sections.push(wrap_css_section("footer", footer_css));

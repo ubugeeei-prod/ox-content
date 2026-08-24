@@ -370,6 +370,7 @@ async function renderPage(
     options.ssg.localeSwitcher,
     undefined,
     options.ssg.a11y,
+    options.ssg.team ?? { enabled: false, members: [] },
   );
 
   // Inject Vite HMR client for live reload

@@ -6,7 +6,7 @@ use napi_derive::napi;
 use crate::{
     JsA11y, JsReaderChrome, JsSsgBarePage, JsSsgConfig, JsSsgExternalizedAssets,
     JsSsgGeneratedHtmlPage, JsSsgNavGroup, JsSsgNavigationGroup, JsSsgPageData, JsSsgRoutePaths,
-    JsSsgSidebarItem,
+    JsSsgSidebarItem, JsTeamOptions,
 };
 
 mod converters;
@@ -173,10 +173,13 @@ pub fn generate_ssg_html(
     config: JsSsgConfig,
 ) -> String {
     // Convert NAPI types to ox_content_ssg types
+    let layout = page_data.layout.unwrap_or_default();
+    let content =
+        ox_content_ssg::render_team_page(&convert_team(config.team), &layout, &page_data.content);
     let ssg_page_data = ox_content_ssg::PageData {
         title: page_data.title,
         description: page_data.description,
-        content: page_data.content,
+        content,
         toc: flatten_toc_entries(page_data.toc),
         last_updated: page_data
             .last_updated
@@ -237,6 +240,34 @@ fn convert_a11y(a11y: Option<JsA11y>) -> ox_content_ssg::A11y {
         Some(a11y) => {
             ox_content_ssg::A11y { skip_link_label: Some(a11y.skip_link_label.unwrap_or_default()) }
         }
+    }
+}
+
+fn convert_team(team: Option<JsTeamOptions>) -> ox_content_ssg::TeamOptions {
+    match team {
+        None => ox_content_ssg::TeamOptions::disabled(),
+        Some(team) => ox_content_ssg::TeamOptions {
+            enabled: team.enabled.unwrap_or(true),
+            members: team
+                .members
+                .unwrap_or_default()
+                .into_iter()
+                .map(|member| ox_content_ssg::TeamMember {
+                    name: member.name,
+                    role: member.role,
+                    avatar: member.avatar,
+                    links: member.links.map(|links| {
+                        links
+                            .into_iter()
+                            .map(|link| ox_content_ssg::TeamLink {
+                                label: link.label,
+                                href: link.href,
+                            })
+                            .collect()
+                    }),
+                })
+                .collect(),
+        },
     }
 }
 

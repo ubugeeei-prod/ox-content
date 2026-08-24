@@ -358,6 +358,17 @@ export interface SsgOptions {
   notFound?: boolean | NotFoundOptions;
 
   /**
+   * Render a static members card grid on pages with `layout: team`.
+   *
+   * Off by default. `true` enables an empty list. An object enables the
+   * feature and supplies `members`. When the option is off, `layout: team`
+   * is ignored and the page stays ordinary.
+   *
+   * @default false
+   */
+  team?: boolean | TeamOptions;
+
+  /**
    * Absolute site URL used when generating social metadata.
    *
    * Set this when pages need absolute Open Graph image URLs. Include the origin
@@ -491,6 +502,10 @@ export interface ResolvedSsgOptions {
    * Present after `resolveSsgOptions`. Omitted in hand-built fixtures means off.
    */
   notFound?: ResolvedNotFoundOptions;
+  /**
+   * Present after `resolveSsgOptions`. Omitted in hand-built fixtures means off.
+   */
+  team?: ResolvedTeamOptions;
   siteUrl?: string;
   theme?: ResolvedThemeConfig;
   navigation?: SsgNavigationGroup[];
@@ -520,6 +535,49 @@ export interface ResolvedNotFoundOptions {
   enabled: boolean;
   source: string;
   output: string;
+}
+
+/**
+ * One link on a team member card.
+ */
+export interface TeamLink {
+  /** Visible label. Escaped in HTML. */
+  label: string;
+  /** Destination. Only `https:` or a site-relative `/` path is emitted. */
+  href: string;
+}
+
+/**
+ * One person on the team page.
+ */
+export interface TeamMember {
+  /** Display name. Escaped in HTML. */
+  name: string;
+  /** Optional role or title. Escaped in HTML. */
+  role?: string;
+  /** Avatar URL. Only `https:` or a site-relative `/` path is emitted. */
+  avatar?: string;
+  /** Optional profile or social links. */
+  links?: TeamLink[];
+}
+
+/**
+ * Opt-in team / members page.
+ */
+export interface TeamOptions {
+  /**
+   * People rendered as static cards on `layout: team` pages.
+   * @default []
+   */
+  members?: TeamMember[];
+}
+
+/**
+ * Resolved team page options.
+ */
+export interface ResolvedTeamOptions {
+  enabled: boolean;
+  members: TeamMember[];
 }
 
 /**
