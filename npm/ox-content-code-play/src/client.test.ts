@@ -1,7 +1,13 @@
 import { describe, expect, it } from "vite-plus/test";
 import { createCodePlay } from "./client";
 import { stripTypeScript } from "./strip-typescript";
-import { parseTsgoOutput } from "./typescript";
+import { createMemoryTransport } from "./transport";
+import {
+  adapterResultFromTypecheckResponse,
+  parseTsgoOutput,
+  typecheckEndpointFailureMessage,
+} from "./typescript";
+import { PhaseTracker } from "./timing";
 import { renderStderrHtml } from "./viewers";
 
 describe("createCodePlay", () => {
@@ -84,6 +90,37 @@ describe("createCodePlay", () => {
     expect(result.stdio.filter((event) => event.stream === "stdout")).toEqual([
       expect.objectContaining({ text: "out\n" }),
     ]);
+  });
+
+  it("times out infinite JavaScript loops in node:vm", async () => {
+    const play = createCodePlay({ languages: { javascript: true }, timeoutMs: 50 });
+    const result = await play.createSession({ language: "js", code: "while (true) {}" }).run();
+    expect(result.status).toBe("timeout");
+    expect(result.diagnostics[0]?.message.length).toBeGreaterThan(0);
+  });
+
+  it("turns transport throws into error results instead of rejecting", async () => {
+    const play = createCodePlay({
+      languages: { rust: true },
+      transport: createMemoryTransport(() => {
+        throw new Error("offline");
+      }),
+    });
+    const result = await play.createSession({ language: "rust", code: "fn main() {}" }).run();
+    expect(result.status).toBe("error");
+    expect(result.diagnostics[0]?.message).toBe("offline");
+  });
+
+  it("explains a missing static-host typecheck endpoint", () => {
+    expect(typecheckEndpointFailureMessage(404, "")).toMatch(/vite dev/);
+    const tracker = new PhaseTracker();
+    const result = adapterResultFromTypecheckResponse(
+      { ok: false, status: 404, text: "" },
+      "/__ox-code-play/typecheck",
+      tracker,
+    );
+    expect(result.status).toBe("error");
+    expect(result.diagnostics[0]?.message).toMatch(/endpoints\.typecheck/);
   });
 
   it("strips TypeScript annotations before execute", () => {

@@ -1,5 +1,6 @@
 import { executeAdapter, typecheckAdapter } from "./adapters";
 import { mergeConfig } from "./config";
+import { errorMessage, errorResult } from "./result";
 import { withStdioText } from "./stdio";
 import type {
   AdapterRequest,
@@ -85,9 +86,17 @@ export class CodePlaySession {
       loadTypeScript: this.loadTypeScript,
       endpoints: this.endpoints,
     };
-    const result = withStdioText(
-      action === "typecheck" ? await typecheckAdapter(request) : await executeAdapter(request),
-    );
+    try {
+      const result = withStdioText(
+        action === "typecheck" ? await typecheckAdapter(request) : await executeAdapter(request),
+      );
+      return this.finish(result);
+    } catch (error) {
+      return this.finish(errorResult(errorMessage(error)));
+    }
+  }
+
+  private finish(result: RunResult): RunResult {
     this.lastResult = result;
     for (const event of result.stdio) {
       this.emit("stdio", event);

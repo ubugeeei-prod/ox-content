@@ -1,3 +1,4 @@
+import { hasNodeVm } from "./runtime-host";
 import { formatConsoleArgs, StdioBuffer } from "./stdio";
 import { nowMs, PhaseTracker } from "./timing";
 import type { AdapterRequest, AdapterResult, Diagnostic } from "./types";
@@ -66,10 +67,6 @@ export async function executeScript(
     });
   }
   return value;
-}
-
-function hasNodeVm(): boolean {
-  return typeof process !== "undefined" && Boolean(process.versions?.node);
 }
 
 function isTimeout(error: unknown): boolean {

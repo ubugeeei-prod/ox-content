@@ -14,6 +14,7 @@ export type { CodePlayPluginOptions } from "./plugin";
 export { CodePlaySession } from "./session";
 export { joinStream, selectStream, withStdioText } from "./stdio";
 export { createFetchTransport, createMemoryTransport } from "./transport";
+export { bootCodePlay } from "./boot";
 export { hydrateCodePlay, mountCodePlay } from "./hydrate";
 export { renderPlayUi } from "./ui";
 export {

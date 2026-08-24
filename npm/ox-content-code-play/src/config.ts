@@ -89,8 +89,8 @@ export function mergeConfig(
 ): Record<string, unknown> {
   const definition = resolveLanguage(languageId);
   return {
-    ...(definition?.defaultConfig ?? {}),
-    ...(enabled?.config ?? {}),
+    ...definition?.defaultConfig,
+    ...enabled?.config,
     ...override,
   };
 }

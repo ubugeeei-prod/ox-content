@@ -1,7 +1,6 @@
 import { readFile, writeFile } from "node:fs/promises";
 import { existsSync, readFileSync, readdirSync, statSync } from "node:fs";
 import path from "node:path";
-import { fileURLToPath } from "node:url";
 import type { Plugin, ViteDevServer } from "vite";
 import { resolveLanguage } from "./catalog";
 import {
@@ -13,6 +12,11 @@ import { enhanceGeneratedModule, enhancePlayHtml } from "./html";
 import { parseCodePlayTags, parsePlayFences, rewritePlayFences } from "./markdown";
 import { decodePayload, encodePayload } from "./payload";
 import { payloadFromFence } from "./payload-factory";
+import {
+  assertBrowserClientSource,
+  resolveClientFile,
+  resolveHydrateSpecifier,
+} from "./plugin-client";
 import { proxy, typecheckProxy } from "./plugin-proxy";
 
 export type CodePlayPluginOptions = RawCodePlayOptions;
@@ -93,7 +97,7 @@ export function codePlay(options: CodePlayPluginOptions = {}): Plugin {
             return next();
           }
           res.setHeader("Content-Type", "text/javascript; charset=utf-8");
-          res.end(await readFile(file, "utf8"));
+          res.end(assertBrowserClientSource(await readFile(file, "utf8")));
           return;
         }
         interceptHtml(res, (html) =>
@@ -111,7 +115,7 @@ export function codePlay(options: CodePlayPluginOptions = {}): Plugin {
       this.emitFile({
         type: "asset",
         fileName: "ox-code-play.js",
-        source: await readFile(file, "utf8"),
+        source: assertBrowserClientSource(await readFile(file, "utf8")),
       });
     },
 
@@ -293,18 +297,6 @@ function walkFiles(dir: string): string[] {
     }
   }
   return files;
-}
-
-function resolveClientFile(): string | undefined {
-  const candidates = [
-    fileURLToPath(new URL("./hydrate.mjs", import.meta.url)),
-    fileURLToPath(new URL("./hydrate.js", import.meta.url)),
-  ];
-  return candidates.find((candidate) => existsSync(candidate));
-}
-
-function resolveHydrateSpecifier(): string {
-  return resolveClientFile() ?? fileURLToPath(new URL("./hydrate.ts", import.meta.url));
 }
 
 function normalizeBase(base: string): string {

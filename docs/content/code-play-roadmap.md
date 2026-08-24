@@ -56,22 +56,22 @@ injected transports (no live network in CI).
 
 ### 1b. `feat(code-play): dedicated stderr viewer`
 
-This PR. First-class `RunResult.stdout` / `RunResult.stderr`, a dedicated
-stderr viewer (stream chunks plus error/warning diagnostics), and compact
-preset coverage for stderr.
+Shipped in #662. First-class `RunResult.stdout` / `RunResult.stderr`, a
+dedicated stderr viewer, and compact preset coverage for stderr.
 
 ### 2. `feat(code-play): Vite SSG hydration and docs dogfood`
 
-Docs example page, package guide, and `examples/code-play` ship with this
-work. Remaining: a visual check that the default preset hydrates on the
-written SSG HTML in CI.
+Docs example page, package guide, and `examples/code-play` shipped in #697.
+This PR emits a standalone `ox-code-play.js` that calls `bootCodePlay()` so
+SSG pages become interactive. One malformed widget or a thrown run no longer
+freezes the toolbar. Remaining: a visual check that the default preset
+hydrates on the written SSG HTML in CI.
 
 ### 3. `feat(code-play): official playground proxies`
 
-This PR. Keep the `/__ox-code-play/rust`, `/__ox-code-play/go`, and
-`/__ox-code-play/typecheck` dev proxies. Reject non-POST requests, oversize
-bodies, and non-http(s) destinations; return generic JSON errors; document
-production `endpoints`.
+Shipped in #663. Dev proxies stay POST-only, cap bodies, refuse non-http(s)
+destinations, and hide upstream fetch details. Production pages must set
+`endpoints` (the proxy is not in SSG output).
 
 ### 4. `feat(code-play): framework preview compilers`
 

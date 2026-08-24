@@ -13,7 +13,7 @@ export function payloadFromFence(fence: PlayFence, options: ResolvedCodePlayOpti
       execute: enabled?.execute ?? Boolean(definition?.capabilities.execute),
       typecheck: fence.typecheck || (enabled?.typecheck ?? false),
     },
-    config: { ...(definition?.defaultConfig ?? {}), ...(enabled?.config ?? {}) },
+    config: { ...definition?.defaultConfig, ...enabled?.config },
     viewers: options.viewers,
     ui: options.ui,
     timeoutMs: options.timeoutMs,

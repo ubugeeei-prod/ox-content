@@ -1,5 +1,7 @@
 import { createCodePlay, type CodePlayClient } from "./client";
+import { readPlayPayload, runPlayAction } from "./hydrate-action";
 import { decodePayload, encodePayload } from "./payload";
+import { errorMessage, errorResult } from "./result";
 import { CODE_PLAY_STYLES } from "./styles";
 import { renderPlayUi } from "./ui";
 import type { PlayPayload, RunResult } from "./types";
@@ -25,7 +27,11 @@ export function hydrateCodePlay(
   ensureStyles();
   const client = options.client ?? createCodePlayFromPayloads(root);
   for (const element of queryWidgets(root)) {
-    mountCodePlay(element, { client });
+    try {
+      mountCodePlay(element, { client });
+    } catch {
+      // One broken widget must not abort the rest of the page.
+    }
   }
 }
 
@@ -33,8 +39,8 @@ export function mountCodePlay(element: Element, options: { client?: CodePlayClie
   if (!(element instanceof HTMLElement) || element.dataset.oxCodePlayMounted === "true") {
     return;
   }
-  const payload = decodePayload(element.getAttribute("data-ox-code-play") ?? "");
-  if (payload.ui === "headless") {
+  const payload = readPlayPayload(element.getAttribute("data-ox-code-play") ?? "");
+  if (!payload || payload.ui === "headless") {
     return;
   }
   const client =
@@ -90,10 +96,12 @@ function bindWidget(element: HTMLElement, payload: PlayPayload, client: CodePlay
   });
 
   async function run(action: "execute" | "typecheck"): Promise<void> {
-    setBusy(element, true);
-    const result = action === "typecheck" ? await session.typecheck() : await session.run();
-    paintResult(element, current, result);
-    setBusy(element, false);
+    await runPlayAction({
+      action: () => (action === "typecheck" ? session.typecheck() : session.run()),
+      setBusy: (busy) => setBusy(element, busy),
+      onResult: (result) => paintResult(element, current, result),
+      onError: (error) => paintResult(element, current, errorResult(errorMessage(error))),
+    });
   }
 }
 
