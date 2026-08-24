@@ -10,6 +10,7 @@ use crate::{
 
 mod attr_tokens;
 mod attributes;
+mod badges;
 pub mod code_blocks;
 mod code_imports;
 mod containers;
@@ -40,6 +41,7 @@ pub struct TransformFeatureOptions {
     code_imports: Option<ResolvedCodeImportOptions>,
     containers: Option<ResolvedContainerOptions>,
     includes: Option<ResolvedIncludeOptions>,
+    badges: bool,
     attributes: bool,
     edit_this_page: Option<ResolvedEditThisPageOptions>,
 }
@@ -82,6 +84,7 @@ impl TransformFeatureOptions {
         let attributes = resolve_attrs(options.attributes.as_ref());
         let containers = containers::resolve(options.containers.as_ref());
         let includes = includes::resolve(options.includes.as_ref(), source_path);
+        let badges = badges::resolve(options.badges.as_ref());
         let edit_this_page = resolve_edit_this_page(
             options.edit_this_page.as_ref(),
             source_path.unwrap_or_default(),
@@ -93,6 +96,7 @@ impl TransformFeatureOptions {
             code_imports,
             containers,
             includes,
+            badges,
             attributes,
             edit_this_page,
         }
@@ -104,6 +108,7 @@ impl TransformFeatureOptions {
             || self.code_imports.is_some()
             || self.containers.is_some()
             || self.includes.is_some()
+            || self.badges
     }
 
     pub fn has_postprocess(&self) -> bool {
@@ -162,6 +167,15 @@ pub fn preprocess_markdown<'a>(
         && current.contains(":::")
     {
         current = Cow::Owned(containers::transform(&current, containers));
+    }
+
+    if options.badges && current.contains("{badge:") {
+        let replaced = transform_markdown_text_segments(&current, |segment, out| {
+            badges::replace(segment, out);
+        });
+        if let Some(replaced) = replaced {
+            current = Cow::Owned(replaced);
+        }
     }
 
     PreprocessResult { source: current, errors }

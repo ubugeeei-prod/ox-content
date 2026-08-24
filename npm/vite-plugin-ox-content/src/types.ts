@@ -530,6 +530,16 @@ export interface OxContentOptions {
   attrs?: boolean | AttrsOptions;
 
   /**
+   * Opt-in `{badge:variant}` inline badges.
+   *
+   * Passing `true` or an options object enables the built-in variants.
+   * Badge text is HTML-escaped. Fenced, indented, and inline code are skipped.
+   *
+   * @default false
+   */
+  badges?: boolean | BadgeOptions;
+
+  /**
    * Opt-in `::: tip` custom containers.
    *
    * GitHub-style `> [!NOTE]` callouts stay available without this option.
@@ -736,6 +746,7 @@ export interface ResolvedOptions {
   wikiLinks: ResolvedWikiLinkOptions;
   emojiShortcodes: ResolvedEmojiShortcodeOptions;
   attrs: ResolvedAttrsOptions;
+  badges: ResolvedBadgeOptions;
   containers: ResolvedContainerOptions;
   codeImports: ResolvedCodeImportOptions;
   includes: ResolvedIncludeOptions;
@@ -845,6 +856,25 @@ export interface ResolvedBuiltinEmbedOptions {
   twitter: TwitterEmbedOptions | false;
   bluesky: boolean;
   webContainer: boolean;
+}
+
+/**
+ * Options for opt-in `{badge:variant}` inline badges.
+ */
+export interface BadgeOptions {
+  /**
+   * Enable the badge transform when an options object is supplied.
+   *
+   * @default true
+   */
+  enabled?: boolean;
+}
+
+/**
+ * Resolved inline-badge transform options.
+ */
+export interface ResolvedBadgeOptions {
+  enabled: boolean;
 }
 
 /**

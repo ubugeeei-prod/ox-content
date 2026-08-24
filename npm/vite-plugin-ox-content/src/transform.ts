@@ -256,6 +256,10 @@ interface JsTransformOptions {
     enabled?: boolean;
   };
 
+  badges?: {
+    enabled?: boolean;
+  };
+
   containers?: {
     enabled?: boolean;
     types?: Record<string, { title?: string; tag?: string }>;
@@ -516,6 +520,7 @@ export async function transformMarkdown(
         }
       : undefined,
     attributes: options.attrs?.enabled ? { enabled: true } : undefined,
+    badges: options.badges?.enabled ? { enabled: true } : undefined,
     containers: options.containers?.enabled
       ? {
           enabled: true,

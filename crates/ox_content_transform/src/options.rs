@@ -31,6 +31,13 @@ pub struct TransformOptions {
     pub containers: Option<ContainerOptions>,
     /// Opt-in Markdown file includes. Disabled when omitted.
     pub includes: Option<IncludeOptions>,
+    /// Opt-in `{badge:variant}` inline badges. Disabled when omitted.
+    pub badges: Option<BadgeOptions>,
+}
+
+#[derive(Clone, Default)]
+pub struct BadgeOptions {
+    pub enabled: Option<bool>,
 }
 
 #[derive(Clone, Default)]

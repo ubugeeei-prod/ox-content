@@ -36,6 +36,12 @@ pub(super) fn transform_markdown_text_segments(
             continue;
         }
 
+        if is_indented_code_line(line) {
+            out.push_str(line);
+            out.push_str(ending);
+            continue;
+        }
+
         let before_len = out.len();
         transform_inline_code_segments(line, &mut out, &mut transform);
         let appended = &out[before_len..];
@@ -105,6 +111,10 @@ pub(super) fn is_closing_fence(line: &str, fence_char: u8, fence_len: usize) -> 
     bytes.len() >= fence_len
         && bytes[..fence_len].iter().all(|value| *value == fence_char)
         && bytes[fence_len..].iter().all(|value| *value == fence_char)
+}
+
+fn is_indented_code_line(line: &str) -> bool {
+    line.starts_with('\t') || line.starts_with("    ")
 }
 
 fn count_repeated_byte(bytes: &[u8], start: usize, byte: u8) -> usize {

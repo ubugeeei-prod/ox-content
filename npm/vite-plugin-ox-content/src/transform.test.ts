@@ -90,6 +90,28 @@ describe("transformMarkdown", () => {
     expect(result.html).toMatchSnapshot();
   });
 
+  it("leaves {badge} markup literal unless opted in", async () => {
+    const markdown = "{badge:tip}Beta{/badge}";
+
+    const defaultResult = await transformMarkdown(
+      markdown,
+      "docs/badges.md",
+      createResolvedOptions(),
+    );
+    expect(defaultResult.html).not.toContain("ox-badge");
+    expect(defaultResult.html).toContain("{badge:tip}Beta{/badge}");
+
+    const enabledResult = await transformMarkdown(
+      markdown,
+      "docs/badges.md",
+      createResolvedOptions({
+        badges: { enabled: true },
+      }),
+    );
+    expect(enabledResult.html).toContain('<span class="ox-badge ox-badge--tip">Beta</span>');
+    expect(enabledResult.html).not.toContain("{badge:tip}");
+  });
+
   it("leaves ::: containers literal unless opted in", async () => {
     const markdown = "::: tip\nHello **world**\n:::\n";
 
@@ -261,6 +283,7 @@ function createResolvedOptions(overrides: Partial<ResolvedOptions> = {}): Resolv
     wikiLinks: { enabled: false, baseUrl: "/" },
     emojiShortcodes: { enabled: false, custom: {} },
     attrs: { enabled: false },
+    badges: { enabled: false },
     containers: { enabled: false, types: {} },
     codeImports: { enabled: false },
     includes: { enabled: false },

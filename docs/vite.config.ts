@@ -89,7 +89,9 @@ export default defineConfig(({ mode }) => {
                     items: [
                       { text: "Markdown Baseline", link: "/built-in/markdown.md" },
                       { text: "Syntax Extensions", link: "/built-in/syntax-extensions.md" },
+                      { text: "Custom Containers", link: "/built-in/containers.md" },
                       { text: "File Includes", link: "/built-in/includes.md" },
+                      { text: "Inline Badges", link: "/built-in/badges.md" },
                       { text: "Code Blocks", link: "/built-in/code-blocks.md" },
                       { text: "Embeds", link: "/built-in/embeds.md" },
                       { text: "Mermaid Diagrams", link: "/built-in/mermaid.md" },
@@ -179,6 +181,7 @@ export default defineConfig(({ mode }) => {
         // inside raw HTML <code> emitted by the generated API reference.)
         emojiShortcodes: true,
         cjkEmphasis: true,
+        badges: true,
         codeImports: true,
         includes: true,
         embeds: {

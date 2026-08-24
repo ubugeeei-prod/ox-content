@@ -45,6 +45,8 @@ export type {
   ResolvedEmojiShortcodeOptions,
   AttrsOptions,
   ResolvedAttrsOptions,
+  BadgeOptions,
+  ResolvedBadgeOptions,
   ContainerOptions,
   ContainerTypeOptions,
   ResolvedContainerOptions,
@@ -552,6 +554,7 @@ function resolveOptions(options: OxContentOptions): ResolvedOptions {
     wikiLinks: resolveWikiLinkOptions(options.wikiLinks, options.base ?? "/"),
     emojiShortcodes: resolveEmojiShortcodeOptions(options.emojiShortcodes),
     attrs: resolveAttrsOptions(options.attrs),
+    badges: resolveBadgeOptions(options.badges),
     containers: resolveContainerOptions(options.containers),
     codeImports: resolveCodeImportOptions(options.codeImports),
     includes: resolveIncludeOptions(options.includes),
@@ -645,6 +648,14 @@ function resolveEmojiShortcodeOptions(
 }
 
 function resolveAttrsOptions(options: OxContentOptions["attrs"]): ResolvedOptions["attrs"] {
+  if (!options) return { enabled: false };
+  if (options === true) return { enabled: true };
+  return { enabled: options.enabled ?? true };
+}
+
+export function resolveBadgeOptions(
+  options: OxContentOptions["badges"],
+): ResolvedOptions["badges"] {
   if (!options) return { enabled: false };
   if (options === true) return { enabled: true };
   return { enabled: options.enabled ?? true };

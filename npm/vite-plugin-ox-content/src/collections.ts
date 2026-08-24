@@ -35,6 +35,7 @@ type NativeTransformOptions = {
   wikiLinks?: { enabled?: boolean; baseUrl?: string };
   emojiShortcodes?: { enabled?: boolean; custom?: Record<string, string> };
   attributes?: { enabled?: boolean };
+  badges?: { enabled?: boolean };
   cjkEmphasis?: boolean;
   codeImports?: { enabled?: boolean; rootDir?: string };
   includes?: { enabled?: boolean; rootDir?: string };
@@ -172,6 +173,7 @@ function createNativeTransformOptions(options: ResolvedOptions): NativeTransform
         }
       : undefined,
     attributes: options.attrs?.enabled ? { enabled: true } : undefined,
+    badges: options.badges?.enabled ? { enabled: true } : undefined,
     containers: options.containers?.enabled
       ? {
           enabled: true,

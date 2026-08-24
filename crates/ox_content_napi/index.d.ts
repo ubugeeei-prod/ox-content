@@ -333,6 +333,16 @@ export interface JsAttrsOptions {
   enabled?: boolean
 }
 
+/** Opt-in `{badge:variant}` inline badges. */
+export interface JsBadgeOptions {
+  /**
+   * Enable `{badge:variant}text{/badge}` expansion.
+   *
+   * Default: `false`.
+   */
+  enabled?: boolean
+}
+
 export interface JsBuildCollectionManifestOptions {
   /** Source directory containing Markdown files. */
   srcDir: string
@@ -1848,6 +1858,12 @@ export interface JsTransformOptions {
    * Default: disabled.
    */
   includes?: JsIncludeOptions
+  /**
+   * Opt-in `{badge:variant}` inline badges.
+   *
+   * Default: disabled.
+   */
+  badges?: JsBadgeOptions
 }
 
 /** Type parameter documentation (`<T extends C = D>`) used by generated API docs. */

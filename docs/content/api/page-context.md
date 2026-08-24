@@ -326,8 +326,7 @@
 <div class="ox-api-entry__example">
 <div class="ox-api-entry__example-heading">Example 1</div>
 <pre><code class="language-tsx">// theme/Layout.tsx
-import { usePageProps, PageProps } from &#39;@ox-content/vite-plugin&#39;;
-
+import { usePageProps, PageProps } from &#39;@ox-content/vite-plugin&#39;;&#10;
 export function Layout({ children }: { children: JSX.Element }) {
   const page = usePageProps&lt;MyPageProps&gt;();
   return (
