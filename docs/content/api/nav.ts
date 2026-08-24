@@ -200,12 +200,8 @@ export const apiNav: NavItem[] = [
     "path": "/api/taxonomies"
   },
   {
-    "title": "Versions",
-    "path": "/api/versions"
-  },
-  {
-    "title": "Versions Html",
-    "path": "/api/versions-html"
+    "title": "Taxonomies Html",
+    "path": "/api/taxonomies-html"
   },
   {
     "title": "Team",
@@ -242,6 +238,14 @@ export const apiNav: NavItem[] = [
   {
     "title": "Types",
     "path": "/api/types"
+  },
+  {
+    "title": "Versions",
+    "path": "/api/versions"
+  },
+  {
+    "title": "Versions Html",
+    "path": "/api/versions-html"
   },
   {
     "title": "Vitepress",
