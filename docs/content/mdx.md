@@ -10,12 +10,12 @@ It is worth understanding how this works, because it differs from "classic" MDX:
 
 - **JSX elements and module-level `import` / `export` parse when MDX is
   enabled.** With `mdx: true` / `ParserOptions.mdx`, the Rust parser turns
-  PascalCase tags into `MdxJsxFlowElement` / `MdxJsxTextElement` nodes
-  (self-closing or simple open/close, with literal, boolean, and `{expr}`
-  attributes), and turns file-level `import` / `export` into `MdxjsEsm`
-  nodes (raw source, not evaluated). `.md` stays CommonMark + GFM unless
-  that option is on. `{expression}` children, fragments, and spreads are
-  not parsed yet.
+  PascalCase and member-name tags into `MdxJsxFlowElement` /
+  `MdxJsxTextElement` nodes (self-closing or open/close, with literal,
+  boolean, `{expr}`, and spread attributes), and turns file-level
+  `import` / `export` into `MdxjsEsm` nodes. Fragments (`<>...</>`), JSX
+  comments, and `{expression}` children are stored as AST source. Nothing
+  is evaluated. `.md` stays CommonMark + GFM unless that option is on.
 - **Components are resolved by a framework plugin**, not the renderer. The
   React/Vue/Svelte plugins scan the content for PascalCase component tags,
   replace them with **island** placeholders, and hydrate them on the client.
@@ -72,12 +72,23 @@ Regular **Markdown** prose.
 <Callout type="tip">
   This child content is passed to the component.
 </Callout>
+
+<>
+  <Icons.Star />
+  {label}
+</>
+
+<Card {...cardProps} />
+
+{/* Hidden from the rendered page */}
 ```
 
 Only tags that start with an uppercase letter are treated as JSX / components,
-so ordinary HTML (`<div>`, `<span>`, …) stays raw HTML. Tags inside fenced
-code blocks and inline code are **not** components, so you can document
-component usage without it being executed.
+so ordinary HTML (`<div>`, `<span>`, …) stays raw HTML. Member names
+(`Foo.Bar`), fragments (`<>...</>`), spreads (`{...props}`), JSX comments
+(`{/* note */}`), and `{expression}` children are parsed when MDX is on;
+expression source is stored and not run. Tags inside fenced code blocks and
+inline code are **not** components.
 
 Module-level `import` and `export` at the start of a file (and after other
 ESM) become `MdxjsEsm` nodes. Multi-line statements are collected with a
@@ -86,8 +97,7 @@ so regex literals and `${}` inside templates may confuse statement
 boundaries. `import` / `export` inside fences or inline code is not ESM.
 Hostile strings such as `import x from "<script>"` store source and do not
 panic. The HTML renderer currently emits nothing for `MdxjsEsm`; framework
-plugins will resolve imports later. Spreads, fragments, and JSX comments
-are not parsed yet.
+plugins will resolve imports later.
 
 ### Props
 
@@ -100,6 +110,7 @@ Props use JSX-like syntax. The following forms are recognised:
 | `prop={true}`      | boolean             |
 | `prop={ {"a":1} }` | object (JSON)       |
 | `prop`             | boolean `true`      |
+| `{...props}`       | spread (source)     |
 
 Props are serialized to a `data-ox-props` attribute on the island element and
 handed to your component at hydration time.

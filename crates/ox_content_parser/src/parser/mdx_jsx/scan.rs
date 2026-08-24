@@ -1,20 +1,22 @@
-//! JSX tag scanning: PascalCase names and named attributes.
+//! JSX tag scanning: fragments, member names, named attrs, and spreads.
 
 use ox_content_allocator::Vec;
 use ox_content_ast::{
     MdxJsxAttribute, MdxJsxAttributeEntry, MdxJsxAttributeValue, MdxJsxAttributeValueExpression,
-    Span,
+    MdxJsxExpressionAttribute, Span,
 };
+
+use super::braces::{skip_backticks, skip_braces, skip_quoted};
 
 /// Opening tag accepted by this slice.
 pub(super) struct JsxOpen<'a> {
-    pub name: &'a str,
+    pub name: Option<&'a str>,
     pub self_closing: bool,
     pub end: usize,
 }
 
 struct TagSkip<'a> {
-    name: &'a str,
+    name: Option<&'a str>,
     start: usize,
     closing: bool,
     self_closing: bool,
@@ -23,7 +25,12 @@ struct TagSkip<'a> {
 
 #[inline]
 pub(super) fn looks_like_jsx_open(bytes: &[u8], at: usize) -> bool {
-    bytes.get(at) == Some(&b'<') && bytes.get(at + 1).is_some_and(u8::is_ascii_uppercase)
+    bytes.get(at) == Some(&b'<')
+        && match bytes.get(at + 1) {
+            Some(b'>') => true,
+            Some(byte) => byte.is_ascii_uppercase(),
+            None => false,
+        }
 }
 
 pub(super) fn only_ws_until_eol(bytes: &[u8], mut cursor: usize) -> bool {
@@ -54,20 +61,27 @@ pub(super) fn scan_jsx_open<'a>(
     if !looks_like_jsx_open(bytes, start) {
         return None;
     }
+    if bytes.get(start + 1) == Some(&b'>') {
+        return Some(JsxOpen { name: None, self_closing: false, end: start + 2 });
+    }
     let name_start = start + 1;
     let name_end = scan_jsx_name(bytes, name_start)?;
     let name = &source[name_start..name_end];
-    let (self_closing, end) = scan_named_attributes(source, name_end, offset, attributes)?;
-    Some(JsxOpen { name, self_closing, end })
+    let (self_closing, end) = scan_attributes(source, name_end, offset, attributes)?;
+    Some(JsxOpen { name: Some(name), self_closing, end })
 }
 
-pub(super) fn find_matching_close(source: &str, from: usize, name: &str) -> Option<(usize, usize)> {
+pub(super) fn find_matching_close(
+    source: &str,
+    from: usize,
+    name: Option<&str>,
+) -> Option<(usize, usize)> {
     let bytes = source.as_bytes();
     let mut cursor = from;
     let mut depth = 1u32;
     while cursor < bytes.len() {
         match bytes[cursor] {
-            b'{' => cursor = skip_braces(bytes, cursor)?,
+            b'{' => cursor = skip_braces(bytes, cursor).unwrap_or(cursor + 1),
             b'`' => cursor = skip_backticks(bytes, cursor).unwrap_or(cursor + 1),
             b'<' => {
                 let Some(tag) = scan_tag_skip(source, cursor) else {
@@ -93,20 +107,13 @@ pub(super) fn find_matching_close(source: &str, from: usize, name: &str) -> Opti
 }
 
 fn scan_jsx_name(bytes: &[u8], start: usize) -> Option<usize> {
-    let first = *bytes.get(start)?;
-    if !first.is_ascii_uppercase() {
+    if !bytes.get(start)?.is_ascii_uppercase() {
         return None;
     }
-    let mut end = start + 1;
-    while end < bytes.len()
-        && (bytes[end].is_ascii_alphanumeric() || matches!(bytes[end], b'_' | b'$'))
-    {
-        end += 1;
-    }
-    Some(end)
+    scan_member_name(bytes, start)
 }
 
-fn scan_named_attributes<'a>(
+fn scan_attributes<'a>(
     source: &'a str,
     mut cursor: usize,
     offset: usize,
@@ -118,11 +125,27 @@ fn scan_named_attributes<'a>(
         match bytes.get(cursor)? {
             b'/' if bytes.get(cursor + 1) == Some(&b'>') => return Some((true, cursor + 2)),
             b'>' => return Some((false, cursor + 1)),
-            b'{' => return None,
+            b'{' if had_ws => {
+                cursor = push_expression_attribute(source, cursor, offset, attributes)?;
+            }
             _ if !had_ws => return None,
             _ => cursor = push_named_attribute(source, cursor, offset, attributes)?,
         }
     }
+}
+
+fn push_expression_attribute<'a>(
+    source: &'a str,
+    start: usize,
+    offset: usize,
+    attributes: &mut Vec<'a, MdxJsxAttributeEntry<'a>>,
+) -> Option<usize> {
+    let end = skip_braces(source.as_bytes(), start)?;
+    attributes.push(MdxJsxAttributeEntry::Expression(MdxJsxExpressionAttribute {
+        value: &source[start + 1..end - 1],
+        span: Span::new((offset + start) as u32, (offset + end) as u32),
+    }));
+    Some(end)
 }
 
 fn push_named_attribute<'a>(
@@ -190,14 +213,17 @@ fn scan_tag_skip(source: &str, start: usize) -> Option<TagSkip<'_>> {
     if closing {
         cursor += 1;
     }
-    let name_end = scan_any_name(bytes, cursor)?;
+    if bytes.get(cursor) == Some(&b'>') {
+        return Some(TagSkip { name: None, start, closing, self_closing: false, end: cursor + 1 });
+    }
+    let name_end = scan_member_name(bytes, cursor)?;
     let name = &source[cursor..name_end];
     cursor = name_end;
     let self_closing = skip_tag_rest(bytes, &mut cursor)?;
     if closing && self_closing {
         return None;
     }
-    Some(TagSkip { name, start, closing, self_closing, end: cursor })
+    Some(TagSkip { name: Some(name), start, closing, self_closing, end: cursor })
 }
 
 fn skip_tag_rest(bytes: &[u8], cursor: &mut usize) -> Option<bool> {
@@ -232,7 +258,15 @@ fn skip_tag_rest(bytes: &[u8], cursor: &mut usize) -> Option<bool> {
     }
 }
 
-fn scan_any_name(bytes: &[u8], start: usize) -> Option<usize> {
+fn scan_member_name(bytes: &[u8], start: usize) -> Option<usize> {
+    let mut end = scan_ident(bytes, start)?;
+    while bytes.get(end) == Some(&b'.') {
+        end = scan_ident(bytes, end + 1)?;
+    }
+    Some(end)
+}
+
+fn scan_ident(bytes: &[u8], start: usize) -> Option<usize> {
     let first = *bytes.get(start)?;
     if !(first.is_ascii_alphabetic() || matches!(first, b'_' | b'$')) {
         return None;
@@ -271,68 +305,6 @@ fn skip_ws(bytes: &[u8], cursor: &mut usize) -> bool {
         *cursor += 1;
     }
     *cursor > start
-}
-
-fn skip_quoted(bytes: &[u8], start: usize) -> Option<usize> {
-    let quote = *bytes.get(start)?;
-    let mut cursor = start + 1;
-    while cursor < bytes.len() {
-        if bytes[cursor] == b'\\' && cursor + 1 < bytes.len() {
-            cursor += 2;
-            continue;
-        }
-        if bytes[cursor] == quote {
-            return Some(cursor + 1);
-        }
-        cursor += 1;
-    }
-    None
-}
-
-fn skip_braces(bytes: &[u8], start: usize) -> Option<usize> {
-    if bytes.get(start) != Some(&b'{') {
-        return None;
-    }
-    let mut cursor = start;
-    let mut depth = 0u32;
-    while cursor < bytes.len() {
-        match bytes[cursor] {
-            b'"' | b'\'' | b'`' => cursor = skip_quoted(bytes, cursor)?,
-            b'{' => {
-                depth = depth.saturating_add(1);
-                cursor += 1;
-            }
-            b'}' => {
-                depth = depth.saturating_sub(1);
-                cursor += 1;
-                if depth == 0 {
-                    return Some(cursor);
-                }
-            }
-            _ => cursor += 1,
-        }
-    }
-    None
-}
-
-fn skip_backticks(bytes: &[u8], start: usize) -> Option<usize> {
-    let mut open = 0usize;
-    while start + open < bytes.len() && bytes[start + open] == b'`' {
-        open += 1;
-    }
-    if open == 0 {
-        return None;
-    }
-    let mut cursor = start + open;
-    while cursor + open <= bytes.len() {
-        if bytes[cursor..cursor + open].iter().all(|byte| *byte == b'`')
-            && bytes.get(cursor + open) != Some(&b'`')
-        {
-            return Some(cursor + open);
-        }
-        cursor += 1;
-    }
-    None
 }
 
 fn skip_unquoted_value(bytes: &[u8], cursor: &mut usize) {

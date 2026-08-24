@@ -1,10 +1,10 @@
 //! JSX element parse when `ParserOptions.mdx` is true.
 //!
-//! This slice covers PascalCase elements (flow + text), literal / boolean /
-//! `{expr}` attributes, self-closing tags, and simple open/close children.
-//! Lowercase HTML stays `Html`. Spreads, fragments, JSX comments, and
-//! `{expression}` children are deferred — tests below pin that subset.
-//! Module-level `import` / `export` is covered in `mdx_esm.rs`.
+//! Covers PascalCase elements (flow + text), literal / boolean / `{expr}`
+//! attributes, self-closing tags, and simple open/close children. Lowercase
+//! HTML stays `Html`. Fragments, spreads, comments, member names, and
+//! children expressions live in `mdx_jsx_remainder.rs`. Module-level
+//! `import` / `export` is covered in `mdx_esm.rs`.
 
 use ox_content_allocator::Allocator;
 use ox_content_parser::{Parser, ParserOptions};
@@ -117,7 +117,7 @@ fn flow_open_close_parses_markdown_children() {
         "expected open/close flow:\n{tree}"
     );
     assert!(tree.contains("Strong"), "markdown children should parse:\n{tree}");
-    assert!(!tree.contains("MdxFlowExpression"), "child expressions are deferred:\n{tree}");
+    assert!(!tree.contains("MdxFlowExpression"), "this fixture has no child expression:\n{tree}");
 }
 
 #[test]
@@ -141,44 +141,56 @@ fn pascal_case_flow_interrupts_paragraph() {
 }
 
 #[test]
-fn spread_attr_is_not_parsed_yet() {
+fn spread_attr_is_expression_entry() {
     let tree = mdx_tree("<Alert {...props} />\n");
     assert!(
-        !tree.contains("MdxJsx") && !tree.contains("AttrExpr"),
-        "spreads are deferred:\n{tree}"
+        tree.contains("MdxJsxFlowElement name=Some(\"Alert\") self_closing=true"),
+        "expected flow Alert with spread:\n{tree}"
+    );
+    assert!(
+        tree.contains("AttrExpr value=\"...props\""),
+        "spreads store source, not a evaluated object:\n{tree}"
     );
 }
 
 #[test]
-fn fragment_is_not_parsed_yet() {
+fn fragment_parses_as_nameless_jsx() {
     let tree = mdx_tree("<>hello</>\n");
-    assert!(!tree.contains("MdxJsx"), "fragments are deferred:\n{tree}");
+    assert!(
+        tree.contains("MdxJsxFlowElement name=None self_closing=false"),
+        "expected a fragment:\n{tree}"
+    );
+    assert!(tree.contains("Text \"hello\""), "fragment children stay markdown:\n{tree}");
 }
 
 #[test]
-fn jsx_comment_is_not_parsed_yet() {
+fn jsx_comment_is_flow_expression() {
     let tree = mdx_tree("{/* hide */}\n");
     assert!(
-        !tree.contains("MdxJsx") && !tree.contains("MdxFlowExpression"),
-        "JSX comments are deferred:\n{tree}"
+        tree.contains("MdxFlowExpression value=\"/* hide */\""),
+        "JSX comments store source as an expression:\n{tree}"
+    );
+    assert!(!tree.contains("MdxJsx"), "a comment is not a JSX element:\n{tree}");
+}
+
+#[test]
+fn member_expression_name_parses() {
+    let tree = mdx_tree("<Foo.Bar />\n");
+    assert!(
+        tree.contains("MdxJsxFlowElement name=Some(\"Foo.Bar\") self_closing=true"),
+        "expected member name:\n{tree}"
     );
 }
 
 #[test]
-fn member_expression_name_is_not_parsed_yet() {
-    let tree = mdx_tree("<Foo.Bar />\n");
-    assert!(!tree.contains("MdxJsx"), "member names are deferred:\n{tree}");
-}
-
-#[test]
-fn children_brace_expression_is_not_an_mdx_expression() {
+fn children_brace_expression_stores_source() {
     let tree = mdx_tree("<Alert>{items.map}</Alert>\n");
     assert!(
         tree.contains("MdxJsxFlowElement name=Some(\"Alert\")"),
         "wrapper still parses:\n{tree}"
     );
     assert!(
-        !tree.contains("MdxFlowExpression") && !tree.contains("MdxTextExpression"),
-        "{{items.map}} children are deferred:\n{tree}"
+        tree.contains("MdxFlowExpression value=\"items.map\""),
+        "children expressions store source, not a evaluated result:\n{tree}"
     );
 }

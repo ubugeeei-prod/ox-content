@@ -154,6 +154,10 @@ impl<'a> Parser<'a> {
                 let trimmed = &line[trimmed_start - line_start..];
                 Self::try_parse_fenced_code_at(line, trimmed)
             }
+            b'{' => {
+                self.options.mdx
+                    && super::mdx_jsx::looks_like_flow_expression(self.source, trimmed_start)
+            }
             b'<' => {
                 let bytes = self.source.as_bytes();
                 if self.options.mdx && super::mdx_jsx::looks_like_jsx_open(bytes, trimmed_start) {

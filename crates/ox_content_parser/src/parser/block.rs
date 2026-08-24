@@ -83,6 +83,13 @@ impl<'a> Parser<'a> {
                     return self.parse_fenced_code(start);
                 }
             }
+            b'{' => {
+                if self.options.mdx
+                    && let Some(node) = self.try_parse_mdx_flow_expression(start, trimmed_start)?
+                {
+                    return Ok(Some(node));
+                }
+            }
             b'<' => {
                 if self.options.mdx
                     && let Some(node) = self.try_parse_mdx_jsx_flow(start, trimmed_start)?
