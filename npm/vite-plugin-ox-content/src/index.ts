@@ -16,6 +16,7 @@ import { resolveSiteMapsOptions } from "./site-maps";
 import { resolvePublishStateOptions } from "./publish-state";
 import { resolveCascadeOptions, resolvePermalinksOptions } from "./permalinks";
 import { resolveRedirectsOptions } from "./redirects";
+import { notFoundSearchExcludeIds } from "./not-found";
 import {
   resolveSearchOptions,
   buildSearchIndex,
@@ -93,6 +94,8 @@ export type {
   ResolvedSsgOptions,
   ReaderChromeOptions,
   ResolvedReaderChrome,
+  NotFoundOptions,
+  ResolvedNotFoundOptions,
   SiteMapsOptions,
   ResolvedSiteMapsOptions,
   PublishStateOptions,
@@ -513,6 +516,7 @@ function createSearchPlugin(resolvedOptions: ResolvedOptions, getRoot: () => str
           resolvedOptions.base,
           resolvedOptions.extensions,
           searchPublishState(resolvedOptions, command),
+          notFoundSearchExcludeIds(resolvedOptions.ssg.notFound),
         );
         console.log("[ox-content] Search index built");
       } catch (err) {
@@ -556,6 +560,7 @@ function createSearchPlugin(resolvedOptions: ResolvedOptions, getRoot: () => str
               resolvedOptions.base,
               resolvedOptions.extensions,
               searchPublishState(resolvedOptions, command),
+              notFoundSearchExcludeIds(resolvedOptions.ssg.notFound),
             );
             stale = false;
           }
@@ -1003,6 +1008,7 @@ export type {
   MarkdownLintFileOptions as MarkdownLintProjectOptions,
 } from "./lint-files";
 export { buildSsg, resolveSsgOptions, DEFAULT_HTML_TEMPLATE } from "./ssg";
+export { resolveNotFoundOptions } from "./not-found";
 export { resolveSiteMapsOptions } from "./site-maps";
 export {
   classifyPublishState,

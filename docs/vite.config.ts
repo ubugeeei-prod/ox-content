@@ -57,6 +57,7 @@ export default defineConfig(({ mode }) => {
           siteUrl,
           pagination: true,
           readerChrome: true,
+          notFound: true,
           generateOgImage: true,
           ogImage,
           theme: defineTheme({
@@ -120,6 +121,7 @@ export default defineConfig(({ mode }) => {
                       { text: "Draft / unlisted / scheduled", link: "/built-in/drafts.md" },
                       { text: "Permalinks and Cascade", link: "/built-in/permalinks.md" },
                       { text: "Redirects and aliases", link: "/built-in/redirects.md" },
+                      { text: "Custom 404", link: "/built-in/not-found.md" },
                     ],
                   },
                   { text: "Theming", link: "/theming.md" },

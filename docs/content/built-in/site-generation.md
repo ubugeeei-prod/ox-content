@@ -72,6 +72,7 @@ export default defineConfig({
 | `lastUpdated`     | `false`        | Show the git last-commit time per page.              |
 | `pagination`      | `false`        | Previous/next links after the article.               |
 | `readerChrome`    | `false`        | Copy, outbound-link icons, and back-to-top.          |
+| `notFound`        | `false`        | Themed 404 page. See [Custom 404](./not-found.md).   |
 | `theme`           | `defaultTheme` | Theme configuration via `defineTheme()`.             |
 | `navigation`      | derived        | Explicit navigation groups instead of the file tree. |
 

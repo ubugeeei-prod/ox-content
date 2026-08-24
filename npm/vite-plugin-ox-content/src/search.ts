@@ -85,12 +85,17 @@ export function resolveSearchOptions(
 
 /**
  * Builds the search index from Markdown files.
+ *
+ * `publishState` is forwarded to the native indexer. `excludeDocumentIds`
+ * then drops matching documents and rebuilds the BM25 index so omitted
+ * pages (such as the opt-in 404 source) are not searchable.
  */
 export async function buildSearchIndex(
   srcDir: string,
   base: string,
   extensions: readonly string[] = DEFAULT_MARKDOWN_EXTENSIONS,
   publishState?: ResolvedPublishStateOptions,
+  excludeDocumentIds: readonly string[] = [],
 ): Promise<string> {
   const napi = await getOxContent();
 
@@ -104,9 +109,41 @@ export async function buildSearchIndex(
     });
   }
 
-  return napi.buildSearchIndexFromDirectory(srcDir, base, [...extensions], {
+  const indexJson = napi.buildSearchIndexFromDirectory(srcDir, base, [...extensions], {
     publishState: toNapiPublishState(publishState),
   });
+  if (excludeDocumentIds.length === 0) {
+    return indexJson;
+  }
+  return excludeSearchDocuments(napi, indexJson, excludeDocumentIds);
+}
+
+function excludeSearchDocuments(
+  napi: NonNullable<Awaited<ReturnType<typeof getOxContent>>>,
+  indexJson: string,
+  excludeDocumentIds: readonly string[],
+): string {
+  const excluded = new Set(excludeDocumentIds);
+  let documents: Array<{
+    id: string;
+    title: string;
+    url: string;
+    body: string;
+    headings: string[];
+    code: string[];
+  }>;
+  try {
+    const parsed = JSON.parse(indexJson) as { documents?: typeof documents };
+    documents = parsed.documents ?? [];
+  } catch {
+    return indexJson;
+  }
+
+  const kept = documents.filter((doc) => !excluded.has(doc.id));
+  if (kept.length === documents.length) {
+    return indexJson;
+  }
+  return napi.buildSearchIndex(kept);
 }
 
 /**

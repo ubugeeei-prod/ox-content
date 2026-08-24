@@ -313,6 +313,18 @@ export interface SsgOptions {
   readerChrome?: boolean | ReaderChromeOptions;
 
   /**
+   * Write a themed 404 page during SSG.
+   *
+   * Off by default. `true` reads `404.md` from `srcDir` and writes `404.html`.
+   * An object enables the feature and overrides only the fields you set.
+   * When the source file is missing, a built-in "Page not found" page is
+   * written instead. The page is omitted from the search index and sitemap.
+   *
+   * @default false
+   */
+  notFound?: boolean | NotFoundOptions;
+
+  /**
    * Absolute site URL used when generating social metadata.
    *
    * Set this when pages need absolute Open Graph image URLs. Include the origin
@@ -416,9 +428,39 @@ export interface ResolvedSsgOptions {
   lastUpdated: boolean;
   pagination: boolean;
   readerChrome: ResolvedReaderChrome;
+  /**
+   * Present after `resolveSsgOptions`. Omitted in hand-built fixtures means off.
+   */
+  notFound?: ResolvedNotFoundOptions;
   siteUrl?: string;
   theme?: ResolvedThemeConfig;
   navigation?: SsgNavigationGroup[];
+}
+
+/**
+ * Opt-in custom 404 page written during SSG.
+ */
+export interface NotFoundOptions {
+  /**
+   * Markdown source relative to `srcDir`.
+   * @default "404.md"
+   */
+  source?: string;
+
+  /**
+   * Output file relative to `outDir`.
+   * @default "404.html"
+   */
+  output?: string;
+}
+
+/**
+ * Resolved custom 404 options.
+ */
+export interface ResolvedNotFoundOptions {
+  enabled: boolean;
+  source: string;
+  output: string;
 }
 
 /**

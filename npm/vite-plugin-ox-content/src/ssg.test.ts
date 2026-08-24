@@ -58,6 +58,18 @@ describe("resolveSsgOptions", () => {
     });
   });
 
+  it("disables notFound by default", () => {
+    expect(resolveSsgOptions(undefined).notFound?.enabled).toBe(false);
+  });
+
+  it("enables notFound when requested", () => {
+    expect(resolveSsgOptions({ notFound: true }).notFound).toEqual({
+      enabled: true,
+      source: "404.md",
+      output: "404.html",
+    });
+  });
+
   it("carries a theme component through", () => {
     const component = () => ({ __html: "<html></html>" });
     expect(resolveSsgOptions({ render: component }).render).toBe(component);

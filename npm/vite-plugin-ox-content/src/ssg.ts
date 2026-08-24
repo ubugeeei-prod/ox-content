@@ -34,6 +34,13 @@ import { writeSiteMapFiles } from "./site-maps";
 import { filterNavGroups, hiddenNavKeys, partitionPublishedPages } from "./publish-state";
 import { applySsgPageRoutes, remapNavGroups } from "./apply-permalinks";
 import { writeRedirectFiles } from "./redirects";
+import {
+  FALLBACK_NOT_FOUND_MARKDOWN,
+  isNotFoundSourceFile,
+  resolveNotFoundOptions,
+  resolveNotFoundOutputPath,
+  resolveNotFoundSourcePath,
+} from "./not-found";
 
 /**
  * Navigation item for SSG.
@@ -112,6 +119,7 @@ export function resolveSsgOptions(ssg: SsgOptions | boolean | undefined): Resolv
       lastUpdated: false,
       pagination: false,
       readerChrome: false,
+      notFound: resolveNotFoundOptions(undefined),
     };
   }
 
@@ -125,6 +133,7 @@ export function resolveSsgOptions(ssg: SsgOptions | boolean | undefined): Resolv
       lastUpdated: false,
       pagination: false,
       readerChrome: false,
+      notFound: resolveNotFoundOptions(undefined),
       theme: resolveTheme(undefined),
     };
   }
@@ -145,6 +154,7 @@ export function resolveSsgOptions(ssg: SsgOptions | boolean | undefined): Resolv
     lastUpdated: ssg.lastUpdated ?? false,
     pagination: resolvePaginationOption(ssg.pagination),
     readerChrome: resolveReaderChromeOption(ssg.readerChrome),
+    notFound: resolveNotFoundOptions(ssg.notFound),
     siteUrl: ssg.siteUrl,
     theme: resolveTheme(ssg.theme),
     navigation: ssg.navigation,
@@ -673,8 +683,11 @@ export async function buildSsg(options: ResolvedOptions, root: string): Promise<
   await cleanOutputDirectory(ssgOptions, outDir);
 
   const markdownFiles = await collectMarkdownFiles(srcDir, options.extensions);
-  const context = await createBuildSsgContext(options, root, srcDir, outDir, markdownFiles);
-  const collected = await collectPageResults(context, markdownFiles);
+  const pageFiles = markdownFiles.filter(
+    (file) => !isNotFoundSourceFile(file, srcDir, ssgOptions.notFound),
+  );
+  const context = await createBuildSsgContext(options, root, srcDir, outDir, pageFiles);
+  const collected = await collectPageResults(context, pageFiles);
   applyPermalinkRoutes(context, collected);
   errors.push(...collected.errors);
   const { outputPages, listedPages } = applyPublishState(context, collected);
@@ -683,6 +696,7 @@ export async function buildSsg(options: ResolvedOptions, root: string): Promise<
   await generateOgImageAssets(context, collected, generatedFiles, errors);
 
   const generatedPages = await generateHtmlPages(context, outputPages, collected, errors);
+  await appendNotFoundPage(generatedPages, context, collected, errors);
   await writeGeneratedPages(
     generatedPages,
     context,
@@ -1181,6 +1195,75 @@ function createSsgPageData(pageResult: PageProcessResult): SsgPageData {
     entryPage,
     prev: parseSsgPagerOverride(frontmatter.prev),
     next: parseSsgPagerOverride(frontmatter.next),
+  };
+}
+
+async function appendNotFoundPage(
+  generatedPages: GeneratedHtmlPage[],
+  context: BuildSsgContext,
+  collected: CollectedPageResults,
+  errors: string[],
+): Promise<void> {
+  const notFound = context.ssgOptions.notFound;
+  if (!notFound?.enabled) {
+    return;
+  }
+
+  const sourcePath = resolveNotFoundSourcePath(context.srcDir, notFound.source);
+  const outputPath = resolveNotFoundOutputPath(context.outDir, notFound.output);
+
+  try {
+    const pageResult = (await fileExists(sourcePath))
+      ? await transformSsgPage(context, sourcePath)
+      : await transformNotFoundMarkdown(context, sourcePath, FALLBACK_NOT_FOUND_MARKDOWN);
+    pageResult.routePaths = { ...pageResult.routePaths, outputPath };
+    generatedPages.push({
+      inputPath: sourcePath,
+      outputPath,
+      html: await renderSsgPage(context, pageResult, collected, collected.pageResults),
+    });
+  } catch (err) {
+    const errorMessage = err instanceof Error ? err.message : String(err);
+    errors.push(`Failed to generate 404 page: ${errorMessage}`);
+  }
+}
+
+async function fileExists(filePath: string): Promise<boolean> {
+  try {
+    await fs.access(filePath);
+    return true;
+  } catch {
+    return false;
+  }
+}
+
+async function transformNotFoundMarkdown(
+  context: BuildSsgContext,
+  inputPath: string,
+  markdown: string,
+): Promise<PageProcessResult> {
+  const result = await transformMarkdown(markdown, inputPath, context.options, {
+    convertMdLinks: true,
+    baseUrl: context.base,
+    sourcePath: inputPath,
+  });
+  const frontmatter = normalizeVitePressFrontmatter(result.frontmatter);
+  const transformedHtml = await transformSsgHtml(result.html, context.options);
+
+  return {
+    inputPath,
+    routePaths: {
+      outputPath: inputPath,
+      urlPath: "404",
+      href: `${context.base}${context.ssgOptions.notFound?.output ?? "404.html"}`,
+      ogImagePath: "",
+      ogImageUrl: "",
+    },
+    transformedHtml,
+    title: extractTitle(transformedHtml, frontmatter),
+    description: typeof frontmatter.description === "string" ? frontmatter.description : undefined,
+    frontmatter,
+    toc: result.toc,
   };
 }
 

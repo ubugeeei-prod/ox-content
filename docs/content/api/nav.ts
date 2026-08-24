@@ -96,6 +96,10 @@ export const apiNav: NavItem[] = [
     "path": "/api/mermaid-protect"
   },
   {
+    "title": "Not Found",
+    "path": "/api/not-found"
+  },
+  {
     "title": "Og Viewer",
     "path": "/api/og-viewer"
   },
