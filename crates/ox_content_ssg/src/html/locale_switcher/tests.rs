@@ -1,7 +1,6 @@
 use super::super::{
     A11y, LocaleInfo, LocalePath, NavGroup, NavItem, PageChromeFlags, PageData, ReaderChrome,
-    SsgConfig,
-    generate_bare_html, generate_html,
+    SsgConfig, generate_bare_html, generate_html,
 };
 
 fn page(path: &str) -> PageData {

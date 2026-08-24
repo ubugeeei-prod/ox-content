@@ -26,11 +26,11 @@
   <span>modules</span>
 </span>
 <span class="ox-api-stat">
-  <strong>53</strong>
+  <strong>54</strong>
   <span>parameters</span>
 </span>
 <span class="ox-api-stat">
-  <strong>48</strong>
+  <strong>49</strong>
   <span>members</span>
 </span>
 <span class="ox-api-stat">
@@ -60,7 +60,7 @@
 <h4>Signature</h4>
 <pre><code class="language-typescript">export function buildNavItems(markdownFiles: string[], srcDir: string, base: string, extension: string): NavGroup[]</code></pre>
 </div>
-<p class="ox-api-entry__source"><a class="ox-api-entry__source-link" href="https://github.com/ubugeeei-prod/ox-content/blob/main/npm/vite-plugin-ox-content/src/ssg.ts#L649-L656" target="_blank" rel="noopener noreferrer">View source<span class="ox-api-entry__source-icon" aria-hidden="true"></span></a></p>
+<p class="ox-api-entry__source"><a class="ox-api-entry__source-link" href="https://github.com/ubugeeei-prod/ox-content/blob/main/npm/vite-plugin-ox-content/src/ssg.ts#L662-L669" target="_blank" rel="noopener noreferrer">View source<span class="ox-api-entry__source-icon" aria-hidden="true"></span></a></p>
 <div class="ox-api-entry__section ox-api-entry__section--params">
 <h4>Parameters</h4>
 <ul class="ox-api-entry__params">
@@ -114,7 +114,7 @@
 <h4>Signature</h4>
 <pre><code class="language-typescript">export async function buildSsg(options: ResolvedOptions, root: string): Promise&lt;SsgBuildResult&gt;</code></pre>
 </div>
-<p class="ox-api-entry__source"><a class="ox-api-entry__source-link" href="https://github.com/ubugeeei-prod/ox-content/blob/main/npm/vite-plugin-ox-content/src/ssg.ts#L720-L762" target="_blank" rel="noopener noreferrer">View source<span class="ox-api-entry__source-icon" aria-hidden="true"></span></a></p>
+<p class="ox-api-entry__source"><a class="ox-api-entry__source-link" href="https://github.com/ubugeeei-prod/ox-content/blob/main/npm/vite-plugin-ox-content/src/ssg.ts#L733-L775" target="_blank" rel="noopener noreferrer">View source<span class="ox-api-entry__source-icon" aria-hidden="true"></span></a></p>
 <div class="ox-api-entry__section ox-api-entry__section--params">
 <h4>Parameters</h4>
 <ul class="ox-api-entry__params">
@@ -154,7 +154,7 @@
 <h4>Signature</h4>
 <pre><code class="language-typescript">export function buildThemeNavItems(sidebar: SidebarItem[], base: string, extension: string): NavGroup[]</code></pre>
 </div>
-<p class="ox-api-entry__source"><a class="ox-api-entry__source-link" href="https://github.com/ubugeeei-prod/ox-content/blob/main/npm/vite-plugin-ox-content/src/ssg.ts#L661-L667" target="_blank" rel="noopener noreferrer">View source<span class="ox-api-entry__source-icon" aria-hidden="true"></span></a></p>
+<p class="ox-api-entry__source"><a class="ox-api-entry__source-link" href="https://github.com/ubugeeei-prod/ox-content/blob/main/npm/vite-plugin-ox-content/src/ssg.ts#L674-L680" target="_blank" rel="noopener noreferrer">View source<span class="ox-api-entry__source-icon" aria-hidden="true"></span></a></p>
 <div class="ox-api-entry__section ox-api-entry__section--params">
 <h4>Parameters</h4>
 <ul class="ox-api-entry__params">
@@ -202,7 +202,7 @@
 <h4>Signature</h4>
 <pre><code class="language-typescript">function canonicalPageUrl(context: BuildSsgContext, urlPath: string): string | undefined</code></pre>
 </div>
-<p class="ox-api-entry__source"><a class="ox-api-entry__source-link" href="https://github.com/ubugeeei-prod/ox-content/blob/main/npm/vite-plugin-ox-content/src/ssg.ts#L1234-L1243" target="_blank" rel="noopener noreferrer">View source<span class="ox-api-entry__source-icon" aria-hidden="true"></span></a></p>
+<p class="ox-api-entry__source"><a class="ox-api-entry__source-link" href="https://github.com/ubugeeei-prod/ox-content/blob/main/npm/vite-plugin-ox-content/src/ssg.ts#L1248-L1257" target="_blank" rel="noopener noreferrer">View source<span class="ox-api-entry__source-icon" aria-hidden="true"></span></a></p>
 <div class="ox-api-entry__section ox-api-entry__section--params">
 <h4>Parameters</h4>
 <ul class="ox-api-entry__params">
@@ -242,7 +242,7 @@
 <h4>Signature</h4>
 <pre><code class="language-typescript">export async function collectMarkdownFiles(srcDir: string, extensions: readonly string[] = DEFAULT_MARKDOWN_EXTENSIONS): Promise&lt;string[]&gt;</code></pre>
 </div>
-<p class="ox-api-entry__source"><a class="ox-api-entry__source-link" href="https://github.com/ubugeeei-prod/ox-content/blob/main/npm/vite-plugin-ox-content/src/ssg.ts#L629-L634" target="_blank" rel="noopener noreferrer">View source<span class="ox-api-entry__source-icon" aria-hidden="true"></span></a></p>
+<p class="ox-api-entry__source"><a class="ox-api-entry__source-link" href="https://github.com/ubugeeei-prod/ox-content/blob/main/npm/vite-plugin-ox-content/src/ssg.ts#L642-L647" target="_blank" rel="noopener noreferrer">View source<span class="ox-api-entry__source-icon" aria-hidden="true"></span></a></p>
 <div class="ox-api-entry__section ox-api-entry__section--params">
 <h4>Parameters</h4>
 <ul class="ox-api-entry__params">
@@ -282,7 +282,7 @@
 <h4>Signature</h4>
 <pre><code class="language-typescript">export const DEFAULT_HTML_TEMPLATE = &quot;&lt;!-- ox-content default HTML template is Rust-backed --&gt;&quot;</code></pre>
 </div>
-<p class="ox-api-entry__source"><a class="ox-api-entry__source-link" href="https://github.com/ubugeeei-prod/ox-content/blob/main/npm/vite-plugin-ox-content/src/ssg.ts#L116" target="_blank" rel="noopener noreferrer">View source<span class="ox-api-entry__source-icon" aria-hidden="true"></span></a></p>
+<p class="ox-api-entry__source"><a class="ox-api-entry__source-link" href="https://github.com/ubugeeei-prod/ox-content/blob/main/npm/vite-plugin-ox-content/src/ssg.ts#L123" target="_blank" rel="noopener noreferrer">View source<span class="ox-api-entry__source-icon" aria-hidden="true"></span></a></p>
   </div>
 </details>
 
@@ -296,7 +296,7 @@
 <h4>Signature</h4>
 <pre><code class="language-typescript">export function extractTitle(content: string, frontmatter: Record&lt;string, unknown&gt;): string</code></pre>
 </div>
-<p class="ox-api-entry__source"><a class="ox-api-entry__source-link" href="https://github.com/ubugeeei-prod/ox-content/blob/main/npm/vite-plugin-ox-content/src/ssg.ts#L252-L257" target="_blank" rel="noopener noreferrer">View source<span class="ox-api-entry__source-icon" aria-hidden="true"></span></a></p>
+<p class="ox-api-entry__source"><a class="ox-api-entry__source-link" href="https://github.com/ubugeeei-prod/ox-content/blob/main/npm/vite-plugin-ox-content/src/ssg.ts#L262-L267" target="_blank" rel="noopener noreferrer">View source<span class="ox-api-entry__source-icon" aria-hidden="true"></span></a></p>
 <div class="ox-api-entry__section ox-api-entry__section--params">
 <h4>Parameters</h4>
 <ul class="ox-api-entry__params">
@@ -336,7 +336,7 @@
 <h4>Signature</h4>
 <pre><code class="language-typescript">export function formatTitle(name: string): string</code></pre>
 </div>
-<p class="ox-api-entry__source"><a class="ox-api-entry__source-link" href="https://github.com/ubugeeei-prod/ox-content/blob/main/npm/vite-plugin-ox-content/src/ssg.ts#L622-L624" target="_blank" rel="noopener noreferrer">View source<span class="ox-api-entry__source-icon" aria-hidden="true"></span></a></p>
+<p class="ox-api-entry__source"><a class="ox-api-entry__source-link" href="https://github.com/ubugeeei-prod/ox-content/blob/main/npm/vite-plugin-ox-content/src/ssg.ts#L635-L637" target="_blank" rel="noopener noreferrer">View source<span class="ox-api-entry__source-icon" aria-hidden="true"></span></a></p>
 <div class="ox-api-entry__section ox-api-entry__section--params">
 <h4>Parameters</h4>
 <ul class="ox-api-entry__params">
@@ -369,7 +369,7 @@
 <h4>Signature</h4>
 <pre><code class="language-typescript">export function generateBareHtmlPage(content: string, title: string): string</code></pre>
 </div>
-<p class="ox-api-entry__source"><a class="ox-api-entry__source-link" href="https://github.com/ubugeeei-prod/ox-content/blob/main/npm/vite-plugin-ox-content/src/ssg.ts#L262-L264" target="_blank" rel="noopener noreferrer">View source<span class="ox-api-entry__source-icon" aria-hidden="true"></span></a></p>
+<p class="ox-api-entry__source"><a class="ox-api-entry__source-link" href="https://github.com/ubugeeei-prod/ox-content/blob/main/npm/vite-plugin-ox-content/src/ssg.ts#L272-L274" target="_blank" rel="noopener noreferrer">View source<span class="ox-api-entry__source-icon" aria-hidden="true"></span></a></p>
 <div class="ox-api-entry__section ox-api-entry__section--params">
 <h4>Parameters</h4>
 <ul class="ox-api-entry__params">
@@ -410,7 +410,7 @@
 <h4>Signature</h4>
 <pre><code class="language-typescript">export function generateBarePage(page: SsgBarePage): string</code></pre>
 </div>
-<p class="ox-api-entry__source"><a class="ox-api-entry__source-link" href="https://github.com/ubugeeei-prod/ox-content/blob/main/npm/vite-plugin-ox-content/src/ssg.ts#L275-L277" target="_blank" rel="noopener noreferrer">View source<span class="ox-api-entry__source-icon" aria-hidden="true"></span></a></p>
+<p class="ox-api-entry__source"><a class="ox-api-entry__source-link" href="https://github.com/ubugeeei-prod/ox-content/blob/main/npm/vite-plugin-ox-content/src/ssg.ts#L285-L287" target="_blank" rel="noopener noreferrer">View source<span class="ox-api-entry__source-icon" aria-hidden="true"></span></a></p>
 <div class="ox-api-entry__section ox-api-entry__section--params">
 <h4>Parameters</h4>
 <ul class="ox-api-entry__params">
@@ -434,16 +434,16 @@
 </details>
 
 <details id="generatehtmlpage" class="ox-api-entry">
-  <summary><span class="ox-api-entry__kind">fn</span><span class="ox-api-entry__summary-main"><code class="ox-api-entry__signature ox-api-entry__signature--highlighted language-typescript">generateHtmlPage(pageData: SsgPageData, navGroups: NavGroup[], siteName: string, base: string, ogImage?: string, theme?: ResolvedThemeConfig, locale?: string, availableLocales?: LocaleConfig[], pagination = false, readerChrome: ResolvedReaderChrome = false, breadcrumbs = false, localeSwitcher = false, localePaths?: SsgLocalePath[], a11y: ResolvedA11y = false, team: ResolvedTeamOptions = { enabled: false, members: [] }): Promise&lt;string&gt;</code><span class="ox-api-entry__description">Generates HTML page with navigation using Rust NAPI bindings.</span><span class="ox-api-entry__meta"><span class="ox-api-badge">15 params</span><span class="ox-api-badge">returns Promise&lt;string&gt;</span></span></span></summary>
+  <summary><span class="ox-api-entry__kind">fn</span><span class="ox-api-entry__summary-main"><code class="ox-api-entry__signature ox-api-entry__signature--highlighted language-typescript">generateHtmlPage(pageData: SsgPageData, navGroups: NavGroup[], siteName: string, base: string, ogImage?: string, theme?: ResolvedThemeConfig, locale?: string, availableLocales?: LocaleConfig[], pagination = false, readerChrome: ResolvedReaderChrome = false, breadcrumbs = false, localeSwitcher = false, localePaths?: SsgLocalePath[], a11y: ResolvedA11y = false, team: ResolvedTeamOptions = { enabled: false, members: [] }, pageChrome: boolean = false): Promise&lt;string&gt;</code><span class="ox-api-entry__description">Generates HTML page with navigation using Rust NAPI bindings.</span><span class="ox-api-entry__meta"><span class="ox-api-badge">16 params</span><span class="ox-api-badge">returns Promise&lt;string&gt;</span></span></span></summary>
   <div class="ox-api-entry__body">
 <div class="ox-api-entry__prose">
 <p>Generates HTML page with navigation using Rust NAPI bindings.</p>
 </div>
 <div class="ox-api-entry__section ox-api-entry__section--signature">
 <h4>Signature</h4>
-<pre><code class="language-typescript">export async function generateHtmlPage(pageData: SsgPageData, navGroups: NavGroup[], siteName: string, base: string, ogImage?: string, theme?: ResolvedThemeConfig, locale?: string, availableLocales?: LocaleConfig[], pagination = false, readerChrome: ResolvedReaderChrome = false, breadcrumbs = false, localeSwitcher = false, localePaths?: SsgLocalePath[], a11y: ResolvedA11y = false, team: ResolvedTeamOptions = { enabled: false, members: [] }): Promise&lt;string&gt;</code></pre>
+<pre><code class="language-typescript">export async function generateHtmlPage(pageData: SsgPageData, navGroups: NavGroup[], siteName: string, base: string, ogImage?: string, theme?: ResolvedThemeConfig, locale?: string, availableLocales?: LocaleConfig[], pagination = false, readerChrome: ResolvedReaderChrome = false, breadcrumbs = false, localeSwitcher = false, localePaths?: SsgLocalePath[], a11y: ResolvedA11y = false, team: ResolvedTeamOptions = { enabled: false, members: [] }, pageChrome: boolean = false): Promise&lt;string&gt;</code></pre>
 </div>
-<p class="ox-api-entry__source"><a class="ox-api-entry__source-link" href="https://github.com/ubugeeei-prod/ox-content/blob/main/npm/vite-plugin-ox-content/src/ssg.ts#L397-L504" target="_blank" rel="noopener noreferrer">View source<span class="ox-api-entry__source-icon" aria-hidden="true"></span></a></p>
+<p class="ox-api-entry__source"><a class="ox-api-entry__source-link" href="https://github.com/ubugeeei-prod/ox-content/blob/main/npm/vite-plugin-ox-content/src/ssg.ts#L407-L517" target="_blank" rel="noopener noreferrer">View source<span class="ox-api-entry__source-icon" aria-hidden="true"></span></a></p>
 <div class="ox-api-entry__section ox-api-entry__section--params">
 <h4>Parameters</h4>
 <ul class="ox-api-entry__params">
@@ -552,6 +552,13 @@
   </div>
   <p class="ox-api-entry__param-description">optional · default: { enabled: false, members: [] }</p>
 </li>
+<li class="ox-api-entry__param">
+  <div class="ox-api-entry__param-heading">
+    <code class="ox-api-entry__param-name">pageChrome</code>
+    <code class="ox-api-entry__param-type">boolean</code>
+  </div>
+  <p class="ox-api-entry__param-description">optional · default: false</p>
+</li>
 </ul>
 </div>
 <div class="ox-api-entry__section ox-api-entry__section--returns">
@@ -574,7 +581,7 @@
 <h4>Signature</h4>
 <pre><code class="language-typescript">export function getHref(inputPath: string, srcDir: string, base: string, extension: string): string</code></pre>
 </div>
-<p class="ox-api-entry__source"><a class="ox-api-entry__source-link" href="https://github.com/ubugeeei-prod/ox-content/blob/main/npm/vite-plugin-ox-content/src/ssg.ts#L566-L573" target="_blank" rel="noopener noreferrer">View source<span class="ox-api-entry__source-icon" aria-hidden="true"></span></a></p>
+<p class="ox-api-entry__source"><a class="ox-api-entry__source-link" href="https://github.com/ubugeeei-prod/ox-content/blob/main/npm/vite-plugin-ox-content/src/ssg.ts#L579-L586" target="_blank" rel="noopener noreferrer">View source<span class="ox-api-entry__source-icon" aria-hidden="true"></span></a></p>
 <div class="ox-api-entry__section ox-api-entry__section--params">
 <h4>Parameters</h4>
 <ul class="ox-api-entry__params">
@@ -628,7 +635,7 @@
 <h4>Signature</h4>
 <pre><code class="language-typescript">export function getOutputPath(inputPath: string, srcDir: string, outDir: string, extension: string): string</code></pre>
 </div>
-<p class="ox-api-entry__source"><a class="ox-api-entry__source-link" href="https://github.com/ubugeeei-prod/ox-content/blob/main/npm/vite-plugin-ox-content/src/ssg.ts#L547-L554" target="_blank" rel="noopener noreferrer">View source<span class="ox-api-entry__source-icon" aria-hidden="true"></span></a></p>
+<p class="ox-api-entry__source"><a class="ox-api-entry__source-link" href="https://github.com/ubugeeei-prod/ox-content/blob/main/npm/vite-plugin-ox-content/src/ssg.ts#L560-L567" target="_blank" rel="noopener noreferrer">View source<span class="ox-api-entry__source-icon" aria-hidden="true"></span></a></p>
 <div class="ox-api-entry__section ox-api-entry__section--params">
 <h4>Parameters</h4>
 <ul class="ox-api-entry__params">
@@ -682,7 +689,7 @@
 <h4>Signature</h4>
 <pre><code class="language-typescript">export function getUrlPath(inputPath: string, srcDir: string): string</code></pre>
 </div>
-<p class="ox-api-entry__source"><a class="ox-api-entry__source-link" href="https://github.com/ubugeeei-prod/ox-content/blob/main/npm/vite-plugin-ox-content/src/ssg.ts#L559-L561" target="_blank" rel="noopener noreferrer">View source<span class="ox-api-entry__source-icon" aria-hidden="true"></span></a></p>
+<p class="ox-api-entry__source"><a class="ox-api-entry__source-link" href="https://github.com/ubugeeei-prod/ox-content/blob/main/npm/vite-plugin-ox-content/src/ssg.ts#L572-L574" target="_blank" rel="noopener noreferrer">View source<span class="ox-api-entry__source-icon" aria-hidden="true"></span></a></p>
 <div class="ox-api-entry__section ox-api-entry__section--params">
 <h4>Parameters</h4>
 <ul class="ox-api-entry__params">
@@ -722,7 +729,7 @@
 <h4>Signature</h4>
 <pre><code class="language-typescript">const localeCodesCache = new WeakMap&lt;LocaleConfig[], string[]&gt;()</code></pre>
 </div>
-<p class="ox-api-entry__source"><a class="ox-api-entry__source-link" href="https://github.com/ubugeeei-prod/ox-content/blob/main/npm/vite-plugin-ox-content/src/ssg.ts#L382" target="_blank" rel="noopener noreferrer">View source<span class="ox-api-entry__source-icon" aria-hidden="true"></span></a></p>
+<p class="ox-api-entry__source"><a class="ox-api-entry__source-link" href="https://github.com/ubugeeei-prod/ox-content/blob/main/npm/vite-plugin-ox-content/src/ssg.ts#L392" target="_blank" rel="noopener noreferrer">View source<span class="ox-api-entry__source-icon" aria-hidden="true"></span></a></p>
   </div>
 </details>
 
@@ -736,7 +743,7 @@
 <h4>Signature</h4>
 <pre><code class="language-typescript">export interface NavGroup</code></pre>
 </div>
-<p class="ox-api-entry__source"><a class="ox-api-entry__source-link" href="https://github.com/ubugeeei-prod/ox-content/blob/main/npm/vite-plugin-ox-content/src/ssg.ts#L639-L644" target="_blank" rel="noopener noreferrer">View source<span class="ox-api-entry__source-icon" aria-hidden="true"></span></a></p>
+<p class="ox-api-entry__source"><a class="ox-api-entry__source-link" href="https://github.com/ubugeeei-prod/ox-content/blob/main/npm/vite-plugin-ox-content/src/ssg.ts#L652-L657" target="_blank" rel="noopener noreferrer">View source<span class="ox-api-entry__source-icon" aria-hidden="true"></span></a></p>
 <div class="ox-api-entry__section ox-api-entry__section--members">
 <h4>Members</h4>
 <div class="ox-api-entry__member-group">
@@ -781,7 +788,7 @@
 <h4>Signature</h4>
 <pre><code class="language-typescript">const navGroupsForRustCache = new WeakMap&lt;NavGroup[], RustNavGroup[]&gt;()</code></pre>
 </div>
-<p class="ox-api-entry__source"><a class="ox-api-entry__source-link" href="https://github.com/ubugeeei-prod/ox-content/blob/main/npm/vite-plugin-ox-content/src/ssg.ts#L307" target="_blank" rel="noopener noreferrer">View source<span class="ox-api-entry__source-icon" aria-hidden="true"></span></a></p>
+<p class="ox-api-entry__source"><a class="ox-api-entry__source-link" href="https://github.com/ubugeeei-prod/ox-content/blob/main/npm/vite-plugin-ox-content/src/ssg.ts#L317" target="_blank" rel="noopener noreferrer">View source<span class="ox-api-entry__source-icon" aria-hidden="true"></span></a></p>
   </div>
 </details>
 
@@ -795,7 +802,7 @@
 <h4>Signature</h4>
 <pre><code class="language-typescript">export function parseSsgPagerOverride(value: unknown): SsgPagerOverride | undefined</code></pre>
 </div>
-<p class="ox-api-entry__source"><a class="ox-api-entry__source-link" href="https://github.com/ubugeeei-prod/ox-content/blob/main/npm/vite-plugin-ox-content/src/ssg.ts#L220-L247" target="_blank" rel="noopener noreferrer">View source<span class="ox-api-entry__source-icon" aria-hidden="true"></span></a></p>
+<p class="ox-api-entry__source"><a class="ox-api-entry__source-link" href="https://github.com/ubugeeei-prod/ox-content/blob/main/npm/vite-plugin-ox-content/src/ssg.ts#L230-L257" target="_blank" rel="noopener noreferrer">View source<span class="ox-api-entry__source-icon" aria-hidden="true"></span></a></p>
 <div class="ox-api-entry__section ox-api-entry__section--params">
 <h4>Parameters</h4>
 <ul class="ox-api-entry__params">
@@ -828,7 +835,7 @@
 <h4>Signature</h4>
 <pre><code class="language-typescript">export function resolveNavigationGroups(navigation: SsgNavigationGroup[] | undefined, base: string, extension: string): NavGroup[] | undefined</code></pre>
 </div>
-<p class="ox-api-entry__source"><a class="ox-api-entry__source-link" href="https://github.com/ubugeeei-prod/ox-content/blob/main/npm/vite-plugin-ox-content/src/ssg.ts#L578-L588" target="_blank" rel="noopener noreferrer">View source<span class="ox-api-entry__source-icon" aria-hidden="true"></span></a></p>
+<p class="ox-api-entry__source"><a class="ox-api-entry__source-link" href="https://github.com/ubugeeei-prod/ox-content/blob/main/npm/vite-plugin-ox-content/src/ssg.ts#L591-L601" target="_blank" rel="noopener noreferrer">View source<span class="ox-api-entry__source-icon" aria-hidden="true"></span></a></p>
 <div class="ox-api-entry__section ox-api-entry__section--params">
 <h4>Parameters</h4>
 <ul class="ox-api-entry__params">
@@ -875,7 +882,7 @@
 <h4>Signature</h4>
 <pre><code class="language-typescript">export function resolveSsgOptions(ssg: SsgOptions | boolean | undefined): ResolvedSsgOptions</code></pre>
 </div>
-<p class="ox-api-entry__source"><a class="ox-api-entry__source-link" href="https://github.com/ubugeeei-prod/ox-content/blob/main/npm/vite-plugin-ox-content/src/ssg.ts#L121-L184" target="_blank" rel="noopener noreferrer">View source<span class="ox-api-entry__source-icon" aria-hidden="true"></span></a></p>
+<p class="ox-api-entry__source"><a class="ox-api-entry__source-link" href="https://github.com/ubugeeei-prod/ox-content/blob/main/npm/vite-plugin-ox-content/src/ssg.ts#L128-L194" target="_blank" rel="noopener noreferrer">View source<span class="ox-api-entry__source-icon" aria-hidden="true"></span></a></p>
 <div class="ox-api-entry__section ox-api-entry__section--params">
 <h4>Parameters</h4>
 <ul class="ox-api-entry__params">
@@ -908,7 +915,7 @@
 <h4>Signature</h4>
 <pre><code class="language-typescript">interface RustLocale</code></pre>
 </div>
-<p class="ox-api-entry__source"><a class="ox-api-entry__source-link" href="https://github.com/ubugeeei-prod/ox-content/blob/main/npm/vite-plugin-ox-content/src/ssg.ts#L350-L354" target="_blank" rel="noopener noreferrer">View source<span class="ox-api-entry__source-icon" aria-hidden="true"></span></a></p>
+<p class="ox-api-entry__source"><a class="ox-api-entry__source-link" href="https://github.com/ubugeeei-prod/ox-content/blob/main/npm/vite-plugin-ox-content/src/ssg.ts#L360-L364" target="_blank" rel="noopener noreferrer">View source<span class="ox-api-entry__source-icon" aria-hidden="true"></span></a></p>
 <div class="ox-api-entry__section ox-api-entry__section--members">
 <h4>Members</h4>
 <div class="ox-api-entry__member-group">
@@ -948,7 +955,7 @@
 <h4>Signature</h4>
 <pre><code class="language-typescript">const rustLocalesCache = new WeakMap&lt;LocaleConfig[], RustLocale[]&gt;()</code></pre>
 </div>
-<p class="ox-api-entry__source"><a class="ox-api-entry__source-link" href="https://github.com/ubugeeei-prod/ox-content/blob/main/npm/vite-plugin-ox-content/src/ssg.ts#L361" target="_blank" rel="noopener noreferrer">View source<span class="ox-api-entry__source-icon" aria-hidden="true"></span></a></p>
+<p class="ox-api-entry__source"><a class="ox-api-entry__source-link" href="https://github.com/ubugeeei-prod/ox-content/blob/main/npm/vite-plugin-ox-content/src/ssg.ts#L371" target="_blank" rel="noopener noreferrer">View source<span class="ox-api-entry__source-icon" aria-hidden="true"></span></a></p>
   </div>
 </details>
 
@@ -962,7 +969,7 @@
 <h4>Signature</h4>
 <pre><code class="language-typescript">interface RustNavGroup</code></pre>
 </div>
-<p class="ox-api-entry__source"><a class="ox-api-entry__source-link" href="https://github.com/ubugeeei-prod/ox-content/blob/main/npm/vite-plugin-ox-content/src/ssg.ts#L295-L300" target="_blank" rel="noopener noreferrer">View source<span class="ox-api-entry__source-icon" aria-hidden="true"></span></a></p>
+<p class="ox-api-entry__source"><a class="ox-api-entry__source-link" href="https://github.com/ubugeeei-prod/ox-content/blob/main/npm/vite-plugin-ox-content/src/ssg.ts#L305-L310" target="_blank" rel="noopener noreferrer">View source<span class="ox-api-entry__source-icon" aria-hidden="true"></span></a></p>
 <div class="ox-api-entry__section ox-api-entry__section--members">
 <h4>Members</h4>
 <div class="ox-api-entry__member-group">
@@ -1008,7 +1015,7 @@
 <h4>Signature</h4>
 <pre><code class="language-typescript">export function shouldGenerateOgImages(options: ResolvedOptions): boolean</code></pre>
 </div>
-<p class="ox-api-entry__source"><a class="ox-api-entry__source-link" href="https://github.com/ubugeeei-prod/ox-content/blob/main/npm/vite-plugin-ox-content/src/ssg.ts#L814-L816" target="_blank" rel="noopener noreferrer">View source<span class="ox-api-entry__source-icon" aria-hidden="true"></span></a></p>
+<p class="ox-api-entry__source"><a class="ox-api-entry__source-link" href="https://github.com/ubugeeei-prod/ox-content/blob/main/npm/vite-plugin-ox-content/src/ssg.ts#L827-L829" target="_blank" rel="noopener noreferrer">View source<span class="ox-api-entry__source-icon" aria-hidden="true"></span></a></p>
 <div class="ox-api-entry__section ox-api-entry__section--params">
 <h4>Parameters</h4>
 <ul class="ox-api-entry__params">
@@ -1041,7 +1048,7 @@
 <h4>Signature</h4>
 <pre><code class="language-typescript">function sitePathFromUrlPath(urlPath: string): string</code></pre>
 </div>
-<p class="ox-api-entry__source"><a class="ox-api-entry__source-link" href="https://github.com/ubugeeei-prod/ox-content/blob/main/npm/vite-plugin-ox-content/src/ssg.ts#L1410-L1415" target="_blank" rel="noopener noreferrer">View source<span class="ox-api-entry__source-icon" aria-hidden="true"></span></a></p>
+<p class="ox-api-entry__source"><a class="ox-api-entry__source-link" href="https://github.com/ubugeeei-prod/ox-content/blob/main/npm/vite-plugin-ox-content/src/ssg.ts#L1425-L1430" target="_blank" rel="noopener noreferrer">View source<span class="ox-api-entry__source-icon" aria-hidden="true"></span></a></p>
 <div class="ox-api-entry__section ox-api-entry__section--params">
 <h4>Parameters</h4>
 <ul class="ox-api-entry__params">
@@ -1084,7 +1091,7 @@
 <h4>Signature</h4>
 <pre><code class="language-typescript">export interface SsgBarePage</code></pre>
 </div>
-<p class="ox-api-entry__source"><a class="ox-api-entry__source-link" href="https://github.com/ubugeeei-prod/ox-content/blob/main/npm/vite-plugin-ox-content/src/ssg.ts#L280-L292" target="_blank" rel="noopener noreferrer">View source<span class="ox-api-entry__source-icon" aria-hidden="true"></span></a></p>
+<p class="ox-api-entry__source"><a class="ox-api-entry__source-link" href="https://github.com/ubugeeei-prod/ox-content/blob/main/npm/vite-plugin-ox-content/src/ssg.ts#L290-L302" target="_blank" rel="noopener noreferrer">View source<span class="ox-api-entry__source-icon" aria-hidden="true"></span></a></p>
 <div class="ox-api-entry__section ox-api-entry__section--members">
 <h4>Members</h4>
 <div class="ox-api-entry__member-group">
@@ -1164,7 +1171,7 @@
 <h4>Signature</h4>
 <pre><code class="language-typescript">export interface SsgBuildResult</code></pre>
 </div>
-<p class="ox-api-entry__source"><a class="ox-api-entry__source-link" href="https://github.com/ubugeeei-prod/ox-content/blob/main/npm/vite-plugin-ox-content/src/ssg.ts#L702-L715" target="_blank" rel="noopener noreferrer">View source<span class="ox-api-entry__source-icon" aria-hidden="true"></span></a></p>
+<p class="ox-api-entry__source"><a class="ox-api-entry__source-link" href="https://github.com/ubugeeei-prod/ox-content/blob/main/npm/vite-plugin-ox-content/src/ssg.ts#L715-L728" target="_blank" rel="noopener noreferrer">View source<span class="ox-api-entry__source-icon" aria-hidden="true"></span></a></p>
 <div class="ox-api-entry__section ox-api-entry__section--members">
 <h4>Members</h4>
 <div class="ox-api-entry__member-group">
@@ -1204,7 +1211,7 @@
 <h4>Signature</h4>
 <pre><code class="language-typescript">export interface SsgEntryPageConfig</code></pre>
 </div>
-<p class="ox-api-entry__source"><a class="ox-api-entry__source-link" href="https://github.com/ubugeeei-prod/ox-content/blob/main/npm/vite-plugin-ox-content/src/ssg.ts#L68-L71" target="_blank" rel="noopener noreferrer">View source<span class="ox-api-entry__source-icon" aria-hidden="true"></span></a></p>
+<p class="ox-api-entry__source"><a class="ox-api-entry__source-link" href="https://github.com/ubugeeei-prod/ox-content/blob/main/npm/vite-plugin-ox-content/src/ssg.ts#L73-L76" target="_blank" rel="noopener noreferrer">View source<span class="ox-api-entry__source-icon" aria-hidden="true"></span></a></p>
 <div class="ox-api-entry__section ox-api-entry__section--members">
 <h4>Members</h4>
 <div class="ox-api-entry__member-group">
@@ -1239,7 +1246,7 @@
 <h4>Signature</h4>
 <pre><code class="language-typescript">export interface SsgNavItem</code></pre>
 </div>
-<p class="ox-api-entry__source"><a class="ox-api-entry__source-link" href="https://github.com/ubugeeei-prod/ox-content/blob/main/npm/vite-plugin-ox-content/src/ssg.ts#L56-L63" target="_blank" rel="noopener noreferrer">View source<span class="ox-api-entry__source-icon" aria-hidden="true"></span></a></p>
+<p class="ox-api-entry__source"><a class="ox-api-entry__source-link" href="https://github.com/ubugeeei-prod/ox-content/blob/main/npm/vite-plugin-ox-content/src/ssg.ts#L61-L68" target="_blank" rel="noopener noreferrer">View source<span class="ox-api-entry__source-icon" aria-hidden="true"></span></a></p>
 <div class="ox-api-entry__section ox-api-entry__section--members">
 <h4>Members</h4>
 <div class="ox-api-entry__member-group">
@@ -1285,7 +1292,7 @@
 </details>
 
 <details id="ssgpagedata" class="ox-api-entry">
-  <summary><span class="ox-api-entry__kind">interface</span><span class="ox-api-entry__summary-main"><code class="ox-api-entry__signature ox-api-entry__signature--highlighted language-typescript">SsgPageData</code><span class="ox-api-entry__description">Page data for SSG.</span><span class="ox-api-entry__meta"><span class="ox-api-badge">12 members</span></span></span></summary>
+  <summary><span class="ox-api-entry__kind">interface</span><span class="ox-api-entry__summary-main"><code class="ox-api-entry__signature ox-api-entry__signature--highlighted language-typescript">SsgPageData</code><span class="ox-api-entry__description">Page data for SSG.</span><span class="ox-api-entry__meta"><span class="ox-api-badge">13 members</span></span></span></summary>
   <div class="ox-api-entry__body">
 <div class="ox-api-entry__prose">
 <p>Page data for SSG.</p>
@@ -1294,7 +1301,7 @@
 <h4>Signature</h4>
 <pre><code class="language-typescript">export interface SsgPageData</code></pre>
 </div>
-<p class="ox-api-entry__source"><a class="ox-api-entry__source-link" href="https://github.com/ubugeeei-prod/ox-content/blob/main/npm/vite-plugin-ox-content/src/ssg.ts#L76-L93" target="_blank" rel="noopener noreferrer">View source<span class="ox-api-entry__source-icon" aria-hidden="true"></span></a></p>
+<p class="ox-api-entry__source"><a class="ox-api-entry__source-link" href="https://github.com/ubugeeei-prod/ox-content/blob/main/npm/vite-plugin-ox-content/src/ssg.ts#L81-L100" target="_blank" rel="noopener noreferrer">View source<span class="ox-api-entry__source-icon" aria-hidden="true"></span></a></p>
 <div class="ox-api-entry__section ox-api-entry__section--members">
 <h4>Members</h4>
 <div class="ox-api-entry__member-group">
@@ -1306,6 +1313,11 @@
   <td><code>breadcrumbs</code><span class="ox-api-badge">optional</span></td>
   <td><code class="ox-api-entry__member-type language-typescript">boolean</code></td>
   <td><div class="ox-api-entry__member-description">Frontmatter <code>breadcrumbs: false</code> hides the trail on this page.</div></td>
+</tr>
+<tr id="ssgpagedata-chrome">
+  <td><code>chrome</code><span class="ox-api-badge">optional</span></td>
+  <td><code class="ox-api-entry__member-type language-typescript"><a href="./header-chrome.md#pagechromeflags">PageChromeFlags</a></code></td>
+  <td><div class="ox-api-entry__member-description">Per-page chrome flags. Honored only when <code>ssg.pageChrome</code> is on.</div></td>
 </tr>
 <tr id="ssgpagedata-content">
   <td><code>content</code></td>
@@ -1379,7 +1391,7 @@
 <h4>Signature</h4>
 <pre><code class="language-typescript">export interface SsgPagerOverride</code></pre>
 </div>
-<p class="ox-api-entry__source"><a class="ox-api-entry__source-link" href="https://github.com/ubugeeei-prod/ox-content/blob/main/npm/vite-plugin-ox-content/src/ssg.ts#L96-L100" target="_blank" rel="noopener noreferrer">View source<span class="ox-api-entry__source-icon" aria-hidden="true"></span></a></p>
+<p class="ox-api-entry__source"><a class="ox-api-entry__source-link" href="https://github.com/ubugeeei-prod/ox-content/blob/main/npm/vite-plugin-ox-content/src/ssg.ts#L103-L107" target="_blank" rel="noopener noreferrer">View source<span class="ox-api-entry__source-icon" aria-hidden="true"></span></a></p>
 <div class="ox-api-entry__section ox-api-entry__section--members">
 <h4>Members</h4>
 <div class="ox-api-entry__member-group">
@@ -1419,7 +1431,7 @@
 <h4>Signature</h4>
 <pre><code class="language-typescript">function toRustTocEntry(entry: TocEntry): TocEntry</code></pre>
 </div>
-<p class="ox-api-entry__source"><a class="ox-api-entry__source-link" href="https://github.com/ubugeeei-prod/ox-content/blob/main/npm/vite-plugin-ox-content/src/ssg.ts#L340-L347" target="_blank" rel="noopener noreferrer">View source<span class="ox-api-entry__source-icon" aria-hidden="true"></span></a></p>
+<p class="ox-api-entry__source"><a class="ox-api-entry__source-link" href="https://github.com/ubugeeei-prod/ox-content/blob/main/npm/vite-plugin-ox-content/src/ssg.ts#L350-L357" target="_blank" rel="noopener noreferrer">View source<span class="ox-api-entry__source-icon" aria-hidden="true"></span></a></p>
 <div class="ox-api-entry__section ox-api-entry__section--params">
 <h4>Parameters</h4>
 <ul class="ox-api-entry__params">
@@ -1452,7 +1464,7 @@
 <h4>Signature</h4>
 <pre><code class="language-typescript">function toThemePageData(pageResult: PageProcessResult): ThemePageData</code></pre>
 </div>
-<p class="ox-api-entry__source"><a class="ox-api-entry__source-link" href="https://github.com/ubugeeei-prod/ox-content/blob/main/npm/vite-plugin-ox-content/src/ssg.ts#L1213-L1226" target="_blank" rel="noopener noreferrer">View source<span class="ox-api-entry__source-icon" aria-hidden="true"></span></a></p>
+<p class="ox-api-entry__source"><a class="ox-api-entry__source-link" href="https://github.com/ubugeeei-prod/ox-content/blob/main/npm/vite-plugin-ox-content/src/ssg.ts#L1227-L1240" target="_blank" rel="noopener noreferrer">View source<span class="ox-api-entry__source-icon" aria-hidden="true"></span></a></p>
 <div class="ox-api-entry__section ox-api-entry__section--params">
 <h4>Parameters</h4>
 <ul class="ox-api-entry__params">

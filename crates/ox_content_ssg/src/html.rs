@@ -4,6 +4,7 @@ use askama::Template;
 
 mod a11y;
 mod aside;
+mod bare;
 mod breadcrumbs;
 mod entry;
 mod footer;
@@ -27,11 +28,12 @@ use pagination::PagerView;
 pub use reader_chrome::ReaderChrome;
 pub use team::{TeamLink, TeamMember, TeamOptions, render_team_page};
 
+pub use bare::{BarePageData, generate_bare_html, generate_bare_page};
 pub use page::{
     EntryPageConfig, FeatureConfig, HeroAction, HeroConfig, HeroImage, HeroNoticeConfig,
     LocaleInfo, LocalePath, NavGroup, NavItem, PageData, PagerOverride, SsgConfig, TocEntry,
 };
-pub use render::{BarePageData, generate_bare_html, generate_bare_page, generate_html};
+pub use render::generate_html;
 pub use theme::{
     SocialLink, SocialLinks, ThemeColors, ThemeConfig, ThemeEmbed, ThemeEntryPage, ThemeFonts,
     ThemeFooter, ThemeHeader, ThemeLayout,
