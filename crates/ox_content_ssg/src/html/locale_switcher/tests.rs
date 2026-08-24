@@ -1,5 +1,5 @@
 use super::super::{
-    LocaleInfo, LocalePath, NavGroup, NavItem, PageData, ReaderChrome, SsgConfig,
+    A11y, LocaleInfo, LocalePath, NavGroup, NavItem, PageData, ReaderChrome, SsgConfig,
     generate_bare_html, generate_html,
 };
 
@@ -68,7 +68,7 @@ fn config(
         reader_chrome: ReaderChrome::default(),
         locale_switcher,
         locale_paths,
-        a11y: Default::default(),
+        a11y: A11y::default(),
     }
 }
 

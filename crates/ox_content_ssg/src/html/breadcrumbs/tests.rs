@@ -1,5 +1,5 @@
 use super::super::{
-    EntryPageConfig, NavGroup, NavItem, PageData, ReaderChrome, SsgConfig, ThemeConfig,
+    A11y, EntryPageConfig, NavGroup, NavItem, PageData, ReaderChrome, SsgConfig, ThemeConfig,
     generate_bare_html, generate_html,
 };
 
@@ -71,7 +71,7 @@ fn config(breadcrumbs: bool) -> SsgConfig {
         reader_chrome: ReaderChrome::default(),
         locale_switcher: false,
         locale_paths: vec![],
-        a11y: Default::default(),
+        a11y: A11y::default(),
     }
 }
 

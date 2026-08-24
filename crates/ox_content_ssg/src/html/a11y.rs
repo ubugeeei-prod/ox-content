@@ -40,10 +40,7 @@ impl A11y {
 
     pub(super) fn skip_link_html(&self) -> Option<String> {
         self.is_enabled().then(|| {
-            format!(
-                "<a class=\"ox-skip-link\" href=\"#ox-main\">{}</a>",
-                escape_html(self.label())
-            )
+            format!("<a class=\"ox-skip-link\" href=\"#ox-main\">{}</a>", escape_html(self.label()))
         })
     }
 }
