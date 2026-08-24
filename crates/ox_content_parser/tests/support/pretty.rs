@@ -11,6 +11,9 @@ use std::fmt::Write as _;
 
 use ox_content_ast::{AlignKind, Document, Node, Span};
 
+#[path = "pretty_mdx.rs"]
+mod mdx;
+
 pub fn format_document(doc: &Document<'_>, source: &str, out: &mut String) {
     line(out, 0, format_args!("Document {}", span(doc.span, source)));
     for child in &doc.children {
@@ -178,128 +181,11 @@ fn format_node(node: &Node<'_>, source: &str, depth: usize, out: &mut String) {
                 format_node(child, source, depth + 1, out);
             }
         }
-        Node::MdxJsxFlowElement(node) => {
-            format_mdx_jsx_element(
-                "MdxJsxFlowElement",
-                node.name,
-                node.self_closing,
-                node.span,
-                &node.attributes,
-                &node.children,
-                source,
-                depth,
-                out,
-            );
-        }
-        Node::MdxJsxTextElement(node) => {
-            format_mdx_jsx_element(
-                "MdxJsxTextElement",
-                node.name,
-                node.self_closing,
-                node.span,
-                &node.attributes,
-                &node.children,
-                source,
-                depth,
-                out,
-            );
-        }
-        Node::MdxjsEsm(node) => {
-            line(
-                out,
-                depth,
-                format_args!("MdxjsEsm value={:?} {}", node.value, span(node.span, source)),
-            );
-        }
-        Node::MdxFlowExpression(node) => {
-            line(
-                out,
-                depth,
-                format_args!(
-                    "MdxFlowExpression value={:?} {}",
-                    node.value,
-                    span(node.span, source)
-                ),
-            );
-        }
-        Node::MdxTextExpression(node) => {
-            line(
-                out,
-                depth,
-                format_args!(
-                    "MdxTextExpression value={:?} {}",
-                    node.value,
-                    span(node.span, source)
-                ),
-            );
-        }
-    }
-}
-
-fn format_mdx_jsx_element(
-    kind: &str,
-    name: Option<&str>,
-    self_closing: bool,
-    node_span: Span,
-    attributes: &[ox_content_ast::MdxJsxAttributeEntry<'_>],
-    children: &[Node<'_>],
-    source: &str,
-    depth: usize,
-    out: &mut String,
-) {
-    line(
-        out,
-        depth,
-        format_args!(
-            "{} name={:?} self_closing={} {}",
-            kind,
-            name,
-            self_closing,
-            span(node_span, source)
-        ),
-    );
-    for attribute in attributes {
-        format_mdx_attribute(attribute, source, depth + 1, out);
-    }
-    for child in children {
-        format_node(child, source, depth + 1, out);
-    }
-}
-
-fn format_mdx_attribute(
-    entry: &ox_content_ast::MdxJsxAttributeEntry<'_>,
-    source: &str,
-    depth: usize,
-    out: &mut String,
-) {
-    match entry {
-        ox_content_ast::MdxJsxAttributeEntry::Attribute(attribute) => {
-            let value = match &attribute.value {
-                None => "boolean".to_string(),
-                Some(ox_content_ast::MdxJsxAttributeValue::Literal(value)) => {
-                    format!("literal({value:?})")
-                }
-                Some(ox_content_ast::MdxJsxAttributeValue::Expression(expr)) => {
-                    format!("expression({:?})", expr.value)
-                }
-            };
-            line(
-                out,
-                depth,
-                format_args!(
-                    "Attr name={:?} value={value} {}",
-                    attribute.name,
-                    span(attribute.span, source)
-                ),
-            );
-        }
-        ox_content_ast::MdxJsxAttributeEntry::Expression(expr) => {
-            line(
-                out,
-                depth,
-                format_args!("AttrExpr value={:?} {}", expr.value, span(expr.span, source)),
-            );
-        }
+        Node::MdxJsxFlowElement(node) => mdx::format_jsx_flow_element(node, source, depth, out),
+        Node::MdxJsxTextElement(node) => mdx::format_jsx_text_element(node, source, depth, out),
+        Node::MdxjsEsm(node) => mdx::format_esm(node, source, depth, out),
+        Node::MdxFlowExpression(node) => mdx::format_flow_expression(node, source, depth, out),
+        Node::MdxTextExpression(node) => mdx::format_text_expression(node, source, depth, out),
     }
 }
 

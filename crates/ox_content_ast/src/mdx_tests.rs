@@ -1,5 +1,7 @@
 //! Strict construction, span, and visitor tests for MDX AST nodes.
 
+#![allow(clippy::disallowed_macros, clippy::disallowed_methods, clippy::disallowed_types)]
+
 use ox_content_allocator::Allocator;
 
 use crate::visit::Visit;
