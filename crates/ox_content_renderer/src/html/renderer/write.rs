@@ -148,7 +148,9 @@ impl HtmlRenderer {
         };
         let value = rewritten.as_deref().unwrap_or(value);
 
-        if self.options.disallow_raw_html && crate::html::tagfilter::needs_filtering(value) {
+        if (self.options.disallow_raw_html || self.in_mdx_island_children)
+            && crate::html::tagfilter::needs_filtering(value)
+        {
             crate::html::tagfilter::write_filtered_into(&mut self.output, value);
         } else {
             self.write(value);

@@ -76,7 +76,16 @@ Regular **Markdown** prose. Hello {name}.
 <Counter initial={5} />
 
 <Callout type="tip">
-  This child content is passed to the component.
+
+# Title
+
+Hello **world**.
+
+- nested
+  - list
+
+<Badge />
+
 </Callout>
 
 <>
@@ -112,6 +121,15 @@ not a JavaScript parser — so regex literals may confuse boundaries.
 Unclosed `{` stays ordinary text. Fences and inline code never become
 expressions. Hostile source such as `{ "<script>" }` is stored and is not
 emitted as HTML.
+
+When MDX is on, Markdown between a component's tags is parsed as Markdown
+and rendered as HTML **inside** the island wrapper (`<h1>`, `<strong>`,
+lists, fences). Fenced and inline code stay code — a `<Alert />` inside a
+fence is not an island. Nested PascalCase tags become nested islands.
+Unclosed tags do not swallow the rest of the file. Hostile raw HTML in
+children such as `<script>alert(1)</script>` is neutralized (the leading
+`<` is escaped) so it cannot execute. Fragments (`<>...</>`) render their
+markdown children with no island wrapper.
 
 When MDX is on, a named JSX component becomes an island placeholder in the
 HTML (`data-ox-island="Name"`). Its attributes are serialized onto that

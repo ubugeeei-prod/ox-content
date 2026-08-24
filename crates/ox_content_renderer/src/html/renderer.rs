@@ -69,6 +69,10 @@ pub struct HtmlRenderer {
     /// (paragraphs, headings, emphasis, …) and only the link case needs
     /// to mask it out.
     in_link: bool,
+    /// Named MDX island children run the GFM tagfilter on raw HTML so a
+    /// `<script>` in component children cannot execute. Cleared while the
+    /// island writes its own non-executing JSON payload.
+    in_mdx_island_children: bool,
     /// First-byte skip index for the autolink scanner. It depends only on
     /// `options.autolink_patterns`, which is immutable for the duration of a
     /// render, so it is built once at `render()` entry and reused for every
@@ -107,6 +111,7 @@ impl HtmlRenderer {
             heading_text_scratch: String::with_capacity(64),
             heading_slug_scratch: String::with_capacity(64),
             in_link: false,
+            in_mdx_island_children: false,
             autolink_index: None,
         }
     }
@@ -136,6 +141,7 @@ impl HtmlRenderer {
     fn render_into_output(&mut self, document: &Document<'_>) {
         crate::profile_span!("renderer::render");
         self.output.clear();
+        self.in_mdx_island_children = false;
         // Renderer setup is intentionally split into a cheap structural scan
         // and the expensive optional work. TOC collection walks every heading
         // and allocates a slug per entry, which used to fire on every render

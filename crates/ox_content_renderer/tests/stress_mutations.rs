@@ -31,7 +31,7 @@ const SPEC: &str = include_str!("spec_fixtures/commonmark-0.31.2-spec.txt");
 /// Generous enough that a slow debug-build machine never trips it, tight
 /// enough that an infinite loop is caught in one test run. The batch
 /// takes low single-digit seconds in practice.
-const BUDGET: Duration = Duration::from_secs(120);
+const BUDGET: Duration = Duration::from_mins(2);
 
 /// Syntax markers spliced into the seeds. Each opens a construct whose
 /// scanner has to cope with the closer being absent or misplaced.

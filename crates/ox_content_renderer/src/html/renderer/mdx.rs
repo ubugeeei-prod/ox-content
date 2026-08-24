@@ -1,8 +1,10 @@
 //! Render MDX JSX elements as island placeholders with serialized props.
 //!
 //! Named PascalCase / member-name tags become `data-ox-island` wrappers.
-//! Fragments render children only. Document-level `{expression}` and ESM
-//! stay silent. Pages without named components emit no `<script>`.
+//! Markdown children render as HTML *inside* that wrapper. Fragments render
+//! children only. Document-level `{expression}` and ESM stay silent. Pages
+//! without named components emit no `<script>`. Raw HTML under a named
+//! island is tagfiltered so `<script>` in children cannot execute.
 
 use ox_content_ast::{MdxJsxAttributeEntry, MdxJsxFlowElement, MdxJsxTextElement, Node};
 
@@ -38,6 +40,9 @@ impl HtmlRenderer {
             return;
         };
 
+        let previous_child_html = self.in_mdx_island_children;
+        self.in_mdx_island_children = false;
+
         self.output.push('<');
         self.output.push_str(tag);
         self.output.push_str(" class=\"ox-island\" data-ox-island=\"");
@@ -58,10 +63,12 @@ impl HtmlRenderer {
             self.output.push_str(json);
             self.output.push_str("</script>");
         }
+        self.in_mdx_island_children = true;
         self.render_mdx_children(children, block);
         self.output.push_str("</");
         self.output.push_str(tag);
         self.output.push('>');
+        self.in_mdx_island_children = previous_child_html;
         if block {
             self.output.push('\n');
         }
