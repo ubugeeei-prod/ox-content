@@ -69,6 +69,8 @@ fn config(breadcrumbs: bool) -> SsgConfig {
         pagination: false,
         breadcrumbs,
         reader_chrome: ReaderChrome::default(),
+        locale_switcher: false,
+        locale_paths: vec![],
     }
 }
 

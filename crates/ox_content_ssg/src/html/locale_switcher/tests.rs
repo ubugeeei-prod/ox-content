@@ -14,6 +14,7 @@ fn page(path: &str) -> PageData {
         entry_page: None,
         prev: None,
         next: None,
+        breadcrumbs: None,
     }
 }
 
@@ -63,6 +64,7 @@ fn config(
         locale: current.map(ToOwned::to_owned),
         available_locales: available,
         pagination: false,
+        breadcrumbs: false,
         reader_chrome: ReaderChrome::default(),
         locale_switcher,
         locale_paths,
