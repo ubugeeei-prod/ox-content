@@ -4,6 +4,7 @@ import path from "node:path";
 import type { Plugin, ViteDevServer } from "vite";
 import { resolveLanguage } from "./catalog";
 import {
+  DEV_TYPECHECK_PATH,
   resolveCodePlayOptions,
   type RawCodePlayOptions,
   type ResolvedCodePlayOptions,
@@ -26,13 +27,8 @@ const RESOLVED_VIRTUAL = `\0${VIRTUAL_ID}`;
 const MARKDOWN_RE = /\.(?:md|markdown|mdx)(?:$|\?)/i;
 
 export function codePlay(options: CodePlayPluginOptions = {}): Plugin {
-  const resolved = resolveCodePlayOptions({
-    ...options,
-    endpoints: {
-      ...options.endpoints,
-      typecheck: options.endpoints?.typecheck ?? "/__ox-code-play/typecheck",
-    },
-  });
+  const resolved = resolveCodePlayOptions(options);
+  const explicitTypecheck = options.endpoints?.typecheck;
   let base = resolved.base;
   let command: "build" | "serve" = "serve";
   let outDir = resolved.outDir;
@@ -55,6 +51,13 @@ export function codePlay(options: CodePlayPluginOptions = {}): Plugin {
       root = config.root;
       base = resolved.base === "/" ? normalizeBase(config.base) : resolved.base;
       outDir = resolved.outDir ?? config.build.outDir;
+      if (explicitTypecheck === undefined) {
+        if (command === "serve") {
+          resolved.endpoints.typecheck = DEV_TYPECHECK_PATH;
+        } else {
+          delete resolved.endpoints.typecheck;
+        }
+      }
     },
 
     resolveId(id) {
@@ -226,7 +229,7 @@ function mountProxies(server: ViteDevServer, rustUrl: string, goUrl: string): vo
   server.middlewares.use("/__ox-code-play/go", (req, res) => {
     void proxy(req, res, goUrl, "application/x-www-form-urlencoded");
   });
-  server.middlewares.use("/__ox-code-play/typecheck", (req, res) => {
+  server.middlewares.use(DEV_TYPECHECK_PATH, (req, res) => {
     void typecheckProxy(req, res);
   });
 }

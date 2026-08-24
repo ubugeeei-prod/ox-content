@@ -1,16 +1,50 @@
 import { executeScript } from "./javascript";
 import { hasNodeVm } from "./runtime-host";
+import { isAbortError } from "./transport";
 import { StdioBuffer } from "./stdio";
 import { stripTypeScript } from "./strip-typescript";
 import { PhaseTracker } from "./timing";
 import type { AdapterRequest, AdapterResult, Diagnostic, TransportResponse } from "./types";
 
+export type TypecheckBackend = "endpoint" | "tsgo" | "unavailable";
+
+export function resolveTypecheckBackend(
+  hasVm: boolean,
+  typecheckUrl: string | undefined,
+): TypecheckBackend {
+  if (typecheckUrl && !hasVm) {
+    return "endpoint";
+  }
+  if (!hasVm) {
+    return "unavailable";
+  }
+  return "tsgo";
+}
+
 export async function typecheckTypeScript(request: AdapterRequest): Promise<AdapterResult> {
   const tracker = new PhaseTracker();
   tracker.start("typecheck", "Typecheck");
+  const backend = resolveTypecheckBackend(hasNodeVm(), request.endpoints.typecheck);
 
-  if (request.endpoints.typecheck && !hasNodeVm()) {
+  if (backend === "endpoint") {
     return typecheckViaEndpoint(request, tracker);
+  }
+  if (backend === "unavailable") {
+    tracker.stop();
+    return {
+      status: "unsupported",
+      stdio: [],
+      diagnostics: [
+        {
+          message:
+            "Typecheck needs a reachable endpoints.typecheck. The Vite /__ox-code-play/typecheck proxy exists only during vite dev.",
+          severity: "error",
+          source: "tsgo",
+        },
+      ],
+      provenance: { compile: { host: "local", runtime: "tsgo" } },
+      timing: tracker.report(),
+    };
   }
 
   try {
@@ -27,6 +61,9 @@ export async function typecheckTypeScript(request: AdapterRequest): Promise<Adap
       timing: tracker.report(),
     };
   } catch (error) {
+    if (isAbortError(error) || request.signal?.aborted) {
+      throw error;
+    }
     tracker.stop();
     const message = error instanceof Error ? error.message : String(error);
     return {
@@ -72,6 +109,9 @@ export async function runTypeScript(request: AdapterRequest): Promise<AdapterRes
       value: value === undefined ? undefined : String(value),
     };
   } catch (error) {
+    if (isAbortError(error) || request.signal?.aborted) {
+      throw error;
+    }
     tracker.stop();
     const message = error instanceof Error ? error.message : String(error);
     stdio.push("stderr", `${message}\n`);

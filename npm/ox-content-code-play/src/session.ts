@@ -1,6 +1,6 @@
 import { executeAdapter, typecheckAdapter } from "./adapters";
 import { mergeConfig } from "./config";
-import { errorMessage, errorResult } from "./result";
+import { friendlyTransportMessage, errorResult } from "./result";
 import { withStdioText } from "./stdio";
 import { isAbortError } from "./transport";
 import type {
@@ -105,7 +105,7 @@ export class CodePlaySession {
       if (signal.aborted || isAbortError(error)) {
         return this.finish(errorResult("Run cancelled.", "code-play", "cancelled"));
       }
-      return this.finish(errorResult(errorMessage(error)));
+      return this.finish(errorResult(friendlyTransportMessage(error)));
     }
   }
 

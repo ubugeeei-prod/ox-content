@@ -107,9 +107,10 @@ session.config; // editable language config
 
 `createCodePlay()` throws if you ask for a language that is not enabled.
 `session.setConfig({ strict: false })` updates the same object the config
-viewer edits. `session.cancel()` aborts an in-flight remote / typecheck
-request and returns `status: "cancelled"`. Inject `transport` (for example
-`createMemoryTransport`) in tests so CI never hits a live playground.
+viewer edits. `session.cancel()` aborts an in-flight run or typecheck and
+returns `status: "cancelled"`. The default toolbar shows **Cancel** while a
+run is busy. Inject `transport` (for example `createMemoryTransport`) in
+tests so CI never hits a live playground.
 
 | Field             | Meaning                                                  |
 | ----------------- | -------------------------------------------------------- |
@@ -169,7 +170,9 @@ official playgrounds (or your own HTTPS executor) for published pages, or
 
 Static hosts do not serve `POST /__ox-code-play/typecheck`. TypeScript
 **Run** still works in the browser (strip types, then a sandboxed iframe).
-**Typecheck** on a published page needs a reachable `endpoints.typecheck`.
+The **Typecheck** button is omitted from published widgets unless you set a
+reachable `endpoints.typecheck`. The Vite proxy path is used only during
+`vite dev`.
 
 Rust and Go on a published page call `endpoints.rust` / `endpoints.go`
 directly from the browser. Official playgrounds may reject that as CORS;
@@ -184,6 +187,7 @@ unreviewed snippets as `play`.
 - Samples are not executed during Markdown transform or SSG.
 - JavaScript and TypeScript execute in `node:vm` on Node, or in
   `<iframe sandbox="allow-scripts">` in the browser (no `allow-same-origin`).
+  They are never run with page-origin `Function`.
 - Vue / React / Svelte / Solid previews use the same iframe flags and load
   runtimes from `esm.sh`.
 - `sh` never spawns a local shell.

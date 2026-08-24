@@ -74,6 +74,9 @@ visitor-supplied snippets as `play`.
 - No sample is executed during Markdown transform or SSG.
 - JavaScript and TypeScript run in `node:vm` on Node, or in
   `<iframe sandbox="allow-scripts">` in the browser (no `allow-same-origin`).
+  They are never run with page-origin `Function`.
+- Published widgets hide **Typecheck** unless `endpoints.typecheck` is set.
+  **Cancel** appears while a run is in flight.
 - Framework previews use the same iframe flags and load runtimes from esm.sh.
 - Rust and Go POST source to the official playgrounds (or your `endpoints`).
   The Vite `/__ox-code-play/*` proxy is **dev-only**.

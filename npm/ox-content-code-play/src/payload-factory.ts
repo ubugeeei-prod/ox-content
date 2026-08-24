@@ -1,7 +1,7 @@
 import { resolveLanguage } from "./catalog";
 import type { ResolvedCodePlayOptions } from "./config";
 import type { PlayFence } from "./markdown";
-import type { PlayPayload } from "./types";
+import type { LanguageDefinition, PlayPayload, PlaygroundEndpoints } from "./types";
 
 export function payloadFromFence(fence: PlayFence, options: ResolvedCodePlayOptions): PlayPayload {
   const definition = resolveLanguage(fence.language);
@@ -11,7 +11,12 @@ export function payloadFromFence(fence: PlayFence, options: ResolvedCodePlayOpti
     code: fence.code,
     capabilities: {
       execute: enabled?.execute ?? Boolean(definition?.capabilities.execute),
-      typecheck: fence.typecheck || (enabled?.typecheck ?? false),
+      typecheck: payloadTypecheckEnabled(
+        fence.typecheck,
+        enabled?.typecheck,
+        definition,
+        options.endpoints,
+      ),
     },
     config: { ...definition?.defaultConfig, ...enabled?.config },
     viewers: options.viewers,
@@ -19,4 +24,20 @@ export function payloadFromFence(fence: PlayFence, options: ResolvedCodePlayOpti
     timeoutMs: options.timeoutMs,
     endpoints: options.endpoints,
   };
+}
+
+/** TypeScript typecheck in the browser needs a reachable endpoint; hide the dead button otherwise. */
+export function payloadTypecheckEnabled(
+  fenceTypecheck: boolean,
+  enabledTypecheck: boolean | undefined,
+  definition: LanguageDefinition | undefined,
+  endpoints: PlaygroundEndpoints,
+): boolean {
+  if (!(fenceTypecheck || enabledTypecheck)) {
+    return false;
+  }
+  if (definition?.id === "typescript") {
+    return Boolean(endpoints.typecheck);
+  }
+  return true;
 }

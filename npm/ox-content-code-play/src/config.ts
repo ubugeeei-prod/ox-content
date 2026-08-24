@@ -36,6 +36,9 @@ export const DEFAULT_ENDPOINTS: PlaygroundEndpoints = {
   go: "https://play.golang.org/compile",
 };
 
+/** Vite dev middleware only. Not present in production SSG output. */
+export const DEV_TYPECHECK_PATH = "/__ox-code-play/typecheck";
+
 export const DEFAULT_VIEWERS: ViewerFlags = {
   config: true,
   stdio: true,

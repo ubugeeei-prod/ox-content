@@ -30,8 +30,9 @@ export function renderPlayUi(state: UiState): string {
   return `<div class="ox-code-play ox-code-play--${preset}" data-ox-code-play-ui>
   <div class="ox-code-play__toolbar">
     <span class="ox-code-play__lang">${escapeHtml(definition?.name ?? state.payload.language)}</span>
-    <button type="button" data-ox-action="run"${state.busy ? " disabled" : ""}>Run</button>
-    ${canTypecheck ? `<button type="button" data-ox-action="typecheck"${state.busy ? " disabled" : ""}>Typecheck</button>` : ""}
+    <button type="button" data-ox-action="run"${actionButtonAttrs("run", Boolean(state.busy))}>Run</button>
+    ${canTypecheck ? `<button type="button" data-ox-action="typecheck"${actionButtonAttrs("typecheck", Boolean(state.busy))}>Typecheck</button>` : ""}
+    <button type="button" data-ox-action="cancel"${actionButtonAttrs("cancel", Boolean(state.busy))}>Cancel</button>
   </div>
   <div class="ox-code-play__source"></div>
   ${tabs}
@@ -62,6 +63,29 @@ function renderTabs(state: UiState, panel: string): string {
 
 function tab(id: string, label: string, selected: string): string {
   return `<button type="button" role="tab" data-ox-panel="${id}" aria-selected="${selected === id ? "true" : "false"}">${label}</button>`;
+}
+
+export function actionButtonAttrs(action: string, busy: boolean): string {
+  const state = actionBusyState(action, busy);
+  return `${state.disabled ? " disabled" : ""}${state.hidden ? " hidden" : ""}`;
+}
+
+export function actionBusyState(
+  action: string,
+  busy: boolean,
+): { disabled: boolean; hidden: boolean } {
+  if (action === "cancel") {
+    return { disabled: !busy, hidden: !busy };
+  }
+  return { disabled: busy, hidden: false };
+}
+
+export function applyActionBusy(root: ParentNode, busy: boolean): void {
+  for (const button of root.querySelectorAll<HTMLButtonElement>("button[data-ox-action]")) {
+    const state = actionBusyState(button.dataset.oxAction ?? "", busy);
+    button.disabled = state.disabled;
+    button.hidden = state.hidden;
+  }
 }
 
 function hidden(current: string, id: string, preset: CodePlayPreset): string {
