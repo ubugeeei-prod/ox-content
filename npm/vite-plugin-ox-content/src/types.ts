@@ -642,6 +642,17 @@ export interface OxContentOptions {
   containers?: boolean | ContainerOptions;
 
   /**
+   * Opt-in figures, captions, and lazy-loaded images.
+   *
+   * Title text becomes a `<figcaption>`. Optional `{width=N height=M}` on the
+   * image is consumed by this feature and does not require `attrs`. Passing
+   * `true` or `{}` enables defaults (`lazy: true`).
+   *
+   * @default false
+   */
+  images?: boolean | ImageOptions;
+
+  /**
    * Import source snippets into fences with `<<< @/path/to/file.ts{region}`.
    *
    * This is useful for documentation that must stay synchronized with examples
@@ -840,6 +851,7 @@ export interface ResolvedOptions {
   attrs: ResolvedAttrsOptions;
   badges: ResolvedBadgeOptions;
   containers: ResolvedContainerOptions;
+  images: ResolvedImageOptions;
   codeImports: ResolvedCodeImportOptions;
   includes: ResolvedIncludeOptions;
   sanitize: ResolvedSanitizeOptions;
@@ -1004,6 +1016,26 @@ export interface ContainerTypeOptions {
 export interface ResolvedContainerOptions {
   enabled: boolean;
   types: Record<string, ContainerTypeOptions>;
+}
+
+/**
+ * Options for opt-in figures, captions, and lazy images.
+ */
+export interface ImageOptions {
+  /**
+   * Add `loading="lazy"` to transformed images.
+   *
+   * @default true
+   */
+  lazy?: boolean;
+}
+
+/**
+ * Resolved image transform options.
+ */
+export interface ResolvedImageOptions {
+  enabled: boolean;
+  lazy: boolean;
 }
 
 /**

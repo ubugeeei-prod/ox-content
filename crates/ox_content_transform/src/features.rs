@@ -17,6 +17,7 @@ mod containers;
 mod edit;
 mod emoji;
 mod emoji_shortcodes;
+mod images;
 mod includes;
 mod segments;
 mod wiki;
@@ -30,6 +31,7 @@ use code_imports::ResolvedCodeImportOptions;
 use containers::ResolvedContainerOptions;
 use edit::append_edit_this_page;
 use emoji_shortcodes::replace_emoji_shortcodes;
+use images::ResolvedImageOptions;
 use includes::ResolvedIncludeOptions;
 use segments::transform_markdown_text_segments;
 use wiki::replace_wiki_links;
@@ -42,6 +44,7 @@ pub struct TransformFeatureOptions {
     containers: Option<ResolvedContainerOptions>,
     includes: Option<ResolvedIncludeOptions>,
     badges: bool,
+    images: Option<ResolvedImageOptions>,
     attributes: bool,
     edit_this_page: Option<ResolvedEditThisPageOptions>,
 }
@@ -85,6 +88,7 @@ impl TransformFeatureOptions {
         let containers = containers::resolve(options.containers.as_ref());
         let includes = includes::resolve(options.includes.as_ref(), source_path);
         let badges = badges::resolve(options.badges.as_ref());
+        let images = images::resolve(options.images.as_ref());
         let edit_this_page = resolve_edit_this_page(
             options.edit_this_page.as_ref(),
             source_path.unwrap_or_default(),
@@ -97,6 +101,7 @@ impl TransformFeatureOptions {
             containers,
             includes,
             badges,
+            images,
             attributes,
             edit_this_page,
         }
@@ -109,6 +114,7 @@ impl TransformFeatureOptions {
             || self.containers.is_some()
             || self.includes.is_some()
             || self.badges
+            || self.images.is_some()
     }
 
     pub fn has_postprocess(&self) -> bool {
@@ -176,6 +182,11 @@ pub fn preprocess_markdown<'a>(
         if let Some(replaced) = replaced {
             current = Cow::Owned(replaced);
         }
+    }
+    if let Some(images) = &options.images
+        && let Some(replaced) = images::preprocess(&current, images)
+    {
+        current = Cow::Owned(replaced);
     }
 
     PreprocessResult { source: current, errors }
@@ -262,7 +273,7 @@ fn resolve_edit_this_page(
     })
 }
 
-fn escape_html_text(value: &str, out: &mut String) {
+pub(super) fn escape_html_text(value: &str, out: &mut String) {
     for ch in value.chars() {
         match ch {
             '&' => out.push_str("&amp;"),
@@ -273,7 +284,7 @@ fn escape_html_text(value: &str, out: &mut String) {
     }
 }
 
-fn escape_html_attr(value: &str, out: &mut String) {
+pub(super) fn escape_html_attr(value: &str, out: &mut String) {
     for ch in value.chars() {
         match ch {
             '&' => out.push_str("&amp;"),

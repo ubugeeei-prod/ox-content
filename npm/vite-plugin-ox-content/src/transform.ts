@@ -265,6 +265,11 @@ interface JsTransformOptions {
     types?: Record<string, { title?: string; tag?: string }>;
   };
 
+  images?: {
+    enabled?: boolean;
+    lazy?: boolean;
+  };
+
   cjkEmphasis?: boolean;
 
   codeImports?: {
@@ -525,6 +530,12 @@ export async function transformMarkdown(
       ? {
           enabled: true,
           types: options.containers.types,
+        }
+      : undefined,
+    images: options.images?.enabled
+      ? {
+          enabled: true,
+          lazy: options.images.lazy,
         }
       : undefined,
     cjkEmphasis: options.cjkEmphasis ?? false,

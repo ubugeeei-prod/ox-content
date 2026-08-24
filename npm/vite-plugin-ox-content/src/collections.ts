@@ -36,13 +36,14 @@ type NativeTransformOptions = {
   emojiShortcodes?: { enabled?: boolean; custom?: Record<string, string> };
   attributes?: { enabled?: boolean };
   badges?: { enabled?: boolean };
-  cjkEmphasis?: boolean;
-  codeImports?: { enabled?: boolean; rootDir?: string };
-  includes?: { enabled?: boolean; rootDir?: string };
   containers?: {
     enabled?: boolean;
     types?: Record<string, { title?: string; tag?: string }>;
   };
+  images?: { enabled?: boolean; lazy?: boolean };
+  cjkEmphasis?: boolean;
+  codeImports?: { enabled?: boolean; rootDir?: string };
+  includes?: { enabled?: boolean; rootDir?: string };
   editThisPage?: {
     enabled?: boolean;
     repoUrl?: string;
@@ -178,6 +179,12 @@ function createNativeTransformOptions(options: ResolvedOptions): NativeTransform
       ? {
           enabled: true,
           types: options.containers.types,
+        }
+      : undefined,
+    images: options.images?.enabled
+      ? {
+          enabled: true,
+          lazy: options.images.lazy,
         }
       : undefined,
     cjkEmphasis: options.cjkEmphasis ?? false,

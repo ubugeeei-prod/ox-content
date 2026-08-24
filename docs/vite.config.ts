@@ -97,6 +97,7 @@ export default defineConfig(({ mode }) => {
                       { text: "Custom Containers", link: "/built-in/containers.md" },
                       { text: "File Includes", link: "/built-in/includes.md" },
                       { text: "Inline Badges", link: "/built-in/badges.md" },
+                      { text: "Images", link: "/built-in/images.md" },
                       { text: "Code Blocks", link: "/built-in/code-blocks.md" },
                       { text: "Embeds", link: "/built-in/embeds.md" },
                       { text: "Mermaid Diagrams", link: "/built-in/mermaid.md" },
@@ -189,6 +190,7 @@ export default defineConfig(({ mode }) => {
         emojiShortcodes: true,
         cjkEmphasis: true,
         badges: true,
+        images: true,
         codeImports: true,
         includes: true,
         embeds: {
