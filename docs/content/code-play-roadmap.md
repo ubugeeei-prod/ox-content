@@ -86,9 +86,10 @@ each runtime is its own language enable flag.
 
 ### 6. `docs(code-play): security and privacy notes`
 
-This PR. Trusted `play` fences, iframe `sandbox="allow-scripts"`, third-party
-playgrounds, endpoint trust, production typecheck / CORS, and the "no local
-shell" guarantee in SECURITY.md and the package guide.
+This PR. Trusted `play` fences, iframe `sandbox="allow-scripts"` for JS/TS
+execute and framework previews, third-party playgrounds, endpoint trust,
+production typecheck / CORS, and the "no local shell" guarantee in
+SECURITY.md and the package guide.
 
 ## Out of Scope
 

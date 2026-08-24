@@ -124,6 +124,11 @@ export default defineConfig(({ mode }) => {
                     link: "/editor-extension-roadmap.md",
                   },
                   { text: "Code Play Roadmap", link: "/code-play-roadmap.md" },
+                  { text: "Ox Content 3.0 Roadmap", link: "/v3-roadmap.md" },
+                  {
+                    text: "Docs Site Feature Roadmap",
+                    link: "/docs-site-feature-roadmap.md",
+                  },
                 ],
               },
               {
