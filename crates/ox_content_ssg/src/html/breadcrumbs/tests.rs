@@ -1,6 +1,6 @@
 use super::super::{
-    A11y, EntryPageConfig, NavGroup, NavItem, PageChromeFlags, PageData, ReaderChrome, SsgConfig,
-    ThemeConfig, generate_bare_html, generate_html,
+    A11y, EntryPageConfig, NavGroup, NavItem, PageChromeFlags, PageData, ReaderChrome, SSG_CSS,
+    SsgConfig, ThemeConfig, generate_bare_html, generate_html,
 };
 
 fn nav_item(title: &str, path: &str, href: &str) -> NavItem {
@@ -87,6 +87,16 @@ fn breadcrumbs_html(html: &str) -> Option<&str> {
 fn assert_no_json_ld(html: &str) {
     assert!(!html.contains("application/ld+json"), "breadcrumbs must not emit JSON-LD: {html}");
     assert!(!html.contains("BreadcrumbList"), "breadcrumbs must not emit BreadcrumbList: {html}");
+}
+
+#[test]
+fn mobile_separator_spacing_is_compact() {
+    assert!(
+        SSG_CSS.contains(
+            ".ox-breadcrumbs-item:not(:last-child)::after {\n    margin-inline: 0.25rem;"
+        ),
+        "mobile separators must not inherit the wide desktop spacing"
+    );
 }
 
 #[test]
