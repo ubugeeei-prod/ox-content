@@ -126,6 +126,7 @@ describe("createCodePlay", () => {
     const result = await pending;
     expect(result.status).toBe("cancelled");
     expect(result.diagnostics[0]?.message).toMatch(/cancelled/i);
+    expect(result.diagnostics[0]?.severity).toBe("info");
   });
 
   it("explains browser CORS failures instead of a raw fetch TypeError", () => {

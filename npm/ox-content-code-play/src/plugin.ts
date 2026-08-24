@@ -9,7 +9,7 @@ import {
   type RawCodePlayOptions,
   type ResolvedCodePlayOptions,
 } from "./config";
-import { enhanceGeneratedModule, enhancePlayHtml } from "./html";
+import { enhanceGeneratedModule, enhancePlayHtml, type HtmlEnhanceOptions } from "./html";
 import { parseCodePlayTags, parsePlayFences, rewritePlayFences } from "./markdown";
 import { decodePayload, encodePayload } from "./payload";
 import { payloadFromFence } from "./payload-factory";
@@ -41,6 +41,7 @@ export function codePlay(options: CodePlayPluginOptions = {}): Plugin {
     decodePayload,
     encodePayload,
     matchFences,
+    endpoints: resolved.endpoints,
   });
 
   return {
@@ -170,12 +171,9 @@ function enhanceHtmlForUrl(
   html: string,
   root: string,
   resolved: ResolvedCodePlayOptions,
-  enhance: (matchFences?: Array<{ language: string; code: string; payload: string }>) => {
-    scriptSrc: string;
-    decodePayload: typeof decodePayload;
-    encodePayload: typeof encodePayload;
-    matchFences?: Array<{ language: string; code: string; payload: string }>;
-  },
+  enhance: (
+    matchFences?: Array<{ language: string; code: string; payload: string }>,
+  ) => HtmlEnhanceOptions,
 ): string | undefined {
   const markdownPath = urlToMarkdown(urlPath, root, resolved.srcDir ?? "docs", resolved.base);
   if (!markdownPath || !existsSync(markdownPath)) {
@@ -238,12 +236,9 @@ async function enhanceWrittenPages(
   srcDir: string,
   outDir: string,
   resolved: ResolvedCodePlayOptions,
-  enhance: (matchFences?: Array<{ language: string; code: string; payload: string }>) => {
-    scriptSrc: string;
-    decodePayload: typeof decodePayload;
-    encodePayload: typeof encodePayload;
-    matchFences?: Array<{ language: string; code: string; payload: string }>;
-  },
+  enhance: (
+    matchFences?: Array<{ language: string; code: string; payload: string }>,
+  ) => HtmlEnhanceOptions,
 ): Promise<void> {
   for (const file of walkFiles(srcDir)) {
     if (!MARKDOWN_RE.test(file)) {

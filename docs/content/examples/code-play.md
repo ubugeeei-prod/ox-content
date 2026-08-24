@@ -60,8 +60,9 @@ console.log(add(2, 40));
 
 ## Typecheck failure
 
-**Typecheck** should fail. **Run** still executes after types are stripped, so
-this sample also shows that execute and type-check are separate.
+During `vite dev`, **Typecheck** should fail on this sample. On a published
+page the button is omitted unless `endpoints.typecheck` is set. **Run** still
+executes after types are stripped, so execute and type-check stay separate.
 
 ```ts play typecheck
 const n: number = "not a number";

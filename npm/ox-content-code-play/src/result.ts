@@ -27,7 +27,13 @@ export function errorResult(
   return withStdioText({
     status,
     stdio: [],
-    diagnostics: [{ message, severity: "error", source }],
+    diagnostics: [
+      {
+        message,
+        severity: status === "cancelled" ? "info" : "error",
+        source,
+      },
+    ],
     provenance: {},
     timing: emptyTiming(),
   });

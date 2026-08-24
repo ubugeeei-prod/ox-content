@@ -84,6 +84,18 @@ describe("markdown and viewers", () => {
     );
   });
 
+  it("does not advertise TypeScript typecheck on a CodePlay tag without an endpoint", () => {
+    const html = enhancePlayHtml(`<CodePlay lang="ts" typecheck>\nconst n = 1;\n</CodePlay>`, {
+      decodePayload,
+      encodePayload,
+    });
+    const encoded = /data-ox-code-play="([^"]+)"/.exec(html)?.[1];
+    expect(encoded).toBeTruthy();
+    const payload = decodePayload(encoded ?? "");
+    expect(payload.capabilities.typecheck).toBe(false);
+    expect(payload.endpoints?.typecheck).toBeUndefined();
+  });
+
   it("renders config, stdio, provenance, and timing viewers", () => {
     expect(
       renderStdioHtml([
