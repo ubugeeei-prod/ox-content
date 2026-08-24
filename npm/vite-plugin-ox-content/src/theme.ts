@@ -180,11 +180,6 @@ export interface ThemeConfig {
    */
   aside?: boolean;
   /**
-   * Show previous/next links derived from sidebar order.
-   * @default false
-   */
-  prevNext?: boolean;
-  /**
    * Extra `--octc-*` custom properties for light mode, keyed without the
    * prefix. Merged key-by-key across composed layers, so a later layer can
    * restyle one token without redeclaring the rest.
@@ -217,7 +212,6 @@ export interface ResolvedThemeConfig {
   sidebar: SidebarItem[];
   embed: ThemeEmbed;
   aside: boolean;
-  prevNext: boolean;
   tokens: ThemeTokens;
   darkTokens: ThemeTokens;
   css: string;
@@ -281,7 +275,6 @@ export const defaultTheme: ThemeConfig = {
   socialLinks: {},
   embed: {},
   aside: false,
-  prevNext: false,
   tokens: {},
   darkTokens: {},
   css: "",
@@ -430,7 +423,6 @@ export function resolveTheme(config?: ThemeConfig | ThemeConfig[]): ResolvedThem
     sidebar: merged.sidebar ?? [],
     embed: merged.embed ?? {},
     aside: merged.aside ?? false,
-    prevNext: merged.prevNext ?? false,
     tokens: merged.tokens ?? {},
     darkTokens: merged.darkTokens ?? {},
     css: merged.css ?? "",
@@ -547,7 +539,6 @@ export function themeToNapi(theme: ResolvedThemeConfig): NapiThemeConfig {
     socialLinks,
     embed: Object.keys(theme.embed).length > 0 ? theme.embed : undefined,
     aside: theme.aside,
-    prevNext: theme.prevNext,
     css: themeCss(theme) || undefined,
     js: theme.js || undefined,
   };
@@ -686,7 +677,6 @@ export interface NapiThemeConfig {
   socialLinks?: NapiSocialLinks;
   embed?: NapiThemeEmbed;
   aside?: boolean;
-  prevNext?: boolean;
   css?: string;
   js?: string;
 }

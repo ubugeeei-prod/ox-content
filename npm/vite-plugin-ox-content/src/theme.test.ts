@@ -30,7 +30,6 @@ describe("theme", () => {
       expect(defaultTheme.header?.showSiteNameText).toBe(true);
       expect(defaultTheme.layout).toBeDefined();
       expect(defaultTheme.aside).toBe(false);
-      expect(defaultTheme.prevNext).toBe(false);
     });
   });
 
@@ -73,19 +72,15 @@ describe("theme", () => {
       expect(resolved.name).toBe("default");
       expect(resolved.colors.primary).toBe("#4f6fae");
       expect(resolved.aside).toBe(false);
-      expect(resolved.prevNext).toBe(false);
     });
 
-    it("should resolve opt-in page chrome flags", () => {
+    it("should resolve opt-in aside outline", () => {
       const resolved = resolveTheme({
         extends: defaultTheme,
         aside: true,
-        prevNext: true,
       });
       expect(resolved.aside).toBe(true);
-      expect(resolved.prevNext).toBe(true);
       expect(themeToNapi(resolved).aside).toBe(true);
-      expect(themeToNapi(resolved).prevNext).toBe(true);
     });
 
     it("should resolve extends chain", () => {

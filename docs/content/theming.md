@@ -44,21 +44,17 @@ export default defineConfig({
 });
 ```
 
-### Page chrome (opt-in)
+### Page outline (opt-in)
 
-The default theme keeps the right-hand outline and previous/next links off
-until you ask for them:
+The default theme keeps the right-hand “On this page” outline off until you
+ask for it. Set `aside: true` to show it when the page has TOC headings:
 
 ```ts
 theme: defineTheme({
   extends: defaultTheme,
-  aside: true, // "On this page" outline when the page has headings
-  prevNext: true, // Previous / Next links from sidebar order
+  aside: true,
 });
 ```
-
-Entry pages never show previous/next links. The outline still needs headings
-in the page TOC.
 
 ### JSX Theme (Full Control)
 

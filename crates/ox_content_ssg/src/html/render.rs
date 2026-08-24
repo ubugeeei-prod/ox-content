@@ -3,7 +3,6 @@ use askama::Template;
 use super::entry::generate_entry_html;
 use super::footer::{FOOTER_CSS, generate_footer_html};
 use super::nav::generate_nav_html;
-use super::pager::{PAGER_CSS, generate_pager_html};
 use super::social::{generate_mobile_social_links_html, generate_social_links_html};
 use super::theme_css::generate_theme_css;
 use super::utils::{
@@ -77,15 +76,6 @@ pub fn generate_html(page_data: &PageData, nav_groups: &[NavGroup], config: &Ssg
     }
 
     let show_aside = theme.and_then(|t| t.aside).unwrap_or(false);
-    let show_prev_next = !is_entry_page && theme.and_then(|t| t.prev_next).unwrap_or(false);
-    let pager_html = if show_prev_next {
-        generate_pager_html(nav_groups, &page_data.path)
-    } else {
-        String::new()
-    };
-    if !pager_html.is_empty() {
-        css_sections.push(wrap_css_section("pager", PAGER_CSS));
-    }
     if !theme_css.is_empty() {
         css_sections.push(wrap_css_section("theme", &theme_css));
     }
@@ -214,7 +204,6 @@ pub fn generate_html(page_data: &PageData, nav_groups: &[NavGroup], config: &Ssg
         embed_sidebar_after,
         embed_content_before,
         main_content: &main_content,
-        pager_html: &pager_html,
         has_toc,
         toc_html: &toc_html,
         last_updated: last_updated.as_ref(),

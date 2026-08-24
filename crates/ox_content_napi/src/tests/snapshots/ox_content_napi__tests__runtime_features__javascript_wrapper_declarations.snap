@@ -1538,8 +1538,6 @@ export interface JsThemeConfig {
   embed?: JsThemeEmbed
   /** Show the right-hand TOC outline. Off by default. */
   aside?: boolean
-  /** Show previous/next links from sidebar order. Off by default. */
-  prevNext?: boolean
   /** Additional custom CSS. */
   css?: string
   /** Additional custom JavaScript. */

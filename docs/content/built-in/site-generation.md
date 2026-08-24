@@ -71,8 +71,8 @@ export default defineConfig({
 | `theme`           | `defaultTheme` | Theme configuration via `defineTheme()`.             |
 | `navigation`      | derived        | Explicit navigation groups instead of the file tree. |
 
-Theming — colors, fonts, header, footer, sidebar, custom CSS, and opt-in
-page chrome (`aside`, `prevNext`) — is a topic of its own: see
+Theming — colors, fonts, header, footer, sidebar, custom CSS, and the
+opt-in page outline (`aside`) — is a topic of its own: see
 [Theming](../theming.md).
 
 ## Custom Theme Component
