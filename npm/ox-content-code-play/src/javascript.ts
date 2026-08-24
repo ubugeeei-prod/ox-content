@@ -1,8 +1,5 @@
-<<<<<<< HEAD
-import { hasNodeVm } from "./runtime-host";
-=======
 import { executeInSandboxIframe } from "./javascript-sandbox";
->>>>>>> 12b14051 (feat(code-play): run browser JavaScript in a sandboxed iframe)
+import { hasNodeVm } from "./runtime-host";
 import { formatConsoleArgs, StdioBuffer } from "./stdio";
 import { nowMs, PhaseTracker } from "./timing";
 import type { AdapterRequest, AdapterResult, Diagnostic } from "./types";
