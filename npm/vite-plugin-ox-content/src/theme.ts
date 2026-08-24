@@ -4,11 +4,16 @@
  * Provides VitePress-like theming with default theme + customization.
  */
 
-import type { HeaderNavItem, ResolvedHeaderNavItem, ThemeAnnouncement } from "./header-chrome";
+import type {
+  HeaderNavItem,
+  LocaleLabel,
+  ResolvedHeaderNavItem,
+  ThemeAnnouncement,
+} from "./header-chrome";
 import { resolveHeaderNavItems } from "./header-chrome";
 import { tokensToCss, type ThemeTokens } from "./theme-tokens";
 
-export type { HeaderNavItem, ThemeAnnouncement } from "./header-chrome";
+export type { HeaderNavItem, LocaleLabel, ThemeAnnouncement } from "./header-chrome";
 
 export type { ThemeTokens } from "./theme-tokens";
 
@@ -143,8 +148,10 @@ export interface ThemeEmbed {
   footer?: string;
 }
 
+/** Sidebar group or link, including recursively nested localized labels. */
 export interface SidebarItem {
-  text?: string;
+  /** Plain label or locale map (`{ en: "Guide", ja: "ガイド" }`). */
+  text?: LocaleLabel;
   link?: string;
   items?: SidebarItem[];
   collapsed?: boolean;

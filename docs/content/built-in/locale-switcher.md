@@ -16,8 +16,9 @@ dictionaries or a translation runtime.
 
 When i18n is on, sidebar and header nav links also follow the current locale
 if that sibling page exists. Missing siblings — including generated API pages
-— keep the authored English href. Sidebar `text` stays a string; put locale
-maps on header `nav` items only.
+— keep the authored href. Sidebar and header-nav `text` accept locale maps such
+as `{ en: "Guide", ja: "ガイド" }`; see [Theming](/theming.md#localized-sidebar-labels)
+for fallback and sticky-collapse behavior.
 
 The feature is off unless you turn it on. Omitted or `false` emits no
 switcher, even when `available_locales` is set. Existing `html` `lang` and

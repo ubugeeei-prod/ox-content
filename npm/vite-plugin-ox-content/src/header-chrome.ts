@@ -56,19 +56,34 @@ function readBool(value: unknown): boolean | undefined {
   return typeof value === "boolean" ? value : undefined;
 }
 
-/** Picks `locale`, then the language prefix, then the first map value. */
-export function resolveLocaleLabel(text: LocaleLabel, locale?: string): string {
+/**
+ * Picks the exact locale, its language, the default locale, then the first
+ * non-empty own string in declaration order.
+ */
+export function resolveLocaleLabel(
+  text: LocaleLabel,
+  locale?: string,
+  defaultLocale?: string,
+): string {
   if (typeof text === "string") {
     return text;
   }
-  if (locale && text[locale]) {
-    return text[locale];
+  const candidates = [locale, locale?.split("-")[0], defaultLocale, defaultLocale?.split("-")[0]];
+  for (const candidate of candidates) {
+    if (!candidate || !Object.hasOwn(text, candidate)) {
+      continue;
+    }
+    const value = text[candidate];
+    if (typeof value === "string" && value.length > 0) {
+      return value;
+    }
   }
-  const lang = locale?.split("-")[0];
-  if (lang && text[lang]) {
-    return text[lang];
+  for (const value of Object.values(text)) {
+    if (typeof value === "string" && value.length > 0) {
+      return value;
+    }
   }
-  return Object.values(text)[0] ?? "";
+  return "";
 }
 
 /** Nav item after locale maps are flattened to strings. */
@@ -82,13 +97,14 @@ export interface ResolvedHeaderNavItem {
 export function resolveHeaderNavItems(
   items: HeaderNavItem[] | undefined,
   locale?: string,
+  defaultLocale?: string,
 ): ResolvedHeaderNavItem[] | undefined {
   if (!items?.length) {
     return undefined;
   }
   return items.map((item) => ({
-    text: resolveLocaleLabel(item.text, locale),
+    text: resolveLocaleLabel(item.text, locale, defaultLocale),
     link: item.link,
-    items: resolveHeaderNavItems(item.items, locale),
+    items: resolveHeaderNavItems(item.items, locale, defaultLocale),
   }));
 }

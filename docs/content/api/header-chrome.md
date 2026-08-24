@@ -26,7 +26,7 @@
   <span>modules</span>
 </span>
 <span class="ox-api-stat">
-  <strong>6</strong>
+  <strong>8</strong>
   <span>parameters</span>
 </span>
 <span class="ox-api-stat">
@@ -211,7 +211,7 @@
 <h4>Signature</h4>
 <pre><code class="language-typescript">export interface ResolvedHeaderNavItem</code></pre>
 </div>
-<p class="ox-api-entry__source"><a class="ox-api-entry__source-link" href="https://github.com/ubugeeei-prod/ox-content/blob/main/npm/vite-plugin-ox-content/src/header-chrome.ts#L75-L79" target="_blank" rel="noopener noreferrer">View source<span class="ox-api-entry__source-icon" aria-hidden="true"></span></a></p>
+<p class="ox-api-entry__source"><a class="ox-api-entry__source-link" href="https://github.com/ubugeeei-prod/ox-content/blob/main/npm/vite-plugin-ox-content/src/header-chrome.ts#L90-L94" target="_blank" rel="noopener noreferrer">View source<span class="ox-api-entry__source-icon" aria-hidden="true"></span></a></p>
 <div class="ox-api-entry__section ox-api-entry__section--members">
 <h4>Members</h4>
 <div class="ox-api-entry__member-group">
@@ -242,16 +242,16 @@
 </details>
 
 <details id="resolveheadernavitems" class="ox-api-entry">
-  <summary><span class="ox-api-entry__kind">fn</span><span class="ox-api-entry__summary-main"><code class="ox-api-entry__signature ox-api-entry__signature--highlighted language-typescript">resolveHeaderNavItems(items: HeaderNavItem[] | undefined, locale?: string): ResolvedHeaderNavItem[] | undefined</code><span class="ox-api-entry__description">Resolves locale maps so NAPI always receives string labels.</span><span class="ox-api-entry__meta"><span class="ox-api-badge">2 params</span><span class="ox-api-badge">returns ResolvedHeaderNavItem[] | undefined</span></span></span></summary>
+  <summary><span class="ox-api-entry__kind">fn</span><span class="ox-api-entry__summary-main"><code class="ox-api-entry__signature ox-api-entry__signature--highlighted language-typescript">resolveHeaderNavItems(items: HeaderNavItem[] | undefined, locale?: string, defaultLocale?: string): ResolvedHeaderNavItem[] | undefined</code><span class="ox-api-entry__description">Resolves locale maps so NAPI always receives string labels.</span><span class="ox-api-entry__meta"><span class="ox-api-badge">3 params</span><span class="ox-api-badge">returns ResolvedHeaderNavItem[] | undefined</span></span></span></summary>
   <div class="ox-api-entry__body">
 <div class="ox-api-entry__prose">
 <p>Resolves locale maps so NAPI always receives string labels.</p>
 </div>
 <div class="ox-api-entry__section ox-api-entry__section--signature">
 <h4>Signature</h4>
-<pre><code class="language-typescript">export function resolveHeaderNavItems(items: HeaderNavItem[] | undefined, locale?: string): ResolvedHeaderNavItem[] | undefined</code></pre>
+<pre><code class="language-typescript">export function resolveHeaderNavItems(items: HeaderNavItem[] | undefined, locale?: string, defaultLocale?: string): ResolvedHeaderNavItem[] | undefined</code></pre>
 </div>
-<p class="ox-api-entry__source"><a class="ox-api-entry__source-link" href="https://github.com/ubugeeei-prod/ox-content/blob/main/npm/vite-plugin-ox-content/src/header-chrome.ts#L82-L94" target="_blank" rel="noopener noreferrer">View source<span class="ox-api-entry__source-icon" aria-hidden="true"></span></a></p>
+<p class="ox-api-entry__source"><a class="ox-api-entry__source-link" href="https://github.com/ubugeeei-prod/ox-content/blob/main/npm/vite-plugin-ox-content/src/header-chrome.ts#L97-L110" target="_blank" rel="noopener noreferrer">View source<span class="ox-api-entry__source-icon" aria-hidden="true"></span></a></p>
 <div class="ox-api-entry__section ox-api-entry__section--params">
 <h4>Parameters</h4>
 <ul class="ox-api-entry__params">
@@ -268,6 +268,13 @@
   </div>
   <p class="ox-api-entry__param-description">optional</p>
 </li>
+<li class="ox-api-entry__param">
+  <div class="ox-api-entry__param-heading">
+    <code class="ox-api-entry__param-name">defaultLocale</code>
+    <code class="ox-api-entry__param-type">string</code>
+  </div>
+  <p class="ox-api-entry__param-description">optional</p>
+</li>
 </ul>
 </div>
 <div class="ox-api-entry__section ox-api-entry__section--returns">
@@ -280,16 +287,16 @@
 </details>
 
 <details id="resolvelocalelabel" class="ox-api-entry">
-  <summary><span class="ox-api-entry__kind">fn</span><span class="ox-api-entry__summary-main"><code class="ox-api-entry__signature ox-api-entry__signature--highlighted language-typescript">resolveLocaleLabel(text: LocaleLabel, locale?: string): string</code><span class="ox-api-entry__description">Picks locale, then the language prefix, then the first map value.</span><span class="ox-api-entry__meta"><span class="ox-api-badge">2 params</span><span class="ox-api-badge">returns string</span></span></span></summary>
+  <summary><span class="ox-api-entry__kind">fn</span><span class="ox-api-entry__summary-main"><code class="ox-api-entry__signature ox-api-entry__signature--highlighted language-typescript">resolveLocaleLabel(text: LocaleLabel, locale?: string, defaultLocale?: string): string</code><span class="ox-api-entry__description">Picks the exact locale, its language, the default locale, then the first non-em…</span><span class="ox-api-entry__meta"><span class="ox-api-badge">3 params</span><span class="ox-api-badge">returns string</span></span></span></summary>
   <div class="ox-api-entry__body">
 <div class="ox-api-entry__prose">
-<p>Picks <code>locale</code>, then the language prefix, then the first map value.</p>
+<p>Picks the exact locale, its language, the default locale, then the first non-empty own string in declaration order.</p>
 </div>
 <div class="ox-api-entry__section ox-api-entry__section--signature">
 <h4>Signature</h4>
-<pre><code class="language-typescript">export function resolveLocaleLabel(text: LocaleLabel, locale?: string): string</code></pre>
+<pre><code class="language-typescript">export function resolveLocaleLabel(text: LocaleLabel, locale?: string, defaultLocale?: string): string</code></pre>
 </div>
-<p class="ox-api-entry__source"><a class="ox-api-entry__source-link" href="https://github.com/ubugeeei-prod/ox-content/blob/main/npm/vite-plugin-ox-content/src/header-chrome.ts#L60-L72" target="_blank" rel="noopener noreferrer">View source<span class="ox-api-entry__source-icon" aria-hidden="true"></span></a></p>
+<p class="ox-api-entry__source"><a class="ox-api-entry__source-link" href="https://github.com/ubugeeei-prod/ox-content/blob/main/npm/vite-plugin-ox-content/src/header-chrome.ts#L63-L87" target="_blank" rel="noopener noreferrer">View source<span class="ox-api-entry__source-icon" aria-hidden="true"></span></a></p>
 <div class="ox-api-entry__section ox-api-entry__section--params">
 <h4>Parameters</h4>
 <ul class="ox-api-entry__params">
@@ -302,6 +309,13 @@
 <li class="ox-api-entry__param">
   <div class="ox-api-entry__param-heading">
     <code class="ox-api-entry__param-name">locale</code>
+    <code class="ox-api-entry__param-type">string</code>
+  </div>
+  <p class="ox-api-entry__param-description">optional</p>
+</li>
+<li class="ox-api-entry__param">
+  <div class="ox-api-entry__param-heading">
+    <code class="ox-api-entry__param-name">defaultLocale</code>
     <code class="ox-api-entry__param-type">string</code>
   </div>
   <p class="ox-api-entry__param-description">optional</p>

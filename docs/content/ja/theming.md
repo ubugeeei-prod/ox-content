@@ -23,6 +23,35 @@ defineTheme({
 
 外部リンク、ダウンロード、ページ内リンクの動作は変わりません。
 
+## サイドバーラベルの多言語化
+
+サイドバーのすべての `text` には、文字列またはロケールマップを指定できます。
+トップレベルのグループ、リンク付き親項目、ネスト項目で同じ形式を使います。
+
+```ts
+defineTheme({
+  sidebar: [
+    {
+      text: { en: "Guide", ja: "ガイド" },
+      collapsed: true,
+      stickyCollapsed: true,
+      items: [
+        {
+          text: { en: "Built-in features", ja: "組み込み機能" },
+          link: "/built-in-features.md",
+          items: [{ text: { en: "Cards", ja: "カード" }, link: "/cards.md" }],
+        },
+      ],
+    },
+  ],
+});
+```
+
+ラベルは、ページの完全なロケール、言語サブタグ、設定された既定ロケール、
+既定ロケールの言語サブタグ、最初の空でない値の順で解決され、HTML
+エスケープされます。兄弟ページが無いリンクは、壊れた URL にせず元の href を保ちます。
+折りたたみ状態の保存キーはラベルではなくツリー位置を使うため、言語を切り替えても維持されます。
+
 ## 最短
 
 ```ts
@@ -82,4 +111,4 @@ export function Layout({ children }) {
 
 トークンは `--octc-*` です。スキンは色を直書きせず、配色パッケージが light / dark を担います。契約の詳細は [テーマプリセット](./theme-presets.md) と [英語の Theming](/theming.md) を見てください。
 
-ヘッダーナビの `text` は `{ en, ja }` のロケールマップにできます。[ヘッダー chrome](./built-in/header-chrome.md) を見てください。
+ヘッダーナビの `text` も `{ en, ja }` のロケールマップにできます。[ヘッダー chrome](./built-in/header-chrome.md) を見てください。

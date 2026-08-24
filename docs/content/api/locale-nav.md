@@ -45,16 +45,16 @@
 </details>
 
 <details id="localizeheadernavitems" class="ox-api-entry">
-  <summary><span class="ox-api-entry__kind">fn</span><span class="ox-api-entry__summary-main"><code class="ox-api-entry__signature ox-api-entry__signature--highlighted language-typescript">localizeHeaderNavItems(items: HeaderNavItem[] | undefined, options: LocalizeNavOptions): HeaderNavItem[] | undefined</code><span class="ox-api-entry__description">Rewrites header nav link values the same way as the sidebar.</span><span class="ox-api-entry__meta"><span class="ox-api-badge">2 params</span><span class="ox-api-badge">returns HeaderNavItem[] | undefined</span></span></span></summary>
+  <summary><span class="ox-api-entry__kind">fn</span><span class="ox-api-entry__summary-main"><code class="ox-api-entry__signature ox-api-entry__signature--highlighted language-typescript">localizeHeaderNavItems(items: HeaderNavItem[] | undefined, options: LocalizeNavOptions): HeaderNavItem[] | undefined</code><span class="ox-api-entry__description">Resolves header labels and rewrites link values the same way as the sidebar.</span><span class="ox-api-entry__meta"><span class="ox-api-badge">2 params</span><span class="ox-api-badge">returns HeaderNavItem[] | undefined</span></span></span></summary>
   <div class="ox-api-entry__body">
 <div class="ox-api-entry__prose">
-<p>Rewrites header nav <code>link</code> values the same way as the sidebar.</p>
+<p>Resolves header labels and rewrites <code>link</code> values the same way as the sidebar.</p>
 </div>
 <div class="ox-api-entry__section ox-api-entry__section--signature">
 <h4>Signature</h4>
 <pre><code class="language-typescript">export function localizeHeaderNavItems(items: HeaderNavItem[] | undefined, options: LocalizeNavOptions): HeaderNavItem[] | undefined</code></pre>
 </div>
-<p class="ox-api-entry__source"><a class="ox-api-entry__source-link" href="https://github.com/ubugeeei-prod/ox-content/blob/main/npm/vite-plugin-ox-content/src/locale-nav.ts#L60-L76" target="_blank" rel="noopener noreferrer">View source<span class="ox-api-entry__source-icon" aria-hidden="true"></span></a></p>
+<p class="ox-api-entry__source"><a class="ox-api-entry__source-link" href="https://github.com/ubugeeei-prod/ox-content/blob/main/npm/vite-plugin-ox-content/src/locale-nav.ts#L153-L167" target="_blank" rel="noopener noreferrer">View source<span class="ox-api-entry__source-icon" aria-hidden="true"></span></a></p>
 <div class="ox-api-entry__section ox-api-entry__section--params">
 <h4>Parameters</h4>
 <ul class="ox-api-entry__params">
@@ -82,16 +82,16 @@
 </details>
 
 <details id="localizenavgroups" class="ox-api-entry">
-  <summary><span class="ox-api-entry__kind">fn</span><span class="ox-api-entry__summary-main"><code class="ox-api-entry__signature ox-api-entry__signature--highlighted language-typescript">localizeNavGroups&lt;T extends LocalizableNavGroup&gt;(groups: T[], options: LocalizeNavOptions): T[]</code><span class="ox-api-entry__description">Prefixes sidebar hrefs/paths with the current locale when that page exists. Mis…</span><span class="ox-api-entry__meta"><span class="ox-api-badge">2 params</span><span class="ox-api-badge">returns T[]</span></span></span></summary>
+  <summary><span class="ox-api-entry__kind">fn</span><span class="ox-api-entry__summary-main"><code class="ox-api-entry__signature ox-api-entry__signature--highlighted language-typescript">localizeNavGroups&lt;T extends LocalizableNavGroup&gt;(groups: T[], options: LocalizeNavOptions): T[]</code><span class="ox-api-entry__description">Resolves authored sidebar label maps and prefixes hrefs/paths with the current…</span><span class="ox-api-entry__meta"><span class="ox-api-badge">2 params</span><span class="ox-api-badge">returns T[]</span></span></span></summary>
   <div class="ox-api-entry__body">
 <div class="ox-api-entry__prose">
-<p>Prefixes sidebar hrefs/paths with the current locale when that page exists. Missing siblings and the hidden default locale stay as authored.</p>
+<p>Resolves authored sidebar label maps and prefixes hrefs/paths with the current locale when that page exists. Missing siblings stay as authored.</p>
 </div>
 <div class="ox-api-entry__section ox-api-entry__section--signature">
 <h4>Signature</h4>
 <pre><code class="language-typescript">export function localizeNavGroups&lt;T extends LocalizableNavGroup&gt;(groups: T[], options: LocalizeNavOptions): T[]</code></pre>
 </div>
-<p class="ox-api-entry__source"><a class="ox-api-entry__source-link" href="https://github.com/ubugeeei-prod/ox-content/blob/main/npm/vite-plugin-ox-content/src/locale-nav.ts#L43-L55" target="_blank" rel="noopener noreferrer">View source<span class="ox-api-entry__source-icon" aria-hidden="true"></span></a></p>
+<p class="ox-api-entry__source"><a class="ox-api-entry__source-link" href="https://github.com/ubugeeei-prod/ox-content/blob/main/npm/vite-plugin-ox-content/src/locale-nav.ts#L135-L148" target="_blank" rel="noopener noreferrer">View source<span class="ox-api-entry__source-icon" aria-hidden="true"></span></a></p>
 <div class="ox-api-entry__section ox-api-entry__section--params">
 <h4>Parameters</h4>
 <ul class="ox-api-entry__params">

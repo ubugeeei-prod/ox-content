@@ -8,7 +8,8 @@ pub(super) fn generate_nav_html(nav_groups: &[NavGroup], current_path: &str) -> 
     for (group_index, group) in nav_groups.iter().enumerate() {
         if group.collapsed.is_some() {
             let open = if group.collapsed == Some(true) { "" } else { " open" };
-            let state_key = format!("group:{group_index}:{}", group.title);
+            // Tree-position keys survive translated labels and localized hrefs.
+            let state_key = format!("group:{group_index}");
             let state_attr = nav_state_attr(group.sticky_collapsed, &state_key);
             push_fmt(
                 &mut html,
@@ -76,7 +77,7 @@ fn render_nav_item(html: &mut String, item: &NavItem, current_path: &str, key_pa
     }
 
     let open = if item.collapsed == Some(true) { "" } else { " open" };
-    let state_key = format!("item:{key_path}:{}:{}", item.path, item.title);
+    let state_key = format!("item:{key_path}");
     let state_attr = nav_state_attr(item.sticky_collapsed, &state_key);
     push_fmt(
         html,

@@ -33,6 +33,36 @@ defineTheme({
 
 External links, downloads, and hash-only links retain normal browser behavior.
 
+## Localized Sidebar Labels
+
+Every sidebar `text` accepts either one string or a locale map. The same map
+works for top-level groups, linked parent items, and nested items:
+
+```ts
+defineTheme({
+  sidebar: [
+    {
+      text: { en: "Guide", ja: "ガイド" },
+      collapsed: true,
+      stickyCollapsed: true,
+      items: [
+        {
+          text: { en: "Built-in features", ja: "組み込み機能" },
+          link: "/built-in-features.md",
+          items: [{ text: { en: "Cards", ja: "カード" }, link: "/cards.md" }],
+        },
+      ],
+    },
+  ],
+});
+```
+
+Resolution is deterministic: the exact page locale, its language subtag, the
+configured default locale, its language subtag, then the first non-empty map
+value. Labels are HTML-escaped. Localized links use an existing sibling page;
+if that sibling is missing, the authored href remains valid. Sticky collapse
+state uses the navigation tree position, so changing locale does not reset it.
+
 ## Quick Start
 
 ### CSS Variable Customization

@@ -30,7 +30,12 @@ import type {
 } from "./types";
 import { buildLocalePaths, resolveLocaleSwitcherOption } from "./locale-switcher";
 import type { SsgLocalePath } from "./locale-switcher";
-import { localizeHeaderNavItems, localizeNavGroups } from "./locale-nav";
+import {
+  attachSidebarLabels,
+  localizeHeaderNavItems,
+  localizeNavGroups,
+  resolveSidebarItems,
+} from "./locale-nav";
 import {
   parsePageChromeFlags,
   resolvePageChromeOption,
@@ -678,14 +683,20 @@ export function buildNavItems(
 }
 
 /**
- * Builds navigation items from an explicit theme sidebar tree.
+ * Builds navigation items from an explicit theme sidebar tree while retaining
+ * locale-map labels for per-page resolution.
  */
 export function buildThemeNavItems(
   sidebar: SidebarItem[],
   base: string,
   extension: string,
 ): NavGroup[] {
-  return importNapiModuleSync().buildSsgThemeNavItems(sidebar, base, extension);
+  const groups = importNapiModuleSync().buildSsgThemeNavItems(
+    resolveSidebarItems(sidebar),
+    base,
+    extension,
+  );
+  return attachSidebarLabels(groups, sidebar);
 }
 
 interface BuildSsgContext {

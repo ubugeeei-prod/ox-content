@@ -65,15 +65,24 @@ describe("parsePageChromeFlags", () => {
 });
 
 describe("locale-safe labels", () => {
-  it("picks the current locale, then the language prefix", () => {
+  it("picks the current locale, language prefix, then configured fallback", () => {
     const text = { en: "Guide", ja: "ガイド", "en-GB": "Guide (UK)" };
     expect(resolveLocaleLabel(text, "ja")).toBe("ガイド");
     expect(resolveLocaleLabel(text, "en-GB")).toBe("Guide (UK)");
     expect(resolveLocaleLabel(text, "en-US")).toBe("Guide");
     expect(resolveLocaleLabel("Guide", "ja")).toBe("Guide");
+    expect(resolveLocaleLabel({ ja: "ガイド", en: "Guide" }, "fr", "en")).toBe("Guide");
+    expect(resolveLocaleLabel({ ja: "", en: "Guide" }, "ja", "en")).toBe("Guide");
     expect(resolveHeaderNavItems([{ text, link: "/guide/" }], "ja")).toEqual([
       { text: "ガイド", link: "/guide/" },
     ]);
+  });
+
+  it("ignores inherited locale-map properties and empty maps", () => {
+    const inherited = Object.create({ ja: "inherited" }) as Record<string, string>;
+    inherited.en = "Guide";
+    expect(resolveLocaleLabel(inherited, "ja", "en")).toBe("Guide");
+    expect(resolveLocaleLabel({}, "ja", "en")).toBe("");
   });
 });
 

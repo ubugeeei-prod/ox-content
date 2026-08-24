@@ -203,6 +203,7 @@ describe("localizeHeaderNavItems", () => {
       jaOptions(),
     );
     expect(items?.[0]?.link).toBe("/docs/ja/getting-started/index.html");
+    expect(items?.[0]?.text).toBe("ガイド");
   });
 });
 
@@ -252,10 +253,10 @@ describe("buildSsg locale nav", () => {
           theme: resolveTheme({
             sidebar: [
               {
-                text: "Guide",
+                text: { en: "Guide", ja: "ガイド" },
                 items: [
-                  { text: "Start", link: "/guide.md" },
-                  { text: "API", link: "/api.md" },
+                  { text: { en: "Start", ja: "開始" }, link: "/guide.md" },
+                  { text: { en: "API", ja: "API" }, link: "/api.md" },
                 ],
               },
             ],
@@ -271,6 +272,58 @@ describe("buildSsg locale nav", () => {
     const jaGuide = await fs.readFile(path.join(root, "dist", "ja", "guide", "index.html"), "utf8");
     expect(jaGuide).toContain('href="/ja/guide/index.html"');
     expect(jaGuide).toContain('href="/api/index.html"');
+    expect(jaGuide).toContain('<div class="nav-title">ガイド</div>');
+    expect(jaGuide).toContain('class="nav-link active">開始</a>');
+    expect(jaGuide).not.toContain("&lt;script");
     expect(jaGuide).not.toMatch(/aside[\s\S]*href="\/guide\/index\.html"/);
+  });
+
+  it("escapes hostile localized labels in nav and breadcrumbs", async () => {
+    const root = await fs.mkdtemp(path.join(os.tmpdir(), "ox-content-locale-labels-"));
+    tempDirs.push(root);
+    const srcDir = path.join(root, "content");
+    await fs.mkdir(path.join(srcDir, "ja"), { recursive: true });
+    await fs.writeFile(path.join(srcDir, "guide.md"), "# Guide\n", "utf8");
+    await fs.writeFile(path.join(srcDir, "ja", "guide.md"), "# ガイド\n", "utf8");
+    const base = createDocsResolvedOptions();
+    const i18n = resolveI18nOptions({
+      enabled: true,
+      defaultLocale: "en",
+      locales: [
+        { code: "en", name: "English" },
+        { code: "ja", name: "日本語" },
+      ],
+      hideDefaultLocale: true,
+      check: false,
+    });
+    expect(i18n).not.toBe(false);
+
+    const result = await buildSsg(
+      createDocsResolvedOptions({
+        i18n,
+        ssg: {
+          ...base.ssg,
+          breadcrumbs: true,
+          theme: resolveTheme({
+            breadcrumbs: true,
+            sidebar: [
+              {
+                text: { en: "Guide", ja: '<img src=x onerror="alert(1)">' },
+                items: [
+                  { text: { en: "Start", ja: '<script>alert("x")</script>' }, link: "/guide.md" },
+                ],
+              },
+            ],
+          }),
+        },
+      }),
+      root,
+    );
+    expect(result.errors).toEqual([]);
+    const html = await fs.readFile(path.join(root, "dist", "ja", "guide", "index.html"), "utf8");
+    expect(html).toContain("&lt;img src=x onerror=&quot;alert(1)&quot;&gt;");
+    expect(html).toContain("&lt;script&gt;alert(&quot;x&quot;)&lt;/script&gt;");
+    expect(html).not.toContain('<img src=x onerror="alert(1)">');
+    expect(html).not.toContain('<script>alert("x")</script>');
   });
 });

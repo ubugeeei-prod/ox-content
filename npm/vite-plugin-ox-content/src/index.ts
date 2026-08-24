@@ -1084,6 +1084,8 @@ export type {
   ThemeEmbed,
   ResolvedThemeConfig,
   HeaderNavItem,
+  LocaleLabel,
+  SidebarItem,
   ThemeAnnouncement,
 } from "./theme";
 export type { PageChromeFlags } from "./header-chrome";
