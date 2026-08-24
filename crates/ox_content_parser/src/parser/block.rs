@@ -84,6 +84,11 @@ impl<'a> Parser<'a> {
                 }
             }
             b'<' => {
+                if self.options.mdx
+                    && let Some(node) = self.try_parse_mdx_jsx_flow(start, trimmed_start)?
+                {
+                    return Ok(Some(node));
+                }
                 let line = self.line_at(start);
                 let trimmed = &line[trimmed_start - start..];
                 if let Some(html_start) = Self::parse_html_block_start(trimmed) {
