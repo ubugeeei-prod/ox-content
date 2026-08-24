@@ -152,6 +152,27 @@ fn test_generate_nav_html_with_nested_collapsed_items() {
 }
 
 #[test]
+fn test_nested_nav_css_keeps_disclosure_and_hierarchy_visible() {
+    assert!(
+        SSG_CSS.contains(".nav-details > .nav-summary"),
+        "linked sidebar groups need an explicit disclosure row"
+    );
+    assert!(
+        SSG_CSS.contains(".nav-summary::-webkit-details-marker"),
+        "the browser marker must not occupy a separate layout row"
+    );
+    assert!(
+        SSG_CSS.contains(".nav-list--nested {\n  margin-inline-start:"),
+        "nested navigation must use RTL-safe visual indentation"
+    );
+    assert!(
+        SSG_CSS.contains(".nav-list--nested {\n  margin-inline-start:")
+            && SSG_CSS.contains("border-inline-start:"),
+        "nested navigation needs both an indentation step and a hierarchy rail"
+    );
+}
+
+#[test]
 fn test_generate_html_without_toc_omits_outline() {
     let page_data = PageData {
         title: "No TOC".to_string(),

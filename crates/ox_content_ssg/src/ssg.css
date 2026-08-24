@@ -627,11 +627,64 @@ a:hover {
   margin-bottom: 0.4rem;
   padding: 0 0.625rem;
 }
+.nav-title--summary,
+.nav-details > .nav-summary {
+  display: flex;
+  align-items: flex-start;
+  min-width: 0;
+  list-style: none;
+  cursor: pointer;
+}
+.nav-title--summary::-webkit-details-marker,
+.nav-summary::-webkit-details-marker {
+  display: none;
+}
+.nav-title--summary::before,
+.nav-details > .nav-summary::before {
+  content: "";
+  flex: 0 0 auto;
+  width: 0.4rem;
+  height: 0.4rem;
+  margin-block-start: 0.32rem;
+  margin-inline-end: 0.45rem;
+  border-right: 1.5px solid currentColor;
+  border-bottom: 1.5px solid currentColor;
+  color: var(--octc-color-text-muted);
+  transform: rotate(-45deg);
+  transform-origin: center;
+  transition: transform 150ms ease;
+}
+.nav-details > .nav-summary::before {
+  margin-block-start: 0.8rem;
+  margin-inline-start: 0.45rem;
+}
+.nav-section--collapsible[open] > .nav-title--summary::before,
+.nav-details[open] > .nav-summary::before {
+  transform: rotate(45deg);
+}
+[dir="rtl"] .nav-section--collapsible:not([open]) > .nav-title--summary::before,
+[dir="rtl"] .nav-details:not([open]) > .nav-summary::before {
+  transform: rotate(135deg);
+}
+.nav-title--summary:focus-visible,
+.nav-details > .nav-summary:focus-visible {
+  outline: 2px solid var(--octc-color-primary);
+  outline-offset: 2px;
+}
 .nav-list {
   list-style: none;
   display: flex;
   flex-direction: column;
   gap: 0.125rem;
+}
+.nav-list--nested {
+  margin-inline-start: 0.65rem;
+  padding-inline-start: 0.75rem;
+  border-inline-start: 1px solid color-mix(in srgb, var(--octc-color-border) 64%, transparent);
+}
+.nav-list--nested .nav-list--nested {
+  margin-inline-start: 0.4rem;
+  padding-inline-start: 0.65rem;
 }
 .nav-item {
   margin: 0;
@@ -665,6 +718,18 @@ a:hover {
 .nav-link.active:hover {
   background: color-mix(in srgb, var(--octc-color-bg-alt) 72%, transparent);
   color: var(--octc-color-text);
+}
+.nav-link--summary {
+  flex: 1;
+  min-width: 0;
+  padding-inline-start: 0.25rem;
+  overflow-wrap: anywhere;
+}
+@media (prefers-reduced-motion: reduce) {
+  .nav-title--summary::before,
+  .nav-details > .nav-summary::before {
+    transition: none;
+  }
 }
 .main {
   flex: 1;
