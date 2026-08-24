@@ -127,7 +127,7 @@ fn test_generate_html_skips_prev_next_on_entry_pages() {
         toc: vec![],
         last_updated: None,
         path: "index".to_string(),
-        entry_page: Some(Default::default()),
+        entry_page: Some(EntryPageConfig::default()),
     };
     let nav_groups = vec![NavGroup {
         title: "Guide".to_string(),

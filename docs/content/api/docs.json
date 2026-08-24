@@ -11,7 +11,7 @@
       "variable": 12,
       "module": 35
     },
-    "members": 775,
+    "members": 781,
     "params": 304,
     "returns": 165,
     "examples": 20,
@@ -7219,13 +7219,33 @@
               "endLine": 176
             },
             {
+              "name": "aside",
+              "kind": "property",
+              "description": "Show the right-hand \"On this page\" outline.",
+              "type": "boolean",
+              "default": "false",
+              "optional": true,
+              "line": 181,
+              "endLine": 181
+            },
+            {
+              "name": "prevNext",
+              "kind": "property",
+              "description": "Show previous/next links derived from sidebar order.",
+              "type": "boolean",
+              "default": "false",
+              "optional": true,
+              "line": 186,
+              "endLine": 186
+            },
+            {
               "name": "tokens",
               "kind": "property",
               "description": "Extra `--octc-*` custom properties for light mode, keyed without the\nprefix. Merged key-by-key across composed layers, so a later layer can\nrestyle one token without redeclaring the rest.",
               "type": "ThemeTokens",
               "optional": true,
-              "line": 182,
-              "endLine": 182
+              "line": 192,
+              "endLine": 192
             },
             {
               "name": "darkTokens",
@@ -7233,8 +7253,8 @@
               "description": "Extra `--octc-*` custom properties for dark mode.",
               "type": "ThemeTokens",
               "optional": true,
-              "line": 184,
-              "endLine": 184
+              "line": 194,
+              "endLine": 194
             },
             {
               "name": "css",
@@ -7242,8 +7262,8 @@
               "description": "Additional custom CSS. Composed layers **concatenate** this rather than\noverwrite, so stacking a skin and a color scheme keeps both stylesheets.",
               "type": "string",
               "optional": true,
-              "line": 189,
-              "endLine": 189
+              "line": 199,
+              "endLine": 199
             },
             {
               "name": "js",
@@ -7251,13 +7271,13 @@
               "description": "Additional custom JavaScript. Concatenated across composed layers.",
               "type": "string",
               "optional": true,
-              "line": 191,
-              "endLine": 191
+              "line": 201,
+              "endLine": 201
             }
           ],
           "file": "npm/vite-plugin-ox-content/src/theme.ts",
           "line": 153,
-          "endLine": 192,
+          "endLine": 202,
           "signature": "export interface ThemeConfig"
         },
         {
@@ -7270,125 +7290,141 @@
               "kind": "property",
               "description": "",
               "type": "string",
-              "line": 198,
-              "endLine": 198
+              "line": 208,
+              "endLine": 208
             },
             {
               "name": "colors",
               "kind": "property",
               "description": "",
               "type": "ThemeColors",
-              "line": 199,
-              "endLine": 199
+              "line": 209,
+              "endLine": 209
             },
             {
               "name": "darkColors",
               "kind": "property",
               "description": "",
               "type": "ThemeColors",
-              "line": 200,
-              "endLine": 200
+              "line": 210,
+              "endLine": 210
             },
             {
               "name": "fonts",
               "kind": "property",
               "description": "",
               "type": "ThemeFonts",
-              "line": 201,
-              "endLine": 201
+              "line": 211,
+              "endLine": 211
             },
             {
               "name": "entryPage",
               "kind": "property",
               "description": "",
               "type": "ThemeEntryPage",
-              "line": 202,
-              "endLine": 202
+              "line": 212,
+              "endLine": 212
             },
             {
               "name": "layout",
               "kind": "property",
               "description": "",
               "type": "ThemeLayout",
-              "line": 203,
-              "endLine": 203
+              "line": 213,
+              "endLine": 213
             },
             {
               "name": "header",
               "kind": "property",
               "description": "",
               "type": "ThemeHeader",
-              "line": 204,
-              "endLine": 204
+              "line": 214,
+              "endLine": 214
             },
             {
               "name": "footer",
               "kind": "property",
               "description": "",
               "type": "ThemeFooter",
-              "line": 205,
-              "endLine": 205
+              "line": 215,
+              "endLine": 215
             },
             {
               "name": "socialLinks",
               "kind": "property",
               "description": "",
               "type": "SocialLinks",
-              "line": 206,
-              "endLine": 206
+              "line": 216,
+              "endLine": 216
             },
             {
               "name": "sidebar",
               "kind": "property",
               "description": "",
               "type": "SidebarItem[]",
-              "line": 207,
-              "endLine": 207
+              "line": 217,
+              "endLine": 217
             },
             {
               "name": "embed",
               "kind": "property",
               "description": "",
               "type": "ThemeEmbed",
-              "line": 208,
-              "endLine": 208
+              "line": 218,
+              "endLine": 218
+            },
+            {
+              "name": "aside",
+              "kind": "property",
+              "description": "",
+              "type": "boolean",
+              "line": 219,
+              "endLine": 219
+            },
+            {
+              "name": "prevNext",
+              "kind": "property",
+              "description": "",
+              "type": "boolean",
+              "line": 220,
+              "endLine": 220
             },
             {
               "name": "tokens",
               "kind": "property",
               "description": "",
               "type": "ThemeTokens",
-              "line": 209,
-              "endLine": 209
+              "line": 221,
+              "endLine": 221
             },
             {
               "name": "darkTokens",
               "kind": "property",
               "description": "",
               "type": "ThemeTokens",
-              "line": 210,
-              "endLine": 210
+              "line": 222,
+              "endLine": 222
             },
             {
               "name": "css",
               "kind": "property",
               "description": "",
               "type": "string",
-              "line": 211,
-              "endLine": 211
+              "line": 223,
+              "endLine": 223
             },
             {
               "name": "js",
               "kind": "property",
               "description": "",
               "type": "string",
-              "line": 212,
-              "endLine": 212
+              "line": 224,
+              "endLine": 224
             }
           ],
           "file": "npm/vite-plugin-ox-content/src/theme.ts",
-          "line": 197,
-          "endLine": 213,
+          "line": 207,
+          "endLine": 225,
           "signature": "export interface ResolvedThemeConfig"
         },
         {
@@ -7396,8 +7432,8 @@
           "kind": "variable",
           "description": "Default theme configuration.\nBased on the current ox-content SSG styles.",
           "file": "npm/vite-plugin-ox-content/src/theme.ts",
-          "line": 219,
-          "endLine": 275,
+          "line": 231,
+          "endLine": 289,
           "signature": "export const defaultTheme: ThemeConfig"
         },
         {
@@ -7421,8 +7457,8 @@
             "description": ""
           },
           "file": "npm/vite-plugin-ox-content/src/theme.ts",
-          "line": 280,
-          "endLine": 306,
+          "line": 294,
+          "endLine": 320,
           "signature": "function deepMerge<T extends Record<string, unknown>>(target: T, source: Partial<T>): T"
         },
         {
@@ -7444,8 +7480,8 @@
             "```ts\nconst myTheme = defineTheme({\n  extends: defaultTheme,\n  colors: {\n    primary: '#3498db',\n  },\n  footer: {\n    copyright: '2025 My Company',\n  },\n});\n```"
           ],
           "file": "npm/vite-plugin-ox-content/src/theme.ts",
-          "line": 324,
-          "endLine": 326,
+          "line": 338,
+          "endLine": 340,
           "signature": "export function defineTheme(config: ThemeConfig): ThemeConfig"
         },
         {
@@ -7467,8 +7503,8 @@
             "```ts\nconst merged = mergeThemes(defaultTheme, pixelSkin, tokyoNight, overrides);\n```"
           ],
           "file": "npm/vite-plugin-ox-content/src/theme.ts",
-          "line": 343,
-          "endLine": 369,
+          "line": 357,
+          "endLine": 383,
           "signature": "export function mergeThemes(...themes: (ThemeConfig | ThemeConfig[])[]): ThemeConfig"
         },
         {
@@ -7488,8 +7524,8 @@
             "description": ""
           },
           "file": "npm/vite-plugin-ox-content/src/theme.ts",
-          "line": 390,
-          "endLine": 423,
+          "line": 404,
+          "endLine": 439,
           "signature": "export function resolveTheme(config?: ThemeConfig | ThemeConfig[]): ResolvedThemeConfig"
         },
         {
@@ -7508,8 +7544,8 @@
             "description": ""
           },
           "file": "npm/vite-plugin-ox-content/src/theme.ts",
-          "line": 431,
-          "endLine": 443,
+          "line": 447,
+          "endLine": 459,
           "signature": "function expandExtendsChain(config: ThemeConfig): ThemeConfig[]"
         },
         {
@@ -7528,8 +7564,8 @@
             "description": ""
           },
           "file": "npm/vite-plugin-ox-content/src/theme.ts",
-          "line": 463,
-          "endLine": 536,
+          "line": 479,
+          "endLine": 554,
           "signature": "export function themeToNapi(theme: ResolvedThemeConfig): NapiThemeConfig"
         },
         {
@@ -7548,8 +7584,8 @@
             "description": ""
           },
           "file": "npm/vite-plugin-ox-content/src/theme.ts",
-          "line": 542,
-          "endLine": 548,
+          "line": 560,
+          "endLine": 566,
           "signature": "function themeCss(theme: ResolvedThemeConfig): string"
         },
         {
@@ -7563,8 +7599,8 @@
               "description": "",
               "type": "string",
               "optional": true,
-              "line": 569,
-              "endLine": 569
+              "line": 587,
+              "endLine": 587
             },
             {
               "name": "primaryHover",
@@ -7572,8 +7608,8 @@
               "description": "",
               "type": "string",
               "optional": true,
-              "line": 570,
-              "endLine": 570
+              "line": 588,
+              "endLine": 588
             },
             {
               "name": "background",
@@ -7581,8 +7617,8 @@
               "description": "",
               "type": "string",
               "optional": true,
-              "line": 571,
-              "endLine": 571
+              "line": 589,
+              "endLine": 589
             },
             {
               "name": "backgroundAlt",
@@ -7590,8 +7626,8 @@
               "description": "",
               "type": "string",
               "optional": true,
-              "line": 572,
-              "endLine": 572
+              "line": 590,
+              "endLine": 590
             },
             {
               "name": "text",
@@ -7599,8 +7635,8 @@
               "description": "",
               "type": "string",
               "optional": true,
-              "line": 573,
-              "endLine": 573
+              "line": 591,
+              "endLine": 591
             },
             {
               "name": "textMuted",
@@ -7608,8 +7644,8 @@
               "description": "",
               "type": "string",
               "optional": true,
-              "line": 574,
-              "endLine": 574
+              "line": 592,
+              "endLine": 592
             },
             {
               "name": "border",
@@ -7617,8 +7653,8 @@
               "description": "",
               "type": "string",
               "optional": true,
-              "line": 575,
-              "endLine": 575
+              "line": 593,
+              "endLine": 593
             },
             {
               "name": "codeBackground",
@@ -7626,8 +7662,8 @@
               "description": "",
               "type": "string",
               "optional": true,
-              "line": 576,
-              "endLine": 576
+              "line": 594,
+              "endLine": 594
             },
             {
               "name": "codeBackgroundTop",
@@ -7635,8 +7671,8 @@
               "description": "",
               "type": "string",
               "optional": true,
-              "line": 577,
-              "endLine": 577
+              "line": 595,
+              "endLine": 595
             },
             {
               "name": "codeText",
@@ -7644,13 +7680,13 @@
               "description": "",
               "type": "string",
               "optional": true,
-              "line": 578,
-              "endLine": 578
+              "line": 596,
+              "endLine": 596
             }
           ],
           "file": "npm/vite-plugin-ox-content/src/theme.ts",
-          "line": 568,
-          "endLine": 579,
+          "line": 586,
+          "endLine": 597,
           "signature": "export interface NapiThemeColors"
         },
         {
@@ -7664,8 +7700,8 @@
               "description": "",
               "type": "string",
               "optional": true,
-              "line": 585,
-              "endLine": 585
+              "line": 603,
+              "endLine": 603
             },
             {
               "name": "mono",
@@ -7673,13 +7709,13 @@
               "description": "",
               "type": "string",
               "optional": true,
-              "line": 586,
-              "endLine": 586
+              "line": 604,
+              "endLine": 604
             }
           ],
           "file": "npm/vite-plugin-ox-content/src/theme.ts",
-          "line": 584,
-          "endLine": 587,
+          "line": 602,
+          "endLine": 605,
           "signature": "export interface NapiThemeFonts"
         },
         {
@@ -7693,13 +7729,13 @@
               "description": "",
               "type": "\"default\" | \"subtle\"",
               "optional": true,
-              "line": 593,
-              "endLine": 593
+              "line": 611,
+              "endLine": 611
             }
           ],
           "file": "npm/vite-plugin-ox-content/src/theme.ts",
-          "line": 592,
-          "endLine": 594,
+          "line": 610,
+          "endLine": 612,
           "signature": "export interface NapiThemeEntryPage"
         },
         {
@@ -7713,8 +7749,8 @@
               "description": "",
               "type": "string",
               "optional": true,
-              "line": 600,
-              "endLine": 600
+              "line": 618,
+              "endLine": 618
             },
             {
               "name": "headerHeight",
@@ -7722,8 +7758,8 @@
               "description": "",
               "type": "string",
               "optional": true,
-              "line": 601,
-              "endLine": 601
+              "line": 619,
+              "endLine": 619
             },
             {
               "name": "maxContentWidth",
@@ -7731,13 +7767,13 @@
               "description": "",
               "type": "string",
               "optional": true,
-              "line": 602,
-              "endLine": 602
+              "line": 620,
+              "endLine": 620
             }
           ],
           "file": "npm/vite-plugin-ox-content/src/theme.ts",
-          "line": 599,
-          "endLine": 603,
+          "line": 617,
+          "endLine": 621,
           "signature": "export interface NapiThemeLayout"
         },
         {
@@ -7751,8 +7787,8 @@
               "description": "",
               "type": "string",
               "optional": true,
-              "line": 609,
-              "endLine": 609
+              "line": 627,
+              "endLine": 627
             },
             {
               "name": "logoLight",
@@ -7760,8 +7796,8 @@
               "description": "",
               "type": "string",
               "optional": true,
-              "line": 610,
-              "endLine": 610
+              "line": 628,
+              "endLine": 628
             },
             {
               "name": "logoDark",
@@ -7769,8 +7805,8 @@
               "description": "",
               "type": "string",
               "optional": true,
-              "line": 611,
-              "endLine": 611
+              "line": 629,
+              "endLine": 629
             },
             {
               "name": "showSiteNameText",
@@ -7778,8 +7814,8 @@
               "description": "",
               "type": "boolean",
               "optional": true,
-              "line": 612,
-              "endLine": 612
+              "line": 630,
+              "endLine": 630
             },
             {
               "name": "logoWidth",
@@ -7787,8 +7823,8 @@
               "description": "",
               "type": "number",
               "optional": true,
-              "line": 613,
-              "endLine": 613
+              "line": 631,
+              "endLine": 631
             },
             {
               "name": "logoHeight",
@@ -7796,13 +7832,13 @@
               "description": "",
               "type": "number",
               "optional": true,
-              "line": 614,
-              "endLine": 614
+              "line": 632,
+              "endLine": 632
             }
           ],
           "file": "npm/vite-plugin-ox-content/src/theme.ts",
-          "line": 608,
-          "endLine": 615,
+          "line": 626,
+          "endLine": 633,
           "signature": "export interface NapiThemeHeader"
         },
         {
@@ -7816,8 +7852,8 @@
               "description": "",
               "type": "string",
               "optional": true,
-              "line": 621,
-              "endLine": 621
+              "line": 639,
+              "endLine": 639
             },
             {
               "name": "copyright",
@@ -7825,13 +7861,13 @@
               "description": "",
               "type": "string",
               "optional": true,
-              "line": 622,
-              "endLine": 622
+              "line": 640,
+              "endLine": 640
             }
           ],
           "file": "npm/vite-plugin-ox-content/src/theme.ts",
-          "line": 620,
-          "endLine": 623,
+          "line": 638,
+          "endLine": 641,
           "signature": "export interface NapiThemeFooter"
         },
         {
@@ -7845,8 +7881,8 @@
               "description": "",
               "type": "string",
               "optional": true,
-              "line": 629,
-              "endLine": 629
+              "line": 647,
+              "endLine": 647
             },
             {
               "name": "twitter",
@@ -7854,8 +7890,8 @@
               "description": "",
               "type": "string",
               "optional": true,
-              "line": 630,
-              "endLine": 630
+              "line": 648,
+              "endLine": 648
             },
             {
               "name": "discord",
@@ -7863,8 +7899,8 @@
               "description": "",
               "type": "string",
               "optional": true,
-              "line": 631,
-              "endLine": 631
+              "line": 649,
+              "endLine": 649
             },
             {
               "name": "links",
@@ -7872,13 +7908,13 @@
               "description": "",
               "type": "NapiSocialLink[]",
               "optional": true,
-              "line": 632,
-              "endLine": 632
+              "line": 650,
+              "endLine": 650
             }
           ],
           "file": "npm/vite-plugin-ox-content/src/theme.ts",
-          "line": 628,
-          "endLine": 633,
+          "line": 646,
+          "endLine": 651,
           "signature": "export interface NapiSocialLinks"
         },
         {
@@ -7892,8 +7928,8 @@
               "description": "",
               "type": "string",
               "optional": true,
-              "line": 646,
-              "endLine": 646
+              "line": 664,
+              "endLine": 664
             },
             {
               "name": "headerBefore",
@@ -7901,8 +7937,8 @@
               "description": "",
               "type": "string",
               "optional": true,
-              "line": 647,
-              "endLine": 647
+              "line": 665,
+              "endLine": 665
             },
             {
               "name": "headerAfter",
@@ -7910,8 +7946,8 @@
               "description": "",
               "type": "string",
               "optional": true,
-              "line": 648,
-              "endLine": 648
+              "line": 666,
+              "endLine": 666
             },
             {
               "name": "sidebarBefore",
@@ -7919,8 +7955,8 @@
               "description": "",
               "type": "string",
               "optional": true,
-              "line": 649,
-              "endLine": 649
+              "line": 667,
+              "endLine": 667
             },
             {
               "name": "sidebarAfter",
@@ -7928,8 +7964,8 @@
               "description": "",
               "type": "string",
               "optional": true,
-              "line": 650,
-              "endLine": 650
+              "line": 668,
+              "endLine": 668
             },
             {
               "name": "contentBefore",
@@ -7937,8 +7973,8 @@
               "description": "",
               "type": "string",
               "optional": true,
-              "line": 651,
-              "endLine": 651
+              "line": 669,
+              "endLine": 669
             },
             {
               "name": "contentAfter",
@@ -7946,8 +7982,8 @@
               "description": "",
               "type": "string",
               "optional": true,
-              "line": 652,
-              "endLine": 652
+              "line": 670,
+              "endLine": 670
             },
             {
               "name": "footerBefore",
@@ -7955,8 +7991,8 @@
               "description": "",
               "type": "string",
               "optional": true,
-              "line": 653,
-              "endLine": 653
+              "line": 671,
+              "endLine": 671
             },
             {
               "name": "footer",
@@ -7964,13 +8000,13 @@
               "description": "",
               "type": "string",
               "optional": true,
-              "line": 654,
-              "endLine": 654
+              "line": 672,
+              "endLine": 672
             }
           ],
           "file": "npm/vite-plugin-ox-content/src/theme.ts",
-          "line": 645,
-          "endLine": 655,
+          "line": 663,
+          "endLine": 673,
           "signature": "export interface NapiThemeEmbed"
         },
         {
@@ -7984,8 +8020,8 @@
               "description": "",
               "type": "NapiThemeColors",
               "optional": true,
-              "line": 661,
-              "endLine": 661
+              "line": 679,
+              "endLine": 679
             },
             {
               "name": "darkColors",
@@ -7993,8 +8029,8 @@
               "description": "",
               "type": "NapiThemeColors",
               "optional": true,
-              "line": 662,
-              "endLine": 662
+              "line": 680,
+              "endLine": 680
             },
             {
               "name": "fonts",
@@ -8002,8 +8038,8 @@
               "description": "",
               "type": "NapiThemeFonts",
               "optional": true,
-              "line": 663,
-              "endLine": 663
+              "line": 681,
+              "endLine": 681
             },
             {
               "name": "entryPage",
@@ -8011,8 +8047,8 @@
               "description": "",
               "type": "NapiThemeEntryPage",
               "optional": true,
-              "line": 664,
-              "endLine": 664
+              "line": 682,
+              "endLine": 682
             },
             {
               "name": "layout",
@@ -8020,8 +8056,8 @@
               "description": "",
               "type": "NapiThemeLayout",
               "optional": true,
-              "line": 665,
-              "endLine": 665
+              "line": 683,
+              "endLine": 683
             },
             {
               "name": "header",
@@ -8029,8 +8065,8 @@
               "description": "",
               "type": "NapiThemeHeader",
               "optional": true,
-              "line": 666,
-              "endLine": 666
+              "line": 684,
+              "endLine": 684
             },
             {
               "name": "footer",
@@ -8038,8 +8074,8 @@
               "description": "",
               "type": "NapiThemeFooter",
               "optional": true,
-              "line": 667,
-              "endLine": 667
+              "line": 685,
+              "endLine": 685
             },
             {
               "name": "socialLinks",
@@ -8047,8 +8083,8 @@
               "description": "",
               "type": "NapiSocialLinks",
               "optional": true,
-              "line": 668,
-              "endLine": 668
+              "line": 686,
+              "endLine": 686
             },
             {
               "name": "embed",
@@ -8056,8 +8092,26 @@
               "description": "",
               "type": "NapiThemeEmbed",
               "optional": true,
-              "line": 669,
-              "endLine": 669
+              "line": 687,
+              "endLine": 687
+            },
+            {
+              "name": "aside",
+              "kind": "property",
+              "description": "",
+              "type": "boolean",
+              "optional": true,
+              "line": 688,
+              "endLine": 688
+            },
+            {
+              "name": "prevNext",
+              "kind": "property",
+              "description": "",
+              "type": "boolean",
+              "optional": true,
+              "line": 689,
+              "endLine": 689
             },
             {
               "name": "css",
@@ -8065,8 +8119,8 @@
               "description": "",
               "type": "string",
               "optional": true,
-              "line": 670,
-              "endLine": 670
+              "line": 690,
+              "endLine": 690
             },
             {
               "name": "js",
@@ -8074,13 +8128,13 @@
               "description": "",
               "type": "string",
               "optional": true,
-              "line": 671,
-              "endLine": 671
+              "line": 691,
+              "endLine": 691
             }
           ],
           "file": "npm/vite-plugin-ox-content/src/theme.ts",
-          "line": 660,
-          "endLine": 672,
+          "line": 678,
+          "endLine": 692,
           "signature": "export interface NapiThemeConfig"
         }
       ]
@@ -13539,8 +13593,8 @@
             "description": ""
           },
           "file": "npm/vite-plugin-ox-content/src/vitepress.ts",
-          "line": 360,
-          "endLine": 370,
+          "line": 379,
+          "endLine": 389,
           "signature": "export function convertVitePressSidebar(sidebar: VitePressSidebar): SsgNavigationGroup[]"
         },
         {
@@ -13559,8 +13613,8 @@
             "description": ""
           },
           "file": "npm/vite-plugin-ox-content/src/vitepress.ts",
-          "line": 376,
-          "endLine": 404,
+          "line": 395,
+          "endLine": 423,
           "signature": "export function convertVitePressNav(nav: VitePressNavItem[]): SsgNavigationGroup[]"
         },
         {
@@ -13586,8 +13640,8 @@
             "description": ""
           },
           "file": "npm/vite-plugin-ox-content/src/vitepress.ts",
-          "line": 409,
-          "endLine": 437,
+          "line": 428,
+          "endLine": 456,
           "signature": "export function fromVitePressConfig(config: VitePressConfig, overrides: OxContentOptions = {}): OxContentOptions"
         },
         {
@@ -13620,8 +13674,8 @@
             "description": ""
           },
           "file": "npm/vite-plugin-ox-content/src/vitepress.ts",
-          "line": 445,
-          "endLine": 459,
+          "line": 464,
+          "endLine": 478,
           "signature": "export function generateVitePressMigrationConfig(config: VitePressConfig, overrides: OxContentOptions = {}, options: GenerateVitePressMigrationConfigOptions = {}): string"
         },
         {
@@ -13640,8 +13694,8 @@
             "description": ""
           },
           "file": "npm/vite-plugin-ox-content/src/vitepress.ts",
-          "line": 510,
-          "endLine": 514,
+          "line": 529,
+          "endLine": 533,
           "signature": "export function normalizeVitePressFrontmatter(frontmatter: Record<string, unknown>): Record<string, unknown>"
         }
       ]
