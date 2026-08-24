@@ -54,7 +54,8 @@ Content release artifacts, including:
   Sample code is not run during Markdown transform or SSG. JavaScript and
   TypeScript run in `node:vm` or a browser iframe. Native languages use official
   playgrounds or a user-configured HTTP executor. The plugin does not spawn a
-  local shell.
+  local shell. The Vite `/__ox-code-play/*` proxies are dev-only, accept POST
+  only, and do not leak upstream fetch errors to the client.
 - Build, release, and dependency configuration that could affect distributed
   artifacts.
 

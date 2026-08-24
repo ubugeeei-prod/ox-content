@@ -106,6 +106,25 @@ Remote languages need `languages.<id>.endpoint` pointing at a
 Piston-compatible executor. Rust and Go default to the official playgrounds.
 JavaScript and TypeScript run locally in `node:vm` or a browser iframe.
 
+## Playground proxies
+
+Vite **dev server** only. `codePlay({ proxy: true })` (the default) mounts:
+
+| Path | Forwards to |
+| ---- | ----------- |
+| `POST /__ox-code-play/rust` | `endpoints.rust` (default `https://play.rust-lang.org/execute`) |
+| `POST /__ox-code-play/go` | `endpoints.go` (default `https://play.golang.org/compile`) |
+| `POST /__ox-code-play/typecheck` | local `tsgo` (no remote compiler) |
+
+These routes accept **POST** only, cap the body at 256 KiB, and refuse
+non-`http(s)` destinations or URLs with embedded credentials. Upstream
+failures return generic JSON `{ "error": "..." }` and do not leak fetch
+details.
+
+The proxy is not installed in production SSG output. Set `endpoints` to the
+official playgrounds (or your own HTTPS executor) for published pages, or
+`proxy: false` if you do not want the dev middleware.
+
 ## Security
 
 - Samples are not executed during Markdown transform or SSG.

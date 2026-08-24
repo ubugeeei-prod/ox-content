@@ -61,8 +61,10 @@ add a visual check for the default preset.
 
 ### 3. `feat(code-play): official playground proxies`
 
-Keep the allowlisted `/__ox-code-play/rust` and `/__ox-code-play/go` proxies,
-add production `endpoints` documentation, and cover proxy failure modes.
+This PR. Keep the `/__ox-code-play/rust`, `/__ox-code-play/go`, and
+`/__ox-code-play/typecheck` dev proxies. Reject non-POST requests, oversize
+bodies, and non-http(s) destinations; return generic JSON errors; document
+production `endpoints`.
 
 ### 4. `feat(code-play): framework preview compilers`
 
