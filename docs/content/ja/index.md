@@ -69,7 +69,10 @@ Ox Content はテーマだけではありません。Markdown パーサ、レン
 
 - [はじめに](./getting-started.md)
 - [組み込み機能](./built-in-features.md)
+- [テーマ](./theming.md)
+- [MDX とコンポーネント](./mdx.md)
 - [ドキュメントのバージョン管理](./built-in/versioning.md)
 - [国際化](./i18n.md)
+- [事例](./examples/index.md)
 
 英語のリファレンス（API、パッケージ、高度な解説）は [English home](/) から辿れます。ヘッダーの locale switcher で言語を切り替えられます。

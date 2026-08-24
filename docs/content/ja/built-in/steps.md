@@ -7,9 +7,9 @@ description: チュートリアル向けのオプトイン ::: steps。
 
 チュートリアルの手順を、ふつうの順序リストと見た目で分けます。省略または `false` では `::: steps` はリテラルです。
 
-| オプション | 型 | 既定 |
-| --- | --- | --- |
-| `steps` | `boolean` / `StepsOptions` | `false` |
+| オプション | 型                         | 既定    |
+| ---------- | -------------------------- | ------- |
+| `steps`    | `boolean` / `StepsOptions` | `false` |
 
 ```ts
 oxContent({
@@ -21,7 +21,7 @@ oxContent({
 
 順序リストを `::: steps` で包みます。フェンス、強調、ネストしたリストは各項目の中で描画されます。
 
-```md
+````md
 ::: steps
 
 1. CLI を入れる
@@ -29,12 +29,15 @@ oxContent({
    ```sh
    npm i -g ox-content
    ```
+````
 
 2. 設定を書く
 3. ビルドする
-:::
+   :::
+
 ```
 
 ## 関連
 
 - [英語版ガイド](/built-in/steps.md)
+```

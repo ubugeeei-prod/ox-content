@@ -43,17 +43,17 @@ export default {
 
 ## プラグインオプション
 
-| オプション  | 型                                              | 既定      | 役割                                     |
-| ----------- | ----------------------------------------------- | --------- | ---------------------------------------- |
-| `languages` | `Record<string, true \| LanguageEnableOptions>` | `{}`      | execute / typecheck / `endpoint` を有効化 |
-| `ui`        | `"default" \| "compact" \| "headless"`          | `default` | サンプル周りのクロム                     |
-| `viewers`   | `Partial<ViewerFlags>`                          | すべてオン | stdio / stderr / config / … の表示     |
-| `timeoutMs` | `number`                                        | `10000`   | 実行ごとのタイムアウト                   |
-| `endpoints` | `{ rust?, go?, typecheck? }`                    | official  | プレイグラウンド / typecheck の URL      |
-| `proxy`     | `boolean`                                       | `true`    | Vite **dev** の `/__ox-code-play/*` をマウント |
-| `srcDir`    | `string`                                        | `"docs"`  | play フェンス照合に使う Markdown ルート  |
-| `outDir`    | `string`                                        | Vite out  | SSG 後に拡張する書き出し HTML            |
-| `base`      | `string`                                        | `"/"`     | `ox-code-play.js` の公開パス             |
+| オプション  | 型                                              | 既定       | 役割                                           |
+| ----------- | ----------------------------------------------- | ---------- | ---------------------------------------------- |
+| `languages` | `Record<string, true \| LanguageEnableOptions>` | `{}`       | execute / typecheck / `endpoint` を有効化      |
+| `ui`        | `"default" \| "compact" \| "headless"`          | `default`  | サンプル周りのクロム                           |
+| `viewers`   | `Partial<ViewerFlags>`                          | すべてオン | stdio / stderr / config / … の表示             |
+| `timeoutMs` | `number`                                        | `10000`    | 実行ごとのタイムアウト                         |
+| `endpoints` | `{ rust?, go?, typecheck? }`                    | official   | プレイグラウンド / typecheck の URL            |
+| `proxy`     | `boolean`                                       | `true`     | Vite **dev** の `/__ox-code-play/*` をマウント |
+| `srcDir`    | `string`                                        | `"docs"`   | play フェンス照合に使う Markdown ルート        |
+| `outDir`    | `string`                                        | Vite out   | SSG 後に拡張する書き出し HTML                  |
+| `base`      | `string`                                        | `"/"`      | `ox-code-play.js` の公開パス                   |
 
 `LanguageEnableOptions` は、その言語のスキーマ向けに `execute`、`typecheck`、`endpoint`、
 `config` の上書きを受け付けます（TypeScript の `strict`、Rust の
@@ -111,18 +111,18 @@ session.config; // editable language config
 テストでは `transport`（たとえば `createMemoryTransport`）を注入し、
 CI がライブのプレイグラウンドに触れないようにします。
 
-| フィールド        | 意味                                                     |
-| ----------------- | -------------------------------------------------------- |
-| `run.status`      | `ok` / `error` / `timeout` / `cancelled` / `unsupported` |
+| フィールド        | 意味                                                        |
+| ----------------- | ----------------------------------------------------------- |
+| `run.status`      | `ok` / `error` / `timeout` / `cancelled` / `unsupported`    |
 | `run.stdio`       | タイムスタンプ付きの `stdin` / `stdout` / `stderr` イベント |
-| `run.stdout`      | 連結した stdout テキスト                                 |
-| `run.stderr`      | 連結した stderr テキスト                                 |
-| `run.diagnostics` | 任意の行 / 列付きのコンパイラ / ランタイムメッセージ     |
-| `run.provenance`  | どこでコンパイルし、どこで実行したか                     |
-| `run.timing`      | フェーズ時間と `totalMs`                                 |
-| `run.preview`     | バックエンドが UI のときのフレームワーク iframe `srcdoc` |
-| `session.stdout`  | `lastResult.stdout` と同じ                               |
-| `session.stderr`  | `lastResult.stderr` と同じ                               |
+| `run.stdout`      | 連結した stdout テキスト                                    |
+| `run.stderr`      | 連結した stderr テキスト                                    |
+| `run.diagnostics` | 任意の行 / 列付きのコンパイラ / ランタイムメッセージ        |
+| `run.provenance`  | どこでコンパイルし、どこで実行したか                        |
+| `run.timing`      | フェーズ時間と `totalMs`                                    |
+| `run.preview`     | バックエンドが UI のときのフレームワーク iframe `srcdoc`    |
+| `session.stdout`  | `lastResult.stdout` と同じ                                  |
+| `session.stderr`  | `lastResult.stderr` と同じ                                  |
 
 ## UI
 
@@ -136,14 +136,14 @@ CI がライブのプレイグラウンドに触れないようにします。
 
 ## 言語
 
-| 言語                      | 実行 | 型チェック | バックエンド                                |
-| ------------------------- | ---- | ---------- | ------------------------------------------- |
-| TypeScript                | yes  | yes        | ローカル strip-types + `tsgo` + `node:vm`   |
+| 言語                      | 実行 | 型チェック | バックエンド                                    |
+| ------------------------- | ---- | ---------- | ----------------------------------------------- |
+| TypeScript                | yes  | yes        | ローカル strip-types + `tsgo` + `node:vm`       |
 | Rust                      | yes  | yes        | `play.rust-lang.org`（または `endpoints.rust`） |
-| Go                        | yes  | yes        | `play.golang.org`（または `endpoints.go`）  |
-| JavaScript                | yes  | no         | `node:vm` / サンドボックス iframe           |
-| Vue、React、Svelte、Solid | yes  | no         | iframe `srcdoc` + esm.sh import map         |
-| Python、PHP、Ruby、sh、…  | yes  | no         | Piston 互換の `languages.<id>.endpoint`     |
+| Go                        | yes  | yes        | `play.golang.org`（または `endpoints.go`）      |
+| JavaScript                | yes  | no         | `node:vm` / サンドボックス iframe               |
+| Vue、React、Svelte、Solid | yes  | no         | iframe `srcdoc` + esm.sh import map             |
+| Python、PHP、Ruby、sh、…  | yes  | no         | Piston 互換の `languages.<id>.endpoint`         |
 
 完全なカタログは [ロードマップ](../code-play-roadmap.md) と同じ一覧です。
 `ts`、`c++`、`bash`、`coq` のようなエイリアスは正規 id に解決されます。
@@ -152,11 +152,11 @@ CI がライブのプレイグラウンドに触れないようにします。
 
 Vite の **dev サーバー** のみです。`codePlay({ proxy: true })`（既定）は次をマウントします。
 
-| パス                             | 転送先                                                          |
-| -------------------------------- | --------------------------------------------------------------- |
-| `POST /__ox-code-play/rust`      | `endpoints.rust`（既定 `https://play.rust-lang.org/execute`）   |
-| `POST /__ox-code-play/go`        | `endpoints.go`（既定 `https://play.golang.org/compile`）        |
-| `POST /__ox-code-play/typecheck` | ローカル `tsgo`（リモートコンパイラなし）                       |
+| パス                             | 転送先                                                        |
+| -------------------------------- | ------------------------------------------------------------- |
+| `POST /__ox-code-play/rust`      | `endpoints.rust`（既定 `https://play.rust-lang.org/execute`） |
+| `POST /__ox-code-play/go`        | `endpoints.go`（既定 `https://play.golang.org/compile`）      |
+| `POST /__ox-code-play/typecheck` | ローカル `tsgo`（リモートコンパイラなし）                     |
 
 これらのルートは **POST** のみを受け付け、本文を 256 KiB で上限し、
 `http(s)` 以外の宛先や埋め込み認証情報付き URL を拒否します。上流の

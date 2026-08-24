@@ -29,12 +29,12 @@ vp run deploy#docs
 
 デプロイコマンドの既定値は、このリポジトリが使う Void プロジェクトと docs 出力ディレクトリです。
 
-| 設定                       | 既定                          | 目的                                        |
-| -------------------------- | ----------------------------- | ------------------------------------------- |
-| `VOID_PROJECT`             | `ox-content`                  | `void deploy --project` に渡します。        |
+| 設定                       | 既定                          | 目的                                         |
+| -------------------------- | ----------------------------- | -------------------------------------------- |
+| `VOID_PROJECT`             | `ox-content`                  | `void deploy --project` に渡します。         |
 | `OX_CONTENT_DOCS_BASE`     | `/`                           | Void ホスト向けサイトの Vite base パスです。 |
-| `OX_CONTENT_DOCS_SITE_URL` | `https://ox-content.void.app` | メタデータと OG に使う絶対サイト URL です。 |
-| デプロイディレクトリ       | `docs/dist/docs`              | `void deploy --dir` に渡します。            |
+| `OX_CONTENT_DOCS_SITE_URL` | `https://ox-content.void.app` | メタデータと OG に使う絶対サイト URL です。  |
+| デプロイディレクトリ       | `docs/dist/docs`              | `void deploy --dir` に渡します。             |
 
 Void は `https://ox-content.void.app` をルートパスでホストするので、デプロイタスクは docs の base を既定で `/` にします。その上書きなしの通常の本番 docs ビルドは、いまも `docs/vite.config.ts` で設定した GitHub Pages の base を使います。
 

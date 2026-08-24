@@ -7,9 +7,9 @@ description: オプトインの card / link-card / card-grid。
 
 カード系ブロックはオプトインです。オフのとき `:::` はそのまま残ります。
 
-| オプション | 型 | 既定 |
-| --- | --- | --- |
-| `cards` | `boolean` / `CardOptions` | `false` |
+| オプション | 型                        | 既定    |
+| ---------- | ------------------------- | ------- |
+| `cards`    | `boolean` / `CardOptions` | `false` |
 
 ```ts
 oxContent({

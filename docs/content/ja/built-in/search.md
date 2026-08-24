@@ -19,14 +19,14 @@ oxContent({
 });
 ```
 
-| オプション | 既定 | 役割 |
-| --- | --- | --- |
-| `enabled` | `true` | `search: false` で完全オフ |
-| `limit` | `10` | クライアントが返す件数 |
-| `prefix` | `true` | 末尾トークンの前方一致 |
-| `placeholder` | `"Search documentation..."` | デフォルトテーマのプレースホルダ |
-| `hotkey` | `"/"` | フォーカス。`""` で登録しない |
-| `provider` | `"local"` | `"local"` は BM25。`"hosted"` はオプトイン |
+| オプション    | 既定                        | 役割                                       |
+| ------------- | --------------------------- | ------------------------------------------ |
+| `enabled`     | `true`                      | `search: false` で完全オフ                 |
+| `limit`       | `10`                        | クライアントが返す件数                     |
+| `prefix`      | `true`                      | 末尾トークンの前方一致                     |
+| `placeholder` | `"Search documentation..."` | デフォルトテーマのプレースホルダ           |
+| `hotkey`      | `"/"`                       | フォーカス。`""` で登録しない              |
+| `provider`    | `"local"`                   | `"local"` は BM25。`"hosted"` はオプトイン |
 
 インデックスは生成ページの横の `search-index.json` です。初回検索で遅延取得します。dev ではメモリから出し、ページ変更で作り直します。
 

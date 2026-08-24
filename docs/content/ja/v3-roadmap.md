@@ -10,13 +10,13 @@ description: テーマパッケージ、完全な MDX、Code Play、オプトイ
 3.0 は、実験的な面を卒業し、ハイライトの破壊的変更を受け入れるリリースです。新しい Markdown と追加のクロムは **オプトイン** のままです。
 作業は、まず落ちるテストを置いた小さな conventional PR で入ります。
 
-| 柱                          | Issue                                                          | メモ                                                                                                     |
-| --------------------------- | -------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------- |
-| 安定したテーマパッケージ    | [#700](https://github.com/ubugeeei-prod/ox-content/issues/700) | スキンとカラースキームが公式の契約になります                                                             |
-| 完全な MDX 対応             | [#701](https://github.com/ubugeeei-prod/ox-content/issues/701) | JSX、import、JSX 内 Markdown。island は既定で JS なしのまま                                              |
-| Code Play                   | [#648](https://github.com/ubugeeei-prod/ox-content/issues/648) | 連動する柱。[Code Play ロードマップ](./code-play-roadmap.md) を見てください                              |
-| 組み込み docs サイト機能    | [#650](https://github.com/ubugeeei-prod/ox-content/issues/650) | 執筆、サイト出力、テーマクロム — 既定は OFF                                                              |
-| Tree-sitter ハイライト      | [#702](https://github.com/ubugeeei-prod/ox-content/issues/702) | [#710](https://github.com/ubugeeei-prod/ox-content/pull/710) で投入済み。`highlight: true` はネイティブのみ |
+| 柱                       | Issue                                                          | メモ                                                                                                        |
+| ------------------------ | -------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------- |
+| 安定したテーマパッケージ | [#700](https://github.com/ubugeeei-prod/ox-content/issues/700) | スキンとカラースキームが公式の契約になります                                                                |
+| 完全な MDX 対応          | [#701](https://github.com/ubugeeei-prod/ox-content/issues/701) | JSX、import、JSX 内 Markdown。island は既定で JS なしのまま                                                 |
+| Code Play                | [#648](https://github.com/ubugeeei-prod/ox-content/issues/648) | 連動する柱。[Code Play ロードマップ](./code-play-roadmap.md) を見てください                                 |
+| 組み込み docs サイト機能 | [#650](https://github.com/ubugeeei-prod/ox-content/issues/650) | 執筆、サイト出力、テーマクロム — 既定は OFF                                                                 |
+| Tree-sitter ハイライト   | [#702](https://github.com/ubugeeei-prod/ox-content/issues/702) | [#710](https://github.com/ubugeeei-prod/ox-content/pull/710) で投入済み。`highlight: true` はネイティブのみ |
 
 ほかで追跡しており、ここには重複しません。
 

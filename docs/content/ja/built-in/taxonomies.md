@@ -30,10 +30,10 @@ oxContent({
 });
 ```
 
-| オプション | 型 | 既定 |
-| --- | --- | --- |
-| `taxonomies` | `boolean` / `TaxonomiesOptions` | `false` |
-| `relatedLimit` | `number` | `5` |
+| オプション     | 型                              | 既定    |
+| -------------- | ------------------------------- | ------- |
+| `taxonomies`   | `boolean` / `TaxonomiesOptions` | `false` |
+| `relatedLimit` | `number`                        | `5`     |
 
 用語は frontmatter だけです。文字列または文字列配列を受け付けます。このドキュメントサイトでは `taxonomies` はオフです。
 

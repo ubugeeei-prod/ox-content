@@ -67,17 +67,17 @@ flowchart TB
 
 ## 入口
 
-| 入口                             | 用途                                                                               | 主な実装                                         |
-| -------------------------------- | ---------------------------------------------------------------------------------- | ------------------------------------------------ |
+| 入口                             | 用途                                                                                 | 主な実装                                               |
+| -------------------------------- | ------------------------------------------------------------------------------------ | ------------------------------------------------------ |
 | `@ox-content/vite-plugin`        | ドキュメントサイト、Markdown 変換、SSG、テーマ、検索、OG 画像、生成 API ドキュメント | TypeScript のオーケストレーションと `@ox-content/napi` |
-| `@ox-content/napi`               | Node.js スクリプト、独自ツール、直接の parse/render/search/docs API                | `crates/ox_content_napi`                         |
-| `@ox-content/wasm`               | ブラウザ、Web Worker、またはサンドボックス化された JavaScript ホスト               | `crates/ox_content_wasm`                         |
-| `@ox-content/vite-plugin-vue`    | Markdown 内の Vue コンポーネント island                                            | ベース Vite プラグインと Vue ランタイム          |
-| `@ox-content/vite-plugin-react`  | Markdown 内の React コンポーネント island                                          | ベース Vite プラグインと React ランタイム        |
-| `@ox-content/vite-plugin-svelte` | Markdown 内の Svelte コンポーネント island                                         | ベース Vite プラグインと Svelte ランタイム       |
-| `@ox-content/vite-plugin-solid`  | Markdown 内の Solid コンポーネント island                                          | ベース Vite プラグインと Solid ランタイム        |
-| `@ox-content/unplugin`           | Rollup、webpack、esbuild など Vite 以外のバンドラー                                | 汎用プラグインラッパー                           |
-| エディタ連携                     | 補完、診断、スニペット、プレビュー、i18n 執筆                                      | `ox-content-lsp` とエディタアダプター            |
+| `@ox-content/napi`               | Node.js スクリプト、独自ツール、直接の parse/render/search/docs API                  | `crates/ox_content_napi`                               |
+| `@ox-content/wasm`               | ブラウザ、Web Worker、またはサンドボックス化された JavaScript ホスト                 | `crates/ox_content_wasm`                               |
+| `@ox-content/vite-plugin-vue`    | Markdown 内の Vue コンポーネント island                                              | ベース Vite プラグインと Vue ランタイム                |
+| `@ox-content/vite-plugin-react`  | Markdown 内の React コンポーネント island                                            | ベース Vite プラグインと React ランタイム              |
+| `@ox-content/vite-plugin-svelte` | Markdown 内の Svelte コンポーネント island                                           | ベース Vite プラグインと Svelte ランタイム             |
+| `@ox-content/vite-plugin-solid`  | Markdown 内の Solid コンポーネント island                                            | ベース Vite プラグインと Solid ランタイム              |
+| `@ox-content/unplugin`           | Rollup、webpack、esbuild など Vite 以外のバンドラー                                  | 汎用プラグインラッパー                                 |
+| エディタ連携                     | 補完、診断、スニペット、プレビュー、i18n 執筆                                        | `ox-content-lsp` とエディタアダプター                  |
 
 ほとんどのドキュメントプロジェクトでは、Vite プラグインから始めてください。必要なネイティブパッケージは
 すでに依存しているので、`@ox-content/napi` を直接入れるのは、独自の Node.js ツールを作るときだけが普通です。
@@ -159,15 +159,15 @@ Markdown ファイルを書きます。
 
 ## Rust crate
 
-| 層               | crate                                                                                | 責任                                                                |
-| ---------------- | ------------------------------------------------------------------------------------ | ------------------------------------------------------------------- |
-| コア Markdown    | `ox_content_allocator`、`ox_content_ast`、`ox_content_parser`、`ox_content_renderer` | arena ベースのデータ構造で Markdown をパースして描画する            |
-| ランタイムブリッジ | `ox_content_napi`、`ox_content_wasm`、`ox_content_vite`                            | コアを Node.js、WebAssembly、Vite 向けランタイムコードへ公開する    |
-| サイト機能       | `ox_content_ssg`、`ox_content_search`、`ox_content_docs`、`ox_content_og_image`      | 静的ページ、検索データ、ソースドキュメント、画像アセットを生成する  |
-| 執筆チェック     | `ox_content_i18n`、`ox_content_i18n_checker`、`ox_content_mdc_checker`               | 辞書、翻訳キー使用、MDC コンポーネント構文を検証する                |
-| 言語サーバー     | `ox_content_lsp`、`ox_content_i18n_lsp`                                              | 補完、診断、プレビュー、i18n 執筆機能を提供する                     |
-| プロファイリング | `ox_content_profiler`、`ox_content_profile_cli`                                      | パーサーとレンダラー作業の割り当てとタイミングスパンを測る          |
-| CLI              | `ox_content_i18n_cli`、`ox_content_profile_cli`、`ox_content_mdc_checker`            | Vite プラグインの外でチェックとプロファイリングを実行する           |
+| 層                 | crate                                                                                | 責任                                                               |
+| ------------------ | ------------------------------------------------------------------------------------ | ------------------------------------------------------------------ |
+| コア Markdown      | `ox_content_allocator`、`ox_content_ast`、`ox_content_parser`、`ox_content_renderer` | arena ベースのデータ構造で Markdown をパースして描画する           |
+| ランタイムブリッジ | `ox_content_napi`、`ox_content_wasm`、`ox_content_vite`                              | コアを Node.js、WebAssembly、Vite 向けランタイムコードへ公開する   |
+| サイト機能         | `ox_content_ssg`、`ox_content_search`、`ox_content_docs`、`ox_content_og_image`      | 静的ページ、検索データ、ソースドキュメント、画像アセットを生成する |
+| 執筆チェック       | `ox_content_i18n`、`ox_content_i18n_checker`、`ox_content_mdc_checker`               | 辞書、翻訳キー使用、MDC コンポーネント構文を検証する               |
+| 言語サーバー       | `ox_content_lsp`、`ox_content_i18n_lsp`                                              | 補完、診断、プレビュー、i18n 執筆機能を提供する                    |
+| プロファイリング   | `ox_content_profiler`、`ox_content_profile_cli`                                      | パーサーとレンダラー作業の割り当てとタイミングスパンを測る         |
+| CLI                | `ox_content_i18n_cli`、`ox_content_profile_cli`、`ox_content_mdc_checker`            | Vite プラグインの外でチェックとプロファイリングを実行する          |
 
 crate はひとつの Cargo ワークスペースから公開されます。内部依存は
 ワークスペースバージョンとローカルパスを使うので、個別 crate を公開しつつ、
@@ -175,18 +175,18 @@ crate はひとつの Cargo ワークスペースから公開されます。内�
 
 ## JavaScript パッケージ
 
-| パッケージ                       | 役割                                                                             |
-| -------------------------------- | -------------------------------------------------------------------------------- |
+| パッケージ                       | 役割                                                                                                    |
+| -------------------------------- | ------------------------------------------------------------------------------------------------------- |
 | `@ox-content/napi`               | `ox_content_napi` とプラットフォームバインディングパッケージに裏打ちされたネイティブ Node.js パッケージ |
-| `@ox-content/vite-plugin`        | メインの Vite プラグインと公開 TypeScript API                                    |
-| `@ox-content/vite-plugin-vue`    | Vue island ランタイムと transform 連携                                           |
-| `@ox-content/vite-plugin-react`  | React island ランタイムと transform 連携                                         |
-| `@ox-content/vite-plugin-svelte` | Svelte island ランタイムと transform 連携                                        |
-| `@ox-content/vite-plugin-solid`  | Solid island ランタイムと transform 連携                                         |
-| `@ox-content/islands`            | フレームワーク非依存の island 登録とハイドレーション基盤                         |
-| `@ox-content/code-play`          | オプトインのオンデマンドサンプル実行、型チェック、ビューアー                     |
-| `@ox-content/unplugin`           | 汎用バンドラープラグインラッパー                                                 |
-| `vscode-ox-content`              | ローカル LSP サーバーと話す VS Code 拡張                                         |
+| `@ox-content/vite-plugin`        | メインの Vite プラグインと公開 TypeScript API                                                           |
+| `@ox-content/vite-plugin-vue`    | Vue island ランタイムと transform 連携                                                                  |
+| `@ox-content/vite-plugin-react`  | React island ランタイムと transform 連携                                                                |
+| `@ox-content/vite-plugin-svelte` | Svelte island ランタイムと transform 連携                                                               |
+| `@ox-content/vite-plugin-solid`  | Solid island ランタイムと transform 連携                                                                |
+| `@ox-content/islands`            | フレームワーク非依存の island 登録とハイドレーション基盤                                                |
+| `@ox-content/code-play`          | オプトインのオンデマンドサンプル実行、型チェック、ビューアー                                            |
+| `@ox-content/unplugin`           | 汎用バンドラープラグインラッパー                                                                        |
+| `vscode-ox-content`              | ローカル LSP サーバーと話す VS Code 拡張                                                                |
 
 フレームワークパッケージはベースプラグインを置き換えず、包みます。そのため
 Markdown パース、SSG、検索、生成ドキュメント、テーマの振る舞いは

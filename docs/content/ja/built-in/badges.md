@@ -7,9 +7,9 @@ description: 見出しや本文の横に置くオプトインの状態ラベル�
 
 見出しや文中に小さな状態ラベル（beta、必須、非推奨）を置きたいことがあります。`{badge:variant}` はオプトインで、既定はオフです。
 
-| オプション | 型 | 既定 |
-| --- | --- | --- |
-| `badges` | `boolean` / `BadgeOptions` | `false` |
+| オプション | 型                         | 既定    |
+| ---------- | -------------------------- | ------- |
+| `badges`   | `boolean` / `BadgeOptions` | `false` |
 
 ```ts
 oxContent({

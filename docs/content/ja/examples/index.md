@@ -1,6 +1,11 @@
+---
+title: 事例
+description: 実行可能な例と小さなソーススニペット。
+---
+
 # 事例
 
-Ox Content は、さまざまな使い方を示す実行可能な例と小さなソーススニペットを提供します。
+Ox Content は、さまざまな使い方を示す実行可能な例と小さなソーススニペットを提供します。個別の事例ページは英語です。ヘッダーの locale switcher で戻れます。
 
 組み込み機能の小さなスニペットは、リポジトリの `examples/builtin-features/` にあります。
 
@@ -139,7 +144,7 @@ oxContent({
 
 すべてのページの Open Graph メタデータをプレビューする開発ツールです。開発中は `/__og-viewer` で使えます。
 
-### [カスタム OG 画像テンプレート](./og-image-custom.md)
+### [カスタム OG 画像テンプレート](/examples/og-image-custom.md)
 
 カスタムテンプレートでページごとの Open Graph 画像を生成します。任意の frontmatter データを props として渡せます。
 
@@ -154,15 +159,15 @@ oxContent({
 
 ## その他の例
 
-### [Code Play](./code-play.md)
+### [Code Play](/examples/code-play.md)
 
 `@ox-content/code-play` によるオンデマンドのサンプル実行です。stdio、stderr、config、provenance、timing のビューアー付きです。ドキュメントページ上のライブフェンスに加え、スタンドアロンの Vite アプリは [`examples/code-play`](https://github.com/ubugeeei-prod/ox-content/tree/main/examples/code-play) です。
 
-### [プレイグラウンド](./playground.md)
+### [プレイグラウンド](/examples/playground.md)
 
 Markdown パースを試す対話的な Web プレイグラウンドです。
 
-### [Vite SSG](./ssg-vite.md)
+### [Vite SSG](/examples/ssg-vite.md)
 
 Vite を使った静的サイト生成の例です。
 

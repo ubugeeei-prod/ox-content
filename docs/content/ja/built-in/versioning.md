@@ -39,23 +39,23 @@ export default {
 
 `true` は `Latest` という現在エントリだけを有効にします。オブジェクトはオンにしたうえで指定したフィールドだけ上書きします。
 
-| オプション | 型 | 既定 |
-| --- | --- | --- |
-| `versions` | `boolean` / `VersionsOptions` | `false` |
-| `current` | `string` | 先頭エントリ、または `"current"` |
-| `switcher` | `boolean` | `true` |
-| `badge` | `boolean` | `true` |
-| `entries` | `VersionEntry[]` | 現在の `Latest` 1 件 |
+| オプション | 型                            | 既定                             |
+| ---------- | ----------------------------- | -------------------------------- |
+| `versions` | `boolean` / `VersionsOptions` | `false`                          |
+| `current`  | `string`                      | 先頭エントリ、または `"current"` |
+| `switcher` | `boolean`                     | `true`                           |
+| `badge`    | `boolean`                     | `true`                           |
+| `entries`  | `VersionEntry[]`              | 現在の `Latest` 1 件             |
 
 各エントリ:
 
-| フィールド | 意味 |
-| --- | --- |
-| `id` | `current` が参照する安定キー |
-| `label` | ドロップダウン表示（HTML エスケープ） |
-| `prefix` | `2.90` や `next` などの URL セグメント。空文字はサイトルート |
-| `dir` | Vite ルートからのスナップショットディレクトリ。省略時はライブの `srcDir` |
-| `banner` | `"unreleased"` / `"unmaintained"` / 省略 |
+| フィールド | 意味                                                                     |
+| ---------- | ------------------------------------------------------------------------ |
+| `id`       | `current` が参照する安定キー                                             |
+| `label`    | ドロップダウン表示（HTML エスケープ）                                    |
+| `prefix`   | `2.90` や `next` などの URL セグメント。空文字はサイトルート             |
+| `dir`      | Vite ルートからのスナップショットディレクトリ。省略時はライブの `srcDir` |
+| `banner`   | `"unreleased"` / `"unmaintained"` / 省略                                 |
 
 プレフィックス付きツリーの検索は、ルートの `search-index.json` ではなく `{prefix}/search-index.json` を読みます。`javascript:` / `data:` / `vbscript:` / `//` / `..` は拒否します。
 

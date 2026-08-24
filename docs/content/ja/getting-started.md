@@ -16,21 +16,21 @@ Rust からパーサとレンダラを直接使うなら crate です。
 
 ## 入口を選ぶ
 
-| やりたいこと | ここから |
-| --- | --- |
+| やりたいこと                               | ここから                                  |
+| ------------------------------------------ | ----------------------------------------- |
 | ドキュメントサイトやコンテンツパイプライン | [Vite プラグイン](#1-vite-プラグインから) |
-| Node.js からパーサとレンダラを呼ぶ | [N-API](#2-n-api-経由の-nodejs-api) |
-| ブラウザや Wasm ホストで動かす | [WebAssembly](/packages/wasm.md) |
-| Rust プロジェクトに埋め込む | [Rust crate](#4-rust-crate) |
+| Node.js からパーサとレンダラを呼ぶ         | [N-API](#2-n-api-経由の-nodejs-api)       |
+| ブラウザや Wasm ホストで動かす             | [WebAssembly](/packages/wasm.md)          |
+| Rust プロジェクトに埋め込む                | [Rust crate](#4-rust-crate)               |
 
 ## 要件
 
-| 経路 | 要件 |
-| --- | --- |
-| Vite プラグイン | Node.js `24+` と Vite または Vite+ プロジェクト |
-| N-API | Node.js `24+` |
-| WebAssembly | npm パッケージを入れ、ESM から `.wasm` を読める JS ツールチェーン |
-| Rust crate | Rust `1.95+` |
+| 経路            | 要件                                                              |
+| --------------- | ----------------------------------------------------------------- |
+| Vite プラグイン | Node.js `24+` と Vite または Vite+ プロジェクト                   |
+| N-API           | Node.js `24+`                                                     |
+| WebAssembly     | npm パッケージを入れ、ESM から `.wasm` を読める JS ツールチェーン |
+| Rust crate      | Rust `1.95+`                                                      |
 
 ## 1. Vite プラグインから
 

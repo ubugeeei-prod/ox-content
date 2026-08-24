@@ -16,10 +16,10 @@ oxContent({
 });
 ```
 
-| オプション | 型 | 既定 |
-| --- | --- | --- |
+| オプション   | 型                              | 既定    |
+| ------------ | ------------------------------- | ------- |
 | `permalinks` | `boolean` / `PermalinksOptions` | `false` |
-| `cascade` | `boolean` / `CascadeOptions` | `false` |
+| `cascade`    | `boolean` / `CascadeOptions`    | `false` |
 
 ## パーマリンク
 

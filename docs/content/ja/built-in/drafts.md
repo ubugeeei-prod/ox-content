@@ -23,10 +23,10 @@ oxContent({
 });
 ```
 
-| オプション | 型 | 既定 |
-| --- | --- | --- |
-| `publishState` | `boolean` / `PublishStateOptions` | `false` |
-| `now` | ISO-8601 文字列 | システム時計 |
+| オプション     | 型                                | 既定         |
+| -------------- | --------------------------------- | ------------ |
+| `publishState` | `boolean` / `PublishStateOptions` | `false`      |
+| `now`          | ISO-8601 文字列                   | システム時計 |
 
 dev サーバでは下書きと未到来の予約公開もプレビューできます。本番の HTML、検索、sitemap からは落ちます。
 

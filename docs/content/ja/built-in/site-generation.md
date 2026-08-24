@@ -7,16 +7,16 @@ description: 静的 HTML、OG 画像、編集リンク、コレクション、AP
 
 ページ単位の Markdown 変換に加え、ドキュメントサイト向けのビルド機能が付きます。
 
-| オプション | 既定 | 役割 |
-| --- | --- | --- |
-| `ssg` | `{ enabled: true }` | ビルド時に静的 HTML を生成 |
-| `ogImage` | `false` | ページごとの OG 画像 |
-| `editThisPage` | `false` | 「このページを編集」リンク |
-| `collections` | `content` | クライアントから Markdown を問い合わせ |
-| `permalinks` | `false` | frontmatter の `permalink` / `slug` |
-| `cascade` | `false` | ディレクトリ `_index` の既定 frontmatter |
-| `docs` | `{ enabled: true }` | JSDoc / TSDoc から API ドキュメント |
-| `transformers` | `[]` | 独自の Markdown AST 変換 |
+| オプション     | 既定                | 役割                                     |
+| -------------- | ------------------- | ---------------------------------------- |
+| `ssg`          | `{ enabled: true }` | ビルド時に静的 HTML を生成               |
+| `ogImage`      | `false`             | ページごとの OG 画像                     |
+| `editThisPage` | `false`             | 「このページを編集」リンク               |
+| `collections`  | `content`           | クライアントから Markdown を問い合わせ   |
+| `permalinks`   | `false`             | frontmatter の `permalink` / `slug`      |
+| `cascade`      | `false`             | ディレクトリ `_index` の既定 frontmatter |
+| `docs`         | `{ enabled: true }` | JSDoc / TSDoc から API ドキュメント      |
+| `transformers` | `[]`                | 独自の Markdown AST 変換                 |
 
 ## 静的サイト生成
 

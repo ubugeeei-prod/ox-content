@@ -54,7 +54,11 @@ export function Layout({ children }) {
     <html lang={page.lang}>
       <body>
         <header>{site.siteName}</header>
-        <nav>{each(nav, (item) => <a href={item.href}>{item.text}</a>)}</nav>
+        <nav>
+          {each(nav, (item) => (
+            <a href={item.href}>{item.text}</a>
+          ))}
+        </nav>
         <main>{raw(children)}</main>
       </body>
     </html>

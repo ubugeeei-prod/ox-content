@@ -7,12 +7,12 @@ description: 絵文字ショートコード、Wiki リンク、属性構文、CJ
 
 非標準の Markdown 構文はオプトインです。有効にするまで、ふつうの文書はどこでも同じように描画されます。
 
-| オプション | 型 | 既定 |
-| --- | --- | --- |
+| オプション        | 型                                  | 既定    |
+| ----------------- | ----------------------------------- | ------- |
 | `emojiShortcodes` | `boolean` / `EmojiShortcodeOptions` | `false` |
-| `wikiLinks` | `boolean` / `WikiLinkOptions` | `false` |
-| `attrs` | `boolean` / `AttrsOptions` | `false` |
-| `cjkEmphasis` | `boolean` | `false` |
+| `wikiLinks`       | `boolean` / `WikiLinkOptions`       | `false` |
+| `attrs`           | `boolean` / `AttrsOptions`          | `false` |
+| `cjkEmphasis`     | `boolean`                           | `false` |
 
 ## 絵文字ショートコード
 
