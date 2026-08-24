@@ -255,10 +255,11 @@ fn generate_bare_html_is_unchanged() {
 }
 
 #[test]
-fn entry_page_still_renders_trail_when_enabled() {
+fn entry_page_skips_trail_when_enabled() {
     let mut page_data = page("features/breadcrumbs");
     page_data.entry_page = Some(EntryPageConfig::default());
+    page_data.title = "Docs".to_string();
 
     let html = generate_html(&page_data, &nested_nav(), &config(true));
-    assert!(breadcrumbs_html(&html).is_some(), "entry pages keep the visible trail: {html}");
+    assert!(breadcrumbs_html(&html).is_none(), "entry pages must not emit a trail: {html}");
 }

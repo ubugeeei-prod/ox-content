@@ -173,6 +173,7 @@ fn announcement_escaped() {
     assert!(html.contains(r#"<div class="ox-announce""#), "{html}");
     assert!(body_class(&html).contains("ox-has-announce"), "{html}");
     assert!(html.contains(r#"data-ox-announce="welcome""#), "{html}");
+    assert!(html.contains(".ox-announce[hidden]"), "{html}");
     assert!(html.contains("parentElement"), "{html}");
     assert!(html.contains("&lt;script&gt;alert(1)&lt;/script&gt;"), "{html}");
     assert!(!html.contains("<script>alert(1)</script>"), "{html}");

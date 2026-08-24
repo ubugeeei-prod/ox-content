@@ -186,7 +186,7 @@ defineTheme({
 
 The default theme can render a right-hand "On this page" outline from the page
 headings. It is **off by default**. Set `aside: true` to enable it; the outline
-still appears only on pages that have TOC entries.
+still appears only on pages that have TOC entries. Entry pages skip the outline.
 
 ```ts
 defineTheme({

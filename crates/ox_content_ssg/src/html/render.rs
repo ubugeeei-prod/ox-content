@@ -58,6 +58,10 @@ pub fn generate_html(page_data: &PageData, nav_groups: &[NavGroup], config: &Ssg
 
     // Check if this is an entry page
     let is_entry_page = page_data.entry_page.is_some();
+    let mut reader_chrome = config.reader_chrome;
+    if is_entry_page {
+        reader_chrome.back_to_top = false;
+    }
     // Build CSS as named sections instead of one anonymous blob. Shared,
     // content-addressed extraction can then pull out only the sections that are
     // globally cacheable and keep page-specific or relative-url CSS inline.
@@ -99,7 +103,7 @@ pub fn generate_html(page_data: &PageData, nav_groups: &[NavGroup], config: &Ssg
     if has_footer {
         css_sections.push(wrap_css_section("footer", footer_css));
     }
-    if config.reader_chrome.is_enabled() {
+    if reader_chrome.is_enabled() {
         css_sections.push(wrap_css_section("reader-chrome", READER_CHROME_CSS));
     }
     if header_chrome_needs_css(&header_nav_html, &announcement_html, chrome) {
@@ -114,7 +118,7 @@ pub fn generate_html(page_data: &PageData, nav_groups: &[NavGroup], config: &Ssg
 
     let all_css = css_sections.join("");
     let toc_html = generate_toc_html(&page_data.toc);
-    let has_toc = super::aside::has_toc(chrome.show_outline, &toc_html);
+    let has_toc = !is_entry_page && super::aside::has_toc(chrome.show_outline, &toc_html);
     let pager = resolve_pager(page_data, nav_groups, config.pagination);
     let breadcrumbs = resolve_breadcrumbs(page_data, nav_groups, config);
     let last_updated = chrome
@@ -170,7 +174,7 @@ pub fn generate_html(page_data: &PageData, nav_groups: &[NavGroup], config: &Ssg
     let custom_js = theme.and_then(|t| t.js.as_deref()).unwrap_or("");
     let mut all_js =
         format!("{}\n{}\n{}", SSG_JS.replace("{{base}}", &config.base), TABS_JS, custom_js);
-    if config.reader_chrome.needs_js() {
+    if reader_chrome.needs_js() {
         all_js.push('\n');
         all_js.push_str(READER_CHROME_JS);
     }
@@ -191,8 +195,8 @@ pub fn generate_html(page_data: &PageData, nav_groups: &[NavGroup], config: &Ssg
         .map_or(String::new(), generate_mobile_social_links_html);
 
     let enhanced_content;
-    let article_html = if config.reader_chrome.copy || config.reader_chrome.external_links {
-        enhanced_content = apply_reader_chrome(&page_data.content, config.reader_chrome);
+    let article_html = if reader_chrome.copy || reader_chrome.external_links {
+        enhanced_content = apply_reader_chrome(&page_data.content, reader_chrome);
         enhanced_content.as_str()
     } else {
         page_data.content.as_str()
@@ -270,7 +274,7 @@ pub fn generate_html(page_data: &PageData, nav_groups: &[NavGroup], config: &Ssg
         has_toc,
         toc_html: &toc_html,
         pager: pager.as_ref(),
-        reader_chrome: config.reader_chrome.is_enabled().then_some(&config.reader_chrome),
+        reader_chrome: reader_chrome.is_enabled().then_some(&reader_chrome),
         last_updated: last_updated.as_ref(),
         embed_content_after,
         embed_footer_before,

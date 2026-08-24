@@ -114,6 +114,15 @@ fn aside_true_with_empty_toc_emits_nothing() {
 }
 
 #[test]
+fn entry_page_skips_outline_even_when_aside_enabled() {
+    let mut page_data = page(hello_toc());
+    page_data.entry_page = Some(EntryPageConfig::default());
+    let html = generate_html(&page_data, &[], &config(Some(theme_with_aside(true))));
+    assert_outline_absent(&html);
+    assert!(html.contains(r#"<main class="main">"#), "{html}");
+}
+
+#[test]
 fn aside_false_explicitly_hides_outline() {
     let html = render(hello_toc(), Some(theme_with_aside(false)));
     assert_outline_absent(&html);

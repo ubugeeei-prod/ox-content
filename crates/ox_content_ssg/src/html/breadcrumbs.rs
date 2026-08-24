@@ -35,7 +35,7 @@ pub(super) fn resolve_breadcrumbs(
 }
 
 fn breadcrumbs_enabled(page: &PageData, config: &SsgConfig) -> bool {
-    if page.breadcrumbs == Some(false) {
+    if page.entry_page.is_some() || page.breadcrumbs == Some(false) {
         return false;
     }
     config.breadcrumbs || config.theme.as_ref().and_then(|theme| theme.breadcrumbs) == Some(true)

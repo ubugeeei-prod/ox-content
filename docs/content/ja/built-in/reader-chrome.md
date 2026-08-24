@@ -31,6 +31,8 @@ oxContent({
 });
 ```
 
+先頭へ戻るは `prefers-reduced-motion` を尊重します。エントリページでは出しません。
+
 ## 関連
 
 - [英語版ガイド](/built-in/reader-chrome.md)

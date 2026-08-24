@@ -74,6 +74,9 @@
   color: #fff;
   font-size: 0.875rem;
 }
+.ox-announce[hidden] {
+  display: none;
+}
 .ox-announce-text {
   margin: 0;
 }

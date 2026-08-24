@@ -66,11 +66,11 @@ oxContent({
 });
 ```
 
-| Field        | Required | Effect                                                                  |
-| ------------ | -------- | ----------------------------------------------------------------------- |
-| `text`       | yes      | Escaped. There is no raw HTML slot.                                     |
-| `link`       | no       | `https:` or same-origin only. Other schemes are dropped.                |
-| `dismissKey` | no       | Best-effort `localStorage` key. Invalid keys still render a static bar. |
+| Field        | Required | Effect                                                                                                                                     |
+| ------------ | -------- | ------------------------------------------------------------------------------------------------------------------------------------------ |
+| `text`       | yes      | Escaped. There is no raw HTML slot.                                                                                                        |
+| `link`       | no       | `https:` or same-origin only. Other schemes are dropped.                                                                                   |
+| `dismissKey` | no       | Best-effort `localStorage` key. Invalid keys still render a static bar. Dismiss sets `hidden` on the bar; the theme CSS honors `[hidden]`. |
 
 ## Per-page chrome
 

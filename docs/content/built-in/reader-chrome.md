@@ -53,5 +53,5 @@ Outbound icons skip relative, hash, `mailto:`, and `tel:` links. Links inside
 fenced blocks or inline code spans are left alone. `javascript:`, `data:`, and
 `vbscript:` hrefs are not given a live action.
 
-The back-to-top control respects `prefers-reduced-motion`. Bare mode never
-emits reader chrome.
+The back-to-top control respects `prefers-reduced-motion`. Entry pages skip
+it. Bare mode never emits reader chrome.

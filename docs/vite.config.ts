@@ -54,7 +54,6 @@ export default defineConfig(({ mode }) => {
               id: "3.0.0-alpha",
               label: "3.0.0-alpha",
               prefix: "",
-              banner: "unreleased",
             },
             {
               id: "2.90.0",
@@ -85,7 +84,7 @@ export default defineConfig(({ mode }) => {
           siteUrl,
           pagination: true,
           breadcrumbs: true,
-          readerChrome: true,
+          readerChrome: { backToTop: false },
           a11y: true,
           pageChrome: true,
           localeSwitcher: true,
@@ -99,11 +98,6 @@ export default defineConfig(({ mode }) => {
               { text: { en: "Guide", ja: "ガイド" }, link: `${base}getting-started/` },
               { text: "API", link: `${base}api/` },
             ],
-            announcement: {
-              text: "Header nav, announcement, and per-page chrome are now opt-in.",
-              link: `${base}built-in/header-chrome/`,
-              dismissKey: "header-chrome-681",
-            },
             header: {
               logo: "oxcontent-dark.svg",
               logoLight: "oxcontent-dark.svg",

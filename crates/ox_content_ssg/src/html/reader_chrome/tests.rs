@@ -1,6 +1,6 @@
 use super::super::{
-    NavGroup, NavItem, PageChromeFlags, PageData, ReaderChrome, SsgConfig, generate_bare_html,
-    generate_html,
+    EntryPageConfig, NavGroup, NavItem, PageChromeFlags, PageData, ReaderChrome, SsgConfig,
+    generate_bare_html, generate_html,
 };
 use super::{READER_CHROME_CSS, READER_CHROME_JS, apply_reader_chrome};
 
@@ -258,4 +258,13 @@ fn encoded_javascript_href_is_not_a_live_action() {
     assert!(!html.contains("javascript:"), "{html}");
     assert!(!html.contains("javascript&#58;"), "{html}");
     assert!(html.contains(r#"class="ox-external-inert""#), "{html}");
+}
+
+#[test]
+fn entry_page_skips_back_to_top_when_enabled() {
+    let mut page_data = page(ARTICLE);
+    page_data.entry_page = Some(EntryPageConfig::default());
+    let html = generate_html(&page_data, &nav(), &config(ReaderChrome::enabled()));
+    assert!(!html.contains(r#"<button type="button" class="ox-back-to-top""#), "{html}");
+    assert!(!html_open_tag(&html).contains("data-ox-back-to-top"), "{}", html_open_tag(&html));
 }
