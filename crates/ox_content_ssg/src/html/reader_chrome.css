@@ -55,7 +55,6 @@
   color: var(--octc-color-text);
   font: inherit;
   font-size: 0.75rem;
-  box-shadow: 0 8px 24px color-mix(in srgb, var(--octc-color-text) 12%, transparent);
   cursor: pointer;
   transition:
     opacity 0.2s ease,

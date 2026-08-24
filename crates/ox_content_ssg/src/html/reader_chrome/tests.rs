@@ -215,6 +215,10 @@ fn reduced_motion_class_and_css_are_present() {
 
     assert!(READER_CHROME_CSS.contains("prefers-reduced-motion"), "{READER_CHROME_CSS}");
     assert!(READER_CHROME_CSS.contains("ox-reader-chrome--reduced-motion"), "{READER_CHROME_CSS}");
+    assert!(
+        !READER_CHROME_CSS.contains("box-shadow"),
+        "back-to-top must stay flat like the rest of the chrome: {READER_CHROME_CSS}"
+    );
     assert!(html.contains("prefers-reduced-motion"), "{html}");
     assert!(html.contains("ox-reader-chrome--reduced-motion"), "{html}");
     assert!(READER_CHROME_JS.contains("ox-reader-chrome--reduced-motion"), "{READER_CHROME_JS}");
