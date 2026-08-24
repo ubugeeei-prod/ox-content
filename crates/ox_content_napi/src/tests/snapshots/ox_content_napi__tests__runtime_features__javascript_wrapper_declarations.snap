@@ -331,13 +331,13 @@ export interface IncrementalMarkdownRenderResult {
   errors: Array<string>
 }
 
-/** Attribute syntax transform options. */
 /** Opt-in skip link and print styles. Presence of the object enables the feature. */
 export interface JsA11y {
   /** Override for the skip-link label. Empty / omitted uses "Skip to content". */
   skipLinkLabel?: string
 }
 
+/** Attribute syntax transform options. */
 export interface JsAttrsOptions {
   /**
    * Enable markdown-it-attrs style `{#id .class key=value}`.
