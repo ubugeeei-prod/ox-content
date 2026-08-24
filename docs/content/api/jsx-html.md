@@ -254,8 +254,7 @@
     &quot;jsx&quot;: &quot;react-jsx&quot;,
     &quot;jsxImportSource&quot;: &quot;@ox-content/vite-plugin&quot;
   }
-}
-
+}&#10;
 // MyComponent.tsx
 export function Hero({ title }: { title: string }) {
   return (
