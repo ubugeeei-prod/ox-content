@@ -11,7 +11,7 @@
       "variable": 13,
       "module": 52
     },
-    "members": 1087,
+    "members": 1088,
     "params": 419,
     "returns": 220,
     "examples": 20,
@@ -11769,14 +11769,24 @@
               "endLine": 148
             },
             {
+              "name": "mdx",
+              "kind": "property",
+              "description": "Enable MDX JSX, ESM, and expression nodes.",
+              "type": "boolean",
+              "default": "false",
+              "optional": true,
+              "line": 154,
+              "endLine": 154
+            },
+            {
               "name": "footnotes",
               "kind": "property",
               "description": "Enable footnotes syntax ([^1]: definition).",
               "type": "boolean",
               "default": "false",
               "optional": true,
-              "line": 154,
-              "endLine": 154
+              "line": 160,
+              "endLine": 160
             },
             {
               "name": "taskLists",
@@ -11785,8 +11795,8 @@
               "type": "boolean",
               "default": "false",
               "optional": true,
-              "line": 160,
-              "endLine": 160
+              "line": 166,
+              "endLine": 166
             },
             {
               "name": "tables",
@@ -11795,8 +11805,8 @@
               "type": "boolean",
               "default": "false",
               "optional": true,
-              "line": 167,
-              "endLine": 167
+              "line": 173,
+              "endLine": 173
             },
             {
               "name": "strikethrough",
@@ -11805,8 +11815,8 @@
               "type": "boolean",
               "default": "false",
               "optional": true,
-              "line": 174,
-              "endLine": 174
+              "line": 180,
+              "endLine": 180
             },
             {
               "name": "autolinks",
@@ -11815,8 +11825,8 @@
               "type": "boolean",
               "default": "false",
               "optional": true,
-              "line": 180,
-              "endLine": 180
+              "line": 186,
+              "endLine": 186
             },
             {
               "name": "autolinkUrls",
@@ -11825,8 +11835,8 @@
               "type": "boolean",
               "default": "true",
               "optional": true,
-              "line": 186,
-              "endLine": 186
+              "line": 192,
+              "endLine": 192
             },
             {
               "name": "frontmatter",
@@ -11835,8 +11845,8 @@
               "type": "boolean",
               "default": "true",
               "optional": true,
-              "line": 192,
-              "endLine": 192
+              "line": 198,
+              "endLine": 198
             },
             {
               "name": "tocMaxDepth",
@@ -11849,8 +11859,8 @@
                 "max": "6",
                 "min": "1"
               },
-              "line": 201,
-              "endLine": 201
+              "line": 207,
+              "endLine": 207
             },
             {
               "name": "convertMdLinks",
@@ -11859,8 +11869,8 @@
               "type": "boolean",
               "default": "false",
               "optional": true,
-              "line": 207,
-              "endLine": 207
+              "line": 213,
+              "endLine": 213
             },
             {
               "name": "baseUrl",
@@ -11869,8 +11879,8 @@
               "type": "string",
               "default": "\"/\"",
               "optional": true,
-              "line": 213,
-              "endLine": 213
+              "line": 219,
+              "endLine": 219
             },
             {
               "name": "sourcePath",
@@ -11878,8 +11888,8 @@
               "description": "Source file path for relative link resolution.\nUsed to determine if the current file is an index file.",
               "type": "string",
               "optional": true,
-              "line": 219,
-              "endLine": 219
+              "line": 225,
+              "endLine": 225
             },
             {
               "name": "codeAnnotations",
@@ -11888,8 +11898,8 @@
               "type": "boolean",
               "default": "false",
               "optional": true,
-              "line": 225,
-              "endLine": 225
+              "line": 231,
+              "endLine": 231
             },
             {
               "name": "codeAnnotationMetaKey",
@@ -11898,8 +11908,8 @@
               "type": "string",
               "default": "\"annotate\"",
               "optional": true,
-              "line": 231,
-              "endLine": 231
+              "line": 237,
+              "endLine": 237
             },
             {
               "name": "codeAnnotationSyntax",
@@ -11908,8 +11918,8 @@
               "type": "\"attribute\" | \"vitepress\" | \"both\"",
               "default": "\"attribute\"",
               "optional": true,
-              "line": 237,
-              "endLine": 237
+              "line": 243,
+              "endLine": 243
             },
             {
               "name": "codeAnnotationDefaultLineNumbers",
@@ -11918,8 +11928,8 @@
               "type": "boolean",
               "default": "false",
               "optional": true,
-              "line": 243,
-              "endLine": 243
+              "line": 249,
+              "endLine": 249
             },
             {
               "name": "wikiLinks",
@@ -11933,8 +11943,8 @@
                   "description": "",
                   "type": "boolean",
                   "optional": true,
-                  "line": 246,
-                  "endLine": 246
+                  "line": 252,
+                  "endLine": 252
                 },
                 {
                   "name": "baseUrl",
@@ -11942,13 +11952,13 @@
                   "description": "",
                   "type": "string",
                   "optional": true,
-                  "line": 247,
-                  "endLine": 247
+                  "line": 253,
+                  "endLine": 253
                 }
               ],
               "optional": true,
-              "line": 245,
-              "endLine": 248
+              "line": 251,
+              "endLine": 254
             },
             {
               "name": "emojiShortcodes",
@@ -11962,8 +11972,8 @@
                   "description": "",
                   "type": "boolean",
                   "optional": true,
-                  "line": 251,
-                  "endLine": 251
+                  "line": 257,
+                  "endLine": 257
                 },
                 {
                   "name": "custom",
@@ -11971,13 +11981,13 @@
                   "description": "",
                   "type": "Record<string, string>",
                   "optional": true,
-                  "line": 252,
-                  "endLine": 252
+                  "line": 258,
+                  "endLine": 258
                 }
               ],
               "optional": true,
-              "line": 250,
-              "endLine": 253
+              "line": 256,
+              "endLine": 259
             },
             {
               "name": "attributes",
@@ -11991,13 +12001,13 @@
                   "description": "",
                   "type": "boolean",
                   "optional": true,
-                  "line": 256,
-                  "endLine": 256
+                  "line": 262,
+                  "endLine": 262
                 }
               ],
               "optional": true,
-              "line": 255,
-              "endLine": 257
+              "line": 261,
+              "endLine": 263
             },
             {
               "name": "badges",
@@ -12011,13 +12021,13 @@
                   "description": "",
                   "type": "boolean",
                   "optional": true,
-                  "line": 260,
-                  "endLine": 260
+                  "line": 266,
+                  "endLine": 266
                 }
               ],
               "optional": true,
-              "line": 259,
-              "endLine": 261
+              "line": 265,
+              "endLine": 267
             },
             {
               "name": "containers",
@@ -12031,8 +12041,8 @@
                   "description": "",
                   "type": "boolean",
                   "optional": true,
-                  "line": 264,
-                  "endLine": 264
+                  "line": 270,
+                  "endLine": 270
                 },
                 {
                   "name": "types",
@@ -12040,13 +12050,13 @@
                   "description": "",
                   "type": "Record<string, { title?: string; tag?: string }>",
                   "optional": true,
-                  "line": 265,
-                  "endLine": 265
+                  "line": 271,
+                  "endLine": 271
                 }
               ],
               "optional": true,
-              "line": 263,
-              "endLine": 266
+              "line": 269,
+              "endLine": 272
             },
             {
               "name": "images",
@@ -12060,8 +12070,8 @@
                   "description": "",
                   "type": "boolean",
                   "optional": true,
-                  "line": 269,
-                  "endLine": 269
+                  "line": 275,
+                  "endLine": 275
                 },
                 {
                   "name": "lazy",
@@ -12069,13 +12079,13 @@
                   "description": "",
                   "type": "boolean",
                   "optional": true,
-                  "line": 270,
-                  "endLine": 270
+                  "line": 276,
+                  "endLine": 276
                 }
               ],
               "optional": true,
-              "line": 268,
-              "endLine": 271
+              "line": 274,
+              "endLine": 277
             },
             {
               "name": "cjkEmphasis",
@@ -12083,8 +12093,8 @@
               "description": "",
               "type": "boolean",
               "optional": true,
-              "line": 273,
-              "endLine": 273
+              "line": 279,
+              "endLine": 279
             },
             {
               "name": "codeImports",
@@ -12098,8 +12108,8 @@
                   "description": "",
                   "type": "boolean",
                   "optional": true,
-                  "line": 276,
-                  "endLine": 276
+                  "line": 282,
+                  "endLine": 282
                 },
                 {
                   "name": "rootDir",
@@ -12107,13 +12117,13 @@
                   "description": "",
                   "type": "string",
                   "optional": true,
-                  "line": 277,
-                  "endLine": 277
+                  "line": 283,
+                  "endLine": 283
                 }
               ],
               "optional": true,
-              "line": 275,
-              "endLine": 278
+              "line": 281,
+              "endLine": 284
             },
             {
               "name": "includes",
@@ -12127,8 +12137,8 @@
                   "description": "",
                   "type": "boolean",
                   "optional": true,
-                  "line": 281,
-                  "endLine": 281
+                  "line": 287,
+                  "endLine": 287
                 },
                 {
                   "name": "rootDir",
@@ -12136,13 +12146,13 @@
                   "description": "",
                   "type": "string",
                   "optional": true,
-                  "line": 282,
-                  "endLine": 282
+                  "line": 288,
+                  "endLine": 288
                 }
               ],
               "optional": true,
-              "line": 280,
-              "endLine": 283
+              "line": 286,
+              "endLine": 289
             },
             {
               "name": "cards",
@@ -12156,13 +12166,13 @@
                   "description": "",
                   "type": "boolean",
                   "optional": true,
-                  "line": 286,
-                  "endLine": 286
+                  "line": 292,
+                  "endLine": 292
                 }
               ],
               "optional": true,
-              "line": 285,
-              "endLine": 287
+              "line": 291,
+              "endLine": 293
             },
             {
               "name": "steps",
@@ -12176,13 +12186,13 @@
                   "description": "",
                   "type": "boolean",
                   "optional": true,
-                  "line": 290,
-                  "endLine": 290
+                  "line": 296,
+                  "endLine": 296
                 }
               ],
               "optional": true,
-              "line": 289,
-              "endLine": 291
+              "line": 295,
+              "endLine": 297
             },
             {
               "name": "fileTree",
@@ -12196,13 +12206,13 @@
                   "description": "",
                   "type": "boolean",
                   "optional": true,
-                  "line": 294,
-                  "endLine": 294
+                  "line": 300,
+                  "endLine": 300
                 }
               ],
               "optional": true,
-              "line": 293,
-              "endLine": 295
+              "line": 299,
+              "endLine": 301
             },
             {
               "name": "sanitize",
@@ -12210,8 +12220,8 @@
               "description": "",
               "type": "JsSanitizeOptions",
               "optional": true,
-              "line": 297,
-              "endLine": 297
+              "line": 303,
+              "endLine": 303
             },
             {
               "name": "editThisPage",
@@ -12225,8 +12235,8 @@
                   "description": "",
                   "type": "boolean",
                   "optional": true,
-                  "line": 300,
-                  "endLine": 300
+                  "line": 306,
+                  "endLine": 306
                 },
                 {
                   "name": "repoUrl",
@@ -12234,8 +12244,8 @@
                   "description": "",
                   "type": "string",
                   "optional": true,
-                  "line": 301,
-                  "endLine": 301
+                  "line": 307,
+                  "endLine": 307
                 },
                 {
                   "name": "branch",
@@ -12243,8 +12253,8 @@
                   "description": "",
                   "type": "string",
                   "optional": true,
-                  "line": 302,
-                  "endLine": 302
+                  "line": 308,
+                  "endLine": 308
                 },
                 {
                   "name": "rootDir",
@@ -12252,8 +12262,8 @@
                   "description": "",
                   "type": "string",
                   "optional": true,
-                  "line": 303,
-                  "endLine": 303
+                  "line": 309,
+                  "endLine": 309
                 },
                 {
                   "name": "label",
@@ -12261,13 +12271,13 @@
                   "description": "",
                   "type": "string",
                   "optional": true,
-                  "line": 304,
-                  "endLine": 304
+                  "line": 310,
+                  "endLine": 310
                 }
               ],
               "optional": true,
-              "line": 299,
-              "endLine": 305
+              "line": 305,
+              "endLine": 311
             },
             {
               "name": "math",
@@ -12276,13 +12286,13 @@
               "type": "boolean | { enabled?: boolean }",
               "default": "false",
               "optional": true,
-              "line": 315,
-              "endLine": 319
+              "line": 321,
+              "endLine": 325
             }
           ],
           "file": "npm/vite-plugin-ox-content/src/transform.ts",
           "line": 142,
-          "endLine": 320,
+          "endLine": 326,
           "signature": "interface JsTransformOptions"
         },
         {
@@ -12296,8 +12306,8 @@
               "description": "Convert `.md` links to `.html` links",
               "type": "boolean",
               "optional": true,
-              "line": 499,
-              "endLine": 499
+              "line": 505,
+              "endLine": 505
             },
             {
               "name": "baseUrl",
@@ -12305,8 +12315,8 @@
               "description": "Base URL for absolute link conversion",
               "type": "string",
               "optional": true,
-              "line": 501,
-              "endLine": 501
+              "line": 507,
+              "endLine": 507
             },
             {
               "name": "sourcePath",
@@ -12314,13 +12324,13 @@
               "description": "Source file path for relative link resolution",
               "type": "string",
               "optional": true,
-              "line": 503,
-              "endLine": 503
+              "line": 509,
+              "endLine": 509
             }
           ],
           "file": "npm/vite-plugin-ox-content/src/transform.ts",
-          "line": 497,
-          "endLine": 504,
+          "line": 503,
+          "endLine": 510,
           "signature": "export interface SsgTransformOptions"
         },
         {
@@ -12359,8 +12369,8 @@
             "description": ""
           },
           "file": "npm/vite-plugin-ox-content/src/transform.ts",
-          "line": 757,
-          "endLine": 806,
+          "line": 763,
+          "endLine": 812,
           "signature": "function generateModuleCode(html: string, frontmatter: Record<string, unknown>, toc: TocEntry[], filePath: string, _options: ResolvedOptions): string"
         },
         {
@@ -12379,8 +12389,8 @@
             "description": ""
           },
           "file": "npm/vite-plugin-ox-content/src/transform.ts",
-          "line": 813,
-          "endLine": 823,
+          "line": 819,
+          "endLine": 829,
           "signature": "export function extractImports(content: string): string[]"
         },
         {
@@ -12405,8 +12415,8 @@
             "description": "SVG string or null if NAPI bindings are unavailable"
           },
           "file": "npm/vite-plugin-ox-content/src/transform.ts",
-          "line": 839,
-          "endLine": 861,
+          "line": 845,
+          "endLine": 867,
           "signature": "export async function generateOgImageSvg(data: OgImageData, config?: OgImageConfig): Promise<string | null>"
         }
       ]
