@@ -494,7 +494,7 @@ export async function generateHtmlPage(
             externalLinks: readerChrome.externalLinks,
             backToTop: readerChrome.backToTop,
           }
-          : undefined,
+        : undefined,
       localeSwitcher: localeSwitcher || undefined,
       localePaths,
       a11y: a11y ? { skipLinkLabel: a11y.skipLinkLabel } : undefined,
