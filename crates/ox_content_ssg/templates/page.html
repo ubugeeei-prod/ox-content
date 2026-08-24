@@ -95,6 +95,25 @@
 {% endif %}
     <main class="main{% if has_toc %} main--with-toc{% endif %}">
 {{ embed_content_before|safe }}
+{% if let Some(breadcrumbs) = breadcrumbs %}
+      <nav class="ox-breadcrumbs" aria-label="Breadcrumb">
+        <ol class="ox-breadcrumbs-list">
+{% for crumb in breadcrumbs.crumbs %}
+          <li class="ox-breadcrumbs-item">
+{% if crumb.current %}
+            <span class="ox-breadcrumbs-current" aria-current="page">{{ crumb.title }}</span>
+{% else %}
+{% if let Some(href) = crumb.href %}
+            <a class="ox-breadcrumbs-link" href="{{ href }}">{{ crumb.title }}</a>
+{% else %}
+            <span class="ox-breadcrumbs-text">{{ crumb.title }}</span>
+{% endif %}
+{% endif %}
+          </li>
+{% endfor %}
+        </ol>
+      </nav>
+{% endif %}
 {{ main_content|safe }}
 {% if let Some(pager) = pager %}
       <nav class="pager" aria-label="Pagination">

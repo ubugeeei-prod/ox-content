@@ -15,6 +15,7 @@ fn page(toc: Vec<TocEntry>) -> PageData {
         entry_page: None,
         prev: None,
         next: None,
+        breadcrumbs: None,
     }
 }
 
@@ -27,6 +28,7 @@ fn config(theme: Option<ThemeConfig>) -> SsgConfig {
         locale: None,
         available_locales: None,
         pagination: false,
+        breadcrumbs: false,
         reader_chrome: ReaderChrome::default(),
     }
 }

@@ -1,5 +1,6 @@
 use askama::Template;
 
+use super::breadcrumbs::resolve_breadcrumbs;
 use super::entry::generate_entry_html;
 use super::footer::{FOOTER_CSS, generate_footer_html};
 use super::nav::generate_nav_html;
@@ -87,6 +88,7 @@ pub fn generate_html(page_data: &PageData, nav_groups: &[NavGroup], config: &Ssg
     let toc_html = generate_toc_html(&page_data.toc);
     let has_toc = super::aside::has_toc(super::aside::aside_enabled(theme), &toc_html);
     let pager = resolve_pager(page_data, nav_groups, config.pagination);
+    let breadcrumbs = resolve_breadcrumbs(page_data, nav_groups, config);
     let last_updated = page_data.last_updated.and_then(format_last_updated);
 
     // Embedded HTML for specific positions
@@ -218,6 +220,7 @@ pub fn generate_html(page_data: &PageData, nav_groups: &[NavGroup], config: &Ssg
         navigation: &nav_html,
         embed_sidebar_after,
         embed_content_before,
+        breadcrumbs: breadcrumbs.as_ref(),
         main_content: &main_content,
         has_toc,
         toc_html: &toc_html,

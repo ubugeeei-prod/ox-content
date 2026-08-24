@@ -30,6 +30,7 @@ describe("theme", () => {
       expect(defaultTheme.header?.showSiteNameText).toBe(true);
       expect(defaultTheme.layout).toBeDefined();
       expect(defaultTheme.aside).toBe(false);
+      expect(defaultTheme.breadcrumbs).toBe(false);
     });
   });
 

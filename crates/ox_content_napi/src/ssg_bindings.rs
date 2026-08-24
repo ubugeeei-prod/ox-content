@@ -185,6 +185,7 @@ pub fn generate_ssg_html(
         entry_page: convert_entry_page_config(page_data.entry_page),
         prev: convert_pager_override(page_data.prev),
         next: convert_pager_override(page_data.next),
+        breadcrumbs: page_data.breadcrumbs,
     };
 
     let ssg_nav_groups: Vec<ox_content_ssg::NavGroup> = nav_groups
@@ -210,6 +211,7 @@ pub fn generate_ssg_html(
                 .collect()
         }),
         pagination: config.pagination.unwrap_or(false),
+        breadcrumbs: config.breadcrumbs.unwrap_or(false),
         reader_chrome: convert_reader_chrome(config.reader_chrome),
     };
 

@@ -14,6 +14,7 @@ fn test_generate_html() {
         entry_page: None,
         prev: None,
         next: None,
+        breadcrumbs: None,
     };
 
     let nav_groups = vec![NavGroup {
@@ -38,6 +39,7 @@ fn test_generate_html() {
         locale: None,
         available_locales: None,
         pagination: false,
+        breadcrumbs: false,
         reader_chrome: ReaderChrome::default(),
     };
 
@@ -156,6 +158,7 @@ fn test_generate_html_without_toc_omits_outline() {
         entry_page: None,
         prev: None,
         next: None,
+        breadcrumbs: None,
     };
     let config = SsgConfig {
         site_name: "Test Site".to_string(),
@@ -165,6 +168,7 @@ fn test_generate_html_without_toc_omits_outline() {
         locale: None,
         available_locales: None,
         pagination: false,
+        breadcrumbs: false,
         reader_chrome: ReaderChrome::default(),
     };
 
@@ -187,6 +191,7 @@ fn test_html_locale_attrs_use_current_locale_and_direction() {
         locale: Some("ar".to_string()),
         available_locales: None,
         pagination: false,
+        breadcrumbs: false,
         reader_chrome: ReaderChrome::default(),
     };
 
@@ -202,6 +207,7 @@ fn test_html_locale_attrs_use_current_locale_and_direction() {
         entry_page: None,
         prev: None,
         next: None,
+        breadcrumbs: None,
     };
     let html = generate_html(&page_data, &[], &config);
     insta::assert_snapshot!(super::snapshot_text(&html));

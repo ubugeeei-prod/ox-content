@@ -71,6 +71,7 @@ export default defineConfig({
 | `generateOgImage` | `false`        | Per-page OG images (see below).                      |
 | `lastUpdated`     | `false`        | Show the git last-commit time per page.              |
 | `pagination`      | `false`        | Previous/next links after the article.               |
+| `breadcrumbs`     | `false`        | Trail from the site root through sidebar ancestors.  |
 | `readerChrome`    | `false`        | Copy, outbound-link icons, and back-to-top.          |
 | `notFound`        | `false`        | Themed 404 page. See [Custom 404](./not-found.md).   |
 | `theme`           | `defaultTheme` | Theme configuration via `defineTheme()`.             |
@@ -295,6 +296,7 @@ array order.
 ## Related
 
 - [Previous / Next](./pagination.md) — opt-in previous and next page links.
+- [Breadcrumbs](./breadcrumbs.md) — opt-in trail from the site root through sidebar ancestors.
 - [Reader Chrome](./reader-chrome.md) — opt-in copy, outbound icons, and back-to-top.
 - [Sitemap / robots / llms.txt](./site-maps.md) — opt-in crawl manifests.
 - [Redirects and aliases](./redirects.md) — opt-in static HTML redirects.

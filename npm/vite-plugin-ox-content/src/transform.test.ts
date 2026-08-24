@@ -266,6 +266,7 @@ function createResolvedOptions(overrides: Partial<ResolvedOptions> = {}): Resolv
       generateOgImage: false,
       lastUpdated: false,
       pagination: false,
+      breadcrumbs: false,
       readerChrome: false,
     },
     gfm: true,

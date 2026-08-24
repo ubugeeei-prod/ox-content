@@ -257,4 +257,6 @@ pub struct JsSsgPageData {
     pub prev: Option<JsPagerOverride>,
     /// Frontmatter override for the next-page link.
     pub next: Option<JsPagerOverride>,
+    /// Frontmatter `breadcrumbs: false` hides the trail on this page.
+    pub breadcrumbs: Option<bool>,
 }

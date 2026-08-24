@@ -14,6 +14,7 @@ fn page(content: &str) -> PageData {
         entry_page: None,
         prev: None,
         next: None,
+        breadcrumbs: None,
     }
 }
 
@@ -26,6 +27,7 @@ fn config(reader_chrome: ReaderChrome) -> SsgConfig {
         locale: None,
         available_locales: None,
         pagination: false,
+        breadcrumbs: false,
         reader_chrome,
     }
 }

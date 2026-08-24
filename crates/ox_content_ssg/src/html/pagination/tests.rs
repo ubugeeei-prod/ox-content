@@ -48,6 +48,7 @@ fn page(path: &str) -> PageData {
         entry_page: None,
         prev: None,
         next: None,
+        breadcrumbs: None,
     }
 }
 
@@ -60,6 +61,7 @@ fn config(pagination: bool) -> SsgConfig {
         locale: None,
         available_locales: None,
         pagination,
+        breadcrumbs: false,
         reader_chrome: ReaderChrome::default(),
     }
 }

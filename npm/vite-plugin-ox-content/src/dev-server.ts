@@ -350,6 +350,7 @@ async function renderPage(
     entryPage,
     prev: parseSsgPagerOverride(frontmatter.prev),
     next: parseSsgPagerOverride(frontmatter.next),
+    breadcrumbs: frontmatter.breadcrumbs === false ? false : undefined,
   };
 
   // Generate full HTML page
@@ -364,6 +365,7 @@ async function renderPage(
     undefined,
     options.ssg.pagination,
     options.ssg.readerChrome,
+    options.ssg.breadcrumbs,
   );
 
   // Inject Vite HMR client for live reload

@@ -29,6 +29,7 @@
 //!     entry_page: None,
 //!     prev: None,
 //!     next: None,
+//!     breadcrumbs: None,
 //! };
 //!
 //! let nav_groups = vec![NavGroup {
@@ -49,6 +50,7 @@
 //!     og_image: None,
 //!     theme: None,
 //!     pagination: false,
+//!     breadcrumbs: false,
 //!     reader_chrome: Default::default(),
 //! };
 //!

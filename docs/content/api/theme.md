@@ -34,7 +34,7 @@
   <span>parameters</span>
 </span>
 <span class="ox-api-stat">
-  <strong>121</strong>
+  <strong>124</strong>
   <span>members</span>
 </span>
 <span class="ox-api-stat">
@@ -392,7 +392,7 @@
 </details>
 
 <details id="napithemeconfig" class="ox-api-entry">
-  <summary><span class="ox-api-entry__kind">interface</span><span class="ox-api-entry__summary-main"><code class="ox-api-entry__signature ox-api-entry__signature--highlighted language-typescript">NapiThemeConfig</code><span class="ox-api-entry__description">NAPI-compatible theme configuration type.</span><span class="ox-api-entry__meta"><span class="ox-api-badge">12 members</span></span></span></summary>
+  <summary><span class="ox-api-entry__kind">interface</span><span class="ox-api-entry__summary-main"><code class="ox-api-entry__signature ox-api-entry__signature--highlighted language-typescript">NapiThemeConfig</code><span class="ox-api-entry__description">NAPI-compatible theme configuration type.</span><span class="ox-api-entry__meta"><span class="ox-api-badge">13 members</span></span></span></summary>
   <div class="ox-api-entry__body">
 <div class="ox-api-entry__prose">
 <p>NAPI-compatible theme configuration type.</p>
@@ -413,6 +413,11 @@
   <td><code>aside</code><span class="ox-api-badge">optional</span></td>
   <td><code class="ox-api-entry__member-type language-typescript">boolean</code></td>
   <td><div class="ox-api-entry__member-description">Right-hand &quot;On this page&quot; outline.</div></td>
+</tr>
+<tr id="napithemeconfig-breadcrumbs">
+  <td><code>breadcrumbs</code><span class="ox-api-badge">optional</span></td>
+  <td><code class="ox-api-entry__member-type language-typescript">boolean</code></td>
+  <td><div class="ox-api-entry__member-description">Breadcrumb trail from the site root through sidebar ancestors.</div></td>
 </tr>
 <tr id="napithemeconfig-colors">
   <td><code>colors</code><span class="ox-api-badge">optional</span></td>
@@ -742,7 +747,7 @@
 </details>
 
 <details id="resolvedthemeconfig" class="ox-api-entry">
-  <summary><span class="ox-api-entry__kind">interface</span><span class="ox-api-entry__summary-main"><code class="ox-api-entry__signature ox-api-entry__signature--highlighted language-typescript">ResolvedThemeConfig</code><span class="ox-api-entry__description">Resolved theme configuration (after merging with defaults).</span><span class="ox-api-entry__meta"><span class="ox-api-badge">16 members</span></span></span></summary>
+  <summary><span class="ox-api-entry__kind">interface</span><span class="ox-api-entry__summary-main"><code class="ox-api-entry__signature ox-api-entry__signature--highlighted language-typescript">ResolvedThemeConfig</code><span class="ox-api-entry__description">Resolved theme configuration (after merging with defaults).</span><span class="ox-api-entry__meta"><span class="ox-api-badge">17 members</span></span></span></summary>
   <div class="ox-api-entry__body">
 <div class="ox-api-entry__prose">
 <p>Resolved theme configuration (after merging with defaults).</p>
@@ -761,6 +766,11 @@
 <tbody>
 <tr id="resolvedthemeconfig-aside">
   <td><code>aside</code></td>
+  <td><code class="ox-api-entry__member-type language-typescript">boolean</code></td>
+  <td></td>
+</tr>
+<tr id="resolvedthemeconfig-breadcrumbs">
+  <td><code>breadcrumbs</code></td>
   <td><code class="ox-api-entry__member-type language-typescript">boolean</code></td>
   <td></td>
 </tr>
@@ -1036,7 +1046,7 @@
 </details>
 
 <details id="themeconfig" class="ox-api-entry">
-  <summary><span class="ox-api-entry__kind">interface</span><span class="ox-api-entry__summary-main"><code class="ox-api-entry__signature ox-api-entry__signature--highlighted language-typescript">ThemeConfig</code><span class="ox-api-entry__description">Complete theme configuration.</span><span class="ox-api-entry__meta"><span class="ox-api-badge">17 members</span></span></span></summary>
+  <summary><span class="ox-api-entry__kind">interface</span><span class="ox-api-entry__summary-main"><code class="ox-api-entry__signature ox-api-entry__signature--highlighted language-typescript">ThemeConfig</code><span class="ox-api-entry__description">Complete theme configuration.</span><span class="ox-api-entry__meta"><span class="ox-api-badge">18 members</span></span></span></summary>
   <div class="ox-api-entry__body">
 <div class="ox-api-entry__prose">
 <p>Complete theme configuration.</p>
@@ -1057,6 +1067,11 @@
   <td><code>aside</code><span class="ox-api-badge">optional</span></td>
   <td><code class="ox-api-entry__member-type language-typescript">boolean</code></td>
   <td><div class="ox-api-entry__member-description">Show the right-hand &quot;On this page&quot; outline.<br><br>Default <code>false</code>. When <code>true</code>, the outline is rendered only on pages<br>that have TOC entries, using the existing <code>&lt;aside class=&quot;toc&quot;&gt;</code> markup.</div></td>
+</tr>
+<tr id="themeconfig-breadcrumbs">
+  <td><code>breadcrumbs</code><span class="ox-api-badge">optional</span></td>
+  <td><code class="ox-api-entry__member-type language-typescript">boolean | Record&lt;string, unknown&gt;</code></td>
+  <td><div class="ox-api-entry__member-description">Show a breadcrumb trail from the site root through sidebar ancestors.<br><br>Default <code>false</code>. <code>true</code> or an object enables the trail. Frontmatter<br><code>breadcrumbs: false</code> still hides it on that page.</div></td>
 </tr>
 <tr id="themeconfig-colors">
   <td><code>colors</code><span class="ox-api-badge">optional</span></td>

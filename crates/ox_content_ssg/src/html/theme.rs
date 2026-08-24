@@ -135,6 +135,8 @@ pub struct ThemeEmbed {
 pub struct ThemeConfig {
     /// Right-hand "On this page" outline. Omitted and `false` hide it.
     pub aside: Option<bool>,
+    /// Breadcrumb trail from the site root through sidebar ancestors.
+    pub breadcrumbs: Option<bool>,
     /// Light mode colors.
     pub colors: Option<ThemeColors>,
     /// Dark mode colors.

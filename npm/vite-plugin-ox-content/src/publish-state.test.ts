@@ -251,6 +251,7 @@ function options(root: string, enabled: boolean): ResolvedOptions {
       generateOgImage: false,
       lastUpdated: false,
       pagination: false,
+      breadcrumbs: false,
       readerChrome: false,
       siteName: "Docs",
       siteUrl: "https://example.com",

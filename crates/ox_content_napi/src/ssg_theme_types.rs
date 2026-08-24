@@ -142,6 +142,8 @@ pub struct JsThemeEmbed {
 pub struct JsThemeConfig {
     /// Right-hand "On this page" outline. Omitted and `false` hide it.
     pub aside: Option<bool>,
+    /// Breadcrumb trail from the site root through sidebar ancestors.
+    pub breadcrumbs: Option<bool>,
     /// Light mode colors.
     pub colors: Option<JsThemeColors>,
     /// Dark mode colors.
@@ -184,6 +186,8 @@ pub struct JsSsgConfig {
     pub available_locales: Option<Vec<JsLocaleInfo>>,
     /// When true, render previous/next page links after the article.
     pub pagination: Option<bool>,
+    /// When true, render a breadcrumb trail above the article.
+    pub breadcrumbs: Option<bool>,
     /// Opt-in copy, external-link, and back-to-top chrome.
     pub reader_chrome: Option<JsReaderChrome>,
 }

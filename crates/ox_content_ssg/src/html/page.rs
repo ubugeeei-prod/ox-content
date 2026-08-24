@@ -161,6 +161,9 @@ pub struct PageData {
     /// Frontmatter override for the next-page link.
     #[serde(default)]
     pub next: Option<PagerOverride>,
+    /// Frontmatter `breadcrumbs: false` hides the trail on this page.
+    #[serde(default)]
+    pub breadcrumbs: Option<bool>,
 }
 
 /// SSG configuration.
@@ -183,6 +186,9 @@ pub struct SsgConfig {
     /// When true, render previous/next page links after the article.
     #[serde(default)]
     pub pagination: bool,
+    /// When true, render a breadcrumb trail above the article.
+    #[serde(default)]
+    pub breadcrumbs: bool,
     /// Opt-in copy, external-link, and back-to-top chrome. Off by default.
     #[serde(default)]
     pub reader_chrome: ReaderChrome,

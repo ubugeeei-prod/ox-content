@@ -1506,6 +1506,8 @@ export interface JsSsgConfig {
   availableLocales?: Array<JsLocaleInfo>
   /** When true, render previous/next page links after the article. */
   pagination?: boolean
+  /** When true, render a breadcrumb trail above the article. */
+  breadcrumbs?: boolean
   /** Opt-in copy, external-link, and back-to-top chrome. */
   readerChrome?: JsReaderChrome
 }
@@ -1584,6 +1586,8 @@ export interface JsSsgPageData {
   prev?: JsPagerOverride
   /** Frontmatter override for the next-page link. */
   next?: JsPagerOverride
+  /** Frontmatter `breadcrumbs: false` hides the trail on this page. */
+  breadcrumbs?: boolean
 }
 
 /** Resolved SSG output and public route paths. */
@@ -1668,6 +1672,8 @@ export interface JsThemeColors {
 export interface JsThemeConfig {
   /** Right-hand "On this page" outline. Omitted and `false` hide it. */
   aside?: boolean
+  /** Breadcrumb trail from the site root through sidebar ancestors. */
+  breadcrumbs?: boolean
   /** Light mode colors. */
   colors?: JsThemeColors
   /** Dark mode colors. */

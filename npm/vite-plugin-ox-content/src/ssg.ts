@@ -82,6 +82,8 @@ export interface SsgPageData {
   prev?: SsgPagerOverride;
   /** Frontmatter override for the next-page link. */
   next?: SsgPagerOverride;
+  /** Frontmatter `breadcrumbs: false` hides the trail on this page. */
+  breadcrumbs?: boolean;
 }
 
 /** Frontmatter override for one previous/next pager side. */
@@ -120,6 +122,7 @@ export function resolveSsgOptions(ssg: SsgOptions | boolean | undefined): Resolv
       generateOgImage: false,
       lastUpdated: false,
       pagination: false,
+      breadcrumbs: false,
       readerChrome: false,
       notFound: resolveNotFoundOptions(undefined),
     };
@@ -134,6 +137,7 @@ export function resolveSsgOptions(ssg: SsgOptions | boolean | undefined): Resolv
       generateOgImage: false,
       lastUpdated: false,
       pagination: false,
+      breadcrumbs: false,
       readerChrome: false,
       notFound: resolveNotFoundOptions(undefined),
       theme: resolveTheme(undefined),
@@ -155,6 +159,7 @@ export function resolveSsgOptions(ssg: SsgOptions | boolean | undefined): Resolv
     generateOgImage: ssg.generateOgImage ?? false,
     lastUpdated: ssg.lastUpdated ?? false,
     pagination: resolvePaginationOption(ssg.pagination),
+    breadcrumbs: resolvePaginationOption(ssg.breadcrumbs),
     readerChrome: resolveReaderChromeOption(ssg.readerChrome),
     notFound: resolveNotFoundOptions(ssg.notFound),
     siteUrl: ssg.siteUrl,
@@ -372,6 +377,7 @@ export async function generateHtmlPage(
   availableLocales?: LocaleConfig[],
   pagination = false,
   readerChrome: ResolvedReaderChrome = false,
+  breadcrumbs = false,
 ): Promise<string> {
   const mod = await importNapiModule();
 
@@ -436,6 +442,7 @@ export async function generateHtmlPage(
       entryPage: entryPageForRust,
       prev: pageData.prev,
       next: pageData.next,
+      breadcrumbs: pageData.breadcrumbs,
     },
     navGroupsForRust,
     {
@@ -446,6 +453,7 @@ export async function generateHtmlPage(
       locale,
       availableLocales: availableLocales ? toRustLocales(availableLocales) : undefined,
       pagination,
+      breadcrumbs,
       readerChrome: readerChrome
         ? {
             copy: readerChrome.copy,
@@ -1139,6 +1147,7 @@ async function renderSsgPage(
     context.options.i18n ? context.options.i18n.locales : undefined,
     context.ssgOptions.pagination,
     context.ssgOptions.readerChrome,
+    context.ssgOptions.breadcrumbs,
   );
 }
 
@@ -1197,6 +1206,7 @@ function createSsgPageData(pageResult: PageProcessResult): SsgPageData {
     entryPage,
     prev: parseSsgPagerOverride(frontmatter.prev),
     next: parseSsgPagerOverride(frontmatter.next),
+    breadcrumbs: frontmatter.breadcrumbs === false ? false : undefined,
   };
 }
 

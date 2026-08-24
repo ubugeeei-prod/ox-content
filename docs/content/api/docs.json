@@ -7425,11 +7425,20 @@
               "optional": true,
               "line": 84,
               "endLine": 84
+            },
+            {
+              "name": "breadcrumbs",
+              "kind": "property",
+              "description": "Frontmatter `breadcrumbs: false` hides the trail on this page.",
+              "type": "boolean",
+              "optional": true,
+              "line": 86,
+              "endLine": 86
             }
           ],
           "file": "npm/vite-plugin-ox-content/src/ssg.ts",
           "line": 70,
-          "endLine": 85,
+          "endLine": 87,
           "signature": "export interface SsgPageData"
         },
         {
@@ -7889,6 +7898,13 @@
               "description": "",
               "optional": true,
               "default": "false"
+            },
+            {
+              "name": "breadcrumbs",
+              "type": "unknown",
+              "description": "",
+              "optional": true,
+              "default": "false"
             }
           ],
           "returns": {
@@ -7898,7 +7914,7 @@
           "file": "npm/vite-plugin-ox-content/src/ssg.ts",
           "line": 364,
           "endLine": 458,
-          "signature": "export async function generateHtmlPage(pageData: SsgPageData, navGroups: NavGroup[], siteName: string, base: string, ogImage?: string, theme?: ResolvedThemeConfig, locale?: string, availableLocales?: LocaleConfig[], pagination = false, readerChrome: ResolvedReaderChrome = false): Promise<string>"
+          "signature": "export async function generateHtmlPage(pageData: SsgPageData, navGroups: NavGroup[], siteName: string, base: string, ogImage?: string, theme?: ResolvedThemeConfig, locale?: string, availableLocales?: LocaleConfig[], pagination = false, readerChrome: ResolvedReaderChrome = false, breadcrumbs = false): Promise<string>"
         },
         {
           "name": "getOutputPath",
@@ -9219,6 +9235,15 @@
               "endLine": 164
             },
             {
+              "name": "breadcrumbs",
+              "kind": "property",
+              "description": "Show a breadcrumb trail from the site root through sidebar ancestors.\n\nDefault `false`. `true` or an object enables the trail. Frontmatter\n`breadcrumbs: false` still hides it on that page.",
+              "type": "boolean | Record<string, unknown>",
+              "optional": true,
+              "line": 171,
+              "endLine": 171
+            },
+            {
               "name": "colors",
               "kind": "property",
               "description": "Light mode colors (maps to CSS variables)",
@@ -9372,11 +9397,19 @@
               "endLine": 206
             },
             {
+              "name": "breadcrumbs",
+              "kind": "property",
+              "description": "",
+              "type": "boolean",
+              "line": 207,
+              "endLine": 207
+            },
+            {
               "name": "colors",
               "kind": "property",
               "description": "",
               "type": "ThemeColors",
-              "line": 207,
+              "line": 208,
               "endLine": 207
             },
             {
@@ -10084,6 +10117,15 @@
               "optional": true,
               "line": 673,
               "endLine": 673
+            },
+            {
+              "name": "breadcrumbs",
+              "kind": "property",
+              "description": "Breadcrumb trail from the site root through sidebar ancestors.",
+              "type": "boolean",
+              "optional": true,
+              "line": 675,
+              "endLine": 675
             },
             {
               "name": "colors",
@@ -11702,6 +11744,16 @@
               "endLine": 302
             },
             {
+              "name": "breadcrumbs",
+              "kind": "property",
+              "description": "Show a breadcrumb trail from the site root through sidebar ancestors.\n\nDisabled when omitted or `false`. `true` enables the default trail.\nAn object also enables the feature. Frontmatter `breadcrumbs: false`\nhides the trail on that page.",
+              "type": "boolean | Record<string, unknown>",
+              "default": "false",
+              "optional": true,
+              "line": 313,
+              "endLine": 313
+            },
+            {
               "name": "readerChrome",
               "kind": "property",
               "description": "Opt-in copy buttons, outbound-link icons, and a back-to-top control.\n\nDisabled when omitted or `false`. `true` enables all three with defaults.\nAn object enables the feature and can turn one control off, for example\n`{ copy: false }`.",
@@ -11932,12 +11984,20 @@
               "endLine": 429
             },
             {
+              "name": "breadcrumbs",
+              "kind": "property",
+              "description": "",
+              "type": "boolean",
+              "line": 430,
+              "endLine": 430
+            },
+            {
               "name": "readerChrome",
               "kind": "property",
               "description": "",
               "type": "ResolvedReaderChrome",
-              "line": 430,
-              "endLine": 430
+              "line": 431,
+              "endLine": 431
             },
             {
               "name": "notFound",

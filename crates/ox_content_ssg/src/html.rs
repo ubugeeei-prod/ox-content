@@ -3,6 +3,7 @@
 use askama::Template;
 
 mod aside;
+mod breadcrumbs;
 mod entry;
 mod footer;
 mod nav;
@@ -15,6 +16,7 @@ mod theme;
 mod theme_css;
 mod utils;
 
+use breadcrumbs::BreadcrumbsView;
 use pagination::PagerView;
 pub use reader_chrome::ReaderChrome;
 
@@ -126,6 +128,7 @@ struct PageTemplate<'a> {
     navigation: &'a str,
     embed_sidebar_after: &'a str,
     embed_content_before: &'a str,
+    breadcrumbs: Option<&'a BreadcrumbsView>,
     main_content: &'a str,
     has_toc: bool,
     toc_html: &'a str,

@@ -302,6 +302,17 @@ export interface SsgOptions {
   pagination?: boolean | Record<string, unknown>;
 
   /**
+   * Show a breadcrumb trail from the site root through sidebar ancestors.
+   *
+   * Disabled when omitted or `false`. `true` enables the default trail.
+   * An object also enables the feature. Frontmatter `breadcrumbs: false`
+   * hides the trail on that page.
+   *
+   * @default false
+   */
+  breadcrumbs?: boolean | Record<string, unknown>;
+
+  /**
    * Opt-in copy buttons, outbound-link icons, and a back-to-top control.
    *
    * Disabled when omitted or `false`. `true` enables all three with defaults.
@@ -427,6 +438,7 @@ export interface ResolvedSsgOptions {
   generateOgImage: boolean;
   lastUpdated: boolean;
   pagination: boolean;
+  breadcrumbs: boolean;
   readerChrome: ResolvedReaderChrome;
   /**
    * Present after `resolveSsgOptions`. Omitted in hand-built fixtures means off.

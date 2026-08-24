@@ -58,6 +58,7 @@ function createBaseOptions(
       generateOgImage: false,
       lastUpdated: false,
       pagination: false,
+      breadcrumbs: false,
       readerChrome: false,
     },
     gfm: options.gfm,

@@ -38,6 +38,18 @@ describe("resolveSsgOptions", () => {
     expect(resolveSsgOptions({ pagination: {} }).pagination).toBe(true);
   });
 
+  it("disables breadcrumbs when omitted", () => {
+    expect(resolveSsgOptions(undefined).breadcrumbs).toBe(false);
+  });
+
+  it("enables breadcrumbs when true", () => {
+    expect(resolveSsgOptions({ breadcrumbs: true }).breadcrumbs).toBe(true);
+  });
+
+  it("enables breadcrumbs when an object is passed", () => {
+    expect(resolveSsgOptions({ breadcrumbs: {} }).breadcrumbs).toBe(true);
+  });
+
   it("disables reader chrome by default", () => {
     expect(resolveSsgOptions(undefined).readerChrome).toBe(false);
   });

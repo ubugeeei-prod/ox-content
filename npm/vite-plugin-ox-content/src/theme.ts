@@ -162,6 +162,13 @@ export interface ThemeConfig {
    * that have TOC entries, using the existing `<aside class="toc">` markup.
    */
   aside?: boolean;
+  /**
+   * Show a breadcrumb trail from the site root through sidebar ancestors.
+   *
+   * Default `false`. `true` or an object enables the trail. Frontmatter
+   * `breadcrumbs: false` still hides it on that page.
+   */
+  breadcrumbs?: boolean | Record<string, unknown>;
   /** Light mode colors (maps to CSS variables) */
   colors?: ThemeColors;
   /** Dark mode colors (maps to CSS variables) */
@@ -204,6 +211,7 @@ export interface ThemeConfig {
 export interface ResolvedThemeConfig {
   name: string;
   aside: boolean;
+  breadcrumbs: boolean;
   colors: ThemeColors;
   darkColors: ThemeColors;
   fonts: ThemeFonts;
@@ -227,6 +235,7 @@ export interface ResolvedThemeConfig {
 export const defaultTheme: ThemeConfig = {
   name: "default",
   aside: false,
+  breadcrumbs: false,
   colors: {
     primary: "#4f6fae",
     primaryHover: "#425f96",
@@ -415,6 +424,7 @@ export function resolveTheme(config?: ThemeConfig | ThemeConfig[]): ResolvedThem
   return {
     name: merged.name ?? "custom",
     aside: merged.aside ?? defaultTheme.aside ?? false,
+    breadcrumbs: resolveThemeFlag(merged.breadcrumbs),
     colors: merged.colors ?? defaultTheme.colors!,
     darkColors: merged.darkColors ?? defaultTheme.darkColors!,
     fonts: merged.fonts ?? defaultTheme.fonts!,
@@ -475,6 +485,7 @@ export function themeToNapi(theme: ResolvedThemeConfig): NapiThemeConfig {
 
   return {
     aside: theme.aside,
+    breadcrumbs: theme.breadcrumbs,
     colors: theme.colors.primary
       ? {
           primary: theme.colors.primary,
@@ -665,12 +676,18 @@ export interface NapiThemeEmbed {
   footer?: string;
 }
 
+function resolveThemeFlag(value: boolean | Record<string, unknown> | undefined): boolean {
+  return value === true || (typeof value === "object" && value !== null);
+}
+
 /**
  * NAPI-compatible theme configuration type.
  */
 export interface NapiThemeConfig {
   /** Right-hand "On this page" outline. */
   aside?: boolean;
+  /** Breadcrumb trail from the site root through sidebar ancestors. */
+  breadcrumbs?: boolean;
   colors?: NapiThemeColors;
   darkColors?: NapiThemeColors;
   fonts?: NapiThemeFonts;

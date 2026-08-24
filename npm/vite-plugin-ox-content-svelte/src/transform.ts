@@ -85,6 +85,7 @@ export async function transformMarkdownWithSvelte(
       generateOgImage: false,
       lastUpdated: false,
       pagination: false,
+      breadcrumbs: false,
       readerChrome: false,
     },
     gfm: options.gfm,
