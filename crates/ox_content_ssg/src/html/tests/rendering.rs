@@ -173,6 +173,35 @@ fn test_nested_nav_css_keeps_disclosure_and_hierarchy_visible() {
 }
 
 #[test]
+fn test_table_css_draws_each_separator_once() {
+    assert!(
+        SSG_CSS.contains(".content table {\n  width: 100%;")
+            && SSG_CSS.contains("border: 1px solid var(--octc-color-border);")
+            && SSG_CSS.contains("border-collapse: separate;"),
+        "tables need one shared separated-border model at every breakpoint"
+    );
+    assert!(
+        SSG_CSS.contains("border-inline-end: 1px solid var(--octc-color-border);")
+            && SSG_CSS.contains("border-block-end: 1px solid var(--octc-color-border);"),
+        "cells must paint only one logical edge per internal seam"
+    );
+    assert!(
+        SSG_CSS.contains(".content tr > :last-child")
+            && SSG_CSS.contains(".content table > :last-child > tr:last-child > *"),
+        "the table border must own the outer inline and block edges"
+    );
+    assert_eq!(
+        SSG_CSS.matches("border-collapse: separate;").count(),
+        1,
+        "mobile must not install a second border model"
+    );
+    assert!(
+        !SSG_CSS.contains("border-collapse: collapse;"),
+        "collapsed cell borders conflict with the scrollable mobile table"
+    );
+}
+
+#[test]
 fn test_generate_html_without_toc_omits_outline() {
     let page_data = PageData {
         title: "No TOC".to_string(),

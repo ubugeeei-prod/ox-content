@@ -1229,15 +1229,26 @@ a:hover {
 }
 .content table {
   width: 100%;
-  border-collapse: collapse;
+  box-sizing: border-box;
+  border: 1px solid var(--octc-color-border);
+  border-collapse: separate;
+  border-spacing: 0;
   margin: 1.25rem 0;
   font-size: 0.875rem;
 }
 .content th,
 .content td {
-  border: 1px solid var(--octc-color-border);
+  border: 0;
+  border-inline-end: 1px solid var(--octc-color-border);
+  border-block-end: 1px solid var(--octc-color-border);
   padding: 0.75rem 1rem;
-  text-align: left;
+  text-align: start;
+}
+.content tr > :last-child {
+  border-inline-end: 0;
+}
+.content table > :last-child > tr:last-child > * {
+  border-block-end: 0;
 }
 .content th {
   background: var(--octc-color-bg-alt);
@@ -2062,8 +2073,6 @@ a:hover {
     -webkit-overflow-scrolling: touch;
     margin: 1rem 0;
     font-size: 0.8125rem;
-    border-collapse: separate;
-    border-spacing: 0;
   }
   .content th,
   .content td {
