@@ -11,6 +11,7 @@ mod code_block;
 mod incremental;
 mod inlines;
 mod links;
+mod mdx;
 mod visit;
 mod write;
 
@@ -204,11 +205,9 @@ impl HtmlRenderer {
             Node::FootnoteReference(node) => self.render_footnote_reference(node),
             Node::Definition(_) => {}
             Node::FootnoteDefinition(node) => self.render_footnote_definition(node),
-            Node::MdxJsxFlowElement(_)
-            | Node::MdxJsxTextElement(_)
-            | Node::MdxjsEsm(_)
-            | Node::MdxFlowExpression(_)
-            | Node::MdxTextExpression(_) => {}
+            Node::MdxJsxFlowElement(node) => self.render_mdx_jsx_flow_element(node),
+            Node::MdxJsxTextElement(node) => self.render_mdx_jsx_text_element(node),
+            Node::MdxjsEsm(_) | Node::MdxFlowExpression(_) | Node::MdxTextExpression(_) => {}
         }
     }
 

@@ -11,6 +11,7 @@ mod code_annotations;
 mod escape;
 mod heading;
 mod html_attr;
+mod mdx_payload;
 mod options;
 mod renderer;
 mod tagfilter;

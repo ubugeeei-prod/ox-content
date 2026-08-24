@@ -5,6 +5,7 @@ mod inline_media;
 mod links;
 mod lists_tables;
 mod mdx;
+mod mdx_islands;
 
 use crate::html::{HtmlRenderer, HtmlRendererOptions};
 use ox_content_allocator::Allocator;

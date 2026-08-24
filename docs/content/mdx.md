@@ -19,8 +19,10 @@ It is worth understanding how this works, because it differs from "classic" MDX:
   `{expression}` children are stored as AST source. Nothing is evaluated.
   `.md` stays CommonMark + GFM unless that option is on.
 - **Components are resolved by a framework plugin**, not the renderer. The
-  React/Vue/Svelte plugins scan the content for PascalCase component tags,
-  replace them with **island** placeholders, and hydrate them on the client.
+  HTML renderer turns named MDX JSX into island placeholders and
+  serializes props (literals as JSON, `{expression}` / spreads as source).
+  The React/Vue/Svelte plugins still discover PascalCase tags for hydration
+  and will evaluate expressions later.
 
 So you get Markdown's speed for prose plus real interactive components where you
 need them — without shipping a JavaScript bundle for pages that have none.
@@ -111,21 +113,40 @@ Unclosed `{` stays ordinary text. Fences and inline code never become
 expressions. Hostile source such as `{ "<script>" }` is stored and is not
 emitted as HTML.
 
+When MDX is on, a named JSX component becomes an island placeholder in the
+HTML (`data-ox-island="Name"`). Its attributes are serialized onto that
+island — they are not run:
+
+- quoted strings, boolean attributes, and JSON-literal `{42}` / `{true}` /
+  `{"a":1}` values become JSON-safe props
+- any other `{expression}` is stored as a **source string**
+- `{...spread}` attributes become a **spread-source list**
+
+The payload is JSON that unicode-escapes `<`, `>`, and `&`, then sits in
+`data-ox-props` (HTML-escaped) and in a `<script type="application/json">`
+that the browser does not execute. Hostile source such as
+`{"</script><script>"}` or `{alert(1)}` cannot break out of the payload
+and is not evaluated. Pages with no components emit no `<script>` and no
+island runtime. Framework plugins still resolve and hydrate components
+later.
+
 ### Props
 
 Props use JSX-like syntax. The following forms are recognised:
 
-| Syntax             | Parsed as           |
-| ------------------ | ------------------- |
-| `prop="text"`      | string              |
-| `prop={42}`        | number / JSON value |
-| `prop={true}`      | boolean             |
-| `prop={ {"a":1} }` | object (JSON)       |
-| `prop`             | boolean `true`      |
-| `{...props}`       | spread (source)     |
+| Syntax             | Serialized as                     |
+| ------------------ | --------------------------------- |
+| `prop="text"`      | string                            |
+| `prop={42}`        | number / JSON value               |
+| `prop={true}`      | boolean                           |
+| `prop={ {"a":1} }` | object (JSON)                     |
+| `prop`             | boolean `true`                    |
+| `prop={count + 1}` | expression source (not evaluated) |
+| `{...props}`       | spread source (not evaluated)     |
 
-Props are serialized to a `data-ox-props` attribute on the island element and
-handed to your component at hydration time.
+Literal props, expression sources, and spreads are serialized together on
+the island element. Hydration still happens later; this slice only stores
+the payload.
 
 ## How islands hydrate
 

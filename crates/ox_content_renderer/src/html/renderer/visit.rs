@@ -6,8 +6,9 @@
 
 use ox_content_ast::{
     BlockQuote, Break, CodeBlock, Definition, Delete, Document, Emphasis, FootnoteDefinition,
-    FootnoteReference, Heading, Html, Image, InlineCode, Link, List, ListItem, Node, Paragraph,
-    Strong, Table, Text, ThematicBreak, Visit,
+    FootnoteReference, Heading, Html, Image, InlineCode, Link, List, ListItem, MdxFlowExpression,
+    MdxJsxFlowElement, MdxJsxTextElement, MdxTextExpression, MdxjsEsm, Node, Paragraph, Strong,
+    Table, Text, ThematicBreak, Visit,
 };
 
 use super::HtmlRenderer;
@@ -101,4 +102,18 @@ impl<'a> Visit<'a> for HtmlRenderer {
     fn visit_footnote_definition(&mut self, footnote_def: &FootnoteDefinition<'a>) {
         self.render_footnote_definition(footnote_def);
     }
+
+    fn visit_mdx_jsx_flow_element(&mut self, node: &MdxJsxFlowElement<'a>) {
+        self.render_mdx_jsx_flow_element(node);
+    }
+
+    fn visit_mdx_jsx_text_element(&mut self, node: &MdxJsxTextElement<'a>) {
+        self.render_mdx_jsx_text_element(node);
+    }
+
+    fn visit_mdxjs_esm(&mut self, _node: &MdxjsEsm<'a>) {}
+
+    fn visit_mdx_flow_expression(&mut self, _node: &MdxFlowExpression<'a>) {}
+
+    fn visit_mdx_text_expression(&mut self, _node: &MdxTextExpression<'a>) {}
 }

@@ -83,6 +83,16 @@ fn scan_node_for_render(node: &Node<'_>, scan: &mut DocumentRenderScan) {
                 scan_node_for_render(child, scan);
             }
         }
+        Node::MdxJsxFlowElement(node) => {
+            for child in &node.children {
+                scan_node_for_render(child, scan);
+            }
+        }
+        Node::MdxJsxTextElement(node) => {
+            for child in &node.children {
+                scan_node_for_render(child, scan);
+            }
+        }
         _ => {}
     }
 }
@@ -180,6 +190,16 @@ fn collect_inline_toc_node(
         }
         Node::FootnoteDefinition(definition) => {
             for child in &definition.children {
+                collect_inline_toc_node(child, max_depth, counts, entries);
+            }
+        }
+        Node::MdxJsxFlowElement(node) => {
+            for child in &node.children {
+                collect_inline_toc_node(child, max_depth, counts, entries);
+            }
+        }
+        Node::MdxJsxTextElement(node) => {
+            for child in &node.children {
                 collect_inline_toc_node(child, max_depth, counts, entries);
             }
         }
