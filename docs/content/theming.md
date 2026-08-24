@@ -14,6 +14,25 @@ through `ssg.theme`. See [Authoring a package](/theme-presets.md#authoring-a-pac
 for the compatibility contract (required tokens, light and dark, screenshots,
 and the rule that skins must not hard-code colors).
 
+## Stable MPA Navigation
+
+The built-in theme restores the saved light, dark, or system color preference
+before the first paint. On browsers that support cross-document View
+Transitions, same-origin page changes keep the current surface visible while
+the next generated page loads. This remains an MPA: links still perform normal
+document navigation, and unsupported browsers use their native fallback.
+
+The transition is disabled automatically for `prefers-reduced-motion: reduce`.
+To opt out for a theme, set `viewTransitions: false`:
+
+```ts
+defineTheme({
+  viewTransitions: false,
+});
+```
+
+External links, downloads, and hash-only links retain normal browser behavior.
+
 ## Quick Start
 
 ### CSS Variable Customization

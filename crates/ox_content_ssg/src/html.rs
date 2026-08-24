@@ -10,6 +10,7 @@ mod entry;
 mod footer;
 mod header_chrome;
 mod locale_switcher;
+mod mpa_navigation;
 mod nav;
 mod page;
 mod pagination;
@@ -119,6 +120,7 @@ struct PageTemplate<'a> {
     document_title: &'a str,
     description: Option<&'a str>,
     og_image: Option<&'a str>,
+    theme_bootstrap_js: &'a str,
     css: &'a str,
     embed_head: &'a str,
     body_class: &'a str,

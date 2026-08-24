@@ -135,6 +135,10 @@ pub struct ThemeEmbed {
 /// Complete theme configuration.
 #[derive(Debug, Clone, Serialize, Deserialize, Default)]
 pub struct ThemeConfig {
+    /// Enable progressive cross-document transitions for same-origin MPA navigation.
+    /// Omitted values default to enabled. Set to `false` to keep native navigation only.
+    #[serde(rename = "viewTransitions")]
+    pub view_transitions: Option<bool>,
     /// Right-hand "On this page" outline. Omitted and `false` hide it.
     pub aside: Option<bool>,
     /// Breadcrumb trail from the site root through sidebar ancestors.

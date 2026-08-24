@@ -1,4 +1,5 @@
 :root {
+  color-scheme: light dark;
   --octc-sidebar-width: 260px;
   --octc-header-height: 60px;
   --octc-max-content-width: 960px;
@@ -46,7 +47,11 @@
   --octc-surface-noise-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 180 180'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='1.2' numOctaves='2' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='180' height='180' filter='url(%23noise)' opacity='0.062'/%3E%3C/svg%3E");
   --octc-surface-noise-size: 164px 164px;
 }
+[data-theme="light"] {
+  color-scheme: light;
+}
 [data-theme="dark"] {
+  color-scheme: dark;
   --octc-color-bg: #060816;
   --octc-color-bg-alt: #0d1528;
   --octc-color-text: #ebf2ff;

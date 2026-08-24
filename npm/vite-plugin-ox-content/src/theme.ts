@@ -160,6 +160,16 @@ export interface ThemeConfig {
   /** Base theme to extend */
   extends?: ThemeConfig;
   /**
+   * Preserve the current surface during same-origin MPA navigation with the
+   * browser's cross-document View Transition API.
+   *
+   * Unsupported browsers use normal navigation. Reduced-motion preferences
+   * never enable the transition. Set `false` to opt out.
+   *
+   * @default true
+   */
+  viewTransitions?: boolean;
+  /**
    * Show the right-hand "On this page" outline.
    *
    * Default `false`. When `true`, the outline is rendered only on pages
@@ -225,6 +235,7 @@ export interface ThemeConfig {
  */
 export interface ResolvedThemeConfig {
   name: string;
+  viewTransitions: boolean;
   aside: boolean;
   breadcrumbs: boolean;
   colors: ThemeColors;
@@ -251,6 +262,7 @@ export interface ResolvedThemeConfig {
  */
 export const defaultTheme: ThemeConfig = {
   name: "default",
+  viewTransitions: true,
   aside: false,
   breadcrumbs: false,
   colors: {
@@ -440,6 +452,7 @@ export function resolveTheme(config?: ThemeConfig | ThemeConfig[]): ResolvedThem
   // Return resolved config with all required fields
   return {
     name: merged.name ?? "custom",
+    viewTransitions: merged.viewTransitions ?? defaultTheme.viewTransitions ?? true,
     aside: merged.aside ?? defaultTheme.aside ?? false,
     breadcrumbs: resolveThemeFlag(merged.breadcrumbs),
     colors: merged.colors ?? defaultTheme.colors!,
@@ -503,6 +516,7 @@ export function themeToNapi(theme: ResolvedThemeConfig, locale?: string): NapiTh
   const socialLinks = socialLinksToNapi(theme.socialLinks);
 
   return {
+    viewTransitions: theme.viewTransitions,
     aside: theme.aside,
     breadcrumbs: theme.breadcrumbs,
     colors: theme.colors.primary
@@ -705,6 +719,8 @@ function resolveThemeFlag(value: boolean | Record<string, unknown> | undefined):
  * NAPI-compatible theme configuration type.
  */
 export interface NapiThemeConfig {
+  /** Progressive cross-document transitions for same-origin MPA navigation. */
+  viewTransitions?: boolean;
   /** Right-hand "On this page" outline. */
   aside?: boolean;
   /** Breadcrumb trail from the site root through sidebar ancestors. */

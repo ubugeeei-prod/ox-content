@@ -20,6 +20,7 @@ fn snapshot_text(value: &str) -> String {
 }
 
 mod aside;
+mod mpa_navigation;
 mod rendering;
 mod theme;
 
@@ -63,4 +64,20 @@ fn default_theme_surfaces_stay_flat() {
             "default theme chrome must use flat surfaces instead of {decorative_effect}"
         );
     }
+}
+
+#[test]
+fn theme_runtime_restores_preferences_on_history_and_storage_events() {
+    assert!(
+        super::SSG_JS.contains("window.addEventListener(\"pageshow\", syncThemePreference)")
+            && super::SSG_JS.contains("window.addEventListener(\"storage\"")
+    );
+    assert!(
+        super::SSG_JS.contains("return stored === \"light\" || stored === \"dark\"")
+            && super::SSG_JS.contains("document.documentElement.removeAttribute(\"data-theme\")")
+    );
+    assert!(
+        super::SSG_JS.contains("try {\n      localStorage.setItem(\"theme\", theme);")
+            && super::SSG_JS.contains("The visual preference still applies")
+    );
 }

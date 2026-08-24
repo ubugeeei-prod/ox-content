@@ -7,6 +7,24 @@ expression: "super::snapshot_text(&html)"
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="color-scheme" content="light dark">
+  <script>(() => {
+  const root = document.documentElement;
+  let stored = null;
+
+  try {
+    stored = localStorage.getItem("theme");
+  } catch {
+    // Storage may be unavailable in privacy modes. The system scheme remains usable.
+  }
+
+  if (stored === "light" || stored === "dark") {
+    root.setAttribute("data-theme", stored);
+  } else {
+    root.removeAttribute("data-theme");
+  }
+})();
+</script>
   <title>Test Page - Test Site</title>
 <sp><sp>
   <meta name="description" content="Test description">
@@ -21,6 +39,7 @@ expression: "super::snapshot_text(&html)"
   <!-- ox-content:styles:start -->
   <style>/* ox-content:css:base:start */
 :root {
+  color-scheme: light dark;
   --octc-sidebar-width: 260px;
   --octc-header-height: 60px;
   --octc-max-content-width: 960px;
@@ -68,7 +87,11 @@ expression: "super::snapshot_text(&html)"
   --octc-surface-noise-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 180 180'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='1.2' numOctaves='2' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='180' height='180' filter='url(%23noise)' opacity='0.062'/%3E%3C/svg%3E");
   --octc-surface-noise-size: 164px 164px;
 }
+[data-theme="light"] {
+  color-scheme: light;
+}
 [data-theme="dark"] {
+  color-scheme: dark;
   --octc-color-bg: #060816;
   --octc-color-bg-alt: #0d1528;
   --octc-color-text: #ebf2ff;
@@ -2175,10 +2198,17 @@ a:hover {
 }
 
 /* ox-content:css:base:end */
+/* ox-content:css:mpa-navigation:start */
+@media (prefers-reduced-motion: no-preference) {
+  @view-transition {
+    navigation: auto;
+  }
+}
+
+/* ox-content:css:mpa-navigation:end */
 </style>
   <!-- ox-content:styles:end -->
 <sp><sp>
-  <script>document.documentElement.setAttribute('data-theme',localStorage.getItem('theme')||(matchMedia('(prefers-color-scheme:dark)').matches?'dark':'light'))</script>
 </head>
 <body>
 
@@ -2371,11 +2401,39 @@ document.querySelectorAll("details[data-ox-nav-state-key]").forEach((details) =>
 });
 
 const themeToggle = document.querySelector(".theme-toggle"),
-  setTheme = (theme) => {
-    document.documentElement.setAttribute("data-theme", theme);
-    localStorage.setItem("theme", theme);
+  readThemePreference = () => {
+    try {
+      const stored = localStorage.getItem("theme");
+      return stored === "light" || stored === "dark" ? stored : "system";
+    } catch {
+      return "system";
+    }
   },
-  getTheme = () => document.documentElement.getAttribute("data-theme") || "light";
+  applyThemePreference = (theme) => {
+    if (theme === "light" || theme === "dark") {
+      document.documentElement.setAttribute("data-theme", theme);
+    } else {
+      document.documentElement.removeAttribute("data-theme");
+    }
+  },
+  setTheme = (theme) => {
+    if (theme !== "light" && theme !== "dark") return;
+    applyThemePreference(theme);
+    try {
+      localStorage.setItem("theme", theme);
+    } catch {
+      // The visual preference still applies when storage is unavailable.
+    }
+  },
+  getTheme = () =>
+    document.documentElement.getAttribute("data-theme") ||
+    (matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light"),
+  syncThemePreference = () => applyThemePreference(readThemePreference());
+
+window.addEventListener("pageshow", syncThemePreference);
+window.addEventListener("storage", (event) => {
+  if (event.key === "theme") syncThemePreference();
+});
 
 themeToggle?.addEventListener("click", () => setTheme(getTheme() === "dark" ? "light" : "dark"));
 

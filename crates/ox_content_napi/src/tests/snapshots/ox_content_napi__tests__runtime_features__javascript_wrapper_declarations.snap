@@ -1763,6 +1763,8 @@ export interface JsThemeColors {
 
 /** Theme configuration for JavaScript. */
 export interface JsThemeConfig {
+  /** Progressive cross-document transitions for same-origin MPA navigation. */
+  viewTransitions?: boolean
   /** Right-hand "On this page" outline. Omitted and `false` hide it. */
   aside?: boolean
   /** Breadcrumb trail from the site root through sidebar ancestors. */

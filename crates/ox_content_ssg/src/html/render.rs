@@ -9,6 +9,7 @@ use super::header_chrome::{
     push_header_chrome_body_classes, render_announcement, render_header_nav, resolve_page_chrome,
 };
 use super::locale_switcher::render_locale_switcher;
+use super::mpa_navigation::{MPA_NAVIGATION_CSS, THEME_BOOTSTRAP_JS, view_transitions_enabled};
 use super::nav::generate_nav_html;
 use super::pagination::resolve_pager;
 use super::reader_chrome::{READER_CHROME_CSS, READER_CHROME_JS, apply_reader_chrome};
@@ -66,6 +67,10 @@ pub fn generate_html(page_data: &PageData, nav_groups: &[NavGroup], config: &Ssg
     // content-addressed extraction can then pull out only the sections that are
     // globally cacheable and keep page-specific or relative-url CSS inline.
     let mut css_sections = vec![wrap_css_section("base", SSG_CSS)];
+
+    if view_transitions_enabled(theme) {
+        css_sections.push(wrap_css_section("mpa-navigation", MPA_NAVIGATION_CSS));
+    }
 
     if is_entry_page {
         css_sections.push(wrap_css_section("entry", ENTRY_CSS));
@@ -245,6 +250,7 @@ pub fn generate_html(page_data: &PageData, nav_groups: &[NavGroup], config: &Ssg
         document_title: &document_title,
         description: page_data.description.as_deref(),
         og_image: config.og_image.as_deref(),
+        theme_bootstrap_js: THEME_BOOTSTRAP_JS,
         css: &all_css,
         embed_head,
         body_class: &body_class,

@@ -140,6 +140,8 @@ pub struct JsThemeEmbed {
 #[napi(object)]
 #[derive(Clone, Default)]
 pub struct JsThemeConfig {
+    /// Progressive cross-document transitions for same-origin MPA navigation.
+    pub view_transitions: Option<bool>,
     /// Right-hand "On this page" outline. Omitted and `false` hide it.
     pub aside: Option<bool>,
     /// Breadcrumb trail from the site root through sidebar ancestors.

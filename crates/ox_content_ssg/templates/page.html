@@ -3,6 +3,8 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="color-scheme" content="light dark">
+  <script>{{ theme_bootstrap_js|safe }}</script>
   <title>{{ document_title }}</title>
   {% if let Some(desc) = description %}
   <meta name="description" content="{{ desc }}">
@@ -21,7 +23,6 @@
   <style>{{ css|safe }}</style>
   <!-- ox-content:styles:end -->
   {{ embed_head|safe }}
-  <script>document.documentElement.setAttribute('data-theme',localStorage.getItem('theme')||(matchMedia('(prefers-color-scheme:dark)').matches?'dark':'light'))</script>
 </head>
 <body{% if !body_class.is_empty() %} class="{{ body_class }}"{% endif %}>
 {% if let Some(skip) = skip_link %}{{ skip|safe }}

@@ -9,6 +9,20 @@ Ox Content の Theme API で見た目を変えられます。簡単な色は CSS
 
 いちから作らなくても、[テーマプリセット](./theme-presets.md) の公式カタログに 27 スキンと 45 配色があります。`@ox-content/theme-*` と `@ox-content/theme-color-*` を `ssg.theme` で合成します。
 
+## 安定した MPA ナビゲーション
+
+組み込みテーマは、保存されたライト、ダーク、またはシステムの配色を初回描画前に復元します。cross-document View Transitions に対応するブラウザーでは、同一オリジンのページ遷移中も現在の画面を維持します。SPA にはならず、リンクは通常どおり別の HTML 文書へ遷移します。未対応ブラウザーではネイティブの遷移にフォールバックします。
+
+`prefers-reduced-motion: reduce` の場合、トランジションは自動的に無効になります。テーマ単位で無効化する場合は `viewTransitions: false` を指定します。
+
+```ts
+defineTheme({
+  viewTransitions: false,
+});
+```
+
+外部リンク、ダウンロード、ページ内リンクの動作は変わりません。
+
 ## 最短
 
 ```ts

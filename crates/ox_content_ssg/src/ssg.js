@@ -80,11 +80,39 @@ document.querySelectorAll("details[data-ox-nav-state-key]").forEach((details) =>
 });
 
 const themeToggle = document.querySelector(".theme-toggle"),
-  setTheme = (theme) => {
-    document.documentElement.setAttribute("data-theme", theme);
-    localStorage.setItem("theme", theme);
+  readThemePreference = () => {
+    try {
+      const stored = localStorage.getItem("theme");
+      return stored === "light" || stored === "dark" ? stored : "system";
+    } catch {
+      return "system";
+    }
   },
-  getTheme = () => document.documentElement.getAttribute("data-theme") || "light";
+  applyThemePreference = (theme) => {
+    if (theme === "light" || theme === "dark") {
+      document.documentElement.setAttribute("data-theme", theme);
+    } else {
+      document.documentElement.removeAttribute("data-theme");
+    }
+  },
+  setTheme = (theme) => {
+    if (theme !== "light" && theme !== "dark") return;
+    applyThemePreference(theme);
+    try {
+      localStorage.setItem("theme", theme);
+    } catch {
+      // The visual preference still applies when storage is unavailable.
+    }
+  },
+  getTheme = () =>
+    document.documentElement.getAttribute("data-theme") ||
+    (matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light"),
+  syncThemePreference = () => applyThemePreference(readThemePreference());
+
+window.addEventListener("pageshow", syncThemePreference);
+window.addEventListener("storage", (event) => {
+  if (event.key === "theme") syncThemePreference();
+});
 
 themeToggle?.addEventListener("click", () => setTheme(getTheme() === "dark" ? "light" : "dark"));
 

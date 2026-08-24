@@ -25,6 +25,7 @@ pub(super) fn convert_theme_config(
     theme: Option<JsThemeConfig>,
 ) -> Option<ox_content_ssg::ThemeConfig> {
     theme.map(|t| ox_content_ssg::ThemeConfig {
+        view_transitions: t.view_transitions,
         aside: t.aside,
         breadcrumbs: t.breadcrumbs,
         colors: convert_theme_colors(t.colors),
