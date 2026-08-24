@@ -1,22 +1,50 @@
-import { mkdtemp, rm, writeFile } from "node:fs/promises";
-import { tmpdir } from "node:os";
-import { join } from "node:path";
-import { execFile } from "node:child_process";
-import { promisify } from "node:util";
 import { executeScript } from "./javascript";
+import { hasNodeVm } from "./runtime-host";
+import { isAbortError } from "./transport";
 import { StdioBuffer } from "./stdio";
 import { stripTypeScript } from "./strip-typescript";
 import { PhaseTracker } from "./timing";
-import type { AdapterRequest, AdapterResult, Diagnostic } from "./types";
+import type { AdapterRequest, AdapterResult, Diagnostic, TransportResponse } from "./types";
 
-const execFileAsync = promisify(execFile);
+export type TypecheckBackend = "endpoint" | "tsgo" | "unavailable";
+
+export function resolveTypecheckBackend(
+  hasVm: boolean,
+  typecheckUrl: string | undefined,
+): TypecheckBackend {
+  if (typecheckUrl && !hasVm) {
+    return "endpoint";
+  }
+  if (!hasVm) {
+    return "unavailable";
+  }
+  return "tsgo";
+}
 
 export async function typecheckTypeScript(request: AdapterRequest): Promise<AdapterResult> {
   const tracker = new PhaseTracker();
   tracker.start("typecheck", "Typecheck");
+  const backend = resolveTypecheckBackend(hasNodeVm(), request.endpoints.typecheck);
 
-  if (request.endpoints.typecheck && !hasNodeVm()) {
+  if (backend === "endpoint") {
     return typecheckViaEndpoint(request, tracker);
+  }
+  if (backend === "unavailable") {
+    tracker.stop();
+    return {
+      status: "unsupported",
+      stdio: [],
+      diagnostics: [
+        {
+          message:
+            "Typecheck needs a reachable endpoints.typecheck. The Vite /__ox-code-play/typecheck proxy exists only during vite dev.",
+          severity: "error",
+          source: "tsgo",
+        },
+      ],
+      provenance: { compile: { host: "local", runtime: "tsgo" } },
+      timing: tracker.report(),
+    };
   }
 
   try {
@@ -33,6 +61,9 @@ export async function typecheckTypeScript(request: AdapterRequest): Promise<Adap
       timing: tracker.report(),
     };
   } catch (error) {
+    if (isAbortError(error) || request.signal?.aborted) {
+      throw error;
+    }
     tracker.stop();
     const message = error instanceof Error ? error.message : String(error);
     return {
@@ -60,7 +91,7 @@ export async function runTypeScript(request: AdapterRequest): Promise<AdapterRes
   const javascript = stripTypeScript(request.code);
   tracker.start("execute", "Execute");
   try {
-    const value = await executeScript(javascript, request.timeoutMs, stdio);
+    const value = await executeScript(javascript, request.timeoutMs, stdio, request.signal);
     tracker.stop();
     return {
       status: "ok",
@@ -70,14 +101,17 @@ export async function runTypeScript(request: AdapterRequest): Promise<AdapterRes
         compile: { host: "local", runtime: "strip-types" },
         execute: {
           host: "local",
-          runtime: hasNodeVm() ? "node:vm" : "function",
-          sandbox: hasNodeVm() ? "vm" : "function",
+          runtime: hasNodeVm() ? "node:vm" : "iframe",
+          sandbox: hasNodeVm() ? "vm" : "srcdoc",
         },
       },
       timing: tracker.report(),
       value: value === undefined ? undefined : String(value),
     };
   } catch (error) {
+    if (isAbortError(error) || request.signal?.aborted) {
+      throw error;
+    }
     tracker.stop();
     const message = error instanceof Error ? error.message : String(error);
     stdio.push("stderr", `${message}\n`);
@@ -87,7 +121,11 @@ export async function runTypeScript(request: AdapterRequest): Promise<AdapterRes
       diagnostics: [{ message, severity: "error", source: "javascript" }],
       provenance: {
         compile: { host: "local", runtime: "strip-types" },
-        execute: { host: "local", runtime: hasNodeVm() ? "node:vm" : "function" },
+        execute: {
+          host: "local",
+          runtime: hasNodeVm() ? "node:vm" : "iframe",
+          sandbox: hasNodeVm() ? "vm" : "srcdoc",
+        },
       },
       timing: tracker.report(),
     };
@@ -98,13 +136,46 @@ async function typecheckViaEndpoint(
   request: AdapterRequest,
   tracker: PhaseTracker,
 ): Promise<AdapterResult> {
+  const url = request.endpoints.typecheck ?? "";
   const response = await request.transport.request({
-    url: request.endpoints.typecheck ?? "",
+    url,
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({ language: "typescript", code: request.code, config: request.config }),
+    signal: request.signal,
   });
   tracker.stop();
+  return adapterResultFromTypecheckResponse(response, url, tracker);
+}
+
+export function typecheckEndpointFailureMessage(status: number, text: string): string {
+  if (status === 404 || status === 405) {
+    return "Typecheck needs a reachable endpoints.typecheck. The Vite /__ox-code-play/typecheck proxy exists only during vite dev.";
+  }
+  const trimmed = text.trim();
+  return trimmed || "Typecheck endpoint failed.";
+}
+
+export function adapterResultFromTypecheckResponse(
+  response: TransportResponse,
+  url: string,
+  tracker: PhaseTracker,
+): AdapterResult {
+  if (!response.ok) {
+    return {
+      status: "error",
+      stdio: [],
+      diagnostics: [
+        {
+          message: typecheckEndpointFailureMessage(response.status, response.text),
+          severity: "error",
+          source: "tsgo",
+        },
+      ],
+      provenance: { compile: { host: hostFromUrl(url), runtime: "tsgo" } },
+      timing: tracker.report(),
+    };
+  }
   try {
     return JSON.parse(response.text) as AdapterResult;
   } catch {
@@ -118,15 +189,22 @@ async function typecheckViaEndpoint(
           source: "tsgo",
         },
       ],
-      provenance: {
-        compile: { host: hostFromUrl(request.endpoints.typecheck ?? ""), runtime: "tsgo" },
-      },
+      provenance: { compile: { host: hostFromUrl(url), runtime: "tsgo" } },
       timing: tracker.report(),
     };
   }
 }
 
 export async function typecheckWithTsgo(code: string, command = "tsgo"): Promise<Diagnostic[]> {
+  const [{ mkdtemp, rm, writeFile }, { tmpdir }, { join }, { execFile }, { promisify }] =
+    await Promise.all([
+      import("node:fs/promises"),
+      import("node:os"),
+      import("node:path"),
+      import("node:child_process"),
+      import("node:util"),
+    ]);
+  const execFileAsync = promisify(execFile);
   const dir = await mkdtemp(join(tmpdir(), "ox-code-play-"));
   const file = join(dir, "snippet.ts");
   await writeFile(file, code);
@@ -175,10 +253,6 @@ function commandOutput(error: unknown): string {
     .filter((part): part is string => typeof part === "string" && part.trim().length > 0)
     .join("\n")
     .trim();
-}
-
-function hasNodeVm(): boolean {
-  return typeof process !== "undefined" && Boolean(process.versions?.node);
 }
 
 function hostFromUrl(url: string): string {

@@ -69,8 +69,6 @@ function createBaseOptions(
     strikethrough: true,
     autolinks: options.autolinks,
     highlight: false,
-    highlightTheme: "github-dark",
-    highlightLangs: [],
     mermaid: false,
     ogImage: false,
     ogImageOptions: {

@@ -34,13 +34,17 @@
     "./plugin": {
       "import": "./dist/plugin.mjs",
       "types": "./dist/plugin.d.mts"
+    },
+    "./browser": {
+      "import": "./dist/browser.mjs",
+      "types": "./dist/browser.d.mts"
     }
   },
   "publishConfig": {
     "access": "public"
   },
   "scripts": {
-    "build": "vp pack",
+    "build": "vp pack && node scripts/bundle-browser.mjs",
     "dev": "vp pack --watch",
     "typecheck": "tsgo --noEmit",
     "test": "vp test src"

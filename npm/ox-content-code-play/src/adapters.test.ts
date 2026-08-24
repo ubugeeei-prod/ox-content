@@ -123,5 +123,8 @@ describe("language adapters", () => {
     expect(result.preview?.html).toContain("esm.sh/vue");
     expect(result.provenance.execute?.sandbox).toBe("srcdoc");
     expect(buildPreviewDocument("react", "console.log(1)").includes("esm.sh/react")).toBe(true);
+    const hostile = buildPreviewDocument("vue", "</script><script>steal()");
+    expect(hostile).toContain("<\\/script>");
+    expect(hostile).not.toContain("</script><script>steal()");
   });
 });

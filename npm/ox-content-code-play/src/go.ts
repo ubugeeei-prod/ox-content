@@ -35,6 +35,7 @@ export async function runGo(
     method: "POST",
     headers: { "Content-Type": "application/x-www-form-urlencoded" },
     body: params.toString(),
+    signal: request.signal,
   });
   tracker.start("collect", "Collect output");
 

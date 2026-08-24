@@ -35,6 +35,7 @@ export async function runRust(
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify(body),
+    signal: request.signal,
   });
   tracker.start("collect", "Collect output");
 

@@ -1,6 +1,8 @@
 import { executeAdapter, typecheckAdapter } from "./adapters";
 import { mergeConfig } from "./config";
+import { friendlyTransportMessage, errorResult } from "./result";
 import { withStdioText } from "./stdio";
+import { isAbortError } from "./transport";
 import type {
   AdapterRequest,
   CodePlayTransport,
@@ -38,6 +40,7 @@ export class CodePlaySession {
   private readonly endpoints: PlaygroundEndpoints;
   private readonly loadTypeScript?: () => Promise<TypeScriptLike | undefined>;
   private readonly listeners = new Map<SessionEventName, Set<Listener<unknown>>>();
+  private abort: AbortController | undefined;
 
   constructor(input: SessionConstructorInput) {
     this.language = input.definition;
@@ -74,7 +77,14 @@ export class CodePlaySession {
     return this.dispatch("typecheck");
   }
 
+  cancel(): void {
+    this.abort?.abort();
+  }
+
   private async dispatch(action: "execute" | "typecheck"): Promise<RunResult> {
+    this.abort?.abort();
+    this.abort = new AbortController();
+    const { signal } = this.abort;
     const request: AdapterRequest = {
       definition: this.language,
       enabled: this.enabled,
@@ -84,10 +94,22 @@ export class CodePlaySession {
       transport: this.transport,
       loadTypeScript: this.loadTypeScript,
       endpoints: this.endpoints,
+      signal,
     };
-    const result = withStdioText(
-      action === "typecheck" ? await typecheckAdapter(request) : await executeAdapter(request),
-    );
+    try {
+      const result = withStdioText(
+        action === "typecheck" ? await typecheckAdapter(request) : await executeAdapter(request),
+      );
+      return this.finish(result);
+    } catch (error) {
+      if (signal.aborted || isAbortError(error)) {
+        return this.finish(errorResult("Run cancelled.", "code-play", "cancelled"));
+      }
+      return this.finish(errorResult(friendlyTransportMessage(error)));
+    }
+  }
+
+  private finish(result: RunResult): RunResult {
     this.lastResult = result;
     for (const event of result.stdio) {
       this.emit("stdio", event);

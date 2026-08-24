@@ -140,6 +140,7 @@ export interface TransportRequest {
   method: "GET" | "POST";
   headers?: Record<string, string>;
   body?: string;
+  signal?: AbortSignal;
 }
 
 export interface TransportResponse {
@@ -227,6 +228,7 @@ export interface AdapterRequest {
   transport: CodePlayTransport;
   loadTypeScript?: () => Promise<TypeScriptLike | undefined>;
   endpoints: PlaygroundEndpoints;
+  signal?: AbortSignal;
 }
 
 export interface PlaygroundEndpoints {

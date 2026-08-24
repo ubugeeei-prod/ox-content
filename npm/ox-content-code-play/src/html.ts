@@ -1,6 +1,8 @@
-import { DEFAULT_VIEWERS } from "./config";
+import { resolveLanguage } from "./catalog";
+import { DEFAULT_ENDPOINTS, DEFAULT_VIEWERS } from "./config";
 import { decodeHtml, escapeAttribute } from "./escape";
-import type { PlayPayload } from "./types";
+import { payloadTypecheckEnabled } from "./payload-factory";
+import type { PlaygroundEndpoints, PlayPayload } from "./types";
 
 const COMMENT_PATTERN = /<!--ox-code-play:([A-Za-z0-9+/=]+)-->\s*(<pre\b[\s\S]*?<\/pre>)/gi;
 const CODEPLAY_TAG_PATTERN = /<CodePlay\b([^>]*)>([\s\S]*?)<\/CodePlay>/gi;
@@ -11,6 +13,7 @@ export interface HtmlEnhanceOptions {
   decodePayload: (value: string) => PlayPayload;
   encodePayload: (payload: PlayPayload) => string;
   matchFences?: Array<{ language: string; code: string; payload: string }>;
+  endpoints?: PlaygroundEndpoints;
 }
 
 export function enhancePlayHtml(html: string, options: HtmlEnhanceOptions): string {
@@ -47,7 +50,7 @@ export function enhanceGeneratedModule(source: string, options: HtmlEnhanceOptio
   return source.slice(0, jsonStart) + JSON.stringify(enhanced) + source.slice(parsed.end);
 }
 
-function wrapCommentedBlocks(html: string, options: HtmlEnhanceOptions): string {
+function wrapCommentedBlocks(html: string, _options: HtmlEnhanceOptions): string {
   return html.replace(COMMENT_PATTERN, (_all, payload: string, pre: string) => {
     return wrapWidget(payload, pre);
   });
@@ -60,14 +63,25 @@ function upgradeCodePlayTags(html: string, options: HtmlEnhanceOptions): string 
     }
     const language = readAttr(attrs, "lang") ?? readAttr(attrs, "language") ?? "text";
     const code = decodeHtml(body).replace(/^\n/, "").replace(/\n$/, "");
+    const definition = resolveLanguage(language);
+    const endpoints = options.endpoints ?? DEFAULT_ENDPOINTS;
     const payload = options.encodePayload({
-      language,
+      language: definition?.id ?? language,
       code,
-      capabilities: { execute: true, typecheck: /\btypecheck\b/i.test(attrs) },
+      capabilities: {
+        execute: true,
+        typecheck: payloadTypecheckEnabled(
+          /\btypecheck\b/i.test(attrs),
+          undefined,
+          definition,
+          endpoints,
+        ),
+      },
       config: {},
       viewers: { ...DEFAULT_VIEWERS },
       ui: "default",
       timeoutMs: 10_000,
+      endpoints,
     });
     return wrapWidget(
       payload,

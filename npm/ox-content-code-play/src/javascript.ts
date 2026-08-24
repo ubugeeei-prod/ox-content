@@ -1,5 +1,8 @@
+import { executeInSandboxIframe } from "./javascript-sandbox";
+import { hasNodeVm } from "./runtime-host";
 import { formatConsoleArgs, StdioBuffer } from "./stdio";
-import { nowMs, PhaseTracker } from "./timing";
+import { PhaseTracker } from "./timing";
+import { abortError, isAbortError } from "./transport";
 import type { AdapterRequest, AdapterResult, Diagnostic } from "./types";
 
 export async function runJavaScript(request: AdapterRequest): Promise<AdapterResult> {
@@ -9,13 +12,13 @@ export async function runJavaScript(request: AdapterRequest): Promise<AdapterRes
   const provenance = {
     execute: {
       host: "local",
-      runtime: hasNodeVm() ? "node:vm" : "function",
-      sandbox: hasNodeVm() ? "vm" : "function",
+      runtime: hasNodeVm() ? "node:vm" : "iframe",
+      sandbox: hasNodeVm() ? "vm" : "srcdoc",
     },
   };
 
   try {
-    const value = await executeScript(request.code, request.timeoutMs, stdio);
+    const value = await executeScript(request.code, request.timeoutMs, stdio, request.signal);
     tracker.stop();
     return {
       status: "ok",
@@ -26,6 +29,9 @@ export async function runJavaScript(request: AdapterRequest): Promise<AdapterRes
       value: value === undefined ? undefined : String(value),
     };
   } catch (error) {
+    if (isAbortError(error) || request.signal?.aborted) {
+      throw error;
+    }
     tracker.stop();
     const diagnostic = toDiagnostic(error);
     stdio.push("stderr", `${diagnostic.message}\n`);
@@ -43,6 +49,7 @@ export async function executeScript(
   code: string,
   timeoutMs: number,
   stdio: StdioBuffer,
+  signal?: AbortSignal,
 ): Promise<unknown> {
   const consoleLike = {
     log: (...args: unknown[]) => stdio.push("stdout", formatConsoleArgs(args)),
@@ -51,25 +58,28 @@ export async function executeScript(
     error: (...args: unknown[]) => stdio.push("stderr", formatConsoleArgs(args)),
   };
 
-  if (hasNodeVm()) {
+  if (signal?.aborted) {
+    throw abortError();
+  }
+
+  const runtime = javascriptExecuteRuntime(hasNodeVm(), typeof document !== "undefined");
+  if (runtime === "vm") {
     const vm = await import("node:vm");
     const context = vm.createContext({ console: consoleLike });
     return vm.runInContext(code, context, { timeout: timeoutMs, displayErrors: true });
   }
 
-  const started = nowMs();
-  const run = new Function("console", `"use strict";\n${code}`);
-  const value = run(consoleLike);
-  if (nowMs() - started > timeoutMs) {
-    throw Object.assign(new Error("JavaScript execution timed out."), {
-      code: "ERR_SCRIPT_EXECUTION_TIMEOUT",
-    });
-  }
-  return value;
+  return executeInSandboxIframe(code, timeoutMs, stdio, signal);
 }
 
-function hasNodeVm(): boolean {
-  return typeof process !== "undefined" && Boolean(process.versions?.node);
+export function javascriptExecuteRuntime(hasVm: boolean, hasDocument: boolean): "vm" | "iframe" {
+  if (hasVm) {
+    return "vm";
+  }
+  if (hasDocument) {
+    return "iframe";
+  }
+  throw new Error("JavaScript execute needs node:vm or a document for the sandbox iframe.");
 }
 
 function isTimeout(error: unknown): boolean {

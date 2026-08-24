@@ -56,22 +56,23 @@ injected transports (no live network in CI).
 
 ### 1b. `feat(code-play): dedicated stderr viewer`
 
-This PR. First-class `RunResult.stdout` / `RunResult.stderr`, a dedicated
-stderr viewer (stream chunks plus error/warning diagnostics), and compact
-preset coverage for stderr.
+Shipped in #662. First-class `RunResult.stdout` / `RunResult.stderr`, a
+dedicated stderr viewer, and compact preset coverage for stderr.
 
 ### 2. `feat(code-play): Vite SSG hydration and docs dogfood`
 
-Harden page-level script emission for ox-content SSG (dev middleware + written
-HTML), enable JavaScript / TypeScript widgets on the docs example page, and
-add a visual check for the default preset.
+Docs example page, package guide, and `examples/code-play` shipped in #697.
+Standalone `ox-code-play.js` + `bootCodePlay()` shipped in #703. This PR
+adds a Playwright check that written SSG HTML hydrates and **Run** prints
+stdio, `session.cancel()` plus a toolbar **Cancel** control, and hides
+TypeScript **Typecheck** on published pages unless `endpoints.typecheck` is
+set.
 
 ### 3. `feat(code-play): official playground proxies`
 
-This PR. Keep the `/__ox-code-play/rust`, `/__ox-code-play/go`, and
-`/__ox-code-play/typecheck` dev proxies. Reject non-POST requests, oversize
-bodies, and non-http(s) destinations; return generic JSON errors; document
-production `endpoints`.
+Shipped in #663. Dev proxies stay POST-only, cap bodies, refuse non-http(s)
+destinations, and hide upstream fetch details. Production pages must set
+`endpoints` (the proxy is not in SSG output).
 
 ### 4. `feat(code-play): framework preview compilers`
 
@@ -85,8 +86,9 @@ each runtime is its own language enable flag.
 
 ### 6. `docs(code-play): security and privacy notes`
 
-Document third-party playgrounds, endpoint trust, iframe sandbox flags, and
-the "no local shell" guarantee in SECURITY.md and the package guide.
+This PR. Trusted `play` fences, iframe `sandbox="allow-scripts"`, third-party
+playgrounds, endpoint trust, production typecheck / CORS, and the "no local
+shell" guarantee in SECURITY.md and the package guide.
 
 ## Out of Scope
 

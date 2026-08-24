@@ -25,8 +25,6 @@ function createResolvedOptions(): ResolvedOptions {
     strikethrough: true,
     autolinks: true,
     highlight: true,
-    highlightTheme: "vitesse-dark",
-    highlightLangs: [],
     codeAnnotations: {
       enabled: true,
       notation: "vitepress",
