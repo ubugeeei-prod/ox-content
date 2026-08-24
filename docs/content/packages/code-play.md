@@ -107,8 +107,9 @@ session.config; // editable language config
 
 `createCodePlay()` throws if you ask for a language that is not enabled.
 `session.setConfig({ strict: false })` updates the same object the config
-viewer edits. Inject `transport` (for example `createMemoryTransport`) in tests
-so CI never hits a live playground.
+viewer edits. `session.cancel()` aborts an in-flight remote / typecheck
+request and returns `status: "cancelled"`. Inject `transport` (for example
+`createMemoryTransport`) in tests so CI never hits a live playground.
 
 | Field             | Meaning                                                  |
 | ----------------- | -------------------------------------------------------- |
@@ -166,15 +167,31 @@ The proxy is not installed in production SSG output. Set `endpoints` to the
 official playgrounds (or your own HTTPS executor) for published pages, or
 `proxy: false` if you do not want the dev middleware.
 
+Static hosts do not serve `POST /__ox-code-play/typecheck`. TypeScript
+**Run** still works in the browser (strip types, then a sandboxed iframe).
+**Typecheck** on a published page needs a reachable `endpoints.typecheck`.
+
+Rust and Go on a published page call `endpoints.rust` / `endpoints.go`
+directly from the browser. Official playgrounds may reject that as CORS;
+keep the Vite proxy for local docs, or point `endpoints` at an executor you
+control.
+
 ## Security
+
+`play` fences are **trusted site content**. Do not mark visitor-supplied or
+unreviewed snippets as `play`.
 
 - Samples are not executed during Markdown transform or SSG.
 - JavaScript and TypeScript execute in `node:vm` on Node, or in
   `<iframe sandbox="allow-scripts">` in the browser (no `allow-same-origin`).
+- Vue / React / Svelte / Solid previews use the same iframe flags and load
+  runtimes from `esm.sh`.
 - `sh` never spawns a local shell.
 - Enabling Rust or Go sends source to `play.rust-lang.org` /
-  `play.golang.org` (or your `endpoints` override).
-- A configured remote endpoint receives source for that language.
+  `play.golang.org` (or your `endpoints` override). Their privacy policy
+  applies.
+- A configured remote endpoint receives source for that language. Only set
+  HTTPS endpoints you trust, without embedded credentials.
 
 ## First publish
 

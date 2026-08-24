@@ -68,11 +68,16 @@ run.timing;
 
 ## Security
 
+`play` fences are trusted site content. Do not mark unreviewed or
+visitor-supplied snippets as `play`.
+
 - No sample is executed during Markdown transform or SSG.
 - JavaScript and TypeScript run in `node:vm` on Node, or in
-  `<iframe sandbox="allow-scripts">` in the browser.
-- Rust and Go use the official playgrounds (or the Vite dev proxy).
-- Other languages need a Piston-compatible `endpoint` you configure.
+  `<iframe sandbox="allow-scripts">` in the browser (no `allow-same-origin`).
+- Framework previews use the same iframe flags and load runtimes from esm.sh.
+- Rust and Go POST source to the official playgrounds (or your `endpoints`).
+  The Vite `/__ox-code-play/*` proxy is **dev-only**.
+- Other languages need a Piston-compatible `endpoint` you trust.
 - `sh` never spawns a local shell.
 
 ## Example

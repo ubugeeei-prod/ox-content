@@ -99,6 +99,32 @@ describe("createCodePlay", () => {
     expect(result.diagnostics[0]?.message.length).toBeGreaterThan(0);
   });
 
+  it("cancels an in-flight remote run without rejecting the session", async () => {
+    const transport = createMemoryTransport(async (request) => {
+      await new Promise<never>((_, reject) => {
+        const fail = () =>
+          reject(
+            Object.assign(new Error("The Code Play run was cancelled."), { name: "AbortError" }),
+          );
+        if (request.signal?.aborted) {
+          fail();
+          return;
+        }
+        request.signal?.addEventListener("abort", fail, { once: true });
+      });
+      return { ok: true, status: 200, text: "{}" };
+    });
+    const session = createCodePlay({ languages: { rust: true }, transport }).createSession({
+      language: "rust",
+      code: "fn main() {}",
+    });
+    const pending = session.run();
+    session.cancel();
+    const result = await pending;
+    expect(result.status).toBe("cancelled");
+    expect(result.diagnostics[0]?.message).toMatch(/cancelled/i);
+  });
+
   it("turns transport throws into error results instead of rejecting", async () => {
     const play = createCodePlay({
       languages: { rust: true },

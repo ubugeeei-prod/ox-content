@@ -17,7 +17,7 @@ export async function runJavaScript(request: AdapterRequest): Promise<AdapterRes
   };
 
   try {
-    const value = await executeScript(request.code, request.timeoutMs, stdio);
+    const value = await executeScript(request.code, request.timeoutMs, stdio, request.signal);
     tracker.stop();
     return {
       status: "ok",
@@ -45,6 +45,7 @@ export async function executeScript(
   code: string,
   timeoutMs: number,
   stdio: StdioBuffer,
+  signal?: AbortSignal,
 ): Promise<unknown> {
   const consoleLike = {
     log: (...args: unknown[]) => stdio.push("stdout", formatConsoleArgs(args)),
@@ -60,7 +61,7 @@ export async function executeScript(
   }
 
   if (typeof document !== "undefined") {
-    return executeInSandboxIframe(code, timeoutMs, stdio);
+    return executeInSandboxIframe(code, timeoutMs, stdio, signal);
   }
 
   const started = nowMs();

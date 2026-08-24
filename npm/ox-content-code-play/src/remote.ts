@@ -44,6 +44,7 @@ export async function runRemote(request: AdapterRequest): Promise<AdapterResult>
       version: request.config.version ?? request.definition.remote?.pistonVersion ?? "*",
       files: [{ content: request.code }],
     }),
+    signal: request.signal,
   });
   tracker.start("collect", "Collect output");
 

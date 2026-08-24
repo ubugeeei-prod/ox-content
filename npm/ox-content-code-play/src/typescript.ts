@@ -54,7 +54,7 @@ export async function runTypeScript(request: AdapterRequest): Promise<AdapterRes
   const javascript = stripTypeScript(request.code);
   tracker.start("execute", "Execute");
   try {
-    const value = await executeScript(javascript, request.timeoutMs, stdio);
+    const value = await executeScript(javascript, request.timeoutMs, stdio, request.signal);
     tracker.stop();
     return {
       status: "ok",
@@ -102,6 +102,7 @@ async function typecheckViaEndpoint(
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({ language: "typescript", code: request.code, config: request.config }),
+    signal: request.signal,
   });
   tracker.stop();
   return adapterResultFromTypecheckResponse(response, url, tracker);

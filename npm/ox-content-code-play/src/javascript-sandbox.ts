@@ -1,4 +1,5 @@
 import type { StdioBuffer } from "./stdio";
+import { abortError } from "./transport";
 
 export const JS_SANDBOX_FLAGS = "allow-scripts";
 
@@ -64,9 +65,13 @@ export async function executeInSandboxIframe(
   code: string,
   timeoutMs: number,
   stdio: StdioBuffer,
+  signal?: AbortSignal,
 ): Promise<unknown> {
   if (typeof document === "undefined" || typeof window === "undefined") {
     throw new Error("JavaScript sandbox iframe needs a document.");
+  }
+  if (signal?.aborted) {
+    throw abortError();
   }
   const messageId = `ox-code-play-${Math.random().toString(36).slice(2)}`;
   return new Promise((resolve, reject) => {
@@ -77,7 +82,12 @@ export async function executeInSandboxIframe(
     const cleanup = () => {
       window.clearTimeout(timer);
       window.removeEventListener("message", onMessage);
+      signal?.removeEventListener("abort", onAbort);
       frame.remove();
+    };
+    const onAbort = () => {
+      cleanup();
+      reject(abortError());
     };
     const onMessage = (event: MessageEvent<SandboxMessage>) => {
       if (event.source !== frame.contentWindow || event.data?.id !== messageId) {
@@ -100,6 +110,7 @@ export async function executeInSandboxIframe(
       );
     }, timeoutMs);
     window.addEventListener("message", onMessage);
+    signal?.addEventListener("abort", onAbort, { once: true });
     frame.srcdoc = buildJavaScriptSandboxDocument(code, messageId);
     document.body.append(frame);
   });

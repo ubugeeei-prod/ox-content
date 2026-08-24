@@ -62,10 +62,9 @@ dedicated stderr viewer, and compact preset coverage for stderr.
 ### 2. `feat(code-play): Vite SSG hydration and docs dogfood`
 
 Docs example page, package guide, and `examples/code-play` shipped in #697.
-This PR emits a standalone `ox-code-play.js` that calls `bootCodePlay()` so
-SSG pages become interactive. One malformed widget or a thrown run no longer
-freezes the toolbar. Remaining: a visual check that the default preset
-hydrates on the written SSG HTML in CI.
+Standalone `ox-code-play.js` + `bootCodePlay()` shipped in #703. This PR
+adds a Playwright check that written SSG HTML hydrates and **Run** prints
+stdio, plus `session.cancel()`.
 
 ### 3. `feat(code-play): official playground proxies`
 
@@ -85,8 +84,9 @@ each runtime is its own language enable flag.
 
 ### 6. `docs(code-play): security and privacy notes`
 
-Document third-party playgrounds, endpoint trust, iframe sandbox flags, and
-the "no local shell" guarantee in SECURITY.md and the package guide.
+This PR. Trusted `play` fences, iframe `sandbox="allow-scripts"`, third-party
+playgrounds, endpoint trust, production typecheck / CORS, and the "no local
+shell" guarantee in SECURITY.md and the package guide.
 
 ## Out of Scope
 
