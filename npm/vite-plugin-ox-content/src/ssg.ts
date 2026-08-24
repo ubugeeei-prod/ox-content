@@ -41,6 +41,8 @@ import {
   resolveNotFoundOutputPath,
   resolveNotFoundSourcePath,
 } from "./not-found";
+import { buildCollectionManifest } from "./collections";
+import { writeFeedFiles } from "./feeds";
 
 /**
  * Navigation item for SSG.
@@ -1316,6 +1318,24 @@ async function writeGeneratedPages(
     })),
   });
   generatedFiles.push(...redirects.files);
+
+  const feeds = await writeFeedFiles({
+    outDir: context.outDir,
+    siteUrl: context.ssgOptions.siteUrl,
+    base: context.base,
+    siteName: context.siteName,
+    options: context.options.feeds,
+    publishState: context.options.publishState,
+    collectionNames: Object.keys(context.options.collections?.collections ?? {}),
+    collections: context.options.feeds?.enabled
+      ? (await buildCollectionManifest(context.root, context.options)).collections
+      : undefined,
+  });
+  generatedFiles.push(...feeds.files);
+  if (feeds.warning) {
+    errors.push(feeds.warning);
+    console.warn(feeds.warning);
+  }
 }
 
 /** Turns an SSG `urlPath` (`guide` or `/`) into a same-origin dest (`/guide`). */

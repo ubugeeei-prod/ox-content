@@ -45,6 +45,7 @@ inline**.
 | [Permalinks and Cascade](./built-in/permalinks.md)     | Opt-in frontmatter URLs and directory-level default frontmatter           |
 | [Redirects and aliases](./built-in/redirects.md)       | Opt-in static HTML redirects from aliases and a rewrite map               |
 | [Custom 404](./built-in/not-found.md)                  | Opt-in themed 404 page with nav and search                                |
+| [RSS / Atom / JSON feeds](./built-in/feeds.md)         | Opt-in collection feeds written next to generated HTML                    |
 
 ## Default vs Opt-in
 
@@ -80,6 +81,7 @@ inline**.
 | Frontmatter tree | `cascade`                                                                                                     | `false`              | [Permalinks and Cascade](./built-in/permalinks.md)     |
 | Redirects        | `redirects`                                                                                                   | `false`              | [Redirects and aliases](./built-in/redirects.md)       |
 | Custom 404       | `ssg.notFound`                                                                                                | `false`              | [Custom 404](./built-in/not-found.md)                  |
+| Collection feeds | `feeds`                                                                                                       | `false`              | [RSS / Atom / JSON feeds](./built-in/feeds.md)         |
 | Code checks      | `codeBlockLint`, `codeBlockTypecheck`, `docsTests`                                                            | `false`              | [Quality Checks](./built-in/quality-checks.md)         |
 | Custom pipeline  | `transformers`                                                                                                | `[]`                 | [Site Generation](./built-in/site-generation.md)       |
 

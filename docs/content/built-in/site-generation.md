@@ -298,6 +298,7 @@ array order.
 - [Reader Chrome](./reader-chrome.md) — opt-in copy, outbound icons, and back-to-top.
 - [Sitemap / robots / llms.txt](./site-maps.md) — opt-in crawl manifests.
 - [Redirects and aliases](./redirects.md) — opt-in static HTML redirects.
+- [RSS / Atom / JSON feeds](./feeds.md) — opt-in collection feeds.
 - [Theming](../theming.md) — the theme system used by SSG.
 - [API Docs from JSDoc](../jsdoc.md) — the full `docs` option reference.
 - [Internationalization](../i18n.md) — locale-aware sites on top of SSG.

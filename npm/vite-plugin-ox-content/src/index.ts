@@ -17,6 +17,7 @@ import { resolvePublishStateOptions } from "./publish-state";
 import { resolveCascadeOptions, resolvePermalinksOptions } from "./permalinks";
 import { resolveRedirectsOptions } from "./redirects";
 import { notFoundSearchExcludeIds } from "./not-found";
+import { resolveFeedsOptions } from "./feeds";
 import {
   resolveSearchOptions,
   buildSearchIndex,
@@ -106,6 +107,9 @@ export type {
   ResolvedCascadeOptions,
   RedirectsOptions,
   ResolvedRedirectsOptions,
+  FeedFormat,
+  FeedsOptions,
+  ResolvedFeedsOptions,
   SearchOptions,
   ResolvedSearchOptions,
   SearchDocument,
@@ -604,6 +608,7 @@ function resolveOptions(options: OxContentOptions): ResolvedOptions {
     permalinks: resolvePermalinksOptions(options.permalinks),
     cascade: resolveCascadeOptions(options.cascade),
     redirects: resolveRedirectsOptions(options.redirects),
+    feeds: resolveFeedsOptions(options.feeds),
     gfm: options.gfm ?? true,
     footnotes: options.footnotes ?? true,
     tables: options.tables ?? true,
@@ -1017,6 +1022,7 @@ export {
 } from "./publish-state";
 export { resolvePermalinksOptions, resolveCascadeOptions } from "./permalinks";
 export { resolveRedirectsOptions } from "./redirects";
+export { resolveFeedsOptions } from "./feeds";
 export { resolveSearchOptions, buildSearchIndex, writeSearchIndex } from "./search";
 export {
   buildCollectionManifest,

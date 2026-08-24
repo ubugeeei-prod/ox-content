@@ -48,6 +48,14 @@ export const apiNav: NavItem[] = [
     "path": "/api/fallback-card"
   },
   {
+    "title": "Feed Format",
+    "path": "/api/feed-format"
+  },
+  {
+    "title": "Feeds",
+    "path": "/api/feeds"
+  },
+  {
     "title": "Highlight",
     "path": "/api/highlight"
   },

@@ -42,10 +42,11 @@ export default defineConfig(({ mode }) => {
         // Enable per-page OG image generation (Chromium-based)
         ogImage: true,
 
-        // Crawl manifests. siteUrl is set above, so these files are safe to
-        // write for the deployed docs site.
+        // Crawl manifests and collection feeds. siteUrl is set above, so
+        // these files are safe to write for the deployed docs site.
         siteMaps: true,
         publishState: true,
+        feeds: true,
 
         // Static HTML redirects. Safe: only aliases/map entries emit files,
         // and destinations stay same-origin unless allowExternal is set.
@@ -122,6 +123,7 @@ export default defineConfig(({ mode }) => {
                       { text: "Permalinks and Cascade", link: "/built-in/permalinks.md" },
                       { text: "Redirects and aliases", link: "/built-in/redirects.md" },
                       { text: "Custom 404", link: "/built-in/not-found.md" },
+                      { text: "RSS / Atom / JSON feeds", link: "/built-in/feeds.md" },
                     ],
                   },
                   { text: "Theming", link: "/theming.md" },

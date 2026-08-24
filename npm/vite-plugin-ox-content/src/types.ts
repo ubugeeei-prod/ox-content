@@ -616,6 +616,51 @@ export interface ResolvedRedirectsOptions {
 }
 
 /**
+ * Feed file formats written during SSG.
+ */
+export type FeedFormat = "rss" | "atom" | "json";
+
+/**
+ * Opt-in RSS / Atom / JSON Feed files written during SSG.
+ */
+export interface FeedsOptions {
+  /**
+   * Feed formats to write.
+   * @default ["rss", "atom", "json"]
+   */
+  formats?: FeedFormat[];
+
+  /**
+   * Named collection to publish. Defaults to `content`, or the first
+   * configured collection when `content` is absent.
+   */
+  collection?: string;
+
+  /**
+   * Maximum number of published items, newest first.
+   * @default 20
+   */
+  limit?: number;
+
+  /**
+   * Site-relative directory for the generated files.
+   * @default "/"
+   */
+  path?: string;
+}
+
+/**
+ * Resolved feed options.
+ */
+export interface ResolvedFeedsOptions {
+  enabled: boolean;
+  formats: FeedFormat[];
+  collection?: string;
+  limit: number;
+  path: string;
+}
+
+/**
  * Options for the core `oxContent()` Vite plugin.
  *
  * The top-level options describe where content lives, which Markdown features
@@ -739,6 +784,19 @@ export interface OxContentOptions {
    * @default false
    */
   redirects?: boolean | RedirectsOptions | Record<string, string>;
+
+  /**
+   * Write RSS, Atom, and/or JSON Feed files from a named collection.
+   *
+   * Off by default. `true` writes all three formats from the `content`
+   * collection (or the first configured collection) with a 20-item limit.
+   * An object enables the feature and overrides only the fields you set.
+   * Requires `ssg.siteUrl`. When that is missing the build continues and a
+   * warning is emitted instead of writing files.
+   *
+   * @default false
+   */
+  feeds?: boolean | FeedsOptions;
 
   /**
    * Enable GitHub Flavored Markdown extensions.
@@ -1099,6 +1157,7 @@ export interface ResolvedOptions {
   permalinks?: ResolvedPermalinksOptions;
   cascade?: ResolvedCascadeOptions;
   redirects?: ResolvedRedirectsOptions;
+  feeds?: ResolvedFeedsOptions;
   gfm: boolean;
   footnotes: boolean;
   tables: boolean;
