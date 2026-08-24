@@ -74,8 +74,7 @@
 <h4>Examples</h4>
 <div class="ox-api-entry__example">
 <div class="ox-api-entry__example-heading">Example 1</div>
-<pre><code class="language-typescript">import { extractDocs, generateMarkdown, writeDocs } from &#39;./docs&#39;;
-
+<pre><code class="language-typescript">import { extractDocs, generateMarkdown, writeDocs } from &#39;./docs&#39;;&#10;
 const docsOptions = {
   enabled: true,
   src: [&#39;./src&#39;],
@@ -84,8 +83,7 @@ const docsOptions = {
   exclude: [&#39;**\/*.test.ts&#39;],
   groupBy: &#39;file&#39;,
   githubUrl: &#39;https://github.com/user/project&#39;,
-};
-
+};&#10;
 const extracted = await extractDocs([&#39;./src&#39;], docsOptions);
 const markdown = generateMarkdown(extracted, docsOptions);
 await writeDocs(markdown, &#39;./docs/api&#39;, extracted, docsOptions);</code></pre>
@@ -204,8 +202,7 @@ await writeDocs(markdown, &#39;./docs/api&#39;, extracted, docsOptions);</code><
     groupBy: &#39;file&#39;,
     generateNav: true,
   }
-);
-
+);&#10;
 // Returns:
 // [
 //   {
