@@ -1,7 +1,4 @@
-use super::{
-    ParsedOpener, ResolvedContainerOptions, ResolvedContainerType, parse_closer, parse_opener,
-    resolve, transform,
-};
+use super::{ResolvedContainerOptions, ResolvedContainerType, resolve, transform};
 use crate::transformer::MarkdownTransformer;
 use crate::{ContainerOptions, ContainerTypeOptions, TransformOptions};
 use rustc_hash::FxHashMap;
@@ -51,68 +48,6 @@ fn resolve_rejects_hostile_custom_type_names() {
         .expect("resolved");
     assert!(!resolved.types.contains_key(r#"tip" onclick="alert(1)"#));
     assert!(resolved.types.contains_key("ok_type"));
-}
-
-#[test]
-fn parse_opener_reads_type_bracket_title_and_attrs() {
-    let parsed = parse_opener("::: tip[Did you know?]{.lead #install open}").unwrap();
-    assert_eq!(
-        parsed,
-        ParsedOpener {
-            name: "tip".into(),
-            title: Some("Did you know?".into()),
-            attrs: vec![
-                ("class".into(), Some("lead".into())),
-                ("id".into(), Some("install".into())),
-                ("open".into(), None),
-            ],
-            colon_count: 3,
-        }
-    );
-}
-
-#[test]
-fn parse_opener_reads_trailing_title_without_brackets() {
-    let parsed = parse_opener("::: warning Watch out").unwrap();
-    assert_eq!(parsed.name, "warning");
-    assert_eq!(parsed.title.as_deref(), Some("Watch out"));
-}
-
-#[test]
-fn parse_opener_is_case_insensitive() {
-    assert_eq!(parse_opener("::: TIP").unwrap().name, "tip");
-    assert_eq!(parse_opener("::: Warning").unwrap().name, "warning");
-}
-
-#[test]
-fn parse_opener_rejects_fewer_than_three_colons() {
-    assert!(parse_opener(":: tip").is_none());
-    assert!(parse_opener(": tip").is_none());
-    assert!(parse_opener("tip").is_none());
-}
-
-#[test]
-fn parse_opener_rejects_empty_or_hostile_type_names() {
-    assert!(parse_opener(":::").is_none());
-    assert!(parse_opener(":::   ").is_none());
-    assert!(parse_opener(r#"::: tip"onclick=alert(1)"#).is_none());
-    assert!(parse_opener("::: tip<script>").is_none());
-}
-
-#[test]
-fn parse_opener_allows_four_colons_for_nesting() {
-    let parsed = parse_opener(":::: note").unwrap();
-    assert_eq!(parsed.colon_count, 4);
-    assert_eq!(parsed.name, "note");
-}
-
-#[test]
-fn parse_closer_requires_only_colons() {
-    assert_eq!(parse_closer(":::"), Some(3));
-    assert_eq!(parse_closer("::::"), Some(4));
-    assert_eq!(parse_closer(":::   "), Some(3));
-    assert!(parse_closer("::: tip").is_none());
-    assert!(parse_closer("::").is_none());
 }
 
 #[test]

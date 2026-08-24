@@ -7,6 +7,12 @@ use rustc_hash::FxHashMap;
 
 use crate::ContainerOptions;
 
+mod parse;
+#[cfg(test)]
+mod tests;
+
+use parse::{ParsedOpener, normalize_type_name, parse_closer, parse_opener};
+
 const BUILTIN_TYPES: &[(&str, ContainerKind)] = &[
     ("tip", ContainerKind::Div),
     ("note", ContainerKind::Div),
@@ -34,14 +40,6 @@ pub(super) struct ResolvedContainerType {
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub(super) struct ResolvedContainerOptions {
     pub(super) types: FxHashMap<String, ResolvedContainerType>,
-}
-
-#[derive(Clone, Debug, PartialEq, Eq)]
-pub(super) struct ParsedOpener {
-    pub(super) name: String,
-    pub(super) title: Option<String>,
-    pub(super) attrs: Vec<(String, Option<String>)>,
-    pub(super) colon_count: usize,
 }
 
 pub(super) fn resolve(options: Option<&ContainerOptions>) -> Option<ResolvedContainerOptions> {
@@ -174,17 +172,6 @@ fn default_title(name: &str) -> String {
     }
 }
 
-fn normalize_type_name(name: &str) -> Option<String> {
-    let trimmed = name.trim();
-    if trimmed.is_empty() {
-        return None;
-    }
-    if !trimmed.bytes().all(|byte| byte.is_ascii_alphanumeric() || byte == b'-' || byte == b'_') {
-        return None;
-    }
-    Some(trimmed.to_ascii_lowercase())
-}
-
 fn split_ending(line_with_end: &str) -> (&str, &str) {
     if let Some(line) = line_with_end.strip_suffix("\r\n") {
         (line, "\n")
@@ -221,92 +208,6 @@ fn is_closing_fence(line: &str, fence_char: u8, fence_len: usize) -> bool {
     let close_len = bytes.iter().take_while(|byte| **byte == fence_char).count();
     close_len >= fence_len
         && bytes.get(close_len..).is_none_or(|rest| rest.iter().all(u8::is_ascii_whitespace))
-}
-
-pub(super) fn parse_opener(line: &str) -> Option<ParsedOpener> {
-    let colon_count = line.bytes().take_while(|byte| *byte == b':').count();
-    if colon_count < 3 {
-        return None;
-    }
-    let rest = line[colon_count..].trim_start();
-    if rest.is_empty() {
-        return None;
-    }
-
-    let (name_part, after_name) = split_name(rest)?;
-    let name = normalize_type_name(name_part)?;
-
-    let mut title = None;
-    let mut attrs = Vec::new();
-    let mut cursor = after_name.trim_start();
-
-    if let Some(inner) = cursor.strip_prefix('[') {
-        let end = inner.find(']')?;
-        let value = inner[..end].trim();
-        if !value.is_empty() {
-            title = Some(value.to_string());
-        }
-        cursor = inner[end + 1..].trim_start();
-    }
-
-    if let Some(inner) = cursor.strip_prefix('{') {
-        let end = inner.find('}')?;
-        attrs = parse_attrs(&inner[..end]);
-        cursor = inner[end + 1..].trim_start();
-    }
-
-    if title.is_none() && !cursor.is_empty() && !cursor.starts_with('{') {
-        title = Some(cursor.trim().to_string());
-    }
-
-    Some(ParsedOpener { name, title, attrs, colon_count })
-}
-
-fn split_name(rest: &str) -> Option<(&str, &str)> {
-    let end = rest
-        .find(|ch: char| ch.is_ascii_whitespace() || ch == '[' || ch == '{')
-        .unwrap_or(rest.len());
-    let name = &rest[..end];
-    (!name.is_empty()).then_some((name, &rest[end..]))
-}
-
-fn parse_attrs(raw: &str) -> Vec<(String, Option<String>)> {
-    let mut attrs = Vec::new();
-    for token in raw.split_whitespace() {
-        if let Some(class) = token.strip_prefix('.') {
-            if is_safe_ident(class) {
-                attrs.push(("class".to_string(), Some(class.to_string())));
-            }
-        } else if let Some(id) = token.strip_prefix('#') {
-            if is_safe_ident(id) {
-                attrs.push(("id".to_string(), Some(id.to_string())));
-            }
-        } else if let Some((key, value)) = token.split_once('=') {
-            if is_safe_ident(key) && is_safe_attr_value(value.trim_matches(['"', '\''])) {
-                attrs.push((key.to_string(), Some(value.trim_matches(['"', '\'']).to_string())));
-            }
-        } else if is_safe_ident(token) {
-            attrs.push((token.to_string(), None));
-        }
-    }
-    attrs
-}
-
-fn is_safe_ident(value: &str) -> bool {
-    !value.is_empty()
-        && value.bytes().all(|byte| byte.is_ascii_alphanumeric() || byte == b'-' || byte == b'_')
-}
-
-fn is_safe_attr_value(value: &str) -> bool {
-    !value.bytes().any(|byte| matches!(byte, b'<' | b'>' | b'"' | b'\'' | b'`' | b'=' | b'\n'))
-}
-
-pub(super) fn parse_closer(line: &str) -> Option<usize> {
-    let colon_count = line.bytes().take_while(|byte| *byte == b':').count();
-    if colon_count < 3 {
-        return None;
-    }
-    line[colon_count..].bytes().all(|byte| byte.is_ascii_whitespace()).then_some(colon_count)
 }
 
 fn emit_open(out: &mut String, spec: &ResolvedContainerType, opener: &ParsedOpener) {
@@ -380,6 +281,3 @@ fn escape_html(value: &str, out: &mut String) {
         }
     }
 }
-
-#[cfg(test)]
-mod tests;
