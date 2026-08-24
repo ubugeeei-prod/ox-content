@@ -190,6 +190,10 @@ pub struct JsSsgConfig {
     pub breadcrumbs: Option<bool>,
     /// Opt-in copy, external-link, and back-to-top chrome.
     pub reader_chrome: Option<JsReaderChrome>,
+    /// Opt-in header locale switcher.
+    pub locale_switcher: Option<bool>,
+    /// Existing sibling hrefs and locale roots.
+    pub locale_paths: Option<Vec<JsLocalePath>>,
 }
 
 /// Opt-in reader chrome flags. Presence of the object enables the feature.
@@ -214,4 +218,16 @@ pub struct JsLocaleInfo {
     pub name: String,
     /// Text direction.
     pub dir: String,
+}
+
+/// Sibling page or locale-root href for one locale.
+#[napi(object)]
+#[derive(Clone)]
+pub struct JsLocalePath {
+    /// BCP 47 locale tag.
+    pub code: String,
+    /// Href of the same page in this locale, when that translation exists.
+    pub href: Option<String>,
+    /// Locale home href used when `href` is missing.
+    pub root: Option<String>,
 }

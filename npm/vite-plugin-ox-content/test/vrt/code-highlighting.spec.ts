@@ -20,6 +20,7 @@ function createResolvedOptions(): ResolvedOptions {
       pagination: false,
       breadcrumbs: false,
       readerChrome: false,
+      localeSwitcher: false,
     },
     gfm: true,
     footnotes: true,

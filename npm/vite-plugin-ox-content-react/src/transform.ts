@@ -86,6 +86,7 @@ export async function transformMarkdownWithReact(
       pagination: false,
       breadcrumbs: false,
       readerChrome: false,
+      localeSwitcher: false,
     },
     gfm: options.gfm,
     frontmatter: false,

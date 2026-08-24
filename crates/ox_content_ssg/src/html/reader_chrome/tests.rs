@@ -29,6 +29,8 @@ fn config(reader_chrome: ReaderChrome) -> SsgConfig {
         pagination: false,
         breadcrumbs: false,
         reader_chrome,
+        locale_switcher: false,
+        locale_paths: vec![],
     }
 }
 

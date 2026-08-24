@@ -192,6 +192,12 @@ pub struct SsgConfig {
     /// Opt-in copy, external-link, and back-to-top chrome. Off by default.
     #[serde(default)]
     pub reader_chrome: ReaderChrome,
+    /// Opt-in header locale switcher. Off unless explicitly enabled.
+    #[serde(default)]
+    pub locale_switcher: bool,
+    /// Existing sibling hrefs and locale roots, keyed by locale code.
+    #[serde(default)]
+    pub locale_paths: Vec<LocalePath>,
 }
 
 /// Locale information for the locale switcher.
@@ -203,4 +209,17 @@ pub struct LocaleInfo {
     pub name: String,
     /// Text direction.
     pub dir: String,
+}
+
+/// Sibling page or locale-root href for one locale in the switcher.
+#[derive(Debug, Clone, Default, Serialize, Deserialize)]
+pub struct LocalePath {
+    /// BCP 47 locale tag matching [`LocaleInfo::code`].
+    pub code: String,
+    /// Href of the same page in this locale, when that translation exists.
+    #[serde(default)]
+    pub href: Option<String>,
+    /// Locale home href used when `href` is missing.
+    #[serde(default)]
+    pub root: Option<String>,
 }

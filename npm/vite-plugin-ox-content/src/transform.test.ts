@@ -268,6 +268,7 @@ function createResolvedOptions(overrides: Partial<ResolvedOptions> = {}): Resolv
       pagination: false,
       breadcrumbs: false,
       readerChrome: false,
+      localeSwitcher: false,
     },
     gfm: true,
     footnotes: true,

@@ -39,6 +39,8 @@ fn test_generate_html_with_theme() {
         pagination: false,
         breadcrumbs: false,
         reader_chrome: ReaderChrome::default(),
+        locale_switcher: false,
+        locale_paths: vec![],
     };
 
     let html = generate_html(&page_data, &nav_groups, &config);
@@ -69,6 +71,8 @@ fn test_generate_html_with_custom_social_link() {
         pagination: false,
         breadcrumbs: false,
         reader_chrome: ReaderChrome::default(),
+        locale_switcher: false,
+        locale_paths: vec![],
         theme: Some(ThemeConfig {
             social_links: Some(SocialLinks {
                 links: Some(vec![SocialLink {

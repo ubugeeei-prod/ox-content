@@ -251,6 +251,29 @@ a:hover {
   align-items: center;
   gap: 0.5rem;
 }
+.ox-locale-switcher {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 0.125rem;
+}
+.ox-locale-switcher a,
+.ox-locale-switcher span {
+  padding: 0.25rem 0.5rem;
+  border-radius: 4px;
+  color: var(--octc-color-text-muted);
+  font-size: 0.8125rem;
+  text-decoration: none;
+}
+.ox-locale-switcher a:hover {
+  background: color-mix(in srgb, var(--octc-color-bg-alt) 82%, var(--octc-color-primary) 12%);
+  color: var(--octc-color-text);
+  text-decoration: none;
+}
+.ox-locale-switcher [aria-current="page"] {
+  color: var(--octc-color-text);
+  font-weight: 600;
+}
 .social-link {
   display: flex;
   align-items: center;

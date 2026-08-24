@@ -120,6 +120,7 @@ export default defineConfig(({ mode }) => {
                       { text: "Previous / Next", link: "/built-in/pagination.md" },
                       { text: "Breadcrumbs", link: "/built-in/breadcrumbs.md" },
                       { text: "Reader Chrome", link: "/built-in/reader-chrome.md" },
+                      { text: "Locale Switcher", link: "/built-in/locale-switcher.md" },
                       { text: "Sitemap / robots / llms.txt", link: "/built-in/site-maps.md" },
                       { text: "Draft / unlisted / scheduled", link: "/built-in/drafts.md" },
                       { text: "Permalinks and Cascade", link: "/built-in/permalinks.md" },

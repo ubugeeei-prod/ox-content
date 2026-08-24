@@ -213,6 +213,17 @@ pub fn generate_ssg_html(
         pagination: config.pagination.unwrap_or(false),
         breadcrumbs: config.breadcrumbs.unwrap_or(false),
         reader_chrome: convert_reader_chrome(config.reader_chrome),
+        locale_switcher: config.locale_switcher.unwrap_or(false),
+        locale_paths: config
+            .locale_paths
+            .unwrap_or_default()
+            .into_iter()
+            .map(|path| ox_content_ssg::LocalePath {
+                code: path.code,
+                href: path.href,
+                root: path.root,
+            })
+            .collect(),
     };
 
     ox_content_ssg::generate_html(&ssg_page_data, &ssg_nav_groups, &ssg_config)

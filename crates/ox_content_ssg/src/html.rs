@@ -6,6 +6,7 @@ mod aside;
 mod breadcrumbs;
 mod entry;
 mod footer;
+mod locale_switcher;
 mod nav;
 mod page;
 mod pagination;
@@ -22,7 +23,7 @@ pub use reader_chrome::ReaderChrome;
 
 pub use page::{
     EntryPageConfig, FeatureConfig, HeroAction, HeroConfig, HeroImage, HeroNoticeConfig,
-    LocaleInfo, NavGroup, NavItem, PageData, PagerOverride, SsgConfig, TocEntry,
+    LocaleInfo, LocalePath, NavGroup, NavItem, PageData, PagerOverride, SsgConfig, TocEntry,
 };
 pub use render::{BarePageData, generate_bare_html, generate_bare_page, generate_html};
 pub use theme::{
@@ -123,6 +124,7 @@ struct PageTemplate<'a> {
     logo_width: u32,
     logo_height: u32,
     social_links: &'a str,
+    locale_switcher: &'a str,
     is_entry_page: bool,
     embed_sidebar_before: &'a str,
     navigation: &'a str,

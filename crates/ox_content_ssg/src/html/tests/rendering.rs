@@ -41,6 +41,8 @@ fn test_generate_html() {
         pagination: false,
         breadcrumbs: false,
         reader_chrome: ReaderChrome::default(),
+        locale_switcher: false,
+        locale_paths: vec![],
     };
 
     let html = generate_html(&page_data, &nav_groups, &config);
@@ -170,6 +172,8 @@ fn test_generate_html_without_toc_omits_outline() {
         pagination: false,
         breadcrumbs: false,
         reader_chrome: ReaderChrome::default(),
+        locale_switcher: false,
+        locale_paths: vec![],
     };
 
     let html = generate_html(&page_data, &[], &config);
@@ -193,6 +197,8 @@ fn test_html_locale_attrs_use_current_locale_and_direction() {
         pagination: false,
         breadcrumbs: false,
         reader_chrome: ReaderChrome::default(),
+        locale_switcher: false,
+        locale_paths: vec![],
     };
 
     assert_eq!(html_locale_attrs(&config), ("ar", "rtl"));

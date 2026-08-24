@@ -30,6 +30,8 @@ fn config(theme: Option<ThemeConfig>) -> SsgConfig {
         pagination: false,
         breadcrumbs: false,
         reader_chrome: ReaderChrome::default(),
+        locale_switcher: false,
+        locale_paths: vec![],
     }
 }
 

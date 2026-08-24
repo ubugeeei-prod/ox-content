@@ -3,6 +3,7 @@ use askama::Template;
 use super::breadcrumbs::resolve_breadcrumbs;
 use super::entry::generate_entry_html;
 use super::footer::{FOOTER_CSS, generate_footer_html};
+use super::locale_switcher::render_locale_switcher;
 use super::nav::generate_nav_html;
 use super::pagination::resolve_pager;
 use super::reader_chrome::{READER_CHROME_CSS, READER_CHROME_JS, apply_reader_chrome};
@@ -143,6 +144,7 @@ pub fn generate_html(page_data: &PageData, nav_groups: &[NavGroup], config: &Ssg
     }
 
     // Social links
+    let locale_switcher_html = render_locale_switcher(config);
     let social_links_html = theme
         .and_then(|t| t.social_links.as_ref())
         .map_or(String::new(), generate_social_links_html);
@@ -215,6 +217,7 @@ pub fn generate_html(page_data: &PageData, nav_groups: &[NavGroup], config: &Ssg
         logo_width,
         logo_height,
         social_links: &social_links_html,
+        locale_switcher: &locale_switcher_html,
         is_entry_page,
         embed_sidebar_before,
         navigation: &nav_html,

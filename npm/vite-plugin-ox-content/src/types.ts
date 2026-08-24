@@ -324,6 +324,18 @@ export interface SsgOptions {
   readerChrome?: boolean | ReaderChromeOptions;
 
   /**
+   * Show a header locale switcher in the default theme.
+   *
+   * Disabled when omitted or `false`, even if `i18n.locales` is set.
+   * `true` or an object enables the control when available locales are
+   * non-empty. Links use the sibling page when it exists, otherwise the
+   * locale root (`/{locale}/` or a configured root).
+   *
+   * @default false
+   */
+  localeSwitcher?: boolean | Record<string, unknown>;
+
+  /**
    * Write a themed 404 page during SSG.
    *
    * Off by default. `true` reads `404.md` from `srcDir` and writes `404.html`.
@@ -440,6 +452,7 @@ export interface ResolvedSsgOptions {
   pagination: boolean;
   breadcrumbs: boolean;
   readerChrome: ResolvedReaderChrome;
+  localeSwitcher: boolean;
   /**
    * Present after `resolveSsgOptions`. Omitted in hand-built fixtures means off.
    */

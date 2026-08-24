@@ -20,6 +20,7 @@ import {
   extractTitle,
   getUrlPath,
   generateHtmlPage,
+  getPageLocale,
   formatTitle,
   parseSsgPagerOverride,
   resolveNavigationGroups,
@@ -361,11 +362,12 @@ async function renderPage(
     base,
     options.ssg.ogImage,
     options.ssg.theme,
-    undefined,
-    undefined,
+    getPageLocale(pageData.path, options.i18n),
+    options.i18n ? options.i18n.locales : undefined,
     options.ssg.pagination,
     options.ssg.readerChrome,
     options.ssg.breadcrumbs,
+    options.ssg.localeSwitcher,
   );
 
   // Inject Vite HMR client for live reload

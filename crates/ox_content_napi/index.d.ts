@@ -1033,6 +1033,16 @@ export interface JsLocaleInfo {
   dir: string
 }
 
+/** Sibling page or locale-root href for one locale. */
+export interface JsLocalePath {
+  /** BCP 47 locale tag. */
+  code: string
+  /** Href of the same page in this locale, when that translation exists. */
+  href?: string
+  /** Locale home href used when `href` is missing. */
+  root?: string
+}
+
 export interface JsMarkdownLintDiagnostic {
   ruleId: string
   severity: string
@@ -1510,6 +1520,10 @@ export interface JsSsgConfig {
   breadcrumbs?: boolean
   /** Opt-in copy, external-link, and back-to-top chrome. */
   readerChrome?: JsReaderChrome
+  /** Opt-in header locale switcher. */
+  localeSwitcher?: boolean
+  /** Existing sibling hrefs and locale roots. */
+  localePaths?: Array<JsLocalePath>
 }
 
 /** Result of SSG shared asset extraction. */

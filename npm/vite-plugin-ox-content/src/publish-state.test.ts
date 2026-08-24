@@ -253,6 +253,7 @@ function options(root: string, enabled: boolean): ResolvedOptions {
       pagination: false,
       breadcrumbs: false,
       readerChrome: false,
+      localeSwitcher: false,
       siteName: "Docs",
       siteUrl: "https://example.com",
     },

@@ -25,6 +25,8 @@ import type {
   FeatureConfig,
   LocaleConfig,
 } from "./types";
+import { buildLocalePaths, resolveLocaleSwitcherOption } from "./locale-switcher";
+import type { SsgLocalePath } from "./locale-switcher";
 import { resolveTheme, themeToNapi } from "./theme";
 import type { ResolvedThemeConfig, SidebarItem } from "./theme";
 import { normalizeVitePressFrontmatter } from "./vitepress";
@@ -124,6 +126,7 @@ export function resolveSsgOptions(ssg: SsgOptions | boolean | undefined): Resolv
       pagination: false,
       breadcrumbs: false,
       readerChrome: false,
+      localeSwitcher: false,
       notFound: resolveNotFoundOptions(undefined),
     };
   }
@@ -139,6 +142,7 @@ export function resolveSsgOptions(ssg: SsgOptions | boolean | undefined): Resolv
       pagination: false,
       breadcrumbs: false,
       readerChrome: false,
+      localeSwitcher: false,
       notFound: resolveNotFoundOptions(undefined),
       theme: resolveTheme(undefined),
     };
@@ -161,6 +165,7 @@ export function resolveSsgOptions(ssg: SsgOptions | boolean | undefined): Resolv
     pagination: resolvePaginationOption(ssg.pagination),
     breadcrumbs: resolvePaginationOption(ssg.breadcrumbs),
     readerChrome: resolveReaderChromeOption(ssg.readerChrome),
+    localeSwitcher: resolveLocaleSwitcherOption(ssg.localeSwitcher),
     notFound: resolveNotFoundOptions(ssg.notFound),
     siteUrl: ssg.siteUrl,
     theme: resolveTheme(ssg.theme),
@@ -378,6 +383,8 @@ export async function generateHtmlPage(
   pagination = false,
   readerChrome: ResolvedReaderChrome = false,
   breadcrumbs = false,
+  localeSwitcher = false,
+  localePaths?: SsgLocalePath[],
 ): Promise<string> {
   const mod = await importNapiModule();
 
@@ -461,6 +468,8 @@ export async function generateHtmlPage(
             backToTop: readerChrome.backToTop,
           }
         : undefined,
+      localeSwitcher: localeSwitcher || undefined,
+      localePaths,
     },
   );
 }
@@ -1136,6 +1145,22 @@ async function renderSsgPage(
 
   const pageData = createSsgPageData(pageResult);
 
+  const i18n = context.options.i18n;
+  const localePaths =
+    context.ssgOptions.localeSwitcher && i18n
+      ? buildLocalePaths({
+          currentPath: pageData.path,
+          locales: i18n.locales,
+          defaultLocale: i18n.defaultLocale,
+          hideDefaultLocale: i18n.hideDefaultLocale,
+          pages: allPageResults.map((result) => ({
+            path: result.routePaths.urlPath,
+            href: result.routePaths.href,
+          })),
+          base: context.base,
+        })
+      : undefined;
+
   return generateHtmlPage(
     pageData,
     context.navItems,
@@ -1143,11 +1168,13 @@ async function renderSsgPage(
     context.base,
     pageOgImage,
     context.ssgOptions.theme,
-    getPageLocale(pageData.path, context.options.i18n),
-    context.options.i18n ? context.options.i18n.locales : undefined,
+    getPageLocale(pageData.path, i18n),
+    i18n ? i18n.locales : undefined,
     context.ssgOptions.pagination,
     context.ssgOptions.readerChrome,
     context.ssgOptions.breadcrumbs,
+    context.ssgOptions.localeSwitcher,
+    localePaths,
   );
 }
 
