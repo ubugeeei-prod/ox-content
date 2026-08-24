@@ -16,12 +16,12 @@ description = "Tree-sitter syntax highlighting for Ox Content"
 workspace = true
 
 [dependencies]
-tree-sitter = "0.25"
-tree-sitter-highlight = "0.25"
+tree-sitter = "0.26"
+tree-sitter-highlight = "0.26"
 tree-sitter-bash = "0.25"
-tree-sitter-css = "0.23"
+tree-sitter-css = "0.25"
 tree-sitter-html = "0.23"
-tree-sitter-javascript = "0.23"
+tree-sitter-javascript = "0.25"
 tree-sitter-md = "0.5"
 tree-sitter-json = "0.24"
 tree-sitter-rust = "0.24"
