@@ -180,14 +180,12 @@ fn format_node(node: &Node<'_>, source: &str, depth: usize, out: &mut String) {
         }
         Node::MdxJsxFlowElement(node) => {
             format_mdx_jsx_element(
-                MdxJsxPrint {
-                    kind: "MdxJsxFlowElement",
-                    name: node.name,
-                    self_closing: node.self_closing,
-                    span: node.span,
-                    attributes: &node.attributes,
-                    children: &node.children,
-                },
+                "MdxJsxFlowElement",
+                node.name,
+                node.self_closing,
+                node.span,
+                &node.attributes,
+                &node.children,
                 source,
                 depth,
                 out,
@@ -195,14 +193,12 @@ fn format_node(node: &Node<'_>, source: &str, depth: usize, out: &mut String) {
         }
         Node::MdxJsxTextElement(node) => {
             format_mdx_jsx_element(
-                MdxJsxPrint {
-                    kind: "MdxJsxTextElement",
-                    name: node.name,
-                    self_closing: node.self_closing,
-                    span: node.span,
-                    attributes: &node.attributes,
-                    children: &node.children,
-                },
+                "MdxJsxTextElement",
+                node.name,
+                node.self_closing,
+                node.span,
+                &node.attributes,
+                &node.children,
                 source,
                 depth,
                 out,
@@ -240,31 +236,32 @@ fn format_node(node: &Node<'_>, source: &str, depth: usize, out: &mut String) {
     }
 }
 
-struct MdxJsxPrint<'a> {
-    kind: &'static str,
-    name: Option<&'a str>,
+fn format_mdx_jsx_element(
+    kind: &str,
+    name: Option<&str>,
     self_closing: bool,
-    span: Span,
-    attributes: &'a [ox_content_ast::MdxJsxAttributeEntry<'a>],
-    children: &'a [Node<'a>],
-}
-
-fn format_mdx_jsx_element(node: MdxJsxPrint<'_>, source: &str, depth: usize, out: &mut String) {
+    node_span: Span,
+    attributes: &[ox_content_ast::MdxJsxAttributeEntry<'_>],
+    children: &[Node<'_>],
+    source: &str,
+    depth: usize,
+    out: &mut String,
+) {
     line(
         out,
         depth,
         format_args!(
             "{} name={:?} self_closing={} {}",
-            node.kind,
-            node.name,
-            node.self_closing,
-            span(node.span, source)
+            kind,
+            name,
+            self_closing,
+            span(node_span, source)
         ),
     );
-    for attribute in node.attributes {
+    for attribute in attributes {
         format_mdx_attribute(attribute, source, depth + 1, out);
     }
-    for child in node.children {
+    for child in children {
         format_node(child, source, depth + 1, out);
     }
 }

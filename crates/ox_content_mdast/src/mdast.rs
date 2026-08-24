@@ -297,12 +297,12 @@ impl MdastJsonSerializer {
         self.write_mdx_jsx("mdxJsxTextElement", node.name, &node.attributes, &node.children);
     }
 
-    fn write_mdx_jsx(
+    fn write_mdx_jsx<'a>(
         &mut self,
         kind: &str,
         name: Option<&str>,
-        attributes: &ArenaVec<'_, MdxJsxAttributeEntry<'_>>,
-        children: &ArenaVec<'_, Node<'_>>,
+        attributes: &ArenaVec<'a, MdxJsxAttributeEntry<'a>>,
+        children: &ArenaVec<'a, Node<'a>>,
     ) {
         self.output.push_str("{\"type\":\"");
         self.output.push_str(kind);
@@ -320,7 +320,7 @@ impl MdastJsonSerializer {
         self.output.push('}');
     }
 
-    fn write_mdx_attributes(&mut self, attributes: &ArenaVec<'_, MdxJsxAttributeEntry<'_>>) {
+    fn write_mdx_attributes<'a>(&mut self, attributes: &ArenaVec<'a, MdxJsxAttributeEntry<'a>>) {
         self.output.push('[');
         for (idx, entry) in attributes.iter().enumerate() {
             if idx > 0 {

@@ -41,8 +41,12 @@ const _AST_IS_ARENA_ONLY: () = {
     assert!(std::mem::size_of::<Node<'static>>() <= 32);
     assert!(std::mem::size_of::<Paragraph<'static>>() > std::mem::size_of::<Node<'static>>());
     assert!(std::mem::size_of::<Definition<'static>>() > std::mem::size_of::<Node<'static>>());
-    assert!(std::mem::size_of::<MdxJsxFlowElement<'static>>() > std::mem::size_of::<Node<'static>>());
-    assert!(std::mem::size_of::<MdxJsxTextElement<'static>>() > std::mem::size_of::<Node<'static>>());
+    assert!(
+        std::mem::size_of::<MdxJsxFlowElement<'static>>() > std::mem::size_of::<Node<'static>>()
+    );
+    assert!(
+        std::mem::size_of::<MdxJsxTextElement<'static>>() > std::mem::size_of::<Node<'static>>()
+    );
 };
 
 #[cfg(test)]

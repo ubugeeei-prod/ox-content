@@ -13,7 +13,7 @@ use ox_content_ast::{
 #[path = "support/pretty.rs"]
 mod pretty;
 
-fn format_nodes(source: &str, nodes: ox_content_allocator::Vec<'_, Node<'_>>) -> String {
+fn format_nodes<'a>(source: &str, nodes: ox_content_allocator::Vec<'a, Node<'a>>) -> String {
     let span = Span::new(0, source.len() as u32);
     let doc = Document { children: nodes, span };
     let mut out = String::new();
