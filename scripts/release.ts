@@ -5,6 +5,7 @@ import { execSync } from "child_process";
 import * as fs from "fs";
 import * as path from "path";
 import { fileURLToPath } from "url";
+import { verifyPublishWorkflow } from "./verify-publish-targets";
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const ROOT = path.resolve(__dirname, "..");
@@ -44,7 +45,6 @@ const CARGO_PUBLISH_PACKAGES = [
 ];
 
 const CARGO_TOML = "Cargo.toml";
-const PUBLISH_WORKFLOW = ".github/workflows/publish.yml";
 const RUST_DOC_FILES = ["docs/content/getting-started.md"];
 const ZED_EXTENSION_TOML = "editors/zed/extension.toml";
 const ZED_CARGO_TOML = "editors/zed/Cargo.toml";
@@ -122,35 +122,6 @@ function updateRustDocsVersion(version: string): void {
       console.log(`  No Rust crate versions to update in ${relativePath}`);
     }
   }
-}
-
-function escapeRegExp(value: string): string {
-  return value.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
-}
-
-function hasCargoPublishTarget(workflow: string, pkg: string): boolean {
-  const escapedPkg = escapeRegExp(pkg);
-  const packageRef = `(?:"${escapedPkg}"|'${escapedPkg}'|${escapedPkg})`;
-  const directCargoPublish = new RegExp(
-    `\\bcargo\\s+publish\\b[^\\n]*(?:-p|--package)\\s+${packageRef}(?=\\s|$)`,
-  );
-  const publishHelperCall = new RegExp(`\\bpublish_crate\\s+${packageRef}(?=\\s|$)`);
-
-  return directCargoPublish.test(workflow) || publishHelperCall.test(workflow);
-}
-
-function verifyCargoPublishPackages(): void {
-  const fullPath = path.join(ROOT, PUBLISH_WORKFLOW);
-  const workflow = fs.readFileSync(fullPath, "utf-8");
-  const missing = CARGO_PUBLISH_PACKAGES.filter((pkg) => !hasCargoPublishTarget(workflow, pkg));
-
-  if (missing.length) {
-    throw new Error(
-      `Missing crates.io publish targets in ${PUBLISH_WORKFLOW}: ${missing.join(", ")}`,
-    );
-  }
-
-  console.log(`  Verified crates.io publish targets: ${CARGO_PUBLISH_PACKAGES.join(", ")}`);
 }
 
 function bumpVersion(
@@ -317,8 +288,13 @@ async function main(): Promise<void> {
   console.log("Updating Rust docs versions...");
   updateRustDocsVersion(newVersion);
 
-  console.log("Verifying crates.io release targets...");
-  verifyCargoPublishPackages();
+  console.log("Verifying publish workflow targets...");
+  verifyPublishWorkflow({
+    root: ROOT,
+    workflowRel: ".github/workflows/publish.yml",
+    cargoPackages: CARGO_PUBLISH_PACKAGES,
+    npmPackages: NPM_PACKAGES,
+  });
 
   console.log("\nGenerating changelog...");
   const latestTag = getLatestTag();
