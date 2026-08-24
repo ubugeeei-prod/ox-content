@@ -64,8 +64,8 @@ export async function runTypeScript(request: AdapterRequest): Promise<AdapterRes
         compile: { host: "local", runtime: "strip-types" },
         execute: {
           host: "local",
-          runtime: hasNodeVm() ? "node:vm" : "function",
-          sandbox: hasNodeVm() ? "vm" : "function",
+          runtime: hasNodeVm() ? "node:vm" : "iframe",
+          sandbox: hasNodeVm() ? "vm" : "srcdoc",
         },
       },
       timing: tracker.report(),
@@ -81,7 +81,11 @@ export async function runTypeScript(request: AdapterRequest): Promise<AdapterRes
       diagnostics: [{ message, severity: "error", source: "javascript" }],
       provenance: {
         compile: { host: "local", runtime: "strip-types" },
-        execute: { host: "local", runtime: hasNodeVm() ? "node:vm" : "function" },
+        execute: {
+          host: "local",
+          runtime: hasNodeVm() ? "node:vm" : "iframe",
+          sandbox: hasNodeVm() ? "vm" : "srcdoc",
+        },
       },
       timing: tracker.report(),
     };

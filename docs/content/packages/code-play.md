@@ -169,6 +169,8 @@ official playgrounds (or your own HTTPS executor) for published pages, or
 ## Security
 
 - Samples are not executed during Markdown transform or SSG.
+- JavaScript and TypeScript execute in `node:vm` on Node, or in
+  `<iframe sandbox="allow-scripts">` in the browser (no `allow-same-origin`).
 - `sh` never spawns a local shell.
 - Enabling Rust or Go sends source to `play.rust-lang.org` /
   `play.golang.org` (or your `endpoints` override).

@@ -69,7 +69,8 @@ run.timing;
 ## Security
 
 - No sample is executed during Markdown transform or SSG.
-- JavaScript and TypeScript run in `node:vm` / a browser iframe.
+- JavaScript and TypeScript run in `node:vm` on Node, or in
+  `<iframe sandbox="allow-scripts">` in the browser.
 - Rust and Go use the official playgrounds (or the Vite dev proxy).
 - Other languages need a Piston-compatible `endpoint` you configure.
 - `sh` never spawns a local shell.
