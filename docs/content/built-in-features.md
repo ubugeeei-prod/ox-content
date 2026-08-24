@@ -24,6 +24,7 @@ inline**.
 | [Markdown Baseline](./built-in/markdown.md)            | GFM, tables, task lists, footnotes, autolinks, frontmatter, TOC           |
 | [Syntax Extensions](./built-in/syntax-extensions.md)   | Emoji shortcodes, wiki links, attribute syntax, CJK emphasis              |
 | [Custom Containers](./built-in/containers.md)          | Opt-in `::: tip` / `::: details` callout blocks                           |
+| [Cards](./built-in/cards.md)                           | Opt-in `::: card` / `::: link-card` / `::: card-grid` blocks              |
 | [Step Lists](./built-in/steps.md)                      | Opt-in `::: steps` tutorial lists                                         |
 | [File Includes](./built-in/includes.md)                | Opt-in `<!-- @include -->` Markdown fragments                             |
 | [Inline Badges](./built-in/badges.md)                  | Opt-in `{badge:tip}` status labels in headings or prose                   |
@@ -56,6 +57,7 @@ inline**.
 | Code authoring   | `codeAnnotations`, `codeImports`                                                                              | `false`              | [Code Blocks](./built-in/code-blocks.md)               |
 | Extra syntax     | `wikiLinks`, `emojiShortcodes`, `attrs`, `cjkEmphasis`, `containers`, `badges`                                | `false`              | [Syntax Extensions](./built-in/syntax-extensions.md)   |
 | File includes    | `includes`                                                                                                    | `false`              | [File Includes](./built-in/includes.md)                |
+| Cards            | `cards`                                                                                                       | `false`              | [Cards](./built-in/cards.md)                           |
 | Step lists       | `steps`                                                                                                       | `false`              | [Step Lists](./built-in/steps.md)                      |
 | Images           | `images`                                                                                                      | `false`              | [Images](./built-in/images.md)                         |
 | Diagrams         | `mermaid`                                                                                                     | `false`              | [Mermaid Diagrams](./built-in/mermaid.md)              |

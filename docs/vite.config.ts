@@ -95,6 +95,7 @@ export default defineConfig(({ mode }) => {
                       { text: "Markdown Baseline", link: "/built-in/markdown.md" },
                       { text: "Syntax Extensions", link: "/built-in/syntax-extensions.md" },
                       { text: "Custom Containers", link: "/built-in/containers.md" },
+                      { text: "Cards", link: "/built-in/cards.md" },
                       { text: "Step Lists", link: "/built-in/steps.md" },
                       { text: "File Includes", link: "/built-in/includes.md" },
                       { text: "Inline Badges", link: "/built-in/badges.md" },
@@ -194,6 +195,7 @@ export default defineConfig(({ mode }) => {
         images: true,
         codeImports: true,
         includes: true,
+        cards: true,
         steps: true,
         embeds: {
           pm: true,

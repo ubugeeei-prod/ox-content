@@ -109,6 +109,7 @@ export function createFrameworkMarkdownOptions(options: FrameworkMarkdownOptions
     images: { enabled: false, lazy: true },
     codeImports: { enabled: false },
     includes: { enabled: false },
+    cards: { enabled: false },
     steps: { enabled: false },
     sanitize: { enabled: false },
     editThisPage: { enabled: false, branch: "main", label: "Edit this page" },

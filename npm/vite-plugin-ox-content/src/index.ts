@@ -32,6 +32,7 @@ import { isMarkdownFilePath, normalizeMarkdownExtensions } from "./markdown";
 import { resolveImageOptions } from "./resolve-image-options";
 import { generateCollectionsVirtualModule, resolveCollectionsOptions } from "./collections";
 import type { BuiltinPmOptions, OxContentOptions, ResolvedOptions } from "./types";
+import { resolveCardOptions } from "./card-options";
 import { resolveIncludeOptions } from "./include-options";
 import { resolveStepsOptions } from "./step-options";
 import type { TwitterEmbedOptions } from "./plugins";
@@ -59,6 +60,8 @@ export type {
   ResolvedCodeImportOptions,
   IncludeOptions,
   ResolvedIncludeOptions,
+  CardOptions,
+  ResolvedCardOptions,
   StepsOptions,
   ResolvedStepsOptions,
   SanitizeOptions,
@@ -571,6 +574,7 @@ function resolveOptions(options: OxContentOptions): ResolvedOptions {
     images: resolveImageOptions(options.images),
     codeImports: resolveCodeImportOptions(options.codeImports),
     includes: resolveIncludeOptions(options.includes),
+    cards: resolveCardOptions(options.cards),
     steps: resolveStepsOptions(options.steps),
     sanitize: resolveSanitizeOptions(options.sanitize),
     editThisPage: resolveEditThisPageOptions(options.editThisPage),
@@ -691,6 +695,7 @@ function resolveCodeImportOptions(
   return { enabled: true, rootDir: options.rootDir };
 }
 
+export { resolveCardOptions } from "./card-options";
 export { resolveIncludeOptions } from "./include-options";
 export { resolveStepsOptions } from "./step-options";
 

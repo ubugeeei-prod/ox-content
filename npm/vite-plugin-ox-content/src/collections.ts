@@ -201,6 +201,7 @@ function createNativeTransformOptions(options: ResolvedOptions): NativeTransform
           rootDir: options.includes.rootDir,
         }
       : undefined,
+    cards: options.cards?.enabled ? { enabled: true } : undefined,
     steps: options.steps?.enabled ? { enabled: true } : undefined,
     editThisPage: options.editThisPage?.enabled
       ? {

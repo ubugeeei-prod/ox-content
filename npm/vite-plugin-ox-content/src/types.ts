@@ -676,6 +676,16 @@ export interface OxContentOptions {
   includes?: boolean | IncludeOptions;
 
   /**
+   * Opt-in `::: card` / `::: link-card` / `::: card-grid` blocks.
+   *
+   * Passing `true` enables the defaults. Pass an object to keep the option
+   * shape while overriding `enabled`.
+   *
+   * @default false
+   */
+  cards?: boolean | CardOptions;
+
+  /**
    * Restyle a `::: steps` wrapper around an ordered list.
    *
    * Disabled when omitted or `false`. `true` and `{}` enable the default
@@ -864,6 +874,7 @@ export interface ResolvedOptions {
   images: ResolvedImageOptions;
   codeImports: ResolvedCodeImportOptions;
   includes: ResolvedIncludeOptions;
+  cards: ResolvedCardOptions;
   steps: ResolvedStepsOptions;
   sanitize: ResolvedSanitizeOptions;
   editThisPage: ResolvedEditThisPageOptions;
@@ -1187,6 +1198,25 @@ export interface IncludeOptions {
 export interface ResolvedIncludeOptions {
   enabled: boolean;
   rootDir?: string;
+}
+
+/**
+ * Options for opt-in `::: card` / `::: link-card` / `::: card-grid` blocks.
+ */
+export interface CardOptions {
+  /**
+   * Enable the card transform when an options object is supplied.
+   *
+   * @default true
+   */
+  enabled?: boolean;
+}
+
+/**
+ * Resolved card transform options.
+ */
+export interface ResolvedCardOptions {
+  enabled: boolean;
 }
 
 /**

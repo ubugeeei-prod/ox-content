@@ -282,6 +282,10 @@ interface JsTransformOptions {
     rootDir?: string;
   };
 
+  cards?: {
+    enabled?: boolean;
+  };
+
   steps?: {
     enabled?: boolean;
   };
@@ -555,6 +559,7 @@ export async function transformMarkdown(
           rootDir: options.includes.rootDir,
         }
       : undefined,
+    cards: options.cards?.enabled ? { enabled: true } : undefined,
     steps: options.steps?.enabled ? { enabled: true } : undefined,
     // Sanitize once at the end of the JS pipeline so opt-in embeds can be
     // expanded before the allow-list is applied.

@@ -29,7 +29,7 @@ Already tracked elsewhere:
 | Inline badges                       | [#669](https://github.com/ubugeeei-prod/ox-content/issues/669) | planned |
 | File tree blocks                    | [#670](https://github.com/ubugeeei-prod/ox-content/issues/670) | planned |
 | Step lists                          | [#671](https://github.com/ubugeeei-prod/ox-content/issues/671) | planned |
-| Card / link-card / card-grid blocks | [#672](https://github.com/ubugeeei-prod/ox-content/issues/672) | planned |
+| Card / link-card / card-grid blocks | [#672](https://github.com/ubugeeei-prod/ox-content/issues/672) | shipped |
 
 ## Phase B — Site outputs
 

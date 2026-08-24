@@ -777,6 +777,35 @@ a:hover {
 .content .ox-container > :last-child {
   margin-bottom: 0;
 }
+.content .ox-card-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(16rem, 1fr));
+  gap: 1rem;
+  margin: 1.25rem 0;
+}
+.content .ox-card,
+.content .ox-link-card {
+  display: block;
+  padding: 1rem 1.15rem;
+  border: 1px solid var(--octc-color-border);
+  border-radius: 8px;
+  background: var(--octc-color-bg-alt);
+  text-decoration: none;
+  color: inherit;
+}
+.content .ox-link-card:hover {
+  border-color: var(--octc-color-primary);
+}
+.content .ox-card-title,
+.content .ox-link-card-title {
+  display: block;
+  margin: 0 0 0.4rem;
+  font-weight: 700;
+}
+.content .ox-card > :last-child,
+.content .ox-link-card > :last-child {
+  margin-bottom: 0;
+}
 .content .ox-steps {
   margin: 1.25rem 0;
 }
