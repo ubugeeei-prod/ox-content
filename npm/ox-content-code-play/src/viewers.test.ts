@@ -2,7 +2,7 @@ import { describe, expect, it } from "vite-plus/test";
 import { DEFAULT_VIEWERS } from "./config";
 import { withStdioText } from "./stdio";
 import type { PlayPayload, RunResult } from "./types";
-import { renderPlayUi } from "./ui";
+import { actionBusyState, renderPlayUi } from "./ui";
 import { renderStderrHtml } from "./viewers";
 
 function result(partial: Partial<RunResult> = {}): RunResult {
@@ -106,6 +106,18 @@ describe("stderr UI flags", () => {
     expect(html).not.toContain('data-ox-panel="stderr"');
     expect(html).not.toContain('data-panel="stderr"');
     expect(html).toContain('data-panel="stdio"');
+  });
+
+  it("hides Cancel until a run is in flight and keeps it enabled while busy", () => {
+    const idle = renderPlayUi({ payload: payload() });
+    expect(idle).toContain('data-ox-action="cancel"');
+    expect(idle).toMatch(/data-ox-action="cancel"[^>]*\bhidden\b/);
+    expect(actionBusyState("cancel", false)).toEqual({ disabled: true, hidden: true });
+    expect(actionBusyState("cancel", true)).toEqual({ disabled: false, hidden: false });
+    expect(actionBusyState("run", true)).toEqual({ disabled: true, hidden: false });
+    const busy = renderPlayUi({ payload: payload(), busy: true });
+    expect(busy).toMatch(/data-ox-action="run"[^>]*\bdisabled\b/);
+    expect(busy).not.toMatch(/data-ox-action="cancel"[^>]*\bhidden\b/);
   });
 
   it("keeps the compact stderr panel visible and hides compact tabs", () => {

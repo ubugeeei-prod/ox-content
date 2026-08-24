@@ -13,6 +13,10 @@ describe("browser client bundle", () => {
       const source = await readFile(path.join(outDir, "browser.mjs"), "utf8");
       expect(assertBrowserClientSource(source)).toContain("bootCodePlay");
       expect(source).toMatch(/hydrateCodePlay|data-ox-code-play/);
+      expect(source).toContain("data-ox-action");
+      expect(source).toContain("cancel");
+      expect(source).toContain("allow-scripts");
+      expect(source).not.toMatch(/allow-same-origin/);
     } finally {
       await rm(outDir, { recursive: true, force: true });
     }

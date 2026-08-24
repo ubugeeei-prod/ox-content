@@ -1,10 +1,13 @@
 import { describe, expect, it } from "vite-plus/test";
 import { createCodePlay } from "./client";
+import { javascriptExecuteRuntime } from "./javascript";
+import { friendlyTransportMessage } from "./result";
 import { stripTypeScript } from "./strip-typescript";
 import { createMemoryTransport } from "./transport";
 import {
   adapterResultFromTypecheckResponse,
   parseTsgoOutput,
+  resolveTypecheckBackend,
   typecheckEndpointFailureMessage,
 } from "./typescript";
 import { PhaseTracker } from "./timing";
@@ -123,6 +126,25 @@ describe("createCodePlay", () => {
     const result = await pending;
     expect(result.status).toBe("cancelled");
     expect(result.diagnostics[0]?.message).toMatch(/cancelled/i);
+    expect(result.diagnostics[0]?.severity).toBe("info");
+  });
+
+  it("explains browser CORS failures instead of a raw fetch TypeError", () => {
+    const error = new TypeError("Failed to fetch");
+    expect(friendlyTransportMessage(error)).toMatch(/CORS/);
+    expect(friendlyTransportMessage(new Error("offline"))).toBe("offline");
+  });
+
+  it("does not run JavaScript through page-origin Function", () => {
+    expect(javascriptExecuteRuntime(true, false)).toBe("vm");
+    expect(javascriptExecuteRuntime(false, true)).toBe("iframe");
+    expect(() => javascriptExecuteRuntime(false, false)).toThrow(/sandbox iframe/);
+  });
+
+  it("picks a typecheck backend that cannot call a missing static-host proxy", () => {
+    expect(resolveTypecheckBackend(true, undefined)).toBe("tsgo");
+    expect(resolveTypecheckBackend(false, "/__ox-code-play/typecheck")).toBe("endpoint");
+    expect(resolveTypecheckBackend(false, undefined)).toBe("unavailable");
   });
 
   it("turns transport throws into error results instead of rejecting", async () => {

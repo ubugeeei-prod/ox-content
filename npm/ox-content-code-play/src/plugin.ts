@@ -4,11 +4,12 @@ import path from "node:path";
 import type { Plugin, ViteDevServer } from "vite";
 import { resolveLanguage } from "./catalog";
 import {
+  DEV_TYPECHECK_PATH,
   resolveCodePlayOptions,
   type RawCodePlayOptions,
   type ResolvedCodePlayOptions,
 } from "./config";
-import { enhanceGeneratedModule, enhancePlayHtml } from "./html";
+import { enhanceGeneratedModule, enhancePlayHtml, type HtmlEnhanceOptions } from "./html";
 import { parseCodePlayTags, parsePlayFences, rewritePlayFences } from "./markdown";
 import { decodePayload, encodePayload } from "./payload";
 import { payloadFromFence } from "./payload-factory";
@@ -26,13 +27,8 @@ const RESOLVED_VIRTUAL = `\0${VIRTUAL_ID}`;
 const MARKDOWN_RE = /\.(?:md|markdown|mdx)(?:$|\?)/i;
 
 export function codePlay(options: CodePlayPluginOptions = {}): Plugin {
-  const resolved = resolveCodePlayOptions({
-    ...options,
-    endpoints: {
-      ...options.endpoints,
-      typecheck: options.endpoints?.typecheck ?? "/__ox-code-play/typecheck",
-    },
-  });
+  const resolved = resolveCodePlayOptions(options);
+  const explicitTypecheck = options.endpoints?.typecheck;
   let base = resolved.base;
   let command: "build" | "serve" = "serve";
   let outDir = resolved.outDir;
@@ -45,6 +41,7 @@ export function codePlay(options: CodePlayPluginOptions = {}): Plugin {
     decodePayload,
     encodePayload,
     matchFences,
+    endpoints: resolved.endpoints,
   });
 
   return {
@@ -55,6 +52,13 @@ export function codePlay(options: CodePlayPluginOptions = {}): Plugin {
       root = config.root;
       base = resolved.base === "/" ? normalizeBase(config.base) : resolved.base;
       outDir = resolved.outDir ?? config.build.outDir;
+      if (explicitTypecheck === undefined) {
+        if (command === "serve" && resolved.proxy) {
+          resolved.endpoints.typecheck = DEV_TYPECHECK_PATH;
+        } else {
+          delete resolved.endpoints.typecheck;
+        }
+      }
     },
 
     resolveId(id) {
@@ -167,12 +171,9 @@ function enhanceHtmlForUrl(
   html: string,
   root: string,
   resolved: ResolvedCodePlayOptions,
-  enhance: (matchFences?: Array<{ language: string; code: string; payload: string }>) => {
-    scriptSrc: string;
-    decodePayload: typeof decodePayload;
-    encodePayload: typeof encodePayload;
-    matchFences?: Array<{ language: string; code: string; payload: string }>;
-  },
+  enhance: (
+    matchFences?: Array<{ language: string; code: string; payload: string }>,
+  ) => HtmlEnhanceOptions,
 ): string | undefined {
   const markdownPath = urlToMarkdown(urlPath, root, resolved.srcDir ?? "docs", resolved.base);
   if (!markdownPath || !existsSync(markdownPath)) {
@@ -226,7 +227,7 @@ function mountProxies(server: ViteDevServer, rustUrl: string, goUrl: string): vo
   server.middlewares.use("/__ox-code-play/go", (req, res) => {
     void proxy(req, res, goUrl, "application/x-www-form-urlencoded");
   });
-  server.middlewares.use("/__ox-code-play/typecheck", (req, res) => {
+  server.middlewares.use(DEV_TYPECHECK_PATH, (req, res) => {
     void typecheckProxy(req, res);
   });
 }
@@ -235,12 +236,9 @@ async function enhanceWrittenPages(
   srcDir: string,
   outDir: string,
   resolved: ResolvedCodePlayOptions,
-  enhance: (matchFences?: Array<{ language: string; code: string; payload: string }>) => {
-    scriptSrc: string;
-    decodePayload: typeof decodePayload;
-    encodePayload: typeof encodePayload;
-    matchFences?: Array<{ language: string; code: string; payload: string }>;
-  },
+  enhance: (
+    matchFences?: Array<{ language: string; code: string; payload: string }>,
+  ) => HtmlEnhanceOptions,
 ): Promise<void> {
   for (const file of walkFiles(srcDir)) {
     if (!MARKDOWN_RE.test(file)) {

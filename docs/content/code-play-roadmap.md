@@ -64,7 +64,9 @@ dedicated stderr viewer, and compact preset coverage for stderr.
 Docs example page, package guide, and `examples/code-play` shipped in #697.
 Standalone `ox-code-play.js` + `bootCodePlay()` shipped in #703. This PR
 adds a Playwright check that written SSG HTML hydrates and **Run** prints
-stdio, plus `session.cancel()`.
+stdio, `session.cancel()` plus a toolbar **Cancel** control, and hides
+TypeScript **Typecheck** on published pages unless `endpoints.typecheck` is
+set.
 
 ### 3. `feat(code-play): official playground proxies`
 
