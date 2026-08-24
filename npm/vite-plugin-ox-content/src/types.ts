@@ -302,6 +302,17 @@ export interface SsgOptions {
   pagination?: boolean | Record<string, unknown>;
 
   /**
+   * Opt-in copy buttons, outbound-link icons, and a back-to-top control.
+   *
+   * Disabled when omitted or `false`. `true` enables all three with defaults.
+   * An object enables the feature and can turn one control off, for example
+   * `{ copy: false }`.
+   *
+   * @default false
+   */
+  readerChrome?: boolean | ReaderChromeOptions;
+
+  /**
    * Absolute site URL used when generating social metadata.
    *
    * Set this when pages need absolute Open Graph image URLs. Include the origin
@@ -346,6 +357,47 @@ export interface SsgOptions {
 }
 
 /**
+ * Per-control flags for `ssg.readerChrome`.
+ *
+ * Omitted fields stay on when the feature itself is enabled.
+ */
+export interface ReaderChromeOptions {
+  /**
+   * Copy button on fenced code blocks. The clipboard is read in the browser,
+   * never at build time.
+   *
+   * @default true
+   */
+  copy?: boolean;
+
+  /**
+   * Icon and `rel="noopener noreferrer"` on outbound `http(s)` links.
+   * Relative, hash, and same-document links are left alone.
+   *
+   * @default true
+   */
+  externalLinks?: boolean;
+
+  /**
+   * Back-to-top control that appears after the page is scrolled.
+   *
+   * @default true
+   */
+  backToTop?: boolean;
+}
+
+/**
+ * Resolved reader chrome. `false` means no extra markup or JS.
+ */
+export type ResolvedReaderChrome =
+  | false
+  | {
+      copy: boolean;
+      externalLinks: boolean;
+      backToTop: boolean;
+    };
+
+/**
  * Resolved SSG options.
  */
 export interface ResolvedSsgOptions {
@@ -363,6 +415,7 @@ export interface ResolvedSsgOptions {
   generateOgImage: boolean;
   lastUpdated: boolean;
   pagination: boolean;
+  readerChrome: ResolvedReaderChrome;
   siteUrl?: string;
   theme?: ResolvedThemeConfig;
   navigation?: SsgNavigationGroup[];

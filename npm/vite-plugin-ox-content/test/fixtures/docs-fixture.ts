@@ -106,6 +106,7 @@ export function createDocsResolvedOptions(
       generateOgImage: false,
       lastUpdated: false,
       pagination: false,
+      readerChrome: false,
     },
     siteMaps: { enabled: false, robots: true, llms: true },
     gfm: true,

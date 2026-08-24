@@ -1439,6 +1439,18 @@ export interface JsSsgConfig {
   availableLocales?: Array<JsLocaleInfo>
   /** When true, render previous/next page links after the article. */
   pagination?: boolean
+  /** Opt-in copy, external-link, and back-to-top chrome. */
+  readerChrome?: JsReaderChrome
+}
+
+/** Opt-in reader chrome flags. Presence of the object enables the feature. */
+export interface JsReaderChrome {
+  /** Copy button on fenced code blocks. */
+  copy?: boolean
+  /** Icon and `rel` on outbound links. */
+  externalLinks?: boolean
+  /** Back-to-top control that appears after scroll. */
+  backToTop?: boolean
 }
 
 /** Result of SSG shared asset extraction. */

@@ -36,6 +36,7 @@ fn test_generate_html_with_theme() {
             ..Default::default()
         }),
         pagination: false,
+        reader_chrome: ReaderChrome::default(),
     };
 
     let html = generate_html(&page_data, &nav_groups, &config);
@@ -63,6 +64,7 @@ fn test_generate_html_with_custom_social_link() {
         locale: None,
         available_locales: None,
         pagination: false,
+        reader_chrome: ReaderChrome::default(),
         theme: Some(ThemeConfig {
             social_links: Some(SocialLinks {
                 links: Some(vec![SocialLink {

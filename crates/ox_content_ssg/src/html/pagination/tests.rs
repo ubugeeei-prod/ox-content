@@ -1,6 +1,6 @@
 use super::super::{
-    EntryPageConfig, NavGroup, NavItem, PageData, PagerOverride, SsgConfig, generate_bare_html,
-    generate_html,
+    EntryPageConfig, NavGroup, NavItem, PageData, PagerOverride, ReaderChrome, SsgConfig,
+    generate_bare_html, generate_html,
 };
 
 fn nav_item(title: &str, path: &str, href: &str) -> NavItem {
@@ -60,6 +60,7 @@ fn config(pagination: bool) -> SsgConfig {
         locale: None,
         available_locales: None,
         pagination,
+        reader_chrome: ReaderChrome::default(),
     }
 }
 

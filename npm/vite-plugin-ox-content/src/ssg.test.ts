@@ -38,6 +38,26 @@ describe("resolveSsgOptions", () => {
     expect(resolveSsgOptions({ pagination: {} }).pagination).toBe(true);
   });
 
+  it("disables reader chrome by default", () => {
+    expect(resolveSsgOptions(undefined).readerChrome).toBe(false);
+  });
+
+  it("enables all reader chrome controls when requested", () => {
+    expect(resolveSsgOptions({ readerChrome: true }).readerChrome).toEqual({
+      copy: true,
+      externalLinks: true,
+      backToTop: true,
+    });
+  });
+
+  it("enables reader chrome when an object is passed", () => {
+    expect(resolveSsgOptions({ readerChrome: { copy: false } }).readerChrome).toEqual({
+      copy: false,
+      externalLinks: true,
+      backToTop: true,
+    });
+  });
+
   it("carries a theme component through", () => {
     const component = () => ({ __html: "<html></html>" });
     expect(resolveSsgOptions({ render: component }).render).toBe(component);
