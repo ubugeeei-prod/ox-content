@@ -7,7 +7,7 @@ fn frontmatter_hides_sidebar() {
     let html =
         render(None, true, PageChromeFlags { sidebar: Some(false), ..PageChromeFlags::default() });
 
-    assert!(!html.contains(r#"<aside class="sidebar""#), "{html}");
+    assert!(!html.contains(r#"class="sidebar""#), "{html}");
     assert!(html.contains(r#"<header class="header">"#), "{html}");
 }
 
@@ -18,7 +18,7 @@ fn frontmatter_hides_navbar() {
 
     assert!(!html.contains(r#"<header class="header">"#), "{html}");
     assert!(body_class(&html).contains("ox-no-navbar"), "{html}");
-    assert!(html.contains(r#"<aside class="sidebar">"#), "{html}");
+    assert!(html.contains(r#"<aside id="ox-sidebar" class="sidebar">"#), "{html}");
 }
 
 #[test]
@@ -29,7 +29,7 @@ fn page_chrome_off_ignores_hide_flags() {
         PageChromeFlags { sidebar: Some(false), navbar: Some(false), ..PageChromeFlags::default() },
     );
 
-    assert!(html.contains(r#"<aside class="sidebar">"#), "{html}");
+    assert!(html.contains(r#"<aside id="ox-sidebar" class="sidebar">"#), "{html}");
     assert!(html.contains(r#"<header class="header">"#), "{html}");
     assert!(!body_class(&html).contains("ox-no-navbar"), "{html}");
 }

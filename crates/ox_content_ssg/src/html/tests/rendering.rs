@@ -227,6 +227,40 @@ fn test_mobile_content_css_preserves_safe_reading_gutters() {
 }
 
 #[test]
+fn test_mobile_menu_css_stays_reachable_and_touch_safe() {
+    assert!(
+        SSG_CSS.contains("body.menu-open {\n  overflow: hidden;"),
+        "an open sheet must not scroll the page behind it"
+    );
+    assert!(
+        SSG_CSS.contains(".sidebar::before {\n    content: \"\";\n    position: sticky;")
+            && SSG_CSS.contains(
+                "background: color-mix(in srgb, var(--octc-color-bg-alt) 88%, var(--octc-color-bg));\n    border-block-end: 1px solid var(--octc-color-border);"
+            ),
+        "the mobile sheet needs a flat sticky bar above long navigation"
+    );
+    assert!(
+        SSG_CSS.contains(".sidebar .nav-link {\n    min-height: 44px;")
+            && SSG_CSS.contains(".sidebar .nav-title--summary {\n    min-height: 44px;"),
+        "every mobile navigation control needs a reliable touch target"
+    );
+    assert!(
+        SSG_CSS
+            .contains("@media (any-hover: hover) and (any-pointer: fine) {\n  .nav-link:hover {")
+            && SSG_CSS.contains(
+                "@media (any-hover: hover) and (any-pointer: fine) {\n  .mobile-footer-btn:hover {"
+            ),
+        "touch input must not retain mouse-only hover treatments"
+    );
+    assert!(
+        SSG_CSS.contains(
+            "@media (any-hover: none) and (any-pointer: coarse) {\n  .mobile-footer-btn:focus {\n    outline: none;"
+        ),
+        "touch-only focus treatment must be selected with input media queries"
+    );
+}
+
+#[test]
 fn test_generate_html_without_toc_omits_outline() {
     let page_data = PageData {
         title: "No TOC".to_string(),

@@ -161,6 +161,9 @@ body {
 body.search-open {
   overflow: hidden;
 }
+body.menu-open {
+  overflow: hidden;
+}
 a {
   color: var(--octc-color-primary);
   text-decoration: none;
@@ -720,27 +723,29 @@ a:hover {
   color: color-mix(in srgb, var(--octc-color-text) 92%, var(--octc-color-text-muted));
   font-size: 0.875rem;
 }
-.nav-link:hover {
-  background: color-mix(in srgb, var(--octc-color-bg-alt) 58%, transparent);
-  text-decoration: none;
-  color: var(--octc-color-text);
-}
-[data-theme="dark"] .nav-link:not(.active):hover {
-  background: color-mix(in srgb, var(--octc-color-bg-alt) 42%, transparent);
-}
-@media (prefers-color-scheme: dark) {
-  :root:not([data-theme="light"]) .nav-link:not(.active):hover {
-    background: color-mix(in srgb, var(--octc-color-bg-alt) 42%, transparent);
-  }
-}
 .nav-link.active {
   background: color-mix(in srgb, var(--octc-color-bg-alt) 72%, transparent);
   color: var(--octc-color-text);
   font-weight: 600;
 }
-.nav-link.active:hover {
-  background: color-mix(in srgb, var(--octc-color-bg-alt) 72%, transparent);
-  color: var(--octc-color-text);
+@media (any-hover: hover) and (any-pointer: fine) {
+  .nav-link:hover {
+    background: color-mix(in srgb, var(--octc-color-bg-alt) 58%, transparent);
+    text-decoration: none;
+    color: var(--octc-color-text);
+  }
+  [data-theme="dark"] .nav-link:not(.active):hover {
+    background: color-mix(in srgb, var(--octc-color-bg-alt) 42%, transparent);
+  }
+  .nav-link.active:hover {
+    background: color-mix(in srgb, var(--octc-color-bg-alt) 72%, transparent);
+    color: var(--octc-color-text);
+  }
+}
+@media (any-hover: hover) and (any-pointer: fine) and (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) .nav-link:not(.active):hover {
+    background: color-mix(in srgb, var(--octc-color-bg-alt) 42%, transparent);
+  }
 }
 .nav-link--summary {
   flex: 1;
@@ -1842,11 +1847,6 @@ a:hover {
     text-decoration: none;
     min-width: 48px;
   }
-  .mobile-footer-btn:hover {
-    background: color-mix(in srgb, var(--octc-color-bg-alt) 82%, var(--octc-color-primary) 12%);
-    color: var(--octc-color-text);
-    text-decoration: none;
-  }
   .mobile-footer-btn svg {
     width: 22px;
     height: 22px;
@@ -1889,17 +1889,35 @@ a:hover {
   }
   .sidebar::before {
     content: "";
-    position: absolute;
-    top: 0.75rem;
-    left: 50%;
-    transform: translateX(-50%);
-    width: 40px;
-    height: 4px;
-    background: var(--octc-color-border);
-    border-radius: 2px;
+    position: sticky;
+    top: 0;
+    z-index: 2;
+    display: block;
+    height: 2.5rem;
+    margin-block-start: -1.5rem;
+    margin-block-end: 0.5rem;
+    margin-inline: calc(0px - var(--octc-mobile-gutter));
+    background: color-mix(in srgb, var(--octc-color-bg-alt) 88%, var(--octc-color-bg));
+    border-block-end: 1px solid var(--octc-color-border);
+    border-radius: 4px 4px 0 0;
   }
   .sidebar.open {
     transform: translateY(0);
+  }
+  .sidebar .nav-link {
+    min-height: 44px;
+    display: flex;
+    align-items: center;
+    padding-block: 0.625rem;
+    line-height: 1.35;
+  }
+  .sidebar .nav-title--summary {
+    min-height: 44px;
+    align-items: center;
+  }
+  .sidebar .nav-title--summary::before,
+  .sidebar .nav-details > .nav-summary::before {
+    margin-block-start: 0;
   }
   .main {
     margin-left: 0;
@@ -2106,6 +2124,20 @@ a:hover {
   }
 }
 
+@media (any-hover: hover) and (any-pointer: fine) {
+  .mobile-footer-btn:hover {
+    background: color-mix(in srgb, var(--octc-color-bg-alt) 82%, var(--octc-color-primary) 12%);
+    color: var(--octc-color-text);
+    text-decoration: none;
+  }
+}
+
+@media (any-hover: none) and (any-pointer: coarse) {
+  .mobile-footer-btn:focus {
+    outline: none;
+  }
+}
+
 @media (max-width: 480px) {
   .main {
     padding-block-start: 0.75rem;
@@ -2162,7 +2194,7 @@ a:hover {
 <body>
 
   <header class="header">
-    <button class="menu-toggle" aria-label="Toggle menu">
+    <button class="menu-toggle" aria-label="Toggle menu" aria-controls="ox-sidebar" aria-expanded="false">
       <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round">
         <path d="M3 12h18M3 6h18M3 18h18"/>
       </svg>
@@ -2214,7 +2246,7 @@ a:hover {
   <div class="overlay"></div>
   <div class="layout">
 
-    <aside class="sidebar">
+    <aside id="ox-sidebar" class="sidebar">
 
       <nav>
 <div class="nav-section">
@@ -2245,7 +2277,7 @@ a:hover {
 
   </div>
   <footer class="mobile-footer">
-    <button class="mobile-footer-btn" aria-label="Menu" data-mobile-menu>
+    <button class="mobile-footer-btn" aria-label="Menu" aria-controls="ox-sidebar" aria-expanded="false" data-mobile-menu>
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
         <path d="M3 12h18M3 6h18M3 18h18"/>
       </svg>
@@ -2269,21 +2301,46 @@ a:hover {
   </footer>
   <!-- ox-content:scripts:start -->
   <script>const toggle = document.querySelector(".menu-toggle"),
+  mobileMenuBtn = document.querySelector("[data-mobile-menu]"),
   sidebar = document.querySelector(".sidebar"),
   overlay = document.querySelector(".overlay");
 
-if (toggle && sidebar && overlay) {
-  const close = () => {
-    sidebar.classList.remove("open");
-    overlay.classList.remove("open");
-  };
+let lastMenuTrigger = null;
 
-  toggle.addEventListener("click", () => {
-    sidebar.classList.toggle("open");
-    overlay.classList.toggle("open");
+const setMenuOpen = (open, trigger = null, restoreFocus = false) => {
+  if (!sidebar || !overlay) return;
+
+  sidebar.classList.toggle("open", open);
+  overlay.classList.toggle("open", open);
+  document.body.classList.toggle("menu-open", open);
+  [toggle, mobileMenuBtn].forEach((button) => button?.setAttribute("aria-expanded", String(open)));
+
+  if (open && trigger instanceof HTMLElement) {
+    lastMenuTrigger = trigger;
+  } else if (!open) {
+    const triggerToRestore = lastMenuTrigger;
+    lastMenuTrigger = null;
+    if (restoreFocus) {
+      requestAnimationFrame(() => triggerToRestore?.focus());
+    }
+  }
+};
+
+const toggleMenu = (trigger) => setMenuOpen(!sidebar?.classList.contains("open"), trigger);
+
+if (sidebar && overlay) {
+  toggle?.addEventListener("click", () => toggleMenu(toggle));
+  mobileMenuBtn?.addEventListener("click", () => toggleMenu(mobileMenuBtn));
+  overlay.addEventListener("click", () => setMenuOpen(false));
+  sidebar
+    .querySelectorAll("a")
+    .forEach((a) => a.addEventListener("click", () => setMenuOpen(false)));
+  document.addEventListener("keydown", (e) => {
+    if (e.key === "Escape" && sidebar.classList.contains("open")) {
+      e.preventDefault();
+      setMenuOpen(false, null, true);
+    }
   });
-  overlay.addEventListener("click", close);
-  sidebar.querySelectorAll("a").forEach((a) => a.addEventListener("click", close));
 }
 
 if (sidebar) {
@@ -2414,16 +2471,8 @@ document.querySelectorAll('a[href^="#"]').forEach((a) =>
   }),
 );
 
-const mobileMenuBtn = document.querySelector("[data-mobile-menu]"),
-  mobileSearchBtn = document.querySelector("[data-mobile-search]"),
+const mobileSearchBtn = document.querySelector("[data-mobile-search]"),
   mobileThemeBtn = document.querySelector("[data-mobile-theme]");
-
-mobileMenuBtn?.addEventListener("click", () => {
-  if (sidebar && overlay) {
-    sidebar.classList.toggle("open");
-    overlay.classList.toggle("open");
-  }
-});
 
 mobileSearchBtn?.addEventListener("click", () => {
   void openSearch();

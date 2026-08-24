@@ -11,7 +11,7 @@ fn nav_disabled_by_default() {
     assert!(!html.contains(r#"class="ox-no-navbar""#), "{html}");
     assert!(!html.contains("data-ox-announce"), "{html}");
     assert!(html.contains(r#"<header class="header">"#), "{html}");
-    assert!(html.contains(r#"<aside class="sidebar">"#), "{html}");
+    assert!(html.contains(r#"<aside id="ox-sidebar" class="sidebar">"#), "{html}");
 }
 
 #[test]
@@ -24,7 +24,11 @@ fn nav_happy_path_links() {
         false,
         PageChromeFlags::default(),
     );
-    let nav = html.find(r#"<nav class="header-nav""#).map(|i| &html[i..]).expect("header nav");
+    let nav = html
+        .find(r#"<nav class="header-nav""#)
+        .map(|i| &html[i..])
+        .and_then(|tail| tail.find("</nav>").map(|end| &tail[..end]))
+        .expect("header nav");
 
     assert!(nav.contains(r#"aria-label="Header""#), "{nav}");
     assert!(nav.contains(r#"href="/guide/""#), "{nav}");

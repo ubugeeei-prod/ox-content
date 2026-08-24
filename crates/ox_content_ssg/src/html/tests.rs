@@ -27,3 +27,23 @@ mod theme;
 fn search_keydown_ignores_ime_composition() {
     assert!(super::SSG_JS.contains("if (e.isComposing || e.keyCode === 229) return;"));
 }
+
+#[test]
+fn mobile_menu_script_keeps_state_and_focus_synchronized() {
+    assert!(
+        super::SSG_JS
+            .contains("const setMenuOpen = (open, trigger = null, restoreFocus = false) =>"),
+        "desktop and mobile menu controls need one state transition"
+    );
+    assert!(
+        super::SSG_JS.contains("document.body.classList.toggle(\"menu-open\", open);")
+            && super::SSG_JS.contains("setAttribute(\"aria-expanded\", String(open))"),
+        "scroll locking and expanded state must follow the visual sheet"
+    );
+    assert!(
+        super::SSG_JS.contains("e.key === \"Escape\"")
+            && super::SSG_JS.contains("setMenuOpen(false, null, true)")
+            && super::SSG_JS.contains("triggerToRestore?.focus()"),
+        "only keyboard dismissal should force focus back to the opener"
+    );
+}

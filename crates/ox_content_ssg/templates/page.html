@@ -27,7 +27,7 @@
 {% if let Some(skip) = skip_link %}{{ skip|safe }}
 {% endif %}{{ embed_header_before|safe }}{{ announcement_html|safe }}{% if show_navbar %}
   <header class="header">
-    <button class="menu-toggle" aria-label="Toggle menu">
+    <button class="menu-toggle" aria-label="Toggle menu" aria-controls="ox-sidebar" aria-expanded="false">
       <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round">
         <path d="M3 12h18M3 6h18M3 18h18"/>
       </svg>
@@ -86,7 +86,7 @@
   <div class="overlay"></div>
   <div class="layout">
 {% if !navigation.is_empty() %}
-    <aside class="sidebar{% if is_entry_page %} sidebar--entry{% endif %}">
+    <aside id="ox-sidebar" class="sidebar{% if is_entry_page %} sidebar--entry{% endif %}">
 {{ embed_sidebar_before|safe }}
       <nav>
 {{ navigation|safe }}
@@ -149,7 +149,7 @@
 {% endif %}
   </div>
   <footer class="mobile-footer">
-    <button class="mobile-footer-btn" aria-label="Menu" data-mobile-menu>
+    <button class="mobile-footer-btn" aria-label="Menu" aria-controls="ox-sidebar" aria-expanded="false" data-mobile-menu>
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
         <path d="M3 12h18M3 6h18M3 18h18"/>
       </svg>

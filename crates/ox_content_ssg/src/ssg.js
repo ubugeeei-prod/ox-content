@@ -1,19 +1,44 @@
 const toggle = document.querySelector(".menu-toggle"),
+  mobileMenuBtn = document.querySelector("[data-mobile-menu]"),
   sidebar = document.querySelector(".sidebar"),
   overlay = document.querySelector(".overlay");
 
-if (toggle && sidebar && overlay) {
-  const close = () => {
-    sidebar.classList.remove("open");
-    overlay.classList.remove("open");
-  };
+let lastMenuTrigger = null;
 
-  toggle.addEventListener("click", () => {
-    sidebar.classList.toggle("open");
-    overlay.classList.toggle("open");
+const setMenuOpen = (open, trigger = null, restoreFocus = false) => {
+  if (!sidebar || !overlay) return;
+
+  sidebar.classList.toggle("open", open);
+  overlay.classList.toggle("open", open);
+  document.body.classList.toggle("menu-open", open);
+  [toggle, mobileMenuBtn].forEach((button) => button?.setAttribute("aria-expanded", String(open)));
+
+  if (open && trigger instanceof HTMLElement) {
+    lastMenuTrigger = trigger;
+  } else if (!open) {
+    const triggerToRestore = lastMenuTrigger;
+    lastMenuTrigger = null;
+    if (restoreFocus) {
+      requestAnimationFrame(() => triggerToRestore?.focus());
+    }
+  }
+};
+
+const toggleMenu = (trigger) => setMenuOpen(!sidebar?.classList.contains("open"), trigger);
+
+if (sidebar && overlay) {
+  toggle?.addEventListener("click", () => toggleMenu(toggle));
+  mobileMenuBtn?.addEventListener("click", () => toggleMenu(mobileMenuBtn));
+  overlay.addEventListener("click", () => setMenuOpen(false));
+  sidebar
+    .querySelectorAll("a")
+    .forEach((a) => a.addEventListener("click", () => setMenuOpen(false)));
+  document.addEventListener("keydown", (e) => {
+    if (e.key === "Escape" && sidebar.classList.contains("open")) {
+      e.preventDefault();
+      setMenuOpen(false, null, true);
+    }
   });
-  overlay.addEventListener("click", close);
-  sidebar.querySelectorAll("a").forEach((a) => a.addEventListener("click", close));
 }
 
 if (sidebar) {
@@ -144,16 +169,8 @@ document.querySelectorAll('a[href^="#"]').forEach((a) =>
   }),
 );
 
-const mobileMenuBtn = document.querySelector("[data-mobile-menu]"),
-  mobileSearchBtn = document.querySelector("[data-mobile-search]"),
+const mobileSearchBtn = document.querySelector("[data-mobile-search]"),
   mobileThemeBtn = document.querySelector("[data-mobile-theme]");
-
-mobileMenuBtn?.addEventListener("click", () => {
-  if (sidebar && overlay) {
-    sidebar.classList.toggle("open");
-    overlay.classList.toggle("open");
-  }
-});
 
 mobileSearchBtn?.addEventListener("click", () => {
   void openSearch();
