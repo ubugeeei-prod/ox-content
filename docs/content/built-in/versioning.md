@@ -67,6 +67,19 @@ root index. Sitemaps stay scoped to the live tree unless a snapshot pass
 writes its own files. `javascript:`, `data:`, `vbscript:`, `//`, and `..`
 prefixes or snapshot paths are dropped.
 
+Inside a frozen snapshot, safe internal sidebar and header links stay under
+that snapshot's prefix. This includes generated and manual sidebars, nested
+items, permalinks, frontmatter aliases, configured redirects, breadcrumb
+roots, and previous/next links. Locale resolution runs first, so a link from
+`/2.90/ja/` keeps both the `2.90` version and `ja` locale when the translated
+sibling exists.
+
+If a sidebar destination does not exist in the snapshot, ox-content links to
+that version's root (for example, `/2.90/`) instead of silently returning to
+the live docs. External URLs, `mailto:`, hash-only links, unsafe schemes, and
+protocol-relative URLs are never version-prefixed. The live tree keeps its
+existing unprefixed navigation.
+
 Recreate a snapshot from a git tag with:
 
 ```bash

@@ -244,6 +244,10 @@ export const apiNav: NavItem[] = [
     "path": "/api/types"
   },
   {
+    "title": "Version Navigation",
+    "path": "/api/version-navigation"
+  },
+  {
     "title": "Versions",
     "path": "/api/versions"
   },
