@@ -72,6 +72,8 @@ pub(super) fn convert_theme_config(
             footer_before: e.footer_before,
             footer: e.footer,
         }),
+        aside: t.aside,
+        prev_next: t.prev_next,
         css: t.css,
         js: t.js,
     })

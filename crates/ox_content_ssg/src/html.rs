@@ -6,6 +6,7 @@ mod entry;
 mod footer;
 mod nav;
 mod page;
+mod pager;
 mod render;
 mod social;
 mod theme;
@@ -121,6 +122,7 @@ struct PageTemplate<'a> {
     embed_sidebar_after: &'a str,
     embed_content_before: &'a str,
     main_content: &'a str,
+    pager_html: &'a str,
     has_toc: bool,
     toc_html: &'a str,
     last_updated: Option<&'a LastUpdatedView>,

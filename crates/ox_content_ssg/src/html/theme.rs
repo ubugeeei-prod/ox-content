@@ -152,6 +152,11 @@ pub struct ThemeConfig {
     pub social_links: Option<SocialLinks>,
     /// Embedded HTML content at specific positions.
     pub embed: Option<ThemeEmbed>,
+    /// Show the right-hand TOC outline. Off by default.
+    pub aside: Option<bool>,
+    /// Show previous/next links from sidebar order. Off by default.
+    #[serde(rename = "prevNext")]
+    pub prev_next: Option<bool>,
     /// Additional custom CSS.
     pub css: Option<String>,
     /// Additional custom JavaScript.

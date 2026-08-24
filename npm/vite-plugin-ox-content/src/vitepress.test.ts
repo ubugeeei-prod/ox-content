@@ -114,6 +114,29 @@ describe("vitepress migration helpers", () => {
     expect(socialLinks.github).toBe("https://github.com/ubugeeei-prod/ox-content");
     expect(theme.footer?.copyright).toBe("2026");
     expect(theme.footer?.message).toBe("Migrated from VitePress");
+    expect(theme.aside).toBeUndefined();
+    expect(theme.prevNext).toBeUndefined();
+  });
+
+  it("maps VitePress aside and docFooter into opt-in page chrome", () => {
+    const options = fromVitePressConfig({
+      title: "Docs",
+      themeConfig: {
+        aside: true,
+        docFooter: { prev: "Previous page", next: "Next page" },
+      },
+    });
+
+    expect(options.ssg).not.toBe(false);
+    if (!options.ssg || options.ssg === true) {
+      throw new Error("Expected migrated SSG options");
+    }
+    const theme = options.ssg.theme;
+    if (!theme || Array.isArray(theme)) {
+      throw new Error("Expected a single migrated theme");
+    }
+    expect(theme.aside).toBe(true);
+    expect(theme.prevNext).toBe(true);
   });
 
   it("generates an editable ox-content options module", () => {

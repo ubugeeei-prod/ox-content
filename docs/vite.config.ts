@@ -51,6 +51,8 @@ export default defineConfig(({ mode }) => {
           ogImage,
           theme: defineTheme({
             extends: defaultTheme,
+            aside: true,
+            prevNext: true,
             header: {
               logo: "oxcontent-dark.svg",
               logoLight: "oxcontent-dark.svg",

@@ -95,7 +95,8 @@
 {% endif %}
     <main class="main{% if has_toc %} main--with-toc{% endif %}">
 {{ embed_content_before|safe }}
-{{ main_content|safe }}
+{{ main_content|safe }}{% if !pager_html.is_empty() %}
+{{ pager_html|safe }}{% endif %}
 {% if let Some(updated) = last_updated %}
       <p class="last-updated">Last updated: <time datetime="{{ updated.datetime }}">{{ updated.text }}</time></p>
 {% endif %}

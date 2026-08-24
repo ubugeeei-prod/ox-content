@@ -43,6 +43,8 @@ export interface VitePressThemeConfig {
   sidebar?: VitePressSidebar;
   socialLinks?: VitePressSocialLink[];
   footer?: VitePressFooter;
+  aside?: boolean;
+  docFooter?: boolean | { prev?: string | false; next?: string | false };
   search?: {
     placeholder?: string;
   };
@@ -296,11 +298,28 @@ function toThemeConfig(themeConfig: VitePressThemeConfig | undefined): ThemeConf
           socialLinks,
         }
       : {}),
+    ...(themeConfig.aside === undefined ? {} : { aside: themeConfig.aside === true }),
+    ...(themeConfig.docFooter === undefined
+      ? {}
+      : { prevNext: vitePressDocFooterEnabled(themeConfig.docFooter) }),
   };
 
-  return logo || Object.keys(socialLinks).length > 0 || themeConfig.footer
+  return logo ||
+    Object.keys(socialLinks).length > 0 ||
+    themeConfig.footer ||
+    themeConfig.aside !== undefined ||
+    themeConfig.docFooter !== undefined
     ? defineTheme(theme)
     : undefined;
+}
+
+function vitePressDocFooterEnabled(
+  docFooter: boolean | { prev?: string | false; next?: string | false },
+): boolean {
+  if (typeof docFooter === "boolean") {
+    return docFooter;
+  }
+  return docFooter.prev !== false || docFooter.next !== false;
 }
 
 function resolveSiteName(config: VitePressConfig): string | undefined {

@@ -44,6 +44,22 @@ export default defineConfig({
 });
 ```
 
+### Page chrome (opt-in)
+
+The default theme keeps the right-hand outline and previous/next links off
+until you ask for them:
+
+```ts
+theme: defineTheme({
+  extends: defaultTheme,
+  aside: true, // "On this page" outline when the page has headings
+  prevNext: true, // Previous / Next links from sidebar order
+});
+```
+
+Entry pages never show previous/next links. The outline still needs headings
+in the page TOC.
+
 ### JSX Theme (Full Control)
 
 ox-content supports JSX/TSX themes that render to static HTML with **zero client-side JavaScript** by default.
