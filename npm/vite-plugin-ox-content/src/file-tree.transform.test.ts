@@ -65,6 +65,7 @@ function createResolvedOptions(overrides: Partial<ResolvedOptions> = {}): Resolv
     images: { enabled: false, lazy: true },
     codeImports: { enabled: false },
     includes: { enabled: false },
+    cards: { enabled: false },
     steps: { enabled: false },
     math: { enabled: false },
     fileTree: { enabled: false },

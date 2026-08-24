@@ -3,15 +3,15 @@
   "generatedAt": "2026-08-24T09:29:05.330Z",
   "summary": {
     "modules": 47,
-    "entries": 403,
+    "entries": 405,
     "byKind": {
       "function": 178,
-      "interface": 162,
+      "interface": 164,
       "type": 14,
       "variable": 12,
       "module": 37
     },
-    "members": 874,
+    "members": 879,
     "params": 320,
     "returns": 174,
     "examples": 20,
@@ -902,8 +902,8 @@
             "```ts\n// vite.config.ts\nimport { defineConfig } from 'vite';\nimport { oxContent } from '@ox-content/vite-plugin';\n\nexport default defineConfig({\n  plugins: [\n    oxContent({\n      srcDir: 'content',\n      gfm: true,\n    }),\n  ],\n});\n```"
           ],
           "file": "npm/vite-plugin-ox-content/src/index.ts",
-          "line": 144,
-          "endLine": 170,
+          "line": 147,
+          "endLine": 173,
           "signature": "export function oxContent(options: OxContentOptions = {}): Plugin[]"
         },
         {
@@ -922,8 +922,8 @@
             "description": ""
           },
           "file": "npm/vite-plugin-ox-content/src/index.ts",
-          "line": 579,
-          "endLine": 627,
+          "line": 582,
+          "endLine": 631,
           "signature": "function resolveOptions(options: OxContentOptions): ResolvedOptions"
         },
         {
@@ -947,8 +947,8 @@
             "description": ""
           },
           "file": "npm/vite-plugin-ox-content/src/index.ts",
-          "line": 857,
-          "endLine": 902,
+          "line": 862,
+          "endLine": 907,
           "signature": "export function generateVirtualModule(path: string, options: ResolvedOptions): string"
         }
       ]
@@ -9533,13 +9533,33 @@
               "endLine": 291
             },
             {
+              "name": "fileTree",
+              "kind": "property",
+              "description": "",
+              "type": "{ enabled?: boolean }",
+              "members": [
+                {
+                  "name": "enabled",
+                  "kind": "property",
+                  "description": "",
+                  "type": "boolean",
+                  "optional": true,
+                  "line": 294,
+                  "endLine": 294
+                }
+              ],
+              "optional": true,
+              "line": 293,
+              "endLine": 295
+            },
+            {
               "name": "sanitize",
               "kind": "property",
               "description": "",
               "type": "JsSanitizeOptions",
               "optional": true,
-              "line": 293,
-              "endLine": 293
+              "line": 297,
+              "endLine": 297
             },
             {
               "name": "editThisPage",
@@ -9553,8 +9573,8 @@
                   "description": "",
                   "type": "boolean",
                   "optional": true,
-                  "line": 296,
-                  "endLine": 296
+                  "line": 300,
+                  "endLine": 300
                 },
                 {
                   "name": "repoUrl",
@@ -9562,8 +9582,8 @@
                   "description": "",
                   "type": "string",
                   "optional": true,
-                  "line": 297,
-                  "endLine": 297
+                  "line": 301,
+                  "endLine": 301
                 },
                 {
                   "name": "branch",
@@ -9571,8 +9591,8 @@
                   "description": "",
                   "type": "string",
                   "optional": true,
-                  "line": 298,
-                  "endLine": 298
+                  "line": 302,
+                  "endLine": 302
                 },
                 {
                   "name": "rootDir",
@@ -9580,8 +9600,8 @@
                   "description": "",
                   "type": "string",
                   "optional": true,
-                  "line": 299,
-                  "endLine": 299
+                  "line": 303,
+                  "endLine": 303
                 },
                 {
                   "name": "label",
@@ -9589,13 +9609,13 @@
                   "description": "",
                   "type": "string",
                   "optional": true,
-                  "line": 300,
-                  "endLine": 300
+                  "line": 304,
+                  "endLine": 304
                 }
               ],
               "optional": true,
-              "line": 295,
-              "endLine": 301
+              "line": 299,
+              "endLine": 305
             },
             {
               "name": "math",
@@ -9604,13 +9624,13 @@
               "type": "boolean | { enabled?: boolean }",
               "default": "false",
               "optional": true,
-              "line": 311,
-              "endLine": 315
+              "line": 315,
+              "endLine": 319
             }
           ],
           "file": "npm/vite-plugin-ox-content/src/transform.ts",
           "line": 142,
-          "endLine": 316,
+          "endLine": 320,
           "signature": "interface JsTransformOptions"
         },
         {
@@ -9624,8 +9644,8 @@
               "description": "Convert `.md` links to `.html` links",
               "type": "boolean",
               "optional": true,
-              "line": 495,
-              "endLine": 495
+              "line": 499,
+              "endLine": 499
             },
             {
               "name": "baseUrl",
@@ -9633,8 +9653,8 @@
               "description": "Base URL for absolute link conversion",
               "type": "string",
               "optional": true,
-              "line": 497,
-              "endLine": 497
+              "line": 501,
+              "endLine": 501
             },
             {
               "name": "sourcePath",
@@ -9642,13 +9662,13 @@
               "description": "Source file path for relative link resolution",
               "type": "string",
               "optional": true,
-              "line": 499,
-              "endLine": 499
+              "line": 503,
+              "endLine": 503
             }
           ],
           "file": "npm/vite-plugin-ox-content/src/transform.ts",
-          "line": 493,
-          "endLine": 500,
+          "line": 497,
+          "endLine": 504,
           "signature": "export interface SsgTransformOptions"
         },
         {
@@ -9687,8 +9707,8 @@
             "description": ""
           },
           "file": "npm/vite-plugin-ox-content/src/transform.ts",
-          "line": 752,
-          "endLine": 801,
+          "line": 757,
+          "endLine": 806,
           "signature": "function generateModuleCode(html: string, frontmatter: Record<string, unknown>, toc: TocEntry[], filePath: string, _options: ResolvedOptions): string"
         },
         {
@@ -9707,8 +9727,8 @@
             "description": ""
           },
           "file": "npm/vite-plugin-ox-content/src/transform.ts",
-          "line": 808,
-          "endLine": 818,
+          "line": 813,
+          "endLine": 823,
           "signature": "export function extractImports(content: string): string[]"
         },
         {
@@ -9733,8 +9753,8 @@
             "description": "SVG string or null if NAPI bindings are unavailable"
           },
           "file": "npm/vite-plugin-ox-content/src/transform.ts",
-          "line": 834,
-          "endLine": 856,
+          "line": 839,
+          "endLine": 861,
           "signature": "export async function generateOgImageSvg(data: OgImageData, config?: OgImageConfig): Promise<string | null>"
         }
       ]
@@ -10905,14 +10925,24 @@
               "endLine": 740
             },
             {
+              "name": "fileTree",
+              "kind": "property",
+              "description": "Opt-in static directory trees from `file-tree` fences.\n\nPassing `true` or `{}` enables the transform. Names are escaped and never\nread from the filesystem.",
+              "type": "boolean | FileTreeOptions",
+              "default": "false",
+              "optional": true,
+              "line": 750,
+              "endLine": 750
+            },
+            {
               "name": "sanitize",
               "kind": "property",
               "description": "Sanitize rendered HTML with safe defaults or explicit allow lists.\n\nEnable this for untrusted Markdown. The default allow lists are conservative;\npass an options object only when the content model intentionally needs extra\ntags, attributes, or URL schemes.",
               "type": "boolean | SanitizeOptions",
               "default": "false",
               "optional": true,
-              "line": 751,
-              "endLine": 751
+              "line": 761,
+              "endLine": 761
             },
             {
               "name": "editThisPage",
@@ -10921,8 +10951,8 @@
               "type": "boolean | EditThisPageOptions",
               "default": "false",
               "optional": true,
-              "line": 762,
-              "endLine": 762
+              "line": 772,
+              "endLine": 772
             },
             {
               "name": "cjkEmphasis",
@@ -10931,8 +10961,8 @@
               "type": "boolean",
               "default": "false",
               "optional": true,
-              "line": 769,
-              "endLine": 769
+              "line": 779,
+              "endLine": 779
             },
             {
               "name": "codeBlockLint",
@@ -10941,8 +10971,8 @@
               "type": "boolean | CodeBlockLintOptions",
               "default": "false",
               "optional": true,
-              "line": 780,
-              "endLine": 780
+              "line": 790,
+              "endLine": 790
             },
             {
               "name": "codeBlockTypecheck",
@@ -10951,8 +10981,8 @@
               "type": "boolean | CodeBlockTypecheckOptions",
               "default": "false",
               "optional": true,
-              "line": 791,
-              "endLine": 791
+              "line": 801,
+              "endLine": 801
             },
             {
               "name": "docsTests",
@@ -10961,8 +10991,8 @@
               "type": "boolean | DocsTestOptions",
               "default": "false",
               "optional": true,
-              "line": 801,
-              "endLine": 801
+              "line": 811,
+              "endLine": 811
             },
             {
               "name": "mermaid",
@@ -10971,8 +11001,8 @@
               "type": "boolean",
               "default": "false",
               "optional": true,
-              "line": 807,
-              "endLine": 807
+              "line": 817,
+              "endLine": 817
             },
             {
               "name": "math",
@@ -10981,8 +11011,8 @@
               "type": "boolean | MathOptions",
               "default": "false",
               "optional": true,
-              "line": 817,
-              "endLine": 817
+              "line": 827,
+              "endLine": 827
             },
             {
               "name": "frontmatter",
@@ -10991,8 +11021,8 @@
               "type": "boolean",
               "default": "true",
               "optional": true,
-              "line": 823,
-              "endLine": 823
+              "line": 833,
+              "endLine": 833
             },
             {
               "name": "toc",
@@ -11001,8 +11031,8 @@
               "type": "boolean",
               "default": "true",
               "optional": true,
-              "line": 829,
-              "endLine": 829
+              "line": 839,
+              "endLine": 839
             },
             {
               "name": "tocMaxDepth",
@@ -11011,8 +11041,8 @@
               "type": "number",
               "default": "3",
               "optional": true,
-              "line": 835,
-              "endLine": 835
+              "line": 845,
+              "endLine": 845
             },
             {
               "name": "ogImage",
@@ -11021,8 +11051,8 @@
               "type": "boolean",
               "default": "false",
               "optional": true,
-              "line": 841,
-              "endLine": 841
+              "line": 851,
+              "endLine": 851
             },
             {
               "name": "ogImageOptions",
@@ -11031,8 +11061,8 @@
               "type": "OgImageOptions",
               "default": "{ vuePlugin: 'vitejs', width: 1200, height: 630, cache: true, concurrency: 1 }",
               "optional": true,
-              "line": 848,
-              "endLine": 848
+              "line": 858,
+              "endLine": 858
             },
             {
               "name": "transformers",
@@ -11041,8 +11071,8 @@
               "type": "MarkdownTransformer[]",
               "default": "[]",
               "optional": true,
-              "line": 855,
-              "endLine": 855
+              "line": 865,
+              "endLine": 865
             },
             {
               "name": "docs",
@@ -11051,8 +11081,8 @@
               "type": "DocsOptions | false",
               "default": "{ enabled: true }",
               "optional": true,
-              "line": 862,
-              "endLine": 862
+              "line": 872,
+              "endLine": 872
             },
             {
               "name": "search",
@@ -11061,8 +11091,8 @@
               "type": "SearchOptions | boolean",
               "default": "{ enabled: true }",
               "optional": true,
-              "line": 869,
-              "endLine": 869
+              "line": 879,
+              "endLine": 879
             },
             {
               "name": "collections",
@@ -11071,8 +11101,8 @@
               "type": "CollectionsOptions | boolean",
               "default": "content collection for all Markdown files",
               "optional": true,
-              "line": 881,
-              "endLine": 881
+              "line": 891,
+              "endLine": 891
             },
             {
               "name": "ogViewer",
@@ -11081,8 +11111,8 @@
               "type": "boolean",
               "default": "true",
               "optional": true,
-              "line": 888,
-              "endLine": 888
+              "line": 898,
+              "endLine": 898
             },
             {
               "name": "embeds",
@@ -11091,8 +11121,8 @@
               "type": "BuiltinEmbedOptions | false",
               "default": "{ github: true, openGraph: true }",
               "optional": true,
-              "line": 895,
-              "endLine": 895
+              "line": 905,
+              "endLine": 905
             },
             {
               "name": "i18n",
@@ -11101,13 +11131,13 @@
               "type": "I18nOptions | false",
               "default": "false",
               "optional": true,
-              "line": 902,
-              "endLine": 902
+              "line": 912,
+              "endLine": 912
             }
           ],
           "file": "npm/vite-plugin-ox-content/src/types.ts",
           "line": 493,
-          "endLine": 903,
+          "endLine": 913,
           "signature": "export interface OxContentOptions"
         },
         {
@@ -11120,40 +11150,40 @@
               "kind": "property",
               "description": "",
               "type": "string",
-              "line": 909,
-              "endLine": 909
+              "line": 919,
+              "endLine": 919
             },
             {
               "name": "outDir",
               "kind": "property",
               "description": "",
               "type": "string",
-              "line": 910,
-              "endLine": 910
+              "line": 920,
+              "endLine": 920
             },
             {
               "name": "base",
               "kind": "property",
               "description": "",
               "type": "string",
-              "line": 911,
-              "endLine": 911
+              "line": 921,
+              "endLine": 921
             },
             {
               "name": "extensions",
               "kind": "property",
               "description": "",
               "type": "string[]",
-              "line": 912,
-              "endLine": 912
+              "line": 922,
+              "endLine": 922
             },
             {
               "name": "ssg",
               "kind": "property",
               "description": "",
               "type": "ResolvedSsgOptions",
-              "line": 913,
-              "endLine": 913
+              "line": 923,
+              "endLine": 923
             },
             {
               "name": "siteMaps",
@@ -11161,8 +11191,8 @@
               "description": "",
               "type": "ResolvedSiteMapsOptions",
               "optional": true,
-              "line": 914,
-              "endLine": 914
+              "line": 924,
+              "endLine": 924
             },
             {
               "name": "publishState",
@@ -11170,291 +11200,211 @@
               "description": "",
               "type": "ResolvedPublishStateOptions",
               "optional": true,
-              "line": 915,
-              "endLine": 915
+              "line": 925,
+              "endLine": 925
             },
             {
               "name": "gfm",
               "kind": "property",
               "description": "",
               "type": "boolean",
-              "line": 916,
-              "endLine": 916
+              "line": 926,
+              "endLine": 926
             },
             {
               "name": "footnotes",
               "kind": "property",
               "description": "",
               "type": "boolean",
-              "line": 917,
-              "endLine": 917
+              "line": 927,
+              "endLine": 927
             },
             {
               "name": "tables",
               "kind": "property",
               "description": "",
               "type": "boolean",
-              "line": 918,
-              "endLine": 918
+              "line": 928,
+              "endLine": 928
             },
             {
               "name": "taskLists",
               "kind": "property",
               "description": "",
               "type": "boolean",
-              "line": 919,
-              "endLine": 919
+              "line": 929,
+              "endLine": 929
             },
             {
               "name": "strikethrough",
               "kind": "property",
               "description": "",
               "type": "boolean",
-              "line": 920,
-              "endLine": 920
+              "line": 930,
+              "endLine": 930
             },
             {
               "name": "autolinks",
               "kind": "property",
               "description": "",
               "type": "boolean",
-              "line": 921,
-              "endLine": 921
+              "line": 931,
+              "endLine": 931
             },
             {
               "name": "highlight",
               "kind": "property",
               "description": "",
               "type": "boolean",
-              "line": 922,
-              "endLine": 922
+              "line": 932,
+              "endLine": 932
             },
             {
               "name": "codeAnnotations",
               "kind": "property",
               "description": "",
               "type": "ResolvedCodeAnnotationsOptions",
-              "line": 923,
-              "endLine": 923
+              "line": 933,
+              "endLine": 933
             },
             {
               "name": "wikiLinks",
               "kind": "property",
               "description": "",
               "type": "ResolvedWikiLinkOptions",
-              "line": 924,
-              "endLine": 924
+              "line": 934,
+              "endLine": 934
             },
             {
               "name": "emojiShortcodes",
               "kind": "property",
               "description": "",
               "type": "ResolvedEmojiShortcodeOptions",
-              "line": 925,
-              "endLine": 925
+              "line": 935,
+              "endLine": 935
             },
             {
               "name": "attrs",
               "kind": "property",
               "description": "",
               "type": "ResolvedAttrsOptions",
-              "line": 926,
-              "endLine": 926
+              "line": 936,
+              "endLine": 936
             },
             {
               "name": "badges",
               "kind": "property",
               "description": "",
               "type": "ResolvedBadgeOptions",
-              "line": 927,
-              "endLine": 927
+              "line": 937,
+              "endLine": 937
             },
             {
               "name": "containers",
               "kind": "property",
               "description": "",
               "type": "ResolvedContainerOptions",
-              "line": 928,
-              "endLine": 928
+              "line": 938,
+              "endLine": 938
             },
             {
               "name": "images",
               "kind": "property",
               "description": "",
               "type": "ResolvedImageOptions",
-              "line": 929,
-              "endLine": 929
+              "line": 939,
+              "endLine": 939
             },
             {
               "name": "codeImports",
               "kind": "property",
               "description": "",
               "type": "ResolvedCodeImportOptions",
-              "line": 930,
-              "endLine": 930
+              "line": 940,
+              "endLine": 940
             },
             {
               "name": "includes",
               "kind": "property",
               "description": "",
               "type": "ResolvedIncludeOptions",
-              "line": 931,
-              "endLine": 931
+              "line": 941,
+              "endLine": 941
             },
             {
               "name": "cards",
               "kind": "property",
               "description": "",
               "type": "ResolvedCardOptions",
-              "line": 932,
-              "endLine": 932
+              "line": 942,
+              "endLine": 942
             },
             {
               "name": "steps",
               "kind": "property",
               "description": "",
               "type": "ResolvedStepsOptions",
-              "line": 933,
-              "endLine": 933
+              "line": 943,
+              "endLine": 943
+            },
+            {
+              "name": "fileTree",
+              "kind": "property",
+              "description": "",
+              "type": "ResolvedFileTreeOptions",
+              "line": 944,
+              "endLine": 944
             },
             {
               "name": "sanitize",
               "kind": "property",
               "description": "",
               "type": "ResolvedSanitizeOptions",
-              "line": 934,
-              "endLine": 934
+              "line": 945,
+              "endLine": 945
             },
             {
               "name": "editThisPage",
               "kind": "property",
               "description": "",
               "type": "ResolvedEditThisPageOptions",
-              "line": 935,
-              "endLine": 935
+              "line": 946,
+              "endLine": 946
             },
             {
               "name": "cjkEmphasis",
               "kind": "property",
               "description": "",
               "type": "boolean",
-              "line": 936,
-              "endLine": 936
+              "line": 947,
+              "endLine": 947
             },
             {
               "name": "codeBlockLint",
               "kind": "property",
               "description": "",
               "type": "ResolvedCodeBlockLintOptions",
-              "line": 937,
-              "endLine": 937
+              "line": 948,
+              "endLine": 948
             },
             {
               "name": "codeBlockTypecheck",
               "kind": "property",
               "description": "",
               "type": "ResolvedCodeBlockTypecheckOptions",
-              "line": 938,
-              "endLine": 938
+              "line": 949,
+              "endLine": 949
             },
             {
               "name": "docsTests",
               "kind": "property",
               "description": "",
               "type": "ResolvedDocsTestOptions",
-              "line": 939,
-              "endLine": 939
-            },
-            {
-              "name": "mermaid",
-              "kind": "property",
-              "description": "",
-              "type": "boolean",
-              "line": 940,
-              "endLine": 940
-            },
-            {
-              "name": "math",
-              "kind": "property",
-              "description": "",
-              "type": "ResolvedMathOptions",
-              "line": 941,
-              "endLine": 941
-            },
-            {
-              "name": "frontmatter",
-              "kind": "property",
-              "description": "",
-              "type": "boolean",
-              "line": 942,
-              "endLine": 942
-            },
-            {
-              "name": "toc",
-              "kind": "property",
-              "description": "",
-              "type": "boolean",
-              "line": 943,
-              "endLine": 943
-            },
-            {
-              "name": "tocMaxDepth",
-              "kind": "property",
-              "description": "",
-              "type": "number",
-              "line": 944,
-              "endLine": 944
-            },
-            {
-              "name": "ogImage",
-              "kind": "property",
-              "description": "",
-              "type": "boolean",
-              "line": 945,
-              "endLine": 945
-            },
-            {
-              "name": "ogImageOptions",
-              "kind": "property",
-              "description": "",
-              "type": "ResolvedOgImageOptions",
-              "line": 946,
-              "endLine": 946
-            },
-            {
-              "name": "transformers",
-              "kind": "property",
-              "description": "",
-              "type": "MarkdownTransformer[]",
-              "line": 947,
-              "endLine": 947
-            },
-            {
-              "name": "docs",
-              "kind": "property",
-              "description": "",
-              "type": "ResolvedDocsOptions | false",
-              "line": 948,
-              "endLine": 948
-            },
-            {
-              "name": "search",
-              "kind": "property",
-              "description": "",
-              "type": "ResolvedSearchOptions",
-              "line": 949,
-              "endLine": 949
-            },
-            {
-              "name": "collections",
-              "kind": "property",
-              "description": "",
-              "type": "ResolvedCollectionsOptions",
               "line": 950,
               "endLine": 950
             },
             {
-              "name": "ogViewer",
+              "name": "mermaid",
               "kind": "property",
               "description": "",
               "type": "boolean",
@@ -11462,25 +11412,113 @@
               "endLine": 951
             },
             {
+              "name": "math",
+              "kind": "property",
+              "description": "",
+              "type": "ResolvedMathOptions",
+              "line": 952,
+              "endLine": 952
+            },
+            {
+              "name": "frontmatter",
+              "kind": "property",
+              "description": "",
+              "type": "boolean",
+              "line": 953,
+              "endLine": 953
+            },
+            {
+              "name": "toc",
+              "kind": "property",
+              "description": "",
+              "type": "boolean",
+              "line": 954,
+              "endLine": 954
+            },
+            {
+              "name": "tocMaxDepth",
+              "kind": "property",
+              "description": "",
+              "type": "number",
+              "line": 955,
+              "endLine": 955
+            },
+            {
+              "name": "ogImage",
+              "kind": "property",
+              "description": "",
+              "type": "boolean",
+              "line": 956,
+              "endLine": 956
+            },
+            {
+              "name": "ogImageOptions",
+              "kind": "property",
+              "description": "",
+              "type": "ResolvedOgImageOptions",
+              "line": 957,
+              "endLine": 957
+            },
+            {
+              "name": "transformers",
+              "kind": "property",
+              "description": "",
+              "type": "MarkdownTransformer[]",
+              "line": 958,
+              "endLine": 958
+            },
+            {
+              "name": "docs",
+              "kind": "property",
+              "description": "",
+              "type": "ResolvedDocsOptions | false",
+              "line": 959,
+              "endLine": 959
+            },
+            {
+              "name": "search",
+              "kind": "property",
+              "description": "",
+              "type": "ResolvedSearchOptions",
+              "line": 960,
+              "endLine": 960
+            },
+            {
+              "name": "collections",
+              "kind": "property",
+              "description": "",
+              "type": "ResolvedCollectionsOptions",
+              "line": 961,
+              "endLine": 961
+            },
+            {
+              "name": "ogViewer",
+              "kind": "property",
+              "description": "",
+              "type": "boolean",
+              "line": 962,
+              "endLine": 962
+            },
+            {
               "name": "embeds",
               "kind": "property",
               "description": "",
               "type": "ResolvedBuiltinEmbedOptions",
-              "line": 952,
-              "endLine": 952
+              "line": 963,
+              "endLine": 963
             },
             {
               "name": "i18n",
               "kind": "property",
               "description": "",
               "type": "ResolvedI18nOptions | false",
-              "line": 953,
-              "endLine": 953
+              "line": 964,
+              "endLine": 964
             }
           ],
           "file": "npm/vite-plugin-ox-content/src/types.ts",
-          "line": 908,
-          "endLine": 954,
+          "line": 918,
+          "endLine": 965,
           "signature": "export interface ResolvedOptions"
         },
         {
@@ -11495,8 +11533,8 @@
               "type": "boolean | GitHubOptions",
               "default": "true",
               "optional": true,
-              "line": 965,
-              "endLine": 965
+              "line": 976,
+              "endLine": 976
             },
             {
               "name": "openGraph",
@@ -11505,8 +11543,8 @@
               "type": "boolean | OgpOptions",
               "default": "true",
               "optional": true,
-              "line": 972,
-              "endLine": 972
+              "line": 983,
+              "endLine": 983
             },
             {
               "name": "pm",
@@ -11515,8 +11553,8 @@
               "type": "boolean | BuiltinPmOptions",
               "default": "false",
               "optional": true,
-              "line": 983,
-              "endLine": 983
+              "line": 994,
+              "endLine": 994
             },
             {
               "name": "spotify",
@@ -11525,8 +11563,8 @@
               "type": "boolean",
               "default": "false",
               "optional": true,
-              "line": 989,
-              "endLine": 989
+              "line": 1000,
+              "endLine": 1000
             },
             {
               "name": "stackBlitz",
@@ -11535,8 +11573,8 @@
               "type": "boolean",
               "default": "false",
               "optional": true,
-              "line": 995,
-              "endLine": 995
+              "line": 1006,
+              "endLine": 1006
             },
             {
               "name": "twitter",
@@ -11545,8 +11583,8 @@
               "type": "boolean | TwitterEmbedOptions",
               "default": "false",
               "optional": true,
-              "line": 1003,
-              "endLine": 1003
+              "line": 1014,
+              "endLine": 1014
             },
             {
               "name": "bluesky",
@@ -11555,8 +11593,8 @@
               "type": "boolean",
               "default": "false",
               "optional": true,
-              "line": 1009,
-              "endLine": 1009
+              "line": 1020,
+              "endLine": 1020
             },
             {
               "name": "webContainer",
@@ -11565,13 +11603,13 @@
               "type": "boolean",
               "default": "false",
               "optional": true,
-              "line": 1015,
-              "endLine": 1015
+              "line": 1026,
+              "endLine": 1026
             }
           ],
           "file": "npm/vite-plugin-ox-content/src/types.ts",
-          "line": 959,
-          "endLine": 1016,
+          "line": 970,
+          "endLine": 1027,
           "signature": "export interface BuiltinEmbedOptions"
         },
         {
@@ -11586,13 +11624,13 @@
               "type": "boolean",
               "default": "false",
               "optional": true,
-              "line": 1026,
-              "endLine": 1026
+              "line": 1037,
+              "endLine": 1037
             }
           ],
           "file": "npm/vite-plugin-ox-content/src/types.ts",
-          "line": 1021,
-          "endLine": 1027,
+          "line": 1032,
+          "endLine": 1038,
           "signature": "export interface BuiltinPmOptions"
         },
         {
@@ -11605,69 +11643,69 @@
               "kind": "property",
               "description": "",
               "type": "GitHubOptions | false",
-              "line": 1033,
-              "endLine": 1033
+              "line": 1044,
+              "endLine": 1044
             },
             {
               "name": "openGraph",
               "kind": "property",
               "description": "",
               "type": "OgpOptions | false",
-              "line": 1034,
-              "endLine": 1034
+              "line": 1045,
+              "endLine": 1045
             },
             {
               "name": "pm",
               "kind": "property",
               "description": "",
               "type": "BuiltinPmOptions | false",
-              "line": 1035,
-              "endLine": 1035
+              "line": 1046,
+              "endLine": 1046
             },
             {
               "name": "spotify",
               "kind": "property",
               "description": "",
               "type": "boolean",
-              "line": 1036,
-              "endLine": 1036
+              "line": 1047,
+              "endLine": 1047
             },
             {
               "name": "stackBlitz",
               "kind": "property",
               "description": "",
               "type": "boolean",
-              "line": 1037,
-              "endLine": 1037
+              "line": 1048,
+              "endLine": 1048
             },
             {
               "name": "twitter",
               "kind": "property",
               "description": "",
               "type": "TwitterEmbedOptions | false",
-              "line": 1038,
-              "endLine": 1038
+              "line": 1049,
+              "endLine": 1049
             },
             {
               "name": "bluesky",
               "kind": "property",
               "description": "",
               "type": "boolean",
-              "line": 1039,
-              "endLine": 1039
+              "line": 1050,
+              "endLine": 1050
             },
             {
               "name": "webContainer",
               "kind": "property",
               "description": "",
               "type": "boolean",
-              "line": 1040,
-              "endLine": 1040
+              "line": 1051,
+              "endLine": 1051
             }
           ],
           "file": "npm/vite-plugin-ox-content/src/types.ts",
-          "line": 1032,
-          "endLine": 1041,
+          "line": 1043,
+          "endLine": 1052,
           "signature": "export interface ResolvedBuiltinEmbedOptions"
         },
         {
@@ -11682,13 +11720,13 @@
               "type": "boolean",
               "default": "true",
               "optional": true,
-              "line": 1052,
-              "endLine": 1052
+              "line": 1063,
+              "endLine": 1063
             }
           ],
           "file": "npm/vite-plugin-ox-content/src/types.ts",
-          "line": 1046,
-          "endLine": 1053,
+          "line": 1057,
+          "endLine": 1064,
           "signature": "export interface BadgeOptions"
         },
         {
@@ -11701,13 +11739,13 @@
               "kind": "property",
               "description": "",
               "type": "boolean",
-              "line": 1059,
-              "endLine": 1059
+              "line": 1070,
+              "endLine": 1070
             }
           ],
           "file": "npm/vite-plugin-ox-content/src/types.ts",
-          "line": 1058,
-          "endLine": 1060,
+          "line": 1069,
+          "endLine": 1071,
           "signature": "export interface ResolvedBadgeOptions"
         },
         {
@@ -11722,8 +11760,8 @@
               "type": "boolean",
               "default": "true",
               "optional": true,
-              "line": 1071,
-              "endLine": 1071
+              "line": 1082,
+              "endLine": 1082
             },
             {
               "name": "types",
@@ -11731,13 +11769,13 @@
               "description": "Extra or overriding container types.\n\nKeys must be ASCII identifiers (`[A-Za-z0-9_-]+`). Unknown hostile names\nare ignored.",
               "type": "Record<string, ContainerTypeOptions>",
               "optional": true,
-              "line": 1078,
-              "endLine": 1078
+              "line": 1089,
+              "endLine": 1089
             }
           ],
           "file": "npm/vite-plugin-ox-content/src/types.ts",
-          "line": 1065,
-          "endLine": 1079,
+          "line": 1076,
+          "endLine": 1090,
           "signature": "export interface ContainerOptions"
         },
         {
@@ -11751,8 +11789,8 @@
               "description": "Title used when the opener does not set one.",
               "type": "string",
               "optional": true,
-              "line": 1086,
-              "endLine": 1086
+              "line": 1097,
+              "endLine": 1097
             },
             {
               "name": "tag",
@@ -11760,13 +11798,13 @@
               "description": "`\"details\"` renders `<details>`/`<summary>`; anything else is a `<div>`.",
               "type": "\"div\" | \"details\"",
               "optional": true,
-              "line": 1088,
-              "endLine": 1088
+              "line": 1099,
+              "endLine": 1099
             }
           ],
           "file": "npm/vite-plugin-ox-content/src/types.ts",
-          "line": 1084,
-          "endLine": 1089,
+          "line": 1095,
+          "endLine": 1100,
           "signature": "export interface ContainerTypeOptions"
         },
         {
@@ -11779,21 +11817,21 @@
               "kind": "property",
               "description": "",
               "type": "boolean",
-              "line": 1095,
-              "endLine": 1095
+              "line": 1106,
+              "endLine": 1106
             },
             {
               "name": "types",
               "kind": "property",
               "description": "",
               "type": "Record<string, ContainerTypeOptions>",
-              "line": 1096,
-              "endLine": 1096
+              "line": 1107,
+              "endLine": 1107
             }
           ],
           "file": "npm/vite-plugin-ox-content/src/types.ts",
-          "line": 1094,
-          "endLine": 1097,
+          "line": 1105,
+          "endLine": 1108,
           "signature": "export interface ResolvedContainerOptions"
         },
         {
@@ -11808,13 +11846,13 @@
               "type": "boolean",
               "default": "true",
               "optional": true,
-              "line": 1108,
-              "endLine": 1108
+              "line": 1119,
+              "endLine": 1119
             }
           ],
           "file": "npm/vite-plugin-ox-content/src/types.ts",
-          "line": 1102,
-          "endLine": 1109,
+          "line": 1113,
+          "endLine": 1120,
           "signature": "export interface ImageOptions"
         },
         {
@@ -11827,21 +11865,21 @@
               "kind": "property",
               "description": "",
               "type": "boolean",
-              "line": 1115,
-              "endLine": 1115
+              "line": 1126,
+              "endLine": 1126
             },
             {
               "name": "lazy",
               "kind": "property",
               "description": "",
               "type": "boolean",
-              "line": 1116,
-              "endLine": 1116
+              "line": 1127,
+              "endLine": 1127
             }
           ],
           "file": "npm/vite-plugin-ox-content/src/types.ts",
-          "line": 1114,
-          "endLine": 1117,
+          "line": 1125,
+          "endLine": 1128,
           "signature": "export interface ResolvedImageOptions"
         },
         {
@@ -11856,13 +11894,13 @@
               "type": "string",
               "default": "options.base",
               "optional": true,
-              "line": 1135,
-              "endLine": 1135
+              "line": 1146,
+              "endLine": 1146
             }
           ],
           "file": "npm/vite-plugin-ox-content/src/types.ts",
-          "line": 1127,
-          "endLine": 1136,
+          "line": 1138,
+          "endLine": 1147,
           "signature": "export interface WikiLinkOptions"
         },
         {
@@ -11875,21 +11913,21 @@
               "kind": "property",
               "description": "",
               "type": "boolean",
-              "line": 1142,
-              "endLine": 1142
+              "line": 1153,
+              "endLine": 1153
             },
             {
               "name": "baseUrl",
               "kind": "property",
               "description": "",
               "type": "string",
-              "line": 1143,
-              "endLine": 1143
+              "line": 1154,
+              "endLine": 1154
             }
           ],
           "file": "npm/vite-plugin-ox-content/src/types.ts",
-          "line": 1141,
-          "endLine": 1144,
+          "line": 1152,
+          "endLine": 1155,
           "signature": "export interface ResolvedWikiLinkOptions"
         },
         {
@@ -11904,13 +11942,13 @@
               "type": "Record<string, string>",
               "default": "{}",
               "optional": true,
-              "line": 1166,
-              "endLine": 1166
+              "line": 1177,
+              "endLine": 1177
             }
           ],
           "file": "npm/vite-plugin-ox-content/src/types.ts",
-          "line": 1153,
-          "endLine": 1167,
+          "line": 1164,
+          "endLine": 1178,
           "signature": "export interface EmojiShortcodeOptions"
         },
         {
@@ -11923,21 +11961,21 @@
               "kind": "property",
               "description": "",
               "type": "boolean",
-              "line": 1173,
-              "endLine": 1173
+              "line": 1184,
+              "endLine": 1184
             },
             {
               "name": "custom",
               "kind": "property",
               "description": "",
               "type": "Record<string, string>",
-              "line": 1174,
-              "endLine": 1174
+              "line": 1185,
+              "endLine": 1185
             }
           ],
           "file": "npm/vite-plugin-ox-content/src/types.ts",
-          "line": 1172,
-          "endLine": 1175,
+          "line": 1183,
+          "endLine": 1186,
           "signature": "export interface ResolvedEmojiShortcodeOptions"
         },
         {
@@ -11952,13 +11990,13 @@
               "type": "boolean",
               "default": "true",
               "optional": true,
-              "line": 1186,
-              "endLine": 1186
+              "line": 1197,
+              "endLine": 1197
             }
           ],
           "file": "npm/vite-plugin-ox-content/src/types.ts",
-          "line": 1180,
-          "endLine": 1187,
+          "line": 1191,
+          "endLine": 1198,
           "signature": "export interface MathOptions"
         },
         {
@@ -11971,13 +12009,13 @@
               "kind": "property",
               "description": "",
               "type": "boolean",
-              "line": 1193,
-              "endLine": 1193
+              "line": 1204,
+              "endLine": 1204
             }
           ],
           "file": "npm/vite-plugin-ox-content/src/types.ts",
-          "line": 1192,
-          "endLine": 1194,
+          "line": 1203,
+          "endLine": 1205,
           "signature": "export interface ResolvedMathOptions"
         },
         {
@@ -11992,13 +12030,13 @@
               "type": "boolean",
               "default": "true",
               "optional": true,
-              "line": 1212,
-              "endLine": 1212
+              "line": 1223,
+              "endLine": 1223
             }
           ],
           "file": "npm/vite-plugin-ox-content/src/types.ts",
-          "line": 1202,
-          "endLine": 1213,
+          "line": 1213,
+          "endLine": 1224,
           "signature": "export interface AttrsOptions"
         },
         {
@@ -12011,13 +12049,13 @@
               "kind": "property",
               "description": "",
               "type": "boolean",
-              "line": 1219,
-              "endLine": 1219
+              "line": 1230,
+              "endLine": 1230
             }
           ],
           "file": "npm/vite-plugin-ox-content/src/types.ts",
-          "line": 1218,
-          "endLine": 1220,
+          "line": 1229,
+          "endLine": 1231,
           "signature": "export interface ResolvedAttrsOptions"
         },
         {
@@ -12032,13 +12070,13 @@
               "type": "string",
               "default": "undefined",
               "optional": true,
-              "line": 1242,
-              "endLine": 1242
+              "line": 1253,
+              "endLine": 1253
             }
           ],
           "file": "npm/vite-plugin-ox-content/src/types.ts",
-          "line": 1229,
-          "endLine": 1243,
+          "line": 1240,
+          "endLine": 1254,
           "signature": "export interface CodeImportOptions"
         },
         {
@@ -12051,8 +12089,8 @@
               "kind": "property",
               "description": "",
               "type": "boolean",
-              "line": 1249,
-              "endLine": 1249
+              "line": 1260,
+              "endLine": 1260
             },
             {
               "name": "rootDir",
@@ -12060,13 +12098,13 @@
               "description": "",
               "type": "string",
               "optional": true,
-              "line": 1250,
-              "endLine": 1250
+              "line": 1261,
+              "endLine": 1261
             }
           ],
           "file": "npm/vite-plugin-ox-content/src/types.ts",
-          "line": 1248,
-          "endLine": 1251,
+          "line": 1259,
+          "endLine": 1262,
           "signature": "export interface ResolvedCodeImportOptions"
         },
         {
@@ -12081,13 +12119,13 @@
               "type": "string",
               "default": "undefined",
               "optional": true,
-              "line": 1267,
-              "endLine": 1267
+              "line": 1278,
+              "endLine": 1278
             }
           ],
           "file": "npm/vite-plugin-ox-content/src/types.ts",
-          "line": 1259,
-          "endLine": 1268,
+          "line": 1270,
+          "endLine": 1279,
           "signature": "export interface IncludeOptions"
         },
         {
@@ -12100,8 +12138,8 @@
               "kind": "property",
               "description": "",
               "type": "boolean",
-              "line": 1274,
-              "endLine": 1274
+              "line": 1285,
+              "endLine": 1285
             },
             {
               "name": "rootDir",
@@ -12109,13 +12147,13 @@
               "description": "",
               "type": "string",
               "optional": true,
-              "line": 1275,
-              "endLine": 1275
+              "line": 1286,
+              "endLine": 1286
             }
           ],
           "file": "npm/vite-plugin-ox-content/src/types.ts",
-          "line": 1273,
-          "endLine": 1276,
+          "line": 1284,
+          "endLine": 1287,
           "signature": "export interface ResolvedIncludeOptions"
         },
         {
@@ -12130,13 +12168,13 @@
               "type": "boolean",
               "default": "true",
               "optional": true,
-              "line": 1287,
-              "endLine": 1287
+              "line": 1298,
+              "endLine": 1298
             }
           ],
           "file": "npm/vite-plugin-ox-content/src/types.ts",
-          "line": 1281,
-          "endLine": 1288,
+          "line": 1292,
+          "endLine": 1299,
           "signature": "export interface CardOptions"
         },
         {
@@ -12149,13 +12187,13 @@
               "kind": "property",
               "description": "",
               "type": "boolean",
-              "line": 1294,
-              "endLine": 1294
+              "line": 1305,
+              "endLine": 1305
             }
           ],
           "file": "npm/vite-plugin-ox-content/src/types.ts",
-          "line": 1293,
-          "endLine": 1295,
+          "line": 1304,
+          "endLine": 1306,
           "signature": "export interface ResolvedCardOptions"
         },
         {
@@ -12170,13 +12208,13 @@
               "type": "boolean",
               "default": "true",
               "optional": true,
-              "line": 1306,
-              "endLine": 1306
+              "line": 1317,
+              "endLine": 1317
             }
           ],
           "file": "npm/vite-plugin-ox-content/src/types.ts",
-          "line": 1300,
-          "endLine": 1307,
+          "line": 1311,
+          "endLine": 1318,
           "signature": "export interface StepsOptions"
         },
         {
@@ -12189,14 +12227,54 @@
               "kind": "property",
               "description": "",
               "type": "boolean",
-              "line": 1313,
-              "endLine": 1313
+              "line": 1324,
+              "endLine": 1324
             }
           ],
           "file": "npm/vite-plugin-ox-content/src/types.ts",
-          "line": 1312,
-          "endLine": 1314,
+          "line": 1323,
+          "endLine": 1325,
           "signature": "export interface ResolvedStepsOptions"
+        },
+        {
+          "name": "FileTreeOptions",
+          "kind": "interface",
+          "description": "Options for opt-in `file-tree` fences.",
+          "members": [
+            {
+              "name": "enabled",
+              "kind": "property",
+              "description": "Enable the file-tree transform when an options object is supplied.",
+              "type": "boolean",
+              "default": "true",
+              "optional": true,
+              "line": 1336,
+              "endLine": 1336
+            }
+          ],
+          "file": "npm/vite-plugin-ox-content/src/types.ts",
+          "line": 1330,
+          "endLine": 1337,
+          "signature": "export interface FileTreeOptions"
+        },
+        {
+          "name": "ResolvedFileTreeOptions",
+          "kind": "interface",
+          "description": "Resolved file-tree transform options.",
+          "members": [
+            {
+              "name": "enabled",
+              "kind": "property",
+              "description": "",
+              "type": "boolean",
+              "line": 1343,
+              "endLine": 1343
+            }
+          ],
+          "file": "npm/vite-plugin-ox-content/src/types.ts",
+          "line": 1342,
+          "endLine": 1344,
+          "signature": "export interface ResolvedFileTreeOptions"
         },
         {
           "name": "SanitizeOptions",
@@ -12210,8 +12288,8 @@
               "type": "string[]",
               "default": "undefined",
               "optional": true,
-              "line": 1331,
-              "endLine": 1331
+              "line": 1361,
+              "endLine": 1361
             },
             {
               "name": "allowedAttributes",
@@ -12220,8 +12298,8 @@
               "type": "string[]",
               "default": "undefined",
               "optional": true,
-              "line": 1340,
-              "endLine": 1340
+              "line": 1370,
+              "endLine": 1370
             },
             {
               "name": "allowedUrlSchemes",
@@ -12230,13 +12308,13 @@
               "type": "string[]",
               "default": "undefined",
               "optional": true,
-              "line": 1349,
-              "endLine": 1349
+              "line": 1379,
+              "endLine": 1379
             }
           ],
           "file": "npm/vite-plugin-ox-content/src/types.ts",
-          "line": 1323,
-          "endLine": 1350,
+          "line": 1353,
+          "endLine": 1380,
           "signature": "export interface SanitizeOptions"
         },
         {
@@ -12249,8 +12327,8 @@
               "kind": "property",
               "description": "",
               "type": "boolean",
-              "line": 1356,
-              "endLine": 1356
+              "line": 1386,
+              "endLine": 1386
             },
             {
               "name": "allowedTags",
@@ -12258,8 +12336,8 @@
               "description": "",
               "type": "string[]",
               "optional": true,
-              "line": 1357,
-              "endLine": 1357
+              "line": 1387,
+              "endLine": 1387
             },
             {
               "name": "allowedAttributes",
@@ -12267,8 +12345,8 @@
               "description": "",
               "type": "string[]",
               "optional": true,
-              "line": 1358,
-              "endLine": 1358
+              "line": 1388,
+              "endLine": 1388
             },
             {
               "name": "allowedUrlSchemes",
@@ -12276,13 +12354,13 @@
               "description": "",
               "type": "string[]",
               "optional": true,
-              "line": 1359,
-              "endLine": 1359
+              "line": 1389,
+              "endLine": 1389
             }
           ],
           "file": "npm/vite-plugin-ox-content/src/types.ts",
-          "line": 1355,
-          "endLine": 1360,
+          "line": 1385,
+          "endLine": 1390,
           "signature": "export interface ResolvedSanitizeOptions"
         },
         {
@@ -12295,8 +12373,8 @@
               "kind": "property",
               "description": "Repository URL used to build edit links.\n\nThe transform is enabled only when this value is provided.",
               "type": "string",
-              "line": 1380,
-              "endLine": 1380
+              "line": 1410,
+              "endLine": 1410
             },
             {
               "name": "branch",
@@ -12305,8 +12383,8 @@
               "type": "string",
               "default": "'main'",
               "optional": true,
-              "line": 1390,
-              "endLine": 1390
+              "line": 1420,
+              "endLine": 1420
             },
             {
               "name": "rootDir",
@@ -12315,8 +12393,8 @@
               "type": "string",
               "default": "undefined",
               "optional": true,
-              "line": 1399,
-              "endLine": 1399
+              "line": 1429,
+              "endLine": 1429
             },
             {
               "name": "label",
@@ -12325,13 +12403,13 @@
               "type": "string",
               "default": "'Edit this page'",
               "optional": true,
-              "line": 1408,
-              "endLine": 1408
+              "line": 1438,
+              "endLine": 1438
             }
           ],
           "file": "npm/vite-plugin-ox-content/src/types.ts",
-          "line": 1369,
-          "endLine": 1409,
+          "line": 1399,
+          "endLine": 1439,
           "signature": "export interface EditThisPageOptions"
         },
         {
@@ -12344,8 +12422,8 @@
               "kind": "property",
               "description": "",
               "type": "boolean",
-              "line": 1415,
-              "endLine": 1415
+              "line": 1445,
+              "endLine": 1445
             },
             {
               "name": "repoUrl",
@@ -12353,16 +12431,16 @@
               "description": "",
               "type": "string",
               "optional": true,
-              "line": 1416,
-              "endLine": 1416
+              "line": 1446,
+              "endLine": 1446
             },
             {
               "name": "branch",
               "kind": "property",
               "description": "",
               "type": "string",
-              "line": 1417,
-              "endLine": 1417
+              "line": 1447,
+              "endLine": 1447
             },
             {
               "name": "rootDir",
@@ -12370,21 +12448,21 @@
               "description": "",
               "type": "string",
               "optional": true,
-              "line": 1418,
-              "endLine": 1418
+              "line": 1448,
+              "endLine": 1448
             },
             {
               "name": "label",
               "kind": "property",
               "description": "",
               "type": "string",
-              "line": 1419,
-              "endLine": 1419
+              "line": 1449,
+              "endLine": 1449
             }
           ],
           "file": "npm/vite-plugin-ox-content/src/types.ts",
-          "line": 1414,
-          "endLine": 1420,
+          "line": 1444,
+          "endLine": 1450,
           "signature": "export interface ResolvedEditThisPageOptions"
         },
         {
@@ -12399,8 +12477,8 @@
               "type": "string[]",
               "default": "undefined",
               "optional": true,
-              "line": 1437,
-              "endLine": 1437
+              "line": 1467,
+              "endLine": 1467
             },
             {
               "name": "requireLanguage",
@@ -12409,8 +12487,8 @@
               "type": "boolean",
               "default": "false",
               "optional": true,
-              "line": 1447,
-              "endLine": 1447
+              "line": 1477,
+              "endLine": 1477
             },
             {
               "name": "trailingSpaces",
@@ -12419,8 +12497,8 @@
               "type": "boolean",
               "default": "true",
               "optional": true,
-              "line": 1456,
-              "endLine": 1456
+              "line": 1486,
+              "endLine": 1486
             },
             {
               "name": "mode",
@@ -12429,13 +12507,13 @@
               "type": "\"warn\" | \"error\"",
               "default": "'warn'",
               "optional": true,
-              "line": 1465,
-              "endLine": 1465
+              "line": 1495,
+              "endLine": 1495
             }
           ],
           "file": "npm/vite-plugin-ox-content/src/types.ts",
-          "line": 1429,
-          "endLine": 1466,
+          "line": 1459,
+          "endLine": 1496,
           "signature": "export interface CodeBlockLintOptions"
         },
         {
@@ -12448,8 +12526,8 @@
               "kind": "property",
               "description": "",
               "type": "boolean",
-              "line": 1472,
-              "endLine": 1472
+              "line": 1502,
+              "endLine": 1502
             },
             {
               "name": "languages",
@@ -12457,37 +12535,37 @@
               "description": "",
               "type": "string[]",
               "optional": true,
-              "line": 1473,
-              "endLine": 1473
+              "line": 1503,
+              "endLine": 1503
             },
             {
               "name": "requireLanguage",
               "kind": "property",
               "description": "",
               "type": "boolean",
-              "line": 1474,
-              "endLine": 1474
+              "line": 1504,
+              "endLine": 1504
             },
             {
               "name": "trailingSpaces",
               "kind": "property",
               "description": "",
               "type": "boolean",
-              "line": 1475,
-              "endLine": 1475
+              "line": 1505,
+              "endLine": 1505
             },
             {
               "name": "mode",
               "kind": "property",
               "description": "",
               "type": "\"warn\" | \"error\"",
-              "line": 1476,
-              "endLine": 1476
+              "line": 1506,
+              "endLine": 1506
             }
           ],
           "file": "npm/vite-plugin-ox-content/src/types.ts",
-          "line": 1471,
-          "endLine": 1477,
+          "line": 1501,
+          "endLine": 1507,
           "signature": "export interface ResolvedCodeBlockLintOptions"
         },
         {
@@ -12502,8 +12580,8 @@
               "type": "string[]",
               "default": "['ts', 'tsx']",
               "optional": true,
-              "line": 1494,
-              "endLine": 1494
+              "line": 1524,
+              "endLine": 1524
             },
             {
               "name": "requireMeta",
@@ -12512,8 +12590,8 @@
               "type": "boolean",
               "default": "true",
               "optional": true,
-              "line": 1504,
-              "endLine": 1504
+              "line": 1534,
+              "endLine": 1534
             },
             {
               "name": "tsgoCommand",
@@ -12522,8 +12600,8 @@
               "type": "string",
               "default": "'tsgo'",
               "optional": true,
-              "line": 1513,
-              "endLine": 1513
+              "line": 1543,
+              "endLine": 1543
             },
             {
               "name": "mode",
@@ -12532,13 +12610,13 @@
               "type": "\"warn\" | \"error\"",
               "default": "'warn'",
               "optional": true,
-              "line": 1522,
-              "endLine": 1522
+              "line": 1552,
+              "endLine": 1552
             }
           ],
           "file": "npm/vite-plugin-ox-content/src/types.ts",
-          "line": 1486,
-          "endLine": 1523,
+          "line": 1516,
+          "endLine": 1553,
           "signature": "export interface CodeBlockTypecheckOptions"
         },
         {
@@ -12551,45 +12629,45 @@
               "kind": "property",
               "description": "",
               "type": "boolean",
-              "line": 1529,
-              "endLine": 1529
+              "line": 1559,
+              "endLine": 1559
             },
             {
               "name": "languages",
               "kind": "property",
               "description": "",
               "type": "string[]",
-              "line": 1530,
-              "endLine": 1530
+              "line": 1560,
+              "endLine": 1560
             },
             {
               "name": "requireMeta",
               "kind": "property",
               "description": "",
               "type": "boolean",
-              "line": 1531,
-              "endLine": 1531
+              "line": 1561,
+              "endLine": 1561
             },
             {
               "name": "tsgoCommand",
               "kind": "property",
               "description": "",
               "type": "string",
-              "line": 1532,
-              "endLine": 1532
+              "line": 1562,
+              "endLine": 1562
             },
             {
               "name": "mode",
               "kind": "property",
               "description": "",
               "type": "\"warn\" | \"error\"",
-              "line": 1533,
-              "endLine": 1533
+              "line": 1563,
+              "endLine": 1563
             }
           ],
           "file": "npm/vite-plugin-ox-content/src/types.ts",
-          "line": 1528,
-          "endLine": 1534,
+          "line": 1558,
+          "endLine": 1564,
           "signature": "export interface ResolvedCodeBlockTypecheckOptions"
         },
         {
@@ -12604,8 +12682,8 @@
               "type": "string[]",
               "default": "['js', 'jsx', 'ts', 'tsx']",
               "optional": true,
-              "line": 1550,
-              "endLine": 1550
+              "line": 1580,
+              "endLine": 1580
             },
             {
               "name": "requireMeta",
@@ -12614,13 +12692,13 @@
               "type": "boolean",
               "default": "true",
               "optional": true,
-              "line": 1560,
-              "endLine": 1560
+              "line": 1590,
+              "endLine": 1590
             }
           ],
           "file": "npm/vite-plugin-ox-content/src/types.ts",
-          "line": 1542,
-          "endLine": 1561,
+          "line": 1572,
+          "endLine": 1591,
           "signature": "export interface DocsTestOptions"
         },
         {
@@ -12633,29 +12711,29 @@
               "kind": "property",
               "description": "",
               "type": "boolean",
-              "line": 1567,
-              "endLine": 1567
+              "line": 1597,
+              "endLine": 1597
             },
             {
               "name": "languages",
               "kind": "property",
               "description": "",
               "type": "string[]",
-              "line": 1568,
-              "endLine": 1568
+              "line": 1598,
+              "endLine": 1598
             },
             {
               "name": "requireMeta",
               "kind": "property",
               "description": "",
               "type": "boolean",
-              "line": 1569,
-              "endLine": 1569
+              "line": 1599,
+              "endLine": 1599
             }
           ],
           "file": "npm/vite-plugin-ox-content/src/types.ts",
-          "line": 1566,
-          "endLine": 1570,
+          "line": 1596,
+          "endLine": 1600,
           "signature": "export interface ResolvedDocsTestOptions"
         },
         {
@@ -12663,8 +12741,8 @@
           "kind": "type",
           "description": "Supported line annotation kinds for code blocks.",
           "file": "npm/vite-plugin-ox-content/src/types.ts",
-          "line": 1575,
-          "endLine": 1575,
+          "line": 1605,
+          "endLine": 1605,
           "signature": "export type CodeAnnotationKind = \"highlight\" | \"warning\" | \"error\""
         },
         {
@@ -12672,8 +12750,8 @@
           "kind": "type",
           "description": "Supported code annotation syntaxes.",
           "file": "npm/vite-plugin-ox-content/src/types.ts",
-          "line": 1580,
-          "endLine": 1580,
+          "line": 1610,
+          "endLine": 1610,
           "signature": "export type CodeAnnotationSyntax = \"attribute\" | \"vitepress\" | \"both\""
         },
         {
@@ -12688,8 +12766,8 @@
               "type": "CodeAnnotationSyntax",
               "default": "\"attribute\"",
               "optional": true,
-              "line": 1595,
-              "endLine": 1595
+              "line": 1625,
+              "endLine": 1625
             },
             {
               "name": "metaKey",
@@ -12698,8 +12776,8 @@
               "type": "string",
               "default": "\"annotate\"",
               "optional": true,
-              "line": 1604,
-              "endLine": 1604
+              "line": 1634,
+              "endLine": 1634
             },
             {
               "name": "defaultLineNumbers",
@@ -12708,13 +12786,13 @@
               "type": "boolean",
               "default": "false",
               "optional": true,
-              "line": 1614,
-              "endLine": 1614
+              "line": 1644,
+              "endLine": 1644
             }
           ],
           "file": "npm/vite-plugin-ox-content/src/types.ts",
-          "line": 1585,
-          "endLine": 1615,
+          "line": 1615,
+          "endLine": 1645,
           "signature": "export interface CodeAnnotationsOptions"
         },
         {
@@ -12727,37 +12805,37 @@
               "kind": "property",
               "description": "",
               "type": "boolean",
-              "line": 1621,
-              "endLine": 1621
+              "line": 1651,
+              "endLine": 1651
             },
             {
               "name": "notation",
               "kind": "property",
               "description": "",
               "type": "CodeAnnotationSyntax",
-              "line": 1622,
-              "endLine": 1622
+              "line": 1652,
+              "endLine": 1652
             },
             {
               "name": "metaKey",
               "kind": "property",
               "description": "",
               "type": "string",
-              "line": 1623,
-              "endLine": 1623
+              "line": 1653,
+              "endLine": 1653
             },
             {
               "name": "defaultLineNumbers",
               "kind": "property",
               "description": "",
               "type": "boolean",
-              "line": 1624,
-              "endLine": 1624
+              "line": 1654,
+              "endLine": 1654
             }
           ],
           "file": "npm/vite-plugin-ox-content/src/types.ts",
-          "line": 1620,
-          "endLine": 1625,
+          "line": 1650,
+          "endLine": 1655,
           "signature": "export interface ResolvedCodeAnnotationsOptions"
         },
         {
@@ -12771,8 +12849,8 @@
               "description": "Path to a custom template file (.ts, .vue, .svelte, .tsx/.jsx).\n- `.ts`: default-export a function `(props) => string`\n- `.vue`: Vue SFC, rendered via SSR\n- `.svelte`: Svelte SFC, rendered via SSR\n- `.tsx`/`.jsx`: React Server Component, rendered via SSR\nIf not specified, the built-in default template is used.",
               "type": "string",
               "optional": true,
-              "line": 1640,
-              "endLine": 1640
+              "line": 1670,
+              "endLine": 1670
             },
             {
               "name": "vuePlugin",
@@ -12781,8 +12859,8 @@
               "type": "\"vitejs\" | \"vizejs\"",
               "default": "'vitejs'",
               "optional": true,
-              "line": 1648,
-              "endLine": 1648
+              "line": 1678,
+              "endLine": 1678
             },
             {
               "name": "width",
@@ -12791,8 +12869,8 @@
               "type": "number",
               "default": "1200",
               "optional": true,
-              "line": 1654,
-              "endLine": 1654
+              "line": 1684,
+              "endLine": 1684
             },
             {
               "name": "height",
@@ -12801,8 +12879,8 @@
               "type": "number",
               "default": "630",
               "optional": true,
-              "line": 1660,
-              "endLine": 1660
+              "line": 1690,
+              "endLine": 1690
             },
             {
               "name": "cache",
@@ -12811,8 +12889,8 @@
               "type": "boolean",
               "default": "true",
               "optional": true,
-              "line": 1667,
-              "endLine": 1667
+              "line": 1697,
+              "endLine": 1697
             },
             {
               "name": "concurrency",
@@ -12821,13 +12899,13 @@
               "type": "number",
               "default": "1",
               "optional": true,
-              "line": 1673,
-              "endLine": 1673
+              "line": 1703,
+              "endLine": 1703
             }
           ],
           "file": "npm/vite-plugin-ox-content/src/types.ts",
-          "line": 1631,
-          "endLine": 1674,
+          "line": 1661,
+          "endLine": 1704,
           "signature": "export interface OgImageOptions"
         },
         {
@@ -12841,53 +12919,53 @@
               "description": "",
               "type": "string",
               "optional": true,
-              "line": 1680,
-              "endLine": 1680
+              "line": 1710,
+              "endLine": 1710
             },
             {
               "name": "vuePlugin",
               "kind": "property",
               "description": "",
               "type": "\"vitejs\" | \"vizejs\"",
-              "line": 1681,
-              "endLine": 1681
+              "line": 1711,
+              "endLine": 1711
             },
             {
               "name": "width",
               "kind": "property",
               "description": "",
               "type": "number",
-              "line": 1682,
-              "endLine": 1682
+              "line": 1712,
+              "endLine": 1712
             },
             {
               "name": "height",
               "kind": "property",
               "description": "",
               "type": "number",
-              "line": 1683,
-              "endLine": 1683
+              "line": 1713,
+              "endLine": 1713
             },
             {
               "name": "cache",
               "kind": "property",
               "description": "",
               "type": "boolean",
-              "line": 1684,
-              "endLine": 1684
+              "line": 1714,
+              "endLine": 1714
             },
             {
               "name": "concurrency",
               "kind": "property",
               "description": "",
               "type": "number",
-              "line": 1685,
-              "endLine": 1685
+              "line": 1715,
+              "endLine": 1715
             }
           ],
           "file": "npm/vite-plugin-ox-content/src/types.ts",
-          "line": 1679,
-          "endLine": 1686,
+          "line": 1709,
+          "endLine": 1716,
           "signature": "export interface ResolvedOgImageOptions"
         },
         {
@@ -12900,8 +12978,8 @@
               "kind": "property",
               "description": "Transformer name.",
               "type": "string",
-              "line": 1695,
-              "endLine": 1695
+              "line": 1725,
+              "endLine": 1725
             },
             {
               "name": "transform",
@@ -12924,13 +13002,13 @@
                 "type": "MarkdownNode | Promise<MarkdownNode>",
                 "description": ""
               },
-              "line": 1700,
-              "endLine": 1700
+              "line": 1730,
+              "endLine": 1730
             }
           ],
           "file": "npm/vite-plugin-ox-content/src/types.ts",
-          "line": 1691,
-          "endLine": 1701,
+          "line": 1721,
+          "endLine": 1731,
           "signature": "export interface MarkdownTransformer"
         },
         {
@@ -12943,29 +13021,29 @@
               "kind": "property",
               "description": "File path being processed.",
               "type": "string",
-              "line": 1710,
-              "endLine": 1710
+              "line": 1740,
+              "endLine": 1740
             },
             {
               "name": "frontmatter",
               "kind": "property",
               "description": "Frontmatter data.",
               "type": "Record<string, unknown>",
-              "line": 1715,
-              "endLine": 1715
+              "line": 1745,
+              "endLine": 1745
             },
             {
               "name": "options",
               "kind": "property",
               "description": "Resolved plugin options.",
               "type": "ResolvedOptions",
-              "line": 1720,
-              "endLine": 1720
+              "line": 1750,
+              "endLine": 1750
             }
           ],
           "file": "npm/vite-plugin-ox-content/src/types.ts",
-          "line": 1706,
-          "endLine": 1721,
+          "line": 1736,
+          "endLine": 1751,
           "signature": "export interface TransformContext"
         },
         {
@@ -12978,8 +13056,8 @@
               "kind": "property",
               "description": "",
               "type": "string",
-              "line": 1727,
-              "endLine": 1727
+              "line": 1757,
+              "endLine": 1757
             },
             {
               "name": "children",
@@ -12987,8 +13065,8 @@
               "description": "",
               "type": "MarkdownNode[]",
               "optional": true,
-              "line": 1728,
-              "endLine": 1728
+              "line": 1758,
+              "endLine": 1758
             },
             {
               "name": "value",
@@ -12996,8 +13074,8 @@
               "description": "",
               "type": "string",
               "optional": true,
-              "line": 1729,
-              "endLine": 1729
+              "line": 1759,
+              "endLine": 1759
             },
             {
               "name": "[key: string]",
@@ -13012,13 +13090,13 @@
                   "description": ""
                 }
               ],
-              "line": 1730,
-              "endLine": 1730
+              "line": 1760,
+              "endLine": 1760
             }
           ],
           "file": "npm/vite-plugin-ox-content/src/types.ts",
-          "line": 1726,
-          "endLine": 1731,
+          "line": 1756,
+          "endLine": 1761,
           "signature": "export interface MarkdownNode"
         },
         {
@@ -13031,8 +13109,8 @@
               "kind": "property",
               "description": "Generated JavaScript code.",
               "type": "string",
-              "line": 1740,
-              "endLine": 1740
+              "line": 1770,
+              "endLine": 1770
             },
             {
               "name": "map",
@@ -13040,37 +13118,37 @@
               "description": "Source map (null means no source map).",
               "type": "null",
               "optional": true,
-              "line": 1745,
-              "endLine": 1745
+              "line": 1775,
+              "endLine": 1775
             },
             {
               "name": "html",
               "kind": "property",
               "description": "Rendered HTML.",
               "type": "string",
-              "line": 1750,
-              "endLine": 1750
+              "line": 1780,
+              "endLine": 1780
             },
             {
               "name": "frontmatter",
               "kind": "property",
               "description": "Parsed frontmatter.",
               "type": "Record<string, unknown>",
-              "line": 1755,
-              "endLine": 1755
+              "line": 1785,
+              "endLine": 1785
             },
             {
               "name": "toc",
               "kind": "property",
               "description": "Table of contents.",
               "type": "TocEntry[]",
-              "line": 1760,
-              "endLine": 1760
+              "line": 1790,
+              "endLine": 1790
             }
           ],
           "file": "npm/vite-plugin-ox-content/src/types.ts",
-          "line": 1736,
-          "endLine": 1761,
+          "line": 1766,
+          "endLine": 1791,
           "signature": "export interface TransformResult"
         },
         {
@@ -13083,37 +13161,37 @@
               "kind": "property",
               "description": "Heading depth (1-6).",
               "type": "number",
-              "line": 1770,
-              "endLine": 1770
+              "line": 1800,
+              "endLine": 1800
             },
             {
               "name": "text",
               "kind": "property",
               "description": "Heading text.",
               "type": "string",
-              "line": 1775,
-              "endLine": 1775
+              "line": 1805,
+              "endLine": 1805
             },
             {
               "name": "slug",
               "kind": "property",
               "description": "Slug/ID for linking.",
               "type": "string",
-              "line": 1780,
-              "endLine": 1780
+              "line": 1810,
+              "endLine": 1810
             },
             {
               "name": "children",
               "kind": "property",
               "description": "Child entries.",
               "type": "TocEntry[]",
-              "line": 1785,
-              "endLine": 1785
+              "line": 1815,
+              "endLine": 1815
             }
           ],
           "file": "npm/vite-plugin-ox-content/src/types.ts",
-          "line": 1766,
-          "endLine": 1786,
+          "line": 1796,
+          "endLine": 1816,
           "signature": "export interface TocEntry"
         },
         {
@@ -13121,8 +13199,8 @@
           "kind": "type",
           "description": "Public API entry point for grouped documentation.",
           "file": "npm/vite-plugin-ox-content/src/types.ts",
-          "line": 1795,
-          "endLine": 1800,
+          "line": 1825,
+          "endLine": 1830,
           "signature": "export type DocsEntryPoint = string | { path: string; name?: string }"
         },
         {
@@ -13135,8 +13213,8 @@
               "kind": "property",
               "description": "",
               "type": "string",
-              "line": 1823,
-              "endLine": 1823
+              "line": 1853,
+              "endLine": 1853
             },
             {
               "name": "name",
@@ -13144,13 +13222,13 @@
               "description": "",
               "type": "string",
               "optional": true,
-              "line": 1824,
-              "endLine": 1824
+              "line": 1854,
+              "endLine": 1854
             }
           ],
           "file": "npm/vite-plugin-ox-content/src/types.ts",
-          "line": 1822,
-          "endLine": 1825,
+          "line": 1852,
+          "endLine": 1855,
           "signature": "export interface ResolvedDocsEntryPoint"
         },
         {
@@ -13165,8 +13243,8 @@
               "type": "boolean",
               "default": "true",
               "optional": true,
-              "line": 1844,
-              "endLine": 1844
+              "line": 1874,
+              "endLine": 1874
             },
             {
               "name": "src",
@@ -13175,8 +13253,8 @@
               "type": "string[]",
               "default": "['./src']",
               "optional": true,
-              "line": 1854,
-              "endLine": 1854
+              "line": 1884,
+              "endLine": 1884
             },
             {
               "name": "out",
@@ -13185,8 +13263,8 @@
               "type": "string",
               "default": "'docs/api'",
               "optional": true,
-              "line": 1864,
-              "endLine": 1864
+              "line": 1894,
+              "endLine": 1894
             },
             {
               "name": "include",
@@ -13195,8 +13273,8 @@
               "type": "string[]",
               "default": "['**\\/*.ts', '**\\/*.tsx', '**\\/*.js', '**\\/*.jsx', '**\\/*.mts', '**\\/*.mjs', '**\\/*.cts', '**\\/*.cjs']",
               "optional": true,
-              "line": 1873,
-              "endLine": 1873
+              "line": 1903,
+              "endLine": 1903
             },
             {
               "name": "exclude",
@@ -13205,8 +13283,8 @@
               "type": "string[]",
               "default": "['**\\/*.test.*', '**\\/*.spec.*', 'node_modules']",
               "optional": true,
-              "line": 1883,
-              "endLine": 1883
+              "line": 1913,
+              "endLine": 1913
             },
             {
               "name": "entryPoints",
@@ -13215,8 +13293,8 @@
               "type": "DocsEntryPoint[]",
               "default": "undefined",
               "optional": true,
-              "line": 1897,
-              "endLine": 1897
+              "line": 1927,
+              "endLine": 1927
             },
             {
               "name": "format",
@@ -13225,8 +13303,8 @@
               "type": "\"markdown\" | \"json\" | \"html\"",
               "default": "'markdown'",
               "optional": true,
-              "line": 1907,
-              "endLine": 1907
+              "line": 1937,
+              "endLine": 1937
             },
             {
               "name": "private",
@@ -13235,8 +13313,8 @@
               "type": "boolean",
               "default": "false",
               "optional": true,
-              "line": 1913,
-              "endLine": 1913
+              "line": 1943,
+              "endLine": 1943
             },
             {
               "name": "internal",
@@ -13245,8 +13323,8 @@
               "type": "boolean",
               "default": "false",
               "optional": true,
-              "line": 1919,
-              "endLine": 1919
+              "line": 1949,
+              "endLine": 1949
             },
             {
               "name": "toc",
@@ -13255,8 +13333,8 @@
               "type": "boolean",
               "default": "false",
               "optional": true,
-              "line": 1926,
-              "endLine": 1926
+              "line": 1956,
+              "endLine": 1956
             },
             {
               "name": "groupBy",
@@ -13265,8 +13343,8 @@
               "type": "\"file\" | \"category\"",
               "default": "'file'",
               "optional": true,
-              "line": 1932,
-              "endLine": 1932
+              "line": 1962,
+              "endLine": 1962
             },
             {
               "name": "githubUrl",
@@ -13275,8 +13353,8 @@
               "type": "string",
               "default": "undefined",
               "optional": true,
-              "line": 1947,
-              "endLine": 1947
+              "line": 1977,
+              "endLine": 1977
             },
             {
               "name": "linkStyle",
@@ -13285,8 +13363,8 @@
               "type": "\"markdown\" | \"clean\"",
               "default": "'markdown'",
               "optional": true,
-              "line": 1957,
-              "endLine": 1957
+              "line": 1987,
+              "endLine": 1987
             },
             {
               "name": "basePath",
@@ -13295,8 +13373,8 @@
               "type": "string",
               "default": "undefined",
               "optional": true,
-              "line": 1966,
-              "endLine": 1966
+              "line": 1996,
+              "endLine": 1996
             },
             {
               "name": "pathStrategy",
@@ -13305,8 +13383,8 @@
               "type": "\"flat\" | \"typedoc\"",
               "default": "'flat'",
               "optional": true,
-              "line": 1976,
-              "endLine": 1976
+              "line": 2006,
+              "endLine": 2006
             },
             {
               "name": "renderStyle",
@@ -13315,8 +13393,8 @@
               "type": "\"html\" | \"markdown\"",
               "default": "'html'",
               "optional": true,
-              "line": 1987,
-              "endLine": 1987
+              "line": 2017,
+              "endLine": 2017
             },
             {
               "name": "indexFormat",
@@ -13325,8 +13403,8 @@
               "type": "MarkdownDisplayFormat",
               "default": "'none'",
               "optional": true,
-              "line": 1993,
-              "endLine": 1993
+              "line": 2023,
+              "endLine": 2023
             },
             {
               "name": "parametersFormat",
@@ -13335,8 +13413,8 @@
               "type": "MarkdownDisplayFormat",
               "default": "'none'",
               "optional": true,
-              "line": 1999,
-              "endLine": 1999
+              "line": 2029,
+              "endLine": 2029
             },
             {
               "name": "interfacePropertiesFormat",
@@ -13345,8 +13423,8 @@
               "type": "MarkdownDisplayFormat",
               "default": "'none'",
               "optional": true,
-              "line": 2005,
-              "endLine": 2005
+              "line": 2035,
+              "endLine": 2035
             },
             {
               "name": "classPropertiesFormat",
@@ -13355,8 +13433,8 @@
               "type": "MarkdownDisplayFormat",
               "default": "'none'",
               "optional": true,
-              "line": 2011,
-              "endLine": 2011
+              "line": 2041,
+              "endLine": 2041
             },
             {
               "name": "typeAliasPropertiesFormat",
@@ -13365,8 +13443,8 @@
               "type": "MarkdownDisplayFormat",
               "default": "'none'",
               "optional": true,
-              "line": 2017,
-              "endLine": 2017
+              "line": 2047,
+              "endLine": 2047
             },
             {
               "name": "enumMembersFormat",
@@ -13375,8 +13453,8 @@
               "type": "MarkdownDisplayFormat",
               "default": "'none'",
               "optional": true,
-              "line": 2023,
-              "endLine": 2023
+              "line": 2053,
+              "endLine": 2053
             },
             {
               "name": "propertyMembersFormat",
@@ -13385,8 +13463,8 @@
               "type": "MarkdownDisplayFormat",
               "default": "'none'",
               "optional": true,
-              "line": 2029,
-              "endLine": 2029
+              "line": 2059,
+              "endLine": 2059
             },
             {
               "name": "typeDeclarationFormat",
@@ -13395,8 +13473,8 @@
               "type": "MarkdownDisplayFormat",
               "default": "'none'",
               "optional": true,
-              "line": 2035,
-              "endLine": 2035
+              "line": 2065,
+              "endLine": 2065
             },
             {
               "name": "typeParameters",
@@ -13405,8 +13483,8 @@
               "type": "boolean",
               "default": "false",
               "optional": true,
-              "line": 2046,
-              "endLine": 2046
+              "line": 2076,
+              "endLine": 2076
             },
             {
               "name": "renderStats",
@@ -13415,8 +13493,8 @@
               "type": "boolean",
               "default": "true",
               "optional": true,
-              "line": 2052,
-              "endLine": 2052
+              "line": 2082,
+              "endLine": 2082
             },
             {
               "name": "renderGeneratedBy",
@@ -13425,8 +13503,8 @@
               "type": "boolean",
               "default": "true",
               "optional": true,
-              "line": 2058,
-              "endLine": 2058
+              "line": 2088,
+              "endLine": 2088
             },
             {
               "name": "groupOrder",
@@ -13435,8 +13513,8 @@
               "type": "string[]",
               "default": "undefined",
               "optional": true,
-              "line": 2065,
-              "endLine": 2065
+              "line": 2095,
+              "endLine": 2095
             },
             {
               "name": "sort",
@@ -13445,8 +13523,8 @@
               "type": "DocsSortStrategy[]",
               "default": "undefined",
               "optional": true,
-              "line": 2072,
-              "endLine": 2072
+              "line": 2102,
+              "endLine": 2102
             },
             {
               "name": "sortEntryPoints",
@@ -13455,8 +13533,8 @@
               "type": "boolean",
               "default": "true",
               "optional": true,
-              "line": 2078,
-              "endLine": 2078
+              "line": 2108,
+              "endLine": 2108
             },
             {
               "name": "kindSortOrder",
@@ -13465,8 +13543,8 @@
               "type": "string[]",
               "default": "undefined",
               "optional": true,
-              "line": 2084,
-              "endLine": 2084
+              "line": 2114,
+              "endLine": 2114
             },
             {
               "name": "singleEntryRoot",
@@ -13475,8 +13553,8 @@
               "type": "\"preserve\" | \"flatten\"",
               "default": "'preserve'",
               "optional": true,
-              "line": 2094,
-              "endLine": 2094
+              "line": 2124,
+              "endLine": 2124
             },
             {
               "name": "generateNav",
@@ -13485,13 +13563,13 @@
               "type": "boolean",
               "default": "true",
               "optional": true,
-              "line": 2100,
-              "endLine": 2100
+              "line": 2130,
+              "endLine": 2130
             }
           ],
           "file": "npm/vite-plugin-ox-content/src/types.ts",
-          "line": 1835,
-          "endLine": 2101,
+          "line": 1865,
+          "endLine": 2131,
           "signature": "export interface DocsOptions"
         },
         {
@@ -13504,40 +13582,40 @@
               "kind": "property",
               "description": "",
               "type": "boolean",
-              "line": 2107,
-              "endLine": 2107
+              "line": 2137,
+              "endLine": 2137
             },
             {
               "name": "src",
               "kind": "property",
               "description": "",
               "type": "string[]",
-              "line": 2108,
-              "endLine": 2108
+              "line": 2138,
+              "endLine": 2138
             },
             {
               "name": "out",
               "kind": "property",
               "description": "",
               "type": "string",
-              "line": 2109,
-              "endLine": 2109
+              "line": 2139,
+              "endLine": 2139
             },
             {
               "name": "include",
               "kind": "property",
               "description": "",
               "type": "string[]",
-              "line": 2110,
-              "endLine": 2110
+              "line": 2140,
+              "endLine": 2140
             },
             {
               "name": "exclude",
               "kind": "property",
               "description": "",
               "type": "string[]",
-              "line": 2111,
-              "endLine": 2111
+              "line": 2141,
+              "endLine": 2141
             },
             {
               "name": "entryPoints",
@@ -13545,48 +13623,48 @@
               "description": "",
               "type": "ResolvedDocsEntryPoint[]",
               "optional": true,
-              "line": 2112,
-              "endLine": 2112
+              "line": 2142,
+              "endLine": 2142
             },
             {
               "name": "format",
               "kind": "property",
               "description": "",
               "type": "\"markdown\" | \"json\" | \"html\"",
-              "line": 2113,
-              "endLine": 2113
+              "line": 2143,
+              "endLine": 2143
             },
             {
               "name": "private",
               "kind": "property",
               "description": "",
               "type": "boolean",
-              "line": 2114,
-              "endLine": 2114
+              "line": 2144,
+              "endLine": 2144
             },
             {
               "name": "internal",
               "kind": "property",
               "description": "",
               "type": "boolean",
-              "line": 2115,
-              "endLine": 2115
+              "line": 2145,
+              "endLine": 2145
             },
             {
               "name": "toc",
               "kind": "property",
               "description": "",
               "type": "boolean",
-              "line": 2116,
-              "endLine": 2116
+              "line": 2146,
+              "endLine": 2146
             },
             {
               "name": "groupBy",
               "kind": "property",
               "description": "",
               "type": "\"file\" | \"category\"",
-              "line": 2117,
-              "endLine": 2117
+              "line": 2147,
+              "endLine": 2147
             },
             {
               "name": "githubUrl",
@@ -13594,16 +13672,16 @@
               "description": "",
               "type": "string",
               "optional": true,
-              "line": 2118,
-              "endLine": 2118
+              "line": 2148,
+              "endLine": 2148
             },
             {
               "name": "linkStyle",
               "kind": "property",
               "description": "",
               "type": "\"markdown\" | \"clean\"",
-              "line": 2119,
-              "endLine": 2119
+              "line": 2149,
+              "endLine": 2149
             },
             {
               "name": "basePath",
@@ -13611,112 +13689,112 @@
               "description": "",
               "type": "string",
               "optional": true,
-              "line": 2120,
-              "endLine": 2120
+              "line": 2150,
+              "endLine": 2150
             },
             {
               "name": "pathStrategy",
               "kind": "property",
               "description": "",
               "type": "\"flat\" | \"typedoc\"",
-              "line": 2121,
-              "endLine": 2121
+              "line": 2151,
+              "endLine": 2151
             },
             {
               "name": "renderStyle",
               "kind": "property",
               "description": "",
               "type": "\"html\" | \"markdown\"",
-              "line": 2122,
-              "endLine": 2122
+              "line": 2152,
+              "endLine": 2152
             },
             {
               "name": "indexFormat",
               "kind": "property",
               "description": "",
               "type": "MarkdownDisplayFormat",
-              "line": 2123,
-              "endLine": 2123
+              "line": 2153,
+              "endLine": 2153
             },
             {
               "name": "parametersFormat",
               "kind": "property",
               "description": "",
               "type": "MarkdownDisplayFormat",
-              "line": 2124,
-              "endLine": 2124
+              "line": 2154,
+              "endLine": 2154
             },
             {
               "name": "interfacePropertiesFormat",
               "kind": "property",
               "description": "",
               "type": "MarkdownDisplayFormat",
-              "line": 2125,
-              "endLine": 2125
+              "line": 2155,
+              "endLine": 2155
             },
             {
               "name": "classPropertiesFormat",
               "kind": "property",
               "description": "",
               "type": "MarkdownDisplayFormat",
-              "line": 2126,
-              "endLine": 2126
+              "line": 2156,
+              "endLine": 2156
             },
             {
               "name": "typeAliasPropertiesFormat",
               "kind": "property",
               "description": "",
               "type": "MarkdownDisplayFormat",
-              "line": 2127,
-              "endLine": 2127
+              "line": 2157,
+              "endLine": 2157
             },
             {
               "name": "enumMembersFormat",
               "kind": "property",
               "description": "",
               "type": "MarkdownDisplayFormat",
-              "line": 2128,
-              "endLine": 2128
+              "line": 2158,
+              "endLine": 2158
             },
             {
               "name": "propertyMembersFormat",
               "kind": "property",
               "description": "",
               "type": "MarkdownDisplayFormat",
-              "line": 2129,
-              "endLine": 2129
+              "line": 2159,
+              "endLine": 2159
             },
             {
               "name": "typeDeclarationFormat",
               "kind": "property",
               "description": "",
               "type": "MarkdownDisplayFormat",
-              "line": 2130,
-              "endLine": 2130
+              "line": 2160,
+              "endLine": 2160
             },
             {
               "name": "typeParameters",
               "kind": "property",
               "description": "",
               "type": "boolean",
-              "line": 2131,
-              "endLine": 2131
+              "line": 2161,
+              "endLine": 2161
             },
             {
               "name": "renderStats",
               "kind": "property",
               "description": "",
               "type": "boolean",
-              "line": 2132,
-              "endLine": 2132
+              "line": 2162,
+              "endLine": 2162
             },
             {
               "name": "renderGeneratedBy",
               "kind": "property",
               "description": "",
               "type": "boolean",
-              "line": 2133,
-              "endLine": 2133
+              "line": 2163,
+              "endLine": 2163
             },
             {
               "name": "groupOrder",
@@ -13724,8 +13802,8 @@
               "description": "",
               "type": "string[]",
               "optional": true,
-              "line": 2134,
-              "endLine": 2134
+              "line": 2164,
+              "endLine": 2164
             },
             {
               "name": "sort",
@@ -13733,16 +13811,16 @@
               "description": "",
               "type": "DocsSortStrategy[]",
               "optional": true,
-              "line": 2135,
-              "endLine": 2135
+              "line": 2165,
+              "endLine": 2165
             },
             {
               "name": "sortEntryPoints",
               "kind": "property",
               "description": "",
               "type": "boolean",
-              "line": 2136,
-              "endLine": 2136
+              "line": 2166,
+              "endLine": 2166
             },
             {
               "name": "kindSortOrder",
@@ -13750,29 +13828,29 @@
               "description": "",
               "type": "string[]",
               "optional": true,
-              "line": 2137,
-              "endLine": 2137
+              "line": 2167,
+              "endLine": 2167
             },
             {
               "name": "singleEntryRoot",
               "kind": "property",
               "description": "",
               "type": "\"preserve\" | \"flatten\"",
-              "line": 2138,
-              "endLine": 2138
+              "line": 2168,
+              "endLine": 2168
             },
             {
               "name": "generateNav",
               "kind": "property",
               "description": "",
               "type": "boolean",
-              "line": 2139,
-              "endLine": 2139
+              "line": 2169,
+              "endLine": 2169
             }
           ],
           "file": "npm/vite-plugin-ox-content/src/types.ts",
-          "line": 2106,
-          "endLine": 2140,
+          "line": 2136,
+          "endLine": 2170,
           "signature": "export interface ResolvedDocsOptions"
         },
         {
@@ -13785,24 +13863,24 @@
               "kind": "property",
               "description": "Exported or declared symbol name.",
               "type": "string",
-              "line": 2151,
-              "endLine": 2151
+              "line": 2181,
+              "endLine": 2181
             },
             {
               "name": "kind",
               "kind": "property",
               "description": "Normalized declaration kind used for grouping and rendering.",
               "type": "\"function\" | \"class\" | \"interface\" | \"type\" | \"enum\" | \"variable\" | \"module\"",
-              "line": 2154,
-              "endLine": 2154
+              "line": 2184,
+              "endLine": 2184
             },
             {
               "name": "description",
               "kind": "property",
               "description": "Main prose extracted from the leading JSDoc/TSDoc block.",
               "type": "string",
-              "line": 2157,
-              "endLine": 2157
+              "line": 2187,
+              "endLine": 2187
             },
             {
               "name": "params",
@@ -13810,8 +13888,8 @@
               "description": "Function, method, or constructor parameter documentation.",
               "type": "ParamDoc[]",
               "optional": true,
-              "line": 2160,
-              "endLine": 2160
+              "line": 2190,
+              "endLine": 2190
             },
             {
               "name": "returns",
@@ -13819,8 +13897,8 @@
               "description": "Return value documentation for callable declarations.",
               "type": "ReturnDoc",
               "optional": true,
-              "line": 2163,
-              "endLine": 2163
+              "line": 2193,
+              "endLine": 2193
             },
             {
               "name": "throws",
@@ -13828,8 +13906,8 @@
               "description": "Exceptions/errors documented with `@throws` / `@exception`.",
               "type": "ThrowsDoc[]",
               "optional": true,
-              "line": 2166,
-              "endLine": 2166
+              "line": 2196,
+              "endLine": 2196
             },
             {
               "name": "examples",
@@ -13837,8 +13915,8 @@
               "description": "Code examples collected from `@example` tags.",
               "type": "string[]",
               "optional": true,
-              "line": 2169,
-              "endLine": 2169
+              "line": 2199,
+              "endLine": 2199
             },
             {
               "name": "tags",
@@ -13846,8 +13924,8 @@
               "description": "Additional tags preserved by tag name after known tags are normalized.",
               "type": "Record<string, string>",
               "optional": true,
-              "line": 2172,
-              "endLine": 2172
+              "line": 2202,
+              "endLine": 2202
             },
             {
               "name": "private",
@@ -13855,32 +13933,32 @@
               "description": "True when the entry is marked private or matched by private filtering.",
               "type": "boolean",
               "optional": true,
-              "line": 2175,
-              "endLine": 2175
+              "line": 2205,
+              "endLine": 2205
             },
             {
               "name": "file",
               "kind": "property",
               "description": "Source file path relative to the extraction root when available.",
               "type": "string",
-              "line": 2178,
-              "endLine": 2178
+              "line": 2208,
+              "endLine": 2208
             },
             {
               "name": "line",
               "kind": "property",
               "description": "1-based start line of the declaration in the source file.",
               "type": "number",
-              "line": 2181,
-              "endLine": 2181
+              "line": 2211,
+              "endLine": 2211
             },
             {
               "name": "endLine",
               "kind": "property",
               "description": "1-based end line of the declaration in the source file.",
               "type": "number",
-              "line": 2184,
-              "endLine": 2184
+              "line": 2214,
+              "endLine": 2214
             },
             {
               "name": "signature",
@@ -13888,8 +13966,8 @@
               "description": "Full declaration signature, when the renderer can extract one.",
               "type": "string",
               "optional": true,
-              "line": 2187,
-              "endLine": 2187
+              "line": 2217,
+              "endLine": 2217
             },
             {
               "name": "members",
@@ -13897,13 +13975,13 @@
               "description": "Members belonging to classes, interfaces, object types, and enums.",
               "type": "DocMember[]",
               "optional": true,
-              "line": 2190,
-              "endLine": 2190
+              "line": 2220,
+              "endLine": 2220
             }
           ],
           "file": "npm/vite-plugin-ox-content/src/types.ts",
-          "line": 2149,
-          "endLine": 2191,
+          "line": 2179,
+          "endLine": 2221,
           "signature": "export interface DocEntry"
         },
         {
@@ -13916,24 +13994,24 @@
               "kind": "property",
               "description": "Member name as it appears in the containing declaration.",
               "type": "string",
-              "line": 2198,
-              "endLine": 2198
+              "line": 2228,
+              "endLine": 2228
             },
             {
               "name": "kind",
               "kind": "property",
               "description": "Normalized member kind used for rendering and sorting.",
               "type": "\"property\" | \"method\" | \"constructor\" | \"getter\" | \"setter\" | \"enumMember\"",
-              "line": 2201,
-              "endLine": 2201
+              "line": 2231,
+              "endLine": 2231
             },
             {
               "name": "description",
               "kind": "property",
               "description": "Main prose extracted from the member's documentation comment.",
               "type": "string",
-              "line": 2204,
-              "endLine": 2204
+              "line": 2234,
+              "endLine": 2234
             },
             {
               "name": "signature",
@@ -13941,8 +14019,8 @@
               "description": "Full member signature, when available.",
               "type": "string",
               "optional": true,
-              "line": 2207,
-              "endLine": 2207
+              "line": 2237,
+              "endLine": 2237
             },
             {
               "name": "type",
@@ -13950,8 +14028,8 @@
               "description": "Rendered TypeScript type text for properties and enum members.",
               "type": "string",
               "optional": true,
-              "line": 2210,
-              "endLine": 2210
+              "line": 2240,
+              "endLine": 2240
             },
             {
               "name": "default",
@@ -13959,8 +14037,8 @@
               "description": "Default value extracted from syntax or `@default` tags.",
               "type": "string",
               "optional": true,
-              "line": 2213,
-              "endLine": 2213
+              "line": 2243,
+              "endLine": 2243
             },
             {
               "name": "params",
@@ -13968,8 +14046,8 @@
               "description": "Parameter documentation for methods and constructors.",
               "type": "ParamDoc[]",
               "optional": true,
-              "line": 2216,
-              "endLine": 2216
+              "line": 2246,
+              "endLine": 2246
             },
             {
               "name": "returns",
@@ -13977,8 +14055,8 @@
               "description": "Return value documentation for methods and accessors.",
               "type": "ReturnDoc",
               "optional": true,
-              "line": 2219,
-              "endLine": 2219
+              "line": 2249,
+              "endLine": 2249
             },
             {
               "name": "throws",
@@ -13986,8 +14064,8 @@
               "description": "Exceptions/errors documented with `@throws` / `@exception`.",
               "type": "ThrowsDoc[]",
               "optional": true,
-              "line": 2222,
-              "endLine": 2222
+              "line": 2252,
+              "endLine": 2252
             },
             {
               "name": "optional",
@@ -13995,8 +14073,8 @@
               "description": "True when the member is optional in the source declaration.",
               "type": "boolean",
               "optional": true,
-              "line": 2225,
-              "endLine": 2225
+              "line": 2255,
+              "endLine": 2255
             },
             {
               "name": "readonly",
@@ -14004,8 +14082,8 @@
               "description": "True when the member is declared readonly.",
               "type": "boolean",
               "optional": true,
-              "line": 2228,
-              "endLine": 2228
+              "line": 2258,
+              "endLine": 2258
             },
             {
               "name": "static",
@@ -14013,8 +14091,8 @@
               "description": "True when the member is static.",
               "type": "boolean",
               "optional": true,
-              "line": 2231,
-              "endLine": 2231
+              "line": 2261,
+              "endLine": 2261
             },
             {
               "name": "private",
@@ -14022,8 +14100,8 @@
               "description": "True when the member is marked private or matched by private filtering.",
               "type": "boolean",
               "optional": true,
-              "line": 2234,
-              "endLine": 2234
+              "line": 2264,
+              "endLine": 2264
             },
             {
               "name": "tags",
@@ -14031,29 +14109,29 @@
               "description": "Additional tags preserved by tag name after known tags are normalized.",
               "type": "Record<string, string>",
               "optional": true,
-              "line": 2237,
-              "endLine": 2237
+              "line": 2267,
+              "endLine": 2267
             },
             {
               "name": "line",
               "kind": "property",
               "description": "1-based start line of the member declaration.",
               "type": "number",
-              "line": 2240,
-              "endLine": 2240
+              "line": 2270,
+              "endLine": 2270
             },
             {
               "name": "endLine",
               "kind": "property",
               "description": "1-based end line of the member declaration.",
               "type": "number",
-              "line": 2243,
-              "endLine": 2243
+              "line": 2273,
+              "endLine": 2273
             }
           ],
           "file": "npm/vite-plugin-ox-content/src/types.ts",
-          "line": 2196,
-          "endLine": 2244,
+          "line": 2226,
+          "endLine": 2274,
           "signature": "export interface DocMember"
         },
         {
@@ -14066,24 +14144,24 @@
               "kind": "property",
               "description": "Parameter name, including dotted names for destructured properties.",
               "type": "string",
-              "line": 2251,
-              "endLine": 2251
+              "line": 2281,
+              "endLine": 2281
             },
             {
               "name": "type",
               "kind": "property",
               "description": "Rendered TypeScript type text.",
               "type": "string",
-              "line": 2254,
-              "endLine": 2254
+              "line": 2284,
+              "endLine": 2284
             },
             {
               "name": "description",
               "kind": "property",
               "description": "Prose extracted from `@param` / `@arg` documentation.",
               "type": "string",
-              "line": 2257,
-              "endLine": 2257
+              "line": 2287,
+              "endLine": 2287
             },
             {
               "name": "optional",
@@ -14091,8 +14169,8 @@
               "description": "True when the parameter is optional.",
               "type": "boolean",
               "optional": true,
-              "line": 2260,
-              "endLine": 2260
+              "line": 2290,
+              "endLine": 2290
             },
             {
               "name": "default",
@@ -14100,13 +14178,13 @@
               "description": "Default value extracted from syntax or `@default` tags.",
               "type": "string",
               "optional": true,
-              "line": 2263,
-              "endLine": 2263
+              "line": 2293,
+              "endLine": 2293
             }
           ],
           "file": "npm/vite-plugin-ox-content/src/types.ts",
-          "line": 2249,
-          "endLine": 2264,
+          "line": 2279,
+          "endLine": 2294,
           "signature": "export interface ParamDoc"
         },
         {
@@ -14119,21 +14197,21 @@
               "kind": "property",
               "description": "Rendered TypeScript type text for the return value.",
               "type": "string",
-              "line": 2271,
-              "endLine": 2271
+              "line": 2301,
+              "endLine": 2301
             },
             {
               "name": "description",
               "kind": "property",
               "description": "Prose extracted from `@returns` / `@return` documentation.",
               "type": "string",
-              "line": 2274,
-              "endLine": 2274
+              "line": 2304,
+              "endLine": 2304
             }
           ],
           "file": "npm/vite-plugin-ox-content/src/types.ts",
-          "line": 2269,
-          "endLine": 2275,
+          "line": 2299,
+          "endLine": 2305,
           "signature": "export interface ReturnDoc"
         },
         {
@@ -14147,21 +14225,21 @@
               "description": "Rendered TypeScript type text for the thrown value, when documented.",
               "type": "string",
               "optional": true,
-              "line": 2282,
-              "endLine": 2282
+              "line": 2312,
+              "endLine": 2312
             },
             {
               "name": "description",
               "kind": "property",
               "description": "Prose extracted from `@throws` / `@exception` documentation.",
               "type": "string",
-              "line": 2285,
-              "endLine": 2285
+              "line": 2315,
+              "endLine": 2315
             }
           ],
           "file": "npm/vite-plugin-ox-content/src/types.ts",
-          "line": 2280,
-          "endLine": 2286,
+          "line": 2310,
+          "endLine": 2316,
           "signature": "export interface ThrowsDoc"
         },
         {
@@ -14174,8 +14252,8 @@
               "kind": "property",
               "description": "Source module or file identifier used by generated output.",
               "type": "string",
-              "line": 2293,
-              "endLine": 2293
+              "line": 2323,
+              "endLine": 2323
             },
             {
               "name": "description",
@@ -14183,8 +14261,8 @@
               "description": "Optional module-level description extracted from a file header comment.",
               "type": "string",
               "optional": true,
-              "line": 2296,
-              "endLine": 2296
+              "line": 2326,
+              "endLine": 2326
             },
             {
               "name": "sourcePath",
@@ -14192,8 +14270,8 @@
               "description": "Absolute source path, when available for source links and diagnostics.",
               "type": "string",
               "optional": true,
-              "line": 2299,
-              "endLine": 2299
+              "line": 2329,
+              "endLine": 2329
             },
             {
               "name": "examples",
@@ -14201,8 +14279,8 @@
               "description": "Module-level examples collected from a file header comment.",
               "type": "string[]",
               "optional": true,
-              "line": 2302,
-              "endLine": 2302
+              "line": 2332,
+              "endLine": 2332
             },
             {
               "name": "tags",
@@ -14210,21 +14288,21 @@
               "description": "Module-level tags preserved by tag name.",
               "type": "Record<string, string>",
               "optional": true,
-              "line": 2305,
-              "endLine": 2305
+              "line": 2335,
+              "endLine": 2335
             },
             {
               "name": "entries",
               "kind": "property",
               "description": "Top-level documented declarations found in this module.",
               "type": "DocEntry[]",
-              "line": 2308,
-              "endLine": 2308
+              "line": 2338,
+              "endLine": 2338
             }
           ],
           "file": "npm/vite-plugin-ox-content/src/types.ts",
-          "line": 2291,
-          "endLine": 2309,
+          "line": 2321,
+          "endLine": 2339,
           "signature": "export interface ExtractedDocs"
         },
         {
@@ -14237,61 +14315,61 @@
               "kind": "property",
               "description": "Number of modules included in the generated payload.",
               "type": "number",
-              "line": 2316,
-              "endLine": 2316
+              "line": 2346,
+              "endLine": 2346
             },
             {
               "name": "entries",
               "kind": "property",
               "description": "Number of top-level entries across all modules.",
               "type": "number",
-              "line": 2319,
-              "endLine": 2319
+              "line": 2349,
+              "endLine": 2349
             },
             {
               "name": "byKind",
               "kind": "property",
               "description": "Entry counts grouped by normalized declaration kind.",
               "type": "Record<string, number>",
-              "line": 2322,
-              "endLine": 2322
+              "line": 2352,
+              "endLine": 2352
             },
             {
               "name": "params",
               "kind": "property",
               "description": "Number of documented parameters.",
               "type": "number",
-              "line": 2325,
-              "endLine": 2325
+              "line": 2355,
+              "endLine": 2355
             },
             {
               "name": "returns",
               "kind": "property",
               "description": "Number of documented return values.",
               "type": "number",
-              "line": 2328,
-              "endLine": 2328
+              "line": 2358,
+              "endLine": 2358
             },
             {
               "name": "examples",
               "kind": "property",
               "description": "Number of collected examples.",
               "type": "number",
-              "line": 2331,
-              "endLine": 2331
+              "line": 2361,
+              "endLine": 2361
             },
             {
               "name": "deprecated",
               "kind": "property",
               "description": "Number of entries or members marked with `@deprecated`.",
               "type": "number",
-              "line": 2334,
-              "endLine": 2334
+              "line": 2364,
+              "endLine": 2364
             }
           ],
           "file": "npm/vite-plugin-ox-content/src/types.ts",
-          "line": 2314,
-          "endLine": 2335,
+          "line": 2344,
+          "endLine": 2365,
           "signature": "export interface DocsSummary"
         },
         {
@@ -14304,37 +14382,37 @@
               "kind": "property",
               "description": "Payload schema version. Increment when the JSON shape changes incompatibly.",
               "type": "1",
-              "line": 2342,
-              "endLine": 2342
+              "line": 2372,
+              "endLine": 2372
             },
             {
               "name": "generatedAt",
               "kind": "property",
               "description": "ISO timestamp for the generation run.",
               "type": "string",
-              "line": 2345,
-              "endLine": 2345
+              "line": 2375,
+              "endLine": 2375
             },
             {
               "name": "summary",
               "kind": "property",
               "description": "Aggregate counts useful for dashboards and generated index pages.",
               "type": "DocsSummary",
-              "line": 2348,
-              "endLine": 2348
+              "line": 2378,
+              "endLine": 2378
             },
             {
               "name": "modules",
               "kind": "property",
               "description": "Extracted documentation modules in render order.",
               "type": "ExtractedDocs[]",
-              "line": 2351,
-              "endLine": 2351
+              "line": 2381,
+              "endLine": 2381
             }
           ],
           "file": "npm/vite-plugin-ox-content/src/types.ts",
-          "line": 2340,
-          "endLine": 2352,
+          "line": 2370,
+          "endLine": 2382,
           "signature": "export interface GeneratedDocsData"
         },
         {
@@ -14347,16 +14425,16 @@
               "kind": "property",
               "description": "Display title for the navigation item.",
               "type": "string",
-              "line": 2361,
-              "endLine": 2361
+              "line": 2391,
+              "endLine": 2391
             },
             {
               "name": "path",
               "kind": "property",
               "description": "Path to the documentation page.",
               "type": "string",
-              "line": 2366,
-              "endLine": 2366
+              "line": 2396,
+              "endLine": 2396
             },
             {
               "name": "children",
@@ -14364,13 +14442,13 @@
               "description": "Child navigation items (optional).",
               "type": "NavItem[]",
               "optional": true,
-              "line": 2371,
-              "endLine": 2371
+              "line": 2401,
+              "endLine": 2401
             }
           ],
           "file": "npm/vite-plugin-ox-content/src/types.ts",
-          "line": 2357,
-          "endLine": 2372,
+          "line": 2387,
+          "endLine": 2402,
           "signature": "export interface NavItem"
         },
         {
@@ -14378,8 +14456,8 @@
           "kind": "type",
           "description": "Extra payload fields embedded into collection entries.\n\nKeep this list small for large sites. By default collection entries contain\nonly route metadata and frontmatter. `body`, `html`, and `toc` increase the\nvirtual module size, and `html`/`toc` require a native Markdown transform.",
           "file": "npm/vite-plugin-ox-content/src/types.ts",
-          "line": 2385,
-          "endLine": 2385,
+          "line": 2415,
+          "endLine": 2415,
           "signature": "export type CollectionIncludeField = \"body\" | \"html\" | \"toc\""
         },
         {
@@ -14394,8 +14472,8 @@
               "type": "string | readonly string[]",
               "default": "all Markdown files",
               "optional": true,
-              "line": 2399,
-              "endLine": 2399
+              "line": 2429,
+              "endLine": 2429
             },
             {
               "name": "include",
@@ -14404,13 +14482,13 @@
               "type": "readonly CollectionIncludeField[]",
               "default": "[]",
               "optional": true,
-              "line": 2410,
-              "endLine": 2410
+              "line": 2440,
+              "endLine": 2440
             }
           ],
           "file": "npm/vite-plugin-ox-content/src/types.ts",
-          "line": 2390,
-          "endLine": 2411,
+          "line": 2420,
+          "endLine": 2441,
           "signature": "export interface CollectionOptions"
         },
         {
@@ -14418,8 +14496,8 @@
           "kind": "type",
           "description": "Top-level collection definitions.",
           "file": "npm/vite-plugin-ox-content/src/types.ts",
-          "line": 2416,
-          "endLine": 2416,
+          "line": 2446,
+          "endLine": 2446,
           "signature": "export type CollectionsOptions = Record<string, CollectionOptions | string | readonly string[]>"
         },
         {
@@ -14432,29 +14510,29 @@
               "kind": "property",
               "description": "",
               "type": "string",
-              "line": 2422,
-              "endLine": 2422
+              "line": 2452,
+              "endLine": 2452
             },
             {
               "name": "source",
               "kind": "property",
               "description": "",
               "type": "string[]",
-              "line": 2423,
-              "endLine": 2423
+              "line": 2453,
+              "endLine": 2453
             },
             {
               "name": "include",
               "kind": "property",
               "description": "",
               "type": "CollectionIncludeField[]",
-              "line": 2424,
-              "endLine": 2424
+              "line": 2454,
+              "endLine": 2454
             }
           ],
           "file": "npm/vite-plugin-ox-content/src/types.ts",
-          "line": 2421,
-          "endLine": 2425,
+          "line": 2451,
+          "endLine": 2455,
           "signature": "export interface ResolvedCollectionOptions"
         },
         {
@@ -14467,21 +14545,21 @@
               "kind": "property",
               "description": "",
               "type": "boolean",
-              "line": 2431,
-              "endLine": 2431
+              "line": 2461,
+              "endLine": 2461
             },
             {
               "name": "collections",
               "kind": "property",
               "description": "",
               "type": "Record<string, ResolvedCollectionOptions>",
-              "line": 2432,
-              "endLine": 2432
+              "line": 2462,
+              "endLine": 2462
             }
           ],
           "file": "npm/vite-plugin-ox-content/src/types.ts",
-          "line": 2430,
-          "endLine": 2433,
+          "line": 2460,
+          "endLine": 2463,
           "signature": "export interface ResolvedCollectionsOptions"
         },
         {
@@ -14502,64 +14580,64 @@
                   "description": ""
                 }
               ],
-              "line": 2439,
-              "endLine": 2439
+              "line": 2469,
+              "endLine": 2469
             },
             {
               "name": "id",
               "kind": "property",
               "description": "",
               "type": "string",
-              "line": 2440,
-              "endLine": 2440
+              "line": 2470,
+              "endLine": 2470
             },
             {
               "name": "collection",
               "kind": "property",
               "description": "",
               "type": "string",
-              "line": 2441,
-              "endLine": 2441
+              "line": 2471,
+              "endLine": 2471
             },
             {
               "name": "path",
               "kind": "property",
               "description": "",
               "type": "string",
-              "line": 2442,
-              "endLine": 2442
+              "line": 2472,
+              "endLine": 2472
             },
             {
               "name": "stem",
               "kind": "property",
               "description": "",
               "type": "string",
-              "line": 2443,
-              "endLine": 2443
+              "line": 2473,
+              "endLine": 2473
             },
             {
               "name": "source",
               "kind": "property",
               "description": "",
               "type": "string",
-              "line": 2444,
-              "endLine": 2444
+              "line": 2474,
+              "endLine": 2474
             },
             {
               "name": "extension",
               "kind": "property",
               "description": "",
               "type": "string",
-              "line": 2445,
-              "endLine": 2445
+              "line": 2475,
+              "endLine": 2475
             },
             {
               "name": "title",
               "kind": "property",
               "description": "",
               "type": "string",
-              "line": 2446,
-              "endLine": 2446
+              "line": 2476,
+              "endLine": 2476
             },
             {
               "name": "description",
@@ -14567,16 +14645,16 @@
               "description": "",
               "type": "string",
               "optional": true,
-              "line": 2447,
-              "endLine": 2447
+              "line": 2477,
+              "endLine": 2477
             },
             {
               "name": "frontmatter",
               "kind": "property",
               "description": "",
               "type": "Record<string, unknown>",
-              "line": 2448,
-              "endLine": 2448
+              "line": 2478,
+              "endLine": 2478
             },
             {
               "name": "body",
@@ -14584,8 +14662,8 @@
               "description": "",
               "type": "string",
               "optional": true,
-              "line": 2449,
-              "endLine": 2449
+              "line": 2479,
+              "endLine": 2479
             },
             {
               "name": "html",
@@ -14593,8 +14671,8 @@
               "description": "",
               "type": "string",
               "optional": true,
-              "line": 2450,
-              "endLine": 2450
+              "line": 2480,
+              "endLine": 2480
             },
             {
               "name": "toc",
@@ -14602,13 +14680,13 @@
               "description": "",
               "type": "TocEntry[]",
               "optional": true,
-              "line": 2451,
-              "endLine": 2451
+              "line": 2481,
+              "endLine": 2481
             }
           ],
           "file": "npm/vite-plugin-ox-content/src/types.ts",
-          "line": 2438,
-          "endLine": 2452,
+          "line": 2468,
+          "endLine": 2482,
           "signature": "export interface CollectionEntry"
         },
         {
@@ -14621,13 +14699,13 @@
               "kind": "property",
               "description": "",
               "type": "Record<string, CollectionEntry[]>",
-              "line": 2458,
-              "endLine": 2458
+              "line": 2488,
+              "endLine": 2488
             }
           ],
           "file": "npm/vite-plugin-ox-content/src/types.ts",
-          "line": 2457,
-          "endLine": 2459,
+          "line": 2487,
+          "endLine": 2489,
           "signature": "export interface CollectionManifest"
         },
         {
@@ -14642,8 +14720,8 @@
               "type": "boolean",
               "default": "true",
               "optional": true,
-              "line": 2515,
-              "endLine": 2515
+              "line": 2545,
+              "endLine": 2545
             },
             {
               "name": "limit",
@@ -14652,8 +14730,8 @@
               "type": "number",
               "default": "10",
               "optional": true,
-              "line": 2525,
-              "endLine": 2525
+              "line": 2555,
+              "endLine": 2555
             },
             {
               "name": "prefix",
@@ -14662,8 +14740,8 @@
               "type": "boolean",
               "default": "true",
               "optional": true,
-              "line": 2535,
-              "endLine": 2535
+              "line": 2565,
+              "endLine": 2565
             },
             {
               "name": "placeholder",
@@ -14672,8 +14750,8 @@
               "type": "string",
               "default": "'Search documentation...'",
               "optional": true,
-              "line": 2544,
-              "endLine": 2544
+              "line": 2574,
+              "endLine": 2574
             },
             {
               "name": "hotkey",
@@ -14682,13 +14760,13 @@
               "type": "string",
               "default": "'/'",
               "optional": true,
-              "line": 2553,
-              "endLine": 2553
+              "line": 2583,
+              "endLine": 2583
             }
           ],
           "file": "npm/vite-plugin-ox-content/src/types.ts",
-          "line": 2506,
-          "endLine": 2554,
+          "line": 2536,
+          "endLine": 2584,
           "signature": "export interface SearchOptions"
         },
         {
@@ -14701,45 +14779,45 @@
               "kind": "property",
               "description": "",
               "type": "boolean",
-              "line": 2560,
-              "endLine": 2560
+              "line": 2590,
+              "endLine": 2590
             },
             {
               "name": "limit",
               "kind": "property",
               "description": "",
               "type": "number",
-              "line": 2561,
-              "endLine": 2561
+              "line": 2591,
+              "endLine": 2591
             },
             {
               "name": "prefix",
               "kind": "property",
               "description": "",
               "type": "boolean",
-              "line": 2562,
-              "endLine": 2562
+              "line": 2592,
+              "endLine": 2592
             },
             {
               "name": "placeholder",
               "kind": "property",
               "description": "",
               "type": "string",
-              "line": 2563,
-              "endLine": 2563
+              "line": 2593,
+              "endLine": 2593
             },
             {
               "name": "hotkey",
               "kind": "property",
               "description": "",
               "type": "string",
-              "line": 2564,
-              "endLine": 2564
+              "line": 2594,
+              "endLine": 2594
             }
           ],
           "file": "npm/vite-plugin-ox-content/src/types.ts",
-          "line": 2559,
-          "endLine": 2565,
+          "line": 2589,
+          "endLine": 2595,
           "signature": "export interface ResolvedSearchOptions"
         },
         {
@@ -14752,53 +14830,53 @@
               "kind": "property",
               "description": "Stable document identifier used by the search index.",
               "type": "string",
-              "line": 2572,
-              "endLine": 2572
+              "line": 2602,
+              "endLine": 2602
             },
             {
               "name": "title",
               "kind": "property",
               "description": "Human-readable document title.",
               "type": "string",
-              "line": 2575,
-              "endLine": 2575
+              "line": 2605,
+              "endLine": 2605
             },
             {
               "name": "url",
               "kind": "property",
               "description": "URL returned to search consumers.",
               "type": "string",
-              "line": 2578,
-              "endLine": 2578
+              "line": 2608,
+              "endLine": 2608
             },
             {
               "name": "body",
               "kind": "property",
               "description": "Plain-text body content used for scoring and snippets.",
               "type": "string",
-              "line": 2581,
-              "endLine": 2581
+              "line": 2611,
+              "endLine": 2611
             },
             {
               "name": "headings",
               "kind": "property",
               "description": "Headings extracted from the document.",
               "type": "string[]",
-              "line": 2584,
-              "endLine": 2584
+              "line": 2614,
+              "endLine": 2614
             },
             {
               "name": "code",
               "kind": "property",
               "description": "Code block text extracted from the document.",
               "type": "string[]",
-              "line": 2587,
-              "endLine": 2587
+              "line": 2617,
+              "endLine": 2617
             }
           ],
           "file": "npm/vite-plugin-ox-content/src/types.ts",
-          "line": 2570,
-          "endLine": 2588,
+          "line": 2600,
+          "endLine": 2618,
           "signature": "export interface SearchDocument"
         },
         {
@@ -14811,48 +14889,48 @@
               "kind": "property",
               "description": "Matching document identifier.",
               "type": "string",
-              "line": 2595,
-              "endLine": 2595
+              "line": 2625,
+              "endLine": 2625
             },
             {
               "name": "title",
               "kind": "property",
               "description": "Matching document title.",
               "type": "string",
-              "line": 2598,
-              "endLine": 2598
+              "line": 2628,
+              "endLine": 2628
             },
             {
               "name": "url",
               "kind": "property",
               "description": "URL to open when the result is selected.",
               "type": "string",
-              "line": 2601,
-              "endLine": 2601
+              "line": 2631,
+              "endLine": 2631
             },
             {
               "name": "score",
               "kind": "property",
               "description": "Relevance score returned by the BM25 search engine.",
               "type": "number",
-              "line": 2604,
-              "endLine": 2604
+              "line": 2634,
+              "endLine": 2634
             },
             {
               "name": "matches",
               "kind": "property",
               "description": "Query terms that matched the document.",
               "type": "string[]",
-              "line": 2607,
-              "endLine": 2607
+              "line": 2637,
+              "endLine": 2637
             },
             {
               "name": "snippet",
               "kind": "property",
               "description": "Context snippet with highlighted terms when available.",
               "type": "string",
-              "line": 2610,
-              "endLine": 2610
+              "line": 2640,
+              "endLine": 2640
             },
             {
               "name": "scopes",
@@ -14860,13 +14938,13 @@
               "description": "Hierarchical scopes derived from the result URL or document id.",
               "type": "string[]",
               "optional": true,
-              "line": 2613,
-              "endLine": 2613
+              "line": 2643,
+              "endLine": 2643
             }
           ],
           "file": "npm/vite-plugin-ox-content/src/types.ts",
-          "line": 2593,
-          "endLine": 2614,
+          "line": 2623,
+          "endLine": 2644,
           "signature": "export interface SearchResult"
         },
         {
@@ -14879,21 +14957,21 @@
               "kind": "property",
               "description": "Query text after `@scope` prefixes have been removed.",
               "type": "string",
-              "line": 2621,
-              "endLine": 2621
+              "line": 2651,
+              "endLine": 2651
             },
             {
               "name": "scopes",
               "kind": "property",
               "description": "Deduplicated lowercase scope prefixes requested by the query.",
               "type": "string[]",
-              "line": 2624,
-              "endLine": 2624
+              "line": 2654,
+              "endLine": 2654
             }
           ],
           "file": "npm/vite-plugin-ox-content/src/types.ts",
-          "line": 2619,
-          "endLine": 2625,
+          "line": 2649,
+          "endLine": 2655,
           "signature": "export interface ScopedSearchQuery"
         },
         {
@@ -14906,16 +14984,16 @@
               "kind": "property",
               "description": "BCP 47 locale tag (e.g., 'en', 'ja', 'zh-Hans').",
               "type": "string",
-              "line": 2638,
-              "endLine": 2638
+              "line": 2668,
+              "endLine": 2668
             },
             {
               "name": "name",
               "kind": "property",
               "description": "Display name for this locale (e.g., 'English', '日本語').",
               "type": "string",
-              "line": 2641,
-              "endLine": 2641
+              "line": 2671,
+              "endLine": 2671
             },
             {
               "name": "dir",
@@ -14924,13 +15002,13 @@
               "type": "\"ltr\" | \"rtl\"",
               "default": "'ltr'",
               "optional": true,
-              "line": 2648,
-              "endLine": 2648
+              "line": 2678,
+              "endLine": 2678
             }
           ],
           "file": "npm/vite-plugin-ox-content/src/types.ts",
-          "line": 2636,
-          "endLine": 2649,
+          "line": 2666,
+          "endLine": 2679,
           "signature": "export interface LocaleConfig"
         },
         {
@@ -14945,8 +15023,8 @@
               "type": "boolean",
               "default": "false",
               "optional": true,
-              "line": 2666,
-              "endLine": 2666
+              "line": 2696,
+              "endLine": 2696
             },
             {
               "name": "dir",
@@ -14955,8 +15033,8 @@
               "type": "string",
               "default": "'content/i18n'",
               "optional": true,
-              "line": 2676,
-              "endLine": 2676
+              "line": 2706,
+              "endLine": 2706
             },
             {
               "name": "defaultLocale",
@@ -14965,8 +15043,8 @@
               "type": "string",
               "default": "'en'",
               "optional": true,
-              "line": 2686,
-              "endLine": 2686
+              "line": 2716,
+              "endLine": 2716
             },
             {
               "name": "locales",
@@ -14975,8 +15053,8 @@
               "type": "LocaleConfig[]",
               "default": "[{ code: defaultLocale, name: defaultLocale }]",
               "optional": true,
-              "line": 2695,
-              "endLine": 2695
+              "line": 2725,
+              "endLine": 2725
             },
             {
               "name": "hideDefaultLocale",
@@ -14985,8 +15063,8 @@
               "type": "boolean",
               "default": "true",
               "optional": true,
-              "line": 2705,
-              "endLine": 2705
+              "line": 2735,
+              "endLine": 2735
             },
             {
               "name": "check",
@@ -14995,8 +15073,8 @@
               "type": "boolean",
               "default": "true",
               "optional": true,
-              "line": 2715,
-              "endLine": 2715
+              "line": 2745,
+              "endLine": 2745
             },
             {
               "name": "functionNames",
@@ -15005,13 +15083,13 @@
               "type": "string[]",
               "default": "['t', '$t']",
               "optional": true,
-              "line": 2725,
-              "endLine": 2725
+              "line": 2755,
+              "endLine": 2755
             }
           ],
           "file": "npm/vite-plugin-ox-content/src/types.ts",
-          "line": 2658,
-          "endLine": 2726,
+          "line": 2688,
+          "endLine": 2756,
           "signature": "export interface I18nOptions"
         },
         {
@@ -15024,61 +15102,61 @@
               "kind": "property",
               "description": "",
               "type": "boolean",
-              "line": 2732,
-              "endLine": 2732
+              "line": 2762,
+              "endLine": 2762
             },
             {
               "name": "dir",
               "kind": "property",
               "description": "",
               "type": "string",
-              "line": 2733,
-              "endLine": 2733
+              "line": 2763,
+              "endLine": 2763
             },
             {
               "name": "defaultLocale",
               "kind": "property",
               "description": "",
               "type": "string",
-              "line": 2734,
-              "endLine": 2734
+              "line": 2764,
+              "endLine": 2764
             },
             {
               "name": "locales",
               "kind": "property",
               "description": "",
               "type": "LocaleConfig[]",
-              "line": 2735,
-              "endLine": 2735
+              "line": 2765,
+              "endLine": 2765
             },
             {
               "name": "hideDefaultLocale",
               "kind": "property",
               "description": "",
               "type": "boolean",
-              "line": 2736,
-              "endLine": 2736
+              "line": 2766,
+              "endLine": 2766
             },
             {
               "name": "check",
               "kind": "property",
               "description": "",
               "type": "boolean",
-              "line": 2737,
-              "endLine": 2737
+              "line": 2767,
+              "endLine": 2767
             },
             {
               "name": "functionNames",
               "kind": "property",
               "description": "",
               "type": "string[]",
-              "line": 2738,
-              "endLine": 2738
+              "line": 2768,
+              "endLine": 2768
             }
           ],
           "file": "npm/vite-plugin-ox-content/src/types.ts",
-          "line": 2731,
-          "endLine": 2739,
+          "line": 2761,
+          "endLine": 2769,
           "signature": "export interface ResolvedI18nOptions"
         }
       ]
