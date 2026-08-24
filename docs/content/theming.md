@@ -7,9 +7,12 @@ description: Customize the appearance of your documentation site with ox-content
 
 ox-content provides a flexible Theme API that allows you to customize the appearance of your documentation site. You can use CSS variables for simple customization or write full JSX themes for complete control.
 
-Prefer not to build one from scratch? [Theme Presets](/theme-presets.md) ships
-18 ready-made skins and 22 color schemes as `@ox-content/theme-*` and
-`@ox-content/theme-color-*` packages that compose freely.
+Prefer not to build one from scratch? The [Theme Presets](/theme-presets.md)
+**official catalog** ships 27 skins and 45 color schemes as
+`@ox-content/theme-*` and `@ox-content/theme-color-*` packages that compose
+through `ssg.theme`. See [Authoring a package](/theme-presets.md#authoring-a-package)
+for the compatibility contract (required tokens, light and dark, screenshots,
+and the rule that skins must not hard-code colors).
 
 ## Quick Start
 

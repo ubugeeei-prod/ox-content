@@ -291,3 +291,51 @@ describe("theme composition", () => {
     );
   });
 });
+
+describe("stable theme package layer composition", () => {
+  const scheme = defineTheme({
+    name: "scheme",
+    colors: { primary: "#235fb1", background: "#e1e2e7", text: "#3760bf" },
+    darkColors: { primary: "#7aa2f7", background: "#1a1b26", text: "#c0caf5" },
+    tokens: {
+      "shiki-foreground": "#3358b0",
+      "shiki-background": "#d0d5e3",
+      "shiki-token-keyword": "#9854f1",
+    },
+    darkTokens: {
+      "shiki-foreground": "#c0caf5",
+      "shiki-background": "#16161e",
+      "shiki-token-keyword": "#bb9af7",
+    },
+  });
+  const skin = defineTheme({
+    name: "skin",
+    layout: { sidebarWidth: "268px", headerHeight: "66px" },
+    tokens: { "motion-base": "420ms" },
+    css: ".skin-header { border-radius: 12px; }",
+  });
+
+  it("defineTheme + mergeThemes produce scheme tokens and skin css/layout", () => {
+    const merged = mergeThemes(scheme, skin);
+
+    expect(merged.colors?.primary).toBe("#235fb1");
+    expect(merged.darkColors?.primary).toBe("#7aa2f7");
+    expect(merged.tokens?.["shiki-foreground"]).toBe("#3358b0");
+    expect(merged.tokens?.["shiki-token-keyword"]).toBe("#9854f1");
+    expect(merged.tokens?.["motion-base"]).toBe("420ms");
+    expect(merged.darkTokens?.["shiki-background"]).toBe("#16161e");
+    expect(merged.layout?.sidebarWidth).toBe("268px");
+    expect(merged.css).toContain(".skin-header { border-radius: 12px; }");
+  });
+
+  it("resolveTheme stacks a scheme layer and a skin layer left to right", () => {
+    const resolved = resolveTheme([scheme, skin]);
+
+    expect(resolved.tokens["shiki-foreground"]).toBe("#3358b0");
+    expect(resolved.tokens["motion-base"]).toBe("420ms");
+    expect(resolved.layout.sidebarWidth).toBe("268px");
+    expect(resolved.css).toContain(".skin-header { border-radius: 12px; }");
+    expect(resolved.colors.primary).toBe("#235fb1");
+    expect(resolved.darkColors.background).toBe("#1a1b26");
+  });
+});

@@ -1,9 +1,14 @@
 ---
 title: Theme Presets
-description: Ready-made Ox Content themes — pick a skin for the form, a color scheme for the palette, and compose them.
+description: Official Ox Content theme catalog — pick a skin for the form, a color scheme for the palette, and compose them.
 ---
 
 # Theme Presets
+
+This page and the [theme gallery](/theme-gallery.html) are the **official
+catalog** of published skins and color schemes — a stable product surface, not
+an experiment. Packages follow the [authoring contract](#authoring-a-package)
+below so any skin pairs with any scheme.
 
 Ox Content splits a theme into two independent axes, published as two families
 of packages:
@@ -306,11 +311,35 @@ That ordering is why a skin declares its surface variables through `tokens`
 rather than raw `css`: tokens resolve declaratively before any stylesheet runs,
 which keeps the outcome independent of the order you list the packages in.
 
-## Writing your own
+## Authoring a package
 
 A preset is a plain [`ThemeConfig`](/theming.md) — there is no plugin API to
 implement. A skin sets `css`, `fonts`, `layout` and motion `tokens`; a scheme
-sets `colors`, `darkColors`, `tokens` and `darkTokens`.
+sets `colors`, `darkColors`, `tokens` and `darkTokens`. New packages must meet
+the compatibility contract below so they compose with every other published
+layer.
+
+### Compatibility
+
+- **Light and dark.** Color schemes must export a `ThemeConfig` (default or
+  named) with both `colors` and `darkColors`. Required palette keys:
+  `primary`, `background`, `text`, `textMuted`, `border`, `codeBackground`,
+  and `codeText`. Catalog schemes also ship `primaryHover` and
+  `backgroundAlt`.
+- **Required syntax tokens.** Schemes must define historical highlighter
+  tokens under `tokens` and `darkTokens`: at least `shiki-foreground`,
+  `shiki-background`, and several `shiki-token-*` keys. Keep the
+  `--octc-shiki-*` names (the `shiki` prefix is historical) so existing sites
+  keep working.
+- **Skins must not hard-code colors.** A skin owns form, not palette. Do not
+  put hex or rgb values in `ThemeConfig.colors` / `darkColors`. CSS variables
+  and omitted color fields are allowed. In `css`, reference `--octc-color-*`
+  and `--octc-accent-*`, and use `color-mix()` for tints. Neutral black/white
+  alpha for depth is fine.
+- **Compose left to right.** List layers in `ssg.theme` as an array. Object
+  fields merge key-by-key; `css` and `js` concatenate. Later layers win.
+- **Screenshot.** Include a screenshot of the skin (or a representative
+  pairing) for the gallery above.
 
 ```ts
 import { defineTheme } from "@ox-content/vite-plugin";
@@ -322,8 +351,3 @@ export default defineTheme({
   css: `.header { border-bottom: 2px solid var(--octc-color-primary); }`,
 });
 ```
-
-The one rule that keeps a skin composable: **never name a color.** Reference
-`--octc-color-*` and `--octc-accent-*`, and reach for `color-mix()` when you
-need a tint. Neutral black/white alpha for depth is fine, since it reads
-correctly over any palette.
