@@ -13,6 +13,8 @@ pub struct SiteMapPage {
     pub description: Option<String>,
     /// When true, the page is omitted from every generated file.
     pub draft: bool,
+    /// When true, the page is omitted from every generated file.
+    pub unlisted: bool,
 }
 
 /// Switches and site metadata for crawl-manifest generation.
@@ -74,7 +76,7 @@ pub fn generate_site_maps(options: &SiteMapsOptions, pages: &[SiteMapPage]) -> S
     }
 
     let mut published: Vec<&SiteMapPage> =
-        pages.iter().filter(|page| !page.draft && !page.loc.is_empty()).collect();
+        pages.iter().filter(|page| !page.draft && !page.unlisted && !page.loc.is_empty()).collect();
     published.sort_unstable_by(|left, right| left.loc.cmp(&right.loc));
 
     SiteMapsOutput {

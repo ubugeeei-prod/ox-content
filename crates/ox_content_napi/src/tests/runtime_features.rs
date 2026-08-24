@@ -28,6 +28,7 @@ fn javascript_wrapper_and_declarations_cover_expected_exports() {
         "buildExportGraph",
         "checkI18n",
         "checkI18nProject",
+        "classifyPublishState",
         "collectDocsSourceFiles",
         "collectSearchMarkdownFiles",
         "collectSsgMarkdownFiles",
@@ -176,6 +177,7 @@ fn builds_search_index_from_directory() {
         docs_dir.to_string_lossy().into_owned(),
         "/docs/".to_string(),
         vec![".md".to_string(), ".markdown".to_string()],
+        None,
     );
     let index = ox_content_search::SearchIndex::from_json(&index_json).unwrap();
 

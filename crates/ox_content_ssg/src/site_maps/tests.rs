@@ -6,6 +6,7 @@ fn page(loc: &str, title: &str, description: Option<&str>) -> SiteMapPage {
         title: title.to_string(),
         description: description.map(str::to_string),
         draft: false,
+        unlisted: false,
     }
 }
 
@@ -114,6 +115,19 @@ fn object_overrides_can_disable_robots_and_llms() {
     assert_eq!(output.robots_txt, None);
     assert_eq!(output.llms_txt, None);
     assert_eq!(output.warning, None);
+}
+
+#[test]
+fn unlisted_pages_are_omitted() {
+    let pages = vec![
+        SiteMapPage { unlisted: true, ..page("https://example.com/secret/", "Secret", None) },
+        page("https://example.com/public/", "Public", None),
+    ];
+    let output = generate_site_maps(&enabled(Some("https://example.com")), &pages);
+    let sitemap = output.sitemap_xml.expect("published pages should still emit a sitemap");
+
+    assert!(sitemap.contains("https://example.com/public/"), "{sitemap}");
+    assert!(!sitemap.contains("secret"), "{sitemap}");
 }
 
 #[test]

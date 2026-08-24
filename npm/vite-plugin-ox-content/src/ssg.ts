@@ -31,6 +31,7 @@ import { normalizeVitePressFrontmatter } from "./vitepress";
 import { renderPage } from "./theme-renderer";
 import type { PageData as ThemePageData } from "./theme-renderer";
 import { writeSiteMapFiles } from "./site-maps";
+import { filterNavGroups, hiddenNavKeys, partitionPublishedPages } from "./publish-state";
 
 /**
  * Navigation item for SSG.
@@ -673,11 +674,19 @@ export async function buildSsg(options: ResolvedOptions, root: string): Promise<
   const context = await createBuildSsgContext(options, root, srcDir, outDir, markdownFiles);
   const collected = await collectPageResults(context, markdownFiles);
   errors.push(...collected.errors);
+  const { outputPages, listedPages } = applyPublishState(context, collected);
 
   await generateOgImageAssets(context, collected, generatedFiles, errors);
 
-  const generatedPages = await generateHtmlPages(context, collected.pageResults, collected, errors);
-  await writeGeneratedPages(generatedPages, context, generatedFiles, collected.pageResults, errors);
+  const generatedPages = await generateHtmlPages(context, outputPages, collected, errors);
+  await writeGeneratedPages(
+    generatedPages,
+    context,
+    generatedFiles,
+    listedPages,
+    outputPages,
+    errors,
+  );
 
   return {
     files: generatedFiles,
@@ -778,6 +787,48 @@ async function collectPageResults(
   }
 
   return collected;
+}
+
+function applyPublishState(
+  context: BuildSsgContext,
+  collected: CollectedPageResults,
+): { outputPages: PageProcessResult[]; listedPages: PageProcessResult[] } {
+  const publishState = context.options.publishState;
+  const { output, listed } = partitionPublishedPages(collected.pageResults, publishState);
+  if (!publishState?.enabled) {
+    return { outputPages: output, listedPages: listed };
+  }
+
+  const usedManualNav =
+    Boolean(context.ssgOptions.navigation) || Boolean(context.ssgOptions.theme?.sidebar.length);
+  if (usedManualNav) {
+    context.navItems = filterNavGroups(
+      context.navItems,
+      hiddenNavKeys(collected.pageResults, listed),
+    );
+  } else {
+    context.navItems = buildNavItems(
+      listed.map((page) => page.inputPath),
+      context.srcDir,
+      context.base,
+      context.ssgOptions.extension,
+    );
+  }
+
+  const outputPaths = new Set(output.map((page) => page.inputPath));
+  collected.ogImageEntries = collected.ogImageEntries.filter((_, index) =>
+    outputPaths.has(collected.ogImageInputPaths[index] ?? ""),
+  );
+  collected.ogImageInputPaths = collected.ogImageInputPaths.filter((inputPath) =>
+    outputPaths.has(inputPath),
+  );
+  for (const inputPath of collected.ogImageUrlMap.keys()) {
+    if (!outputPaths.has(inputPath)) {
+      collected.ogImageUrlMap.delete(inputPath);
+    }
+  }
+
+  return { outputPages: output, listedPages: listed };
 }
 
 async function transformSsgPage(
@@ -1081,7 +1132,8 @@ async function writeGeneratedPages(
   generatedPages: GeneratedHtmlPage[],
   context: BuildSsgContext,
   generatedFiles: string[],
-  pageResults: PageProcessResult[],
+  listedPages: PageProcessResult[],
+  outputPages: PageProcessResult[],
   errors: string[],
 ): Promise<void> {
   // Shared asset extraction needs the complete page set to maximize
@@ -1106,16 +1158,27 @@ async function writeGeneratedPages(
     base: context.base,
     siteName: context.siteName,
     options: context.options.siteMaps,
-    pages: pageResults.map((page) => ({
-      loc: canonicalPageUrl(context, page.routePaths.urlPath) ?? "",
-      title: page.title,
-      description: page.description,
-      draft: page.frontmatter.draft === true,
-    })),
+    pages: sitemapPages(context, listedPages, outputPages),
   });
   generatedFiles.push(...siteMaps.files);
   if (siteMaps.warning) {
     errors.push(siteMaps.warning);
     console.warn(siteMaps.warning);
   }
+}
+
+function sitemapPages(
+  context: BuildSsgContext,
+  listedPages: PageProcessResult[],
+  outputPages: PageProcessResult[],
+): Array<{ loc: string; title: string; description?: string; draft: boolean; unlisted: boolean }> {
+  const pages = context.options.publishState?.enabled ? listedPages : outputPages;
+  const listedPaths = new Set(listedPages.map((page) => page.inputPath));
+  return pages.map((page) => ({
+    loc: canonicalPageUrl(context, page.routePaths.urlPath) ?? "",
+    title: page.title,
+    description: page.description,
+    draft: page.frontmatter.draft === true,
+    unlisted: Boolean(context.options.publishState?.enabled) && !listedPaths.has(page.inputPath),
+  }));
 }

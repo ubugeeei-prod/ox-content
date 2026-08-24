@@ -38,7 +38,7 @@ Already tracked elsewhere:
 | `sitemap.xml`, `robots.txt`, `llms.txt` | [#673](https://github.com/ubugeeei-prod/ox-content/issues/673) | shipped |
 | RSS / Atom / JSON feeds                 | [#674](https://github.com/ubugeeei-prod/ox-content/issues/674) | planned |
 | Redirects, aliases, and path rewrites   | [#675](https://github.com/ubugeeei-prod/ox-content/issues/675) | planned |
-| Draft, unlisted, and scheduled pages    | [#676](https://github.com/ubugeeei-prod/ox-content/issues/676) | planned |
+| Draft, unlisted, and scheduled pages    | [#676](https://github.com/ubugeeei-prod/ox-content/issues/676) | shipped |
 | Custom 404 page                         | [#677](https://github.com/ubugeeei-prod/ox-content/issues/677) | planned |
 | Permalinks and frontmatter cascade      | [#678](https://github.com/ubugeeei-prod/ox-content/issues/678) | planned |
 

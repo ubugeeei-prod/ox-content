@@ -13,6 +13,7 @@ import { transformMarkdown } from "./transform";
 import { extractDocs, generateMarkdown, writeDocs, resolveDocsOptions } from "./docs";
 import { buildSsg, resolveSsgOptions } from "./ssg";
 import { resolveSiteMapsOptions } from "./site-maps";
+import { resolvePublishStateOptions } from "./publish-state";
 import {
   resolveSearchOptions,
   buildSearchIndex,
@@ -87,6 +88,8 @@ export type {
   ResolvedReaderChrome,
   SiteMapsOptions,
   ResolvedSiteMapsOptions,
+  PublishStateOptions,
+  ResolvedPublishStateOptions,
   SearchOptions,
   ResolvedSearchOptions,
   SearchDocument,
@@ -438,11 +441,30 @@ function notifySsgFileAddedOrRemoved(
   });
 }
 
+function searchPublishState(
+  resolvedOptions: ResolvedOptions,
+  command: "build" | "serve",
+): ResolvedOptions["publishState"] {
+  const publishState = resolvedOptions.publishState ?? {
+    enabled: false,
+    includeDrafts: false,
+  };
+  return {
+    ...publishState,
+    includeDrafts: publishState.includeDrafts || command === "serve",
+  };
+}
+
 function createSearchPlugin(resolvedOptions: ResolvedOptions, getRoot: () => string): Plugin {
   let searchIndexJson = "";
+  let command: "build" | "serve" = "build";
 
   return {
     name: "ox-content:search",
+
+    config(_config, env) {
+      command = env.command;
+    },
 
     resolveId(id) {
       if (id === "virtual:ox-content/search") {
@@ -477,6 +499,7 @@ function createSearchPlugin(resolvedOptions: ResolvedOptions, getRoot: () => str
           srcDir,
           resolvedOptions.base,
           resolvedOptions.extensions,
+          searchPublishState(resolvedOptions, command),
         );
         console.log("[ox-content] Search index built");
       } catch (err) {
@@ -519,6 +542,7 @@ function createSearchPlugin(resolvedOptions: ResolvedOptions, getRoot: () => str
               srcDir,
               resolvedOptions.base,
               resolvedOptions.extensions,
+              searchPublishState(resolvedOptions, command),
             );
             stale = false;
           }
@@ -558,6 +582,7 @@ function resolveOptions(options: OxContentOptions): ResolvedOptions {
     extensions: normalizeMarkdownExtensions(options.extensions),
     ssg: resolveSsgOptions(options.ssg),
     siteMaps: resolveSiteMapsOptions(options.siteMaps),
+    publishState: resolvePublishStateOptions(options.publishState),
     gfm: options.gfm ?? true,
     footnotes: options.footnotes ?? true,
     tables: options.tables ?? true,
@@ -954,6 +979,11 @@ export type {
 } from "./lint-files";
 export { buildSsg, resolveSsgOptions, DEFAULT_HTML_TEMPLATE } from "./ssg";
 export { resolveSiteMapsOptions } from "./site-maps";
+export {
+  classifyPublishState,
+  resolvePublishStateOptions,
+  partitionPublishedPages,
+} from "./publish-state";
 export { resolveSearchOptions, buildSearchIndex, writeSearchIndex } from "./search";
 export {
   buildCollectionManifest,

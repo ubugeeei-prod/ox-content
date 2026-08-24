@@ -18,6 +18,7 @@ export interface SiteMapPageInput {
   title: string;
   description?: string;
   draft?: boolean;
+  unlisted?: boolean;
 }
 
 /** Inputs for rendering crawl-manifest bodies. */
@@ -81,7 +82,7 @@ export function generateSiteMaps(input: SiteMapsRenderInput): SiteMapsRenderResu
   }
 
   const published = input.pages
-    .filter((page) => !page.draft && page.loc.length > 0)
+    .filter((page) => !page.draft && !page.unlisted && page.loc.length > 0)
     .slice()
     .sort((left, right) => (left.loc < right.loc ? -1 : left.loc > right.loc ? 1 : 0));
 

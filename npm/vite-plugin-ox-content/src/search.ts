@@ -9,9 +9,11 @@ import { DEFAULT_MARKDOWN_EXTENSIONS } from "./markdown";
 import type {
   SearchOptions,
   ResolvedSearchOptions,
+  ResolvedPublishStateOptions,
   SearchDocument,
   ScopedSearchQuery,
 } from "./types";
+import { toNapiPublishState } from "./publish-state";
 
 // Import Rust bindings
 let oxContent: typeof import("@ox-content/napi") | null = null;
@@ -88,6 +90,7 @@ export async function buildSearchIndex(
   srcDir: string,
   base: string,
   extensions: readonly string[] = DEFAULT_MARKDOWN_EXTENSIONS,
+  publishState?: ResolvedPublishStateOptions,
 ): Promise<string> {
   const napi = await getOxContent();
 
@@ -101,7 +104,9 @@ export async function buildSearchIndex(
     });
   }
 
-  return napi.buildSearchIndexFromDirectory(srcDir, base, [...extensions]);
+  return napi.buildSearchIndexFromDirectory(srcDir, base, [...extensions], {
+    publishState: toNapiPublishState(publishState),
+  });
 }
 
 /**

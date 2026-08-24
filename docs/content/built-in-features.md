@@ -39,6 +39,7 @@ inline**.
 | [Previous / Next](./built-in/pagination.md)            | Opt-in previous and next page links                                       |
 | [Reader Chrome](./built-in/reader-chrome.md)           | Opt-in copy, outbound-link icons, and back-to-top                         |
 | [Sitemap / robots / llms.txt](./built-in/site-maps.md) | Opt-in crawl manifests written next to generated HTML                     |
+| [Draft / unlisted / scheduled](./built-in/drafts.md)   | Opt-in frontmatter publish states for production output                   |
 
 ## Default vs Opt-in
 
@@ -67,6 +68,7 @@ inline**.
 | Page pager       | `ssg.pagination`                                                                                              | `false`              | [Previous / Next](./built-in/pagination.md)            |
 | Reader chrome    | `ssg.readerChrome`                                                                                            | `false`              | [Reader Chrome](./built-in/reader-chrome.md)           |
 | Crawl manifests  | `siteMaps`                                                                                                    | `false`              | [Sitemap / robots / llms.txt](./built-in/site-maps.md) |
+| Publish states   | `publishState`                                                                                                | `false`              | [Draft / unlisted / scheduled](./built-in/drafts.md)   |
 | Code checks      | `codeBlockLint`, `codeBlockTypecheck`, `docsTests`                                                            | `false`              | [Quality Checks](./built-in/quality-checks.md)         |
 | Custom pipeline  | `transformers`                                                                                                | `[]`                 | [Site Generation](./built-in/site-generation.md)       |
 

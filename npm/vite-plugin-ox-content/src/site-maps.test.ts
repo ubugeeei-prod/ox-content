@@ -136,6 +136,21 @@ describe("generateSiteMaps", () => {
     expect(output.llmsTxt).toBeUndefined();
   });
 
+  it("omits unlisted pages", () => {
+    const output = generateSiteMaps({
+      options: { enabled: true, robots: true, llms: true },
+      siteUrl: "https://example.com",
+      siteName: "Docs",
+      pages: [
+        { loc: "https://example.com/secret/", title: "Secret", unlisted: true },
+        { loc: "https://example.com/public/", title: "Public" },
+      ],
+    });
+
+    expect(output.sitemapXml).toContain("https://example.com/public/");
+    expect(output.sitemapXml).not.toContain("secret");
+  });
+
   it("omits draft pages", () => {
     const output = generateSiteMaps({
       options: { enabled: true, robots: true, llms: true },

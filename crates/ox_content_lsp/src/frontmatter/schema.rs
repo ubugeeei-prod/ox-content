@@ -38,6 +38,22 @@ pub fn builtin_schema() -> FrontmatterSchema {
                 "type": "boolean",
                 "description": "Marks the page as draft content."
             },
+            "unlisted": {
+                "type": "boolean",
+                "description": "Builds the page but omits it from nav, search, and sitemaps."
+            },
+            "scheduled": {
+                "type": "string",
+                "description": "ISO-8601 instant. The page stays unpublished until this time."
+            },
+            "date": {
+                "type": "string",
+                "description": "ISO-8601 publish instant when scheduled is omitted."
+            },
+            "expiry": {
+                "type": "string",
+                "description": "ISO-8601 instant after which the page is unpublished."
+            },
             "tags": {
                 "type": "array",
                 "items": { "type": "string" },

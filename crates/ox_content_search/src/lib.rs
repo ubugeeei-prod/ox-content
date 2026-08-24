@@ -40,7 +40,8 @@ pub use files::{collect_markdown_files, strip_markdown_extension, write_search_i
 pub use index::{Field, Posting, SearchDocument, SearchIndex, SearchIndexBuilder};
 pub use indexer::DocumentIndexer;
 pub use markdown::{
-    build_search_index_from_directory, build_search_index_json,
+    SearchIndexBuildOptions, build_search_index_from_directory,
+    build_search_index_from_directory_with_options, build_search_index_json,
     extract_search_document_from_source, search_document_id,
 };
 pub use query::{SearchOptions, SearchResult};

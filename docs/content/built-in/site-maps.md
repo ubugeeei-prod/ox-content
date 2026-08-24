@@ -51,7 +51,8 @@ oxContent({
 | `llms`     | `boolean`                     | `true`  |
 
 `sitemap.xml` is always written when the feature is on. Pages with
-`draft: true` in frontmatter are omitted.
+`draft: true` in frontmatter are omitted. When [`publishState`](./drafts.md)
+is also enabled, unlisted and not-yet-scheduled pages are omitted too.
 
 If `siteMaps` is enabled without `ssg.siteUrl`, no files are written. The build
 continues and emits a warning.

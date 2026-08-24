@@ -70,7 +70,7 @@ export declare function buildSearchIndex(documents: Array<JsSearchDocument>): st
  * File discovery, Markdown parsing, search document extraction, and index
  * construction all run on the Rust side.
  */
-export declare function buildSearchIndexFromDirectory(srcDir: string, base: string, extensions: Array<string>): string
+export declare function buildSearchIndexFromDirectory(srcDir: string, base: string, extensions: Array<string>, options?: JsSearchIndexBuildOptions | undefined | null): string
 
 /** Builds SSG navigation groups from markdown files. */
 export declare function buildSsgNavItems(markdownFiles: Array<string>, srcDir: string, base: string, extension: string): Array<JsSsgNavGroup>
@@ -95,6 +95,9 @@ export declare function checkI18n(dictDir: string, usedKeys: Array<string>): I18
  * `default_locale` is used for dictionary fallback rules.
  */
 export declare function checkI18nProject(dictDir: string, srcDirs: Array<string>, functionNames: Array<string>, defaultLocale: string): I18NCheckResult
+
+/** Classifies already-parsed frontmatter JSON against publish-state options. */
+export declare function classifyPublishState(frontmatterJson: string, options?: JsPublishStateOptions | undefined | null): JsPublishDecision
 
 /** Collects source files for generated API documentation. */
 export declare function collectDocsSourceFiles(srcDir: string, include: Array<string>, exclude: Array<string>): Array<string>
@@ -1221,6 +1224,24 @@ export interface JsPublicExport {
   source: JsExportSource
 }
 
+/** Whether a page should be written and listed. */
+export interface JsPublishDecision {
+  /** Write HTML for this page. */
+  output: boolean
+  /** Include the page in nav, sitemap, and search. */
+  listed: boolean
+}
+
+/** JavaScript publish-state options. */
+export interface JsPublishStateOptions {
+  /** When false, every page stays published and listed. */
+  enabled?: boolean
+  /** Injected ISO-8601 clock used for scheduled / expiry comparison. */
+  now?: string
+  /** Keep draft and not-yet-scheduled pages visible (dev preview). */
+  includeDrafts?: boolean
+}
+
 /** Opt-in reader chrome flags. Presence of the object enables the feature. */
 export interface JsReaderChrome {
   /** Copy button on fenced code blocks. */
@@ -1287,6 +1308,12 @@ export interface JsSearchDocument {
   headings: Array<string>
   /** Code snippets. */
   code: Array<string>
+}
+
+/** Optional filters for directory search-index construction. */
+export interface JsSearchIndexBuildOptions {
+  /** Publish-state filter applied while walking Markdown files. */
+  publishState?: JsPublishStateOptions
 }
 
 /** Search options for JavaScript. */

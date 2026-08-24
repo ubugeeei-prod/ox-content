@@ -448,6 +448,38 @@ export interface ResolvedSiteMapsOptions {
 }
 
 /**
+ * Opt-in draft / unlisted / scheduled page filtering.
+ */
+export interface PublishStateOptions {
+  /**
+   * When `false`, frontmatter publish fields are ignored.
+   * @default true when the option is an object
+   */
+  enabled?: boolean;
+
+  /**
+   * Injected ISO-8601 clock compared against `scheduled`, `date`, and `expiry`.
+   * Invalid values fall back to the system clock.
+   */
+  now?: string;
+
+  /**
+   * Keep draft and not-yet-scheduled pages in output. The dev server sets this.
+   * @default false
+   */
+  includeDrafts?: boolean;
+}
+
+/**
+ * Resolved publish-state options.
+ */
+export interface ResolvedPublishStateOptions {
+  enabled: boolean;
+  now?: string;
+  includeDrafts: boolean;
+}
+
+/**
  * Options for the core `oxContent()` Vite plugin.
  *
  * The top-level options describe where content lives, which Markdown features
@@ -522,6 +554,18 @@ export interface OxContentOptions {
    * @default false
    */
   siteMaps?: boolean | SiteMapsOptions;
+
+  /**
+   * Honor frontmatter draft / unlisted / scheduled publish states.
+   *
+   * Off by default. `true` omits drafts and future-scheduled pages from
+   * production HTML, search, and sitemaps. Unlisted pages still build and
+   * remain reachable by URL. An object enables the feature and can inject
+   * `now` for a deterministic build-time clock.
+   *
+   * @default false
+   */
+  publishState?: boolean | PublishStateOptions;
 
   /**
    * Enable GitHub Flavored Markdown extensions.
@@ -858,6 +902,7 @@ export interface ResolvedOptions {
   extensions: string[];
   ssg: ResolvedSsgOptions;
   siteMaps?: ResolvedSiteMapsOptions;
+  publishState?: ResolvedPublishStateOptions;
   gfm: boolean;
   footnotes: boolean;
   tables: boolean;
