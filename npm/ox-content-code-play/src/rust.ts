@@ -82,7 +82,7 @@ function resolveCrateType(code: string, configured: string): "bin" | "lib" {
   if (configured === "bin" || configured === "lib") {
     return configured;
   }
-  return /\bfn\s+main\s*\(/.test(code) ? "bin" : "lib";
+  return /(?:^|\b)(?:async\s+)?fn\s+main\s*\(/.test(code) ? "bin" : "lib";
 }
 
 function parseResponse(text: string): RustPlaygroundResponse {
