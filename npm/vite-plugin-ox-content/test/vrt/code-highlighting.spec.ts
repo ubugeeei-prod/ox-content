@@ -18,6 +18,7 @@ function createResolvedOptions(): ResolvedOptions {
       generateOgImage: false,
       lastUpdated: false,
       pagination: false,
+      readerChrome: false,
     },
     gfm: true,
     footnotes: true,

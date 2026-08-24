@@ -184,6 +184,20 @@ pub struct JsSsgConfig {
     pub available_locales: Option<Vec<JsLocaleInfo>>,
     /// When true, render previous/next page links after the article.
     pub pagination: Option<bool>,
+    /// Opt-in copy, external-link, and back-to-top chrome.
+    pub reader_chrome: Option<JsReaderChrome>,
+}
+
+/// Opt-in reader chrome flags. Presence of the object enables the feature.
+#[napi(object)]
+#[derive(Clone)]
+pub struct JsReaderChrome {
+    /// Copy button on fenced code blocks.
+    pub copy: Option<bool>,
+    /// Icon and `rel` on outbound links.
+    pub external_links: Option<bool>,
+    /// Back-to-top control that appears after scroll.
+    pub back_to_top: Option<bool>,
 }
 
 /// Locale information for the locale switcher.

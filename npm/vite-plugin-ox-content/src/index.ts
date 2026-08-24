@@ -68,6 +68,8 @@ export type {
   ExtractedDocs,
   SsgOptions,
   ResolvedSsgOptions,
+  ReaderChromeOptions,
+  ResolvedReaderChrome,
   SearchOptions,
   ResolvedSearchOptions,
   SearchDocument,

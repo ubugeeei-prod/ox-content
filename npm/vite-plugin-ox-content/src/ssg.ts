@@ -15,7 +15,9 @@ import { importNapiModule, importNapiModuleSync } from "./napi";
 import { DEFAULT_MARKDOWN_EXTENSIONS } from "./markdown";
 import type {
   ResolvedOptions,
+  ResolvedReaderChrome,
   ResolvedSsgOptions,
+  ReaderChromeOptions,
   SsgOptions,
   SsgNavigationGroup,
   TocEntry,
@@ -105,6 +107,7 @@ export function resolveSsgOptions(ssg: SsgOptions | boolean | undefined): Resolv
       generateOgImage: false,
       lastUpdated: false,
       pagination: false,
+      readerChrome: false,
     };
   }
 
@@ -117,6 +120,7 @@ export function resolveSsgOptions(ssg: SsgOptions | boolean | undefined): Resolv
       generateOgImage: false,
       lastUpdated: false,
       pagination: false,
+      readerChrome: false,
       theme: resolveTheme(undefined),
     };
   }
@@ -136,6 +140,7 @@ export function resolveSsgOptions(ssg: SsgOptions | boolean | undefined): Resolv
     generateOgImage: ssg.generateOgImage ?? false,
     lastUpdated: ssg.lastUpdated ?? false,
     pagination: resolvePaginationOption(ssg.pagination),
+    readerChrome: resolveReaderChromeOption(ssg.readerChrome),
     siteUrl: ssg.siteUrl,
     theme: resolveTheme(ssg.theme),
     navigation: ssg.navigation,
@@ -144,6 +149,22 @@ export function resolveSsgOptions(ssg: SsgOptions | boolean | undefined): Resolv
 
 function resolvePaginationOption(value: boolean | Record<string, unknown> | undefined): boolean {
   return value === true || (typeof value === "object" && value !== null);
+}
+
+function resolveReaderChromeOption(
+  value: boolean | ReaderChromeOptions | undefined,
+): ResolvedReaderChrome {
+  if (value === true) {
+    return { copy: true, externalLinks: true, backToTop: true };
+  }
+  if (value && typeof value === "object") {
+    return {
+      copy: value.copy !== false,
+      externalLinks: value.externalLinks !== false,
+      backToTop: value.backToTop !== false,
+    };
+  }
+  return false;
 }
 
 /** Parses `prev` / `next` frontmatter into a pager override. */
@@ -334,6 +355,7 @@ export async function generateHtmlPage(
   locale?: string,
   availableLocales?: LocaleConfig[],
   pagination = false,
+  readerChrome: ResolvedReaderChrome = false,
 ): Promise<string> {
   const mod = await importNapiModule();
 
@@ -408,6 +430,13 @@ export async function generateHtmlPage(
       locale,
       availableLocales: availableLocales ? toRustLocales(availableLocales) : undefined,
       pagination,
+      readerChrome: readerChrome
+        ? {
+            copy: readerChrome.copy,
+            externalLinks: readerChrome.externalLinks,
+            backToTop: readerChrome.backToTop,
+          }
+        : undefined,
     },
   );
 }
@@ -985,6 +1014,7 @@ async function renderSsgPage(
     getPageLocale(pageData.path, context.options.i18n),
     context.options.i18n ? context.options.i18n.locales : undefined,
     context.ssgOptions.pagination,
+    context.ssgOptions.readerChrome,
   );
 }
 

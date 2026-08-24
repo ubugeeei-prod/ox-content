@@ -60,6 +60,7 @@ fn config(pagination: bool) -> SsgConfig {
         locale: None,
         available_locales: None,
         pagination,
+        reader_chrome: Default::default(),
     }
 }
 

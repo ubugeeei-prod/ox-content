@@ -32,6 +32,7 @@ inline**.
 | [Quality Checks](./built-in/quality-checks.md)       | Code block lint, type checking, docs tests, HTML sanitizer                |
 | [Site Generation](./built-in/site-generation.md)     | SSG, OG images, edit links, collections, API docs, transformers           |
 | [Previous / Next](./built-in/pagination.md)          | Opt-in previous and next page links                                       |
+| [Reader Chrome](./built-in/reader-chrome.md)         | Opt-in copy, outbound-link icons, and back-to-top                         |
 
 ## Default vs Opt-in
 
@@ -54,6 +55,7 @@ inline**.
 | HTML safety      | `sanitize`                                                                                                    | `false`              | [Quality Checks](./built-in/quality-checks.md)       |
 | Editing links    | `editThisPage`                                                                                                | `false`              | [Site Generation](./built-in/site-generation.md)     |
 | Page pager       | `ssg.pagination`                                                                                              | `false`              | [Previous / Next](./built-in/pagination.md)          |
+| Reader chrome    | `ssg.readerChrome`                                                                                            | `false`              | [Reader Chrome](./built-in/reader-chrome.md)         |
 | Code checks      | `codeBlockLint`, `codeBlockTypecheck`, `docsTests`                                                            | `false`              | [Quality Checks](./built-in/quality-checks.md)       |
 | Custom pipeline  | `transformers`                                                                                                | `[]`                 | [Site Generation](./built-in/site-generation.md)     |
 

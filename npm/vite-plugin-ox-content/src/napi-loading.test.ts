@@ -47,6 +47,7 @@ function createResolvedOptions(overrides: Partial<ResolvedOptions> = {}): Resolv
       generateOgImage: false,
       lastUpdated: false,
       pagination: false,
+      readerChrome: false,
     },
     gfm: true,
     footnotes: true,

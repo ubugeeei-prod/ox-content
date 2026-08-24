@@ -47,6 +47,7 @@ export default defineConfig(({ mode }) => {
           siteName: "Ox Content",
           siteUrl,
           pagination: true,
+          readerChrome: true,
           generateOgImage: true,
           ogImage,
           theme: defineTheme({
@@ -97,6 +98,7 @@ export default defineConfig(({ mode }) => {
                       { text: "Quality Checks", link: "/built-in/quality-checks.md" },
                       { text: "Site Generation", link: "/built-in/site-generation.md" },
                       { text: "Previous / Next", link: "/built-in/pagination.md" },
+                      { text: "Reader Chrome", link: "/built-in/reader-chrome.md" },
                     ],
                   },
                   { text: "Theming", link: "/theming.md" },
