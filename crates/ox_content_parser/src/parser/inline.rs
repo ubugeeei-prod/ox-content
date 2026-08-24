@@ -47,7 +47,7 @@ impl<'a> Parser<'a> {
     }
 
     fn allows_mdx_text_expression(&self) -> bool {
-        self.options.mdx && self.mdx_in_jsx.get()
+        self.options.mdx
     }
 
     fn next_inline_marker(&self, bytes: &[u8], from: usize) -> usize {

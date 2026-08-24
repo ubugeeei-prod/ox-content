@@ -8,14 +8,16 @@ description: Embed Vue, React, or Svelte components in Markdown using island hyd
 Ox Content lets you embed framework components inside Markdown and `.mdx` files.
 It is worth understanding how this works, because it differs from "classic" MDX:
 
-- **JSX elements and module-level `import` / `export` parse when MDX is
-  enabled.** With `mdx: true` / `ParserOptions.mdx`, the Rust parser turns
-  PascalCase and member-name tags into `MdxJsxFlowElement` /
-  `MdxJsxTextElement` nodes (self-closing or open/close, with literal,
-  boolean, `{expr}`, and spread attributes), and turns file-level
-  `import` / `export` into `MdxjsEsm` nodes. Fragments (`<>...</>`), JSX
-  comments, and `{expression}` children are stored as AST source. Nothing
-  is evaluated. `.md` stays CommonMark + GFM unless that option is on.
+- **JSX elements, module-level `import` / `export`, and prose
+  `{expression}` parse when MDX is enabled.** With `mdx: true` /
+  `ParserOptions.mdx`, the Rust parser turns PascalCase and member-name
+  tags into `MdxJsxFlowElement` / `MdxJsxTextElement` nodes (self-closing
+  or open/close, with literal, boolean, `{expr}`, and spread attributes),
+  turns file-level `import` / `export` into `MdxjsEsm` nodes, and turns
+  document-level `{foo}` / `Hello {name}` into `MdxFlowExpression` /
+  `MdxTextExpression`. Fragments (`<>...</>`), JSX comments, and
+  `{expression}` children are stored as AST source. Nothing is evaluated.
+  `.md` stays CommonMark + GFM unless that option is on.
 - **Components are resolved by a framework plugin**, not the renderer. The
   React/Vue/Svelte plugins scan the content for PascalCase component tags,
   replace them with **island** placeholders, and hydrate them on the client.
@@ -65,7 +67,9 @@ children:
 ```md
 # My Page
 
-Regular **Markdown** prose.
+Regular **Markdown** prose. Hello {name}.
+
+{count + 1}
 
 <Counter initial={5} />
 
@@ -86,9 +90,10 @@ Regular **Markdown** prose.
 Only tags that start with an uppercase letter are treated as JSX / components,
 so ordinary HTML (`<div>`, `<span>`, …) stays raw HTML. Member names
 (`Foo.Bar`), fragments (`<>...</>`), spreads (`{...props}`), JSX comments
-(`{/* note */}`), and `{expression}` children are parsed when MDX is on;
-expression source is stored and not run. Tags inside fenced code blocks and
-inline code are **not** components.
+(`{/* note */}`), `{expression}` children, and document-level
+`{expression}` are parsed when MDX is on; expression source is stored and
+not run. Tags inside fenced code blocks and inline code are **not**
+components or expressions.
 
 Module-level `import` and `export` at the start of a file (and after other
 ESM) become `MdxjsEsm` nodes. Multi-line statements are collected with a
@@ -96,8 +101,15 @@ naive brace / paren / string / comment scan — not a JavaScript parser —
 so regex literals and `${}` inside templates may confuse statement
 boundaries. `import` / `export` inside fences or inline code is not ESM.
 Hostile strings such as `import x from "<script>"` store source and do not
-panic. The HTML renderer currently emits nothing for `MdxjsEsm`; framework
-plugins will resolve imports later.
+panic. The HTML renderer currently emits nothing for `MdxjsEsm` or
+`{expression}` nodes; framework plugins will resolve imports and evaluate
+expressions later.
+
+Document-level `{expression}` uses a naive brace / string / comment scan —
+not a JavaScript parser — so regex literals may confuse boundaries.
+Unclosed `{` stays ordinary text. Fences and inline code never become
+expressions. Hostile source such as `{ "<script>" }` is stored and is not
+emitted as HTML.
 
 ### Props
 

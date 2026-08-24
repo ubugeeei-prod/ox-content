@@ -1,7 +1,5 @@
 //! Markdown parser implementation.
 
-use std::cell::Cell;
-
 use ox_content_allocator::Allocator;
 use ox_content_ast::{Document, Span};
 
@@ -94,7 +92,8 @@ pub struct ParserOptions {
     /// Enable MDX. Off by default.
     ///
     /// When set, PascalCase and member-name JSX elements, fragments, spreads,
-    /// JSX comments, and `{expression}` children parse as MDX AST nodes.
+    /// JSX comments, `{expression}` children, and document-level
+    /// `{expression}` constructs parse as MDX AST nodes.
     /// Module-level `import` / `export` parse as [`ox_content_ast::MdxjsEsm`].
     /// Expression and ESM source is stored, not evaluated. Lowercase HTML
     /// stays HTML.
@@ -171,11 +170,6 @@ pub struct Parser<'a> {
     /// construction and must not be reinterpreted as setext underlines
     /// during the re-parse.
     lazy_lines: Option<std::rc::Rc<rustc_hash::FxHashSet<u32>>>,
-
-    /// When set, `{expression}` is parsed in phrasing (JSX children).
-    /// Document-level prose keeps braces as text so `import { x }` is left
-    /// for the ESM scanner.
-    mdx_in_jsx: Cell<bool>,
 }
 
 impl<'a> Parser<'a> {
@@ -197,7 +191,6 @@ impl<'a> Parser<'a> {
             definitions: None,
             footnote_labels: None,
             lazy_lines: None,
-            mdx_in_jsx: Cell::new(false),
         };
         // A single fused pre-pass collects both the reference definitions
         // and the footnote labels (see `prepass.rs`).
@@ -228,7 +221,6 @@ impl<'a> Parser<'a> {
             // Most sub-sources are entered without any lazy continuation
             // line, and every block quote and list item builds one of these.
             lazy_lines: (!lazy_lines.is_empty()).then(|| std::rc::Rc::new(lazy_lines)),
-            mdx_in_jsx: Cell::new(self.mdx_in_jsx.get()),
         }
     }
 

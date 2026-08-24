@@ -107,10 +107,7 @@ impl<'a> Parser<'a> {
         content: &'a str,
         offset: usize,
     ) -> ParseResult<ox_content_allocator::Vec<'a, Node<'a>>> {
-        let previous = self.mdx_in_jsx.replace(true);
-        let children = self.parse_inline(content, offset);
-        self.mdx_in_jsx.set(previous);
-        children
+        self.parse_inline(content, offset)
     }
 
     fn parse_jsx_flow_children(
@@ -124,7 +121,6 @@ impl<'a> Parser<'a> {
         let inner = &self.source[inner_start..inner_end];
         let mut sub = self.sub_parser_with_lazy_lines(inner, rustc_hash::FxHashSet::default());
         sub.nesting_depth = self.nesting_depth + 1;
-        sub.mdx_in_jsx.set(true);
         let mut children = sub.parse()?.children;
         for child in &mut children {
             Self::offset_node_spans(child, inner_start as u32);

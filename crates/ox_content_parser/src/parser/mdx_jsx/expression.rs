@@ -1,4 +1,4 @@
-//! MDX `{expression}` parse: flow, text, and JSX comments.
+//! MDX `{expression}` parse: flow, text, JSX comments, and prose braces.
 //!
 //! Source inside the braces is stored. Nothing is evaluated.
 
@@ -45,6 +45,8 @@ impl<'a> Parser<'a> {
     }
 
     /// Parses an inline `{expression}` or `{/* comment */}` at `pos`.
+    ///
+    /// Used for document-level prose and for JSX children.
     pub(in crate::parser) fn try_parse_mdx_text_expression(
         &self,
         content: &'a str,
