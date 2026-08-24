@@ -1,96 +1,51 @@
 ---
-title: ヘッダーナビ、告知、ページクロム
-description: オプトインのヘッダーナビ、告知バー、ページ単位のクロムフラグです。
+title: ヘッダー chrome
+description: オプトインのヘッダーナビ、告知バー、ページ単位の chrome。
 ---
 
-# ヘッダーナビ、告知、ページクロム
+# ヘッダー chrome
 
-既定テーマはヘッダータイトル、検索、テーマトグルを出荷します。ヘッダー
-ナビ、告知バー、ページ単位のクロムフラグは、オプトインするまで **オフ** です。
-新しいオプションを設定しない限り、既存サイトは変わりません。
+デフォルトテーマにはタイトル、検索、テーマ切替が付きます。ヘッダーナビ、告知バー、ページ単位の chrome フラグは、明示するまでオフです。既存サイトは新しいオプションを置かない限り変わりません。
 
 ## ヘッダーナビ
 
-`theme.nav` に `{ text, link }` 項目、または `{ text, items }`
-ドロップダウンの配列を設定します。`text` は文字列またはロケールマップ
-（`{ en: "Guide", ja: "ガイド" }`）にできます。現在のページロケールがあるときに使います。
+`theme.nav` に `{ text, link }` または `{ text, items }` ドロップダウンを置きます。`text` は文字列、またはロケールマップ (`{ en: "Guide", ja: "ガイド" }`) です。現在ページのロケールが使われます。
 
 ```ts
 import { oxContent, defineTheme } from "@ox-content/vite-plugin";
 
-export default {
-  plugins: [
-    oxContent({
-      ssg: {
-        theme: defineTheme({
-          nav: [
-            { text: "Guide", link: "/guide/" },
-            {
-              text: "API",
-              items: [
-                { text: "SSG", link: "/api/ssg/" },
-                { text: "Search", link: "/api/search/" },
-              ],
-            },
-          ],
-        }),
-      },
-    }),
-  ],
-};
-```
-
-ラベルはエスケープされます。`link` が `javascript:`、`data:`、
-`vbscript:`、またはプロトコル相対の `//` href を使う項目は省かれます。
-
-ドロップダウンは `aria-expanded` と `aria-haspopup` 付きの `button` を使います。Escape は
-開いたメニューを閉じます。小さなビューポートではリストが横スクロールするので、
-ページは溢れません。
-
-## 告知バー
-
-ヘッダーの上にバーを出すには `theme.announcement` を設定します。
-
-```ts
 oxContent({
   ssg: {
     theme: defineTheme({
-      announcement: {
-        text: "Ox Content 3 is in progress.",
-        link: "/v3-roadmap/",
-        dismissKey: "v3-wip",
-      },
+      nav: [
+        { text: { en: "Guide", ja: "ガイド" }, link: "/getting-started/" },
+        { text: "API", link: "/api/" },
+      ],
     }),
   },
 });
 ```
 
-| 欄           | 必須 | 効果                                                                    |
-| ------------ | ---- | ----------------------------------------------------------------------- |
-| `text`       | はい | エスケープされます。raw HTML スロットはありません。                     |
-| `link`       | いいえ | `https:` または同一オリジンのみ。他のスキームは捨てられます。         |
-| `dismissKey` | いいえ | 最善努力の `localStorage` キー。不正なキーでも静的バーは描画されます。 |
+ラベルはエスケープされます。`javascript:` / `data:` / `vbscript:` / `//` の `link` は落ちます。
 
-## ページ単位のクロム
+## 告知バー
 
-`ssg.pageChrome` は既定オフです。`true` または `{}` でこれらの
-frontmatter フラグを読むようになります。省略したフラグはいまのレイアウトを保ちます。`false` はその
-領域を隠します。
+`theme.announcement` でヘッダー上にバーを出します。`text` はエスケープされ、生 HTML 枠はありません。`link` は `https:` または同一オリジンだけです。`dismissKey` は最善努力の `localStorage` キーです。
+
+## ページ単位の chrome
+
+`ssg.pageChrome` は既定オフです。`true` または `{}` で frontmatter フラグを読みます。省略したフラグは今のレイアウトのまま、`false` でその領域を隠します。
 
 ```md
 ---
-title: Landing
 sidebar: false
 outline: false
-footer: false
-navbar: false
-lastUpdated: false
-editLink: false
 ---
 ```
 
-`aside: false` は `outline: false` のエイリアスです。`pageChrome` がオフのとき、
-これらのフラグは無視されるので、既存の frontmatter がシェルを変えられません。
+対象は `sidebar`, `outline` / `aside`, `footer`, `navbar`, `lastUpdated`, `editLink` です。
 
-bare モードはヘッダーナビ、告知バー、ページクロム
-クラスを決して出しません。
+## 関連
+
+- [英語版ガイド](/built-in/header-chrome.md)
+- [ロケールスイッチャー](./locale-switcher.md)
