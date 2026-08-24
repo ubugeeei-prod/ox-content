@@ -47,6 +47,33 @@ export default defineConfig(({ mode }) => {
         siteMaps: true,
         publishState: true,
         feeds: true,
+        versions: {
+          current: "3.0.0-alpha",
+          entries: [
+            {
+              id: "3.0.0-alpha",
+              label: "3.0.0-alpha",
+              prefix: "",
+              banner: "unreleased",
+            },
+            {
+              id: "2.90.0",
+              label: "2.90.0",
+              prefix: "2.90",
+              dir: "versions/2.90",
+            },
+          ],
+        },
+        i18n: {
+          enabled: true,
+          defaultLocale: "en",
+          locales: [
+            { code: "en", name: "English" },
+            { code: "ja", name: "日本語" },
+          ],
+          hideDefaultLocale: true,
+          check: false,
+        },
 
         // Static HTML redirects. Safe: only aliases/map entries emit files,
         // and destinations stay same-origin unless allowExternal is set.
@@ -61,6 +88,7 @@ export default defineConfig(({ mode }) => {
           readerChrome: true,
           a11y: true,
           pageChrome: true,
+          localeSwitcher: true,
           notFound: true,
           generateOgImage: true,
           ogImage,
@@ -68,7 +96,7 @@ export default defineConfig(({ mode }) => {
             extends: defaultTheme,
             aside: true,
             nav: [
-              { text: "Guide", link: `${base}getting-started/` },
+              { text: { en: "Guide", ja: "ガイド" }, link: `${base}getting-started/` },
               { text: "API", link: `${base}api/` },
             ],
             announcement: {
@@ -141,6 +169,7 @@ export default defineConfig(({ mode }) => {
                       { text: "Custom 404", link: "/built-in/not-found.md" },
                       { text: "RSS / Atom / JSON feeds", link: "/built-in/feeds.md" },
                       { text: "Taxonomies", link: "/built-in/taxonomies.md" },
+                      { text: "Documentation versioning", link: "/built-in/versioning.md" },
                       { text: "Team / members page", link: "/built-in/team.md" },
                     ],
                   },

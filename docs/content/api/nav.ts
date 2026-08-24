@@ -200,6 +200,14 @@ export const apiNav: NavItem[] = [
     "path": "/api/taxonomies"
   },
   {
+    "title": "Versions",
+    "path": "/api/versions"
+  },
+  {
+    "title": "Versions Html",
+    "path": "/api/versions-html"
+  },
+  {
     "title": "Team",
     "path": "/api/team"
   },

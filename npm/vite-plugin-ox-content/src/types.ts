@@ -815,6 +815,70 @@ export interface ResolvedTaxonomiesOptions {
   relatedLimit: number;
 }
 
+/** Banner shown on pages that belong to one documented version. */
+export type VersionBannerKind = "unreleased" | "unmaintained";
+
+/**
+ * One published or snapshot version of a docs tree.
+ */
+export interface VersionEntry {
+  /** Stable id used as `versions.current`. */
+  id: string;
+  /** Header label. Escaped before it is rendered. */
+  label: string;
+  /**
+   * URL prefix without slashes (`"2.90"`, `"next"`). Empty string is the
+   * site root.
+   */
+  prefix: string;
+  /**
+   * Snapshot directory relative to the Vite root. Omitted entries use the
+   * live `srcDir` and are not copied. Historical dirs are read-only.
+   */
+  dir?: string;
+  /** Optional status banner for pages in this version. */
+  banner?: VersionBannerKind | false;
+}
+
+/**
+ * Opt-in documentation versioning.
+ *
+ * Off by default. `true` enables a single current entry. An object enables
+ * the feature and overrides only the fields you set.
+ */
+export interface VersionsOptions {
+  /** Id of the live tree being built from `srcDir`. */
+  current?: string;
+  /** Render the header version dropdown. @default true */
+  switcher?: boolean;
+  /** Show unreleased / unmaintained badges in the dropdown. @default true */
+  badge?: boolean;
+  /** Declared versions. Historical snapshots must set `dir`. */
+  entries?: VersionEntry[];
+}
+
+/**
+ * Resolved documentation versioning.
+ */
+export interface ResolvedVersionsOptions {
+  enabled: boolean;
+  current: string;
+  switcher: boolean;
+  badge: boolean;
+  entries: ResolvedVersionEntry[];
+}
+
+/**
+ * One resolved version after prefix and banner sanitization.
+ */
+export interface ResolvedVersionEntry {
+  id: string;
+  label: string;
+  prefix: string;
+  dir?: string;
+  banner: VersionBannerKind | false;
+}
+
 /**
  * Options for the core `oxContent()` Vite plugin.
  *
@@ -965,6 +1029,18 @@ export interface OxContentOptions {
    * @default false
    */
   taxonomies?: boolean | TaxonomiesOptions;
+
+  /**
+   * Prefix live docs, emit frozen snapshot trees, and render a header
+   * version dropdown.
+   *
+   * Off by default. `true` enables a single current entry. An object
+   * enables the feature and lists additional versions. Historical
+   * snapshot directories are read, never rewritten.
+   *
+   * @default false
+   */
+  versions?: boolean | VersionsOptions;
 
   /**
    * Enable GitHub Flavored Markdown extensions.
@@ -1327,6 +1403,7 @@ export interface ResolvedOptions {
   redirects?: ResolvedRedirectsOptions;
   feeds?: ResolvedFeedsOptions;
   taxonomies?: ResolvedTaxonomiesOptions;
+  versions?: ResolvedVersionsOptions;
   gfm: boolean;
   footnotes: boolean;
   tables: boolean;

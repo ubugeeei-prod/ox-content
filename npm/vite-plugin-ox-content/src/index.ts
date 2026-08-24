@@ -19,6 +19,7 @@ import { resolveRedirectsOptions } from "./redirects";
 import { notFoundSearchExcludeIds } from "./not-found";
 import { resolveFeedsOptions } from "./feeds";
 import { resolveTaxonomiesOptions } from "./taxonomies";
+import { resolveVersionsOptions } from "./versions";
 import {
   resolveSearchOptions,
   buildSearchIndex,
@@ -619,6 +620,7 @@ function resolveOptions(options: OxContentOptions): ResolvedOptions {
     redirects: resolveRedirectsOptions(options.redirects),
     feeds: resolveFeedsOptions(options.feeds),
     taxonomies: resolveTaxonomiesOptions(options.taxonomies),
+    versions: resolveVersionsOptions(options.versions),
     gfm: options.gfm ?? true,
     footnotes: options.footnotes ?? true,
     tables: options.tables ?? true,
@@ -1034,6 +1036,7 @@ export { resolvePermalinksOptions, resolveCascadeOptions } from "./permalinks";
 export { resolveRedirectsOptions } from "./redirects";
 export { resolveFeedsOptions } from "./feeds";
 export { resolveTaxonomiesOptions } from "./taxonomies";
+export { resolveVersionsOptions } from "./versions";
 export { resolveTeamOptions } from "./team";
 export { resolveSearchOptions, buildSearchIndex, writeSearchIndex } from "./search";
 export {

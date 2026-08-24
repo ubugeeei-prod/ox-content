@@ -1,0 +1,176 @@
+# highlight.ts
+
+**[Source](https://github.com/ubugeeei-prod/ox-content/blob/main/npm/vite-plugin-ox-content/src/highlight.ts)**
+
+> 4 documented symbols. Read the signatures first, then expand each item for parameters, return types, and examples.
+
+<div class="ox-api-stats" aria-label="API reference summary">
+<span class="ox-api-stat">
+  <strong>4</strong>
+  <span>symbols</span>
+</span>
+<span class="ox-api-stat">
+  <strong>3</strong>
+  <span>functions</span>
+</span>
+<span class="ox-api-stat">
+  <strong>1</strong>
+  <span>modules</span>
+</span>
+<span class="ox-api-stat">
+  <strong>8</strong>
+  <span>parameters</span>
+</span>
+<span class="ox-api-stat">
+  <strong>2</strong>
+  <span>returns</span>
+</span>
+</div>
+
+## Reference
+
+<div class="ox-api-controls" data-ox-api-target=".ox-api-entry" role="toolbar" aria-label="Reference display controls">
+<button type="button" class="ox-api-controls__button" data-ox-api-toggle="expand">Open all</button>
+<button type="button" class="ox-api-controls__button" data-ox-api-toggle="collapse">Close all</button>
+</div>
+
+<details id="gethighlighter" class="ox-api-entry">
+  <summary><span class="ox-api-entry__kind">fn</span><span class="ox-api-entry__summary-main"><code class="ox-api-entry__signature ox-api-entry__signature--highlighted language-typescript">getHighlighter(theme: string | ThemeRegistration, customLangs: LanguageRegistration[] = []): Promise&lt;Highlighter&gt;</code><span class="ox-api-entry__description">Get or create the Shiki highlighter.</span><span class="ox-api-entry__meta"><span class="ox-api-badge">2 params</span><span class="ox-api-badge">returns Promise&lt;Highlighter&gt;</span></span></span></summary>
+  <div class="ox-api-entry__body">
+<div class="ox-api-entry__prose">
+<p>Get or create the Shiki highlighter.</p>
+</div>
+<div class="ox-api-entry__section ox-api-entry__section--signature">
+<h4>Signature</h4>
+<pre><code class="language-typescript">async function getHighlighter(theme: string | ThemeRegistration, customLangs: LanguageRegistration[] = []): Promise&lt;Highlighter&gt;</code></pre>
+</div>
+<p class="ox-api-entry__source"><a class="ox-api-entry__source-link" href="https://github.com/ubugeeei-prod/ox-content/blob/main/npm/vite-plugin-ox-content/src/highlight.ts#L63-L82" target="_blank" rel="noopener noreferrer">View source<span class="ox-api-entry__source-icon" aria-hidden="true"></span></a></p>
+<div class="ox-api-entry__section ox-api-entry__section--params">
+<h4>Parameters</h4>
+<ul class="ox-api-entry__params">
+<li class="ox-api-entry__param">
+  <div class="ox-api-entry__param-heading">
+    <code class="ox-api-entry__param-name">theme</code>
+    <code class="ox-api-entry__param-type">string | ThemeRegistration</code>
+  </div>
+  
+</li>
+<li class="ox-api-entry__param">
+  <div class="ox-api-entry__param-heading">
+    <code class="ox-api-entry__param-name">customLangs</code>
+    <code class="ox-api-entry__param-type">LanguageRegistration[]</code>
+  </div>
+  <p class="ox-api-entry__param-description">optional · default: []</p>
+</li>
+</ul>
+</div>
+<div class="ox-api-entry__section ox-api-entry__section--returns">
+<h4>Returns</h4>
+<div class="ox-api-entry__return">
+  <code class="ox-api-entry__return-type">Promise&lt;Highlighter&gt;</code>
+  
+</div>
+</div>
+  </div>
+</details>
+
+<details id="highlight" class="ox-api-entry">
+  <summary><span class="ox-api-entry__kind">module</span><span class="ox-api-entry__summary-main"><code class="ox-api-entry__name">highlight</code><span class="ox-api-entry__description">Syntax highlighting with Shiki via rehype.</span></span></summary>
+  <div class="ox-api-entry__body">
+<div class="ox-api-entry__prose">
+<p>Syntax highlighting with Shiki via rehype.</p>
+</div>
+<p class="ox-api-entry__source"><a class="ox-api-entry__source-link" href="https://github.com/ubugeeei-prod/ox-content/blob/main/npm/vite-plugin-ox-content/src/highlight.ts#L1-L3" target="_blank" rel="noopener noreferrer">View source<span class="ox-api-entry__source-icon" aria-hidden="true"></span></a></p>
+  </div>
+</details>
+
+<details id="highlightcode" class="ox-api-entry">
+  <summary><span class="ox-api-entry__kind">fn</span><span class="ox-api-entry__summary-main"><code class="ox-api-entry__signature ox-api-entry__signature--highlighted language-typescript">highlightCode(html: string, theme: string | ThemeRegistration = CSS_VARIABLES_THEME, langs: LanguageRegistration[] = []): Promise&lt;string&gt;</code><span class="ox-api-entry__description">Apply syntax highlighting to HTML using Shiki.</span><span class="ox-api-entry__meta"><span class="ox-api-badge">3 params</span><span class="ox-api-badge">returns Promise&lt;string&gt;</span></span></span></summary>
+  <div class="ox-api-entry__body">
+<div class="ox-api-entry__prose">
+<p>Apply syntax highlighting to HTML using Shiki.</p>
+</div>
+<div class="ox-api-entry__section ox-api-entry__section--signature">
+<h4>Signature</h4>
+<pre><code class="language-typescript">export async function highlightCode(html: string, theme: string | ThemeRegistration = CSS_VARIABLES_THEME, langs: LanguageRegistration[] = []): Promise&lt;string&gt;</code></pre>
+</div>
+<p class="ox-api-entry__source"><a class="ox-api-entry__source-link" href="https://github.com/ubugeeei-prod/ox-content/blob/main/npm/vite-plugin-ox-content/src/highlight.ts#L256-L268" target="_blank" rel="noopener noreferrer">View source<span class="ox-api-entry__source-icon" aria-hidden="true"></span></a></p>
+<div class="ox-api-entry__section ox-api-entry__section--params">
+<h4>Parameters</h4>
+<ul class="ox-api-entry__params">
+<li class="ox-api-entry__param">
+  <div class="ox-api-entry__param-heading">
+    <code class="ox-api-entry__param-name">html</code>
+    <code class="ox-api-entry__param-type">string</code>
+  </div>
+  
+</li>
+<li class="ox-api-entry__param">
+  <div class="ox-api-entry__param-heading">
+    <code class="ox-api-entry__param-name">theme</code>
+    <code class="ox-api-entry__param-type">string | ThemeRegistration</code>
+  </div>
+  <p class="ox-api-entry__param-description">optional · default: CSS<em>VARIABLES</em>THEME</p>
+</li>
+<li class="ox-api-entry__param">
+  <div class="ox-api-entry__param-heading">
+    <code class="ox-api-entry__param-name">langs</code>
+    <code class="ox-api-entry__param-type">LanguageRegistration[]</code>
+  </div>
+  <p class="ox-api-entry__param-description">optional · default: []</p>
+</li>
+</ul>
+</div>
+<div class="ox-api-entry__section ox-api-entry__section--returns">
+<h4>Returns</h4>
+<div class="ox-api-entry__return">
+  <code class="ox-api-entry__return-type">Promise&lt;string&gt;</code>
+  
+</div>
+</div>
+  </div>
+</details>
+
+<details id="rehypeshikihighlight" class="ox-api-entry">
+  <summary><span class="ox-api-entry__kind">fn</span><span class="ox-api-entry__summary-main"><code class="ox-api-entry__signature ox-api-entry__signature--highlighted language-typescript">rehypeShikiHighlight(options: { theme: string | ThemeRegistration; langs?: LanguageRegistration[]; })</code><span class="ox-api-entry__description">Rehype plugin for syntax highlighting with Shiki.</span><span class="ox-api-entry__meta"><span class="ox-api-badge">3 params</span></span></span></summary>
+  <div class="ox-api-entry__body">
+<div class="ox-api-entry__prose">
+<p>Rehype plugin for syntax highlighting with Shiki.</p>
+</div>
+<div class="ox-api-entry__section ox-api-entry__section--signature">
+<h4>Signature</h4>
+<pre><code class="language-typescript">function rehypeShikiHighlight(options: {
+  theme: string | ThemeRegistration;
+  langs?: LanguageRegistration[];
+})</code></pre>
+</div>
+<p class="ox-api-entry__source"><a class="ox-api-entry__source-link" href="https://github.com/ubugeeei-prod/ox-content/blob/main/npm/vite-plugin-ox-content/src/highlight.ts#L109-L251" target="_blank" rel="noopener noreferrer">View source<span class="ox-api-entry__source-icon" aria-hidden="true"></span></a></p>
+<div class="ox-api-entry__section ox-api-entry__section--params">
+<h4>Parameters</h4>
+<ul class="ox-api-entry__params">
+<li class="ox-api-entry__param">
+  <div class="ox-api-entry__param-heading">
+    <code class="ox-api-entry__param-name">options</code>
+    <code class="ox-api-entry__param-type">{ <a href="./theme.md#theme">theme</a>: string | ThemeRegistration; langs?: LanguageRegistration[] }</code>
+  </div>
+  
+</li>
+<li class="ox-api-entry__param">
+  <div class="ox-api-entry__param-heading">
+    <code class="ox-api-entry__param-name">options.theme</code>
+    <code class="ox-api-entry__param-type">string | ThemeRegistration</code>
+  </div>
+  
+</li>
+<li class="ox-api-entry__param">
+  <div class="ox-api-entry__param-heading">
+    <code class="ox-api-entry__param-name">options.langs?</code>
+    <code class="ox-api-entry__param-type">LanguageRegistration[]</code>
+  </div>
+  <p class="ox-api-entry__param-description">optional</p>
+</li>
+</ul>
+</div>
+  </div>
+</details>
+

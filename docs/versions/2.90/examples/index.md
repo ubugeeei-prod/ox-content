@@ -1,0 +1,181 @@
+# Examples
+
+Ox Content provides runnable examples and small source snippets demonstrating
+different use cases.
+
+Small built-in feature snippets live in the repository under
+`examples/builtin-features/`.
+
+## Integration Examples
+
+### [Vue Integration](./integ-vue.md)
+
+Embed Vue 3 components in Markdown using `@ox-content/vite-plugin-vue`.
+
+```ts
+import { oxContentVue } from "@ox-content/vite-plugin-vue";
+
+export default defineConfig({
+  plugins: [
+    vue(),
+    oxContentVue({
+      components: "./src/components/*.vue",
+    }),
+  ],
+});
+```
+
+### [React Integration](./integ-react.md)
+
+Embed React components in Markdown using `@ox-content/vite-plugin-react`.
+
+```ts
+import { oxContentReact } from "@ox-content/vite-plugin-react";
+
+export default defineConfig({
+  plugins: [
+    react(),
+    oxContentReact({
+      components: "./src/components/*.tsx",
+    }),
+  ],
+});
+```
+
+### [Svelte Integration](./integ-svelte.md)
+
+Embed Svelte 5 components in Markdown using `@ox-content/vite-plugin-svelte`.
+
+```ts
+import { oxContentSvelte } from "@ox-content/vite-plugin-svelte";
+
+export default defineConfig({
+  plugins: [
+    svelte(),
+    oxContentSvelte({
+      components: "./src/components/*.svelte",
+    }),
+  ],
+});
+```
+
+### [Solid Integration](./integ-solid.md)
+
+Embed Solid components in Markdown using `@ox-content/vite-plugin-solid`.
+
+```ts
+import { defineConfig } from "vite";
+import solid from "vite-plugin-solid";
+import { oxContentSolid } from "@ox-content/vite-plugin-solid";
+
+export default defineConfig({
+  plugins: [
+    oxContentSolid({
+      components: "./src/components/*.tsx",
+    }),
+    // Solid's JSX is compile-time only, so this plugin runs after
+    // oxContentSolid() and needs the Markdown extensions.
+    solid({ extensions: [".md", ".markdown", ".mdx"] }),
+  ],
+});
+```
+
+## Plugin Examples
+
+### [Code Annotations](./code-annotations.md)
+
+Opt-in code block annotations with both custom attributes and VitePress-compatible notation.
+
+```ts
+oxContent({
+  highlight: true,
+  codeAnnotations: {
+    notation: "both",
+  },
+});
+```
+
+### [Package Manager Tabs](./package-manager-tabs.md)
+
+Opt in to package-manager tabs, then author one npm command and render it as npm/pnpm/yarn/bun install tabs.
+
+```md
+<pm>npm install -D vite</pm>
+```
+
+### [markdown-it Plugin](./plugin-markdown-it.md)
+
+Use Ox Content as a markdown-it plugin for existing markdown-it projects.
+
+### [rehype Plugin](./plugin-rehype.md)
+
+Use Ox Content as a rehype plugin in the unified ecosystem.
+
+### [unplugin mdast Bridge](./unplugin-mdast-bridge.md)
+
+Run custom mdast plugins and existing remark/unified plugins on top of Ox Content's native parser,
+with documented compatibility boundaries and bridge performance notes.
+
+### [unplugin markdown-it Token Bridge](./unplugin-markdown-it-token-bridge.md)
+
+Run `markdown-it` plugins first and then read the resulting token stream from downstream unified plugins.
+
+## Generator Examples
+
+### [Source Docs Generation](./gen-source-docs.md)
+
+Generate API documentation from JSDoc/TSDoc comments automatically.
+
+```ts
+oxContent({
+  docs: {
+    src: ["./src"],
+    out: "docs/api",
+    include: ["**/*.ts"],
+  },
+});
+```
+
+## OG Image Examples
+
+### [OG Viewer](./og-viewer.md)
+
+Dev tool for previewing Open Graph metadata of all pages. Accessible at `/__og-viewer` during development.
+
+### [Custom OG Image Templates](./og-image-custom.md)
+
+Generate per-page Open Graph images with a custom template. Pass arbitrary frontmatter data as props.
+
+```ts
+oxContent({
+  ogImage: true,
+  ogImageOptions: {
+    template: "./og-template.ts",
+  },
+});
+```
+
+## Other Examples
+
+### [Playground](./playground.md)
+
+Interactive web playground for testing Markdown parsing.
+
+### [Vite SSG](./ssg-vite.md)
+
+Static Site Generation example using Vite.
+
+## Running Examples
+
+```bash
+# Clone the repository
+git clone https://github.com/ubugeeei-prod/ox-content.git
+cd ox-content
+
+# Install dependencies
+npm install
+
+# Run an example
+cd examples/integ-vue
+npm run dev
+```

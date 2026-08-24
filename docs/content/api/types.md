@@ -2436,6 +2436,11 @@
   <td><code class="ox-api-entry__member-type language-typescript">boolean | <a href="#taxonomiesoptions">TaxonomiesOptions</a></code></td>
   <td><div class="ox-api-entry__member-description">Write tag/category term pages and inject related-page lists.<br><br>Off by default. <code>true</code> reads frontmatter <code>tags</code> and <code>categories</code> and<br>writes list pages, per-term pages, and up to 5 related links on pages<br>that share a term. An object enables the feature and overrides only<br>the fields you set. Term slugs are <code>[a-z0-9-]</code> and every label is<br>HTML-escaped.</div><div class="ox-api-entry__member-default"><span>Default</span> <code class="language-typescript">false</code></div></td>
 </tr>
+<tr id="oxcontentoptions-versions">
+  <td><code>versions</code><span class="ox-api-badge">optional</span></td>
+  <td><code class="ox-api-entry__member-type language-typescript">boolean | <a href="#versionsoptions">VersionsOptions</a></code></td>
+  <td><div class="ox-api-entry__member-description">Prefix live docs, emit frozen snapshot trees, and render a header<br>version dropdown.<br><br>Off by default. <code>true</code> enables a single current entry. An object<br>enables the feature and lists additional versions. Historical<br>snapshot directories are read, never rewritten.</div><div class="ox-api-entry__member-default"><span>Default</span> <code class="language-typescript">false</code></div></td>
+</tr>
 <tr id="oxcontentoptions-toc">
   <td><code>toc</code><span class="ox-api-badge">optional</span></td>
   <td><code class="ox-api-entry__member-type language-typescript">boolean</code></td>
@@ -3851,7 +3856,7 @@
 </details>
 
 <details id="resolvedoptions" class="ox-api-entry">
-  <summary><span class="ox-api-entry__kind">interface</span><span class="ox-api-entry__summary-main"><code class="ox-api-entry__signature ox-api-entry__signature--highlighted language-typescript">ResolvedOptions</code><span class="ox-api-entry__description">Resolved options with all defaults applied.</span><span class="ox-api-entry__meta"><span class="ox-api-badge">51 members</span></span></span></summary>
+  <summary><span class="ox-api-entry__kind">interface</span><span class="ox-api-entry__summary-main"><code class="ox-api-entry__signature ox-api-entry__signature--highlighted language-typescript">ResolvedOptions</code><span class="ox-api-entry__description">Resolved options with all defaults applied.</span><span class="ox-api-entry__meta"><span class="ox-api-badge">52 members</span></span></span></summary>
   <div class="ox-api-entry__body">
 <div class="ox-api-entry__prose">
 <p>Resolved options with all defaults applied.</p>
@@ -4101,6 +4106,11 @@
 <tr id="resolvedoptions-taxonomies">
   <td><code>taxonomies</code><span class="ox-api-badge">optional</span></td>
   <td><code class="ox-api-entry__member-type language-typescript"><a href="#resolvedtaxonomiesoptions">ResolvedTaxonomiesOptions</a></code></td>
+  <td></td>
+</tr>
+<tr id="resolvedoptions-versions">
+  <td><code>versions</code><span class="ox-api-badge">optional</span></td>
+  <td><code class="ox-api-entry__member-type language-typescript"><a href="#resolvedversionsoptions">ResolvedVersionsOptions</a></code></td>
   <td></td>
 </tr>
 <tr id="resolvedoptions-toc">
@@ -4675,6 +4685,106 @@
 <tr id="resolvedteamoptions-members">
   <td><code>members</code></td>
   <td><code class="ox-api-entry__member-type language-typescript"><a href="#teammember">TeamMember</a>[]</code></td>
+  <td></td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+  </div>
+</details>
+
+<details id="resolvedversionentry" class="ox-api-entry">
+  <summary><span class="ox-api-entry__kind">interface</span><span class="ox-api-entry__summary-main"><code class="ox-api-entry__signature ox-api-entry__signature--highlighted language-typescript">ResolvedVersionEntry</code><span class="ox-api-entry__description">One resolved version after prefix and banner sanitization.</span><span class="ox-api-entry__meta"><span class="ox-api-badge">5 members</span></span></span></summary>
+  <div class="ox-api-entry__body">
+<div class="ox-api-entry__prose">
+<p>One resolved version after prefix and banner sanitization.</p>
+</div>
+<div class="ox-api-entry__section ox-api-entry__section--signature">
+<h4>Signature</h4>
+<pre><code class="language-typescript">export interface ResolvedVersionEntry</code></pre>
+</div>
+<p class="ox-api-entry__source"><a class="ox-api-entry__source-link" href="https://github.com/ubugeeei-prod/ox-content/blob/main/npm/vite-plugin-ox-content/src/types.ts#L874-L880" target="_blank" rel="noopener noreferrer">View source<span class="ox-api-entry__source-icon" aria-hidden="true"></span></a></p>
+<div class="ox-api-entry__section ox-api-entry__section--members">
+<h4>Members</h4>
+<div class="ox-api-entry__member-group">
+<h5>Properties</h5>
+<table class="ox-api-entry__members-table">
+<thead><tr><th>Name</th><th>Type</th><th>Description</th></tr></thead>
+<tbody>
+<tr id="resolvedversionentry-banner">
+  <td><code>banner</code></td>
+  <td><code class="ox-api-entry__member-type language-typescript"><a href="#versionbannerkind">VersionBannerKind</a> | false</code></td>
+  <td></td>
+</tr>
+<tr id="resolvedversionentry-dir">
+  <td><code>dir</code><span class="ox-api-badge">optional</span></td>
+  <td><code class="ox-api-entry__member-type language-typescript">string</code></td>
+  <td></td>
+</tr>
+<tr id="resolvedversionentry-id">
+  <td><code>id</code></td>
+  <td><code class="ox-api-entry__member-type language-typescript">string</code></td>
+  <td></td>
+</tr>
+<tr id="resolvedversionentry-label">
+  <td><code>label</code></td>
+  <td><code class="ox-api-entry__member-type language-typescript">string</code></td>
+  <td></td>
+</tr>
+<tr id="resolvedversionentry-prefix">
+  <td><code>prefix</code></td>
+  <td><code class="ox-api-entry__member-type language-typescript">string</code></td>
+  <td></td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+  </div>
+</details>
+
+<details id="resolvedversionsoptions" class="ox-api-entry">
+  <summary><span class="ox-api-entry__kind">interface</span><span class="ox-api-entry__summary-main"><code class="ox-api-entry__signature ox-api-entry__signature--highlighted language-typescript">ResolvedVersionsOptions</code><span class="ox-api-entry__description">Resolved documentation versioning.</span><span class="ox-api-entry__meta"><span class="ox-api-badge">5 members</span></span></span></summary>
+  <div class="ox-api-entry__body">
+<div class="ox-api-entry__prose">
+<p>Resolved documentation versioning.</p>
+</div>
+<div class="ox-api-entry__section ox-api-entry__section--signature">
+<h4>Signature</h4>
+<pre><code class="language-typescript">export interface ResolvedVersionsOptions</code></pre>
+</div>
+<p class="ox-api-entry__source"><a class="ox-api-entry__source-link" href="https://github.com/ubugeeei-prod/ox-content/blob/main/npm/vite-plugin-ox-content/src/types.ts#L863-L869" target="_blank" rel="noopener noreferrer">View source<span class="ox-api-entry__source-icon" aria-hidden="true"></span></a></p>
+<div class="ox-api-entry__section ox-api-entry__section--members">
+<h4>Members</h4>
+<div class="ox-api-entry__member-group">
+<h5>Properties</h5>
+<table class="ox-api-entry__members-table">
+<thead><tr><th>Name</th><th>Type</th><th>Description</th></tr></thead>
+<tbody>
+<tr id="resolvedversionsoptions-badge">
+  <td><code>badge</code></td>
+  <td><code class="ox-api-entry__member-type language-typescript">boolean</code></td>
+  <td></td>
+</tr>
+<tr id="resolvedversionsoptions-current">
+  <td><code>current</code></td>
+  <td><code class="ox-api-entry__member-type language-typescript">string</code></td>
+  <td></td>
+</tr>
+<tr id="resolvedversionsoptions-enabled">
+  <td><code>enabled</code></td>
+  <td><code class="ox-api-entry__member-type language-typescript">boolean</code></td>
+  <td></td>
+</tr>
+<tr id="resolvedversionsoptions-entries">
+  <td><code>entries</code></td>
+  <td><code class="ox-api-entry__member-type language-typescript"><a href="#resolvedversionentry">ResolvedVersionEntry</a>[]</code></td>
+  <td></td>
+</tr>
+<tr id="resolvedversionsoptions-switcher">
+  <td><code>switcher</code></td>
+  <td><code class="ox-api-entry__member-type language-typescript">boolean</code></td>
   <td></td>
 </tr>
 </tbody>
@@ -5634,6 +5744,116 @@
 <p>Type definitions for @ox-content/vite-plugin</p>
 </div>
 <p class="ox-api-entry__source"><a class="ox-api-entry__source-link" href="https://github.com/ubugeeei-prod/ox-content/blob/main/npm/vite-plugin-ox-content/src/types.ts#L1-L3" target="_blank" rel="noopener noreferrer">View source<span class="ox-api-entry__source-icon" aria-hidden="true"></span></a></p>
+  </div>
+</details>
+
+<details id="versionbannerkind" class="ox-api-entry">
+  <summary><span class="ox-api-entry__kind">type</span><span class="ox-api-entry__summary-main"><code class="ox-api-entry__signature ox-api-entry__signature--highlighted language-typescript">VersionBannerKind = &quot;unreleased&quot; | &quot;unmaintained&quot;</code><span class="ox-api-entry__description">Banner shown on pages that belong to one documented version.</span></span></summary>
+  <div class="ox-api-entry__body">
+<div class="ox-api-entry__prose">
+<p>Banner shown on pages that belong to one documented version.</p>
+</div>
+<div class="ox-api-entry__section ox-api-entry__section--signature">
+<h4>Signature</h4>
+<pre><code class="language-typescript">export type VersionBannerKind = &quot;unreleased&quot; | &quot;unmaintained&quot;</code></pre>
+</div>
+<p class="ox-api-entry__source"><a class="ox-api-entry__source-link" href="https://github.com/ubugeeei-prod/ox-content/blob/main/npm/vite-plugin-ox-content/src/types.ts#L819" target="_blank" rel="noopener noreferrer">View source<span class="ox-api-entry__source-icon" aria-hidden="true"></span></a></p>
+  </div>
+</details>
+
+<details id="versionentry" class="ox-api-entry">
+  <summary><span class="ox-api-entry__kind">interface</span><span class="ox-api-entry__summary-main"><code class="ox-api-entry__signature ox-api-entry__signature--highlighted language-typescript">VersionEntry</code><span class="ox-api-entry__description">One published or snapshot version of a docs tree.</span><span class="ox-api-entry__meta"><span class="ox-api-badge">5 members</span></span></span></summary>
+  <div class="ox-api-entry__body">
+<div class="ox-api-entry__prose">
+<p>One published or snapshot version of a docs tree.</p>
+</div>
+<div class="ox-api-entry__section ox-api-entry__section--signature">
+<h4>Signature</h4>
+<pre><code class="language-typescript">export interface VersionEntry</code></pre>
+</div>
+<p class="ox-api-entry__source"><a class="ox-api-entry__source-link" href="https://github.com/ubugeeei-prod/ox-content/blob/main/npm/vite-plugin-ox-content/src/types.ts#L824-L841" target="_blank" rel="noopener noreferrer">View source<span class="ox-api-entry__source-icon" aria-hidden="true"></span></a></p>
+<div class="ox-api-entry__section ox-api-entry__section--members">
+<h4>Members</h4>
+<div class="ox-api-entry__member-group">
+<h5>Properties</h5>
+<table class="ox-api-entry__members-table">
+<thead><tr><th>Name</th><th>Type</th><th>Description</th></tr></thead>
+<tbody>
+<tr id="versionentry-banner">
+  <td><code>banner</code><span class="ox-api-badge">optional</span></td>
+  <td><code class="ox-api-entry__member-type language-typescript"><a href="#versionbannerkind">VersionBannerKind</a> | false</code></td>
+  <td><div class="ox-api-entry__member-description">Optional status banner for pages in this version.</div></td>
+</tr>
+<tr id="versionentry-dir">
+  <td><code>dir</code><span class="ox-api-badge">optional</span></td>
+  <td><code class="ox-api-entry__member-type language-typescript">string</code></td>
+  <td><div class="ox-api-entry__member-description">Snapshot directory relative to the Vite root. Omitted entries use the<br>live <code>srcDir</code> and are not copied. Historical dirs are read-only.</div></td>
+</tr>
+<tr id="versionentry-id">
+  <td><code>id</code></td>
+  <td><code class="ox-api-entry__member-type language-typescript">string</code></td>
+  <td><div class="ox-api-entry__member-description">Stable id used as <code>versions.current</code>.</div></td>
+</tr>
+<tr id="versionentry-label">
+  <td><code>label</code></td>
+  <td><code class="ox-api-entry__member-type language-typescript">string</code></td>
+  <td><div class="ox-api-entry__member-description">Header label. Escaped before it is rendered.</div></td>
+</tr>
+<tr id="versionentry-prefix">
+  <td><code>prefix</code></td>
+  <td><code class="ox-api-entry__member-type language-typescript">string</code></td>
+  <td><div class="ox-api-entry__member-description">URL prefix without slashes (<code>&quot;2.90&quot;</code>, <code>&quot;next&quot;</code>). Empty string is the<br>site root.</div></td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+  </div>
+</details>
+
+<details id="versionsoptions" class="ox-api-entry">
+  <summary><span class="ox-api-entry__kind">interface</span><span class="ox-api-entry__summary-main"><code class="ox-api-entry__signature ox-api-entry__signature--highlighted language-typescript">VersionsOptions</code><span class="ox-api-entry__description">Opt-in documentation versioning. Off by default. true enables a single current…</span><span class="ox-api-entry__meta"><span class="ox-api-badge">4 members</span></span></span></summary>
+  <div class="ox-api-entry__body">
+<div class="ox-api-entry__prose">
+<p>Opt-in documentation versioning.</p>
+<p>Off by default. <code>true</code> enables a single current entry. An object enables the feature and overrides only the fields you set.</p>
+</div>
+<div class="ox-api-entry__section ox-api-entry__section--signature">
+<h4>Signature</h4>
+<pre><code class="language-typescript">export interface VersionsOptions</code></pre>
+</div>
+<p class="ox-api-entry__source"><a class="ox-api-entry__source-link" href="https://github.com/ubugeeei-prod/ox-content/blob/main/npm/vite-plugin-ox-content/src/types.ts#L849-L858" target="_blank" rel="noopener noreferrer">View source<span class="ox-api-entry__source-icon" aria-hidden="true"></span></a></p>
+<div class="ox-api-entry__section ox-api-entry__section--members">
+<h4>Members</h4>
+<div class="ox-api-entry__member-group">
+<h5>Properties</h5>
+<table class="ox-api-entry__members-table">
+<thead><tr><th>Name</th><th>Type</th><th>Description</th></tr></thead>
+<tbody>
+<tr id="versionsoptions-badge">
+  <td><code>badge</code><span class="ox-api-badge">optional</span></td>
+  <td><code class="ox-api-entry__member-type language-typescript">boolean</code></td>
+  <td><div class="ox-api-entry__member-description">Show unreleased / unmaintained badges in the dropdown. @default true</div></td>
+</tr>
+<tr id="versionsoptions-current">
+  <td><code>current</code><span class="ox-api-badge">optional</span></td>
+  <td><code class="ox-api-entry__member-type language-typescript">string</code></td>
+  <td><div class="ox-api-entry__member-description">Id of the live tree being built from <code>srcDir</code>.</div></td>
+</tr>
+<tr id="versionsoptions-entries">
+  <td><code>entries</code><span class="ox-api-badge">optional</span></td>
+  <td><code class="ox-api-entry__member-type language-typescript"><a href="#versionentry">VersionEntry</a>[]</code></td>
+  <td><div class="ox-api-entry__member-description">Declared versions. Historical snapshots must set <code>dir</code>.</div></td>
+</tr>
+<tr id="versionsoptions-switcher">
+  <td><code>switcher</code><span class="ox-api-badge">optional</span></td>
+  <td><code class="ox-api-entry__member-type language-typescript">boolean</code></td>
+  <td><div class="ox-api-entry__member-description">Render the header version dropdown. @default true</div></td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
   </div>
 </details>
 

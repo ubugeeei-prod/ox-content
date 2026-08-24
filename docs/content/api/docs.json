@@ -2,8 +2,8 @@
   "version": 1,
   "generatedAt": "2026-08-24T09:29:05.330Z",
   "summary": {
-    "modules": 59,
-    "entries": 498,
+    "modules": 61,
+    "entries": 510,
     "byKind": {
       "function": 218,
       "interface": 202,
@@ -12238,6 +12238,218 @@
       "description": "",
       "entries": [
         {
+          "name": "ResolvedVersionEntry",
+          "kind": "interface",
+          "description": "One resolved version after prefix and banner sanitization.",
+          "members": [
+            {
+              "name": "id",
+              "kind": "property",
+              "description": "",
+              "type": "string",
+              "line": 875,
+              "endLine": 875
+            },
+            {
+              "name": "label",
+              "kind": "property",
+              "description": "",
+              "type": "string",
+              "line": 876,
+              "endLine": 876
+            },
+            {
+              "name": "prefix",
+              "kind": "property",
+              "description": "",
+              "type": "string",
+              "line": 877,
+              "endLine": 877
+            },
+            {
+              "name": "dir",
+              "kind": "property",
+              "description": "",
+              "type": "string",
+              "optional": true,
+              "line": 878,
+              "endLine": 878
+            },
+            {
+              "name": "banner",
+              "kind": "property",
+              "description": "",
+              "type": "VersionBannerKind | false",
+              "line": 879,
+              "endLine": 879
+            }
+          ],
+          "file": "npm/vite-plugin-ox-content/src/types.ts",
+          "line": 874,
+          "endLine": 880,
+          "signature": "export interface ResolvedVersionEntry"
+        },
+        {
+          "name": "ResolvedVersionsOptions",
+          "kind": "interface",
+          "description": "Resolved documentation versioning.",
+          "members": [
+            {
+              "name": "enabled",
+              "kind": "property",
+              "description": "",
+              "type": "boolean",
+              "line": 864,
+              "endLine": 864
+            },
+            {
+              "name": "current",
+              "kind": "property",
+              "description": "",
+              "type": "string",
+              "line": 865,
+              "endLine": 865
+            },
+            {
+              "name": "switcher",
+              "kind": "property",
+              "description": "",
+              "type": "boolean",
+              "line": 866,
+              "endLine": 866
+            },
+            {
+              "name": "badge",
+              "kind": "property",
+              "description": "",
+              "type": "boolean",
+              "line": 867,
+              "endLine": 867
+            },
+            {
+              "name": "entries",
+              "kind": "property",
+              "description": "",
+              "type": "ResolvedVersionEntry[]",
+              "line": 868,
+              "endLine": 868
+            }
+          ],
+          "file": "npm/vite-plugin-ox-content/src/types.ts",
+          "line": 863,
+          "endLine": 869,
+          "signature": "export interface ResolvedVersionsOptions"
+        },
+        {
+          "name": "VersionBannerKind",
+          "kind": "type",
+          "description": "Banner shown on pages that belong to one documented version.",
+          "file": "npm/vite-plugin-ox-content/src/types.ts",
+          "line": 819,
+          "endLine": 819,
+          "signature": "export type VersionBannerKind = \"unreleased\" | \"unmaintained\""
+        },
+        {
+          "name": "VersionEntry",
+          "kind": "interface",
+          "description": "One published or snapshot version of a docs tree.",
+          "members": [
+            {
+              "name": "id",
+              "kind": "property",
+              "description": "Stable id used as `versions.current`.",
+              "type": "string",
+              "line": 826,
+              "endLine": 826
+            },
+            {
+              "name": "label",
+              "kind": "property",
+              "description": "Header label. Escaped before it is rendered.",
+              "type": "string",
+              "line": 828,
+              "endLine": 828
+            },
+            {
+              "name": "prefix",
+              "kind": "property",
+              "description": "URL prefix without slashes (`\"2.90\"`, `\"next\"`). Empty string is the\nsite root.",
+              "type": "string",
+              "line": 833,
+              "endLine": 833
+            },
+            {
+              "name": "dir",
+              "kind": "property",
+              "description": "Snapshot directory relative to the Vite root. Omitted entries use the\nlive `srcDir` and are not copied. Historical dirs are read-only.",
+              "type": "string",
+              "optional": true,
+              "line": 838,
+              "endLine": 838
+            },
+            {
+              "name": "banner",
+              "kind": "property",
+              "description": "Optional status banner for pages in this version.",
+              "type": "VersionBannerKind | false",
+              "optional": true,
+              "line": 840,
+              "endLine": 840
+            }
+          ],
+          "file": "npm/vite-plugin-ox-content/src/types.ts",
+          "line": 824,
+          "endLine": 841,
+          "signature": "export interface VersionEntry"
+        },
+        {
+          "name": "VersionsOptions",
+          "kind": "interface",
+          "description": "Opt-in documentation versioning.\n\nOff by default. `true` enables a single current entry. An object enables\nthe feature and overrides only the fields you set.",
+          "members": [
+            {
+              "name": "current",
+              "kind": "property",
+              "description": "Id of the live tree being built from `srcDir`.",
+              "type": "string",
+              "optional": true,
+              "line": 851,
+              "endLine": 851
+            },
+            {
+              "name": "switcher",
+              "kind": "property",
+              "description": "Render the header version dropdown. @default true",
+              "type": "boolean",
+              "optional": true,
+              "line": 853,
+              "endLine": 853
+            },
+            {
+              "name": "badge",
+              "kind": "property",
+              "description": "Show unreleased / unmaintained badges in the dropdown. @default true",
+              "type": "boolean",
+              "optional": true,
+              "line": 855,
+              "endLine": 855
+            },
+            {
+              "name": "entries",
+              "kind": "property",
+              "description": "Declared versions. Historical snapshots must set `dir`.",
+              "type": "VersionEntry[]",
+              "optional": true,
+              "line": 857,
+              "endLine": 857
+            }
+          ],
+          "file": "npm/vite-plugin-ox-content/src/types.ts",
+          "line": 849,
+          "endLine": 858,
+          "signature": "export interface VersionsOptions"
+        },
+        {
           "name": "types",
           "kind": "module",
           "description": "Type definitions for @ox-content/vite-plugin",
@@ -14043,6 +14255,16 @@
               "endLine": 994
             },
             {
+              "name": "versions",
+              "kind": "property",
+              "description": "Prefix live docs, emit frozen snapshot trees, and render a header\nversion dropdown.\n\nOff by default. `true` enables a single current entry. An object\nenables the feature and lists additional versions. Historical\nsnapshot directories are read, never rewritten.",
+              "type": "boolean | VersionsOptions",
+              "default": "false",
+              "optional": true,
+              "line": 1043,
+              "endLine": 1043
+            },
+            {
               "name": "wikiLinks",
               "kind": "property",
               "description": "Expand Obsidian-style `[[page]]` and `[[page|label]]` links.\n\nUse this for knowledge-base style content where authors prefer short,\ndocument-relative link syntax. Pass an object to override the base URL used\nwhen resolving generated hrefs.",
@@ -14520,6 +14742,15 @@
               "type": "ResolvedCodeAnnotationsOptions",
               "line": 1297,
               "endLine": 1297
+            },
+            {
+              "name": "versions",
+              "kind": "property",
+              "description": "",
+              "type": "ResolvedVersionsOptions",
+              "optional": true,
+              "line": 1406,
+              "endLine": 1406
             },
             {
               "name": "wikiLinks",
@@ -18521,6 +18752,183 @@
           "line": 3181,
           "endLine": 3189,
           "signature": "export interface ResolvedI18nOptions"
+        }
+      ]
+    },
+    {
+      "file": "npm/vite-plugin-ox-content/src/versions-html.ts",
+      "description": "",
+      "entries": [
+        {
+          "name": "versions-html",
+          "kind": "module",
+          "description": "Escaped version switcher, banner, and badge markup.",
+          "file": "npm/vite-plugin-ox-content/src/versions-html.ts",
+          "line": 1,
+          "endLine": 3
+        }
+      ]
+    },
+    {
+      "file": "npm/vite-plugin-ox-content/src/versions.ts",
+      "description": "",
+      "entries": [
+        {
+          "name": "versions",
+          "kind": "module",
+          "description": "Opt-in documentation versioning: prefixes, snapshots, and header chrome.\n\nHistorical snapshot directories are read-only during the build. Recreate\nthem with an explicit snapshot command.",
+          "file": "npm/vite-plugin-ox-content/src/versions.ts",
+          "line": 1,
+          "endLine": 6
+        },
+        {
+          "name": "resolveVersionsOptions",
+          "kind": "function",
+          "description": "Resolves `versions`. Omitted / `false` stay off. `true` enables a single\ncurrent entry. An object enables the feature and overrides set fields.",
+          "params": [
+            {
+              "name": "value",
+              "type": "boolean | VersionsOptions | undefined",
+              "description": ""
+            }
+          ],
+          "returns": {
+            "type": "ResolvedVersionsOptions",
+            "description": ""
+          },
+          "file": "npm/vite-plugin-ox-content/src/versions.ts",
+          "line": 41,
+          "endLine": 74,
+          "signature": "export function resolveVersionsOptions(value: boolean | VersionsOptions | undefined): ResolvedVersionsOptions"
+        },
+        {
+          "name": "currentVersionPrefix",
+          "kind": "function",
+          "description": "Prefix used for the active version (empty string = site root).",
+          "params": [
+            {
+              "name": "options",
+              "type": "ResolvedVersionsOptions",
+              "description": "",
+              "optional": true
+            }
+          ],
+          "returns": {
+            "type": "string",
+            "description": ""
+          },
+          "file": "npm/vite-plugin-ox-content/src/versions.ts",
+          "line": 77,
+          "endLine": 82,
+          "signature": "export function currentVersionPrefix(options?: ResolvedVersionsOptions): string"
+        },
+        {
+          "name": "resolveSnapshotDir",
+          "kind": "function",
+          "description": "Confines a snapshot dir to `root`.",
+          "params": [
+            {
+              "name": "root",
+              "type": "string",
+              "description": ""
+            },
+            {
+              "name": "dir",
+              "type": "string",
+              "description": ""
+            }
+          ],
+          "returns": {
+            "type": "string | undefined",
+            "description": ""
+          },
+          "file": "npm/vite-plugin-ox-content/src/versions.ts",
+          "line": 92,
+          "endLine": 103,
+          "signature": "export function resolveSnapshotDir(root: string, dir: string): string | undefined"
+        },
+        {
+          "name": "versionLocation",
+          "kind": "function",
+          "description": "Version id and same-path remainder for a generated HTML file.",
+          "params": [
+            {
+              "name": "outputPath",
+              "type": "string",
+              "description": ""
+            },
+            {
+              "name": "outDir",
+              "type": "string",
+              "description": ""
+            },
+            {
+              "name": "options",
+              "type": "ResolvedVersionsOptions",
+              "description": ""
+            }
+          ],
+          "returns": {
+            "type": "object",
+            "description": "",
+            "members": [
+              {
+                "name": "id",
+                "kind": "property",
+                "description": "",
+                "type": "string",
+                "line": 155,
+                "endLine": 155
+              },
+              {
+                "name": "sibling",
+                "kind": "property",
+                "description": "",
+                "type": "string",
+                "line": 155,
+                "endLine": 155
+              }
+            ]
+          },
+          "file": "npm/vite-plugin-ox-content/src/versions.ts",
+          "line": 151,
+          "endLine": 169,
+          "signature": "export function versionLocation(outputPath: string, outDir: string, options: ResolvedVersionsOptions): { id: string; sibling: string }"
+        },
+        {
+          "name": "decorateVersionedPages",
+          "kind": "function",
+          "description": "Applies switcher / banner / search rewrite after every version tree is generated.",
+          "params": [
+            {
+              "name": "pages",
+              "type": "Array<{ outputPath: string; html: string }>",
+              "description": ""
+            },
+            {
+              "name": "options",
+              "type": "ResolvedVersionsOptions",
+              "description": ""
+            },
+            {
+              "name": "outDir",
+              "type": "string",
+              "description": ""
+            },
+            {
+              "name": "base",
+              "type": "string",
+              "description": ""
+            }
+          ],
+          "returns": {
+            "type": "void",
+            "description": ""
+          },
+          "file": "npm/vite-plugin-ox-content/src/versions.ts",
+          "line": 176,
+          "endLine": 190,
+          "signature": "export function decorateVersionedPages(pages: Array<{ outputPath: string; html: string }>, options: ResolvedVersionsOptions, outDir: string, base: string): void"
         }
       ]
     },

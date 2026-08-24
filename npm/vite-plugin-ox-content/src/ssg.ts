@@ -55,6 +55,13 @@ import { buildCollectionManifest } from "./collections";
 import { writeFeedFiles } from "./feeds";
 import { appendTaxonomyPages, injectRelatedPages, toTaxonomyProcessResult } from "./taxonomies";
 import { resolveTeamOptions } from "./team";
+import {
+  decorateVersionedPages,
+  prefixRoutePaths,
+  resolveSnapshotDir,
+  snapshotEntries,
+  writeSnapshotSearchIndex,
+} from "./versions";
 
 /**
  * Navigation item for SSG.
@@ -769,6 +776,7 @@ export async function buildSsg(options: ResolvedOptions, root: string): Promise<
     errors,
     render: (page) => renderSsgPage(context, toTaxonomyProcessResult(page), collected, listedPages),
   });
+  await applyDocumentationVersions(generatedPages, context, errors);
   await writeGeneratedPages(
     generatedPages,
     context,
@@ -1361,6 +1369,61 @@ async function transformNotFoundMarkdown(
     frontmatter,
     toc: result.toc,
   };
+}
+
+async function applyDocumentationVersions(
+  generatedPages: GeneratedHtmlPage[],
+  context: BuildSsgContext,
+  errors: string[],
+): Promise<void> {
+  const versions = context.options.versions;
+  if (!versions?.enabled) {
+    return;
+  }
+  for (const entry of snapshotEntries(versions)) {
+    const snapSrc = resolveSnapshotDir(context.root, entry.dir ?? "");
+    if (!snapSrc) {
+      continue;
+    }
+    const files = await collectMarkdownFiles(snapSrc, context.options.extensions);
+    if (files.length === 0) {
+      continue;
+    }
+    const snapContext = await createBuildSsgContext(
+      context.options,
+      context.root,
+      snapSrc,
+      context.outDir,
+      files,
+    );
+    const snapCollected = await collectPageResults(snapContext, files);
+    errors.push(...snapCollected.errors);
+    for (const page of snapCollected.pageResults) {
+      page.routePaths = {
+        ...page.routePaths,
+        ...prefixRoutePaths(page.routePaths, entry.prefix, context.outDir, context.base),
+      };
+    }
+    const { outputPages } = applyPublishState(snapContext, snapCollected);
+    const snapPages = await generateHtmlPages(snapContext, outputPages, snapCollected, errors);
+    generatedPages.push(...snapPages);
+    if (context.options.search?.enabled) {
+      try {
+        await writeSnapshotSearchIndex({
+          srcDir: snapSrc,
+          outDir: context.outDir,
+          prefix: entry.prefix,
+          base: context.base,
+          extensions: context.options.extensions,
+          publishState: context.options.publishState,
+        });
+      } catch (err) {
+        const message = err instanceof Error ? err.message : String(err);
+        errors.push(`Failed to write search index for ${entry.id}: ${message}`);
+      }
+    }
+  }
+  decorateVersionedPages(generatedPages, versions, context.outDir, context.base);
 }
 
 async function writeGeneratedPages(
