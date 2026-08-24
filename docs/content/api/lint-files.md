@@ -49,7 +49,7 @@
 <h4>Signature</h4>
 <pre><code class="language-typescript">export async function lintMarkdownFile(filePath: string, options: MarkdownLintFileOptions = {}): Promise&lt;MarkdownLintFileResult&gt;</code></pre>
 </div>
-<p class="ox-api-entry__source"><a class="ox-api-entry__source-link" href="https://github.com/ubugeeei-prod/ox-content/blob/main/npm/vite-plugin-ox-content/src/lint-files.ts#L107-L116" target="_blank" rel="noopener noreferrer">View source<span class="ox-api-entry__source-icon" aria-hidden="true"></span></a></p>
+<p class="ox-api-entry__source"><a class="ox-api-entry__source-link" href="https://github.com/ubugeeei-prod/ox-content/blob/main/npm/vite-plugin-ox-content/src/lint-files.ts#L108-L117" target="_blank" rel="noopener noreferrer">View source<span class="ox-api-entry__source-icon" aria-hidden="true"></span></a></p>
 <div class="ox-api-entry__section ox-api-entry__section--params">
 <h4>Parameters</h4>
 <ul class="ox-api-entry__params">
@@ -87,7 +87,7 @@
 <h4>Signature</h4>
 <pre><code class="language-typescript">export async function lintMarkdownFiles(options: MarkdownLintFileOptions = {}): Promise&lt;MarkdownLintFilesResult&gt;</code></pre>
 </div>
-<p class="ox-api-entry__source"><a class="ox-api-entry__source-link" href="https://github.com/ubugeeei-prod/ox-content/blob/main/npm/vite-plugin-ox-content/src/lint-files.ts#L121-L154" target="_blank" rel="noopener noreferrer">View source<span class="ox-api-entry__source-icon" aria-hidden="true"></span></a></p>
+<p class="ox-api-entry__source"><a class="ox-api-entry__source-link" href="https://github.com/ubugeeei-prod/ox-content/blob/main/npm/vite-plugin-ox-content/src/lint-files.ts#L122-L159" target="_blank" rel="noopener noreferrer">View source<span class="ox-api-entry__source-icon" aria-hidden="true"></span></a></p>
 <div class="ox-api-entry__section ox-api-entry__section--params">
 <h4>Parameters</h4>
 <ul class="ox-api-entry__params">
@@ -123,7 +123,7 @@
 <h4>Signature</h4>
 <pre><code class="language-typescript">export interface MarkdownLintFileDiagnostic extends MarkdownLintDiagnostic</code></pre>
 </div>
-<p class="ox-api-entry__source"><a class="ox-api-entry__source-link" href="https://github.com/ubugeeei-prod/ox-content/blob/main/npm/vite-plugin-ox-content/src/lint-files.ts#L52-L55" target="_blank" rel="noopener noreferrer">View source<span class="ox-api-entry__source-icon" aria-hidden="true"></span></a></p>
+<p class="ox-api-entry__source"><a class="ox-api-entry__source-link" href="https://github.com/ubugeeei-prod/ox-content/blob/main/npm/vite-plugin-ox-content/src/lint-files.ts#L53-L56" target="_blank" rel="noopener noreferrer">View source<span class="ox-api-entry__source-icon" aria-hidden="true"></span></a></p>
 <div class="ox-api-entry__section ox-api-entry__section--members">
 <h4>Members</h4>
 <div class="ox-api-entry__member-group">
@@ -163,7 +163,7 @@
 <h4>Signature</h4>
 <pre><code class="language-typescript">export interface MarkdownLintFileOptions extends MarkdownLintOptions</code></pre>
 </div>
-<p class="ox-api-entry__source"><a class="ox-api-entry__source-link" href="https://github.com/ubugeeei-prod/ox-content/blob/main/npm/vite-plugin-ox-content/src/lint-files.ts#L22-L47" target="_blank" rel="noopener noreferrer">View source<span class="ox-api-entry__source-icon" aria-hidden="true"></span></a></p>
+<p class="ox-api-entry__source"><a class="ox-api-entry__source-link" href="https://github.com/ubugeeei-prod/ox-content/blob/main/npm/vite-plugin-ox-content/src/lint-files.ts#L23-L48" target="_blank" rel="noopener noreferrer">View source<span class="ox-api-entry__source-icon" aria-hidden="true"></span></a></p>
 <div class="ox-api-entry__section ox-api-entry__section--members">
 <h4>Members</h4>
 <div class="ox-api-entry__member-group">
@@ -212,7 +212,7 @@
 <h4>Signature</h4>
 <pre><code class="language-typescript">export interface MarkdownLintFileResult extends MarkdownLintResult</code></pre>
 </div>
-<p class="ox-api-entry__source"><a class="ox-api-entry__source-link" href="https://github.com/ubugeeei-prod/ox-content/blob/main/npm/vite-plugin-ox-content/src/lint-files.ts#L60-L64" target="_blank" rel="noopener noreferrer">View source<span class="ox-api-entry__source-icon" aria-hidden="true"></span></a></p>
+<p class="ox-api-entry__source"><a class="ox-api-entry__source-link" href="https://github.com/ubugeeei-prod/ox-content/blob/main/npm/vite-plugin-ox-content/src/lint-files.ts#L61-L65" target="_blank" rel="noopener noreferrer">View source<span class="ox-api-entry__source-icon" aria-hidden="true"></span></a></p>
 <div class="ox-api-entry__section ox-api-entry__section--members">
 <h4>Members</h4>
 <div class="ox-api-entry__member-group">
@@ -252,7 +252,7 @@
 <h4>Signature</h4>
 <pre><code class="language-typescript">export interface MarkdownLintFilesResult</code></pre>
 </div>
-<p class="ox-api-entry__source"><a class="ox-api-entry__source-link" href="https://github.com/ubugeeei-prod/ox-content/blob/main/npm/vite-plugin-ox-content/src/lint-files.ts#L69-L76" target="_blank" rel="noopener noreferrer">View source<span class="ox-api-entry__source-icon" aria-hidden="true"></span></a></p>
+<p class="ox-api-entry__source"><a class="ox-api-entry__source-link" href="https://github.com/ubugeeei-prod/ox-content/blob/main/npm/vite-plugin-ox-content/src/lint-files.ts#L70-L77" target="_blank" rel="noopener noreferrer">View source<span class="ox-api-entry__source-icon" aria-hidden="true"></span></a></p>
 <div class="ox-api-entry__section ox-api-entry__section--members">
 <h4>Members</h4>
 <div class="ox-api-entry__member-group">
@@ -307,7 +307,7 @@
 <h4>Signature</h4>
 <pre><code class="language-typescript">export function shouldLintMarkdownFile(filePath: string, options: MarkdownLintFileOptions = {}): boolean</code></pre>
 </div>
-<p class="ox-api-entry__source"><a class="ox-api-entry__source-link" href="https://github.com/ubugeeei-prod/ox-content/blob/main/npm/vite-plugin-ox-content/src/lint-files.ts#L93-L99" target="_blank" rel="noopener noreferrer">View source<span class="ox-api-entry__source-icon" aria-hidden="true"></span></a></p>
+<p class="ox-api-entry__source"><a class="ox-api-entry__source-link" href="https://github.com/ubugeeei-prod/ox-content/blob/main/npm/vite-plugin-ox-content/src/lint-files.ts#L94-L100" target="_blank" rel="noopener noreferrer">View source<span class="ox-api-entry__source-icon" aria-hidden="true"></span></a></p>
 <div class="ox-api-entry__section ox-api-entry__section--params">
 <h4>Parameters</h4>
 <ul class="ox-api-entry__params">

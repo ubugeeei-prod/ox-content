@@ -48,7 +48,7 @@
 <h4>Signature</h4>
 <pre><code class="language-typescript">export function generateVirtualModule(path: string, options: ResolvedOptions): string</code></pre>
 </div>
-<p class="ox-api-entry__source"><a class="ox-api-entry__source-link" href="https://github.com/ubugeeei-prod/ox-content/blob/main/npm/vite-plugin-ox-content/src/index.ts#L895-L940" target="_blank" rel="noopener noreferrer">View source<span class="ox-api-entry__source-icon" aria-hidden="true"></span></a></p>
+<p class="ox-api-entry__source"><a class="ox-api-entry__source-link" href="https://github.com/ubugeeei-prod/ox-content/blob/main/npm/vite-plugin-ox-content/src/index.ts#L898-L943" target="_blank" rel="noopener noreferrer">View source<span class="ox-api-entry__source-icon" aria-hidden="true"></span></a></p>
 <div class="ox-api-entry__section ox-api-entry__section--params">
 <h4>Parameters</h4>
 <ul class="ox-api-entry__params">
@@ -145,7 +145,7 @@ export default defineConfig({
 <h4>Signature</h4>
 <pre><code class="language-typescript">function resolveOptions(options: OxContentOptions): ResolvedOptions</code></pre>
 </div>
-<p class="ox-api-entry__source"><a class="ox-api-entry__source-link" href="https://github.com/ubugeeei-prod/ox-content/blob/main/npm/vite-plugin-ox-content/src/index.ts#L609-L664" target="_blank" rel="noopener noreferrer">View source<span class="ox-api-entry__source-icon" aria-hidden="true"></span></a></p>
+<p class="ox-api-entry__source"><a class="ox-api-entry__source-link" href="https://github.com/ubugeeei-prod/ox-content/blob/main/npm/vite-plugin-ox-content/src/index.ts#L611-L667" target="_blank" rel="noopener noreferrer">View source<span class="ox-api-entry__source-icon" aria-hidden="true"></span></a></p>
 <div class="ox-api-entry__section ox-api-entry__section--params">
 <h4>Parameters</h4>
 <ul class="ox-api-entry__params">

@@ -22,7 +22,7 @@
   <span>modules</span>
 </span>
 <span class="ox-api-stat">
-  <strong>587</strong>
+  <strong>589</strong>
   <span>members</span>
 </span>
 </div>
@@ -76,7 +76,7 @@
 <h4>Signature</h4>
 <pre><code class="language-typescript">export interface AttrsOptions</code></pre>
 </div>
-<p class="ox-api-entry__source"><a class="ox-api-entry__source-link" href="https://github.com/ubugeeei-prod/ox-content/blob/main/npm/vite-plugin-ox-content/src/types.ts#L1694-L1705" target="_blank" rel="noopener noreferrer">View source<span class="ox-api-entry__source-icon" aria-hidden="true"></span></a></p>
+<p class="ox-api-entry__source"><a class="ox-api-entry__source-link" href="https://github.com/ubugeeei-prod/ox-content/blob/main/npm/vite-plugin-ox-content/src/types.ts#L1705-L1716" target="_blank" rel="noopener noreferrer">View source<span class="ox-api-entry__source-icon" aria-hidden="true"></span></a></p>
 <div class="ox-api-entry__section ox-api-entry__section--members">
 <h4>Members</h4>
 <div class="ox-api-entry__member-group">
@@ -106,7 +106,7 @@
 <h4>Signature</h4>
 <pre><code class="language-typescript">export interface BadgeOptions</code></pre>
 </div>
-<p class="ox-api-entry__source"><a class="ox-api-entry__source-link" href="https://github.com/ubugeeei-prod/ox-content/blob/main/npm/vite-plugin-ox-content/src/types.ts#L1538-L1545" target="_blank" rel="noopener noreferrer">View source<span class="ox-api-entry__source-icon" aria-hidden="true"></span></a></p>
+<p class="ox-api-entry__source"><a class="ox-api-entry__source-link" href="https://github.com/ubugeeei-prod/ox-content/blob/main/npm/vite-plugin-ox-content/src/types.ts#L1549-L1556" target="_blank" rel="noopener noreferrer">View source<span class="ox-api-entry__source-icon" aria-hidden="true"></span></a></p>
 <div class="ox-api-entry__section ox-api-entry__section--members">
 <h4>Members</h4>
 <div class="ox-api-entry__member-group">
@@ -136,7 +136,7 @@
 <h4>Signature</h4>
 <pre><code class="language-typescript">export interface BuiltinEmbedOptions</code></pre>
 </div>
-<p class="ox-api-entry__source"><a class="ox-api-entry__source-link" href="https://github.com/ubugeeei-prod/ox-content/blob/main/npm/vite-plugin-ox-content/src/types.ts#L1451-L1508" target="_blank" rel="noopener noreferrer">View source<span class="ox-api-entry__source-icon" aria-hidden="true"></span></a></p>
+<p class="ox-api-entry__source"><a class="ox-api-entry__source-link" href="https://github.com/ubugeeei-prod/ox-content/blob/main/npm/vite-plugin-ox-content/src/types.ts#L1462-L1519" target="_blank" rel="noopener noreferrer">View source<span class="ox-api-entry__source-icon" aria-hidden="true"></span></a></p>
 <div class="ox-api-entry__section ox-api-entry__section--members">
 <h4>Members</h4>
 <div class="ox-api-entry__member-group">
@@ -201,7 +201,7 @@
 <h4>Signature</h4>
 <pre><code class="language-typescript">export interface BuiltinPmOptions</code></pre>
 </div>
-<p class="ox-api-entry__source"><a class="ox-api-entry__source-link" href="https://github.com/ubugeeei-prod/ox-content/blob/main/npm/vite-plugin-ox-content/src/types.ts#L1513-L1519" target="_blank" rel="noopener noreferrer">View source<span class="ox-api-entry__source-icon" aria-hidden="true"></span></a></p>
+<p class="ox-api-entry__source"><a class="ox-api-entry__source-link" href="https://github.com/ubugeeei-prod/ox-content/blob/main/npm/vite-plugin-ox-content/src/types.ts#L1524-L1530" target="_blank" rel="noopener noreferrer">View source<span class="ox-api-entry__source-icon" aria-hidden="true"></span></a></p>
 <div class="ox-api-entry__section ox-api-entry__section--members">
 <h4>Members</h4>
 <div class="ox-api-entry__member-group">
@@ -231,7 +231,7 @@
 <h4>Signature</h4>
 <pre><code class="language-typescript">export interface CardOptions</code></pre>
 </div>
-<p class="ox-api-entry__source"><a class="ox-api-entry__source-link" href="https://github.com/ubugeeei-prod/ox-content/blob/main/npm/vite-plugin-ox-content/src/types.ts#L1773-L1780" target="_blank" rel="noopener noreferrer">View source<span class="ox-api-entry__source-icon" aria-hidden="true"></span></a></p>
+<p class="ox-api-entry__source"><a class="ox-api-entry__source-link" href="https://github.com/ubugeeei-prod/ox-content/blob/main/npm/vite-plugin-ox-content/src/types.ts#L1784-L1791" target="_blank" rel="noopener noreferrer">View source<span class="ox-api-entry__source-icon" aria-hidden="true"></span></a></p>
 <div class="ox-api-entry__section ox-api-entry__section--members">
 <h4>Members</h4>
 <div class="ox-api-entry__member-group">
@@ -292,7 +292,7 @@
 <h4>Signature</h4>
 <pre><code class="language-typescript">export type CodeAnnotationKind = &quot;highlight&quot; | &quot;warning&quot; | &quot;error&quot;</code></pre>
 </div>
-<p class="ox-api-entry__source"><a class="ox-api-entry__source-link" href="https://github.com/ubugeeei-prod/ox-content/blob/main/npm/vite-plugin-ox-content/src/types.ts#L2086" target="_blank" rel="noopener noreferrer">View source<span class="ox-api-entry__source-icon" aria-hidden="true"></span></a></p>
+<p class="ox-api-entry__source"><a class="ox-api-entry__source-link" href="https://github.com/ubugeeei-prod/ox-content/blob/main/npm/vite-plugin-ox-content/src/types.ts#L2097" target="_blank" rel="noopener noreferrer">View source<span class="ox-api-entry__source-icon" aria-hidden="true"></span></a></p>
   </div>
 </details>
 
@@ -306,7 +306,7 @@
 <h4>Signature</h4>
 <pre><code class="language-typescript">export interface CodeAnnotationsOptions</code></pre>
 </div>
-<p class="ox-api-entry__source"><a class="ox-api-entry__source-link" href="https://github.com/ubugeeei-prod/ox-content/blob/main/npm/vite-plugin-ox-content/src/types.ts#L2096-L2126" target="_blank" rel="noopener noreferrer">View source<span class="ox-api-entry__source-icon" aria-hidden="true"></span></a></p>
+<p class="ox-api-entry__source"><a class="ox-api-entry__source-link" href="https://github.com/ubugeeei-prod/ox-content/blob/main/npm/vite-plugin-ox-content/src/types.ts#L2107-L2137" target="_blank" rel="noopener noreferrer">View source<span class="ox-api-entry__source-icon" aria-hidden="true"></span></a></p>
 <div class="ox-api-entry__section ox-api-entry__section--members">
 <h4>Members</h4>
 <div class="ox-api-entry__member-group">
@@ -346,7 +346,7 @@
 <h4>Signature</h4>
 <pre><code class="language-typescript">export type CodeAnnotationSyntax = &quot;attribute&quot; | &quot;vitepress&quot; | &quot;both&quot;</code></pre>
 </div>
-<p class="ox-api-entry__source"><a class="ox-api-entry__source-link" href="https://github.com/ubugeeei-prod/ox-content/blob/main/npm/vite-plugin-ox-content/src/types.ts#L2091" target="_blank" rel="noopener noreferrer">View source<span class="ox-api-entry__source-icon" aria-hidden="true"></span></a></p>
+<p class="ox-api-entry__source"><a class="ox-api-entry__source-link" href="https://github.com/ubugeeei-prod/ox-content/blob/main/npm/vite-plugin-ox-content/src/types.ts#L2102" target="_blank" rel="noopener noreferrer">View source<span class="ox-api-entry__source-icon" aria-hidden="true"></span></a></p>
   </div>
 </details>
 
@@ -361,7 +361,7 @@
 <h4>Signature</h4>
 <pre><code class="language-typescript">export interface CodeBlockLintOptions</code></pre>
 </div>
-<p class="ox-api-entry__source"><a class="ox-api-entry__source-link" href="https://github.com/ubugeeei-prod/ox-content/blob/main/npm/vite-plugin-ox-content/src/types.ts#L1940-L1977" target="_blank" rel="noopener noreferrer">View source<span class="ox-api-entry__source-icon" aria-hidden="true"></span></a></p>
+<p class="ox-api-entry__source"><a class="ox-api-entry__source-link" href="https://github.com/ubugeeei-prod/ox-content/blob/main/npm/vite-plugin-ox-content/src/types.ts#L1951-L1988" target="_blank" rel="noopener noreferrer">View source<span class="ox-api-entry__source-icon" aria-hidden="true"></span></a></p>
 <div class="ox-api-entry__section ox-api-entry__section--members">
 <h4>Members</h4>
 <div class="ox-api-entry__member-group">
@@ -407,7 +407,7 @@
 <h4>Signature</h4>
 <pre><code class="language-typescript">export interface CodeBlockTypecheckOptions</code></pre>
 </div>
-<p class="ox-api-entry__source"><a class="ox-api-entry__source-link" href="https://github.com/ubugeeei-prod/ox-content/blob/main/npm/vite-plugin-ox-content/src/types.ts#L1997-L2034" target="_blank" rel="noopener noreferrer">View source<span class="ox-api-entry__source-icon" aria-hidden="true"></span></a></p>
+<p class="ox-api-entry__source"><a class="ox-api-entry__source-link" href="https://github.com/ubugeeei-prod/ox-content/blob/main/npm/vite-plugin-ox-content/src/types.ts#L2008-L2045" target="_blank" rel="noopener noreferrer">View source<span class="ox-api-entry__source-icon" aria-hidden="true"></span></a></p>
 <div class="ox-api-entry__section ox-api-entry__section--members">
 <h4>Members</h4>
 <div class="ox-api-entry__member-group">
@@ -453,7 +453,7 @@
 <h4>Signature</h4>
 <pre><code class="language-typescript">export interface CodeImportOptions</code></pre>
 </div>
-<p class="ox-api-entry__source"><a class="ox-api-entry__source-link" href="https://github.com/ubugeeei-prod/ox-content/blob/main/npm/vite-plugin-ox-content/src/types.ts#L1721-L1735" target="_blank" rel="noopener noreferrer">View source<span class="ox-api-entry__source-icon" aria-hidden="true"></span></a></p>
+<p class="ox-api-entry__source"><a class="ox-api-entry__source-link" href="https://github.com/ubugeeei-prod/ox-content/blob/main/npm/vite-plugin-ox-content/src/types.ts#L1732-L1746" target="_blank" rel="noopener noreferrer">View source<span class="ox-api-entry__source-icon" aria-hidden="true"></span></a></p>
 <div class="ox-api-entry__section ox-api-entry__section--members">
 <h4>Members</h4>
 <div class="ox-api-entry__member-group">
@@ -483,7 +483,7 @@
 <h4>Signature</h4>
 <pre><code class="language-typescript">export interface CollectionEntry</code></pre>
 </div>
-<p class="ox-api-entry__source"><a class="ox-api-entry__source-link" href="https://github.com/ubugeeei-prod/ox-content/blob/main/npm/vite-plugin-ox-content/src/types.ts#L2949-L2963" target="_blank" rel="noopener noreferrer">View source<span class="ox-api-entry__source-icon" aria-hidden="true"></span></a></p>
+<p class="ox-api-entry__source"><a class="ox-api-entry__source-link" href="https://github.com/ubugeeei-prod/ox-content/blob/main/npm/vite-plugin-ox-content/src/types.ts#L2960-L2974" target="_blank" rel="noopener noreferrer">View source<span class="ox-api-entry__source-icon" aria-hidden="true"></span></a></p>
 <div class="ox-api-entry__section ox-api-entry__section--members">
 <h4>Members</h4>
 <div class="ox-api-entry__member-group ox-api-entry__member-group--indexable">
@@ -576,7 +576,7 @@
 <h4>Signature</h4>
 <pre><code class="language-typescript">export type CollectionIncludeField = &quot;body&quot; | &quot;html&quot; | &quot;toc&quot;</code></pre>
 </div>
-<p class="ox-api-entry__source"><a class="ox-api-entry__source-link" href="https://github.com/ubugeeei-prod/ox-content/blob/main/npm/vite-plugin-ox-content/src/types.ts#L2896" target="_blank" rel="noopener noreferrer">View source<span class="ox-api-entry__source-icon" aria-hidden="true"></span></a></p>
+<p class="ox-api-entry__source"><a class="ox-api-entry__source-link" href="https://github.com/ubugeeei-prod/ox-content/blob/main/npm/vite-plugin-ox-content/src/types.ts#L2907" target="_blank" rel="noopener noreferrer">View source<span class="ox-api-entry__source-icon" aria-hidden="true"></span></a></p>
   </div>
 </details>
 
@@ -590,7 +590,7 @@
 <h4>Signature</h4>
 <pre><code class="language-typescript">export interface CollectionManifest</code></pre>
 </div>
-<p class="ox-api-entry__source"><a class="ox-api-entry__source-link" href="https://github.com/ubugeeei-prod/ox-content/blob/main/npm/vite-plugin-ox-content/src/types.ts#L2968-L2970" target="_blank" rel="noopener noreferrer">View source<span class="ox-api-entry__source-icon" aria-hidden="true"></span></a></p>
+<p class="ox-api-entry__source"><a class="ox-api-entry__source-link" href="https://github.com/ubugeeei-prod/ox-content/blob/main/npm/vite-plugin-ox-content/src/types.ts#L2979-L2981" target="_blank" rel="noopener noreferrer">View source<span class="ox-api-entry__source-icon" aria-hidden="true"></span></a></p>
 <div class="ox-api-entry__section ox-api-entry__section--members">
 <h4>Members</h4>
 <div class="ox-api-entry__member-group">
@@ -620,7 +620,7 @@
 <h4>Signature</h4>
 <pre><code class="language-typescript">export interface CollectionOptions</code></pre>
 </div>
-<p class="ox-api-entry__source"><a class="ox-api-entry__source-link" href="https://github.com/ubugeeei-prod/ox-content/blob/main/npm/vite-plugin-ox-content/src/types.ts#L2901-L2922" target="_blank" rel="noopener noreferrer">View source<span class="ox-api-entry__source-icon" aria-hidden="true"></span></a></p>
+<p class="ox-api-entry__source"><a class="ox-api-entry__source-link" href="https://github.com/ubugeeei-prod/ox-content/blob/main/npm/vite-plugin-ox-content/src/types.ts#L2912-L2933" target="_blank" rel="noopener noreferrer">View source<span class="ox-api-entry__source-icon" aria-hidden="true"></span></a></p>
 <div class="ox-api-entry__section ox-api-entry__section--members">
 <h4>Members</h4>
 <div class="ox-api-entry__member-group">
@@ -655,7 +655,7 @@
 <h4>Signature</h4>
 <pre><code class="language-typescript">export type CollectionsOptions = Record&lt;string, CollectionOptions | string | readonly string[]&gt;</code></pre>
 </div>
-<p class="ox-api-entry__source"><a class="ox-api-entry__source-link" href="https://github.com/ubugeeei-prod/ox-content/blob/main/npm/vite-plugin-ox-content/src/types.ts#L2927" target="_blank" rel="noopener noreferrer">View source<span class="ox-api-entry__source-icon" aria-hidden="true"></span></a></p>
+<p class="ox-api-entry__source"><a class="ox-api-entry__source-link" href="https://github.com/ubugeeei-prod/ox-content/blob/main/npm/vite-plugin-ox-content/src/types.ts#L2938" target="_blank" rel="noopener noreferrer">View source<span class="ox-api-entry__source-icon" aria-hidden="true"></span></a></p>
   </div>
 </details>
 
@@ -669,7 +669,7 @@
 <h4>Signature</h4>
 <pre><code class="language-typescript">export interface ContainerOptions</code></pre>
 </div>
-<p class="ox-api-entry__source"><a class="ox-api-entry__source-link" href="https://github.com/ubugeeei-prod/ox-content/blob/main/npm/vite-plugin-ox-content/src/types.ts#L1557-L1571" target="_blank" rel="noopener noreferrer">View source<span class="ox-api-entry__source-icon" aria-hidden="true"></span></a></p>
+<p class="ox-api-entry__source"><a class="ox-api-entry__source-link" href="https://github.com/ubugeeei-prod/ox-content/blob/main/npm/vite-plugin-ox-content/src/types.ts#L1568-L1582" target="_blank" rel="noopener noreferrer">View source<span class="ox-api-entry__source-icon" aria-hidden="true"></span></a></p>
 <div class="ox-api-entry__section ox-api-entry__section--members">
 <h4>Members</h4>
 <div class="ox-api-entry__member-group">
@@ -704,7 +704,7 @@
 <h4>Signature</h4>
 <pre><code class="language-typescript">export interface ContainerTypeOptions</code></pre>
 </div>
-<p class="ox-api-entry__source"><a class="ox-api-entry__source-link" href="https://github.com/ubugeeei-prod/ox-content/blob/main/npm/vite-plugin-ox-content/src/types.ts#L1576-L1581" target="_blank" rel="noopener noreferrer">View source<span class="ox-api-entry__source-icon" aria-hidden="true"></span></a></p>
+<p class="ox-api-entry__source"><a class="ox-api-entry__source-link" href="https://github.com/ubugeeei-prod/ox-content/blob/main/npm/vite-plugin-ox-content/src/types.ts#L1587-L1592" target="_blank" rel="noopener noreferrer">View source<span class="ox-api-entry__source-icon" aria-hidden="true"></span></a></p>
 <div class="ox-api-entry__section ox-api-entry__section--members">
 <h4>Members</h4>
 <div class="ox-api-entry__member-group">
@@ -740,7 +740,7 @@
 <h4>Signature</h4>
 <pre><code class="language-typescript">export interface DocEntry</code></pre>
 </div>
-<p class="ox-api-entry__source"><a class="ox-api-entry__source-link" href="https://github.com/ubugeeei-prod/ox-content/blob/main/npm/vite-plugin-ox-content/src/types.ts#L2660-L2702" target="_blank" rel="noopener noreferrer">View source<span class="ox-api-entry__source-icon" aria-hidden="true"></span></a></p>
+<p class="ox-api-entry__source"><a class="ox-api-entry__source-link" href="https://github.com/ubugeeei-prod/ox-content/blob/main/npm/vite-plugin-ox-content/src/types.ts#L2671-L2713" target="_blank" rel="noopener noreferrer">View source<span class="ox-api-entry__source-icon" aria-hidden="true"></span></a></p>
 <div class="ox-api-entry__section ox-api-entry__section--members">
 <h4>Members</h4>
 <div class="ox-api-entry__member-group">
@@ -835,7 +835,7 @@
 <h4>Signature</h4>
 <pre><code class="language-typescript">export interface DocMember</code></pre>
 </div>
-<p class="ox-api-entry__source"><a class="ox-api-entry__source-link" href="https://github.com/ubugeeei-prod/ox-content/blob/main/npm/vite-plugin-ox-content/src/types.ts#L2707-L2755" target="_blank" rel="noopener noreferrer">View source<span class="ox-api-entry__source-icon" aria-hidden="true"></span></a></p>
+<p class="ox-api-entry__source"><a class="ox-api-entry__source-link" href="https://github.com/ubugeeei-prod/ox-content/blob/main/npm/vite-plugin-ox-content/src/types.ts#L2718-L2766" target="_blank" rel="noopener noreferrer">View source<span class="ox-api-entry__source-icon" aria-hidden="true"></span></a></p>
 <div class="ox-api-entry__section ox-api-entry__section--members">
 <h4>Members</h4>
 <div class="ox-api-entry__member-group">
@@ -940,7 +940,7 @@
 <h4>Signature</h4>
 <pre><code class="language-typescript">export type DocsEntryPoint = string | { path: string; name?: string }</code></pre>
 </div>
-<p class="ox-api-entry__source"><a class="ox-api-entry__source-link" href="https://github.com/ubugeeei-prod/ox-content/blob/main/npm/vite-plugin-ox-content/src/types.ts#L2306-L2311" target="_blank" rel="noopener noreferrer">View source<span class="ox-api-entry__source-icon" aria-hidden="true"></span></a></p>
+<p class="ox-api-entry__source"><a class="ox-api-entry__source-link" href="https://github.com/ubugeeei-prod/ox-content/blob/main/npm/vite-plugin-ox-content/src/types.ts#L2317-L2322" target="_blank" rel="noopener noreferrer">View source<span class="ox-api-entry__source-icon" aria-hidden="true"></span></a></p>
   </div>
 </details>
 
@@ -955,7 +955,7 @@
 <h4>Signature</h4>
 <pre><code class="language-typescript">export interface DocsOptions</code></pre>
 </div>
-<p class="ox-api-entry__source"><a class="ox-api-entry__source-link" href="https://github.com/ubugeeei-prod/ox-content/blob/main/npm/vite-plugin-ox-content/src/types.ts#L2346-L2612" target="_blank" rel="noopener noreferrer">View source<span class="ox-api-entry__source-icon" aria-hidden="true"></span></a></p>
+<p class="ox-api-entry__source"><a class="ox-api-entry__source-link" href="https://github.com/ubugeeei-prod/ox-content/blob/main/npm/vite-plugin-ox-content/src/types.ts#L2357-L2623" target="_blank" rel="noopener noreferrer">View source<span class="ox-api-entry__source-icon" aria-hidden="true"></span></a></p>
 <div class="ox-api-entry__section ox-api-entry__section--members">
 <h4>Members</h4>
 <div class="ox-api-entry__member-group">
@@ -1145,7 +1145,7 @@
 <h4>Signature</h4>
 <pre><code class="language-typescript">export interface DocsSummary</code></pre>
 </div>
-<p class="ox-api-entry__source"><a class="ox-api-entry__source-link" href="https://github.com/ubugeeei-prod/ox-content/blob/main/npm/vite-plugin-ox-content/src/types.ts#L2825-L2846" target="_blank" rel="noopener noreferrer">View source<span class="ox-api-entry__source-icon" aria-hidden="true"></span></a></p>
+<p class="ox-api-entry__source"><a class="ox-api-entry__source-link" href="https://github.com/ubugeeei-prod/ox-content/blob/main/npm/vite-plugin-ox-content/src/types.ts#L2836-L2857" target="_blank" rel="noopener noreferrer">View source<span class="ox-api-entry__source-icon" aria-hidden="true"></span></a></p>
 <div class="ox-api-entry__section ox-api-entry__section--members">
 <h4>Members</h4>
 <div class="ox-api-entry__member-group">
@@ -1206,7 +1206,7 @@
 <h4>Signature</h4>
 <pre><code class="language-typescript">export interface DocsTestOptions</code></pre>
 </div>
-<p class="ox-api-entry__source"><a class="ox-api-entry__source-link" href="https://github.com/ubugeeei-prod/ox-content/blob/main/npm/vite-plugin-ox-content/src/types.ts#L2053-L2072" target="_blank" rel="noopener noreferrer">View source<span class="ox-api-entry__source-icon" aria-hidden="true"></span></a></p>
+<p class="ox-api-entry__source"><a class="ox-api-entry__source-link" href="https://github.com/ubugeeei-prod/ox-content/blob/main/npm/vite-plugin-ox-content/src/types.ts#L2064-L2083" target="_blank" rel="noopener noreferrer">View source<span class="ox-api-entry__source-icon" aria-hidden="true"></span></a></p>
 <div class="ox-api-entry__section ox-api-entry__section--members">
 <h4>Members</h4>
 <div class="ox-api-entry__member-group">
@@ -1242,7 +1242,7 @@
 <h4>Signature</h4>
 <pre><code class="language-typescript">export interface EditThisPageOptions</code></pre>
 </div>
-<p class="ox-api-entry__source"><a class="ox-api-entry__source-link" href="https://github.com/ubugeeei-prod/ox-content/blob/main/npm/vite-plugin-ox-content/src/types.ts#L1880-L1920" target="_blank" rel="noopener noreferrer">View source<span class="ox-api-entry__source-icon" aria-hidden="true"></span></a></p>
+<p class="ox-api-entry__source"><a class="ox-api-entry__source-link" href="https://github.com/ubugeeei-prod/ox-content/blob/main/npm/vite-plugin-ox-content/src/types.ts#L1891-L1931" target="_blank" rel="noopener noreferrer">View source<span class="ox-api-entry__source-icon" aria-hidden="true"></span></a></p>
 <div class="ox-api-entry__section ox-api-entry__section--members">
 <h4>Members</h4>
 <div class="ox-api-entry__member-group">
@@ -1288,7 +1288,7 @@
 <h4>Signature</h4>
 <pre><code class="language-typescript">export interface EmojiShortcodeOptions</code></pre>
 </div>
-<p class="ox-api-entry__source"><a class="ox-api-entry__source-link" href="https://github.com/ubugeeei-prod/ox-content/blob/main/npm/vite-plugin-ox-content/src/types.ts#L1645-L1659" target="_blank" rel="noopener noreferrer">View source<span class="ox-api-entry__source-icon" aria-hidden="true"></span></a></p>
+<p class="ox-api-entry__source"><a class="ox-api-entry__source-link" href="https://github.com/ubugeeei-prod/ox-content/blob/main/npm/vite-plugin-ox-content/src/types.ts#L1656-L1670" target="_blank" rel="noopener noreferrer">View source<span class="ox-api-entry__source-icon" aria-hidden="true"></span></a></p>
 <div class="ox-api-entry__section ox-api-entry__section--members">
 <h4>Members</h4>
 <div class="ox-api-entry__member-group">
@@ -1358,7 +1358,7 @@
 <h4>Signature</h4>
 <pre><code class="language-typescript">export interface ExtractedDocs</code></pre>
 </div>
-<p class="ox-api-entry__source"><a class="ox-api-entry__source-link" href="https://github.com/ubugeeei-prod/ox-content/blob/main/npm/vite-plugin-ox-content/src/types.ts#L2802-L2820" target="_blank" rel="noopener noreferrer">View source<span class="ox-api-entry__source-icon" aria-hidden="true"></span></a></p>
+<p class="ox-api-entry__source"><a class="ox-api-entry__source-link" href="https://github.com/ubugeeei-prod/ox-content/blob/main/npm/vite-plugin-ox-content/src/types.ts#L2813-L2831" target="_blank" rel="noopener noreferrer">View source<span class="ox-api-entry__source-icon" aria-hidden="true"></span></a></p>
 <div class="ox-api-entry__section ox-api-entry__section--members">
 <h4>Members</h4>
 <div class="ox-api-entry__member-group">
@@ -1522,7 +1522,7 @@
 <h4>Signature</h4>
 <pre><code class="language-typescript">export interface FileTreeOptions</code></pre>
 </div>
-<p class="ox-api-entry__source"><a class="ox-api-entry__source-link" href="https://github.com/ubugeeei-prod/ox-content/blob/main/npm/vite-plugin-ox-content/src/types.ts#L1811-L1818" target="_blank" rel="noopener noreferrer">View source<span class="ox-api-entry__source-icon" aria-hidden="true"></span></a></p>
+<p class="ox-api-entry__source"><a class="ox-api-entry__source-link" href="https://github.com/ubugeeei-prod/ox-content/blob/main/npm/vite-plugin-ox-content/src/types.ts#L1822-L1829" target="_blank" rel="noopener noreferrer">View source<span class="ox-api-entry__source-icon" aria-hidden="true"></span></a></p>
 <div class="ox-api-entry__section ox-api-entry__section--members">
 <h4>Members</h4>
 <div class="ox-api-entry__member-group">
@@ -1552,7 +1552,7 @@
 <h4>Signature</h4>
 <pre><code class="language-typescript">export interface GeneratedDocsData</code></pre>
 </div>
-<p class="ox-api-entry__source"><a class="ox-api-entry__source-link" href="https://github.com/ubugeeei-prod/ox-content/blob/main/npm/vite-plugin-ox-content/src/types.ts#L2851-L2863" target="_blank" rel="noopener noreferrer">View source<span class="ox-api-entry__source-icon" aria-hidden="true"></span></a></p>
+<p class="ox-api-entry__source"><a class="ox-api-entry__source-link" href="https://github.com/ubugeeei-prod/ox-content/blob/main/npm/vite-plugin-ox-content/src/types.ts#L2862-L2874" target="_blank" rel="noopener noreferrer">View source<span class="ox-api-entry__source-icon" aria-hidden="true"></span></a></p>
 <div class="ox-api-entry__section ox-api-entry__section--members">
 <h4>Members</h4>
 <div class="ox-api-entry__member-group">
@@ -1783,7 +1783,7 @@
 <h4>Signature</h4>
 <pre><code class="language-typescript">export interface I18nOptions</code></pre>
 </div>
-<p class="ox-api-entry__source"><a class="ox-api-entry__source-link" href="https://github.com/ubugeeei-prod/ox-content/blob/main/npm/vite-plugin-ox-content/src/types.ts#L3225-L3293" target="_blank" rel="noopener noreferrer">View source<span class="ox-api-entry__source-icon" aria-hidden="true"></span></a></p>
+<p class="ox-api-entry__source"><a class="ox-api-entry__source-link" href="https://github.com/ubugeeei-prod/ox-content/blob/main/npm/vite-plugin-ox-content/src/types.ts#L3236-L3304" target="_blank" rel="noopener noreferrer">View source<span class="ox-api-entry__source-icon" aria-hidden="true"></span></a></p>
 <div class="ox-api-entry__section ox-api-entry__section--members">
 <h4>Members</h4>
 <div class="ox-api-entry__member-group">
@@ -1843,7 +1843,7 @@
 <h4>Signature</h4>
 <pre><code class="language-typescript">export interface ImageOptions</code></pre>
 </div>
-<p class="ox-api-entry__source"><a class="ox-api-entry__source-link" href="https://github.com/ubugeeei-prod/ox-content/blob/main/npm/vite-plugin-ox-content/src/types.ts#L1594-L1601" target="_blank" rel="noopener noreferrer">View source<span class="ox-api-entry__source-icon" aria-hidden="true"></span></a></p>
+<p class="ox-api-entry__source"><a class="ox-api-entry__source-link" href="https://github.com/ubugeeei-prod/ox-content/blob/main/npm/vite-plugin-ox-content/src/types.ts#L1605-L1612" target="_blank" rel="noopener noreferrer">View source<span class="ox-api-entry__source-icon" aria-hidden="true"></span></a></p>
 <div class="ox-api-entry__section ox-api-entry__section--members">
 <h4>Members</h4>
 <div class="ox-api-entry__member-group">
@@ -1874,7 +1874,7 @@
 <h4>Signature</h4>
 <pre><code class="language-typescript">export interface IncludeOptions</code></pre>
 </div>
-<p class="ox-api-entry__source"><a class="ox-api-entry__source-link" href="https://github.com/ubugeeei-prod/ox-content/blob/main/npm/vite-plugin-ox-content/src/types.ts#L1751-L1760" target="_blank" rel="noopener noreferrer">View source<span class="ox-api-entry__source-icon" aria-hidden="true"></span></a></p>
+<p class="ox-api-entry__source"><a class="ox-api-entry__source-link" href="https://github.com/ubugeeei-prod/ox-content/blob/main/npm/vite-plugin-ox-content/src/types.ts#L1762-L1771" target="_blank" rel="noopener noreferrer">View source<span class="ox-api-entry__source-icon" aria-hidden="true"></span></a></p>
 <div class="ox-api-entry__section ox-api-entry__section--members">
 <h4>Members</h4>
 <div class="ox-api-entry__member-group">
@@ -1905,7 +1905,7 @@
 <h4>Signature</h4>
 <pre><code class="language-typescript">export interface LocaleConfig</code></pre>
 </div>
-<p class="ox-api-entry__source"><a class="ox-api-entry__source-link" href="https://github.com/ubugeeei-prod/ox-content/blob/main/npm/vite-plugin-ox-content/src/types.ts#L3203-L3216" target="_blank" rel="noopener noreferrer">View source<span class="ox-api-entry__source-icon" aria-hidden="true"></span></a></p>
+<p class="ox-api-entry__source"><a class="ox-api-entry__source-link" href="https://github.com/ubugeeei-prod/ox-content/blob/main/npm/vite-plugin-ox-content/src/types.ts#L3214-L3227" target="_blank" rel="noopener noreferrer">View source<span class="ox-api-entry__source-icon" aria-hidden="true"></span></a></p>
 <div class="ox-api-entry__section ox-api-entry__section--members">
 <h4>Members</h4>
 <div class="ox-api-entry__member-group">
@@ -1945,7 +1945,7 @@
 <h4>Signature</h4>
 <pre><code class="language-typescript">export interface MarkdownNode</code></pre>
 </div>
-<p class="ox-api-entry__source"><a class="ox-api-entry__source-link" href="https://github.com/ubugeeei-prod/ox-content/blob/main/npm/vite-plugin-ox-content/src/types.ts#L2237-L2242" target="_blank" rel="noopener noreferrer">View source<span class="ox-api-entry__source-icon" aria-hidden="true"></span></a></p>
+<p class="ox-api-entry__source"><a class="ox-api-entry__source-link" href="https://github.com/ubugeeei-prod/ox-content/blob/main/npm/vite-plugin-ox-content/src/types.ts#L2248-L2253" target="_blank" rel="noopener noreferrer">View source<span class="ox-api-entry__source-icon" aria-hidden="true"></span></a></p>
 <div class="ox-api-entry__section ox-api-entry__section--members">
 <h4>Members</h4>
 <div class="ox-api-entry__member-group ox-api-entry__member-group--indexable">
@@ -1992,7 +1992,7 @@
 <h4>Signature</h4>
 <pre><code class="language-typescript">export interface MarkdownTransformer</code></pre>
 </div>
-<p class="ox-api-entry__source"><a class="ox-api-entry__source-link" href="https://github.com/ubugeeei-prod/ox-content/blob/main/npm/vite-plugin-ox-content/src/types.ts#L2202-L2212" target="_blank" rel="noopener noreferrer">View source<span class="ox-api-entry__source-icon" aria-hidden="true"></span></a></p>
+<p class="ox-api-entry__source"><a class="ox-api-entry__source-link" href="https://github.com/ubugeeei-prod/ox-content/blob/main/npm/vite-plugin-ox-content/src/types.ts#L2213-L2223" target="_blank" rel="noopener noreferrer">View source<span class="ox-api-entry__source-icon" aria-hidden="true"></span></a></p>
 <div class="ox-api-entry__section ox-api-entry__section--members">
 <h4>Members</h4>
 <div class="ox-api-entry__member-group">
@@ -2027,7 +2027,7 @@
 <h4>Signature</h4>
 <pre><code class="language-typescript">export interface MathOptions</code></pre>
 </div>
-<p class="ox-api-entry__source"><a class="ox-api-entry__source-link" href="https://github.com/ubugeeei-prod/ox-content/blob/main/npm/vite-plugin-ox-content/src/types.ts#L1672-L1679" target="_blank" rel="noopener noreferrer">View source<span class="ox-api-entry__source-icon" aria-hidden="true"></span></a></p>
+<p class="ox-api-entry__source"><a class="ox-api-entry__source-link" href="https://github.com/ubugeeei-prod/ox-content/blob/main/npm/vite-plugin-ox-content/src/types.ts#L1683-L1690" target="_blank" rel="noopener noreferrer">View source<span class="ox-api-entry__source-icon" aria-hidden="true"></span></a></p>
 <div class="ox-api-entry__section ox-api-entry__section--members">
 <h4>Members</h4>
 <div class="ox-api-entry__member-group">
@@ -2057,7 +2057,7 @@
 <h4>Signature</h4>
 <pre><code class="language-typescript">export interface NavItem</code></pre>
 </div>
-<p class="ox-api-entry__source"><a class="ox-api-entry__source-link" href="https://github.com/ubugeeei-prod/ox-content/blob/main/npm/vite-plugin-ox-content/src/types.ts#L2868-L2883" target="_blank" rel="noopener noreferrer">View source<span class="ox-api-entry__source-icon" aria-hidden="true"></span></a></p>
+<p class="ox-api-entry__source"><a class="ox-api-entry__source-link" href="https://github.com/ubugeeei-prod/ox-content/blob/main/npm/vite-plugin-ox-content/src/types.ts#L2879-L2894" target="_blank" rel="noopener noreferrer">View source<span class="ox-api-entry__source-icon" aria-hidden="true"></span></a></p>
 <div class="ox-api-entry__section ox-api-entry__section--members">
 <h4>Members</h4>
 <div class="ox-api-entry__member-group">
@@ -2132,7 +2132,7 @@
 <h4>Signature</h4>
 <pre><code class="language-typescript">export interface OgImageOptions</code></pre>
 </div>
-<p class="ox-api-entry__source"><a class="ox-api-entry__source-link" href="https://github.com/ubugeeei-prod/ox-content/blob/main/npm/vite-plugin-ox-content/src/types.ts#L2142-L2185" target="_blank" rel="noopener noreferrer">View source<span class="ox-api-entry__source-icon" aria-hidden="true"></span></a></p>
+<p class="ox-api-entry__source"><a class="ox-api-entry__source-link" href="https://github.com/ubugeeei-prod/ox-content/blob/main/npm/vite-plugin-ox-content/src/types.ts#L2153-L2196" target="_blank" rel="noopener noreferrer">View source<span class="ox-api-entry__source-icon" aria-hidden="true"></span></a></p>
 <div class="ox-api-entry__section ox-api-entry__section--members">
 <h4>Members</h4>
 <div class="ox-api-entry__member-group">
@@ -2178,7 +2178,7 @@
 </details>
 
 <details id="oxcontentoptions" class="ox-api-entry">
-  <summary><span class="ox-api-entry__kind">interface</span><span class="ox-api-entry__summary-main"><code class="ox-api-entry__signature ox-api-entry__signature--highlighted language-typescript">OxContentOptions</code><span class="ox-api-entry__description">Options for the core oxContent() Vite plugin. The top-level options describe wh…</span><span class="ox-api-entry__meta"><span class="ox-api-badge">52 members</span></span></span></summary>
+  <summary><span class="ox-api-entry__kind">interface</span><span class="ox-api-entry__summary-main"><code class="ox-api-entry__signature ox-api-entry__signature--highlighted language-typescript">OxContentOptions</code><span class="ox-api-entry__description">Options for the core oxContent() Vite plugin. The top-level options describe wh…</span><span class="ox-api-entry__meta"><span class="ox-api-badge">53 members</span></span></span></summary>
   <div class="ox-api-entry__body">
 <div class="ox-api-entry__prose">
 <p>Options for the core <code>oxContent()</code> Vite plugin.</p>
@@ -2193,7 +2193,7 @@
 <h4>Signature</h4>
 <pre><code class="language-typescript">export interface OxContentOptions</code></pre>
 </div>
-<p class="ox-api-entry__source"><a class="ox-api-entry__source-link" href="https://github.com/ubugeeei-prod/ox-content/blob/main/npm/vite-plugin-ox-content/src/types.ts#L893-L1388" target="_blank" rel="noopener noreferrer">View source<span class="ox-api-entry__source-icon" aria-hidden="true"></span></a></p>
+<p class="ox-api-entry__source"><a class="ox-api-entry__source-link" href="https://github.com/ubugeeei-prod/ox-content/blob/main/npm/vite-plugin-ox-content/src/types.ts#L893-L1398" target="_blank" rel="noopener noreferrer">View source<span class="ox-api-entry__source-icon" aria-hidden="true"></span></a></p>
 <div class="ox-api-entry__section ox-api-entry__section--members">
 <h4>Members</h4>
 <div class="ox-api-entry__member-group">
@@ -2346,6 +2346,11 @@
   <td><code class="ox-api-entry__member-type language-typescript">boolean | <a href="#mathoptions">MathOptions</a></code></td>
   <td><div class="ox-api-entry__member-description">Enable <code>$…$</code> inline and <code>$$…$$</code> block math.<br><br>Currency-like <code>$</code> runs, fenced code, indented code, and inline code stay<br>literal. TeX is HTML-escaped into accessible MathML <code>mtext</code>.</div><div class="ox-api-entry__member-default"><span>Default</span> <code class="language-typescript">false</code></div></td>
 </tr>
+<tr id="oxcontentoptions-mdx">
+  <td><code>mdx</code><span class="ox-api-badge">optional</span></td>
+  <td><code class="ox-api-entry__member-type language-typescript">boolean</code></td>
+  <td><div class="ox-api-entry__member-description">Enable MDX JSX, ESM, and expressions.<br><br>When omitted, MDX is enabled for <code>.mdx</code> files only. Set <code>true</code> to enable<br>it for every configured extension or <code>false</code> to keep <code>.mdx</code> on the plain<br>Markdown path.</div><div class="ox-api-entry__member-default"><span>Default</span> <code class="language-typescript">inferred from the source extension</code></div></td>
+</tr>
 <tr id="oxcontentoptions-mermaid">
   <td><code>mermaid</code><span class="ox-api-badge">optional</span></td>
   <td><code class="ox-api-entry__member-type language-typescript">boolean</code></td>
@@ -2478,7 +2483,7 @@
 <h4>Signature</h4>
 <pre><code class="language-typescript">export interface ParamDoc</code></pre>
 </div>
-<p class="ox-api-entry__source"><a class="ox-api-entry__source-link" href="https://github.com/ubugeeei-prod/ox-content/blob/main/npm/vite-plugin-ox-content/src/types.ts#L2760-L2775" target="_blank" rel="noopener noreferrer">View source<span class="ox-api-entry__source-icon" aria-hidden="true"></span></a></p>
+<p class="ox-api-entry__source"><a class="ox-api-entry__source-link" href="https://github.com/ubugeeei-prod/ox-content/blob/main/npm/vite-plugin-ox-content/src/types.ts#L2771-L2786" target="_blank" rel="noopener noreferrer">View source<span class="ox-api-entry__source-icon" aria-hidden="true"></span></a></p>
 <div class="ox-api-entry__section ox-api-entry__section--members">
 <h4>Members</h4>
 <div class="ox-api-entry__member-group">
@@ -2705,7 +2710,7 @@
 <h4>Signature</h4>
 <pre><code class="language-typescript">export interface ResolvedAttrsOptions</code></pre>
 </div>
-<p class="ox-api-entry__source"><a class="ox-api-entry__source-link" href="https://github.com/ubugeeei-prod/ox-content/blob/main/npm/vite-plugin-ox-content/src/types.ts#L1710-L1712" target="_blank" rel="noopener noreferrer">View source<span class="ox-api-entry__source-icon" aria-hidden="true"></span></a></p>
+<p class="ox-api-entry__source"><a class="ox-api-entry__source-link" href="https://github.com/ubugeeei-prod/ox-content/blob/main/npm/vite-plugin-ox-content/src/types.ts#L1721-L1723" target="_blank" rel="noopener noreferrer">View source<span class="ox-api-entry__source-icon" aria-hidden="true"></span></a></p>
 <div class="ox-api-entry__section ox-api-entry__section--members">
 <h4>Members</h4>
 <div class="ox-api-entry__member-group">
@@ -2735,7 +2740,7 @@
 <h4>Signature</h4>
 <pre><code class="language-typescript">export interface ResolvedBadgeOptions</code></pre>
 </div>
-<p class="ox-api-entry__source"><a class="ox-api-entry__source-link" href="https://github.com/ubugeeei-prod/ox-content/blob/main/npm/vite-plugin-ox-content/src/types.ts#L1550-L1552" target="_blank" rel="noopener noreferrer">View source<span class="ox-api-entry__source-icon" aria-hidden="true"></span></a></p>
+<p class="ox-api-entry__source"><a class="ox-api-entry__source-link" href="https://github.com/ubugeeei-prod/ox-content/blob/main/npm/vite-plugin-ox-content/src/types.ts#L1561-L1563" target="_blank" rel="noopener noreferrer">View source<span class="ox-api-entry__source-icon" aria-hidden="true"></span></a></p>
 <div class="ox-api-entry__section ox-api-entry__section--members">
 <h4>Members</h4>
 <div class="ox-api-entry__member-group">
@@ -2765,7 +2770,7 @@
 <h4>Signature</h4>
 <pre><code class="language-typescript">export interface ResolvedBuiltinEmbedOptions</code></pre>
 </div>
-<p class="ox-api-entry__source"><a class="ox-api-entry__source-link" href="https://github.com/ubugeeei-prod/ox-content/blob/main/npm/vite-plugin-ox-content/src/types.ts#L1524-L1533" target="_blank" rel="noopener noreferrer">View source<span class="ox-api-entry__source-icon" aria-hidden="true"></span></a></p>
+<p class="ox-api-entry__source"><a class="ox-api-entry__source-link" href="https://github.com/ubugeeei-prod/ox-content/blob/main/npm/vite-plugin-ox-content/src/types.ts#L1535-L1544" target="_blank" rel="noopener noreferrer">View source<span class="ox-api-entry__source-icon" aria-hidden="true"></span></a></p>
 <div class="ox-api-entry__section ox-api-entry__section--members">
 <h4>Members</h4>
 <div class="ox-api-entry__member-group">
@@ -2830,7 +2835,7 @@
 <h4>Signature</h4>
 <pre><code class="language-typescript">export interface ResolvedCardOptions</code></pre>
 </div>
-<p class="ox-api-entry__source"><a class="ox-api-entry__source-link" href="https://github.com/ubugeeei-prod/ox-content/blob/main/npm/vite-plugin-ox-content/src/types.ts#L1785-L1787" target="_blank" rel="noopener noreferrer">View source<span class="ox-api-entry__source-icon" aria-hidden="true"></span></a></p>
+<p class="ox-api-entry__source"><a class="ox-api-entry__source-link" href="https://github.com/ubugeeei-prod/ox-content/blob/main/npm/vite-plugin-ox-content/src/types.ts#L1796-L1798" target="_blank" rel="noopener noreferrer">View source<span class="ox-api-entry__source-icon" aria-hidden="true"></span></a></p>
 <div class="ox-api-entry__section ox-api-entry__section--members">
 <h4>Members</h4>
 <div class="ox-api-entry__member-group">
@@ -2890,7 +2895,7 @@
 <h4>Signature</h4>
 <pre><code class="language-typescript">export interface ResolvedCodeAnnotationsOptions</code></pre>
 </div>
-<p class="ox-api-entry__source"><a class="ox-api-entry__source-link" href="https://github.com/ubugeeei-prod/ox-content/blob/main/npm/vite-plugin-ox-content/src/types.ts#L2131-L2136" target="_blank" rel="noopener noreferrer">View source<span class="ox-api-entry__source-icon" aria-hidden="true"></span></a></p>
+<p class="ox-api-entry__source"><a class="ox-api-entry__source-link" href="https://github.com/ubugeeei-prod/ox-content/blob/main/npm/vite-plugin-ox-content/src/types.ts#L2142-L2147" target="_blank" rel="noopener noreferrer">View source<span class="ox-api-entry__source-icon" aria-hidden="true"></span></a></p>
 <div class="ox-api-entry__section ox-api-entry__section--members">
 <h4>Members</h4>
 <div class="ox-api-entry__member-group">
@@ -2935,7 +2940,7 @@
 <h4>Signature</h4>
 <pre><code class="language-typescript">export interface ResolvedCodeBlockLintOptions</code></pre>
 </div>
-<p class="ox-api-entry__source"><a class="ox-api-entry__source-link" href="https://github.com/ubugeeei-prod/ox-content/blob/main/npm/vite-plugin-ox-content/src/types.ts#L1982-L1988" target="_blank" rel="noopener noreferrer">View source<span class="ox-api-entry__source-icon" aria-hidden="true"></span></a></p>
+<p class="ox-api-entry__source"><a class="ox-api-entry__source-link" href="https://github.com/ubugeeei-prod/ox-content/blob/main/npm/vite-plugin-ox-content/src/types.ts#L1993-L1999" target="_blank" rel="noopener noreferrer">View source<span class="ox-api-entry__source-icon" aria-hidden="true"></span></a></p>
 <div class="ox-api-entry__section ox-api-entry__section--members">
 <h4>Members</h4>
 <div class="ox-api-entry__member-group">
@@ -2985,7 +2990,7 @@
 <h4>Signature</h4>
 <pre><code class="language-typescript">export interface ResolvedCodeBlockTypecheckOptions</code></pre>
 </div>
-<p class="ox-api-entry__source"><a class="ox-api-entry__source-link" href="https://github.com/ubugeeei-prod/ox-content/blob/main/npm/vite-plugin-ox-content/src/types.ts#L2039-L2045" target="_blank" rel="noopener noreferrer">View source<span class="ox-api-entry__source-icon" aria-hidden="true"></span></a></p>
+<p class="ox-api-entry__source"><a class="ox-api-entry__source-link" href="https://github.com/ubugeeei-prod/ox-content/blob/main/npm/vite-plugin-ox-content/src/types.ts#L2050-L2056" target="_blank" rel="noopener noreferrer">View source<span class="ox-api-entry__source-icon" aria-hidden="true"></span></a></p>
 <div class="ox-api-entry__section ox-api-entry__section--members">
 <h4>Members</h4>
 <div class="ox-api-entry__member-group">
@@ -3035,7 +3040,7 @@
 <h4>Signature</h4>
 <pre><code class="language-typescript">export interface ResolvedCodeImportOptions</code></pre>
 </div>
-<p class="ox-api-entry__source"><a class="ox-api-entry__source-link" href="https://github.com/ubugeeei-prod/ox-content/blob/main/npm/vite-plugin-ox-content/src/types.ts#L1740-L1743" target="_blank" rel="noopener noreferrer">View source<span class="ox-api-entry__source-icon" aria-hidden="true"></span></a></p>
+<p class="ox-api-entry__source"><a class="ox-api-entry__source-link" href="https://github.com/ubugeeei-prod/ox-content/blob/main/npm/vite-plugin-ox-content/src/types.ts#L1751-L1754" target="_blank" rel="noopener noreferrer">View source<span class="ox-api-entry__source-icon" aria-hidden="true"></span></a></p>
 <div class="ox-api-entry__section ox-api-entry__section--members">
 <h4>Members</h4>
 <div class="ox-api-entry__member-group">
@@ -3070,7 +3075,7 @@
 <h4>Signature</h4>
 <pre><code class="language-typescript">export interface ResolvedCollectionOptions</code></pre>
 </div>
-<p class="ox-api-entry__source"><a class="ox-api-entry__source-link" href="https://github.com/ubugeeei-prod/ox-content/blob/main/npm/vite-plugin-ox-content/src/types.ts#L2932-L2936" target="_blank" rel="noopener noreferrer">View source<span class="ox-api-entry__source-icon" aria-hidden="true"></span></a></p>
+<p class="ox-api-entry__source"><a class="ox-api-entry__source-link" href="https://github.com/ubugeeei-prod/ox-content/blob/main/npm/vite-plugin-ox-content/src/types.ts#L2943-L2947" target="_blank" rel="noopener noreferrer">View source<span class="ox-api-entry__source-icon" aria-hidden="true"></span></a></p>
 <div class="ox-api-entry__section ox-api-entry__section--members">
 <h4>Members</h4>
 <div class="ox-api-entry__member-group">
@@ -3110,7 +3115,7 @@
 <h4>Signature</h4>
 <pre><code class="language-typescript">export interface ResolvedCollectionsOptions</code></pre>
 </div>
-<p class="ox-api-entry__source"><a class="ox-api-entry__source-link" href="https://github.com/ubugeeei-prod/ox-content/blob/main/npm/vite-plugin-ox-content/src/types.ts#L2941-L2944" target="_blank" rel="noopener noreferrer">View source<span class="ox-api-entry__source-icon" aria-hidden="true"></span></a></p>
+<p class="ox-api-entry__source"><a class="ox-api-entry__source-link" href="https://github.com/ubugeeei-prod/ox-content/blob/main/npm/vite-plugin-ox-content/src/types.ts#L2952-L2955" target="_blank" rel="noopener noreferrer">View source<span class="ox-api-entry__source-icon" aria-hidden="true"></span></a></p>
 <div class="ox-api-entry__section ox-api-entry__section--members">
 <h4>Members</h4>
 <div class="ox-api-entry__member-group">
@@ -3145,7 +3150,7 @@
 <h4>Signature</h4>
 <pre><code class="language-typescript">export interface ResolvedContainerOptions</code></pre>
 </div>
-<p class="ox-api-entry__source"><a class="ox-api-entry__source-link" href="https://github.com/ubugeeei-prod/ox-content/blob/main/npm/vite-plugin-ox-content/src/types.ts#L1586-L1589" target="_blank" rel="noopener noreferrer">View source<span class="ox-api-entry__source-icon" aria-hidden="true"></span></a></p>
+<p class="ox-api-entry__source"><a class="ox-api-entry__source-link" href="https://github.com/ubugeeei-prod/ox-content/blob/main/npm/vite-plugin-ox-content/src/types.ts#L1597-L1600" target="_blank" rel="noopener noreferrer">View source<span class="ox-api-entry__source-icon" aria-hidden="true"></span></a></p>
 <div class="ox-api-entry__section ox-api-entry__section--members">
 <h4>Members</h4>
 <div class="ox-api-entry__member-group">
@@ -3180,7 +3185,7 @@
 <h4>Signature</h4>
 <pre><code class="language-typescript">export interface ResolvedDocsEntryPoint</code></pre>
 </div>
-<p class="ox-api-entry__source"><a class="ox-api-entry__source-link" href="https://github.com/ubugeeei-prod/ox-content/blob/main/npm/vite-plugin-ox-content/src/types.ts#L2333-L2336" target="_blank" rel="noopener noreferrer">View source<span class="ox-api-entry__source-icon" aria-hidden="true"></span></a></p>
+<p class="ox-api-entry__source"><a class="ox-api-entry__source-link" href="https://github.com/ubugeeei-prod/ox-content/blob/main/npm/vite-plugin-ox-content/src/types.ts#L2344-L2347" target="_blank" rel="noopener noreferrer">View source<span class="ox-api-entry__source-icon" aria-hidden="true"></span></a></p>
 <div class="ox-api-entry__section ox-api-entry__section--members">
 <h4>Members</h4>
 <div class="ox-api-entry__member-group">
@@ -3215,7 +3220,7 @@
 <h4>Signature</h4>
 <pre><code class="language-typescript">export interface ResolvedDocsOptions</code></pre>
 </div>
-<p class="ox-api-entry__source"><a class="ox-api-entry__source-link" href="https://github.com/ubugeeei-prod/ox-content/blob/main/npm/vite-plugin-ox-content/src/types.ts#L2617-L2651" target="_blank" rel="noopener noreferrer">View source<span class="ox-api-entry__source-icon" aria-hidden="true"></span></a></p>
+<p class="ox-api-entry__source"><a class="ox-api-entry__source-link" href="https://github.com/ubugeeei-prod/ox-content/blob/main/npm/vite-plugin-ox-content/src/types.ts#L2628-L2662" target="_blank" rel="noopener noreferrer">View source<span class="ox-api-entry__source-icon" aria-hidden="true"></span></a></p>
 <div class="ox-api-entry__section ox-api-entry__section--members">
 <h4>Members</h4>
 <div class="ox-api-entry__member-group">
@@ -3405,7 +3410,7 @@
 <h4>Signature</h4>
 <pre><code class="language-typescript">export interface ResolvedDocsTestOptions</code></pre>
 </div>
-<p class="ox-api-entry__source"><a class="ox-api-entry__source-link" href="https://github.com/ubugeeei-prod/ox-content/blob/main/npm/vite-plugin-ox-content/src/types.ts#L2077-L2081" target="_blank" rel="noopener noreferrer">View source<span class="ox-api-entry__source-icon" aria-hidden="true"></span></a></p>
+<p class="ox-api-entry__source"><a class="ox-api-entry__source-link" href="https://github.com/ubugeeei-prod/ox-content/blob/main/npm/vite-plugin-ox-content/src/types.ts#L2088-L2092" target="_blank" rel="noopener noreferrer">View source<span class="ox-api-entry__source-icon" aria-hidden="true"></span></a></p>
 <div class="ox-api-entry__section ox-api-entry__section--members">
 <h4>Members</h4>
 <div class="ox-api-entry__member-group">
@@ -3445,7 +3450,7 @@
 <h4>Signature</h4>
 <pre><code class="language-typescript">export interface ResolvedEditThisPageOptions</code></pre>
 </div>
-<p class="ox-api-entry__source"><a class="ox-api-entry__source-link" href="https://github.com/ubugeeei-prod/ox-content/blob/main/npm/vite-plugin-ox-content/src/types.ts#L1925-L1931" target="_blank" rel="noopener noreferrer">View source<span class="ox-api-entry__source-icon" aria-hidden="true"></span></a></p>
+<p class="ox-api-entry__source"><a class="ox-api-entry__source-link" href="https://github.com/ubugeeei-prod/ox-content/blob/main/npm/vite-plugin-ox-content/src/types.ts#L1936-L1942" target="_blank" rel="noopener noreferrer">View source<span class="ox-api-entry__source-icon" aria-hidden="true"></span></a></p>
 <div class="ox-api-entry__section ox-api-entry__section--members">
 <h4>Members</h4>
 <div class="ox-api-entry__member-group">
@@ -3495,7 +3500,7 @@
 <h4>Signature</h4>
 <pre><code class="language-typescript">export interface ResolvedEmojiShortcodeOptions</code></pre>
 </div>
-<p class="ox-api-entry__source"><a class="ox-api-entry__source-link" href="https://github.com/ubugeeei-prod/ox-content/blob/main/npm/vite-plugin-ox-content/src/types.ts#L1664-L1667" target="_blank" rel="noopener noreferrer">View source<span class="ox-api-entry__source-icon" aria-hidden="true"></span></a></p>
+<p class="ox-api-entry__source"><a class="ox-api-entry__source-link" href="https://github.com/ubugeeei-prod/ox-content/blob/main/npm/vite-plugin-ox-content/src/types.ts#L1675-L1678" target="_blank" rel="noopener noreferrer">View source<span class="ox-api-entry__source-icon" aria-hidden="true"></span></a></p>
 <div class="ox-api-entry__section ox-api-entry__section--members">
 <h4>Members</h4>
 <div class="ox-api-entry__member-group">
@@ -3580,7 +3585,7 @@
 <h4>Signature</h4>
 <pre><code class="language-typescript">export interface ResolvedFileTreeOptions</code></pre>
 </div>
-<p class="ox-api-entry__source"><a class="ox-api-entry__source-link" href="https://github.com/ubugeeei-prod/ox-content/blob/main/npm/vite-plugin-ox-content/src/types.ts#L1823-L1825" target="_blank" rel="noopener noreferrer">View source<span class="ox-api-entry__source-icon" aria-hidden="true"></span></a></p>
+<p class="ox-api-entry__source"><a class="ox-api-entry__source-link" href="https://github.com/ubugeeei-prod/ox-content/blob/main/npm/vite-plugin-ox-content/src/types.ts#L1834-L1836" target="_blank" rel="noopener noreferrer">View source<span class="ox-api-entry__source-icon" aria-hidden="true"></span></a></p>
 <div class="ox-api-entry__section ox-api-entry__section--members">
 <h4>Members</h4>
 <div class="ox-api-entry__member-group">
@@ -3610,7 +3615,7 @@
 <h4>Signature</h4>
 <pre><code class="language-typescript">export interface ResolvedI18nOptions</code></pre>
 </div>
-<p class="ox-api-entry__source"><a class="ox-api-entry__source-link" href="https://github.com/ubugeeei-prod/ox-content/blob/main/npm/vite-plugin-ox-content/src/types.ts#L3298-L3306" target="_blank" rel="noopener noreferrer">View source<span class="ox-api-entry__source-icon" aria-hidden="true"></span></a></p>
+<p class="ox-api-entry__source"><a class="ox-api-entry__source-link" href="https://github.com/ubugeeei-prod/ox-content/blob/main/npm/vite-plugin-ox-content/src/types.ts#L3309-L3317" target="_blank" rel="noopener noreferrer">View source<span class="ox-api-entry__source-icon" aria-hidden="true"></span></a></p>
 <div class="ox-api-entry__section ox-api-entry__section--members">
 <h4>Members</h4>
 <div class="ox-api-entry__member-group">
@@ -3670,7 +3675,7 @@
 <h4>Signature</h4>
 <pre><code class="language-typescript">export interface ResolvedImageOptions</code></pre>
 </div>
-<p class="ox-api-entry__source"><a class="ox-api-entry__source-link" href="https://github.com/ubugeeei-prod/ox-content/blob/main/npm/vite-plugin-ox-content/src/types.ts#L1606-L1609" target="_blank" rel="noopener noreferrer">View source<span class="ox-api-entry__source-icon" aria-hidden="true"></span></a></p>
+<p class="ox-api-entry__source"><a class="ox-api-entry__source-link" href="https://github.com/ubugeeei-prod/ox-content/blob/main/npm/vite-plugin-ox-content/src/types.ts#L1617-L1620" target="_blank" rel="noopener noreferrer">View source<span class="ox-api-entry__source-icon" aria-hidden="true"></span></a></p>
 <div class="ox-api-entry__section ox-api-entry__section--members">
 <h4>Members</h4>
 <div class="ox-api-entry__member-group">
@@ -3705,7 +3710,7 @@
 <h4>Signature</h4>
 <pre><code class="language-typescript">export interface ResolvedIncludeOptions</code></pre>
 </div>
-<p class="ox-api-entry__source"><a class="ox-api-entry__source-link" href="https://github.com/ubugeeei-prod/ox-content/blob/main/npm/vite-plugin-ox-content/src/types.ts#L1765-L1768" target="_blank" rel="noopener noreferrer">View source<span class="ox-api-entry__source-icon" aria-hidden="true"></span></a></p>
+<p class="ox-api-entry__source"><a class="ox-api-entry__source-link" href="https://github.com/ubugeeei-prod/ox-content/blob/main/npm/vite-plugin-ox-content/src/types.ts#L1776-L1779" target="_blank" rel="noopener noreferrer">View source<span class="ox-api-entry__source-icon" aria-hidden="true"></span></a></p>
 <div class="ox-api-entry__section ox-api-entry__section--members">
 <h4>Members</h4>
 <div class="ox-api-entry__member-group">
@@ -3740,7 +3745,7 @@
 <h4>Signature</h4>
 <pre><code class="language-typescript">export interface ResolvedMathOptions</code></pre>
 </div>
-<p class="ox-api-entry__source"><a class="ox-api-entry__source-link" href="https://github.com/ubugeeei-prod/ox-content/blob/main/npm/vite-plugin-ox-content/src/types.ts#L1684-L1686" target="_blank" rel="noopener noreferrer">View source<span class="ox-api-entry__source-icon" aria-hidden="true"></span></a></p>
+<p class="ox-api-entry__source"><a class="ox-api-entry__source-link" href="https://github.com/ubugeeei-prod/ox-content/blob/main/npm/vite-plugin-ox-content/src/types.ts#L1695-L1697" target="_blank" rel="noopener noreferrer">View source<span class="ox-api-entry__source-icon" aria-hidden="true"></span></a></p>
 <div class="ox-api-entry__section ox-api-entry__section--members">
 <h4>Members</h4>
 <div class="ox-api-entry__member-group">
@@ -3810,7 +3815,7 @@
 <h4>Signature</h4>
 <pre><code class="language-typescript">export interface ResolvedOgImageOptions</code></pre>
 </div>
-<p class="ox-api-entry__source"><a class="ox-api-entry__source-link" href="https://github.com/ubugeeei-prod/ox-content/blob/main/npm/vite-plugin-ox-content/src/types.ts#L2190-L2197" target="_blank" rel="noopener noreferrer">View source<span class="ox-api-entry__source-icon" aria-hidden="true"></span></a></p>
+<p class="ox-api-entry__source"><a class="ox-api-entry__source-link" href="https://github.com/ubugeeei-prod/ox-content/blob/main/npm/vite-plugin-ox-content/src/types.ts#L2201-L2208" target="_blank" rel="noopener noreferrer">View source<span class="ox-api-entry__source-icon" aria-hidden="true"></span></a></p>
 <div class="ox-api-entry__section ox-api-entry__section--members">
 <h4>Members</h4>
 <div class="ox-api-entry__member-group">
@@ -3856,7 +3861,7 @@
 </details>
 
 <details id="resolvedoptions" class="ox-api-entry">
-  <summary><span class="ox-api-entry__kind">interface</span><span class="ox-api-entry__summary-main"><code class="ox-api-entry__signature ox-api-entry__signature--highlighted language-typescript">ResolvedOptions</code><span class="ox-api-entry__description">Resolved options with all defaults applied.</span><span class="ox-api-entry__meta"><span class="ox-api-badge">52 members</span></span></span></summary>
+  <summary><span class="ox-api-entry__kind">interface</span><span class="ox-api-entry__summary-main"><code class="ox-api-entry__signature ox-api-entry__signature--highlighted language-typescript">ResolvedOptions</code><span class="ox-api-entry__description">Resolved options with all defaults applied.</span><span class="ox-api-entry__meta"><span class="ox-api-badge">53 members</span></span></span></summary>
   <div class="ox-api-entry__body">
 <div class="ox-api-entry__prose">
 <p>Resolved options with all defaults applied.</p>
@@ -3865,7 +3870,7 @@
 <h4>Signature</h4>
 <pre><code class="language-typescript">export interface ResolvedOptions</code></pre>
 </div>
-<p class="ox-api-entry__source"><a class="ox-api-entry__source-link" href="https://github.com/ubugeeei-prod/ox-content/blob/main/npm/vite-plugin-ox-content/src/types.ts#L1393-L1446" target="_blank" rel="noopener noreferrer">View source<span class="ox-api-entry__source-icon" aria-hidden="true"></span></a></p>
+<p class="ox-api-entry__source"><a class="ox-api-entry__source-link" href="https://github.com/ubugeeei-prod/ox-content/blob/main/npm/vite-plugin-ox-content/src/types.ts#L1403-L1457" target="_blank" rel="noopener noreferrer">View source<span class="ox-api-entry__source-icon" aria-hidden="true"></span></a></p>
 <div class="ox-api-entry__section ox-api-entry__section--members">
 <h4>Members</h4>
 <div class="ox-api-entry__member-group">
@@ -4016,6 +4021,11 @@
 <tr id="resolvedoptions-math">
   <td><code>math</code></td>
   <td><code class="ox-api-entry__member-type language-typescript"><a href="#resolvedmathoptions">ResolvedMathOptions</a></code></td>
+  <td></td>
+</tr>
+<tr id="resolvedoptions-mdx">
+  <td><code>mdx</code><span class="ox-api-badge">optional</span></td>
+  <td><code class="ox-api-entry__member-type language-typescript">boolean</code></td>
   <td></td>
 </tr>
 <tr id="resolvedoptions-mermaid">
@@ -4289,7 +4299,7 @@
 <h4>Signature</h4>
 <pre><code class="language-typescript">export interface ResolvedSanitizeOptions</code></pre>
 </div>
-<p class="ox-api-entry__source"><a class="ox-api-entry__source-link" href="https://github.com/ubugeeei-prod/ox-content/blob/main/npm/vite-plugin-ox-content/src/types.ts#L1866-L1871" target="_blank" rel="noopener noreferrer">View source<span class="ox-api-entry__source-icon" aria-hidden="true"></span></a></p>
+<p class="ox-api-entry__source"><a class="ox-api-entry__source-link" href="https://github.com/ubugeeei-prod/ox-content/blob/main/npm/vite-plugin-ox-content/src/types.ts#L1877-L1882" target="_blank" rel="noopener noreferrer">View source<span class="ox-api-entry__source-icon" aria-hidden="true"></span></a></p>
 <div class="ox-api-entry__section ox-api-entry__section--members">
 <h4>Members</h4>
 <div class="ox-api-entry__member-group">
@@ -4334,7 +4344,7 @@
 <h4>Signature</h4>
 <pre><code class="language-typescript">export interface ResolvedSearchOptions</code></pre>
 </div>
-<p class="ox-api-entry__source"><a class="ox-api-entry__source-link" href="https://github.com/ubugeeei-prod/ox-content/blob/main/npm/vite-plugin-ox-content/src/types.ts#L3120-L3132" target="_blank" rel="noopener noreferrer">View source<span class="ox-api-entry__source-icon" aria-hidden="true"></span></a></p>
+<p class="ox-api-entry__source"><a class="ox-api-entry__source-link" href="https://github.com/ubugeeei-prod/ox-content/blob/main/npm/vite-plugin-ox-content/src/types.ts#L3131-L3143" target="_blank" rel="noopener noreferrer">View source<span class="ox-api-entry__source-icon" aria-hidden="true"></span></a></p>
 <div class="ox-api-entry__section ox-api-entry__section--members">
 <h4>Members</h4>
 <div class="ox-api-entry__member-group">
@@ -4599,7 +4609,7 @@
 <h4>Signature</h4>
 <pre><code class="language-typescript">export interface ResolvedStepsOptions</code></pre>
 </div>
-<p class="ox-api-entry__source"><a class="ox-api-entry__source-link" href="https://github.com/ubugeeei-prod/ox-content/blob/main/npm/vite-plugin-ox-content/src/types.ts#L1804-L1806" target="_blank" rel="noopener noreferrer">View source<span class="ox-api-entry__source-icon" aria-hidden="true"></span></a></p>
+<p class="ox-api-entry__source"><a class="ox-api-entry__source-link" href="https://github.com/ubugeeei-prod/ox-content/blob/main/npm/vite-plugin-ox-content/src/types.ts#L1815-L1817" target="_blank" rel="noopener noreferrer">View source<span class="ox-api-entry__source-icon" aria-hidden="true"></span></a></p>
 <div class="ox-api-entry__section ox-api-entry__section--members">
 <h4>Members</h4>
 <div class="ox-api-entry__member-group">
@@ -4804,7 +4814,7 @@
 <h4>Signature</h4>
 <pre><code class="language-typescript">export interface ResolvedWikiLinkOptions</code></pre>
 </div>
-<p class="ox-api-entry__source"><a class="ox-api-entry__source-link" href="https://github.com/ubugeeei-prod/ox-content/blob/main/npm/vite-plugin-ox-content/src/types.ts#L1633-L1636" target="_blank" rel="noopener noreferrer">View source<span class="ox-api-entry__source-icon" aria-hidden="true"></span></a></p>
+<p class="ox-api-entry__source"><a class="ox-api-entry__source-link" href="https://github.com/ubugeeei-prod/ox-content/blob/main/npm/vite-plugin-ox-content/src/types.ts#L1644-L1647" target="_blank" rel="noopener noreferrer">View source<span class="ox-api-entry__source-icon" aria-hidden="true"></span></a></p>
 <div class="ox-api-entry__section ox-api-entry__section--members">
 <h4>Members</h4>
 <div class="ox-api-entry__member-group">
@@ -4839,7 +4849,7 @@
 <h4>Signature</h4>
 <pre><code class="language-typescript">export interface ReturnDoc</code></pre>
 </div>
-<p class="ox-api-entry__source"><a class="ox-api-entry__source-link" href="https://github.com/ubugeeei-prod/ox-content/blob/main/npm/vite-plugin-ox-content/src/types.ts#L2780-L2786" target="_blank" rel="noopener noreferrer">View source<span class="ox-api-entry__source-icon" aria-hidden="true"></span></a></p>
+<p class="ox-api-entry__source"><a class="ox-api-entry__source-link" href="https://github.com/ubugeeei-prod/ox-content/blob/main/npm/vite-plugin-ox-content/src/types.ts#L2791-L2797" target="_blank" rel="noopener noreferrer">View source<span class="ox-api-entry__source-icon" aria-hidden="true"></span></a></p>
 <div class="ox-api-entry__section ox-api-entry__section--members">
 <h4>Members</h4>
 <div class="ox-api-entry__member-group">
@@ -4875,7 +4885,7 @@
 <h4>Signature</h4>
 <pre><code class="language-typescript">export interface SanitizeOptions</code></pre>
 </div>
-<p class="ox-api-entry__source"><a class="ox-api-entry__source-link" href="https://github.com/ubugeeei-prod/ox-content/blob/main/npm/vite-plugin-ox-content/src/types.ts#L1834-L1861" target="_blank" rel="noopener noreferrer">View source<span class="ox-api-entry__source-icon" aria-hidden="true"></span></a></p>
+<p class="ox-api-entry__source"><a class="ox-api-entry__source-link" href="https://github.com/ubugeeei-prod/ox-content/blob/main/npm/vite-plugin-ox-content/src/types.ts#L1845-L1872" target="_blank" rel="noopener noreferrer">View source<span class="ox-api-entry__source-icon" aria-hidden="true"></span></a></p>
 <div class="ox-api-entry__section ox-api-entry__section--members">
 <h4>Members</h4>
 <div class="ox-api-entry__member-group">
@@ -4915,7 +4925,7 @@
 <h4>Signature</h4>
 <pre><code class="language-typescript">export interface ScopedSearchQuery</code></pre>
 </div>
-<p class="ox-api-entry__source"><a class="ox-api-entry__source-link" href="https://github.com/ubugeeei-prod/ox-content/blob/main/npm/vite-plugin-ox-content/src/types.ts#L3186-L3192" target="_blank" rel="noopener noreferrer">View source<span class="ox-api-entry__source-icon" aria-hidden="true"></span></a></p>
+<p class="ox-api-entry__source"><a class="ox-api-entry__source-link" href="https://github.com/ubugeeei-prod/ox-content/blob/main/npm/vite-plugin-ox-content/src/types.ts#L3197-L3203" target="_blank" rel="noopener noreferrer">View source<span class="ox-api-entry__source-icon" aria-hidden="true"></span></a></p>
 <div class="ox-api-entry__section ox-api-entry__section--members">
 <h4>Members</h4>
 <div class="ox-api-entry__member-group">
@@ -4950,7 +4960,7 @@
 <h4>Signature</h4>
 <pre><code class="language-typescript">export interface SearchDocument</code></pre>
 </div>
-<p class="ox-api-entry__source"><a class="ox-api-entry__source-link" href="https://github.com/ubugeeei-prod/ox-content/blob/main/npm/vite-plugin-ox-content/src/types.ts#L3137-L3155" target="_blank" rel="noopener noreferrer">View source<span class="ox-api-entry__source-icon" aria-hidden="true"></span></a></p>
+<p class="ox-api-entry__source"><a class="ox-api-entry__source-link" href="https://github.com/ubugeeei-prod/ox-content/blob/main/npm/vite-plugin-ox-content/src/types.ts#L3148-L3166" target="_blank" rel="noopener noreferrer">View source<span class="ox-api-entry__source-icon" aria-hidden="true"></span></a></p>
 <div class="ox-api-entry__section ox-api-entry__section--members">
 <h4>Members</h4>
 <div class="ox-api-entry__member-group">
@@ -5006,7 +5016,7 @@
 <h4>Signature</h4>
 <pre><code class="language-typescript">export interface SearchOptions</code></pre>
 </div>
-<p class="ox-api-entry__source"><a class="ox-api-entry__source-link" href="https://github.com/ubugeeei-prod/ox-content/blob/main/npm/vite-plugin-ox-content/src/types.ts#L3017-L3115" target="_blank" rel="noopener noreferrer">View source<span class="ox-api-entry__source-icon" aria-hidden="true"></span></a></p>
+<p class="ox-api-entry__source"><a class="ox-api-entry__source-link" href="https://github.com/ubugeeei-prod/ox-content/blob/main/npm/vite-plugin-ox-content/src/types.ts#L3028-L3126" target="_blank" rel="noopener noreferrer">View source<span class="ox-api-entry__source-icon" aria-hidden="true"></span></a></p>
 <div class="ox-api-entry__section ox-api-entry__section--members">
 <h4>Members</h4>
 <div class="ox-api-entry__member-group">
@@ -5086,7 +5096,7 @@
 <h4>Signature</h4>
 <pre><code class="language-typescript">export interface SearchResult</code></pre>
 </div>
-<p class="ox-api-entry__source"><a class="ox-api-entry__source-link" href="https://github.com/ubugeeei-prod/ox-content/blob/main/npm/vite-plugin-ox-content/src/types.ts#L3160-L3181" target="_blank" rel="noopener noreferrer">View source<span class="ox-api-entry__source-icon" aria-hidden="true"></span></a></p>
+<p class="ox-api-entry__source"><a class="ox-api-entry__source-link" href="https://github.com/ubugeeei-prod/ox-content/blob/main/npm/vite-plugin-ox-content/src/types.ts#L3171-L3192" target="_blank" rel="noopener noreferrer">View source<span class="ox-api-entry__source-icon" aria-hidden="true"></span></a></p>
 <div class="ox-api-entry__section ox-api-entry__section--members">
 <h4>Members</h4>
 <div class="ox-api-entry__member-group">
@@ -5402,7 +5412,7 @@
 <h4>Signature</h4>
 <pre><code class="language-typescript">export interface StepsOptions</code></pre>
 </div>
-<p class="ox-api-entry__source"><a class="ox-api-entry__source-link" href="https://github.com/ubugeeei-prod/ox-content/blob/main/npm/vite-plugin-ox-content/src/types.ts#L1792-L1799" target="_blank" rel="noopener noreferrer">View source<span class="ox-api-entry__source-icon" aria-hidden="true"></span></a></p>
+<p class="ox-api-entry__source"><a class="ox-api-entry__source-link" href="https://github.com/ubugeeei-prod/ox-content/blob/main/npm/vite-plugin-ox-content/src/types.ts#L1803-L1810" target="_blank" rel="noopener noreferrer">View source<span class="ox-api-entry__source-icon" aria-hidden="true"></span></a></p>
 <div class="ox-api-entry__section ox-api-entry__section--members">
 <h4>Members</h4>
 <div class="ox-api-entry__member-group">
@@ -5577,7 +5587,7 @@
 <h4>Signature</h4>
 <pre><code class="language-typescript">export interface ThrowsDoc</code></pre>
 </div>
-<p class="ox-api-entry__source"><a class="ox-api-entry__source-link" href="https://github.com/ubugeeei-prod/ox-content/blob/main/npm/vite-plugin-ox-content/src/types.ts#L2791-L2797" target="_blank" rel="noopener noreferrer">View source<span class="ox-api-entry__source-icon" aria-hidden="true"></span></a></p>
+<p class="ox-api-entry__source"><a class="ox-api-entry__source-link" href="https://github.com/ubugeeei-prod/ox-content/blob/main/npm/vite-plugin-ox-content/src/types.ts#L2802-L2808" target="_blank" rel="noopener noreferrer">View source<span class="ox-api-entry__source-icon" aria-hidden="true"></span></a></p>
 <div class="ox-api-entry__section ox-api-entry__section--members">
 <h4>Members</h4>
 <div class="ox-api-entry__member-group">
@@ -5612,7 +5622,7 @@
 <h4>Signature</h4>
 <pre><code class="language-typescript">export interface TocEntry</code></pre>
 </div>
-<p class="ox-api-entry__source"><a class="ox-api-entry__source-link" href="https://github.com/ubugeeei-prod/ox-content/blob/main/npm/vite-plugin-ox-content/src/types.ts#L2277-L2297" target="_blank" rel="noopener noreferrer">View source<span class="ox-api-entry__source-icon" aria-hidden="true"></span></a></p>
+<p class="ox-api-entry__source"><a class="ox-api-entry__source-link" href="https://github.com/ubugeeei-prod/ox-content/blob/main/npm/vite-plugin-ox-content/src/types.ts#L2288-L2308" target="_blank" rel="noopener noreferrer">View source<span class="ox-api-entry__source-icon" aria-hidden="true"></span></a></p>
 <div class="ox-api-entry__section ox-api-entry__section--members">
 <h4>Members</h4>
 <div class="ox-api-entry__member-group">
@@ -5657,7 +5667,7 @@
 <h4>Signature</h4>
 <pre><code class="language-typescript">export interface TransformContext</code></pre>
 </div>
-<p class="ox-api-entry__source"><a class="ox-api-entry__source-link" href="https://github.com/ubugeeei-prod/ox-content/blob/main/npm/vite-plugin-ox-content/src/types.ts#L2217-L2232" target="_blank" rel="noopener noreferrer">View source<span class="ox-api-entry__source-icon" aria-hidden="true"></span></a></p>
+<p class="ox-api-entry__source"><a class="ox-api-entry__source-link" href="https://github.com/ubugeeei-prod/ox-content/blob/main/npm/vite-plugin-ox-content/src/types.ts#L2228-L2243" target="_blank" rel="noopener noreferrer">View source<span class="ox-api-entry__source-icon" aria-hidden="true"></span></a></p>
 <div class="ox-api-entry__section ox-api-entry__section--members">
 <h4>Members</h4>
 <div class="ox-api-entry__member-group">
@@ -5697,7 +5707,7 @@
 <h4>Signature</h4>
 <pre><code class="language-typescript">export interface TransformResult</code></pre>
 </div>
-<p class="ox-api-entry__source"><a class="ox-api-entry__source-link" href="https://github.com/ubugeeei-prod/ox-content/blob/main/npm/vite-plugin-ox-content/src/types.ts#L2247-L2272" target="_blank" rel="noopener noreferrer">View source<span class="ox-api-entry__source-icon" aria-hidden="true"></span></a></p>
+<p class="ox-api-entry__source"><a class="ox-api-entry__source-link" href="https://github.com/ubugeeei-prod/ox-content/blob/main/npm/vite-plugin-ox-content/src/types.ts#L2258-L2283" target="_blank" rel="noopener noreferrer">View source<span class="ox-api-entry__source-icon" aria-hidden="true"></span></a></p>
 <div class="ox-api-entry__section ox-api-entry__section--members">
 <h4>Members</h4>
 <div class="ox-api-entry__member-group">
@@ -5868,7 +5878,7 @@
 <h4>Signature</h4>
 <pre><code class="language-typescript">export interface WikiLinkOptions</code></pre>
 </div>
-<p class="ox-api-entry__source"><a class="ox-api-entry__source-link" href="https://github.com/ubugeeei-prod/ox-content/blob/main/npm/vite-plugin-ox-content/src/types.ts#L1619-L1628" target="_blank" rel="noopener noreferrer">View source<span class="ox-api-entry__source-icon" aria-hidden="true"></span></a></p>
+<p class="ox-api-entry__source"><a class="ox-api-entry__source-link" href="https://github.com/ubugeeei-prod/ox-content/blob/main/npm/vite-plugin-ox-content/src/types.ts#L1630-L1639" target="_blank" rel="noopener noreferrer">View source<span class="ox-api-entry__source-icon" aria-hidden="true"></span></a></p>
 <div class="ox-api-entry__section ox-api-entry__section--members">
 <h4>Members</h4>
 <div class="ox-api-entry__member-group">

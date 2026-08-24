@@ -22,7 +22,7 @@
   <span>parameters</span>
 </span>
 <span class="ox-api-stat">
-  <strong>31</strong>
+  <strong>32</strong>
   <span>members</span>
 </span>
 <span class="ox-api-stat">
@@ -48,7 +48,7 @@
 <h4>Signature</h4>
 <pre><code class="language-typescript">export function lintMarkdown(source: string, options: MarkdownLintOptions = {}): MarkdownLintResult</code></pre>
 </div>
-<p class="ox-api-entry__source"><a class="ox-api-entry__source-link" href="https://github.com/ubugeeei-prod/ox-content/blob/main/npm/vite-plugin-ox-content/src/lint.ts#L299-L305" target="_blank" rel="noopener noreferrer">View source<span class="ox-api-entry__source-icon" aria-hidden="true"></span></a></p>
+<p class="ox-api-entry__source"><a class="ox-api-entry__source-link" href="https://github.com/ubugeeei-prod/ox-content/blob/main/npm/vite-plugin-ox-content/src/lint.ts#L308-L314" target="_blank" rel="noopener noreferrer">View source<span class="ox-api-entry__source-icon" aria-hidden="true"></span></a></p>
 <div class="ox-api-entry__section ox-api-entry__section--params">
 <h4>Parameters</h4>
 <ul class="ox-api-entry__params">
@@ -86,7 +86,7 @@
 <h4>Signature</h4>
 <pre><code class="language-typescript">export async function lintMarkdownAsync(source: string, options: MarkdownLintOptions = {}): Promise&lt;MarkdownLintResult&gt;</code></pre>
 </div>
-<p class="ox-api-entry__source"><a class="ox-api-entry__source-link" href="https://github.com/ubugeeei-prod/ox-content/blob/main/npm/vite-plugin-ox-content/src/lint.ts#L310-L317" target="_blank" rel="noopener noreferrer">View source<span class="ox-api-entry__source-icon" aria-hidden="true"></span></a></p>
+<p class="ox-api-entry__source"><a class="ox-api-entry__source-link" href="https://github.com/ubugeeei-prod/ox-content/blob/main/npm/vite-plugin-ox-content/src/lint.ts#L319-L326" target="_blank" rel="noopener noreferrer">View source<span class="ox-api-entry__source-icon" aria-hidden="true"></span></a></p>
 <div class="ox-api-entry__section ox-api-entry__section--params">
 <h4>Parameters</h4>
 <ul class="ox-api-entry__params">
@@ -124,7 +124,7 @@
 <h4>Signature</h4>
 <pre><code class="language-typescript">export async function lintMarkdownDocumentsAsync(sources: string[], options: MarkdownLintOptions = {}): Promise&lt;MarkdownLintResult[]&gt;</code></pre>
 </div>
-<p class="ox-api-entry__source"><a class="ox-api-entry__source-link" href="https://github.com/ubugeeei-prod/ox-content/blob/main/npm/vite-plugin-ox-content/src/lint.ts#L322-L328" target="_blank" rel="noopener noreferrer">View source<span class="ox-api-entry__source-icon" aria-hidden="true"></span></a></p>
+<p class="ox-api-entry__source"><a class="ox-api-entry__source-link" href="https://github.com/ubugeeei-prod/ox-content/blob/main/npm/vite-plugin-ox-content/src/lint.ts#L331-L337" target="_blank" rel="noopener noreferrer">View source<span class="ox-api-entry__source-icon" aria-hidden="true"></span></a></p>
 <div class="ox-api-entry__section ox-api-entry__section--params">
 <h4>Parameters</h4>
 <ul class="ox-api-entry__params">
@@ -162,7 +162,7 @@
 <h4>Signature</h4>
 <pre><code class="language-typescript">export interface MarkdownLintDiagnostic</code></pre>
 </div>
-<p class="ox-api-entry__source"><a class="ox-api-entry__source-link" href="https://github.com/ubugeeei-prod/ox-content/blob/main/npm/vite-plugin-ox-content/src/lint.ts#L179-L224" target="_blank" rel="noopener noreferrer">View source<span class="ox-api-entry__source-icon" aria-hidden="true"></span></a></p>
+<p class="ox-api-entry__source"><a class="ox-api-entry__source-link" href="https://github.com/ubugeeei-prod/ox-content/blob/main/npm/vite-plugin-ox-content/src/lint.ts#L186-L231" target="_blank" rel="noopener noreferrer">View source<span class="ox-api-entry__source-icon" aria-hidden="true"></span></a></p>
 <div class="ox-api-entry__section ox-api-entry__section--members">
 <h4>Members</h4>
 <div class="ox-api-entry__member-group">
@@ -268,7 +268,7 @@
 </details>
 
 <details id="markdownlintoptions" class="ox-api-entry">
-  <summary><span class="ox-api-entry__kind">interface</span><span class="ox-api-entry__summary-main"><code class="ox-api-entry__signature ox-api-entry__signature--highlighted language-typescript">MarkdownLintOptions</code><span class="ox-api-entry__description">Options for linting Markdown documents.</span><span class="ox-api-entry__meta"><span class="ox-api-badge">3 members</span></span></span></summary>
+  <summary><span class="ox-api-entry__kind">interface</span><span class="ox-api-entry__summary-main"><code class="ox-api-entry__signature ox-api-entry__signature--highlighted language-typescript">MarkdownLintOptions</code><span class="ox-api-entry__description">Options for linting Markdown documents.</span><span class="ox-api-entry__meta"><span class="ox-api-badge">4 members</span></span></span></summary>
   <div class="ox-api-entry__body">
 <div class="ox-api-entry__prose">
 <p>Options for linting Markdown documents.</p>
@@ -277,7 +277,7 @@
 <h4>Signature</h4>
 <pre><code class="language-typescript">export interface MarkdownLintOptions</code></pre>
 </div>
-<p class="ox-api-entry__source"><a class="ox-api-entry__source-link" href="https://github.com/ubugeeei-prod/ox-content/blob/main/npm/vite-plugin-ox-content/src/lint.ts#L151-L174" target="_blank" rel="noopener noreferrer">View source<span class="ox-api-entry__source-icon" aria-hidden="true"></span></a></p>
+<p class="ox-api-entry__source"><a class="ox-api-entry__source-link" href="https://github.com/ubugeeei-prod/ox-content/blob/main/npm/vite-plugin-ox-content/src/lint.ts#L151-L181" target="_blank" rel="noopener noreferrer">View source<span class="ox-api-entry__source-icon" aria-hidden="true"></span></a></p>
 <div class="ox-api-entry__section ox-api-entry__section--members">
 <h4>Members</h4>
 <div class="ox-api-entry__member-group">
@@ -294,6 +294,11 @@
   <td><code>languages</code><span class="ox-api-badge">optional</span></td>
   <td><code class="ox-api-entry__member-type language-typescript">MarkdownLintLanguage[]</code></td>
   <td><div class="ox-api-entry__member-description">Languages enabled for spellchecking.<br><br>When <code>dictionary.standard.languages</code> is provided and this option is<br>omitted, those languages are used instead.</div><div class="ox-api-entry__member-default"><span>Default</span> <code class="language-typescript">[&#39;en&#39;]</code></div></td>
+</tr>
+<tr id="markdownlintoptions-mdx">
+  <td><code>mdx</code><span class="ox-api-badge">optional</span></td>
+  <td><code class="ox-api-entry__member-type language-typescript">boolean</code></td>
+  <td><div class="ox-api-entry__member-description">Enable MDX-aware syntax masking while linting visible prose.<br>File-oriented APIs infer this from <code>.mdx</code> when omitted.</div><div class="ox-api-entry__member-default"><span>Default</span> <code class="language-typescript">false for content APIs; inferred for file APIs</code></div></td>
 </tr>
 <tr id="markdownlintoptions-rules">
   <td><code>rules</code><span class="ox-api-badge">optional</span></td>
@@ -317,7 +322,7 @@
 <h4>Signature</h4>
 <pre><code class="language-typescript">export interface MarkdownLintResult</code></pre>
 </div>
-<p class="ox-api-entry__source"><a class="ox-api-entry__source-link" href="https://github.com/ubugeeei-prod/ox-content/blob/main/npm/vite-plugin-ox-content/src/lint.ts#L229-L249" target="_blank" rel="noopener noreferrer">View source<span class="ox-api-entry__source-icon" aria-hidden="true"></span></a></p>
+<p class="ox-api-entry__source"><a class="ox-api-entry__source-link" href="https://github.com/ubugeeei-prod/ox-content/blob/main/npm/vite-plugin-ox-content/src/lint.ts#L236-L256" target="_blank" rel="noopener noreferrer">View source<span class="ox-api-entry__source-icon" aria-hidden="true"></span></a></p>
 <div class="ox-api-entry__section ox-api-entry__section--members">
 <h4>Members</h4>
 <div class="ox-api-entry__member-group">

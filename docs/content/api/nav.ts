@@ -108,6 +108,10 @@ export const apiNav: NavItem[] = [
     "path": "/api/locale-switcher"
   },
   {
+    "title": "Markdown",
+    "path": "/api/markdown"
+  },
+  {
     "title": "Mermaid",
     "path": "/api/mermaid"
   },

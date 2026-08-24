@@ -18,7 +18,7 @@
   <span>modules</span>
 </span>
 <span class="ox-api-stat">
-  <strong>14</strong>
+  <strong>15</strong>
   <span>parameters</span>
 </span>
 <span class="ox-api-stat">
@@ -35,7 +35,7 @@
 </div>
 
 <details id="buildsearchindex" class="ox-api-entry">
-  <summary><span class="ox-api-entry__kind">fn</span><span class="ox-api-entry__summary-main"><code class="ox-api-entry__signature ox-api-entry__signature--highlighted language-typescript">buildSearchIndex(srcDir: string, base: string, extensions: readonly string[] = DEFAULT_MARKDOWN_EXTENSIONS, publishState?: ResolvedPublishStateOptions, excludeDocumentIds: readonly string[] = []): Promise&lt;string&gt;</code><span class="ox-api-entry__description">Builds the search index from Markdown files. publishState is forwarded to the n…</span><span class="ox-api-entry__meta"><span class="ox-api-badge">5 params</span><span class="ox-api-badge">returns Promise&lt;string&gt;</span></span></span></summary>
+  <summary><span class="ox-api-entry__kind">fn</span><span class="ox-api-entry__summary-main"><code class="ox-api-entry__signature ox-api-entry__signature--highlighted language-typescript">buildSearchIndex(srcDir: string, base: string, extensions: readonly string[] = DEFAULT_MARKDOWN_EXTENSIONS, publishState?: ResolvedPublishStateOptions, excludeDocumentIds: readonly string[] = [], mdx?: boolean): Promise&lt;string&gt;</code><span class="ox-api-entry__description">Builds the search index from Markdown files. publishState is forwarded to the n…</span><span class="ox-api-entry__meta"><span class="ox-api-badge">6 params</span><span class="ox-api-badge">returns Promise&lt;string&gt;</span></span></span></summary>
   <div class="ox-api-entry__body">
 <div class="ox-api-entry__prose">
 <p>Builds the search index from Markdown files.</p>
@@ -43,9 +43,9 @@
 </div>
 <div class="ox-api-entry__section ox-api-entry__section--signature">
 <h4>Signature</h4>
-<pre><code class="language-typescript">export async function buildSearchIndex(srcDir: string, base: string, extensions: readonly string[] = DEFAULT_MARKDOWN_EXTENSIONS, publishState?: ResolvedPublishStateOptions, excludeDocumentIds: readonly string[] = []): Promise&lt;string&gt;</code></pre>
+<pre><code class="language-typescript">export async function buildSearchIndex(srcDir: string, base: string, extensions: readonly string[] = DEFAULT_MARKDOWN_EXTENSIONS, publishState?: ResolvedPublishStateOptions, excludeDocumentIds: readonly string[] = [], mdx?: boolean): Promise&lt;string&gt;</code></pre>
 </div>
-<p class="ox-api-entry__source"><a class="ox-api-entry__source-link" href="https://github.com/ubugeeei-prod/ox-content/blob/main/npm/vite-plugin-ox-content/src/search.ts#L119-L145" target="_blank" rel="noopener noreferrer">View source<span class="ox-api-entry__source-icon" aria-hidden="true"></span></a></p>
+<p class="ox-api-entry__source"><a class="ox-api-entry__source-link" href="https://github.com/ubugeeei-prod/ox-content/blob/main/npm/vite-plugin-ox-content/src/search.ts#L119-L147" target="_blank" rel="noopener noreferrer">View source<span class="ox-api-entry__source-icon" aria-hidden="true"></span></a></p>
 <div class="ox-api-entry__section ox-api-entry__section--params">
 <h4>Parameters</h4>
 <ul class="ox-api-entry__params">
@@ -82,6 +82,13 @@
   </div>
   <p class="ox-api-entry__param-description">optional · default: []</p>
 </li>
+<li class="ox-api-entry__param">
+  <div class="ox-api-entry__param-heading">
+    <code class="ox-api-entry__param-name">mdx</code>
+    <code class="ox-api-entry__param-type">boolean</code>
+  </div>
+  <p class="ox-api-entry__param-description">optional</p>
+</li>
 </ul>
 </div>
 <div class="ox-api-entry__section ox-api-entry__section--returns">
@@ -103,7 +110,7 @@
 <h4>Signature</h4>
 <pre><code class="language-typescript">export function generateSearchModule(options: ResolvedSearchOptions, indexPath: string): string</code></pre>
 </div>
-<p class="ox-api-entry__source"><a class="ox-api-entry__source-link" href="https://github.com/ubugeeei-prod/ox-content/blob/main/npm/vite-plugin-ox-content/src/search.ts#L192-L200" target="_blank" rel="noopener noreferrer">View source<span class="ox-api-entry__source-icon" aria-hidden="true"></span></a></p>
+<p class="ox-api-entry__source"><a class="ox-api-entry__source-link" href="https://github.com/ubugeeei-prod/ox-content/blob/main/npm/vite-plugin-ox-content/src/search.ts#L194-L202" target="_blank" rel="noopener noreferrer">View source<span class="ox-api-entry__source-icon" aria-hidden="true"></span></a></p>
 <div class="ox-api-entry__section ox-api-entry__section--params">
 <h4>Parameters</h4>
 <ul class="ox-api-entry__params">
@@ -282,7 +289,7 @@
 <h4>Signature</h4>
 <pre><code class="language-typescript">export async function writeSearchIndex(indexJson: string, outDir: string): Promise&lt;void&gt;</code></pre>
 </div>
-<p class="ox-api-entry__source"><a class="ox-api-entry__source-link" href="https://github.com/ubugeeei-prod/ox-content/blob/main/npm/vite-plugin-ox-content/src/search.ts#L178-L186" target="_blank" rel="noopener noreferrer">View source<span class="ox-api-entry__source-icon" aria-hidden="true"></span></a></p>
+<p class="ox-api-entry__source"><a class="ox-api-entry__source-link" href="https://github.com/ubugeeei-prod/ox-content/blob/main/npm/vite-plugin-ox-content/src/search.ts#L180-L188" target="_blank" rel="noopener noreferrer">View source<span class="ox-api-entry__source-icon" aria-hidden="true"></span></a></p>
 <div class="ox-api-entry__section ox-api-entry__section--params">
 <h4>Parameters</h4>
 <ul class="ox-api-entry__params">
