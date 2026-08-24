@@ -2,18 +2,18 @@
   "version": 1,
   "generatedAt": "2026-08-24T09:29:05.330Z",
   "summary": {
-    "modules": 57,
-    "entries": 487,
+    "modules": 59,
+    "entries": 498,
     "byKind": {
-      "function": 213,
-      "interface": 198,
+      "function": 218,
+      "interface": 202,
       "type": 17,
       "variable": 13,
-      "module": 46
+      "module": 48
     },
-    "members": 1040,
-    "params": 386,
-    "returns": 208,
+    "members": 1057,
+    "params": 400,
+    "returns": 213,
     "examples": 20,
     "deprecated": 2
   },
@@ -8869,6 +8869,386 @@
       ]
     },
     {
+      "file": "npm/vite-plugin-ox-content/src/taxonomies-html.ts",
+      "description": "",
+      "entries": [
+        {
+          "name": "taxonomies-html",
+          "kind": "module",
+          "description": "Escaped taxonomy HTML and confined output paths.",
+          "file": "npm/vite-plugin-ox-content/src/taxonomies-html.ts",
+          "line": 1,
+          "endLine": 3
+        },
+        {
+          "name": "TaxonomySourcePage",
+          "kind": "interface",
+          "description": "One built page considered for terms and related lists.",
+          "members": [
+            {
+              "name": "title",
+              "kind": "property",
+              "description": "",
+              "type": "string",
+              "line": 9,
+              "endLine": 9
+            },
+            {
+              "name": "frontmatter",
+              "kind": "property",
+              "description": "",
+              "type": "Record<string, unknown>",
+              "line": 10,
+              "endLine": 10
+            },
+            {
+              "name": "transformedHtml",
+              "kind": "property",
+              "description": "",
+              "type": "string",
+              "line": 11,
+              "endLine": 11
+            },
+            {
+              "name": "inputPath",
+              "kind": "property",
+              "description": "",
+              "type": "string",
+              "optional": true,
+              "line": 12,
+              "endLine": 12
+            },
+            {
+              "name": "routePaths",
+              "kind": "property",
+              "description": "",
+              "type": "{ href: string }",
+              "members": [
+                {
+                  "name": "href",
+                  "kind": "property",
+                  "description": "",
+                  "type": "string",
+                  "line": 13,
+                  "endLine": 13
+                }
+              ],
+              "line": 13,
+              "endLine": 13
+            }
+          ],
+          "file": "npm/vite-plugin-ox-content/src/taxonomies-html.ts",
+          "line": 8,
+          "endLine": 14,
+          "signature": "export interface TaxonomySourcePage"
+        }
+      ]
+    },
+    {
+      "file": "npm/vite-plugin-ox-content/src/taxonomies.ts",
+      "description": "",
+      "entries": [
+        {
+          "name": "taxonomies",
+          "kind": "module",
+          "description": "Opt-in taxonomy term pages and related-page lists.\n\nResolution and HTML live here. The Vite plugin injects related markup into\npage content, then writes themed list and per-term pages during SSG.",
+          "file": "npm/vite-plugin-ox-content/src/taxonomies.ts",
+          "line": 1,
+          "endLine": 6
+        },
+        {
+          "name": "TaxonomyGeneratedPage",
+          "kind": "interface",
+          "description": "Synthetic page passed back to `generateHtmlPage`.",
+          "members": [
+            {
+              "name": "title",
+              "kind": "property",
+              "description": "",
+              "type": "string",
+              "line": 28,
+              "endLine": 28
+            },
+            {
+              "name": "content",
+              "kind": "property",
+              "description": "",
+              "type": "string",
+              "line": 29,
+              "endLine": 29
+            },
+            {
+              "name": "outputPath",
+              "kind": "property",
+              "description": "",
+              "type": "string",
+              "line": 30,
+              "endLine": 30
+            },
+            {
+              "name": "urlPath",
+              "kind": "property",
+              "description": "",
+              "type": "string",
+              "line": 31,
+              "endLine": 31
+            },
+            {
+              "name": "href",
+              "kind": "property",
+              "description": "",
+              "type": "string",
+              "line": 32,
+              "endLine": 32
+            }
+          ],
+          "file": "npm/vite-plugin-ox-content/src/taxonomies.ts",
+          "line": 27,
+          "endLine": 33,
+          "signature": "export interface TaxonomyGeneratedPage"
+        },
+        {
+          "name": "resolveTaxonomiesOptions",
+          "kind": "function",
+          "description": "Resolves `taxonomies` with defaults.\n\n`false` / omitted stays off. `true` enables `tags` and `categories` with\nrelatedLimit 5. An object enables the feature and overrides only set fields.",
+          "params": [
+            {
+              "name": "value",
+              "type": "boolean | TaxonomiesOptions | undefined",
+              "description": ""
+            }
+          ],
+          "returns": {
+            "type": "ResolvedTaxonomiesOptions",
+            "description": ""
+          },
+          "file": "npm/vite-plugin-ox-content/src/taxonomies.ts",
+          "line": 41,
+          "endLine": 63,
+          "signature": "export function resolveTaxonomiesOptions(value: boolean | TaxonomiesOptions | undefined): ResolvedTaxonomiesOptions"
+        },
+        {
+          "name": "termSlug",
+          "kind": "function",
+          "description": "Stable URL slug for a frontmatter term.\n\nReturns `undefined` when the value cannot become a safe `[a-z0-9-]` href.",
+          "params": [
+            {
+              "name": "term",
+              "type": "string",
+              "description": ""
+            }
+          ],
+          "returns": {
+            "type": "string | undefined",
+            "description": ""
+          },
+          "file": "npm/vite-plugin-ox-content/src/taxonomies.ts",
+          "line": 70,
+          "endLine": 80,
+          "signature": "export function termSlug(term: string): string | undefined"
+        },
+        {
+          "name": "injectRelatedPages",
+          "kind": "function",
+          "description": "Appends related-page HTML to source pages that share a listed term.",
+          "params": [
+            {
+              "name": "pages",
+              "type": "TaxonomySourcePage[]",
+              "description": ""
+            },
+            {
+              "name": "listed",
+              "type": "readonly TaxonomySourcePage[]",
+              "description": ""
+            },
+            {
+              "name": "options",
+              "type": "ResolvedTaxonomiesOptions",
+              "description": "",
+              "optional": true
+            }
+          ],
+          "returns": {
+            "type": "void",
+            "description": ""
+          },
+          "file": "npm/vite-plugin-ox-content/src/taxonomies.ts",
+          "line": 83,
+          "endLine": 119,
+          "signature": "export function injectRelatedPages(pages: TaxonomySourcePage[], listed: readonly TaxonomySourcePage[], options?: ResolvedTaxonomiesOptions): void"
+        },
+        {
+          "name": "toTaxonomyProcessResult",
+          "kind": "function",
+          "description": "Maps a generated taxonomy page onto the SSG render shape.",
+          "params": [
+            {
+              "name": "page",
+              "type": "TaxonomyGeneratedPage",
+              "description": ""
+            }
+          ],
+          "returns": {
+            "type": "object",
+            "description": "",
+            "members": [
+              {
+                "name": "inputPath",
+                "kind": "property",
+                "description": "",
+                "type": "string",
+                "line": 123,
+                "endLine": 123
+              },
+              {
+                "name": "routePaths",
+                "kind": "property",
+                "description": "",
+                "type": "{ outputPath: string; urlPath: string; href: string; ogImagePath: string; ogImageUrl: string }",
+                "members": [
+                  {
+                    "name": "outputPath",
+                    "kind": "property",
+                    "description": "",
+                    "type": "string",
+                    "line": 125,
+                    "endLine": 125
+                  },
+                  {
+                    "name": "urlPath",
+                    "kind": "property",
+                    "description": "",
+                    "type": "string",
+                    "line": 126,
+                    "endLine": 126
+                  },
+                  {
+                    "name": "href",
+                    "kind": "property",
+                    "description": "",
+                    "type": "string",
+                    "line": 127,
+                    "endLine": 127
+                  },
+                  {
+                    "name": "ogImagePath",
+                    "kind": "property",
+                    "description": "",
+                    "type": "string",
+                    "line": 128,
+                    "endLine": 128
+                  },
+                  {
+                    "name": "ogImageUrl",
+                    "kind": "property",
+                    "description": "",
+                    "type": "string",
+                    "line": 129,
+                    "endLine": 129
+                  }
+                ],
+                "line": 124,
+                "endLine": 130
+              },
+              {
+                "name": "transformedHtml",
+                "kind": "property",
+                "description": "",
+                "type": "string",
+                "line": 131,
+                "endLine": 131
+              },
+              {
+                "name": "title",
+                "kind": "property",
+                "description": "",
+                "type": "string",
+                "line": 132,
+                "endLine": 132
+              },
+              {
+                "name": "frontmatter",
+                "kind": "property",
+                "description": "",
+                "type": "Record<string, unknown>",
+                "line": 133,
+                "endLine": 133
+              },
+              {
+                "name": "toc",
+                "kind": "property",
+                "description": "",
+                "type": "[]",
+                "line": 134,
+                "endLine": 134
+              }
+            ]
+          },
+          "file": "npm/vite-plugin-ox-content/src/taxonomies.ts",
+          "line": 122,
+          "endLine": 150,
+          "signature": "export function toTaxonomyProcessResult(page: TaxonomyGeneratedPage): {\n  inputPath: string;\n  routePaths: {\n    outputPath: string;\n    urlPath: string;\n    href: string;\n    ogImagePath: string;\n    ogImageUrl: string;\n  };\n  transformedHtml: string;\n  title: string;\n  frontmatter: Record<string, unknown>;\n  toc: [];\n}"
+        },
+        {
+          "name": "appendTaxonomyPages",
+          "kind": "function",
+          "description": "Renders themed list and per-term pages and appends them to the build.",
+          "params": [
+            {
+              "name": "input",
+              "type": "{ generatedPages: Array<{ inputPath: string; outputPath: string; html: string }>; listedPages: readonly TaxonomySourcePage[]; options?: ResolvedTaxonomiesOptions; outDir: string; base: string; render: (page: TaxonomyGeneratedPage) => Promise<string>; errors: string[] }",
+              "description": ""
+            },
+            {
+              "name": "input.generatedPages",
+              "type": "Array<{ inputPath: string; outputPath: string; html: string }>",
+              "description": ""
+            },
+            {
+              "name": "input.listedPages",
+              "type": "readonly TaxonomySourcePage[]",
+              "description": ""
+            },
+            {
+              "name": "input.options?",
+              "type": "ResolvedTaxonomiesOptions",
+              "description": "",
+              "optional": true
+            },
+            {
+              "name": "input.outDir",
+              "type": "string",
+              "description": ""
+            },
+            {
+              "name": "input.base",
+              "type": "string",
+              "description": ""
+            },
+            {
+              "name": "input.render",
+              "type": "(page: TaxonomyGeneratedPage) => Promise<string>",
+              "description": ""
+            },
+            {
+              "name": "input.errors",
+              "type": "string[]",
+              "description": ""
+            }
+          ],
+          "returns": {
+            "type": "Promise<void>",
+            "description": ""
+          },
+          "file": "npm/vite-plugin-ox-content/src/taxonomies.ts",
+          "line": 153,
+          "endLine": 182,
+          "signature": "export async function appendTaxonomyPages(input: {\n  generatedPages: Array<{ inputPath: string; outputPath: string; html: string }>;\n  listedPages: readonly TaxonomySourcePage[];\n  options?: ResolvedTaxonomiesOptions;\n  outDir: string;\n  base: string;\n  render: (page: TaxonomyGeneratedPage) => Promise<string>;\n  errors: string[];\n}): Promise<void>"
+        }
+      ]
+    },
+    {
       "file": "npm/vite-plugin-ox-content/src/team.ts",
       "description": "",
       "entries": [
@@ -13400,6 +13780,72 @@
           "line": 784,
           "endLine": 790,
           "signature": "export interface ResolvedFeedsOptions"
+        },
+        {
+          "name": "TaxonomiesOptions",
+          "kind": "interface",
+          "description": "Opt-in term list pages, per-term pages, and related-page lists.",
+          "members": [
+            {
+              "name": "taxonomies",
+              "kind": "property",
+              "description": "Frontmatter keys (and URL prefixes) to read terms from.",
+              "type": "string[]",
+              "default": "[\"tags\", \"categories\"]",
+              "optional": true,
+              "line": 800,
+              "endLine": 800
+            },
+            {
+              "name": "relatedLimit",
+              "kind": "property",
+              "description": "Maximum related pages injected into a source page.",
+              "type": "number",
+              "default": "5",
+              "optional": true,
+              "line": 806,
+              "endLine": 806
+            }
+          ],
+          "file": "npm/vite-plugin-ox-content/src/types.ts",
+          "line": 795,
+          "endLine": 807,
+          "signature": "export interface TaxonomiesOptions"
+        },
+        {
+          "name": "ResolvedTaxonomiesOptions",
+          "kind": "interface",
+          "description": "Resolved taxonomy options.",
+          "members": [
+            {
+              "name": "enabled",
+              "kind": "property",
+              "description": "",
+              "type": "boolean",
+              "line": 813,
+              "endLine": 813
+            },
+            {
+              "name": "taxonomies",
+              "kind": "property",
+              "description": "",
+              "type": "string[]",
+              "line": 814,
+              "endLine": 814
+            },
+            {
+              "name": "relatedLimit",
+              "kind": "property",
+              "description": "",
+              "type": "number",
+              "line": 815,
+              "endLine": 815
+            }
+          ],
+          "file": "npm/vite-plugin-ox-content/src/types.ts",
+          "line": 812,
+          "endLine": 816,
+          "signature": "export interface ResolvedTaxonomiesOptions"
         },
         {
           "name": "OxContentOptions",
