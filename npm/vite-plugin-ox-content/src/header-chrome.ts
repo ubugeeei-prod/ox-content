@@ -2,9 +2,12 @@
  * Opt-in header nav, announcement, and per-page chrome helpers.
  */
 
+/** Plain label or locale map (`{ en: "Guide", ja: "ガイド" }`). */
+export type LocaleLabel = string | Record<string, string>;
+
 /** Header nav link or dropdown. */
 export interface HeaderNavItem {
-  text: string;
+  text: LocaleLabel;
   link?: string;
   items?: HeaderNavItem[];
 }
@@ -51,4 +54,41 @@ export function parsePageChromeFlags(frontmatter: Record<string, unknown>): Page
 
 function readBool(value: unknown): boolean | undefined {
   return typeof value === "boolean" ? value : undefined;
+}
+
+/** Picks `locale`, then the language prefix, then the first map value. */
+export function resolveLocaleLabel(text: LocaleLabel, locale?: string): string {
+  if (typeof text === "string") {
+    return text;
+  }
+  if (locale && text[locale]) {
+    return text[locale];
+  }
+  const lang = locale?.split("-")[0];
+  if (lang && text[lang]) {
+    return text[lang];
+  }
+  return Object.values(text)[0] ?? "";
+}
+
+/** Nav item after locale maps are flattened to strings. */
+export interface ResolvedHeaderNavItem {
+  text: string;
+  link?: string;
+  items?: ResolvedHeaderNavItem[];
+}
+
+/** Resolves locale maps so NAPI always receives string labels. */
+export function resolveHeaderNavItems(
+  items: HeaderNavItem[] | undefined,
+  locale?: string,
+): ResolvedHeaderNavItem[] | undefined {
+  if (!items?.length) {
+    return undefined;
+  }
+  return items.map((item) => ({
+    text: resolveLocaleLabel(item.text, locale),
+    link: item.link,
+    items: resolveHeaderNavItems(item.items, locale),
+  }));
 }

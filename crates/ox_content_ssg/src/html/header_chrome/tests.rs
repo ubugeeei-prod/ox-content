@@ -2,6 +2,7 @@ use super::super::{
     HeaderNavItem, NavGroup, NavItem, PageChromeFlags, PageData, ReaderChrome, SsgConfig,
     ThemeAnnouncement, ThemeConfig, ThemeFooter, TocEntry, generate_html,
 };
+use super::HEADER_CHROME_JS;
 
 fn nav_item(text: &str, link: Option<&str>) -> HeaderNavItem {
     HeaderNavItem { text: text.to_string(), link: link.map(ToOwned::to_owned), items: vec![] }
@@ -309,4 +310,41 @@ fn body_class(html: &str) -> &str {
     let tag = &html[start..];
     let end = tag.find('>').expect("body close");
     &tag[..=end]
+}
+
+#[test]
+fn hostile_unclosed_input_does_not_panic() {
+    let html = render(
+        Some(ThemeConfig {
+            nav: Some(vec![nav_item("<b>unclosed", Some("/x/\">xss"))]),
+            announcement: Some(ThemeAnnouncement {
+                text: "<div unclosed".into(),
+                link: Some("https://example.com/\">".into()),
+                dismiss_key: Some("bad key!".into()),
+            }),
+            ..ThemeConfig::default()
+        }),
+        true,
+        PageChromeFlags::default(),
+    );
+    assert!(html.contains("&lt;b&gt;unclosed") && html.contains("&lt;div unclosed"), "{html}");
+    assert!(!html.contains("<b>unclosed") && !html.contains("<div unclosed"), "{html}");
+}
+
+#[test]
+fn dropdown_js_closes_on_escape_and_restores_focus() {
+    assert!(
+        HEADER_CHROME_JS.contains("Escape") && HEADER_CHROME_JS.contains(".focus("),
+        "{HEADER_CHROME_JS}"
+    );
+}
+
+#[test]
+fn header_nav_css_scrolls_on_small_viewports() {
+    let html = render(
+        Some(theme_nav(vec![nav_item("Guide", Some("/guide/"))])),
+        false,
+        PageChromeFlags::default(),
+    );
+    assert!(html.contains("overflow-x: auto") && html.contains("flex-wrap: nowrap"), "{html}");
 }

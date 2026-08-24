@@ -5,8 +5,8 @@ use super::breadcrumbs::resolve_breadcrumbs;
 use super::entry::generate_entry_html;
 use super::footer::{FOOTER_CSS, generate_footer_html};
 use super::header_chrome::{
-    HEADER_CHROME_JS, header_chrome_needs_js, render_announcement, render_header_nav,
-    resolve_page_chrome,
+    HEADER_CHROME_CSS, HEADER_CHROME_JS, header_chrome_needs_css, header_chrome_needs_js,
+    push_header_chrome_body_classes, render_announcement, render_header_nav, resolve_page_chrome,
 };
 use super::locale_switcher::render_locale_switcher;
 use super::nav::generate_nav_html;
@@ -101,6 +101,9 @@ pub fn generate_html(page_data: &PageData, nav_groups: &[NavGroup], config: &Ssg
     }
     if config.reader_chrome.is_enabled() {
         css_sections.push(wrap_css_section("reader-chrome", READER_CHROME_CSS));
+    }
+    if header_chrome_needs_css(&header_nav_html, &announcement_html, chrome) {
+        css_sections.push(wrap_css_section("header-chrome", HEADER_CHROME_CSS));
     }
     if config.a11y.is_enabled() {
         css_sections.push(wrap_css_section("a11y", A11Y_CSS));
@@ -221,15 +224,7 @@ pub fn generate_html(page_data: &PageData, nav_groups: &[NavGroup], config: &Ssg
     {
         body_classes.push("entry-page--subtle".to_string());
     }
-    if !announcement_html.is_empty() {
-        body_classes.push("ox-has-announce".to_string());
-    }
-    if !chrome.show_navbar {
-        body_classes.push("ox-no-navbar".to_string());
-    }
-    if chrome.hide_edit_link {
-        body_classes.push("ox-hide-edit-link".to_string());
-    }
+    push_header_chrome_body_classes(&mut body_classes, &announcement_html, chrome);
     let body_class = body_classes.join(" ");
 
     let document_title = if page_data.title.trim() == config.site_name.trim() {

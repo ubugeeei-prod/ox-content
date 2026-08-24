@@ -18,7 +18,10 @@
 
   document.addEventListener("click", () => closeDropdowns(null));
   document.addEventListener("keydown", (event) => {
-    if (event.key === "Escape") closeDropdowns(null);
+    if (event.key !== "Escape") return;
+    const open = document.querySelector(".header-nav-dropdown > button[aria-expanded='true']");
+    closeDropdowns(null);
+    if (open instanceof HTMLElement) open.focus();
   });
 
   document.querySelectorAll("[data-ox-announce]").forEach((bar) => {

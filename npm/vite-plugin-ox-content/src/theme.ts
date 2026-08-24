@@ -4,7 +4,8 @@
  * Provides VitePress-like theming with default theme + customization.
  */
 
-import type { HeaderNavItem, ThemeAnnouncement } from "./header-chrome";
+import type { HeaderNavItem, ResolvedHeaderNavItem, ThemeAnnouncement } from "./header-chrome";
+import { resolveHeaderNavItems } from "./header-chrome";
 import { tokensToCss, type ThemeTokens } from "./theme-tokens";
 
 export type { HeaderNavItem, ThemeAnnouncement } from "./header-chrome";
@@ -498,7 +499,7 @@ function withDerivedCodeBackgroundTop(theme: ThemeConfig): ThemeConfig {
 /**
  * Converts resolved theme to the format expected by Rust NAPI.
  */
-export function themeToNapi(theme: ResolvedThemeConfig): NapiThemeConfig {
+export function themeToNapi(theme: ResolvedThemeConfig, locale?: string): NapiThemeConfig {
   const socialLinks = socialLinksToNapi(theme.socialLinks);
 
   return {
@@ -561,7 +562,7 @@ export function themeToNapi(theme: ResolvedThemeConfig): NapiThemeConfig {
             logoHeight: theme.header.logoHeight,
           }
         : undefined,
-    nav: theme.nav && theme.nav.length > 0 ? theme.nav : undefined,
+    nav: resolveHeaderNavItems(theme.nav, locale),
     announcement: theme.announcement?.text ? theme.announcement : undefined,
     footer:
       theme.footer.message || theme.footer.copyright
@@ -708,7 +709,7 @@ export interface NapiThemeConfig {
   aside?: boolean;
   /** Breadcrumb trail from the site root through sidebar ancestors. */
   breadcrumbs?: boolean;
-  nav?: HeaderNavItem[];
+  nav?: ResolvedHeaderNavItem[];
   announcement?: ThemeAnnouncement;
   colors?: NapiThemeColors;
   darkColors?: NapiThemeColors;

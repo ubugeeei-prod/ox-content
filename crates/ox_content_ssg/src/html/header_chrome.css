@@ -1,0 +1,117 @@
+.header-nav {
+  flex: 1 1 auto;
+  min-width: 0;
+  overflow-x: auto;
+  overscroll-behavior-x: contain;
+  -webkit-overflow-scrolling: touch;
+}
+.header-nav-list,
+.header-nav-menu {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+.header-nav-list {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.15rem 1rem;
+}
+.header-nav-item > a,
+.header-nav-dropdown > button {
+  display: inline-flex;
+  align-items: center;
+  background: none;
+  border: none;
+  color: var(--octc-color-text);
+  cursor: pointer;
+  font: inherit;
+  padding: 0.35rem 0;
+  text-decoration: none;
+  white-space: nowrap;
+}
+.header-nav-item > a:hover,
+.header-nav-dropdown > button:hover {
+  color: var(--octc-color-primary);
+  text-decoration: none;
+}
+.header-nav-dropdown {
+  position: relative;
+}
+.header-nav-menu {
+  display: none;
+  position: absolute;
+  top: calc(100% + 0.35rem);
+  left: 0;
+  min-width: 10rem;
+  padding: 0.4rem 0;
+  background: var(--octc-color-bg);
+  border: 1px solid var(--octc-color-border);
+  border-radius: 6px;
+  box-shadow: 0 8px 24px color-mix(in srgb, var(--octc-color-text) 12%, transparent);
+  z-index: 120;
+}
+.header-nav-dropdown > button[aria-expanded="true"] + .header-nav-menu {
+  display: block;
+}
+.header-nav-menu .header-nav-item > a {
+  display: block;
+  padding: 0.4rem 0.85rem;
+}
+.ox-announce {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  z-index: 110;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.75rem;
+  min-height: 2.25rem;
+  padding: 0.35rem 1.25rem;
+  background: var(--octc-color-primary);
+  color: #fff;
+  font-size: 0.875rem;
+}
+.ox-announce-text {
+  margin: 0;
+}
+.ox-announce a {
+  color: inherit;
+  text-decoration: underline;
+}
+.ox-announce-dismiss {
+  background: transparent;
+  border: 1px solid color-mix(in srgb, #fff 55%, transparent);
+  border-radius: 4px;
+  color: inherit;
+  cursor: pointer;
+  font: inherit;
+  padding: 0.15rem 0.55rem;
+}
+.ox-has-announce .header,
+.ox-has-announce .sidebar,
+.ox-has-announce .toc {
+  top: 2.25rem;
+}
+.ox-has-announce .layout {
+  padding-top: calc(var(--octc-header-height) + 2.25rem);
+}
+.ox-no-navbar .header {
+  display: none;
+}
+.ox-no-navbar .layout {
+  padding-top: 0;
+}
+.ox-has-announce.ox-no-navbar .layout {
+  padding-top: 2.25rem;
+}
+.ox-hide-edit-link .ox-edit-this-page {
+  display: none;
+}
+@media (max-width: 768px) {
+  .header-nav-list {
+    flex-wrap: nowrap;
+  }
+}

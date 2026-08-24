@@ -4,6 +4,7 @@ use serde::{Deserialize, Serialize};
 
 use super::utils::escape_html;
 
+pub(super) const HEADER_CHROME_CSS: &str = include_str!("header_chrome.css");
 pub(super) const HEADER_CHROME_JS: &str = include_str!("header_chrome.js");
 
 /// Header nav link or dropdown.
@@ -143,6 +144,33 @@ pub(super) fn render_announcement(announcement: &ThemeAnnouncement) -> String {
 
 pub(super) fn header_chrome_needs_js(nav_html: &str, announcement_html: &str) -> bool {
     nav_html.contains("aria-expanded") || announcement_html.contains("data-ox-announce")
+}
+
+pub(super) fn header_chrome_needs_css(
+    nav_html: &str,
+    announcement_html: &str,
+    chrome: ResolvedPageChrome,
+) -> bool {
+    !nav_html.is_empty()
+        || !announcement_html.is_empty()
+        || !chrome.show_navbar
+        || chrome.hide_edit_link
+}
+
+pub(super) fn push_header_chrome_body_classes(
+    body_classes: &mut Vec<String>,
+    announcement_html: &str,
+    chrome: ResolvedPageChrome,
+) {
+    if !announcement_html.is_empty() {
+        body_classes.push("ox-has-announce".into());
+    }
+    if !chrome.show_navbar {
+        body_classes.push("ox-no-navbar".into());
+    }
+    if chrome.hide_edit_link {
+        body_classes.push("ox-hide-edit-link".into());
+    }
 }
 
 fn is_dangerous_href(href: &str) -> bool {

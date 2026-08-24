@@ -431,7 +431,7 @@ export async function generateHtmlPage(
   const navGroupsForRust = convertNavGroupsForRust(navGroups);
 
   // Convert theme to NAPI format if provided
-  const themeForRust = theme ? themeToNapi(theme) : undefined;
+  const themeForRust = theme ? themeToNapi(theme, locale) : undefined;
 
   // Convert entry page to NAPI format if provided
   const entryPageForRust = pageData.entryPage

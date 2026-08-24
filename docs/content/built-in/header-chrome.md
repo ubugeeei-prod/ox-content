@@ -12,7 +12,9 @@ you opt in. Existing sites do not change unless they set the new options.
 ## Header nav
 
 Set `theme.nav` to an array of `{ text, link }` items or `{ text, items }`
-dropdowns:
+dropdowns. `text` may be a string or a locale map
+(`{ en: "Guide", ja: "ガイド" }`); the current page locale is used when
+present:
 
 ```ts
 import { oxContent, defineTheme } from "@ox-content/vite-plugin";

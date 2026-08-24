@@ -1,5 +1,10 @@
 import { describe, expect, it } from "vite-plus/test";
-import { parsePageChromeFlags, resolvePageChromeOption } from "./header-chrome";
+import {
+  parsePageChromeFlags,
+  resolveHeaderNavItems,
+  resolveLocaleLabel,
+  resolvePageChromeOption,
+} from "./header-chrome";
 import { resolveSsgOptions } from "./ssg";
 import { resolveTheme, themeToNapi } from "./theme";
 
@@ -59,6 +64,19 @@ describe("parsePageChromeFlags", () => {
   });
 });
 
+describe("locale-safe labels", () => {
+  it("picks the current locale, then the language prefix", () => {
+    const text = { en: "Guide", ja: "ガイド", "en-GB": "Guide (UK)" };
+    expect(resolveLocaleLabel(text, "ja")).toBe("ガイド");
+    expect(resolveLocaleLabel(text, "en-GB")).toBe("Guide (UK)");
+    expect(resolveLocaleLabel(text, "en-US")).toBe("Guide");
+    expect(resolveLocaleLabel("Guide", "ja")).toBe("Guide");
+    expect(resolveHeaderNavItems([{ text, link: "/guide/" }], "ja")).toEqual([
+      { text: "ガイド", link: "/guide/" },
+    ]);
+  });
+});
+
 describe("theme header chrome", () => {
   it("passes header nav and announcement through", () => {
     const napi = themeToNapi(
@@ -73,5 +91,15 @@ describe("theme header chrome", () => {
       link: "https://example.com/news",
       dismissKey: "hi",
     });
+  });
+
+  it("flattens locale map labels for the current page locale", () => {
+    const napi = themeToNapi(
+      resolveTheme({
+        nav: [{ text: { en: "Guide", ja: "ガイド" }, link: "/guide/" }],
+      }),
+      "ja",
+    );
+    expect(napi.nav).toEqual([{ text: "ガイド", link: "/guide/" }]);
   });
 });

@@ -3,17 +3,17 @@
   "generatedAt": "2026-08-24T09:29:05.330Z",
   "summary": {
     "modules": 56,
-    "entries": 477,
+    "entries": 481,
     "byKind": {
-      "function": 206,
-      "interface": 197,
-      "type": 16,
+      "function": 208,
+      "interface": 198,
+      "type": 17,
       "variable": 13,
       "module": 45
     },
-    "members": 1025,
-    "params": 375,
-    "returns": 202,
+    "members": 1028,
+    "params": 380,
+    "returns": 204,
     "examples": 20,
     "deprecated": 2
   },
@@ -1312,6 +1312,15 @@
           "endLine": 3
         },
         {
+          "name": "LocaleLabel",
+          "kind": "type",
+          "description": "Plain label or locale map (`{ en: \"Guide\", ja: \"ガイド\" }`).",
+          "file": "npm/vite-plugin-ox-content/src/header-chrome.ts",
+          "line": 6,
+          "endLine": 6,
+          "signature": "export type LocaleLabel = string | Record<string, string>"
+        },
+        {
           "name": "HeaderNavItem",
           "kind": "interface",
           "description": "Header nav link or dropdown.",
@@ -1320,9 +1329,9 @@
               "name": "text",
               "kind": "property",
               "description": "",
-              "type": "string",
-              "line": 7,
-              "endLine": 7
+              "type": "LocaleLabel",
+              "line": 10,
+              "endLine": 10
             },
             {
               "name": "link",
@@ -1330,8 +1339,8 @@
               "description": "",
               "type": "string",
               "optional": true,
-              "line": 8,
-              "endLine": 8
+              "line": 11,
+              "endLine": 11
             },
             {
               "name": "items",
@@ -1339,13 +1348,13 @@
               "description": "",
               "type": "HeaderNavItem[]",
               "optional": true,
-              "line": 9,
-              "endLine": 9
+              "line": 12,
+              "endLine": 12
             }
           ],
           "file": "npm/vite-plugin-ox-content/src/header-chrome.ts",
-          "line": 6,
-          "endLine": 10,
+          "line": 9,
+          "endLine": 13,
           "signature": "export interface HeaderNavItem"
         },
         {
@@ -1358,8 +1367,8 @@
               "kind": "property",
               "description": "",
               "type": "string",
-              "line": 14,
-              "endLine": 14
+              "line": 17,
+              "endLine": 17
             },
             {
               "name": "link",
@@ -1367,8 +1376,8 @@
               "description": "https or same-origin only.",
               "type": "string",
               "optional": true,
-              "line": 16,
-              "endLine": 16
+              "line": 19,
+              "endLine": 19
             },
             {
               "name": "dismissKey",
@@ -1376,13 +1385,13 @@
               "description": "Best-effort localStorage key for dismiss.",
               "type": "string",
               "optional": true,
-              "line": 18,
-              "endLine": 18
+              "line": 21,
+              "endLine": 21
             }
           ],
           "file": "npm/vite-plugin-ox-content/src/header-chrome.ts",
-          "line": 13,
-          "endLine": 19,
+          "line": 16,
+          "endLine": 22,
           "signature": "export interface ThemeAnnouncement"
         },
         {
@@ -1396,38 +1405,11 @@
               "description": "",
               "type": "boolean",
               "optional": true,
-              "line": 23,
-              "endLine": 23
-            },
-            {
-              "name": "outline",
-              "kind": "property",
-              "description": "",
-              "type": "boolean",
-              "optional": true,
-              "line": 24,
-              "endLine": 24
-            },
-            {
-              "name": "aside",
-              "kind": "property",
-              "description": "",
-              "type": "boolean",
-              "optional": true,
-              "line": 25,
-              "endLine": 25
-            },
-            {
-              "name": "footer",
-              "kind": "property",
-              "description": "",
-              "type": "boolean",
-              "optional": true,
               "line": 26,
               "endLine": 26
             },
             {
-              "name": "navbar",
+              "name": "outline",
               "kind": "property",
               "description": "",
               "type": "boolean",
@@ -1436,7 +1418,7 @@
               "endLine": 27
             },
             {
-              "name": "lastUpdated",
+              "name": "aside",
               "kind": "property",
               "description": "",
               "type": "boolean",
@@ -1445,18 +1427,45 @@
               "endLine": 28
             },
             {
-              "name": "editLink",
+              "name": "footer",
               "kind": "property",
               "description": "",
               "type": "boolean",
               "optional": true,
               "line": 29,
               "endLine": 29
+            },
+            {
+              "name": "navbar",
+              "kind": "property",
+              "description": "",
+              "type": "boolean",
+              "optional": true,
+              "line": 30,
+              "endLine": 30
+            },
+            {
+              "name": "lastUpdated",
+              "kind": "property",
+              "description": "",
+              "type": "boolean",
+              "optional": true,
+              "line": 31,
+              "endLine": 31
+            },
+            {
+              "name": "editLink",
+              "kind": "property",
+              "description": "",
+              "type": "boolean",
+              "optional": true,
+              "line": 32,
+              "endLine": 32
             }
           ],
           "file": "npm/vite-plugin-ox-content/src/header-chrome.ts",
-          "line": 22,
-          "endLine": 30,
+          "line": 25,
+          "endLine": 33,
           "signature": "export interface PageChromeFlags"
         },
         {
@@ -1475,8 +1484,8 @@
             "description": ""
           },
           "file": "npm/vite-plugin-ox-content/src/header-chrome.ts",
-          "line": 33,
-          "endLine": 37,
+          "line": 36,
+          "endLine": 40,
           "signature": "export function resolvePageChromeOption(value: boolean | Record<string, unknown> | undefined): boolean"
         },
         {
@@ -1495,9 +1504,98 @@
             "description": ""
           },
           "file": "npm/vite-plugin-ox-content/src/header-chrome.ts",
-          "line": 40,
-          "endLine": 50,
+          "line": 43,
+          "endLine": 53,
           "signature": "export function parsePageChromeFlags(frontmatter: Record<string, unknown>): PageChromeFlags"
+        },
+        {
+          "name": "resolveLocaleLabel",
+          "kind": "function",
+          "description": "Picks `locale`, then the language prefix, then the first map value.",
+          "params": [
+            {
+              "name": "text",
+              "type": "LocaleLabel",
+              "description": ""
+            },
+            {
+              "name": "locale",
+              "type": "string",
+              "description": "",
+              "optional": true
+            }
+          ],
+          "returns": {
+            "type": "string",
+            "description": ""
+          },
+          "file": "npm/vite-plugin-ox-content/src/header-chrome.ts",
+          "line": 60,
+          "endLine": 72,
+          "signature": "export function resolveLocaleLabel(text: LocaleLabel, locale?: string): string"
+        },
+        {
+          "name": "ResolvedHeaderNavItem",
+          "kind": "interface",
+          "description": "Nav item after locale maps are flattened to strings.",
+          "members": [
+            {
+              "name": "text",
+              "kind": "property",
+              "description": "",
+              "type": "string",
+              "line": 76,
+              "endLine": 76
+            },
+            {
+              "name": "link",
+              "kind": "property",
+              "description": "",
+              "type": "string",
+              "optional": true,
+              "line": 77,
+              "endLine": 77
+            },
+            {
+              "name": "items",
+              "kind": "property",
+              "description": "",
+              "type": "ResolvedHeaderNavItem[]",
+              "optional": true,
+              "line": 78,
+              "endLine": 78
+            }
+          ],
+          "file": "npm/vite-plugin-ox-content/src/header-chrome.ts",
+          "line": 75,
+          "endLine": 79,
+          "signature": "export interface ResolvedHeaderNavItem"
+        },
+        {
+          "name": "resolveHeaderNavItems",
+          "kind": "function",
+          "description": "Resolves locale maps so NAPI always receives string labels.",
+          "params": [
+            {
+              "name": "items",
+              "type": "HeaderNavItem[] | undefined",
+              "description": ""
+            },
+            {
+              "name": "locale",
+              "type": "string",
+              "description": "",
+              "optional": true
+            }
+          ],
+          "returns": {
+            "type": "ResolvedHeaderNavItem[] | undefined",
+            "description": ""
+          },
+          "file": "npm/vite-plugin-ox-content/src/header-chrome.ts",
+          "line": 82,
+          "endLine": 94,
+          "signature": "export function resolveHeaderNavItems(items: HeaderNavItem[] | undefined, locale?: string): ResolvedHeaderNavItem[] | undefined"
         }
       ]
     },
@@ -9089,8 +9187,8 @@
               "description": "Primary accent color",
               "type": "string",
               "optional": true,
-              "line": 19,
-              "endLine": 19
+              "line": 20,
+              "endLine": 20
             },
             {
               "name": "primaryHover",
@@ -9098,8 +9196,8 @@
               "description": "Primary color on hover",
               "type": "string",
               "optional": true,
-              "line": 21,
-              "endLine": 21
+              "line": 22,
+              "endLine": 22
             },
             {
               "name": "background",
@@ -9107,8 +9205,8 @@
               "description": "Background color",
               "type": "string",
               "optional": true,
-              "line": 23,
-              "endLine": 23
+              "line": 24,
+              "endLine": 24
             },
             {
               "name": "backgroundAlt",
@@ -9116,8 +9214,8 @@
               "description": "Alternative background color (sidebar, code blocks)",
               "type": "string",
               "optional": true,
-              "line": 25,
-              "endLine": 25
+              "line": 26,
+              "endLine": 26
             },
             {
               "name": "text",
@@ -9125,8 +9223,8 @@
               "description": "Main text color",
               "type": "string",
               "optional": true,
-              "line": 27,
-              "endLine": 27
+              "line": 28,
+              "endLine": 28
             },
             {
               "name": "textMuted",
@@ -9134,8 +9232,8 @@
               "description": "Muted/secondary text color",
               "type": "string",
               "optional": true,
-              "line": 29,
-              "endLine": 29
+              "line": 30,
+              "endLine": 30
             },
             {
               "name": "border",
@@ -9143,8 +9241,8 @@
               "description": "Border color",
               "type": "string",
               "optional": true,
-              "line": 31,
-              "endLine": 31
+              "line": 32,
+              "endLine": 32
             },
             {
               "name": "codeBackground",
@@ -9152,8 +9250,8 @@
               "description": "Code block background color",
               "type": "string",
               "optional": true,
-              "line": 33,
-              "endLine": 33
+              "line": 34,
+              "endLine": 34
             },
             {
               "name": "codeBackgroundTop",
@@ -9161,8 +9259,8 @@
               "description": "Code block gradient color at the top; defaults to `codeBackground` when customized",
               "type": "string",
               "optional": true,
-              "line": 35,
-              "endLine": 35
+              "line": 36,
+              "endLine": 36
             },
             {
               "name": "codeText",
@@ -9170,13 +9268,13 @@
               "description": "Code block text color",
               "type": "string",
               "optional": true,
-              "line": 37,
-              "endLine": 37
+              "line": 38,
+              "endLine": 38
             }
           ],
           "file": "npm/vite-plugin-ox-content/src/theme.ts",
-          "line": 17,
-          "endLine": 38,
+          "line": 18,
+          "endLine": 39,
           "signature": "export interface ThemeColors"
         },
         {
@@ -9190,8 +9288,8 @@
               "description": "Sidebar width (CSS value, e.g., \"260px\")",
               "type": "string",
               "optional": true,
-              "line": 45,
-              "endLine": 45
+              "line": 46,
+              "endLine": 46
             },
             {
               "name": "headerHeight",
@@ -9199,8 +9297,8 @@
               "description": "Header height (CSS value, e.g., \"60px\")",
               "type": "string",
               "optional": true,
-              "line": 47,
-              "endLine": 47
+              "line": 48,
+              "endLine": 48
             },
             {
               "name": "maxContentWidth",
@@ -9208,13 +9306,13 @@
               "description": "Maximum content width (CSS value, e.g., \"960px\")",
               "type": "string",
               "optional": true,
-              "line": 49,
-              "endLine": 49
+              "line": 50,
+              "endLine": 50
             }
           ],
           "file": "npm/vite-plugin-ox-content/src/theme.ts",
-          "line": 43,
-          "endLine": 50,
+          "line": 44,
+          "endLine": 51,
           "signature": "export interface ThemeLayout"
         },
         {
@@ -9228,8 +9326,8 @@
               "description": "Sans-serif font stack",
               "type": "string",
               "optional": true,
-              "line": 57,
-              "endLine": 57
+              "line": 58,
+              "endLine": 58
             },
             {
               "name": "mono",
@@ -9237,13 +9335,13 @@
               "description": "Monospace font stack",
               "type": "string",
               "optional": true,
-              "line": 59,
-              "endLine": 59
+              "line": 60,
+              "endLine": 60
             }
           ],
           "file": "npm/vite-plugin-ox-content/src/theme.ts",
-          "line": 55,
-          "endLine": 60,
+          "line": 56,
+          "endLine": 61,
           "signature": "export interface ThemeFonts"
         },
         {
@@ -9257,13 +9355,13 @@
               "description": "Landing page presentation mode",
               "type": "\"default\" | \"subtle\"",
               "optional": true,
-              "line": 67,
-              "endLine": 67
+              "line": 68,
+              "endLine": 68
             }
           ],
           "file": "npm/vite-plugin-ox-content/src/theme.ts",
-          "line": 65,
-          "endLine": 68,
+          "line": 66,
+          "endLine": 69,
           "signature": "export interface ThemeEntryPage"
         },
         {
@@ -9277,8 +9375,8 @@
               "description": "Logo image URL",
               "type": "string",
               "optional": true,
-              "line": 75,
-              "endLine": 75
+              "line": 76,
+              "endLine": 76
             },
             {
               "name": "logoLight",
@@ -9286,8 +9384,8 @@
               "description": "Light mode logo image URL",
               "type": "string",
               "optional": true,
-              "line": 77,
-              "endLine": 77
+              "line": 78,
+              "endLine": 78
             },
             {
               "name": "logoDark",
@@ -9295,8 +9393,8 @@
               "description": "Dark mode logo image URL",
               "type": "string",
               "optional": true,
-              "line": 79,
-              "endLine": 79
+              "line": 80,
+              "endLine": 80
             },
             {
               "name": "showSiteNameText",
@@ -9304,8 +9402,8 @@
               "description": "Whether to render the site name text next to the logo",
               "type": "boolean",
               "optional": true,
-              "line": 81,
-              "endLine": 81
+              "line": 82,
+              "endLine": 82
             },
             {
               "name": "logoWidth",
@@ -9313,8 +9411,8 @@
               "description": "Logo width in pixels",
               "type": "number",
               "optional": true,
-              "line": 83,
-              "endLine": 83
+              "line": 84,
+              "endLine": 84
             },
             {
               "name": "logoHeight",
@@ -9322,13 +9420,13 @@
               "description": "Logo height in pixels",
               "type": "number",
               "optional": true,
-              "line": 85,
-              "endLine": 85
+              "line": 86,
+              "endLine": 86
             }
           ],
           "file": "npm/vite-plugin-ox-content/src/theme.ts",
-          "line": 73,
-          "endLine": 86,
+          "line": 74,
+          "endLine": 87,
           "signature": "export interface ThemeHeader"
         },
         {
@@ -9342,8 +9440,8 @@
               "description": "Footer message (supports HTML)",
               "type": "string",
               "optional": true,
-              "line": 93,
-              "endLine": 93
+              "line": 94,
+              "endLine": 94
             },
             {
               "name": "copyright",
@@ -9351,13 +9449,13 @@
               "description": "Copyright text (supports HTML)",
               "type": "string",
               "optional": true,
-              "line": 95,
-              "endLine": 95
+              "line": 96,
+              "endLine": 96
             }
           ],
           "file": "npm/vite-plugin-ox-content/src/theme.ts",
-          "line": 91,
-          "endLine": 96,
+          "line": 92,
+          "endLine": 97,
           "signature": "export interface ThemeFooter"
         },
         {
@@ -9365,8 +9463,8 @@
           "kind": "type",
           "description": "Custom social link icon.",
           "file": "npm/vite-plugin-ox-content/src/theme.ts",
-          "line": 99,
-          "endLine": 99,
+          "line": 100,
+          "endLine": 100,
           "signature": "export type SocialLinkIcon = string | { svg: string }"
         },
         {
@@ -9379,16 +9477,16 @@
               "kind": "property",
               "description": "",
               "type": "SocialLinkIcon",
-              "line": 103,
-              "endLine": 103
+              "line": 104,
+              "endLine": 104
             },
             {
               "name": "link",
               "kind": "property",
               "description": "",
               "type": "string",
-              "line": 104,
-              "endLine": 104
+              "line": 105,
+              "endLine": 105
             },
             {
               "name": "ariaLabel",
@@ -9396,13 +9494,13 @@
               "description": "",
               "type": "string",
               "optional": true,
-              "line": 105,
-              "endLine": 105
+              "line": 106,
+              "endLine": 106
             }
           ],
           "file": "npm/vite-plugin-ox-content/src/theme.ts",
-          "line": 102,
-          "endLine": 106,
+          "line": 103,
+          "endLine": 107,
           "signature": "export interface SocialLink"
         },
         {
@@ -9416,8 +9514,8 @@
               "description": "GitHub URL",
               "type": "string",
               "optional": true,
-              "line": 111,
-              "endLine": 111
+              "line": 112,
+              "endLine": 112
             },
             {
               "name": "twitter",
@@ -9425,8 +9523,8 @@
               "description": "Twitter/X URL",
               "type": "string",
               "optional": true,
-              "line": 113,
-              "endLine": 113
+              "line": 114,
+              "endLine": 114
             },
             {
               "name": "discord",
@@ -9434,13 +9532,13 @@
               "description": "Discord URL",
               "type": "string",
               "optional": true,
-              "line": 115,
-              "endLine": 115
+              "line": 116,
+              "endLine": 116
             }
           ],
           "file": "npm/vite-plugin-ox-content/src/theme.ts",
-          "line": 109,
-          "endLine": 116,
+          "line": 110,
+          "endLine": 117,
           "signature": "export interface LegacySocialLinks"
         },
         {
@@ -9448,8 +9546,8 @@
           "kind": "type",
           "description": "Social links configuration.",
           "file": "npm/vite-plugin-ox-content/src/theme.ts",
-          "line": 119,
-          "endLine": 119,
+          "line": 120,
+          "endLine": 120,
           "signature": "export type SocialLinks = LegacySocialLinks | SocialLink[]"
         },
         {
@@ -9463,8 +9561,8 @@
               "description": "Content to embed into <head>",
               "type": "string",
               "optional": true,
-              "line": 126,
-              "endLine": 126
+              "line": 127,
+              "endLine": 127
             },
             {
               "name": "headerBefore",
@@ -9472,8 +9570,8 @@
               "description": "Content before header",
               "type": "string",
               "optional": true,
-              "line": 128,
-              "endLine": 128
+              "line": 129,
+              "endLine": 129
             },
             {
               "name": "headerAfter",
@@ -9481,8 +9579,8 @@
               "description": "Content after header",
               "type": "string",
               "optional": true,
-              "line": 130,
-              "endLine": 130
+              "line": 131,
+              "endLine": 131
             },
             {
               "name": "sidebarBefore",
@@ -9490,8 +9588,8 @@
               "description": "Content before sidebar navigation",
               "type": "string",
               "optional": true,
-              "line": 132,
-              "endLine": 132
+              "line": 133,
+              "endLine": 133
             },
             {
               "name": "sidebarAfter",
@@ -9499,8 +9597,8 @@
               "description": "Content after sidebar navigation",
               "type": "string",
               "optional": true,
-              "line": 134,
-              "endLine": 134
+              "line": 135,
+              "endLine": 135
             },
             {
               "name": "contentBefore",
@@ -9508,8 +9606,8 @@
               "description": "Content before main content",
               "type": "string",
               "optional": true,
-              "line": 136,
-              "endLine": 136
+              "line": 137,
+              "endLine": 137
             },
             {
               "name": "contentAfter",
@@ -9517,8 +9615,8 @@
               "description": "Content after main content",
               "type": "string",
               "optional": true,
-              "line": 138,
-              "endLine": 138
+              "line": 139,
+              "endLine": 139
             },
             {
               "name": "footerBefore",
@@ -9526,8 +9624,8 @@
               "description": "Content before footer",
               "type": "string",
               "optional": true,
-              "line": 140,
-              "endLine": 140
+              "line": 141,
+              "endLine": 141
             },
             {
               "name": "footer",
@@ -9535,13 +9633,13 @@
               "description": "Custom footer content (replaces default footer)",
               "type": "string",
               "optional": true,
-              "line": 142,
-              "endLine": 142
+              "line": 143,
+              "endLine": 143
             }
           ],
           "file": "npm/vite-plugin-ox-content/src/theme.ts",
-          "line": 124,
-          "endLine": 143,
+          "line": 125,
+          "endLine": 144,
           "signature": "export interface ThemeEmbed"
         },
         {
@@ -9555,8 +9653,8 @@
               "description": "Theme name for identification",
               "type": "string",
               "optional": true,
-              "line": 158,
-              "endLine": 158
+              "line": 159,
+              "endLine": 159
             },
             {
               "name": "extends",
@@ -9564,8 +9662,8 @@
               "description": "Base theme to extend",
               "type": "ThemeConfig",
               "optional": true,
-              "line": 160,
-              "endLine": 160
+              "line": 161,
+              "endLine": 161
             },
             {
               "name": "aside",
@@ -9573,8 +9671,8 @@
               "description": "Show the right-hand \"On this page\" outline.\n\nDefault `false`. When `true`, the outline is rendered only on pages\nthat have TOC entries, using the existing `<aside class=\"toc\">` markup.",
               "type": "boolean",
               "optional": true,
-              "line": 167,
-              "endLine": 167
+              "line": 168,
+              "endLine": 168
             },
             {
               "name": "breadcrumbs",
@@ -9582,8 +9680,8 @@
               "description": "Show a breadcrumb trail from the site root through sidebar ancestors.\n\nDefault `false`. `true` or an object enables the trail. Frontmatter\n`breadcrumbs: false` still hides it on that page.",
               "type": "boolean | Record<string, unknown>",
               "optional": true,
-              "line": 174,
-              "endLine": 174
+              "line": 175,
+              "endLine": 175
             },
             {
               "name": "colors",
@@ -9591,8 +9689,8 @@
               "description": "Light mode colors (maps to CSS variables)",
               "type": "ThemeColors",
               "optional": true,
-              "line": 176,
-              "endLine": 176
+              "line": 177,
+              "endLine": 177
             },
             {
               "name": "darkColors",
@@ -9600,8 +9698,8 @@
               "description": "Dark mode colors (maps to CSS variables)",
               "type": "ThemeColors",
               "optional": true,
-              "line": 178,
-              "endLine": 178
+              "line": 179,
+              "endLine": 179
             },
             {
               "name": "fonts",
@@ -9609,8 +9707,8 @@
               "description": "Font configuration (maps to CSS variables)",
               "type": "ThemeFonts",
               "optional": true,
-              "line": 180,
-              "endLine": 180
+              "line": 181,
+              "endLine": 181
             },
             {
               "name": "entryPage",
@@ -9618,8 +9716,8 @@
               "description": "Entry page configuration",
               "type": "ThemeEntryPage",
               "optional": true,
-              "line": 182,
-              "endLine": 182
+              "line": 183,
+              "endLine": 183
             },
             {
               "name": "layout",
@@ -9627,8 +9725,8 @@
               "description": "Layout configuration (maps to CSS variables)",
               "type": "ThemeLayout",
               "optional": true,
-              "line": 184,
-              "endLine": 184
+              "line": 185,
+              "endLine": 185
             },
             {
               "name": "header",
@@ -9636,8 +9734,8 @@
               "description": "Header configuration",
               "type": "ThemeHeader",
               "optional": true,
-              "line": 186,
-              "endLine": 186
+              "line": 187,
+              "endLine": 187
             },
             {
               "name": "nav",
@@ -9645,8 +9743,8 @@
               "description": "Opt-in header nav. Each item is `{ text, link }` or a dropdown\n`{ text, items }`. Labels are escaped. `javascript:`, `data:`,\n`vbscript:`, and protocol-relative `//` links are omitted.",
               "type": "HeaderNavItem[]",
               "optional": true,
-              "line": 192,
-              "endLine": 192
+              "line": 193,
+              "endLine": 193
             },
             {
               "name": "announcement",
@@ -9654,8 +9752,8 @@
               "description": "Opt-in announcement bar above the header. Text is escaped.\nOptional `link` must be https or same-origin.",
               "type": "ThemeAnnouncement",
               "optional": true,
-              "line": 197,
-              "endLine": 197
+              "line": 198,
+              "endLine": 198
             },
             {
               "name": "footer",
@@ -9663,8 +9761,8 @@
               "description": "Footer configuration",
               "type": "ThemeFooter",
               "optional": true,
-              "line": 199,
-              "endLine": 199
+              "line": 200,
+              "endLine": 200
             },
             {
               "name": "socialLinks",
@@ -9672,8 +9770,8 @@
               "description": "Social links configuration",
               "type": "SocialLinks",
               "optional": true,
-              "line": 201,
-              "endLine": 201
+              "line": 202,
+              "endLine": 202
             },
             {
               "name": "sidebar",
@@ -9681,8 +9779,8 @@
               "description": "",
               "type": "SidebarItem[]",
               "optional": true,
-              "line": 202,
-              "endLine": 202
+              "line": 203,
+              "endLine": 203
             },
             {
               "name": "embed",
@@ -9690,8 +9788,8 @@
               "description": "Embedded HTML content at specific positions",
               "type": "ThemeEmbed",
               "optional": true,
-              "line": 204,
-              "endLine": 204
+              "line": 205,
+              "endLine": 205
             },
             {
               "name": "tokens",
@@ -9699,8 +9797,8 @@
               "description": "Extra `--octc-*` custom properties for light mode, keyed without the\nprefix. Merged key-by-key across composed layers, so a later layer can\nrestyle one token without redeclaring the rest.",
               "type": "ThemeTokens",
               "optional": true,
-              "line": 210,
-              "endLine": 210
+              "line": 211,
+              "endLine": 211
             },
             {
               "name": "darkTokens",
@@ -9708,8 +9806,8 @@
               "description": "Extra `--octc-*` custom properties for dark mode.",
               "type": "ThemeTokens",
               "optional": true,
-              "line": 212,
-              "endLine": 212
+              "line": 213,
+              "endLine": 213
             },
             {
               "name": "css",
@@ -9717,8 +9815,8 @@
               "description": "Additional custom CSS. Composed layers **concatenate** this rather than\noverwrite, so stacking a skin and a color scheme keeps both stylesheets.",
               "type": "string",
               "optional": true,
-              "line": 217,
-              "endLine": 217
+              "line": 218,
+              "endLine": 218
             },
             {
               "name": "js",
@@ -9726,13 +9824,13 @@
               "description": "Additional custom JavaScript. Concatenated across composed layers.",
               "type": "string",
               "optional": true,
-              "line": 219,
-              "endLine": 219
+              "line": 220,
+              "endLine": 220
             }
           ],
           "file": "npm/vite-plugin-ox-content/src/theme.ts",
-          "line": 156,
-          "endLine": 220,
+          "line": 157,
+          "endLine": 221,
           "signature": "export interface ThemeConfig"
         },
         {
@@ -9745,19 +9843,11 @@
               "kind": "property",
               "description": "",
               "type": "string",
-              "line": 226,
-              "endLine": 226
-            },
-            {
-              "name": "aside",
-              "kind": "property",
-              "description": "",
-              "type": "boolean",
               "line": 227,
               "endLine": 227
             },
             {
-              "name": "breadcrumbs",
+              "name": "aside",
               "kind": "property",
               "description": "",
               "type": "boolean",
@@ -9765,15 +9855,15 @@
               "endLine": 228
             },
             {
-              "name": "colors",
+              "name": "breadcrumbs",
               "kind": "property",
               "description": "",
-              "type": "ThemeColors",
+              "type": "boolean",
               "line": 229,
               "endLine": 229
             },
             {
-              "name": "darkColors",
+              "name": "colors",
               "kind": "property",
               "description": "",
               "type": "ThemeColors",
@@ -9781,36 +9871,44 @@
               "endLine": 230
             },
             {
+              "name": "darkColors",
+              "kind": "property",
+              "description": "",
+              "type": "ThemeColors",
+              "line": 231,
+              "endLine": 231
+            },
+            {
               "name": "fonts",
               "kind": "property",
               "description": "",
               "type": "ThemeFonts",
-              "line": 231,
-              "endLine": 231
+              "line": 232,
+              "endLine": 232
             },
             {
               "name": "entryPage",
               "kind": "property",
               "description": "",
               "type": "ThemeEntryPage",
-              "line": 232,
-              "endLine": 232
+              "line": 233,
+              "endLine": 233
             },
             {
               "name": "layout",
               "kind": "property",
               "description": "",
               "type": "ThemeLayout",
-              "line": 233,
-              "endLine": 233
+              "line": 234,
+              "endLine": 234
             },
             {
               "name": "header",
               "kind": "property",
               "description": "",
               "type": "ThemeHeader",
-              "line": 234,
-              "endLine": 234
+              "line": 235,
+              "endLine": 235
             },
             {
               "name": "nav",
@@ -9818,8 +9916,8 @@
               "description": "",
               "type": "HeaderNavItem[]",
               "optional": true,
-              "line": 235,
-              "endLine": 235
+              "line": 236,
+              "endLine": 236
             },
             {
               "name": "announcement",
@@ -9827,51 +9925,43 @@
               "description": "",
               "type": "ThemeAnnouncement",
               "optional": true,
-              "line": 236,
-              "endLine": 236
+              "line": 237,
+              "endLine": 237
             },
             {
               "name": "footer",
               "kind": "property",
               "description": "",
               "type": "ThemeFooter",
-              "line": 237,
-              "endLine": 237
+              "line": 238,
+              "endLine": 238
             },
             {
               "name": "socialLinks",
               "kind": "property",
               "description": "",
               "type": "SocialLinks",
-              "line": 238,
-              "endLine": 238
+              "line": 239,
+              "endLine": 239
             },
             {
               "name": "sidebar",
               "kind": "property",
               "description": "",
               "type": "SidebarItem[]",
-              "line": 239,
-              "endLine": 239
+              "line": 240,
+              "endLine": 240
             },
             {
               "name": "embed",
               "kind": "property",
               "description": "",
               "type": "ThemeEmbed",
-              "line": 240,
-              "endLine": 240
-            },
-            {
-              "name": "tokens",
-              "kind": "property",
-              "description": "",
-              "type": "ThemeTokens",
               "line": 241,
               "endLine": 241
             },
             {
-              "name": "darkTokens",
+              "name": "tokens",
               "kind": "property",
               "description": "",
               "type": "ThemeTokens",
@@ -9879,25 +9969,33 @@
               "endLine": 242
             },
             {
+              "name": "darkTokens",
+              "kind": "property",
+              "description": "",
+              "type": "ThemeTokens",
+              "line": 243,
+              "endLine": 243
+            },
+            {
               "name": "css",
               "kind": "property",
               "description": "",
               "type": "string",
-              "line": 243,
-              "endLine": 243
+              "line": 244,
+              "endLine": 244
             },
             {
               "name": "js",
               "kind": "property",
               "description": "",
               "type": "string",
-              "line": 244,
-              "endLine": 244
+              "line": 245,
+              "endLine": 245
             }
           ],
           "file": "npm/vite-plugin-ox-content/src/theme.ts",
-          "line": 225,
-          "endLine": 245,
+          "line": 226,
+          "endLine": 246,
           "signature": "export interface ResolvedThemeConfig"
         },
         {
@@ -9905,8 +10003,8 @@
           "kind": "variable",
           "description": "Default theme configuration.\nBased on the current ox-content SSG styles.",
           "file": "npm/vite-plugin-ox-content/src/theme.ts",
-          "line": 251,
-          "endLine": 309,
+          "line": 252,
+          "endLine": 310,
           "signature": "export const defaultTheme: ThemeConfig"
         },
         {
@@ -9930,8 +10028,8 @@
             "description": ""
           },
           "file": "npm/vite-plugin-ox-content/src/theme.ts",
-          "line": 314,
-          "endLine": 340,
+          "line": 315,
+          "endLine": 341,
           "signature": "function deepMerge<T extends Record<string, unknown>>(target: T, source: Partial<T>): T"
         },
         {
@@ -9953,8 +10051,8 @@
             "```ts\nconst myTheme = defineTheme({\n  extends: defaultTheme,\n  colors: {\n    primary: '#3498db',\n  },\n  footer: {\n    copyright: '2025 My Company',\n  },\n});\n```"
           ],
           "file": "npm/vite-plugin-ox-content/src/theme.ts",
-          "line": 358,
-          "endLine": 360,
+          "line": 359,
+          "endLine": 361,
           "signature": "export function defineTheme(config: ThemeConfig): ThemeConfig"
         },
         {
@@ -9976,8 +10074,8 @@
             "```ts\nconst merged = mergeThemes(defaultTheme, pixelSkin, tokyoNight, overrides);\n```"
           ],
           "file": "npm/vite-plugin-ox-content/src/theme.ts",
-          "line": 377,
-          "endLine": 403,
+          "line": 378,
+          "endLine": 404,
           "signature": "export function mergeThemes(...themes: (ThemeConfig | ThemeConfig[])[]): ThemeConfig"
         },
         {
@@ -9997,8 +10095,8 @@
             "description": ""
           },
           "file": "npm/vite-plugin-ox-content/src/theme.ts",
-          "line": 424,
-          "endLine": 461,
+          "line": 425,
+          "endLine": 462,
           "signature": "export function resolveTheme(config?: ThemeConfig | ThemeConfig[]): ResolvedThemeConfig"
         },
         {
@@ -10017,8 +10115,8 @@
             "description": ""
           },
           "file": "npm/vite-plugin-ox-content/src/theme.ts",
-          "line": 469,
-          "endLine": 481,
+          "line": 470,
+          "endLine": 482,
           "signature": "function expandExtendsChain(config: ThemeConfig): ThemeConfig[]"
         },
         {
@@ -10030,6 +10128,12 @@
               "name": "theme",
               "type": "ResolvedThemeConfig",
               "description": ""
+            },
+            {
+              "name": "locale",
+              "type": "string",
+              "description": "",
+              "optional": true
             }
           ],
           "returns": {
@@ -10037,9 +10141,9 @@
             "description": ""
           },
           "file": "npm/vite-plugin-ox-content/src/theme.ts",
-          "line": 501,
-          "endLine": 578,
-          "signature": "export function themeToNapi(theme: ResolvedThemeConfig): NapiThemeConfig"
+          "line": 502,
+          "endLine": 579,
+          "signature": "export function themeToNapi(theme: ResolvedThemeConfig, locale?: string): NapiThemeConfig"
         },
         {
           "name": "themeCss",
@@ -10057,8 +10161,8 @@
             "description": ""
           },
           "file": "npm/vite-plugin-ox-content/src/theme.ts",
-          "line": 584,
-          "endLine": 590,
+          "line": 585,
+          "endLine": 591,
           "signature": "function themeCss(theme: ResolvedThemeConfig): string"
         },
         {
@@ -10072,20 +10176,11 @@
               "description": "",
               "type": "string",
               "optional": true,
-              "line": 611,
-              "endLine": 611
-            },
-            {
-              "name": "primaryHover",
-              "kind": "property",
-              "description": "",
-              "type": "string",
-              "optional": true,
               "line": 612,
               "endLine": 612
             },
             {
-              "name": "background",
+              "name": "primaryHover",
               "kind": "property",
               "description": "",
               "type": "string",
@@ -10094,7 +10189,7 @@
               "endLine": 613
             },
             {
-              "name": "backgroundAlt",
+              "name": "background",
               "kind": "property",
               "description": "",
               "type": "string",
@@ -10103,7 +10198,7 @@
               "endLine": 614
             },
             {
-              "name": "text",
+              "name": "backgroundAlt",
               "kind": "property",
               "description": "",
               "type": "string",
@@ -10112,7 +10207,7 @@
               "endLine": 615
             },
             {
-              "name": "textMuted",
+              "name": "text",
               "kind": "property",
               "description": "",
               "type": "string",
@@ -10121,7 +10216,7 @@
               "endLine": 616
             },
             {
-              "name": "border",
+              "name": "textMuted",
               "kind": "property",
               "description": "",
               "type": "string",
@@ -10130,7 +10225,7 @@
               "endLine": 617
             },
             {
-              "name": "codeBackground",
+              "name": "border",
               "kind": "property",
               "description": "",
               "type": "string",
@@ -10139,7 +10234,7 @@
               "endLine": 618
             },
             {
-              "name": "codeBackgroundTop",
+              "name": "codeBackground",
               "kind": "property",
               "description": "",
               "type": "string",
@@ -10148,18 +10243,27 @@
               "endLine": 619
             },
             {
-              "name": "codeText",
+              "name": "codeBackgroundTop",
               "kind": "property",
               "description": "",
               "type": "string",
               "optional": true,
               "line": 620,
               "endLine": 620
+            },
+            {
+              "name": "codeText",
+              "kind": "property",
+              "description": "",
+              "type": "string",
+              "optional": true,
+              "line": 621,
+              "endLine": 621
             }
           ],
           "file": "npm/vite-plugin-ox-content/src/theme.ts",
-          "line": 610,
-          "endLine": 621,
+          "line": 611,
+          "endLine": 622,
           "signature": "export interface NapiThemeColors"
         },
         {
@@ -10173,8 +10277,8 @@
               "description": "",
               "type": "string",
               "optional": true,
-              "line": 627,
-              "endLine": 627
+              "line": 628,
+              "endLine": 628
             },
             {
               "name": "mono",
@@ -10182,13 +10286,13 @@
               "description": "",
               "type": "string",
               "optional": true,
-              "line": 628,
-              "endLine": 628
+              "line": 629,
+              "endLine": 629
             }
           ],
           "file": "npm/vite-plugin-ox-content/src/theme.ts",
-          "line": 626,
-          "endLine": 629,
+          "line": 627,
+          "endLine": 630,
           "signature": "export interface NapiThemeFonts"
         },
         {
@@ -10202,13 +10306,13 @@
               "description": "",
               "type": "\"default\" | \"subtle\"",
               "optional": true,
-              "line": 635,
-              "endLine": 635
+              "line": 636,
+              "endLine": 636
             }
           ],
           "file": "npm/vite-plugin-ox-content/src/theme.ts",
-          "line": 634,
-          "endLine": 636,
+          "line": 635,
+          "endLine": 637,
           "signature": "export interface NapiThemeEntryPage"
         },
         {
@@ -10222,8 +10326,8 @@
               "description": "",
               "type": "string",
               "optional": true,
-              "line": 642,
-              "endLine": 642
+              "line": 643,
+              "endLine": 643
             },
             {
               "name": "headerHeight",
@@ -10231,8 +10335,8 @@
               "description": "",
               "type": "string",
               "optional": true,
-              "line": 643,
-              "endLine": 643
+              "line": 644,
+              "endLine": 644
             },
             {
               "name": "maxContentWidth",
@@ -10240,13 +10344,13 @@
               "description": "",
               "type": "string",
               "optional": true,
-              "line": 644,
-              "endLine": 644
+              "line": 645,
+              "endLine": 645
             }
           ],
           "file": "npm/vite-plugin-ox-content/src/theme.ts",
-          "line": 641,
-          "endLine": 645,
+          "line": 642,
+          "endLine": 646,
           "signature": "export interface NapiThemeLayout"
         },
         {
@@ -10260,20 +10364,11 @@
               "description": "",
               "type": "string",
               "optional": true,
-              "line": 651,
-              "endLine": 651
-            },
-            {
-              "name": "logoLight",
-              "kind": "property",
-              "description": "",
-              "type": "string",
-              "optional": true,
               "line": 652,
               "endLine": 652
             },
             {
-              "name": "logoDark",
+              "name": "logoLight",
               "kind": "property",
               "description": "",
               "type": "string",
@@ -10282,13 +10377,22 @@
               "endLine": 653
             },
             {
+              "name": "logoDark",
+              "kind": "property",
+              "description": "",
+              "type": "string",
+              "optional": true,
+              "line": 654,
+              "endLine": 654
+            },
+            {
               "name": "showSiteNameText",
               "kind": "property",
               "description": "",
               "type": "boolean",
               "optional": true,
-              "line": 654,
-              "endLine": 654
+              "line": 655,
+              "endLine": 655
             },
             {
               "name": "logoWidth",
@@ -10296,8 +10400,8 @@
               "description": "",
               "type": "number",
               "optional": true,
-              "line": 655,
-              "endLine": 655
+              "line": 656,
+              "endLine": 656
             },
             {
               "name": "logoHeight",
@@ -10305,13 +10409,13 @@
               "description": "",
               "type": "number",
               "optional": true,
-              "line": 656,
-              "endLine": 656
+              "line": 657,
+              "endLine": 657
             }
           ],
           "file": "npm/vite-plugin-ox-content/src/theme.ts",
-          "line": 650,
-          "endLine": 657,
+          "line": 651,
+          "endLine": 658,
           "signature": "export interface NapiThemeHeader"
         },
         {
@@ -10325,8 +10429,8 @@
               "description": "",
               "type": "string",
               "optional": true,
-              "line": 663,
-              "endLine": 663
+              "line": 664,
+              "endLine": 664
             },
             {
               "name": "copyright",
@@ -10334,13 +10438,13 @@
               "description": "",
               "type": "string",
               "optional": true,
-              "line": 664,
-              "endLine": 664
+              "line": 665,
+              "endLine": 665
             }
           ],
           "file": "npm/vite-plugin-ox-content/src/theme.ts",
-          "line": 662,
-          "endLine": 665,
+          "line": 663,
+          "endLine": 666,
           "signature": "export interface NapiThemeFooter"
         },
         {
@@ -10354,20 +10458,11 @@
               "description": "",
               "type": "string",
               "optional": true,
-              "line": 671,
-              "endLine": 671
-            },
-            {
-              "name": "twitter",
-              "kind": "property",
-              "description": "",
-              "type": "string",
-              "optional": true,
               "line": 672,
               "endLine": 672
             },
             {
-              "name": "discord",
+              "name": "twitter",
               "kind": "property",
               "description": "",
               "type": "string",
@@ -10376,18 +10471,27 @@
               "endLine": 673
             },
             {
+              "name": "discord",
+              "kind": "property",
+              "description": "",
+              "type": "string",
+              "optional": true,
+              "line": 674,
+              "endLine": 674
+            },
+            {
               "name": "links",
               "kind": "property",
               "description": "",
               "type": "NapiSocialLink[]",
               "optional": true,
-              "line": 674,
-              "endLine": 674
+              "line": 675,
+              "endLine": 675
             }
           ],
           "file": "npm/vite-plugin-ox-content/src/theme.ts",
-          "line": 670,
-          "endLine": 675,
+          "line": 671,
+          "endLine": 676,
           "signature": "export interface NapiSocialLinks"
         },
         {
@@ -10401,20 +10505,11 @@
               "description": "",
               "type": "string",
               "optional": true,
-              "line": 688,
-              "endLine": 688
-            },
-            {
-              "name": "headerBefore",
-              "kind": "property",
-              "description": "",
-              "type": "string",
-              "optional": true,
               "line": 689,
               "endLine": 689
             },
             {
-              "name": "headerAfter",
+              "name": "headerBefore",
               "kind": "property",
               "description": "",
               "type": "string",
@@ -10423,7 +10518,7 @@
               "endLine": 690
             },
             {
-              "name": "sidebarBefore",
+              "name": "headerAfter",
               "kind": "property",
               "description": "",
               "type": "string",
@@ -10432,7 +10527,7 @@
               "endLine": 691
             },
             {
-              "name": "sidebarAfter",
+              "name": "sidebarBefore",
               "kind": "property",
               "description": "",
               "type": "string",
@@ -10441,7 +10536,7 @@
               "endLine": 692
             },
             {
-              "name": "contentBefore",
+              "name": "sidebarAfter",
               "kind": "property",
               "description": "",
               "type": "string",
@@ -10450,7 +10545,7 @@
               "endLine": 693
             },
             {
-              "name": "contentAfter",
+              "name": "contentBefore",
               "kind": "property",
               "description": "",
               "type": "string",
@@ -10459,7 +10554,7 @@
               "endLine": 694
             },
             {
-              "name": "footerBefore",
+              "name": "contentAfter",
               "kind": "property",
               "description": "",
               "type": "string",
@@ -10468,18 +10563,27 @@
               "endLine": 695
             },
             {
-              "name": "footer",
+              "name": "footerBefore",
               "kind": "property",
               "description": "",
               "type": "string",
               "optional": true,
               "line": 696,
               "endLine": 696
+            },
+            {
+              "name": "footer",
+              "kind": "property",
+              "description": "",
+              "type": "string",
+              "optional": true,
+              "line": 697,
+              "endLine": 697
             }
           ],
           "file": "npm/vite-plugin-ox-content/src/theme.ts",
-          "line": 687,
-          "endLine": 697,
+          "line": 688,
+          "endLine": 698,
           "signature": "export interface NapiThemeEmbed"
         },
         {
@@ -10493,8 +10597,8 @@
               "description": "Right-hand \"On this page\" outline.",
               "type": "boolean",
               "optional": true,
-              "line": 708,
-              "endLine": 708
+              "line": 709,
+              "endLine": 709
             },
             {
               "name": "breadcrumbs",
@@ -10502,17 +10606,17 @@
               "description": "Breadcrumb trail from the site root through sidebar ancestors.",
               "type": "boolean",
               "optional": true,
-              "line": 710,
-              "endLine": 710
+              "line": 711,
+              "endLine": 711
             },
             {
               "name": "nav",
               "kind": "property",
               "description": "",
-              "type": "HeaderNavItem[]",
+              "type": "ResolvedHeaderNavItem[]",
               "optional": true,
-              "line": 711,
-              "endLine": 711
+              "line": 712,
+              "endLine": 712
             },
             {
               "name": "announcement",
@@ -10520,20 +10624,11 @@
               "description": "",
               "type": "ThemeAnnouncement",
               "optional": true,
-              "line": 712,
-              "endLine": 712
-            },
-            {
-              "name": "colors",
-              "kind": "property",
-              "description": "",
-              "type": "NapiThemeColors",
-              "optional": true,
               "line": 713,
               "endLine": 713
             },
             {
-              "name": "darkColors",
+              "name": "colors",
               "kind": "property",
               "description": "",
               "type": "NapiThemeColors",
@@ -10542,13 +10637,22 @@
               "endLine": 714
             },
             {
+              "name": "darkColors",
+              "kind": "property",
+              "description": "",
+              "type": "NapiThemeColors",
+              "optional": true,
+              "line": 715,
+              "endLine": 715
+            },
+            {
               "name": "fonts",
               "kind": "property",
               "description": "",
               "type": "NapiThemeFonts",
               "optional": true,
-              "line": 715,
-              "endLine": 715
+              "line": 716,
+              "endLine": 716
             },
             {
               "name": "entryPage",
@@ -10556,8 +10660,8 @@
               "description": "",
               "type": "NapiThemeEntryPage",
               "optional": true,
-              "line": 716,
-              "endLine": 716
+              "line": 717,
+              "endLine": 717
             },
             {
               "name": "layout",
@@ -10565,8 +10669,8 @@
               "description": "",
               "type": "NapiThemeLayout",
               "optional": true,
-              "line": 717,
-              "endLine": 717
+              "line": 718,
+              "endLine": 718
             },
             {
               "name": "header",
@@ -10574,8 +10678,8 @@
               "description": "",
               "type": "NapiThemeHeader",
               "optional": true,
-              "line": 718,
-              "endLine": 718
+              "line": 719,
+              "endLine": 719
             },
             {
               "name": "footer",
@@ -10583,8 +10687,8 @@
               "description": "",
               "type": "NapiThemeFooter",
               "optional": true,
-              "line": 719,
-              "endLine": 719
+              "line": 720,
+              "endLine": 720
             },
             {
               "name": "socialLinks",
@@ -10592,8 +10696,8 @@
               "description": "",
               "type": "NapiSocialLinks",
               "optional": true,
-              "line": 720,
-              "endLine": 720
+              "line": 721,
+              "endLine": 721
             },
             {
               "name": "embed",
@@ -10601,8 +10705,8 @@
               "description": "",
               "type": "NapiThemeEmbed",
               "optional": true,
-              "line": 721,
-              "endLine": 721
+              "line": 722,
+              "endLine": 722
             },
             {
               "name": "css",
@@ -10610,8 +10714,8 @@
               "description": "",
               "type": "string",
               "optional": true,
-              "line": 722,
-              "endLine": 722
+              "line": 723,
+              "endLine": 723
             },
             {
               "name": "js",
@@ -10619,13 +10723,13 @@
               "description": "",
               "type": "string",
               "optional": true,
-              "line": 723,
-              "endLine": 723
+              "line": 724,
+              "endLine": 724
             }
           ],
           "file": "npm/vite-plugin-ox-content/src/theme.ts",
-          "line": 706,
-          "endLine": 724,
+          "line": 707,
+          "endLine": 725,
           "signature": "export interface NapiThemeConfig"
         }
       ]

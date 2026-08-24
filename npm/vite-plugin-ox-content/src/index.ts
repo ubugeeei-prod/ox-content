@@ -1079,7 +1079,12 @@ export type {
   ThemeAnnouncement,
 } from "./theme";
 export type { PageChromeFlags } from "./header-chrome";
-export { resolvePageChromeOption, parsePageChromeFlags } from "./header-chrome";
+export {
+  parsePageChromeFlags,
+  resolveHeaderNavItems,
+  resolveLocaleLabel,
+  resolvePageChromeOption,
+} from "./header-chrome";
 export * from "./types";
 
 // JSX Runtime
