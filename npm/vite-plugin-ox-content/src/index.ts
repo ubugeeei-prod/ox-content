@@ -29,6 +29,7 @@ import {
 import { createOgViewerPlugin } from "./og-viewer";
 import { resolveI18nOptions, createI18nPlugin } from "./i18n";
 import { isMarkdownFilePath, normalizeMarkdownExtensions } from "./markdown";
+import { resolveImageOptions } from "./resolve-image-options";
 import { generateCollectionsVirtualModule, resolveCollectionsOptions } from "./collections";
 import type { BuiltinPmOptions, OxContentOptions, ResolvedOptions } from "./types";
 import { resolveIncludeOptions } from "./include-options";
@@ -51,6 +52,8 @@ export type {
   ContainerOptions,
   ContainerTypeOptions,
   ResolvedContainerOptions,
+  ImageOptions,
+  ResolvedImageOptions,
   CodeImportOptions,
   ResolvedCodeImportOptions,
   IncludeOptions,
@@ -560,6 +563,7 @@ function resolveOptions(options: OxContentOptions): ResolvedOptions {
     attrs: resolveAttrsOptions(options.attrs),
     badges: resolveBadgeOptions(options.badges),
     containers: resolveContainerOptions(options.containers),
+    images: resolveImageOptions(options.images),
     codeImports: resolveCodeImportOptions(options.codeImports),
     includes: resolveIncludeOptions(options.includes),
     sanitize: resolveSanitizeOptions(options.sanitize),
@@ -875,6 +879,7 @@ export {
   type MarkdownChunkSource,
 } from "./incremental";
 export { transformMarkdown } from "./transform";
+export { resolveImageOptions } from "./resolve-image-options";
 export {
   createFrameworkMarkdownOptions,
   escapeSvelteMarkup,

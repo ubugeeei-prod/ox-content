@@ -126,6 +126,7 @@ export function createDocsResolvedOptions(
     attrs: { enabled: false },
     badges: { enabled: false },
     containers: { enabled: false, types: {} },
+    images: { enabled: false, lazy: true },
     codeImports: { enabled: false },
     includes: { enabled: false },
     sanitize: { enabled: false },

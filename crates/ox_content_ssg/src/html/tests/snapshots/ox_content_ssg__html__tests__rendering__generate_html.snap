@@ -815,6 +815,18 @@ a:hover {
 .content .ox-badge--required {
   --octc-badge-accent: #c2410c;
 }
+.content .ox-figure {
+  margin: 1.25rem 0;
+}
+.content .ox-figure img {
+  margin-inline: auto;
+}
+.content .ox-figure figcaption {
+  margin-top: 0.5rem;
+  color: var(--octc-color-text-muted);
+  font-size: 0.875rem;
+  text-align: center;
+}
 .content code {
   font-family: var(--octc-font-mono);
   font-size: 0.875em;

@@ -948,6 +948,22 @@ export interface JsI18NRuntimeLocale {
   dir?: string
 }
 
+/** Opt-in figures, captions, and lazy images. */
+export interface JsImageOptions {
+  /**
+   * Enable figure captions, lazy loading, and safe dimensions.
+   *
+   * Default: `false`.
+   */
+  enabled?: boolean
+  /**
+   * Add `loading="lazy"` to transformed images.
+   *
+   * Default: `true`.
+   */
+  lazy?: boolean
+}
+
 /** Markdown file include options. */
 export interface JsIncludeOptions {
   /**
@@ -1852,6 +1868,12 @@ export interface JsTransformOptions {
    * Default: disabled.
    */
   containers?: JsContainerOptions
+  /**
+   * Opt-in figures, captions, and lazy images.
+   *
+   * Default: disabled.
+   */
+  images?: JsImageOptions
   /**
    * Opt-in Markdown file includes via `<!-- @include: PATH -->`.
    *

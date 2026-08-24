@@ -3,15 +3,15 @@
   "generatedAt": "2026-06-23T17:24:26.758Z",
   "summary": {
     "modules": 46,
-    "entries": 383,
+    "entries": 385,
     "byKind": {
       "function": 173,
-      "interface": 149,
+      "interface": 151,
       "type": 13,
       "variable": 12,
       "module": 36
     },
-    "members": 833,
+    "members": 839,
     "params": 309,
     "returns": 169,
     "examples": 20,
@@ -9173,6 +9173,35 @@
               "endLine": 273
             },
             {
+              "name": "images",
+              "kind": "property",
+              "description": "",
+              "type": "{ enabled?: boolean; lazy?: boolean }",
+              "members": [
+                {
+                  "name": "enabled",
+                  "kind": "property",
+                  "description": "",
+                  "type": "boolean",
+                  "optional": true,
+                  "line": 265,
+                  "endLine": 265
+                },
+                {
+                  "name": "lazy",
+                  "kind": "property",
+                  "description": "",
+                  "type": "boolean",
+                  "optional": true,
+                  "line": 266,
+                  "endLine": 266
+                }
+              ],
+              "optional": true,
+              "line": 264,
+              "endLine": 267
+            },
+            {
               "name": "includes",
               "kind": "property",
               "description": "",
@@ -10370,6 +10399,16 @@
               "endLine": 600
             },
             {
+              "name": "images",
+              "kind": "property",
+              "description": "Opt-in figures, captions, and lazy-loaded images.\n\nTitle text becomes a `<figcaption>`. Optional `{width=N height=M}` on the\nimage is consumed by this feature and does not require `attrs`. Passing\n`true` or `{}` enables defaults (`lazy: true`).",
+              "type": "boolean | ImageOptions",
+              "default": "false",
+              "optional": true,
+              "line": 552,
+              "endLine": 552
+            },
+            {
               "name": "includes",
               "kind": "property",
               "description": "Inline another Markdown file with `<!-- @include: ./path.md -->`.\n\nExpansion happens before Markdown is parsed, so included headings and\nlists become part of the host document. Relative paths resolve from the\ncurrent file. `@/` and `/` resolve from `rootDir`. Paths outside\n`rootDir` are rejected and reported as transform errors.",
@@ -10740,6 +10779,14 @@
               "type": "ResolvedCodeImportOptions",
               "line": 790,
               "endLine": 790
+            },
+            {
+              "name": "images",
+              "kind": "property",
+              "description": "",
+              "type": "ResolvedImageOptions",
+              "line": 739,
+              "endLine": 739
             },
             {
               "name": "includes",
@@ -11406,6 +11453,27 @@
           "signature": "export interface ResolvedCodeImportOptions"
         },
         {
+          "name": "ImageOptions",
+          "kind": "interface",
+          "description": "Options for opt-in figures, captions, and lazy images.",
+          "members": [
+            {
+              "name": "lazy",
+              "kind": "property",
+              "description": "Add `loading=\"lazy\"` to transformed images.",
+              "type": "boolean",
+              "default": "true",
+              "optional": true,
+              "line": 895,
+              "endLine": 895
+            }
+          ],
+          "file": "npm/vite-plugin-ox-content/src/types.ts",
+          "line": 889,
+          "endLine": 896,
+          "signature": "export interface ImageOptions"
+        },
+        {
           "name": "IncludeOptions",
           "kind": "interface",
           "description": "Options for inlining Markdown files with `<!-- @include: PATH -->`.\n\nRelative paths resolve from the current file. `@/` and leading `/` resolve\nfrom `rootDir`. After canonicalize, paths outside `rootDir` are rejected.",
@@ -11425,6 +11493,33 @@
           "line": 1077,
           "endLine": 1086,
           "signature": "export interface IncludeOptions"
+        },
+        {
+          "name": "ResolvedImageOptions",
+          "kind": "interface",
+          "description": "Resolved image transform options.",
+          "members": [
+            {
+              "name": "enabled",
+              "kind": "property",
+              "description": "",
+              "type": "boolean",
+              "line": 902,
+              "endLine": 902
+            },
+            {
+              "name": "lazy",
+              "kind": "property",
+              "description": "",
+              "type": "boolean",
+              "line": 903,
+              "endLine": 903
+            }
+          ],
+          "file": "npm/vite-plugin-ox-content/src/types.ts",
+          "line": 901,
+          "endLine": 904,
+          "signature": "export interface ResolvedImageOptions"
         },
         {
           "name": "ResolvedIncludeOptions",

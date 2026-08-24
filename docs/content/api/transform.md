@@ -292,6 +292,11 @@
   <td><code class="ox-api-entry__member-type language-typescript">boolean</code></td>
   <td><div class="ox-api-entry__member-description">Enable GitHub Flavored Markdown extensions.<br>Includes tables, task lists, strikethrough, and autolinks.</div><div class="ox-api-entry__member-default"><span>Default</span> <code class="language-typescript">false</code></div></td>
 </tr>
+<tr id="jstransformoptions-images">
+  <td><code>images</code><span class="ox-api-badge">optional</span></td>
+  <td><code class="ox-api-entry__member-type language-typescript">{ enabled?: boolean; lazy?: boolean }</code></td>
+  <td></td>
+</tr>
 <tr id="jstransformoptions-includes">
   <td><code>includes</code><span class="ox-api-badge">optional</span></td>
   <td><code class="ox-api-entry__member-type language-typescript">{ enabled?: boolean; rootDir?: string }</code></td>

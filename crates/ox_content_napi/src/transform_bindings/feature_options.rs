@@ -7,6 +7,9 @@ use ox_content_transform::{
     MediaEmbedsOptions, SanitizeOptions, WikiLinkOptions,
 };
 
+mod image_options;
+pub use image_options::JsImageOptions;
+
 /// Wiki-link transform options.
 #[napi(object)]
 #[derive(Default, Clone)]

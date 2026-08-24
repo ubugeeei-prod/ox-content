@@ -33,11 +33,19 @@ pub struct TransformOptions {
     pub includes: Option<IncludeOptions>,
     /// Opt-in `{badge:variant}` inline badges. Disabled when omitted.
     pub badges: Option<BadgeOptions>,
+    /// Opt-in figures, captions, and lazy images. Disabled when omitted.
+    pub images: Option<ImageOptions>,
 }
 
 #[derive(Clone, Default)]
 pub struct BadgeOptions {
     pub enabled: Option<bool>,
+}
+
+#[derive(Clone, Default)]
+pub struct ImageOptions {
+    pub enabled: Option<bool>,
+    pub lazy: Option<bool>,
 }
 
 #[derive(Clone, Default)]

@@ -3,7 +3,8 @@ use ox_content_transform::TransformOptions;
 
 use super::{
     JsAttrsOptions, JsBadgeOptions, JsCodeImportOptions, JsContainerOptions, JsEditThisPageOptions,
-    JsEmojiShortcodeOptions, JsIncludeOptions, JsSanitizeOptions, JsWikiLinkOptions,
+    JsEmojiShortcodeOptions, JsImageOptions, JsIncludeOptions, JsSanitizeOptions,
+    JsWikiLinkOptions,
 };
 
 /// Transform options for JavaScript.
@@ -169,6 +170,11 @@ pub struct JsTransformOptions {
     ///
     /// Default: disabled.
     pub badges: Option<JsBadgeOptions>,
+
+    /// Opt-in figures, captions, and lazy images.
+    ///
+    /// Default: disabled.
+    pub images: Option<JsImageOptions>,
 }
 
 impl From<JsTransformOptions> for TransformOptions {
@@ -202,6 +208,7 @@ impl From<JsTransformOptions> for TransformOptions {
             containers: value.containers.map(Into::into),
             includes: value.includes.map(Into::into),
             badges: value.badges.map(Into::into),
+            images: value.images.map(Into::into),
         }
     }
 }
