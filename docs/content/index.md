@@ -97,6 +97,8 @@ Under the hood, Ox Content is not only a docs theme. It also exposes the Markdow
 - [Docs Deployment](./deployment.md) - Deploy the documentation site to Void with `vp run deploy#docs`
 - [Editor Extension Roadmap](./editor-extension-roadmap.md) - VS Code and Neovim plan, PR-by-PR
 - [Code Play Roadmap](./code-play-roadmap.md) - Opt-in `@ox-content/code-play` plugin plan
+- [Ox Content 3.0 Roadmap](./v3-roadmap.md) - Theme packages, MDX, Code Play, built-ins, tree-sitter highlighting
+- [Docs Site Feature Roadmap](./docs-site-feature-roadmap.md) - Opt-in built-in docs-site features
 
 ## Reference
 
