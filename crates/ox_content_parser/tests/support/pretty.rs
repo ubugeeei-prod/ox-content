@@ -11,6 +11,9 @@ use std::fmt::Write as _;
 
 use ox_content_ast::{AlignKind, Document, Node, Span};
 
+#[path = "pretty_mdx.rs"]
+mod mdx;
+
 pub fn format_document(doc: &Document<'_>, source: &str, out: &mut String) {
     line(out, 0, format_args!("Document {}", span(doc.span, source)));
     for child in &doc.children {
@@ -178,6 +181,11 @@ fn format_node(node: &Node<'_>, source: &str, depth: usize, out: &mut String) {
                 format_node(child, source, depth + 1, out);
             }
         }
+        Node::MdxJsxFlowElement(node) => mdx::format_jsx_flow_element(node, source, depth, out),
+        Node::MdxJsxTextElement(node) => mdx::format_jsx_text_element(node, source, depth, out),
+        Node::MdxjsEsm(node) => mdx::format_esm(node, source, depth, out),
+        Node::MdxFlowExpression(node) => mdx::format_flow_expression(node, source, depth, out),
+        Node::MdxTextExpression(node) => mdx::format_text_expression(node, source, depth, out),
     }
 }
 

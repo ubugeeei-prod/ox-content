@@ -1,6 +1,7 @@
 //! AST visitor trait for traversing Markdown AST.
 
 use crate::ast::*;
+use crate::mdx::*;
 
 /// Visitor trait for traversing the Markdown AST.
 pub trait Visit<'a> {
@@ -105,6 +106,25 @@ pub trait Visit<'a> {
     fn visit_footnote_definition(&mut self, footnote_def: &FootnoteDefinition<'a>) {
         walk_footnote_definition(self, footnote_def);
     }
+
+    /// Visits a block JSX element.
+    fn visit_mdx_jsx_flow_element(&mut self, node: &MdxJsxFlowElement<'a>) {
+        walk_mdx_jsx_flow_element(self, node);
+    }
+
+    /// Visits an inline JSX element.
+    fn visit_mdx_jsx_text_element(&mut self, node: &MdxJsxTextElement<'a>) {
+        walk_mdx_jsx_text_element(self, node);
+    }
+
+    /// Visits an MDX ESM `import` / `export`.
+    fn visit_mdxjs_esm(&mut self, _node: &MdxjsEsm<'a>) {}
+
+    /// Visits a block MDX expression.
+    fn visit_mdx_flow_expression(&mut self, _node: &MdxFlowExpression<'a>) {}
+
+    /// Visits an inline MDX expression.
+    fn visit_mdx_text_expression(&mut self, _node: &MdxTextExpression<'a>) {}
 }
 
 /// Walks through a document's children.
@@ -137,6 +157,11 @@ pub fn walk_node<'a, V: Visit<'a> + ?Sized>(visitor: &mut V, node: &Node<'a>) {
         Node::FootnoteReference(n) => visitor.visit_footnote_reference(n),
         Node::Definition(n) => visitor.visit_definition(n),
         Node::FootnoteDefinition(n) => visitor.visit_footnote_definition(n),
+        Node::MdxJsxFlowElement(n) => visitor.visit_mdx_jsx_flow_element(n),
+        Node::MdxJsxTextElement(n) => visitor.visit_mdx_jsx_text_element(n),
+        Node::MdxjsEsm(n) => visitor.visit_mdxjs_esm(n),
+        Node::MdxFlowExpression(n) => visitor.visit_mdx_flow_expression(n),
+        Node::MdxTextExpression(n) => visitor.visit_mdx_text_expression(n),
     }
 }
 
@@ -230,6 +255,26 @@ pub fn walk_footnote_definition<'a, V: Visit<'a> + ?Sized>(
     footnote_def: &FootnoteDefinition<'a>,
 ) {
     for child in &footnote_def.children {
+        visitor.visit_node(child);
+    }
+}
+
+/// Walks a block JSX element's children. Attributes are not nodes.
+pub fn walk_mdx_jsx_flow_element<'a, V: Visit<'a> + ?Sized>(
+    visitor: &mut V,
+    node: &MdxJsxFlowElement<'a>,
+) {
+    for child in &node.children {
+        visitor.visit_node(child);
+    }
+}
+
+/// Walks an inline JSX element's children. Attributes are not nodes.
+pub fn walk_mdx_jsx_text_element<'a, V: Visit<'a> + ?Sized>(
+    visitor: &mut V,
+    node: &MdxJsxTextElement<'a>,
+) {
+    for child in &node.children {
         visitor.visit_node(child);
     }
 }

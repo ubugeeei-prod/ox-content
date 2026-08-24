@@ -21,6 +21,7 @@ import {
   getUrlPath,
   generateHtmlPage,
   formatTitle,
+  parseSsgPagerOverride,
   resolveNavigationGroups,
 } from "./ssg";
 import type { NavGroup, SsgPageData, SsgEntryPageConfig } from "./ssg";
@@ -347,6 +348,8 @@ async function renderPage(
     path: getUrlPath(filePath, srcDir),
     href: getUrlPath(filePath, srcDir) || "/",
     entryPage,
+    prev: parseSsgPagerOverride(frontmatter.prev),
+    next: parseSsgPagerOverride(frontmatter.next),
   };
 
   // Generate full HTML page
@@ -357,6 +360,9 @@ async function renderPage(
     base,
     options.ssg.ogImage,
     options.ssg.theme,
+    undefined,
+    undefined,
+    options.ssg.pagination,
   );
 
   // Inject Vite HMR client for live reload

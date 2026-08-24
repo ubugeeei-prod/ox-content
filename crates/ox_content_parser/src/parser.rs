@@ -87,6 +87,11 @@ pub struct ParserOptions {
     /// Default: `false`.
     pub cjk_emphasis: bool,
 
+    /// Enable MDX (JSX, ESM, and expressions). Off by default.
+    ///
+    /// Default: `false`.
+    pub mdx: bool,
+
     /// Maximum nesting depth for block elements.
     ///
     /// Default: `0`; [`ParserOptions::gfm`] sets this to `100`.
@@ -106,8 +111,15 @@ impl ParserOptions {
             autolinks: true,
             // Not part of GFM: GitHub renders these runs per CommonMark too.
             cjk_emphasis: false,
+            mdx: false,
             max_nesting_depth: 100,
         }
+    }
+
+    /// Creates parser options with MDX enabled and GFM left off.
+    #[must_use]
+    pub fn mdx() -> Self {
+        Self { mdx: true, max_nesting_depth: 100, ..Self::default() }
     }
 }
 

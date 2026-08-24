@@ -6,15 +6,18 @@ mod entry;
 mod footer;
 mod nav;
 mod page;
+mod pagination;
 mod render;
 mod social;
 mod theme;
 mod theme_css;
 mod utils;
 
+use pagination::PagerView;
+
 pub use page::{
     EntryPageConfig, FeatureConfig, HeroAction, HeroConfig, HeroImage, HeroNoticeConfig,
-    LocaleInfo, NavGroup, NavItem, PageData, SsgConfig, TocEntry,
+    LocaleInfo, NavGroup, NavItem, PageData, PagerOverride, SsgConfig, TocEntry,
 };
 pub use render::{BarePageData, generate_bare_html, generate_bare_page, generate_html};
 pub use theme::{
@@ -123,6 +126,7 @@ struct PageTemplate<'a> {
     main_content: &'a str,
     has_toc: bool,
     toc_html: &'a str,
+    pager: Option<&'a PagerView>,
     last_updated: Option<&'a LastUpdatedView>,
     embed_content_after: &'a str,
     embed_footer_before: &'a str,

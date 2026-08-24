@@ -96,6 +96,22 @@
     <main class="main{% if has_toc %} main--with-toc{% endif %}">
 {{ embed_content_before|safe }}
 {{ main_content|safe }}
+{% if let Some(pager) = pager %}
+      <nav class="pager" aria-label="Pagination">
+{% if let Some(prev) = pager.prev %}
+        <a class="pager-link pager-link--prev" rel="prev" href="{{ prev.href }}">
+          <span class="pager-label">Previous</span>
+          <span class="pager-title">{{ prev.title }}</span>
+        </a>
+{% endif %}
+{% if let Some(next) = pager.next %}
+        <a class="pager-link pager-link--next" rel="next" href="{{ next.href }}">
+          <span class="pager-label">Next</span>
+          <span class="pager-title">{{ next.title }}</span>
+        </a>
+{% endif %}
+      </nav>
+{% endif %}
 {% if let Some(updated) = last_updated %}
       <p class="last-updated">Last updated: <time datetime="{{ updated.datetime }}">{{ updated.text }}</time></p>
 {% endif %}

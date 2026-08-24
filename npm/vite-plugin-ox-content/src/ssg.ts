@@ -63,6 +63,17 @@ export interface SsgPageData {
   href: string;
   /** Entry page configuration (if layout: entry) */
   entryPage?: SsgEntryPageConfig;
+  /** Frontmatter override for the previous-page link. */
+  prev?: SsgPagerOverride;
+  /** Frontmatter override for the next-page link. */
+  next?: SsgPagerOverride;
+}
+
+/** Frontmatter override for one previous/next pager side. */
+export interface SsgPagerOverride {
+  hidden?: boolean;
+  text?: string;
+  href?: string;
 }
 
 interface SsgRoutePaths {
@@ -93,6 +104,7 @@ export function resolveSsgOptions(ssg: SsgOptions | boolean | undefined): Resolv
       bare: false,
       generateOgImage: false,
       lastUpdated: false,
+      pagination: false,
     };
   }
 
@@ -104,6 +116,7 @@ export function resolveSsgOptions(ssg: SsgOptions | boolean | undefined): Resolv
       bare: false,
       generateOgImage: false,
       lastUpdated: false,
+      pagination: false,
       theme: resolveTheme(undefined),
     };
   }
@@ -122,10 +135,45 @@ export function resolveSsgOptions(ssg: SsgOptions | boolean | undefined): Resolv
     ogImage: ssg.ogImage,
     generateOgImage: ssg.generateOgImage ?? false,
     lastUpdated: ssg.lastUpdated ?? false,
+    pagination: resolvePaginationOption(ssg.pagination),
     siteUrl: ssg.siteUrl,
     theme: resolveTheme(ssg.theme),
     navigation: ssg.navigation,
   };
+}
+
+function resolvePaginationOption(value: boolean | Record<string, unknown> | undefined): boolean {
+  return value === true || (typeof value === "object" && value !== null);
+}
+
+/** Parses `prev` / `next` frontmatter into a pager override. */
+export function parseSsgPagerOverride(value: unknown): SsgPagerOverride | undefined {
+  if (value === false) {
+    return { hidden: true };
+  }
+  if (value == null || value === true) {
+    return undefined;
+  }
+  if (typeof value !== "object") {
+    return undefined;
+  }
+  const record = value as Record<string, unknown>;
+  const text =
+    typeof record.text === "string"
+      ? record.text
+      : typeof record.title === "string"
+        ? record.title
+        : undefined;
+  const href =
+    typeof record.link === "string"
+      ? record.link
+      : typeof record.href === "string"
+        ? record.href
+        : undefined;
+  if (text === undefined && href === undefined) {
+    return undefined;
+  }
+  return { text, href };
 }
 
 /**
@@ -285,6 +333,7 @@ export async function generateHtmlPage(
   theme?: ResolvedThemeConfig,
   locale?: string,
   availableLocales?: LocaleConfig[],
+  pagination = false,
 ): Promise<string> {
   const mod = await importNapiModule();
 
@@ -347,6 +396,8 @@ export async function generateHtmlPage(
       lastUpdated: pageData.lastUpdated,
       path: pageData.path,
       entryPage: entryPageForRust,
+      prev: pageData.prev,
+      next: pageData.next,
     },
     navGroupsForRust,
     {
@@ -356,6 +407,7 @@ export async function generateHtmlPage(
       theme: themeForRust,
       locale,
       availableLocales: availableLocales ? toRustLocales(availableLocales) : undefined,
+      pagination,
     },
   );
 }
@@ -932,6 +984,7 @@ async function renderSsgPage(
     context.ssgOptions.theme,
     getPageLocale(pageData.path, context.options.i18n),
     context.options.i18n ? context.options.i18n.locales : undefined,
+    context.ssgOptions.pagination,
   );
 }
 
@@ -988,6 +1041,8 @@ function createSsgPageData(pageResult: PageProcessResult): SsgPageData {
     path: pageResult.routePaths.urlPath,
     href: pageResult.routePaths.href,
     entryPage,
+    prev: parseSsgPagerOverride(frontmatter.prev),
+    next: parseSsgPagerOverride(frontmatter.next),
   };
 }
 

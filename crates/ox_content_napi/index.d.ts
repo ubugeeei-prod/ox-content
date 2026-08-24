@@ -1057,6 +1057,16 @@ export interface JsOgImageData {
   author?: string
 }
 
+/** Frontmatter override for one previous/next pager side. */
+export interface JsPagerOverride {
+  /** Hide this side when true. */
+  hidden?: boolean
+  /** Replacement title. */
+  text?: string
+  /** Replacement href. */
+  href?: string
+}
+
 /**
  * Parser options for JavaScript.
  *
@@ -1365,6 +1375,8 @@ export interface JsSsgConfig {
   locale?: string
   /** Available locales for locale switcher. */
   availableLocales?: Array<JsLocaleInfo>
+  /** When true, render previous/next page links after the article. */
+  pagination?: boolean
 }
 
 /** Result of SSG shared asset extraction. */
@@ -1437,6 +1449,10 @@ export interface JsSsgPageData {
   path: string
   /** Entry page configuration (if layout: entry). */
   entryPage?: JsEntryPageConfig
+  /** Frontmatter override for the previous-page link. */
+  prev?: JsPagerOverride
+  /** Frontmatter override for the next-page link. */
+  next?: JsPagerOverride
 }
 
 /** Resolved SSG output and public route paths. */

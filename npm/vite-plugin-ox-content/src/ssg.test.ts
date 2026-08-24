@@ -6,6 +6,7 @@ import {
   formatTitle,
   generateBareHtmlPage,
   generateBarePage,
+  parseSsgPagerOverride,
   getHref,
   getOutputPath,
   getPageLocale,
@@ -23,6 +24,18 @@ describe("resolveSsgOptions", () => {
 
   it("enables git timestamps when requested", () => {
     expect(resolveSsgOptions({ lastUpdated: true }).lastUpdated).toBe(true);
+  });
+
+  it("disables pagination by default", () => {
+    expect(resolveSsgOptions(undefined).pagination).toBe(false);
+  });
+
+  it("enables pagination when requested", () => {
+    expect(resolveSsgOptions({ pagination: true }).pagination).toBe(true);
+  });
+
+  it("enables pagination when an object is passed", () => {
+    expect(resolveSsgOptions({ pagination: {} }).pagination).toBe(true);
   });
 
   it("carries a theme component through", () => {
@@ -251,5 +264,32 @@ describe("SSG route helpers", () => {
 
   it("formats file names as titles through the Rust helper", () => {
     expect(formatTitle("getting_started-now")).toBe("Getting Started Now");
+  });
+});
+
+describe("parseSsgPagerOverride", () => {
+  it("hides a side when frontmatter is false", () => {
+    expect(parseSsgPagerOverride(false)).toEqual({ hidden: true });
+  });
+
+  it("treats omitted or true as auto", () => {
+    expect(parseSsgPagerOverride(undefined)).toBeUndefined();
+    expect(parseSsgPagerOverride(true)).toBeUndefined();
+  });
+
+  it("accepts text/link and title/href objects", () => {
+    expect(parseSsgPagerOverride({ text: "Back", link: "/intro/" })).toEqual({
+      text: "Back",
+      href: "/intro/",
+    });
+    expect(parseSsgPagerOverride({ title: "API", href: "/api/" })).toEqual({
+      text: "API",
+      href: "/api/",
+    });
+  });
+
+  it("ignores empty objects and non-objects", () => {
+    expect(parseSsgPagerOverride({})).toBeUndefined();
+    expect(parseSsgPagerOverride("guide")).toBeUndefined();
   });
 });

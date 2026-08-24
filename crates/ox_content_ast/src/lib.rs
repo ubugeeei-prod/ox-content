@@ -7,10 +7,12 @@
 #![deny(clippy::disallowed_macros, clippy::disallowed_methods, clippy::disallowed_types)]
 
 mod ast;
+mod mdx;
 mod span;
 mod visit;
 
 pub use ast::*;
+pub use mdx::*;
 pub use span::*;
 pub use visit::*;
 
@@ -39,4 +41,13 @@ const _AST_IS_ARENA_ONLY: () = {
     assert!(std::mem::size_of::<Node<'static>>() <= 32);
     assert!(std::mem::size_of::<Paragraph<'static>>() > std::mem::size_of::<Node<'static>>());
     assert!(std::mem::size_of::<Definition<'static>>() > std::mem::size_of::<Node<'static>>());
+    assert!(
+        std::mem::size_of::<MdxJsxFlowElement<'static>>() > std::mem::size_of::<Node<'static>>()
+    );
+    assert!(
+        std::mem::size_of::<MdxJsxTextElement<'static>>() > std::mem::size_of::<Node<'static>>()
+    );
 };
+
+#[cfg(test)]
+mod mdx_tests;

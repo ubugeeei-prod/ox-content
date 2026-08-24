@@ -105,6 +105,7 @@ export function createDocsResolvedOptions(
       siteName: "Ox Content",
       generateOgImage: false,
       lastUpdated: false,
+      pagination: false,
     },
     gfm: true,
     footnotes: true,

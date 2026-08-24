@@ -10,6 +10,8 @@ fn test_generate_html_omits_toc_aside_until_opted_in() {
         last_updated: None,
         path: "test".to_string(),
         entry_page: None,
+        prev: None,
+        next: None,
     };
     let config = SsgConfig {
         site_name: "Test Site".to_string(),
@@ -18,6 +20,7 @@ fn test_generate_html_omits_toc_aside_until_opted_in() {
         theme: None,
         locale: None,
         available_locales: None,
+        pagination: false,
     };
 
     let html = generate_html(&page_data, &[], &config);
@@ -42,6 +45,8 @@ fn test_generate_html_renders_toc_aside_when_enabled() {
         last_updated: None,
         path: "test".to_string(),
         entry_page: None,
+        prev: None,
+        next: None,
     };
     let config = SsgConfig {
         site_name: "Test Site".to_string(),
@@ -50,6 +55,7 @@ fn test_generate_html_renders_toc_aside_when_enabled() {
         theme: Some(ThemeConfig { aside: Some(true), ..Default::default() }),
         locale: None,
         available_locales: None,
+        pagination: false,
     };
 
     let html = generate_html(&page_data, &[], &config);

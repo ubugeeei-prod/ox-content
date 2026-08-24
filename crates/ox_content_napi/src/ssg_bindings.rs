@@ -12,8 +12,8 @@ mod converters;
 
 use converters::{
     convert_entry_page_config, convert_generated_html_page, convert_nav_item,
-    convert_navigation_group, convert_sidebar_item, convert_theme_config, flatten_toc_entries,
-    map_generated_html_page, map_nav_group, map_route_paths, map_shared_asset,
+    convert_navigation_group, convert_pager_override, convert_sidebar_item, convert_theme_config,
+    flatten_toc_entries, map_generated_html_page, map_nav_group, map_route_paths, map_shared_asset,
 };
 
 /// Returns the last git commit timestamp for a file in milliseconds.
@@ -183,6 +183,8 @@ pub fn generate_ssg_html(
             .map(|timestamp| timestamp as i64),
         path: page_data.path,
         entry_page: convert_entry_page_config(page_data.entry_page),
+        prev: convert_pager_override(page_data.prev),
+        next: convert_pager_override(page_data.next),
     };
 
     let ssg_nav_groups: Vec<ox_content_ssg::NavGroup> = nav_groups
@@ -207,6 +209,7 @@ pub fn generate_ssg_html(
                 .map(|l| ox_content_ssg::LocaleInfo { code: l.code, name: l.name, dir: l.dir })
                 .collect()
         }),
+        pagination: config.pagination.unwrap_or(false),
     };
 
     ox_content_ssg::generate_html(&ssg_page_data, &ssg_nav_groups, &ssg_config)

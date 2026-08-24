@@ -204,6 +204,11 @@ impl HtmlRenderer {
             Node::FootnoteReference(node) => self.render_footnote_reference(node),
             Node::Definition(_) => {}
             Node::FootnoteDefinition(node) => self.render_footnote_definition(node),
+            Node::MdxJsxFlowElement(_)
+            | Node::MdxJsxTextElement(_)
+            | Node::MdxjsEsm(_)
+            | Node::MdxFlowExpression(_)
+            | Node::MdxTextExpression(_) => {}
         }
     }
 

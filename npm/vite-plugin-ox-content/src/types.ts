@@ -292,6 +292,16 @@ export interface SsgOptions {
   lastUpdated?: boolean;
 
   /**
+   * Show previous/next page links after the article.
+   *
+   * Disabled when omitted or `false`. `true` enables the default pager.
+   * An object also enables the feature.
+   *
+   * @default false
+   */
+  pagination?: boolean | Record<string, unknown>;
+
+  /**
    * Absolute site URL used when generating social metadata.
    *
    * Set this when pages need absolute Open Graph image URLs. Include the origin
@@ -352,6 +362,7 @@ export interface ResolvedSsgOptions {
   ogImage?: string;
   generateOgImage: boolean;
   lastUpdated: boolean;
+  pagination: boolean;
   siteUrl?: string;
   theme?: ResolvedThemeConfig;
   navigation?: SsgNavigationGroup[];

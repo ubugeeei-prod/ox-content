@@ -624,6 +624,39 @@ a:hover {
   color: var(--octc-color-text-muted);
   font-size: 0.875rem;
 }
+.pager {
+  max-width: var(--octc-max-content-width);
+  margin: 2rem auto 0;
+  padding-top: 1rem;
+  border-top: 1px solid color-mix(in srgb, var(--octc-color-border) 78%, transparent);
+  display: flex;
+  justify-content: space-between;
+  gap: 1.5rem;
+  font-size: 0.875rem;
+}
+.pager-link {
+  display: flex;
+  flex-direction: column;
+  gap: 0.2rem;
+  min-width: 0;
+  color: inherit;
+  text-decoration: none;
+}
+.pager-link--next {
+  margin-left: auto;
+  text-align: right;
+}
+.pager-label {
+  color: var(--octc-color-text-muted);
+  font-size: 0.75rem;
+}
+.pager-title {
+  color: var(--octc-color-text);
+  font-weight: 600;
+}
+.pager-link:hover .pager-title {
+  color: var(--octc-color-primary);
+}
 .content h1 {
   font-size: clamp(2.4rem, 5vw, 3.1rem);
   margin-bottom: 1rem;
@@ -1810,6 +1843,7 @@ a:hover {
 <article class="content">
 <h1>Hello</h1>
       </article>
+
 
       <p class="last-updated">Last updated: <time datetime="1970-01-01">1970-01-01</time></p>
 

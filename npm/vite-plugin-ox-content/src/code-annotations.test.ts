@@ -124,6 +124,7 @@ function createResolvedOptions(overrides: Partial<ResolvedOptions> = {}): Resolv
       bare: false,
       generateOgImage: false,
       lastUpdated: false,
+      pagination: false,
     },
     gfm: true,
     footnotes: true,

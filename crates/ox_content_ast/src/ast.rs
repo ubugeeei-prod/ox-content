@@ -5,7 +5,9 @@
 
 use ox_content_allocator::{Box, Vec};
 
-use crate::Span;
+use crate::{
+    MdxFlowExpression, MdxJsxFlowElement, MdxJsxTextElement, MdxTextExpression, MdxjsEsm, Span,
+};
 
 /// Root node of a Markdown document.
 #[derive(Debug)]
@@ -69,6 +71,18 @@ pub enum Node<'a> {
     Definition(Box<'a, Definition<'a>>),
     /// Footnote definition (GFM extension).
     FootnoteDefinition(Box<'a, FootnoteDefinition<'a>>),
+
+    // MDX nodes (mdast-util-mdx)
+    /// Block JSX element.
+    MdxJsxFlowElement(Box<'a, MdxJsxFlowElement<'a>>),
+    /// Inline JSX element.
+    MdxJsxTextElement(Box<'a, MdxJsxTextElement<'a>>),
+    /// Module-level `import` / `export`.
+    MdxjsEsm(MdxjsEsm<'a>),
+    /// Block `{expression}`.
+    MdxFlowExpression(MdxFlowExpression<'a>),
+    /// Inline `{expression}`.
+    MdxTextExpression(MdxTextExpression<'a>),
 }
 
 // Block nodes
@@ -347,6 +361,11 @@ impl<'a> Node<'a> {
             Self::FootnoteReference(n) => n.span,
             Self::Definition(n) => n.span,
             Self::FootnoteDefinition(n) => n.span,
+            Self::MdxJsxFlowElement(n) => n.span,
+            Self::MdxJsxTextElement(n) => n.span,
+            Self::MdxjsEsm(n) => n.span,
+            Self::MdxFlowExpression(n) => n.span,
+            Self::MdxTextExpression(n) => n.span,
         }
     }
 }

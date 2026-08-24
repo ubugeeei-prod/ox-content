@@ -6,6 +6,7 @@ use ox_content_ast::{
 };
 
 mod escape;
+mod mdx;
 
 pub fn to_mdast_json(document: &Document<'_>) -> String {
     // mdast JSON expands well past the source: every text run carries
@@ -96,6 +97,11 @@ impl MdastJsonSerializer {
             Node::FootnoteReference(node) => self.write_footnote_reference(node),
             Node::Definition(node) => self.write_definition(node),
             Node::FootnoteDefinition(node) => self.write_footnote_definition(node),
+            Node::MdxJsxFlowElement(node) => self.write_mdx_jsx_flow_element(node),
+            Node::MdxJsxTextElement(node) => self.write_mdx_jsx_text_element(node),
+            Node::MdxjsEsm(node) => self.write_mdxjs_esm(node),
+            Node::MdxFlowExpression(node) => self.write_mdx_flow_expression(node),
+            Node::MdxTextExpression(node) => self.write_mdx_text_expression(node),
         }
     }
 
