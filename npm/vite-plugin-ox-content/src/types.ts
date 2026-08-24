@@ -369,6 +369,32 @@ export interface ResolvedSsgOptions {
 }
 
 /**
+ * Opt-in crawl manifests written during SSG.
+ */
+export interface SiteMapsOptions {
+  /**
+   * Write `robots.txt` with a Sitemap line.
+   * @default true
+   */
+  robots?: boolean;
+
+  /**
+   * Write `llms.txt` with the site title, description, and page URLs.
+   * @default true
+   */
+  llms?: boolean;
+}
+
+/**
+ * Resolved crawl-manifest options.
+ */
+export interface ResolvedSiteMapsOptions {
+  enabled: boolean;
+  robots: boolean;
+  llms: boolean;
+}
+
+/**
  * Options for the core `oxContent()` Vite plugin.
  *
  * The top-level options describe where content lives, which Markdown features
@@ -431,6 +457,18 @@ export interface OxContentOptions {
    * @default { enabled: true }
    */
   ssg?: SsgOptions | boolean;
+
+  /**
+   * Write crawl manifests next to generated HTML.
+   *
+   * Off by default. `true` writes `sitemap.xml`, `robots.txt`, and `llms.txt`.
+   * An object enables the feature and overrides only the fields you set.
+   * Requires `ssg.siteUrl`. When that is missing the build continues and a
+   * warning is emitted instead of writing files.
+   *
+   * @default false
+   */
+  siteMaps?: boolean | SiteMapsOptions;
 
   /**
    * Enable GitHub Flavored Markdown extensions.
@@ -735,6 +773,7 @@ export interface ResolvedOptions {
   base: string;
   extensions: string[];
   ssg: ResolvedSsgOptions;
+  siteMaps?: ResolvedSiteMapsOptions;
   gfm: boolean;
   footnotes: boolean;
   tables: boolean;

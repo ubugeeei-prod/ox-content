@@ -42,6 +42,10 @@ export default defineConfig(({ mode }) => {
         // Enable per-page OG image generation (Chromium-based)
         ogImage: true,
 
+        // Crawl manifests. siteUrl is set above, so these files are safe to
+        // write for the deployed docs site.
+        siteMaps: true,
+
         // SSG options with theme customization
         ssg: {
           siteName: "Ox Content",
@@ -100,6 +104,7 @@ export default defineConfig(({ mode }) => {
                       { text: "Quality Checks", link: "/built-in/quality-checks.md" },
                       { text: "Site Generation", link: "/built-in/site-generation.md" },
                       { text: "Previous / Next", link: "/built-in/pagination.md" },
+                      { text: "Sitemap / robots / llms.txt", link: "/built-in/site-maps.md" },
                     ],
                   },
                   { text: "Theming", link: "/theming.md" },

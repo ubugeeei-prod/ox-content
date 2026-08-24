@@ -57,6 +57,7 @@
 mod assets;
 mod html;
 mod routes;
+mod site_maps;
 mod vitepress;
 
 pub use assets::{
@@ -75,4 +76,5 @@ pub use routes::{
     get_og_image_path, get_og_image_url, get_output_path, get_page_locale, get_url_path,
     resolve_navigation_groups, resolve_route_paths,
 };
+pub use site_maps::{SiteMapPage, SiteMapsOptions, SiteMapsOutput, generate_site_maps};
 pub use vitepress::normalize_vitepress_frontmatter;

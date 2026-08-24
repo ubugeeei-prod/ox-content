@@ -52,6 +52,7 @@ export function createFrameworkMarkdownOptions(options: FrameworkMarkdownOptions
       lastUpdated: false,
       pagination: false,
     },
+    siteMaps: { enabled: false, robots: true, llms: true },
     gfm: options.gfm,
     frontmatter: options.frontmatter ?? false,
     toc: options.toc,

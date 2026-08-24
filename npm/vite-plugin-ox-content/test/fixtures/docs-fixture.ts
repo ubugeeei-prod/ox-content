@@ -107,6 +107,7 @@ export function createDocsResolvedOptions(
       lastUpdated: false,
       pagination: false,
     },
+    siteMaps: { enabled: false, robots: true, llms: true },
     gfm: true,
     footnotes: true,
     tables: true,

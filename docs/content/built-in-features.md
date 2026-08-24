@@ -19,46 +19,48 @@ inline**.
 
 ## Feature Guides
 
-| Guide                                                | Covers                                                                    |
-| ---------------------------------------------------- | ------------------------------------------------------------------------- |
-| [Markdown Baseline](./built-in/markdown.md)          | GFM, tables, task lists, footnotes, autolinks, frontmatter, TOC           |
-| [Syntax Extensions](./built-in/syntax-extensions.md) | Emoji shortcodes, wiki links, attribute syntax, CJK emphasis              |
-| [Custom Containers](./built-in/containers.md)        | Opt-in `::: tip` / `::: details` callout blocks                           |
-| [File Includes](./built-in/includes.md)              | Opt-in `<!-- @include -->` Markdown fragments                             |
-| [Inline Badges](./built-in/badges.md)                | Opt-in `{badge:tip}` status labels in headings or prose                   |
-| [Code Blocks](./built-in/code-blocks.md)             | Syntax highlighting, code annotations, code imports                       |
-| [Embeds](./built-in/embeds.md)                       | GitHub cards, OG cards, package-manager tabs, tabs, YouTube, social cards |
-| [Mermaid Diagrams](./built-in/mermaid.md)            | Diagram fences rendered to static SVG                                     |
-| [Search](./built-in/search.md)                       | The static BM25 index and client search API                               |
-| [Collections](./built-in/collections.md)             | Query Markdown files with a SQL-like builder                              |
-| [Quality Checks](./built-in/quality-checks.md)       | Code block lint, type checking, docs tests, HTML sanitizer                |
-| [Site Generation](./built-in/site-generation.md)     | SSG, OG images, edit links, collections, API docs, transformers           |
-| [Previous / Next](./built-in/pagination.md)          | Opt-in previous and next page links                                       |
+| Guide                                                  | Covers                                                                    |
+| ------------------------------------------------------ | ------------------------------------------------------------------------- |
+| [Markdown Baseline](./built-in/markdown.md)            | GFM, tables, task lists, footnotes, autolinks, frontmatter, TOC           |
+| [Syntax Extensions](./built-in/syntax-extensions.md)   | Emoji shortcodes, wiki links, attribute syntax, CJK emphasis              |
+| [Custom Containers](./built-in/containers.md)          | Opt-in `::: tip` / `::: details` callout blocks                           |
+| [File Includes](./built-in/includes.md)                | Opt-in `<!-- @include -->` Markdown fragments                             |
+| [Inline Badges](./built-in/badges.md)                  | Opt-in `{badge:tip}` status labels in headings or prose                   |
+| [Code Blocks](./built-in/code-blocks.md)               | Syntax highlighting, code annotations, code imports                       |
+| [Embeds](./built-in/embeds.md)                         | GitHub cards, OG cards, package-manager tabs, tabs, YouTube, social cards |
+| [Mermaid Diagrams](./built-in/mermaid.md)              | Diagram fences rendered to static SVG                                     |
+| [Search](./built-in/search.md)                         | The static BM25 index and client search API                               |
+| [Collections](./built-in/collections.md)               | Query Markdown files with a SQL-like builder                              |
+| [Quality Checks](./built-in/quality-checks.md)         | Code block lint, type checking, docs tests, HTML sanitizer                |
+| [Site Generation](./built-in/site-generation.md)       | SSG, OG images, edit links, collections, API docs, transformers           |
+| [Previous / Next](./built-in/pagination.md)            | Opt-in previous and next page links                                       |
+| [Sitemap / robots / llms.txt](./built-in/site-maps.md) | Opt-in crawl manifests written next to generated HTML                     |
 
 ## Default vs Opt-in
 
-| Area             | Option                                                                                                        | Default              | Guide                                                |
-| ---------------- | ------------------------------------------------------------------------------------------------------------- | -------------------- | ---------------------------------------------------- |
-| Markdown base    | `gfm`, `footnotes`, `tables`, `taskLists`, `strikethrough`, `autolinks`                                       | `true`               | [Markdown Baseline](./built-in/markdown.md)          |
-| Page metadata    | `frontmatter`                                                                                                 | `true`               | [Markdown Baseline](./built-in/markdown.md)          |
-| Navigation       | `toc`, `tocMaxDepth`                                                                                          | `true`, `3`          | [Markdown Baseline](./built-in/markdown.md)          |
-| Static site      | `ssg`                                                                                                         | `{ enabled }`        | [Site Generation](./built-in/site-generation.md)     |
-| API docs         | `docs`                                                                                                        | `{ enabled }`        | [Site Generation](./built-in/site-generation.md)     |
-| Search           | `search`                                                                                                      | `{ enabled }`        | [Search](./built-in/search.md)                       |
-| Collections      | `collections`                                                                                                 | `content` collection | [Collections](./built-in/collections.md)             |
-| Static embeds    | `embeds.github`, `embeds.openGraph`                                                                           | `true`               | [Embeds](./built-in/embeds.md)                       |
-| Opt-in embeds    | `embeds.pm`, `embeds.twitter`, `embeds.bluesky`, `embeds.spotify`, `embeds.stackBlitz`, `embeds.webContainer` | `false`              | [Embeds](./built-in/embeds.md)                       |
-| Syntax highlight | `highlight`                                                                                                   | `false`              | [Code Blocks](./built-in/code-blocks.md)             |
-| Code authoring   | `codeAnnotations`, `codeImports`                                                                              | `false`              | [Code Blocks](./built-in/code-blocks.md)             |
-| Extra syntax     | `wikiLinks`, `emojiShortcodes`, `attrs`, `cjkEmphasis`, `containers`, `badges`                                | `false`              | [Syntax Extensions](./built-in/syntax-extensions.md) |
-| File includes    | `includes`                                                                                                    | `false`              | [File Includes](./built-in/includes.md)              |
-| Diagrams         | `mermaid`                                                                                                     | `false`              | [Mermaid Diagrams](./built-in/mermaid.md)            |
-| OG images        | `ogImage`                                                                                                     | `false`              | [Site Generation](./built-in/site-generation.md)     |
-| HTML safety      | `sanitize`                                                                                                    | `false`              | [Quality Checks](./built-in/quality-checks.md)       |
-| Editing links    | `editThisPage`                                                                                                | `false`              | [Site Generation](./built-in/site-generation.md)     |
-| Page pager       | `ssg.pagination`                                                                                              | `false`              | [Previous / Next](./built-in/pagination.md)          |
-| Code checks      | `codeBlockLint`, `codeBlockTypecheck`, `docsTests`                                                            | `false`              | [Quality Checks](./built-in/quality-checks.md)       |
-| Custom pipeline  | `transformers`                                                                                                | `[]`                 | [Site Generation](./built-in/site-generation.md)     |
+| Area             | Option                                                                                                        | Default              | Guide                                                  |
+| ---------------- | ------------------------------------------------------------------------------------------------------------- | -------------------- | ------------------------------------------------------ |
+| Markdown base    | `gfm`, `footnotes`, `tables`, `taskLists`, `strikethrough`, `autolinks`                                       | `true`               | [Markdown Baseline](./built-in/markdown.md)            |
+| Page metadata    | `frontmatter`                                                                                                 | `true`               | [Markdown Baseline](./built-in/markdown.md)            |
+| Navigation       | `toc`, `tocMaxDepth`                                                                                          | `true`, `3`          | [Markdown Baseline](./built-in/markdown.md)            |
+| Static site      | `ssg`                                                                                                         | `{ enabled }`        | [Site Generation](./built-in/site-generation.md)       |
+| API docs         | `docs`                                                                                                        | `{ enabled }`        | [Site Generation](./built-in/site-generation.md)       |
+| Search           | `search`                                                                                                      | `{ enabled }`        | [Search](./built-in/search.md)                         |
+| Collections      | `collections`                                                                                                 | `content` collection | [Collections](./built-in/collections.md)               |
+| Static embeds    | `embeds.github`, `embeds.openGraph`                                                                           | `true`               | [Embeds](./built-in/embeds.md)                         |
+| Opt-in embeds    | `embeds.pm`, `embeds.twitter`, `embeds.bluesky`, `embeds.spotify`, `embeds.stackBlitz`, `embeds.webContainer` | `false`              | [Embeds](./built-in/embeds.md)                         |
+| Syntax highlight | `highlight`                                                                                                   | `false`              | [Code Blocks](./built-in/code-blocks.md)               |
+| Code authoring   | `codeAnnotations`, `codeImports`                                                                              | `false`              | [Code Blocks](./built-in/code-blocks.md)               |
+| Extra syntax     | `wikiLinks`, `emojiShortcodes`, `attrs`, `cjkEmphasis`, `containers`, `badges`                                | `false`              | [Syntax Extensions](./built-in/syntax-extensions.md)   |
+| File includes    | `includes`                                                                                                    | `false`              | [File Includes](./built-in/includes.md)                |
+| Diagrams         | `mermaid`                                                                                                     | `false`              | [Mermaid Diagrams](./built-in/mermaid.md)              |
+| OG images        | `ogImage`                                                                                                     | `false`              | [Site Generation](./built-in/site-generation.md)       |
+| HTML safety      | `sanitize`                                                                                                    | `false`              | [Quality Checks](./built-in/quality-checks.md)         |
+| Editing links    | `editThisPage`                                                                                                | `false`              | [Site Generation](./built-in/site-generation.md)       |
+| Page pager       | `ssg.pagination`                                                                                              | `false`              | [Previous / Next](./built-in/pagination.md)            |
+| Crawl manifests  | `siteMaps`                                                                                                    | `false`              | [Sitemap / robots / llms.txt](./built-in/site-maps.md) |
+| Code checks      | `codeBlockLint`, `codeBlockTypecheck`, `docsTests`                                                            | `false`              | [Quality Checks](./built-in/quality-checks.md)         |
+| Custom pipeline  | `transformers`                                                                                                | `[]`                 | [Site Generation](./built-in/site-generation.md)       |
 
 Tab groups and YouTube embeds have no option: they are always processed for
 SSG output and dev preview. See [Embeds](./built-in/embeds.md#tabs).
