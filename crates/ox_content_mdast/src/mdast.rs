@@ -1,8 +1,10 @@
 use ox_content_allocator::Vec as ArenaVec;
 use ox_content_ast::{
     AlignKind, BlockQuote, CodeBlock, Definition, Delete, Document, Emphasis, FootnoteDefinition,
-    FootnoteReference, Heading, Html, Image, InlineCode, Link, List, ListItem, Node, Paragraph,
-    Strong, Table, TableCell, TableRow, Text, ThematicBreak,
+    FootnoteReference, Heading, Html, Image, InlineCode, Link, List, ListItem, MdxFlowExpression,
+    MdxJsxAttributeEntry, MdxJsxAttributeValue, MdxJsxFlowElement, MdxJsxTextElement,
+    MdxTextExpression, MdxjsEsm, Node, Paragraph, Strong, Table, TableCell, TableRow, Text,
+    ThematicBreak,
 };
 
 mod escape;
@@ -96,6 +98,11 @@ impl MdastJsonSerializer {
             Node::FootnoteReference(node) => self.write_footnote_reference(node),
             Node::Definition(node) => self.write_definition(node),
             Node::FootnoteDefinition(node) => self.write_footnote_definition(node),
+            Node::MdxJsxFlowElement(node) => self.write_mdx_jsx_flow_element(node),
+            Node::MdxJsxTextElement(node) => self.write_mdx_jsx_text_element(node),
+            Node::MdxjsEsm(node) => self.write_mdxjs_esm(node),
+            Node::MdxFlowExpression(node) => self.write_mdx_flow_expression(node),
+            Node::MdxTextExpression(node) => self.write_mdx_text_expression(node),
         }
     }
 
@@ -279,6 +286,89 @@ impl MdastJsonSerializer {
         }
         self.output.push_str(",\"children\":");
         self.write_nodes(&footnote_definition.children);
+        self.output.push('}');
+    }
+
+    fn write_mdx_jsx_flow_element(&mut self, node: &MdxJsxFlowElement<'_>) {
+        self.write_mdx_jsx("mdxJsxFlowElement", node.name, &node.attributes, &node.children);
+    }
+
+    fn write_mdx_jsx_text_element(&mut self, node: &MdxJsxTextElement<'_>) {
+        self.write_mdx_jsx("mdxJsxTextElement", node.name, &node.attributes, &node.children);
+    }
+
+    fn write_mdx_jsx(
+        &mut self,
+        kind: &str,
+        name: Option<&str>,
+        attributes: &ArenaVec<'_, MdxJsxAttributeEntry<'_>>,
+        children: &ArenaVec<'_, Node<'_>>,
+    ) {
+        self.output.push_str("{\"type\":\"");
+        self.output.push_str(kind);
+        self.output.push('"');
+        if let Some(name) = name {
+            self.output.push_str(",\"name\":");
+            self.write_string(name);
+        } else {
+            self.output.push_str(",\"name\":null");
+        }
+        self.output.push_str(",\"attributes\":");
+        self.write_mdx_attributes(attributes);
+        self.output.push_str(",\"children\":");
+        self.write_nodes(children);
+        self.output.push('}');
+    }
+
+    fn write_mdx_attributes(&mut self, attributes: &ArenaVec<'_, MdxJsxAttributeEntry<'_>>) {
+        self.output.push('[');
+        for (idx, entry) in attributes.iter().enumerate() {
+            if idx > 0 {
+                self.output.push(',');
+            }
+            match entry {
+                MdxJsxAttributeEntry::Attribute(attribute) => {
+                    self.output.push_str("{\"type\":\"mdxJsxAttribute\",\"name\":");
+                    self.write_string(attribute.name);
+                    self.output.push_str(",\"value\":");
+                    match &attribute.value {
+                        None => self.output.push_str("null"),
+                        Some(MdxJsxAttributeValue::Literal(value)) => self.write_string(value),
+                        Some(MdxJsxAttributeValue::Expression(expr)) => {
+                            self.output.push_str(
+                                "{\"type\":\"mdxJsxAttributeValueExpression\",\"value\":",
+                            );
+                            self.write_string(expr.value);
+                            self.output.push('}');
+                        }
+                    }
+                    self.output.push('}');
+                }
+                MdxJsxAttributeEntry::Expression(expr) => {
+                    self.output.push_str("{\"type\":\"mdxJsxExpressionAttribute\",\"value\":");
+                    self.write_string(expr.value);
+                    self.output.push('}');
+                }
+            }
+        }
+        self.output.push(']');
+    }
+
+    fn write_mdxjs_esm(&mut self, node: &MdxjsEsm<'_>) {
+        self.output.push_str("{\"type\":\"mdxjsEsm\",\"value\":");
+        self.write_string(node.value);
+        self.output.push('}');
+    }
+
+    fn write_mdx_flow_expression(&mut self, node: &MdxFlowExpression<'_>) {
+        self.output.push_str("{\"type\":\"mdxFlowExpression\",\"value\":");
+        self.write_string(node.value);
+        self.output.push('}');
+    }
+
+    fn write_mdx_text_expression(&mut self, node: &MdxTextExpression<'_>) {
+        self.output.push_str("{\"type\":\"mdxTextExpression\",\"value\":");
+        self.write_string(node.value);
         self.output.push('}');
     }
 

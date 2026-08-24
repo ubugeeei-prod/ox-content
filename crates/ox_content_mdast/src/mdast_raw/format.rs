@@ -45,6 +45,11 @@ pub(super) const KIND_DELETE: u8 = 19;
 pub(super) const KIND_FOOTNOTE_REFERENCE: u8 = 20;
 pub(super) const KIND_DEFINITION: u8 = 21;
 pub(super) const KIND_FOOTNOTE_DEFINITION: u8 = 22;
+pub(super) const KIND_MDX_JSX_FLOW: u8 = 23;
+pub(super) const KIND_MDX_JSX_TEXT: u8 = 24;
+pub(super) const KIND_MDX_ESM: u8 = 25;
+pub(super) const KIND_MDX_FLOW_EXPRESSION: u8 = 26;
+pub(super) const KIND_MDX_TEXT_EXPRESSION: u8 = 27;
 
 #[derive(Clone, Copy)]
 pub(super) struct RawNodeRecord {

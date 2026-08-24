@@ -178,6 +178,131 @@ fn format_node(node: &Node<'_>, source: &str, depth: usize, out: &mut String) {
                 format_node(child, source, depth + 1, out);
             }
         }
+        Node::MdxJsxFlowElement(node) => {
+            format_mdx_jsx_element(
+                MdxJsxPrint {
+                    kind: "MdxJsxFlowElement",
+                    name: node.name,
+                    self_closing: node.self_closing,
+                    span: node.span,
+                    attributes: &node.attributes,
+                    children: &node.children,
+                },
+                source,
+                depth,
+                out,
+            );
+        }
+        Node::MdxJsxTextElement(node) => {
+            format_mdx_jsx_element(
+                MdxJsxPrint {
+                    kind: "MdxJsxTextElement",
+                    name: node.name,
+                    self_closing: node.self_closing,
+                    span: node.span,
+                    attributes: &node.attributes,
+                    children: &node.children,
+                },
+                source,
+                depth,
+                out,
+            );
+        }
+        Node::MdxjsEsm(node) => {
+            line(
+                out,
+                depth,
+                format_args!("MdxjsEsm value={:?} {}", node.value, span(node.span, source)),
+            );
+        }
+        Node::MdxFlowExpression(node) => {
+            line(
+                out,
+                depth,
+                format_args!(
+                    "MdxFlowExpression value={:?} {}",
+                    node.value,
+                    span(node.span, source)
+                ),
+            );
+        }
+        Node::MdxTextExpression(node) => {
+            line(
+                out,
+                depth,
+                format_args!(
+                    "MdxTextExpression value={:?} {}",
+                    node.value,
+                    span(node.span, source)
+                ),
+            );
+        }
+    }
+}
+
+struct MdxJsxPrint<'a> {
+    kind: &'static str,
+    name: Option<&'a str>,
+    self_closing: bool,
+    span: Span,
+    attributes: &'a [ox_content_ast::MdxJsxAttributeEntry<'a>],
+    children: &'a [Node<'a>],
+}
+
+fn format_mdx_jsx_element(node: MdxJsxPrint<'_>, source: &str, depth: usize, out: &mut String) {
+    line(
+        out,
+        depth,
+        format_args!(
+            "{} name={:?} self_closing={} {}",
+            node.kind,
+            node.name,
+            node.self_closing,
+            span(node.span, source)
+        ),
+    );
+    for attribute in node.attributes {
+        format_mdx_attribute(attribute, source, depth + 1, out);
+    }
+    for child in node.children {
+        format_node(child, source, depth + 1, out);
+    }
+}
+
+fn format_mdx_attribute(
+    entry: &ox_content_ast::MdxJsxAttributeEntry<'_>,
+    source: &str,
+    depth: usize,
+    out: &mut String,
+) {
+    match entry {
+        ox_content_ast::MdxJsxAttributeEntry::Attribute(attribute) => {
+            let value = match &attribute.value {
+                None => "boolean".to_string(),
+                Some(ox_content_ast::MdxJsxAttributeValue::Literal(value)) => {
+                    format!("literal({value:?})")
+                }
+                Some(ox_content_ast::MdxJsxAttributeValue::Expression(expr)) => {
+                    format!("expression({:?})", expr.value)
+                }
+            };
+            line(
+                out,
+                depth,
+                format_args!(
+                    "Attr name={:?} value={value} {}",
+                    attribute.name,
+                    span(attribute.span, source)
+                ),
+            );
+        }
+        ox_content_ast::MdxJsxAttributeEntry::Expression(expr) => {
+            line(
+                out,
+                depth,
+                format_args!("AttrExpr value={:?} {}", expr.value, span(expr.span, source)),
+            );
+        }
     }
 }
 

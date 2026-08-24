@@ -3,6 +3,7 @@ use ox_content_ast::Document;
 mod blocks;
 mod format;
 mod inlines;
+mod mdx;
 mod serializer;
 #[cfg(test)]
 mod tests;

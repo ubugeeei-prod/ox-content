@@ -101,5 +101,10 @@ fn node_kind(node: Option<&Node<'_>>) -> &'static str {
         Some(Node::FootnoteReference(_)) => "FootnoteReference",
         Some(Node::Definition(_)) => "Definition",
         Some(Node::FootnoteDefinition(_)) => "FootnoteDefinition",
+        Some(Node::MdxJsxFlowElement(_)) => "MdxJsxFlowElement",
+        Some(Node::MdxJsxTextElement(_)) => "MdxJsxTextElement",
+        Some(Node::MdxjsEsm(_)) => "MdxjsEsm",
+        Some(Node::MdxFlowExpression(_)) => "MdxFlowExpression",
+        Some(Node::MdxTextExpression(_)) => "MdxTextExpression",
     }
 }
