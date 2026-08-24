@@ -120,6 +120,20 @@ fn hostile_text_escaped() {
 }
 
 #[test]
+fn preamble_before_first_marker_is_preserved() {
+    let html =
+        transform_html("::: steps\nFollow these steps:\n\n1. First\n2. Second\n:::\n", steps_on());
+    assert!(html.contains("Follow these steps:"), "leading prose must stay:\n{html}");
+    assert!(html.contains("ox-steps"), "{html}");
+    assert_eq!(html.matches(r#"<li class="ox-steps__item">"#).count(), 2, "{html}");
+    assert!(html.contains("First"), "{html}");
+    assert!(html.contains("Second"), "{html}");
+    let preamble_at = html.find("Follow these steps:").unwrap_or_else(|| panic!("{html}"));
+    let list_at = html.find(r#"<ol class="ox-steps__list">"#).unwrap_or_else(|| panic!("{html}"));
+    assert!(preamble_at < list_at, "preamble must appear before the list:\n{html}");
+}
+
+#[test]
 fn ordinary_ordered_list_unchanged() {
     let html = transform_html("1. foo\n2. bar\n", steps_on());
     assert!(!html.contains("ox-steps"), "{html}");

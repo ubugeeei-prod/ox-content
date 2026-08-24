@@ -111,8 +111,14 @@ fn collect_body(lines: &[(&str, &str)]) -> String {
 }
 
 fn emit_steps(out: &mut String, body: &str) {
-    out.push_str("<div class=\"ox-steps\">\n<ol class=\"ox-steps__list\">\n");
-    let items = split_ordered_items(body);
+    let (preamble, items) = split_ordered_items(body);
+    out.push_str("<div class=\"ox-steps\">\n");
+    if !items.is_empty() && !preamble.trim().is_empty() {
+        let escaped_preamble = escape_item_markdown(&preamble);
+        out.push_str(escaped_preamble.trim_end());
+        out.push_str("\n\n");
+    }
+    out.push_str("<ol class=\"ox-steps__list\">\n");
     if items.is_empty() {
         let escaped = escape_item_markdown(body);
         if !escaped.trim().is_empty() {
@@ -130,7 +136,8 @@ fn emit_steps(out: &mut String, body: &str) {
     out.push_str("</ol>\n</div>\n");
 }
 
-fn split_ordered_items(body: &str) -> Vec<String> {
+fn split_ordered_items(body: &str) -> (String, Vec<String>) {
+    let mut preamble = String::new();
     let mut items = Vec::new();
     let mut current: Option<String> = None;
     let mut item_indent: Option<usize> = None;
@@ -142,7 +149,7 @@ fn split_ordered_items(body: &str) -> Vec<String> {
         let (line, ending) = split_ending(line_with_end);
 
         if in_fence {
-            push_item_line(&mut current, line, ending);
+            push_item_line(&mut current, &mut preamble, line, ending);
             if is_closing_fence(line, fence_char, fence_len) {
                 in_fence = false;
             }
@@ -153,7 +160,7 @@ fn split_ordered_items(body: &str) -> Vec<String> {
             in_fence = true;
             fence_char = open.0;
             fence_len = open.1;
-            push_item_line(&mut current, line, ending);
+            push_item_line(&mut current, &mut preamble, line, ending);
             continue;
         }
 
@@ -176,19 +183,25 @@ fn split_ordered_items(body: &str) -> Vec<String> {
             let stripped = strip_item_indent(line, item_indent.unwrap_or(0));
             buf.push_str(stripped);
             buf.push_str(ending);
+        } else {
+            preamble.push_str(line);
+            preamble.push_str(ending);
         }
     }
 
     if let Some(item) = current.take() {
         items.push(escape_item_markdown(&item));
     }
-    items
+    (preamble, items)
 }
 
-fn push_item_line(current: &mut Option<String>, line: &str, ending: &str) {
+fn push_item_line(current: &mut Option<String>, preamble: &mut String, line: &str, ending: &str) {
     if let Some(buf) = current.as_mut() {
         buf.push_str(line);
         buf.push_str(ending);
+    } else {
+        preamble.push_str(line);
+        preamble.push_str(ending);
     }
 }
 

@@ -54,7 +54,7 @@ inline**.
 | Opt-in embeds    | `embeds.pm`, `embeds.twitter`, `embeds.bluesky`, `embeds.spotify`, `embeds.stackBlitz`, `embeds.webContainer` | `false`              | [Embeds](./built-in/embeds.md)                         |
 | Syntax highlight | `highlight`                                                                                                   | `false`              | [Code Blocks](./built-in/code-blocks.md)               |
 | Code authoring   | `codeAnnotations`, `codeImports`                                                                              | `false`              | [Code Blocks](./built-in/code-blocks.md)               |
-| Extra syntax     | `wikiLinks`, `emojiShortcodes`, `attrs`, `cjkEmphasis`, `containers`, `badges`, `steps`                       | `false`              | [Syntax Extensions](./built-in/syntax-extensions.md)   |
+| Extra syntax     | `wikiLinks`, `emojiShortcodes`, `attrs`, `cjkEmphasis`, `containers`, `badges`                                | `false`              | [Syntax Extensions](./built-in/syntax-extensions.md)   |
 | File includes    | `includes`                                                                                                    | `false`              | [File Includes](./built-in/includes.md)                |
 | Step lists       | `steps`                                                                                                       | `false`              | [Step Lists](./built-in/steps.md)                      |
 | Images           | `images`                                                                                                      | `false`              | [Images](./built-in/images.md)                         |
