@@ -180,6 +180,8 @@ pub struct JsSsgConfig {
     pub locale: Option<String>,
     /// Available locales for locale switcher.
     pub available_locales: Option<Vec<JsLocaleInfo>>,
+    /// When true, render previous/next page links after the article.
+    pub pagination: Option<bool>,
 }
 
 /// Locale information for the locale switcher.

@@ -224,6 +224,18 @@ pub struct JsEntryPageConfig {
     pub features: Option<Vec<JsFeatureConfig>>,
 }
 
+/// Frontmatter override for one previous/next pager side.
+#[napi(object)]
+#[derive(Clone, Default)]
+pub struct JsPagerOverride {
+    /// Hide this side when true.
+    pub hidden: Option<bool>,
+    /// Replacement title.
+    pub text: Option<String>,
+    /// Replacement href.
+    pub href: Option<String>,
+}
+
 /// Page data for SSG.
 #[napi(object)]
 pub struct JsSsgPageData {
@@ -241,4 +253,8 @@ pub struct JsSsgPageData {
     pub path: String,
     /// Entry page configuration (if layout: entry).
     pub entry_page: Option<JsEntryPageConfig>,
+    /// Frontmatter override for the previous-page link.
+    pub prev: Option<JsPagerOverride>,
+    /// Frontmatter override for the next-page link.
+    pub next: Option<JsPagerOverride>,
 }

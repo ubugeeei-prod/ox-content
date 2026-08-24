@@ -12,6 +12,8 @@ fn test_generate_html() {
         last_updated: Some(0),
         path: "test".to_string(),
         entry_page: None,
+        prev: None,
+        next: None,
     };
 
     let nav_groups = vec![NavGroup {
@@ -35,6 +37,7 @@ fn test_generate_html() {
         theme: None,
         locale: None,
         available_locales: None,
+        pagination: false,
     };
 
     let html = generate_html(&page_data, &nav_groups, &config);
@@ -150,6 +153,8 @@ fn test_generate_html_without_toc_omits_outline() {
         last_updated: None,
         path: "no-toc".to_string(),
         entry_page: None,
+        prev: None,
+        next: None,
     };
     let config = SsgConfig {
         site_name: "Test Site".to_string(),
@@ -158,6 +163,7 @@ fn test_generate_html_without_toc_omits_outline() {
         theme: None,
         locale: None,
         available_locales: None,
+        pagination: false,
     };
 
     let html = generate_html(&page_data, &[], &config);
@@ -178,6 +184,7 @@ fn test_html_locale_attrs_use_current_locale_and_direction() {
         theme: None,
         locale: Some("ar".to_string()),
         available_locales: None,
+        pagination: false,
     };
 
     assert_eq!(html_locale_attrs(&config), ("ar", "rtl"));
@@ -190,6 +197,8 @@ fn test_html_locale_attrs_use_current_locale_and_direction() {
         last_updated: None,
         path: "ar".to_string(),
         entry_page: None,
+        prev: None,
+        next: None,
     };
     let html = generate_html(&page_data, &[], &config);
     insta::assert_snapshot!(super::snapshot_text(&html));

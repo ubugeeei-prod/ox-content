@@ -25,6 +25,14 @@ describe("resolveSsgOptions", () => {
     expect(resolveSsgOptions({ lastUpdated: true }).lastUpdated).toBe(true);
   });
 
+  it("disables pagination by default", () => {
+    expect(resolveSsgOptions(undefined).pagination).toBe(false);
+  });
+
+  it("enables pagination when requested", () => {
+    expect(resolveSsgOptions({ pagination: true }).pagination).toBe(true);
+  });
+
   it("carries a theme component through", () => {
     const component = () => ({ __html: "<html></html>" });
     expect(resolveSsgOptions({ render: component }).render).toBe(component);

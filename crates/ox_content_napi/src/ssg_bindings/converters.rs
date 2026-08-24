@@ -1,7 +1,7 @@
 use crate::{
-    JsEntryPageConfig, JsSsgGeneratedHtmlPage, JsSsgNavGroup, JsSsgNavItem, JsSsgNavigationGroup,
-    JsSsgNavigationItem, JsSsgRoutePaths, JsSsgSharedAsset, JsSsgSidebarItem, JsThemeColors,
-    JsThemeConfig, TocEntry,
+    JsEntryPageConfig, JsPagerOverride, JsSsgGeneratedHtmlPage, JsSsgNavGroup, JsSsgNavItem,
+    JsSsgNavigationGroup, JsSsgNavigationItem, JsSsgRoutePaths, JsSsgSharedAsset, JsSsgSidebarItem,
+    JsThemeColors, JsThemeConfig, TocEntry,
 };
 
 /// Converts JsThemeColors to ox_content_ssg::ThemeColors.
@@ -120,6 +120,16 @@ pub(super) fn convert_entry_page_config(
                 })
                 .collect()
         }),
+    })
+}
+
+pub(super) fn convert_pager_override(
+    value: Option<JsPagerOverride>,
+) -> Option<ox_content_ssg::PagerOverride> {
+    value.map(|over| ox_content_ssg::PagerOverride {
+        hidden: over.hidden.unwrap_or(false),
+        text: over.text,
+        href: over.href,
     })
 }
 

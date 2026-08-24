@@ -123,6 +123,20 @@ pub struct TocEntry {
     pub slug: String,
 }
 
+/// Frontmatter override for one side of the previous/next pager.
+#[derive(Debug, Clone, Serialize, Deserialize, Default)]
+pub struct PagerOverride {
+    /// Hide this side when true (`prev: false` / `next: false`).
+    #[serde(default)]
+    pub hidden: bool,
+    /// Replacement title (`text` or `title` in frontmatter).
+    #[serde(default)]
+    pub text: Option<String>,
+    /// Replacement href (`link` or `href` in frontmatter).
+    #[serde(default)]
+    pub href: Option<String>,
+}
+
 /// Page data for SSG.
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct PageData {
@@ -140,6 +154,12 @@ pub struct PageData {
     pub path: String,
     /// Entry page configuration (if layout: entry).
     pub entry_page: Option<EntryPageConfig>,
+    /// Frontmatter override for the previous-page link.
+    #[serde(default)]
+    pub prev: Option<PagerOverride>,
+    /// Frontmatter override for the next-page link.
+    #[serde(default)]
+    pub next: Option<PagerOverride>,
 }
 
 /// SSG configuration.
@@ -159,6 +179,9 @@ pub struct SsgConfig {
     /// All available locales (for generating locale switcher and hreflang tags).
     #[serde(skip_serializing_if = "Option::is_none")]
     pub available_locales: Option<Vec<LocaleInfo>>,
+    /// When true, render previous/next page links after the article.
+    #[serde(default)]
+    pub pagination: bool,
 }
 
 /// Locale information for the locale switcher.

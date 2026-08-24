@@ -68,6 +68,7 @@ export default defineConfig({
 | `ogImage`         | —              | Static fallback OG image URL.                        |
 | `generateOgImage` | `false`        | Per-page OG images (see below).                      |
 | `lastUpdated`     | `false`        | Show the git last-commit time per page.              |
+| `pagination`      | `false`        | Previous/next links after the article.               |
 | `theme`           | `defaultTheme` | Theme configuration via `defineTheme()`.             |
 | `navigation`      | derived        | Explicit navigation groups instead of the file tree. |
 
@@ -288,6 +289,7 @@ array order.
 
 ## Related
 
+- [Previous / Next](./pagination.md) — opt-in previous and next page links.
 - [Theming](../theming.md) — the theme system used by SSG.
 - [API Docs from JSDoc](../jsdoc.md) — the full `docs` option reference.
 - [Internationalization](../i18n.md) — locale-aware sites on top of SSG.

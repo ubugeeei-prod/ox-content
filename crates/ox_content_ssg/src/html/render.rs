@@ -3,6 +3,7 @@ use askama::Template;
 use super::entry::generate_entry_html;
 use super::footer::{FOOTER_CSS, generate_footer_html};
 use super::nav::generate_nav_html;
+use super::pagination::resolve_pager;
 use super::social::{generate_mobile_social_links_html, generate_social_links_html};
 use super::theme_css::generate_theme_css;
 use super::utils::{
@@ -81,6 +82,7 @@ pub fn generate_html(page_data: &PageData, nav_groups: &[NavGroup], config: &Ssg
     let all_css = css_sections.join("");
     let toc_html = generate_toc_html(&page_data.toc);
     let has_toc = !toc_html.is_empty();
+    let pager = resolve_pager(page_data, nav_groups, config.pagination);
     let last_updated = page_data.last_updated.and_then(format_last_updated);
 
     // Embedded HTML for specific positions
@@ -204,6 +206,7 @@ pub fn generate_html(page_data: &PageData, nav_groups: &[NavGroup], config: &Ssg
         main_content: &main_content,
         has_toc,
         toc_html: &toc_html,
+        pager: pager.as_ref(),
         last_updated: last_updated.as_ref(),
         embed_content_after,
         embed_footer_before,

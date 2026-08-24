@@ -102,6 +102,7 @@ export async function transformMarkdownWithVue(
       bare: false,
       generateOgImage: false,
       lastUpdated: false,
+      pagination: false,
     },
     gfm: options.gfm,
     frontmatter: false, // Already extracted

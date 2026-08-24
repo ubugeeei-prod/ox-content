@@ -27,6 +27,8 @@
 //!     last_updated: None,
 //!     path: "getting-started".to_string(),
 //!     entry_page: None,
+//!     prev: None,
+//!     next: None,
 //! };
 //!
 //! let nav_groups = vec![NavGroup {
@@ -46,6 +48,7 @@
 //!     base: "/docs/".to_string(),
 //!     og_image: None,
 //!     theme: None,
+//!     pagination: false,
 //! };
 //!
 //! let html = generate_html(&page_data, &nav_groups, &config);
@@ -61,9 +64,10 @@ pub use assets::{
 };
 pub use html::{
     BarePageData, EntryPageConfig, FeatureConfig, HeroAction, HeroConfig, HeroImage,
-    HeroNoticeConfig, LocaleInfo, NavGroup, NavItem, PageData, SocialLink, SocialLinks, SsgConfig,
-    ThemeColors, ThemeConfig, ThemeEmbed, ThemeEntryPage, ThemeFonts, ThemeFooter, ThemeHeader,
-    ThemeLayout, TocEntry, generate_bare_html, generate_bare_page, generate_html,
+    HeroNoticeConfig, LocaleInfo, NavGroup, NavItem, PageData, PagerOverride, SocialLink,
+    SocialLinks, SsgConfig, ThemeColors, ThemeConfig, ThemeEmbed, ThemeEntryPage, ThemeFonts,
+    ThemeFooter, ThemeHeader, ThemeLayout, TocEntry, generate_bare_html, generate_bare_page,
+    generate_html,
 };
 pub use routes::{
     ManualNavigationGroup, ManualNavigationItem, RoutePaths, SidebarItem, build_nav_items,
