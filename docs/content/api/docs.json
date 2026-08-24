@@ -2,18 +2,18 @@
   "version": 1,
   "generatedAt": "2026-08-24T09:29:05.330Z",
   "summary": {
-    "modules": 61,
-    "entries": 510,
+    "modules": 62,
+    "entries": 513,
     "byKind": {
-      "function": 223,
+      "function": 225,
       "interface": 206,
       "type": 18,
       "variable": 13,
-      "module": 50
+      "module": 51
     },
-    "members": 1078,
-    "params": 411,
-    "returns": 218,
+    "members": 1079,
+    "params": 416,
+    "returns": 220,
     "examples": 20,
     "deprecated": 2
   },
@@ -287,8 +287,8 @@
           "kind": "variable",
           "description": "File extensions to skip in the middleware.",
           "file": "npm/vite-plugin-ox-content/src/dev-server.ts",
-          "line": 36,
-          "endLine": 59,
+          "line": 39,
+          "endLine": 62,
           "signature": "const SKIP_EXTENSIONS = new Set([\n  \".js\",\n  \".ts\",\n  \".css\",\n  \".scss\",\n  \".less\",\n  \".svg\",\n  \".png\",\n  \".jpg\",\n  \".jpeg\",\n  \".gif\",\n  \".webp\",\n  \".ico\",\n  \".woff\",\n  \".woff2\",\n  \".ttf\",\n  \".eot\",\n  \".json\",\n  \".map\",\n  \".mp4\",\n  \".webm\",\n  \".mp3\",\n  \".pdf\",\n])"
         },
         {
@@ -296,8 +296,8 @@
           "kind": "variable",
           "description": "Vite internal URL prefixes to skip.",
           "file": "npm/vite-plugin-ox-content/src/dev-server.ts",
-          "line": 62,
-          "endLine": 62,
+          "line": 65,
+          "endLine": 65,
           "signature": "const VITE_INTERNAL_PREFIXES = [\"/@vite/\", \"/@fs/\", \"/@id/\", \"/__\"]"
         },
         {
@@ -316,8 +316,8 @@
             "description": ""
           },
           "file": "npm/vite-plugin-ox-content/src/dev-server.ts",
-          "line": 67,
-          "endLine": 84,
+          "line": 70,
+          "endLine": 87,
           "signature": "function shouldSkip(url: string): boolean"
         },
         {
@@ -346,8 +346,8 @@
             "description": ""
           },
           "file": "npm/vite-plugin-ox-content/src/dev-server.ts",
-          "line": 90,
-          "endLine": 137,
+          "line": 93,
+          "endLine": 140,
           "signature": "async function resolveMarkdownFile(url: string, srcDir: string, extensions: readonly string[]): Promise<string | null>"
         },
         {
@@ -366,8 +366,8 @@
             "description": ""
           },
           "file": "npm/vite-plugin-ox-content/src/dev-server.ts",
-          "line": 142,
-          "endLine": 209,
+          "line": 145,
+          "endLine": 212,
           "signature": "function injectViteHmrClient(html: string): string"
         },
         {
@@ -380,29 +380,37 @@
               "kind": "property",
               "description": "Cached navigation groups. Invalidated on file add/unlink.",
               "type": "NavGroup[] | null",
-              "line": 216,
-              "endLine": 216
+              "line": 219,
+              "endLine": 219
+            },
+            {
+              "name": "localePages",
+              "kind": "property",
+              "description": "Cached urlPath → href pairs for locale sibling lookup.",
+              "type": "Array<{ path: string; href: string }> | null",
+              "line": 221,
+              "endLine": 221
             },
             {
               "name": "pages",
               "kind": "property",
               "description": "Cached rendered HTML keyed by absolute file path.",
               "type": "Map<string, string>",
-              "line": 218,
-              "endLine": 218
+              "line": 223,
+              "endLine": 223
             },
             {
               "name": "siteName",
               "kind": "property",
               "description": "Cached site name. Computed once.",
               "type": "string | null",
-              "line": 220,
-              "endLine": 220
+              "line": 225,
+              "endLine": 225
             }
           ],
           "file": "npm/vite-plugin-ox-content/src/dev-server.ts",
-          "line": 214,
-          "endLine": 221,
+          "line": 217,
+          "endLine": 226,
           "signature": "interface DevServerCache"
         },
         {
@@ -414,8 +422,8 @@
             "description": ""
           },
           "file": "npm/vite-plugin-ox-content/src/dev-server.ts",
-          "line": 226,
-          "endLine": 232,
+          "line": 231,
+          "endLine": 238,
           "signature": "export function createDevServerCache(): DevServerCache"
         },
         {
@@ -434,8 +442,8 @@
             "description": ""
           },
           "file": "npm/vite-plugin-ox-content/src/dev-server.ts",
-          "line": 237,
-          "endLine": 241,
+          "line": 243,
+          "endLine": 248,
           "signature": "export function invalidateNavCache(cache: DevServerCache): void"
         },
         {
@@ -459,8 +467,8 @@
             "description": ""
           },
           "file": "npm/vite-plugin-ox-content/src/dev-server.ts",
-          "line": 246,
-          "endLine": 248,
+          "line": 253,
+          "endLine": 255,
           "signature": "export function invalidatePageCache(cache: DevServerCache, filePath: string): void"
         },
         {
@@ -484,8 +492,8 @@
             "description": ""
           },
           "file": "npm/vite-plugin-ox-content/src/dev-server.ts",
-          "line": 253,
-          "endLine": 269,
+          "line": 260,
+          "endLine": 276,
           "signature": "async function resolveSiteName(options: ResolvedOptions, root: string): Promise<string>"
         },
         {
@@ -522,6 +530,11 @@
               "name": "root",
               "type": "string",
               "description": ""
+            },
+            {
+              "name": "localePages",
+              "type": "Array<{ path: string; href: string }>",
+              "description": ""
             }
           ],
           "returns": {
@@ -529,9 +542,9 @@
             "description": ""
           },
           "file": "npm/vite-plugin-ox-content/src/dev-server.ts",
-          "line": 274,
-          "endLine": 383,
-          "signature": "async function renderPage(filePath: string, options: ResolvedOptions, navGroups: NavGroup[], siteName: string, base: string, root: string): Promise<string>"
+          "line": 281,
+          "endLine": 425,
+          "signature": "async function renderPage(filePath: string, options: ResolvedOptions, navGroups: NavGroup[], siteName: string, base: string, root: string, localePages: Array<{ path: string; href: string }>): Promise<string>"
         },
         {
           "name": "createDevServerMiddleware",
@@ -559,8 +572,8 @@
             "description": ""
           },
           "file": "npm/vite-plugin-ox-content/src/dev-server.ts",
-          "line": 388,
-          "endLine": 453,
+          "line": 430,
+          "endLine": 513,
           "signature": "export function createDevServerMiddleware(options: ResolvedOptions, root: string, cache: DevServerCache): Connect.NextHandleFunction"
         }
       ]
@@ -3416,6 +3429,70 @@
           "line": 322,
           "endLine": 328,
           "signature": "export async function lintMarkdownDocumentsAsync(sources: string[], options: MarkdownLintOptions = {}): Promise<MarkdownLintResult[]>"
+        }
+      ]
+    },
+    {
+      "file": "npm/vite-plugin-ox-content/src/locale-nav.ts",
+      "description": "",
+      "entries": [
+        {
+          "name": "locale-nav",
+          "kind": "module",
+          "description": "Rewrites default-theme nav hrefs to the current locale sibling when it exists.",
+          "file": "npm/vite-plugin-ox-content/src/locale-nav.ts",
+          "line": 1,
+          "endLine": 3
+        },
+        {
+          "name": "localizeNavGroups",
+          "kind": "function",
+          "description": "Prefixes sidebar hrefs/paths with the current locale when that page exists.\nMissing siblings and the hidden default locale stay as authored.",
+          "params": [
+            {
+              "name": "groups",
+              "type": "T[]",
+              "description": ""
+            },
+            {
+              "name": "options",
+              "type": "LocalizeNavOptions",
+              "description": ""
+            }
+          ],
+          "returns": {
+            "type": "T[]",
+            "description": ""
+          },
+          "file": "npm/vite-plugin-ox-content/src/locale-nav.ts",
+          "line": 43,
+          "endLine": 55,
+          "signature": "export function localizeNavGroups<T extends LocalizableNavGroup>(groups: T[], options: LocalizeNavOptions): T[]"
+        },
+        {
+          "name": "localizeHeaderNavItems",
+          "kind": "function",
+          "description": "Rewrites header nav `link` values the same way as the sidebar.",
+          "params": [
+            {
+              "name": "items",
+              "type": "HeaderNavItem[] | undefined",
+              "description": ""
+            },
+            {
+              "name": "options",
+              "type": "LocalizeNavOptions",
+              "description": ""
+            }
+          ],
+          "returns": {
+            "type": "HeaderNavItem[] | undefined",
+            "description": ""
+          },
+          "file": "npm/vite-plugin-ox-content/src/locale-nav.ts",
+          "line": 60,
+          "endLine": 76,
+          "signature": "export function localizeHeaderNavItems(items: HeaderNavItem[] | undefined, options: LocalizeNavOptions): HeaderNavItem[] | undefined"
         }
       ]
     },
@@ -7727,19 +7804,11 @@
               "kind": "property",
               "description": "",
               "type": "string",
-              "line": 70,
-              "endLine": 70
-            },
-            {
-              "name": "path",
-              "kind": "property",
-              "description": "",
-              "type": "string",
               "line": 71,
               "endLine": 71
             },
             {
-              "name": "href",
+              "name": "path",
               "kind": "property",
               "description": "",
               "type": "string",
@@ -7747,13 +7816,21 @@
               "endLine": 72
             },
             {
+              "name": "href",
+              "kind": "property",
+              "description": "",
+              "type": "string",
+              "line": 73,
+              "endLine": 73
+            },
+            {
               "name": "children",
               "kind": "property",
               "description": "",
               "type": "SsgNavItem[]",
               "optional": true,
-              "line": 73,
-              "endLine": 73
+              "line": 74,
+              "endLine": 74
             },
             {
               "name": "collapsed",
@@ -7761,8 +7838,8 @@
               "description": "",
               "type": "boolean",
               "optional": true,
-              "line": 74,
-              "endLine": 74
+              "line": 75,
+              "endLine": 75
             },
             {
               "name": "stickyCollapsed",
@@ -7770,13 +7847,13 @@
               "description": "",
               "type": "boolean",
               "optional": true,
-              "line": 75,
-              "endLine": 75
+              "line": 76,
+              "endLine": 76
             }
           ],
           "file": "npm/vite-plugin-ox-content/src/ssg.ts",
-          "line": 69,
-          "endLine": 76,
+          "line": 70,
+          "endLine": 77,
           "signature": "export interface SsgNavItem"
         },
         {
@@ -7790,8 +7867,8 @@
               "description": "",
               "type": "HeroConfig",
               "optional": true,
-              "line": 82,
-              "endLine": 82
+              "line": 83,
+              "endLine": 83
             },
             {
               "name": "features",
@@ -7799,13 +7876,13 @@
               "description": "",
               "type": "FeatureConfig[]",
               "optional": true,
-              "line": 83,
-              "endLine": 83
+              "line": 84,
+              "endLine": 84
             }
           ],
           "file": "npm/vite-plugin-ox-content/src/ssg.ts",
-          "line": 81,
-          "endLine": 84,
+          "line": 82,
+          "endLine": 85,
           "signature": "export interface SsgEntryPageConfig"
         },
         {
@@ -7818,8 +7895,8 @@
               "kind": "property",
               "description": "",
               "type": "string",
-              "line": 90,
-              "endLine": 90
+              "line": 91,
+              "endLine": 91
             },
             {
               "name": "description",
@@ -7827,24 +7904,24 @@
               "description": "",
               "type": "string",
               "optional": true,
-              "line": 91,
-              "endLine": 91
+              "line": 92,
+              "endLine": 92
             },
             {
               "name": "content",
               "kind": "property",
               "description": "",
               "type": "string",
-              "line": 92,
-              "endLine": 92
+              "line": 93,
+              "endLine": 93
             },
             {
               "name": "toc",
               "kind": "property",
               "description": "",
               "type": "TocEntry[]",
-              "line": 93,
-              "endLine": 93
+              "line": 94,
+              "endLine": 94
             },
             {
               "name": "lastUpdated",
@@ -7852,27 +7929,19 @@
               "description": "",
               "type": "number",
               "optional": true,
-              "line": 94,
-              "endLine": 94
+              "line": 95,
+              "endLine": 95
             },
             {
               "name": "frontmatter",
               "kind": "property",
               "description": "",
               "type": "Record<string, unknown>",
-              "line": 95,
-              "endLine": 95
-            },
-            {
-              "name": "path",
-              "kind": "property",
-              "description": "",
-              "type": "string",
               "line": 96,
               "endLine": 96
             },
             {
-              "name": "href",
+              "name": "path",
               "kind": "property",
               "description": "",
               "type": "string",
@@ -7880,13 +7949,21 @@
               "endLine": 97
             },
             {
+              "name": "href",
+              "kind": "property",
+              "description": "",
+              "type": "string",
+              "line": 98,
+              "endLine": 98
+            },
+            {
               "name": "entryPage",
               "kind": "property",
               "description": "Entry page configuration (if layout: entry)",
               "type": "SsgEntryPageConfig",
               "optional": true,
-              "line": 99,
-              "endLine": 99
+              "line": 100,
+              "endLine": 100
             },
             {
               "name": "prev",
@@ -7894,8 +7971,8 @@
               "description": "Frontmatter override for the previous-page link.",
               "type": "SsgPagerOverride",
               "optional": true,
-              "line": 101,
-              "endLine": 101
+              "line": 102,
+              "endLine": 102
             },
             {
               "name": "next",
@@ -7903,8 +7980,8 @@
               "description": "Frontmatter override for the next-page link.",
               "type": "SsgPagerOverride",
               "optional": true,
-              "line": 103,
-              "endLine": 103
+              "line": 104,
+              "endLine": 104
             },
             {
               "name": "breadcrumbs",
@@ -7912,8 +7989,8 @@
               "description": "Frontmatter `breadcrumbs: false` hides the trail on this page.",
               "type": "boolean",
               "optional": true,
-              "line": 105,
-              "endLine": 105
+              "line": 106,
+              "endLine": 106
             },
             {
               "name": "chrome",
@@ -7921,13 +7998,13 @@
               "description": "Per-page chrome flags. Honored only when `ssg.pageChrome` is on.",
               "type": "PageChromeFlags",
               "optional": true,
-              "line": 107,
-              "endLine": 107
+              "line": 108,
+              "endLine": 108
             }
           ],
           "file": "npm/vite-plugin-ox-content/src/ssg.ts",
-          "line": 89,
-          "endLine": 108,
+          "line": 90,
+          "endLine": 109,
           "signature": "export interface SsgPageData"
         },
         {
@@ -7941,8 +8018,8 @@
               "description": "",
               "type": "boolean",
               "optional": true,
-              "line": 112,
-              "endLine": 112
+              "line": 113,
+              "endLine": 113
             },
             {
               "name": "text",
@@ -7950,8 +8027,8 @@
               "description": "",
               "type": "string",
               "optional": true,
-              "line": 113,
-              "endLine": 113
+              "line": 114,
+              "endLine": 114
             },
             {
               "name": "href",
@@ -7959,13 +8036,13 @@
               "description": "",
               "type": "string",
               "optional": true,
-              "line": 114,
-              "endLine": 114
+              "line": 115,
+              "endLine": 115
             }
           ],
           "file": "npm/vite-plugin-ox-content/src/ssg.ts",
-          "line": 111,
-          "endLine": 115,
+          "line": 112,
+          "endLine": 116,
           "signature": "export interface SsgPagerOverride"
         },
         {
@@ -7976,8 +8053,8 @@
             "deprecated": "Use `generateHtmlPage`/`buildSsg` instead."
           },
           "file": "npm/vite-plugin-ox-content/src/ssg.ts",
-          "line": 131,
-          "endLine": 131,
+          "line": 132,
+          "endLine": 132,
           "signature": "export const DEFAULT_HTML_TEMPLATE = \"<!-- ox-content default HTML template is Rust-backed -->\""
         },
         {
@@ -7996,8 +8073,8 @@
             "description": ""
           },
           "file": "npm/vite-plugin-ox-content/src/ssg.ts",
-          "line": 136,
-          "endLine": 202,
+          "line": 137,
+          "endLine": 203,
           "signature": "export function resolveSsgOptions(ssg: SsgOptions | boolean | undefined): ResolvedSsgOptions"
         },
         {
@@ -8016,8 +8093,8 @@
             "description": ""
           },
           "file": "npm/vite-plugin-ox-content/src/ssg.ts",
-          "line": 238,
-          "endLine": 265,
+          "line": 239,
+          "endLine": 266,
           "signature": "export function parseSsgPagerOverride(value: unknown): SsgPagerOverride | undefined"
         },
         {
@@ -8041,8 +8118,8 @@
             "description": ""
           },
           "file": "npm/vite-plugin-ox-content/src/ssg.ts",
-          "line": 270,
-          "endLine": 275,
+          "line": 271,
+          "endLine": 276,
           "signature": "export function extractTitle(content: string, frontmatter: Record<string, unknown>): string"
         },
         {
@@ -8066,8 +8143,8 @@
             "description": ""
           },
           "file": "npm/vite-plugin-ox-content/src/ssg.ts",
-          "line": 280,
-          "endLine": 282,
+          "line": 281,
+          "endLine": 283,
           "signature": "export function generateBareHtmlPage(content: string, title: string): string"
         },
         {
@@ -8086,8 +8163,8 @@
             "description": ""
           },
           "file": "npm/vite-plugin-ox-content/src/ssg.ts",
-          "line": 293,
-          "endLine": 295,
+          "line": 294,
+          "endLine": 296,
           "signature": "export function generateBarePage(page: SsgBarePage): string"
         },
         {
@@ -8100,28 +8177,19 @@
               "kind": "property",
               "description": "",
               "type": "string",
-              "line": 299,
-              "endLine": 299
+              "line": 300,
+              "endLine": 300
             },
             {
               "name": "content",
               "kind": "property",
               "description": "",
               "type": "string",
-              "line": 300,
-              "endLine": 300
-            },
-            {
-              "name": "lang",
-              "kind": "property",
-              "description": "",
-              "type": "string",
-              "optional": true,
               "line": 301,
               "endLine": 301
             },
             {
-              "name": "dir",
+              "name": "lang",
               "kind": "property",
               "description": "",
               "type": "string",
@@ -8130,7 +8198,7 @@
               "endLine": 302
             },
             {
-              "name": "description",
+              "name": "dir",
               "kind": "property",
               "description": "",
               "type": "string",
@@ -8139,7 +8207,7 @@
               "endLine": 303
             },
             {
-              "name": "canonicalUrl",
+              "name": "description",
               "kind": "property",
               "description": "",
               "type": "string",
@@ -8148,7 +8216,7 @@
               "endLine": 304
             },
             {
-              "name": "siteName",
+              "name": "canonicalUrl",
               "kind": "property",
               "description": "",
               "type": "string",
@@ -8157,7 +8225,7 @@
               "endLine": 305
             },
             {
-              "name": "ogImage",
+              "name": "siteName",
               "kind": "property",
               "description": "",
               "type": "string",
@@ -8166,7 +8234,7 @@
               "endLine": 306
             },
             {
-              "name": "head",
+              "name": "ogImage",
               "kind": "property",
               "description": "",
               "type": "string",
@@ -8175,7 +8243,7 @@
               "endLine": 307
             },
             {
-              "name": "bodyStart",
+              "name": "head",
               "kind": "property",
               "description": "",
               "type": "string",
@@ -8184,18 +8252,27 @@
               "endLine": 308
             },
             {
-              "name": "bodyEnd",
+              "name": "bodyStart",
               "kind": "property",
               "description": "",
               "type": "string",
               "optional": true,
               "line": 309,
               "endLine": 309
+            },
+            {
+              "name": "bodyEnd",
+              "kind": "property",
+              "description": "",
+              "type": "string",
+              "optional": true,
+              "line": 310,
+              "endLine": 310
             }
           ],
           "file": "npm/vite-plugin-ox-content/src/ssg.ts",
-          "line": 298,
-          "endLine": 310,
+          "line": 299,
+          "endLine": 311,
           "signature": "export interface SsgBarePage"
         },
         {
@@ -8208,20 +8285,11 @@
               "kind": "property",
               "description": "",
               "type": "string",
-              "line": 314,
-              "endLine": 314
-            },
-            {
-              "name": "collapsed",
-              "kind": "property",
-              "description": "",
-              "type": "boolean",
-              "optional": true,
               "line": 315,
               "endLine": 315
             },
             {
-              "name": "stickyCollapsed",
+              "name": "collapsed",
               "kind": "property",
               "description": "",
               "type": "boolean",
@@ -8230,17 +8298,26 @@
               "endLine": 316
             },
             {
+              "name": "stickyCollapsed",
+              "kind": "property",
+              "description": "",
+              "type": "boolean",
+              "optional": true,
+              "line": 317,
+              "endLine": 317
+            },
+            {
               "name": "items",
               "kind": "property",
               "description": "",
               "type": "SsgNavItem[]",
-              "line": 317,
-              "endLine": 317
+              "line": 318,
+              "endLine": 318
             }
           ],
           "file": "npm/vite-plugin-ox-content/src/ssg.ts",
-          "line": 313,
-          "endLine": 318,
+          "line": 314,
+          "endLine": 319,
           "signature": "interface RustNavGroup"
         },
         {
@@ -8248,8 +8325,8 @@
           "kind": "variable",
           "description": "Per-build cache for the Rust-facing nav conversion. `navGroups` is the same\n`context.navItems` reference for every page in a build, so the deep recursive\ncopy below only needs to run once per build instead of once per page.",
           "file": "npm/vite-plugin-ox-content/src/ssg.ts",
-          "line": 325,
-          "endLine": 325,
+          "line": 326,
+          "endLine": 326,
           "signature": "const navGroupsForRustCache = new WeakMap<NavGroup[], RustNavGroup[]>()"
         },
         {
@@ -8268,8 +8345,8 @@
             "description": ""
           },
           "file": "npm/vite-plugin-ox-content/src/ssg.ts",
-          "line": 358,
-          "endLine": 365,
+          "line": 359,
+          "endLine": 366,
           "signature": "function toRustTocEntry(entry: TocEntry): TocEntry"
         },
         {
@@ -8282,29 +8359,29 @@
               "kind": "property",
               "description": "",
               "type": "string",
-              "line": 369,
-              "endLine": 369
+              "line": 370,
+              "endLine": 370
             },
             {
               "name": "name",
               "kind": "property",
               "description": "",
               "type": "string",
-              "line": 370,
-              "endLine": 370
+              "line": 371,
+              "endLine": 371
             },
             {
               "name": "dir",
               "kind": "property",
               "description": "",
               "type": "string",
-              "line": 371,
-              "endLine": 371
+              "line": 372,
+              "endLine": 372
             }
           ],
           "file": "npm/vite-plugin-ox-content/src/ssg.ts",
-          "line": 368,
-          "endLine": 372,
+          "line": 369,
+          "endLine": 373,
           "signature": "interface RustLocale"
         },
         {
@@ -8312,8 +8389,8 @@
           "kind": "variable",
           "description": "Per-build cache for the Rust-facing locale list. `i18n.locales` is the same\nreference for every page in a build, so this mapping (and the `?? \"ltr\"`\ndefault) only runs once per build instead of once per page.",
           "file": "npm/vite-plugin-ox-content/src/ssg.ts",
-          "line": 379,
-          "endLine": 379,
+          "line": 380,
+          "endLine": 380,
           "signature": "const rustLocalesCache = new WeakMap<LocaleConfig[], RustLocale[]>()"
         },
         {
@@ -8321,8 +8398,8 @@
           "kind": "variable",
           "description": "Per-build cache for the locale-code list passed to `getSsgPageLocale`. The\n`i18n.locales` reference is stable across a build, so the `.map` to codes\nruns once instead of once per page.",
           "file": "npm/vite-plugin-ox-content/src/ssg.ts",
-          "line": 400,
-          "endLine": 400,
+          "line": 401,
+          "endLine": 401,
           "signature": "const localeCodesCache = new WeakMap<LocaleConfig[], string[]>()"
         },
         {
@@ -8435,8 +8512,8 @@
             "description": ""
           },
           "file": "npm/vite-plugin-ox-content/src/ssg.ts",
-          "line": 415,
-          "endLine": 525,
+          "line": 416,
+          "endLine": 526,
           "signature": "export async function generateHtmlPage(pageData: SsgPageData, navGroups: NavGroup[], siteName: string, base: string, ogImage?: string, theme?: ResolvedThemeConfig, locale?: string, availableLocales?: LocaleConfig[], pagination = false, readerChrome: ResolvedReaderChrome = false, breadcrumbs = false, localeSwitcher = false, localePaths?: SsgLocalePath[], a11y: ResolvedA11y = false, team: ResolvedTeamOptions = { enabled: false, members: [] }, pageChrome: boolean = false): Promise<string>"
         },
         {
@@ -8470,8 +8547,8 @@
             "description": ""
           },
           "file": "npm/vite-plugin-ox-content/src/ssg.ts",
-          "line": 568,
-          "endLine": 575,
+          "line": 569,
+          "endLine": 576,
           "signature": "export function getOutputPath(inputPath: string, srcDir: string, outDir: string, extension: string): string"
         },
         {
@@ -8495,8 +8572,8 @@
             "description": ""
           },
           "file": "npm/vite-plugin-ox-content/src/ssg.ts",
-          "line": 580,
-          "endLine": 582,
+          "line": 581,
+          "endLine": 583,
           "signature": "export function getUrlPath(inputPath: string, srcDir: string): string"
         },
         {
@@ -8530,8 +8607,8 @@
             "description": ""
           },
           "file": "npm/vite-plugin-ox-content/src/ssg.ts",
-          "line": 587,
-          "endLine": 594,
+          "line": 588,
+          "endLine": 595,
           "signature": "export function getHref(inputPath: string, srcDir: string, base: string, extension: string): string"
         },
         {
@@ -8560,8 +8637,8 @@
             "description": ""
           },
           "file": "npm/vite-plugin-ox-content/src/ssg.ts",
-          "line": 599,
-          "endLine": 609,
+          "line": 600,
+          "endLine": 610,
           "signature": "export function resolveNavigationGroups(navigation: SsgNavigationGroup[] | undefined, base: string, extension: string): NavGroup[] | undefined"
         },
         {
@@ -8580,8 +8657,8 @@
             "description": ""
           },
           "file": "npm/vite-plugin-ox-content/src/ssg.ts",
-          "line": 643,
-          "endLine": 645,
+          "line": 644,
+          "endLine": 646,
           "signature": "export function formatTitle(name: string): string"
         },
         {
@@ -8607,8 +8684,8 @@
             "description": ""
           },
           "file": "npm/vite-plugin-ox-content/src/ssg.ts",
-          "line": 650,
-          "endLine": 655,
+          "line": 651,
+          "endLine": 656,
           "signature": "export async function collectMarkdownFiles(srcDir: string, extensions: readonly string[] = DEFAULT_MARKDOWN_EXTENSIONS): Promise<string[]>"
         },
         {
@@ -8621,16 +8698,16 @@
               "kind": "property",
               "description": "",
               "type": "string",
-              "line": 661,
-              "endLine": 661
+              "line": 662,
+              "endLine": 662
             },
             {
               "name": "items",
               "kind": "property",
               "description": "",
               "type": "SsgNavItem[]",
-              "line": 662,
-              "endLine": 662
+              "line": 663,
+              "endLine": 663
             },
             {
               "name": "collapsed",
@@ -8638,8 +8715,8 @@
               "description": "",
               "type": "boolean",
               "optional": true,
-              "line": 663,
-              "endLine": 663
+              "line": 664,
+              "endLine": 664
             },
             {
               "name": "stickyCollapsed",
@@ -8647,13 +8724,13 @@
               "description": "",
               "type": "boolean",
               "optional": true,
-              "line": 664,
-              "endLine": 664
+              "line": 665,
+              "endLine": 665
             }
           ],
           "file": "npm/vite-plugin-ox-content/src/ssg.ts",
-          "line": 660,
-          "endLine": 665,
+          "line": 661,
+          "endLine": 666,
           "signature": "export interface NavGroup"
         },
         {
@@ -8687,8 +8764,8 @@
             "description": ""
           },
           "file": "npm/vite-plugin-ox-content/src/ssg.ts",
-          "line": 670,
-          "endLine": 677,
+          "line": 671,
+          "endLine": 678,
           "signature": "export function buildNavItems(markdownFiles: string[], srcDir: string, base: string, extension: string): NavGroup[]"
         },
         {
@@ -8717,8 +8794,8 @@
             "description": ""
           },
           "file": "npm/vite-plugin-ox-content/src/ssg.ts",
-          "line": 682,
-          "endLine": 688,
+          "line": 683,
+          "endLine": 689,
           "signature": "export function buildThemeNavItems(sidebar: SidebarItem[], base: string, extension: string): NavGroup[]"
         },
         {
@@ -8731,29 +8808,29 @@
               "kind": "property",
               "description": "Every file written, HTML pages and generated OG images alike.",
               "type": "string[]",
-              "line": 725,
-              "endLine": 725
+              "line": 726,
+              "endLine": 726
             },
             {
               "name": "errors",
               "kind": "property",
               "description": "Per-page failures that did not abort the build.",
               "type": "string[]",
-              "line": 727,
-              "endLine": 727
+              "line": 728,
+              "endLine": 728
             },
             {
               "name": "ogImages",
               "kind": "property",
               "description": "Generated OG image URL per source file, keyed by absolute input path.\n\nBare mode renders these into the page itself, but a consumer\npost-processing the output had no way to find them short of probing the\noutput directory for `og-image.png`.",
               "type": "Record<string, string>",
-              "line": 735,
-              "endLine": 735
+              "line": 736,
+              "endLine": 736
             }
           ],
           "file": "npm/vite-plugin-ox-content/src/ssg.ts",
-          "line": 723,
-          "endLine": 736,
+          "line": 724,
+          "endLine": 737,
           "signature": "export interface SsgBuildResult"
         },
         {
@@ -8777,8 +8854,8 @@
             "description": ""
           },
           "file": "npm/vite-plugin-ox-content/src/ssg.ts",
-          "line": 741,
-          "endLine": 794,
+          "line": 742,
+          "endLine": 795,
           "signature": "export async function buildSsg(options: ResolvedOptions, root: string): Promise<SsgBuildResult>"
         },
         {
@@ -8797,8 +8874,8 @@
             "description": ""
           },
           "file": "npm/vite-plugin-ox-content/src/ssg.ts",
-          "line": 846,
-          "endLine": 848,
+          "line": 847,
+          "endLine": 849,
           "signature": "export function shouldGenerateOgImages(options: ResolvedOptions): boolean"
         },
         {
@@ -8817,8 +8894,8 @@
             "description": ""
           },
           "file": "npm/vite-plugin-ox-content/src/ssg.ts",
-          "line": 1246,
-          "endLine": 1259,
+          "line": 1269,
+          "endLine": 1282,
           "signature": "function toThemePageData(pageResult: PageProcessResult): ThemePageData"
         },
         {
@@ -8842,8 +8919,8 @@
             "description": ""
           },
           "file": "npm/vite-plugin-ox-content/src/ssg.ts",
-          "line": 1267,
-          "endLine": 1276,
+          "line": 1290,
+          "endLine": 1299,
           "signature": "function canonicalPageUrl(context: BuildSsgContext, urlPath: string): string | undefined"
         },
         {
@@ -8862,8 +8939,8 @@
             "description": ""
           },
           "file": "npm/vite-plugin-ox-content/src/ssg.ts",
-          "line": 1499,
-          "endLine": 1504,
+          "line": 1522,
+          "endLine": 1527,
           "signature": "function sitePathFromUrlPath(urlPath: string): string"
         }
       ]
