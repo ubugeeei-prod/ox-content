@@ -1530,6 +1530,7 @@ async function applyDocumentationVersions(
           base: context.base,
           extensions: context.options.extensions,
           publishState: context.options.publishState,
+          mdx: context.options.mdx,
         });
       } catch (err) {
         const message = err instanceof Error ? err.message : String(err);

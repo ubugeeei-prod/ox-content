@@ -531,6 +531,7 @@ function createSearchPlugin(resolvedOptions: ResolvedOptions, getRoot: () => str
           resolvedOptions.extensions,
           searchPublishState(resolvedOptions, command),
           notFoundSearchExcludeIds(resolvedOptions.ssg.notFound),
+          resolvedOptions.mdx,
         );
         console.log("[ox-content] Search index built");
       } catch (err) {
@@ -575,6 +576,7 @@ function createSearchPlugin(resolvedOptions: ResolvedOptions, getRoot: () => str
               resolvedOptions.extensions,
               searchPublishState(resolvedOptions, command),
               notFoundSearchExcludeIds(resolvedOptions.ssg.notFound),
+              resolvedOptions.mdx,
             );
             stale = false;
           }
@@ -622,6 +624,7 @@ function resolveOptions(options: OxContentOptions): ResolvedOptions {
     taxonomies: resolveTaxonomiesOptions(options.taxonomies),
     versions: resolveVersionsOptions(options.versions),
     gfm: options.gfm ?? true,
+    mdx: options.mdx,
     footnotes: options.footnotes ?? true,
     tables: options.tables ?? true,
     taskLists: options.taskLists ?? true,

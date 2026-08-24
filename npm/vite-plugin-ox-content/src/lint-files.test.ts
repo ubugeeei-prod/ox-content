@@ -12,6 +12,37 @@ afterEach(async () => {
 });
 
 describe("lintMarkdownFile", () => {
+  it("infers MDX case-insensitively and honors explicit opt-out", async () => {
+    const cwd = await fs.mkdtemp(path.join(os.tmpdir(), "ox-content-lint-mdx-"));
+    tempDirs.push(cwd);
+
+    const filePath = path.join(cwd, "docs", "Guide.MDX");
+    await fs.mkdir(path.dirname(filePath), { recursive: true });
+    await fs.writeFile(
+      filePath,
+      "import Card from './Card'\n\n<Card>Hello wrld {user.name}</Card>\n",
+      "utf-8",
+    );
+
+    const inferred = await lintMarkdownFile(filePath, {
+      cwd,
+      dictionary: { words: ["Hello"] },
+    });
+    expect(inferred.skipped).toBe(false);
+    expect(inferred.diagnostics.map((diagnostic) => diagnostic.message)).toEqual([
+      'Unknown en word "wrld".',
+    ]);
+
+    const optedOut = await lintMarkdownFile(filePath, {
+      cwd,
+      dictionary: { words: ["Hello"] },
+      mdx: false,
+    });
+    expect(optedOut.diagnostics.some((diagnostic) => diagnostic.message.includes("Card"))).toBe(
+      true,
+    );
+  });
+
   it("supports end-user file targeting, ignores, and custom words", async () => {
     const cwd = await fs.mkdtemp(path.join(os.tmpdir(), "ox-content-lint-files-"));
     tempDirs.push(cwd);
@@ -54,6 +85,33 @@ describe("lintMarkdownFile", () => {
 });
 
 describe("lintMarkdownFiles", () => {
+  it("uses each file extension when a batch mixes Markdown and MDX", async () => {
+    const cwd = await fs.mkdtemp(path.join(os.tmpdir(), "ox-content-lint-mixed-"));
+    tempDirs.push(cwd);
+    const docsDir = path.join(cwd, "docs");
+    await fs.mkdir(docsDir, { recursive: true });
+    const source = "import Card from './Card'\n\n<Card>Hello</Card>\n";
+    await fs.writeFile(path.join(docsDir, "component.MDX"), source, "utf-8");
+    await fs.writeFile(path.join(docsDir, "plain.md"), source, "utf-8");
+
+    const result = await lintMarkdownFiles({
+      cwd,
+      dictionary: { words: ["Hello"] },
+    });
+    const mdxDiagnostics = result.diagnostics.filter(
+      (diagnostic) => diagnostic.relativePath === "docs/component.MDX",
+    );
+    const markdownDiagnostics = result.diagnostics.filter(
+      (diagnostic) => diagnostic.relativePath === "docs/plain.md",
+    );
+
+    expect(result.checkedFileCount).toBe(2);
+    expect(mdxDiagnostics).toHaveLength(0);
+    expect(markdownDiagnostics.some((diagnostic) => diagnostic.message.includes("Card"))).toBe(
+      true,
+    );
+  });
+
   it("checks only matched files and flattens diagnostics with file metadata", async () => {
     const cwd = await fs.mkdtemp(path.join(os.tmpdir(), "ox-content-lint-files-"));
     tempDirs.push(cwd);

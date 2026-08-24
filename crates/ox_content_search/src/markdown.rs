@@ -12,6 +12,8 @@ use crate::{DocumentIndexer, SearchDocument, SearchIndexBuilder};
 pub struct SearchIndexBuildOptions {
     /// When set, draft / unlisted / scheduled pages follow publish-state rules.
     pub publish_state: Option<PublishStateOptions>,
+    /// Explicit MDX parser override. When omitted, `.mdx` files enable MDX.
+    pub mdx: Option<bool>,
 }
 
 pub fn extract_search_document_from_source(
@@ -89,7 +91,7 @@ pub fn build_search_index_from_directory_with_options(
     options: Option<&SearchIndexBuildOptions>,
 ) -> String {
     let src_path = Path::new(src_dir);
-    let parser_options = ParserOptions::gfm();
+    let default_parser_options = ParserOptions::gfm();
     let publish_state = options.and_then(|opts| opts.publish_state.as_ref());
     let documents =
         crate::collect_markdown_files(src_dir, extensions).into_iter().filter_map(|file| {
@@ -103,7 +105,15 @@ pub fn build_search_index_from_directory_with_options(
             let id = search_document_id(src_path, &file, extensions);
             let url = format!("{base}{id}");
 
-            Some(extract_search_document_from_source(&source, id, url, parser_options.clone()))
+            let mut parser_options = default_parser_options.clone();
+            parser_options.mdx = options.and_then(|opts| opts.mdx).unwrap_or_else(|| {
+                Path::new(&file)
+                    .extension()
+                    .and_then(|extension| extension.to_str())
+                    .is_some_and(|extension| extension.eq_ignore_ascii_case("mdx"))
+            });
+
+            Some(extract_search_document_from_source(&source, id, url, parser_options))
         });
 
     build_search_index_json(documents)

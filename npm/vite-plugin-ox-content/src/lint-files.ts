@@ -8,6 +8,7 @@ import {
   type MarkdownLintOptions,
   type MarkdownLintResult,
 } from "./lint";
+import { resolveMdxForFilePath } from "./markdown";
 
 const DEFAULT_LINT_FILE_INCLUDE = ["**/*.md", "**/*.markdown", "**/*.mdx"] as const;
 const DEFAULT_LINT_FILE_EXCLUDE = ["**/node_modules/**", "**/.git/**", "**/dist/**"] as const;
@@ -126,7 +127,11 @@ export async function lintMarkdownFiles(
   const sources = await Promise.all(
     matchedFiles.map((file) => fs.readFile(file.filePath, "utf-8")),
   );
-  const results = await lintMarkdownDocumentsAsync(sources, resolvedOptions.lintOptions);
+  const results = await lintMatchedMarkdownFiles(
+    matchedFiles,
+    sources,
+    resolvedOptions.lintOptions,
+  );
 
   const files = matchedFiles.map((file, index): MarkdownLintFileResult => ({
     ...(results[index] ?? createEmptyLintResult()),
@@ -165,6 +170,7 @@ function resolveMarkdownLintFileOptions(
     lintOptions: {
       dictionary: options.dictionary,
       languages: options.languages,
+      mdx: options.mdx,
       rules: options.rules,
     },
   };
@@ -187,7 +193,10 @@ async function lintMarkdownFileWithResolvedOptions(
   }
 
   const source = await fs.readFile(absoluteFilePath, "utf-8");
-  const result = await lintMarkdownAsync(source, options.lintOptions);
+  const result = await lintMarkdownAsync(source, {
+    ...options.lintOptions,
+    mdx: resolveMdxForFilePath(absoluteFilePath, options.lintOptions.mdx),
+  });
 
   return {
     ...result,
@@ -207,6 +216,7 @@ async function collectMarkdownLintFileEntries(
       absolute: true,
       cwd: options.cwd,
       ignore: options.exclude,
+      nocase: true,
       nodir: true,
     });
 
@@ -234,13 +244,50 @@ function shouldLintAbsoluteFile(
   const matches = (patterns: string[]) =>
     patterns.some((pattern) => {
       const normalizedPattern = normalizePath(pattern);
-      return (
-        path.matchesGlob(relativePath, normalizedPattern) ||
-        path.matchesGlob(absolutePath, normalizedPattern)
+      return [relativePath, absolutePath].some(
+        (candidate) =>
+          path.matchesGlob(candidate, normalizedPattern) ||
+          path.matchesGlob(candidate.toLowerCase(), normalizedPattern.toLowerCase()),
       );
     });
 
   return matches(options.include) && !matches(options.exclude);
+}
+
+async function lintMatchedMarkdownFiles(
+  files: MarkdownLintFileEntry[],
+  sources: string[],
+  options: MarkdownLintOptions,
+): Promise<MarkdownLintResult[]> {
+  const results = Array.from({ length: sources.length }, () => createEmptyLintResult());
+
+  await Promise.all(
+    [false, true].map(async (mdx) => {
+      const indexes = files
+        .map((file, index) => ({
+          index,
+          mdx: resolveMdxForFilePath(file.filePath, options.mdx),
+        }))
+        .filter((entry) => entry.mdx === mdx)
+        .map((entry) => entry.index);
+      if (indexes.length === 0) {
+        return;
+      }
+
+      const groupResults = await lintMarkdownDocumentsAsync(
+        indexes.map((index) => sources[index] ?? ""),
+        { ...options, mdx },
+      );
+      for (const [groupIndex, result] of groupResults.entries()) {
+        const sourceIndex = indexes[groupIndex];
+        if (sourceIndex !== undefined) {
+          results[sourceIndex] = result;
+        }
+      }
+    }),
+  );
+
+  return results;
 }
 
 function normalizePath(value: string): string {

@@ -14,7 +14,7 @@ pub struct PreviewPayload {
     pub title: String,
 }
 
-pub fn render_preview(source: &str) -> Result<PreviewPayload, ParseError> {
+pub fn render_preview(source: &str, mdx: bool) -> Result<PreviewPayload, ParseError> {
     let document = TextDocumentState::new(source.to_string());
     let frontmatter = parse_frontmatter(&document);
     let block = frontmatter.block;
@@ -26,7 +26,9 @@ pub fn render_preview(source: &str) -> Result<PreviewPayload, ParseError> {
     // often. Use the same source-length arena heuristic as NAPI so editor
     // previews do not benchmark a zero-capacity allocator.
     let allocator = Allocator::for_source_len(content.len());
-    let parser = Parser::with_options(&allocator, content, ParserOptions::gfm());
+    let mut options = ParserOptions::gfm();
+    options.mdx = mdx;
+    let parser = Parser::with_options(&allocator, content, options);
     let ast = parser.parse()?;
     let mut renderer = HtmlRenderer::new();
     let body = renderer.render(&ast);
@@ -53,7 +55,7 @@ mod tests {
 
     #[test]
     fn render_plain_markdown_uses_first_heading_as_title() {
-        let payload = render_preview("# Hello World\n\nA paragraph.\n").unwrap();
+        let payload = render_preview("# Hello World\n\nA paragraph.\n", false).unwrap();
         snap("render_plain_markdown_uses_first_heading_as_title", &payload);
     }
 
@@ -61,13 +63,13 @@ mod tests {
     fn render_with_frontmatter_uses_frontmatter_title() {
         let source =
             "---\ntitle: From Frontmatter\nlayout: doc\n---\n\n# Heading Should Not Win\n\nbody\n";
-        let payload = render_preview(source).unwrap();
+        let payload = render_preview(source, false).unwrap();
         snap("render_with_frontmatter_uses_frontmatter_title", &payload);
     }
 
     #[test]
     fn render_without_heading_or_frontmatter_falls_back_to_default_title() {
-        let payload = render_preview("just a paragraph\n").unwrap();
+        let payload = render_preview("just a paragraph\n", false).unwrap();
         snap("render_without_heading_or_frontmatter_falls_back_to_default_title", &payload);
     }
 
@@ -75,7 +77,7 @@ mod tests {
     fn render_strips_frontmatter_from_body() {
         // The rendered HTML body must not contain the frontmatter block — it
         // should be stripped before parsing so editors never display the YAML.
-        let payload = render_preview("---\ntitle: Hi\n---\n\n# Body Title\n").unwrap();
+        let payload = render_preview("---\ntitle: Hi\n---\n\n# Body Title\n", false).unwrap();
         snap("render_strips_frontmatter_from_body", &payload);
     }
 
@@ -93,7 +95,19 @@ mod tests {
             "\n",
             "~~strike~~ and `code` and **bold**.\n",
         );
-        let payload = render_preview(source).unwrap();
+        let payload = render_preview(source, false).unwrap();
         snap("render_gfm_features_round_trip", &payload);
+    }
+
+    #[test]
+    fn render_mdx_suppresses_esm_and_renders_component_islands() {
+        let payload = render_preview(
+            "import Card from './Card'\n\n# MDX Preview\n\n<Card>Visible copy</Card>\n",
+            true,
+        )
+        .unwrap();
+        assert!(!payload.html.contains("import Card"));
+        assert!(payload.html.contains("data-ox-island=\"Card\""), "{}", payload.html);
+        assert!(payload.html.contains("Visible copy"), "{}", payload.html);
     }
 }

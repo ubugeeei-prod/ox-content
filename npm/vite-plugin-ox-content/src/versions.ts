@@ -196,6 +196,7 @@ export async function writeSnapshotSearchIndex(input: {
   base: string;
   extensions: readonly string[];
   publishState?: ResolvedPublishStateOptions;
+  mdx?: boolean;
 }): Promise<string | undefined> {
   const prefix = sanitizePrefix(input.prefix);
   if (!prefix) {
@@ -208,6 +209,8 @@ export async function writeSnapshotSearchIndex(input: {
     prefixBase,
     input.extensions,
     input.publishState,
+    [],
+    input.mdx,
   );
   await fs.mkdir(destDir, { recursive: true });
   await writeSearchIndex(json, destDir);

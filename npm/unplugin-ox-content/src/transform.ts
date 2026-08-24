@@ -32,6 +32,7 @@ import type {
   TransformResult,
   TocEntry,
 } from "./types";
+import { resolveMdxForSourceFile } from "./source-path";
 
 const require = createRequire(import.meta.url);
 
@@ -47,6 +48,7 @@ interface NapiBindings {
     kind: string,
     options?: {
       gfm?: boolean;
+      mdx?: boolean;
       footnotes?: boolean;
       taskLists?: boolean;
       tables?: boolean;
@@ -58,6 +60,7 @@ interface NapiBindings {
     source: string,
     options?: {
       gfm?: boolean;
+      mdx?: boolean;
       footnotes?: boolean;
       taskLists?: boolean;
       tables?: boolean;
@@ -75,6 +78,7 @@ interface NapiBindings {
     source: string,
     options?: {
       gfm?: boolean;
+      mdx?: boolean;
       footnotes?: boolean;
       taskLists?: boolean;
       tables?: boolean;
@@ -186,7 +190,7 @@ export async function transformMarkdown(
     ? await transformWithMarkdownIt(source, filePath, options)
     : hasUnifiedPlugins(options)
       ? await transformWithUnified(source, filePath, options)
-      : transformWithNativePipeline(loadNapiBindings(), source, options);
+      : transformWithNativePipeline(loadNapiBindings(), source, filePath, options);
 
   let nextHtml = transformed.html;
   for (const plugin of options.plugin.oxContent) {
@@ -227,8 +231,12 @@ function loadNapiBindings(): NapiBindings {
   }
 }
 
-function createNapiTransformOptions(options: ResolvedOptions): {
+function createNapiTransformOptions(
+  options: ResolvedOptions,
+  filePath: string,
+): {
   gfm: boolean;
+  mdx: boolean;
   footnotes: boolean;
   taskLists: boolean;
   tables: boolean;
@@ -247,6 +255,7 @@ function createNapiTransformOptions(options: ResolvedOptions): {
 
   return {
     gfm: options.gfm,
+    mdx: resolveMdxForSourceFile(filePath, options.mdx),
     footnotes: options.footnotes,
     taskLists: options.taskLists,
     tables: options.tables,
@@ -306,9 +315,10 @@ function hasMdastOrRemarkPlugins(options: ResolvedOptions): boolean {
 function transformWithNativePipeline(
   napi: NapiBindings,
   source: string,
+  filePath: string,
   options: ResolvedOptions,
 ): PipelineTransformResult {
-  const result = napi.transform(source, createNapiTransformOptions(options));
+  const result = napi.transform(source, createNapiTransformOptions(options, filePath));
 
   if (result.errors.length > 0) {
     console.warn("[ox-content] Transform warnings:", result.errors);
@@ -331,12 +341,13 @@ function transformWithNativePipeline(
 function transformWithNativeMdastPipeline(
   napi: NapiBindings,
   source: string,
+  filePath: string,
   options: ResolvedOptions,
 ): NativeMdastTransformPayload {
   return deserializeNativeMdastTransform(
     requireNapiMethod(napi.transformMdastRaw, "transformMdastRaw")(
       source,
-      createNapiTransformOptions(options),
+      createNapiTransformOptions(options, filePath),
     ),
   );
 }
@@ -568,7 +579,7 @@ async function transformWithUnified(
 
   const nativePayload =
     parserStrategy === "native"
-      ? transformWithNativeMdastPipeline(loadNapiBindings(), fullSource, options)
+      ? transformWithNativeMdastPipeline(loadNapiBindings(), fullSource, filePath, options)
       : null;
   const preparedInput =
     parserStrategy === "native"
@@ -593,7 +604,7 @@ async function transformWithUnified(
     ),
   );
   applyUnifiedPlugins(processor, remarkPlugins);
-  installUnifiedParser(processor, parserStrategy, options, nativePayload?.tree);
+  installUnifiedParser(processor, parserStrategy, options, filePath, nativePayload?.tree);
 
   let toc: TocEntry[] = [];
   processor.use(() => {
@@ -726,6 +737,7 @@ function installUnifiedParser(
   processor: UnifiedProcessor,
   strategy: UnifiedParserStrategy,
   options: ResolvedOptions,
+  filePath: string,
   nativeTree?: MdastRoot,
 ): void {
   if (strategy === "custom") {
@@ -746,6 +758,7 @@ function installUnifiedParser(
 
   processor.use(oxContentMdast, {
     gfm: options.gfm,
+    mdx: resolveMdxForSourceFile(filePath, options.mdx),
     footnotes: options.footnotes,
     taskLists: options.taskLists,
     tables: options.tables,

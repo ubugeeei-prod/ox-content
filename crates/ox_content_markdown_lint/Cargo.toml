@@ -16,6 +16,9 @@ workspace = true
 
 [dependencies]
 compact_str = { workspace = true }
+ox_content_allocator = { workspace = true }
+ox_content_ast = { workspace = true }
+ox_content_parser = { workspace = true }
 regex = { workspace = true }
 rustc-hash = { workspace = true }
 serde = { workspace = true }

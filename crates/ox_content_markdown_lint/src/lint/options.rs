@@ -30,6 +30,7 @@ pub(super) fn normalize_lint_options(
         } else {
             dedupe_strings(languages)
         },
+        mdx: options.mdx.unwrap_or(false),
         rules: InternalMarkdownLintRules {
             duplicate_headings: rules.duplicate_headings.unwrap_or(true),
             heading_increment: rules.heading_increment.unwrap_or(true),

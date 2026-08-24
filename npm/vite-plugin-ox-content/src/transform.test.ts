@@ -8,6 +8,26 @@ import type { ResolvedOptions } from "./types";
 const repoRoot = resolve(dirname(fileURLToPath(import.meta.url)), "../../..");
 
 describe("transformMarkdown", () => {
+  it("enables MDX from the resource id and honors explicit overrides", async () => {
+    const source = "import Card from './Card'\n\n<Card>Visible copy</Card>\n";
+    const inferred = await transformMarkdown(source, "docs/Guide.MDX?raw", createResolvedOptions());
+    const optedOut = await transformMarkdown(
+      source,
+      "docs/guide.mdx",
+      createResolvedOptions({ mdx: false }),
+    );
+    const optedIn = await transformMarkdown(
+      source,
+      "docs/guide.md",
+      createResolvedOptions({ mdx: true }),
+    );
+
+    expect(inferred.html).toContain('data-ox-island="Card"');
+    expect(inferred.html).not.toContain("import Card");
+    expect(optedOut.html).toContain("import Card");
+    expect(optedIn.html).toContain('data-ox-island="Card"');
+  });
+
   it("uses Rust frontmatter parsing and Rust-built TOC trees", async () => {
     const result = await transformMarkdown(
       "---\ntitle: Guide\nmeta:\n  tags:\n    - rust\n  draft: false\n---\n# Intro\n\n## Install\n\n### CLI\n",

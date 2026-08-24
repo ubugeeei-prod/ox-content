@@ -1049,6 +1049,16 @@ export interface OxContentOptions {
   gfm?: boolean;
 
   /**
+   * Enable MDX JSX, ESM, and expressions.
+   *
+   * When omitted, MDX is enabled for `.mdx` files only. Set `true` to enable
+   * it for every configured extension or `false` to keep `.mdx` on the plain
+   * Markdown path.
+   * @default inferred from the source extension
+   */
+  mdx?: boolean;
+
+  /**
    * Enable footnotes.
    * @default true
    */
@@ -1405,6 +1415,7 @@ export interface ResolvedOptions {
   taxonomies?: ResolvedTaxonomiesOptions;
   versions?: ResolvedVersionsOptions;
   gfm: boolean;
+  mdx?: boolean;
   footnotes: boolean;
   tables: boolean;
   taskLists: boolean;

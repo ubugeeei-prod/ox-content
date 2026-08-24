@@ -22,6 +22,58 @@ fn titles(index_json: &str) -> Vec<String> {
         .collect()
 }
 
+fn body(index_json: &str) -> String {
+    let index: serde_json::Value = serde_json::from_str(index_json).unwrap();
+    index["documents"][0]["body"].as_str().unwrap().to_string()
+}
+
+#[test]
+fn mdx_extension_enables_mdx_and_indexes_component_children() {
+    let root = std::env::temp_dir().join(format!("ox-search-mdx-auto-{}", std::process::id()));
+    let _ = std::fs::remove_dir_all(&root);
+    write_tree(
+        &root,
+        &[(
+            "guide.MDX",
+            "import Card from './Card'\n\n# Guide\n\n<Card>Visible search copy</Card>\n",
+        )],
+    );
+
+    let body = body(&build_search_index_from_directory_with_options(
+        root.to_str().unwrap(),
+        "/",
+        &[".mdx".to_string()],
+        None,
+    ));
+    assert_eq!(body, "Visible search copy");
+    let _ = std::fs::remove_dir_all(&root);
+}
+
+#[test]
+fn explicit_mdx_setting_overrides_the_source_extension() {
+    let root = std::env::temp_dir().join(format!("ox-search-mdx-override-{}", std::process::id()));
+    let _ = std::fs::remove_dir_all(&root);
+    let source = "import Card from './Card'\n\n# Guide\n\n<Card>Visible search copy</Card>\n";
+    write_tree(&root, &[("enabled.md", source), ("disabled.mdx", source)]);
+
+    let enabled = body(&build_search_index_from_directory_with_options(
+        root.to_str().unwrap(),
+        "/",
+        &[".md".to_string()],
+        Some(&SearchIndexBuildOptions { mdx: Some(true), ..SearchIndexBuildOptions::default() }),
+    ));
+    assert_eq!(enabled, "Visible search copy");
+
+    let disabled = body(&build_search_index_from_directory_with_options(
+        root.to_str().unwrap(),
+        "/",
+        &[".mdx".to_string()],
+        Some(&SearchIndexBuildOptions { mdx: Some(false), ..SearchIndexBuildOptions::default() }),
+    ));
+    assert!(disabled.contains("import Card"), "{disabled:?}");
+    let _ = std::fs::remove_dir_all(&root);
+}
+
 #[test]
 fn off_indexes_every_page() {
     let root = std::env::temp_dir().join(format!("ox-search-drafts-off-{}", std::process::id()));
@@ -73,6 +125,7 @@ fn on_omits_draft_unlisted_and_scheduled() {
                 now: Some("2026-08-24T00:00:00Z".to_string()),
                 include_drafts: false,
             }),
+            ..SearchIndexBuildOptions::default()
         }),
     ));
     assert_eq!(titles, vec!["Public".to_string()]);
@@ -101,6 +154,7 @@ fn include_drafts_keeps_wip_out_of_unlisted() {
                 now: Some("2026-08-24T00:00:00Z".to_string()),
                 include_drafts: true,
             }),
+            ..SearchIndexBuildOptions::default()
         }),
     ));
     assert_eq!(titles, vec!["Draft".to_string()]);

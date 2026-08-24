@@ -70,6 +70,8 @@ pub struct JsMarkdownLintOptions {
     pub languages: Option<Vec<String>>,
     pub rules: Option<JsMarkdownLintRuleOptions>,
     pub dictionary: Option<JsMarkdownLintDictionaryOptions>,
+    /// Enable MDX-aware syntax masking while linting visible prose.
+    pub mdx: Option<bool>,
 }
 
 impl From<JsMarkdownLintOptions> for MarkdownLintOptions {
@@ -78,6 +80,7 @@ impl From<JsMarkdownLintOptions> for MarkdownLintOptions {
             languages: value.languages,
             rules: value.rules.map(Into::into),
             dictionary: value.dictionary.map(Into::into),
+            mdx: value.mdx,
         }
     }
 }

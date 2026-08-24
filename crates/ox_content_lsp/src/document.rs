@@ -132,8 +132,29 @@ impl TextDocumentState {
 
 #[must_use]
 pub fn is_markdown_path(path: &Path) -> bool {
-    matches!(
-        path.extension().and_then(|ext| ext.to_str()),
-        Some("md" | "markdown" | "mdown" | "mdc")
-    )
+    path.extension().and_then(|extension| extension.to_str()).is_some_and(|extension| {
+        ["md", "markdown", "mdown", "mdc", "mdx"]
+            .iter()
+            .any(|candidate| extension.eq_ignore_ascii_case(candidate))
+    })
+}
+
+#[must_use]
+pub fn is_mdx_path(path: &Path) -> bool {
+    path.extension()
+        .and_then(|extension| extension.to_str())
+        .is_some_and(|extension| extension.eq_ignore_ascii_case("mdx"))
+}
+
+#[cfg(test)]
+mod path_tests {
+    use super::*;
+
+    #[test]
+    fn markdown_paths_include_mdx_case_insensitively() {
+        assert!(is_markdown_path(Path::new("guide.mdx")));
+        assert!(is_markdown_path(Path::new("guide.MDX")));
+        assert!(is_mdx_path(Path::new("guide.MDX")));
+        assert!(!is_mdx_path(Path::new("guide.md")));
+    }
 }

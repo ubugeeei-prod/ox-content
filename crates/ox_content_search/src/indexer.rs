@@ -181,6 +181,16 @@ impl<'a> Visit<'a> for DocumentIndexer {
                     self.visit_node(child);
                 }
             }
+            Node::MdxJsxFlowElement(n) => {
+                for child in &n.children {
+                    self.visit_node(child);
+                }
+            }
+            Node::MdxJsxTextElement(n) => {
+                for child in &n.children {
+                    self.visit_node(child);
+                }
+            }
             _ => {}
         }
     }

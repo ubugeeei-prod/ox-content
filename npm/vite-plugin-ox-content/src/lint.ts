@@ -171,6 +171,13 @@ export interface MarkdownLintOptions {
    * @default {}
    */
   dictionary?: MarkdownLintDictionaryOptions;
+
+  /**
+   * Enable MDX-aware syntax masking while linting visible prose.
+   * File-oriented APIs infer this from `.mdx` when omitted.
+   * @default false for content APIs; inferred for file APIs
+   */
+  mdx?: boolean;
 }
 
 /**
@@ -260,6 +267,7 @@ interface InternalNormalizedMarkdownLintOptions {
     standard: NormalizedStandardDictionaryOptions | false;
   };
   languages: MarkdownLintLanguage[];
+  mdx: boolean;
   rules: Required<MarkdownLintRuleOptions>;
 }
 
@@ -275,6 +283,7 @@ interface NapiMarkdownLintOptions {
     words?: string[];
   };
   languages?: MarkdownLintLanguage[];
+  mdx?: boolean;
   rules?: Required<MarkdownLintRuleOptions>;
 }
 
@@ -424,6 +433,7 @@ function toNapiMarkdownLintOptions(
       words: options.dictionary.words,
     },
     languages: options.languages,
+    mdx: options.mdx,
     rules: {
       ...options.rules,
       spellcheck: disableBuiltinSpellcheck ? false : options.rules.spellcheck,
@@ -463,6 +473,7 @@ function normalizeLintOptions(options: MarkdownLintOptions): InternalNormalizedM
       standard,
     },
     languages: [...new Set(languages)],
+    mdx: options.mdx ?? false,
     rules: {
       duplicateHeadings: options.rules?.duplicateHeadings ?? DEFAULT_RULES.duplicateHeadings,
       headingIncrement: options.rules?.headingIncrement ?? DEFAULT_RULES.headingIncrement,

@@ -12,6 +12,7 @@ mod diagnostics;
 mod dictionary;
 mod latin;
 mod mask;
+mod mdx_mask;
 mod options;
 mod patterns;
 mod state;
@@ -140,6 +141,7 @@ pub struct MarkdownLintOptions {
     pub languages: Option<Vec<String>>,
     pub rules: Option<MarkdownLintRuleOptions>,
     pub dictionary: Option<MarkdownLintDictionaryOptions>,
+    pub mdx: Option<bool>,
 }
 
 #[derive(Clone)]
@@ -167,6 +169,7 @@ pub struct MarkdownLintResult {
 struct InternalMarkdownLintOptions {
     dictionary: InternalMarkdownLintDictionary,
     languages: Vec<String>,
+    mdx: bool,
     rules: InternalMarkdownLintRules,
 }
 
@@ -230,4 +233,53 @@ pub fn lint_markdown_documents(
             )
         })
         .collect()
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    fn lint_with_mdx(source: &str, mdx: bool) -> MarkdownLintResult {
+        lint_markdown(
+            source,
+            Some(MarkdownLintOptions {
+                dictionary: Some(MarkdownLintDictionaryOptions {
+                    words: Some(
+                        ["Guide", "Visible", "copy", "Hello"]
+                            .into_iter()
+                            .map(ToString::to_string)
+                            .collect(),
+                    ),
+                    ..MarkdownLintDictionaryOptions::default()
+                }),
+                mdx: Some(mdx),
+                ..MarkdownLintOptions::default()
+            }),
+        )
+    }
+
+    #[test]
+    fn mdx_lint_masks_syntax_but_keeps_visible_copy() {
+        let source = concat!(
+            "import Card from './Card'\n\n",
+            "export const meta = { title: 'Guide' }\n\n",
+            "# Guide\n\n",
+            "<Card tone={theme.primary}>Visible wrld {user.name}</Card>\n",
+        );
+        let result = lint_with_mdx(source, true);
+
+        assert_eq!(result.diagnostics.len(), 1);
+        assert_eq!(result.diagnostics[0].rule_id, "spellcheck");
+        assert!(result.diagnostics[0].message.contains("wrld"));
+        assert_eq!(result.diagnostics[0].line, 7);
+    }
+
+    #[test]
+    fn explicit_mdx_opt_out_keeps_plain_markdown_linting() {
+        let result = lint_with_mdx("import Card from './Card'\n", false);
+        assert!(
+            result.diagnostics.iter().any(|diagnostic| diagnostic.message.contains("Card")),
+            "explicit mdx=false must preserve the Markdown path"
+        );
+    }
 }

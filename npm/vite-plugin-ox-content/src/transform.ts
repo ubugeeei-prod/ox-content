@@ -39,6 +39,7 @@ import { transformMermaidStatic } from "./plugins/mermaid";
 import { normalizeSelfClosingEmbeds, transformBuiltinEmbeds } from "./plugins";
 import { protectMermaidSvgs, restoreMermaidSvgs } from "./plugins/mermaid-protect";
 import { typecheckCodeBlocks } from "./code-blocks";
+import { resolveMdxForFilePath } from "./markdown";
 
 /**
  * NAPI bindings for Rust-based Markdown processing.
@@ -529,6 +530,7 @@ export async function transformMarkdown(
 
   const result = napi.transform(source, {
     gfm: options.gfm,
+    mdx: resolveMdxForFilePath(filePath, options.mdx),
     footnotes: options.footnotes,
     taskLists: options.taskLists,
     tables: options.tables,

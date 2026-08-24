@@ -27,6 +27,17 @@ export function isMarkdownFilePath(
   return extensions.some((extension) => pathname.endsWith(extension.toLowerCase()));
 }
 
+/** Returns true when a resource id points at an MDX source file. */
+export function isMdxFilePath(filePath: string): boolean {
+  const pathname = filePath.split("?")[0].split("#")[0];
+  return pathname.toLowerCase().endsWith(".mdx");
+}
+
+/** Explicit configuration wins; otherwise MDX follows the source extension. */
+export function resolveMdxForFilePath(filePath: string, configured?: boolean): boolean {
+  return configured ?? isMdxFilePath(filePath);
+}
+
 export function stripMarkdownExtension(
   filePath: string,
   extensions: readonly string[] = DEFAULT_MARKDOWN_EXTENSIONS,

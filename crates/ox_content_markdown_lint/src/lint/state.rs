@@ -10,6 +10,8 @@ pub(super) fn collect_markdown_lint_state(
     normalized_options: &InternalMarkdownLintOptions,
     dictionary: &DictionaryBundle,
 ) -> MarkdownLintState {
+    let mdx_masked_source = normalized_options.mdx.then(|| mdx_mask::mask_mdx_syntax(source));
+    let lint_source = mdx_masked_source.as_deref().unwrap_or(source);
     let mut diagnostics = Vec::new();
     let mut masked_lines = Vec::new();
     let mut seen_headings = FxHashMap::default();
@@ -23,8 +25,11 @@ pub(super) fn collect_markdown_lint_state(
     let mut frontmatter_checked = false;
     let mut previous_heading_depth = 0_usize;
 
-    for (index, raw_line) in source.split('\n').enumerate() {
+    for (index, (raw_line, lint_line)) in
+        source.split('\n').zip(lint_source.split('\n')).enumerate()
+    {
         let line = raw_line.strip_suffix('\r').unwrap_or(raw_line);
+        let lint_line = lint_line.strip_suffix('\r').unwrap_or(lint_line);
         let line_number = index + 1;
         let trimmed = line.trim();
 
@@ -172,7 +177,7 @@ pub(super) fn collect_markdown_lint_state(
             continue;
         }
 
-        let masked_line = mask_markdown_line(line);
+        let masked_line = mask_markdown_line(lint_line);
         masked_lines.push(masked_line.clone());
 
         if normalized_options.rules.repeated_punctuation {

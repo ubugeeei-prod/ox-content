@@ -122,6 +122,7 @@ export async function buildSearchIndex(
   extensions: readonly string[] = DEFAULT_MARKDOWN_EXTENSIONS,
   publishState?: ResolvedPublishStateOptions,
   excludeDocumentIds: readonly string[] = [],
+  mdx?: boolean,
 ): Promise<string> {
   const napi = await getOxContent();
 
@@ -137,6 +138,7 @@ export async function buildSearchIndex(
 
   const indexJson = napi.buildSearchIndexFromDirectory(srcDir, base, [...extensions], {
     publishState: toNapiPublishState(publishState),
+    mdx,
   });
   if (excludeDocumentIds.length === 0) {
     return indexJson;

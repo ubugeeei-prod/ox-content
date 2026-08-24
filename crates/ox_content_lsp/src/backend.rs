@@ -142,8 +142,12 @@ impl Backend {
             .block
             .as_ref()
             .map_or_else(Vec::new, |block| Self::frontmatter_diagnostics(block, &config));
-        diagnostics
-            .extend(diagnostics::markdown_parse_diagnostics(document, frontmatter.block.as_ref()));
+        let mdx = uri.to_file_path().is_ok_and(|path| crate::document::is_mdx_path(&path));
+        diagnostics.extend(diagnostics::markdown_parse_diagnostics(
+            document,
+            frontmatter.block.as_ref(),
+            mdx,
+        ));
         if is_mdc {
             diagnostics.extend(diagnostics::mdc_diagnostics(document, frontmatter.block.as_ref()));
         }

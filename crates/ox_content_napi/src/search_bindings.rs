@@ -133,6 +133,8 @@ pub fn build_search_index(documents: Vec<JsSearchDocument>) -> String {
 pub struct JsSearchIndexBuildOptions {
     /// Publish-state filter applied while walking Markdown files.
     pub publish_state: Option<JsPublishStateOptions>,
+    /// Explicit MDX parser override. When omitted, `.mdx` files enable MDX.
+    pub mdx: Option<bool>,
 }
 
 /// Builds a search index directly from Markdown files under a source directory.
@@ -148,6 +150,7 @@ pub fn build_search_index_from_directory(
 ) -> String {
     let build_options = options.map(|opts| ox_content_search::SearchIndexBuildOptions {
         publish_state: opts.publish_state.map(Into::into),
+        mdx: opts.mdx,
     });
     ox_content_search::build_search_index_from_directory_with_options(
         &src_dir,

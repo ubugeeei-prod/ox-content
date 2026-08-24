@@ -11,6 +11,7 @@ use crate::frontmatter::FrontmatterBlock;
 pub(super) fn markdown_parse_diagnostics(
     document: &TextDocumentState,
     block: Option<&FrontmatterBlock>,
+    mdx: bool,
 ) -> Vec<Diagnostic> {
     // Diagnostics apply to the markdown body, not the YAML frontmatter.
     // `block_end_offset` is the byte just past the closing `---` line.
@@ -23,7 +24,9 @@ pub(super) fn markdown_parse_diagnostics(
     // parser with a source-sized arena so editor feedback does not pay bumpalo
     // chunk growth on every parse.
     let allocator = Allocator::for_source_len(source.len());
-    let parser = Parser::with_options(&allocator, source, ParserOptions::gfm());
+    let mut options = ParserOptions::gfm();
+    options.mdx = mdx;
+    let parser = Parser::with_options(&allocator, source, options);
 
     match parser.parse() {
         Ok(_) => Vec::new(),
@@ -137,7 +140,7 @@ mod tests {
         let source = "---\ntitle: Doc\n---\n\n# Valid heading\n\nA paragraph.\n";
         let document = TextDocumentState::new(source.to_string());
         let frontmatter = parse_frontmatter(&document);
-        let diagnostics = markdown_parse_diagnostics(&document, frontmatter.block.as_ref());
+        let diagnostics = markdown_parse_diagnostics(&document, frontmatter.block.as_ref(), false);
         assert!(diagnostics.is_empty(), "expected clean parse for valid body, got {diagnostics:?}");
     }
 
@@ -149,7 +152,15 @@ mod tests {
         let source = "---\ntitle: A title with : colon\n---\n\nbody\n";
         let document = TextDocumentState::new(source.to_string());
         let frontmatter = parse_frontmatter(&document);
-        let diagnostics = markdown_parse_diagnostics(&document, frontmatter.block.as_ref());
+        let diagnostics = markdown_parse_diagnostics(&document, frontmatter.block.as_ref(), false);
         assert!(diagnostics.is_empty(), "yaml leaked into markdown diagnostics: {diagnostics:?}");
+    }
+
+    #[test]
+    fn markdown_parse_diagnostics_accept_mdx_when_enabled() {
+        let source = "import Card from './Card'\n\n<Card count={1}>Visible</Card>\n";
+        let document = TextDocumentState::new(source.to_string());
+        let diagnostics = markdown_parse_diagnostics(&document, None, true);
+        assert!(diagnostics.is_empty(), "expected clean MDX parse, got {diagnostics:?}");
     }
 }

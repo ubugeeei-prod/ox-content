@@ -78,7 +78,8 @@ impl Backend {
             return Ok(None);
         };
 
-        let payload = preview::render_preview(document.text()).map_err(|error| Error {
+        let mdx = uri.to_file_path().is_ok_and(|path| crate::document::is_mdx_path(&path));
+        let payload = preview::render_preview(document.text(), mdx).map_err(|error| Error {
             code: ErrorCode::InternalError,
             message: error.to_string().into(),
             data: None,
@@ -127,7 +128,8 @@ impl Backend {
             return;
         };
 
-        let payload = match preview::render_preview(document.text()) {
+        let mdx = uri.to_file_path().is_ok_and(|path| crate::document::is_mdx_path(&path));
+        let payload = match preview::render_preview(document.text(), mdx) {
             Ok(payload) => payload,
             Err(error) => {
                 self.client

@@ -57,6 +57,7 @@ const baseMdast = {
 };
 
 let lastParseTransferOptions: Record<string, unknown> | undefined;
+let lastTransformOptions: Record<string, unknown> | undefined;
 
 function createRawMdastBuffer(): Uint8Array {
   const encoder = new TextEncoder();
@@ -311,15 +312,18 @@ require.cache[napiId] = {
       const parsed = splitFrontmatterForMock(source, options?.frontmatter !== false);
       return createMdastTransformBuffer(parsed.content, parsed.frontmatter, parsed.sourceOffset);
     },
-    transform: (source: string, options?: { frontmatter?: boolean }) => ({
-      html: "<h1>Hello</h1>\n<p>World</p>\n",
-      frontmatter:
-        options?.frontmatter === false || !source.startsWith("---")
-          ? "{}"
-          : JSON.stringify({ title: "frontmatter-from-rust" }),
-      toc: [{ depth: 1, text: "Hello", slug: "hello" }],
-      errors: [],
-    }),
+    transform: (source: string, options?: { frontmatter?: boolean }) => {
+      lastTransformOptions = options;
+      return {
+        html: "<h1>Hello</h1>\n<p>World</p>\n",
+        frontmatter:
+          options?.frontmatter === false || !source.startsWith("---")
+            ? "{}"
+            : JSON.stringify({ title: "frontmatter-from-rust" }),
+        toc: [{ depth: 1, text: "Hello", slug: "hello" }],
+        errors: [],
+      };
+    },
   },
 } as never;
 
@@ -369,6 +373,24 @@ interface UpstreamUnifiedFixture {
   remark?: unknown[];
   rehype?: unknown[];
 }
+
+describe("MDX source detection", () => {
+  it("infers MDX from resource ids and honors explicit overrides", async () => {
+    const options = createResolvedOptions();
+
+    await transformMarkdown("# Guide", "docs/Guide.MDX?raw", options);
+    expect(lastTransformOptions).toMatchObject({ mdx: true });
+
+    await transformMarkdown("# Guide", "docs/guide.md", options);
+    expect(lastTransformOptions).toMatchObject({ mdx: false });
+
+    await transformMarkdown("# Guide", "docs/guide.mdx", createResolvedOptions({ mdx: false }));
+    expect(lastTransformOptions).toMatchObject({ mdx: false });
+
+    await transformMarkdown("# Guide", "docs/guide.md", createResolvedOptions({ mdx: true }));
+    expect(lastTransformOptions).toMatchObject({ mdx: true });
+  });
+});
 
 function applyUpstreamUnifiedPlugins(processor: ReturnType<typeof unified>, plugins: unknown[]) {
   for (const plugin of plugins) {

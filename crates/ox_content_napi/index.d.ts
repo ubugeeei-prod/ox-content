@@ -1086,6 +1086,8 @@ export interface JsMarkdownLintOptions {
   languages?: Array<string>
   rules?: JsMarkdownLintRuleOptions
   dictionary?: JsMarkdownLintDictionaryOptions
+  /** Enable MDX-aware syntax masking while linting visible prose. */
+  mdx?: boolean
 }
 
 export interface JsMarkdownLintResult {
@@ -1377,6 +1379,8 @@ export interface JsSearchDocument {
 export interface JsSearchIndexBuildOptions {
   /** Publish-state filter applied while walking Markdown files. */
   publishState?: JsPublishStateOptions
+  /** Explicit MDX parser override. When omitted, `.mdx` files enable MDX. */
+  mdx?: boolean
 }
 
 /** Search options for JavaScript. */

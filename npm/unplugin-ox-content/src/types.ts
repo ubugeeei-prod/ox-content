@@ -319,6 +319,15 @@ export interface OxContentOptions {
   gfm?: boolean;
 
   /**
+   * Enable MDX JSX, ESM, and expressions.
+   *
+   * When omitted, MDX is enabled for `.mdx` files only. Explicit `true` or
+   * `false` overrides extension-based detection.
+   * @default inferred from the source extension
+   */
+  mdx?: boolean;
+
+  /**
    * Enable footnotes.
    * @default true
    */
@@ -450,6 +459,7 @@ export interface ResolvedDocsConfig {
 export interface ResolvedOptions {
   srcDir: string;
   gfm: boolean;
+  mdx?: boolean;
   footnotes: boolean;
   tables: boolean;
   taskLists: boolean;
