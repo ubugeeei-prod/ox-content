@@ -22,6 +22,7 @@ function createResolvedOptions(): ResolvedOptions {
       readerChrome: false,
       localeSwitcher: false,
       a11y: false,
+      pageChrome: false,
     },
     gfm: true,
     footnotes: true,

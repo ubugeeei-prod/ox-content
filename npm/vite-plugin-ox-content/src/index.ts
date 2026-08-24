@@ -1075,7 +1075,11 @@ export type {
   SocialLinks,
   ThemeEmbed,
   ResolvedThemeConfig,
+  HeaderNavItem,
+  ThemeAnnouncement,
 } from "./theme";
+export type { PageChromeFlags } from "./header-chrome";
+export { resolvePageChromeOption, parsePageChromeFlags } from "./header-chrome";
 export * from "./types";
 
 // JSX Runtime

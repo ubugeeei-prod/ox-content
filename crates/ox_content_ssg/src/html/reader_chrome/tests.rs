@@ -1,5 +1,6 @@
 use super::super::{
-    NavGroup, NavItem, PageData, ReaderChrome, SsgConfig, generate_bare_html, generate_html,
+    NavGroup, NavItem, PageChromeFlags, PageData, ReaderChrome, SsgConfig, generate_bare_html,
+    generate_html,
 };
 use super::{READER_CHROME_CSS, READER_CHROME_JS, apply_reader_chrome};
 
@@ -15,6 +16,7 @@ fn page(content: &str) -> PageData {
         prev: None,
         next: None,
         breadcrumbs: None,
+        chrome: PageChromeFlags::default(),
     }
 }
 
@@ -32,6 +34,7 @@ fn config(reader_chrome: ReaderChrome) -> SsgConfig {
         locale_switcher: false,
         locale_paths: vec![],
         a11y: crate::A11y::default(),
+        page_chrome: false,
     }
 }
 

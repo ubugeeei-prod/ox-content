@@ -129,6 +129,7 @@ function createResolvedOptions(overrides: Partial<ResolvedOptions> = {}): Resolv
       readerChrome: false,
       localeSwitcher: false,
       a11y: false,
+      pageChrome: false,
     },
     gfm: true,
     footnotes: true,

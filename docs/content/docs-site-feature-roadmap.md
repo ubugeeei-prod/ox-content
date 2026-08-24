@@ -48,7 +48,7 @@ Already tracked elsewhere:
 | --------------------------------------------- | -------------------------------------------------------------- | ------- |
 | Previous / next page links                    | [#679](https://github.com/ubugeeei-prod/ox-content/issues/679) | planned |
 | Code copy, external-link icons, back-to-top   | [#680](https://github.com/ubugeeei-prod/ox-content/issues/680) | planned |
-| Header nav, announcement bar, per-page chrome | [#681](https://github.com/ubugeeei-prod/ox-content/issues/681) | planned |
+| Header nav, announcement bar, per-page chrome | [#681](https://github.com/ubugeeei-prod/ox-content/issues/681) | shipped |
 | Breadcrumbs                                   | [#682](https://github.com/ubugeeei-prod/ox-content/issues/682) | shipped |
 | Team / members page                           | [#683](https://github.com/ubugeeei-prod/ox-content/issues/683) | shipped |
 | Locale switcher                               | [#684](https://github.com/ubugeeei-prod/ox-content/issues/684) | shipped |

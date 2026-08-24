@@ -30,6 +30,11 @@ import type {
 } from "./types";
 import { buildLocalePaths, resolveLocaleSwitcherOption } from "./locale-switcher";
 import type { SsgLocalePath } from "./locale-switcher";
+import {
+  parsePageChromeFlags,
+  resolvePageChromeOption,
+  type PageChromeFlags,
+} from "./header-chrome";
 import { resolveTheme, themeToNapi } from "./theme";
 import type { ResolvedThemeConfig, SidebarItem } from "./theme";
 import { normalizeVitePressFrontmatter } from "./vitepress";
@@ -90,6 +95,8 @@ export interface SsgPageData {
   next?: SsgPagerOverride;
   /** Frontmatter `breadcrumbs: false` hides the trail on this page. */
   breadcrumbs?: boolean;
+  /** Per-page chrome flags. Honored only when `ssg.pageChrome` is on. */
+  chrome?: PageChromeFlags;
 }
 
 /** Frontmatter override for one previous/next pager side. */
@@ -132,6 +139,7 @@ export function resolveSsgOptions(ssg: SsgOptions | boolean | undefined): Resolv
       readerChrome: false,
       localeSwitcher: false,
       a11y: false,
+      pageChrome: false,
       notFound: resolveNotFoundOptions(undefined),
       team: resolveTeamOptions(undefined),
     };
@@ -150,6 +158,7 @@ export function resolveSsgOptions(ssg: SsgOptions | boolean | undefined): Resolv
       readerChrome: false,
       localeSwitcher: false,
       a11y: false,
+      pageChrome: false,
       notFound: resolveNotFoundOptions(undefined),
       team: resolveTeamOptions(undefined),
       theme: resolveTheme(undefined),
@@ -175,6 +184,7 @@ export function resolveSsgOptions(ssg: SsgOptions | boolean | undefined): Resolv
     readerChrome: resolveReaderChromeOption(ssg.readerChrome),
     localeSwitcher: resolveLocaleSwitcherOption(ssg.localeSwitcher),
     a11y: resolveA11yOption(ssg.a11y),
+    pageChrome: resolvePageChromeOption(ssg.pageChrome),
     notFound: resolveNotFoundOptions(ssg.notFound),
     team: resolveTeamOptions(ssg.team),
     siteUrl: ssg.siteUrl,
@@ -410,6 +420,7 @@ export async function generateHtmlPage(
   localePaths?: SsgLocalePath[],
   a11y: ResolvedA11y = false,
   team: ResolvedTeamOptions = { enabled: false, members: [] },
+  pageChrome: boolean = false,
 ): Promise<string> {
   const mod = await importNapiModule();
 
@@ -477,6 +488,7 @@ export async function generateHtmlPage(
       breadcrumbs: pageData.breadcrumbs,
       layout:
         typeof pageData.frontmatter.layout === "string" ? pageData.frontmatter.layout : undefined,
+      chrome: pageData.chrome,
     },
     navGroupsForRust,
     {
@@ -499,6 +511,7 @@ export async function generateHtmlPage(
       localePaths,
       a11y: a11y ? { skipLinkLabel: a11y.skipLinkLabel } : undefined,
       team,
+      pageChrome,
     },
   );
 }
@@ -1206,6 +1219,7 @@ async function renderSsgPage(
     localePaths,
     context.ssgOptions.a11y,
     context.ssgOptions.team ?? { enabled: false, members: [] },
+    context.ssgOptions.pageChrome,
   );
 }
 
@@ -1265,6 +1279,7 @@ function createSsgPageData(pageResult: PageProcessResult): SsgPageData {
     prev: parseSsgPagerOverride(frontmatter.prev),
     next: parseSsgPagerOverride(frontmatter.next),
     breadcrumbs: frontmatter.breadcrumbs === false ? false : undefined,
+    chrome: parsePageChromeFlags(frontmatter),
   };
 }
 

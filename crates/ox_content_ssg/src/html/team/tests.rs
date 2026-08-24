@@ -37,6 +37,7 @@ fn page(content: &str) -> PageData {
         prev: None,
         next: None,
         breadcrumbs: None,
+        chrome: crate::PageChromeFlags::default(),
     }
 }
 
@@ -54,6 +55,7 @@ fn config() -> SsgConfig {
         locale_switcher: false,
         locale_paths: vec![],
         a11y: crate::A11y::default(),
+        page_chrome: false,
     }
 }
 

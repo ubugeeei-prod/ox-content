@@ -110,6 +110,7 @@ export function createDocsResolvedOptions(
       readerChrome: false,
       localeSwitcher: false,
       a11y: false,
+      pageChrome: false,
     },
     siteMaps: { enabled: false, robots: true, llms: true },
     permalinks: { enabled: false },

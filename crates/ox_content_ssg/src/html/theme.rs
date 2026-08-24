@@ -1,5 +1,7 @@
 use serde::{Deserialize, Serialize};
 
+use super::header_chrome::{HeaderNavItem, ThemeAnnouncement};
+
 /// Theme color configuration.
 #[derive(Debug, Clone, Serialize, Deserialize, Default)]
 pub struct ThemeColors {
@@ -150,6 +152,10 @@ pub struct ThemeConfig {
     pub layout: Option<ThemeLayout>,
     /// Header configuration.
     pub header: Option<ThemeHeader>,
+    /// Opt-in header nav items. Omitted and empty emit nothing.
+    pub nav: Option<Vec<HeaderNavItem>>,
+    /// Opt-in announcement bar above the header.
+    pub announcement: Option<ThemeAnnouncement>,
     /// Footer configuration.
     pub footer: Option<ThemeFooter>,
     /// Social links configuration.

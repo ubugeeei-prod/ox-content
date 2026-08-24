@@ -2,6 +2,7 @@ use serde::{Deserialize, Serialize};
 
 use super::ThemeConfig;
 use super::a11y::A11y;
+use super::header_chrome::PageChromeFlags;
 use super::reader_chrome::ReaderChrome;
 
 /// Hero action button.
@@ -165,6 +166,9 @@ pub struct PageData {
     /// Frontmatter `breadcrumbs: false` hides the trail on this page.
     #[serde(default)]
     pub breadcrumbs: Option<bool>,
+    /// Per-page chrome flags. Honored only when `SsgConfig::page_chrome` is on.
+    #[serde(default)]
+    pub chrome: PageChromeFlags,
 }
 
 /// SSG configuration.
@@ -202,6 +206,9 @@ pub struct SsgConfig {
     /// Opt-in skip link and print styles. Off by default.
     #[serde(default)]
     pub a11y: A11y,
+    /// When true, honor per-page frontmatter chrome flags. Off by default.
+    #[serde(default)]
+    pub page_chrome: bool,
 }
 
 /// Locale information for the locale switcher.

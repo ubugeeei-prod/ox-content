@@ -56,6 +56,10 @@ export const apiNav: NavItem[] = [
     "path": "/api/feeds"
   },
   {
+    "title": "Header Chrome",
+    "path": "/api/header-chrome"
+  },
+  {
     "title": "Highlight",
     "path": "/api/highlight"
   },

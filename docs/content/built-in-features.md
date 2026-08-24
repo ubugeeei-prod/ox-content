@@ -43,6 +43,7 @@ inline**.
 | [Reader Chrome](./built-in/reader-chrome.md)           | Opt-in copy, outbound-link icons, and back-to-top                         |
 | [Locale Switcher](./built-in/locale-switcher.md)       | Opt-in header control for configured locales                              |
 | [Accessibility](./built-in/a11y.md)                    | Opt-in skip link and print styles                                         |
+| [Header chrome](./built-in/header-chrome.md)           | Opt-in header nav, announcement bar, and per-page chrome                  |
 | [Sitemap / robots / llms.txt](./built-in/site-maps.md) | Opt-in crawl manifests written next to generated HTML                     |
 | [Draft / unlisted / scheduled](./built-in/drafts.md)   | Opt-in frontmatter publish states for production output                   |
 | [Permalinks and Cascade](./built-in/permalinks.md)     | Opt-in frontmatter URLs and directory-level default frontmatter           |
@@ -82,6 +83,7 @@ inline**.
 | Reader chrome    | `ssg.readerChrome`                                                                                            | `false`              | [Reader Chrome](./built-in/reader-chrome.md)           |
 | Locale switcher  | `ssg.localeSwitcher`                                                                                          | `false`              | [Locale Switcher](./built-in/locale-switcher.md)       |
 | Accessibility    | `ssg.a11y`                                                                                                    | `false`              | [Accessibility](./built-in/a11y.md)                    |
+| Header chrome    | `theme.nav`, `theme.announcement`, `ssg.pageChrome`                                                           | off                  | [Header chrome](./built-in/header-chrome.md)           |
 | Crawl manifests  | `siteMaps`                                                                                                    | `false`              | [Sitemap / robots / llms.txt](./built-in/site-maps.md) |
 | Publish states   | `publishState`                                                                                                | `false`              | [Draft / unlisted / scheduled](./built-in/drafts.md)   |
 | Permalinks       | `permalinks`                                                                                                  | `false`              | [Permalinks and Cascade](./built-in/permalinks.md)     |

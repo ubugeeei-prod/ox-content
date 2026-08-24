@@ -190,6 +190,7 @@ pub fn generate_ssg_html(
         prev: convert_pager_override(page_data.prev),
         next: convert_pager_override(page_data.next),
         breadcrumbs: page_data.breadcrumbs,
+        chrome: convert_page_chrome_flags(page_data.chrome),
     };
 
     let ssg_nav_groups: Vec<ox_content_ssg::NavGroup> = nav_groups
@@ -229,6 +230,7 @@ pub fn generate_ssg_html(
             })
             .collect(),
         a11y: convert_a11y(config.a11y),
+        page_chrome: config.page_chrome.unwrap_or(false),
     };
 
     ox_content_ssg::generate_html(&ssg_page_data, &ssg_nav_groups, &ssg_config)
@@ -269,6 +271,22 @@ fn convert_team(team: Option<JsTeamOptions>) -> ox_content_ssg::TeamOptions {
                 .collect(),
         },
     }
+}
+
+fn convert_page_chrome_flags(
+    flags: Option<crate::JsPageChromeFlags>,
+) -> ox_content_ssg::PageChromeFlags {
+    flags.map_or_else(ox_content_ssg::PageChromeFlags::default, |flags| {
+        ox_content_ssg::PageChromeFlags {
+            sidebar: flags.sidebar,
+            outline: flags.outline,
+            aside: flags.aside,
+            footer: flags.footer,
+            navbar: flags.navbar,
+            last_updated: flags.last_updated,
+            edit_link: flags.edit_link,
+        }
+    })
 }
 
 fn convert_reader_chrome(chrome: Option<JsReaderChrome>) -> ox_content_ssg::ReaderChrome {

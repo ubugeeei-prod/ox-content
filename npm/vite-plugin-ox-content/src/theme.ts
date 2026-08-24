@@ -4,7 +4,10 @@
  * Provides VitePress-like theming with default theme + customization.
  */
 
+import type { HeaderNavItem, ThemeAnnouncement } from "./header-chrome";
 import { tokensToCss, type ThemeTokens } from "./theme-tokens";
+
+export type { HeaderNavItem, ThemeAnnouncement } from "./header-chrome";
 
 export type { ThemeTokens } from "./theme-tokens";
 
@@ -181,6 +184,17 @@ export interface ThemeConfig {
   layout?: ThemeLayout;
   /** Header configuration */
   header?: ThemeHeader;
+  /**
+   * Opt-in header nav. Each item is `{ text, link }` or a dropdown
+   * `{ text, items }`. Labels are escaped. `javascript:`, `data:`,
+   * `vbscript:`, and protocol-relative `//` links are omitted.
+   */
+  nav?: HeaderNavItem[];
+  /**
+   * Opt-in announcement bar above the header. Text is escaped.
+   * Optional `link` must be https or same-origin.
+   */
+  announcement?: ThemeAnnouncement;
   /** Footer configuration */
   footer?: ThemeFooter;
   /** Social links configuration */
@@ -218,6 +232,8 @@ export interface ResolvedThemeConfig {
   entryPage: ThemeEntryPage;
   layout: ThemeLayout;
   header: ThemeHeader;
+  nav?: HeaderNavItem[];
+  announcement?: ThemeAnnouncement;
   footer: ThemeFooter;
   socialLinks: SocialLinks;
   sidebar: SidebarItem[];
@@ -431,6 +447,8 @@ export function resolveTheme(config?: ThemeConfig | ThemeConfig[]): ResolvedThem
     entryPage: merged.entryPage ?? defaultTheme.entryPage!,
     layout: merged.layout ?? defaultTheme.layout!,
     header: merged.header ?? defaultTheme.header!,
+    nav: merged.nav,
+    announcement: merged.announcement,
     footer: merged.footer ?? defaultTheme.footer!,
     socialLinks: merged.socialLinks ?? defaultTheme.socialLinks!,
     sidebar: merged.sidebar ?? [],
@@ -543,6 +561,8 @@ export function themeToNapi(theme: ResolvedThemeConfig): NapiThemeConfig {
             logoHeight: theme.header.logoHeight,
           }
         : undefined,
+    nav: theme.nav && theme.nav.length > 0 ? theme.nav : undefined,
+    announcement: theme.announcement?.text ? theme.announcement : undefined,
     footer:
       theme.footer.message || theme.footer.copyright
         ? {
@@ -688,6 +708,8 @@ export interface NapiThemeConfig {
   aside?: boolean;
   /** Breadcrumb trail from the site root through sidebar ancestors. */
   breadcrumbs?: boolean;
+  nav?: HeaderNavItem[];
+  announcement?: ThemeAnnouncement;
   colors?: NapiThemeColors;
   darkColors?: NapiThemeColors;
   fonts?: NapiThemeFonts;

@@ -346,6 +346,17 @@ export interface SsgOptions {
   a11y?: boolean | A11yOptions;
 
   /**
+   * Honor per-page frontmatter chrome flags (`sidebar`, `outline` / `aside`,
+   * `footer`, `navbar`, `lastUpdated`, `editLink`).
+   *
+   * Disabled when omitted or `false`. `true` or `{}` enables the defaults:
+   * omitted flags keep current chrome, and `false` hides that region.
+   *
+   * @default false
+   */
+  pageChrome?: boolean | Record<string, unknown>;
+
+  /**
    * Write a themed 404 page during SSG.
    *
    * Off by default. `true` reads `404.md` from `srcDir` and writes `404.html`.
@@ -498,6 +509,7 @@ export interface ResolvedSsgOptions {
   readerChrome: ResolvedReaderChrome;
   localeSwitcher: boolean;
   a11y: ResolvedA11y;
+  pageChrome: boolean;
   /**
    * Present after `resolveSsgOptions`. Omitted in hand-built fixtures means off.
    */

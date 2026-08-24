@@ -16,6 +16,7 @@ fn page(toc: Vec<TocEntry>) -> PageData {
         prev: None,
         next: None,
         breadcrumbs: None,
+        chrome: PageChromeFlags::default(),
     }
 }
 
@@ -33,6 +34,7 @@ fn config(theme: Option<ThemeConfig>) -> SsgConfig {
         locale_switcher: false,
         locale_paths: vec![],
         a11y: A11y::default(),
+        page_chrome: false,
     }
 }
 

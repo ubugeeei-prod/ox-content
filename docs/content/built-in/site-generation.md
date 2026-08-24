@@ -77,6 +77,7 @@ export default defineConfig({
 | `a11y`            | `false`        | Skip link and print styles.                            |
 | `notFound`        | `false`        | Themed 404 page. See [Custom 404](./not-found.md).     |
 | `team`            | `false`        | Member cards on `layout: team`. See [Team](./team.md). |
+| `pageChrome`      | `false`        | Honor per-page frontmatter chrome flags.               |
 | `theme`           | `defaultTheme` | Theme configuration via `defineTheme()`.               |
 | `navigation`      | derived        | Explicit navigation groups instead of the file tree.   |
 
@@ -304,6 +305,7 @@ array order.
 - [Locale Switcher](./locale-switcher.md) — opt-in header locale list.
 - [Accessibility](./a11y.md) — opt-in skip link and print styles.
 - [Team / members page](./team.md) — opt-in member cards on `layout: team`.
+- [Header chrome](./header-chrome.md) — opt-in header nav, announcement, and page flags.
 - [Sitemap / robots / llms.txt](./site-maps.md) — opt-in crawl manifests.
 - [Redirects and aliases](./redirects.md) — opt-in static HTML redirects.
 - [RSS / Atom / JSON feeds](./feeds.md) — opt-in collection feeds.

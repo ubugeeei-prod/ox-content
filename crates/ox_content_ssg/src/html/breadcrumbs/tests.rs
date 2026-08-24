@@ -1,6 +1,6 @@
 use super::super::{
-    A11y, EntryPageConfig, NavGroup, NavItem, PageData, ReaderChrome, SsgConfig, ThemeConfig,
-    generate_bare_html, generate_html,
+    A11y, EntryPageConfig, NavGroup, NavItem, PageChromeFlags, PageData, ReaderChrome, SsgConfig,
+    ThemeConfig, generate_bare_html, generate_html,
 };
 
 fn nav_item(title: &str, path: &str, href: &str) -> NavItem {
@@ -55,6 +55,7 @@ fn page(path: &str) -> PageData {
         prev: None,
         next: None,
         breadcrumbs: None,
+        chrome: PageChromeFlags::default(),
     }
 }
 
@@ -72,6 +73,7 @@ fn config(breadcrumbs: bool) -> SsgConfig {
         locale_switcher: false,
         locale_paths: vec![],
         a11y: A11y::default(),
+        page_chrome: false,
     }
 }
 

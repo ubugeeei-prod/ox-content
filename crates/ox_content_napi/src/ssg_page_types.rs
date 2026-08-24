@@ -261,4 +261,19 @@ pub struct JsSsgPageData {
     pub breadcrumbs: Option<bool>,
     /// Frontmatter `layout`. `team` renders member cards when the option is on.
     pub layout: Option<String>,
+    /// Per-page chrome flags. Honored only when page chrome is enabled.
+    pub chrome: Option<JsPageChromeFlags>,
+}
+
+/// Per-page frontmatter chrome flags.
+#[napi(object)]
+#[derive(Clone, Default)]
+pub struct JsPageChromeFlags {
+    pub sidebar: Option<bool>,
+    pub outline: Option<bool>,
+    pub aside: Option<bool>,
+    pub footer: Option<bool>,
+    pub navbar: Option<bool>,
+    pub last_updated: Option<bool>,
+    pub edit_link: Option<bool>,
 }

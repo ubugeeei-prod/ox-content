@@ -15,6 +15,7 @@ fn test_generate_html() {
         prev: None,
         next: None,
         breadcrumbs: None,
+        chrome: PageChromeFlags::default(),
     };
 
     let nav_groups = vec![NavGroup {
@@ -44,6 +45,7 @@ fn test_generate_html() {
         locale_switcher: false,
         locale_paths: vec![],
         a11y: A11y::default(),
+        page_chrome: false,
     };
 
     let html = generate_html(&page_data, &nav_groups, &config);
@@ -162,6 +164,7 @@ fn test_generate_html_without_toc_omits_outline() {
         prev: None,
         next: None,
         breadcrumbs: None,
+        chrome: PageChromeFlags::default(),
     };
     let config = SsgConfig {
         site_name: "Test Site".to_string(),
@@ -176,6 +179,7 @@ fn test_generate_html_without_toc_omits_outline() {
         locale_switcher: false,
         locale_paths: vec![],
         a11y: A11y::default(),
+        page_chrome: false,
     };
 
     let html = generate_html(&page_data, &[], &config);
@@ -202,6 +206,7 @@ fn test_html_locale_attrs_use_current_locale_and_direction() {
         locale_switcher: false,
         locale_paths: vec![],
         a11y: A11y::default(),
+        page_chrome: false,
     };
 
     assert_eq!(html_locale_attrs(&config), ("ar", "rtl"));
@@ -217,6 +222,7 @@ fn test_html_locale_attrs_use_current_locale_and_direction() {
         prev: None,
         next: None,
         breadcrumbs: None,
+        chrome: PageChromeFlags::default(),
     };
     let html = generate_html(&page_data, &[], &config);
     insta::assert_snapshot!(super::snapshot_text(&html));

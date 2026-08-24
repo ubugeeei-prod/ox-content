@@ -60,12 +60,22 @@ export default defineConfig(({ mode }) => {
           breadcrumbs: true,
           readerChrome: true,
           a11y: true,
+          pageChrome: true,
           notFound: true,
           generateOgImage: true,
           ogImage,
           theme: defineTheme({
             extends: defaultTheme,
             aside: true,
+            nav: [
+              { text: "Guide", link: `${base}getting-started/` },
+              { text: "API", link: `${base}api/` },
+            ],
+            announcement: {
+              text: "Header nav, announcement, and per-page chrome are now opt-in.",
+              link: `${base}built-in/header-chrome/`,
+              dismissKey: "header-chrome-681",
+            },
             header: {
               logo: "oxcontent-dark.svg",
               logoLight: "oxcontent-dark.svg",
@@ -123,6 +133,7 @@ export default defineConfig(({ mode }) => {
                       { text: "Reader Chrome", link: "/built-in/reader-chrome.md" },
                       { text: "Locale Switcher", link: "/built-in/locale-switcher.md" },
                       { text: "Accessibility", link: "/built-in/a11y.md" },
+                      { text: "Header chrome", link: "/built-in/header-chrome.md" },
                       { text: "Sitemap / robots / llms.txt", link: "/built-in/site-maps.md" },
                       { text: "Draft / unlisted / scheduled", link: "/built-in/drafts.md" },
                       { text: "Permalinks and Cascade", link: "/built-in/permalinks.md" },

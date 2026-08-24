@@ -255,6 +255,7 @@ function options(root: string, enabled: boolean): ResolvedOptions {
       readerChrome: false,
       localeSwitcher: false,
       a11y: false,
+      pageChrome: false,
       siteName: "Docs",
       siteUrl: "https://example.com",
     },

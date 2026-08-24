@@ -156,6 +156,10 @@ pub struct JsThemeConfig {
     pub layout: Option<JsThemeLayout>,
     /// Header configuration.
     pub header: Option<JsThemeHeader>,
+    /// Opt-in header nav items.
+    pub nav: Option<Vec<JsHeaderNavItem>>,
+    /// Opt-in announcement bar.
+    pub announcement: Option<JsThemeAnnouncement>,
     /// Footer configuration.
     pub footer: Option<JsThemeFooter>,
     /// Social links configuration.
@@ -199,6 +203,8 @@ pub struct JsSsgConfig {
     pub a11y: Option<JsA11y>,
     /// Opt-in team / members page. Omitted stays off.
     pub team: Option<JsTeamOptions>,
+    /// When true, honor per-page frontmatter chrome flags.
+    pub page_chrome: Option<bool>,
 }
 
 /// Opt-in skip link and print styles. Presence of the object enables the feature.
@@ -241,6 +247,30 @@ pub struct JsTeamOptions {
     pub enabled: Option<bool>,
     /// Members rendered as static cards.
     pub members: Option<Vec<JsTeamMember>>,
+}
+
+/// Header nav link or dropdown.
+#[napi(object)]
+#[derive(Clone, Default)]
+pub struct JsHeaderNavItem {
+    /// Display label.
+    pub text: String,
+    /// Link URL.
+    pub link: Option<String>,
+    /// Dropdown children.
+    pub items: Option<Vec<JsHeaderNavItem>>,
+}
+
+/// Announcement bar for JavaScript.
+#[napi(object)]
+#[derive(Clone, Default)]
+pub struct JsThemeAnnouncement {
+    /// Escaped bar text.
+    pub text: String,
+    /// Optional https or same-origin link.
+    pub link: Option<String>,
+    /// localStorage key used to persist dismiss.
+    pub dismiss_key: Option<String>,
 }
 
 /// Opt-in reader chrome flags. Presence of the object enables the feature.

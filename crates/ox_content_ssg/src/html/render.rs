@@ -5,6 +5,10 @@ use super::breadcrumbs::resolve_breadcrumbs;
 use super::entry::generate_entry_html;
 use super::footer::{FOOTER_CSS, generate_footer_html};
 use super::locale_switcher::render_locale_switcher;
+use super::header_chrome::{
+    HEADER_CHROME_JS, header_chrome_needs_js, render_announcement, render_header_nav,
+    resolve_page_chrome,
+};
 use super::nav::generate_nav_html;
 use super::pagination::resolve_pager;
 use super::reader_chrome::{READER_CHROME_CSS, READER_CHROME_JS, apply_reader_chrome};
@@ -25,19 +29,31 @@ use super::{
 /// This function creates a full HTML document with navigation sidebar,
 /// content area, table of contents, search functionality, and theme toggle.
 pub fn generate_html(page_data: &PageData, nav_groups: &[NavGroup], config: &SsgConfig) -> String {
-    let nav_html = generate_nav_html(nav_groups, &page_data.path);
-
-    // Theme configuration
     let theme = config.theme.as_ref();
+    let chrome = resolve_page_chrome(
+        config.page_chrome,
+        page_data.chrome,
+        super::aside::aside_enabled(theme),
+    );
+    let nav_html = if chrome.show_sidebar {
+        generate_nav_html(nav_groups, &page_data.path)
+    } else {
+        String::new()
+    };
+    let header_nav_html =
+        theme.and_then(|t| t.nav.as_deref()).map(render_header_nav).unwrap_or_default();
+    let announcement_html =
+        theme.and_then(|t| t.announcement.as_ref()).map(render_announcement).unwrap_or_default();
     let embed = theme.and_then(|t| t.embed.as_ref());
 
     // Generate theme CSS overrides
     let theme_css = theme.map_or(String::new(), generate_theme_css);
 
     // Check if we have a footer
-    let has_footer = theme.is_some_and(|t| {
-        t.footer.as_ref().is_some_and(|f| f.message.is_some() || f.copyright.is_some())
-    });
+    let has_footer = chrome.show_footer
+        && theme.is_some_and(|t| {
+            t.footer.as_ref().is_some_and(|f| f.message.is_some() || f.copyright.is_some())
+        });
     let footer_css = if has_footer { FOOTER_CSS } else { "" };
 
     // Check if this is an entry page
@@ -95,10 +111,13 @@ pub fn generate_html(page_data: &PageData, nav_groups: &[NavGroup], config: &Ssg
 
     let all_css = css_sections.join("");
     let toc_html = generate_toc_html(&page_data.toc);
-    let has_toc = super::aside::has_toc(super::aside::aside_enabled(theme), &toc_html);
+    let has_toc = super::aside::has_toc(chrome.show_outline, &toc_html);
     let pager = resolve_pager(page_data, nav_groups, config.pagination);
     let breadcrumbs = resolve_breadcrumbs(page_data, nav_groups, config);
-    let last_updated = page_data.last_updated.and_then(format_last_updated);
+    let last_updated = chrome
+        .show_last_updated
+        .then(|| page_data.last_updated.and_then(format_last_updated))
+        .flatten();
 
     // Embedded HTML for specific positions
     let embed_head = embed.and_then(|e| e.head.as_deref()).unwrap_or("");
@@ -111,7 +130,9 @@ pub fn generate_html(page_data: &PageData, nav_groups: &[NavGroup], config: &Ssg
     let embed_footer_before = embed.and_then(|e| e.footer_before.as_deref()).unwrap_or("");
 
     // Footer HTML
-    let footer_html = if let Some(embed_footer) = embed.and_then(|e| e.footer.clone()) {
+    let footer_html = if !chrome.show_footer {
+        String::new()
+    } else if let Some(embed_footer) = embed.and_then(|e| e.footer.clone()) {
         embed_footer
     } else if let Some(t) = theme {
         generate_footer_html(t)
@@ -149,6 +170,10 @@ pub fn generate_html(page_data: &PageData, nav_groups: &[NavGroup], config: &Ssg
     if config.reader_chrome.needs_js() {
         all_js.push('\n');
         all_js.push_str(READER_CHROME_JS);
+    }
+    if header_chrome_needs_js(&header_nav_html, &announcement_html) {
+        all_js.push('\n');
+        all_js.push_str(HEADER_CHROME_JS);
     }
 
     // Social links
@@ -196,6 +221,15 @@ pub fn generate_html(page_data: &PageData, nav_groups: &[NavGroup], config: &Ssg
     {
         body_classes.push("entry-page--subtle".to_string());
     }
+    if !announcement_html.is_empty() {
+        body_classes.push("ox-has-announce".to_string());
+    }
+    if !chrome.show_navbar {
+        body_classes.push("ox-no-navbar".to_string());
+    }
+    if chrome.hide_edit_link {
+        body_classes.push("ox-hide-edit-link".to_string());
+    }
     let body_class = body_classes.join(" ");
 
     let document_title = if page_data.title.trim() == config.site_name.trim() {
@@ -218,6 +252,9 @@ pub fn generate_html(page_data: &PageData, nav_groups: &[NavGroup], config: &Ssg
         body_class: &body_class,
         skip_link: skip_link.as_deref(),
         embed_header_before,
+        announcement_html: &announcement_html,
+        show_navbar: chrome.show_navbar,
+        header_nav_html: &header_nav_html,
         embed_header_after,
         base: &config.base,
         logo_src: &logo_src,

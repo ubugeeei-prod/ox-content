@@ -25,7 +25,9 @@
 </head>
 <body{% if !body_class.is_empty() %} class="{{ body_class }}"{% endif %}>
 {% if let Some(skip) = skip_link %}{{ skip|safe }}
-{% endif %}{{ embed_header_before|safe }}
+{% endif %}{{ embed_header_before|safe }}{% if !announcement_html.is_empty() %}
+{{ announcement_html|safe }}
+{% endif %}{% if show_navbar %}
   <header class="header">
     <button class="menu-toggle" aria-label="Toggle menu">
       <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round">
@@ -47,6 +49,9 @@
       {{ site_name }}
 {% endif %}
     </a>
+{% if !header_nav_html.is_empty() %}
+{{ header_nav_html|safe }}
+{% endif %}
     <div class="header-actions">
 {{ locale_switcher|safe }}{{ social_links|safe }}      <button class="search-button" aria-label="Search">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
@@ -65,6 +70,7 @@
       </button>
     </div>
   </header>
+{% endif %}
 {{ embed_header_after|safe }}
   <div class="search-modal-overlay" role="dialog" aria-modal="true" aria-label="Search documentation">
     <div class="search-modal">

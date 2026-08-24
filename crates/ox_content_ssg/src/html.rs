@@ -7,6 +7,7 @@ mod aside;
 mod breadcrumbs;
 mod entry;
 mod footer;
+mod header_chrome;
 mod locale_switcher;
 mod nav;
 mod page;
@@ -21,6 +22,7 @@ mod utils;
 
 pub use a11y::A11y;
 use breadcrumbs::BreadcrumbsView;
+pub use header_chrome::{HeaderNavItem, PageChromeFlags, ThemeAnnouncement};
 use pagination::PagerView;
 pub use reader_chrome::ReaderChrome;
 pub use team::{TeamLink, TeamMember, TeamOptions, render_team_page};
@@ -120,6 +122,9 @@ struct PageTemplate<'a> {
     body_class: &'a str,
     skip_link: Option<&'a str>,
     embed_header_before: &'a str,
+    announcement_html: &'a str,
+    show_navbar: bool,
+    header_nav_html: &'a str,
     embed_header_after: &'a str,
     base: &'a str,
     logo_src: &'a str,

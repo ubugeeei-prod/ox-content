@@ -1,7 +1,7 @@
 use crate::{
-    JsEntryPageConfig, JsPagerOverride, JsSsgGeneratedHtmlPage, JsSsgNavGroup, JsSsgNavItem,
-    JsSsgNavigationGroup, JsSsgNavigationItem, JsSsgRoutePaths, JsSsgSharedAsset, JsSsgSidebarItem,
-    JsThemeColors, JsThemeConfig, TocEntry,
+    JsEntryPageConfig, JsHeaderNavItem, JsPagerOverride, JsSsgGeneratedHtmlPage, JsSsgNavGroup,
+    JsSsgNavItem, JsSsgNavigationGroup, JsSsgNavigationItem, JsSsgRoutePaths, JsSsgSharedAsset,
+    JsSsgSidebarItem, JsThemeColors, JsThemeConfig, TocEntry,
 };
 
 /// Converts JsThemeColors to ox_content_ssg::ThemeColors.
@@ -43,6 +43,12 @@ pub(super) fn convert_theme_config(
             show_site_name_text: h.show_site_name_text,
             logo_width: h.logo_width,
             logo_height: h.logo_height,
+        }),
+        nav: t.nav.map(|items| items.into_iter().map(convert_header_nav_item).collect()),
+        announcement: t.announcement.map(|a| ox_content_ssg::ThemeAnnouncement {
+            text: a.text,
+            link: a.link,
+            dismiss_key: a.dismiss_key,
         }),
         footer: t
             .footer
@@ -123,6 +129,14 @@ pub(super) fn convert_entry_page_config(
                 .collect()
         }),
     })
+}
+
+fn convert_header_nav_item(item: JsHeaderNavItem) -> ox_content_ssg::HeaderNavItem {
+    ox_content_ssg::HeaderNavItem {
+        text: item.text,
+        link: item.link,
+        items: item.items.unwrap_or_default().into_iter().map(convert_header_nav_item).collect(),
+    }
 }
 
 pub(super) fn convert_pager_override(

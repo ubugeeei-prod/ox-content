@@ -17,7 +17,7 @@
 //! # Example
 //!
 //! ```ignore
-//! use ox_content_ssg::{generate_html, PageData, NavGroup, NavItem, SsgConfig, TocEntry};
+//! use ox_content_ssg::{generate_html, PageChromeFlags, PageData, NavGroup, NavItem, SsgConfig, TocEntry};
 //!
 //! let page_data = PageData {
 //!     title: "Getting Started".to_string(),
@@ -30,6 +30,7 @@
 //!     prev: None,
 //!     next: None,
 //!     breadcrumbs: None,
+//!     chrome: PageChromeFlags::default(),
 //! };
 //!
 //! let nav_groups = vec![NavGroup {
@@ -55,6 +56,7 @@
 //!     locale_switcher: false,
 //!     locale_paths: vec![],
 //!     a11y: Default::default(),
+//!     page_chrome: false,
 //! };
 //!
 //! let html = generate_html(&page_data, &nav_groups, &config);
@@ -74,11 +76,12 @@ pub use assets::{
 };
 pub use feeds::{FeedFormat, FeedItem, FeedsOptions, FeedsOutput, generate_feeds};
 pub use html::{
-    A11y, BarePageData, EntryPageConfig, FeatureConfig, HeroAction, HeroConfig, HeroImage,
-    HeroNoticeConfig, LocaleInfo, LocalePath, NavGroup, NavItem, PageData, PagerOverride,
-    ReaderChrome, SocialLink, SocialLinks, SsgConfig, TeamLink, TeamMember, TeamOptions,
-    ThemeColors, ThemeConfig, ThemeEmbed, ThemeEntryPage, ThemeFonts, ThemeFooter, ThemeHeader,
-    ThemeLayout, TocEntry, generate_bare_html, generate_bare_page, generate_html, render_team_page,
+    A11y, BarePageData, EntryPageConfig, FeatureConfig, HeaderNavItem, HeroAction, HeroConfig,
+    HeroImage, HeroNoticeConfig, LocaleInfo, LocalePath, NavGroup, NavItem, PageChromeFlags,
+    PageData, PagerOverride, ReaderChrome, SocialLink, SocialLinks, SsgConfig, TeamLink,
+    TeamMember, TeamOptions, ThemeAnnouncement, ThemeColors, ThemeConfig, ThemeEmbed,
+    ThemeEntryPage, ThemeFonts, ThemeFooter, ThemeHeader, ThemeLayout, TocEntry,
+    generate_bare_html, generate_bare_page, generate_html, render_team_page,
 };
 pub use permalinks::{
     CascadeOptions, PermalinksOptions, ResolvedRoutePage, RoutePage, RouteResolveOutput,

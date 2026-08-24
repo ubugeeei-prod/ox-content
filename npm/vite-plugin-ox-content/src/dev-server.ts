@@ -29,6 +29,7 @@ import type { NavGroup, SsgPageData, SsgEntryPageConfig } from "./ssg";
 import type { ResolvedOptions } from "./types";
 import type { HeroConfig, FeatureConfig } from "./types";
 import { normalizeVitePressFrontmatter } from "./vitepress";
+import { parsePageChromeFlags } from "./header-chrome";
 import { isMarkdownFilePath } from "./markdown";
 
 /** File extensions to skip in the middleware. */
@@ -352,6 +353,7 @@ async function renderPage(
     prev: parseSsgPagerOverride(frontmatter.prev),
     next: parseSsgPagerOverride(frontmatter.next),
     breadcrumbs: frontmatter.breadcrumbs === false ? false : undefined,
+    chrome: parsePageChromeFlags(frontmatter),
   };
 
   // Generate full HTML page
@@ -371,6 +373,7 @@ async function renderPage(
     undefined,
     options.ssg.a11y,
     options.ssg.team ?? { enabled: false, members: [] },
+    options.ssg.pageChrome,
   );
 
   // Inject Vite HMR client for live reload
