@@ -291,6 +291,7 @@ array order.
 ## Related
 
 - [Previous / Next](./pagination.md) — opt-in previous and next page links.
+- [Sitemap / robots / llms.txt](./site-maps.md) — opt-in crawl manifests.
 - [Theming](../theming.md) — the theme system used by SSG.
 - [API Docs from JSDoc](../jsdoc.md) — the full `docs` option reference.
 - [Internationalization](../i18n.md) — locale-aware sites on top of SSG.

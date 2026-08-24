@@ -217,6 +217,11 @@
   <td><code class="ox-api-entry__member-type language-typescript">boolean</code></td>
   <td><div class="ox-api-entry__member-description">Linkify bare URLs while rendering.</div><div class="ox-api-entry__member-default"><span>Default</span> <code class="language-typescript">true</code></div></td>
 </tr>
+<tr id="jstransformoptions-badges">
+  <td><code>badges</code><span class="ox-api-badge">optional</span></td>
+  <td><code class="ox-api-entry__member-type language-typescript">{ enabled?: boolean }</code></td>
+  <td></td>
+</tr>
 <tr id="jstransformoptions-baseurl">
   <td><code>baseUrl</code><span class="ox-api-badge">optional</span></td>
   <td><code class="ox-api-entry__member-type language-typescript">string</code></td>
@@ -286,6 +291,11 @@
   <td><code>gfm</code><span class="ox-api-badge">optional</span></td>
   <td><code class="ox-api-entry__member-type language-typescript">boolean</code></td>
   <td><div class="ox-api-entry__member-description">Enable GitHub Flavored Markdown extensions.<br>Includes tables, task lists, strikethrough, and autolinks.</div><div class="ox-api-entry__member-default"><span>Default</span> <code class="language-typescript">false</code></div></td>
+</tr>
+<tr id="jstransformoptions-images">
+  <td><code>images</code><span class="ox-api-badge">optional</span></td>
+  <td><code class="ox-api-entry__member-type language-typescript">{ enabled?: boolean; lazy?: boolean }</code></td>
+  <td></td>
 </tr>
 <tr id="jstransformoptions-includes">
   <td><code>includes</code><span class="ox-api-badge">optional</span></td>
@@ -560,14 +570,12 @@
 <h4>Examples</h4>
 <div class="ox-api-entry__example">
 <div class="ox-api-entry__example-heading">Example 1</div>
-<pre><code class="language-typescript">import { transformMarkdown } from &#39;./transform&#39;;
-
+<pre><code class="language-typescript">import { transformMarkdown } from &#39;./transform&#39;;&#10;
 const content = await transformMarkdown(
   &#39;# Hello\n\nWorld&#39;,
   &#39;path/to/file.md&#39;,
   resolvedOptions
-);
-
+);&#10;
 console.log(content.html); // &#39;&lt;h1&gt;Hello&lt;/h1&gt;&lt;p&gt;World&lt;/p&gt;&#39;
 console.log(content.toc);  // [{ depth: 1, text: &#39;Hello&#39;, slug: &#39;hello&#39;, children: [] }]</code></pre>
 </div>

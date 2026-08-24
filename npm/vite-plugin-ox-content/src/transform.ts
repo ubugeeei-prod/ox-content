@@ -256,9 +256,18 @@ interface JsTransformOptions {
     enabled?: boolean;
   };
 
+  badges?: {
+    enabled?: boolean;
+  };
+
   containers?: {
     enabled?: boolean;
     types?: Record<string, { title?: string; tag?: string }>;
+  };
+
+  images?: {
+    enabled?: boolean;
+    lazy?: boolean;
   };
 
   cjkEmphasis?: boolean;
@@ -520,10 +529,17 @@ export async function transformMarkdown(
         }
       : undefined,
     attributes: options.attrs?.enabled ? { enabled: true } : undefined,
+    badges: options.badges?.enabled ? { enabled: true } : undefined,
     containers: options.containers?.enabled
       ? {
           enabled: true,
           types: options.containers.types,
+        }
+      : undefined,
+    images: options.images?.enabled
+      ? {
+          enabled: true,
+          lazy: options.images.lazy,
         }
       : undefined,
     cjkEmphasis: options.cjkEmphasis ?? false,

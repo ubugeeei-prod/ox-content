@@ -369,6 +369,32 @@ export interface ResolvedSsgOptions {
 }
 
 /**
+ * Opt-in crawl manifests written during SSG.
+ */
+export interface SiteMapsOptions {
+  /**
+   * Write `robots.txt` with a Sitemap line.
+   * @default true
+   */
+  robots?: boolean;
+
+  /**
+   * Write `llms.txt` with the site title, description, and page URLs.
+   * @default true
+   */
+  llms?: boolean;
+}
+
+/**
+ * Resolved crawl-manifest options.
+ */
+export interface ResolvedSiteMapsOptions {
+  enabled: boolean;
+  robots: boolean;
+  llms: boolean;
+}
+
+/**
  * Options for the core `oxContent()` Vite plugin.
  *
  * The top-level options describe where content lives, which Markdown features
@@ -431,6 +457,18 @@ export interface OxContentOptions {
    * @default { enabled: true }
    */
   ssg?: SsgOptions | boolean;
+
+  /**
+   * Write crawl manifests next to generated HTML.
+   *
+   * Off by default. `true` writes `sitemap.xml`, `robots.txt`, and `llms.txt`.
+   * An object enables the feature and overrides only the fields you set.
+   * Requires `ssg.siteUrl`. When that is missing the build continues and a
+   * warning is emitted instead of writing files.
+   *
+   * @default false
+   */
+  siteMaps?: boolean | SiteMapsOptions;
 
   /**
    * Enable GitHub Flavored Markdown extensions.
@@ -530,6 +568,16 @@ export interface OxContentOptions {
   attrs?: boolean | AttrsOptions;
 
   /**
+   * Opt-in `{badge:variant}` inline badges.
+   *
+   * Passing `true` or an options object enables the built-in variants.
+   * Badge text is HTML-escaped. Fenced, indented, and inline code are skipped.
+   *
+   * @default false
+   */
+  badges?: boolean | BadgeOptions;
+
+  /**
    * Opt-in `::: tip` custom containers.
    *
    * GitHub-style `> [!NOTE]` callouts stay available without this option.
@@ -539,6 +587,17 @@ export interface OxContentOptions {
    * @default false
    */
   containers?: boolean | ContainerOptions;
+
+  /**
+   * Opt-in figures, captions, and lazy-loaded images.
+   *
+   * Title text becomes a `<figcaption>`. Optional `{width=N height=M}` on the
+   * image is consumed by this feature and does not require `attrs`. Passing
+   * `true` or `{}` enables defaults (`lazy: true`).
+   *
+   * @default false
+   */
+  images?: boolean | ImageOptions;
 
   /**
    * Import source snippets into fences with `<<< @/path/to/file.ts{region}`.
@@ -735,6 +794,7 @@ export interface ResolvedOptions {
   base: string;
   extensions: string[];
   ssg: ResolvedSsgOptions;
+  siteMaps?: ResolvedSiteMapsOptions;
   gfm: boolean;
   footnotes: boolean;
   tables: boolean;
@@ -746,7 +806,9 @@ export interface ResolvedOptions {
   wikiLinks: ResolvedWikiLinkOptions;
   emojiShortcodes: ResolvedEmojiShortcodeOptions;
   attrs: ResolvedAttrsOptions;
+  badges: ResolvedBadgeOptions;
   containers: ResolvedContainerOptions;
+  images: ResolvedImageOptions;
   codeImports: ResolvedCodeImportOptions;
   includes: ResolvedIncludeOptions;
   steps: ResolvedStepsOptions;
@@ -859,6 +921,25 @@ export interface ResolvedBuiltinEmbedOptions {
 }
 
 /**
+ * Options for opt-in `{badge:variant}` inline badges.
+ */
+export interface BadgeOptions {
+  /**
+   * Enable the badge transform when an options object is supplied.
+   *
+   * @default true
+   */
+  enabled?: boolean;
+}
+
+/**
+ * Resolved inline-badge transform options.
+ */
+export interface ResolvedBadgeOptions {
+  enabled: boolean;
+}
+
+/**
  * Options for opt-in `::: type` custom containers.
  */
 export interface ContainerOptions {
@@ -893,6 +974,26 @@ export interface ContainerTypeOptions {
 export interface ResolvedContainerOptions {
   enabled: boolean;
   types: Record<string, ContainerTypeOptions>;
+}
+
+/**
+ * Options for opt-in figures, captions, and lazy images.
+ */
+export interface ImageOptions {
+  /**
+   * Add `loading="lazy"` to transformed images.
+   *
+   * @default true
+   */
+  lazy?: boolean;
+}
+
+/**
+ * Resolved image transform options.
+ */
+export interface ResolvedImageOptions {
+  enabled: boolean;
+  lazy: boolean;
 }
 
 /**

@@ -42,6 +42,10 @@ export default defineConfig(({ mode }) => {
         // Enable per-page OG image generation (Chromium-based)
         ogImage: true,
 
+        // Crawl manifests. siteUrl is set above, so these files are safe to
+        // write for the deployed docs site.
+        siteMaps: true,
+
         // SSG options with theme customization
         ssg: {
           siteName: "Ox Content",
@@ -92,6 +96,8 @@ export default defineConfig(({ mode }) => {
                       { text: "Custom Containers", link: "/built-in/containers.md" },
                       { text: "Step Lists", link: "/built-in/steps.md" },
                       { text: "File Includes", link: "/built-in/includes.md" },
+                      { text: "Inline Badges", link: "/built-in/badges.md" },
+                      { text: "Images", link: "/built-in/images.md" },
                       { text: "Code Blocks", link: "/built-in/code-blocks.md" },
                       { text: "Embeds", link: "/built-in/embeds.md" },
                       { text: "Mermaid Diagrams", link: "/built-in/mermaid.md" },
@@ -100,6 +106,7 @@ export default defineConfig(({ mode }) => {
                       { text: "Quality Checks", link: "/built-in/quality-checks.md" },
                       { text: "Site Generation", link: "/built-in/site-generation.md" },
                       { text: "Previous / Next", link: "/built-in/pagination.md" },
+                      { text: "Sitemap / robots / llms.txt", link: "/built-in/site-maps.md" },
                     ],
                   },
                   { text: "Theming", link: "/theming.md" },
@@ -181,6 +188,8 @@ export default defineConfig(({ mode }) => {
         // inside raw HTML <code> emitted by the generated API reference.)
         emojiShortcodes: true,
         cjkEmphasis: true,
+        badges: true,
+        images: true,
         codeImports: true,
         includes: true,
         steps: true,

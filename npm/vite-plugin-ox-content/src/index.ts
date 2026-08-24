@@ -12,6 +12,7 @@ import { createMarkdownEnvironment } from "./environment";
 import { transformMarkdown } from "./transform";
 import { extractDocs, generateMarkdown, writeDocs, resolveDocsOptions } from "./docs";
 import { buildSsg, resolveSsgOptions } from "./ssg";
+import { resolveSiteMapsOptions } from "./site-maps";
 import {
   resolveSearchOptions,
   buildSearchIndex,
@@ -28,6 +29,7 @@ import {
 import { createOgViewerPlugin } from "./og-viewer";
 import { resolveI18nOptions, createI18nPlugin } from "./i18n";
 import { isMarkdownFilePath, normalizeMarkdownExtensions } from "./markdown";
+import { resolveImageOptions } from "./resolve-image-options";
 import { generateCollectionsVirtualModule, resolveCollectionsOptions } from "./collections";
 import type { BuiltinPmOptions, OxContentOptions, ResolvedOptions } from "./types";
 import { resolveIncludeOptions } from "./include-options";
@@ -46,9 +48,13 @@ export type {
   ResolvedEmojiShortcodeOptions,
   AttrsOptions,
   ResolvedAttrsOptions,
+  BadgeOptions,
+  ResolvedBadgeOptions,
   ContainerOptions,
   ContainerTypeOptions,
   ResolvedContainerOptions,
+  ImageOptions,
+  ResolvedImageOptions,
   CodeImportOptions,
   ResolvedCodeImportOptions,
   IncludeOptions,
@@ -74,6 +80,8 @@ export type {
   ExtractedDocs,
   SsgOptions,
   ResolvedSsgOptions,
+  SiteMapsOptions,
+  ResolvedSiteMapsOptions,
   SearchOptions,
   ResolvedSearchOptions,
   SearchDocument,
@@ -544,6 +552,7 @@ function resolveOptions(options: OxContentOptions): ResolvedOptions {
     base: options.base ?? "/",
     extensions: normalizeMarkdownExtensions(options.extensions),
     ssg: resolveSsgOptions(options.ssg),
+    siteMaps: resolveSiteMapsOptions(options.siteMaps),
     gfm: options.gfm ?? true,
     footnotes: options.footnotes ?? true,
     tables: options.tables ?? true,
@@ -555,7 +564,9 @@ function resolveOptions(options: OxContentOptions): ResolvedOptions {
     wikiLinks: resolveWikiLinkOptions(options.wikiLinks, options.base ?? "/"),
     emojiShortcodes: resolveEmojiShortcodeOptions(options.emojiShortcodes),
     attrs: resolveAttrsOptions(options.attrs),
+    badges: resolveBadgeOptions(options.badges),
     containers: resolveContainerOptions(options.containers),
+    images: resolveImageOptions(options.images),
     codeImports: resolveCodeImportOptions(options.codeImports),
     includes: resolveIncludeOptions(options.includes),
     steps: resolveStepsOptions(options.steps),
@@ -649,6 +660,14 @@ function resolveEmojiShortcodeOptions(
 }
 
 function resolveAttrsOptions(options: OxContentOptions["attrs"]): ResolvedOptions["attrs"] {
+  if (!options) return { enabled: false };
+  if (options === true) return { enabled: true };
+  return { enabled: options.enabled ?? true };
+}
+
+export function resolveBadgeOptions(
+  options: OxContentOptions["badges"],
+): ResolvedOptions["badges"] {
   if (!options) return { enabled: false };
   if (options === true) return { enabled: true };
   return { enabled: options.enabled ?? true };
@@ -865,6 +884,7 @@ export {
   type MarkdownChunkSource,
 } from "./incremental";
 export { transformMarkdown } from "./transform";
+export { resolveImageOptions } from "./resolve-image-options";
 export {
   createFrameworkMarkdownOptions,
   escapeSvelteMarkup,
@@ -926,6 +946,7 @@ export type {
   MarkdownLintFileOptions as MarkdownLintProjectOptions,
 } from "./lint-files";
 export { buildSsg, resolveSsgOptions, DEFAULT_HTML_TEMPLATE } from "./ssg";
+export { resolveSiteMapsOptions } from "./site-maps";
 export { resolveSearchOptions, buildSearchIndex, writeSearchIndex } from "./search";
 export {
   buildCollectionManifest,

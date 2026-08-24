@@ -333,6 +333,16 @@ export interface JsAttrsOptions {
   enabled?: boolean
 }
 
+/** Opt-in `{badge:variant}` inline badges. */
+export interface JsBadgeOptions {
+  /**
+   * Enable `{badge:variant}text{/badge}` expansion.
+   *
+   * Default: `false`.
+   */
+  enabled?: boolean
+}
+
 export interface JsBuildCollectionManifestOptions {
   /** Source directory containing Markdown files. */
   srcDir: string
@@ -936,6 +946,22 @@ export interface JsI18NRuntimeLocale {
   name: string
   /** Text direction. */
   dir?: string
+}
+
+/** Opt-in figures, captions, and lazy images. */
+export interface JsImageOptions {
+  /**
+   * Enable figure captions, lazy loading, and safe dimensions.
+   *
+   * Default: `false`.
+   */
+  enabled?: boolean
+  /**
+   * Add `loading="lazy"` to transformed images.
+   *
+   * Default: `true`.
+   */
+  lazy?: boolean
 }
 
 /** Markdown file include options. */
@@ -1853,6 +1879,12 @@ export interface JsTransformOptions {
    */
   containers?: JsContainerOptions
   /**
+   * Opt-in figures, captions, and lazy images.
+   *
+   * Default: disabled.
+   */
+  images?: JsImageOptions
+  /**
    * Opt-in Markdown file includes via `<!-- @include: PATH -->`.
    *
    * Default: disabled.
@@ -1864,6 +1896,12 @@ export interface JsTransformOptions {
    * Default: disabled.
    */
   steps?: JsStepsOptions
+  /**
+   * Opt-in `{badge:variant}` inline badges.
+   *
+   * Default: disabled.
+   */
+  badges?: JsBadgeOptions
 }
 
 /** Type parameter documentation (`<T extends C = D>`) used by generated API docs. */

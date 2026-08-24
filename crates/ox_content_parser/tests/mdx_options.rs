@@ -1,7 +1,7 @@
 //! Strict tests for `ParserOptions.mdx`.
 //!
-//! This slice only adds the flag. Enabling it must not change CommonMark or
-//! GFM parse output until the JSX/ESM/expression PRs land.
+//! Enabling the flag must not change CommonMark or GFM parse output for
+//! non-JSX Markdown. PascalCase JSX is covered in `mdx_jsx.rs`.
 
 use ox_content_allocator::Allocator;
 use ox_content_parser::{Parser, ParserOptions};
@@ -26,7 +26,7 @@ fn assert_mdx_flag_is_noop(source: &str, mut options: ParserOptions) {
     let on = pretty_ast(source, options);
     assert_eq!(
         off, on,
-        "ParserOptions.mdx must not change parse output until MDX syntax lands\n--- mdx=false ---\n{off}\n--- mdx=true ---\n{on}"
+        "ParserOptions.mdx must not change parse output for non-JSX Markdown\n--- mdx=false ---\n{off}\n--- mdx=true ---\n{on}"
     );
 }
 
@@ -135,16 +135,6 @@ fn mdx_flag_is_noop_for_gfm_task_list() {
 }
 
 #[test]
-fn mdx_flag_is_noop_for_jsx_looking_flow() {
-    assert_mdx_flag_is_noop("<Alert title=\"hi\" />\n", ParserOptions::default());
-}
-
-#[test]
-fn mdx_flag_is_noop_for_jsx_looking_text() {
-    assert_mdx_flag_is_noop("Hello <Badge /> world.\n", ParserOptions::default());
-}
-
-#[test]
 fn mdx_flag_is_noop_for_import_line() {
     assert_mdx_flag_is_noop("import { Chart } from './Chart'\n", ParserOptions::default());
 }
@@ -167,16 +157,5 @@ fn mdx_flag_is_noop_for_nested_blockquote() {
 #[test]
 fn mdx_false_does_not_emit_mdx_nodes_for_jsx() {
     let tree = pretty_ast("<Counter count={1} />\n", ParserOptions::default());
-    assert!(!tree.contains("MdxJsx"), "mdx=false must not emit MDX JSX nodes yet:\n{tree}");
-}
-
-#[test]
-fn mdx_true_does_not_emit_mdx_nodes_until_parse_lands() {
-    let tree = pretty_ast("<Counter count={1} />\n", ParserOptions::mdx());
-    assert!(
-        !tree.contains("MdxJsx")
-            && !tree.contains("MdxjsEsm")
-            && !tree.contains("MdxFlowExpression"),
-        "this slice only adds the option; JSX parse comes next:\n{tree}"
-    );
+    assert!(!tree.contains("MdxJsx"), "mdx=false must not emit MDX JSX nodes:\n{tree}");
 }
