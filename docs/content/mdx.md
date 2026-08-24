@@ -8,12 +8,14 @@ description: Embed Vue, React, or Svelte components in Markdown using island hyd
 Ox Content lets you embed framework components inside Markdown and `.mdx` files.
 It is worth understanding how this works, because it differs from "classic" MDX:
 
-- **JSX elements parse when MDX is enabled.** With `mdx: true` /
-  `ParserOptions.mdx`, the Rust parser turns PascalCase tags into
-  `MdxJsxFlowElement` / `MdxJsxTextElement` nodes (self-closing or simple
-  open/close, with literal, boolean, and `{expr}` attributes). `.md` stays
-  CommonMark + GFM unless that option is on. `import` / `export` and
-  `{expression}` children are not parsed yet.
+- **JSX elements and module-level `import` / `export` parse when MDX is
+  enabled.** With `mdx: true` / `ParserOptions.mdx`, the Rust parser turns
+  PascalCase tags into `MdxJsxFlowElement` / `MdxJsxTextElement` nodes
+  (self-closing or simple open/close, with literal, boolean, and `{expr}`
+  attributes), and turns file-level `import` / `export` into `MdxjsEsm`
+  nodes (raw source, not evaluated). `.md` stays CommonMark + GFM unless
+  that option is on. `{expression}` children, fragments, and spreads are
+  not parsed yet.
 - **Components are resolved by a framework plugin**, not the renderer. The
   React/Vue/Svelte plugins scan the content for PascalCase component tags,
   replace them with **island** placeholders, and hydrate them on the client.
@@ -75,8 +77,17 @@ Regular **Markdown** prose.
 Only tags that start with an uppercase letter are treated as JSX / components,
 so ordinary HTML (`<div>`, `<span>`, …) stays raw HTML. Tags inside fenced
 code blocks and inline code are **not** components, so you can document
-component usage without it being executed. Spreads, fragments, JSX comments,
-and `import` / `export` are not parsed yet.
+component usage without it being executed.
+
+Module-level `import` and `export` at the start of a file (and after other
+ESM) become `MdxjsEsm` nodes. Multi-line statements are collected with a
+naive brace / paren / string / comment scan — not a JavaScript parser —
+so regex literals and `${}` inside templates may confuse statement
+boundaries. `import` / `export` inside fences or inline code is not ESM.
+Hostile strings such as `import x from "<script>"` store source and do not
+panic. The HTML renderer currently emits nothing for `MdxjsEsm`; framework
+plugins will resolve imports later. Spreads, fragments, and JSX comments
+are not parsed yet.
 
 ### Props
 

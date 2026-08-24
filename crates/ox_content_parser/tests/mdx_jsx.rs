@@ -2,8 +2,9 @@
 //!
 //! This slice covers PascalCase elements (flow + text), literal / boolean /
 //! `{expr}` attributes, self-closing tags, and simple open/close children.
-//! Lowercase HTML stays `Html`. Spreads, fragments, JSX comments, ESM, and
+//! Lowercase HTML stays `Html`. Spreads, fragments, JSX comments, and
 //! `{expression}` children are deferred — tests below pin that subset.
+//! Module-level `import` / `export` is covered in `mdx_esm.rs`.
 
 use ox_content_allocator::Allocator;
 use ox_content_parser::{Parser, ParserOptions};

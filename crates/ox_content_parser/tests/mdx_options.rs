@@ -1,7 +1,8 @@
 //! Strict tests for `ParserOptions.mdx`.
 //!
 //! Enabling the flag must not change CommonMark or GFM parse output for
-//! non-JSX Markdown. PascalCase JSX is covered in `mdx_jsx.rs`.
+//! non-JSX, non-ESM Markdown. PascalCase JSX is covered in `mdx_jsx.rs`.
+//! Module-level `import` / `export` is covered in `mdx_esm.rs`.
 
 use ox_content_allocator::Allocator;
 use ox_content_parser::{Parser, ParserOptions};
@@ -132,16 +133,6 @@ fn mdx_flag_is_noop_for_gfm_table() {
 #[test]
 fn mdx_flag_is_noop_for_gfm_task_list() {
     assert_mdx_flag_is_noop("- [ ] todo\n- [x] done\n", ParserOptions::gfm());
-}
-
-#[test]
-fn mdx_flag_is_noop_for_import_line() {
-    assert_mdx_flag_is_noop("import { Chart } from './Chart'\n", ParserOptions::default());
-}
-
-#[test]
-fn mdx_flag_is_noop_for_export_line() {
-    assert_mdx_flag_is_noop("export const meta = { title: 'Hi' }\n", ParserOptions::default());
 }
 
 #[test]

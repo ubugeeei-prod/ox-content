@@ -110,6 +110,13 @@ impl<'a> Parser<'a> {
                     return self.parse_list(start, line_indent, first_item, line.len());
                 }
             }
+            b'i' | b'e' => {
+                if self.options.mdx
+                    && let Some(node) = self.try_parse_mdxjs_esm(start, trimmed_start)
+                {
+                    return Ok(Some(node));
+                }
+            }
             _ => {}
         }
 
