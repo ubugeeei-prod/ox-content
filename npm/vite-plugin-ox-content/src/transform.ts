@@ -256,6 +256,10 @@ interface JsTransformOptions {
     enabled?: boolean;
   };
 
+  badges?: {
+    enabled?: boolean;
+  };
+
   containers?: {
     enabled?: boolean;
     types?: Record<string, { title?: string; tag?: string }>;
@@ -264,6 +268,11 @@ interface JsTransformOptions {
   cjkEmphasis?: boolean;
 
   codeImports?: {
+    enabled?: boolean;
+    rootDir?: string;
+  };
+
+  includes?: {
     enabled?: boolean;
     rootDir?: string;
   };
@@ -511,6 +520,7 @@ export async function transformMarkdown(
         }
       : undefined,
     attributes: options.attrs?.enabled ? { enabled: true } : undefined,
+    badges: options.badges?.enabled ? { enabled: true } : undefined,
     containers: options.containers?.enabled
       ? {
           enabled: true,
@@ -522,6 +532,12 @@ export async function transformMarkdown(
       ? {
           enabled: true,
           rootDir: options.codeImports.rootDir,
+        }
+      : undefined,
+    includes: options.includes?.enabled
+      ? {
+          enabled: true,
+          rootDir: options.includes.rootDir,
         }
       : undefined,
     // Sanitize once at the end of the JS pipeline so opt-in embeds can be

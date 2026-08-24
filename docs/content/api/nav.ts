@@ -144,6 +144,10 @@ export const apiNav: NavItem[] = [
     "path": "/api/search"
   },
   {
+    "title": "Site Maps",
+    "path": "/api/site-maps"
+  },
+  {
     "title": "Ssg",
     "path": "/api/ssg"
   },

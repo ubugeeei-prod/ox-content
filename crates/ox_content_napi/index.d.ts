@@ -333,6 +333,16 @@ export interface JsAttrsOptions {
   enabled?: boolean
 }
 
+/** Opt-in `{badge:variant}` inline badges. */
+export interface JsBadgeOptions {
+  /**
+   * Enable `{badge:variant}text{/badge}` expansion.
+   *
+   * Default: `false`.
+   */
+  enabled?: boolean
+}
+
 export interface JsBuildCollectionManifestOptions {
   /** Source directory containing Markdown files. */
   srcDir: string
@@ -936,6 +946,22 @@ export interface JsI18NRuntimeLocale {
   name: string
   /** Text direction. */
   dir?: string
+}
+
+/** Markdown file include options. */
+export interface JsIncludeOptions {
+  /**
+   * Enable `<!-- @include: PATH -->` expansion.
+   *
+   * Default: `false`.
+   */
+  enabled?: boolean
+  /**
+   * Root directory used for `@/` and absolute include paths.
+   *
+   * Default: project root from the JavaScript caller.
+   */
+  rootDir?: string
 }
 
 /** Options for appending to an incremental parser. */
@@ -1838,6 +1864,18 @@ export interface JsTransformOptions {
    * Default: disabled.
    */
   containers?: JsContainerOptions
+  /**
+   * Opt-in Markdown file includes via `<!-- @include: PATH -->`.
+   *
+   * Default: disabled.
+   */
+  includes?: JsIncludeOptions
+  /**
+   * Opt-in `{badge:variant}` inline badges.
+   *
+   * Default: disabled.
+   */
+  badges?: JsBadgeOptions
 }
 
 /** Type parameter documentation (`<T extends C = D>`) used by generated API docs. */

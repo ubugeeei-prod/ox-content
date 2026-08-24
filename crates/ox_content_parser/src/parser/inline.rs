@@ -159,7 +159,7 @@ impl<'a> Parser<'a> {
                     *pos += 1;
                 }
             }
-            b'<' => self.parse_inline_html_or_text(content, offset, children, pos),
+            b'<' => self.parse_inline_html_or_text(content, offset, children, pos)?,
             b'\\' if *pos + 1 < content.len() && bytes[*pos + 1].is_ascii_punctuation() => {
                 // A backslash escapes only ASCII punctuation (CommonMark
                 // "Backslash escapes"). The escaped character is emitted as
@@ -253,9 +253,12 @@ impl<'a> Parser<'a> {
         offset: usize,
         children: &mut Vec<'a, Node<'a>>,
         pos: &mut usize,
-    ) {
+    ) -> ParseResult<()> {
         if let Some((link, end)) = self.parse_autolink(content, *pos, offset) {
             children.push(link);
+            *pos = end;
+        } else if let Some((node, end)) = self.try_parse_mdx_jsx_text(content, *pos, offset)? {
+            children.push(node);
             *pos = end;
         } else if let Some((html, end)) = Self::parse_inline_html(content, *pos, offset) {
             children.push(Node::Html(html));
@@ -264,6 +267,7 @@ impl<'a> Parser<'a> {
             Self::push_text(children, "<", offset + *pos, offset + *pos + 1);
             *pos += 1;
         }
+        Ok(())
     }
 
     fn parse_strikethrough(

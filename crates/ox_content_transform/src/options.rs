@@ -29,6 +29,15 @@ pub struct TransformOptions {
     pub edit_this_page: Option<EditThisPageOptions>,
     /// Opt-in `::: tip` custom containers. Disabled when omitted.
     pub containers: Option<ContainerOptions>,
+    /// Opt-in Markdown file includes. Disabled when omitted.
+    pub includes: Option<IncludeOptions>,
+    /// Opt-in `{badge:variant}` inline badges. Disabled when omitted.
+    pub badges: Option<BadgeOptions>,
+}
+
+#[derive(Clone, Default)]
+pub struct BadgeOptions {
+    pub enabled: Option<bool>,
 }
 
 #[derive(Clone, Default)]
@@ -62,6 +71,12 @@ pub struct AttrsOptions {
 
 #[derive(Clone, Default)]
 pub struct CodeImportOptions {
+    pub enabled: Option<bool>,
+    pub root_dir: Option<String>,
+}
+
+#[derive(Clone, Default)]
+pub struct IncludeOptions {
     pub enabled: Option<bool>,
     pub root_dir: Option<String>,
 }

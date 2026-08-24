@@ -30,6 +30,7 @@ import type { ResolvedThemeConfig, SidebarItem } from "./theme";
 import { normalizeVitePressFrontmatter } from "./vitepress";
 import { renderPage } from "./theme-renderer";
 import type { PageData as ThemePageData } from "./theme-renderer";
+import { writeSiteMapFiles } from "./site-maps";
 
 /**
  * Navigation item for SSG.
@@ -676,7 +677,7 @@ export async function buildSsg(options: ResolvedOptions, root: string): Promise<
   await generateOgImageAssets(context, collected, generatedFiles, errors);
 
   const generatedPages = await generateHtmlPages(context, collected.pageResults, collected, errors);
-  await writeGeneratedPages(generatedPages, context, generatedFiles);
+  await writeGeneratedPages(generatedPages, context, generatedFiles, collected.pageResults, errors);
 
   return {
     files: generatedFiles,
@@ -1080,6 +1081,8 @@ async function writeGeneratedPages(
   generatedPages: GeneratedHtmlPage[],
   context: BuildSsgContext,
   generatedFiles: string[],
+  pageResults: PageProcessResult[],
+  errors: string[],
 ): Promise<void> {
   // Shared asset extraction needs the complete page set to maximize
   // de-duplication. Only after replacement do we write pages and record both
@@ -1095,5 +1098,24 @@ async function writeGeneratedPages(
     await fs.mkdir(path.dirname(page.outputPath), { recursive: true });
     await fs.writeFile(page.outputPath, page.html, "utf-8");
     generatedFiles.push(page.outputPath);
+  }
+
+  const siteMaps = await writeSiteMapFiles({
+    outDir: context.outDir,
+    siteUrl: context.ssgOptions.siteUrl,
+    base: context.base,
+    siteName: context.siteName,
+    options: context.options.siteMaps,
+    pages: pageResults.map((page) => ({
+      loc: canonicalPageUrl(context, page.routePaths.urlPath) ?? "",
+      title: page.title,
+      description: page.description,
+      draft: page.frontmatter.draft === true,
+    })),
+  });
+  generatedFiles.push(...siteMaps.files);
+  if (siteMaps.warning) {
+    errors.push(siteMaps.warning);
+    console.warn(siteMaps.warning);
   }
 }

@@ -3,8 +3,8 @@ use std::collections::HashMap;
 use napi_derive::napi;
 use ox_content_transform::{
     AttrsOptions, CodeBlockLintOptions, CodeImportOptions, ContainerOptions, ContainerTypeOptions,
-    DocsTestOptions, EditThisPageOptions, EmojiShortcodeOptions, MediaEmbedsOptions,
-    SanitizeOptions, WikiLinkOptions,
+    DocsTestOptions, EditThisPageOptions, EmojiShortcodeOptions, IncludeOptions,
+    MediaEmbedsOptions, SanitizeOptions, WikiLinkOptions,
 };
 
 /// Wiki-link transform options.
@@ -128,6 +128,27 @@ pub struct JsCodeImportOptions {
 
 impl From<JsCodeImportOptions> for CodeImportOptions {
     fn from(value: JsCodeImportOptions) -> Self {
+        Self { enabled: value.enabled, root_dir: value.root_dir }
+    }
+}
+
+/// Markdown file include options.
+#[napi(object)]
+#[derive(Default, Clone)]
+pub struct JsIncludeOptions {
+    /// Enable `<!-- @include: PATH -->` expansion.
+    ///
+    /// Default: `false`.
+    pub enabled: Option<bool>,
+
+    /// Root directory used for `@/` and absolute include paths.
+    ///
+    /// Default: project root from the JavaScript caller.
+    pub root_dir: Option<String>,
+}
+
+impl From<JsIncludeOptions> for IncludeOptions {
+    fn from(value: JsIncludeOptions) -> Self {
         Self { enabled: value.enabled, root_dir: value.root_dir }
     }
 }

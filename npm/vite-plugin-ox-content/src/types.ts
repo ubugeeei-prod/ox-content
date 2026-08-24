@@ -422,6 +422,32 @@ export interface ResolvedSsgOptions {
 }
 
 /**
+ * Opt-in crawl manifests written during SSG.
+ */
+export interface SiteMapsOptions {
+  /**
+   * Write `robots.txt` with a Sitemap line.
+   * @default true
+   */
+  robots?: boolean;
+
+  /**
+   * Write `llms.txt` with the site title, description, and page URLs.
+   * @default true
+   */
+  llms?: boolean;
+}
+
+/**
+ * Resolved crawl-manifest options.
+ */
+export interface ResolvedSiteMapsOptions {
+  enabled: boolean;
+  robots: boolean;
+  llms: boolean;
+}
+
+/**
  * Options for the core `oxContent()` Vite plugin.
  *
  * The top-level options describe where content lives, which Markdown features
@@ -484,6 +510,18 @@ export interface OxContentOptions {
    * @default { enabled: true }
    */
   ssg?: SsgOptions | boolean;
+
+  /**
+   * Write crawl manifests next to generated HTML.
+   *
+   * Off by default. `true` writes `sitemap.xml`, `robots.txt`, and `llms.txt`.
+   * An object enables the feature and overrides only the fields you set.
+   * Requires `ssg.siteUrl`. When that is missing the build continues and a
+   * warning is emitted instead of writing files.
+   *
+   * @default false
+   */
+  siteMaps?: boolean | SiteMapsOptions;
 
   /**
    * Enable GitHub Flavored Markdown extensions.
@@ -583,6 +621,16 @@ export interface OxContentOptions {
   attrs?: boolean | AttrsOptions;
 
   /**
+   * Opt-in `{badge:variant}` inline badges.
+   *
+   * Passing `true` or an options object enables the built-in variants.
+   * Badge text is HTML-escaped. Fenced, indented, and inline code are skipped.
+   *
+   * @default false
+   */
+  badges?: boolean | BadgeOptions;
+
+  /**
    * Opt-in `::: tip` custom containers.
    *
    * GitHub-style `> [!NOTE]` callouts stay available without this option.
@@ -603,6 +651,18 @@ export interface OxContentOptions {
    * @default false
    */
   codeImports?: boolean | CodeImportOptions;
+
+  /**
+   * Inline another Markdown file with `<!-- @include: ./path.md -->`.
+   *
+   * Expansion happens before Markdown is parsed, so included headings and
+   * lists become part of the host document. Relative paths resolve from the
+   * current file. `@/` and `/` resolve from `rootDir`. Paths outside
+   * `rootDir` are rejected and reported as transform errors.
+   *
+   * @default false
+   */
+  includes?: boolean | IncludeOptions;
 
   /**
    * Sanitize rendered HTML with safe defaults or explicit allow lists.
@@ -766,6 +826,7 @@ export interface ResolvedOptions {
   base: string;
   extensions: string[];
   ssg: ResolvedSsgOptions;
+  siteMaps?: ResolvedSiteMapsOptions;
   gfm: boolean;
   footnotes: boolean;
   tables: boolean;
@@ -777,8 +838,10 @@ export interface ResolvedOptions {
   wikiLinks: ResolvedWikiLinkOptions;
   emojiShortcodes: ResolvedEmojiShortcodeOptions;
   attrs: ResolvedAttrsOptions;
+  badges: ResolvedBadgeOptions;
   containers: ResolvedContainerOptions;
   codeImports: ResolvedCodeImportOptions;
+  includes: ResolvedIncludeOptions;
   sanitize: ResolvedSanitizeOptions;
   editThisPage: ResolvedEditThisPageOptions;
   cjkEmphasis: boolean;
@@ -885,6 +948,25 @@ export interface ResolvedBuiltinEmbedOptions {
   twitter: TwitterEmbedOptions | false;
   bluesky: boolean;
   webContainer: boolean;
+}
+
+/**
+ * Options for opt-in `{badge:variant}` inline badges.
+ */
+export interface BadgeOptions {
+  /**
+   * Enable the badge transform when an options object is supplied.
+   *
+   * @default true
+   */
+  enabled?: boolean;
+}
+
+/**
+ * Resolved inline-badge transform options.
+ */
+export interface ResolvedBadgeOptions {
+  enabled: boolean;
 }
 
 /**
@@ -1035,6 +1117,31 @@ export interface CodeImportOptions {
  * Resolved code-import transform options.
  */
 export interface ResolvedCodeImportOptions {
+  enabled: boolean;
+  rootDir?: string;
+}
+
+/**
+ * Options for inlining Markdown files with `<!-- @include: PATH -->`.
+ *
+ * Relative paths resolve from the current file. `@/` and leading `/` resolve
+ * from `rootDir`. After canonicalize, paths outside `rootDir` are rejected.
+ */
+export interface IncludeOptions {
+  /**
+   * Directory used to resolve `@/` and absolute include paths.
+   *
+   * When omitted, includes resolve from the Vite project root.
+   *
+   * @default undefined
+   */
+  rootDir?: string;
+}
+
+/**
+ * Resolved Markdown-include transform options.
+ */
+export interface ResolvedIncludeOptions {
   enabled: boolean;
   rootDir?: string;
 }

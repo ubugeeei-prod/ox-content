@@ -12,6 +12,7 @@ import { createMarkdownEnvironment } from "./environment";
 import { transformMarkdown } from "./transform";
 import { extractDocs, generateMarkdown, writeDocs, resolveDocsOptions } from "./docs";
 import { buildSsg, resolveSsgOptions } from "./ssg";
+import { resolveSiteMapsOptions } from "./site-maps";
 import {
   resolveSearchOptions,
   buildSearchIndex,
@@ -30,6 +31,7 @@ import { resolveI18nOptions, createI18nPlugin } from "./i18n";
 import { isMarkdownFilePath, normalizeMarkdownExtensions } from "./markdown";
 import { generateCollectionsVirtualModule, resolveCollectionsOptions } from "./collections";
 import type { BuiltinPmOptions, OxContentOptions, ResolvedOptions } from "./types";
+import { resolveIncludeOptions } from "./include-options";
 import type { TwitterEmbedOptions } from "./plugins";
 
 export type { OxContentOptions } from "./types";
@@ -44,11 +46,15 @@ export type {
   ResolvedEmojiShortcodeOptions,
   AttrsOptions,
   ResolvedAttrsOptions,
+  BadgeOptions,
+  ResolvedBadgeOptions,
   ContainerOptions,
   ContainerTypeOptions,
   ResolvedContainerOptions,
   CodeImportOptions,
   ResolvedCodeImportOptions,
+  IncludeOptions,
+  ResolvedIncludeOptions,
   SanitizeOptions,
   ResolvedSanitizeOptions,
   EditThisPageOptions,
@@ -70,6 +76,8 @@ export type {
   ResolvedSsgOptions,
   ReaderChromeOptions,
   ResolvedReaderChrome,
+  SiteMapsOptions,
+  ResolvedSiteMapsOptions,
   SearchOptions,
   ResolvedSearchOptions,
   SearchDocument,
@@ -540,6 +548,7 @@ function resolveOptions(options: OxContentOptions): ResolvedOptions {
     base: options.base ?? "/",
     extensions: normalizeMarkdownExtensions(options.extensions),
     ssg: resolveSsgOptions(options.ssg),
+    siteMaps: resolveSiteMapsOptions(options.siteMaps),
     gfm: options.gfm ?? true,
     footnotes: options.footnotes ?? true,
     tables: options.tables ?? true,
@@ -551,8 +560,10 @@ function resolveOptions(options: OxContentOptions): ResolvedOptions {
     wikiLinks: resolveWikiLinkOptions(options.wikiLinks, options.base ?? "/"),
     emojiShortcodes: resolveEmojiShortcodeOptions(options.emojiShortcodes),
     attrs: resolveAttrsOptions(options.attrs),
+    badges: resolveBadgeOptions(options.badges),
     containers: resolveContainerOptions(options.containers),
     codeImports: resolveCodeImportOptions(options.codeImports),
+    includes: resolveIncludeOptions(options.includes),
     sanitize: resolveSanitizeOptions(options.sanitize),
     editThisPage: resolveEditThisPageOptions(options.editThisPage),
     cjkEmphasis: options.cjkEmphasis ?? false,
@@ -648,6 +659,14 @@ function resolveAttrsOptions(options: OxContentOptions["attrs"]): ResolvedOption
   return { enabled: options.enabled ?? true };
 }
 
+export function resolveBadgeOptions(
+  options: OxContentOptions["badges"],
+): ResolvedOptions["badges"] {
+  if (!options) return { enabled: false };
+  if (options === true) return { enabled: true };
+  return { enabled: options.enabled ?? true };
+}
+
 function resolveContainerOptions(
   options: OxContentOptions["containers"],
 ): ResolvedOptions["containers"] {
@@ -663,6 +682,8 @@ function resolveCodeImportOptions(
   if (options === true) return { enabled: true };
   return { enabled: true, rootDir: options.rootDir };
 }
+
+export { resolveIncludeOptions } from "./include-options";
 
 function resolveSanitizeOptions(
   options: OxContentOptions["sanitize"],
@@ -917,6 +938,7 @@ export type {
   MarkdownLintFileOptions as MarkdownLintProjectOptions,
 } from "./lint-files";
 export { buildSsg, resolveSsgOptions, DEFAULT_HTML_TEMPLATE } from "./ssg";
+export { resolveSiteMapsOptions } from "./site-maps";
 export { resolveSearchOptions, buildSearchIndex, writeSearchIndex } from "./search";
 export {
   buildCollectionManifest,

@@ -9,18 +9,20 @@ use ox_content_transform::{
 use crate::{JsSourceOptions, JsSourceOrigin, PreparedSourceResult, TocEntry, TransformResult};
 
 mod async_task;
+mod badge_options;
 mod code_blocks;
 mod embed_types;
 mod feature_options;
 mod transform_options;
 
 pub use async_task::TransformTask;
+pub use badge_options::JsBadgeOptions;
 pub use code_blocks::{JsCodeBlock, JsCodeBlockDiagnostic};
 pub use embed_types::{JsPmOptions, JsPmTransformResult, JsTabsTransformResult, JsYouTubeOptions};
 pub use feature_options::{
     JsAttrsOptions, JsCodeBlockLintOptions, JsCodeImportOptions, JsContainerOptions,
     JsContainerTypeOptions, JsDocsTestOptions, JsEditThisPageOptions, JsEmojiShortcodeOptions,
-    JsMediaEmbedsOptions, JsSanitizeOptions, JsWikiLinkOptions,
+    JsIncludeOptions, JsMediaEmbedsOptions, JsSanitizeOptions, JsWikiLinkOptions,
 };
 pub use transform_options::JsTransformOptions;
 

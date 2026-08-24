@@ -155,8 +155,13 @@ impl<'a> Parser<'a> {
                 Self::try_parse_fenced_code_at(line, trimmed)
             }
             b'<' => {
-                let line = self.line_at(line_start);
-                Self::parse_html_block_start(&line[trimmed_start - line_start..]).is_some()
+                let bytes = self.source.as_bytes();
+                if self.options.mdx && super::mdx_jsx::looks_like_jsx_open(bytes, trimmed_start) {
+                    true
+                } else {
+                    let line = self.line_at(line_start);
+                    Self::parse_html_block_start(&line[trimmed_start - line_start..]).is_some()
+                }
             }
             b'+' | b'0'..=b'9' => {
                 let line = self.line_at(line_start);

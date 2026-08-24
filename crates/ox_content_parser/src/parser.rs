@@ -22,6 +22,7 @@ mod leaf;
 mod line_scan;
 mod list;
 mod list_item;
+mod mdx_jsx;
 mod prepass;
 mod reference;
 mod spans;
@@ -87,7 +88,11 @@ pub struct ParserOptions {
     /// Default: `false`.
     pub cjk_emphasis: bool,
 
-    /// Enable MDX (JSX, ESM, and expressions). Off by default.
+    /// Enable MDX. Off by default.
+    ///
+    /// When set, PascalCase JSX elements parse as [`ox_content_ast::MdxJsxFlowElement`]
+    /// / [`ox_content_ast::MdxJsxTextElement`]. `import` / `export` and
+    /// `{expression}` children are not parsed yet. Lowercase HTML stays HTML.
     ///
     /// Default: `false`.
     pub mdx: bool,

@@ -755,6 +755,44 @@ a:hover {
 .content .ox-container > :last-child {
   margin-bottom: 0;
 }
+.content .ox-badge {
+  --octc-badge-accent: var(--octc-color-primary);
+  display: inline-block;
+  padding: 0.1em 0.45em;
+  border-radius: 999px;
+  font-size: 0.75em;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+  line-height: 1.4;
+  vertical-align: 0.1em;
+  border: 1px solid color-mix(in srgb, var(--octc-badge-accent) 35%, transparent);
+  color: var(--octc-badge-accent);
+  background: color-mix(in srgb, var(--octc-color-bg-alt) 88%, var(--octc-badge-accent) 12%);
+}
+.content .ox-badge--tip {
+  --octc-badge-accent: #0891b2;
+}
+.content .ox-badge--note {
+  --octc-badge-accent: var(--octc-color-primary);
+}
+.content .ox-badge--info {
+  --octc-badge-accent: #2563eb;
+}
+.content .ox-badge--warning {
+  --octc-badge-accent: #d97706;
+}
+.content .ox-badge--danger {
+  --octc-badge-accent: #dc2626;
+}
+.content .ox-badge--success {
+  --octc-badge-accent: #16a34a;
+}
+.content .ox-badge--deprecated {
+  --octc-badge-accent: #7c3aed;
+}
+.content .ox-badge--required {
+  --octc-badge-accent: #c2410c;
+}
 .content code {
   font-family: var(--octc-font-mono);
   font-size: 0.875em;

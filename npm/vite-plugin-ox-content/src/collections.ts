@@ -35,8 +35,14 @@ type NativeTransformOptions = {
   wikiLinks?: { enabled?: boolean; baseUrl?: string };
   emojiShortcodes?: { enabled?: boolean; custom?: Record<string, string> };
   attributes?: { enabled?: boolean };
+  badges?: { enabled?: boolean };
   cjkEmphasis?: boolean;
   codeImports?: { enabled?: boolean; rootDir?: string };
+  includes?: { enabled?: boolean; rootDir?: string };
+  containers?: {
+    enabled?: boolean;
+    types?: Record<string, { title?: string; tag?: string }>;
+  };
   editThisPage?: {
     enabled?: boolean;
     repoUrl?: string;
@@ -167,6 +173,7 @@ function createNativeTransformOptions(options: ResolvedOptions): NativeTransform
         }
       : undefined,
     attributes: options.attrs?.enabled ? { enabled: true } : undefined,
+    badges: options.badges?.enabled ? { enabled: true } : undefined,
     containers: options.containers?.enabled
       ? {
           enabled: true,
@@ -178,6 +185,12 @@ function createNativeTransformOptions(options: ResolvedOptions): NativeTransform
       ? {
           enabled: true,
           rootDir: options.codeImports.rootDir,
+        }
+      : undefined,
+    includes: options.includes?.enabled
+      ? {
+          enabled: true,
+          rootDir: options.includes.rootDir,
         }
       : undefined,
     editThisPage: options.editThisPage?.enabled

@@ -8,10 +8,13 @@ description: Embed Vue, React, or Svelte components in Markdown using island hyd
 Ox Content lets you embed framework components inside Markdown and `.mdx` files.
 It is worth understanding how this works, because it differs from "classic" MDX:
 
-- **`.md` and `.mdx` are parsed identically** — both go through the same Rust
-  Markdown parser (CommonMark + GFM). The parser does **not** parse JSX. The
-  `.mdx` extension is simply recognised as a content file.
-- **Components are resolved by a framework plugin**, not the parser. The
+- **JSX elements parse when MDX is enabled.** With `mdx: true` /
+  `ParserOptions.mdx`, the Rust parser turns PascalCase tags into
+  `MdxJsxFlowElement` / `MdxJsxTextElement` nodes (self-closing or simple
+  open/close, with literal, boolean, and `{expr}` attributes). `.md` stays
+  CommonMark + GFM unless that option is on. `import` / `export` and
+  `{expression}` children are not parsed yet.
+- **Components are resolved by a framework plugin**, not the renderer. The
   React/Vue/Svelte plugins scan the content for PascalCase component tags,
   replace them with **island** placeholders, and hydrate them on the client.
 
@@ -69,10 +72,11 @@ Regular **Markdown** prose.
 </Callout>
 ```
 
-Only tags that start with an uppercase letter are treated as components, so your
-ordinary HTML (`<div>`, `<span>`, …) is left untouched. Tags inside fenced code
-blocks are **not** transformed, so you can document component usage without it
-being executed.
+Only tags that start with an uppercase letter are treated as JSX / components,
+so ordinary HTML (`<div>`, `<span>`, …) stays raw HTML. Tags inside fenced
+code blocks and inline code are **not** components, so you can document
+component usage without it being executed. Spreads, fragments, JSX comments,
+and `import` / `export` are not parsed yet.
 
 ### Props
 
