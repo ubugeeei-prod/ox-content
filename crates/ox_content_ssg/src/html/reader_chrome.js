@@ -6,24 +6,45 @@
   if (reduced) root.classList.add("ox-reader-chrome--reduced-motion");
 
   if (root.hasAttribute("data-ox-copy")) {
+    const resetTimers = new WeakMap();
+    const setCopyState = (button, status, state) => {
+      const previousTimer = resetTimers.get(button);
+      if (previousTimer) clearTimeout(previousTimer);
+
+      const label =
+        state === "copied" ? "Copied" : state === "failed" ? "Copy failed" : "Copy code";
+      if (state) button.dataset.copyState = state;
+      else delete button.dataset.copyState;
+      button.setAttribute("aria-label", label);
+      button.setAttribute("title", label);
+      if (status) status.textContent = state ? label : "";
+
+      if (state) {
+        resetTimers.set(
+          button,
+          setTimeout(() => setCopyState(button, status, null), 1500),
+        );
+      } else {
+        resetTimers.delete(button);
+      }
+    };
+
     document.addEventListener("click", (event) => {
       const button =
         event.target instanceof Element ? event.target.closest("[data-ox-copy]") : null;
       if (!(button instanceof HTMLButtonElement)) return;
-      const pre = button.closest(".ox-code")?.querySelector("pre");
+      const container = button.closest(".ox-code");
+      const pre = container?.querySelector("pre");
+      const status = container?.querySelector("[data-ox-copy-status]");
       const text = pre ? pre.textContent || "" : "";
-      if (!navigator.clipboard?.writeText) return;
+      if (!navigator.clipboard?.writeText) {
+        setCopyState(button, status, "failed");
+        return;
+      }
       navigator.clipboard
         .writeText(text)
-        .then(() => {
-          button.dataset.copied = "true";
-          button.setAttribute("aria-label", "Copied");
-          setTimeout(() => {
-            delete button.dataset.copied;
-            button.setAttribute("aria-label", "Copy code");
-          }, 1500);
-        })
-        .catch(() => {});
+        .then(() => setCopyState(button, status, "copied"))
+        .catch(() => setCopyState(button, status, "failed"));
     });
   }
 

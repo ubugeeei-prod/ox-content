@@ -121,10 +121,17 @@ fn enabled_defaults_emit_copy_external_and_back_to_top() {
     assert!(html.contains(r#"<div class="ox-code">"#), "{html}");
     assert!(
         html.contains(
-            r#"<button type="button" class="ox-copy" data-ox-copy aria-label="Copy code">Copy</button>"#
+            r#"<button type="button" class="ox-copy" data-ox-copy aria-label="Copy code" title="Copy code"></button>"#
         ),
         "{html}"
     );
+    assert!(
+        html.contains(
+            r#"<span class="ox-copy-status" data-ox-copy-status role="status" aria-live="polite"></span>"#
+        ),
+        "{html}"
+    );
+    assert!(!html.contains(">Copy</button>"), "copy control must be icon-only: {html}");
     assert!(html.contains("<pre><code>curl https://example.com/api\n</code></pre>"), "{html}");
     assert!(
         !html.contains("data-ox-copy-text"),
@@ -144,7 +151,7 @@ fn enabled_defaults_emit_copy_external_and_back_to_top() {
 }
 
 #[test]
-fn copy_control_reserves_space_in_plain_and_titled_code_blocks() {
+fn copy_control_uses_inline_clearance_without_wasting_vertical_space() {
     assert!(
         READER_CHROME_CSS.contains("inset-block-start: 0.5rem;")
             && READER_CHROME_CSS.contains("inset-inline-end: 0.5rem;"),
@@ -152,15 +159,42 @@ fn copy_control_reserves_space_in_plain_and_titled_code_blocks() {
     );
     assert!(
         READER_CHROME_CSS.contains(
-            ".content .ox-code > pre:not([data-code-title]) {\n  padding-block-start: 3rem;"
+            ".content .ox-code > pre {\n  margin: 0;\n  padding-inline-end: calc(var(--ox-copy-reserved-inline-size) + 0.5rem);"
         ),
-        "plain code needs a toolbar strip above its first line: {READER_CHROME_CSS}"
+        "code only needs enough inline clearance for the icon: {READER_CHROME_CSS}"
+    );
+    assert!(
+        !READER_CHROME_CSS.contains("padding-block-start: 3rem"),
+        "copy must not push the first code line down: {READER_CHROME_CSS}"
     );
     assert!(
         READER_CHROME_CSS.contains(
             ".content .ox-code > pre[data-code-title]::before {\n  padding-inline-end: var(--ox-copy-reserved-inline-size);"
         ),
-        "a code title must reserve inline space for Copy and Copied: {READER_CHROME_CSS}"
+        "a code title must reserve inline space for the fixed-size icon: {READER_CHROME_CSS}"
+    );
+}
+
+#[test]
+fn copy_control_uses_capability_media_queries_and_stable_status_ui() {
+    assert!(
+        READER_CHROME_CSS.contains("(any-hover: hover) and (any-pointer: fine)"),
+        "hover reveal must be restricted to hover-capable devices: {READER_CHROME_CSS}"
+    );
+    assert!(
+        READER_CHROME_CSS.contains(".ox-code:focus-within > .ox-copy"),
+        "keyboard focus must reveal the control: {READER_CHROME_CSS}"
+    );
+    assert!(
+        READER_CHROME_CSS.contains(".ox-copy::before")
+            && READER_CHROME_CSS.contains(".ox-copy-status"),
+        "the control needs a visible icon and a non-visual status region: {READER_CHROME_CSS}"
+    );
+    assert!(
+        READER_CHROME_JS.contains("data-ox-copy-status")
+            && READER_CHROME_JS.contains("Copy failed")
+            && !READER_CHROME_JS.contains("textContent = \"Copy"),
+        "copy feedback must not replace the fixed-size icon: {READER_CHROME_JS}"
     );
 }
 
@@ -237,8 +271,8 @@ fn reduced_motion_class_and_css_are_present() {
     assert!(READER_CHROME_CSS.contains("prefers-reduced-motion"), "{READER_CHROME_CSS}");
     assert!(READER_CHROME_CSS.contains("ox-reader-chrome--reduced-motion"), "{READER_CHROME_CSS}");
     assert!(
-        !READER_CHROME_CSS.contains("box-shadow"),
-        "back-to-top must stay flat like the rest of the chrome: {READER_CHROME_CSS}"
+        !READER_CHROME_CSS.contains("box-shadow") && !READER_CHROME_CSS.contains("linear-gradient"),
+        "reader chrome must stay flat, without shadows or gradients: {READER_CHROME_CSS}"
     );
     assert!(html.contains("prefers-reduced-motion"), "{html}");
     assert!(html.contains("ox-reader-chrome--reduced-motion"), "{html}");

@@ -40,9 +40,12 @@ impl ReaderChrome {
 
 pub(super) const READER_CHROME_CSS: &str = include_str!("reader_chrome.css");
 pub(super) const READER_CHROME_JS: &str = include_str!("reader_chrome.js");
-
-const COPY_BUTTON: &str =
-    "<button type=\"button\" class=\"ox-copy\" data-ox-copy aria-label=\"Copy code\">Copy</button>";
+const COPY_BUTTON: &str = concat!(
+    "<button type=\"button\" class=\"ox-copy\" data-ox-copy ",
+    "aria-label=\"Copy code\" title=\"Copy code\"></button>",
+    "<span class=\"ox-copy-status\" data-ox-copy-status role=\"status\" ",
+    "aria-live=\"polite\"></span>"
+);
 const EXTERNAL_ICON: &str = "<span class=\"ox-external-icon\" aria-hidden=\"true\"></span>";
 
 /// Rewrites article HTML. Fenced code is never treated as a link target.
