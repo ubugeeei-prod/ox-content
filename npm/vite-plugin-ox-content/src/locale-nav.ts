@@ -13,6 +13,8 @@ const localizedNavTitle: unique symbol = Symbol("ox-content.localized-nav-title"
 export interface LocalePageRef {
   path: string;
   href: string;
+  /** Alternate source/permalink paths that resolve to this canonical page. */
+  aliases?: readonly string[];
 }
 
 export interface LocalizeNavOptions {
@@ -291,7 +293,17 @@ function pageLookup(options: LocalizeNavOptions): Map<string, LocalePageRef> | u
   if (options.hideDefaultLocale && options.locale === options.defaultLocale) {
     return undefined;
   }
-  return new Map(options.pages.map((page) => [normalizeLocalePath(page.path), page]));
+  const lookup = new Map<string, LocalePageRef>();
+  for (const page of options.pages) {
+    lookup.set(normalizeLocalePath(page.path), page);
+    for (const alias of page.aliases ?? []) {
+      const key = normalizeLocalePath(alias);
+      if (!lookup.has(key)) {
+        lookup.set(key, page);
+      }
+    }
+  }
+  return lookup;
 }
 
 function stripLocalePrefix(

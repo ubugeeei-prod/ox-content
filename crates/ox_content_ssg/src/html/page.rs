@@ -178,6 +178,9 @@ pub struct SsgConfig {
     pub site_name: String,
     /// Base URL path.
     pub base: String,
+    /// Optional site-root href for breadcrumbs (for example, a version root).
+    #[serde(default)]
+    pub breadcrumb_root_href: Option<String>,
     /// OG image URL.
     pub og_image: Option<String>,
     /// Theme configuration.

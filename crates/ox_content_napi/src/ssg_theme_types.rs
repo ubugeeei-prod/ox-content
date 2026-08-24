@@ -182,6 +182,8 @@ pub struct JsSsgConfig {
     pub site_name: String,
     /// Base URL path.
     pub base: String,
+    /// Optional site-root href for breadcrumbs.
+    pub breadcrumb_root_href: Option<String>,
     /// OG image URL.
     pub og_image: Option<String>,
     /// Theme configuration.

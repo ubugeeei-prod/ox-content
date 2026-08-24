@@ -23,6 +23,7 @@ fn test_generate_html_with_theme() {
     let config = SsgConfig {
         site_name: "Themed Site".to_string(),
         base: "/".to_string(),
+        breadcrumb_root_href: None,
         og_image: None,
         locale: None,
         available_locales: None,
@@ -69,6 +70,7 @@ fn test_generate_html_with_custom_social_link() {
     let config = SsgConfig {
         site_name: "Social Site".to_string(),
         base: "/".to_string(),
+        breadcrumb_root_href: None,
         og_image: None,
         locale: None,
         available_locales: None,

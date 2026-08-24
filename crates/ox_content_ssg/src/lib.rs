@@ -48,6 +48,7 @@
 //! let config = SsgConfig {
 //!     site_name: "My Docs".to_string(),
 //!     base: "/docs/".to_string(),
+//!     breadcrumb_root_href: None,
 //!     og_image: None,
 //!     theme: None,
 //!     pagination: false,

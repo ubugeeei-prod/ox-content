@@ -52,6 +52,7 @@ fn config(theme: Option<ThemeConfig>, page_chrome: bool) -> SsgConfig {
     SsgConfig {
         site_name: "Docs".to_string(),
         base: "/docs/".to_string(),
+        breadcrumb_root_href: None,
         og_image: None,
         theme,
         locale: None,

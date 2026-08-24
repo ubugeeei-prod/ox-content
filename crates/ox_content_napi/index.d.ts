@@ -1533,6 +1533,8 @@ export interface JsSsgConfig {
   siteName: string
   /** Base URL path. */
   base: string
+  /** Optional site-root href for breadcrumbs. */
+  breadcrumbRootHref?: string
   /** OG image URL. */
   ogImage?: string
   /** Theme configuration. */

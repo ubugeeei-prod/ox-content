@@ -45,6 +45,7 @@ fn config() -> SsgConfig {
     SsgConfig {
         site_name: "Docs".to_string(),
         base: "/".to_string(),
+        breadcrumb_root_href: None,
         og_image: None,
         theme: None,
         locale: None,

@@ -206,6 +206,7 @@ pub fn generate_ssg_html(
     let ssg_config = ox_content_ssg::SsgConfig {
         site_name: config.site_name,
         base: config.base,
+        breadcrumb_root_href: config.breadcrumb_root_href,
         og_image: config.og_image,
         theme: convert_theme_config(config.theme),
         locale: config.locale,

@@ -17,7 +17,6 @@ fn test_generate_html() {
         breadcrumbs: None,
         chrome: PageChromeFlags::default(),
     };
-
     let nav_groups = vec![NavGroup {
         title: "Guide".to_string(),
         items: vec![NavItem {
@@ -31,10 +30,10 @@ fn test_generate_html() {
         collapsed: None,
         sticky_collapsed: None,
     }];
-
     let config = SsgConfig {
         site_name: "Test Site".to_string(),
         base: "/docs/".to_string(),
+        breadcrumb_root_href: None,
         og_image: None,
         theme: None,
         locale: None,
@@ -47,7 +46,6 @@ fn test_generate_html() {
         a11y: A11y::default(),
         page_chrome: false,
     };
-
     let html = generate_html(&page_data, &nav_groups, &config);
 
     insta::assert_snapshot!(super::snapshot_text(&html));
@@ -278,6 +276,7 @@ fn test_generate_html_without_toc_omits_outline() {
     let config = SsgConfig {
         site_name: "Test Site".to_string(),
         base: "/".to_string(),
+        breadcrumb_root_href: None,
         og_image: None,
         theme: None,
         locale: None,
@@ -305,6 +304,7 @@ fn test_html_locale_attrs_use_current_locale_and_direction() {
     let config = SsgConfig {
         site_name: "Localized".to_string(),
         base: "/".to_string(),
+        breadcrumb_root_href: None,
         og_image: None,
         theme: None,
         locale: Some("ar".to_string()),

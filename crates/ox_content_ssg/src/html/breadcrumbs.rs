@@ -42,7 +42,8 @@ fn breadcrumbs_enabled(page: &PageData, config: &SsgConfig) -> bool {
 }
 
 fn site_root_crumb(config: &SsgConfig) -> BreadcrumbCrumb {
-    let href = format!("{}index.html", config.base);
+    let href =
+        config.breadcrumb_root_href.clone().unwrap_or_else(|| format!("{}index.html", config.base));
     BreadcrumbCrumb {
         title: config.site_name.clone(),
         href: is_safe_href(&href).then_some(href),

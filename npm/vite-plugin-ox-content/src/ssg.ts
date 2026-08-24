@@ -68,6 +68,15 @@ import {
   snapshotEntries,
   writeSnapshotSearchIndex,
 } from "./versions";
+import {
+  createVersionNavigationContext,
+  rewriteVersionedHeaderNavItems,
+  rewriteVersionedHref,
+  rewriteVersionedNavGroups,
+  unversionedPath,
+  versionedLocaleRoots,
+  type VersionNavigationContext,
+} from "./version-navigation";
 
 /**
  * Navigation item for SSG.
@@ -435,6 +444,7 @@ export async function generateHtmlPage(
   a11y: ResolvedA11y = false,
   team: ResolvedTeamOptions = { enabled: false, members: [] },
   pageChrome: boolean = false,
+  breadcrumbRootHref?: string,
 ): Promise<string> {
   const mod = await importNapiModule();
 
@@ -508,6 +518,7 @@ export async function generateHtmlPage(
     {
       siteName,
       base,
+      breadcrumbRootHref,
       ogImage,
       theme: themeForRust,
       locale,
@@ -708,6 +719,7 @@ interface BuildSsgContext {
   base: string;
   siteName: string;
   navItems: NavGroup[];
+  versionNavigation?: VersionNavigationContext;
   shouldGenerateOgImages: boolean;
   napi?: Awaited<ReturnType<typeof importNapiModule>>;
 }
@@ -1190,11 +1202,14 @@ async function renderSsgPage(
   // A theme component owns the whole document, so it comes before both the
   // bare shell and the built-in renderer.
   if (context.ssgOptions.render) {
+    const nav = context.versionNavigation
+      ? rewriteVersionedNavGroups(context.navItems, context.versionNavigation)
+      : context.navItems;
     return renderPage(toThemePageData(pageResult), {
       theme: context.ssgOptions.render,
       siteName: context.siteName,
       base: context.base,
-      nav: context.navItems,
+      nav,
       pages: allPageResults.map(toThemePageData),
     });
   }
@@ -1217,13 +1232,23 @@ async function renderSsgPage(
   }
 
   const pageData = createSsgPageData(pageResult);
+  const versionNavigation = context.versionNavigation;
+  if (versionNavigation) {
+    pageData.prev = rewritePagerOverride(pageData.prev, versionNavigation);
+    pageData.next = rewritePagerOverride(pageData.next, versionNavigation);
+  }
 
   const i18n = context.options.i18n;
-  const pages = allPageResults.map((result) => ({
-    path: result.routePaths.urlPath,
-    href: result.routePaths.href,
-  }));
-  const locale = getPageLocale(pageData.path, i18n);
+  const pages = versionNavigation
+    ? versionNavigation.pages
+    : allPageResults.map((result) => ({
+        path: result.routePaths.urlPath,
+        href: result.routePaths.href,
+      }));
+  const localePath = versionNavigation
+    ? unversionedPath(pageData.path, versionNavigation)
+    : pageData.path;
+  const locale = getPageLocale(localePath, i18n);
   const localeNav =
     i18n && locale
       ? {
@@ -1235,8 +1260,13 @@ async function renderSsgPage(
           base: context.base,
         }
       : undefined;
-  const navItems = localeNav ? localizeNavGroups(context.navItems, localeNav) : context.navItems;
-  const theme = context.ssgOptions.theme
+  const localizedNav = localeNav
+    ? localizeNavGroups(context.navItems, localeNav)
+    : context.navItems;
+  const navItems = versionNavigation
+    ? rewriteVersionedNavGroups(localizedNav, versionNavigation)
+    : localizedNav;
+  const localizedTheme = context.ssgOptions.theme
     ? localeNav
       ? {
           ...context.ssgOptions.theme,
@@ -1244,15 +1274,30 @@ async function renderSsgPage(
         }
       : context.ssgOptions.theme
     : undefined;
+  const theme =
+    localizedTheme && versionNavigation
+      ? {
+          ...localizedTheme,
+          nav: rewriteVersionedHeaderNavItems(localizedTheme.nav, versionNavigation),
+        }
+      : localizedTheme;
   const localePaths =
     context.ssgOptions.localeSwitcher && i18n
       ? buildLocalePaths({
-          currentPath: pageData.path,
+          currentPath: localePath,
           locales: i18n.locales,
           defaultLocale: i18n.defaultLocale,
           hideDefaultLocale: i18n.hideDefaultLocale,
           pages,
           base: context.base,
+          roots: versionNavigation
+            ? versionedLocaleRoots(
+                versionNavigation,
+                i18n.locales,
+                i18n.defaultLocale,
+                i18n.hideDefaultLocale,
+              )
+            : undefined,
         })
       : undefined;
 
@@ -1273,7 +1318,15 @@ async function renderSsgPage(
     context.ssgOptions.a11y,
     context.ssgOptions.team ?? { enabled: false, members: [] },
     context.ssgOptions.pageChrome,
+    versionNavigation?.root.href,
   );
+}
+
+function rewritePagerOverride(
+  pager: SsgPagerOverride | undefined,
+  context: VersionNavigationContext,
+): SsgPagerOverride | undefined {
+  return pager?.href ? { ...pager, href: rewriteVersionedHref(pager.href, context) } : pager;
 }
 
 /** Maps an internal page result onto the theme renderer's page shape. */
@@ -1434,14 +1487,38 @@ async function applyDocumentationVersions(
       files,
     );
     const snapCollected = await collectPageResults(snapContext, files);
+    applyPermalinkRoutes(snapContext, snapCollected);
     errors.push(...snapCollected.errors);
+    const { outputPages, listedPages } = applyPublishState(snapContext, snapCollected);
+    remapPermalinkNav(snapContext, listedPages);
+    const unversionedRoutes = new Map(
+      snapCollected.pageResults.map((page) => [page.inputPath, { ...page.routePaths }]),
+    );
     for (const page of snapCollected.pageResults) {
       page.routePaths = {
         ...page.routePaths,
         ...prefixRoutePaths(page.routePaths, entry.prefix, context.outDir, context.base),
       };
     }
-    const { outputPages } = applyPublishState(snapContext, snapCollected);
+    snapContext.versionNavigation = createVersionNavigationContext({
+      prefix: entry.prefix,
+      base: context.base,
+      pages: listedPages.flatMap((page) => {
+        const route = unversionedRoutes.get(page.inputPath);
+        return route
+          ? [
+              {
+                path: route.urlPath,
+                versionedPath: page.routePaths.urlPath,
+                href: page.routePaths.href,
+                sourcePath: getUrlPath(page.inputPath, snapContext.srcDir),
+                aliases: pageAliases(page.frontmatter),
+              },
+            ]
+          : [];
+      }),
+      redirects: snapContext.options.redirects?.map,
+    });
     const snapPages = await generateHtmlPages(snapContext, outputPages, snapCollected, errors);
     generatedPages.push(...snapPages);
     if (context.options.search?.enabled) {
@@ -1461,6 +1538,13 @@ async function applyDocumentationVersions(
     }
   }
   decorateVersionedPages(generatedPages, versions, context.outDir, context.base);
+}
+
+function pageAliases(frontmatter: Record<string, unknown>): string[] {
+  const aliases = frontmatter.aliases;
+  const values = typeof aliases === "string" ? [aliases] : Array.isArray(aliases) ? aliases : [];
+  const resolved = values.filter((value): value is string => typeof value === "string");
+  return typeof frontmatter.redirect === "string" ? [...resolved, frontmatter.redirect] : resolved;
 }
 
 async function writeGeneratedPages(

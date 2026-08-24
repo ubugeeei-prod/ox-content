@@ -63,6 +63,7 @@ fn config(breadcrumbs: bool) -> SsgConfig {
     SsgConfig {
         site_name: "Docs".to_string(),
         base: "/docs/".to_string(),
+        breadcrumb_root_href: None,
         og_image: None,
         theme: None,
         locale: None,
@@ -75,6 +76,16 @@ fn config(breadcrumbs: bool) -> SsgConfig {
         a11y: A11y::default(),
         page_chrome: false,
     }
+}
+
+#[test]
+fn breadcrumb_root_can_stay_inside_a_documentation_version() {
+    let mut config = config(true);
+    config.breadcrumb_root_href = Some("/docs/2.90/".to_string());
+    let html = generate_html(&page("features/breadcrumbs"), &nested_nav(), &config);
+    let trail = breadcrumbs_html(&html).expect("breadcrumbs");
+    assert!(trail.contains(r#"href="/docs/2.90/""#), "{trail}");
+    assert!(!trail.contains(r#"href="/docs/index.html""#), "{trail}");
 }
 
 fn breadcrumbs_html(html: &str) -> Option<&str> {
