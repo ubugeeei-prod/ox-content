@@ -32,10 +32,10 @@ oxContent({
 });
 ```
 
-| Option       | Type                             | Default |
-| ------------ | -------------------------------- | ------- |
-| `publishState` | `boolean` / `PublishStateOptions` | `false` |
-| `now`        | `string` (ISO-8601)              | system clock |
+| Option         | Type                              | Default      |
+| -------------- | --------------------------------- | ------------ |
+| `publishState` | `boolean` / `PublishStateOptions` | `false`      |
+| `now`          | `string` (ISO-8601)               | system clock |
 
 The dev server keeps draft and not-yet-scheduled pages visible so you can
 preview them. Production HTML, search, and sitemaps omit those pages.
@@ -49,13 +49,13 @@ draft: true
 ---
 ```
 
-| Field       | Production result                                      |
-| ----------- | ------------------------------------------------------ |
-| `draft: true` | No HTML, nav, search, or sitemap                     |
-| `unlisted: true` | HTML is written; omitted from nav, search, sitemap |
-| `scheduled` | Unpublished until that instant                         |
-| `date`      | Same as `scheduled` when the value is a valid timestamp |
-| `expiry`    | Unpublished after that instant                         |
+| Field            | Production result                                       |
+| ---------------- | ------------------------------------------------------- |
+| `draft: true`    | No HTML, nav, search, or sitemap                        |
+| `unlisted: true` | HTML is written; omitted from nav, search, sitemap      |
+| `scheduled`      | Unpublished until that instant                          |
+| `date`           | Same as `scheduled` when the value is a valid timestamp |
+| `expiry`         | Unpublished after that instant                          |
 
 `scheduled` wins over `date` when both are set. Only JSON `true` counts as
 `draft` or `unlisted`.
