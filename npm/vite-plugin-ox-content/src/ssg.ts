@@ -29,6 +29,7 @@ import { normalizeVitePressFrontmatter } from "./vitepress";
 import { renderPage } from "./theme-renderer";
 import type { PageData as ThemePageData } from "./theme-renderer";
 import { writeSiteMapFiles } from "./site-maps";
+import { writeRedirectFiles } from "./redirects";
 
 /**
  * Navigation item for SSG.
@@ -1005,6 +1006,14 @@ function toThemePageData(pageResult: PageProcessResult): ThemePageData {
   };
 }
 
+/** Turns an SSG `urlPath` (`guide` or `/`) into a same-origin dest (`/guide`). */
+function sitePathFromUrlPath(urlPath: string): string {
+  if (!urlPath || urlPath === "/") {
+    return "/";
+  }
+  return urlPath.startsWith("/") ? urlPath : `/${urlPath}`;
+}
+
 /**
  * Absolute URL of a page, or `undefined` when `ssg.siteUrl` is not set.
  *
@@ -1088,4 +1097,15 @@ async function writeGeneratedPages(
     errors.push(siteMaps.warning);
     console.warn(siteMaps.warning);
   }
+
+  const redirects = await writeRedirectFiles({
+    outDir: context.outDir,
+    options: context.options.redirects,
+    pages: pageResults.map((page) => ({
+      dest: sitePathFromUrlPath(page.routePaths.urlPath),
+      aliases: page.frontmatter.aliases,
+      redirect: page.frontmatter.redirect,
+    })),
+  });
+  generatedFiles.push(...redirects.files);
 }

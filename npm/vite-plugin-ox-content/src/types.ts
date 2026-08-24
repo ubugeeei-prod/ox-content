@@ -395,6 +395,44 @@ export interface ResolvedSiteMapsOptions {
 }
 
 /**
+ * Opt-in static redirects, aliases, and path rewrites.
+ *
+ * A path map such as `{ "/old-guide": "/guide" }` is also accepted in place
+ * of this object and enables the feature with that map.
+ */
+export interface RedirectsOptions {
+  /**
+   * Enable the feature when an options object is supplied.
+   * @default true
+   */
+  enabled?: boolean;
+  /**
+   * Old path to new path. Destinations must be same-origin (`/` but not `//`).
+   * @default {}
+   */
+  map?: Record<string, string>;
+  /**
+   * Write a Netlify-style `_redirects` file next to the HTML pages.
+   * @default false
+   */
+  netlify?: boolean;
+  /**
+   * Alias for `netlify`.
+   * @default false
+   */
+  writeNetlify?: boolean;
+}
+
+/**
+ * Resolved redirect options.
+ */
+export interface ResolvedRedirectsOptions {
+  enabled: boolean;
+  map: Record<string, string>;
+  netlify: boolean;
+}
+
+/**
  * Options for the core `oxContent()` Vite plugin.
  *
  * The top-level options describe where content lives, which Markdown features
@@ -469,6 +507,19 @@ export interface OxContentOptions {
    * @default false
    */
   siteMaps?: boolean | SiteMapsOptions;
+
+  /**
+   * Write static HTML redirect pages for frontmatter aliases and a config map.
+   *
+   * Off by default. `true` or `{}` enables empty defaults. A path map such as
+   * `{ "/old-guide": "/guide" }` enables the feature with that map. Destinations
+   * must be same-origin paths (`/` but not `//`); `javascript:`, `data:`, and
+   * absolute URLs are ignored. Overlapping sources last-win after trailing
+   * slashes are folded (`/old` and `/old/` are the same source).
+   *
+   * @default false
+   */
+  redirects?: boolean | RedirectsOptions | Record<string, string>;
 
   /**
    * Enable GitHub Flavored Markdown extensions.
@@ -785,6 +836,7 @@ export interface ResolvedOptions {
   extensions: string[];
   ssg: ResolvedSsgOptions;
   siteMaps?: ResolvedSiteMapsOptions;
+  redirects?: ResolvedRedirectsOptions;
   gfm: boolean;
   footnotes: boolean;
   tables: boolean;

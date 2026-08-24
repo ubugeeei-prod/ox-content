@@ -106,6 +106,7 @@ export default defineConfig(({ mode }) => {
                       { text: "Site Generation", link: "/built-in/site-generation.md" },
                       { text: "Previous / Next", link: "/built-in/pagination.md" },
                       { text: "Sitemap / robots / llms.txt", link: "/built-in/site-maps.md" },
+                      { text: "Redirects and aliases", link: "/built-in/redirects.md" },
                     ],
                   },
                   { text: "Theming", link: "/theming.md" },

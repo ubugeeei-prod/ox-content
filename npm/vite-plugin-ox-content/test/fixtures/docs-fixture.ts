@@ -108,6 +108,7 @@ export function createDocsResolvedOptions(
       pagination: false,
     },
     siteMaps: { enabled: false, robots: true, llms: true },
+    redirects: { enabled: false, map: {}, netlify: false },
     gfm: true,
     footnotes: true,
     tables: true,
