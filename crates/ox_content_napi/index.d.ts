@@ -1902,12 +1902,6 @@ export interface JsTransformOptions {
    */
   includes?: JsIncludeOptions
   /**
-   * Opt-in `::: card` / `::: link-card` / `::: card-grid` blocks.
-   *
-   * Default: disabled.
-   */
-  cards?: JsCardOptions
-  /**
    * Opt-in `::: steps` ordered lists.
    *
    * Default: disabled.
@@ -1925,6 +1919,12 @@ export interface JsTransformOptions {
    * Default: disabled.
    */
   images?: JsImageOptions
+  /**
+   * Opt-in `::: card` / `::: link-card` / `::: card-grid` blocks.
+   *
+   * Default: disabled.
+   */
+  cards?: JsCardOptions
 }
 
 /** Type parameter documentation (`<T extends C = D>`) used by generated API docs. */
