@@ -61,7 +61,7 @@ describe("proxy", () => {
     const calls: Array<{ url: string; body: string; type: string | undefined }> = [];
     globalThis.fetch = (async (url, init) => {
       calls.push({
-        url: String(url),
+        url: requestUrl(url),
         body: decodeBody(init?.body),
         type: new Headers(init?.headers).get("content-type") ?? undefined,
       });
@@ -72,7 +72,12 @@ describe("proxy", () => {
     }) as typeof fetch;
 
     const res = response();
-    await proxy(request(JSON.stringify({ code: "fn main() {}" })), res, "https://play.rust-lang.org/execute", "application/json");
+    await proxy(
+      request(JSON.stringify({ code: "fn main() {}" })),
+      res,
+      "https://play.rust-lang.org/execute",
+      "application/json",
+    );
     expect(res.statusCode).toBe(200);
     expect(res.state.body).toBe(JSON.stringify({ success: true }));
     expect(res.state.headers["content-type"]).toBe("application/json");
@@ -92,7 +97,12 @@ describe("proxy", () => {
       return new Response("nope");
     }) as typeof fetch;
     const res = response();
-    await proxy(request("{}", "GET"), res, "https://play.golang.org/compile", "application/x-www-form-urlencoded");
+    await proxy(
+      request("{}", "GET"),
+      res,
+      "https://play.golang.org/compile",
+      "application/x-www-form-urlencoded",
+    );
     expect(called).toBe(false);
     expect(res.statusCode).toBe(405);
     expect(JSON.parse(res.state.body)).toEqual({ error: "Code Play proxy only accepts POST." });
@@ -165,6 +175,19 @@ describe("writeProxyError", () => {
   });
 });
 
+function requestUrl(url: unknown): string {
+  if (typeof url === "string") {
+    return url;
+  }
+  if (url instanceof URL) {
+    return url.href;
+  }
+  if (url instanceof Request) {
+    return url.url;
+  }
+  return "";
+}
+
 function decodeBody(body: unknown): string {
   if (typeof body === "string") {
     return body;
@@ -172,7 +195,7 @@ function decodeBody(body: unknown): string {
   if (body instanceof Uint8Array) {
     return Buffer.from(body).toString("utf8");
   }
-  return String(body);
+  return "";
 }
 
 function request(body: string, method = "POST"): IncomingMessage {
@@ -190,7 +213,7 @@ function response(): ServerResponse & { state: { body: string; headers: Record<s
       state.headers[String(name).toLowerCase()] = String(value);
     },
     end(chunk?: unknown) {
-      state.body = chunk == null ? "" : String(chunk);
+      state.body = typeof chunk === "string" ? chunk : "";
     },
   };
   return res as unknown as ServerResponse & { state: typeof state };

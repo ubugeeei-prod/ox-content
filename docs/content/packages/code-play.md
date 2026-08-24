@@ -110,11 +110,11 @@ JavaScript and TypeScript run locally in `node:vm` or a browser iframe.
 
 Vite **dev server** only. `codePlay({ proxy: true })` (the default) mounts:
 
-| Path | Forwards to |
-| ---- | ----------- |
-| `POST /__ox-code-play/rust` | `endpoints.rust` (default `https://play.rust-lang.org/execute`) |
-| `POST /__ox-code-play/go` | `endpoints.go` (default `https://play.golang.org/compile`) |
-| `POST /__ox-code-play/typecheck` | local `tsgo` (no remote compiler) |
+| Path                             | Forwards to                                                     |
+| -------------------------------- | --------------------------------------------------------------- |
+| `POST /__ox-code-play/rust`      | `endpoints.rust` (default `https://play.rust-lang.org/execute`) |
+| `POST /__ox-code-play/go`        | `endpoints.go` (default `https://play.golang.org/compile`)      |
+| `POST /__ox-code-play/typecheck` | local `tsgo` (no remote compiler)                               |
 
 These routes accept **POST** only, cap the body at 256 KiB, and refuse
 non-`http(s)` destinations or URLs with embedded credentials. Upstream
