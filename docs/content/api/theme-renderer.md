@@ -103,7 +103,8 @@
 <div class="ox-api-entry__example-heading">Example 1</div>
 <pre><code class="language-tsx">import { createTheme } from &#39;@ox-content/vite-plugin&#39;;
 import { DefaultLayout } from &#39;./layouts/Default&#39;;
-import { EntryLayout } from &#39;./layouts/Entry&#39;;&#10;
+import { EntryLayout } from &#39;./layouts/Entry&#39;;
+
 export default createTheme({
   layouts: {
     default: DefaultLayout,

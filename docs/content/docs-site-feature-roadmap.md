@@ -24,7 +24,7 @@ Already tracked elsewhere:
 | ----------------------------------- | -------------------------------------------------------------- | ------- |
 | Custom containers (`::: tip`)       | [#665](https://github.com/ubugeeei-prod/ox-content/issues/665) | planned |
 | Math (inline `$` / block `$$`)      | [#666](https://github.com/ubugeeei-prod/ox-content/issues/666) | planned |
-| Markdown file includes              | [#667](https://github.com/ubugeeei-prod/ox-content/issues/667) | planned |
+| Markdown file includes              | [#667](https://github.com/ubugeeei-prod/ox-content/issues/667) | shipped |
 | Figures, captions, and lazy images  | [#668](https://github.com/ubugeeei-prod/ox-content/issues/668) | planned |
 | Inline badges                       | [#669](https://github.com/ubugeeei-prod/ox-content/issues/669) | planned |
 | File tree blocks                    | [#670](https://github.com/ubugeeei-prod/ox-content/issues/670) | planned |

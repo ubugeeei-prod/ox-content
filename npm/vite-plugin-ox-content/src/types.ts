@@ -552,6 +552,18 @@ export interface OxContentOptions {
   codeImports?: boolean | CodeImportOptions;
 
   /**
+   * Inline another Markdown file with `<!-- @include: ./path.md -->`.
+   *
+   * Expansion happens before Markdown is parsed, so included headings and
+   * lists become part of the host document. Relative paths resolve from the
+   * current file. `@/` and `/` resolve from `rootDir`. Paths outside
+   * `rootDir` are rejected and reported as transform errors.
+   *
+   * @default false
+   */
+  includes?: boolean | IncludeOptions;
+
+  /**
    * Sanitize rendered HTML with safe defaults or explicit allow lists.
    *
    * Enable this for untrusted Markdown. The default allow lists are conservative;
@@ -726,6 +738,7 @@ export interface ResolvedOptions {
   attrs: ResolvedAttrsOptions;
   containers: ResolvedContainerOptions;
   codeImports: ResolvedCodeImportOptions;
+  includes: ResolvedIncludeOptions;
   sanitize: ResolvedSanitizeOptions;
   editThisPage: ResolvedEditThisPageOptions;
   cjkEmphasis: boolean;
@@ -982,6 +995,31 @@ export interface CodeImportOptions {
  * Resolved code-import transform options.
  */
 export interface ResolvedCodeImportOptions {
+  enabled: boolean;
+  rootDir?: string;
+}
+
+/**
+ * Options for inlining Markdown files with `<!-- @include: PATH -->`.
+ *
+ * Relative paths resolve from the current file. `@/` and leading `/` resolve
+ * from `rootDir`. After canonicalize, paths outside `rootDir` are rejected.
+ */
+export interface IncludeOptions {
+  /**
+   * Directory used to resolve `@/` and absolute include paths.
+   *
+   * When omitted, includes resolve from the Vite project root.
+   *
+   * @default undefined
+   */
+  rootDir?: string;
+}
+
+/**
+ * Resolved Markdown-include transform options.
+ */
+export interface ResolvedIncludeOptions {
   enabled: boolean;
   rootDir?: string;
 }

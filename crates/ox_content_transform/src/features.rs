@@ -16,6 +16,7 @@ mod containers;
 mod edit;
 mod emoji;
 mod emoji_shortcodes;
+mod includes;
 mod segments;
 mod wiki;
 
@@ -28,6 +29,7 @@ use code_imports::ResolvedCodeImportOptions;
 use containers::ResolvedContainerOptions;
 use edit::append_edit_this_page;
 use emoji_shortcodes::replace_emoji_shortcodes;
+use includes::ResolvedIncludeOptions;
 use segments::transform_markdown_text_segments;
 use wiki::replace_wiki_links;
 
@@ -37,6 +39,7 @@ pub struct TransformFeatureOptions {
     emoji_shortcodes: Option<ResolvedEmojiShortcodeOptions>,
     code_imports: Option<ResolvedCodeImportOptions>,
     containers: Option<ResolvedContainerOptions>,
+    includes: Option<ResolvedIncludeOptions>,
     attributes: bool,
     edit_this_page: Option<ResolvedEditThisPageOptions>,
 }
@@ -78,12 +81,21 @@ impl TransformFeatureOptions {
         let code_imports = code_imports::resolve(options.code_imports.as_ref(), source_path);
         let attributes = resolve_attrs(options.attributes.as_ref());
         let containers = containers::resolve(options.containers.as_ref());
+        let includes = includes::resolve(options.includes.as_ref(), source_path);
         let edit_this_page = resolve_edit_this_page(
             options.edit_this_page.as_ref(),
             source_path.unwrap_or_default(),
         );
 
-        Self { wiki_links, emoji_shortcodes, code_imports, containers, attributes, edit_this_page }
+        Self {
+            wiki_links,
+            emoji_shortcodes,
+            code_imports,
+            containers,
+            includes,
+            attributes,
+            edit_this_page,
+        }
     }
 
     pub fn has_preprocess(&self) -> bool {
@@ -91,6 +103,7 @@ impl TransformFeatureOptions {
             || self.emoji_shortcodes.is_some()
             || self.code_imports.is_some()
             || self.containers.is_some()
+            || self.includes.is_some()
     }
 
     pub fn has_postprocess(&self) -> bool {
@@ -108,6 +121,13 @@ pub fn preprocess_markdown<'a>(
 
     let mut current = Cow::Borrowed(source);
     let mut errors = Vec::new();
+
+    if let Some(includes) = &options.includes
+        && current.contains("<!--")
+    {
+        let replaced = includes::transform(&current, includes, &mut errors);
+        current = Cow::Owned(replaced);
+    }
 
     if let Some(code_imports) = &options.code_imports
         && current.contains("<<<")

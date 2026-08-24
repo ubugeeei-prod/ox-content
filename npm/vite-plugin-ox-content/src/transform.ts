@@ -268,6 +268,11 @@ interface JsTransformOptions {
     rootDir?: string;
   };
 
+  includes?: {
+    enabled?: boolean;
+    rootDir?: string;
+  };
+
   sanitize?: JsSanitizeOptions;
 
   editThisPage?: {
@@ -522,6 +527,12 @@ export async function transformMarkdown(
       ? {
           enabled: true,
           rootDir: options.codeImports.rootDir,
+        }
+      : undefined,
+    includes: options.includes?.enabled
+      ? {
+          enabled: true,
+          rootDir: options.includes.rootDir,
         }
       : undefined,
     // Sanitize once at the end of the JS pipeline so opt-in embeds can be

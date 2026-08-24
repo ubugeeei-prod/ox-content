@@ -20,7 +20,7 @@ pub use embed_types::{JsPmOptions, JsPmTransformResult, JsTabsTransformResult, J
 pub use feature_options::{
     JsAttrsOptions, JsCodeBlockLintOptions, JsCodeImportOptions, JsContainerOptions,
     JsContainerTypeOptions, JsDocsTestOptions, JsEditThisPageOptions, JsEmojiShortcodeOptions,
-    JsMediaEmbedsOptions, JsSanitizeOptions, JsWikiLinkOptions,
+    JsIncludeOptions, JsMediaEmbedsOptions, JsSanitizeOptions, JsWikiLinkOptions,
 };
 pub use transform_options::JsTransformOptions;
 

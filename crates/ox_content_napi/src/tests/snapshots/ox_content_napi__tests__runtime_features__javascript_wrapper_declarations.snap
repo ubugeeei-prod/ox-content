@@ -942,6 +942,22 @@ export interface JsI18NRuntimeLocale {
   dir?: string
 }
 
+/** Markdown file include options. */
+export interface JsIncludeOptions {
+  /**
+   * Enable `<!-- @include: PATH -->` expansion.
+   *
+   * Default: `false`.
+   */
+  enabled?: boolean
+  /**
+   * Root directory used for `@/` and absolute include paths.
+   *
+   * Default: project root from the JavaScript caller.
+   */
+  rootDir?: string
+}
+
 /** Options for appending to an incremental parser. */
 export interface JsIncrementalParseOptions {
   /** Treat this append as the final stream chunk. */
@@ -1828,6 +1844,12 @@ export interface JsTransformOptions {
    * Default: disabled.
    */
   containers?: JsContainerOptions
+  /**
+   * Opt-in Markdown file includes via `<!-- @include: PATH -->`.
+   *
+   * Default: disabled.
+   */
+  includes?: JsIncludeOptions
 }
 
 /** Type parameter documentation (`<T extends C = D>`) used by generated API docs. */

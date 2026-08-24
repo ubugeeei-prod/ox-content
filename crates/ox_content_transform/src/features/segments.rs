@@ -48,7 +48,7 @@ pub(super) fn transform_markdown_text_segments(
     changed.then_some(out)
 }
 
-fn transform_inline_code_segments(
+pub(super) fn transform_inline_code_segments(
     line: &str,
     out: &mut String,
     transform: &mut impl FnMut(&str, &mut String),

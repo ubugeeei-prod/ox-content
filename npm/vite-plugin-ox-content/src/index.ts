@@ -30,6 +30,7 @@ import { resolveI18nOptions, createI18nPlugin } from "./i18n";
 import { isMarkdownFilePath, normalizeMarkdownExtensions } from "./markdown";
 import { generateCollectionsVirtualModule, resolveCollectionsOptions } from "./collections";
 import type { BuiltinPmOptions, OxContentOptions, ResolvedOptions } from "./types";
+import { resolveIncludeOptions } from "./include-options";
 import type { TwitterEmbedOptions } from "./plugins";
 
 export type { OxContentOptions } from "./types";
@@ -49,6 +50,8 @@ export type {
   ResolvedContainerOptions,
   CodeImportOptions,
   ResolvedCodeImportOptions,
+  IncludeOptions,
+  ResolvedIncludeOptions,
   SanitizeOptions,
   ResolvedSanitizeOptions,
   EditThisPageOptions,
@@ -551,6 +554,7 @@ function resolveOptions(options: OxContentOptions): ResolvedOptions {
     attrs: resolveAttrsOptions(options.attrs),
     containers: resolveContainerOptions(options.containers),
     codeImports: resolveCodeImportOptions(options.codeImports),
+    includes: resolveIncludeOptions(options.includes),
     sanitize: resolveSanitizeOptions(options.sanitize),
     editThisPage: resolveEditThisPageOptions(options.editThisPage),
     cjkEmphasis: options.cjkEmphasis ?? false,
@@ -661,6 +665,8 @@ function resolveCodeImportOptions(
   if (options === true) return { enabled: true };
   return { enabled: true, rootDir: options.rootDir };
 }
+
+export { resolveIncludeOptions } from "./include-options";
 
 function resolveSanitizeOptions(
   options: OxContentOptions["sanitize"],

@@ -263,6 +263,7 @@ function createResolvedOptions(overrides: Partial<ResolvedOptions> = {}): Resolv
     attrs: { enabled: false },
     containers: { enabled: false, types: {} },
     codeImports: { enabled: false },
+    includes: { enabled: false },
     sanitize: { enabled: false },
     editThisPage: { enabled: false, branch: "main", label: "Edit this page" },
     cjkEmphasis: false,

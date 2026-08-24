@@ -3,7 +3,7 @@ use ox_content_transform::TransformOptions;
 
 use super::{
     JsAttrsOptions, JsCodeImportOptions, JsContainerOptions, JsEditThisPageOptions,
-    JsEmojiShortcodeOptions, JsSanitizeOptions, JsWikiLinkOptions,
+    JsEmojiShortcodeOptions, JsIncludeOptions, JsSanitizeOptions, JsWikiLinkOptions,
 };
 
 /// Transform options for JavaScript.
@@ -159,6 +159,11 @@ pub struct JsTransformOptions {
     ///
     /// Default: disabled.
     pub containers: Option<JsContainerOptions>,
+
+    /// Opt-in Markdown file includes via `<!-- @include: PATH -->`.
+    ///
+    /// Default: disabled.
+    pub includes: Option<JsIncludeOptions>,
 }
 
 impl From<JsTransformOptions> for TransformOptions {
@@ -190,6 +195,7 @@ impl From<JsTransformOptions> for TransformOptions {
             sanitize: value.sanitize.map(Into::into),
             edit_this_page: value.edit_this_page.map(Into::into),
             containers: value.containers.map(Into::into),
+            includes: value.includes.map(Into::into),
         }
     }
 }
