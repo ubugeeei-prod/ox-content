@@ -22,6 +22,7 @@ This directory contains runnable projects and small source examples.
 | Example                                      | Description               | Shows                                |
 | -------------------------------------------- | ------------------------- | ------------------------------------ |
 | [playground](./playground)                   | Browser playground        | Live Markdown preview                |
+| Code Play (docs page)                        | `@ox-content/code-play`   | On-demand sample run / type-check    |
 | [ssg-vite](./ssg-vite)                       | Vite static site          | SSG output and generated routes      |
 | [gen-source-docs](./gen-source-docs)         | Source documentation      | API docs generated from TypeScript   |
 | [og-image-custom](./og-image-custom)         | Custom OG image templates | React, Svelte, Vue, and TS templates |

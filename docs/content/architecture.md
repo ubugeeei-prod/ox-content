@@ -186,6 +186,7 @@ system while still publishing individual crates.
 | `@ox-content/vite-plugin-svelte` | Svelte island runtime and transform integration                                  |
 | `@ox-content/vite-plugin-solid`  | Solid island runtime and transform integration                                   |
 | `@ox-content/islands`            | Framework-agnostic island registration and hydration primitives                  |
+| `@ox-content/code-play`          | Opt-in on-demand sample execution, type-check, and viewers                       |
 | `@ox-content/unplugin`           | Universal bundler plugin wrapper                                                 |
 | `vscode-ox-content`              | VS Code extension that talks to the local LSP server                             |
 

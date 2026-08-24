@@ -35,6 +35,7 @@
 - **Framework Agnostic** - Works with Vue, React, Svelte, and more
 - **Built-in SSG** - Static site generation with theming, search, and OG images
 - **Built-in Embeds** - Static GitHub repository, source code, and Open Graph link cards
+- **Code Play** - Opt-in `@ox-content/code-play` plugin for on-demand sample execution
 - **API Docs Generation** - Generate docs from JSDoc/TypeScript (like `cargo doc`)
 - **i18n** - ICU MessageFormat 2 parser, dictionary management, static checker, and LSP
 - **Editor Tooling** - Markdown/MDC LSP plus VS Code, Zed, and Neovim integrations

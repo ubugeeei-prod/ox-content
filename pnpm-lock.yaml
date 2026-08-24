@@ -261,6 +261,9 @@ importers:
 
   docs:
     devDependencies:
+      '@ox-content/code-play':
+        specifier: workspace:*
+        version: link:../npm/ox-content-code-play
       '@ox-content/vite-plugin':
         specifier: workspace:*
         version: link:../npm/vite-plugin-ox-content
@@ -599,6 +602,25 @@ importers:
       webpack-cli:
         specifier: ^7.2.2
         version: 7.2.2(js-yaml@4.3.1)(json5@2.2.3)(webpack@5.109.2)
+
+  npm/ox-content-code-play:
+    dependencies:
+      vite:
+        specifier: npm:@voidzero-dev/vite-plus-core@0.2.8
+        version: '@voidzero-dev/vite-plus-core@0.2.8(@types/node@26.2.0)(esbuild@0.28.2)(jiti@1.21.7)(terser@5.49.0)(typescript@7.0.2)(yaml@2.9.0)'
+    devDependencies:
+      '@types/node':
+        specifier: 'catalog:'
+        version: 26.2.0
+      '@typescript/native-preview':
+        specifier: 'catalog:'
+        version: 7.0.0-dev.20260707.2
+      typescript:
+        specifier: 'catalog:'
+        version: 7.0.2
+      vite-plus:
+        specifier: 'catalog:'
+        version: 0.2.9(@types/node@26.2.0)(@voidzero-dev/vite-plus-core@0.2.8(@types/node@26.2.0)(esbuild@0.28.2)(jiti@1.21.7)(terser@5.49.0)(typescript@7.0.2)(yaml@2.9.0))(esbuild@0.28.2)(jiti@1.21.7)(svelte@5.56.10)(terser@5.49.0)(typescript@7.0.2)(yaml@2.9.0)
 
   npm/ox-content-islands:
     devDependencies:
@@ -4988,9 +5010,6 @@ packages:
 
   '@types/nlcst@2.0.3':
     resolution: {integrity: sha512-vSYNSDe6Ix3q+6Z7ri9lyWqgGhJTmzRjZRqyq15N0Z/1/UnVsno9G/N40NBijoYx2seFDIl0+B2mgAb9mezUCA==}
-
-  '@types/node@26.1.2':
-    resolution: {integrity: sha512-Vu4a5UFA9rIIFJ7rB/Vaafh9lrCQszopTCx6KjFboXTGQbPNasehVR5TEiithSDGyd1DEiUByggTZsg8jukeIg==}
 
   '@types/node@26.2.0':
     resolution: {integrity: sha512-5IviulTZeRNp2vAJ514cc/HUlY5nZ9fCbq9DMyC52BrhFZACo3nI0R7qBxhQmo/d27NFe96ur/b7Wwxklda+kg==}
@@ -11597,10 +11616,6 @@ snapshots:
     dependencies:
       '@types/unist': 3.0.3
 
-  '@types/node@26.1.2':
-    dependencies:
-      undici-types: 8.3.0
-
   '@types/node@26.2.0':
     dependencies:
       undici-types: 8.3.0
@@ -13818,7 +13833,7 @@ snapshots:
 
   jest-worker@27.5.1:
     dependencies:
-      '@types/node': 26.1.2
+      '@types/node': 26.2.0
       merge-stream: 2.0.0
       supports-color: 8.1.1
 

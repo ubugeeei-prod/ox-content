@@ -50,6 +50,11 @@ Content release artifacts, including:
 - Editor tooling for VS Code, Zed, Neovim, and language server integrations.
 - The documentation site, playground, generated documentation pipeline, and
   examples maintained in this repository.
+- `@ox-content/code-play` execution sandboxes and remote-executor configuration.
+  Sample code is not run during Markdown transform or SSG. JavaScript and
+  TypeScript run in `node:vm` or a browser iframe. Native languages use official
+  playgrounds or a user-configured HTTP executor. The plugin does not spawn a
+  local shell.
 - Build, release, and dependency configuration that could affect distributed
   artifacts.
 

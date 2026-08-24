@@ -1,0 +1,67 @@
+{
+  "name": "@ox-content/code-play",
+  "version": "2.90.0",
+  "description": "Opt-in Code Play plugin for on-demand documentation sample execution",
+  "keywords": [
+    "code-play",
+    "documentation",
+    "markdown",
+    "ox-content",
+    "playground"
+  ],
+  "license": "MIT",
+  "author": "ubugeeei",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/ubugeeei-prod/ox-content.git",
+    "directory": "npm/ox-content-code-play"
+  },
+  "files": [
+    "dist"
+  ],
+  "type": "module",
+  "main": "./dist/index.mjs",
+  "types": "./dist/index.d.mts",
+  "exports": {
+    ".": {
+      "import": "./dist/index.mjs",
+      "types": "./dist/index.d.mts"
+    },
+    "./client": {
+      "import": "./dist/hydrate.mjs",
+      "types": "./dist/hydrate.d.mts"
+    },
+    "./plugin": {
+      "import": "./dist/plugin.mjs",
+      "types": "./dist/plugin.d.mts"
+    }
+  },
+  "publishConfig": {
+    "access": "public"
+  },
+  "scripts": {
+    "build": "vp pack",
+    "dev": "vp pack --watch",
+    "typecheck": "tsgo --noEmit",
+    "test": "vp test src"
+  },
+  "devDependencies": {
+    "@types/node": "catalog:",
+    "@typescript/native-preview": "catalog:",
+    "typescript": "catalog:",
+    "vite": "catalog:",
+    "vite-plus": "catalog:"
+  },
+  "peerDependencies": {
+    "typescript": ">=5.0.0",
+    "vite": "^0.2.8 || ^8.0.0"
+  },
+  "peerDependenciesMeta": {
+    "typescript": {
+      "optional": true
+    },
+    "vite": {
+      "optional": true
+    }
+  }
+}

@@ -1,0 +1,138 @@
+import { describe, expect, it } from "vite-plus/test";
+import { enhanceGeneratedModule, enhancePlayHtml } from "./html";
+import { parseCodePlayTags, parsePlayFences, rewritePlayFences, stripPlayMeta } from "./markdown";
+import { decodePayload, encodePayload } from "./payload";
+import { payloadFromFence } from "./payload-factory";
+import { resolveCodePlayOptions } from "./config";
+import {
+  renderConfigHtml,
+  renderProvenanceHtml,
+  renderStdioHtml,
+  renderTimingHtml,
+} from "./viewers";
+import { renderPlayUi } from "./ui";
+
+describe("markdown and viewers", () => {
+  it("parses only top-level play fences and leaves nested examples alone", () => {
+    const source = [
+      "````md",
+      "```ts play",
+      "const nested = 1;",
+      "```",
+      "````",
+      "",
+      '```ts play typecheck annotate="highlight:1"',
+      "const live = 1;",
+      "```",
+    ].join("\n");
+    const fences = parsePlayFences(source);
+    expect(fences).toHaveLength(1);
+    expect(fences[0]?.code).toBe("const live = 1;");
+    expect(fences[0]?.typecheck).toBe(true);
+    expect(stripPlayMeta(fences[0]?.meta ?? "")).toBe('annotate="highlight:1"');
+  });
+
+  it("rewrites play fences to comments and parses CodePlay tags", () => {
+    const options = resolveCodePlayOptions({ languages: { typescript: true } });
+    const rewritten = rewritePlayFences("```ts play\nconst n = 1;\n```", (fence) =>
+      encodePayload(payloadFromFence(fence, options)),
+    );
+    expect(rewritten).toContain("<!--ox-code-play:");
+    expect(rewritten).toContain("```ts\nconst n = 1;\n```");
+
+    const tags = parseCodePlayTags(`<CodePlay lang="python" typecheck>\nprint(1)\n</CodePlay>`);
+    expect(tags[0]).toMatchObject({ language: "python", typecheck: true, code: "print(1)" });
+  });
+
+  it("wraps commented pre blocks and matching SSG fences in HTML", () => {
+    const options = resolveCodePlayOptions({ languages: { javascript: true } });
+    const payload = encodePayload(
+      payloadFromFence(
+        {
+          language: "js",
+          meta: "play",
+          code: "console.log(1)",
+          raw: "",
+          start: 0,
+          end: 0,
+          typecheck: false,
+        },
+        options,
+      ),
+    );
+    const commented = enhancePlayHtml(
+      `<!--ox-code-play:${payload}-->\n<pre><code class="language-js">console.log(1)</code></pre>`,
+      {
+        decodePayload,
+        encodePayload,
+        scriptSrc: "/ox-code-play.js",
+      },
+    );
+    expect(commented).toContain("<ox-code-play data-ox-code-play=");
+    expect(commented).toContain("/ox-code-play.js");
+
+    const matched = enhancePlayHtml(`<pre><code class="language-js">console.log(1)</code></pre>`, {
+      decodePayload,
+      encodePayload,
+      matchFences: [{ language: "js", code: "console.log(1)", payload }],
+    });
+    expect(matched).toContain("data-ox-code-play");
+
+    const moduleSource = `export const html = ${JSON.stringify(`<!--ox-code-play:${payload}--><pre><code>x</code></pre>`)};`;
+    expect(enhanceGeneratedModule(moduleSource, { decodePayload, encodePayload })).toContain(
+      "ox-code-play",
+    );
+  });
+
+  it("renders config, stdio, provenance, and timing viewers", () => {
+    expect(
+      renderStdioHtml([
+        { stream: "stdout", text: "ok\n", timestampMs: 1.2 },
+        { stream: "stderr", text: "bad\n", timestampMs: 3 },
+      ]),
+    ).toContain("stdout +1.2ms");
+    expect(
+      renderConfigHtml([{ key: "strict", label: "Strict", type: "boolean", default: true }], {
+        strict: true,
+      }),
+    ).toContain('name="strict"');
+    expect(
+      renderProvenanceHtml({
+        compile: { host: "play.rust-lang.org", runtime: "rustc", version: "stable" },
+        execute: { host: "play.rust-lang.org", runtime: "rust-playground", sandbox: "playground" },
+      }),
+    ).toMatch(/Compiled[\s\S]*play\.rust-lang\.org/);
+    expect(
+      renderTimingHtml({
+        totalMs: 10,
+        phases: [{ id: "compile", label: "Compile", startMs: 0, durationMs: 4 }],
+      }),
+    ).toContain("Total 10.0ms");
+    expect(
+      renderPlayUi({
+        payload: {
+          language: "typescript",
+          code: "const n = 1;",
+          capabilities: { execute: true, typecheck: true },
+          config: { strict: true },
+          viewers: { config: true, stdio: true, provenance: true, timing: true },
+          ui: "default",
+          timeoutMs: 1000,
+        },
+      }),
+    ).toContain("Typecheck");
+  });
+
+  it("decodes the same payload it encodes", () => {
+    const payload = {
+      language: "go",
+      code: "package main",
+      capabilities: { execute: true, typecheck: true },
+      config: { withVet: true },
+      viewers: { config: true, stdio: true, provenance: true, timing: true },
+      ui: "compact" as const,
+      timeoutMs: 5,
+    };
+    expect(decodePayload(encodePayload(payload))).toEqual(payload);
+  });
+});

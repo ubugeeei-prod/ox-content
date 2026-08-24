@@ -2,6 +2,7 @@ import { spawnSync } from "node:child_process";
 import { fileURLToPath } from "node:url";
 import { defineConfig } from "vite-plus";
 import { oxContent, defineTheme, defaultTheme } from "@ox-content/vite-plugin";
+import { codePlay } from "@ox-content/code-play";
 import { oxContentHighlightTheme } from "./ox-content-highlight-theme";
 
 /**
@@ -68,6 +69,7 @@ export default defineConfig(({ mode }) => {
                 <link rel="preconnect" href="https://fonts.googleapis.com">
                 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
                 <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600;700;800&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+                <script type="module" src="${base}ox-code-play.js"></script>
               `,
             },
             footer: {
@@ -122,6 +124,7 @@ export default defineConfig(({ mode }) => {
                     text: "Editor Extension Roadmap",
                     link: "/editor-extension-roadmap.md",
                   },
+                  { text: "Code Play Roadmap", link: "/code-play-roadmap.md" },
                 ],
               },
               {
@@ -143,6 +146,7 @@ export default defineConfig(({ mode }) => {
                     link: "/packages/vite-plugin-ox-content-solid.md",
                   },
                   { text: "i18n Package", link: "/packages/i18n.md" },
+                  { text: "Code Play", link: "/packages/code-play.md" },
                 ],
               },
             ],
@@ -192,6 +196,14 @@ export default defineConfig(({ mode }) => {
           githubUrl: "https://github.com/ubugeeei-prod/ox-content",
           generateNav: true,
         },
+      }),
+      codePlay({
+        languages: {
+          javascript: true,
+          typescript: { execute: true, typecheck: true },
+        },
+        srcDir: "content",
+        outDir: "dist/docs",
       }),
     ],
 
