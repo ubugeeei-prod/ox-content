@@ -332,19 +332,16 @@ fn hostile_unclosed_input_does_not_panic() {
 }
 
 #[test]
-fn dropdown_js_closes_on_escape_and_restores_focus() {
-    assert!(
-        HEADER_CHROME_JS.contains("Escape") && HEADER_CHROME_JS.contains(".focus("),
-        "{HEADER_CHROME_JS}"
-    );
-}
-
-#[test]
-fn header_nav_css_scrolls_on_small_viewports() {
+fn header_nav_css_scrolls_and_dropdown_js_covers_locale() {
     let html = render(
         Some(theme_nav(vec![nav_item("Guide", Some("/guide/"))])),
         false,
         PageChromeFlags::default(),
     );
     assert!(html.contains("overflow-x: auto") && html.contains("flex-wrap: nowrap"), "{html}");
+    assert!(
+        HEADER_CHROME_JS.contains("Escape")
+            && HEADER_CHROME_JS.contains(".ox-locale-switcher > button"),
+        "{HEADER_CHROME_JS}"
+    );
 }

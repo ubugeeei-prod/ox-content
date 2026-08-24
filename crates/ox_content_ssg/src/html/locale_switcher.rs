@@ -14,11 +14,23 @@ pub(super) fn render_locale_switcher(config: &SsgConfig) -> String {
     };
 
     let current = config.locale.as_deref().unwrap_or("");
-    let mut html = String::from("<nav class=\"ox-locale-switcher\" aria-label=\"Language\">");
+    let current_name = locales
+        .iter()
+        .find(|locale| locale.code == current)
+        .or_else(|| locales.first())
+        .map(|locale| escape_html(&locale.name))
+        .unwrap_or_default();
+    let mut html =
+        String::from("<nav class=\"ox-header-select ox-locale-switcher\" aria-label=\"Language\">");
+    html.push_str("<button type=\"button\" aria-expanded=\"false\" aria-haspopup=\"true\">");
+    html.push_str(&current_name);
+    html.push_str("</button><ul class=\"ox-header-select-menu\">");
     for locale in locales {
+        html.push_str("<li>");
         html.push_str(&render_locale_item(locale, current, config));
+        html.push_str("</li>");
     }
-    html.push_str("</nav>");
+    html.push_str("</ul></nav>");
     html
 }
 
@@ -29,15 +41,15 @@ fn render_locale_item(locale: &LocaleInfo, current: &str, config: &SsgConfig) ->
         "rtl" => "rtl",
         _ => "ltr",
     };
-    let current_attr = if locale.code == current { " aria-current=\"page\"" } else { "" };
+    if locale.code == current {
+        return format!("<span lang=\"{code}\" dir=\"{dir}\" aria-current=\"page\">{name}</span>");
+    }
     match locale_href(locale, config) {
         Some(href) => format!(
-            "<a href=\"{}\" hreflang=\"{code}\" lang=\"{code}\" dir=\"{dir}\"{current_attr}>{name}</a>",
+            "<a href=\"{}\" hreflang=\"{code}\" lang=\"{code}\" dir=\"{dir}\">{name}</a>",
             escape_html(&href)
         ),
-        None => {
-            format!("<span lang=\"{code}\" dir=\"{dir}\"{current_attr}>{name}</span>")
-        }
+        None => format!("<span lang=\"{code}\" dir=\"{dir}\">{name}</span>"),
     }
 }
 

@@ -19,6 +19,7 @@ import {
   buildThemeNavItems,
   extractTitle,
   getUrlPath,
+  getHref,
   generateHtmlPage,
   getPageLocale,
   formatTitle,
@@ -30,6 +31,8 @@ import type { ResolvedOptions } from "./types";
 import type { HeroConfig, FeatureConfig } from "./types";
 import { normalizeVitePressFrontmatter } from "./vitepress";
 import { parsePageChromeFlags } from "./header-chrome";
+import { buildLocalePaths } from "./locale-switcher";
+import { localizeHeaderNavItems, localizeNavGroups } from "./locale-nav";
 import { isMarkdownFilePath } from "./markdown";
 
 /** File extensions to skip in the middleware. */
@@ -214,6 +217,8 @@ if (import.meta.hot) {
 interface DevServerCache {
   /** Cached navigation groups. Invalidated on file add/unlink. */
   navGroups: NavGroup[] | null;
+  /** Cached urlPath → href pairs for locale sibling lookup. */
+  localePages: Array<{ path: string; href: string }> | null;
   /** Cached rendered HTML keyed by absolute file path. */
   pages: Map<string, string>;
   /** Cached site name. Computed once. */
@@ -226,6 +231,7 @@ interface DevServerCache {
 export function createDevServerCache(): DevServerCache {
   return {
     navGroups: null,
+    localePages: null,
     pages: new Map(),
     siteName: null,
   };
@@ -236,6 +242,7 @@ export function createDevServerCache(): DevServerCache {
  */
 export function invalidateNavCache(cache: DevServerCache): void {
   cache.navGroups = null;
+  cache.localePages = null;
   // Also clear all page caches since navigation HTML is embedded in pages
   cache.pages.clear();
 }
@@ -278,6 +285,7 @@ async function renderPage(
   siteName: string,
   base: string,
   root: string,
+  localePages: Array<{ path: string; href: string }>,
 ): Promise<string> {
   const srcDir = path.resolve(root, options.srcDir);
 
@@ -356,21 +364,55 @@ async function renderPage(
     chrome: parsePageChromeFlags(frontmatter),
   };
 
+  const i18n = options.i18n;
+  const locale = getPageLocale(pageData.path, i18n);
+  const localeNav =
+    i18n && locale
+      ? {
+          locale,
+          locales: i18n.locales,
+          defaultLocale: i18n.defaultLocale,
+          hideDefaultLocale: i18n.hideDefaultLocale,
+          pages: localePages,
+          base,
+        }
+      : undefined;
+  const localizedNav = localeNav ? localizeNavGroups(navGroups, localeNav) : navGroups;
+  const theme = options.ssg.theme
+    ? localeNav
+      ? {
+          ...options.ssg.theme,
+          nav: localizeHeaderNavItems(options.ssg.theme.nav, localeNav),
+        }
+      : options.ssg.theme
+    : undefined;
+  const localePaths =
+    options.ssg.localeSwitcher && i18n
+      ? buildLocalePaths({
+          currentPath: pageData.path,
+          locales: i18n.locales,
+          defaultLocale: i18n.defaultLocale,
+          hideDefaultLocale: i18n.hideDefaultLocale,
+          pages: localePages,
+          base,
+        })
+      : undefined;
+
   // Generate full HTML page
   let html = await generateHtmlPage(
     pageData,
-    navGroups,
+    localizedNav,
     siteName,
     base,
     options.ssg.ogImage,
-    options.ssg.theme,
-    getPageLocale(pageData.path, options.i18n),
-    options.i18n ? options.i18n.locales : undefined,
+    theme,
+    locale,
+    i18n ? i18n.locales : undefined,
     options.ssg.pagination,
     options.ssg.readerChrome,
     options.ssg.breadcrumbs,
     options.ssg.localeSwitcher,
-    undefined,
+    localePaths,
     options.ssg.a11y,
     options.ssg.team ?? { enabled: false, members: [] },
     options.ssg.pageChrome,
@@ -426,8 +468,12 @@ export function createDevServerMiddleware(
       }
 
       // Build navigation if not cached
-      if (!cache.navGroups) {
+      if (!cache.navGroups || !cache.localePages) {
         const markdownFiles = await collectMarkdownFiles(srcDir, options.extensions);
+        cache.localePages = markdownFiles.map((file) => ({
+          path: getUrlPath(file, srcDir),
+          href: getHref(file, srcDir, base, options.ssg.extension),
+        }));
         cache.navGroups =
           resolveNavigationGroups(options.ssg.navigation, base, options.ssg.extension) ??
           (options.ssg.theme?.sidebar.length
@@ -435,8 +481,22 @@ export function createDevServerMiddleware(
             : buildNavItems(markdownFiles, srcDir, base, options.ssg.extension));
       }
 
+      const navGroups = cache.navGroups;
+      const localePages = cache.localePages;
+      if (!navGroups || !localePages) {
+        return next();
+      }
+
       // Render the page
-      const html = await renderPage(filePath, options, cache.navGroups, cache.siteName, base, root);
+      const html = await renderPage(
+        filePath,
+        options,
+        navGroups,
+        cache.siteName,
+        base,
+        root,
+        localePages,
+      );
 
       // Cache the result
       cache.pages.set(filePath, html);

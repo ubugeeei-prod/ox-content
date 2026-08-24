@@ -88,7 +88,8 @@ fn render(
 }
 
 fn switcher_html(html: &str) -> Option<&str> {
-    let start = html.find(r#"<nav class="ox-locale-switcher""#)?;
+    let class_at = html.find("ox-locale-switcher")?;
+    let start = html[..class_at].rfind("<nav")?;
     let rest = &html[start..];
     let end = rest.find("</nav>")?;
     Some(&rest[..end + "</nav>".len()])
@@ -113,8 +114,9 @@ fn disabled_by_default() {
     );
 
     assert!(switcher_html(&html).is_none(), "omitted/false must not emit a switcher: {html}");
-    assert!(!html.contains(r#"<nav class="ox-locale-switcher""#), "{html}");
+    assert!(!html.contains("ox-locale-switcher"), "{html}");
     assert!(!html.contains(r#"aria-label="Language""#), "{html}");
+    assert!(!html.contains(".ox-locale-switcher > button"), "{html}");
     let open = html_open_tag(&html);
     assert!(open.contains(r#"lang="ja""#), "{open}");
     assert!(open.contains(r#"dir="ltr""#), "{open}");
@@ -134,11 +136,20 @@ fn happy_path_lists_locales_and_marks_current() {
 
     let switcher = switcher_html(&html).expect("enabled switcher must render");
     assert!(
-        switcher.starts_with(r#"<nav class="ox-locale-switcher" aria-label="Language">"#),
+        switcher.starts_with(
+            r#"<nav class="ox-header-select ox-locale-switcher" aria-label="Language">"#
+        ),
         "{switcher}"
     );
+    assert!(
+        switcher.contains(
+            r#"<button type="button" aria-expanded="false" aria-haspopup="true">日本語</button>"#
+        ),
+        "{switcher}"
+    );
+    assert!(switcher.contains(r#"<ul class="ox-header-select-menu">"#), "{switcher}");
     assert!(switcher.contains(r#"href="/docs/guide/index.html""#), "{switcher}");
-    assert!(switcher.contains(r#"href="/docs/ja/guide/index.html""#), "{switcher}");
+    assert!(!switcher.contains(r#"href="/docs/ja/guide/index.html""#), "{switcher}");
     assert!(switcher.contains(">English<"), "{switcher}");
     assert!(switcher.contains(">日本語<"), "{switcher}");
     assert!(switcher.contains(r#"lang="en""#), "{switcher}");
@@ -147,10 +158,17 @@ fn happy_path_lists_locales_and_marks_current() {
         switcher.contains(r#"lang="ja""#) && switcher.contains(r#"aria-current="page""#),
         "current locale must be marked: {switcher}"
     );
-    let ja = switcher.split("日本語").next().expect("ja link");
+    let ja = switcher.split("日本語</span>").next().expect("ja current item");
     assert!(ja.contains(r#"aria-current="page""#), "{switcher}");
-    let en = switcher.split("English").next().expect("en link");
+    let en = switcher.split("English</a>").next().expect("en link");
     assert!(!en.contains(r#"aria-current="page""#), "{switcher}");
+    assert!(html.contains(".ox-locale-switcher > button"), "{html}");
+    assert!(html.contains("Escape"), "{html}");
+    assert!(html.contains(".ox-header-select"), "{html}");
+    assert!(html.contains("--octc-color-bg"), "{html}");
+    assert!(html.contains("--octc-color-border"), "{html}");
+    assert!(html.contains(".ox-version-banner--unreleased"), "{html}");
+    assert!(!html.contains("#fff7ed"), "{html}");
 }
 
 #[test]
@@ -166,7 +184,7 @@ fn missing_sibling_falls_back_to_locale_root() {
     );
 
     let switcher = switcher_html(&html).expect("enabled switcher must render");
-    assert!(switcher.contains(r#"href="/docs/guide/index.html""#), "{switcher}");
+    assert!(!switcher.contains(r#"href="/docs/guide/index.html""#), "{switcher}");
     assert!(switcher.contains(r#"href="/docs/ja/""#), "{switcher}");
     assert!(!switcher.contains("/docs/ja/guide"), "{switcher}");
 }
@@ -241,7 +259,7 @@ fn javascript_root_rejected() {
 fn empty_available_locales_emits_nothing() {
     let html = render(true, Some("ja"), Some(vec![]), vec![]);
     assert!(switcher_html(&html).is_none(), "{html}");
-    assert!(!html.contains(r#"<nav class="ox-locale-switcher""#), "{html}");
+    assert!(!html.contains("ox-locale-switcher"), "{html}");
 }
 
 #[test]
@@ -254,8 +272,26 @@ fn enabled_without_available_locales_emits_nothing() {
 fn missing_sibling_defaults_to_base_locale_root() {
     let html = render(true, Some("en"), Some(locales()), vec![]);
     let switcher = switcher_html(&html).expect("default roots must still render");
-    assert!(switcher.contains(r#"href="/docs/en/""#), "{switcher}");
+    assert!(!switcher.contains(r#"href="/docs/en/""#), "{switcher}");
     assert!(switcher.contains(r#"href="/docs/ja/""#), "{switcher}");
+}
+
+#[test]
+fn dropdown_trigger_escapes_current_name() {
+    let html = render(
+        true,
+        Some("xx"),
+        Some(vec![locale("xx", "<script>alert(1)</script>", "ltr")]),
+        vec![locale_path("xx", Some("/docs/xx/"), None)],
+    );
+    let switcher = switcher_html(&html).expect("enabled switcher must render");
+    assert!(
+        switcher
+            .contains("<button type=\"button\" aria-expanded=\"false\" aria-haspopup=\"true\">")
+            && switcher.contains("&lt;script&gt;alert(1)&lt;/script&gt;"),
+        "{switcher}"
+    );
+    assert!(!switcher.contains("<script>alert(1)</script>"), "{switcher}");
 }
 
 #[test]
@@ -291,7 +327,7 @@ fn data_and_vbscript_roots_rejected() {
 #[test]
 fn generate_bare_html_is_unchanged() {
     let html = generate_bare_html("<h1>Hello</h1>", "Test Page");
-    assert!(!html.contains(r#"<nav class="ox-locale-switcher""#), "{html}");
+    assert!(!html.contains("ox-locale-switcher"), "{html}");
     assert_eq!(
         html,
         "<!DOCTYPE html>\n<html lang=\"en\">\n<head>\n  <meta charset=\"UTF-8\">\n  <meta name=\"viewport\" content=\"width=device-width, initial-scale=1.0\">\n  <title>Test Page</title>\n</head>\n<body>\n<h1>Hello</h1>\n</body>\n</html>"

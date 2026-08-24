@@ -10,7 +10,13 @@ import {
   resolveVersionsOptions,
   sanitizePrefix,
 } from "./versions";
-import { escapeHtml, injectVersionChrome, searchIndexUrl } from "./versions-html";
+import {
+  escapeHtml,
+  injectVersionChrome,
+  searchIndexUrl,
+  versionBannerMarkup,
+  versionSwitcherMarkup,
+} from "./versions-html";
 
 const tempDirs: string[] = [];
 
@@ -111,6 +117,30 @@ describe("prefixRoutePaths", () => {
     expect(prefixed.outputPath).toBe(path.join("/site", "dist", "2.90", "guide", "index.html"));
     expect(prefixed.urlPath).toBe("2.90/guide");
     expect(prefixed.href).toBe("/2.90/guide/");
+  });
+});
+
+describe("version switcher chrome", () => {
+  it("uses themed header-select markup without hardcoded colors", () => {
+    const html = versionSwitcherMarkup(
+      [
+        { id: "alpha", label: "3.0.0-alpha", href: "/", current: true, banner: "unreleased" },
+        { id: "stable", label: "2.90.0", href: "/2.90/", current: false },
+      ],
+      true,
+    );
+    expect(html).toContain('class="ox-header-select ox-version-switcher"');
+    expect(html).toContain('class="ox-header-select-menu"');
+    expect(html).toContain('aria-expanded="false"');
+    expect(html).toContain('aria-haspopup="true"');
+    expect(html).toContain("/2.90/");
+    expect(html).not.toContain("Canvas");
+    expect(html).not.toContain("#fff7ed");
+    expect(html).not.toContain("#f4f4f5");
+    expect(html).not.toContain("--ox-bg");
+    expect(html).not.toContain("<style>");
+    expect(versionBannerMarkup("unreleased")).toContain("ox-version-banner--unreleased");
+    expect(versionBannerMarkup("unreleased")).not.toContain("#fff7ed");
   });
 });
 

@@ -170,6 +170,8 @@ pub fn generate_html(page_data: &PageData, nav_groups: &[NavGroup], config: &Ssg
         header_config.and_then(|h| h.logo_light.as_deref()).map(resolve_theme_asset);
     let logo_dark_src = header_config.and_then(|h| h.logo_dark.as_deref()).map(resolve_theme_asset);
 
+    let locale_switcher_html = render_locale_switcher(config);
+
     // Custom JS
     let custom_js = theme.and_then(|t| t.js.as_deref()).unwrap_or("");
     let mut all_js =
@@ -178,13 +180,10 @@ pub fn generate_html(page_data: &PageData, nav_groups: &[NavGroup], config: &Ssg
         all_js.push('\n');
         all_js.push_str(READER_CHROME_JS);
     }
-    if header_chrome_needs_js(&header_nav_html, &announcement_html) {
-        all_js.push('\n');
+    if header_chrome_needs_js(&header_nav_html, &announcement_html, &locale_switcher_html) {
+        all_js.push_str("\n");
         all_js.push_str(HEADER_CHROME_JS);
     }
-
-    // Social links
-    let locale_switcher_html = render_locale_switcher(config);
     let social_links_html = theme
         .and_then(|t| t.social_links.as_ref())
         .map_or(String::new(), generate_social_links_html);

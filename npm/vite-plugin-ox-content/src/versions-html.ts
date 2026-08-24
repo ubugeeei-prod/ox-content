@@ -12,18 +12,6 @@ export interface VersionLink {
   banner?: VersionBannerKind | false;
 }
 
-const STYLE = `<style>
-.ox-version-switcher{position:relative;display:inline-flex;align-items:center;margin-inline-end:.5rem}
-.ox-version-switcher > button{font:inherit;background:transparent;border:1px solid currentColor;border-radius:.4rem;padding:.2rem .55rem;cursor:pointer}
-.ox-version-switcher[open] > button{border-bottom-left-radius:0;border-bottom-right-radius:0}
-.ox-version-switcher ul{position:absolute;inset-inline-start:0;top:100%;z-index:20;margin:0;padding:.25rem 0;list-style:none;min-width:100%;background:var(--ox-bg,Canvas);border:1px solid currentColor;border-radius:0 .4rem .4rem}
-.ox-version-switcher a,.ox-version-switcher span{display:block;padding:.25rem .7rem;white-space:nowrap;color:inherit;text-decoration:none}
-.ox-version-badge{display:inline-block;margin-inline-start:.35rem;font-size:.75em;opacity:.75}
-.ox-version-banner{padding:.6rem 1rem;border-bottom:1px solid currentColor}
-.ox-version-banner--unreleased{background:#fff7ed}
-.ox-version-banner--unmaintained{background:#f4f4f5}
-</style>`;
-
 export function versionSwitcherMarkup(links: readonly VersionLink[], badge: boolean): string {
   if (links.length === 0) {
     return "";
@@ -38,7 +26,7 @@ export function versionSwitcherMarkup(links: readonly VersionLink[], badge: bool
       return `<li><a href="${escapeHtml(link.href)}">${label}</a></li>`;
     })
     .join("");
-  return `${STYLE}<nav class="ox-version-switcher" aria-label="Version"><button type="button" aria-expanded="false" aria-haspopup="listbox">${escapeHtml(current.label)}${badgeMarkup(current, badge)}</button><ul hidden>${items}</ul></nav><script>(function(){var n=document.currentScript&&document.currentScript.previousElementSibling;if(!n||!n.classList.contains("ox-version-switcher"))return;var b=n.querySelector("button"),u=n.querySelector("ul");if(!b||!u)return;function c(){var o=b.getAttribute("aria-expanded")==="true";b.setAttribute("aria-expanded",o?"false":"true");u.hidden=o;}b.addEventListener("click",c);document.addEventListener("keydown",function(e){if(e.key==="Escape"){b.setAttribute("aria-expanded","false");u.hidden=true;b.focus();}});})()</script>`;
+  return `<nav class="ox-header-select ox-version-switcher" aria-label="Version"><button type="button" aria-expanded="false" aria-haspopup="true">${escapeHtml(current.label)}${badgeMarkup(current, badge)}</button><ul class="ox-header-select-menu">${items}</ul></nav><script>(function(){var n=document.currentScript&&document.currentScript.previousElementSibling;if(!n||!n.classList.contains("ox-version-switcher"))return;var b=n.querySelector("button");if(!b)return;function closeOthers(){document.querySelectorAll(".header-nav-dropdown > button[aria-expanded='true'], .ox-locale-switcher > button[aria-expanded='true']").forEach(function(btn){btn.setAttribute("aria-expanded","false");});}b.addEventListener("click",function(e){e.stopPropagation();var o=b.getAttribute("aria-expanded")==="true";closeOthers();b.setAttribute("aria-expanded",o?"false":"true");});document.addEventListener("click",function(e){if(!n.contains(e.target))b.setAttribute("aria-expanded","false");});document.addEventListener("keydown",function(e){if(e.key==="Escape"){b.setAttribute("aria-expanded","false");b.focus();}});})()</script>`;
 }
 
 export function versionBannerMarkup(kind: VersionBannerKind | false | undefined): string {

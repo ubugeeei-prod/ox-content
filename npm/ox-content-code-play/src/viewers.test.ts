@@ -3,7 +3,7 @@ import { DEFAULT_VIEWERS } from "./config";
 import { withStdioText } from "./stdio";
 import type { PlayPayload, RunResult } from "./types";
 import { actionBusyState, renderPlayUi } from "./ui";
-import { renderStderrHtml } from "./viewers";
+import { renderStderrHtml, renderStdioHtml } from "./viewers";
 
 function result(partial: Partial<RunResult> = {}): RunResult {
   return withStdioText({
@@ -28,6 +28,13 @@ function payload(overrides: Partial<PlayPayload> = {}): PlayPayload {
     ...overrides,
   };
 }
+
+describe("stdio viewer", () => {
+  it("uses a paragraph for the empty state so docs code-block CSS cannot restyle it", () => {
+    expect(renderStdioHtml([])).toBe(`<p class="ox-code-play__stdio ox-code-play__empty">No stdio yet.</p>`);
+    expect(renderStdioHtml([])).not.toContain("<pre");
+  });
+});
 
 describe("stderr viewer", () => {
   it("shows the empty state when there is no stderr and no error or warning", () => {

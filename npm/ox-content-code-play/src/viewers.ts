@@ -4,7 +4,7 @@ import type { ConfigField, Provenance, RunResult, StdioEvent, TimingReport } fro
 
 export function renderStdioHtml(events: StdioEvent[]): string {
   if (events.length === 0) {
-    return `<pre class="ox-code-play__stdio ox-code-play__empty">No stdio yet.</pre>`;
+    return `<p class="ox-code-play__stdio ox-code-play__empty">No stdio yet.</p>`;
   }
   const lines = events
     .map((event) => {

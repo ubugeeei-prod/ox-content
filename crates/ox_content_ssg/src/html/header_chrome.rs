@@ -142,8 +142,14 @@ pub(super) fn render_announcement(announcement: &ThemeAnnouncement) -> String {
     html
 }
 
-pub(super) fn header_chrome_needs_js(nav_html: &str, announcement_html: &str) -> bool {
-    nav_html.contains("aria-expanded") || announcement_html.contains("data-ox-announce")
+pub(super) fn header_chrome_needs_js(
+    nav_html: &str,
+    announcement_html: &str,
+    locale_switcher_html: &str,
+) -> bool {
+    nav_html.contains("aria-expanded")
+        || announcement_html.contains("data-ox-announce")
+        || locale_switcher_html.contains("ox-header-select")
 }
 
 pub(super) fn header_chrome_needs_css(

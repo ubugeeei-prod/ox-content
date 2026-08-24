@@ -1,13 +1,14 @@
 (() => {
+  const dropdownTriggers = ".header-nav-dropdown > button, .ox-locale-switcher > button";
+  const openDropdowns =
+    ".header-nav-dropdown > button[aria-expanded='true'], .ox-locale-switcher > button[aria-expanded='true'], .ox-version-switcher > button[aria-expanded='true']";
   const closeDropdowns = (except) => {
-    document
-      .querySelectorAll(".header-nav-dropdown > button[aria-expanded='true']")
-      .forEach((button) => {
-        if (button !== except) button.setAttribute("aria-expanded", "false");
-      });
+    document.querySelectorAll(openDropdowns).forEach((button) => {
+      if (button !== except) button.setAttribute("aria-expanded", "false");
+    });
   };
 
-  document.querySelectorAll(".header-nav-dropdown > button").forEach((button) => {
+  document.querySelectorAll(dropdownTriggers).forEach((button) => {
     button.addEventListener("click", (event) => {
       event.stopPropagation();
       const open = button.getAttribute("aria-expanded") === "true";
@@ -19,7 +20,7 @@
   document.addEventListener("click", () => closeDropdowns(null));
   document.addEventListener("keydown", (event) => {
     if (event.key !== "Escape") return;
-    const open = document.querySelector(".header-nav-dropdown > button[aria-expanded='true']");
+    const open = document.querySelector(openDropdowns);
     closeDropdowns(null);
     if (open instanceof HTMLElement) open.focus();
   });

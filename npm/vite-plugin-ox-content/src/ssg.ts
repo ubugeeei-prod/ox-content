@@ -30,6 +30,7 @@ import type {
 } from "./types";
 import { buildLocalePaths, resolveLocaleSwitcherOption } from "./locale-switcher";
 import type { SsgLocalePath } from "./locale-switcher";
+import { localizeHeaderNavItems, localizeNavGroups } from "./locale-nav";
 import {
   parsePageChromeFlags,
   resolvePageChromeOption,
@@ -1207,6 +1208,31 @@ async function renderSsgPage(
   const pageData = createSsgPageData(pageResult);
 
   const i18n = context.options.i18n;
+  const pages = allPageResults.map((result) => ({
+    path: result.routePaths.urlPath,
+    href: result.routePaths.href,
+  }));
+  const locale = getPageLocale(pageData.path, i18n);
+  const localeNav =
+    i18n && locale
+      ? {
+          locale,
+          locales: i18n.locales,
+          defaultLocale: i18n.defaultLocale,
+          hideDefaultLocale: i18n.hideDefaultLocale,
+          pages,
+          base: context.base,
+        }
+      : undefined;
+  const navItems = localeNav ? localizeNavGroups(context.navItems, localeNav) : context.navItems;
+  const theme = context.ssgOptions.theme
+    ? localeNav
+      ? {
+          ...context.ssgOptions.theme,
+          nav: localizeHeaderNavItems(context.ssgOptions.theme.nav, localeNav),
+        }
+      : context.ssgOptions.theme
+    : undefined;
   const localePaths =
     context.ssgOptions.localeSwitcher && i18n
       ? buildLocalePaths({
@@ -1214,22 +1240,19 @@ async function renderSsgPage(
           locales: i18n.locales,
           defaultLocale: i18n.defaultLocale,
           hideDefaultLocale: i18n.hideDefaultLocale,
-          pages: allPageResults.map((result) => ({
-            path: result.routePaths.urlPath,
-            href: result.routePaths.href,
-          })),
+          pages,
           base: context.base,
         })
       : undefined;
 
   return generateHtmlPage(
     pageData,
-    context.navItems,
+    navItems,
     context.siteName,
     context.base,
     pageOgImage,
-    context.ssgOptions.theme,
-    getPageLocale(pageData.path, i18n),
+    theme,
+    locale,
     i18n ? i18n.locales : undefined,
     context.ssgOptions.pagination,
     context.ssgOptions.readerChrome,

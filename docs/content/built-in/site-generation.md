@@ -73,7 +73,7 @@ export default defineConfig({
 | `pagination`      | `false`        | Previous/next links after the article.                 |
 | `breadcrumbs`     | `false`        | Trail from the site root through sidebar ancestors.    |
 | `readerChrome`    | `false`        | Copy, outbound-link icons, and back-to-top.            |
-| `localeSwitcher`  | `false`        | Header locale list when i18n locales are set.          |
+| `localeSwitcher`  | `false`        | Header locale dropdown when i18n locales are set.      |
 | `a11y`            | `false`        | Skip link and print styles.                            |
 | `notFound`        | `false`        | Themed 404 page. See [Custom 404](./not-found.md).     |
 | `team`            | `false`        | Member cards on `layout: team`. See [Team](./team.md). |

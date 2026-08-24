@@ -228,28 +228,94 @@ a:hover {
   align-items: center;
   gap: 0.5rem;
 }
-.ox-locale-switcher {
-  display: flex;
-  align-items: center;
-  flex-wrap: wrap;
-  gap: 0.125rem;
+.ox-header-select {
+  position: relative;
 }
-.ox-locale-switcher a,
-.ox-locale-switcher span {
-  padding: 0.25rem 0.5rem;
+.ox-header-select > button {
+  display: inline-flex;
+  align-items: center;
+  background: none;
+  border: none;
   border-radius: 4px;
   color: var(--octc-color-text-muted);
-  font-size: 0.8125rem;
-  text-decoration: none;
+  cursor: pointer;
+  font: inherit;
+  font-size: 0.875rem;
+  padding: 0.5rem 0.6rem;
+  white-space: nowrap;
 }
-.ox-locale-switcher a:hover {
+.ox-header-select > button::after {
+  content: "";
+  width: 0.35em;
+  height: 0.35em;
+  border-right: 1.5px solid currentColor;
+  border-bottom: 1.5px solid currentColor;
+  transform: rotate(45deg);
+  margin-inline-start: 0.4rem;
+  margin-bottom: 0.15em;
+}
+.ox-header-select > button:hover,
+.ox-header-select > button[aria-expanded="true"] {
+  background: color-mix(in srgb, var(--octc-color-bg-alt) 82%, var(--octc-color-primary) 12%);
+  color: var(--octc-color-text);
+}
+.ox-header-select-menu {
+  display: none;
+  position: absolute;
+  top: calc(100% + 0.35rem);
+  inset-inline-end: 0;
+  min-width: 8rem;
+  margin: 0;
+  padding: 0.4rem 0;
+  list-style: none;
+  background: var(--octc-color-bg);
+  border: 1px solid var(--octc-color-border);
+  border-radius: 6px;
+  box-shadow: 0 8px 24px color-mix(in srgb, var(--octc-color-text) 12%, transparent);
+  z-index: 120;
+}
+.ox-header-select > button[aria-expanded="true"] + .ox-header-select-menu {
+  display: block;
+}
+.ox-header-select-menu a,
+.ox-header-select-menu span {
+  display: block;
+  padding: 0.4rem 0.85rem;
+  color: var(--octc-color-text);
+  text-decoration: none;
+  white-space: nowrap;
+}
+.ox-header-select-menu a:hover {
   background: color-mix(in srgb, var(--octc-color-bg-alt) 82%, var(--octc-color-primary) 12%);
   color: var(--octc-color-text);
   text-decoration: none;
 }
-.ox-locale-switcher [aria-current="page"] {
+.ox-header-select-menu [aria-current="page"] {
   color: var(--octc-color-text);
   font-weight: 600;
+}
+.ox-version-badge {
+  display: inline-block;
+  margin-inline-start: 0.35rem;
+  font-size: 0.75em;
+  color: var(--octc-color-text-muted);
+}
+.ox-version-banner {
+  padding: 0.6rem 1rem;
+  border-bottom: 1px solid var(--octc-color-border);
+  background: var(--octc-color-bg-alt);
+  color: var(--octc-color-text);
+}
+.ox-version-banner--unreleased {
+  background: color-mix(
+    in srgb,
+    var(--octc-color-code-line-warning-border) 16%,
+    var(--octc-color-bg)
+  );
+}
+.ox-version-banner--unmaintained {
+  background: var(--octc-color-bg-alt);
+  color: var(--octc-color-text-muted);
 }
 .social-link {
   display: flex;
