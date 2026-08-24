@@ -235,7 +235,7 @@ function normalizeDest(value: string, allowExternal: boolean): string | null {
 
 function isAllowedDest(value: string, allowExternal: boolean): boolean {
   const trimmed = value.trim();
-  if (!trimmed || /[\u0000-\u001F\u007F;]/u.test(trimmed)) {
+  if (!trimmed || hasDisallowedDestChars(trimmed)) {
     return false;
   }
   if (isHttpUrl(trimmed)) {
@@ -248,8 +248,20 @@ function isAllowedDest(value: string, allowExternal: boolean): boolean {
   return !lower.includes("javascript:") && !lower.includes("data:") && !lower.includes("://");
 }
 
+function hasDisallowedDestChars(value: string): boolean {
+  for (let index = 0; index < value.length; index++) {
+    const code = value.charCodeAt(index);
+    if (code <= 0x1f || code === 0x7f || code === 0x3b) {
+      return true;
+    }
+  }
+  return false;
+}
+
 function hasUnsafePathSegments(value: string): boolean {
-  return value.includes("\\") || value.split("/").some((segment) => segment === "." || segment === "..");
+  return (
+    value.includes("\\") || value.split("/").some((segment) => segment === "." || segment === "..")
+  );
 }
 
 function isHttpUrl(value: string): boolean {
