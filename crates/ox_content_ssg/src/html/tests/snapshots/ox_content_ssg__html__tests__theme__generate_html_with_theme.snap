@@ -20,6 +20,7 @@ expression: "super::snapshot_text(&html)"
   --octc-sidebar-width: 260px;
   --octc-header-height: 60px;
   --octc-max-content-width: 960px;
+  --octc-mobile-gutter: clamp(1rem, 4vw, 1.25rem);
   --octc-font-sans: "IBM Plex Sans", "Avenir Next", "Segoe UI Variable", "Segoe UI", sans-serif;
   --octc-font-mono: "IBM Plex Mono", "SFMono-Regular", Consolas, monospace;
   --octc-color-bg: #ffffff;
@@ -1818,7 +1819,8 @@ a:hover {
     border-top: 1px solid var(--octc-color-border);
     justify-content: space-around;
     align-items: center;
-    padding: 0 1rem;
+    padding-left: max(var(--octc-mobile-gutter), env(safe-area-inset-left, 0px));
+    padding-right: max(var(--octc-mobile-gutter), env(safe-area-inset-right, 0px));
     z-index: 100;
   }
   .mobile-footer-btn {
@@ -1866,6 +1868,8 @@ a:hover {
     z-index: 99;
     border-radius: 4px 4px 0 0;
     padding: 1.5rem 1rem calc(56px + 1.5rem);
+    padding-left: max(var(--octc-mobile-gutter), env(safe-area-inset-left, 0px));
+    padding-right: max(var(--octc-mobile-gutter), env(safe-area-inset-right, 0px));
     background: color-mix(in srgb, var(--octc-color-bg-alt) 88%, var(--octc-color-bg));
   }
   .entry-page .sidebar--entry {
@@ -1895,11 +1899,10 @@ a:hover {
   }
   .main {
     margin-left: 0;
-    padding: 0.9rem 0.5rem;
+    padding: 0.9rem var(--octc-mobile-gutter);
+    padding-left: max(var(--octc-mobile-gutter), env(safe-area-inset-left, 0px));
+    padding-right: max(var(--octc-mobile-gutter), env(safe-area-inset-right, 0px));
     padding-bottom: calc(56px + 0.9rem);
-  }
-  .main--with-toc {
-    padding-right: 0.5rem;
   }
   .content {
     padding: 0;
@@ -2064,7 +2067,7 @@ a:hover {
     display: block;
     width: max-content;
     min-width: 100%;
-    max-width: calc(100vw - 1rem);
+    max-width: 100%;
     overflow-x: auto;
     -webkit-overflow-scrolling: touch;
     margin: 1rem 0;
@@ -2077,7 +2080,8 @@ a:hover {
     vertical-align: top;
   }
   .header {
-    padding: 0 1rem;
+    padding-left: max(var(--octc-mobile-gutter), env(safe-area-inset-left, 0px));
+    padding-right: max(var(--octc-mobile-gutter), env(safe-area-inset-right, 0px));
   }
   .header-title {
     font-size: 1rem;
@@ -2100,7 +2104,7 @@ a:hover {
 
 @media (max-width: 480px) {
   .main {
-    padding: 0.75rem 0.4rem;
+    padding-block-start: 0.75rem;
     padding-bottom: calc(56px + 0.75rem);
   }
   .content h1 {
@@ -2137,7 +2141,6 @@ a:hover {
     left: 0.85rem;
   }
   .content table {
-    max-width: calc(100vw - 0.8rem);
     font-size: 0.75rem;
   }
   .content th,

@@ -202,6 +202,31 @@ fn test_table_css_draws_each_separator_once() {
 }
 
 #[test]
+fn test_mobile_content_css_preserves_safe_reading_gutters() {
+    assert!(
+        SSG_CSS.contains("--octc-mobile-gutter: clamp(1rem, 4vw, 1.25rem);"),
+        "mobile layouts need a shared readable gutter token"
+    );
+    assert!(
+        SSG_CSS.contains(
+            "padding-left: max(var(--octc-mobile-gutter), env(safe-area-inset-left, 0px));"
+        ) && SSG_CSS.contains(
+            "padding-right: max(var(--octc-mobile-gutter), env(safe-area-inset-right, 0px));"
+        ),
+        "content gutters must include each physical display safe area"
+    );
+    assert!(
+        SSG_CSS.contains(".content table {\n    display: block;")
+            && SSG_CSS.contains("max-width: 100%;"),
+        "wide tables must scroll inside the safe content gutter"
+    );
+    assert!(
+        !SSG_CSS.contains("padding: 0.75rem 0.4rem;"),
+        "the narrow breakpoint must not collapse back to a 6.4px gutter"
+    );
+}
+
+#[test]
 fn test_generate_html_without_toc_omits_outline() {
     let page_data = PageData {
         title: "No TOC".to_string(),
