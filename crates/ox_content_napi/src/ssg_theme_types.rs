@@ -195,11 +195,12 @@ pub struct JsSsgConfig {
     /// Existing sibling hrefs and locale roots.
     pub locale_paths: Option<Vec<JsLocalePath>>,
     /// Opt-in skip link and print styles. Presence enables the feature.
+    #[napi(js_name = "a11y")]
     pub a11y: Option<JsA11y>,
 }
 
 /// Opt-in skip link and print styles. Presence of the object enables the feature.
-#[napi(object)]
+#[napi(object, js_name = "JsA11y")]
 #[derive(Clone)]
 pub struct JsA11y {
     /// Override for the skip-link label. Empty / omitted uses "Skip to content".
