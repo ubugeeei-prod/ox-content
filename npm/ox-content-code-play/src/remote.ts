@@ -1,6 +1,6 @@
 import { StdioBuffer } from "./stdio";
 import { PhaseTracker } from "./timing";
-import type { AdapterRequest, RunResult } from "./types";
+import type { AdapterRequest, AdapterResult } from "./types";
 
 interface PistonExecuteResponse {
   compile?: { stdout?: string; stderr?: string; code?: number };
@@ -8,7 +8,7 @@ interface PistonExecuteResponse {
   message?: string;
 }
 
-export async function runRemote(request: AdapterRequest): Promise<RunResult> {
+export async function runRemote(request: AdapterRequest): Promise<AdapterResult> {
   const tracker = new PhaseTracker();
   const stdio = new StdioBuffer(tracker.startedAt);
   const endpoint = request.enabled.endpoint;
@@ -44,6 +44,7 @@ export async function runRemote(request: AdapterRequest): Promise<RunResult> {
       version: request.config.version ?? request.definition.remote?.pistonVersion ?? "*",
       files: [{ content: request.code }],
     }),
+    signal: request.signal,
   });
   tracker.start("collect", "Collect output");
 

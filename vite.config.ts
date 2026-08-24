@@ -137,11 +137,12 @@ export default defineConfig({
         "test:vscode-unit",
         "test:vrt",
       ]),
-      "test:ts-unit": noopTask(["test:vite-plugin", "test:code-play"]),
+      "test:ts-unit": noopTask(["test:vite-plugin", "test:code-play", "test:publish-targets"]),
       "test:vite-plugin": task("vp exec --filter @ox-content/vite-plugin -- vp test src", {
         dependsOn: ["build:napi"],
       }),
       "test:code-play": task("vp exec --filter @ox-content/code-play -- vp test src"),
+      "test:publish-targets": task("vp test scripts/verify-publish-targets.test.ts"),
       "build:vite-plugin": task("vp run --filter @ox-content/vite-plugin build", {
         dependsOn: ["build:napi"],
       }),

@@ -6,7 +6,7 @@ export default defineConfig({
     ignorePatterns: ["dist/**"],
   },
   pack: definePackConfig({
-    entry: ["src/index.ts", "src/plugin.ts", "src/hydrate.ts"],
+    entry: ["src/index.ts", "src/plugin.ts", "src/hydrate.ts", "src/browser.ts"],
     format: ["esm"],
     dts: true,
     clean: true,

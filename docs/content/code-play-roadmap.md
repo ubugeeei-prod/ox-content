@@ -27,8 +27,9 @@ reverse.
    a browser iframe. Native languages use official playgrounds or a
    user-configured HTTP executor. Code Play does not spawn `sh`, `python`, or
    `rustc` on the docs host unless a later local-runtime PR says so.
-5. **Observability is API data.** stdio, config, provenance, and timing are
-   returned on every `RunResult`, not only painted in the default UI.
+5. **Observability is API data.** stdio, dedicated `stdout` / `stderr` strings,
+   config, provenance, and timing are returned on every `RunResult`, not only
+   painted in the default UI.
 
 ## Language Matrix
 
@@ -49,20 +50,29 @@ reverse.
 
 ### 1. `feat(code-play): plugin scaffold, headless API, viewers`
 
-This PR. Ships the package, catalog, headless client, default/compact/headless
+Shipped in #649. Package, catalog, headless client, default/compact/headless
 UI, config / stdio / provenance / timing viewers, Vite plugin, and tests with
 injected transports (no live network in CI).
 
+### 1b. `feat(code-play): dedicated stderr viewer`
+
+Shipped in #662. First-class `RunResult.stdout` / `RunResult.stderr`, a
+dedicated stderr viewer, and compact preset coverage for stderr.
+
 ### 2. `feat(code-play): Vite SSG hydration and docs dogfood`
 
-Harden page-level script emission for ox-content SSG (dev middleware + written
-HTML), enable JavaScript / TypeScript widgets on the docs example page, and
-add a visual check for the default preset.
+Docs example page, package guide, and `examples/code-play` shipped in #697.
+Standalone `ox-code-play.js` + `bootCodePlay()` shipped in #703. This PR
+adds a Playwright check that written SSG HTML hydrates and **Run** prints
+stdio, `session.cancel()` plus a toolbar **Cancel** control, and hides
+TypeScript **Typecheck** on published pages unless `endpoints.typecheck` is
+set.
 
 ### 3. `feat(code-play): official playground proxies`
 
-Keep the allowlisted `/__ox-code-play/rust` and `/__ox-code-play/go` proxies,
-add production `endpoints` documentation, and cover proxy failure modes.
+Shipped in #663. Dev proxies stay POST-only, cap bodies, refuse non-http(s)
+destinations, and hide upstream fetch details. Production pages must set
+`endpoints` (the proxy is not in SSG output).
 
 ### 4. `feat(code-play): framework preview compilers`
 
@@ -76,8 +86,9 @@ each runtime is its own language enable flag.
 
 ### 6. `docs(code-play): security and privacy notes`
 
-Document third-party playgrounds, endpoint trust, iframe sandbox flags, and
-the "no local shell" guarantee in SECURITY.md and the package guide.
+This PR. Trusted `play` fences, iframe `sandbox="allow-scripts"`, third-party
+playgrounds, endpoint trust, production typecheck / CORS, and the "no local
+shell" guarantee in SECURITY.md and the package guide.
 
 ## Out of Scope
 

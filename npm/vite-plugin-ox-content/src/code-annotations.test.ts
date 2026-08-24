@@ -132,8 +132,6 @@ function createResolvedOptions(overrides: Partial<ResolvedOptions> = {}): Resolv
     strikethrough: true,
     autolinks: true,
     highlight: true,
-    highlightTheme: "github-dark",
-    highlightLangs: [],
     codeAnnotations: {
       enabled: true,
       notation: "attribute",

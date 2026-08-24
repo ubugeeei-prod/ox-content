@@ -349,12 +349,6 @@ export interface OxContentOptions {
   highlight?: boolean;
 
   /**
-   * Syntax highlighting theme.
-   * @default 'github-dark'
-   */
-  highlightTheme?: string;
-
-  /**
    * Opt-in line annotations for fenced code blocks.
    *
    * Pass `true` to enable the default `annotate` meta key, or pass an object to
@@ -455,7 +449,6 @@ export interface ResolvedOptions {
   taskLists: boolean;
   strikethrough: boolean;
   highlight: boolean;
-  highlightTheme: string;
   codeAnnotations: ResolvedCodeAnnotationsOptions;
   mermaid: boolean;
   frontmatter: boolean;

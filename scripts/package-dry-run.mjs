@@ -8,6 +8,7 @@ import { spawnSync } from "node:child_process";
 const packages = [
   "crates/ox_content_napi",
   "npm/ox-content-islands",
+  "npm/ox-content-code-play",
   "npm/vite-plugin-ox-content",
   "npm/unplugin-ox-content",
   "npm/vite-plugin-ox-content-vue",

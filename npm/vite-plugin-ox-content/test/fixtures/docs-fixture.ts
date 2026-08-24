@@ -113,8 +113,6 @@ export function createDocsResolvedOptions(
     strikethrough: true,
     autolinks: true,
     highlight: true,
-    highlightTheme: "vitesse-dark",
-    highlightLangs: [],
     codeAnnotations: {
       enabled: false,
       notation: "attribute",

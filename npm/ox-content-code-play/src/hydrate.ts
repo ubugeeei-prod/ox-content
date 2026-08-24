@@ -1,11 +1,15 @@
 import { createCodePlay, type CodePlayClient } from "./client";
+import { readPlayPayload, runPlayAction } from "./hydrate-action";
 import { decodePayload, encodePayload } from "./payload";
+import { errorMessage, errorResult } from "./result";
 import { CODE_PLAY_STYLES } from "./styles";
-import { renderPlayUi } from "./ui";
+import { JS_SANDBOX_FLAGS } from "./javascript-sandbox";
+import { applyActionBusy, renderPlayUi } from "./ui";
 import type { PlayPayload, RunResult } from "./types";
 import {
   renderDiagnosticsHtml,
   renderProvenanceHtml,
+  renderStderrHtml,
   renderStdioHtml,
   renderTimingHtml,
 } from "./viewers";
@@ -24,7 +28,11 @@ export function hydrateCodePlay(
   ensureStyles();
   const client = options.client ?? createCodePlayFromPayloads(root);
   for (const element of queryWidgets(root)) {
-    mountCodePlay(element, { client });
+    try {
+      mountCodePlay(element, { client });
+    } catch {
+      // One broken widget must not abort the rest of the page.
+    }
   }
 }
 
@@ -32,8 +40,8 @@ export function mountCodePlay(element: Element, options: { client?: CodePlayClie
   if (!(element instanceof HTMLElement) || element.dataset.oxCodePlayMounted === "true") {
     return;
   }
-  const payload = decodePayload(element.getAttribute("data-ox-code-play") ?? "");
-  if (payload.ui === "headless") {
+  const payload = readPlayPayload(element.getAttribute("data-ox-code-play") ?? "");
+  if (!payload || payload.ui === "headless") {
     return;
   }
   const client =
@@ -67,8 +75,10 @@ function bindWidget(element: HTMLElement, payload: PlayPayload, client: CodePlay
   });
   const runButton = element.querySelector<HTMLButtonElement>('[data-ox-action="run"]');
   const checkButton = element.querySelector<HTMLButtonElement>('[data-ox-action="typecheck"]');
+  const cancelButton = element.querySelector<HTMLButtonElement>('[data-ox-action="cancel"]');
   runButton?.addEventListener("click", () => void run("execute"));
   checkButton?.addEventListener("click", () => void run("typecheck"));
+  cancelButton?.addEventListener("click", () => session.cancel());
   element.addEventListener("click", (event) => {
     const target = event.target;
     if (!(target instanceof HTMLElement)) {
@@ -89,10 +99,12 @@ function bindWidget(element: HTMLElement, payload: PlayPayload, client: CodePlay
   });
 
   async function run(action: "execute" | "typecheck"): Promise<void> {
-    setBusy(element, true);
-    const result = action === "typecheck" ? await session.typecheck() : await session.run();
-    paintResult(element, current, result);
-    setBusy(element, false);
+    await runPlayAction({
+      action: () => (action === "typecheck" ? session.typecheck() : session.run()),
+      setBusy: (busy) => applyActionBusy(element, busy),
+      onResult: (result) => paintResult(element, current, result),
+      onError: (error) => paintResult(element, current, errorResult(errorMessage(error))),
+    });
   }
 }
 
@@ -102,7 +114,7 @@ function paintResult(element: HTMLElement, _payload: PlayPayload, result: RunRes
     stdio.innerHTML = `${renderDiagnosticsHtml(result)}${renderStdioHtml(result.stdio)}`;
     if (result.preview) {
       const frame = document.createElement("iframe");
-      frame.setAttribute("sandbox", "allow-scripts");
+      frame.setAttribute("sandbox", JS_SANDBOX_FLAGS);
       frame.srcdoc = result.preview.html;
       frame.title = "Code Play preview";
       frame.style.width = "100%";
@@ -119,10 +131,19 @@ function paintResult(element: HTMLElement, _payload: PlayPayload, result: RunRes
   if (timing) {
     timing.innerHTML = renderTimingHtml(result.timing);
   }
-  showPanel(element, "stdio");
+  const stderr = element.querySelector('[data-panel="stderr"]');
+  if (stderr) {
+    stderr.innerHTML = renderStderrHtml(result);
+  }
+  const focusStderr =
+    Boolean(stderr) &&
+    (Boolean(result.stderr) ||
+      result.diagnostics.some((diagnostic) => diagnostic.severity === "error"));
+  showPanel(element, focusStderr ? "stderr" : "stdio");
 }
 
 function showPanel(element: HTMLElement, panel: string): void {
+  const compact = Boolean(element.querySelector(".ox-code-play--compact"));
   for (const tab of element.querySelectorAll("[data-ox-panel]")) {
     tab.setAttribute(
       "aria-selected",
@@ -130,13 +151,12 @@ function showPanel(element: HTMLElement, panel: string): void {
     );
   }
   for (const node of element.querySelectorAll<HTMLElement>(".ox-code-play__panel")) {
-    node.hidden = node.dataset.panel !== panel;
-  }
-}
-
-function setBusy(element: HTMLElement, busy: boolean): void {
-  for (const button of element.querySelectorAll("button[data-ox-action]")) {
-    (button as HTMLButtonElement).disabled = busy;
+    const id = node.dataset.panel;
+    if (compact && (id === "stdio" || id === "stderr")) {
+      node.hidden = false;
+      continue;
+    }
+    node.hidden = id !== panel;
   }
 }
 

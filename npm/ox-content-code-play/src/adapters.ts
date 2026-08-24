@@ -4,9 +4,9 @@ import { runJavaScript } from "./javascript";
 import { runRemote } from "./remote";
 import { runRust } from "./rust";
 import { runTypeScript, typecheckTypeScript } from "./typescript";
-import type { AdapterRequest, RunResult } from "./types";
+import type { AdapterRequest, AdapterResult } from "./types";
 
-export async function executeAdapter(request: AdapterRequest): Promise<RunResult> {
+export async function executeAdapter(request: AdapterRequest): Promise<AdapterResult> {
   if (!request.enabled.execute) {
     return capabilityDisabled(request, "execute");
   }
@@ -28,7 +28,7 @@ export async function executeAdapter(request: AdapterRequest): Promise<RunResult
   }
 }
 
-export async function typecheckAdapter(request: AdapterRequest): Promise<RunResult> {
+export async function typecheckAdapter(request: AdapterRequest): Promise<AdapterResult> {
   if (!request.enabled.typecheck || !request.definition.capabilities.typecheck) {
     return capabilityDisabled(request, "typecheck");
   }
@@ -44,7 +44,10 @@ export async function typecheckAdapter(request: AdapterRequest): Promise<RunResu
   }
 }
 
-function capabilityDisabled(request: AdapterRequest, action: "execute" | "typecheck"): RunResult {
+function capabilityDisabled(
+  request: AdapterRequest,
+  action: "execute" | "typecheck",
+): AdapterResult {
   return {
     status: "unsupported",
     stdio: [],

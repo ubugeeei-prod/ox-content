@@ -52,7 +52,7 @@ export interface PreviewDocument {
   html: string;
 }
 
-export interface RunResult {
+export interface AdapterResult {
   status: RunStatus;
   stdio: StdioEvent[];
   diagnostics: Diagnostic[];
@@ -60,6 +60,13 @@ export interface RunResult {
   timing: TimingReport;
   preview?: PreviewDocument;
   value?: string;
+}
+
+export interface RunResult extends AdapterResult {
+  /** Concatenated `stdout` chunks from `stdio`. */
+  stdout: string;
+  /** Concatenated `stderr` chunks from `stdio`. */
+  stderr: string;
 }
 
 export type ConfigFieldType = "string" | "boolean" | "select" | "number";
@@ -133,6 +140,7 @@ export interface TransportRequest {
   method: "GET" | "POST";
   headers?: Record<string, string>;
   body?: string;
+  signal?: AbortSignal;
 }
 
 export interface TransportResponse {
@@ -148,6 +156,7 @@ export interface CodePlayTransport {
 export interface ViewerFlags {
   config: boolean;
   stdio: boolean;
+  stderr: boolean;
   provenance: boolean;
   timing: boolean;
 }
@@ -219,6 +228,7 @@ export interface AdapterRequest {
   transport: CodePlayTransport;
   loadTypeScript?: () => Promise<TypeScriptLike | undefined>;
   endpoints: PlaygroundEndpoints;
+  signal?: AbortSignal;
 }
 
 export interface PlaygroundEndpoints {

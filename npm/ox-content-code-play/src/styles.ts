@@ -82,5 +82,5 @@ export const CODE_PLAY_STYLES = `
 .ox-code-play__diag--error { color: var(--octc-danger, #b42318); }
 .ox-code-play__diag--warning { color: var(--octc-warning, #b54708); }
 .ox-code-play--compact .ox-code-play__tabs { display: none; }
-.ox-code-play--compact .ox-code-play__panel[data-panel]:not([data-panel="stdio"]) { display: none; }
+.ox-code-play--compact .ox-code-play__panel[data-panel]:not([data-panel="stdio"]):not([data-panel="stderr"]) { display: none; }
 `;

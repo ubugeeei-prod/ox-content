@@ -330,7 +330,6 @@ function createResolvedOptions(overrides?: Partial<ResolvedOptions>): ResolvedOp
     taskLists: true,
     strikethrough: true,
     highlight: false,
-    highlightTheme: "github-dark",
     mermaid: false,
     frontmatter: true,
     toc: true,

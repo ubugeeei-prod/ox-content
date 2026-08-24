@@ -300,6 +300,7 @@ jobs:
             ./binding-packages/linux-arm64-musl \
             ./binding-packages/win32-x64-msvc \
             ./npm/ox-content-islands \
+            ./npm/ox-content-code-play \
             ./npm/unplugin-ox-content \
             ./npm/vite-plugin-ox-content \
             ./npm/vite-plugin-ox-content-react \

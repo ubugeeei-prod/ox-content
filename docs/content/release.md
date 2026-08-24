@@ -58,10 +58,19 @@ three are part of the identity, so renaming the workflow file or the environment
 breaks publishing until every entry is updated to match.
 
 Entries are needed for the workspace packages (`@ox-content/napi`,
-`@ox-content/islands`, `@ox-content/vite-plugin`, `@ox-content/unplugin`, the
-four `@ox-content/vite-plugin-{vue,react,svelte,solid}` integrations, and
+`@ox-content/islands`, `@ox-content/code-play`, `@ox-content/vite-plugin`,
+`@ox-content/unplugin`, the four
+`@ox-content/vite-plugin-{vue,react,svelte,solid}` integrations, and
 `@ox-content/wasm`) and for each `@ox-content/napi-*` platform binding package
 the N-API build publishes.
+
+On npmjs.com the GitHub Actions trusted publisher must match this identity
+exactly:
+
+- Organization or user: `ubugeeei-prod`
+- Repository: `ox-content`
+- Workflow filename: `publish.yml`
+- Environment name: `npm`
 
 ## First-Time npm Publishing
 
@@ -73,10 +82,14 @@ A release that introduces a new npm package therefore needs one manual publish
 by a maintainer with local npm credentials, before the tag is pushed:
 
 ```bash
+# Generic new package
 corepack pnpm --filter @ox-content/vite-plugin-new build
 cd npm/vite-plugin-ox-content-new
 corepack pnpm pack --pack-destination /tmp
 npm publish /tmp/ox-content-vite-plugin-new-<version>.tgz --access public --provenance=false
+
+# @ox-content/code-play bootstrap (package does not exist on npm yet)
+node scripts/bootstrap-npm-package.mjs npm/ox-content-code-play
 ```
 
 Bump every workspace package to the release version before packing, or the

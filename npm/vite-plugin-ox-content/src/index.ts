@@ -31,11 +31,9 @@ import { isMarkdownFilePath, normalizeMarkdownExtensions } from "./markdown";
 import { generateCollectionsVirtualModule, resolveCollectionsOptions } from "./collections";
 import type { BuiltinPmOptions, OxContentOptions, ResolvedOptions } from "./types";
 import type { TwitterEmbedOptions } from "./plugins";
-import { CSS_VARIABLES_THEME } from "./shiki-theme";
 
 export type { OxContentOptions } from "./types";
 export type { TwitterEmbedOptions } from "./plugins";
-export type { LanguageRegistration, ThemeRegistration } from "shiki";
 export type {
   CodeAnnotationSyntax,
   CodeAnnotationsOptions,
@@ -544,8 +542,6 @@ function resolveOptions(options: OxContentOptions): ResolvedOptions {
     strikethrough: options.strikethrough ?? true,
     autolinks: options.autolinks ?? options.gfm ?? true,
     highlight: options.highlight ?? false,
-    highlightTheme: options.highlightTheme ?? CSS_VARIABLES_THEME,
-    highlightLangs: options.highlightLangs ?? [],
     codeAnnotations: resolveCodeAnnotationsOptions(options.codeAnnotations),
     wikiLinks: resolveWikiLinkOptions(options.wikiLinks, options.base ?? "/"),
     emojiShortcodes: resolveEmojiShortcodeOptions(options.emojiShortcodes),

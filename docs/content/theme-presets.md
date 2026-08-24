@@ -196,22 +196,16 @@ toggle switches between them with no extra configuration.
 ## Syntax highlighting
 
 Highlighting follows the color scheme in both modes, with no extra
-configuration. `highlightTheme` defaults to `'css-variables'`, so Shiki emits
-token colors as `--octc-shiki-*` custom properties and each scheme defines them
-per mode — one build, two palettes.
+configuration. The native tree-sitter highlighter emits token colors as
+`--octc-shiki-*` custom properties (the `shiki` prefix is historical) and each
+scheme defines them per mode — one build, two palettes.
 
 Schemes pick syntax colors against the **code background**, not the page
 background. Several light schemes (`mono`, `snow`, `nord`, `retro`, `monokai`,
 `poimandres`, `synthwave`) deliberately keep a dark code block in light mode; a
 fixed theme would put dark token colors on it and make it unreadable.
 
-With no scheme installed the properties fall back to GitHub Dark, which is what
-the default used to be. To bake fixed colors in instead, name any bundled Shiki
-theme:
-
-```ts
-oxContent({ highlightTheme: "vitesse-dark" });
-```
+With no scheme installed the properties fall back to GitHub Dark.
 
 Override individual tokens like any other token:
 

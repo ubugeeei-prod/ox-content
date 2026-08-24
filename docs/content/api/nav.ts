@@ -52,10 +52,6 @@ export const apiNav: NavItem[] = [
     "path": "/api/highlight-native"
   },
   {
-    "title": "Highlight Pending",
-    "path": "/api/highlight-pending"
-  },
-  {
     "title": "I18n",
     "path": "/api/i18n"
   },
@@ -146,10 +142,6 @@ export const apiNav: NavItem[] = [
   {
     "title": "Search",
     "path": "/api/search"
-  },
-  {
-    "title": "Shiki Theme",
-    "path": "/api/shiki-theme"
   },
   {
     "title": "Ssg",

@@ -128,23 +128,19 @@ export async function lintMarkdownFiles(
   );
   const results = await lintMarkdownDocumentsAsync(sources, resolvedOptions.lintOptions);
 
-  const files = matchedFiles.map(
-    (file, index): MarkdownLintFileResult => ({
-      ...(results[index] ?? createEmptyLintResult()),
-      filePath: file.filePath,
-      relativePath: file.relativePath,
-      skipped: false,
-    }),
-  );
+  const files = matchedFiles.map((file, index): MarkdownLintFileResult => ({
+    ...(results[index] ?? createEmptyLintResult()),
+    filePath: file.filePath,
+    relativePath: file.relativePath,
+    skipped: false,
+  }));
 
   const diagnostics = files.flatMap((fileResult) =>
-    fileResult.diagnostics.map(
-      (diagnostic): MarkdownLintFileDiagnostic => ({
-        ...diagnostic,
-        filePath: fileResult.filePath,
-        relativePath: fileResult.relativePath,
-      }),
-    ),
+    fileResult.diagnostics.map((diagnostic): MarkdownLintFileDiagnostic => ({
+      ...diagnostic,
+      filePath: fileResult.filePath,
+      relativePath: fileResult.relativePath,
+    })),
   );
 
   return {

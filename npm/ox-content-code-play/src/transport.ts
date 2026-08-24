@@ -7,6 +7,7 @@ export function createFetchTransport(fetchImpl: typeof fetch = fetch): CodePlayT
         method: input.method,
         headers: input.headers,
         body: input.body,
+        signal: input.signal,
       });
       return {
         ok: response.ok,
@@ -21,7 +22,12 @@ export function createMemoryTransport(
   handler: (input: TransportRequest) => TransportResponse | Promise<TransportResponse>,
 ): CodePlayTransport {
   return {
-    request: (input) => Promise.resolve(handler(input)),
+    async request(input) {
+      if (input.signal?.aborted) {
+        throw abortError();
+      }
+      return handler(input);
+    },
   };
 }
 
@@ -32,9 +38,24 @@ export class MissingTransportError extends Error {
   }
 }
 
+export function abortError(): Error {
+  const error = new Error("The Code Play run was cancelled.");
+  error.name = "AbortError";
+  return error;
+}
+
+export function isAbortError(error: unknown): boolean {
+  return Boolean(
+    error && typeof error === "object" && "name" in error && error.name === "AbortError",
+  );
+}
+
 export function createUnavailableTransport(): CodePlayTransport {
   return {
     request(input) {
+      if (input.signal?.aborted) {
+        return Promise.reject(abortError());
+      }
       return Promise.reject(new MissingTransportError(input.url));
     },
   };

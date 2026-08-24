@@ -5,6 +5,7 @@ import {
   renderConfigHtml,
   renderDiagnosticsHtml,
   renderProvenanceHtml,
+  renderStderrHtml,
   renderStdioHtml,
   renderTimingHtml,
 } from "./viewers";
@@ -13,7 +14,7 @@ export interface UiState {
   payload: PlayPayload;
   result?: RunResult;
   busy?: boolean;
-  panel?: "stdio" | "config" | "provenance" | "timing";
+  panel?: "stdio" | "stderr" | "config" | "provenance" | "timing";
 }
 
 export function renderPlayUi(state: UiState): string {
@@ -25,18 +26,21 @@ export function renderPlayUi(state: UiState): string {
   const panel = state.panel ?? "stdio";
   const canTypecheck = state.payload.capabilities.typecheck;
   const tabs = renderTabs(state, panel);
+  const viewers = state.payload.viewers;
   return `<div class="ox-code-play ox-code-play--${preset}" data-ox-code-play-ui>
   <div class="ox-code-play__toolbar">
     <span class="ox-code-play__lang">${escapeHtml(definition?.name ?? state.payload.language)}</span>
-    <button type="button" data-ox-action="run"${state.busy ? " disabled" : ""}>Run</button>
-    ${canTypecheck ? `<button type="button" data-ox-action="typecheck"${state.busy ? " disabled" : ""}>Typecheck</button>` : ""}
+    <button type="button" data-ox-action="run"${actionButtonAttrs("run", Boolean(state.busy))}>Run</button>
+    ${canTypecheck ? `<button type="button" data-ox-action="typecheck"${actionButtonAttrs("typecheck", Boolean(state.busy))}>Typecheck</button>` : ""}
+    <button type="button" data-ox-action="cancel"${actionButtonAttrs("cancel", Boolean(state.busy))}>Cancel</button>
   </div>
   <div class="ox-code-play__source"></div>
   ${tabs}
-  <div class="ox-code-play__panel" data-panel="stdio">${renderDiagnosticsHtml(state.result)}${renderStdioHtml(state.result?.stdio ?? [])}</div>
-  <div class="ox-code-play__panel" data-panel="config"${hidden(panel, "config")}>${renderConfigHtml(definition?.configSchema ?? [], state.payload.config)}</div>
-  <div class="ox-code-play__panel" data-panel="provenance"${hidden(panel, "provenance")}>${renderProvenanceHtml(state.result?.provenance)}</div>
-  <div class="ox-code-play__panel" data-panel="timing"${hidden(panel, "timing")}>${renderTimingHtml(state.result?.timing)}</div>
+  ${viewers.stdio ? `<div class="ox-code-play__panel" data-panel="stdio">${renderDiagnosticsHtml(state.result)}${renderStdioHtml(state.result?.stdio ?? [])}</div>` : ""}
+  ${viewers.stderr ? `<div class="ox-code-play__panel" data-panel="stderr"${hidden(panel, "stderr", preset)}>${renderStderrHtml(state.result)}</div>` : ""}
+  <div class="ox-code-play__panel" data-panel="config"${hidden(panel, "config", preset)}>${renderConfigHtml(definition?.configSchema ?? [], state.payload.config)}</div>
+  <div class="ox-code-play__panel" data-panel="provenance"${hidden(panel, "provenance", preset)}>${renderProvenanceHtml(state.result?.provenance)}</div>
+  <div class="ox-code-play__panel" data-panel="timing"${hidden(panel, "timing", preset)}>${renderTimingHtml(state.result?.timing)}</div>
 </div>`;
 }
 
@@ -47,6 +51,7 @@ function renderTabs(state: UiState, panel: string): string {
   const viewers = state.payload.viewers;
   const buttons = [
     viewers.stdio ? tab("stdio", "stdio", panel) : "",
+    viewers.stderr ? tab("stderr", "stderr", panel) : "",
     viewers.config ? tab("config", "config", panel) : "",
     viewers.provenance ? tab("provenance", "provenance", panel) : "",
     viewers.timing ? tab("timing", "timing", panel) : "",
@@ -60,6 +65,32 @@ function tab(id: string, label: string, selected: string): string {
   return `<button type="button" role="tab" data-ox-panel="${id}" aria-selected="${selected === id ? "true" : "false"}">${label}</button>`;
 }
 
-function hidden(current: string, id: string): string {
+export function actionButtonAttrs(action: string, busy: boolean): string {
+  const state = actionBusyState(action, busy);
+  return `${state.disabled ? " disabled" : ""}${state.hidden ? " hidden" : ""}`;
+}
+
+export function actionBusyState(
+  action: string,
+  busy: boolean,
+): { disabled: boolean; hidden: boolean } {
+  if (action === "cancel") {
+    return { disabled: !busy, hidden: !busy };
+  }
+  return { disabled: busy, hidden: false };
+}
+
+export function applyActionBusy(root: ParentNode, busy: boolean): void {
+  for (const button of root.querySelectorAll<HTMLButtonElement>("button[data-ox-action]")) {
+    const state = actionBusyState(button.dataset.oxAction ?? "", busy);
+    button.disabled = state.disabled;
+    button.hidden = state.hidden;
+  }
+}
+
+function hidden(current: string, id: string, preset: CodePlayPreset): string {
+  if (preset === "compact" && (id === "stdio" || id === "stderr")) {
+    return "";
+  }
   return current === id ? "" : " hidden";
 }

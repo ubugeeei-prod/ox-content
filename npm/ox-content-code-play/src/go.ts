@@ -1,6 +1,6 @@
 import { StdioBuffer } from "./stdio";
 import { PhaseTracker } from "./timing";
-import type { AdapterRequest, Diagnostic, RunResult } from "./types";
+import type { AdapterRequest, AdapterResult, Diagnostic } from "./types";
 
 interface GoPlaygroundEvent {
   Message?: string;
@@ -17,7 +17,7 @@ interface GoPlaygroundResponse {
 export async function runGo(
   request: AdapterRequest,
   mode: "execute" | "typecheck",
-): Promise<RunResult> {
+): Promise<AdapterResult> {
   const tracker = new PhaseTracker();
   const stdio = new StdioBuffer(tracker.startedAt);
   const params = new URLSearchParams({
@@ -35,6 +35,7 @@ export async function runGo(
     method: "POST",
     headers: { "Content-Type": "application/x-www-form-urlencoded" },
     body: params.toString(),
+    signal: request.signal,
   });
   tracker.start("collect", "Collect output");
 

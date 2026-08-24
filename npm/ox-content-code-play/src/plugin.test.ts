@@ -1,4 +1,6 @@
 import { describe, expect, it } from "vite-plus/test";
+import { DEV_TYPECHECK_PATH } from "./config";
+import { decodePayload } from "./payload";
 import { codePlay } from "./plugin";
 
 describe("codePlay vite plugin", () => {
@@ -15,7 +17,67 @@ describe("codePlay vite plugin", () => {
     const resolveId = hookFn(plugin.resolveId) as (id: string) => string | null;
     expect(resolveId("virtual:ox-content/code-play")).toBe("\0virtual:ox-content/code-play");
   });
+
+  it("does not embed the Vite typecheck proxy into SSG payloads", () => {
+    const plugin = codePlay({ languages: { typescript: { execute: true, typecheck: true } } });
+    resolveCommand(plugin, "build");
+    const payload = payloadFromTransform(plugin, "```ts play\nconst n = 1;\n```\n");
+    expect(payload.capabilities.typecheck).toBe(false);
+    expect(payload.endpoints?.typecheck).toBeUndefined();
+  });
+
+  it("keeps an explicit typecheck endpoint in SSG payloads", () => {
+    const plugin = codePlay({
+      languages: { typescript: { execute: true, typecheck: true } },
+      endpoints: { typecheck: "https://example.test/typecheck" },
+    });
+    resolveCommand(plugin, "build");
+    const payload = payloadFromTransform(plugin, "```ts play\nconst n = 1;\n```\n");
+    expect(payload.capabilities.typecheck).toBe(true);
+    expect(payload.endpoints?.typecheck).toBe("https://example.test/typecheck");
+  });
+
+  it("keeps the Vite typecheck proxy on the dev server", () => {
+    const plugin = codePlay({ languages: { typescript: { execute: true, typecheck: true } } });
+    resolveCommand(plugin, "serve");
+    const payload = payloadFromTransform(plugin, "```ts play\nconst n = 1;\n```\n");
+    expect(payload.capabilities.typecheck).toBe(true);
+    expect(payload.endpoints?.typecheck).toBe(DEV_TYPECHECK_PATH);
+  });
+
+  it("does not embed the Vite typecheck proxy when proxy is disabled", () => {
+    const plugin = codePlay({
+      languages: { typescript: { execute: true, typecheck: true } },
+      proxy: false,
+    });
+    resolveCommand(plugin, "serve");
+    const payload = payloadFromTransform(plugin, "```ts play\nconst n = 1;\n```\n");
+    expect(payload.capabilities.typecheck).toBe(false);
+    expect(payload.endpoints?.typecheck).toBeUndefined();
+  });
 });
+
+function resolveCommand(plugin: { configResolved?: unknown }, command: "build" | "serve"): void {
+  hookFn(plugin.configResolved)({
+    command,
+    root: "/",
+    base: "/",
+    build: { outDir: "dist" },
+  } as never);
+}
+
+function payloadFromTransform(plugin: { transform?: unknown }, code: string) {
+  const rewritten = (hookFn(plugin.transform) as (source: string, id: string) => string | null)(
+    code,
+    "page.md",
+  );
+  const match =
+    typeof rewritten === "string" ? /<!--ox-code-play:([A-Za-z0-9+/=]+)-->/.exec(rewritten) : null;
+  if (!match?.[1]) {
+    throw new Error("expected a Code Play payload comment");
+  }
+  return decodePayload(match[1]);
+}
 
 function hookFn(hook: unknown): (...args: never[]) => unknown {
   if (typeof hook === "function") {

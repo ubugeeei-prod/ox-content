@@ -96,7 +96,6 @@ function resolveOptions(options: OxContentOptions): ResolvedOptions {
     taskLists: options.taskLists ?? true,
     strikethrough: options.strikethrough ?? true,
     highlight: options.highlight ?? false,
-    highlightTheme: options.highlightTheme ?? "github-dark",
     codeAnnotations: resolveCodeAnnotationsOptions(options.codeAnnotations),
     mermaid: options.mermaid ?? false,
     frontmatter: options.frontmatter ?? true,

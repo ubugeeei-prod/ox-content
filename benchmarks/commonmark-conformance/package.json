@@ -12,13 +12,13 @@
     "@tanstack/markdown": "^0.0.13",
     "markdown-it": "^15.0.0",
     "markdown-it-ts": "^1.0.10",
-    "marked": "^18.0.9",
+    "marked": "^18.0.10",
     "md4w": "^0.2.7",
     "md4x": "^0.0.29",
     "micromark": "^4.0.1",
     "remark-html": "^16.0.1",
     "remark-parse": "^11.0.0",
-    "satteri": "^0.9.5",
+    "satteri": "^0.10.5",
     "unified": "^11.0.5"
   }
 }
