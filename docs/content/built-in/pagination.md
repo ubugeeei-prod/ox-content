@@ -47,10 +47,10 @@ next: false
 ---
 ```
 
-| Value | Result |
-| --- | --- |
-| omitted | Auto neighbor from the sidebar |
-| `false` | Hide that side |
-| `{ text, link }` or `{ title, href }` | Replace that side |
+| Value                                 | Result                         |
+| ------------------------------------- | ------------------------------ |
+| omitted                               | Auto neighbor from the sidebar |
+| `false`                               | Hide that side                 |
+| `{ text, link }` or `{ title, href }` | Replace that side              |
 
 Override hrefs that use `javascript:` or `data:` are dropped.

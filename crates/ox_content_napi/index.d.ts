@@ -1057,6 +1057,16 @@ export interface JsOgImageData {
   author?: string
 }
 
+/** Frontmatter override for one previous/next pager side. */
+export interface JsPagerOverride {
+  /** Hide this side when true. */
+  hidden?: boolean
+  /** Replacement title. */
+  text?: string
+  /** Replacement href. */
+  href?: string
+}
+
 /**
  * Parser options for JavaScript.
  *
@@ -1421,16 +1431,6 @@ export interface JsSsgNavItem {
   children?: Array<JsSsgNavItem>
   collapsed?: boolean
   stickyCollapsed?: boolean
-}
-
-/** Frontmatter override for one previous/next pager side. */
-export interface JsPagerOverride {
-  /** Hide this side when true. */
-  hidden?: boolean
-  /** Replacement title. */
-  text?: string
-  /** Replacement href. */
-  href?: string
 }
 
 /** Page data for SSG. */
