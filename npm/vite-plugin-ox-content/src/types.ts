@@ -522,6 +522,58 @@ export interface ResolvedCascadeOptions {
 }
 
 /**
+ * Opt-in static redirects, aliases, and path rewrites.
+ *
+ * A path map such as `{ "/old-guide": "/guide" }` is also accepted in place
+ * of this object and enables the feature with that map.
+ */
+export interface RedirectsOptions {
+  /**
+   * Old path to new path. Destinations must be same-origin (`/` but not `//`)
+   * unless `allowExternal` is set.
+   * @default {}
+   */
+  map?: Record<string, string>;
+
+  /**
+   * Write a Netlify / Cloudflare `_redirects` file next to the HTML pages.
+   * @default false
+   */
+  netlify?: boolean;
+
+  /**
+   * Write a `_headers` Location map next to the HTML pages.
+   * @default false
+   */
+  headers?: boolean;
+
+  /**
+   * Write a machine-readable `redirects.json` map.
+   * @default false
+   */
+  json?: boolean;
+
+  /**
+   * Allow `http://` and `https://` destinations. `javascript:`, `data:`, and
+   * protocol-relative `//` targets stay rejected.
+   * @default false
+   */
+  allowExternal?: boolean;
+}
+
+/**
+ * Resolved redirect options.
+ */
+export interface ResolvedRedirectsOptions {
+  enabled: boolean;
+  map: Record<string, string>;
+  netlify: boolean;
+  headers: boolean;
+  json: boolean;
+  allowExternal: boolean;
+}
+
+/**
  * Options for the core `oxContent()` Vite plugin.
  *
  * The top-level options describe where content lives, which Markdown features
@@ -632,6 +684,19 @@ export interface OxContentOptions {
    * @default false
    */
   cascade?: boolean | CascadeOptions;
+
+  /**
+   * Write static HTML redirect pages for frontmatter aliases and a config map.
+   *
+   * Off by default. `true` or `{}` enables empty defaults. A path map such as
+   * `{ "/old-guide": "/guide" }` enables the feature with that map. Destinations
+   * must be same-origin paths (`/` but not `//`) unless `allowExternal` is set.
+   * `javascript:`, `data:`, and protocol-relative URLs are ignored.
+   * Overlapping sources last-win after trailing slashes are folded.
+   *
+   * @default false
+   */
+  redirects?: boolean | RedirectsOptions | Record<string, string>;
 
   /**
    * Enable GitHub Flavored Markdown extensions.
@@ -991,6 +1056,7 @@ export interface ResolvedOptions {
   publishState?: ResolvedPublishStateOptions;
   permalinks?: ResolvedPermalinksOptions;
   cascade?: ResolvedCascadeOptions;
+  redirects?: ResolvedRedirectsOptions;
   gfm: boolean;
   footnotes: boolean;
   tables: boolean;

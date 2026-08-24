@@ -58,6 +58,7 @@
 mod assets;
 mod html;
 mod permalinks;
+mod redirects;
 mod routes;
 mod site_maps;
 mod vitepress;
@@ -75,6 +76,10 @@ pub use html::{
 pub use permalinks::{
     CascadeOptions, PermalinksOptions, ResolvedRoutePage, RoutePage, RouteResolveOutput,
     apply_cascade, escape_attribute, is_safe_permalink, resolve_page_routes,
+};
+pub use redirects::{
+    RedirectEntry, RedirectPage, RedirectsOptions, RedirectsOutput, generate_redirect_html,
+    generate_redirects, is_safe_dest, normalize_path,
 };
 pub use routes::{
     ManualNavigationGroup, ManualNavigationItem, RoutePaths, SidebarItem, build_nav_items,

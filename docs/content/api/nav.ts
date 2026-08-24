@@ -144,6 +144,10 @@ export const apiNav: NavItem[] = [
     "path": "/api/publish-state"
   },
   {
+    "title": "Redirects",
+    "path": "/api/redirects"
+  },
+  {
     "title": "Renderer",
     "path": "/api/renderer"
   },

@@ -47,6 +47,10 @@ export default defineConfig(({ mode }) => {
         siteMaps: true,
         publishState: true,
 
+        // Static HTML redirects. Safe: only aliases/map entries emit files,
+        // and destinations stay same-origin unless allowExternal is set.
+        redirects: true,
+
         // SSG options with theme customization
         ssg: {
           siteName: "Ox Content",
@@ -115,6 +119,7 @@ export default defineConfig(({ mode }) => {
                       { text: "Sitemap / robots / llms.txt", link: "/built-in/site-maps.md" },
                       { text: "Draft / unlisted / scheduled", link: "/built-in/drafts.md" },
                       { text: "Permalinks and Cascade", link: "/built-in/permalinks.md" },
+                      { text: "Redirects and aliases", link: "/built-in/redirects.md" },
                     ],
                   },
                   { text: "Theming", link: "/theming.md" },

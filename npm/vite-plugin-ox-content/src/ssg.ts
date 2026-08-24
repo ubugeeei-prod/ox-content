@@ -33,6 +33,7 @@ import type { PageData as ThemePageData } from "./theme-renderer";
 import { writeSiteMapFiles } from "./site-maps";
 import { filterNavGroups, hiddenNavKeys, partitionPublishedPages } from "./publish-state";
 import { applySsgPageRoutes, remapNavGroups } from "./apply-permalinks";
+import { writeRedirectFiles } from "./redirects";
 
 /**
  * Navigation item for SSG.
@@ -1220,6 +1221,26 @@ async function writeGeneratedPages(
     errors.push(siteMaps.warning);
     console.warn(siteMaps.warning);
   }
+
+  const redirects = await writeRedirectFiles({
+    outDir: context.outDir,
+    base: context.base,
+    options: context.options.redirects,
+    pages: outputPages.map((page) => ({
+      dest: sitePathFromUrlPath(page.routePaths.urlPath),
+      aliases: page.frontmatter.aliases,
+      redirect: page.frontmatter.redirect,
+    })),
+  });
+  generatedFiles.push(...redirects.files);
+}
+
+/** Turns an SSG `urlPath` (`guide` or `/`) into a same-origin dest (`/guide`). */
+function sitePathFromUrlPath(urlPath: string): string {
+  if (!urlPath || urlPath === "/") {
+    return "/";
+  }
+  return urlPath.startsWith("/") ? urlPath : `/${urlPath}`;
 }
 
 function sitemapPages(
