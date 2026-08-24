@@ -61,7 +61,6 @@
     <code class="ox-api-entry__param-name">dest</code>
     <code class="ox-api-entry__param-type">string</code>
   </div>
-  
 </li>
 </ul>
 </div>
@@ -69,7 +68,6 @@
 <h4>Returns</h4>
 <div class="ox-api-entry__return">
   <code class="ox-api-entry__return-type">string</code>
-  
 </div>
 </div>
   </div>
@@ -94,7 +92,6 @@
     <code class="ox-api-entry__param-name">value</code>
     <code class="ox-api-entry__param-type">string</code>
   </div>
-  
 </li>
 </ul>
 </div>
@@ -102,7 +99,6 @@
 <h4>Returns</h4>
 <div class="ox-api-entry__return">
   <code class="ox-api-entry__return-type">boolean</code>
-  
 </div>
 </div>
   </div>
@@ -127,7 +123,6 @@
     <code class="ox-api-entry__param-name">value</code>
     <code class="ox-api-entry__param-type">string</code>
   </div>
-  
 </li>
 </ul>
 </div>
@@ -135,7 +130,6 @@
 <h4>Returns</h4>
 <div class="ox-api-entry__return">
   <code class="ox-api-entry__return-type">string | null</code>
-  
 </div>
 </div>
   </div>
@@ -160,7 +154,6 @@
     <code class="ox-api-entry__param-name">input</code>
     <code class="ox-api-entry__param-type"><a href="#redirectplaninput">RedirectPlanInput</a></code>
   </div>
-  
 </li>
 </ul>
 </div>
@@ -168,7 +161,6 @@
 <h4>Returns</h4>
 <div class="ox-api-entry__return">
   <code class="ox-api-entry__return-type"><a href="#redirectplan">RedirectPlan</a></code>
-  
 </div>
 </div>
   </div>
@@ -375,7 +367,6 @@
     <code class="ox-api-entry__param-name">value</code>
     <code class="ox-api-entry__param-type">boolean | <a href="./types.md#redirectsoptions">RedirectsOptions</a> | Record&lt;string, string&gt; | undefined</code>
   </div>
-  
 </li>
 </ul>
 </div>
@@ -383,7 +374,6 @@
 <h4>Returns</h4>
 <div class="ox-api-entry__return">
   <code class="ox-api-entry__return-type"><a href="./types.md#resolvedredirectsoptions">ResolvedRedirectsOptions</a></code>
-  
 </div>
 </div>
   </div>
@@ -408,7 +398,6 @@
     <code class="ox-api-entry__param-name">input</code>
     <code class="ox-api-entry__param-type"><a href="#writeredirectfilesinput">WriteRedirectFilesInput</a></code>
   </div>
-  
 </li>
 </ul>
 </div>
@@ -416,7 +405,6 @@
 <h4>Returns</h4>
 <div class="ox-api-entry__return">
   <code class="ox-api-entry__return-type">Promise&lt;{ files: string[] }&gt;</code>
-  
 </div>
 </div>
   </div>
@@ -466,4 +454,3 @@
 </div>
   </div>
 </details>
-

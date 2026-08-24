@@ -1,6 +1,7 @@
 use rustc_hash::FxHashMap;
 
 use ox_content_ast::{Document, Heading, Node};
+use ox_content_renderer::slugify_heading;
 
 /// Table of contents entry.
 #[derive(serde::Serialize)]
@@ -20,7 +21,7 @@ pub fn extract_toc(doc: &Document, max_depth: u8) -> Vec<TocEntry> {
             && heading.depth <= max_depth
         {
             let text = extract_heading_text(heading);
-            let slug = unique_slug(slugify(&text), &mut slug_counts);
+            let slug = unique_slug(slugify_heading(&text), &mut slug_counts);
             entries.push(TocEntry { depth: heading.depth, text, slug });
         }
     }
@@ -66,17 +67,6 @@ fn collect_text(node: &Node, text: &mut String) {
     }
 }
 
-/// Converts text to URL-friendly slug.
-fn slugify(text: &str) -> String {
-    text.to_lowercase()
-        .chars()
-        .map(|c| if c.is_alphanumeric() || c == ' ' || c == '-' { c } else { ' ' })
-        .collect::<String>()
-        .split_whitespace()
-        .collect::<Vec<_>>()
-        .join("-")
-}
-
 fn unique_slug(slug: String, counts: &mut FxHashMap<String, usize>) -> String {
     let slug = if slug.is_empty() { "section".to_string() } else { slug };
     let count = counts.entry(slug.clone()).or_insert(0);
@@ -95,12 +85,19 @@ mod tests {
     #[test]
     fn toc_slugs_are_unique_and_match_heading_ids() {
         let allocator = Allocator::new();
-        let doc = Parser::new(&allocator, "## Setup!\n## Setup?\n##").parse().unwrap();
+        let doc = Parser::new(
+            &allocator,
+            "## Setup!\n## Setup?\n##\n## Node.js API via N-API\n## Detail tracing (`--detail`)",
+        )
+        .parse()
+        .unwrap();
 
         let toc = extract_toc(&doc, 3);
 
         assert_eq!(toc[0].slug, "setup");
         assert_eq!(toc[1].slug, "setup-1");
         assert_eq!(toc[2].slug, "section");
+        assert_eq!(toc[3].slug, "node-js-api-via-n-api");
+        assert_eq!(toc[4].slug, "detail-tracing-detail");
     }
 }

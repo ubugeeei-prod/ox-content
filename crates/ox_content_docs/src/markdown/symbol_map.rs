@@ -4,16 +4,18 @@ use rustc_hash::FxHashMap;
 
 use super::links::SymbolLocation;
 use super::options::{MarkdownDocsOptions, MarkdownPathStrategy};
-use super::paths::{entry_anchor, member_anchor, module_file_name};
+use super::paths::{entry_anchor, member_anchor};
 use super::typedoc::{plural_kind_file_name, typedoc_entry_file_name};
 use super::{CanonicalOwners, member_symbol_name};
 use crate::model::ApiDocModule;
+use crate::module_routes::module_file_name;
 #[allow(unused_imports)]
 use crate::profile_span;
 
 pub(super) fn build_symbol_map(
     docs: &[ApiDocModule],
     options: &MarkdownDocsOptions,
+    doc_to_file: Option<&FxHashMap<String, String>>,
 ) -> FxHashMap<String, Vec<SymbolLocation>> {
     profile_span!("docs::build_symbol_map");
     let mut map = FxHashMap::default();
@@ -26,7 +28,12 @@ pub(super) fn build_symbol_map(
 
     for doc in docs {
         // Interned once per module and shared by every entry + member below.
-        let module_name: Rc<str> = Rc::from(module_file_name(&doc.file));
+        let module_name: Rc<str> = Rc::from(
+            doc_to_file
+                .and_then(|routes| routes.get(&doc.file))
+                .cloned()
+                .unwrap_or_else(|| module_file_name(&doc.file)),
+        );
         for entry in &doc.entries {
             let (file_name, anchor): (Rc<str>, Option<String>) =
                 match (options.group_by.as_str(), options.path_strategy) {

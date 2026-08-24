@@ -83,16 +83,17 @@ pub(super) fn push_returns_html(
         link_context,
         &FxHashSet::default(),
     ));
-    body.push_str(
-        "</code>
-  ",
-    );
+    body.push_str("</code>");
     if !returns.description.is_empty() {
-        body.push_str("<p class=\"ox-api-entry__return-description\">");
+        body.push_str("\n  <p class=\"ox-api-entry__return-description\">");
         body.push_str(&render_doc_inline_html(&returns.description, link_context));
         body.push_str("</p>");
     }
-    body.push_str(&render_return_members_html(&returns.members, options, link_context));
+    let members = render_return_members_html(&returns.members, options, link_context);
+    if !members.is_empty() {
+        body.push('\n');
+        body.push_str(&members);
+    }
     body.push_str(
         "
 </div>

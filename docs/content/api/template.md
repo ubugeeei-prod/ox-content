@@ -53,7 +53,6 @@
     <code class="ox-api-entry__param-name">str</code>
     <code class="ox-api-entry__param-type">string</code>
   </div>
-  
 </li>
 </ul>
 </div>
@@ -61,7 +60,6 @@
 <h4>Returns</h4>
 <div class="ox-api-entry__return">
   <code class="ox-api-entry__return-type">string</code>
-  
 </div>
 </div>
   </div>
@@ -81,8 +79,7 @@
 <div class="ox-api-entry__section ox-api-entry__section--returns">
 <h4>Returns</h4>
 <div class="ox-api-entry__return">
-  <code class="ox-api-entry__return-type"><a href="./types.md#ogimagetemplatefn">OgImageTemplateFn</a></code>
-  
+  <code class="ox-api-entry__return-type"><a href="./og-image-types.md#ogimagetemplatefn">OgImageTemplateFn</a></code>
 </div>
 </div>
   </div>
@@ -98,4 +95,3 @@
 <p class="ox-api-entry__source"><a class="ox-api-entry__source-link" href="https://github.com/ubugeeei-prod/ox-content/blob/main/npm/vite-plugin-ox-content/src/og-image/template.ts#L1-L6" target="_blank" rel="noopener noreferrer">View source<span class="ox-api-entry__source-icon" aria-hidden="true"></span></a></p>
   </div>
 </details>
-

@@ -30,7 +30,6 @@ source: crates/ox_content_docs/src/markdown/tests/helpers/assertions.rs
     <code class="ox-api-entry__param-name">value</code>
     <code class="ox-api-entry__param-type">string | number</code>
   </div>
-<sp><sp>
 </li>
 </ul>
 </div>

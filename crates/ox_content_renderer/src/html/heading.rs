@@ -47,7 +47,9 @@ fn collect_node_text(node: &Node<'_>, text: &mut String) {
     }
 }
 
-pub(super) fn slugify_heading(text: &str) -> String {
+/// Returns the canonical fragment identifier used for a rendered heading.
+#[must_use]
+pub fn slugify_heading(text: &str) -> String {
     let mut out = String::with_capacity(text.len());
     slugify_heading_into(text, &mut out);
     out

@@ -41,6 +41,27 @@ fn normalizes_nav_base_path() {
 }
 
 #[test]
+fn flat_nav_uses_collision_free_generated_module_routes() {
+    let docs = [
+        ApiDocModule { file: "/repo/src/index.ts".to_string(), ..ApiDocModule::default() },
+        ApiDocModule { file: "/repo/src/plugins/index.ts".to_string(), ..ApiDocModule::default() },
+    ];
+
+    let nav = generate_nav_metadata_from_docs(
+        &docs,
+        Some("/api"),
+        MarkdownPathStrategy::Flat,
+        None,
+        None,
+        true,
+        None,
+    );
+
+    assert_eq!(nav[0].path, "/api/index-module");
+    assert_eq!(nav[1].path, "/api/plugins-index");
+}
+
+#[test]
 fn generates_nav_code() {
     let code = generate_nav_code(
         &[DocsNavItem {

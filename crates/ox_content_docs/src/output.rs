@@ -1,6 +1,7 @@
 //! Generated API documentation output writing.
 
 // BTreeMap keeps generated file output deterministic across runs.
+use std::borrow::Cow;
 use std::collections::BTreeMap;
 use std::fs;
 use std::path::Path;
@@ -106,7 +107,7 @@ pub fn write_docs_output(
         if let Some(parent) = output_path.parent() {
             fs::create_dir_all(parent)?;
         }
-        fs::write(output_path, content)?;
+        fs::write(output_path, normalize_markdown_eof(content).as_bytes())?;
     }
 
     if let Some(extracted_docs) = extracted_docs {
@@ -139,6 +140,16 @@ pub fn write_docs_output(
     fs::write(out_dir.join(DOCS_MANIFEST_FILE), serde_json::to_string_pretty(&generated_files)?)?;
 
     Ok(())
+}
+
+fn normalize_markdown_eof(content: &str) -> Cow<'_, str> {
+    if !content.ends_with("\n\n") {
+        return Cow::Borrowed(content);
+    }
+
+    let mut normalized = content.trim_end_matches('\n').to_string();
+    normalized.push('\n');
+    Cow::Owned(normalized)
 }
 
 fn remove_stale_files(out_dir: &Path, generated_files: &[String]) -> DocsOutputResult<()> {
@@ -239,6 +250,17 @@ mod tests {
         assert_eq!(fs::read_to_string(out_dir.join("beta.md")).unwrap(), "# Beta updated");
         assert_eq!(fs::read_to_string(out_dir.join("manual.md")).unwrap(), "# Manual");
 
+        fs::remove_dir_all(out_dir).unwrap();
+    }
+
+    #[test]
+    fn generated_markdown_has_one_terminal_newline() {
+        let out_dir = temp_dir();
+        let docs = BTreeMap::from([("alpha.md".to_string(), "# Alpha\n\n\n".to_string())]);
+
+        write_docs_output(&docs, &out_dir, None, &options()).unwrap();
+
+        assert_eq!(fs::read_to_string(out_dir.join("alpha.md")).unwrap(), "# Alpha\n");
         fs::remove_dir_all(out_dir).unwrap();
     }
 

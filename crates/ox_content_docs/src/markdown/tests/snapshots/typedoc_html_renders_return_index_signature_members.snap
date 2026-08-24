@@ -26,7 +26,8 @@ source: crates/ox_content_docs/src/markdown/tests/helpers/assertions.rs
 <h4>Returns</h4>
 <div class="ox-api-entry__return">
   <code class="ox-api-entry__return-type">object</code>
-  <p class="ox-api-entry__return-description">Resolved args.</p><div class="ox-api-entry__return-members">
+  <p class="ox-api-entry__return-description">Resolved args.</p>
+<div class="ox-api-entry__return-members">
 <div class="ox-api-entry__return-member ox-api-entry__return-member--indexable">
 <h5>Indexable</h5>
 <pre><code class="language-ts">[option: string]: ArgSchema</code></pre>

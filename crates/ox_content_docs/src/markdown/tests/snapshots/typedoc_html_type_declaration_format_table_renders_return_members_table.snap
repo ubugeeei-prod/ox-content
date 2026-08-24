@@ -35,7 +35,8 @@ source: crates/ox_content_docs/src/markdown/tests/helpers/assertions.rs
 <h4>Returns</h4>
 <div class="ox-api-entry__return">
   <code class="ox-api-entry__return-type">object</code>
-  <p class="ox-api-entry__return-description">Resolved args.</p><table class="ox-api-entry__type-declaration-table"><thead><tr><th>Name</th><th>Type</th><th>Description</th></tr></thead><tbody>
+  <p class="ox-api-entry__return-description">Resolved args.</p>
+<table class="ox-api-entry__type-declaration-table"><thead><tr><th>Name</th><th>Type</th><th>Description</th></tr></thead><tbody>
 <tr>
   <td><code>values</code></td>
   <td><code class="ox-api-entry__member-type language-typescript"><a href="../type-aliases/ArgValues.md">ArgValues</a>&lt;A&gt;</code></td>

@@ -106,14 +106,6 @@ oxContent({
 <pm>npm install -D vite</pm>
 ```
 
-### [markdown-it プラグイン](/examples/plugin-markdown-it.md)
-
-既存の markdown-it プロジェクトで、Ox Content を markdown-it プラグインとして使います。
-
-### [rehype プラグイン](/examples/plugin-rehype.md)
-
-unified エコシステムで、Ox Content を rehype プラグインとして使います。
-
 ### [unplugin mdast ブリッジ](/examples/unplugin-mdast-bridge.md)
 
 Ox Content のネイティブパーサーの上で、カスタム mdast プラグインと既存の remark/unified プラグインを動かします。互換境界とブリッジの性能メモも文書化しています。

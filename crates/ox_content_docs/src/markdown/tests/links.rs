@@ -86,6 +86,51 @@ fn symbol_cross_file_links_use_configured_link_policy() {
 }
 
 #[test]
+fn flat_file_routes_disambiguate_same_basename_modules_and_symbol_links() {
+    let docs = vec![
+        ApiDocModule {
+            file: "/repo/src/index.ts".to_string(),
+            entries: vec![test_entry(
+                "createApp",
+                "function",
+                "/repo/src/index.ts",
+                "Uses [IslandOptions].",
+            )],
+            ..ApiDocModule::default()
+        },
+        ApiDocModule {
+            file: "/repo/src/island/index.ts".to_string(),
+            entries: vec![test_entry(
+                "IslandOptions",
+                "interface",
+                "/repo/src/island/index.ts",
+                "Island options.",
+            )],
+            ..ApiDocModule::default()
+        },
+        ApiDocModule {
+            file: "/repo/src/plugins/index.ts".to_string(),
+            entries: vec![test_entry(
+                "PluginOptions",
+                "interface",
+                "/repo/src/plugins/index.ts",
+                "Plugin options.",
+            )],
+            ..ApiDocModule::default()
+        },
+    ];
+
+    let markdown = generate_markdown(&docs, &MarkdownDocsOptions::default());
+
+    assert!(markdown.contains_key("index-module.md"));
+    assert!(markdown.contains_key("island-index.md"));
+    assert!(markdown.contains_key("plugins-index.md"));
+    assert_eq!(markdown.len(), 4, "three modules plus the API index");
+    assert!(markdown["index-module.md"].contains("./island-index.md#islandoptions"));
+    assert!(markdown["index.md"].contains("./plugins-index.md#pluginoptions"));
+}
+
+#[test]
 fn jsdoc_inline_links_render_across_doc_fields() {
     let docs = vec![
         ApiDocModule {

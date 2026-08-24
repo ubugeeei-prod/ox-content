@@ -257,7 +257,6 @@
     <code class="ox-api-entry__param-name">input</code>
     <code class="ox-api-entry__param-type"><a href="#feedsrenderinput">FeedsRenderInput</a></code>
   </div>
-  
 </li>
 </ul>
 </div>
@@ -265,7 +264,6 @@
 <h4>Returns</h4>
 <div class="ox-api-entry__return">
   <code class="ox-api-entry__return-type"><a href="#feedsrenderresult">FeedsRenderResult</a></code>
-  
 </div>
 </div>
   </div>
@@ -290,14 +288,12 @@
     <code class="ox-api-entry__param-name">requested</code>
     <code class="ox-api-entry__param-type">string | undefined</code>
   </div>
-  
 </li>
 <li class="ox-api-entry__param">
   <div class="ox-api-entry__param-heading">
     <code class="ox-api-entry__param-name">collectionNames</code>
     <code class="ox-api-entry__param-type">readonly string[]</code>
   </div>
-  
 </li>
 </ul>
 </div>
@@ -305,7 +301,6 @@
 <h4>Returns</h4>
 <div class="ox-api-entry__return">
   <code class="ox-api-entry__return-type">string | undefined</code>
-  
 </div>
 </div>
   </div>
@@ -331,7 +326,6 @@
     <code class="ox-api-entry__param-name">value</code>
     <code class="ox-api-entry__param-type">boolean | <a href="./types.md#feedsoptions">FeedsOptions</a> | undefined</code>
   </div>
-  
 </li>
 </ul>
 </div>
@@ -339,7 +333,6 @@
 <h4>Returns</h4>
 <div class="ox-api-entry__return">
   <code class="ox-api-entry__return-type"><a href="./types.md#resolvedfeedsoptions">ResolvedFeedsOptions</a></code>
-  
 </div>
 </div>
   </div>
@@ -364,7 +357,6 @@
     <code class="ox-api-entry__param-name">input</code>
     <code class="ox-api-entry__param-type"><a href="#writefeedfilesinput">WriteFeedFilesInput</a></code>
   </div>
-  
 </li>
 </ul>
 </div>
@@ -372,7 +364,6 @@
 <h4>Returns</h4>
 <div class="ox-api-entry__return">
   <code class="ox-api-entry__return-type">Promise&lt;{ files: string[]; warning?: string }&gt;</code>
-  
 </div>
 </div>
   </div>
@@ -416,4 +407,3 @@
 </div>
   </div>
 </details>
-

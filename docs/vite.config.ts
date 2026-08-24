@@ -256,7 +256,11 @@ export default defineConfig(({ mode }) => {
         fileTree: true,
         embeds: {
           pm: true,
-          twitter: { fetch: true },
+          twitter: {
+            fetch: true,
+            mediaOutputDir: "public/twitter",
+            mediaPublicPath: `${base}twitter`,
+          },
           bluesky: true,
           webContainer: true,
           spotify: true,

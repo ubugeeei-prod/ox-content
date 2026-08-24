@@ -1,6 +1,7 @@
 use std::collections::BTreeMap;
 
 pub(in crate::markdown::tests) fn assert_markdown_snapshot(name: &str, markdown: &str) {
+    assert_no_trailing_whitespace(markdown);
     let markdown = visible_trailing_whitespace(markdown);
     insta::with_settings!({
         snapshot_path => "../snapshots",
@@ -9,6 +10,17 @@ pub(in crate::markdown::tests) fn assert_markdown_snapshot(name: &str, markdown:
     }, {
         insta::assert_snapshot!(name, markdown);
     });
+}
+
+fn assert_no_trailing_whitespace(value: &str) {
+    for (index, line) in value.lines().enumerate() {
+        assert_eq!(
+            line.trim_end_matches([' ', '\t']),
+            line,
+            "trailing whitespace on generated Markdown line {}",
+            index + 1,
+        );
+    }
 }
 
 pub(in crate::markdown::tests) fn assert_markdown_map_snapshot(

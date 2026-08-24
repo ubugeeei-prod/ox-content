@@ -8939,8 +8939,8 @@
             "description": ""
           },
           "file": "npm/vite-plugin-ox-content/src/ssg.ts",
-          "line": 1522,
-          "endLine": 1527,
+          "line": 1525,
+          "endLine": 1530,
           "signature": "function sitePathFromUrlPath(urlPath: string): string"
         }
       ]

@@ -39,8 +39,9 @@ pub fn resolve_route_paths(
 pub fn get_output_path(input_path: &str, src_dir: &str, out_dir: &str, extension: &str) -> String {
     let relative_path = relative_path(input_path, src_dir);
     let base_name = replace_markdown_extension(&relative_path, extension);
+    let route_name = normalize_separators(trim_suffix(&base_name, extension).as_str());
 
-    if base_name.ends_with(&format!("index{extension}")) {
+    if route_name == "index" || route_name.ends_with("/index") {
         return join_path(out_dir, &base_name);
     }
 
@@ -183,6 +184,10 @@ mod tests {
             join_path("/repo/dist", "guide/intro/index.html")
         );
         assert_eq!(get_url_path("/repo/docs/reference.mdx", root), "reference");
+        assert_eq!(
+            get_output_path("/repo/docs/api/island-index.md", root, "/repo/dist", ".html"),
+            join_path("/repo/dist", "api/island-index/index.html")
+        );
         assert_eq!(
             get_og_image_url(
                 "/repo/docs/guide/index.markdown",

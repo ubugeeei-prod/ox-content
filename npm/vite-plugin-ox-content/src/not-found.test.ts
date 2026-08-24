@@ -124,6 +124,7 @@ describe("buildSsg notFound", () => {
     expect(html).toContain('class="sidebar');
     expect(html).toContain('href="/index.html"');
     expect(html).toContain("Overview");
+    expect(html).not.toContain('href="../getting-started/index.html"');
     await expect(fs.access(path.join(root, "dist", "404", "index.html"))).rejects.toThrow();
   });
 

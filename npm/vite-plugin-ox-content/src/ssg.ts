@@ -1340,10 +1340,11 @@ async function appendNotFoundPage(
   const outputPath = resolveNotFoundOutputPath(context.outDir, notFound.output);
 
   try {
-    const pageResult = (await fileExists(sourcePath))
-      ? await transformSsgPage(context, sourcePath)
-      : await transformNotFoundMarkdown(context, sourcePath, FALLBACK_NOT_FOUND_MARKDOWN);
-    pageResult.routePaths = { ...pageResult.routePaths, outputPath };
+    const markdown = (await fileExists(sourcePath))
+      ? await fs.readFile(sourcePath, "utf8")
+      : FALLBACK_NOT_FOUND_MARKDOWN;
+    const pageResult = await transformNotFoundMarkdown(context, sourcePath, markdown);
+    pageResult.routePaths = { ...pageResult.routePaths, outputPath, urlPath: "" };
     generatedPages.push({
       inputPath: sourcePath,
       outputPath,
@@ -1372,7 +1373,9 @@ async function transformNotFoundMarkdown(
   const result = await transformMarkdown(markdown, inputPath, context.options, {
     convertMdLinks: true,
     baseUrl: context.base,
-    sourcePath: inputPath,
+    // The page is written at the output root (`404.html`), so relative links
+    // must resolve as if authored by that root's index page.
+    sourcePath: path.join(context.srcDir, "index.md"),
   });
   const frontmatter = normalizeVitePressFrontmatter(result.frontmatter);
   const transformedHtml = await transformSsgHtml(result.html, context.options);
@@ -1381,7 +1384,7 @@ async function transformNotFoundMarkdown(
     inputPath,
     routePaths: {
       outputPath: inputPath,
-      urlPath: "404",
+      urlPath: "",
       href: `${context.base}${context.ssgOptions.notFound?.output ?? "404.html"}`,
       ogImagePath: "",
       ogImageUrl: "",

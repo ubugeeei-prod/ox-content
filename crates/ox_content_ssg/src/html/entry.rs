@@ -25,7 +25,7 @@ fn convert_entry_link(link: &str, base: &str) -> String {
     }
 
     // Remove .md extension
-    let stem = &path[..path.len() - 3];
+    let stem = path[..path.len() - 3].trim_start_matches('/');
 
     // Entry page is always index.md, so plain relative: getting-started.md -> {base}getting-started/index.html
     let converted = if stem == "index" || stem.ends_with("/index") {
@@ -39,6 +39,22 @@ fn convert_entry_link(link: &str, base: &str) -> String {
         Some(f) => format!("{converted}#{f}"),
         None => converted,
     }
+}
+
+fn convert_entry_asset(src: &str, base: &str) -> String {
+    if src.starts_with("http://")
+        || src.starts_with("https://")
+        || src.starts_with("//")
+        || src.starts_with('/')
+        || src.starts_with("data:")
+    {
+        return src.to_string();
+    }
+
+    let mut resolved = base.trim_end_matches('/').to_string();
+    resolved.push('/');
+    resolved.push_str(src);
+    resolved
 }
 
 /// Generates the Entry page HTML (hero section and features).
@@ -66,9 +82,9 @@ pub(super) fn generate_entry_html(entry: &EntryPageConfig, base: &str) -> String
 
         // Process hero image src
         let image = hero.image.as_ref().map(|img| {
-            let src = convert_entry_link(&img.src, base);
-            let light_src = img.light_src.as_ref().map(|src| convert_entry_link(src, base));
-            let dark_src = img.dark_src.as_ref().map(|src| convert_entry_link(src, base));
+            let src = convert_entry_asset(&img.src, base);
+            let light_src = img.light_src.as_ref().map(|src| convert_entry_asset(src, base));
+            let dark_src = img.dark_src.as_ref().map(|src| convert_entry_asset(src, base));
             HeroImage {
                 src,
                 light_src,
@@ -160,4 +176,26 @@ fn render_icon(icon: &str, base: &str) -> String {
 
     // Treat as emoji/text
     icon.to_string()
+}
+
+#[cfg(test)]
+mod tests {
+    use super::{convert_entry_asset, convert_entry_link};
+
+    #[test]
+    fn entry_links_join_root_markdown_paths_without_double_slashes() {
+        assert_eq!(
+            convert_entry_link("/ja/getting-started.md", "/ox-content/"),
+            "/ox-content/ja/getting-started/index.html"
+        );
+    }
+
+    #[test]
+    fn entry_assets_are_rooted_at_the_deployment_base() {
+        assert_eq!(
+            convert_entry_asset("oxcontent-dark.svg", "/ox-content/"),
+            "/ox-content/oxcontent-dark.svg"
+        );
+        assert_eq!(convert_entry_asset("/shared/logo.svg", "/ox-content/"), "/shared/logo.svg");
+    }
 }

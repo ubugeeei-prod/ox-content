@@ -184,7 +184,6 @@
     <code class="ox-api-entry__param-name">samples</code>
     <code class="ox-api-entry__param-type">Record&lt;string, unknown&gt;[]</code>
   </div>
-  
 </li>
 <li class="ox-api-entry__param">
   <div class="ox-api-entry__param-heading">
@@ -199,7 +198,6 @@
 <h4>Returns</h4>
 <div class="ox-api-entry__return">
   <code class="ox-api-entry__return-type">string</code>
-  
 </div>
 </div>
   </div>
@@ -224,7 +222,6 @@
     <code class="ox-api-entry__param-name">value</code>
     <code class="ox-api-entry__param-type">unknown</code>
   </div>
-  
 </li>
 </ul>
 </div>
@@ -232,7 +229,6 @@
 <h4>Returns</h4>
 <div class="ox-api-entry__return">
   <code class="ox-api-entry__return-type">string</code>
-  
 </div>
 </div>
   </div>
@@ -475,7 +471,6 @@ export function Layout({ children }: { children: JSX.Element }) {
     <code class="ox-api-entry__param-name">path</code>
     <code class="ox-api-entry__param-type">string</code>
   </div>
-  
 </li>
 </ul>
 </div>
@@ -483,7 +478,6 @@ export function Layout({ children }: { children: JSX.Element }) {
 <h4>Returns</h4>
 <div class="ox-api-entry__return">
   <code class="ox-api-entry__return-type">boolean</code>
-  
 </div>
 </div>
 <div class="ox-api-entry__section ox-api-entry__section--examples">
@@ -514,7 +508,6 @@ export function Layout({ children }: { children: JSX.Element }) {
 <h4>Returns</h4>
 <div class="ox-api-entry__return">
   <code class="ox-api-entry__return-type"><a href="#navgroup">NavGroup</a>[]</code>
-  
 </div>
 </div>
 <div class="ox-api-entry__section ox-api-entry__section--examples">
@@ -656,4 +649,3 @@ export function Layout({ children }: { children: JSX.Element }) {
 </div>
   </div>
 </details>
-

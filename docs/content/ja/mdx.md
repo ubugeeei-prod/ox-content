@@ -59,7 +59,7 @@ Vue、Svelte、Solid も同じように `@ox-content/vite-plugin-vue`
 
 Solid 連携は加えて `vite-plugin-solid` より前に動かす必要があり、
 そちらには Markdown 拡張子を渡す必要があります。
-[そのリファレンスページ](./packages/vite-plugin-ox-content-solid.md#plugin-order-and-extensions) を見てください。
+[そのリファレンスページ](/packages/vite-plugin-ox-content-solid.md#plugin-order-and-extensions) を見てください。
 
 ## Markdown でコンポーネントを書く
 
@@ -203,7 +203,7 @@ React はなく、オプトインする開発専用の振る舞いもありま�
 
 ## 関連
 
-- [React 連携](./packages/vite-plugin-ox-content-react.md)
-- [Vue 連携](./packages/vite-plugin-ox-content-vue.md)
-- [Svelte 連携](./packages/vite-plugin-ox-content-svelte.md)
-- [Solid 連携](./packages/vite-plugin-ox-content-solid.md)
+- [React 連携](/packages/vite-plugin-ox-content-react.md)
+- [Vue 連携](/packages/vite-plugin-ox-content-vue.md)
+- [Svelte 連携](/packages/vite-plugin-ox-content-svelte.md)
+- [Solid 連携](/packages/vite-plugin-ox-content-solid.md)

@@ -1,10 +1,10 @@
 //! Markdown rendering for generated API reference documentation.
 
-use rustc_hash::FxHashMap;
 // BTreeMap keeps generated API section and tag output deterministic.
 use std::collections::BTreeMap;
 
 use crate::model::{ApiDocEntry, ApiDocModule};
+use crate::module_routes::{build_flat_module_routes, module_file_name};
 #[allow(unused_imports)]
 use crate::profile_span;
 use crate::string_builder::{join2, join3};
@@ -48,7 +48,7 @@ pub use options::{
 use paths::{
     capitalize_ascii, doc_page_href, doc_page_href_from, entry_anchor, file_name, file_stem,
     generate_source_href, generate_source_link, member_anchor, module_display_name,
-    module_file_name, module_route_name,
+    module_route_name,
 };
 use regex_cache::{RegexCache, cached_regex};
 #[allow(unused_imports)]
@@ -69,8 +69,8 @@ use tags::{SINCE_TAGS, get_entry_badges, is_structured_tag, is_throws_tag, rende
 use type_links::{TypeFragment, resolve_type_fragments};
 use typedoc::{
     anchor_href, plural_kind_file_name, plural_kind_title, push_typedoc_entry_page_title,
-    sanitize_doc_path_segment, typedoc_entry_file_name, typedoc_entry_page_title_len,
-    typedoc_kind_singular, typedoc_kind_title, typedoc_module_index_file_name,
+    typedoc_entry_file_name, typedoc_entry_page_title_len, typedoc_kind_singular,
+    typedoc_kind_title, typedoc_module_index_file_name,
 };
 use typedoc_pages::generate_typedoc_markdown;
 
@@ -87,18 +87,22 @@ pub fn generate_markdown(
     let mut result = BTreeMap::new();
     let mut sorted_docs = sort_extracted_docs(docs, options);
     annotate_implementation_relationships(&mut sorted_docs);
-    let symbol_map = build_symbol_map(&sorted_docs, options);
+    let doc_to_file = (options.group_by == "file"
+        && options.path_strategy == MarkdownPathStrategy::Flat)
+        .then(|| build_flat_module_routes(&sorted_docs));
+    let symbol_map = build_symbol_map(&sorted_docs, options, doc_to_file.as_ref());
 
     if options.group_by == "file" {
         if options.path_strategy == MarkdownPathStrategy::TypeDoc {
             return generate_typedoc_markdown(&sorted_docs, options, &symbol_map);
         }
 
-        let mut doc_to_file = FxHashMap::default();
-
         for doc in &sorted_docs {
-            let file_name = module_file_name(&doc.file);
-            doc_to_file.insert(doc.file.clone(), file_name.clone());
+            let file_name = doc_to_file
+                .as_ref()
+                .and_then(|routes| routes.get(&doc.file))
+                .cloned()
+                .unwrap_or_else(|| module_file_name(&doc.file));
 
             let markdown = generate_file_markdown(doc, options, &file_name, &symbol_map);
             result.insert(join2(&file_name, ".md"), markdown);
@@ -106,7 +110,7 @@ pub fn generate_markdown(
 
         result.insert(
             "index.md".to_string(),
-            generate_index(&sorted_docs, options, Some(&doc_to_file), Some(&symbol_map)),
+            generate_index(&sorted_docs, options, doc_to_file.as_ref(), Some(&symbol_map)),
         );
     } else {
         let mut by_kind: BTreeMap<String, Vec<ApiDocEntry>> = BTreeMap::new();

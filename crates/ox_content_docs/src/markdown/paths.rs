@@ -1,8 +1,6 @@
 use std::path::Path;
 
-use super::{
-    MarkdownDocsOptions, MarkdownLinkStyle, MarkdownPathStrategy, sanitize_doc_path_segment,
-};
+use super::{MarkdownDocsOptions, MarkdownLinkStyle, MarkdownPathStrategy};
 use crate::model::{ApiDocMember, ApiDocModule};
 use crate::string_builder::{StringBuilder, join2, join3, join4};
 
@@ -120,16 +118,8 @@ pub(super) fn member_anchor(
     }
 }
 
-pub(super) fn module_file_name(file_path: &str) -> String {
-    let mut file_name = file_stem(file_path);
-    if file_name == "index" {
-        file_name = "index-module".to_string();
-    }
-    sanitize_doc_path_segment(&file_name)
-}
-
 pub(super) fn module_route_name(doc: &ApiDocModule) -> String {
-    module_file_name(&doc.file)
+    crate::module_routes::module_file_name(&doc.file)
 }
 
 pub(super) fn module_display_name(doc: &ApiDocModule) -> String {

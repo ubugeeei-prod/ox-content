@@ -61,13 +61,20 @@ fn tracks_source_origin_after_frontmatter() {
 #[test]
 fn toc_slugs_are_unique_and_match_heading_ids() {
     let allocator = Allocator::new();
-    let doc = Parser::new(&allocator, "## Setup!\n## Setup?\n##").parse().unwrap();
+    let doc = Parser::new(
+        &allocator,
+        "## Setup!\n## Setup?\n##\n## Node.js API via N-API\n## Detail tracing (`--detail`)",
+    )
+    .parse()
+    .unwrap();
 
     let toc = extract_toc(&doc, 3);
 
     assert_eq!(toc[0].slug, "setup");
     assert_eq!(toc[1].slug, "setup-1");
     assert_eq!(toc[2].slug, "section");
+    assert_eq!(toc[3].slug, "node-js-api-via-n-api");
+    assert_eq!(toc[4].slug, "detail-tracing-detail");
 }
 
 #[test]

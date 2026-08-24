@@ -9,6 +9,7 @@ use paths::{get_doc_display_name, get_doc_file_name, normalize_base_path};
 
 use crate::markdown::{MarkdownPathStrategy, MarkdownSingleEntryRoot};
 use crate::model::ApiDocModule;
+use crate::module_routes::build_flat_module_routes;
 #[allow(unused_imports)]
 use crate::profile_span;
 use crate::string_builder::{StringBuilder, join3};
@@ -122,8 +123,17 @@ pub fn generate_nav_metadata_from_docs_with_options(
     profile_span!("docs::generate_nav");
     match options.path_strategy {
         MarkdownPathStrategy::Flat => {
-            let files = docs.iter().map(|doc| doc.file.clone()).collect::<Vec<_>>();
-            generate_nav_metadata(&files, options.base_path)
+            let base_path = normalize_base_path(options.base_path.unwrap_or(DEFAULT_BASE_PATH));
+            let routes = build_flat_module_routes(docs);
+            let mut docs = docs.iter().collect::<Vec<_>>();
+            docs.sort_by_cached_key(|doc| get_doc_display_name(&doc.file));
+            docs.into_iter()
+                .map(|doc| DocsNavItem {
+                    title: get_doc_display_name(&doc.file),
+                    path: join3(&base_path, "/", &routes[&doc.file]),
+                    children: None,
+                })
+                .collect()
         }
         MarkdownPathStrategy::TypeDoc => {
             let nav = typedoc::generate_typedoc_nav_metadata(

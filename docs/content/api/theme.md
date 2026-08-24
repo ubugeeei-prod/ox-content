@@ -73,14 +73,12 @@
     <code class="ox-api-entry__param-name">target</code>
     <code class="ox-api-entry__param-type">T</code>
   </div>
-  
 </li>
 <li class="ox-api-entry__param">
   <div class="ox-api-entry__param-heading">
     <code class="ox-api-entry__param-name">source</code>
     <code class="ox-api-entry__param-type">Partial&lt;T&gt;</code>
   </div>
-  
 </li>
 </ul>
 </div>
@@ -88,7 +86,6 @@
 <h4>Returns</h4>
 <div class="ox-api-entry__return">
   <code class="ox-api-entry__return-type">T</code>
-  
 </div>
 </div>
   </div>
@@ -127,7 +124,6 @@
     <code class="ox-api-entry__param-name">config</code>
     <code class="ox-api-entry__param-type"><a href="#themeconfig">ThemeConfig</a></code>
   </div>
-  
 </li>
 </ul>
 </div>
@@ -135,7 +131,6 @@
 <h4>Returns</h4>
 <div class="ox-api-entry__return">
   <code class="ox-api-entry__return-type"><a href="#themeconfig">ThemeConfig</a></code>
-  
 </div>
 </div>
 <div class="ox-api-entry__section ox-api-entry__section--examples">
@@ -176,7 +171,6 @@
     <code class="ox-api-entry__param-name">config</code>
     <code class="ox-api-entry__param-type"><a href="#themeconfig">ThemeConfig</a></code>
   </div>
-  
 </li>
 </ul>
 </div>
@@ -184,7 +178,6 @@
 <h4>Returns</h4>
 <div class="ox-api-entry__return">
   <code class="ox-api-entry__return-type"><a href="#themeconfig">ThemeConfig</a>[]</code>
-  
 </div>
 </div>
   </div>
@@ -250,7 +243,6 @@
     <code class="ox-api-entry__param-name">themes</code>
     <code class="ox-api-entry__param-type">(<a href="#themeconfig">ThemeConfig</a> | <a href="#themeconfig">ThemeConfig</a>[])[]</code>
   </div>
-  
 </li>
 </ul>
 </div>
@@ -258,7 +250,6 @@
 <h4>Returns</h4>
 <div class="ox-api-entry__return">
   <code class="ox-api-entry__return-type"><a href="#themeconfig">ThemeConfig</a></code>
-  
 </div>
 </div>
 <div class="ox-api-entry__section ox-api-entry__section--examples">
@@ -905,7 +896,6 @@
 <h4>Returns</h4>
 <div class="ox-api-entry__return">
   <code class="ox-api-entry__return-type"><a href="#resolvedthemeconfig">ResolvedThemeConfig</a></code>
-  
 </div>
 </div>
   </div>
@@ -1209,7 +1199,6 @@
     <code class="ox-api-entry__param-name">theme</code>
     <code class="ox-api-entry__param-type"><a href="#resolvedthemeconfig">ResolvedThemeConfig</a></code>
   </div>
-  
 </li>
 </ul>
 </div>
@@ -1217,7 +1206,6 @@
 <h4>Returns</h4>
 <div class="ox-api-entry__return">
   <code class="ox-api-entry__return-type">string</code>
-  
 </div>
 </div>
   </div>
@@ -1507,7 +1495,6 @@
     <code class="ox-api-entry__param-name">theme</code>
     <code class="ox-api-entry__param-type"><a href="#resolvedthemeconfig">ResolvedThemeConfig</a></code>
   </div>
-  
 </li>
 <li class="ox-api-entry__param">
   <div class="ox-api-entry__param-heading">
@@ -1522,9 +1509,7 @@
 <h4>Returns</h4>
 <div class="ox-api-entry__return">
   <code class="ox-api-entry__return-type"><a href="#napithemeconfig">NapiThemeConfig</a></code>
-  
 </div>
 </div>
   </div>
 </details>
-

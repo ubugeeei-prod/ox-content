@@ -53,7 +53,6 @@
     <code class="ox-api-entry__param-name">theme</code>
     <code class="ox-api-entry__param-type">string | ThemeRegistration</code>
   </div>
-  
 </li>
 <li class="ox-api-entry__param">
   <div class="ox-api-entry__param-heading">
@@ -68,7 +67,6 @@
 <h4>Returns</h4>
 <div class="ox-api-entry__return">
   <code class="ox-api-entry__return-type">Promise&lt;Highlighter&gt;</code>
-  
 </div>
 </div>
   </div>
@@ -103,7 +101,6 @@
     <code class="ox-api-entry__param-name">html</code>
     <code class="ox-api-entry__param-type">string</code>
   </div>
-  
 </li>
 <li class="ox-api-entry__param">
   <div class="ox-api-entry__param-heading">
@@ -125,7 +122,6 @@
 <h4>Returns</h4>
 <div class="ox-api-entry__return">
   <code class="ox-api-entry__return-type">Promise&lt;string&gt;</code>
-  
 </div>
 </div>
   </div>
@@ -153,14 +149,12 @@
     <code class="ox-api-entry__param-name">options</code>
     <code class="ox-api-entry__param-type">{ <a href="./theme.md#theme">theme</a>: string | ThemeRegistration; langs?: LanguageRegistration[] }</code>
   </div>
-  
 </li>
 <li class="ox-api-entry__param">
   <div class="ox-api-entry__param-heading">
     <code class="ox-api-entry__param-name">options.theme</code>
     <code class="ox-api-entry__param-type">string | ThemeRegistration</code>
   </div>
-  
 </li>
 <li class="ox-api-entry__param">
   <div class="ox-api-entry__param-heading">
@@ -173,4 +167,3 @@
 </div>
   </div>
 </details>
-

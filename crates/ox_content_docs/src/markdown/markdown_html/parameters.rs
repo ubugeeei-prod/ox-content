@@ -25,9 +25,9 @@ pub(super) fn render_params_list_html(
             context,
             &FxHashSet::default(),
         ));
-        rows.push_str("</code>\n  </div>\n  ");
+        rows.push_str("</code>\n  </div>");
         if !description.is_empty() {
-            rows.push_str("<p class=\"ox-api-entry__param-description\">");
+            rows.push_str("\n  <p class=\"ox-api-entry__param-description\">");
             rows.push_str(&render_doc_inline_html(&description, context));
             rows.push_str("</p>");
         }

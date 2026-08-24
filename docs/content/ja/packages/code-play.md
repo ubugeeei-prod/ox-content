@@ -9,7 +9,7 @@ Code Play は、ドキュメントのサンプルをオンデマンドで実行�
 `@ox-content/vite-plugin` は有効にせず、このパッケージを入れただけでは何も起きません。
 言語を列挙するまで動きません。
 
-このサイトの [ドキュメント例](../examples/code-play.md) とスタンドアロンの
+このサイトの [ドキュメント例](/examples/code-play.md) とスタンドアロンの
 [`examples/code-play`](https://github.com/ubugeeei-prod/ox-content/tree/main/examples/code-play)
 アプリは、JavaScript と TypeScript だけを有効にしています。Rust、Go、リモート言語は
 オプトインするまでオフです。
@@ -145,7 +145,7 @@ CI がライブのプレイグラウンドに触れないようにします。
 | Vue、React、Svelte、Solid | yes  | no         | iframe `srcdoc` + esm.sh import map             |
 | Python、PHP、Ruby、sh、…  | yes  | no         | Piston 互換の `languages.<id>.endpoint`         |
 
-完全なカタログは [ロードマップ](../code-play-roadmap.md) と同じ一覧です。
+完全なカタログは [ロードマップ](/code-play-roadmap.md) と同じ一覧です。
 `ts`、`c++`、`bash`、`coq` のようなエイリアスは正規 id に解決されます。
 
 ## プレイグラウンドプロキシ
@@ -199,6 +199,6 @@ dev ミドルウェアが不要なら `proxy: false` にしてください。
 `@ox-content/code-play` は npm では新しいです。Trusted publishing はパッケージを
 作れないので、メンテナーがノート PC から **一度** 公開し、そのあと trusted publisher を足します。
 コマンドと npmjs.com の正確な欄は
-[リリース作業](../release.md#first-time-npm-publishing) にあります。
+[リリース作業](/release.md#first-time-npm-publishing) にあります。
 
-後続 PR は [Code Play ロードマップ](../code-play-roadmap.md) を見てください。
+後続 PR は [Code Play ロードマップ](/code-play-roadmap.md) を見てください。

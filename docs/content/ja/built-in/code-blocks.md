@@ -12,7 +12,7 @@ description: フェンス付きコードブロック向けのシンタックス�
 
 サンプルのオンデマンド **Run** / **Typecheck** は別パッケージ
 [`@ox-content/code-play`](../packages/code-play.md) です。
-`@ox-content/vite-plugin` の一部ではありません。[Code Play の例](../examples/code-play.md) を見てください。
+`@ox-content/vite-plugin` の一部ではありません。[Code Play の例](/examples/code-play.md) を見てください。
 
 | オプション        | 型                                   | 既定    |
 | ----------------- | ------------------------------------ | ------- |
@@ -216,5 +216,5 @@ oxContent({
 ## 関連
 
 - [品質チェック](./quality-checks.md) — コードブロック自体を lint、型チェック、テストする。
-- [コード注釈の例](../examples/code-annotations.md)
-- [コードインポートの例](../examples/code-imports.md)
+- [コード注釈の例](/examples/code-annotations.md)
+- [コードインポートの例](/examples/code-imports.md)

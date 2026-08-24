@@ -53,7 +53,6 @@
     <code class="ox-api-entry__param-name">html</code>
     <code class="ox-api-entry__param-type">string</code>
   </div>
-  
 </li>
 </ul>
 </div>
@@ -61,7 +60,6 @@
 <h4>Returns</h4>
 <div class="ox-api-entry__return">
   <code class="ox-api-entry__return-type">Promise&lt;string[]&gt;</code>
-  
 </div>
 </div>
   </div>
@@ -86,7 +84,6 @@
     <code class="ox-api-entry__param-name">url</code>
     <code class="ox-api-entry__param-type">string</code>
   </div>
-  
 </li>
 </ul>
 </div>
@@ -94,7 +91,6 @@
 <h4>Returns</h4>
 <div class="ox-api-entry__return">
   <code class="ox-api-entry__return-type">Element</code>
-  
 </div>
 </div>
   </div>
@@ -119,7 +115,6 @@
     <code class="ox-api-entry__param-name">data</code>
     <code class="ox-api-entry__param-type">OgpData</code>
   </div>
-  
 </li>
 </ul>
 </div>
@@ -127,7 +122,6 @@
 <h4>Returns</h4>
 <div class="ox-api-entry__return">
   <code class="ox-api-entry__return-type">Element</code>
-  
 </div>
 </div>
   </div>
@@ -152,7 +146,6 @@
     <code class="ox-api-entry__param-name">url</code>
     <code class="ox-api-entry__param-type">string</code>
   </div>
-  
 </li>
 </ul>
 </div>
@@ -160,7 +153,6 @@
 <h4>Returns</h4>
 <div class="ox-api-entry__return">
   <code class="ox-api-entry__return-type">string</code>
-  
 </div>
 </div>
   </div>
@@ -185,14 +177,12 @@
     <code class="ox-api-entry__param-name">url</code>
     <code class="ox-api-entry__param-type">string</code>
   </div>
-  
 </li>
 <li class="ox-api-entry__param">
   <div class="ox-api-entry__param-heading">
     <code class="ox-api-entry__param-name">options</code>
     <code class="ox-api-entry__param-type">Required&lt;OgpOptions&gt;</code>
   </div>
-  
 </li>
 </ul>
 </div>
@@ -200,7 +190,6 @@
 <h4>Returns</h4>
 <div class="ox-api-entry__return">
   <code class="ox-api-entry__return-type">Promise&lt;OgpData | null&gt;</code>
-  
 </div>
 </div>
   </div>
@@ -225,14 +214,12 @@
     <code class="ox-api-entry__param-name">el</code>
     <code class="ox-api-entry__param-type">Element</code>
   </div>
-  
 </li>
 <li class="ox-api-entry__param">
   <div class="ox-api-entry__param-heading">
     <code class="ox-api-entry__param-name">name</code>
     <code class="ox-api-entry__param-type">string</code>
   </div>
-  
 </li>
 </ul>
 </div>
@@ -240,7 +227,6 @@
 <h4>Returns</h4>
 <div class="ox-api-entry__return">
   <code class="ox-api-entry__return-type">string | undefined</code>
-  
 </div>
 </div>
   </div>
@@ -265,7 +251,6 @@
     <code class="ox-api-entry__param-name">url</code>
     <code class="ox-api-entry__param-type">string</code>
   </div>
-  
 </li>
 </ul>
 </div>
@@ -273,7 +258,6 @@
 <h4>Returns</h4>
 <div class="ox-api-entry__return">
   <code class="ox-api-entry__return-type">string</code>
-  
 </div>
 </div>
   </div>
@@ -309,14 +293,12 @@
     <code class="ox-api-entry__param-name">html</code>
     <code class="ox-api-entry__param-type">string</code>
   </div>
-  
 </li>
 <li class="ox-api-entry__param">
   <div class="ox-api-entry__param-heading">
     <code class="ox-api-entry__param-name">url</code>
     <code class="ox-api-entry__param-type">string</code>
   </div>
-  
 </li>
 </ul>
 </div>
@@ -324,7 +306,6 @@
 <h4>Returns</h4>
 <div class="ox-api-entry__return">
   <code class="ox-api-entry__return-type">OgpData</code>
-  
 </div>
 </div>
   </div>
@@ -349,7 +330,6 @@
     <code class="ox-api-entry__param-name">urls</code>
     <code class="ox-api-entry__param-type">string[]</code>
   </div>
-  
 </li>
 <li class="ox-api-entry__param">
   <div class="ox-api-entry__param-heading">
@@ -364,7 +344,6 @@
 <h4>Returns</h4>
 <div class="ox-api-entry__return">
   <code class="ox-api-entry__return-type">Promise&lt;Map&lt;string, OgpData | null&gt;&gt;</code>
-  
 </div>
 </div>
   </div>
@@ -389,7 +368,6 @@
     <code class="ox-api-entry__param-name">ogpDataMap</code>
     <code class="ox-api-entry__param-type">Map&lt;string, OgpData | null&gt;</code>
   </div>
-  
 </li>
 </ul>
 </div>
@@ -415,7 +393,6 @@
     <code class="ox-api-entry__param-name">html</code>
     <code class="ox-api-entry__param-type">string</code>
   </div>
-  
 </li>
 <li class="ox-api-entry__param">
   <div class="ox-api-entry__param-heading">
@@ -437,9 +414,7 @@
 <h4>Returns</h4>
 <div class="ox-api-entry__return">
   <code class="ox-api-entry__return-type">Promise&lt;string&gt;</code>
-  
 </div>
 </div>
   </div>
 </details>
-

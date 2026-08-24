@@ -14,7 +14,7 @@ Contributor setup and source builds live on a separate page: [Development Setup]
 | You want to...                                            | Start here                                  |
 | --------------------------------------------------------- | ------------------------------------------- |
 | Build a docs site or content pipeline                     | [Vite Plugin](#1-vite-plugin-first)         |
-| Call the parser and renderer from Node.js                 | [N-API](#2-nodejs-api-via-n-api)            |
+| Call the parser and renderer from Node.js                 | [N-API](#2-node-js-api-via-n-api)           |
 | Run Ox Content in the browser or another WebAssembly host | [WebAssembly Package](./packages/wasm.md)   |
 | Embed Ox Content directly in a Rust project               | [Rust Crates](#4-rust-crates)               |
 | Work on Ox Content itself                                 | [Development Setup](./development-setup.md) |

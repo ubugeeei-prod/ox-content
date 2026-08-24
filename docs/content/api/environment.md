@@ -66,7 +66,6 @@
     <code class="ox-api-entry__param-name">options</code>
     <code class="ox-api-entry__param-type"><a href="./types.md#resolvedoptions">ResolvedOptions</a></code>
   </div>
-  
 </li>
 </ul>
 </div>
@@ -98,7 +97,6 @@
     <code class="ox-api-entry__param-name">options</code>
     <code class="ox-api-entry__param-type"><a href="./types.md#resolvedoptions">ResolvedOptions</a></code>
   </div>
-  
 </li>
 </ul>
 </div>
@@ -106,7 +104,6 @@
 <h4>Returns</h4>
 <div class="ox-api-entry__return">
   <code class="ox-api-entry__return-type">EnvironmentOptions</code>
-  
 </div>
 </div>
 <div class="ox-api-entry__section ox-api-entry__section--examples">
@@ -146,14 +143,12 @@ export default defineConfig({
     <code class="ox-api-entry__param-name">ctx</code>
     <code class="ox-api-entry__param-type"><a href="#environmenttransformcontext">EnvironmentTransformContext</a></code>
   </div>
-  
 </li>
 <li class="ox-api-entry__param">
   <div class="ox-api-entry__param-heading">
     <code class="ox-api-entry__param-name">options</code>
     <code class="ox-api-entry__param-type"><a href="./types.md#resolvedoptions">ResolvedOptions</a></code>
   </div>
-  
 </li>
 </ul>
 </div>
@@ -161,7 +156,6 @@ export default defineConfig({
 <h4>Returns</h4>
 <div class="ox-api-entry__return">
   <code class="ox-api-entry__return-type"><a href="./types.md#resolvedoptions">ResolvedOptions</a></code>
-  
 </div>
 </div>
   </div>
@@ -244,14 +238,12 @@ export default defineConfig({
     <code class="ox-api-entry__param-name">files</code>
     <code class="ox-api-entry__param-type">string[]</code>
   </div>
-  
 </li>
 <li class="ox-api-entry__param">
   <div class="ox-api-entry__param-heading">
     <code class="ox-api-entry__param-name">_options</code>
     <code class="ox-api-entry__param-type"><a href="./types.md#resolvedoptions">ResolvedOptions</a></code>
   </div>
-  
 </li>
 </ul>
 </div>
@@ -259,9 +251,7 @@ export default defineConfig({
 <h4>Returns</h4>
 <div class="ox-api-entry__return">
   <code class="ox-api-entry__return-type">Promise&lt;Map&lt;string, string&gt;&gt;</code>
-  
 </div>
 </div>
   </div>
 </details>
-

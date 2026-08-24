@@ -1,6 +1,7 @@
 use rustc_hash::FxHashMap;
 
 use ox_content_ast::{Document, Heading, Node};
+use ox_content_renderer::slugify_heading;
 
 use crate::TocEntry;
 
@@ -13,7 +14,7 @@ pub(super) fn extract_toc(doc: &Document, max_depth: u8) -> Vec<TocEntry> {
             && heading.depth <= max_depth
         {
             let text = extract_heading_text(heading);
-            let slug = unique_slug(slugify(&text), &mut slug_counts);
+            let slug = unique_slug(slugify_heading(&text), &mut slug_counts);
             push_nested_toc_entry(
                 &mut entries,
                 TocEntry { depth: heading.depth, text, slug, children: Vec::new() },
@@ -69,26 +70,6 @@ fn collect_text(node: &Node, text: &mut String) {
         }
         _ => {}
     }
-}
-
-fn slugify(text: &str) -> String {
-    let mapped: String = text
-        .to_lowercase()
-        .chars()
-        .map(|c| if c.is_alphanumeric() || c == ' ' || c == '-' { c } else { ' ' })
-        .collect();
-    // Join the whitespace-split tokens with '-' directly, skipping the
-    // intermediate `Vec<&str>` and the separate `join` allocation. This TOC
-    // slugger runs for every heading in NAPI transforms; `mapped.len()` is a
-    // safe upper bound for the slug because separators only shrink it.
-    let mut slug = String::with_capacity(mapped.len());
-    for token in mapped.split_whitespace() {
-        if !slug.is_empty() {
-            slug.push('-');
-        }
-        slug.push_str(token);
-    }
-    slug
 }
 
 fn unique_slug(slug: String, counts: &mut FxHashMap<String, usize>) -> String {

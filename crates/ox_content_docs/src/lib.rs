@@ -35,6 +35,7 @@ mod generator;
 mod graph;
 mod markdown;
 mod model;
+mod module_routes;
 mod nav;
 mod normalize;
 mod output;

@@ -61,14 +61,12 @@
     <code class="ox-api-entry__param-name">frontmatter</code>
     <code class="ox-api-entry__param-type">Record&lt;string, unknown&gt;</code>
   </div>
-  
 </li>
 <li class="ox-api-entry__param">
   <div class="ox-api-entry__param-heading">
     <code class="ox-api-entry__param-name">options</code>
     <code class="ox-api-entry__param-type"><a href="./types.md#resolvedpublishstateoptions">ResolvedPublishStateOptions</a> | undefined</code>
   </div>
-  
 </li>
 </ul>
 </div>
@@ -76,7 +74,7 @@
 <h4>Returns</h4>
 <div class="ox-api-entry__return">
   <code class="ox-api-entry__return-type">object</code>
-  <div class="ox-api-entry__return-members">
+<div class="ox-api-entry__return-members">
 <div class="ox-api-entry__return-member">
 <h5>listed</h5>
 <code class="ox-api-entry__return-member-type language-typescript">listed: boolean;</code>
@@ -110,14 +108,12 @@
     <code class="ox-api-entry__param-name">groups</code>
     <code class="ox-api-entry__param-type">T[]</code>
   </div>
-  
 </li>
 <li class="ox-api-entry__param">
   <div class="ox-api-entry__param-heading">
     <code class="ox-api-entry__param-name">hidden</code>
     <code class="ox-api-entry__param-type">ReadonlySet&lt;string&gt;</code>
   </div>
-  
 </li>
 </ul>
 </div>
@@ -125,7 +121,6 @@
 <h4>Returns</h4>
 <div class="ox-api-entry__return">
   <code class="ox-api-entry__return-type">T[]</code>
-  
 </div>
 </div>
   </div>
@@ -150,14 +145,12 @@
     <code class="ox-api-entry__param-name">pages</code>
     <code class="ox-api-entry__param-type">readonly <a href="#publishstatepage">PublishStatePage</a>[]</code>
   </div>
-  
 </li>
 <li class="ox-api-entry__param">
   <div class="ox-api-entry__param-heading">
     <code class="ox-api-entry__param-name">listed</code>
     <code class="ox-api-entry__param-type">readonly <a href="#publishstatepage">PublishStatePage</a>[]</code>
   </div>
-  
 </li>
 </ul>
 </div>
@@ -165,7 +158,6 @@
 <h4>Returns</h4>
 <div class="ox-api-entry__return">
   <code class="ox-api-entry__return-type">Set&lt;string&gt;</code>
-  
 </div>
 </div>
   </div>
@@ -225,14 +217,12 @@
     <code class="ox-api-entry__param-name">pages</code>
     <code class="ox-api-entry__param-type">readonly T[]</code>
   </div>
-  
 </li>
 <li class="ox-api-entry__param">
   <div class="ox-api-entry__param-heading">
     <code class="ox-api-entry__param-name">options</code>
     <code class="ox-api-entry__param-type"><a href="./types.md#resolvedpublishstateoptions">ResolvedPublishStateOptions</a> | undefined</code>
   </div>
-  
 </li>
 </ul>
 </div>
@@ -240,7 +230,6 @@
 <h4>Returns</h4>
 <div class="ox-api-entry__return">
   <code class="ox-api-entry__return-type"><a href="#partitionedpages">PartitionedPages</a>&lt;T&gt;</code>
-  
 </div>
 </div>
   </div>
@@ -321,7 +310,6 @@
     <code class="ox-api-entry__param-name">value</code>
     <code class="ox-api-entry__param-type">boolean | <a href="./types.md#publishstateoptions">PublishStateOptions</a> | undefined</code>
   </div>
-  
 </li>
 </ul>
 </div>
@@ -329,9 +317,7 @@
 <h4>Returns</h4>
 <div class="ox-api-entry__return">
   <code class="ox-api-entry__return-type"><a href="./types.md#resolvedpublishstateoptions">ResolvedPublishStateOptions</a></code>
-  
 </div>
 </div>
   </div>
 </details>
-
