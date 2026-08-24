@@ -85,6 +85,7 @@ export default defineConfig({
       "crates/ox_content_napi/index.d.ts",
       "crates/ox_content_ssg/templates/*.html",
       "docs/content/api/**",
+      "docs/versions/**",
     ],
   },
   lint: {

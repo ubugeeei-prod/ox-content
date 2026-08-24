@@ -47,3 +47,6 @@ object also enables the feature.
 Each locale link honors `dir` for RTL languages. Locale names and codes are
 escaped. `javascript:`, `data:`, and `vbscript:` locale roots are rejected.
 Bare mode never emits the switcher.
+
+This documentation site enables the switcher with `en` and `ja`. Japanese
+guides live under [`/ja/`](/ja/).

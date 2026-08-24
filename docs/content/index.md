@@ -79,6 +79,7 @@ Under the hood, Ox Content is not only a docs theme. It also exposes the Markdow
 
 ## User Guide
 
+- [日本語ドキュメント](/ja/) — ガイドと組み込み機能の日本語
 - [Getting Started](./getting-started.md) - Installation and first steps
 - [Built-in Features](./built-in-features.md) - Defaults, opt-in features, embeds, emoji shortcodes, and code annotations
 - [Theming](./theming.md) - Customize your documentation site
