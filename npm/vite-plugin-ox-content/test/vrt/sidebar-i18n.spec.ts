@@ -104,7 +104,7 @@ for (const viewport of [
     await openMobileMenu(page);
 
     const details = page.locator('details[data-ox-nav-state-key="group:0"]');
-    const summary = details.locator("summary");
+    const summary = details.locator(":scope > summary");
     await expect(summary).toHaveText("Guide");
     await summary.focus();
     await page.keyboard.press("Enter");
@@ -118,7 +118,7 @@ for (const viewport of [
     await openMobileMenu(page);
     const japaneseDetails = page.locator('details[data-ox-nav-state-key="group:0"]');
     await expect(japaneseDetails).toHaveAttribute("open", "");
-    await expect(japaneseDetails.locator("summary")).toHaveText("ガイド");
+    await expect(japaneseDetails.locator(":scope > summary")).toHaveText("ガイド");
     await expect(japaneseDetails).toContainText("組み込み機能");
     await expect(japaneseDetails).toContainText("カード");
     await expect(page.locator('a[href="/ja/built-in.html"]')).toHaveClass(/active/);
