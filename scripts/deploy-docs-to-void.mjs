@@ -65,6 +65,7 @@ run("cargo", ["build", "--workspace"]);
 run("napi", ["build", "--release"], { cwd: "crates/ox_content_napi" });
 run("vp", ["pack"], { cwd: "npm/ox-content-islands" });
 run("vp", ["pack"], { cwd: "npm/vite-plugin-ox-content" });
+run("vp", ["run", "build"], { cwd: "npm/ox-content-code-play" });
 run("vp", ["build"], {
   cwd: "docs",
   env: {
