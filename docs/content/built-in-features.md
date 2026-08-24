@@ -36,6 +36,7 @@ inline**.
 | [Site Generation](./built-in/site-generation.md)       | SSG, OG images, edit links, collections, API docs, transformers           |
 | [Previous / Next](./built-in/pagination.md)            | Opt-in previous and next page links                                       |
 | [Sitemap / robots / llms.txt](./built-in/site-maps.md) | Opt-in crawl manifests written next to generated HTML                     |
+| [Custom 404 Page](./built-in/not-found.md)             | Opt-in themed 404 page with search and noindex                            |
 
 ## Default vs Opt-in
 
@@ -61,6 +62,7 @@ inline**.
 | Editing links    | `editThisPage`                                                                                                | `false`              | [Site Generation](./built-in/site-generation.md)       |
 | Page pager       | `ssg.pagination`                                                                                              | `false`              | [Previous / Next](./built-in/pagination.md)            |
 | Crawl manifests  | `siteMaps`                                                                                                    | `false`              | [Sitemap / robots / llms.txt](./built-in/site-maps.md) |
+| Custom 404 page  | `notFound`                                                                                                    | `false`              | [Custom 404 Page](./built-in/not-found.md)             |
 | Code checks      | `codeBlockLint`, `codeBlockTypecheck`, `docsTests`                                                            | `false`              | [Quality Checks](./built-in/quality-checks.md)         |
 | Custom pipeline  | `transformers`                                                                                                | `[]`                 | [Site Generation](./built-in/site-generation.md)       |
 

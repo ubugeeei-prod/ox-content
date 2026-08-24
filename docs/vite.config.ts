@@ -46,6 +46,10 @@ export default defineConfig(({ mode }) => {
         // write for the deployed docs site.
         siteMaps: true,
 
+        // Themed 404 page from content/404.md. Omitted from search and
+        // crawl manifests.
+        notFound: true,
+
         // SSG options with theme customization
         ssg: {
           siteName: "Ox Content",
@@ -106,6 +110,7 @@ export default defineConfig(({ mode }) => {
                       { text: "Site Generation", link: "/built-in/site-generation.md" },
                       { text: "Previous / Next", link: "/built-in/pagination.md" },
                       { text: "Sitemap / robots / llms.txt", link: "/built-in/site-maps.md" },
+                      { text: "Custom 404 Page", link: "/built-in/not-found.md" },
                     ],
                   },
                   { text: "Theming", link: "/theming.md" },

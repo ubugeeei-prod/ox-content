@@ -29,6 +29,13 @@ import { normalizeVitePressFrontmatter } from "./vitepress";
 import { renderPage } from "./theme-renderer";
 import type { PageData as ThemePageData } from "./theme-renderer";
 import { writeSiteMapFiles } from "./site-maps";
+import {
+  applyNotFoundNoindex,
+  isNotFoundSourcePath,
+  missingNotFoundSourceWarning,
+  notFoundVirtualInputPath,
+  resolveNotFoundSourcePath,
+} from "./not-found";
 
 /**
  * Navigation item for SSG.
@@ -640,7 +647,9 @@ export async function buildSsg(options: ResolvedOptions, root: string): Promise<
 
   await cleanOutputDirectory(ssgOptions, outDir);
 
-  const markdownFiles = await collectMarkdownFiles(srcDir, options.extensions);
+  const markdownFiles = (await collectMarkdownFiles(srcDir, options.extensions)).filter(
+    (file) => !isNotFoundSourcePath(file, srcDir, options.notFound),
+  );
   const context = await createBuildSsgContext(options, root, srcDir, outDir, markdownFiles);
   const collected = await collectPageResults(context, markdownFiles);
   errors.push(...collected.errors);
@@ -648,6 +657,10 @@ export async function buildSsg(options: ResolvedOptions, root: string): Promise<
   await generateOgImageAssets(context, collected, generatedFiles, errors);
 
   const generatedPages = await generateHtmlPages(context, collected.pageResults, collected, errors);
+  const notFoundPage = await renderNotFoundGeneratedPage(context, errors);
+  if (notFoundPage) {
+    generatedPages.push(notFoundPage);
+  }
   await writeGeneratedPages(generatedPages, context, generatedFiles, collected.pageResults, errors);
 
   return {
@@ -933,6 +946,95 @@ async function generateHtmlPages(
   return generatedPages;
 }
 
+async function renderNotFoundGeneratedPage(
+  context: BuildSsgContext,
+  errors: string[],
+): Promise<GeneratedHtmlPage | undefined> {
+  const options = context.options.notFound;
+  if (!options?.enabled) {
+    return undefined;
+  }
+
+  const sourcePath = resolveNotFoundSourcePath(context.srcDir, options);
+  let content: string;
+  try {
+    content = await fs.readFile(sourcePath, "utf-8");
+  } catch {
+    const warning = missingNotFoundSourceWarning(options.source);
+    errors.push(warning);
+    console.warn(warning);
+    return undefined;
+  }
+
+  try {
+    const pageResult = await transformNotFoundPage(context, sourcePath, content);
+    return {
+      inputPath: pageResult.inputPath,
+      outputPath: pageResult.routePaths.outputPath,
+      html: applyNotFoundNoindex(await renderNotFoundHtml(context, pageResult)),
+    };
+  } catch (err) {
+    const errorMessage = err instanceof Error ? err.message : String(err);
+    const warning = `[ox-content] Failed to generate the 404 page from ${sourcePath}: ${errorMessage}`;
+    errors.push(warning);
+    console.warn(warning);
+    return undefined;
+  }
+}
+
+async function transformNotFoundPage(
+  context: BuildSsgContext,
+  sourcePath: string,
+  content: string,
+): Promise<PageProcessResult> {
+  const virtualInput = notFoundVirtualInputPath(context.srcDir);
+  const result = await transformMarkdown(content, sourcePath, context.options, {
+    convertMdLinks: true,
+    baseUrl: context.base,
+    sourcePath,
+  });
+  const frontmatter = normalizeVitePressFrontmatter(result.frontmatter);
+  frontmatter.noindex = true;
+  frontmatter.draft = true;
+  const transformedHtml = await transformSsgHtml(result.html, context.options);
+
+  return {
+    inputPath: virtualInput,
+    routePaths: getRoutePaths(
+      virtualInput,
+      context.srcDir,
+      context.outDir,
+      context.base,
+      context.ssgOptions.extension,
+      context.ssgOptions.siteUrl,
+    ),
+    transformedHtml,
+    title: extractTitle(transformedHtml, frontmatter),
+    description: frontmatter.description as string | undefined,
+    lastUpdated: undefined,
+    frontmatter,
+    toc: result.toc,
+  };
+}
+
+async function renderNotFoundHtml(
+  context: BuildSsgContext,
+  pageResult: PageProcessResult,
+): Promise<string> {
+  const pageData = createSsgPageData(pageResult);
+  return generateHtmlPage(
+    pageData,
+    context.navItems,
+    context.siteName,
+    context.base,
+    context.ssgOptions.ogImage,
+    context.ssgOptions.theme,
+    getPageLocale(pageData.path, context.options.i18n),
+    context.options.i18n ? context.options.i18n.locales : undefined,
+    false,
+  );
+}
+
 async function renderSsgPage(
   context: BuildSsgContext,
   pageResult: PageProcessResult,
@@ -1081,6 +1183,7 @@ async function writeGeneratedPages(
       title: page.title,
       description: page.description,
       draft: page.frontmatter.draft === true,
+      noindex: page.frontmatter.noindex === true,
     })),
   });
   generatedFiles.push(...siteMaps.files);

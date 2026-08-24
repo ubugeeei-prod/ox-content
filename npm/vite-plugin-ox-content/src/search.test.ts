@@ -84,6 +84,32 @@ Body text with a searchable phrase.
 
     expect(index).toMatchSnapshot();
   });
+
+  it("omits 404.md and noindex pages from the index", async () => {
+    const srcDir = await fs.mkdtemp(path.join(os.tmpdir(), "ox-content-search-404-"));
+    tempDirs.push(srcDir);
+    await fs.writeFile(
+      path.join(srcDir, "guide.md"),
+      "---\ntitle: Guide\n---\n\nPublished body.\n",
+      "utf-8",
+    );
+    await fs.writeFile(
+      path.join(srcDir, "404.md"),
+      "---\ntitle: Lost\n---\n\nShould not be indexed.\n",
+      "utf-8",
+    );
+    await fs.writeFile(
+      path.join(srcDir, "secret.md"),
+      "---\ntitle: Secret\nnoindex: true\n---\n\nHidden body.\n",
+      "utf-8",
+    );
+
+    const index = JSON.parse(await buildSearchIndex(srcDir, "/")) as {
+      documents: Array<{ id: string; title: string }>;
+    };
+
+    expect(index.documents.map((doc) => doc.id)).toEqual(["guide"]);
+  });
 });
 
 describe("writeSearchIndex", () => {

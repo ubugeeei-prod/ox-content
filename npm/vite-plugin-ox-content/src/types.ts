@@ -395,6 +395,25 @@ export interface ResolvedSiteMapsOptions {
 }
 
 /**
+ * Opt-in custom 404 page written during SSG.
+ */
+export interface NotFoundOptions {
+  /**
+   * Markdown file under `srcDir` used as the 404 page body.
+   * @default '404.md'
+   */
+  source?: string;
+}
+
+/**
+ * Resolved custom 404 options.
+ */
+export interface ResolvedNotFoundOptions {
+  enabled: boolean;
+  source: string;
+}
+
+/**
  * Options for the core `oxContent()` Vite plugin.
  *
  * The top-level options describe where content lives, which Markdown features
@@ -469,6 +488,17 @@ export interface OxContentOptions {
    * @default false
    */
   siteMaps?: boolean | SiteMapsOptions;
+
+  /**
+   * Write a themed 404 page during SSG.
+   *
+   * Off by default. `true` uses `404.md` under `srcDir`. An object enables
+   * the feature and overrides only the fields you set. The page is omitted
+   * from search and crawl manifests.
+   *
+   * @default false
+   */
+  notFound?: boolean | NotFoundOptions;
 
   /**
    * Enable GitHub Flavored Markdown extensions.
@@ -785,6 +815,7 @@ export interface ResolvedOptions {
   extensions: string[];
   ssg: ResolvedSsgOptions;
   siteMaps?: ResolvedSiteMapsOptions;
+  notFound?: ResolvedNotFoundOptions;
   gfm: boolean;
   footnotes: boolean;
   tables: boolean;

@@ -76,6 +76,9 @@ Theming — colors, fonts, header, footer, sidebar, custom CSS, and the opt-in
 page outline (`theme.aside`, default `false`) — is a topic of its own: see
 [Theming](../theming.md#page-outline).
 
+A themed 404 page is a separate opt-in. See
+[Custom 404 Page](./not-found.md).
+
 ## Custom Theme Component
 
 `ssg.render` hands the whole document to a JSX component. The component owns

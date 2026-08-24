@@ -6,6 +6,7 @@ fn page(loc: &str, title: &str, description: Option<&str>) -> SiteMapPage {
         title: title.to_string(),
         description: description.map(str::to_string),
         draft: false,
+        noindex: false,
     }
 }
 
@@ -117,9 +118,10 @@ fn object_overrides_can_disable_robots_and_llms() {
 }
 
 #[test]
-fn draft_pages_are_omitted() {
+fn draft_and_noindex_pages_are_omitted() {
     let pages = vec![
         draft_page("https://example.com/secret/", "Secret"),
+        SiteMapPage { noindex: true, ..page("https://example.com/404/", "Lost", None) },
         page("https://example.com/public/", "Public", None),
     ];
     let output = generate_site_maps(&enabled(Some("https://example.com")), &pages);
@@ -128,8 +130,10 @@ fn draft_pages_are_omitted() {
 
     assert!(sitemap.contains("https://example.com/public/"), "{sitemap}");
     assert!(!sitemap.contains("secret"), "{sitemap}");
+    assert!(!sitemap.contains("/404"), "{sitemap}");
     assert!(llms.contains("Public"), "{llms}");
     assert!(!llms.contains("Secret"), "{llms}");
+    assert!(!llms.contains("Lost"), "{llms}");
 }
 
 #[test]

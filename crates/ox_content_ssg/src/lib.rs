@@ -56,6 +56,7 @@
 
 mod assets;
 mod html;
+mod not_found;
 mod routes;
 mod site_maps;
 mod vitepress;
@@ -69,6 +70,10 @@ pub use html::{
     SocialLinks, SsgConfig, ThemeColors, ThemeConfig, ThemeEmbed, ThemeEntryPage, ThemeFonts,
     ThemeFooter, ThemeHeader, ThemeLayout, TocEntry, generate_bare_html, generate_bare_page,
     generate_html,
+};
+pub use not_found::{
+    NotFoundOptions, NotFoundOutput, NotFoundPage, NotFoundRequest, generate_not_found,
+    missing_source_warning, not_found_sitemap_page,
 };
 pub use routes::{
     ManualNavigationGroup, ManualNavigationItem, RoutePaths, SidebarItem, build_nav_items,

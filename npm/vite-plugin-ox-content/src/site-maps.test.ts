@@ -136,21 +136,24 @@ describe("generateSiteMaps", () => {
     expect(output.llmsTxt).toBeUndefined();
   });
 
-  it("omits draft pages", () => {
+  it("omits draft and noindex pages", () => {
     const output = generateSiteMaps({
       options: { enabled: true, robots: true, llms: true },
       siteUrl: "https://example.com",
       siteName: "Docs",
       pages: [
         { loc: "https://example.com/secret/", title: "Secret", draft: true },
+        { loc: "https://example.com/404/", title: "Lost", noindex: true },
         { loc: "https://example.com/public/", title: "Public" },
       ],
     });
 
     expect(output.sitemapXml).toContain("https://example.com/public/");
     expect(output.sitemapXml).not.toContain("secret");
+    expect(output.sitemapXml).not.toContain("/404");
     expect(output.llmsTxt).toContain("Public");
     expect(output.llmsTxt).not.toContain("Secret");
+    expect(output.llmsTxt).not.toContain("Lost");
   });
 
   it("escapes hostile titles and descriptions", () => {

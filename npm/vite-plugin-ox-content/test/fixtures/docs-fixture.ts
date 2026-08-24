@@ -108,6 +108,7 @@ export function createDocsResolvedOptions(
       pagination: false,
     },
     siteMaps: { enabled: false, robots: true, llms: true },
+    notFound: { enabled: false, source: "404.md" },
     gfm: true,
     footnotes: true,
     tables: true,
