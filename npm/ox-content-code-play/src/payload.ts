@@ -1,3 +1,4 @@
+import { DEFAULT_VIEWERS } from "./config";
 import type { PlayPayload } from "./types";
 
 export function encodePayload(payload: PlayPayload): string {
@@ -10,7 +11,10 @@ export function decodePayload(value: string): PlayPayload {
   if (!parsed || typeof parsed !== "object" || typeof parsed.language !== "string") {
     throw new Error("Invalid Code Play payload.");
   }
-  return parsed;
+  return {
+    ...parsed,
+    viewers: { ...DEFAULT_VIEWERS, ...parsed.viewers },
+  };
 }
 
 function bytesToBase64(bytes: Uint8Array): string {

@@ -12,6 +12,7 @@ export type { RawCodePlayOptions, ResolvedCodePlayOptions } from "./config";
 export { codePlay } from "./plugin";
 export type { CodePlayPluginOptions } from "./plugin";
 export { CodePlaySession } from "./session";
+export { joinStream, selectStream, withStdioText } from "./stdio";
 export { createFetchTransport, createMemoryTransport } from "./transport";
 export { hydrateCodePlay, mountCodePlay } from "./hydrate";
 export { renderPlayUi } from "./ui";
@@ -19,6 +20,7 @@ export {
   renderConfigHtml,
   renderDiagnosticsHtml,
   renderProvenanceHtml,
+  renderStderrHtml,
   renderStdioHtml,
   renderTimingHtml,
 } from "./viewers";
@@ -28,6 +30,7 @@ export { encodePayload, decodePayload } from "./payload";
 export { PhaseTracker } from "./timing";
 export { CODE_PLAY_STYLES } from "./styles";
 export type {
+  AdapterResult,
   CodePlayPreset,
   ConfigField,
   Diagnostic,

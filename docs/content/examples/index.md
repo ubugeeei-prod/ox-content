@@ -159,8 +159,8 @@ oxContent({
 
 ### [Code Play](./code-play.md)
 
-On-demand sample execution through `@ox-content/code-play`, with stdio, config,
-provenance, and timing viewers.
+On-demand sample execution through `@ox-content/code-play`, with stdio, stderr,
+config, provenance, and timing viewers.
 
 ### [Playground](./playground.md)
 

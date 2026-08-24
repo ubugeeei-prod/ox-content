@@ -39,6 +39,7 @@ export const DEFAULT_ENDPOINTS: PlaygroundEndpoints = {
 export const DEFAULT_VIEWERS: ViewerFlags = {
   config: true,
   stdio: true,
+  stderr: true,
   provenance: true,
   timing: true,
 };

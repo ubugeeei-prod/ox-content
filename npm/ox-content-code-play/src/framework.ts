@@ -1,6 +1,6 @@
 import { escapeHtml } from "./escape";
 import { PhaseTracker } from "./timing";
-import type { AdapterRequest, FrameworkId, RunResult } from "./types";
+import type { AdapterRequest, AdapterResult, FrameworkId } from "./types";
 
 const RUNTIMES: Record<FrameworkId, { specifier: string; cdn: string }> = {
   vue: { specifier: "vue", cdn: "https://esm.sh/vue@3" },
@@ -9,7 +9,7 @@ const RUNTIMES: Record<FrameworkId, { specifier: string; cdn: string }> = {
   solid: { specifier: "solid-js", cdn: "https://esm.sh/solid-js@1" },
 };
 
-export async function runFramework(request: AdapterRequest): Promise<RunResult> {
+export async function runFramework(request: AdapterRequest): Promise<AdapterResult> {
   const tracker = new PhaseTracker();
   tracker.start("compile", "Compile preview");
   const framework = request.definition.framework ?? "vue";

@@ -27,6 +27,8 @@ describe("language adapters", () => {
       .createSession({ language: "rust", code: "fn main() { let x = 1; }" })
       .run();
     expect(result.status).toBe("ok");
+    expect(result.stdout).toBe("ok\n");
+    expect(result.stderr).toBe("warning: unused variable: `x`\n");
     expect(result.stdio[0]).toMatchObject({ stream: "stdout", text: "ok\n" });
     expect(result.diagnostics).toEqual([
       expect.objectContaining({ severity: "warning", message: "unused variable: `x`" }),
@@ -51,6 +53,8 @@ describe("language adapters", () => {
       .createSession({ language: "rs", code: "fn add(x: i32) -> i32 { x }" })
       .typecheck();
     expect(result.status).toBe("error");
+    expect(result.stdout).toBe("");
+    expect(result.stderr).toBe("error[E0308]: mismatched types\n");
     expect(parseRustcDiagnostics("error[E0308]: mismatched types")[0]?.source).toBe("rustc E0308");
     expect(result.diagnostics[0]?.severity).toBe("error");
   });
@@ -72,6 +76,8 @@ describe("language adapters", () => {
       .createSession({ language: "go", code: "package main\nfunc main() {}" })
       .run();
     expect(result.status).toBe("ok");
+    expect(result.stdout).toBe("hi\n");
+    expect(result.stderr).toBe("");
     expect(result.stdio[0]?.text).toBe("hi\n");
     expect(result.provenance.execute?.runtime).toBe("go-playground");
   });
@@ -102,6 +108,8 @@ describe("language adapters", () => {
     });
     const sh = await remote.createSession({ language: "bash", code: "echo 1" }).run();
     expect(sh.status).toBe("ok");
+    expect(sh.stdout).toBe("1\n");
+    expect(sh.stderr).toBe("");
     expect(sh.provenance.execute?.sandbox).toBe("piston");
     expect(sh.stdio[0]?.text).toBe("1\n");
   });

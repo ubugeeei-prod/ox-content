@@ -2,6 +2,7 @@ import { describe, expect, it } from "vite-plus/test";
 import { createCodePlay } from "./client";
 import { stripTypeScript } from "./strip-typescript";
 import { parseTsgoOutput } from "./typescript";
+import { renderStderrHtml } from "./viewers";
 
 describe("createCodePlay", () => {
   it("executes opted-in JavaScript and records stdio, provenance, and timing", async () => {
@@ -18,6 +19,10 @@ describe("createCodePlay", () => {
       ["stdout", "hello\n"],
       ["stderr", "oops\n"],
     ]);
+    expect(result.stdout).toBe("hello\n");
+    expect(result.stderr).toBe("oops\n");
+    expect(session.stdout).toBe("hello\n");
+    expect(session.stderr).toBe("oops\n");
     expect(result.provenance.execute?.runtime).toBe("node:vm");
     expect(result.timing.totalMs).toBeGreaterThanOrEqual(0);
     expect(result.timing.phases.some((phase) => phase.id === "execute")).toBe(true);
@@ -36,7 +41,11 @@ describe("createCodePlay", () => {
       .createSession({ language: "tsx", code: "const n: number = 'nope';" })
       .typecheck();
     expect(check.status).toBe("error");
+    expect(check.stdout).toBe("");
+    expect(check.stderr).toBe("");
     expect(check.diagnostics.some((diagnostic) => diagnostic.message.length > 0)).toBe(true);
+    expect(renderStderrHtml(check)).toContain("ox-code-play__diag--error");
+    expect(renderStderrHtml(check)).not.toContain("No stderr.");
   });
 
   it("refuses languages that were not enabled", () => {
@@ -53,10 +62,28 @@ describe("createCodePlay", () => {
       .createSession({ language: "js", code: "throw new Error('boom');" })
       .run();
     expect(result.status).toBe("error");
-    expect(result.diagnostics[0]?.message).toContain("boom");
+    expect(result.diagnostics[0]?.message).toBe("boom");
+    expect(result.stdout).toBe("");
+    expect(result.stderr).toBe("boom\n");
     expect(
       result.stdio.some((event) => event.stream === "stderr" && event.text.includes("boom")),
     ).toBe(true);
+  });
+
+  it("routes console.warn and console.error to stderr, never stdout", async () => {
+    const play = createCodePlay({ languages: { javascript: true } });
+    const result = await play
+      .createSession({
+        language: "js",
+        code: `console.log("out"); console.warn("warn"); console.error("err");`,
+      })
+      .run();
+    expect(result.status).toBe("ok");
+    expect(result.stdout).toBe("out\n");
+    expect(result.stderr).toBe("warn\nerr\n");
+    expect(result.stdio.filter((event) => event.stream === "stdout")).toEqual([
+      expect.objectContaining({ text: "out\n" }),
+    ]);
   });
 
   it("strips TypeScript annotations before execute", () => {

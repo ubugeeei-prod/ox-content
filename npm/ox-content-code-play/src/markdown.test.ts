@@ -3,7 +3,7 @@ import { enhanceGeneratedModule, enhancePlayHtml } from "./html";
 import { parseCodePlayTags, parsePlayFences, rewritePlayFences, stripPlayMeta } from "./markdown";
 import { decodePayload, encodePayload } from "./payload";
 import { payloadFromFence } from "./payload-factory";
-import { resolveCodePlayOptions } from "./config";
+import { DEFAULT_VIEWERS, resolveCodePlayOptions } from "./config";
 import {
   renderConfigHtml,
   renderProvenanceHtml,
@@ -115,7 +115,7 @@ describe("markdown and viewers", () => {
           code: "const n = 1;",
           capabilities: { execute: true, typecheck: true },
           config: { strict: true },
-          viewers: { config: true, stdio: true, provenance: true, timing: true },
+          viewers: { ...DEFAULT_VIEWERS },
           ui: "default",
           timeoutMs: 1000,
         },
@@ -129,10 +129,26 @@ describe("markdown and viewers", () => {
       code: "package main",
       capabilities: { execute: true, typecheck: true },
       config: { withVet: true },
-      viewers: { config: true, stdio: true, provenance: true, timing: true },
+      viewers: { ...DEFAULT_VIEWERS },
       ui: "compact" as const,
       timeoutMs: 5,
     };
     expect(decodePayload(encodePayload(payload))).toEqual(payload);
+  });
+
+  it("fills a missing stderr viewer flag when decoding older payloads", () => {
+    const encoded = Buffer.from(
+      JSON.stringify({
+        language: "javascript",
+        code: "1",
+        capabilities: { execute: true, typecheck: false },
+        config: {},
+        viewers: { config: true, stdio: true, provenance: true, timing: true },
+        ui: "default",
+        timeoutMs: 1,
+      }),
+    ).toString("base64");
+    expect(decodePayload(encoded).viewers.stderr).toBe(true);
+    expect(decodePayload(encoded).viewers.stdio).toBe(true);
   });
 });

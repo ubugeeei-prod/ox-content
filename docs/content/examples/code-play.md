@@ -1,6 +1,6 @@
 ---
 title: Code Play
-description: Opt-in on-demand sample execution with stdio, config, provenance, and timing viewers.
+description: Opt-in on-demand sample execution with stdio, stderr, config, provenance, and timing viewers.
 ---
 
 # Code Play
@@ -23,7 +23,7 @@ export default {
         typescript: { execute: true, typecheck: true },
       },
       ui: "default",
-      viewers: { config: true, stdio: true, provenance: true, timing: true },
+      viewers: { config: true, stdio: true, stderr: true, provenance: true, timing: true },
     }),
   ],
 };
@@ -32,8 +32,8 @@ export default {
 ## Live TypeScript sample
 
 The fence below is marked `play`. Use **Run** to execute it and **Typecheck**
-to type-check it. The stdio, config, provenance, and timing tabs are the same
-objects the headless API returns.
+to type-check it. The stdio, stderr, config, provenance, and timing tabs are
+the same objects the headless API returns. `console.warn` lands in `run.stderr`.
 
 ```ts play typecheck
 const message: string = "hello from Code Play";
@@ -64,6 +64,8 @@ const session = play.createSession({
 
 const result = await session.run();
 result.stdio;
+result.stdout;
+result.stderr;
 result.provenance.compile;
 result.provenance.execute;
 result.timing.phases;

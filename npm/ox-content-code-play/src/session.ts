@@ -1,5 +1,6 @@
 import { executeAdapter, typecheckAdapter } from "./adapters";
 import { mergeConfig } from "./config";
+import { withStdioText } from "./stdio";
 import type {
   AdapterRequest,
   CodePlayTransport,
@@ -20,6 +21,17 @@ export class CodePlaySession {
   code: string;
   config: Record<string, unknown>;
   lastResult: RunResult | undefined;
+
+  /** Last run's concatenated stdout (same as `lastResult.stdout`). */
+  get stdout(): string {
+    return this.lastResult?.stdout ?? "";
+  }
+
+  /** Last run's concatenated stderr (same as `lastResult.stderr`). */
+  get stderr(): string {
+    return this.lastResult?.stderr ?? "";
+  }
+
   private readonly enabled: ResolvedLanguageEnable;
   private readonly timeoutMs: number;
   private readonly transport: CodePlayTransport;
@@ -73,8 +85,9 @@ export class CodePlaySession {
       loadTypeScript: this.loadTypeScript,
       endpoints: this.endpoints,
     };
-    const result =
-      action === "typecheck" ? await typecheckAdapter(request) : await executeAdapter(request);
+    const result = withStdioText(
+      action === "typecheck" ? await typecheckAdapter(request) : await executeAdapter(request),
+    );
     this.lastResult = result;
     for (const event of result.stdio) {
       this.emit("stdio", event);

@@ -7,11 +7,11 @@ import { executeScript } from "./javascript";
 import { StdioBuffer } from "./stdio";
 import { stripTypeScript } from "./strip-typescript";
 import { PhaseTracker } from "./timing";
-import type { AdapterRequest, Diagnostic, RunResult } from "./types";
+import type { AdapterRequest, AdapterResult, Diagnostic } from "./types";
 
 const execFileAsync = promisify(execFile);
 
-export async function typecheckTypeScript(request: AdapterRequest): Promise<RunResult> {
+export async function typecheckTypeScript(request: AdapterRequest): Promise<AdapterResult> {
   const tracker = new PhaseTracker();
   tracker.start("typecheck", "Typecheck");
 
@@ -53,7 +53,7 @@ export async function typecheckTypeScript(request: AdapterRequest): Promise<RunR
   }
 }
 
-export async function runTypeScript(request: AdapterRequest): Promise<RunResult> {
+export async function runTypeScript(request: AdapterRequest): Promise<AdapterResult> {
   const tracker = new PhaseTracker();
   const stdio = new StdioBuffer(tracker.startedAt);
   tracker.start("compile", "Strip types");
@@ -97,7 +97,7 @@ export async function runTypeScript(request: AdapterRequest): Promise<RunResult>
 async function typecheckViaEndpoint(
   request: AdapterRequest,
   tracker: PhaseTracker,
-): Promise<RunResult> {
+): Promise<AdapterResult> {
   const response = await request.transport.request({
     url: request.endpoints.typecheck ?? "",
     method: "POST",
@@ -106,7 +106,7 @@ async function typecheckViaEndpoint(
   });
   tracker.stop();
   try {
-    return JSON.parse(response.text) as RunResult;
+    return JSON.parse(response.text) as AdapterResult;
   } catch {
     return {
       status: "error",

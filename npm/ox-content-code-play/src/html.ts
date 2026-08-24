@@ -1,3 +1,4 @@
+import { DEFAULT_VIEWERS } from "./config";
 import { decodeHtml, escapeAttribute } from "./escape";
 import type { PlayPayload } from "./types";
 
@@ -64,7 +65,7 @@ function upgradeCodePlayTags(html: string, options: HtmlEnhanceOptions): string 
       code,
       capabilities: { execute: true, typecheck: /\btypecheck\b/i.test(attrs) },
       config: {},
-      viewers: { config: true, stdio: true, provenance: true, timing: true },
+      viewers: { ...DEFAULT_VIEWERS },
       ui: "default",
       timeoutMs: 10_000,
     });

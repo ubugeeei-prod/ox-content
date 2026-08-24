@@ -27,8 +27,9 @@ reverse.
    a browser iframe. Native languages use official playgrounds or a
    user-configured HTTP executor. Code Play does not spawn `sh`, `python`, or
    `rustc` on the docs host unless a later local-runtime PR says so.
-5. **Observability is API data.** stdio, config, provenance, and timing are
-   returned on every `RunResult`, not only painted in the default UI.
+5. **Observability is API data.** stdio, dedicated `stdout` / `stderr` strings,
+   config, provenance, and timing are returned on every `RunResult`, not only
+   painted in the default UI.
 
 ## Language Matrix
 
@@ -49,9 +50,15 @@ reverse.
 
 ### 1. `feat(code-play): plugin scaffold, headless API, viewers`
 
-This PR. Ships the package, catalog, headless client, default/compact/headless
+Shipped in #649. Package, catalog, headless client, default/compact/headless
 UI, config / stdio / provenance / timing viewers, Vite plugin, and tests with
 injected transports (no live network in CI).
+
+### 1b. `feat(code-play): dedicated stderr viewer`
+
+This PR. First-class `RunResult.stdout` / `RunResult.stderr`, a dedicated
+stderr viewer (stream chunks plus error/warning diagnostics), and compact
+preset coverage for stderr.
 
 ### 2. `feat(code-play): Vite SSG hydration and docs dogfood`
 

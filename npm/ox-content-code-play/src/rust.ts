@@ -1,6 +1,6 @@
 import { StdioBuffer } from "./stdio";
 import { PhaseTracker } from "./timing";
-import type { AdapterRequest, Diagnostic, RunResult } from "./types";
+import type { AdapterRequest, AdapterResult, Diagnostic } from "./types";
 
 interface RustPlaygroundResponse {
   success?: boolean;
@@ -12,7 +12,7 @@ interface RustPlaygroundResponse {
 export async function runRust(
   request: AdapterRequest,
   mode: "execute" | "typecheck",
-): Promise<RunResult> {
+): Promise<AdapterResult> {
   const tracker = new PhaseTracker();
   const stdio = new StdioBuffer(tracker.startedAt);
   const crateType = resolveCrateType(request.code, String(request.config.crateType ?? "auto"));

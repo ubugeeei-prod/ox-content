@@ -30,7 +30,7 @@ export default {
         javascript: true,
       },
       ui: "default",
-      viewers: { config: true, stdio: true, provenance: true, timing: true },
+      viewers: { config: true, stdio: true, stderr: true, provenance: true, timing: true },
       srcDir: "content",
     }),
   ],
@@ -74,7 +74,9 @@ const session = play.createSession({
 const check = await session.typecheck();
 const run = await session.run();
 
-run.stdio; // timestamped stdin / stdout / stderr
+run.stdio; // timestamped stdin / stdout / stderr events
+run.stdout; // concatenated stdout text
+run.stderr; // concatenated stderr text
 run.provenance; // where it compiled, where it ran
 run.timing; // phase durations and totalMs
 session.config; // editable language config
@@ -88,9 +90,9 @@ viewer edits.
 
 | Preset     | Behavior                                               |
 | ---------- | ------------------------------------------------------ |
-| `default`  | Toolbar plus stdio / config / provenance / timing tabs |
-| `compact`  | Run / type-check and stdio only                        |
-| `headless` | No DOM chrome; use the session API                     |
+| `default`  | Toolbar plus stdio / stderr / config / provenance / timing tabs |
+| `compact`  | Run / type-check plus stdio and stderr                          |
+| `headless` | No DOM chrome; use the session API                              |
 
 Viewers can be toggled independently through `viewers`.
 

@@ -1,4 +1,5 @@
 import { escapeHtml } from "./escape";
+import { selectStream } from "./stdio";
 import type { ConfigField, Provenance, RunResult, StdioEvent, TimingReport } from "./types";
 
 export function renderStdioHtml(events: StdioEvent[]): string {
@@ -12,6 +13,30 @@ export function renderStdioHtml(events: StdioEvent[]): string {
     })
     .join("");
   return `<div class="ox-code-play__stdio" role="log">${lines}</div>`;
+}
+
+/** Dedicated stderr viewer: stderr chunks plus error/warning diagnostics. */
+export function renderStderrHtml(result: RunResult | undefined): string {
+  const chunks = selectStream(result?.stdio ?? [], "stderr");
+  const diagnostics = (result?.diagnostics ?? []).filter(
+    (diagnostic) => diagnostic.severity === "error" || diagnostic.severity === "warning",
+  );
+  if (chunks.length === 0 && diagnostics.length === 0) {
+    return `<p class="ox-code-play__empty">No stderr.</p>`;
+  }
+  const stream = chunks.length === 0 ? "" : renderStdioHtml(chunks);
+  if (diagnostics.length === 0) {
+    return stream;
+  }
+  const items = diagnostics
+    .map((diagnostic) => {
+      const place = diagnostic.line
+        ? `:${diagnostic.line}${diagnostic.column ? `:${diagnostic.column}` : ""}`
+        : "";
+      return `<li class="ox-code-play__diag ox-code-play__diag--${diagnostic.severity}">${escapeHtml(diagnostic.severity)}${escapeHtml(place)} ${escapeHtml(diagnostic.message)}</li>`;
+    })
+    .join("");
+  return `${stream}<ul class="ox-code-play__diags">${items}</ul>`;
 }
 
 export function renderConfigHtml(schema: ConfigField[], config: Record<string, unknown>): string {

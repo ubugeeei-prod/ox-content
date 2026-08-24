@@ -6,6 +6,7 @@ import type { PlayPayload, RunResult } from "./types";
 import {
   renderDiagnosticsHtml,
   renderProvenanceHtml,
+  renderStderrHtml,
   renderStdioHtml,
   renderTimingHtml,
 } from "./viewers";
@@ -119,10 +120,18 @@ function paintResult(element: HTMLElement, _payload: PlayPayload, result: RunRes
   if (timing) {
     timing.innerHTML = renderTimingHtml(result.timing);
   }
-  showPanel(element, "stdio");
+  const stderr = element.querySelector('[data-panel="stderr"]');
+  if (stderr) {
+    stderr.innerHTML = renderStderrHtml(result);
+  }
+  const focusStderr =
+    Boolean(stderr) &&
+    (Boolean(result.stderr) || result.diagnostics.some((diagnostic) => diagnostic.severity === "error"));
+  showPanel(element, focusStderr ? "stderr" : "stdio");
 }
 
 function showPanel(element: HTMLElement, panel: string): void {
+  const compact = Boolean(element.querySelector(".ox-code-play--compact"));
   for (const tab of element.querySelectorAll("[data-ox-panel]")) {
     tab.setAttribute(
       "aria-selected",
@@ -130,7 +139,12 @@ function showPanel(element: HTMLElement, panel: string): void {
     );
   }
   for (const node of element.querySelectorAll<HTMLElement>(".ox-code-play__panel")) {
-    node.hidden = node.dataset.panel !== panel;
+    const id = node.dataset.panel;
+    if (compact && (id === "stdio" || id === "stderr")) {
+      node.hidden = false;
+      continue;
+    }
+    node.hidden = id !== panel;
   }
 }
 

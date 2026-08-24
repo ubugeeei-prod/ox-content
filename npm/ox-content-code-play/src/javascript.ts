@@ -1,8 +1,8 @@
 import { formatConsoleArgs, StdioBuffer } from "./stdio";
 import { nowMs, PhaseTracker } from "./timing";
-import type { AdapterRequest, Diagnostic, RunResult } from "./types";
+import type { AdapterRequest, AdapterResult, Diagnostic } from "./types";
 
-export async function runJavaScript(request: AdapterRequest): Promise<RunResult> {
+export async function runJavaScript(request: AdapterRequest): Promise<AdapterResult> {
   const tracker = new PhaseTracker();
   tracker.start("execute", "Execute");
   const stdio = new StdioBuffer(tracker.startedAt);
@@ -82,8 +82,18 @@ function isTimeout(error: unknown): boolean {
 }
 
 function toDiagnostic(error: unknown): Diagnostic {
-  if (error instanceof Error) {
+  if (isErrorLike(error)) {
     return { message: error.message, severity: "error", source: "javascript" };
   }
   return { message: String(error), severity: "error", source: "javascript" };
+}
+
+function isErrorLike(error: unknown): error is { message: string } {
+  return Boolean(
+    error &&
+    typeof error === "object" &&
+    "message" in error &&
+    typeof error.message === "string" &&
+    error.message.length > 0,
+  );
 }

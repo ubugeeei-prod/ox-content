@@ -24,7 +24,7 @@ export default {
         rust: true,
       },
       ui: "default",
-      viewers: { config: true, stdio: true, provenance: true, timing: true },
+      viewers: { config: true, stdio: true, stderr: true, provenance: true, timing: true },
     }),
   ],
 };
@@ -60,6 +60,8 @@ const check = await session.typecheck();
 const run = await session.run();
 
 run.stdio;
+run.stdout;
+run.stderr;
 run.provenance;
 run.timing;
 ```
