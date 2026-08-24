@@ -46,6 +46,7 @@ export default defineConfig(({ mode }) => {
         ssg: {
           siteName: "Ox Content",
           siteUrl,
+          pagination: true,
           generateOgImage: true,
           ogImage,
           theme: defineTheme({
@@ -94,6 +95,7 @@ export default defineConfig(({ mode }) => {
                       { text: "Collections", link: "/built-in/collections.md" },
                       { text: "Quality Checks", link: "/built-in/quality-checks.md" },
                       { text: "Site Generation", link: "/built-in/site-generation.md" },
+                      { text: "Previous / Next", link: "/built-in/pagination.md" },
                     ],
                   },
                   { text: "Theming", link: "/theming.md" },

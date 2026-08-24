@@ -436,6 +436,28 @@ mod tests {
     }
 
     #[test]
+    fn entry_page_skips_pager_even_when_enabled() {
+        let mut page_data = page("guide");
+        page_data.entry_page = Some(super::super::EntryPageConfig::default());
+
+        let html = generate_html(&page_data, &linear_nav(), &config(true));
+
+        assert!(pager_html(&html).is_none(), "entry pages must not emit pager chrome: {html}");
+        assert!(!html.contains(r#"rel="prev""#), "{html}");
+        assert!(!html.contains("Previous"), "{html}");
+    }
+
+    #[test]
+    fn single_page_sidebar_emits_nothing() {
+        let nav = guide(vec![nav_item("Only", "only", "/docs/only/index.html")]);
+        let html = generate_html(&page("only"), &nav, &config(true));
+
+        assert!(pager_html(&html).is_none(), "a single-page sidebar must emit no pager: {html}");
+        assert!(!html.contains(r#"rel="prev""#), "{html}");
+        assert!(!html.contains(r#"rel="next""#), "{html}");
+    }
+
+    #[test]
     fn generate_bare_html_is_unchanged() {
         let html = generate_bare_html("<h1>Hello</h1>", "Test Page");
 
