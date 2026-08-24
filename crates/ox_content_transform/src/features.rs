@@ -327,4 +327,4 @@ fn resolve_edit_this_page(
 }
 
 #[cfg(test)]
-mod feature_tests;
+mod wiring_tests;
