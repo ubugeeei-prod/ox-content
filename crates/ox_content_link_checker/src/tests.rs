@@ -85,6 +85,7 @@ fn absolute_paths_resolve_under_src_dir_when_configured() {
     let opts = CheckOptions {
         file_path: dir.join("docs/doc.md"),
         src_dir: Some(dir.clone()),
+        public_dir: None,
         ignore_patterns: Vec::new(),
     };
     let diagnostics = check_source("[abs](/nested/leaf.md) [miss](/nope.md)\n", &opts);
@@ -120,6 +121,7 @@ fn ignore_patterns_suppress_diagnostics() {
     let opts = CheckOptions {
         file_path: PathBuf::from("/tmp/doc.md"),
         src_dir: None,
+        public_dir: None,
         ignore_patterns: vec!["intentionally-broken".into()],
     };
     let diagnostics =
@@ -144,4 +146,40 @@ fn line_index_points_at_the_link_start() {
     assert_eq!(diagnostics.len(), 1, "{diagnostics:?}");
     assert_eq!(diagnostics[0].line, 2);
     assert!(diagnostics[0].column > 1);
+}
+
+#[test]
+fn unicode_percent_encoded_and_duplicate_anchors_match_renderer_ids() {
+    let source = concat!(
+        "# 日本語の見出し\n",
+        "# 日本語の見出し\n",
+        "# !!!\n",
+        "[first](#%E6%97%A5%E6%9C%AC%E8%AA%9E%E3%81%AE%E8%A6%8B%E5%87%BA%E3%81%97)\n",
+        "[duplicate](#日本語の見出し-1)\n",
+        "[fallback](#section)\n",
+    );
+    let diagnostics = run(source, PathBuf::from("/tmp/doc.md"));
+    assert!(diagnostics.is_empty(), "{diagnostics:?}");
+}
+
+#[test]
+fn absolute_public_assets_and_route_style_paths_resolve() {
+    let dir = tmp_dir("public-and-routes");
+    let content = dir.join("content");
+    let public = dir.join("public");
+    fs::create_dir_all(content.join("guide")).unwrap();
+    fs::create_dir_all(&public).unwrap();
+    fs::write(content.join("guide.md"), "# Guide").unwrap();
+    fs::write(content.join("guide/index.md"), "# Nested").unwrap();
+    fs::write(public.join("logo icon.svg"), "<svg/>").unwrap();
+
+    let options = CheckOptions {
+        file_path: content.join("index.md"),
+        src_dir: Some(content),
+        public_dir: Some(public),
+        ignore_patterns: Vec::new(),
+    };
+    let source = "[guide](/guide/) [nested](/guide/index) ![logo](/logo%20icon.svg)";
+    let diagnostics = check_source(source, &options);
+    assert!(diagnostics.is_empty(), "{diagnostics:?}");
 }

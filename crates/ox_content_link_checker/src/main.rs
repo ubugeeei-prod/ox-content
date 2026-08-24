@@ -16,22 +16,38 @@ use std::path::PathBuf;
 use std::process::ExitCode;
 
 use clap::{Parser, ValueEnum};
-use ox_content_link_checker::{CheckOptions, Diagnostic, Severity, check_source};
+use ox_content_link_checker::{
+    CheckOptions, Diagnostic, LinkKind, Severity, SiteCheckOptions, check_site, check_source,
+};
 
 #[derive(Parser)]
 #[command(
     name = "ox-content-link-check",
-    about = "Check Markdown links and assets for missing local targets"
+    about = "Check Markdown sources and generated sites for broken internal links",
+    group(clap::ArgGroup::new("inputs").required(true).multiple(true).args(["files", "site_dir"]))
 )]
 struct Cli {
     /// Files to check. Pass one or more `.md` / `.mdc` paths.
-    #[arg(required = true)]
     files: Vec<PathBuf>,
 
     /// Treat paths starting with `/` as relative to this directory.
     /// Defaults to each file's parent directory.
     #[arg(long)]
     src_dir: Option<PathBuf>,
+
+    /// Directory copied to the generated site's root. Absolute source
+    /// links fall back here after `src_dir`.
+    #[arg(long)]
+    public_dir: Option<PathBuf>,
+
+    /// Recursively validate every generated HTML page and local asset
+    /// below this directory. May be combined with source files.
+    #[arg(long)]
+    site_dir: Option<PathBuf>,
+
+    /// Public URL prefix used by `site_dir`, for example `/ox-content/`.
+    #[arg(long, default_value = "/")]
+    base: String,
 
     /// Substring patterns that suppress diagnostics whose target
     /// contains the pattern. Repeatable. Plain `contains` match — the
@@ -89,11 +105,47 @@ fn main() -> ExitCode {
         let opts = CheckOptions {
             file_path: file.clone(),
             src_dir: cli.src_dir.clone(),
+            public_dir: cli.public_dir.clone(),
             ignore_patterns: cli.ignore.clone(),
         };
         let diagnostics = check_source(&source, &opts);
         error_count += diagnostics.iter().filter(|d| d.severity == Severity::Error).count();
         reports.push(FileReport { file: display, diagnostics });
+    }
+
+    if let Some(site_dir) = cli.site_dir {
+        let options = SiteCheckOptions { site_dir: site_dir.clone(), base: cli.base };
+        match check_site(&options) {
+            Ok(site_reports) => {
+                for report in site_reports {
+                    error_count += report
+                        .diagnostics
+                        .iter()
+                        .filter(|diagnostic| diagnostic.severity == Severity::Error)
+                        .count();
+                    reports.push(FileReport {
+                        file: report.file_path.to_string_lossy().into_owned(),
+                        diagnostics: report.diagnostics,
+                    });
+                }
+            }
+            Err(error) => {
+                io_error_count += 1;
+                reports.push(FileReport {
+                    file: site_dir.to_string_lossy().into_owned(),
+                    diagnostics: vec![Diagnostic {
+                        severity: Severity::Error,
+                        message: format!("Failed to inspect generated site: {error}"),
+                        line: 1,
+                        column: 1,
+                        end_line: 1,
+                        end_column: 1,
+                        kind: LinkKind::Unknown,
+                        target: String::new(),
+                    }],
+                });
+            }
+        }
     }
 
     match cli.format {

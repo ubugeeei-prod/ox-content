@@ -21,8 +21,10 @@ for diagnostic in check_source(source, &opts) {
 Knobs:
 
 - `CheckOptions::src_dir` — base for paths that start with `/`.
-  Defaults to the document's own directory; set this to the workspace
-  root for the same resolution rules as Vite-served static files.
+  Defaults to the document's own directory; set this to the Markdown
+  content root.
+- `CheckOptions::public_dir` — optional Vite-style public directory.
+  Absolute targets resolve against `src_dir` first and then this root.
 - `CheckOptions::ignore_patterns` — substring patterns. Any link whose
   raw target contains any of them is skipped.
 
@@ -32,6 +34,7 @@ Knobs:
 ox-content-link-check docs/**/*.md
 ox-content-link-check --src-dir docs --format json docs/index.md
 ox-content-link-check --ignore "intentionally-broken" docs/**/*.md
+ox-content-link-check --site-dir docs/dist/docs --base /ox-content/
 ```
 
 Exit code is `1` when any error-severity diagnostic was emitted (or any
@@ -50,15 +53,22 @@ on their own; they show up in the output.
 | `[text](./other.md#section)`             | file existence is checked; the anchor is flagged with a warning until cross-file anchor resolution lands |
 | `![alt](./image.png)`                    | same resolution as inline links                                                                          |
 
+With `--site-dir`, the checker recursively indexes the production HTML,
+then validates final `href`, `src`, `srcset`, `poster`, form actions,
+route directories, copied assets, and cross-page fragments. URL-encoded
+paths and the configured deployment base are decoded before resolution.
+Links that intentionally pass through a generated redirect are reported
+as warnings; missing pages, assets, anchors, or root escapes are errors.
+
 ## Limitations (tracked follow-ups)
 
 - Reference-link / shortcut-link forms (`[ok][ref]` plus `[ref]: …`) are
   not yet expanded by the parser, so the checker can't see them. A
   future parser change that emits `Link` nodes for resolved references
   will surface here automatically.
-- Cross-file anchor validation is intentionally deferred — it requires
-  parsing the other document and slugifying its headings, which doubles
-  the I/O fan-out. The warning lets the user know the file half passed
-  while keeping that work out of the per-keystroke LSP hot path.
+- Per-source cross-file anchors remain warnings to keep editor diagnostics
+  free of recursive I/O. The generated-site pass validates them strictly
+  in CI after all transforms, navigation, API docs, locales, and versions
+  have been emitted.
 - HTTP link checking is not implemented. A `http-check` feature flag
   with a deterministic, opt-in head-check pool is on the roadmap.

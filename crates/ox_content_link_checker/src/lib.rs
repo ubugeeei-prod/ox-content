@@ -26,11 +26,13 @@ use ox_content_parser::{Parser, ParserOptions};
 
 use anchors::collect_anchors;
 use line_index::LineIndex;
-pub use types::{CheckOptions, Diagnostic, LinkKind, Severity};
+pub use site::check_site;
+pub use types::{CheckOptions, Diagnostic, LinkKind, Severity, SiteCheckOptions, SiteReport};
 use walker::Walker;
 
 mod anchors;
 mod line_index;
+mod site;
 mod target;
 mod types;
 mod walker;
@@ -54,6 +56,7 @@ pub fn check_source(source: &str, options: &CheckOptions) -> Vec<Diagnostic> {
         &anchors,
         base_dir.as_deref(),
         options.src_dir.as_deref(),
+        options.public_dir.as_deref(),
         &options.ignore_patterns,
     );
     walker.walk(&document.children);

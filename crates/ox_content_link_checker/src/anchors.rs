@@ -1,18 +1,39 @@
-use rustc_hash::FxHashSet;
+use rustc_hash::{FxHashMap, FxHashSet};
 
 use ox_content_ast::{Document, Node};
 
 pub fn collect_anchors(source: &str, document: &Document<'_>) -> FxHashSet<String> {
     let mut anchors = FxHashSet::default();
-    collect_anchors_into(source, &document.children, &mut anchors);
+    let mut counts = FxHashMap::default();
+    collect_anchors_into(source, &document.children, &mut anchors, &mut counts);
     anchors
 }
 
-fn collect_anchors_into(source: &str, nodes: &[Node<'_>], out: &mut FxHashSet<String>) {
+fn collect_anchors_into(
+    source: &str,
+    nodes: &[Node<'_>],
+    out: &mut FxHashSet<String>,
+    counts: &mut FxHashMap<String, u32>,
+) {
     for node in nodes {
-        if let Node::Heading(heading) = node {
-            let text = inline_text(source, &heading.children);
-            out.insert(slugify(&text));
+        match node {
+            Node::Heading(heading) => {
+                let text = inline_text(source, &heading.children);
+                let slug = slugify(&text);
+                let count = counts.entry(slug.clone()).or_insert(0);
+                let unique = if *count == 0 { slug } else { format!("{slug}-{count}") };
+                *count += 1;
+                out.insert(unique);
+            }
+            Node::BlockQuote(block) => {
+                collect_anchors_into(source, &block.children, out, counts);
+            }
+            Node::List(list) => {
+                for item in &list.children {
+                    collect_anchors_into(source, &item.children, out, counts);
+                }
+            }
+            _ => {}
         }
     }
 }
@@ -41,22 +62,28 @@ fn flatten(source: &str, nodes: &[Node<'_>], buf: &mut String) {
     }
 }
 
-/// GitHub-style heading slug. Lowercase, strip everything that is not
-/// `[a-z0-9 -]`, collapse spaces into `-`. Matches the slug rules
-/// `ox_content_renderer` uses, so anchors emitted by the renderer for a
-/// given heading round-trip through the checker.
+/// Keep this byte-for-byte compatible with the renderer's Unicode-aware
+/// heading slugger. Punctuation collapses to one separator, non-Latin
+/// alphanumerics are preserved, and an empty result becomes `section`.
 fn slugify(input: &str) -> String {
     let mut out = String::with_capacity(input.len());
+    let mut last_was_separator = true;
     for ch in input.chars() {
-        if ch.is_ascii_alphanumeric() {
-            out.extend(ch.to_lowercase());
-        } else if ch == ' ' || ch == '-' || ch == '_' {
-            out.push('-');
+        for lower in ch.to_lowercase() {
+            if lower.is_alphanumeric() {
+                out.push(lower);
+                last_was_separator = false;
+            } else if !last_was_separator {
+                out.push('-');
+                last_was_separator = true;
+            }
         }
-        // Drop everything else (punctuation, emoji, etc.).
     }
-    while out.contains("--") {
-        out = out.replace("--", "-");
+    while out.ends_with('-') {
+        out.pop();
     }
-    out.trim_matches('-').to_string()
+    if out.is_empty() {
+        out.push_str("section");
+    }
+    out
 }

@@ -5,7 +5,7 @@ use rustc_hash::FxHashSet;
 use ox_content_ast::{Node, Span};
 
 use crate::line_index::LineIndex;
-use crate::target::{anchor_of, classify, split_anchor};
+use crate::target::{anchor_of, classify, percent_decode, split_anchor};
 use crate::{Diagnostic, LinkKind, Severity};
 
 pub struct Walker<'src, 'opts> {
@@ -14,6 +14,7 @@ pub struct Walker<'src, 'opts> {
     anchors: &'src FxHashSet<String>,
     base_dir: Option<&'opts Path>,
     src_dir: Option<&'opts Path>,
+    public_dir: Option<&'opts Path>,
     ignore_patterns: &'opts [String],
 }
 
@@ -23,9 +24,18 @@ impl<'src, 'opts> Walker<'src, 'opts> {
         anchors: &'src FxHashSet<String>,
         base_dir: Option<&'opts Path>,
         src_dir: Option<&'opts Path>,
+        public_dir: Option<&'opts Path>,
         ignore_patterns: &'opts [String],
     ) -> Self {
-        Self { diagnostics: Vec::new(), line_index, anchors, base_dir, src_dir, ignore_patterns }
+        Self {
+            diagnostics: Vec::new(),
+            line_index,
+            anchors,
+            base_dir,
+            src_dir,
+            public_dir,
+            ignore_patterns,
+        }
     }
 
     pub fn walk(&mut self, nodes: &[Node<'src>]) {
@@ -79,7 +89,8 @@ impl<'src, 'opts> Walker<'src, 'opts> {
             LinkKind::External | LinkKind::Scheme => {}
             LinkKind::Anchor => {
                 let anchor = anchor_of(&target).unwrap_or_default();
-                if !self.anchors.contains(anchor) {
+                let decoded_anchor = percent_decode(anchor);
+                if !self.anchors.contains(decoded_anchor.as_ref()) {
                     self.push(
                         span,
                         LinkKind::Anchor,
@@ -152,16 +163,29 @@ impl<'src, 'opts> Walker<'src, 'opts> {
     }
 
     fn resolve_file(&self, raw: &str) -> Option<PathBuf> {
-        let path = Path::new(raw);
+        let path_without_query = raw.split_once('?').map_or(raw, |(path, _)| path);
+        let decoded = percent_decode(path_without_query);
+        let path = Path::new(decoded.as_ref());
         if path.is_absolute() {
             // POSIX absolute path inside a Markdown document is a
             // workspace-rooted reference, not a host-absolute one.
             // Strip the leading slash and join under src_dir / base_dir.
-            let stripped = raw.trim_start_matches('/');
-            let base = self.src_dir.or(self.base_dir)?;
-            return Some(base.join(stripped));
+            let stripped = decoded.trim_start_matches('/');
+            let roots = [self.src_dir, self.public_dir, self.base_dir];
+            let mut fallback = None;
+            for root in roots.into_iter().flatten() {
+                let candidate = root.join(stripped);
+                fallback.get_or_insert_with(|| candidate.clone());
+                if let Some(existing) = existing_source_target(&candidate) {
+                    return Some(existing);
+                }
+            }
+            return fallback;
         }
-        self.base_dir.map(|base| base.join(raw))
+        self.base_dir.map(|base| {
+            let candidate = base.join(path);
+            existing_source_target(&candidate).unwrap_or(candidate)
+        })
     }
 
     fn push(
@@ -185,4 +209,24 @@ impl<'src, 'opts> Walker<'src, 'opts> {
             target,
         });
     }
+}
+
+fn existing_source_target(candidate: &Path) -> Option<PathBuf> {
+    if candidate.is_file() {
+        return Some(candidate.to_path_buf());
+    }
+
+    let trimmed = candidate.to_string_lossy().trim_end_matches(['/', '\\']).to_string();
+    let trimmed = PathBuf::from(trimmed);
+    let mut candidates = Vec::new();
+    if trimmed.extension().is_none() {
+        candidates.push(trimmed.with_extension("md"));
+        candidates.push(trimmed.with_extension("mdx"));
+        candidates.push(trimmed.with_extension("html"));
+    }
+    candidates.push(trimmed.join("index.md"));
+    candidates.push(trimmed.join("index.mdx"));
+    candidates.push(trimmed.join("_index.md"));
+    candidates.push(trimmed.join("index.html"));
+    candidates.into_iter().find(|path| path.is_file())
 }

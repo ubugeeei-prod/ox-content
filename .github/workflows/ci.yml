@@ -330,3 +330,8 @@ jobs:
 
       - name: Build
         run: vp run build
+
+      - name: Check generated documentation links
+        run: >-
+          cargo run -p ox_content_link_checker --bin ox-content-link-check --
+          --site-dir docs/dist/docs --base /ox-content/

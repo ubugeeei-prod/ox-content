@@ -83,7 +83,8 @@ pub(super) fn link_check_diagnostics(
         return Vec::new();
     };
 
-    let options = CheckOptions { file_path, src_dir, ignore_patterns: Vec::new() };
+    let options =
+        CheckOptions { file_path, src_dir, public_dir: None, ignore_patterns: Vec::new() };
     link_check_source(document.text(), &options)
         .into_iter()
         .map(|diagnostic| Diagnostic {
