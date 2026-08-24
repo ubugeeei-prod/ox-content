@@ -90,6 +90,44 @@ describe("transformMarkdown", () => {
     expect(result.html).toMatchSnapshot();
   });
 
+  it("leaves ::: containers literal unless opted in", async () => {
+    const markdown = "::: tip\nHello **world**\n:::\n";
+
+    const defaultResult = await transformMarkdown(
+      markdown,
+      "docs/containers.md",
+      createResolvedOptions(),
+    );
+    expect(defaultResult.html).not.toContain("ox-container");
+
+    const enabledResult = await transformMarkdown(
+      markdown,
+      "docs/containers.md",
+      createResolvedOptions({
+        containers: { enabled: true, types: {} },
+      }),
+    );
+    expect(enabledResult.html).toContain('class="ox-container ox-container--tip"');
+    expect(enabledResult.html).toContain("<strong>world</strong>");
+    expect(enabledResult.html).not.toContain(":::");
+  });
+
+  it("drops hostile container titles and attributes", async () => {
+    const result = await transformMarkdown(
+      "::: tip[<img src=x onerror=alert(1)>]{#ok .ok onclick=alert(1)}\nBody\n:::\n",
+      "docs/containers-xss.md",
+      createResolvedOptions({
+        containers: { enabled: true, types: {} },
+      }),
+    );
+
+    expect(result.html).toContain('id="ok"');
+    expect(result.html).toContain("ox-container--tip ok");
+    expect(result.html).not.toContain("onclick");
+    expect(result.html).not.toContain("<img");
+    expect(result.html).toMatch(/(&lt;|&#x3C;|&#60;)img/);
+  });
+
   it("keeps package-manager tabs disabled unless opted in", async () => {
     const markdown = "<pm>npm install -D vite</pm>";
 
@@ -223,6 +261,7 @@ function createResolvedOptions(overrides: Partial<ResolvedOptions> = {}): Resolv
     wikiLinks: { enabled: false, baseUrl: "/" },
     emojiShortcodes: { enabled: false, custom: {} },
     attrs: { enabled: false },
+    containers: { enabled: false, types: {} },
     codeImports: { enabled: false },
     sanitize: { enabled: false },
     editThisPage: { enabled: false, branch: "main", label: "Edit this page" },

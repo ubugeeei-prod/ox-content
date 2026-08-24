@@ -102,6 +102,7 @@ export function createFrameworkMarkdownOptions(options: FrameworkMarkdownOptions
     wikiLinks: { enabled: false, baseUrl: options.base },
     emojiShortcodes: { enabled: false, custom: {} },
     attrs: { enabled: false },
+    containers: { enabled: false, types: {} },
     codeImports: { enabled: false },
     sanitize: { enabled: false },
     editThisPage: { enabled: false, branch: "main", label: "Edit this page" },

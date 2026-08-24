@@ -27,6 +27,20 @@ pub struct TransformOptions {
     pub code_imports: Option<CodeImportOptions>,
     pub sanitize: Option<SanitizeOptions>,
     pub edit_this_page: Option<EditThisPageOptions>,
+    /// Opt-in `::: tip` custom containers. Disabled when omitted.
+    pub containers: Option<ContainerOptions>,
+}
+
+#[derive(Clone, Default)]
+pub struct ContainerOptions {
+    pub enabled: Option<bool>,
+    pub types: Option<FxHashMap<String, ContainerTypeOptions>>,
+}
+
+#[derive(Clone, Default)]
+pub struct ContainerTypeOptions {
+    pub title: Option<String>,
+    pub tag: Option<String>,
 }
 
 #[derive(Clone, Default)]

@@ -530,6 +530,17 @@ export interface OxContentOptions {
   attrs?: boolean | AttrsOptions;
 
   /**
+   * Opt-in `::: tip` custom containers.
+   *
+   * GitHub-style `> [!NOTE]` callouts stay available without this option.
+   * Passing `true` enables the built-in types. Pass an object to register extra
+   * types or override titles.
+   *
+   * @default false
+   */
+  containers?: boolean | ContainerOptions;
+
+  /**
    * Import source snippets into fences with `<<< @/path/to/file.ts{region}`.
    *
    * This is useful for documentation that must stay synchronized with examples
@@ -713,6 +724,7 @@ export interface ResolvedOptions {
   wikiLinks: ResolvedWikiLinkOptions;
   emojiShortcodes: ResolvedEmojiShortcodeOptions;
   attrs: ResolvedAttrsOptions;
+  containers: ResolvedContainerOptions;
   codeImports: ResolvedCodeImportOptions;
   sanitize: ResolvedSanitizeOptions;
   editThisPage: ResolvedEditThisPageOptions;
@@ -820,6 +832,43 @@ export interface ResolvedBuiltinEmbedOptions {
   twitter: TwitterEmbedOptions | false;
   bluesky: boolean;
   webContainer: boolean;
+}
+
+/**
+ * Options for opt-in `::: type` custom containers.
+ */
+export interface ContainerOptions {
+  /**
+   * Enable the container transform when an options object is supplied.
+   *
+   * @default true
+   */
+  enabled?: boolean;
+  /**
+   * Extra or overriding container types.
+   *
+   * Keys must be ASCII identifiers (`[A-Za-z0-9_-]+`). Unknown hostile names
+   * are ignored.
+   */
+  types?: Record<string, ContainerTypeOptions>;
+}
+
+/**
+ * Per-type container presentation.
+ */
+export interface ContainerTypeOptions {
+  /** Title used when the opener does not set one. */
+  title?: string;
+  /** `"details"` renders `<details>`/`<summary>`; anything else is a `<div>`. */
+  tag?: "div" | "details";
+}
+
+/**
+ * Resolved custom-container transform options.
+ */
+export interface ResolvedContainerOptions {
+  enabled: boolean;
+  types: Record<string, ContainerTypeOptions>;
 }
 
 /**

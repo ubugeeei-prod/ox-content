@@ -44,6 +44,9 @@ export type {
   ResolvedEmojiShortcodeOptions,
   AttrsOptions,
   ResolvedAttrsOptions,
+  ContainerOptions,
+  ContainerTypeOptions,
+  ResolvedContainerOptions,
   CodeImportOptions,
   ResolvedCodeImportOptions,
   SanitizeOptions,
@@ -546,6 +549,7 @@ function resolveOptions(options: OxContentOptions): ResolvedOptions {
     wikiLinks: resolveWikiLinkOptions(options.wikiLinks, options.base ?? "/"),
     emojiShortcodes: resolveEmojiShortcodeOptions(options.emojiShortcodes),
     attrs: resolveAttrsOptions(options.attrs),
+    containers: resolveContainerOptions(options.containers),
     codeImports: resolveCodeImportOptions(options.codeImports),
     sanitize: resolveSanitizeOptions(options.sanitize),
     editThisPage: resolveEditThisPageOptions(options.editThisPage),
@@ -640,6 +644,14 @@ function resolveAttrsOptions(options: OxContentOptions["attrs"]): ResolvedOption
   if (!options) return { enabled: false };
   if (options === true) return { enabled: true };
   return { enabled: options.enabled ?? true };
+}
+
+function resolveContainerOptions(
+  options: OxContentOptions["containers"],
+): ResolvedOptions["containers"] {
+  if (!options) return { enabled: false, types: {} };
+  if (options === true) return { enabled: true, types: {} };
+  return { enabled: options.enabled ?? true, types: options.types ?? {} };
 }
 
 function resolveCodeImportOptions(

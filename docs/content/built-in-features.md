@@ -23,6 +23,7 @@ inline**.
 | ---------------------------------------------------- | ------------------------------------------------------------------------- |
 | [Markdown Baseline](./built-in/markdown.md)          | GFM, tables, task lists, footnotes, autolinks, frontmatter, TOC           |
 | [Syntax Extensions](./built-in/syntax-extensions.md) | Emoji shortcodes, wiki links, attribute syntax, CJK emphasis              |
+| [Custom Containers](./built-in/containers.md)        | Opt-in `::: tip` / `::: details` callout blocks                           |
 | [Code Blocks](./built-in/code-blocks.md)             | Syntax highlighting, code annotations, code imports                       |
 | [Embeds](./built-in/embeds.md)                       | GitHub cards, OG cards, package-manager tabs, tabs, YouTube, social cards |
 | [Mermaid Diagrams](./built-in/mermaid.md)            | Diagram fences rendered to static SVG                                     |
@@ -47,7 +48,7 @@ inline**.
 | Opt-in embeds    | `embeds.pm`, `embeds.twitter`, `embeds.bluesky`, `embeds.spotify`, `embeds.stackBlitz`, `embeds.webContainer` | `false`              | [Embeds](./built-in/embeds.md)                       |
 | Syntax highlight | `highlight`                                                                                                   | `false`              | [Code Blocks](./built-in/code-blocks.md)             |
 | Code authoring   | `codeAnnotations`, `codeImports`                                                                              | `false`              | [Code Blocks](./built-in/code-blocks.md)             |
-| Extra syntax     | `wikiLinks`, `emojiShortcodes`, `attrs`, `cjkEmphasis`                                                        | `false`              | [Syntax Extensions](./built-in/syntax-extensions.md) |
+| Extra syntax     | `wikiLinks`, `emojiShortcodes`, `attrs`, `cjkEmphasis`, `containers`                                          | `false`              | [Syntax Extensions](./built-in/syntax-extensions.md) |
 | Diagrams         | `mermaid`                                                                                                     | `false`              | [Mermaid Diagrams](./built-in/mermaid.md)            |
 | OG images        | `ogImage`                                                                                                     | `false`              | [Site Generation](./built-in/site-generation.md)     |
 | HTML safety      | `sanitize`                                                                                                    | `false`              | [Quality Checks](./built-in/quality-checks.md)       |

@@ -2,8 +2,8 @@ use napi_derive::napi;
 use ox_content_transform::TransformOptions;
 
 use super::{
-    JsAttrsOptions, JsCodeImportOptions, JsEditThisPageOptions, JsEmojiShortcodeOptions,
-    JsSanitizeOptions, JsWikiLinkOptions,
+    JsAttrsOptions, JsCodeImportOptions, JsContainerOptions, JsEditThisPageOptions,
+    JsEmojiShortcodeOptions, JsSanitizeOptions, JsWikiLinkOptions,
 };
 
 /// Transform options for JavaScript.
@@ -154,6 +154,11 @@ pub struct JsTransformOptions {
     ///
     /// Default: disabled.
     pub edit_this_page: Option<JsEditThisPageOptions>,
+
+    /// Opt-in `::: tip` custom containers.
+    ///
+    /// Default: disabled.
+    pub containers: Option<JsContainerOptions>,
 }
 
 impl From<JsTransformOptions> for TransformOptions {
@@ -184,6 +189,7 @@ impl From<JsTransformOptions> for TransformOptions {
             code_imports: value.code_imports.map(Into::into),
             sanitize: value.sanitize.map(Into::into),
             edit_this_page: value.edit_this_page.map(Into::into),
+            containers: value.containers.map(Into::into),
         }
     }
 }
