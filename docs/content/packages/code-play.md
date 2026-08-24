@@ -181,21 +181,23 @@ control.
 
 ## Security
 
-`play` fences are **trusted site content**. Do not mark visitor-supplied or
-unreviewed snippets as `play`.
+`play` fences are **trusted site content**, same as any other script you
+ship. Do not mark visitor-supplied or unreviewed snippets as `play`.
 
 - Samples are not executed during Markdown transform or SSG.
-- JavaScript and TypeScript execute in `node:vm` on Node, or in
+- **JavaScript / TypeScript execute** in `node:vm` on Node, or in
   `<iframe sandbox="allow-scripts">` in the browser (no `allow-same-origin`).
-  They are never run with page-origin `Function`.
-- Vue / React / Svelte / Solid previews use the same iframe flags and load
-  runtimes from `esm.sh`.
-- `sh` never spawns a local shell.
-- Enabling Rust or Go sends source to `play.rust-lang.org` /
-  `play.golang.org` (or your `endpoints` override). Their privacy policy
-  applies.
-- A configured remote endpoint receives source for that language. Only set
-  HTTPS endpoints you trust, without embedded credentials.
+  They are never run with page-origin `Function`. The sample cannot read the
+  host page's DOM or storage.
+- **Vue / React / Svelte / Solid** previews use the same iframe flags and
+  `srcdoc`. Preview runtimes load from `esm.sh`.
+- `sh` never spawns a local shell on the docs host.
+- **Rust / Go** POST source to `play.rust-lang.org` / `play.golang.org`
+  (or your `endpoints` override). Those hosts see the sample and their
+  privacy policy applies.
+- A Piston-compatible `languages.<id>.endpoint` receives source for that
+  language. Only set HTTPS endpoints you trust, without embedded
+  credentials.
 
 ## First publish
 

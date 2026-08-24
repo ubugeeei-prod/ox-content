@@ -54,12 +54,13 @@ Content release artifacts, including:
   Sample code is not run during Markdown transform or SSG. `play` fences are
   trusted site content. JavaScript and TypeScript run in `node:vm` on Node,
   or in an iframe with `sandbox="allow-scripts"` (no `allow-same-origin`) in
-  the browser — never via page-origin `Function`. Native languages POST
-  source to official playgrounds or a user-configured HTTPS executor. Treat
-  `endpoints` and
-  `languages.<id>.endpoint` as trusted destinations. The plugin does not
-  spawn a local shell. The Vite `/__ox-code-play/*` proxies are dev-only,
-  accept POST only, and do not leak upstream fetch errors to the client.
+  the browser — never via page-origin `Function`. Framework previews use the
+  same iframe flags. Native languages POST source to official playgrounds
+  or a user-configured HTTPS executor. Treat `endpoints` and
+  `languages.<id>.endpoint` as trusted destinations; they receive sample
+  source. The plugin does not spawn a local shell. The Vite
+  `/__ox-code-play/*` proxies are dev-only, accept POST only, and do not
+  leak upstream fetch errors to the client.
 - Build, release, and dependency configuration that could affect distributed
   artifacts.
 
