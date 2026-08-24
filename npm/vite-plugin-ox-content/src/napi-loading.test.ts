@@ -64,6 +64,7 @@ function createResolvedOptions(overrides: Partial<ResolvedOptions> = {}): Resolv
     wikiLinks: { enabled: false, baseUrl: "/" },
     emojiShortcodes: { enabled: false, custom: {} },
     attrs: { enabled: false },
+    containers: { enabled: false, types: {} },
     codeImports: { enabled: false },
     sanitize: { enabled: false },
     editThisPage: { enabled: false, branch: "main", label: "Edit this page" },

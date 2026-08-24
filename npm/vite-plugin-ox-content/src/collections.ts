@@ -167,6 +167,12 @@ function createNativeTransformOptions(options: ResolvedOptions): NativeTransform
         }
       : undefined,
     attributes: options.attrs?.enabled ? { enabled: true } : undefined,
+    containers: options.containers?.enabled
+      ? {
+          enabled: true,
+          types: options.containers.types,
+        }
+      : undefined,
     cjkEmphasis: options.cjkEmphasis ?? false,
     codeImports: options.codeImports?.enabled
       ? {

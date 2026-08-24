@@ -2,8 +2,9 @@ use std::collections::HashMap;
 
 use napi_derive::napi;
 use ox_content_transform::{
-    AttrsOptions, CodeBlockLintOptions, CodeImportOptions, DocsTestOptions, EditThisPageOptions,
-    EmojiShortcodeOptions, MediaEmbedsOptions, SanitizeOptions, WikiLinkOptions,
+    AttrsOptions, CodeBlockLintOptions, CodeImportOptions, ContainerOptions, ContainerTypeOptions,
+    DocsTestOptions, EditThisPageOptions, EmojiShortcodeOptions, MediaEmbedsOptions,
+    SanitizeOptions, WikiLinkOptions,
 };
 
 /// Wiki-link transform options.
@@ -48,6 +49,48 @@ impl From<JsEmojiShortcodeOptions> for EmojiShortcodeOptions {
         Self {
             enabled: value.enabled,
             custom: value.custom.map(|values| values.into_iter().collect()),
+        }
+    }
+}
+
+/// Custom container transform options.
+#[napi(object)]
+#[derive(Default, Clone)]
+#[allow(clippy::disallowed_types)]
+pub struct JsContainerTypeOptions {
+    /// Title used when the opener does not set one.
+    pub title: Option<String>,
+    /// `"details"` renders `<details>`/`<summary>`; anything else is a `<div>`.
+    pub tag: Option<String>,
+}
+
+impl From<JsContainerTypeOptions> for ContainerTypeOptions {
+    fn from(value: JsContainerTypeOptions) -> Self {
+        Self { title: value.title, tag: value.tag }
+    }
+}
+
+/// Opt-in `::: tip` custom containers.
+#[napi(object)]
+#[derive(Default, Clone)]
+#[allow(clippy::disallowed_types)]
+pub struct JsContainerOptions {
+    /// Enable `::: type` containers.
+    ///
+    /// Default: `false`.
+    pub enabled: Option<bool>,
+
+    /// Extra or overriding container types.
+    pub types: Option<HashMap<String, JsContainerTypeOptions>>,
+}
+
+impl From<JsContainerOptions> for ContainerOptions {
+    fn from(value: JsContainerOptions) -> Self {
+        Self {
+            enabled: value.enabled,
+            types: value
+                .types
+                .map(|types| types.into_iter().map(|(key, spec)| (key, spec.into())).collect()),
         }
     }
 }

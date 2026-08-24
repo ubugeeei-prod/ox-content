@@ -676,6 +676,25 @@ export interface JsDocThrows {
 }
 
 /** Edit-this-page link options. */
+export interface JsContainerTypeOptions {
+  /** Title used when the opener does not set one. */
+  title?: string
+  /** `"details"` renders `<details>`/`<summary>`; anything else is a `<div>`. */
+  tag?: string
+}
+/**
+ * Opt-in `::: tip` custom containers.
+ */
+export interface JsContainerOptions {
+  /**
+   * Enable `::: type` containers.
+   *
+   * Default: `false`.
+   */
+  enabled?: boolean
+  /** Extra or overriding container types. */
+  types?: Record<string, JsContainerTypeOptions>
+}
 export interface JsEditThisPageOptions {
   /**
    * Enable edit link generation.
@@ -1798,6 +1817,12 @@ export interface JsTransformOptions {
    * Default: disabled.
    */
   editThisPage?: JsEditThisPageOptions
+  /**
+   * Opt-in `::: tip` custom containers.
+   *
+   * Default: disabled.
+   */
+  containers?: JsContainerOptions
 }
 
 /** Type parameter documentation (`<T extends C = D>`) used by generated API docs. */

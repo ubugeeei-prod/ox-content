@@ -256,6 +256,11 @@ interface JsTransformOptions {
     enabled?: boolean;
   };
 
+  containers?: {
+    enabled?: boolean;
+    types?: Record<string, { title?: string; tag?: string }>;
+  };
+
   cjkEmphasis?: boolean;
 
   codeImports?: {
@@ -506,6 +511,12 @@ export async function transformMarkdown(
         }
       : undefined,
     attributes: options.attrs?.enabled ? { enabled: true } : undefined,
+    containers: options.containers?.enabled
+      ? {
+          enabled: true,
+          types: options.containers.types,
+        }
+      : undefined,
     cjkEmphasis: options.cjkEmphasis ?? false,
     codeImports: options.codeImports?.enabled
       ? {

@@ -12,6 +12,7 @@ mod attr_tokens;
 mod attributes;
 pub mod code_blocks;
 mod code_imports;
+mod containers;
 mod edit;
 mod emoji;
 mod emoji_shortcodes;
@@ -24,6 +25,7 @@ pub use code_blocks::{
     lint_code_blocks,
 };
 use code_imports::ResolvedCodeImportOptions;
+use containers::ResolvedContainerOptions;
 use edit::append_edit_this_page;
 use emoji_shortcodes::replace_emoji_shortcodes;
 use segments::transform_markdown_text_segments;
@@ -34,6 +36,7 @@ pub struct TransformFeatureOptions {
     wiki_links: Option<ResolvedWikiLinkOptions>,
     emoji_shortcodes: Option<ResolvedEmojiShortcodeOptions>,
     code_imports: Option<ResolvedCodeImportOptions>,
+    containers: Option<ResolvedContainerOptions>,
     attributes: bool,
     edit_this_page: Option<ResolvedEditThisPageOptions>,
 }
@@ -74,16 +77,20 @@ impl TransformFeatureOptions {
         let source_path = options.source_path.as_deref().filter(|value| !value.is_empty());
         let code_imports = code_imports::resolve(options.code_imports.as_ref(), source_path);
         let attributes = resolve_attrs(options.attributes.as_ref());
+        let containers = containers::resolve(options.containers.as_ref());
         let edit_this_page = resolve_edit_this_page(
             options.edit_this_page.as_ref(),
             source_path.unwrap_or_default(),
         );
 
-        Self { wiki_links, emoji_shortcodes, code_imports, attributes, edit_this_page }
+        Self { wiki_links, emoji_shortcodes, code_imports, containers, attributes, edit_this_page }
     }
 
     pub fn has_preprocess(&self) -> bool {
-        self.wiki_links.is_some() || self.emoji_shortcodes.is_some() || self.code_imports.is_some()
+        self.wiki_links.is_some()
+            || self.emoji_shortcodes.is_some()
+            || self.code_imports.is_some()
+            || self.containers.is_some()
     }
 
     pub fn has_postprocess(&self) -> bool {
@@ -129,6 +136,12 @@ pub fn preprocess_markdown<'a>(
         if let Some(replaced) = replaced {
             current = Cow::Owned(replaced);
         }
+    }
+
+    if let Some(containers) = &options.containers
+        && current.contains(":::")
+    {
+        current = Cow::Owned(containers::transform(&current, containers));
     }
 
     PreprocessResult { source: current, errors }
