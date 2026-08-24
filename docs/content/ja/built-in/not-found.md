@@ -1,32 +1,23 @@
 ---
-title: カスタム 404 ページ
-description: 生成 HTML の隣に書く、オプトインのテーマ付き 404 ページです。
+title: カスタム 404
+description: 生成 HTML の横に書く、テーマ付き 404。
 ---
 
-# カスタム 404 ページ
+# カスタム 404
 
-`ssg.notFound` が有効なとき、SSG ビルドは既定レイアウトでテーマ付き 404 ページを書きます。
-ナビ、検索、残りのサイトクロム付きです。ページは検索インデックスと、
-それらが有効なときの `sitemap.xml` / `llms.txt` から省かれます。
+`ssg.notFound` を有効にすると、デフォルトレイアウト（ナビ、検索、サイト chrome）の 404 を書きます。検索インデックスと、有効なら `sitemap.xml` / `llms.txt` からは外れます。
 
-機能は、オンにするまでオフです。既存サイトは変わりません。
+省略または `false` ではオフです。
 
 ```ts
-import { oxContent } from "@ox-content/vite-plugin";
-
-export default {
-  plugins: [
-    oxContent({
-      ssg: {
-        notFound: true,
-      },
-    }),
-  ],
-};
+oxContent({
+  ssg: {
+    notFound: true,
+  },
+});
 ```
 
-`false` または省略するとファイルはオフのままです。`true` は既定を有効にします（`srcDir` の
-`404.md`、出力 `404.html`）。オブジェクトは機能を有効にし、設定した欄だけ上書きします。
+`true` の既定は `srcDir` の `404.md` を `404.html` に出すことです。オブジェクトで上書きできます。
 
 ```ts
 oxContent({
@@ -39,21 +30,8 @@ oxContent({
 });
 ```
 
-| オプション     | 型                            | 既定         |
-| -------------- | ----------------------------- | ------------ |
-| `ssg.notFound` | `boolean` / `NotFoundOptions` | `false`      |
-| `source`       | `string`                      | `"404.md"`   |
-| `output`       | `string`                      | `"404.html"` |
-
-ソースファイルがなくても、ビルドは「Page not found」というタイトルのテーマ付きページを書きます。
-オプションを有効にすると、常に出力ファイルができます。
-
-`404.md` からのタイトルとその他のメタデータは HTML 文書内でエスケープされるので、
-`<title>` や属性から抜けられません。
+このサイトの日本語 404 本文は [`../404.md`](../404.md) です。ロケール付き URL でも、ファイル名はホストの慣習に合わせて `404.html` です。
 
 ## 関連
 
-- [サイト生成](./site-generation.md)
-- [検索](./search.md)
-- [Sitemap / robots / llms.txt](./site-maps.md)
-- [組み込み機能の概要](../built-in-features.md)
+- [英語版ガイド](/built-in/not-found.md)

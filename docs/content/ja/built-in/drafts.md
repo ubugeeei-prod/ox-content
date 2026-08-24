@@ -1,28 +1,19 @@
 ---
-title: 下書き、非公開、予約公開ページ
-description: 本番 HTML、ナビ、検索、サイトマップ向けの、オプトイン frontmatter 公開状態です。
+title: 下書き / 非公開 / 予約公開
+description: 本番 HTML・ナビ・検索・sitemap 向けのオプトイン公開状態。
 ---
 
-# 下書き、非公開、予約公開ページ
+# 下書き / 非公開 / 予約公開
 
-`publishState` が有効なとき、本番ビルドは frontmatter の公開
-欄を尊重します。省略または `false` はいまの振る舞いのままです。すべての Markdown ページが
-公開されます。
+`publishState` を有効にすると、本番ビルドが frontmatter の公開フィールドを尊重します。省略または `false` では今までどおり、すべての Markdown が公開されます。
 
 ```ts
-import { oxContent } from "@ox-content/vite-plugin";
-
-export default {
-  plugins: [
-    oxContent({
-      publishState: true,
-    }),
-  ],
-};
+oxContent({
+  publishState: true,
+});
 ```
 
-`false` または省略するとフィルタはオフのままです。`true` は既定を有効にします。オブジェクトは
-機能を有効にし、ビルド時の時計を注入できます。
+オブジェクトでビルド時刻を注入できます。
 
 ```ts
 oxContent({
@@ -32,45 +23,23 @@ oxContent({
 });
 ```
 
-| オプション     | 型                                | 既定         |
-| -------------- | --------------------------------- | ------------ |
-| `publishState` | `boolean` / `PublishStateOptions` | `false`      |
-| `now`          | `string`（ISO-8601）              | システム時計 |
+| オプション | 型 | 既定 |
+| --- | --- | --- |
+| `publishState` | `boolean` / `PublishStateOptions` | `false` |
+| `now` | ISO-8601 文字列 | システム時計 |
 
-dev サーバーは下書きとまだ予約公開前のページを見えるままにするので、
-プレビューできます。本番 HTML、検索、サイトマップはそれらのページを省きます。
-
-## Frontmatter
+dev サーバでは下書きと未到来の予約公開もプレビューできます。本番の HTML、検索、sitemap からは落ちます。
 
 ```md
 ---
-title: Work in progress
+title: 準備中
 draft: true
 ---
 ```
 
-| 欄               | 本番の結果                                          |
-| ---------------- | --------------------------------------------------- |
-| `draft: true`    | HTML、ナビ、検索、サイトマップなし                  |
-| `unlisted: true` | HTML は書く。ナビ、検索、サイトマップからは省く     |
-| `scheduled`      | その瞬間まで非公開                                  |
-| `date`           | 値が有効なタイムスタンプなら `scheduled` と同じ     |
-| `expiry`         | その瞬間のあと非公開                                |
-
-両方あるとき `scheduled` が `date` に勝ちます。`draft` または `unlisted` として数えるのは JSON の `true` だけです。
-
-## タイムゾーンと不正な日付
-
-素朴なタイムスタンプ（`2026-08-24` と `2026-08-24T12:00:00`）は UTC です。`+09:00` や
-`Z` のようなオフセットは尊重されます。
-
-不正な `scheduled` または `expiry` 値はページを非公開にします。不正な `date`
-値は無視されます。`date` は表示メタデータとしても使われるからです。不正な
-`now` オプションはシステム時計へフォールバックします。
+`unlisted: true` は HTML を出しますが、ナビ・検索・sitemap から外します。`publishAt` は指定時刻まで下書き扱いです。
 
 ## 関連
 
-- [サイト生成](./site-generation.md)
-- [検索](./search.md)
+- [英語版ガイド](/built-in/drafts.md)
 - [Sitemap / robots / llms.txt](./site-maps.md)
-- [組み込み機能の概要](../built-in-features.md)
