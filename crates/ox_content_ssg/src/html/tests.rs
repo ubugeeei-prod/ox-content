@@ -47,3 +47,20 @@ fn mobile_menu_script_keeps_state_and_focus_synchronized() {
         "only keyboard dismissal should force focus back to the opener"
     );
 }
+
+#[test]
+fn default_theme_surfaces_stay_flat() {
+    let default_css = [
+        super::SSG_CSS,
+        super::header_chrome::HEADER_CHROME_CSS,
+        super::reader_chrome::READER_CHROME_CSS,
+    ]
+    .join("\n");
+
+    for decorative_effect in ["box-shadow", "linear-gradient(", "radial-gradient("] {
+        assert!(
+            !default_css.contains(decorative_effect),
+            "default theme chrome must use flat surfaces instead of {decorative_effect}"
+        );
+    }
+}

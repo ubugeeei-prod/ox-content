@@ -48,7 +48,6 @@
   background: var(--octc-color-bg);
   border: 1px solid var(--octc-color-border);
   border-radius: 6px;
-  box-shadow: 0 8px 24px color-mix(in srgb, var(--octc-color-text) 12%, transparent);
   z-index: 120;
 }
 .header-nav-dropdown > button[aria-expanded="true"] + .header-nav-menu {

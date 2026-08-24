@@ -297,7 +297,6 @@ a:hover {
   background: var(--octc-color-bg);
   border: 1px solid var(--octc-color-border);
   border-radius: 6px;
-  box-shadow: 0 8px 24px color-mix(in srgb, var(--octc-color-text) 12%, transparent);
   z-index: 120;
 }
 .ox-header-select > button[aria-expanded="true"] + .ox-header-select-menu {
@@ -425,7 +424,6 @@ a:hover {
   max-height: 70vh;
   display: flex;
   flex-direction: column;
-  box-shadow: 0 24px 80px rgba(5, 8, 22, 0.32);
 }
 .search-header {
   display: flex;
@@ -1142,11 +1140,7 @@ a:hover {
   overflow-wrap: anywhere;
 }
 .content pre {
-  background: linear-gradient(
-    180deg,
-    var(--octc-color-code-bg-top) 0,
-    var(--octc-color-code-bg) 3.5rem
-  ) !important;
+  background: var(--octc-color-code-bg) !important;
   color: var(--octc-color-code-text);
   padding: 1rem 1.25rem;
   border-radius: 4px;
@@ -1424,11 +1418,7 @@ a:hover {
   display: block;
   width: 100%;
   max-width: 100%;
-  background: linear-gradient(
-    180deg,
-    var(--octc-color-code-bg-top) 0,
-    var(--octc-color-code-bg) 2.75rem
-  ) !important;
+  background: var(--octc-color-code-bg) !important;
   border: 1px solid var(--octc-color-code-frame-border) !important;
   padding: 0.55rem 0.7rem !important;
   border-radius: 4px !important;
@@ -1602,11 +1592,7 @@ a:hover {
   padding: 0.9rem 1rem;
   border: 1px solid var(--octc-color-code-frame-border);
   border-radius: 4px;
-  background: linear-gradient(
-    180deg,
-    var(--octc-color-code-bg-top) 0,
-    var(--octc-color-code-bg) 2.75rem
-  ) !important;
+  background: var(--octc-color-code-bg) !important;
 }
 .content .ox-api-entry__section--signature pre code {
   font-size: 0.91rem;
