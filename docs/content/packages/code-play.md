@@ -142,7 +142,7 @@ Viewers can be toggled independently through `viewers`.
 | TypeScript                | yes     | yes        | local strip-types + `tsgo` + `node:vm`      |
 | Rust                      | yes     | yes        | `play.rust-lang.org` (or `endpoints.rust`)  |
 | Go                        | yes     | yes        | `play.golang.org` (or `endpoints.go`)       |
-| JavaScript                | yes     | no         | `node:vm` / `Function`                      |
+| JavaScript                | yes     | no         | `node:vm` / sandbox iframe                  |
 | Vue, React, Svelte, Solid | yes     | no         | iframe `srcdoc` + esm.sh import map         |
 | Python, PHP, Ruby, sh, …  | yes     | no         | Piston-compatible `languages.<id>.endpoint` |
 

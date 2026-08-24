@@ -44,6 +44,17 @@ describe("codePlay vite plugin", () => {
     expect(payload.capabilities.typecheck).toBe(true);
     expect(payload.endpoints?.typecheck).toBe(DEV_TYPECHECK_PATH);
   });
+
+  it("does not embed the Vite typecheck proxy when proxy is disabled", () => {
+    const plugin = codePlay({
+      languages: { typescript: { execute: true, typecheck: true } },
+      proxy: false,
+    });
+    resolveCommand(plugin, "serve");
+    const payload = payloadFromTransform(plugin, "```ts play\nconst n = 1;\n```\n");
+    expect(payload.capabilities.typecheck).toBe(false);
+    expect(payload.endpoints?.typecheck).toBeUndefined();
+  });
 });
 
 function resolveCommand(plugin: { configResolved?: unknown }, command: "build" | "serve"): void {

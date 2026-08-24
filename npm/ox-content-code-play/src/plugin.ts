@@ -53,7 +53,7 @@ export function codePlay(options: CodePlayPluginOptions = {}): Plugin {
       base = resolved.base === "/" ? normalizeBase(config.base) : resolved.base;
       outDir = resolved.outDir ?? config.build.outDir;
       if (explicitTypecheck === undefined) {
-        if (command === "serve") {
+        if (command === "serve" && resolved.proxy) {
           resolved.endpoints.typecheck = DEV_TYPECHECK_PATH;
         } else {
           delete resolved.endpoints.typecheck;
