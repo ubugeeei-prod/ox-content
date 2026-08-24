@@ -23,11 +23,11 @@ fn frontmatter_hides_navbar() {
 
 #[test]
 fn page_chrome_off_ignores_hide_flags() {
-    let html = render(None, false, PageChromeFlags {
-        sidebar: Some(false),
-        navbar: Some(false),
-        ..PageChromeFlags::default()
-    });
+    let html = render(
+        None,
+        false,
+        PageChromeFlags { sidebar: Some(false), navbar: Some(false), ..PageChromeFlags::default() },
+    );
 
     assert!(html.contains(r#"<aside class="sidebar">"#), "{html}");
     assert!(html.contains(r#"<header class="header">"#), "{html}");
@@ -41,13 +41,17 @@ fn frontmatter_hides_footer_outline_last_updated_and_edit_link() {
         footer: Some(ThemeFooter { message: Some("Built here".to_string()), copyright: None }),
         ..ThemeConfig::default()
     };
-    let html = render(Some(theme.clone()), true, PageChromeFlags {
-        outline: Some(false),
-        footer: Some(false),
-        last_updated: Some(false),
-        edit_link: Some(false),
-        ..PageChromeFlags::default()
-    });
+    let html = render(
+        Some(theme.clone()),
+        true,
+        PageChromeFlags {
+            outline: Some(false),
+            footer: Some(false),
+            last_updated: Some(false),
+            edit_link: Some(false),
+            ..PageChromeFlags::default()
+        },
+    );
 
     assert!(!html.contains(r#"<aside class="toc""#), "{html}");
     assert!(!html.contains("Built here"), "{html}");

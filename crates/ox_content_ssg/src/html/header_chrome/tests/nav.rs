@@ -37,10 +37,10 @@ fn nav_happy_path_links() {
 #[test]
 fn nav_dropdown_markup_has_aria() {
     let html = render(
-        Some(theme_nav(vec![dropdown("API", vec![
-            nav_item("SSG", Some("/api/ssg/")),
-            nav_item("Search", Some("/api/search/")),
-        ])])),
+        Some(theme_nav(vec![dropdown(
+            "API",
+            vec![nav_item("SSG", Some("/api/ssg/")), nav_item("Search", Some("/api/search/"))],
+        )])),
         false,
         PageChromeFlags::default(),
     );
