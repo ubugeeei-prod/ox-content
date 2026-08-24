@@ -1211,6 +1211,16 @@ export interface JsPublicExport {
   source: JsExportSource
 }
 
+/** Opt-in reader chrome flags. Presence of the object enables the feature. */
+export interface JsReaderChrome {
+  /** Copy button on fenced code blocks. */
+  copy?: boolean
+  /** Icon and `rel` on outbound links. */
+  externalLinks?: boolean
+  /** Back-to-top control that appears after scroll. */
+  backToTop?: boolean
+}
+
 /** Resolved source module. */
 export interface JsResolvedModule {
   path: string
@@ -1441,16 +1451,6 @@ export interface JsSsgConfig {
   pagination?: boolean
   /** Opt-in copy, external-link, and back-to-top chrome. */
   readerChrome?: JsReaderChrome
-}
-
-/** Opt-in reader chrome flags. Presence of the object enables the feature. */
-export interface JsReaderChrome {
-  /** Copy button on fenced code blocks. */
-  copy?: boolean
-  /** Icon and `rel` on outbound links. */
-  externalLinks?: boolean
-  /** Back-to-top control that appears after scroll. */
-  backToTop?: boolean
 }
 
 /** Result of SSG shared asset extraction. */
@@ -1891,12 +1891,6 @@ export interface JsTransformOptions {
    */
   containers?: JsContainerOptions
   /**
-   * Opt-in figures, captions, and lazy images.
-   *
-   * Default: disabled.
-   */
-  images?: JsImageOptions
-  /**
    * Opt-in Markdown file includes via `<!-- @include: PATH -->`.
    *
    * Default: disabled.
@@ -1914,6 +1908,12 @@ export interface JsTransformOptions {
    * Default: disabled.
    */
   badges?: JsBadgeOptions
+  /**
+   * Opt-in figures, captions, and lazy images.
+   *
+   * Default: disabled.
+   */
+  images?: JsImageOptions
 }
 
 /** Type parameter documentation (`<T extends C = D>`) used by generated API docs. */
