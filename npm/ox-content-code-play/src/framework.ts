@@ -50,6 +50,7 @@ ${indentPreview(code)}
 
 function indentPreview(code: string): string {
   return code
+    .replace(/<\/script/gi, "<\\/script")
     .split("\n")
     .map((line) => `    ${line}`)
     .join("\n");

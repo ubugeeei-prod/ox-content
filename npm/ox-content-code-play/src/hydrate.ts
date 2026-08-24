@@ -3,6 +3,7 @@ import { readPlayPayload, runPlayAction } from "./hydrate-action";
 import { decodePayload, encodePayload } from "./payload";
 import { errorMessage, errorResult } from "./result";
 import { CODE_PLAY_STYLES } from "./styles";
+import { JS_SANDBOX_FLAGS } from "./javascript-sandbox";
 import { applyActionBusy, renderPlayUi } from "./ui";
 import type { PlayPayload, RunResult } from "./types";
 import {
@@ -113,7 +114,7 @@ function paintResult(element: HTMLElement, _payload: PlayPayload, result: RunRes
     stdio.innerHTML = `${renderDiagnosticsHtml(result)}${renderStdioHtml(result.stdio)}`;
     if (result.preview) {
       const frame = document.createElement("iframe");
-      frame.setAttribute("sandbox", "allow-scripts");
+      frame.setAttribute("sandbox", JS_SANDBOX_FLAGS);
       frame.srcdoc = result.preview.html;
       frame.title = "Code Play preview";
       frame.style.width = "100%";
