@@ -2945,6 +2945,56 @@ export interface SearchOptions {
    * @default '/'
    */
   hotkey?: string;
+
+  /**
+   * Search backend used by `virtual:ox-content/search`.
+   *
+   * `"local"` (the default) keeps the static BM25 `search-index.json` client.
+   * `"hosted"` sends queries to a remote index with a public search-only key.
+   * Hosted search is used only when this is set to `"hosted"`.
+   *
+   * @default 'local'
+   */
+  provider?: "local" | "hosted";
+
+  /**
+   * Hosted search application id.
+   *
+   * Required when `provider` is `"hosted"`. Also read from
+   * `OX_CONTENT_SEARCH_APP_ID` when omitted here.
+   */
+  appId?: string;
+
+  /**
+   * Hosted search index name.
+   *
+   * Required when `provider` is `"hosted"`. Also read from
+   * `OX_CONTENT_SEARCH_INDEX_NAME` when omitted here.
+   */
+  indexName?: string;
+
+  /**
+   * Public search-only key for the hosted provider.
+   *
+   * Write and admin keys are rejected. Also read from `OX_CONTENT_SEARCH_KEY`
+   * when omitted here.
+   */
+  searchKey?: string;
+
+  /**
+   * Alias for `searchKey`.
+   *
+   * Also read from `OX_CONTENT_SEARCH_PUBLIC_KEY` when omitted here.
+   */
+  publicKey?: string;
+
+  /**
+   * HTTP endpoint that receives hosted search queries.
+   *
+   * Also read from `OX_CONTENT_SEARCH_ENDPOINT`. Defaults to `/search` when
+   * hosted credentials are present.
+   */
+  endpoint?: string;
 }
 
 /**
@@ -2956,6 +3006,12 @@ export interface ResolvedSearchOptions {
   prefix: boolean;
   placeholder: string;
   hotkey: string;
+  provider?: "local" | "hosted";
+  appId?: string;
+  indexName?: string;
+  searchKey?: string;
+  publicKey?: string;
+  endpoint?: string;
 }
 
 /**

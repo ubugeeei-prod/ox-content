@@ -14,6 +14,11 @@ import type {
   ScopedSearchQuery,
 } from "./types";
 import { toNapiPublishState } from "./publish-state";
+import {
+  generateHostedSearchModule,
+  resolveHostedSearchConfig,
+  toLocalSearchRuntimeOptions,
+} from "./search-provider";
 
 // Import Rust bindings
 let oxContent: typeof import("@ox-content/napi") | null = null;
@@ -69,17 +74,38 @@ export function resolveSearchOptions(
       prefix: true,
       placeholder: "Search documentation...",
       hotkey: "/",
+      provider: "local",
     };
   }
 
   const opts = typeof options === "object" ? options : {};
-
-  return {
-    enabled: opts.enabled ?? true,
+  const enabled = opts.enabled ?? true;
+  const provider = opts.provider === "hosted" ? "hosted" : "local";
+  const resolved: ResolvedSearchOptions = {
+    enabled,
     limit: opts.limit ?? 10,
     prefix: opts.prefix ?? true,
     placeholder: opts.placeholder ?? "Search documentation...",
     hotkey: opts.hotkey ?? "/",
+    provider,
+  };
+
+  if (!enabled || provider !== "hosted") {
+    return resolved;
+  }
+
+  const hosted = resolveHostedSearchConfig(opts, process.env);
+  if (!hosted) {
+    console.warn("[ox-content] Hosted search is not configured");
+    return resolved;
+  }
+
+  return {
+    ...resolved,
+    appId: hosted.appId,
+    indexName: hosted.indexName,
+    searchKey: hosted.searchKey,
+    endpoint: hosted.endpoint,
   };
 }
 
@@ -164,5 +190,11 @@ export async function writeSearchIndex(indexJson: string, outDir: string): Promi
  * This is injected into the bundle as a virtual module.
  */
 export function generateSearchModule(options: ResolvedSearchOptions, indexPath: string): string {
-  return importNapiModuleSync().generateSearchModuleFromOptions(options, indexPath);
+  if (options.provider === "hosted") {
+    return generateHostedSearchModule(options);
+  }
+  return importNapiModuleSync().generateSearchModuleFromOptions(
+    toLocalSearchRuntimeOptions(options),
+    indexPath,
+  );
 }
