@@ -45,6 +45,7 @@ export default defineConfig(({ mode }) => {
         // Crawl manifests. siteUrl is set above, so these files are safe to
         // write for the deployed docs site.
         siteMaps: true,
+        publishState: true,
 
         // Themed 404 page from content/404.md. Omitted from search and
         // crawl manifests.
@@ -55,6 +56,7 @@ export default defineConfig(({ mode }) => {
           siteName: "Ox Content",
           siteUrl,
           pagination: true,
+          readerChrome: true,
           generateOgImage: true,
           ogImage,
           theme: defineTheme({
@@ -98,6 +100,8 @@ export default defineConfig(({ mode }) => {
                       { text: "Markdown Baseline", link: "/built-in/markdown.md" },
                       { text: "Syntax Extensions", link: "/built-in/syntax-extensions.md" },
                       { text: "Custom Containers", link: "/built-in/containers.md" },
+                      { text: "Cards", link: "/built-in/cards.md" },
+                      { text: "Step Lists", link: "/built-in/steps.md" },
                       { text: "File Includes", link: "/built-in/includes.md" },
                       { text: "Inline Badges", link: "/built-in/badges.md" },
                       { text: "Images", link: "/built-in/images.md" },
@@ -109,8 +113,10 @@ export default defineConfig(({ mode }) => {
                       { text: "Quality Checks", link: "/built-in/quality-checks.md" },
                       { text: "Site Generation", link: "/built-in/site-generation.md" },
                       { text: "Previous / Next", link: "/built-in/pagination.md" },
+                      { text: "Reader Chrome", link: "/built-in/reader-chrome.md" },
                       { text: "Sitemap / robots / llms.txt", link: "/built-in/site-maps.md" },
                       { text: "Custom 404 Page", link: "/built-in/not-found.md" },
+                      { text: "Draft / unlisted / scheduled", link: "/built-in/drafts.md" },
                     ],
                   },
                   { text: "Theming", link: "/theming.md" },
@@ -196,6 +202,8 @@ export default defineConfig(({ mode }) => {
         images: true,
         codeImports: true,
         includes: true,
+        cards: true,
+        steps: true,
         embeds: {
           pm: true,
           twitter: { fetch: true },

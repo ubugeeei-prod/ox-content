@@ -3,7 +3,7 @@ use napi_derive::napi;
 use ox_content_parser::ParserOptions;
 use ox_content_search::{SearchDocument, SearchIndex, SearchOptions, SearchRuntimeOptions};
 
-use crate::JsParserOptions;
+use crate::{JsParserOptions, JsPublishStateOptions};
 
 /// Search document for JavaScript.
 #[napi(object)]
@@ -127,6 +127,14 @@ pub fn build_search_index(documents: Vec<JsSearchDocument>) -> String {
     }))
 }
 
+/// Optional filters for directory search-index construction.
+#[napi(object)]
+#[derive(Clone, Default)]
+pub struct JsSearchIndexBuildOptions {
+    /// Publish-state filter applied while walking Markdown files.
+    pub publish_state: Option<JsPublishStateOptions>,
+}
+
 /// Builds a search index directly from Markdown files under a source directory.
 ///
 /// File discovery, Markdown parsing, search document extraction, and index
@@ -136,8 +144,17 @@ pub fn build_search_index_from_directory(
     src_dir: String,
     base: String,
     extensions: Vec<String>,
+    options: Option<JsSearchIndexBuildOptions>,
 ) -> String {
-    ox_content_search::build_search_index_from_directory(&src_dir, &base, &extensions)
+    let build_options = options.map(|opts| ox_content_search::SearchIndexBuildOptions {
+        publish_state: opts.publish_state.map(Into::into),
+    });
+    ox_content_search::build_search_index_from_directory_with_options(
+        &src_dir,
+        &base,
+        &extensions,
+        build_options.as_ref(),
+    )
 }
 
 /// Searches a serialized index.

@@ -10,6 +10,7 @@ buildSsgThemeNavItems
 buildExportGraph
 checkI18n
 checkI18nProject
+classifyPublishState
 collectDocsSourceFiles
 collectSearchMarkdownFiles
 collectSsgMarkdownFiles

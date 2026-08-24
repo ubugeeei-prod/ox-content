@@ -24,6 +24,8 @@ inline**.
 | [Markdown Baseline](./built-in/markdown.md)            | GFM, tables, task lists, footnotes, autolinks, frontmatter, TOC           |
 | [Syntax Extensions](./built-in/syntax-extensions.md)   | Emoji shortcodes, wiki links, attribute syntax, CJK emphasis              |
 | [Custom Containers](./built-in/containers.md)          | Opt-in `::: tip` / `::: details` callout blocks                           |
+| [Cards](./built-in/cards.md)                           | Opt-in `::: card` / `::: link-card` / `::: card-grid` blocks              |
+| [Step Lists](./built-in/steps.md)                      | Opt-in `::: steps` tutorial lists                                         |
 | [File Includes](./built-in/includes.md)                | Opt-in `<!-- @include -->` Markdown fragments                             |
 | [Inline Badges](./built-in/badges.md)                  | Opt-in `{badge:tip}` status labels in headings or prose                   |
 | [Images](./built-in/images.md)                         | Opt-in figures, captions, lazy loading, and safe dimensions               |
@@ -35,8 +37,10 @@ inline**.
 | [Quality Checks](./built-in/quality-checks.md)         | Code block lint, type checking, docs tests, HTML sanitizer                |
 | [Site Generation](./built-in/site-generation.md)       | SSG, OG images, edit links, collections, API docs, transformers           |
 | [Previous / Next](./built-in/pagination.md)            | Opt-in previous and next page links                                       |
+| [Reader Chrome](./built-in/reader-chrome.md)           | Opt-in copy, outbound-link icons, and back-to-top                         |
 | [Sitemap / robots / llms.txt](./built-in/site-maps.md) | Opt-in crawl manifests written next to generated HTML                     |
 | [Custom 404 Page](./built-in/not-found.md)             | Opt-in themed 404 page with search and noindex                            |
+| [Draft / unlisted / scheduled](./built-in/drafts.md)   | Opt-in frontmatter publish states for production output                   |
 
 ## Default vs Opt-in
 
@@ -55,14 +59,18 @@ inline**.
 | Code authoring   | `codeAnnotations`, `codeImports`                                                                              | `false`              | [Code Blocks](./built-in/code-blocks.md)               |
 | Extra syntax     | `wikiLinks`, `emojiShortcodes`, `attrs`, `cjkEmphasis`, `containers`, `badges`                                | `false`              | [Syntax Extensions](./built-in/syntax-extensions.md)   |
 | File includes    | `includes`                                                                                                    | `false`              | [File Includes](./built-in/includes.md)                |
+| Cards            | `cards`                                                                                                       | `false`              | [Cards](./built-in/cards.md)                           |
+| Step lists       | `steps`                                                                                                       | `false`              | [Step Lists](./built-in/steps.md)                      |
 | Images           | `images`                                                                                                      | `false`              | [Images](./built-in/images.md)                         |
 | Diagrams         | `mermaid`                                                                                                     | `false`              | [Mermaid Diagrams](./built-in/mermaid.md)              |
 | OG images        | `ogImage`                                                                                                     | `false`              | [Site Generation](./built-in/site-generation.md)       |
 | HTML safety      | `sanitize`                                                                                                    | `false`              | [Quality Checks](./built-in/quality-checks.md)         |
 | Editing links    | `editThisPage`                                                                                                | `false`              | [Site Generation](./built-in/site-generation.md)       |
 | Page pager       | `ssg.pagination`                                                                                              | `false`              | [Previous / Next](./built-in/pagination.md)            |
+| Reader chrome    | `ssg.readerChrome`                                                                                            | `false`              | [Reader Chrome](./built-in/reader-chrome.md)           |
 | Crawl manifests  | `siteMaps`                                                                                                    | `false`              | [Sitemap / robots / llms.txt](./built-in/site-maps.md) |
 | Custom 404 page  | `notFound`                                                                                                    | `false`              | [Custom 404 Page](./built-in/not-found.md)             |
+| Publish states   | `publishState`                                                                                                | `false`              | [Draft / unlisted / scheduled](./built-in/drafts.md)   |
 | Code checks      | `codeBlockLint`, `codeBlockTypecheck`, `docsTests`                                                            | `false`              | [Quality Checks](./built-in/quality-checks.md)         |
 | Custom pipeline  | `transformers`                                                                                                | `[]`                 | [Site Generation](./built-in/site-generation.md)       |
 

@@ -15,7 +15,9 @@ import { importNapiModule, importNapiModuleSync } from "./napi";
 import { DEFAULT_MARKDOWN_EXTENSIONS } from "./markdown";
 import type {
   ResolvedOptions,
+  ResolvedReaderChrome,
   ResolvedSsgOptions,
+  ReaderChromeOptions,
   SsgOptions,
   SsgNavigationGroup,
   TocEntry,
@@ -36,6 +38,7 @@ import {
   notFoundVirtualInputPath,
   resolveNotFoundSourcePath,
 } from "./not-found";
+import { filterNavGroups, hiddenNavKeys, partitionPublishedPages } from "./publish-state";
 
 /**
  * Navigation item for SSG.
@@ -113,6 +116,7 @@ export function resolveSsgOptions(ssg: SsgOptions | boolean | undefined): Resolv
       generateOgImage: false,
       lastUpdated: false,
       pagination: false,
+      readerChrome: false,
     };
   }
 
@@ -125,6 +129,7 @@ export function resolveSsgOptions(ssg: SsgOptions | boolean | undefined): Resolv
       generateOgImage: false,
       lastUpdated: false,
       pagination: false,
+      readerChrome: false,
       theme: resolveTheme(undefined),
     };
   }
@@ -144,6 +149,7 @@ export function resolveSsgOptions(ssg: SsgOptions | boolean | undefined): Resolv
     generateOgImage: ssg.generateOgImage ?? false,
     lastUpdated: ssg.lastUpdated ?? false,
     pagination: resolvePaginationOption(ssg.pagination),
+    readerChrome: resolveReaderChromeOption(ssg.readerChrome),
     siteUrl: ssg.siteUrl,
     theme: resolveTheme(ssg.theme),
     navigation: ssg.navigation,
@@ -152,6 +158,22 @@ export function resolveSsgOptions(ssg: SsgOptions | boolean | undefined): Resolv
 
 function resolvePaginationOption(value: boolean | Record<string, unknown> | undefined): boolean {
   return value === true || (typeof value === "object" && value !== null);
+}
+
+function resolveReaderChromeOption(
+  value: boolean | ReaderChromeOptions | undefined,
+): ResolvedReaderChrome {
+  if (value === true) {
+    return { copy: true, externalLinks: true, backToTop: true };
+  }
+  if (value && typeof value === "object") {
+    return {
+      copy: value.copy !== false,
+      externalLinks: value.externalLinks !== false,
+      backToTop: value.backToTop !== false,
+    };
+  }
+  return false;
 }
 
 /** Parses `prev` / `next` frontmatter into a pager override. */
@@ -342,6 +364,7 @@ export async function generateHtmlPage(
   locale?: string,
   availableLocales?: LocaleConfig[],
   pagination = false,
+  readerChrome: ResolvedReaderChrome = false,
 ): Promise<string> {
   const mod = await importNapiModule();
 
@@ -416,6 +439,13 @@ export async function generateHtmlPage(
       locale,
       availableLocales: availableLocales ? toRustLocales(availableLocales) : undefined,
       pagination,
+      readerChrome: readerChrome
+        ? {
+            copy: readerChrome.copy,
+            externalLinks: readerChrome.externalLinks,
+            backToTop: readerChrome.backToTop,
+          }
+        : undefined,
     },
   );
 }
@@ -653,15 +683,23 @@ export async function buildSsg(options: ResolvedOptions, root: string): Promise<
   const context = await createBuildSsgContext(options, root, srcDir, outDir, markdownFiles);
   const collected = await collectPageResults(context, markdownFiles);
   errors.push(...collected.errors);
+  const { outputPages, listedPages } = applyPublishState(context, collected);
 
   await generateOgImageAssets(context, collected, generatedFiles, errors);
 
-  const generatedPages = await generateHtmlPages(context, collected.pageResults, collected, errors);
+  const generatedPages = await generateHtmlPages(context, outputPages, collected, errors);
   const notFoundPage = await renderNotFoundGeneratedPage(context, errors);
   if (notFoundPage) {
     generatedPages.push(notFoundPage);
   }
-  await writeGeneratedPages(generatedPages, context, generatedFiles, collected.pageResults, errors);
+  await writeGeneratedPages(
+    generatedPages,
+    context,
+    generatedFiles,
+    listedPages,
+    outputPages,
+    errors,
+  );
 
   return {
     files: generatedFiles,
@@ -762,6 +800,48 @@ async function collectPageResults(
   }
 
   return collected;
+}
+
+function applyPublishState(
+  context: BuildSsgContext,
+  collected: CollectedPageResults,
+): { outputPages: PageProcessResult[]; listedPages: PageProcessResult[] } {
+  const publishState = context.options.publishState;
+  const { output, listed } = partitionPublishedPages(collected.pageResults, publishState);
+  if (!publishState?.enabled) {
+    return { outputPages: output, listedPages: listed };
+  }
+
+  const usedManualNav =
+    Boolean(context.ssgOptions.navigation) || Boolean(context.ssgOptions.theme?.sidebar.length);
+  if (usedManualNav) {
+    context.navItems = filterNavGroups(
+      context.navItems,
+      hiddenNavKeys(collected.pageResults, listed),
+    );
+  } else {
+    context.navItems = buildNavItems(
+      listed.map((page) => page.inputPath),
+      context.srcDir,
+      context.base,
+      context.ssgOptions.extension,
+    );
+  }
+
+  const outputPaths = new Set(output.map((page) => page.inputPath));
+  collected.ogImageEntries = collected.ogImageEntries.filter((_, index) =>
+    outputPaths.has(collected.ogImageInputPaths[index] ?? ""),
+  );
+  collected.ogImageInputPaths = collected.ogImageInputPaths.filter((inputPath) =>
+    outputPaths.has(inputPath),
+  );
+  for (const inputPath of collected.ogImageUrlMap.keys()) {
+    if (!outputPaths.has(inputPath)) {
+      collected.ogImageUrlMap.delete(inputPath);
+    }
+  }
+
+  return { outputPages: output, listedPages: listed };
 }
 
 async function transformSsgPage(
@@ -1088,6 +1168,7 @@ async function renderSsgPage(
     getPageLocale(pageData.path, context.options.i18n),
     context.options.i18n ? context.options.i18n.locales : undefined,
     context.ssgOptions.pagination,
+    context.ssgOptions.readerChrome,
   );
 }
 
@@ -1153,7 +1234,8 @@ async function writeGeneratedPages(
   generatedPages: GeneratedHtmlPage[],
   context: BuildSsgContext,
   generatedFiles: string[],
-  pageResults: PageProcessResult[],
+  listedPages: PageProcessResult[],
+  outputPages: PageProcessResult[],
   errors: string[],
 ): Promise<void> {
   // Shared asset extraction needs the complete page set to maximize
@@ -1178,17 +1260,35 @@ async function writeGeneratedPages(
     base: context.base,
     siteName: context.siteName,
     options: context.options.siteMaps,
-    pages: pageResults.map((page) => ({
-      loc: canonicalPageUrl(context, page.routePaths.urlPath) ?? "",
-      title: page.title,
-      description: page.description,
-      draft: page.frontmatter.draft === true,
-      noindex: page.frontmatter.noindex === true,
-    })),
+    pages: sitemapPages(context, listedPages, outputPages),
   });
   generatedFiles.push(...siteMaps.files);
   if (siteMaps.warning) {
     errors.push(siteMaps.warning);
     console.warn(siteMaps.warning);
   }
+}
+
+function sitemapPages(
+  context: BuildSsgContext,
+  listedPages: PageProcessResult[],
+  outputPages: PageProcessResult[],
+): Array<{
+  loc: string;
+  title: string;
+  description?: string;
+  draft: boolean;
+  unlisted: boolean;
+  noindex: boolean;
+}> {
+  const pages = context.options.publishState?.enabled ? listedPages : outputPages;
+  const listedPaths = new Set(listedPages.map((page) => page.inputPath));
+  return pages.map((page) => ({
+    loc: canonicalPageUrl(context, page.routePaths.urlPath) ?? "",
+    title: page.title,
+    description: page.description,
+    draft: page.frontmatter.draft === true,
+    unlisted: Boolean(context.options.publishState?.enabled) && !listedPaths.has(page.inputPath),
+    noindex: page.frontmatter.noindex === true,
+  }));
 }

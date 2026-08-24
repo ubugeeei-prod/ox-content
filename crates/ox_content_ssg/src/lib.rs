@@ -49,6 +49,7 @@
 //!     og_image: None,
 //!     theme: None,
 //!     pagination: false,
+//!     reader_chrome: Default::default(),
 //! };
 //!
 //! let html = generate_html(&page_data, &nav_groups, &config);
@@ -66,10 +67,10 @@ pub use assets::{
 };
 pub use html::{
     BarePageData, EntryPageConfig, FeatureConfig, HeroAction, HeroConfig, HeroImage,
-    HeroNoticeConfig, LocaleInfo, NavGroup, NavItem, PageData, PagerOverride, SocialLink,
-    SocialLinks, SsgConfig, ThemeColors, ThemeConfig, ThemeEmbed, ThemeEntryPage, ThemeFonts,
-    ThemeFooter, ThemeHeader, ThemeLayout, TocEntry, generate_bare_html, generate_bare_page,
-    generate_html,
+    HeroNoticeConfig, LocaleInfo, NavGroup, NavItem, PageData, PagerOverride, ReaderChrome,
+    SocialLink, SocialLinks, SsgConfig, ThemeColors, ThemeConfig, ThemeEmbed, ThemeEntryPage,
+    ThemeFonts, ThemeFooter, ThemeHeader, ThemeLayout, TocEntry, generate_bare_html,
+    generate_bare_page, generate_html,
 };
 pub use not_found::{
     NotFoundOptions, NotFoundOutput, NotFoundPage, NotFoundRequest, generate_not_found,

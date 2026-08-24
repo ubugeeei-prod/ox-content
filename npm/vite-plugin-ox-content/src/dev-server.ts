@@ -363,6 +363,7 @@ async function renderPage(
     undefined,
     undefined,
     options.ssg.pagination,
+    options.ssg.readerChrome,
   );
 
   // Inject Vite HMR client for live reload

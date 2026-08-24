@@ -1,21 +1,27 @@
-//! MDX JSX element parse: PascalCase flow and text tags.
+//! MDX JSX parse: PascalCase / member names, fragments, spreads, expressions.
 
 use ox_content_ast::{MdxJsxFlowElement, MdxJsxTextElement, Node, Span};
 
 use super::Parser;
 use crate::error::ParseResult;
 
+mod braces;
+mod expression;
 mod scan;
 
 pub(super) fn looks_like_jsx_open(bytes: &[u8], at: usize) -> bool {
     scan::looks_like_jsx_open(bytes, at)
 }
 
+pub(super) fn looks_like_flow_expression(source: &str, at: usize) -> bool {
+    expression::looks_like_flow_expression(source, at)
+}
+
 impl<'a> Parser<'a> {
     /// Parses a flow JSX element starting at the current line.
     ///
     /// On failure the cursor is left unchanged so HTML / paragraph dispatch
-    /// can run. Unclosed tags and spreads do not panic.
+    /// can run. Unclosed tags do not panic or emit a half-parsed node.
     pub(super) fn try_parse_mdx_jsx_flow(
         &mut self,
         start: usize,
@@ -47,7 +53,7 @@ impl<'a> Parser<'a> {
 
         self.position = scan::after_trailing_line_ws(self.source.as_bytes(), element_end);
         Ok(Some(Node::MdxJsxFlowElement(self.allocator.boxed(MdxJsxFlowElement {
-            name: Some(open.name),
+            name: open.name,
             attributes,
             children,
             self_closing,
@@ -79,13 +85,14 @@ impl<'a> Parser<'a> {
             else {
                 return Ok(None);
             };
-            let children = self.parse_inline(&content[open.end..close_start], offset + open.end)?;
+            let children =
+                self.parse_jsx_phrasing(&content[open.end..close_start], offset + open.end)?;
             (false, children, close_end)
         };
 
         Ok(Some((
             Node::MdxJsxTextElement(self.allocator.boxed(MdxJsxTextElement {
-                name: Some(open.name),
+                name: open.name,
                 attributes,
                 children,
                 self_closing,
@@ -93,6 +100,14 @@ impl<'a> Parser<'a> {
             })),
             end,
         )))
+    }
+
+    fn parse_jsx_phrasing(
+        &self,
+        content: &'a str,
+        offset: usize,
+    ) -> ParseResult<ox_content_allocator::Vec<'a, Node<'a>>> {
+        self.parse_inline(content, offset)
     }
 
     fn parse_jsx_flow_children(

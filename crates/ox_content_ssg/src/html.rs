@@ -8,6 +8,7 @@ mod footer;
 mod nav;
 mod page;
 mod pagination;
+mod reader_chrome;
 mod render;
 mod social;
 mod theme;
@@ -15,6 +16,7 @@ mod theme_css;
 mod utils;
 
 use pagination::PagerView;
+pub use reader_chrome::ReaderChrome;
 
 pub use page::{
     EntryPageConfig, FeatureConfig, HeroAction, HeroConfig, HeroImage, HeroNoticeConfig,
@@ -128,6 +130,7 @@ struct PageTemplate<'a> {
     has_toc: bool,
     toc_html: &'a str,
     pager: Option<&'a PagerView>,
+    reader_chrome: Option<&'a ReaderChrome>,
     last_updated: Option<&'a LastUpdatedView>,
     embed_content_after: &'a str,
     embed_footer_before: &'a str,

@@ -197,6 +197,7 @@ module.exports.mergeHighlightedCodeBlocks = binding.mergeHighlightedCodeBlocks;
 module.exports.generateOgImageSvg = binding.generateOgImageSvg;
 module.exports.buildSearchIndex = binding.buildSearchIndex;
 module.exports.buildSearchIndexFromDirectory = binding.buildSearchIndexFromDirectory;
+module.exports.classifyPublishState = binding.classifyPublishState;
 module.exports.writeSearchIndex = binding.writeSearchIndex;
 module.exports.searchIndex = binding.searchIndex;
 module.exports.extractSearchContent = binding.extractSearchContent;

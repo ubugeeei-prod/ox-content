@@ -4,8 +4,8 @@ use std::process::Command;
 use napi_derive::napi;
 
 use crate::{
-    JsSsgBarePage, JsSsgConfig, JsSsgExternalizedAssets, JsSsgGeneratedHtmlPage, JsSsgNavGroup,
-    JsSsgNavigationGroup, JsSsgPageData, JsSsgRoutePaths, JsSsgSidebarItem,
+    JsReaderChrome, JsSsgBarePage, JsSsgConfig, JsSsgExternalizedAssets, JsSsgGeneratedHtmlPage,
+    JsSsgNavGroup, JsSsgNavigationGroup, JsSsgPageData, JsSsgRoutePaths, JsSsgSidebarItem,
 };
 
 mod converters;
@@ -210,9 +210,21 @@ pub fn generate_ssg_html(
                 .collect()
         }),
         pagination: config.pagination.unwrap_or(false),
+        reader_chrome: convert_reader_chrome(config.reader_chrome),
     };
 
     ox_content_ssg::generate_html(&ssg_page_data, &ssg_nav_groups, &ssg_config)
+}
+
+fn convert_reader_chrome(chrome: Option<JsReaderChrome>) -> ox_content_ssg::ReaderChrome {
+    match chrome {
+        None => ox_content_ssg::ReaderChrome::disabled(),
+        Some(chrome) => ox_content_ssg::ReaderChrome {
+            copy: chrome.copy.unwrap_or(true),
+            external_links: chrome.external_links.unwrap_or(true),
+            back_to_top: chrome.back_to_top.unwrap_or(true),
+        },
+    }
 }
 
 /// Generates a bare SSG HTML page without navigation or styles.

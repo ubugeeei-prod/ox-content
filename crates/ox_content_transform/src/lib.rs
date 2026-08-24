@@ -5,6 +5,7 @@ pub mod highlight;
 pub(crate) mod html_scan;
 pub mod media_embeds;
 pub mod pm;
+pub mod publish_state;
 pub mod sanitize;
 pub mod tabs;
 pub mod transformer;
@@ -13,3 +14,4 @@ pub mod youtube;
 mod options;
 
 pub use options::*;
+pub use publish_state::{PublishDecision, PublishStateOptions, classify_publish_state};

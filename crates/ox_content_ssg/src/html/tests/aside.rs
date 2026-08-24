@@ -27,6 +27,7 @@ fn config(theme: Option<ThemeConfig>) -> SsgConfig {
         locale: None,
         available_locales: None,
         pagination: false,
+        reader_chrome: ReaderChrome::default(),
     }
 }
 

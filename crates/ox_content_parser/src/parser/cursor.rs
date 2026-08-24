@@ -154,6 +154,10 @@ impl<'a> Parser<'a> {
                 let trimmed = &line[trimmed_start - line_start..];
                 Self::try_parse_fenced_code_at(line, trimmed)
             }
+            b'{' => {
+                self.options.mdx
+                    && super::mdx_jsx::looks_like_flow_expression(self.source, trimmed_start)
+            }
             b'<' => {
                 let bytes = self.source.as_bytes();
                 if self.options.mdx && super::mdx_jsx::looks_like_jsx_open(bytes, trimmed_start) {
@@ -167,6 +171,7 @@ impl<'a> Parser<'a> {
                 let line = self.line_at(line_start);
                 Self::try_parse_list_interrupt(&line[trimmed_start - line_start..])
             }
+            b'i' | b'e' => self.options.mdx && super::mdx_esm::looks_like_esm(bytes, trimmed_start),
             _ => false,
         };
 

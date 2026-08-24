@@ -4,6 +4,7 @@ use super::entry::generate_entry_html;
 use super::footer::{FOOTER_CSS, generate_footer_html};
 use super::nav::generate_nav_html;
 use super::pagination::resolve_pager;
+use super::reader_chrome::{READER_CHROME_CSS, READER_CHROME_JS, apply_reader_chrome};
 use super::social::{generate_mobile_social_links_html, generate_social_links_html};
 use super::theme_css::generate_theme_css;
 use super::utils::{
@@ -75,6 +76,9 @@ pub fn generate_html(page_data: &PageData, nav_groups: &[NavGroup], config: &Ssg
     if has_footer {
         css_sections.push(wrap_css_section("footer", footer_css));
     }
+    if config.reader_chrome.is_enabled() {
+        css_sections.push(wrap_css_section("reader-chrome", READER_CHROME_CSS));
+    }
     if !theme_css.is_empty() {
         css_sections.push(wrap_css_section("theme", &theme_css));
     }
@@ -129,8 +133,12 @@ pub fn generate_html(page_data: &PageData, nav_groups: &[NavGroup], config: &Ssg
 
     // Custom JS
     let custom_js = theme.and_then(|t| t.js.as_deref()).unwrap_or("");
-    let all_js =
+    let mut all_js =
         format!("{}\n{}\n{}", SSG_JS.replace("{{base}}", &config.base), TABS_JS, custom_js);
+    if config.reader_chrome.needs_js() {
+        all_js.push('\n');
+        all_js.push_str(READER_CHROME_JS);
+    }
 
     // Social links
     let social_links_html = theme
@@ -142,21 +150,28 @@ pub fn generate_html(page_data: &PageData, nav_groups: &[NavGroup], config: &Ssg
         .and_then(|t| t.social_links.as_ref())
         .map_or(String::new(), generate_mobile_social_links_html);
 
+    let enhanced_content;
+    let article_html = if config.reader_chrome.copy || config.reader_chrome.external_links {
+        enhanced_content = apply_reader_chrome(&page_data.content, config.reader_chrome);
+        enhanced_content.as_str()
+    } else {
+        page_data.content.as_str()
+    };
+
     // Generate entry page content if applicable
     let (page_class, main_content) = if let Some(ref entry) = page_data.entry_page {
         let entry_html = generate_entry_html(entry, &config.base);
         // Entry page: hero/features + optional markdown content
-        let combined = if page_data.content.trim().is_empty() {
+        let combined = if article_html.trim().is_empty() {
             entry_html
         } else {
             format!(
-                "{}\n<div class=\"entry-content\">\n  <div class=\"content\">\n{}\n  </div>\n</div>",
-                entry_html, page_data.content
+                "{entry_html}\n<div class=\"entry-content\">\n  <div class=\"content\">\n{article_html}\n  </div>\n</div>"
             )
         };
         ("entry-page", combined)
     } else {
-        ("", format!("<article class=\"content\">\n{}\n      </article>", page_data.content))
+        ("", format!("<article class=\"content\">\n{article_html}\n      </article>"))
     };
 
     let mut body_classes = Vec::new();
@@ -207,6 +222,7 @@ pub fn generate_html(page_data: &PageData, nav_groups: &[NavGroup], config: &Ssg
         has_toc,
         toc_html: &toc_html,
         pager: pager.as_ref(),
+        reader_chrome: config.reader_chrome.is_enabled().then_some(&config.reader_chrome),
         last_updated: last_updated.as_ref(),
         embed_content_after,
         embed_footer_before,

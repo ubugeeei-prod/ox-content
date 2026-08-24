@@ -1,0 +1,78 @@
+.ox-code {
+  position: relative;
+  margin: 1.25rem 0;
+}
+.content .ox-code > pre {
+  margin: 0;
+}
+.ox-copy {
+  position: absolute;
+  top: 0.5rem;
+  right: 0.5rem;
+  z-index: 1;
+  padding: 0.2rem 0.55rem;
+  border: 1px solid color-mix(in srgb, var(--octc-color-border) 80%, transparent);
+  border-radius: 4px;
+  background: color-mix(in srgb, var(--octc-color-bg) 88%, transparent);
+  color: var(--octc-color-text-muted);
+  font: inherit;
+  font-size: 0.75rem;
+  line-height: 1.4;
+  cursor: pointer;
+}
+.ox-copy:hover,
+.ox-copy:focus-visible {
+  color: var(--octc-color-text);
+  border-color: var(--octc-color-primary);
+}
+.ox-copy[data-copied] {
+  color: var(--octc-color-primary);
+}
+.ox-external {
+  text-decoration-thickness: from-font;
+}
+.ox-external-icon {
+  display: inline-block;
+  width: 0.7em;
+  height: 0.7em;
+  margin-inline-start: 0.2em;
+  vertical-align: middle;
+  background-color: currentColor;
+  -webkit-mask: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'><path d='M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6'/><polyline points='15 3 21 3 21 9'/><line x1='10' y1='14' x2='21' y2='3'/></svg>")
+    center / contain no-repeat;
+  mask: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'><path d='M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6'/><polyline points='15 3 21 3 21 9'/><line x1='10' y1='14' x2='21' y2='3'/></svg>")
+    center / contain no-repeat;
+}
+.ox-back-to-top {
+  position: fixed;
+  right: 1.25rem;
+  bottom: 5.5rem;
+  z-index: 8;
+  padding: 0.45rem 0.75rem;
+  border: 1px solid color-mix(in srgb, var(--octc-color-border) 80%, transparent);
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--octc-color-bg) 92%, transparent);
+  color: var(--octc-color-text);
+  font: inherit;
+  font-size: 0.75rem;
+  box-shadow: 0 8px 24px color-mix(in srgb, var(--octc-color-text) 12%, transparent);
+  cursor: pointer;
+  transition:
+    opacity 0.2s ease,
+    transform 0.2s ease;
+}
+.ox-back-to-top[hidden] {
+  display: none;
+}
+.ox-back-to-top:hover,
+.ox-back-to-top:focus-visible {
+  color: var(--octc-color-primary);
+  border-color: var(--octc-color-primary);
+}
+@media (prefers-reduced-motion: reduce) {
+  .ox-reader-chrome--reduced-motion .ox-back-to-top,
+  .ox-back-to-top,
+  .ox-copy {
+    transition: none;
+  }
+}

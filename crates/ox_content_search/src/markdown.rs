@@ -3,8 +3,16 @@ use std::{fs, path::Path};
 use ox_content_allocator::Allocator;
 use ox_content_parser::{Parser, ParserOptions};
 use ox_content_transform::transformer::parse_frontmatter;
+use ox_content_transform::{PublishStateOptions, classify_publish_state};
 
 use crate::{DocumentIndexer, SearchDocument, SearchIndexBuilder};
+
+/// Optional filters applied while walking a content directory.
+#[derive(Clone, Debug, Default)]
+pub struct SearchIndexBuildOptions {
+    /// When set, draft / unlisted / scheduled pages follow publish-state rules.
+    pub publish_state: Option<PublishStateOptions>,
+}
 
 pub fn extract_search_document_from_source(
     source: &str,
@@ -71,7 +79,7 @@ fn should_omit_from_search(id: &str, source: &str) -> bool {
         return true;
     }
     let (_, frontmatter) = parse_frontmatter(source);
-    frontmatter_flag(frontmatter.get("noindex")) || frontmatter_flag(frontmatter.get("draft"))
+    frontmatter_flag(frontmatter.get("noindex"))
 }
 
 fn frontmatter_flag(value: Option<&serde_json::Value>) -> bool {
@@ -87,11 +95,28 @@ pub fn build_search_index_from_directory(
     base: &str,
     extensions: &[String],
 ) -> String {
+    build_search_index_from_directory_with_options(src_dir, base, extensions, None)
+}
+
+/// Builds a search index, optionally honoring publish-state frontmatter.
+pub fn build_search_index_from_directory_with_options(
+    src_dir: &str,
+    base: &str,
+    extensions: &[String],
+    options: Option<&SearchIndexBuildOptions>,
+) -> String {
     let src_path = Path::new(src_dir);
     let parser_options = ParserOptions::gfm();
+    let publish_state = options.and_then(|opts| opts.publish_state.as_ref());
     let documents =
         crate::collect_markdown_files(src_dir, extensions).into_iter().filter_map(|file| {
             let source = fs::read_to_string(&file).ok()?;
+            if let Some(publish_state) = publish_state {
+                let (_, frontmatter) = parse_frontmatter(&source);
+                if !classify_publish_state(&frontmatter, publish_state).listed {
+                    return None;
+                }
+            }
             let id = search_document_id(src_path, &file, extensions);
             if should_omit_from_search(&id, &source) {
                 return None;
@@ -105,32 +130,4 @@ pub fn build_search_index_from_directory(
 }
 
 #[cfg(test)]
-mod tests {
-    use super::*;
-
-    #[test]
-    fn omits_404_and_noindex_documents() {
-        let root = std::env::temp_dir()
-            .join(format!("ox-content-search-not-found-{}", std::process::id()));
-        let _ = std::fs::remove_dir_all(&root);
-        std::fs::create_dir_all(&root).unwrap();
-        std::fs::write(root.join("guide.md"), "---\ntitle: Guide\n---\n\nPublished.\n").unwrap();
-        std::fs::write(root.join("404.md"), "---\ntitle: Lost\n---\n\nNot indexed.\n").unwrap();
-        std::fs::write(
-            root.join("secret.md"),
-            "---\ntitle: Secret\nnoindex: true\n---\n\nHidden.\n",
-        )
-        .unwrap();
-
-        let index = build_search_index_from_directory(
-            root.to_string_lossy().as_ref(),
-            "/",
-            &[".md".to_string()],
-        );
-        let _ = std::fs::remove_dir_all(&root);
-
-        assert!(index.contains("Guide"), "{index}");
-        assert!(!index.contains("Lost"), "{index}");
-        assert!(!index.contains("Secret"), "{index}");
-    }
-}
+mod tests;

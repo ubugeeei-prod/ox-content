@@ -29,7 +29,7 @@ Already tracked elsewhere:
 | Inline badges                       | [#669](https://github.com/ubugeeei-prod/ox-content/issues/669) | planned |
 | File tree blocks                    | [#670](https://github.com/ubugeeei-prod/ox-content/issues/670) | planned |
 | Step lists                          | [#671](https://github.com/ubugeeei-prod/ox-content/issues/671) | planned |
-| Card / link-card / card-grid blocks | [#672](https://github.com/ubugeeei-prod/ox-content/issues/672) | planned |
+| Card / link-card / card-grid blocks | [#672](https://github.com/ubugeeei-prod/ox-content/issues/672) | shipped |
 
 ## Phase B — Site outputs
 
@@ -38,7 +38,7 @@ Already tracked elsewhere:
 | `sitemap.xml`, `robots.txt`, `llms.txt` | [#673](https://github.com/ubugeeei-prod/ox-content/issues/673) | shipped |
 | RSS / Atom / JSON feeds                 | [#674](https://github.com/ubugeeei-prod/ox-content/issues/674) | planned |
 | Redirects, aliases, and path rewrites   | [#675](https://github.com/ubugeeei-prod/ox-content/issues/675) | planned |
-| Draft, unlisted, and scheduled pages    | [#676](https://github.com/ubugeeei-prod/ox-content/issues/676) | planned |
+| Draft, unlisted, and scheduled pages    | [#676](https://github.com/ubugeeei-prod/ox-content/issues/676) | shipped |
 | Custom 404 page                         | [#677](https://github.com/ubugeeei-prod/ox-content/issues/677) | shipped |
 | Permalinks and frontmatter cascade      | [#678](https://github.com/ubugeeei-prod/ox-content/issues/678) | planned |
 

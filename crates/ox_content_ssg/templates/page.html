@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="{{ html_lang }}" dir="{{ html_dir }}">
+<html lang="{{ html_lang }}" dir="{{ html_dir }}"{% if let Some(chrome) = reader_chrome %} data-ox-reader-chrome{% if chrome.copy %} data-ox-copy{% endif %}{% if chrome.external_links %} data-ox-external-links{% endif %}{% if chrome.back_to_top %} data-ox-back-to-top{% endif %}{% endif %}>
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -151,7 +151,8 @@
       <span class="mobile-footer-label">Theme</span>
     </button>
   </footer>
-  <!-- ox-content:scripts:start -->
+{% if let Some(chrome) = reader_chrome %}{% if chrome.back_to_top %}  <button type="button" class="ox-back-to-top" data-ox-back-to-top hidden aria-label="Back to top">Back to top</button>
+{% endif %}{% endif %}  <!-- ox-content:scripts:start -->
   <script>{{ js|safe }}</script>
   <!-- ox-content:scripts:end -->
 </body>

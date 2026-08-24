@@ -83,6 +83,13 @@ impl<'a> Parser<'a> {
                     return self.parse_fenced_code(start);
                 }
             }
+            b'{' => {
+                if self.options.mdx
+                    && let Some(node) = self.try_parse_mdx_flow_expression(start, trimmed_start)?
+                {
+                    return Ok(Some(node));
+                }
+            }
             b'<' => {
                 if self.options.mdx
                     && let Some(node) = self.try_parse_mdx_jsx_flow(start, trimmed_start)?
@@ -108,6 +115,13 @@ impl<'a> Parser<'a> {
                     self.parse_list_item_line_from_trimmed(start, line, trimmed)
                 {
                     return self.parse_list(start, line_indent, first_item, line.len());
+                }
+            }
+            b'i' | b'e' => {
+                if self.options.mdx
+                    && let Some(node) = self.try_parse_mdxjs_esm(start, trimmed_start)
+                {
+                    return Ok(Some(node));
                 }
             }
             _ => {}

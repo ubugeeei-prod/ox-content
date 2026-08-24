@@ -31,10 +31,14 @@ pub struct TransformOptions {
     pub containers: Option<ContainerOptions>,
     /// Opt-in Markdown file includes. Disabled when omitted.
     pub includes: Option<IncludeOptions>,
+    /// Opt-in `::: steps` ordered lists. Disabled when omitted.
+    pub steps: Option<StepsOptions>,
     /// Opt-in `{badge:variant}` inline badges. Disabled when omitted.
     pub badges: Option<BadgeOptions>,
     /// Opt-in figures, captions, and lazy images. Disabled when omitted.
     pub images: Option<ImageOptions>,
+    /// Opt-in `::: card` / `::: link-card` / `::: card-grid` blocks. Disabled when omitted.
+    pub cards: Option<CardOptions>,
 }
 
 #[derive(Clone, Default)]
@@ -87,6 +91,16 @@ pub struct CodeImportOptions {
 pub struct IncludeOptions {
     pub enabled: Option<bool>,
     pub root_dir: Option<String>,
+}
+
+#[derive(Clone, Default)]
+pub struct CardOptions {
+    pub enabled: Option<bool>,
+}
+
+#[derive(Clone, Default)]
+pub struct StepsOptions {
+    pub enabled: Option<bool>,
 }
 
 #[derive(Clone, Default)]

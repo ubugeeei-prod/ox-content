@@ -755,6 +755,72 @@ a:hover {
 .content .ox-container > :last-child {
   margin-bottom: 0;
 }
+.content .ox-card-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(16rem, 1fr));
+  gap: 1rem;
+  margin: 1.25rem 0;
+}
+.content .ox-card,
+.content .ox-link-card {
+  display: block;
+  padding: 1rem 1.15rem;
+  border: 1px solid var(--octc-color-border);
+  border-radius: 8px;
+  background: var(--octc-color-bg-alt);
+  text-decoration: none;
+  color: inherit;
+}
+.content .ox-link-card:hover {
+  border-color: var(--octc-color-primary);
+}
+.content .ox-card-title,
+.content .ox-link-card-title {
+  display: block;
+  margin: 0 0 0.4rem;
+  font-weight: 700;
+}
+.content .ox-card > :last-child,
+.content .ox-link-card > :last-child {
+  margin-bottom: 0;
+}
+.content .ox-steps {
+  margin: 1.25rem 0;
+}
+.content .ox-steps__list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  counter-reset: ox-steps;
+}
+.content .ox-steps__item {
+  position: relative;
+  margin: 0 0 1rem;
+  padding-left: 2.5rem;
+  counter-increment: ox-steps;
+}
+.content .ox-steps__item::before {
+  content: counter(ox-steps);
+  position: absolute;
+  left: 0;
+  top: 0.15rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 1.6rem;
+  height: 1.6rem;
+  border-radius: 999px;
+  background: var(--octc-color-primary);
+  color: var(--octc-color-bg);
+  font-size: 0.75rem;
+  font-weight: 700;
+}
+.content .ox-steps__item > :first-child {
+  margin-top: 0;
+}
+.content .ox-steps__item > :last-child {
+  margin-bottom: 0;
+}
 .content .ox-badge {
   --octc-badge-accent: var(--octc-color-primary);
   display: inline-block;

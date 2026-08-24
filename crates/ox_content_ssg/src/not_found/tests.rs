@@ -130,6 +130,7 @@ fn not_included_in_sitemap_pages() {
                 description: None,
                 draft: false,
                 noindex: false,
+                unlisted: false,
             },
         ],
     );

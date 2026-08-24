@@ -14,6 +14,7 @@ import { extractDocs, generateMarkdown, writeDocs, resolveDocsOptions } from "./
 import { buildSsg, resolveSsgOptions } from "./ssg";
 import { resolveSiteMapsOptions } from "./site-maps";
 import { resolveNotFoundOptions } from "./not-found";
+import { resolvePublishStateOptions } from "./publish-state";
 import {
   resolveSearchOptions,
   buildSearchIndex,
@@ -33,7 +34,9 @@ import { isMarkdownFilePath, normalizeMarkdownExtensions } from "./markdown";
 import { resolveImageOptions } from "./resolve-image-options";
 import { generateCollectionsVirtualModule, resolveCollectionsOptions } from "./collections";
 import type { BuiltinPmOptions, OxContentOptions, ResolvedOptions } from "./types";
+import { resolveCardOptions } from "./card-options";
 import { resolveIncludeOptions } from "./include-options";
+import { resolveStepsOptions } from "./step-options";
 import type { TwitterEmbedOptions } from "./plugins";
 
 export type { OxContentOptions } from "./types";
@@ -59,6 +62,10 @@ export type {
   ResolvedCodeImportOptions,
   IncludeOptions,
   ResolvedIncludeOptions,
+  CardOptions,
+  ResolvedCardOptions,
+  StepsOptions,
+  ResolvedStepsOptions,
   SanitizeOptions,
   ResolvedSanitizeOptions,
   EditThisPageOptions,
@@ -78,10 +85,14 @@ export type {
   ExtractedDocs,
   SsgOptions,
   ResolvedSsgOptions,
+  ReaderChromeOptions,
+  ResolvedReaderChrome,
   SiteMapsOptions,
   ResolvedSiteMapsOptions,
   NotFoundOptions,
   ResolvedNotFoundOptions,
+  PublishStateOptions,
+  ResolvedPublishStateOptions,
   SearchOptions,
   ResolvedSearchOptions,
   SearchDocument,
@@ -433,11 +444,30 @@ function notifySsgFileAddedOrRemoved(
   });
 }
 
+function searchPublishState(
+  resolvedOptions: ResolvedOptions,
+  command: "build" | "serve",
+): ResolvedOptions["publishState"] {
+  const publishState = resolvedOptions.publishState ?? {
+    enabled: false,
+    includeDrafts: false,
+  };
+  return {
+    ...publishState,
+    includeDrafts: publishState.includeDrafts || command === "serve",
+  };
+}
+
 function createSearchPlugin(resolvedOptions: ResolvedOptions, getRoot: () => string): Plugin {
   let searchIndexJson = "";
+  let command: "build" | "serve" = "build";
 
   return {
     name: "ox-content:search",
+
+    config(_config, env) {
+      command = env.command;
+    },
 
     resolveId(id) {
       if (id === "virtual:ox-content/search") {
@@ -472,6 +502,7 @@ function createSearchPlugin(resolvedOptions: ResolvedOptions, getRoot: () => str
           srcDir,
           resolvedOptions.base,
           resolvedOptions.extensions,
+          searchPublishState(resolvedOptions, command),
         );
         console.log("[ox-content] Search index built");
       } catch (err) {
@@ -514,6 +545,7 @@ function createSearchPlugin(resolvedOptions: ResolvedOptions, getRoot: () => str
               srcDir,
               resolvedOptions.base,
               resolvedOptions.extensions,
+              searchPublishState(resolvedOptions, command),
             );
             stale = false;
           }
@@ -554,6 +586,7 @@ function resolveOptions(options: OxContentOptions): ResolvedOptions {
     ssg: resolveSsgOptions(options.ssg),
     siteMaps: resolveSiteMapsOptions(options.siteMaps),
     notFound: resolveNotFoundOptions(options.notFound),
+    publishState: resolvePublishStateOptions(options.publishState),
     gfm: options.gfm ?? true,
     footnotes: options.footnotes ?? true,
     tables: options.tables ?? true,
@@ -570,6 +603,8 @@ function resolveOptions(options: OxContentOptions): ResolvedOptions {
     images: resolveImageOptions(options.images),
     codeImports: resolveCodeImportOptions(options.codeImports),
     includes: resolveIncludeOptions(options.includes),
+    cards: resolveCardOptions(options.cards),
+    steps: resolveStepsOptions(options.steps),
     sanitize: resolveSanitizeOptions(options.sanitize),
     editThisPage: resolveEditThisPageOptions(options.editThisPage),
     cjkEmphasis: options.cjkEmphasis ?? false,
@@ -689,7 +724,9 @@ function resolveCodeImportOptions(
   return { enabled: true, rootDir: options.rootDir };
 }
 
+export { resolveCardOptions } from "./card-options";
 export { resolveIncludeOptions } from "./include-options";
+export { resolveStepsOptions } from "./step-options";
 
 function resolveSanitizeOptions(
   options: OxContentOptions["sanitize"],
@@ -947,6 +984,11 @@ export type {
 export { buildSsg, resolveSsgOptions, DEFAULT_HTML_TEMPLATE } from "./ssg";
 export { resolveSiteMapsOptions } from "./site-maps";
 export { resolveNotFoundOptions } from "./not-found";
+export {
+  classifyPublishState,
+  resolvePublishStateOptions,
+  partitionPublishedPages,
+} from "./publish-state";
 export { resolveSearchOptions, buildSearchIndex, writeSearchIndex } from "./search";
 export {
   buildCollectionManifest,

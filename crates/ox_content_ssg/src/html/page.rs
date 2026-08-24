@@ -1,6 +1,7 @@
 use serde::{Deserialize, Serialize};
 
 use super::ThemeConfig;
+use super::reader_chrome::ReaderChrome;
 
 /// Hero action button.
 #[derive(Debug, Clone, Serialize, Deserialize, Default)]
@@ -182,6 +183,9 @@ pub struct SsgConfig {
     /// When true, render previous/next page links after the article.
     #[serde(default)]
     pub pagination: bool,
+    /// Opt-in copy, external-link, and back-to-top chrome. Off by default.
+    #[serde(default)]
+    pub reader_chrome: ReaderChrome,
 }
 
 /// Locale information for the locale switcher.

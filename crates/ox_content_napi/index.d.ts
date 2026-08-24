@@ -70,7 +70,7 @@ export declare function buildSearchIndex(documents: Array<JsSearchDocument>): st
  * File discovery, Markdown parsing, search document extraction, and index
  * construction all run on the Rust side.
  */
-export declare function buildSearchIndexFromDirectory(srcDir: string, base: string, extensions: Array<string>): string
+export declare function buildSearchIndexFromDirectory(srcDir: string, base: string, extensions: Array<string>, options?: JsSearchIndexBuildOptions | undefined | null): string
 
 /** Builds SSG navigation groups from markdown files. */
 export declare function buildSsgNavItems(markdownFiles: Array<string>, srcDir: string, base: string, extension: string): Array<JsSsgNavGroup>
@@ -95,6 +95,9 @@ export declare function checkI18n(dictDir: string, usedKeys: Array<string>): I18
  * `default_locale` is used for dictionary fallback rules.
  */
 export declare function checkI18nProject(dictDir: string, srcDirs: Array<string>, functionNames: Array<string>, defaultLocale: string): I18NCheckResult
+
+/** Classifies already-parsed frontmatter JSON against publish-state options. */
+export declare function classifyPublishState(frontmatterJson: string, options?: JsPublishStateOptions | undefined | null): JsPublishDecision
 
 /** Collects source files for generated API documentation. */
 export declare function collectDocsSourceFiles(srcDir: string, include: Array<string>, exclude: Array<string>): Array<string>
@@ -354,6 +357,16 @@ export interface JsBuildCollectionManifestOptions {
   collections: Array<JsCollectionDefinition>
   /** Rust Markdown transform options used only when a collection includes `html` or `toc`. */
   transformOptions?: JsTransformOptions
+}
+
+/** Opt-in `::: card` / `::: link-card` / `::: card-grid` blocks. */
+export interface JsCardOptions {
+  /**
+   * Enable card, link-card, and card-grid containers.
+   *
+   * Default: `false`.
+   */
+  enabled?: boolean
 }
 
 /** Extracted fenced code block. */
@@ -1211,6 +1224,34 @@ export interface JsPublicExport {
   source: JsExportSource
 }
 
+/** Whether a page should be written and listed. */
+export interface JsPublishDecision {
+  /** Write HTML for this page. */
+  output: boolean
+  /** Include the page in nav, sitemap, and search. */
+  listed: boolean
+}
+
+/** JavaScript publish-state options. */
+export interface JsPublishStateOptions {
+  /** When false, every page stays published and listed. */
+  enabled?: boolean
+  /** Injected ISO-8601 clock used for scheduled / expiry comparison. */
+  now?: string
+  /** Keep draft and not-yet-scheduled pages visible (dev preview). */
+  includeDrafts?: boolean
+}
+
+/** Opt-in reader chrome flags. Presence of the object enables the feature. */
+export interface JsReaderChrome {
+  /** Copy button on fenced code blocks. */
+  copy?: boolean
+  /** Icon and `rel` on outbound links. */
+  externalLinks?: boolean
+  /** Back-to-top control that appears after scroll. */
+  backToTop?: boolean
+}
+
 /** Resolved source module. */
 export interface JsResolvedModule {
   path: string
@@ -1267,6 +1308,12 @@ export interface JsSearchDocument {
   headings: Array<string>
   /** Code snippets. */
   code: Array<string>
+}
+
+/** Optional filters for directory search-index construction. */
+export interface JsSearchIndexBuildOptions {
+  /** Publish-state filter applied while walking Markdown files. */
+  publishState?: JsPublishStateOptions
 }
 
 /** Search options for JavaScript. */
@@ -1439,6 +1486,8 @@ export interface JsSsgConfig {
   availableLocales?: Array<JsLocaleInfo>
   /** When true, render previous/next page links after the article. */
   pagination?: boolean
+  /** Opt-in copy, external-link, and back-to-top chrome. */
+  readerChrome?: JsReaderChrome
 }
 
 /** Result of SSG shared asset extraction. */
@@ -1553,6 +1602,11 @@ export interface JsSsgSidebarItem {
   collapsed?: boolean
   /** Whether this group's open state persists across page navigations. */
   stickyCollapsed?: boolean
+}
+
+/** Opt-in `::: steps` wrappers. `enabled` defaults to `false`. */
+export interface JsStepsOptions {
+  enabled?: boolean
 }
 
 /** Result of [`super::transform_tabs_embeds`]. */
@@ -1869,23 +1923,35 @@ export interface JsTransformOptions {
    */
   containers?: JsContainerOptions
   /**
-   * Opt-in figures, captions, and lazy images.
-   *
-   * Default: disabled.
-   */
-  images?: JsImageOptions
-  /**
    * Opt-in Markdown file includes via `<!-- @include: PATH -->`.
    *
    * Default: disabled.
    */
   includes?: JsIncludeOptions
   /**
+   * Opt-in `::: steps` ordered lists.
+   *
+   * Default: disabled.
+   */
+  steps?: JsStepsOptions
+  /**
    * Opt-in `{badge:variant}` inline badges.
    *
    * Default: disabled.
    */
   badges?: JsBadgeOptions
+  /**
+   * Opt-in figures, captions, and lazy images.
+   *
+   * Default: disabled.
+   */
+  images?: JsImageOptions
+  /**
+   * Opt-in `::: card` / `::: link-card` / `::: card-grid` blocks.
+   *
+   * Default: disabled.
+   */
+  cards?: JsCardOptions
 }
 
 /** Type parameter documentation (`<T extends C = D>`) used by generated API docs. */

@@ -1,6 +1,6 @@
 //! Opt-in custom 404 page planned and rendered by the SSG.
 
-use crate::html::{NavGroup, PageData, SsgConfig, generate_html};
+use crate::html::{NavGroup, PageData, ReaderChrome, SsgConfig, generate_html};
 use crate::routes::{get_output_path, get_url_path};
 use crate::site_maps::SiteMapPage;
 
@@ -112,6 +112,7 @@ pub fn generate_not_found(
         locale: None,
         available_locales: None,
         pagination: false,
+        reader_chrome: ReaderChrome::default(),
     };
     let html = inject_robots_noindex(&generate_html(&page_data, request.nav_groups, &config));
 
@@ -132,6 +133,7 @@ pub fn not_found_sitemap_page(page: &NotFoundPage, loc: impl Into<String>) -> Si
         description: None,
         draft: page.draft,
         noindex: page.noindex,
+        unlisted: true,
     }
 }
 

@@ -302,6 +302,17 @@ export interface SsgOptions {
   pagination?: boolean | Record<string, unknown>;
 
   /**
+   * Opt-in copy buttons, outbound-link icons, and a back-to-top control.
+   *
+   * Disabled when omitted or `false`. `true` enables all three with defaults.
+   * An object enables the feature and can turn one control off, for example
+   * `{ copy: false }`.
+   *
+   * @default false
+   */
+  readerChrome?: boolean | ReaderChromeOptions;
+
+  /**
    * Absolute site URL used when generating social metadata.
    *
    * Set this when pages need absolute Open Graph image URLs. Include the origin
@@ -346,6 +357,47 @@ export interface SsgOptions {
 }
 
 /**
+ * Per-control flags for `ssg.readerChrome`.
+ *
+ * Omitted fields stay on when the feature itself is enabled.
+ */
+export interface ReaderChromeOptions {
+  /**
+   * Copy button on fenced code blocks. The clipboard is read in the browser,
+   * never at build time.
+   *
+   * @default true
+   */
+  copy?: boolean;
+
+  /**
+   * Icon and `rel="noopener noreferrer"` on outbound `http(s)` links.
+   * Relative, hash, and same-document links are left alone.
+   *
+   * @default true
+   */
+  externalLinks?: boolean;
+
+  /**
+   * Back-to-top control that appears after the page is scrolled.
+   *
+   * @default true
+   */
+  backToTop?: boolean;
+}
+
+/**
+ * Resolved reader chrome. `false` means no extra markup or JS.
+ */
+export type ResolvedReaderChrome =
+  | false
+  | {
+      copy: boolean;
+      externalLinks: boolean;
+      backToTop: boolean;
+    };
+
+/**
  * Resolved SSG options.
  */
 export interface ResolvedSsgOptions {
@@ -363,6 +415,7 @@ export interface ResolvedSsgOptions {
   generateOgImage: boolean;
   lastUpdated: boolean;
   pagination: boolean;
+  readerChrome: ResolvedReaderChrome;
   siteUrl?: string;
   theme?: ResolvedThemeConfig;
   navigation?: SsgNavigationGroup[];
@@ -411,6 +464,38 @@ export interface NotFoundOptions {
 export interface ResolvedNotFoundOptions {
   enabled: boolean;
   source: string;
+}
+
+/**
+ * Opt-in draft / unlisted / scheduled page filtering.
+ */
+export interface PublishStateOptions {
+  /**
+   * When `false`, frontmatter publish fields are ignored.
+   * @default true when the option is an object
+   */
+  enabled?: boolean;
+
+  /**
+   * Injected ISO-8601 clock compared against `scheduled`, `date`, and `expiry`.
+   * Invalid values fall back to the system clock.
+   */
+  now?: string;
+
+  /**
+   * Keep draft and not-yet-scheduled pages in output. The dev server sets this.
+   * @default false
+   */
+  includeDrafts?: boolean;
+}
+
+/**
+ * Resolved publish-state options.
+ */
+export interface ResolvedPublishStateOptions {
+  enabled: boolean;
+  now?: string;
+  includeDrafts: boolean;
 }
 
 /**
@@ -499,6 +584,18 @@ export interface OxContentOptions {
    * @default false
    */
   notFound?: boolean | NotFoundOptions;
+
+  /**
+   * Honor frontmatter draft / unlisted / scheduled publish states.
+   *
+   * Off by default. `true` omits drafts and future-scheduled pages from
+   * production HTML, search, and sitemaps. Unlisted pages still build and
+   * remain reachable by URL. An object enables the feature and can inject
+   * `now` for a deterministic build-time clock.
+   *
+   * @default false
+   */
+  publishState?: boolean | PublishStateOptions;
 
   /**
    * Enable GitHub Flavored Markdown extensions.
@@ -651,6 +748,26 @@ export interface OxContentOptions {
    * @default false
    */
   includes?: boolean | IncludeOptions;
+
+  /**
+   * Opt-in `::: card` / `::: link-card` / `::: card-grid` blocks.
+   *
+   * Passing `true` enables the defaults. Pass an object to keep the option
+   * shape while overriding `enabled`.
+   *
+   * @default false
+   */
+  cards?: boolean | CardOptions;
+
+  /**
+   * Restyle a `::: steps` wrapper around an ordered list.
+   *
+   * Disabled when omitted or `false`. `true` and `{}` enable the default
+   * step-list markup. Ordinary ordered lists outside `::: steps` are unchanged.
+   *
+   * @default false
+   */
+  steps?: boolean | StepsOptions;
 
   /**
    * Sanitize rendered HTML with safe defaults or explicit allow lists.
@@ -816,6 +933,7 @@ export interface ResolvedOptions {
   ssg: ResolvedSsgOptions;
   siteMaps?: ResolvedSiteMapsOptions;
   notFound?: ResolvedNotFoundOptions;
+  publishState?: ResolvedPublishStateOptions;
   gfm: boolean;
   footnotes: boolean;
   tables: boolean;
@@ -832,6 +950,8 @@ export interface ResolvedOptions {
   images: ResolvedImageOptions;
   codeImports: ResolvedCodeImportOptions;
   includes: ResolvedIncludeOptions;
+  cards: ResolvedCardOptions;
+  steps: ResolvedStepsOptions;
   sanitize: ResolvedSanitizeOptions;
   editThisPage: ResolvedEditThisPageOptions;
   cjkEmphasis: boolean;
@@ -1154,6 +1274,44 @@ export interface IncludeOptions {
 export interface ResolvedIncludeOptions {
   enabled: boolean;
   rootDir?: string;
+}
+
+/**
+ * Options for opt-in `::: card` / `::: link-card` / `::: card-grid` blocks.
+ */
+export interface CardOptions {
+  /**
+   * Enable the card transform when an options object is supplied.
+   *
+   * @default true
+   */
+  enabled?: boolean;
+}
+
+/**
+ * Resolved card transform options.
+ */
+export interface ResolvedCardOptions {
+  enabled: boolean;
+}
+
+/**
+ * Options for opt-in `::: steps` ordered lists.
+ */
+export interface StepsOptions {
+  /**
+   * Enable the steps transform when an options object is supplied.
+   *
+   * @default true
+   */
+  enabled?: boolean;
+}
+
+/**
+ * Resolved step-list transform options.
+ */
+export interface ResolvedStepsOptions {
+  enabled: boolean;
 }
 
 /**
