@@ -114,7 +114,7 @@ describe("transformMarkdown", () => {
 
   it("drops hostile container titles and attributes", async () => {
     const result = await transformMarkdown(
-      '::: tip[<img src=x onerror=alert(1)>]{#ok .ok onclick=alert(1)}\nBody\n:::\n',
+      "::: tip[<img src=x onerror=alert(1)>]{#ok .ok onclick=alert(1)}\nBody\n:::\n",
       "docs/containers-xss.md",
       createResolvedOptions({
         containers: { enabled: true, types: {} },

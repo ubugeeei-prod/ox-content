@@ -8,9 +8,9 @@ description: Opt-in ::: tip / ::: warning / ::: details blocks for documentation
 `::: type` containers are opt-in. GitHub-style `> [!NOTE]` callouts stay on the
 default renderer path and do not require this option.
 
-| Option       | Type                               | Default |
-| ------------ | ---------------------------------- | ------- |
-| `containers` | `boolean` / `ContainerOptions`     | `false` |
+| Option       | Type                           | Default |
+| ------------ | ------------------------------ | ------- |
+| `containers` | `boolean` / `ContainerOptions` | `false` |
 
 ```ts
 import { oxContent } from "@ox-content/vite-plugin";
