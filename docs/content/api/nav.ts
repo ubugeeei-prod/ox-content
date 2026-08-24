@@ -96,6 +96,10 @@ export const apiNav: NavItem[] = [
     "path": "/api/lint-files"
   },
   {
+    "title": "Locale Switcher",
+    "path": "/api/locale-switcher"
+  },
+  {
     "title": "Mermaid",
     "path": "/api/mermaid"
   },
