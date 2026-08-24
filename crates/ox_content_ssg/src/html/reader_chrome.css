@@ -1,14 +1,21 @@
 .ox-code {
+  --ox-copy-reserved-inline-size: 4.75rem;
   position: relative;
   margin: 1.25rem 0;
 }
 .content .ox-code > pre {
   margin: 0;
 }
+.content .ox-code > pre:not([data-code-title]) {
+  padding-block-start: 3rem;
+}
+.content .ox-code > pre[data-code-title]::before {
+  padding-inline-end: var(--ox-copy-reserved-inline-size);
+}
 .ox-copy {
   position: absolute;
-  top: 0.5rem;
-  right: 0.5rem;
+  inset-block-start: 0.5rem;
+  inset-inline-end: 0.5rem;
   z-index: 1;
   padding: 0.2rem 0.55rem;
   border: 1px solid color-mix(in srgb, var(--octc-color-border) 80%, transparent);

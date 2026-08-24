@@ -144,6 +144,27 @@ fn enabled_defaults_emit_copy_external_and_back_to_top() {
 }
 
 #[test]
+fn copy_control_reserves_space_in_plain_and_titled_code_blocks() {
+    assert!(
+        READER_CHROME_CSS.contains("inset-block-start: 0.5rem;")
+            && READER_CHROME_CSS.contains("inset-inline-end: 0.5rem;"),
+        "copy positioning must follow the document writing direction: {READER_CHROME_CSS}"
+    );
+    assert!(
+        READER_CHROME_CSS.contains(
+            ".content .ox-code > pre:not([data-code-title]) {\n  padding-block-start: 3rem;"
+        ),
+        "plain code needs a toolbar strip above its first line: {READER_CHROME_CSS}"
+    );
+    assert!(
+        READER_CHROME_CSS.contains(
+            ".content .ox-code > pre[data-code-title]::before {\n  padding-inline-end: var(--ox-copy-reserved-inline-size);"
+        ),
+        "a code title must reserve inline space for Copy and Copied: {READER_CHROME_CSS}"
+    );
+}
+
+#[test]
 fn object_can_disable_copy() {
     let html =
         render(ARTICLE, ReaderChrome { copy: false, external_links: true, back_to_top: true });
