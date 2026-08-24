@@ -20,6 +20,11 @@ pub struct JsTransformOptions {
     /// Default: `false`.
     pub gfm: Option<bool>,
 
+    /// Enable MDX JSX, ESM, and expression nodes.
+    ///
+    /// Default: `false`.
+    pub mdx: Option<bool>,
+
     /// Enable footnote references and definitions.
     ///
     /// Default: `false`, or `true` when `gfm` is `true`.
@@ -202,6 +207,7 @@ impl From<JsTransformOptions> for TransformOptions {
     fn from(value: JsTransformOptions) -> Self {
         Self {
             gfm: value.gfm,
+            mdx: value.mdx,
             footnotes: value.footnotes,
             task_lists: value.task_lists,
             tables: value.tables,

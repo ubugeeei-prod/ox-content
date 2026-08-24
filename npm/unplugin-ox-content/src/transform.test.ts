@@ -56,6 +56,8 @@ const baseMdast = {
   ],
 };
 
+let lastParseTransferOptions: Record<string, unknown> | undefined;
+
 function createRawMdastBuffer(): Uint8Array {
   const encoder = new TextEncoder();
   const strings = ["Hello", "World"];
@@ -300,7 +302,10 @@ require.cache[napiId] = {
       const parsed = splitFrontmatterForMock(source, options?.frontmatter !== false);
       return createPreparedSourceBuffer(parsed.content, parsed.frontmatter, parsed.sourceOffset);
     },
-    parseTransferRaw: () => createRawMdastBuffer(),
+    parseTransferRaw: (_source: string, _kind: string, options?: Record<string, unknown>) => {
+      lastParseTransferOptions = options;
+      return createRawMdastBuffer();
+    },
     parseMdastRaw: () => createRawMdastBuffer(),
     transformMdastRaw: (source: string, options?: { frontmatter?: boolean }) => {
       const parsed = splitFrontmatterForMock(source, options?.frontmatter !== false);
@@ -1564,12 +1569,14 @@ describe("mdast js plugin", () => {
   });
 
   it("can be used directly as a unified parser plugin", async () => {
+    lastParseTransferOptions = undefined;
     const file = await unified()
-      .use(oxContentMdast, { gfm: true })
+      .use(oxContentMdast, { gfm: true, mdx: true })
       .use(remarkRehype, { allowDangerousHtml: true })
       .use(rehypeStringify, { allowDangerousHtml: true })
       .process("# Ignored by mock parser");
 
     expect(String(file)).toMatchSnapshot();
+    expect(lastParseTransferOptions).toMatchObject({ gfm: true, mdx: true });
   });
 });

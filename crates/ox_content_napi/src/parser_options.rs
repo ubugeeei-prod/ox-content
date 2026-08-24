@@ -3,7 +3,7 @@
 //! Every Markdown entry point takes this object, so how fast it crosses the
 //! boundary sets the floor for a `parseAndRender` call on a short document. The
 //! derived reader spends four Node-API calls per field, one of which allocates a
-//! fresh JavaScript string for the property name — six fields of that measured
+//! fresh JavaScript string for the property name — seven fields of that measured
 //! at roughly as much as parsing a 500-byte document. [`FromNapiValue`] is
 //! therefore written by hand below; the struct keeps `#[napi(object)]` so the
 //! generated TypeScript declaration and the JavaScript-facing conversion stay
@@ -32,6 +32,11 @@ pub struct JsParserOptions {
     ///
     /// Default: `false`.
     pub gfm: Option<bool>,
+
+    /// Enable MDX JSX, ESM, and expression nodes.
+    ///
+    /// Default: `false`.
+    pub mdx: Option<bool>,
 
     /// Enable footnote references and definitions.
     ///
@@ -78,6 +83,9 @@ impl From<JsParserOptions> for ParserOptions {
         }
         if let Some(v) = opts.autolinks {
             options.autolinks = v;
+        }
+        if let Some(v) = opts.mdx {
+            options.mdx = v;
         }
 
         options
@@ -130,6 +138,7 @@ impl FromNapiValue for JsParserOptions {
     unsafe fn from_napi_value(env: sys::napi_env, napi_val: sys::napi_value) -> napi::Result<Self> {
         Ok(Self {
             gfm: unsafe { read_flag(env, napi_val, c"gfm") }?,
+            mdx: unsafe { read_flag(env, napi_val, c"mdx") }?,
             footnotes: unsafe { read_flag(env, napi_val, c"footnotes") }?,
             task_lists: unsafe { read_flag(env, napi_val, c"taskLists") }?,
             tables: unsafe { read_flag(env, napi_val, c"tables") }?,
@@ -142,3 +151,20 @@ impl FromNapiValue for JsParserOptions {
 /// Uses the default object check from [`ValidateNapiValue`], matching what the
 /// derived implementation installed before the reader was written by hand.
 impl ValidateNapiValue for JsParserOptions {}
+
+#[cfg(test)]
+mod tests {
+    use ox_content_parser::ParserOptions;
+
+    use super::JsParserOptions;
+
+    #[test]
+    fn mdx_flag_maps_to_parser_options_without_changing_the_default() {
+        let enabled =
+            ParserOptions::from(JsParserOptions { mdx: Some(true), ..JsParserOptions::default() });
+        assert!(enabled.mdx);
+
+        let defaults = ParserOptions::from(JsParserOptions::default());
+        assert!(!defaults.mdx);
+    }
+}

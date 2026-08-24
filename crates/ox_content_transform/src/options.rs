@@ -3,6 +3,7 @@ use rustc_hash::FxHashMap;
 #[derive(Clone, Default)]
 pub struct TransformOptions {
     pub gfm: Option<bool>,
+    pub mdx: Option<bool>,
     pub footnotes: Option<bool>,
     pub task_lists: Option<bool>,
     pub tables: Option<bool>,

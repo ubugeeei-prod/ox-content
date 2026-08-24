@@ -36,6 +36,7 @@ pub struct TransformResult {
 #[derive(Default)]
 pub struct WasmParserOptions {
     gfm: bool,
+    mdx: bool,
     // The extension flags are tri-state: `None` means "not set from JS",
     // which lets the `gfm` profile supply its own defaults instead of the
     // field defaults silently overwriting them (see the `From` impl).
@@ -54,13 +55,14 @@ pub struct WasmParserOptions {
 impl WasmParserOptions {
     /// Creates options with all Markdown extension flags disabled.
     ///
-    /// Defaults: `gfm = false`, `tocMaxDepth = 3`, `autolinkUrls = true`,
+    /// Defaults: `gfm = false`, `mdx = false`, `tocMaxDepth = 3`, `autolinkUrls = true`,
     /// `autolinkPatterns = ["http://", "https://"]`, and
     /// `autolinkTargetBlank = true`.
     #[wasm_bindgen(constructor)]
     pub fn new() -> Self {
         Self {
             gfm: false,
+            mdx: false,
             footnotes: None,
             task_lists: None,
             tables: None,
@@ -79,6 +81,14 @@ impl WasmParserOptions {
     #[wasm_bindgen(setter)]
     pub fn set_gfm(&mut self, value: bool) {
         self.gfm = value;
+    }
+
+    /// Enables MDX JSX, ESM, and expression nodes.
+    ///
+    /// Default: `false`.
+    #[wasm_bindgen(setter)]
+    pub fn set_mdx(&mut self, value: bool) {
+        self.mdx = value;
     }
 
     /// Enables footnote references and definitions.
@@ -180,6 +190,7 @@ impl From<&WasmParserOptions> for ParserOptions {
         if let Some(autolinks) = opts.autolinks {
             options.autolinks = autolinks;
         }
+        options.mdx = opts.mdx;
 
         options
     }
@@ -276,4 +287,21 @@ pub fn transform(source: &str, options: Option<WasmParserOptions>) -> JsValue {
 #[wasm_bindgen]
 pub fn version() -> String {
     env!("CARGO_PKG_VERSION").to_string()
+}
+
+#[cfg(test)]
+mod tests {
+    use ox_content_parser::ParserOptions;
+
+    use super::WasmParserOptions;
+
+    #[test]
+    fn mdx_setter_maps_to_parser_options_without_changing_the_default() {
+        let defaults = ParserOptions::from(&WasmParserOptions::new());
+        assert!(!defaults.mdx);
+
+        let mut enabled = WasmParserOptions::new();
+        enabled.set_mdx(true);
+        assert!(ParserOptions::from(&enabled).mdx);
+    }
 }

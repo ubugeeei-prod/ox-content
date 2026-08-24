@@ -27,6 +27,20 @@ fn transforms_markdown_with_frontmatter_and_toc() {
 }
 
 #[test]
+fn mdx_transform_option_reaches_the_parser_and_renderer() {
+    let transformer = MarkdownTransformer::from_options(&TransformOptions {
+        mdx: Some(true),
+        ..Default::default()
+    });
+    let result = transformer.transform("import Alert from './Alert'\n\n<Alert title=\"Hi\" />\n");
+
+    assert!(result.errors.is_empty(), "unexpected transform errors: {:?}", result.errors);
+    assert!(!result.html.contains("import Alert"));
+    assert!(result.html.contains("data-ox-island=\"Alert\""), "{}", result.html);
+    assert!(result.html.contains("&quot;Hi&quot;"), "{}", result.html);
+}
+
+#[test]
 fn leaves_non_frontmatter_documents_untouched() {
     let (content, frontmatter) = super::parse_frontmatter("# Hello");
 

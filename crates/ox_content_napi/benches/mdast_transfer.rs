@@ -116,6 +116,7 @@ fn repeated_document(times: usize) -> String {
 fn gfm_parser_options() -> JsParserOptions {
     JsParserOptions {
         gfm: Some(true),
+        mdx: None,
         footnotes: Some(true),
         task_lists: Some(true),
         tables: Some(true),

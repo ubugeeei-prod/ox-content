@@ -18,6 +18,7 @@ interface NapiBindings {
     kind: string,
     options?: {
       gfm?: boolean;
+      mdx?: boolean;
       footnotes?: boolean;
       taskLists?: boolean;
       tables?: boolean;
@@ -36,6 +37,12 @@ export interface OxContentMdastOptions {
    * @default true
    */
   gfm?: boolean;
+
+  /**
+   * Enable MDX JSX, ESM, and expression nodes.
+   * @default false
+   */
+  mdx?: boolean;
 
   /**
    * Enable footnotes.
@@ -75,6 +82,7 @@ type ProcessorWithParser = {
 let cachedNapiBindings: NapiBindings | null | undefined;
 const DEFAULT_MDAST_OPTIONS: Required<OxContentMdastOptions> = {
   gfm: true,
+  mdx: false,
   footnotes: true,
   taskLists: true,
   tables: true,
@@ -113,6 +121,7 @@ export function parseMarkdownToMdast(
   const resolvedOptions = resolveMdastOptions(options);
   const parserOptions = {
     gfm: resolvedOptions.gfm,
+    mdx: resolvedOptions.mdx,
     footnotes: resolvedOptions.footnotes,
     taskLists: resolvedOptions.taskLists,
     tables: resolvedOptions.tables,
@@ -230,6 +239,7 @@ function requireNapiMethod<T extends (...args: never[]) => unknown>(
 function resolveMdastOptions(options: OxContentMdastOptions): Required<OxContentMdastOptions> {
   return {
     gfm: options.gfm ?? DEFAULT_MDAST_OPTIONS.gfm,
+    mdx: options.mdx ?? DEFAULT_MDAST_OPTIONS.mdx,
     footnotes: options.footnotes ?? DEFAULT_MDAST_OPTIONS.footnotes,
     taskLists: options.taskLists ?? DEFAULT_MDAST_OPTIONS.taskLists,
     tables: options.tables ?? DEFAULT_MDAST_OPTIONS.tables,

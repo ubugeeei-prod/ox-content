@@ -13,6 +13,12 @@ export interface IncrementalMarkdownParserOptions {
   gfm?: boolean;
 
   /**
+   * Enable MDX JSX, ESM, and expression nodes.
+   * @default false
+   */
+  mdx?: boolean;
+
+  /**
    * Enable footnotes.
    * @default true
    */
@@ -124,6 +130,7 @@ export type MarkdownChunkSource = Iterable<string> | AsyncIterable<string>;
 function toNativeParserOptions(options: IncrementalMarkdownParserOptions = {}) {
   return {
     gfm: options.gfm ?? true,
+    mdx: options.mdx,
     footnotes: options.footnotes,
     taskLists: options.taskLists,
     tables: options.tables,

@@ -1212,6 +1212,12 @@ export interface JsParserOptions {
    */
   gfm?: boolean
   /**
+   * Enable MDX JSX, ESM, and expression nodes.
+   *
+   * Default: `false`.
+   */
+  mdx?: boolean
+  /**
    * Enable footnote references and definitions.
    *
    * Default: `false`, or `true` when `gfm` is `true`.
@@ -1878,6 +1884,12 @@ export interface JsTransformOptions {
    * Default: `false`.
    */
   gfm?: boolean
+  /**
+   * Enable MDX JSX, ESM, and expression nodes.
+   *
+   * Default: `false`.
+   */
+  mdx?: boolean
   /**
    * Enable footnote references and definitions.
    *

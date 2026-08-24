@@ -22,6 +22,9 @@ pub(super) fn transform_options_to_parser_options(opts: &TransformOptions) -> Pa
     if let Some(v) = opts.autolinks {
         options.autolinks = v;
     }
+    if let Some(v) = opts.mdx {
+        options.mdx = v;
+    }
     if let Some(v) = opts.cjk_emphasis {
         options.cjk_emphasis = v;
     }

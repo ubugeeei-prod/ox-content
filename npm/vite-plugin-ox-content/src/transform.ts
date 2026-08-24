@@ -148,6 +148,12 @@ interface JsTransformOptions {
   gfm?: boolean;
 
   /**
+   * Enable MDX JSX, ESM, and expression nodes.
+   * @default false
+   */
+  mdx?: boolean;
+
+  /**
    * Enable footnotes syntax ([^1]: definition).
    * @default false
    */
