@@ -26,3 +26,18 @@ fn hostile_expression_does_not_emit_raw_markup() {
     assert!(!html.contains("<script"), "hostile source must not render as HTML:\n{html}");
     assert!(!html.contains("alert(1)"), "expression source is not evaluated or emitted:\n{html}");
 }
+
+#[test]
+fn esm_is_metadata_only_in_static_html() {
+    let html = render_mdx(
+        "import Chart from './Chart'\nexport const meta = { title: 'Report' }\n\n# Report\n",
+    );
+
+    assert!(!html.contains("import Chart"), "imports must not leak into HTML:\n{html}");
+    assert!(!html.contains("export const"), "exports must not leak into HTML:\n{html}");
+    assert!(!html.contains("<script"), "ESM must not become executable HTML:\n{html}");
+    assert!(
+        html.contains("<h1 id=\"report\">Report</h1>"),
+        "markdown after ESM must still render:\n{html}"
+    );
+}
