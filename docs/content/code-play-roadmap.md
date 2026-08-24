@@ -62,9 +62,9 @@ preset coverage for stderr.
 
 ### 2. `feat(code-play): Vite SSG hydration and docs dogfood`
 
-Harden page-level script emission for ox-content SSG (dev middleware + written
-HTML), enable JavaScript / TypeScript widgets on the docs example page, and
-add a visual check for the default preset.
+Docs example page, package guide, and `examples/code-play` ship with this
+work. Remaining: a visual check that the default preset hydrates on the
+written SSG HTML in CI.
 
 ### 3. `feat(code-play): official playground proxies`
 

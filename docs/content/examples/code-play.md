@@ -8,6 +8,10 @@ description: Opt-in on-demand sample execution with stdio, stderr, config, prove
 This page uses `@ox-content/code-play` with **JavaScript** and **TypeScript**
 enabled. Other languages stay ordinary fences until a site opts them in.
 
+A copy-paste Vite app lives at
+[`examples/code-play`](https://github.com/ubugeeei-prod/ox-content/tree/main/examples/code-play)
+in the repository.
+
 ## Enable the plugin
 
 ```ts
@@ -51,6 +55,26 @@ function add(left, right) {
 console.log(add(2, 40));
 ```
 
+## Typecheck failure
+
+**Typecheck** should fail. **Run** still executes after types are stripped, so
+this sample also shows that execute and type-check are separate.
+
+```ts play typecheck
+const n: number = "not a number";
+console.log(n);
+```
+
+## Runtime error
+
+`throw` becomes a diagnostic and a stderr chunk. The stderr tab opens when the
+run produces stderr or an error diagnostic.
+
+```js play
+console.log("before");
+throw new Error("boom from the example");
+```
+
 ## Headless usage
 
 ```ts
@@ -70,6 +94,9 @@ result.provenance.compile;
 result.provenance.execute;
 result.timing.phases;
 ```
+
+`ui: "compact"` hides the tab list and keeps stdio plus stderr. `ui: "headless"`
+renders no chrome — use `createCodePlay()` from your own UI.
 
 ## Remote languages
 

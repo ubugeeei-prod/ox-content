@@ -10,6 +10,10 @@ highlighting, annotation syntax for highlighting and diff markers, and
 importing snippets from real source files. This site enables all three, so
 every example below is rendered live.
 
+On-demand **Run** / **Typecheck** for samples is a separate package,
+[`@ox-content/code-play`](../packages/code-play.md). It is not part of
+`@ox-content/vite-plugin`. See the [Code Play example](../examples/code-play.md).
+
 | Option            | Type                                 | Default         |
 | ----------------- | ------------------------------------ | --------------- |
 | `highlight`       | `boolean`                            | `false`         |

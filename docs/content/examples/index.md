@@ -160,7 +160,8 @@ oxContent({
 ### [Code Play](./code-play.md)
 
 On-demand sample execution through `@ox-content/code-play`, with stdio, stderr,
-config, provenance, and timing viewers.
+config, provenance, and timing viewers. Live fences on the docs page; a
+standalone Vite app is [`examples/code-play`](https://github.com/ubugeeei-prod/ox-content/tree/main/examples/code-play).
 
 ### [Playground](./playground.md)
 
@@ -183,4 +184,7 @@ npm install
 # Run an example
 cd examples/integ-vue
 npm run dev
+
+# Code Play (JS / TS widgets)
+corepack pnpm --filter ./examples/code-play dev
 ```

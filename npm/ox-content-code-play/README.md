@@ -74,4 +74,15 @@ run.timing;
 - Other languages need a Piston-compatible `endpoint` you configure.
 - `sh` never spawns a local shell.
 
+## Example
+
+A runnable Vite site lives in [`examples/code-play`](../../examples/code-play):
+
+```bash
+corepack pnpm --filter ./examples/code-play dev
+```
+
+The docs site also dogfoods JavaScript and TypeScript widgets on
+[Code Play](../../docs/content/examples/code-play.md).
+
 See [Code Play](../../docs/content/packages/code-play.md) in the docs site.
