@@ -19,6 +19,7 @@ fn snapshot_text(value: &str) -> String {
     rendered
 }
 
+mod aside;
 mod rendering;
 mod theme;
 

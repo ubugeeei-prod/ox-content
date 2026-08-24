@@ -1550,6 +1550,8 @@ export interface JsThemeColors {
 
 /** Theme configuration for JavaScript. */
 export interface JsThemeConfig {
+  /** Right-hand "On this page" outline. Omitted and `false` hide it. */
+  aside?: boolean
   /** Light mode colors. */
   colors?: JsThemeColors
   /** Dark mode colors. */

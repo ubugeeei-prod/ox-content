@@ -2,6 +2,7 @@
 
 use askama::Template;
 
+mod aside;
 mod entry;
 mod footer;
 mod nav;

@@ -25,6 +25,7 @@ pub(super) fn convert_theme_config(
     theme: Option<JsThemeConfig>,
 ) -> Option<ox_content_ssg::ThemeConfig> {
     theme.map(|t| ox_content_ssg::ThemeConfig {
+        aside: t.aside,
         colors: convert_theme_colors(t.colors),
         dark_colors: convert_theme_colors(t.dark_colors),
         fonts: t.fonts.map(|f| ox_content_ssg::ThemeFonts { sans: f.sans, mono: f.mono }),

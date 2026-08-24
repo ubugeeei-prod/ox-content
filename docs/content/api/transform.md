@@ -550,12 +550,14 @@
 <h4>Examples</h4>
 <div class="ox-api-entry__example">
 <div class="ox-api-entry__example-heading">Example 1</div>
-<pre><code class="language-typescript">import { transformMarkdown } from &#39;./transform&#39;;&#10;
+<pre><code class="language-typescript">import { transformMarkdown } from &#39;./transform&#39;;
+
 const content = await transformMarkdown(
   &#39;# Hello\n\nWorld&#39;,
   &#39;path/to/file.md&#39;,
   resolvedOptions
-);&#10;
+);
+
 console.log(content.html); // &#39;&lt;h1&gt;Hello&lt;/h1&gt;&lt;p&gt;World&lt;/p&gt;&#39;
 console.log(content.toc);  // [{ depth: 1, text: &#39;Hello&#39;, slug: &#39;hello&#39;, children: [] }]</code></pre>
 </div>

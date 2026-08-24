@@ -182,6 +182,23 @@ defineTheme({
 });
 ```
 
+## Page Outline
+
+The default theme can render a right-hand "On this page" outline from the page
+headings. It is **off by default**. Set `aside: true` to enable it; the outline
+still appears only on pages that have TOC entries.
+
+```ts
+defineTheme({
+  extends: defaultTheme,
+  aside: true,
+});
+```
+
+When enabled, the markup stays `<aside class="toc">` plus `main--with-toc` on
+the article column — the same chrome as before this became opt-in. Existing
+sites that want the outline must set `theme.aside: true`.
+
 ## Page Props & Hooks
 
 Access page data in your theme components using hooks:
@@ -465,6 +482,7 @@ oxContent({
 ```ts
 const defaultTheme = {
   name: "default",
+  aside: false,
   colors: {
     primary: "#3b82f6",
     primaryHover: "#2563eb",

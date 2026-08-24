@@ -81,7 +81,7 @@ pub fn generate_html(page_data: &PageData, nav_groups: &[NavGroup], config: &Ssg
 
     let all_css = css_sections.join("");
     let toc_html = generate_toc_html(&page_data.toc);
-    let has_toc = !toc_html.is_empty();
+    let has_toc = super::aside::has_toc(super::aside::aside_enabled(theme), &toc_html);
     let pager = resolve_pager(page_data, nav_groups, config.pagination);
     let last_updated = page_data.last_updated.and_then(format_last_updated);
 
