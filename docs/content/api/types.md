@@ -2178,7 +2178,7 @@
 </details>
 
 <details id="oxcontentoptions" class="ox-api-entry">
-  <summary><span class="ox-api-entry__kind">interface</span><span class="ox-api-entry__summary-main"><code class="ox-api-entry__signature ox-api-entry__signature--highlighted language-typescript">OxContentOptions</code><span class="ox-api-entry__description">Options for the core oxContent() Vite plugin. The top-level options describe wh…</span><span class="ox-api-entry__meta"><span class="ox-api-badge">50 members</span></span></span></summary>
+  <summary><span class="ox-api-entry__kind">interface</span><span class="ox-api-entry__summary-main"><code class="ox-api-entry__signature ox-api-entry__signature--highlighted language-typescript">OxContentOptions</code><span class="ox-api-entry__description">Options for the core oxContent() Vite plugin. The top-level options describe wh…</span><span class="ox-api-entry__meta"><span class="ox-api-badge">51 members</span></span></span></summary>
   <div class="ox-api-entry__body">
 <div class="ox-api-entry__prose">
 <p>Options for the core <code>oxContent()</code> Vite plugin.</p>
@@ -2430,6 +2430,11 @@
   <td><code>taskLists</code><span class="ox-api-badge">optional</span></td>
   <td><code class="ox-api-entry__member-type language-typescript">boolean</code></td>
   <td><div class="ox-api-entry__member-description">Enable task lists.</div><div class="ox-api-entry__member-default"><span>Default</span> <code class="language-typescript">true</code></div></td>
+</tr>
+<tr id="oxcontentoptions-taxonomies">
+  <td><code>taxonomies</code><span class="ox-api-badge">optional</span></td>
+  <td><code class="ox-api-entry__member-type language-typescript">boolean | <a href="#taxonomiesoptions">TaxonomiesOptions</a></code></td>
+  <td><div class="ox-api-entry__member-description">Write tag/category term pages and inject related-page lists.<br><br>Off by default. <code>true</code> reads frontmatter <code>tags</code> and <code>categories</code> and<br>writes list pages, per-term pages, and up to 5 related links on pages<br>that share a term. An object enables the feature and overrides only<br>the fields you set. Term slugs are <code>[a-z0-9-]</code> and every label is<br>HTML-escaped.</div><div class="ox-api-entry__member-default"><span>Default</span> <code class="language-typescript">false</code></div></td>
 </tr>
 <tr id="oxcontentoptions-toc">
   <td><code>toc</code><span class="ox-api-badge">optional</span></td>
@@ -3846,7 +3851,7 @@
 </details>
 
 <details id="resolvedoptions" class="ox-api-entry">
-  <summary><span class="ox-api-entry__kind">interface</span><span class="ox-api-entry__summary-main"><code class="ox-api-entry__signature ox-api-entry__signature--highlighted language-typescript">ResolvedOptions</code><span class="ox-api-entry__description">Resolved options with all defaults applied.</span><span class="ox-api-entry__meta"><span class="ox-api-badge">50 members</span></span></span></summary>
+  <summary><span class="ox-api-entry__kind">interface</span><span class="ox-api-entry__summary-main"><code class="ox-api-entry__signature ox-api-entry__signature--highlighted language-typescript">ResolvedOptions</code><span class="ox-api-entry__description">Resolved options with all defaults applied.</span><span class="ox-api-entry__meta"><span class="ox-api-badge">51 members</span></span></span></summary>
   <div class="ox-api-entry__body">
 <div class="ox-api-entry__prose">
 <p>Resolved options with all defaults applied.</p>
@@ -4091,6 +4096,11 @@
 <tr id="resolvedoptions-tasklists">
   <td><code>taskLists</code></td>
   <td><code class="ox-api-entry__member-type language-typescript">boolean</code></td>
+  <td></td>
+</tr>
+<tr id="resolvedoptions-taxonomies">
+  <td><code>taxonomies</code><span class="ox-api-badge">optional</span></td>
+  <td><code class="ox-api-entry__member-type language-typescript"><a href="#resolvedtaxonomiesoptions">ResolvedTaxonomiesOptions</a></code></td>
   <td></td>
 </tr>
 <tr id="resolvedoptions-toc">
@@ -4590,6 +4600,46 @@
 <tr id="resolvedstepsoptions-enabled">
   <td><code>enabled</code></td>
   <td><code class="ox-api-entry__member-type language-typescript">boolean</code></td>
+  <td></td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+  </div>
+</details>
+
+<details id="resolvedtaxonomiesoptions" class="ox-api-entry">
+  <summary><span class="ox-api-entry__kind">interface</span><span class="ox-api-entry__summary-main"><code class="ox-api-entry__signature ox-api-entry__signature--highlighted language-typescript">ResolvedTaxonomiesOptions</code><span class="ox-api-entry__description">Resolved taxonomy options.</span><span class="ox-api-entry__meta"><span class="ox-api-badge">3 members</span></span></span></summary>
+  <div class="ox-api-entry__body">
+<div class="ox-api-entry__prose">
+<p>Resolved taxonomy options.</p>
+</div>
+<div class="ox-api-entry__section ox-api-entry__section--signature">
+<h4>Signature</h4>
+<pre><code class="language-typescript">export interface ResolvedTaxonomiesOptions</code></pre>
+</div>
+<p class="ox-api-entry__source"><a class="ox-api-entry__source-link" href="https://github.com/ubugeeei-prod/ox-content/blob/main/npm/vite-plugin-ox-content/src/types.ts#L812-L816" target="_blank" rel="noopener noreferrer">View source<span class="ox-api-entry__source-icon" aria-hidden="true"></span></a></p>
+<div class="ox-api-entry__section ox-api-entry__section--members">
+<h4>Members</h4>
+<div class="ox-api-entry__member-group">
+<h5>Properties</h5>
+<table class="ox-api-entry__members-table">
+<thead><tr><th>Name</th><th>Type</th><th>Description</th></tr></thead>
+<tbody>
+<tr id="resolvedtaxonomiesoptions-enabled">
+  <td><code>enabled</code></td>
+  <td><code class="ox-api-entry__member-type language-typescript">boolean</code></td>
+  <td></td>
+</tr>
+<tr id="resolvedtaxonomiesoptions-relatedlimit">
+  <td><code>relatedLimit</code></td>
+  <td><code class="ox-api-entry__member-type language-typescript">number</code></td>
+  <td></td>
+</tr>
+<tr id="resolvedtaxonomiesoptions-taxonomies">
+  <td><code>taxonomies</code></td>
+  <td><code class="ox-api-entry__member-type language-typescript">string[]</code></td>
   <td></td>
 </tr>
 </tbody>
@@ -5254,6 +5304,41 @@
   <td><code>enabled</code><span class="ox-api-badge">optional</span></td>
   <td><code class="ox-api-entry__member-type language-typescript">boolean</code></td>
   <td><div class="ox-api-entry__member-description">Enable the steps transform when an options object is supplied.</div><div class="ox-api-entry__member-default"><span>Default</span> <code class="language-typescript">true</code></div></td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+  </div>
+</details>
+
+<details id="taxonomiesoptions" class="ox-api-entry">
+  <summary><span class="ox-api-entry__kind">interface</span><span class="ox-api-entry__summary-main"><code class="ox-api-entry__signature ox-api-entry__signature--highlighted language-typescript">TaxonomiesOptions</code><span class="ox-api-entry__description">Opt-in term list pages, per-term pages, and related-page lists.</span><span class="ox-api-entry__meta"><span class="ox-api-badge">2 members</span></span></span></summary>
+  <div class="ox-api-entry__body">
+<div class="ox-api-entry__prose">
+<p>Opt-in term list pages, per-term pages, and related-page lists.</p>
+</div>
+<div class="ox-api-entry__section ox-api-entry__section--signature">
+<h4>Signature</h4>
+<pre><code class="language-typescript">export interface TaxonomiesOptions</code></pre>
+</div>
+<p class="ox-api-entry__source"><a class="ox-api-entry__source-link" href="https://github.com/ubugeeei-prod/ox-content/blob/main/npm/vite-plugin-ox-content/src/types.ts#L795-L807" target="_blank" rel="noopener noreferrer">View source<span class="ox-api-entry__source-icon" aria-hidden="true"></span></a></p>
+<div class="ox-api-entry__section ox-api-entry__section--members">
+<h4>Members</h4>
+<div class="ox-api-entry__member-group">
+<h5>Properties</h5>
+<table class="ox-api-entry__members-table">
+<thead><tr><th>Name</th><th>Type</th><th>Description</th></tr></thead>
+<tbody>
+<tr id="taxonomiesoptions-relatedlimit">
+  <td><code>relatedLimit</code><span class="ox-api-badge">optional</span></td>
+  <td><code class="ox-api-entry__member-type language-typescript">number</code></td>
+  <td><div class="ox-api-entry__member-description">Maximum related pages injected into a source page.</div><div class="ox-api-entry__member-default"><span>Default</span> <code class="language-typescript">5</code></div></td>
+</tr>
+<tr id="taxonomiesoptions-taxonomies">
+  <td><code>taxonomies</code><span class="ox-api-badge">optional</span></td>
+  <td><code class="ox-api-entry__member-type language-typescript">string[]</code></td>
+  <td><div class="ox-api-entry__member-description">Frontmatter keys (and URL prefixes) to read terms from.</div><div class="ox-api-entry__member-default"><span>Default</span> <code class="language-typescript">[&quot;tags&quot;, &quot;categories&quot;]</code></div></td>
 </tr>
 </tbody>
 </table>

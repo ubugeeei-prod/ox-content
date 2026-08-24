@@ -196,6 +196,10 @@ export const apiNav: NavItem[] = [
     "path": "/api/tabs"
   },
   {
+    "title": "Taxonomies",
+    "path": "/api/taxonomies"
+  },
+  {
     "title": "Team",
     "path": "/api/team"
   },

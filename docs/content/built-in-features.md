@@ -50,6 +50,7 @@ inline**.
 | [Redirects and aliases](./built-in/redirects.md)       | Opt-in static HTML redirects from aliases and a rewrite map               |
 | [Custom 404](./built-in/not-found.md)                  | Opt-in themed 404 page with nav and search                                |
 | [RSS / Atom / JSON feeds](./built-in/feeds.md)         | Opt-in collection feeds written next to generated HTML                    |
+| [Taxonomies](./built-in/taxonomies.md)                 | Opt-in tag/category term pages and related-page lists                     |
 | [Team / members page](./built-in/team.md)              | Opt-in static member cards on `layout: team` pages                        |
 
 ## Default vs Opt-in
@@ -91,6 +92,7 @@ inline**.
 | Redirects        | `redirects`                                                                                                   | `false`              | [Redirects and aliases](./built-in/redirects.md)       |
 | Custom 404       | `ssg.notFound`                                                                                                | `false`              | [Custom 404](./built-in/not-found.md)                  |
 | Collection feeds | `feeds`                                                                                                       | `false`              | [RSS / Atom / JSON feeds](./built-in/feeds.md)         |
+| Taxonomies       | `taxonomies`                                                                                                  | `false`              | [Taxonomies](./built-in/taxonomies.md)                 |
 | Team page        | `ssg.team`                                                                                                    | `false`              | [Team / members page](./built-in/team.md)              |
 | Code checks      | `codeBlockLint`, `codeBlockTypecheck`, `docsTests`                                                            | `false`              | [Quality Checks](./built-in/quality-checks.md)         |
 | Custom pipeline  | `transformers`                                                                                                | `[]`                 | [Site Generation](./built-in/site-generation.md)       |

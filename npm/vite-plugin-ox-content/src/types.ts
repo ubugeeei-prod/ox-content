@@ -790,6 +790,32 @@ export interface ResolvedFeedsOptions {
 }
 
 /**
+ * Opt-in term list pages, per-term pages, and related-page lists.
+ */
+export interface TaxonomiesOptions {
+  /**
+   * Frontmatter keys (and URL prefixes) to read terms from.
+   * @default ["tags", "categories"]
+   */
+  taxonomies?: string[];
+
+  /**
+   * Maximum related pages injected into a source page.
+   * @default 5
+   */
+  relatedLimit?: number;
+}
+
+/**
+ * Resolved taxonomy options.
+ */
+export interface ResolvedTaxonomiesOptions {
+  enabled: boolean;
+  taxonomies: string[];
+  relatedLimit: number;
+}
+
+/**
  * Options for the core `oxContent()` Vite plugin.
  *
  * The top-level options describe where content lives, which Markdown features
@@ -926,6 +952,19 @@ export interface OxContentOptions {
    * @default false
    */
   feeds?: boolean | FeedsOptions;
+
+  /**
+   * Write tag/category term pages and inject related-page lists.
+   *
+   * Off by default. `true` reads frontmatter `tags` and `categories` and
+   * writes list pages, per-term pages, and up to 5 related links on pages
+   * that share a term. An object enables the feature and overrides only
+   * the fields you set. Term slugs are `[a-z0-9-]` and every label is
+   * HTML-escaped.
+   *
+   * @default false
+   */
+  taxonomies?: boolean | TaxonomiesOptions;
 
   /**
    * Enable GitHub Flavored Markdown extensions.
@@ -1287,6 +1326,7 @@ export interface ResolvedOptions {
   cascade?: ResolvedCascadeOptions;
   redirects?: ResolvedRedirectsOptions;
   feeds?: ResolvedFeedsOptions;
+  taxonomies?: ResolvedTaxonomiesOptions;
   gfm: boolean;
   footnotes: boolean;
   tables: boolean;

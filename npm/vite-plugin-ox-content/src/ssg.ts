@@ -53,6 +53,7 @@ import {
 } from "./not-found";
 import { buildCollectionManifest } from "./collections";
 import { writeFeedFiles } from "./feeds";
+import { appendTaxonomyPages, injectRelatedPages, toTaxonomyProcessResult } from "./taxonomies";
 import { resolveTeamOptions } from "./team";
 
 /**
@@ -756,8 +757,18 @@ export async function buildSsg(options: ResolvedOptions, root: string): Promise<
 
   await generateOgImageAssets(context, collected, generatedFiles, errors);
 
+  injectRelatedPages(outputPages, listedPages, context.options.taxonomies);
   const generatedPages = await generateHtmlPages(context, outputPages, collected, errors);
   await appendNotFoundPage(generatedPages, context, collected, errors);
+  await appendTaxonomyPages({
+    generatedPages,
+    listedPages,
+    options: context.options.taxonomies,
+    outDir: context.outDir,
+    base: context.base,
+    errors,
+    render: (page) => renderSsgPage(context, toTaxonomyProcessResult(page), collected, listedPages),
+  });
   await writeGeneratedPages(
     generatedPages,
     context,
