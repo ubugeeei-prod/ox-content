@@ -2188,7 +2188,7 @@
           },
           "file": "npm/vite-plugin-ox-content/src/lint-files.ts",
           "line": 121,
-          "endLine": 158,
+          "endLine": 154,
           "signature": "export async function lintMarkdownFiles(options: MarkdownLintFileOptions = {}): Promise<MarkdownLintFilesResult>"
         }
       ]
