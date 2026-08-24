@@ -14,6 +14,7 @@ pub(super) const NONE_U32: u32 = u32::MAX;
 
 pub(super) const FLAG_ORDERED: u8 = 1 << 0;
 pub(super) const FLAG_SPREAD: u8 = 1 << 1;
+pub(super) const FLAG_MDX_SELF_CLOSING: u8 = 1 << 1;
 pub(super) const FLAG_CHECKED_PRESENT: u8 = 1 << 2;
 pub(super) const FLAG_CHECKED_VALUE: u8 = 1 << 3;
 

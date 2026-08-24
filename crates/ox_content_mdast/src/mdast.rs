@@ -8,6 +8,8 @@ use ox_content_ast::{
 mod escape;
 mod mdx;
 
+pub(crate) use mdx::mdx_attributes_to_json;
+
 pub fn to_mdast_json(document: &Document<'_>) -> String {
     // mdast JSON expands well past the source: every text run carries
     // `{"type":"text","value":...}` framing and structural nodes carry

@@ -48,6 +48,11 @@ const KIND_DELETE = 19;
 const KIND_FOOTNOTE_REFERENCE = 20;
 const KIND_DEFINITION = 21;
 const KIND_FOOTNOTE_DEFINITION = 22;
+const KIND_MDX_JSX_FLOW = 23;
+const KIND_MDX_JSX_TEXT = 24;
+const KIND_MDX_ESM = 25;
+const KIND_MDX_FLOW_EXPRESSION = 26;
+const KIND_MDX_TEXT_EXPRESSION = 27;
 
 const FLAG_ORDERED = 1 << 0;
 const FLAG_SPREAD = 1 << 1;
@@ -310,6 +315,28 @@ export function deserializeMdastFromRaw(buffer: Uint8Array, source: string): Mda
         }
         return node;
       }
+      case KIND_MDX_JSX_FLOW:
+        return {
+          type: "mdxJsxFlowElement",
+          name: str0 ?? null,
+          attributes: parseMdxAttributes(str1),
+          children: children ?? [],
+          position,
+        };
+      case KIND_MDX_JSX_TEXT:
+        return {
+          type: "mdxJsxTextElement",
+          name: str0 ?? null,
+          attributes: parseMdxAttributes(str1),
+          children: children ?? [],
+          position,
+        };
+      case KIND_MDX_ESM:
+        return { type: "mdxjsEsm", value: str0 ?? "", position };
+      case KIND_MDX_FLOW_EXPRESSION:
+        return { type: "mdxFlowExpression", value: str0 ?? "", position };
+      case KIND_MDX_TEXT_EXPRESSION:
+        return { type: "mdxTextExpression", value: str0 ?? "", position };
       default:
         throw new Error(`[ox-content] Unsupported mdast raw node kind: ${kind}`);
     }
@@ -321,6 +348,24 @@ export function deserializeMdastFromRaw(buffer: Uint8Array, source: string): Mda
   }
 
   return root;
+}
+
+function parseMdxAttributes(value: string | undefined): unknown[] {
+  if (value === undefined) {
+    return [];
+  }
+
+  let attributes: unknown;
+  try {
+    attributes = JSON.parse(value);
+  } catch {
+    throw new Error("[ox-content] mdast raw transfer contains invalid MDX attributes.");
+  }
+
+  if (!Array.isArray(attributes)) {
+    throw new Error("[ox-content] mdast raw transfer contains invalid MDX attributes.");
+  }
+  return attributes;
 }
 
 function readSourceOrigin(buffer: Uint8Array, view: DataView): SourceOriginPoint | undefined {

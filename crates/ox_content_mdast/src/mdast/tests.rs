@@ -31,6 +31,32 @@ fn serializes_gfm_nodes() {
 }
 
 #[test]
+fn serializes_mdx_nodes_and_attributes() {
+    let json = parse_json(
+        "import Alert from './Alert'\n\n<Alert title=\"Hi\" count={count} {...props}>Hello {name}</Alert>\n",
+        ParserOptions::mdx(),
+    );
+
+    assert_eq!(json["children"][0]["type"], "mdxjsEsm");
+    assert_eq!(json["children"][0]["value"], "import Alert from './Alert'");
+
+    let element = &json["children"][1];
+    assert_eq!(element["type"], "mdxJsxFlowElement");
+    assert_eq!(element["name"], "Alert");
+    assert_eq!(element["attributes"][0]["type"], "mdxJsxAttribute");
+    assert_eq!(element["attributes"][0]["name"], "title");
+    assert_eq!(element["attributes"][0]["value"], "Hi");
+    assert_eq!(element["attributes"][1]["value"]["type"], "mdxJsxAttributeValueExpression");
+    assert_eq!(element["attributes"][1]["value"]["value"], "count");
+    assert_eq!(element["attributes"][2]["type"], "mdxJsxExpressionAttribute");
+    assert_eq!(element["attributes"][2]["value"], "...props");
+    assert_eq!(element["children"][0]["type"], "paragraph");
+    assert_eq!(element["children"][0]["children"][0]["type"], "text");
+    assert_eq!(element["children"][0]["children"][1]["type"], "mdxTextExpression");
+    assert_eq!(element["children"][0]["children"][1]["value"], "name");
+}
+
+#[test]
 fn serializes_code_breaks_and_ordered_list_start() {
     let json = parse_json(
         "5. item\n\nline 1\\\nline 2\n\n```ts meta=1\nconsole.log(1)\n```",

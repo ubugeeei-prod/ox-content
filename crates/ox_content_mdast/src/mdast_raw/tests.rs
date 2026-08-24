@@ -4,9 +4,10 @@ use ox_content_allocator::Allocator;
 use ox_content_parser::{Parser, ParserOptions};
 
 use super::format::{
-    KIND_HEADING, KIND_PARAGRAPH, KIND_ROOT, KIND_TEXT, MDAST_PAYLOAD_VERSION,
-    MDAST_SECTION_ALIGNS, MDAST_SECTION_CHILD_INDICES, MDAST_SECTION_NODES, MDAST_SECTION_STRINGS,
-    NODE_RECORD_LEN,
+    FLAG_MDX_SELF_CLOSING, KIND_HEADING, KIND_MDX_ESM, KIND_MDX_FLOW_EXPRESSION, KIND_MDX_JSX_FLOW,
+    KIND_MDX_JSX_TEXT, KIND_MDX_TEXT_EXPRESSION, KIND_PARAGRAPH, KIND_ROOT, KIND_TEXT,
+    MDAST_PAYLOAD_VERSION, MDAST_SECTION_ALIGNS, MDAST_SECTION_CHILD_INDICES, MDAST_SECTION_NODES,
+    MDAST_SECTION_STRINGS, NODE_RECORD_LEN, NONE_U32,
 };
 use super::to_mdast_raw;
 use crate::transfer::{
@@ -15,8 +16,12 @@ use crate::transfer::{
 };
 
 fn parse_to_raw_bytes(source: &str) -> Vec<u8> {
+    parse_to_raw_bytes_with_options(source, ParserOptions::gfm())
+}
+
+fn parse_to_raw_bytes_with_options(source: &str, options: ParserOptions) -> Vec<u8> {
     let allocator = Allocator::new();
-    let parser = Parser::with_options(&allocator, source, ParserOptions::gfm());
+    let parser = Parser::with_options(&allocator, source, options);
     let document = parser.parse().expect("markdown should parse");
     to_mdast_raw(&document).expect("raw mdast serialization should succeed")
 }
@@ -47,6 +52,27 @@ fn find_section(bytes: &[u8], id: u32) -> (usize, usize) {
 
 fn node_base(nodes_offset: usize, index: usize) -> usize {
     nodes_offset + index * NODE_RECORD_LEN
+}
+
+fn find_node_base(bytes: &[u8], kind: u8) -> usize {
+    let (nodes_offset, nodes_len) = find_section(bytes, MDAST_SECTION_NODES);
+    (0..nodes_len / NODE_RECORD_LEN)
+        .map(|index| node_base(nodes_offset, index))
+        .find(|base| read_u8(bytes, *base) == kind)
+        .unwrap_or_else(|| panic!("missing raw mdast node kind {kind}"))
+}
+
+fn read_node_string(bytes: &[u8], base: usize, slot: usize) -> Option<&str> {
+    let (strings_offset, strings_len) = find_section(bytes, MDAST_SECTION_STRINGS);
+    let slot_base = base + 28 + slot * 8;
+    let offset = read_u32(bytes, slot_base);
+    if offset == NONE_U32 {
+        return None;
+    }
+    let len = read_u32(bytes, slot_base + 4) as usize;
+    let start = strings_offset + offset as usize;
+    assert!(start + len <= strings_offset + strings_len);
+    Some(std::str::from_utf8(&bytes[start..start + len]).expect("raw mdast string is UTF-8"))
 }
 
 #[test]
@@ -113,4 +139,35 @@ fn preserves_utf8_spans_as_byte_offsets() {
     assert_eq!(read_u8(&bytes, root_base), KIND_ROOT);
     assert_eq!(read_u32(&bytes, root_base + 4), 0);
     assert_eq!(read_u32(&bytes, root_base + 8), 5);
+}
+
+#[test]
+fn serializes_every_mdx_kind_and_preserves_jsx_attributes() {
+    let source = "import Alert from './Alert'\n\n{count}\n\n<Alert title=\"Hi\" count={count} {...props} />\n\nHello <Badge /> {name}\n";
+    let bytes = parse_to_raw_bytes_with_options(source, ParserOptions::mdx());
+
+    for kind in [
+        KIND_MDX_ESM,
+        KIND_MDX_FLOW_EXPRESSION,
+        KIND_MDX_JSX_FLOW,
+        KIND_MDX_JSX_TEXT,
+        KIND_MDX_TEXT_EXPRESSION,
+    ] {
+        find_node_base(&bytes, kind);
+    }
+
+    let flow = find_node_base(&bytes, KIND_MDX_JSX_FLOW);
+    assert_ne!(read_u8(&bytes, flow + 1) & FLAG_MDX_SELF_CLOSING, 0);
+    assert_eq!(read_node_string(&bytes, flow, 0), Some("Alert"));
+
+    let attributes: serde_json::Value = serde_json::from_str(
+        read_node_string(&bytes, flow, 1).expect("MDX attributes must be transferred"),
+    )
+    .expect("MDX attributes must be valid JSON");
+    assert_eq!(attributes[0]["name"], "title");
+    assert_eq!(attributes[0]["value"], "Hi");
+    assert_eq!(attributes[1]["value"]["type"], "mdxJsxAttributeValueExpression");
+    assert_eq!(attributes[1]["value"]["value"], "count");
+    assert_eq!(attributes[2]["type"], "mdxJsxExpressionAttribute");
+    assert_eq!(attributes[2]["value"], "...props");
 }

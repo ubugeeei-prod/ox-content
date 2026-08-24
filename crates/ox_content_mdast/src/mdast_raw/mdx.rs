@@ -3,8 +3,8 @@ use ox_content_ast::{
 };
 
 use super::format::{
-    FLAG_SPREAD, KIND_MDX_ESM, KIND_MDX_FLOW_EXPRESSION, KIND_MDX_JSX_FLOW, KIND_MDX_JSX_TEXT,
-    KIND_MDX_TEXT_EXPRESSION, RawNodeRecord,
+    FLAG_MDX_SELF_CLOSING, KIND_MDX_ESM, KIND_MDX_FLOW_EXPRESSION, KIND_MDX_JSX_FLOW,
+    KIND_MDX_JSX_TEXT, KIND_MDX_TEXT_EXPRESSION, RawNodeRecord,
 };
 use super::serializer::MdastRawSerializer;
 
@@ -16,8 +16,10 @@ impl MdastRawSerializer {
         let mut record = RawNodeRecord::new(KIND_MDX_JSX_FLOW, node.span);
         self.write_child_nodes(&mut record, &node.children)?;
         self.write_string_into_slot(&mut record, 0, node.name)?;
+        let attributes = crate::mdast::mdx_attributes_to_json(&node.attributes);
+        self.write_string_into_slot(&mut record, 1, Some(&attributes))?;
         if node.self_closing {
-            record.flags |= FLAG_SPREAD;
+            record.flags |= FLAG_MDX_SELF_CLOSING;
         }
         self.push_record(record)
     }
@@ -29,8 +31,10 @@ impl MdastRawSerializer {
         let mut record = RawNodeRecord::new(KIND_MDX_JSX_TEXT, node.span);
         self.write_child_nodes(&mut record, &node.children)?;
         self.write_string_into_slot(&mut record, 0, node.name)?;
+        let attributes = crate::mdast::mdx_attributes_to_json(&node.attributes);
+        self.write_string_into_slot(&mut record, 1, Some(&attributes))?;
         if node.self_closing {
-            record.flags |= FLAG_SPREAD;
+            record.flags |= FLAG_MDX_SELF_CLOSING;
         }
         self.push_record(record)
     }

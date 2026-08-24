@@ -6,6 +6,12 @@ use ox_content_ast::{
 
 use super::MdastJsonSerializer;
 
+pub fn mdx_attributes_to_json(attributes: &ArenaVec<'_, MdxJsxAttributeEntry<'_>>) -> String {
+    let mut serializer = MdastJsonSerializer { output: String::new() };
+    serializer.write_mdx_attributes(attributes);
+    serializer.output
+}
+
 impl MdastJsonSerializer {
     pub(super) fn write_mdx_jsx_flow_element(&mut self, node: &MdxJsxFlowElement<'_>) {
         self.write_mdx_jsx("mdxJsxFlowElement", node.name, &node.attributes, &node.children);
