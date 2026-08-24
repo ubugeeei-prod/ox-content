@@ -17,4 +17,5 @@ corepack pnpm --filter ./examples/code-play preview
 ```
 
 The plugin never executes samples during Markdown transform or SSG. Readers
-trigger execute / type-check in the browser (or Node, for the headless API).
+trigger **Run** in the browser. TypeScript **Typecheck** needs the Vite dev
+proxy or a reachable `endpoints.typecheck`.
