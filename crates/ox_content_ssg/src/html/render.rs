@@ -152,7 +152,7 @@ pub fn generate_html(page_data: &PageData, nav_groups: &[NavGroup], config: &Ssg
 
     let enhanced_content;
     let article_html = if config.reader_chrome.copy || config.reader_chrome.external_links {
-        enhanced_content = apply_reader_chrome(&page_data.content, &config.reader_chrome);
+        enhanced_content = apply_reader_chrome(&page_data.content, config.reader_chrome);
         enhanced_content.as_str()
     } else {
         page_data.content.as_str()
@@ -166,13 +166,12 @@ pub fn generate_html(page_data: &PageData, nav_groups: &[NavGroup], config: &Ssg
             entry_html
         } else {
             format!(
-                "{}\n<div class=\"entry-content\">\n  <div class=\"content\">\n{}\n  </div>\n</div>",
-                entry_html, article_html
+                "{entry_html}\n<div class=\"entry-content\">\n  <div class=\"content\">\n{article_html}\n  </div>\n</div>"
             )
         };
         ("entry-page", combined)
     } else {
-        ("", format!("<article class=\"content\">\n{}\n      </article>", article_html))
+        ("", format!("<article class=\"content\">\n{article_html}\n      </article>"))
     };
 
     let mut body_classes = Vec::new();

@@ -46,7 +46,7 @@ const COPY_BUTTON: &str =
 const EXTERNAL_ICON: &str = "<span class=\"ox-external-icon\" aria-hidden=\"true\"></span>";
 
 /// Rewrites article HTML. Fenced code is never treated as a link target.
-pub(super) fn apply_reader_chrome(html: &str, chrome: &ReaderChrome) -> String {
+pub(super) fn apply_reader_chrome(html: &str, chrome: ReaderChrome) -> String {
     if !chrome.copy && !chrome.external_links {
         return html.to_string();
     }
@@ -68,15 +68,16 @@ pub(super) fn apply_reader_chrome(html: &str, chrome: &ReaderChrome) -> String {
 
         if name.eq_ignore_ascii_case("pre") {
             if !is_closing(raw) {
-                if chrome.copy && in_pre == 0 {
-                    if let Some(element) = take_element(tag, "pre") {
-                        out.push_str("<div class=\"ox-code\">");
-                        out.push_str(COPY_BUTTON);
-                        out.push_str(element);
-                        out.push_str("</div>");
-                        rest = &tag[element.len()..];
-                        continue;
-                    }
+                if chrome.copy
+                    && in_pre == 0
+                    && let Some(element) = take_element(tag, "pre")
+                {
+                    out.push_str("<div class=\"ox-code\">");
+                    out.push_str(COPY_BUTTON);
+                    out.push_str(element);
+                    out.push_str("</div>");
+                    rest = &tag[element.len()..];
+                    continue;
                 }
                 in_pre = in_pre.saturating_add(1);
             } else {
@@ -93,12 +94,11 @@ pub(super) fn apply_reader_chrome(html: &str, chrome: &ReaderChrome) -> String {
             && !is_closing(raw)
             && in_pre == 0
             && in_code == 0
+            && let Some((rewritten, consumed)) = rewrite_anchor(tag)
         {
-            if let Some((rewritten, consumed)) = rewrite_anchor(tag) {
-                out.push_str(&rewritten);
-                rest = &tag[consumed..];
-                continue;
-            }
+            out.push_str(&rewritten);
+            rest = &tag[consumed..];
+            continue;
         }
 
         out.push_str(raw);

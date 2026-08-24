@@ -106,10 +106,10 @@ fn generate_bare_html_is_unchanged() {
 fn enabled_defaults_emit_copy_external_and_back_to_top() {
     let html = render(ARTICLE, ReaderChrome::enabled());
 
-    assert!(html.contains(r#"data-ox-reader-chrome"#), "{html}");
-    assert!(html.contains(r#"data-ox-copy"#), "{html}");
-    assert!(html.contains(r#"data-ox-external-links"#), "{html}");
-    assert!(html.contains(r#"data-ox-back-to-top"#), "{html}");
+    assert!(html.contains(r"data-ox-reader-chrome"), "{html}");
+    assert!(html.contains(r"data-ox-copy"), "{html}");
+    assert!(html.contains(r"data-ox-external-links"), "{html}");
+    assert!(html.contains(r"data-ox-back-to-top"), "{html}");
     assert!(html.contains(r#"<div class="ox-code">"#), "{html}");
     assert!(
         html.contains(
@@ -218,8 +218,8 @@ fn unclosed_or_hostile_input_is_left_intact() {
     let unclosed_pre = "<pre><code>no end";
     let unclosed_link = r#"<a href="https://example.com/docs">no end"#;
 
-    assert_eq!(apply_reader_chrome(unclosed_pre, &ReaderChrome::enabled()), unclosed_pre);
-    assert_eq!(apply_reader_chrome(unclosed_link, &ReaderChrome::enabled()), unclosed_link);
+    assert_eq!(apply_reader_chrome(unclosed_pre, ReaderChrome::enabled()), unclosed_pre);
+    assert_eq!(apply_reader_chrome(unclosed_link, ReaderChrome::enabled()), unclosed_link);
 
     let html = render(unclosed_pre, ReaderChrome::enabled());
     assert!(!html.contains(r#"class="ox-code""#), "{html}");
@@ -244,10 +244,8 @@ fn relative_and_hash_links_are_skipped() {
 
 #[test]
 fn encoded_javascript_href_is_not_a_live_action() {
-    let html = apply_reader_chrome(
-        r#"<a href="javascript&#58;alert(1)">js</a>"#,
-        &ReaderChrome::enabled(),
-    );
+    let html =
+        apply_reader_chrome(r#"<a href="javascript&#58;alert(1)">js</a>"#, ReaderChrome::enabled());
 
     assert!(!html.contains("javascript:"), "{html}");
     assert!(!html.contains("javascript&#58;"), "{html}");
