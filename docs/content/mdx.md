@@ -80,7 +80,7 @@ Regular **Markdown** prose.
 
 <Card {...cardProps} />
 
-{/_ Hidden from the rendered page _/}
+{/* Hidden from the rendered page */}
 ```
 
 Only tags that start with an uppercase letter are treated as JSX / components,
