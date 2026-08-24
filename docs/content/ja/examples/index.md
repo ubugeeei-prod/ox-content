@@ -6,7 +6,7 @@ Ox Content は、さまざまな使い方を示す実行可能な例と小さな
 
 ## 連携の例
 
-### [Vue 連携](./integ-vue.md)
+### [Vue 連携](/examples/integ-vue.md)
 
 `@ox-content/vite-plugin-vue` を使って、Markdown に Vue 3 コンポーネントを埋め込みます。
 
@@ -23,7 +23,7 @@ export default defineConfig({
 });
 ```
 
-### [React 連携](./integ-react.md)
+### [React 連携](/examples/integ-react.md)
 
 `@ox-content/vite-plugin-react` を使って、Markdown に React コンポーネントを埋め込みます。
 
@@ -40,7 +40,7 @@ export default defineConfig({
 });
 ```
 
-### [Svelte 連携](./integ-svelte.md)
+### [Svelte 連携](/examples/integ-svelte.md)
 
 `@ox-content/vite-plugin-svelte` を使って、Markdown に Svelte 5 コンポーネントを埋め込みます。
 
@@ -57,7 +57,7 @@ export default defineConfig({
 });
 ```
 
-### [Solid 連携](./integ-solid.md)
+### [Solid 連携](/examples/integ-solid.md)
 
 `@ox-content/vite-plugin-solid` を使って、Markdown に Solid コンポーネントを埋め込みます。
 
@@ -80,7 +80,7 @@ export default defineConfig({
 
 ## プラグインの例
 
-### [コード注釈](./code-annotations.md)
+### [コード注釈](/examples/code-annotations.md)
 
 カスタム属性と互換記法の両方を使える、オプトインのコードブロック注釈です。
 
@@ -93,7 +93,7 @@ oxContent({
 });
 ```
 
-### [パッケージマネージャータブ](./package-manager-tabs.md)
+### [パッケージマネージャータブ](/examples/package-manager-tabs.md)
 
 パッケージマネージャータブをオプトインし、ひとつの npm コマンドを書いて npm/pnpm/yarn/bun のインストールタブとして描画します。
 
@@ -101,15 +101,15 @@ oxContent({
 <pm>npm install -D vite</pm>
 ```
 
-### [markdown-it プラグイン](./plugin-markdown-it.md)
+### [markdown-it プラグイン](/examples/plugin-markdown-it.md)
 
 既存の markdown-it プロジェクトで、Ox Content を markdown-it プラグインとして使います。
 
-### [rehype プラグイン](./plugin-rehype.md)
+### [rehype プラグイン](/examples/plugin-rehype.md)
 
 unified エコシステムで、Ox Content を rehype プラグインとして使います。
 
-### [unplugin mdast ブリッジ](./unplugin-mdast-bridge.md)
+### [unplugin mdast ブリッジ](/examples/unplugin-mdast-bridge.md)
 
 Ox Content のネイティブパーサーの上で、カスタム mdast プラグインと既存の remark/unified プラグインを動かします。互換境界とブリッジの性能メモも文書化しています。
 

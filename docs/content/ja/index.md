@@ -47,7 +47,7 @@ features:
   - icon: "mdi:puzzle-outline"
     title: 高速 Markdown エンジン
     details: パーサ、レンダラ、プラグインはデフォルトテーマの内部実装ではなく、ライブラリとして再利用できます。
-    link: /performance.md
+    link: /ja/performance.md
   - icon: "mdi:connection"
     title: Vue / Svelte / React
     details: 第一級の統合で、コアパイプラインを捨てずにフレームワークコンポーネントを Markdown に埋め込めます。
