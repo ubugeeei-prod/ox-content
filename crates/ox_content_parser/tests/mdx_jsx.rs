@@ -3,7 +3,8 @@
 //! Covers PascalCase elements (flow + text), literal / boolean / `{expr}`
 //! attributes, self-closing tags, and simple open/close children. Lowercase
 //! HTML stays `Html`. Fragments, spreads, comments, member names, and
-//! children expressions live in `mdx_jsx_remainder.rs`. Module-level
+//! children expressions live in `mdx_jsx_remainder.rs`. Document-level
+//! `{expression}` is covered in `mdx_expressions.rs`. Module-level
 //! `import` / `export` is covered in `mdx_esm.rs`.
 
 use ox_content_allocator::Allocator;

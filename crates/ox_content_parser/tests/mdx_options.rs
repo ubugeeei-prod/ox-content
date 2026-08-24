@@ -1,8 +1,9 @@
 //! Strict tests for `ParserOptions.mdx`.
 //!
 //! Enabling the flag must not change CommonMark or GFM parse output for
-//! non-JSX, non-ESM Markdown. PascalCase JSX is covered in `mdx_jsx.rs`.
-//! Module-level `import` / `export` is covered in `mdx_esm.rs`.
+//! non-JSX, non-ESM, non-expression Markdown. PascalCase JSX is covered in
+//! `mdx_jsx.rs`. Module-level `import` / `export` is covered in `mdx_esm.rs`.
+//! Document-level `{expression}` is covered in `mdx_expressions.rs`.
 
 use ox_content_allocator::Allocator;
 use ox_content_parser::{Parser, ParserOptions};
@@ -27,7 +28,7 @@ fn assert_mdx_flag_is_noop(source: &str, mut options: ParserOptions) {
     let on = pretty_ast(source, options);
     assert_eq!(
         off, on,
-        "ParserOptions.mdx must not change parse output for non-JSX Markdown\n--- mdx=false ---\n{off}\n--- mdx=true ---\n{on}"
+        "ParserOptions.mdx must not change parse output for non-MDX Markdown\n--- mdx=false ---\n{off}\n--- mdx=true ---\n{on}"
     );
 }
 
@@ -136,8 +137,12 @@ fn mdx_flag_is_noop_for_gfm_task_list() {
 }
 
 #[test]
-fn mdx_flag_is_noop_for_brace_expression() {
-    assert_mdx_flag_is_noop("Hello {name}.\n", ParserOptions::default());
+fn mdx_flag_parses_brace_expression_when_enabled() {
+    let off = pretty_ast("Hello {name}.\n", ParserOptions::default());
+    let on = pretty_ast("Hello {name}.\n", ParserOptions::mdx());
+    assert!(off.contains("Text \"Hello {name}.\""), "mdx=false keeps braces as text:\n{off}");
+    assert!(!off.contains("MdxTextExpression"), "mdx=false must not emit expr:\n{off}");
+    assert!(on.contains("MdxTextExpression value=\"name\""), "mdx=true parses prose expr:\n{on}");
 }
 
 #[test]
