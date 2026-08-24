@@ -118,6 +118,7 @@ export function createFrameworkMarkdownOptions(options: FrameworkMarkdownOptions
     includes: { enabled: false },
     cards: { enabled: false },
     steps: { enabled: false },
+    fileTree: { enabled: false },
     sanitize: { enabled: false },
     editThisPage: { enabled: false, branch: "main", label: "Edit this page" },
     cjkEmphasis: false,

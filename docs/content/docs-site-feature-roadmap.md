@@ -27,7 +27,7 @@ Already tracked elsewhere:
 | Markdown file includes              | [#667](https://github.com/ubugeeei-prod/ox-content/issues/667) | shipped |
 | Figures, captions, and lazy images  | [#668](https://github.com/ubugeeei-prod/ox-content/issues/668) | planned |
 | Inline badges                       | [#669](https://github.com/ubugeeei-prod/ox-content/issues/669) | planned |
-| File tree blocks                    | [#670](https://github.com/ubugeeei-prod/ox-content/issues/670) | planned |
+| File tree blocks                    | [#670](https://github.com/ubugeeei-prod/ox-content/issues/670) | shipped |
 | Step lists                          | [#671](https://github.com/ubugeeei-prod/ox-content/issues/671) | planned |
 | Card / link-card / card-grid blocks | [#672](https://github.com/ubugeeei-prod/ox-content/issues/672) | shipped |
 

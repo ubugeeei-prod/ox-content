@@ -40,6 +40,8 @@ pub struct TransformOptions {
     pub images: Option<ImageOptions>,
     /// Opt-in `::: card` / `::: link-card` / `::: card-grid` blocks. Disabled when omitted.
     pub cards: Option<CardOptions>,
+    /// Opt-in `file-tree` fences. Disabled when omitted.
+    pub file_tree: Option<FileTreeOptions>,
 }
 
 #[derive(Clone, Default)]
@@ -106,6 +108,11 @@ pub struct CardOptions {
 
 #[derive(Clone, Default)]
 pub struct StepsOptions {
+    pub enabled: Option<bool>,
+}
+
+#[derive(Clone, Default)]
+pub struct FileTreeOptions {
     pub enabled: Option<bool>,
 }
 

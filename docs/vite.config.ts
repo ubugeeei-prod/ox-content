@@ -99,6 +99,7 @@ export default defineConfig(({ mode }) => {
                       { text: "Cards", link: "/built-in/cards.md" },
                       { text: "Step Lists", link: "/built-in/steps.md" },
                       { text: "File Includes", link: "/built-in/includes.md" },
+                      { text: "File Tree", link: "/built-in/file-tree.md" },
                       { text: "Inline Badges", link: "/built-in/badges.md" },
                       { text: "Images", link: "/built-in/images.md" },
                       { text: "Code Blocks", link: "/built-in/code-blocks.md" },
@@ -201,6 +202,7 @@ export default defineConfig(({ mode }) => {
         includes: true,
         cards: true,
         steps: true,
+        fileTree: true,
         embeds: {
           pm: true,
           twitter: { fetch: true },

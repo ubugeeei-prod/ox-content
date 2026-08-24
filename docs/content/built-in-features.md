@@ -27,6 +27,7 @@ inline**.
 | [Cards](./built-in/cards.md)                           | Opt-in `::: card` / `::: link-card` / `::: card-grid` blocks              |
 | [Step Lists](./built-in/steps.md)                      | Opt-in `::: steps` tutorial lists                                         |
 | [File Includes](./built-in/includes.md)                | Opt-in `<!-- @include -->` Markdown fragments                             |
+| [File Tree](./built-in/file-tree.md)                   | Opt-in static `file-tree` directory diagrams                              |
 | [Inline Badges](./built-in/badges.md)                  | Opt-in `{badge:tip}` status labels in headings or prose                   |
 | [Images](./built-in/images.md)                         | Opt-in figures, captions, lazy loading, and safe dimensions               |
 | [Code Blocks](./built-in/code-blocks.md)               | Syntax highlighting, code annotations, code imports                       |
@@ -61,6 +62,7 @@ inline**.
 | File includes    | `includes`                                                                                                    | `false`              | [File Includes](./built-in/includes.md)                |
 | Cards            | `cards`                                                                                                       | `false`              | [Cards](./built-in/cards.md)                           |
 | Step lists       | `steps`                                                                                                       | `false`              | [Step Lists](./built-in/steps.md)                      |
+| File tree        | `fileTree`                                                                                                    | `false`              | [File Tree](./built-in/file-tree.md)                   |
 | Images           | `images`                                                                                                      | `false`              | [Images](./built-in/images.md)                         |
 | Diagrams         | `mermaid`                                                                                                     | `false`              | [Mermaid Diagrams](./built-in/mermaid.md)              |
 | Math             | `math`                                                                                                        | `false`              | [Math](./built-in/math.md)                             |

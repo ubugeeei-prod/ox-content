@@ -858,6 +858,16 @@ export interface JsFeatureConfig {
   linkText?: string
 }
 
+/** Opt-in static `file-tree` fences. */
+export interface JsFileTreeOptions {
+  /**
+   * Enable `file-tree` fences.
+   *
+   * Default: `false`.
+   */
+  enabled?: boolean
+}
+
 export interface JsFrameworkComponentIsland {
   name: string
   props: Record<string, any>
@@ -1968,6 +1978,12 @@ export interface JsTransformOptions {
    * Default: disabled.
    */
   math?: boolean | JsMathOptions
+  /**
+   * Opt-in static `file-tree` fences.
+   *
+   * Default: disabled.
+   */
+  fileTree?: JsFileTreeOptions
 }
 
 /** Type parameter documentation (`<T extends C = D>`) used by generated API docs. */
