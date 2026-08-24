@@ -133,6 +133,8 @@ pub struct ThemeEmbed {
 /// Complete theme configuration.
 #[derive(Debug, Clone, Serialize, Deserialize, Default)]
 pub struct ThemeConfig {
+    /// Right-hand "On this page" outline. Omitted and `false` hide it.
+    pub aside: Option<bool>,
     /// Light mode colors.
     pub colors: Option<ThemeColors>,
     /// Dark mode colors.

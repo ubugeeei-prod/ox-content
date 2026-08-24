@@ -1868,7 +1868,7 @@ a:hover {
 
     </aside>
 
-    <main class="main main--with-toc">
+    <main class="main">
 
 <article class="content">
 <h1>Hello</h1>
@@ -1881,14 +1881,6 @@ a:hover {
 
 
     </main>
-
-    <aside class="toc" aria-label="On this page">
-      <div class="toc-title">On this page</div>
-      <ul class="toc-list">
-        <li class="toc-item"><a href="#hello" class="toc-link toc-link--depth-1">Hello</a></li>
-
-      </ul>
-    </aside>
 
   </div>
   <footer class="mobile-footer">

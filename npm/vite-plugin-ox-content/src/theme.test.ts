@@ -29,6 +29,7 @@ describe("theme", () => {
       expect(defaultTheme.entryPage?.mode).toBe("default");
       expect(defaultTheme.header?.showSiteNameText).toBe(true);
       expect(defaultTheme.layout).toBeDefined();
+      expect(defaultTheme.aside).toBe(false);
     });
   });
 

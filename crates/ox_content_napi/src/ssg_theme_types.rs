@@ -140,6 +140,8 @@ pub struct JsThemeEmbed {
 #[napi(object)]
 #[derive(Clone, Default)]
 pub struct JsThemeConfig {
+    /// Right-hand "On this page" outline. Omitted and `false` hide it.
+    pub aside: Option<bool>,
     /// Light mode colors.
     pub colors: Option<JsThemeColors>,
     /// Dark mode colors.

@@ -155,6 +155,13 @@ export interface ThemeConfig {
   name?: string;
   /** Base theme to extend */
   extends?: ThemeConfig;
+  /**
+   * Show the right-hand "On this page" outline.
+   *
+   * Default `false`. When `true`, the outline is rendered only on pages
+   * that have TOC entries, using the existing `<aside class="toc">` markup.
+   */
+  aside?: boolean;
   /** Light mode colors (maps to CSS variables) */
   colors?: ThemeColors;
   /** Dark mode colors (maps to CSS variables) */
@@ -196,6 +203,7 @@ export interface ThemeConfig {
  */
 export interface ResolvedThemeConfig {
   name: string;
+  aside: boolean;
   colors: ThemeColors;
   darkColors: ThemeColors;
   fonts: ThemeFonts;
@@ -218,6 +226,7 @@ export interface ResolvedThemeConfig {
  */
 export const defaultTheme: ThemeConfig = {
   name: "default",
+  aside: false,
   colors: {
     primary: "#4f6fae",
     primaryHover: "#425f96",
@@ -405,6 +414,7 @@ export function resolveTheme(config?: ThemeConfig | ThemeConfig[]): ResolvedThem
   // Return resolved config with all required fields
   return {
     name: merged.name ?? "custom",
+    aside: merged.aside ?? defaultTheme.aside ?? false,
     colors: merged.colors ?? defaultTheme.colors!,
     darkColors: merged.darkColors ?? defaultTheme.darkColors!,
     fonts: merged.fonts ?? defaultTheme.fonts!,
@@ -464,6 +474,7 @@ export function themeToNapi(theme: ResolvedThemeConfig): NapiThemeConfig {
   const socialLinks = socialLinksToNapi(theme.socialLinks);
 
   return {
+    aside: theme.aside,
     colors: theme.colors.primary
       ? {
           primary: theme.colors.primary,
@@ -658,6 +669,8 @@ export interface NapiThemeEmbed {
  * NAPI-compatible theme configuration type.
  */
 export interface NapiThemeConfig {
+  /** Right-hand "On this page" outline. */
+  aside?: boolean;
   colors?: NapiThemeColors;
   darkColors?: NapiThemeColors;
   fonts?: NapiThemeFonts;
