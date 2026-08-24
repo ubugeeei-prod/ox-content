@@ -3,11 +3,7 @@
  */
 
 import type { HeaderNavItem } from "./header-chrome";
-import {
-  normalizeLocalePath,
-  pathForLocale,
-  remainderPath,
-} from "./locale-switcher";
+import { normalizeLocalePath, pathForLocale, remainderPath } from "./locale-switcher";
 import type { LocaleConfig } from "./types";
 
 export interface LocalePageRef {
@@ -173,7 +169,10 @@ function pageLookup(options: LocalizeNavOptions): Map<string, LocalePageRef> | u
   return new Map(options.pages.map((page) => [normalizeLocalePath(page.path), page]));
 }
 
-function stripLocalePrefix(sitePath: string, locales: readonly Pick<LocaleConfig, "code">[]): string {
+function stripLocalePrefix(
+  sitePath: string,
+  locales: readonly Pick<LocaleConfig, "code">[],
+): string {
   const normalized = normalizeLocalePath(sitePath);
   const codes = locales.map((locale) => locale.code).sort((a, b) => b.length - a.length);
   for (const code of codes) {

@@ -31,7 +31,9 @@ function payload(overrides: Partial<PlayPayload> = {}): PlayPayload {
 
 describe("stdio viewer", () => {
   it("uses a paragraph for the empty state so docs code-block CSS cannot restyle it", () => {
-    expect(renderStdioHtml([])).toBe(`<p class="ox-code-play__stdio ox-code-play__empty">No stdio yet.</p>`);
+    expect(renderStdioHtml([])).toBe(
+      `<p class="ox-code-play__stdio ox-code-play__empty">No stdio yet.</p>`,
+    );
     expect(renderStdioHtml([])).not.toContain("<pre");
   });
 });

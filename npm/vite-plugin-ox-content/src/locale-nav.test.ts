@@ -218,7 +218,11 @@ describe("buildSsg locale nav", () => {
     tempDirs.push(root);
     const srcDir = path.join(root, "content");
     await fs.mkdir(path.join(srcDir, "ja"), { recursive: true });
-    await fs.writeFile(path.join(srcDir, "guide.md"), "---\ntitle: Guide\n---\n\n# Guide\n", "utf8");
+    await fs.writeFile(
+      path.join(srcDir, "guide.md"),
+      "---\ntitle: Guide\n---\n\n# Guide\n",
+      "utf8",
+    );
     await fs.writeFile(path.join(srcDir, "api.md"), "---\ntitle: API\n---\n\n# API\n", "utf8");
     await fs.writeFile(
       path.join(srcDir, "ja", "guide.md"),

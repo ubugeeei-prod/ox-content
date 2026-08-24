@@ -181,7 +181,7 @@ pub fn generate_html(page_data: &PageData, nav_groups: &[NavGroup], config: &Ssg
         all_js.push_str(READER_CHROME_JS);
     }
     if header_chrome_needs_js(&header_nav_html, &announcement_html, &locale_switcher_html) {
-        all_js.push_str("\n");
+        all_js.push('\n');
         all_js.push_str(HEADER_CHROME_JS);
     }
     let social_links_html = theme
