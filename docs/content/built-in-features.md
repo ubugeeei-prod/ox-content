@@ -24,6 +24,7 @@ inline**.
 | [Markdown Baseline](./built-in/markdown.md)          | GFM, tables, task lists, footnotes, autolinks, frontmatter, TOC           |
 | [Syntax Extensions](./built-in/syntax-extensions.md) | Emoji shortcodes, wiki links, attribute syntax, CJK emphasis              |
 | [Custom Containers](./built-in/containers.md)        | Opt-in `::: tip` / `::: details` callout blocks                           |
+| [Step Lists](./built-in/steps.md)                    | Opt-in `::: steps` tutorial lists                                         |
 | [File Includes](./built-in/includes.md)              | Opt-in `<!-- @include -->` Markdown fragments                             |
 | [Code Blocks](./built-in/code-blocks.md)             | Syntax highlighting, code annotations, code imports                       |
 | [Embeds](./built-in/embeds.md)                       | GitHub cards, OG cards, package-manager tabs, tabs, YouTube, social cards |
@@ -49,8 +50,9 @@ inline**.
 | Opt-in embeds    | `embeds.pm`, `embeds.twitter`, `embeds.bluesky`, `embeds.spotify`, `embeds.stackBlitz`, `embeds.webContainer` | `false`              | [Embeds](./built-in/embeds.md)                       |
 | Syntax highlight | `highlight`                                                                                                   | `false`              | [Code Blocks](./built-in/code-blocks.md)             |
 | Code authoring   | `codeAnnotations`, `codeImports`                                                                              | `false`              | [Code Blocks](./built-in/code-blocks.md)             |
-| Extra syntax     | `wikiLinks`, `emojiShortcodes`, `attrs`, `cjkEmphasis`, `containers`                                          | `false`              | [Syntax Extensions](./built-in/syntax-extensions.md) |
+| Extra syntax     | `wikiLinks`, `emojiShortcodes`, `attrs`, `cjkEmphasis`, `containers`, `steps`                                 | `false`              | [Syntax Extensions](./built-in/syntax-extensions.md) |
 | File includes    | `includes`                                                                                                    | `false`              | [File Includes](./built-in/includes.md)              |
+| Step lists       | `steps`                                                                                                       | `false`              | [Step Lists](./built-in/steps.md)                    |
 | Diagrams         | `mermaid`                                                                                                     | `false`              | [Mermaid Diagrams](./built-in/mermaid.md)            |
 | OG images        | `ogImage`                                                                                                     | `false`              | [Site Generation](./built-in/site-generation.md)     |
 | HTML safety      | `sanitize`                                                                                                    | `false`              | [Quality Checks](./built-in/quality-checks.md)       |

@@ -89,6 +89,8 @@ export default defineConfig(({ mode }) => {
                     items: [
                       { text: "Markdown Baseline", link: "/built-in/markdown.md" },
                       { text: "Syntax Extensions", link: "/built-in/syntax-extensions.md" },
+                      { text: "Custom Containers", link: "/built-in/containers.md" },
+                      { text: "Step Lists", link: "/built-in/steps.md" },
                       { text: "File Includes", link: "/built-in/includes.md" },
                       { text: "Code Blocks", link: "/built-in/code-blocks.md" },
                       { text: "Embeds", link: "/built-in/embeds.md" },
@@ -181,6 +183,7 @@ export default defineConfig(({ mode }) => {
         cjkEmphasis: true,
         codeImports: true,
         includes: true,
+        steps: true,
         embeds: {
           pm: true,
           twitter: { fetch: true },

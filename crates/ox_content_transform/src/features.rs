@@ -18,6 +18,7 @@ mod emoji;
 mod emoji_shortcodes;
 mod includes;
 mod segments;
+mod steps;
 mod wiki;
 
 use attributes::transform_attribute_syntax;
@@ -31,6 +32,7 @@ use edit::append_edit_this_page;
 use emoji_shortcodes::replace_emoji_shortcodes;
 use includes::ResolvedIncludeOptions;
 use segments::transform_markdown_text_segments;
+use steps::ResolvedStepsOptions;
 use wiki::replace_wiki_links;
 
 #[derive(Clone, Default)]
@@ -40,6 +42,7 @@ pub struct TransformFeatureOptions {
     code_imports: Option<ResolvedCodeImportOptions>,
     containers: Option<ResolvedContainerOptions>,
     includes: Option<ResolvedIncludeOptions>,
+    steps: Option<ResolvedStepsOptions>,
     attributes: bool,
     edit_this_page: Option<ResolvedEditThisPageOptions>,
 }
@@ -80,7 +83,13 @@ impl TransformFeatureOptions {
         let source_path = options.source_path.as_deref().filter(|value| !value.is_empty());
         let code_imports = code_imports::resolve(options.code_imports.as_ref(), source_path);
         let attributes = resolve_attrs(options.attributes.as_ref());
-        let containers = containers::resolve(options.containers.as_ref());
+        let steps = steps::resolve(options.steps.as_ref());
+        let mut containers = containers::resolve(options.containers.as_ref());
+        if steps.is_some()
+            && let Some(containers) = containers.as_mut()
+        {
+            containers.types.remove("steps");
+        }
         let includes = includes::resolve(options.includes.as_ref(), source_path);
         let edit_this_page = resolve_edit_this_page(
             options.edit_this_page.as_ref(),
@@ -93,6 +102,7 @@ impl TransformFeatureOptions {
             code_imports,
             containers,
             includes,
+            steps,
             attributes,
             edit_this_page,
         }
@@ -104,6 +114,7 @@ impl TransformFeatureOptions {
             || self.code_imports.is_some()
             || self.containers.is_some()
             || self.includes.is_some()
+            || self.steps.is_some()
     }
 
     pub fn has_postprocess(&self) -> bool {
@@ -156,6 +167,10 @@ pub fn preprocess_markdown<'a>(
         if let Some(replaced) = replaced {
             current = Cow::Owned(replaced);
         }
+    }
+
+    if options.steps.is_some() && current.contains(":::") {
+        current = Cow::Owned(steps::transform(&current));
     }
 
     if let Some(containers) = &options.containers

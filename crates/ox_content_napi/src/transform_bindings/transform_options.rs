@@ -3,7 +3,8 @@ use ox_content_transform::TransformOptions;
 
 use super::{
     JsAttrsOptions, JsCodeImportOptions, JsContainerOptions, JsEditThisPageOptions,
-    JsEmojiShortcodeOptions, JsIncludeOptions, JsSanitizeOptions, JsWikiLinkOptions,
+    JsEmojiShortcodeOptions, JsIncludeOptions, JsSanitizeOptions, JsStepsOptions,
+    JsWikiLinkOptions,
 };
 
 /// Transform options for JavaScript.
@@ -164,6 +165,11 @@ pub struct JsTransformOptions {
     ///
     /// Default: disabled.
     pub includes: Option<JsIncludeOptions>,
+
+    /// Opt-in `::: steps` ordered lists.
+    ///
+    /// Default: disabled.
+    pub steps: Option<JsStepsOptions>,
 }
 
 impl From<JsTransformOptions> for TransformOptions {
@@ -196,6 +202,7 @@ impl From<JsTransformOptions> for TransformOptions {
             edit_this_page: value.edit_this_page.map(Into::into),
             containers: value.containers.map(Into::into),
             includes: value.includes.map(Into::into),
+            steps: value.steps.map(Into::into),
         }
     }
 }

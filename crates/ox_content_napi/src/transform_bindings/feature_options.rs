@@ -4,7 +4,7 @@ use napi_derive::napi;
 use ox_content_transform::{
     AttrsOptions, CodeBlockLintOptions, CodeImportOptions, ContainerOptions, ContainerTypeOptions,
     DocsTestOptions, EditThisPageOptions, EmojiShortcodeOptions, IncludeOptions,
-    MediaEmbedsOptions, SanitizeOptions, WikiLinkOptions,
+    MediaEmbedsOptions, SanitizeOptions, StepsOptions, WikiLinkOptions,
 };
 
 /// Wiki-link transform options.
@@ -150,6 +150,18 @@ pub struct JsIncludeOptions {
 impl From<JsIncludeOptions> for IncludeOptions {
     fn from(value: JsIncludeOptions) -> Self {
         Self { enabled: value.enabled, root_dir: value.root_dir }
+    }
+}
+
+/// Opt-in `::: steps` wrappers. `enabled` defaults to `false`.
+#[napi(object)]
+#[derive(Default, Clone)]
+pub struct JsStepsOptions {
+    pub enabled: Option<bool>,
+}
+impl From<JsStepsOptions> for StepsOptions {
+    fn from(value: JsStepsOptions) -> Self {
+        Self { enabled: value.enabled }
     }
 }
 

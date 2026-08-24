@@ -112,6 +112,30 @@ describe("transformMarkdown", () => {
     expect(enabledResult.html).not.toContain(":::");
   });
 
+  it("leaves ::: steps literal unless opted in", async () => {
+    const markdown = "::: steps\n1. Install the CLI\n2. Run **build**\n:::\n";
+
+    const defaultResult = await transformMarkdown(
+      markdown,
+      "docs/steps.md",
+      createResolvedOptions(),
+    );
+    expect(defaultResult.html).not.toContain("ox-steps");
+
+    const enabledResult = await transformMarkdown(
+      markdown,
+      "docs/steps.md",
+      createResolvedOptions({
+        steps: { enabled: true },
+      }),
+    );
+    expect(enabledResult.html).toContain('class="ox-steps"');
+    expect(enabledResult.html).toContain('class="ox-steps__list"');
+    expect(enabledResult.html).toContain('class="ox-steps__item"');
+    expect(enabledResult.html).toContain("<strong>build</strong>");
+    expect(enabledResult.html).not.toContain(":::");
+  });
+
   it("drops hostile container titles and attributes", async () => {
     const result = await transformMarkdown(
       "::: tip[<img src=x onerror=alert(1)>]{#ok .ok onclick=alert(1)}\nBody\n:::\n",
@@ -264,6 +288,7 @@ function createResolvedOptions(overrides: Partial<ResolvedOptions> = {}): Resolv
     containers: { enabled: false, types: {} },
     codeImports: { enabled: false },
     includes: { enabled: false },
+    steps: { enabled: false },
     sanitize: { enabled: false },
     editThisPage: { enabled: false, branch: "main", label: "Edit this page" },
     cjkEmphasis: false,

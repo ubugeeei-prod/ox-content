@@ -31,6 +31,7 @@ import { isMarkdownFilePath, normalizeMarkdownExtensions } from "./markdown";
 import { generateCollectionsVirtualModule, resolveCollectionsOptions } from "./collections";
 import type { BuiltinPmOptions, OxContentOptions, ResolvedOptions } from "./types";
 import { resolveIncludeOptions } from "./include-options";
+import { resolveStepsOptions } from "./step-options";
 import type { TwitterEmbedOptions } from "./plugins";
 
 export type { OxContentOptions } from "./types";
@@ -52,6 +53,8 @@ export type {
   ResolvedCodeImportOptions,
   IncludeOptions,
   ResolvedIncludeOptions,
+  StepsOptions,
+  ResolvedStepsOptions,
   SanitizeOptions,
   ResolvedSanitizeOptions,
   EditThisPageOptions,
@@ -555,6 +558,7 @@ function resolveOptions(options: OxContentOptions): ResolvedOptions {
     containers: resolveContainerOptions(options.containers),
     codeImports: resolveCodeImportOptions(options.codeImports),
     includes: resolveIncludeOptions(options.includes),
+    steps: resolveStepsOptions(options.steps),
     sanitize: resolveSanitizeOptions(options.sanitize),
     editThisPage: resolveEditThisPageOptions(options.editThisPage),
     cjkEmphasis: options.cjkEmphasis ?? false,
@@ -667,6 +671,7 @@ function resolveCodeImportOptions(
 }
 
 export { resolveIncludeOptions } from "./include-options";
+export { resolveStepsOptions } from "./step-options";
 
 function resolveSanitizeOptions(
   options: OxContentOptions["sanitize"],
