@@ -19,8 +19,8 @@ pub use code_blocks::{JsCodeBlock, JsCodeBlockDiagnostic};
 pub use embed_types::{JsPmOptions, JsPmTransformResult, JsTabsTransformResult, JsYouTubeOptions};
 pub use feature_options::{
     JsAttrsOptions, JsCodeBlockLintOptions, JsCodeImportOptions, JsContainerOptions,
-    JsDocsTestOptions, JsEditThisPageOptions, JsEmojiShortcodeOptions, JsMediaEmbedsOptions,
-    JsSanitizeOptions, JsWikiLinkOptions,
+    JsContainerTypeOptions, JsDocsTestOptions, JsEditThisPageOptions, JsEmojiShortcodeOptions,
+    JsMediaEmbedsOptions, JsSanitizeOptions, JsWikiLinkOptions,
 };
 pub use transform_options::JsTransformOptions;
 
