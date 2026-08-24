@@ -28,8 +28,9 @@ whatever is already published to the registry.
 2. `napi build --release` in `crates/ox_content_napi`
 3. `vp pack` in `npm/ox-content-islands`
 4. `vp pack` in `npm/vite-plugin-ox-content`
-5. `vp build` in `docs`
-6. `vpx void@0.10.8 deploy`
+5. `vp run build` in `npm/ox-content-code-play`
+6. `vp build` in `docs`
+7. `vpx void@0.10.8 deploy`
 
 The deploy command defaults to the Void project and docs output directory used
 by this repository.
