@@ -35,6 +35,7 @@ import { resolveImageOptions } from "./resolve-image-options";
 import { generateCollectionsVirtualModule, resolveCollectionsOptions } from "./collections";
 import type { BuiltinPmOptions, OxContentOptions, ResolvedOptions } from "./types";
 import { resolveCardOptions } from "./card-options";
+import { resolveFileTreeOptions } from "./file-tree-options";
 import { resolveIncludeOptions } from "./include-options";
 import { resolveStepsOptions } from "./step-options";
 import type { TwitterEmbedOptions } from "./plugins";
@@ -68,6 +69,8 @@ export type {
   ResolvedCardOptions,
   StepsOptions,
   ResolvedStepsOptions,
+  FileTreeOptions,
+  ResolvedFileTreeOptions,
   SanitizeOptions,
   ResolvedSanitizeOptions,
   EditThisPageOptions,
@@ -610,6 +613,7 @@ function resolveOptions(options: OxContentOptions): ResolvedOptions {
     includes: resolveIncludeOptions(options.includes),
     cards: resolveCardOptions(options.cards),
     steps: resolveStepsOptions(options.steps),
+    fileTree: resolveFileTreeOptions(options.fileTree),
     sanitize: resolveSanitizeOptions(options.sanitize),
     editThisPage: resolveEditThisPageOptions(options.editThisPage),
     cjkEmphasis: options.cjkEmphasis ?? false,
@@ -739,6 +743,7 @@ function resolveCodeImportOptions(
 export { resolveCardOptions } from "./card-options";
 export { resolveIncludeOptions } from "./include-options";
 export { resolveStepsOptions } from "./step-options";
+export { resolveFileTreeOptions } from "./file-tree-options";
 
 function resolveSanitizeOptions(
   options: OxContentOptions["sanitize"],

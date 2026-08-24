@@ -4,8 +4,8 @@ use ox_content_transform::{MathOptions, TransformOptions};
 
 use super::{
     JsAttrsOptions, JsBadgeOptions, JsCardOptions, JsCodeImportOptions, JsContainerOptions,
-    JsEditThisPageOptions, JsEmojiShortcodeOptions, JsImageOptions, JsIncludeOptions,
-    JsMathOptions, JsSanitizeOptions, JsStepsOptions, JsWikiLinkOptions,
+    JsEditThisPageOptions, JsEmojiShortcodeOptions, JsFileTreeOptions, JsImageOptions,
+    JsIncludeOptions, JsMathOptions, JsSanitizeOptions, JsStepsOptions, JsWikiLinkOptions,
 };
 
 /// Transform options for JavaScript.
@@ -191,6 +191,11 @@ pub struct JsTransformOptions {
     ///
     /// Default: disabled.
     pub math: Option<Either<bool, JsMathOptions>>,
+
+    /// Opt-in static `file-tree` fences.
+    ///
+    /// Default: disabled.
+    pub file_tree: Option<JsFileTreeOptions>,
 }
 
 impl From<JsTransformOptions> for TransformOptions {
@@ -232,6 +237,7 @@ impl From<JsTransformOptions> for TransformOptions {
                 Some(Either::B(options)) => Some(options.into()),
                 None => None,
             },
+            file_tree: value.file_tree.map(Into::into),
         }
     }
 }

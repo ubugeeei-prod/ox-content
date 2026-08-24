@@ -19,6 +19,7 @@ mod edit;
 mod emoji;
 mod emoji_shortcodes;
 mod escape;
+mod file_tree;
 mod images;
 mod includes;
 mod math;
@@ -37,6 +38,7 @@ use containers::ResolvedContainerOptions;
 use edit::append_edit_this_page;
 use emoji_shortcodes::replace_emoji_shortcodes;
 pub(super) use escape::{escape_html_attr, escape_html_text};
+use file_tree::ResolvedFileTreeOptions;
 use images::ResolvedImageOptions;
 use includes::ResolvedIncludeOptions;
 use segments::transform_markdown_text_segments;
@@ -52,6 +54,7 @@ pub struct TransformFeatureOptions {
     includes: Option<ResolvedIncludeOptions>,
     cards: Option<ResolvedCardOptions>,
     steps: Option<ResolvedStepsOptions>,
+    file_tree: Option<ResolvedFileTreeOptions>,
     badges: bool,
     images: Option<ResolvedImageOptions>,
     math: bool,
@@ -111,6 +114,7 @@ impl TransformFeatureOptions {
             }
         }
         let includes = includes::resolve(options.includes.as_ref(), source_path);
+        let file_tree = file_tree::resolve(options.file_tree.as_ref());
         let badges = badges::resolve(options.badges.as_ref());
         let images = images::resolve(options.images.as_ref());
         let math = math::resolve(options.math.as_ref());
@@ -127,6 +131,7 @@ impl TransformFeatureOptions {
             includes,
             cards,
             steps,
+            file_tree,
             badges,
             images,
             math,
@@ -143,6 +148,7 @@ impl TransformFeatureOptions {
             || self.includes.is_some()
             || self.cards.is_some()
             || self.steps.is_some()
+            || self.file_tree.is_some()
             || self.badges
             || self.images.is_some()
             || self.math
@@ -212,6 +218,12 @@ pub fn preprocess_markdown<'a>(
         && current.contains(":::")
     {
         current = Cow::Owned(containers::transform(&current, containers));
+    }
+
+    if let Some(file_tree) = &options.file_tree
+        && current.contains("file-tree")
+    {
+        current = Cow::Owned(file_tree::transform(&current, *file_tree));
     }
 
     if options.badges && current.contains("{badge:") {
@@ -315,4 +327,4 @@ fn resolve_edit_this_page(
 }
 
 #[cfg(test)]
-mod feature_tests;
+mod wiring_tests;

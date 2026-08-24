@@ -290,6 +290,10 @@ interface JsTransformOptions {
     enabled?: boolean;
   };
 
+  fileTree?: {
+    enabled?: boolean;
+  };
+
   sanitize?: JsSanitizeOptions;
 
   editThisPage?: {
@@ -575,6 +579,7 @@ export async function transformMarkdown(
       : undefined,
     cards: options.cards?.enabled ? { enabled: true } : undefined,
     steps: options.steps?.enabled ? { enabled: true } : undefined,
+    fileTree: options.fileTree?.enabled ? { enabled: true } : undefined,
     // Sanitize once at the end of the JS pipeline so opt-in embeds can be
     // expanded before the allow-list is applied.
     sanitize: undefined,

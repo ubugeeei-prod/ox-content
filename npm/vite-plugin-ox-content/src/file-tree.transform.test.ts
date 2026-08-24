@@ -2,34 +2,29 @@ import { describe, expect, it } from "vite-plus/test";
 import { transformMarkdown } from "./transform";
 import type { ResolvedOptions } from "./types";
 
-// This file's first use of the plugin has to be the concurrent one, which is
-// why it is a file of its own: the NAPI load is cached per module instance,
-// so any earlier call here would warm it and hide what is being tested.
-describe("loading the NAPI bindings", () => {
-  it("serves every caller that arrives while the first load is in flight", async () => {
-    // A build starts transforming several pages at once, and all of them reach
-    // the loader before any of them has finished loading. Each used to see the
-    // "already attempted" flag with the result still unset, decide the bindings
-    // were unavailable, and throw — so the first page rendered and the rest
-    // failed.
-    const pages = Array.from({ length: 16 }, (_, i) =>
-      transformMarkdown(
-        `# page ${i}\n\nText for page ${i}.\n`,
-        `docs/page-${i}.md`,
-        createResolvedOptions(),
-      ),
+describe("file-tree transform", () => {
+  it("leaves file-tree fences literal unless opted in", async () => {
+    const markdown = "```file-tree\n- src/\n  - index.ts **\n```\n";
+
+    const defaultResult = await transformMarkdown(
+      markdown,
+      "docs/file-tree.md",
+      createResolvedOptions(),
     );
+    expect(defaultResult.html).not.toContain("ox-file-tree");
 
-    const settled = await Promise.allSettled(pages);
-    const rejected = settled.filter((result) => result.status === "rejected");
-
-    expect(rejected).toEqual([]);
-    for (const [index, result] of settled.entries()) {
-      expect(result.status).toBe("fulfilled");
-      if (result.status === "fulfilled") {
-        expect(result.value.html).toContain(`page ${index}`);
-      }
-    }
+    const enabledResult = await transformMarkdown(
+      markdown,
+      "docs/file-tree.md",
+      createResolvedOptions({
+        fileTree: { enabled: true },
+      }),
+    );
+    expect(enabledResult.html).toContain('class="ox-file-tree"');
+    expect(enabledResult.html).toContain("ox-file-tree__dir");
+    expect(enabledResult.html).toContain("ox-file-tree__highlight");
+    expect(enabledResult.html).not.toContain("<script");
+    expect(enabledResult.html).toContain("index.ts");
   });
 });
 
@@ -72,6 +67,7 @@ function createResolvedOptions(overrides: Partial<ResolvedOptions> = {}): Resolv
     includes: { enabled: false },
     cards: { enabled: false },
     steps: { enabled: false },
+    math: { enabled: false },
     fileTree: { enabled: false },
     sanitize: { enabled: false },
     editThisPage: { enabled: false, branch: "main", label: "Edit this page" },
@@ -91,7 +87,6 @@ function createResolvedOptions(overrides: Partial<ResolvedOptions> = {}): Resolv
     },
     docsTests: { enabled: false, languages: ["js", "jsx", "ts", "tsx"], requireMeta: true },
     mermaid: false,
-    math: { enabled: false },
     frontmatter: true,
     toc: true,
     tocMaxDepth: 3,

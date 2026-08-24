@@ -806,6 +806,16 @@ export interface OxContentOptions {
   steps?: boolean | StepsOptions;
 
   /**
+   * Opt-in static directory trees from `file-tree` fences.
+   *
+   * Passing `true` or `{}` enables the transform. Names are escaped and never
+   * read from the filesystem.
+   *
+   * @default false
+   */
+  fileTree?: boolean | FileTreeOptions;
+
+  /**
    * Sanitize rendered HTML with safe defaults or explicit allow lists.
    *
    * Enable this for untrusted Markdown. The default allow lists are conservative;
@@ -999,6 +1009,7 @@ export interface ResolvedOptions {
   includes: ResolvedIncludeOptions;
   cards: ResolvedCardOptions;
   steps: ResolvedStepsOptions;
+  fileTree: ResolvedFileTreeOptions;
   sanitize: ResolvedSanitizeOptions;
   editThisPage: ResolvedEditThisPageOptions;
   cjkEmphasis: boolean;
@@ -1378,6 +1389,25 @@ export interface StepsOptions {
  * Resolved step-list transform options.
  */
 export interface ResolvedStepsOptions {
+  enabled: boolean;
+}
+
+/**
+ * Options for opt-in `file-tree` fences.
+ */
+export interface FileTreeOptions {
+  /**
+   * Enable the file-tree transform when an options object is supplied.
+   *
+   * @default true
+   */
+  enabled?: boolean;
+}
+
+/**
+ * Resolved file-tree transform options.
+ */
+export interface ResolvedFileTreeOptions {
   enabled: boolean;
 }
 
