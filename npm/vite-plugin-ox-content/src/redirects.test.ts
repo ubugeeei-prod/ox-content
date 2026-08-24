@@ -122,6 +122,24 @@ describe("planRedirectFiles", () => {
     expect(plan.files).toEqual([]);
   });
 
+  it("rejects control characters and path traversal in sources and dests", () => {
+    const plan = planRedirectFiles({
+      options: {
+        ...on,
+        json: true,
+        map: {
+          "/../outside": "/guide",
+          "/..\\outside": "/guide",
+          "/old": "/guide\tv2",
+        },
+      },
+      pages: [],
+    });
+
+    expect(plan.files).toEqual([]);
+    expect(plan.json).toBeUndefined();
+  });
+
   it("ignores open-redirect destinations unless allowExternal is set", () => {
     const blocked = planRedirectFiles({
       options: {
@@ -222,6 +240,23 @@ describe("writeRedirectFiles", () => {
     });
 
     expect(await fs.readFile(existing, "utf8")).toBe("real page");
+  });
+
+  it("does not write outside outDir for traversal sources", async () => {
+    const outDir = await fs.mkdtemp(path.join(os.tmpdir(), "ox-content-redirects-trav-"));
+    tempDirs.push(outDir);
+
+    const result = await writeRedirectFiles({
+      outDir,
+      options: {
+        ...on,
+        map: { "/../outside": "/guide", "/..\\outside": "/guide" },
+      },
+      pages: [],
+    });
+
+    expect(result.files).toEqual([]);
+    await expect(fs.access(path.join(outDir, "..", "outside", "index.html"))).rejects.toThrow();
   });
 
   it("writes nothing when disabled", async () => {

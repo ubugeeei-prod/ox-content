@@ -235,17 +235,21 @@ function normalizeDest(value: string, allowExternal: boolean): string | null {
 
 function isAllowedDest(value: string, allowExternal: boolean): boolean {
   const trimmed = value.trim();
-  if (!trimmed || /[\n\r\0;]/u.test(trimmed)) {
+  if (!trimmed || /[\u0000-\u001F\u007F;]/u.test(trimmed)) {
     return false;
   }
   if (isHttpUrl(trimmed)) {
     return allowExternal;
   }
-  if (!trimmed.startsWith("/") || trimmed.startsWith("//")) {
+  if (!trimmed.startsWith("/") || trimmed.startsWith("//") || hasUnsafePathSegments(trimmed)) {
     return false;
   }
   const lower = trimmed.toLowerCase();
   return !lower.includes("javascript:") && !lower.includes("data:") && !lower.includes("://");
+}
+
+function hasUnsafePathSegments(value: string): boolean {
+  return value.includes("\\") || value.split("/").some((segment) => segment === "." || segment === "..");
 }
 
 function isHttpUrl(value: string): boolean {

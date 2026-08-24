@@ -73,6 +73,22 @@ fn config_map_emits_redirect() {
 }
 
 #[test]
+fn control_characters_and_traversal_are_rejected() {
+    assert!(!is_safe_dest("/guide\tv2"));
+    assert!(!is_safe_dest("/../outside"));
+    assert!(!is_safe_dest("/..\\outside"));
+    assert!(!is_safe_dest("/./inside"));
+
+    let output = generate_redirects(
+        &enabled(&[("/../outside", "/guide"), ("/..\\outside", "/guide"), ("/old", "/guide\tv2")]),
+        &[],
+    );
+
+    assert!(output.pages.is_empty(), "{output:?}");
+    assert_eq!(output.json, None);
+}
+
+#[test]
 fn javascript_and_data_destinations_are_rejected() {
     let output = generate_redirects(
         &enabled(&[("/old", "javascript:alert(1)"), ("/data", "data:text/html,hi")]),

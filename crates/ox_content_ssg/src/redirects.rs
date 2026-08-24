@@ -138,15 +138,13 @@ fn normalize_dest(value: &str, allow_external: bool) -> Option<String> {
 
 fn is_allowed_dest(value: &str, allow_external: bool) -> bool {
     let trimmed = value.trim();
-    if trimmed.is_empty()
-        || trimmed.bytes().any(|byte| matches!(byte, b'\n' | b'\r' | b'\0' | b';'))
-    {
+    if trimmed.is_empty() || trimmed.bytes().any(|byte| byte.is_ascii_control() || byte == b';') {
         return false;
     }
     if is_http_url(trimmed) {
         return allow_external;
     }
-    if !trimmed.starts_with('/') || trimmed.starts_with("//") {
+    if !trimmed.starts_with('/') || trimmed.starts_with("//") || has_unsafe_path_segments(trimmed) {
         return false;
     }
     let lower = trimmed.to_ascii_lowercase();
@@ -156,6 +154,10 @@ fn is_allowed_dest(value: &str, allow_external: bool) -> bool {
 fn is_http_url(value: &str) -> bool {
     let lower = value.to_ascii_lowercase();
     lower.starts_with("https://") || lower.starts_with("http://")
+}
+
+fn has_unsafe_path_segments(value: &str) -> bool {
+    value.contains('\\') || value.split('/').any(|segment| matches!(segment, "." | ".."))
 }
 
 fn upsert(
