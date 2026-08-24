@@ -31,6 +31,7 @@ fn config(reader_chrome: ReaderChrome) -> SsgConfig {
         reader_chrome,
         locale_switcher: false,
         locale_paths: vec![],
+        a11y: crate::A11y::default(),
     }
 }
 

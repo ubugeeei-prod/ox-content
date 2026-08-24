@@ -70,6 +70,22 @@ describe("resolveSsgOptions", () => {
     });
   });
 
+  it("disables a11y by default", () => {
+    expect(resolveSsgOptions(undefined).a11y).toBe(false);
+  });
+
+  it("enables a11y when requested", () => {
+    expect(resolveSsgOptions({ a11y: true }).a11y).toEqual({
+      skipLinkLabel: "Skip to content",
+    });
+  });
+
+  it("enables a11y when an object is passed", () => {
+    expect(resolveSsgOptions({ a11y: {} }).a11y).toEqual({
+      skipLinkLabel: "Skip to content",
+    });
+  });
+
   it("disables notFound by default", () => {
     expect(resolveSsgOptions(undefined).notFound?.enabled).toBe(false);
   });

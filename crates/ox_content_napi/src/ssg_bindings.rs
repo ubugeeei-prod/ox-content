@@ -4,8 +4,9 @@ use std::process::Command;
 use napi_derive::napi;
 
 use crate::{
-    JsReaderChrome, JsSsgBarePage, JsSsgConfig, JsSsgExternalizedAssets, JsSsgGeneratedHtmlPage,
-    JsSsgNavGroup, JsSsgNavigationGroup, JsSsgPageData, JsSsgRoutePaths, JsSsgSidebarItem,
+    JsA11y, JsReaderChrome, JsSsgBarePage, JsSsgConfig, JsSsgExternalizedAssets,
+    JsSsgGeneratedHtmlPage, JsSsgNavGroup, JsSsgNavigationGroup, JsSsgPageData, JsSsgRoutePaths,
+    JsSsgSidebarItem,
 };
 
 mod converters;
@@ -224,9 +225,19 @@ pub fn generate_ssg_html(
                 root: path.root,
             })
             .collect(),
+        a11y: convert_a11y(config.a11y),
     };
 
     ox_content_ssg::generate_html(&ssg_page_data, &ssg_nav_groups, &ssg_config)
+}
+
+fn convert_a11y(a11y: Option<JsA11y>) -> ox_content_ssg::A11y {
+    match a11y {
+        None => ox_content_ssg::A11y::disabled(),
+        Some(a11y) => {
+            ox_content_ssg::A11y { skip_link_label: Some(a11y.skip_link_label.unwrap_or_default()) }
+        }
+    }
 }
 
 fn convert_reader_chrome(chrome: Option<JsReaderChrome>) -> ox_content_ssg::ReaderChrome {

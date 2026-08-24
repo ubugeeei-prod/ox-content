@@ -1,0 +1,44 @@
+.ox-skip-link {
+  position: absolute;
+  left: 0.75rem;
+  top: 0.75rem;
+  z-index: 100;
+  padding: 0.35rem 0.75rem;
+  border-radius: 4px;
+  background: var(--octc-color-bg);
+  color: var(--octc-color-text);
+  box-shadow: 0 0 0 2px var(--octc-color-primary);
+  font: inherit;
+  font-size: 0.875rem;
+  text-decoration: none;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  clip-path: inset(50%);
+  white-space: nowrap;
+}
+.ox-skip-link:focus {
+  width: auto;
+  height: auto;
+  overflow: visible;
+  clip: auto;
+  clip-path: none;
+}
+@media print {
+  .header,
+  .sidebar,
+  .search-modal-overlay,
+  .search-modal,
+  .overlay,
+  .mobile-footer,
+  .ox-skip-link,
+  .ox-copy,
+  .ox-back-to-top,
+  .ox-external-icon {
+    display: none !important;
+  }
+  .main {
+    margin: 0;
+  }
+}

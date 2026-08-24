@@ -54,6 +54,7 @@
 //!     reader_chrome: Default::default(),
 //!     locale_switcher: false,
 //!     locale_paths: vec![],
+//!     a11y: Default::default(),
 //! };
 //!
 //! let html = generate_html(&page_data, &nav_groups, &config);
@@ -73,7 +74,7 @@ pub use assets::{
 };
 pub use feeds::{FeedFormat, FeedItem, FeedsOptions, FeedsOutput, generate_feeds};
 pub use html::{
-    BarePageData, EntryPageConfig, FeatureConfig, HeroAction, HeroConfig, HeroImage,
+    A11y, BarePageData, EntryPageConfig, FeatureConfig, HeroAction, HeroConfig, HeroImage,
     HeroNoticeConfig, LocaleInfo, LocalePath, NavGroup, NavItem, PageData, PagerOverride,
     ReaderChrome, SocialLink, SocialLinks, SsgConfig, ThemeColors, ThemeConfig, ThemeEmbed,
     ThemeEntryPage, ThemeFonts, ThemeFooter, ThemeHeader, ThemeLayout, TocEntry,

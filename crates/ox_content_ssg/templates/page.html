@@ -24,7 +24,8 @@
   <script>document.documentElement.setAttribute('data-theme',localStorage.getItem('theme')||(matchMedia('(prefers-color-scheme:dark)').matches?'dark':'light'))</script>
 </head>
 <body{% if !body_class.is_empty() %} class="{{ body_class }}"{% endif %}>
-{{ embed_header_before|safe }}
+{% if let Some(skip) = skip_link %}{{ skip|safe }}
+{% endif %}{{ embed_header_before|safe }}
   <header class="header">
     <button class="menu-toggle" aria-label="Toggle menu">
       <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round">
@@ -93,7 +94,7 @@
 {{ embed_sidebar_after|safe }}
     </aside>
 {% endif %}
-    <main class="main{% if has_toc %} main--with-toc{% endif %}">
+    <main class="main{% if has_toc %} main--with-toc{% endif %}"{% if skip_link.is_some() %} id="ox-main"{% endif %}>
 {{ embed_content_before|safe }}
 {% if let Some(breadcrumbs) = breadcrumbs %}
       <nav class="ox-breadcrumbs" aria-label="Breadcrumb">

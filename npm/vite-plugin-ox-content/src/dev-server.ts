@@ -368,6 +368,8 @@ async function renderPage(
     options.ssg.readerChrome,
     options.ssg.breadcrumbs,
     options.ssg.localeSwitcher,
+    undefined,
+    options.ssg.a11y,
   );
 
   // Inject Vite HMR client for live reload

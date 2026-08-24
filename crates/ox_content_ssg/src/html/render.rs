@@ -1,5 +1,6 @@
 use askama::Template;
 
+use super::a11y::A11Y_CSS;
 use super::breadcrumbs::resolve_breadcrumbs;
 use super::entry::generate_entry_html;
 use super::footer::{FOOTER_CSS, generate_footer_html};
@@ -80,6 +81,9 @@ pub fn generate_html(page_data: &PageData, nav_groups: &[NavGroup], config: &Ssg
     }
     if config.reader_chrome.is_enabled() {
         css_sections.push(wrap_css_section("reader-chrome", READER_CHROME_CSS));
+    }
+    if config.a11y.is_enabled() {
+        css_sections.push(wrap_css_section("a11y", A11Y_CSS));
     }
     if !theme_css.is_empty() {
         css_sections.push(wrap_css_section("theme", &theme_css));
@@ -197,6 +201,7 @@ pub fn generate_html(page_data: &PageData, nav_groups: &[NavGroup], config: &Ssg
     };
     let (html_lang, html_dir) = html_locale_attrs(config);
 
+    let skip_link = config.a11y.skip_link_html();
     let template = PageTemplate {
         html_lang,
         html_dir,
@@ -207,6 +212,7 @@ pub fn generate_html(page_data: &PageData, nav_groups: &[NavGroup], config: &Ssg
         css: &all_css,
         embed_head,
         body_class: &body_class,
+        skip_link: skip_link.as_deref(),
         embed_header_before,
         embed_header_after,
         base: &config.base,

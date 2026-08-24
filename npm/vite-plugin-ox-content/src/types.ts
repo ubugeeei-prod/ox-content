@@ -336,6 +336,16 @@ export interface SsgOptions {
   localeSwitcher?: boolean | Record<string, unknown>;
 
   /**
+   * Opt-in skip link and print styles.
+   *
+   * Disabled when omitted or `false`. `true` enables the default skip link
+   * and print CSS. An object enables the feature and can override the label.
+   *
+   * @default false
+   */
+  a11y?: boolean | A11yOptions;
+
+  /**
    * Write a themed 404 page during SSG.
    *
    * Off by default. `true` reads `404.md` from `srcDir` and writes `404.html`.
@@ -433,6 +443,29 @@ export type ResolvedReaderChrome =
     };
 
 /**
+ * Per-control flags for `ssg.a11y`.
+ *
+ * Omitted fields keep the defaults when the feature itself is enabled.
+ */
+export interface A11yOptions {
+  /**
+   * Visible label for the skip link. Escaped in HTML.
+   *
+   * @default "Skip to content"
+   */
+  skipLinkLabel?: string;
+}
+
+/**
+ * Resolved skip-link / print styles. `false` means no extra markup or CSS.
+ */
+export type ResolvedA11y =
+  | false
+  | {
+      skipLinkLabel: string;
+    };
+
+/**
  * Resolved SSG options.
  */
 export interface ResolvedSsgOptions {
@@ -453,6 +486,7 @@ export interface ResolvedSsgOptions {
   breadcrumbs: boolean;
   readerChrome: ResolvedReaderChrome;
   localeSwitcher: boolean;
+  a11y: ResolvedA11y;
   /**
    * Present after `resolveSsgOptions`. Omitted in hand-built fixtures means off.
    */

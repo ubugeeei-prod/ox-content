@@ -61,6 +61,7 @@ function createBaseOptions(
       breadcrumbs: false,
       readerChrome: false,
       localeSwitcher: false,
+      a11y: false,
     },
     gfm: options.gfm,
     frontmatter: false,

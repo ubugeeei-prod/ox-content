@@ -1,6 +1,7 @@
 use serde::{Deserialize, Serialize};
 
 use super::ThemeConfig;
+use super::a11y::A11y;
 use super::reader_chrome::ReaderChrome;
 
 /// Hero action button.
@@ -198,6 +199,9 @@ pub struct SsgConfig {
     /// Existing sibling hrefs and locale roots, keyed by locale code.
     #[serde(default)]
     pub locale_paths: Vec<LocalePath>,
+    /// Opt-in skip link and print styles. Off by default.
+    #[serde(default)]
+    pub a11y: A11y,
 }
 
 /// Locale information for the locale switcher.

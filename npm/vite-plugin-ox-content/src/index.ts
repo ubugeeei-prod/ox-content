@@ -93,6 +93,8 @@ export type {
   ExtractedDocs,
   SsgOptions,
   ResolvedSsgOptions,
+  A11yOptions,
+  ResolvedA11y,
   ReaderChromeOptions,
   ResolvedReaderChrome,
   NotFoundOptions,

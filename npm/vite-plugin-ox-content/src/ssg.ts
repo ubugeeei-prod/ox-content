@@ -15,8 +15,10 @@ import { importNapiModule, importNapiModuleSync } from "./napi";
 import { DEFAULT_MARKDOWN_EXTENSIONS } from "./markdown";
 import type {
   ResolvedOptions,
+  ResolvedA11y,
   ResolvedReaderChrome,
   ResolvedSsgOptions,
+  A11yOptions,
   ReaderChromeOptions,
   SsgOptions,
   SsgNavigationGroup,
@@ -127,6 +129,7 @@ export function resolveSsgOptions(ssg: SsgOptions | boolean | undefined): Resolv
       breadcrumbs: false,
       readerChrome: false,
       localeSwitcher: false,
+      a11y: false,
       notFound: resolveNotFoundOptions(undefined),
     };
   }
@@ -143,6 +146,7 @@ export function resolveSsgOptions(ssg: SsgOptions | boolean | undefined): Resolv
       breadcrumbs: false,
       readerChrome: false,
       localeSwitcher: false,
+      a11y: false,
       notFound: resolveNotFoundOptions(undefined),
       theme: resolveTheme(undefined),
     };
@@ -166,6 +170,7 @@ export function resolveSsgOptions(ssg: SsgOptions | boolean | undefined): Resolv
     breadcrumbs: resolvePaginationOption(ssg.breadcrumbs),
     readerChrome: resolveReaderChromeOption(ssg.readerChrome),
     localeSwitcher: resolveLocaleSwitcherOption(ssg.localeSwitcher),
+    a11y: resolveA11yOption(ssg.a11y),
     notFound: resolveNotFoundOptions(ssg.notFound),
     siteUrl: ssg.siteUrl,
     theme: resolveTheme(ssg.theme),
@@ -189,6 +194,19 @@ function resolveReaderChromeOption(
       externalLinks: value.externalLinks !== false,
       backToTop: value.backToTop !== false,
     };
+  }
+  return false;
+}
+
+const DEFAULT_SKIP_LINK_LABEL = "Skip to content";
+
+function resolveA11yOption(value: boolean | A11yOptions | undefined): ResolvedA11y {
+  if (value === true) {
+    return { skipLinkLabel: DEFAULT_SKIP_LINK_LABEL };
+  }
+  if (value && typeof value === "object") {
+    const label = value.skipLinkLabel?.trim();
+    return { skipLinkLabel: label || DEFAULT_SKIP_LINK_LABEL };
   }
   return false;
 }
@@ -385,6 +403,7 @@ export async function generateHtmlPage(
   breadcrumbs = false,
   localeSwitcher = false,
   localePaths?: SsgLocalePath[],
+  a11y: ResolvedA11y = false,
 ): Promise<string> {
   const mod = await importNapiModule();
 
@@ -470,6 +489,7 @@ export async function generateHtmlPage(
         : undefined,
       localeSwitcher: localeSwitcher || undefined,
       localePaths,
+      a11y: a11y ? { skipLinkLabel: a11y.skipLinkLabel } : undefined,
     },
   );
 }
@@ -1175,6 +1195,7 @@ async function renderSsgPage(
     context.ssgOptions.breadcrumbs,
     context.ssgOptions.localeSwitcher,
     localePaths,
+    context.ssgOptions.a11y,
   );
 }
 

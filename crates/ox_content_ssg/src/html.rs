@@ -2,6 +2,7 @@
 
 use askama::Template;
 
+mod a11y;
 mod aside;
 mod breadcrumbs;
 mod entry;
@@ -17,6 +18,7 @@ mod theme;
 mod theme_css;
 mod utils;
 
+pub use a11y::A11y;
 use breadcrumbs::BreadcrumbsView;
 use pagination::PagerView;
 pub use reader_chrome::ReaderChrome;
@@ -114,6 +116,7 @@ struct PageTemplate<'a> {
     css: &'a str,
     embed_head: &'a str,
     body_class: &'a str,
+    skip_link: Option<&'a str>,
     embed_header_before: &'a str,
     embed_header_after: &'a str,
     base: &'a str,

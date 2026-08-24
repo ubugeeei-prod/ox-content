@@ -55,6 +55,7 @@ export function createFrameworkMarkdownOptions(options: FrameworkMarkdownOptions
       breadcrumbs: false,
       readerChrome: false,
       localeSwitcher: false,
+      a11y: false,
     },
     siteMaps: { enabled: false, robots: true, llms: true },
     publishState: { enabled: false, includeDrafts: false },

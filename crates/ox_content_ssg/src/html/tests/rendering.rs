@@ -43,6 +43,7 @@ fn test_generate_html() {
         reader_chrome: ReaderChrome::default(),
         locale_switcher: false,
         locale_paths: vec![],
+        a11y: A11y::default(),
     };
 
     let html = generate_html(&page_data, &nav_groups, &config);
@@ -174,6 +175,7 @@ fn test_generate_html_without_toc_omits_outline() {
         reader_chrome: ReaderChrome::default(),
         locale_switcher: false,
         locale_paths: vec![],
+        a11y: A11y::default(),
     };
 
     let html = generate_html(&page_data, &[], &config);
@@ -199,6 +201,7 @@ fn test_html_locale_attrs_use_current_locale_and_direction() {
         reader_chrome: ReaderChrome::default(),
         locale_switcher: false,
         locale_paths: vec![],
+        a11y: A11y::default(),
     };
 
     assert_eq!(html_locale_attrs(&config), ("ar", "rtl"));

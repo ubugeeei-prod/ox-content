@@ -327,6 +327,12 @@ export interface IncrementalMarkdownRenderResult {
 }
 
 /** Attribute syntax transform options. */
+/** Opt-in skip link and print styles. Presence of the object enables the feature. */
+export interface JsA11y {
+  /** Override for the skip-link label. Empty / omitted uses "Skip to content". */
+  skipLinkLabel?: string
+}
+
 export interface JsAttrsOptions {
   /**
    * Enable markdown-it-attrs style `{#id .class key=value}`.
@@ -1524,6 +1530,8 @@ export interface JsSsgConfig {
   localeSwitcher?: boolean
   /** Existing sibling hrefs and locale roots. */
   localePaths?: Array<JsLocalePath>
+  /** Opt-in skip link and print styles. Presence enables the feature. */
+  a11y?: JsA11y
 }
 
 /** Result of SSG shared asset extraction. */

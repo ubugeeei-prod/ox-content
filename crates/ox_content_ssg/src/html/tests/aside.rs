@@ -32,6 +32,7 @@ fn config(theme: Option<ThemeConfig>) -> SsgConfig {
         reader_chrome: ReaderChrome::default(),
         locale_switcher: false,
         locale_paths: vec![],
+        a11y: A11y::default(),
     }
 }
 

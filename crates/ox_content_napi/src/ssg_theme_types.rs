@@ -194,6 +194,16 @@ pub struct JsSsgConfig {
     pub locale_switcher: Option<bool>,
     /// Existing sibling hrefs and locale roots.
     pub locale_paths: Option<Vec<JsLocalePath>>,
+    /// Opt-in skip link and print styles. Presence enables the feature.
+    pub a11y: Option<JsA11y>,
+}
+
+/// Opt-in skip link and print styles. Presence of the object enables the feature.
+#[napi(object)]
+#[derive(Clone)]
+pub struct JsA11y {
+    /// Override for the skip-link label. Empty / omitted uses "Skip to content".
+    pub skip_link_label: Option<String>,
 }
 
 /// Opt-in reader chrome flags. Presence of the object enables the feature.

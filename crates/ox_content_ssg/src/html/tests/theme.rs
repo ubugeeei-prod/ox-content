@@ -41,6 +41,7 @@ fn test_generate_html_with_theme() {
         reader_chrome: ReaderChrome::default(),
         locale_switcher: false,
         locale_paths: vec![],
+        a11y: A11y::default(),
     };
 
     let html = generate_html(&page_data, &nav_groups, &config);
@@ -73,6 +74,7 @@ fn test_generate_html_with_custom_social_link() {
         reader_chrome: ReaderChrome::default(),
         locale_switcher: false,
         locale_paths: vec![],
+        a11y: A11y::default(),
         theme: Some(ThemeConfig {
             social_links: Some(SocialLinks {
                 links: Some(vec![SocialLink {

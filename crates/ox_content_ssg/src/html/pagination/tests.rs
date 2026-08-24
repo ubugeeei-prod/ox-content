@@ -65,6 +65,7 @@ fn config(pagination: bool) -> SsgConfig {
         reader_chrome: ReaderChrome::default(),
         locale_switcher: false,
         locale_paths: vec![],
+        a11y: crate::A11y::default(),
     }
 }
 
