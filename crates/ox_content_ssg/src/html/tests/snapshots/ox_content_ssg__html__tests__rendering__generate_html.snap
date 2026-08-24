@@ -747,6 +747,36 @@ a:hover {
 .content blockquote.ox-callout > :not(.ox-callout-title):first-of-type {
   margin-top: 0;
 }
+.content .ox-container {
+  --octc-container-accent: var(--octc-color-primary);
+  border-left: 3px solid var(--octc-container-accent);
+  padding: 0.9rem 1rem;
+  margin: 1.25rem 0;
+  border-radius: 4px;
+  background: color-mix(in srgb, var(--octc-color-bg-alt) 92%, var(--octc-container-accent) 8%);
+}
+.content .ox-container--tip {
+  --octc-container-accent: #0891b2;
+}
+.content .ox-container--warning,
+.content .ox-container--caution {
+  --octc-container-accent: #d97706;
+}
+.content .ox-container--danger {
+  --octc-container-accent: #dc2626;
+}
+.content .ox-container-title,
+.content .ox-container summary {
+  margin: 0 0 0.5rem;
+  font-size: 0.75rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--octc-container-accent, var(--octc-color-primary));
+}
+.content .ox-container > :last-child {
+  margin-bottom: 0;
+}
 .content code {
   font-family: var(--octc-font-mono);
   font-size: 0.875em;
