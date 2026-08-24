@@ -73,7 +73,7 @@
     "unplugin": "^3.3.0"
   },
   "devDependencies": {
-    "@types/markdown-it": "^14.1.2",
+    "@types/markdown-it": "^14.2.0",
     "@types/node": "catalog:",
     "@typescript/native-preview": "catalog:",
     "esbuild": "catalog:",
@@ -89,7 +89,7 @@
     "remark-math": "^6.0.0",
     "remark-smartypants": "^3.0.3",
     "remark-toc": "^9.0.0",
-    "rollup": "^4.62.4",
+    "rollup": "^4.62.5",
     "typescript": "catalog:",
     "vite": "catalog:",
     "vite-plus": "catalog:",
