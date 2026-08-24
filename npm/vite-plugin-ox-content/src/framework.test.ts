@@ -44,6 +44,25 @@ describe("framework Markdown utilities", () => {
     expect(options.embeds.github).toBe(false);
     expect(options.embeds.openGraph).toEqual({ timeout: 500 });
     expect(options.embeds.pm).toBe(false);
+    expect(options.math.enabled).toBe(false);
+  });
+
+  it("forwards math into resolved Markdown options", () => {
+    const base = {
+      srcDir: "docs",
+      outDir: "dist",
+      base: "/",
+      extensions: [".md"],
+      gfm: true,
+      toc: false,
+      tocMaxDepth: 2,
+    };
+    expect(createFrameworkMarkdownOptions(base).math.enabled).toBe(false);
+    expect(createFrameworkMarkdownOptions({ ...base, math: true }).math.enabled).toBe(true);
+    expect(createFrameworkMarkdownOptions({ ...base, math: {} }).math.enabled).toBe(true);
+    expect(createFrameworkMarkdownOptions({ ...base, math: { enabled: false } }).math.enabled).toBe(
+      false,
+    );
   });
 
   it("renders React VDOM code with React-compatible attributes", () => {

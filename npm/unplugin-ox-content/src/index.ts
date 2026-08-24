@@ -98,6 +98,8 @@ function resolveOptions(options: OxContentOptions): ResolvedOptions {
     highlight: options.highlight ?? false,
     codeAnnotations: resolveCodeAnnotationsOptions(options.codeAnnotations),
     mermaid: options.mermaid ?? false,
+    math:
+      options.math === true || (typeof options.math === "object" && options.math.enabled !== false),
     frontmatter: options.frontmatter ?? true,
     toc: options.toc ?? true,
     tocMaxDepth: options.tocMaxDepth ?? 3,

@@ -331,6 +331,7 @@ function createResolvedOptions(overrides?: Partial<ResolvedOptions>): ResolvedOp
     strikethrough: true,
     highlight: false,
     mermaid: false,
+    math: false,
     frontmatter: true,
     toc: true,
     tocMaxDepth: 3,

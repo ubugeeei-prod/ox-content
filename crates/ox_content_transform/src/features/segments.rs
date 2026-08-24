@@ -1,6 +1,6 @@
 use compact_str::CompactString;
 
-pub(super) fn transform_markdown_text_segments(
+pub(crate) fn transform_markdown_text_segments(
     source: &str,
     mut transform: impl FnMut(&str, &mut String),
 ) -> Option<String> {

@@ -86,6 +86,7 @@ interface NapiBindings {
       codeAnnotationMetaKey?: string;
       codeAnnotationSyntax?: string;
       codeAnnotationDefaultLineNumbers?: boolean;
+      math?: boolean;
     },
   ) => {
     html: string;
@@ -237,6 +238,7 @@ function createNapiTransformOptions(options: ResolvedOptions): {
   tocMaxDepth: number;
   codeAnnotations: boolean;
   codeAnnotationMetaKey: string;
+  math?: boolean;
 } {
   const codeAnnotations = options.codeAnnotations ?? {
     enabled: false,
@@ -254,6 +256,7 @@ function createNapiTransformOptions(options: ResolvedOptions): {
     tocMaxDepth: options.tocMaxDepth,
     codeAnnotations: codeAnnotations.enabled,
     codeAnnotationMetaKey: codeAnnotations.metaKey,
+    math: options.math,
   };
 }
 

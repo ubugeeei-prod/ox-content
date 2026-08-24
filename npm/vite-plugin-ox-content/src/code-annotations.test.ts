@@ -168,6 +168,7 @@ function createResolvedOptions(overrides: Partial<ResolvedOptions> = {}): Resolv
     },
     docsTests: { enabled: false, languages: ["js", "jsx", "ts", "tsx"], requireMeta: true },
     mermaid: false,
+    math: { enabled: false },
     frontmatter: true,
     toc: true,
     tocMaxDepth: 3,

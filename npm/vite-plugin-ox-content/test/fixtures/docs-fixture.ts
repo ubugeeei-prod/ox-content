@@ -150,6 +150,7 @@ export function createDocsResolvedOptions(
     },
     docsTests: { enabled: false, languages: ["js", "jsx", "ts", "tsx"], requireMeta: true },
     mermaid: false,
+    math: { enabled: false },
     frontmatter: true,
     toc: true,
     tocMaxDepth: 3,

@@ -32,6 +32,7 @@ inline**.
 | [Code Blocks](./built-in/code-blocks.md)               | Syntax highlighting, code annotations, code imports                       |
 | [Embeds](./built-in/embeds.md)                         | GitHub cards, OG cards, package-manager tabs, tabs, YouTube, social cards |
 | [Mermaid Diagrams](./built-in/mermaid.md)              | Diagram fences rendered to static SVG                                     |
+| [Math](./built-in/math.md)                             | Opt-in `$…$` inline and `$$…$$` block math                                |
 | [Search](./built-in/search.md)                         | The static BM25 index and client search API                               |
 | [Collections](./built-in/collections.md)               | Query Markdown files with a SQL-like builder                              |
 | [Quality Checks](./built-in/quality-checks.md)         | Code block lint, type checking, docs tests, HTML sanitizer                |
@@ -62,6 +63,7 @@ inline**.
 | Step lists       | `steps`                                                                                                       | `false`              | [Step Lists](./built-in/steps.md)                      |
 | Images           | `images`                                                                                                      | `false`              | [Images](./built-in/images.md)                         |
 | Diagrams         | `mermaid`                                                                                                     | `false`              | [Mermaid Diagrams](./built-in/mermaid.md)              |
+| Math             | `math`                                                                                                        | `false`              | [Math](./built-in/math.md)                             |
 | OG images        | `ogImage`                                                                                                     | `false`              | [Site Generation](./built-in/site-generation.md)       |
 | HTML safety      | `sanitize`                                                                                                    | `false`              | [Quality Checks](./built-in/quality-checks.md)         |
 | Editing links    | `editThisPage`                                                                                                | `false`              | [Site Generation](./built-in/site-generation.md)       |

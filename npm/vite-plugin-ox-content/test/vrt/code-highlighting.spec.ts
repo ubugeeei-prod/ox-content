@@ -34,6 +34,7 @@ function createResolvedOptions(): ResolvedOptions {
       defaultLineNumbers: false,
     },
     mermaid: false,
+    math: { enabled: false },
     frontmatter: true,
     toc: true,
     tocMaxDepth: 3,

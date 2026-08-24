@@ -21,6 +21,7 @@ mod emoji_shortcodes;
 mod escape;
 mod images;
 mod includes;
+mod math;
 mod segments;
 mod steps;
 mod wiki;
@@ -53,6 +54,7 @@ pub struct TransformFeatureOptions {
     steps: Option<ResolvedStepsOptions>,
     badges: bool,
     images: Option<ResolvedImageOptions>,
+    math: bool,
     attributes: bool,
     edit_this_page: Option<ResolvedEditThisPageOptions>,
 }
@@ -111,6 +113,7 @@ impl TransformFeatureOptions {
         let includes = includes::resolve(options.includes.as_ref(), source_path);
         let badges = badges::resolve(options.badges.as_ref());
         let images = images::resolve(options.images.as_ref());
+        let math = math::resolve(options.math.as_ref());
         let edit_this_page = resolve_edit_this_page(
             options.edit_this_page.as_ref(),
             source_path.unwrap_or_default(),
@@ -126,6 +129,7 @@ impl TransformFeatureOptions {
             steps,
             badges,
             images,
+            math,
             attributes,
             edit_this_page,
         }
@@ -141,6 +145,7 @@ impl TransformFeatureOptions {
             || self.steps.is_some()
             || self.badges
             || self.images.is_some()
+            || self.math
     }
 
     pub fn has_postprocess(&self) -> bool {
@@ -222,6 +227,8 @@ pub fn preprocess_markdown<'a>(
     {
         current = Cow::Owned(replaced);
     }
+
+    math::apply(&mut current, options.math);
 
     PreprocessResult { source: current, errors }
 }

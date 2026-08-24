@@ -1070,6 +1070,16 @@ export interface JsMarkdownLintRuleOptions {
   trailingSpaces?: boolean
 }
 
+/** Opt-in `$…$` inline and `$$…$$` block math. */
+export interface JsMathOptions {
+  /**
+   * Enable `$…$` inline and `$$…$$` block math.
+   *
+   * Default: `false` when the whole option is omitted; `true` when this object is present.
+   */
+  enabled?: boolean
+}
+
 /** Built-in media embed transform switches. */
 export interface JsMediaEmbedsOptions {
   /**
@@ -1952,6 +1962,12 @@ export interface JsTransformOptions {
    * Default: disabled.
    */
   cards?: JsCardOptions
+  /**
+   * Opt-in `$…$` inline and `$$…$$` block math.
+   *
+   * Default: disabled.
+   */
+  math?: boolean | JsMathOptions
 }
 
 /** Type parameter documentation (`<T extends C = D>`) used by generated API docs. */

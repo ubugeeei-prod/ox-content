@@ -22,6 +22,7 @@ export interface FrameworkMarkdownOptions {
     github?: ResolvedOptions["embeds"]["github"];
     openGraph?: ResolvedOptions["embeds"]["openGraph"];
   };
+  math?: boolean | { enabled?: boolean };
 }
 
 export interface FrameworkComponentIsland {
@@ -72,6 +73,11 @@ export function createFrameworkMarkdownOptions(options: FrameworkMarkdownOptions
     autolinks: options.gfm,
     highlight: false,
     mermaid: false,
+    math: {
+      enabled:
+        options.math === true ||
+        (typeof options.math === "object" && options.math.enabled !== false),
+    },
     ogImage: false,
     ogImageOptions: {
       vuePlugin: "vitejs",

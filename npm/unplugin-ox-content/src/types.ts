@@ -371,6 +371,12 @@ export interface OxContentOptions {
   mermaid?: boolean;
 
   /**
+   * Enable `$…$` inline and `$$…$$` block math.
+   * @default false
+   */
+  math?: boolean | { enabled?: boolean };
+
+  /**
    * Parse YAML frontmatter.
    * @default true
    */
@@ -451,6 +457,7 @@ export interface ResolvedOptions {
   highlight: boolean;
   codeAnnotations: ResolvedCodeAnnotationsOptions;
   mermaid: boolean;
+  math: boolean;
   frontmatter: boolean;
   toc: boolean;
   tocMaxDepth: number;

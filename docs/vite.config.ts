@@ -104,6 +104,7 @@ export default defineConfig(({ mode }) => {
                       { text: "Code Blocks", link: "/built-in/code-blocks.md" },
                       { text: "Embeds", link: "/built-in/embeds.md" },
                       { text: "Mermaid Diagrams", link: "/built-in/mermaid.md" },
+                      { text: "Math", link: "/built-in/math.md" },
                       { text: "Search", link: "/built-in/search.md" },
                       { text: "Collections", link: "/built-in/collections.md" },
                       { text: "Quality Checks", link: "/built-in/quality-checks.md" },
@@ -192,6 +193,7 @@ export default defineConfig(({ mode }) => {
         // (wikiLinks and attrs stay off: both also rewrite `[[...]]` / `{...}`
         // inside raw HTML <code> emitted by the generated API reference.)
         emojiShortcodes: true,
+        math: true,
         cjkEmphasis: true,
         badges: true,
         images: true,

@@ -1,10 +1,11 @@
+use napi::bindgen_prelude::Either;
 use napi_derive::napi;
-use ox_content_transform::TransformOptions;
+use ox_content_transform::{MathOptions, TransformOptions};
 
 use super::{
     JsAttrsOptions, JsBadgeOptions, JsCardOptions, JsCodeImportOptions, JsContainerOptions,
     JsEditThisPageOptions, JsEmojiShortcodeOptions, JsImageOptions, JsIncludeOptions,
-    JsSanitizeOptions, JsStepsOptions, JsWikiLinkOptions,
+    JsMathOptions, JsSanitizeOptions, JsStepsOptions, JsWikiLinkOptions,
 };
 
 /// Transform options for JavaScript.
@@ -185,6 +186,11 @@ pub struct JsTransformOptions {
     ///
     /// Default: disabled.
     pub cards: Option<JsCardOptions>,
+
+    /// Opt-in `$…$` inline and `$$…$$` block math.
+    ///
+    /// Default: disabled.
+    pub math: Option<Either<bool, JsMathOptions>>,
 }
 
 impl From<JsTransformOptions> for TransformOptions {
@@ -221,6 +227,11 @@ impl From<JsTransformOptions> for TransformOptions {
             badges: value.badges.map(Into::into),
             images: value.images.map(Into::into),
             cards: value.cards.map(Into::into),
+            math: match value.math {
+                Some(Either::A(enabled)) => Some(MathOptions { enabled: Some(enabled) }),
+                Some(Either::B(options)) => Some(options.into()),
+                None => None,
+            },
         }
     }
 }

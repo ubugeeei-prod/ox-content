@@ -22,6 +22,7 @@ pub struct TransformOptions {
     pub autolink_target_blank: Option<bool>,
     pub wiki_links: Option<WikiLinkOptions>,
     pub emoji_shortcodes: Option<EmojiShortcodeOptions>,
+    pub math: Option<MathOptions>,
     pub attributes: Option<AttrsOptions>,
     pub cjk_emphasis: Option<bool>,
     pub code_imports: Option<CodeImportOptions>,
@@ -74,6 +75,11 @@ pub struct WikiLinkOptions {
 pub struct EmojiShortcodeOptions {
     pub enabled: Option<bool>,
     pub custom: Option<FxHashMap<String, String>>,
+}
+
+#[derive(Clone, Default)]
+pub struct MathOptions {
+    pub enabled: Option<bool>,
 }
 
 #[derive(Clone, Default)]

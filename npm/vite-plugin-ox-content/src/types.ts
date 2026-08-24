@@ -807,6 +807,16 @@ export interface OxContentOptions {
   mermaid?: boolean;
 
   /**
+   * Enable `$…$` inline and `$$…$$` block math.
+   *
+   * Currency-like `$` runs, fenced code, indented code, and inline code stay
+   * literal. TeX is HTML-escaped into accessible MathML `mtext`.
+   *
+   * @default false
+   */
+  math?: boolean | MathOptions;
+
+  /**
    * Parse YAML frontmatter.
    * @default true
    */
@@ -928,6 +938,7 @@ export interface ResolvedOptions {
   codeBlockTypecheck: ResolvedCodeBlockTypecheckOptions;
   docsTests: ResolvedDocsTestOptions;
   mermaid: boolean;
+  math: ResolvedMathOptions;
   frontmatter: boolean;
   toc: boolean;
   tocMaxDepth: number;
@@ -1161,6 +1172,25 @@ export interface EmojiShortcodeOptions {
 export interface ResolvedEmojiShortcodeOptions {
   enabled: boolean;
   custom: Record<string, string>;
+}
+
+/**
+ * Options for opt-in `$…$` / `$$…$$` math.
+ */
+export interface MathOptions {
+  /**
+   * Enable the math transform when an options object is supplied.
+   *
+   * @default true
+   */
+  enabled?: boolean;
+}
+
+/**
+ * Resolved math transform options.
+ */
+export interface ResolvedMathOptions {
+  enabled: boolean;
 }
 
 /**

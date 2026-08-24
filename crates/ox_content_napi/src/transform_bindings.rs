@@ -14,6 +14,7 @@ mod card_options;
 mod code_blocks;
 mod embed_types;
 mod feature_options;
+mod math_options;
 mod steps_options;
 mod transform_options;
 
@@ -27,6 +28,7 @@ pub use feature_options::{
     JsContainerTypeOptions, JsDocsTestOptions, JsEditThisPageOptions, JsEmojiShortcodeOptions,
     JsImageOptions, JsIncludeOptions, JsMediaEmbedsOptions, JsSanitizeOptions, JsWikiLinkOptions,
 };
+pub use math_options::JsMathOptions;
 pub use steps_options::JsStepsOptions;
 pub use transform_options::JsTransformOptions;
 

@@ -48,6 +48,8 @@ export type {
   ResolvedWikiLinkOptions,
   EmojiShortcodeOptions,
   ResolvedEmojiShortcodeOptions,
+  MathOptions,
+  ResolvedMathOptions,
   AttrsOptions,
   ResolvedAttrsOptions,
   BadgeOptions,
@@ -608,6 +610,7 @@ function resolveOptions(options: OxContentOptions): ResolvedOptions {
     codeBlockTypecheck: resolveCodeBlockTypecheckOptions(options.codeBlockTypecheck),
     docsTests: resolveDocsTestOptions(options.docsTests),
     mermaid: options.mermaid ?? false,
+    math: resolveMathOptions(options.math),
     frontmatter: options.frontmatter ?? true,
     toc: options.toc ?? true,
     tocMaxDepth: options.tocMaxDepth ?? 3,
@@ -688,6 +691,12 @@ function resolveEmojiShortcodeOptions(
   if (!options) return { enabled: false, custom: {} };
   if (options === true) return { enabled: true, custom: {} };
   return { enabled: true, custom: options.custom ?? {} };
+}
+
+export function resolveMathOptions(options: OxContentOptions["math"]): ResolvedOptions["math"] {
+  if (!options) return { enabled: false };
+  if (options === true) return { enabled: true };
+  return { enabled: options.enabled ?? true };
 }
 
 function resolveAttrsOptions(options: OxContentOptions["attrs"]): ResolvedOptions["attrs"] {

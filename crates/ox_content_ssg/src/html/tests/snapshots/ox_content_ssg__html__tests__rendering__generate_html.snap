@@ -893,6 +893,23 @@ a:hover {
   font-size: 0.875rem;
   text-align: center;
 }
+.content .ox-math {
+  font-family: var(--octc-font-mono);
+  font-size: 0.95em;
+}
+.content .ox-math-inline {
+  padding: 0.05em 0.2em;
+}
+.content .ox-math-block {
+  display: block;
+  margin: 1.25rem 0;
+  padding: 0.85rem 1rem;
+  overflow-x: auto;
+  text-align: center;
+  background: color-mix(in srgb, var(--octc-color-bg-alt) 92%, var(--octc-color-bg));
+  border: 1px solid color-mix(in srgb, var(--octc-color-border) 72%, transparent);
+  border-radius: 4px;
+}
 .content code {
   font-family: var(--octc-font-mono);
   font-size: 0.875em;

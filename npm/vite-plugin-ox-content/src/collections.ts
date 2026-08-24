@@ -52,6 +52,7 @@ type NativeTransformOptions = {
     rootDir?: string;
     label?: string;
   };
+  math?: boolean | { enabled?: boolean };
 };
 
 type BuildCollectionManifestNapi = {
@@ -212,6 +213,7 @@ function createNativeTransformOptions(options: ResolvedOptions): NativeTransform
           label: options.editThisPage.label,
         }
       : undefined,
+    math: options.math?.enabled ?? false,
   };
 }
 

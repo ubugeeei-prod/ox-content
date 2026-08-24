@@ -299,6 +299,20 @@ interface JsTransformOptions {
     rootDir?: string;
     label?: string;
   };
+
+  /**
+   * Opt-in `$…$` inline and `$$…$$` block math.
+   *
+   * Omitted or `false` leaves `$` literal. `true` or `{}` enables defaults;
+   * `{ enabled: false }` disables math.
+   *
+   * @default false
+   */
+  math?:
+    | boolean
+    | {
+        enabled?: boolean;
+      };
 }
 
 interface JsSanitizeOptions {
@@ -573,6 +587,7 @@ export async function transformMarkdown(
           label: options.editThisPage.label,
         }
       : undefined,
+    math: isMathEnabled(options.math),
   });
 
   if (result.errors.length > 0) {
@@ -838,4 +853,10 @@ export async function generateOgImageSvg(
     : undefined;
 
   return napi.generateOgImageSvg(data, napiConfig);
+}
+
+function isMathEnabled(math: boolean | { enabled?: boolean } | undefined): boolean {
+  if (math === true) return true;
+  if (math === false || math == null) return false;
+  return math.enabled !== false;
 }
