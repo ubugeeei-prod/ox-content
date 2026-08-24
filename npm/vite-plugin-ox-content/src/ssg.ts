@@ -32,6 +32,7 @@ import { renderPage } from "./theme-renderer";
 import type { PageData as ThemePageData } from "./theme-renderer";
 import { writeSiteMapFiles } from "./site-maps";
 import { filterNavGroups, hiddenNavKeys, partitionPublishedPages } from "./publish-state";
+import { applySsgPageRoutes, remapNavGroups } from "./apply-permalinks";
 
 /**
  * Navigation item for SSG.
@@ -673,8 +674,10 @@ export async function buildSsg(options: ResolvedOptions, root: string): Promise<
   const markdownFiles = await collectMarkdownFiles(srcDir, options.extensions);
   const context = await createBuildSsgContext(options, root, srcDir, outDir, markdownFiles);
   const collected = await collectPageResults(context, markdownFiles);
+  applyPermalinkRoutes(context, collected);
   errors.push(...collected.errors);
   const { outputPages, listedPages } = applyPublishState(context, collected);
+  remapPermalinkNav(context, listedPages);
 
   await generateOgImageAssets(context, collected, generatedFiles, errors);
 
@@ -761,6 +764,58 @@ async function resolveSiteName(root: string, ssgOptions: ResolvedSsgOptions): Pr
   } catch {
     return "Documentation";
   }
+}
+
+function applyPermalinkRoutes(context: BuildSsgContext, collected: CollectedPageResults): void {
+  if (!context.options.permalinks?.enabled && !context.options.cascade?.enabled) {
+    return;
+  }
+
+  const routed = applySsgPageRoutes({
+    pages: collected.pageResults,
+    permalinks: context.options.permalinks,
+    cascade: context.options.cascade,
+    srcDir: context.srcDir,
+    outDir: context.outDir,
+    base: context.base,
+    extension: context.ssgOptions.extension,
+    siteUrl: context.ssgOptions.siteUrl,
+  });
+  collected.errors.push(...routed.errors);
+  collected.pageResults = routed.pages as PageProcessResult[];
+
+  collected.ogImageEntries = [];
+  collected.ogImageInputPaths = [];
+  collected.ogImageUrlMap.clear();
+  for (const page of collected.pageResults) {
+    collectOgImageEntry(context, page, collected);
+  }
+}
+
+function remapPermalinkNav(context: BuildSsgContext, listedPages: PageProcessResult[]): void {
+  if (!context.options.permalinks?.enabled) {
+    return;
+  }
+  const usedManualNav =
+    Boolean(context.ssgOptions.navigation) || Boolean(context.ssgOptions.theme?.sidebar.length);
+  if (usedManualNav) {
+    return;
+  }
+
+  context.navItems = remapNavGroups(
+    buildNavItems(
+      listedPages.map((page) => page.inputPath),
+      context.srcDir,
+      context.base,
+      context.ssgOptions.extension,
+    ),
+    listedPages.map((page) => ({
+      fileUrl: getUrlPath(page.inputPath, context.srcDir),
+      urlPath: page.routePaths.urlPath,
+      href: page.routePaths.href,
+    })),
+    [],
+  );
 }
 
 async function collectPageResults(

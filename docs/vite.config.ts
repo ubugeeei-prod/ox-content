@@ -113,6 +113,7 @@ export default defineConfig(({ mode }) => {
                       { text: "Reader Chrome", link: "/built-in/reader-chrome.md" },
                       { text: "Sitemap / robots / llms.txt", link: "/built-in/site-maps.md" },
                       { text: "Draft / unlisted / scheduled", link: "/built-in/drafts.md" },
+                      { text: "Permalinks and Cascade", link: "/built-in/permalinks.md" },
                     ],
                   },
                   { text: "Theming", link: "/theming.md" },

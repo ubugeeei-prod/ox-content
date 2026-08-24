@@ -16,6 +16,10 @@ export const apiNav: NavItem[] = [
     "path": "/api/api"
   },
   {
+    "title": "Apply Permalinks",
+    "path": "/api/apply-permalinks"
+  },
+  {
     "title": "Attributes",
     "path": "/api/attributes"
   },
@@ -126,6 +130,10 @@ export const apiNav: NavItem[] = [
   {
     "title": "Parse",
     "path": "/api/parse"
+  },
+  {
+    "title": "Permalinks",
+    "path": "/api/permalinks"
   },
   {
     "title": "Pm",

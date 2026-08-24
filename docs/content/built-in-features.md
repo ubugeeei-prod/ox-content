@@ -41,6 +41,7 @@ inline**.
 | [Reader Chrome](./built-in/reader-chrome.md)           | Opt-in copy, outbound-link icons, and back-to-top                         |
 | [Sitemap / robots / llms.txt](./built-in/site-maps.md) | Opt-in crawl manifests written next to generated HTML                     |
 | [Draft / unlisted / scheduled](./built-in/drafts.md)   | Opt-in frontmatter publish states for production output                   |
+| [Permalinks and Cascade](./built-in/permalinks.md)     | Opt-in frontmatter URLs and directory-level default frontmatter           |
 
 ## Default vs Opt-in
 
@@ -71,6 +72,8 @@ inline**.
 | Reader chrome    | `ssg.readerChrome`                                                                                            | `false`              | [Reader Chrome](./built-in/reader-chrome.md)           |
 | Crawl manifests  | `siteMaps`                                                                                                    | `false`              | [Sitemap / robots / llms.txt](./built-in/site-maps.md) |
 | Publish states   | `publishState`                                                                                                | `false`              | [Draft / unlisted / scheduled](./built-in/drafts.md)   |
+| Permalinks       | `permalinks`                                                                                                  | `false`              | [Permalinks and Cascade](./built-in/permalinks.md)     |
+| Frontmatter tree | `cascade`                                                                                                     | `false`              | [Permalinks and Cascade](./built-in/permalinks.md)     |
 | Code checks      | `codeBlockLint`, `codeBlockTypecheck`, `docsTests`                                                            | `false`              | [Quality Checks](./built-in/quality-checks.md)         |
 | Custom pipeline  | `transformers`                                                                                                | `[]`                 | [Site Generation](./built-in/site-generation.md)       |
 

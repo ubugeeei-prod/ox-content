@@ -1,4 +1,5 @@
 import * as path from "node:path";
+import { applyCollectionRoutes } from "./apply-permalinks";
 import { generateCollectionsModule } from "./collections-runtime";
 import { importNapiModule } from "./napi";
 import type {
@@ -116,7 +117,15 @@ export async function buildCollectionManifest(
     transformOptions: createNativeTransformOptions(options),
   });
 
-  return parseCollectionManifest(manifestJson);
+  const { manifest, errors } = applyCollectionRoutes(
+    parseCollectionManifest(manifestJson),
+    options.permalinks,
+    options.cascade,
+  );
+  for (const error of errors) {
+    console.warn(error);
+  }
+  return manifest;
 }
 
 export async function generateCollectionsVirtualModule(

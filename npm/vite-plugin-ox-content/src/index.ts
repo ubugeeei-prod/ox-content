@@ -14,6 +14,7 @@ import { extractDocs, generateMarkdown, writeDocs, resolveDocsOptions } from "./
 import { buildSsg, resolveSsgOptions } from "./ssg";
 import { resolveSiteMapsOptions } from "./site-maps";
 import { resolvePublishStateOptions } from "./publish-state";
+import { resolveCascadeOptions, resolvePermalinksOptions } from "./permalinks";
 import {
   resolveSearchOptions,
   buildSearchIndex,
@@ -92,6 +93,10 @@ export type {
   ResolvedSiteMapsOptions,
   PublishStateOptions,
   ResolvedPublishStateOptions,
+  PermalinksOptions,
+  ResolvedPermalinksOptions,
+  CascadeOptions,
+  ResolvedCascadeOptions,
   SearchOptions,
   ResolvedSearchOptions,
   SearchDocument,
@@ -585,6 +590,8 @@ function resolveOptions(options: OxContentOptions): ResolvedOptions {
     ssg: resolveSsgOptions(options.ssg),
     siteMaps: resolveSiteMapsOptions(options.siteMaps),
     publishState: resolvePublishStateOptions(options.publishState),
+    permalinks: resolvePermalinksOptions(options.permalinks),
+    cascade: resolveCascadeOptions(options.cascade),
     gfm: options.gfm ?? true,
     footnotes: options.footnotes ?? true,
     tables: options.tables ?? true,
@@ -993,6 +1000,7 @@ export {
   resolvePublishStateOptions,
   partitionPublishedPages,
 } from "./publish-state";
+export { resolvePermalinksOptions, resolveCascadeOptions } from "./permalinks";
 export { resolveSearchOptions, buildSearchIndex, writeSearchIndex } from "./search";
 export {
   buildCollectionManifest,

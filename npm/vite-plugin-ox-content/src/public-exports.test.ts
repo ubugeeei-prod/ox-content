@@ -34,6 +34,8 @@ describe("public export surface", () => {
       "resolveSearchOptions",
       "resolvePublishStateOptions",
       "resolveSiteMapsOptions",
+      "resolvePermalinksOptions",
+      "resolveCascadeOptions",
       "resolveSsgOptions",
       "runDocsTests",
       "transformMarkdown",

@@ -57,6 +57,7 @@
 
 mod assets;
 mod html;
+mod permalinks;
 mod routes;
 mod site_maps;
 mod vitepress;
@@ -70,6 +71,10 @@ pub use html::{
     SocialLink, SocialLinks, SsgConfig, ThemeColors, ThemeConfig, ThemeEmbed, ThemeEntryPage,
     ThemeFonts, ThemeFooter, ThemeHeader, ThemeLayout, TocEntry, generate_bare_html,
     generate_bare_page, generate_html,
+};
+pub use permalinks::{
+    CascadeOptions, PermalinksOptions, ResolvedRoutePage, RoutePage, RouteResolveOutput,
+    apply_cascade, escape_attribute, is_safe_permalink, resolve_page_routes,
 };
 pub use routes::{
     ManualNavigationGroup, ManualNavigationItem, RoutePaths, SidebarItem, build_nav_items,

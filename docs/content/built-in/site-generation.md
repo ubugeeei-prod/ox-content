@@ -15,6 +15,8 @@ images, content collections, and generated API docs.
 | `ogImage`      | `false`              | Generate per-page Open Graph images.     |
 | `editThisPage` | `false`              | Append "Edit this page" links.           |
 | `collections`  | `content` collection | Query Markdown files from client code.   |
+| `permalinks`   | `false`              | Frontmatter `permalink` / `slug` URLs.   |
+| `cascade`      | `false`              | Directory `_index` frontmatter defaults. |
 | `docs`         | `{ enabled: true }`  | Generate API docs from JSDoc/TSDoc.      |
 | `transformers` | `[]`                 | Custom Markdown AST transforms.          |
 

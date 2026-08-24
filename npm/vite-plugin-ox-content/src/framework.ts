@@ -56,6 +56,8 @@ export function createFrameworkMarkdownOptions(options: FrameworkMarkdownOptions
     },
     siteMaps: { enabled: false, robots: true, llms: true },
     publishState: { enabled: false, includeDrafts: false },
+    permalinks: { enabled: false },
+    cascade: { enabled: false },
     gfm: options.gfm,
     frontmatter: options.frontmatter ?? false,
     toc: options.toc,

@@ -480,6 +480,48 @@ export interface ResolvedPublishStateOptions {
 }
 
 /**
+ * Opt-in frontmatter `permalink` / `slug` routing.
+ *
+ * `false` or omitted stays off. `true` or `{}` enables defaults.
+ * Set `enabled: false` on the object to turn the feature back off.
+ */
+export interface PermalinksOptions {
+  /**
+   * Enable permalink / slug routing.
+   * @default true
+   */
+  enabled?: boolean;
+}
+
+/**
+ * Resolved permalink options.
+ */
+export interface ResolvedPermalinksOptions {
+  enabled: boolean;
+}
+
+/**
+ * Opt-in `_index` directory frontmatter cascade.
+ *
+ * `false` or omitted stays off. `true` or `{}` enables defaults.
+ * Set `enabled: false` on the object to turn the feature back off.
+ */
+export interface CascadeOptions {
+  /**
+   * Enable directory-level frontmatter inheritance.
+   * @default true
+   */
+  enabled?: boolean;
+}
+
+/**
+ * Resolved cascade options.
+ */
+export interface ResolvedCascadeOptions {
+  enabled: boolean;
+}
+
+/**
  * Options for the core `oxContent()` Vite plugin.
  *
  * The top-level options describe where content lives, which Markdown features
@@ -566,6 +608,30 @@ export interface OxContentOptions {
    * @default false
    */
   publishState?: boolean | PublishStateOptions;
+
+  /**
+   * Honor frontmatter `permalink` / `slug` when resolving page URLs.
+   *
+   * Off by default. `true` or `{}` replaces the file-tree URL with
+   * `permalink`, or the last path segment with `slug`. Path escape
+   * (`../`, absolute filesystem paths, `javascript:`, protocol-relative
+   * `//`) is rejected and the file-tree URL is kept. Two pages that
+   * resolve to the same URL produce an error; the first page is kept and
+   * the later page is skipped.
+   *
+   * @default false
+   */
+  permalinks?: boolean | PermalinksOptions;
+
+  /**
+   * Inherit missing frontmatter keys from ancestor `_index` files.
+   *
+   * Off by default. `true` or `{}` fills keys a child does not set.
+   * `permalink` and `slug` are never inherited.
+   *
+   * @default false
+   */
+  cascade?: boolean | CascadeOptions;
 
   /**
    * Enable GitHub Flavored Markdown extensions.
@@ -913,6 +979,8 @@ export interface ResolvedOptions {
   ssg: ResolvedSsgOptions;
   siteMaps?: ResolvedSiteMapsOptions;
   publishState?: ResolvedPublishStateOptions;
+  permalinks?: ResolvedPermalinksOptions;
+  cascade?: ResolvedCascadeOptions;
   gfm: boolean;
   footnotes: boolean;
   tables: boolean;

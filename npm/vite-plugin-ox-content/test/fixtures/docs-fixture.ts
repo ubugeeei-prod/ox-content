@@ -109,6 +109,8 @@ export function createDocsResolvedOptions(
       readerChrome: false,
     },
     siteMaps: { enabled: false, robots: true, llms: true },
+    permalinks: { enabled: false },
+    cascade: { enabled: false },
     gfm: true,
     footnotes: true,
     tables: true,
