@@ -88,8 +88,8 @@ viewer edits.
 
 ## UI
 
-| Preset     | Behavior                                               |
-| ---------- | ------------------------------------------------------ |
+| Preset     | Behavior                                                        |
+| ---------- | --------------------------------------------------------------- |
 | `default`  | Toolbar plus stdio / stderr / config / provenance / timing tabs |
 | `compact`  | Run / type-check plus stdio and stderr                          |
 | `headless` | No DOM chrome; use the session API                              |

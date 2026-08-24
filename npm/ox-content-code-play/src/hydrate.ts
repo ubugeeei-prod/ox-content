@@ -126,7 +126,8 @@ function paintResult(element: HTMLElement, _payload: PlayPayload, result: RunRes
   }
   const focusStderr =
     Boolean(stderr) &&
-    (Boolean(result.stderr) || result.diagnostics.some((diagnostic) => diagnostic.severity === "error"));
+    (Boolean(result.stderr) ||
+      result.diagnostics.some((diagnostic) => diagnostic.severity === "error"));
   showPanel(element, focusStderr ? "stderr" : "stdio");
 }
 

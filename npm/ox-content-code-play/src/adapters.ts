@@ -44,7 +44,10 @@ export async function typecheckAdapter(request: AdapterRequest): Promise<Adapter
   }
 }
 
-function capabilityDisabled(request: AdapterRequest, action: "execute" | "typecheck"): AdapterResult {
+function capabilityDisabled(
+  request: AdapterRequest,
+  action: "execute" | "typecheck",
+): AdapterResult {
   return {
     status: "unsupported",
     stdio: [],
