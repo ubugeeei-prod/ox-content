@@ -1,10 +1,6 @@
 /**
- * The native tree-sitter highlighting path, plus the small hast helpers both
- * engines read code blocks with.
- *
- * Kept apart from the Shiki plumbing so the two engines stay legible on their
- * own, and arranged as a leaf: `highlight.ts` reaches in here, never the other
- * way round.
+ * The native tree-sitter highlighting path, plus the small hast helpers the
+ * per-block walk uses when the document pass cannot read the markup.
  */
 
 import type { Root, Element } from "hast";
@@ -46,10 +42,8 @@ export function normalizeClassName(className: unknown): string[] {
  * Highlights with the native tree-sitter engine, or `null` when it has no
  * grammar for `lang`.
  *
- * Parsing once and walking the tree is roughly eight times faster than
- * matching TextMate patterns line by line — 10.5 ms against 81.5 ms over the
- * documentation corpus's code blocks — and it emits the same
- * `--octc-shiki-*` markup, so themes are unaffected.
+ * It emits `--octc-shiki-*` markup (the `shiki` prefix is historical) so
+ * theme-color packages keep working.
  */
 export function highlightNatively(code: string, lang: string): string | null {
   try {
@@ -59,73 +53,11 @@ export function highlightNatively(code: string, lang: string): string | null {
   }
 }
 
-/** Whether the native engine claims `lang`. */
-export function nativeSupports(lang: string): boolean {
-  try {
-    return importNapiModuleSync().supportsHighlightLanguage(lang);
-  } catch {
-    return false;
-  }
-}
-
-/**
- * Whether any block in this tree still needs Shiki.
- *
- * Creating a Shiki highlighter parses two dozen TextMate grammars, about
- * 190 ms, so a document whose languages are all covered natively must not
- * touch it at all.
- */
-export function treeNeedsShiki(tree: Root, nativeThemeApplies: boolean): boolean {
-  if (!nativeThemeApplies) {
-    return true;
-  }
-  let needed = false;
-  const walk = (node: Root | Element): void => {
-    if (needed || !("children" in node)) {
-      return;
-    }
-    for (const child of node.children) {
-      if (child.type !== "element") {
-        continue;
-      }
-      if (child.tagName === "code") {
-        const lang = languageOf(child);
-        if (lang !== null && !nativeSupports(lang)) {
-          needed = true;
-          return;
-        }
-      }
-      walk(child);
-    }
-  };
-  walk(tree);
-  return needed;
-}
-
-/** The `language-*` class on a `<code>` element, if it carries one. */
-export function languageOf(codeElement: Element): string | null {
-  const className = normalizeClassName(codeElement.properties?.className).find((value) =>
-    value.startsWith("language-"),
-  );
-  return className ? className.slice("language-".length) : null;
-}
-
 /**
  * Highlights every code block in a rendered document in one native call.
  *
- * Returns the rewritten HTML and the languages it declined, so the caller
- * knows whether Shiki still has to run over the result. Returns `null` when
- * the native module is unavailable.
- *
- * This exists because the plumbing dwarfed the work: walking each page
- * through an HTML parser and serializer to find `<pre>` elements cost 139 ms
- * over the documentation corpus, and re-parsing each highlighted block to
- * splice it back cost another 38 ms, against 14 ms of actual highlighting.
- *
- * It runs off the main thread. The synchronous binding held the event loop
- * for the whole pass, so a build asking for several pages at once still got
- * them one at a time — `Promise.all` over the corpus measured the same as
- * awaiting each page in turn.
+ * Returns the rewritten HTML and the languages it declined. Pending languages
+ * stay unhighlighted. Returns `null` when the native module is unavailable.
  */
 export async function highlightDocumentNatively(html: string): Promise<NativeDocument | null> {
   try {
@@ -135,7 +67,7 @@ export async function highlightDocumentNatively(html: string): Promise<NativeDoc
   }
 }
 
-/** A block the native pass left for another highlighter. */
+/** A block the native pass left unhighlighted (no grammar). */
 export interface PendingBlock {
   language: string;
   source: string;
@@ -146,25 +78,9 @@ export interface NativeDocument {
   html: string;
   /**
    * Languages of elements the native pass could not read. Non-empty means the
-   * page has to be produced by the HTML-parser-based highlighter instead.
+   * page has to be produced by the per-block walk instead.
    */
   skipped: string[];
   /** Well-formed blocks whose language has no native grammar, in order. */
   pending: PendingBlock[];
-}
-
-/**
- * Splices `replacements` back over the blocks the native pass left pending.
- *
- * Entry `i` is the highlighted `<pre>` for pending block `i`, or an empty
- * string to leave that block alone. This keeps a page that needs one exotic
- * grammar — a Vue SFC, a Mermaid diagram — off the HTML round trip, rather
- * than surrendering the whole document for it.
- */
-export function applyPendingHighlights(html: string, replacements: string[]): string {
-  try {
-    return importNapiModuleSync().applyPendingHighlights(html, replacements);
-  } catch {
-    return html;
-  }
 }

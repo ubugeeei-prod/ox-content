@@ -5,7 +5,7 @@ description: Syntax highlighting, code annotations, and code imports for fenced 
 
 # Code Blocks
 
-Three opt-in features extend fenced code blocks: Shiki-based syntax
+Three opt-in features extend fenced code blocks: tree-sitter syntax
 highlighting, annotation syntax for highlighting and diff markers, and
 importing snippets from real source files. This site enables all three, so
 every example below is rendered live.
@@ -14,17 +14,17 @@ On-demand **Run** / **Typecheck** for samples is a separate package,
 [`@ox-content/code-play`](../packages/code-play.md). It is not part of
 `@ox-content/vite-plugin`. See the [Code Play example](../examples/code-play.md).
 
-| Option            | Type                                 | Default         |
-| ----------------- | ------------------------------------ | --------------- |
-| `highlight`       | `boolean`                            | `false`         |
-| `highlightTheme`  | `string` / `ThemeRegistration`       | `"github-dark"` |
-| `highlightLangs`  | `LanguageRegistration[]`             | `[]`            |
-| `codeAnnotations` | `boolean` / `CodeAnnotationsOptions` | `false`         |
-| `codeImports`     | `boolean` / `CodeImportOptions`      | `false`         |
+| Option            | Type                                 | Default |
+| ----------------- | ------------------------------------ | ------- |
+| `highlight`       | `boolean`                            | `false` |
+| `codeAnnotations` | `boolean` / `CodeAnnotationsOptions` | `false` |
+| `codeImports`     | `boolean` / `CodeImportOptions`      | `false` |
 
 ## Syntax Highlighting
 
-Highlighting is opt-in because it adds Shiki to the build:
+Highlighting is opt-in. When enabled, fenced blocks and language-tagged inline
+code go through the native tree-sitter engine. Languages with no native
+grammar stay as ordinary `<pre><code>` — they are not highlighted.
 
 ```ts
 import { oxContent } from "@ox-content/vite-plugin";
@@ -33,19 +33,17 @@ export default {
   plugins: [
     oxContent({
       highlight: true,
-      // Optional: a Shiki theme name or a full theme registration object.
-      highlightTheme: "github-dark",
-      // Optional: extra TextMate grammars for custom languages.
-      highlightLangs: [],
     }),
   ],
 };
 ```
 
-Every code block on this site is highlighted through this pipeline — this page
-uses a custom `highlightTheme` registration to match the site design. After
-highlighting, code block metadata (annotations, line numbers) is merged back
-into Shiki's output natively.
+Token colors are `--octc-shiki-*` CSS custom properties on
+`<pre class="shiki css-variables">`. Those names are historical: highlighting
+is tree-sitter only, but `@ox-content/theme-color-*` packages still resolve
+the same variables. Without a color scheme the properties fall back to GitHub
+Dark. After highlighting, code block metadata (annotations, line numbers) is
+merged back into the native output.
 
 ## Code Annotations
 

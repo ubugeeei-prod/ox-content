@@ -78,7 +78,6 @@
     "rehype-parse": "^9.0.1",
     "rehype-stringify": "^10.0.1",
     "rolldown": "^1.2.5",
-    "shiki": "^4.4.3",
     "typescript": "catalog:",
     "unified": "^11.0.5"
   },

@@ -33,9 +33,7 @@
 
 import type { ResolvedOptions, TransformResult, TocEntry } from "./types";
 import { highlightCode } from "./highlight";
-import { highlightPendingBlocks } from "./highlight-pending";
-import { applyPendingHighlights, highlightDocumentNatively } from "./highlight-native";
-import { CSS_VARIABLES_THEME } from "./shiki-theme";
+import { highlightDocumentNatively } from "./highlight-native";
 import { importNapiModule } from "./napi";
 import { transformMermaidStatic } from "./plugins/mermaid";
 import { normalizeSelfClosingEmbeds, transformBuiltinEmbeds } from "./plugins";
@@ -93,7 +91,7 @@ interface NapiBindings {
    * Restores code block metadata after JavaScript-side syntax highlighting.
    *
    * @param originalHtml - HTML before syntax highlighting
-   * @param highlightedHtml - HTML after Shiki highlighting
+   * @param highlightedHtml - HTML after native highlighting
    * @returns Highlighted HTML with original code block metadata reapplied
    */
   mergeHighlightedCodeBlocks: (originalHtml: string, highlightedHtml: string) => string;
@@ -434,7 +432,6 @@ function loadNapiBindings(): Promise<NapiBindings | null> {
  *
  * const options = resolveOptions({
  *   highlight: true,
- *   highlightTheme: 'github-dark',
  *   toc: true,
  *   gfm: true,
  *   mermaid: true,
@@ -552,34 +549,18 @@ export async function transformMarkdown(
 
   // Apply syntax highlighting if enabled
   if (options.highlight) {
-    // The native pass handles the whole document without an HTML parser in
-    // the loop. A block whose language it has no grammar for comes back as
-    // `pending`: Shiki highlights that block alone and the result is spliced
-    // straight back, so one Mermaid diagram no longer costs the page a parse
-    // and a serialize. Only markup the pass cannot read at all — where a text
-    // scan and a real HTML parser would disagree — surrenders the document to
-    // the tree walk.
-    const nativeTheme =
-      options.highlightTheme === undefined || options.highlightTheme === CSS_VARIABLES_THEME;
-    const native = nativeTheme ? await highlightDocumentNatively(html) : null;
+    // The native document pass handles the whole page without an HTML parser
+    // in the loop. Languages with no native grammar stay as the original
+    // `<pre><code>`. Only markup the pass cannot read — where a text scan and
+    // a real HTML parser would disagree — falls back to a native-only
+    // per-block walk.
+    const native = await highlightDocumentNatively(html);
 
     if (native && native.skipped.length === 0) {
       html = native.html;
-      if (native.pending.length > 0) {
-        const replacements = await highlightPendingBlocks(
-          native.pending,
-          options.highlightTheme,
-          options.highlightLangs,
-        );
-        html = applyPendingHighlights(html, replacements);
-      }
     } else {
       const originalHtml = html;
-      const highlightedHtml = await highlightCode(
-        html,
-        options.highlightTheme,
-        options.highlightLangs,
-      );
+      const highlightedHtml = await highlightCode(html);
       html = napi.mergeHighlightedCodeBlocks(originalHtml, highlightedHtml);
     }
   }

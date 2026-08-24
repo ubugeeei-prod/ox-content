@@ -27,7 +27,6 @@ export default defineConfig({
       outDir: "dist",
       gfm: true,
       highlight: true,
-      highlightTheme: "github-dark",
       // SSG is enabled by default
     }),
   ],
@@ -109,7 +108,7 @@ oxContent({
 - Static HTML generation (SSG) by default
 - Sidebar navigation (auto-generated from files)
 - Dark mode support
-- Syntax highlighting with Shiki
+- Native tree-sitter syntax highlighting
 - GitHub Flavored Markdown support
 - Frontmatter parsing
 - Table of contents generation

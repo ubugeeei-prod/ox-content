@@ -3,7 +3,6 @@ import { fileURLToPath } from "node:url";
 import { defineConfig } from "vite-plus";
 import { oxContent, defineTheme, defaultTheme } from "@ox-content/vite-plugin";
 import { codePlay } from "@ox-content/code-play";
-import { oxContentHighlightTheme } from "./ox-content-highlight-theme";
 
 /**
  * Ox Content Documentation Site
@@ -159,9 +158,8 @@ export default defineConfig(({ mode }) => {
           }),
         },
 
-        // Enable syntax highlighting with Shiki
+        // Enable native tree-sitter syntax highlighting
         highlight: true,
-        highlightTheme: oxContentHighlightTheme,
         codeAnnotations: {
           notation: "both",
         },

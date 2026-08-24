@@ -2,7 +2,6 @@
  * Type definitions for @ox-content/vite-plugin
  */
 
-import type { LanguageRegistration, ThemeRegistration } from "shiki";
 import type { ThemeConfig, ResolvedThemeConfig } from "./theme";
 import type { GitHubOptions, OgpOptions, TwitterEmbedOptions } from "./plugins";
 import type { ThemeComponent } from "./theme-renderer";
@@ -460,30 +459,15 @@ export interface OxContentOptions {
 
   /**
    * Enable syntax highlighting for code blocks.
+   *
+   * When true, fenced and language-tagged inline code is highlighted with the
+   * native tree-sitter engine. Token colors are `--octc-shiki-*` custom
+   * properties (the `shiki` prefix is historical) so theme-color packages keep
+   * working. Languages with no native grammar stay unhighlighted.
+   *
    * @default false
    */
   highlight?: boolean;
-
-  /**
-   * Syntax highlighting theme.
-   *
-   * Defaults to `'css-variables'`, which renders token colors as `--octc-shiki-*`
-   * custom properties so highlighting follows the active color scheme in both
-   * light and dark from one build. Without a `@ox-content/theme-color-*`
-   * package installed the properties fall back to GitHub Dark. Pass any bundled
-   * Shiki theme name to opt out and bake fixed colors in instead.
-   *
-   * @default 'css-variables'
-   */
-  highlightTheme?: string | ThemeRegistration;
-
-  /**
-   * Additional languages for syntax highlighting.
-   * Accepts Shiki LanguageRegistration objects (e.g., TextMate grammars).
-   * These are loaded alongside the built-in languages.
-   * @default []
-   */
-  highlightLangs?: LanguageRegistration[];
 
   /**
    * Code block line annotations for fenced code blocks.
@@ -714,8 +698,6 @@ export interface ResolvedOptions {
   strikethrough: boolean;
   autolinks: boolean;
   highlight: boolean;
-  highlightTheme: string | ThemeRegistration;
-  highlightLangs: LanguageRegistration[];
   codeAnnotations: ResolvedCodeAnnotationsOptions;
   wikiLinks: ResolvedWikiLinkOptions;
   emojiShortcodes: ResolvedEmojiShortcodeOptions;

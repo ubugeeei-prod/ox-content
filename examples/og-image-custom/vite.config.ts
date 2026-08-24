@@ -15,7 +15,6 @@ export default defineConfig({
       outDir: "dist",
       gfm: true,
       highlight: true,
-      highlightTheme: "github-dark",
 
       // Enable OG image generation with a custom template
       ogImage: true,
