@@ -74,13 +74,13 @@ Regular **Markdown** prose.
 </Callout>
 
 <>
-  <Icons.Star />
-  {label}
+<Icons.Star />
+{label}
 </>
 
 <Card {...cardProps} />
 
-{/* Hidden from the rendered page */}
+{/_ Hidden from the rendered page _/}
 ```
 
 Only tags that start with an uppercase letter are treated as JSX / components,
