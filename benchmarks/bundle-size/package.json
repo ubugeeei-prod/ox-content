@@ -10,19 +10,19 @@
     "clean": "rm -rf apps/*/dist apps/*/.vitepress/dist"
   },
   "dependencies": {
-    "@astrojs/markdown-remark": "^7.2.2",
+    "@astrojs/markdown-remark": "^7.2.4",
     "@mizchi/markdown": "^0.6.5",
     "@ox-content/napi": "workspace:*",
     "@tanstack/markdown": "^0.0.13",
     "markdown-it": "^15.0.0",
     "markdown-it-ts": "^1.0.10",
-    "marked": "^18.0.9",
+    "marked": "^18.0.10",
     "md4w": "^0.2.7",
     "md4x": "^0.0.29",
     "micromark": "^4.0.1",
     "remark-html": "^16.0.1",
     "remark-parse": "^11.0.0",
-    "satteri": "^0.9.5",
+    "satteri": "^0.10.5",
     "showdown": "^2.1.0",
     "unified": "^11.0.5"
   },
