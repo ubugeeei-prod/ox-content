@@ -1567,13 +1567,8 @@ export interface JsSsgSidebarItem {
   stickyCollapsed?: boolean
 }
 
-/** Opt-in `::: steps` ordered lists. */
+/** Opt-in `::: steps` wrappers. `enabled` defaults to `false`. */
 export interface JsStepsOptions {
-  /**
-   * Enable `::: steps` wrappers around ordered lists.
-   *
-   * Default: `false`.
-   */
   enabled?: boolean
 }
 
