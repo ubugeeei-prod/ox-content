@@ -101,6 +101,11 @@ impl<'a> Parser<'a> {
                     return self.parse_html_block(start, super::html::HtmlBlockStart::Other);
                 }
             }
+            b'i' | b'e' if self.options.mdx => {
+                if let Some(node) = self.try_parse_mdx_esm(start, trimmed_start)? {
+                    return Ok(Some(node));
+                }
+            }
             b'+' | b'0'..=b'9' => {
                 let line = self.line_at(start);
                 let trimmed = &line[trimmed_start - start..];

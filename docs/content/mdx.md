@@ -8,12 +8,14 @@ description: Embed Vue, React, or Svelte components in Markdown using island hyd
 Ox Content lets you embed framework components inside Markdown and `.mdx` files.
 It is worth understanding how this works, because it differs from "classic" MDX:
 
-- **JSX elements parse when MDX is enabled.** With `mdx: true` /
-  `ParserOptions.mdx`, the Rust parser turns PascalCase tags into
-  `MdxJsxFlowElement` / `MdxJsxTextElement` nodes (self-closing or simple
-  open/close, with literal, boolean, and `{expr}` attributes). `.md` stays
-  CommonMark + GFM unless that option is on. `import` / `export` and
-  `{expression}` children are not parsed yet.
+- **JSX elements and `import` / `export` parse when MDX is enabled.** With
+  `mdx: true` / `ParserOptions.mdx`, the Rust parser turns PascalCase tags
+  into `MdxJsxFlowElement` / `MdxJsxTextElement` nodes (self-closing or
+  simple open/close, with literal, boolean, and `{expr}` attributes), and
+  block-level ESM `import` / `export` statements into `MdxjsEsm` nodes. The
+  statement source is stored on the node; it is not executed. `.md` stays
+  CommonMark + GFM unless that option is on. `{expression}` children are
+  not parsed yet.
 - **Components are resolved by a framework plugin**, not the renderer. The
   React/Vue/Svelte plugins scan the content for PascalCase component tags,
   replace them with **island** placeholders, and hydrate them on the client.
@@ -73,10 +75,26 @@ Regular **Markdown** prose.
 ```
 
 Only tags that start with an uppercase letter are treated as JSX / components,
-so ordinary HTML (`<div>`, `<span>`, …) stays raw HTML. Tags inside fenced
-code blocks and inline code are **not** components, so you can document
-component usage without it being executed. Spreads, fragments, JSX comments,
-and `import` / `export` are not parsed yet.
+so ordinary HTML (`<div>`, `<span>`, …) stays raw HTML. Tags and ESM
+statements inside fenced code blocks and inline code are **not** parsed as
+MDX, so you can document usage without it being executed. Spreads, fragments,
+JSX comments, and `{expression}` children are not parsed yet.
+
+When MDX is on, module-level `import` and `export` become `MdxjsEsm` nodes:
+
+```md
+import Foo from "./Foo"
+import { Foo, Bar as Baz } from "./mod"
+
+export const meta = { title: "Hi" }
+export default Foo
+```
+
+The parser keeps the source string (including hostile path text) and does
+not read the filesystem. Framework plugins may later resolve local
+components from that source. Invalid or unclosed `import` / `export` lines
+stay ordinary Markdown. This documentation site does not enable MDX
+globally, so the snippet above is an example, not a live module.
 
 ### Props
 

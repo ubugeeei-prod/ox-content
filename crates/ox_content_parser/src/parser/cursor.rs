@@ -167,6 +167,9 @@ impl<'a> Parser<'a> {
                 let line = self.line_at(line_start);
                 Self::try_parse_list_interrupt(&line[trimmed_start - line_start..])
             }
+            b'i' | b'e' => {
+                self.options.mdx && super::mdx_esm::looks_like_esm(self.source, trimmed_start)
+            }
             _ => false,
         };
 
