@@ -5,6 +5,7 @@ import {
   remainderPath,
   resolveLocaleSwitcherOption,
 } from "./locale-switcher";
+import { resolveSsgOptions } from "./ssg";
 
 describe("resolveLocaleSwitcherOption", () => {
   it("treats omitted as false", () => {
@@ -17,6 +18,20 @@ describe("resolveLocaleSwitcherOption", () => {
 
   it("treats an empty object as true", () => {
     expect(resolveLocaleSwitcherOption({})).toBe(true);
+  });
+});
+
+describe("resolveSsgOptions localeSwitcher", () => {
+  it("disables localeSwitcher by default", () => {
+    expect(resolveSsgOptions(undefined).localeSwitcher).toBe(false);
+  });
+
+  it("enables localeSwitcher when requested", () => {
+    expect(resolveSsgOptions({ localeSwitcher: true }).localeSwitcher).toBe(true);
+  });
+
+  it("enables localeSwitcher when an object is passed", () => {
+    expect(resolveSsgOptions({ localeSwitcher: {} }).localeSwitcher).toBe(true);
   });
 });
 

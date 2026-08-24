@@ -70,18 +70,6 @@ describe("resolveSsgOptions", () => {
     });
   });
 
-  it("disables localeSwitcher by default", () => {
-    expect(resolveSsgOptions(undefined).localeSwitcher).toBe(false);
-  });
-
-  it("enables localeSwitcher when requested", () => {
-    expect(resolveSsgOptions({ localeSwitcher: true }).localeSwitcher).toBe(true);
-  });
-
-  it("enables localeSwitcher when an object is passed", () => {
-    expect(resolveSsgOptions({ localeSwitcher: {} }).localeSwitcher).toBe(true);
-  });
-
   it("disables notFound by default", () => {
     expect(resolveSsgOptions(undefined).notFound?.enabled).toBe(false);
   });
