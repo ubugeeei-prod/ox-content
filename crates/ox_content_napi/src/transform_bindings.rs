@@ -154,6 +154,9 @@ pub fn transform(source: String, options: Option<JsTransformOptions>) -> Transfo
             frontmatter: "{}".to_string(),
             toc: vec![],
             errors: vec![crate::ffi::UNEXPECTED_PANIC.to_string()],
+            imports: vec![],
+            exports: vec![],
+            components: vec![],
         },
     )
 }
