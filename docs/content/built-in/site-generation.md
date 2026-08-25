@@ -66,7 +66,8 @@ export default defineConfig({
 | `bodyStart`       | —              | Raw markup after `<body>` (bare mode).                                                                |
 | `bodyEnd`         | —              | Raw markup before `</body>` (bare mode).                                                              |
 | `siteName`        | —              | Suffix for `<title>` and OG site name.                                                                |
-| `siteUrl`         | —              | Origin used for absolute OG URLs.                                                                     |
+| `siteUrl`         | —              | Origin used for absolute OG URLs, canonical, and hreflang. See [SEO](./seo.md).                       |
+| `headValidation`  | `false`        | `warn` or `strict` for invalid head descriptors. See [SEO](./seo.md).                                 |
 | `ogImage`         | —              | Static fallback OG image URL.                                                                         |
 | `generateOgImage` | `false`        | Per-page OG images (see below).                                                                       |
 | `lastUpdated`     | `false`        | Show the git last-commit time per page.                                                               |
@@ -305,6 +306,8 @@ array order.
 
 - [Previous / Next](./pagination.md) — opt-in previous and next page links.
 - [Breadcrumbs](./breadcrumbs.md) — opt-in trail from the site root through sidebar ancestors.
+- [Page head](./page-head.md) — build-time title / meta / link / JSON-LD API.
+- [SEO](./seo.md) — canonical, robots, hreflang, and validation.
 - [JSON-LD](./json-ld.md) — opt-in TechArticle / WebSite / BreadcrumbList structured data.
 - [Reader Chrome](./reader-chrome.md) — opt-in copy, outbound icons, and back-to-top.
 - [Locale Switcher](./locale-switcher.md) — opt-in header locale list.

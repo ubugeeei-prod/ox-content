@@ -1,22 +1,26 @@
 use napi_derive::napi;
 
 use crate::{
-    JsA11y, JsReaderChrome, JsSsgBarePage, JsSsgConfig, JsSsgExternalizedAssets,
-    JsSsgGeneratedHtmlPage, JsSsgNavGroup, JsSsgNavigationGroup, JsSsgPageData, JsSsgRoutePaths,
-    JsSsgSidebarItem, JsTeamOptions,
+    JsHeadDiagnostic, JsReaderChrome, JsSsgBarePage, JsSsgConfig, JsSsgExternalizedAssets,
+    JsSsgGeneratedHtmlPage, JsSsgHtmlResult, JsSsgNavGroup, JsSsgNavigationGroup, JsSsgPageData,
+    JsSsgRoutePaths, JsSsgSidebarItem, JsTeamOptions,
 };
 
 mod converters;
 mod git;
 pub use git::*;
+mod head;
+pub use head::render_head;
 mod section_index;
 pub use section_index::*;
 
 use converters::{
-    convert_entry_page_config, convert_generated_html_page, convert_json_ld, convert_nav_item,
-    convert_navigation_group, convert_pager_override, convert_sidebar_item, convert_theme_config,
-    flatten_toc_entries, map_generated_html_page, map_nav_group, map_route_paths, map_shared_asset,
+    convert_a11y, convert_entry_page_config, convert_generated_html_page, convert_json_ld,
+    convert_nav_item, convert_navigation_group, convert_pager_override, convert_sidebar_item,
+    convert_theme_config, flatten_toc_entries, map_generated_html_page, map_nav_group,
+    map_route_paths, map_shared_asset,
 };
+use head::convert_head_validation;
 
 /// Resolves all output and public route paths for an SSG page.
 #[napi(js_name = "resolveSsgRoutePaths")]
@@ -150,7 +154,7 @@ pub fn generate_ssg_html(
     page_data: JsSsgPageData,
     nav_groups: Vec<JsSsgNavGroup>,
     config: JsSsgConfig,
-) -> String {
+) -> JsSsgHtmlResult {
     // Convert NAPI types to ox_content_ssg types
     let layout = page_data.layout.unwrap_or_default();
     let content =
@@ -179,6 +183,8 @@ pub fn generate_ssg_html(
         next: convert_pager_override(page_data.next),
         breadcrumbs: page_data.breadcrumbs,
         chrome: convert_page_chrome_flags(page_data.chrome),
+        robots: page_data.robots,
+        canonical: page_data.canonical,
     };
 
     let ssg_nav_groups: Vec<ox_content_ssg::NavGroup> = nav_groups
@@ -196,6 +202,11 @@ pub fn generate_ssg_html(
         base: config.base,
         breadcrumb_root_href: config.breadcrumb_root_href,
         og_image: config.og_image,
+        site_url: config.site_url.and_then(|url| {
+            let trimmed = url.trim().to_string();
+            (!trimmed.is_empty()).then_some(trimmed)
+        }),
+        head_validation: convert_head_validation(config.head_validation),
         theme: convert_theme_config(config.theme),
         locale: config.locale,
         available_locales: config.available_locales.map(|locales| {
@@ -223,15 +234,15 @@ pub fn generate_ssg_html(
         json_ld: convert_json_ld(config.json_ld),
     };
 
-    ox_content_ssg::generate_html(&ssg_page_data, &ssg_nav_groups, &ssg_config)
-}
-
-fn convert_a11y(a11y: Option<JsA11y>) -> ox_content_ssg::A11y {
-    match a11y {
-        None => ox_content_ssg::A11y::disabled(),
-        Some(a11y) => {
-            ox_content_ssg::A11y { skip_link_label: Some(a11y.skip_link_label.unwrap_or_default()) }
-        }
+    let generated =
+        ox_content_ssg::generate_html_result(&ssg_page_data, &ssg_nav_groups, &ssg_config);
+    JsSsgHtmlResult {
+        html: generated.html,
+        diagnostics: generated
+            .diagnostics
+            .into_iter()
+            .map(|d| JsHeadDiagnostic { strict: d.strict, message: d.message })
+            .collect(),
     }
 }
 

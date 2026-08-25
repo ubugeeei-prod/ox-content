@@ -51,10 +51,12 @@ oxContent({
 });
 ```
 
-| Field         | Default | Effect                                                                          |
-| ------------- | ------- | ------------------------------------------------------------------------------- |
-| `breadcrumbs` | `true`  | Emit `BreadcrumbList` only when a visible trail exists. Set `false` to hide it. |
-| `publisher`   | omitted | Optional `{ name?, url? }`. Missing fields are not invented.                    |
+| Field         | Default       | Effect                                                                          |
+| ------------- | ------------- | ------------------------------------------------------------------------------- |
+| `breadcrumbs` | `true`        | Emit `BreadcrumbList` only when a visible trail exists. Set `false` to hide it. |
+| `publisher`   | omitted       | Optional `{ name?, url? }`. Missing fields are not invented.                    |
+| `type`        | `TechArticle` | Page `@type`: `TechArticle`, `BlogPosting`, or `WebPage`.                       |
+| `graph`       | omitted       | Extra `@graph` objects. Invalid JSON is dropped.                                |
 
 ## What is emitted
 
@@ -99,6 +101,8 @@ Bare mode never emits JSON-LD.
 ## Related
 
 - [Breadcrumbs](./breadcrumbs.md)
+- [Page head](./page-head.md)
+- [SEO](./seo.md)
 - [Site Generation](./site-generation.md)
 - [Built-in Features overview](../built-in-features.md)
 - Tracking issue: [#696](https://github.com/ubugeeei-prod/ox-content/issues/696)

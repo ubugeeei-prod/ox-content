@@ -62,7 +62,8 @@ export default defineConfig({
 | `bodyStart`       | —              | `<body>` の直後に足す生マークアップ（bare モード）。                                                     |
 | `bodyEnd`         | —              | `</body>` の直前に足す生マークアップ（bare モード）。                                                    |
 | `siteName`        | —              | `<title>` の接尾辞と OG サイト名。                                                                       |
-| `siteUrl`         | —              | 絶対 OG URL に使うオリジン。                                                                             |
+| `siteUrl`         | —              | 絶対 OG URL、canonical、hreflang に使うオリジン。[SEO](./seo.md)。                                       |
+| `headValidation`  | `false`        | 不正な head デスクリプタの `warn` / `strict`。[SEO](./seo.md)。                                          |
 | `ogImage`         | —              | 静的フォールバックの OG 画像 URL。                                                                       |
 | `generateOgImage` | `false`        | ページごとの OG 画像（後述）。                                                                           |
 | `lastUpdated`     | `false`        | ページごとの git 最終コミット時刻を出す。                                                                |

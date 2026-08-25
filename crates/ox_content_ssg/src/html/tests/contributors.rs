@@ -14,6 +14,8 @@ fn page(contributors: Vec<Contributor>) -> PageData {
         next: None,
         breadcrumbs: None,
         chrome: PageChromeFlags::default(),
+        robots: None,
+        canonical: None,
     }
 }
 
@@ -34,6 +36,8 @@ fn config() -> SsgConfig {
         a11y: A11y::default(),
         page_chrome: false,
         json_ld: JsonLd::default(),
+        site_url: None,
+        head_validation: Default::default(),
     }
 }
 

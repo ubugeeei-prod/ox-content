@@ -49,10 +49,12 @@ oxContent({
 });
 ```
 
-| フィールド    | 既定   | 効果                                                                 |
-| ------------- | ------ | -------------------------------------------------------------------- |
-| `breadcrumbs` | `true` | 表示用の道筋があるときだけ `BreadcrumbList` を出す。`false` で隠す。 |
-| `publisher`   | 省略   | 任意の `{ name?, url? }`。未設定のフィールドは捏造しない。           |
+| フィールド    | 既定          | 効果                                                                 |
+| ------------- | ------------- | -------------------------------------------------------------------- |
+| `breadcrumbs` | `true`        | 表示用の道筋があるときだけ `BreadcrumbList` を出す。`false` で隠す。 |
+| `publisher`   | 省略          | 任意の `{ name?, url? }`。未設定のフィールドは捏造しない。           |
+| `type`        | `TechArticle` | ページの `@type`。`TechArticle` / `BlogPosting` / `WebPage`。        |
+| `graph`       | 省略          | 追加の `@graph` オブジェクト。不正な JSON は落とす。                 |
 
 ## 何が出力されるか
 
@@ -93,6 +95,8 @@ bare モードでは JSON-LD を出しません。
 
 ## 関連
 
+- [ページ head](./page-head.md)
+- [SEO](./seo.md)
 - [パンくず](./breadcrumbs.md)
 - [サイト生成](./site-generation.md)
 - [組み込み機能の概要](../built-in-features.md)

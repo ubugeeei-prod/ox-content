@@ -68,6 +68,7 @@ prepareSource
 prepareSourceRaw
 render
 renderFrameworkComponentCode
+renderHead
 renderSsgSectionIndex
 resolveSsgNavigationGroups
 resolveSsgRoutePaths

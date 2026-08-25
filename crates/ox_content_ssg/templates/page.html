@@ -5,23 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <meta name="color-scheme" content="light dark">
   <script>{{ theme_bootstrap_js|safe }}</script>
-  <title>{{ document_title }}</title>
-  {% if let Some(desc) = description %}
-  <meta name="description" content="{{ desc }}">
-  <meta property="og:description" content="{{ desc }}">
-  <meta name="twitter:description" content="{{ desc }}">
-  {% endif %}
-  <meta property="og:type" content="website">
-  <meta property="og:title" content="{{ document_title }}">
-  {% if let Some(img) = og_image %}
-  <meta property="og:image" content="{{ img }}">
-  <meta name="twitter:image" content="{{ img }}">
-  {% endif %}
-  <meta name="twitter:card" content="summary_large_image">
-  <meta name="twitter:title" content="{{ document_title }}">
-{%- if let Some(json_ld) = json_ld %}
-  <script type="application/ld+json">{{ json_ld|safe }}</script>
-{%- endif %}
+{{ page_head|safe }}
   <!-- ox-content:styles:start -->
   <style>{{ css|safe }}</style>
   <!-- ox-content:styles:end -->

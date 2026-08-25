@@ -26,14 +26,11 @@ expression: "super::snapshot_text(&html)"
 })();
 </script>
   <title>Test Page - Test Site</title>
-<sp><sp>
   <meta name="description" content="Test description">
   <meta property="og:description" content="Test description">
   <meta name="twitter:description" content="Test description">
-<sp><sp>
   <meta property="og:type" content="website">
   <meta property="og:title" content="Test Page - Test Site">
-<sp><sp>
   <meta name="twitter:card" content="summary_large_image">
   <meta name="twitter:title" content="Test Page - Test Site">
   <!-- ox-content:styles:start -->

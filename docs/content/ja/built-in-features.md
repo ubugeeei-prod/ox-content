@@ -36,6 +36,8 @@ Ox Content は、よく使うドキュメントの挙動を既定で載せ、非
 | [品質チェック](./built-in/quality-checks.md)             | lint、型チェック、docs テスト、HTML サニタイズ                                 |
 | [型ホバー](./built-in/typed-hover.md)                    | `twoslash` フェンスのビルド時 TypeScript 型オーバーレイ                        |
 | [サイト生成](./built-in/site-generation.md)              | SSG、OG 画像、編集リンク、API ドキュメント                                     |
+| [ページ head](./built-in/page-head.md)                   | ビルド時の Unhead 互換 title / meta / link / JSON-LD API                       |
+| [SEO](./built-in/seo.md)                                 | その API 上の canonical、robots、hreflang、検証                                |
 | [前へ / 次へ](./built-in/pagination.md)                  | サイドバー順の前後リンク                                                       |
 | [パンくず](./built-in/breadcrumbs.md)                    | ルートからサイドバー祖先までの道筋                                             |
 | [JSON-LD](./built-in/json-ld.md)                         | オプトインの TechArticle / WebSite / BreadcrumbList                            |
@@ -86,6 +88,9 @@ Ox Content は、よく使うドキュメントの挙動を既定で載せ、非
 | 編集リンク           | `editThisPage`                                                                                                | `false`       | [サイト生成](./built-in/site-generation.md)              |
 | ページ送り           | `ssg.pagination`                                                                                              | `false`       | [前へ / 次へ](./built-in/pagination.md)                  |
 | パンくず             | `ssg.breadcrumbs` / `theme.breadcrumbs`                                                                       | `false`       | [パンくず](./built-in/breadcrumbs.md)                    |
+| ページ head          | `renderHead`                                                                                                  | ビルド時      | [ページ head](./built-in/page-head.md)                   |
+| SEO タグ             | `ssg.siteUrl`、frontmatter `robots` / `canonical`                                                             | 設定時のみ    | [SEO](./built-in/seo.md)                                 |
+| head 検証            | `ssg.headValidation`                                                                                          | `false`       | [SEO](./built-in/seo.md)                                 |
 | 構造化データ         | `ssg.jsonLd`                                                                                                  | `false`       | [JSON-LD](./built-in/json-ld.md)                         |
 | リーダー chrome      | `ssg.readerChrome`                                                                                            | `false`       | [リーダー chrome](./built-in/reader-chrome.md)           |
 | ロケールスイッチャー | `ssg.localeSwitcher`                                                                                          | `false`       | [ロケールスイッチャー](./built-in/locale-switcher.md)    |

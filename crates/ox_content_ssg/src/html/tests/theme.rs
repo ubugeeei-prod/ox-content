@@ -17,6 +17,8 @@ fn test_generate_html_with_theme() {
         next: None,
         breadcrumbs: None,
         chrome: PageChromeFlags::default(),
+        robots: None,
+        canonical: None,
     };
 
     let nav_groups = vec![];
@@ -47,6 +49,8 @@ fn test_generate_html_with_theme() {
         a11y: A11y::default(),
         page_chrome: false,
         json_ld: JsonLd::default(),
+        site_url: None,
+        head_validation: Default::default(),
     };
 
     let html = generate_html(&page_data, &nav_groups, &config);
@@ -69,6 +73,8 @@ fn test_generate_html_with_custom_social_link() {
         next: None,
         breadcrumbs: None,
         chrome: PageChromeFlags::default(),
+        robots: None,
+        canonical: None,
     };
     let config = SsgConfig {
         site_name: "Social Site".to_string(),
@@ -85,6 +91,8 @@ fn test_generate_html_with_custom_social_link() {
         a11y: A11y::default(),
         page_chrome: false,
         json_ld: JsonLd::default(),
+        site_url: None,
+        head_validation: Default::default(),
         theme: Some(ThemeConfig {
             social_links: Some(SocialLinks {
                 links: Some(vec![SocialLink {

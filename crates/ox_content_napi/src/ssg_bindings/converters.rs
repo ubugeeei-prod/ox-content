@@ -1,5 +1,5 @@
 use crate::{
-    JsEntryPageConfig, JsHeaderNavItem, JsJsonLd, JsPagerOverride, JsSsgGeneratedHtmlPage,
+    JsA11y, JsEntryPageConfig, JsHeaderNavItem, JsJsonLd, JsPagerOverride, JsSsgGeneratedHtmlPage,
     JsSsgNavGroup, JsSsgNavItem, JsSsgNavigationGroup, JsSsgNavigationItem, JsSsgRoutePaths,
     JsSsgSharedAsset, JsSsgSidebarItem, JsThemeColors, JsThemeConfig, TocEntry,
 };
@@ -270,6 +270,17 @@ pub(super) fn convert_json_ld(json_ld: Option<JsJsonLd>) -> ox_content_ssg::Json
                     let trimmed = url.trim().to_string();
                     (!trimmed.is_empty()).then_some(trimmed)
                 }),
+                page_type: opts.page_type.and_then(|value| {
+                    let trimmed = value.trim().to_string();
+                    (!trimmed.is_empty()).then_some(trimmed)
+                }),
+                graph: opts
+                    .graph
+                    .unwrap_or_default()
+                    .into_iter()
+                    .filter_map(|node| serde_json::from_str(&node).ok())
+                    .filter(|node: &serde_json::Value| node.is_object())
+                    .collect(),
             }
         }
     }
@@ -286,4 +297,13 @@ pub(super) fn flatten_toc_entries(entries: Vec<TocEntry>) -> Vec<ox_content_ssg:
         flat.extend(flatten_toc_entries(entry.children));
     }
     flat
+}
+
+pub(super) fn convert_a11y(a11y: Option<JsA11y>) -> ox_content_ssg::A11y {
+    match a11y {
+        None => ox_content_ssg::A11y::disabled(),
+        Some(a11y) => {
+            ox_content_ssg::A11y { skip_link_label: Some(a11y.skip_link_label.unwrap_or_default()) }
+        }
+    }
 }

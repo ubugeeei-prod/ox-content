@@ -51,6 +51,8 @@ fn page(path: &str) -> PageData {
         next: None,
         breadcrumbs: None,
         chrome: PageChromeFlags::default(),
+        robots: None,
+        canonical: None,
     }
 }
 
@@ -71,6 +73,8 @@ fn config(pagination: bool) -> SsgConfig {
         a11y: crate::A11y::default(),
         page_chrome: false,
         json_ld: crate::JsonLd::default(),
+        site_url: None,
+        head_validation: Default::default(),
     }
 }
 

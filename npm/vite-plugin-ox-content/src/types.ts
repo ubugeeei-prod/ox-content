@@ -337,6 +337,16 @@ export interface SsgOptions {
   jsonLd?: boolean | JsonLdOptions;
 
   /**
+   * Validate custom page-head descriptors during SSG.
+   *
+   * `false` / omitted drops invalid values silently. `warn` logs them.
+   * `strict` fails the build on unsafe URLs or invalid hreflang.
+   *
+   * @default false
+   */
+  headValidation?: false | "warn" | "strict";
+
+  /**
    * Opt-in copy buttons, outbound-link icons, and a back-to-top control.
    *
    * Disabled when omitted or `false`. `true` enables all three with defaults.
@@ -552,7 +562,21 @@ export interface JsonLdOptions {
    * Logo and other Organization fields are never invented.
    */
   publisher?: JsonLdPublisherOptions;
+
+  /**
+   * Page `@type`. Defaults to `TechArticle`.
+   */
+  type?: JsonLdPageType;
+
+  /**
+   * Extra `@graph` nodes. Only objects are kept. The build does not invent
+   * fields inside them.
+   */
+  graph?: Record<string, unknown>[];
 }
+
+/** JSON-LD page node `@type`. Unknown values fall back to `TechArticle`. */
+export type JsonLdPageType = "TechArticle" | "BlogPosting" | "WebPage";
 
 /**
  * Optional JSON-LD publisher. Empty or omitted fields are left out.
@@ -575,6 +599,8 @@ export type ResolvedJsonLd =
         name?: string;
         url?: string;
       };
+      type?: JsonLdPageType;
+      graph?: Record<string, unknown>[];
     };
 
 /**
@@ -601,6 +627,10 @@ export interface ResolvedSsgOptions {
   pagination: boolean;
   breadcrumbs: boolean;
   jsonLd: ResolvedJsonLd;
+  /**
+   * Present after `resolveSsgOptions`. Omitted / `false` means off.
+   */
+  headValidation?: false | "warn" | "strict";
   readerChrome: ResolvedReaderChrome;
   localeSwitcher: boolean;
   a11y: ResolvedA11y;

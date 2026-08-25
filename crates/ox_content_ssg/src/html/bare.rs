@@ -1,6 +1,7 @@
 use askama::Template;
 
 use super::BarePageTemplate;
+use super::head::render_bare_head;
 
 /// Everything the bare template can put around a rendered page body.
 ///
@@ -47,21 +48,12 @@ pub fn generate_bare_html(content: &str, title: &str) -> String {
 /// Generates a bare HTML page with whatever head metadata and injected markup
 /// the caller has.
 pub fn generate_bare_page(data: &BarePageData<'_>) -> String {
-    let has_metadata = data.description.is_some()
-        || data.canonical_url.is_some()
-        || data.site_name.is_some()
-        || data.og_image.is_some();
-
+    let page_head = render_bare_head(data);
     BarePageTemplate {
         lang: if data.lang.is_empty() { "en" } else { data.lang },
         dir: data.dir,
-        title: data.title,
+        page_head: &page_head.html,
         content: data.content,
-        has_metadata,
-        description: data.description,
-        canonical_url: data.canonical_url,
-        site_name: data.site_name,
-        og_image: data.og_image,
         head: data.head,
         body_start: data.body_start,
         body_end: data.body_end,

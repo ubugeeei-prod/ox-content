@@ -196,7 +196,7 @@ export declare function generateSsgBareHtml(content: string, title: string): str
 export declare function generateSsgBarePage(page: JsSsgBarePage): string
 
 /** Generates SSG HTML page with navigation and search. */
-export declare function generateSsgHtml(pageData: JsSsgPageData, navGroups: Array<JsSsgNavGroup>, config: JsSsgConfig): string
+export declare function generateSsgHtml(pageData: JsSsgPageData, navGroups: Array<JsSsgNavGroup>, config: JsSsgConfig): JsSsgHtmlResult
 
 /** Returns unique git authors for a file. Empty when git is missing or fails. */
 export declare function getGitContributors(filePath: string, root?: string | undefined | null): Array<JsGitContributor>
@@ -922,6 +922,12 @@ export interface JsGraphOptions {
   externalPackageSources?: Array<JsExternalPackageSource>
 }
 
+/** One page-head validation finding. */
+export interface JsHeadDiagnostic {
+  strict: boolean
+  message: string
+}
+
 /** Header nav link or dropdown. */
 export interface JsHeaderNavItem {
   /** Display label. */
@@ -1080,6 +1086,10 @@ export interface JsJsonLd {
   publisher?: JsJsonLdPublisher
   /** Site origin used for `@id` / `url`. */
   siteUrl?: string
+  /** Page `@type`. Defaults to `TechArticle`. */
+  pageType?: string
+  /** Extra `@graph` nodes as JSON object strings. */
+  graph?: Array<string>
 }
 
 /** Optional JSON-LD publisher. Only configured fields are emitted. */
@@ -1608,6 +1618,10 @@ export interface JsSsgConfig {
   breadcrumbRootHref?: string
   /** OG image URL. */
   ogImage?: string
+  /** Site origin used for canonical / `og:url` / hreflang. */
+  siteUrl?: string
+  /** `off` / `warn` / `strict`. Omitted is off. */
+  headValidation?: string
   /** Theme configuration. */
   theme?: JsThemeConfig
   /** Current locale for this page. */
@@ -1658,6 +1672,12 @@ export interface JsSsgGeneratedHtmlPage {
   outputPath: string
   /** HTML content. */
   html: string
+}
+
+/** Themed SSG HTML plus page-head diagnostics. */
+export interface JsSsgHtmlResult {
+  html: string
+  diagnostics: Array<JsHeadDiagnostic>
 }
 
 /** Navigation group for SSG. */
@@ -1724,6 +1744,10 @@ export interface JsSsgPageData {
   layout?: string
   /** Per-page chrome flags. Honored only when page chrome is enabled. */
   chrome?: JsPageChromeFlags
+  /** Frontmatter `robots`. */
+  robots?: string
+  /** Frontmatter `canonical`. */
+  canonical?: string
 }
 
 /** Resolved SSG output and public route paths. */
@@ -2370,6 +2394,9 @@ export declare function render(astJson: string): RenderResult
  * `mode` defaults to `"expression"` for backward compatibility.
  */
 export declare function renderFrameworkComponentCode(html: string, target: string, islands?: Array<JsFrameworkComponentIsland> | undefined | null, mode?: string | undefined | null): string
+
+/** Resolve Unhead-compatible page-head descriptors to HTML. */
+export declare function renderHead(inputJson: string): JsSsgHtmlResult
 
 /** Render result containing the HTML output. */
 export interface RenderResult {

@@ -23,6 +23,30 @@ fn page(
         next: None,
         breadcrumbs: None,
         chrome: PageChromeFlags::default(),
+        robots: None,
+        canonical: None,
+    }
+}
+
+fn config(site_name: &str, base: &str, locale: Option<&str>) -> SsgConfig {
+    SsgConfig {
+        site_name: site_name.to_string(),
+        base: base.to_string(),
+        breadcrumb_root_href: None,
+        og_image: None,
+        theme: None,
+        locale: locale.map(str::to_string),
+        available_locales: None,
+        pagination: false,
+        breadcrumbs: false,
+        reader_chrome: ReaderChrome::default(),
+        locale_switcher: false,
+        locale_paths: vec![],
+        a11y: A11y::default(),
+        page_chrome: false,
+        json_ld: JsonLd::default(),
+        site_url: None,
+        head_validation: Default::default(),
     }
 }
 
@@ -49,23 +73,7 @@ fn test_generate_html() {
         collapsed: None,
         sticky_collapsed: None,
     }];
-    let config = SsgConfig {
-        site_name: "Test Site".to_string(),
-        base: "/docs/".to_string(),
-        breadcrumb_root_href: None,
-        og_image: None,
-        theme: None,
-        locale: None,
-        available_locales: None,
-        pagination: false,
-        breadcrumbs: false,
-        reader_chrome: ReaderChrome::default(),
-        locale_switcher: false,
-        locale_paths: vec![],
-        a11y: A11y::default(),
-        page_chrome: false,
-        json_ld: JsonLd::default(),
-    };
+    let config = config("Test Site", "/docs/", None);
     let html = generate_html(&page_data, &nav_groups, &config);
 
     insta::assert_snapshot!(super::snapshot_text(&html));
@@ -281,24 +289,7 @@ fn test_mobile_menu_css_stays_reachable_and_touch_safe() {
 #[test]
 fn test_generate_html_without_toc_omits_outline() {
     let page_data = page("No TOC", None, "<p>Content</p>", vec![], None, "no-toc");
-    let config = SsgConfig {
-        site_name: "Test Site".to_string(),
-        base: "/".to_string(),
-        breadcrumb_root_href: None,
-        og_image: None,
-        theme: None,
-        locale: None,
-        available_locales: None,
-        pagination: false,
-        breadcrumbs: false,
-        reader_chrome: ReaderChrome::default(),
-        locale_switcher: false,
-        locale_paths: vec![],
-        a11y: A11y::default(),
-        page_chrome: false,
-        json_ld: JsonLd::default(),
-    };
-
+    let config = config("Test Site", "/", None);
     let html = generate_html(&page_data, &[], &config);
     insta::assert_snapshot!(super::snapshot_text(&html));
 }
@@ -310,23 +301,7 @@ fn test_format_last_updated_rejects_invalid_timestamps() {
 
 #[test]
 fn test_html_locale_attrs_use_current_locale_and_direction() {
-    let config = SsgConfig {
-        site_name: "Localized".to_string(),
-        base: "/".to_string(),
-        breadcrumb_root_href: None,
-        og_image: None,
-        theme: None,
-        locale: Some("ar".to_string()),
-        available_locales: None,
-        pagination: false,
-        breadcrumbs: false,
-        reader_chrome: ReaderChrome::default(),
-        locale_switcher: false,
-        locale_paths: vec![],
-        a11y: A11y::default(),
-        page_chrome: false,
-        json_ld: JsonLd::default(),
-    };
+    let config = config("Localized", "/", Some("ar"));
 
     assert_eq!(html_locale_attrs(&config), ("ar", "rtl"));
 

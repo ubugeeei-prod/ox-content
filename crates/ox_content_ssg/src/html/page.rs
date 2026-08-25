@@ -6,6 +6,19 @@ use super::header_chrome::PageChromeFlags;
 use super::json_ld::JsonLd;
 use super::reader_chrome::ReaderChrome;
 
+/// How invalid page-head descriptors are reported.
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Default, Serialize, Deserialize)]
+#[serde(rename_all = "lowercase")]
+pub enum HeadValidation {
+    /// Drop invalid values silently.
+    #[default]
+    Off,
+    /// Keep valid tags and record warnings.
+    Warn,
+    /// Record errors that a caller can treat as fatal.
+    Strict,
+}
+
 /// Hero action button.
 #[derive(Debug, Clone, Serialize, Deserialize, Default)]
 pub struct HeroAction {
@@ -183,6 +196,12 @@ pub struct PageData {
     /// Per-page chrome flags. Honored only when `SsgConfig::page_chrome` is on.
     #[serde(default)]
     pub chrome: PageChromeFlags,
+    /// Frontmatter `robots`. Omitted when empty.
+    #[serde(default)]
+    pub robots: Option<String>,
+    /// Frontmatter `canonical`. Overrides the `siteUrl` + path URL.
+    #[serde(default)]
+    pub canonical: Option<String>,
 }
 
 /// SSG configuration.
@@ -197,6 +216,12 @@ pub struct SsgConfig {
     pub breadcrumb_root_href: Option<String>,
     /// OG image URL.
     pub og_image: Option<String>,
+    /// Site origin used for canonical / `og:url` / hreflang. Not invented.
+    #[serde(default)]
+    pub site_url: Option<String>,
+    /// How invalid head descriptors are reported.
+    #[serde(default)]
+    pub head_validation: HeadValidation,
     /// Theme configuration.
     pub theme: Option<ThemeConfig>,
     /// Current locale (BCP 47 tag) for this page, if i18n is enabled.

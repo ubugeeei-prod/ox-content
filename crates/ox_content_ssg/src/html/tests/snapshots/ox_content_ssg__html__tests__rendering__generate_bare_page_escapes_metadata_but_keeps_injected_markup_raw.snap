@@ -8,10 +8,10 @@ expression: "super::snapshot_text(&generate_bare_page(&data))"
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Guide</title>
-  <meta name="description" content="a &#34;quoted&#34; &#38; &#60;angled&#62; value">
-  <meta property="og:description" content="a &#34;quoted&#34; &#38; &#60;angled&#62; value">
-  <meta name="twitter:description" content="a &#34;quoted&#34; &#38; &#60;angled&#62; value">
-  <meta property="og:site_name" content="Docs &#38; More">
+  <meta name="description" content="a &quot;quoted&quot; &amp; &lt;angled&gt; value">
+  <meta property="og:description" content="a &quot;quoted&quot; &amp; &lt;angled&gt; value">
+  <meta name="twitter:description" content="a &quot;quoted&quot; &amp; &lt;angled&gt; value">
+  <meta property="og:site_name" content="Docs &amp; More">
   <meta property="og:type" content="website">
   <meta property="og:title" content="Guide">
   <meta name="twitter:card" content="summary_large_image">

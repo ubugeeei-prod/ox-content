@@ -4,6 +4,7 @@ use super::a11y::A11Y_CSS;
 use super::breadcrumbs::resolve_breadcrumbs;
 use super::entry::generate_entry_html;
 use super::footer::{FOOTER_CSS, generate_footer_html};
+use super::head::{HeadDiagnostic, RenderedHead, render_themed_head};
 use super::header_chrome::{
     HEADER_CHROME_CSS, HEADER_CHROME_JS, header_chrome_needs_css, header_chrome_needs_js,
     push_header_chrome_body_classes, render_announcement, render_header_nav, resolve_page_chrome,
@@ -28,11 +29,40 @@ use super::{
     YOUTUBE_CSS,
 };
 
+/// Themed HTML plus page-head diagnostics.
+pub struct GeneratedHtml {
+    pub html: String,
+    pub diagnostics: Vec<HeadDiagnostic>,
+}
+
+struct GeneratedPage {
+    html: String,
+    head: RenderedHead,
+}
+
 /// Generates a complete HTML page for SSG.
 ///
 /// This function creates a full HTML document with navigation sidebar,
 /// content area, table of contents, search functionality, and theme toggle.
 pub fn generate_html(page_data: &PageData, nav_groups: &[NavGroup], config: &SsgConfig) -> String {
+    generate_html_result(page_data, nav_groups, config).html
+}
+
+/// Same as [`generate_html`], with head-validation findings.
+pub fn generate_html_result(
+    page_data: &PageData,
+    nav_groups: &[NavGroup],
+    config: &SsgConfig,
+) -> GeneratedHtml {
+    let generated = generate_html_inner(page_data, nav_groups, config);
+    GeneratedHtml { html: generated.html, diagnostics: generated.head.diagnostics }
+}
+
+fn generate_html_inner(
+    page_data: &PageData,
+    nav_groups: &[NavGroup],
+    config: &SsgConfig,
+) -> GeneratedPage {
     let theme = config.theme.as_ref();
     let chrome = resolve_page_chrome(
         config.page_chrome,
@@ -262,11 +292,7 @@ pub fn generate_html(page_data: &PageData, nav_groups: &[NavGroup], config: &Ssg
     push_header_chrome_body_classes(&mut body_classes, &announcement_html, chrome);
     let body_class = body_classes.join(" ");
 
-    let document_title = if page_data.title.trim() == config.site_name.trim() {
-        config.site_name.clone()
-    } else {
-        format!("{} - {}", page_data.title, config.site_name)
-    };
+    let page_head = render_themed_head(page_data, config, json_ld.as_deref());
     let (html_lang, html_dir) = html_locale_attrs(config);
 
     let skip_link = config.a11y.skip_link_html();
@@ -274,10 +300,7 @@ pub fn generate_html(page_data: &PageData, nav_groups: &[NavGroup], config: &Ssg
         html_lang,
         html_dir,
         site_name: &config.site_name,
-        document_title: &document_title,
-        description: page_data.description.as_deref(),
-        og_image: config.og_image.as_deref(),
-        json_ld: json_ld.as_deref(),
+        page_head: &page_head.html,
         theme_bootstrap_js: THEME_BOOTSTRAP_JS,
         css: &all_css,
         embed_head: &embed_head,
@@ -317,5 +340,5 @@ pub fn generate_html(page_data: &PageData, nav_groups: &[NavGroup], config: &Ssg
         js: &all_js,
     };
 
-    template.render().unwrap_or_default()
+    GeneratedPage { html: template.render().unwrap_or_default(), head: page_head }
 }

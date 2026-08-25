@@ -29,6 +29,21 @@ pub struct JsSsgNavGroup {
     pub sticky_collapsed: Option<bool>,
 }
 
+/// Themed SSG HTML plus page-head diagnostics.
+#[napi(object)]
+pub struct JsSsgHtmlResult {
+    pub html: String,
+    pub diagnostics: Vec<JsHeadDiagnostic>,
+}
+
+/// One page-head validation finding.
+#[napi(object)]
+#[derive(Clone)]
+pub struct JsHeadDiagnostic {
+    pub strict: bool,
+    pub message: String,
+}
+
 /// Head metadata and injected markup for a bare SSG page.
 ///
 /// Every field is optional. A value with none of them set renders the same
@@ -287,6 +302,10 @@ pub struct JsSsgPageData {
     pub layout: Option<String>,
     /// Per-page chrome flags. Honored only when page chrome is enabled.
     pub chrome: Option<JsPageChromeFlags>,
+    /// Frontmatter `robots`.
+    pub robots: Option<String>,
+    /// Frontmatter `canonical`.
+    pub canonical: Option<String>,
 }
 
 /// Per-page frontmatter chrome flags.

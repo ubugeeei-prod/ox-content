@@ -32,6 +32,8 @@
 //!     next: None,
 //!     breadcrumbs: None,
 //!     chrome: PageChromeFlags::default(),
+//!     robots: None,
+//!     canonical: None,
 //! };
 //!
 //! let nav_groups = vec![NavGroup {
@@ -90,13 +92,16 @@ pub use assets::{
 };
 pub use feeds::{FeedFormat, FeedItem, FeedsOptions, FeedsOutput, generate_feeds};
 pub use html::{
-    A11y, BarePageData, Contributor, EntryPageConfig, FeatureConfig, HeaderNavItem, HeroAction,
-    HeroConfig, HeroImage, HeroNoticeConfig, JsonLd, JsonLdPublisher, LocaleInfo, LocalePath,
-    NavGroup, NavItem, PageChromeFlags, PageData, PagerOverride, ReaderChrome, SectionIndexItem,
-    SectionIndexStyle, SocialLink, SocialLinks, SsgConfig, TeamLink, TeamMember, TeamOptions,
-    ThemeAnnouncement, ThemeColors, ThemeConfig, ThemeEmbed, ThemeEntryPage, ThemeFonts,
-    ThemeFooter, ThemeHeader, ThemeLayout, TocEntry, generate_bare_html, generate_bare_page,
-    generate_html, is_safe_section_href, render_section_index, render_team_page,
+    A11y, BarePageData, Contributor, EntryPageConfig, FeatureConfig, GeneratedHtml, HeadAlternate,
+    HeadDiagnostic, HeadInput, HeadJsonLd, HeadLink, HeadMeta, HeadValidation, HeaderNavItem,
+    HeroAction, HeroConfig, HeroImage, HeroNoticeConfig, JsonLd, JsonLdPublisher, LocaleInfo,
+    LocalePath, NavGroup, NavItem, PageChromeFlags, PageData, PagerOverride, ReaderChrome,
+    RenderedHead, ResolvedHead, ResolvedTag, SectionIndexItem, SectionIndexStyle, SiteHead,
+    SocialLink, SocialLinks, SsgConfig, TeamLink, TeamMember, TeamOptions, ThemeAnnouncement,
+    ThemeColors, ThemeConfig, ThemeEmbed, ThemeEntryPage, ThemeFonts, ThemeFooter, ThemeHeader,
+    ThemeLayout, TocEntry, generate_bare_html, generate_bare_page, generate_html,
+    generate_html_result, is_safe_section_href, render_head, render_section_index,
+    render_team_page, resolve_head, serialize_head,
 };
 pub use permalinks::{
     CascadeOptions, PermalinksOptions, ResolvedRoutePage, RoutePage, RouteResolveOutput,

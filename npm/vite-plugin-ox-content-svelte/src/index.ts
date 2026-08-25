@@ -358,4 +358,5 @@ function toPascalCase(str: string): string {
   return str.replace(/[-_](\w)/g, (_, c) => c.toUpperCase()).replace(/^\w/, (c) => c.toUpperCase());
 }
 
-export { oxContent } from "@ox-content/vite-plugin";
+export { oxContent, renderHead } from "@ox-content/vite-plugin";
+export type { HeadInput, RenderedHead } from "@ox-content/vite-plugin";

@@ -95,6 +95,24 @@ describe("resolveSsgOptions", () => {
     });
   });
 
+  it("disables headValidation when omitted", () => {
+    expect(resolveSsgOptions(undefined).headValidation).toBe(false);
+    expect(resolveSsgOptions({ headValidation: "warn" }).headValidation).toBe("warn");
+    expect(resolveSsgOptions({ headValidation: "strict" }).headValidation).toBe("strict");
+  });
+
+  it("carries jsonLd type and graph through", () => {
+    expect(
+      resolveSsgOptions({
+        jsonLd: { type: "BlogPosting", graph: [{ "@type": "Person", name: "Ada" }] },
+      }).jsonLd,
+    ).toEqual({
+      breadcrumbs: true,
+      type: "BlogPosting",
+      graph: [{ "@type": "Person", name: "Ada" }],
+    });
+  });
+
   it("carries a configured jsonLd publisher through", () => {
     expect(
       resolveSsgOptions({

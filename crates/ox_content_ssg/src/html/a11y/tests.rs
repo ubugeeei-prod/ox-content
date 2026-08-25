@@ -17,6 +17,8 @@ fn page(content: &str) -> PageData {
         next: None,
         breadcrumbs: None,
         chrome: crate::PageChromeFlags::default(),
+        robots: None,
+        canonical: None,
     }
 }
 
@@ -37,6 +39,8 @@ fn config(a11y: A11y) -> SsgConfig {
         a11y,
         page_chrome: false,
         json_ld: crate::JsonLd::default(),
+        site_url: None,
+        head_validation: Default::default(),
     }
 }
 

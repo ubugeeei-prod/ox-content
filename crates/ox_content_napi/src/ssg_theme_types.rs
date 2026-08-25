@@ -178,14 +178,12 @@ pub struct JsThemeConfig {
 #[napi(object)]
 #[derive(Clone)]
 pub struct JsSsgConfig {
-    /// Site name.
     pub site_name: String,
-    /// Base URL path.
     pub base: String,
-    /// Optional site-root href for breadcrumbs.
     pub breadcrumb_root_href: Option<String>,
-    /// OG image URL.
     pub og_image: Option<String>,
+    pub site_url: Option<String>,
+    pub head_validation: Option<String>,
     /// Theme configuration.
     pub theme: Option<JsThemeConfig>,
     /// Current locale for this page.
@@ -223,6 +221,8 @@ pub struct JsJsonLd {
     pub publisher: Option<JsJsonLdPublisher>,
     /// Site origin used for `@id` / `url`.
     pub site_url: Option<String>,
+    pub page_type: Option<String>,
+    pub graph: Option<Vec<String>>,
 }
 
 /// Optional JSON-LD publisher. Only configured fields are emitted.

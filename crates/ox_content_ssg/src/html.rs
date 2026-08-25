@@ -8,6 +8,7 @@ mod bare;
 mod breadcrumbs;
 mod entry;
 mod footer;
+mod head;
 mod header_chrome;
 mod json_ld;
 mod locale_switcher;
@@ -22,10 +23,15 @@ mod social;
 mod team;
 mod theme;
 mod theme_css;
+mod urls;
 mod utils;
 
 pub use a11y::A11y;
 use breadcrumbs::BreadcrumbsView;
+pub use head::{
+    HeadAlternate, HeadDiagnostic, HeadInput, HeadJsonLd, HeadLink, HeadMeta, RenderedHead,
+    ResolvedHead, ResolvedTag, SiteHead, render_head, resolve_head, serialize_head,
+};
 pub use header_chrome::{HeaderNavItem, PageChromeFlags, ThemeAnnouncement};
 pub use json_ld::{JsonLd, JsonLdPublisher};
 use pagination::PagerView;
@@ -37,11 +43,11 @@ pub use team::{TeamLink, TeamMember, TeamOptions, render_team_page};
 
 pub use bare::{BarePageData, generate_bare_html, generate_bare_page};
 pub use page::{
-    Contributor, EntryPageConfig, FeatureConfig, HeroAction, HeroConfig, HeroImage,
+    Contributor, EntryPageConfig, FeatureConfig, HeadValidation, HeroAction, HeroConfig, HeroImage,
     HeroNoticeConfig, LocaleInfo, LocalePath, NavGroup, NavItem, PageData, PagerOverride,
     SsgConfig, TocEntry,
 };
-pub use render::generate_html;
+pub use render::{GeneratedHtml, generate_html, generate_html_result};
 pub use theme::{
     SocialLink, SocialLinks, ThemeColors, ThemeConfig, ThemeEmbed, ThemeEntryPage, ThemeFonts,
     ThemeFooter, ThemeHeader, ThemeLayout,
@@ -129,10 +135,7 @@ struct PageTemplate<'a> {
     html_lang: &'a str,
     html_dir: &'a str,
     site_name: &'a str,
-    document_title: &'a str,
-    description: Option<&'a str>,
-    og_image: Option<&'a str>,
-    json_ld: Option<&'a str>,
+    page_head: &'a str,
     theme_bootstrap_js: &'a str,
     css: &'a str,
     embed_head: &'a str,
@@ -178,13 +181,8 @@ struct PageTemplate<'a> {
 struct BarePageTemplate<'a> {
     lang: &'a str,
     dir: &'a str,
-    title: &'a str,
+    page_head: &'a str,
     content: &'a str,
-    has_metadata: bool,
-    description: Option<&'a str>,
-    canonical_url: Option<&'a str>,
-    site_name: Option<&'a str>,
-    og_image: Option<&'a str>,
     head: &'a str,
     body_start: &'a str,
     body_end: &'a str,

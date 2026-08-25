@@ -419,6 +419,7 @@ async function renderPage(
     undefined,
     options.ssg.jsonLd,
     options.ssg.siteUrl,
+    options.ssg.headValidation,
   );
 
   // Inject Vite HMR client for live reload

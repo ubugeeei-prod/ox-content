@@ -40,6 +40,8 @@ inline**.
 | [Quality Checks](./built-in/quality-checks.md)         | Code block lint, type checking, docs tests, HTML sanitizer                |
 | [Typed Hover](./built-in/typed-hover.md)               | Opt-in build-time TypeScript hover overlays for `twoslash` fences         |
 | [Site Generation](./built-in/site-generation.md)       | SSG, OG images, edit links, collections, API docs, transformers           |
+| [Page head](./built-in/page-head.md)                   | Build-time Unhead-compatible title / meta / link / JSON-LD API            |
+| [SEO](./built-in/seo.md)                               | Canonical, robots, hreflang, and head validation on that API              |
 | [Previous / Next](./built-in/pagination.md)            | Opt-in previous and next page links                                       |
 | [Breadcrumbs](./built-in/breadcrumbs.md)               | Opt-in trail from the site root through sidebar ancestors                 |
 | [JSON-LD](./built-in/json-ld.md)                       | Opt-in TechArticle / WebSite / BreadcrumbList structured data             |
@@ -90,6 +92,9 @@ inline**.
 | Editing links    | `editThisPage`                                                                                                | `false`              | [Site Generation](./built-in/site-generation.md)       |
 | Page pager       | `ssg.pagination`                                                                                              | `false`              | [Previous / Next](./built-in/pagination.md)            |
 | Breadcrumbs      | `ssg.breadcrumbs` / `theme.breadcrumbs`                                                                       | `false`              | [Breadcrumbs](./built-in/breadcrumbs.md)               |
+| Page head        | `renderHead`                                                                                                  | build-time           | [Page head](./built-in/page-head.md)                   |
+| SEO tags         | `ssg.siteUrl`, frontmatter `robots` / `canonical`                                                             | off unless set       | [SEO](./built-in/seo.md)                               |
+| Head validation  | `ssg.headValidation`                                                                                          | `false`              | [SEO](./built-in/seo.md)                               |
 | Structured data  | `ssg.jsonLd`                                                                                                  | `false`              | [JSON-LD](./built-in/json-ld.md)                       |
 | Reader chrome    | `ssg.readerChrome`                                                                                            | `false`              | [Reader Chrome](./built-in/reader-chrome.md)           |
 | Locale switcher  | `ssg.localeSwitcher`                                                                                          | `false`              | [Locale Switcher](./built-in/locale-switcher.md)       |

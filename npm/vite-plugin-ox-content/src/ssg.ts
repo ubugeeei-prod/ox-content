@@ -45,6 +45,7 @@ import {
   resolvePageChromeOption,
   type PageChromeFlags,
 } from "./header-chrome";
+import { reportHeadDiagnostics, resolveHeadValidation } from "./page-head";
 import { resolveTheme, themeToNapi } from "./theme";
 import type { ResolvedThemeConfig, SidebarItem } from "./theme";
 import { normalizeVitePressFrontmatter } from "./vitepress";
@@ -181,6 +182,7 @@ export function resolveSsgOptions(ssg: SsgOptions | boolean | undefined): Resolv
       pagination: false,
       breadcrumbs: false,
       jsonLd: false,
+      headValidation: false,
       readerChrome: false,
       localeSwitcher: false,
       a11y: false,
@@ -204,6 +206,7 @@ export function resolveSsgOptions(ssg: SsgOptions | boolean | undefined): Resolv
       pagination: false,
       breadcrumbs: false,
       jsonLd: false,
+      headValidation: false,
       readerChrome: false,
       localeSwitcher: false,
       a11y: false,
@@ -234,6 +237,7 @@ export function resolveSsgOptions(ssg: SsgOptions | boolean | undefined): Resolv
     pagination: resolvePaginationOption(ssg.pagination),
     breadcrumbs: resolvePaginationOption(ssg.breadcrumbs),
     jsonLd: resolveJsonLdOption(ssg.jsonLd),
+    headValidation: resolveHeadValidation(ssg.headValidation),
     readerChrome: resolveReaderChromeOption(ssg.readerChrome),
     localeSwitcher: resolveLocaleSwitcherOption(ssg.localeSwitcher),
     a11y: resolveA11yOption(ssg.a11y),
@@ -277,6 +281,8 @@ function resolveJsonLdOption(value: boolean | JsonLdOptions | undefined): Resolv
     return {
       breadcrumbs: value.breadcrumbs !== false,
       ...(publisher ? { publisher } : {}),
+      ...(value.type ? { type: value.type } : {}),
+      ...(value.graph ? { graph: value.graph } : {}),
     };
   }
   return false;
@@ -526,6 +532,7 @@ export async function generateHtmlPage(
   breadcrumbRootHref?: string,
   jsonLd: ResolvedJsonLd = false,
   siteUrl?: string,
+  headValidation: false | "warn" | "strict" = false,
 ): Promise<string> {
   const mod = await importNapiModule();
 
@@ -579,7 +586,7 @@ export async function generateHtmlPage(
       }
     : undefined;
 
-  return mod.generateSsgHtml(
+  const result = mod.generateSsgHtml(
     {
       title: pageData.title,
       description: pageData.description,
@@ -595,6 +602,12 @@ export async function generateHtmlPage(
       layout:
         typeof pageData.frontmatter.layout === "string" ? pageData.frontmatter.layout : undefined,
       chrome: pageData.chrome,
+      robots:
+        typeof pageData.frontmatter.robots === "string" ? pageData.frontmatter.robots : undefined,
+      canonical:
+        typeof pageData.frontmatter.canonical === "string"
+          ? pageData.frontmatter.canonical
+          : undefined,
     },
     navGroupsForRust,
     {
@@ -602,6 +615,8 @@ export async function generateHtmlPage(
       base,
       breadcrumbRootHref,
       ogImage,
+      siteUrl,
+      headValidation: headValidation || undefined,
       theme: themeForRust,
       locale,
       availableLocales: availableLocales ? toRustLocales(availableLocales) : undefined,
@@ -624,10 +639,16 @@ export async function generateHtmlPage(
             breadcrumbs: jsonLd.breadcrumbs,
             publisher: jsonLd.publisher,
             siteUrl,
+            pageType: jsonLd.type,
+            graph: jsonLd.graph?.map((node) => JSON.stringify(node)),
           }
         : undefined,
     },
   );
+  const html = typeof result === "string" ? result : result.html;
+  const diagnostics = typeof result === "string" ? [] : (result.diagnostics ?? []);
+  reportHeadDiagnostics(diagnostics, headValidation);
+  return html;
 }
 
 interface GeneratedHtmlPage {
@@ -1484,6 +1505,7 @@ async function renderSsgPage(
     versionNavigation?.root.href,
     context.ssgOptions.jsonLd,
     context.ssgOptions.siteUrl,
+    context.ssgOptions.headValidation,
   );
 }
 

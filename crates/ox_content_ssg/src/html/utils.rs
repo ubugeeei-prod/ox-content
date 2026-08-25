@@ -22,6 +22,21 @@ pub(super) fn page_content_contains_any(content: &str, needles: &[&str]) -> bool
     needles.iter().any(|needle| memmem::find(haystack, needle.as_bytes()).is_some())
 }
 
+pub(super) fn escape_json_for_script(json: &str) -> String {
+    let mut out = String::with_capacity(json.len());
+    for ch in json.chars() {
+        match ch {
+            '<' => out.push_str("\\u003c"),
+            '>' => out.push_str("\\u003e"),
+            '&' => out.push_str("\\u0026"),
+            '\u{2028}' => out.push_str("\\u2028"),
+            '\u{2029}' => out.push_str("\\u2029"),
+            _ => out.push(ch),
+        }
+    }
+    out
+}
+
 pub(super) fn escape_html(value: &str) -> String {
     // SSG escaping favors predictable allocation over chained `replace()`:
     // allocate once at the input length, stream characters into the output,

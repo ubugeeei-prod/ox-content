@@ -53,6 +53,8 @@ fn page(title: &str) -> PageData {
         next: None,
         breadcrumbs: None,
         chrome: PageChromeFlags::default(),
+        robots: None,
+        canonical: None,
     }
 }
 
@@ -73,6 +75,8 @@ fn config(json_ld: JsonLd, breadcrumbs: bool) -> SsgConfig {
         a11y: A11y::default(),
         page_chrome: false,
         json_ld,
+        site_url: None,
+        head_validation: Default::default(),
     }
 }
 
@@ -236,6 +240,36 @@ fn no_publisher_invented() {
     assert!(value["@graph"][0].get("@id").is_none(), "{raw}");
     assert!(value["@graph"][1].get("@id").is_none(), "{raw}");
     assert!(value["@graph"][1].get("isPartOf").is_none(), "{raw}");
+}
+
+#[test]
+fn themed_canonical_only_when_site_url_is_set() {
+    let html =
+        generate_html(&page("Getting Started"), &nested_nav(), &config(JsonLd::default(), false));
+    assert!(!html.contains("rel=\"canonical\""), "{html}");
+
+    let mut with_url = config(JsonLd::default(), false);
+    with_url.site_url = Some("https://docs.example".into());
+    let html = generate_html(&page("Getting Started"), &nested_nav(), &with_url);
+    assert!(
+        html.contains("<link rel=\"canonical\" href=\"https://docs.example/docs/guide/\">"),
+        "{html}"
+    );
+    assert!(
+        html.contains("<meta property=\"og:url\" content=\"https://docs.example/docs/guide/\">"),
+        "{html}"
+    );
+}
+
+#[test]
+fn page_type_and_extra_graph_nodes() {
+    let mut json_ld = JsonLd::enabled();
+    json_ld.page_type = Some("BlogPosting".into());
+    json_ld.graph = vec![serde_json::json!({"@type": "Person", "name": "Ada"})];
+    let html = generate_html(&page("Getting Started"), &nested_nav(), &config(json_ld, false));
+    let value = parse_json_ld(&html);
+    let types = graph_types(&value);
+    assert_eq!(types, ["WebSite", "BlogPosting", "Person"], "{html}");
 }
 
 #[test]

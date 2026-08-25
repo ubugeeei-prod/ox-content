@@ -1095,6 +1095,18 @@ export type {
   MarkdownLintFileOptions as MarkdownLintProjectOptions,
 } from "./lint-files";
 export { buildSsg, resolveSsgOptions, DEFAULT_HTML_TEMPLATE } from "./ssg";
+export { renderHead, resolveHeadValidation } from "./page-head";
+export type {
+  HeadAlternate,
+  HeadDiagnostic,
+  HeadInput,
+  HeadJsonLd,
+  HeadLink,
+  HeadMeta,
+  HeadValidationMode,
+  RenderedHead,
+  SiteHead,
+} from "./page-head";
 export { resolveNotFoundOptions } from "./not-found";
 export { resolveSiteMapsOptions } from "./site-maps";
 export {

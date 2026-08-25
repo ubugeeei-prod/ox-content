@@ -26,10 +26,8 @@ expression: "super::snapshot_text(&html)"
 })();
 </script>
   <title>مرحبا - Localized</title>
-<sp><sp>
   <meta property="og:type" content="website">
   <meta property="og:title" content="مرحبا - Localized">
-<sp><sp>
   <meta name="twitter:card" content="summary_large_image">
   <meta name="twitter:title" content="مرحبا - Localized">
   <!-- ox-content:styles:start -->

@@ -1,13 +1,13 @@
 ---
 source: crates/ox_content_ssg/src/html/tests/rendering.rs
-expression: html
+expression: "super::snapshot_text(&html)"
 ---
 <!DOCTYPE html>
 <html lang="en">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>&#60;script&#62;alert(1)&#60;/script&#62;</title>
+  <title>&lt;script&gt;alert(1)&lt;/script&gt;</title>
 </head>
 <body>
 <h1>Raw & ready</h1>

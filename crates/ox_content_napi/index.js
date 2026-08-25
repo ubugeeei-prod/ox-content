@@ -209,6 +209,7 @@ module.exports.generateSearchModuleFromOptions = binding.generateSearchModuleFro
 module.exports.collectSearchMarkdownFiles = binding.collectSearchMarkdownFiles;
 module.exports.normalizeVitePressFrontmatter = binding.normalizeVitePressFrontmatter;
 module.exports.generateSsgHtml = binding.generateSsgHtml;
+module.exports.renderHead = binding.renderHead;
 module.exports.generateSsgBareHtml = binding.generateSsgBareHtml;
 module.exports.highlightCodeBlock = binding.highlightCodeBlock;
 module.exports.applyPendingHighlights = binding.applyPendingHighlights;
