@@ -1,10 +1,10 @@
 use memchr::memchr;
-use ox_content_allocator::Allocator;
+use ox_content_allocator::{Allocator, Vec};
 use ox_content_ast::{Node, Span};
 
 pub(super) struct JsxChildSource<'a> {
     pub source: &'a str,
-    pub offsets: Option<std::vec::Vec<u32>>,
+    pub offsets: Option<Vec<'a, u32>>,
 }
 
 pub(super) fn normalize_indentation<'a>(
@@ -19,7 +19,7 @@ pub(super) fn normalize_indentation<'a>(
     let bytes = source.as_bytes();
     let mut normalized =
         ox_content_allocator::String::with_capacity_in(source.len(), allocator.bump());
-    let mut offsets = std::vec::Vec::with_capacity(source.len() + 1);
+    let mut offsets: Vec<'a, u32> = allocator.new_vec();
     let mut line_start = 0usize;
 
     while line_start < bytes.len() {
@@ -208,7 +208,7 @@ fn push_mapped_slice(
     start: usize,
     end: usize,
     normalized: &mut ox_content_allocator::String<'_>,
-    offsets: &mut std::vec::Vec<u32>,
+    offsets: &mut Vec<'_, u32>,
 ) {
     if start >= end {
         if offsets.is_empty() {
