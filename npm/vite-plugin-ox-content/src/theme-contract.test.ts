@@ -31,6 +31,7 @@ type PkgJson = {
 };
 
 type ThemePkg = { dir: string; json: PkgJson };
+type PaletteCatalog = { palettes: { id: string; title: string }[] };
 
 function listPackages(familyDir: string): ThemePkg[] {
   const root = join(repoRoot, familyDir);
@@ -129,6 +130,9 @@ function configsIn(pkg: ThemePkg): string[] {
 
 const schemes = listPackages("npm/theme-color");
 const skins = listPackages("npm/theme");
+const paletteCatalog = JSON.parse(
+  readFileSync(join(repoRoot, "scripts/theme-colors/palettes.json"), "utf8"),
+) as PaletteCatalog;
 
 describe("theme package contract", () => {
   it("discovers published theme-color and theme packages from the filesystem", () => {
@@ -239,5 +243,33 @@ describe("theme package contract", () => {
     expect(page).toMatch(/ssg\.theme/);
     expect(page).toMatch(/--octc-syntax-\*/);
     expect(page).toMatch(/must not hard-code/i);
+  });
+
+  it("keeps color scheme previews synchronized with the palette catalog", () => {
+    const expectedIds = paletteCatalog.palettes.map((palette) => palette.id);
+    const packageIds = schemes
+      .map((pkg) => pkg.json.name?.replace(/^@ox-content\/theme-color-/, "") ?? "")
+      .sort();
+
+    expect(packageIds).toEqual([...expectedIds].sort());
+
+    for (const localePath of [
+      "docs/content/theme-presets.md",
+      "docs/content/ja/theme-presets.md",
+    ]) {
+      const page = readFileSync(join(repoRoot, localePath), "utf8");
+      const previewIds = [...page.matchAll(/data-theme-color-preview="([^"]+)"/g)].map(
+        (match) => match[1],
+      );
+
+      expect(page, localePath).toContain("data-theme-color-previews");
+      expect(previewIds, localePath).toEqual(expectedIds);
+      for (const palette of paletteCatalog.palettes) {
+        expect(page, `${localePath} ${palette.id}`).toContain(
+          `@ox-content/theme-color-${palette.id}`,
+        );
+        expect(page, `${localePath} ${palette.id}`).toContain(palette.title);
+      }
+    }
   });
 });

@@ -20,6 +20,7 @@ const VERSION = JSON.parse(
 ).version;
 
 import { ensureContrast, tokensFor } from "./derive.mjs";
+import { updateDocsPreview } from "./update-docs-preview.mjs";
 
 const record = (obj, indent) =>
   Object.entries(obj)
@@ -226,6 +227,8 @@ for (const p of palettes) {
   writeFileSync(join(dir, "vite.config.ts"), VITE_CONFIG);
   writeFileSync(join(dir, "README.md"), readme(p, exportName));
 }
+
+updateDocsPreview();
 
 // The repository formats its sources, and generated files are sources too.
 // Formatting here rather than leaving it to the caller means a regeneration can
