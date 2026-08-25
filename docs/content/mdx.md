@@ -9,15 +9,17 @@ Ox Content lets you embed framework components inside Markdown and `.mdx` files.
 It is worth understanding how this works, because it differs from "classic" MDX:
 
 - **JSX elements, module-level `import` / `export`, and prose
-  `{expression}` parse when MDX is enabled.** With `mdx: true` /
-  `ParserOptions.mdx`, the Rust parser turns PascalCase and member-name
-  tags into `MdxJsxFlowElement` / `MdxJsxTextElement` nodes (self-closing
-  or open/close, with literal, boolean, `{expr}`, and spread attributes),
-  turns file-level `import` / `export` into `MdxjsEsm` nodes, and turns
-  document-level `{foo}` / `Hello {name}` into `MdxFlowExpression` /
-  `MdxTextExpression`. Fragments (`<>...</>`), JSX comments, and
-  `{expression}` children are stored as AST source. Nothing is evaluated.
-  `.md` stays CommonMark + GFM unless that option is on.
+  `{expression}` parse when MDX is enabled.** That is the default for
+  `.mdx` files. With `mdx: true` / `ParserOptions.mdx`, you can enable
+  the same path for every configured extension. The Rust parser turns
+  PascalCase and member-name tags into `MdxJsxFlowElement` /
+  `MdxJsxTextElement` nodes (self-closing or open/close, with literal,
+  boolean, `{expr}`, and spread attributes), turns file-level `import` /
+  `export` into `MdxjsEsm` nodes, and turns document-level `{foo}` /
+  `Hello {name}` into `MdxFlowExpression` / `MdxTextExpression`.
+  Fragments (`<>...</>`), JSX comments, and `{expression}` children are
+  stored as AST source. Nothing is evaluated. `.md` stays CommonMark +
+  GFM unless that option is on.
 - **Components are resolved by a framework plugin**, not the renderer. The
   HTML renderer turns named MDX JSX into island placeholders and
   serializes props (literals as JSON, `{expression}` / spreads as source).
@@ -31,6 +33,37 @@ It is worth understanding how this works, because it differs from "classic" MDX:
 
 So you get Markdown's speed for prose plus real interactive components where you
 need them — without shipping a JavaScript bundle for pages that have none.
+
+## Defaults
+
+When `mdx` is omitted, Ox Content infers it from the source extension:
+
+| Source              | Default                           | `mdx: true` | `mdx: false`     |
+| ------------------- | --------------------------------- | ----------- | ---------------- |
+| `.mdx`              | MDX on (JSX, ESM, `{expression}`) | MDX on      | CommonMark + GFM |
+| `.md` / `.markdown` | CommonMark + GFM                  | MDX on      | CommonMark + GFM |
+
+You do **not** need `mdx: true` for `.mdx` files. Set `mdx: true` /
+`ParserOptions.mdx` only when you want the same syntax in `.md` files.
+Set `mdx: false` to keep `.mdx` on the plain Markdown path.
+
+## Static HTML vs islands
+
+Without a framework plugin, the HTML renderer stays on the static path:
+
+- **Lowercase / custom HTML tags** (`<div>`, `<note>`) stay HTML. They are
+  not islands.
+- **PascalCase / member-name tags** (`<NoteCard />`, `<Icons.Star />`)
+  become `data-ox-island` placeholders. Props are serialized; nothing is
+  hydrated until a React / Vue / Svelte / Solid plugin is present.
+- **Module-level `import` / `export`** become `MdxjsEsm` nodes. They do
+  **not** appear in the HTML and are **not** executed.
+- **Prose `{expression}`** is stored as AST source and is **not**
+  evaluated. The static HTML renderer currently emits nothing for those
+  nodes — the source is not leaked as text or as JavaScript.
+
+A runnable Vite + `@ox-content/vite-plugin` site with real `.mdx` pages is
+[`examples/mdx`](https://github.com/ubugeeei-prod/ox-content/tree/main/examples/mdx).
 
 ## Setup
 
@@ -219,6 +252,7 @@ See [Theming](./theming.md) for using it to build a custom layout.
 
 ## See also
 
+- [Built-in MDX example](./examples/mdx.md)
 - [React Integration](./packages/vite-plugin-ox-content-react.md)
 - [Vue Integration](./packages/vite-plugin-ox-content-vue.md)
 - [Svelte Integration](./packages/vite-plugin-ox-content-svelte.md)

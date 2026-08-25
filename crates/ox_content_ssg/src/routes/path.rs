@@ -141,16 +141,19 @@ fn join_path(left: &str, right: &str) -> String {
 }
 
 pub(super) fn strip_markdown_extension(path: &str) -> String {
-    if path.len() >= 3 && path[path.len() - 3..].eq_ignore_ascii_case(".md") {
-        return path[..path.len() - 3].to_string();
-    }
-    if path.len() >= 4 && path[path.len() - 4..].eq_ignore_ascii_case(".mdx") {
-        return path[..path.len() - 4].to_string();
-    }
-    if path.len() >= 9 && path[path.len() - 9..].eq_ignore_ascii_case(".markdown") {
-        return path[..path.len() - 9].to_string();
+    for suffix in [b".markdown".as_slice(), b".mdx", b".md"] {
+        if let Some(stem) = strip_ascii_suffix_ignore_case(path, suffix) {
+            return stem.to_string();
+        }
     }
     path.to_string()
+}
+
+/// Byte-wise ASCII suffix compare so multibyte paths never slice mid-character.
+fn strip_ascii_suffix_ignore_case<'a>(path: &'a str, suffix: &[u8]) -> Option<&'a str> {
+    let bytes = path.as_bytes();
+    let start = bytes.len().checked_sub(suffix.len())?;
+    bytes[start..].eq_ignore_ascii_case(suffix).then(|| &path[..start])
 }
 
 fn replace_markdown_extension(path: &str, extension: &str) -> String {
@@ -197,5 +200,20 @@ mod tests {
             ),
             "https://example.com/base/guide/og-image.png"
         );
+    }
+
+    #[test]
+    fn multibyte_paths_do_not_panic_and_keep_non_markdown_stems() {
+        let root = "/repo/docs";
+        let emoji = "/repo/docs/\u{1F600}";
+        let japanese = "/repo/docs/\u{3042}.md";
+        let mixed = "/repo/docs/guide/\u{1F600}.mdx";
+
+        let emoji_paths = resolve_route_paths(emoji, root, "/repo/dist", "/base/", ".html", None);
+        assert_eq!(emoji_paths.url_path, "\u{1F600}");
+        assert_eq!(get_url_path(japanese, root), "\u{3042}");
+        assert_eq!(get_url_path(mixed, root), "guide/\u{1F600}");
+        assert_eq!(strip_markdown_extension("\u{1F600}"), "\u{1F600}");
+        assert_eq!(strip_markdown_extension("\u{3042}.MD"), "\u{3042}");
     }
 }

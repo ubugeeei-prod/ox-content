@@ -219,7 +219,9 @@ fn get_transformed_file<'a>(
         cache.insert(file.path_key.clone(), transformed);
     }
 
-    Ok(cache.get(&file.path_key).expect("transformed file should be cached"))
+    cache.get(&file.path_key).ok_or_else(|| {
+        Error::from_reason(format!("transformed file missing from cache: {}", file.path_key))
+    })
 }
 
 fn collect_source_files(src_dir: &Path, extensions: &[String]) -> Vec<SourceFile> {

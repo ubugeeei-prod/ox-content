@@ -103,7 +103,8 @@ pub struct ParserOptions {
 
     /// Maximum nesting depth for block elements.
     ///
-    /// Default: `0`; [`ParserOptions::gfm`] sets this to `100`.
+    /// `0` means unlimited. [`ParserOptions::gfm`] and [`ParserOptions::mdx`]
+    /// set this to `100`.
     pub max_nesting_depth: usize,
 }
 
@@ -215,7 +216,7 @@ impl<'a> Parser<'a> {
             source,
             options: self.options.clone(),
             position: 0,
-            nesting_depth: 0,
+            nesting_depth: self.nesting_depth,
             definitions: self.definitions.clone(),
             footnote_labels: self.footnote_labels.clone(),
             // Most sub-sources are entered without any lazy continuation

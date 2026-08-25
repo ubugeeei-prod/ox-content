@@ -9,8 +9,9 @@ Ox Content では、Markdown と `.mdx` ファイルの中にフレームワー�
 動き方を理解しておく価値があります。いわゆる「クラシック」な MDX とは違います。
 
 - **JSX 要素、モジュールレベルの `import` / `export`、本文の `{expression}` は、
-  MDX が有効なときにパースされます。** `mdx: true` /
-  `ParserOptions.mdx` があると、Rust パーサーは PascalCase とメンバー名の
+  MDX が有効なときにパースされます。** `.mdx` ではそれが既定です。
+  `mdx: true` / `ParserOptions.mdx` を付けると、設定したすべての拡張子で
+  同じ経路を有効にできます。Rust パーサーは PascalCase とメンバー名の
   タグを `MdxJsxFlowElement` / `MdxJsxTextElement` ノードにします（自己閉じ
   または開閉、リテラル、真偽、`{expr}`、spread 属性付き）。
   ファイルレベルの `import` / `export` は `MdxjsEsm` ノードになり、
@@ -31,6 +32,39 @@ Ox Content では、Markdown と `.mdx` ファイルの中にフレームワー�
 
 そのため、本文は Markdown の速さのまま、必要なところだけ本物の対話コンポーネントを置けます。
 コンポーネントのないページには JavaScript バンドルを出しません。
+
+## 既定
+
+`mdx` を省略すると、Ox Content はソースの拡張子から推論します。
+
+| ソース              | 既定                                 | `mdx: true` | `mdx: false`     |
+| ------------------- | ------------------------------------ | ----------- | ---------------- |
+| `.mdx`              | MDX オン（JSX、ESM、`{expression}`） | MDX オン    | CommonMark + GFM |
+| `.md` / `.markdown` | CommonMark + GFM                     | MDX オン    | CommonMark + GFM |
+
+`.mdx` に `mdx: true` は**不要**です。`.md` でも同じ構文を使いたいときだけ
+`mdx: true` / `ParserOptions.mdx` を付けます。`.mdx` をプレーンな
+Markdown 経路のままにするなら `mdx: false` です。
+
+## 静的 HTML と island
+
+フレームワークプラグインが無いとき、HTML レンダラーは静的経路のままです。
+
+- **小文字 / カスタム HTML タグ**（`<div>`、`<note>`）は HTML のままです。
+  island にはなりません。
+- **PascalCase / メンバー名のタグ**（`<NoteCard />`、`<Icons.Star />`）は
+  `data-ox-island` プレースホルダーになります。props は直列化されます。
+  React / Vue / Svelte / Solid プラグインが無いあいだはハイドレートしません。
+- **モジュールレベルの `import` / `export`** は `MdxjsEsm` ノードになります。
+  HTML には**出ません**し、**実行もされません**。
+- **本文の `{expression}`** は AST ソースとして保存され、**評価されません**。
+  静的 HTML レンダラーはいまのところこれらのノードには何も出しません。
+  ソースはテキストとしても JavaScript としても漏れません。
+
+本物の `.mdx` ページがある、実行可能な Vite + `@ox-content/vite-plugin`
+サイトは
+[`examples/mdx`](https://github.com/ubugeeei-prod/ox-content/tree/main/examples/mdx)
+です。
 
 ## セットアップ
 
@@ -211,6 +245,7 @@ React はなく、オプトインする開発専用の振る舞いもありま�
 
 ## 関連
 
+- [組み込み MDX の例](/examples/mdx.md)
 - [React 連携](/packages/vite-plugin-ox-content-react.md)
 - [Vue 連携](/packages/vite-plugin-ox-content-vue.md)
 - [Svelte 連携](/packages/vite-plugin-ox-content-svelte.md)

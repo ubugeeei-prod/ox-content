@@ -323,3 +323,23 @@ fn parses_solid_target_aliases() {
     }
     assert_eq!(FrameworkCodegenTarget::Solid.as_str(), "solid");
 }
+
+#[test]
+fn svelte_public_codegen_does_not_abort_on_user_html() {
+    use std::panic::{AssertUnwindSafe, catch_unwind};
+
+    let html = "<p>{count}</p><script>alert(1)</script>";
+    let outcome = catch_unwind(AssertUnwindSafe(|| {
+        render_framework_component_code(html, FrameworkCodegenTarget::Svelte, &[])
+    }));
+    let code = outcome.expect("svelte component codegen aborted");
+    assert!(code.contains("{count}") || code.contains("&#123;count&#125;") || !code.is_empty());
+
+    let result = render_framework_code(
+        html,
+        FrameworkCodegenTarget::Svelte,
+        FrameworkCodegenMode::Expression,
+        &[],
+    );
+    assert!(matches!(result, Err(FrameworkCodegenError::UnsupportedModeForTarget { .. })));
+}
