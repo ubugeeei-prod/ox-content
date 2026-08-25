@@ -124,6 +124,6 @@ describe("typedHover transform", () => {
     expect(attached).not.toMatch(/<\/script>\s*<script>/);
     expect(attached).toContain("\\u003c");
     expect(attached).toContain('tabindex="0"');
-    expect(attached).toContain("closest(\".ox-code\")");
+    expect(attached).toContain('closest(".ox-code")');
   });
 });
