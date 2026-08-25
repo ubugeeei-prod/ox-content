@@ -1,0 +1,40 @@
+.header-anchor {
+  margin-inline-start: 0.35em;
+  font-weight: 500;
+  text-decoration: none;
+  color: var(--octc-color-text-muted);
+  -webkit-tap-highlight-color: transparent;
+  user-select: none;
+}
+.header-anchor:hover,
+.header-anchor:focus-visible {
+  color: var(--octc-color-primary);
+}
+.header-anchor:focus-visible {
+  outline: 2px solid var(--octc-color-primary);
+  outline-offset: 2px;
+}
+@media (hover: hover) and (pointer: fine) {
+  body:not(.ox-heading-permalinks--always) :is(h1, h2, h3, h4, h5, h6) > .header-anchor {
+    opacity: 0;
+  }
+  body:not(.ox-heading-permalinks--always) :is(h1, h2, h3, h4, h5, h6):hover > .header-anchor,
+  body:not(.ox-heading-permalinks--always)
+    :is(h1, h2, h3, h4, h5, h6):focus-within
+    > .header-anchor,
+  body:not(.ox-heading-permalinks--always) .header-anchor:focus-visible {
+    opacity: 1;
+  }
+}
+@media (prefers-reduced-motion: no-preference) {
+  .header-anchor {
+    transition:
+      color 0.15s ease,
+      opacity 0.15s ease;
+  }
+}
+@media print {
+  .header-anchor {
+    display: none;
+  }
+}

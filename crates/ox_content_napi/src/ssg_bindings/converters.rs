@@ -28,6 +28,7 @@ pub(super) fn convert_theme_config(
         view_transitions: t.view_transitions,
         aside: t.aside,
         breadcrumbs: t.breadcrumbs,
+        heading_permalink: t.heading_permalink,
         colors: convert_theme_colors(t.colors),
         dark_colors: convert_theme_colors(t.dark_colors),
         fonts: t.fonts.map(|f| ox_content_ssg::ThemeFonts { sans: f.sans, mono: f.mono }),

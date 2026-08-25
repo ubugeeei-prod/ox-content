@@ -21,6 +21,8 @@ pub struct TransformOptions {
     pub autolink_urls: Option<bool>,
     pub autolink_patterns: Option<Vec<String>>,
     pub autolink_target_blank: Option<bool>,
+    /// Opt-in visible heading permalinks. Disabled when omitted.
+    pub heading_permalinks: Option<bool>,
     pub wiki_links: Option<WikiLinkOptions>,
     pub emoji_shortcodes: Option<EmojiShortcodeOptions>,
     pub math: Option<MathOptions>,

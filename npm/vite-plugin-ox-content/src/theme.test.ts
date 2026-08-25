@@ -31,6 +31,7 @@ describe("theme", () => {
       expect(defaultTheme.layout).toBeDefined();
       expect(defaultTheme.aside).toBe(false);
       expect(defaultTheme.breadcrumbs).toBe(false);
+      expect(defaultTheme.headingPermalink).toBe("hover");
     });
   });
 
@@ -167,6 +168,12 @@ describe("theme", () => {
       expect(napi.footer?.message).toBe("Test");
       expect(napi.footer?.copyright).toBe("2025");
       expect(napi.socialLinks?.github).toBe("https://github.com/example");
+      expect(napi.headingPermalink).toBe("hover");
+    });
+
+    it("passes always-visible heading permalinks through to NAPI", () => {
+      const napi = themeToNapi(resolveTheme({ headingPermalink: "always" }));
+      expect(napi.headingPermalink).toBe("always");
     });
 
     it("should convert custom social links to NAPI format", () => {

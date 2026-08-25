@@ -1747,6 +1747,16 @@ export interface OxContentOptions {
   tocMaxDepth?: number;
 
   /**
+   * Append a visible heading permalink (`<a class="header-anchor" href="#id">`).
+   *
+   * Reuses the generated heading id. Default off. Theme
+   * `headingPermalink: "hover" | "always"` changes only CSS visibility.
+   *
+   * @default false
+   */
+  headingPermalinks?: boolean | HeadingPermalinksOptions;
+
+  /**
    * Enable OG image generation.
    * @default false
    */
@@ -1869,6 +1879,10 @@ export interface ResolvedOptions {
   frontmatter: boolean;
   toc: boolean;
   tocMaxDepth: number;
+  /**
+   * Present after `resolveOptions`. Omitted in hand-built fixtures means off.
+   */
+  headingPermalinks?: ResolvedHeadingPermalinksOptions;
   ogImage: boolean;
   ogImageOptions: ResolvedOgImageOptions;
   transformers: MarkdownTransformer[];
@@ -2199,6 +2213,29 @@ export interface AttrsOptions {
  * Resolved attrs transform options.
  */
 export interface ResolvedAttrsOptions {
+  enabled: boolean;
+}
+
+/**
+ * Opt-in visible heading permalinks.
+ *
+ * Headings already have stable `id`s. Enabling this appends a real
+ * `<a class="header-anchor" href="#id">` using that exact id. Off by
+ * default so existing HTML stays byte-stable.
+ */
+export interface HeadingPermalinksOptions {
+  /**
+   * Emit the permalink control.
+   *
+   * @default true
+   */
+  enabled?: boolean;
+}
+
+/**
+ * Resolved heading permalink options.
+ */
+export interface ResolvedHeadingPermalinksOptions {
   enabled: boolean;
 }
 

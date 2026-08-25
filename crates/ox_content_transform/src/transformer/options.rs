@@ -73,6 +73,9 @@ pub(super) fn transform_options_to_renderer_options(
     if let Some(v) = opts.autolink_target_blank {
         options.autolink_target_blank = v;
     }
+    if let Some(v) = opts.heading_permalinks {
+        options.heading_permalinks = v;
+    }
 
     options
 }

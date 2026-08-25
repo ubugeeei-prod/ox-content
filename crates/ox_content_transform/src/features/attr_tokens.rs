@@ -8,6 +8,10 @@ pub(super) struct ParsedAttrs {
 }
 
 impl ParsedAttrs {
+    pub(super) fn id(&self) -> Option<&str> {
+        self.id.as_deref()
+    }
+
     pub(super) fn parse(value: &str) -> Option<Self> {
         if !value.contains('#') && !value.contains('.') && !value.contains('=') {
             return None;
@@ -68,6 +72,38 @@ fn split_attr_tokens(value: &str) -> Vec<&str> {
         tokens.push(&value[start..cursor]);
     }
     tokens
+}
+
+/// Writes `open_without_gt` plus parsed attrs, replacing an existing `id`
+/// instead of emitting a second `id` attribute.
+pub(super) fn write_open_tag_attrs(out: &mut String, open_without_gt: &str, attrs: &ParsedAttrs) {
+    if attrs.id.is_some() {
+        out.push_str(&strip_quoted_attr(open_without_gt, "id"));
+    } else {
+        out.push_str(open_without_gt);
+    }
+    write_attrs(out, attrs);
+}
+
+pub(super) fn strip_quoted_attr(open: &str, name: &str) -> String {
+    for quote in ['"', '\''] {
+        let mut needle = String::with_capacity(name.len() + 3);
+        needle.push(' ');
+        needle.push_str(name);
+        needle.push('=');
+        needle.push(quote);
+        if let Some(start) = open.find(&needle) {
+            let value_start = start + needle.len();
+            if let Some(end_rel) = open[value_start..].find(quote) {
+                let end = value_start + end_rel + 1;
+                let mut stripped = String::with_capacity(open.len() - (end - start));
+                stripped.push_str(&open[..start]);
+                stripped.push_str(&open[end..]);
+                return stripped;
+            }
+        }
+    }
+    open.to_string()
 }
 
 pub(super) fn write_attrs(out: &mut String, attrs: &ParsedAttrs) {

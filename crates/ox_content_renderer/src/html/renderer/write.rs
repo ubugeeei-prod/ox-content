@@ -11,7 +11,10 @@ use ox_content_ast::{Heading, Node};
 
 use super::super::autolink::find_autolink_match;
 use super::super::escape::{write_escaped_into, write_url_escaped_into};
-use super::super::heading::{collect_heading_text_into, slugify_heading_into};
+use super::super::heading::{
+    HEADING_PERMALINK_CLASS, collect_heading_text_into, heading_has_permalink_marker,
+    slugify_heading_into,
+};
 use super::HtmlRenderer;
 
 impl HtmlRenderer {
@@ -187,39 +190,55 @@ impl HtmlRenderer {
         }
     }
 
-    /// Writes the heading's slugified id directly into `self.output`.
+    /// Writes the heading's unique id into `heading_id_scratch` and `self.output`.
     ///
-    /// This avoids allocating a return `String`. The unique-heading path pays
-    /// for exactly one owned string, the slug clone that becomes the map key.
-    /// The duplicate-heading path pays for zero additional strings because the
-    /// existing scratch slug is written directly and the numeric suffix is
-    /// formatted into `self.output`.
+    /// Permalinks read the same scratch so the `href` matches the `id`
+    /// attribute, including duplicate `-N` suffixes.
     pub(in crate::html::renderer) fn write_heading_id(&mut self, heading: &Heading<'_>) {
-        use std::fmt::Write as _;
-
         crate::profile_span!("renderer::write_heading_id");
+        self.prepare_heading_id(heading);
+        self.output.push_str(&self.heading_id_scratch);
+    }
 
+    pub(in crate::html::renderer) fn write_heading_permalink_if_needed(
+        &mut self,
+        heading: &Heading<'_>,
+    ) {
+        if !self.options.heading_permalinks {
+            return;
+        }
+        if heading_has_permalink_marker(&heading.children, &self.heading_id_scratch) {
+            return;
+        }
+        self.output.push_str("<a class=\"");
+        self.output.push_str(HEADING_PERMALINK_CLASS);
+        self.output.push_str("\" href=\"#");
+        self.output.push_str(&self.heading_id_scratch);
+        if self.heading_text_scratch.is_empty() {
+            self.output.push_str("\" aria-label=\"Permalink to this section\">#</a>");
+            return;
+        }
+        self.output.push_str("\" aria-label=\"Permalink to &quot;");
+        write_escaped_into(&mut self.output, &self.heading_text_scratch);
+        self.output.push_str("&quot;\">#</a>");
+    }
+
+    fn prepare_heading_id(&mut self, heading: &Heading<'_>) {
         self.heading_text_scratch.clear();
         collect_heading_text_into(&heading.children, &mut self.heading_text_scratch);
         self.heading_slug_scratch.clear();
         slugify_heading_into(&self.heading_text_scratch, &mut self.heading_slug_scratch);
 
-        // Cheap lookup first — avoids cloning the slug on the duplicate
-        // path. The `entry()` API would force us to materialize an owned
-        // key up front, defeating the point.
+        self.heading_id_scratch.clear();
         if let Some(count) = self.heading_id_counts.get_mut(self.heading_slug_scratch.as_str()) {
             let n = *count;
             *count += 1;
-            self.output.push_str(&self.heading_slug_scratch);
-            // `write!` into `String` is infallible; the formatter pushes bytes
-            // directly into the existing buffer with no temporary allocation.
-            let _ = write!(self.output, "-{n}");
+            self.heading_id_scratch.push_str(&self.heading_slug_scratch);
+            let _ = write!(self.heading_id_scratch, "-{n}");
             return;
         }
 
-        self.output.push_str(&self.heading_slug_scratch);
-        // `CompactString::from(&str)` stores slugs up to 24 bytes inline, so
-        // the common heading pays no allocation for its map key at all.
+        self.heading_id_scratch.push_str(&self.heading_slug_scratch);
         let key = CompactString::from(self.heading_slug_scratch.as_str());
         self.heading_id_counts.insert(key, 1);
     }

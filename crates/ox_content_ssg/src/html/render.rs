@@ -9,6 +9,7 @@ use super::header_chrome::{
     HEADER_CHROME_CSS, HEADER_CHROME_JS, header_chrome_needs_css, header_chrome_needs_js,
     push_header_chrome_body_classes, render_announcement, render_header_nav, resolve_page_chrome,
 };
+use super::heading_permalinks::{push_heading_permalink_body_class, push_heading_permalink_css};
 use super::json_ld::render_json_ld;
 use super::locale_switcher::render_locale_switcher;
 use super::mpa_navigation::{MPA_NAVIGATION_CSS, THEME_BOOTSTRAP_JS, view_transitions_enabled};
@@ -151,6 +152,7 @@ fn generate_html_inner(
     if page_content_contains_any(&page_data.content, &["ox-file-tree"]) {
         css_sections.push(wrap_css_section("file-tree", FILE_TREE_CSS));
     }
+    push_heading_permalink_css(&mut css_sections, &page_data.content);
     if has_footer {
         css_sections.push(wrap_css_section("footer", footer_css));
     }
@@ -293,6 +295,7 @@ fn generate_html_inner(
         body_classes.push("entry-page--subtle".to_string());
     }
     push_header_chrome_body_classes(&mut body_classes, &announcement_html, chrome);
+    push_heading_permalink_body_class(&mut body_classes, theme, &page_data.content);
     let body_class = body_classes.join(" ");
 
     let page_head = render_themed_head(page_data, config, json_ld.as_deref());
