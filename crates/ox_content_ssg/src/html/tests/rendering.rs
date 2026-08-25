@@ -46,6 +46,7 @@ fn test_generate_html() {
         locale_paths: vec![],
         a11y: A11y::default(),
         page_chrome: false,
+        json_ld: JsonLd::default(),
     };
     let html = generate_html(&page_data, &nav_groups, &config);
 
@@ -290,6 +291,7 @@ fn test_generate_html_without_toc_omits_outline() {
         locale_paths: vec![],
         a11y: A11y::default(),
         page_chrome: false,
+        json_ld: JsonLd::default(),
     };
 
     let html = generate_html(&page_data, &[], &config);
@@ -318,6 +320,7 @@ fn test_html_locale_attrs_use_current_locale_and_direction() {
         locale_paths: vec![],
         a11y: A11y::default(),
         page_chrome: false,
+        json_ld: JsonLd::default(),
     };
 
     assert_eq!(html_locale_attrs(&config), ("ar", "rtl"));

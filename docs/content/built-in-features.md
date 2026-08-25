@@ -30,6 +30,7 @@ inline**.
 | [File Tree](./built-in/file-tree.md)                   | Opt-in static `file-tree` directory diagrams                              |
 | [Inline Badges](./built-in/badges.md)                  | Opt-in `{badge:tip}` status labels in headings or prose                   |
 | [Images](./built-in/images.md)                         | Opt-in figures, captions, lazy loading, and safe dimensions               |
+| [Page resources](./built-in/resources.md)              | Opt-in page-bundle assets with resize, crop, and format transforms        |
 | [Code Blocks](./built-in/code-blocks.md)               | Syntax highlighting, code annotations, code imports                       |
 | [Embeds](./built-in/embeds.md)                         | GitHub cards, OG cards, package-manager tabs, tabs, YouTube, social cards |
 | [Mermaid Diagrams](./built-in/mermaid.md)              | Diagram fences rendered to static SVG                                     |
@@ -37,9 +38,11 @@ inline**.
 | [Search](./built-in/search.md)                         | The static BM25 index and client search API                               |
 | [Collections](./built-in/collections.md)               | Query Markdown files with a SQL-like builder                              |
 | [Quality Checks](./built-in/quality-checks.md)         | Code block lint, type checking, docs tests, HTML sanitizer                |
+| [Typed Hover](./built-in/typed-hover.md)               | Opt-in build-time TypeScript hover overlays for `twoslash` fences         |
 | [Site Generation](./built-in/site-generation.md)       | SSG, OG images, edit links, collections, API docs, transformers           |
 | [Previous / Next](./built-in/pagination.md)            | Opt-in previous and next page links                                       |
 | [Breadcrumbs](./built-in/breadcrumbs.md)               | Opt-in trail from the site root through sidebar ancestors                 |
+| [JSON-LD](./built-in/json-ld.md)                       | Opt-in TechArticle / WebSite / BreadcrumbList structured data             |
 | [Reader Chrome](./built-in/reader-chrome.md)           | Opt-in copy, outbound-link icons, and back-to-top                         |
 | [Locale Switcher](./built-in/locale-switcher.md)       | Opt-in header control for configured locales                              |
 | [Accessibility](./built-in/a11y.md)                    | Opt-in skip link and print styles                                         |
@@ -77,6 +80,7 @@ inline**.
 | Step lists       | `steps`                                                                                                       | `false`              | [Step Lists](./built-in/steps.md)                      |
 | File tree        | `fileTree`                                                                                                    | `false`              | [File Tree](./built-in/file-tree.md)                   |
 | Images           | `images`                                                                                                      | `false`              | [Images](./built-in/images.md)                         |
+| Page resources   | `resources`                                                                                                   | `false`              | [Page resources](./built-in/resources.md)              |
 | Diagrams         | `mermaid`                                                                                                     | `false`              | [Mermaid Diagrams](./built-in/mermaid.md)              |
 | Math             | `math`                                                                                                        | `false`              | [Math](./built-in/math.md)                             |
 | OG images        | `ogImage`                                                                                                     | `false`              | [Site Generation](./built-in/site-generation.md)       |
@@ -84,6 +88,7 @@ inline**.
 | Editing links    | `editThisPage`                                                                                                | `false`              | [Site Generation](./built-in/site-generation.md)       |
 | Page pager       | `ssg.pagination`                                                                                              | `false`              | [Previous / Next](./built-in/pagination.md)            |
 | Breadcrumbs      | `ssg.breadcrumbs` / `theme.breadcrumbs`                                                                       | `false`              | [Breadcrumbs](./built-in/breadcrumbs.md)               |
+| Structured data  | `ssg.jsonLd`                                                                                                  | `false`              | [JSON-LD](./built-in/json-ld.md)                       |
 | Reader chrome    | `ssg.readerChrome`                                                                                            | `false`              | [Reader Chrome](./built-in/reader-chrome.md)           |
 | Locale switcher  | `ssg.localeSwitcher`                                                                                          | `false`              | [Locale Switcher](./built-in/locale-switcher.md)       |
 | Accessibility    | `ssg.a11y`                                                                                                    | `false`              | [Accessibility](./built-in/a11y.md)                    |
@@ -101,6 +106,7 @@ inline**.
 | Team page        | `ssg.team`                                                                                                    | `false`              | [Team / members page](./built-in/team.md)              |
 | Git authors      | `ssg.contributors`                                                                                            | `false`              | [Git contributors](./built-in/contributors.md)         |
 | Code checks      | `codeBlockLint`, `codeBlockTypecheck`, `docsTests`                                                            | `false`              | [Quality Checks](./built-in/quality-checks.md)         |
+| Typed hover      | `typedHover`                                                                                                  | `false`              | [Typed Hover](./built-in/typed-hover.md)               |
 | Custom pipeline  | `transformers`                                                                                                | `[]`                 | [Site Generation](./built-in/site-generation.md)       |
 
 Tab groups and YouTube embeds have no option: they are always processed for

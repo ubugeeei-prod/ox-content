@@ -62,14 +62,14 @@ Already tracked elsewhere:
 | Blog (index, authors, tags, reading time, archive) | [#688](https://github.com/ubugeeei-prod/ox-content/issues/688) | planned |
 | Documentation versioning                           | [#689](https://github.com/ubugeeei-prod/ox-content/issues/689) | shipped |
 | Generated section index pages                      | [#690](https://github.com/ubugeeei-prod/ox-content/issues/690) | planned |
-| Page resources and image processing                | [#691](https://github.com/ubugeeei-prod/ox-content/issues/691) | planned |
+| Page resources and image processing                | [#691](https://github.com/ubugeeei-prod/ox-content/issues/691) | shipped |
 
 ## Phase E — Integrations
 
 | Feature                                    | Issue                                                          | Status  |
 | ------------------------------------------ | -------------------------------------------------------------- | ------- |
 | Git contributors                           | [#692](https://github.com/ubugeeei-prod/ox-content/issues/692) | shipped |
-| Typed hover overlays for TypeScript fences | [#693](https://github.com/ubugeeei-prod/ox-content/issues/693) | planned |
+| Typed hover overlays for TypeScript fences | [#693](https://github.com/ubugeeei-prod/ox-content/issues/693) | shipped |
 | Hosted search provider adapter             | [#694](https://github.com/ubugeeei-prod/ox-content/issues/694) | planned |
 | PWA manifest and service worker            | [#695](https://github.com/ubugeeei-prod/ox-content/issues/695) | shipped |
-| Structured data (JSON-LD)                  | [#696](https://github.com/ubugeeei-prod/ox-content/issues/696) | planned |
+| Structured data (JSON-LD)                  | [#696](https://github.com/ubugeeei-prod/ox-content/issues/696) | shipped |

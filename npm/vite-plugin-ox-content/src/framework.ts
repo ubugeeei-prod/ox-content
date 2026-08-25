@@ -54,6 +54,7 @@ export function createFrameworkMarkdownOptions(options: FrameworkMarkdownOptions
       lastUpdated: false,
       pagination: false,
       breadcrumbs: false,
+      jsonLd: false,
       readerChrome: false,
       localeSwitcher: false,
       a11y: false,

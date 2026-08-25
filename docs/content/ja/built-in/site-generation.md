@@ -50,32 +50,34 @@ export default defineConfig({
 });
 ```
 
-| オプション        | 既定           | 目的                                                                  |
-| ----------------- | -------------- | --------------------------------------------------------------------- |
-| `enabled`         | `true`         | `.md` モジュールだけ残すときは `ssg: false`。                         |
-| `extension`       | `".html"`      | 生成ページの拡張子。                                                  |
-| `clean`           | `false`        | 書き出す前に生成物を消す。                                            |
-| `bare`            | `false`        | ナビなしの、テーマなし HTML を出す。                                  |
-| `render`          | —              | 文書全体を所有する JSX コンポーネント。                               |
-| `lang`            | `"en"`         | `<html>` の `lang` 属性（bare モード）。                              |
-| `head`            | —              | `<head>` に足す生マークアップ（bare モード）。                        |
-| `bodyStart`       | —              | `<body>` の直後に足す生マークアップ（bare モード）。                  |
-| `bodyEnd`         | —              | `</body>` の直前に足す生マークアップ（bare モード）。                 |
-| `siteName`        | —              | `<title>` の接尾辞と OG サイト名。                                    |
-| `siteUrl`         | —              | 絶対 OG URL に使うオリジン。                                          |
-| `ogImage`         | —              | 静的フォールバックの OG 画像 URL。                                    |
-| `generateOgImage` | `false`        | ページごとの OG 画像（後述）。                                        |
-| `lastUpdated`     | `false`        | ページごとの git 最終コミット時刻を出す。                             |
-| `pagination`      | `false`        | 記事のあとに前へ / 次へリンク。                                       |
-| `breadcrumbs`     | `false`        | サイトルートからサイドバー祖先までの道筋。                            |
-| `readerChrome`    | `false`        | コピー、外部リンクアイコン、先頭へ戻る。                              |
-| `localeSwitcher`  | `false`        | i18n ロケールがあるときのヘッダーロケールドロップダウン。             |
-| `a11y`            | `false`        | スキップリンクと印刷スタイル。                                        |
-| `notFound`        | `false`        | テーマ付き 404。 [カスタム 404](./not-found.md) を見てください。      |
-| `team`            | `false`        | `layout: team` のメンバーカード。[チーム](./team.md) を見てください。 |
-| `pageChrome`      | `false`        | ページ単位の frontmatter chrome フラグを尊重する。                    |
-| `theme`           | `defaultTheme` | `defineTheme()` によるテーマ設定。                                    |
-| `navigation`      | 派生           | ファイルツリーの代わりに明示的なナビグループ。                        |
+| オプション        | 既定           | 目的                                                                                  |
+| ----------------- | -------------- | ------------------------------------------------------------------------------------- |
+| `enabled`         | `true`         | `.md` モジュールだけ残すときは `ssg: false`。                                         |
+| `extension`       | `".html"`      | 生成ページの拡張子。                                                                  |
+| `clean`           | `false`        | 書き出す前に生成物を消す。                                                            |
+| `bare`            | `false`        | ナビなしの、テーマなし HTML を出す。                                                  |
+| `render`          | —              | 文書全体を所有する JSX コンポーネント。                                               |
+| `lang`            | `"en"`         | `<html>` の `lang` 属性（bare モード）。                                              |
+| `head`            | —              | `<head>` に足す生マークアップ（bare モード）。                                        |
+| `bodyStart`       | —              | `<body>` の直後に足す生マークアップ（bare モード）。                                  |
+| `bodyEnd`         | —              | `</body>` の直前に足す生マークアップ（bare モード）。                                 |
+| `siteName`        | —              | `<title>` の接尾辞と OG サイト名。                                                    |
+| `siteUrl`         | —              | 絶対 OG URL に使うオリジン。                                                          |
+| `ogImage`         | —              | 静的フォールバックの OG 画像 URL。                                                    |
+| `generateOgImage` | `false`        | ページごとの OG 画像（後述）。                                                        |
+| `lastUpdated`     | `false`        | ページごとの git 最終コミット時刻を出す。                                             |
+| `contributors`    | `false`        | ページごとの一意な git 作者。[コントリビューター](./contributors.md) を見てください。 |
+| `pagination`      | `false`        | 記事のあとに前へ / 次へリンク。                                                       |
+| `breadcrumbs`     | `false`        | サイトルートからサイドバー祖先までの道筋。                                            |
+| `jsonLd`          | `false`        | TechArticle / WebSite / BreadcrumbList の JSON-LD。                                   |
+| `readerChrome`    | `false`        | コピー、外部リンクアイコン、先頭へ戻る。                                              |
+| `localeSwitcher`  | `false`        | i18n ロケールがあるときのヘッダーロケールドロップダウン。                             |
+| `a11y`            | `false`        | スキップリンクと印刷スタイル。                                                        |
+| `notFound`        | `false`        | テーマ付き 404。 [カスタム 404](./not-found.md) を見てください。                      |
+| `team`            | `false`        | `layout: team` のメンバーカード。[チーム](./team.md) を見てください。                 |
+| `pageChrome`      | `false`        | ページ単位の frontmatter chrome フラグを尊重する。                                    |
+| `theme`           | `defaultTheme` | `defineTheme()` によるテーマ設定。                                                    |
+| `navigation`      | 派生           | ファイルツリーの代わりに明示的なナビグループ。                                        |
 
 テーマ — 色、フォント、ヘッダー、フッター、サイドバー、独自 CSS、オプトインのページアウトライン（`theme.aside`、既定 `false`）— は別トピックです。[テーマ](../theming.md#ページアウトライン) を見てください。
 

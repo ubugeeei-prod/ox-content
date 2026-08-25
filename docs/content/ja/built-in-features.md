@@ -26,6 +26,7 @@ Ox Content は、よく使うドキュメントの挙動を既定で載せ、非
 | [ファイルツリー](./built-in/file-tree.md)                | オプトインの静的ディレクトリ図                                                 |
 | [インラインバッジ](./built-in/badges.md)                 | オプトインの `{badge:tip}`                                                     |
 | [画像](./built-in/images.md)                             | 図、キャプション、遅延読み込み、安全な寸法                                     |
+| [ページリソース](./built-in/resources.md)                | ページバンドル資産とリサイズ・クロップ・形式変換                               |
 | [コードブロック](./built-in/code-blocks.md)              | ハイライト、注釈、ソース取り込み                                               |
 | [埋め込み](./built-in/embeds.md)                         | GitHub / OG カード、パッケージマネージャタブ、YouTube、SNS                     |
 | [Mermaid](./built-in/mermaid.md)                         | フェンスを静的 SVG に描画                                                      |
@@ -33,9 +34,11 @@ Ox Content は、よく使うドキュメントの挙動を既定で載せ、非
 | [検索](./built-in/search.md)                             | 静的 BM25 インデックスとクライアント API                                       |
 | [コレクション](./built-in/collections.md)                | Markdown を SQL 風ビルダで問い合わせ                                           |
 | [品質チェック](./built-in/quality-checks.md)             | lint、型チェック、docs テスト、HTML サニタイズ                                 |
+| [型ホバー](./built-in/typed-hover.md)                    | `twoslash` フェンスのビルド時 TypeScript 型オーバーレイ                        |
 | [サイト生成](./built-in/site-generation.md)              | SSG、OG 画像、編集リンク、API ドキュメント                                     |
 | [前へ / 次へ](./built-in/pagination.md)                  | サイドバー順の前後リンク                                                       |
 | [パンくず](./built-in/breadcrumbs.md)                    | ルートからサイドバー祖先までの道筋                                             |
+| [JSON-LD](./built-in/json-ld.md)                         | オプトインの TechArticle / WebSite / BreadcrumbList                            |
 | [リーダー chrome](./built-in/reader-chrome.md)           | コピー、外部リンクアイコン、先頭へ戻る                                         |
 | [ロケールスイッチャー](./built-in/locale-switcher.md)    | 設定したロケールへのヘッダー導線                                               |
 | [アクセシビリティ](./built-in/a11y.md)                   | スキップリンクと印刷スタイル                                                   |
@@ -73,6 +76,7 @@ Ox Content は、よく使うドキュメントの挙動を既定で載せ、非
 | 手順リスト           | `steps`                                                                                                       | `false`       | [手順リスト](./built-in/steps.md)                        |
 | ファイルツリー       | `fileTree`                                                                                                    | `false`       | [ファイルツリー](./built-in/file-tree.md)                |
 | 画像                 | `images`                                                                                                      | `false`       | [画像](./built-in/images.md)                             |
+| ページリソース       | `resources`                                                                                                   | `false`       | [ページリソース](./built-in/resources.md)                |
 | 図                   | `mermaid`                                                                                                     | `false`       | [Mermaid](./built-in/mermaid.md)                         |
 | 数式                 | `math`                                                                                                        | `false`       | [数式](./built-in/math.md)                               |
 | OG 画像              | `ogImage`                                                                                                     | `false`       | [サイト生成](./built-in/site-generation.md)              |
@@ -80,6 +84,7 @@ Ox Content は、よく使うドキュメントの挙動を既定で載せ、非
 | 編集リンク           | `editThisPage`                                                                                                | `false`       | [サイト生成](./built-in/site-generation.md)              |
 | ページ送り           | `ssg.pagination`                                                                                              | `false`       | [前へ / 次へ](./built-in/pagination.md)                  |
 | パンくず             | `ssg.breadcrumbs` / `theme.breadcrumbs`                                                                       | `false`       | [パンくず](./built-in/breadcrumbs.md)                    |
+| 構造化データ         | `ssg.jsonLd`                                                                                                  | `false`       | [JSON-LD](./built-in/json-ld.md)                         |
 | リーダー chrome      | `ssg.readerChrome`                                                                                            | `false`       | [リーダー chrome](./built-in/reader-chrome.md)           |
 | ロケールスイッチャー | `ssg.localeSwitcher`                                                                                          | `false`       | [ロケールスイッチャー](./built-in/locale-switcher.md)    |
 | アクセシビリティ     | `ssg.a11y`                                                                                                    | `false`       | [アクセシビリティ](./built-in/a11y.md)                   |
@@ -97,6 +102,7 @@ Ox Content は、よく使うドキュメントの挙動を既定で載せ、非
 | チームページ         | `ssg.team`                                                                                                    | `false`       | [チーム / メンバー](./built-in/team.md)                  |
 | Git 作者             | `ssg.contributors`                                                                                            | `false`       | [Git コントリビューター](./built-in/contributors.md)     |
 | コード検査           | `codeBlockLint`, `codeBlockTypecheck`, `docsTests`                                                            | `false`       | [品質チェック](./built-in/quality-checks.md)             |
+| 型ホバー             | `typedHover`                                                                                                  | `false`       | [型ホバー](./built-in/typed-hover.md)                    |
 | 独自パイプライン     | `transformers`                                                                                                | `[]`          | [サイト生成](./built-in/site-generation.md)              |
 
 タブと YouTube 埋め込みにオプションはありません。SSG と dev preview では常に処理されます。[埋め込み](./built-in/embeds.md) を見てください。

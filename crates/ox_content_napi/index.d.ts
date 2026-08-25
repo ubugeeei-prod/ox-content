@@ -1052,6 +1052,24 @@ export interface JsIncrementalRenderOptions {
   completeInline?: boolean
 }
 
+/** Opt-in JSON-LD structured data. Presence of the object enables the feature. */
+export interface JsJsonLd {
+  /** When false, omit BreadcrumbList even if a visible trail exists. */
+  breadcrumbs?: boolean
+  /** Optional publisher. Missing fields are not invented. */
+  publisher?: JsJsonLdPublisher
+  /** Site origin used for `@id` / `url`. */
+  siteUrl?: string
+}
+
+/** Optional JSON-LD publisher. Only configured fields are emitted. */
+export interface JsJsonLdPublisher {
+  /** Organization name. */
+  name?: string
+  /** Organization URL. Unsafe schemes are dropped. */
+  url?: string
+}
+
 /** Locale information for the locale switcher. */
 export interface JsLocaleInfo {
   /** BCP 47 locale tag. */
@@ -1582,6 +1600,8 @@ export interface JsSsgConfig {
   team?: JsTeamOptions
   /** When true, honor per-page frontmatter chrome flags. */
   pageChrome?: boolean
+  /** Opt-in JSON-LD structured data. Presence enables the feature. */
+  jsonLd?: JsJsonLd
 }
 
 /** One rendered git author on an SSG page. */

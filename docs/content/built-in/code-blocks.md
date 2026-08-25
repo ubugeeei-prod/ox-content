@@ -223,5 +223,7 @@ literally.
 
 - [Quality Checks](./quality-checks.md) — lint, type-check, and test the code
   blocks themselves.
+- [Typed Hover](./typed-hover.md) — build-time TypeScript hover overlays on
+  `twoslash` fences.
 - [Code Annotations example](../examples/code-annotations.md)
 - [Code Imports example](../examples/code-imports.md)

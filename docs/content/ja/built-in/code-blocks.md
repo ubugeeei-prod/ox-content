@@ -216,5 +216,6 @@ oxContent({
 ## 関連
 
 - [品質チェック](./quality-checks.md) — コードブロック自体を lint、型チェック、テストする。
+- [型ホバー](./typed-hover.md) — `twoslash` フェンスのビルド時 TypeScript 型オーバーレイ。
 - [コード注釈の例](/examples/code-annotations.md)
 - [コードインポートの例](/examples/code-imports.md)
