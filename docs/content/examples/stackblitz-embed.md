@@ -22,7 +22,9 @@ export default {
 ```
 
 ```html
-<StackBlitz url="https://stackblitz.com/edit/vitejs-vite-abc123"></StackBlitz>
+<StackBlitz url="https://stackblitz.com/edit/vitejs-vite" />
 ```
 
 The transform appends `embed=1` and renders a sandboxed iframe.
+
+<StackBlitz url="https://stackblitz.com/edit/vitejs-vite" />

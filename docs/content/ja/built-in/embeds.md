@@ -232,8 +232,10 @@ oxContent({
 `embeds.stackBlitz` は StackBlitz プロジェクト URL を、`embed=1` を付けたサンドボックス iframe にします。
 
 ```md
-<StackBlitz url="https://stackblitz.com/edit/vitejs-vite-abc123"></StackBlitz>
+<StackBlitz url="https://stackblitz.com/edit/vitejs-vite" />
 ```
+
+<StackBlitz url="https://stackblitz.com/edit/vitejs-vite" />
 
 ## WebContainer
 

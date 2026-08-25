@@ -289,8 +289,10 @@ is why it stays opt-in.
 with `embed=1` appended:
 
 ```md
-<StackBlitz url="https://stackblitz.com/edit/vitejs-vite-abc123"></StackBlitz>
+<StackBlitz url="https://stackblitz.com/edit/vitejs-vite" />
 ```
+
+<StackBlitz url="https://stackblitz.com/edit/vitejs-vite" />
 
 ## WebContainer
 

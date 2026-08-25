@@ -30,13 +30,14 @@ pub(super) fn find_component<'a>(
             return Some(ComponentElement { span: (tag_start, start_tag.end), attrs, body: "" });
         }
         let close = format!("</{name}>");
-        let close_start = find_ci(html, start_tag.end, &close).unwrap_or(start_tag.end);
-        let span_end =
-            if close_start == start_tag.end { start_tag.end } else { close_start + close.len() };
+        let (body_end, span_end) = match find_ci(html, start_tag.end, &close) {
+            Some(close_start) => (close_start, close_start + close.len()),
+            None => (start_tag.end, start_tag.end),
+        };
         return Some(ComponentElement {
             span: (tag_start, span_end),
             attrs,
-            body: &html[start_tag.end..close_start],
+            body: &html[start_tag.end..body_end],
         });
     }
 }

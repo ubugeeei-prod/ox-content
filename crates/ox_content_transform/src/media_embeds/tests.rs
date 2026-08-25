@@ -17,6 +17,21 @@ fn renders_spotify_iframe() {
 }
 
 #[test]
+fn renders_stackblitz_iframe_and_consumes_empty_close_tag() {
+    let html = transform_media_embeds(
+        r#"<StackBlitz url="https://stackblitz.com/edit/vitejs-vite"></StackBlitz><p>after</p>"#,
+        Some(&MediaEmbedsOptions {
+            spotify: None,
+            stack_blitz: Some(true),
+            twitter: None,
+            bluesky: None,
+            web_container: None,
+        }),
+    );
+    insta::assert_snapshot!(html);
+}
+
+#[test]
 fn renders_static_tweet_card() {
     let html = transform_media_embeds(
         r#"<Tweet id="123">hello</Tweet>"#,

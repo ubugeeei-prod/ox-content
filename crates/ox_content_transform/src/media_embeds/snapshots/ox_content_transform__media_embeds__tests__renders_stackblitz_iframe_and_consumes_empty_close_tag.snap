@@ -1,0 +1,5 @@
+---
+source: crates/ox_content_transform/src/media_embeds/tests.rs
+expression: html
+---
+<iframe class="ox-stackblitz" src="https://stackblitz.com/edit/vitejs-vite?embed=1" title="StackBlitz project" width="100%" height="480" loading="lazy" allow="accelerometer; ambient-light-sensor; camera; encrypted-media; geolocation; gyroscope; hid; microphone; midi; payment; serial; usb; vr; xr-spatial-tracking; clipboard-read; clipboard-write; fullscreen" sandbox="allow-forms allow-modals allow-popups allow-presentation allow-same-origin allow-scripts"></iframe><p>after</p>

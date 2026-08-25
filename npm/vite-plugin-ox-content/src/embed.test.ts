@@ -223,12 +223,14 @@ describe("builtin embed input hardening", () => {
     const html = await transformBuiltinEmbeds(
       [
         '<Spotify url="https://open.spotify.com/track/abc123"></Spotify>',
+        '<StackBlitz url="https://stackblitz.com/edit/vitejs-vite"></StackBlitz>',
         '<Tweet id="123">static text</Tweet>',
       ].join(""),
       {
         github: false,
         openGraph: false,
         spotify: true,
+        stackBlitz: true,
         twitter: true,
       },
     );
