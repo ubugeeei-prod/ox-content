@@ -53,6 +53,8 @@ export interface PageData {
   path: string;
   /** Output URL path */
   url: string;
+  /** Published Markdown companion URL when `ssg.markdownSource` is on */
+  markdownSource?: string;
   /** Frontmatter */
   frontmatter: Record<string, unknown>;
   /** Layout name */
@@ -97,6 +99,7 @@ export function renderPage(page: PageData, options: ThemeRenderOptions): string 
     contributors: page.contributors,
     path: page.path,
     url: page.url,
+    markdownSource: page.markdownSource,
     frontmatter: page.frontmatter,
     layout: page.layout,
   };
@@ -115,6 +118,7 @@ export function renderPage(page: PageData, options: ThemeRenderOptions): string 
       contributors: p.contributors,
       path: p.path,
       url: p.url,
+      markdownSource: p.markdownSource,
       frontmatter: p.frontmatter,
       layout: p.layout,
     })),

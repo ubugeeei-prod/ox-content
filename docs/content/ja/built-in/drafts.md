@@ -66,4 +66,5 @@ draft: true
 - [サイト生成](./site-generation.md)
 - [検索](./search.md)
 - [Sitemap / robots / llms.txt](./site-maps.md)
+- [Markdown ソースの併記](./markdown-source.md)
 - [組み込み機能の一覧](../built-in-features.md)

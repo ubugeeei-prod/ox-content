@@ -79,6 +79,7 @@ export default defineConfig({
 | `blog`            | `false`        | ページ送り索引、著者、タグ、アーカイブ、任意の外部フィード。[ブログ](./blog.md) を見てください。         |
 | `sectionIndex`    | `false`        | `index.md` がないディレクトリ向けの生成一覧。[セクション索引ページ](./section-index.md) を見てください。 |
 | `pageChrome`      | `false`        | ページ単位の frontmatter chrome フラグを尊重する。                                                       |
+| `markdownSource`  | `false`        | 各ページの横に元の Markdown を公開する。[Markdown ソースの併記](./markdown-source.md)。                  |
 | `theme`           | `defaultTheme` | `defineTheme()` によるテーマ設定。                                                                       |
 | `navigation`      | 派生           | ファイルツリーの代わりに明示的なナビグループ。                                                           |
 
@@ -273,6 +274,7 @@ oxContent({
 - [セクション索引ページ](./section-index.md) — `index.md` がないディレクトリ向けのオプトイン一覧。
 - [ヘッダー chrome](./header-chrome.md) — オプトインのヘッダーナビ、告知、ページフラグ。
 - [Sitemap / robots / llms.txt](./site-maps.md) — オプトインのクロール用マニフェスト。
+- [Markdown ソースの併記](./markdown-source.md) — 各ページの横に元の Markdown をオプトインで出す。
 - [リダイレクトとエイリアス](./redirects.md) — オプトインの静的 HTML リダイレクト。
 - [RSS / Atom / JSON フィード](./feeds.md) — オプトインのコレクションフィード。
 - [PWA マニフェストとサービスワーカー](./pwa.md) — オプトインのマニフェストと保守的なオフラインキャッシュ（クライアント JS を追加）。
