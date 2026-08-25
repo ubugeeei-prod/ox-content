@@ -672,7 +672,6 @@ export async function transformMarkdown(
   const components = result.components ?? [];
   html = await applyTypedHover(source, html, options.typedHover);
 
-
   // Generate JavaScript module code
   const code = generateModuleCode(html, frontmatter, toc, imports, exports, components, filePath);
 
