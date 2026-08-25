@@ -116,6 +116,73 @@ panic. The HTML renderer currently emits nothing for `MdxjsEsm` or
 `{expression}` nodes; framework plugins will resolve imports and evaluate
 expressions later.
 
+When MDX is active, the generated Vite module also exports structured
+metadata collected from those AST nodes. User JavaScript is **not**
+executed during transform, and `import` statements are not re-emitted as
+live ESM — they are JSON data:
+
+```ts
+import {
+  html,
+  frontmatter,
+  toc,
+  imports,
+  exports,
+  components,
+} from "./guide.mdx";
+
+html;
+// string — rendered HTML (islands, no live imports)
+
+frontmatter;
+// object — parsed YAML
+
+toc;
+// array — heading tree
+
+imports;
+// [
+//   {
+//     source: "./Alert",
+//     specifiers: [{ imported: "default", local: "Alert", kind: "default" }],
+//   },
+//   {
+//     source: "./Chart",
+//     specifiers: [{ imported: "Chart", local: "Plot", kind: "named" }],
+//   },
+//   {
+//     source: "./icons",
+//     specifiers: [{ imported: "*", local: "Icons", kind: "namespace" }],
+//   },
+// ]
+
+exports;
+// ["title", "helper"]
+
+components;
+// ["Alert", "Badge", "Icons.Star"]
+```
+
+Each `imports` entry is one statement. Specifier `kind` is `default`,
+`named`, or `namespace`. `exports` is the list of exported names
+(`default` for `export default`). `components` is the unique PascalCase
+and member JSX names in document order; fragments (`<>...</>`) are
+skipped. When MDX is off, or a file has no MDX nodes, these three
+exports are empty arrays so the module shape stays stable.
+
+```md
+import Alert from './Alert'
+import { Chart as Plot } from './Chart'
+import * as Icons from './icons'
+
+export const title = 'Guide'
+export function helper() {}
+
+<Alert />
+
+Hello <Badge /> and <Icons.Star />
+```
+
 Document-level `{expression}` uses a naive brace / string / comment scan —
 not a JavaScript parser — so regex literals may confuse boundaries.
 Unclosed `{` stays ordinary text. Fences and inline code never become

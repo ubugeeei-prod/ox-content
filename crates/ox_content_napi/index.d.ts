@@ -2186,6 +2186,24 @@ export declare function loadDictionariesFlat(dir: string): Record<string, Record
 /** Returns true when a document belongs to at least one requested search scope. */
 export declare function matchesSearchScopes(id: string, url: string, scopes: Array<string>): boolean
 
+/** One `import` statement collected from MDX ESM. */
+export interface MdxImport {
+  /** Module specifier string. */
+  source: string
+  /** Bindings created by the import. */
+  specifiers: Array<MdxImportSpecifier>
+}
+
+/** How a specifier was imported. */
+export interface MdxImportSpecifier {
+  /** Imported name (`default`, `*`, or the named export). */
+  imported: string
+  /** Local binding name. */
+  local: string
+  /** `default`, `named`, or `namespace`. */
+  kind: 'default' | 'named' | 'namespace'
+}
+
 /** Restores code block metadata after JavaScript-side syntax highlighting. */
 export declare function mergeHighlightedCodeBlocks(originalHtml: string, highlightedHtml: string): string
 
@@ -2354,7 +2372,7 @@ export declare function transformMermaid(html: string, mmdcPath: string): Mermai
  */
 export declare function transformPmEmbeds(html: string, startGroup: number, options?: JsPmOptions | undefined | null): JsPmTransformResult
 
-/** Transform result containing HTML, frontmatter, and TOC. */
+/** Transform result containing HTML, frontmatter, TOC, and MDX metadata. */
 export interface TransformResult {
   /** The rendered HTML. */
   html: string
@@ -2364,6 +2382,12 @@ export interface TransformResult {
   toc: Array<TocEntry>
   /** Parse/render errors, if any. */
   errors: Array<string>
+  /** MDX `import` statements (empty when MDX is off or no ESM nodes). */
+  imports: Array<MdxImport>
+  /** Export names from MDX ESM (empty when MDX is off or no exports). */
+  exports: Array<string>
+  /** Unique JSX component names in document order (empty when none). */
+  components: Array<string>
 }
 
 /**

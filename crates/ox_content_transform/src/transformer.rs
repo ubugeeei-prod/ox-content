@@ -24,6 +24,7 @@ use toc::extract_toc;
 use crate::{
     SanitizeOptions, TransformOptions, TransformResult,
     features::{self, TransformFeatureOptions},
+    mdx_metadata::extract_mdx_metadata,
 };
 
 const PREPARED_SOURCE_PAYLOAD_VERSION: u32 = 1;
@@ -87,12 +88,16 @@ impl MarkdownTransformer {
                     html = crate::sanitize::sanitize_html(&html, self.sanitize_options.as_ref());
                 }
 
+                let metadata = extract_mdx_metadata(&document);
                 TransformResult {
                     html,
                     frontmatter: serde_json::to_string(&prepared.frontmatter)
                         .unwrap_or_else(|_| "{}".to_string()),
                     toc: extract_toc(&document, self.toc_max_depth),
                     errors,
+                    imports: metadata.imports,
+                    exports: metadata.exports,
+                    components: metadata.components,
                 }
             }
             Err(error) => TransformResult {
@@ -103,6 +108,9 @@ impl MarkdownTransformer {
                     errors.push(error.to_string());
                     errors
                 },
+                imports: vec![],
+                exports: vec![],
+                components: vec![],
             },
         }
     }

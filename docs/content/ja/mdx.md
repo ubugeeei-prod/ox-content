@@ -113,6 +113,73 @@ JavaScript パーサーではないので、正規表現リテラルやテンプ
 HTML レンダラーはいまのところ `MdxjsEsm` や `{expression}` ノードには何も出しません。
 フレームワークプラグインが後で import を解決し、式を評価します。
 
+MDX が有効なとき、生成される Vite モジュールはそれらの AST ノードから集めた
+構造化メタデータも export します。transform 中にユーザーの JavaScript は
+**実行されません**。`import` 文は生きた ESM としては再出力されず、JSON
+データになります。
+
+```ts
+import {
+  html,
+  frontmatter,
+  toc,
+  imports,
+  exports,
+  components,
+} from "./guide.mdx";
+
+html;
+// string — 描画済み HTML（island。生きた import はなし）
+
+frontmatter;
+// object — パース済み YAML
+
+toc;
+// array — 見出しツリー
+
+imports;
+// [
+//   {
+//     source: "./Alert",
+//     specifiers: [{ imported: "default", local: "Alert", kind: "default" }],
+//   },
+//   {
+//     source: "./Chart",
+//     specifiers: [{ imported: "Chart", local: "Plot", kind: "named" }],
+//   },
+//   {
+//     source: "./icons",
+//     specifiers: [{ imported: "*", local: "Icons", kind: "namespace" }],
+//   },
+// ]
+
+exports;
+// ["title", "helper"]
+
+components;
+// ["Alert", "Badge", "Icons.Star"]
+```
+
+`imports` の各要素は 1 つの文です。specifier の `kind` は `default`、
+`named`、または `namespace` です。`exports` は export された名前のリストです
+（`export default` は `default`）。`components` は文書順の一意な
+PascalCase / メンバー JSX 名です。フラグメント（`<>...</>`）は除きます。
+MDX がオフのとき、または MDX ノードがないファイルでは、これら 3 つの
+export は空配列になり、モジュールの形は安定したままです。
+
+```md
+import Alert from './Alert'
+import { Chart as Plot } from './Chart'
+import * as Icons from './icons'
+
+export const title = 'Guide'
+export function helper() {}
+
+<Alert />
+
+Hello <Badge /> and <Icons.Star />
+```
+
 文書レベルの `{expression}` も素朴な brace / 文字列 / コメント走査を使い、
 JavaScript パーサーではないので、正規表現リテラルは境界を混乱させることがあります。
 閉じられていない `{` は普通のテキストのままです。フェンスとインラインコードは式になりません。

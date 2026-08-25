@@ -38,6 +38,10 @@ fn mdx_transform_option_reaches_the_parser_and_renderer() {
     assert!(!result.html.contains("import Alert"));
     assert!(result.html.contains("data-ox-island=\"Alert\""), "{}", result.html);
     assert!(result.html.contains("&quot;Hi&quot;"), "{}", result.html);
+    assert_eq!(result.imports.len(), 1);
+    assert_eq!(result.imports[0].source, "./Alert");
+    assert_eq!(result.components, vec!["Alert"]);
+    assert!(result.exports.is_empty());
 }
 
 #[test]

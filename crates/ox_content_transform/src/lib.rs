@@ -11,7 +11,11 @@ pub mod tabs;
 pub mod transformer;
 pub mod youtube;
 
+mod mdx_metadata;
 mod options;
 
+pub use mdx_metadata::{
+    MdxImport, MdxImportSpecifier, MdxImportSpecifierKind, MdxMetadata, extract_mdx_metadata,
+};
 pub use options::*;
 pub use publish_state::{PublishDecision, PublishStateOptions, classify_publish_state};

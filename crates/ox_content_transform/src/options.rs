@@ -171,4 +171,10 @@ pub struct TransformResult {
     pub frontmatter: String,
     pub toc: Vec<TocEntry>,
     pub errors: Vec<String>,
+    /// MDX `import` statements parsed from `MdxjsEsm` (empty when MDX is off).
+    pub imports: Vec<crate::MdxImport>,
+    /// Export names from `MdxjsEsm` (empty when MDX is off).
+    pub exports: Vec<String>,
+    /// Unique JSX component names, document order (empty when MDX is off).
+    pub components: Vec<String>,
 }

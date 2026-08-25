@@ -46,7 +46,31 @@ pub struct TocEntry {
     pub children: Vec<TocEntry>,
 }
 
-/// Transform result containing HTML, frontmatter, and TOC.
+/// How a specifier was imported.
+#[napi(object)]
+pub struct MdxImportSpecifier {
+    /// Imported name (`default`, `*`, or the named export).
+    pub imported: String,
+
+    /// Local binding name.
+    pub local: String,
+
+    /// `default`, `named`, or `namespace`.
+    #[napi(ts_type = "'default' | 'named' | 'namespace'")]
+    pub kind: String,
+}
+
+/// One `import` statement collected from MDX ESM.
+#[napi(object)]
+pub struct MdxImport {
+    /// Module specifier string.
+    pub source: String,
+
+    /// Bindings created by the import.
+    pub specifiers: Vec<MdxImportSpecifier>,
+}
+
+/// Transform result containing HTML, frontmatter, TOC, and MDX metadata.
 #[napi(object)]
 pub struct TransformResult {
     /// The rendered HTML.
@@ -60,6 +84,15 @@ pub struct TransformResult {
 
     /// Parse/render errors, if any.
     pub errors: Vec<String>,
+
+    /// MDX `import` statements (empty when MDX is off or no ESM nodes).
+    pub imports: Vec<MdxImport>,
+
+    /// Export names from MDX ESM (empty when MDX is off or no exports).
+    pub exports: Vec<String>,
+
+    /// Unique JSX component names in document order (empty when none).
+    pub components: Vec<String>,
 }
 
 /// Source offset where prepared Markdown content begins in the original source.

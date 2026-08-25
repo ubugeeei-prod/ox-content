@@ -2253,6 +2253,33 @@ export interface MarkdownNode {
 }
 
 /**
+ * How a specifier was imported from an MDX `import` statement.
+ */
+export type MdxImportSpecifierKind = "default" | "named" | "namespace";
+
+/**
+ * One binding created by an MDX `import` statement.
+ */
+export interface MdxImportSpecifier {
+  /** Imported name (`default`, `*`, or the named export). */
+  imported: string;
+  /** Local binding name. */
+  local: string;
+  /** Specifier kind. */
+  kind: MdxImportSpecifierKind;
+}
+
+/**
+ * One MDX `import` statement collected from the AST.
+ */
+export interface MdxImport {
+  /** Module specifier string. */
+  source: string;
+  /** Bindings created by the import. */
+  specifiers: MdxImportSpecifier[];
+}
+
+/**
  * Transform result.
  */
 export interface TransformResult {
@@ -2280,6 +2307,21 @@ export interface TransformResult {
    * Table of contents.
    */
   toc: TocEntry[];
+
+  /**
+   * MDX `import` statements (empty when MDX is off or no ESM nodes).
+   */
+  imports: MdxImport[];
+
+  /**
+   * Export names from MDX ESM (empty when MDX is off or no exports).
+   */
+  exports: string[];
+
+  /**
+   * Unique JSX component names in document order (empty when none).
+   */
+  components: string[];
 }
 
 /**

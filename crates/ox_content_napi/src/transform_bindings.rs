@@ -45,6 +45,25 @@ impl From<ox_content_transform::TocEntry> for TocEntry {
     }
 }
 
+impl From<ox_content_transform::MdxImportSpecifier> for crate::MdxImportSpecifier {
+    fn from(specifier: ox_content_transform::MdxImportSpecifier) -> Self {
+        Self {
+            imported: specifier.imported,
+            local: specifier.local,
+            kind: specifier.kind.as_str().to_string(),
+        }
+    }
+}
+
+impl From<ox_content_transform::MdxImport> for crate::MdxImport {
+    fn from(import: ox_content_transform::MdxImport) -> Self {
+        Self {
+            source: import.source,
+            specifiers: import.specifiers.into_iter().map(Into::into).collect(),
+        }
+    }
+}
+
 impl From<ox_content_transform::TransformResult> for TransformResult {
     fn from(result: ox_content_transform::TransformResult) -> Self {
         Self {
@@ -52,6 +71,9 @@ impl From<ox_content_transform::TransformResult> for TransformResult {
             frontmatter: result.frontmatter,
             toc: result.toc.into_iter().map(Into::into).collect(),
             errors: result.errors,
+            imports: result.imports.into_iter().map(Into::into).collect(),
+            exports: result.exports,
+            components: result.components,
         }
     }
 }
