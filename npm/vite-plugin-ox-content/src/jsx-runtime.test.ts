@@ -48,3 +48,11 @@ describe("jsx runtime packaging", () => {
     });
   }
 });
+
+describe("typed hover packaging", () => {
+  it("leaves the native-preview sync API external so it resolves its own tsgo binary", () => {
+    const neverBundle: string[] = require("../vite.config.ts").default.pack.deps.neverBundle;
+    expect(neverBundle).toContain("@typescript/native-preview");
+    expect(neverBundle).toContain("@typescript/native-preview/unstable/sync");
+  });
+});

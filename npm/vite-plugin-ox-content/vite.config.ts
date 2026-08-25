@@ -44,6 +44,7 @@ export default defineConfig({
         "react-dom/server",
         "typescript",
         "@typescript/native-preview",
+        "@typescript/native-preview/unstable/sync",
       ],
     },
   }),
