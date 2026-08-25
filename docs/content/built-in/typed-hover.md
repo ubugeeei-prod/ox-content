@@ -14,8 +14,8 @@ fences tagged `twoslash` receive hover payloads. Types are computed during
 the Markdown transform. The page ships JSON plus a tiny overlay script —
 **no TypeScript compiler runs in the browser**.
 
-| Option       | Type                          | Default |
-| ------------ | ----------------------------- | ------- |
+| Option       | Type                            | Default |
+| ------------ | ------------------------------- | ------- |
 | `typedHover` | `boolean` / `TypedHoverOptions` | `false` |
 
 ```ts
@@ -56,13 +56,13 @@ const skipped = 1;
 ```
 ````
 
-| Fence                         | Overlay |
-| ----------------------------- | ------- |
-| `` ```ts twoslash ``          | yes     |
-| `` ```tsx twoslash ``         | yes     |
-| `` ```ts `` (no meta)         | no      |
-| `` ```js twoslash ``          | no      |
-| Inline `` `const value = 1` `` | no     |
+| Fence                          | Overlay |
+| ------------------------------ | ------- |
+| ` ```ts twoslash `             | yes     |
+| ` ```tsx twoslash `            | yes     |
+| ` ```ts ` (no meta)            | no      |
+| ` ```js twoslash `             | no      |
+| Inline `` `const value = 1` `` | no      |
 
 `twoslash` is the same meta that [`codeBlockTypecheck`](./quality-checks.md)
 already recognizes. A fence can be type-checked and receive hovers without a

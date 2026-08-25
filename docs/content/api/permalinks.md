@@ -61,6 +61,7 @@
     <code class="ox-api-entry__param-name">value</code>
     <code class="ox-api-entry__param-type">string</code>
   </div>
+  
 </li>
 </ul>
 </div>
@@ -68,6 +69,7 @@
 <h4>Returns</h4>
 <div class="ox-api-entry__return">
   <code class="ox-api-entry__return-type">string</code>
+  
 </div>
 </div>
   </div>
@@ -103,6 +105,7 @@
     <code class="ox-api-entry__param-name">value</code>
     <code class="ox-api-entry__param-type">boolean | <a href="./types.md#cascadeoptions">CascadeOptions</a> | undefined</code>
   </div>
+  
 </li>
 </ul>
 </div>
@@ -110,6 +113,7 @@
 <h4>Returns</h4>
 <div class="ox-api-entry__return">
   <code class="ox-api-entry__return-type"><a href="./types.md#resolvedcascadeoptions">ResolvedCascadeOptions</a></code>
+  
 </div>
 </div>
   </div>
@@ -179,12 +183,14 @@
     <code class="ox-api-entry__param-name">input</code>
     <code class="ox-api-entry__param-type">{ pages: readonly <a href="#routepageinput">RoutePageInput</a>[]; <a href="#permalinks">permalinks</a>?: <a href="./types.md#resolvedpermalinksoptions">ResolvedPermalinksOptions</a> | null; cascade?: <a href="./types.md#resolvedcascadeoptions">ResolvedCascadeOptions</a> | null }</code>
   </div>
+  
 </li>
 <li class="ox-api-entry__param">
   <div class="ox-api-entry__param-heading">
     <code class="ox-api-entry__param-name">input.pages</code>
     <code class="ox-api-entry__param-type">readonly <a href="#routepageinput">RoutePageInput</a>[]</code>
   </div>
+  
 </li>
 <li class="ox-api-entry__param">
   <div class="ox-api-entry__param-heading">
@@ -206,6 +212,7 @@
 <h4>Returns</h4>
 <div class="ox-api-entry__return">
   <code class="ox-api-entry__return-type"><a href="#routeresolveoutput">RouteResolveOutput</a></code>
+  
 </div>
 </div>
   </div>
@@ -230,6 +237,7 @@
     <code class="ox-api-entry__param-name">value</code>
     <code class="ox-api-entry__param-type">boolean | <a href="./types.md#permalinksoptions">PermalinksOptions</a> | undefined</code>
   </div>
+  
 </li>
 </ul>
 </div>
@@ -237,6 +245,7 @@
 <h4>Returns</h4>
 <div class="ox-api-entry__return">
   <code class="ox-api-entry__return-type"><a href="./types.md#resolvedpermalinksoptions">ResolvedPermalinksOptions</a></code>
+  
 </div>
 </div>
   </div>
@@ -316,3 +325,4 @@
 </div>
   </div>
 </details>
+

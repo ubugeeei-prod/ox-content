@@ -69,18 +69,21 @@
     <code class="ox-api-entry__param-name">input</code>
     <code class="ox-api-entry__param-type">{ generatedPages: Array&lt;{ inputPath: string; outputPath: string; html: string }&gt;; listedPages: readonly <a href="./taxonomies-html.md#taxonomysourcepage">TaxonomySourcePage</a>[]; options?: <a href="./types.md#resolvedtaxonomiesoptions">ResolvedTaxonomiesOptions</a>; outDir: string; base: string; render: (page: <a href="#taxonomygeneratedpage">TaxonomyGeneratedPage</a>) =&gt; Promise&lt;string&gt;; errors: string[] }</code>
   </div>
+  
 </li>
 <li class="ox-api-entry__param">
   <div class="ox-api-entry__param-heading">
     <code class="ox-api-entry__param-name">input.generatedPages</code>
     <code class="ox-api-entry__param-type">Array&lt;{ inputPath: string; outputPath: string; html: string }&gt;</code>
   </div>
+  
 </li>
 <li class="ox-api-entry__param">
   <div class="ox-api-entry__param-heading">
     <code class="ox-api-entry__param-name">input.listedPages</code>
     <code class="ox-api-entry__param-type">readonly <a href="./taxonomies-html.md#taxonomysourcepage">TaxonomySourcePage</a>[]</code>
   </div>
+  
 </li>
 <li class="ox-api-entry__param">
   <div class="ox-api-entry__param-heading">
@@ -94,24 +97,28 @@
     <code class="ox-api-entry__param-name">input.outDir</code>
     <code class="ox-api-entry__param-type">string</code>
   </div>
+  
 </li>
 <li class="ox-api-entry__param">
   <div class="ox-api-entry__param-heading">
     <code class="ox-api-entry__param-name">input.base</code>
     <code class="ox-api-entry__param-type">string</code>
   </div>
+  
 </li>
 <li class="ox-api-entry__param">
   <div class="ox-api-entry__param-heading">
     <code class="ox-api-entry__param-name">input.render</code>
     <code class="ox-api-entry__param-type">(page: <a href="#taxonomygeneratedpage">TaxonomyGeneratedPage</a>) =&gt; Promise&lt;string&gt;</code>
   </div>
+  
 </li>
 <li class="ox-api-entry__param">
   <div class="ox-api-entry__param-heading">
     <code class="ox-api-entry__param-name">input.errors</code>
     <code class="ox-api-entry__param-type">string[]</code>
   </div>
+  
 </li>
 </ul>
 </div>
@@ -119,6 +126,7 @@
 <h4>Returns</h4>
 <div class="ox-api-entry__return">
   <code class="ox-api-entry__return-type">Promise&lt;void&gt;</code>
+  
 </div>
 </div>
   </div>
@@ -143,12 +151,14 @@
     <code class="ox-api-entry__param-name">pages</code>
     <code class="ox-api-entry__param-type"><a href="./taxonomies-html.md#taxonomysourcepage">TaxonomySourcePage</a>[]</code>
   </div>
+  
 </li>
 <li class="ox-api-entry__param">
   <div class="ox-api-entry__param-heading">
     <code class="ox-api-entry__param-name">listed</code>
     <code class="ox-api-entry__param-type">readonly <a href="./taxonomies-html.md#taxonomysourcepage">TaxonomySourcePage</a>[]</code>
   </div>
+  
 </li>
 <li class="ox-api-entry__param">
   <div class="ox-api-entry__param-heading">
@@ -163,6 +173,7 @@
 <h4>Returns</h4>
 <div class="ox-api-entry__return">
   <code class="ox-api-entry__return-type">void</code>
+  
 </div>
 </div>
   </div>
@@ -188,6 +199,7 @@
     <code class="ox-api-entry__param-name">value</code>
     <code class="ox-api-entry__param-type">boolean | <a href="./types.md#taxonomiesoptions">TaxonomiesOptions</a> | undefined</code>
   </div>
+  
 </li>
 </ul>
 </div>
@@ -195,6 +207,7 @@
 <h4>Returns</h4>
 <div class="ox-api-entry__return">
   <code class="ox-api-entry__return-type"><a href="./types.md#resolvedtaxonomiesoptions">ResolvedTaxonomiesOptions</a></code>
+  
 </div>
 </div>
   </div>
@@ -281,6 +294,7 @@
     <code class="ox-api-entry__param-name">term</code>
     <code class="ox-api-entry__param-type">string</code>
   </div>
+  
 </li>
 </ul>
 </div>
@@ -288,6 +302,7 @@
 <h4>Returns</h4>
 <div class="ox-api-entry__return">
   <code class="ox-api-entry__return-type">string | undefined</code>
+  
 </div>
 </div>
   </div>
@@ -325,6 +340,7 @@
     <code class="ox-api-entry__param-name">page</code>
     <code class="ox-api-entry__param-type"><a href="#taxonomygeneratedpage">TaxonomyGeneratedPage</a></code>
   </div>
+  
 </li>
 </ul>
 </div>
@@ -332,7 +348,7 @@
 <h4>Returns</h4>
 <div class="ox-api-entry__return">
   <code class="ox-api-entry__return-type">object</code>
-<div class="ox-api-entry__return-members">
+  <div class="ox-api-entry__return-members">
 <div class="ox-api-entry__return-member">
 <h5>frontmatter</h5>
 <code class="ox-api-entry__return-member-type language-typescript">frontmatter: Record&lt;string, unknown&gt;;</code>
@@ -362,3 +378,4 @@
 </div>
   </div>
 </details>
+
