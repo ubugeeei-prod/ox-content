@@ -209,6 +209,30 @@ pub struct JsSsgConfig {
     pub team: Option<JsTeamOptions>,
     /// When true, honor per-page frontmatter chrome flags.
     pub page_chrome: Option<bool>,
+    /// Opt-in JSON-LD structured data. Presence enables the feature.
+    pub json_ld: Option<JsJsonLd>,
+}
+
+/// Opt-in JSON-LD structured data. Presence of the object enables the feature.
+#[napi(object)]
+#[derive(Clone, Default)]
+pub struct JsJsonLd {
+    /// When false, omit BreadcrumbList even if a visible trail exists.
+    pub breadcrumbs: Option<bool>,
+    /// Optional publisher. Missing fields are not invented.
+    pub publisher: Option<JsJsonLdPublisher>,
+    /// Site origin used for `@id` / `url`.
+    pub site_url: Option<String>,
+}
+
+/// Optional JSON-LD publisher. Only configured fields are emitted.
+#[napi(object)]
+#[derive(Clone, Default)]
+pub struct JsJsonLdPublisher {
+    /// Organization name.
+    pub name: Option<String>,
+    /// Organization URL. Unsafe schemes are dropped.
+    pub url: Option<String>,
 }
 
 /// Opt-in skip link and print styles. Presence of the object enables the feature.

@@ -39,6 +39,7 @@ import { transformMermaidStatic } from "./plugins/mermaid";
 import { normalizeSelfClosingEmbeds, transformBuiltinEmbeds } from "./plugins";
 import { protectMermaidSvgs, restoreMermaidSvgs } from "./plugins/mermaid-protect";
 import { typecheckCodeBlocks } from "./code-blocks";
+import { applyTypedHover } from "./typed-hover";
 import { resolveMdxForFilePath } from "./markdown";
 
 /**
@@ -656,6 +657,8 @@ export async function transformMarkdown(
   if (options.sanitize?.enabled) {
     html = napi.sanitizeHtml(html, toJsSanitizeOptions(options.sanitize));
   }
+
+  html = await applyTypedHover(source, html, options.typedHover);
 
   // Generate JavaScript module code
   const code = generateModuleCode(html, frontmatter, toc, filePath, options);

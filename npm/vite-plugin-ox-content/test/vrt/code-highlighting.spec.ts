@@ -19,6 +19,7 @@ function createResolvedOptions(): ResolvedOptions {
       lastUpdated: false,
       pagination: false,
       breadcrumbs: false,
+      jsonLd: false,
       readerChrome: false,
       localeSwitcher: false,
       a11y: false,

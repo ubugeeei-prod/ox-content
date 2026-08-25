@@ -1,6 +1,6 @@
 use super::super::{
-    A11y, EntryPageConfig, NavGroup, NavItem, PageChromeFlags, PageData, ReaderChrome, SSG_CSS,
-    SsgConfig, ThemeConfig, generate_bare_html, generate_html,
+    A11y, EntryPageConfig, JsonLd, NavGroup, NavItem, PageChromeFlags, PageData, ReaderChrome,
+    SSG_CSS, SsgConfig, ThemeConfig, generate_bare_html, generate_html,
 };
 
 fn nav_item(title: &str, path: &str, href: &str) -> NavItem {
@@ -75,6 +75,7 @@ fn config(breadcrumbs: bool) -> SsgConfig {
         locale_paths: vec![],
         a11y: A11y::default(),
         page_chrome: false,
+        json_ld: JsonLd::default(),
     }
 }
 

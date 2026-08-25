@@ -181,4 +181,6 @@ actually ships.
 
 - [Code Blocks](./code-blocks.md) — highlighting, annotations, and imports
   for the fences these checks guard.
+- [Typed Hover](./typed-hover.md) — opt-in build-time type overlays for
+  `twoslash` fences.
 - [HTML Sanitizer example](../examples/html-sanitizer.md)

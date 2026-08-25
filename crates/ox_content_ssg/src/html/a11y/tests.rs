@@ -35,6 +35,7 @@ fn config(a11y: A11y) -> SsgConfig {
         locale_paths: vec![],
         a11y,
         page_chrome: false,
+        json_ld: crate::JsonLd::default(),
     }
 }
 

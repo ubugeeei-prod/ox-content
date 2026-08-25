@@ -21,6 +21,7 @@ import { resolveFeedsOptions } from "./feeds";
 import { resolvePwaOptions } from "./pwa";
 import { resolveTaxonomiesOptions } from "./taxonomies";
 import { resolveVersionsOptions } from "./versions";
+import { PageResourceError, resolveResourcesOptions } from "./resources";
 import {
   resolveSearchOptions,
   buildSearchIndex,
@@ -42,6 +43,7 @@ import { generateCollectionsVirtualModule, resolveCollectionsOptions } from "./c
 import type { BuiltinPmOptions, OxContentOptions, ResolvedOptions } from "./types";
 import { resolveCardOptions } from "./card-options";
 import { resolveFileTreeOptions } from "./file-tree-options";
+import { resolveTypedHoverOptions } from "./typed-hover";
 import { resolveIncludeOptions } from "./include-options";
 import { resolveStepsOptions } from "./step-options";
 import type { TwitterEmbedOptions } from "./plugins";
@@ -67,6 +69,8 @@ export type {
   ResolvedContainerOptions,
   ImageOptions,
   ResolvedImageOptions,
+  ResourcesOptions,
+  ResolvedResourcesOptions,
   CodeImportOptions,
   ResolvedCodeImportOptions,
   IncludeOptions,
@@ -85,6 +89,8 @@ export type {
   ResolvedCodeBlockLintOptions,
   CodeBlockTypecheckOptions,
   ResolvedCodeBlockTypecheckOptions,
+  TypedHoverOptions,
+  ResolvedTypedHoverOptions,
   DocsTestOptions,
   ResolvedDocsTestOptions,
   MarkdownDisplayFormat,
@@ -96,6 +102,9 @@ export type {
   ExtractedDocs,
   SsgOptions,
   ResolvedSsgOptions,
+  JsonLdOptions,
+  JsonLdPublisherOptions,
+  ResolvedJsonLd,
   A11yOptions,
   ResolvedA11y,
   ReaderChromeOptions,
@@ -449,6 +458,9 @@ function createSsgPlugin(
         }
       } catch (err) {
         console.error("[ox-content] SSG build failed:", err);
+        if (err instanceof PageResourceError) {
+          throw err;
+        }
       }
     },
   };
@@ -627,6 +639,7 @@ function resolveOptions(options: OxContentOptions): ResolvedOptions {
     pwa: resolvePwaOptions(options.pwa),
     taxonomies: resolveTaxonomiesOptions(options.taxonomies),
     versions: resolveVersionsOptions(options.versions),
+    resources: resolveResourcesOptions(options.resources),
     gfm: options.gfm ?? true,
     mdx: options.mdx,
     footnotes: options.footnotes ?? true,
@@ -652,6 +665,7 @@ function resolveOptions(options: OxContentOptions): ResolvedOptions {
     cjkEmphasis: options.cjkEmphasis ?? false,
     codeBlockLint: resolveCodeBlockLintOptions(options.codeBlockLint),
     codeBlockTypecheck: resolveCodeBlockTypecheckOptions(options.codeBlockTypecheck),
+    typedHover: resolveTypedHoverOptions(options.typedHover),
     docsTests: resolveDocsTestOptions(options.docsTests),
     mermaid: options.mermaid ?? false,
     math: resolveMathOptions(options.math),
@@ -777,6 +791,7 @@ export { resolveCardOptions } from "./card-options";
 export { resolveIncludeOptions } from "./include-options";
 export { resolveStepsOptions } from "./step-options";
 export { resolveFileTreeOptions } from "./file-tree-options";
+export { resolveTypedHoverOptions } from "./typed-hover";
 
 function resolveSanitizeOptions(
   options: OxContentOptions["sanitize"],
@@ -1055,6 +1070,7 @@ export { resolveFeedsOptions } from "./feeds";
 export { resolvePwaOptions } from "./pwa";
 export { resolveTaxonomiesOptions } from "./taxonomies";
 export { resolveVersionsOptions } from "./versions";
+export { resolveResourcesOptions, PageResourceError } from "./resources";
 export { resolveTeamOptions } from "./team";
 export { resolveSectionIndexOptions } from "./section-index";
 export { resolveSearchOptions, buildSearchIndex, writeSearchIndex } from "./search";

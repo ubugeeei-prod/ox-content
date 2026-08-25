@@ -68,6 +68,7 @@ export default defineConfig({
 | `lastUpdated`     | `false`        | ページごとの git 最終コミット時刻を出す。                                                                |
 | `pagination`      | `false`        | 記事のあとに前へ / 次へリンク。                                                                          |
 | `breadcrumbs`     | `false`        | サイトルートからサイドバー祖先までの道筋。                                                               |
+| `jsonLd`          | `false`        | TechArticle / WebSite / BreadcrumbList の JSON-LD。                                                      |
 | `readerChrome`    | `false`        | コピー、外部リンクアイコン、先頭へ戻る。                                                                 |
 | `localeSwitcher`  | `false`        | i18n ロケールがあるときのヘッダーロケールドロップダウン。                                                |
 | `a11y`            | `false`        | スキップリンクと印刷スタイル。                                                                           |

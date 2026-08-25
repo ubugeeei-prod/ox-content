@@ -41,7 +41,8 @@ oxContent({
 ```
 
 The visible trail is independent of structured data. Enabling breadcrumbs does
-not emit JSON-LD. Entry pages skip the trail.
+not emit JSON-LD. See [JSON-LD](./json-ld.md) to opt in. Entry pages skip the
+trail.
 
 ## Frontmatter
 

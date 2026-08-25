@@ -69,6 +69,7 @@ fn config(pagination: bool) -> SsgConfig {
         locale_paths: vec![],
         a11y: crate::A11y::default(),
         page_chrome: false,
+        json_ld: crate::JsonLd::default(),
     }
 }
 
