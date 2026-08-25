@@ -23,6 +23,7 @@ import { resolvePwaOptions } from "./pwa";
 import { resolveTaxonomiesOptions } from "./taxonomies";
 import { resolveVersionsOptions } from "./versions";
 import { PageResourceError, resolveResourcesOptions } from "./resources";
+import { createKatexAssetsPlugin } from "./plugins/math-assets";
 import {
   resolveSearchOptions,
   buildSearchIndex,
@@ -203,6 +204,10 @@ export function oxContent(options: OxContentOptions = {}): Plugin[] {
     createCollectionsPlugin(resolvedOptions, getRoot),
     createSearchPlugin(resolvedOptions, getRoot),
   ];
+
+  if (resolvedOptions.math.enabled) {
+    plugins.push(createKatexAssetsPlugin());
+  }
 
   if (resolvedOptions.i18n) {
     plugins.push(createI18nPlugin(resolvedOptions));

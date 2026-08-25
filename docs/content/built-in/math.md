@@ -1,6 +1,6 @@
 ---
 title: Math
-description: Opt-in inline `$…$` and display `$$…$$` math with escaped static markup.
+description: Opt-in `$…$` / `$$…$$` math, typeset at build time with optional KaTeX.
 ---
 
 # Math
@@ -23,6 +23,11 @@ export default {
 `true` and `{}` both enable the defaults. Omit the option or pass `false` to
 leave `$` and `$$` unchanged.
 
+The plugin does not depend on KaTeX. Sites that never turn math on do not
+install it. When math is on, the native transform finds `$…$` / `$$…$$` and
+KaTeX — if present — turns that TeX into static HTML at build time. Readers
+get typeset math with no client-side JavaScript.
+
 ## Delimiters
 
 | Form    | Source               | Result                                   |
@@ -35,9 +40,10 @@ Display delimiters produce a block only when they occupy the whole paragraph.
 Surrounded `$$…$$` stays inline so Markdown does not emit a `<div>` inside a
 `<p>`.
 
-The transform emits accessible static MathML. TeX is placed in `<mtext>` after
-the same HTML escaping used elsewhere in the pipeline, so `<script>`, quotes,
-and attribute-like fragments cannot become raw HTML.
+Unclosed `$` or `$$` stays literal and does not consume the rest of the file.
+Write `\$` when math is on and you need a literal dollar sign. Fenced code,
+indented code, and inline code are not rewritten. Currency such as `$5` or
+`$5.00` stays literal.
 
 ## Rendered Example
 
@@ -45,22 +51,37 @@ Inline: the identity is $E=mc^2$.
 
 Display:
 
-$$E = mc^2$$
+$$
+\int_{-\infty}^{\infty} e^{-x^2}\,dx = \sqrt{\pi}
+$$
 
-Fenced code, indented code, and inline code are not rewritten:
+A Gaussian density:
 
-````md
+$$
+\frac{1}{\sqrt{2\pi\sigma^2}}
+\exp\left(-\frac{(x-\mu)^2}{2\sigma^2}\right)
+$$
+
+```md
+Inline: the identity is $E=mc^2$.
+
+$$
+\int_{-\infty}^{\infty} e^{-x^2}\,dx = \sqrt{\pi}
+$$
 ```
-$E=mc^2$
-```
 
-Use `$E=mc^2$` in prose. Currency stays literal: `$5`, `$5.00`, `$5-$10`, `US$`.
-````
+## Requirements
 
-Unclosed `$` or `$$` stays literal and does not consume the rest of the file.
-Write `\$` when math is on and you need a literal dollar sign.
+Typesetting uses KaTeX at build time, so add it only on sites that enable
+math:
 
-GitHub-style `> [!NOTE]` callouts and other existing syntax are unchanged.
+<pm>npm install -D katex</pm>
+
+If `katex` cannot be found, the build does not fail: the escaped TeX
+placeholder stays in the page and a warning is printed once. That keeps
+sites that only want the delimiter scan — or CI images without the extra
+package — working while you decide whether typesetting is worth the
+dependency.
 
 ## Related
 

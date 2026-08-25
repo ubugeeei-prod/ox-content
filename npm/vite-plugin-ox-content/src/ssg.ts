@@ -8,6 +8,7 @@ import { transformMarkdown } from "./transform";
 import { generateOgImages } from "./og-image";
 import type { OgImagePageEntry } from "./og-image";
 import { transformAllPlugins } from "./plugins";
+import { copyKatexAssets } from "./plugins/math-assets";
 import type { TransformAllOptions } from "./plugins";
 import { protectMermaidSvgs, restoreMermaidSvgs } from "./plugins/mermaid-protect";
 import { transformIslands, hasIslands } from "./island";
@@ -932,6 +933,10 @@ export async function buildSsg(options: ResolvedOptions, root: string): Promise<
     outputPages,
     errors,
   );
+
+  if (options.math.enabled) {
+    generatedFiles.push(...(await copyKatexAssets(outDir)));
+  }
 
   return {
     files: generatedFiles,

@@ -29,6 +29,7 @@ describe("math options", () => {
       math: { enabled: true },
     } as ResolvedOptions);
     expect(enabled.html).toContain('class="ox-math ox-math-inline"');
-    expect(enabled.html).toContain("<mtext>E=mc^2</mtext>");
+    expect(enabled.html).toContain("katex");
+    expect(enabled.html).not.toContain("data-ox-tex");
   });
 });

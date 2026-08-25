@@ -24,6 +24,7 @@ fn disabled_by_default() {
 fn inline_happy_path() {
     let html = transform_html("$E=mc^2$", math_on());
     assert!(html.contains(r#"class="ox-math ox-math-inline""#), "{html}");
+    assert!(html.contains(r#"data-ox-tex="E=mc^2""#), "{html}");
     assert!(html.contains("<mtext>E=mc^2</mtext>"), "{html}");
     assert!(!html.contains("ox-math-block"), "{html}");
 }

@@ -30,7 +30,7 @@ Ox Content は、よく使うドキュメントの挙動を既定で載せ、非
 | [コードブロック](./built-in/code-blocks.md)              | ハイライト、注釈、ソース取り込み                                               |
 | [埋め込み](./built-in/embeds.md)                         | GitHub / OG カード、パッケージマネージャタブ、YouTube、SNS                     |
 | [Mermaid](./built-in/mermaid.md)                         | フェンスを静的 SVG に描画                                                      |
-| [数式](./built-in/math.md)                               | オプトインの `$…$` / `$$…$$`                                                   |
+| [数式](./built-in/math.md)                               | オプトインの `$…$` / `$$…$$`。任意依存の KaTeX で組版                          |
 | [検索](./built-in/search.md)                             | 静的 BM25 インデックスとクライアント API                                       |
 | [コレクション](./built-in/collections.md)                | Markdown を SQL 風ビルダで問い合わせ                                           |
 | [品質チェック](./built-in/quality-checks.md)             | lint、型チェック、docs テスト、HTML サニタイズ                                 |

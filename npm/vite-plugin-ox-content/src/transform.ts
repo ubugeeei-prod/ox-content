@@ -39,6 +39,7 @@ import { highlightCode } from "./highlight";
 import { highlightDocumentNatively } from "./highlight-native";
 import { importNapiModule } from "./napi";
 import { transformMermaidStatic } from "./plugins/mermaid";
+import { renderKatexMath } from "./plugins/math";
 import { normalizeSelfClosingEmbeds, transformBuiltinEmbeds } from "./plugins";
 import { protectMermaidSvgs, restoreMermaidSvgs } from "./plugins/mermaid-protect";
 import { typecheckCodeBlocks } from "./code-blocks";
@@ -665,6 +666,10 @@ export async function transformMarkdown(
 
   if (options.sanitize?.enabled) {
     html = napi.sanitizeHtml(html, toJsSanitizeOptions(options.sanitize));
+  }
+
+  if (isMathEnabled(options.math)) {
+    html = await renderKatexMath(html);
   }
 
   const imports = result.imports ?? [];

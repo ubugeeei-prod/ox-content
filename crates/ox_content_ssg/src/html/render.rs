@@ -142,7 +142,20 @@ pub fn generate_html(page_data: &PageData, nav_groups: &[NavGroup], config: &Ssg
         .flatten();
 
     // Embedded HTML for specific positions
-    let embed_head = embed.and_then(|e| e.head.as_deref()).unwrap_or("");
+    let embed_head_user = embed.and_then(|e| e.head.as_deref()).unwrap_or("");
+    let katex_head =
+        if page_content_contains_any(&page_data.content, &["class=\"katex\"", "class='katex'"]) {
+            format!("<link rel=\"stylesheet\" href=\"{}__ox_katex__/katex.min.css\">", config.base)
+        } else {
+            String::new()
+        };
+    let embed_head = if katex_head.is_empty() {
+        embed_head_user.to_string()
+    } else if embed_head_user.is_empty() {
+        katex_head
+    } else {
+        format!("{katex_head}\n  {embed_head_user}")
+    };
     let embed_header_before = embed.and_then(|e| e.header_before.as_deref()).unwrap_or("");
     let embed_header_after = embed.and_then(|e| e.header_after.as_deref()).unwrap_or("");
     let embed_sidebar_before = embed.and_then(|e| e.sidebar_before.as_deref()).unwrap_or("");
@@ -263,7 +276,7 @@ pub fn generate_html(page_data: &PageData, nav_groups: &[NavGroup], config: &Ssg
         json_ld: json_ld.as_deref(),
         theme_bootstrap_js: THEME_BOOTSTRAP_JS,
         css: &all_css,
-        embed_head,
+        embed_head: &embed_head,
         body_class: &body_class,
         skip_link: skip_link.as_deref(),
         embed_header_before,

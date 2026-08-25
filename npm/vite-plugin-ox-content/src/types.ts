@@ -2035,6 +2035,10 @@ export interface ResolvedEmojiShortcodeOptions {
 
 /**
  * Options for opt-in `$…$` / `$$…$$` math.
+ *
+ * Delimiter parsing lives in the native transform. Typesetting uses KaTeX at
+ * build time when the optional `katex` peer is installed. Sites that omit
+ * `math` do not need that package.
  */
 export interface MathOptions {
   /**

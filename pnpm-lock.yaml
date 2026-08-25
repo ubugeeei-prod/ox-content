@@ -267,6 +267,9 @@ importers:
       '@ox-content/vite-plugin':
         specifier: workspace:*
         version: link:../npm/vite-plugin-ox-content
+      katex:
+        specifier: ^0.16.22
+        version: 0.16.47
       vite:
         specifier: npm:@voidzero-dev/vite-plus-core@0.2.8
         version: '@voidzero-dev/vite-plus-core@0.2.8(@types/node@26.2.0)(esbuild@0.28.2)(jiti@1.21.7)(terser@5.49.0)(typescript@7.0.2)(yaml@2.9.0)'
@@ -2150,6 +2153,9 @@ importers:
       '@typescript/native-preview':
         specifier: 'catalog:'
         version: 7.0.0-dev.20260707.2
+      katex:
+        specifier: ^0.16.22
+        version: 0.16.47
       vite-plus:
         specifier: 'catalog:'
         version: 0.2.9(@types/node@26.2.0)(@voidzero-dev/vite-plus-core@0.2.8(@types/node@26.2.0)(esbuild@0.28.2)(jiti@1.21.7)(terser@5.49.0)(typescript@7.0.2)(yaml@2.9.0))(esbuild@0.28.2)(jiti@1.21.7)(svelte@5.56.8)(terser@5.49.0)(typescript@7.0.2)(yaml@2.9.0)

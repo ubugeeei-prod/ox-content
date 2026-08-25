@@ -76,9 +76,15 @@ pub(super) fn replace_math(segment: &str, out: &mut String) {
 
 fn emit_math(tex: &str, block: bool, out: &mut String) {
     if block {
-        out.push_str("<div class=\"ox-math ox-math-block\"><math display=\"block\"><mtext>");
+        out.push_str("<div class=\"ox-math ox-math-block\" data-ox-tex=\"");
     } else {
-        out.push_str("<span class=\"ox-math ox-math-inline\"><math><mtext>");
+        out.push_str("<span class=\"ox-math ox-math-inline\" data-ox-tex=\"");
+    }
+    escape_html_attr(tex, out);
+    if block {
+        out.push_str("\"><math display=\"block\"><mtext>");
+    } else {
+        out.push_str("\"><math><mtext>");
     }
     escape_html_attr(tex, out);
     if block {

@@ -73,6 +73,7 @@ impl Default for SanitizeConfig {
                 "data-line-number-start",
                 "data-line-numbers",
                 "data-ox-tab-group",
+                "data-ox-tex",
                 "default",
                 "disabled",
                 "disablepictureinpicture",
