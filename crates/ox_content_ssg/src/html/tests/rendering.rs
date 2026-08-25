@@ -201,10 +201,11 @@ fn test_nested_nav_css_keeps_disclosure_and_hierarchy_visible() {
 #[test]
 fn test_table_css_draws_each_separator_once() {
     assert!(
-        SSG_CSS.contains(".content table {\n  width: 100%;")
-            && SSG_CSS.contains("border: 1px solid var(--octc-color-border);")
+        SSG_CSS.contains(
+            ".content table {\n  display: block;\n  width: max-content;\n  max-width: 100%;"
+        ) && SSG_CSS.contains("border: 1px solid var(--octc-color-border);")
             && SSG_CSS.contains("border-collapse: separate;"),
-        "tables need one shared separated-border model at every breakpoint"
+        "tables need a shrink-to-content scroller and one shared separated-border model"
     );
     assert!(
         SSG_CSS.contains("border-inline-end: 1px solid var(--octc-color-border);")
@@ -246,8 +247,12 @@ fn test_mobile_content_css_preserves_safe_reading_gutters() {
         "content gutters must include each physical display safe area"
     );
     assert!(
-        SSG_CSS.contains(".content table {\n    display: block;")
-            && SSG_CSS.contains("max-width: 100%;"),
+        SSG_CSS.contains(".content table {\n  display: block;")
+            && SSG_CSS.contains("width: max-content;")
+            && SSG_CSS.contains("max-width: 100%;")
+            && SSG_CSS.contains("overflow-x: auto;")
+            && !SSG_CSS
+                .contains("  .content table {\n    display: block;\n    width: max-content;\n    min-width: 100%;"),
         "wide tables must scroll inside the safe content gutter"
     );
     assert!(

@@ -1214,11 +1214,15 @@ a:hover {
   background: var(--octc-color-code-line-focus);
 }
 .content table {
-  width: 100%;
+  display: block;
+  width: max-content;
+  max-width: 100%;
   box-sizing: border-box;
   border: 1px solid var(--octc-color-border);
   border-collapse: separate;
   border-spacing: 0;
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
   margin: 1.25rem 0;
   font-size: 0.875rem;
 }
@@ -2055,12 +2059,6 @@ a:hover {
     width: 1.75rem;
   }
   .content table {
-    display: block;
-    width: max-content;
-    min-width: 100%;
-    max-width: 100%;
-    overflow-x: auto;
-    -webkit-overflow-scrolling: touch;
     margin: 1rem 0;
     font-size: 0.8125rem;
   }
