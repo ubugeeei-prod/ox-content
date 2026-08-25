@@ -32,7 +32,7 @@ export default {
 Write a `<pm>` element containing a single npm-style command:
 
 ```html
-<pm>npm install -D vite</pm>
+<pm>npm install -D @ox-content/vite-plugin</pm>
 ```
 
 The renderer expands it into the same tab widget used by `<tabs>`, so styling
@@ -42,7 +42,7 @@ body is a code block with the command converted for that package manager.
 
 ## Rendered example
 
-<pm>npm install -D vite</pm>
+<pm>npm install -D @ox-content/vite-plugin</pm>
 
 ## Conversion rules
 

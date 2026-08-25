@@ -138,10 +138,10 @@ oxContent({
 ```
 
 ```md
-<pm>npm install -D @ox-content/vite-plugin</pm>
+<pm>npm install -D @ox-content/vite-plugin @ox-content/theme-swiss</pm>
 ```
 
-<pm>npm install -D @ox-content/vite-plugin</pm>
+<pm>npm install -D @ox-content/vite-plugin @ox-content/theme-swiss</pm>
 
 The command is converted natively in Rust — `npm install -D` becomes
 `pnpm add -D`, `yarn add -D`, `bun add -D`, and `vp install -D`, while
@@ -159,16 +159,50 @@ available in SSG builds and dev preview:
 
 ```md
 <tabs>
-  <tab label="macOS">brew install oxc</tab>
-  <tab label="Linux">apt install oxc</tab>
-  <tab label="Windows">winget install oxc</tab>
+<tab label="Install">
+<pre><code>pnpm add -D @ox-content/vite-plugin
+pnpm add -D @ox-content/theme-swiss</code></pre>
+</tab>
+<tab label="Config">
+<pre><code>oxContent({ srcDir: "content", embeds: { pm: true } })</code></pre>
+</tab>
+<tab label="Markdown">
+<pre><code>---
+title: Install
+---
+
+Install Ox Content with the package manager you prefer.
+
+&lt;pm&gt;npm install -D @ox-content/vite-plugin&lt;/pm&gt;</code></pre>
+</tab>
+<tab label="Build">
+<pre><code>pnpm vite build
+pnpm vite preview</code></pre>
+</tab>
 </tabs>
 ```
 
 <tabs>
-  <tab label="macOS">brew install oxc</tab>
-  <tab label="Linux">apt install oxc</tab>
-  <tab label="Windows">winget install oxc</tab>
+<tab label="Install">
+<pre><code>pnpm add -D @ox-content/vite-plugin
+pnpm add -D @ox-content/theme-swiss</code></pre>
+</tab>
+<tab label="Config">
+<pre><code>oxContent({ srcDir: "content", embeds: { pm: true } })</code></pre>
+</tab>
+<tab label="Markdown">
+<pre><code>---
+title: Install
+---
+
+Install Ox Content with the package manager you prefer.
+
+&lt;pm&gt;npm install -D @ox-content/vite-plugin&lt;/pm&gt;</code></pre>
+</tab>
+<tab label="Build">
+<pre><code>pnpm vite build
+pnpm vite preview</code></pre>
+</tab>
 </tabs>
 
 A `<tab>` without a `label` attribute falls back to `Tab 1`, `Tab 2`, and so

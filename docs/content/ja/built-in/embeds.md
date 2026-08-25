@@ -117,10 +117,10 @@ oxContent({
 ```
 
 ```md
-<pm>npm install -D @ox-content/vite-plugin</pm>
+<pm>npm install -D @ox-content/vite-plugin @ox-content/theme-swiss</pm>
 ```
 
-<pm>npm install -D @ox-content/vite-plugin</pm>
+<pm>npm install -D @ox-content/vite-plugin @ox-content/theme-swiss</pm>
 
 コマンド変換は Rust ネイティブです。`npm install -D` は `pnpm add -D`、`yarn add -D`、`bun add -D`、`vp install -D` になり、`npx <bin>` は `vp exec -- <bin>` になります。タブはクライアント側 JavaScript なしで動きます。選択は CSS `:has()` です。`pm: { sync: true }` をオプトインすると、ページ上のすべてのブロックで選んだパッケージマネージャを `localStorage` 経由で同期します。変換表の全体は [Package Manager Tabs](/examples/package-manager-tabs.md) を見てください。
 
@@ -130,16 +130,50 @@ oxContent({
 
 ```md
 <tabs>
-  <tab label="macOS">brew install oxc</tab>
-  <tab label="Linux">apt install oxc</tab>
-  <tab label="Windows">winget install oxc</tab>
+<tab label="Install">
+<pre><code>pnpm add -D @ox-content/vite-plugin
+pnpm add -D @ox-content/theme-swiss</code></pre>
+</tab>
+<tab label="Config">
+<pre><code>oxContent({ srcDir: "content", embeds: { pm: true } })</code></pre>
+</tab>
+<tab label="Markdown">
+<pre><code>---
+title: Install
+---
+
+好きなパッケージマネージャで Ox Content を入れます。
+
+&lt;pm&gt;npm install -D @ox-content/vite-plugin&lt;/pm&gt;</code></pre>
+</tab>
+<tab label="Build">
+<pre><code>pnpm vite build
+pnpm vite preview</code></pre>
+</tab>
 </tabs>
 ```
 
 <tabs>
-  <tab label="macOS">brew install oxc</tab>
-  <tab label="Linux">apt install oxc</tab>
-  <tab label="Windows">winget install oxc</tab>
+<tab label="Install">
+<pre><code>pnpm add -D @ox-content/vite-plugin
+pnpm add -D @ox-content/theme-swiss</code></pre>
+</tab>
+<tab label="Config">
+<pre><code>oxContent({ srcDir: "content", embeds: { pm: true } })</code></pre>
+</tab>
+<tab label="Markdown">
+<pre><code>---
+title: Install
+---
+
+好きなパッケージマネージャで Ox Content を入れます。
+
+&lt;pm&gt;npm install -D @ox-content/vite-plugin&lt;/pm&gt;</code></pre>
+</tab>
+<tab label="Build">
+<pre><code>pnpm vite build
+pnpm vite preview</code></pre>
+</tab>
 </tabs>
 
 `label` 属性のない `<tab>` は `Tab 1`、`Tab 2` のように落ちます。
