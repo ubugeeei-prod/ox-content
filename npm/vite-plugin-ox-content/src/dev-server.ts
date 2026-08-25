@@ -420,6 +420,7 @@ async function renderPage(
     options.ssg.jsonLd,
     options.ssg.siteUrl,
     options.ssg.headValidation,
+    i18n?.defaultLocale,
   );
 
   // Inject Vite HMR client for live reload

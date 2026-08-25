@@ -2527,24 +2527,91 @@ const getOxContentSearchElements = () => {
     return null;
   }
 
-  return { searchOverlay, searchInput, searchResults, searchClose };
+  return {
+    searchOverlay,
+    searchInput,
+    searchResults,
+    searchClose,
+    localeSelect: searchOverlay.querySelector("[data-search-filter=locale]"),
+    versionSelect: searchOverlay.querySelector("[data-search-filter=version]"),
+  };
 };
 
 const createOxContentSearchState = () => ({
   searchIndex: null,
+  indexes: new Map(),
+  filter: null,
   selectedIdx: 0,
   results: [],
   searchTimeout: null,
 });
 
-const loadOxContentSearchIndex = async (state) => {
-  if (state.searchIndex) return;
+const defaultOxContentSearchIndexUrl = () =>
+  document.documentElement.getAttribute("data-ox-search-index") || "/docs/search-index.json";
+
+const readOxContentSearchFilter = (elements) => {
+  const localeSelect = elements.localeSelect;
+  const versionSelect = elements.versionSelect;
+  const selectedVersion =
+    versionSelect instanceof HTMLSelectElement ? versionSelect.selectedOptions[0] : null;
+  const localeCodes = new Set();
+  if (localeSelect instanceof HTMLSelectElement) {
+    for (const option of localeSelect.options) {
+      if (option.value) localeCodes.add(option.value.toLowerCase());
+    }
+  }
+  return {
+    locale: localeSelect instanceof HTMLSelectElement ? localeSelect.value.toLowerCase() : "",
+    defaultLocale: (localeSelect?.getAttribute("data-default-locale") || "en").toLowerCase(),
+    localeCodes,
+    versionPrefix: (selectedVersion?.getAttribute("data-prefix") || "")
+      .replace(/^\/+|\/+$/g, "")
+      .toLowerCase(),
+    indexUrl: selectedVersion?.getAttribute("data-index") || defaultOxContentSearchIndexUrl(),
+  };
+};
+
+const loadOxContentSearchIndex = async (state, indexUrl) => {
+  const cached = state.indexes.get(indexUrl);
+  if (cached) {
+    state.searchIndex = cached;
+    return;
+  }
   try {
-    state.searchIndex = await (await fetch("/docs/search-index.json")).json();
+    const index = await (await fetch(indexUrl)).json();
+    state.indexes.set(indexUrl, index);
+    state.searchIndex = index;
   } catch (e) {
     console.warn("Search index load failed:", e);
+    state.searchIndex = null;
   }
 };
+
+const firstOxContentPathSegment = (path) => {
+  let start = 0;
+  while (path.charCodeAt(start) === 47) start++;
+  if (start >= path.length) return "";
+  const slash = path.indexOf("/", start);
+  return (slash === -1 ? path.slice(start) : path.slice(start, slash)).toLowerCase();
+};
+
+const oxContentDocLocale = (doc, filter) => {
+  if (doc.__oxLocalePref === filter.versionPrefix) return doc.__oxLocale;
+
+  let path = (doc.url || doc.id || "").replace(/^\/+/, "").toLowerCase();
+  const prefix = filter.versionPrefix;
+  if (prefix && (path === prefix || path.startsWith(prefix + "/"))) {
+    path = path.slice(prefix.length + (path === prefix ? 0 : 1));
+  }
+  const first = firstOxContentPathSegment(path);
+  const locale = first && filter.localeCodes.has(first) ? first : filter.defaultLocale;
+  doc.__oxLocalePref = filter.versionPrefix;
+  doc.__oxLocale = locale;
+  return locale;
+};
+
+const matchesOxContentLocale = (doc, filter) =>
+  !filter.locale || oxContentDocLocale(doc, filter) === filter.locale;
 
 const parseOxContentScopedQuery = (query) => {
   const scopes = [];
@@ -2583,6 +2650,9 @@ const matchesOxContentScopes = (doc, scopes) => {
   const docScopes = doc.__oxScopes || (doc.__oxScopes = new Set(getOxContentScopesForDoc(doc)));
   return scopes.some((scope) => docScopes.has(scope));
 };
+
+const matchesOxContentDoc = (doc, scopes, filter) =>
+  matchesOxContentLocale(doc, filter) && matchesOxContentScopes(doc, scopes);
 
 const tokenizeOxContentSearchText = (text) => {
   const tokens = [];
@@ -2632,14 +2702,14 @@ const renderOxContentSearchResults = (elements, state) => {
     .join("");
 };
 
-const scoreOxContentSearchTerms = (searchIndex, parsedQuery, tokens) => {
+const scoreOxContentSearchTerms = (searchIndex, parsedQuery, tokens, filter) => {
   const k1 = 1.2,
     b = 0.75,
     scores = new Map();
 
   if (!tokens.length) {
     searchIndex.documents.forEach((doc, idx) => {
-      if (matchesOxContentScopes(doc, parsedQuery.scopes)) {
+      if (matchesOxContentDoc(doc, parsedQuery.scopes, filter)) {
         scores.set(idx, { score: 0, matches: new Set() });
       }
     });
@@ -2662,13 +2732,13 @@ const scoreOxContentSearchTerms = (searchIndex, parsedQuery, tokens) => {
           ? [token]
           : [];
 
-    addOxContentTermScores(searchIndex, scores, parsedQuery.scopes, terms, k1, b);
+    addOxContentTermScores(searchIndex, scores, parsedQuery.scopes, terms, k1, b, filter);
   }
 
   return scores;
 };
 
-const addOxContentTermScores = (searchIndex, scores, scopes, terms, k1, b) => {
+const addOxContentTermScores = (searchIndex, scores, scopes, terms, k1, b, filter) => {
   for (const term of terms) {
     const postings = searchIndex.index[term] || [],
       df = searchIndex.df[term] || 1,
@@ -2676,7 +2746,7 @@ const addOxContentTermScores = (searchIndex, scores, scopes, terms, k1, b) => {
 
     for (const posting of postings) {
       const doc = searchIndex.documents[posting.doc_idx];
-      if (!doc || !matchesOxContentScopes(doc, scopes)) continue;
+      if (!doc || !matchesOxContentDoc(doc, scopes, filter)) continue;
 
       const boost = posting.field === "Title" ? 10 : posting.field === "Heading" ? 5 : 1,
         score =
@@ -2719,9 +2789,9 @@ const createOxContentSnippet = (doc, matches) => {
   return snippet;
 };
 
-const buildOxContentSearchResults = (searchIndex, parsedQuery) => {
+const buildOxContentSearchResults = (searchIndex, parsedQuery, filter) => {
   const tokens = tokenizeOxContentSearchText(parsedQuery.text);
-  const scores = scoreOxContentSearchTerms(searchIndex, parsedQuery, tokens);
+  const scores = scoreOxContentSearchTerms(searchIndex, parsedQuery, tokens, filter);
 
   return Array.from(scores.entries())
     .map(([idx, data]) => {
@@ -2738,7 +2808,8 @@ const buildOxContentSearchResults = (searchIndex, parsedQuery) => {
 };
 
 const runOxContentSearch = async (query, elements, state) => {
-  await loadOxContentSearchIndex(state);
+  const filter = state.filter || (state.filter = readOxContentSearchFilter(elements));
+  await loadOxContentSearchIndex(state, filter.indexUrl);
   if (!state.searchIndex) {
     elements.searchResults.innerHTML = '<div class="search-empty">Index unavailable</div>';
     return;
@@ -2751,7 +2822,7 @@ const runOxContentSearch = async (query, elements, state) => {
     return;
   }
 
-  state.results = buildOxContentSearchResults(state.searchIndex, parsedQuery);
+  state.results = buildOxContentSearchResults(state.searchIndex, parsedQuery, filter);
   state.selectedIdx = 0;
   renderOxContentSearchResults(elements, state);
 };
@@ -2773,6 +2844,17 @@ const registerOxContentSearchEvents = (elements, state, closeSearch) => {
   });
   elements.searchInput.addEventListener("keydown", (e) => {
     handleOxContentSearchKeydown(e, elements, state, closeSearch);
+  });
+  elements.searchOverlay.addEventListener("keydown", (e) => {
+    if (e.key === "Escape") closeSearch();
+  });
+  elements.searchOverlay.addEventListener("change", (e) => {
+    if (!(e.target instanceof HTMLSelectElement) || !e.target.closest(".search-filters")) {
+      return;
+    }
+    if (state.searchTimeout) clearTimeout(state.searchTimeout);
+    state.filter = readOxContentSearchFilter(elements);
+    void runOxContentSearch(elements.searchInput.value, elements, state);
   });
 };
 
@@ -2800,6 +2882,7 @@ const handleOxContentSearchKeydown = (e, elements, state, closeSearch) => {
 
 const createOxContentSearchApi = (elements) => {
   const state = createOxContentSearchState();
+  state.filter = readOxContentSearchFilter(elements);
   const openSearch = () => {
     elements.searchOverlay.classList.add("open");
     document.body.classList.add("search-open");

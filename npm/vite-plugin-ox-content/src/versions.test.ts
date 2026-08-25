@@ -187,6 +187,9 @@ describe("buildSsg versions", () => {
     expect(live).toContain("3.0.0-alpha");
     expect(live).toContain("ox-version-banner--unreleased");
     expect(live).toContain("/2.90/");
+    expect(live).toContain('data-search-filter="version"');
+    expect(live).toContain('data-index="/2.90/search-index.json"');
+    expect(live).toContain('aria-label="Version"');
     expect(snap).toContain("Old");
     expect(snap).toContain("2.90.0");
     expect(snap).toContain("/2.90/search-index.json");

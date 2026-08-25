@@ -40,6 +40,8 @@ export default {
 
 インデックスは生成ページの横の `search-index.json` に書き、読者が初めて検索したときに遅延取得します。開発中はメモリから配信し、ページが変わるたびに作り直します。
 
+サイトにロケールが2つ以上あるときは、ダイアログに **Language** の `<select>` が出て、今見ているページの言語が既定になります。**All languages** はインデックス全体を探します。ドキュメントバージョンが有効なら、**Version** の `<select>` がその版の `search-index.json` を読みます。どちらもネイティブの select なので、Tab・矢印・タイプアヘッド・Space・Enter が追加ウィジェットなしで動きます。
+
 ## ホスト済みプロバイダ
 
 `provider` を `"hosted"` にしない限り、検索はローカル BM25 インデックスのままです。ホスト済みアダプタは、設定または環境変数からアプリケーション ID、インデックス名、**公開の検索専用キー** を受け取ります。書き込みキーや管理キーは渡さないでください。`adminKey`、`writeKey`、`apiKey` という名前のフィールドは拒否します。
@@ -91,7 +93,7 @@ for (const result of results) {
 }
 ```
 
-- `search(query, options?)` は `provider` に応じてローカル BM25 またはホスト済みアダプタを使います。`options.limit` と `options.prefix` は呼び出しごとに設定済みの既定を上書きします。
+- `search(query, options?)` は `provider` に応じてローカル BM25 またはホスト済みアダプタを使います。`options.limit` と `options.prefix` は呼び出しごとに設定済みの既定を上書きします。`options.locale` は、`localeCodes` と `defaultLocale` も渡したときに結果を一つの言語に保ちます。`versionPrefixes` は、ロケール区分を読む前に文書パスから取り除きます。
 - `searchOptions` は解決済みの `{ enabled, limit, prefix, placeholder, hotkey, provider }` を出すので、独自 UI がサイト設定を尊重できます。
 - `@api transform` のようなスコープ付きクエリは、結果をサイトの一区画に限定します。
 

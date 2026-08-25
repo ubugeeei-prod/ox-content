@@ -32,6 +32,7 @@ import type {
   FeatureConfig,
   LocaleConfig,
 } from "./types";
+import { injectSearchLocaleFilters } from "./search-filters";
 import { buildLocalePaths, resolveLocaleSwitcherOption } from "./locale-switcher";
 import type { SsgLocalePath } from "./locale-switcher";
 import {
@@ -533,6 +534,7 @@ export async function generateHtmlPage(
   jsonLd: ResolvedJsonLd = false,
   siteUrl?: string,
   headValidation: false | "warn" | "strict" = false,
+  defaultLocale?: string,
 ): Promise<string> {
   const mod = await importNapiModule();
 
@@ -648,7 +650,11 @@ export async function generateHtmlPage(
   const html = typeof result === "string" ? result : result.html;
   const diagnostics = typeof result === "string" ? [] : (result.diagnostics ?? []);
   reportHeadDiagnostics(diagnostics, headValidation);
-  return html;
+  return injectSearchLocaleFilters(html, {
+    locales: availableLocales ?? [],
+    current: locale,
+    defaultLocale: defaultLocale ?? availableLocales?.[0]?.code ?? "en",
+  });
 }
 
 interface GeneratedHtmlPage {
@@ -1506,6 +1512,7 @@ async function renderSsgPage(
     context.ssgOptions.jsonLd,
     context.ssgOptions.siteUrl,
     context.ssgOptions.headValidation,
+    i18n?.defaultLocale,
   );
 }
 

@@ -16,6 +16,7 @@ import type {
   VersionEntry,
   VersionsOptions,
 } from "./types";
+import { injectSearchVersionFilters } from "./search-filters";
 import {
   injectVersionChrome,
   searchIndexUrl,
@@ -244,7 +245,16 @@ export function applyVersionChrome(
   const banner = versionBannerMarkup(active?.banner);
   const from = searchIndexUrl(base, currentVersionPrefix(options));
   const to = searchIndexUrl(base, active?.prefix ?? "");
-  return injectVersionChrome(html, switcher, banner, from, to);
+  return injectSearchVersionFilters(
+    injectVersionChrome(html, switcher, banner, from, to),
+    options.entries.map((entry) => ({
+      id: entry.id,
+      label: entry.label,
+      prefix: entry.prefix,
+      indexUrl: searchIndexUrl(base, entry.prefix),
+      current: entry.id === activeId,
+    })),
+  );
 }
 
 export function sanitizePrefix(prefix: string): string {

@@ -51,11 +51,73 @@ function matchesScopes(doc, scopes) {
     return true;
   }
 
-  // Scope checks run once per posting during scoring. Keep the transformation
-  // from doc id/url to cumulative scope strings isolated here so generated
-  // runtimes can cache it without touching BM25 scoring.
-  const docScopes = new Set(getScopesForDoc(doc));
+  // A doc's scopes derive only from its immutable id/url, but this predicate
+  // runs once per posting per term. Cache the Set on the document so later
+  // postings and keystrokes are one property read plus `Set.has`.
+  const docScopes = doc.__oxScopes || (doc.__oxScopes = new Set(getScopesForDoc(doc)));
   return scopes.some((scope) => docScopes.has(scope));
+}
+
+function firstPathSegment(path) {
+  let start = 0;
+  while (path.charCodeAt(start) === 47) start++;
+  if (start >= path.length) return "";
+  const slash = path.indexOf("/", start);
+  return (slash === -1 ? path.slice(start) : path.slice(start, slash)).toLowerCase();
+}
+
+function normalizeLocaleFilter(options, defaults) {
+  const locale = (options.locale || "").toLowerCase();
+  if (!locale) return null;
+
+  const localeCodes = new Set();
+  const codes = options.localeCodes || defaults.localeCodes || [];
+  for (let i = 0; i < codes.length; i++) {
+    if (codes[i]) localeCodes.add(codes[i].toLowerCase());
+  }
+
+  const rawPrefixes = options.versionPrefixes || defaults.versionPrefixes || [];
+  const prefixes = [];
+  for (let i = 0; i < rawPrefixes.length; i++) {
+    const prefix = (rawPrefixes[i] || "").replace(/^\/+|\/+$/g, "").toLowerCase();
+    if (prefix) prefixes.push(prefix);
+  }
+  if (prefixes.length > 1) prefixes.sort((left, right) => right.length - left.length);
+
+  return {
+    locale,
+    localeCodes,
+    defaultLocale: (options.defaultLocale || defaults.defaultLocale || "en").toLowerCase(),
+    prefixes,
+    cacheKey: locale + "\0" + prefixes.join("/"),
+  };
+}
+
+function localeForDoc(doc, filter) {
+  if (doc.__oxLocaleKey === filter.cacheKey) return doc.__oxLocale;
+
+  let source = (doc.id || doc.url || "").replace(/^\/+/, "").toLowerCase();
+  for (let i = 0; i < filter.prefixes.length; i++) {
+    const prefix = filter.prefixes[i];
+    if (source === prefix) {
+      source = "";
+      break;
+    }
+    if (source.startsWith(prefix) && source.charCodeAt(prefix.length) === 47) {
+      source = source.slice(prefix.length + 1);
+      break;
+    }
+  }
+
+  const first = firstPathSegment(source);
+  const locale = first && filter.localeCodes.has(first) ? first : filter.defaultLocale;
+  doc.__oxLocaleKey = filter.cacheKey;
+  doc.__oxLocale = locale;
+  return locale;
+}
+
+function matchesLocale(doc, filter) {
+  return !filter || localeForDoc(doc, filter) === filter.locale;
 }
 
 function tokenizeQuery(text) {
@@ -138,13 +200,14 @@ export async function search(query, options = {}) {
 
   const limit = options.limit ?? searchOptions.limit;
   const prefix = options.prefix ?? searchOptions.prefix;
+  const localeFilter = normalizeLocaleFilter(options, searchOptions);
   const tokens = tokenizeQuery(parsedQuery.text);
 
   const docScores = new Map();
 
   if (tokens.length === 0) {
     index.documents.forEach((doc, docIdx) => {
-      if (matchesScopes(doc, parsedQuery.scopes)) {
+      if (matchesLocale(doc, localeFilter) && matchesScopes(doc, parsedQuery.scopes)) {
         docScores.set(docIdx, { score: 0, matches: new Set() });
       }
     });
@@ -158,7 +221,7 @@ export async function search(query, options = {}) {
     for (const posting of postings) {
       const doc = index.documents[posting.doc_idx];
       if (!doc) continue;
-      if (!matchesScopes(doc, parsedQuery.scopes)) continue;
+      if (!matchesLocale(doc, localeFilter) || !matchesScopes(doc, parsedQuery.scopes)) continue;
 
       const docLen = doc.body.length;
       const tf = posting.tf;
@@ -169,10 +232,13 @@ export async function search(query, options = {}) {
           (tf + BM25_K1 * (1.0 - BM25_B + (BM25_B * docLen) / index.avg_dl))) *
         boost;
 
-      if (!docScores.has(posting.doc_idx)) {
-        docScores.set(posting.doc_idx, { score: 0, matches: new Set() });
+      // One Map lookup in the steady state: this runs once per posting per
+      // term on every query, so skip the `has` + `get` pair.
+      let entry = docScores.get(posting.doc_idx);
+      if (entry === undefined) {
+        entry = { score: 0, matches: new Set() };
+        docScores.set(posting.doc_idx, entry);
       }
-      const entry = docScores.get(posting.doc_idx);
       entry.score += score;
       entry.matches.add(term);
     }

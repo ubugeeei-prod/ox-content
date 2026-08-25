@@ -45,6 +45,12 @@ The index is written to `search-index.json` next to the generated pages and
 fetched lazily the first time a reader searches. During dev it is served from
 memory and rebuilt as pages change.
 
+When the site has more than one locale, the dialog shows a **Language**
+`<select>` and defaults to the current page. **All languages** searches the
+whole index. When documentation versions are enabled, a **Version** `<select>`
+loads that version's `search-index.json`. Both controls are native selects, so
+Tab, arrows, typeahead, Space, and Enter work without extra widgets.
+
 ## Hosted provider
 
 Search stays on the local BM25 index unless `provider` is set to `"hosted"`.
@@ -109,7 +115,9 @@ for (const result of results) {
 
 - `search(query, options?)` uses local BM25 or the hosted adapter, depending
   on `provider`. `options.limit` and `options.prefix` override the configured
-  defaults per call.
+  defaults per call. `options.locale` keeps results in one language when you
+  also pass `localeCodes` and `defaultLocale`. `versionPrefixes` are stripped
+  from document paths before the locale segment is read.
 - `searchOptions` exposes the resolved
   `{ enabled, limit, prefix, placeholder, hotkey, provider }` so a custom UI
   can honor the site configuration.
