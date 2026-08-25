@@ -50,7 +50,7 @@
     "vite-plus": "catalog:"
   },
   "peerDependencies": {
-    "@ox-content/vite-plugin": ">=2.84.0"
+    "@ox-content/vite-plugin": ">=3.0.0-alpha.1"
   },
   "peerDependenciesMeta": {
     "@ox-content/vite-plugin": {

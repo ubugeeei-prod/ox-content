@@ -22,13 +22,13 @@ Already tracked elsewhere:
 
 | Feature                             | Issue                                                          | Status  |
 | ----------------------------------- | -------------------------------------------------------------- | ------- |
-| Custom containers (`::: tip`)       | [#665](https://github.com/ubugeeei-prod/ox-content/issues/665) | planned |
+| Custom containers (`::: tip`)       | [#665](https://github.com/ubugeeei-prod/ox-content/issues/665) | shipped |
 | Math (inline `$` / block `$$`)      | [#666](https://github.com/ubugeeei-prod/ox-content/issues/666) | shipped |
 | Markdown file includes              | [#667](https://github.com/ubugeeei-prod/ox-content/issues/667) | shipped |
-| Figures, captions, and lazy images  | [#668](https://github.com/ubugeeei-prod/ox-content/issues/668) | planned |
-| Inline badges                       | [#669](https://github.com/ubugeeei-prod/ox-content/issues/669) | planned |
+| Figures, captions, and lazy images  | [#668](https://github.com/ubugeeei-prod/ox-content/issues/668) | shipped |
+| Inline badges                       | [#669](https://github.com/ubugeeei-prod/ox-content/issues/669) | shipped |
 | File tree blocks                    | [#670](https://github.com/ubugeeei-prod/ox-content/issues/670) | shipped |
-| Step lists                          | [#671](https://github.com/ubugeeei-prod/ox-content/issues/671) | planned |
+| Step lists                          | [#671](https://github.com/ubugeeei-prod/ox-content/issues/671) | shipped |
 | Card / link-card / card-grid blocks | [#672](https://github.com/ubugeeei-prod/ox-content/issues/672) | shipped |
 
 ## Phase B — Site outputs
@@ -40,25 +40,25 @@ Already tracked elsewhere:
 | Redirects, aliases, and path rewrites   | [#675](https://github.com/ubugeeei-prod/ox-content/issues/675) | shipped |
 | Draft, unlisted, and scheduled pages    | [#676](https://github.com/ubugeeei-prod/ox-content/issues/676) | shipped |
 | Custom 404 page                         | [#677](https://github.com/ubugeeei-prod/ox-content/issues/677) | shipped |
-| Permalinks and frontmatter cascade      | [#678](https://github.com/ubugeeei-prod/ox-content/issues/678) | planned |
+| Permalinks and frontmatter cascade      | [#678](https://github.com/ubugeeei-prod/ox-content/issues/678) | shipped |
 
 ## Phase C — Theme chrome
 
 | Feature                                       | Issue                                                          | Status  |
 | --------------------------------------------- | -------------------------------------------------------------- | ------- |
-| Previous / next page links                    | [#679](https://github.com/ubugeeei-prod/ox-content/issues/679) | planned |
-| Code copy, external-link icons, back-to-top   | [#680](https://github.com/ubugeeei-prod/ox-content/issues/680) | planned |
+| Previous / next page links                    | [#679](https://github.com/ubugeeei-prod/ox-content/issues/679) | shipped |
+| Code copy, external-link icons, back-to-top   | [#680](https://github.com/ubugeeei-prod/ox-content/issues/680) | shipped |
 | Header nav, announcement bar, per-page chrome | [#681](https://github.com/ubugeeei-prod/ox-content/issues/681) | shipped |
 | Breadcrumbs                                   | [#682](https://github.com/ubugeeei-prod/ox-content/issues/682) | shipped |
 | Team / members page                           | [#683](https://github.com/ubugeeei-prod/ox-content/issues/683) | shipped |
 | Locale switcher                               | [#684](https://github.com/ubugeeei-prod/ox-content/issues/684) | shipped |
-| Skip link and print styles                    | [#685](https://github.com/ubugeeei-prod/ox-content/issues/685) | planned |
+| Skip link and print styles                    | [#685](https://github.com/ubugeeei-prod/ox-content/issues/685) | shipped |
 
 ## Phase D — Content model
 
 | Feature                                            | Issue                                                          | Status  |
 | -------------------------------------------------- | -------------------------------------------------------------- | ------- |
-| Taxonomies and related pages                       | [#687](https://github.com/ubugeeei-prod/ox-content/issues/687) | planned |
+| Taxonomies and related pages                       | [#687](https://github.com/ubugeeei-prod/ox-content/issues/687) | shipped |
 | Blog (index, authors, tags, reading time, archive) | [#688](https://github.com/ubugeeei-prod/ox-content/issues/688) | shipped |
 | Documentation versioning                           | [#689](https://github.com/ubugeeei-prod/ox-content/issues/689) | shipped |
 | Generated section index pages                      | [#690](https://github.com/ubugeeei-prod/ox-content/issues/690) | shipped |
@@ -70,6 +70,6 @@ Already tracked elsewhere:
 | ------------------------------------------ | -------------------------------------------------------------- | ------- |
 | Git contributors                           | [#692](https://github.com/ubugeeei-prod/ox-content/issues/692) | shipped |
 | Typed hover overlays for TypeScript fences | [#693](https://github.com/ubugeeei-prod/ox-content/issues/693) | shipped |
-| Hosted search provider adapter             | [#694](https://github.com/ubugeeei-prod/ox-content/issues/694) | planned |
+| Hosted search provider adapter             | [#694](https://github.com/ubugeeei-prod/ox-content/issues/694) | shipped |
 | PWA manifest and service worker            | [#695](https://github.com/ubugeeei-prod/ox-content/issues/695) | shipped |
 | Structured data (JSON-LD)                  | [#696](https://github.com/ubugeeei-prod/ox-content/issues/696) | shipped |
