@@ -4,7 +4,7 @@ use std::process::Command;
 use napi_derive::napi;
 
 use crate::{
-    JsA11y, JsJsonLd, JsReaderChrome, JsSsgBarePage, JsSsgConfig, JsSsgExternalizedAssets,
+    JsA11y, JsReaderChrome, JsSsgBarePage, JsSsgConfig, JsSsgExternalizedAssets,
     JsSsgGeneratedHtmlPage, JsSsgNavGroup, JsSsgNavigationGroup, JsSsgPageData, JsSsgRoutePaths,
     JsSsgSidebarItem, JsTeamOptions,
 };
@@ -12,7 +12,7 @@ use crate::{
 mod converters;
 
 use converters::{
-    convert_entry_page_config, convert_generated_html_page, convert_nav_item,
+    convert_entry_page_config, convert_generated_html_page, convert_json_ld, convert_nav_item,
     convert_navigation_group, convert_pager_override, convert_sidebar_item, convert_theme_config,
     flatten_toc_entries, map_generated_html_page, map_nav_group, map_route_paths, map_shared_asset,
 };
@@ -236,35 +236,6 @@ pub fn generate_ssg_html(
     };
 
     ox_content_ssg::generate_html(&ssg_page_data, &ssg_nav_groups, &ssg_config)
-}
-
-fn convert_json_ld(json_ld: Option<JsJsonLd>) -> ox_content_ssg::JsonLd {
-    match json_ld {
-        None => ox_content_ssg::JsonLd::disabled(),
-        Some(opts) => {
-            let publisher = opts.publisher.and_then(|publisher| {
-                let name = publisher.name.and_then(|name| {
-                    let trimmed = name.trim().to_string();
-                    (!trimmed.is_empty()).then_some(trimmed)
-                });
-                let url = publisher.url.and_then(|url| {
-                    let trimmed = url.trim().to_string();
-                    (!trimmed.is_empty()).then_some(trimmed)
-                });
-                (name.is_some() || url.is_some())
-                    .then_some(ox_content_ssg::JsonLdPublisher { name, url })
-            });
-            ox_content_ssg::JsonLd {
-                enabled: true,
-                breadcrumbs: opts.breadcrumbs.unwrap_or(true),
-                publisher,
-                site_url: opts.site_url.and_then(|url| {
-                    let trimmed = url.trim().to_string();
-                    (!trimmed.is_empty()).then_some(trimmed)
-                }),
-            }
-        }
-    }
 }
 
 fn convert_a11y(a11y: Option<JsA11y>) -> ox_content_ssg::A11y {

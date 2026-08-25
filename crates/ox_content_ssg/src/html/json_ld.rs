@@ -105,7 +105,7 @@ fn tech_article_node(page: &PageData, config: &SsgConfig) -> Value {
             node.insert("isPartOf".into(), json!({ "@id": website_id }));
         }
     }
-    if let Some(publisher) = publisher_node(&config.json_ld.publisher) {
+    if let Some(publisher) = publisher_node(config.json_ld.publisher.as_ref()) {
         node.insert("publisher".into(), publisher);
     }
     Value::Object(node)
@@ -138,8 +138,8 @@ fn breadcrumb_list_node(trail: &BreadcrumbsView, config: &SsgConfig) -> Option<V
     }))
 }
 
-fn publisher_node(publisher: &Option<JsonLdPublisher>) -> Option<Value> {
-    let publisher = publisher.as_ref()?;
+fn publisher_node(publisher: Option<&JsonLdPublisher>) -> Option<Value> {
+    let publisher = publisher?;
     let name = publisher.name.as_deref().map(str::trim).filter(|name| !name.is_empty());
     let url = publisher.url.as_deref().and_then(safe_http_url);
     if name.is_none() && url.is_none() {
@@ -194,10 +194,9 @@ fn absolute_href(config: &SsgConfig, href: &str) -> Option<String> {
 fn site_origin(site_url: &str) -> Option<String> {
     let (scheme, rest) = if let Some(rest) = site_url.strip_prefix("https://") {
         ("https", rest)
-    } else if let Some(rest) = site_url.strip_prefix("http://") {
-        ("http", rest)
     } else {
-        return None;
+        let rest = site_url.strip_prefix("http://")?;
+        ("http", rest)
     };
     let host = rest.split('/').next()?.trim();
     if host.is_empty() {

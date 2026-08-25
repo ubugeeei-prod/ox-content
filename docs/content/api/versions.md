@@ -61,6 +61,7 @@
 <h4>Returns</h4>
 <div class="ox-api-entry__return">
   <code class="ox-api-entry__return-type">string</code>
+  
 </div>
 </div>
   </div>
@@ -85,24 +86,28 @@
     <code class="ox-api-entry__param-name">pages</code>
     <code class="ox-api-entry__param-type">Array&lt;{ outputPath: string; html: string }&gt;</code>
   </div>
+  
 </li>
 <li class="ox-api-entry__param">
   <div class="ox-api-entry__param-heading">
     <code class="ox-api-entry__param-name">options</code>
     <code class="ox-api-entry__param-type"><a href="./types.md#resolvedversionsoptions">ResolvedVersionsOptions</a></code>
   </div>
+  
 </li>
 <li class="ox-api-entry__param">
   <div class="ox-api-entry__param-heading">
     <code class="ox-api-entry__param-name">outDir</code>
     <code class="ox-api-entry__param-type">string</code>
   </div>
+  
 </li>
 <li class="ox-api-entry__param">
   <div class="ox-api-entry__param-heading">
     <code class="ox-api-entry__param-name">base</code>
     <code class="ox-api-entry__param-type">string</code>
   </div>
+  
 </li>
 </ul>
 </div>
@@ -110,6 +115,7 @@
 <h4>Returns</h4>
 <div class="ox-api-entry__return">
   <code class="ox-api-entry__return-type">void</code>
+  
 </div>
 </div>
   </div>
@@ -134,12 +140,14 @@
     <code class="ox-api-entry__param-name">root</code>
     <code class="ox-api-entry__param-type">string</code>
   </div>
+  
 </li>
 <li class="ox-api-entry__param">
   <div class="ox-api-entry__param-heading">
     <code class="ox-api-entry__param-name">dir</code>
     <code class="ox-api-entry__param-type">string</code>
   </div>
+  
 </li>
 </ul>
 </div>
@@ -147,6 +155,7 @@
 <h4>Returns</h4>
 <div class="ox-api-entry__return">
   <code class="ox-api-entry__return-type">string | undefined</code>
+  
 </div>
 </div>
   </div>
@@ -171,6 +180,7 @@
     <code class="ox-api-entry__param-name">value</code>
     <code class="ox-api-entry__param-type">boolean | <a href="./types.md#versionsoptions">VersionsOptions</a> | undefined</code>
   </div>
+  
 </li>
 </ul>
 </div>
@@ -178,6 +188,7 @@
 <h4>Returns</h4>
 <div class="ox-api-entry__return">
   <code class="ox-api-entry__return-type"><a href="./types.md#resolvedversionsoptions">ResolvedVersionsOptions</a></code>
+  
 </div>
 </div>
   </div>
@@ -202,18 +213,21 @@
     <code class="ox-api-entry__param-name">outputPath</code>
     <code class="ox-api-entry__param-type">string</code>
   </div>
+  
 </li>
 <li class="ox-api-entry__param">
   <div class="ox-api-entry__param-heading">
     <code class="ox-api-entry__param-name">outDir</code>
     <code class="ox-api-entry__param-type">string</code>
   </div>
+  
 </li>
 <li class="ox-api-entry__param">
   <div class="ox-api-entry__param-heading">
     <code class="ox-api-entry__param-name">options</code>
     <code class="ox-api-entry__param-type"><a href="./types.md#resolvedversionsoptions">ResolvedVersionsOptions</a></code>
   </div>
+  
 </li>
 </ul>
 </div>
@@ -221,7 +235,7 @@
 <h4>Returns</h4>
 <div class="ox-api-entry__return">
   <code class="ox-api-entry__return-type">object</code>
-<div class="ox-api-entry__return-members">
+  <div class="ox-api-entry__return-members">
 <div class="ox-api-entry__return-member">
 <h5>id</h5>
 <code class="ox-api-entry__return-member-type language-typescript">id: string;</code>
@@ -246,3 +260,4 @@
 <p class="ox-api-entry__source"><a class="ox-api-entry__source-link" href="https://github.com/ubugeeei-prod/ox-content/blob/main/npm/vite-plugin-ox-content/src/versions.ts#L1-L6" target="_blank" rel="noopener noreferrer">View source<span class="ox-api-entry__source-icon" aria-hidden="true"></span></a></p>
   </div>
 </details>
+

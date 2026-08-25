@@ -49,20 +49,20 @@ oxContent({
 });
 ```
 
-| フィールド      | 既定    | 効果                                                                 |
-| --------------- | ------- | -------------------------------------------------------------------- |
-| `breadcrumbs`   | `true`  | 表示用の道筋があるときだけ `BreadcrumbList` を出す。`false` で隠す。 |
-| `publisher`     | 省略    | 任意の `{ name?, url? }`。未設定のフィールドは捏造しない。           |
+| フィールド    | 既定   | 効果                                                                 |
+| ------------- | ------ | -------------------------------------------------------------------- |
+| `breadcrumbs` | `true` | 表示用の道筋があるときだけ `BreadcrumbList` を出す。`false` で隠す。 |
+| `publisher`   | 省略   | 任意の `{ name?, url? }`。未設定のフィールドは捏造しない。           |
 
 ## 何が出力されるか
 
 スクリプトは単一の `@graph` ドキュメントです。
 
-| `@type`          | いつ                                                         | 主なフィールド                                      |
-| ---------------- | ------------------------------------------------------------ | --------------------------------------------------- |
-| `WebSite`        | `jsonLd` がオン                                              | `name` は `siteName`。`url` / `@id` は `siteUrl` があるとき |
-| `TechArticle`    | `jsonLd` がオン                                              | `headline`、`description`。`url` / `@id` / `isPartOf` は `siteUrl` があるとき。`publisher` は設定したときだけ |
-| `BreadcrumbList` | 表示用パンくずがあり、**かつ** `jsonLd.breadcrumbs` が `false` でない | `itemListElement` に `position`、`name`、絶対 URL を組み立てられるときの `item` |
+| `@type`          | いつ                                                                  | 主なフィールド                                                                                                |
+| ---------------- | --------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------- |
+| `WebSite`        | `jsonLd` がオン                                                       | `name` は `siteName`。`url` / `@id` は `siteUrl` があるとき                                                   |
+| `TechArticle`    | `jsonLd` がオン                                                       | `headline`、`description`。`url` / `@id` / `isPartOf` は `siteUrl` があるとき。`publisher` は設定したときだけ |
+| `BreadcrumbList` | 表示用パンくずがあり、**かつ** `jsonLd.breadcrumbs` が `false` でない | `itemListElement` に `position`、`name`、絶対 URL を組み立てられるときの `item`                               |
 
 `@id` と `url` には `siteUrl` が必要です。無いときはそれらの絶対 URL
 フィールドを省略します。ホスト、ロゴ、publisher を捏造しません。

@@ -51,20 +51,20 @@ oxContent({
 });
 ```
 
-| Field         | Default | Effect                                                                 |
-| ------------- | ------- | ---------------------------------------------------------------------- |
+| Field         | Default | Effect                                                                          |
+| ------------- | ------- | ------------------------------------------------------------------------------- |
 | `breadcrumbs` | `true`  | Emit `BreadcrumbList` only when a visible trail exists. Set `false` to hide it. |
-| `publisher`   | omitted | Optional `{ name?, url? }`. Missing fields are not invented.           |
+| `publisher`   | omitted | Optional `{ name?, url? }`. Missing fields are not invented.                    |
 
 ## What is emitted
 
 The script is a single `@graph` document:
 
-| `@type`          | When                                                         | Typical fields                                      |
-| ---------------- | ------------------------------------------------------------ | --------------------------------------------------- |
-| `WebSite`        | `jsonLd` is on                                               | `name` from `siteName`; `url` / `@id` when `siteUrl` is set |
-| `TechArticle`    | `jsonLd` is on                                               | `headline`, `description`; `url` / `@id` / `isPartOf` when `siteUrl` is set; `publisher` only when configured |
-| `BreadcrumbList` | Visible breadcrumbs exist **and** `jsonLd.breadcrumbs` is not `false` | `itemListElement` with `position`, `name`, and `item` when an absolute URL can be built |
+| `@type`          | When                                                                  | Typical fields                                                                                                |
+| ---------------- | --------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------- |
+| `WebSite`        | `jsonLd` is on                                                        | `name` from `siteName`; `url` / `@id` when `siteUrl` is set                                                   |
+| `TechArticle`    | `jsonLd` is on                                                        | `headline`, `description`; `url` / `@id` / `isPartOf` when `siteUrl` is set; `publisher` only when configured |
+| `BreadcrumbList` | Visible breadcrumbs exist **and** `jsonLd.breadcrumbs` is not `false` | `itemListElement` with `position`, `name`, and `item` when an absolute URL can be built                       |
 
 `siteUrl` is required for `@id` and `url`. If it is missing, those absolute
 URL fields are omitted. The build does not invent a host, a logo, or a

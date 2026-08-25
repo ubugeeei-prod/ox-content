@@ -122,7 +122,7 @@ fn happy_path_tech_article_and_website() {
         "JSON-LD must follow existing OG tags: {html}"
     );
     let twitter = html.find(r#"name="twitter:title""#).expect("twitter title");
-    let script = html.find(r#"application/ld+json"#).expect("json-ld");
+    let script = html.find(r"application/ld+json").expect("json-ld");
     let styles = html.find("<!-- ox-content:styles:start -->").expect("styles");
     assert!(twitter < script && script < styles, "JSON-LD placement is wrong: {html}");
 

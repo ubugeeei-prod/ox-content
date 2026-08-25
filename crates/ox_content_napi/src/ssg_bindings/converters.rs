@@ -1,7 +1,7 @@
 use crate::{
-    JsEntryPageConfig, JsHeaderNavItem, JsPagerOverride, JsSsgGeneratedHtmlPage, JsSsgNavGroup,
-    JsSsgNavItem, JsSsgNavigationGroup, JsSsgNavigationItem, JsSsgRoutePaths, JsSsgSharedAsset,
-    JsSsgSidebarItem, JsThemeColors, JsThemeConfig, TocEntry,
+    JsEntryPageConfig, JsHeaderNavItem, JsJsonLd, JsPagerOverride, JsSsgGeneratedHtmlPage,
+    JsSsgNavGroup, JsSsgNavItem, JsSsgNavigationGroup, JsSsgNavigationItem, JsSsgRoutePaths,
+    JsSsgSharedAsset, JsSsgSidebarItem, JsThemeColors, JsThemeConfig, TocEntry,
 };
 
 /// Converts JsThemeColors to ox_content_ssg::ThemeColors.
@@ -243,6 +243,35 @@ pub(super) fn map_shared_asset(asset: ox_content_ssg::SharedAsset) -> JsSsgShare
         output_path: asset.output_path,
         public_path: asset.public_path,
         content: asset.content,
+    }
+}
+
+pub(super) fn convert_json_ld(json_ld: Option<JsJsonLd>) -> ox_content_ssg::JsonLd {
+    match json_ld {
+        None => ox_content_ssg::JsonLd::disabled(),
+        Some(opts) => {
+            let publisher = opts.publisher.and_then(|publisher| {
+                let name = publisher.name.and_then(|name| {
+                    let trimmed = name.trim().to_string();
+                    (!trimmed.is_empty()).then_some(trimmed)
+                });
+                let url = publisher.url.and_then(|url| {
+                    let trimmed = url.trim().to_string();
+                    (!trimmed.is_empty()).then_some(trimmed)
+                });
+                (name.is_some() || url.is_some())
+                    .then_some(ox_content_ssg::JsonLdPublisher { name, url })
+            });
+            ox_content_ssg::JsonLd {
+                enabled: true,
+                breadcrumbs: opts.breadcrumbs.unwrap_or(true),
+                publisher,
+                site_url: opts.site_url.and_then(|url| {
+                    let trimmed = url.trim().to_string();
+                    (!trimmed.is_empty()).then_some(trimmed)
+                }),
+            }
+        }
     }
 }
 
