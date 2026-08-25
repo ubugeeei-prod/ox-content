@@ -189,7 +189,10 @@ const html = `<title>Ox Content Theme Gallery</title>
 <script>${readFileSync(join(HERE, "theme-gallery.js"), "utf-8")}</script>
 `;
 
-writeFileSync(OUT, html);
+const changed = !existsSync(OUT) || readFileSync(OUT, "utf-8") !== html;
+if (changed) {
+  writeFileSync(OUT, html);
+}
 console.log(
-  `Wrote ${OUT} (${(html.length / 1024).toFixed(0)} kB, ${skins.length} skins x ${schemeData.length} schemes = ${skins.length * schemeData.length} combinations)`,
+  `${changed ? "Wrote" : "Skipped unchanged"} ${OUT} (${(html.length / 1024).toFixed(0)} kB, ${skins.length} skins x ${schemeData.length} schemes = ${skins.length * schemeData.length} combinations)`,
 );
