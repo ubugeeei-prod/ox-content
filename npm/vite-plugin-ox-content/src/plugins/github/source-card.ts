@@ -126,7 +126,12 @@ export function createGitHubSourceCard(
         type: "element",
         tagName: "pre",
         properties: {
-          className: ["ox-github-code-block", "ox-code-block", "line-numbers-mode", ...languageClass],
+          className: [
+            "ox-github-code-block",
+            "ox-code-block",
+            "line-numbers-mode",
+            ...languageClass,
+          ],
           "data-line-numbers": "true",
           "data-line-number-start": String(start),
           ...(source.language ? { "data-language": source.language } : {}),

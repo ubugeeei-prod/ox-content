@@ -32,9 +32,9 @@ export function resolveFileTreeOptions(
 }
 
 export function toJsFileTreeOptions(
-  options: ResolvedOptions["fileTree"],
+  options: ResolvedOptions["fileTree"] | undefined,
 ): JsFileTreeOptions | undefined {
-  if (!options.enabled) return undefined;
+  if (!options?.enabled) return undefined;
   return {
     enabled: true,
     defaultOpen: options.defaultOpen,
