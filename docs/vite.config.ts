@@ -142,6 +142,7 @@ export default defineConfig(({ mode }) => {
                       { text: "File Tree", link: "/built-in/file-tree.md" },
                       { text: "Inline Badges", link: "/built-in/badges.md" },
                       { text: "Images", link: "/built-in/images.md" },
+                      { text: "Page resources", link: "/built-in/resources.md" },
                       { text: "Code Blocks", link: "/built-in/code-blocks.md" },
                       { text: "Embeds", link: "/built-in/embeds.md" },
                       { text: "Mermaid Diagrams", link: "/built-in/mermaid.md" },

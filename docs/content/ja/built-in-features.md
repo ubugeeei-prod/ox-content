@@ -24,6 +24,7 @@ Ox Content は、よく使うドキュメントの挙動を既定で載せ、非
 | [ファイルツリー](./built-in/file-tree.md)                | オプトインの静的ディレクトリ図                              |
 | [インラインバッジ](./built-in/badges.md)                 | オプトインの `{badge:tip}`                                  |
 | [画像](./built-in/images.md)                             | 図、キャプション、遅延読み込み、安全な寸法                  |
+| [ページリソース](./built-in/resources.md)                | ページバンドル資産とリサイズ・クロップ・形式変換            |
 | [コードブロック](./built-in/code-blocks.md)              | ハイライト、注釈、ソース取り込み                            |
 | [埋め込み](./built-in/embeds.md)                         | GitHub / OG カード、パッケージマネージャタブ、YouTube、SNS  |
 | [Mermaid](./built-in/mermaid.md)                         | フェンスを静的 SVG に描画                                   |
@@ -69,6 +70,7 @@ Ox Content は、よく使うドキュメントの挙動を既定で載せ、非
 | 手順リスト           | `steps`                                                                        | `false`       | [手順リスト](./built-in/steps.md)                        |
 | ファイルツリー       | `fileTree`                                                                     | `false`       | [ファイルツリー](./built-in/file-tree.md)                |
 | 画像                 | `images`                                                                       | `false`       | [画像](./built-in/images.md)                             |
+| ページリソース       | `resources`                                                                    | `false`       | [ページリソース](./built-in/resources.md)                |
 | 図                   | `mermaid`                                                                      | `false`       | [Mermaid](./built-in/mermaid.md)                         |
 | 数式                 | `math`                                                                         | `false`       | [数式](./built-in/math.md)                               |
 | OG 画像              | `ogImage`                                                                      | `false`       | [サイト生成](./built-in/site-generation.md)              |

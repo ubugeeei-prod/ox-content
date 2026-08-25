@@ -20,6 +20,7 @@ import { notFoundSearchExcludeIds } from "./not-found";
 import { resolveFeedsOptions } from "./feeds";
 import { resolveTaxonomiesOptions } from "./taxonomies";
 import { resolveVersionsOptions } from "./versions";
+import { PageResourceError, resolveResourcesOptions } from "./resources";
 import {
   resolveSearchOptions,
   buildSearchIndex,
@@ -66,6 +67,8 @@ export type {
   ResolvedContainerOptions,
   ImageOptions,
   ResolvedImageOptions,
+  ResourcesOptions,
+  ResolvedResourcesOptions,
   CodeImportOptions,
   ResolvedCodeImportOptions,
   IncludeOptions,
@@ -446,6 +449,9 @@ function createSsgPlugin(
         }
       } catch (err) {
         console.error("[ox-content] SSG build failed:", err);
+        if (err instanceof PageResourceError) {
+          throw err;
+        }
       }
     },
   };
@@ -623,6 +629,7 @@ function resolveOptions(options: OxContentOptions): ResolvedOptions {
     feeds: resolveFeedsOptions(options.feeds),
     taxonomies: resolveTaxonomiesOptions(options.taxonomies),
     versions: resolveVersionsOptions(options.versions),
+    resources: resolveResourcesOptions(options.resources),
     gfm: options.gfm ?? true,
     mdx: options.mdx,
     footnotes: options.footnotes ?? true,
@@ -1040,6 +1047,7 @@ export { resolveRedirectsOptions } from "./redirects";
 export { resolveFeedsOptions } from "./feeds";
 export { resolveTaxonomiesOptions } from "./taxonomies";
 export { resolveVersionsOptions } from "./versions";
+export { resolveResourcesOptions, PageResourceError } from "./resources";
 export { resolveTeamOptions } from "./team";
 export { resolveSearchOptions, buildSearchIndex, writeSearchIndex } from "./search";
 export {

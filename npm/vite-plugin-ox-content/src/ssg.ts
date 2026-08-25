@@ -68,6 +68,7 @@ import {
   snapshotEntries,
   writeSnapshotSearchIndex,
 } from "./versions";
+import { PageResourceError, processPageResources } from "./resources";
 import {
   createVersionNavigationContext,
   rewriteVersionedHeaderNavItems,
@@ -786,6 +787,8 @@ export async function buildSsg(options: ResolvedOptions, root: string): Promise<
   const { outputPages, listedPages } = applyPublishState(context, collected);
   remapPermalinkNav(context, listedPages);
 
+  await applyPageResources(context, outputPages, generatedFiles, errors);
+
   await generateOgImageAssets(context, collected, generatedFiles, errors);
 
   injectRelatedPages(outputPages, listedPages, context.options.taxonomies);
@@ -882,6 +885,38 @@ async function resolveSiteName(root: string, ssgOptions: ResolvedSsgOptions): Pr
     return pkg.name ? formatTitle(pkg.name) : "Documentation";
   } catch {
     return "Documentation";
+  }
+}
+
+async function applyPageResources(
+  context: BuildSsgContext,
+  pages: PageProcessResult[],
+  generatedFiles: string[],
+  errors: string[],
+): Promise<void> {
+  const options = context.options.resources;
+  if (!options?.enabled) {
+    return;
+  }
+
+  const cacheDir = path.join(context.root, ".cache", "ox-content-resources");
+  const fatal: string[] = [];
+  for (const page of pages) {
+    const processed = await processPageResources({
+      html: page.transformedHtml,
+      inputPath: page.inputPath,
+      outputPath: page.routePaths.outputPath,
+      srcDir: context.srcDir,
+      options,
+      cacheDir,
+    });
+    page.transformedHtml = processed.html;
+    generatedFiles.push(...processed.files);
+    errors.push(...processed.errors);
+    fatal.push(...processed.fatal);
+  }
+  if (fatal.length > 0) {
+    throw new PageResourceError(fatal);
   }
 }
 

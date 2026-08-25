@@ -1182,6 +1182,23 @@ export interface OxContentOptions {
   images?: boolean | ImageOptions;
 
   /**
+   * Opt-in page-bundle resources and build-time image processing.
+   *
+   * Off by default. `true` or `{}` treats each page directory as a bundle:
+   * sibling images are addressable with relative URLs. Query-string
+   * resize/crop/format transforms run at build time and are cached by
+   * source mtime plus transform params. Paths that leave the page
+   * directory or `srcDir` are rejected. Missing sources fail the build
+   * when `missing` is `"error"` (the default when enabled).
+   *
+   * This is separate from `images`, which only adds figures, captions,
+   * and lazy-loading.
+   *
+   * @default false
+   */
+  resources?: boolean | ResourcesOptions;
+
+  /**
    * Import source snippets into fences with `<<< @/path/to/file.ts{region}`.
    *
    * This is useful for documentation that must stay synchronized with examples
@@ -1414,6 +1431,7 @@ export interface ResolvedOptions {
   feeds?: ResolvedFeedsOptions;
   taxonomies?: ResolvedTaxonomiesOptions;
   versions?: ResolvedVersionsOptions;
+  resources?: ResolvedResourcesOptions;
   gfm: boolean;
   mdx?: boolean;
   footnotes: boolean;
@@ -1617,6 +1635,47 @@ export interface ImageOptions {
 export interface ResolvedImageOptions {
   enabled: boolean;
   lazy: boolean;
+}
+
+/**
+ * Options for opt-in page-bundle resources and image processing.
+ */
+export interface ResourcesOptions {
+  /**
+   * Allowed output formats for `?format=`.
+   *
+   * `jpg` is treated as `jpeg`. Pixel transforms encode `png` and `jpeg`.
+   * `webp` is copied when the source is already webp and no pixel
+   * transform is requested.
+   *
+   * @default ["png", "jpeg", "webp"]
+   */
+  formats?: string[];
+
+  /**
+   * Allowed `?width=` / `?w=` values. An empty list allows any positive
+   * width.
+   *
+   * @default []
+   */
+  widths?: number[];
+
+  /**
+   * What to do when a relative resource is missing.
+   *
+   * @default "error"
+   */
+  missing?: "error" | "warn";
+}
+
+/**
+ * Resolved page-resource options.
+ */
+export interface ResolvedResourcesOptions {
+  enabled: boolean;
+  formats: string[];
+  widths: number[];
+  missing: "error" | "warn";
 }
 
 /**

@@ -30,6 +30,7 @@ inline**.
 | [File Tree](./built-in/file-tree.md)                   | Opt-in static `file-tree` directory diagrams                              |
 | [Inline Badges](./built-in/badges.md)                  | Opt-in `{badge:tip}` status labels in headings or prose                   |
 | [Images](./built-in/images.md)                         | Opt-in figures, captions, lazy loading, and safe dimensions               |
+| [Page resources](./built-in/resources.md)              | Opt-in page-bundle assets with resize, crop, and format transforms        |
 | [Code Blocks](./built-in/code-blocks.md)               | Syntax highlighting, code annotations, code imports                       |
 | [Embeds](./built-in/embeds.md)                         | GitHub cards, OG cards, package-manager tabs, tabs, YouTube, social cards |
 | [Mermaid Diagrams](./built-in/mermaid.md)              | Diagram fences rendered to static SVG                                     |
@@ -75,6 +76,7 @@ inline**.
 | Step lists       | `steps`                                                                                                       | `false`              | [Step Lists](./built-in/steps.md)                      |
 | File tree        | `fileTree`                                                                                                    | `false`              | [File Tree](./built-in/file-tree.md)                   |
 | Images           | `images`                                                                                                      | `false`              | [Images](./built-in/images.md)                         |
+| Page resources   | `resources`                                                                                                   | `false`              | [Page resources](./built-in/resources.md)              |
 | Diagrams         | `mermaid`                                                                                                     | `false`              | [Mermaid Diagrams](./built-in/mermaid.md)              |
 | Math             | `math`                                                                                                        | `false`              | [Math](./built-in/math.md)                             |
 | OG images        | `ogImage`                                                                                                     | `false`              | [Site Generation](./built-in/site-generation.md)       |
