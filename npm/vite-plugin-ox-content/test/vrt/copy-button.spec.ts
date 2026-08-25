@@ -51,8 +51,8 @@ test("code copy button stays compact on touch layouts", async ({ page }) => {
 
   expect(metrics.buttonWidth).toBeLessThanOrEqual(28);
   expect(metrics.buttonHeight).toBeLessThanOrEqual(28);
-  expect(metrics.iconWidth).toBeLessThanOrEqual(14);
-  expect(metrics.iconHeight).toBeLessThanOrEqual(14);
-  expect(metrics.opacity).toBeLessThan(0.9);
-  expect(metrics.backgroundColor).not.toBe("rgb(255, 255, 255)");
+  expect(metrics.iconWidth).toBeLessThanOrEqual(13);
+  expect(metrics.iconHeight).toBeLessThanOrEqual(13);
+  expect(metrics.opacity).toBeLessThanOrEqual(0.72);
+  expect(metrics.backgroundColor).toBe("rgba(0, 0, 0, 0)");
 });
