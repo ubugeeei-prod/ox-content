@@ -107,6 +107,22 @@ pub struct HtmlRendererOptions {
     ///
     /// Default: `true`.
     pub autolink_target_blank: bool,
+
+    /// Append a visible heading permalink after the heading children.
+    ///
+    /// Default: `false`. Off output is byte-identical to previous releases.
+    /// When on, each heading that does not already contain the permalink
+    /// marker (`class="header-anchor"` or a `#` link to the same id) gains:
+    ///
+    /// ```html
+    /// <a class="header-anchor" href="#{id}" aria-label="Permalink to &quot;{text}&quot;">#</a>
+    /// ```
+    ///
+    /// `{id}` is the exact generated heading id (including `-N` suffixes).
+    /// Empty headings use `aria-label="Permalink to this section"`. Visibility
+    /// (always vs hover/focus-visible) is CSS-only and does not change this
+    /// markup.
+    pub heading_permalinks: bool,
 }
 
 const DEFAULT_SOFT_BREAK: &str = "\n";
@@ -137,6 +153,7 @@ pub(super) struct RendererOptions {
     pub(super) autolink_urls: bool,
     autolink_patterns: Option<Vec<String>>,
     pub(super) autolink_target_blank: bool,
+    pub(super) heading_permalinks: bool,
 }
 
 impl RendererOptions {
@@ -157,6 +174,7 @@ impl RendererOptions {
             autolink_urls: true,
             autolink_patterns: None,
             autolink_target_blank: true,
+            heading_permalinks: false,
         }
     }
 
@@ -202,6 +220,7 @@ impl From<HtmlRendererOptions> for RendererOptions {
             autolink_urls: options.autolink_urls,
             autolink_patterns: Some(options.autolink_patterns),
             autolink_target_blank: options.autolink_target_blank,
+            heading_permalinks: options.heading_permalinks,
         }
     }
 }
@@ -243,6 +262,7 @@ impl HtmlRendererOptions {
             autolink_urls: true,
             autolink_patterns: DEFAULT_AUTOLINK_PATTERNS.iter().map(ToString::to_string).collect(),
             autolink_target_blank: true,
+            heading_permalinks: false,
         }
     }
 }

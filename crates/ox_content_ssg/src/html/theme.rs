@@ -143,6 +143,10 @@ pub struct ThemeConfig {
     pub aside: Option<bool>,
     /// Breadcrumb trail from the site root through sidebar ancestors.
     pub breadcrumbs: Option<bool>,
+    /// Heading permalink visibility. `"hover"` (default) or `"always"`.
+    /// CSS only — the renderer HTML contract stays the same.
+    #[serde(rename = "headingPermalink")]
+    pub heading_permalink: Option<String>,
     /// Light mode colors.
     pub colors: Option<ThemeColors>,
     /// Dark mode colors.

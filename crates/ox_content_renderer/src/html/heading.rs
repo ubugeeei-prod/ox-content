@@ -4,7 +4,13 @@
 //! shared text collector and slugifier so both code paths reuse the same Unicode-aware
 //! normalization behavior.
 
-use ox_content_ast::Node;
+use ox_content_ast::{Link, Node};
+
+/// Class name on the opt-in heading permalink control.
+///
+/// Headings that already contain an `<a class="header-anchor">` or a `#`
+/// link to the generated id do not receive a second marker.
+pub const HEADING_PERMALINK_CLASS: &str = "header-anchor";
 
 pub(super) fn collect_heading_text(nodes: &[Node<'_>]) -> String {
     let mut text = String::new();
@@ -118,4 +124,57 @@ pub(super) fn slugify_heading_into(text: &str, out: &mut String) {
     if out.len() == start_len {
         out.push_str("section");
     }
+}
+
+pub(super) fn heading_has_permalink_marker(nodes: &[Node<'_>], id: &str) -> bool {
+    nodes.iter().any(|node| node_has_permalink_marker(node, id))
+}
+
+fn node_has_permalink_marker(node: &Node<'_>, id: &str) -> bool {
+    match node {
+        Node::Link(link) => {
+            is_hash_permalink_link(link, id) || heading_has_permalink_marker(&link.children, id)
+        }
+        Node::Html(html) => html_has_header_anchor(html.value),
+        Node::Emphasis(value) => heading_has_permalink_marker(&value.children, id),
+        Node::Strong(value) => heading_has_permalink_marker(&value.children, id),
+        Node::Delete(value) => heading_has_permalink_marker(&value.children, id),
+        _ => false,
+    }
+}
+
+fn is_hash_permalink_link(link: &Link<'_>, id: &str) -> bool {
+    let url = link.url;
+    if url.len() != id.len() + 1 || !url.starts_with('#') || &url[1..] != id {
+        return false;
+    }
+    collect_heading_text(&link.children) == "#"
+}
+
+fn html_has_header_anchor(value: &str) -> bool {
+    let mut rest = value;
+    while let Some(start) = rest.find("<a") {
+        let tag = &rest[start..];
+        let Some(end) = tag.find('>') else {
+            break;
+        };
+        if class_attr_contains(&tag[..end], HEADING_PERMALINK_CLASS) {
+            return true;
+        }
+        rest = &tag[end + 1..];
+    }
+    false
+}
+
+fn class_attr_contains(tag: &str, class_name: &str) -> bool {
+    for quote in ['"', '\''] {
+        let needle = if quote == '"' { "class=\"" } else { "class='" };
+        if let Some(index) = tag.find(needle) {
+            let after = &tag[index + needle.len()..];
+            if let Some(end) = after.find(quote) {
+                return after[..end].split_whitespace().any(|class| class == class_name);
+            }
+        }
+    }
+    false
 }

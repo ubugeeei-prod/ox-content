@@ -49,6 +49,7 @@ pub struct WasmParserOptions {
     autolink_urls: bool,
     autolink_patterns: Vec<String>,
     autolink_target_blank: bool,
+    heading_permalinks: bool,
 }
 
 #[wasm_bindgen]
@@ -72,6 +73,7 @@ impl WasmParserOptions {
             autolink_urls: true,
             autolink_patterns: vec!["http://".to_string(), "https://".to_string()],
             autolink_target_blank: true,
+            heading_permalinks: false,
         }
     }
 
@@ -165,6 +167,14 @@ impl WasmParserOptions {
     pub fn set_autolink_target_blank(&mut self, value: bool) {
         self.autolink_target_blank = value;
     }
+
+    /// Appends a visible heading permalink (`<a class="header-anchor" href="#id">`).
+    ///
+    /// Default: `false`.
+    #[wasm_bindgen(setter = headingPermalinks)]
+    pub fn set_heading_permalinks(&mut self, value: bool) {
+        self.heading_permalinks = value;
+    }
 }
 
 impl From<&WasmParserOptions> for ParserOptions {
@@ -226,6 +236,7 @@ pub fn parse_and_render(source: &str, options: Option<WasmParserOptions>) -> JsV
         autolink_urls: opts.autolink_urls,
         autolink_target_blank: opts.autolink_target_blank,
         autolink_patterns: opts.autolink_patterns,
+        heading_permalinks: opts.heading_permalinks,
     };
 
     // The arena and renderer are reused across calls (see `scratch`); on a
@@ -257,6 +268,7 @@ pub fn transform(source: &str, options: Option<WasmParserOptions>) -> JsValue {
         autolink_urls: opts.autolink_urls,
         autolink_target_blank: opts.autolink_target_blank,
         autolink_patterns: opts.autolink_patterns,
+        heading_permalinks: opts.heading_permalinks,
     };
 
     let transform_result = with_scratch(content.len(), &renderer_key, |allocator, renderer| {

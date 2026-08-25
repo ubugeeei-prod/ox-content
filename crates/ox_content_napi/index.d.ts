@@ -1866,15 +1866,15 @@ export interface JsThemeConfig {
   aside?: boolean
   /** Breadcrumb trail from the site root through sidebar ancestors. */
   breadcrumbs?: boolean
+  /** Heading permalink visibility. `"hover"` or `"always"`. CSS only. */
+  headingPermalink?: string
   /** Light mode colors. */
   colors?: JsThemeColors
   /** Dark mode colors. */
   darkColors?: JsThemeColors
-  /** Font configuration. */
   fonts?: JsThemeFonts
   /** Entry page configuration. */
   entryPage?: JsThemeEntryPage
-  /** Layout configuration. */
   layout?: JsThemeLayout
   /** Header configuration. */
   header?: JsThemeHeader
@@ -2025,6 +2025,12 @@ export interface JsTransformOptions {
    * Default: `3`.
    */
   tocMaxDepth?: number
+  /**
+   * Opt-in visible heading permalinks (`<a class="header-anchor" href="#id">`).
+   *
+   * Default: disabled. Existing HTML stays unchanged until this is enabled.
+   */
+  headingPermalinks?: boolean
   /**
    * Convert `.md` links to `.html` links for SSG output.
    *

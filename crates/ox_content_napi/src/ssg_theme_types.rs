@@ -146,15 +146,15 @@ pub struct JsThemeConfig {
     pub aside: Option<bool>,
     /// Breadcrumb trail from the site root through sidebar ancestors.
     pub breadcrumbs: Option<bool>,
+    /// Heading permalink visibility. `"hover"` or `"always"`. CSS only.
+    pub heading_permalink: Option<String>,
     /// Light mode colors.
     pub colors: Option<JsThemeColors>,
     /// Dark mode colors.
     pub dark_colors: Option<JsThemeColors>,
-    /// Font configuration.
     pub fonts: Option<JsThemeFonts>,
     /// Entry page configuration.
     pub entry_page: Option<JsThemeEntryPage>,
-    /// Layout configuration.
     pub layout: Option<JsThemeLayout>,
     /// Header configuration.
     pub header: Option<JsThemeHeader>,

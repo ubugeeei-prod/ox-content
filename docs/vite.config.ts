@@ -134,6 +134,7 @@ export default defineConfig(({ mode }) => {
                     link: "/built-in-features.md",
                     items: [
                       { text: "Markdown Baseline", link: "/built-in/markdown.md" },
+                      { text: "Heading Permalinks", link: "/built-in/heading-permalinks.md" },
                       { text: "Syntax Extensions", link: "/built-in/syntax-extensions.md" },
                       { text: "Custom Containers", link: "/built-in/containers.md" },
                       { text: "Cards", link: "/built-in/cards.md" },
@@ -252,6 +253,7 @@ export default defineConfig(({ mode }) => {
         // so those pages can render live examples inline.
         // (wikiLinks and attrs stay off: both also rewrite `[[...]]` / `{...}`
         // inside raw HTML <code> emitted by the generated API reference.)
+        headingPermalinks: true,
         emojiShortcodes: true,
         math: true,
         cjkEmphasis: true,

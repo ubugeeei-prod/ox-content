@@ -177,8 +177,14 @@ children }` entries:
 Every heading also gets a stable `id` attribute (the `slug` above), so deep
 links like [#task-lists](#task-lists) work on every page.
 
+Visible `#` permalink controls next to the heading are opt-in. See
+[Heading Permalinks](./heading-permalinks.md). Off by default so existing HTML
+stays unchanged.
+
 ## Related
 
+- [Heading Permalinks](./heading-permalinks.md) — opt-in visible `#` links on
+  those ids.
 - [Syntax Extensions](./syntax-extensions.md) — opt-in authoring syntax on top
   of this baseline.
 - [Built-in Features overview](../built-in-features.md)

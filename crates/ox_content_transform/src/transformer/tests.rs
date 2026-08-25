@@ -77,6 +77,45 @@ fn tracks_source_origin_after_frontmatter() {
 }
 
 #[test]
+fn heading_permalinks_default_off_keeps_html() {
+    let off = MarkdownTransformer::from_options(&TransformOptions {
+        gfm: Some(true),
+        ..Default::default()
+    })
+    .transform("# Hello");
+    let on = MarkdownTransformer::from_options(&TransformOptions {
+        gfm: Some(true),
+        heading_permalinks: Some(true),
+        ..Default::default()
+    })
+    .transform("# Hello");
+
+    assert_eq!(off.html, "<h1 id=\"hello\">Hello</h1>\n");
+    assert!(on.html.contains("class=\"header-anchor\""), "{}", on.html);
+    assert!(on.html.contains("href=\"#hello\""), "{}", on.html);
+    assert_eq!(on.toc[0].slug, "hello");
+}
+
+#[test]
+fn heading_permalinks_compose_with_explicit_ids() {
+    let html = MarkdownTransformer::from_options(&TransformOptions {
+        gfm: Some(true),
+        heading_permalinks: Some(true),
+        attributes: Some(crate::AttrsOptions { enabled: Some(true) }),
+        ..Default::default()
+    })
+    .transform("## Title {#custom-id}")
+    .html;
+
+    assert!(html.contains("id=\"custom-id\""), "{html}");
+    assert!(!html.contains("id=\"title-custom-id\""), "{html}");
+    assert!(html.contains("class=\"header-anchor\""), "{html}");
+    assert!(html.contains("href=\"#custom-id\""), "{html}");
+    assert!(html.contains("Permalink to &quot;Title&quot;"), "{html}");
+    assert!(!html.contains("{#custom-id}"), "{html}");
+}
+
+#[test]
 fn toc_slugs_are_unique_and_match_heading_ids() {
     let allocator = Allocator::new();
     let doc = Parser::new(

@@ -248,6 +248,24 @@ When enabled, the markup stays `<aside class="toc">` plus `main--with-toc` on
 the article column — the same chrome as before this became opt-in. Existing
 sites that want the outline must set `theme.aside: true`.
 
+## Heading Permalinks
+
+Visible `#` links on headings are **off by default**. Enable
+`headingPermalinks: true` so the renderer appends
+`<a class="header-anchor" href="#id">` using the exact generated id. Then
+`theme.headingPermalink` chooses only the CSS presentation:
+
+```ts
+defineTheme({
+  extends: defaultTheme,
+  headingPermalink: "always",
+});
+```
+
+`"hover"` (the default) reveals the control on hover and `:focus-visible`,
+and keeps it visible on touch. `"always"` keeps it visible. The heading HTML
+does not change. See [Heading Permalinks](./built-in/heading-permalinks.md).
+
 ## Page Props & Hooks
 
 Access page data in your theme components using hooks:
@@ -532,6 +550,7 @@ oxContent({
 const defaultTheme = {
   name: "default",
   aside: false,
+  headingPermalink: "hover",
   colors: {
     primary: "#3b82f6",
     primaryHover: "#2563eb",

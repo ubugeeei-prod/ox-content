@@ -63,6 +63,10 @@ pub struct HtmlRenderer {
     /// ends up in `heading_id_counts` is copied out of here on vacant
     /// inserts; the buffer itself stays around across renders.
     heading_slug_scratch: String,
+    /// Unique heading id for the heading currently being written, including
+    /// any `-N` suffix. Permalinks reuse this exact value instead of
+    /// slugifying again.
+    heading_id_scratch: String,
     /// Suppresses URL auto-linking while we're already inside an `<a>` so
     /// the builtin can't nest anchors. Tracked manually rather than via
     /// the AST because `visit_text` can be reached through many parents
@@ -110,6 +114,7 @@ impl HtmlRenderer {
             // live for the renderer's lifetime regardless).
             heading_text_scratch: String::with_capacity(64),
             heading_slug_scratch: String::with_capacity(64),
+            heading_id_scratch: String::with_capacity(64),
             in_link: false,
             in_mdx_island_children: false,
             autolink_index: None,
