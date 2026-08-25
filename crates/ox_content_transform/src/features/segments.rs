@@ -54,6 +54,78 @@ pub(crate) fn transform_markdown_text_segments(
     changed.then_some(out)
 }
 
+/// Like [`transform_markdown_text_segments`], but feeds consecutive prose
+/// (including newlines) to `transform` as one chunk so delimiters can span
+/// lines. Fenced and indented code still pass through unchanged.
+pub(crate) fn transform_markdown_prose_segments(
+    source: &str,
+    mut transform: impl FnMut(&str, &mut String),
+) -> Option<String> {
+    let mut out = String::with_capacity(source.len());
+    let mut prose = String::new();
+    let mut changed = false;
+    let mut in_fence = false;
+    let mut fence_char = b'\0';
+    let mut fence_len = 0usize;
+
+    for line_with_end in source.split_inclusive('\n') {
+        let (line, ending) = match line_with_end.strip_suffix('\n') {
+            Some(line) => (line, "\n"),
+            None => (line_with_end, ""),
+        };
+
+        if in_fence {
+            changed |= flush_prose(&mut prose, &mut out, &mut transform);
+            out.push_str(line);
+            out.push_str(ending);
+            if is_closing_fence(line, fence_char, fence_len) {
+                in_fence = false;
+                fence_char = b'\0';
+                fence_len = 0;
+            }
+            continue;
+        }
+
+        if let Some(open) = parse_opening_fence(line) {
+            changed |= flush_prose(&mut prose, &mut out, &mut transform);
+            in_fence = true;
+            fence_char = open.fence_char;
+            fence_len = open.fence_len;
+            out.push_str(line);
+            out.push_str(ending);
+            continue;
+        }
+
+        if is_indented_code_line(line) {
+            changed |= flush_prose(&mut prose, &mut out, &mut transform);
+            out.push_str(line);
+            out.push_str(ending);
+            continue;
+        }
+
+        prose.push_str(line);
+        prose.push_str(ending);
+    }
+
+    changed |= flush_prose(&mut prose, &mut out, &mut transform);
+    changed.then_some(out)
+}
+
+fn flush_prose(
+    prose: &mut String,
+    out: &mut String,
+    transform: &mut impl FnMut(&str, &mut String),
+) -> bool {
+    if prose.is_empty() {
+        return false;
+    }
+    let before_len = out.len();
+    transform_inline_code_segments(prose, out, transform);
+    let changed = &out[before_len..] != prose.as_str();
+    prose.clear();
+    changed
+}
+
 pub(super) fn transform_inline_code_segments(
     line: &str,
     out: &mut String,

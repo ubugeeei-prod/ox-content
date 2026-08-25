@@ -6,7 +6,7 @@ mod tests;
 use std::borrow::Cow;
 
 use super::escape_html_attr;
-use super::segments::transform_markdown_text_segments;
+use super::segments::transform_markdown_prose_segments;
 use crate::MathOptions;
 
 pub(super) fn resolve(options: Option<&MathOptions>) -> bool {
@@ -16,7 +16,7 @@ pub(super) fn resolve(options: Option<&MathOptions>) -> bool {
 pub(super) fn apply(current: &mut Cow<'_, str>, enabled: bool) {
     if enabled
         && current.contains('$')
-        && let Some(replaced) = transform_markdown_text_segments(current, replace_math)
+        && let Some(replaced) = transform_markdown_prose_segments(current, replace_math)
     {
         *current = Cow::Owned(replaced);
     }
@@ -128,8 +128,17 @@ fn find_inline_close(bytes: &[u8], from: usize) -> Option<usize> {
 }
 
 fn is_block_math_context(bytes: &[u8], open: usize, close: usize) -> bool {
-    bytes[..open].iter().all(u8::is_ascii_whitespace)
-        && bytes.get(close + 2..).is_none_or(|after| after.iter().all(u8::is_ascii_whitespace))
+    is_line_start(bytes, open) && is_line_end(bytes, close + 2)
+}
+
+fn is_line_start(bytes: &[u8], index: usize) -> bool {
+    index == 0
+        || bytes[..index].iter().rev().take_while(|byte| **byte != b'\n').all(u8::is_ascii_whitespace)
+}
+
+fn is_line_end(bytes: &[u8], index: usize) -> bool {
+    index >= bytes.len()
+        || bytes[index..].iter().take_while(|byte| **byte != b'\n').all(u8::is_ascii_whitespace)
 }
 
 fn can_open_inline(bytes: &[u8], index: usize) -> bool {

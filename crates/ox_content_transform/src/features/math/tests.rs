@@ -38,6 +38,17 @@ fn block_happy_path() {
 }
 
 #[test]
+fn multiline_block_math() {
+    let html = transform_html("Intro\n\n$$\n\\int_{-\\infty}^{\\infty} e^{-x^2}\\,dx\n$$\n\nOutro\n", math_on());
+    assert!(html.contains(r#"class="ox-math ox-math-block""#), "{html}");
+    assert!(html.contains(r#"data-ox-tex=""#), "{html}");
+    assert!(html.contains("\\int"), "{html}");
+    assert!(!html.contains("$$\n"), "{html}");
+    assert!(html.contains("Intro"), "{html}");
+    assert!(html.contains("Outro"), "{html}");
+}
+
+#[test]
 fn skips_fenced_code() {
     let html = transform_html("```\n$E=mc^2$\n```\n", math_on());
     assert!(!html.contains("ox-math"), "{html}");
