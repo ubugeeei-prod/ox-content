@@ -96,7 +96,12 @@ pub fn transform_youtube(html: &str, options: &YouTubeEmbedOptions) -> String {
 
         match video_id {
             Some(video_id) => {
-                out.push_str(&render_embed(&video_id, options, element.title.as_deref()));
+                out.push_str(&render_embed(
+                    &video_id,
+                    options,
+                    element.title.as_deref(),
+                    element.start,
+                ));
             }
             // No usable id: leave the original element bytes in place.
             None => out.push_str(&html[start..end]),

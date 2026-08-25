@@ -14,15 +14,62 @@ fn wraps_bare_id_matching_characterization() {
 }
 
 #[test]
-fn extracts_from_url_and_title_ignoring_start() {
+fn extracts_from_url_and_honours_title_and_start() {
     let html = transform_youtube(
         r#"<youtube url="https://youtu.be/dQw4w9WgXcQ" title="Demo" start="30"></youtube>"#,
         &opts(),
     );
     assert_eq!(
         html,
-        r#"<div class="ox-youtube" style="aspect-ratio: 16/9;"><iframe src="https://www.youtube-nocookie.com/embed/dQw4w9WgXcQ" title="Demo" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" referrerpolicy="strict-origin-when-cross-origin" allowfullscreen loading="lazy"></iframe></div>"#
+        r#"<div class="ox-youtube" style="aspect-ratio: 16/9;"><iframe src="https://www.youtube-nocookie.com/embed/dQw4w9WgXcQ?start=30" title="Demo" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" referrerpolicy="strict-origin-when-cross-origin" allowfullscreen loading="lazy"></iframe></div>"#
     );
+}
+
+#[test]
+fn honours_unquoted_zero_start() {
+    let html = transform_youtube(r#"<youtube id="dQw4w9WgXcQ" start=0></youtube>"#, &opts());
+    assert!(html.contains(r#"src="https://www.youtube-nocookie.com/embed/dQw4w9WgXcQ?start=0""#));
+}
+
+#[test]
+fn ignores_invalid_negative_fractional_overflow_and_hostile_start() {
+    for start in [
+        r#"start="-1""#,
+        r#"start="30.5""#,
+        r#"start="+30""#,
+        r#"start="4294967296""#,
+        r#"start="1e3""#,
+        r#"start="javascript:alert(1)""#,
+        r#"start="""#,
+    ] {
+        let input = format!(r#"<youtube id="dQw4w9WgXcQ" {start}></youtube>"#);
+        let html = transform_youtube(&input, &opts());
+        assert!(
+            html.contains(r#"src="https://www.youtube-nocookie.com/embed/dQw4w9WgXcQ""#),
+            "{start} must drop the query string, got {html}"
+        );
+        assert!(!html.contains("start="), "{start} leaked into {html}");
+    }
+}
+
+#[test]
+fn first_start_wins_even_when_invalid() {
+    let html =
+        transform_youtube(r#"<youtube id="dQw4w9WgXcQ" start="-1" start="30"></youtube>"#, &opts());
+    assert!(html.contains(r#"src="https://www.youtube-nocookie.com/embed/dQw4w9WgXcQ""#));
+    assert!(!html.contains("start="));
+}
+
+#[test]
+fn regular_host_keeps_start_query() {
+    let options = YouTubeEmbedOptions {
+        privacy_enhanced: false,
+        aspect_ratio: "16/9".to_string(),
+        allow_fullscreen: true,
+        lazy_load: true,
+    };
+    let html = transform_youtube(r#"<youtube id="dQw4w9WgXcQ" start="4190"></youtube>"#, &options);
+    assert!(html.contains(r#"src="https://www.youtube.com/embed/dQw4w9WgXcQ?start=4190""#));
 }
 
 #[test]

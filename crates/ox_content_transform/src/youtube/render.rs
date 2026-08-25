@@ -16,21 +16,24 @@ fn escape_attribute(value: &str) -> String {
     out
 }
 
-fn build_embed_url(video_id: &str, options: &YouTubeEmbedOptions) -> String {
-    // Build directly from the validated id and option-selected host. Query
-    // string support is intentionally absent because the TS transform being
-    // ported dropped `start` before URL construction.
+fn build_embed_url(video_id: &str, options: &YouTubeEmbedOptions, start: Option<u32>) -> String {
+    // The video id is already restricted to `[A-Za-z0-9_-]{11}`, so it is
+    // safe to interpolate. `start` is digits-only `u32` from the parser.
     let domain =
         if options.privacy_enhanced { "www.youtube-nocookie.com" } else { "www.youtube.com" };
-    format!("https://{domain}/embed/{video_id}")
+    match start {
+        Some(seconds) => format!("https://{domain}/embed/{video_id}?start={seconds}"),
+        None => format!("https://{domain}/embed/{video_id}"),
+    }
 }
 
 pub(super) fn render_embed(
     video_id: &str,
     options: &YouTubeEmbedOptions,
     title: Option<&str>,
+    start: Option<u32>,
 ) -> String {
-    let embed_url = build_embed_url(video_id, options);
+    let embed_url = build_embed_url(video_id, options, start);
     // Escape the borrowed title directly instead of copying it into an owned
     // String first (`escape_attribute` already returns an owned String).
     let escaped_title = match title {

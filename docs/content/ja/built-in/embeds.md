@@ -149,7 +149,11 @@ YouTube 埋め込みは SSG ビルドと dev preview で常に処理されます
 
 <youtube id="aqz-KE-bpKQ" title="Big Buck Bunny" />
 
-`id`、`url`、`href` 属性を受け付けます。`youtu.be`、`watch?v=`、`shorts`、`embed` の URL 形はどれも認識します。
+`id`、`url`、`href` 属性を受け付けます。`youtu.be`、`watch?v=`、`shorts`、`embed` の URL 形はどれも認識します。`start` は非負整数の秒で、iframe URL に `?start=` を付けます。不正、負、小数、オーバーフロー、重複した値は無視します。`start` を省略すると、これまでの URL のままです。
+
+```md
+<youtube id="aqz-KE-bpKQ" title="Big Buck Bunny" start="4190" />
+```
 
 ## Twitter / X
 

@@ -2,7 +2,8 @@
  * YouTube Plugin - Privacy-enhanced iframe embedding
  *
  * Transforms <YouTube> components into responsive iframe embeds using
- * youtube-nocookie.com for enhanced privacy.
+ * youtube-nocookie.com for enhanced privacy. A digits-only `start` attribute
+ * becomes `?start=` on the iframe URL.
  *
  * The HTML rewrite is performed in Rust (`transformYoutubeEmbeds` in
  * @ox-content/napi), replacing the previous rehype parse/stringify

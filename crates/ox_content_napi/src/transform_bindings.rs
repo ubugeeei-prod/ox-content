@@ -253,3 +253,19 @@ pub fn transform_async(
     let opts = options.unwrap_or_default();
     AsyncTask::new(TransformTask { source, options: opts })
 }
+
+#[cfg(test)]
+mod tests {
+    use super::transform_youtube_embeds;
+
+    #[test]
+    fn forwards_start_through_the_napi_wrapper() {
+        let html = transform_youtube_embeds(
+            r#"<youtube id="dQw4w9WgXcQ" start="4190"></youtube>"#.to_string(),
+            None,
+        );
+        assert!(
+            html.contains(r#"src="https://www.youtube-nocookie.com/embed/dQw4w9WgXcQ?start=4190""#)
+        );
+    }
+}

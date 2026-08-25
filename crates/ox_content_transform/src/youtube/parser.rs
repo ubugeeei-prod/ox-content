@@ -1,17 +1,14 @@
 use crate::html_scan::find_ci;
 
 /// A `<youtube ...>` element located in the source HTML.
-///
-/// Note: the `start` attribute is intentionally not read. The TS
-/// implementation this ports parsed HTML via hast, which coerces `start`
-/// (a known numeric attribute on `<ol>`) to a number and then dropped it in
-/// its string-only attribute reader, so `start` never reached the embed URL.
 pub(super) struct YouTubeElement {
     /// Byte range of the whole element (open tag through close tag or `/>`).
     pub(super) span: (usize, usize),
     pub(super) id: Option<String>,
     pub(super) url: Option<String>,
     pub(super) title: Option<String>,
+    /// First `start` attribute, if it is a non-negative integer of seconds.
+    pub(super) start: Option<u32>,
 }
 
 /// Find the next `<youtube ...>` element at or after `from`. Recognises both
@@ -57,12 +54,17 @@ pub(super) fn find_youtube_element(html: &str, from: usize) -> Option<YouTubeEle
         let self_closing = tag_end > after_name && bytes[tag_end - 1] == b'/';
 
         let inner_end = if self_closing { tag_end - 1 } else { tag_end };
-        let (mut id, mut url, mut title) = (None, None, None);
+        let (mut id, mut url, mut title, mut start) = (None, None, None, None);
+        let mut start_seen = false;
         for (name, value) in parse_attributes(&html[after_name..inner_end]) {
             match name.as_str() {
                 "id" if id.is_none() => id = Some(value),
                 "url" if url.is_none() => url = Some(value),
                 "title" if title.is_none() => title = Some(value),
+                "start" if !start_seen => {
+                    start_seen = true;
+                    start = parse_start_seconds(&value);
+                }
                 _ => {}
             }
         }
@@ -76,8 +78,17 @@ pub(super) fn find_youtube_element(html: &str, from: usize) -> Option<YouTubeEle
             }
         };
 
-        return Some(YouTubeElement { span: (tag_start, span_end), id, url, title });
+        return Some(YouTubeElement { span: (tag_start, span_end), id, url, title, start });
     }
+}
+
+/// Accept only a non-negative integer that fits in `u32`. Fractions, signs,
+/// whitespace, and overflow are ignored so hostile values never reach the URL.
+fn parse_start_seconds(value: &str) -> Option<u32> {
+    if value.is_empty() || !value.bytes().all(|b| b.is_ascii_digit()) {
+        return None;
+    }
+    value.parse().ok()
 }
 
 /// Parse `name="value"` / `name='value'` / `name=value` / bare `name`

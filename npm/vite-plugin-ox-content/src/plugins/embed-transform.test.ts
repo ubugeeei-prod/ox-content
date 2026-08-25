@@ -31,12 +31,18 @@ describe("transformYouTube output", () => {
     );
     expect(html).toBe(
       `<div class="ox-youtube" style="aspect-ratio: 16/9;">` +
-        `<iframe src="https://www.youtube-nocookie.com/embed/dQw4w9WgXcQ" ` +
+        `<iframe src="https://www.youtube-nocookie.com/embed/dQw4w9WgXcQ?start=30" ` +
         `title="Demo" ` +
         `allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" ` +
         `referrerpolicy="strict-origin-when-cross-origin" allowfullscreen loading="lazy">` +
         `</iframe></div>`,
     );
+  });
+
+  it("ignores an invalid start attribute", async () => {
+    const html = await transformYouTube(`<youtube id="dQw4w9WgXcQ" start="-1"></youtube>`);
+    expect(html).toContain(`src="https://www.youtube-nocookie.com/embed/dQw4w9WgXcQ"`);
+    expect(html).not.toContain("start=");
   });
 
   it("returns input unchanged when there is no <youtube> element", async () => {

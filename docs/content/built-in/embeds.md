@@ -177,7 +177,14 @@ default:
 <youtube id="aqz-KE-bpKQ" title="Big Buck Bunny" />
 
 `id`, `url`, and `href` attributes are accepted; `youtu.be`, `watch?v=`,
-`shorts`, and `embed` URL shapes are all recognized.
+`shorts`, and `embed` URL shapes are all recognized. `start` accepts a
+non-negative integer number of seconds and becomes `?start=` on the iframe
+URL. Invalid, negative, fractional, overflowing, or duplicated values are
+ignored. Omitting `start` leaves the previous URL unchanged.
+
+```md
+<youtube id="aqz-KE-bpKQ" title="Big Buck Bunny" start="4190" />
+```
 
 ## Twitter/X
 
