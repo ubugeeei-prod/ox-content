@@ -1443,6 +1443,16 @@ export interface JsSearchRuntimeOptions {
   hotkey: string
 }
 
+/** One child link on a generated section index. */
+export interface JsSectionIndexItem {
+  /** Visible title. Escaped in HTML. */
+  title: string
+  /** Destination. `javascript:` and other schemes are rejected. */
+  href: string
+  /** Optional card description. Escaped in HTML. */
+  description?: string
+}
+
 /** Custom social link for JavaScript. */
 export interface JsSocialLink {
   /** Icon label. */
@@ -2307,6 +2317,9 @@ export interface RenderResult {
   /** Render errors, if any. */
   errors: Array<string>
 }
+
+/** Renders escaped section-index listing HTML. Hostile hrefs are dropped. */
+export declare function renderSsgSectionIndex(title: string, items: Array<JsSectionIndexItem>, style: string): string
 
 /** Resolves manual SSG navigation groups. */
 export declare function resolveSsgNavigationGroups(navigation: Array<JsSsgNavigationGroup>, base: string, extension: string): Array<JsSsgNavGroup>

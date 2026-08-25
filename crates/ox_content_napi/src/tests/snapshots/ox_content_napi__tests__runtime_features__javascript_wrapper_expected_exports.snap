@@ -67,6 +67,7 @@ prepareSource
 prepareSourceRaw
 render
 renderFrameworkComponentCode
+renderSsgSectionIndex
 resolveSsgNavigationGroups
 resolveSsgRoutePaths
 sanitizeHtml

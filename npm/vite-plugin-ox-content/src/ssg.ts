@@ -72,6 +72,11 @@ import {
   toBlogProcessResult,
 } from "./blog";
 import {
+  appendSectionIndexPages,
+  resolveSectionIndexOptions,
+  toSectionIndexProcessResult,
+} from "./section-index";
+import {
   decorateVersionedPages,
   prefixRoutePaths,
   resolveSnapshotDir,
@@ -178,6 +183,7 @@ export function resolveSsgOptions(ssg: SsgOptions | boolean | undefined): Resolv
       notFound: resolveNotFoundOptions(undefined),
       team: resolveTeamOptions(undefined),
       blog: resolveBlogOptions(undefined),
+      sectionIndex: resolveSectionIndexOptions(undefined),
     };
   }
 
@@ -199,6 +205,7 @@ export function resolveSsgOptions(ssg: SsgOptions | boolean | undefined): Resolv
       notFound: resolveNotFoundOptions(undefined),
       team: resolveTeamOptions(undefined),
       blog: resolveBlogOptions(undefined),
+      sectionIndex: resolveSectionIndexOptions(undefined),
       theme: resolveTheme(undefined),
     };
   }
@@ -227,6 +234,7 @@ export function resolveSsgOptions(ssg: SsgOptions | boolean | undefined): Resolv
     notFound: resolveNotFoundOptions(ssg.notFound),
     team: resolveTeamOptions(ssg.team),
     blog: resolveBlogOptions(ssg.blog),
+    sectionIndex: resolveSectionIndexOptions(ssg.sectionIndex),
     siteUrl: ssg.siteUrl,
     theme: resolveTheme(ssg.theme),
     navigation: ssg.navigation,
@@ -859,6 +867,18 @@ export async function buildSsg(options: ResolvedOptions, root: string): Promise<
   });
   const generatedPages = await generateHtmlPages(context, outputPages, collected, errors);
   await appendNotFoundPage(generatedPages, context, collected, errors);
+  await appendSectionIndexPages({
+    generatedPages,
+    collectedPages: collected.pageResults,
+    listedPages,
+    options: context.ssgOptions.sectionIndex,
+    outDir: context.outDir,
+    base: context.base,
+    extension: context.ssgOptions.extension,
+    errors,
+    render: (page) =>
+      renderSsgPage(context, toSectionIndexProcessResult(page), collected, listedPages),
+  });
   await appendTaxonomyPages({
     generatedPages,
     listedPages,
@@ -1633,6 +1653,18 @@ async function applyDocumentationVersions(
       redirects: snapContext.options.redirects?.map,
     });
     const snapPages = await generateHtmlPages(snapContext, outputPages, snapCollected, errors);
+    await appendSectionIndexPages({
+      generatedPages: snapPages,
+      collectedPages: snapCollected.pageResults,
+      listedPages,
+      options: snapContext.ssgOptions.sectionIndex,
+      outDir: snapContext.outDir,
+      base: snapContext.base,
+      extension: snapContext.ssgOptions.extension,
+      errors,
+      render: (page) =>
+        renderSsgPage(snapContext, toSectionIndexProcessResult(page), snapCollected, listedPages),
+    });
     generatedPages.push(...snapPages);
     if (context.options.search?.enabled) {
       try {
