@@ -54,6 +54,19 @@ fn compact_tweet_pages_do_not_ship_full_card_css() {
 }
 
 #[test]
+fn static_tweet_pages_ship_rich_card_css() {
+    let html = generate_html(
+        &page(r#"<article class="ox-tweet ox-tweet--rich"></article>"#),
+        &[],
+        &config(),
+    );
+    assert!(html.contains("ox-content:css:plugin-social:start"));
+    assert!(html.contains(".ox-tweet--rich .ox-tweet__card"));
+    assert!(html.contains(".ox-tweet--rich .ox-tweet__avatar-fallback"));
+    assert!(!html.contains("ox-content:css:plugin-social-tweet-full:start"));
+}
+
+#[test]
 fn full_tweet_pages_ship_gated_full_card_css() {
     let html = generate_html(
         &page(r#"<figure class="ox-tweet ox-tweet--fetched ox-tweet--full"></figure>"#),

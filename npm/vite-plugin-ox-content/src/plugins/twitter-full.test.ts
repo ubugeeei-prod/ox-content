@@ -158,6 +158,9 @@ describe("full-fidelity Tweet cards", () => {
         id_str: "555",
         favorite_count: 1500,
         conversation_count: 12,
+        retweet_count: 44,
+        quote_count: 3,
+        view_count: "22000",
         user: { ...user(), is_blue_verified: true },
       },
       { appearance: "full" },
@@ -171,6 +174,9 @@ describe("full-fidelity Tweet cards", () => {
     expect(blue).toContain('aria-label="Copy link to post"');
     expect(blue).toContain(">Copy link</a>");
     expect(blue).toContain("1.5K");
+    expect(blue).toContain("<strong>44</strong> reposts");
+    expect(blue).toContain("<strong>3</strong> quotes");
+    expect(blue).toContain("<strong>22.0K</strong> views");
     expect(blue).toContain("Read 12 replies");
     expect(blue).toContain("Follow");
 

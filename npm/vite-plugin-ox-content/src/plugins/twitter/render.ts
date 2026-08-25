@@ -1,6 +1,7 @@
 import { renderFullTweet } from "./full";
 import { escapeAttribute, escapeHtml } from "./html";
 import { renderMedia } from "./markup";
+import { renderTweetMetrics } from "./metrics";
 import { renderTweetText } from "./text";
 import type { ResolvedTwitterEmbedOptions, TweetAssets, TweetBodyData, TweetData } from "./types";
 import { quotedPermalink, replyPermalink, sanitizeScreenName } from "./validate";
@@ -25,6 +26,7 @@ export function renderFetchedTweet(
     renderMedia(assets, permalink),
     quote,
     renderFooter(permalink, data.created_at, options.lang),
+    renderTweetMetrics(data),
     "</figure>",
   ].join("");
 }
@@ -69,8 +71,10 @@ function renderReply(data: TweetData): string {
 }
 
 function renderFooter(permalink: string, createdAt: string | undefined, lang: string): string {
+  const source = (label: string) =>
+    `<a class="ox-tweet__source" href="${escapeAttribute(permalink)}" target="_blank" rel="noopener noreferrer">${label}</a>`;
   if (!createdAt) {
-    return `<footer class="ox-tweet__footer"><a class="ox-tweet__permalink" href="${escapeAttribute(permalink)}" target="_blank" rel="noopener noreferrer">View on X</a></footer>`;
+    return `<footer class="ox-tweet__footer">${source("View on X")}</footer>`;
   }
   const date = new Date(createdAt);
   if (Number.isNaN(date.valueOf())) return renderFooter(permalink, undefined, lang);
@@ -81,5 +85,5 @@ function renderFooter(permalink: string, createdAt: string | undefined, lang: st
   } catch {
     label = new Intl.DateTimeFormat("en", { dateStyle: "medium", timeZone: "UTC" }).format(date);
   }
-  return `<footer class="ox-tweet__footer"><a class="ox-tweet__permalink" href="${escapeAttribute(permalink)}" target="_blank" rel="noopener noreferrer"><time datetime="${iso}">${escapeHtml(label)}</time></a></footer>`;
+  return `<footer class="ox-tweet__footer"><a class="ox-tweet__permalink" href="${escapeAttribute(permalink)}" target="_blank" rel="noopener noreferrer"><time datetime="${iso}">${escapeHtml(label)}</time></a>${source("Open post")}</footer>`;
 }

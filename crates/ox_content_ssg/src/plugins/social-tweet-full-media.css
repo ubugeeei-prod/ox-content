@@ -75,6 +75,7 @@
 }
 
 .ox-tweet--full .ox-tweet__info,
+.ox-tweet--full .ox-tweet__metrics,
 .ox-tweet--full .ox-tweet__actions {
   display: flex;
   align-items: center;
@@ -89,6 +90,11 @@
   padding-top: 0.25rem;
   margin-top: 0.25rem;
   border-top: var(--ox-tweet-border);
+}
+
+.ox-tweet--full .ox-tweet__metrics {
+  gap: 0.75rem;
+  font-size: var(--ox-tweet-actions-font-size);
 }
 
 .ox-tweet--full .ox-tweet__permalink,

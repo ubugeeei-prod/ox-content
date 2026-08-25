@@ -3,6 +3,7 @@
 // 2024 ryoppippi). Notices live in social-tweet-full.css and docs/content/credits.md.
 import { escapeAttribute, escapeHtml } from "./html";
 import { renderMedia } from "./markup";
+import { formatCount, renderTweetMetrics } from "./metrics";
 import { renderTweetText } from "./text";
 import type { TweetAssets, TweetBodyData, TweetData, TweetUser } from "./types";
 import { quotedPermalink, replyPermalink, sanitizeScreenName, sanitizeStatusId } from "./validate";
@@ -19,6 +20,7 @@ export function renderFullTweet(permalink: string, data: TweetData, assets: Twee
     renderMedia(assets, permalink),
     quote,
     renderInfo(permalink, data.created_at),
+    renderTweetMetrics(data, { replies: false, likes: false }),
     renderActions(permalink, data),
     renderReplies(permalink, data.conversation_count),
     "</figure>",
@@ -95,7 +97,7 @@ function renderInfo(permalink: string, createdAt: string | undefined): string {
 function renderActions(permalink: string, data: TweetData): string {
   const id = statusId(data, permalink);
   if (!id) return "";
-  const likes = formatCount(data.favorite_count);
+  const likes = formatCount(data.favorite_count) ?? "0";
   return [
     '<div class="ox-tweet__actions">',
     `<a class="ox-tweet__action ox-tweet__action--like" href="https://x.com/intent/like?tweet_id=${id}" target="_blank" rel="noopener noreferrer"><span class="ox-tweet__icon ox-tweet__icon--like"></span><span>${likes}</span></a>`,
@@ -144,14 +146,6 @@ function followHref(user: TweetUser): string | undefined {
 
 function statusId(data: TweetData, permalink: string): string | undefined {
   return sanitizeStatusId(data.id_str) ?? permalink.match(/\/status\/(\d+)/)?.[1];
-}
-
-function formatCount(value: unknown): string {
-  const n =
-    typeof value === "number" && Number.isFinite(value) && value >= 0 ? Math.floor(value) : 0;
-  if (n > 999_999) return `${(n / 1_000_000).toFixed(1)}M`;
-  if (n > 999) return `${(n / 1000).toFixed(1)}K`;
-  return String(n);
 }
 
 function repliesLabel(value: unknown): string {

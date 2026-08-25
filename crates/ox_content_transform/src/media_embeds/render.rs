@@ -23,7 +23,7 @@ pub(super) fn render_tweet(element: &ComponentElement<'_>) -> Option<String> {
     let url =
         attr(element, "url").or_else(|| attr(element, "href")).or_else(|| attr(element, "id"))?;
     let href = tweet_url(url)?;
-    Some(render_static_card("ox-tweet", "X", &href, element.body.trim()))
+    Some(render_tweet_card(element, &href))
 }
 
 pub(super) fn render_bluesky(element: &ComponentElement<'_>) -> Option<String> {
@@ -82,6 +82,70 @@ fn tweet_url(input: &str) -> Option<String> {
         return Some(format!("https://x.com/i/web/status/{input}"));
     }
     None
+}
+
+fn render_tweet_card(element: &ComponentElement<'_>, href: &str) -> String {
+    let handle = first_attr(element, &["handle", "screenName", "authorHandle"])
+        .or_else(|| tweet_handle_from_url(href))
+        .unwrap_or("x.com");
+    let author =
+        first_attr(element, &["displayName", "authorName", "name", "author"]).unwrap_or(handle);
+    let avatar = first_attr(element, &["avatar", "avatarUrl", "authorAvatar", "profileImage"]);
+    let date = first_attr(element, &["datetime", "dateTime", "createdAt", "date", "timestamp"]);
+    let date_label = first_attr(element, &["dateLabel", "time", "publishedAtLabel"]).or(date);
+    let body = element.body.trim();
+
+    let mut html = String::new();
+    html.push_str("<article class=\"ox-tweet ox-tweet--rich\"><a class=\"ox-tweet__card\" href=\"");
+    escape_attr(href, &mut html);
+    html.push_str("\" target=\"_blank\" rel=\"noopener noreferrer\"><header class=\"ox-tweet__header\"><span class=\"ox-tweet__profile\"><span class=\"ox-tweet__avatar-wrap\">");
+    if let Some(avatar) = avatar {
+        html.push_str("<img class=\"ox-tweet__avatar\" src=\"");
+        escape_attr(avatar, &mut html);
+        html.push_str("\" alt=\"\" loading=\"lazy\" decoding=\"async\">");
+    } else {
+        html.push_str("<span class=\"ox-tweet__avatar-fallback\" aria-hidden=\"true\">X</span>");
+    }
+    html.push_str(
+        "</span><span class=\"ox-tweet__identity\"><strong class=\"ox-tweet__author-name\">",
+    );
+    escape_text(author, &mut html);
+    html.push_str("</strong><span class=\"ox-tweet__author-handle\">@");
+    escape_text(handle.trim_start_matches('@'), &mut html);
+    html.push_str("</span></span></span><span class=\"ox-tweet__network\">X</span></header>");
+
+    if !body.is_empty() {
+        html.push_str("<p class=\"ox-tweet__body\">");
+        escape_text(body, &mut html);
+        html.push_str("</p>");
+    }
+
+    html.push_str("<footer class=\"ox-tweet__meta\">");
+    if let Some(date_label) = date_label {
+        html.push_str("<time datetime=\"");
+        escape_attr(date.unwrap_or(date_label), &mut html);
+        html.push_str("\">");
+        escape_text(date_label, &mut html);
+        html.push_str("</time>");
+    }
+    push_count(
+        &mut html,
+        first_attr(element, &["replies", "replyCount", "conversationCount"]),
+        "replies",
+    );
+    push_count(&mut html, first_attr(element, &["reposts", "retweets", "retweetCount"]), "reposts");
+    push_count(&mut html, first_attr(element, &["quotes", "quoteCount"]), "quotes");
+    push_count(&mut html, first_attr(element, &["likes", "likeCount", "favoriteCount"]), "likes");
+    push_count(&mut html, first_attr(element, &["views", "viewCount", "impressions"]), "views");
+    html.push_str("<span class=\"ox-tweet__source\">Open post</span></footer></a></article>");
+    html
+}
+
+fn tweet_handle_from_url(url: &str) -> Option<&str> {
+    let rest =
+        url.strip_prefix("https://x.com/").or_else(|| url.strip_prefix("https://twitter.com/"))?;
+    let (handle, _) = rest.split_once("/status/")?;
+    (!handle.is_empty() && handle != "i/web").then_some(handle)
 }
 
 fn render_bluesky_card(element: &ComponentElement<'_>, href: &str) -> String {
@@ -180,26 +244,6 @@ fn render_iframe(class_name: &str, src: &str, title: &str, width: &str, height: 
     html.push_str("\" height=\"");
     escape_attr(height, &mut html);
     html.push_str("\" loading=\"lazy\" allow=\"accelerometer; ambient-light-sensor; camera; encrypted-media; geolocation; gyroscope; hid; microphone; midi; payment; serial; usb; vr; xr-spatial-tracking; clipboard-read; clipboard-write; fullscreen\" sandbox=\"allow-forms allow-modals allow-popups allow-presentation allow-same-origin allow-scripts\"></iframe>");
-    html
-}
-
-fn render_static_card(class_name: &str, label: &str, href: &str, body: &str) -> String {
-    let mut html = String::new();
-    html.push_str("<article class=\"");
-    html.push_str(class_name);
-    html.push_str("\"><a href=\"");
-    escape_attr(href, &mut html);
-    html.push_str("\" target=\"_blank\" rel=\"noopener noreferrer\"><span>");
-    escape_text(label, &mut html);
-    html.push_str("</span><strong>");
-    escape_text(href, &mut html);
-    html.push_str("</strong>");
-    if !body.is_empty() {
-        html.push_str("<p>");
-        escape_text(body, &mut html);
-        html.push_str("</p>");
-    }
-    html.push_str("</a></article>");
     html
 }
 

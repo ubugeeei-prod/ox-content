@@ -208,7 +208,8 @@ const GITHUB_CSS: &str = include_str!("plugins/github.css");
 const OGP_CSS: &str = include_str!("plugins/ogp.css");
 
 /// CSS styles for social embeds (Twitter/X, Bluesky, WebContainer, media iframes).
-const SOCIAL_CSS: &str = include_str!("plugins/social.css");
+const SOCIAL_CSS: &str =
+    concat!(include_str!("plugins/social.css"), include_str!("plugins/social-twitter-rich.css"));
 
 /// CSS for opt-in full-fidelity Tweet cards (`.ox-tweet--full`).
 const SOCIAL_TWEET_FULL_CSS: &str = concat!(

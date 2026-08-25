@@ -105,6 +105,12 @@ export interface TweetData extends TweetBodyData {
   in_reply_to_status_id_str?: string;
   favorite_count?: number;
   conversation_count?: number;
+  retweet_count?: number;
+  repost_count?: number;
+  quote_count?: number;
+  view_count?: number | string;
+  views_count?: number | string;
+  impression_count?: number | string;
 }
 
 export interface TweetReference {

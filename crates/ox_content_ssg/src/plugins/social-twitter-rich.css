@@ -1,0 +1,68 @@
+.ox-tweet--rich .ox-tweet__card {
+  display: block;
+  padding: 1rem 0;
+  color: var(--octc-color-text);
+  text-decoration: none;
+}
+
+.ox-tweet--rich .ox-tweet__profile {
+  display: flex;
+  align-items: center;
+  gap: 0.625rem;
+  min-width: 0;
+}
+
+.ox-tweet--rich .ox-tweet__avatar-wrap {
+  flex: 0 0 auto;
+}
+
+.ox-tweet--rich .ox-tweet__avatar,
+.ox-tweet--rich .ox-tweet__avatar-fallback {
+  display: grid;
+  place-items: center;
+  width: 42px;
+  height: 42px;
+  border-radius: 50%;
+  background: color-mix(in srgb, var(--octc-color-text) 10%, var(--octc-color-bg-alt));
+  color: var(--octc-color-text);
+  font-weight: 800;
+}
+
+.ox-tweet--rich .ox-tweet__avatar {
+  object-fit: cover;
+}
+
+.ox-tweet--rich .ox-tweet__identity {
+  display: grid;
+  min-width: 0;
+  gap: 0.125rem;
+}
+
+.ox-tweet--rich .ox-tweet__author-name,
+.ox-tweet--rich .ox-tweet__author-handle {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.ox-tweet--rich .ox-tweet__network {
+  margin-left: auto;
+  flex: 0 0 auto;
+  font-size: 0.75rem;
+  font-weight: 700;
+  color: var(--octc-color-text-muted);
+}
+
+.ox-tweet--rich .ox-tweet__meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.45rem 0.8rem;
+  margin-top: 0.875rem;
+  font-size: 0.75rem;
+  color: var(--octc-color-text-muted);
+}
+
+.ox-tweet--rich .ox-tweet__source {
+  color: var(--octc-color-primary);
+  font-weight: 600;
+}

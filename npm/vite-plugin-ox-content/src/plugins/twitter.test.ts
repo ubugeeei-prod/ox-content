@@ -80,6 +80,11 @@ describe("fetched Twitter embeds", () => {
               profile_image_url_https: "https://pbs.twimg.com/profile_images/avatar_normal.jpg",
             },
             created_at: "Tue Jul 15 03:00:00 +0000 2026",
+            conversation_count: 7,
+            retweet_count: 5,
+            quote_count: 2,
+            favorite_count: 1500,
+            view_count: "20000",
           }),
         } as Response;
       }
@@ -108,6 +113,12 @@ describe("fetched Twitter embeds", () => {
       expect(html).toContain('src="/tweets/123456-avatar.jpg"');
       expect(html).toContain('src="/tweets/123456-media-1.jpg"');
       expect(html).toContain('data-count="1"');
+      expect(html).toContain("Open post");
+      expect(html).toContain("<strong>7</strong> replies");
+      expect(html).toContain("<strong>5</strong> reposts");
+      expect(html).toContain("<strong>2</strong> quotes");
+      expect(html).toContain("<strong>1.5K</strong> likes");
+      expect(html).toContain("<strong>20.0K</strong> views");
 
       await expect(readFile(path.join(mediaOutputDir, "123456-avatar.jpg"))).resolves.toEqual(
         Buffer.from([1, 2, 3]),

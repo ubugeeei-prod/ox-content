@@ -233,20 +233,43 @@ ignored. Omitting `start` leaves the previous URL unchanged.
 ## Twitter/X
 
 `embeds.twitter` renders posts as static cards and never loads the third-party
-widget script. With `twitter: true`, the embed is a privacy-conscious link
-card:
+widget script. With `twitter: true`, the embed is a privacy-conscious card. The
+element body provides the post text, and optional attributes can add author,
+avatar, timestamp, engagement metrics, and a clear original-post link without a
+network request:
 
 ```mdx
-<XPost url="https://x.com/jack/status/20" />
+<XPost
+  url="https://x.com/jack/status/20"
+  displayName="jack"
+  handle="jack"
+  dateLabel="Mar 21, 2006"
+  likes="2.4M"
+  views="10M"
+>
+  just setting up my twttr
+</XPost>
 ```
 
-<XPost url="https://x.com/jack/status/20" />
+<XPost
+url="https://x.com/jack/status/20"
+displayName="jack"
+handle="jack"
+dateLabel="Mar 21, 2006"
+likes="2.4M"
+views="10M"
+
+>
+
+just setting up my twttr
+</XPost>
 
 Use the object form to fetch the post body, author, avatar, photos, and video
 posters at build time and serve them from your own origin. Fetched cards include
-a nested quoted-post card and a “Replying to @…” link when the syndication
-response has that metadata. `appearance: "full"` opts into a sveltweet /
-react-tweet-shaped static card; the default `"compact"` card is unchanged:
+timestamp, source link, available reply/repost/quote/like/view metrics, a nested
+quoted-post card, and a “Replying to @…” link when the syndication response has
+that metadata. `appearance: "full"` opts into a sveltweet / react-tweet-shaped
+static card:
 
 ```ts
 oxContent({

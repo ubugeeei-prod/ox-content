@@ -196,15 +196,35 @@ YouTube 埋め込みは SSG ビルドと dev preview で常に処理されます
 
 ## Twitter / X
 
-`embeds.twitter` は投稿を静的カードとして描画し、第三者ウィジェットのスクリプトは決して読みません。`twitter: true` のとき、埋め込みはプライバシーを意識したリンクカードです。
+`embeds.twitter` は投稿を静的カードとして描画し、第三者ウィジェットのスクリプトは決して読みません。`twitter: true` のとき、埋め込みはプライバシーを意識したカードです。要素本文が投稿本文になり、任意の属性で作者、アバター、日時、リアクション数、元投稿リンクをネットワークなしで出せます。
 
 ```mdx
-<XPost url="https://x.com/jack/status/20" />
+<XPost
+  url="https://x.com/jack/status/20"
+  displayName="jack"
+  handle="jack"
+  dateLabel="Mar 21, 2006"
+  likes="2.4M"
+  views="10M"
+>
+  just setting up my twttr
+</XPost>
 ```
 
-<XPost url="https://x.com/jack/status/20" />
+<XPost
+url="https://x.com/jack/status/20"
+displayName="jack"
+handle="jack"
+dateLabel="Mar 21, 2006"
+likes="2.4M"
+views="10M"
 
-オブジェクト形式を使うと、ビルド時に本文、著者、アバター、写真、動画ポスターを取り、自分のオリジンから配信します。取ってきたカードには、syndication にそのメタデータがあるとき、引用投稿の入れ子カードと「Replying to @…」リンクも含まれます。`appearance: "full"` は sveltweet / react-tweet 形の静的カードです。既定の `"compact"` カードは変わりません。
+>
+
+just setting up my twttr
+</XPost>
+
+オブジェクト形式を使うと、ビルド時に本文、著者、アバター、写真、動画ポスターを取り、自分のオリジンから配信します。取ってきたカードには、日時、元投稿リンク、利用可能な返信/リポスト/引用/いいね/表示数、引用投稿の入れ子カード、「Replying to @…」リンクも含まれます。`appearance: "full"` は sveltweet / react-tweet 形の静的カードです。
 
 ```ts
 oxContent({

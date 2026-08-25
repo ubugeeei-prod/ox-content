@@ -230,6 +230,24 @@
   white-space: nowrap;
 }
 
+.ox-tweet__source {
+  color: var(--octc-color-primary);
+  font-weight: 600;
+}
+
+.ox-tweet__metrics {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4rem 0.75rem;
+  margin: 0.5rem 0 0;
+  font-size: 0.75rem;
+  color: var(--octc-color-text-muted);
+}
+
+.ox-tweet__metric strong {
+  color: var(--octc-color-text);
+}
+
 .ox-tweet__reply {
   margin: 0 0 0.5rem;
   font-size: 0.8125rem;

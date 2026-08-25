@@ -8,10 +8,10 @@ description: Render X posts as privacy-conscious static cards.
 Twitter/X embeds are opt-in and never load a third-party widget script.
 `twitter: true` renders the privacy-conscious link card. Use the object form to
 fetch the post body, author, avatar, photos, and video posters at build time.
-Fetched cards also render a nested quoted-post card and a “Replying to @…” link
-when that metadata is present. Set `appearance: "full"` for a sveltweet /
-react-tweet-shaped static card, or override one embed with
-`appearance="full"`:
+Fetched cards also render timestamp, source link, available engagement metrics,
+a nested quoted-post card, and a “Replying to @…” link when that metadata is
+present. Set `appearance: "full"` for a sveltweet / react-tweet-shaped static
+card, or override one embed with `appearance="full"`:
 
 ```ts
 import { oxContent } from "@ox-content/vite-plugin";
@@ -74,7 +74,7 @@ respective owners.
 
 Intentional differences from `sveltweet@0.5.1` / `react-tweet`:
 
-- No copy control. It would need client JavaScript; the readable card does not.
+- Copy link is a static permalink action instead of a hydrated clipboard widget.
 - No fonts or assets from the X/Twitter CDN. The card uses the page font stack.
 - Timestamps use UTC so build output does not depend on the viewer timezone.
 - Downloaded video uses native `<video controls>` instead of a custom player.
