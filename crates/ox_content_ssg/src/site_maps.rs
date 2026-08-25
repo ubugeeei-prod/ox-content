@@ -11,6 +11,8 @@ pub struct SiteMapPage {
     pub title: String,
     /// Optional page summary used by `llms.txt`.
     pub description: Option<String>,
+    /// Source-file git commit time in milliseconds. `None` omits `<lastmod>`.
+    pub last_updated: Option<i64>,
     /// When true, the page is omitted from every generated file.
     pub draft: bool,
     /// When true, the page is omitted from every generated file.
@@ -87,6 +89,31 @@ pub fn generate_site_maps(options: &SiteMapsOptions, pages: &[SiteMapPage]) -> S
     }
 }
 
+/// UTC `YYYY-MM-DD` for W3C lastmod. Negative timestamps are dropped.
+fn format_lastmod(timestamp_ms: Option<i64>) -> Option<String> {
+    let timestamp_ms = timestamp_ms.filter(|value| *value >= 0)?;
+    let days = (timestamp_ms / 1_000).div_euclid(86_400);
+    let (year, month, day) = civil_from_days(days);
+    if !(0..=9999).contains(&year) {
+        return None;
+    }
+    Some(format!("{year:04}-{month:02}-{day:02}"))
+}
+
+fn civil_from_days(days: i64) -> (i64, i64, i64) {
+    let z = days + 719_468;
+    let era = if z >= 0 { z } else { z - 146_096 } / 146_097;
+    let doe = z - era * 146_097;
+    let yoe = (doe - doe / 1_460 + doe / 36_524 - doe / 146_096) / 365;
+    let year = yoe + era * 400;
+    let doy = doe - (365 * yoe + yoe / 4 - yoe / 100);
+    let mp = (5 * doy + 2) / 153;
+    let day = doy - (153 * mp + 2) / 5 + 1;
+    let month = mp + if mp < 10 { 3 } else { -9 };
+    let year = year + i64::from(month <= 2);
+    (year, month, day)
+}
+
 fn has_site_url(site_url: Option<&str>) -> bool {
     site_url.is_some_and(|value| !value.trim().is_empty())
 }
@@ -99,7 +126,13 @@ fn generate_sitemap_xml(pages: &[&SiteMapPage]) -> String {
     for page in pages {
         xml.push_str("  <url>\n    <loc>");
         escape_xml(&page.loc, &mut xml);
-        xml.push_str("</loc>\n  </url>\n");
+        xml.push_str("</loc>\n");
+        if let Some(lastmod) = format_lastmod(page.last_updated) {
+            xml.push_str("    <lastmod>");
+            xml.push_str(&lastmod);
+            xml.push_str("</lastmod>\n");
+        }
+        xml.push_str("  </url>\n");
     }
     xml.push_str("</urlset>\n");
     xml

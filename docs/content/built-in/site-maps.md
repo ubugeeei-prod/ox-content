@@ -8,7 +8,8 @@ description: Opt-in crawl manifests written next to generated HTML.
 When `siteMaps` is enabled and `ssg.siteUrl` is set, the SSG build writes
 crawl manifests next to the generated HTML:
 
-- `sitemap.xml` — every published page URL, sorted
+- `sitemap.xml` — every published page URL, sorted, with `<lastmod>` when Git
+  history is available
 - `robots.txt` — allow-all plus a Sitemap line
 - `llms.txt` — site title, description, and a page list
 
@@ -53,6 +54,12 @@ oxContent({
 `sitemap.xml` is always written when the feature is on. Pages with
 `draft: true` in frontmatter are omitted. When [`publishState`](./drafts.md)
 is also enabled, unlisted and not-yet-scheduled pages are omitted too.
+
+When Git history is available, each URL includes a W3C `<lastmod>` date. That
+value is the source file's latest Git commit time in UTC (`YYYY-MM-DD`), not
+the generated HTML mtime. Enabling `siteMaps` reuses the same Git lookup as
+`ssg.lastUpdated` and does not require the visible last-updated chrome. A
+shallow clone or missing history omits `<lastmod>` for that page.
 
 If `siteMaps` is enabled without `ssg.siteUrl`, no files are written. The build
 continues and emits a warning.

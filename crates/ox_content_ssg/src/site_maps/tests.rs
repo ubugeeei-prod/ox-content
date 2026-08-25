@@ -5,6 +5,7 @@ fn page(loc: &str, title: &str, description: Option<&str>) -> SiteMapPage {
         loc: loc.to_string(),
         title: title.to_string(),
         description: description.map(str::to_string),
+        last_updated: None,
         draft: false,
         unlisted: false,
     }
@@ -183,4 +184,27 @@ fn sitemap_order_is_deterministic() {
     let m = sitemap.find("https://example.com/m/").expect("m");
     let z = sitemap.find("https://example.com/z/").expect("z");
     assert!(a < m && m < z, "{sitemap}");
+}
+
+#[test]
+fn writes_lastmod_from_git_timestamp_and_omits_invalid() {
+    let pages = vec![
+        SiteMapPage {
+            last_updated: Some(1_704_067_200_000),
+            ..page("https://example.com/fresh/", "Fresh", None)
+        },
+        SiteMapPage { last_updated: Some(-1), ..page("https://example.com/old/", "Old", None) },
+        page("https://example.com/plain/", "Plain", None),
+    ];
+    let sitemap = generate_site_maps(&enabled(Some("https://example.com")), &pages)
+        .sitemap_xml
+        .expect("pages should emit a sitemap");
+
+    assert!(
+        sitemap
+            .contains("<loc>https://example.com/fresh/</loc>\n    <lastmod>2024-01-01</lastmod>"),
+        "{sitemap}"
+    );
+    assert!(!sitemap.contains("https://example.com/old/</loc>\n    <lastmod>"), "{sitemap}");
+    assert!(!sitemap.contains("https://example.com/plain/</loc>\n    <lastmod>"), "{sitemap}");
 }

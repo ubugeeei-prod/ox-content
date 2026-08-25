@@ -17,6 +17,8 @@ export interface SiteMapPageInput {
   loc: string;
   title: string;
   description?: string;
+  /** Source-file git commit time in milliseconds. Omitted when Git has no history. */
+  lastUpdated?: number;
   draft?: boolean;
   unlisted?: boolean;
 }
@@ -133,6 +135,18 @@ export async function writeSiteMapFiles(
   return { files };
 }
 
+/** UTC `YYYY-MM-DD` for W3C lastmod. Invalid or negative timestamps are dropped. */
+export function formatLastmod(timestampMs: number | undefined): string | undefined {
+  if (timestampMs == null || !Number.isFinite(timestampMs) || timestampMs < 0) {
+    return undefined;
+  }
+  const date = new Date(timestampMs);
+  if (Number.isNaN(date.getTime())) {
+    return undefined;
+  }
+  return date.toISOString().slice(0, 10);
+}
+
 function hasSiteUrl(siteUrl: string | undefined): boolean {
   return Boolean(siteUrl && siteUrl.trim());
 }
@@ -152,7 +166,14 @@ function generateSitemapXml(pages: readonly SiteMapPageInput[]): string {
   for (const page of pages) {
     xml += "  <url>\n    <loc>";
     xml += escapeXml(page.loc);
-    xml += "</loc>\n  </url>\n";
+    xml += "</loc>\n";
+    const lastmod = formatLastmod(page.lastUpdated);
+    if (lastmod) {
+      xml += "    <lastmod>";
+      xml += lastmod;
+      xml += "</lastmod>\n";
+    }
+    xml += "  </url>\n";
   }
   xml += "</urlset>\n";
   return xml;

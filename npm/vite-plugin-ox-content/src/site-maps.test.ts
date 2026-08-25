@@ -2,7 +2,12 @@ import { afterEach, describe, expect, it } from "vite-plus/test";
 import * as fs from "node:fs/promises";
 import * as os from "node:os";
 import * as path from "node:path";
-import { generateSiteMaps, resolveSiteMapsOptions, writeSiteMapFiles } from "./site-maps";
+import {
+  formatLastmod,
+  generateSiteMaps,
+  resolveSiteMapsOptions,
+  writeSiteMapFiles,
+} from "./site-maps";
 
 const tempDirs: string[] = [];
 
@@ -251,5 +256,33 @@ describe("writeSiteMapFiles", () => {
       "Sitemap: https://example.com/docs/sitemap.xml",
     );
     expect(await fs.readFile(path.join(outDir, "llms.txt"), "utf8")).toContain("# Docs");
+  });
+});
+
+describe("sitemap lastmod", () => {
+  it("emits UTC lastmod from a git timestamp and omits invalid values", () => {
+    const output = generateSiteMaps({
+      options: { enabled: true, robots: false, llms: false },
+      siteUrl: "https://example.com",
+      pages: [
+        { loc: "https://example.com/fresh/", title: "Fresh", lastUpdated: 1_704_067_200_000 },
+        { loc: "https://example.com/old/", title: "Old", lastUpdated: -1 },
+        { loc: "https://example.com/plain/", title: "Plain" },
+      ],
+    });
+
+    expect(output.sitemapXml).toContain(
+      "<loc>https://example.com/fresh/</loc>\n    <lastmod>2024-01-01</lastmod>",
+    );
+    expect(output.sitemapXml).not.toContain("https://example.com/old/</loc>\n    <lastmod>");
+    expect(output.sitemapXml).not.toContain("https://example.com/plain/</loc>\n    <lastmod>");
+  });
+
+  it("formats only finite non-negative timestamps", () => {
+    expect(formatLastmod(1_704_067_200_000)).toBe("2024-01-01");
+    expect(formatLastmod(undefined)).toBeUndefined();
+    expect(formatLastmod(-1)).toBeUndefined();
+    expect(formatLastmod(Number.NaN)).toBeUndefined();
+    expect(formatLastmod(Number.POSITIVE_INFINITY)).toBeUndefined();
   });
 });

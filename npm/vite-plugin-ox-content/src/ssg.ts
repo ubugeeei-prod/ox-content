@@ -1003,7 +1003,10 @@ async function createBuildSsgContext(
     navItems,
     siteName: await resolveSiteName(root, ssgOptions),
     shouldGenerateOgImages: shouldGenerateOgImages(options),
-    napi: ssgOptions.lastUpdated || ssgOptions.contributors ? await importNapiModule() : undefined,
+    napi:
+      ssgOptions.lastUpdated || ssgOptions.contributors || options.siteMaps.enabled
+        ? await importNapiModule()
+        : undefined,
   };
 }
 
@@ -1213,9 +1216,10 @@ async function transformSsgPage(
     transformedHtml,
     title,
     description: frontmatter.description as string | undefined,
-    lastUpdated: context.ssgOptions.lastUpdated
-      ? (context.napi?.getGitLastUpdated(inputPath, context.root) ?? undefined)
-      : undefined,
+    lastUpdated:
+      context.ssgOptions.lastUpdated || context.options.siteMaps.enabled
+        ? (context.napi?.getGitLastUpdated(inputPath, context.root) ?? undefined)
+        : undefined,
     contributors: contributorsForPage(context, inputPath),
     frontmatter,
     toc: result.toc,
@@ -1850,13 +1854,21 @@ function sitemapPages(
   context: BuildSsgContext,
   listedPages: PageProcessResult[],
   outputPages: PageProcessResult[],
-): Array<{ loc: string; title: string; description?: string; draft: boolean; unlisted: boolean }> {
+): Array<{
+  loc: string;
+  title: string;
+  description?: string;
+  lastUpdated?: number;
+  draft: boolean;
+  unlisted: boolean;
+}> {
   const pages = context.options.publishState?.enabled ? listedPages : outputPages;
   const listedPaths = new Set(listedPages.map((page) => page.inputPath));
   return pages.map((page) => ({
     loc: canonicalPageUrl(context, page.routePaths.urlPath) ?? "",
     title: page.title,
     description: page.description,
+    lastUpdated: page.lastUpdated,
     draft: page.frontmatter.draft === true,
     unlisted: Boolean(context.options.publishState?.enabled) && !listedPaths.has(page.inputPath),
   }));
