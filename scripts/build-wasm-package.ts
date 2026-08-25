@@ -1,4 +1,4 @@
-#!/usr/bin/env -S node --experimental-strip-types
+#!/usr/bin/env node
 
 import { execFileSync } from "node:child_process";
 import fs from "node:fs";

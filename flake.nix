@@ -27,7 +27,7 @@
         };
 
         lib = pkgs.lib;
-        nodejs = pkgs.nodejs_24;
+        nodejs = pkgs.nodejs_26;
         pnpm = pkgs.pnpm;
         rustToolchain = pkgs.rust-bin.stable."1.98.0".default.override {
           extensions = [

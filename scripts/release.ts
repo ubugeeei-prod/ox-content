@@ -1,11 +1,11 @@
-#!/usr/bin/env bun
-// Usage: bun scripts/release.ts [patch|minor|major|alpha|beta|x.y.z] [--prepare-only]
+#!/usr/bin/env node
+// Usage: node scripts/release.ts [patch|minor|major|alpha|beta|x.y.z] [--prepare-only]
 
 import { execSync } from "child_process";
 import * as fs from "fs";
 import * as path from "path";
 import { fileURLToPath } from "url";
-import { verifyPublishWorkflow } from "./verify-publish-targets";
+import { verifyPublishWorkflow } from "./verify-publish-targets.ts";
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const ROOT = path.resolve(__dirname, "..");

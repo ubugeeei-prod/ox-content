@@ -11,7 +11,7 @@ Before you begin, ensure you have the following installed:
 | Requirement   | Version | Installation                                                                         |
 | ------------- | ------- | ------------------------------------------------------------------------------------ |
 | **Rust**      | 1.95+   | Provided by `nix develop` (pinned in `flake.nix`) or [rustup.rs](https://rustup.rs/) |
-| **Node.js**   | 24+     | Provided by `nix develop` or managed via `.node-version`                             |
+| **Node.js**   | 26+     | Provided by `nix develop` or managed via `.node-version`                             |
 | **Vite+**     | Latest  | Available as `vp` inside the dev shell                                               |
 | **wasm-pack** | Latest  | Provided by `nix develop`; needed when you run `vp run build:wasm`                   |
 

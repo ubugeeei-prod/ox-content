@@ -122,7 +122,7 @@ export default defineConfig({
       "build:playground": task("vp run --filter ./examples/playground build", {
         dependsOn: ["build:npm"],
       }),
-      "build:wasm": task("node --experimental-strip-types scripts/build-wasm-package.ts"),
+      "build:wasm": task("node scripts/build-wasm-package.ts"),
 
       "workspace:test": noopTask(["test:rust", "test:ts"]),
       "test:rust": task("cargo test --workspace"),
@@ -298,7 +298,7 @@ export default defineConfig({
       "dev-preview": uncachedTask("vp run --filter ./docs preview"),
 
       install: uncachedTask("vp install"),
-      "workspace:release": uncachedTask("bun scripts/release.ts"),
+      "workspace:release": uncachedTask("node scripts/release.ts"),
       "examples-install": noopTask(["install"], { cache: false }),
     },
   },
