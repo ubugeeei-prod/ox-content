@@ -133,7 +133,11 @@ fn is_block_math_context(bytes: &[u8], open: usize, close: usize) -> bool {
 
 fn is_line_start(bytes: &[u8], index: usize) -> bool {
     index == 0
-        || bytes[..index].iter().rev().take_while(|byte| **byte != b'\n').all(u8::is_ascii_whitespace)
+        || bytes[..index]
+            .iter()
+            .rev()
+            .take_while(|byte| **byte != b'\n')
+            .all(u8::is_ascii_whitespace)
 }
 
 fn is_line_end(bytes: &[u8], index: usize) -> bool {
