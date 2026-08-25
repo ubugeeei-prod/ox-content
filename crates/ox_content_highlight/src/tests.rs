@@ -105,6 +105,8 @@ fn the_visible_text_is_exactly_the_input() {
         ("template <typename T> T f(T a) { return a; }\n", "cpp"),
         ("key: \"a > b\"\nlist:\n  - 1\n", "yaml"),
         ("# H\n\n*a* **b** `c` [d](http://e)\n", "md"),
+        ("[package]\nname = \"demo\"\n", "toml"),
+        ("@compute @workgroup_size(64)\nfn main() {\n    let x = 1;\n}\n", "wgsl"),
         ("no trailing newline", "ts"),
         ("\n\n\n", "ts"),
         ("tabs\tand  spaces\n", "ts"),

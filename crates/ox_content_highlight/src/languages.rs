@@ -225,6 +225,22 @@ fn grammars() -> &'static [Grammar] {
             "",
             "",
         ),
+        grammar!(
+            "toml",
+            ["toml"],
+            tree_sitter_toml_ng::LANGUAGE,
+            tree_sitter_toml_ng::HIGHLIGHTS_QUERY,
+            "",
+            "",
+        ),
+        grammar!(
+            "wgsl",
+            ["wgsl"],
+            tree_sitter_wgsl_bevy::LANGUAGE,
+            include_str!("../queries/wgsl-highlights.scm"),
+            "",
+            "",
+        ),
     ]
 }
 
