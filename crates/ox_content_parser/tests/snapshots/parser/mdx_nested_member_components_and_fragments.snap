@@ -1,0 +1,21 @@
+---
+source: crates/ox_content_parser/tests/snapshot_parse.rs
+description: "<Docs.Layout>\n<Docs.Header eyebrow=\"Guide\">\n<>Build <Icons.Sparkle /> faster</>\n</Docs.Header>\n\n<Docs.Body>\nUse <Package.Name scope=\"@ox-content\" /> with {runtime}.\n</Docs.Body>\n</Docs.Layout>\n"
+---
+Document [0..193]
+  MdxJsxFlowElement name=Some("Docs.Layout") self_closing=false [0..193]
+    MdxJsxFlowElement name=Some("Docs.Header") self_closing=false [14..95]
+      Attr name="eyebrow" value=literal("Guide") [27..42]
+      MdxJsxFlowElement name=None self_closing=false [44..80]
+        Paragraph [46..76]
+          Text "Build " [46..52]
+          MdxJsxTextElement name=Some("Icons.Sparkle") self_closing=true [52..69]
+          Text " faster" [69..76]
+    MdxJsxFlowElement name=Some("Docs.Body") self_closing=false [96..178]
+      Paragraph [108..165]
+        Text "Use " [108..112]
+        MdxJsxTextElement name=Some("Package.Name") self_closing=true [112..148]
+          Attr name="scope" value=literal("@ox-content") [126..145]
+        Text " with " [148..154]
+        MdxTextExpression value="runtime" [154..163]
+        Text "." [163..164]

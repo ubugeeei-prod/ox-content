@@ -1,0 +1,16 @@
+---
+source: crates/ox_content_parser/tests/snapshot_parse.rs
+description: "<Callout>\n\n# The heading survives\n\nText before {broken\n\n<Card title=\"unterminated\"\n\n```mdx\n<RealExample />\n```\n"
+---
+Document [0..111]
+  Html value="<Callout>\n" [0..10]
+  Heading depth=1 [11..34]
+    Text "The heading survives" [13..33]
+  Paragraph [35..55]
+    Text "Text before " [35..47]
+    Text "{" [47..48]
+    Text "broken" [48..54]
+  Paragraph [56..83]
+    Text "<" [56..57]
+    Text "Card title=\"unterminated\"" [57..82]
+  CodeBlock lang=Some("mdx") meta=None value="<RealExample />\n" [84..111]

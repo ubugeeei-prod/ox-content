@@ -18,6 +18,8 @@ mod html;
 mod inline;
 #[path = "snapshot_parse/lists.rs"]
 mod lists;
+#[path = "snapshot_parse/mdx.rs"]
+mod mdx;
 #[path = "snapshot_parse/mixed.rs"]
 mod mixed;
 #[path = "support/pretty.rs"]

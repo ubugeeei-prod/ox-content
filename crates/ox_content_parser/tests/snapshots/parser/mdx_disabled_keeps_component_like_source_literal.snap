@@ -1,0 +1,11 @@
+---
+source: crates/ox_content_parser/tests/snapshot_parse.rs
+description: "<Callout title=\"Install\">\n\nHello <Badge /> and {value}.\n\n</Callout>\n"
+---
+Document [0..68]
+  Html value="<Callout title=\"Install\">\n" [0..26]
+  Paragraph [27..56]
+    Text "Hello " [27..33]
+    Html value="<Badge />" [33..42]
+    Text " and {value}." [42..55]
+  Html value="</Callout>\n" [57..68]
