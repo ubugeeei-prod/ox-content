@@ -103,12 +103,22 @@ renders a static link card:
 
 <OgCard url="https://vite.dev" />
 
-| Option      | Default                      | Purpose                         |
-| ----------- | ---------------------------- | ------------------------------- |
-| `timeout`   | `10000`                      | Fetch timeout in milliseconds.  |
-| `cache`     | `true`                       | Cache fetched metadata.         |
-| `cacheTTL`  | `3600000`                    | Cache lifetime in milliseconds. |
-| `userAgent` | `ox-content-ogp-bot/1.0 ...` | User agent sent to the target.  |
+| Option         | Default                      | Purpose                                                |
+| -------------- | ---------------------------- | ------------------------------------------------------ |
+| `timeout`      | `10000`                      | Fetch timeout in milliseconds.                         |
+| `cache`        | `true`                       | Cache fetched metadata in memory for this process.     |
+| `cacheTTL`     | `3600000`                    | Freshness window in milliseconds.                      |
+| `persistCache` | `false`                      | Persist successful and negative entries across builds. |
+| `cacheDir`     | `.cache/ox-content/ogp`      | Persistent metadata cache directory.                   |
+| `refresh`      | `false`                      | Re-fetch even when a fresh cache entry exists.         |
+| `userAgent`    | `ox-content-ogp-bot/1.0 ...` | User agent sent to the target.                         |
+
+Set `persistCache: true` to reuse metadata across clean builds and CI workers.
+Successful lookups and unavailable URLs are stored as one JSON file per
+normalized URL under `cacheDir`. Fresh entries skip the network; expired
+entries and `refresh: true` fetch again and replace the file atomically.
+Corrupt files are ignored so they cannot poison later builds. Metadata you
+already supply to the transform still wins over cache and fetch.
 
 Unreachable pages fall back to a plain link card. Requests to localhost,
 private IP ranges, and non-HTTP(S) schemes are rejected, so Markdown content
