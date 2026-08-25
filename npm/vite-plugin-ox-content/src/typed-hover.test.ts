@@ -54,6 +54,22 @@ describe("typedHover transform", () => {
     expect(result.html).not.toContain("typescript/lib");
   });
 
+  it("keeps hover payloads after native syntax highlighting", async () => {
+    const result = await transformMarkdown(
+      TWOSLASH_SNIPPET,
+      "docs/typed-hover-highlighted.md",
+      createDocsResolvedOptions({
+        highlight: true,
+        typedHover: { enabled: true, languages: ["ts", "tsx"] },
+      }),
+    );
+
+    expect(result.html).toContain('class="ox-highlight css-variables ox-typed-hover"');
+    expect(result.html).toContain("ox-typed-hover-token");
+    expect(result.html).toContain("ox-typed-hover-data");
+    expect(result.html).toMatch(/number/);
+  });
+
   it("skips TypeScript fences that omit the twoslash meta", async () => {
     const result = await transformMarkdown(
       ["```ts", "const value = 1;", "```"].join("\n"),

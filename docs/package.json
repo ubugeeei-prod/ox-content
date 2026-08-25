@@ -12,6 +12,7 @@
   "devDependencies": {
     "@ox-content/code-play": "workspace:*",
     "@ox-content/vite-plugin": "workspace:*",
+    "@typescript/native-preview": "catalog:",
     "katex": "^0.16.22",
     "vite": "catalog:",
     "vite-plus": "catalog:"

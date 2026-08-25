@@ -267,6 +267,9 @@ importers:
       '@ox-content/vite-plugin':
         specifier: workspace:*
         version: link:../npm/vite-plugin-ox-content
+      '@typescript/native-preview':
+        specifier: 'catalog:'
+        version: 7.0.0-dev.20260707.2
       katex:
         specifier: ^0.16.22
         version: 0.16.47
