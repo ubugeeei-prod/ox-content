@@ -4,6 +4,7 @@ export { resolveTwitterEmbedOptions, transformFetchedTweets } from "./transform"
 export { createSyndicationToken, parseTweetReference } from "./url";
 export type {
   ResolvedTwitterEmbedOptions,
+  TweetBodyData,
   TweetData,
   TweetEntity,
   TweetMedia,

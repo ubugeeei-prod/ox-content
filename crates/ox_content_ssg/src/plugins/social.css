@@ -134,6 +134,51 @@
   white-space: nowrap;
 }
 
+.ox-tweet__reply {
+  margin: 0 0 0.5rem;
+  font-size: 0.8125rem;
+}
+
+.ox-tweet__reply-link {
+  color: var(--octc-color-text-muted);
+  text-decoration: none;
+}
+
+.ox-tweet__reply-link:hover {
+  text-decoration: underline;
+}
+
+.ox-tweet__quote {
+  margin: 0 0 0.625rem;
+  padding: 0.75rem;
+  border: 1px solid color-mix(in srgb, var(--octc-color-border) 74%, transparent);
+  border-radius: 8px;
+}
+
+.ox-tweet__quote-header {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin-bottom: 0.5rem;
+}
+
+.ox-tweet__quote .ox-tweet__avatar {
+  width: 28px;
+  height: 28px;
+}
+
+.ox-tweet__quote-body {
+  margin: 0 0 0.5rem;
+  font-size: 0.875rem;
+  line-height: 1.5;
+  color: var(--octc-color-text);
+  white-space: pre-wrap;
+}
+
+.ox-tweet__quote .ox-tweet__media {
+  margin-bottom: 0;
+}
+
 /* WebContainer lazy placeholder */
 .ox-webcontainer {
   margin: 1.5rem 0;

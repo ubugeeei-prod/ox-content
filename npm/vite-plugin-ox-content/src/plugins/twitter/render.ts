@@ -1,4 +1,9 @@
-import type { ResolvedTwitterEmbedOptions, TweetAssets, TweetData, TweetEntity } from "./types";
+import { escapeAttribute, escapeHtml } from "./html";
+import { renderTweetText } from "./text";
+import type { ResolvedTwitterEmbedOptions, TweetAssets, TweetBodyData, TweetData } from "./types";
+import { quotedPermalink, replyPermalink, sanitizeScreenName } from "./validate";
+
+export { renderTweetText } from "./text";
 
 export function renderFetchedTweet(
   permalink: string,
@@ -6,66 +11,57 @@ export function renderFetchedTweet(
   assets: TweetAssets,
   options: ResolvedTwitterEmbedOptions,
 ): string {
-  const profile = `https://x.com/${encodeURIComponent(data.user.screen_name)}`;
-  const author = escapeHtml(data.user.name);
-  const handle = escapeHtml(data.user.screen_name);
-  const avatar = assets.avatar
-    ? `<img class="ox-tweet__avatar" src="${escapeAttribute(assets.avatar)}" alt="" width="48" height="48" loading="lazy" decoding="async">`
-    : "";
-  const media = renderMedia(assets);
-  const footer = renderFooter(permalink, data.created_at, options.lang);
-
+  const quote = data.quoted_tweet ? renderQuotedTweet(data.quoted_tweet, assets.quoted) : "";
   return [
     '<figure class="ox-tweet ox-tweet--fetched">',
-    '<header class="ox-tweet__header">',
-    `<a class="ox-tweet__profile" href="${escapeAttribute(profile)}" target="_blank" rel="noopener noreferrer">`,
-    avatar,
-    `<span class="ox-tweet__author-name">${author}</span>`,
-    `<span class="ox-tweet__author-handle">@${handle}</span>`,
-    "</a></header>",
-    `<div class="ox-tweet__body">${renderTweetText(data)}</div>`,
-    media,
-    footer,
+    renderHeader(data.user, assets.avatar),
+    renderReply(data),
+    `<div class="ox-tweet__body">${renderTweetText(data, { omitTrailingQuoteUrl: Boolean(quote) })}</div>`,
+    renderMedia(assets),
+    quote,
+    renderFooter(permalink, data.created_at, options.lang),
     "</figure>",
   ].join("");
 }
 
-export function renderTweetText(data: TweetData): string {
-  const [start, end] = data.display_text_range ?? [0, data.text.length];
-  const entities = collectEntities(data)
-    .filter((entity) => validRange(entity.indices, start, end))
-    .sort((left, right) => left.indices![0] - right.indices![0]);
-
-  let cursor = start;
-  let output = "";
-  for (const entity of entities) {
-    const [entityStart, entityEnd] = entity.indices!;
-    if (entityStart < cursor) continue;
-    output += escapeText(data.text.slice(cursor, entityStart));
-    if (entity.kind === "url") {
-      const href = entity.expanded_url ?? entity.url;
-      const label = entity.display_url ?? href;
-      output += `<a href="${escapeAttribute(href)}" target="_blank" rel="noopener noreferrer">${escapeHtml(label)}</a>`;
-    }
-    cursor = entityEnd;
-  }
-  output += escapeText(data.text.slice(cursor, end));
-  return output.trim();
-}
-
-function collectEntities(data: TweetData): Array<TweetEntity & { kind: "url" | "media" }> {
+function renderQuotedTweet(data: TweetBodyData, assets: TweetAssets | undefined): string {
+  const permalink = quotedPermalink(data);
+  const media = renderMedia(assets ?? { media: [] });
   return [
-    ...(data.entities?.urls ?? []).map((entity) => ({ ...entity, kind: "url" as const })),
-    ...(data.entities?.media ?? []).map((entity) => ({ ...entity, kind: "media" as const })),
-  ];
+    '<blockquote class="ox-tweet__quote">',
+    renderHeader(data.user, assets?.avatar, permalink, "ox-tweet__quote-header"),
+    `<div class="ox-tweet__quote-body">${renderTweetText(data)}</div>`,
+    media,
+    "</blockquote>",
+  ].join("");
 }
 
-function validRange(
-  indices: [number, number] | undefined,
-  start: number,
-  end: number,
-): indices is [number, number] {
-  return Boolean(indices && indices[0] >= start && indices[1] <= end && indices[0] < indices[1]);
+function renderHeader(
+  user: TweetBodyData["user"],
+  avatarSrc: string | undefined,
+  href?: string,
+  headerClass = "ox-tweet__header",
+): string {
+  const screen = sanitizeScreenName(user.screen_name) ?? user.screen_name;
+  const profile = href ?? `https://x.com/${encodeURIComponent(screen)}`;
+  const avatar = avatarSrc
+    ? `<img class="ox-tweet__avatar" src="${escapeAttribute(avatarSrc)}" alt="" width="48" height="48" loading="lazy" decoding="async">`
+    : "";
+  return [
+    `<header class="${headerClass}">`,
+    `<a class="ox-tweet__profile" href="${escapeAttribute(profile)}" target="_blank" rel="noopener noreferrer">`,
+    avatar,
+    `<span class="ox-tweet__author-name">${escapeHtml(user.name)}</span>`,
+    `<span class="ox-tweet__author-handle">@${escapeHtml(user.screen_name)}</span>`,
+    "</a></header>",
+  ].join("");
+}
+
+function renderReply(data: TweetData): string {
+  const href = replyPermalink(data);
+  const handle = data.in_reply_to_screen_name;
+  if (!href || !handle) return "";
+  return `<p class="ox-tweet__reply"><a class="ox-tweet__reply-link" href="${escapeAttribute(href)}" target="_blank" rel="noopener noreferrer">Replying to @${escapeHtml(handle)}</a></p>`;
 }
 
 function renderMedia(assets: TweetAssets): string {
@@ -96,21 +92,4 @@ function renderFooter(permalink: string, createdAt: string | undefined, lang: st
     label = new Intl.DateTimeFormat("en", { dateStyle: "medium", timeZone: "UTC" }).format(date);
   }
   return `<footer class="ox-tweet__footer"><a class="ox-tweet__permalink" href="${escapeAttribute(permalink)}" target="_blank" rel="noopener noreferrer"><time datetime="${iso}">${escapeHtml(label)}</time></a></footer>`;
-}
-
-function escapeText(value: string): string {
-  return escapeHtml(value).replaceAll("\n", "<br>");
-}
-
-function escapeAttribute(value: string): string {
-  return escapeHtml(value).replaceAll("`", "&#96;");
-}
-
-function escapeHtml(value: string): string {
-  return value
-    .replaceAll("&", "&amp;")
-    .replaceAll("<", "&lt;")
-    .replaceAll(">", "&gt;")
-    .replaceAll('"', "&quot;")
-    .replaceAll("'", "&#39;");
 }

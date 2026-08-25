@@ -1,7 +1,8 @@
 import { access, mkdir, readFile, writeFile } from "node:fs/promises";
 import path from "node:path";
+import type { ResolvedTwitterEmbedOptions, TweetAssets, TweetBodyData, TweetData, TweetMedia } from "./types";
 import { createSyndicationToken } from "./url";
-import type { ResolvedTwitterEmbedOptions, TweetAssets, TweetData, TweetMedia } from "./types";
+import { parseTweetData } from "./validate";
 
 const tweetCache = new Map<string, TweetData>();
 
@@ -37,8 +38,8 @@ export async function fetchTweetData(
       signal: controller.signal,
     });
     if (!response.ok) return null;
-    const data: unknown = await response.json();
-    if (!isTweetData(data)) return null;
+    const data = parseTweetData(await response.json());
+    if (!data) return null;
     if (options.cache) {
       tweetCache.set(key, data);
       await writeCachedTweet(key, data, options.cacheDir);
@@ -54,6 +55,18 @@ export async function fetchTweetData(
 export async function materializeTweetAssets(
   id: string,
   data: TweetData,
+  options: ResolvedTwitterEmbedOptions,
+): Promise<TweetAssets> {
+  const assets = await materializeBodyAssets(id, data, options);
+  if (data.quoted_tweet) {
+    assets.quoted = await materializeBodyAssets(`${id}-quoted`, data.quoted_tweet, options);
+  }
+  return assets;
+}
+
+async function materializeBodyAssets(
+  id: string,
+  data: TweetBodyData,
   options: ResolvedTwitterEmbedOptions,
 ): Promise<TweetAssets> {
   const assets: TweetAssets = { media: [] };
@@ -110,8 +123,7 @@ async function downloadAsset(
 
 async function readCachedTweet(key: string, directory: string): Promise<TweetData | null> {
   try {
-    const data: unknown = JSON.parse(await readFile(path.join(directory, `${key}.json`), "utf8"));
-    return isTweetData(data) ? data : null;
+    return parseTweetData(JSON.parse(await readFile(path.join(directory, `${key}.json`), "utf8")));
   } catch {
     return null;
   }
@@ -124,17 +136,6 @@ async function writeCachedTweet(key: string, data: TweetData, directory: string)
   } catch {
     // A read-only cache directory must not fail the build.
   }
-}
-
-function isTweetData(data: unknown): data is TweetData {
-  if (!data || typeof data !== "object") return false;
-  const value = data as Partial<TweetData>;
-  return (
-    typeof value.text === "string" &&
-    Boolean(value.user) &&
-    typeof value.user?.name === "string" &&
-    typeof value.user.screen_name === "string"
-  );
 }
 
 function extensionFromUrl(url: URL): string {

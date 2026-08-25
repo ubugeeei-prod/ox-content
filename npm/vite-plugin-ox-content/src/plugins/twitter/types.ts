@@ -39,17 +39,27 @@ export interface TweetMedia extends TweetEntity {
   original_info?: { width?: number; height?: number };
 }
 
-export interface TweetData {
+export interface TweetUser {
+  name: string;
+  screen_name: string;
+  profile_image_url_https?: string;
+}
+
+/** Root or quoted post body. Nested `quoted_tweet` is stripped during normalize. */
+export interface TweetBodyData {
   text: string;
+  id_str?: string;
   display_text_range?: [number, number];
   entities?: { urls?: TweetEntity[]; media?: TweetMedia[] };
   mediaDetails?: TweetMedia[];
-  user: {
-    name: string;
-    screen_name: string;
-    profile_image_url_https?: string;
-  };
+  user: TweetUser;
   created_at?: string;
+}
+
+export interface TweetData extends TweetBodyData {
+  quoted_tweet?: TweetBodyData;
+  in_reply_to_screen_name?: string;
+  in_reply_to_status_id_str?: string;
 }
 
 export interface TweetReference {
@@ -60,4 +70,5 @@ export interface TweetReference {
 export interface TweetAssets {
   avatar?: string;
   media: Array<{ src: string; alt?: string; width?: number; height?: number }>;
+  quoted?: TweetAssets;
 }

@@ -161,7 +161,7 @@ YouTube 埋め込みは SSG ビルドと dev preview で常に処理されます
 
 <XPost url="https://x.com/jack/status/20" />
 
-オブジェクト形式を使うと、ビルド時に本文、著者、アバター、写真を取り、自分のオリジンから配信します。
+オブジェクト形式を使うと、ビルド時に本文、著者、アバター、写真を取り、自分のオリジンから配信します。取ってきたカードには、syndication にそのメタデータがあるとき、引用投稿の入れ子カードと「Replying to @…」リンクも含まれます。
 
 ```ts
 oxContent({
@@ -186,7 +186,7 @@ oxContent({
 | `mediaOutputDir`  | `public/ox-content/twitter` | アバターと写真のローカルディレクトリ。              |
 | `mediaPublicPath` | `/ox-content/twitter`       | ダウンロードしたメディアに出す URL プレフィックス。 |
 
-ダウンロードしたメディアは自分のサイトから出すので、厳しい `img-src 'self'` CSP も動き続けます。削除済みや非公開の投稿は、ビルドを落とさずリンクのみのカードに落ちます。詳細は [Twitter/X Embed](/examples/twitter-embed.md) を見てください。
+ダウンロードしたメディアは自分のサイトから出すので、厳しい `img-src 'self'` CSP も動き続けます。削除済みや非公開の投稿は、ビルドを落とさずリンクのみのカードに落ちます。引用投稿が欠けていても、元の投稿カードは残します。詳細は [Twitter/X Embed](/examples/twitter-embed.md) を見てください。
 
 ## Bluesky
 

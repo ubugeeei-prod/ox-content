@@ -7,7 +7,9 @@ description: Render X posts as privacy-conscious static cards.
 
 Twitter/X embeds are opt-in and never load a third-party widget script.
 `twitter: true` renders the privacy-conscious link card. Use the object form to
-fetch the post body, author, avatar, and photos at build time:
+fetch the post body, author, avatar, and photos at build time. Fetched cards
+also render a nested quoted-post card and a “Replying to @…” link when that
+metadata is present:
 
 ```ts
 import { oxContent } from "@ox-content/vite-plugin";
@@ -33,10 +35,11 @@ export default {
 ```
 
 Fetched metadata is cached in memory and under `.cache/ox-content/twitter` by
-default. Avatars and photos are copied into the configured output directory, so
-the generated page can use a strict `img-src 'self'` policy. If the post is
-deleted, private, or unavailable during a build, Ox Content falls back to the
-link-only card instead of failing the build.
+default. Avatars and photos — including those on a quoted post — are copied
+into the configured output directory, so the generated page can use a strict
+`img-src 'self'` policy. If the post is deleted, private, or unavailable
+during a build, Ox Content falls back to the link-only card instead of failing
+the build. A missing quoted post is omitted without discarding the root card.
 
 | Option            | Default                     | Purpose                                      |
 | ----------------- | --------------------------- | -------------------------------------------- |

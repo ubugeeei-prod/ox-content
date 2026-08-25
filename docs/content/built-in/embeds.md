@@ -192,7 +192,9 @@ card:
 <XPost url="https://x.com/jack/status/20" />
 
 Use the object form to fetch the post body, author, avatar, and photos at
-build time and serve them from your own origin:
+build time and serve them from your own origin. Fetched cards include a
+nested quoted-post card and a “Replying to @…” link when the syndication
+response has that metadata:
 
 ```ts
 oxContent({
@@ -219,7 +221,8 @@ oxContent({
 
 Downloaded media is served from your site, so a strict `img-src 'self'` CSP
 keeps working. Deleted or private posts fall back to the link-only card
-instead of failing the build. See
+instead of failing the build. A missing quoted post is omitted without
+discarding the root card. See
 [Twitter/X Embed](../examples/twitter-embed.md) for details.
 
 ## Bluesky
