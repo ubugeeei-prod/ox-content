@@ -28,8 +28,8 @@ Node.js から Rust コアを呼ぶなら、次に N-API パッケージです�
 
 | 経路            | 要件                                                              |
 | --------------- | ----------------------------------------------------------------- |
-| Vite プラグイン | Node.js `26+` と Vite または Vite+ プロジェクト                   |
-| N-API           | Node.js `26+`                                                     |
+| Vite プラグイン | Node.js `24+` と Vite または Vite+ プロジェクト                   |
+| N-API           | Node.js `24+`                                                     |
 | WebAssembly     | npm パッケージを入れ、ESM から `.wasm` を読める JS ツールチェーン |
 | Rust crate      | Rust `1.95+`                                                      |
 

@@ -249,9 +249,7 @@ async function main(): Promise<void> {
   const input = args.find((arg) => arg !== "--prepare-only");
 
   if (!input) {
-    console.error(
-      "Usage: vpr release [patch|minor|major|alpha|beta|x.y.z] [--prepare-only]",
-    );
+    console.error("Usage: vpr release [patch|minor|major|alpha|beta|x.y.z] [--prepare-only]");
     process.exit(1);
   }
 
