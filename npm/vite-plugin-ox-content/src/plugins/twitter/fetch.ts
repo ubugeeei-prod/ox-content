@@ -1,6 +1,12 @@
 import { access, mkdir, readFile, writeFile } from "node:fs/promises";
 import path from "node:path";
-import type { ResolvedTwitterEmbedOptions, TweetAssets, TweetBodyData, TweetData, TweetMedia } from "./types";
+import type {
+  ResolvedTwitterEmbedOptions,
+  TweetAssets,
+  TweetBodyData,
+  TweetData,
+  TweetMedia,
+} from "./types";
 import { createSyndicationToken } from "./url";
 import { parseTweetData } from "./validate";
 

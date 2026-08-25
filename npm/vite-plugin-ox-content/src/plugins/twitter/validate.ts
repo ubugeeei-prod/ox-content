@@ -29,9 +29,13 @@ export function normalizeTweetData(data: TweetData): TweetData {
   const handle = sanitizeScreenName(data.in_reply_to_screen_name);
   return {
     ...data,
-    quoted_tweet: isTweetBodyData(data.quoted_tweet) ? stripNestedQuote(data.quoted_tweet) : undefined,
+    quoted_tweet: isTweetBodyData(data.quoted_tweet)
+      ? stripNestedQuote(data.quoted_tweet)
+      : undefined,
     in_reply_to_screen_name: handle,
-    in_reply_to_status_id_str: handle ? sanitizeStatusId(data.in_reply_to_status_id_str) : undefined,
+    in_reply_to_status_id_str: handle
+      ? sanitizeStatusId(data.in_reply_to_status_id_str)
+      : undefined,
   };
 }
 
@@ -62,7 +66,10 @@ export function replyPermalink(data: TweetData): string | undefined {
   return id ? `https://x.com/${handle}/status/${id}` : `https://x.com/${handle}`;
 }
 
-export function visibleTextRange(data: TweetBodyData, omitTrailingQuoteUrl = false): [number, number] {
+export function visibleTextRange(
+  data: TweetBodyData,
+  omitTrailingQuoteUrl = false,
+): [number, number] {
   const start = Math.max(0, data.display_text_range?.[0] ?? 0);
   let end = Math.min(data.text.length, data.display_text_range?.[1] ?? data.text.length);
   if (!omitTrailingQuoteUrl || start >= end) return [start, end];
