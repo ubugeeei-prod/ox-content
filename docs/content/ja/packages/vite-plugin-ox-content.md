@@ -222,7 +222,7 @@ oxContent({
 
 組み込みの静的埋め込みは変換時に描画され、クライアント側 JavaScript は使いません。非標準の埋め込みはオプトインです。既定表と描画例の全体は [埋め込み](../built-in/embeds.md) を見てください。
 
-```md
+```mdx
 <GitHub repo="ubugeeei-prod/ox-content" />
 
 <GitHub permalink="https://github.com/ubugeeei-prod/ox-content/blob/278098b/README.md#L1-L12" />

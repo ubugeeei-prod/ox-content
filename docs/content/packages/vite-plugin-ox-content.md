@@ -222,7 +222,7 @@ Non-standard embeds are opt-in.
 See [Embeds](../built-in/embeds.md) for the full
 default table and rendered examples.
 
-```md
+```mdx
 <GitHub repo="ubugeeei-prod/ox-content" />
 
 <GitHub permalink="https://github.com/ubugeeei-prod/ox-content/blob/278098b/README.md#L1-L12" />

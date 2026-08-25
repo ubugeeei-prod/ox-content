@@ -53,7 +53,7 @@ third-party widget script.
 
 A repository card:
 
-```md
+```mdx
 <GitHub repo="ubugeeei-prod/ox-content" />
 ```
 
@@ -61,7 +61,7 @@ A repository card:
 
 A source snippet pinned to a ref and line range:
 
-```md
+```mdx
 <GitHub repo="ubugeeei-prod/ox-content" path="README.md" ref="main" loc="1-10" />
 ```
 
@@ -70,7 +70,7 @@ A source snippet pinned to a ref and line range:
 A permalink form is also supported — paste a GitHub blob URL with `#L10-L18`
 line anchors:
 
-```md
+```mdx
 <GitHub permalink="https://github.com/ubugeeei-prod/ox-content/blob/278098b/npm/vite-plugin-ox-content/src/plugins/github.ts#L10-L18" />
 ```
 
@@ -97,7 +97,7 @@ card instead of failing the build.
 `embeds.openGraph` fetches a page's Open Graph metadata at build time and
 renders a static link card:
 
-```md
+```mdx
 <OgCard url="https://vite.dev" />
 ```
 
@@ -137,7 +137,7 @@ oxContent({
 });
 ```
 
-```md
+```mdx
 <pm>npm install -D @ox-content/vite-plugin @ox-content/theme-swiss</pm>
 ```
 
@@ -214,7 +214,7 @@ YouTube embeds are always processed in SSG builds and dev preview. The iframe
 uses privacy-enhanced mode (`youtube-nocookie.com`) and lazy loading by
 default:
 
-```md
+```mdx
 <youtube id="aqz-KE-bpKQ" title="Big Buck Bunny" />
 ```
 
@@ -226,7 +226,7 @@ non-negative integer number of seconds and becomes `?start=` on the iframe
 URL. Invalid, negative, fractional, overflowing, or duplicated values are
 ignored. Omitting `start` leaves the previous URL unchanged.
 
-```md
+```mdx
 <youtube id="aqz-KE-bpKQ" title="Big Buck Bunny" start="4190" />
 ```
 
@@ -236,7 +236,7 @@ ignored. Omitting `start` leaves the previous URL unchanged.
 widget script. With `twitter: true`, the embed is a privacy-conscious link
 card:
 
-```md
+```mdx
 <XPost url="https://x.com/jack/status/20" />
 ```
 
@@ -292,7 +292,7 @@ are in [Credits](../credits.md). See
 `embeds.bluesky` renders a static card. The element body provides the text
 shown in the card, so no network request is needed at all:
 
-```md
+```mdx
 <Bluesky url="https://bsky.app/profile/bsky.app/post/3l6oveex3ii2l">
   👋 Bluesky is an open social network
 </Bluesky>
@@ -307,7 +307,7 @@ shown in the card, so no network request is needed at all:
 `embeds.spotify` renders the official iframe player for tracks, albums,
 playlists, episodes, shows, and artists:
 
-```md
+```mdx
 <Spotify url="https://open.spotify.com/track/4uLU6hMCjMI75M1A2tKUQC" />
 ```
 
@@ -322,7 +322,7 @@ is why it stays opt-in.
 `embeds.stackBlitz` turns a StackBlitz project URL into a sandboxed iframe
 with `embed=1` appended:
 
-```md
+```mdx
 <StackBlitz url="https://stackblitz.com/edit/vitejs-vite" />
 ```
 

@@ -46,7 +46,7 @@ export default {
 
 リポジトリカード:
 
-```md
+```mdx
 <GitHub repo="ubugeeei-prod/ox-content" />
 ```
 
@@ -54,7 +54,7 @@ export default {
 
 ref と行範囲を固定したソーススニペット:
 
-```md
+```mdx
 <GitHub repo="ubugeeei-prod/ox-content" path="README.md" ref="main" loc="1-10" />
 ```
 
@@ -62,7 +62,7 @@ ref と行範囲を固定したソーススニペット:
 
 パーマリンク形式も使えます。`#L10-L18` 行アンカー付きの GitHub blob URL を貼ります。
 
-```md
+```mdx
 <GitHub permalink="https://github.com/ubugeeei-prod/ox-content/blob/278098b/npm/vite-plugin-ox-content/src/plugins/github.ts#L10-L18" />
 ```
 
@@ -84,7 +84,7 @@ ref と行範囲を固定したソーススニペット:
 
 `embeds.openGraph` はビルド時にページの Open Graph メタデータを取り、静的リンクカードを描画します。
 
-```md
+```mdx
 <OgCard url="https://vite.dev" />
 ```
 
@@ -116,7 +116,7 @@ oxContent({
 });
 ```
 
-```md
+```mdx
 <pm>npm install -D @ox-content/vite-plugin @ox-content/theme-swiss</pm>
 ```
 
@@ -182,7 +182,7 @@ pnpm vite preview</code></pre>
 
 YouTube 埋め込みは SSG ビルドと dev preview で常に処理されます。iframe はプライバシー強化モード（`youtube-nocookie.com`）と遅延読み込みが既定です。
 
-```md
+```mdx
 <youtube id="aqz-KE-bpKQ" title="Big Buck Bunny" />
 ```
 
@@ -190,7 +190,7 @@ YouTube 埋め込みは SSG ビルドと dev preview で常に処理されます
 
 `id`、`url`、`href` 属性を受け付けます。`youtu.be`、`watch?v=`、`shorts`、`embed` の URL 形はどれも認識します。`start` は非負整数の秒で、iframe URL に `?start=` を付けます。不正、負、小数、オーバーフロー、重複した値は無視します。`start` を省略すると、これまでの URL のままです。
 
-```md
+```mdx
 <youtube id="aqz-KE-bpKQ" title="Big Buck Bunny" start="4190" />
 ```
 
@@ -198,7 +198,7 @@ YouTube 埋め込みは SSG ビルドと dev preview で常に処理されます
 
 `embeds.twitter` は投稿を静的カードとして描画し、第三者ウィジェットのスクリプトは決して読みません。`twitter: true` のとき、埋め込みはプライバシーを意識したリンクカードです。
 
-```md
+```mdx
 <XPost url="https://x.com/jack/status/20" />
 ```
 
@@ -239,7 +239,7 @@ oxContent({
 
 `embeds.bluesky` は静的カードを描画します。カードに出すテキストは要素本文なので、ネットワーク要求は一切要りません。
 
-```md
+```mdx
 <Bluesky url="https://bsky.app/profile/bsky.app/post/3l6oveex3ii2l">
   👋 Bluesky is an open social network
 </Bluesky>
@@ -253,7 +253,7 @@ oxContent({
 
 `embeds.spotify` はトラック、アルバム、プレイリスト、エピソード、番組、アーティスト向けの公式 iframe プレーヤーを描画します。
 
-```md
+```mdx
 <Spotify url="https://open.spotify.com/track/4uLU6hMCjMI75M1A2tKUQC" />
 ```
 
@@ -265,7 +265,7 @@ oxContent({
 
 `embeds.stackBlitz` は StackBlitz プロジェクト URL を、`embed=1` を付けたサンドボックス iframe にします。
 
-```md
+```mdx
 <StackBlitz url="https://stackblitz.com/edit/vitejs-vite" />
 ```
 
