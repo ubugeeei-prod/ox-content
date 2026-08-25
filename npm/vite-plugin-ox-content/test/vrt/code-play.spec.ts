@@ -8,7 +8,7 @@ import { enhancePlayHtml } from "../../../ox-content-code-play/src/html";
 import { decodePayload, encodePayload } from "../../../ox-content-code-play/src/payload";
 import { payloadFromFence } from "../../../ox-content-code-play/src/payload-factory";
 
-test("hydrates written SSG HTML and runs JavaScript in the sandbox iframe", async ({ page }) => {
+test("hydrates written SSG HTML and runs JavaScript in the browser sandbox", async ({ page }) => {
   const outDir = await mkdtemp(path.join(tmpdir(), "ox-code-play-vrt-"));
   try {
     await bundleBrowserClient(outDir);

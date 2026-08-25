@@ -72,9 +72,10 @@ run.timing;
 visitor-supplied snippets as `play`.
 
 - No sample is executed during Markdown transform or SSG.
-- JavaScript and TypeScript run in `node:vm` on Node, or in
-  `<iframe sandbox="allow-scripts">` in the browser (no `allow-same-origin`).
-  They are never run with page-origin `Function`.
+- JavaScript and TypeScript run in `node:vm` on Node, or in a Web Worker in the
+  browser. Browsers without Worker support fall back to
+  `<iframe sandbox="allow-scripts">` with no `allow-same-origin`. Snippets are
+  never run with page-origin `Function`.
 - Published widgets hide **Typecheck** unless `endpoints.typecheck` is set.
   **Cancel** appears while a run is in flight.
 - Framework previews use the same iframe flags and load runtimes from esm.sh.

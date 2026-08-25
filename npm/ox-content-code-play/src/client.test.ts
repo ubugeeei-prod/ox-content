@@ -136,9 +136,10 @@ describe("createCodePlay", () => {
   });
 
   it("does not run JavaScript through page-origin Function", () => {
-    expect(javascriptExecuteRuntime(true, false)).toBe("vm");
-    expect(javascriptExecuteRuntime(false, true)).toBe("iframe");
-    expect(() => javascriptExecuteRuntime(false, false)).toThrow(/sandbox iframe/);
+    expect(javascriptExecuteRuntime(true, false, false)).toBe("vm");
+    expect(javascriptExecuteRuntime(false, true, true)).toBe("worker");
+    expect(javascriptExecuteRuntime(false, false, true)).toBe("iframe");
+    expect(() => javascriptExecuteRuntime(false, false, false)).toThrow(/worker sandbox/);
   });
 
   it("picks a typecheck backend that cannot call a missing static-host proxy", () => {

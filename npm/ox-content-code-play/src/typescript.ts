@@ -1,4 +1,9 @@
-import { executeScript } from "./javascript";
+import {
+  currentJavaScriptRuntime,
+  executeScriptWithRuntime,
+  executionRuntimeFromError,
+  javascriptRuntimeProvenance,
+} from "./javascript";
 import { hasNodeVm } from "./runtime-host";
 import { isAbortError } from "./transport";
 import { StdioBuffer } from "./stdio";
@@ -64,6 +69,7 @@ export async function typecheckTypeScript(request: AdapterRequest): Promise<Adap
     if (isAbortError(error) || request.signal?.aborted) {
       throw error;
     }
+    executedRuntime = executionRuntimeFromError(error) ?? executedRuntime;
     tracker.stop();
     const message = error instanceof Error ? error.message : String(error);
     return {
@@ -89,9 +95,18 @@ export async function runTypeScript(request: AdapterRequest): Promise<AdapterRes
   const stdio = new StdioBuffer(tracker.startedAt);
   tracker.start("compile", "Strip types");
   const javascript = stripTypeScript(request.code);
+  const runtime = currentJavaScriptRuntime();
+  let executedRuntime = runtime;
   tracker.start("execute", "Execute");
   try {
-    const value = await executeScript(javascript, request.timeoutMs, stdio, request.signal);
+    const result = await executeScriptWithRuntime(
+      javascript,
+      request.timeoutMs,
+      stdio,
+      request.signal,
+      runtime,
+    );
+    executedRuntime = result.runtime;
     tracker.stop();
     return {
       status: "ok",
@@ -99,14 +114,10 @@ export async function runTypeScript(request: AdapterRequest): Promise<AdapterRes
       diagnostics: [],
       provenance: {
         compile: { host: "local", runtime: "strip-types" },
-        execute: {
-          host: "local",
-          runtime: hasNodeVm() ? "node:vm" : "iframe",
-          sandbox: hasNodeVm() ? "vm" : "srcdoc",
-        },
+        execute: javascriptRuntimeProvenance(executedRuntime),
       },
       timing: tracker.report(),
-      value: value === undefined ? undefined : String(value),
+      value: result.value === undefined ? undefined : String(result.value),
     };
   } catch (error) {
     if (isAbortError(error) || request.signal?.aborted) {
@@ -121,11 +132,7 @@ export async function runTypeScript(request: AdapterRequest): Promise<AdapterRes
       diagnostics: [{ message, severity: "error", source: "javascript" }],
       provenance: {
         compile: { host: "local", runtime: "strip-types" },
-        execute: {
-          host: "local",
-          runtime: hasNodeVm() ? "node:vm" : "iframe",
-          sandbox: hasNodeVm() ? "vm" : "srcdoc",
-        },
+        execute: javascriptRuntimeProvenance(executedRuntime),
       },
       timing: tracker.report(),
     };

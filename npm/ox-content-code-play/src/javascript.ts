@@ -1,37 +1,54 @@
-import { executeInSandboxIframe } from "./javascript-sandbox";
+import {
+  canUseSandboxWorker,
+  executeInSandboxIframe,
+  executeInSandboxWorker,
+  isSandboxWorkerUnavailable,
+} from "./javascript-sandbox";
 import { hasNodeVm } from "./runtime-host";
 import { formatConsoleArgs, StdioBuffer } from "./stdio";
 import { PhaseTracker } from "./timing";
 import { abortError, isAbortError } from "./transport";
-import type { AdapterRequest, AdapterResult, Diagnostic } from "./types";
+import type { AdapterRequest, AdapterResult, Diagnostic, RuntimeLocation } from "./types";
+
+export type JavaScriptExecutionRuntime = "vm" | "worker" | "iframe";
+
+export interface JavaScriptExecutionResult {
+  value: unknown;
+  runtime: JavaScriptExecutionRuntime;
+}
 
 export async function runJavaScript(request: AdapterRequest): Promise<AdapterResult> {
   const tracker = new PhaseTracker();
   tracker.start("execute", "Execute");
   const stdio = new StdioBuffer(tracker.startedAt);
-  const provenance = {
-    execute: {
-      host: "local",
-      runtime: hasNodeVm() ? "node:vm" : "iframe",
-      sandbox: hasNodeVm() ? "vm" : "srcdoc",
-    },
-  };
+  const runtime = currentJavaScriptRuntime();
+  let executedRuntime = runtime;
 
   try {
-    const value = await executeScript(request.code, request.timeoutMs, stdio, request.signal);
+    const result = await executeScriptWithRuntime(
+      request.code,
+      request.timeoutMs,
+      stdio,
+      request.signal,
+      runtime,
+    );
+    executedRuntime = result.runtime;
     tracker.stop();
     return {
       status: "ok",
       stdio: stdio.snapshot(),
       diagnostics: [],
-      provenance,
+      provenance: {
+        execute: javascriptRuntimeProvenance(executedRuntime),
+      },
       timing: tracker.report(),
-      value: value === undefined ? undefined : String(value),
+      value: result.value === undefined ? undefined : String(result.value),
     };
   } catch (error) {
     if (isAbortError(error) || request.signal?.aborted) {
       throw error;
     }
+    executedRuntime = executionRuntimeFromError(error) ?? executedRuntime;
     tracker.stop();
     const diagnostic = toDiagnostic(error);
     stdio.push("stderr", `${diagnostic.message}\n`);
@@ -39,7 +56,9 @@ export async function runJavaScript(request: AdapterRequest): Promise<AdapterRes
       status: isTimeout(error) ? "timeout" : "error",
       stdio: stdio.snapshot(),
       diagnostics: [diagnostic],
-      provenance,
+      provenance: {
+        execute: javascriptRuntimeProvenance(executedRuntime),
+      },
       timing: tracker.report(),
     };
   }
@@ -50,6 +69,49 @@ export async function executeScript(
   timeoutMs: number,
   stdio: StdioBuffer,
   signal?: AbortSignal,
+  runtime = currentJavaScriptRuntime(),
+): Promise<unknown> {
+  const result = await executeScriptWithRuntime(code, timeoutMs, stdio, signal, runtime);
+  return result.value;
+}
+
+export async function executeScriptWithRuntime(
+  code: string,
+  timeoutMs: number,
+  stdio: StdioBuffer,
+  signal?: AbortSignal,
+  runtime = currentJavaScriptRuntime(),
+): Promise<JavaScriptExecutionResult> {
+  try {
+    return {
+      value: await executeScriptInRuntime(code, timeoutMs, stdio, signal, runtime),
+      runtime,
+    };
+  } catch (error) {
+    if (
+      runtime === "worker" &&
+      isSandboxWorkerUnavailable(error) &&
+      typeof document !== "undefined"
+    ) {
+      try {
+        return {
+          value: await executeScriptInRuntime(code, timeoutMs, stdio, signal, "iframe"),
+          runtime: "iframe",
+        };
+      } catch (fallbackError) {
+        throw withExecutionRuntime(fallbackError, "iframe");
+      }
+    }
+    throw withExecutionRuntime(error, runtime);
+  }
+}
+
+async function executeScriptInRuntime(
+  code: string,
+  timeoutMs: number,
+  stdio: StdioBuffer,
+  signal: AbortSignal | undefined,
+  runtime: JavaScriptExecutionRuntime,
 ): Promise<unknown> {
   const consoleLike = {
     log: (...args: unknown[]) => stdio.push("stdout", formatConsoleArgs(args)),
@@ -62,24 +124,84 @@ export async function executeScript(
     throw abortError();
   }
 
-  const runtime = javascriptExecuteRuntime(hasNodeVm(), typeof document !== "undefined");
   if (runtime === "vm") {
     const vm = await import("node:vm");
     const context = vm.createContext({ console: consoleLike });
     return vm.runInContext(code, context, { timeout: timeoutMs, displayErrors: true });
   }
+  if (runtime === "worker") {
+    return executeInSandboxWorker(code, timeoutMs, stdio, signal);
+  }
 
   return executeInSandboxIframe(code, timeoutMs, stdio, signal);
 }
 
-export function javascriptExecuteRuntime(hasVm: boolean, hasDocument: boolean): "vm" | "iframe" {
+export function currentJavaScriptRuntime(): JavaScriptExecutionRuntime {
+  return javascriptExecuteRuntime(
+    hasNodeVm(),
+    canUseSandboxWorker(),
+    typeof document !== "undefined",
+  );
+}
+
+export function javascriptExecuteRuntime(
+  hasVm: boolean,
+  hasWorker: boolean,
+  hasDocument: boolean,
+): JavaScriptExecutionRuntime {
   if (hasVm) {
     return "vm";
+  }
+  if (hasWorker) {
+    return "worker";
   }
   if (hasDocument) {
     return "iframe";
   }
-  throw new Error("JavaScript execute needs node:vm or a document for the sandbox iframe.");
+  throw new Error(
+    "JavaScript execute needs node:vm, a browser worker sandbox, or a document for the sandbox iframe.",
+  );
+}
+
+export function javascriptRuntimeProvenance(runtime: JavaScriptExecutionRuntime): RuntimeLocation {
+  if (runtime === "vm") {
+    return { host: "local", runtime: "node:vm", sandbox: "vm" };
+  }
+  if (runtime === "worker") {
+    return { host: "local", runtime: "web-worker", sandbox: "worker" };
+  }
+  return { host: "local", runtime: "iframe", sandbox: "srcdoc" };
+}
+
+function withExecutionRuntime(
+  error: unknown,
+  runtime: JavaScriptExecutionRuntime,
+): Error & { executionRuntime: JavaScriptExecutionRuntime } {
+  if (error instanceof Error) {
+    return Object.assign(error, { executionRuntime: runtime });
+  }
+  if (isErrorLike(error)) {
+    return Object.assign(error, { executionRuntime: runtime }) as Error & {
+      executionRuntime: JavaScriptExecutionRuntime;
+    };
+  }
+  return Object.assign(new Error(String(error)), { executionRuntime: runtime });
+}
+
+export function executionRuntimeFromError(error: unknown): JavaScriptExecutionRuntime | undefined {
+  if (
+    error &&
+    typeof error === "object" &&
+    "executionRuntime" in error &&
+    isJavaScriptExecutionRuntime(error.executionRuntime)
+  ) {
+    return error.executionRuntime;
+  }
+  return undefined;
+}
+
+function isJavaScriptExecutionRuntime(value: unknown): value is JavaScriptExecutionRuntime {
+  return value === "vm" || value === "worker" || value === "iframe";
 }
 
 function isTimeout(error: unknown): boolean {

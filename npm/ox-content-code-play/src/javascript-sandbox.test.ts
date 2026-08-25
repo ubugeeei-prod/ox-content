@@ -3,6 +3,7 @@ import { StdioBuffer } from "./stdio";
 import {
   applySandboxStreams,
   buildJavaScriptSandboxDocument,
+  buildJavaScriptWorkerSource,
   embedJson,
   JS_SANDBOX_FLAGS,
 } from "./javascript-sandbox";
@@ -21,6 +22,16 @@ describe("JavaScript browser sandbox", () => {
     expect(html).toContain("new Function");
     expect(html).toContain("parent.postMessage");
     expect(html).toContain(embedJson("msg-1"));
+  });
+
+  it("keeps worker source generic and sends snippets by message", () => {
+    const source = buildJavaScriptWorkerSource();
+    expect(source).toContain("self.onmessage");
+    expect(source).toContain("new Function");
+    expect(source).toContain("self.postMessage");
+    expect(source).toContain("stdout.push");
+    expect(source).not.toContain("parent.postMessage");
+    expect(source).not.toContain("</script>");
   });
 
   it("escapes raw < in JSON payloads", () => {
