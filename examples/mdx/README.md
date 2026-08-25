@@ -23,11 +23,11 @@ corepack pnpm --filter ./examples/mdx preview
 
 ## Pages
 
-| File                     | Shows                                                                 |
-| ------------------------ | --------------------------------------------------------------------- |
-| `src/content/index.mdx`  | Static HTML, island placeholder, ESM omitted, expressions not evaluated |
-| `src/content/islands.mdx` | Lowercase tags as HTML vs PascalCase `data-ox-island`                  |
-| `src/content/plain.md`   | Sibling `.md` that does **not** parse JSX                             |
+| File                      | Shows                                                                   |
+| ------------------------- | ----------------------------------------------------------------------- |
+| `src/content/index.mdx`   | Static HTML, island placeholder, ESM omitted, expressions not evaluated |
+| `src/content/islands.mdx` | Lowercase tags as HTML vs PascalCase `data-ox-island`                   |
+| `src/content/plain.md`    | Sibling `.md` that does **not** parse JSX                               |
 
 After `build`, inspect `dist` for `data-ox-island="NoteCard"`, lowercase
 `<note>` markup, and the absence of `import` / `export` from the `.mdx` pages.

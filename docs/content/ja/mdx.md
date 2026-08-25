@@ -32,10 +32,10 @@ Ox Content では、Markdown と `.mdx` ファイルの中にフレームワー�
 
 `mdx` を省略すると、Ox Content はソースの拡張子から推論します。
 
-| ソース | 既定 | `mdx: true` | `mdx: false` |
-| ------ | ---- | ----------- | ------------ |
-| `.mdx` | MDX オン（JSX、ESM、`{expression}`） | MDX オン | CommonMark + GFM |
-| `.md` / `.markdown` | CommonMark + GFM | MDX オン | CommonMark + GFM |
+| ソース              | 既定                                 | `mdx: true` | `mdx: false`     |
+| ------------------- | ------------------------------------ | ----------- | ---------------- |
+| `.mdx`              | MDX オン（JSX、ESM、`{expression}`） | MDX オン    | CommonMark + GFM |
+| `.md` / `.markdown` | CommonMark + GFM                     | MDX オン    | CommonMark + GFM |
 
 `.mdx` に `mdx: true` は**不要**です。`.md` でも同じ構文を使いたいときだけ
 `mdx: true` / `ParserOptions.mdx` を付けます。`.mdx` をプレーンな

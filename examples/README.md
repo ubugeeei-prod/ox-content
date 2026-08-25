@@ -19,15 +19,15 @@ This directory contains runnable projects and small source examples.
 
 ## Site and Tooling
 
-| Example                                      | Description               | Shows                                |
-| -------------------------------------------- | ------------------------- | ------------------------------------ |
-| [playground](./playground)                   | Browser playground        | Live Markdown preview                |
-| [code-play](./code-play)                     | `@ox-content/code-play`   | On-demand sample run / type-check    |
-| [ssg-vite](./ssg-vite)                       | Vite static site          | SSG output and generated routes      |
+| Example                                      | Description               | Shows                                 |
+| -------------------------------------------- | ------------------------- | ------------------------------------- |
+| [playground](./playground)                   | Browser playground        | Live Markdown preview                 |
+| [code-play](./code-play)                     | `@ox-content/code-play`   | On-demand sample run / type-check     |
+| [ssg-vite](./ssg-vite)                       | Vite static site          | SSG output and generated routes       |
 | [mdx](./mdx)                                 | Built-in MDX              | `.mdx` JSX, islands, ESM, expressions |
-| [gen-source-docs](./gen-source-docs)         | Source documentation      | API docs generated from TypeScript   |
-| [og-image-custom](./og-image-custom)         | Custom OG image templates | React, Svelte, Vue, and TS templates |
-| [incremental-html-js](./incremental-html-js) | Incremental rendering     | Plain Node.js, HTML, CSS, and SSE    |
+| [gen-source-docs](./gen-source-docs)         | Source documentation      | API docs generated from TypeScript    |
+| [og-image-custom](./og-image-custom)         | Custom OG image templates | React, Svelte, Vue, and TS templates  |
+| [incremental-html-js](./incremental-html-js) | Incremental rendering     | Plain Node.js, HTML, CSS, and SSE     |
 
 ## Parser and Pipeline Plugins
 

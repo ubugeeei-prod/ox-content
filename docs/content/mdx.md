@@ -33,10 +33,10 @@ need them — without shipping a JavaScript bundle for pages that have none.
 
 When `mdx` is omitted, Ox Content infers it from the source extension:
 
-| Source | Default | `mdx: true` | `mdx: false` |
-| ------ | ------- | ----------- | ------------ |
-| `.mdx` | MDX on (JSX, ESM, `{expression}`) | MDX on | CommonMark + GFM |
-| `.md` / `.markdown` | CommonMark + GFM | MDX on | CommonMark + GFM |
+| Source              | Default                           | `mdx: true` | `mdx: false`     |
+| ------------------- | --------------------------------- | ----------- | ---------------- |
+| `.mdx`              | MDX on (JSX, ESM, `{expression}`) | MDX on      | CommonMark + GFM |
+| `.md` / `.markdown` | CommonMark + GFM                  | MDX on      | CommonMark + GFM |
 
 You do **not** need `mdx: true` for `.mdx` files. Set `mdx: true` /
 `ParserOptions.mdx` only when you want the same syntax in `.md` files.

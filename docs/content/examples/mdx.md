@@ -22,11 +22,11 @@ corepack pnpm --filter ./examples/mdx build
 
 ## What the pages show
 
-| File | Shows |
-| ---- | ----- |
-| `src/content/index.mdx` | Lowercase tags as static HTML, PascalCase `data-ox-island`, ESM omitted, `{expression}` not evaluated |
-| `src/content/islands.mdx` | Static HTML vs island placeholders without a framework plugin |
-| `src/content/plain.md` | Sibling `.md` that does **not** parse JSX |
+| File                      | Shows                                                                                                 |
+| ------------------------- | ----------------------------------------------------------------------------------------------------- |
+| `src/content/index.mdx`   | Lowercase tags as static HTML, PascalCase `data-ox-island`, ESM omitted, `{expression}` not evaluated |
+| `src/content/islands.mdx` | Static HTML vs island placeholders without a framework plugin                                         |
+| `src/content/plain.md`    | Sibling `.md` that does **not** parse JSX                                                             |
 
 There is no React / Vue / Svelte / Solid plugin. Named components stay
 `data-ox-island` placeholders. `import` / `export` do not appear in the HTML
