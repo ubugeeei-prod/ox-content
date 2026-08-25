@@ -113,7 +113,7 @@ fn grammars() -> &'static [Grammar] {
         ),
         grammar!(
             "tsx",
-            ["tsx"],
+            ["tsx", "typescriptreact"],
             tree_sitter_typescript::LANGUAGE_TSX,
             tsx_highlights(),
             tree_sitter_javascript::INJECTIONS_QUERY,
@@ -121,7 +121,7 @@ fn grammars() -> &'static [Grammar] {
         ),
         grammar!(
             "javascript",
-            ["javascript", "js", "cjs", "mjs", "jsx", "mdx"],
+            ["javascript", "js", "cjs", "mjs", "jsx", "javascriptreact", "flow", "mdx"],
             tree_sitter_javascript::LANGUAGE,
             javascript_highlights(),
             tree_sitter_javascript::INJECTIONS_QUERY,
@@ -137,7 +137,7 @@ fn grammars() -> &'static [Grammar] {
         ),
         grammar!(
             "json",
-            ["json"],
+            ["json", "jsonc", "json5", "webmanifest"],
             tree_sitter_json::LANGUAGE,
             tree_sitter_json::HIGHLIGHTS_QUERY,
             "",
@@ -153,7 +153,7 @@ fn grammars() -> &'static [Grammar] {
         ),
         grammar!(
             "html",
-            ["html"],
+            ["html", "vue", "svelte", "astro", "angular"],
             tree_sitter_html::LANGUAGE,
             tree_sitter_html::HIGHLIGHTS_QUERY,
             tree_sitter_html::INJECTIONS_QUERY,
@@ -275,7 +275,23 @@ pub fn config_by_name(name: &str) -> Option<&'static HighlightConfiguration> {
 }
 
 /// Names for "this block has no syntax", rendered without tokenizing.
-pub const PLAIN_LANGUAGES: &[&str] = &["text", "plaintext", "txt", "plain"];
+pub const PLAIN_LANGUAGES: &[&str] = &[
+    "text",
+    "plaintext",
+    "txt",
+    "plain",
+    "dotenv",
+    "env",
+    ".env",
+    "gitignore",
+    "dockerignore",
+    "npmrc",
+    "yarnrc",
+    "properties",
+    "ini",
+    "conf",
+    "config",
+];
 
 /// Whether `lang` names a block that should render without tokenizing.
 pub fn is_plain(lang: &str) -> bool {

@@ -14,10 +14,28 @@ fn aliases_resolve_to_the_same_grammar() {
     for alias in ["bash", "sh", "shell", "zsh"] {
         assert!(supports(alias), "{alias} should be supported");
     }
+    for alias in ["jsonc", "json5", "webmanifest"] {
+        assert!(supports(alias), "{alias} should be supported");
+    }
+    for alias in ["vue", "svelte", "astro", "angular"] {
+        assert!(supports(alias), "{alias} should be supported");
+    }
+    for alias in ["flow", "javascriptreact", "typescriptreact"] {
+        assert!(supports(alias), "{alias} should be supported");
+    }
     assert!(supports("mdx"));
     assert_eq!(
         highlight_to_html("const a = 1;", "ts"),
         highlight_to_html("const a = 1;", "typescript")
+    );
+    assert_eq!(highlight_to_html("{\"a\":1}", "jsonc"), highlight_to_html("{\"a\":1}", "json"));
+    assert_eq!(
+        highlight_to_html("<script>const a = 1;</script>\n", "vue"),
+        highlight_to_html("<script>const a = 1;</script>\n", "html")
+    );
+    assert_eq!(
+        highlight_to_html("export const C = () => <p />;\n", "typescriptreact"),
+        highlight_to_html("export const C = () => <p />;\n", "tsx")
     );
 }
 
@@ -108,6 +126,10 @@ fn the_visible_text_is_exactly_the_input() {
         ("# H\n\n*a* **b** `c` [d](http://e)\n", "md"),
         ("[package]\nname = \"demo\"\n", "toml"),
         ("@compute @workgroup_size(64)\nfn main() {\n    let x = 1;\n}\n", "wgsl"),
+        ("{\n  // comment\n  \"a\": true\n}\n", "jsonc"),
+        ("<script lang=\"ts\">let a = 1;</script>\n", "svelte"),
+        ("---\ntitle: Demo\n---\n<h1>{title}</h1>\n", "astro"),
+        ("FOO=a < b\n# comment\n", "dotenv"),
         ("no trailing newline", "ts"),
         ("\n\n\n", "ts"),
         ("tabs\tand  spaces\n", "ts"),
@@ -186,7 +208,24 @@ fn plain_text_renders_without_tokenizing() {
     // `text` is the third most common fence tag in the documentation corpus.
     // Declining it would send those pages to the fallback highlighter purely
     // to render prose, which is the cost this avoids.
-    for lang in ["text", "plaintext", "txt", "plain", "TEXT"] {
+    for lang in [
+        "text",
+        "plaintext",
+        "txt",
+        "plain",
+        "dotenv",
+        "env",
+        ".env",
+        "gitignore",
+        "dockerignore",
+        "npmrc",
+        "yarnrc",
+        "properties",
+        "ini",
+        "conf",
+        "config",
+        "TEXT",
+    ] {
         assert!(supports(lang), "{lang} should be supported");
     }
 

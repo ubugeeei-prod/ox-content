@@ -25,6 +25,12 @@ On-demand **Run** / **Typecheck** for samples is a separate package,
 Highlighting is opt-in. When enabled, fenced blocks and language-tagged inline
 code go through the native tree-sitter engine. Languages with no native
 grammar stay as ordinary `<pre><code>` — they are not highlighted.
+Adjacent formats without their own bundled grammar use best-effort aliases
+when the existing grammar keeps source text safe: `jsonc` / `json5` /
+`webmanifest` use JSON, `vue` / `svelte` / `astro` / `angular` use HTML,
+`flow` / `javascriptreact` use JavaScript, and `typescriptreact` uses TSX.
+Dotfile and config tags such as `dotenv`, `.env`, `gitignore`, `npmrc`,
+`ini`, and `conf` render as escaped plain text.
 
 ```ts
 import { oxContent } from "@ox-content/vite-plugin";

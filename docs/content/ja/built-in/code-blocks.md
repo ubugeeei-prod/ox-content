@@ -25,6 +25,12 @@ description: フェンス付きコードブロック向けのシンタックス�
 ハイライトはオプトインです。有効にすると、フェンス付きブロックと言語タグ付きインライン
 コードはネイティブ tree-sitter エンジンを通ります。ネイティブ文法がない言語は
 普通の `<pre><code>` のままです。ハイライトされません。
+専用の文法を同梱していない近い形式は、既存文法でソース文字列を安全に保てる場合だけ
+best-effort alias として扱います。`jsonc` / `json5` / `webmanifest` は JSON、
+`vue` / `svelte` / `astro` / `angular` は HTML、`flow` / `javascriptreact` は
+JavaScript、`typescriptreact` は TSX を使います。`dotenv`、`.env`、`gitignore`、
+`npmrc`、`ini`、`conf` などの dotfile / config タグは、エスケープ済みの plain text
+として描画します。
 
 ```ts
 import { oxContent } from "@ox-content/vite-plugin";
