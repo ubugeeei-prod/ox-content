@@ -121,6 +121,7 @@ export function oxContentReact(options: ReactIntegrationOptions = {}): PluginOpt
         ...resolved,
         components: Object.fromEntries(componentMap),
         root: config.root,
+        renderIsland: options.renderIsland,
       });
 
       return {

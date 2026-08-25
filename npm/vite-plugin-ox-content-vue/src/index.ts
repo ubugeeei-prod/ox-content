@@ -127,6 +127,7 @@ export function oxContentVue(options: VueIntegrationOptions = {}): PluginOption[
         ...resolved,
         components: componentMap,
         root: config.root,
+        renderIsland: options.renderIsland,
       });
 
       return {

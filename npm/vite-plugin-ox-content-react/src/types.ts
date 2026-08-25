@@ -1,4 +1,4 @@
-import type { OxContentOptions } from "@ox-content/vite-plugin";
+import type { OxContentOptions, RenderIslandFn } from "@ox-content/vite-plugin";
 
 /**
  * Code annotation options for the React integration.
@@ -100,6 +100,13 @@ export interface ReactIntegrationOptions extends OxContentOptions {
    * @default { github: true, openGraph: true }
    */
   embeds?: BuiltinEmbedOptions | false;
+
+  /**
+   * Optional adapter hook that replaces island inner HTML at transform time.
+   * The core renderer stays framework-neutral; do not import a framework SSR
+   * runtime from `@ox-content/vite-plugin`.
+   */
+  renderIsland?: RenderIslandFn;
 }
 
 /**
@@ -204,6 +211,7 @@ export interface ResolvedReactOptions {
   embeds: ResolvedBuiltinEmbedOptions;
   mdx?: boolean;
   root?: string;
+  renderIsland?: RenderIslandFn;
 }
 
 export interface ReactTransformResult {

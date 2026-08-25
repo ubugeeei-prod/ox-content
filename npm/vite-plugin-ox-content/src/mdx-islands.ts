@@ -3,7 +3,8 @@
  *
  * Framework plugins use this instead of a source regex when MDX is on, so
  * nested JSX, expression attributes, and fragments stay visible. Names that
- * are not in the global `components` map are left as static HTML.
+ * are not in the global `components` map and are not document-local import
+ * bindings are left as static HTML.
  */
 
 import { importNapiModule } from "./napi";
@@ -47,9 +48,21 @@ export function intersectRegisteredComponentNames(
   names: Iterable<string>,
   components: ComponentRegistry,
 ): string[] {
+  return intersectHydratableComponentNames(names, components);
+}
+
+/**
+ * Keep names that are either globally registered or document-local bindings.
+ */
+export function intersectHydratableComponentNames(
+  names: Iterable<string>,
+  components: ComponentRegistry,
+  localNames?: Iterable<string>,
+): string[] {
+  const local = localNames ? new Set(localNames) : null;
   const used: string[] = [];
   for (const name of names) {
-    if (isRegisteredComponent(name, components) && !used.includes(name)) {
+    if ((local?.has(name) || isRegisteredComponent(name, components)) && !used.includes(name)) {
       used.push(name);
     }
   }
@@ -62,6 +75,8 @@ export interface DiscoverRegisteredMdxComponentsInput {
   /** Rendered HTML, used when `parse()` is missing or the AST walk fails. */
   html?: string;
   components: ComponentRegistry;
+  /** Document-local import bindings. These override the global map for this file. */
+  localNames?: Iterable<string>;
 }
 
 /**
@@ -76,7 +91,7 @@ export async function discoverRegisteredMdxComponents(
   const astNames = await tryCollectNamesFromParse(input.source);
   const names =
     astNames ?? (input.html !== undefined ? collectMdxIslandNamesFromHtml(input.html) : []);
-  return intersectRegisteredComponentNames(names, input.components);
+  return intersectHydratableComponentNames(names, input.components, input.localNames);
 }
 
 export function isRegisteredComponent(name: string, components: ComponentRegistry): boolean {

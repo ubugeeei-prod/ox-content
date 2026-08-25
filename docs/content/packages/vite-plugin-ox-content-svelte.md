@@ -69,6 +69,9 @@ Enable Svelte 5 Runes mode.
 
 ## Using Components in Markdown
 
+Register shared components in the global `components` map, or import a
+component from the document that uses it.
+
 ```markdown
 # My Page
 
@@ -82,6 +85,19 @@ And an alert:
   This is a warning message!
 </Alert>
 ```
+
+On `.mdx`, a relative import is local to that file and overrides the global
+map when the names match:
+
+```md
+import GtvChart from './gtv-chart/GtvChart.svelte'
+
+<GtvChart title="ok" />
+```
+
+Optional `renderIsland(name, props, filePath)` can replace island inner HTML
+at transform time. The hook belongs on the Svelte adapter; `@ox-content/vite-plugin`
+does not import `svelte/server`.
 
 ## Example Component (Svelte 5 Runes)
 

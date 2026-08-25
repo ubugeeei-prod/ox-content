@@ -96,6 +96,9 @@ Turn it off when Solid's JSX is compiled by something other than
 
 ## Using Components in Markdown
 
+Register shared components in the global `components` map, or import a
+component from the document that uses it.
+
 ```markdown
 # My Page
 
@@ -109,6 +112,19 @@ And an alert:
   This is a warning message!
 </Alert>
 ```
+
+On `.mdx`, a relative import is local to that file and overrides the global
+map when the names match:
+
+```md
+import GtvChart from './gtv-chart/GtvChart.tsx'
+
+<GtvChart title="ok" />
+```
+
+Optional `renderIsland(name, props, filePath)` can replace island inner HTML
+at transform time. The hook belongs on the Solid adapter; `@ox-content/vite-plugin`
+does not import `solid-js/web` for SSR.
 
 ## Example Component
 
@@ -147,13 +163,13 @@ generated modules import directly.
 
 ## Islands
 
-Markdown that uses a registered component is emitted with island markers and
-hydrated through `@ox-content/islands`, the same runtime the other framework
-integrations use. Each island is mounted with `render` from `solid-js/web` and
-disposed when the Markdown component unmounts.
+Markdown that uses a registered or document-imported component is emitted with
+island markers and hydrated through `@ox-content/islands`, the same runtime the
+other framework integrations use. Each island is mounted with `render` from
+`solid-js/web` and disposed when the Markdown component unmounts.
 
-Markdown without any registered component skips the island runtime entirely and
-compiles to a single `innerHTML` binding.
+Markdown without any registered or document-imported component skips the island
+runtime entirely and compiles to a single `innerHTML` binding.
 
 ## HMR
 

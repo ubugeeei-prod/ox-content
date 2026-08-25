@@ -1,5 +1,7 @@
 import {
-  discoverRegisteredMdxComponents,
+  applyIslandSsrHtml,
+  discoverDocumentMdxIslands,
+  resolveContentRootPath,
   resolveMdxForFilePath,
   transformMarkdown as baseTransformMarkdown,
 } from "@ox-content/vite-plugin";
@@ -22,22 +24,38 @@ export async function transformMarkdownWithSolid(
 
   if (mdx) {
     const transformed = await baseTransformMarkdown(markdownContent, id, baseOptions);
-    const usedComponents = await discoverRegisteredMdxComponents({
+    const discovered = await discoverDocumentMdxIslands({
       source: markdownContent,
       html: transformed.html,
       components: options.components,
+      imports: transformed.imports,
+      documentPath: id,
+      contentRoot: resolveContentRootPath({
+        srcDir: options.srcDir,
+        root: options.root,
+      }),
+      srcDir: options.srcDir,
     });
+    const html = options.renderIsland
+      ? await applyIslandSsrHtml(
+          transformed.html,
+          options.renderIsland,
+          id,
+          discovered.usedComponents,
+        )
+      : transformed.html;
     return {
       code: generateSolidModule(
-        transformed.html,
-        usedComponents,
-        usedComponents,
+        html,
+        discovered.usedComponents,
+        discovered.usedComponents,
         frontmatter,
         options,
         id,
+        discovered.localBindings,
       ),
       map: null,
-      usedComponents,
+      usedComponents: discovered.usedComponents,
       frontmatter,
     };
   }

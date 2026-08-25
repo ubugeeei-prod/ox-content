@@ -25,11 +25,12 @@ It is worth understanding how this works, because it differs from "classic" MDX:
   serializes props (literals as JSON, `{expression}` / spreads as source).
   For `.mdx` files (or when `mdx: true`), the React/Vue/Svelte/Solid
   plugins walk the MDX AST — or the rendered `data-ox-island` names —
-  and import hydration modules only for names in the global `components`
-  map. Nested JSX, expression attributes, and fragments are visible to
-  that walk. Unregistered JSX stays static HTML. Plain `.md` still uses a
-  source scan so existing pages keep working. Expressions are stored and
-  evaluated later.
+  and import hydration modules for names in the global `components` map
+  **or** a relative `import` resolved from that document. Nested JSX,
+  expression attributes, and fragments are visible to that walk.
+  Unregistered JSX without a matching import stays static HTML. Plain
+  `.md` still uses a source scan of the global map so existing pages keep
+  working. Expressions are stored and evaluated later.
 
 So you get Markdown's speed for prose plus real interactive components where you
 need them — without shipping a JavaScript bundle for pages that have none.
@@ -98,6 +99,38 @@ the component name is the PascalCased file name.
 The Solid integration additionally has to run before `vite-plugin-solid`, which
 must be given the Markdown extensions — see
 [its reference page](./packages/vite-plugin-ox-content-solid.md#plugin-order-and-extensions).
+
+## Document-local imports
+
+On `.mdx` (or when `mdx: true`), a document can import a component relative to
+itself instead of registering it in the site-wide `components` map:
+
+```md
+import GtvChart from './gtv-chart/GtvChart.tsx'
+
+<GtvChart title="ok" />
+```
+
+The specifier is resolved from that file's directory. The binding is local to
+the document: two pages may both import `Chart` from different files without
+sharing one global name. Only the components that page actually uses are
+imported into the generated module, as static `import`s, so changing the
+component file invalidates the Markdown module through Vite HMR.
+
+| Form                                                | Resolved as an island?             |
+| --------------------------------------------------- | ---------------------------------- |
+| `import Name from './file.tsx'`                     | Yes, if `<Name />` is used         |
+| `import { Chart as Plot } from './file.tsx'`        | Yes, if `<Plot />` is used         |
+| Bare / npm / `https:` specifier                     | No. Reported, not resolved         |
+| `../` that leaves `srcDir`                          | No. Diagnostic, no import          |
+| Same name in the document import and the global map | Document import wins for that file |
+| `.md` without `mdx: true`                           | No. ESM is not a document import   |
+
+The global `components` map remains the backwards-compatible fallback for pages
+that do not declare a local import. Framework plugins may also pass an optional
+`renderIsland(name, props, filePath)` hook to replace island inner HTML at
+transform time. That hook lives on the adapter; the core renderer does not
+import `react-dom/server`, `svelte/server`, or `solid-js/web`.
 
 ## Authoring components in Markdown
 
@@ -243,9 +276,9 @@ The payload is JSON that unicode-escapes `<`, `>`, and `&`, then sits in
 that the browser does not execute. Hostile source such as
 `{"</script><script>"}` or `{alert(1)}` cannot break out of the payload
 and is not evaluated. Pages with no components emit no `<script>` and no
-island runtime. Framework plugins resolve registered names from the MDX
-AST and hydrate those islands later. Unregistered names keep the static
-HTML the renderer already emitted.
+island runtime. Framework plugins resolve registered names and document-local imports from
+the MDX AST and hydrate those islands later. Unregistered names keep the
+static HTML the renderer already emitted.
 
 ### Props
 
@@ -285,8 +318,9 @@ Hydration timing is controlled by a load strategy (see
 Because the server output is plain HTML, pages render and are readable before
 (or entirely without) hydration; the island JavaScript is only loaded for the
 components a page actually uses. On `.mdx`, that list comes from the AST
-intersected with the global component map, so a nested or fragmented tag
-still hydrates when it is registered.
+intersected with the global component map and any resolved document-local
+imports, so a nested or fragmented tag still hydrates when it is
+registered or imported by that page.
 
 ## Static JSX in themes
 

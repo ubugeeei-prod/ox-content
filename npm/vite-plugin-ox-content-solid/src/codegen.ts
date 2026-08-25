@@ -6,7 +6,10 @@
  * the React and Vue integrations there is no factory-call form to emit.
  */
 
-import * as path from "path";
+import {
+  renderIslandComponentImports,
+  type ResolvedDocumentComponentImport,
+} from "@ox-content/vite-plugin";
 import type { ComponentIsland, ResolvedSolidOptions } from "./types";
 
 export function generateSolidModule(
@@ -16,6 +19,7 @@ export function generateSolidModule(
   frontmatter: Record<string, unknown>,
   options: ResolvedSolidOptions & { root?: string },
   id: string,
+  localBindings?: ReadonlyMap<string, ResolvedDocumentComponentImport>,
 ): string {
   const rawHtml = JSON.stringify(content);
   const frontmatterLiteral = JSON.stringify(frontmatter);
@@ -35,7 +39,12 @@ export default function MarkdownContent() {
 `;
   }
 
-  const imports = renderComponentImports(usedComponents, options, id);
+  const imports = renderIslandComponentImports(usedComponents, {
+    globalComponents: options.components,
+    localBindings,
+    documentPath: id,
+    root: options.root,
+  });
   const componentMap = usedComponents.map((name) => `  ${name},`).join("\n");
 
   return `
@@ -88,26 +97,4 @@ export default function MarkdownContent() {
   return <div class="ox-content" ref={container} innerHTML={rawHtml} />;
 }
 `;
-}
-
-/** Rewrites registered component paths as imports relative to the Markdown file. */
-function renderComponentImports(
-  usedComponents: string[],
-  options: ResolvedSolidOptions & { root?: string },
-  id: string,
-): string {
-  const mdDir = path.dirname(id);
-  const root = options.root || process.cwd();
-
-  return usedComponents
-    .map((name) => {
-      const componentPath = options.components[name];
-      if (!componentPath) return "";
-      const absolutePath = path.resolve(root, componentPath.replace(/^\.\//, ""));
-      const relativePath = path.relative(mdDir, absolutePath).replace(/\\/g, "/");
-      const importPath = relativePath.startsWith(".") ? relativePath : "./" + relativePath;
-      return `import ${name} from '${importPath}';`;
-    })
-    .filter(Boolean)
-    .join("\n");
 }

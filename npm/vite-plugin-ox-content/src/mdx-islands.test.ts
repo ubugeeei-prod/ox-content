@@ -80,4 +80,20 @@ describe("discoverRegisteredMdxComponents", () => {
     });
     expect(used).toEqual(["Alert"]);
   });
+
+  it("treats document-local bindings as hydratable and lets them override globals", async () => {
+    const localOnly = await discoverRegisteredMdxComponents({
+      source: '<GtvChart title="ok" />\n',
+      components: {},
+      localNames: ["GtvChart"],
+    });
+    expect(localOnly).toEqual(["GtvChart"]);
+
+    const override = await discoverRegisteredMdxComponents({
+      source: "<Chart />\n<Alert />\n",
+      components: { Chart: "./GlobalChart.tsx", Alert: "./Alert.tsx" },
+      localNames: ["Chart"],
+    });
+    expect(override).toEqual(["Chart", "Alert"]);
+  });
 });

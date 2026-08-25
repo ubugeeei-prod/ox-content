@@ -1,8 +1,11 @@
-import * as path from "path";
 import {
-  discoverRegisteredMdxComponents,
+  applyIslandSsrHtml,
+  discoverDocumentMdxIslands,
+  renderIslandComponentImports,
+  resolveContentRootPath,
   resolveMdxForFilePath,
   transformMarkdown as baseTransformMarkdown,
+  type ResolvedDocumentComponentImport,
 } from "@ox-content/vite-plugin";
 import type {
   ResolvedReactOptions,
@@ -90,22 +93,35 @@ export async function transformMarkdownWithReact(
 
   if (mdx) {
     const transformed = await baseTransformMarkdown(markdownContent, id, baseOptions);
-    const usedComponents = await discoverRegisteredMdxComponents({
+    const discovered = await discoverDocumentMdxIslands({
       source: markdownContent,
       html: transformed.html,
       components,
+      imports: transformed.imports,
+      documentPath: id,
+      contentRoot: resolveContentRootPath({ srcDir: options.srcDir, root: options.root }),
+      srcDir: options.srcDir,
     });
+    const html = options.renderIsland
+      ? await applyIslandSsrHtml(
+          transformed.html,
+          options.renderIsland,
+          id,
+          discovered.usedComponents,
+        )
+      : transformed.html;
     return {
       code: generateReactModule(
-        transformed.html,
-        usedComponents,
-        usedComponents,
+        html,
+        discovered.usedComponents,
+        discovered.usedComponents,
         frontmatter,
         options,
         id,
+        discovered.localBindings,
       ),
       map: null,
-      usedComponents,
+      usedComponents: discovered.usedComponents,
       frontmatter,
     };
   }
@@ -321,21 +337,14 @@ function generateReactModule(
   frontmatter: Record<string, unknown>,
   options: ResolvedReactOptions & { root?: string },
   id: string,
+  localBindings?: ReadonlyMap<string, ResolvedDocumentComponentImport>,
 ): string {
-  const mdDir = path.dirname(id);
-  const root = options.root || process.cwd();
-
-  const imports = usedComponents
-    .map((name) => {
-      const componentPath = options.components[name];
-      if (!componentPath) return "";
-      const absolutePath = path.resolve(root, componentPath.replace(/^\.\//, ""));
-      const relativePath = path.relative(mdDir, absolutePath).replace(/\\/g, "/");
-      const importPath = relativePath.startsWith(".") ? relativePath : "./" + relativePath;
-      return `import ${name} from '${importPath}';`;
-    })
-    .filter(Boolean)
-    .join("\n");
+  const imports = renderIslandComponentImports(usedComponents, {
+    globalComponents: options.components,
+    localBindings,
+    documentPath: id,
+    root: options.root,
+  });
 
   const componentMap = usedComponents.map((name) => `  ${name},`).join("\n");
 

@@ -1000,11 +1000,33 @@ export {
   collectMdxIslandNamesFromHtml,
   collectMdxJsxNamesFromAst,
   discoverRegisteredMdxComponents,
+  intersectHydratableComponentNames,
   intersectRegisteredComponentNames,
   isRegisteredComponent,
   type ComponentRegistry,
   type DiscoverRegisteredMdxComponentsInput,
 } from "./mdx-islands";
+export {
+  resolveContentRootPath,
+  resolveDocumentComponentImports,
+  stripViteQuery,
+  type DocumentImportDiagnostic,
+  type DocumentImportDiagnosticCode,
+  type ResolveDocumentComponentImportsInput,
+  type ResolveDocumentComponentImportsResult,
+  type ResolvedDocumentComponentImport,
+} from "./document-imports";
+export {
+  discoverDocumentMdxIslands,
+  type DiscoverDocumentMdxIslandsInput,
+  type DiscoverDocumentMdxIslandsResult,
+} from "./document-islands";
+export {
+  renderIslandComponentImports,
+  type GlobalComponentMap,
+  type RenderIslandComponentImportsInput,
+} from "./island-codegen";
+export { applyIslandSsrHtml, type RenderIslandFn } from "./island-ssr";
 export { resolveImageOptions } from "./resolve-image-options";
 export {
   createFrameworkMarkdownOptions,

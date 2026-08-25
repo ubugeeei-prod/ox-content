@@ -96,6 +96,7 @@ export function oxContentSolid(options: SolidIntegrationOptions = {}): PluginOpt
         ...resolved,
         components: Object.fromEntries(componentMap),
         root: config.root,
+        renderIsland: options.renderIsland,
       });
 
       return {

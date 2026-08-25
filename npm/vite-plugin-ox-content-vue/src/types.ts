@@ -2,7 +2,7 @@
  * Type definitions for Vue integration plugin.
  */
 
-import type { OxContentOptions } from "@ox-content/vite-plugin";
+import type { OxContentOptions, RenderIslandFn } from "@ox-content/vite-plugin";
 
 /**
  * Code annotation options for the Vue integration.
@@ -129,6 +129,13 @@ export interface VueIntegrationOptions extends OxContentOptions {
    * @default { github: true, openGraph: true }
    */
   embeds?: BuiltinEmbedOptions | false;
+
+  /**
+   * Optional adapter hook that replaces island inner HTML at transform time.
+   * The core renderer stays framework-neutral; do not import a framework SSR
+   * runtime from `@ox-content/vite-plugin`.
+   */
+  renderIsland?: RenderIslandFn;
 }
 
 /**
@@ -236,6 +243,7 @@ export interface ResolvedVueOptions {
   customBlocks: boolean;
   embeds: ResolvedBuiltinEmbedOptions;
   mdx?: boolean;
+  renderIsland?: RenderIslandFn;
 }
 
 /**

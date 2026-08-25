@@ -121,6 +121,7 @@ export function oxContentSvelte(options: SvelteIntegrationOptions = {}): PluginO
         ...resolved,
         components: Object.fromEntries(componentMap),
         root: config.root,
+        renderIsland: options.renderIsland,
       });
 
       return {

@@ -24,11 +24,12 @@ Ox Content では、Markdown と `.mdx` ファイルの中にフレームワー�
   props を直列化します（リテラルは JSON、`{expression}` / spread はソース）。
   `.mdx` ファイル（または `mdx: true`）では、React / Vue / Svelte / Solid
   プラグインは MDX AST を歩きます。AST が使えないときは、描画済みの
-  `data-ox-island` 名を使います。グローバルな `components` マップにある名前だけ
-  ハイドレーション用モジュールを import します。入れ子の JSX、式属性、
-  フラグメントもその走査に入ります。未登録の JSX は静的 HTML のままです。
-  素の `.md` は既存ページのためソース走査のままです。式は保存され、
-  評価は後です。
+  `data-ox-island` 名を使います。グローバルな `components` マップにある名前、
+  またはその文書から解決した相対 `import` の名前だけ、ハイドレーション用
+  モジュールを import します。入れ子の JSX、式属性、フラグメントもその走査に
+  入ります。一致する import のない未登録 JSX は静的 HTML のままです。
+  素の `.md` は既存ページのためグローバルマップのソース走査のままです。
+  式は保存され、評価は後です。
 
 そのため、本文は Markdown の速さのまま、必要なところだけ本物の対話コンポーネントを置けます。
 コンポーネントのないページには JavaScript バンドルを出しません。
@@ -99,6 +100,39 @@ Vue、Svelte、Solid も同じように `@ox-content/vite-plugin-vue`
 Solid 連携は加えて `vite-plugin-solid` より前に動かす必要があり、
 そちらには Markdown 拡張子を渡す必要があります。
 [そのリファレンスページ](/packages/vite-plugin-ox-content-solid.md#plugin-order-and-extensions) を見てください。
+
+## 文書ローカルな import
+
+`.mdx`（または `mdx: true`）では、サイト全体の `components` マップに登録せず、
+文書自身からの相対 import でコンポーネントを使えます。
+
+```md
+import GtvChart from './gtv-chart/GtvChart.tsx'
+
+<GtvChart title="ok" />
+```
+
+specifier はそのファイルのディレクトリから解決されます。束縛はその文書だけに
+効きます。2 つのページが同じ名前 `Chart` を別ファイルから import しても、
+グローバル名は衝突しません。そのページが実際に使うコンポーネントだけが、
+静的な `import` として生成モジュールに入ります。コンポーネントファイルを
+変えると、Vite HMR がその Markdown モジュールを無効化します。
+
+| 形                                           | island として解決するか            |
+| -------------------------------------------- | ---------------------------------- |
+| `import Name from './file.tsx'`              | `<Name />` を使っていればする      |
+| `import { Chart as Plot } from './file.tsx'` | `<Plot />` を使っていればする      |
+| bare / npm / `https:` specifier              | しない。報告するだけで解決しない   |
+| `srcDir` を出る `../`                        | しない。診断を出し、import しない  |
+| 文書 import とグローバルマップに同じ名前     | そのファイルでは文書 import が勝つ |
+| `mdx: true` のない `.md`                     | しない。ESM は文書 import ではない |
+
+グローバルな `components` マップは、ローカル import を書かないページ向けの
+後方互換フォールバックのままです。フレームワークプラグインは任意で
+`renderIsland(name, props, filePath)` フックを渡し、transform 時に island の
+内側 HTML を差し替えられます。そのフックはアダプタ側に置きます。コア
+レンダラーは `react-dom/server`、`svelte/server`、`solid-js/web` を
+import しません。
 
 ## Markdown でコンポーネントを書く
 
@@ -239,8 +273,9 @@ MDX がオンのとき、名前付き JSX コンポーネントは HTML の isla
 `<script type="application/json">` に置かれます。
 `{"</script><script>"}` や `{alert(1)}` のような敵対的なソースはペイロードから抜けられず、
 評価もされません。コンポーネントのないページは `<script>` も island ランタイムも出しません。
-フレームワークプラグインは MDX AST から登録済みの名前を解決し、それらの island を後で
-ハイドレートします。未登録の名前は、レンダラーがすでに出した静的 HTML のままです。
+フレームワークプラグインは MDX AST から登録済みの名前と文書ローカルな
+import を解決し、それらの island を後でハイドレートします。未登録の名前は、
+レンダラーがすでに出した静的 HTML のままです。
 
 ### Props
 
@@ -278,8 +313,9 @@ Props は JSX 風の構文です。次の形を認識します。
 
 サーバー出力はプレーン HTML なので、ハイドレーションの前（またはなし）でもページは描画され読めます。
 island の JavaScript は、そのページが実際に使うコンポーネント分だけ読み込まれます。
-`.mdx` ではその一覧は AST とグローバルなコンポーネントマップの交差です。
-入れ子やフラグメント内のタグも、登録されていればハイドレートされます。
+`.mdx` ではその一覧は AST と、グローバルなコンポーネントマップおよび
+解決済みの文書ローカル import の交差です。入れ子やフラグメント内のタグも、
+登録されているか、そのページが import していればハイドレートされます。
 
 ## テーマ内の静的 JSX
 

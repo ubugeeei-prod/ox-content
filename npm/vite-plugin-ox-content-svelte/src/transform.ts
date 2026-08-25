@@ -1,8 +1,11 @@
-import * as path from "path";
 import {
-  discoverRegisteredMdxComponents,
+  applyIslandSsrHtml,
+  discoverDocumentMdxIslands,
+  renderIslandComponentImports,
+  resolveContentRootPath,
   resolveMdxForFilePath,
   transformMarkdown as baseTransformMarkdown,
+  type ResolvedDocumentComponentImport,
 } from "@ox-content/vite-plugin";
 import { compile } from "svelte/compiler";
 import type {
@@ -91,22 +94,35 @@ export async function transformMarkdownWithSvelte(
 
   if (mdx) {
     const transformed = await baseTransformMarkdown(markdownContent, id, baseOptions);
-    const usedComponents = await discoverRegisteredMdxComponents({
+    const discovered = await discoverDocumentMdxIslands({
       source: markdownContent,
       html: transformed.html,
       components,
+      imports: transformed.imports,
+      documentPath: id,
+      contentRoot: resolveContentRootPath({ srcDir: options.srcDir, root: options.root }),
+      srcDir: options.srcDir,
     });
+    const html = options.renderIsland
+      ? await applyIslandSsrHtml(
+          transformed.html,
+          options.renderIsland,
+          id,
+          discovered.usedComponents,
+        )
+      : transformed.html;
     return compileSvelteResult(
       generateSvelteModule(
-        transformed.html,
-        usedComponents,
-        usedComponents,
+        html,
+        discovered.usedComponents,
+        discovered.usedComponents,
         frontmatter,
         options,
         id,
+        discovered.localBindings,
       ),
       id,
-      usedComponents,
+      discovered.usedComponents,
       frontmatter,
     );
   }
@@ -332,23 +348,17 @@ function generateSvelteModule(
   frontmatter: Record<string, unknown>,
   options: ResolvedSvelteOptions & { root?: string },
   id: string,
+  localBindings?: ReadonlyMap<string, ResolvedDocumentComponentImport>,
 ): string {
-  const mdDir = path.dirname(id);
-  const root = options.root || process.cwd();
   // Rust island payloads include `</script>`; that must not close this SFC block.
   const rawHtmlLiteral = JSON.stringify(content).replaceAll("</script", "<\\/script");
 
-  const imports = usedComponents
-    .map((name) => {
-      const componentPath = options.components[name];
-      if (!componentPath) return "";
-      const absolutePath = path.resolve(root, componentPath.replace(/^\.\//, ""));
-      const relativePath = path.relative(mdDir, absolutePath).replace(/\\/g, "/");
-      const importPath = relativePath.startsWith(".") ? relativePath : "./" + relativePath;
-      return `import ${name} from '${importPath}';`;
-    })
-    .filter(Boolean)
-    .join("\n");
+  const imports = renderIslandComponentImports(usedComponents, {
+    globalComponents: options.components,
+    localBindings,
+    documentPath: id,
+    root: options.root,
+  });
 
   // If no registered islands, generate simpler code without island runtime
   if (usedComponents.length === 0) {
