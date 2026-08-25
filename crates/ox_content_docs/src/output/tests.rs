@@ -65,6 +65,22 @@ fn generated_markdown_has_one_terminal_newline() {
 }
 
 #[test]
+fn unchanged_docs_output_keeps_existing_mtime() {
+    let out_dir = temp_dir();
+    let docs = BTreeMap::from([("alpha.md".to_string(), "# Alpha".to_string())]);
+
+    write_docs_output(&docs, &out_dir, None, &options()).unwrap();
+    let path = out_dir.join("alpha.md");
+    let first_modified = fs::metadata(&path).unwrap().modified().unwrap();
+
+    std::thread::sleep(std::time::Duration::from_millis(20));
+    write_docs_output(&docs, &out_dir, None, &options()).unwrap();
+
+    assert_eq!(fs::metadata(&path).unwrap().modified().unwrap(), first_modified);
+    fs::remove_dir_all(out_dir).unwrap();
+}
+
+#[test]
 fn writes_and_removes_stale_nested_docs_output() {
     let out_dir = temp_dir();
     let mut docs = BTreeMap::new();

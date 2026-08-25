@@ -107,7 +107,8 @@ pub fn write_docs_output(
         if let Some(parent) = output_path.parent() {
             fs::create_dir_all(parent)?;
         }
-        fs::write(output_path, normalize_markdown_eof(content).as_bytes())?;
+        let content = normalize_markdown_eof(content);
+        write_if_changed(&output_path, content.as_bytes())?;
     }
 
     if let Some(extracted_docs) = extracted_docs {
@@ -125,20 +126,36 @@ pub fn write_docs_output(
                     single_entry_root: options.single_entry_root,
                 },
             );
-            fs::write(
-                out_dir.join(DOCS_NAV_FILE),
+            write_if_changed(
+                &out_dir.join(DOCS_NAV_FILE),
                 generate_nav_code(&nav_items, Some(DOCS_NAV_EXPORT_NAME)),
             )?;
         }
 
-        fs::write(
-            out_dir.join(DOCS_DATA_FILE),
+        write_if_changed(
+            &out_dir.join(DOCS_DATA_FILE),
             generate_docs_data_json(extracted_docs, &options.generated_at)?,
         )?;
     }
 
-    fs::write(out_dir.join(DOCS_MANIFEST_FILE), serde_json::to_string_pretty(&generated_files)?)?;
+    write_if_changed(
+        &out_dir.join(DOCS_MANIFEST_FILE),
+        serde_json::to_string_pretty(&generated_files)?,
+    )?;
 
+    Ok(())
+}
+
+fn write_if_changed(path: &Path, content: impl AsRef<[u8]>) -> DocsOutputResult<()> {
+    let content = content.as_ref();
+    match fs::read(path) {
+        Ok(existing) if existing == content => return Ok(()),
+        Ok(_) => {}
+        Err(error) if error.kind() == std::io::ErrorKind::NotFound => {}
+        Err(error) => return Err(error.into()),
+    }
+
+    fs::write(path, content)?;
     Ok(())
 }
 
