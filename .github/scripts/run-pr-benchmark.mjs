@@ -1,11 +1,19 @@
 #!/usr/bin/env node
 
 import { spawnSync } from "node:child_process";
-import { copyFileSync, mkdirSync } from "node:fs";
+import { copyFileSync, mkdirSync, writeFileSync } from "node:fs";
+import { cpus, totalmem } from "node:os";
 import { dirname, join, resolve } from "node:path";
 
 const options = parseOptions(process.argv.slice(2));
 const checkoutRoot = process.cwd();
+
+if (options.skipRuntime && options.skipBundle) {
+  writeSkippedRuntimeReport(options.runtimeJson);
+  writeSkippedBundleReport(options.bundleJson);
+  process.exit(0);
+}
+
 const sourceRoot = resolve(options.source ?? requiredEnv("GITHUB_WORKSPACE"));
 
 for (const file of [
@@ -24,18 +32,38 @@ for (const file of [
 
 run("vp", ["install"]);
 run("vp", ["run", "build:npm"]);
-run("node", [
-  "benchmarks/bundle-size/parse-benchmark.mjs",
-  "--runs",
-  options.runs,
-  "--json",
-  options.runtimeJson,
-]);
-run("node", ["benchmarks/bundle-size/measure.mjs", "--skip-install", "--json", options.bundleJson]);
+if (options.skipRuntime) {
+  writeSkippedRuntimeReport(options.runtimeJson);
+} else {
+  run("node", [
+    "benchmarks/bundle-size/parse-benchmark.mjs",
+    "--runs",
+    options.runs,
+    "--json",
+    options.runtimeJson,
+  ]);
+}
+if (options.skipBundle) {
+  writeSkippedBundleReport(options.bundleJson);
+} else {
+  run("node", [
+    "benchmarks/bundle-size/measure.mjs",
+    "--skip-install",
+    "--json",
+    options.bundleJson,
+  ]);
+}
 
 /**
  * @param {string[]} args
- * @returns {{ source: string | null; runtimeJson: string; bundleJson: string; runs: string }}
+ * @returns {{
+ *   source: string | null;
+ *   runtimeJson: string;
+ *   bundleJson: string;
+ *   runs: string;
+ *   skipRuntime: boolean;
+ *   skipBundle: boolean;
+ * }}
  */
 function parseOptions(args) {
   const parsed = {
@@ -43,6 +71,8 @@ function parseOptions(args) {
     runtimeJson: null,
     bundleJson: null,
     runs: process.env.OX_CONTENT_BENCHMARK_RUNS || "5",
+    skipRuntime: false,
+    skipBundle: false,
   };
 
   for (let index = 0; index < args.length; index++) {
@@ -61,6 +91,14 @@ function parseOptions(args) {
     }
     if (arg === "--runs") {
       parsed.runs = String(readPositiveIntegerOption(args, ++index, "--runs"));
+      continue;
+    }
+    if (arg === "--skip-runtime") {
+      parsed.skipRuntime = true;
+      continue;
+    }
+    if (arg === "--skip-bundle") {
+      parsed.skipBundle = true;
       continue;
     }
 
@@ -146,4 +184,65 @@ function run(command, args) {
   if (result.status !== 0) {
     process.exit(result.status ?? 1);
   }
+}
+
+/**
+ * @param {string} path
+ */
+function writeSkippedRuntimeReport(path) {
+  writeFileSync(
+    path,
+    `${JSON.stringify(
+      {
+        name: "Parse/Render Speed Benchmark",
+        generatedAt: new Date().toISOString(),
+        skipped: true,
+        runs: Number.parseInt(options.runs, 10),
+        environment: collectEnvironment(),
+        sizes: {},
+      },
+      null,
+      2,
+    )}\n`,
+  );
+}
+
+/**
+ * @param {string} path
+ */
+function writeSkippedBundleReport(path) {
+  writeFileSync(
+    path,
+    `${JSON.stringify(
+      {
+        name: "Bundle Size Benchmark",
+        generatedAt: new Date().toISOString(),
+        skipped: true,
+        environment: collectEnvironment(),
+        results: [],
+      },
+      null,
+      2,
+    )}\n`,
+  );
+}
+
+function collectEnvironment() {
+  const cpuList = cpus();
+  const firstCpu = cpuList[0];
+
+  return {
+    node: process.version,
+    v8: process.versions.v8,
+    platform: process.platform,
+    arch: process.arch,
+    ci: process.env.CI === "true",
+    runnerName: process.env.RUNNER_NAME ?? null,
+    runnerOs: process.env.RUNNER_OS ?? null,
+    runnerArch: process.env.RUNNER_ARCH ?? null,
+    runnerLabel: process.env.OX_CONTENT_BENCHMARK_RUNNER ?? null,
+    cpuModel: firstCpu?.model ?? null,
+    cpuCount: cpuList.length,
+    totalMemoryGB: Number((totalmem() / 1024 ** 3).toFixed(2)),
+  };
 }

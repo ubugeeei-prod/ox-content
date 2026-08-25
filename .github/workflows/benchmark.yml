@@ -50,12 +50,27 @@ jobs:
           cache: true
           run-install: false
 
+      - name: Detect benchmark scope
+        id: scope
+        env:
+          BASE_REPOSITORY: ${{ github.repository }}
+          BASE_SHA: ${{ github.event.pull_request.base.sha }}
+          HEAD_SHA: ${{ github.event.pull_request.head.sha }}
+        run: |
+          git -C .benchmark/head fetch --no-tags --depth=1 "https://github.com/$BASE_REPOSITORY.git" "$BASE_SHA"
+          git -C .benchmark/head diff --name-only "$BASE_SHA" "$HEAD_SHA" > "$RUNNER_TEMP/benchmark-changed-files.txt"
+          node "$GITHUB_WORKSPACE/.github/scripts/detect-pr-benchmark-scope.mjs" \
+            "$RUNNER_TEMP/benchmark-changed-files.txt" >> "$GITHUB_OUTPUT"
+          echo "Changed files:"
+          sed 's/^/  /' "$RUNNER_TEMP/benchmark-changed-files.txt"
+
       # The parse/render benchmark compares against `Bun.markdown.html`, which
       # only exists in Bun >= 1.3.8. Without an explicit Bun the runner has no
       # (or too old a) bun, so `loadBunMarkdownBenchmarks` silently drops the
       # Bun.markdown row. Pin a version that ships the API so the comparison
       # always includes Bun.
       - name: Setup Bun
+        if: steps.scope.outputs.runtime == 'true'
         # oven-sh/setup-bun is outside this repo's allowed-actions policy, so
         # every workflow that referenced it died with a startup_failure before
         # any job ran. Install the same pinned Bun through npm (Node is set up
@@ -65,9 +80,11 @@ jobs:
         run: npm install --global bun@1.3.14 # zizmor: ignore[adhoc-packages]
 
       - name: Setup Rust
+        if: steps.scope.outputs.runtime == 'true' || steps.scope.outputs.bundle == 'true'
         uses: dtolnay/rust-toolchain@29eef336d9b2848a0b548edc03f92a220660cdb8 # stable
 
       - name: Mount sticky cache
+        if: steps.scope.outputs.runtime == 'true' || steps.scope.outputs.bundle == 'true'
         uses: ./.github/actions/mount-sticky-cache
         with:
           key-prefix: ${{ github.repository }}-benchmark-${{ github.job }}
@@ -76,8 +93,19 @@ jobs:
 
       - name: Benchmark base
         working-directory: .benchmark/base
+        env:
+          BENCHMARK_RUNTIME: ${{ steps.scope.outputs.runtime }}
+          BENCHMARK_BUNDLE: ${{ steps.scope.outputs.bundle }}
         run: |
+          skip_args=()
+          if [ "$BENCHMARK_RUNTIME" != "true" ]; then
+            skip_args+=(--skip-runtime)
+          fi
+          if [ "$BENCHMARK_BUNDLE" != "true" ]; then
+            skip_args+=(--skip-bundle)
+          fi
           node "$GITHUB_WORKSPACE/.github/scripts/run-pr-benchmark.mjs" \
+            "${skip_args[@]}" \
             --source "$GITHUB_WORKSPACE" \
             --runs "$OX_CONTENT_BENCHMARK_RUNS" \
             --runtime-json "$RUNNER_TEMP/benchmark-base.json" \
@@ -85,8 +113,19 @@ jobs:
 
       - name: Benchmark head
         working-directory: .benchmark/head
+        env:
+          BENCHMARK_RUNTIME: ${{ steps.scope.outputs.runtime }}
+          BENCHMARK_BUNDLE: ${{ steps.scope.outputs.bundle }}
         run: |
+          skip_args=()
+          if [ "$BENCHMARK_RUNTIME" != "true" ]; then
+            skip_args+=(--skip-runtime)
+          fi
+          if [ "$BENCHMARK_BUNDLE" != "true" ]; then
+            skip_args+=(--skip-bundle)
+          fi
           node "$GITHUB_WORKSPACE/.github/scripts/run-pr-benchmark.mjs" \
+            "${skip_args[@]}" \
             --source "$GITHUB_WORKSPACE" \
             --runs "$OX_CONTENT_BENCHMARK_RUNS" \
             --runtime-json "$RUNNER_TEMP/benchmark-head.json" \
