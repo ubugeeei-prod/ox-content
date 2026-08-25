@@ -22,6 +22,7 @@ mod escape;
 mod file_tree;
 mod images;
 mod includes;
+mod magic;
 mod math;
 mod segments;
 mod steps;
@@ -41,6 +42,7 @@ pub(super) use escape::{escape_html_attr, escape_html_text};
 use file_tree::ResolvedFileTreeOptions;
 use images::ResolvedImageOptions;
 use includes::ResolvedIncludeOptions;
+use magic::ResolvedMagicLinks;
 use segments::transform_markdown_text_segments;
 use steps::ResolvedStepsOptions;
 use wiki::replace_wiki_links;
@@ -56,6 +58,7 @@ pub struct TransformFeatureOptions {
     steps: Option<ResolvedStepsOptions>,
     file_tree: Option<ResolvedFileTreeOptions>,
     badges: bool,
+    magic_links: Option<ResolvedMagicLinks>,
     images: Option<ResolvedImageOptions>,
     math: bool,
     attributes: bool,
@@ -116,6 +119,7 @@ impl TransformFeatureOptions {
         let includes = includes::resolve(options.includes.as_ref(), source_path);
         let file_tree = file_tree::resolve(options.file_tree.as_ref());
         let badges = badges::resolve(options.badges.as_ref());
+        let magic_links = magic::resolve(options.magic_links.as_ref());
         let images = images::resolve(options.images.as_ref());
         let math = math::resolve(options.math.as_ref());
         let edit_this_page = resolve_edit_this_page(
@@ -133,6 +137,7 @@ impl TransformFeatureOptions {
             steps,
             file_tree,
             badges,
+            magic_links,
             images,
             math,
             attributes,
@@ -150,6 +155,7 @@ impl TransformFeatureOptions {
             || self.steps.is_some()
             || self.file_tree.is_some()
             || self.badges
+            || self.magic_links.is_some()
             || self.images.is_some()
             || self.math
     }
@@ -233,6 +239,12 @@ pub fn preprocess_markdown<'a>(
         if let Some(replaced) = replaced {
             current = Cow::Owned(replaced);
         }
+    }
+    if let Some(magic_links) = &options.magic_links
+        && current.contains("{link:")
+        && let Some(replaced) = magic::transform(&current, magic_links)
+    {
+        current = Cow::Owned(replaced);
     }
     if let Some(images) = &options.images
         && let Some(replaced) = images::preprocess(&current, images)

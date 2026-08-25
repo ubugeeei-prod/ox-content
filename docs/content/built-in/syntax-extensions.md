@@ -14,6 +14,7 @@ everywhere until a site explicitly enables an extension.
 | `wikiLinks`       | `boolean` / `WikiLinkOptions`       | `false` |
 | `attrs`           | `boolean` / `AttrsOptions`          | `false` |
 | `cjkEmphasis`     | `boolean`                           | `false` |
+| `magicLinks`      | `boolean` / `MagicLinkOptions`      | `false` |
 
 ## Emoji Shortcodes
 
@@ -177,8 +178,14 @@ This is a deliberate deviation from the specification, which is why it is
 opt-in. See [CJK Emphasis](../examples/cjk-emphasis.md) for the exact boundary
 and the reclassified character ranges.
 
+## Magic Links
+
+Opt-in `{link:@user}`, `{link:alias}`, and `{link:label|url}` rich links with
+optional avatars. Off by default. See [Magic Links](./magic-links.md).
+
 ## Related
 
 - [Markdown Baseline](./markdown.md) — the default syntax these extensions
   build on.
 - [Code Blocks](./code-blocks.md) — annotation and import syntax for fences.
+- [Magic Links](./magic-links.md) — configurable GitHub, alias, and URL links.

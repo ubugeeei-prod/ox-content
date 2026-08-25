@@ -19,6 +19,7 @@ These files are intentionally tiny. Copy one into a Vite example such as
 | `content/emoji-shortcodes.md`     | Emoji shortcode expansion                  |
 | `content/attributes.md`           | Markdown attribute syntax                  |
 | `content/wiki-links.md`           | Obsidian-style wiki links                  |
+| `content/magic-links.md`          | `{link:@user}` and named-alias rich links  |
 | `content/cjk-emphasis.md`         | Emphasis next to CJK text                  |
 | `content/code-annotations.md`     | Highlight, warning, and error line marks   |
 | `content/code-imports.md`         | Source snippet imports                     |

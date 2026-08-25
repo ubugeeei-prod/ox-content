@@ -1509,6 +1509,19 @@ export interface OxContentOptions {
   badges?: boolean | BadgeOptions;
 
   /**
+   * Opt-in `{link:...}` rich magic links.
+   *
+   * Passing `true` or an options object enables GitHub-user, alias, and
+   * explicit `label|url` forms. Attributes and text are HTML-escaped.
+   * Fenced, indented, inline, and raw code, plus already-linked text, are
+   * skipped. The transform does not make network requests unless an explicit
+   * favicon template is enabled (still URL-only; no fetch at transform time).
+   *
+   * @default false
+   */
+  magicLinks?: boolean | MagicLinkOptions;
+
+  /**
    * Opt-in `::: tip` custom containers.
    *
    * GitHub-style `> [!NOTE]` callouts stay available without this option.
@@ -1809,6 +1822,10 @@ export interface ResolvedOptions {
   emojiShortcodes: ResolvedEmojiShortcodeOptions;
   attrs: ResolvedAttrsOptions;
   badges: ResolvedBadgeOptions;
+  /**
+   * Present after `resolveOptions`. Omitted in hand-built fixtures means off.
+   */
+  magicLinks?: ResolvedMagicLinkOptions;
   containers: ResolvedContainerOptions;
   images: ResolvedImageOptions;
   codeImports: ResolvedCodeImportOptions;
@@ -1946,6 +1963,64 @@ export interface BadgeOptions {
  */
 export interface ResolvedBadgeOptions {
   enabled: boolean;
+}
+
+/**
+ * Options for opt-in `{link:...}` rich magic links.
+ */
+export interface MagicLinkOptions {
+  /**
+   * Enable the magic-link transform when an options object is supplied.
+   *
+   * @default true
+   */
+  enabled?: boolean;
+  /**
+   * Named aliases. A string value is treated as `{ href }`.
+   */
+  aliases?: Record<string, string | MagicLinkAlias>;
+  /**
+   * Emit a favicon URL when a link has no image.
+   *
+   * `true` uses `https://{host}/favicon.ico`. Pass `{ template }` to override.
+   * The transform never fetches; the browser may load the URL later.
+   *
+   * @default false
+   */
+  favicon?: boolean | { template?: string };
+  /**
+   * Replace the resolved image for matching hrefs.
+   */
+  imageOverrides?: MagicLinkImageOverride[];
+}
+
+/**
+ * One configured magic-link target.
+ */
+export interface MagicLinkAlias {
+  href: string;
+  label?: string;
+  image?: string;
+}
+
+/**
+ * Replace the image for an exact href or prefix.
+ */
+export interface MagicLinkImageOverride {
+  href?: string;
+  prefix?: string;
+  image: string;
+}
+
+/**
+ * Resolved magic-link transform options.
+ */
+export interface ResolvedMagicLinkOptions {
+  enabled: boolean;
+  aliases: Record<string, MagicLinkAlias>;
+  favicon: boolean;
+  faviconTemplate?: string;
+  imageOverrides: MagicLinkImageOverride[];
 }
 
 /**

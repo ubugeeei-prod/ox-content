@@ -24,6 +24,11 @@ export default defineConfig({
       },
       mermaid: true,
       wikiLinks: { baseUrl: "/docs" },
+      magicLinks: {
+        aliases: {
+          Oxc: { href: "https://oxc.rs", image: "https://github.com/oxc-project.png" },
+        },
+      },
     }),
   ],
 });

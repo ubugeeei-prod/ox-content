@@ -13,6 +13,7 @@ description: オプトインの執筆構文 — 絵文字ショートコード�
 | `wikiLinks`       | `boolean` / `WikiLinkOptions`       | `false` |
 | `attrs`           | `boolean` / `AttrsOptions`          | `false` |
 | `cjkEmphasis`     | `boolean`                           | `false` |
+| `magicLinks`      | `boolean` / `MagicLinkOptions`      | `false` |
 
 ## 絵文字ショートコード
 
@@ -155,7 +156,12 @@ A**強調。**B
 
 これは仕様からの意図した逸脱なので、オプトインです。境界と再分類する文字範囲の正確な話は [CJK Emphasis](/examples/cjk-emphasis.md) を見てください。
 
+## マジックリンク
+
+オプトインの `{link:@user}`、`{link:alias}`、`{link:label|url}` リッチリンクです。アバターも付けられます。既定はオフです。詳細は [マジックリンク](./magic-links.md) を見てください。
+
 ## 関連
 
 - [Markdown の土台](./markdown.md) — これらの拡張が乗る既定構文。
 - [コードブロック](./code-blocks.md) — フェンス向けの注釈と取り込み構文。
+- [マジックリンク](./magic-links.md) — GitHub・エイリアス・URL の設定可能なリンク。

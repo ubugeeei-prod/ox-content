@@ -130,6 +130,7 @@ export function createFrameworkMarkdownOptions(options: FrameworkMarkdownOptions
     emojiShortcodes: { enabled: false, custom: {} },
     attrs: { enabled: false },
     badges: { enabled: false },
+    magicLinks: { enabled: false, aliases: {}, favicon: false, imageOverrides: [] },
     containers: { enabled: false, types: {} },
     images: { enabled: false, lazy: true },
     codeImports: { enabled: false },
