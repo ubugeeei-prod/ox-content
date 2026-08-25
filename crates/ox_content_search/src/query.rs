@@ -4,6 +4,7 @@ use rustc_hash::FxHashMap;
 
 use serde::{Deserialize, Serialize};
 
+use crate::fuzzy::fuzzy_match_weight;
 use crate::index::SearchIndex;
 use crate::tokenizer::tokenize_query;
 
@@ -105,10 +106,16 @@ impl SearchIndex {
                 // like "render mar" can reuse exact postings for "render" and
                 // only scan vocabulary terms for the active completion token.
                 for term in self.index.keys().filter(|term| term.starts_with(token)) {
-                    self.score_matching_term(term, &mut doc_scores);
+                    self.score_matching_term(term, 1.0, &mut doc_scores);
                 }
             } else {
-                self.score_matching_term(token, &mut doc_scores);
+                self.score_matching_term(token, 1.0, &mut doc_scores);
+            }
+
+            if options.fuzzy {
+                for (term, weight) in self.fuzzy_terms(token, is_last && options.prefix) {
+                    self.score_matching_term(term, weight, &mut doc_scores);
+                }
             }
         }
 
@@ -158,6 +165,7 @@ impl SearchIndex {
     fn score_matching_term(
         &self,
         term: &str,
+        weight: f64,
         doc_scores: &mut FxHashMap<usize, (f64, Vec<String>)>,
     ) {
         let Some(postings) = self.index.get(term) else {
@@ -176,7 +184,8 @@ impl SearchIndex {
             // BM25 score with field boost
             let score = idf
                 * ((tf * (K1 + 1.0)) / K1.mul_add(1.0 - B + B * doc_len / self.avg_dl, tf))
-                * posting.field.boost();
+                * posting.field.boost()
+                * weight;
 
             // Accumulate in one per-document entry so repeated matches across
             // query tokens do not allocate intermediate result rows. The small
@@ -188,6 +197,19 @@ impl SearchIndex {
                 entry.1.push(term.to_owned());
             }
         }
+    }
+
+    fn fuzzy_terms<'a>(
+        &'a self,
+        token: &'a str,
+        skip_prefix_matches: bool,
+    ) -> impl Iterator<Item = (&'a str, f64)> {
+        self.index.keys().filter_map(move |term| {
+            if term == token || (skip_prefix_matches && term.starts_with(token)) {
+                return None;
+            }
+            fuzzy_match_weight(token, term).map(|weight| (term.as_str(), weight))
+        })
     }
 
     /// Generates a snippet of text around matched terms.

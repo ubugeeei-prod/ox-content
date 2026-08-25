@@ -22,6 +22,11 @@ pub struct SearchRuntimeOptions {
     /// Default from the Vite plugin resolver: `true`.
     pub prefix: bool,
 
+    /// Enable fuzzy typo-tolerant matching.
+    ///
+    /// Default from the Vite plugin resolver: `false`.
+    pub fuzzy: bool,
+
     /// Search input placeholder.
     ///
     /// Default from the Vite plugin resolver: `"Search documentation..."`.
@@ -70,6 +75,7 @@ mod tests {
                 enabled: true,
                 limit: 12,
                 prefix: false,
+                fuzzy: true,
                 placeholder: "Find docs".to_string(),
                 hotkey: "k".to_string(),
             },

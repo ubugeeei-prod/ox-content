@@ -28,6 +28,7 @@
 //! ```
 
 mod files;
+mod fuzzy;
 mod index;
 mod indexer;
 mod markdown;

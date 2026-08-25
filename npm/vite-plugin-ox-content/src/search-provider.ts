@@ -85,6 +85,7 @@ function hostedClientOptions(options: ResolvedSearchOptions) {
     enabled: options.enabled,
     limit: options.limit,
     prefix: options.prefix,
+    fuzzy: options.fuzzy,
     placeholder: options.placeholder,
     hotkey: options.hotkey,
     provider: "hosted" as const,
@@ -179,6 +180,7 @@ export function toLocalSearchRuntimeOptions(options: ResolvedSearchOptions) {
     enabled: options.enabled,
     limit: options.limit,
     prefix: options.prefix,
+    fuzzy: options.fuzzy,
     placeholder: options.placeholder,
     hotkey: options.hotkey,
   };

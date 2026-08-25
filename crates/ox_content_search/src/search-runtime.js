@@ -3,6 +3,7 @@ const searchOptions = __OX_CONTENT_SEARCH_OPTIONS__;
 const BM25_K1 = 1.2;
 const BM25_B = 0.75;
 const MIN_PREFIX_MATCH_LENGTH = 2;
+const MIN_FUZZY_MATCH_LENGTH = 3;
 const SNIPPET_CONTEXT_CHARS = 50;
 const SNIPPET_MAX_CHARS = 150;
 const SNIPPET_ELLIPSIS = "...";
@@ -167,6 +168,32 @@ function getFieldBoost(field) {
   }
 }
 
+function fuzzyWeight(query, term) {
+  if (query.length < MIN_FUZZY_MATCH_LENGTH || term.length < MIN_FUZZY_MATCH_LENGTH) return 0;
+  const maxDistance = Math.max(query.length, term.length) >= 6 ? 2 : 1;
+  if (Math.abs(query.length - term.length) > maxDistance) return 0;
+  let previous = Array.from({ length: term.length + 1 }, (_, index) => index);
+  for (let row = 1; row <= query.length; row++) {
+    const current = [row];
+    let rowMin = row;
+    const queryCode = query.charCodeAt(row - 1);
+    for (let column = 1; column <= term.length; column++) {
+      const cost = queryCode === term.charCodeAt(column - 1) ? 0 : 1;
+      const value = Math.min(
+        previous[column] + 1,
+        current[column - 1] + 1,
+        previous[column - 1] + cost,
+      );
+      current[column] = value;
+      if (value < rowMin) rowMin = value;
+    }
+    if (rowMin > maxDistance) return 0;
+    previous = current;
+  }
+  const distance = previous[term.length];
+  return distance === 1 ? 0.65 : distance === 2 ? 0.4 : 0;
+}
+
 async function loadIndex() {
   if (searchIndex) return searchIndex;
   if (indexPromise) return indexPromise;
@@ -200,6 +227,7 @@ export async function search(query, options = {}) {
 
   const limit = options.limit ?? searchOptions.limit;
   const prefix = options.prefix ?? searchOptions.prefix;
+  const fuzzy = options.fuzzy ?? searchOptions.fuzzy ?? false;
   const localeFilter = normalizeLocaleFilter(options, searchOptions);
   const tokens = tokenizeQuery(parsedQuery.text);
 
@@ -213,7 +241,7 @@ export async function search(query, options = {}) {
     });
   }
 
-  const scoreTerm = (term) => {
+  const scoreTerm = (term, weight = 1) => {
     const postings = index.index[term] || [];
     const df = index.df[term] || 1;
     const idf = computeIdf(df, index.doc_count);
@@ -230,7 +258,8 @@ export async function search(query, options = {}) {
         idf *
         ((tf * (BM25_K1 + 1.0)) /
           (tf + BM25_K1 * (1.0 - BM25_B + (BM25_B * docLen) / index.avg_dl))) *
-        boost;
+        boost *
+        weight;
 
       // One Map lookup in the steady state: this runs once per posting per
       // term on every query, so skip the `has` + `get` pair.
@@ -252,13 +281,17 @@ export async function search(query, options = {}) {
       // Only the active final token expands across the vocabulary. Completed
       // tokens score exact postings, keeping multi-word queries from
       // multiplying prefix scan cost by token count.
-      for (const term in index.index) {
-        if (term.startsWith(token)) {
-          scoreTerm(term);
-        }
-      }
+      for (const term in index.index) if (term.startsWith(token)) scoreTerm(term);
     } else if (index.index[token]) {
       scoreTerm(token);
+    }
+
+    if (fuzzy) {
+      for (const term in index.index) {
+        if (term === token || (prefix && isLast && term.startsWith(token))) continue;
+        const weight = fuzzyWeight(token, term);
+        if (weight > 0) scoreTerm(term, weight);
+      }
     }
   }
 

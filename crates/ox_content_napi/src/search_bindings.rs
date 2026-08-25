@@ -94,6 +94,8 @@ pub struct JsSearchRuntimeOptions {
     pub limit: u32,
     /// Enable prefix matching.
     pub prefix: bool,
+    /// Enable fuzzy typo-tolerant matching.
+    pub fuzzy: bool,
     /// Search input placeholder.
     pub placeholder: String,
     /// Keyboard shortcut to focus search.
@@ -106,6 +108,7 @@ impl From<JsSearchRuntimeOptions> for SearchRuntimeOptions {
             enabled: options.enabled,
             limit: options.limit,
             prefix: options.prefix,
+            fuzzy: options.fuzzy,
             placeholder: options.placeholder,
             hotkey: options.hotkey,
         }

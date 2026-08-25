@@ -43,6 +43,32 @@ fn test_search_prefix() {
 }
 
 #[test]
+fn test_search_fuzzy_typo() {
+    let mut builder = SearchIndexBuilder::new();
+    builder.add_simple("1", "Installation", "/installation", "Install the package.");
+    builder.add_simple("2", "Reference", "/reference", "Render Markdown quickly.");
+
+    let index = builder.build();
+    let options = SearchOptions { fuzzy: true, prefix: false, ..Default::default() };
+
+    let results = index.search("isntall", &options);
+    assert!(!results.is_empty());
+    assert_eq!(results[0].id, "1");
+    assert!(results[0].score > 0.0);
+}
+
+#[test]
+fn test_search_fuzzy_stays_opt_in() {
+    let mut builder = SearchIndexBuilder::new();
+    builder.add_simple("1", "Installation", "/installation", "Install the package.");
+
+    let index = builder.build();
+    let options = SearchOptions { prefix: false, ..Default::default() };
+
+    assert!(index.search("isntall", &options).is_empty());
+}
+
+#[test]
 fn test_search_empty() {
     let index = SearchIndexBuilder::new().build();
     let options = SearchOptions::default();

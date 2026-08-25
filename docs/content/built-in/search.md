@@ -37,6 +37,7 @@ export default {
 | `enabled`     | `true`                      | Set `search: false` to disable entirely.       |
 | `limit`       | `10`                        | Maximum results returned by the client.        |
 | `prefix`      | `true`                      | Prefix-match the last query token (typeahead). |
+| `fuzzy`       | `false`                     | Match small typos in local BM25 results.       |
 | `placeholder` | `"Search documentation..."` | Input placeholder in the default theme.        |
 | `hotkey`      | `"/"`                       | Focus hotkey; `""` opts out of registration.   |
 | `provider`    | `"local"`                   | `"local"` keeps BM25. `"hosted"` is opt-in.    |
@@ -114,10 +115,12 @@ for (const result of results) {
 ```
 
 - `search(query, options?)` uses local BM25 or the hosted adapter, depending
-  on `provider`. `options.limit` and `options.prefix` override the configured
-  defaults per call. `options.locale` keeps results in one language when you
-  also pass `localeCodes` and `defaultLocale`. `versionPrefixes` are stripped
-  from document paths before the locale segment is read.
+  on `provider`. `options.limit`, `options.prefix`, and `options.fuzzy`
+  override the configured defaults per call. `fuzzy` is local-only and stays
+  off by default so large static indexes keep the fastest exact/prefix path.
+  `options.locale` keeps results in one language when you also pass
+  `localeCodes` and `defaultLocale`. `versionPrefixes` are stripped from
+  document paths before the locale segment is read.
 - `searchOptions` exposes the resolved
   `{ enabled, limit, prefix, placeholder, hotkey, provider }` so a custom UI
   can honor the site configuration.

@@ -308,6 +308,7 @@ fn generates_search_module_from_typed_options() {
             enabled: true,
             limit: 7,
             prefix: false,
+            fuzzy: true,
             placeholder: "Find".to_string(),
             hotkey: "k".to_string(),
         },

@@ -1524,6 +1524,8 @@ export interface JsSearchRuntimeOptions {
   limit: number
   /** Enable prefix matching. */
   prefix: boolean
+  /** Enable fuzzy typo-tolerant matching. */
+  fuzzy: boolean
   /** Search input placeholder. */
   placeholder: string
   /** Keyboard shortcut to focus search. */

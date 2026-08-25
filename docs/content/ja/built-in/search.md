@@ -34,6 +34,7 @@ export default {
 | `enabled`     | `true`                      | 完全に切るときは `search: false`。                           |
 | `limit`       | `10`                        | クライアントが返す結果の上限。                               |
 | `prefix`      | `true`                      | 最後のクエリトークンをプレフィックス一致（タイプアヘッド）。 |
+| `fuzzy`       | `false`                     | ローカル BM25 で小さなタイプミスを拾う。                     |
 | `placeholder` | `"Search documentation..."` | 既定テーマの入力プレースホルダ。                             |
 | `hotkey`      | `"/"`                       | フォーカス用ホットキー。`""` で登録しない。                  |
 | `provider`    | `"local"`                   | `"local"` は BM25 のまま。`"hosted"` はオプトイン。          |
@@ -93,7 +94,7 @@ for (const result of results) {
 }
 ```
 
-- `search(query, options?)` は `provider` に応じてローカル BM25 またはホスト済みアダプタを使います。`options.limit` と `options.prefix` は呼び出しごとに設定済みの既定を上書きします。`options.locale` は、`localeCodes` と `defaultLocale` も渡したときに結果を一つの言語に保ちます。`versionPrefixes` は、ロケール区分を読む前に文書パスから取り除きます。
+- `search(query, options?)` は `provider` に応じてローカル BM25 またはホスト済みアダプタを使います。`options.limit`、`options.prefix`、`options.fuzzy` は呼び出しごとに設定済みの既定を上書きします。`fuzzy` はローカル専用で、巨大な静的インデックスの exact/prefix 経路を速いまま保つため既定ではオフです。`options.locale` は、`localeCodes` と `defaultLocale` も渡したときに結果を一つの言語に保ちます。`versionPrefixes` は、ロケール区分を読む前に文書パスから取り除きます。
 - `searchOptions` は解決済みの `{ enabled, limit, prefix, placeholder, hotkey, provider }` を出すので、独自 UI がサイト設定を尊重できます。
 - `@api transform` のようなスコープ付きクエリは、結果をサイトの一区画に限定します。
 

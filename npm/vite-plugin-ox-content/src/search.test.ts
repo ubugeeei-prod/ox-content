@@ -14,10 +14,29 @@ import {
 } from "./search";
 
 const tempDirs: string[] = [];
+const restore: Array<() => void> = [];
 
 afterEach(async () => {
+  while (restore.length > 0) restore.pop()?.();
   await Promise.all(tempDirs.splice(0).map((dir) => fs.rm(dir, { recursive: true, force: true })));
 });
+
+async function loadModule(code: string) {
+  return import(`data:text/javascript;charset=utf-8,${encodeURIComponent(code)}`);
+}
+
+function mockFetchJson(json: string) {
+  const calls: string[] = [];
+  const original = globalThis.fetch;
+  globalThis.fetch = (async (input: unknown) => {
+    calls.push(String(input));
+    return { json: async () => JSON.parse(json) };
+  }) as typeof fetch;
+  restore.push(() => {
+    globalThis.fetch = original;
+  });
+  return calls;
+}
 
 describe("parseScopedSearchQuery", () => {
   it("separates scope prefixes from free-text terms", () => {
@@ -57,6 +76,27 @@ describe("generateSearchModule", () => {
     const mod = generateSearchModule(resolveSearchOptions(true), "/docs/search-index.json");
 
     expect(mod).toMatchSnapshot();
+  });
+
+  it("supports opt-in fuzzy matching in the local runtime", async () => {
+    const srcDir = await fs.mkdtemp(path.join(os.tmpdir(), "ox-content-search-fuzzy-"));
+    tempDirs.push(srcDir);
+    await fs.writeFile(
+      path.join(srcDir, "install.md"),
+      "# Installation\n\nInstall the package and configure the docs.",
+      "utf-8",
+    );
+    const indexJson = await buildSearchIndex(srcDir, "/docs/");
+    const calls = mockFetchJson(indexJson);
+    const runtime = await loadModule(
+      generateSearchModule(resolveSearchOptions({ fuzzy: true, prefix: false }), "/search.json"),
+    );
+
+    expect(runtime.searchOptions.fuzzy).toBe(true);
+    const results = await runtime.search("isntall");
+
+    expect(calls).toEqual(["/search.json"]);
+    expect(results[0]?.id).toBe("install");
   });
 });
 
@@ -122,7 +162,10 @@ describe("search dev server", () => {
         },
       },
     };
-    (search?.configureServer as (server: unknown) => void)(devServer);
+    if (!search?.configureServer) {
+      throw new Error("search plugin should expose configureServer");
+    }
+    (search.configureServer as (server: unknown) => void)(devServer);
     expect(middlewares).toHaveLength(1);
 
     const request = async (url: string) => {

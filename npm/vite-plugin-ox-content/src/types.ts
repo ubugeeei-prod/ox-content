@@ -3781,6 +3781,17 @@ export interface SearchOptions {
   prefix?: boolean;
 
   /**
+   * Enable fuzzy typo-tolerant matching.
+   *
+   * Fuzzy matching is off by default so large static indexes keep the fastest
+   * exact/prefix path. When enabled, local BM25 also considers near matches
+   * for tokens with at least three characters.
+   *
+   * @default false
+   */
+  fuzzy?: boolean;
+
+  /**
    * Placeholder text for the search input.
    *
    * This value is embedded in the virtual search module for UI consumers.
@@ -3856,6 +3867,7 @@ export interface ResolvedSearchOptions {
   enabled: boolean;
   limit: number;
   prefix: boolean;
+  fuzzy: boolean;
   placeholder: string;
   hotkey: string;
   provider?: "local" | "hosted";
