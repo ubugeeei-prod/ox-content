@@ -24,6 +24,30 @@ export const apiNav: NavItem[] = [
     "path": "/api/attributes"
   },
   {
+    "title": "Blog",
+    "path": "/api/blog"
+  },
+  {
+    "title": "Blog Html",
+    "path": "/api/blog-html"
+  },
+  {
+    "title": "Blog Options",
+    "path": "/api/blog-options"
+  },
+  {
+    "title": "Blog Pages",
+    "path": "/api/blog-pages"
+  },
+  {
+    "title": "Blog Posts",
+    "path": "/api/blog-posts"
+  },
+  {
+    "title": "Blog Reading",
+    "path": "/api/blog-reading"
+  },
+  {
     "title": "Browser",
     "path": "/api/browser"
   },
@@ -137,19 +161,19 @@ export const apiNav: NavItem[] = [
   },
   {
     "title": "Overview",
-    "path": "/api/index-module"
+    "path": "/api/index"
   },
   {
     "title": "Overview",
-    "path": "/api/island-index"
+    "path": "/api/index"
   },
   {
     "title": "Overview",
-    "path": "/api/og-image-index"
+    "path": "/api/index"
   },
   {
     "title": "Overview",
-    "path": "/api/plugins-index"
+    "path": "/api/index"
   },
   {
     "title": "Page Context",
@@ -233,7 +257,7 @@ export const apiNav: NavItem[] = [
   },
   {
     "title": "Transform",
-    "path": "/api/github-transform"
+    "path": "/api/transform"
   },
   {
     "title": "Transform",
@@ -241,7 +265,7 @@ export const apiNav: NavItem[] = [
   },
   {
     "title": "Types",
-    "path": "/api/og-image-types"
+    "path": "/api/types"
   },
   {
     "title": "Types",

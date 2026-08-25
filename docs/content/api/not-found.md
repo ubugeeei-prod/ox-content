@@ -76,12 +76,14 @@ The page you requested does not exist. Use search or the navigation to find what
     <code class="ox-api-entry__param-name">filePath</code>
     <code class="ox-api-entry__param-type">string</code>
   </div>
+  
 </li>
 <li class="ox-api-entry__param">
   <div class="ox-api-entry__param-heading">
     <code class="ox-api-entry__param-name">srcDir</code>
     <code class="ox-api-entry__param-type">string</code>
   </div>
+  
 </li>
 <li class="ox-api-entry__param">
   <div class="ox-api-entry__param-heading">
@@ -96,6 +98,7 @@ The page you requested does not exist. Use search or the navigation to find what
 <h4>Returns</h4>
 <div class="ox-api-entry__return">
   <code class="ox-api-entry__return-type">boolean</code>
+  
 </div>
 </div>
   </div>
@@ -131,6 +134,7 @@ The page you requested does not exist. Use search or the navigation to find what
     <code class="ox-api-entry__param-name">source</code>
     <code class="ox-api-entry__param-type">string</code>
   </div>
+  
 </li>
 </ul>
 </div>
@@ -138,6 +142,7 @@ The page you requested does not exist. Use search or the navigation to find what
 <h4>Returns</h4>
 <div class="ox-api-entry__return">
   <code class="ox-api-entry__return-type">string</code>
+  
 </div>
 </div>
   </div>
@@ -170,6 +175,7 @@ The page you requested does not exist. Use search or the navigation to find what
 <h4>Returns</h4>
 <div class="ox-api-entry__return">
   <code class="ox-api-entry__return-type">string[]</code>
+  
 </div>
 </div>
   </div>
@@ -195,6 +201,7 @@ The page you requested does not exist. Use search or the navigation to find what
     <code class="ox-api-entry__param-name">value</code>
     <code class="ox-api-entry__param-type">boolean | <a href="./types.md#notfoundoptions">NotFoundOptions</a> | undefined</code>
   </div>
+  
 </li>
 </ul>
 </div>
@@ -202,6 +209,7 @@ The page you requested does not exist. Use search or the navigation to find what
 <h4>Returns</h4>
 <div class="ox-api-entry__return">
   <code class="ox-api-entry__return-type"><a href="./types.md#resolvednotfoundoptions">ResolvedNotFoundOptions</a></code>
+  
 </div>
 </div>
   </div>
@@ -226,12 +234,14 @@ The page you requested does not exist. Use search or the navigation to find what
     <code class="ox-api-entry__param-name">outDir</code>
     <code class="ox-api-entry__param-type">string</code>
   </div>
+  
 </li>
 <li class="ox-api-entry__param">
   <div class="ox-api-entry__param-heading">
     <code class="ox-api-entry__param-name">output</code>
     <code class="ox-api-entry__param-type">string</code>
   </div>
+  
 </li>
 </ul>
 </div>
@@ -239,6 +249,7 @@ The page you requested does not exist. Use search or the navigation to find what
 <h4>Returns</h4>
 <div class="ox-api-entry__return">
   <code class="ox-api-entry__return-type">string</code>
+  
 </div>
 </div>
   </div>
@@ -263,12 +274,14 @@ The page you requested does not exist. Use search or the navigation to find what
     <code class="ox-api-entry__param-name">srcDir</code>
     <code class="ox-api-entry__param-type">string</code>
   </div>
+  
 </li>
 <li class="ox-api-entry__param">
   <div class="ox-api-entry__param-heading">
     <code class="ox-api-entry__param-name">source</code>
     <code class="ox-api-entry__param-type">string</code>
   </div>
+  
 </li>
 </ul>
 </div>
@@ -276,7 +289,9 @@ The page you requested does not exist. Use search or the navigation to find what
 <h4>Returns</h4>
 <div class="ox-api-entry__return">
   <code class="ox-api-entry__return-type">string</code>
+  
 </div>
 </div>
   </div>
 </details>
+

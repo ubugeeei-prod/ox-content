@@ -66,6 +66,7 @@
     <code class="ox-api-entry__param-name">content</code>
     <code class="ox-api-entry__param-type">string</code>
   </div>
+  
 </li>
 </ul>
 </div>
@@ -73,6 +74,7 @@
 <h4>Returns</h4>
 <div class="ox-api-entry__return">
   <code class="ox-api-entry__return-type">string[]</code>
+  
 </div>
 </div>
   </div>
@@ -97,30 +99,35 @@
     <code class="ox-api-entry__param-name">html</code>
     <code class="ox-api-entry__param-type">string</code>
   </div>
+  
 </li>
 <li class="ox-api-entry__param">
   <div class="ox-api-entry__param-heading">
     <code class="ox-api-entry__param-name">frontmatter</code>
     <code class="ox-api-entry__param-type">Record&lt;string, unknown&gt;</code>
   </div>
+  
 </li>
 <li class="ox-api-entry__param">
   <div class="ox-api-entry__param-heading">
     <code class="ox-api-entry__param-name">toc</code>
     <code class="ox-api-entry__param-type"><a href="./types.md#tocentry">TocEntry</a>[]</code>
   </div>
+  
 </li>
 <li class="ox-api-entry__param">
   <div class="ox-api-entry__param-heading">
     <code class="ox-api-entry__param-name">filePath</code>
     <code class="ox-api-entry__param-type">string</code>
   </div>
+  
 </li>
 <li class="ox-api-entry__param">
   <div class="ox-api-entry__param-heading">
     <code class="ox-api-entry__param-name">_options</code>
     <code class="ox-api-entry__param-type"><a href="./types.md#resolvedoptions">ResolvedOptions</a></code>
   </div>
+  
 </li>
 </ul>
 </div>
@@ -128,6 +135,7 @@
 <h4>Returns</h4>
 <div class="ox-api-entry__return">
   <code class="ox-api-entry__return-type">string</code>
+  
 </div>
 </div>
   </div>
@@ -256,7 +264,7 @@
 </tr>
 <tr id="jstransformoptions-containers">
   <td><code>containers</code><span class="ox-api-badge">optional</span></td>
-  <td><code class="ox-api-entry__member-type language-typescript">{ enabled?: boolean; <a href="./og-image-types.md#types">types</a>?: Record&lt;string, { title?: string; tag?: string }&gt; }</code></td>
+  <td><code class="ox-api-entry__member-type language-typescript">{ enabled?: boolean; <a href="./types.md#types">types</a>?: Record&lt;string, { title?: string; tag?: string }&gt; }</code></td>
   <td></td>
 </tr>
 <tr id="jstransformoptions-convertmdlinks">
@@ -594,3 +602,4 @@ console.log(content.toc);  // [{ depth: 1, text: &#39;Hello&#39;, slug: &#39;hel
 </div>
   </div>
 </details>
+

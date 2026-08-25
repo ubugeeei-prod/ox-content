@@ -73,8 +73,7 @@ export function indexPageContent(
   if (pager.olderHref) {
     links.push(`<a href="${escapeHtml(pager.olderHref)}" rel="next">Older</a>`);
   }
-  const nav =
-    links.length > 0 ? `<nav class="ox-blog-pager">${links.join("")}</nav>` : "";
+  const nav = links.length > 0 ? `<nav class="ox-blog-pager">${links.join("")}</nav>` : "";
   return `<h1>Blog</h1><ul class="ox-blog">${list}</ul>${nav}`;
 }
 

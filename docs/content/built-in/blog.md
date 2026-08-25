@@ -60,13 +60,13 @@ oxContent({
 });
 ```
 
-| Option       | Type                       | Default                                                      |
-| ------------ | -------------------------- | ------------------------------------------------------------ |
-| `blog`       | `boolean` / `BlogOptions`  | `false`                                                      |
-| `ssg.blog`   | `boolean` / `BlogOptions`  | `false`                                                      |
-| `collection` | `string`                   | collection named `blog`, else the only configured collection |
-| `authors`    | `Record<string, BlogAuthor>` | `{}`                                                       |
-| `pageSize`   | `number`                   | `10`                                                         |
+| Option       | Type                         | Default                                                      |
+| ------------ | ---------------------------- | ------------------------------------------------------------ |
+| `blog`       | `boolean` / `BlogOptions`    | `false`                                                      |
+| `ssg.blog`   | `boolean` / `BlogOptions`    | `false`                                                      |
+| `collection` | `string`                     | collection named `blog`, else the only configured collection |
+| `authors`    | `Record<string, BlogAuthor>` | `{}`                                                         |
+| `pageSize`   | `number`                     | `10`                                                         |
 
 ## Collection
 

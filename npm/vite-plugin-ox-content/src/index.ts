@@ -625,7 +625,8 @@ function resolveOptions(options: OxContentOptions): ResolvedOptions {
     cascade: resolveCascadeOptions(options.cascade),
     redirects: resolveRedirectsOptions(options.redirects),
     blog: resolveBlogOptions(
-      options.blog ?? (typeof options.ssg === "object" && options.ssg ? options.ssg.blog : undefined),
+      options.blog ??
+        (typeof options.ssg === "object" && options.ssg ? options.ssg.blog : undefined),
     ),
     feeds: resolveFeedsOptions(options.feeds),
     taxonomies: resolveTaxonomiesOptions(options.taxonomies),

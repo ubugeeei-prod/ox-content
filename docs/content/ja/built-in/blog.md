@@ -58,13 +58,13 @@ oxContent({
 });
 ```
 
-| オプション   | 型                         | 既定                                                         |
-| ------------ | -------------------------- | ------------------------------------------------------------ |
-| `blog`       | `boolean` / `BlogOptions`  | `false`                                                      |
-| `ssg.blog`   | `boolean` / `BlogOptions`  | `false`                                                      |
-| `collection` | `string`                   | 名前が `blog` のコレクション、なければ唯一のコレクション     |
-| `authors`    | `Record<string, BlogAuthor>` | `{}`                                                       |
-| `pageSize`   | `number`                   | `10`                                                         |
+| オプション   | 型                           | 既定                                                     |
+| ------------ | ---------------------------- | -------------------------------------------------------- |
+| `blog`       | `boolean` / `BlogOptions`    | `false`                                                  |
+| `ssg.blog`   | `boolean` / `BlogOptions`    | `false`                                                  |
+| `collection` | `string`                     | 名前が `blog` のコレクション、なければ唯一のコレクション |
+| `authors`    | `Record<string, BlogAuthor>` | `{}`                                                     |
+| `pageSize`   | `number`                     | `10`                                                     |
 
 ## コレクション
 
