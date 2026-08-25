@@ -214,25 +214,25 @@ function buildComment({ basePath, headPath, baseBundlePath, headBundlePath, base
 
   if (baseBundlePath && headBundlePath) {
     lines.push(
-      "### Bundle Size",
+      "### Build and Output Size",
       "",
-      "| App | Base gzip | Head gzip | Delta | Base requests | Head requests | Base files | Head files |",
-      "| --- | ---: | ---: | ---: | ---: | ---: | ---: | ---: |",
+      "| App | Base gzip | Head gzip | Gzip delta | Base HTML gzip | Head HTML gzip | HTML delta | Base build | Head build | Build delta | Requests | Files |",
+      "| --- | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: |",
     );
 
     if (bundleRows.length === 0) {
-      lines.push("| n/a | n/a | n/a | n/a | n/a | n/a | n/a | n/a |");
+      lines.push("| n/a | n/a | n/a | n/a | n/a | n/a | n/a | n/a | n/a | n/a | n/a | n/a |");
     } else {
       for (const row of bundleRows) {
         lines.push(
-          `| ${String(row.name)} | ${formatBytes(row.baseGzipped)} | ${formatBytes(row.headGzipped)} | ${formatDelta(row.deltaPercent)} | ${formatNumber(row.baseRequests)} | ${formatNumber(row.headRequests)} | ${formatNumber(row.baseFiles)} | ${formatNumber(row.headFiles)} |`,
+          `| ${String(row.name)} | ${formatBytes(row.baseGzipped)} | ${formatBytes(row.headGzipped)} | ${formatDelta(row.deltaPercent)} | ${formatBytes(row.baseHtmlGzipped)} | ${formatBytes(row.headHtmlGzipped)} | ${formatDelta(row.htmlDeltaPercent)} | ${formatDurationMs(row.baseBuildMs)} | ${formatDurationMs(row.headBuildMs)} | ${formatDelta(row.buildDeltaPercent)} | ${formatNumberTransition(row.baseRequests, row.headRequests)} | ${formatNumberTransition(row.baseFiles, row.headFiles)} |`,
         );
       }
     }
 
     lines.push(
       "",
-      "Bundle size uses gzipped JS/CSS/HTML/JSON assets. Requests estimate index.html plus referenced local initial assets. Lower is better.",
+      "Gzip uses JS/CSS/HTML/JSON assets. HTML gzip tracks rendered page output without JS/CSS assets. Requests estimate index.html plus referenced local initial assets. Build time is informational for now because runner variance is higher than the size gates.",
       "",
     );
   }
@@ -240,7 +240,7 @@ function buildComment({ basePath, headPath, baseBundlePath, headBundlePath, base
   lines.push(
     "### Regression Gate",
     "",
-    `Runtime regressions fail when head throughput is more than ${Math.abs(RUNTIME_REGRESSION_THRESHOLD_PERCENT)}% slower than base (async rows are informational only; their worker-scheduling variance exceeds the threshold on quiet PRs). Bundle regressions fail when gzipped size grows by more than ${BUNDLE_REGRESSION_THRESHOLD_PERCENT}%. Maintainers can intentionally override by applying the \`benchmark-regression-accepted\` PR label, which sets \`${BENCHMARK_OVERRIDE_ENV}=1\`.`,
+    `Runtime regressions fail when head throughput is more than ${Math.abs(RUNTIME_REGRESSION_THRESHOLD_PERCENT)}% slower than base (async rows are informational only; their worker-scheduling variance exceeds the threshold on quiet PRs). Bundle and rendered HTML regressions fail when gzipped size grows by more than ${BUNDLE_REGRESSION_THRESHOLD_PERCENT}%. Maintainers can intentionally override by applying the \`benchmark-regression-accepted\` PR label, which sets \`${BENCHMARK_OVERRIDE_ENV}=1\`.`,
     "",
   );
 
@@ -307,16 +307,26 @@ function compareBundleReports(base, head) {
     const headRow = headRows.get(name);
     const baseGzipped = baseRow?.gzipped ?? null;
     const headGzipped = headRow?.gzipped ?? null;
+    const baseHtmlGzipped = baseRow?.htmlGzipped ?? null;
+    const headHtmlGzipped = headRow?.htmlGzipped ?? null;
+    const baseBuildMs = baseRow?.buildMs ?? null;
+    const headBuildMs = headRow?.buildMs ?? null;
 
     return {
       name,
       baseGzipped,
       headGzipped,
+      baseHtmlGzipped,
+      headHtmlGzipped,
+      baseBuildMs,
+      headBuildMs,
       baseRequests: baseRow?.requests ?? null,
       headRequests: headRow?.requests ?? null,
       baseFiles: baseRow?.files ?? null,
       headFiles: headRow?.files ?? null,
       deltaPercent: percentChange(baseGzipped, headGzipped),
+      htmlDeltaPercent: percentChange(baseHtmlGzipped, headHtmlGzipped),
+      buildDeltaPercent: percentChange(baseBuildMs, headBuildMs),
     };
   });
 }
@@ -395,9 +405,11 @@ function collectBundleRows(report) {
     .filter((result) => !result.error)
     .map((result) => ({
       name: String(result.name),
-      gzipped: Number(result.gzipped),
-      requests: Number(result.requests),
-      files: Number(result.files),
+      gzipped: finiteNumber(result.gzipped),
+      htmlGzipped: finiteNumber(result.htmlGzipped),
+      requests: finiteNumber(result.requests),
+      files: finiteNumber(result.files),
+      buildMs: finiteNumber(result.buildMs),
     }));
 }
 
@@ -525,9 +537,24 @@ function collectRegressions(runtimeRows, bundleRows) {
         thresholdPercent: BUNDLE_REGRESSION_THRESHOLD_PERCENT,
       });
     }
+    if (
+      Number.isFinite(row.htmlDeltaPercent) &&
+      row.htmlDeltaPercent > BUNDLE_REGRESSION_THRESHOLD_PERCENT
+    ) {
+      regressions.push({
+        metric: "Rendered HTML gzip",
+        target: row.name,
+        deltaPercent: row.htmlDeltaPercent,
+        thresholdPercent: BUNDLE_REGRESSION_THRESHOLD_PERCENT,
+      });
+    }
   }
 
   return regressions;
+}
+
+function finiteNumber(value) {
+  return typeof value === "number" && Number.isFinite(value) ? value : null;
 }
 
 function formatNumber(value) {
@@ -536,6 +563,10 @@ function formatNumber(value) {
   }
 
   return Math.round(value).toLocaleString("en-US");
+}
+
+function formatNumberTransition(baseValue, headValue) {
+  return `${formatNumber(baseValue)} -> ${formatNumber(headValue)}`;
 }
 
 function formatOps(value) {
@@ -582,6 +613,17 @@ function formatBytes(value) {
   }
 
   return `${(value / (1024 * 1024)).toFixed(2)} MB`;
+}
+
+function formatDurationMs(value) {
+  if (!Number.isFinite(value)) {
+    return "n/a";
+  }
+  if (value < 1000) {
+    return `${value.toFixed(0)} ms`;
+  }
+
+  return `${(value / 1000).toFixed(2)} s`;
 }
 
 function formatDelta(value) {

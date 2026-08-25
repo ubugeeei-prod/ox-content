@@ -12,11 +12,13 @@ const options = parseOptions(process.argv.slice(2));
 /**
  * Get total size of a directory
  * @param {string} dir
- * @returns {{ total: number, gzipped: number, files: number }}
+ * @returns {{ total: number, gzipped: number, html: number, htmlGzipped: number, files: number }}
  */
 function getDirSize(dir) {
   let total = 0;
   let gzipped = 0;
+  let html = 0;
+  let htmlGzipped = 0;
   let files = 0;
 
   function walk(currentDir) {
@@ -35,6 +37,10 @@ function getDirSize(dir) {
           } else {
             gzipped += content.length;
           }
+          if (/\.html$/i.test(entry.name)) {
+            html += content.length;
+            htmlGzipped += gzipSizeSync(content);
+          }
           files++;
         }
       }
@@ -44,7 +50,7 @@ function getDirSize(dir) {
   }
 
   walk(dir);
-  return { total, gzipped, files };
+  return { total, gzipped, html, htmlGzipped, files };
 }
 
 /**
@@ -280,6 +286,12 @@ function formatBytes(bytes) {
   return `${(bytes / (1024 * 1024)).toFixed(2)} MB`;
 }
 
+function formatDuration(ms) {
+  if (!Number.isFinite(ms)) return "n/a";
+  if (ms < 1000) return `${ms.toFixed(0)} ms`;
+  return `${(ms / 1000).toFixed(2)} s`;
+}
+
 function collectEnvironment() {
   const cpuList = cpus();
   const firstCpu = cpuList[0];
@@ -457,18 +469,24 @@ async function main() {
 
   for (const app of apps) {
     console.log(`Building ${app.name}...`);
+    let buildMs = null;
 
     if (!options.skipBuild) {
       try {
+        const buildStart = performance.now();
         execSync(app.buildCmd, { cwd: app.dir, stdio: "pipe" });
+        buildMs = performance.now() - buildStart;
       } catch (e) {
         console.log(`  Build failed: ${e.message}\n`);
         results.push({
           name: app.name,
           total: -1,
           gzipped: -1,
+          html: -1,
+          htmlGzipped: -1,
           files: 0,
           requests: 0,
+          buildMs,
           error: true,
         });
         continue;
@@ -484,10 +502,15 @@ async function main() {
     results.push({
       name: app.name,
       ...size,
+      buildMs,
     });
 
+    if (Number.isFinite(buildMs)) {
+      console.log(`  Build: ${formatDuration(buildMs)}`);
+    }
     console.log(`  Total: ${formatBytes(size.total)}`);
     console.log(`  Gzipped: ${formatBytes(size.gzipped)}`);
+    console.log(`  HTML: ${formatBytes(size.html)} (${formatBytes(size.htmlGzipped)} gzip)`);
     console.log(`  Requests: ${size.requests}`);
     console.log(`  Files: ${size.files}\n`);
   }
@@ -511,38 +534,46 @@ async function main() {
 
   // Calculate dynamic column widths
   const nameWidth = Math.max(9, ...results.map((r) => r.name.length)); // min 9 for "Framework"
+  const buildWidth = 9;
   const totalWidth = 10;
   const gzippedWidth = 10;
+  const htmlWidth = 10;
   const ratioWidth = 9;
   const requestsWidth = 8;
   const filesWidth = 5;
 
   // Print markdown table
-  const header = `| ${"Framework".padEnd(nameWidth)} | ${"Total".padEnd(totalWidth)} | ${"Gzipped".padEnd(gzippedWidth)} | ${"Ratio".padEnd(ratioWidth)} | ${"Requests".padEnd(requestsWidth)} | ${"Files".padEnd(filesWidth)} |`;
-  const separator = `|${"-".repeat(nameWidth + 2)}|${"-".repeat(totalWidth + 2)}|${"-".repeat(gzippedWidth + 2)}|${"-".repeat(ratioWidth + 2)}|${"-".repeat(requestsWidth + 2)}|${"-".repeat(filesWidth + 2)}|`;
+  const header = `| ${"Framework".padEnd(nameWidth)} | ${"Build".padEnd(buildWidth)} | ${"Total".padEnd(totalWidth)} | ${"Gzipped".padEnd(gzippedWidth)} | ${"HTML gzip".padEnd(htmlWidth)} | ${"Ratio".padEnd(ratioWidth)} | ${"Requests".padEnd(requestsWidth)} | ${"Files".padEnd(filesWidth)} |`;
+  const separator = `|${"-".repeat(nameWidth + 2)}|${"-".repeat(buildWidth + 2)}|${"-".repeat(totalWidth + 2)}|${"-".repeat(gzippedWidth + 2)}|${"-".repeat(htmlWidth + 2)}|${"-".repeat(ratioWidth + 2)}|${"-".repeat(requestsWidth + 2)}|${"-".repeat(filesWidth + 2)}|`;
   console.log(header);
   console.log(separator);
 
   for (const result of results) {
     if (result.error) {
       console.log(
-        `| ${result.name.padEnd(nameWidth)} | ${"Error".padEnd(totalWidth)} | ${"-".padEnd(gzippedWidth)} | ${"-".padEnd(ratioWidth)} | ${"-".padEnd(requestsWidth)} | ${"-".padEnd(filesWidth)} |`,
+        `| ${result.name.padEnd(nameWidth)} | ${"Error".padEnd(buildWidth)} | ${"-".padEnd(totalWidth)} | ${"-".padEnd(gzippedWidth)} | ${"-".padEnd(htmlWidth)} | ${"-".padEnd(ratioWidth)} | ${"-".padEnd(requestsWidth)} | ${"-".padEnd(filesWidth)} |`,
       );
       continue;
     }
 
     const name = result.name.padEnd(nameWidth);
+    const build = formatDuration(result.buildMs).padEnd(buildWidth);
     const total = formatBytes(result.total).padEnd(totalWidth);
     const gzipped = formatBytes(result.gzipped).padEnd(gzippedWidth);
+    const html = formatBytes(result.htmlGzipped).padEnd(htmlWidth);
     const ratio = ((result.gzipped / baseline).toFixed(2) + "x").padEnd(ratioWidth);
     const requests = String(result.requests).padEnd(requestsWidth);
     const files = String(result.files).padEnd(filesWidth);
-    console.log(`| ${name} | ${total} | ${gzipped} | ${ratio} | ${requests} | ${files} |`);
+    console.log(
+      `| ${name} | ${build} | ${total} | ${gzipped} | ${html} | ${ratio} | ${requests} | ${files} |`,
+    );
   }
 
   console.log("\n\nNotes:");
   console.log("- All frameworks built with production settings");
   console.log("- Gzipped size calculated for JS/CSS/HTML files");
+  console.log("- HTML gzip tracks rendered page output, excluding JS and CSS assets");
+  console.log("- Build time is the production app build for this benchmark fixture");
   console.log("- Requests include index.html plus referenced local initial assets");
   console.log("- Same markdown content used across all frameworks");
   console.log("- Ratio is relative to the smallest bundle");

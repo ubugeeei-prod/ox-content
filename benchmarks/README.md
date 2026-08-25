@@ -143,7 +143,9 @@ local command is:
 OX_CONTENT_BENCHMARK_RUNS=7 vp run bench:docs
 ```
 
-Pull requests use the same Blacksmith runner class for base/head runtime and
-bundle comparisons. The comment includes the regression gate, a head-commit
-competitive snapshot, and the captured runner/runtime metadata so result drift
-can be traced back to the environment.
+Pull requests use the same Blacksmith runner class for base/head runtime,
+fixture build-time, bundle, and rendered HTML output-size comparisons. The
+comment includes the regression gate, a head-commit competitive snapshot, and
+the captured runner/runtime metadata so result drift can be traced back to the
+environment. Build time is reported as an informational signal first; runtime,
+bundle gzip, and rendered HTML gzip are the gated values.
