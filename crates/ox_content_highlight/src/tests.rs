@@ -166,6 +166,22 @@ fn mdx_highlights_custom_element_closing_tags() {
 }
 
 #[test]
+fn html_highlights_tab_custom_elements() {
+    let html = highlight_to_html(
+        "<tabs>\n  <tab label=\"Install\">pnpm add -D @ox-content/vite-plugin</tab>\n</tabs>\n",
+        "html",
+    )
+    .expect("supported");
+    let closing = html.split("&lt;/").nth(1).expect("closing tab should be present");
+
+    assert!(html.contains("--octc-syntax-token-string"), "{html}");
+    assert!(html.contains("tabs"), "{html}");
+    assert!(html.contains("tab"), "{html}");
+    assert!(closing.contains("--octc-syntax-token-constant"), "{html}");
+    assert!(closing.contains("--octc-syntax-token-punctuation"), "{html}");
+}
+
+#[test]
 fn plain_text_renders_without_tokenizing() {
     // `text` is the third most common fence tag in the documentation corpus.
     // Declining it would send those pages to the fallback highlighter purely

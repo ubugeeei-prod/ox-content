@@ -128,28 +128,28 @@ oxContent({
 
 汎用タブグループはパッケージマネージャタブと同じウィジェットで、SSG ビルドと dev preview では常に使えます。
 
-```md
+```html
 <tabs>
-<tab label="Install">
-<pre><code>pnpm add -D @ox-content/vite-plugin
+  <tab label="Install">
+    <pre><code>pnpm add -D @ox-content/vite-plugin
 pnpm add -D @ox-content/theme-swiss</code></pre>
-</tab>
-<tab label="Config">
-<pre><code>oxContent({ srcDir: "content", embeds: { pm: true } })</code></pre>
-</tab>
-<tab label="Markdown">
-<pre><code>---
+  </tab>
+  <tab label="Config">
+    <pre><code>oxContent({ srcDir: "content", embeds: { pm: true } })</code></pre>
+  </tab>
+  <tab label="Markdown">
+    <pre><code>---
 title: Install
 ---
 
 好きなパッケージマネージャで Ox Content を入れます。
 
 &lt;pm&gt;npm install -D @ox-content/vite-plugin&lt;/pm&gt;</code></pre>
-</tab>
-<tab label="Build">
-<pre><code>pnpm vite build
+  </tab>
+  <tab label="Build">
+    <pre><code>pnpm vite build
 pnpm vite preview</code></pre>
-</tab>
+  </tab>
 </tabs>
 ```
 
