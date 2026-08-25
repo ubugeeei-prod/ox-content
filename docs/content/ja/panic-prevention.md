@@ -24,13 +24,13 @@ CI は `.github/workflows/ci.yml` の `Panic constructs` ジョブでゲート�
 
 ## 監査したサブシステム（このスライス）
 
-| サブシステム | Crate | 結果 |
-| --- | --- | --- |
-| Markdown パース | `ox_content_parser` | 公開 `parse` は `ParseResult` を返します。サブパーサーは入れ子深さを引き継ぐので、深い引用は際限なく伸びず `NestingTooDeep` を返します。delimiter / list ヘルパーは回復可能な不一致で `expect` しません。 |
-| HTML 描画 / フレームワーク codegen | `ox_content_renderer` | `String` への書き込みは `expect` しません。Svelte の公開 codegen は `unreachable!` に到達しません。 |
-| Transform / frontmatter | `ox_content_transform` | 壊れた YAML は空の frontmatter のままです。敵対的な Markdown は abort せず `errors` を返します。コンパイル時 YouTube 正規表現の `expect` は allowlist に残します。 |
-| SSG ルート / エントリリンク | `ox_content_ssg` | パス接尾辞の除去はバイト安全です。`😀` のようなマルチバイトパスで文字境界の途中をスライスしません。 |
-| N-API 公開 parse / transform | `ox_content_napi` | キャッシュミスは `napi::Error` です。unwind ビルドでは、想定外 panic を `errors` 配列に落とします。 |
+| サブシステム                       | Crate                  | 結果                                                                                                                                                                                                      |
+| ---------------------------------- | ---------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Markdown パース                    | `ox_content_parser`    | 公開 `parse` は `ParseResult` を返します。サブパーサーは入れ子深さを引き継ぐので、深い引用は際限なく伸びず `NestingTooDeep` を返します。delimiter / list ヘルパーは回復可能な不一致で `expect` しません。 |
+| HTML 描画 / フレームワーク codegen | `ox_content_renderer`  | `String` への書き込みは `expect` しません。Svelte の公開 codegen は `unreachable!` に到達しません。                                                                                                       |
+| Transform / frontmatter            | `ox_content_transform` | 壊れた YAML は空の frontmatter のままです。敵対的な Markdown は abort せず `errors` を返します。コンパイル時 YouTube 正規表現の `expect` は allowlist に残します。                                        |
+| SSG ルート / エントリリンク        | `ox_content_ssg`       | パス接尾辞の除去はバイト安全です。`😀` のようなマルチバイトパスで文字境界の途中をスライスしません。                                                                                                       |
+| N-API 公開 parse / transform       | `ox_content_napi`      | キャッシュミスは `napi::Error` です。unwind ビルドでは、想定外 panic を `errors` 配列に落とします。                                                                                                       |
 
 テスト専用の `unwrap` / `expect` / `panic!` は対象外です。
 

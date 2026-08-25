@@ -75,7 +75,9 @@ for (const [entryKey, entry] of allowed) {
 
 if (extras.length > 0 || stale.length > 0) {
   if (extras.length > 0) {
-    console.error("New panic-prone production constructs (update the allowlist only after review):");
+    console.error(
+      "New panic-prone production constructs (update the allowlist only after review):",
+    );
     for (const extra of extras) {
       console.error(`  - ${extra.file} ${extra.kind} x${extra.count} (${extra.reason})`);
     }

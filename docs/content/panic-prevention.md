@@ -24,13 +24,13 @@ CI runs the gate as the `Panic constructs` job in `.github/workflows/ci.yml`. `v
 
 ## Audited subsystems (this slice)
 
-| Subsystem | Crate | Outcome |
-| --- | --- | --- |
-| Markdown parse | `ox_content_parser` | Public `parse` returns `ParseResult`. Sub-parsers inherit nesting depth so deeply nested quotes return `NestingTooDeep` instead of growing without bound. Delimiter and list helpers no longer `expect` on recoverable mismatch. |
-| HTML render / framework codegen | `ox_content_renderer` | String writes no longer `expect`. Svelte public codegen no longer hits `unreachable!`. |
-| Transform / frontmatter | `ox_content_transform` | Malformed YAML stays empty frontmatter. Hostile Markdown returns `errors` instead of aborting. Compile-time YouTube regex `expect`s remain allowlisted. |
-| SSG routes / entry links | `ox_content_ssg` | Path suffix stripping is byte-safe. Multibyte paths such as `😀` no longer slice mid-character. |
-| N-API public parse / transform | `ox_content_napi` | Cache misses return `napi::Error`. Parse/transform wrap unexpected panics into the `errors` array in unwind builds. |
+| Subsystem                       | Crate                  | Outcome                                                                                                                                                                                                                          |
+| ------------------------------- | ---------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Markdown parse                  | `ox_content_parser`    | Public `parse` returns `ParseResult`. Sub-parsers inherit nesting depth so deeply nested quotes return `NestingTooDeep` instead of growing without bound. Delimiter and list helpers no longer `expect` on recoverable mismatch. |
+| HTML render / framework codegen | `ox_content_renderer`  | String writes no longer `expect`. Svelte public codegen no longer hits `unreachable!`.                                                                                                                                           |
+| Transform / frontmatter         | `ox_content_transform` | Malformed YAML stays empty frontmatter. Hostile Markdown returns `errors` instead of aborting. Compile-time YouTube regex `expect`s remain allowlisted.                                                                          |
+| SSG routes / entry links        | `ox_content_ssg`       | Path suffix stripping is byte-safe. Multibyte paths such as `😀` no longer slice mid-character.                                                                                                                                  |
+| N-API public parse / transform  | `ox_content_napi`      | Cache misses return `napi::Error`. Parse/transform wrap unexpected panics into the `errors` array in unwind builds.                                                                                                              |
 
 Test-only `unwrap` / `expect` / `panic!` are out of scope.
 
