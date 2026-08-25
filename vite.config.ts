@@ -191,7 +191,13 @@ export default defineConfig({
         },
       ),
 
-      "workspace:check": noopTask(["fmt:rust-check", "lint:rust", "check:ts"]),
+      "check:panic-constructs": task("node scripts/check-panic-constructs.mjs"),
+      "workspace:check": noopTask([
+        "fmt:rust-check",
+        "lint:rust",
+        "check:panic-constructs",
+        "check:ts",
+      ]),
       "check:rust": task("cargo check --workspace --all-targets"),
 
       clippy: task("cargo clippy --workspace --all-targets -- -D warnings", {
@@ -233,7 +239,13 @@ export default defineConfig({
         cwd: "crates/ox_content_napi",
       }),
 
-      "workspace:ci": noopTask(["fmt:rust-check", "lint:rust", "check:ts", "workspace:test"]),
+      "workspace:ci": noopTask([
+        "fmt:rust-check",
+        "lint:rust",
+        "check:panic-constructs",
+        "check:ts",
+        "workspace:test",
+      ]),
       actrun: uncachedTask("actrun workflow run .github/workflows/ci.yml --trust"),
       "testbox:warmup": uncachedTask(
         "blacksmith testbox warmup .github/workflows/testbox.yml --job testbox --idle-timeout 60",

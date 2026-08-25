@@ -180,6 +180,7 @@ export default defineConfig(({ mode }) => {
                 text: "Advanced",
                 items: [
                   { text: "Architecture", link: "/architecture.md" },
+                  { text: "Panic Prevention", link: "/panic-prevention.md" },
                   { text: "Performance", link: "/performance.md" },
                   { text: "Profiling Mode", link: "/profiling.md" },
                   { text: "mdast Bridge Example", link: "/examples/unplugin-mdast-bridge.md" },
