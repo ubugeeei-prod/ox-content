@@ -31,6 +31,7 @@ type NativeTransformOptions = {
   autolinkUrls?: boolean;
   frontmatter?: boolean;
   tocMaxDepth?: number;
+  headingPermalinks?: boolean;
   codeAnnotations?: boolean;
   codeAnnotationMetaKey?: string;
   codeAnnotationSyntax?: string;
@@ -180,6 +181,7 @@ function createNativeTransformOptions(options: ResolvedOptions): NativeTransform
     autolinkUrls: options.autolinks,
     frontmatter: options.frontmatter,
     tocMaxDepth: options.tocMaxDepth,
+    headingPermalinks: options.headingPermalinks?.enabled ?? false,
     codeAnnotations: options.codeAnnotations?.enabled ?? false,
     codeAnnotationMetaKey: options.codeAnnotations?.metaKey ?? "annotate",
     codeAnnotationSyntax: options.codeAnnotations?.notation ?? "attribute",

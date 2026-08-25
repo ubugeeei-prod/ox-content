@@ -53,6 +53,7 @@ impl HtmlRenderer {
         for child in &heading.children {
             self.visit_inline_node(child);
         }
+        self.write_heading_permalink_if_needed(heading);
         self.output.push_str("</h");
         self.output.push((b'0' + depth) as char);
         self.output.push_str(">\n");

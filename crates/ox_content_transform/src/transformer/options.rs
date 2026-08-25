@@ -76,6 +76,9 @@ pub(super) fn transform_options_to_renderer_options(
     if let Some(v) = opts.semantic_footnotes {
         options.semantic_footnotes = v;
     }
+    if let Some(v) = opts.heading_permalinks {
+        options.heading_permalinks = v;
+    }
 
     options
 }

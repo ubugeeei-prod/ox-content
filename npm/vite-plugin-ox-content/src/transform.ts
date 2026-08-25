@@ -222,6 +222,12 @@ interface JsTransformOptions {
   tocMaxDepth?: number;
 
   /**
+   * Append visible heading permalinks.
+   * @default false
+   */
+  headingPermalinks?: boolean;
+
+  /**
    * Convert `.md` links to `.html` links for SSG output.
    * @default false
    */
@@ -563,6 +569,7 @@ export async function transformMarkdown(
     autolinkUrls: options.autolinks,
     frontmatter: options.frontmatter,
     tocMaxDepth: options.tocMaxDepth,
+    headingPermalinks: options.headingPermalinks?.enabled ?? false,
     convertMdLinks: ssgOptions?.convertMdLinks,
     baseUrl: ssgOptions?.baseUrl,
     sourcePath: ssgOptions?.sourcePath ?? filePath,

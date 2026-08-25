@@ -18,6 +18,7 @@ Ox Content は、よく使うドキュメントの挙動を既定で載せ、非
 | ガイド                                                   | 内容                                                                           |
 | -------------------------------------------------------- | ------------------------------------------------------------------------------ |
 | [Markdown の土台](./built-in/markdown.md)                | GFM、表、タスクリスト、脚注、autolink、frontmatter、TOC                        |
+| [見出しパーマリンク](./built-in/heading-permalinks.md)   | 生成済み見出し id を再利用するオプトインの可視 `#` リンク                      |
 | [構文拡張](./built-in/syntax-extensions.md)              | 絵文字ショートコード、Wiki リンク、属性構文、CJK 強調                          |
 | [カスタムコンテナ](./built-in/containers.md)             | オプトインの `::: tip` / `::: details`                                         |
 | [カード](./built-in/cards.md)                            | オプトインの `::: card` / `::: link-card` / `::: card-grid`                    |
@@ -61,12 +62,13 @@ Ox Content は、よく使うドキュメントの挙動を既定で載せ、非
 
 ## 既定とオプトイン
 
-| 領域                 | オプション                                                                                                    | 既定          | ガイド                                                   |
-| -------------------- | ------------------------------------------------------------------------------------------------------------- | ------------- | -------------------------------------------------------- |
-| Markdown 土台        | `gfm`, `footnotes`, `tables`, `taskLists`, `strikethrough`, `autolinks`                                       | `true`        | [Markdown の土台](./built-in/markdown.md)                |
-| 意味的な脚注         | `semanticFootnotes`                                                                                           | `false`       | [Markdown の土台](./built-in/markdown.md)                |
-| ページメタ           | `frontmatter`                                                                                                 | `true`        | [Markdown の土台](./built-in/markdown.md)                |
-| ナビゲーション       | `toc`, `tocMaxDepth`                                                                                          | `true`, `3`   | [Markdown の土台](./built-in/markdown.md)                |
+| 領域                 | オプション                                                                                                    | 既定               | ガイド                                                   |
+| -------------------- | ------------------------------------------------------------------------------------------------------------- | ------------------ | -------------------------------------------------------- |
+| Markdown 土台        | `gfm`, `footnotes`, `tables`, `taskLists`, `strikethrough`, `autolinks`                                       | `true`             | [Markdown の土台](./built-in/markdown.md)                |
+| 意味的な脚注         | `semanticFootnotes`                                                                                           | `false`            | [Markdown の土台](./built-in/markdown.md)                |
+| ページメタ           | `frontmatter`                                                                                                 | `true`             | [Markdown の土台](./built-in/markdown.md)                |
+| ナビゲーション       | `toc`, `tocMaxDepth`                                                                                          | `true`, `3`        | [Markdown の土台](./built-in/markdown.md)                |
+| 見出しリンク         | `headingPermalinks` / `theme.headingPermalink`                                                                | `false`, `"hover"` | [見出しパーマリンク](./built-in/heading-permalinks.md)   |
 | 静的サイト           | `ssg`                                                                                                         | `{ enabled }` | [サイト生成](./built-in/site-generation.md)              |
 | API ドキュメント     | `docs`                                                                                                        | `{ enabled }` | [サイト生成](./built-in/site-generation.md)              |
 | 検索                 | `search`                                                                                                      | `{ enabled }` | [検索](./built-in/search.md)                             |
@@ -114,6 +116,7 @@ Ox Content は、よく使うドキュメントの挙動を既定で載せ、非
 | コード検査           | `codeBlockLint`, `codeBlockTypecheck`, `docsTests`                                                            | `false`       | [品質チェック](./built-in/quality-checks.md)             |
 | 型ホバー             | `typedHover`                                                                                                  | `false`       | [型ホバー](./built-in/typed-hover.md)                    |
 | 独自パイプライン     | `transformers`                                                                                                | `[]`          | [サイト生成](./built-in/site-generation.md)              |
+
 
 タブと YouTube 埋め込みにオプションはありません。SSG と dev preview では常に処理されます。[埋め込み](./built-in/embeds.md) を見てください。
 

@@ -38,6 +38,72 @@ fn test_render_heading_id_uses_inline_text() {
     insta::assert_snapshot!(html);
 }
 
+fn render_with_permalinks(source: &str) -> String {
+    let allocator = Allocator::new();
+    let doc = Parser::new(&allocator, source).parse().unwrap();
+    let mut renderer = HtmlRenderer::with_options(HtmlRendererOptions {
+        heading_permalinks: true,
+        ..Default::default()
+    });
+    renderer.render(&doc)
+}
+
+#[test]
+fn test_heading_permalinks_default_off_keeps_html() {
+    let allocator = Allocator::new();
+    let doc = Parser::new(&allocator, "# Hello").parse().unwrap();
+    let html = HtmlRenderer::new().render(&doc);
+    assert_eq!(html, "<h1 id=\"hello\">Hello</h1>\n");
+}
+
+#[test]
+fn test_heading_permalinks_reuse_generated_id() {
+    let html = render_with_permalinks("# Hello World");
+    assert_eq!(
+        html,
+        "<h1 id=\"hello-world\">Hello World<a class=\"header-anchor\" href=\"#hello-world\" aria-label=\"Permalink to &quot;Hello World&quot;\">#</a></h1>\n"
+    );
+}
+
+#[test]
+fn test_heading_permalinks_unicode_and_duplicates() {
+    let html = render_with_permalinks("## はじめに\n## はじめに");
+    insta::assert_snapshot!(html);
+}
+
+#[test]
+fn test_heading_permalinks_skip_existing_hash_link() {
+    let html = render_with_permalinks("## Hello [#](#hello)");
+    assert!(html.contains("<h2 id=\"hello\">"), "{html}");
+    assert_eq!(html.matches("href=\"#hello\"").count(), 1, "{html}");
+    assert!(!html.contains("class=\"header-anchor\""), "{html}");
+}
+
+#[test]
+fn test_heading_permalinks_skip_existing_header_anchor_html() {
+    let html = render_with_permalinks(
+        "## Hello <a class=\"header-anchor\" href=\"#hello\" aria-label=\"Permalink to &quot;Hello&quot;\">#</a>",
+    );
+    assert_eq!(html.matches("class=\"header-anchor\"").count(), 1, "{html}");
+}
+
+#[test]
+fn test_heading_permalinks_empty_heading_uses_section_id() {
+    let html = render_with_permalinks("#");
+    assert!(
+        html.contains("<h1 id=\"section\"><a class=\"header-anchor\" href=\"#section\" aria-label=\"Permalink to this section\">#</a></h1>"),
+        "{html}"
+    );
+}
+
+#[test]
+fn test_heading_permalinks_are_real_links_without_js() {
+    let html = render_with_permalinks("## API");
+    assert!(html.contains("<a class=\"header-anchor\" href=\"#api\""), "{html}");
+    assert!(!html.contains("onclick="), "{html}");
+    assert!(!html.contains("<script"), "{html}");
+}
+
 #[test]
 fn test_render_inline_toc_directive() {
     let allocator = Allocator::new();

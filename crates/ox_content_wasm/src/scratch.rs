@@ -33,6 +33,7 @@ pub struct RendererKey {
     pub autolink_target_blank: bool,
     pub autolink_patterns: Vec<String>,
     pub semantic_footnotes: bool,
+    pub heading_permalinks: bool,
 }
 
 struct Scratch {
@@ -49,6 +50,7 @@ fn default_key() -> RendererKey {
         autolink_target_blank: defaults.autolink_target_blank,
         autolink_patterns: defaults.autolink_patterns,
         semantic_footnotes: defaults.semantic_footnotes,
+        heading_permalinks: defaults.heading_permalinks,
     }
 }
 
@@ -88,6 +90,7 @@ pub fn with_scratch<R>(
                 autolink_target_blank: key.autolink_target_blank,
                 autolink_patterns: key.autolink_patterns.clone(),
                 semantic_footnotes: key.semantic_footnotes,
+                heading_permalinks: key.heading_permalinks,
                 ..Default::default()
             });
             scratch.renderer_key = key.clone();

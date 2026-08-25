@@ -22,6 +22,7 @@ inline**.
 | Guide                                                  | Covers                                                                      |
 | ------------------------------------------------------ | --------------------------------------------------------------------------- |
 | [Markdown Baseline](./built-in/markdown.md)            | GFM, tables, task lists, footnotes, autolinks, frontmatter, TOC             |
+| [Heading Permalinks](./built-in/heading-permalinks.md) | Opt-in visible `#` links that reuse the generated heading id                |
 | [Syntax Extensions](./built-in/syntax-extensions.md)   | Emoji shortcodes, wiki links, attribute syntax, CJK emphasis                |
 | [Custom Containers](./built-in/containers.md)          | Opt-in `::: tip` / `::: details` callout blocks                             |
 | [Cards](./built-in/cards.md)                           | Opt-in `::: card` / `::: link-card` / `::: card-grid` blocks                |
@@ -71,6 +72,7 @@ inline**.
 | Semantic footnotes | `semanticFootnotes`                                                                                           | `false`              | [Markdown Baseline](./built-in/markdown.md)            |
 | Page metadata    | `frontmatter`                                                                                                 | `true`               | [Markdown Baseline](./built-in/markdown.md)            |
 | Navigation       | `toc`, `tocMaxDepth`                                                                                          | `true`, `3`          | [Markdown Baseline](./built-in/markdown.md)            |
+| Heading links    | `headingPermalinks` / `theme.headingPermalink`                                                                | `false`, `"hover"`   | [Heading Permalinks](./built-in/heading-permalinks.md) |
 | Static site      | `ssg`                                                                                                         | `{ enabled }`        | [Site Generation](./built-in/site-generation.md)       |
 | API docs         | `docs`                                                                                                        | `{ enabled }`        | [Site Generation](./built-in/site-generation.md)       |
 | Search           | `search`                                                                                                      | `{ enabled }`        | [Search](./built-in/search.md)                         |
