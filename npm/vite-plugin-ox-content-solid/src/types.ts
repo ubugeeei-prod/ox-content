@@ -219,6 +219,7 @@ export interface ResolvedSolidOptions {
   components: ComponentsMap;
   verifySolidPlugin: boolean;
   embeds: ResolvedBuiltinEmbedOptions;
+  mdx?: boolean;
   root?: string;
 }
 

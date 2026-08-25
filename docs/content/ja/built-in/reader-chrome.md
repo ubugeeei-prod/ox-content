@@ -1,27 +1,33 @@
 ---
 title: リーダー chrome
-description: コピーボタン、外部リンクアイコン、先頭へ戻る。
+description: オプトインのコピーボタン、外部リンクアイコン、先頭へ戻る操作。
 ---
 
 # リーダー chrome
 
-`ssg.readerChrome` を有効にすると、テーマ付きページに次の操作が付きます。
+`ssg.readerChrome` を有効にすると、テーマ付きページに小さな読書用コントロールが 3 つ付きます。
 
-- フェンスへの **Copy**
+- フェンス付きコードブロックの **Copy** ボタン
 - 外部 `http(s)` リンクへのアイコンと `rel="noopener noreferrer"`
-- スクロール後に出る **先頭へ戻る**
+- スクロール後に現れる **先頭へ戻る** 操作
 
-省略または `false` では追加のマークアップも JS も出しません。
+機能は自分でオンにするまでオフです。オフのページには余分なマークアップも JavaScript も出ません。
 
 ```ts
-oxContent({
-  ssg: {
-    readerChrome: true,
-  },
-});
+import { oxContent } from "@ox-content/vite-plugin";
+
+export default {
+  plugins: [
+    oxContent({
+      ssg: {
+        readerChrome: true,
+      },
+    }),
+  ],
+};
 ```
 
-オブジェクトで個別に切れます。
+`false` または省略は chrome をオフのままにします。`true` は既定でオンです。オブジェクトを渡すと機能はオンになり、個別の操作だけ切れます。
 
 ```ts
 oxContent({
@@ -31,9 +37,14 @@ oxContent({
 });
 ```
 
-先頭へ戻るは `prefers-reduced-motion` を尊重します。エントリページでは出しません。
+| フィールド      | 既定   | 効果                                |
+| --------------- | ------ | ----------------------------------- |
+| `copy`          | `true` | フェンス付き `<pre>` にコピーボタン |
+| `externalLinks` | `true` | 外部リンクにアイコンと `rel`        |
+| `backToTop`     | `true` | スクロール後に先頭へ戻るボタン      |
 
-## 関連
+コピーは読者がボタンを押したときにブラウザのクリップボードを使います。フェンス本文はビルド時にはコピーしません。
 
-- [英語版ガイド](/built-in/reader-chrome.md)
-- [アクセシビリティ](./a11y.md)
+外部リンクアイコンは相対、ハッシュ、`mailto:`、`tel:` を飛ばします。フェンス内やインラインコード内のリンクはそのままです。`javascript:`、`data:`、`vbscript:` の href には生きた操作を付けません。
+
+先頭へ戻る操作は `prefers-reduced-motion` を尊重します。エントリページでは出しません。bare モードはリーダー chrome を一切出しません。

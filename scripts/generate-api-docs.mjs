@@ -1,13 +1,11 @@
 #!/usr/bin/env node
-// Usage: node scripts/generate-api-docs.mjs --write | --check
+// Usage: node scripts/generate-api-docs.mjs [--write]
 //
-// Regenerates `docs/content/api` the same way the docs plugin does on
-// `buildStart`. Keep the options here in lockstep with `docs` in
-// `docs/vite.config.ts`. `--check` writes in place and fails if git sees a
-// diff — the same shape as `cargo fmt --check` / the NAPI `index.d.ts` job.
+// Writes `docs/content/api` the same way the docs plugin does on `buildStart`.
+// Keep the options here in lockstep with `docs` in `docs/vite.config.ts`.
+// The output is gitignored; `vp run dev:docs` / `build:docs` regenerate it.
 
 import { createRequire } from "node:module";
-import { spawnSync } from "node:child_process";
 import { readFileSync } from "node:fs";
 import * as path from "node:path";
 import { fileURLToPath } from "node:url";
@@ -15,10 +13,12 @@ import { fileURLToPath } from "node:url";
 const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
 const DOCS_ROOT = path.join(ROOT, "docs");
 const API_DIR = path.join(DOCS_ROOT, "content/api");
-const API_GIT_PATH = "docs/content/api";
 const SRC_DIR = path.join(ROOT, "npm/vite-plugin-ox-content/src");
 
-const mode = parseMode(process.argv.slice(2));
+if (process.argv.slice(2).some((arg) => arg !== "--write")) {
+  throw new Error("Usage: scripts/generate-api-docs.mjs [--write]");
+}
+
 const napi = createRequire(import.meta.url)("../crates/ox_content_napi");
 
 const extracted = napi.extractDocsFromDirectories(
@@ -67,36 +67,7 @@ napi.writeGeneratedDocs(generated, API_DIR, modules, {
   singleEntryRoot: "preserve",
 });
 
-console.log(`Generated ${Object.keys(generated).length} API markdown files into ${API_GIT_PATH}`);
-
-if (mode === "write") {
-  process.exit(0);
-}
-
-const diff = git(["diff", "--exit-code", "--", API_GIT_PATH]);
-const untracked = git(["ls-files", "--others", "--exclude-standard", "--", API_GIT_PATH]);
-const extra = untracked.stdout.trim();
-
-if (diff.status === 0 && extra.length === 0) {
-  process.exit(0);
-}
-
-console.error("Checked-in API docs are stale. Run `vp run docs:api` and commit the result.");
-if (diff.status !== 0) {
-  process.stderr.write(diff.stdout);
-  process.stderr.write(diff.stderr);
-}
-if (extra.length > 0) {
-  console.error("Untracked generated files:");
-  console.error(extra);
-}
-process.exit(1);
-
-function parseMode(args) {
-  if (args.includes("--check") && !args.includes("--write")) return "check";
-  if (args.includes("--write") && !args.includes("--check")) return "write";
-  throw new Error("Usage: scripts/generate-api-docs.mjs --write | --check");
-}
+console.log(`Generated ${Object.keys(generated).length} API markdown files into docs/content/api`);
 
 function existingGeneratedAt(outDir) {
   try {
@@ -107,8 +78,4 @@ function existingGeneratedAt(outDir) {
   } catch {
     return undefined;
   }
-}
-
-function git(args) {
-  return spawnSync("git", args, { cwd: ROOT, encoding: "utf-8" });
 }

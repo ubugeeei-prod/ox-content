@@ -202,6 +202,7 @@ export interface ResolvedReactOptions {
   components: ComponentsMap;
   jsxRuntime: "automatic" | "classic";
   embeds: ResolvedBuiltinEmbedOptions;
+  mdx?: boolean;
   root?: string;
 }
 

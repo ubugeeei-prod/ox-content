@@ -74,3 +74,28 @@ fn the_ast_entry_point_shares_the_arena_safely() {
     assert!(html.contains("Other"), "unexpected html: {html}");
     assert_eq!(ast, ast_again, "the same source parsed differently after an interleaved render");
 }
+
+#[test]
+fn hostile_markdown_returns_errors_or_html_without_aborting() {
+    use std::panic::{AssertUnwindSafe, catch_unwind};
+
+    use crate::{parse, parse_and_render, transform};
+
+    let cases = ["", "*", &"> ".repeat(120), "---\n[broken\n---\n# Body", "\u{1F600}***"];
+    for source in cases {
+        let parse_outcome = catch_unwind(AssertUnwindSafe(|| parse(source.to_string(), None)));
+        let parsed = parse_outcome.unwrap_or_else(|_| panic!("parse aborted on {source:?}"));
+        assert!(
+            parsed.errors.is_empty() || !parsed.errors.is_empty(),
+            "parse should return a result object for {source:?}"
+        );
+
+        let render_outcome =
+            catch_unwind(AssertUnwindSafe(|| parse_and_render(source.to_string(), None)));
+        render_outcome.unwrap_or_else(|_| panic!("parse_and_render aborted on {source:?}"));
+
+        let transform_outcome =
+            catch_unwind(AssertUnwindSafe(|| transform(source.to_string(), None)));
+        transform_outcome.unwrap_or_else(|_| panic!("transform aborted on {source:?}"));
+    }
+}

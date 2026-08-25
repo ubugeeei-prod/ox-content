@@ -38,6 +38,72 @@ describe("transformMarkdownWithSvelte", () => {
     expect(result.code).toMatchSnapshot();
   });
 
+  it("discovers nested, expression, and fragment islands from the MDX AST", async () => {
+    const nested = await transformMarkdownWithSvelte(
+      '<Callout>\n\n# Title\n\n<Badge title="hi" />\n\n</Callout>\n',
+      "/repo/docs/nested.mdx",
+      createOptions({
+        components: {
+          Alert: "./src/components/Alert.svelte",
+          Callout: "./src/components/Callout.svelte",
+          Badge: "./src/components/Badge.svelte",
+        },
+      }),
+    );
+    expect(nested.usedComponents).toEqual(["Callout", "Badge"]);
+    expect(nested.code).toContain("Callout");
+    expect(nested.code).toContain("Badge");
+    expect(nested.code).toContain("initIslands");
+
+    const expr = await transformMarkdownWithSvelte(
+      "<Alert title={foo} count={count + 1} />\n",
+      "/repo/docs/expr.mdx",
+      createOptions(),
+    );
+    expect(expr.usedComponents).toEqual(["Alert"]);
+    expect(expr.code).toContain("Alert");
+
+    const fragment = await transformMarkdownWithSvelte(
+      '<>\n<Alert tone="info" />\n</>\n',
+      "/repo/docs/fragment.mdx",
+      createOptions(),
+    );
+    expect(fragment.usedComponents).toEqual(["Alert"]);
+  });
+
+  it("keeps fenced JSX literal and skips unregistered MDX components", async () => {
+    const fenced = await transformMarkdownWithSvelte(
+      [
+        "# Guide",
+        "",
+        '<Alert tone="info" />',
+        "",
+        "```svelte",
+        '<Alert tone="code" />',
+        "```",
+      ].join("\n"),
+      "/repo/docs/fence.mdx",
+      createOptions(),
+    );
+    expect(fenced.usedComponents).toEqual(["Alert"]);
+
+    const mixed = await transformMarkdownWithSvelte(
+      "# Plain\n\n<Alert />\n\n<Unknown />\n",
+      "/repo/docs/mixed.mdx",
+      createOptions(),
+    );
+    expect(mixed.usedComponents).toEqual(["Alert"]);
+    expect(mixed.code).not.toContain("import Unknown");
+
+    const unknownOnly = await transformMarkdownWithSvelte(
+      "# Plain\n\n<Unknown />\n",
+      "/repo/docs/unknown.mdx",
+      createOptions(),
+    );
+    expect(unknownOnly.usedComponents).toEqual([]);
+    expect(unknownOnly.code).not.toContain("initIslands");
+  });
+
   it("honors disabled built-in embeds from framework options", async () => {
     const result = await transformMarkdownWithSvelte(
       '<GitHub repo="ubugeeei-prod/ox-content"></GitHub>',

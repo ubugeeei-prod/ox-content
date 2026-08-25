@@ -18,6 +18,7 @@ export function resolveSolidOptions(
     codeAnnotations: resolveCodeAnnotationsOptions(options.codeAnnotations),
     verifySolidPlugin: options.verifySolidPlugin ?? true,
     embeds: resolveBuiltinEmbedOptions(options.embeds),
+    mdx: options.mdx,
   };
 }
 

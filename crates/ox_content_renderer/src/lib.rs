@@ -21,6 +21,16 @@
 
 #![deny(clippy::disallowed_macros)]
 #![cfg_attr(test, allow(clippy::disallowed_macros))]
+#![cfg_attr(
+    not(test),
+    deny(
+        clippy::unwrap_used,
+        clippy::expect_used,
+        clippy::panic,
+        clippy::todo,
+        clippy::unimplemented
+    )
+)]
 
 /// Lightweight RAII span guard used internally by the renderer modules.
 ///

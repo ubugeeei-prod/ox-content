@@ -256,6 +256,7 @@ function resolveVueOptions(options: VueIntegrationOptions): ResolvedVueOptions {
     codeAnnotations: resolveCodeAnnotationsOptions(options.codeAnnotations),
     components: options.components ?? {},
     embeds: resolveBuiltinEmbedOptions(options.embeds),
+    mdx: options.mdx,
     // Vue-specific options
     reactivityTransform: options.reactivityTransform ?? false,
     customBlocks: options.customBlocks ?? true,

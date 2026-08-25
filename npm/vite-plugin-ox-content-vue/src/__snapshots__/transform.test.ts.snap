@@ -26,7 +26,7 @@ export default defineComponent({
 exports[`transformMarkdownWithVue > turns registered components into islands and leaves fenced tags literal 1`] = `
 "
 import { h, ref, onMounted, onBeforeUnmount, defineComponent, render } from 'vue';
-import { initIslands } from '@ox-content/islands';
+import { initIslands, readIslandSlotHtml } from '@ox-content/islands';
 import Alert from '../src/components/Alert.vue';
 
 export const frontmatter = {"title":"Vue Guide","draft":false};
@@ -44,7 +44,7 @@ function createVueHydrate(container) {
     const Component = components[componentName];
     if (!Component) return;
 
-    const islandContent = element.dataset.oxContent || element.innerHTML;
+    const islandContent = readIslandSlotHtml(element);
     const children = islandContent
       ? { default: () => h('div', { innerHTML: islandContent }) }
       : undefined;

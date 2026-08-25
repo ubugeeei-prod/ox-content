@@ -5,15 +5,15 @@ description: Theme API でドキュメントサイトの見た目を変える。
 
 # テーマ
 
-Ox Content の Theme API で見た目を変えられます。簡単な色は CSS 変数、完全な制御は JSX テーマです。
+ox-content は、ドキュメントサイトの見た目を変えられる柔軟な Theme API を提供します。簡単なカスタムは CSS 変数、完全な制御は JSX テーマです。
 
-いちから作らなくても、[テーマプリセット](./theme-presets.md) の公式カタログに 27 スキンと 45 配色があります。`@ox-content/theme-*` と `@ox-content/theme-color-*` を `ssg.theme` で合成します。
+いちから作らなくても、[テーマプリセット](./theme-presets.md) の **公式カタログ** に 27 スキンと 45 配色があります。`@ox-content/theme-*` と `@ox-content/theme-color-*` を `ssg.theme` で合成します。互換契約（必須トークン、ライトとダーク、スクリーンショット、スキンが色をハードコードしてはいけない規則）は [パッケージを書く](./theme-presets.md#パッケージを書く) を見てください。
 
 ## 安定した MPA ナビゲーション
 
-組み込みテーマは、保存されたライト、ダーク、またはシステムの配色を初回描画前に復元します。cross-document View Transitions に対応するブラウザーでは、同一オリジンのページ遷移中も現在の画面を維持します。SPA にはならず、リンクは通常どおり別の HTML 文書へ遷移します。未対応ブラウザーではネイティブの遷移にフォールバックします。
+組み込みテーマは、保存されたライト、ダーク、またはシステムの配色を初回描画前に復元します。cross-document View Transitions に対応するブラウザでは、同一オリジンのページ遷移中も現在の画面を維持し、次の生成ページを読み込みます。これは MPA のままです。リンクは通常どおり文書遷移し、未対応ブラウザはネイティブのフォールバックを使います。
 
-`prefers-reduced-motion: reduce` の場合、トランジションは自動的に無効になります。テーマ単位で無効化する場合は `viewTransitions: false` を指定します。
+`prefers-reduced-motion: reduce` ではトランジションは自動でオフになります。テーマ単位で切るときは `viewTransitions: false` です。
 
 ```ts
 defineTheme({
@@ -21,12 +21,11 @@ defineTheme({
 });
 ```
 
-外部リンク、ダウンロード、ページ内リンクの動作は変わりません。
+外部リンク、ダウンロード、ハッシュのみのリンクは、普通のブラウザ挙動のままです。
 
-## サイドバーラベルの多言語化
+## ローカライズしたサイドバーラベル
 
-サイドバーのすべての `text` には、文字列またはロケールマップを指定できます。
-トップレベルのグループ、リンク付き親項目、ネスト項目で同じ形式を使います。
+すべてのサイドバー `text` は、1 つの文字列でもロケールマップでも構いません。同じマップはトップレベルグループ、リンク付き親、入れ子項目で動きます。
 
 ```ts
 defineTheme({
@@ -47,14 +46,14 @@ defineTheme({
 });
 ```
 
-ラベルは、ページの完全なロケール、言語サブタグ、設定された既定ロケール、
-既定ロケールの言語サブタグ、最初の空でない値の順で解決され、HTML
-エスケープされます。兄弟ページが無いリンクは、壊れた URL にせず元の href を保ちます。
-折りたたみ状態の保存キーはラベルではなくツリー位置を使うため、言語を切り替えても維持されます。
+解決は決定的です。正確なページロケール、その言語サブタグ、設定した既定ロケール、その言語サブタグ、それから最初の空でないマップ値です。ラベルは HTML エスケープされます。ローカライズしたリンクは存在する兄弟ページを使います。兄弟がなければ、書いた href が有効なままです。折りたたみの sticky 状態はナビ木の位置を使うので、ロケールを変えてもリセットされません。
 
-## 最短
+## クイックスタート
+
+### CSS 変数でカスタム
 
 ```ts
+// vite.config.ts
 import { defineConfig } from "vite";
 import { oxContent, defineTheme, defaultTheme } from "@ox-content/vite-plugin";
 
@@ -82,33 +81,476 @@ export default defineConfig({
 });
 ```
 
-## JSX テーマ
+### JSX テーマ（完全制御）
 
-JSX / TSX テーマは、既定でクライアント JS なしの静的 HTML に描画されます。
+ox-content は JSX / TSX テーマをサポートし、**クライアント側 JavaScript なし** で静的 HTML に描画します（既定）。
 
 ```tsx
+// theme/Layout.tsx
 import { usePageProps, useSiteConfig, useNav, raw, each } from "@ox-content/vite-plugin";
 
 export function Layout({ children }) {
   const page = usePageProps();
   const site = useSiteConfig();
   const nav = useNav();
+
   return (
-    <html lang={page.lang}>
+    <html lang="en">
+      <head>
+        <meta charset="UTF-8" />
+        <title>
+          {page.title} - {site.name}
+        </title>
+      </head>
       <body>
-        <header>{site.siteName}</header>
         <nav>
-          {each(nav, (item) => (
-            <a href={item.href}>{item.text}</a>
+          {each(nav, (group) => (
+            <div>
+              <h3>{group.title}</h3>
+              <ul>
+                {each(group.items, (item) => (
+                  <li>
+                    <a href={item.href}>{item.title}</a>
+                  </li>
+                ))}
+              </ul>
+            </div>
           ))}
         </nav>
-        <main>{raw(children)}</main>
+        <main>{children}</main>
       </body>
     </html>
   );
 }
 ```
 
-トークンは `--octc-*` です。スキンは色を直書きせず、配色パッケージが light / dark を担います。契約の詳細は [テーマプリセット](./theme-presets.md) と [英語の Theming](/theming.md) を見てください。
+JSX 向けに `tsconfig.json` を設定します。
 
-ヘッダーナビの `text` も `{ en, ja }` のロケールマップにできます。[ヘッダー chrome](./built-in/header-chrome.md) を見てください。
+```json
+{
+  "compilerOptions": {
+    "jsx": "react-jsx",
+    "jsxImportSource": "@ox-content/vite-plugin"
+  }
+}
+```
+
+## CSS 変数リファレンス
+
+テーマの色、レイアウト寸法、フォントスタックはすべて、`:root` 上の `--octc-` プレフィックス付き CSS カスタムプロパティとして出ます。下のテーマ設定からセットしても、[独自 CSS](#独自-css-と-javascript) から直接上書きしても構いません。どちらでも変数が単一の真実です。
+
+### 色
+
+| オプション                 | CSS 変数                     | 説明                                                     |
+| -------------------------- | ---------------------------- | -------------------------------------------------------- |
+| `colors.primary`           | `--octc-color-primary`       | リンクやアクティブ状態の主アクセント                     |
+| `colors.primaryHover`      | `--octc-color-primary-hover` | ホバー時の主色                                           |
+| `colors.background`        | `--octc-color-bg`            | メイン背景色                                             |
+| `colors.backgroundAlt`     | `--octc-color-bg-alt`        | 代替背景（サイドバー、コードブロック）                   |
+| `colors.text`              | `--octc-color-text`          | メイン文字色                                             |
+| `colors.textMuted`         | `--octc-color-text-muted`    | 控えめ / 副次の文字色                                    |
+| `colors.border`            | `--octc-color-border`        | 境界色                                                   |
+| `colors.codeBackground`    | `--octc-color-code-bg`       | コードブロック背景                                       |
+| `colors.codeBackgroundTop` | `--octc-color-code-bg-top`   | コードブロック勾配の上。省略時は `codeBackground` に従う |
+| `colors.codeText`          | `--octc-color-code-text`     | コードブロック文字色                                     |
+
+### レイアウト
+
+| オプション               | CSS 変数                   | 説明                              |
+| ------------------------ | -------------------------- | --------------------------------- |
+| `layout.sidebarWidth`    | `--octc-sidebar-width`     | サイドバー幅（既定: `260px`）     |
+| `layout.headerHeight`    | `--octc-header-height`     | ヘッダー高さ（既定: `60px`）      |
+| `layout.maxContentWidth` | `--octc-max-content-width` | コンテンツ最大幅（既定: `960px`） |
+
+### フォント
+
+| オプション   | CSS 変数           | 説明                         |
+| ------------ | ------------------ | ---------------------------- |
+| `fonts.sans` | `--octc-font-sans` | サンセリフのフォントスタック |
+| `fonts.mono` | `--octc-font-mono` | 等幅のフォントスタック       |
+
+セットしたキーだけが出ます。省略した色、フォント、レイアウトは [既定テーマの値](#既定テーマの値) に落ちるので、アクセント 1 つを上書きするためにパレット全体を書き直す必要はありません。
+
+## ダークモード
+
+`colors` がライトパレット、`darkColors` がダークパレットです。Ox Content は 1 回のビルドから両方を出し、2 つのセレクタで切り替えます。
+
+- `[data-theme="dark"]` — ページ（または読者が、組み込みヘッダーのテーマ切替で）明示的にダークを選んだとき。切替は `localStorage` に残すので、遷移しても保たれます。
+- `@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) { … } }` — 読者が明示的にライトを選んでいない限り、OS の設定を尊重します。
+
+```ts
+defineTheme({
+  extends: defaultTheme,
+  colors: { primary: "#3b82f6", background: "#ffffff" },
+  darkColors: { primary: "#60a5fa", background: "#060816" },
+});
+```
+
+`darkColors` も `colors` と同じキー単位のフォールバックです。省略したキーは既定のダークパレットを継承します。
+
+## エントリページのモード
+
+既定テーマはランディングページのモードを 2 つ持っています。
+
+- `default` — よりブランド寄りの、マーケティング風エントリページ
+- `subtle` — docs.rs に近い、余白を詰めた控えめなヒーロー
+
+```ts
+defineTheme({
+  extends: defaultTheme,
+  entryPage: {
+    mode: "subtle",
+  },
+});
+```
+
+## ページアウトライン
+
+既定テーマは、ページ見出しから右側の「このページ」アウトラインを描けます。**既定はオフ** です。`aside: true` でオンにします。アウトラインが出るのは TOC エントリがあるページだけです。エントリページはアウトラインを出しません。
+
+```ts
+defineTheme({
+  extends: defaultTheme,
+  aside: true,
+});
+```
+
+オンにすると、マークアップは `<aside class="toc">` と、記事カラムの `main--with-toc` のままです。オプトインになる前と同じ chrome です。アウトラインが欲しい既存サイトは `theme.aside: true` を設定する必要があります。
+
+## ページ props とフック
+
+テーマコンポーネントではフックでページデータに触れます。
+
+### `usePageProps()`
+
+現在ページのデータを返します。
+
+```tsx
+function PageHeader() {
+  const page = usePageProps();
+
+  return (
+    <header>
+      <h1>{page.title}</h1>
+      {page.description && <p>{page.description}</p>}
+    </header>
+  );
+}
+```
+
+**使えるプロパティ:**
+
+- `title` — ページタイトル
+- `description` — ページ説明
+- `html` — 描画済み HTML
+- `toc` — 目次
+- `path` — ソースファイルパス
+- `url` — 出力 URL
+- `frontmatter` — 生の frontmatter オブジェクト
+- `layout` — レイアウト名
+
+### `useSiteConfig()`
+
+サイト全体の設定を返します。
+
+```tsx
+function SiteHeader() {
+  const site = useSiteConfig();
+
+  return <header>{site.name}</header>;
+}
+```
+
+### `useNav()`
+
+ナビグループを返します。
+
+```tsx
+function Sidebar() {
+  const nav = useNav();
+
+  return (
+    <nav>
+      {each(nav, (group) => (
+        <section>
+          <h3>{group.title}</h3>
+          {each(group.items, (item) => (
+            <a href={item.href}>{item.title}</a>
+          ))}
+        </section>
+      ))}
+    </nav>
+  );
+}
+```
+
+### `useIsActive(path)`
+
+パスが現在ページかどうかを調べます。
+
+```tsx
+function NavLink({ href, children }) {
+  const isActive = useIsActive(href);
+
+  return (
+    <a href={href} class={isActive ? "active" : ""}>
+      {children}
+    </a>
+  );
+}
+```
+
+## JSX ユーティリティ
+
+### `raw(html)`
+
+エスケープせずに生 HTML を描画します。
+
+```tsx
+<div>{raw(page.html)}</div>
+```
+
+### `each(items, render)`
+
+配列を写します。
+
+```tsx
+{
+  each(items, (item, index) => <li key={index}>{item.name}</li>);
+}
+```
+
+### `when(condition, content)`
+
+条件付き描画です。
+
+```tsx
+{
+  when(page.toc.length > 0, <aside class="toc">...</aside>);
+}
+```
+
+## 型生成
+
+ox-content はページの frontmatter から TypeScript 型を自動生成します。生成型は出力ディレクトリに保存されます。
+
+```ts
+// Generated: page-props.d.ts
+export interface PageFrontmatter {
+  title: string;
+  description?: string;
+  layout?: string;
+  // ... other fields from your frontmatter
+}
+
+export type PageProps = import("@ox-content/vite-plugin").PageProps<PageFrontmatter>;
+```
+
+生成型の使い方:
+
+```tsx
+import type { PageProps } from "./page-props";
+
+function Layout() {
+  const page = usePageProps<PageProps["frontmatter"]>();
+  // page.frontmatter is now fully typed
+}
+```
+
+## レイアウト切替
+
+frontmatter に応じて複数レイアウトを使えます。
+
+```tsx
+// theme/index.tsx
+import { createTheme } from "@ox-content/vite-plugin";
+import { DefaultLayout } from "./layouts/Default";
+import { EntryLayout } from "./layouts/Entry";
+import { BlogLayout } from "./layouts/Blog";
+
+export default createTheme({
+  layouts: {
+    default: DefaultLayout,
+    entry: EntryLayout,
+    blog: BlogLayout,
+  },
+});
+```
+
+Markdown 側:
+
+```md
+---
+layout: entry
+title: Welcome
+---
+
+# Welcome to My Docs
+```
+
+## ソーシャルリンク
+
+ヘッダーにソーシャルリンクを足します。短縮形はよく使うネットワークをカバーします。
+
+```ts
+defineTheme({
+  extends: defaultTheme,
+  socialLinks: {
+    github: "https://github.com/your/repo",
+    twitter: "https://twitter.com/yourhandle",
+    discord: "https://discord.gg/yourserver",
+  },
+});
+```
+
+それ以外は `{ icon, link, label? }` の配列を渡します。`icon` は次の形式を受け付けます。
+
+| 形式                  | 例                            | 描画                                     |
+| --------------------- | ----------------------------- | ---------------------------------------- |
+| Iconify `prefix:name` | `"mdi:mastodon"`              | Iconify アイコン（任意のセット）、色対応 |
+| Lucide                | `"lucide:rss"`                | Iconify 経由の Lucide アイコン           |
+| 画像 URL              | `"https://example.com/x.svg"` | そのソースの `<img>`                     |
+| ローカルパス          | `"/icons/x.svg"`              | サイト `base` に対して解決した `<img>`   |
+| 絵文字 / テキスト     | `"📡"`                        | そのままインライン描画                   |
+
+```ts
+defineTheme({
+  extends: defaultTheme,
+  socialLinks: [
+    { icon: "mdi:mastodon", link: "https://mastodon.social/@you", label: "Mastodon" },
+    { icon: "lucide:rss", link: "/feed.xml", label: "RSS" },
+  ],
+});
+```
+
+アイコンとして渡したインライン SVG はサニタイズされます。`<script>` は除くので、アイコン文字列が実行可能なマークアップを注入することはありません。
+
+## 埋め込み HTML（スロット）
+
+`embed` オプションは、ページレイアウトの決まった位置に生 HTML を注入します。9 箇所すべて任意です。
+
+| フィールド      | 描画先                                           |
+| --------------- | ------------------------------------------------ |
+| `head`          | `<head>` 内（分析、`preconnect`、独自 `<meta>`） |
+| `headerBefore`  | ヘッダーバーの直前                               |
+| `headerAfter`   | ヘッダーバーの直後                               |
+| `sidebarBefore` | サイドバー先頭、ナビの前                         |
+| `sidebarAfter`  | サイドバー末尾、ナビのあと                       |
+| `contentBefore` | メインコンテンツの前（記事の上）                 |
+| `contentAfter`  | メインコンテンツのあと（記事の下）               |
+| `footerBefore`  | フッターの直前                                   |
+| `footer`        | 既定フッターを丸ごと置き換える                   |
+
+```ts
+defineTheme({
+  extends: defaultTheme,
+  embed: {
+    head: '<link rel="preconnect" href="https://fonts.googleapis.com">',
+    headerBefore: '<div class="announcement">New version!</div>',
+    contentAfter: '<div class="feedback">Was this helpful?</div>',
+    footer: '<footer class="custom">© My Project</footer>',
+  },
+});
+```
+
+埋め込み HTML はそのまま挿入されるので、信頼できるマークアップだけを渡してください。
+
+## 独自 CSS と JavaScript
+
+`css` は生成された `--octc-*` 変数上書きの **あと** に付くので、特異度が同じときは自分の規則が勝ち、変数を自由に読んだり再定義したりできます。`js` はすべてのページにインラインスクリプトとして注入されます。
+
+```ts
+defineTheme({
+  extends: defaultTheme,
+  css: `
+    /* Override a generated variable for every page… */
+    :root {
+      --octc-max-content-width: 1100px;
+    }
+    /* …or target the rendered markup directly. */
+    .content h1 {
+      color: var(--octc-color-primary);
+      letter-spacing: -0.04em;
+    }
+  `,
+  js: `
+    console.log('Page loaded');
+  `,
+});
+```
+
+一度きりの調整なら、テーマ全体を定義せず `ssg` プラグインオプションに直接 `css` を渡せます。同じようにマージされます。
+
+```ts
+oxContent({
+  ssg: {
+    theme: { css: ".hero-name { letter-spacing: -0.04em; }" },
+  },
+});
+```
+
+## 既定テーマの値
+
+```ts
+const defaultTheme = {
+  name: "default",
+  aside: false,
+  colors: {
+    primary: "#3b82f6",
+    primaryHover: "#2563eb",
+    background: "#ffffff",
+    backgroundAlt: "#f5f7fb",
+    text: "#131a30",
+    textMuted: "#4f607b",
+    border: "#d2dbea",
+    codeBackground: "#0b1328",
+    codeText: "#eaf2ff",
+  },
+  darkColors: {
+    primary: "#60a5fa",
+    primaryHover: "#93c5fd",
+    background: "#060816",
+    backgroundAlt: "#0d1528",
+    text: "#ebf2ff",
+    textMuted: "#8ea0bf",
+    border: "#223252",
+    codeBackground: "#0a1020",
+    codeText: "#e7f0ff",
+  },
+  fonts: {
+    sans: '"IBM Plex Sans", "Avenir Next", "Segoe UI Variable", "Segoe UI", sans-serif',
+    mono: '"IBM Plex Mono", "SFMono-Regular", Consolas, monospace',
+  },
+  layout: {
+    sidebarWidth: "260px",
+    headerHeight: "60px",
+    maxContentWidth: "960px",
+  },
+  socialLinks: {},
+};
+```
+
+## TypeScript 対応
+
+型はすべて export されます。
+
+```ts
+import type {
+  ThemeConfig,
+  ThemeColors,
+  ThemeLayout,
+  ThemeFonts,
+  ThemeHeader,
+  ThemeFooter,
+  SocialLinks,
+  ThemeEmbed,
+  ResolvedThemeConfig,
+  PageProps,
+  BasePageProps,
+  SiteConfig,
+  NavGroup,
+  NavItem,
+  ThemeComponent,
+  ThemeProps,
+} from "@ox-content/vite-plugin";
+```
