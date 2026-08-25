@@ -24,14 +24,15 @@ describe("highlightCode", () => {
     expect(highlighted).not.toContain("--octc-syntax-token");
   });
 
-  it("leaves vue unhighlighted when the native engine has no grammar", async () => {
+  it("highlights vue through the native html-adjacent alias", async () => {
     const highlighted = await highlightCode(
       block("vue", "&lt;template&gt;&lt;p&gt;hi&lt;/p&gt;&lt;/template&gt;"),
     );
 
     expect(highlighted).toContain("template");
     expect(highlighted).toContain("hi");
-    expect(highlighted).not.toContain("--octc-syntax-token");
+    expect(highlighted).toContain("var(--octc-syntax-token-");
+    expect(highlighted).toContain('data-language="vue"');
   });
 
   it("highlights standalone language-tagged code inline", async () => {
