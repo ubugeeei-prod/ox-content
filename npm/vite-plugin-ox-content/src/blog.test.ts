@@ -9,11 +9,13 @@ describe("resolveBlogOptions", () => {
       enabled: false,
       authors: {},
       pageSize: 10,
+      feeds: [],
     });
     expect(resolveBlogOptions(false)).toEqual({
       enabled: false,
       authors: {},
       pageSize: 10,
+      feeds: [],
     });
     expect(createDocsResolvedOptions().blog).toBeUndefined();
     expect(resolveSsgOptions(undefined).blog?.enabled).toBe(false);
@@ -26,28 +28,49 @@ describe("resolveBlogOptions", () => {
       enabled: true,
       authors: {},
       pageSize: 10,
+      feeds: [],
     });
     expect(resolveSsgOptions({ blog: true }).blog).toEqual({
       enabled: true,
       authors: {},
       pageSize: 10,
+      feeds: [],
     });
     expect(
       resolveBlogOptions({
         collection: "posts",
         pageSize: 5,
         authors: { ada: { name: "Ada", bio: "Writer", url: "https://example.com/ada" } },
+        feeds: [
+          "https://example.com/rss.xml",
+          {
+            url: "https://example.com/atom.xml",
+            language: "ja",
+            author: "ada",
+            onError: "error",
+          },
+        ],
       }),
     ).toEqual({
       enabled: true,
       collection: "posts",
       pageSize: 5,
       authors: { ada: { name: "Ada", bio: "Writer", url: "https://example.com/ada" } },
+      feeds: [
+        { url: "https://example.com/rss.xml", onError: "warn" },
+        {
+          url: "https://example.com/atom.xml",
+          language: "ja",
+          author: "ada",
+          onError: "error",
+        },
+      ],
     });
     expect(resolveBlogOptions({})).toEqual({
       enabled: true,
       authors: {},
       pageSize: 10,
+      feeds: [],
     });
     expect(resolveBlogOptions({ pageSize: 0 }).pageSize).toBe(10);
     expect(resolveBlogOptions({ pageSize: -3 }).pageSize).toBe(10);

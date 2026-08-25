@@ -51,7 +51,7 @@ Ox Content は、よく使うドキュメントの挙動を既定で載せ、非
 | [リダイレクトとエイリアス](./built-in/redirects.md)      | 静的 HTML リダイレクト                                                         |
 | [カスタム 404](./built-in/not-found.md)                  | テーマ付き 404                                                                 |
 | [RSS / Atom / JSON フィード](./built-in/feeds.md)        | コレクションからフィードを出力                                                 |
-| [ブログ](./built-in/blog.md)                             | ページ送り索引、著者、タグ、読了時間、アーカイブ                               |
+| [ブログ](./built-in/blog.md)                             | ページ送り索引、著者、タグ、アーカイブ、任意の外部フィード                     |
 | [PWA マニフェストとサービスワーカー](./built-in/pwa.md)  | Web アプリマニフェストと保守的なオフラインキャッシュ（クライアント JS を追加） |
 | [タクソノミー](./built-in/taxonomies.md)                 | タグ / カテゴリの用語ページと関連ページ                                        |
 | [ドキュメントのバージョン管理](./built-in/versioning.md) | プレフィックス、凍結スナップショット、切替 UI                                  |

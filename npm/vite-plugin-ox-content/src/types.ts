@@ -1060,7 +1060,35 @@ export interface BlogOptions {
    * @default 10
    */
   pageSize?: number;
+
+  /**
+   * External RSS / Atom sources merged into the blog index at build time.
+   * Empty / omitted fetches nothing. Only these URLs are requested.
+   * @default []
+   */
+  feeds?: Array<string | BlogFeedSource>;
 }
+
+/**
+ * One configured external blog feed.
+ */
+export interface BlogFeedSource {
+  /** Absolute `https:` feed URL. */
+  url: string;
+  /** Default language applied when an item omits one. */
+  language?: string;
+  /** Default author applied when an item omits one. */
+  author?: string;
+  /**
+   * Failed fetch / parse handling for this source.
+   * `warn` skips the source. `error` fails the build after other sources run.
+   * @default "warn"
+   */
+  onError?: BlogFeedFailurePolicy;
+}
+
+/** How a failed external feed source is reported. */
+export type BlogFeedFailurePolicy = "warn" | "error";
 
 /**
  * Resolved blog options.
@@ -1070,6 +1098,17 @@ export interface ResolvedBlogOptions {
   collection?: string;
   authors: Record<string, BlogAuthor>;
   pageSize: number;
+  feeds: ResolvedBlogFeedSource[];
+}
+
+/**
+ * Resolved external blog feed source.
+ */
+export interface ResolvedBlogFeedSource {
+  url: string;
+  language?: string;
+  author?: string;
+  onError: BlogFeedFailurePolicy;
 }
 
 /**

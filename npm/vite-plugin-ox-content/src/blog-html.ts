@@ -12,6 +12,8 @@ export interface BlogSourcePage {
   transformedHtml: string;
   inputPath: string;
   routePaths: { href: string };
+  /** When true, href is a remote canonical URL and must not become a local route. */
+  external?: boolean;
 }
 
 export interface BlogPostMeta {
@@ -24,6 +26,7 @@ export interface BlogListItem {
   title: string;
   href: string;
   dateLabel?: string;
+  external?: boolean;
 }
 
 /** `https:` or a same-origin path starting with `/` but not `//`. */
@@ -149,5 +152,8 @@ function listItem(item: BlogListItem): string {
   const time = item.dateLabel
     ? ` <time datetime="${escapeHtml(item.dateLabel)}">${escapeHtml(item.dateLabel)}</time>`
     : "";
+  if (item.external) {
+    return `<li class="ox-blog-external" data-ox-blog-external="true"><a href="${escapeHtml(item.href)}" rel="external noopener noreferrer">${escapeHtml(item.title)}</a>${time}</li>`;
+  }
   return `<li><a href="${escapeHtml(item.href)}">${escapeHtml(item.title)}</a>${time}</li>`;
 }

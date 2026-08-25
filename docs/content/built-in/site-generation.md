@@ -80,7 +80,7 @@ export default defineConfig({
 | `a11y`            | `false`        | Skip link and print styles.                                                                           |
 | `notFound`        | `false`        | Themed 404 page. See [Custom 404](./not-found.md).                                                    |
 | `team`            | `false`        | Member cards on `layout: team`. See [Team](./team.md).                                                |
-| `blog`            | `false`        | Paginated index, authors, tags, archive. See [Blog](./blog.md).                                       |
+| `blog`            | `false`        | Paginated index, authors, tags, archive, optional external feeds. See [Blog](./blog.md).              |
 | `sectionIndex`    | `false`        | Generated listings for directories without `index.md`. See [Section index pages](./section-index.md). |
 | `pageChrome`      | `false`        | Honor per-page frontmatter chrome flags.                                                              |
 | `theme`           | `defaultTheme` | Theme configuration via `defineTheme()`.                                                              |

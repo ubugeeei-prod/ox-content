@@ -13,6 +13,7 @@ description: オプトインのページ送り索引、著者、タグ、読了�
 - `/blog/tags/{tag}/` のタグページ
 - `/blog/archive/`、`/blog/archive/{yyyy}/`、`/blog/archive/{yyyy}/{mm}/`
   の年次・月次アーカイブ
+- 同じ索引へマージする任意の外部 RSS / Atom ソース
 
 省略または `false` ではオフです。既存サイトの出力は変わりません。
 タグとアーカイブはこの機能の中で実装します。タクソノミー（#687）を待ちません。
@@ -58,13 +59,14 @@ oxContent({
 });
 ```
 
-| オプション   | 型                           | 既定                                                     |
-| ------------ | ---------------------------- | -------------------------------------------------------- |
-| `blog`       | `boolean` / `BlogOptions`    | `false`                                                  |
-| `ssg.blog`   | `boolean` / `BlogOptions`    | `false`                                                  |
-| `collection` | `string`                     | 名前が `blog` のコレクション、なければ唯一のコレクション |
-| `authors`    | `Record<string, BlogAuthor>` | `{}`                                                     |
-| `pageSize`   | `number`                     | `10`                                                     |
+| オプション   | 型                             | 既定                                                     |
+| ------------ | ------------------------------ | -------------------------------------------------------- |
+| `blog`       | `boolean` / `BlogOptions`      | `false`                                                  |
+| `ssg.blog`   | `boolean` / `BlogOptions`      | `false`                                                  |
+| `collection` | `string`                       | 名前が `blog` のコレクション、なければ唯一のコレクション |
+| `authors`    | `Record<string, BlogAuthor>`   | `{}`                                                     |
+| `pageSize`   | `number`                       | `10`                                                     |
+| `feeds`      | `(string \| BlogFeedSource)[]` | `[]`（取得しない）                                       |
 
 ## コレクション
 
@@ -155,6 +157,54 @@ tags:
 - `/blog/archive/{yyyy}/{mm}/` — その月の投稿（`mm` はゼロ埋め）
 
 パースできない `date` の投稿は索引とタグページにだけ載ります。
+
+## 外部フィード
+
+`feeds` は空でない配列を書いたときだけ動きます。ビルドが取るのはその
+設定 URL だけです。Markdown や HTML の中のリンクは取りに行きません。
+
+```ts
+oxContent({
+  blog: {
+    feeds: [
+      "https://example.com/rss.xml",
+      {
+        url: "https://example.com/atom.xml",
+        language: "ja",
+        author: "ada",
+        onError: "warn",
+      },
+    ],
+  },
+});
+```
+
+| フィールド | 型                 | 既定   | 役割                                                 |
+| ---------- | ------------------ | ------ | ---------------------------------------------------- |
+| `url`      | `string`           | —      | 絶対 `https:` の RSS または Atom URL                 |
+| `language` | `string`           | —      | 項目に言語が無いときの既定                           |
+| `author`   | `string`           | —      | 項目に著者が無いときの既定                           |
+| `onError`  | `"warn"`/`"error"` | `warn` | ソースを飛ばすか、他ソースのあとでビルドを失敗させる |
+
+文字列エントリは `{ url, onError: "warn" }` です。同じ URL はビルドあたり
+1 回だけ取ります。ページごとではありません。タイムアウト、リダイレクト回数、
+応答サイズ、`https:` の公開ホストだけ、が効きます。ループバック、プライベート、
+リンクローカルは DNS のあとで拒否します。HTML ページはパースしません。
+
+`warn` の失敗ソースは飛ばし、成功したソースはマージします。1 つの失敗で
+ブログ全体は落ちません。`onError: "error"` は残りのソースを終えたあとで
+ビルドを失敗させます。
+
+項目はタイトル、正規の `https:` リンク、公開日、安定 id、言語、要約がある
+ときそれを残します。ローカル投稿とマージし、新しい順、同じなら href です。
+重複は正規 URL か明示の安定 id で判定します。ローカル投稿が勝ちます。
+
+外部項目には `external` マーカー（`class="ox-blog-external"`、
+`rel="external"`）が付きます。テーマはリモート URL を残し、ローカル経路へ
+書き換えてはいけません。
+
+外部項目は生成する RSS / Atom / JSON フィードには**入りません**。
+このリリースに取り込みスイッチはありません。
 
 ## 下書きと非公開
 

@@ -15,6 +15,8 @@ import {
   type BlogSourcePage,
 } from "./blog-html";
 import { readingTimeMinutes } from "./blog-reading";
+import { BlogFeedError, loadExternalBlogPosts, mergeBlogPosts } from "./blog-feeds";
+import type { BlogFeedNetwork } from "./blog-feed-fetch";
 import {
   collectTags,
   datedPosts,
@@ -58,7 +60,7 @@ export async function injectBlogPostMeta(input: {
   }
   const listedPaths = new Set(posts.map((page) => page.inputPath));
   for (const page of input.pages) {
-    if (!listedPaths.has(page.inputPath)) {
+    if (!listedPaths.has(page.inputPath) || page.external === true) {
       continue;
     }
     const markdown = await readMarkdown(page.inputPath);
@@ -113,6 +115,7 @@ export async function appendBlogPages(input: {
   base: string;
   render: (page: BlogGeneratedPage) => Promise<string>;
   errors: string[];
+  feedNetwork?: BlogFeedNetwork;
 }): Promise<void> {
   if (!input.options?.enabled) {
     return;
@@ -121,10 +124,11 @@ export async function appendBlogPages(input: {
     input.errors.push(AMBIGUOUS_COLLECTION);
     return;
   }
-  const posts = selectBlogPosts(input.listedPages, input.options, input.srcDir, input.collections);
-  if (posts === undefined) {
+  const local = selectBlogPosts(input.listedPages, input.options, input.srcDir, input.collections);
+  if (local === undefined) {
     return;
   }
+  const posts = await collectIndexPosts(local, input.options, input.errors, input.feedNetwork);
   for (const spec of blogPageSpecs(posts, input.options, input.outDir, input.base)) {
     try {
       input.generatedPages.push({
@@ -252,6 +256,26 @@ function blogPageSpecs(
   }
 
   return pages;
+}
+
+async function collectIndexPosts(
+  local: BlogSourcePage[],
+  options: ResolvedBlogOptions,
+  errors: string[],
+  network?: BlogFeedNetwork,
+): Promise<BlogSourcePage[]> {
+  if (options.feeds.length === 0) {
+    return local;
+  }
+  const loaded = await loadExternalBlogPosts(options.feeds, network);
+  errors.push(...loaded.warnings);
+  for (const warning of loaded.warnings) {
+    console.warn(warning);
+  }
+  if (loaded.fatals.length > 0) {
+    throw new BlogFeedError(loaded.fatals);
+  }
+  return mergeBlogPosts(local, loaded.pages);
 }
 
 async function readMarkdown(inputPath: string): Promise<string> {

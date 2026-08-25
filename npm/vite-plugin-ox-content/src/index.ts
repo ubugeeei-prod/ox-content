@@ -18,7 +18,7 @@ import { resolveCascadeOptions, resolvePermalinksOptions } from "./permalinks";
 import { resolveRedirectsOptions } from "./redirects";
 import { notFoundSearchExcludeIds } from "./not-found";
 import { resolveFeedsOptions } from "./feeds";
-import { resolveBlogOptions } from "./blog";
+import { BlogFeedError, resolveBlogOptions } from "./blog";
 import { resolvePwaOptions } from "./pwa";
 import { resolveTaxonomiesOptions } from "./taxonomies";
 import { resolveVersionsOptions } from "./versions";
@@ -131,7 +131,10 @@ export type {
   RedirectsOptions,
   ResolvedRedirectsOptions,
   BlogAuthor,
+  BlogFeedFailurePolicy,
+  BlogFeedSource,
   BlogOptions,
+  ResolvedBlogFeedSource,
   ResolvedBlogOptions,
   FeedFormat,
   FeedsOptions,
@@ -470,7 +473,7 @@ function createSsgPlugin(
         }
       } catch (err) {
         console.error("[ox-content] SSG build failed:", err);
-        if (err instanceof PageResourceError) {
+        if (err instanceof PageResourceError || err instanceof BlogFeedError) {
           throw err;
         }
       }
@@ -1117,7 +1120,12 @@ export {
 export { resolvePermalinksOptions, resolveCascadeOptions } from "./permalinks";
 export { resolveRedirectsOptions } from "./redirects";
 export { resolveFeedsOptions } from "./feeds";
-export { resolveBlogOptions, resolveBlogCollectionName, readingTimeMinutes } from "./blog";
+export {
+  BlogFeedError,
+  resolveBlogOptions,
+  resolveBlogCollectionName,
+  readingTimeMinutes,
+} from "./blog";
 export { resolvePwaOptions } from "./pwa";
 export { resolveTaxonomiesOptions } from "./taxonomies";
 export { resolveVersionsOptions } from "./versions";

@@ -19,49 +19,49 @@ inline**.
 
 ## Feature Guides
 
-| Guide                                                  | Covers                                                                    |
-| ------------------------------------------------------ | ------------------------------------------------------------------------- |
-| [Markdown Baseline](./built-in/markdown.md)            | GFM, tables, task lists, footnotes, autolinks, frontmatter, TOC           |
-| [Syntax Extensions](./built-in/syntax-extensions.md)   | Emoji shortcodes, wiki links, attribute syntax, CJK emphasis              |
-| [Custom Containers](./built-in/containers.md)          | Opt-in `::: tip` / `::: details` callout blocks                           |
-| [Cards](./built-in/cards.md)                           | Opt-in `::: card` / `::: link-card` / `::: card-grid` blocks              |
-| [Step Lists](./built-in/steps.md)                      | Opt-in `::: steps` tutorial lists                                         |
-| [File Includes](./built-in/includes.md)                | Opt-in `<!-- @include -->` Markdown fragments                             |
-| [File Tree](./built-in/file-tree.md)                   | Opt-in static `file-tree` directory diagrams                              |
-| [Inline Badges](./built-in/badges.md)                  | Opt-in `{badge:tip}` status labels in headings or prose                   |
-| [Images](./built-in/images.md)                         | Opt-in figures, captions, lazy loading, and safe dimensions               |
-| [Page resources](./built-in/resources.md)              | Opt-in page-bundle assets with resize, crop, and format transforms        |
-| [Code Blocks](./built-in/code-blocks.md)               | Syntax highlighting, code annotations, code imports                       |
-| [Embeds](./built-in/embeds.md)                         | GitHub cards, OG cards, package-manager tabs, tabs, YouTube, social cards |
-| [Mermaid Diagrams](./built-in/mermaid.md)              | Diagram fences rendered to static SVG                                     |
-| [Math](./built-in/math.md)                             | Opt-in `$…$` / `$$…$$` typeset with optional KaTeX                        |
-| [Search](./built-in/search.md)                         | The static BM25 index and client search API                               |
-| [Collections](./built-in/collections.md)               | Query Markdown files with a SQL-like builder                              |
-| [Quality Checks](./built-in/quality-checks.md)         | Code block lint, type checking, docs tests, HTML sanitizer                |
-| [Typed Hover](./built-in/typed-hover.md)               | Opt-in build-time TypeScript hover overlays for `twoslash` fences         |
-| [Site Generation](./built-in/site-generation.md)       | SSG, OG images, edit links, collections, API docs, transformers           |
-| [Page head](./built-in/page-head.md)                   | Build-time Unhead-compatible title / meta / link / JSON-LD API            |
-| [SEO](./built-in/seo.md)                               | Canonical, robots, hreflang, and head validation on that API              |
-| [Previous / Next](./built-in/pagination.md)            | Opt-in previous and next page links                                       |
-| [Breadcrumbs](./built-in/breadcrumbs.md)               | Opt-in trail from the site root through sidebar ancestors                 |
-| [JSON-LD](./built-in/json-ld.md)                       | Opt-in TechArticle / WebSite / BreadcrumbList structured data             |
-| [Reader Chrome](./built-in/reader-chrome.md)           | Opt-in copy, outbound-link icons, and back-to-top                         |
-| [Locale Switcher](./built-in/locale-switcher.md)       | Opt-in header control for configured locales                              |
-| [Accessibility](./built-in/a11y.md)                    | Opt-in skip link and print styles                                         |
-| [Header chrome](./built-in/header-chrome.md)           | Opt-in header nav, announcement bar, and per-page chrome                  |
-| [Sitemap / robots / llms.txt](./built-in/site-maps.md) | Opt-in crawl manifests written next to generated HTML                     |
-| [Draft / unlisted / scheduled](./built-in/drafts.md)   | Opt-in frontmatter publish states for production output                   |
-| [Permalinks and Cascade](./built-in/permalinks.md)     | Opt-in frontmatter URLs and directory-level default frontmatter           |
-| [Redirects and aliases](./built-in/redirects.md)       | Opt-in static HTML redirects from aliases and a rewrite map               |
-| [Custom 404](./built-in/not-found.md)                  | Opt-in themed 404 page with nav and search                                |
-| [RSS / Atom / JSON feeds](./built-in/feeds.md)         | Opt-in collection feeds written next to generated HTML                    |
-| [Blog](./built-in/blog.md)                             | Opt-in paginated index, authors, tags, reading time, and archive          |
-| [PWA manifest and service worker](./built-in/pwa.md)   | Opt-in web app manifest and conservative offline cache (adds client JS)   |
-| [Taxonomies](./built-in/taxonomies.md)                 | Opt-in tag/category term pages and related-page lists                     |
-| [Documentation versioning](./built-in/versioning.md)   | Opt-in prefixes, frozen snapshots, and a header version dropdown          |
-| [Team / members page](./built-in/team.md)              | Opt-in static member cards on `layout: team` pages                        |
-| [Git contributors](./built-in/contributors.md)         | Opt-in unique git authors under each article                              |
-| [Section index pages](./built-in/section-index.md)     | Opt-in generated listings for directories without `index.md`              |
+| Guide                                                  | Covers                                                                      |
+| ------------------------------------------------------ | --------------------------------------------------------------------------- |
+| [Markdown Baseline](./built-in/markdown.md)            | GFM, tables, task lists, footnotes, autolinks, frontmatter, TOC             |
+| [Syntax Extensions](./built-in/syntax-extensions.md)   | Emoji shortcodes, wiki links, attribute syntax, CJK emphasis                |
+| [Custom Containers](./built-in/containers.md)          | Opt-in `::: tip` / `::: details` callout blocks                             |
+| [Cards](./built-in/cards.md)                           | Opt-in `::: card` / `::: link-card` / `::: card-grid` blocks                |
+| [Step Lists](./built-in/steps.md)                      | Opt-in `::: steps` tutorial lists                                           |
+| [File Includes](./built-in/includes.md)                | Opt-in `<!-- @include -->` Markdown fragments                               |
+| [File Tree](./built-in/file-tree.md)                   | Opt-in static `file-tree` directory diagrams                                |
+| [Inline Badges](./built-in/badges.md)                  | Opt-in `{badge:tip}` status labels in headings or prose                     |
+| [Images](./built-in/images.md)                         | Opt-in figures, captions, lazy loading, and safe dimensions                 |
+| [Page resources](./built-in/resources.md)              | Opt-in page-bundle assets with resize, crop, and format transforms          |
+| [Code Blocks](./built-in/code-blocks.md)               | Syntax highlighting, code annotations, code imports                         |
+| [Embeds](./built-in/embeds.md)                         | GitHub cards, OG cards, package-manager tabs, tabs, YouTube, social cards   |
+| [Mermaid Diagrams](./built-in/mermaid.md)              | Diagram fences rendered to static SVG                                       |
+| [Math](./built-in/math.md)                             | Opt-in `$…$` / `$$…$$` typeset with optional KaTeX                          |
+| [Search](./built-in/search.md)                         | The static BM25 index and client search API                                 |
+| [Collections](./built-in/collections.md)               | Query Markdown files with a SQL-like builder                                |
+| [Quality Checks](./built-in/quality-checks.md)         | Code block lint, type checking, docs tests, HTML sanitizer                  |
+| [Typed Hover](./built-in/typed-hover.md)               | Opt-in build-time TypeScript hover overlays for `twoslash` fences           |
+| [Site Generation](./built-in/site-generation.md)       | SSG, OG images, edit links, collections, API docs, transformers             |
+| [Page head](./built-in/page-head.md)                   | Build-time Unhead-compatible title / meta / link / JSON-LD API              |
+| [SEO](./built-in/seo.md)                               | Canonical, robots, hreflang, and head validation on that API                |
+| [Previous / Next](./built-in/pagination.md)            | Opt-in previous and next page links                                         |
+| [Breadcrumbs](./built-in/breadcrumbs.md)               | Opt-in trail from the site root through sidebar ancestors                   |
+| [JSON-LD](./built-in/json-ld.md)                       | Opt-in TechArticle / WebSite / BreadcrumbList structured data               |
+| [Reader Chrome](./built-in/reader-chrome.md)           | Opt-in copy, outbound-link icons, and back-to-top                           |
+| [Locale Switcher](./built-in/locale-switcher.md)       | Opt-in header control for configured locales                                |
+| [Accessibility](./built-in/a11y.md)                    | Opt-in skip link and print styles                                           |
+| [Header chrome](./built-in/header-chrome.md)           | Opt-in header nav, announcement bar, and per-page chrome                    |
+| [Sitemap / robots / llms.txt](./built-in/site-maps.md) | Opt-in crawl manifests written next to generated HTML                       |
+| [Draft / unlisted / scheduled](./built-in/drafts.md)   | Opt-in frontmatter publish states for production output                     |
+| [Permalinks and Cascade](./built-in/permalinks.md)     | Opt-in frontmatter URLs and directory-level default frontmatter             |
+| [Redirects and aliases](./built-in/redirects.md)       | Opt-in static HTML redirects from aliases and a rewrite map                 |
+| [Custom 404](./built-in/not-found.md)                  | Opt-in themed 404 page with nav and search                                  |
+| [RSS / Atom / JSON feeds](./built-in/feeds.md)         | Opt-in collection feeds written next to generated HTML                      |
+| [Blog](./built-in/blog.md)                             | Opt-in paginated index, authors, tags, archive, and optional external feeds |
+| [PWA manifest and service worker](./built-in/pwa.md)   | Opt-in web app manifest and conservative offline cache (adds client JS)     |
+| [Taxonomies](./built-in/taxonomies.md)                 | Opt-in tag/category term pages and related-page lists                       |
+| [Documentation versioning](./built-in/versioning.md)   | Opt-in prefixes, frozen snapshots, and a header version dropdown            |
+| [Team / members page](./built-in/team.md)              | Opt-in static member cards on `layout: team` pages                          |
+| [Git contributors](./built-in/contributors.md)         | Opt-in unique git authors under each article                                |
+| [Section index pages](./built-in/section-index.md)     | Opt-in generated listings for directories without `index.md`                |
 
 ## Default vs Opt-in
 
