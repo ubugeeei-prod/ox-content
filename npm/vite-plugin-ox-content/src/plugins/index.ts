@@ -5,32 +5,23 @@
  * They generate static HTML at build time and require no client-side JS.
  */
 
-import type { GitHubOptions } from "./github";
-import type { MediaEmbedOptions } from "./media";
-import type { TwitterEmbedOptions } from "./twitter";
-import type { OgpOptions } from "./ogp";
-import type { PmOptions } from "./pm";
-
-export {
+import {
   transformTabs,
   generateTabsCSS,
   resetTabGroupCounter,
   getTabGroupCounter,
   setTabGroupCounter,
 } from "./tabs";
-
-export { transformPm, type PmOptions } from "./pm";
-
-export { transformYouTube, extractVideoId, type YouTubeOptions } from "./youtube";
-export { transformMediaEmbeds, type MediaEmbedOptions } from "./media";
-export {
+import { transformPm, type PmOptions } from "./pm";
+import { transformYouTube, extractVideoId, type YouTubeOptions } from "./youtube";
+import { transformMediaEmbeds, type MediaEmbedOptions } from "./media";
+import {
   createSyndicationToken,
   parseTweetReference,
   type TweetData,
   type TwitterEmbedOptions,
 } from "./twitter";
-
-export {
+import {
   transformGitHub,
   fetchRepoData,
   fetchGitHubSource,
@@ -47,8 +38,7 @@ export {
   type GitHubLineRange,
   type GitHubOptions,
 } from "./github";
-
-export {
+import {
   transformOgp,
   fetchOgpData,
   collectOgpUrls,
@@ -56,8 +46,53 @@ export {
   type OgpData,
   type OgpOptions,
 } from "./ogp";
+import { transformMermaidStatic, mermaidClientScript, type MermaidOptions } from "./mermaid";
 
-export { transformMermaidStatic, mermaidClientScript, type MermaidOptions } from "./mermaid";
+export {
+  transformTabs,
+  generateTabsCSS,
+  resetTabGroupCounter,
+  getTabGroupCounter,
+  setTabGroupCounter,
+  transformPm,
+  transformYouTube,
+  extractVideoId,
+  transformMediaEmbeds,
+  createSyndicationToken,
+  parseTweetReference,
+  transformGitHub,
+  fetchRepoData,
+  fetchGitHubSource,
+  collectGitHubRepos,
+  collectGitHubSources,
+  prefetchGitHubRepos,
+  prefetchGitHubSources,
+  parseGitHubPermalink,
+  parseGitHubLineRange,
+  transformOgp,
+  fetchOgpData,
+  collectOgpUrls,
+  prefetchOgpData,
+  transformMermaidStatic,
+  mermaidClientScript,
+};
+
+export type {
+  PmOptions,
+  YouTubeOptions,
+  MediaEmbedOptions,
+  TweetData,
+  TwitterEmbedOptions,
+  GitHubRepoData,
+  GitHubSourceCommit,
+  GitHubSourceData,
+  GitHubSourceRef,
+  GitHubLineRange,
+  GitHubOptions,
+  OgpData,
+  OgpOptions,
+  MermaidOptions,
+};
 
 const SELF_CLOSING_EMBED_TAG =
   /<(GitHub|OgCard|Tweet|XPost|Bluesky|Spotify|StackBlitz|WebContainer|YouTube)((?:[^>"']|"[^"]*"|'[^']*')*?)\s*\/>/gi;
@@ -130,7 +165,6 @@ export async function transformAllPlugins(
 
   // 1. Tabs (no external dependencies)
   if (tabs) {
-    const { transformTabs } = await import("./tabs");
     result = await transformTabs(result);
   }
 
@@ -138,26 +172,22 @@ export async function transformAllPlugins(
   // counter with the tabs transform, so it runs right after it. Syncing is
   // opt-in via `{ pm: { sync: true } }` and off by default.
   if (pm) {
-    const { transformPm } = await import("./pm");
     result = await transformPm(result, typeof pm === "object" ? pm : {});
   }
 
   // 2. YouTube (no external dependencies)
   if (youtube) {
-    const { transformYouTube } = await import("./youtube");
     result = await transformYouTube(result);
   }
 
   // 3. GitHub (requires API calls)
   if (github !== false) {
-    const { transformGitHub } = await import("./github");
     const options = typeof github === "object" ? github : {};
     result = await transformGitHub(result, undefined, { token: githubToken, ...options });
   }
 
   // 4. OGP (requires fetch calls)
   if (ogpOptions !== false) {
-    const { transformOgp } = await import("./ogp");
     result = await transformOgp(
       result,
       undefined,
@@ -167,13 +197,11 @@ export async function transformAllPlugins(
 
   const mediaOptions = { spotify, stackBlitz, twitter, bluesky, webContainer };
   if (Object.values(mediaOptions).some(Boolean)) {
-    const { transformMediaEmbeds } = await import("./media");
     result = await transformMediaEmbeds(result, mediaOptions);
   }
 
   // 5. Mermaid (requires mermaid library)
   if (mermaid) {
-    const { transformMermaidStatic } = await import("./mermaid");
     result = await transformMermaidStatic(result);
   }
 
@@ -199,7 +227,6 @@ export async function transformBuiltinEmbeds(
   let result = normalizeSelfClosingEmbeds(html);
 
   if (options.github) {
-    const { transformGitHub } = await import("./github");
     result = await transformGitHub(result, undefined, {
       token: process.env.GITHUB_TOKEN,
       ...options.github,
@@ -207,12 +234,10 @@ export async function transformBuiltinEmbeds(
   }
 
   if (options.openGraph) {
-    const { transformOgp } = await import("./ogp");
     result = await transformOgp(result, undefined, options.openGraph);
   }
 
   if (options.pm) {
-    const { transformPm } = await import("./pm");
     result = await transformPm(result, typeof options.pm === "object" ? options.pm : {});
   }
 
@@ -224,7 +249,6 @@ export async function transformBuiltinEmbeds(
     webContainer: options.webContainer,
   };
   if (Object.values(mediaOptions).some(Boolean)) {
-    const { transformMediaEmbeds } = await import("./media");
     result = await transformMediaEmbeds(result, mediaOptions);
   }
 
