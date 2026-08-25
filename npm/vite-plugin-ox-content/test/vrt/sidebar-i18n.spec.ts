@@ -21,6 +21,18 @@ const sidebar: SidebarItem[] = [
   },
 ];
 
+const longSidebar: SidebarItem[] = [
+  {
+    text: "Guide",
+    collapsed: false,
+    stickyCollapsed: true,
+    items: Array.from({ length: 34 }, (_, index) => ({
+      text: `Navigation item ${String(index + 1).padStart(2, "0")}`,
+      link: `/long-${index + 1}.md`,
+    })),
+  },
+];
+
 const pageRefs = [
   { path: "built-in", href: "/built-in.html" },
   { path: "cards", href: "/cards.html" },
@@ -60,6 +72,26 @@ async function render(locale: "en" | "ja") {
   );
 }
 
+async function renderLongMenu() {
+  const path = "long-1";
+  return generateHtmlPage(
+    {
+      title: "Long navigation",
+      content:
+        '<h1>Long navigation</h1><p>Mobile navigation stress fixture.</p><div style="height:1600px"></div>',
+      toc: [],
+      frontmatter: {},
+      path,
+      href: `/${path}.html`,
+    },
+    buildThemeNavItems(longSidebar, "/", ".html"),
+    "Long menu fixture",
+    "/",
+    undefined,
+    resolveTheme({ sidebar: longSidebar }),
+  );
+}
+
 async function routePages(page: Page) {
   const pages = {
     "/built-in.html": await render("en"),
@@ -71,6 +103,18 @@ async function routePages(page: Page) {
     await route.fulfill(
       body
         ? { contentType: "text/html", body }
+        : { status: 404, contentType: "text/plain", body: "not found" },
+    );
+  });
+}
+
+async function routeLongMenuPage(page: Page) {
+  const html = await renderLongMenu();
+  await page.route(`${origin}/**`, async (route) => {
+    const pathname = new URL(route.request().url()).pathname;
+    await route.fulfill(
+      pathname === "/long-1.html"
+        ? { contentType: "text/html", body: html }
         : { status: 404, contentType: "text/plain", body: "not found" },
     );
   });
@@ -125,3 +169,53 @@ for (const viewport of [
     await attachScreenshot(page, testInfo, `${viewport.name}-sidebar-ja.png`);
   });
 }
+
+test("contains a long mobile menu between the fixed header and footer", async ({
+  page,
+}, testInfo) => {
+  await page.setViewportSize({ width: 390, height: 844 });
+  await routeLongMenuPage(page);
+  await page.goto(`${origin}/long-1.html`);
+  await openMobileMenu(page);
+
+  const boxes = await page.evaluate(() => {
+    const sidebar = document.querySelector<HTMLElement>("#ox-sidebar");
+    const header = document.querySelector<HTMLElement>(".header");
+    const footer = document.querySelector<HTMLElement>(".mobile-footer");
+    const overlay = document.querySelector<HTMLElement>(".overlay");
+    if (!sidebar || !header || !footer || !overlay) throw new Error("missing mobile chrome");
+
+    const sidebarBox = sidebar.getBoundingClientRect();
+    const headerBox = header.getBoundingClientRect();
+    const footerBox = footer.getBoundingClientRect();
+    const overlayBox = overlay.getBoundingClientRect();
+    const overlayStyle = getComputedStyle(overlay);
+    return {
+      headerBottom: headerBox.bottom,
+      footerTop: footerBox.top,
+      overlayBackground: overlayStyle.backgroundColor,
+      overlayBottom: overlayBox.bottom,
+      overlayTop: overlayBox.top,
+      sidebarBottom: sidebarBox.bottom,
+      sidebarClientHeight: sidebar.clientHeight,
+      sidebarScrollHeight: sidebar.scrollHeight,
+      sidebarTop: sidebarBox.top,
+    };
+  });
+
+  expect(boxes.sidebarTop).toBeGreaterThanOrEqual(Math.floor(boxes.headerBottom) - 1);
+  expect(boxes.sidebarBottom).toBeLessThanOrEqual(Math.ceil(boxes.footerTop) + 1);
+  expect(boxes.sidebarScrollHeight).toBeGreaterThan(boxes.sidebarClientHeight);
+  expect(boxes.overlayTop).toBeGreaterThanOrEqual(Math.floor(boxes.headerBottom) - 1);
+  expect(boxes.overlayBottom).toBeLessThanOrEqual(Math.ceil(boxes.footerTop) + 1);
+  expect(boxes.overlayBackground).not.toBe("rgba(0, 0, 0, 0)");
+
+  const bodyScrollBefore = await page.evaluate(() => window.scrollY);
+  await page.locator("#ox-sidebar").hover();
+  await page.mouse.wheel(0, 900);
+  await expect.poll(() => page.evaluate(() => window.scrollY)).toBe(bodyScrollBefore);
+  await expect
+    .poll(() => page.locator("#ox-sidebar").evaluate((element) => element.scrollTop))
+    .toBeGreaterThan(0);
+  await attachScreenshot(page, testInfo, "mobile-long-sidebar-contained.png");
+});

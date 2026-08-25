@@ -2,6 +2,7 @@
   color-scheme: light dark;
   --octc-sidebar-width: 260px;
   --octc-header-height: 60px;
+  --octc-mobile-footer-height: 56px;
   --octc-max-content-width: 960px;
   --octc-mobile-gutter: clamp(1rem, 4vw, 1.25rem);
   --octc-font-sans: "IBM Plex Sans", "Avenir Next", "Segoe UI Variable", "Segoe UI", sans-serif;
@@ -146,6 +147,7 @@ body.search-open {
 }
 body.menu-open {
   overflow: hidden;
+  overscroll-behavior: none;
 }
 a {
   color: var(--octc-color-primary);
@@ -1793,13 +1795,14 @@ a:hover {
     bottom: 0;
     left: 0;
     right: 0;
-    height: 56px;
+    height: calc(var(--octc-mobile-footer-height) + env(safe-area-inset-bottom, 0px));
     background: var(--octc-surface-glass);
     border-top: 1px solid var(--octc-color-border);
     justify-content: space-around;
     align-items: center;
     padding-left: max(var(--octc-mobile-gutter), env(safe-area-inset-left, 0px));
     padding-right: max(var(--octc-mobile-gutter), env(safe-area-inset-right, 0px));
+    padding-bottom: env(safe-area-inset-bottom, 0px);
     z-index: 100;
   }
   .mobile-footer-btn {
@@ -1832,16 +1835,18 @@ a:hover {
   }
   .sidebar {
     position: fixed;
-    top: auto;
+    top: var(--octc-header-height);
     left: 0;
     right: 0;
-    bottom: 0;
+    bottom: calc(var(--octc-mobile-footer-height) + env(safe-area-inset-bottom, 0px));
     width: 100%;
-    max-height: 70vh;
+    max-height: none;
     transform: translateY(100%);
     z-index: 99;
-    border-radius: 4px 4px 0 0;
-    padding: 1.5rem 1rem calc(56px + 1.5rem);
+    border-radius: 0;
+    overflow-y: auto;
+    overscroll-behavior: contain;
+    padding: 1rem 1rem 1.25rem;
     padding-left: max(var(--octc-mobile-gutter), env(safe-area-inset-left, 0px));
     padding-right: max(var(--octc-mobile-gutter), env(safe-area-inset-right, 0px));
     background: color-mix(in srgb, var(--octc-color-bg-alt) 88%, var(--octc-color-bg));
@@ -1858,18 +1863,7 @@ a:hover {
     }
   }
   .sidebar::before {
-    content: "";
-    position: sticky;
-    top: 0;
-    z-index: 2;
-    display: block;
-    height: 2.5rem;
-    margin-block-start: -1.5rem;
-    margin-block-end: 0.5rem;
-    margin-inline: calc(0px - var(--octc-mobile-gutter));
-    background: color-mix(in srgb, var(--octc-color-bg-alt) 88%, var(--octc-color-bg));
-    border-block-end: 1px solid var(--octc-color-border);
-    border-radius: 4px 4px 0 0;
+    display: none;
   }
   .sidebar.open {
     transform: translateY(0);
@@ -1894,7 +1888,9 @@ a:hover {
     padding: 0.9rem var(--octc-mobile-gutter);
     padding-left: max(var(--octc-mobile-gutter), env(safe-area-inset-left, 0px));
     padding-right: max(var(--octc-mobile-gutter), env(safe-area-inset-right, 0px));
-    padding-bottom: calc(56px + 0.9rem);
+    padding-bottom: calc(
+      var(--octc-mobile-footer-height) + env(safe-area-inset-bottom, 0px) + 0.9rem
+    );
   }
   .content {
     padding: 0;
@@ -2088,8 +2084,15 @@ a:hover {
   .overlay {
     display: none;
     position: fixed;
-    inset: 0;
-    background: transparent;
+    top: var(--octc-header-height);
+    left: 0;
+    right: 0;
+    bottom: calc(var(--octc-mobile-footer-height) + env(safe-area-inset-bottom, 0px));
+    background: color-mix(in srgb, var(--octc-color-bg) 72%, transparent);
+    backdrop-filter: blur(2px);
+    -webkit-backdrop-filter: blur(2px);
+    overscroll-behavior: contain;
+    touch-action: none;
     z-index: 98;
   }
   .overlay.open {
@@ -2114,7 +2117,9 @@ a:hover {
 @media (max-width: 480px) {
   .main {
     padding-block-start: 0.75rem;
-    padding-bottom: calc(56px + 0.75rem);
+    padding-bottom: calc(
+      var(--octc-mobile-footer-height) + env(safe-area-inset-bottom, 0px) + 0.75rem
+    );
   }
   .content h1 {
     font-size: 1.35rem;

@@ -234,6 +234,10 @@ fn test_mobile_content_css_preserves_safe_reading_gutters() {
         "mobile layouts need a shared readable gutter token"
     );
     assert!(
+        SSG_CSS.contains("--octc-mobile-footer-height: 56px;"),
+        "mobile chrome spacing should use one shared footer height token"
+    );
+    assert!(
         SSG_CSS.contains(
             "padding-left: max(var(--octc-mobile-gutter), env(safe-area-inset-left, 0px));"
         ) && SSG_CSS.contains(
@@ -255,15 +259,26 @@ fn test_mobile_content_css_preserves_safe_reading_gutters() {
 #[test]
 fn test_mobile_menu_css_stays_reachable_and_touch_safe() {
     assert!(
-        SSG_CSS.contains("body.menu-open {\n  overflow: hidden;"),
-        "an open sheet must not scroll the page behind it"
+        SSG_CSS.contains("body.menu-open {\n  overflow: hidden;\n  overscroll-behavior: none;"),
+        "an open drawer must not scroll the page behind it"
     );
     assert!(
-        SSG_CSS.contains(".sidebar::before {\n    content: \"\";\n    position: sticky;")
+        SSG_CSS.contains(".sidebar {\n    position: fixed;\n    top: var(--octc-header-height);")
             && SSG_CSS.contains(
-                "background: color-mix(in srgb, var(--octc-color-bg-alt) 88%, var(--octc-color-bg));\n    border-block-end: 1px solid var(--octc-color-border);"
-            ),
-        "the mobile sheet needs a flat sticky bar above long navigation"
+                "bottom: calc(var(--octc-mobile-footer-height) + env(safe-area-inset-bottom, 0px));"
+            )
+            && SSG_CSS.contains("overflow-y: auto;\n    overscroll-behavior: contain;"),
+        "the mobile drawer must stay between header and footer with internal scrolling"
+    );
+    assert!(
+        SSG_CSS.contains(".sidebar::before {\n    display: none;"),
+        "the mobile drawer should not rely on a fake sticky bar above long navigation"
+    );
+    assert!(
+        SSG_CSS.contains(".overlay {\n    display: none;\n    position: fixed;")
+            && SSG_CSS
+                .contains("background: color-mix(in srgb, var(--octc-color-bg) 72%, transparent);"),
+        "the menu overlay must cover the reading pane instead of staying transparent"
     );
     assert!(
         SSG_CSS.contains(".sidebar .nav-link {\n    min-height: 44px;")
