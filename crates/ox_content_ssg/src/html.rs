@@ -10,6 +10,7 @@ mod entry;
 mod footer;
 mod head;
 mod header_chrome;
+mod heading_permalinks;
 mod json_ld;
 mod locale_switcher;
 mod mpa_navigation;

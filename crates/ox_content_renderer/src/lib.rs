@@ -76,5 +76,8 @@ pub use frameworks::{
     FrameworkCodegenError, FrameworkCodegenTarget, FrameworkComponentIsland, escape_svelte_markup,
     render_framework_component_code,
 };
-pub use html::{CodeAnnotationSyntax, HtmlRenderer, HtmlRendererOptions, slugify_heading};
+pub use html::{
+    CodeAnnotationSyntax, HEADING_PERMALINK_CLASS, HtmlRenderer, HtmlRendererOptions,
+    slugify_heading,
+};
 pub use render::{RenderError, RenderResult, Renderer};

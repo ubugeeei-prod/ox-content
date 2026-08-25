@@ -20,6 +20,6 @@ mod toc;
 #[cfg(test)]
 mod tests;
 
-pub use heading::slugify_heading;
+pub use heading::{HEADING_PERMALINK_CLASS, slugify_heading};
 pub use options::{CodeAnnotationSyntax, HtmlRendererOptions};
 pub use renderer::HtmlRenderer;

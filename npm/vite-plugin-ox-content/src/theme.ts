@@ -190,6 +190,14 @@ export interface ThemeConfig {
    * `breadcrumbs: false` still hides it on that page.
    */
   breadcrumbs?: boolean | Record<string, unknown>;
+  /**
+   * Heading permalink visibility. CSS only — the renderer HTML stays
+   * `<a class="header-anchor" href="#id">`.
+   *
+   * `"hover"` (default) reveals the `#` on hover / focus-visible, and
+   * stays visible on touch. `"always"` keeps it visible.
+   */
+  headingPermalink?: "hover" | "always";
   /** Light mode colors (maps to CSS variables) */
   colors?: ThemeColors;
   /** Dark mode colors (maps to CSS variables) */
@@ -245,6 +253,7 @@ export interface ResolvedThemeConfig {
   viewTransitions: boolean;
   aside: boolean;
   breadcrumbs: boolean;
+  headingPermalink: "hover" | "always";
   colors: ThemeColors;
   darkColors: ThemeColors;
   fonts: ThemeFonts;
@@ -272,6 +281,7 @@ export const defaultTheme: ThemeConfig = {
   viewTransitions: true,
   aside: false,
   breadcrumbs: false,
+  headingPermalink: "hover",
   colors: {
     primary: "#4f6fae",
     primaryHover: "#425f96",
@@ -462,6 +472,7 @@ export function resolveTheme(config?: ThemeConfig | ThemeConfig[]): ResolvedThem
     viewTransitions: merged.viewTransitions ?? defaultTheme.viewTransitions ?? true,
     aside: merged.aside ?? defaultTheme.aside ?? false,
     breadcrumbs: resolveThemeFlag(merged.breadcrumbs),
+    headingPermalink: merged.headingPermalink === "always" ? "always" : "hover",
     colors: merged.colors ?? defaultTheme.colors!,
     darkColors: merged.darkColors ?? defaultTheme.darkColors!,
     fonts: merged.fonts ?? defaultTheme.fonts!,
@@ -526,6 +537,7 @@ export function themeToNapi(theme: ResolvedThemeConfig, locale?: string): NapiTh
     viewTransitions: theme.viewTransitions,
     aside: theme.aside,
     breadcrumbs: theme.breadcrumbs,
+    headingPermalink: theme.headingPermalink,
     colors: theme.colors.primary
       ? {
           primary: theme.colors.primary,
@@ -732,6 +744,8 @@ export interface NapiThemeConfig {
   aside?: boolean;
   /** Breadcrumb trail from the site root through sidebar ancestors. */
   breadcrumbs?: boolean;
+  /** Heading permalink visibility. CSS only. */
+  headingPermalink?: "hover" | "always";
   nav?: ResolvedHeaderNavItem[];
   announcement?: ThemeAnnouncement;
   colors?: NapiThemeColors;

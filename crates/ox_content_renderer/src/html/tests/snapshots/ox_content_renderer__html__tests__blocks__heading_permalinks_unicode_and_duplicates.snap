@@ -1,0 +1,6 @@
+---
+source: crates/ox_content_renderer/src/html/tests/blocks.rs
+expression: html
+---
+<h2 id="はじめに">はじめに<a class="header-anchor" href="#はじめに" aria-label="Permalink to &quot;はじめに&quot;">#</a></h2>
+<h2 id="はじめに-1">はじめに<a class="header-anchor" href="#はじめに-1" aria-label="Permalink to &quot;はじめに&quot;">#</a></h2>

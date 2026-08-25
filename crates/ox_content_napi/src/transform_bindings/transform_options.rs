@@ -114,6 +114,11 @@ pub struct JsTransformOptions {
     /// Default: `true`; ignored when [`Self::autolink_urls`] is off.
     pub autolink_target_blank: Option<bool>,
 
+    /// Opt-in visible heading permalinks (`<a class="header-anchor" href="#id">`).
+    ///
+    /// Default: disabled. Existing HTML stays unchanged until this is enabled.
+    pub heading_permalinks: Option<bool>,
+
     /// Opt-in Obsidian-style wiki links.
     ///
     /// Default: disabled.
@@ -231,6 +236,7 @@ impl From<JsTransformOptions> for TransformOptions {
             autolink_urls: value.autolink_urls,
             autolink_patterns: value.autolink_patterns,
             autolink_target_blank: value.autolink_target_blank,
+            heading_permalinks: value.heading_permalinks,
             wiki_links: value.wiki_links.map(Into::into),
             emoji_shortcodes: value.emoji_shortcodes.map(Into::into),
             attributes: value.attributes.map(Into::into),

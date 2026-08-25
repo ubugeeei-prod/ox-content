@@ -45,6 +45,7 @@ import { generateCollectionsVirtualModule, resolveCollectionsOptions } from "./c
 import type { BuiltinPmOptions, OxContentOptions, ResolvedOptions } from "./types";
 import { resolveCardOptions } from "./card-options";
 import { resolveFileTreeOptions } from "./file-tree-options";
+import { resolveHeadingPermalinksOptions } from "./heading-permalinks-options";
 import { resolveMagicLinkOptions } from "./magic-link-options";
 import { resolveTypedHoverOptions } from "./typed-hover";
 import { resolveIncludeOptions } from "./include-options";
@@ -697,6 +698,7 @@ function resolveOptions(options: OxContentOptions): ResolvedOptions {
     frontmatter: options.frontmatter ?? true,
     toc: options.toc ?? true,
     tocMaxDepth: options.tocMaxDepth ?? 3,
+    headingPermalinks: resolveHeadingPermalinksOptions(options.headingPermalinks),
     ogImage: options.ogImage ?? false,
     ogImageOptions: resolveOgImageOptions(options.ogImageOptions),
     transformers: options.transformers ?? [],
@@ -816,6 +818,7 @@ export { resolveCardOptions } from "./card-options";
 export { resolveIncludeOptions } from "./include-options";
 export { resolveStepsOptions } from "./step-options";
 export { resolveFileTreeOptions } from "./file-tree-options";
+export { resolveHeadingPermalinksOptions } from "./heading-permalinks-options";
 export { resolveTypedHoverOptions } from "./typed-hover";
 
 function resolveSanitizeOptions(

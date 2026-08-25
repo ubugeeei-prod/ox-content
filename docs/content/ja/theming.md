@@ -217,6 +217,23 @@ defineTheme({
 
 オンにすると、マークアップは `<aside class="toc">` と、記事カラムの `main--with-toc` のままです。オプトインになる前と同じ chrome です。アウトラインが欲しい既存サイトは `theme.aside: true` を設定する必要があります。
 
+## 見出しパーマリンク
+
+見出し横の可視 `#` リンクは **既定オフ** です。`headingPermalinks: true` で、
+レンダラが生成済み id を使って `<a class="header-anchor" href="#id">` を付けます。
+`theme.headingPermalink` は CSS の見え方だけを選びます。
+
+```ts
+defineTheme({
+  extends: defaultTheme,
+  headingPermalink: "always",
+});
+```
+
+`"hover"`（既定）は hover と `:focus-visible` で出し、タッチでは常時表示です。
+`"always"` は常に出します。見出し HTML は変わりません。
+[見出しパーマリンク](./built-in/heading-permalinks.md) を見てください。
+
 ## ページ props とフック
 
 テーマコンポーネントではフックでページデータに触れます。
@@ -495,6 +512,7 @@ oxContent({
 const defaultTheme = {
   name: "default",
   aside: false,
+  headingPermalink: "hover",
   colors: {
     primary: "#3b82f6",
     primaryHover: "#2563eb",
