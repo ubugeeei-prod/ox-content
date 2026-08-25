@@ -27,7 +27,7 @@ exports[`transformMarkdownWithSvelte > turns registered components into islands 
 "import 'svelte/internal/disclose-version';
 import * as $ from 'svelte/internal/client';
 import { createRawSnippet, onMount, mount, unmount } from 'svelte';
-import { initIslands } from '@ox-content/islands';
+import { initIslands, readIslandSlotHtml } from '@ox-content/islands';
 import Alert from '../src/components/Alert.svelte';
 
 var root = $.from_html(\`<div class="ox-content svelte-1wrpihl"></div>\`);
@@ -49,7 +49,7 @@ export default function Svelte_md($$anchor, $$props) {
 
 			if (!Component) return;
 
-			const islandContent = element.dataset.oxContent || element.innerHTML;
+			const islandContent = readIslandSlotHtml(element);
 			const componentProps = { ...props };
 
 			if (islandContent) {

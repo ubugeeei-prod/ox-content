@@ -1,4 +1,8 @@
-import { transformMarkdown as baseTransformMarkdown } from "@ox-content/vite-plugin";
+import {
+  discoverRegisteredMdxComponents,
+  resolveMdxForFilePath,
+  transformMarkdown as baseTransformMarkdown,
+} from "@ox-content/vite-plugin";
 import { generateSolidModule } from "./codegen";
 import { extractFrontmatter, injectIslandMarkers, scanComponents } from "./markdown";
 import type { ResolvedSolidOptions, SolidTransformResult } from "./types";
@@ -13,10 +17,33 @@ export async function transformMarkdownWithSolid(
   const { content: markdownContent, frontmatter } = options.frontmatter
     ? extractFrontmatter(code)
     : { content: code, frontmatter: {} };
+  const mdx = resolveMdxForFilePath(id, options.mdx);
+  const baseOptions = createBaseOptions(options, mdx);
+
+  if (mdx) {
+    const transformed = await baseTransformMarkdown(markdownContent, id, baseOptions);
+    const usedComponents = await discoverRegisteredMdxComponents({
+      source: markdownContent,
+      html: transformed.html,
+      components: options.components,
+    });
+    return {
+      code: generateSolidModule(
+        transformed.html,
+        usedComponents,
+        usedComponents,
+        frontmatter,
+        options,
+        id,
+      ),
+      map: null,
+      usedComponents,
+      frontmatter,
+    };
+  }
+
   const scanned = scanComponents(markdownContent, options.components);
-
-  const transformed = await baseTransformMarkdown(scanned.content, id, createBaseOptions(options));
-
+  const transformed = await baseTransformMarkdown(scanned.content, id, baseOptions);
   const htmlWithIslands = injectIslandMarkers(transformed.html, scanned.islands);
 
   return {
@@ -44,12 +71,14 @@ export async function transformMarkdownWithSolid(
  */
 function createBaseOptions(
   options: ResolvedSolidOptions,
+  mdx: boolean,
 ): Parameters<typeof baseTransformMarkdown>[2] {
   return {
     srcDir: options.srcDir,
     outDir: options.outDir,
     base: options.base,
     extensions: options.extensions,
+    mdx,
     ssg: {
       enabled: false,
       extension: ".html",
