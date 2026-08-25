@@ -25,6 +25,7 @@
 //!     content: "<h1>Getting Started</h1><p>Welcome!</p>".to_string(),
 //!     toc: vec![TocEntry { depth: 1, text: "Getting Started".to_string(), slug: "getting-started".to_string() }],
 //!     last_updated: None,
+//!     contributors: vec![],
 //!     path: "getting-started".to_string(),
 //!     entry_page: None,
 //!     prev: None,
@@ -77,10 +78,10 @@ pub use assets::{
 };
 pub use feeds::{FeedFormat, FeedItem, FeedsOptions, FeedsOutput, generate_feeds};
 pub use html::{
-    A11y, BarePageData, EntryPageConfig, FeatureConfig, HeaderNavItem, HeroAction, HeroConfig,
-    HeroImage, HeroNoticeConfig, LocaleInfo, LocalePath, NavGroup, NavItem, PageChromeFlags,
-    PageData, PagerOverride, ReaderChrome, SocialLink, SocialLinks, SsgConfig, TeamLink,
-    TeamMember, TeamOptions, ThemeAnnouncement, ThemeColors, ThemeConfig, ThemeEmbed,
+    A11y, BarePageData, Contributor, EntryPageConfig, FeatureConfig, HeaderNavItem, HeroAction,
+    HeroConfig, HeroImage, HeroNoticeConfig, LocaleInfo, LocalePath, NavGroup, NavItem,
+    PageChromeFlags, PageData, PagerOverride, ReaderChrome, SocialLink, SocialLinks, SsgConfig,
+    TeamLink, TeamMember, TeamOptions, ThemeAnnouncement, ThemeColors, ThemeConfig, ThemeEmbed,
     ThemeEntryPage, ThemeFonts, ThemeFooter, ThemeHeader, ThemeLayout, TocEntry,
     generate_bare_html, generate_bare_page, generate_html, render_team_page,
 };

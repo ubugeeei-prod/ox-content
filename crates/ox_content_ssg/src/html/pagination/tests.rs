@@ -44,6 +44,7 @@ fn page(path: &str) -> PageData {
         content: "<p>Body</p>".to_string(),
         toc: vec![],
         last_updated: None,
+        contributors: vec![],
         path: path.to_string(),
         entry_page: None,
         prev: None,

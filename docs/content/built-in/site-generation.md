@@ -70,6 +70,7 @@ export default defineConfig({
 | `ogImage`         | —              | Static fallback OG image URL.                          |
 | `generateOgImage` | `false`        | Per-page OG images (see below).                        |
 | `lastUpdated`     | `false`        | Show the git last-commit time per page.                |
+| `contributors`    | `false`        | Unique git authors per page. See [Contributors](./contributors.md). |
 | `pagination`      | `false`        | Previous/next links after the article.                 |
 | `breadcrumbs`     | `false`        | Trail from the site root through sidebar ancestors.    |
 | `readerChrome`    | `false`        | Copy, outbound-link icons, and back-to-top.            |

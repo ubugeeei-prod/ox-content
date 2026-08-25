@@ -292,6 +292,18 @@ export interface SsgOptions {
   lastUpdated?: boolean;
 
   /**
+   * List unique git authors for each page.
+   *
+   * Off by default. `true` enables names only. An object enables the
+   * feature and can set `ignore` and `avatars`. Missing `.git` (for
+   * example a published tarball) yields an empty list and does not
+   * fail the build.
+   *
+   * @default false
+   */
+  contributors?: boolean | ContributorsOptions;
+
+  /**
    * Show previous/next page links after the article.
    *
    * Disabled when omitted or `false`. `true` enables the default pager.
@@ -504,6 +516,10 @@ export interface ResolvedSsgOptions {
   ogImage?: string;
   generateOgImage: boolean;
   lastUpdated: boolean;
+  /**
+   * Present after `resolveSsgOptions`. Omitted in hand-built fixtures means off.
+   */
+  contributors?: ResolvedContributors;
   pagination: boolean;
   breadcrumbs: boolean;
   readerChrome: ResolvedReaderChrome;
@@ -576,6 +592,33 @@ export interface TeamMember {
 /**
  * Opt-in team / members page.
  */
+/**
+ * Opt-in git contributor list.
+ */
+export interface ContributorsOptions {
+  /**
+   * Author names or emails to omit. Comparison is case-insensitive and
+   * matches the full name or the full email.
+   */
+  ignore?: string[];
+  /**
+   * When true and a git author email is present, render a Gravatar
+   * image from the MD5 of that email. The raw email is never written
+   * into HTML. Default is names only.
+   */
+  avatars?: boolean;
+}
+
+/**
+ * Resolved git contributor list. `false` means the feature is off.
+ */
+export type ResolvedContributors =
+  | false
+  | {
+      ignore: string[];
+      avatars: boolean;
+    };
+
 export interface TeamOptions {
   /**
    * People rendered as static cards on `layout: team` pages.

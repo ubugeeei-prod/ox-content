@@ -136,6 +136,18 @@
 {% if let Some(updated) = last_updated %}
       <p class="last-updated">Last updated: <time datetime="{{ updated.datetime }}">{{ updated.text }}</time></p>
 {% endif %}
+{% if !contributors.is_empty() %}
+      <ul class="contributors" aria-label="Contributors">
+{% for contributor in contributors %}
+        <li class="contributor">
+{% if let Some(avatar) = contributor.avatar %}
+          <img class="contributor-avatar" src="{{ avatar|safe }}" alt="" width="24" height="24">
+{% endif %}
+          <span class="contributor-name">{{ contributor.name|safe }}</span>
+        </li>
+{% endfor %}
+      </ul>
+{% endif %}
 {{ embed_content_after|safe }}
 {{ embed_footer_before|safe }}
 {{ footer_html|safe }}

@@ -31,8 +31,9 @@ pub use team::{TeamLink, TeamMember, TeamOptions, render_team_page};
 
 pub use bare::{BarePageData, generate_bare_html, generate_bare_page};
 pub use page::{
-    EntryPageConfig, FeatureConfig, HeroAction, HeroConfig, HeroImage, HeroNoticeConfig,
-    LocaleInfo, LocalePath, NavGroup, NavItem, PageData, PagerOverride, SsgConfig, TocEntry,
+    Contributor, EntryPageConfig, FeatureConfig, HeroAction, HeroConfig, HeroImage,
+    HeroNoticeConfig, LocaleInfo, LocalePath, NavGroup, NavItem, PageData, PagerOverride,
+    SsgConfig, TocEntry,
 };
 pub use render::generate_html;
 pub use theme::{
@@ -110,6 +111,11 @@ struct LastUpdatedView {
     datetime: String,
 }
 
+struct ContributorView {
+    name: String,
+    avatar: Option<String>,
+}
+
 /// Main page template.
 #[derive(Template)]
 #[template(path = "page.html")]
@@ -151,6 +157,7 @@ struct PageTemplate<'a> {
     pager: Option<&'a PagerView>,
     reader_chrome: Option<&'a ReaderChrome>,
     last_updated: Option<&'a LastUpdatedView>,
+    contributors: &'a [ContributorView],
     embed_content_after: &'a str,
     embed_footer_before: &'a str,
     footer_html: &'a str,
@@ -202,6 +209,9 @@ const MERMAID_CSS: &str = include_str!("plugins/mermaid.css");
 
 /// CSS styles for Island plugin.
 const ISLAND_CSS: &str = include_str!("plugins/island.css");
+
+/// CSS styles for the opt-in git contributor list.
+const CONTRIBUTORS_CSS: &str = include_str!("html/contributors.css");
 
 /// JavaScript for SSG pages.
 const SSG_JS: &str = include_str!("ssg.js");

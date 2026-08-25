@@ -11,6 +11,7 @@ fn page(toc: Vec<TocEntry>) -> PageData {
         content: "<h1>Hello</h1>".to_string(),
         toc,
         last_updated: None,
+        contributors: vec![],
         path: "guide".to_string(),
         entry_page: None,
         prev: None,

@@ -32,6 +32,7 @@ fn page(content: &str) -> PageData {
         content: content.to_string(),
         toc: vec![],
         last_updated: None,
+        contributors: vec![],
         path: "team".to_string(),
         entry_page: None,
         prev: None,

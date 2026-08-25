@@ -1,6 +1,6 @@
 use memchr::memmem;
 
-use super::{LastUpdatedView, SsgConfig, TocEntry};
+use super::{Contributor, ContributorView, LastUpdatedView, SsgConfig, TocEntry};
 
 pub(super) fn wrap_css_section(name: &str, css: &str) -> String {
     if css.trim().is_empty() {
@@ -69,6 +69,37 @@ fn civil_from_days(days: i64) -> (i64, i64, i64) {
     let month = mp + if mp < 10 { 3 } else { -9 };
     let year = year + i64::from(month <= 2);
     (year, month, day)
+}
+
+pub(super) fn safe_contributor_avatar(url: &str) -> Option<&str> {
+    let trimmed = url.trim();
+    if trimmed.is_empty()
+        || trimmed.bytes().any(|byte| matches!(byte, b'\n' | b'\r' | b'\0' | b'\t'))
+        || trimmed.starts_with("//")
+    {
+        return None;
+    }
+    trimmed.to_ascii_lowercase().starts_with("https:").then_some(trimmed)
+}
+
+pub(super) fn contributor_views(contributors: &[Contributor]) -> Vec<ContributorView> {
+    let mut views = Vec::new();
+    let mut seen = rustc_hash::FxHashSet::default();
+    for contributor in contributors {
+        let name = contributor.name.trim();
+        if name.is_empty() || !seen.insert(name.to_ascii_lowercase()) {
+            continue;
+        }
+        views.push(ContributorView {
+            name: escape_html(name),
+            avatar: contributor
+                .avatar
+                .as_deref()
+                .and_then(safe_contributor_avatar)
+                .map(escape_html),
+        });
+    }
+    views
 }
 
 pub(super) fn format_last_updated(timestamp_ms: i64) -> Option<LastUpdatedView> {

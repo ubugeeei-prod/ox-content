@@ -105,6 +105,8 @@ export type {
   TeamMember,
   TeamOptions,
   ResolvedTeamOptions,
+  ContributorsOptions,
+  ResolvedContributors,
   SiteMapsOptions,
   ResolvedSiteMapsOptions,
   PublishStateOptions,

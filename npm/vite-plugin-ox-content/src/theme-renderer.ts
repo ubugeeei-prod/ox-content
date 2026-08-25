@@ -47,6 +47,8 @@ export interface PageData {
   toc: TocEntry[];
   /** Last git commit timestamp in milliseconds */
   lastUpdated?: number;
+  /** Unique git authors for this page */
+  contributors?: Array<{ name: string; avatar?: string }>;
   /** Source file path */
   path: string;
   /** Output URL path */
@@ -92,6 +94,7 @@ export function renderPage(page: PageData, options: ThemeRenderOptions): string 
     html: page.html,
     toc: page.toc,
     lastUpdated: page.lastUpdated,
+    contributors: page.contributors,
     path: page.path,
     url: page.url,
     frontmatter: page.frontmatter,
@@ -109,6 +112,7 @@ export function renderPage(page: PageData, options: ThemeRenderOptions): string 
       html: p.html,
       toc: p.toc,
       lastUpdated: p.lastUpdated,
+      contributors: p.contributors,
       path: p.path,
       url: p.url,
       frontmatter: p.frontmatter,

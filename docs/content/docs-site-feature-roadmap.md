@@ -68,7 +68,7 @@ Already tracked elsewhere:
 
 | Feature                                    | Issue                                                          | Status  |
 | ------------------------------------------ | -------------------------------------------------------------- | ------- |
-| Git contributors                           | [#692](https://github.com/ubugeeei-prod/ox-content/issues/692) | planned |
+| Git contributors                           | [#692](https://github.com/ubugeeei-prod/ox-content/issues/692) | shipped |
 | Typed hover overlays for TypeScript fences | [#693](https://github.com/ubugeeei-prod/ox-content/issues/693) | planned |
 | Hosted search provider adapter             | [#694](https://github.com/ubugeeei-prod/ox-content/issues/694) | planned |
 | PWA manifest and service worker            | [#695](https://github.com/ubugeeei-prod/ox-content/issues/695) | planned |

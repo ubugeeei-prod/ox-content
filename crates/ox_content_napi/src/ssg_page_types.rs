@@ -236,6 +236,28 @@ pub struct JsPagerOverride {
     pub href: Option<String>,
 }
 
+/// One unique git author returned by `getGitContributors`.
+#[napi(object)]
+#[derive(Clone, Debug, Default)]
+pub struct JsGitContributor {
+    /// Author name from `%an`.
+    pub name: String,
+    /// Author email from `%ae`. Never rendered into `href`.
+    pub email: Option<String>,
+    /// Number of commits attributed to this author on the file.
+    pub commits: Option<u32>,
+}
+
+/// One rendered git author on an SSG page.
+#[napi(object)]
+#[derive(Clone, Default)]
+pub struct JsSsgContributor {
+    /// Display name. Escaped in HTML.
+    pub name: String,
+    /// Optional `https:` avatar URL. Emails are never accepted here.
+    pub avatar: Option<String>,
+}
+
 /// Page data for SSG.
 #[napi(object)]
 pub struct JsSsgPageData {
@@ -249,6 +271,8 @@ pub struct JsSsgPageData {
     pub toc: Vec<TocEntry>,
     /// Last updated timestamp in milliseconds since the Unix epoch.
     pub last_updated: Option<f64>,
+    /// Unique git authors for this page. Empty unless the site opted in.
+    pub contributors: Option<Vec<JsSsgContributor>>,
     /// URL path.
     pub path: String,
     /// Entry page configuration (if layout: entry).

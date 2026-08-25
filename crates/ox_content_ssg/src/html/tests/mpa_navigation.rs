@@ -7,6 +7,7 @@ fn page() -> PageData {
         content: "<p>Content</p>".to_string(),
         toc: vec![],
         last_updated: None,
+        contributors: vec![],
         path: "stable".to_string(),
         entry_page: None,
         prev: None,

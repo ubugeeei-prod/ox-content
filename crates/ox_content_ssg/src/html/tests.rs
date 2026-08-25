@@ -20,6 +20,7 @@ fn snapshot_text(value: &str) -> String {
 }
 
 mod aside;
+mod contributors;
 mod mpa_navigation;
 mod navigation_state;
 mod rendering;
@@ -54,6 +55,7 @@ fn mobile_menu_script_keeps_state_and_focus_synchronized() {
 fn default_theme_surfaces_stay_flat() {
     let default_css = [
         super::SSG_CSS,
+        super::CONTRIBUTORS_CSS,
         super::header_chrome::HEADER_CHROME_CSS,
         super::reader_chrome::READER_CHROME_CSS,
     ]

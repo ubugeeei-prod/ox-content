@@ -67,7 +67,7 @@ Ox Content は、非標準の Markdown と追加のサイト振る舞いは **�
 
 | 機能                                      | Issue                                                          | 状態    |
 | ----------------------------------------- | -------------------------------------------------------------- | ------- |
-| Git コントリビューター                    | [#692](https://github.com/ubugeeei-prod/ox-content/issues/692) | planned |
+| Git コントリビューター                    | [#692](https://github.com/ubugeeei-prod/ox-content/issues/692) | shipped |
 | TypeScript フェンスの型ホバーオーバーレイ | [#693](https://github.com/ubugeeei-prod/ox-content/issues/693) | planned |
 | ホスト型検索プロバイダーアダプター        | [#694](https://github.com/ubugeeei-prod/ox-content/issues/694) | planned |
 | PWA マニフェストとサービスワーカー        | [#695](https://github.com/ubugeeei-prod/ox-content/issues/695) | planned |

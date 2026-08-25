@@ -140,6 +140,16 @@ pub struct PagerOverride {
     pub href: Option<String>,
 }
 
+/// One git author rendered under an article.
+#[derive(Debug, Clone, Default, PartialEq, Eq, Serialize, Deserialize)]
+pub struct Contributor {
+    /// Display name. Escaped in HTML.
+    pub name: String,
+    /// Optional avatar URL. Only `https:` URLs are emitted.
+    #[serde(default)]
+    pub avatar: Option<String>,
+}
+
 /// Page data for SSG.
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct PageData {
@@ -153,6 +163,9 @@ pub struct PageData {
     pub toc: Vec<TocEntry>,
     /// Last updated timestamp in milliseconds since the Unix epoch.
     pub last_updated: Option<i64>,
+    /// Unique git authors for this page. Empty unless the site opted in.
+    #[serde(default)]
+    pub contributors: Vec<Contributor>,
     /// URL path.
     pub path: String,
     /// Entry page configuration (if layout: entry).

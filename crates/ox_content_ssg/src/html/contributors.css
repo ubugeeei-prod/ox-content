@@ -1,0 +1,22 @@
+.contributors {
+  max-width: var(--octc-max-content-width);
+  margin: 1.25rem auto 0;
+  padding: 0;
+  list-style: none;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem 1rem;
+  color: var(--octc-color-text-muted);
+  font-size: 0.875rem;
+}
+.contributor {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+}
+.contributor-avatar {
+  width: 1.5rem;
+  height: 1.5rem;
+  border-radius: 999px;
+  object-fit: cover;
+}

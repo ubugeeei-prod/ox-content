@@ -15,6 +15,11 @@ import {
   resolveSsgOptions,
   shouldGenerateOgImages,
 } from "./ssg";
+import {
+  applyContributorOptions,
+  filterGitContributors,
+  gravatarAvatar,
+} from "./contributors";
 import type { ResolvedOptions } from "./types";
 
 describe("resolveSsgOptions", () => {
@@ -25,6 +30,31 @@ describe("resolveSsgOptions", () => {
   it("enables git timestamps when requested", () => {
     expect(resolveSsgOptions({ lastUpdated: true }).lastUpdated).toBe(true);
   });
+
+  it("disables git contributors by default", () => {
+    expect(resolveSsgOptions(undefined).contributors).toBe(false);
+    expect(resolveSsgOptions(true).contributors).toBe(false);
+    expect(resolveSsgOptions({}).contributors).toBe(false);
+  });
+
+  it("enables git contributors with name-only defaults", () => {
+    expect(resolveSsgOptions({ contributors: true }).contributors).toEqual({
+      ignore: [],
+      avatars: false,
+    });
+  });
+
+  it("keeps ignore and avatars from the contributors object", () => {
+    expect(
+      resolveSsgOptions({
+        contributors: { ignore: ["dependabot[bot]", "ci@example.com"], avatars: true },
+      }).contributors,
+    ).toEqual({
+      ignore: ["dependabot[bot]", "ci@example.com"],
+      avatars: true,
+    });
+  });
+
 
   it("disables pagination by default", () => {
     expect(resolveSsgOptions(undefined).pagination).toBe(false);
@@ -351,5 +381,48 @@ describe("parseSsgPagerOverride", () => {
   it("ignores empty objects and non-objects", () => {
     expect(parseSsgPagerOverride({})).toBeUndefined();
     expect(parseSsgPagerOverride("guide")).toBeUndefined();
+  });
+});
+
+describe("git contributors", () => {
+  const authors = [
+    { name: "Ada Lovelace", email: "ada@example.com", commits: 2 },
+    { name: "dependabot[bot]", email: "49699333+dependabot[bot]@users.noreply.github.com" },
+    { name: "CI", email: "ci@example.com" },
+  ];
+
+  it("filters the ignore list by name or email", () => {
+    expect(
+      filterGitContributors(authors, ["dependabot[bot]", "ci@example.com"]).map((author) => author.name),
+    ).toEqual(["Ada Lovelace"]);
+  });
+
+  it("keeps authors when the ignore list is empty", () => {
+    expect(filterGitContributors(authors, []).map((author) => author.name)).toEqual([
+      "Ada Lovelace",
+      "dependabot[bot]",
+      "CI",
+    ]);
+  });
+
+  it("omits avatars and emails unless avatars is true", () => {
+    expect(applyContributorOptions(authors, { ignore: [], avatars: false })).toEqual([
+      { name: "Ada Lovelace", avatar: undefined },
+      { name: "dependabot[bot]", avatar: undefined },
+      { name: "CI", avatar: undefined },
+    ]);
+  });
+
+  it("adds gravatar URLs without putting email into the view", () => {
+    const [ada] = applyContributorOptions(
+      [{ name: "Ada Lovelace", email: "ada@example.com" }],
+      { ignore: [], avatars: true },
+    );
+    expect(ada).toEqual({
+      name: "Ada Lovelace",
+      avatar: gravatarAvatar("ada@example.com"),
+    });
+    expect(JSON.stringify(ada)).not.toContain("ada@example.com");
+    expect(ada.avatar).toMatch(/^https:\/\/www\.gravatar\.com\/avatar\/[a-f0-9]{32}\?d=mp&s=40$/);
   });
 });

@@ -42,6 +42,8 @@ export interface BasePageProps {
   toc: TocEntry[];
   /** Last git commit timestamp in milliseconds */
   lastUpdated?: number;
+  /** Unique git authors for this page */
+  contributors?: Array<{ name: string; avatar?: string }>;
   /** Source file path (relative to docs root) */
   path: string;
   /** Output URL path */

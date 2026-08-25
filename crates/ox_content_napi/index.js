@@ -218,6 +218,7 @@ module.exports.supportsHighlightLanguage = binding.supportsHighlightLanguage;
 module.exports.nativeHighlightLanguages = binding.nativeHighlightLanguages;
 module.exports.generateSsgBarePage = binding.generateSsgBarePage;
 module.exports.getGitLastUpdated = binding.getGitLastUpdated;
+module.exports.getGitContributors = binding.getGitContributors;
 module.exports.resolveSsgRoutePaths = binding.resolveSsgRoutePaths;
 module.exports.getSsgOutputPath = binding.getSsgOutputPath;
 module.exports.getSsgUrlPath = binding.getSsgUrlPath;

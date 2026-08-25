@@ -53,6 +53,7 @@ inline**.
 | [Taxonomies](./built-in/taxonomies.md)                 | Opt-in tag/category term pages and related-page lists                     |
 | [Documentation versioning](./built-in/versioning.md)   | Opt-in prefixes, frozen snapshots, and a header version dropdown          |
 | [Team / members page](./built-in/team.md)              | Opt-in static member cards on `layout: team` pages                        |
+| [Git contributors](./built-in/contributors.md)         | Opt-in unique git authors under each article                              |
 
 ## Default vs Opt-in
 
@@ -96,6 +97,7 @@ inline**.
 | Taxonomies       | `taxonomies`                                                                                                  | `false`              | [Taxonomies](./built-in/taxonomies.md)                 |
 | Versioning       | `versions`                                                                                                    | `false`              | [Documentation versioning](./built-in/versioning.md)   |
 | Team page        | `ssg.team`                                                                                                    | `false`              | [Team / members page](./built-in/team.md)              |
+| Git authors      | `ssg.contributors`                                                                                            | `false`              | [Git contributors](./built-in/contributors.md)         |
 | Code checks      | `codeBlockLint`, `codeBlockTypecheck`, `docsTests`                                                            | `false`              | [Quality Checks](./built-in/quality-checks.md)         |
 | Custom pipeline  | `transformers`                                                                                                | `[]`                 | [Site Generation](./built-in/site-generation.md)       |
 

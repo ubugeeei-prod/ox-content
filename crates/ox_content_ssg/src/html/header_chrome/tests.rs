@@ -23,6 +23,7 @@ fn page() -> PageData {
             .to_string(),
         toc: vec![TocEntry { depth: 1, text: "Hello".to_string(), slug: "hello".to_string() }],
         last_updated: Some(0),
+        contributors: vec![],
         path: "guide".to_string(),
         entry_page: None,
         prev: None,

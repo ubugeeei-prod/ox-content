@@ -47,6 +47,7 @@ Ox Content は、よく使うドキュメントの挙動を既定で載せ、非
 | [タクソノミー](./built-in/taxonomies.md)                 | タグ / カテゴリの用語ページと関連ページ                     |
 | [ドキュメントのバージョン管理](./built-in/versioning.md) | プレフィックス、凍結スナップショット、切替 UI               |
 | [チーム / メンバー](./built-in/team.md)                  | `layout: team` の静的カード                                 |
+| [Git コントリビューター](./built-in/contributors.md)      | 各記事の下に一意の git 作者を出すオプトイン                 |
 
 ## 既定とオプトイン
 
@@ -90,6 +91,7 @@ Ox Content は、よく使うドキュメントの挙動を既定で載せ、非
 | ドキュメント版       | `versions`                                                                     | `false`       | [ドキュメントのバージョン管理](./built-in/versioning.md) |
 | タクソノミー         | `taxonomies`                                                                   | `false`       | [タクソノミー](./built-in/taxonomies.md)                 |
 | チームページ         | `ssg.team`                                                                     | `false`       | [チーム / メンバー](./built-in/team.md)                  |
+| Git 作者             | `ssg.contributors`                                                             | `false`       | [Git コントリビューター](./built-in/contributors.md)      |
 | コード検査           | `codeBlockLint`, `codeBlockTypecheck`, `docsTests`                             | `false`       | [品質チェック](./built-in/quality-checks.md)             |
 | 独自パイプライン     | `transformers`                                                                 | `[]`          | [サイト生成](./built-in/site-generation.md)              |
 

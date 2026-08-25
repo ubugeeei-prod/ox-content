@@ -61,6 +61,8 @@ import { buildCollectionManifest } from "./collections";
 import { writeFeedFiles } from "./feeds";
 import { appendTaxonomyPages, injectRelatedPages, toTaxonomyProcessResult } from "./taxonomies";
 import { resolveTeamOptions } from "./team";
+import { applyContributorOptions, resolveContributorsOption } from "./contributors";
+import type { SsgContributor } from "./contributors";
 import {
   decorateVersionedPages,
   prefixRoutePaths,
@@ -107,6 +109,7 @@ export interface SsgPageData {
   content: string;
   toc: TocEntry[];
   lastUpdated?: number;
+  contributors?: SsgContributor[];
   frontmatter: Record<string, unknown>;
   path: string;
   href: string;
@@ -157,6 +160,7 @@ export function resolveSsgOptions(ssg: SsgOptions | boolean | undefined): Resolv
       bare: false,
       generateOgImage: false,
       lastUpdated: false,
+      contributors: resolveContributorsOption(undefined),
       pagination: false,
       breadcrumbs: false,
       readerChrome: false,
@@ -176,6 +180,7 @@ export function resolveSsgOptions(ssg: SsgOptions | boolean | undefined): Resolv
       bare: false,
       generateOgImage: false,
       lastUpdated: false,
+      contributors: resolveContributorsOption(undefined),
       pagination: false,
       breadcrumbs: false,
       readerChrome: false,
@@ -202,6 +207,7 @@ export function resolveSsgOptions(ssg: SsgOptions | boolean | undefined): Resolv
     ogImage: ssg.ogImage,
     generateOgImage: ssg.generateOgImage ?? false,
     lastUpdated: ssg.lastUpdated ?? false,
+    contributors: resolveContributorsOption(ssg.contributors),
     pagination: resolvePaginationOption(ssg.pagination),
     breadcrumbs: resolvePaginationOption(ssg.breadcrumbs),
     readerChrome: resolveReaderChromeOption(ssg.readerChrome),
@@ -214,6 +220,22 @@ export function resolveSsgOptions(ssg: SsgOptions | boolean | undefined): Resolv
     theme: resolveTheme(ssg.theme),
     navigation: ssg.navigation,
   };
+}
+
+function contributorsForPage(
+  context: BuildSsgContext,
+  inputPath: string,
+): SsgContributor[] | undefined {
+  const option = context.ssgOptions.contributors;
+  if (!option) {
+    return undefined;
+  }
+  try {
+    const raw = context.napi?.getGitContributors(inputPath, context.root) ?? [];
+    return applyContributorOptions(raw, option);
+  } catch {
+    return [];
+  }
 }
 
 function resolvePaginationOption(value: boolean | Record<string, unknown> | undefined): boolean {
@@ -505,6 +527,7 @@ export async function generateHtmlPage(
       content: pageData.content,
       toc: tocForRust,
       lastUpdated: pageData.lastUpdated,
+      contributors: pageData.contributors,
       path: pageData.path,
       entryPage: entryPageForRust,
       prev: pageData.prev,
@@ -731,6 +754,7 @@ interface PageProcessResult {
   title: string;
   description?: string;
   lastUpdated?: number;
+  contributors?: SsgContributor[];
   frontmatter: Record<string, unknown>;
   toc: TocEntry[];
 }
@@ -854,7 +878,10 @@ async function createBuildSsgContext(
     navItems,
     siteName: await resolveSiteName(root, ssgOptions),
     shouldGenerateOgImages: shouldGenerateOgImages(options),
-    napi: ssgOptions.lastUpdated ? await importNapiModule() : undefined,
+    napi:
+      ssgOptions.lastUpdated || ssgOptions.contributors
+        ? await importNapiModule()
+        : undefined,
   };
 }
 
@@ -1032,7 +1059,10 @@ async function transformSsgPage(
     transformedHtml,
     title,
     description: frontmatter.description as string | undefined,
-    lastUpdated: context.napi?.getGitLastUpdated(inputPath, context.root) ?? undefined,
+    lastUpdated: context.ssgOptions.lastUpdated
+      ? (context.napi?.getGitLastUpdated(inputPath, context.root) ?? undefined)
+      : undefined,
+    contributors: contributorsForPage(context, inputPath),
     frontmatter,
     toc: result.toc,
   };
@@ -1337,6 +1367,7 @@ function toThemePageData(pageResult: PageProcessResult): ThemePageData {
     html: pageResult.transformedHtml,
     toc: pageResult.toc,
     lastUpdated: pageResult.lastUpdated,
+    contributors: pageResult.contributors,
     path: pageResult.inputPath,
     url: pageResult.routePaths.href,
     frontmatter: pageResult.frontmatter,
@@ -1378,6 +1409,7 @@ function createSsgPageData(pageResult: PageProcessResult): SsgPageData {
     content: pageResult.transformedHtml,
     toc: pageResult.toc,
     lastUpdated: pageResult.lastUpdated,
+    contributors: pageResult.contributors,
     frontmatter,
     path: pageResult.routePaths.urlPath,
     href: pageResult.routePaths.href,

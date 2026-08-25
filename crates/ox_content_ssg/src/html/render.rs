@@ -17,12 +17,12 @@ use super::social::{generate_mobile_social_links_html, generate_social_links_htm
 use super::team::TEAM_CSS;
 use super::theme_css::generate_theme_css;
 use super::utils::{
-    format_last_updated, generate_toc_html, html_locale_attrs, page_content_contains_any,
-    wrap_css_section,
+    contributor_views, format_last_updated, generate_toc_html, html_locale_attrs,
+    page_content_contains_any, wrap_css_section,
 };
 use super::{
-    ENTRY_CSS, GITHUB_CSS, ISLAND_CSS, MERMAID_CSS, NavGroup, OGP_CSS, PageData, PageTemplate,
-    SOCIAL_CSS, SSG_CSS, SSG_JS, SsgConfig, TABS_CSS, TABS_JS, YOUTUBE_CSS,
+    CONTRIBUTORS_CSS, ENTRY_CSS, GITHUB_CSS, ISLAND_CSS, MERMAID_CSS, NavGroup, OGP_CSS, PageData,
+    PageTemplate, SOCIAL_CSS, SSG_CSS, SSG_JS, SsgConfig, TABS_CSS, TABS_JS, YOUTUBE_CSS,
 };
 
 /// Generates a complete HTML page for SSG.
@@ -63,6 +63,7 @@ pub fn generate_html(page_data: &PageData, nav_groups: &[NavGroup], config: &Ssg
     if is_entry_page {
         reader_chrome.back_to_top = false;
     }
+    let contributors = contributor_views(&page_data.contributors);
     // Build CSS as named sections instead of one anonymous blob. Shared,
     // content-addressed extraction can then pull out only the sections that are
     // globally cacheable and keep page-specific or relative-url CSS inline.
@@ -104,6 +105,9 @@ pub fn generate_html(page_data: &PageData, nav_groups: &[NavGroup], config: &Ssg
     }
     if page_content_contains_any(&page_data.content, &["ox-team"]) {
         css_sections.push(wrap_css_section("team", TEAM_CSS));
+    }
+    if !contributors.is_empty() {
+        css_sections.push(wrap_css_section("contributors", CONTRIBUTORS_CSS));
     }
     if has_footer {
         css_sections.push(wrap_css_section("footer", footer_css));
@@ -281,6 +285,7 @@ pub fn generate_html(page_data: &PageData, nav_groups: &[NavGroup], config: &Ssg
         pager: pager.as_ref(),
         reader_chrome: reader_chrome.is_enabled().then_some(&reader_chrome),
         last_updated: last_updated.as_ref(),
+        contributors: &contributors,
         embed_content_after,
         embed_footer_before,
         footer_html: &footer_html,
