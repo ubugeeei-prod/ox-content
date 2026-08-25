@@ -48,6 +48,8 @@ crates/ox_content_wasm/pkg/
 
 # Documentation
 /docs/api
+# Live JSDoc output from the docs plugin / `vp run docs:api`
+docs/content/api/
 **/.ox-content-docs-manifest.json
 
 # Environment

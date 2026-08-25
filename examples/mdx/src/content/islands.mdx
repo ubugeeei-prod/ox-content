@@ -1,0 +1,29 @@
+---
+title: Static HTML vs islands
+description: Lowercase tags stay HTML; PascalCase tags become data-ox-island
+---
+
+# Static HTML vs islands
+
+This second `.mdx` page shows the two JSX paths without a framework plugin.
+
+## Unregistered lowercase tags
+
+A custom `<note>` and a normal `<div>` render as HTML:
+
+<note>custom lowercase tag</note>
+
+<div class="static-html">ordinary HTML div</div>
+
+## PascalCase becomes an island
+
+<NoteCard label="no hydrate"></NoteCard>
+
+There is no React / Vue / Svelte / Solid plugin in this example. The
+placeholder is still emitted so you can read `data-ox-island="NoteCard"` in
+the HTML. Hydration is a later step.
+
+## Back
+
+- [Built-in MDX](./index.mdx)
+- [Plain Markdown](./plain.md)

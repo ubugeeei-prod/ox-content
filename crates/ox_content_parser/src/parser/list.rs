@@ -165,11 +165,9 @@ impl<'a> Parser<'a> {
                 // blank line, but its list may (`* a\n*\n\n* c`).
                 if next_indent >= content_indent && !(item_is_empty && item_source.is_none()) {
                     // Interior blank line(s): the item continues below.
-                    if item_source.is_none() {
-                        item_source =
-                            Some(self.init_list_item_source(item.content, consumed_newline));
-                    }
-                    let item_source = item_source.as_mut().expect("item source initialized");
+                    let item_source = item_source.get_or_insert_with(|| {
+                        self.init_list_item_source(item.content, consumed_newline)
+                    });
                     for _ in 0..blank_count {
                         item_source.push('\n');
                     }
@@ -198,10 +196,9 @@ impl<'a> Parser<'a> {
             let current_indent = self.calc_indentation(continuation_start);
             if current_indent >= content_indent {
                 // Indented continuation content.
-                if item_source.is_none() {
-                    item_source = Some(self.init_list_item_source(item.content, consumed_newline));
-                }
-                let item_source = item_source.as_mut().expect("item source initialized");
+                let item_source = item_source.get_or_insert_with(|| {
+                    self.init_list_item_source(item.content, consumed_newline)
+                });
                 Self::push_line_without_indent(item_source, continuation_line, content_indent);
                 item_source.push('\n');
                 self.position = continuation_next;
@@ -236,10 +233,8 @@ impl<'a> Parser<'a> {
             if item_is_empty || after_blank || self.line_starts_block() {
                 break;
             }
-            if item_source.is_none() {
-                item_source = Some(self.init_list_item_source(item.content, consumed_newline));
-            }
-            let source = item_source.as_mut().expect("item source initialized");
+            let source = item_source
+                .get_or_insert_with(|| self.init_list_item_source(item.content, consumed_newline));
             // Keep the lazy line's own indentation: the sub-parse then
             // treats it as paragraph continuation even when it looks like
             // an (over-indented) marker, e.g. `- e` five columns deep.

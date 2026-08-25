@@ -245,3 +245,5 @@ go-to-definition, hover, inlay hints, and preview HTML.
 - [@ox-content/wasm](./packages/wasm.md) covers browser and WebAssembly usage.
 - [Development Setup](./development-setup.md) explains local builds,
   contributor commands, and test workflows.
+- [Panic Prevention](./panic-prevention.md) is the #774 evidence ledger for
+  input-triggered panics.

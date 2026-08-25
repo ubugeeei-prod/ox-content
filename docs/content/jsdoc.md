@@ -161,4 +161,5 @@ sidebar: [
 
 - [`examples/gen-source-docs`](./examples/gen-source-docs.md) — a runnable setup.
 - The generated [API Reference](./api/index.md) for this project is itself
-  produced by this feature.
+  produced by this feature. Those pages are written at docs build time and
+  are not checked in.

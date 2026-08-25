@@ -1,28 +1,34 @@
 ---
 title: RSS / Atom / JSON フィード
-description: コレクションから生成 HTML の横に書くオプトインのフィード。
+description: 生成 HTML の横に書き出す、オプトインのコレクションフィード。
 ---
 
 # RSS / Atom / JSON フィード
 
-`feeds` を有効にし、`ssg.siteUrl` があると、名前付きコレクションから機械可読フィードを書きます。
+`feeds` を有効にし、`ssg.siteUrl` を設定すると、SSG ビルドは名前付きコレクションから機械可読のフィードを書き出します。
 
 - `feed.xml` — RSS 2.0
 - `atom.xml` — Atom 1.0
 - `feed.json` — JSON Feed 1.1
 
-省略または `false` ではオフです。
+機能は自分でオンにするまでオフです。既存サイトはそのままです。
 
 ```ts
-oxContent({
-  feeds: true,
-  ssg: {
-    siteUrl: "https://example.com",
-  },
-});
+import { oxContent } from "@ox-content/vite-plugin";
+
+export default {
+  plugins: [
+    oxContent({
+      feeds: true,
+      ssg: {
+        siteUrl: "https://example.com",
+      },
+    }),
+  ],
+};
 ```
 
-`true` の既定は 3 形式すべて、`content` コレクション（または最初の設定済みコレクション）、20 件上限です。オブジェクトで上書きできます。
+`false` または省略はファイルを出しません。`true` は既定でオンです。3 形式すべて、`content` コレクション（なければ設定された最初のコレクション）、20 件制限です。オブジェクトを渡すと機能はオンになり、設定したフィールドだけ上書きします。
 
 ```ts
 oxContent({
@@ -32,12 +38,31 @@ oxContent({
     limit: 10,
     path: "/feeds",
   },
+  ssg: {
+    siteUrl: "https://example.com",
+  },
 });
 ```
 
-`siteUrl` が無いとファイルは書かず、警告が出ます。下書きは `publishState` がオンなら落ちます。
+| オプション   | 型                              | 既定                                  |
+| ------------ | ------------------------------- | ------------------------------------- |
+| `feeds`      | `boolean` / `FeedsOptions`      | `false`                               |
+| `formats`    | `("rss" \| "atom" \| "json")[]` | `["rss", "atom", "json"]`             |
+| `collection` | `string`                        | `content`、なければ最初のコレクション |
+| `limit`      | `number`                        | `20`                                  |
+| `path`       | `string`                        | `/`（サイトルート）                   |
+
+`path` は生成ファイルのサイト相対ディレクトリです。`/feeds` なら `feeds/feed.xml`、`feeds/atom.xml`、`feeds/feed.json` を書き出します。
+
+項目は新しい順です。ソートキーは frontmatter の `date`、なければ `lastUpdated` です。`draft: true` のエントリは外れます。
+
+`feeds` をオンにしても `ssg.siteUrl` がなければ、ファイルは書き出しません。ビルドは続き、警告を出します。
+
+タイトルと説明はエスケープされるので、XML や JSON の外へは出られません。
 
 ## 関連
 
-- [英語版ガイド](/built-in/feeds.md)
 - [コレクション](./collections.md)
+- [Sitemap / robots / llms.txt](./site-maps.md)
+- [サイト生成](./site-generation.md)
+- [組み込み機能の一覧](../built-in-features.md)
