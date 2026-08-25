@@ -79,10 +79,11 @@ pub use feeds::{FeedFormat, FeedItem, FeedsOptions, FeedsOutput, generate_feeds}
 pub use html::{
     A11y, BarePageData, EntryPageConfig, FeatureConfig, HeaderNavItem, HeroAction, HeroConfig,
     HeroImage, HeroNoticeConfig, LocaleInfo, LocalePath, NavGroup, NavItem, PageChromeFlags,
-    PageData, PagerOverride, ReaderChrome, SocialLink, SocialLinks, SsgConfig, TeamLink,
-    TeamMember, TeamOptions, ThemeAnnouncement, ThemeColors, ThemeConfig, ThemeEmbed,
-    ThemeEntryPage, ThemeFonts, ThemeFooter, ThemeHeader, ThemeLayout, TocEntry,
-    generate_bare_html, generate_bare_page, generate_html, render_team_page,
+    PageData, PagerOverride, ReaderChrome, SectionIndexItem, SectionIndexStyle, SocialLink,
+    SocialLinks, SsgConfig, TeamLink, TeamMember, TeamOptions, ThemeAnnouncement, ThemeColors,
+    ThemeConfig, ThemeEmbed, ThemeEntryPage, ThemeFonts, ThemeFooter, ThemeHeader, ThemeLayout,
+    TocEntry, generate_bare_html, generate_bare_page, generate_html, is_safe_section_href,
+    render_section_index, render_team_page,
 };
 pub use permalinks::{
     CascadeOptions, PermalinksOptions, ResolvedRoutePage, RoutePage, RouteResolveOutput,

@@ -1041,6 +1041,7 @@ export { resolveFeedsOptions } from "./feeds";
 export { resolveTaxonomiesOptions } from "./taxonomies";
 export { resolveVersionsOptions } from "./versions";
 export { resolveTeamOptions } from "./team";
+export { resolveSectionIndexOptions } from "./section-index";
 export { resolveSearchOptions, buildSearchIndex, writeSearchIndex } from "./search";
 export {
   buildCollectionManifest,

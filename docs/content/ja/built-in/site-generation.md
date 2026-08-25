@@ -57,3 +57,4 @@ export default defineConfig({
 - [英語版ガイド](/built-in/site-generation.md)
 - [テーマ](../theming.md)
 - [パーマリンクと Cascade](./permalinks.md)
+- [セクション索引ページ](./section-index.md)
