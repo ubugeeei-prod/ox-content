@@ -13,13 +13,19 @@ Run releases from a clean `main` checkout:
 
 ```bash
 git status --short
-vp run release -- patch
+vpr release patch
+```
+
+For a 3.0 prerelease:
+
+```bash
+vpr release alpha
 ```
 
 For a first-time npm package, stop before the tag so you can bootstrap it:
 
 ```bash
-vp run release -- 3.0.0-alpha.1 --prepare-only
+vpr release 3.0.0-alpha.1 --prepare-only
 node scripts/bootstrap-npm-package.mjs npm/ox-content-code-play
 ```
 

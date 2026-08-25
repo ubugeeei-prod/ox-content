@@ -1,11 +1,11 @@
 #!/usr/bin/env -S node --experimental-strip-types
-// Usage: bun scripts/release.ts [patch|minor|major|alpha|beta|x.y.z] [--prepare-only]
+// Usage: node --experimental-strip-types scripts/release.ts [patch|minor|major|alpha|beta|x.y.z] [--prepare-only]
 
 import { execSync } from "child_process";
 import * as fs from "fs";
 import * as path from "path";
 import { fileURLToPath } from "url";
-import { verifyPublishWorkflow } from "./verify-publish-targets";
+import { verifyPublishWorkflow } from "./verify-publish-targets.ts";
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const ROOT = path.resolve(__dirname, "..");
@@ -244,13 +244,13 @@ function updateChangelogFile(content: string): void {
 }
 
 async function main(): Promise<void> {
-  const args = process.argv.slice(2);
+  const args = process.argv.slice(2).filter((arg) => arg !== "--");
   const prepareOnly = args.includes("--prepare-only");
   const input = args.find((arg) => arg !== "--prepare-only");
 
   if (!input) {
     console.error(
-      "Usage: bun scripts/release.ts [patch|minor|major|alpha|beta|x.y.z] [--prepare-only]",
+      "Usage: vpr release [patch|minor|major|alpha|beta|x.y.z] [--prepare-only]",
     );
     process.exit(1);
   }
