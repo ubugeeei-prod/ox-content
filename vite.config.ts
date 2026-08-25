@@ -259,6 +259,7 @@ export default defineConfig({
       "integ-solid": uncachedTask("vp run --filter ./examples/integ-solid dev"),
       "integ-svelte": uncachedTask("vp run --filter ./examples/integ-svelte dev"),
       "ssg-vite": uncachedTask("vp run --filter ./examples/ssg-vite dev"),
+      mdx: uncachedTask("vp run --filter ./examples/mdx dev"),
       "plugin-markdown-it": uncachedTask("vp run --filter ./examples/plugin-markdown-it start"),
       "plugin-rehype": uncachedTask("vp run --filter ./examples/plugin-rehype start"),
       "gen-source-docs": uncachedTask("vp run --filter ./examples/gen-source-docs dev"),
