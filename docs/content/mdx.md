@@ -21,8 +21,13 @@ It is worth understanding how this works, because it differs from "classic" MDX:
 - **Components are resolved by a framework plugin**, not the renderer. The
   HTML renderer turns named MDX JSX into island placeholders and
   serializes props (literals as JSON, `{expression}` / spreads as source).
-  The React/Vue/Svelte plugins still discover PascalCase tags for hydration
-  and will evaluate expressions later.
+  For `.mdx` files (or when `mdx: true`), the React/Vue/Svelte/Solid
+  plugins walk the MDX AST — or the rendered `data-ox-island` names —
+  and import hydration modules only for names in the global `components`
+  map. Nested JSX, expression attributes, and fragments are visible to
+  that walk. Unregistered JSX stays static HTML. Plain `.md` still uses a
+  source scan so existing pages keep working. Expressions are stored and
+  evaluated later.
 
 So you get Markdown's speed for prose plus real interactive components where you
 need them — without shipping a JavaScript bundle for pages that have none.
@@ -145,8 +150,9 @@ The payload is JSON that unicode-escapes `<`, `>`, and `&`, then sits in
 that the browser does not execute. Hostile source such as
 `{"</script><script>"}` or `{alert(1)}` cannot break out of the payload
 and is not evaluated. Pages with no components emit no `<script>` and no
-island runtime. Framework plugins still resolve and hydrate components
-later.
+island runtime. Framework plugins resolve registered names from the MDX
+AST and hydrate those islands later. Unregistered names keep the static
+HTML the renderer already emitted.
 
 ### Props
 
@@ -185,7 +191,9 @@ Hydration timing is controlled by a load strategy (see
 
 Because the server output is plain HTML, pages render and are readable before
 (or entirely without) hydration; the island JavaScript is only loaded for the
-components a page actually uses.
+components a page actually uses. On `.mdx`, that list comes from the AST
+intersected with the global component map, so a nested or fragmented tag
+still hydrates when it is registered.
 
 ## Static JSX in themes
 

@@ -966,6 +966,16 @@ export {
   type MarkdownChunkSource,
 } from "./incremental";
 export { transformMarkdown } from "./transform";
+export { isMdxFilePath, resolveMdxForFilePath } from "./markdown";
+export {
+  collectMdxIslandNamesFromHtml,
+  collectMdxJsxNamesFromAst,
+  discoverRegisteredMdxComponents,
+  intersectRegisteredComponentNames,
+  isRegisteredComponent,
+  type ComponentRegistry,
+  type DiscoverRegisteredMdxComponentsInput,
+} from "./mdx-islands";
 export { resolveImageOptions } from "./resolve-image-options";
 export {
   createFrameworkMarkdownOptions,

@@ -1,5 +1,9 @@
 import * as path from "path";
-import { transformMarkdown as baseTransformMarkdown } from "@ox-content/vite-plugin";
+import {
+  discoverRegisteredMdxComponents,
+  resolveMdxForFilePath,
+  transformMarkdown as baseTransformMarkdown,
+} from "@ox-content/vite-plugin";
 import type {
   ResolvedReactOptions,
   ReactTransformResult,
@@ -24,58 +28,15 @@ export async function transformMarkdownWithReact(
   options: ResolvedReactOptions,
 ): Promise<ReactTransformResult> {
   const components: ComponentsMap = options.components;
-  const usedComponents: string[] = [];
-  const islands: ComponentIsland[] = [];
-  let islandIndex = 0;
-
   const { content: markdownContent, frontmatter } = extractFrontmatter(code);
-  const fenceRanges = collectFenceRanges(markdownContent);
-  let processedContent = "";
-  let lastIndex = 0;
-  let match: RegExpExecArray | null;
-
-  COMPONENT_REGEX.lastIndex = 0;
-  while ((match = COMPONENT_REGEX.exec(markdownContent)) !== null) {
-    const [fullMatch, componentName, propsString, rawIslandContent] = match;
-    const matchStart = match.index;
-    const matchEnd = matchStart + fullMatch.length;
-
-    if (
-      !Object.prototype.hasOwnProperty.call(components, componentName) ||
-      isInRanges(matchStart, matchEnd, fenceRanges)
-    ) {
-      processedContent += markdownContent.slice(lastIndex, matchEnd);
-      lastIndex = matchEnd;
-      continue;
-    }
-
-    if (!usedComponents.includes(componentName)) {
-      usedComponents.push(componentName);
-    }
-
-    const props = parseProps(propsString);
-    const islandId = `ox-island-${islandIndex++}`;
-    const islandContent =
-      typeof rawIslandContent === "string" ? rawIslandContent.trim() : undefined;
-
-    islands.push({
-      name: componentName,
-      props,
-      position: matchStart,
-      id: islandId,
-      content: islandContent,
-    });
-
-    processedContent += markdownContent.slice(lastIndex, matchStart) + createIslandMarker(islandId);
-    lastIndex = matchEnd;
-  }
-  processedContent += markdownContent.slice(lastIndex);
+  const mdx = resolveMdxForFilePath(id, options.mdx);
 
   const baseOptions = {
     srcDir: options.srcDir,
     outDir: options.outDir,
     base: options.base,
     extensions: options.extensions,
+    mdx,
     ssg: {
       enabled: false,
       extension: ".html",
@@ -125,6 +86,74 @@ export async function transformMarkdownWithReact(
   } as unknown as Parameters<typeof baseTransformMarkdown>[2] & {
     codeAnnotations?: ResolvedReactOptions["codeAnnotations"];
   };
+
+  if (mdx) {
+    const transformed = await baseTransformMarkdown(markdownContent, id, baseOptions);
+    const usedComponents = await discoverRegisteredMdxComponents({
+      source: markdownContent,
+      html: transformed.html,
+      components,
+    });
+    return {
+      code: generateReactModule(
+        transformed.html,
+        usedComponents,
+        usedComponents,
+        frontmatter,
+        options,
+        id,
+      ),
+      map: null,
+      usedComponents,
+      frontmatter,
+    };
+  }
+
+  const usedComponents: string[] = [];
+  const islands: ComponentIsland[] = [];
+  let islandIndex = 0;
+
+  const fenceRanges = collectFenceRanges(markdownContent);
+  let processedContent = "";
+  let lastIndex = 0;
+  let match: RegExpExecArray | null;
+
+  COMPONENT_REGEX.lastIndex = 0;
+  while ((match = COMPONENT_REGEX.exec(markdownContent)) !== null) {
+    const [fullMatch, componentName, propsString, rawIslandContent] = match;
+    const matchStart = match.index;
+    const matchEnd = matchStart + fullMatch.length;
+
+    if (
+      !Object.prototype.hasOwnProperty.call(components, componentName) ||
+      isInRanges(matchStart, matchEnd, fenceRanges)
+    ) {
+      processedContent += markdownContent.slice(lastIndex, matchEnd);
+      lastIndex = matchEnd;
+      continue;
+    }
+
+    if (!usedComponents.includes(componentName)) {
+      usedComponents.push(componentName);
+    }
+
+    const props = parseProps(propsString);
+    const islandId = `ox-island-${islandIndex++}`;
+    const islandContent =
+      typeof rawIslandContent === "string" ? rawIslandContent.trim() : undefined;
+
+    islands.push({
+      name: componentName,
+      props,
+      position: matchStart,
+      id: islandId,
+      content: islandContent,
+    });
+
+    processedContent += markdownContent.slice(lastIndex, matchStart) + createIslandMarker(islandId);
+    lastIndex = matchEnd;
+  }
+  processedContent += markdownContent.slice(lastIndex);
 
   const transformed = await baseTransformMarkdown(processedContent, id, baseOptions);
 
@@ -287,7 +316,7 @@ function parseProps(propsString: string): Record<string, unknown> {
 function generateReactModule(
   content: string,
   usedComponents: string[],
-  islands: ComponentIsland[],
+  _islands: ComponentIsland[] | string[],
   frontmatter: Record<string, unknown>,
   options: ResolvedReactOptions & { root?: string },
   id: string,
@@ -309,8 +338,8 @@ function generateReactModule(
 
   const componentMap = usedComponents.map((name) => `  ${name},`).join("\n");
 
-  // If no islands, generate simpler code without island runtime
-  if (islands.length === 0) {
+  // If no registered islands, generate simpler code without island runtime
+  if (usedComponents.length === 0) {
     return `
 import React, { createElement } from 'react';
 
@@ -330,7 +359,7 @@ export default function MarkdownContent() {
   return `
 import React, { useEffect, useRef, createElement } from 'react';
 import { createRoot } from 'react-dom/client';
-import { initIslands } from '@ox-content/islands';
+import { initIslands, readIslandSlotHtml } from '@ox-content/islands';
 ${imports}
 
 export const frontmatter = ${JSON.stringify(frontmatter)};
@@ -348,7 +377,7 @@ function createReactHydrate() {
     const Component = components[componentName];
     if (!Component) return;
 
-    const islandContent = element.dataset.oxContent || element.innerHTML;
+    const islandContent = readIslandSlotHtml(element);
     const vnode = islandContent
       ? createElement(
           Component,

@@ -235,6 +235,7 @@ export interface ResolvedVueOptions {
   reactivityTransform: boolean;
   customBlocks: boolean;
   embeds: ResolvedBuiltinEmbedOptions;
+  mdx?: boolean;
 }
 
 /**

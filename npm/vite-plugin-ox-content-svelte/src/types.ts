@@ -200,6 +200,7 @@ export interface ResolvedSvelteOptions {
   components: ComponentsMap;
   runes: boolean;
   embeds: ResolvedBuiltinEmbedOptions;
+  mdx?: boolean;
   root?: string;
 }
 
