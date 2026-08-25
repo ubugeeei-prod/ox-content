@@ -1,4 +1,4 @@
-use super::super::{HEADER_CHROME_JS, PageChromeFlags};
+use super::super::{HEADER_CHROME_CSS, HEADER_CHROME_JS, PageChromeFlags};
 use super::{dropdown, nav_item, render, theme_nav};
 
 #[test]
@@ -118,4 +118,28 @@ fn header_nav_css_scrolls_on_small_viewports() {
         PageChromeFlags::default(),
     );
     assert!(html.contains("overflow-x: auto") && html.contains("flex-wrap: nowrap"), "{html}");
+}
+
+#[test]
+fn header_nav_css_keeps_mobile_links_compact_and_intentional() {
+    assert!(
+        HEADER_CHROME_CSS
+            .contains("@media (max-width: 768px) {\n  .header-nav {\n    flex: 0 1 auto;")
+            && HEADER_CHROME_CSS.contains("margin-inline-start: auto;")
+            && HEADER_CHROME_CSS.contains("max-width: min(52vw, 18rem);"),
+        "mobile header nav should sit as a compact control aligned away from the brand"
+    );
+    assert!(
+        HEADER_CHROME_CSS.contains("scrollbar-width: none;")
+            && HEADER_CHROME_CSS.contains(".header-nav::-webkit-scrollbar")
+            && HEADER_CHROME_CSS.contains("width: max-content;")
+            && HEADER_CHROME_CSS.contains("min-width: 100%;"),
+        "overflowing mobile header nav needs hidden-scrollbar horizontal scrolling"
+    );
+    assert!(
+        HEADER_CHROME_CSS.contains("min-height: 36px;")
+            && HEADER_CHROME_CSS.contains("font-size: 0.9rem;")
+            && HEADER_CHROME_CSS.contains("@media (max-width: 420px)"),
+        "mobile header links need deliberate tap geometry at both narrow breakpoints"
+    );
 }
