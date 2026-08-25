@@ -1,6 +1,6 @@
 use super::super::{
-    HeaderNavItem, NavGroup, NavItem, PageChromeFlags, PageData, ReaderChrome, SsgConfig,
-    ThemeConfig, TocEntry, generate_html,
+    HeadValidation, HeaderNavItem, NavGroup, NavItem, PageChromeFlags, PageData, ReaderChrome,
+    SsgConfig, ThemeConfig, TocEntry, generate_html,
 };
 
 mod announcement;
@@ -69,7 +69,7 @@ fn config(theme: Option<ThemeConfig>, page_chrome: bool) -> SsgConfig {
         page_chrome,
         json_ld: crate::JsonLd::default(),
         site_url: None,
-        head_validation: Default::default(),
+        head_validation: HeadValidation::Off,
     }
 }
 

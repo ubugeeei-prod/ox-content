@@ -1,5 +1,6 @@
 use super::super::{
-    A11y, NavGroup, NavItem, PageData, ReaderChrome, SsgConfig, generate_bare_html, generate_html,
+    A11y, HeadValidation, NavGroup, NavItem, PageData, ReaderChrome, SsgConfig, generate_bare_html,
+    generate_html,
 };
 use super::A11Y_CSS;
 
@@ -40,7 +41,7 @@ fn config(a11y: A11y) -> SsgConfig {
         page_chrome: false,
         json_ld: crate::JsonLd::default(),
         site_url: None,
-        head_validation: Default::default(),
+        head_validation: HeadValidation::Off,
     }
 }
 

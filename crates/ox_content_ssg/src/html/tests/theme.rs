@@ -50,7 +50,7 @@ fn test_generate_html_with_theme() {
         page_chrome: false,
         json_ld: JsonLd::default(),
         site_url: None,
-        head_validation: Default::default(),
+        head_validation: HeadValidation::Off,
     };
 
     let html = generate_html(&page_data, &nav_groups, &config);
@@ -92,7 +92,7 @@ fn test_generate_html_with_custom_social_link() {
         page_chrome: false,
         json_ld: JsonLd::default(),
         site_url: None,
-        head_validation: Default::default(),
+        head_validation: HeadValidation::Off,
         theme: Some(ThemeConfig {
             social_links: Some(SocialLinks {
                 links: Some(vec![SocialLink {

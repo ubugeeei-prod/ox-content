@@ -52,7 +52,7 @@ pub fn bare_head_input(data: &BarePageData<'_>) -> HeadInput {
 }
 
 fn apply_seo(input: &mut HeadInput, page: &PageData, config: &SsgConfig) {
-    input.robots = page.robots.clone();
+    input.robots.clone_from(&page.robots);
     input.canonical = page.canonical.clone().or_else(|| {
         config
             .site_url

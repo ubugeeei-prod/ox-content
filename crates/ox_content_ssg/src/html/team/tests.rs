@@ -1,6 +1,7 @@
 use super::{TeamLink, TeamMember, TeamOptions, render_team_page};
 use crate::html::{
-    NavGroup, NavItem, PageData, ReaderChrome, SsgConfig, generate_html, team::TEAM_CSS,
+    HeadValidation, NavGroup, NavItem, PageData, ReaderChrome, SsgConfig, generate_html,
+    team::TEAM_CSS,
 };
 
 fn member(
@@ -62,7 +63,7 @@ fn config() -> SsgConfig {
         page_chrome: false,
         json_ld: crate::JsonLd::default(),
         site_url: None,
-        head_validation: Default::default(),
+        head_validation: HeadValidation::Off,
     }
 }
 

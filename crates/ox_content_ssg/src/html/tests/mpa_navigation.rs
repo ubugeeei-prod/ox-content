@@ -37,7 +37,7 @@ fn config(theme: Option<ThemeConfig>) -> SsgConfig {
         page_chrome: false,
         json_ld: JsonLd::default(),
         site_url: None,
-        head_validation: Default::default(),
+        head_validation: HeadValidation::Off,
     }
 }
 

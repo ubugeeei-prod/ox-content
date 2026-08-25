@@ -1,6 +1,6 @@
 use super::super::{
-    A11y, JsonLd, JsonLdPublisher, NavGroup, NavItem, PageChromeFlags, PageData, ReaderChrome,
-    SsgConfig, generate_html,
+    A11y, HeadValidation, JsonLd, JsonLdPublisher, NavGroup, NavItem, PageChromeFlags, PageData,
+    ReaderChrome, SsgConfig, generate_html,
 };
 
 fn nav_item(title: &str, path: &str, href: &str) -> NavItem {
@@ -76,7 +76,7 @@ fn config(json_ld: JsonLd, breadcrumbs: bool) -> SsgConfig {
         page_chrome: false,
         json_ld,
         site_url: None,
-        head_validation: Default::default(),
+        head_validation: HeadValidation::Off,
     }
 }
 
