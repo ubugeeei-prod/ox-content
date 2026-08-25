@@ -23,8 +23,9 @@ use super::utils::{
     page_content_contains_any, wrap_css_section,
 };
 use super::{
-    CONTRIBUTORS_CSS, ENTRY_CSS, GITHUB_CSS, ISLAND_CSS, MERMAID_CSS, NavGroup, OGP_CSS, PageData,
-    PageTemplate, SOCIAL_CSS, SSG_CSS, SSG_JS, SsgConfig, TABS_CSS, TABS_JS, YOUTUBE_CSS,
+    CONTRIBUTORS_CSS, ENTRY_CSS, FILE_TREE_CSS, GITHUB_CSS, ISLAND_CSS, MERMAID_CSS, NavGroup,
+    OGP_CSS, PageData, PageTemplate, SOCIAL_CSS, SSG_CSS, SSG_JS, SsgConfig, TABS_CSS, TABS_JS,
+    YOUTUBE_CSS,
 };
 
 /// Generates a complete HTML page for SSG.
@@ -113,6 +114,9 @@ pub fn generate_html(page_data: &PageData, nav_groups: &[NavGroup], config: &Ssg
     }
     if page_content_contains_any(&page_data.content, &["ox-section-index"]) {
         css_sections.push(wrap_css_section("section-index", SECTION_INDEX_CSS));
+    }
+    if page_content_contains_any(&page_data.content, &["ox-file-tree"]) {
+        css_sections.push(wrap_css_section("file-tree", FILE_TREE_CSS));
     }
     if has_footer {
         css_sections.push(wrap_css_section("footer", footer_css));

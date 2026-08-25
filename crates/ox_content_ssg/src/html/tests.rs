@@ -56,6 +56,7 @@ fn default_theme_surfaces_stay_flat() {
     let default_css = [
         super::SSG_CSS,
         super::CONTRIBUTORS_CSS,
+        super::FILE_TREE_CSS,
         super::header_chrome::HEADER_CHROME_CSS,
         super::reader_chrome::READER_CHROME_CSS,
     ]
@@ -67,6 +68,17 @@ fn default_theme_surfaces_stay_flat() {
             "default theme chrome must use flat surfaces instead of {decorative_effect}"
         );
     }
+}
+
+#[test]
+fn card_css_collapses_leading_block_margin() {
+    assert!(
+        super::SSG_CSS.contains(".content .ox-card > :first-child,")
+            && super::SSG_CSS.contains(".content .ox-card > :first-of-type,")
+            && super::SSG_CSS.contains(".content .ox-link-card > :first-of-type {")
+            && super::SSG_CSS.contains("margin-top: 0;"),
+        "card headings inherit section margin-top and must not pad the preview"
+    );
 }
 
 #[test]

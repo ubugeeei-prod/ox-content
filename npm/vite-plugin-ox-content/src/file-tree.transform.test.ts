@@ -17,14 +17,50 @@ describe("file-tree transform", () => {
       markdown,
       "docs/file-tree.md",
       createResolvedOptions({
-        fileTree: { enabled: true },
+        fileTree: { enabled: true, defaultOpen: true, icons: true },
       }),
     );
     expect(enabledResult.html).toContain('class="ox-file-tree"');
     expect(enabledResult.html).toContain("ox-file-tree__dir");
     expect(enabledResult.html).toContain("ox-file-tree__highlight");
+    expect(enabledResult.html).toContain("<details open>");
+    expect(enabledResult.html).toContain("<summary>");
+    expect(enabledResult.html).toContain("ox-file-tree__icon--folder");
+    expect(enabledResult.html).toContain("<svg");
     expect(enabledResult.html).not.toContain("<script");
     expect(enabledResult.html).toContain("index.ts");
+  });
+
+  it("turns icons off and can start directories closed", async () => {
+    const result = await transformMarkdown(
+      "```file-tree\n- src/\n  - index.ts\n```\n",
+      "docs/file-tree.md",
+      createResolvedOptions({
+        fileTree: { enabled: true, defaultOpen: false, icons: false },
+      }),
+    );
+    expect(result.html).toContain("<details>");
+    expect(result.html).not.toContain("<details open>");
+    expect(result.html).not.toContain("<svg");
+    expect(result.html).not.toContain("ox-file-tree__icon");
+  });
+
+  it("uses trusted config icons and ignores fence names as markup", async () => {
+    const result = await transformMarkdown(
+      "```file-tree\n- <svg></svg>.ts\n```\n",
+      "docs/file-tree.md",
+      createResolvedOptions({
+        fileTree: {
+          enabled: true,
+          defaultOpen: true,
+          icons: true,
+          iconFile: '<svg class="custom-file"></svg>',
+        },
+      }),
+    );
+    expect(result.html).toContain('class="custom-file"');
+    expect(result.html).toContain("&lt;svg&gt;&lt;/svg&gt;.ts");
+    expect(result.html).not.toContain("><svg></svg>.ts");
   });
 });
 
@@ -73,7 +109,7 @@ function createResolvedOptions(overrides: Partial<ResolvedOptions> = {}): Resolv
     cards: { enabled: false },
     steps: { enabled: false },
     math: { enabled: false },
-    fileTree: { enabled: false },
+    fileTree: { enabled: false, defaultOpen: true, icons: true },
     sanitize: { enabled: false },
     editThisPage: { enabled: false, branch: "main", label: "Edit this page" },
     cjkEmphasis: false,

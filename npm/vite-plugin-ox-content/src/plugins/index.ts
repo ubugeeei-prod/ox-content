@@ -41,6 +41,7 @@ export {
   parseGitHubPermalink,
   parseGitHubLineRange,
   type GitHubRepoData,
+  type GitHubSourceCommit,
   type GitHubSourceData,
   type GitHubSourceRef,
   type GitHubLineRange,

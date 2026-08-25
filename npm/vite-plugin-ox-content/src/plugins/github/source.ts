@@ -33,6 +33,14 @@ export function formatLineRange(lines: GitHubLineRange): string {
   return lines.start === lines.end ? `L${lines.start}` : `L${lines.start}-L${lines.end}`;
 }
 
+export function summarizeCommitMessage(message: string): string {
+  const firstLine = message.split(/\r?\n/, 1)[0]?.replace(/\s+/g, " ").trim() ?? "";
+  if (firstLine.length <= 120) {
+    return firstLine;
+  }
+  return `${firstLine.slice(0, 119)}…`;
+}
+
 export function parseGitHubLineRange(value: string | undefined): GitHubLineRange | undefined {
   if (!value) return undefined;
   const match = value.trim().match(/^#?L?(\d+)(?:-L?(\d+))?$/i);

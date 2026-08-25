@@ -978,6 +978,12 @@ a:hover {
   margin: 0 0 0.4rem;
   font-weight: 700;
 }
+.content .ox-card > :first-child,
+.content .ox-card > :first-of-type,
+.content .ox-link-card > :first-child,
+.content .ox-link-card > :first-of-type {
+  margin-top: 0;
+}
 .content .ox-card > :last-child,
 .content .ox-link-card > :last-child {
   margin-bottom: 0;
@@ -1085,32 +1091,6 @@ a:hover {
   background: color-mix(in srgb, var(--octc-color-bg-alt) 92%, var(--octc-color-bg));
   border: 1px solid color-mix(in srgb, var(--octc-color-border) 72%, transparent);
   border-radius: 4px;
-}
-.content .ox-file-tree {
-  font-family: var(--octc-font-mono);
-  font-size: 0.8125rem;
-  line-height: 1.55;
-  margin: 1.25rem 0;
-  padding: 0.9rem 1rem;
-  border: 1px solid var(--octc-color-border);
-  border-radius: 4px;
-  background: var(--octc-color-bg-alt);
-  overflow-x: auto;
-}
-.content .ox-file-tree ul {
-  list-style: none;
-  margin: 0;
-  padding: 0 0 0 1.15rem;
-}
-.content .ox-file-tree > ul {
-  padding-left: 0;
-}
-.content .ox-file-tree__dir {
-  font-weight: 600;
-}
-.content .ox-file-tree__highlight {
-  color: var(--octc-color-primary);
-  font-weight: 700;
 }
 .content code {
   font-family: var(--octc-font-mono);

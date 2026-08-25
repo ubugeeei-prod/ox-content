@@ -1,5 +1,6 @@
 import * as path from "node:path";
 import { applyCollectionRoutes } from "./apply-permalinks";
+import { toJsFileTreeOptions } from "./file-tree-options";
 import { generateCollectionsModule } from "./collections-runtime";
 import { importNapiModule } from "./napi";
 import type {
@@ -46,7 +47,15 @@ type NativeTransformOptions = {
   codeImports?: { enabled?: boolean; rootDir?: string };
   includes?: { enabled?: boolean; rootDir?: string };
   steps?: { enabled?: boolean };
-  fileTree?: { enabled?: boolean };
+  fileTree?: {
+    enabled?: boolean;
+    defaultOpen?: boolean;
+    icons?: boolean;
+    iconFolder?: string;
+    iconFolderOpen?: string;
+    iconFile?: string;
+    iconFiles?: Record<string, string>;
+  };
   editThisPage?: {
     enabled?: boolean;
     repoUrl?: string;
@@ -214,7 +223,7 @@ function createNativeTransformOptions(options: ResolvedOptions): NativeTransform
       : undefined,
     cards: options.cards?.enabled ? { enabled: true } : undefined,
     steps: options.steps?.enabled ? { enabled: true } : undefined,
-    fileTree: options.fileTree?.enabled ? { enabled: true } : undefined,
+    fileTree: toJsFileTreeOptions(options.fileTree),
     editThisPage: options.editThisPage?.enabled
       ? {
           enabled: true,

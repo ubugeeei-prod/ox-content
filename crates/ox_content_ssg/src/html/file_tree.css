@@ -1,0 +1,93 @@
+.content .ox-file-tree {
+  font-family: var(--octc-font-mono);
+  font-size: 0.8125rem;
+  line-height: 1.55;
+  margin: 1.25rem 0;
+  padding: 0.9rem 1rem;
+  border: 1px solid var(--octc-color-border);
+  border-radius: 4px;
+  background: var(--octc-color-bg-alt);
+  overflow-x: auto;
+}
+.content .ox-file-tree ul {
+  list-style: none;
+  margin: 0;
+  padding: 0 0 0 1.15rem;
+}
+.content .ox-file-tree > ul {
+  padding-left: 0;
+}
+.content .ox-file-tree__dir {
+  font-weight: 600;
+}
+.content .ox-file-tree__highlight {
+  color: var(--octc-color-primary);
+  font-weight: 700;
+}
+.content .ox-file-tree__row,
+.content .ox-file-tree summary {
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
+  min-height: 1.65em;
+}
+.content .ox-file-tree summary {
+  cursor: pointer;
+  list-style: none;
+}
+.content .ox-file-tree summary::-webkit-details-marker {
+  display: none;
+}
+.content .ox-file-tree summary::marker {
+  content: "";
+}
+.content .ox-file-tree summary:focus {
+  outline: none;
+}
+.content .ox-file-tree summary:focus-visible {
+  outline: 2px solid var(--octc-color-primary);
+  outline-offset: 2px;
+  border-radius: 2px;
+}
+.content .ox-file-tree__twisty {
+  display: inline-block;
+  width: 0;
+  height: 0;
+  flex: 0 0 auto;
+  border-block: 0.28em solid transparent;
+  border-inline-start: 0.36em solid currentColor;
+  transform: rotate(0deg);
+  transform-origin: 35% 50%;
+  transition: transform 0.12s ease;
+  opacity: 0.7;
+}
+.content .ox-file-tree details[open] > summary > .ox-file-tree__twisty {
+  transform: rotate(90deg);
+}
+.content .ox-file-tree__twisty--spacer {
+  visibility: hidden;
+}
+.content .ox-file-tree__icon {
+  display: inline-flex;
+  flex: 0 0 auto;
+  width: 14px;
+  height: 14px;
+  color: var(--octc-color-text-muted);
+}
+.content .ox-file-tree__icon--folder,
+.content .ox-file-tree__icon--folder-open {
+  color: var(--octc-color-primary);
+}
+.content .ox-file-tree details:not([open]) > summary .ox-file-tree__icon--folder-open,
+.content .ox-file-tree details[open] > summary .ox-file-tree__icon--folder {
+  display: none;
+}
+.content .ox-file-tree__icon svg,
+.content .ox-file-tree__glyph {
+  display: block;
+  width: 14px;
+  height: 14px;
+}
+.content .ox-file-tree__name {
+  min-width: 0;
+}

@@ -875,6 +875,26 @@ export interface JsFileTreeOptions {
    * Default: `false`.
    */
   enabled?: boolean
+  /**
+   * Open directory `<details>` by default.
+   *
+   * Default: `true`.
+   */
+  defaultOpen?: boolean
+  /**
+   * Render folder and file icons.
+   *
+   * Default: `true`.
+   */
+  icons?: boolean
+  /** Trusted SVG markup or class tokens for collapsed folders. */
+  iconFolder?: string
+  /** Trusted SVG markup or class tokens for open folders. */
+  iconFolderOpen?: string
+  /** Trusted SVG markup or class tokens for files. */
+  iconFile?: string
+  /** Trusted SVG markup or class tokens keyed by file extension. */
+  iconFiles?: Record<string, string>
 }
 
 export interface JsFrameworkComponentIsland {

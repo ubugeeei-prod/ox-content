@@ -51,7 +51,19 @@ pub fn wrap_preview_html(title: &str, body: &str) -> String {
         box-shadow: 0 20px 60px rgba(15, 23, 42, 0.12);
       }}
       h1, h2, h3, h4, h5, h6 {{ line-height: 1.2; margin: 1.8em 0 0.7em; }}
-      h1:first-child {{ margin-top: 0; }}
+      main > :first-child {{ margin-top: 0; }}
+      .ox-card, .ox-link-card {{
+        display: block;
+        padding: 1rem 1.15rem;
+        border: 1px solid var(--border);
+        border-radius: 8px;
+        background: color-mix(in srgb, var(--surface) 88%, var(--bg));
+      }}
+      .ox-card > :first-child, .ox-card > :first-of-type,
+      .ox-link-card > :first-child, .ox-link-card > :first-of-type {{
+        margin-top: 0;
+      }}
+      .ox-card > :last-child, .ox-link-card > :last-child {{ margin-bottom: 0; }}
       p, ul, ol, blockquote, pre, table {{ margin: 1rem 0; }}
       a {{ color: var(--accent); }}
       code {{
@@ -102,6 +114,17 @@ mod tests {
         }, {
             insta::assert_snapshot!("wraps_body_inside_main_with_title", out);
         });
+    }
+
+    #[test]
+    fn card_and_leading_heading_do_not_keep_section_margin() {
+        let out = wrap_preview_html(
+            "Cards",
+            "<article class=\"ox-card\"><h3>Install</h3><p>Copy the package and run the CLI.</p></article>",
+        );
+        assert!(out.contains("main > :first-child { margin-top: 0; }"), "{out}");
+        assert!(out.contains(".ox-card > :first-child"), "{out}");
+        assert!(out.contains(".ox-card > :first-of-type"), "{out}");
     }
 
     #[test]

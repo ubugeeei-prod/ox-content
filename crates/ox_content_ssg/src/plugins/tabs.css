@@ -81,36 +81,33 @@
   margin-bottom: 0;
 }
 
-/* Panel visibility via :has() - modern browsers */
+/* Panel visibility via :has(). Radio ids are `ox-tab-{group}-{index}`. */
 @supports selector(:has(*)) {
-  .ox-tabs:has(#ox-tab-0:checked) .ox-tab-panel[data-tab="0"] {
+  .ox-tabs:has(input[id$="-0"]:checked) .ox-tab-panel[data-tab="0"] {
     display: block;
   }
-  .ox-tabs:has(#ox-tab-1:checked) .ox-tab-panel[data-tab="1"] {
+  .ox-tabs:has(input[id$="-1"]:checked) .ox-tab-panel[data-tab="1"] {
     display: block;
   }
-  .ox-tabs:has(#ox-tab-2:checked) .ox-tab-panel[data-tab="2"] {
+  .ox-tabs:has(input[id$="-2"]:checked) .ox-tab-panel[data-tab="2"] {
     display: block;
   }
-  .ox-tabs:has(#ox-tab-3:checked) .ox-tab-panel[data-tab="3"] {
+  .ox-tabs:has(input[id$="-3"]:checked) .ox-tab-panel[data-tab="3"] {
     display: block;
   }
-  .ox-tabs:has(#ox-tab-4:checked) .ox-tab-panel[data-tab="4"] {
+  .ox-tabs:has(input[id$="-4"]:checked) .ox-tab-panel[data-tab="4"] {
     display: block;
   }
-  .ox-tabs:has(#ox-tab-5:checked) .ox-tab-panel[data-tab="5"] {
+  .ox-tabs:has(input[id$="-5"]:checked) .ox-tab-panel[data-tab="5"] {
     display: block;
   }
-  .ox-tabs:has(#ox-tab-6:checked) .ox-tab-panel[data-tab="6"] {
+  .ox-tabs:has(input[id$="-6"]:checked) .ox-tab-panel[data-tab="6"] {
     display: block;
   }
-  .ox-tabs:has(#ox-tab-7:checked) .ox-tab-panel[data-tab="7"] {
+  .ox-tabs:has(input[id$="-7"]:checked) .ox-tab-panel[data-tab="7"] {
     display: block;
   }
 }
-
-/* Unique ID per tab group - generated dynamically */
-/* Pattern: .ox-tabs[data-group="X"]:has(#ox-tab-X-Y:checked) .ox-tab-panel[data-tab="Y"] */
 
 /* Code blocks inside tabs */
 .ox-tab-panel pre {
@@ -123,6 +120,10 @@
 
 .ox-tab-panel pre:last-child {
   margin-bottom: 0;
+}
+
+.ox-tab-panel > .ox-code {
+  margin: 0;
 }
 
 /* Fallback for older browsers using <details> */

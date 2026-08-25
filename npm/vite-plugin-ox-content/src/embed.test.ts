@@ -1,5 +1,6 @@
 import { Buffer } from "node:buffer";
 import { describe, expect, it } from "vite-plus/test";
+import { createDocsResolvedOptions } from "../test/fixtures/docs-fixture";
 import {
   collectGitHubRepos,
   collectGitHubSources,
@@ -7,8 +8,43 @@ import {
   parseGitHubPermalink,
   transformGitHub,
 } from "./plugins/github";
+import { summarizeCommitMessage } from "./plugins/github/source";
 import { transformBuiltinEmbeds } from "./plugins";
 import { collectOgpUrls, isSafeOgpUrl, transformOgp } from "./plugins/ogp";
+import { transformMarkdown } from "./transform";
+
+function mockGitHubSourceFetch(): typeof fetch {
+  return (async (input: RequestInfo | URL) => {
+    const url = String(input);
+    if (url.includes("/commits")) {
+      return {
+        ok: true,
+        status: 200,
+        json: async () => [
+          {
+            sha: "abc123def456",
+            html_url: "https://github.com/acme/project/commit/abc123def456",
+            commit: { message: "feat: add source cards\n\nMore detail." },
+          },
+        ],
+      } as Response;
+    }
+
+    return {
+      ok: true,
+      status: 200,
+      json: async () => ({
+        type: "file",
+        encoding: "base64",
+        content: Buffer.from("const first = 1;\nconst second = 2;\nconst third = 3;\n").toString(
+          "base64",
+        ),
+        size: 48,
+        html_url: "https://github.com/acme/project/blob/abc123/src/index.ts#L2-L3",
+      }),
+    } as Response;
+  }) as typeof fetch;
+}
 
 describe("builtin embed input hardening", () => {
   it("accepts only safe GitHub repo references", async () => {
@@ -52,22 +88,14 @@ describe("builtin embed input hardening", () => {
     ]);
   });
 
+  it("keeps only the first line of a commit message", () => {
+    expect(summarizeCommitMessage("feat: add cards\n\nbody")).toBe("feat: add cards");
+    expect(summarizeCommitMessage("x".repeat(130))).toBe(`${"x".repeat(119)}…`);
+  });
+
   it("expands GitHub source permalinks into code cards", async () => {
     const originalFetch = globalThis.fetch;
-    globalThis.fetch = async () =>
-      ({
-        ok: true,
-        status: 200,
-        json: async () => ({
-          type: "file",
-          encoding: "base64",
-          content: Buffer.from("const first = 1;\nconst second = 2;\nconst third = 3;\n").toString(
-            "base64",
-          ),
-          size: 48,
-          html_url: "https://github.com/acme/project/blob/abc123/src/index.ts#L2-L3",
-        }),
-      }) as Response;
+    globalThis.fetch = mockGitHubSourceFetch();
 
     try {
       const html = await transformGitHub(
@@ -76,7 +104,42 @@ describe("builtin embed input hardening", () => {
         { cache: false },
       );
 
+      expect(html).toContain("ox-code-block");
+      expect(html).toContain('data-line-number="2"');
+      expect(html).toContain("feat: add source cards");
+      expect(html).toContain("abc123d");
       expect(html).toMatchSnapshot();
+    } finally {
+      globalThis.fetch = originalFetch;
+    }
+  });
+
+  it("highlights GitHub source cards after embed expansion", async () => {
+    const originalFetch = globalThis.fetch;
+    globalThis.fetch = mockGitHubSourceFetch();
+
+    try {
+      const result = await transformMarkdown(
+        '<GitHub permalink="https://github.com/acme/project/blob/abc123/src/index.ts#L2-L3" />',
+        "docs/embed.md",
+        createDocsResolvedOptions({
+          embeds: {
+            github: { cache: false },
+            openGraph: false,
+            pm: false,
+            spotify: false,
+            stackBlitz: false,
+            twitter: false,
+            bluesky: false,
+            webContainer: false,
+          },
+        }),
+      );
+
+      expect(result.html).toContain("shiki");
+      expect(result.html).toContain("ox-github-code-block");
+      expect(result.html).toContain('data-line-number="2"');
+      expect(result.html).toMatch(/--octc-shiki-/);
     } finally {
       globalThis.fetch = originalFetch;
     }

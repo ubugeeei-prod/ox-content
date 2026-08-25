@@ -1,9 +1,10 @@
 import { Buffer } from "node:buffer";
-import { inferLanguage, sourceKey } from "./source";
+import { inferLanguage, sourceKey, summarizeCommitMessage } from "./source";
 import {
   defaultOptions,
   type GitHubOptions,
   type GitHubRepoData,
+  type GitHubSourceCommit,
   type GitHubSourceData,
   type GitHubSourceRef,
 } from "./types";
@@ -20,6 +21,12 @@ interface GitHubContentApiFile {
   html_url?: string;
 }
 
+interface GitHubCommitApiItem {
+  sha?: string;
+  html_url?: string;
+  commit?: { message?: string };
+}
+
 function githubHeaders(options: Required<GitHubOptions>): Record<string, string> {
   const headers: Record<string, string> = {
     Accept: "application/vnd.github.v3+json",
@@ -31,6 +38,37 @@ function githubHeaders(options: Required<GitHubOptions>): Record<string, string>
   }
 
   return headers;
+}
+
+async function fetchSourceCommit(
+  source: GitHubSourceRef,
+  options: Required<GitHubOptions>,
+): Promise<GitHubSourceCommit | undefined> {
+  try {
+    const apiUrl = `https://api.github.com/repos/${source.repo}/commits?path=${encodeURIComponent(
+      source.path,
+    )}&sha=${encodeURIComponent(source.ref)}&per_page=1`;
+    const response = await fetch(apiUrl, { headers: githubHeaders(options) });
+    if (!response.ok) {
+      return undefined;
+    }
+
+    const items = (await response.json()) as GitHubCommitApiItem[];
+    const item = items[0];
+    const sha = item?.sha;
+    const message = item?.commit?.message ? summarizeCommitMessage(item.commit.message) : "";
+    if (!sha || !message) {
+      return undefined;
+    }
+
+    return {
+      sha,
+      message,
+      html_url: item.html_url ?? `https://github.com/${source.repo}/commit/${sha}`,
+    };
+  } catch {
+    return undefined;
+  }
 }
 
 /**
@@ -100,7 +138,10 @@ export async function fetchGitHubSource(
     const apiUrl = `https://api.github.com/repos/${source.repo}/contents/${encodePath(
       source.path,
     )}?ref=${encodeURIComponent(source.ref)}`;
-    const response = await fetch(apiUrl, { headers: githubHeaders(options) });
+    const [response, commit] = await Promise.all([
+      fetch(apiUrl, { headers: githubHeaders(options) }),
+      fetchSourceCommit(source, options),
+    ]);
 
     if (!response.ok) {
       console.warn(`Failed to fetch GitHub source ${source.permalink}: ${response.status}`);
@@ -131,6 +172,7 @@ export async function fetchGitHubSource(
       size: data.size ?? Buffer.byteLength(content),
       html_url: data.html_url ?? source.permalink,
       language: inferLanguage(source.path),
+      ...(commit ? { commit } : {}),
     };
 
     if (options.cache) {

@@ -156,3 +156,19 @@ export async function highlightCode(html: string): Promise<string> {
 
   return String(result);
 }
+
+/**
+ * Highlight every code block in a rendered page, preserving original classes
+ * and per-line metadata when the native document pass cannot read the markup.
+ */
+export async function highlightPageHtml(
+  html: string,
+  mergeHighlightedCodeBlocks: (originalHtml: string, highlightedHtml: string) => string,
+): Promise<string> {
+  const native = await highlightDocumentNatively(html);
+  if (native && native.skipped.length === 0) {
+    return native.html;
+  }
+
+  return mergeHighlightedCodeBlocks(html, await highlightCode(html));
+}

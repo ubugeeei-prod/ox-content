@@ -67,12 +67,17 @@ A source snippet pinned to a ref and line range:
 
 <GitHub repo="ubugeeei-prod/ox-content" path="README.md" ref="main" loc="1-10" />
 
-A permalink form is also supported — paste a GitHub blob URL with `#L2-L8`
+A permalink form is also supported — paste a GitHub blob URL with `#L10-L18`
 line anchors:
 
 ```md
-<GitHub permalink="https://github.com/owner/repo/blob/abc123/src/index.ts#L2-L8" />
+<GitHub permalink="https://github.com/ubugeeei-prod/ox-content/blob/278098b/npm/vite-plugin-ox-content/src/plugins/github.ts#L10-L18" />
 ```
+
+<GitHub permalink="https://github.com/ubugeeei-prod/ox-content/blob/278098b/npm/vite-plugin-ox-content/src/plugins/github.ts#L10-L18" />
+
+The source card header links to the blob and, when the GitHub API returns it,
+shows the latest commit that touched that path at the pinned ref.
 
 | Option           | Default   | Purpose                                             |
 | ---------------- | --------- | --------------------------------------------------- |

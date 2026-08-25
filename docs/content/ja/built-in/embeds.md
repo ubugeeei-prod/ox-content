@@ -60,11 +60,15 @@ ref と行範囲を固定したソーススニペット:
 
 <GitHub repo="ubugeeei-prod/ox-content" path="README.md" ref="main" loc="1-10" />
 
-パーマリンク形式も使えます。`#L2-L8` 行アンカー付きの GitHub blob URL を貼ります。
+パーマリンク形式も使えます。`#L10-L18` 行アンカー付きの GitHub blob URL を貼ります。
 
 ```md
-<GitHub permalink="https://github.com/owner/repo/blob/abc123/src/index.ts#L2-L8" />
+<GitHub permalink="https://github.com/ubugeeei-prod/ox-content/blob/278098b/npm/vite-plugin-ox-content/src/plugins/github.ts#L10-L18" />
 ```
+
+<GitHub permalink="https://github.com/ubugeeei-prod/ox-content/blob/278098b/npm/vite-plugin-ox-content/src/plugins/github.ts#L10-L18" />
+
+ソースカードのヘッダは blob へリンクし、GitHub API が返すときは、その ref でそのパスを最後に触ったコミットも表示します。
 
 | オプション       | 既定      | 目的                                                         |
 | ---------------- | --------- | ------------------------------------------------------------ |

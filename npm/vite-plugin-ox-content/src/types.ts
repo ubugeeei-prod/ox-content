@@ -1525,7 +1525,8 @@ export interface OxContentOptions {
    * Opt-in static directory trees from `file-tree` fences.
    *
    * Passing `true` or `{}` enables the transform. Names are escaped and never
-   * read from the filesystem.
+   * read from the filesystem. Directories with children open and close with
+   * `<details>`. Icons are on by default and can be replaced from site config.
    *
    * @default false
    */
@@ -2173,6 +2174,21 @@ export interface ResolvedStepsOptions {
 }
 
 /**
+ * Replaceable file-tree icons. Values are trusted site-config SVG markup or
+ * CSS class tokens, never fence content.
+ */
+export interface FileTreeIconOptions {
+  /** Collapsed folder icon. */
+  folder?: string;
+  /** Open folder icon. */
+  folderOpen?: string;
+  /** Default file icon. */
+  file?: string;
+  /** File icons keyed by extension (`ts`, `.json`). */
+  files?: Record<string, string>;
+}
+
+/**
  * Options for opt-in `file-tree` fences.
  */
 export interface FileTreeOptions {
@@ -2182,6 +2198,18 @@ export interface FileTreeOptions {
    * @default true
    */
   enabled?: boolean;
+  /**
+   * Open directory `<details>` by default.
+   *
+   * @default true
+   */
+  defaultOpen?: boolean;
+  /**
+   * Render folder and file icons. Pass an object to replace the defaults.
+   *
+   * @default true
+   */
+  icons?: boolean | FileTreeIconOptions;
 }
 
 /**
@@ -2189,6 +2217,12 @@ export interface FileTreeOptions {
  */
 export interface ResolvedFileTreeOptions {
   enabled: boolean;
+  defaultOpen: boolean;
+  icons: boolean;
+  iconFolder?: string;
+  iconFolderOpen?: string;
+  iconFile?: string;
+  iconFiles?: Record<string, string>;
 }
 
 /**

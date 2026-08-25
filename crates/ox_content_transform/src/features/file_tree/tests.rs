@@ -1,3 +1,5 @@
+use rustc_hash::FxHashMap;
+
 use super::{resolve, transform};
 use crate::transformer::MarkdownTransformer;
 use crate::{ContainerOptions, FileTreeOptions, TransformOptions};
@@ -5,7 +7,7 @@ use crate::{ContainerOptions, FileTreeOptions, TransformOptions};
 fn file_tree_on() -> TransformOptions {
     TransformOptions {
         gfm: Some(true),
-        file_tree: Some(FileTreeOptions { enabled: Some(true) }),
+        file_tree: Some(FileTreeOptions { enabled: Some(true), ..Default::default() }),
         ..Default::default()
     }
 }
@@ -21,13 +23,17 @@ fn fence(body: &str) -> String {
 #[test]
 fn resolve_is_none_when_omitted_or_false() {
     assert!(resolve(None).is_none());
-    assert!(resolve(Some(&FileTreeOptions { enabled: Some(false) })).is_none());
+    assert!(
+        resolve(Some(&FileTreeOptions { enabled: Some(false), ..Default::default() })).is_none()
+    );
 }
 
 #[test]
 fn resolve_is_some_when_true_or_object() {
-    assert!(resolve(Some(&FileTreeOptions { enabled: Some(true) })).is_some());
-    assert!(resolve(Some(&FileTreeOptions { enabled: None })).is_some());
+    assert!(
+        resolve(Some(&FileTreeOptions { enabled: Some(true), ..Default::default() })).is_some()
+    );
+    assert!(resolve(Some(&FileTreeOptions { enabled: None, ..Default::default() })).is_some());
 }
 
 #[test]
@@ -45,7 +51,7 @@ fn explicit_false_leaves_fence_literal() {
     let html = transform_html(
         &fence("- src/"),
         TransformOptions {
-            file_tree: Some(FileTreeOptions { enabled: Some(false) }),
+            file_tree: Some(FileTreeOptions { enabled: Some(false), ..Default::default() }),
             ..Default::default()
         },
     );
@@ -148,7 +154,7 @@ fn containers_do_not_steal_file_tree_fences() {
         TransformOptions {
             gfm: Some(true),
             containers: Some(ContainerOptions { enabled: Some(true), types: None }),
-            file_tree: Some(FileTreeOptions { enabled: Some(true) }),
+            file_tree: Some(FileTreeOptions { enabled: Some(true), ..Default::default() }),
             ..Default::default()
         },
     );
@@ -159,9 +165,82 @@ fn containers_do_not_steal_file_tree_fences() {
 
 #[test]
 fn preprocess_emits_static_tree_html() {
-    let source = transform(&fence("- src/\n  - index.ts **"), super::ResolvedFileTreeOptions);
+    let source =
+        transform(&fence("- src/\n  - index.ts **"), &super::ResolvedFileTreeOptions::default());
     assert!(source.contains(r#"<div class="ox-file-tree">"#), "{source}");
     assert!(source.contains(r#"class="ox-file-tree__dir""#), "{source}");
     assert!(source.contains(r#"class="ox-file-tree__file ox-file-tree__highlight""#), "{source}");
+    assert!(source.contains("<details open>"), "{source}");
+    assert!(source.contains("<summary>"), "{source}");
+    assert!(source.contains("ox-file-tree__icon--folder"), "{source}");
     assert!(!source.contains("```"), "{source}");
+}
+
+#[test]
+fn dirs_with_children_use_details_empty_dirs_do_not() {
+    let html =
+        transform_html(&fence("- src/\n  - index.ts\n- empty/\n- README.md"), file_tree_on());
+    assert_eq!(html.matches("<details open>").count(), 1, "{html}");
+    assert!(html.contains("<summary>"), "{html}");
+    assert!(html.contains("ox-file-tree__twisty"), "{html}");
+    assert!(html.contains(r#"<span class="ox-file-tree__row">"#), "{html}");
+    assert!(html.contains(r#"<span class="ox-file-tree__name">empty/</span>"#), "{html}");
+}
+
+#[test]
+fn icons_false_omits_svg() {
+    let html = transform_html(
+        &fence("- src/\n  - index.ts"),
+        TransformOptions {
+            file_tree: Some(FileTreeOptions {
+                enabled: Some(true),
+                icons: Some(false),
+                ..Default::default()
+            }),
+            ..Default::default()
+        },
+    );
+    assert!(html.contains("<details open>"), "{html}");
+    assert!(!html.contains("<svg"), "{html}");
+    assert!(!html.contains("ox-file-tree__icon"), "{html}");
+}
+
+#[test]
+fn default_open_false_starts_closed() {
+    let html = transform_html(
+        &fence("- src/\n  - index.ts"),
+        TransformOptions {
+            file_tree: Some(FileTreeOptions {
+                enabled: Some(true),
+                default_open: Some(false),
+                ..Default::default()
+            }),
+            ..Default::default()
+        },
+    );
+    assert!(html.contains("<details>"), "{html}");
+    assert!(!html.contains("<details open>"), "{html}");
+}
+
+#[test]
+fn custom_icons_come_from_options_not_names() {
+    let mut files = FxHashMap::default();
+    files.insert("ts".into(), r#"<svg class="icon-ts"></svg>"#.into());
+    let html = transform_html(
+        &fence("- <svg></svg>.md\n- index.ts"),
+        TransformOptions {
+            file_tree: Some(FileTreeOptions {
+                enabled: Some(true),
+                icon_folder: Some(r#"<svg class="icon-folder"></svg>"#.into()),
+                icon_file: Some(r#"<svg class="icon-file"></svg>"#.into()),
+                icon_files: Some(files),
+                ..Default::default()
+            }),
+            ..Default::default()
+        },
+    );
+    assert!(html.contains(r#"class="icon-file""#), "{html}");
+    assert!(html.contains(r#"class="icon-ts""#), "{html}");
+    assert!(html.contains("&lt;svg&gt;&lt;/svg&gt;.md"), "{html}");
+    assert!(!html.contains("><svg></svg>.md"), "{html}");
 }

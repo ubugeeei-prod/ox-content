@@ -115,6 +115,12 @@ pub struct StepsOptions {
 #[derive(Clone, Default)]
 pub struct FileTreeOptions {
     pub enabled: Option<bool>,
+    pub default_open: Option<bool>,
+    pub icons: Option<bool>,
+    pub icon_folder: Option<String>,
+    pub icon_folder_open: Option<String>,
+    pub icon_file: Option<String>,
+    pub icon_files: Option<FxHashMap<String, String>>,
 }
 
 #[derive(Clone, Default)]

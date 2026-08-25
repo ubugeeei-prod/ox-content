@@ -1,6 +1,5 @@
 ---
 source: crates/ox_content_lsp/src/preview/render.rs
-assertion_line: 48
 ---
 title: Ox Content Preview
 ---
@@ -55,7 +54,19 @@ title: Ox Content Preview
         box-shadow: 0 20px 60px rgba(15, 23, 42, 0.12);
       }
       h1, h2, h3, h4, h5, h6 { line-height: 1.2; margin: 1.8em 0 0.7em; }
-      h1:first-child { margin-top: 0; }
+      main > :first-child { margin-top: 0; }
+      .ox-card, .ox-link-card {
+        display: block;
+        padding: 1rem 1.15rem;
+        border: 1px solid var(--border);
+        border-radius: 8px;
+        background: color-mix(in srgb, var(--surface) 88%, var(--bg));
+      }
+      .ox-card > :first-child, .ox-card > :first-of-type,
+      .ox-link-card > :first-child, .ox-link-card > :first-of-type {
+        margin-top: 0;
+      }
+      .ox-card > :last-child, .ox-link-card > :last-child { margin-bottom: 0; }
       p, ul, ol, blockquote, pre, table { margin: 1rem 0; }
       a { color: var(--accent); }
       code {

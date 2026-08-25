@@ -223,7 +223,7 @@ pub fn preprocess_markdown<'a>(
     if let Some(file_tree) = &options.file_tree
         && current.contains("file-tree")
     {
-        current = Cow::Owned(file_tree::transform(&current, *file_tree));
+        current = Cow::Owned(file_tree::transform(&current, file_tree));
     }
 
     if options.badges && current.contains("{badge:") {

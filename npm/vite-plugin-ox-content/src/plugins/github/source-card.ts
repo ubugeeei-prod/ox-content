@@ -1,6 +1,6 @@
-import type { Element } from "hast";
+import type { Element, Text } from "hast";
 import { formatLineRange } from "./source";
-import type { GitHubLineRange, GitHubOptions, GitHubSourceData } from "./types";
+import type { GitHubLineRange, GitHubOptions, GitHubSourceCommit, GitHubSourceData } from "./types";
 
 function normalizeSourceLines(content: string): string[] {
   const lines = content.replace(/\r\n?/g, "\n").split("\n");
@@ -8,6 +8,55 @@ function normalizeSourceLines(content: string): string[] {
     lines.pop();
   }
   return lines.length > 0 ? lines : [""];
+}
+
+function text(value: string): Text {
+  return { type: "text", value };
+}
+
+function createSourceLines(lines: string[], start: number): Array<Element | Text> {
+  return lines.flatMap((line, index) => {
+    const lineNumber = start + index;
+    const span: Element = {
+      type: "element",
+      tagName: "span",
+      properties: {
+        className: ["line"],
+        "data-line": String(lineNumber),
+        "data-line-number": String(lineNumber),
+      },
+      children: [text(line)],
+    };
+    return index === 0 ? [span] : [text("\n"), span];
+  });
+}
+
+function createCommitMeta(commit: GitHubSourceCommit): Element {
+  return {
+    type: "element",
+    tagName: "a",
+    properties: {
+      className: ["ox-github-code-commit"],
+      href: commit.html_url,
+      target: "_blank",
+      rel: "noopener noreferrer",
+      title: commit.message,
+    },
+    children: [
+      {
+        type: "element",
+        tagName: "span",
+        properties: { className: ["ox-github-code-sha"] },
+        children: [text(commit.sha.slice(0, 7))],
+      },
+      {
+        type: "element",
+        tagName: "span",
+        properties: { className: ["ox-github-code-commit-message"] },
+        children: [text(commit.message)],
+      },
+    ],
+  };
 }
 
 export function createGitHubSourceCard(
@@ -21,14 +70,29 @@ export function createGitHubSourceCard(
     ? Math.min(lines.end, allLines.length)
     : Math.min(allLines.length, options.maxSourceLines);
   const selectedLines = allLines.slice(start - 1, end);
-  const lineRange = { start, end };
   const loc = selectedLines.length;
-  const rangeLabel = formatLineRange(lineRange);
+  const rangeLabel = formatLineRange({ start, end });
   const locLabel =
     !lines && end < allLines.length
       ? `${rangeLabel} of ${allLines.length} LOC`
-      : `${rangeLabel} - ${loc} LOC`;
+      : `${rangeLabel} · ${loc} LOC`;
   const languageClass = source.language ? [`language-${source.language}`] : [];
+  const heading: Element[] = [
+    {
+      type: "element",
+      tagName: "a",
+      properties: {
+        className: ["ox-github-code-title"],
+        href: source.permalink,
+        target: "_blank",
+        rel: "noopener noreferrer",
+      },
+      children: [text(`${source.repo}/${source.path}`)],
+    },
+  ];
+  if (source.commit) {
+    heading.push(createCommitMeta(source.commit));
+  }
 
   return {
     type: "element",
@@ -46,20 +110,15 @@ export function createGitHubSourceCard(
         children: [
           {
             type: "element",
-            tagName: "a",
-            properties: {
-              className: ["ox-github-code-title"],
-              href: source.permalink,
-              target: "_blank",
-              rel: "noopener noreferrer",
-            },
-            children: [{ type: "text", value: `${source.repo}/${source.path}` }],
+            tagName: "div",
+            properties: { className: ["ox-github-code-heading"] },
+            children: heading,
           },
           {
             type: "element",
             tagName: "span",
             properties: { className: ["ox-github-code-loc"] },
-            children: [{ type: "text", value: locLabel }],
+            children: [text(locLabel)],
           },
         ],
       },
@@ -67,7 +126,9 @@ export function createGitHubSourceCard(
         type: "element",
         tagName: "pre",
         properties: {
-          className: ["ox-github-code-block", ...languageClass],
+          className: ["ox-github-code-block", "ox-code-block", "line-numbers-mode", ...languageClass],
+          "data-line-numbers": "true",
+          "data-line-number-start": String(start),
           ...(source.language ? { "data-language": source.language } : {}),
         },
         children: [
@@ -75,31 +136,7 @@ export function createGitHubSourceCard(
             type: "element",
             tagName: "code",
             properties: { className: languageClass },
-            children: selectedLines.map((line, index) => {
-              const lineNumber = start + index;
-              return {
-                type: "element" as const,
-                tagName: "span",
-                properties: {
-                  className: ["line", "ox-github-code-line"],
-                  "data-line": String(lineNumber),
-                },
-                children: [
-                  {
-                    type: "element" as const,
-                    tagName: "span",
-                    properties: { className: ["ox-github-code-line-number"] },
-                    children: [{ type: "text" as const, value: String(lineNumber) }],
-                  },
-                  {
-                    type: "element" as const,
-                    tagName: "span",
-                    properties: { className: ["ox-github-code-line-content"] },
-                    children: [{ type: "text" as const, value: line || " " }],
-                  },
-                ],
-              };
-            }),
+            children: createSourceLines(selectedLines, start),
           },
         ],
       },

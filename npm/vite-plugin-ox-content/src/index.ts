@@ -80,6 +80,7 @@ export type {
   ResolvedCardOptions,
   StepsOptions,
   ResolvedStepsOptions,
+  FileTreeIconOptions,
   FileTreeOptions,
   ResolvedFileTreeOptions,
   SanitizeOptions,
@@ -1227,6 +1228,7 @@ export {
 export type {
   YouTubeOptions,
   GitHubRepoData,
+  GitHubSourceCommit,
   GitHubSourceData,
   GitHubSourceRef,
   GitHubLineRange,

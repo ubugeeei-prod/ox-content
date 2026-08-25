@@ -11,6 +11,7 @@ export type {
   GitHubLineRange,
   GitHubOptions,
   GitHubRepoData,
+  GitHubSourceCommit,
   GitHubSourceData,
   GitHubSourceRef,
 } from "./github/types";

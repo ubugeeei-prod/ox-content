@@ -25,6 +25,12 @@ export interface GitHubSourceRef {
   lines?: GitHubLineRange;
 }
 
+export interface GitHubSourceCommit {
+  sha: string;
+  message: string;
+  html_url: string;
+}
+
 export interface GitHubSourceData {
   repo: string;
   ref: string;
@@ -34,6 +40,7 @@ export interface GitHubSourceData {
   size: number;
   html_url: string;
   language: string | null;
+  commit?: GitHubSourceCommit;
 }
 
 export interface GitHubOptions {
