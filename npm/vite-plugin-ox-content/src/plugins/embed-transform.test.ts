@@ -1,4 +1,5 @@
-import { describe, expect, it } from "vite-plus/test";
+import { afterEach, describe, expect, it } from "vite-plus/test";
+import { transformAllPlugins } from ".";
 import { transformPm } from "./pm";
 import { resetTabGroupCounter, transformTabs } from "./tabs";
 import { transformYouTube } from "./youtube";
@@ -12,16 +13,22 @@ import { transformYouTube } from "./youtube";
  * equivalence target when the transforms are ported to Rust.
  */
 
+const originalFetch = globalThis.fetch;
+
+afterEach(() => {
+  globalThis.fetch = originalFetch;
+});
+
 describe("transformYouTube output", () => {
   it("wraps a bare id in a privacy-enhanced responsive embed", async () => {
-    const html = await transformYouTube(`<p><youtube id="dQw4w9WgXcQ"></youtube></p>`);
+    const html = await transformYouTube(`<youtube id="dQw4w9WgXcQ"></youtube>`);
     expect(html).toBe(
-      `<p><div class="ox-youtube" style="aspect-ratio: 16/9;">` +
+      `<div class="ox-youtube" style="aspect-ratio: 16/9;">` +
         `<iframe src="https://www.youtube-nocookie.com/embed/dQw4w9WgXcQ" ` +
         `title="YouTube video dQw4w9WgXcQ" ` +
         `allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" ` +
         `referrerpolicy="strict-origin-when-cross-origin" allowfullscreen loading="lazy">` +
-        `</iframe></div></p>`,
+        `</iframe></div>`,
     );
   });
 
@@ -48,6 +55,47 @@ describe("transformYouTube output", () => {
   it("returns input unchanged when there is no <youtube> element", async () => {
     const html = `<p>Plain prose with a <a href="/x">link</a> and no embeds.</p>`;
     expect(await transformYouTube(html)).toBe(html);
+  });
+});
+
+describe("transformAllPlugins block structure", () => {
+  it("keeps standalone YouTube embeds out of paragraphs", async () => {
+    const html = await transformAllPlugins(`<p><youtube id="dQw4w9WgXcQ"></youtube></p>`, {
+      github: false,
+      openGraph: false,
+      mermaid: false,
+    });
+
+    expect(html).toBe(
+      `<div class="ox-youtube" style="aspect-ratio: 16/9;">` +
+        `<iframe src="https://www.youtube-nocookie.com/embed/dQw4w9WgXcQ" ` +
+        `title="YouTube video dQw4w9WgXcQ" ` +
+        `allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" ` +
+        `referrerpolicy="strict-origin-when-cross-origin" allowfullscreen loading="lazy">` +
+        `</iframe></div>`,
+    );
+  });
+
+  it("splits fetched Open Graph cards out of mixed paragraphs", async () => {
+    globalThis.fetch = async () =>
+      ({
+        ok: true,
+        text: async () =>
+          `<html><head><title>Example Domain</title><meta name="description" content="Example description"></head></html>`,
+      }) as Response;
+
+    const html = await transformAllPlugins(
+      `<p>See <OgCard url="https://example.com"></OgCard> today.</p>`,
+      {
+        github: false,
+        openGraph: { cache: false },
+        mermaid: false,
+      },
+    );
+
+    expect(html).toContain(`<p>See </p><a class="ox-ogp-card"`);
+    expect(html).toContain(`<p> today.</p>`);
+    expect(html).not.toContain(`<p><a class="ox-ogp-card"`);
   });
 });
 

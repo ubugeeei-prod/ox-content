@@ -177,6 +177,21 @@ describe("builtin embed input hardening", () => {
     expect(html).toMatchSnapshot();
   });
 
+  it("keeps block cards out of generated paragraphs", async () => {
+    const html = await transformBuiltinEmbeds(
+      '<p>Before <OgCard url="javascript:alert(1)"></OgCard> after.</p>',
+      {
+        github: false,
+        openGraph: {},
+      },
+    );
+
+    expect(html).toContain("<p>Before </p>");
+    expect(html).toContain('<a class="ox-ogp-simple"');
+    expect(html).toContain("<p> after.</p>");
+    expect(html).not.toContain('<p><a class="ox-ogp-simple"');
+  });
+
   it("does not let self-closing embed tags swallow trailing content", async () => {
     const html = await transformBuiltinEmbeds(
       '<GitHub repo="../secret" />\n<p>after github</p>\n<OgCard url="javascript:alert(1)" />\n<p>after ogp</p>',
