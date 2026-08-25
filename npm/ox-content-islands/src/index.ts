@@ -32,3 +32,4 @@ export type {
 } from "./types";
 
 export { initIslands, createDeferredInit, isIslandsSupported } from "./runtime";
+export { unwrapIslandProps, stripIslandPayloadScript, readIslandSlotHtml } from "./payload";

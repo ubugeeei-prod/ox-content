@@ -3,11 +3,23 @@
 //! This crate provides NAPI bindings for using Ox Content from Node.js,
 //! including raw-buffer AST transfer for JavaScript interoperability.
 
+#![cfg_attr(
+    not(test),
+    deny(
+        clippy::unwrap_used,
+        clippy::expect_used,
+        clippy::panic,
+        clippy::todo,
+        clippy::unimplemented
+    )
+)]
+
 mod collection_bindings;
 mod docs_bindings;
 mod docs_graph_types;
 mod docs_markdown_types;
 mod docs_source_types;
+mod ffi;
 mod framework_codegen;
 mod highlight_bindings;
 mod i18n_bindings;

@@ -136,14 +136,16 @@ impl<'a> Parser<'a> {
                 }
             }
 
-            let opener_pos = delimiters
-                .iter()
-                .position(|d| d.node_index == opener_node)
-                .expect("opener survives retain");
-            let closer_pos = delimiters
-                .iter()
-                .position(|d| d.node_index == closer_node_now)
-                .expect("closer survives retain");
+            let Some(opener_pos) = delimiters.iter().position(|d| d.node_index == opener_node)
+            else {
+                closer_idx += 1;
+                continue;
+            };
+            let Some(closer_pos) = delimiters.iter().position(|d| d.node_index == closer_node_now)
+            else {
+                closer_idx += 1;
+                continue;
+            };
             delimiters[opener_pos].remaining -= use_delims as usize;
             delimiters[closer_pos].remaining -= use_delims as usize;
 

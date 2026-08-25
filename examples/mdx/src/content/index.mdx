@@ -1,0 +1,52 @@
+---
+title: Built-in MDX
+description: Default-on MDX for .mdx files — static HTML, islands, ESM, and expressions
+---
+
+import NoteCard from "./NoteCard";
+export const demo = true;
+
+# Built-in MDX
+
+This page is a real `.mdx` file. MDX is **on by default** for this extension —
+`vite.config.ts` does not set `mdx: true`. Compare with the sibling
+[plain Markdown page](./plain.md), and see [static HTML vs islands](./islands.mdx)
+for a closer look at the generated markup.
+
+## Static HTML
+
+Lowercase and custom tags stay HTML. The `<note>` below is **not** an island:
+
+<note class="callout">This is static HTML from an unregistered lowercase tag.</note>
+
+## Island placeholder
+
+PascalCase tags become `data-ox-island` placeholders. This example has **no**
+framework plugin, so the island stays static HTML:
+
+<NoteCard title="Static island" count={3}></NoteCard>
+
+Inspect the generated markup for `class="ox-island"` and
+`data-ox-island="NoteCard"`. Props are serialized; nothing hydrates.
+
+## ESM is not executed
+
+The `import` / `export` at the top of this file are stored as `MdxjsEsm`.
+They do **not** appear in the HTML and are **not** run as JavaScript.
+
+## Expressions are not evaluated
+
+Hello {name}.
+
+{1 + 1}
+
+The `{name}` and `{1 + 1}` above are parsed as MDX expressions. They are
+**not** evaluated (you will not see `2`) and the static HTML renderer emits
+nothing for them — they do not become JavaScript. The source text of those
+expressions is omitted from the HTML rather than interpolated.
+
+```mdx
+Hello {name}.
+
+{1 + 1}
+```

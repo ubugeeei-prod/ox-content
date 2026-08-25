@@ -23,6 +23,7 @@ export interface FrameworkMarkdownOptions {
     openGraph?: ResolvedOptions["embeds"]["openGraph"];
   };
   math?: boolean | { enabled?: boolean };
+  mdx?: boolean;
 }
 
 export interface FrameworkComponentIsland {
@@ -59,6 +60,7 @@ export function createFrameworkMarkdownOptions(options: FrameworkMarkdownOptions
       pageChrome: false,
     },
     siteMaps: { enabled: false, robots: true, llms: true },
+    pwa: { enabled: false, offline: true },
     publishState: { enabled: false, includeDrafts: false },
     permalinks: { enabled: false },
     cascade: { enabled: false },
@@ -71,6 +73,7 @@ export function createFrameworkMarkdownOptions(options: FrameworkMarkdownOptions
       allowExternal: false,
     },
     gfm: options.gfm,
+    mdx: options.mdx,
     frontmatter: options.frontmatter ?? false,
     toc: options.toc,
     tocMaxDepth: options.tocMaxDepth,

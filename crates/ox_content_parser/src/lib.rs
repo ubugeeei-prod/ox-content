@@ -22,6 +22,16 @@
 //! ```
 
 #![deny(clippy::disallowed_macros, clippy::disallowed_methods, clippy::disallowed_types)]
+#![cfg_attr(
+    not(test),
+    deny(
+        clippy::unwrap_used,
+        clippy::expect_used,
+        clippy::panic,
+        clippy::todo,
+        clippy::unimplemented
+    )
+)]
 
 /// Lightweight RAII span guard used internally by the parser modules.
 ///

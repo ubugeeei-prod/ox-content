@@ -3,7 +3,11 @@
  */
 
 import * as path from "path";
-import { transformMarkdown as baseTransformMarkdown } from "@ox-content/vite-plugin";
+import {
+  discoverRegisteredMdxComponents,
+  resolveMdxForFilePath,
+  transformMarkdown as baseTransformMarkdown,
+} from "@ox-content/vite-plugin";
 import type { ResolvedVueOptions, VueTransformResult, ComponentIsland } from "./types";
 
 // Regex to match Vue-like component tags in Markdown
@@ -38,14 +42,91 @@ export async function transformMarkdownWithVue(
   options: TransformOptions,
 ): Promise<VueTransformResult> {
   const { components } = options;
+  const { content: markdownContent, frontmatter } = extractFrontmatter(code);
+  const mdx = resolveMdxForFilePath(id, options.mdx);
+
+  const baseOptions = {
+    srcDir: options.srcDir,
+    outDir: options.outDir,
+    base: options.base,
+    extensions: options.extensions,
+    mdx,
+    ssg: {
+      enabled: false,
+      extension: ".html",
+      clean: false,
+      bare: false,
+      generateOgImage: false,
+      lastUpdated: false,
+      pagination: false,
+      breadcrumbs: false,
+      readerChrome: false,
+      localeSwitcher: false,
+      a11y: false,
+      pageChrome: false,
+    },
+    gfm: options.gfm,
+    frontmatter: false,
+    toc: options.toc,
+    tocMaxDepth: options.tocMaxDepth,
+    codeAnnotations: options.codeAnnotations,
+    footnotes: true,
+    tables: true,
+    taskLists: true,
+    strikethrough: true,
+    autolinks: options.autolinks,
+    highlight: false,
+    mermaid: false,
+    ogImage: false,
+    ogImageOptions: {
+      vuePlugin: "vitejs",
+      width: 1200,
+      height: 630,
+      cache: true,
+      concurrency: 1,
+    },
+    transformers: [],
+    docs: false,
+    ogViewer: false,
+    search: {
+      enabled: false,
+      limit: 10,
+      prefix: true,
+      placeholder: "Search...",
+      hotkey: "k",
+    },
+    embeds: options.embeds,
+    i18n: false,
+  } as unknown as Parameters<typeof baseTransformMarkdown>[2] & {
+    codeAnnotations?: TransformOptions["codeAnnotations"];
+  };
+
+  if (mdx) {
+    const transformed = await baseTransformMarkdown(markdownContent, id, baseOptions);
+    const usedComponents = await discoverRegisteredMdxComponents({
+      source: markdownContent,
+      html: transformed.html,
+      components,
+    });
+    return {
+      code: generateVueSFC(
+        transformed.html,
+        usedComponents,
+        usedComponents,
+        frontmatter,
+        options,
+        id,
+      ),
+      map: null,
+      usedComponents,
+      frontmatter,
+    };
+  }
+
   const usedComponents: string[] = [];
   const islands: ComponentIsland[] = [];
   let islandIndex = 0;
 
-  // Extract frontmatter
-  const { content: markdownContent, frontmatter } = extractFrontmatter(code);
-
-  // Find and extract component usages
   const fenceRanges = collectFenceRanges(markdownContent);
   let processedContent = "";
   let lastIndex = 0;
@@ -88,62 +169,6 @@ export async function transformMarkdownWithVue(
     lastIndex = matchEnd;
   }
   processedContent += markdownContent.slice(lastIndex);
-
-  // Transform Markdown to HTML using ox-content
-  const baseOptions = {
-    srcDir: options.srcDir,
-    outDir: options.outDir,
-    base: options.base,
-    extensions: options.extensions,
-    ssg: {
-      enabled: false,
-      extension: ".html",
-      clean: false,
-      bare: false,
-      generateOgImage: false,
-      lastUpdated: false,
-      pagination: false,
-      breadcrumbs: false,
-      readerChrome: false,
-      localeSwitcher: false,
-      a11y: false,
-      pageChrome: false,
-    },
-    gfm: options.gfm,
-    frontmatter: false, // Already extracted
-    toc: options.toc,
-    tocMaxDepth: options.tocMaxDepth,
-    codeAnnotations: options.codeAnnotations,
-    footnotes: true,
-    tables: true,
-    taskLists: true,
-    strikethrough: true,
-    autolinks: options.autolinks,
-    highlight: false,
-    mermaid: false,
-    ogImage: false,
-    ogImageOptions: {
-      vuePlugin: "vitejs",
-      width: 1200,
-      height: 630,
-      cache: true,
-      concurrency: 1,
-    },
-    transformers: [],
-    docs: false,
-    ogViewer: false,
-    search: {
-      enabled: false,
-      limit: 10,
-      prefix: true,
-      placeholder: "Search...",
-      hotkey: "k",
-    },
-    embeds: options.embeds,
-    i18n: false,
-  } as unknown as Parameters<typeof baseTransformMarkdown>[2] & {
-    codeAnnotations?: TransformOptions["codeAnnotations"];
-  };
 
   const transformed = await baseTransformMarkdown(processedContent, id, baseOptions);
 
@@ -333,7 +358,7 @@ function parseProps(propsString: string): Record<string, unknown> {
 function generateVueSFC(
   content: string,
   usedComponents: string[],
-  islands: ComponentIsland[],
+  _islands: ComponentIsland[] | string[],
   frontmatter: Record<string, unknown>,
   options: TransformOptions,
   id: string,
@@ -357,8 +382,8 @@ function generateVueSFC(
 
   const componentMap = usedComponents.map((name) => `  ${name},`).join("\n");
 
-  // If no islands, generate simpler code without island runtime
-  if (islands.length === 0) {
+  // If no registered islands, generate simpler code without island runtime
+  if (usedComponents.length === 0) {
     return `
 import { h, ref, defineComponent } from 'vue';
 
@@ -383,7 +408,7 @@ export default defineComponent({
 
   return `
 import { h, ref, onMounted, onBeforeUnmount, defineComponent, render } from 'vue';
-import { initIslands } from '@ox-content/islands';
+import { initIslands, readIslandSlotHtml } from '@ox-content/islands';
 ${componentImports}
 
 export const frontmatter = ${JSON.stringify(frontmatter)};
@@ -401,7 +426,7 @@ function createVueHydrate(container) {
     const Component = components[componentName];
     if (!Component) return;
 
-    const islandContent = element.dataset.oxContent || element.innerHTML;
+    const islandContent = readIslandSlotHtml(element);
     const children = islandContent
       ? { default: () => h('div', { innerHTML: islandContent }) }
       : undefined;

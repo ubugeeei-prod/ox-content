@@ -1,5 +1,16 @@
 //! Markdown transformation pipeline for Ox Content.
 
+#![cfg_attr(
+    not(test),
+    deny(
+        clippy::unwrap_used,
+        clippy::expect_used,
+        clippy::panic,
+        clippy::todo,
+        clippy::unimplemented
+    )
+)]
+
 pub mod features;
 pub mod highlight;
 pub(crate) mod html_scan;

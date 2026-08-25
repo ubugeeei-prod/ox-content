@@ -117,4 +117,3 @@ const skipped = 1;
 - [品質チェック](./quality-checks.md) — `tsgo` による `codeBlockTypecheck`
 - [コードブロック](./code-blocks.md) — ハイライトと注釈
 - [組み込み機能の概要](../built-in-features.md)
-- [英語版ガイド](/built-in/typed-hover.md)

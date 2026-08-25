@@ -113,6 +113,7 @@ export function createDocsResolvedOptions(
       pageChrome: false,
     },
     siteMaps: { enabled: false, robots: true, llms: true },
+    pwa: { enabled: false, offline: true },
     permalinks: { enabled: false },
     cascade: { enabled: false },
     redirects: {

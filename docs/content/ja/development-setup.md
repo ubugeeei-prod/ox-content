@@ -64,6 +64,7 @@ vp run fmt
 vp run fmt:check
 vp run clippy
 vp run lint
+vp run check:panic-constructs
 vp run ready
 
 # Documentation
