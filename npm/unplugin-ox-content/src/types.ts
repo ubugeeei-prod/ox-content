@@ -334,6 +334,12 @@ export interface OxContentOptions {
   footnotes?: boolean;
 
   /**
+   * Render footnotes as a semantic ordered section with numeric markers.
+   * @default false
+   */
+  semanticFootnotes?: boolean;
+
+  /**
    * Enable tables.
    * @default true
    */
@@ -461,6 +467,8 @@ export interface ResolvedOptions {
   gfm: boolean;
   mdx?: boolean;
   footnotes: boolean;
+  /** Present after `resolveOptions`. Omitted in hand-built fixtures means off. */
+  semanticFootnotes?: boolean;
   tables: boolean;
   taskLists: boolean;
   strikethrough: boolean;

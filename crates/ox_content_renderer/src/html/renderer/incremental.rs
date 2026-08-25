@@ -23,10 +23,16 @@ impl HtmlRenderer {
         let document_scan = scan_document_for_render(document);
         let heading_id_counts =
             (document_scan.heading_count != 0).then(|| self.heading_id_counts.clone());
+        let footnote_ref_counts = self.footnote_ref_counts.clone();
+        let footnote_index = self.footnote_index.clone();
+        let footnote_records = self.footnote_records.clone();
         let html = self.render_fragment_with_scan(document, document_scan);
         if let Some(heading_id_counts) = heading_id_counts {
             self.heading_id_counts = heading_id_counts;
         }
+        self.footnote_ref_counts = footnote_ref_counts;
+        self.footnote_index = footnote_index;
+        self.footnote_records = footnote_records;
         html
     }
 
@@ -34,6 +40,7 @@ impl HtmlRenderer {
     pub fn reset_incremental_state(&mut self) {
         self.output.clear();
         self.heading_id_counts.clear();
+        self.clear_footnote_state();
         self.toc_entries.clear();
         self.document_has_toc_marker = false;
         self.heading_text_scratch.clear();
@@ -72,6 +79,7 @@ impl HtmlRenderer {
             self.output.reserve(estimated_len - self.output.capacity());
         }
         self.render_document(document);
+        self.finish_semantic_footnotes();
         std::mem::take(&mut self.output)
     }
 }

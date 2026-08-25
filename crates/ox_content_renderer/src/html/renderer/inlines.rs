@@ -4,10 +4,7 @@
 //! and image URL sanitization so URL escaping and Markdown link conversion happen in a
 //! single place.
 
-use ox_content_ast::{
-    Break, Delete, Emphasis, FootnoteDefinition, FootnoteReference, Image, InlineCode, Link,
-    Strong, Text,
-};
+use ox_content_ast::{Break, Delete, Emphasis, Image, InlineCode, Link, Strong, Text};
 
 use super::HtmlRenderer;
 
@@ -111,51 +108,5 @@ impl HtmlRenderer {
             self.visit_inline_node(child);
         }
         self.write("</del>");
-    }
-
-    pub(in crate::html::renderer) fn render_footnote_reference(
-        &mut self,
-        footnote_ref: &FootnoteReference<'_>,
-    ) {
-        crate::profile_span_detail!("renderer::visit_footnote_ref");
-        // A footnote may be referenced repeatedly, so each occurrence
-        // needs its own id: the first keeps `fnref-<id>` (which the
-        // definition's back-link targets) and later ones get a `-N`
-        // suffix. Without this the document carries duplicate ids, which
-        // is invalid HTML and breaks in-page anchors.
-        let occurrence = {
-            let count =
-                self.footnote_ref_counts.entry(footnote_ref.identifier.to_owned()).or_insert(0);
-            *count += 1;
-            *count
-        };
-
-        self.write("<sup><a href=\"#fn-");
-        self.write_escaped(footnote_ref.identifier);
-        self.write("\" id=\"fnref-");
-        self.write_escaped(footnote_ref.identifier);
-        if occurrence > 1 {
-            self.write("-");
-            self.write_display(occurrence);
-        }
-        self.write("\">");
-        self.write_escaped(footnote_ref.identifier);
-        self.write("</a></sup>");
-    }
-
-    pub(in crate::html::renderer) fn render_footnote_definition(
-        &mut self,
-        footnote_def: &FootnoteDefinition<'_>,
-    ) {
-        crate::profile_span!("renderer::visit_footnote_def");
-        self.write("<div id=\"fn-");
-        self.write_escaped(footnote_def.identifier);
-        self.write("\" class=\"footnote\">\n");
-        for child in &footnote_def.children {
-            self.render_node(child);
-        }
-        self.write("<a href=\"#fnref-");
-        self.write_escaped(footnote_def.identifier);
-        self.write("\">↩</a>\n</div>\n");
     }
 }

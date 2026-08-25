@@ -27,6 +27,30 @@ fn transforms_markdown_with_frontmatter_and_toc() {
 }
 
 #[test]
+fn semantic_footnotes_option_reaches_the_renderer() {
+    let transformer = MarkdownTransformer::from_options(&TransformOptions {
+        gfm: Some(true),
+        footnotes: Some(true),
+        semantic_footnotes: Some(true),
+        ..Default::default()
+    });
+    let result = transformer.transform("A[^note].\n\n[^note]: Body.\n");
+
+    assert!(result.errors.is_empty(), "unexpected transform errors: {:?}", result.errors);
+    assert!(
+        result.html.contains("<section class=\"footnotes\" aria-label=\"Footnotes\">"),
+        "{}",
+        result.html
+    );
+    assert!(
+        result.html.contains("<sup><a href=\"#fn-note\" id=\"fnref-note\">1</a></sup>"),
+        "{}",
+        result.html
+    );
+    assert!(!result.html.contains("class=\"footnote\""), "{}", result.html);
+}
+
+#[test]
 fn mdx_transform_option_reaches_the_parser_and_renderer() {
     let transformer = MarkdownTransformer::from_options(&TransformOptions {
         mdx: Some(true),

@@ -30,6 +30,11 @@ pub struct JsTransformOptions {
     /// Default: `false`, or `true` when `gfm` is `true`.
     pub footnotes: Option<bool>,
 
+    /// Render footnotes as a semantic ordered section with numeric markers.
+    ///
+    /// Default: `false`.
+    pub semantic_footnotes: Option<bool>,
+
     /// Enable GFM task-list item markers.
     ///
     /// Default: `false`, or `true` when `gfm` is `true`.
@@ -209,6 +214,7 @@ impl From<JsTransformOptions> for TransformOptions {
             gfm: value.gfm,
             mdx: value.mdx,
             footnotes: value.footnotes,
+            semantic_footnotes: value.semantic_footnotes,
             task_lists: value.task_lists,
             tables: value.tables,
             strikethrough: value.strikethrough,

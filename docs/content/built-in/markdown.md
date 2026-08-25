@@ -9,17 +9,18 @@ Common GitHub-flavored Markdown behavior is enabled by default. You do not need
 any configuration for the features on this page — every rendered example below
 is produced by this documentation site itself with the default settings.
 
-| Option          | Type      | Default        | Purpose                                    |
-| --------------- | --------- | -------------- | ------------------------------------------ |
-| `gfm`           | `boolean` | `true`         | GitHub Flavored Markdown extensions.       |
-| `tables`        | `boolean` | `true`         | GFM tables.                                |
-| `taskLists`     | `boolean` | `true`         | `- [ ]` / `- [x]` checkboxes.              |
-| `strikethrough` | `boolean` | `true`         | `~~text~~`.                                |
-| `autolinks`     | `boolean` | inherits `gfm` | Turn bare URLs into links.                 |
-| `footnotes`     | `boolean` | `true`         | `[^1]` references and definitions.         |
-| `frontmatter`   | `boolean` | `true`         | Parse YAML frontmatter before rendering.   |
-| `toc`           | `boolean` | `true`         | Build a table of contents from headings.   |
-| `tocMaxDepth`   | `number`  | `3`            | Deepest heading level included in the TOC. |
+| Option              | Type      | Default        | Purpose                                                |
+| ------------------- | --------- | -------------- | ------------------------------------------------------ |
+| `gfm`               | `boolean` | `true`         | GitHub Flavored Markdown extensions.                   |
+| `tables`            | `boolean` | `true`         | GFM tables.                                            |
+| `taskLists`         | `boolean` | `true`         | `- [ ]` / `- [x]` checkboxes.                          |
+| `strikethrough`     | `boolean` | `true`         | `~~text~~`.                                            |
+| `autolinks`         | `boolean` | inherits `gfm` | Turn bare URLs into links.                             |
+| `footnotes`         | `boolean` | `true`         | `[^1]` references and definitions.                     |
+| `semanticFootnotes` | `boolean` | `false`        | Numeric markers and one `<section class="footnotes">`. |
+| `frontmatter`       | `boolean` | `true`         | Parse YAML frontmatter before rendering.               |
+| `toc`               | `boolean` | `true`         | Build a table of contents from headings.               |
+| `tocMaxDepth`       | `number`  | `3`            | Deepest heading level included in the TOC.             |
 
 Every option above is an extension on top of CommonMark, and each is opt-out.
 The parser underneath targets full conformance: it renders all 652
@@ -115,9 +116,36 @@ Ox Content renders footnotes natively.[^1]
 
 [^1]: This is the footnote body.
 
-The reference becomes a superscript link, and the definition renders where it
-is written in the source with a back-link — put definitions at the bottom of a
-page to collect them there.
+The reference becomes a superscript link. With the default renderer the visible
+marker is the source identifier, and each definition is emitted in place as
+`<div class="footnote">` — put definitions at the bottom of a page to collect
+them there.
+
+Set `semanticFootnotes: true` to assign stable numeric markers in document
+order (`[^deployment-note]` → 1, 2, …) and collect definitions into one
+accessible section. The source identifier is used only for lookup and slug
+generation (`fn-…` / `fnref-…`). Repeated references keep unique ids
+(`fnref-note`, `fnref-note-2`, …) and each occurrence gets a backlink.
+Definition bodies keep their block content. No client JavaScript is required.
+
+```html
+<section class="footnotes" aria-label="Footnotes">
+  <ol>
+    <li id="fn-deployment-note">… <a href="#fnref-deployment-note" aria-label="Back to reference 1">↩</a></li>
+  </ol>
+</section>
+```
+
+```ts
+oxContent({
+  footnotes: true,
+  semanticFootnotes: true,
+});
+```
+
+This documentation site enables `semanticFootnotes` so the live example above
+uses the ordered section. The option stays off by default so current alpha
+HTML does not change.
 
 ## Frontmatter
 

@@ -8,6 +8,7 @@
 mod blocks;
 mod callout;
 mod code_block;
+mod footnotes;
 mod incremental;
 mod inlines;
 mod links;
@@ -44,6 +45,11 @@ pub struct HtmlRenderer {
     /// far in this render, so repeated references can be given unique
     /// `fnref-` ids. Cleared per `render()` like the heading id map.
     footnote_ref_counts: FxHashMap<String, usize>,
+    /// Source identifier → list index for semantic footnotes. One insert
+    /// per unique footnote; later markers look up this map.
+    footnote_index: FxHashMap<CompactString, u32>,
+    /// Document-order footnote list used when `semantic_footnotes` is on.
+    footnote_records: Vec<footnotes::FootnoteRecord>,
     toc_entries: Vec<InlineTocEntry>,
     /// Whether the document being rendered contains at least one
     /// `[[toc]]` directive paragraph. Cached at `render()` entry so each
@@ -101,6 +107,8 @@ impl HtmlRenderer {
             output: String::new(),
             heading_id_counts: FxHashMap::default(),
             footnote_ref_counts: FxHashMap::default(),
+            footnote_index: FxHashMap::default(),
+            footnote_records: Vec::new(),
             toc_entries: Vec::new(),
             document_has_toc_marker: false,
             // Pre-size the heading scratch buffers: a typical heading text
@@ -157,7 +165,7 @@ impl HtmlRenderer {
         }
         self.heading_id_counts.clear();
         self.heading_id_counts.reserve(document_scan.heading_count);
-        self.footnote_ref_counts.clear();
+        self.clear_footnote_state();
         // Build the autolink first-byte index once per render. It depends only
         // on the immutable pattern list, not on the text node being rendered,
         // so reusing it avoids rebuilding a 256-byte table on every inline
@@ -179,6 +187,7 @@ impl HtmlRenderer {
             self.output.reserve(estimated_len - self.output.capacity());
         }
         self.render_document(document);
+        self.finish_semantic_footnotes();
     }
 
     pub(in crate::html::renderer) fn render_document(&mut self, document: &Document<'_>) {

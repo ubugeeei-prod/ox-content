@@ -64,6 +64,7 @@ Ox Content は、よく使うドキュメントの挙動を既定で載せ、非
 | 領域                 | オプション                                                                                                    | 既定          | ガイド                                                   |
 | -------------------- | ------------------------------------------------------------------------------------------------------------- | ------------- | -------------------------------------------------------- |
 | Markdown 土台        | `gfm`, `footnotes`, `tables`, `taskLists`, `strikethrough`, `autolinks`                                       | `true`        | [Markdown の土台](./built-in/markdown.md)                |
+| 意味的な脚注         | `semanticFootnotes`                                                                                           | `false`       | [Markdown の土台](./built-in/markdown.md)                |
 | ページメタ           | `frontmatter`                                                                                                 | `true`        | [Markdown の土台](./built-in/markdown.md)                |
 | ナビゲーション       | `toc`, `tocMaxDepth`                                                                                          | `true`, `3`   | [Markdown の土台](./built-in/markdown.md)                |
 | 静的サイト           | `ssg`                                                                                                         | `{ enabled }` | [サイト生成](./built-in/site-generation.md)              |

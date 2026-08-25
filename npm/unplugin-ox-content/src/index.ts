@@ -94,6 +94,7 @@ function resolveOptions(options: OxContentOptions): ResolvedOptions {
     gfm: options.gfm ?? true,
     mdx: options.mdx,
     footnotes: options.footnotes ?? true,
+    semanticFootnotes: options.semanticFootnotes ?? false,
     tables: options.tables ?? true,
     taskLists: options.taskLists ?? true,
     strikethrough: options.strikethrough ?? true,

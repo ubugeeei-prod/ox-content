@@ -7,17 +7,18 @@ description: 最初からオンの GitHub Flavored Markdown、frontmatter、目�
 
 よく使う GitHub Flavored Markdown の挙動は既定でオンです。このページの機能に設定は不要です。下の描画例はすべて、このドキュメントサイト自身が既定設定で出しています。
 
-| オプション      | 型        | 既定         | 目的                                 |
-| --------------- | --------- | ------------ | ------------------------------------ |
-| `gfm`           | `boolean` | `true`       | GitHub Flavored Markdown 拡張。      |
-| `tables`        | `boolean` | `true`       | GFM の表。                           |
-| `taskLists`     | `boolean` | `true`       | `- [ ]` / `- [x]` チェックボックス。 |
-| `strikethrough` | `boolean` | `true`       | `~~text~~`。                         |
-| `autolinks`     | `boolean` | `gfm` を継承 | 裸の URL をリンクにする。            |
-| `footnotes`     | `boolean` | `true`       | `[^1]` 参照と定義。                  |
-| `frontmatter`   | `boolean` | `true`       | 描画前に YAML frontmatter をパース。 |
-| `toc`           | `boolean` | `true`       | 見出しから目次を作る。               |
-| `tocMaxDepth`   | `number`  | `3`          | TOC に含める最も深い見出しレベル。   |
+| オプション          | 型        | 既定         | 目的                                                 |
+| ------------------- | --------- | ------------ | ---------------------------------------------------- |
+| `gfm`               | `boolean` | `true`       | GitHub Flavored Markdown 拡張。                      |
+| `tables`            | `boolean` | `true`       | GFM の表。                                           |
+| `taskLists`         | `boolean` | `true`       | `- [ ]` / `- [x]` チェックボックス。                 |
+| `strikethrough`     | `boolean` | `true`       | `~~text~~`。                                         |
+| `autolinks`         | `boolean` | `gfm` を継承 | 裸の URL をリンクにする。                            |
+| `footnotes`         | `boolean` | `true`       | `[^1]` 参照と定義。                                  |
+| `semanticFootnotes` | `boolean` | `false`      | 数字マーカーと 1 つの `<section class="footnotes">`。 |
+| `frontmatter`       | `boolean` | `true`       | 描画前に YAML frontmatter をパース。                 |
+| `toc`               | `boolean` | `true`       | 見出しから目次を作る。                               |
+| `tocMaxDepth`       | `number`  | `3`          | TOC に含める最も深い見出しレベル。                   |
 
 上のオプションはどれも CommonMark の上の拡張で、それぞれオプトアウトです。下のパーサは完全適合を狙います。コアプロファイルでは [CommonMark 0.31.2](https://spec.commonmark.org/0.31.2/) の仕様例 652 件を正しく描画し、毎回の CI で確認します。拡張を使わない文書は、適合スイートの HTML 正規化規則の下で仕様に適合します。マークアップはバイト一致ではありません。ox-content が見出しに slug の `id` 属性を付けるからです。プロファイルごとの数値は [CommonMark 適合](../performance.md#commonmark-適合) を見てください。
 
@@ -104,7 +105,26 @@ Ox Content renders footnotes natively.[^1]
 
 [^1]: This is the footnote body.
 
-参照は上付きリンクになり、定義はソースに書いた場所で戻るリンク付きで描画されます。ページ末に定義を置くと、そこに集まります。
+参照は上付きリンクになります。既定のレンダラでは見えるマーカーはソースの識別子で、各定義は書いた場所で `<div class="footnote">` として出ます。ページ末に定義を置くと、そこに集まります。
+
+`semanticFootnotes: true` にすると、表示マーカーは文書順の安定した数字になり（`[^deployment-note]` → 1, 2, …）、定義はアクセス可能な 1 つのセクションにまとまります。ソースの識別子は照合と slug 生成（`fn-…` / `fnref-…`）だけに使います。同じ定義への複数参照は一意の id（`fnref-note`、`fnref-note-2`、…）を保ち、各出現に戻るリンクが付きます。定義本体のブロック内容はそのままです。クライアント JavaScript は不要です。
+
+```html
+<section class="footnotes" aria-label="Footnotes">
+  <ol>
+    <li id="fn-deployment-note">… <a href="#fnref-deployment-note" aria-label="Back to reference 1">↩</a></li>
+  </ol>
+</section>
+```
+
+```ts
+oxContent({
+  footnotes: true,
+  semanticFootnotes: true,
+});
+```
+
+このドキュメントサイトは `semanticFootnotes` をオンにしているので、上の実例は順序付きセクションになります。オプションの既定はオフのままなので、現在の alpha HTML は変わりません。
 
 ## Frontmatter
 

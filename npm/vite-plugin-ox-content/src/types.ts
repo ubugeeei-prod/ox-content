@@ -1414,6 +1414,18 @@ export interface OxContentOptions {
   footnotes?: boolean;
 
   /**
+   * Render footnotes as a semantic ordered section with numeric markers.
+   *
+   * Source identifiers are used only for lookup and slugs. Visible markers
+   * are 1, 2, … in document order, and definitions emit as
+   * `<section class="footnotes"><ol><li>…`.
+   *
+   * Off by default so current alpha HTML stays stable.
+   * @default false
+   */
+  semanticFootnotes?: boolean;
+
+  /**
    * Enable tables.
    * @default true
    */
@@ -1799,6 +1811,10 @@ export interface ResolvedOptions {
   gfm: boolean;
   mdx?: boolean;
   footnotes: boolean;
+  /**
+   * Present after `resolveOptions`. Omitted in hand-built fixtures means off.
+   */
+  semanticFootnotes?: boolean;
   tables: boolean;
   taskLists: boolean;
   strikethrough: boolean;

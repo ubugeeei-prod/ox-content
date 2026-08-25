@@ -1994,6 +1994,12 @@ export interface JsTransformOptions {
    */
   footnotes?: boolean
   /**
+   * Render footnotes as a semantic ordered section with numeric markers.
+   *
+   * Default: `false`.
+   */
+  semanticFootnotes?: boolean
+  /**
    * Enable GFM task-list item markers.
    *
    * Default: `false`, or `true` when `gfm` is `true`.

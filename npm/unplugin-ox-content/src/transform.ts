@@ -80,6 +80,7 @@ interface NapiBindings {
       gfm?: boolean;
       mdx?: boolean;
       footnotes?: boolean;
+      semanticFootnotes?: boolean;
       taskLists?: boolean;
       tables?: boolean;
       strikethrough?: boolean;
@@ -238,6 +239,7 @@ function createNapiTransformOptions(
   gfm: boolean;
   mdx: boolean;
   footnotes: boolean;
+  semanticFootnotes?: boolean;
   taskLists: boolean;
   tables: boolean;
   strikethrough: boolean;
@@ -257,6 +259,7 @@ function createNapiTransformOptions(
     gfm: options.gfm,
     mdx: resolveMdxForSourceFile(filePath, options.mdx),
     footnotes: options.footnotes,
+    semanticFootnotes: options.semanticFootnotes,
     taskLists: options.taskLists,
     tables: options.tables,
     strikethrough: options.strikethrough,

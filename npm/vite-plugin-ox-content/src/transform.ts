@@ -169,6 +169,12 @@ interface JsTransformOptions {
   footnotes?: boolean;
 
   /**
+   * Render footnotes as a semantic ordered section with numeric markers.
+   * @default false
+   */
+  semanticFootnotes?: boolean;
+
+  /**
    * Enable task list syntax (- [ ] unchecked, - [x] checked).
    * @default false
    */
@@ -549,6 +555,7 @@ export async function transformMarkdown(
     gfm: options.gfm,
     mdx: resolveMdxForFilePath(filePath, options.mdx),
     footnotes: options.footnotes,
+    semanticFootnotes: options.semanticFootnotes ?? false,
     taskLists: options.taskLists,
     tables: options.tables,
     strikethrough: options.strikethrough,

@@ -97,6 +97,9 @@ interface ParseOptions {
   /** Enable footnotes */
   footnotes?: boolean;
 
+  /** Render footnotes as a semantic ordered section with numeric markers */
+  semanticFootnotes?: boolean;
+
   /** Enable tables */
   tables?: boolean;
 

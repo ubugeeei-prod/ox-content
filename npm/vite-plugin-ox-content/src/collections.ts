@@ -23,6 +23,7 @@ type NativeCollectionDefinition = {
 type NativeTransformOptions = {
   gfm?: boolean;
   footnotes?: boolean;
+  semanticFootnotes?: boolean;
   taskLists?: boolean;
   tables?: boolean;
   strikethrough?: boolean;
@@ -171,6 +172,7 @@ function createNativeTransformOptions(options: ResolvedOptions): NativeTransform
   return {
     gfm: options.gfm,
     footnotes: options.footnotes,
+    semanticFootnotes: options.semanticFootnotes ?? false,
     taskLists: options.taskLists,
     tables: options.tables,
     strikethrough: options.strikethrough,

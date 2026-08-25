@@ -65,9 +65,10 @@ inline**.
 
 ## Default vs Opt-in
 
-| Area             | Option                                                                                                        | Default              | Guide                                                  |
-| ---------------- | ------------------------------------------------------------------------------------------------------------- | -------------------- | ------------------------------------------------------ |
-| Markdown base    | `gfm`, `footnotes`, `tables`, `taskLists`, `strikethrough`, `autolinks`                                       | `true`               | [Markdown Baseline](./built-in/markdown.md)            |
+| Area               | Option                                                                                                        | Default              | Guide                                                  |
+| ------------------ | ------------------------------------------------------------------------------------------------------------- | -------------------- | ------------------------------------------------------ |
+| Markdown base      | `gfm`, `footnotes`, `tables`, `taskLists`, `strikethrough`, `autolinks`                                       | `true`               | [Markdown Baseline](./built-in/markdown.md)            |
+| Semantic footnotes | `semanticFootnotes`                                                                                           | `false`              | [Markdown Baseline](./built-in/markdown.md)            |
 | Page metadata    | `frontmatter`                                                                                                 | `true`               | [Markdown Baseline](./built-in/markdown.md)            |
 | Navigation       | `toc`, `tocMaxDepth`                                                                                          | `true`, `3`          | [Markdown Baseline](./built-in/markdown.md)            |
 | Static site      | `ssg`                                                                                                         | `{ enabled }`        | [Site Generation](./built-in/site-generation.md)       |

@@ -38,6 +38,7 @@ export default defineConfig(({ mode }) => {
         srcDir: "content",
         outDir: "dist/docs",
         base,
+        semanticFootnotes: true,
 
         // Enable per-page OG image generation (Chromium-based)
         ogImage: true,

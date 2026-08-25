@@ -21,6 +21,7 @@ pub struct TransformOptions {
     pub autolink_urls: Option<bool>,
     pub autolink_patterns: Option<Vec<String>>,
     pub autolink_target_blank: Option<bool>,
+    pub semantic_footnotes: Option<bool>,
     pub wiki_links: Option<WikiLinkOptions>,
     pub emoji_shortcodes: Option<EmojiShortcodeOptions>,
     pub math: Option<MathOptions>,
