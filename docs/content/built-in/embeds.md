@@ -230,7 +230,10 @@ Watch on X permalink unless `downloadVideo` is enabled, and the generated HTML
 never includes `video.twimg.com`. Deleted or private posts fall back to the
 link-only card instead of failing the build. A missing quoted post is omitted
 without discarding the root card. Full-card CSS ships only on pages that
-render `.ox-tweet--full`. See
+render `.ox-tweet--full`. The full-card chrome follows the MIT-licensed
+[react-tweet](https://github.com/vercel/react-tweet) and
+[sveltweet](https://github.com/ryoppippi/sveltweet) visual contract; notices
+are in [Credits](../credits.md). See
 [Twitter/X Embed](../examples/twitter-embed.md) for details.
 
 ## Bluesky

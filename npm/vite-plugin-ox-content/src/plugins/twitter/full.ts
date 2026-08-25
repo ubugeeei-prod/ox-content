@@ -1,3 +1,6 @@
+// Static HTML for appearance: "full". Visual contract follows MIT-licensed
+// react-tweet (Copyright (c) 2023 Luis Alvarez) and sveltweet (Copyright (c)
+// 2024 ryoppippi). Notices live in social-tweet-full.css and docs/content/credits.md.
 import { escapeAttribute, escapeHtml } from "./html";
 import { renderMedia } from "./markup";
 import { renderTweetText } from "./text";

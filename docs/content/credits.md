@@ -23,3 +23,19 @@ Contribution summary:
   documentation.
 - Improved documentation quality around generated API docs and user-facing
   docs.
+
+## Third-party attribution
+
+### react-tweet and sveltweet
+
+The opt-in Twitter/X `appearance: "full"` card is static HTML and CSS. Its
+visual contract — layout, color tokens, and control icons — follows
+[react-tweet](https://github.com/vercel/react-tweet) (MIT, Copyright (c) 2023
+Luis Alvarez) and [sveltweet](https://github.com/ryoppippi/sveltweet) (MIT,
+Copyright (c) 2024 ryoppippi). Ox Content does not depend on those packages at
+runtime.
+
+The MIT copyright notice and permission notice for both projects are
+reproduced in `crates/ox_content_ssg/src/plugins/social-tweet-full.css`.
+
+X, Twitter, and related marks are trademarks of their respective owners.

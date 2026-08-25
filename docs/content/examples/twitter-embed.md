@@ -65,6 +65,13 @@ Full appearance is static HTML/CSS: no hydration, widget iframe, or per-card
 listeners. It reuses the same materialized avatar/photo/video assets as compact.
 Pages that only render compact cards do not ship the full-card CSS.
 
+The full-card visual contract follows MIT-licensed
+[react-tweet](https://github.com/vercel/react-tweet) (Copyright (c) 2023 Luis
+Alvarez) and [sveltweet](https://github.com/ryoppippi/sveltweet) (Copyright (c)
+2024 ryoppippi). Notices are in [Credits](../credits.md) and
+`social-tweet-full.css`. X, Twitter, and related marks are trademarks of their
+respective owners.
+
 Intentional differences from `sveltweet@0.5.1` / `react-tweet`:
 
 - No copy control. It would need client JavaScript; the readable card does not.
