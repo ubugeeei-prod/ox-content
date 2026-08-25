@@ -43,6 +43,7 @@ export default defineConfig({
         "react-dom",
         "react-dom/server",
         "typescript",
+        "@typescript/native-preview",
       ],
     },
   }),

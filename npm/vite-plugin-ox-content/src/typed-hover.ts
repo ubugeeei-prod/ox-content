@@ -58,7 +58,8 @@ export async function applyTypedHover(
   try {
     const attachments = await generateTypedHoverAttachments(fences, options.tsgoCommand);
     return attachTypedHoverPayloads(html, attachments);
-  } catch {
+  } catch (error) {
+    console.warn("[ox-content] typedHover failed; leaving the fence unannotated.", error);
     return html;
   }
 }
@@ -202,11 +203,19 @@ function decodeHtmlEntities(value: string): string {
   return value
     .replace(/&lt;/g, "<")
     .replace(/&gt;/g, ">")
-    .replace(/&amp;/g, "&")
     .replace(/&quot;/g, '"')
-    .replace(/&#39;/g, "'");
+    .replace(/&#39;/g, "'")
+    .replace(/&#x([0-9a-fA-F]+);/g, (_, hex: string) => {
+      const code = Number.parseInt(hex, 16);
+      return Number.isFinite(code) ? String.fromCodePoint(code) : "";
+    })
+    .replace(/&#(\d+);/g, (_, dec: string) => {
+      const code = Number.parseInt(dec, 10);
+      return Number.isFinite(code) ? String.fromCodePoint(code) : "";
+    })
+    .replace(/&amp;/g, "&");
 }
 
 const TYPED_HOVER_STYLE = `<style data-ox-typed-hover-style>.ox-typed-hover-token{cursor:help;text-decoration:underline dotted}.ox-typed-hover-overlay{position:fixed;z-index:50;max-width:36rem;padding:.35rem .55rem;border:1px solid #444;border-radius:4px;background:#1e1e1e;color:#d4d4d4;font:12px/1.4 ui-monospace,SFMono-Regular,Menlo,monospace;white-space:pre-wrap;pointer-events:none}</style>`;
 
-const TYPED_HOVER_CLIENT = `<script data-ox-typed-hover-runtime>(function(){if(window.__oxTypedHover)return;window.__oxTypedHover=1;var tip=document.createElement("div");tip.className="ox-typed-hover-overlay";tip.setAttribute("role","tooltip");tip.hidden=true;document.body.appendChild(tip);function payload(token){var pre=token.closest(".ox-typed-hover");var data=pre&&pre.nextElementSibling;if(!data||!data.classList.contains("ox-typed-hover-data"))return null;try{return JSON.parse(data.textContent||"")}catch(e){return null}}function show(token){var data=payload(token);var item=data&&data.hovers[Number(token.getAttribute("data-ox-typed-hover"))];if(!item)return;tip.textContent=item.type;tip.hidden=false;var box=token.getBoundingClientRect();tip.style.left=Math.max(8,box.left)+"px";tip.style.top=Math.max(8,box.top-tip.offsetHeight-8)+"px"}function hide(){tip.hidden=true}document.addEventListener("mouseover",function(e){var t=e.target.closest(".ox-typed-hover-token");if(t)show(t)});document.addEventListener("mouseout",function(e){var t=e.target.closest(".ox-typed-hover-token");if(t&&!t.contains(e.relatedTarget))hide()});document.addEventListener("focusin",function(e){var t=e.target.closest(".ox-typed-hover-token");if(t)show(t)});document.addEventListener("focusout",function(e){if(!e.relatedTarget||!e.relatedTarget.closest(".ox-typed-hover-token"))hide()});document.addEventListener("keydown",function(e){if(e.key==="Escape")hide()})})();</script>`;
+const TYPED_HOVER_CLIENT = `<script data-ox-typed-hover-runtime>(function(){if(window.__oxTypedHover)return;window.__oxTypedHover=1;var tip=document.createElement("div");tip.className="ox-typed-hover-overlay";tip.setAttribute("role","tooltip");tip.hidden=true;document.body.appendChild(tip);function payload(token){var pre=token.closest(".ox-typed-hover");if(!pre)return null;var host=pre.closest(".ox-code")||pre;var data=host.nextElementSibling;if(!data||!data.classList.contains("ox-typed-hover-data"))return null;try{return JSON.parse(data.textContent||"")}catch(e){return null}}function show(token){var data=payload(token);var item=data&&data.hovers[Number(token.getAttribute("data-ox-typed-hover"))];if(!item)return;tip.textContent=item.type;tip.hidden=false;var box=token.getBoundingClientRect();tip.style.left=Math.max(8,box.left)+"px";tip.style.top=Math.max(8,box.top-tip.offsetHeight-8)+"px"}function hide(){tip.hidden=true}document.addEventListener("mouseover",function(e){var t=e.target.closest(".ox-typed-hover-token");if(t)show(t)});document.addEventListener("mouseout",function(e){var t=e.target.closest(".ox-typed-hover-token");if(t&&!t.contains(e.relatedTarget))hide()});document.addEventListener("focusin",function(e){var t=e.target.closest(".ox-typed-hover-token");if(t)show(t)});document.addEventListener("focusout",function(e){if(!e.relatedTarget||!e.relatedTarget.closest(".ox-typed-hover-token"))hide()});document.addEventListener("keydown",function(e){if(e.key==="Escape")hide()})})();</script>`;
