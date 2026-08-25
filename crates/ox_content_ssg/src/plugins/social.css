@@ -57,6 +57,85 @@
   color: var(--octc-color-text-muted);
 }
 
+.ox-bluesky__header {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  min-width: 0;
+}
+
+.ox-bluesky__avatar-wrap {
+  flex: 0 0 auto;
+}
+
+.ox-bluesky__avatar,
+.ox-bluesky__avatar-fallback {
+  display: grid;
+  place-items: center;
+  width: 42px;
+  height: 42px;
+  border-radius: 50%;
+  background: color-mix(in srgb, var(--octc-color-primary) 16%, var(--octc-color-bg-alt));
+  color: var(--octc-color-primary);
+  font-weight: 700;
+}
+
+.ox-bluesky__avatar {
+  object-fit: cover;
+}
+
+.ox-bluesky__identity {
+  display: grid;
+  min-width: 0;
+  gap: 0.125rem;
+}
+
+.ox-bluesky__author-name,
+.ox-bluesky__handle {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.ox-bluesky__author-name {
+  font-size: 0.95rem;
+  line-height: 1.2;
+  color: var(--octc-color-text);
+}
+
+.ox-bluesky__handle,
+.ox-bluesky__network,
+.ox-bluesky__meta {
+  color: var(--octc-color-text-muted);
+}
+
+.ox-bluesky__network {
+  margin-left: auto;
+  flex: 0 0 auto;
+  font-size: 0.75rem;
+  font-weight: 600;
+}
+
+.ox-bluesky__body {
+  margin: 0.875rem 0 0;
+  font-size: 0.95rem;
+  line-height: 1.55;
+  color: var(--octc-color-text);
+}
+
+.ox-bluesky__meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.45rem 0.8rem;
+  margin-top: 0.875rem;
+  font-size: 0.75rem;
+}
+
+.ox-bluesky__source {
+  color: var(--octc-color-primary);
+  font-weight: 600;
+}
+
 /* Fetched tweet cards (<Tweet> with `twitter: { fetch: true }`) */
 .ox-tweet--fetched > a {
   padding: 1rem 0;

@@ -289,17 +289,40 @@ are in [Credits](../credits.md). See
 
 ## Bluesky
 
-`embeds.bluesky` renders a static card. The element body provides the text
-shown in the card, so no network request is needed at all:
+`embeds.bluesky` renders a static card with optional author, avatar, timestamp,
+and engagement metadata. The element body provides the post text, so no network
+request is needed at all:
 
 ```mdx
-<Bluesky url="https://bsky.app/profile/bsky.app/post/3l6oveex3ii2l">
+<Bluesky
+  url="https://bsky.app/profile/bsky.app/post/3l6oveex3ii2l"
+  displayName="Bluesky"
+  handle="bsky.app"
+  avatar="https://bsky.app/static/apple-touch-icon.png"
+  dateTime="2024-02-06T12:34:56Z"
+  dateLabel="Feb 6, 2024"
+  replies="1.2k"
+  reposts="8.4k"
+  likes="21k"
+>
   👋 Bluesky is an open social network
 </Bluesky>
 ```
 
-<Bluesky url="https://bsky.app/profile/bsky.app/post/3l6oveex3ii2l">
-  👋 Bluesky is an open social network
+<Bluesky
+url="https://bsky.app/profile/bsky.app/post/3l6oveex3ii2l"
+displayName="Bluesky"
+handle="bsky.app"
+avatar="https://bsky.app/static/apple-touch-icon.png"
+dateTime="2024-02-06T12:34:56Z"
+dateLabel="Feb 6, 2024"
+replies="1.2k"
+reposts="8.4k"
+likes="21k"
+
+>
+
+👋 Bluesky is an open social network
 </Bluesky>
 
 ## Spotify

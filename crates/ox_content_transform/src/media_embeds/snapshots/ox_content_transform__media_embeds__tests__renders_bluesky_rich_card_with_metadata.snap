@@ -1,0 +1,5 @@
+---
+source: crates/ox_content_transform/src/media_embeds/tests.rs
+expression: html
+---
+<article class="ox-bluesky ox-bluesky--rich"><a class="ox-bluesky__card" href="https://bsky.app/profile/bsky.app/post/3l6oveex3ii2l" target="_blank" rel="noopener noreferrer"><header class="ox-bluesky__header"><span class="ox-bluesky__avatar-wrap"><img class="ox-bluesky__avatar" src="https://bsky.app/static/apple-touch-icon.png" alt="" loading="lazy"></span><span class="ox-bluesky__identity"><strong class="ox-bluesky__author-name">Bluesky</strong><span class="ox-bluesky__handle">@bsky.app</span></span><span class="ox-bluesky__network">Bluesky</span></header><p class="ox-bluesky__body">hello sky</p><footer class="ox-bluesky__meta"><time datetime="2024-02-06T12:34:56Z">Feb 6, 2024</time><span>10 replies</span><span>20 reposts</span><span>30 likes</span><span>4 quotes</span><span class="ox-bluesky__source">Open post</span></footer></a></article>

@@ -31,7 +31,7 @@ pub(super) fn render_bluesky(element: &ComponentElement<'_>) -> Option<String> {
     if !url.starts_with("https://bsky.app/profile/") {
         return None;
     }
-    Some(render_static_card("ox-bluesky", "Bluesky", url, element.body.trim()))
+    Some(render_bluesky_card(element, url))
 }
 
 pub(super) fn render_webcontainer(element: &ComponentElement<'_>) -> Option<String> {
@@ -82,6 +82,89 @@ fn tweet_url(input: &str) -> Option<String> {
         return Some(format!("https://x.com/i/web/status/{input}"));
     }
     None
+}
+
+fn render_bluesky_card(element: &ComponentElement<'_>, href: &str) -> String {
+    let handle = first_attr(element, &["handle", "authorHandle"])
+        .or_else(|| bluesky_handle_from_url(href))
+        .unwrap_or("bsky.app");
+    let author =
+        first_attr(element, &["displayName", "authorName", "name", "author"]).unwrap_or(handle);
+    let avatar = first_attr(element, &["avatar", "avatarUrl", "authorAvatar", "authorAvatarUrl"]);
+    let date = first_attr(element, &["datetime", "dateTime", "createdAt", "date", "timestamp"]);
+    let date_label = first_attr(element, &["dateLabel", "time", "publishedAtLabel"]).or(date);
+    let body = element.body.trim();
+
+    let mut html = String::new();
+    html.push_str(
+        "<article class=\"ox-bluesky ox-bluesky--rich\"><a class=\"ox-bluesky__card\" href=\"",
+    );
+    escape_attr(href, &mut html);
+    html.push_str("\" target=\"_blank\" rel=\"noopener noreferrer\"><header class=\"ox-bluesky__header\"><span class=\"ox-bluesky__avatar-wrap\">");
+    if let Some(avatar) = avatar {
+        html.push_str("<img class=\"ox-bluesky__avatar\" src=\"");
+        escape_attr(avatar, &mut html);
+        html.push_str("\" alt=\"\" loading=\"lazy\">");
+    } else {
+        html.push_str("<span class=\"ox-bluesky__avatar-fallback\" aria-hidden=\"true\">B</span>");
+    }
+    html.push_str(
+        "</span><span class=\"ox-bluesky__identity\"><strong class=\"ox-bluesky__author-name\">",
+    );
+    escape_text(author, &mut html);
+    html.push_str("</strong><span class=\"ox-bluesky__handle\">@");
+    escape_text(handle.trim_start_matches('@'), &mut html);
+    html.push_str("</span></span><span class=\"ox-bluesky__network\">Bluesky</span></header>");
+
+    if !body.is_empty() {
+        html.push_str("<p class=\"ox-bluesky__body\">");
+        escape_text(body, &mut html);
+        html.push_str("</p>");
+    }
+
+    html.push_str("<footer class=\"ox-bluesky__meta\">");
+    if let Some(date_label) = date_label {
+        html.push_str("<time datetime=\"");
+        escape_attr(date.unwrap_or(date_label), &mut html);
+        html.push_str("\">");
+        escape_text(date_label, &mut html);
+        html.push_str("</time>");
+    }
+    push_count(
+        &mut html,
+        first_attr(element, &["replies", "replyCount", "reply_count"]),
+        "replies",
+    );
+    push_count(
+        &mut html,
+        first_attr(element, &["reposts", "repostCount", "repost_count"]),
+        "reposts",
+    );
+    push_count(&mut html, first_attr(element, &["likes", "likeCount", "like_count"]), "likes");
+    push_count(&mut html, first_attr(element, &["quotes", "quoteCount", "quote_count"]), "quotes");
+    html.push_str("<span class=\"ox-bluesky__source\">Open post</span></footer></a></article>");
+    html
+}
+
+fn first_attr<'a>(element: &'a ComponentElement<'_>, names: &[&str]) -> Option<&'a str> {
+    names.iter().find_map(|name| attr(element, name))
+}
+
+fn bluesky_handle_from_url(url: &str) -> Option<&str> {
+    let rest = url.strip_prefix("https://bsky.app/profile/")?;
+    let (handle, _) = rest.split_once("/post/")?;
+    (!handle.is_empty()).then_some(handle)
+}
+
+fn push_count(html: &mut String, value: Option<&str>, label: &str) {
+    let Some(value) = value else {
+        return;
+    };
+    html.push_str("<span>");
+    escape_text(value, html);
+    html.push(' ');
+    html.push_str(label);
+    html.push_str("</span>");
 }
 
 fn render_iframe(class_name: &str, src: &str, title: &str, width: &str, height: &str) -> String {
