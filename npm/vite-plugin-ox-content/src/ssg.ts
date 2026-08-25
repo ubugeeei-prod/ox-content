@@ -1004,7 +1004,7 @@ async function createBuildSsgContext(
     siteName: await resolveSiteName(root, ssgOptions),
     shouldGenerateOgImages: shouldGenerateOgImages(options),
     napi:
-      ssgOptions.lastUpdated || ssgOptions.contributors || options.siteMaps.enabled
+      ssgOptions.lastUpdated || ssgOptions.contributors || options.siteMaps?.enabled
         ? await importNapiModule()
         : undefined,
   };
@@ -1217,7 +1217,7 @@ async function transformSsgPage(
     title,
     description: frontmatter.description as string | undefined,
     lastUpdated:
-      context.ssgOptions.lastUpdated || context.options.siteMaps.enabled
+      context.ssgOptions.lastUpdated || context.options.siteMaps?.enabled
         ? (context.napi?.getGitLastUpdated(inputPath, context.root) ?? undefined)
         : undefined,
     contributors: contributorsForPage(context, inputPath),
