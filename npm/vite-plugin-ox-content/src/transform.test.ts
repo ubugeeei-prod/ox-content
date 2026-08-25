@@ -133,6 +133,29 @@ describe("transformMarkdown", () => {
     expect(enabledResult.html).not.toContain("{badge:tip}");
   });
 
+  it("leaves {link} markup literal unless opted in", async () => {
+    const markdown = "{link:@ryoppippi}";
+
+    const defaultResult = await transformMarkdown(
+      markdown,
+      "docs/magic-links.md",
+      createResolvedOptions(),
+    );
+    expect(defaultResult.html).not.toContain("ox-magic-link");
+    expect(defaultResult.html).toContain("{link:@ryoppippi}");
+
+    const enabledResult = await transformMarkdown(
+      markdown,
+      "docs/magic-links.md",
+      createResolvedOptions({
+        magicLinks: { enabled: true, aliases: {}, favicon: false, imageOverrides: [] },
+      }),
+    );
+    expect(enabledResult.html).toContain('class="ox-magic-link ox-magic-link--github"');
+    expect(enabledResult.html).toContain('href="https://github.com/ryoppippi"');
+    expect(enabledResult.html).not.toContain("{link:@ryoppippi}");
+  });
+
   it("leaves ::: containers literal unless opted in", async () => {
     const markdown = "::: tip\nHello **world**\n:::\n";
 

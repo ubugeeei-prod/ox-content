@@ -40,6 +40,8 @@ pub struct TransformOptions {
     pub steps: Option<StepsOptions>,
     /// Opt-in `{badge:variant}` inline badges. Disabled when omitted.
     pub badges: Option<BadgeOptions>,
+    /// Opt-in `{link:...}` rich magic links. Disabled when omitted.
+    pub magic_links: Option<MagicLinkOptions>,
     /// Opt-in figures, captions, and lazy images. Disabled when omitted.
     pub images: Option<ImageOptions>,
     /// Opt-in `::: card` / `::: link-card` / `::: card-grid` blocks. Disabled when omitted.
@@ -51,6 +53,29 @@ pub struct TransformOptions {
 #[derive(Clone, Default)]
 pub struct BadgeOptions {
     pub enabled: Option<bool>,
+}
+
+#[derive(Clone, Default)]
+pub struct MagicLinkOptions {
+    pub enabled: Option<bool>,
+    pub aliases: Option<FxHashMap<String, MagicLinkAlias>>,
+    pub favicon: Option<bool>,
+    pub favicon_template: Option<String>,
+    pub image_overrides: Option<Vec<MagicLinkImageOverride>>,
+}
+
+#[derive(Clone, Default)]
+pub struct MagicLinkAlias {
+    pub href: String,
+    pub label: Option<String>,
+    pub image: Option<String>,
+}
+
+#[derive(Clone, Default)]
+pub struct MagicLinkImageOverride {
+    pub href: Option<String>,
+    pub prefix: Option<String>,
+    pub image: String,
 }
 
 #[derive(Clone, Default)]

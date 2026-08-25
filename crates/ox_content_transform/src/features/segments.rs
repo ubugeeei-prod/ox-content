@@ -185,7 +185,7 @@ pub(super) fn is_closing_fence(line: &str, fence_char: u8, fence_len: usize) -> 
         && bytes[fence_len..].iter().all(|value| *value == fence_char)
 }
 
-fn is_indented_code_line(line: &str) -> bool {
+pub(super) fn is_indented_code_line(line: &str) -> bool {
     line.starts_with('\t') || line.starts_with("    ")
 }
 

@@ -287,6 +287,14 @@ interface JsTransformOptions {
     enabled?: boolean;
   };
 
+  magicLinks?: {
+    enabled?: boolean;
+    aliases?: Record<string, { href: string; label?: string; image?: string }>;
+    favicon?: boolean;
+    faviconTemplate?: string;
+    imageOverrides?: Array<{ href?: string; prefix?: string; image: string }>;
+  };
+
   containers?: {
     enabled?: boolean;
     types?: Record<string, { title?: string; tag?: string }>;
@@ -591,6 +599,15 @@ export async function transformMarkdown(
       : undefined,
     attributes: options.attrs?.enabled ? { enabled: true } : undefined,
     badges: options.badges?.enabled ? { enabled: true } : undefined,
+    magicLinks: options.magicLinks?.enabled
+      ? {
+          enabled: true,
+          aliases: options.magicLinks.aliases,
+          favicon: options.magicLinks.favicon,
+          faviconTemplate: options.magicLinks.faviconTemplate,
+          imageOverrides: options.magicLinks.imageOverrides,
+        }
+      : undefined,
     containers: options.containers?.enabled
       ? {
           enabled: true,

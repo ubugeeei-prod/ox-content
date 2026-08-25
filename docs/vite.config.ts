@@ -143,6 +143,7 @@ export default defineConfig(({ mode }) => {
                       { text: "File Includes", link: "/built-in/includes.md" },
                       { text: "File Tree", link: "/built-in/file-tree.md" },
                       { text: "Inline Badges", link: "/built-in/badges.md" },
+                      { text: "Magic Links", link: "/built-in/magic-links.md" },
                       { text: "Images", link: "/built-in/images.md" },
                       { text: "Page resources", link: "/built-in/resources.md" },
                       { text: "Code Blocks", link: "/built-in/code-blocks.md" },
@@ -260,6 +261,14 @@ export default defineConfig(({ mode }) => {
         math: true,
         cjkEmphasis: true,
         badges: true,
+        magicLinks: {
+          aliases: {
+            Oxc: {
+              href: "https://oxc.rs",
+              image: "https://github.com/oxc-project.png",
+            },
+          },
+        },
         images: true,
         codeImports: true,
         includes: true,

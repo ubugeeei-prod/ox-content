@@ -1118,6 +1118,52 @@ export interface JsLocalePath {
   root?: string
 }
 
+/** One configured magic-link alias. */
+export interface JsMagicLinkAlias {
+  /** Absolute `http:` / `https:` URL. */
+  href: string
+  /** Optional display label. Defaults to the alias key. */
+  label?: string
+  /** Optional avatar or favicon URL. */
+  image?: string
+}
+
+/** Replace the resolved image for matching hrefs. */
+export interface JsMagicLinkImageOverride {
+  /** Exact href to replace. */
+  href?: string
+  /** Href prefix to replace. */
+  prefix?: string
+  /** Replacement image URL. Must be `http:` or `https:`. */
+  image: string
+}
+
+/** Opt-in `{link:...}` rich magic links. */
+export interface JsMagicLinkOptions {
+  /**
+   * Enable `{link:@user}`, `{link:alias}`, and `{link:label|url}`.
+   *
+   * Default: `false`.
+   */
+  enabled?: boolean
+  /** Named aliases mapped to href / label / image. */
+  aliases?: Record<string, JsMagicLinkAlias>
+  /**
+   * Emit a favicon URL for explicit links that have no image.
+   *
+   * Default: `false`. No transform-time network request.
+   */
+  favicon?: boolean
+  /**
+   * Favicon URL template with a `{host}` placeholder.
+   *
+   * Default: `https://{host}/favicon.ico` when `favicon` is true.
+   */
+  faviconTemplate?: string
+  /** Image replacements applied after alias / GitHub / favicon resolution. */
+  imageOverrides?: Array<JsMagicLinkImageOverride>
+}
+
 export interface JsMarkdownLintDiagnostic {
   ruleId: string
   severity: string
@@ -2180,6 +2226,12 @@ export interface JsTransformOptions {
    * Default: disabled.
    */
   badges?: JsBadgeOptions
+  /**
+   * Opt-in `{link:...}` rich magic links.
+   *
+   * Default: disabled.
+   */
+  magicLinks?: JsMagicLinkOptions
   /**
    * Opt-in figures, captions, and lazy images.
    *

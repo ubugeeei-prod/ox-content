@@ -46,6 +46,7 @@ import type { BuiltinPmOptions, OxContentOptions, ResolvedOptions } from "./type
 import { resolveCardOptions } from "./card-options";
 import { resolveFileTreeOptions } from "./file-tree-options";
 import { resolveHeadingPermalinksOptions } from "./heading-permalinks-options";
+import { resolveMagicLinkOptions } from "./magic-link-options";
 import { resolveTypedHoverOptions } from "./typed-hover";
 import { resolveIncludeOptions } from "./include-options";
 import { resolveStepsOptions } from "./step-options";
@@ -67,6 +68,10 @@ export type {
   ResolvedAttrsOptions,
   BadgeOptions,
   ResolvedBadgeOptions,
+  MagicLinkOptions,
+  MagicLinkAlias,
+  MagicLinkImageOverride,
+  ResolvedMagicLinkOptions,
   ContainerOptions,
   ContainerTypeOptions,
   ResolvedContainerOptions,
@@ -676,6 +681,7 @@ function resolveOptions(options: OxContentOptions): ResolvedOptions {
     emojiShortcodes: resolveEmojiShortcodeOptions(options.emojiShortcodes),
     attrs: resolveAttrsOptions(options.attrs),
     badges: resolveBadgeOptions(options.badges),
+    magicLinks: resolveMagicLinkOptions(options.magicLinks),
     containers: resolveContainerOptions(options.containers),
     images: resolveImageOptions(options.images),
     codeImports: resolveCodeImportOptions(options.codeImports),
