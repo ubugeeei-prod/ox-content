@@ -131,7 +131,9 @@ Definition bodies keep their block content. No client JavaScript is required.
 ```html
 <section class="footnotes" aria-label="Footnotes">
   <ol>
-    <li id="fn-deployment-note">… <a href="#fnref-deployment-note" aria-label="Back to reference 1">↩</a></li>
+    <li id="fn-deployment-note">
+      … <a href="#fnref-deployment-note" aria-label="Back to reference 1">↩</a>
+    </li>
   </ol>
 </section>
 ```
