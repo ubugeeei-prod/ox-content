@@ -19,6 +19,7 @@ import { resolveRedirectsOptions } from "./redirects";
 import { notFoundSearchExcludeIds } from "./not-found";
 import { resolveFeedsOptions } from "./feeds";
 import { resolveBlogOptions } from "./blog";
+import { resolvePwaOptions } from "./pwa";
 import { resolveTaxonomiesOptions } from "./taxonomies";
 import { resolveVersionsOptions } from "./versions";
 import {
@@ -122,6 +123,8 @@ export type {
   FeedFormat,
   FeedsOptions,
   ResolvedFeedsOptions,
+  PwaOptions,
+  ResolvedPwaOptions,
   TaxonomiesOptions,
   ResolvedTaxonomiesOptions,
   SearchOptions,
@@ -629,6 +632,7 @@ function resolveOptions(options: OxContentOptions): ResolvedOptions {
         (typeof options.ssg === "object" && options.ssg ? options.ssg.blog : undefined),
     ),
     feeds: resolveFeedsOptions(options.feeds),
+    pwa: resolvePwaOptions(options.pwa),
     taxonomies: resolveTaxonomiesOptions(options.taxonomies),
     versions: resolveVersionsOptions(options.versions),
     gfm: options.gfm ?? true,
@@ -974,6 +978,16 @@ export {
   type MarkdownChunkSource,
 } from "./incremental";
 export { transformMarkdown } from "./transform";
+export { isMdxFilePath, resolveMdxForFilePath } from "./markdown";
+export {
+  collectMdxIslandNamesFromHtml,
+  collectMdxJsxNamesFromAst,
+  discoverRegisteredMdxComponents,
+  intersectRegisteredComponentNames,
+  isRegisteredComponent,
+  type ComponentRegistry,
+  type DiscoverRegisteredMdxComponentsInput,
+} from "./mdx-islands";
 export { resolveImageOptions } from "./resolve-image-options";
 export {
   createFrameworkMarkdownOptions,
@@ -1047,6 +1061,7 @@ export { resolvePermalinksOptions, resolveCascadeOptions } from "./permalinks";
 export { resolveRedirectsOptions } from "./redirects";
 export { resolveFeedsOptions } from "./feeds";
 export { resolveBlogOptions, resolveBlogCollectionName, readingTimeMinutes } from "./blog";
+export { resolvePwaOptions } from "./pwa";
 export { resolveTaxonomiesOptions } from "./taxonomies";
 export { resolveVersionsOptions } from "./versions";
 export { resolveTeamOptions } from "./team";

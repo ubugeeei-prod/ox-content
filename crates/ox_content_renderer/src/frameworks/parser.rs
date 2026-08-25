@@ -274,7 +274,9 @@ fn close_element(root: &mut HtmlNodes, stack: &mut OpenElements, tag_name: &str)
     };
 
     while stack.len() > position {
-        let open = stack.pop().expect("stack length checked above");
+        let Some(open) = stack.pop() else {
+            break;
+        };
         append_node(root, stack, open.into_node());
     }
 }

@@ -1,5 +1,9 @@
 import * as path from "path";
-import { transformMarkdown as baseTransformMarkdown } from "@ox-content/vite-plugin";
+import {
+  discoverRegisteredMdxComponents,
+  resolveMdxForFilePath,
+  transformMarkdown as baseTransformMarkdown,
+} from "@ox-content/vite-plugin";
 import { compile } from "svelte/compiler";
 import type {
   ResolvedSvelteOptions,
@@ -25,58 +29,15 @@ export async function transformMarkdownWithSvelte(
   options: ResolvedSvelteOptions,
 ): Promise<SvelteTransformResult> {
   const components: ComponentsMap = options.components;
-  const usedComponents: string[] = [];
-  const islands: ComponentIsland[] = [];
-  let islandIndex = 0;
-
   const { content: markdownContent, frontmatter } = extractFrontmatter(code);
-  const fenceRanges = collectFenceRanges(markdownContent);
-  let processedContent = "";
-  let lastIndex = 0;
-  let match: RegExpExecArray | null;
-
-  COMPONENT_REGEX.lastIndex = 0;
-  while ((match = COMPONENT_REGEX.exec(markdownContent)) !== null) {
-    const [fullMatch, componentName, propsString, rawIslandContent] = match;
-    const matchStart = match.index;
-    const matchEnd = matchStart + fullMatch.length;
-
-    if (
-      !Object.prototype.hasOwnProperty.call(components, componentName) ||
-      isInRanges(matchStart, matchEnd, fenceRanges)
-    ) {
-      processedContent += markdownContent.slice(lastIndex, matchEnd);
-      lastIndex = matchEnd;
-      continue;
-    }
-
-    if (!usedComponents.includes(componentName)) {
-      usedComponents.push(componentName);
-    }
-
-    const props = parseProps(propsString);
-    const islandId = `ox-island-${islandIndex++}`;
-    const islandContent =
-      typeof rawIslandContent === "string" ? rawIslandContent.trim() : undefined;
-
-    islands.push({
-      name: componentName,
-      props,
-      position: matchStart,
-      id: islandId,
-      content: islandContent,
-    });
-
-    processedContent += markdownContent.slice(lastIndex, matchStart) + createIslandMarker(islandId);
-    lastIndex = matchEnd;
-  }
-  processedContent += markdownContent.slice(lastIndex);
+  const mdx = resolveMdxForFilePath(id, options.mdx);
 
   const baseOptions = {
     srcDir: options.srcDir,
     outDir: options.outDir,
     base: options.base,
     extensions: options.extensions,
+    mdx,
     ssg: {
       enabled: false,
       extension: ".html",
@@ -127,28 +88,98 @@ export async function transformMarkdownWithSvelte(
     codeAnnotations?: ResolvedSvelteOptions["codeAnnotations"];
   };
 
+  if (mdx) {
+    const transformed = await baseTransformMarkdown(markdownContent, id, baseOptions);
+    const usedComponents = await discoverRegisteredMdxComponents({
+      source: markdownContent,
+      html: transformed.html,
+      components,
+    });
+    return compileSvelteResult(
+      generateSvelteModule(
+        transformed.html,
+        usedComponents,
+        usedComponents,
+        frontmatter,
+        options,
+        id,
+      ),
+      id,
+      usedComponents,
+      frontmatter,
+    );
+  }
+
+  const usedComponents: string[] = [];
+  const islands: ComponentIsland[] = [];
+  let islandIndex = 0;
+
+  const fenceRanges = collectFenceRanges(markdownContent);
+  let processedContent = "";
+  let lastIndex = 0;
+  let match: RegExpExecArray | null;
+
+  COMPONENT_REGEX.lastIndex = 0;
+  while ((match = COMPONENT_REGEX.exec(markdownContent)) !== null) {
+    const [fullMatch, componentName, propsString, rawIslandContent] = match;
+    const matchStart = match.index;
+    const matchEnd = matchStart + fullMatch.length;
+
+    if (
+      !Object.prototype.hasOwnProperty.call(components, componentName) ||
+      isInRanges(matchStart, matchEnd, fenceRanges)
+    ) {
+      processedContent += markdownContent.slice(lastIndex, matchEnd);
+      lastIndex = matchEnd;
+      continue;
+    }
+
+    if (!usedComponents.includes(componentName)) {
+      usedComponents.push(componentName);
+    }
+
+    const props = parseProps(propsString);
+    const islandId = `ox-island-${islandIndex++}`;
+    const islandContent =
+      typeof rawIslandContent === "string" ? rawIslandContent.trim() : undefined;
+
+    islands.push({
+      name: componentName,
+      props,
+      position: matchStart,
+      id: islandId,
+      content: islandContent,
+    });
+
+    processedContent += markdownContent.slice(lastIndex, matchStart) + createIslandMarker(islandId);
+    lastIndex = matchEnd;
+  }
+  processedContent += markdownContent.slice(lastIndex);
+
   const transformed = await baseTransformMarkdown(processedContent, id, baseOptions);
-
   const htmlWithIslands = injectIslandMarkers(transformed.html, islands);
-  const svelteCode = generateSvelteModule(
-    htmlWithIslands,
-    usedComponents,
-    islands,
-    frontmatter,
-    options,
+  return compileSvelteResult(
+    generateSvelteModule(htmlWithIslands, usedComponents, islands, frontmatter, options, id),
     id,
+    usedComponents,
+    frontmatter,
   );
+}
 
+function compileSvelteResult(
+  svelteCode: string,
+  id: string,
+  usedComponents: string[],
+  frontmatter: Record<string, unknown>,
+): SvelteTransformResult {
   const compiled = compile(svelteCode, {
     filename: id,
     generate: "client",
     runes: true,
   });
 
-  const finalCode = `${compiled.js.code}\nexport const frontmatter = ${JSON.stringify(frontmatter)};`;
-
   return {
-    code: finalCode,
+    code: `${compiled.js.code}\nexport const frontmatter = ${JSON.stringify(frontmatter)};`,
     map: null,
     usedComponents,
     frontmatter,
@@ -296,13 +327,15 @@ function parseProps(propsString: string): Record<string, unknown> {
 function generateSvelteModule(
   content: string,
   usedComponents: string[],
-  islands: ComponentIsland[],
+  _islands: ComponentIsland[] | string[],
   frontmatter: Record<string, unknown>,
   options: ResolvedSvelteOptions & { root?: string },
   id: string,
 ): string {
   const mdDir = path.dirname(id);
   const root = options.root || process.cwd();
+  // Rust island payloads include `</script>`; that must not close this SFC block.
+  const rawHtmlLiteral = JSON.stringify(content).replaceAll("</script", "<\\/script");
 
   const imports = usedComponents
     .map((name) => {
@@ -316,12 +349,12 @@ function generateSvelteModule(
     .filter(Boolean)
     .join("\n");
 
-  // If no islands, generate simpler code without island runtime
-  if (islands.length === 0) {
+  // If no registered islands, generate simpler code without island runtime
+  if (usedComponents.length === 0) {
     return `
 <script>
   const frontmatter = ${JSON.stringify(frontmatter)};
-  const rawHtml = ${JSON.stringify(content)};
+  const rawHtml = ${rawHtmlLiteral};
 
   export { frontmatter };
 </script>
@@ -343,11 +376,11 @@ function generateSvelteModule(
   return `
 <script>
   import { createRawSnippet, onMount, mount, unmount } from 'svelte';
-  import { initIslands } from '@ox-content/islands';
+  import { initIslands, readIslandSlotHtml } from '@ox-content/islands';
   ${imports}
 
   const frontmatter = ${JSON.stringify(frontmatter)};
-  const rawHtml = ${JSON.stringify(content)};
+  const rawHtml = ${rawHtmlLiteral};
   const components = {
 ${componentMap}
   };
@@ -364,7 +397,7 @@ ${componentMap}
       const Component = components[componentName];
       if (!Component) return;
 
-      const islandContent = element.dataset.oxContent || element.innerHTML;
+      const islandContent = readIslandSlotHtml(element);
       const componentProps = { ...props };
       if (islandContent) {
         componentProps.children = createRawSnippet(() => ({

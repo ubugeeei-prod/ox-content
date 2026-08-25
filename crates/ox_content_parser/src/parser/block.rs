@@ -15,8 +15,10 @@ impl<'a> Parser<'a> {
             return Ok(None);
         }
 
-        // Check nesting depth
-        if self.nesting_depth > self.options.max_nesting_depth {
+        // `max_nesting_depth == 0` means unlimited. Sub-parsers inherit depth,
+        // so a positive cap actually applies to quotes and list items.
+        if self.options.max_nesting_depth > 0 && self.nesting_depth > self.options.max_nesting_depth
+        {
             return Err(ParseError::NestingTooDeep {
                 span: Span::new(self.position as u32, self.position as u32),
                 max_depth: self.options.max_nesting_depth,

@@ -163,6 +163,13 @@ Interactive web playground for testing Markdown parsing.
 
 Static Site Generation example using Vite.
 
+### [Built-in MDX](./mdx.md)
+
+Default-on MDX for `.mdx` files: static HTML, island placeholders, ESM that
+is not executed, and `{expression}` that is not evaluated. A sibling `.md`
+file stays GFM. Runnable app:
+[`examples/mdx`](https://github.com/ubugeeei-prod/ox-content/tree/main/examples/mdx).
+
 ## Running Examples
 
 ```bash

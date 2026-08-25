@@ -191,7 +191,13 @@ export default defineConfig({
         },
       ),
 
-      "workspace:check": noopTask(["fmt:rust-check", "lint:rust", "check:ts"]),
+      "check:panic-constructs": task("node scripts/check-panic-constructs.mjs"),
+      "workspace:check": noopTask([
+        "fmt:rust-check",
+        "lint:rust",
+        "check:panic-constructs",
+        "check:ts",
+      ]),
       "check:rust": task("cargo check --workspace --all-targets"),
 
       clippy: task("cargo clippy --workspace --all-targets -- -D warnings", {
@@ -233,7 +239,13 @@ export default defineConfig({
         cwd: "crates/ox_content_napi",
       }),
 
-      "workspace:ci": noopTask(["fmt:rust-check", "lint:rust", "check:ts", "workspace:test"]),
+      "workspace:ci": noopTask([
+        "fmt:rust-check",
+        "lint:rust",
+        "check:panic-constructs",
+        "check:ts",
+        "workspace:test",
+      ]),
       actrun: uncachedTask("actrun workflow run .github/workflows/ci.yml --trust"),
       "testbox:warmup": uncachedTask(
         "blacksmith testbox warmup .github/workflows/testbox.yml --job testbox --idle-timeout 60",
@@ -259,6 +271,7 @@ export default defineConfig({
       "integ-solid": uncachedTask("vp run --filter ./examples/integ-solid dev"),
       "integ-svelte": uncachedTask("vp run --filter ./examples/integ-svelte dev"),
       "ssg-vite": uncachedTask("vp run --filter ./examples/ssg-vite dev"),
+      mdx: uncachedTask("vp run --filter ./examples/mdx dev"),
       "plugin-markdown-it": uncachedTask("vp run --filter ./examples/plugin-markdown-it start"),
       "plugin-rehype": uncachedTask("vp run --filter ./examples/plugin-rehype start"),
       "gen-source-docs": uncachedTask("vp run --filter ./examples/gen-source-docs dev"),
@@ -267,9 +280,6 @@ export default defineConfig({
         dependsOn: ["build:npm"],
       }),
       "docs:api": uncachedTask("node scripts/generate-api-docs.mjs --write", {
-        dependsOn: ["build:napi"],
-      }),
-      "check:api-docs": uncachedTask("node scripts/generate-api-docs.mjs --check", {
         dependsOn: ["build:napi"],
       }),
       "dev:playground": uncachedTask("vp run --filter ./examples/playground dev"),

@@ -51,6 +51,7 @@ inline**.
 | [Custom 404](./built-in/not-found.md)                  | Opt-in themed 404 page with nav and search                                |
 | [RSS / Atom / JSON feeds](./built-in/feeds.md)         | Opt-in collection feeds written next to generated HTML                    |
 | [Blog](./built-in/blog.md)                             | Opt-in paginated index, authors, tags, reading time, and archive          |
+| [PWA manifest and service worker](./built-in/pwa.md)   | Opt-in web app manifest and conservative offline cache (adds client JS)   |
 | [Taxonomies](./built-in/taxonomies.md)                 | Opt-in tag/category term pages and related-page lists                     |
 | [Documentation versioning](./built-in/versioning.md)   | Opt-in prefixes, frozen snapshots, and a header version dropdown          |
 | [Team / members page](./built-in/team.md)              | Opt-in static member cards on `layout: team` pages                        |
@@ -95,6 +96,7 @@ inline**.
 | Custom 404       | `ssg.notFound`                                                                                                | `false`              | [Custom 404](./built-in/not-found.md)                  |
 | Collection feeds | `feeds`                                                                                                       | `false`              | [RSS / Atom / JSON feeds](./built-in/feeds.md)         |
 | Blog             | `blog` / `ssg.blog`                                                                                           | `false`              | [Blog](./built-in/blog.md)                             |
+| PWA              | `pwa`                                                                                                         | `false`              | [PWA manifest and service worker](./built-in/pwa.md)   |
 | Taxonomies       | `taxonomies`                                                                                                  | `false`              | [Taxonomies](./built-in/taxonomies.md)                 |
 | Versioning       | `versions`                                                                                                    | `false`              | [Documentation versioning](./built-in/versioning.md)   |
 | Team page        | `ssg.team`                                                                                                    | `false`              | [Team / members page](./built-in/team.md)              |

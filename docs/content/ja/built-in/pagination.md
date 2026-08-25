@@ -1,34 +1,50 @@
 ---
 title: 前へ / 次へ
-description: サイドバー順から作るオプトインの前後リンク。
+description: サイドバー順から生成する、オプトインの前後ページリンク。
 ---
 
 # 前へ / 次へ
 
-`ssg.pagination` を有効にすると、本文のあと・最終更新の前に前後リンクが付きます。順序はサイドバーです。グループは深さ優先で平坦化し、サイト内 href のない項目は飛ばします。
+`ssg.pagination` を有効にすると、各記事の本文のあと・最終更新行の前に、前へ / 次へリンクが付きます。並びはサイドバーです。グループを深さ優先で平坦化し、サイト内 href のない項目は飛ばします。
 
-省略または `false` ではオフです。
+機能は自分でオンにするまでオフです。
 
 ```ts
-oxContent({
-  ssg: {
-    pagination: true,
-  },
-});
+import { oxContent } from "@ox-content/vite-plugin";
+
+export default {
+  plugins: [
+    oxContent({
+      ssg: {
+        pagination: true,
+      },
+    }),
+  ],
+};
 ```
 
-`true` はデフォルトでオン、オブジェクトもオンです。先頭ページに前はなく、末尾に次はありません。1 ページだけのサイドバーは何も出しません。エントリページと bare モードは pager を出しません。
+`false` または省略はページャーをオフのままにします。`true` は既定でオンです。オブジェクトを渡しても機能はオンになります。
 
-frontmatter で片側を上書き、または隠せます。
+最初のページには前へのリンクはありません。最後のページには次へのリンクはありません。ページが 1 つだけのサイドバーでは何も出ません。エントリページはページャーを出しません。bare モードはページャーの chrome を一切出しません。
+
+## Frontmatter
+
+片側だけ差し替えるか、隠します。
 
 ```md
 ---
-prev: false
-next: /guide/install
+title: Guide
+prev:
+  text: Back to intro
+  link: /intro/
+next: false
 ---
 ```
 
-## 関連
+| 値                                        | 結果                             |
+| ----------------------------------------- | -------------------------------- |
+| 省略                                      | サイドバーから隣ページを自動決定 |
+| `false`                                   | その側を隠す                     |
+| `{ text, link }` または `{ title, href }` | その側を差し替える               |
 
-- [英語版ガイド](/built-in/pagination.md)
-- [パンくず](./breadcrumbs.md)
+`javascript:` や `data:` を使った上書き href は捨てられます。

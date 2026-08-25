@@ -105,8 +105,7 @@ fn line_end_swar(bytes: &[u8], from: usize) -> usize {
     let mut i = from;
 
     while i + 8 <= end {
-        // `unwrap` is unreachable: the slice is exactly 8 bytes wide.
-        let word = u64::from_le_bytes(bytes[i..i + 8].try_into().unwrap());
+        let word = u64::from_le_bytes(copy_eight(bytes, i));
         let mask = has_zero(word ^ NEWLINES);
         if mask != 0 {
             return i + (mask.trailing_zeros() / 8) as usize;
@@ -126,6 +125,13 @@ fn line_end_swar(bytes: &[u8], from: usize) -> usize {
 pub(in crate::parser) fn next_line_start(bytes: &[u8], from: usize) -> usize {
     let end = line_end(bytes, from);
     if end < bytes.len() { end + 1 } else { end }
+}
+
+#[inline]
+fn copy_eight(bytes: &[u8], from: usize) -> [u8; 8] {
+    let mut chunk = [0u8; 8];
+    chunk.copy_from_slice(&bytes[from..from + 8]);
+    chunk
 }
 
 #[cfg(test)]
