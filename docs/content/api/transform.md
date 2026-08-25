@@ -22,7 +22,7 @@
   <span>modules</span>
 </span>
 <span class="ox-api-stat">
-  <strong>8</strong>
+  <strong>10</strong>
   <span>parameters</span>
 </span>
 <span class="ox-api-stat">
@@ -57,7 +57,7 @@
 <h4>Signature</h4>
 <pre><code class="language-typescript">export function extractImports(content: string): string[]</code></pre>
 </div>
-<p class="ox-api-entry__source"><a class="ox-api-entry__source-link" href="https://github.com/ubugeeei-prod/ox-content/blob/main/npm/vite-plugin-ox-content/src/transform.ts#L821-L831" target="_blank" rel="noopener noreferrer">View source<span class="ox-api-entry__source-icon" aria-hidden="true"></span></a></p>
+<p class="ox-api-entry__source"><a class="ox-api-entry__source-link" href="https://github.com/ubugeeei-prod/ox-content/blob/main/npm/vite-plugin-ox-content/src/transform.ts#L863-L873" target="_blank" rel="noopener noreferrer">View source<span class="ox-api-entry__source-icon" aria-hidden="true"></span></a></p>
 <div class="ox-api-entry__section ox-api-entry__section--params">
 <h4>Parameters</h4>
 <ul class="ox-api-entry__params">
@@ -79,16 +79,17 @@
 </details>
 
 <details id="generatemodulecode" class="ox-api-entry">
-  <summary><span class="ox-api-entry__kind">fn</span><span class="ox-api-entry__summary-main"><code class="ox-api-entry__signature ox-api-entry__signature--highlighted language-typescript">generateModuleCode(html: string, frontmatter: Record&lt;string, unknown&gt;, toc: TocEntry[], filePath: string, _options: ResolvedOptions): string</code><span class="ox-api-entry__description">Generates the JavaScript module code.</span><span class="ox-api-entry__meta"><span class="ox-api-badge">5 params</span><span class="ox-api-badge">returns string</span></span></span></summary>
+  <summary><span class="ox-api-entry__kind">fn</span><span class="ox-api-entry__summary-main"><code class="ox-api-entry__signature ox-api-entry__signature--highlighted language-typescript">generateModuleCode(html: string, frontmatter: Record&lt;string, unknown&gt;, toc: TocEntry[], imports: MdxImport[], exports: string[], components: string[], filePath: string): string</code><span class="ox-api-entry__description">Generates the JavaScript module code. MDX metadata is serialized as JSON. User…</span><span class="ox-api-entry__meta"><span class="ox-api-badge">7 params</span><span class="ox-api-badge">returns string</span></span></span></summary>
   <div class="ox-api-entry__body">
 <div class="ox-api-entry__prose">
 <p>Generates the JavaScript module code.</p>
+<p>MDX metadata is serialized as JSON. User <code>import</code> / <code>export</code> source is never emitted as live JavaScript, so transform does not execute module side effects.</p>
 </div>
 <div class="ox-api-entry__section ox-api-entry__section--signature">
 <h4>Signature</h4>
-<pre><code class="language-typescript">function generateModuleCode(html: string, frontmatter: Record&lt;string, unknown&gt;, toc: TocEntry[], filePath: string, _options: ResolvedOptions): string</code></pre>
+<pre><code class="language-typescript">function generateModuleCode(html: string, frontmatter: Record&lt;string, unknown&gt;, toc: TocEntry[], imports: MdxImport[], exports: string[], components: string[], filePath: string): string</code></pre>
 </div>
-<p class="ox-api-entry__source"><a class="ox-api-entry__source-link" href="https://github.com/ubugeeei-prod/ox-content/blob/main/npm/vite-plugin-ox-content/src/transform.ts#L765-L814" target="_blank" rel="noopener noreferrer">View source<span class="ox-api-entry__source-icon" aria-hidden="true"></span></a></p>
+<p class="ox-api-entry__source"><a class="ox-api-entry__source-link" href="https://github.com/ubugeeei-prod/ox-content/blob/main/npm/vite-plugin-ox-content/src/transform.ts#L784-L856" target="_blank" rel="noopener noreferrer">View source<span class="ox-api-entry__source-icon" aria-hidden="true"></span></a></p>
 <div class="ox-api-entry__section ox-api-entry__section--params">
 <h4>Parameters</h4>
 <ul class="ox-api-entry__params">
@@ -112,14 +113,26 @@
 </li>
 <li class="ox-api-entry__param">
   <div class="ox-api-entry__param-heading">
-    <code class="ox-api-entry__param-name">filePath</code>
-    <code class="ox-api-entry__param-type">string</code>
+    <code class="ox-api-entry__param-name">imports</code>
+    <code class="ox-api-entry__param-type"><a href="./types.md#mdximport">MdxImport</a>[]</code>
   </div>
 </li>
 <li class="ox-api-entry__param">
   <div class="ox-api-entry__param-heading">
-    <code class="ox-api-entry__param-name">_options</code>
-    <code class="ox-api-entry__param-type"><a href="./types.md#resolvedoptions">ResolvedOptions</a></code>
+    <code class="ox-api-entry__param-name">exports</code>
+    <code class="ox-api-entry__param-type">string[]</code>
+  </div>
+</li>
+<li class="ox-api-entry__param">
+  <div class="ox-api-entry__param-heading">
+    <code class="ox-api-entry__param-name">components</code>
+    <code class="ox-api-entry__param-type">string[]</code>
+  </div>
+</li>
+<li class="ox-api-entry__param">
+  <div class="ox-api-entry__param-heading">
+    <code class="ox-api-entry__param-name">filePath</code>
+    <code class="ox-api-entry__param-type">string</code>
   </div>
 </li>
 </ul>
@@ -145,7 +158,7 @@
 <h4>Signature</h4>
 <pre><code class="language-typescript">export async function generateOgImageSvg(data: OgImageData, config?: OgImageConfig): Promise&lt;string | null&gt;</code></pre>
 </div>
-<p class="ox-api-entry__source"><a class="ox-api-entry__source-link" href="https://github.com/ubugeeei-prod/ox-content/blob/main/npm/vite-plugin-ox-content/src/transform.ts#L847-L869" target="_blank" rel="noopener noreferrer">View source<span class="ox-api-entry__source-icon" aria-hidden="true"></span></a></p>
+<p class="ox-api-entry__source"><a class="ox-api-entry__source-link" href="https://github.com/ubugeeei-prod/ox-content/blob/main/npm/vite-plugin-ox-content/src/transform.ts#L889-L911" target="_blank" rel="noopener noreferrer">View source<span class="ox-api-entry__source-icon" aria-hidden="true"></span></a></p>
 <div class="ox-api-entry__section ox-api-entry__section--params">
 <h4>Parameters</h4>
 <ul class="ox-api-entry__params">
@@ -186,7 +199,7 @@
 <h4>Signature</h4>
 <pre><code class="language-typescript">interface JsTransformOptions</code></pre>
 </div>
-<p class="ox-api-entry__source"><a class="ox-api-entry__source-link" href="https://github.com/ubugeeei-prod/ox-content/blob/main/npm/vite-plugin-ox-content/src/transform.ts#L143-L327" target="_blank" rel="noopener noreferrer">View source<span class="ox-api-entry__source-icon" aria-hidden="true"></span></a></p>
+<p class="ox-api-entry__source"><a class="ox-api-entry__source-link" href="https://github.com/ubugeeei-prod/ox-content/blob/main/npm/vite-plugin-ox-content/src/transform.ts#L149-L333" target="_blank" rel="noopener noreferrer">View source<span class="ox-api-entry__source-icon" aria-hidden="true"></span></a></p>
 <div class="ox-api-entry__section ox-api-entry__section--members">
 <h4>Members</h4>
 <div class="ox-api-entry__member-group">
@@ -372,7 +385,7 @@
 <h4>Signature</h4>
 <pre><code class="language-typescript">interface NapiBindings</code></pre>
 </div>
-<p class="ox-api-entry__source"><a class="ox-api-entry__source-link" href="https://github.com/ubugeeei-prod/ox-content/blob/main/npm/vite-plugin-ox-content/src/transform.ts#L50-L103" target="_blank" rel="noopener noreferrer">View source<span class="ox-api-entry__source-icon" aria-hidden="true"></span></a></p>
+<p class="ox-api-entry__source"><a class="ox-api-entry__source-link" href="https://github.com/ubugeeei-prod/ox-content/blob/main/npm/vite-plugin-ox-content/src/transform.ts#L53-L109" target="_blank" rel="noopener noreferrer">View source<span class="ox-api-entry__source-icon" aria-hidden="true"></span></a></p>
 <div class="ox-api-entry__section ox-api-entry__section--members">
 <h4>Members</h4>
 <div class="ox-api-entry__member-group">
@@ -407,7 +420,7 @@
 </tr>
 <tr id="napibindings-transform">
   <td><code>transform</code></td>
-  <td><code class="ox-api-entry__member-type language-typescript">(source: string, options?: <a href="#jstransformoptions">JsTransformOptions</a>) =&gt; { html: string; frontmatter: string; toc: Array&lt;{ depth: number; text: string; slug: string; children?: <a href="./types.md#tocentry">TocEntry</a>[] }&gt;; errors: string[] }</code></td>
+  <td><code class="ox-api-entry__member-type language-typescript">(source: string, options?: <a href="#jstransformoptions">JsTransformOptions</a>) =&gt; { html: string; frontmatter: string; toc: Array&lt;{ depth: number; text: string; slug: string; children?: <a href="./types.md#tocentry">TocEntry</a>[] }&gt;; errors: string[]; imports: <a href="./types.md#mdximport">MdxImport</a>[]; exports: string[]; components: string[] }</code></td>
   <td><div class="ox-api-entry__member-description">Full-featured Markdown transformation pipeline.<br>Handles frontmatter extraction, TOC generation, and advanced parsing.</div><ul class="ox-api-entry__member-params"><li><code>source</code> Raw Markdown content (may include frontmatter)</li><li><code>options</code> Comprehensive transformation options — optional</li></ul><div class="ox-api-entry__member-return"><span>Returns</span> Transformed result with HTML, metadata, and TOC</div></td>
 </tr>
 </tbody>
@@ -427,7 +440,7 @@
 <h4>Signature</h4>
 <pre><code class="language-typescript">export interface OgImageConfig</code></pre>
 </div>
-<p class="ox-api-entry__source"><a class="ox-api-entry__source-link" href="https://github.com/ubugeeei-prod/ox-content/blob/main/npm/vite-plugin-ox-content/src/transform.ts#L122-L135" target="_blank" rel="noopener noreferrer">View source<span class="ox-api-entry__source-icon" aria-hidden="true"></span></a></p>
+<p class="ox-api-entry__source"><a class="ox-api-entry__source-link" href="https://github.com/ubugeeei-prod/ox-content/blob/main/npm/vite-plugin-ox-content/src/transform.ts#L128-L141" target="_blank" rel="noopener noreferrer">View source<span class="ox-api-entry__source-icon" aria-hidden="true"></span></a></p>
 <div class="ox-api-entry__section ox-api-entry__section--members">
 <h4>Members</h4>
 <div class="ox-api-entry__member-group">
@@ -482,7 +495,7 @@
 <h4>Signature</h4>
 <pre><code class="language-typescript">export interface OgImageData</code></pre>
 </div>
-<p class="ox-api-entry__source"><a class="ox-api-entry__source-link" href="https://github.com/ubugeeei-prod/ox-content/blob/main/npm/vite-plugin-ox-content/src/transform.ts#L108-L117" target="_blank" rel="noopener noreferrer">View source<span class="ox-api-entry__source-icon" aria-hidden="true"></span></a></p>
+<p class="ox-api-entry__source"><a class="ox-api-entry__source-link" href="https://github.com/ubugeeei-prod/ox-content/blob/main/npm/vite-plugin-ox-content/src/transform.ts#L114-L123" target="_blank" rel="noopener noreferrer">View source<span class="ox-api-entry__source-icon" aria-hidden="true"></span></a></p>
 <div class="ox-api-entry__section ox-api-entry__section--members">
 <h4>Members</h4>
 <div class="ox-api-entry__member-group">
@@ -527,7 +540,7 @@
 <h4>Signature</h4>
 <pre><code class="language-typescript">export interface SsgTransformOptions</code></pre>
 </div>
-<p class="ox-api-entry__source"><a class="ox-api-entry__source-link" href="https://github.com/ubugeeei-prod/ox-content/blob/main/npm/vite-plugin-ox-content/src/transform.ts#L504-L511" target="_blank" rel="noopener noreferrer">View source<span class="ox-api-entry__source-icon" aria-hidden="true"></span></a></p>
+<p class="ox-api-entry__source"><a class="ox-api-entry__source-link" href="https://github.com/ubugeeei-prod/ox-content/blob/main/npm/vite-plugin-ox-content/src/transform.ts#L513-L520" target="_blank" rel="noopener noreferrer">View source<span class="ox-api-entry__source-icon" aria-hidden="true"></span></a></p>
 <div class="ox-api-entry__section ox-api-entry__section--members">
 <h4>Members</h4>
 <div class="ox-api-entry__member-group">
@@ -574,10 +587,13 @@
 <li><code>html</code>: Rendered HTML content</li>
 <li><code>frontmatter</code>: Parsed YAML metadata</li>
 <li><code>toc</code>: Hierarchical table of contents</li>
+<li><code>imports</code>: MDX import statements from the AST</li>
+<li><code>exports</code>: MDX export names from the AST</li>
+<li><code>components</code>: Unique JSX component names from the AST</li>
 <li><code>render</code>: Client-side render function for dynamic updates</li>
 </ul>
 </div>
-<p class="ox-api-entry__source"><a class="ox-api-entry__source-link" href="https://github.com/ubugeeei-prod/ox-content/blob/main/npm/vite-plugin-ox-content/src/transform.ts#L1-L32" target="_blank" rel="noopener noreferrer">View source<span class="ox-api-entry__source-icon" aria-hidden="true"></span></a></p>
+<p class="ox-api-entry__source"><a class="ox-api-entry__source-link" href="https://github.com/ubugeeei-prod/ox-content/blob/main/npm/vite-plugin-ox-content/src/transform.ts#L1-L35" target="_blank" rel="noopener noreferrer">View source<span class="ox-api-entry__source-icon" aria-hidden="true"></span></a></p>
 <div class="ox-api-entry__section ox-api-entry__section--examples">
 <h4>Examples</h4>
 <div class="ox-api-entry__example">

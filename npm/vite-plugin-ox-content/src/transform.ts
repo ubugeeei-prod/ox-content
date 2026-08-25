@@ -34,12 +34,7 @@
  * ```
  */
 
-import type {
-  MdxImport,
-  ResolvedOptions,
-  TocEntry,
-  TransformResult,
-} from "./types";
+import type { MdxImport, ResolvedOptions, TocEntry, TransformResult } from "./types";
 import { highlightCode } from "./highlight";
 import { highlightDocumentNatively } from "./highlight-native";
 import { importNapiModule } from "./napi";

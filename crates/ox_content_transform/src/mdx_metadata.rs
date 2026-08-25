@@ -62,7 +62,7 @@ pub fn extract_mdx_metadata(document: &Document<'_>) -> MdxMetadata {
     collector.finish()
 }
 
-pub(super) fn specifier(
+pub fn specifier(
     imported: impl Into<String>,
     local: impl Into<String>,
     kind: MdxImportSpecifierKind,

@@ -122,14 +122,7 @@ executed during transform, and `import` statements are not re-emitted as
 live ESM — they are JSON data:
 
 ```ts
-import {
-  html,
-  frontmatter,
-  toc,
-  imports,
-  exports,
-  components,
-} from "./guide.mdx";
+import { html, frontmatter, toc, imports, exports, components } from "./guide.mdx";
 
 html;
 // string — rendered HTML (islands, no live imports)

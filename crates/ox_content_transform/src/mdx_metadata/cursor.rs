@@ -101,9 +101,8 @@ impl<'a> Cursor<'a> {
 
     pub(super) fn eat_string(&mut self) -> Option<String> {
         self.skip_ws_and_comments();
-        let quote = match self.peek() {
-            Some(q @ ('\'' | '"')) => q,
-            _ => return None,
+        let Some(quote @ ('\'' | '"')) = self.peek() else {
+            return None;
         };
         self.bump();
         let mut out = String::new();

@@ -119,14 +119,7 @@ MDX が有効なとき、生成される Vite モジュールはそれらの AST
 データになります。
 
 ```ts
-import {
-  html,
-  frontmatter,
-  toc,
-  imports,
-  exports,
-  components,
-} from "./guide.mdx";
+import { html, frontmatter, toc, imports, exports, components } from "./guide.mdx";
 
 html;
 // string — 描画済み HTML（island。生きた import はなし）
