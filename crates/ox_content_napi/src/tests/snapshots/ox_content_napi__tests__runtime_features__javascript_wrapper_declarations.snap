@@ -2030,12 +2030,6 @@ export interface JsTransformOptions {
    */
   tocMaxDepth?: number
   /**
-   * Opt-in visible heading permalinks (`<a class="header-anchor" href="#id">`).
-   *
-   * Default: disabled. Existing HTML stays unchanged until this is enabled.
-   */
-  headingPermalinks?: boolean
-  /**
    * Convert `.md` links to `.html` links for SSG output.
    *
    * Default: `false`.
@@ -2098,6 +2092,12 @@ export interface JsTransformOptions {
    * Default: `true`; ignored when [`Self::autolink_urls`] is off.
    */
   autolinkTargetBlank?: boolean
+  /**
+   * Opt-in visible heading permalinks (`<a class="header-anchor" href="#id">`).
+   *
+   * Default: disabled. Existing HTML stays unchanged until this is enabled.
+   */
+  headingPermalinks?: boolean
   /**
    * Opt-in Obsidian-style wiki links.
    *
