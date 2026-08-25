@@ -37,11 +37,11 @@ oxContent({
 });
 ```
 
-| オプション            | 型                              | 既定    |
-| --------------------- | ------------------------------- | ------- |
-| `ssg.contributors`    | `boolean` / `{ ignore?, avatars? }` | `false` |
-| `ignore`              | `string[]`                      | `[]`    |
-| `avatars`             | `boolean`                       | `false` |
+| オプション         | 型                                  | 既定    |
+| ------------------ | ----------------------------------- | ------- |
+| `ssg.contributors` | `boolean` / `{ ignore?, avatars? }` | `false` |
+| `ignore`           | `string[]`                          | `[]`    |
+| `avatars`          | `boolean`                           | `false` |
 
 作者はソースファイルに対する `git log --format=%an%x09%ae` から取ります。重複は
 メールがあればメール、なければ名前でまとめます。比較は大文字小文字を無視します。

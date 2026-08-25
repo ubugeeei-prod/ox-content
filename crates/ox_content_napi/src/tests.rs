@@ -52,6 +52,7 @@ mod docs_markdown_types_and_modules;
 mod docs_nav_output;
 mod entry_points;
 mod frontmatter;
+mod git_contributors;
 mod mdx_bindings;
 mod render_scratch;
 mod runtime_features;

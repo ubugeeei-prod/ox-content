@@ -878,10 +878,7 @@ async function createBuildSsgContext(
     navItems,
     siteName: await resolveSiteName(root, ssgOptions),
     shouldGenerateOgImages: shouldGenerateOgImages(options),
-    napi:
-      ssgOptions.lastUpdated || ssgOptions.contributors
-        ? await importNapiModule()
-        : undefined,
+    napi: ssgOptions.lastUpdated || ssgOptions.contributors ? await importNapiModule() : undefined,
   };
 }
 

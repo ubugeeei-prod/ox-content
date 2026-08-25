@@ -15,11 +15,7 @@ import {
   resolveSsgOptions,
   shouldGenerateOgImages,
 } from "./ssg";
-import {
-  applyContributorOptions,
-  filterGitContributors,
-  gravatarAvatar,
-} from "./contributors";
+import { applyContributorOptions, filterGitContributors, gravatarAvatar } from "./contributors";
 import type { ResolvedOptions } from "./types";
 
 describe("resolveSsgOptions", () => {
@@ -54,7 +50,6 @@ describe("resolveSsgOptions", () => {
       avatars: true,
     });
   });
-
 
   it("disables pagination by default", () => {
     expect(resolveSsgOptions(undefined).pagination).toBe(false);
@@ -393,7 +388,9 @@ describe("git contributors", () => {
 
   it("filters the ignore list by name or email", () => {
     expect(
-      filterGitContributors(authors, ["dependabot[bot]", "ci@example.com"]).map((author) => author.name),
+      filterGitContributors(authors, ["dependabot[bot]", "ci@example.com"]).map(
+        (author) => author.name,
+      ),
     ).toEqual(["Ada Lovelace"]);
   });
 
@@ -414,10 +411,10 @@ describe("git contributors", () => {
   });
 
   it("adds gravatar URLs without putting email into the view", () => {
-    const [ada] = applyContributorOptions(
-      [{ name: "Ada Lovelace", email: "ada@example.com" }],
-      { ignore: [], avatars: true },
-    );
+    const [ada] = applyContributorOptions([{ name: "Ada Lovelace", email: "ada@example.com" }], {
+      ignore: [],
+      avatars: true,
+    });
     expect(ada).toEqual({
       name: "Ada Lovelace",
       avatar: gravatarAvatar("ada@example.com"),

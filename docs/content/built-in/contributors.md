@@ -37,11 +37,11 @@ oxContent({
 });
 ```
 
-| Option              | Type                      | Default |
-| ------------------- | ------------------------- | ------- |
-| `ssg.contributors`  | `boolean` / `{ ignore?, avatars? }` | `false` |
-| `ignore`            | `string[]`                | `[]`    |
-| `avatars`           | `boolean`                 | `false` |
+| Option             | Type                                | Default |
+| ------------------ | ----------------------------------- | ------- |
+| `ssg.contributors` | `boolean` / `{ ignore?, avatars? }` | `false` |
+| `ignore`           | `string[]`                          | `[]`    |
+| `avatars`          | `boolean`                           | `false` |
 
 Authors come from `git log --format=%an%x09%ae` on the source file. Duplicates
 are merged by email when an email is present, otherwise by name. Comparison is

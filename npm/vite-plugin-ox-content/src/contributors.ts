@@ -75,8 +75,6 @@ export function applyContributorOptions(
   return filterGitContributors(raw, option.ignore).map((contributor) => ({
     name: contributor.name.trim(),
     avatar:
-      option.avatars && contributor.email?.trim()
-        ? gravatarAvatar(contributor.email)
-        : undefined,
+      option.avatars && contributor.email?.trim() ? gravatarAvatar(contributor.email) : undefined,
   }));
 }
