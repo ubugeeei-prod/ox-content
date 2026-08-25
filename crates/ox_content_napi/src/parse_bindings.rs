@@ -107,12 +107,19 @@ pub struct JsSourceOptions {
 /// Returns the AST as a JSON string for compatibility-oriented JavaScript consumers.
 #[napi]
 pub fn parse(source: String, options: Option<JsParserOptions>) -> ParseResult {
-    let parser_options = options.map(ParserOptions::from).unwrap_or_default();
-
-    match render_scratch::parse_to_mdast_json(&source, parser_options) {
-        Ok(ast) => ParseResult { ast, errors: vec![] },
-        Err(error) => ParseResult { ast: String::new(), errors: vec![error] },
-    }
+    crate::ffi::recover(
+        || {
+            let parser_options = options.map(ParserOptions::from).unwrap_or_default();
+            match render_scratch::parse_to_mdast_json(&source, parser_options) {
+                Ok(ast) => ParseResult { ast, errors: vec![] },
+                Err(error) => ParseResult { ast: String::new(), errors: vec![error] },
+            }
+        },
+        || ParseResult {
+            ast: String::new(),
+            errors: vec![crate::ffi::UNEXPECTED_PANIC.to_string()],
+        },
+    )
 }
 
 /// Parses Markdown source into a raw mdast memory block for JavaScript-side deserialization.
@@ -157,12 +164,19 @@ pub fn parse_transfer_raw(
 /// Parses Markdown and renders to HTML.
 #[napi]
 pub fn parse_and_render(source: String, options: Option<JsParserOptions>) -> RenderResult {
-    let parser_options = options.map(ParserOptions::from).unwrap_or_default();
-
-    match render_scratch::parse_and_render_html(&source, parser_options) {
-        Ok(html) => RenderResult { html, errors: vec![] },
-        Err(error) => RenderResult { html: String::new(), errors: vec![error] },
-    }
+    crate::ffi::recover(
+        || {
+            let parser_options = options.map(ParserOptions::from).unwrap_or_default();
+            match render_scratch::parse_and_render_html(&source, parser_options) {
+                Ok(html) => RenderResult { html, errors: vec![] },
+                Err(error) => RenderResult { html: String::new(), errors: vec![error] },
+            }
+        },
+        || RenderResult {
+            html: String::new(),
+            errors: vec![crate::ffi::UNEXPECTED_PANIC.to_string()],
+        },
+    )
 }
 
 /// Renders an AST (provided as JSON) to HTML.

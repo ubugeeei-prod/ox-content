@@ -16,7 +16,7 @@ exports[`transformMarkdownWithSolid > turns registered components into islands a
 "
 import { onCleanup, onMount } from 'solid-js';
 import { render } from 'solid-js/web';
-import { initIslands } from '@ox-content/islands';
+import { initIslands, readIslandSlotHtml } from '@ox-content/islands';
 import Alert from '../src/components/Alert.tsx';
 
 export const frontmatter = {"title":"Solid Guide","draft":false};
@@ -34,7 +34,7 @@ function createSolidHydrate() {
 
     // Read the slot content before clearing: the island element still holds the
     // markup the Markdown transform left behind.
-    const islandContent = element.dataset.oxContent || element.innerHTML;
+    const islandContent = readIslandSlotHtml(element);
     element.innerHTML = '';
 
     const dispose = render(

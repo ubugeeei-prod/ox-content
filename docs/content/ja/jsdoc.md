@@ -154,4 +154,4 @@ sidebar: [
 ## 関連
 
 - [`examples/gen-source-docs`](/examples/gen-source-docs.md) — 実行可能なセットアップ。
-- このプロジェクトの生成 [API リファレンス](/api/index.md) 自体も、この機能で作られています。
+- このプロジェクトの生成 [API リファレンス](/api/index.md) 自体も、この機能で作られています。ページはドキュメントビルド時に書かれ、リポジトリには入れません。

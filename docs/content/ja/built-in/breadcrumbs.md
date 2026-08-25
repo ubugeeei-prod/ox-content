@@ -1,23 +1,31 @@
 ---
 title: パンくず
-description: サイトルートからサイドバー祖先までのオプトインの道筋。
+description: サイトルートからサイドバー祖先までの、オプトインのパンくず。
 ---
 
 # パンくず
 
-`ssg.breadcrumbs` または `theme.breadcrumbs` を有効にすると、記事の上にルートから現在ページまでの道筋が付きます。現在ページはリンクではありません。
+`ssg.breadcrumbs` または `theme.breadcrumbs` を有効にすると、各記事の上に、サイトルートからサイドバー祖先を経て現在ページまでの道筋が出ます。現在ページはリンクになりません。
 
-省略または `false` ではオフです。
+機能は自分でオンにするまでオフです。
 
 ```ts
-oxContent({
-  ssg: {
-    breadcrumbs: true,
-  },
-});
+import { oxContent } from "@ox-content/vite-plugin";
+
+export default {
+  plugins: [
+    oxContent({
+      ssg: {
+        breadcrumbs: true,
+      },
+    }),
+  ],
+};
 ```
 
-テーマ側にも置けます。
+`false` または省略はパンくずをオフのままにします。`true` は既定でオンです。オブジェクトを渡しても機能はオンになります。
+
+同じフラグはテーマ側にも置けます。
 
 ```ts
 oxContent({
@@ -29,9 +37,23 @@ oxContent({
 });
 ```
 
-`true` はデフォルトでオン、オブジェクトもオンです。エントリページと bare モードは出しません。
+画面上のパンくずは構造化データとは独立です。パンくずをオンにしても JSON-LD は出ません。エントリページはパンくずを出しません。
 
-## 関連
+## Frontmatter
 
-- [英語版ガイド](/built-in/breadcrumbs.md)
-- [前へ / 次へ](./pagination.md)
+1 ページだけパンくずを隠します。
+
+```md
+---
+title: Landing
+breadcrumbs: false
+---
+```
+
+| 値      | 結果                                     |
+| ------- | ---------------------------------------- |
+| 省略    | サイトの `breadcrumbs` オプションに従う  |
+| `false` | このページではパンくずを隠す             |
+| `true`  | サイトオプションがオンならパンくずを出す |
+
+祖先 href が `javascript:`、`data:`、`vbscript:`、または `//` のときはリンクとして出しません。bare モードはパンくずの chrome を一切出しません。

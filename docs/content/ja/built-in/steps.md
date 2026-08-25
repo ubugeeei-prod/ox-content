@@ -1,43 +1,65 @@
 ---
 title: 手順リスト
-description: チュートリアル向けのオプトイン ::: steps。
+description: チュートリアル向けに番号付きリストを整える、オプトインの ::: steps。
 ---
 
 # 手順リスト
 
-チュートリアルの手順を、ふつうの順序リストと見た目で分けます。省略または `false` では `::: steps` はリテラルです。
+チュートリアルの手順は、普通の番号付きリストと見た目を分けておきます。機能はオプトインです。省略または `false` なら `::: steps` はリテラルのままです。
 
 | オプション | 型                         | 既定    |
 | ---------- | -------------------------- | ------- |
 | `steps`    | `boolean` / `StepsOptions` | `false` |
 
 ```ts
-oxContent({
-  steps: true,
-});
+import { oxContent } from "@ox-content/vite-plugin";
+
+export default {
+  plugins: [
+    oxContent({
+      steps: true,
+    }),
+  ],
+};
 ```
 
-`{}` もデフォルトでオンです。
+`{}` を渡しても既定でオンになります。
 
-順序リストを `::: steps` で包みます。フェンス、強調、ネストしたリストは各項目の中で描画されます。
+## 書き方
 
-````md
+番号付きリストを `::: steps` で囲みます。ネストした Markdown（フェンス、強調、入れ子リスト）は各項目の中でそのまま描画されます。
+
 ::: steps
 
-1. CLI を入れる
+1. Install the CLI
 
    ```sh
    npm i -g ox-content
    ```
-````
 
-2. 設定を書く
-3. ビルドする
+2. Run **build**
    :::
 
-```
+````md
+::: steps
+
+1. Install the CLI
+
+   ```sh
+   npm i -g ox-content
+   ```
+
+2. Run **build**
+   :::
+````
+
+有効にすると、ラッパーは `<div class="ox-steps">` になり、各項目は `<ol class="ox-steps__list">` と `<li class="ox-steps__item">` になります。
+
+閉じていない `::: steps` はリテラルのままで、ファイルの残りを飲み込みません。ラッパーの外にある普通の `1. foo` リストはそのままです。
+
+カスタムコンテナもオンのとき、`steps` はこの機能が処理します。未知のコンテナ種類としては扱いません。
 
 ## 関連
 
-- [英語版ガイド](/built-in/steps.md)
-```
+- [カスタムコンテナ](./containers.md)
+- [組み込み機能の一覧](../built-in-features.md)

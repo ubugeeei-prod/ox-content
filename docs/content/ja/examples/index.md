@@ -163,6 +163,14 @@ Markdown パースを試す対話的な Web プレイグラウンドです。
 
 Vite を使った静的サイト生成の例です。
 
+### [組み込み MDX](/examples/mdx.md)
+
+`.mdx` では MDX が既定でオンです。静的 HTML、island プレースホルダー、
+実行されない ESM、評価されない `{expression}` を示します。隣の `.md` は
+GFM のままです。実行可能なアプリは
+[`examples/mdx`](https://github.com/ubugeeei-prod/ox-content/tree/main/examples/mdx)
+です。
+
 ## 事例を動かす
 
 ```bash

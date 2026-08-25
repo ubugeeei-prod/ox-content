@@ -21,7 +21,7 @@ exports[`transformMarkdownWithReact > turns registered components into islands a
 "
 import React, { useEffect, useRef, createElement } from 'react';
 import { createRoot } from 'react-dom/client';
-import { initIslands } from '@ox-content/islands';
+import { initIslands, readIslandSlotHtml } from '@ox-content/islands';
 import Alert from '../src/components/Alert.tsx';
 
 export const frontmatter = {"title":"React Guide","draft":false};
@@ -39,7 +39,7 @@ function createReactHydrate() {
     const Component = components[componentName];
     if (!Component) return;
 
-    const islandContent = element.dataset.oxContent || element.innerHTML;
+    const islandContent = readIslandSlotHtml(element);
     const vnode = islandContent
       ? createElement(
           Component,

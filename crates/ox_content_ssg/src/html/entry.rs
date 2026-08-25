@@ -24,8 +24,8 @@ fn convert_entry_link(link: &str, base: &str) -> String {
         return link.to_string();
     }
 
-    // Remove .md extension
-    let stem = path[..path.len() - 3].trim_start_matches('/');
+    // Remove a trailing `.md` without slicing through a multibyte character.
+    let stem = strip_ascii_suffix_ignore_case(path, b".md").unwrap_or(path).trim_start_matches('/');
 
     // Entry page is always index.md, so plain relative: getting-started.md -> {base}getting-started/index.html
     let converted = if stem == "index" || stem.ends_with("/index") {
@@ -178,6 +178,12 @@ fn render_icon(icon: &str, base: &str) -> String {
     icon.to_string()
 }
 
+fn strip_ascii_suffix_ignore_case<'a>(value: &'a str, suffix: &[u8]) -> Option<&'a str> {
+    let bytes = value.as_bytes();
+    let start = bytes.len().checked_sub(suffix.len())?;
+    bytes[start..].eq_ignore_ascii_case(suffix).then(|| &value[..start])
+}
+
 #[cfg(test)]
 mod tests {
     use super::{convert_entry_asset, convert_entry_link};
@@ -188,6 +194,11 @@ mod tests {
             convert_entry_link("/ja/getting-started.md", "/ox-content/"),
             "/ox-content/ja/getting-started/index.html"
         );
+        assert_eq!(
+            convert_entry_link("/ja/\u{3042}.md", "/ox-content/"),
+            "/ox-content/ja/\u{3042}/index.html"
+        );
+        assert_eq!(convert_entry_link("\u{1F600}", "/ox-content/"), "\u{1F600}");
     }
 
     #[test]
