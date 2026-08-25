@@ -18,6 +18,7 @@ import { resolveCascadeOptions, resolvePermalinksOptions } from "./permalinks";
 import { resolveRedirectsOptions } from "./redirects";
 import { notFoundSearchExcludeIds } from "./not-found";
 import { resolveFeedsOptions } from "./feeds";
+import { resolvePwaOptions } from "./pwa";
 import { resolveTaxonomiesOptions } from "./taxonomies";
 import { resolveVersionsOptions } from "./versions";
 import {
@@ -118,6 +119,8 @@ export type {
   FeedFormat,
   FeedsOptions,
   ResolvedFeedsOptions,
+  PwaOptions,
+  ResolvedPwaOptions,
   TaxonomiesOptions,
   ResolvedTaxonomiesOptions,
   SearchOptions,
@@ -621,6 +624,7 @@ function resolveOptions(options: OxContentOptions): ResolvedOptions {
     cascade: resolveCascadeOptions(options.cascade),
     redirects: resolveRedirectsOptions(options.redirects),
     feeds: resolveFeedsOptions(options.feeds),
+    pwa: resolvePwaOptions(options.pwa),
     taxonomies: resolveTaxonomiesOptions(options.taxonomies),
     versions: resolveVersionsOptions(options.versions),
     gfm: options.gfm ?? true,
@@ -1038,6 +1042,7 @@ export {
 export { resolvePermalinksOptions, resolveCascadeOptions } from "./permalinks";
 export { resolveRedirectsOptions } from "./redirects";
 export { resolveFeedsOptions } from "./feeds";
+export { resolvePwaOptions } from "./pwa";
 export { resolveTaxonomiesOptions } from "./taxonomies";
 export { resolveVersionsOptions } from "./versions";
 export { resolveTeamOptions } from "./team";

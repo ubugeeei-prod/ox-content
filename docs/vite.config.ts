@@ -162,6 +162,7 @@ export default defineConfig(({ mode }) => {
                       { text: "Redirects and aliases", link: "/built-in/redirects.md" },
                       { text: "Custom 404", link: "/built-in/not-found.md" },
                       { text: "RSS / Atom / JSON feeds", link: "/built-in/feeds.md" },
+                      { text: "PWA manifest and service worker", link: "/built-in/pwa.md" },
                       { text: "Taxonomies", link: "/built-in/taxonomies.md" },
                       { text: "Documentation versioning", link: "/built-in/versioning.md" },
                       { text: "Team / members page", link: "/built-in/team.md" },

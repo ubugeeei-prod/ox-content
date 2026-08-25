@@ -59,6 +59,7 @@ export function createFrameworkMarkdownOptions(options: FrameworkMarkdownOptions
       pageChrome: false,
     },
     siteMaps: { enabled: false, robots: true, llms: true },
+    pwa: { enabled: false, offline: true },
     publishState: { enabled: false, includeDrafts: false },
     permalinks: { enabled: false },
     cascade: { enabled: false },

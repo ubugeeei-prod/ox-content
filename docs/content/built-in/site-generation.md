@@ -309,6 +309,7 @@ array order.
 - [Sitemap / robots / llms.txt](./site-maps.md) — opt-in crawl manifests.
 - [Redirects and aliases](./redirects.md) — opt-in static HTML redirects.
 - [RSS / Atom / JSON feeds](./feeds.md) — opt-in collection feeds.
+- [PWA manifest and service worker](./pwa.md) — opt-in manifest and conservative offline cache (adds client JS).
 - [Theming](../theming.md) — the theme system used by SSG.
 - [API Docs from JSDoc](../jsdoc.md) — the full `docs` option reference.
 - [Internationalization](../i18n.md) — locale-aware sites on top of SSG.
