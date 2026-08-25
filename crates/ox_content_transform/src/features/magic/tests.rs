@@ -95,11 +95,13 @@ fn renders_github_user_with_avatar() {
 
 #[test]
 fn renders_github_user_with_label_and_href() {
-    let html =
-        transform_html("{link:@antfu|Anthony|https://github.com/antfu?tab=sponsoring}", magic_on());
-    assert!(html.contains(r#"href="https://github.com/antfu?tab=sponsoring""#), "{html}");
-    assert!(html.contains(r#"src="https://github.com/antfu.png""#), "{html}");
-    assert!(html.contains(">Anthony</span>"), "{html}");
+    let html = transform_html(
+        "{link:@ubugeeei|ox-content|https://github.com/ubugeeei?tab=repositories}",
+        magic_on(),
+    );
+    assert!(html.contains(r#"href="https://github.com/ubugeeei?tab=repositories""#), "{html}");
+    assert!(html.contains(r#"src="https://github.com/ubugeeei.png""#), "{html}");
+    assert!(html.contains(">ox-content</span>"), "{html}");
 }
 
 #[test]

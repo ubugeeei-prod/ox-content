@@ -41,9 +41,9 @@ export default {
 
 - GitHub ユーザー: `{link:@ryoppippi}` — プロフィール URL と
   `https://github.com/ryoppippi.png`
-- GitHub ユーザー + ラベル: `{link:@antfu|Anthony}` — 同じアバター、カスタムラベル
+- GitHub ユーザー + ラベル: `{link:@ubugeeei|ox-content}` — 同じアバター、カスタムラベル
 - GitHub ユーザー + ラベル + URL:
-  `{link:@antfu|Anthony|https://github.com/antfu?tab=sponsoring}`
+  `{link:@ubugeeei|ox-content|https://github.com/ubugeeei?tab=repositories}`
 - 名前付きエイリアス: `{link:Oxc}` — 設定した `{ href, label?, image? }`
 - 明示ラベル + URL: `{link:VueUse|https://vueuse.org}` — `favicon` がオンでない限り画像なし
 

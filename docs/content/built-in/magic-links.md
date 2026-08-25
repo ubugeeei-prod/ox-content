@@ -42,9 +42,9 @@ The form is `{link:BODY}`. `BODY` is one of:
 
 - GitHub user: `{link:@ryoppippi}` — profile URL plus
   `https://github.com/ryoppippi.png`
-- GitHub user + label: `{link:@antfu|Anthony}` — same avatar, custom label
+- GitHub user + label: `{link:@ubugeeei|ox-content}` — same avatar, custom label
 - GitHub user + label + URL:
-  `{link:@antfu|Anthony|https://github.com/antfu?tab=sponsoring}`
+  `{link:@ubugeeei|ox-content|https://github.com/ubugeeei?tab=repositories}`
 - Named alias: `{link:Oxc}` — configured `{ href, label?, image? }`
 - Explicit label + URL: `{link:VueUse|https://vueuse.org}` — no image unless
   `favicon` is on
