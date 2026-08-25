@@ -204,6 +204,11 @@ fn copy_control_uses_capability_media_queries_and_stable_status_ui() {
         "the control needs a visible icon and a non-visual status region: {READER_CHROME_CSS}"
     );
     assert!(
+        READER_CHROME_CSS.contains("var(--octc-color-code-bg) 74%")
+            && READER_CHROME_CSS.contains(".ox-code:focus-within > .ox-copy {\n    opacity: 0.92;"),
+        "copy should blend into code blocks until hover/focus: {READER_CHROME_CSS}"
+    );
+    assert!(
         READER_CHROME_JS.contains("data-ox-copy-status")
             && READER_CHROME_JS.contains("Copy failed")
             && !READER_CHROME_JS.contains("textContent = \"Copy"),
