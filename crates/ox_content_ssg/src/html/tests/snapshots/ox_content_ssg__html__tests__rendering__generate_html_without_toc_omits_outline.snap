@@ -1883,31 +1883,40 @@ a:hover {
   }
   .sidebar {
     position: fixed;
-    top: var(--octc-header-height);
-    left: 0;
-    right: 0;
-    bottom: calc(var(--octc-mobile-footer-height) + env(safe-area-inset-bottom, 0px));
-    width: 100%;
-    max-height: none;
-    transform: translateY(100%);
-    z-index: 99;
-    border-radius: 0;
+    top: calc(var(--octc-header-height) + 0.75rem);
+    left: max(var(--octc-mobile-gutter), env(safe-area-inset-left, 0px));
+    right: max(var(--octc-mobile-gutter), env(safe-area-inset-right, 0px));
+    bottom: calc(var(--octc-mobile-footer-height) + env(safe-area-inset-bottom, 0px) + 0.75rem);
+    width: auto;
+    max-height: calc(
+      100dvh - var(--octc-header-height) - var(--octc-mobile-footer-height) -
+        env(safe-area-inset-bottom, 0px) - 1.5rem
+    );
+    transform: translateY(calc(100% + 1rem));
+    z-index: 101;
+    border: 1px solid var(--octc-color-border);
+    border-radius: 8px;
+    visibility: hidden;
+    pointer-events: none;
     overflow-y: auto;
-    overscroll-behavior: contain;
+    overflow-x: hidden;
+    overscroll-behavior-y: contain;
+    -webkit-overflow-scrolling: touch;
+    scrollbar-gutter: stable;
     padding: 1rem 1rem 1.25rem;
-    padding-left: max(var(--octc-mobile-gutter), env(safe-area-inset-left, 0px));
-    padding-right: max(var(--octc-mobile-gutter), env(safe-area-inset-right, 0px));
-    background: color-mix(in srgb, var(--octc-color-bg-alt) 88%, var(--octc-color-bg));
+    background: var(--octc-color-bg-alt);
+    background-clip: padding-box;
+    contain: paint;
   }
   .entry-page .sidebar--entry {
     display: block;
   }
   [data-theme="dark"] .sidebar {
-    background: color-mix(in srgb, var(--octc-color-bg-alt) 88%, var(--octc-color-bg));
+    background: var(--octc-color-bg-alt);
   }
   @media (prefers-color-scheme: dark) {
     :root:not([data-theme="light"]) .sidebar {
-      background: color-mix(in srgb, var(--octc-color-bg-alt) 88%, var(--octc-color-bg));
+      background: var(--octc-color-bg-alt);
     }
   }
   .sidebar::before {
@@ -1915,6 +1924,8 @@ a:hover {
   }
   .sidebar.open {
     transform: translateY(0);
+    visibility: visible;
+    pointer-events: auto;
   }
   .sidebar .nav-link {
     min-height: 44px;
