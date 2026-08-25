@@ -77,6 +77,43 @@ fn nested_fragments_match_by_depth() {
 }
 
 #[test]
+fn indented_flow_children_parse_as_mdx_blocks() {
+    let tree = mdx_tree(
+        "<Docs.Layout>\n  <Docs.Header eyebrow=\"Guide\">\n    <>Build <Icons.Sparkle /> faster</>\n  </Docs.Header>\n\n  <Docs.Body>\n    Use <Package.Name scope=\"@ox-content\" /> with {runtime}.\n  </Docs.Body>\n</Docs.Layout>\n",
+    );
+    assert!(
+        tree.contains("MdxJsxFlowElement name=Some(\"Docs.Header\")"),
+        "indented Header should stay JSX:\n{tree}"
+    );
+    assert!(
+        tree.contains("MdxJsxFlowElement name=None self_closing=false"),
+        "indented fragment should stay JSX:\n{tree}"
+    );
+    assert!(
+        tree.contains("MdxJsxTextElement name=Some(\"Icons.Sparkle\")"),
+        "nested icon should stay JSX:\n{tree}"
+    );
+    assert!(
+        tree.contains("MdxTextExpression value=\"runtime\""),
+        "indented prose expression should stay MDX:\n{tree}"
+    );
+    assert!(!tree.contains("CodeBlock"), "authoring indentation is not code:\n{tree}");
+}
+
+#[test]
+fn indented_fenced_code_inside_flow_jsx_remains_code() {
+    let tree = mdx_tree("<Callout>\n  ```sh\n  npm test\n  ```\n</Callout>\n");
+    assert!(
+        tree.contains("MdxJsxFlowElement name=Some(\"Callout\")"),
+        "wrapper still parses:\n{tree}"
+    );
+    assert!(
+        tree.contains("CodeBlock lang=Some(\"sh\")") && tree.contains("value=\"npm test\\n\""),
+        "fenced code stays explicit code with authoring indent stripped:\n{tree}"
+    );
+}
+
+#[test]
 fn spread_can_mix_with_named_attrs() {
     let tree = mdx_tree("<Btn disabled {...rest} title=\"hi\" />\n");
     assert!(tree.contains("Attr name=\"disabled\" value=boolean"), "expected boolean:\n{tree}");

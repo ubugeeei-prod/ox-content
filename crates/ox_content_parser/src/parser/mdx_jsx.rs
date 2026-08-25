@@ -6,6 +6,7 @@ use super::Parser;
 use crate::error::ParseResult;
 
 mod braces;
+mod children;
 mod expression;
 mod scan;
 
@@ -119,11 +120,17 @@ impl<'a> Parser<'a> {
             return Ok(self.allocator.new_vec());
         }
         let inner = &self.source[inner_start..inner_end];
-        let mut sub = self.sub_parser_with_lazy_lines(inner, rustc_hash::FxHashSet::default());
+        let child_source = children::normalize_indentation(self.allocator, inner);
+        let mut sub =
+            self.sub_parser_with_lazy_lines(child_source.source, rustc_hash::FxHashSet::default());
         sub.nesting_depth = self.nesting_depth + 1;
         let mut children = sub.parse()?.children;
         for child in &mut children {
-            Self::offset_node_spans(child, inner_start as u32);
+            if let Some(offsets) = &child_source.offsets {
+                children::remap_node_spans(child, inner_start as u32, offsets);
+            } else {
+                Self::offset_node_spans(child, inner_start as u32);
+            }
         }
         Ok(children)
     }
