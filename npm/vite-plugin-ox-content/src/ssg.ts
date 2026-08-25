@@ -53,6 +53,13 @@ import { normalizeVitePressFrontmatter } from "./vitepress";
 import { renderPage } from "./theme-renderer";
 import type { PageData as ThemePageData } from "./theme-renderer";
 import { writeSiteMapFiles } from "./site-maps";
+import {
+  injectMarkdownSourceAlternate,
+  markdownSourceHref,
+  resolveMarkdownSourceOptions,
+  shouldPublishMarkdownSource,
+  writeMarkdownSourceFiles,
+} from "./markdown-source";
 import { filterNavGroups, hiddenNavKeys, partitionPublishedPages } from "./publish-state";
 import { applySsgPageRoutes, remapNavGroups } from "./apply-permalinks";
 import { writeRedirectFiles } from "./redirects";
@@ -188,6 +195,7 @@ export function resolveSsgOptions(ssg: SsgOptions | boolean | undefined): Resolv
       localeSwitcher: false,
       a11y: false,
       pageChrome: false,
+      markdownSource: resolveMarkdownSourceOptions(undefined),
       notFound: resolveNotFoundOptions(undefined),
       team: resolveTeamOptions(undefined),
       blog: resolveBlogOptions(undefined),
@@ -212,6 +220,7 @@ export function resolveSsgOptions(ssg: SsgOptions | boolean | undefined): Resolv
       localeSwitcher: false,
       a11y: false,
       pageChrome: false,
+      markdownSource: resolveMarkdownSourceOptions(undefined),
       notFound: resolveNotFoundOptions(undefined),
       team: resolveTeamOptions(undefined),
       blog: resolveBlogOptions(undefined),
@@ -243,6 +252,7 @@ export function resolveSsgOptions(ssg: SsgOptions | boolean | undefined): Resolv
     localeSwitcher: resolveLocaleSwitcherOption(ssg.localeSwitcher),
     a11y: resolveA11yOption(ssg.a11y),
     pageChrome: resolvePageChromeOption(ssg.pageChrome),
+    markdownSource: resolveMarkdownSourceOptions(ssg.markdownSource),
     notFound: resolveNotFoundOptions(ssg.notFound),
     team: resolveTeamOptions(ssg.team),
     blog: resolveBlogOptions(ssg.blog),
@@ -837,11 +847,14 @@ interface BuildSsgContext {
   navItems: NavGroup[];
   versionNavigation?: VersionNavigationContext;
   shouldGenerateOgImages: boolean;
+  markdownSourcePages: PageProcessResult[];
   napi?: Awaited<ReturnType<typeof importNapiModule>>;
 }
 
 interface PageProcessResult {
   inputPath: string;
+  /** Already-read source bytes. Used to emit markdownSource companions. */
+  source?: string;
   routePaths: SsgRoutePaths;
   transformedHtml: string;
   title: string;
@@ -901,6 +914,7 @@ export async function buildSsg(options: ResolvedOptions, root: string): Promise<
   applyPermalinkRoutes(context, collected);
   errors.push(...collected.errors);
   const { outputPages, listedPages } = applyPublishState(context, collected);
+  context.markdownSourcePages.push(...outputPages);
   remapPermalinkNav(context, listedPages);
 
   await applyPageResources(context, outputPages, generatedFiles, errors);
@@ -1009,6 +1023,7 @@ async function createBuildSsgContext(
     navItems,
     siteName: await resolveSiteName(root, ssgOptions),
     shouldGenerateOgImages: shouldGenerateOgImages(options),
+    markdownSourcePages: [],
     napi:
       ssgOptions.lastUpdated || ssgOptions.contributors || options.siteMaps?.enabled
         ? await importNapiModule()
@@ -1215,6 +1230,7 @@ async function transformSsgPage(
 
   return {
     inputPath,
+    source: content,
     routePaths: getRoutePaths(
       inputPath,
       context.srcDir,
@@ -1399,34 +1415,46 @@ async function renderSsgPage(
 
   // A theme component owns the whole document, so it comes before both the
   // bare shell and the built-in renderer.
+  const markdownSource = pageMarkdownSourceHref(context, pageResult);
+
   if (context.ssgOptions.render) {
     const nav = context.versionNavigation
       ? rewriteVersionedNavGroups(context.navItems, context.versionNavigation)
       : context.navItems;
-    return renderPage(toThemePageData(pageResult), {
-      theme: context.ssgOptions.render,
-      siteName: context.siteName,
-      base: context.base,
-      nav,
-      pages: allPageResults.map(toThemePageData),
-    });
+    return applyMarkdownSourceAlternate(
+      context,
+      renderPage(toThemePageData(pageResult, markdownSource), {
+        theme: context.ssgOptions.render,
+        siteName: context.siteName,
+        base: context.base,
+        nav,
+        pages: allPageResults.map((page) =>
+          toThemePageData(page, pageMarkdownSourceHref(context, page)),
+        ),
+      }),
+      markdownSource,
+    );
   }
 
   if (context.ssgOptions.bare) {
-    return generateBarePage({
-      title: pageResult.title,
-      content: pageResult.transformedHtml,
-      lang:
-        context.ssgOptions.lang ??
-        getPageLocale(pageResult.routePaths.urlPath, context.options.i18n),
-      description: pageResult.description,
-      canonicalUrl: canonicalPageUrl(context, pageResult.routePaths.urlPath),
-      siteName: context.ssgOptions.siteName,
-      ogImage: pageOgImage,
-      head: context.ssgOptions.head,
-      bodyStart: context.ssgOptions.bodyStart,
-      bodyEnd: context.ssgOptions.bodyEnd,
-    });
+    return applyMarkdownSourceAlternate(
+      context,
+      generateBarePage({
+        title: pageResult.title,
+        content: pageResult.transformedHtml,
+        lang:
+          context.ssgOptions.lang ??
+          getPageLocale(pageResult.routePaths.urlPath, context.options.i18n),
+        description: pageResult.description,
+        canonicalUrl: canonicalPageUrl(context, pageResult.routePaths.urlPath),
+        siteName: context.ssgOptions.siteName,
+        ogImage: pageOgImage,
+        head: context.ssgOptions.head,
+        bodyStart: context.ssgOptions.bodyStart,
+        bodyEnd: context.ssgOptions.bodyEnd,
+      }),
+      markdownSource,
+    );
   }
 
   const pageData = createSsgPageData(pageResult);
@@ -1499,29 +1527,57 @@ async function renderSsgPage(
         })
       : undefined;
 
-  return generateHtmlPage(
-    pageData,
-    navItems,
-    context.siteName,
-    context.base,
-    pageOgImage,
-    theme,
-    locale,
-    i18n ? i18n.locales : undefined,
-    context.ssgOptions.pagination,
-    context.ssgOptions.readerChrome,
-    context.ssgOptions.breadcrumbs,
-    context.ssgOptions.localeSwitcher,
-    localePaths,
-    context.ssgOptions.a11y,
-    context.ssgOptions.team ?? { enabled: false, members: [] },
-    context.ssgOptions.pageChrome,
-    versionNavigation?.root.href,
-    context.ssgOptions.jsonLd,
-    context.ssgOptions.siteUrl,
-    context.ssgOptions.headValidation,
-    i18n?.defaultLocale,
+  return applyMarkdownSourceAlternate(
+    context,
+    await generateHtmlPage(
+      pageData,
+      navItems,
+      context.siteName,
+      context.base,
+      pageOgImage,
+      theme,
+      locale,
+      i18n ? i18n.locales : undefined,
+      context.ssgOptions.pagination,
+      context.ssgOptions.readerChrome,
+      context.ssgOptions.breadcrumbs,
+      context.ssgOptions.localeSwitcher,
+      localePaths,
+      context.ssgOptions.a11y,
+      context.ssgOptions.team ?? { enabled: false, members: [] },
+      context.ssgOptions.pageChrome,
+      versionNavigation?.root.href,
+      context.ssgOptions.jsonLd,
+      context.ssgOptions.siteUrl,
+      context.ssgOptions.headValidation,
+      i18n?.defaultLocale,
+    ),
+    markdownSource,
   );
+}
+
+function pageMarkdownSourceHref(
+  context: BuildSsgContext,
+  page: PageProcessResult,
+): string | undefined {
+  if (
+    !context.ssgOptions.markdownSource?.enabled ||
+    !shouldPublishMarkdownSource(page.frontmatter, context.options.publishState)
+  ) {
+    return undefined;
+  }
+  return markdownSourceHref(page.routePaths.urlPath, context.base);
+}
+
+function applyMarkdownSourceAlternate(
+  context: BuildSsgContext,
+  html: string,
+  href: string | undefined,
+): string {
+  if (!href || !context.ssgOptions.markdownSource?.alternate) {
+    return html;
+  }
+  return injectMarkdownSourceAlternate(html, href);
 }
 
 function rewritePagerOverride(
@@ -1532,7 +1588,7 @@ function rewritePagerOverride(
 }
 
 /** Maps an internal page result onto the theme renderer's page shape. */
-function toThemePageData(pageResult: PageProcessResult): ThemePageData {
+function toThemePageData(pageResult: PageProcessResult, markdownSource?: string): ThemePageData {
   return {
     title: pageResult.title,
     description: pageResult.description,
@@ -1542,6 +1598,7 @@ function toThemePageData(pageResult: PageProcessResult): ThemePageData {
     contributors: pageResult.contributors,
     path: pageResult.inputPath,
     url: pageResult.routePaths.href,
+    markdownSource,
     frontmatter: pageResult.frontmatter,
     layout:
       typeof pageResult.frontmatter.layout === "string" ? pageResult.frontmatter.layout : undefined,
@@ -1704,6 +1761,7 @@ async function applyDocumentationVersions(
         ...prefixRoutePaths(page.routePaths, entry.prefix, context.outDir, context.base),
       };
     }
+    context.markdownSourcePages.push(...outputPages);
     snapContext.versionNavigation = createVersionNavigationContext({
       prefix: entry.prefix,
       base: context.base,
@@ -1851,6 +1909,21 @@ async function writeGeneratedPages(
     errors.push(feeds.warning);
     console.warn(feeds.warning);
   }
+
+  const markdownSource = await writeMarkdownSourceFiles({
+    outDir: context.outDir,
+    base: context.base,
+    options: context.ssgOptions.markdownSource,
+    publishState: context.options.publishState,
+    pages: context.markdownSourcePages.map((page) => ({
+      inputPath: page.inputPath,
+      source: page.source,
+      urlPath: page.routePaths.urlPath,
+      frontmatter: page.frontmatter,
+    })),
+  });
+  generatedFiles.push(...markdownSource.files);
+  errors.push(...markdownSource.errors);
 }
 
 /** Turns an SSG `urlPath` (`guide` or `/`) into a same-origin dest (`/guide`). */

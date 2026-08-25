@@ -34,6 +34,14 @@ import { parsePageChromeFlags } from "./header-chrome";
 import { buildLocalePaths } from "./locale-switcher";
 import { localizeHeaderNavItems, localizeNavGroups } from "./locale-nav";
 import { isMarkdownFilePath } from "./markdown";
+import {
+  buildMarkdownSourceIndex,
+  injectMarkdownSourceAlternate,
+  isMarkdownSourceRequest,
+  markdownSourceHrefForPage,
+  resolveMarkdownSourceRequest,
+  type MarkdownSourceIndexEntry,
+} from "./markdown-source";
 
 /** File extensions to skip in the middleware. */
 const SKIP_EXTENSIONS = new Set([
@@ -223,6 +231,8 @@ interface DevServerCache {
   pages: Map<string, string>;
   /** Cached site name. Computed once. */
   siteName: string | null;
+  /** Companion URL → source bytes when `ssg.markdownSource` is on. */
+  markdownSourceIndex: Map<string, MarkdownSourceIndexEntry> | null;
 }
 
 /**
@@ -234,6 +244,7 @@ export function createDevServerCache(): DevServerCache {
     localePages: null,
     pages: new Map(),
     siteName: null,
+    markdownSourceIndex: null,
   };
 }
 
@@ -243,6 +254,7 @@ export function createDevServerCache(): DevServerCache {
 export function invalidateNavCache(cache: DevServerCache): void {
   cache.navGroups = null;
   cache.localePages = null;
+  cache.markdownSourceIndex = null;
   // Also clear all page caches since navigation HTML is embedded in pages
   cache.pages.clear();
 }
@@ -252,6 +264,7 @@ export function invalidateNavCache(cache: DevServerCache): void {
  */
 export function invalidatePageCache(cache: DevServerCache, filePath: string): void {
   cache.pages.delete(filePath);
+  cache.markdownSourceIndex = null;
 }
 
 /**
@@ -398,6 +411,18 @@ async function renderPage(
         })
       : undefined;
 
+  const markdownSource = options.ssg.markdownSource?.enabled
+    ? markdownSourceHrefForPage({
+        source: filePath,
+        fileUrl: pageData.path,
+        frontmatter,
+        base,
+        permalinks: options.permalinks,
+        cascade: options.cascade,
+        publishState: options.publishState,
+      })
+    : undefined;
+
   // Generate full HTML page
   let html = await generateHtmlPage(
     pageData,
@@ -423,10 +448,37 @@ async function renderPage(
     i18n?.defaultLocale,
   );
 
+  if (markdownSource && options.ssg.markdownSource?.alternate) {
+    html = injectMarkdownSourceAlternate(html, markdownSource);
+  }
+
   // Inject Vite HMR client for live reload
   html = injectViteHmrClient(html);
 
   return html;
+}
+
+async function serveMarkdownSource(
+  routeUrl: string,
+  options: ResolvedOptions,
+  srcDir: string,
+  cache: DevServerCache,
+): Promise<string | "missing" | "hidden"> {
+  if (!cache.markdownSourceIndex) {
+    const files = await collectMarkdownFiles(srcDir, options.extensions);
+    cache.markdownSourceIndex = await buildMarkdownSourceIndex({
+      files,
+      srcDir,
+      permalinks: options.permalinks,
+      cascade: options.cascade,
+      publishState: options.publishState,
+    });
+  }
+  const entry = resolveMarkdownSourceRequest(routeUrl, cache.markdownSourceIndex);
+  if (!entry) {
+    return "missing";
+  }
+  return entry.allowed ? entry.source : "hidden";
 }
 
 /**
@@ -452,6 +504,20 @@ export function createDevServerMiddleware(
 
     // Skip non-page requests
     if (shouldSkip(routeUrl)) return next();
+
+    if (options.ssg.markdownSource?.enabled && isMarkdownSourceRequest(routeUrl)) {
+      const served = await serveMarkdownSource(routeUrl, options, srcDir, cache);
+      if (served === "missing") return next();
+      if (served === "hidden") {
+        res.statusCode = 404;
+        res.end();
+        return;
+      }
+      res.setHeader("Content-Type", "text/markdown; charset=utf-8");
+      res.setHeader("Cache-Control", "no-cache");
+      res.end(served);
+      return;
+    }
 
     // Resolve markdown file
     const filePath = await resolveMarkdownFile(routeUrl, srcDir, options.extensions);

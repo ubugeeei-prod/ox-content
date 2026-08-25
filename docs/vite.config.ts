@@ -163,6 +163,7 @@ export default defineConfig(({ mode }) => {
                       { text: "Accessibility", link: "/built-in/a11y.md" },
                       { text: "Header chrome", link: "/built-in/header-chrome.md" },
                       { text: "Sitemap / robots / llms.txt", link: "/built-in/site-maps.md" },
+                      { text: "Markdown source companions", link: "/built-in/markdown-source.md" },
                       { text: "Draft / unlisted / scheduled", link: "/built-in/drafts.md" },
                       { text: "Permalinks and Cascade", link: "/built-in/permalinks.md" },
                       { text: "Redirects and aliases", link: "/built-in/redirects.md" },

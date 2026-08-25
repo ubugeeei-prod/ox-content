@@ -47,6 +47,7 @@ Ox Content は、よく使うドキュメントの挙動を既定で載せ、非
 | [アクセシビリティ](./built-in/a11y.md)                   | スキップリンクと印刷スタイル                                                   |
 | [ヘッダー chrome](./built-in/header-chrome.md)           | ナビ、告知バー、ページ単位の chrome                                            |
 | [Sitemap / robots / llms.txt](./built-in/site-maps.md)   | クロール用マニフェスト                                                         |
+| [Markdown ソースの併記](./built-in/markdown-source.md)   | 生成 HTML の横に元の Markdown をオプトインで書き出す                           |
 | [下書き / 非公開 / 予約公開](./built-in/drafts.md)       | frontmatter の公開状態                                                         |
 | [パーマリンクと Cascade](./built-in/permalinks.md)       | 独自 URL とディレクトリ既定 frontmatter                                        |
 | [リダイレクトとエイリアス](./built-in/redirects.md)      | 静的 HTML リダイレクト                                                         |
@@ -100,6 +101,7 @@ Ox Content は、よく使うドキュメントの挙動を既定で載せ、非
 | アクセシビリティ     | `ssg.a11y`                                                                                                    | `false`            | [アクセシビリティ](./built-in/a11y.md)                   |
 | ヘッダー chrome      | `theme.nav`, `theme.announcement`, `ssg.pageChrome`                                                           | オフ               | [ヘッダー chrome](./built-in/header-chrome.md)           |
 | クロール             | `siteMaps`                                                                                                    | `false`            | [Sitemap / robots / llms.txt](./built-in/site-maps.md)   |
+| Markdown ソース      | `ssg.markdownSource`                                                                                          | `false`            | [Markdown ソースの併記](./built-in/markdown-source.md)   |
 | 公開状態             | `publishState`                                                                                                | `false`            | [下書き / 非公開 / 予約公開](./built-in/drafts.md)       |
 | パーマリンク         | `permalinks`                                                                                                  | `false`            | [パーマリンクと Cascade](./built-in/permalinks.md)       |
 | frontmatter 継承     | `cascade`                                                                                                     | `false`            | [パーマリンクと Cascade](./built-in/permalinks.md)       |

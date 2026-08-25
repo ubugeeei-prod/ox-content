@@ -74,4 +74,5 @@ values are ignored because `date` is also used as display metadata. An invalid
 - [Site Generation](./site-generation.md)
 - [Search](./search.md)
 - [Sitemap / robots / llms.txt](./site-maps.md)
+- [Markdown source companions](./markdown-source.md)
 - [Built-in Features overview](../built-in-features.md)

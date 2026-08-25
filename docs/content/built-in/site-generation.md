@@ -83,6 +83,7 @@ export default defineConfig({
 | `blog`            | `false`        | Paginated index, authors, tags, archive, optional external feeds. See [Blog](./blog.md).              |
 | `sectionIndex`    | `false`        | Generated listings for directories without `index.md`. See [Section index pages](./section-index.md). |
 | `pageChrome`      | `false`        | Honor per-page frontmatter chrome flags.                                                              |
+| `markdownSource`  | `false`        | Publish original Markdown beside each page. See [Markdown source companions](./markdown-source.md).   |
 | `theme`           | `defaultTheme` | Theme configuration via `defineTheme()`.                                                              |
 | `navigation`      | derived        | Explicit navigation groups instead of the file tree.                                                  |
 
@@ -316,6 +317,7 @@ array order.
 - [Section index pages](./section-index.md) — opt-in listings for directories without `index.md`.
 - [Header chrome](./header-chrome.md) — opt-in header nav, announcement, and page flags.
 - [Sitemap / robots / llms.txt](./site-maps.md) — opt-in crawl manifests.
+- [Markdown source companions](./markdown-source.md) — opt-in original Markdown beside each page.
 - [Redirects and aliases](./redirects.md) — opt-in static HTML redirects.
 - [Blog](./blog.md) — opt-in paginated index, authors, tags, and archive.
 - [RSS / Atom / JSON feeds](./feeds.md) — opt-in collection feeds.

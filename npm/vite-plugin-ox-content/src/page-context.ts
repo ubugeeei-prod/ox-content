@@ -48,6 +48,8 @@ export interface BasePageProps {
   path: string;
   /** Output URL path */
   url: string;
+  /** Published Markdown companion URL when `ssg.markdownSource` is on */
+  markdownSource?: string;
   /** Raw frontmatter object */
   frontmatter: Record<string, unknown>;
   /** Layout name from frontmatter */
