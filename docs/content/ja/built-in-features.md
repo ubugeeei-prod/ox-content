@@ -5,11 +5,13 @@ description: @ox-content/vite-plugin で使える既定機能とオプトイン�
 
 # 組み込み機能
 
-Ox Content は、よく使うドキュメントの挙動を既定で載せ、非標準の Markdown や追加のサイト挙動はオプトインにします。
+Ox Content は、よく使うドキュメントの挙動を既定で載せ、非標準の Markdown や HTML 拡張はオプトインにします。
 
-`false` または省略はオフ、`true` はデフォルトでオン、オブジェクトはオンにしたうえで指定したフィールドだけ上書きします。
+下の既定は `@ox-content/vite-plugin` と一致します。速い静的ベースライン向けです。パース、静的埋め込み、ソース docs、検索インデックスは変換時またはビルド時に走り、追加構文と実行時挙動は明示的にオンにします。
 
-このドキュメントサイト自体が Ox Content でできています。英語の各ガイドには実例がインラインで描画されます。日本語ガイドは契約と設定を先に揃えています。
+`false` または省略はオフ、`true` は既定でオン、オブジェクトはオンにしたうえで指定したフィールドだけ上書きします。
+
+このドキュメントサイト自体が Ox Content でできています。下の機能ガイドは説明するだけでなく、機能をオンにして **実例をインラインで描画します**。日本語ガイドは英語と同じ情報を載せます。
 
 ## 機能ガイド
 
@@ -60,7 +62,7 @@ Ox Content は、よく使うドキュメントの挙動を既定で載せ、非
 | 検索                 | `search`                                                                       | `{ enabled }` | [検索](./built-in/search.md)                             |
 | コレクション         | `collections`                                                                  | `content`     | [コレクション](./built-in/collections.md)                |
 | 静的埋め込み         | `embeds.github`, `embeds.openGraph`                                            | `true`        | [埋め込み](./built-in/embeds.md)                         |
-| オプトイン埋め込み   | `embeds.pm` ほか                                                               | `false`       | [埋め込み](./built-in/embeds.md)                         |
+| オプトイン埋め込み   | `embeds.pm`, `embeds.twitter`, `embeds.bluesky`, `embeds.spotify`, `embeds.stackBlitz`, `embeds.webContainer` | `false`       | [埋め込み](./built-in/embeds.md)                         |
 | 構文ハイライト       | `highlight`                                                                    | `false`       | [コードブロック](./built-in/code-blocks.md)              |
 | コード執筆           | `codeAnnotations`, `codeImports`                                               | `false`       | [コードブロック](./built-in/code-blocks.md)              |
 | 追加構文             | `wikiLinks`, `emojiShortcodes`, `attrs`, `cjkEmphasis`, `containers`, `badges` | `false`       | [構文拡張](./built-in/syntax-extensions.md)              |
@@ -75,7 +77,7 @@ Ox Content は、よく使うドキュメントの挙動を既定で載せ、非
 | HTML 安全            | `sanitize`                                                                     | `false`       | [品質チェック](./built-in/quality-checks.md)             |
 | 編集リンク           | `editThisPage`                                                                 | `false`       | [サイト生成](./built-in/site-generation.md)              |
 | ページ送り           | `ssg.pagination`                                                               | `false`       | [前へ / 次へ](./built-in/pagination.md)                  |
-| パンくず             | `ssg.breadcrumbs`                                                              | `false`       | [パンくず](./built-in/breadcrumbs.md)                    |
+| パンくず             | `ssg.breadcrumbs` / `theme.breadcrumbs`                                        | `false`       | [パンくず](./built-in/breadcrumbs.md)                    |
 | リーダー chrome      | `ssg.readerChrome`                                                             | `false`       | [リーダー chrome](./built-in/reader-chrome.md)           |
 | ロケールスイッチャー | `ssg.localeSwitcher`                                                           | `false`       | [ロケールスイッチャー](./built-in/locale-switcher.md)    |
 | アクセシビリティ     | `ssg.a11y`                                                                     | `false`       | [アクセシビリティ](./built-in/a11y.md)                   |
@@ -119,6 +121,6 @@ export default defineConfig({
 });
 ```
 
-コピーできる執筆例はリポジトリの `examples/builtin-features/content/` にあります。[事例](./examples/index.md) も見てください。
+どのオプションも同じ約束です。`false` は機能を切り、`true` は既定でオン、オブジェクトはオンにしたうえで指定したフィールドだけ上書きします。
 
-英語の一覧は [Built-in Features](/built-in-features.md) です。
+コピーできる執筆例はリポジトリの `examples/builtin-features/content/` にあります。[事例](./examples/index.md) のページは、いくつかの機能を実行可能なプロジェクトで見せます。
