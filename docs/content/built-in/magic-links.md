@@ -7,7 +7,8 @@ description: Opt-in rich links for GitHub users, named aliases, and explicit URL
 
 Prose often names people, projects, and recurring sites. Ordinary Markdown
 links repeat the URL and cannot attach a stable avatar or favicon.
-`{link:...}` is opt-in and off by default.
+`{link:...}` is opt-in and off by default. The idea is inspired by
+[markdown-it-magic-link](https://github.com/antfu/markdown-it-magic-link).
 
 | Option       | Type                           | Default |
 | ------------ | ------------------------------ | ------- |
@@ -101,3 +102,4 @@ re-parse per name. There is no client JavaScript.
 - [Syntax Extensions](./syntax-extensions.md)
 - [Inline Badges](./badges.md)
 - [Built-in Features overview](../built-in-features.md)
+- [markdown-it-magic-link](https://github.com/antfu/markdown-it-magic-link)

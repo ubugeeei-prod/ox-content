@@ -3,6 +3,8 @@
 //! Disabled by default. When enabled, a single source walk rewrites GitHub-user
 //! shorthands, configured aliases, and explicit `label|url` forms into escaped
 //! HTML. Fences, code, raw HTML, and already-linked text stay literal.
+//!
+//! Inspired by [markdown-it-magic-link](https://github.com/antfu/markdown-it-magic-link).
 
 use rustc_hash::FxHashMap;
 

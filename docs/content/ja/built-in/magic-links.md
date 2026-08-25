@@ -7,7 +7,8 @@ description: GitHub ユーザー、名前付きエイリアス、明示 URL 向�
 
 本文では人、プロジェクト、繰り返し出すサイトの名前がよく出ます。普通の
 Markdown リンクは URL を繰り返し、安定したアバターやファビコンを付けられません。
-`{link:...}` はオプトインで、既定はオフです。
+`{link:...}` はオプトインで、既定はオフです。着想は
+[markdown-it-magic-link](https://github.com/antfu/markdown-it-magic-link) にあります。
 
 | オプション   | 型                             | 既定    |
 | ------------ | ------------------------------ | ------- |
@@ -99,3 +100,4 @@ fetch はしません。URL を書くだけです。`imageOverrides` は exact �
 - [構文拡張](./syntax-extensions.md)
 - [インラインバッジ](./badges.md)
 - [組み込み機能の一覧](../built-in-features.md)
+- [markdown-it-magic-link](https://github.com/antfu/markdown-it-magic-link)
