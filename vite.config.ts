@@ -143,6 +143,7 @@ export default defineConfig({
         "test:code-play",
         "test:publish-targets",
         "test:benchmark-scripts",
+        "test:editor-publish-scripts",
       ]),
       "test:vite-plugin": task("vp exec --filter @ox-content/vite-plugin -- vp test src", {
         dependsOn: ["build:napi"],
@@ -150,6 +151,7 @@ export default defineConfig({
       "test:code-play": task("vp exec --filter @ox-content/code-play -- vp test src"),
       "test:publish-targets": task("vp test scripts/verify-publish-targets.test.ts"),
       "test:benchmark-scripts": task("vp test benchmarks/bundle-size/compare-pr-benchmark.test.ts"),
+      "test:editor-publish-scripts": task("vp test scripts/publish-editor-extensions.test.ts"),
       "build:vite-plugin": task("vp run --filter @ox-content/vite-plugin build", {
         dependsOn: ["build:napi"],
       }),

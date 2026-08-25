@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 
 import { spawnSync } from "node:child_process";
-import { readdirSync } from "node:fs";
+import { readFileSync, readdirSync } from "node:fs";
 import { join } from "node:path";
 import { setTimeout as sleep } from "node:timers/promises";
 
@@ -69,6 +69,14 @@ if (
   process.exit(0);
 }
 
+const releaseVersion = getReleaseVersion();
+if (registry === registries["vscode-marketplace"] && isPrereleaseVersion(releaseVersion)) {
+  console.log(
+    `::notice::Skipping ${registry.label} publish for prerelease extension version ${releaseVersion}; VS Code Marketplace rejects prerelease semver strings.`,
+  );
+  process.exit(0);
+}
+
 const token = process.env[registry.tokenEnv];
 if (!token) {
   console.log(
@@ -108,6 +116,31 @@ function listVsixPackages(): string[] {
   }
 
   return found;
+}
+
+function getReleaseVersion(): string | null {
+  const input = process.env.VERSION_INPUT?.trim();
+  if (input) {
+    return input;
+  }
+
+  const refName = process.env.GITHUB_REF_NAME?.trim();
+  if (refName?.startsWith("v")) {
+    return refName.slice(1);
+  }
+
+  try {
+    const pkg = JSON.parse(readFileSync("npm/vscode-ox-content/package.json", "utf8")) as {
+      version?: unknown;
+    };
+    return typeof pkg.version === "string" ? pkg.version : null;
+  } catch {
+    return null;
+  }
+}
+
+function isPrereleaseVersion(version: string | null): boolean {
+  return version !== null && /^\d+\.\d+\.\d+-/.test(version);
 }
 
 async function publishWithRetry(target: Registry, vsix: string, pat: string): Promise<void> {
