@@ -7,11 +7,11 @@ description: file-tree フェンスから作る、オプトインの静的ディ
 
 `file-tree` フェンスはオプトインです。有効にすると、言語が `file-tree` のフェンスブロックが静的 HTML のツリーになります。名前はエスケープされます。実際のファイルシステムは読みません。子があるディレクトリは `<details>` / `<summary>` で開閉します。フォルダとファイルのアイコンは既定でオンで、サイト設定から差し替えできます。
 
-| オプション             | 型                                            | 既定    |
-| ---------------------- | --------------------------------------------- | ------- |
-| `fileTree`             | `boolean` / `FileTreeOptions`                 | `false` |
-| `fileTree.defaultOpen` | `boolean`                                     | `true`  |
-| `fileTree.icons`       | `boolean` / `FileTreeIconOptions`             | `true`  |
+| オプション             | 型                                | 既定    |
+| ---------------------- | --------------------------------- | ------- |
+| `fileTree`             | `boolean` / `FileTreeOptions`     | `false` |
+| `fileTree.defaultOpen` | `boolean`                         | `true`  |
+| `fileTree.icons`       | `boolean` / `FileTreeIconOptions` | `true`  |
 
 ```ts
 import { oxContent } from "@ox-content/vite-plugin";

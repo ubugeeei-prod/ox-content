@@ -11,11 +11,11 @@ is never read. Directories that have children open and close with
 `<details>`/`<summary>`. Folder and file icons are on by default and can be
 replaced from site config.
 
-| Option                | Type                                          | Default |
-| --------------------- | --------------------------------------------- | ------- |
-| `fileTree`            | `boolean` / `FileTreeOptions`                 | `false` |
-| `fileTree.defaultOpen` | `boolean`                                    | `true`  |
-| `fileTree.icons`      | `boolean` / `FileTreeIconOptions`             | `true`  |
+| Option                 | Type                              | Default |
+| ---------------------- | --------------------------------- | ------- |
+| `fileTree`             | `boolean` / `FileTreeOptions`     | `false` |
+| `fileTree.defaultOpen` | `boolean`                         | `true`  |
+| `fileTree.icons`       | `boolean` / `FileTreeIconOptions` | `true`  |
 
 ```ts
 import { oxContent } from "@ox-content/vite-plugin";

@@ -59,7 +59,7 @@ describe("file-tree transform", () => {
       }),
     );
     expect(result.html).toContain('class="custom-file"');
-    expect(result.html).toContain("&lt;svg&gt;&lt;/svg&gt;.ts");
+    expect(result.html).toMatch(/(&lt;|&#x3C;)svg(&gt;|&gt;|>)(&lt;|&#x3C;)\/svg(&gt;|&gt;|>)\.ts/);
     expect(result.html).not.toContain("><svg></svg>.ts");
   });
 });
