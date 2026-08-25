@@ -45,7 +45,7 @@ export default {
 - GitHub ユーザー + ラベル + URL:
   `{link:@ubugeeei|ox-content|https://github.com/ubugeeei?tab=repositories}`
 - 名前付きエイリアス: `{link:Oxc}` — 設定した `{ href, label?, image? }`
-- 明示ラベル + URL: `{link:VueUse|https://vueuse.org}` — `favicon` がオンでない限り画像なし
+- 明示ラベル + URL: `{link:Example|https://example.com}` — `favicon` がオンでない限り画像なし
 
 未知のエイリアス、危険なスキーム（`javascript:`、`data:`、`file:`）、壊れた
 URL、閉じていないタグはリテラルのままです。ラベルと URL は HTML エスケープされます。

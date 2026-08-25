@@ -123,20 +123,20 @@ fn missing_alias_stays_literal() {
 
 #[test]
 fn renders_explicit_label_and_url() {
-    let html = transform_html("{link:VueUse|https://vueuse.org}", magic_on());
-    assert!(html.contains(r#"href="https://vueuse.org""#), "{html}");
+    let html = transform_html("{link:Example|https://example.com}", magic_on());
+    assert!(html.contains(r#"href="https://example.com""#), "{html}");
     assert!(html.contains(r#"class="ox-magic-link ox-magic-link--url""#), "{html}");
-    assert!(html.contains(">VueUse</span>"), "{html}");
+    assert!(html.contains(">Example</span>"), "{html}");
     assert!(!html.contains("ox-magic-link__image"), "{html}");
 }
 
 #[test]
 fn favicon_resolver_is_opt_in() {
-    let without = transform_html("{link:VueUse|https://vueuse.org}", magic_on());
+    let without = transform_html("{link:Example|https://example.com}", magic_on());
     assert!(!without.contains("favicon"), "{without}");
 
     let with = transform_html(
-        "{link:VueUse|https://vueuse.org}",
+        "{link:Example|https://example.com}",
         magic_options(MagicLinkOptions {
             enabled: Some(true),
             favicon: Some(true),
@@ -144,7 +144,7 @@ fn favicon_resolver_is_opt_in() {
             ..Default::default()
         }),
     );
-    assert!(with.contains(r#"src="https://icons.example/vueuse.org.ico""#), "{with}");
+    assert!(with.contains(r#"src="https://icons.example/example.com.ico""#), "{with}");
 }
 
 #[test]

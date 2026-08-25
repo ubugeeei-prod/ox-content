@@ -46,7 +46,7 @@ The form is `{link:BODY}`. `BODY` is one of:
 - GitHub user + label + URL:
   `{link:@ubugeeei|ox-content|https://github.com/ubugeeei?tab=repositories}`
 - Named alias: `{link:Oxc}` — configured `{ href, label?, image? }`
-- Explicit label + URL: `{link:VueUse|https://vueuse.org}` — no image unless
+- Explicit label + URL: `{link:Example|https://example.com}` — no image unless
   `favicon` is on
 
 Unknown aliases, unsafe schemes (`javascript:`, `data:`, `file:`), malformed
