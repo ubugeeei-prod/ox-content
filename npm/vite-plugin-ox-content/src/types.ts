@@ -313,6 +313,18 @@ export interface SsgOptions {
   breadcrumbs?: boolean | Record<string, unknown>;
 
   /**
+   * Emit JSON-LD structured data (`TechArticle`, `WebSite`, and optional
+   * `BreadcrumbList`) in the page `<head>`.
+   *
+   * Disabled when omitted or `false`. `true` enables the defaults. An object
+   * enables the feature and can hide BreadcrumbList or supply a publisher.
+   * Publisher fields the site does not set are not invented.
+   *
+   * @default false
+   */
+  jsonLd?: boolean | JsonLdOptions;
+
+  /**
    * Opt-in copy buttons, outbound-link icons, and a back-to-top control.
    *
    * Disabled when omitted or `false`. `true` enables all three with defaults.
@@ -488,6 +500,49 @@ export type ResolvedA11y =
     };
 
 /**
+ * Per-control flags for `ssg.jsonLd`.
+ *
+ * Omitted fields keep the defaults when the feature itself is enabled.
+ */
+export interface JsonLdOptions {
+  /**
+   * Emit `BreadcrumbList` when a visible breadcrumb trail exists.
+   *
+   * @default true
+   */
+  breadcrumbs?: boolean;
+
+  /**
+   * Optional publisher. Only configured `name` / `url` are written.
+   * Logo and other Organization fields are never invented.
+   */
+  publisher?: JsonLdPublisherOptions;
+}
+
+/**
+ * Optional JSON-LD publisher. Empty or omitted fields are left out.
+ */
+export interface JsonLdPublisherOptions {
+  /** Organization name. */
+  name?: string;
+  /** Organization URL. `javascript:` and other unsafe schemes are dropped. */
+  url?: string;
+}
+
+/**
+ * Resolved JSON-LD options. `false` means no `<script type="application/ld+json">`.
+ */
+export type ResolvedJsonLd =
+  | false
+  | {
+      breadcrumbs: boolean;
+      publisher?: {
+        name?: string;
+        url?: string;
+      };
+    };
+
+/**
  * Resolved SSG options.
  */
 export interface ResolvedSsgOptions {
@@ -506,6 +561,7 @@ export interface ResolvedSsgOptions {
   lastUpdated: boolean;
   pagination: boolean;
   breadcrumbs: boolean;
+  jsonLd: ResolvedJsonLd;
   readerChrome: ResolvedReaderChrome;
   localeSwitcher: boolean;
   a11y: ResolvedA11y;

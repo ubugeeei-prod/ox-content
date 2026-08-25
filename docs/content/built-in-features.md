@@ -40,6 +40,7 @@ inline**.
 | [Site Generation](./built-in/site-generation.md)       | SSG, OG images, edit links, collections, API docs, transformers           |
 | [Previous / Next](./built-in/pagination.md)            | Opt-in previous and next page links                                       |
 | [Breadcrumbs](./built-in/breadcrumbs.md)               | Opt-in trail from the site root through sidebar ancestors                 |
+| [JSON-LD](./built-in/json-ld.md)                       | Opt-in TechArticle / WebSite / BreadcrumbList structured data             |
 | [Reader Chrome](./built-in/reader-chrome.md)           | Opt-in copy, outbound-link icons, and back-to-top                         |
 | [Locale Switcher](./built-in/locale-switcher.md)       | Opt-in header control for configured locales                              |
 | [Accessibility](./built-in/a11y.md)                    | Opt-in skip link and print styles                                         |
@@ -82,6 +83,7 @@ inline**.
 | Editing links    | `editThisPage`                                                                                                | `false`              | [Site Generation](./built-in/site-generation.md)       |
 | Page pager       | `ssg.pagination`                                                                                              | `false`              | [Previous / Next](./built-in/pagination.md)            |
 | Breadcrumbs      | `ssg.breadcrumbs` / `theme.breadcrumbs`                                                                       | `false`              | [Breadcrumbs](./built-in/breadcrumbs.md)               |
+| Structured data  | `ssg.jsonLd`                                                                                                  | `false`              | [JSON-LD](./built-in/json-ld.md)                       |
 | Reader chrome    | `ssg.readerChrome`                                                                                            | `false`              | [Reader Chrome](./built-in/reader-chrome.md)           |
 | Locale switcher  | `ssg.localeSwitcher`                                                                                          | `false`              | [Locale Switcher](./built-in/locale-switcher.md)       |
 | Accessibility    | `ssg.a11y`                                                                                                    | `false`              | [Accessibility](./built-in/a11y.md)                    |

@@ -36,6 +36,7 @@ fn config(theme: Option<ThemeConfig>) -> SsgConfig {
         locale_paths: vec![],
         a11y: A11y::default(),
         page_chrome: false,
+        json_ld: JsonLd::default(),
     }
 }
 

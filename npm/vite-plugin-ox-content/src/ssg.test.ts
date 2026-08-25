@@ -50,6 +50,37 @@ describe("resolveSsgOptions", () => {
     expect(resolveSsgOptions({ breadcrumbs: {} }).breadcrumbs).toBe(true);
   });
 
+  it("disables jsonLd when omitted", () => {
+    expect(resolveSsgOptions(undefined).jsonLd).toBe(false);
+    expect(resolveSsgOptions({}).jsonLd).toBe(false);
+    expect(resolveSsgOptions({ jsonLd: false }).jsonLd).toBe(false);
+  });
+
+  it("enables jsonLd when true", () => {
+    expect(resolveSsgOptions({ jsonLd: true }).jsonLd).toEqual({ breadcrumbs: true });
+  });
+
+  it("enables jsonLd when an object is passed", () => {
+    expect(resolveSsgOptions({ jsonLd: {} }).jsonLd).toEqual({ breadcrumbs: true });
+  });
+
+  it("keeps jsonLd breadcrumbs off when set to false", () => {
+    expect(resolveSsgOptions({ jsonLd: { breadcrumbs: false } }).jsonLd).toEqual({
+      breadcrumbs: false,
+    });
+  });
+
+  it("carries a configured jsonLd publisher through", () => {
+    expect(
+      resolveSsgOptions({
+        jsonLd: { publisher: { name: "Acme", url: "https://acme.example" } },
+      }).jsonLd,
+    ).toEqual({
+      breadcrumbs: true,
+      publisher: { name: "Acme", url: "https://acme.example" },
+    });
+  });
+
   it("disables reader chrome by default", () => {
     expect(resolveSsgOptions(undefined).readerChrome).toBe(false);
   });

@@ -9,6 +9,7 @@ mod breadcrumbs;
 mod entry;
 mod footer;
 mod header_chrome;
+mod json_ld;
 mod locale_switcher;
 mod mpa_navigation;
 mod nav;
@@ -25,6 +26,7 @@ mod utils;
 pub use a11y::A11y;
 use breadcrumbs::BreadcrumbsView;
 pub use header_chrome::{HeaderNavItem, PageChromeFlags, ThemeAnnouncement};
+pub use json_ld::{JsonLd, JsonLdPublisher};
 use pagination::PagerView;
 pub use reader_chrome::ReaderChrome;
 pub use team::{TeamLink, TeamMember, TeamOptions, render_team_page};
@@ -120,6 +122,7 @@ struct PageTemplate<'a> {
     document_title: &'a str,
     description: Option<&'a str>,
     og_image: Option<&'a str>,
+    json_ld: Option<&'a str>,
     theme_bootstrap_js: &'a str,
     css: &'a str,
     embed_head: &'a str,

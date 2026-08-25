@@ -72,6 +72,7 @@ export default defineConfig({
 | `lastUpdated`     | `false`        | Show the git last-commit time per page.                |
 | `pagination`      | `false`        | Previous/next links after the article.                 |
 | `breadcrumbs`     | `false`        | Trail from the site root through sidebar ancestors.    |
+| `jsonLd`          | `false`        | JSON-LD for TechArticle / WebSite / BreadcrumbList.    |
 | `readerChrome`    | `false`        | Copy, outbound-link icons, and back-to-top.            |
 | `localeSwitcher`  | `false`        | Header locale dropdown when i18n locales are set.      |
 | `a11y`            | `false`        | Skip link and print styles.                            |
@@ -301,6 +302,7 @@ array order.
 
 - [Previous / Next](./pagination.md) — opt-in previous and next page links.
 - [Breadcrumbs](./breadcrumbs.md) — opt-in trail from the site root through sidebar ancestors.
+- [JSON-LD](./json-ld.md) — opt-in TechArticle / WebSite / BreadcrumbList structured data.
 - [Reader Chrome](./reader-chrome.md) — opt-in copy, outbound icons, and back-to-top.
 - [Locale Switcher](./locale-switcher.md) — opt-in header locale list.
 - [Accessibility](./a11y.md) — opt-in skip link and print styles.

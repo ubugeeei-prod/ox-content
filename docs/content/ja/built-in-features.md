@@ -34,6 +34,7 @@ Ox Content は、よく使うドキュメントの挙動を既定で載せ、非
 | [サイト生成](./built-in/site-generation.md)              | SSG、OG 画像、編集リンク、API ドキュメント                  |
 | [前へ / 次へ](./built-in/pagination.md)                  | サイドバー順の前後リンク                                    |
 | [パンくず](./built-in/breadcrumbs.md)                    | ルートからサイドバー祖先までの道筋                          |
+| [JSON-LD](./built-in/json-ld.md)                         | オプトインの TechArticle / WebSite / BreadcrumbList         |
 | [リーダー chrome](./built-in/reader-chrome.md)           | コピー、外部リンクアイコン、先頭へ戻る                      |
 | [ロケールスイッチャー](./built-in/locale-switcher.md)    | 設定したロケールへのヘッダー導線                            |
 | [アクセシビリティ](./built-in/a11y.md)                   | スキップリンクと印刷スタイル                                |
@@ -76,6 +77,7 @@ Ox Content は、よく使うドキュメントの挙動を既定で載せ、非
 | 編集リンク           | `editThisPage`                                                                 | `false`       | [サイト生成](./built-in/site-generation.md)              |
 | ページ送り           | `ssg.pagination`                                                               | `false`       | [前へ / 次へ](./built-in/pagination.md)                  |
 | パンくず             | `ssg.breadcrumbs`                                                              | `false`       | [パンくず](./built-in/breadcrumbs.md)                    |
+| 構造化データ         | `ssg.jsonLd`                                                                   | `false`       | [JSON-LD](./built-in/json-ld.md)                         |
 | リーダー chrome      | `ssg.readerChrome`                                                             | `false`       | [リーダー chrome](./built-in/reader-chrome.md)           |
 | ロケールスイッチャー | `ssg.localeSwitcher`                                                           | `false`       | [ロケールスイッチャー](./built-in/locale-switcher.md)    |
 | アクセシビリティ     | `ssg.a11y`                                                                     | `false`       | [アクセシビリティ](./built-in/a11y.md)                   |
