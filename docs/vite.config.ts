@@ -149,6 +149,7 @@ export default defineConfig(({ mode }) => {
                       { text: "Search", link: "/built-in/search.md" },
                       { text: "Collections", link: "/built-in/collections.md" },
                       { text: "Quality Checks", link: "/built-in/quality-checks.md" },
+                      { text: "Typed Hover", link: "/built-in/typed-hover.md" },
                       { text: "Site Generation", link: "/built-in/site-generation.md" },
                       { text: "Previous / Next", link: "/built-in/pagination.md" },
                       { text: "Breadcrumbs", link: "/built-in/breadcrumbs.md" },
@@ -254,6 +255,7 @@ export default defineConfig(({ mode }) => {
         cards: true,
         steps: true,
         fileTree: true,
+        typedHover: true,
         embeds: {
           pm: true,
           twitter: {

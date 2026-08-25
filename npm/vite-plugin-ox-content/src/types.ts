@@ -1286,6 +1286,17 @@ export interface OxContentOptions {
   codeBlockTypecheck?: boolean | CodeBlockTypecheckOptions;
 
   /**
+   * Attach build-time TypeScript hover overlays to opted-in fences.
+   *
+   * Off by default. `true` or `{}` enables the feature. Only `ts` / `tsx`
+   * fences tagged `twoslash` receive payloads. Types are generated during
+   * the Markdown transform; no TypeScript compiler is shipped to the browser.
+   *
+   * @default false
+   */
+  typedHover?: boolean | TypedHoverOptions;
+
+  /**
    * Extract runnable fenced examples for Vitest docs-as-tests harnesses.
    *
    * Collected examples can be written by the docs test helpers and executed as
@@ -1439,6 +1450,10 @@ export interface ResolvedOptions {
   cjkEmphasis: boolean;
   codeBlockLint: ResolvedCodeBlockLintOptions;
   codeBlockTypecheck: ResolvedCodeBlockTypecheckOptions;
+  /**
+   * Present after `resolveOptions`. Omitted in hand-built fixtures means off.
+   */
+  typedHover?: ResolvedTypedHoverOptions;
   docsTests: ResolvedDocsTestOptions;
   mermaid: boolean;
   math: ResolvedMathOptions;
@@ -2053,6 +2068,47 @@ export interface ResolvedCodeBlockTypecheckOptions {
   requireMeta: boolean;
   tsgoCommand: string;
   mode: "warn" | "error";
+}
+
+/**
+ * Options for opt-in typed hover overlays on TypeScript fences.
+ *
+ * Hover strings are computed at build time with the same TypeScript compiler
+ * family used by `codeBlockTypecheck` (`tsgo` / `typescript`). The browser
+ * only receives JSON payloads and a tiny overlay script.
+ */
+export interface TypedHoverOptions {
+  /**
+   * Enable typed hover overlays.
+   *
+   * @default true when the object form is used
+   */
+  enabled?: boolean;
+
+  /**
+   * Fence languages that can receive hover payloads.
+   *
+   * Language names are compared case-insensitively.
+   *
+   * @default ['ts', 'tsx']
+   */
+  languages?: string[];
+
+  /**
+   * Path to the `tsgo` binary used to compute hover types.
+   *
+   * When omitted, the bundled `@typescript/native-preview` executable is used.
+   */
+  tsgoCommand?: string;
+}
+
+/**
+ * Resolved typed-hover options.
+ */
+export interface ResolvedTypedHoverOptions {
+  enabled: boolean;
+  languages: string[];
+  tsgoCommand?: string;
 }
 
 /**

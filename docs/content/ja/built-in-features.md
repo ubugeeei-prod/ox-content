@@ -31,6 +31,7 @@ Ox Content は、よく使うドキュメントの挙動を既定で載せ、非
 | [検索](./built-in/search.md)                             | 静的 BM25 インデックスとクライアント API                    |
 | [コレクション](./built-in/collections.md)                | Markdown を SQL 風ビルダで問い合わせ                        |
 | [品質チェック](./built-in/quality-checks.md)             | lint、型チェック、docs テスト、HTML サニタイズ              |
+| [型ホバー](./built-in/typed-hover.md)                    | `twoslash` フェンスのビルド時 TypeScript 型オーバーレイ     |
 | [サイト生成](./built-in/site-generation.md)              | SSG、OG 画像、編集リンク、API ドキュメント                  |
 | [前へ / 次へ](./built-in/pagination.md)                  | サイドバー順の前後リンク                                    |
 | [パンくず](./built-in/breadcrumbs.md)                    | ルートからサイドバー祖先までの道筋                          |
@@ -91,6 +92,7 @@ Ox Content は、よく使うドキュメントの挙動を既定で載せ、非
 | タクソノミー         | `taxonomies`                                                                   | `false`       | [タクソノミー](./built-in/taxonomies.md)                 |
 | チームページ         | `ssg.team`                                                                     | `false`       | [チーム / メンバー](./built-in/team.md)                  |
 | コード検査           | `codeBlockLint`, `codeBlockTypecheck`, `docsTests`                             | `false`       | [品質チェック](./built-in/quality-checks.md)             |
+| 型ホバー             | `typedHover`                                                                   | `false`       | [型ホバー](./built-in/typed-hover.md)                    |
 | 独自パイプライン     | `transformers`                                                                 | `[]`          | [サイト生成](./built-in/site-generation.md)              |
 
 タブと YouTube 埋め込みにオプションはありません。SSG と dev preview では常に処理されます。[埋め込み](./built-in/embeds.md) を見てください。

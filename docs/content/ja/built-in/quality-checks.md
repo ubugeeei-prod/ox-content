@@ -35,3 +35,4 @@ oxContent({
 
 - [英語版ガイド](/built-in/quality-checks.md)
 - [コードブロック](./code-blocks.md)
+- [型ホバー](./typed-hover.md) — `twoslash` フェンスのビルド時型オーバーレイ

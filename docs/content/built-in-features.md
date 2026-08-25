@@ -37,6 +37,7 @@ inline**.
 | [Search](./built-in/search.md)                         | The static BM25 index and client search API                               |
 | [Collections](./built-in/collections.md)               | Query Markdown files with a SQL-like builder                              |
 | [Quality Checks](./built-in/quality-checks.md)         | Code block lint, type checking, docs tests, HTML sanitizer                |
+| [Typed Hover](./built-in/typed-hover.md)               | Opt-in build-time TypeScript hover overlays for `twoslash` fences         |
 | [Site Generation](./built-in/site-generation.md)       | SSG, OG images, edit links, collections, API docs, transformers           |
 | [Previous / Next](./built-in/pagination.md)            | Opt-in previous and next page links                                       |
 | [Breadcrumbs](./built-in/breadcrumbs.md)               | Opt-in trail from the site root through sidebar ancestors                 |
@@ -97,6 +98,7 @@ inline**.
 | Versioning       | `versions`                                                                                                    | `false`              | [Documentation versioning](./built-in/versioning.md)   |
 | Team page        | `ssg.team`                                                                                                    | `false`              | [Team / members page](./built-in/team.md)              |
 | Code checks      | `codeBlockLint`, `codeBlockTypecheck`, `docsTests`                                                            | `false`              | [Quality Checks](./built-in/quality-checks.md)         |
+| Typed hover      | `typedHover`                                                                                                  | `false`              | [Typed Hover](./built-in/typed-hover.md)               |
 | Custom pipeline  | `transformers`                                                                                                | `[]`                 | [Site Generation](./built-in/site-generation.md)       |
 
 Tab groups and YouTube embeds have no option: they are always processed for
