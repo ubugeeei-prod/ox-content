@@ -162,9 +162,15 @@ fn copy_control_uses_inline_clearance_without_wasting_vertical_space() {
     );
     assert!(
         READER_CHROME_CSS.contains(
-            ".content .ox-code > pre {\n  margin: 0;\n  padding-inline-end: calc(var(--ox-copy-reserved-inline-size) + 0.5rem);"
+            ".content .ox-code > pre,\n.content .ox-code:has(ox-code-play) pre {\n  margin: 0;\n  padding-inline-end: calc(var(--ox-copy-reserved-inline-size) + 0.5rem);"
         ),
         "code only needs enough inline clearance for the icon: {READER_CHROME_CSS}"
+    );
+    assert!(
+        READER_CHROME_CSS.contains(
+            ".ox-code:has(> ox-code-play) .ox-code-play__toolbar {\n  padding-inline-end: calc(var(--ox-copy-reserved-inline-size) + 0.8rem);"
+        ),
+        "Code Play Run must sit left of the copy icon: {READER_CHROME_CSS}"
     );
     assert!(
         !READER_CHROME_CSS.contains("padding-block-start: 3rem"),
