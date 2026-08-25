@@ -17,6 +17,8 @@ export interface TwitterEmbedOptions {
   downloadVideo?: boolean;
   /** Maximum video size in bytes. Oversized assets are skipped. @default 8388608 */
   maxVideoBytes?: number;
+  /** Fetched-card chrome. `"full"` matches sveltweet / react-tweet. @default "compact" */
+  appearance?: TweetAppearance;
 }
 
 export interface ResolvedTwitterEmbedOptions {
@@ -29,7 +31,10 @@ export interface ResolvedTwitterEmbedOptions {
   mediaPublicPath: string;
   downloadVideo: boolean;
   maxVideoBytes: number;
+  appearance: TweetAppearance;
 }
+
+export type TweetAppearance = "compact" | "full";
 
 export interface TweetEntity {
   url: string;
@@ -52,10 +57,29 @@ export interface TweetMedia extends TweetEntity {
   video_info?: { variants?: TweetVideoVariant[] };
 }
 
+export interface TweetIndexedEntity {
+  indices?: [number, number];
+}
+
+export interface TweetHashtagEntity extends TweetIndexedEntity {
+  text?: string;
+}
+
+export interface TweetMentionEntity extends TweetIndexedEntity {
+  screen_name?: string;
+}
+
+export interface TweetSymbolEntity extends TweetIndexedEntity {
+  text?: string;
+}
+
 export interface TweetUser {
   name: string;
   screen_name: string;
   profile_image_url_https?: string;
+  verified?: boolean;
+  is_blue_verified?: boolean;
+  verified_type?: string;
 }
 
 /** Root or quoted post body. Nested `quoted_tweet` is stripped during normalize. */
@@ -63,7 +87,13 @@ export interface TweetBodyData {
   text: string;
   id_str?: string;
   display_text_range?: [number, number];
-  entities?: { urls?: TweetEntity[]; media?: TweetMedia[] };
+  entities?: {
+    urls?: TweetEntity[];
+    media?: TweetMedia[];
+    hashtags?: TweetHashtagEntity[];
+    user_mentions?: TweetMentionEntity[];
+    symbols?: TweetSymbolEntity[];
+  };
   mediaDetails?: TweetMedia[];
   user: TweetUser;
   created_at?: string;
@@ -73,6 +103,8 @@ export interface TweetData extends TweetBodyData {
   quoted_tweet?: TweetBodyData;
   in_reply_to_screen_name?: string;
   in_reply_to_status_id_str?: string;
+  favorite_count?: number;
+  conversation_count?: number;
 }
 
 export interface TweetReference {

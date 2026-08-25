@@ -194,7 +194,8 @@ card:
 Use the object form to fetch the post body, author, avatar, photos, and video
 posters at build time and serve them from your own origin. Fetched cards include
 a nested quoted-post card and a “Replying to @…” link when the syndication
-response has that metadata:
+response has that metadata. `appearance: "full"` opts into a sveltweet /
+react-tweet-shaped static card; the default `"compact"` card is unchanged:
 
 ```ts
 oxContent({
@@ -202,6 +203,7 @@ oxContent({
     twitter: {
       fetch: true,
       lang: "en",
+      appearance: "compact",
       mediaOutputDir: "public/ox-content/twitter",
       mediaPublicPath: "/ox-content/twitter",
     },
@@ -220,13 +222,15 @@ oxContent({
 | `mediaPublicPath` | `/ox-content/twitter`       | URL prefix emitted for downloaded media.         |
 | `downloadVideo`   | `false`                     | Download MP4 video and animated GIF assets.      |
 | `maxVideoBytes`   | `8388608`                   | Skip videos larger than this (8 MiB).            |
+| `appearance`      | `"compact"`                 | `"full"` for sveltweet-shaped static chrome.     |
 
 Downloaded media is served from your site, so a strict `img-src 'self'` CSP
 keeps working. Video and animated GIF posts use a self-hosted poster and a
 Watch on X permalink unless `downloadVideo` is enabled, and the generated HTML
 never includes `video.twimg.com`. Deleted or private posts fall back to the
 link-only card instead of failing the build. A missing quoted post is omitted
-without discarding the root card. See
+without discarding the root card. Full-card CSS ships only on pages that
+render `.ox-tweet--full`. See
 [Twitter/X Embed](../examples/twitter-embed.md) for details.
 
 ## Bluesky

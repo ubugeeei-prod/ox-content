@@ -209,6 +209,12 @@ const OGP_CSS: &str = include_str!("plugins/ogp.css");
 /// CSS styles for social embeds (Twitter/X, Bluesky, WebContainer, media iframes).
 const SOCIAL_CSS: &str = include_str!("plugins/social.css");
 
+/// CSS for opt-in full-fidelity Tweet cards (`.ox-tweet--full`).
+const SOCIAL_TWEET_FULL_CSS: &str = concat!(
+    include_str!("plugins/social-tweet-full.css"),
+    include_str!("plugins/social-tweet-full-media.css"),
+);
+
 /// CSS styles for Mermaid plugin.
 const MERMAID_CSS: &str = include_str!("plugins/mermaid.css");
 

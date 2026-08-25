@@ -24,6 +24,7 @@ mod contributors;
 mod mpa_navigation;
 mod navigation_state;
 mod rendering;
+mod social;
 mod theme;
 
 #[test]

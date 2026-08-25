@@ -100,6 +100,7 @@ describe("fetched Twitter embeds", () => {
     try {
       const html = await transformMediaEmbeds(input, { twitter: options });
       expect(html).toContain('class="ox-tweet ox-tweet--fetched"');
+      expect(html).not.toContain("ox-tweet--full");
       expect(html).toContain("Ox &lt;Content&gt;");
       expect(html).toContain('href="https://example.com/docs"');
       expect(html).toContain(">example.com/docs</a>");

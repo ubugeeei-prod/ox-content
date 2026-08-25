@@ -1,6 +1,14 @@
 import { escapeAttribute, escapeHtml, escapeText } from "./html";
-import type { TweetBodyData, TweetEntity } from "./types";
-import { visibleTextRange } from "./validate";
+import type { TweetBodyData, TweetIndexedEntity } from "./types";
+import { sanitizeScreenName, visibleTextRange } from "./validate";
+
+type EntityKind = "url" | "media" | "hashtag" | "mention" | "symbol";
+
+interface CollectedEntity extends TweetIndexedEntity {
+  kind: EntityKind;
+  href?: string;
+  label?: string;
+}
 
 export function renderTweetText(
   data: TweetBodyData,
@@ -17,10 +25,9 @@ export function renderTweetText(
     const [entityStart, entityEnd] = entity.indices!;
     if (entityStart < cursor) continue;
     output += escapeText(data.text.slice(cursor, entityStart));
-    if (entity.kind === "url") {
-      const href = entity.expanded_url ?? entity.url;
-      const label = entity.display_url ?? href;
-      output += `<a href="${escapeAttribute(href)}" target="_blank" rel="noopener noreferrer">${escapeHtml(label)}</a>`;
+    if (entity.href) {
+      const label = entity.label ?? data.text.slice(entityStart, entityEnd);
+      output += `<a href="${escapeAttribute(entity.href)}" target="_blank" rel="noopener noreferrer">${escapeHtml(label)}</a>`;
     }
     cursor = entityEnd;
   }
@@ -28,11 +35,45 @@ export function renderTweetText(
   return output.trim();
 }
 
-function collectEntities(data: TweetBodyData): Array<TweetEntity & { kind: "url" | "media" }> {
-  return [
-    ...(data.entities?.urls ?? []).map((entity) => ({ ...entity, kind: "url" as const })),
-    ...(data.entities?.media ?? []).map((entity) => ({ ...entity, kind: "media" as const })),
-  ];
+function collectEntities(data: TweetBodyData): CollectedEntity[] {
+  const collected: CollectedEntity[] = [];
+  for (const entity of data.entities?.urls ?? []) {
+    collected.push({
+      kind: "url",
+      indices: entity.indices,
+      href: entity.expanded_url ?? entity.url,
+      label: entity.display_url ?? entity.expanded_url ?? entity.url,
+    });
+  }
+  for (const entity of data.entities?.media ?? []) {
+    collected.push({ kind: "media", indices: entity.indices });
+  }
+  for (const entity of data.entities?.hashtags ?? []) {
+    if (!entity.text) continue;
+    collected.push({
+      kind: "hashtag",
+      indices: entity.indices,
+      href: `https://x.com/hashtag/${encodeURIComponent(entity.text)}`,
+    });
+  }
+  for (const entity of data.entities?.user_mentions ?? []) {
+    const screen = sanitizeScreenName(entity.screen_name);
+    if (!screen) continue;
+    collected.push({
+      kind: "mention",
+      indices: entity.indices,
+      href: `https://x.com/${encodeURIComponent(screen)}`,
+    });
+  }
+  for (const entity of data.entities?.symbols ?? []) {
+    if (!entity.text) continue;
+    collected.push({
+      kind: "symbol",
+      indices: entity.indices,
+      href: `https://x.com/search?q=%24${encodeURIComponent(entity.text)}`,
+    });
+  }
+  return collected;
 }
 
 function validRange(

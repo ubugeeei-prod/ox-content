@@ -1,4 +1,4 @@
-import type { TweetReference } from "./types";
+import type { TweetAppearance, TweetReference } from "./types";
 
 const STATUS_PATH = /^\/(?:[^/]+|i\/web)\/status\/(\d+)(?:\/.*)?$/;
 
@@ -33,11 +33,24 @@ export function parseTweetReference(value: string): TweetReference | null {
   }
 }
 
-export function referenceFromAttributes(attributes: string): TweetReference | null {
+export function tweetElementAttributes(attributes: string): {
+  reference: TweetReference | null;
+  appearance?: TweetAppearance;
+} {
   const values = new Map<string, string>();
-  const pattern = /\b(url|href|id)\s*=\s*(?:"([^"]*)"|'([^']*)'|([^\s>]+))/gi;
+  const pattern = /\b(url|href|id|appearance)\s*=\s*(?:"([^"]*)"|'([^']*)'|([^\s>]+))/gi;
   for (const match of attributes.matchAll(pattern)) {
     values.set(match[1].toLowerCase(), match[2] ?? match[3] ?? match[4] ?? "");
   }
-  return parseTweetReference(values.get("url") ?? values.get("href") ?? values.get("id") ?? "");
+  const appearance = values.get("appearance");
+  return {
+    reference: parseTweetReference(
+      values.get("url") ?? values.get("href") ?? values.get("id") ?? "",
+    ),
+    appearance: appearance === "full" || appearance === "compact" ? appearance : undefined,
+  };
+}
+
+export function referenceFromAttributes(attributes: string): TweetReference | null {
+  return tweetElementAttributes(attributes).reference;
 }

@@ -2,7 +2,7 @@ import path from "node:path";
 import { fetchTweetData, materializeTweetAssets } from "./fetch";
 import { renderFetchedTweet } from "./render";
 import type { ResolvedTwitterEmbedOptions, TwitterEmbedOptions } from "./types";
-import { referenceFromAttributes } from "./url";
+import { tweetElementAttributes } from "./url";
 
 const TWEET_ELEMENT = /<(tweet|xpost)\b([^>]*?)(?:\/\s*>|>[\s\S]*?<\/\1\s*>)/gi;
 
@@ -19,6 +19,7 @@ export function resolveTwitterEmbedOptions(
     mediaPublicPath: options.mediaPublicPath ?? "/ox-content/twitter",
     downloadVideo: options.downloadVideo ?? false,
     maxVideoBytes: options.maxVideoBytes ?? 8_388_608,
+    appearance: options.appearance === "full" ? "full" : "compact",
   };
 }
 
@@ -34,22 +35,25 @@ export async function transformFetchedTweets(
   for (const match of html.matchAll(TWEET_ELEMENT)) {
     const index = match.index ?? 0;
     output += html.slice(cursor, index);
-    const reference = referenceFromAttributes(match[2]);
-    if (!reference) {
+    const attrs = tweetElementAttributes(match[2]);
+    if (!attrs.reference) {
       output += match[0];
       cursor = index + match[0].length;
       continue;
     }
 
-    const data = await fetchTweetData(reference.id, resolved);
+    const data = await fetchTweetData(attrs.reference.id, resolved);
     if (!data) {
       output += match[0];
       cursor = index + match[0].length;
       continue;
     }
 
-    const assets = await materializeTweetAssets(reference.id, data, resolved);
-    output += renderFetchedTweet(reference.url, data, assets, resolved);
+    const assets = await materializeTweetAssets(attrs.reference.id, data, resolved);
+    output += renderFetchedTweet(attrs.reference.url, data, assets, {
+      ...resolved,
+      appearance: attrs.appearance ?? resolved.appearance,
+    });
     cursor = index + match[0].length;
   }
   return output + html.slice(cursor);

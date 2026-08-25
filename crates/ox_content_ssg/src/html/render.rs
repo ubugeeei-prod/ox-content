@@ -25,8 +25,8 @@ use super::utils::{
 };
 use super::{
     CONTRIBUTORS_CSS, ENTRY_CSS, FILE_TREE_CSS, GITHUB_CSS, ISLAND_CSS, MERMAID_CSS, NavGroup,
-    OGP_CSS, PageData, PageTemplate, SOCIAL_CSS, SSG_CSS, SSG_JS, SsgConfig, TABS_CSS, TABS_JS,
-    YOUTUBE_CSS,
+    OGP_CSS, PageData, PageTemplate, SOCIAL_CSS, SOCIAL_TWEET_FULL_CSS, SSG_CSS, SSG_JS, SsgConfig,
+    TABS_CSS, TABS_JS, YOUTUBE_CSS,
 };
 
 /// Themed HTML plus page-head diagnostics.
@@ -129,6 +129,9 @@ fn generate_html_inner(
         &["ox-tweet", "ox-bluesky", "ox-webcontainer", "ox-spotify", "ox-stackblitz"],
     ) {
         css_sections.push(wrap_css_section("plugin-social", SOCIAL_CSS));
+    }
+    if page_content_contains_any(&page_data.content, &["ox-tweet--full"]) {
+        css_sections.push(wrap_css_section("plugin-social-tweet-full", SOCIAL_TWEET_FULL_CSS));
     }
     if page_content_contains_any(&page_data.content, &["ox-mermaid"]) {
         css_sections.push(wrap_css_section("plugin-mermaid", MERMAID_CSS));

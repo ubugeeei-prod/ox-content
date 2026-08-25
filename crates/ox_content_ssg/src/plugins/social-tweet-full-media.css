@@ -1,0 +1,170 @@
+.ox-tweet--full .ox-tweet__media {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 2px;
+  margin: 0.75rem 0 0;
+  overflow: hidden;
+  border: var(--ox-tweet-border);
+  border-radius: 12px;
+}
+
+.ox-tweet--full .ox-tweet__media[data-count="2"],
+.ox-tweet--full .ox-tweet__media[data-count="3"],
+.ox-tweet--full .ox-tweet__media[data-count="4"] {
+  grid-template-columns: 1fr 1fr;
+  aspect-ratio: 16 / 9;
+}
+
+.ox-tweet--full .ox-tweet__media[data-count="3"],
+.ox-tweet--full .ox-tweet__media[data-count="4"] {
+  grid-template-rows: 1fr 1fr;
+}
+
+.ox-tweet--full .ox-tweet__media[data-count="3"] > :first-child {
+  grid-row: span 2;
+}
+
+.ox-tweet--full .ox-tweet__media-item {
+  width: 100%;
+  height: auto;
+  border: 0;
+  border-radius: 0;
+}
+
+.ox-tweet--full .ox-tweet__media[data-count="2"] .ox-tweet__media-item,
+.ox-tweet--full .ox-tweet__media[data-count="3"] .ox-tweet__media-item,
+.ox-tweet--full .ox-tweet__media[data-count="4"] .ox-tweet__media-item {
+  height: 100%;
+  object-fit: cover;
+}
+
+.ox-tweet--full .ox-tweet__media-fallback {
+  position: relative;
+}
+
+.ox-tweet--full .ox-tweet__watch {
+  margin-top: 0.375rem;
+  font-size: 0.8125rem;
+}
+
+.ox-tweet--full .ox-tweet__quote {
+  margin: 0.75rem 0 0;
+  padding: 0.75rem;
+  overflow: hidden;
+  border: var(--ox-tweet-border);
+  border-radius: 12px;
+}
+
+.ox-tweet--full .ox-tweet__quote-header {
+  margin: 0;
+}
+
+.ox-tweet--full .ox-tweet__quote .ox-tweet__avatar {
+  width: 20px;
+  height: 20px;
+}
+
+.ox-tweet--full .ox-tweet__quote-body {
+  margin: 0.25rem 0 0;
+  font-size: var(--ox-tweet-quoted-body-font-size);
+  line-height: 1.25rem;
+}
+
+.ox-tweet--full .ox-tweet__quote .ox-tweet__media {
+  margin-top: 0.75rem;
+}
+
+.ox-tweet--full .ox-tweet__info,
+.ox-tweet--full .ox-tweet__actions {
+  display: flex;
+  align-items: center;
+  margin-top: 0.125rem;
+  overflow: hidden;
+  color: var(--ox-tweet-font-color-secondary);
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+
+.ox-tweet--full .ox-tweet__actions {
+  padding-top: 0.25rem;
+  margin-top: 0.25rem;
+  border-top: var(--ox-tweet-border);
+}
+
+.ox-tweet--full .ox-tweet__permalink,
+.ox-tweet--full .ox-tweet__info-help,
+.ox-tweet--full .ox-tweet__action,
+.ox-tweet--full .ox-tweet__replies-link {
+  color: inherit;
+  text-decoration: none;
+}
+
+.ox-tweet--full .ox-tweet__permalink {
+  font-size: var(--ox-tweet-info-font-size);
+  line-height: 1.25rem;
+}
+
+.ox-tweet--full .ox-tweet__permalink:hover {
+  text-decoration: underline;
+}
+
+.ox-tweet--full .ox-tweet__info-help {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 2em;
+  height: 2em;
+  margin-left: auto;
+  border-radius: 9999px;
+}
+
+.ox-tweet--full .ox-tweet__action {
+  display: flex;
+  align-items: center;
+  margin-right: 1.25rem;
+  font-size: var(--ox-tweet-actions-font-size);
+  font-weight: 700;
+  line-height: 1rem;
+}
+
+.ox-tweet--full .ox-tweet__action .ox-tweet__icon {
+  margin-right: 0.25rem;
+}
+
+.ox-tweet--full .ox-tweet__action--like:hover {
+  color: var(--ox-tweet-color-red);
+}
+
+.ox-tweet--full .ox-tweet__action--reply:hover {
+  color: var(--ox-tweet-color-blue-text);
+}
+
+.ox-tweet--full .ox-tweet__replies {
+  padding: 0.25rem 0 0;
+  margin: 0.5rem 0 0;
+  text-align: center;
+}
+
+.ox-tweet--full .ox-tweet__replies-link {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 32px;
+  padding: 0 1rem;
+  font-size: 0.875rem;
+  font-weight: 700;
+  color: var(--ox-tweet-color-blue-text);
+  border: var(--ox-tweet-border);
+  border-radius: 9999px;
+}
+
+@media (max-width: 400px) {
+  .ox-tweet--full {
+    padding: 0.625rem 0.75rem;
+  }
+
+  .ox-tweet--full .ox-tweet__follow,
+  .ox-tweet--full .ox-tweet__sep {
+    display: none;
+  }
+}
