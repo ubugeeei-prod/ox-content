@@ -71,6 +71,7 @@
     <code class="ox-api-entry__param-name">manifest</code>
     <code class="ox-api-entry__param-type"><a href="./types.md#collectionmanifest">CollectionManifest</a></code>
   </div>
+  
 </li>
 <li class="ox-api-entry__param">
   <div class="ox-api-entry__param-heading">
@@ -92,7 +93,7 @@
 <h4>Returns</h4>
 <div class="ox-api-entry__return">
   <code class="ox-api-entry__return-type">object</code>
-<div class="ox-api-entry__return-members">
+  <div class="ox-api-entry__return-members">
 <div class="ox-api-entry__return-member">
 <h5>errors</h5>
 <code class="ox-api-entry__return-member-type language-typescript">errors: string[];</code>
@@ -135,12 +136,14 @@
     <code class="ox-api-entry__param-name">input</code>
     <code class="ox-api-entry__param-type">{ pages: readonly <a href="#ssgroutablepage">SsgRoutablePage</a>[]; <a href="./permalinks.md#permalinks">permalinks</a>?: <a href="./types.md#resolvedpermalinksoptions">ResolvedPermalinksOptions</a> | null; cascade?: <a href="./types.md#resolvedcascadeoptions">ResolvedCascadeOptions</a> | null; srcDir: string; outDir: string; base: string; extension: string; siteUrl?: string }</code>
   </div>
+  
 </li>
 <li class="ox-api-entry__param">
   <div class="ox-api-entry__param-heading">
     <code class="ox-api-entry__param-name">input.pages</code>
     <code class="ox-api-entry__param-type">readonly <a href="#ssgroutablepage">SsgRoutablePage</a>[]</code>
   </div>
+  
 </li>
 <li class="ox-api-entry__param">
   <div class="ox-api-entry__param-heading">
@@ -161,24 +164,28 @@
     <code class="ox-api-entry__param-name">input.srcDir</code>
     <code class="ox-api-entry__param-type">string</code>
   </div>
+  
 </li>
 <li class="ox-api-entry__param">
   <div class="ox-api-entry__param-heading">
     <code class="ox-api-entry__param-name">input.outDir</code>
     <code class="ox-api-entry__param-type">string</code>
   </div>
+  
 </li>
 <li class="ox-api-entry__param">
   <div class="ox-api-entry__param-heading">
     <code class="ox-api-entry__param-name">input.base</code>
     <code class="ox-api-entry__param-type">string</code>
   </div>
+  
 </li>
 <li class="ox-api-entry__param">
   <div class="ox-api-entry__param-heading">
     <code class="ox-api-entry__param-name">input.extension</code>
     <code class="ox-api-entry__param-type">string</code>
   </div>
+  
 </li>
 <li class="ox-api-entry__param">
   <div class="ox-api-entry__param-heading">
@@ -193,7 +200,7 @@
 <h4>Returns</h4>
 <div class="ox-api-entry__return">
   <code class="ox-api-entry__return-type">object</code>
-<div class="ox-api-entry__return-members">
+  <div class="ox-api-entry__return-members">
 <div class="ox-api-entry__return-member">
 <h5>errors</h5>
 <code class="ox-api-entry__return-member-type language-typescript">errors: string[];</code>
@@ -227,18 +234,21 @@
     <code class="ox-api-entry__param-name">nav</code>
     <code class="ox-api-entry__param-type">T[]</code>
   </div>
+  
 </li>
 <li class="ox-api-entry__param">
   <div class="ox-api-entry__param-heading">
     <code class="ox-api-entry__param-name">kept</code>
     <code class="ox-api-entry__param-type">readonly { fileUrl: string; urlPath: string; href: string }[]</code>
   </div>
+  
 </li>
 <li class="ox-api-entry__param">
   <div class="ox-api-entry__param-heading">
     <code class="ox-api-entry__param-name">skippedFileUrls</code>
     <code class="ox-api-entry__param-type">readonly string[]</code>
   </div>
+  
 </li>
 </ul>
 </div>
@@ -246,6 +256,7 @@
 <h4>Returns</h4>
 <div class="ox-api-entry__return">
   <code class="ox-api-entry__return-type">T[]</code>
+  
 </div>
 </div>
   </div>
@@ -290,3 +301,4 @@
 </div>
   </div>
 </details>
+

@@ -189,6 +189,7 @@
     <code class="ox-api-entry__param-name">frontmatter</code>
     <code class="ox-api-entry__param-type">Record&lt;string, unknown&gt;</code>
   </div>
+  
 </li>
 </ul>
 </div>
@@ -196,6 +197,7 @@
 <h4>Returns</h4>
 <div class="ox-api-entry__return">
   <code class="ox-api-entry__return-type"><a href="#pagechromeflags">PageChromeFlags</a></code>
+  
 </div>
 </div>
   </div>
@@ -260,6 +262,7 @@
     <code class="ox-api-entry__param-name">items</code>
     <code class="ox-api-entry__param-type"><a href="#headernavitem">HeaderNavItem</a>[] | undefined</code>
   </div>
+  
 </li>
 <li class="ox-api-entry__param">
   <div class="ox-api-entry__param-heading">
@@ -281,6 +284,7 @@
 <h4>Returns</h4>
 <div class="ox-api-entry__return">
   <code class="ox-api-entry__return-type"><a href="#resolvedheadernavitem">ResolvedHeaderNavItem</a>[] | undefined</code>
+  
 </div>
 </div>
   </div>
@@ -305,6 +309,7 @@
     <code class="ox-api-entry__param-name">text</code>
     <code class="ox-api-entry__param-type"><a href="#localelabel">LocaleLabel</a></code>
   </div>
+  
 </li>
 <li class="ox-api-entry__param">
   <div class="ox-api-entry__param-heading">
@@ -326,6 +331,7 @@
 <h4>Returns</h4>
 <div class="ox-api-entry__return">
   <code class="ox-api-entry__return-type">string</code>
+  
 </div>
 </div>
   </div>
@@ -350,6 +356,7 @@
     <code class="ox-api-entry__param-name">value</code>
     <code class="ox-api-entry__param-type">boolean | Record&lt;string, unknown&gt; | undefined</code>
   </div>
+  
 </li>
 </ul>
 </div>
@@ -357,6 +364,7 @@
 <h4>Returns</h4>
 <div class="ox-api-entry__return">
   <code class="ox-api-entry__return-type">boolean</code>
+  
 </div>
 </div>
   </div>
@@ -401,3 +409,4 @@
 </div>
   </div>
 </details>
+

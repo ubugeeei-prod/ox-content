@@ -9,8 +9,9 @@ Ox Content では、Markdown と `.mdx` ファイルの中にフレームワー�
 動き方を理解しておく価値があります。いわゆる「クラシック」な MDX とは違います。
 
 - **JSX 要素、モジュールレベルの `import` / `export`、本文の `{expression}` は、
-  MDX が有効なときにパースされます。** `mdx: true` /
-  `ParserOptions.mdx` があると、Rust パーサーは PascalCase とメンバー名の
+  MDX が有効なときにパースされます。** `.mdx` ではそれが既定です。
+  `mdx: true` / `ParserOptions.mdx` を付けると、設定したすべての拡張子で
+  同じ経路を有効にできます。Rust パーサーは PascalCase とメンバー名の
   タグを `MdxJsxFlowElement` / `MdxJsxTextElement` ノードにします（自己閉じ
   または開閉、リテラル、真偽、`{expr}`、spread 属性付き）。
   ファイルレベルの `import` / `export` は `MdxjsEsm` ノードになり、
@@ -21,11 +22,49 @@ Ox Content では、Markdown と `.mdx` ファイルの中にフレームワー�
 - **コンポーネントはレンダラーではなく、フレームワークプラグインが解決します。**
   HTML レンダラーは名前付き MDX JSX を island プレースホルダーにし、
   props を直列化します（リテラルは JSON、`{expression}` / spread はソース）。
-  React / Vue / Svelte プラグインは、ハイドレーション用に PascalCase タグを発見し、
-  式は後で評価します。
+  `.mdx` ファイル（または `mdx: true`）では、React / Vue / Svelte / Solid
+  プラグインは MDX AST を歩きます。AST が使えないときは、描画済みの
+  `data-ox-island` 名を使います。グローバルな `components` マップにある名前だけ
+  ハイドレーション用モジュールを import します。入れ子の JSX、式属性、
+  フラグメントもその走査に入ります。未登録の JSX は静的 HTML のままです。
+  素の `.md` は既存ページのためソース走査のままです。式は保存され、
+  評価は後です。
 
 そのため、本文は Markdown の速さのまま、必要なところだけ本物の対話コンポーネントを置けます。
 コンポーネントのないページには JavaScript バンドルを出しません。
+
+## 既定
+
+`mdx` を省略すると、Ox Content はソースの拡張子から推論します。
+
+| ソース              | 既定                                 | `mdx: true` | `mdx: false`     |
+| ------------------- | ------------------------------------ | ----------- | ---------------- |
+| `.mdx`              | MDX オン（JSX、ESM、`{expression}`） | MDX オン    | CommonMark + GFM |
+| `.md` / `.markdown` | CommonMark + GFM                     | MDX オン    | CommonMark + GFM |
+
+`.mdx` に `mdx: true` は**不要**です。`.md` でも同じ構文を使いたいときだけ
+`mdx: true` / `ParserOptions.mdx` を付けます。`.mdx` をプレーンな
+Markdown 経路のままにするなら `mdx: false` です。
+
+## 静的 HTML と island
+
+フレームワークプラグインが無いとき、HTML レンダラーは静的経路のままです。
+
+- **小文字 / カスタム HTML タグ**（`<div>`、`<note>`）は HTML のままです。
+  island にはなりません。
+- **PascalCase / メンバー名のタグ**（`<NoteCard />`、`<Icons.Star />`）は
+  `data-ox-island` プレースホルダーになります。props は直列化されます。
+  React / Vue / Svelte / Solid プラグインが無いあいだはハイドレートしません。
+- **モジュールレベルの `import` / `export`** は `MdxjsEsm` ノードになります。
+  HTML には**出ません**し、**実行もされません**。
+- **本文の `{expression}`** は AST ソースとして保存され、**評価されません**。
+  静的 HTML レンダラーはいまのところこれらのノードには何も出しません。
+  ソースはテキストとしても JavaScript としても漏れません。
+
+本物の `.mdx` ページがある、実行可能な Vite + `@ox-content/vite-plugin`
+サイトは
+[`examples/mdx`](https://github.com/ubugeeei-prod/ox-content/tree/main/examples/mdx)
+です。
 
 ## セットアップ
 
@@ -140,7 +179,8 @@ MDX がオンのとき、名前付き JSX コンポーネントは HTML の isla
 `<script type="application/json">` に置かれます。
 `{"</script><script>"}` や `{alert(1)}` のような敵対的なソースはペイロードから抜けられず、
 評価もされません。コンポーネントのないページは `<script>` も island ランタイムも出しません。
-フレームワークプラグインは後でコンポーネントを解決してハイドレートします。
+フレームワークプラグインは MDX AST から登録済みの名前を解決し、それらの island を後で
+ハイドレートします。未登録の名前は、レンダラーがすでに出した静的 HTML のままです。
 
 ### Props
 
@@ -178,6 +218,8 @@ Props は JSX 風の構文です。次の形を認識します。
 
 サーバー出力はプレーン HTML なので、ハイドレーションの前（またはなし）でもページは描画され読めます。
 island の JavaScript は、そのページが実際に使うコンポーネント分だけ読み込まれます。
+`.mdx` ではその一覧は AST とグローバルなコンポーネントマップの交差です。
+入れ子やフラグメント内のタグも、登録されていればハイドレートされます。
 
 ## テーマ内の静的 JSX
 
@@ -203,6 +245,7 @@ React はなく、オプトインする開発専用の振る舞いもありま�
 
 ## 関連
 
+- [組み込み MDX の例](/examples/mdx.md)
 - [React 連携](/packages/vite-plugin-ox-content-react.md)
 - [Vue 連携](/packages/vite-plugin-ox-content-vue.md)
 - [Svelte 連携](/packages/vite-plugin-ox-content-svelte.md)

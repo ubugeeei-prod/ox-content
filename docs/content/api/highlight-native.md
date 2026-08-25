@@ -61,6 +61,7 @@
     <code class="ox-api-entry__param-name">node</code>
     <code class="ox-api-entry__param-type">Element | Root</code>
   </div>
+  
 </li>
 </ul>
 </div>
@@ -68,6 +69,7 @@
 <h4>Returns</h4>
 <div class="ox-api-entry__return">
   <code class="ox-api-entry__return-type">string</code>
+  
 </div>
 </div>
   </div>
@@ -103,6 +105,7 @@
     <code class="ox-api-entry__param-name">html</code>
     <code class="ox-api-entry__param-type">string</code>
   </div>
+  
 </li>
 </ul>
 </div>
@@ -110,6 +113,7 @@
 <h4>Returns</h4>
 <div class="ox-api-entry__return">
   <code class="ox-api-entry__return-type">Promise&lt;<a href="#nativedocument">NativeDocument</a> | null&gt;</code>
+  
 </div>
 </div>
   </div>
@@ -135,12 +139,14 @@
     <code class="ox-api-entry__param-name">code</code>
     <code class="ox-api-entry__param-type">string</code>
   </div>
+  
 </li>
 <li class="ox-api-entry__param">
   <div class="ox-api-entry__param-heading">
     <code class="ox-api-entry__param-name">lang</code>
     <code class="ox-api-entry__param-type">string</code>
   </div>
+  
 </li>
 </ul>
 </div>
@@ -148,6 +154,7 @@
 <h4>Returns</h4>
 <div class="ox-api-entry__return">
   <code class="ox-api-entry__return-type">string | null</code>
+  
 </div>
 </div>
   </div>
@@ -227,3 +234,4 @@
 </div>
   </div>
 </details>
+

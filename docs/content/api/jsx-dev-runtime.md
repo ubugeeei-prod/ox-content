@@ -84,12 +84,14 @@
     <code class="ox-api-entry__param-name">type</code>
     <code class="ox-api-entry__param-type"><a href="./jsx-html.md#jsxelementtype">JSXElementType</a></code>
   </div>
+  
 </li>
 <li class="ox-api-entry__param">
   <div class="ox-api-entry__param-heading">
     <code class="ox-api-entry__param-name">props</code>
     <code class="ox-api-entry__param-type"><a href="./jsx-html.md#jsxprops">JSXProps</a></code>
   </div>
+  
 </li>
 <li class="ox-api-entry__param">
   <div class="ox-api-entry__param-heading">
@@ -125,6 +127,7 @@
 <h4>Returns</h4>
 <div class="ox-api-entry__return">
   <code class="ox-api-entry__return-type"><a href="./jsx-html.md#jsxnode">JSXNode</a></code>
+  
 </div>
 </div>
   </div>
@@ -169,3 +172,4 @@
 </div>
   </div>
 </details>
+

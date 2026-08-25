@@ -224,6 +224,7 @@ function resolveSvelteOptions(
     codeAnnotations: resolveCodeAnnotationsOptions(options.codeAnnotations),
     runes: options.runes ?? true,
     embeds: resolveBuiltinEmbedOptions(options.embeds),
+    mdx: options.mdx,
   };
 }
 

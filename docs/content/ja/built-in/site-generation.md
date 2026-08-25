@@ -269,6 +269,8 @@ oxContent({
 - [Sitemap / robots / llms.txt](./site-maps.md) — オプトインのクロール用マニフェスト。
 - [リダイレクトとエイリアス](./redirects.md) — オプトインの静的 HTML リダイレクト。
 - [RSS / Atom / JSON フィード](./feeds.md) — オプトインのコレクションフィード。
+- [PWA マニフェストとサービスワーカー](./pwa.md) — オプトインのマニフェストと保守的なオフラインキャッシュ（クライアント JS を追加）。
 - [テーマ](../theming.md) — SSG が使うテーマシステム。
 - [JSDoc から作る API ドキュメント](../jsdoc.md) — `docs` オプションの全体。
 - [国際化](../i18n.md) — SSG の上のロケール対応サイト。
+- [パーマリンクと Cascade](./permalinks.md) — 独自 URL とディレクトリ既定 frontmatter。

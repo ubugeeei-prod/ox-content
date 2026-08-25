@@ -121,9 +121,19 @@ pub fn transform_pm_embeds(
 /// This is the main entry point for @ox-content/unplugin.
 #[napi]
 pub fn transform(source: String, options: Option<JsTransformOptions>) -> TransformResult {
-    let opts = options.unwrap_or_default();
-    let core_options = opts.into();
-    MarkdownTransformer::from_options(&core_options).transform(&source).into()
+    crate::ffi::recover(
+        || {
+            let opts = options.unwrap_or_default();
+            let core_options = opts.into();
+            MarkdownTransformer::from_options(&core_options).transform(&source).into()
+        },
+        || TransformResult {
+            html: String::new(),
+            frontmatter: "{}".to_string(),
+            toc: vec![],
+            errors: vec![crate::ffi::UNEXPECTED_PANIC.to_string()],
+        },
+    )
 }
 
 /// Sanitize an HTML string with safe defaults or an explicit allow-list.

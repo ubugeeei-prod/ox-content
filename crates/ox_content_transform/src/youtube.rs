@@ -43,15 +43,19 @@ impl Default for YouTubeEmbedOptions {
     }
 }
 
-static VIDEO_ID: LazyLock<Regex> =
-    LazyLock::new(|| Regex::new(r"^[a-zA-Z0-9_-]{11}$").expect("valid video id regex"));
+static VIDEO_ID: LazyLock<Regex> = LazyLock::new(|| {
+    #[allow(clippy::expect_used)]
+    Regex::new(r"^[a-zA-Z0-9_-]{11}$").expect("compile-time YouTube video id regex")
+});
 static URL_PATTERNS: LazyLock<[Regex; 2]> = LazyLock::new(|| {
+    #[allow(clippy::expect_used)]
     [
         Regex::new(
             r"(?:youtube\.com/watch\?v=|youtu\.be/|youtube\.com/embed/|youtube\.com/v/)([a-zA-Z0-9_-]{11})",
         )
-        .expect("valid url regex"),
-        Regex::new(r"youtube\.com/shorts/([a-zA-Z0-9_-]{11})").expect("valid shorts regex"),
+        .expect("compile-time YouTube URL regex"),
+        Regex::new(r"youtube\.com/shorts/([a-zA-Z0-9_-]{11})")
+            .expect("compile-time YouTube shorts regex"),
     ]
 });
 

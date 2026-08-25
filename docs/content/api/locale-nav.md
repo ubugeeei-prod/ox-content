@@ -63,12 +63,14 @@
     <code class="ox-api-entry__param-name">items</code>
     <code class="ox-api-entry__param-type"><a href="./header-chrome.md#headernavitem">HeaderNavItem</a>[] | undefined</code>
   </div>
+  
 </li>
 <li class="ox-api-entry__param">
   <div class="ox-api-entry__param-heading">
     <code class="ox-api-entry__param-name">options</code>
     <code class="ox-api-entry__param-type">LocalizeNavOptions</code>
   </div>
+  
 </li>
 </ul>
 </div>
@@ -76,6 +78,7 @@
 <h4>Returns</h4>
 <div class="ox-api-entry__return">
   <code class="ox-api-entry__return-type"><a href="./header-chrome.md#headernavitem">HeaderNavItem</a>[] | undefined</code>
+  
 </div>
 </div>
   </div>
@@ -100,12 +103,14 @@
     <code class="ox-api-entry__param-name">groups</code>
     <code class="ox-api-entry__param-type">T[]</code>
   </div>
+  
 </li>
 <li class="ox-api-entry__param">
   <div class="ox-api-entry__param-heading">
     <code class="ox-api-entry__param-name">options</code>
     <code class="ox-api-entry__param-type">LocalizeNavOptions</code>
   </div>
+  
 </li>
 </ul>
 </div>
@@ -113,7 +118,9 @@
 <h4>Returns</h4>
 <div class="ox-api-entry__return">
   <code class="ox-api-entry__return-type">T[]</code>
+  
 </div>
 </div>
   </div>
 </details>
+

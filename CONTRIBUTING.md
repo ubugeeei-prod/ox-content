@@ -67,6 +67,7 @@ cargo test --workspace
 cargo check --workspace --all-targets
 cargo clippy --workspace --all-targets -- -D warnings
 cargo fmt --all -- --check
+node scripts/check-panic-constructs.mjs
 ```
 
 ## Branches, Commits, and Pull Requests

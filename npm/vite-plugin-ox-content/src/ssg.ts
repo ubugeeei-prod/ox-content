@@ -59,6 +59,7 @@ import {
 } from "./not-found";
 import { buildCollectionManifest } from "./collections";
 import { writeFeedFiles } from "./feeds";
+import { injectPwaPageTags, writePwaFiles } from "./pwa";
 import { appendTaxonomyPages, injectRelatedPages, toTaxonomyProcessResult } from "./taxonomies";
 import { resolveTeamOptions } from "./team";
 import {
@@ -1565,6 +1566,26 @@ async function writeGeneratedPages(
     context.base,
   );
   generatedFiles.push(...optimizedOutput.assets);
+
+  const pwa = await writePwaFiles({
+    outDir: context.outDir,
+    siteUrl: context.ssgOptions.siteUrl,
+    base: context.base,
+    siteName: context.siteName,
+    options: context.options.pwa,
+  });
+  generatedFiles.push(...pwa.files);
+  if (pwa.warning) {
+    errors.push(pwa.warning);
+    console.warn(pwa.warning);
+  } else if (!context.ssgOptions.bare && context.options.pwa?.enabled) {
+    for (const page of optimizedOutput.pages) {
+      page.html = injectPwaPageTags(page.html, {
+        options: context.options.pwa,
+        base: context.base,
+      });
+    }
+  }
 
   for (const page of optimizedOutput.pages) {
     await fs.mkdir(path.dirname(page.outputPath), { recursive: true });

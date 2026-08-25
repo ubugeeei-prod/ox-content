@@ -12,7 +12,7 @@ import type { ComponentIsland, ResolvedSolidOptions } from "./types";
 export function generateSolidModule(
   content: string,
   usedComponents: string[],
-  islands: ComponentIsland[],
+  _islands: ComponentIsland[] | string[],
   frontmatter: Record<string, unknown>,
   options: ResolvedSolidOptions & { root?: string },
   id: string,
@@ -23,7 +23,7 @@ export function generateSolidModule(
   // Markdown with no registered component skips the island runtime entirely and
   // compiles to a single `innerHTML` binding — no imports needed, because Solid
   // injects whatever its compiled output requires.
-  if (islands.length === 0) {
+  if (usedComponents.length === 0) {
     return `
 export const frontmatter = ${frontmatterLiteral};
 
@@ -41,7 +41,7 @@ export default function MarkdownContent() {
   return `
 import { onCleanup, onMount } from 'solid-js';
 import { render } from 'solid-js/web';
-import { initIslands } from '@ox-content/islands';
+import { initIslands, readIslandSlotHtml } from '@ox-content/islands';
 ${imports}
 
 export const frontmatter = ${frontmatterLiteral};
@@ -59,7 +59,7 @@ function createSolidHydrate() {
 
     // Read the slot content before clearing: the island element still holds the
     // markup the Markdown transform left behind.
-    const islandContent = element.dataset.oxContent || element.innerHTML;
+    const islandContent = readIslandSlotHtml(element);
     element.innerHTML = '';
 
     const dispose = render(

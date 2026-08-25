@@ -61,6 +61,7 @@
     <code class="ox-api-entry__param-name">input</code>
     <code class="ox-api-entry__param-type"><a href="#sitemapsrenderinput">SiteMapsRenderInput</a></code>
   </div>
+  
 </li>
 </ul>
 </div>
@@ -68,6 +69,7 @@
 <h4>Returns</h4>
 <div class="ox-api-entry__return">
   <code class="ox-api-entry__return-type"><a href="#sitemapsrenderresult">SiteMapsRenderResult</a></code>
+  
 </div>
 </div>
   </div>
@@ -93,6 +95,7 @@
     <code class="ox-api-entry__param-name">value</code>
     <code class="ox-api-entry__param-type">boolean | <a href="./types.md#sitemapsoptions">SiteMapsOptions</a> | undefined</code>
   </div>
+  
 </li>
 </ul>
 </div>
@@ -100,6 +103,7 @@
 <h4>Returns</h4>
 <div class="ox-api-entry__return">
   <code class="ox-api-entry__return-type"><a href="./types.md#resolvedsitemapsoptions">ResolvedSiteMapsOptions</a></code>
+  
 </div>
 </div>
   </div>
@@ -285,6 +289,7 @@
     <code class="ox-api-entry__param-name">input</code>
     <code class="ox-api-entry__param-type"><a href="#writesitemapfilesinput">WriteSiteMapFilesInput</a></code>
   </div>
+  
 </li>
 </ul>
 </div>
@@ -292,6 +297,7 @@
 <h4>Returns</h4>
 <div class="ox-api-entry__return">
   <code class="ox-api-entry__return-type">Promise&lt;{ files: string[]; warning?: string }&gt;</code>
+  
 </div>
 </div>
   </div>
@@ -356,3 +362,4 @@
 </div>
   </div>
 </details>
+
