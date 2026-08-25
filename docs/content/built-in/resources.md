@@ -40,12 +40,12 @@ oxContent({
 });
 ```
 
-| Option    | Type                           | Default                     |
-| --------- | ------------------------------ | --------------------------- |
+| Option      | Type                           | Default                   |
+| ----------- | ------------------------------ | ------------------------- |
 | `resources` | `boolean` / `ResourcesOptions` | `false`                   |
-| `formats` | `string[]`                     | `["png", "jpeg", "webp"]`   |
-| `widths`  | `number[]`                     | `[]` (any positive width)   |
-| `missing` | `"error"` / `"warn"`           | `"error"`                   |
+| `formats`   | `string[]`                     | `["png", "jpeg", "webp"]` |
+| `widths`    | `number[]`                     | `[]` (any positive width) |
+| `missing`   | `"error"` / `"warn"`           | `"error"`                 |
 
 ## Page bundle
 
@@ -74,20 +74,20 @@ Append a query string to request a build-time derivative:
 
 ```md
 ![Wide](./hero.png?width=800)
-![Fill](<./hero.png?width=800&height=400&crop=center>)
-![Jpeg](<./hero.png?width=400&format=jpeg>)
+![Fill](./hero.png?width=800&height=400&crop=center)
+![Jpeg](./hero.png?width=400&format=jpeg)
 ```
 
 Use a `<destination>` when the query string contains `&`, so Markdown does
 not treat the rest of the URL as text.
 
-| Param              | Meaning                                                                 |
-| ------------------ | ----------------------------------------------------------------------- |
-| `width` / `w`      | Target width in pixels                                                  |
-| `height` / `h`     | Target height in pixels                                                 |
-| `crop=center`      | Scale to cover `width` × `height`, then center-crop                     |
-| `crop=x,y,w,h`     | Crop that rectangle from the source                                     |
-| `format`           | Output container: `png`, `jpeg` / `jpg`, or `webp`                      |
+| Param          | Meaning                                             |
+| -------------- | --------------------------------------------------- |
+| `width` / `w`  | Target width in pixels                              |
+| `height` / `h` | Target height in pixels                             |
+| `crop=center`  | Scale to cover `width` × `height`, then center-crop |
+| `crop=x,y,w,h` | Crop that rectangle from the source                 |
+| `format`       | Output container: `png`, `jpeg` / `jpg`, or `webp`  |
 
 When only one of `width` or `height` is set, the other side follows the
 source aspect ratio. `crop=center` requires both `width` and `height`.

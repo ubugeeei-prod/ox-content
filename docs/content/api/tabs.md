@@ -53,6 +53,7 @@
     <code class="ox-api-entry__param-name">groupCount</code>
     <code class="ox-api-entry__param-type">number</code>
   </div>
+  
 </li>
 </ul>
 </div>
@@ -60,6 +61,7 @@
 <h4>Returns</h4>
 <div class="ox-api-entry__return">
   <code class="ox-api-entry__return-type">string</code>
+  
 </div>
 </div>
   </div>
@@ -80,6 +82,7 @@
 <h4>Returns</h4>
 <div class="ox-api-entry__return">
   <code class="ox-api-entry__return-type">number</code>
+  
 </div>
 </div>
   </div>
@@ -100,6 +103,7 @@
 <h4>Returns</h4>
 <div class="ox-api-entry__return">
   <code class="ox-api-entry__return-type">void</code>
+  
 </div>
 </div>
   </div>
@@ -124,6 +128,7 @@
     <code class="ox-api-entry__param-name">value</code>
     <code class="ox-api-entry__param-type">number</code>
   </div>
+  
 </li>
 </ul>
 </div>
@@ -131,6 +136,7 @@
 <h4>Returns</h4>
 <div class="ox-api-entry__return">
   <code class="ox-api-entry__return-type">void</code>
+  
 </div>
 </div>
   </div>
@@ -171,6 +177,7 @@
     <code class="ox-api-entry__param-name">html</code>
     <code class="ox-api-entry__param-type">string</code>
   </div>
+  
 </li>
 </ul>
 </div>
@@ -178,7 +185,9 @@
 <h4>Returns</h4>
 <div class="ox-api-entry__return">
   <code class="ox-api-entry__return-type">Promise&lt;string&gt;</code>
+  
 </div>
 </div>
   </div>
 </details>
+

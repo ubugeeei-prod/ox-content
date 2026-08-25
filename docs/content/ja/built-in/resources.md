@@ -38,12 +38,12 @@ oxContent({
 });
 ```
 
-| オプション    | 型                             | 既定                        |
-| ------------- | ------------------------------ | --------------------------- |
-| `resources`   | `boolean` / `ResourcesOptions` | `false`                     |
-| `formats`     | `string[]`                     | `["png", "jpeg", "webp"]`   |
-| `widths`      | `number[]`                     | `[]`（正の幅ならどれでも）  |
-| `missing`     | `"error"` / `"warn"`           | `"error"`                   |
+| オプション  | 型                             | 既定                       |
+| ----------- | ------------------------------ | -------------------------- |
+| `resources` | `boolean` / `ResourcesOptions` | `false`                    |
+| `formats`   | `string[]`                     | `["png", "jpeg", "webp"]`  |
+| `widths`    | `number[]`                     | `[]`（正の幅ならどれでも） |
+| `missing`   | `"error"` / `"warn"`           | `"error"`                  |
 
 ## ページバンドル
 
@@ -72,20 +72,20 @@ SSG は生成 HTML の隣にファイルをコピーするので、出力ツリ�
 
 ```md
 ![Wide](./hero.png?width=800)
-![Fill](<./hero.png?width=800&height=400&crop=center>)
-![Jpeg](<./hero.png?width=400&format=jpeg>)
+![Fill](./hero.png?width=800&height=400&crop=center)
+![Jpeg](./hero.png?width=400&format=jpeg)
 ```
 
 クエリに `&` が含まれるときは `<destination>` を使います。そうしないと
 Markdown が URL の残りを本文として扱います。
 
-| パラメータ         | 意味                                                          |
-| ------------------ | ------------------------------------------------------------- |
-| `width` / `w`      | 目標幅（ピクセル）                                            |
-| `height` / `h`     | 目標高さ（ピクセル）                                          |
-| `crop=center`      | `width` × `height` を覆うまで拡大し、中央でクロップ           |
-| `crop=x,y,w,h`     | ソースからその矩形を切り出す                                  |
-| `format`           | 出力コンテナ。`png`、`jpeg` / `jpg`、または `webp`            |
+| パラメータ     | 意味                                                |
+| -------------- | --------------------------------------------------- |
+| `width` / `w`  | 目標幅（ピクセル）                                  |
+| `height` / `h` | 目標高さ（ピクセル）                                |
+| `crop=center`  | `width` × `height` を覆うまで拡大し、中央でクロップ |
+| `crop=x,y,w,h` | ソースからその矩形を切り出す                        |
+| `format`       | 出力コンテナ。`png`、`jpeg` / `jpg`、または `webp`  |
 
 `width` か `height` の一方だけを付けた場合、もう一方はソースの縦横比に
 従います。`crop=center` には `width` と `height` の両方が必要です。

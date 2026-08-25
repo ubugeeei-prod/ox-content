@@ -137,19 +137,19 @@ export const apiNav: NavItem[] = [
   },
   {
     "title": "Overview",
-    "path": "/api/index-module"
+    "path": "/api/index"
   },
   {
     "title": "Overview",
-    "path": "/api/island-index"
+    "path": "/api/index"
   },
   {
     "title": "Overview",
-    "path": "/api/og-image-index"
+    "path": "/api/index"
   },
   {
     "title": "Overview",
-    "path": "/api/plugins-index"
+    "path": "/api/index"
   },
   {
     "title": "Page Context",
@@ -182,6 +182,22 @@ export const apiNav: NavItem[] = [
   {
     "title": "Repo Card",
     "path": "/api/repo-card"
+  },
+  {
+    "title": "Resources",
+    "path": "/api/resources"
+  },
+  {
+    "title": "Resources Image",
+    "path": "/api/resources-image"
+  },
+  {
+    "title": "Resources Jpeg",
+    "path": "/api/resources-jpeg"
+  },
+  {
+    "title": "Resources Process",
+    "path": "/api/resources-process"
   },
   {
     "title": "Search",
@@ -233,7 +249,7 @@ export const apiNav: NavItem[] = [
   },
   {
     "title": "Transform",
-    "path": "/api/github-transform"
+    "path": "/api/transform"
   },
   {
     "title": "Transform",
@@ -241,7 +257,7 @@ export const apiNav: NavItem[] = [
   },
   {
     "title": "Types",
-    "path": "/api/og-image-types"
+    "path": "/api/types"
   },
   {
     "title": "Types",

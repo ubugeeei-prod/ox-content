@@ -49,6 +49,7 @@
     <code class="ox-api-entry__param-name">nav</code>
     <code class="ox-api-entry__param-type">VitePressNavItem[]</code>
   </div>
+  
 </li>
 </ul>
 </div>
@@ -56,6 +57,7 @@
 <h4>Returns</h4>
 <div class="ox-api-entry__return">
   <code class="ox-api-entry__return-type"><a href="./types.md#ssgnavigationgroup">SsgNavigationGroup</a>[]</code>
+  
 </div>
 </div>
   </div>
@@ -80,6 +82,7 @@
     <code class="ox-api-entry__param-name">sidebar</code>
     <code class="ox-api-entry__param-type">VitePressSidebar</code>
   </div>
+  
 </li>
 </ul>
 </div>
@@ -87,6 +90,7 @@
 <h4>Returns</h4>
 <div class="ox-api-entry__return">
   <code class="ox-api-entry__return-type"><a href="./types.md#ssgnavigationgroup">SsgNavigationGroup</a>[]</code>
+  
 </div>
 </div>
   </div>
@@ -111,6 +115,7 @@
     <code class="ox-api-entry__param-name">config</code>
     <code class="ox-api-entry__param-type">VitePressConfig</code>
   </div>
+  
 </li>
 <li class="ox-api-entry__param">
   <div class="ox-api-entry__param-heading">
@@ -125,6 +130,7 @@
 <h4>Returns</h4>
 <div class="ox-api-entry__return">
   <code class="ox-api-entry__return-type"><a href="./types.md#oxcontentoptions">OxContentOptions</a></code>
+  
 </div>
 </div>
   </div>
@@ -150,6 +156,7 @@
     <code class="ox-api-entry__param-name">config</code>
     <code class="ox-api-entry__param-type">VitePressConfig</code>
   </div>
+  
 </li>
 <li class="ox-api-entry__param">
   <div class="ox-api-entry__param-heading">
@@ -171,6 +178,7 @@
 <h4>Returns</h4>
 <div class="ox-api-entry__return">
   <code class="ox-api-entry__return-type">string</code>
+  
 </div>
 </div>
   </div>
@@ -195,6 +203,7 @@
     <code class="ox-api-entry__param-name">frontmatter</code>
     <code class="ox-api-entry__param-type">Record&lt;string, unknown&gt;</code>
   </div>
+  
 </li>
 </ul>
 </div>
@@ -202,7 +211,9 @@
 <h4>Returns</h4>
 <div class="ox-api-entry__return">
   <code class="ox-api-entry__return-type">Record&lt;string, unknown&gt;</code>
+  
 </div>
 </div>
   </div>
 </details>
+
