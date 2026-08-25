@@ -100,6 +100,7 @@ function renderActions(permalink: string, data: TweetData): string {
     '<div class="ox-tweet__actions">',
     `<a class="ox-tweet__action ox-tweet__action--like" href="https://x.com/intent/like?tweet_id=${id}" target="_blank" rel="noopener noreferrer"><span class="ox-tweet__icon ox-tweet__icon--like"></span><span>${likes}</span></a>`,
     `<a class="ox-tweet__action ox-tweet__action--reply" href="https://x.com/intent/tweet?in_reply_to=${id}" target="_blank" rel="noopener noreferrer"><span class="ox-tweet__icon ox-tweet__icon--reply"></span>Reply</a>`,
+    `<a class="ox-tweet__action ox-tweet__action--copy" href="${escapeAttribute(permalink)}" target="_blank" rel="noopener noreferrer" data-ox-tweet-copy data-ox-tweet-copy-url="${escapeAttribute(permalink)}" aria-label="Copy link to post"><span class="ox-tweet__icon ox-tweet__icon--copy"></span>Copy link</a>`,
     "</div>",
   ].join("");
 }

@@ -151,7 +151,7 @@ describe("full-fidelity Tweet cards", () => {
     expect(video).not.toContain("video.twimg.com");
   });
 
-  it("renders verified variants, like/reply intents, and reply counts", async () => {
+  it("renders verified variants, intents, copy link, and reply counts", async () => {
     const blue = await renderCard(
       {
         text: "Hi",
@@ -165,10 +165,14 @@ describe("full-fidelity Tweet cards", () => {
     expect(blue).toContain("ox-tweet__badge--blue");
     expect(blue).toContain('href="https://x.com/intent/like?tweet_id=555"');
     expect(blue).toContain('href="https://x.com/intent/tweet?in_reply_to=555"');
+    expect(blue).toContain("ox-tweet__action--copy");
+    expect(blue).toContain("data-ox-tweet-copy");
+    expect(blue).toContain('data-ox-tweet-copy-url="https://x.com/i/web/status/555"');
+    expect(blue).toContain('aria-label="Copy link to post"');
+    expect(blue).toContain(">Copy link</a>");
     expect(blue).toContain("1.5K");
     expect(blue).toContain("Read 12 replies");
     expect(blue).toContain("Follow");
-    expect(blue).not.toContain("ox-tweet__action--copy");
 
     const gold = await renderCard(
       {

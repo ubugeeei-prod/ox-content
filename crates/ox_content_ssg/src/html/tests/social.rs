@@ -64,3 +64,20 @@ fn full_tweet_pages_ship_gated_full_card_css() {
     assert!(html.contains("ox-content:css:plugin-social-tweet-full:start"));
     assert!(html.contains("--ox-tweet-color-blue"));
 }
+
+#[test]
+fn full_tweet_css_keeps_rich_copy_and_replies_affordances() {
+    assert!(SOCIAL_TWEET_FULL_CSS.contains("--ox-tweet-icon-copy"));
+    assert!(SOCIAL_TWEET_FULL_CSS.contains(".ox-tweet__icon--copy"));
+    assert!(SOCIAL_TWEET_FULL_CSS.contains(".ox-tweet--full .ox-tweet__action--copy:hover"));
+    assert!(
+        SOCIAL_TWEET_FULL_CSS.contains(
+            ".ox-tweet--full .ox-tweet__replies-link {\n  box-sizing: border-box;\n  display: flex;"
+        ),
+        "{SOCIAL_TWEET_FULL_CSS}"
+    );
+    assert!(
+        SOCIAL_TWEET_FULL_CSS.contains("\n  width: 100%;\n  min-height: 32px;"),
+        "{SOCIAL_TWEET_FULL_CSS}"
+    );
+}

@@ -139,6 +139,10 @@
   color: var(--ox-tweet-color-blue-text);
 }
 
+.ox-tweet--full .ox-tweet__action--copy:hover {
+  color: var(--ox-tweet-color-blue-text);
+}
+
 .ox-tweet--full .ox-tweet__replies {
   padding: 0.25rem 0 0;
   margin: 0.5rem 0 0;
@@ -146,9 +150,11 @@
 }
 
 .ox-tweet--full .ox-tweet__replies-link {
-  display: inline-flex;
+  box-sizing: border-box;
+  display: flex;
   align-items: center;
   justify-content: center;
+  width: 100%;
   min-height: 32px;
   padding: 0 1rem;
   font-size: 0.875rem;
