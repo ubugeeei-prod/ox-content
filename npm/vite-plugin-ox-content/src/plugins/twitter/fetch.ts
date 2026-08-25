@@ -6,9 +6,12 @@ import type {
   TweetBodyData,
   TweetData,
   TweetMedia,
+  TweetMediaAsset,
+  TweetMediaKind,
 } from "./types";
 import { createSyndicationToken } from "./url";
 import { parseTweetData } from "./validate";
+import { downloadVideoAsset, selectBestMp4Url } from "./video";
 
 const tweetCache = new Map<string, TweetData>();
 
@@ -83,10 +86,25 @@ async function materializeBodyAssets(
 
   const media = data.mediaDetails ?? data.entities?.media ?? [];
   for (const [index, item] of media.entries()) {
-    if (item.type && item.type !== "photo") continue;
-    if (!item.media_url_https) continue;
-    const src = await downloadAsset(item.media_url_https, `${id}-media-${index + 1}`, options);
-    if (src) assets.media.push(assetRecord(src, item));
+    const kind: TweetMediaKind =
+      item.type === "video" || item.type === "animated_gif" ? item.type : "photo";
+    const basename = `${id}-media-${index + 1}`;
+    if (kind === "photo") {
+      if (item.type && item.type !== "photo") continue;
+      if (!item.media_url_https) continue;
+      const src = await downloadAsset(item.media_url_https, basename, options);
+      if (src) assets.media.push(assetRecord("photo", src, item));
+      continue;
+    }
+
+    const poster = item.media_url_https
+      ? await downloadAsset(item.media_url_https, `${basename}-poster`, options)
+      : undefined;
+    const videoUrl = options.downloadVideo
+      ? selectBestMp4Url(item.video_info?.variants)
+      : undefined;
+    const src = videoUrl ? await downloadVideoAsset(videoUrl, basename, options) : undefined;
+    assets.media.push(assetRecord(kind, src, item, poster));
   }
   return assets;
 }
@@ -157,9 +175,16 @@ function sanitizeSegment(value: string): string {
   return value.replaceAll(/[^a-zA-Z0-9_-]/g, "-");
 }
 
-function assetRecord(src: string, media: TweetMedia): TweetAssets["media"][number] {
+function assetRecord(
+  kind: TweetMediaKind,
+  src: string | undefined,
+  media: TweetMedia,
+  poster?: string,
+): TweetMediaAsset {
   return {
+    kind,
     src,
+    poster,
     alt: media.ext_alt_text,
     width: media.original_info?.width,
     height: media.original_info?.height,

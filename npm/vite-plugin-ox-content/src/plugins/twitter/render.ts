@@ -1,6 +1,12 @@
 import { escapeAttribute, escapeHtml } from "./html";
 import { renderTweetText } from "./text";
-import type { ResolvedTwitterEmbedOptions, TweetAssets, TweetBodyData, TweetData } from "./types";
+import type {
+  ResolvedTwitterEmbedOptions,
+  TweetAssets,
+  TweetBodyData,
+  TweetData,
+  TweetMediaAsset,
+} from "./types";
 import { quotedPermalink, replyPermalink, sanitizeScreenName } from "./validate";
 
 export { renderTweetText } from "./text";
@@ -17,7 +23,7 @@ export function renderFetchedTweet(
     renderHeader(data.user, assets.avatar),
     renderReply(data),
     `<div class="ox-tweet__body">${renderTweetText(data, { omitTrailingQuoteUrl: Boolean(quote) })}</div>`,
-    renderMedia(assets),
+    renderMedia(assets, permalink),
     quote,
     renderFooter(permalink, data.created_at, options.lang),
     "</figure>",
@@ -25,13 +31,12 @@ export function renderFetchedTweet(
 }
 
 function renderQuotedTweet(data: TweetBodyData, assets: TweetAssets | undefined): string {
-  const permalink = quotedPermalink(data);
-  const media = renderMedia(assets ?? { media: [] });
+  const permalink = quotedPermalink(data) ?? "";
   return [
     '<blockquote class="ox-tweet__quote">',
-    renderHeader(data.user, assets?.avatar, permalink, "ox-tweet__quote-header"),
+    renderHeader(data.user, assets?.avatar, permalink || undefined, "ox-tweet__quote-header"),
     `<div class="ox-tweet__quote-body">${renderTweetText(data)}</div>`,
-    media,
+    renderMedia(assets ?? { media: [] }, permalink),
     "</blockquote>",
   ].join("");
 }
@@ -64,18 +69,49 @@ function renderReply(data: TweetData): string {
   return `<p class="ox-tweet__reply"><a class="ox-tweet__reply-link" href="${escapeAttribute(href)}" target="_blank" rel="noopener noreferrer">Replying to @${escapeHtml(handle)}</a></p>`;
 }
 
-function renderMedia(assets: TweetAssets): string {
+function renderMedia(assets: TweetAssets, permalink: string): string {
   if (assets.media.length === 0) return "";
-  const images = assets.media
-    .map((item) => {
-      const size = [
-        item.width ? ` width="${item.width}"` : "",
-        item.height ? ` height="${item.height}"` : "",
-      ].join("");
-      return `<img class="ox-tweet__media-item" src="${escapeAttribute(item.src)}" alt="${escapeAttribute(item.alt ?? "")}"${size} loading="lazy" decoding="async">`;
-    })
-    .join("");
-  return `<div class="ox-tweet__media" data-count="${assets.media.length}">${images}</div>`;
+  const items = assets.media.map((item) => renderMediaItem(item, permalink)).join("");
+  return `<div class="ox-tweet__media" data-count="${assets.media.length}">${items}</div>`;
+}
+
+function renderMediaItem(item: TweetMediaAsset, permalink: string): string {
+  if (item.kind === "video" || item.kind === "animated_gif") {
+    return renderVideoItem(item, permalink);
+  }
+  const size = sizeAttributes(item);
+  return `<img class="ox-tweet__media-item" src="${escapeAttribute(item.src ?? "")}" alt="${escapeAttribute(item.alt ?? "")}"${size} loading="lazy" decoding="async">`;
+}
+
+function renderVideoItem(item: TweetMediaAsset, permalink: string): string {
+  const watch = watchOnX(permalink);
+  const size = sizeAttributes(item);
+  const src = selfHostedMediaSrc(item.src);
+  if (src) {
+    const poster = item.poster ? ` poster="${escapeAttribute(item.poster)}"` : "";
+    const gif = item.kind === "animated_gif" ? " muted loop" : "";
+    return `<video class="ox-tweet__media-item" src="${escapeAttribute(src)}"${poster}${size} controls playsinline preload="none"${gif}>${watch}</video>`;
+  }
+  const poster = item.poster
+    ? `<img src="${escapeAttribute(item.poster)}" alt="${escapeAttribute(item.alt ?? "")}"${size} loading="lazy" decoding="async">`
+    : "";
+  return `<div class="ox-tweet__media-item ox-tweet__media-fallback">${poster}${watch}</div>`;
+}
+
+function selfHostedMediaSrc(src: string | undefined): string | undefined {
+  return src && !src.includes("video.twimg.com") ? src : undefined;
+}
+
+function sizeAttributes(item: Pick<TweetMediaAsset, "width" | "height">): string {
+  return [
+    item.width ? ` width="${item.width}"` : "",
+    item.height ? ` height="${item.height}"` : "",
+  ].join("");
+}
+
+function watchOnX(permalink: string): string {
+  if (!permalink) return "";
+  return `<a class="ox-tweet__watch" href="${escapeAttribute(permalink)}" target="_blank" rel="noopener noreferrer">Watch on X</a>`;
 }
 
 function renderFooter(permalink: string, createdAt: string | undefined, lang: string): string {
