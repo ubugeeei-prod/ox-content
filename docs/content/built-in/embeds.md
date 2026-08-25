@@ -191,8 +191,8 @@ card:
 
 <XPost url="https://x.com/jack/status/20" />
 
-Use the object form to fetch the post body, author, avatar, and photos at
-build time and serve them from your own origin:
+Use the object form to fetch the post body, author, avatar, photos, and video
+posters at build time and serve them from your own origin:
 
 ```ts
 oxContent({
@@ -207,19 +207,23 @@ oxContent({
 });
 ```
 
-| Option            | Default                     | Purpose                                   |
-| ----------------- | --------------------------- | ----------------------------------------- |
-| `fetch`           | `false`                     | Fetch post content at build time.         |
-| `lang`            | `"en"`                      | Syndication language and displayed date.  |
-| `timeout`         | `10000`                     | Metadata request timeout in milliseconds. |
-| `cache`           | `true`                      | In-memory and persistent JSON caches.     |
-| `cacheDir`        | `.cache/ox-content/twitter` | Persistent metadata cache directory.      |
-| `mediaOutputDir`  | `public/ox-content/twitter` | Local directory for avatars and photos.   |
-| `mediaPublicPath` | `/ox-content/twitter`       | URL prefix emitted for downloaded media.  |
+| Option            | Default                     | Purpose                                          |
+| ----------------- | --------------------------- | ------------------------------------------------ |
+| `fetch`           | `false`                     | Fetch post content at build time.                |
+| `lang`            | `"en"`                      | Syndication language and displayed date.         |
+| `timeout`         | `10000`                     | Metadata request timeout in milliseconds.        |
+| `cache`           | `true`                      | In-memory and persistent JSON caches.            |
+| `cacheDir`        | `.cache/ox-content/twitter` | Persistent metadata cache directory.             |
+| `mediaOutputDir`  | `public/ox-content/twitter` | Local directory for avatars, photos, and videos. |
+| `mediaPublicPath` | `/ox-content/twitter`       | URL prefix emitted for downloaded media.         |
+| `downloadVideo`   | `false`                     | Download MP4 video and animated GIF assets.      |
+| `maxVideoBytes`   | `8388608`                   | Skip videos larger than this (8 MiB).            |
 
 Downloaded media is served from your site, so a strict `img-src 'self'` CSP
-keeps working. Deleted or private posts fall back to the link-only card
-instead of failing the build. See
+keeps working. Video and animated GIF posts use a self-hosted poster and a
+Watch on X permalink unless `downloadVideo` is enabled, and the generated HTML
+never includes `video.twimg.com`. Deleted or private posts fall back to the
+link-only card instead of failing the build. See
 [Twitter/X Embed](../examples/twitter-embed.md) for details.
 
 ## Bluesky

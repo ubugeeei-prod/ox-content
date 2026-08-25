@@ -161,7 +161,7 @@ YouTube 埋め込みは SSG ビルドと dev preview で常に処理されます
 
 <XPost url="https://x.com/jack/status/20" />
 
-オブジェクト形式を使うと、ビルド時に本文、著者、アバター、写真を取り、自分のオリジンから配信します。
+オブジェクト形式を使うと、ビルド時に本文、著者、アバター、写真、動画ポスターを取り、自分のオリジンから配信します。
 
 ```ts
 oxContent({
@@ -183,10 +183,12 @@ oxContent({
 | `timeout`         | `10000`                     | メタデータ要求のタイムアウト（ミリ秒）。            |
 | `cache`           | `true`                      | メモリと永続 JSON キャッシュ。                      |
 | `cacheDir`        | `.cache/ox-content/twitter` | 永続メタデータキャッシュディレクトリ。              |
-| `mediaOutputDir`  | `public/ox-content/twitter` | アバターと写真のローカルディレクトリ。              |
+| `mediaOutputDir`  | `public/ox-content/twitter` | アバター、写真、動画のローカルディレクトリ。        |
 | `mediaPublicPath` | `/ox-content/twitter`       | ダウンロードしたメディアに出す URL プレフィックス。 |
+| `downloadVideo`   | `false`                     | ビルド時に MP4 動画とアニメーション GIF を取る。    |
+| `maxVideoBytes`   | `8388608`                   | これより大きい動画はスキップする（8 MiB）。         |
 
-ダウンロードしたメディアは自分のサイトから出すので、厳しい `img-src 'self'` CSP も動き続けます。削除済みや非公開の投稿は、ビルドを落とさずリンクのみのカードに落ちます。詳細は [Twitter/X Embed](/examples/twitter-embed.md) を見てください。
+ダウンロードしたメディアは自分のサイトから出すので、厳しい `img-src 'self'` CSP も動き続けます。動画とアニメーション GIF は、`downloadVideo` をオンにしない限り自前のポスターと Watch on X パーマリンクを使い、生成 HTML に `video.twimg.com` は出しません。削除済みや非公開の投稿は、ビルドを落とさずリンクのみのカードに落ちます。詳細は [Twitter/X Embed](/examples/twitter-embed.md) を見てください。
 
 ## Bluesky
 

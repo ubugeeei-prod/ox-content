@@ -9,10 +9,14 @@ export interface TwitterEmbedOptions {
   cache?: boolean;
   /** Directory used for the persistent metadata cache. @default ".cache/ox-content/twitter" */
   cacheDir?: string;
-  /** Directory where avatars and photos are written. @default "public/ox-content/twitter" */
+  /** Directory where avatars, photos, and videos are written. @default "public/ox-content/twitter" */
   mediaOutputDir?: string;
   /** Public URL prefix for downloaded media. @default "/ox-content/twitter" */
   mediaPublicPath?: string;
+  /** Download MP4 video and animated GIF assets at build time. @default false */
+  downloadVideo?: boolean;
+  /** Maximum video size in bytes. Oversized assets are skipped. @default 8388608 */
+  maxVideoBytes?: number;
 }
 
 export interface ResolvedTwitterEmbedOptions {
@@ -23,6 +27,8 @@ export interface ResolvedTwitterEmbedOptions {
   cacheDir: string;
   mediaOutputDir: string;
   mediaPublicPath: string;
+  downloadVideo: boolean;
+  maxVideoBytes: number;
 }
 
 export interface TweetEntity {
@@ -32,11 +38,18 @@ export interface TweetEntity {
   indices?: [number, number];
 }
 
+export interface TweetVideoVariant {
+  content_type?: string;
+  url?: string;
+  bitrate?: number;
+}
+
 export interface TweetMedia extends TweetEntity {
   media_url_https?: string;
   ext_alt_text?: string;
   type?: string;
   original_info?: { width?: number; height?: number };
+  video_info?: { variants?: TweetVideoVariant[] };
 }
 
 export interface TweetData {
@@ -57,7 +70,18 @@ export interface TweetReference {
   url: string;
 }
 
+export type TweetMediaKind = "photo" | "video" | "animated_gif";
+
+export interface TweetMediaAsset {
+  kind: TweetMediaKind;
+  src?: string;
+  poster?: string;
+  alt?: string;
+  width?: number;
+  height?: number;
+}
+
 export interface TweetAssets {
   avatar?: string;
-  media: Array<{ src: string; alt?: string; width?: number; height?: number }>;
+  media: TweetMediaAsset[];
 }

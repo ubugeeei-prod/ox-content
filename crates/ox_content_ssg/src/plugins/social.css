@@ -120,6 +120,23 @@
   background: var(--octc-color-bg-alt);
 }
 
+.ox-tweet__media-fallback {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+
+.ox-tweet__media-fallback > img {
+  width: 100%;
+  height: auto;
+  border-radius: inherit;
+}
+
+.ox-tweet__watch {
+  margin-top: 0.375rem;
+  font-size: 0.8125rem;
+}
+
 .ox-tweet__footer {
   display: flex;
   align-items: center;

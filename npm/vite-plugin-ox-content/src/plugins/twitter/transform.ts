@@ -17,6 +17,8 @@ export function resolveTwitterEmbedOptions(
     cacheDir: path.resolve(options.cacheDir ?? ".cache/ox-content/twitter"),
     mediaOutputDir: path.resolve(options.mediaOutputDir ?? "public/ox-content/twitter"),
     mediaPublicPath: options.mediaPublicPath ?? "/ox-content/twitter",
+    downloadVideo: options.downloadVideo ?? false,
+    maxVideoBytes: options.maxVideoBytes ?? 8_388_608,
   };
 }
 
