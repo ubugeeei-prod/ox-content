@@ -282,9 +282,6 @@ export default defineConfig({
       "docs:api": uncachedTask("node scripts/generate-api-docs.mjs --write", {
         dependsOn: ["build:napi"],
       }),
-      "check:api-docs": uncachedTask("node scripts/generate-api-docs.mjs --check", {
-        dependsOn: ["build:napi"],
-      }),
       "dev:playground": uncachedTask("vp run --filter ./examples/playground dev"),
       "workspace:dev": uncachedTask(
         [
