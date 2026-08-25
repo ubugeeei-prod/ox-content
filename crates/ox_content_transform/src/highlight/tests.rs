@@ -6,7 +6,7 @@ fn merges_annotation_metadata_into_highlighted_html() {
 <span class="line ox-code-line ox-code-line--warning" data-line="2">const second = 2;</span>
 <span class="line ox-code-line ox-code-line--error" data-line="3">throw new Error("boom");</span>
 </code></pre><p>After</p>"#;
-    let highlighted = r#"<p>Before</p><pre class="shiki github-dark" style="background-color:#24292e;color:#e1e4e8" tabindex="0"><code><span class="line"><span style="color:#E1E4E8">const first = 1;</span></span>
+    let highlighted = r#"<p>Before</p><pre class="ox-highlight github-dark" style="background-color:#24292e;color:#e1e4e8" tabindex="0"><code><span class="line"><span style="color:#E1E4E8">const first = 1;</span></span>
 <span class="line"><span style="color:#E1E4E8">const second = 2;</span></span>
 <span class="line"><span style="color:#E1E4E8">throw new Error("boom");</span></span>
 </code></pre><p>After</p>"#;
@@ -20,7 +20,7 @@ fn merges_annotation_metadata_into_highlighted_html() {
 fn preserves_language_metadata_for_non_annotated_code_blocks() {
     let original = r#"<pre><code class="language-rs">fn main() {}
 </code></pre>"#;
-    let highlighted = r#"<pre class="shiki github-dark" style="background-color:#24292e;color:#e1e4e8" tabindex="0"><code><span class="line"><span style="color:#E1E4E8">fn main() {}</span></span>
+    let highlighted = r#"<pre class="ox-highlight github-dark" style="background-color:#24292e;color:#e1e4e8" tabindex="0"><code><span class="line"><span style="color:#E1E4E8">fn main() {}</span></span>
 </code></pre>"#;
 
     let merged = merge_highlighted_code_blocks(original, highlighted);
@@ -84,7 +84,7 @@ fn recovers_the_source_of_a_member_type_that_cross_references_another() {
     );
 
     assert!(result.skipped.is_empty());
-    assert!(result.html.contains("shiki-inline"));
+    assert!(result.html.contains("ox-highlight-inline"));
 }
 
 #[test]
@@ -126,11 +126,11 @@ fn splices_the_callers_highlighting_back_over_a_pending_block() {
     let html = "<pre><code class=\"language-vue\">x</code></pre>";
     let merged = super::apply_pending_highlights(
         html,
-        &["<pre class=\"shiki\"><code><span>x</span></code></pre>".to_string()],
+        &["<pre class=\"ox-highlight\"><code><span>x</span></code></pre>".to_string()],
         |lang| lang != "vue",
     );
 
-    assert!(merged.contains("shiki"));
+    assert!(merged.contains("ox-highlight"));
     assert!(merged.contains("<span>x</span>"));
     assert!(merged.contains("data-language=\"vue\""));
 }
@@ -141,11 +141,11 @@ fn leaves_the_blocks_it_already_highlighted_out_of_the_second_pass() {
     // what it claims and lists the rest, and the second must walk to the same
     // elements in the same order. Touching a claimed one would consume a
     // replacement meant for a later block and shift every one after it.
-    let html = "<pre class=\"shiki\"><code class=\"language-ts\"><span>done</span></code></pre>\n\
+    let html = "<pre class=\"ox-highlight\"><code class=\"language-ts\"><span>done</span></code></pre>\n\
                 <pre><code class=\"language-vue\">x</code></pre>";
     let merged = super::apply_pending_highlights(
         html,
-        &["<pre class=\"shiki\"><code><span>vue</span></code></pre>".to_string()],
+        &["<pre class=\"ox-highlight\"><code><span>vue</span></code></pre>".to_string()],
         |lang| lang != "vue",
     );
 
@@ -165,7 +165,7 @@ fn gives_a_pending_block_its_language_even_when_nothing_could_highlight_it() {
 
     assert!(merged.contains("<pre data-language=\"mermaid\">"));
     assert!(merged.contains("flowchart LR"));
-    assert!(!merged.contains("shiki"));
+    assert!(!merged.contains("ox-highlight"));
 }
 
 #[test]
@@ -177,7 +177,7 @@ fn highlights_an_inline_element_without_giving_it_a_block_wrapper() {
         |code, _| {
             assert_eq!(code, "a: string");
             Some(
-                "<pre class=\"shiki\"><code class=\"language-ts\"><span>a</span></code></pre>"
+                "<pre class=\"ox-highlight\"><code class=\"language-ts\"><span>a</span></code></pre>"
                     .to_string(),
             )
         },
@@ -185,8 +185,8 @@ fn highlights_an_inline_element_without_giving_it_a_block_wrapper() {
 
     assert!(result.skipped.is_empty());
     assert!(!result.html.contains("<pre"), "inline code must not gain a block wrapper");
-    assert!(result.html.contains("shiki-inline"));
-    assert!(result.html.contains("class=\"sig language-ts shiki-inline\""));
+    assert!(result.html.contains("ox-highlight-inline"));
+    assert!(result.html.contains("class=\"sig language-ts ox-highlight-inline\""));
     assert!(result.html.contains("data-language=\"ts\""));
     assert!(result.html.contains("<span>a</span>"));
 }
@@ -240,8 +240,8 @@ fn keeps_each_element_of_a_repeated_snippet_on_its_own_classes() {
         |_, _| Some("<pre><code><span>t</span></code></pre>".to_string()),
     );
 
-    assert!(result.html.contains("class=\"first language-ts shiki-inline\""));
-    assert!(result.html.contains("class=\"second language-ts shiki-inline\""));
+    assert!(result.html.contains("class=\"first language-ts ox-highlight-inline\""));
+    assert!(result.html.contains("class=\"second language-ts ox-highlight-inline\""));
 }
 
 #[test]

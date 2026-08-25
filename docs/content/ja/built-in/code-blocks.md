@@ -38,10 +38,10 @@ export default {
 };
 ```
 
-トークン色は `<pre class="shiki css-variables">` 上の
-`--octc-shiki-*` CSS カスタムプロパティです。これらの名前は歴史的です。ハイライトは
-tree-sitter のみですが、`@ox-content/theme-color-*` パッケージはいまでも
-同じ変数を解決します。カラースキームがなければプロパティは GitHub
+トークン色は `<pre class="ox-highlight css-variables">` 上の
+`--octc-syntax-*` CSS カスタムプロパティです。ハイライトは
+tree-sitter のみで、`@ox-content/theme-color-*` パッケージが
+これらの変数を解決します。カラースキームがなければプロパティは GitHub
 Dark にフォールバックします。ハイライトのあと、コードブロックメタデータ（注釈、行番号）は
 ネイティブ出力へ戻しマージされます。
 

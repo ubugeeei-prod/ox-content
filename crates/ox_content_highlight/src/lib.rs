@@ -2,19 +2,19 @@
 //!
 //! This replaces a TextMate-grammar highlighter whose regex engine, not its
 //! host language, was the bottleneck: on the documentation corpus's 176
-//! TypeScript blocks (44 KB) Shiki takes 63 ms and a native TextMate engine
-//! takes 66 ms, while tree-sitter takes **6 ms**. Parsing once and walking the
-//! tree beats matching Oniguruma patterns line by line by an order of
-//! magnitude, and it is why this crate exists.
+//! TypeScript blocks (44 KB) a TextMate highlighter takes about 63–66 ms,
+//! while tree-sitter takes **6 ms**. Parsing once and walking the tree beats
+//! matching Oniguruma patterns line by line by an order of magnitude, and it
+//! is why this crate exists.
 //!
-//! The emitted markup is deliberately unchanged from the previous highlighter:
-//! `<pre class="shiki css-variables">` with `--octc-shiki-*` custom properties,
-//! so existing themes and the code-annotation transforms keep working.
+//! The emitted markup is `<pre class="ox-highlight css-variables">` with
+//! `--octc-syntax-*` custom properties, so theme-color packages and the
+//! code-annotation transforms keep working.
 //!
 //! ```
 //! let html = ox_content_highlight::highlight_to_html("const a = 1;", "ts")
 //!     .expect("typescript is supported");
-//! assert!(html.starts_with("<pre class=\"shiki css-variables\""));
+//! assert!(html.starts_with("<pre class=\"ox-highlight css-variables\""));
 //! ```
 
 mod languages;

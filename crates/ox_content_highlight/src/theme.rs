@@ -1,10 +1,10 @@
 //! Mapping from tree-sitter capture names to the renderer's CSS variables.
 //!
-//! The emitted colors are `--octc-shiki-*` custom properties with a baked-in
-//! GitHub Dark fallback, the same contract the previous highlighter used. That
-//! is what lets one build serve both light and dark: the HTML is generated
-//! once and the properties resolve per color scheme. Keeping the variable
-//! names means every `@ox-content/theme-color-*` package keeps working.
+//! The emitted colors are `--octc-syntax-*` custom properties with a baked-in
+//! GitHub Dark fallback. That is what lets one build serve both light and
+//! dark: the HTML is generated once and the properties resolve per color
+//! scheme. Every `@ox-content/theme-color-*` package defines the matching
+//! `syntax-*` tokens.
 
 /// Capture names requested from every grammar, in priority order.
 ///
@@ -47,7 +47,7 @@ pub const CAPTURE_NAMES: &[&str] = &[
     "variable.parameter",
 ];
 
-/// One CSS variable: its `--octc-shiki-` suffix and the fallback color.
+/// One CSS variable: its `--octc-syntax-` suffix and the fallback color.
 #[derive(Clone, Copy, PartialEq, Eq)]
 pub struct Token {
     pub name: &'static str,
@@ -92,9 +92,9 @@ pub fn token_for(capture: &str) -> Option<Token> {
     })
 }
 
-/// Writes `color:var(--octc-shiki-NAME, FALLBACK)` into `out`.
+/// Writes `color:var(--octc-syntax-NAME, FALLBACK)` into `out`.
 pub fn push_color(out: &mut String, token: Token) {
-    out.push_str("color:var(--octc-shiki-");
+    out.push_str("color:var(--octc-syntax-");
     out.push_str(token.name);
     out.push_str(", ");
     out.push_str(token.fallback);

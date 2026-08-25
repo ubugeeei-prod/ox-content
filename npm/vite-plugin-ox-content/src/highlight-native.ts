@@ -42,8 +42,8 @@ export function normalizeClassName(className: unknown): string[] {
  * Highlights with the native tree-sitter engine, or `null` when it has no
  * grammar for `lang`.
  *
- * It emits `--octc-shiki-*` markup (the `shiki` prefix is historical) so
- * theme-color packages keep working.
+ * It emits `--octc-syntax-*` markup so theme-color packages resolve token
+ * colors.
  */
 export function highlightNatively(code: string, lang: string): string | null {
   try {

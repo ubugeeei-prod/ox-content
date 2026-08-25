@@ -136,10 +136,10 @@ describe("builtin embed input hardening", () => {
         }),
       );
 
-      expect(result.html).toContain("shiki");
+      expect(result.html).toContain("ox-highlight");
       expect(result.html).toContain("ox-github-code-block");
       expect(result.html).toContain('data-line-number="2"');
-      expect(result.html).toMatch(/--octc-shiki-/);
+      expect(result.html).toMatch(/--octc-syntax-/);
     } finally {
       globalThis.fetch = originalFetch;
     }

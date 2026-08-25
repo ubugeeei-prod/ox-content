@@ -64,7 +64,7 @@ const SELF_CLOSING_EMBED_TAG =
 
 /**
  * Custom embed tags are not HTML void elements, so a self-closing authoring
- * form like `<GitHub ... />` reaches the HTML re-parsers (Shiki highlighting,
+ * form like `<GitHub ... />` reaches the HTML re-parsers (syntax highlighting,
  * embed transforms) as an unclosed element that swallows the rest of the
  * document. Normalize to an explicit open/close pair before any rehype pass
  * runs.

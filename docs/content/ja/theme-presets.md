@@ -185,7 +185,7 @@ theme: [
 
 ## シンタックスハイライト
 
-ハイライトは両モードで配色に従い、追加設定は不要です。ネイティブ tree-sitter ハイライターはトークン色を `--octc-shiki-*` カスタムプロパティとして出します（`shiki` プレフィックスは歴史的です）。各配色がモードごとに定義するので、1 ビルドで 2 パレットです。
+ハイライトは両モードで配色に従い、追加設定は不要です。ネイティブ tree-sitter ハイライターはトークン色を `--octc-syntax-*` カスタムプロパティとして出します。各配色がモードごとに定義するので、1 ビルドで 2 パレットです。
 
 配色はページ背景ではなく **コード背景** に対してシンタックス色を選びます。いくつかのライト配色（`mono`、`snow`、`nord`、`retro`、`monokai`、`poimandres`、`synthwave`）は、ライトモードでも意図して暗いコードブロックを残します。固定テーマだと暗いトークン色が乗って読めなくなります。
 
@@ -194,7 +194,7 @@ theme: [
 他のトークンと同じように、個別トークンを上書きできます。
 
 ```ts
-theme: [pixel, tokyoNight, { darkTokens: { "shiki-token-comment": "#5a6a8a" } }];
+theme: [pixel, tokyoNight, { darkTokens: { "syntax-token-comment": "#5a6a8a" } }];
 ```
 
 ## モーション
@@ -276,7 +276,7 @@ theme: [
 ### 互換性
 
 - **ライトとダーク。** 配色は `colors` と `darkColors` の両方を持つ `ThemeConfig`（default または named）を export する必要があります。必須パレットキー: `primary`、`background`、`text`、`textMuted`、`border`、`codeBackground`、`codeText`。カタログ配色は `primaryHover` と `backgroundAlt` も載せます。
-- **必須シンタックストークン。** 配色は `tokens` と `darkTokens` の下に、歴史的ハイライタートークンを定義する必要があります。少なくとも `shiki-foreground`、`shiki-background`、いくつかの `shiki-token-*` キー。既存サイトが動き続けるよう、`--octc-shiki-*` 名を保ってください（`shiki` プレフィックスは歴史的です）。
+- **必須シンタックストークン。** 配色は `tokens` と `darkTokens` の下に、ハイライタートークンを定義する必要があります。少なくとも `syntax-foreground`、`syntax-background`、いくつかの `syntax-token-*` キー。これらは `@ox-content/theme-color-*` パッケージが解決する `--octc-syntax-*` カスタムプロパティになります。
 - **スキンは色をハードコードしてはいけない。** スキンが持つのは形であり、パレットではありません。`ThemeConfig.colors` / `darkColors` に hex や rgb を置かないでください。CSS 変数と、色フィールドの省略は構いません。`css` では `--octc-color-*` と `--octc-accent-*` を参照し、色合いには `color-mix()` を使います。奥行きのための中立の黒 / 白アルファは構いません。
 - **左から右へ合成。** `ssg.theme` にレイヤーを配列で並べます。オブジェクトフィールドはキー単位にマージし、`css` と `js` は連結します。後のレイヤーが勝ちます。
 - **スクリーンショット。** 上のギャラリー向けに、スキン（または代表的な組み合わせ）のスクリーンショットを含めてください。

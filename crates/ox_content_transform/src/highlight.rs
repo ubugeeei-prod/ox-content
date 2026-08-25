@@ -181,14 +181,14 @@ fn find_highlighted_code(block: &str) -> Option<HighlightedCode<'_>> {
 /// highlighter, of which only the inner markup of its `<code>` is kept: the
 /// element being replaced is inline, so it must not gain a block wrapper. The
 /// original element keeps its own attributes and class order, with the
-/// highlighter's classes and the `shiki-inline` marker merged in after them,
-/// which is the same shape the rehype pass produced.
+/// highlighter's classes and the `ox-highlight-inline` marker merged in after
+/// them, which is the same shape the rehype pass produced.
 fn merge_highlighted_inline_code(original_code: &str, highlighted_block: &str) -> Option<String> {
     let highlighted = find_highlighted_code(highlighted_block)?;
     let mut tag = find_next_start_tag(original_code, 0)?.tag;
 
     tag.merge_class_names(&highlighted.classes);
-    tag.merge_class_names(std::slice::from_ref(&String::from("shiki-inline")));
+    tag.merge_class_names(std::slice::from_ref(&String::from("ox-highlight-inline")));
 
     let language = tag
         .class_names()

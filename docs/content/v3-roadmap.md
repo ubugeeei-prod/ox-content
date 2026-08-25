@@ -31,8 +31,9 @@ Also tracked elsewhere and not duplicated here:
 - Built-ins and Code Play do **not** turn on just because the major version
   changed. Each still needs an explicit install or option.
 
-Syntax token CSS (`--octc-shiki-*`, `class="shiki"`) stays so published color
-packages keep working. Those names are historical.
+Syntax token CSS uses `--octc-syntax-*` custom properties on
+`<pre class="ox-highlight css-variables">`. Color packages define the matching
+`syntax-*` tokens.
 
 ## Built-ins
 

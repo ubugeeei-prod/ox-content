@@ -1,6 +1,6 @@
 //! Turns a tree-sitter highlight event stream into HTML.
 //!
-//! The markup matches what the renderer emitted before: a `<pre class="shiki
+//! The markup is a `<pre class="ox-highlight
 //! css-variables">` carrying the background and foreground colors, a `<code>`,
 //! and one `<span class="line">` per line whose runs are `<span
 //! style="color:var(...)">`. Downstream CSS, the code-annotation transforms and
@@ -35,7 +35,7 @@ impl Writer {
     fn new(capacity: usize) -> Self {
         let mut out = String::with_capacity(capacity);
         out.push_str(
-            "<pre class=\"shiki css-variables\" style=\"background-color:var(--octc-shiki-",
+            "<pre class=\"ox-highlight css-variables\" style=\"background-color:var(--octc-syntax-",
         );
         out.push_str(BACKGROUND.name);
         out.push_str(", ");

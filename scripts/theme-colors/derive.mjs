@@ -126,19 +126,19 @@ function tokensFor(c, other, mode) {
     "accent-warm-ink": ensureContrast(c.yellow, c.bg, 4.5),
     "accent-cool-ink": ensureContrast(c.blue, c.bg, 4.5),
     "accent-coral-ink": ensureContrast(c.red, c.bg, 4.5),
-    // Shiki renders through `createCssVariablesTheme`, so syntax colors are
-    // just custom properties and follow the scheme with no extra config.
-    "shiki-foreground": c.codeText,
-    "shiki-background": c.codeBg,
-    "shiki-token-comment": mix(c.codeText, 55, c.codeBg),
-    "shiki-token-punctuation": mix(c.codeText, 72, c.codeBg),
-    "shiki-token-keyword": code.magenta,
-    "shiki-token-string": code.green,
-    "shiki-token-string-expression": code.green,
-    "shiki-token-constant": code.yellow,
-    "shiki-token-function": code.blue,
-    "shiki-token-parameter": code.red,
-    "shiki-token-link": code.cyan,
+    // Syntax colors are custom properties so they follow the scheme with no
+    // extra highlighter config.
+    "syntax-foreground": c.codeText,
+    "syntax-background": c.codeBg,
+    "syntax-token-comment": mix(c.codeText, 55, c.codeBg),
+    "syntax-token-punctuation": mix(c.codeText, 72, c.codeBg),
+    "syntax-token-keyword": code.magenta,
+    "syntax-token-string": code.green,
+    "syntax-token-string-expression": code.green,
+    "syntax-token-constant": code.yellow,
+    "syntax-token-function": code.blue,
+    "syntax-token-parameter": code.red,
+    "syntax-token-link": code.cyan,
   };
 }
 

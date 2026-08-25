@@ -38,12 +38,12 @@ export default {
 };
 ```
 
-Token colors are `--octc-shiki-*` CSS custom properties on
-`<pre class="shiki css-variables">`. Those names are historical: highlighting
-is tree-sitter only, but `@ox-content/theme-color-*` packages still resolve
-the same variables. Without a color scheme the properties fall back to GitHub
-Dark. After highlighting, code block metadata (annotations, line numbers) is
-merged back into the native output.
+Token colors are `--octc-syntax-*` CSS custom properties on
+`<pre class="ox-highlight css-variables">`. Highlighting is tree-sitter only,
+and `@ox-content/theme-color-*` packages resolve those variables. Without a
+color scheme the properties fall back to GitHub Dark. After highlighting, code
+block metadata (annotations, line numbers) is merged back into the native
+output.
 
 ## Code Annotations
 

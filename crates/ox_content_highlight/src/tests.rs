@@ -29,7 +29,7 @@ fn language_matching_ignores_case() {
 #[test]
 fn wraps_the_block_the_way_the_theme_expects() {
     let html = highlight_to_html("const a = 1;\n", "ts").expect("supported");
-    assert!(html.starts_with("<pre class=\"shiki css-variables\" style=\"background-color:var(--octc-shiki-background, #0d1117);color:var(--octc-shiki-foreground, #e6edf3)\" tabindex=\"0\"><code>"));
+    assert!(html.starts_with("<pre class=\"ox-highlight css-variables\" style=\"background-color:var(--octc-syntax-background, #0d1117);color:var(--octc-syntax-foreground, #e6edf3)\" tabindex=\"0\"><code>"));
     assert!(html.ends_with("</code></pre>"));
     assert!(html.contains("<span class=\"line\">"));
 }
@@ -37,8 +37,8 @@ fn wraps_the_block_the_way_the_theme_expects() {
 #[test]
 fn keywords_and_comments_get_their_own_variables() {
     let html = highlight_to_html("// note\nconst a = 1;\n", "ts").expect("supported");
-    assert!(html.contains("--octc-shiki-token-comment"), "{html}");
-    assert!(html.contains("--octc-shiki-token-keyword"), "{html}");
+    assert!(html.contains("--octc-syntax-token-comment"), "{html}");
+    assert!(html.contains("--octc-syntax-token-keyword"), "{html}");
 }
 
 #[test]
@@ -132,11 +132,11 @@ fn markdown_highlights_block_and_inline_syntax() {
             .expect("supported");
 
     // Block grammar: the heading.
-    assert!(html.contains("--octc-shiki-token-function"), "heading: {html}");
+    assert!(html.contains("--octc-syntax-token-function"), "heading: {html}");
     // Inline grammar, reachable only through the injection.
-    assert!(html.contains("--octc-shiki-token-constant"), "emphasis: {html}");
-    assert!(html.contains("--octc-shiki-token-string"), "code span: {html}");
-    assert!(html.contains("--octc-shiki-token-link"), "link: {html}");
+    assert!(html.contains("--octc-syntax-token-constant"), "emphasis: {html}");
+    assert!(html.contains("--octc-syntax-token-string"), "code span: {html}");
+    assert!(html.contains("--octc-syntax-token-link"), "link: {html}");
 }
 
 #[test]
@@ -145,7 +145,7 @@ fn markdown_highlights_a_fenced_block_in_its_own_language() {
     // so resolving injections by canonical name only would leave this plain.
     let html = highlight_to_html("```ts\nconst a = 1;\n```\n", "md").expect("supported");
 
-    assert!(html.contains("--octc-shiki-token-keyword"), "{html}");
+    assert!(html.contains("--octc-syntax-token-keyword"), "{html}");
 }
 
 #[test]
@@ -158,10 +158,10 @@ fn plain_text_renders_without_tokenizing() {
     }
 
     let html = highlight_to_html("a < b\nline two\n", "text").expect("supported");
-    assert!(html.starts_with("<pre class=\"shiki css-variables\""), "{html}");
+    assert!(html.starts_with("<pre class=\"ox-highlight css-variables\""), "{html}");
     assert!(html.contains("&lt;"), "{html}");
     // Nothing is tokenized, so no token variable may appear.
-    assert!(!html.contains("--octc-shiki-token-"), "{html}");
+    assert!(!html.contains("--octc-syntax-token-"), "{html}");
     assert_eq!(html.matches("<span class=\"line\">").count(), 3, "{html}");
 }
 
@@ -178,6 +178,6 @@ fn empty_input_produces_a_well_formed_block() {
     let html = highlight_to_html("", "ts").expect("supported");
     assert_eq!(
         html,
-        "<pre class=\"shiki css-variables\" style=\"background-color:var(--octc-shiki-background, #0d1117);color:var(--octc-shiki-foreground, #e6edf3)\" tabindex=\"0\"><code><span class=\"line\"></span></code></pre>"
+        "<pre class=\"ox-highlight css-variables\" style=\"background-color:var(--octc-syntax-background, #0d1117);color:var(--octc-syntax-foreground, #e6edf3)\" tabindex=\"0\"><code><span class=\"line\"></span></code></pre>"
     );
 }

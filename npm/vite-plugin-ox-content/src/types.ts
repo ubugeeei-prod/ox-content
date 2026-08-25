@@ -1372,9 +1372,9 @@ export interface OxContentOptions {
    * Enable syntax highlighting for code blocks.
    *
    * When true, fenced and language-tagged inline code is highlighted with the
-   * native tree-sitter engine. Token colors are `--octc-shiki-*` custom
-   * properties (the `shiki` prefix is historical) so theme-color packages keep
-   * working. Languages with no native grammar stay unhighlighted.
+   * native tree-sitter engine. Token colors are `--octc-syntax-*` custom
+   * properties so theme-color packages resolve highlighting. Languages with no
+   * native grammar stay unhighlighted.
    *
    * @default false
    */

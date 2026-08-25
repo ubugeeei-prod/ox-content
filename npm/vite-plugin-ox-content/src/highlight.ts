@@ -1,8 +1,8 @@
 /**
  * Syntax highlighting with the native tree-sitter engine.
  *
- * Markup keeps the historical `<pre class="shiki css-variables">` wrapper and
- * `--octc-shiki-*` custom properties so theme-color packages keep working.
+ * Markup uses `<pre class="ox-highlight css-variables">` and `--octc-syntax-*`
+ * custom properties so theme-color packages resolve token colors.
  */
 
 import { unified } from "unified";
@@ -84,7 +84,7 @@ function rehypeNativeHighlight() {
             highlightedCode.properties ??= {};
             const highlightedClasses = normalizeClassName(highlightedCode.properties.className);
             highlightedCode.properties.className = [
-              ...new Set([...originalCodeClasses, ...highlightedClasses, "shiki-inline"]),
+              ...new Set([...originalCodeClasses, ...highlightedClasses, "ox-highlight-inline"]),
             ];
             highlightedCode.properties["data-language"] = lang;
             return highlightedCode;
@@ -111,7 +111,7 @@ function rehypeNativeHighlight() {
           );
 
           const alreadyHighlighted = normalizeClassName(child.properties?.className).includes(
-            "shiki",
+            "ox-highlight",
           );
 
           if (codeElement && !alreadyHighlighted) {

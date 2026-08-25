@@ -129,9 +129,9 @@ const featuresHtml = FEATURES.map(
     `<div class="feature-card"><div class="feature-body"><h3 class="feature-title">${t}</h3><p class="feature-details">${d}</p></div></div>`,
 ).join("");
 
-// Uses the same --octc-shiki-* properties the real pipeline emits, so the
+// Uses the same --octc-syntax-* properties the real pipeline emits, so the
 // preview shows the scheme's actual syntax colours rather than a stand-in.
-const tok = (name, text) => `<span style="color:var(--octc-shiki-${name})">${text}</span>`;
+const tok = (name, text) => `<span style="color:var(--octc-syntax-${name})">${text}</span>`;
 const CODE = [
   `${tok("token-keyword", "import")} { oxContent } ${tok("token-keyword", "from")} ${tok("token-string-expression", '"@ox-content/vite-plugin"')};`,
   `${tok("token-keyword", "import")} ${tok("token-constant", "pixel")} ${tok("token-keyword", "from")} ${tok("token-string-expression", '"@ox-content/theme-pixel"')};`,

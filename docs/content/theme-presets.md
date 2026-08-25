@@ -202,8 +202,8 @@ toggle switches between them with no extra configuration.
 
 Highlighting follows the color scheme in both modes, with no extra
 configuration. The native tree-sitter highlighter emits token colors as
-`--octc-shiki-*` custom properties (the `shiki` prefix is historical) and each
-scheme defines them per mode — one build, two palettes.
+`--octc-syntax-*` custom properties and each scheme defines them per mode —
+one build, two palettes.
 
 Schemes pick syntax colors against the **code background**, not the page
 background. Several light schemes (`mono`, `snow`, `nord`, `retro`, `monokai`,
@@ -215,7 +215,7 @@ With no scheme installed the properties fall back to GitHub Dark.
 Override individual tokens like any other token:
 
 ```ts
-theme: [pixel, tokyoNight, { darkTokens: { "shiki-token-comment": "#5a6a8a" } }];
+theme: [pixel, tokyoNight, { darkTokens: { "syntax-token-comment": "#5a6a8a" } }];
 ```
 
 ## Motion
@@ -326,11 +326,10 @@ layer.
   `primary`, `background`, `text`, `textMuted`, `border`, `codeBackground`,
   and `codeText`. Catalog schemes also ship `primaryHover` and
   `backgroundAlt`.
-- **Required syntax tokens.** Schemes must define historical highlighter
-  tokens under `tokens` and `darkTokens`: at least `shiki-foreground`,
-  `shiki-background`, and several `shiki-token-*` keys. Keep the
-  `--octc-shiki-*` names (the `shiki` prefix is historical) so existing sites
-  keep working.
+- **Required syntax tokens.** Schemes must define highlighter tokens under
+  `tokens` and `darkTokens`: at least `syntax-foreground`,
+  `syntax-background`, and several `syntax-token-*` keys. These become
+  `--octc-syntax-*` custom properties that theme-color packages resolve.
 - **Skins must not hard-code colors.** A skin owns form, not palette. Do not
   put hex or rgb values in `ThemeConfig.colors` / `darkColors`. CSS variables
   and omitted color fields are allowed. In `css`, reference `--octc-color-*`

@@ -1411,8 +1411,8 @@ a:hover {
   border-radius: 0;
   word-break: normal;
 }
-.content code.shiki-inline.ox-api-entry__signature--highlighted,
-.content code.shiki-inline.ox-api-module__signature--highlighted {
+.content code.ox-highlight-inline.ox-api-entry__signature--highlighted,
+.content code.ox-highlight-inline.ox-api-module__signature--highlighted {
   display: block;
   width: 100%;
   max-width: 100%;
@@ -1425,8 +1425,8 @@ a:hover {
   overflow-y: hidden;
   -webkit-overflow-scrolling: touch;
 }
-.content code.shiki-inline.ox-api-entry__signature--highlighted .line,
-.content code.shiki-inline.ox-api-module__signature--highlighted .line {
+.content code.ox-highlight-inline.ox-api-entry__signature--highlighted .line,
+.content code.ox-highlight-inline.ox-api-module__signature--highlighted .line {
   display: block;
   width: max-content;
   min-width: 100%;
@@ -2051,8 +2051,8 @@ a:hover {
   .content .ox-api-entry__signature {
     width: 100%;
   }
-  .content code.shiki-inline.ox-api-entry__signature--highlighted,
-  .content code.shiki-inline.ox-api-module__signature--highlighted {
+  .content code.ox-highlight-inline.ox-api-entry__signature--highlighted,
+  .content code.ox-highlight-inline.ox-api-module__signature--highlighted {
     padding: 0.5rem 0.65rem !important;
     border-radius: 8px !important;
     font-size: 0.82rem !important;

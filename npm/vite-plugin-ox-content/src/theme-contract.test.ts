@@ -19,7 +19,7 @@ const PALETTE_KEYS = [
   "codeText",
 ] as const;
 
-const SHIKI_BASE = ["shiki-foreground", "shiki-background"] as const;
+const SYNTAX_BASE = ["syntax-foreground", "syntax-background"] as const;
 const HARD_CODED_COLOR = /#(?:[0-9a-f]{3,8})\b|\brgba?\(|\bhsla?\(/i;
 
 type PkgJson = {
@@ -156,20 +156,20 @@ describe("theme package contract", () => {
     }
   });
 
-  it("includes historical --octc-shiki-* syntax tokens on every color scheme", () => {
+  it("includes --octc-syntax-* syntax tokens on every color scheme", () => {
     for (const pkg of schemes) {
       for (const config of configsIn(pkg)) {
         for (const field of ["tokens", "darkTokens"] as const) {
           const tokens = namedObject(config, field);
           const keys = tokens ? objectKeys(tokens) : [];
           const label = `${pkg.json.name} ${field}`;
-          expect(missing(SHIKI_BASE, keys), label).toEqual([]);
+          expect(missing(SYNTAX_BASE, keys), label).toEqual([]);
           expect(
-            keys.filter((key) => key.startsWith("shiki-token-")).length,
+            keys.filter((key) => key.startsWith("syntax-token-")).length,
             label,
           ).toBeGreaterThanOrEqual(4);
-          for (const key of keys.filter((item) => item.startsWith("shiki-"))) {
-            expect(key, `${label} ${key}`).toMatch(/^shiki-(foreground|background|token-)/);
+          for (const key of keys.filter((item) => item.startsWith("syntax-"))) {
+            expect(key, `${label} ${key}`).toMatch(/^syntax-(foreground|background|token-)/);
           }
         }
       }
@@ -237,7 +237,7 @@ describe("theme package contract", () => {
     expect(page).toMatch(/official\s+catalog/i);
     expect(page).toMatch(/## Authoring a package/);
     expect(page).toMatch(/ssg\.theme/);
-    expect(page).toMatch(/--octc-shiki-\*/);
+    expect(page).toMatch(/--octc-syntax-\*/);
     expect(page).toMatch(/must not hard-code/i);
   });
 });
