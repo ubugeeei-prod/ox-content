@@ -40,7 +40,8 @@ nested lists — still renders inside each item.
    ```
 
 2. Run **build**
-   :::
+
+:::
 
 ````md
 ::: steps
@@ -52,7 +53,8 @@ nested lists — still renders inside each item.
    ```
 
 2. Run **build**
-   :::
+
+:::
 ````
 
 When enabled, the wrapper becomes `<div class="ox-steps">` with

@@ -38,7 +38,8 @@ export default {
    ```
 
 2. Run **build**
-   :::
+
+:::
 
 ````md
 ::: steps
@@ -50,7 +51,8 @@ export default {
    ```
 
 2. Run **build**
-   :::
+
+:::
 ````
 
 有効にすると、ラッパーは `<div class="ox-steps">` になり、各項目は `<ol class="ox-steps__list">` と `<li class="ox-steps__item">` になります。

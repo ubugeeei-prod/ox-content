@@ -991,7 +991,11 @@ a:hover {
   margin-bottom: 0;
 }
 .content .ox-steps {
-  margin: 1.25rem 0;
+  margin: 1.75rem 0 2rem;
+  padding: 1.1rem 1rem 1.1rem 0;
+  border: 1px solid var(--octc-color-border);
+  border-radius: 8px;
+  background: color-mix(in srgb, var(--octc-color-bg-alt) 42%, transparent);
 }
 .content .ox-steps__list {
   list-style: none;
