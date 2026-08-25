@@ -45,6 +45,7 @@ fn test_generate_html_with_theme() {
         locale_paths: vec![],
         a11y: A11y::default(),
         page_chrome: false,
+        json_ld: JsonLd::default(),
     };
 
     let html = generate_html(&page_data, &nav_groups, &config);
@@ -81,6 +82,7 @@ fn test_generate_html_with_custom_social_link() {
         locale_paths: vec![],
         a11y: A11y::default(),
         page_chrome: false,
+        json_ld: JsonLd::default(),
         theme: Some(ThemeConfig {
             social_links: Some(SocialLinks {
                 links: Some(vec![SocialLink {

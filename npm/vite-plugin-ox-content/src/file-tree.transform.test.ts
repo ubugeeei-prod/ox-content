@@ -43,6 +43,7 @@ function createResolvedOptions(overrides: Partial<ResolvedOptions> = {}): Resolv
       lastUpdated: false,
       pagination: false,
       breadcrumbs: false,
+      jsonLd: false,
       readerChrome: false,
       localeSwitcher: false,
       a11y: false,

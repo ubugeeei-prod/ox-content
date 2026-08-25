@@ -416,6 +416,9 @@ async function renderPage(
     options.ssg.a11y,
     options.ssg.team ?? { enabled: false, members: [] },
     options.ssg.pageChrome,
+    undefined,
+    options.ssg.jsonLd,
+    options.ssg.siteUrl,
   );
 
   // Inject Vite HMR client for live reload

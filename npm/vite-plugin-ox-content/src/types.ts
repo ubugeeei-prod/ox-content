@@ -313,6 +313,18 @@ export interface SsgOptions {
   breadcrumbs?: boolean | Record<string, unknown>;
 
   /**
+   * Emit JSON-LD structured data (`TechArticle`, `WebSite`, and optional
+   * `BreadcrumbList`) in the page `<head>`.
+   *
+   * Disabled when omitted or `false`. `true` enables the defaults. An object
+   * enables the feature and can hide BreadcrumbList or supply a publisher.
+   * Publisher fields the site does not set are not invented.
+   *
+   * @default false
+   */
+  jsonLd?: boolean | JsonLdOptions;
+
+  /**
    * Opt-in copy buttons, outbound-link icons, and a back-to-top control.
    *
    * Disabled when omitted or `false`. `true` enables all three with defaults.
@@ -499,6 +511,49 @@ export type ResolvedA11y =
     };
 
 /**
+ * Per-control flags for `ssg.jsonLd`.
+ *
+ * Omitted fields keep the defaults when the feature itself is enabled.
+ */
+export interface JsonLdOptions {
+  /**
+   * Emit `BreadcrumbList` when a visible breadcrumb trail exists.
+   *
+   * @default true
+   */
+  breadcrumbs?: boolean;
+
+  /**
+   * Optional publisher. Only configured `name` / `url` are written.
+   * Logo and other Organization fields are never invented.
+   */
+  publisher?: JsonLdPublisherOptions;
+}
+
+/**
+ * Optional JSON-LD publisher. Empty or omitted fields are left out.
+ */
+export interface JsonLdPublisherOptions {
+  /** Organization name. */
+  name?: string;
+  /** Organization URL. `javascript:` and other unsafe schemes are dropped. */
+  url?: string;
+}
+
+/**
+ * Resolved JSON-LD options. `false` means no `<script type="application/ld+json">`.
+ */
+export type ResolvedJsonLd =
+  | false
+  | {
+      breadcrumbs: boolean;
+      publisher?: {
+        name?: string;
+        url?: string;
+      };
+    };
+
+/**
  * Resolved SSG options.
  */
 export interface ResolvedSsgOptions {
@@ -517,6 +572,7 @@ export interface ResolvedSsgOptions {
   lastUpdated: boolean;
   pagination: boolean;
   breadcrumbs: boolean;
+  jsonLd: ResolvedJsonLd;
   readerChrome: ResolvedReaderChrome;
   localeSwitcher: boolean;
   a11y: ResolvedA11y;
@@ -1326,6 +1382,23 @@ export interface OxContentOptions {
   images?: boolean | ImageOptions;
 
   /**
+   * Opt-in page-bundle resources and build-time image processing.
+   *
+   * Off by default. `true` or `{}` treats each page directory as a bundle:
+   * sibling images are addressable with relative URLs. Query-string
+   * resize/crop/format transforms run at build time and are cached by
+   * source mtime plus transform params. Paths that leave the page
+   * directory or `srcDir` are rejected. Missing sources fail the build
+   * when `missing` is `"error"` (the default when enabled).
+   *
+   * This is separate from `images`, which only adds figures, captions,
+   * and lazy-loading.
+   *
+   * @default false
+   */
+  resources?: boolean | ResourcesOptions;
+
+  /**
    * Import source snippets into fences with `<<< @/path/to/file.ts{region}`.
    *
    * This is useful for documentation that must stay synchronized with examples
@@ -1428,6 +1501,17 @@ export interface OxContentOptions {
    * @default false
    */
   codeBlockTypecheck?: boolean | CodeBlockTypecheckOptions;
+
+  /**
+   * Attach build-time TypeScript hover overlays to opted-in fences.
+   *
+   * Off by default. `true` or `{}` enables the feature. Only `ts` / `tsx`
+   * fences tagged `twoslash` receive payloads. Types are generated during
+   * the Markdown transform; no TypeScript compiler is shipped to the browser.
+   *
+   * @default false
+   */
+  typedHover?: boolean | TypedHoverOptions;
 
   /**
    * Extract runnable fenced examples for Vitest docs-as-tests harnesses.
@@ -1560,6 +1644,7 @@ export interface ResolvedOptions {
   pwa?: ResolvedPwaOptions;
   taxonomies?: ResolvedTaxonomiesOptions;
   versions?: ResolvedVersionsOptions;
+  resources?: ResolvedResourcesOptions;
   gfm: boolean;
   mdx?: boolean;
   footnotes: boolean;
@@ -1585,6 +1670,10 @@ export interface ResolvedOptions {
   cjkEmphasis: boolean;
   codeBlockLint: ResolvedCodeBlockLintOptions;
   codeBlockTypecheck: ResolvedCodeBlockTypecheckOptions;
+  /**
+   * Present after `resolveOptions`. Omitted in hand-built fixtures means off.
+   */
+  typedHover?: ResolvedTypedHoverOptions;
   docsTests: ResolvedDocsTestOptions;
   mermaid: boolean;
   math: ResolvedMathOptions;
@@ -1763,6 +1852,47 @@ export interface ImageOptions {
 export interface ResolvedImageOptions {
   enabled: boolean;
   lazy: boolean;
+}
+
+/**
+ * Options for opt-in page-bundle resources and image processing.
+ */
+export interface ResourcesOptions {
+  /**
+   * Allowed output formats for `?format=`.
+   *
+   * `jpg` is treated as `jpeg`. Pixel transforms encode `png` and `jpeg`.
+   * `webp` is copied when the source is already webp and no pixel
+   * transform is requested.
+   *
+   * @default ["png", "jpeg", "webp"]
+   */
+  formats?: string[];
+
+  /**
+   * Allowed `?width=` / `?w=` values. An empty list allows any positive
+   * width.
+   *
+   * @default []
+   */
+  widths?: number[];
+
+  /**
+   * What to do when a relative resource is missing.
+   *
+   * @default "error"
+   */
+  missing?: "error" | "warn";
+}
+
+/**
+ * Resolved page-resource options.
+ */
+export interface ResolvedResourcesOptions {
+  enabled: boolean;
+  formats: string[];
+  widths: number[];
+  missing: "error" | "warn";
 }
 
 /**
@@ -2199,6 +2329,47 @@ export interface ResolvedCodeBlockTypecheckOptions {
   requireMeta: boolean;
   tsgoCommand: string;
   mode: "warn" | "error";
+}
+
+/**
+ * Options for opt-in typed hover overlays on TypeScript fences.
+ *
+ * Hover strings are computed at build time with the same TypeScript compiler
+ * family used by `codeBlockTypecheck` (`tsgo` / `typescript`). The browser
+ * only receives JSON payloads and a tiny overlay script.
+ */
+export interface TypedHoverOptions {
+  /**
+   * Enable typed hover overlays.
+   *
+   * @default true when the object form is used
+   */
+  enabled?: boolean;
+
+  /**
+   * Fence languages that can receive hover payloads.
+   *
+   * Language names are compared case-insensitively.
+   *
+   * @default ['ts', 'tsx']
+   */
+  languages?: string[];
+
+  /**
+   * Path to the `tsgo` binary used to compute hover types.
+   *
+   * When omitted, the bundled `@typescript/native-preview` executable is used.
+   */
+  tsgoCommand?: string;
+}
+
+/**
+ * Resolved typed-hover options.
+ */
+export interface ResolvedTypedHoverOptions {
+  enabled: boolean;
+  languages: string[];
+  tsgoCommand?: string;
 }
 
 /**

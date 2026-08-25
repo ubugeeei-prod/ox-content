@@ -3,6 +3,7 @@ use serde::{Deserialize, Serialize};
 use super::ThemeConfig;
 use super::a11y::A11y;
 use super::header_chrome::PageChromeFlags;
+use super::json_ld::JsonLd;
 use super::reader_chrome::ReaderChrome;
 
 /// Hero action button.
@@ -212,6 +213,9 @@ pub struct SsgConfig {
     /// When true, honor per-page frontmatter chrome flags. Off by default.
     #[serde(default)]
     pub page_chrome: bool,
+    /// Opt-in JSON-LD structured data. Off by default.
+    #[serde(default)]
+    pub json_ld: JsonLd,
 }
 
 /// Locale information for the locale switcher.

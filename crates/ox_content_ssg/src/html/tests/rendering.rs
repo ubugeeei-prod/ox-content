@@ -45,6 +45,7 @@ fn test_generate_html() {
         locale_paths: vec![],
         a11y: A11y::default(),
         page_chrome: false,
+        json_ld: JsonLd::default(),
     };
     let html = generate_html(&page_data, &nav_groups, &config);
 
@@ -288,6 +289,7 @@ fn test_generate_html_without_toc_omits_outline() {
         locale_paths: vec![],
         a11y: A11y::default(),
         page_chrome: false,
+        json_ld: JsonLd::default(),
     };
 
     let html = generate_html(&page_data, &[], &config);
@@ -316,6 +318,7 @@ fn test_html_locale_attrs_use_current_locale_and_direction() {
         locale_paths: vec![],
         a11y: A11y::default(),
         page_chrome: false,
+        json_ld: JsonLd::default(),
     };
 
     assert_eq!(html_locale_attrs(&config), ("ar", "rtl"));
@@ -336,7 +339,6 @@ fn test_html_locale_attrs_use_current_locale_and_direction() {
     let html = generate_html(&page_data, &[], &config);
     insta::assert_snapshot!(super::snapshot_text(&html));
 }
-
 #[test]
 fn test_generate_toc_html_escapes_entries() {
     let html = generate_toc_html(&[TocEntry {
@@ -344,6 +346,5 @@ fn test_generate_toc_html_escapes_entries() {
         text: "A <script>".to_string(),
         slug: "a\" onclick=\"alert(1)".to_string(),
     }]);
-
     insta::assert_snapshot!(super::snapshot_text(&html));
 }
