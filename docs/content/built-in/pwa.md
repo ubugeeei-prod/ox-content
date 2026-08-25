@@ -72,15 +72,15 @@ oxContent({
 });
 ```
 
-| Option            | Type                       | Default                         |
-| ----------------- | -------------------------- | ------------------------------- |
-| `pwa`             | `boolean` / `PwaOptions`   | `false`                         |
-| `offline`         | `boolean`                  | `true`                          |
-| `name`            | `string`                   | `ssg.siteName`                  |
-| `shortName`       | `string`                   | `name`                          |
-| `themeColor`      | `string`                   | `#000000`                       |
-| `backgroundColor` | `string`                   | `#ffffff`                       |
-| `startUrl`        | `string`                   | the Vite `base` (`/` or `/docs/`) |
+| Option            | Type                     | Default                           |
+| ----------------- | ------------------------ | --------------------------------- |
+| `pwa`             | `boolean` / `PwaOptions` | `false`                           |
+| `offline`         | `boolean`                | `true`                            |
+| `name`            | `string`                 | `ssg.siteName`                    |
+| `shortName`       | `string`                 | `name`                            |
+| `themeColor`      | `string`                 | `#000000`                         |
+| `backgroundColor` | `string`                 | `#ffffff`                         |
+| `startUrl`        | `string`                 | the Vite `base` (`/` or `/docs/`) |
 
 `start_url` and `scope` are base-relative site paths, not absolute origins.
 `javascript:`, protocol-relative `//`, and other non-path values fall back to
@@ -113,8 +113,7 @@ into themed pages:
 
 ```html
 <script>
-  if ("serviceWorker" in navigator)
-    navigator.serviceWorker.register("/sw.js");
+  if ("serviceWorker" in navigator) navigator.serviceWorker.register("/sw.js");
 </script>
 ```
 

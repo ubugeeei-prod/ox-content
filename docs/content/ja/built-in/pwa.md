@@ -71,15 +71,15 @@ oxContent({
 });
 ```
 
-| オプション        | 型                         | 既定                              |
-| ----------------- | -------------------------- | --------------------------------- |
-| `pwa`             | `boolean` / `PwaOptions`   | `false`                           |
-| `offline`         | `boolean`                  | `true`                            |
-| `name`            | `string`                   | `ssg.siteName`                    |
-| `shortName`       | `string`                   | `name`                            |
-| `themeColor`      | `string`                   | `#000000`                         |
-| `backgroundColor` | `string`                   | `#ffffff`                         |
-| `startUrl`        | `string`                   | Vite の `base`（`/` または `/docs/`） |
+| オプション        | 型                       | 既定                                  |
+| ----------------- | ------------------------ | ------------------------------------- |
+| `pwa`             | `boolean` / `PwaOptions` | `false`                               |
+| `offline`         | `boolean`                | `true`                                |
+| `name`            | `string`                 | `ssg.siteName`                        |
+| `shortName`       | `string`                 | `name`                                |
+| `themeColor`      | `string`                 | `#000000`                             |
+| `backgroundColor` | `string`                 | `#ffffff`                             |
+| `startUrl`        | `string`                 | Vite の `base`（`/` または `/docs/`） |
 
 `start_url` と `scope` はオリジン付き絶対 URL ではなく、サイト相対パスです。
 `javascript:`、プロトコル相対の `//`、パス以外の値は `base` に戻します。
@@ -111,8 +111,7 @@ oxContent({
 
 ```html
 <script>
-  if ("serviceWorker" in navigator)
-    navigator.serviceWorker.register("/sw.js");
+  if ("serviceWorker" in navigator) navigator.serviceWorker.register("/sw.js");
 </script>
 ```
 

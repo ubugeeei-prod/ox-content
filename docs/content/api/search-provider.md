@@ -53,6 +53,7 @@
     <code class="ox-api-entry__param-name">value</code>
     <code class="ox-api-entry__param-type">unknown</code>
   </div>
+  
 </li>
 </ul>
 </div>
@@ -60,6 +61,7 @@
 <h4>Returns</h4>
 <div class="ox-api-entry__return">
   <code class="ox-api-entry__return-type">string</code>
+  
 </div>
 </div>
   </div>
@@ -85,6 +87,7 @@
     <code class="ox-api-entry__param-name">options</code>
     <code class="ox-api-entry__param-type"><a href="./types.md#resolvedsearchoptions">ResolvedSearchOptions</a></code>
   </div>
+  
 </li>
 </ul>
 </div>
@@ -92,6 +95,7 @@
 <h4>Returns</h4>
 <div class="ox-api-entry__return">
   <code class="ox-api-entry__return-type">string</code>
+  
 </div>
 </div>
   </div>
@@ -116,6 +120,7 @@
     <code class="ox-api-entry__param-name">options</code>
     <code class="ox-api-entry__param-type">object</code>
   </div>
+  
 </li>
 </ul>
 </div>
@@ -123,6 +128,7 @@
 <h4>Returns</h4>
 <div class="ox-api-entry__return">
   <code class="ox-api-entry__return-type">boolean</code>
+  
 </div>
 </div>
   </div>
@@ -147,6 +153,7 @@
     <code class="ox-api-entry__param-name">options</code>
     <code class="ox-api-entry__param-type"><a href="./types.md#searchoptions">SearchOptions</a></code>
   </div>
+  
 </li>
 <li class="ox-api-entry__param">
   <div class="ox-api-entry__param-heading">
@@ -161,6 +168,7 @@
 <h4>Returns</h4>
 <div class="ox-api-entry__return">
   <code class="ox-api-entry__return-type">HostedSearchConfig | null</code>
+  
 </div>
 </div>
   </div>
@@ -196,8 +204,10 @@
     <code class="ox-api-entry__param-name">options</code>
     <code class="ox-api-entry__param-type"><a href="./types.md#resolvedsearchoptions">ResolvedSearchOptions</a></code>
   </div>
+  
 </li>
 </ul>
 </div>
   </div>
 </details>
+

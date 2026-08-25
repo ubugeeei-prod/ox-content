@@ -137,19 +137,19 @@ export const apiNav: NavItem[] = [
   },
   {
     "title": "Overview",
-    "path": "/api/index-module"
+    "path": "/api/index"
   },
   {
     "title": "Overview",
-    "path": "/api/island-index"
+    "path": "/api/index"
   },
   {
     "title": "Overview",
-    "path": "/api/og-image-index"
+    "path": "/api/index"
   },
   {
     "title": "Overview",
-    "path": "/api/plugins-index"
+    "path": "/api/index"
   },
   {
     "title": "Page Context",
@@ -170,6 +170,10 @@ export const apiNav: NavItem[] = [
   {
     "title": "Publish State",
     "path": "/api/publish-state"
+  },
+  {
+    "title": "Pwa",
+    "path": "/api/pwa"
   },
   {
     "title": "Redirects",
@@ -233,7 +237,7 @@ export const apiNav: NavItem[] = [
   },
   {
     "title": "Transform",
-    "path": "/api/github-transform"
+    "path": "/api/transform"
   },
   {
     "title": "Transform",
@@ -241,7 +245,7 @@ export const apiNav: NavItem[] = [
   },
   {
     "title": "Types",
-    "path": "/api/og-image-types"
+    "path": "/api/types"
   },
   {
     "title": "Types",

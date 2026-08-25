@@ -13,41 +13,41 @@ Ox Content は、よく使うドキュメントの挙動を既定で載せ、非
 
 ## 機能ガイド
 
-| ガイド                                                   | 内容                                                        |
-| -------------------------------------------------------- | ----------------------------------------------------------- |
-| [Markdown の土台](./built-in/markdown.md)                | GFM、表、タスクリスト、脚注、autolink、frontmatter、TOC     |
-| [構文拡張](./built-in/syntax-extensions.md)              | 絵文字ショートコード、Wiki リンク、属性構文、CJK 強調       |
-| [カスタムコンテナ](./built-in/containers.md)             | オプトインの `::: tip` / `::: details`                      |
-| [カード](./built-in/cards.md)                            | オプトインの `::: card` / `::: link-card` / `::: card-grid` |
-| [手順リスト](./built-in/steps.md)                        | オプトインの `::: steps`                                    |
-| [ファイル取り込み](./built-in/includes.md)               | オプトインの `<!-- @include -->`                            |
-| [ファイルツリー](./built-in/file-tree.md)                | オプトインの静的ディレクトリ図                              |
-| [インラインバッジ](./built-in/badges.md)                 | オプトインの `{badge:tip}`                                  |
-| [画像](./built-in/images.md)                             | 図、キャプション、遅延読み込み、安全な寸法                  |
-| [コードブロック](./built-in/code-blocks.md)              | ハイライト、注釈、ソース取り込み                            |
-| [埋め込み](./built-in/embeds.md)                         | GitHub / OG カード、パッケージマネージャタブ、YouTube、SNS  |
-| [Mermaid](./built-in/mermaid.md)                         | フェンスを静的 SVG に描画                                   |
-| [数式](./built-in/math.md)                               | オプトインの `$…$` / `$$…$$`                                |
-| [検索](./built-in/search.md)                             | 静的 BM25 インデックスとクライアント API                    |
-| [コレクション](./built-in/collections.md)                | Markdown を SQL 風ビルダで問い合わせ                        |
-| [品質チェック](./built-in/quality-checks.md)             | lint、型チェック、docs テスト、HTML サニタイズ              |
-| [サイト生成](./built-in/site-generation.md)              | SSG、OG 画像、編集リンク、API ドキュメント                  |
-| [前へ / 次へ](./built-in/pagination.md)                  | サイドバー順の前後リンク                                    |
-| [パンくず](./built-in/breadcrumbs.md)                    | ルートからサイドバー祖先までの道筋                          |
-| [リーダー chrome](./built-in/reader-chrome.md)           | コピー、外部リンクアイコン、先頭へ戻る                      |
-| [ロケールスイッチャー](./built-in/locale-switcher.md)    | 設定したロケールへのヘッダー導線                            |
-| [アクセシビリティ](./built-in/a11y.md)                   | スキップリンクと印刷スタイル                                |
-| [ヘッダー chrome](./built-in/header-chrome.md)           | ナビ、告知バー、ページ単位の chrome                         |
-| [Sitemap / robots / llms.txt](./built-in/site-maps.md)   | クロール用マニフェスト                                      |
-| [下書き / 非公開 / 予約公開](./built-in/drafts.md)       | frontmatter の公開状態                                      |
-| [パーマリンクと Cascade](./built-in/permalinks.md)       | 独自 URL とディレクトリ既定 frontmatter                     |
-| [リダイレクトとエイリアス](./built-in/redirects.md)      | 静的 HTML リダイレクト                                      |
-| [カスタム 404](./built-in/not-found.md)                  | テーマ付き 404                                              |
-| [RSS / Atom / JSON フィード](./built-in/feeds.md)        | コレクションからフィードを出力                              |
-| [PWA マニフェストとサービスワーカー](./built-in/pwa.md) | Web アプリマニフェストと保守的なオフラインキャッシュ（クライアント JS を追加） |
-| [タクソノミー](./built-in/taxonomies.md)                 | タグ / カテゴリの用語ページと関連ページ                     |
-| [ドキュメントのバージョン管理](./built-in/versioning.md) | プレフィックス、凍結スナップショット、切替 UI               |
-| [チーム / メンバー](./built-in/team.md)                  | `layout: team` の静的カード                                 |
+| ガイド                                                   | 内容                                                                           |
+| -------------------------------------------------------- | ------------------------------------------------------------------------------ |
+| [Markdown の土台](./built-in/markdown.md)                | GFM、表、タスクリスト、脚注、autolink、frontmatter、TOC                        |
+| [構文拡張](./built-in/syntax-extensions.md)              | 絵文字ショートコード、Wiki リンク、属性構文、CJK 強調                          |
+| [カスタムコンテナ](./built-in/containers.md)             | オプトインの `::: tip` / `::: details`                                         |
+| [カード](./built-in/cards.md)                            | オプトインの `::: card` / `::: link-card` / `::: card-grid`                    |
+| [手順リスト](./built-in/steps.md)                        | オプトインの `::: steps`                                                       |
+| [ファイル取り込み](./built-in/includes.md)               | オプトインの `<!-- @include -->`                                               |
+| [ファイルツリー](./built-in/file-tree.md)                | オプトインの静的ディレクトリ図                                                 |
+| [インラインバッジ](./built-in/badges.md)                 | オプトインの `{badge:tip}`                                                     |
+| [画像](./built-in/images.md)                             | 図、キャプション、遅延読み込み、安全な寸法                                     |
+| [コードブロック](./built-in/code-blocks.md)              | ハイライト、注釈、ソース取り込み                                               |
+| [埋め込み](./built-in/embeds.md)                         | GitHub / OG カード、パッケージマネージャタブ、YouTube、SNS                     |
+| [Mermaid](./built-in/mermaid.md)                         | フェンスを静的 SVG に描画                                                      |
+| [数式](./built-in/math.md)                               | オプトインの `$…$` / `$$…$$`                                                   |
+| [検索](./built-in/search.md)                             | 静的 BM25 インデックスとクライアント API                                       |
+| [コレクション](./built-in/collections.md)                | Markdown を SQL 風ビルダで問い合わせ                                           |
+| [品質チェック](./built-in/quality-checks.md)             | lint、型チェック、docs テスト、HTML サニタイズ                                 |
+| [サイト生成](./built-in/site-generation.md)              | SSG、OG 画像、編集リンク、API ドキュメント                                     |
+| [前へ / 次へ](./built-in/pagination.md)                  | サイドバー順の前後リンク                                                       |
+| [パンくず](./built-in/breadcrumbs.md)                    | ルートからサイドバー祖先までの道筋                                             |
+| [リーダー chrome](./built-in/reader-chrome.md)           | コピー、外部リンクアイコン、先頭へ戻る                                         |
+| [ロケールスイッチャー](./built-in/locale-switcher.md)    | 設定したロケールへのヘッダー導線                                               |
+| [アクセシビリティ](./built-in/a11y.md)                   | スキップリンクと印刷スタイル                                                   |
+| [ヘッダー chrome](./built-in/header-chrome.md)           | ナビ、告知バー、ページ単位の chrome                                            |
+| [Sitemap / robots / llms.txt](./built-in/site-maps.md)   | クロール用マニフェスト                                                         |
+| [下書き / 非公開 / 予約公開](./built-in/drafts.md)       | frontmatter の公開状態                                                         |
+| [パーマリンクと Cascade](./built-in/permalinks.md)       | 独自 URL とディレクトリ既定 frontmatter                                        |
+| [リダイレクトとエイリアス](./built-in/redirects.md)      | 静的 HTML リダイレクト                                                         |
+| [カスタム 404](./built-in/not-found.md)                  | テーマ付き 404                                                                 |
+| [RSS / Atom / JSON フィード](./built-in/feeds.md)        | コレクションからフィードを出力                                                 |
+| [PWA マニフェストとサービスワーカー](./built-in/pwa.md)  | Web アプリマニフェストと保守的なオフラインキャッシュ（クライアント JS を追加） |
+| [タクソノミー](./built-in/taxonomies.md)                 | タグ / カテゴリの用語ページと関連ページ                                        |
+| [ドキュメントのバージョン管理](./built-in/versioning.md) | プレフィックス、凍結スナップショット、切替 UI                                  |
+| [チーム / メンバー](./built-in/team.md)                  | `layout: team` の静的カード                                                    |
 
 ## 既定とオプトイン
 
@@ -88,7 +88,7 @@ Ox Content は、よく使うドキュメントの挙動を既定で載せ、非
 | リダイレクト         | `redirects`                                                                    | `false`       | [リダイレクトとエイリアス](./built-in/redirects.md)      |
 | カスタム 404         | `ssg.notFound`                                                                 | `false`       | [カスタム 404](./built-in/not-found.md)                  |
 | フィード             | `feeds`                                                                        | `false`       | [RSS / Atom / JSON フィード](./built-in/feeds.md)        |
-| PWA                  | `pwa`                                                                          | `false`       | [PWA マニフェストとサービスワーカー](./built-in/pwa.md) |
+| PWA                  | `pwa`                                                                          | `false`       | [PWA マニフェストとサービスワーカー](./built-in/pwa.md)  |
 | ドキュメント版       | `versions`                                                                     | `false`       | [ドキュメントのバージョン管理](./built-in/versioning.md) |
 | タクソノミー         | `taxonomies`                                                                   | `false`       | [タクソノミー](./built-in/taxonomies.md)                 |
 | チームページ         | `ssg.team`                                                                     | `false`       | [チーム / メンバー](./built-in/team.md)                  |
