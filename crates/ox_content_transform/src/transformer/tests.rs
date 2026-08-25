@@ -104,3 +104,32 @@ fn toc_entries_are_nested_in_rust() {
     assert_eq!(toc[0].children[0].children[0].slug, "cli");
     assert_eq!(toc[1].slug, "api");
 }
+
+#[test]
+fn hostile_user_content_returns_errors_or_html_without_aborting() {
+    use std::panic::{AssertUnwindSafe, catch_unwind};
+
+    let transformer = MarkdownTransformer::from_options(&TransformOptions {
+        gfm: Some(true),
+        frontmatter: Some(true),
+        ..Default::default()
+    });
+    let cases = [
+        "---\ntitle: [broken\n---\nBody",
+        "---\n{not: yaml\n---\n# Hi",
+        &"> ".repeat(120),
+        "*[unterminated",
+        "```\nunclosed fence",
+        "<!-- @include: ../../etc/passwd -->\n",
+    ];
+
+    for source in cases {
+        let outcome = catch_unwind(AssertUnwindSafe(|| transformer.transform(source)));
+        let result = outcome.unwrap_or_else(|_| panic!("transform aborted on {source:?}"));
+        assert!(
+            result.errors.iter().all(|error| !error.contains("panic")),
+            "unexpected panic diagnostic for {source:?}: {:?}",
+            result.errors
+        );
+    }
+}

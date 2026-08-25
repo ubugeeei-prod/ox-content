@@ -63,6 +63,17 @@
 //! let html = generate_html(&page_data, &nav_groups, &config);
 //! ```
 
+#![cfg_attr(
+    not(test),
+    deny(
+        clippy::unwrap_used,
+        clippy::expect_used,
+        clippy::panic,
+        clippy::todo,
+        clippy::unimplemented
+    )
+)]
+
 mod assets;
 mod feeds;
 mod html;
