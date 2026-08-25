@@ -1,8 +1,10 @@
 import { describe, expect, it, vi } from "vite-plus/test";
 import { readPlayPayload, runPlayAction } from "./hydrate-action";
+import { resultPanelToShow } from "./hydrate";
 import { encodePayload } from "./payload";
 import { DEFAULT_VIEWERS } from "./config";
 import { errorResult } from "./result";
+import { emptyTiming } from "./timing";
 
 describe("readPlayPayload", () => {
   it("returns undefined for malformed widgets instead of throwing", () => {
@@ -55,5 +57,62 @@ describe("runPlayAction", () => {
     expect(setBusy.mock.calls.map((call) => call[0])).toEqual([true, false]);
     expect(errors).toHaveLength(1);
     expect(errors[0]).toBeInstanceOf(Error);
+  });
+});
+
+describe("resultPanelToShow", () => {
+  const cargoProgress = [
+    "   Compiling playground v0.0.1 (/playground)",
+    "    Finished `dev` profile [unoptimized + debuginfo] target(s) in 0.77s",
+    "     Running `target/debug/playground`",
+  ].join("\n");
+
+  it("keeps successful runs on stdio even when cargo wrote progress to stderr", () => {
+    expect(
+      resultPanelToShow(
+        {
+          status: "ok",
+          stdio: [
+            { stream: "stdout", text: "hello\n", timestampMs: 0 },
+            { stream: "stderr", text: cargoProgress, timestampMs: 0 },
+          ],
+          diagnostics: [],
+          provenance: {},
+          timing: emptyTiming(),
+          stdout: "hello\n",
+          stderr: cargoProgress,
+        },
+        true,
+      ),
+    ).toBe("stdio");
+  });
+
+  it("opens stderr when the run failed or reported an error diagnostic", () => {
+    expect(
+      resultPanelToShow(
+        {
+          status: "error",
+          stdio: [{ stream: "stderr", text: "error: expected `;`", timestampMs: 0 }],
+          diagnostics: [],
+          provenance: {},
+          timing: emptyTiming(),
+          stderr: "error: expected `;`",
+        },
+        true,
+      ),
+    ).toBe("stderr");
+    expect(
+      resultPanelToShow(
+        {
+          status: "ok",
+          stdio: [],
+          diagnostics: [{ message: "unused", severity: "error", source: "rustc" }],
+          provenance: {},
+          timing: emptyTiming(),
+          stderr: cargoProgress,
+        },
+        true,
+      ),
+    ).toBe("stderr");
   });
 });

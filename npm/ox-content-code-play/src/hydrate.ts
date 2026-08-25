@@ -135,11 +135,23 @@ function paintResult(element: HTMLElement, _payload: PlayPayload, result: RunRes
   if (stderr) {
     stderr.innerHTML = renderStderrHtml(result);
   }
-  const focusStderr =
-    Boolean(stderr) &&
-    (Boolean(result.stderr) ||
-      result.diagnostics.some((diagnostic) => diagnostic.severity === "error"));
-  showPanel(element, focusStderr ? "stderr" : "stdio");
+  showPanel(element, resultPanelToShow(result, Boolean(stderr)));
+}
+
+export function resultPanelToShow(
+  result: RunResult,
+  hasStderrPanel: boolean,
+): "stderr" | "stdio" {
+  if (!hasStderrPanel) {
+    return "stdio";
+  }
+  const hasErrorDiagnostics = result.diagnostics.some(
+    (diagnostic) => diagnostic.severity === "error",
+  );
+  if (hasErrorDiagnostics || (result.status !== "ok" && Boolean(result.stderr))) {
+    return "stderr";
+  }
+  return "stdio";
 }
 
 function showPanel(element: HTMLElement, panel: string): void {
