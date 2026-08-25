@@ -14,6 +14,7 @@ use super::mpa_navigation::{MPA_NAVIGATION_CSS, THEME_BOOTSTRAP_JS, view_transit
 use super::nav::generate_nav_html;
 use super::pagination::resolve_pager;
 use super::reader_chrome::{READER_CHROME_CSS, READER_CHROME_JS, apply_reader_chrome};
+use super::section_index::SECTION_INDEX_CSS;
 use super::social::{generate_mobile_social_links_html, generate_social_links_html};
 use super::team::TEAM_CSS;
 use super::theme_css::generate_theme_css;
@@ -105,6 +106,9 @@ pub fn generate_html(page_data: &PageData, nav_groups: &[NavGroup], config: &Ssg
     }
     if page_content_contains_any(&page_data.content, &["ox-team"]) {
         css_sections.push(wrap_css_section("team", TEAM_CSS));
+    }
+    if page_content_contains_any(&page_data.content, &["ox-section-index"]) {
+        css_sections.push(wrap_css_section("section-index", SECTION_INDEX_CSS));
     }
     if has_footer {
         css_sections.push(wrap_css_section("footer", footer_css));

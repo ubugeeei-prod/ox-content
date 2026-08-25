@@ -53,6 +53,7 @@ Ox Content は、よく使うドキュメントの挙動を既定で載せ、非
 | [タクソノミー](./built-in/taxonomies.md)                 | タグ / カテゴリの用語ページと関連ページ                                        |
 | [ドキュメントのバージョン管理](./built-in/versioning.md) | プレフィックス、凍結スナップショット、切替 UI                                  |
 | [チーム / メンバー](./built-in/team.md)                  | `layout: team` の静的カード                                                    |
+| [セクション索引ページ](./built-in/section-index.md)      | `index.md` がないディレクトリ向けの生成一覧                                    |
 
 ## 既定とオプトイン
 
@@ -99,6 +100,7 @@ Ox Content は、よく使うドキュメントの挙動を既定で載せ、非
 | ドキュメント版       | `versions`                                                                                                    | `false`       | [ドキュメントのバージョン管理](./built-in/versioning.md) |
 | タクソノミー         | `taxonomies`                                                                                                  | `false`       | [タクソノミー](./built-in/taxonomies.md)                 |
 | チームページ         | `ssg.team`                                                                                                    | `false`       | [チーム / メンバー](./built-in/team.md)                  |
+| セクション索引       | `ssg.sectionIndex`                                                                                            | `false`       | [セクション索引ページ](./built-in/section-index.md)      |
 | コード検査           | `codeBlockLint`, `codeBlockTypecheck`, `docsTests`                                                            | `false`       | [品質チェック](./built-in/quality-checks.md)             |
 | 型ホバー             | `typedHover`                                                                                                  | `false`       | [型ホバー](./built-in/typed-hover.md)                    |
 | 独自パイプライン     | `transformers`                                                                                                | `[]`          | [サイト生成](./built-in/site-generation.md)              |

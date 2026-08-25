@@ -129,6 +129,22 @@ describe("resolveSsgOptions", () => {
     });
   });
 
+  it("disables sectionIndex by default", () => {
+    expect(resolveSsgOptions(undefined).sectionIndex?.enabled).toBe(false);
+    expect(resolveSsgOptions(true).sectionIndex?.enabled).toBe(false);
+  });
+
+  it("enables sectionIndex when requested", () => {
+    expect(resolveSsgOptions({ sectionIndex: true }).sectionIndex).toEqual({
+      enabled: true,
+      style: "cards",
+    });
+    expect(resolveSsgOptions({ sectionIndex: { style: "list" } }).sectionIndex).toEqual({
+      enabled: true,
+      style: "list",
+    });
+  });
+
   it("carries a theme component through", () => {
     const component = () => ({ __html: "<html></html>" });
     expect(resolveSsgOptions({ render: component }).render).toBe(component);

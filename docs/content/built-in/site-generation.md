@@ -54,33 +54,34 @@ export default defineConfig({
 });
 ```
 
-| Option            | Default        | Purpose                                                |
-| ----------------- | -------------- | ------------------------------------------------------ |
-| `enabled`         | `true`         | Set `ssg: false` to keep only `.md` modules.           |
-| `extension`       | `".html"`      | Generated page extension.                              |
-| `clean`           | `false`        | Remove generated output before writing.                |
-| `bare`            | `false`        | Emit unthemed HTML without navigation.                 |
-| `render`          | —              | JSX component that owns the whole document.            |
-| `lang`            | `"en"`         | `lang` attribute on `<html>` (bare mode).              |
-| `head`            | —              | Raw markup appended to `<head>` (bare mode).           |
-| `bodyStart`       | —              | Raw markup after `<body>` (bare mode).                 |
-| `bodyEnd`         | —              | Raw markup before `</body>` (bare mode).               |
-| `siteName`        | —              | Suffix for `<title>` and OG site name.                 |
-| `siteUrl`         | —              | Origin used for absolute OG URLs.                      |
-| `ogImage`         | —              | Static fallback OG image URL.                          |
-| `generateOgImage` | `false`        | Per-page OG images (see below).                        |
-| `lastUpdated`     | `false`        | Show the git last-commit time per page.                |
-| `pagination`      | `false`        | Previous/next links after the article.                 |
-| `breadcrumbs`     | `false`        | Trail from the site root through sidebar ancestors.    |
-| `jsonLd`          | `false`        | JSON-LD for TechArticle / WebSite / BreadcrumbList.    |
-| `readerChrome`    | `false`        | Copy, outbound-link icons, and back-to-top.            |
-| `localeSwitcher`  | `false`        | Header locale dropdown when i18n locales are set.      |
-| `a11y`            | `false`        | Skip link and print styles.                            |
-| `notFound`        | `false`        | Themed 404 page. See [Custom 404](./not-found.md).     |
-| `team`            | `false`        | Member cards on `layout: team`. See [Team](./team.md). |
-| `pageChrome`      | `false`        | Honor per-page frontmatter chrome flags.               |
-| `theme`           | `defaultTheme` | Theme configuration via `defineTheme()`.               |
-| `navigation`      | derived        | Explicit navigation groups instead of the file tree.   |
+| Option            | Default        | Purpose                                                                                               |
+| ----------------- | -------------- | ----------------------------------------------------------------------------------------------------- |
+| `enabled`         | `true`         | Set `ssg: false` to keep only `.md` modules.                                                          |
+| `extension`       | `".html"`      | Generated page extension.                                                                             |
+| `clean`           | `false`        | Remove generated output before writing.                                                               |
+| `bare`            | `false`        | Emit unthemed HTML without navigation.                                                                |
+| `render`          | —              | JSX component that owns the whole document.                                                           |
+| `lang`            | `"en"`         | `lang` attribute on `<html>` (bare mode).                                                             |
+| `head`            | —              | Raw markup appended to `<head>` (bare mode).                                                          |
+| `bodyStart`       | —              | Raw markup after `<body>` (bare mode).                                                                |
+| `bodyEnd`         | —              | Raw markup before `</body>` (bare mode).                                                              |
+| `siteName`        | —              | Suffix for `<title>` and OG site name.                                                                |
+| `siteUrl`         | —              | Origin used for absolute OG URLs.                                                                     |
+| `ogImage`         | —              | Static fallback OG image URL.                                                                         |
+| `generateOgImage` | `false`        | Per-page OG images (see below).                                                                       |
+| `lastUpdated`     | `false`        | Show the git last-commit time per page.                                                               |
+| `pagination`      | `false`        | Previous/next links after the article.                                                                |
+| `breadcrumbs`     | `false`        | Trail from the site root through sidebar ancestors.                                                   |
+| `jsonLd`          | `false`        | JSON-LD for TechArticle / WebSite / BreadcrumbList.                                                   |
+| `readerChrome`    | `false`        | Copy, outbound-link icons, and back-to-top.                                                           |
+| `localeSwitcher`  | `false`        | Header locale dropdown when i18n locales are set.                                                     |
+| `a11y`            | `false`        | Skip link and print styles.                                                                           |
+| `notFound`        | `false`        | Themed 404 page. See [Custom 404](./not-found.md).                                                    |
+| `team`            | `false`        | Member cards on `layout: team`. See [Team](./team.md).                                                |
+| `sectionIndex`    | `false`        | Generated listings for directories without `index.md`. See [Section index pages](./section-index.md). |
+| `pageChrome`      | `false`        | Honor per-page frontmatter chrome flags.                                                              |
+| `theme`           | `defaultTheme` | Theme configuration via `defineTheme()`.                                                              |
+| `navigation`      | derived        | Explicit navigation groups instead of the file tree.                                                  |
 
 Theming — colors, fonts, header, footer, sidebar, custom CSS, and the opt-in
 page outline (`theme.aside`, default `false`) — is a topic of its own: see
@@ -307,6 +308,7 @@ array order.
 - [Locale Switcher](./locale-switcher.md) — opt-in header locale list.
 - [Accessibility](./a11y.md) — opt-in skip link and print styles.
 - [Team / members page](./team.md) — opt-in member cards on `layout: team`.
+- [Section index pages](./section-index.md) — opt-in listings for directories without `index.md`.
 - [Header chrome](./header-chrome.md) — opt-in header nav, announcement, and page flags.
 - [Sitemap / robots / llms.txt](./site-maps.md) — opt-in crawl manifests.
 - [Redirects and aliases](./redirects.md) — opt-in static HTML redirects.

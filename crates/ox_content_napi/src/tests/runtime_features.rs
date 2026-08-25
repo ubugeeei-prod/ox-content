@@ -85,6 +85,7 @@ fn javascript_wrapper_and_declarations_cover_expected_exports() {
         "prepareSourceRaw",
         "render",
         "renderFrameworkComponentCode",
+        "renderSsgSectionIndex",
         "resolveSsgNavigationGroups",
         "resolveSsgRoutePaths",
         "sanitizeHtml",

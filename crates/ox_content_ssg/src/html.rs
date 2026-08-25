@@ -17,6 +17,7 @@ mod page;
 mod pagination;
 mod reader_chrome;
 mod render;
+mod section_index;
 mod social;
 mod team;
 mod theme;
@@ -29,6 +30,9 @@ pub use header_chrome::{HeaderNavItem, PageChromeFlags, ThemeAnnouncement};
 pub use json_ld::{JsonLd, JsonLdPublisher};
 use pagination::PagerView;
 pub use reader_chrome::ReaderChrome;
+pub use section_index::{
+    SectionIndexItem, SectionIndexStyle, is_safe_section_href, render_section_index,
+};
 pub use team::{TeamLink, TeamMember, TeamOptions, render_team_page};
 
 pub use bare::{BarePageData, generate_bare_html, generate_bare_page};

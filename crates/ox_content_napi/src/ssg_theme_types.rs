@@ -277,6 +277,18 @@ pub struct JsTeamOptions {
     pub members: Option<Vec<JsTeamMember>>,
 }
 
+/// One child link on a generated section index.
+#[napi(object)]
+#[derive(Clone, Default)]
+pub struct JsSectionIndexItem {
+    /// Visible title. Escaped in HTML.
+    pub title: String,
+    /// Destination. `javascript:` and other schemes are rejected.
+    pub href: String,
+    /// Optional card description. Escaped in HTML.
+    pub description: Option<String>,
+}
+
 /// Header nav link or dropdown.
 #[napi(object)]
 #[derive(Clone, Default)]

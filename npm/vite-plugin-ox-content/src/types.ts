@@ -392,6 +392,18 @@ export interface SsgOptions {
   team?: boolean | TeamOptions;
 
   /**
+   * Generate a static index for directories that have child pages but no
+   * `index.md` / `index.mdx`.
+   *
+   * Off by default. `true` enables card listings. An object enables the
+   * feature and can switch the listing to `list`. Existing content indexes
+   * are never overwritten.
+   *
+   * @default false
+   */
+  sectionIndex?: boolean | SectionIndexOptions;
+
+  /**
    * Absolute site URL used when generating social metadata.
    *
    * Set this when pages need absolute Open Graph image URLs. Include the origin
@@ -574,6 +586,10 @@ export interface ResolvedSsgOptions {
    * Present after `resolveSsgOptions`. Omitted in hand-built fixtures means off.
    */
   team?: ResolvedTeamOptions;
+  /**
+   * Present after `resolveSsgOptions`. Omitted in hand-built fixtures means off.
+   */
+  sectionIndex?: ResolvedSectionIndexOptions;
   siteUrl?: string;
   theme?: ResolvedThemeConfig;
   navigation?: SsgNavigationGroup[];
@@ -646,6 +662,30 @@ export interface TeamOptions {
 export interface ResolvedTeamOptions {
   enabled: boolean;
   members: TeamMember[];
+}
+
+/**
+ * Listing style for a generated section index.
+ */
+export type SectionIndexStyle = "list" | "cards";
+
+/**
+ * Opt-in generated section index pages.
+ */
+export interface SectionIndexOptions {
+  /**
+   * How children are rendered. `cards` is the default when the feature is on.
+   * @default "cards"
+   */
+  style?: SectionIndexStyle;
+}
+
+/**
+ * Resolved generated section index options.
+ */
+export interface ResolvedSectionIndexOptions {
+  enabled: boolean;
+  style: SectionIndexStyle;
 }
 
 /**
