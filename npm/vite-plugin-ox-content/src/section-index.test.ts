@@ -114,7 +114,9 @@ describe("buildSsg sectionIndex", () => {
       false,
     );
     await expect(fs.access(path.join(root, "dist", "guide", "index.html"))).rejects.toThrow();
-    await expect(fs.access(path.join(root, "dist", "guide", "a", "index.html"))).resolves.toBeUndefined();
+    await expect(
+      fs.access(path.join(root, "dist", "guide", "a", "index.html")),
+    ).resolves.toBeUndefined();
   });
 
   it("generates /guide/index.html from child pages when no index.md exists", async () => {
@@ -152,7 +154,8 @@ describe("buildSsg sectionIndex", () => {
   it("keeps an existing index.md and does not overwrite it", async () => {
     const root = await makeSite({
       "index.md": "# Home\n\nWelcome.\n",
-      "guide/index.md": "---\ntitle: Real guide index\n---\n\n# Real guide index\n\nAuthored body.\n",
+      "guide/index.md":
+        "---\ntitle: Real guide index\n---\n\n# Real guide index\n\nAuthored body.\n",
       "guide/a.md": "---\ntitle: Page A\n---\n\n# Page A\n",
       "guide/b.md": "---\ntitle: Page B\n---\n\n# Page B\n",
     });

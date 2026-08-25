@@ -72,12 +72,14 @@
     <code class="ox-api-entry__param-name">config</code>
     <code class="ox-api-entry__param-type">{ layouts: Record&lt;string, <a href="#themecomponent">ThemeComponent</a>&gt;; defaultLayout?: string }</code>
   </div>
+  
 </li>
 <li class="ox-api-entry__param">
   <div class="ox-api-entry__param-heading">
     <code class="ox-api-entry__param-name">config.layouts</code>
     <code class="ox-api-entry__param-type">Record&lt;string, <a href="#themecomponent">ThemeComponent</a>&gt;</code>
   </div>
+  
 </li>
 <li class="ox-api-entry__param">
   <div class="ox-api-entry__param-heading">
@@ -92,6 +94,7 @@
 <h4>Returns</h4>
 <div class="ox-api-entry__return">
   <code class="ox-api-entry__return-type"><a href="#themecomponent">ThemeComponent</a></code>
+  
 </div>
 </div>
 <div class="ox-api-entry__section ox-api-entry__section--examples">
@@ -131,6 +134,7 @@ export default createTheme({
     <code class="ox-api-entry__param-name">param</code>
     <code class="ox-api-entry__param-type"><a href="#themeprops">ThemeProps</a></code>
   </div>
+  
 </li>
 </ul>
 </div>
@@ -138,6 +142,7 @@ export default createTheme({
 <h4>Returns</h4>
 <div class="ox-api-entry__return">
   <code class="ox-api-entry__return-type"><a href="./jsx-html.md#jsxnode">JSXNode</a></code>
+  
 </div>
 </div>
   </div>
@@ -177,6 +182,7 @@ export default createTheme({
 <h4>Returns</h4>
 <div class="ox-api-entry__return">
   <code class="ox-api-entry__return-type">Promise&lt;void&gt;</code>
+  
 </div>
 </div>
   </div>
@@ -362,6 +368,7 @@ export default createTheme({
     <code class="ox-api-entry__param-name">props</code>
     <code class="ox-api-entry__param-type"><a href="#themeprops">ThemeProps</a></code>
   </div>
+  
 </li>
 </ul>
 </div>
@@ -369,6 +376,7 @@ export default createTheme({
 <h4>Returns</h4>
 <div class="ox-api-entry__return">
   <code class="ox-api-entry__return-type"><a href="./jsx-html.md#jsxnode">JSXNode</a></code>
+  
 </div>
 </div>
   </div>
@@ -458,3 +466,4 @@ export default createTheme({
 </div>
   </div>
 </details>
+

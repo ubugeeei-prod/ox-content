@@ -4,12 +4,14 @@ use std::process::Command;
 use napi_derive::napi;
 
 use crate::{
-    JsA11y, JsReaderChrome, JsSectionIndexItem, JsSsgBarePage, JsSsgConfig,
-    JsSsgExternalizedAssets, JsSsgGeneratedHtmlPage, JsSsgNavGroup, JsSsgNavigationGroup,
-    JsSsgPageData, JsSsgRoutePaths, JsSsgSidebarItem, JsTeamOptions,
+    JsA11y, JsReaderChrome, JsSsgBarePage, JsSsgConfig, JsSsgExternalizedAssets,
+    JsSsgGeneratedHtmlPage, JsSsgNavGroup, JsSsgNavigationGroup, JsSsgPageData, JsSsgRoutePaths,
+    JsSsgSidebarItem, JsTeamOptions,
 };
 
 mod converters;
+mod section_index;
+pub use section_index::*;
 
 use converters::{
     convert_entry_page_config, convert_generated_html_page, convert_nav_item,
@@ -163,28 +165,6 @@ pub fn resolve_ssg_navigation_groups(
 #[napi(js_name = "collectSsgMarkdownFiles")]
 pub fn collect_ssg_markdown_files(src_dir: String, extensions: Vec<String>) -> Vec<String> {
     ox_content_ssg::collect_markdown_files(&src_dir, &extensions)
-}
-
-/// Renders escaped section-index listing HTML. Hostile hrefs are dropped.
-#[napi(js_name = "renderSsgSectionIndex")]
-pub fn render_ssg_section_index(
-    title: String,
-    items: Vec<JsSectionIndexItem>,
-    style: String,
-) -> String {
-    let items: Vec<ox_content_ssg::SectionIndexItem> = items
-        .into_iter()
-        .map(|item| ox_content_ssg::SectionIndexItem {
-            title: item.title,
-            href: item.href,
-            description: item.description,
-        })
-        .collect();
-    ox_content_ssg::render_section_index(
-        &title,
-        &items,
-        ox_content_ssg::SectionIndexStyle::parse(&style),
-    )
 }
 
 /// Generates SSG HTML page with navigation and search.

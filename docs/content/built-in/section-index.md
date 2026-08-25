@@ -44,10 +44,10 @@ oxContent({
 });
 ```
 
-| Option             | Type                               | Default   |
-| ------------------ | ---------------------------------- | --------- |
-| `ssg.sectionIndex` | `boolean` / `SectionIndexOptions`  | `false`   |
-| `style`            | `"list"` / `"cards"`               | `"cards"` |
+| Option             | Type                              | Default   |
+| ------------------ | --------------------------------- | --------- |
+| `ssg.sectionIndex` | `boolean` / `SectionIndexOptions` | `false`   |
+| `style`            | `"list"` / `"cards"`              | `"cards"` |
 
 ## What gets generated
 

@@ -128,12 +128,8 @@ fn javascript_href_rejected() {
 #[test]
 fn hostile_title_escaped() {
     let html = render_section_index(
-        r#"</title><script>alert(1)</script>"#,
-        &[item(
-            r#"<img src=x onerror=alert(1)>"#,
-            "/guide/a/index.html",
-            Some("<script>x</script>"),
-        )],
+        r"</title><script>alert(1)</script>",
+        &[item(r"<img src=x onerror=alert(1)>", "/guide/a/index.html", Some("<script>x</script>"))],
         SectionIndexStyle::Cards,
     );
 

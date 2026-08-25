@@ -57,6 +57,7 @@
     <code class="ox-api-entry__param-name">source</code>
     <code class="ox-api-entry__param-type">string</code>
   </div>
+  
 </li>
 <li class="ox-api-entry__param">
   <div class="ox-api-entry__param-heading">
@@ -71,6 +72,7 @@
 <h4>Returns</h4>
 <div class="ox-api-entry__return">
   <code class="ox-api-entry__return-type"><a href="#markdownlintresult">MarkdownLintResult</a></code>
+  
 </div>
 </div>
   </div>
@@ -95,6 +97,7 @@
     <code class="ox-api-entry__param-name">source</code>
     <code class="ox-api-entry__param-type">string</code>
   </div>
+  
 </li>
 <li class="ox-api-entry__param">
   <div class="ox-api-entry__param-heading">
@@ -109,6 +112,7 @@
 <h4>Returns</h4>
 <div class="ox-api-entry__return">
   <code class="ox-api-entry__return-type">Promise&lt;<a href="#markdownlintresult">MarkdownLintResult</a>&gt;</code>
+  
 </div>
 </div>
   </div>
@@ -133,6 +137,7 @@
     <code class="ox-api-entry__param-name">sources</code>
     <code class="ox-api-entry__param-type">string[]</code>
   </div>
+  
 </li>
 <li class="ox-api-entry__param">
   <div class="ox-api-entry__param-heading">
@@ -147,6 +152,7 @@
 <h4>Returns</h4>
 <div class="ox-api-entry__return">
   <code class="ox-api-entry__return-type">Promise&lt;<a href="#markdownlintresult">MarkdownLintResult</a>[]&gt;</code>
+  
 </div>
 </div>
   </div>
@@ -462,3 +468,4 @@
 </div>
   </div>
 </details>
+

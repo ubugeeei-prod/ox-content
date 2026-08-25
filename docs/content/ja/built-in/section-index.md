@@ -37,10 +37,10 @@ oxContent({
 });
 ```
 
-| オプション           | 型                                 | 既定        |
-| -------------------- | ---------------------------------- | ----------- |
-| `ssg.sectionIndex`   | `boolean` / `SectionIndexOptions`  | `false`     |
-| `style`              | `"list"` / `"cards"`               | `"cards"`   |
+| オプション         | 型                                | 既定      |
+| ------------------ | --------------------------------- | --------- |
+| `ssg.sectionIndex` | `boolean` / `SectionIndexOptions` | `false`   |
+| `style`            | `"list"` / `"cards"`              | `"cards"` |
 
 ## 何が生成されるか
 
