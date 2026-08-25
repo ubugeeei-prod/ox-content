@@ -146,6 +146,9 @@ pub fn render_framework_component_code(
     target: FrameworkCodegenTarget,
     islands: &[FrameworkComponentIsland],
 ) -> String {
+    if target == FrameworkCodegenTarget::Svelte {
+        return svelte::escape_markup(html);
+    }
     let nodes = parser::HtmlFragmentParser::new(html).parse();
     render::FrameworkCodegen { target, islands }.render_root(&nodes)
 }

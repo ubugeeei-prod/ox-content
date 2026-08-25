@@ -135,8 +135,7 @@ fn first_flagged(
     let mut i = from;
 
     while i + 8 <= len {
-        // `unwrap` is unreachable: the slice is exactly 8 bytes wide.
-        let word = u64::from_le_bytes(bytes[i..i + 8].try_into().unwrap());
+        let word = u64::from_le_bytes(copy_eight(bytes, i));
         let mask = mask_of(word);
         if mask != 0 {
             return i + first_flagged_lane(mask);
@@ -148,7 +147,7 @@ fn first_flagged(
         // `base < i` here: the loop above only stops with bytes left when
         // fewer than eight remain, so the re-read always overlaps.
         let base = len - 8;
-        let word = u64::from_le_bytes(bytes[base..len].try_into().unwrap());
+        let word = u64::from_le_bytes(copy_eight(bytes, base));
         let mut mask = mask_of(word) & (u64::MAX << ((i - base) * 8));
         while mask != 0 {
             let lane = base + first_flagged_lane(mask);
@@ -164,6 +163,13 @@ fn first_flagged(
         i += 1;
     }
     i
+}
+
+#[inline]
+fn copy_eight(bytes: &[u8], from: usize) -> [u8; 8] {
+    let mut chunk = [0u8; 8];
+    chunk.copy_from_slice(&bytes[from..from + 8]);
+    chunk
 }
 
 /// Appends `src` to `out`, copying short runs inline instead of handing them

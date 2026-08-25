@@ -20,7 +20,7 @@ impl HtmlRenderer {
     }
 
     pub(in crate::html::renderer) fn write_display(&mut self, value: impl Display) {
-        write!(self.output, "{value}").expect("writing to String should not fail");
+        let _ = write!(self.output, "{value}");
     }
 
     pub(in crate::html::renderer) fn write_escaped(&mut self, s: &str) {

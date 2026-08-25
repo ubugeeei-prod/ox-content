@@ -50,7 +50,7 @@ cargo run --release -p ox_content_profile_cli -- pipeline
 # Profile a specific file, GFM-enabled, with 200 measured iterations
 cargo run --release -p ox_content_profile_cli -- \
     pipeline --gfm --iters 200 --warmup 20 \
-    docs/content/api/types.md
+    docs/content/getting-started.md
 
 # Parse only — useful for isolating parser work
 cargo run --release -p ox_content_profile_cli -- parse path/to/file.md

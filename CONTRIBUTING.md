@@ -54,7 +54,7 @@ renderer crates:
 
 ```bash
 cargo run --release -p ox_content_profile_cli -- pipeline --gfm \
-    --iters 200 --warmup 20 docs/content/api/types.md
+    --iters 200 --warmup 20 docs/content/getting-started.md
 ```
 
 See [docs/content/profiling.md](./docs/content/profiling.md) for the full
@@ -67,6 +67,7 @@ cargo test --workspace
 cargo check --workspace --all-targets
 cargo clippy --workspace --all-targets -- -D warnings
 cargo fmt --all -- --check
+node scripts/check-panic-constructs.mjs
 ```
 
 ## Branches, Commits, and Pull Requests

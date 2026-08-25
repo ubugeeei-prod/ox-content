@@ -593,6 +593,62 @@ export interface ResolvedTeamOptions {
 }
 
 /**
+ * Opt-in web app manifest and service worker written during SSG.
+ *
+ * Enabling `offline` (the default when the feature is on) injects a tiny
+ * client script that registers `sw.js`. Set `offline: false` to keep the
+ * manifest without that script.
+ */
+export interface PwaOptions {
+  /**
+   * Write `sw.js` and register it from themed pages.
+   * @default true
+   */
+  offline?: boolean;
+
+  /**
+   * Manifest `name`. Falls back to `ssg.siteName` when omitted.
+   */
+  name?: string;
+
+  /**
+   * Manifest `short_name`. Falls back to `name` when omitted.
+   */
+  shortName?: string;
+
+  /**
+   * Manifest / meta theme color. Hex (`#rgb` / `#rrggbb`) or a CSS color name.
+   * @default "#000000"
+   */
+  themeColor?: string;
+
+  /**
+   * Manifest background color. Hex or a CSS color name.
+   * @default "#ffffff"
+   */
+  backgroundColor?: string;
+
+  /**
+   * Manifest `start_url`. Same-origin site paths only (`/`, `/docs/`).
+   * Defaults to the Vite `base`.
+   */
+  startUrl?: string;
+}
+
+/**
+ * Resolved PWA options.
+ */
+export interface ResolvedPwaOptions {
+  enabled: boolean;
+  offline: boolean;
+  name?: string;
+  shortName?: string;
+  themeColor?: string;
+  backgroundColor?: string;
+  startUrl?: string;
+}
+
+/**
  * Opt-in crawl manifests written during SSG.
  */
 export interface SiteMapsOptions {
@@ -1018,6 +1074,20 @@ export interface OxContentOptions {
   feeds?: boolean | FeedsOptions;
 
   /**
+   * Write a web app manifest and an optional service worker.
+   *
+   * Off by default. `true` writes `manifest.webmanifest` and `sw.js`, and
+   * injects a tiny client script that registers the worker on themed pages.
+   * An object enables the feature and can set `offline: false` to keep the
+   * manifest without caching or that script. This adds client JavaScript
+   * when offline is on. Requires `ssg.siteUrl`. When that is missing the
+   * build continues and a warning is emitted instead of writing files.
+   *
+   * @default false
+   */
+  pwa?: boolean | PwaOptions;
+
+  /**
    * Write tag/category term pages and inject related-page lists.
    *
    * Off by default. `true` reads frontmatter `tags` and `categories` and
@@ -1412,6 +1482,7 @@ export interface ResolvedOptions {
   cascade?: ResolvedCascadeOptions;
   redirects?: ResolvedRedirectsOptions;
   feeds?: ResolvedFeedsOptions;
+  pwa?: ResolvedPwaOptions;
   taxonomies?: ResolvedTaxonomiesOptions;
   versions?: ResolvedVersionsOptions;
   gfm: boolean;

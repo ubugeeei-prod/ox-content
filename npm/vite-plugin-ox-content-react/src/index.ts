@@ -228,6 +228,7 @@ function resolveReactOptions(
     codeAnnotations: resolveCodeAnnotationsOptions(options.codeAnnotations),
     jsxRuntime: options.jsxRuntime ?? "automatic",
     embeds: resolveBuiltinEmbedOptions(options.embeds),
+    mdx: options.mdx,
   };
 }
 

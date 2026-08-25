@@ -241,3 +241,4 @@ LSP はサイトパイプラインと同じパーサーとレンダラーの概�
 - [@ox-content/wasm](./packages/wasm.md) はブラウザと WebAssembly の使い方を扱います。
 - [開発環境のセットアップ](./development-setup.md) はローカルビルド、
   コントリビューター向けコマンド、テストワークフローを説明します。
+- [Panic 防止](./panic-prevention.md) は入力起因 panic の #774 証拠台帳です。

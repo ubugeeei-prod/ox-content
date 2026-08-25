@@ -5,6 +5,7 @@
  * No framework dependencies - works with Vue, React, Svelte, or plain JS.
  */
 
+import { unwrapIslandProps } from "./payload";
 import type {
   HydrateFunction,
   InitIslandsOptions,
@@ -36,7 +37,7 @@ function parseIslandConfig(element: HTMLElement): IslandConfig {
   try {
     const propsJson = element.dataset.oxProps;
     if (propsJson) {
-      props = JSON.parse(propsJson);
+      props = unwrapIslandProps(JSON.parse(propsJson));
     }
   } catch (e) {
     console.warn("[ox-islands] Failed to parse props for", element, e);
