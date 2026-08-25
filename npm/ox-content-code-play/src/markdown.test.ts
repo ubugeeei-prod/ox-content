@@ -78,6 +78,30 @@ describe("markdown and viewers", () => {
     });
     expect(matched).toContain("data-ox-code-play");
 
+    const rustPayload = encodePayload(
+      payloadFromFence(
+        {
+          language: "rust",
+          meta: "play",
+          code: "let v: Vec<u8> = vec![];",
+          raw: "",
+          start: 0,
+          end: 0,
+          typecheck: false,
+        },
+        resolveCodePlayOptions({ languages: { rust: true } }),
+      ),
+    );
+    const numeric = enhancePlayHtml(
+      `<pre><code class="language-rust">let v: Vec&#x3C;u8> = vec![];</code></pre>`,
+      {
+        decodePayload,
+        encodePayload,
+        matchFences: [{ language: "rust", code: "let v: Vec<u8> = vec![];", payload: rustPayload }],
+      },
+    );
+    expect(numeric).toContain("data-ox-code-play");
+
     const moduleSource = `export const html = ${JSON.stringify(`<!--ox-code-play:${payload}--><pre><code>x</code></pre>`)};`;
     expect(enhanceGeneratedModule(moduleSource, { decodePayload, encodePayload })).toContain(
       "ox-code-play",

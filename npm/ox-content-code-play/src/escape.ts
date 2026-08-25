@@ -21,7 +21,14 @@ export function decodeHtml(value: string): string {
     .replace(/&gt;/g, ">")
     .replace(/&quot;/g, '"')
     .replace(/&#39;/g, "'")
+    .replace(/&#x([0-9a-fA-F]+);/g, (_, hex: string) => decodeCodePoint(hex, 16))
+    .replace(/&#(\d+);/g, (_, dec: string) => decodeCodePoint(dec, 10))
     .replace(/&amp;/g, "&");
+}
+
+function decodeCodePoint(digits: string, radix: number): string {
+  const code = Number.parseInt(digits, radix);
+  return Number.isFinite(code) ? String.fromCodePoint(code) : "";
 }
 
 export function escapeAttribute(value: string): string {
