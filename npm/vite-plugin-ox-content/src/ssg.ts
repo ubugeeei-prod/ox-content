@@ -88,7 +88,7 @@ import {
   snapshotEntries,
   writeSnapshotSearchIndex,
 } from "./versions";
-import { PageResourceError, processPageResources } from "./resources";
+import { PageResourceError, createResourceDedupeStore, processPageResources } from "./resources";
 import {
   createVersionNavigationContext,
   rewriteVersionedHeaderNavItems,
@@ -1056,6 +1056,7 @@ async function applyPageResources(
 
   const cacheDir = path.join(context.root, ".cache", "ox-content-resources");
   const fatal: string[] = [];
+  const dedupeStore = options.dedupe ? createResourceDedupeStore() : undefined;
   for (const page of pages) {
     const processed = await processPageResources({
       html: page.transformedHtml,
@@ -1064,6 +1065,9 @@ async function applyPageResources(
       srcDir: context.srcDir,
       options,
       cacheDir,
+      outDir: context.outDir,
+      base: context.base,
+      dedupeStore,
     });
     page.transformedHtml = processed.html;
     generatedFiles.push(...processed.files);

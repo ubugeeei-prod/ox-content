@@ -76,7 +76,7 @@ export default defineConfig({
 | `a11y`            | `false`        | スキップリンクと印刷スタイル。                                                                           |
 | `notFound`        | `false`        | テーマ付き 404。 [カスタム 404](./not-found.md) を見てください。                                         |
 | `team`            | `false`        | `layout: team` のメンバーカード。[チーム](./team.md) を見てください。                                    |
-| `blog`            | `false`        | ページ送り索引、著者、タグ、アーカイブ。[ブログ](./blog.md) を見てください。                             |
+| `blog`            | `false`        | ページ送り索引、著者、タグ、アーカイブ、任意の外部フィード。[ブログ](./blog.md) を見てください。         |
 | `sectionIndex`    | `false`        | `index.md` がないディレクトリ向けの生成一覧。[セクション索引ページ](./section-index.md) を見てください。 |
 | `pageChrome`      | `false`        | ページ単位の frontmatter chrome フラグを尊重する。                                                       |
 | `theme`           | `defaultTheme` | `defineTheme()` によるテーマ設定。                                                                       |

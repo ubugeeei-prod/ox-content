@@ -9,6 +9,7 @@
 
 import { createHash } from "node:crypto";
 import * as path from "node:path";
+import type { ResourceDedupeStore } from "./resources-dedupe";
 import type { ResourcesOptions, ResolvedResourcesOptions } from "./types";
 
 const DEFAULT_FORMATS = ["png", "jpeg", "webp"];
@@ -38,6 +39,12 @@ export interface ProcessPageResourcesInput {
   srcDir: string;
   options: ResolvedResourcesOptions;
   cacheDir: string;
+  /** Site output root. Required when `options.dedupe` is on. */
+  outDir?: string;
+  /** Site base path used for canonical URLs when dedupe is on. */
+  base?: string;
+  /** Shared across pages so identical bytes emit once per digest. */
+  dedupeStore?: ResourceDedupeStore;
 }
 
 export interface ProcessPageResourcesResult {
@@ -60,6 +67,7 @@ export function resolveResourcesOptions(
       formats: [...DEFAULT_FORMATS],
       widths: [],
       missing: "error",
+      dedupe: false,
     };
   }
   if (value === true) {
@@ -68,6 +76,7 @@ export function resolveResourcesOptions(
       formats: [...DEFAULT_FORMATS],
       widths: [],
       missing: "error",
+      dedupe: false,
     };
   }
   return {
@@ -75,6 +84,7 @@ export function resolveResourcesOptions(
     formats: normalizeFormats(value.formats),
     widths: normalizeWidths(value.widths),
     missing: value.missing === "warn" ? "warn" : "error",
+    dedupe: value.dedupe === true,
   };
 }
 
@@ -186,3 +196,5 @@ function normalizeTransform(transform: ResourceTransform): ResourceTransform {
 }
 
 export { processPageResources } from "./resources-process";
+export { createResourceDedupeStore } from "./resources-dedupe";
+export type { ResourceDedupeStore } from "./resources-dedupe";

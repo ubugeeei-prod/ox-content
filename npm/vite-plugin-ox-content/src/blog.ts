@@ -4,6 +4,7 @@
 
 export type { BlogSourcePage } from "./blog-html";
 export { resolveBlogOptions, resolveBlogCollectionName } from "./blog-options";
+export { BlogFeedError, loadExternalBlogPosts, mergeBlogPosts } from "./blog-feeds";
 export { readingTimeMinutes } from "./blog-reading";
 export {
   appendBlogPages,

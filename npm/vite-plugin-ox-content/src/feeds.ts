@@ -243,6 +243,9 @@ function isExcludedFromFeed(
   if (item.unlisted === true || frontmatter.unlisted === true) {
     return true;
   }
+  if (frontmatter.external === true) {
+    return true;
+  }
   if (!publishState?.enabled) {
     return false;
   }

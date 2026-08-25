@@ -67,9 +67,16 @@ continues and emits a warning.
 
 Titles and descriptions are escaped so they cannot break out of XML or JSON.
 
+## Blog index items
+
+External posts aggregated by [Blog](./blog.md) `blog.feeds` stay on the blog
+index only. They are omitted from these generated files. There is no include
+switch in this release.
+
 ## Related
 
 - [Collections](./collections.md)
+- [Blog](./blog.md)
 - [Sitemap / robots / llms.txt](./site-maps.md)
 - [Site Generation](./site-generation.md)
 - [Built-in Features overview](../built-in-features.md)

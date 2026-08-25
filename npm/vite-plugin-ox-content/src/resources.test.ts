@@ -27,12 +27,14 @@ describe("resolveResourcesOptions", () => {
       formats: ["png", "jpeg", "webp"],
       widths: [],
       missing: "error",
+      dedupe: false,
     });
     expect(resolveResourcesOptions(false)).toEqual({
       enabled: false,
       formats: ["png", "jpeg", "webp"],
       widths: [],
       missing: "error",
+      dedupe: false,
     });
     expect(createDocsResolvedOptions().resources).toBeUndefined();
   });
@@ -43,20 +45,28 @@ describe("resolveResourcesOptions", () => {
       formats: ["png", "jpeg", "webp"],
       widths: [],
       missing: "error",
+      dedupe: false,
     });
     expect(resolveResourcesOptions({})).toEqual({
       enabled: true,
       formats: ["png", "jpeg", "webp"],
       widths: [],
       missing: "error",
+      dedupe: false,
     });
     expect(
-      resolveResourcesOptions({ formats: ["PNG", "jpg"], widths: [16, 32], missing: "warn" }),
+      resolveResourcesOptions({
+        formats: ["PNG", "jpg"],
+        widths: [16, 32],
+        missing: "warn",
+        dedupe: true,
+      }),
     ).toEqual({
       enabled: true,
       formats: ["png", "jpeg"],
       widths: [16, 32],
       missing: "warn",
+      dedupe: true,
     });
   });
 });

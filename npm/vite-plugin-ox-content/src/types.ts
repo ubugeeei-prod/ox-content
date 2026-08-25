@@ -1060,7 +1060,35 @@ export interface BlogOptions {
    * @default 10
    */
   pageSize?: number;
+
+  /**
+   * External RSS / Atom sources merged into the blog index at build time.
+   * Empty / omitted fetches nothing. Only these URLs are requested.
+   * @default []
+   */
+  feeds?: Array<string | BlogFeedSource>;
 }
+
+/**
+ * One configured external blog feed.
+ */
+export interface BlogFeedSource {
+  /** Absolute `https:` feed URL. */
+  url: string;
+  /** Default language applied when an item omits one. */
+  language?: string;
+  /** Default author applied when an item omits one. */
+  author?: string;
+  /**
+   * Failed fetch / parse handling for this source.
+   * `warn` skips the source. `error` fails the build after other sources run.
+   * @default "warn"
+   */
+  onError?: BlogFeedFailurePolicy;
+}
+
+/** How a failed external feed source is reported. */
+export type BlogFeedFailurePolicy = "warn" | "error";
 
 /**
  * Resolved blog options.
@@ -1070,6 +1098,17 @@ export interface ResolvedBlogOptions {
   collection?: string;
   authors: Record<string, BlogAuthor>;
   pageSize: number;
+  feeds: ResolvedBlogFeedSource[];
+}
+
+/**
+ * Resolved external blog feed source.
+ */
+export interface ResolvedBlogFeedSource {
+  url: string;
+  language?: string;
+  author?: string;
+  onError: BlogFeedFailurePolicy;
 }
 
 /**
@@ -1500,6 +1539,7 @@ export interface OxContentOptions {
    * source mtime plus transform params. Paths that leave the page
    * directory or `srcDir` are rejected. Missing sources fail the build
    * when `missing` is `"error"` (the default when enabled).
+   * `dedupe` is off unless set; it does not turn on with `true` / `{}`.
    *
    * This is separate from `images`, which only adds figures, captions,
    * and lazy-loading.
@@ -2008,6 +2048,16 @@ export interface ResourcesOptions {
    * @default "error"
    */
   missing?: "error" | "warn";
+
+  /**
+   * Emit identical bytes once as `/assets/content/<sha256>.<ext>` and
+   * rewrite `src`, `poster`, and relevant `href` to that URL.
+   *
+   * Off unless this is `true`. `resources: true` and `{}` leave it off.
+   *
+   * @default false
+   */
+  dedupe?: boolean;
 }
 
 /**
@@ -2018,6 +2068,7 @@ export interface ResolvedResourcesOptions {
   formats: string[];
   widths: number[];
   missing: "error" | "warn";
+  dedupe: boolean;
 }
 
 /**

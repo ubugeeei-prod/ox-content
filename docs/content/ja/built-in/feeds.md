@@ -60,9 +60,15 @@ oxContent({
 
 タイトルと説明はエスケープされるので、XML や JSON の外へは出られません。
 
+## ブログ索引の項目
+
+[ブログ](./blog.md) の `blog.feeds` で集めた外部投稿は索引にだけ載ります。
+生成ファイルには入りません。このリリースに取り込みスイッチはありません。
+
 ## 関連
 
 - [コレクション](./collections.md)
+- [ブログ](./blog.md)
 - [Sitemap / robots / llms.txt](./site-maps.md)
 - [サイト生成](./site-generation.md)
 - [組み込み機能の一覧](../built-in-features.md)

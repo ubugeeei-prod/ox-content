@@ -13,6 +13,7 @@ layout on top of collections:
 - Tag pages at `/blog/tags/{tag}/`
 - Yearly and monthly archive at `/blog/archive/`, `/blog/archive/{yyyy}/`, and
   `/blog/archive/{yyyy}/{mm}/`
+- Optional external RSS / Atom sources merged into that same index
 
 The feature is off unless you turn it on. Existing sites stay unchanged.
 Tags and archive are implemented here; they do not wait on taxonomies.
@@ -60,13 +61,14 @@ oxContent({
 });
 ```
 
-| Option       | Type                         | Default                                                      |
-| ------------ | ---------------------------- | ------------------------------------------------------------ |
-| `blog`       | `boolean` / `BlogOptions`    | `false`                                                      |
-| `ssg.blog`   | `boolean` / `BlogOptions`    | `false`                                                      |
-| `collection` | `string`                     | collection named `blog`, else the only configured collection |
-| `authors`    | `Record<string, BlogAuthor>` | `{}`                                                         |
-| `pageSize`   | `number`                     | `10`                                                         |
+| Option       | Type                           | Default                                                      |
+| ------------ | ------------------------------ | ------------------------------------------------------------ |
+| `blog`       | `boolean` / `BlogOptions`      | `false`                                                      |
+| `ssg.blog`   | `boolean` / `BlogOptions`      | `false`                                                      |
+| `collection` | `string`                       | collection named `blog`, else the only configured collection |
+| `authors`    | `Record<string, BlogAuthor>`   | `{}`                                                         |
+| `pageSize`   | `number`                       | `10`                                                         |
+| `feeds`      | `(string \| BlogFeedSource)[]` | `[]` (no fetch)                                              |
 
 ## Collection
 
@@ -159,6 +161,55 @@ maps to the same path:
 - `/blog/archive/{yyyy}/{mm}/` — posts in that month (`mm` is zero-padded)
 
 Posts without a parseable `date` stay on the index and tag pages only.
+
+## External feeds
+
+`feeds` is off unless you set a non-empty array. The build fetches only those
+configured URLs. Links inside Markdown or HTML are never requested.
+
+```ts
+oxContent({
+  blog: {
+    feeds: [
+      "https://example.com/rss.xml",
+      {
+        url: "https://example.com/atom.xml",
+        language: "ja",
+        author: "ada",
+        onError: "warn",
+      },
+    ],
+  },
+});
+```
+
+| Field      | Type               | Default | Role                                                          |
+| ---------- | ------------------ | ------- | ------------------------------------------------------------- |
+| `url`      | `string`           | —       | Absolute `https:` RSS or Atom URL                             |
+| `language` | `string`           | —       | Default language when an item omits one                       |
+| `author`   | `string`           | —       | Default author when an item omits one                         |
+| `onError`  | `"warn"`/`"error"` | `warn`  | Skip the source, or fail the build after other sources finish |
+
+A string entry is `{ url, onError: "warn" }`. Each unique URL is fetched once
+per build, not per page. The request uses a timeout, a redirect hop limit, a
+response size cap, and `https:`-only public hosts. Loopback, private, and
+link-local targets are rejected after DNS. HTML pages are not parsed.
+
+A failed source in `warn` mode is skipped; successful sources still merge. One
+bad source does not drop the rest of the blog. `onError: "error"` fails the
+build after the remaining sources finish.
+
+Items keep title, canonical `https:` link, publication date, stable id,
+language, and summary when present. They merge with local posts, newest first,
+then href. Duplicates match a canonical URL or an explicit stable id. The
+local post wins.
+
+External items carry an `external` marker (`class="ox-blog-external"`,
+`rel="external"`). Themes must keep the remote URL and must not rewrite the
+item to a local route.
+
+External items are **not** written to generated RSS, Atom, or JSON feeds.
+There is no include switch in this release.
 
 ## Drafts and unlisted posts
 

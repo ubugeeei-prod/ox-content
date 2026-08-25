@@ -168,6 +168,7 @@ export function toListItem(page: BlogSourcePage): {
     dateLabel: parsed
       ? `${String(parsed.year).padStart(4, "0")}-${String(parsed.month).padStart(2, "0")}-${String(parsed.day).padStart(2, "0")}`
       : undefined,
+    ...(page.external || page.frontmatter.external === true ? { external: true } : {}),
   };
 }
 

@@ -12,6 +12,7 @@ export function resolveBlogOptions(value: boolean | BlogOptions | undefined): Re
       enabled: false,
       authors: {},
       pageSize: DEFAULT_PAGE_SIZE,
+      feeds: [],
     };
   }
   if (value === true) {
@@ -19,6 +20,7 @@ export function resolveBlogOptions(value: boolean | BlogOptions | undefined): Re
       enabled: true,
       authors: {},
       pageSize: DEFAULT_PAGE_SIZE,
+      feeds: [],
     };
   }
   return {
@@ -26,6 +28,7 @@ export function resolveBlogOptions(value: boolean | BlogOptions | undefined): Re
     collection: value.collection,
     authors: normalizeAuthors(value.authors),
     pageSize: normalizePageSize(value.pageSize),
+    feeds: normalizeFeeds(value.feeds),
   };
 }
 
@@ -74,4 +77,40 @@ function normalizePageSize(value: number | undefined): number {
     return Math.floor(value);
   }
   return DEFAULT_PAGE_SIZE;
+}
+
+function normalizeFeeds(feeds: BlogOptions["feeds"]): ResolvedBlogOptions["feeds"] {
+  if (!Array.isArray(feeds)) {
+    return [];
+  }
+  const resolved: ResolvedBlogOptions["feeds"] = [];
+  for (const entry of feeds) {
+    if (typeof entry === "string") {
+      const url = entry.trim();
+      if (url) {
+        resolved.push({ url, onError: "warn" });
+      }
+      continue;
+    }
+    if (!entry || typeof entry !== "object" || typeof entry.url !== "string") {
+      continue;
+    }
+    const url = entry.url.trim();
+    if (!url) {
+      continue;
+    }
+    const language = trimOptional(entry.language);
+    const author = trimOptional(entry.author);
+    resolved.push({
+      url,
+      ...(language ? { language } : {}),
+      ...(author ? { author } : {}),
+      onError: entry.onError === "error" ? "error" : "warn",
+    });
+  }
+  return resolved;
+}
+
+function trimOptional(value: unknown): string | undefined {
+  return typeof value === "string" && value.trim() ? value.trim() : undefined;
 }
