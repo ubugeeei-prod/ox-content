@@ -1,4 +1,4 @@
-use oxc_ast::ast::{TSSignature, TSType, TSTypeLiteral, TSTypeName};
+use oxc_ast::ast::{TSSignature, TSTupleElement, TSType, TSTypeLiteral, TSTypeName};
 use oxc_span::GetSpan;
 
 use crate::string_builder::{StringBuilder, join2, join3};
@@ -61,7 +61,7 @@ impl<'a> DocVisitor<'a> {
                 let types: Vec<String> = tuple
                     .element_types
                     .iter()
-                    .map(|t| self.format_ts_type(t.to_ts_type()))
+                    .map(|element| self.format_ts_tuple_element(element))
                     .collect();
                 join3("[", &types.join(", "), "]")
             }
@@ -75,6 +75,21 @@ impl<'a> DocVisitor<'a> {
                 _ => "literal".to_string(),
             },
             _ => self.format_type_from_span(ts_type),
+        }
+    }
+
+    fn format_ts_tuple_element(&self, element: &TSTupleElement<'a>) -> String {
+        match element {
+            TSTupleElement::TSOptionalType(optional) => {
+                join2(&self.format_ts_type(&optional.type_annotation), "?")
+            }
+            TSTupleElement::TSRestType(rest) => {
+                join2("...", &self.format_ts_type(&rest.type_annotation))
+            }
+            _ => element.as_ts_type().map_or_else(
+                || self.format_type_span(element.span().start, element.span().end),
+                |ts_type| self.format_ts_type(ts_type),
+            ),
         }
     }
 

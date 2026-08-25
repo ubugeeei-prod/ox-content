@@ -114,3 +114,46 @@ export type PluginFunction<G> = (ctx: Readonly<PluginContext<G>>) => Awaitable<v
     assert_eq!(alias.params[0].type_annotation.as_deref(), Some("Readonly<PluginContext<G>>"));
     assert_eq!(alias.return_type.as_deref(), Some("Awaitable<void>"));
 }
+
+#[test]
+fn tuple_type_aliases_format_optional_rest_and_named_elements() {
+    let source = r"
+/** Optional trailing element. */
+export type Pair = [number, string?];
+
+/** Optional-only tuple. */
+export type OptionalOnly = [number?];
+
+/** Rest tuple element. */
+export type Variadic = [number, ...string[]];
+
+/** Named optional tuple element. */
+export type NamedPair = [value: number, label?: string];
+
+/** Named rest tuple element. */
+export type NamedVariadic = [head: number, ...tail: string[]];
+
+/** Nested optional tuple. */
+export type ReadonlyPair = readonly [number, string?];
+";
+
+    let extractor = DocExtractor::new();
+    let items = extractor.extract_source(source, "tuples.ts", SourceType::ts()).unwrap();
+    let signature = |name: &str| {
+        items
+            .iter()
+            .find(|item| item.name == name)
+            .and_then(|item| item.signature.as_deref())
+            .unwrap()
+    };
+
+    assert_eq!(signature("Pair"), "export type Pair = [number, string?]");
+    assert_eq!(signature("OptionalOnly"), "export type OptionalOnly = [number?]");
+    assert_eq!(signature("Variadic"), "export type Variadic = [number, ...string[]]");
+    assert_eq!(signature("NamedPair"), "export type NamedPair = [value: number, label?: string]");
+    assert_eq!(
+        signature("NamedVariadic"),
+        "export type NamedVariadic = [head: number, ...tail: string[]]"
+    );
+    assert_eq!(signature("ReadonlyPair"), "export type ReadonlyPair = readonly [number, string?]");
+}

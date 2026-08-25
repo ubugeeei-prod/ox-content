@@ -138,6 +138,54 @@ export const CLI_OPTIONS_DEFAULT: CliOptions<DefaultGunshiParams> = {
 }
 
 #[test]
+fn entrypoint_docs_handle_internal_optional_tuple_alias() {
+    let root = temp_root();
+    fs::create_dir_all(root.join("src")).unwrap();
+    fs::write(
+        root.join("src/resolver.ts"),
+        r"
+const enum Actions {
+  APPEND,
+  PUSH,
+}
+
+const enum States {
+  BEFORE_PATH,
+  ERROR,
+}
+
+type StateAction = [States, Actions?]
+type PathState = StateAction | States.ERROR
+
+export type Path = string
+",
+    )
+    .unwrap();
+
+    let entrypoints = [EntryPointSpec {
+        path: PathBuf::from("src/resolver.ts"),
+        name: Some("default".to_string()),
+    }];
+    let docs = extract_docs_from_entry_points(
+        &entrypoints,
+        &EntryPointDocsOptions {
+            graph: GraphOptions { root: Some(root.clone()), ..GraphOptions::default() },
+            include_private: false,
+            include_internal: false,
+            type_parameters: false,
+        },
+    )
+    .unwrap();
+
+    assert!(docs[0].diagnostics.is_empty());
+    assert_eq!(docs[0].entries.len(), 1);
+    assert_eq!(docs[0].entries[0].name, "Path");
+    assert_eq!(docs[0].entries[0].signature.as_deref(), Some("export type Path = string"));
+
+    fs::remove_dir_all(root).unwrap();
+}
+
+#[test]
 fn entrypoint_docs_diagnose_internal_type_filtered_by_visibility() {
     let root = temp_root();
     fs::create_dir_all(root.join("src")).unwrap();
