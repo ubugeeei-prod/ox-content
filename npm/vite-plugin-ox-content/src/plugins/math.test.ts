@@ -3,11 +3,7 @@ import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { afterEach, describe, expect, it } from "vite-plus/test";
 import { copyKatexAssets } from "./math-assets";
-import {
-  renderKatexMath,
-  resetKatexWarningForTests,
-  resolveKatexDist,
-} from "./math";
+import { renderKatexMath, resetKatexWarningForTests, resolveKatexDist } from "./math";
 
 afterEach(() => {
   resetKatexWarningForTests();

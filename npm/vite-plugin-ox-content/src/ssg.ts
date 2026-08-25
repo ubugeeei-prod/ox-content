@@ -934,7 +934,7 @@ export async function buildSsg(options: ResolvedOptions, root: string): Promise<
     errors,
   );
 
-  if (options.math.enabled) {
+  if (options.math?.enabled) {
     generatedFiles.push(...(await copyKatexAssets(outDir)));
   }
 
